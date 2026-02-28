@@ -1,6 +1,6 @@
 {
   "name": "jmap-webmail",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A modern JMAP webmail client built for Stalwart Mail Server",
   "author": "Matthieu MALVACHE <matthieu@root.cloud>",
   "license": "MIT",

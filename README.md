@@ -131,6 +131,7 @@ Stalwart is a mail server written in Rust with native JMAP support, not IMAP/SMT
 - Runtime environment variables (no rebuild needed)
 - Health check endpoint
 - Structured logging (text/JSON)
+- Update check on startup (server logs only, no client exposure)
 
 ## Tech stack
 
