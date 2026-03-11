@@ -21,6 +21,7 @@ interface CalendarWeekViewProps {
   onCreateAtTime: (date: Date, endDate?: Date) => void;
   firstDayOfWeek?: number;
   timeFormat?: "12h" | "24h";
+  isMobile?: boolean;
 }
 
 const HOUR_HEIGHT = 60;
@@ -35,6 +36,7 @@ export function CalendarWeekView({
   onCreateAtTime,
   firstDayOfWeek = 1,
   timeFormat = "24h",
+  isMobile,
 }: CalendarWeekViewProps) {
   const t = useTranslations("calendar");
   const intlFormatter = useFormatter();
@@ -42,9 +44,13 @@ export function CalendarWeekView({
   const weekStart = (firstDayOfWeek === 0 ? 0 : 1) as 0 | 1;
 
   const weekDays = useMemo(() => {
+    if (isMobile) {
+      // Show 3-day window centered on selected date
+      return Array.from({ length: 3 }, (_, i) => addDays(selectedDate, i - 1));
+    }
     const start = startOfWeek(selectedDate, { weekStartsOn: weekStart });
     return Array.from({ length: 7 }, (_, i) => addDays(start, i));
-  }, [selectedDate, weekStart]);
+  }, [selectedDate, weekStart, isMobile]);
 
   const calendarMap = useMemo(() => {
     const map = new Map<string, Calendar>();
@@ -132,14 +138,16 @@ export function CalendarWeekView({
     return format(new Date(2000, 0, 1, h), "HH:mm");
   };
 
+  const colCount = isMobile ? 3 : 7;
+
   return (
     <div className="flex flex-col flex-1 overflow-hidden" role="grid" aria-label={t("views.week")}>
       {hasAllDay && (
         <div className="flex border-b border-border">
-          <div className="w-14 flex-shrink-0 text-[10px] text-muted-foreground p-1 text-right">
+          <div className={cn("flex-shrink-0 text-[10px] text-muted-foreground p-1 text-right", isMobile ? "w-10" : "w-14")}>
             {t("events.all_day")}
           </div>
-          <div className="flex-1 grid grid-cols-7 gap-px bg-border">
+          <div className={cn("flex-1 grid gap-px bg-border", isMobile ? "grid-cols-3" : "grid-cols-7")}>
             {weekDays.map((day) => {
               const key = format(day, "yyyy-MM-dd");
               const dayAllDay = allDayEvents.get(key) || [];
@@ -165,8 +173,8 @@ export function CalendarWeekView({
       )}
 
       <div className="flex border-b border-border" role="row">
-        <div className="w-14 flex-shrink-0" />
-        <div className="flex-1 grid grid-cols-7 border-l border-border">
+        <div className={cn("flex-shrink-0", isMobile ? "w-10" : "w-14")} />
+        <div className={cn("flex-1 border-l border-border", isMobile ? "grid grid-cols-3" : "grid grid-cols-7")}>
           {weekDays.map((day) => {
             const todayCol = isToday(day);
             const selected = isSameDay(day, selectedDate);
@@ -178,7 +186,7 @@ export function CalendarWeekView({
                 role="columnheader"
                 aria-label={fullLabel}
                 className={cn(
-                  "text-center py-2 text-sm border-r border-border last:border-r-0 transition-colors",
+                  "text-center py-2 text-sm border-r border-border last:border-r-0 transition-colors touch-manipulation",
                   "hover:bg-muted/50",
                   todayCol && "font-bold",
                 )}
@@ -201,7 +209,7 @@ export function CalendarWeekView({
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto">
         <div className="flex relative" style={{ height: 24 * HOUR_HEIGHT }}>
-          <div className="w-14 flex-shrink-0">
+          <div className={cn("flex-shrink-0", isMobile ? "w-10" : "w-14")}>
             {HOURS.map((h) => (
               <div
                 key={h}
@@ -209,7 +217,7 @@ export function CalendarWeekView({
                 style={{ height: HOUR_HEIGHT }}
               >
                 {h > 0 && (
-                  <span className="absolute top-0 right-2 -translate-y-1/2 text-[10px] leading-none">
+                  <span className={cn("absolute top-0 right-2 -translate-y-1/2 leading-none", isMobile ? "text-[9px]" : "text-[10px]")}>
                     {formatHour(h)}
                   </span>
                 )}
@@ -217,7 +225,7 @@ export function CalendarWeekView({
             ))}
           </div>
 
-          <div className="flex-1 grid grid-cols-7 border-l border-border relative">
+          <div className={cn("flex-1 border-l border-border relative", isMobile ? "grid grid-cols-3" : "grid grid-cols-7")}>
             {weekDays.map((day) => {
               const key = format(day, "yyyy-MM-dd");
               const dayEvents = timedEvents.get(key) || [];

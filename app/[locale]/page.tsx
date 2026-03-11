@@ -7,6 +7,7 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { EmailList } from "@/components/email/email-list";
 import { EmailViewer } from "@/components/email/email-viewer";
 import { EmailComposer } from "@/components/email/email-composer";
+import type { ComposerDraftData } from "@/components/email/email-composer";
 import { ThreadConversationView } from "@/components/email/thread-conversation-view";
 import { MobileHeader, MobileViewerHeader } from "@/components/layout/mobile-header";
 import { ThreadGroup, Email } from "@/lib/jmap/types";
@@ -18,6 +19,7 @@ import { useIdentityStore } from "@/stores/identity-store";
 import { useUIStore } from "@/stores/ui-store";
 import { useDeviceDetection } from "@/hooks/use-media-query";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
+import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { debug } from "@/lib/debug";
 import { playNotificationSound } from "@/lib/notification-sound";
 import { cn } from "@/lib/utils";
@@ -28,12 +30,13 @@ import {
   EmailViewerErrorFallback,
   ComposerErrorFallback,
 } from "@/components/error";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DragDropProvider } from "@/contexts/drag-drop-context";
 import { isFilterEmpty, activeFilterCount } from "@/lib/jmap/search-utils";
 import { WelcomeBanner } from "@/components/ui/welcome-banner";
 import { NavigationRail } from "@/components/layout/navigation-rail";
 import { Input } from "@/components/ui/input";
-import { Search, Filter, ChevronDown, X, Paperclip, Star, Mail, MailOpen, RotateCcw } from "lucide-react";
+import { Search, Filter, ChevronDown, X, Paperclip, Star, Mail, MailOpen, RotateCcw, PenSquare, PenLine } from "lucide-react";
 import { ResizeHandle } from "@/components/layout/resize-handle";
 import { Button } from "@/components/ui/button";
 
@@ -44,6 +47,8 @@ export default function Home() {
   const [showComposer, setShowComposer] = useState(false);
   const [composerMode, setComposerMode] = useState<'compose' | 'reply' | 'replyAll' | 'forward'>('compose');
   const [composerDraftText, setComposerDraftText] = useState("");
+  const [pendingDraft, setPendingDraft] = useState<ComposerDraftData | null>(null);
+  const { dialogProps: confirmDialogProps, confirm: confirmDialog } = useConfirmDialog();
   const [initialCheckDone, setInitialCheckDone] = useState(false);
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
   const [showAdvancedFields, setShowAdvancedFields] = useState(false);
@@ -170,6 +175,7 @@ export default function Home() {
     onCompose: () => {
       setComposerMode('compose');
       setShowComposer(true);
+      if (isMobile) setActiveView('viewer');
     },
     onFocusSearch: () => {
       const searchInput = document.querySelector('[data-search-input]') as HTMLInputElement;
@@ -422,16 +428,19 @@ export default function Home() {
     setComposerDraftText(draftText || "");
     setComposerMode('reply');
     setShowComposer(true);
+    if (isMobile) setActiveView('viewer');
   };
 
   const handleReplyAll = () => {
     setComposerMode('replyAll');
     setShowComposer(true);
+    if (isMobile) setActiveView('viewer');
   };
 
   const handleForward = () => {
     setComposerMode('forward');
     setShowComposer(true);
+    if (isMobile) setActiveView('viewer');
   };
 
   const handleDelete = async () => {
@@ -682,6 +691,11 @@ export default function Home() {
   const handleEmailSelect = async (email: { id: string }) => {
     if (!client || !email) return;
 
+    // If composing, suspend the composer (unmount will trigger onSaveState)
+    if (showComposer) {
+      setShowComposer(false);
+    }
+
     // Set loading state immediately (keep current email visible)
     setLoadingEmail(true);
 
@@ -751,18 +765,21 @@ export default function Home() {
     selectEmail(email);
     setComposerMode('reply');
     setShowComposer(true);
+    if (isMobile) setActiveView('viewer');
   };
 
   const handleConversationReplyAll = (email: Email) => {
     selectEmail(email);
     setComposerMode('replyAll');
     setShowComposer(true);
+    if (isMobile) setActiveView('viewer');
   };
 
   const handleConversationForward = (email: Email) => {
     selectEmail(email);
     setComposerMode('forward');
     setShowComposer(true);
+    if (isMobile) setActiveView('viewer');
   };
 
   const ToggleChip = ({ icon, label, value, onClick }: { icon: React.ReactNode; label: string; value: boolean | null; onClick: () => void }) => (
@@ -825,7 +842,10 @@ export default function Home() {
               onCompose={() => {
                 setComposerMode('compose');
                 setShowComposer(true);
-                if (isMobile) setSidebarOpen(false);
+                if (isMobile) {
+                  setSidebarOpen(false);
+                  setActiveView('viewer');
+                }
               }}
               onSidebarClose={() => setSidebarOpen(false)}
             />
@@ -847,7 +867,7 @@ export default function Home() {
           {/* Email List - full width on mobile, fixed width on tablet/desktop */}
           <div
             className={cn(
-              "flex flex-col h-full bg-background border-r border-border",
+              "relative flex flex-col h-full bg-background border-r border-border",
               // Mobile: full width, hidden when viewing email
               "max-md:flex-1 max-md:border-r-0",
               isMobile && activeView !== "list" && "max-md:hidden",
@@ -862,10 +882,6 @@ export default function Home() {
             {/* Mobile Header for List View */}
             <MobileHeader
               title={currentMailboxName}
-              onCompose={() => {
-                setComposerMode('compose');
-                setShowComposer(true);
-              }}
             />
 
             {/* Search Bar + Inline Advanced Filters */}
@@ -1105,6 +1121,21 @@ export default function Home() {
               />
             </ErrorBoundary>
             </div>
+
+            {/* Floating Compose Button (mobile) */}
+            {isMobile && (
+              <Button
+                onClick={() => {
+                  setComposerMode('compose');
+                  setShowComposer(true);
+                  setActiveView('viewer');
+                }}
+                className="absolute bottom-4 right-4 z-40 h-14 w-14 rounded-full shadow-lg"
+                aria-label={t('sidebar.compose')}
+              >
+                <PenSquare className="h-6 w-6" />
+              </Button>
+            )}
           </div>
 
           {/* Email list resize handle (desktop only) */}
@@ -1116,7 +1147,7 @@ export default function Home() {
             />
           )}
 
-          {/* Email Viewer - full screen on mobile, flex on tablet/desktop */}
+          {/* Email Viewer / Composer - full screen on mobile, flex on tablet/desktop */}
           <div
             className={cn(
               "flex flex-col h-full bg-background",
@@ -1127,6 +1158,82 @@ export default function Home() {
               "md:flex-1 md:min-w-0 md:relative"
             )}
           >
+            {/* Inline Composer - shown in viewer pane */}
+            {showComposer ? (
+              <ErrorBoundary
+                fallback={ComposerErrorFallback}
+                onReset={() => {
+                  setShowComposer(false);
+                  setComposerMode('compose');
+                }}
+              >
+                <EmailComposer
+                  mode={pendingDraft?.mode ?? composerMode}
+                  replyTo={pendingDraft?.replyTo ?? (selectedEmail ? {
+                    from: selectedEmail.from,
+                    to: selectedEmail.to,
+                    cc: selectedEmail.cc,
+                    subject: selectedEmail.subject,
+                    body: selectedEmail.bodyValues?.[selectedEmail.textBody?.[0]?.partId || '']?.value || selectedEmail.preview || '',
+                    receivedAt: selectedEmail.receivedAt
+                  } : undefined)}
+                  initialDraftText={composerDraftText}
+                  initialData={pendingDraft}
+                  onSaveState={(data) => setPendingDraft(data)}
+                  onSend={async (data) => {
+                    await handleEmailSend(data);
+                    setPendingDraft(null);
+                  }}
+                  onClose={() => {
+                    setShowComposer(false);
+                    setComposerMode('compose');
+                    setComposerDraftText("");
+                    setPendingDraft(null);
+                    if (isMobile) {
+                      setActiveView('list');
+                    }
+                  }}
+                  onDiscardDraft={(draftId) => {
+                    handleDiscardDraft(draftId);
+                    setPendingDraft(null);
+                  }}
+                />
+              </ErrorBoundary>
+            ) : (
+            <>
+            {/* Pending draft banner */}
+            {pendingDraft && (
+              <button
+                onClick={() => {
+                  setShowComposer(true);
+                  if (isMobile) setActiveView('viewer');
+                }}
+                className="flex items-center gap-3 px-4 py-2.5 bg-primary/10 border-b border-primary/20 hover:bg-primary/15 transition-colors cursor-pointer w-full text-left"
+              >
+                <PenLine className="w-4 h-4 text-primary shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <span className="text-sm font-medium text-primary">{t('email_composer.continue_draft')}</span>
+                  {pendingDraft.subject && (
+                    <span className="text-xs text-muted-foreground ml-2 truncate">{pendingDraft.subject}</span>
+                  )}
+                </div>
+                <X
+                  className="w-4 h-4 text-muted-foreground hover:text-foreground shrink-0"
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    const confirmed = await confirmDialog({
+                      title: t('email_composer.discard_draft_title'),
+                      message: t('email_composer.discard_draft_confirm'),
+                      confirmText: t('email_composer.discard'),
+                      variant: "destructive",
+                    });
+                    if (confirmed) {
+                      setPendingDraft(null);
+                    }
+                  }}
+                />
+              </button>
+            )}
             {/* Mobile Conversation View - shown when thread is selected on mobile */}
             {isMobile && conversationThread ? (
               <ThreadConversationView
@@ -1187,6 +1294,8 @@ export default function Home() {
                 </ErrorBoundary>
               </>
             )}
+            </>
+            )}
           </div>
           </div>
 
@@ -1196,44 +1305,6 @@ export default function Home() {
           )}
         </div>
 
-        {/* Email Composer Modal */}
-        {showComposer && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 lg:p-0">
-            <div className={cn(
-              "w-full h-full lg:h-[600px] lg:max-w-3xl",
-              "max-lg:flex max-lg:flex-col"
-            )}>
-              <ErrorBoundary
-                fallback={ComposerErrorFallback}
-                onReset={() => {
-                  setShowComposer(false);
-                  setComposerMode('compose');
-                }}
-              >
-                <EmailComposer
-                  mode={composerMode}
-                  replyTo={selectedEmail ? {
-                    from: selectedEmail.from,
-                    to: selectedEmail.to,
-                    cc: selectedEmail.cc,
-                    subject: selectedEmail.subject,
-                    body: selectedEmail.bodyValues?.[selectedEmail.textBody?.[0]?.partId || '']?.value || selectedEmail.preview || '',
-                    receivedAt: selectedEmail.receivedAt
-                  } : undefined}
-                  initialDraftText={composerDraftText}
-                  onSend={handleEmailSend}
-                  onClose={() => {
-                    setShowComposer(false);
-                    setComposerMode('compose');
-                    setComposerDraftText("");
-                  }}
-                  onDiscardDraft={handleDiscardDraft}
-                />
-              </ErrorBoundary>
-            </div>
-          </div>
-        )}
-
         {/* Keyboard Shortcuts Modal */}
         <KeyboardShortcutsModal
           isOpen={showShortcutsModal}
@@ -1242,6 +1313,8 @@ export default function Home() {
 
         {/* Screen reader live region for dynamic status announcements */}
         <div className="sr-only" aria-live="polite" aria-atomic="true" id="sr-status" />
+
+        <ConfirmDialog {...confirmDialogProps} />
       </div>
     </DragDropProvider>
   );

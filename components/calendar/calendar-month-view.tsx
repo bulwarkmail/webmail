@@ -21,6 +21,7 @@ interface CalendarMonthViewProps {
   onSelectDate: (date: Date) => void;
   onSelectEvent: (event: CalendarEvent, anchorRect: DOMRect) => void;
   firstDayOfWeek?: number;
+  isMobile?: boolean;
 }
 
 export function CalendarMonthView({
@@ -30,6 +31,7 @@ export function CalendarMonthView({
   onSelectDate,
   onSelectEvent,
   firstDayOfWeek = 1,
+  isMobile,
 }: CalendarMonthViewProps) {
   const t = useTranslations("calendar");
   const intlFormatter = useFormatter();
@@ -125,22 +127,28 @@ export function CalendarMonthView({
     <div className="flex flex-col flex-1 overflow-hidden" role="grid" aria-label={intlFormatter.dateTime(selectedDate, { month: "long", year: "numeric" })}>
       <div className="grid grid-cols-7 border-b border-border" role="row">
         {dayHeaders.map((d) => (
-          <div key={d} role="columnheader" className="text-center text-xs font-medium text-muted-foreground py-2 border-r border-border last:border-r-0">
-            {t(`days.${d}`)}
+          <div key={d} role="columnheader" className={cn(
+            "text-center text-xs font-medium text-muted-foreground py-2 border-r border-border last:border-r-0",
+            isMobile && "py-1.5 text-[11px]"
+          )}>
+            {isMobile ? t(`days.${d}`).slice(0, 2) : t(`days.${d}`)}
           </div>
         ))}
       </div>
 
       <div className="flex-1 flex flex-col overflow-y-auto">
         {weeks.map((week, wi) => (
-          <div key={wi} className="grid grid-cols-7 flex-1 min-h-[100px] border-b border-border last:border-b-0" role="row">
+          <div key={wi} className={cn(
+            "grid grid-cols-7 flex-1 border-b border-border last:border-b-0",
+            isMobile ? "min-h-[52px]" : "min-h-[100px]"
+          )} role="row">
             {week.map((day) => {
               const inMonth = isSameMonth(day, selectedDate);
               const selected = isSameDay(day, selectedDate);
               const today = isToday(day);
               const key = format(day, "yyyy-MM-dd");
               const dayEvents = eventsByDate.get(key) || [];
-              const maxVisible = 3;
+              const maxVisible = isMobile ? 0 : 3;
               const fullDateLabel = intlFormatter.dateTime(day, { weekday: "long", month: "long", day: "numeric", year: "numeric" });
 
               return (
@@ -154,16 +162,18 @@ export function CalendarMonthView({
                   onDragLeave={handleCellDragLeave}
                   onDrop={(e) => handleCellDrop(e, day)}
                   className={cn(
-                    "border-r border-border last:border-r-0 p-1 cursor-pointer transition-colors",
+                    "border-r border-border last:border-r-0 p-1 cursor-pointer transition-colors touch-manipulation",
                     !inMonth && "bg-muted/30",
                     "hover:bg-muted/50",
+                    selected && isMobile && "bg-primary/10",
                     dropDayKey === key && "ring-2 ring-inset ring-primary bg-primary/10"
                   )}
                 >
                   <div className="flex items-center justify-center mb-0.5">
                     <span
                       className={cn(
-                        "inline-flex items-center justify-center w-6 h-6 text-xs rounded-full",
+                        "inline-flex items-center justify-center rounded-full",
+                        isMobile ? "w-7 h-7 text-xs" : "w-6 h-6 text-xs",
                         today && !selected && "bg-primary text-primary-foreground font-bold",
                         selected && "bg-primary text-primary-foreground font-bold",
                         !inMonth && !selected && !today && "text-muted-foreground/50",
@@ -173,26 +183,48 @@ export function CalendarMonthView({
                       {format(day, "d")}
                     </span>
                   </div>
-                  <div className="space-y-0.5">
-                    {dayEvents.slice(0, maxVisible).map((ev) => {
-                      const calId = Object.keys(ev.calendarIds)[0];
-                      return (
-                        <EventCard
-                          key={ev.id}
-                          event={ev}
-                          calendar={calendarMap.get(calId)}
-                          variant="chip"
-                          onClick={(rect) => onSelectEvent(ev, rect)}
-                          draggable
-                        />
-                      );
-                    })}
-                    {dayEvents.length > maxVisible && (
-                      <div className="text-[10px] text-muted-foreground px-1">
-                        {t("events.more", { count: dayEvents.length - maxVisible })}
+                  {isMobile ? (
+                    dayEvents.length > 0 && (
+                      <div className="flex items-center justify-center gap-0.5 flex-wrap">
+                        {dayEvents.slice(0, 3).map((ev) => {
+                          const calId = Object.keys(ev.calendarIds)[0];
+                          const cal = calendarMap.get(calId);
+                          const evColor = ev.color || cal?.color || "#3b82f6";
+                          return (
+                            <span
+                              key={ev.id}
+                              className="w-1.5 h-1.5 rounded-full"
+                              style={{ backgroundColor: evColor }}
+                            />
+                          );
+                        })}
+                        {dayEvents.length > 3 && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/40" />
+                        )}
                       </div>
-                    )}
-                  </div>
+                    )
+                  ) : (
+                    <div className="space-y-0.5">
+                      {dayEvents.slice(0, maxVisible).map((ev) => {
+                        const calId = Object.keys(ev.calendarIds)[0];
+                        return (
+                          <EventCard
+                            key={ev.id}
+                            event={ev}
+                            calendar={calendarMap.get(calId)}
+                            variant="chip"
+                            onClick={(rect) => onSelectEvent(ev, rect)}
+                            draggable
+                          />
+                        );
+                      })}
+                      {dayEvents.length > maxVisible && (
+                        <div className="text-[10px] text-muted-foreground px-1">
+                          {t("events.more", { count: dayEvents.length - maxVisible })}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               );
             })}

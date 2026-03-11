@@ -336,6 +336,7 @@ export default function ContactsPage() {
             onEdit={handleEditGroup}
             onDelete={handleDeleteGroup}
             onRemoveMember={handleRemoveGroupMember}
+            isMobile={isMobile}
             onSelectMember={(id) => {
               setSelectedContact(id);
               setActiveTab("all");
@@ -422,9 +423,18 @@ export default function ContactsPage() {
             contact={selectedContact}
             onEdit={handleEdit}
             onDelete={handleDelete}
+            isMobile={isMobile}
           />
         );
     }
+  };
+
+  const showListPanel = !isMobile || view === "list";
+  const showRightPanel = !isMobile || view !== "list";
+
+  const mobileBackToList = () => {
+    setView("list");
+    clearSelection();
   };
 
   return (
@@ -437,112 +447,134 @@ export default function ContactsPage() {
 
       <div className="flex flex-col flex-1 min-w-0">
         <div className="flex flex-1 min-h-0">
-          <div className="w-80 border-r border-border flex flex-col flex-shrink-0">
-        <div className="p-4 border-b border-border">
-          <div className="flex items-center justify-between">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => router.push("/")}
-              className="justify-start"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              {t("back_to_mail")}
-            </Button>
-            <div className="flex gap-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => setView("import")}
-                title={t("import.title")}
-              >
-                <Upload className="w-4 h-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => {
-                  if (contacts.length > 0) {
-                    exportContacts(contacts.filter(c => c.kind !== "group"));
-                    toast.success(t("export.success", { count: contacts.filter(c => c.kind !== "group").length }));
-                  }
-                }}
-                title={t("export.title")}
-              >
-                <Download className="w-4 h-4" />
-              </Button>
+          {showListPanel && (
+            <div className={cn(
+              "border-r border-border flex flex-col flex-shrink-0",
+              isMobile ? "w-full" : "w-80"
+            )}>
+              <div className={cn("p-4 border-b border-border", isMobile && "px-3 py-3")}>
+                <div className="flex items-center justify-between">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => router.push("/")}
+                    className="justify-start"
+                  >
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    {t("back_to_mail")}
+                  </Button>
+                  <div className="flex gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => setView("import")}
+                      title={t("import.title")}
+                    >
+                      <Upload className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => {
+                        if (contacts.length > 0) {
+                          exportContacts(contacts.filter(c => c.kind !== "group"));
+                          toast.success(t("export.success", { count: contacts.filter(c => c.kind !== "group").length }));
+                        }
+                      }}
+                      title={t("export.title")}
+                    >
+                      <Download className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex border-b border-border">
+                <button
+                  onClick={() => setActiveTab("all")}
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-medium transition-colors touch-manipulation",
+                    activeTab === "all"
+                      ? "border-b-2 border-primary text-primary"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <BookUser className="w-4 h-4" />
+                  {t("tabs.all")}
+                </button>
+                <button
+                  onClick={() => setActiveTab("groups")}
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-medium transition-colors touch-manipulation",
+                    activeTab === "groups"
+                      ? "border-b-2 border-primary text-primary"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <Users className="w-4 h-4" />
+                  {t("tabs.groups")}
+                  {groups.length > 0 && (
+                    <span className="text-xs px-1.5 py-0.5 rounded-full bg-muted">
+                      {groups.length}
+                    </span>
+                  )}
+                </button>
+              </div>
+
+              {activeTab === "all" ? (
+                <ContactList
+                  contacts={contacts}
+                  selectedContactId={selectedContactId}
+                  searchQuery={searchQuery}
+                  onSearchChange={setSearchQuery}
+                  onSelectContact={handleSelectContact}
+                  onCreateNew={handleCreateNew}
+                  onImport={() => setView("import")}
+                  supportsSync={supportsSync}
+                  className="flex-1"
+                  selectedContactIds={selectedContactIds}
+                  onToggleSelection={toggleContactSelection}
+                  onSelectAll={selectAllContacts}
+                  onClearSelection={clearSelection}
+                  onBulkDelete={handleBulkDelete}
+                  onBulkAddToGroup={handleBulkAddToGroup}
+                  onBulkExport={handleBulkExport}
+                />
+              ) : (
+                <ContactGroupList
+                  groups={groups}
+                  selectedGroupId={selectedGroupId}
+                  onSelectGroup={handleSelectGroup}
+                  onCreateGroup={handleCreateGroup}
+                  searchQuery={searchQuery}
+                  className="flex-1"
+                />
+              )}
             </div>
-          </div>
-        </div>
+          )}
 
-        <div className="flex border-b border-border">
-          <button
-            onClick={() => setActiveTab("all")}
-            className={cn(
-              "flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-medium transition-colors",
-              activeTab === "all"
-                ? "border-b-2 border-primary text-primary"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            <BookUser className="w-4 h-4" />
-            {t("tabs.all")}
-          </button>
-          <button
-            onClick={() => setActiveTab("groups")}
-            className={cn(
-              "flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-medium transition-colors",
-              activeTab === "groups"
-                ? "border-b-2 border-primary text-primary"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            <Users className="w-4 h-4" />
-            {t("tabs.groups")}
-            {groups.length > 0 && (
-              <span className="text-xs px-1.5 py-0.5 rounded-full bg-muted">
-                {groups.length}
-              </span>
-            )}
-          </button>
-        </div>
-
-        {activeTab === "all" ? (
-          <ContactList
-            contacts={contacts}
-            selectedContactId={selectedContactId}
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            onSelectContact={handleSelectContact}
-            onCreateNew={handleCreateNew}
-            onImport={() => setView("import")}
-            supportsSync={supportsSync}
-            className="flex-1"
-            selectedContactIds={selectedContactIds}
-            onToggleSelection={toggleContactSelection}
-            onSelectAll={selectAllContacts}
-            onClearSelection={clearSelection}
-            onBulkDelete={handleBulkDelete}
-            onBulkAddToGroup={handleBulkAddToGroup}
-            onBulkExport={handleBulkExport}
-          />
-        ) : (
-          <ContactGroupList
-            groups={groups}
-            selectedGroupId={selectedGroupId}
-            onSelectGroup={handleSelectGroup}
-            onCreateGroup={handleCreateGroup}
-            searchQuery={searchQuery}
-            className="flex-1"
-          />
-        )}
-      </div>
-
-          <div className="flex-1 min-w-0">
-            {renderRightPanel()}
-          </div>
+          {showRightPanel && (
+            <div className="flex-1 min-w-0 flex flex-col">
+              {isMobile && (
+                <div className="px-3 py-2 border-b border-border">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={mobileBackToList}
+                    className="touch-manipulation"
+                  >
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    {t("back_to_mail")}
+                  </Button>
+                </div>
+              )}
+              <div className="flex-1 min-h-0">
+                {renderRightPanel()}
+              </div>
+            </div>
+          )}
         </div>
 
         {isMobile && (

@@ -17,6 +17,7 @@ interface CalendarDayViewProps {
   onSelectEvent: (event: CalendarEvent, anchorRect: DOMRect) => void;
   onCreateAtTime: (date: Date, endDate?: Date) => void;
   timeFormat?: "12h" | "24h";
+  isMobile?: boolean;
 }
 
 const HOUR_HEIGHT = 64;
@@ -29,6 +30,7 @@ export function CalendarDayView({
   onSelectEvent,
   onCreateAtTime,
   timeFormat = "24h",
+  isMobile,
 }: CalendarDayViewProps) {
   const t = useTranslations("calendar");
   const intlFormatter = useFormatter();
@@ -110,9 +112,12 @@ export function CalendarDayView({
 
   return (
     <div className="flex flex-col flex-1 overflow-hidden" role="grid" aria-label={intlFormatter.dateTime(selectedDate, { weekday: "long", month: "long", day: "numeric", year: "numeric" })}>
-      <div className="px-4 py-3 border-b border-border">
-        <h3 className={cn("text-lg font-semibold", today && "text-primary")}>
-          {intlFormatter.dateTime(selectedDate, { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
+      <div className={cn("px-4 py-3 border-b border-border", isMobile && "px-3 py-2")}>
+        <h3 className={cn("font-semibold", isMobile ? "text-base" : "text-lg", today && "text-primary")}>
+          {isMobile
+            ? intlFormatter.dateTime(selectedDate, { weekday: "short", month: "short", day: "numeric" })
+            : intlFormatter.dateTime(selectedDate, { weekday: "long", month: "long", day: "numeric", year: "numeric" })
+          }
         </h3>
       </div>
 
@@ -138,15 +143,15 @@ export function CalendarDayView({
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto">
         <div className="flex relative" style={{ height: 24 * HOUR_HEIGHT }}>
-          <div className="w-16 flex-shrink-0">
+          <div className={cn("flex-shrink-0", isMobile ? "w-10" : "w-16")}>
             {HOURS.map((h) => (
               <div
                 key={h}
-                className="relative text-muted-foreground text-right pr-3"
+                className="relative text-muted-foreground text-right pr-2"
                 style={{ height: HOUR_HEIGHT }}
               >
                 {h > 0 && (
-                  <span className="absolute top-0 right-3 -translate-y-1/2 text-xs leading-none">
+                  <span className={cn("absolute top-0 right-2 -translate-y-1/2 leading-none", isMobile ? "text-[10px]" : "text-xs")}>
                     {formatHour(h)}
                   </span>
                 )}

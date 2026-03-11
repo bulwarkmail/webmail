@@ -15,6 +15,7 @@ interface ContactGroupDetailProps {
   onDelete: () => void;
   onRemoveMember: (memberId: string) => void;
   onSelectMember: (id: string) => void;
+  isMobile?: boolean;
   className?: string;
 }
 
@@ -25,6 +26,7 @@ export function ContactGroupDetail({
   onDelete,
   onRemoveMember,
   onSelectMember,
+  isMobile,
   className,
 }: ContactGroupDetailProps) {
   const t = useTranslations("contacts");
@@ -32,21 +34,21 @@ export function ContactGroupDetail({
 
   return (
     <div className={cn("flex flex-col h-full overflow-y-auto", className)}>
-      <div className="px-6 py-6 border-b border-border">
-        <div className="flex items-start justify-between">
+      <div className={cn("border-b border-border", isMobile ? "px-4 py-4" : "px-6 py-6")}>
+        <div className={cn("flex gap-4", isMobile ? "flex-col" : "items-start justify-between")}>
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
-              <Users className="w-7 h-7 text-primary" />
+            <div className={cn("rounded-full bg-primary/10 flex items-center justify-center", isMobile ? "w-12 h-12" : "w-14 h-14")}>
+              <Users className={cn("text-primary", isMobile ? "w-6 h-6" : "w-7 h-7")} />
             </div>
             <div>
-              <h2 className="text-xl font-semibold">{groupName}</h2>
+              <h2 className={cn("font-semibold", isMobile ? "text-lg" : "text-xl")}>{groupName}</h2>
               <p className="text-sm text-muted-foreground">
                 {t("groups.member_count", { count: members.length })}
               </p>
             </div>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={onEdit}>
+            <Button variant="outline" size="sm" onClick={onEdit} className="touch-manipulation">
               <Pencil className="w-4 h-4 mr-1" />
               {t("form.edit_title")}
             </Button>
@@ -54,7 +56,7 @@ export function ContactGroupDetail({
               variant="outline"
               size="sm"
               onClick={onDelete}
-              className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-950"
+              className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-950 touch-manipulation"
             >
               <Trash2 className="w-4 h-4" />
             </Button>
@@ -95,7 +97,10 @@ export function ContactGroupDetail({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                    className={cn(
+                      "h-8 w-8 transition-opacity",
+                      isMobile ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                    )}
                     onClick={() => onRemoveMember(member.id)}
                   >
                     <UserMinus className="w-4 h-4 text-muted-foreground" />

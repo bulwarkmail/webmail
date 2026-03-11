@@ -2,11 +2,9 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
-import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { X, Paperclip, Send, Save, Check, Loader2, AlertCircle, FileText, BookmarkPlus } from "lucide-react";
 import { cn, formatFileSize } from "@/lib/utils";
 import { debug } from "@/lib/debug";
@@ -20,6 +18,21 @@ import { substitutePlaceholders } from "@/lib/template-utils";
 import { TemplatePicker } from "@/components/templates/template-picker";
 import { TemplateForm } from "@/components/templates/template-form";
 import type { EmailTemplate } from "@/lib/template-types";
+
+export interface ComposerDraftData {
+  to: string;
+  cc: string;
+  bcc: string;
+  subject: string;
+  body: string;
+  showCc: boolean;
+  showBcc: boolean;
+  selectedIdentityId: string | null;
+  subAddressTag: string;
+  mode: 'compose' | 'reply' | 'replyAll' | 'forward';
+  replyTo?: EmailComposerProps['replyTo'];
+  draftId: string | null;
+}
 
 interface EmailComposerProps {
   onSend?: (data: {
@@ -35,8 +48,10 @@ interface EmailComposerProps {
   }) => void | Promise<void>;
   onClose?: () => void;
   onDiscardDraft?: (draftId: string) => void;
+  onSaveState?: (data: ComposerDraftData) => void;
   className?: string;
   initialDraftText?: string;
+  initialData?: ComposerDraftData | null;
   mode?: 'compose' | 'reply' | 'replyAll' | 'forward';
   replyTo?: {
     from?: { email?: string; name?: string }[];
@@ -52,8 +67,10 @@ export function EmailComposer({
   onSend,
   onClose,
   onDiscardDraft,
+  onSaveState,
   className,
   initialDraftText,
+  initialData,
   mode = 'compose',
   replyTo
 }: EmailComposerProps) {
@@ -106,14 +123,14 @@ export function EmailComposer({
     return prefix;
   };
 
-  const [to, setTo] = useState(getInitialTo());
-  const [cc, setCc] = useState(getInitialCc());
-  const [bcc, setBcc] = useState("");
-  const [subject, setSubject] = useState(getInitialSubject());
-  const [body, setBody] = useState(getInitialBody());
-  const [showCc, setShowCc] = useState(!!getInitialCc());
-  const [showBcc, setShowBcc] = useState(false);
-  const [draftId, setDraftId] = useState<string | null>(null);
+  const [to, setTo] = useState(initialData?.to ?? getInitialTo());
+  const [cc, setCc] = useState(initialData?.cc ?? getInitialCc());
+  const [bcc, setBcc] = useState(initialData?.bcc ?? "");
+  const [subject, setSubject] = useState(initialData?.subject ?? getInitialSubject());
+  const [body, setBody] = useState(initialData?.body ?? getInitialBody());
+  const [showCc, setShowCc] = useState(initialData?.showCc ?? !!getInitialCc());
+  const [showBcc, setShowBcc] = useState(initialData?.showBcc ?? false);
+  const [draftId, setDraftId] = useState<string | null>(initialData?.draftId ?? null);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastSavedDataRef = useRef<string>("");
@@ -121,11 +138,11 @@ export function EmailComposer({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [validationErrors, setValidationErrors] = useState<{ to?: boolean; subject?: boolean; body?: boolean }>({});
   const [shakeField, setShakeField] = useState<string | null>(null);
-  const [selectedIdentityId, setSelectedIdentityId] = useState<string | null>(null);
-  const [subAddressTag, setSubAddressTag] = useState<string>('');
+  const [selectedIdentityId, setSelectedIdentityId] = useState<string | null>(initialData?.selectedIdentityId ?? null);
+  const [subAddressTag, setSubAddressTag] = useState<string>(initialData?.subAddressTag ?? '');
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
   const [showSaveAsTemplate, setShowSaveAsTemplate] = useState(false);
-  const { dialogProps: confirmDialogProps, confirm } = useConfirmDialog();
+  const [showCloseDialog, setShowCloseDialog] = useState(false);
 
   const saveTemplateModalRef = useFocusTrap({
     isActive: showSaveAsTemplate,
@@ -133,9 +150,56 @@ export function EmailComposer({
     restoreFocus: true,
   });
 
+  const closeDialogRef = useFocusTrap({
+    isActive: showCloseDialog,
+    onEscape: () => setShowCloseDialog(false),
+    restoreFocus: true,
+  });
+
   const { client, identities, primaryIdentity } = useAuthStore();
   const getAutocomplete = useContactStore((s) => s.getAutocomplete);
   const addTemplate = useTemplateStore((s) => s.addTemplate);
+
+  // Keep a ref to current state for the unmount save
+  const stateRef = useRef({ to, cc, bcc, subject, body, showCc, showBcc, selectedIdentityId, subAddressTag, draftId });
+  stateRef.current = { to, cc, bcc, subject, body, showCc, showBcc, selectedIdentityId, subAddressTag, draftId };
+
+  // Track initial values for dirty detection (captured once on first render)
+  const initialValuesRef = useRef({ to, cc, bcc, subject, body, attachmentCount: 0 });
+  const isDirtyRef = useRef(false);
+  isDirtyRef.current = to !== initialValuesRef.current.to || cc !== initialValuesRef.current.cc ||
+    bcc !== initialValuesRef.current.bcc || subject !== initialValuesRef.current.subject ||
+    body !== initialValuesRef.current.body || attachments.length > initialValuesRef.current.attachmentCount;
+
+  // Ref to latest saveDraft for use in event handlers with stale closures
+  const saveDraftRef = useRef<() => Promise<string | null>>(() => Promise.resolve(null));
+
+  // Auto-save state on unmount (when user navigates away without explicitly closing)
+  useEffect(() => {
+    return () => {
+      if (onSaveState && isDirtyRef.current) {
+        const s = stateRef.current;
+        onSaveState({
+          ...s,
+          mode,
+          replyTo,
+        });
+      }
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Auto-save draft to server on page close (best-effort)
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (isDirtyRef.current) {
+        saveDraftRef.current();
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, []);
+
   const [autocompleteResults, setAutocompleteResults] = useState<Array<{ name: string; email: string }>>([]);
   const [activeAutoField, setActiveAutoField] = useState<'to' | 'cc' | 'bcc' | null>(null);
   const [autoSelectedIndex, setAutoSelectedIndex] = useState(-1);
@@ -389,15 +453,18 @@ export function EmailComposer({
     }
   };
 
-  // Trigger auto-save when content changes
+  // Keep saveDraftRef pointing to latest saveDraft
+  saveDraftRef.current = saveDraft;
+
+  // Trigger auto-save when content changes (only if user modified something)
   useEffect(() => {
     // Clear existing timeout
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
     }
 
-    // Don't auto-save if there's no content
-    if (!to && !subject && !body) {
+    // Don't auto-save if nothing has changed from initial state
+    if (!isDirtyRef.current) {
       return;
     }
 
@@ -498,77 +565,107 @@ export function EmailComposer({
       setDraftId(null);
       setSubAddressTag("");
       setValidationErrors({});
+      // Clear ref so unmount effect doesn't re-save
+      stateRef.current = { to: '', cc: '', bcc: '', subject: '', body: '', showCc: false, showBcc: false, selectedIdentityId: null, subAddressTag: '', draftId: null };
     } catch (err) {
       debug.error('Failed to send email:', err);
       toast.error(t('send_failed'));
     }
   };
 
-  const handleClose = async () => {
-    if (draftId && (to || subject || body)) {
-      const confirmed = await confirm({
-        title: t('discard_draft_title'),
-        message: t('discard_draft_confirm'),
-        confirmText: t('discard'),
-        variant: "destructive",
-      });
+  const cleanClose = () => {
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+    stateRef.current = { to: '', cc: '', bcc: '', subject: '', body: '', showCc: false, showBcc: false, selectedIdentityId: null, subAddressTag: '', draftId: null };
+    onClose?.();
+  };
 
-      if (confirmed) {
-        if (saveTimeoutRef.current) {
-          clearTimeout(saveTimeoutRef.current);
-        }
+  const handleSaveDraftAndClose = async () => {
+    setShowCloseDialog(false);
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+    await saveDraft();
+    stateRef.current = { to: '', cc: '', bcc: '', subject: '', body: '', showCc: false, showBcc: false, selectedIdentityId: null, subAddressTag: '', draftId: null };
+    onClose?.();
+  };
 
-        if (onDiscardDraft) {
-          onDiscardDraft(draftId);
-        }
+  const handleDiscardAndClose = () => {
+    setShowCloseDialog(false);
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+    if (draftId && onDiscardDraft) {
+      onDiscardDraft(draftId);
+    }
+    stateRef.current = { to: '', cc: '', bcc: '', subject: '', body: '', showCc: false, showBcc: false, selectedIdentityId: null, subAddressTag: '', draftId: null };
+    onClose?.();
+  };
 
-        onClose?.();
-      }
+  const handleClose = () => {
+    if (isDirtyRef.current) {
+      setShowCloseDialog(true);
     } else {
-      onClose?.();
+      cleanClose();
     }
   };
 
   return (
-    <div className={cn("flex flex-col h-full bg-background border rounded-lg", className)}>
-      <div className="flex items-center justify-between px-4 py-3 border-b">
-        <div className="flex items-center gap-2">
-          <h3 className="font-semibold">{t('new_message')}</h3>
-          {saveStatus === 'saving' && (
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <Save className="w-3 h-3 animate-pulse" />
-              <span>{t('saving')}</span>
-            </div>
-          )}
-          {saveStatus === 'saved' && (
-            <div className="flex items-center gap-1 text-xs text-green-600">
-              <Check className="w-3 h-3" />
-              <span>{t('draft_saved')}</span>
-            </div>
-          )}
-          {saveStatus === 'error' && (
-            <div className="flex items-center gap-1 text-xs text-red-600">
-              <X className="w-3 h-3" />
-              <span>{t('save_failed')}</span>
-            </div>
-          )}
+    <div className={cn("flex flex-col h-full bg-background", className)}>
+      {/* Header - mobile: clean bar with close/send, desktop: title bar */}
+      <div className="flex items-center justify-between px-4 py-3 border-b bg-background">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="icon" onClick={handleClose} className="h-9 w-9 md:h-8 md:w-8">
+            <X className="w-5 h-5 md:w-4 md:h-4" />
+          </Button>
+          <div className="flex items-center gap-2">
+            <h3 className="font-semibold text-base">{t('new_message')}</h3>
+            {saveStatus === 'saving' && (
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <Save className="w-3 h-3 animate-pulse" />
+                <span className="hidden md:inline">{t('saving')}</span>
+              </div>
+            )}
+            {saveStatus === 'saved' && (
+              <div className="flex items-center gap-1 text-xs text-green-600">
+                <Check className="w-3 h-3" />
+                <span className="hidden md:inline">{t('draft_saved')}</span>
+              </div>
+            )}
+            {saveStatus === 'error' && (
+              <div className="flex items-center gap-1 text-xs text-red-600">
+                <X className="w-3 h-3" />
+                <span className="hidden md:inline">{t('save_failed')}</span>
+              </div>
+            )}
+          </div>
         </div>
-        <Button variant="ghost" size="icon" onClick={handleClose}>
-          <X className="w-4 h-4" />
+        {/* Mobile: send button in header */}
+        <Button
+          onClick={handleSend}
+          disabled={!canSend}
+          title={getSendTooltip()}
+          size="sm"
+          className="md:hidden h-9 px-4"
+        >
+          <Send className="w-4 h-4 mr-1.5" />
+          {t('send')}
         </Button>
       </div>
 
-      <div className="flex-1 flex flex-col">
-        <div className="space-y-2 px-4 py-3 border-b">
-          {/* From field - show dropdown if multiple identities, otherwise display email */}
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground w-16">{t('from')}:</span>
-            <div className="flex-1 flex items-center gap-1">
+      <div className="flex-1 flex flex-col min-h-0">
+        {/* Fields section */}
+        <div className="space-y-0 border-b">
+          {/* From field */}
+          <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/50">
+            <span className="text-sm text-muted-foreground w-12 md:w-16 shrink-0">{t('from')}:</span>
+            <div className="flex-1 flex items-center gap-1 min-w-0">
               {identities.length > 1 ? (
                 <select
                   value={selectedIdentityId || primaryIdentity?.id || ''}
                   onChange={(e) => setSelectedIdentityId(e.target.value)}
-                  className="flex-1 bg-transparent text-sm text-foreground outline-none cursor-pointer hover:text-muted-foreground transition-colors"
+                  className="flex-1 bg-transparent text-sm text-foreground outline-none cursor-pointer hover:text-muted-foreground transition-colors min-w-0 truncate"
                 >
                   {identities.map((identity) => (
                     <option key={identity.id} value={identity.id}>
@@ -577,7 +674,7 @@ export function EmailComposer({
                   ))}
                 </select>
               ) : (
-                <span className="text-sm text-foreground flex-1">
+                <span className="text-sm text-foreground flex-1 truncate">
                   {subAddressTag ? (
                     <span className="font-mono">
                       {generateSubAddress(primaryIdentity?.email || '', subAddressTag)}
@@ -615,9 +712,10 @@ export function EmailComposer({
             </div>
           </div>
 
-          <div className={cn("flex items-center gap-2 relative", shakeField === 'to' && "animate-shake")}>
-            <span className="text-sm text-muted-foreground w-16">{t('to')}:</span>
-            <div className="flex-1 relative">
+          {/* To field */}
+          <div className={cn("flex items-center gap-2 px-4 py-2.5 border-b border-border/50 relative", shakeField === 'to' && "animate-shake")}>
+            <span className="text-sm text-muted-foreground w-12 md:w-16 shrink-0">{t('to')}:</span>
+            <div className="flex-1 relative min-w-0">
               <Input
                 ref={toInputRef}
                 type="email"
@@ -631,7 +729,7 @@ export function EmailComposer({
                 onKeyDown={(e) => handleAutoKeyDown(e, 'to')}
                 onBlur={(e) => handleAutoBlur(e, 'to')}
                 className={cn(
-                  "border-0 focus-visible:ring-0",
+                  "border-0 focus-visible:ring-0 h-8 px-0 text-sm",
                   validationErrors.to && "ring-2 ring-red-500 dark:ring-red-400"
                 )}
                 role="combobox"
@@ -642,18 +740,18 @@ export function EmailComposer({
                 aria-invalid={validationErrors.to || undefined}
               />
               {validationErrors.to && (
-                <p className="text-xs text-red-600 dark:text-red-400 mt-0.5 px-1">{t('validation.recipient_required')}</p>
+                <p className="text-xs text-red-600 dark:text-red-400 mt-0.5">{t('validation.recipient_required')}</p>
               )}
               {activeAutoField === 'to' && autocompleteResults.length > 0 && (
                 <AutocompleteDropdown ref={toDropdownRef} id="autocomplete-to" results={autocompleteResults} selectedIndex={autoSelectedIndex} onSelect={(email) => insertAutocomplete(email, 'to')} />
               )}
             </div>
-            <div className="flex gap-1">
+            <div className="flex gap-0.5 shrink-0">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowCc(!showCc)}
-                className="text-xs"
+                className="text-xs h-7 px-2"
               >
                 Cc
               </Button>
@@ -661,17 +759,18 @@ export function EmailComposer({
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowBcc(!showBcc)}
-                className="text-xs"
+                className="text-xs h-7 px-2"
               >
                 Bcc
               </Button>
             </div>
           </div>
 
+          {/* Cc field */}
           {showCc && (
-            <div className="flex items-center gap-2 relative">
-              <span className="text-sm text-muted-foreground w-16">{t('cc_label')}</span>
-              <div className="flex-1 relative">
+            <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/50 relative">
+              <span className="text-sm text-muted-foreground w-12 md:w-16 shrink-0">{t('cc_label')}</span>
+              <div className="flex-1 relative min-w-0">
                 <Input
                   ref={ccInputRef}
                   type="email"
@@ -683,7 +782,7 @@ export function EmailComposer({
                   }}
                   onKeyDown={(e) => handleAutoKeyDown(e, 'cc')}
                   onBlur={(e) => handleAutoBlur(e, 'cc')}
-                  className="border-0 focus-visible:ring-0"
+                  className="border-0 focus-visible:ring-0 h-8 px-0 text-sm"
                   role="combobox"
                   aria-expanded={activeAutoField === 'cc' && autocompleteResults.length > 0}
                   aria-autocomplete="list"
@@ -697,10 +796,11 @@ export function EmailComposer({
             </div>
           )}
 
+          {/* Bcc field */}
           {showBcc && (
-            <div className="flex items-center gap-2 relative">
-              <span className="text-sm text-muted-foreground w-16">{t('bcc_label')}</span>
-              <div className="flex-1 relative">
+            <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/50 relative">
+              <span className="text-sm text-muted-foreground w-12 md:w-16 shrink-0">{t('bcc_label')}</span>
+              <div className="flex-1 relative min-w-0">
                 <Input
                   ref={bccInputRef}
                   type="email"
@@ -712,7 +812,7 @@ export function EmailComposer({
                   }}
                   onKeyDown={(e) => handleAutoKeyDown(e, 'bcc')}
                   onBlur={(e) => handleAutoBlur(e, 'bcc')}
-                  className="border-0 focus-visible:ring-0"
+                  className="border-0 focus-visible:ring-0 h-8 px-0 text-sm"
                   role="combobox"
                   aria-expanded={activeAutoField === 'bcc' && autocompleteResults.length > 0}
                   aria-autocomplete="list"
@@ -726,8 +826,9 @@ export function EmailComposer({
             </div>
           )}
 
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground w-16">{t('subject_label')}</span>
+          {/* Subject field */}
+          <div className="flex items-center gap-2 px-4 py-2.5">
+            <span className="text-sm text-muted-foreground w-12 md:w-16 shrink-0">{t('subject_label')}</span>
             <Input
               type="text"
               placeholder={t('subject_placeholder')}
@@ -737,7 +838,7 @@ export function EmailComposer({
                 if (validationErrors.subject) setValidationErrors(prev => ({ ...prev, subject: false }));
               }}
               className={cn(
-                "flex-1 border-0 focus-visible:ring-0",
+                "flex-1 border-0 focus-visible:ring-0 h-8 px-0 text-sm",
                 validationErrors.subject && "ring-2 ring-red-500 dark:ring-red-400"
               )}
               aria-invalid={validationErrors.subject || undefined}
@@ -745,6 +846,7 @@ export function EmailComposer({
           </div>
         </div>
 
+        {/* Body */}
         <div className="flex-1 px-4 py-3 min-h-0">
           <textarea
             className={cn(
@@ -761,6 +863,7 @@ export function EmailComposer({
           />
         </div>
 
+        {/* Attachments */}
         {attachments.length > 0 && (
           <div className="px-4 py-2 border-t">
             <div className="flex flex-wrap gap-2">
@@ -786,7 +889,7 @@ export function EmailComposer({
                     ) : (
                       <Paperclip className="w-3 h-3 flex-shrink-0" />
                     )}
-                    <span className="max-w-[200px] truncate">{att.file.name}</span>
+                    <span className="max-w-[150px] md:max-w-[200px] truncate">{att.file.name}</span>
                     <span className="text-xs text-muted-foreground whitespace-nowrap">
                       ({formatFileSize(att.file.size)})
                     </span>
@@ -804,35 +907,10 @@ export function EmailComposer({
           </div>
         )}
 
-        <div className="flex items-center justify-between px-4 py-3 border-t">
-          {/* Left side - Discard button */}
-          <button
-            type="button"
-            onClick={handleClose}
-            className="text-sm text-muted-foreground hover:text-red-500 transition-colors"
-          >
-            {t('discard')}
-          </button>
-
-          {/* Right side - Template, Save as Template, Attach and Send */}
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowTemplatePicker(true)}
-              title={t('use_template')}
-            >
-              <FileText className="w-4 h-4 mr-2" />
-              {t('use_template')}
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowSaveAsTemplate(true)}
-              title={t('save_as_template')}
-            >
-              <BookmarkPlus className="w-4 h-4" />
-            </Button>
+        {/* Bottom toolbar */}
+        <div className="flex items-center justify-between px-4 py-2.5 border-t bg-background">
+          {/* Left side actions */}
+          <div className="flex items-center gap-1">
             <input
               ref={fileInputRef}
               type="file"
@@ -843,16 +921,47 @@ export function EmailComposer({
             />
             <Button
               variant="ghost"
-              size="sm"
+              size="icon"
               onClick={() => fileInputRef.current?.click()}
+              className="h-9 w-9"
+              title={t('attach')}
             >
-              <Paperclip className="w-4 h-4 mr-2" />
-              {t('attach')}
+              <Paperclip className="w-4 h-4" />
             </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowTemplatePicker(true)}
+              title={t('use_template')}
+              className="h-9 w-9"
+            >
+              <FileText className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowSaveAsTemplate(true)}
+              title={t('save_as_template')}
+              className="h-9 w-9"
+            >
+              <BookmarkPlus className="w-4 h-4" />
+            </Button>
+          </div>
+
+          {/* Right side - Discard + Send (desktop) */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleClose}
+              className="text-sm text-muted-foreground hover:text-red-500 transition-colors px-2 py-1"
+            >
+              {t('discard')}
+            </button>
             <Button
               onClick={handleSend}
               disabled={!canSend}
               title={getSendTooltip()}
+              className="hidden md:inline-flex"
             >
               <Send className="w-4 h-4 mr-2" />
               {t('send')}
@@ -896,7 +1005,37 @@ export function EmailComposer({
         </div>
       )}
 
-      <ConfirmDialog {...confirmDialogProps} />
+      {showCloseDialog && (
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-[1px] flex items-center justify-center z-[60] p-4 animate-in fade-in duration-150"
+          onClick={() => setShowCloseDialog(false)}
+        >
+          <div
+            ref={closeDialogRef}
+            role="alertdialog"
+            aria-modal="true"
+            onClick={(e) => e.stopPropagation()}
+            className="bg-background border border-border rounded-lg shadow-xl w-full max-w-md animate-in zoom-in-95 duration-200"
+          >
+            <div className="p-6">
+              <h2 className="text-lg font-semibold text-foreground">{t('close_draft_title')}</h2>
+              <p className="mt-2 text-sm text-muted-foreground">{t('close_draft_message')}</p>
+            </div>
+            <div className="flex items-center justify-end gap-3 px-6 pb-6">
+              <Button variant="outline" onClick={() => setShowCloseDialog(false)}>
+                {t('cancel')}
+              </Button>
+              <Button variant="destructive" onClick={handleDiscardAndClose}>
+                {t('discard')}
+              </Button>
+              <Button onClick={handleSaveDraftAndClose}>
+                <Save className="w-4 h-4 mr-2" />
+                {t('save_draft')}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo, type TouchEvent as ReactTouchEvent } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
+import { Plus } from "lucide-react";
 import {
   startOfMonth, endOfMonth, startOfWeek, endOfWeek,
   addMonths, subMonths, addWeeks, subWeeks, addDays, subDays,
@@ -14,6 +15,7 @@ import { useSettingsStore } from "@/stores/settings-store";
 import { useIdentityStore } from "@/stores/identity-store";
 import { toast } from "@/stores/toast-store";
 import { useIsMobile } from "@/hooks/use-media-query";
+import { Button } from "@/components/ui/button";
 import { CalendarToolbar } from "@/components/calendar/calendar-toolbar";
 import { CalendarMonthView } from "@/components/calendar/calendar-month-view";
 import { CalendarWeekView } from "@/components/calendar/calendar-week-view";
@@ -67,6 +69,9 @@ export default function CalendarPage() {
   const [detailEvent, setDetailEvent] = useState<CalendarEvent | null>(null);
   const [detailAnchorRect, setDetailAnchorRect] = useState<DOMRect | null>(null);
   const hasFetched = useRef(false);
+
+  // Swipe navigation ref (handlers defined after navigatePrev/navigateNext)
+  const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -155,10 +160,35 @@ export default function CalendarPage() {
     setMiniMonth(new Date());
   }, [setSelectedDate]);
 
+  // Swipe navigation handlers for mobile
+  const handleTouchStart = useCallback((e: ReactTouchEvent) => {
+    const touch = e.touches[0];
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY, time: Date.now() };
+  }, []);
+
+  const handleTouchEnd = useCallback((e: ReactTouchEvent) => {
+    if (!touchStartRef.current || !isMobile) return;
+    const touch = e.changedTouches[0];
+    const dx = touch.clientX - touchStartRef.current.x;
+    const dy = touch.clientY - touchStartRef.current.y;
+    const elapsed = Date.now() - touchStartRef.current.time;
+    touchStartRef.current = null;
+
+    // Only trigger swipe if horizontal movement is dominant and fast enough
+    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5 && elapsed < 400) {
+      if (dx > 0) navigatePrev();
+      else navigateNext();
+    }
+  }, [isMobile, navigatePrev, navigateNext]);
+
   const handleSelectDate = useCallback((date: Date) => {
     setSelectedDate(date);
     setMiniMonth(date);
-  }, [setSelectedDate]);
+    // On mobile month view, tapping a date switches to day view
+    if (isMobile && viewMode === "month") {
+      setViewMode("day");
+    }
+  }, [setSelectedDate, isMobile, viewMode, setViewMode]);
 
   const handleMiniMonthChange = useCallback((date: Date) => {
     setMiniMonth(date);
@@ -549,6 +579,7 @@ export default function CalendarPage() {
               onSelectDate={handleSelectDate}
               onSelectEvent={handleSelectEvent}
               firstDayOfWeek={firstDayOfWeek}
+              isMobile={isMobile}
             />
           );
         case "week":
@@ -562,6 +593,7 @@ export default function CalendarPage() {
               onCreateAtTime={openCreateModal}
               firstDayOfWeek={firstDayOfWeek}
               timeFormat={timeFormat}
+              isMobile={isMobile}
             />
           );
         case "day":
@@ -573,6 +605,7 @@ export default function CalendarPage() {
               onSelectEvent={handleSelectEvent}
               onCreateAtTime={openCreateModal}
               timeFormat={timeFormat}
+              isMobile={isMobile}
             />
           );
         case "agenda":
@@ -620,9 +653,16 @@ export default function CalendarPage() {
           onCreateEvent={() => openCreateModal()}
           onImport={() => setShowImportModal(true)}
           isMobile={isMobile}
+          calendars={calendars}
+          selectedCalendarIds={selectedCalendarIds}
+          onToggleVisibility={toggleCalendarVisibility}
         />
 
-        <div className="flex flex-1 overflow-hidden">
+        <div
+          className="flex flex-1 overflow-hidden relative"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
           {!isMobile && (
             <div className="w-60 border-r border-border p-3 overflow-y-auto flex-shrink-0">
               <MiniCalendar
@@ -642,6 +682,17 @@ export default function CalendarPage() {
           )}
 
           {renderView()}
+
+          {/* Floating Create Event Button (mobile) */}
+          {isMobile && (
+            <Button
+              onClick={() => openCreateModal()}
+              className="absolute bottom-4 right-4 z-40 h-14 w-14 rounded-full shadow-lg"
+              aria-label={t("events.create")}
+            >
+              <Plus className="h-6 w-6" />
+            </Button>
+          )}
         </div>
 
         {/* Mobile Bottom Navigation */}
@@ -663,6 +714,7 @@ export default function CalendarPage() {
           onRsvp={handleRsvpFromDetail}
           currentUserEmails={currentUserEmails}
           timeFormat={timeFormat}
+          isMobile={isMobile}
         />
       )}
 

@@ -9,6 +9,7 @@ import {
   Pencil, Trash2, Copy, Send, Check,
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
+import { cn } from "@/lib/utils";
 import type { CalendarEvent, Calendar, CalendarParticipant } from "@/lib/jmap/types";
 import { parseDuration, getEventColor } from "./event-card";
 import {
@@ -30,6 +31,7 @@ interface EventDetailPopoverProps {
   onRsvp?: (status: CalendarParticipant["participationStatus"]) => void;
   currentUserEmails?: string[];
   timeFormat?: "12h" | "24h";
+  isMobile?: boolean;
 }
 
 const POPOVER_WIDTH = 360;
@@ -119,6 +121,7 @@ export function EventDetailPopover({
   onRsvp,
   currentUserEmails = [],
   timeFormat = "24h",
+  isMobile,
 }: EventDetailPopoverProps) {
   const t = useTranslations("calendar");
   const popoverRef = useRef<HTMLDivElement>(null);
@@ -249,8 +252,16 @@ export function EventDetailPopover({
       ref={popoverRef}
       role="dialog"
       aria-label={event.title || t("events.no_title")}
-      className="fixed z-[60] bg-background border border-border rounded-lg shadow-xl overflow-hidden transition-[opacity,transform] duration-150 ease-out"
-      style={{
+      className={cn(
+        "fixed z-[60] bg-background border border-border shadow-xl overflow-hidden transition-[opacity,transform] duration-150 ease-out",
+        isMobile
+          ? "inset-0 rounded-none flex flex-col"
+          : "rounded-lg"
+      )}
+      style={isMobile ? {
+        opacity: 1,
+        transform: "none",
+      } : {
         width: POPOVER_WIDTH,
         maxHeight: MAX_HEIGHT,
         top: position?.top ?? -9999,
@@ -301,7 +312,10 @@ export function EventDetailPopover({
       </div>
 
       {/* Content */}
-      <div className="px-4 py-2 space-y-2.5 overflow-y-auto" style={{ maxHeight: MAX_HEIGHT - 140 }}>
+      <div className={cn(
+        "px-4 py-2 space-y-2.5 overflow-y-auto",
+        isMobile ? "flex-1" : ""
+      )} style={isMobile ? undefined : { maxHeight: MAX_HEIGHT - 140 }}>
         {/* Date & Time */}
         <div className="flex items-start gap-2.5">
           <Clock className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />

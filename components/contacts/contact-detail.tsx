@@ -13,10 +13,11 @@ interface ContactDetailProps {
   contact: ContactCard | null;
   onEdit: () => void;
   onDelete: () => void;
+  isMobile?: boolean;
   className?: string;
 }
 
-export function ContactDetail({ contact, onEdit, onDelete, className }: ContactDetailProps) {
+export function ContactDetail({ contact, onEdit, onDelete, isMobile, className }: ContactDetailProps) {
   const t = useTranslations("contacts");
 
   if (!contact) {
@@ -38,23 +39,23 @@ export function ContactDetail({ contact, onEdit, onDelete, className }: ContactD
 
   return (
     <div className={cn("flex flex-col h-full overflow-y-auto", className)}>
-      <div className="px-6 py-6 border-b border-border">
-        <div className="flex items-start justify-between">
+      <div className={cn("border-b border-border", isMobile ? "px-4 py-4" : "px-6 py-6")}>
+        <div className={cn("flex gap-4", isMobile ? "flex-col" : "items-start justify-between")}>
           <div className="flex items-center gap-4">
-            <Avatar name={name} email={email} size="lg" />
-            <div>
-              <h2 className="text-xl font-semibold">{name || "—"}</h2>
+            <Avatar name={name} email={email} size={isMobile ? "md" : "lg"} />
+            <div className="min-w-0 flex-1">
+              <h2 className={cn("font-semibold truncate", isMobile ? "text-lg" : "text-xl")}>{name || "—"}</h2>
               {orgs.length > 0 && orgs[0].name && (
-                <p className="text-sm text-muted-foreground">{orgs[0].name}</p>
+                <p className="text-sm text-muted-foreground truncate">{orgs[0].name}</p>
               )}
             </div>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={onEdit}>
+            <Button variant="outline" size="sm" onClick={onEdit} className="touch-manipulation">
               <Pencil className="w-4 h-4 mr-1" />
               {t("form.edit_title")}
             </Button>
-            <Button variant="outline" size="sm" onClick={onDelete} className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-950">
+            <Button variant="outline" size="sm" onClick={onDelete} className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-950 touch-manipulation">
               <Trash2 className="w-4 h-4" />
             </Button>
           </div>
@@ -72,10 +73,13 @@ export function ContactDetail({ contact, onEdit, onDelete, className }: ContactD
                 {e.contexts && (
                   <ContextBadge contexts={e.contexts} />
                 )}
-                <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className={cn(
+                  "flex items-center gap-0.5 transition-opacity",
+                  isMobile ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                )}>
                   <a
                     href={`mailto:${e.address}`}
-                    className="p-1 rounded hover:bg-muted transition-colors"
+                    className="p-1.5 rounded hover:bg-muted transition-colors touch-manipulation"
                     title={t("detail.compose_email")}
                     aria-label={t("detail.compose_email")}
                   >
@@ -90,7 +94,7 @@ export function ContactDetail({ contact, onEdit, onDelete, className }: ContactD
                         toast.error(t("detail.copy_failed"));
                       }
                     }}
-                    className="p-1 rounded hover:bg-muted transition-colors"
+                    className="p-1.5 rounded hover:bg-muted transition-colors touch-manipulation"
                     title={t("detail.copy_email")}
                     aria-label={t("detail.copy_email")}
                   >
@@ -121,7 +125,10 @@ export function ContactDetail({ contact, onEdit, onDelete, className }: ContactD
                       toast.error(t("detail.copy_failed"));
                     }
                   }}
-                  className="p-1 rounded hover:bg-muted transition-colors opacity-0 group-hover:opacity-100"
+                  className={cn(
+                    "p-1.5 rounded hover:bg-muted transition-colors touch-manipulation",
+                    isMobile ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                  )}
                   title={t("detail.copy_phone")}
                   aria-label={t("detail.copy_phone")}
                 >
