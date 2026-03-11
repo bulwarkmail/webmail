@@ -446,7 +446,13 @@
       "advanced": "Geavanceerd",
       "calendar": "Agenda",
       "filters": "Filters",
-      "templates": "Sjablonen"
+      "templates": "Sjablonen",
+      "folders": "Mappen"
+    },
+    "tab_groups": {
+      "general": "Algemeen",
+      "account": "Account",
+      "organization": "Organisatie"
     },
     "appearance": {
       "title": "Uiterlijk",

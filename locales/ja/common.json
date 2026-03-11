@@ -446,7 +446,13 @@
       "advanced": "詳細設定",
       "calendar": "カレンダー",
       "filters": "フィルター",
-      "templates": "テンプレート"
+      "templates": "テンプレート",
+      "folders": "フォルダー"
+    },
+    "tab_groups": {
+      "general": "一般",
+      "account": "アカウント",
+      "organization": "整理"
     },
     "appearance": {
       "title": "外観",

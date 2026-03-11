@@ -446,7 +446,13 @@
       "advanced": "Avançado",
       "calendar": "Calendário",
       "filters": "Filtros",
-      "templates": "Modelos"
+      "templates": "Modelos",
+      "folders": "Pastas"
+    },
+    "tab_groups": {
+      "general": "Geral",
+      "account": "Conta",
+      "organization": "Organização"
     },
     "appearance": {
       "title": "Aparência",

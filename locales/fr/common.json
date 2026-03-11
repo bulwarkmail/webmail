@@ -446,7 +446,13 @@
       "advanced": "Avancé",
       "calendar": "Calendrier",
       "filters": "Filtres",
-      "templates": "Modèles"
+      "templates": "Modèles",
+      "folders": "Dossiers"
+    },
+    "tab_groups": {
+      "general": "Général",
+      "account": "Compte",
+      "organization": "Organisation"
     },
     "appearance": {
       "title": "Apparence",

@@ -457,6 +457,11 @@
       "templates": "Templates",
       "folders": "Folders"
     },
+    "tab_groups": {
+      "general": "General",
+      "account": "Account",
+      "organization": "Organization"
+    },
     "appearance": {
       "title": "Appearance",
       "description": "Customize the look and feel of your webmail",

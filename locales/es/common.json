@@ -446,7 +446,13 @@
       "advanced": "Avanzado",
       "calendar": "Calendario",
       "filters": "Filtros",
-      "templates": "Plantillas"
+      "templates": "Plantillas",
+      "folders": "Carpetas"
+    },
+    "tab_groups": {
+      "general": "General",
+      "account": "Cuenta",
+      "organization": "Organización"
     },
     "appearance": {
       "title": "Apariencia",
