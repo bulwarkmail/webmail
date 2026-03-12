@@ -44,7 +44,13 @@ DOT="${DIM}·${RESET}"
 BULLET="${BLUE}●${RESET}"
 
 # ── State ───────────────────────────────────────────────────────────────────
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+set +u
+if [[ -n "${BASH_SOURCE[0]:-}" ]]; then
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+else
+    SCRIPT_DIR="$(pwd)"
+fi
+set -u
 ENV_FILE="${SCRIPT_DIR}/.env.local"
 
 # Config values (defaults)
