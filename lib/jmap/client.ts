@@ -1429,6 +1429,16 @@ export class JMAPClient {
       .replace('{type}', encodeURIComponent(type || 'application/octet-stream'));
   }
 
+  async fetchBlobAsObjectUrl(blobId: string, name?: string, type?: string): Promise<string> {
+    const url = this.getBlobDownloadUrl(blobId, name, type);
+    const response = await this.authenticatedFetch(url, {});
+    if (!response.ok) {
+      throw new Error(`Failed to fetch blob: ${response.status}`);
+    }
+    const blob = await response.blob();
+    return URL.createObjectURL(blob);
+  }
+
   getCapabilities(): Record<string, unknown> {
     return this.capabilities;
   }

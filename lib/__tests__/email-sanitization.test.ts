@@ -1,9 +1,11 @@
 import { describe, it, expect } from 'vitest';
+import DOMPurify from 'dompurify';
 import {
   sanitizeEmailHtml,
   sanitizeSignatureHtml,
   parseHtmlSafely,
   hasRichFormatting,
+  EMAIL_SANITIZE_CONFIG,
 } from '../email-sanitization';
 
 describe('email-sanitization', () => {
@@ -190,6 +192,64 @@ describe('email-sanitization', () => {
     it('should handle empty HTML', () => {
       expect(hasRichFormatting('')).toBe(false);
       expect(hasRichFormatting('   ')).toBe(false);
+    });
+  });
+
+  describe('inline CID image handling', () => {
+    it('should preserve blob: URLs for CID-replaced images (not treated as external)', () => {
+      // Simulate what the component does: replace cid: with blob: object URLs
+      const html = '<p>See image:</p><img src="blob:http://localhost/abc-123">';
+      const clean = sanitizeEmailHtml(html);
+      expect(clean).toContain('blob:');
+    });
+
+    it('should preserve data: URLs for CID placeholder images', () => {
+      const html = '<img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">';
+      const clean = sanitizeEmailHtml(html);
+      expect(clean).toContain('data:image/gif');
+    });
+
+    it('should not leave raw JMAP download URLs after CID replacement pattern', () => {
+      // This tests the regex pattern used for CID replacement
+      const htmlWithCid = '<img src="cid:image001@example.com">';
+      // Simulate the component's replacement: all cid: refs should become blob: or data: URLs
+      const replaced = htmlWithCid.replace(
+        /\bcid:([^"'\s)]+)/gi,
+        () => 'blob:http://localhost/safe-object-url'
+      );
+      expect(replaced).not.toContain('cid:');
+      expect(replaced).toContain('blob:');
+    });
+
+    it('should block external http(s) images but not blob/data URLs via DOMPurify hook', () => {
+      const html = `
+        <img src="blob:http://localhost/inline-ok">
+        <img src="https://tracker.evil.com/pixel.png">
+        <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">
+      `;
+
+      const config = { ...EMAIL_SANITIZE_CONFIG };
+
+      DOMPurify.addHook('afterSanitizeAttributes', (node) => {
+        if (node.tagName === 'IMG') {
+          const src = node.getAttribute('src');
+          if (src && (src.startsWith('http://') || src.startsWith('https://') || src.startsWith('//'))) {
+            node.setAttribute('data-blocked-src', src);
+            node.removeAttribute('src');
+            node.setAttribute('alt', '[Image blocked]');
+          }
+        }
+      });
+
+      const clean = DOMPurify.sanitize(html, config);
+      DOMPurify.removeAllHooks();
+
+      // External https image should be blocked
+      expect(clean).toContain('data-blocked-src');
+      expect(clean).toContain('tracker.evil.com');
+      // blob: and data: URLs should NOT be blocked (they don't start with http/https)
+      expect(clean).toContain('blob:');
+      expect(clean).toContain('data:image/gif');
     });
   });
 });

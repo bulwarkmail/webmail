@@ -11,6 +11,9 @@ export const EMAIL_SANITIZE_CONFIG = {
   ADD_ATTR: ['target', 'rel', 'style', 'class', 'width', 'height', 'align', 'valign', 'bgcolor', 'color'],
   ALLOW_DATA_ATTR: false,
   FORCE_BODY: true,
+  // Allow blob: URIs so authenticated inline images (CID) are not stripped
+  // eslint-disable-next-line no-useless-escape
+  ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|sms|cid|xmpp|blob|data):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
   FORBID_TAGS: [
     'script', 'iframe', 'object', 'embed', 'form',
     'input', 'button', 'meta', 'link', 'base',

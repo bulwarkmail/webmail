@@ -225,6 +225,7 @@ function EmailCard({
   const isUnread = !email.keywords?.$seen;
   const isStarred = email.keywords?.$flagged;
   const [hasBlockedContent, setHasBlockedContent] = useState(false);
+  const [cidBlobUrls, setCidBlobUrls] = useState<Record<string, string>>({});
   const { client } = useAuthStore();
 
   // Mark as read when email is expanded
@@ -255,6 +256,51 @@ function EmailCard({
     return () => clearTimeout(timeout);
   }, [isExpanded, email.id, email.keywords?.$seen, onMarkAsRead]);
 
+  // Fetch inline CID images with authentication to prevent browser auth dialogs
+  useEffect(() => {
+    if (!client || !email?.attachments) {
+      setCidBlobUrls({});
+      return;
+    }
+
+    const cidAttachments = email.attachments.filter(att => att.cid && att.blobId);
+    if (cidAttachments.length === 0) {
+      setCidBlobUrls({});
+      return;
+    }
+
+    let cancelled = false;
+    const objectUrls: string[] = [];
+
+    async function fetchCidBlobs() {
+      const urls: Record<string, string> = {};
+      await Promise.all(cidAttachments.map(async (att) => {
+        const cidValue = att.cid!.replace(/^<|>$/g, '');
+        try {
+          const objectUrl = await client!.fetchBlobAsObjectUrl(att.blobId, att.name || 'inline', att.type);
+          if (!cancelled) {
+            urls[cidValue] = objectUrl;
+            objectUrls.push(objectUrl);
+          } else {
+            URL.revokeObjectURL(objectUrl);
+          }
+        } catch {
+          // Failed to fetch inline image, will show placeholder
+        }
+      }));
+      if (!cancelled) {
+        setCidBlobUrls(urls);
+      }
+    }
+
+    fetchCidBlobs();
+
+    return () => {
+      cancelled = true;
+      objectUrls.forEach(url => URL.revokeObjectURL(url));
+    };
+  }, [client, email?.id]);
+
   // Sanitize and prepare email HTML content
   const emailContent = useMemo(() => {
     if (!email) return { html: "", isHtml: false };
@@ -269,28 +315,15 @@ function EmailCard({
       }
 
       if (useHtmlVersion && htmlContent) {
-        // Replace cid: references with actual blob download URLs for inline images
-        const cidReplacedUrls = new Set<string>();
-        if (client && email.attachments) {
-          const cidMap = new Map<string, string>();
-          for (const att of email.attachments) {
-            if (att.cid && att.blobId) {
-              const cidValue = att.cid.replace(/^<|>$/g, '');
-              try {
-                const url = client.getBlobDownloadUrl(att.blobId, att.name || 'inline', att.type);
-                cidMap.set(cidValue, url);
-                cidReplacedUrls.add(url);
-              } catch {
-                // downloadUrl not available yet, skip
-              }
+        // Replace cid: references with authenticated blob URLs (fetched via useEffect)
+        // This prevents browser auth dialogs that occur when loading raw JMAP download URLs
+        if (email.attachments) {
+          htmlContent = htmlContent.replace(
+            /\bcid:([^"'\s)]+)/gi,
+            (_match, cidRef) => {
+              return cidBlobUrls[cidRef] || 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
             }
-          }
-          if (cidMap.size > 0) {
-            htmlContent = htmlContent.replace(
-              /\bcid:([^"'\s)]+)/gi,
-              (match, cidRef) => cidMap.get(cidRef) || match
-            );
-          }
+          );
         }
 
         let blockedExternalContent = false;
@@ -304,7 +337,7 @@ function EmailCard({
           if (!allowExternal) {
             if (node.tagName === 'IMG') {
               const src = node.getAttribute('src');
-              if (src && !cidReplacedUrls.has(src) && (src.startsWith('http://') || src.startsWith('https://') || src.startsWith('//'))) {
+              if (src && (src.startsWith('http://') || src.startsWith('https://') || src.startsWith('//'))) {
                 node.setAttribute('data-blocked-src', src);
                 node.removeAttribute('src');
                 node.setAttribute('alt', '[Image blocked]');
@@ -378,7 +411,7 @@ function EmailCard({
     }
 
     return { html: "", isHtml: false };
-  }, [email, allowExternal, resolvedTheme, client]);
+  }, [email, allowExternal, resolvedTheme, cidBlobUrls]);
 
   return (
     <div className={cn(

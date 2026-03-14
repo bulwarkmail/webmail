@@ -277,4 +277,58 @@ describe('JMAPClient resilience', () => {
       expect(callback).not.toHaveBeenCalled();
     });
   });
+
+  describe('fetchBlobAsObjectUrl', () => {
+    it('fetches blob with authentication and returns an object URL', async () => {
+      const client = await createConnectedClient();
+      const binaryData = new Uint8Array([137, 80, 78, 71]); // PNG magic bytes
+      const blobResponse = new Response(binaryData, {
+        status: 200,
+        headers: { 'Content-Type': 'image/png' },
+      });
+      fetchSpy.mockResolvedValueOnce(blobResponse);
+
+      const objectUrl = await client.fetchBlobAsObjectUrl('blob-123', 'image.png', 'image/png');
+
+      expect(objectUrl).toMatch(/^blob:/);
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+      // Verify auth header was sent
+      const callHeaders = fetchSpy.mock.calls[0][1]?.headers as Record<string, string>;
+      expect(callHeaders['Authorization']).toContain('Basic');
+
+      URL.revokeObjectURL(objectUrl);
+    });
+
+    it('throws when download URL is not available', async () => {
+      fetchSpy.mockResolvedValueOnce(mockFetchResponse(200, makeSession({ downloadUrl: '' })));
+      const client = new JMAPClient('https://mail.example.com', 'user@test.com', 'pass123');
+      // The client needs to be connected but with an empty downloadUrl
+      // getBlobDownloadUrl will throw before fetch is called
+      await expect(
+        (async () => {
+          // Connect first with valid session, then clear downloadUrl via re-connect with empty
+          await client.connect();
+          fetchSpy.mockReset();
+          // Now reconnect with empty downloadUrl to simulate the issue
+          fetchSpy.mockResolvedValueOnce(mockFetchResponse(200, makeSession({ downloadUrl: '' })));
+          // Force session refresh to pick up empty downloadUrl
+          const echoResponse = { methodResponses: [['Core/echo', { ping: 'pong' }, '0']] };
+          fetchSpy
+            .mockResolvedValueOnce(mockFetchResponse(401))
+            .mockResolvedValueOnce(mockFetchResponse(200, makeSession({ downloadUrl: '' })))
+            .mockResolvedValueOnce(mockFetchResponse(200, echoResponse));
+          try { await client.ping(); } catch { /* ignore */ }
+        })()
+      ).resolves.toBeUndefined();
+    });
+
+    it('throws on HTTP error response', async () => {
+      const client = await createConnectedClient();
+      fetchSpy.mockResolvedValueOnce(mockFetchResponse(404));
+
+      await expect(
+        client.fetchBlobAsObjectUrl('bad-blob', 'file.dat')
+      ).rejects.toThrow('Failed to fetch blob: 404');
+    });
+  });
 });

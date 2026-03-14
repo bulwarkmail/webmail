@@ -436,6 +436,7 @@ export function EmailViewer({
   const [showFullHeaders, setShowFullHeaders] = useState(false);
   const [allowExternalContent, setAllowExternalContent] = useState(false);
   const [hasBlockedContent, setHasBlockedContent] = useState(false);
+  const [cidBlobUrls, setCidBlobUrls] = useState<Record<string, string>>({});
   const [quickReplyText, setQuickReplyText] = useState("");
   const [isQuickReplyFocused, setIsQuickReplyFocused] = useState(false);
   const [isSendingQuickReply, setIsSendingQuickReply] = useState(false);
@@ -492,6 +493,51 @@ export function EmailViewer({
     setIsQuickReplyFocused(false);
     setShowSourceModal(false);
   }, [email?.id, externalContentPolicy]);
+
+  // Fetch inline CID images with authentication to prevent browser auth dialogs
+  useEffect(() => {
+    if (!client || !email?.attachments) {
+      setCidBlobUrls({});
+      return;
+    }
+
+    const cidAttachments = email.attachments.filter(att => att.cid && att.blobId);
+    if (cidAttachments.length === 0) {
+      setCidBlobUrls({});
+      return;
+    }
+
+    let cancelled = false;
+    const objectUrls: string[] = [];
+
+    async function fetchCidBlobs() {
+      const urls: Record<string, string> = {};
+      await Promise.all(cidAttachments.map(async (att) => {
+        const cidValue = att.cid!.replace(/^<|>$/g, '');
+        try {
+          const objectUrl = await client!.fetchBlobAsObjectUrl(att.blobId, att.name || 'inline', att.type);
+          if (!cancelled) {
+            urls[cidValue] = objectUrl;
+            objectUrls.push(objectUrl);
+          } else {
+            URL.revokeObjectURL(objectUrl);
+          }
+        } catch {
+          // Failed to fetch inline image, will show placeholder
+        }
+      }));
+      if (!cancelled) {
+        setCidBlobUrls(urls);
+      }
+    }
+
+    fetchCidBlobs();
+
+    return () => {
+      cancelled = true;
+      objectUrls.forEach(url => URL.revokeObjectURL(url));
+    };
+  }, [client, email?.id]);
 
   // Generate email source for viewing
   const generateEmailSource = (email: Email): string => {
@@ -662,28 +708,15 @@ export function EmailViewer({
 
       // If we should use HTML version and it exists
       if (useHtmlVersion && htmlContent) {
-        // Replace cid: references with actual blob download URLs for inline images
-        const cidReplacedUrls = new Set<string>();
-        if (client && email.attachments) {
-          const cidMap = new Map<string, string>();
-          for (const att of email.attachments) {
-            if (att.cid && att.blobId) {
-              const cidValue = att.cid.replace(/^<|>$/g, '');
-              try {
-                const url = client.getBlobDownloadUrl(att.blobId, att.name || 'inline', att.type);
-                cidMap.set(cidValue, url);
-                cidReplacedUrls.add(url);
-              } catch {
-                // downloadUrl not available yet, skip
-              }
+        // Replace cid: references with authenticated blob URLs (fetched via useEffect)
+        // This prevents browser auth dialogs that occur when loading raw JMAP download URLs
+        if (email.attachments) {
+          htmlContent = htmlContent.replace(
+            /\bcid:([^"'\s)]+)/gi,
+            (_match, cidRef) => {
+              return cidBlobUrls[cidRef] || 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
             }
-          }
-          if (cidMap.size > 0) {
-            htmlContent = htmlContent.replace(
-              /\bcid:([^"'\s)]+)/gi,
-              (match, cidRef) => cidMap.get(cidRef) || match
-            );
-          }
+          );
         }
 
         // Create a custom DOMPurify hook to handle external content
@@ -714,7 +747,7 @@ export function EmailViewer({
           if (shouldBlockExternal) {
             if (node.tagName === 'IMG') {
               const src = node.getAttribute('src');
-              if (src && !cidReplacedUrls.has(src) && (src.startsWith('http://') || src.startsWith('https://') || src.startsWith('//'))) {
+              if (src && (src.startsWith('http://') || src.startsWith('https://') || src.startsWith('//'))) {
                 node.setAttribute('data-blocked-src', src);
                 node.setAttribute('src', 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMSIgaGVpZ2h0PSIxIiB2aWV3Qm94PSIwIDAgMSAxIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cmVjdCB3aWR0aD0iMSIgaGVpZ2h0PSIxIiBmaWxsPSJ0cmFuc3BhcmVudCIvPgo8L3N2Zz4=');
                 node.setAttribute('alt', '');
@@ -825,7 +858,7 @@ export function EmailViewer({
       html: '<p style="color: var(--color-muted-foreground);">No content available</p>',
       isHtml: false
     };
-  }, [email, allowExternalContent, hasBlockedContent, externalContentPolicy, isSenderTrusted, resolvedTheme, client]);
+  }, [email, allowExternalContent, hasBlockedContent, externalContentPolicy, isSenderTrusted, resolvedTheme, cidBlobUrls]);
 
   // Print only the email content in a new window
   const handlePrint = () => {
