@@ -22,7 +22,20 @@ function formatPhoneFeatures(features?: Record<string, boolean>): string {
   return Object.keys(features).filter(k => features[k]).join(", ");
 }
 
-function formatDate(dateStr: string): string {
+function formatDate(dateInput: string | Record<string, unknown>): string {
+  // Handle RFC 9553 PartialDate objects: { year?, month?, day?, calendarScale? }
+  if (typeof dateInput === 'object' && dateInput !== null) {
+    const year = dateInput.year as number | undefined;
+    const month = dateInput.month as number | undefined;
+    const day = dateInput.day as number | undefined;
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const parts: string[] = [];
+    if (month && monthNames[month - 1]) parts.push(monthNames[month - 1]);
+    if (day) parts.push(String(day));
+    if (year) parts.push(String(year));
+    return parts.join(' ') || String(dateInput);
+  }
+  const dateStr = String(dateInput);
   // Handle both ISO dates and partial dates like 1990-01-15 or --01-15
   if (dateStr.startsWith("--")) {
     // Partial date without year
@@ -216,12 +229,12 @@ export function ContactDetail({ contact, onEdit, onDelete, isMobile, className }
             <Section icon={Globe} title={t("detail.online_services")} category="digital">
               {onlineServices.map((svc, i) => (
                 <div key={i} className="flex items-center gap-2 group">
-                  {svc.uri.startsWith("http") ? (
+                  {typeof svc.uri === 'string' && svc.uri.startsWith("http") ? (
                     <a href={svc.uri} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline break-all">
                       {svc.user || svc.uri}
                     </a>
                   ) : (
-                    <span className="text-sm break-all">{svc.user || svc.uri}</span>
+                    <span className="text-sm break-all">{svc.user || String(svc.uri ?? '')}</span>
                   )}
                   {svc.service && (
                     <span className="text-xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{svc.service}</span>
@@ -320,12 +333,12 @@ export function ContactDetail({ contact, onEdit, onDelete, isMobile, className }
             <Section icon={KeyRound} title={t("detail.crypto_keys")} category="digital">
               {cryptoKeys.map((key, i) => (
                 <div key={i} className="text-sm break-all">
-                  {key.uri.startsWith("http") ? (
+                  {typeof key.uri === 'string' && key.uri.startsWith("http") ? (
                     <a href={key.uri} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
                       {key.uri}
                     </a>
                   ) : (
-                    <span className="text-muted-foreground">{key.uri.substring(0, 80)}{key.uri.length > 80 ? "…" : ""}</span>
+                    <span className="text-muted-foreground">{typeof key.uri === 'string' ? `${key.uri.substring(0, 80)}${key.uri.length > 80 ? "…" : ""}` : String(key.uri ?? '')}</span>
                   )}
                 </div>
               ))}
