@@ -45,7 +45,8 @@ export default function CalendarPage() {
   const router = useRouter();
   const t = useTranslations("calendar");
   const isMobile = useIsMobile();
-  const { client, isAuthenticated, logout } = useAuthStore();
+  const { client, isAuthenticated, logout, checkAuth, isLoading: authLoading } = useAuthStore();
+  const [initialCheckDone, setInitialCheckDone] = useState(() => useAuthStore.getState().isAuthenticated && !!useAuthStore.getState().client);
   const { quota, isPushConnected } = useEmailStore();
   const {
     calendars, events, selectedDate, viewMode, selectedCalendarIds,
@@ -76,14 +77,21 @@ export default function CalendarPage() {
   // Swipe navigation ref (handlers defined after navigatePrev/navigateNext)
   const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
 
+  // Check auth on mount
   useEffect(() => {
-    if (!isAuthenticated) {
+    checkAuth().finally(() => {
+      setInitialCheckDone(true);
+    });
+  }, [checkAuth]);
+
+  useEffect(() => {
+    if (initialCheckDone && !isAuthenticated && !authLoading) {
       try { sessionStorage.setItem('redirect_after_login', window.location.pathname); } catch { /* ignore */ }
       router.push("/login");
-    } else if (!supportsCalendar) {
+    } else if (client && !supportsCalendar) {
       router.push("/");
     }
-  }, [isAuthenticated, supportsCalendar, router]);
+  }, [initialCheckDone, isAuthenticated, authLoading, client, supportsCalendar, router]);
 
   useEffect(() => {
     if (error) {

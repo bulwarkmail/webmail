@@ -31,19 +31,33 @@ export default function SettingsPage() {
   const router = useRouter();
   const t = useTranslations('settings');
   const tSidebar = useTranslations('sidebar');
-  const { client, isAuthenticated, logout } = useAuthStore();
+  const { client, isAuthenticated, logout, checkAuth, isLoading: authLoading } = useAuthStore();
+  const [initialCheckDone, setInitialCheckDone] = useState(() => useAuthStore.getState().isAuthenticated && !!useAuthStore.getState().client);
   const { quota, isPushConnected } = useEmailStore();
   const { stalwartFeaturesEnabled } = useConfig();
-  const [activeTab, setActiveTab] = useState<Tab>('appearance');
+  const [activeTab, setActiveTab] = useState<Tab>(() => {
+    try {
+      const saved = localStorage.getItem('settings-active-tab');
+      if (saved) return saved as Tab;
+    } catch { /* ignore */ }
+    return 'appearance';
+  });
   const [mobileShowContent, setMobileShowContent] = useState(false);
   const isDesktop = useIsDesktop();
 
+  // Check auth on mount
   useEffect(() => {
-    if (!isAuthenticated) {
+    checkAuth().finally(() => {
+      setInitialCheckDone(true);
+    });
+  }, [checkAuth]);
+
+  useEffect(() => {
+    if (initialCheckDone && !isAuthenticated && !authLoading) {
       try { sessionStorage.setItem('redirect_after_login', window.location.pathname); } catch { /* ignore */ }
       router.push('/login');
     }
-  }, [isAuthenticated, router]);
+  }, [initialCheckDone, isAuthenticated, authLoading, router]);
 
   if (!isAuthenticated) {
     return null;
@@ -70,6 +84,7 @@ export default function SettingsPage() {
 
   const handleTabSelect = (tabId: Tab) => {
     setActiveTab(tabId);
+    try { localStorage.setItem('settings-active-tab', tabId); } catch { /* ignore */ }
     if (!isDesktop) {
       setMobileShowContent(true);
     }

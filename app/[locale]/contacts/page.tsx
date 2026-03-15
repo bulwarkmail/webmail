@@ -38,7 +38,8 @@ type View =
 export default function ContactsPage() {
   const router = useRouter();
   const t = useTranslations("contacts");
-  const { client, isAuthenticated, logout } = useAuthStore();
+  const { client, isAuthenticated, logout, checkAuth, isLoading: authLoading } = useAuthStore();
+  const [initialCheckDone, setInitialCheckDone] = useState(() => useAuthStore.getState().isAuthenticated && !!useAuthStore.getState().client);
   const { quota, isPushConnected } = useEmailStore();
   const {
     contacts,
@@ -77,12 +78,19 @@ export default function ContactsPage() {
   const { dialogProps: confirmDialogProps, confirm: confirmDialog } = useConfirmDialog();
   const isMobile = useIsMobile();
 
+  // Check auth on mount
   useEffect(() => {
-    if (!isAuthenticated) {
+    checkAuth().finally(() => {
+      setInitialCheckDone(true);
+    });
+  }, [checkAuth]);
+
+  useEffect(() => {
+    if (initialCheckDone && !isAuthenticated && !authLoading) {
       try { sessionStorage.setItem('redirect_after_login', window.location.pathname); } catch { /* ignore */ }
       router.push("/login");
     }
-  }, [isAuthenticated, router]);
+  }, [initialCheckDone, isAuthenticated, authLoading, router]);
 
   useEffect(() => {
     if (client && supportsSync && !hasFetched.current) {

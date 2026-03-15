@@ -2,11 +2,12 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { Mail, Calendar, BookUser, Settings, LogOut } from "lucide-react";
+import { Mail, Calendar, BookUser, HardDrive, Settings, LogOut } from "lucide-react";
 import { usePathname, Link } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { useCalendarStore } from "@/stores/calendar-store";
 import { useEmailStore } from "@/stores/email-store";
+import { useWebDAVStore } from "@/stores/webdav-store";
 import { cn, formatFileSize } from "@/lib/utils";
 
 interface NavItem {
@@ -140,12 +141,14 @@ export function NavigationRail({
   const pathname = usePathname();
   const { supportsCalendar } = useCalendarStore();
   const { mailboxes } = useEmailStore();
+  const { supportsWebDAV } = useWebDAVStore();
   const inboxUnread = mailboxes.find(m => m.role === "inbox")?.unreadEmails || 0;
 
   const navItems: NavItem[] = [
     { id: "mail", icon: Mail, labelKey: "mail", href: "/", badge: inboxUnread },
     { id: "calendar", icon: Calendar, labelKey: "calendar", href: "/calendar", hidden: !supportsCalendar },
     { id: "contacts", icon: BookUser, labelKey: "contacts", href: "/contacts" },
+    { id: "files", icon: HardDrive, labelKey: "files", href: "/files", hidden: supportsWebDAV === false },
     { id: "settings", icon: Settings, labelKey: "settings", href: "/settings" },
   ];
 

@@ -144,6 +144,14 @@ export class JMAPClient {
     this.authHeader = `Bearer ${token}`;
   }
 
+  getAuthHeader(): string {
+    return this.authHeader;
+  }
+
+  getServerUrl(): string {
+    return this.serverUrl;
+  }
+
   private async authenticatedFetch(url: string, init?: Parameters<typeof fetch>[1]): Promise<Response> {
     const headers = { ...init?.headers as Record<string, string>, 'Authorization': this.authHeader };
     let response: Response;
