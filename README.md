@@ -14,7 +14,6 @@ Built with Next.js and the JMAP protocol.
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/version-1.2.4-green.svg)](CHANGELOG.md)
 [![Docker](https://img.shields.io/badge/docker-ghcr.io%2Fbulwarkmail%2Fwebmail-blue)](https://ghcr.io/bulwarkmail/webmail)
-
 </div>
 
 ---
@@ -74,15 +73,21 @@ Built with Next.js and the JMAP protocol.
 - **Threading** — Gmail-style inline expansion with thread navigation
 - **Draft auto-save** with discard confirmation
 - **Attachments** — upload, download, and inline preview
-- **Search** — full-text with JMAP filter panel, search chips, and cross-mailbox queries
-- **Batch operations** — multi-select, archive, delete, move, tag
+- **Search** — full-text with JMAP filter panel, search chips, cross-mailbox queries, wildcard support, and OR conditions
+- **Batch operations** — multi-select with checkboxes, archive, delete, move, tag
+- **Print** emails directly from the viewer
 - **Color tags/labels** and star/unstar
 - **Virtual scrolling** for large mailboxes
 - **Quick reply** from the viewer
+- **Sender avatars** — favicon-based with negative caching for performance
+- **Recipient popover** for quick contact interaction
+- **Folder management** — create, rename, delete folders with icon picker and subfolder support
+- **Tag counts** — unread and total counts displayed in sidebar
 
 ### Calendar
 
 - **Month, week, day, and agenda views** with mini-calendar sidebar
+- **Event hover preview** popover with details
 - **Drag-and-drop rescheduling**, click-drag creation, edge-resize (15-min snap)
 - **Recurring events** with edit/delete scope (this / this and following / all)
 - **Participant scheduling** — iTIP invitations, organizer/attendee UI, RSVP
@@ -107,25 +112,42 @@ Built with Next.js and the JMAP protocol.
 - **Vacation responder** with date range scheduling and sidebar indicator
 - **Email templates** — reusable, categorized, with placeholder auto-fill (`{{recipientName}}`, `{{date}}`, etc.)
 
+### Files
+
+- **File browser** with JMAP FileNode cloud storage (Stalwart native)
+- **Upload and download** files with progress tracking and folder upload support
+- **Folder navigation** with breadcrumb path and tree sidebar
+- **Grid and list views** with sorting by name, size, or date
+- **Clipboard operations** — cut, copy, paste, duplicate files
+- **File preview** for images, text, audio, video, and more
+- **Favorites and recent files** for quick access
+- **Bulk operations** — multi-select, delete, move, download
+
 ### Security & Privacy
 
 - **External content blocked** by default — trusted senders list for auto-load
 - **HTML sanitization** via DOMPurify with XSS prevention
 - **SPF/DKIM/DMARC** status indicators
-- **OAuth2/OIDC with PKCE** for SSO (Keycloak, Authentik, or built-in)
+- **OAuth2/OIDC with PKCE** for SSO (Keycloak, Authentik, or built-in), with OAuth-only mode
 - **TOTP two-factor authentication**
+- **Account security panel** — manage passwords and 2FA via Stalwart admin API
 - **"Remember me"** — AES-256-GCM encrypted httpOnly cookie (opt-in)
 - **Security headers** — CSP with per-request nonce, X-Frame-Options, Referrer-Policy
 - **Newsletter unsubscribe** (RFC 2369)
 
 ### Interface
 
-- **Three-pane layout** — sidebar, email list, viewer
+- **Three-pane layout** — sidebar, email list, viewer with resizable columns
 - **Dark and light themes** with intelligent email color transformation
-- **Responsive** — desktop sidebar + mobile bottom tab bar
+- **Responsive** — desktop sidebar + mobile bottom tab bar with tablet support
 - **Keyboard shortcuts** — full navigation without a mouse
-- **Drag-and-drop** email organization between mailboxes
+- **Drag-and-drop** email organization between mailboxes and tag assignment
 - **Right-click context menus**, toast notifications with undo, form validation with shake feedback
+- **Customizable toolbar** position and login page branding
+- **Configurable logo** with light/dark mode variants
+- **Settings sync** — preferences synchronized with the server (encrypted)
+- **Storage quota** display
+- **Shared folders** — multi-account access
 - **Accessibility** — WCAG AA contrast, reduced-motion support, focus trap, screen reader live regions
 
 ### Internationalization
@@ -139,6 +161,10 @@ Automatic browser detection with persistent preference.
 - **Multiple sender identities** with per-identity signatures
 - **Sub-addressing** — `user+tag@domain.com` with contextual tag suggestions
 - **Identity badges** in viewer and email list
+
+### Operations
+
+- **Automatic update check** — server logs when a newer release is available
 
 ---
 
