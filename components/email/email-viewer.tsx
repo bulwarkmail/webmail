@@ -804,6 +804,7 @@ export function EmailViewer({
   const t = useTranslations('email_viewer');
   const tNotifications = useTranslations('notifications');
   const tCommon = useTranslations('common');
+  const tSmime = useTranslations('smime');
   const tFiles = useTranslations('files');
   const externalContentPolicy = useSettingsStore((state) => state.externalContentPolicy);
   const mailAttachmentAction = useSettingsStore((state) => state.mailAttachmentAction);
@@ -3944,8 +3945,8 @@ export function EmailViewer({
             setSmimeUnlockError(null);
           }}
           onSubmit={handleSmimeUnlockSubmit}
-          title={tCommon('smime.unlock_key')}
-          description={tCommon('smime.unlock_key_desc')}
+          title={tSmime('unlock_key')}
+          description={tSmime('unlock_key_desc')}
           error={smimeUnlockError}
         />
 

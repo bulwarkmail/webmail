@@ -27,6 +27,7 @@
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
+    "test:translations": "vitest run lib/__tests__/translations.test.ts",
     "prepare": "husky",
     "typecheck": "tsc --noEmit"
   },

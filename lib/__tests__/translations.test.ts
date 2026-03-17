@@ -87,6 +87,22 @@ function extractUsedKeys(filePath: string): string[] {
   return [...new Set(keys)];
 }
 
+function collectUsedKeysByFile(files: string[]): Map<string, string[]> {
+  const keyToFiles = new Map<string, string[]>();
+
+  for (const filePath of files) {
+    for (const key of extractUsedKeys(filePath)) {
+      const existing = keyToFiles.get(key) ?? [];
+      if (!existing.includes(filePath)) {
+        existing.push(filePath);
+        keyToFiles.set(key, existing);
+      }
+    }
+  }
+
+  return keyToFiles;
+}
+
 const locales = fs
   .readdirSync(localesDir)
   .filter((entry) => fs.statSync(path.join(localesDir, entry)).isDirectory());
@@ -120,19 +136,22 @@ describe('translations completeness', () => {
 describe('translations used in source code exist in en locale', () => {
   const srcDirs = ['components', 'app', 'hooks', 'lib', 'stores', 'contexts'].map((d) => path.join(rootDir, d));
   const allFiles = srcDirs.flatMap((d) => getSourceFiles(d));
-  const usedKeys = new Set<string>();
-  for (const f of allFiles) {
-    for (const k of extractUsedKeys(f)) {
-      usedKeys.add(k);
-    }
-  }
+  const usedKeysByFile = collectUsedKeysByFile(allFiles);
+  const usedKeys = [...usedKeysByFile.keys()].sort();
 
   it('all translation keys referenced in source should exist in en locale', () => {
-    const missing = [...usedKeys].sort().filter((key) => resolveKey(referenceData, key) === undefined);
+    const missing = usedKeys.filter((key) => resolveKey(referenceData, key) === undefined);
+    const details = missing.map((key) => {
+      const relativeFiles = (usedKeysByFile.get(key) ?? [])
+        .map((filePath) => path.relative(rootDir, filePath))
+        .sort();
+
+      return `${key}\n  used in:\n  - ${relativeFiles.join('\n  - ')}`;
+    });
 
     expect(
       missing,
-      `${missing.length} translation key(s) used in source code but missing from en locale:\n${missing.join('\n')}`,
+      `${missing.length} translation key(s) used in source code but missing from en locale:\n${details.join('\n')}`,
     ).toEqual([]);
   });
 });
