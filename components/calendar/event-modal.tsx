@@ -18,6 +18,7 @@ import {
   getStatusCounts,
   buildParticipantMap,
 } from "@/lib/calendar-participants";
+import { useSettingsStore } from "@/stores/settings-store";
 
 interface EventModalProps {
   event?: CalendarEvent | null;
@@ -108,6 +109,8 @@ export function EventModal({
   isMobile = false,
 }: EventModalProps) {
   const t = useTranslations("calendar");
+  const timeFormat = useSettingsStore((s) => s.timeFormat);
+  const timeDisplayFmt = timeFormat === "12h" ? "h:mm a" : "HH:mm";
   const isEdit = !!event;
   const [mode, setMode] = useState<"view" | "edit">(isEdit ? "view" : "edit");
 
@@ -452,7 +455,7 @@ export function EventModal({
               <span className="font-medium">{format(startD, "EEE, MMM d, yyyy")}</span>
               {!event.showWithoutTime && (
                 <span className="text-muted-foreground ml-2">
-                  {format(startD, "HH:mm")} – {format(endD, "HH:mm")}
+                  {format(startD, timeDisplayFmt)} – {format(endD, timeDisplayFmt)}
                 </span>
               )}
             </div>
@@ -576,7 +579,7 @@ export function EventModal({
                   <span className="text-muted-foreground ml-1.5">{t("events.all_day")}</span>
                 ) : (
                   <div className="text-muted-foreground">
-                    {format(startD, "HH:mm")} – {format(endD, "HH:mm")}
+                    {format(startD, timeDisplayFmt)} – {format(endD, timeDisplayFmt)}
                     <span className="ml-1.5 text-xs">({formatDurationDisplay(durMin)})</span>
                   </div>
                 )}

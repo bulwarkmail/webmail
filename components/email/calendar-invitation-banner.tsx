@@ -360,6 +360,7 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
   const client = useAuthStore((s) => s.client);
   const currentUserEmail = useAuthStore((s) => s.primaryIdentity?.email);
   const calendarInvitationParsingEnabled = useSettingsStore((s) => s.calendarInvitationParsingEnabled);
+  const timeFormat = useSettingsStore((s) => s.timeFormat);
   const { calendars, supportsCalendar, importEvents, rsvpEvent, updateEvent, events: storeEvents, setSelectedDate } = useCalendarStore();
 
   const [state, setState] = useState<BannerState>('loading');
@@ -679,6 +680,7 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
       day: 'numeric',
       hour: 'numeric',
       minute: '2-digit',
+      hour12: timeFormat === '12h',
     });
   };
 

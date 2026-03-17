@@ -8,6 +8,7 @@ import { format, parseISO } from "date-fns";
 import type { CalendarEvent, Calendar } from "@/lib/jmap/types";
 import type { JMAPClient } from "@/lib/jmap/client";
 import { useCalendarStore } from "@/stores/calendar-store";
+import { useSettingsStore } from "@/stores/settings-store";
 import { toast } from "@/stores/toast-store";
 
 interface ICalImportModalProps {
@@ -28,6 +29,7 @@ export function ICalImportModal({ calendars, client, onClose }: ICalImportModalP
   const tCommon = useTranslations("common");
   const tForm = useTranslations("calendar.form");
   const importEvents = useCalendarStore((s) => s.importEvents);
+  const timeFormat = useSettingsStore((s) => s.timeFormat);
 
   const [step, setStep] = useState<ImportStep>("select");
   const [parsedEvents, setParsedEvents] = useState<Partial<CalendarEvent>[]>([]);
@@ -194,9 +196,10 @@ export function ICalImportModal({ calendars, client, onClose }: ICalImportModalP
     if (!event.start) return "";
     try {
       const date = parseISO(event.start);
+      const timeFmt = timeFormat === "12h" ? "h:mm a" : "HH:mm";
       return event.showWithoutTime
         ? format(date, "MMM d, yyyy")
-        : format(date, "MMM d, yyyy HH:mm");
+        : format(date, `MMM d, yyyy ${timeFmt}`);
     } catch {
       return event.start;
     }

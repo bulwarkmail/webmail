@@ -3,10 +3,11 @@
 import { useState, useRef, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { Globe, Plus, RefreshCw, Trash2 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, formatDateTime } from "@/lib/utils";
 import type { Calendar } from "@/lib/jmap/types";
 import { CalendarColorPicker } from "@/components/settings/calendar-management-settings";
 import { useCalendarStore } from "@/stores/calendar-store";
+import { useSettingsStore } from "@/stores/settings-store";
 import { toast } from "@/stores/toast-store";
 import type { JMAPClient } from "@/lib/jmap/client";
 
@@ -33,6 +34,7 @@ export function CalendarSidebarPanel({
   const icalSubscriptions = useCalendarStore((s) => s.icalSubscriptions);
   const refreshICalSubscription = useCalendarStore((s) => s.refreshICalSubscription);
   const removeICalSubscription = useCalendarStore((s) => s.removeICalSubscription);
+  const timeFormat = useSettingsStore((s) => s.timeFormat);
 
   const [colorPickerId, setColorPickerId] = useState<string | null>(null);
   const [contextMenuCalId, setContextMenuCalId] = useState<string | null>(null);
@@ -169,7 +171,7 @@ export function CalendarSidebarPanel({
                     </button>
                     {sub.lastRefreshed && (
                       <div className="px-3 py-1.5 text-xs text-muted-foreground border-t border-border mt-1 pt-1">
-                        {tSub('last_refreshed', { time: new Date(sub.lastRefreshed).toLocaleString() })}
+                        {tSub('last_refreshed', { time: formatDateTime(sub.lastRefreshed, timeFormat, { month: 'short', day: 'numeric', year: 'numeric' }) })}
                       </div>
                     )}
                   </div>

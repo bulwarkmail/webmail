@@ -7,7 +7,7 @@ import { Email, ContactCard, Mailbox } from "@/lib/jmap/types";
 import { EMAIL_SANITIZE_CONFIG, collapseBlockedImageContainers } from "@/lib/email-sanitization";
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
-import { formatFileSize, cn, buildMailboxTree, MailboxNode } from "@/lib/utils";
+import { formatFileSize, cn, buildMailboxTree, MailboxNode, formatDateTime } from "@/lib/utils";
 import { getSecurityStatus, extractListHeaders } from "@/lib/email-headers";
 import {
   Reply,
@@ -818,6 +818,7 @@ export function EmailViewer({
   const toolbarPosition = useSettingsStore((state) => state.toolbarPosition);
   const showToolbarLabels = useSettingsStore((state) => state.showToolbarLabels);
   const calendarInvitationParsingEnabled = useSettingsStore((state) => state.calendarInvitationParsingEnabled);
+  const timeFormat = useSettingsStore((state) => state.timeFormat);
 
   // Detect if current mailbox is Junk folder
   const isInJunkFolder = currentMailboxRole === 'junk';
@@ -2224,7 +2225,7 @@ export function EmailViewer({
   const handlePrint = () => {
     if (!email) return;
     const printSender = email.from?.[0];
-    const date = email.sentAt ? new Date(email.sentAt).toLocaleString() : '';
+    const date = email.sentAt ? formatDateTime(email.sentAt, timeFormat, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }) : '';
     const toList = email.to?.map(r => r.name ? `${r.name} &lt;${r.email}&gt;` : r.email).join(', ') || '';
     const ccList = email.cc?.map(r => r.name ? `${r.name} &lt;${r.email}&gt;` : r.email).join(', ') || '';
 
@@ -2976,14 +2977,7 @@ export function EmailViewer({
               <div className="flex items-center gap-2 lg:gap-3 mt-1 lg:mt-1.5 text-xs lg:text-sm text-muted-foreground">
                 <span className="flex items-center gap-1 lg:gap-1.5 whitespace-nowrap">
                   <Clock className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
-                  {new Date(email.receivedAt).toLocaleString('en-US', {
-                    weekday: 'short',
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}
+                  {formatDateTime(email.receivedAt, timeFormat, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
                 </span>
                 {isImportant && (
                   <span className="px-1.5 lg:px-2 py-0.5 bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-full text-xs font-medium whitespace-nowrap">
@@ -3458,14 +3452,7 @@ export function EmailViewer({
                 {/* Date and size on the right */}
                 <div className="text-right flex-shrink-0">
                   <div className="text-sm text-muted-foreground whitespace-nowrap">
-                    {new Date(email.receivedAt).toLocaleString('en-US', {
-                      weekday: 'short',
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
+                    {formatDateTime(email.receivedAt, timeFormat, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
                   </div>
                   {email.size > 0 && (
                     <div className="text-xs text-muted-foreground/70 mt-0.5">
@@ -3596,16 +3583,7 @@ export function EmailViewer({
                       <div className="flex items-start gap-2">
                         <span className="text-muted-foreground font-medium w-12 shrink-0">{t('date')}:</span>
                         <span className="text-foreground">
-                          {new Date(email.receivedAt).toLocaleString('en-US', {
-                            weekday: 'long',
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            second: '2-digit',
-                            timeZoneName: 'short'
-                          })}
+                          {formatDateTime(email.receivedAt, timeFormat, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', second: '2-digit', timeZoneName: 'short' })}
                         </span>
                       </div>
                       {/* Reply-To if different */}

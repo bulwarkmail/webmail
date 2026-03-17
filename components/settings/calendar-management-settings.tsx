@@ -7,9 +7,10 @@ import { useAuthStore } from '@/stores/auth-store';
 import { toast } from '@/stores/toast-store';
 import { SettingsSection } from './settings-section';
 import { Plus, Pencil, Trash2, Check, X, Calendar as CalendarIcon, Copy, Link, Upload, Globe, RefreshCw, Eraser } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, formatDateTime } from '@/lib/utils';
 import { ICalImportModal } from '@/components/calendar/ical-import-modal';
 import { ICalSubscriptionModal } from '@/components/calendar/ical-subscription-modal';
+import { useSettingsStore } from '@/stores/settings-store';
 
 const CALENDAR_COLORS = [
   "#3b82f6", // blue
@@ -164,6 +165,7 @@ export function CalendarManagementSettings() {
   const [refreshingSubId, setRefreshingSubId] = useState<string | null>(null);
   const tImport = useTranslations('calendar.import');
   const tSub = useTranslations('calendar.subscription');
+  const timeFormat = useSettingsStore((s) => s.timeFormat);
   const colorPickerRef = useRef<HTMLDivElement>(null);
 
   // Load calendars if not yet loaded
@@ -563,7 +565,7 @@ export function CalendarManagementSettings() {
                   </span>
                   {sub.lastRefreshed && (
                     <span className="text-xs text-muted-foreground">
-                      {tSub('last_refreshed', { time: new Date(sub.lastRefreshed).toLocaleString() })}
+                      {tSub('last_refreshed', { time: formatDateTime(sub.lastRefreshed, timeFormat, { month: 'short', day: 'numeric', year: 'numeric' }) })}
                     </span>
                   )}
                 </div>

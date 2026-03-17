@@ -27,6 +27,42 @@ export function formatDate(date: Date | string): string {
   });
 }
 
+/**
+ * Format a date/time string respecting the user's 12h/24h time format preference.
+ */
+export function formatDateTime(
+  date: Date | string,
+  timeFormat: '12h' | '24h',
+  options?: {
+    weekday?: 'short' | 'long';
+    year?: 'numeric';
+    month?: 'short' | 'long';
+    day?: 'numeric';
+    second?: '2-digit';
+    timeZoneName?: 'short';
+    dateOnly?: boolean;
+  }
+): string {
+  const d = typeof date === 'string' ? new Date(date) : date;
+  if (isNaN(d.getTime())) return typeof date === 'string' ? date : '';
+
+  const localeOptions: Intl.DateTimeFormatOptions = {};
+  if (options?.weekday) localeOptions.weekday = options.weekday;
+  if (options?.year) localeOptions.year = options.year;
+  if (options?.month) localeOptions.month = options.month;
+  if (options?.day) localeOptions.day = options.day;
+
+  if (!options?.dateOnly) {
+    localeOptions.hour = '2-digit';
+    localeOptions.minute = '2-digit';
+    localeOptions.hour12 = timeFormat === '12h';
+    if (options?.second) localeOptions.second = options.second;
+    if (options?.timeZoneName) localeOptions.timeZoneName = options.timeZoneName;
+  }
+
+  return d.toLocaleString(undefined, localeOptions);
+}
+
 export function truncateText(text: string, maxLength: number): string {
   if (text.length <= maxLength) return text;
   return text.substring(0, maxLength).trim() + "...";

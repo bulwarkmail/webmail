@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { X, Paperclip, Send, Save, Check, Loader2, AlertCircle, FileText, BookmarkPlus, ShieldCheck, Lock } from "lucide-react";
-import { cn, formatFileSize } from "@/lib/utils";
+import { cn, formatFileSize, formatDateTime } from "@/lib/utils";
 import { debug } from "@/lib/debug";
 import { toast } from "@/stores/toast-store";
 import { sanitizeEmailHtml } from "@/lib/email-sanitization";
@@ -14,6 +14,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import { useIdentityStore } from "@/stores/identity-store";
 import { useSmimeStore } from "@/stores/smime-store";
 import { useEmailStore } from "@/stores/email-store";
+import { useSettingsStore } from "@/stores/settings-store";
 import { buildMimeMessage, wrapCmsAsSmimeMessage } from "@/lib/smime/mime-builder";
 import type { MimeAttachment } from "@/lib/smime/mime-builder";
 import { smimeSign } from "@/lib/smime/smime-sign";
@@ -86,6 +87,7 @@ export function EmailComposer({
 }: EmailComposerProps) {
   const t = useTranslations('email_composer');
   const tCommon = useTranslations('common');
+  const timeFormat = useSettingsStore((state) => state.timeFormat);
 
   // Initialize with reply/forward data if provided
   const getInitialTo = () => {
@@ -124,7 +126,7 @@ export function EmailComposer({
     const prefix = initialDraftText || "";
     if (!replyTo?.body && !replyTo?.htmlBody) return prefix;
 
-    const date = replyTo.receivedAt ? new Date(replyTo.receivedAt).toLocaleString() : "";
+    const date = replyTo.receivedAt ? formatDateTime(replyTo.receivedAt, timeFormat, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }) : "";
     const from = replyTo.from?.[0];
     const fromStr = from ? `${from.name || from.email}` : tCommon('unknown');
 
@@ -669,7 +671,7 @@ export function EmailComposer({
       const signatureHtml = currentIdentity?.textSignature
         ? `<br><br>-- <br>${currentIdentity.textSignature.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>')}`
         : '';
-      const date = replyTo.receivedAt ? new Date(replyTo.receivedAt).toLocaleString() : '';
+      const date = replyTo.receivedAt ? formatDateTime(replyTo.receivedAt, timeFormat, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }) : '';
       const fromAddr = replyTo.from?.[0];
       const fromStr = fromAddr ? `${fromAddr.name || fromAddr.email}` : tCommon('unknown');
       const quoteHeader = mode === 'forward'
@@ -1092,7 +1094,7 @@ export function EmailComposer({
             <div className="px-4 py-2 text-xs text-muted-foreground">
               {mode === 'forward'
                 ? `---------- ${t('prefix.forward')} ----------`
-                : `${replyTo.receivedAt ? new Date(replyTo.receivedAt).toLocaleString() : ''}, ${replyTo.from?.[0]?.name || replyTo.from?.[0]?.email || tCommon('unknown')}:`
+                : `${replyTo.receivedAt ? formatDateTime(replyTo.receivedAt, timeFormat, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }) : ''}, ${replyTo.from?.[0]?.name || replyTo.from?.[0]?.email || tCommon('unknown')}:`
               }
             </div>
             <div

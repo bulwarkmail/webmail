@@ -7,6 +7,7 @@ import type { CalendarEvent, Calendar } from "@/lib/jmap/types";
 import { format, parseISO } from "date-fns";
 import { Users } from "lucide-react";
 import { getParticipantCount } from "@/lib/calendar-participants";
+import { useSettingsStore } from "@/stores/settings-store";
 
 interface EventCardProps {
   event: CalendarEvent;
@@ -68,11 +69,13 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
   const [isBeingDragged, setIsBeingDragged] = useState(false);
   const color = getEventColor(event, calendar);
   const startDate = parseISO(event.start);
+  const timeFormat = useSettingsStore((state) => state.timeFormat);
+  const timeFmt = timeFormat === "12h" ? "h:mm a" : "HH:mm";
 
   const calendarName = calendar?.name || "";
   const durationMinutes = parseDuration(event.duration);
   const endTime = new Date(startDate.getTime() + durationMinutes * 60000);
-  const timeString = `${format(startDate, "HH:mm")} – ${format(endTime, "HH:mm")}`;
+  const timeString = `${format(startDate, timeFmt)} – ${format(endTime, timeFmt)}`;
   const ariaLabel = `${event.title || t("events.no_title")}, ${timeString}${calendarName ? `, ${calendarName}` : ""}`;
 
   const handleDragStart = useCallback((e: DragEvent) => {
