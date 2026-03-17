@@ -25,16 +25,16 @@ Built with Next.js and the JMAP protocol.
 <tr>
 <td width="50%">
 
-<img src="screenshots/inbox.png" width="100%" alt="Inbox — three-pane layout with sidebar, email list, and viewer (dark mode)">
+<img src="screenshots/inbox.png" width="100%" alt="Inbox - three-pane layout with sidebar, email list, and viewer (dark mode)">
 
-**Mail** — Three-pane layout with sidebar, email list, and viewer
+**Mail** - Three-pane layout with sidebar, email list, and viewer
 
 </td>
 <td width="50%">
 
 <img src="screenshots/calendar.png" width="100%" alt="Calendar">
 
-**Calendar** — Month, week, day, and agenda views with event management
+**Calendar** - Month, week, day, and agenda views with event management
 
 </td>
 </tr>
@@ -43,14 +43,14 @@ Built with Next.js and the JMAP protocol.
 
 <img src="screenshots/contacts.png" width="100%" alt="Contacts">
 
-**Contacts** — Contact management with groups and vCard support
+**Contacts** - Contact management with groups and vCard support
 
 </td>
 <td width="50%">
 
 <img src="screenshots/files.png" width="100%" alt="File browser">
 
-**Files** — Cloud file browser with upload, preview, and folder navigation
+**Files** - Cloud file browser with upload, preview, and folder navigation
 
 </td>
 </tr>
@@ -62,16 +62,16 @@ Built with Next.js and the JMAP protocol.
 <tr>
 <td width="50%">
 
-<img src="screenshots/inbox%20whitemode.png" width="100%" alt="Inbox — light mode">
+<img src="screenshots/inbox%20whitemode.png" width="100%" alt="Inbox - light mode">
 
-**Light mode** — Full theme support with intelligent color transformation
+**Light mode** - Full theme support with intelligent color transformation
 
 </td>
 <td width="50%">
 
 <img src="screenshots/settings.png" width="100%" alt="Settings">
 
-**Settings** — Appearance, identities, filters, templates, and more
+**Settings** - Appearance, identities, filters, templates, and more
 
 </td>
 </tr>
@@ -80,7 +80,7 @@ Built with Next.js and the JMAP protocol.
 
 <img src="screenshots/login.png" width="100%" alt="Login page">
 
-**Login** — Configurable branding with OAuth2/OIDC and 2FA support
+**Login** - Configurable branding with OAuth2/OIDC and 2FA support
 
 </td>
 <td width="50%">
@@ -94,19 +94,19 @@ Built with Next.js and the JMAP protocol.
 ### Mail
 
 - **Read, compose, reply, reply-all, forward** with rich HTML rendering
-- **Threading** — Gmail-style inline expansion with thread navigation
+- **Threading** - Gmail-style inline expansion with thread navigation
 - **Draft auto-save** with discard confirmation
-- **Attachments** — upload, download, and inline preview
-- **Search** — full-text with JMAP filter panel, search chips, cross-mailbox queries, wildcard support, and OR conditions
-- **Batch operations** — multi-select with checkboxes, archive, delete, move, tag
+- **Attachments** - upload, download, and inline preview
+- **Search** - full-text with JMAP filter panel, search chips, cross-mailbox queries, wildcard support, and OR conditions
+- **Batch operations** - multi-select with checkboxes, archive, delete, move, tag
 - **Print** emails directly from the viewer
 - **Color tags/labels** and star/unstar
 - **Virtual scrolling** for large mailboxes
 - **Quick reply** from the viewer
-- **Sender avatars** — favicon-based with negative caching for performance
+- **Sender avatars** - favicon-based with negative caching for performance
 - **Recipient popover** for quick contact interaction
-- **Folder management** — create, rename, delete folders with icon picker and subfolder support
-- **Tag counts** — unread and total counts displayed in sidebar
+- **Folder management** - create, rename, delete folders with icon picker and subfolder support
+- **Tag counts** - unread and total counts displayed in sidebar
 
 ### Calendar
 
@@ -114,8 +114,8 @@ Built with Next.js and the JMAP protocol.
 - **Event hover preview** popover with details
 - **Drag-and-drop rescheduling**, click-drag creation, edge-resize (15-min snap)
 - **Recurring events** with edit/delete scope (this / this and following / all)
-- **Participant scheduling** — iTIP invitations, organizer/attendee UI, RSVP
-- **Inline calendar invitations** in email viewer — auto-detect `.ics`, RSVP, import
+- **Participant scheduling** - iTIP invitations, organizer/attendee UI, RSVP
+- **Inline calendar invitations** in email viewer - auto-detect `.ics`, RSVP, import
 - **iCalendar import** with preview and bulk create
 - **Notifications** with configurable sound and alert persistence
 - **Real-time sync** via JMAP push
@@ -126,15 +126,15 @@ Built with Next.js and the JMAP protocol.
 - **Contact groups** with group expansion and member management
 - **vCard import/export** (RFC 6350) with duplicate detection
 - **Autocomplete** in composer (To/Cc/Bcc)
-- **Bulk operations** — multi-select, delete, group add, export
+- **Bulk operations** - multi-select, delete, group add, export
 
 ### Filters & Automation
 
 - **Server-side email filters** via JMAP Sieve Scripts (RFC 9661)
-- **Visual rule builder** — conditions (From, To, Subject, Size, Body…) and actions (Move, Forward, Star, Discard…)
+- **Visual rule builder** - conditions (From, To, Subject, Size, Body…) and actions (Move, Forward, Star, Discard…)
 - **Raw Sieve editor** with syntax validation
 - **Vacation responder** with date range scheduling and sidebar indicator
-- **Email templates** — reusable, categorized, with placeholder auto-fill (`{{recipientName}}`, `{{date}}`, etc.)
+- **Email templates** - reusable, categorized, with placeholder auto-fill (`{{recipientName}}`, `{{date}}`, etc.)
 
 ### Files
 
@@ -142,37 +142,37 @@ Built with Next.js and the JMAP protocol.
 - **Upload and download** files with progress tracking and folder upload support
 - **Folder navigation** with breadcrumb path and tree sidebar
 - **Grid and list views** with sorting by name, size, or date
-- **Clipboard operations** — cut, copy, paste, duplicate files
+- **Clipboard operations** - cut, copy, paste, duplicate files
 - **File preview** for images, text, audio, video, and more
 - **Favorites and recent files** for quick access
-- **Bulk operations** — multi-select, delete, move, download
+- **Bulk operations** - multi-select, delete, move, download
 
 ### Security & Privacy
 
-- **External content blocked** by default — trusted senders list for auto-load
+- **External content blocked** by default - trusted senders list for auto-load
 - **HTML sanitization** via DOMPurify with XSS prevention
 - **SPF/DKIM/DMARC** status indicators
 - **OAuth2/OIDC with PKCE** for SSO (Keycloak, Authentik, or built-in), with OAuth-only mode
 - **TOTP two-factor authentication**
-- **Account security panel** — manage passwords and 2FA via Stalwart admin API
-- **"Remember me"** — AES-256-GCM encrypted httpOnly cookie (opt-in)
-- **Security headers** — CSP with per-request nonce, X-Frame-Options, Referrer-Policy
+- **Account security panel** - manage passwords and 2FA via Stalwart admin API
+- **"Remember me"** - AES-256-GCM encrypted httpOnly cookie (opt-in)
+- **Security headers** - CSP with per-request nonce, X-Frame-Options, Referrer-Policy
 - **Newsletter unsubscribe** (RFC 2369)
 
 ### Interface
 
-- **Three-pane layout** — sidebar, email list, viewer with resizable columns
+- **Three-pane layout** - sidebar, email list, viewer with resizable columns
 - **Dark and light themes** with intelligent email color transformation
-- **Responsive** — desktop sidebar + mobile bottom tab bar with tablet support
-- **Keyboard shortcuts** — full navigation without a mouse
+- **Responsive** - desktop sidebar + mobile bottom tab bar with tablet support
+- **Keyboard shortcuts** - full navigation without a mouse
 - **Drag-and-drop** email organization between mailboxes and tag assignment
 - **Right-click context menus**, toast notifications with undo, form validation with shake feedback
 - **Customizable toolbar** position and login page branding
 - **Configurable logo** with light/dark mode variants
-- **Settings sync** — preferences synchronized with the server (encrypted)
+- **Settings sync** - preferences synchronized with the server (encrypted)
 - **Storage quota** display
-- **Shared folders** — multi-account access
-- **Accessibility** — WCAG AA contrast, reduced-motion support, focus trap, screen reader live regions
+- **Shared folders** - multi-account access
+- **Accessibility** - WCAG AA contrast, reduced-motion support, focus trap, screen reader live regions
 
 ### Internationalization
 
@@ -183,12 +183,12 @@ Automatic browser detection with persistent preference.
 ### Identity Management
 
 - **Multiple sender identities** with per-identity signatures
-- **Sub-addressing** — `user+tag@domain.com` with contextual tag suggestions
+- **Sub-addressing** - `user+tag@domain.com` with contextual tag suggestions
 - **Identity badges** in viewer and email list
 
 ### Operations
 
-- **Automatic update check** — server logs when a newer release is available
+- **Automatic update check** - server logs when a newer release is available
 
 ---
 
@@ -206,7 +206,7 @@ Or with Docker Compose:
 
 ```bash
 cp .env.example .env.local
-# Edit .env.local — set JMAP_SERVER_URL
+# Edit .env.local - set JMAP_SERVER_URL
 docker compose up -d
 ```
 
@@ -217,7 +217,7 @@ git clone https://github.com/bulwarkmail/webmail.git
 cd webmail
 npm install
 cp .env.example .env.local
-# Edit .env.local — set JMAP_SERVER_URL
+# Edit .env.local - set JMAP_SERVER_URL
 npm run build && npm start
 ```
 
@@ -241,7 +241,7 @@ JMAP_SERVER_URL=https://mail.example.com
 APP_NAME=My Webmail
 ```
 
-All variables are **runtime** — Docker deployments can be configured without rebuilding.
+All variables are **runtime** - Docker deployments can be configured without rebuilding.
 
 <details>
 <summary>OAuth2/OIDC (SSO)</summary>
@@ -298,7 +298,7 @@ Credentials encrypted with AES-256-GCM, stored in an httpOnly cookie (30-day exp
 
 ## Why Stalwart?
 
-[Stalwart](https://github.com/stalwartlabs/mail-server) is a mail server written in Rust with **native JMAP support** — not IMAP/SMTP with JMAP bolted on. It handles JMAP, IMAP, SMTP, and ManageSieve in a single binary. Self-hosted, no third-party dependencies.
+[Stalwart](https://github.com/stalwartlabs/mail-server) is a mail server written in Rust with **native JMAP support** - not IMAP/SMTP with JMAP bolted on. It handles JMAP, IMAP, SMTP, and ManageSieve in a single binary. Self-hosted, no third-party dependencies.
 
 ## Contributing
 
