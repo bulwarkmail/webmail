@@ -183,7 +183,10 @@ export interface ContactCard {
   relatedTo?: Record<string, ContactRelation>;
   keywords?: Record<string, boolean>;
   members?: Record<string, boolean>;
-  gender?: { sex?: string; identity?: string };
+  speakToAs?: {
+    grammaticalGender?: string;
+    pronouns?: Record<string, { pronouns: string; pref?: number; contexts?: Record<string, boolean> }>;
+  };
   calendarUri?: string;
   schedulingUri?: string;
   freeBusyUri?: string;

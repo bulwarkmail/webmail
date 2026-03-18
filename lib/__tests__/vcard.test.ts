@@ -226,7 +226,7 @@ describe("parseVCard", () => {
     expect(result).toHaveLength(1);
     const card = result[0];
 
-    expect(card.gender).toEqual({ sex: "F", identity: "Female" });
+    expect(card.speakToAs).toEqual({ grammaticalGender: "feminine", pronouns: { p0: { pronouns: "Female" } } });
     expect(card.media?.m0).toEqual({
       kind: "logo",
       uri: "https://example.com/logo.png",
@@ -331,7 +331,7 @@ describe("generateVCard", () => {
         components: [{ kind: "given", value: "Jane" }],
         isOrdered: true,
       },
-      gender: { sex: "F", identity: "Female" },
+      speakToAs: { grammaticalGender: "feminine", pronouns: { p0: { pronouns: "Female" } } },
       media: {
         m0: { kind: "logo", uri: "https://example.com/logo.png", mediaType: "image/png" },
         m1: { kind: "sound", uri: "https://example.com/sound.ogg", mediaType: "audio/ogg" },

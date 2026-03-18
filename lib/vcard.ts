@@ -1,5 +1,29 @@
 import type { ContactCard, NameComponent, ContactMedia, ContactOnlineService } from "@/lib/jmap/types";
 
+const VCARD_SEX_TO_GENDER: Record<string, string> = {
+  M: "masculine",
+  F: "feminine",
+  O: "other",
+  N: "none",
+  U: "unknown",
+};
+
+const GENDER_TO_VCARD_SEX: Record<string, string> = {
+  masculine: "M",
+  feminine: "F",
+  other: "O",
+  none: "N",
+  unknown: "U",
+};
+
+function vcardSexToGrammaticalGender(sex: string): string {
+  return VCARD_SEX_TO_GENDER[sex.toUpperCase()] || sex.toLowerCase();
+}
+
+function grammaticalGenderToVcardSex(gender: string): string {
+  return GENDER_TO_VCARD_SEX[gender.toLowerCase()] || "";
+}
+
 function unfoldLines(vcf: string): string {
   return vcf.replace(/\r\n[ \t]/g, "").replace(/\r\n/g, "\n").replace(/\r/g, "\n");
 }
@@ -390,9 +414,17 @@ function buildContact(raw: Record<string, string[]>): ContactCard | null {
 
         case "GENDER": {
           const gParts = val.split(";");
-          card.gender = {};
-          if (gParts[0]) card.gender.sex = gParts[0];
-          if (gParts[1]) card.gender.identity = gParts[1];
+          const sexCode = gParts[0]?.toUpperCase();
+          const identityText = gParts[1];
+          if (sexCode || identityText) {
+            card.speakToAs = {};
+            if (sexCode) {
+              card.speakToAs.grammaticalGender = vcardSexToGrammaticalGender(sexCode);
+            }
+            if (identityText) {
+              card.speakToAs.pronouns = { p0: { pronouns: identityText } };
+            }
+          }
           break;
         }
 
@@ -684,10 +716,15 @@ function generateSingleVCard(contact: ContactCard): string {
     }
   }
 
-  if (contact.gender) {
-    const sex = contact.gender.sex || "";
-    const identity = contact.gender.identity || "";
-    lines.push(`GENDER:${sex}${identity ? `;${identity}` : ""}`);
+  if (contact.speakToAs) {
+    const sex = contact.speakToAs.grammaticalGender
+      ? grammaticalGenderToVcardSex(contact.speakToAs.grammaticalGender)
+      : "";
+    const pronouns = contact.speakToAs.pronouns;
+    const identity = pronouns ? Object.values(pronouns)[0]?.pronouns || "" : "";
+    if (sex || identity) {
+      lines.push(`GENDER:${sex}${identity ? `;${identity}` : ""}`);
+    }
   }
 
   if (contact.calendarUri) {

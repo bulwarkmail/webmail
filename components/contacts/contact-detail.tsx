@@ -351,13 +351,16 @@ export function ContactDetail({ contact, onEdit, onDelete, isMobile, className }
             </Section>
           )}
 
-          {contact.gender && (contact.gender.sex || contact.gender.identity) && (
+          {contact.speakToAs && (contact.speakToAs.grammaticalGender || contact.speakToAs.pronouns) && (
             <Section icon={UserCircle} title={t("detail.gender")} category="personal">
               <div className="text-sm">
-                {contact.gender.sex && <span>{t(`detail.gender_${contact.gender.sex.toUpperCase()}`, { defaultValue: contact.gender.sex })}</span>}
-                {contact.gender.identity && (
-                  <span className="text-muted-foreground">{contact.gender.sex ? " — " : ""}{contact.gender.identity}</span>
-                )}
+                {contact.speakToAs.grammaticalGender && <span>{t(`detail.gender_${contact.speakToAs.grammaticalGender}`, { defaultValue: contact.speakToAs.grammaticalGender })}</span>}
+                {contact.speakToAs.pronouns && (() => {
+                  const firstPronoun = Object.values(contact.speakToAs!.pronouns!)[0]?.pronouns;
+                  return firstPronoun ? (
+                    <span className="text-muted-foreground">{contact.speakToAs!.grammaticalGender ? " — " : ""}{firstPronoun}</span>
+                  ) : null;
+                })()}
               </div>
             </Section>
           )}

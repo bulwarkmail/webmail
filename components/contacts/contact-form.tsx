@@ -235,8 +235,10 @@ export function ContactForm({ contact, onSave, onCancel }: ContactFormProps) {
     contact?.notes ? Object.values(contact.notes)[0]?.note || "" : ""
   );
 
-  const [genderSex, setGenderSex] = useState(contact?.gender?.sex || "");
-  const [genderIdentity, setGenderIdentity] = useState(contact?.gender?.identity || "");
+  const [genderSex, setGenderSex] = useState(contact?.speakToAs?.grammaticalGender || "");
+  const [genderIdentity, setGenderIdentity] = useState(
+    contact?.speakToAs?.pronouns ? Object.values(contact.speakToAs.pronouns)[0]?.pronouns || "" : ""
+  );
   const [calendarUri, setCalendarUri] = useState(contact?.calendarUri || "");
   const [schedulingUri, setSchedulingUri] = useState(contact?.schedulingUri || "");
   const [freeBusyUri, setFreeBusyUri] = useState(contact?.freeBusyUri || "");
@@ -371,8 +373,11 @@ export function ContactForm({ contact, onSave, onCancel }: ContactFormProps) {
       notes: note.trim()
         ? { n0: { note: note.trim() } }
         : undefined,
-      gender: (genderSex.trim() || genderIdentity.trim())
-        ? { sex: genderSex.trim() || undefined, identity: genderIdentity.trim() || undefined }
+      speakToAs: (genderSex.trim() || genderIdentity.trim())
+        ? {
+            grammaticalGender: genderSex.trim() || undefined,
+            pronouns: genderIdentity.trim() ? { p0: { pronouns: genderIdentity.trim() } } : undefined,
+          }
         : undefined,
       calendarUri: calendarUri.trim() || undefined,
       schedulingUri: schedulingUri.trim() || undefined,
@@ -737,11 +742,11 @@ export function ContactForm({ contact, onSave, onCancel }: ContactFormProps) {
                 <label className="text-xs text-muted-foreground mb-1 block">{t("gender_sex")}</label>
                 <Select value={genderSex} onChange={(e) => setGenderSex(e.target.value)} className="w-full">
                   <option value="">—</option>
-                  <option value="M">{t("gender_male")}</option>
-                  <option value="F">{t("gender_female")}</option>
-                  <option value="O">{t("gender_other")}</option>
-                  <option value="N">{t("gender_none")}</option>
-                  <option value="U">{t("gender_unknown")}</option>
+                  <option value="masculine">{t("gender_male")}</option>
+                  <option value="feminine">{t("gender_female")}</option>
+                  <option value="other">{t("gender_other")}</option>
+                  <option value="none">{t("gender_none")}</option>
+                  <option value="unknown">{t("gender_unknown")}</option>
                 </Select>
               </div>
               <div>
