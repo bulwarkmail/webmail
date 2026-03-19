@@ -135,7 +135,7 @@ export function SubAddressHelper({
         <div
           ref={popoverRef}
           className={cn(
-            'absolute top-full left-0 mt-1 z-50',
+            'absolute top-full right-0 mt-1 z-50',
             'bg-background border border-border rounded-lg shadow-lg',
             'w-80 p-4 animate-in fade-in zoom-in-95 duration-150'
           )}
