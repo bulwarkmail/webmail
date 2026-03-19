@@ -1022,6 +1022,10 @@ export default function Home() {
     </button>
   );
 
+  if (!isAuthenticated) {
+    return null;
+  }
+
   return (
     <DragDropProvider>
       <div className="flex flex-col h-dvh bg-background overflow-hidden">

@@ -11,6 +11,7 @@ import { useAccountStore } from './account-store';
 import { fetchConfig } from '@/hooks/use-config';
 import { debug } from '@/lib/debug';
 import { generateAccountId } from '@/lib/account-utils';
+import { replaceWindowLocation } from '@/lib/browser-navigation';
 import { snapshotAccount, restoreAccount, clearAllStores, evictAccount, evictAll } from '@/lib/account-state-manager';
 import type { Identity } from '@/lib/jmap/types';
 
@@ -98,8 +99,45 @@ function loadIdentities(rawIdentities: Identity[], username: string): { identiti
   return { identities, primaryIdentity };
 }
 
+function getLocaleLoginPath(): string {
+  if (typeof window === 'undefined') return '/en/login';
+
+  const segments = window.location.pathname.split('/').filter(Boolean);
+  const locale = segments[0] || 'en';
+  return `/${locale}/login`;
+}
+
+function saveRedirectAfterLogin(): void {
+  if (typeof window === 'undefined') return;
+
+  try {
+    const loginPath = getLocaleLoginPath();
+    const currentPath = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+
+    if (currentPath !== loginPath) {
+      sessionStorage.setItem('redirect_after_login', currentPath);
+    }
+  } catch {
+    /* noop */
+  }
+}
+
+function redirectToLogin(): void {
+  if (typeof window === 'undefined') return;
+
+  const loginPath = getLocaleLoginPath();
+  if (window.location.pathname === loginPath) return;
+  replaceWindowLocation(loginPath);
+}
+
 function markSessionExpired(): void {
-  try { sessionStorage.setItem('session_expired', 'true'); } catch { /* noop */ }
+  try {
+    sessionStorage.setItem('session_expired', 'true');
+  } catch {
+    /* noop */
+  }
+
+  saveRedirectAfterLogin();
 }
 
 function initializeFeatureStores(client: JMAPClient): void {
@@ -479,6 +517,7 @@ export const useAuthStore = create<AuthState>()(
 
         // Check if there are remaining accounts to switch to
         const remainingAccounts = accountStore.accounts;
+        const shouldRedirectToLogin = remainingAccounts.length === 0;
         if (remainingAccounts.length > 0) {
           // Switch to the next account
           const nextAccount = remainingAccounts[0];
@@ -540,28 +579,51 @@ export const useAuthStore = create<AuthState>()(
         }
 
         // Clean up cookies for the removed account
-        fetch(`/api/auth/session?slot=${slot}`, { method: 'DELETE' }).catch((err) => {
+        fetch(`/api/auth/session?slot=${slot}`, { method: 'DELETE', keepalive: shouldRedirectToLogin }).catch((err) => {
           debug.error('Failed to clear session cookie:', err);
         });
 
-        if (wasOAuth) {
-          fetch(`/api/auth/token?slot=${slot}`, { method: 'DELETE' })
+        if (wasOAuth && shouldRedirectToLogin) {
+          let redirectCommitted = false;
+          const commitLoginRedirect = () => {
+            if (redirectCommitted) return;
+            redirectCommitted = true;
+            redirectToLogin();
+          };
+
+          window.setTimeout(commitLoginRedirect, 0);
+
+          fetch(`/api/auth/token?slot=${slot}`, { method: 'DELETE', keepalive: true })
             .then((res) => {
               if (!res.ok) throw new Error(`Revocation failed: ${res.status}`);
               return res.json();
             })
             .then((data) => {
-              if (data.end_session_url && remainingAccounts.length === 0) {
+              if (redirectCommitted) return;
+
+              if (data.end_session_url) {
+                redirectCommitted = true;
                 const locale = window.location.pathname.split('/')[1] || 'en';
                 const redirectUri = `${window.location.origin}/${locale}/login`;
                 const url = new URL(data.end_session_url);
                 url.searchParams.set('post_logout_redirect_uri', redirectUri);
-                window.location.href = url.toString();
+                replaceWindowLocation(url.toString());
+                return;
               }
+
+              commitLoginRedirect();
             })
             .catch((err) => {
               debug.error('OAuth logout cleanup failed:', err);
+              commitLoginRedirect();
             });
+        } else if (wasOAuth) {
+          fetch(`/api/auth/token?slot=${slot}`, { method: 'DELETE', keepalive: false })
+            .catch((err) => {
+              debug.error('OAuth logout cleanup failed:', err);
+            });
+        } else if (shouldRedirectToLogin) {
+          redirectToLogin();
         }
       },
 
@@ -604,8 +666,9 @@ export const useAuthStore = create<AuthState>()(
         }
 
         // Delete all cookies
-        fetch('/api/auth/session?all=true', { method: 'DELETE' }).catch(() => {});
-        fetch('/api/auth/token?all=true', { method: 'DELETE' }).catch(() => {});
+        fetch('/api/auth/session?all=true', { method: 'DELETE', keepalive: true }).catch(() => {});
+        fetch('/api/auth/token?all=true', { method: 'DELETE', keepalive: true }).catch(() => {});
+        redirectToLogin();
       },
 
       switchAccount: async (accountId: string) => {
