@@ -1,6 +1,8 @@
+import v8 from 'node:v8';
 import { NextResponse } from 'next/server';
 import { NextRequest } from 'next/server';
 import { logger } from '@/lib/logger';
+import { calculateHeapUsagePercent } from '@/lib/health-memory';
 
 // Health check thresholds
 const MEMORY_WARNING_THRESHOLD = 0.85; // 85% heap usage
@@ -14,6 +16,7 @@ interface HealthStatus {
   memory?: {
     heapUsed: number;
     heapTotal: number;
+    heapSizeLimit: number;
     rss: number;
     external: number;
     heapUsagePercent: number;
@@ -43,7 +46,8 @@ export async function GET(request: NextRequest) {
   try {
     const timestamp = new Date().toISOString();
     const memUsage = process.memoryUsage();
-    const heapUsagePercent = (memUsage.heapUsed / memUsage.heapTotal) * 100;
+    const heapSizeLimit = process.constrainedMemory() || v8.getHeapStatistics().heap_size_limit;
+    const heapUsagePercent = calculateHeapUsagePercent(memUsage.heapUsed, memUsage.heapTotal, heapSizeLimit);
 
     // Determine health status based on memory usage
     let status: 'healthy' | 'degraded' | 'unhealthy' = 'healthy';
@@ -75,6 +79,7 @@ export async function GET(request: NextRequest) {
       response.memory = {
         heapUsed: memUsage.heapUsed,
         heapTotal: memUsage.heapTotal,
+        heapSizeLimit,
         rss: memUsage.rss,
         external: memUsage.external,
         heapUsagePercent: Number(heapUsagePercent.toFixed(2)),
@@ -117,7 +122,8 @@ export async function GET(request: NextRequest) {
 export async function HEAD() {
   try {
     const memUsage = process.memoryUsage();
-    const heapUsagePercent = (memUsage.heapUsed / memUsage.heapTotal) * 100;
+    const heapSizeLimit = process.constrainedMemory() || v8.getHeapStatistics().heap_size_limit;
+    const heapUsagePercent = calculateHeapUsagePercent(memUsage.heapUsed, memUsage.heapTotal, heapSizeLimit);
 
     if (heapUsagePercent >= MEMORY_CRITICAL_THRESHOLD * 100) {
       return new Response(null, { status: 503 });
