@@ -210,6 +210,7 @@
     "attachments": "Archivos adjuntos",
     "important": "Importante",
     "download": "Descargar",
+    "download_all": "Descargar todo",
     "from": "De",
     "to": "Para",
     "cc": "CC",
@@ -401,7 +402,8 @@
     },
     "previous": "Anterior",
     "next": "Siguiente",
-    "send": "Enviar"
+    "send": "Enviar",
+    "more": "más"
   },
   "email_composer": {
     "new_message": "Nuevo Mensaje",
@@ -752,6 +754,12 @@
         "description": "Elige si al hacer clic en un archivo adjunto se abre una vista previa o se descarga de inmediato",
         "preview": "Mostrar vista previa cuando sea posible",
         "download": "Descargar inmediatamente"
+      },
+      "attachment_position": {
+        "label": "Posición del adjunto",
+        "description": "Dónde mostrar los adjuntos en el encabezado del correo",
+        "beside-sender": "Junto al remitente",
+        "below-header": "Debajo del encabezado"
       },
       "emails_per_page": {
         "25": "25 correos",
@@ -1947,6 +1955,12 @@
       "deleted": "Suscripción eliminada",
       "delete_error": "No se pudo eliminar la suscripción",
       "last_refreshed": "Última actualización: {time}"
+    },
+    "tasks": {
+      "no_tasks": "Sin tareas",
+      "no_title": "(Sin título)",
+      "mark_complete": "Marcar como completada",
+      "mark_incomplete": "Marcar como incompleta"
     }
   },
   "advanced_search": {

@@ -816,13 +816,13 @@ export default function Home() {
     };
   }, []);
 
-  const handleDownloadAttachment = async (blobId: string, name: string, type?: string) => {
+  const handleDownloadAttachment = async (blobId: string, name: string, type?: string, forceDownload?: boolean) => {
     if (!client) return;
 
     try {
       const { mailAttachmentAction } = useSettingsStore.getState();
 
-      if (mailAttachmentAction === 'preview' && isFilePreviewable(name, type)) {
+      if (!forceDownload && mailAttachmentAction === 'preview' && isFilePreviewable(name, type)) {
         setPreviewAttachment({ blobId, name, type });
         return;
       }

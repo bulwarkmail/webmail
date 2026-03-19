@@ -210,6 +210,7 @@
     "attachments": "Attachments",
     "important": "Important",
     "download": "Download",
+    "download_all": "Download all",
     "from": "From",
     "to": "To",
     "cc": "CC",
@@ -401,7 +402,8 @@
       "event_status_tentative": "Tentative",
       "event_status_cancelled": "Cancelled"
     },
-    "send": "Send"
+    "send": "Send",
+    "more": "more"
   },
   "email_composer": {
     "new_message": "New Message",
@@ -752,6 +754,12 @@
         "description": "Choose whether clicking a file attachment previews it or downloads it immediately",
         "preview": "Preview when possible",
         "download": "Download immediately"
+      },
+      "attachment_position": {
+        "label": "Attachment Position",
+        "description": "Where to display attachments in the email header",
+        "beside-sender": "Next to sender",
+        "below-header": "Below header"
       },
       "emails_per_page": {
         "25": "25 emails",
@@ -1947,6 +1955,12 @@
       "deleted": "Subscription removed",
       "delete_error": "Failed to remove subscription",
       "last_refreshed": "Last updated: {time}"
+    },
+    "tasks": {
+      "no_tasks": "No tasks",
+      "no_title": "(No title)",
+      "mark_complete": "Mark as complete",
+      "mark_incomplete": "Mark as incomplete"
     }
   },
   "advanced_search": {

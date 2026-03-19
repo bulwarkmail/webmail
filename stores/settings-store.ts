@@ -29,6 +29,7 @@ export type TimeFormat = '12h' | '24h';
 export type FirstDayOfWeek = 0 | 1; // 0 = Sunday, 1 = Monday
 export type ExternalContentPolicy = 'ask' | 'block' | 'allow';
 export type MailAttachmentAction = 'preview' | 'download';
+export type AttachmentPosition = 'beside-sender' | 'below-header';
 export type ToolbarPosition = 'top' | 'below-subject';
 export type ArchiveMode = 'single' | 'year' | 'month';
 
@@ -92,6 +93,7 @@ interface SettingsState {
   emailsPerPage: number;
   externalContentPolicy: ExternalContentPolicy;
   mailAttachmentAction: MailAttachmentAction;
+  attachmentPosition: AttachmentPosition;
   emailAlwaysLightMode: boolean; // Always render email content in light mode
   archiveMode: ArchiveMode; // How to organize archived emails: single folder, by year, or by year+month
 
@@ -186,6 +188,7 @@ const DEFAULT_SETTINGS = {
   emailsPerPage: 50,
   externalContentPolicy: 'ask' as ExternalContentPolicy,
   mailAttachmentAction: 'preview' as MailAttachmentAction,
+  attachmentPosition: 'beside-sender' as AttachmentPosition,
   emailAlwaysLightMode: false,
   archiveMode: 'single' as ArchiveMode,
 
@@ -271,6 +274,7 @@ export const useSettingsStore = create<SettingsState>()(
           emailsPerPage: state.emailsPerPage,
           externalContentPolicy: state.externalContentPolicy,
           mailAttachmentAction: state.mailAttachmentAction,
+          attachmentPosition: state.attachmentPosition,
           archiveMode: state.archiveMode,
           trustedSenders: state.trustedSenders,
           autoSaveDraftInterval: state.autoSaveDraftInterval,

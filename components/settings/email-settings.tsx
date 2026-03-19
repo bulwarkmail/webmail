@@ -24,6 +24,7 @@ export function EmailSettings() {
     emailsPerPage,
     externalContentPolicy,
     mailAttachmentAction,
+    attachmentPosition,
     emailAlwaysLightMode,
     archiveMode,
     trustedSenders,
@@ -191,6 +192,17 @@ export function EmailSettings() {
           options={[
             { value: 'preview', label: t('attachment_click_action.preview') },
             { value: 'download', label: t('attachment_click_action.download') },
+          ]}
+        />
+      </SettingItem>
+
+      <SettingItem label={t('attachment_position.label')} description={t('attachment_position.description')}>
+        <Select
+          value={attachmentPosition}
+          onChange={(value) => updateSetting('attachmentPosition', value as 'beside-sender' | 'below-header')}
+          options={[
+            { value: 'beside-sender', label: t('attachment_position.beside-sender') },
+            { value: 'below-header', label: t('attachment_position.below-header') },
           ]}
         />
       </SettingItem>

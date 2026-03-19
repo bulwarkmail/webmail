@@ -210,6 +210,7 @@
     "attachments": "Pièces jointes",
     "important": "Important",
     "download": "Télécharger",
+    "download_all": "Tout télécharger",
     "from": "De",
     "to": "À",
     "cc": "CC",
@@ -401,7 +402,8 @@
     },
     "previous": "Précédent",
     "next": "Suivant",
-    "send": "Envoyer"
+    "send": "Envoyer",
+    "more": "plus"
   },
   "email_composer": {
     "new_message": "Nouveau message",
@@ -752,6 +754,12 @@
         "description": "Choisissez si un clic sur une pièce jointe ouvre un aperçu ou lance immédiatement le téléchargement",
         "preview": "Aperçu si possible",
         "download": "Télécharger immédiatement"
+      },
+      "attachment_position": {
+        "label": "Position des pièces jointes",
+        "description": "Où afficher les pièces jointes dans l'en-tête de l'email",
+        "beside-sender": "À côté de l'expéditeur",
+        "below-header": "Sous l'en-tête"
       },
       "emails_per_page": {
         "25": "25 emails",
@@ -1947,6 +1955,12 @@
       "deleted": "Abonnement supprimé",
       "delete_error": "Impossible de supprimer l'abonnement",
       "last_refreshed": "Dernière mise à jour : {time}"
+    },
+    "tasks": {
+      "no_tasks": "Aucune tâche",
+      "no_title": "(Sans titre)",
+      "mark_complete": "Marquer comme terminée",
+      "mark_incomplete": "Marquer comme non terminée"
     }
   },
   "advanced_search": {

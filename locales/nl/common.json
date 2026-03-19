@@ -210,6 +210,7 @@
     "attachments": "Bijlagen",
     "important": "Belangrijk",
     "download": "Downloaden",
+    "download_all": "Alles downloaden",
     "from": "Van",
     "to": "Aan",
     "cc": "CC",
@@ -401,7 +402,8 @@
     },
     "previous": "Vorige",
     "next": "Volgende",
-    "send": "Verzenden"
+    "send": "Verzenden",
+    "more": "meer"
   },
   "email_composer": {
     "new_message": "Nieuw bericht",
@@ -752,6 +754,12 @@
         "description": "Kies of een klik op een bijlage een voorbeeld opent of direct downloadt",
         "preview": "Voorbeeld tonen indien mogelijk",
         "download": "Direct downloaden"
+      },
+      "attachment_position": {
+        "label": "Positie van bijlagen",
+        "description": "Waar bijlagen in de e-mailkop worden weergegeven",
+        "beside-sender": "Naast de afzender",
+        "below-header": "Onder de kop"
       },
       "emails_per_page": {
         "25": "25 e-mails",
@@ -1947,6 +1955,12 @@
       "deleted": "Abonnement verwijderd",
       "delete_error": "Kan abonnement niet verwijderen",
       "last_refreshed": "Laatst bijgewerkt: {time}"
+    },
+    "tasks": {
+      "no_tasks": "Geen taken",
+      "no_title": "(Geen titel)",
+      "mark_complete": "Markeren als voltooid",
+      "mark_incomplete": "Markeren als onvoltooid"
     }
   },
   "advanced_search": {

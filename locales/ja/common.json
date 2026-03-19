@@ -210,6 +210,7 @@
     "attachments": "添付ファイル",
     "important": "重要",
     "download": "ダウンロード",
+    "download_all": "すべてダウンロード",
     "from": "送信者",
     "to": "宛先",
     "cc": "CC",
@@ -401,7 +402,8 @@
     },
     "previous": "前へ",
     "next": "次へ",
-    "send": "送信"
+    "send": "送信",
+    "more": "他"
   },
   "email_composer": {
     "new_message": "新規メッセージ",
@@ -752,6 +754,12 @@
         "description": "添付ファイルをクリックしたときに、プレビューを開くかすぐにダウンロードするかを選択します",
         "preview": "可能ならプレビューを開く",
         "download": "すぐにダウンロード"
+      },
+      "attachment_position": {
+        "label": "添付ファイルの位置",
+        "description": "メールヘッダー内での添付ファイルの表示位置",
+        "beside-sender": "送信者の横",
+        "below-header": "ヘッダーの下"
       },
       "emails_per_page": {
         "25": "25件",
@@ -1947,6 +1955,12 @@
       "deleted": "購読を解除しました",
       "delete_error": "購読の解除に失敗しました",
       "last_refreshed": "最終更新: {time}"
+    },
+    "tasks": {
+      "no_tasks": "タスクなし",
+      "no_title": "(タイトルなし)",
+      "mark_complete": "完了にする",
+      "mark_incomplete": "未完了にする"
     }
   },
   "advanced_search": {

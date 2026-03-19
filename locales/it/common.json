@@ -210,6 +210,7 @@
     "attachments": "Allegati",
     "important": "Importante",
     "download": "Scarica",
+    "download_all": "Scarica tutto",
     "from": "Da",
     "to": "A",
     "cc": "CC",
@@ -401,7 +402,8 @@
     },
     "previous": "Precedente",
     "next": "Successivo",
-    "send": "Invia"
+    "send": "Invia",
+    "more": "altri"
   },
   "email_composer": {
     "new_message": "Nuovo messaggio",
@@ -752,6 +754,12 @@
         "description": "Scegli se facendo clic su un allegato si apre un'anteprima o si avvia subito il download",
         "preview": "Anteprima quando possibile",
         "download": "Scarica immediatamente"
+      },
+      "attachment_position": {
+        "label": "Posizione degli allegati",
+        "description": "Dove visualizzare gli allegati nell'intestazione dell'email",
+        "beside-sender": "Accanto al mittente",
+        "below-header": "Sotto l'intestazione"
       },
       "emails_per_page": {
         "25": "25 messaggi",
@@ -1947,6 +1955,12 @@
       "deleted": "Abbonamento rimosso",
       "delete_error": "Impossibile rimuovere l'abbonamento",
       "last_refreshed": "Ultimo aggiornamento: {time}"
+    },
+    "tasks": {
+      "no_tasks": "Nessuna attività",
+      "no_title": "(Senza titolo)",
+      "mark_complete": "Segna come completata",
+      "mark_incomplete": "Segna come non completata"
     }
   },
   "advanced_search": {

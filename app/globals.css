@@ -20,6 +20,8 @@
   --color-accent-foreground: #1e40af;
   --color-destructive: #ef4444;
   --color-destructive-foreground: #ffffff;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #0f172a;
 
   /* Settings variables */
   --font-size-base: 16px;
@@ -50,6 +52,8 @@
   --color-accent-foreground: #dbeafe;
   --color-destructive: #ef4444;
   --color-destructive-foreground: #fafafa;
+  --color-popover: #1c1c1c;
+  --color-popover-foreground: #fafafa;
 }
 
 @theme inline {
@@ -68,6 +72,8 @@
   --color-accent-foreground: var(--color-accent-foreground);
   --color-destructive: var(--color-destructive);
   --color-destructive-foreground: var(--color-destructive-foreground);
+  --color-popover: var(--color-popover);
+  --color-popover-foreground: var(--color-popover-foreground);
 }
 
 * {

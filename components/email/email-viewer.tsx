@@ -105,7 +105,7 @@ interface EmailViewerProps {
   onToggleStar?: () => void;
   onMarkAsRead?: (emailId: string, read: boolean) => void;
   onSetColorTag?: (emailId: string, color: string | null) => void;
-  onDownloadAttachment?: (blobId: string, name: string, type?: string) => void;
+  onDownloadAttachment?: (blobId: string, name: string, type?: string, forceDownload?: boolean) => void;
   onQuickReply?: (body: string) => Promise<void>;
   onMarkAsSpam?: () => void;
   onUndoSpam?: () => void;
@@ -147,6 +147,42 @@ const getFileIcon = (name?: string, type?: string) => {
     return FileText;
   }
   return File;
+};
+
+const MIME_TYPE_LABELS: Record<string, string> = {
+  'application/pdf': 'Document.pdf',
+  'application/zip': 'Archive.zip',
+  'application/x-zip-compressed': 'Archive.zip',
+  'application/gzip': 'Archive.gz',
+  'application/x-rar-compressed': 'Archive.rar',
+  'application/x-7z-compressed': 'Archive.7z',
+  'application/msword': 'Document.doc',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'Document.docx',
+  'application/vnd.ms-excel': 'Spreadsheet.xls',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'Spreadsheet.xlsx',
+  'application/vnd.ms-powerpoint': 'Presentation.ppt',
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'Presentation.pptx',
+  'text/plain': 'Text.txt',
+  'text/html': 'Document.html',
+  'text/csv': 'Data.csv',
+  'application/json': 'Data.json',
+  'application/xml': 'Data.xml',
+  'application/octet-stream': 'Attachment',
+  'message/rfc822': 'Email.eml',
+};
+
+const getAttachmentDisplayName = (name: string | null | undefined, mimeType?: string): string => {
+  if (name) return name;
+  if (mimeType) {
+    const label = MIME_TYPE_LABELS[mimeType.toLowerCase()];
+    if (label) return label;
+    const sub = mimeType.split('/')[1];
+    if (sub) {
+      const clean = sub.replace(/^x-/, '').replace(/^vnd\./, '');
+      return `Attachment.${clean}`;
+    }
+  }
+  return 'Attachment';
 };
 
 const getCurrentColor = (keywords: Record<string, boolean> | undefined) => {
@@ -837,6 +873,7 @@ export function EmailViewer({
   const tFiles = useTranslations('files');
   const externalContentPolicy = useSettingsStore((state) => state.externalContentPolicy);
   const mailAttachmentAction = useSettingsStore((state) => state.mailAttachmentAction);
+  const attachmentPosition = useSettingsStore((state) => state.attachmentPosition);
   const addTrustedSender = useSettingsStore((state) => state.addTrustedSender);
   const isSenderTrusted = useSettingsStore((state) => state.isSenderTrusted);
   const emailKeywords = useSettingsStore((state) => state.emailKeywords);
@@ -864,6 +901,8 @@ export function EmailViewer({
   const { identities, client } = useAuthStore();
   const resolvedTheme = useThemeStore((state) => state.resolvedTheme);
   const [showFullHeaders, setShowFullHeaders] = useState(false);
+  const [showAllBesideAttachments, setShowAllBesideAttachments] = useState(false);
+  const [showAllMobileAttachments, setShowAllMobileAttachments] = useState(false);
   const [allowExternalContent, setAllowExternalContent] = useState(false);
   const [hasBlockedContent, setHasBlockedContent] = useState(false);
   const [cidBlobUrls, setCidBlobUrls] = useState<Record<string, string>>({});
@@ -2394,6 +2433,44 @@ export function EmailViewer({
     setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
   }, [mailAttachmentAction, onDownloadAttachment]);
 
+  const handleEffectiveAttachmentDownload = useCallback((attachment: EffectiveAttachment) => {
+    if (attachment.blobId && onDownloadAttachment) {
+      onDownloadAttachment(attachment.blobId, attachment.name || 'download', attachment.type, true);
+      return;
+    }
+
+    if (attachment.tnefData) {
+      const buffer = attachment.tnefData.buffer.slice(
+        attachment.tnefData.byteOffset,
+        attachment.tnefData.byteOffset + attachment.tnefData.byteLength,
+      ) as ArrayBuffer;
+      const blob = new Blob([buffer], { type: attachment.type || 'application/octet-stream' });
+      const objectUrl = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = objectUrl;
+      anchor.download = attachment.name || 'download';
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 60000);
+      return;
+    }
+
+    if (!attachment.decryptedAttachment) return;
+    const bytes = getAttachmentContentBytes(attachment.decryptedAttachment);
+    if (!bytes || bytes.byteLength === 0) return;
+    const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+    const blob = new Blob([buffer], { type: attachment.type || 'application/octet-stream' });
+    const objectUrl = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = objectUrl;
+    anchor.download = attachment.name || 'download';
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
+  }, [onDownloadAttachment]);
+
   // Iframe for rendering HTML emails true-to-life
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
@@ -2913,6 +2990,21 @@ export function EmailViewer({
           <Code className="w-4 h-4" />
         </Button>
 
+        {/* Dark/light mode toggle for HTML emails */}
+        {effectiveEmailContent.isHtml && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setEmailViewDarkOverride(prev => prev === null ? !(resolvedTheme === 'dark') : !prev)}
+            data-overflow-item
+            data-overflow-priority="11"
+            className="hidden sm:inline-flex h-8 gap-1.5"
+            title={isDark ? 'View in light mode' : 'View in dark mode'}
+          >
+            {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          </Button>
+        )}
+
         {/* More menu — click-based */}
         <div ref={moreMenuRef} className="relative">
           <Button
@@ -3095,6 +3187,16 @@ export function EmailViewer({
                 <Code className="w-4 h-4" />
                 {t('view_source')}
               </button>
+              {/* Overflow: dark/light mode toggle */}
+              {effectiveEmailContent.isHtml && (
+                <button
+                  onClick={() => { setEmailViewDarkOverride(prev => prev === null ? !(resolvedTheme === 'dark') : !prev); setMoreMenuOpen(false); setMoreMenuSub(null); }}
+                  className={cn("w-full px-3 py-1.5 text-sm text-left hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(11) ? "" : "sm:hidden")}
+                >
+                  {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                  {isDark ? 'View in light mode' : 'View in dark mode'}
+                </button>
+              )}
               <div className="h-px bg-border my-1" />
               {/* Export email */}
               <button
@@ -3268,6 +3370,15 @@ export function EmailViewer({
             <Code className="w-5 h-5" />
             {t('view_source')}
           </button>
+          {effectiveEmailContent.isHtml && (
+            <button
+              onClick={() => { setEmailViewDarkOverride(prev => prev === null ? !(resolvedTheme === 'dark') : !prev); setMoreMenuOpen(false); }}
+              className="w-full px-4 py-3 min-h-[44px] text-sm text-left hover:bg-muted text-foreground flex items-center gap-3"
+            >
+              {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              {isDark ? 'View in light mode' : 'View in dark mode'}
+            </button>
+          )}
           <div className="h-px bg-border my-1" />
           <button
             onClick={() => { handleExportEmail(); setMoreMenuOpen(false); }}
@@ -3341,7 +3452,7 @@ export function EmailViewer({
             )}
             <div className="flex-1 min-w-0">
               <div className="flex items-start gap-2">
-                <h1 className="text-lg lg:text-2xl font-bold text-foreground tracking-tight break-words min-w-0">
+                <h1 className="text-lg lg:text-xl font-bold text-foreground tracking-tight break-words min-w-0">
                   {email.subject || t('no_subject')}
                 </h1>
                 {/* Star inline with subject (top toolbar mode) */}
@@ -3365,18 +3476,23 @@ export function EmailViewer({
                     <span className={cn("w-2.5 h-2.5 rounded-full flex-shrink-0", dotClass)} title={kw!.label} />
                   ) : null;
                 })()}
-              </div>
-              <div className="flex items-center gap-2 lg:gap-3 mt-1 lg:mt-1.5 text-xs lg:text-sm text-muted-foreground">
-                <span className="flex items-center gap-1 lg:gap-1.5 whitespace-nowrap">
-                  <Clock className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
-                  {formatDateTime(email.receivedAt, timeFormat, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
-                </span>
                 {isImportant && (
-                  <span className="px-1.5 lg:px-2 py-0.5 bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-full text-xs font-medium whitespace-nowrap">
+                  <span className="px-1.5 lg:px-2 py-0.5 bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-full text-xs font-medium whitespace-nowrap flex-shrink-0 self-center">
                     {t('important')}
                   </span>
                 )}
               </div>
+            </div>
+            {/* Date/time on the right of subject row */}
+            <div className="flex-shrink-0 text-right">
+              <span className="text-xs lg:text-sm text-muted-foreground whitespace-nowrap">
+                {formatDateTime(email.receivedAt, timeFormat, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
+              </span>
+              {email.size > 0 && (
+                <div className="text-xs text-muted-foreground/60">
+                  {formatFileSize(email.size)}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -3408,13 +3524,14 @@ export function EmailViewer({
                 name={sender?.name}
                 email={sender?.email}
                 size="lg"
-                className="shadow-sm w-12 h-12 group-hover:ring-2 group-hover:ring-primary/30 transition-all"
+                className="shadow-sm w-10 h-10 group-hover:ring-2 group-hover:ring-primary/30 transition-all"
               />
             </button>
 
-            <div className="flex-1 min-w-0">
-              {/* Sender line with email and badges */}
-              <div className="flex items-start justify-between gap-4">
+            <div className="flex-1 min-w-0 flex gap-4">
+              <div className="flex-1 min-w-0">
+              {/* Row 1: Sender name + badges */}
+              <div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <button
@@ -3425,102 +3542,79 @@ export function EmailViewer({
                       {sender?.name || sender?.email || t('unknown_sender')}
                     </button>
                     <EmailIdentityBadge email={email} identities={identities} />
+                    {shouldShowUnsubBanner && listHeaders?.listUnsubscribe && (
+                      <UnsubscribeBanner
+                        listUnsubscribe={listHeaders.listUnsubscribe}
+                        senderEmail={email?.from?.[0]?.email || ''}
+                        onDismiss={() => {
+                          const messageId = email?.messageId || '';
+                          const newSet = new Set(dismissedUnsubBanners).add(messageId);
+                          setDismissedUnsubBanners(newSet);
+                          localStorage.setItem('dismissed-unsub-banners', JSON.stringify([...newSet]));
+                        }}
+                      />
+                    )}
                   </div>
-                  {sender?.email && (
-                    <div className="text-sm text-muted-foreground mt-0.5 flex items-center min-w-0">
-                      <span className="truncate">{sender.email}</span>
-                      {shouldShowUnsubBanner && listHeaders?.listUnsubscribe && (
-                        <UnsubscribeBanner
-                          listUnsubscribe={listHeaders.listUnsubscribe}
-                          senderEmail={email?.from?.[0]?.email || ''}
-                          onDismiss={() => {
-                            const messageId = email?.messageId || '';
-                            const newSet = new Set(dismissedUnsubBanners).add(messageId);
-                            setDismissedUnsubBanners(newSet);
-                            localStorage.setItem('dismissed-unsub-banners', JSON.stringify([...newSet]));
-                          }}
-                        />
-                      )}
-                    </div>
-                  )}
-                </div>
-                {/* Date and size on the right */}
-                <div className="text-right flex-shrink-0">
-                  <div className="text-sm text-muted-foreground whitespace-nowrap">
-                    {formatDateTime(email.receivedAt, timeFormat, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
-                  </div>
-                  {email.size > 0 && (
-                    <div className="text-xs text-muted-foreground/70 mt-0.5">
-                      {formatFileSize(email.size)}
-                    </div>
-                  )}
-                  {effectiveEmailContent.isHtml && (
-                    <button
-                      onClick={() => setEmailViewDarkOverride(prev => prev === null ? !(resolvedTheme === 'dark') : !prev)}
-                      className="inline-flex items-center rounded-full p-1 mt-1 text-muted-foreground/70 hover:text-foreground transition-colors hover:bg-muted"
-                      title={isDark ? 'View in light mode' : 'View in dark mode'}
-                    >
-                      {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-                    </button>
+                  {/* Email address under name */}
+                  {sender?.email && sender?.name && (
+                    <div className="text-sm text-muted-foreground mt-0.5 truncate">{sender.email}</div>
                   )}
                 </div>
               </div>
 
-              {/* Recipient section - separate line */}
-              <div className="mt-2 space-y-1">
+              {/* Row 2: Recipients + Show details */}
+              <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
                 {email.to && email.to.length > 0 && (
-                  <div className="flex flex-wrap items-center gap-1 text-sm">
-                    <span className="text-muted-foreground">{t('recipient_to_prefix')}</span>
+                  <>
+                    <span>{t('recipient_to_prefix')}</span>
                     {renderClickableRecipients(email.to, currentUserEmail, t, handleViewContactSidebar)}
                     {email.to.length > 2 && (
                       <button
                         onClick={() => setShowFullHeaders(!showFullHeaders)}
-                        className="ml-1 text-blue-600 dark:text-blue-400 hover:underline text-sm"
+                        className="text-blue-600 dark:text-blue-400 hover:underline text-sm"
                       >
                         {t('more_count', { count: email.to.length - 2 })}
                       </button>
                     )}
-                  </div>
+                  </>
                 )}
-
                 {email.cc && email.cc.length > 0 && (
-                  <div className="flex flex-wrap items-center gap-1 text-sm">
-                    <span className="text-muted-foreground">CC:</span>
+                  <>
+                    <span className="text-muted-foreground/50">|</span>
+                    <span>CC:</span>
                     {renderClickableRecipients(email.cc, currentUserEmail, t, handleViewContactSidebar)}
                     {email.cc.length > 2 && (
-                      <span className="text-muted-foreground text-sm">+{email.cc.length - 2}</span>
+                      <span className="text-muted-foreground">+{email.cc.length - 2}</span>
                     )}
-                  </div>
+                  </>
                 )}
-
                 {email.bcc && email.bcc.length > 0 && (
-                  <div className="flex flex-wrap items-center gap-1 text-sm">
-                    <span className="text-muted-foreground">{t('bcc')}:</span>
+                  <>
+                    <span className="text-muted-foreground/50">|</span>
+                    <span>{t('bcc')}:</span>
                     {renderClickableRecipients(email.bcc, currentUserEmail, t, handleViewContactSidebar)}
                     {email.bcc.length > 2 && (
-                      <span className="text-muted-foreground text-sm">+{email.bcc.length - 2}</span>
+                      <span className="text-muted-foreground">+{email.bcc.length - 2}</span>
                     )}
-                  </div>
+                  </>
                 )}
+                <button
+                  onClick={() => setShowFullHeaders(!showFullHeaders)}
+                  className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors ml-1"
+                >
+                  {showFullHeaders ? (
+                    <>
+                      <ChevronUp className="w-3 h-3" />
+                      {t('hide_details')}
+                    </>
+                  ) : (
+                    <>
+                      <ChevronDown className="w-3 h-3" />
+                      {t('show_details')}
+                    </>
+                  )}
+                </button>
               </div>
-
-              {/* Details toggle - stays in place when expanded */}
-              <button
-                onClick={() => setShowFullHeaders(!showFullHeaders)}
-                className="mt-3 text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
-              >
-                {showFullHeaders ? (
-                  <>
-                    <ChevronUp className="w-3 h-3" />
-                    {t('hide_details')}
-                  </>
-                ) : (
-                  <>
-                    <ChevronDown className="w-3 h-3" />
-                    {t('show_details')}
-                  </>
-                )}
-              </button>
 
               {/* Expandable Details */}
               {showFullHeaders && (
@@ -3893,45 +3987,247 @@ export function EmailViewer({
                 </div>
               )}
 
+              </div>
+              {/* Attachments on the right (beside-sender mode) */}
+              {attachmentPosition === 'beside-sender' && effectiveAttachments.length > 0 && (
+                <div className="relative flex flex-col items-end justify-start gap-1 flex-shrink-0 max-w-[50%]">
+                  {effectiveAttachments.slice(0, 2).map((attachment) => {
+                    const FileIcon = getFileIcon(attachment.name || undefined, attachment.type);
+                    const isPreviewable = isFilePreviewable(attachment.name || undefined, attachment.type);
+                    const opensPreview = isPreviewable && mailAttachmentAction === 'preview';
+                    return (
+                      <div
+                        key={attachment.id}
+                        className="inline-flex items-center gap-1.5 px-2 py-1 bg-muted/60 rounded-md border border-border/50 group relative cursor-default"
+                      >
+                        <FileIcon className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                        <span className="text-xs text-foreground truncate max-w-[140px]">
+                          {getAttachmentDisplayName(attachment.name, attachment.type)}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground">
+                          {formatFileSize(attachment.size)}
+                        </span>
+                        <div className="absolute inset-y-0 right-0 rounded-r-md bg-background/95 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 px-1.5">
+                          <button
+                            className="p-1 hover:bg-accent rounded transition-colors"
+                            title={t('download')}
+                            onClick={() => handleEffectiveAttachmentDownload(attachment)}
+                          >
+                            <Download className="w-3.5 h-3.5 text-foreground" />
+                          </button>
+                          {opensPreview && (
+                            <button
+                              className="p-1 hover:bg-accent rounded transition-colors"
+                              title={tFiles('preview')}
+                              onClick={() => handleEffectiveAttachmentOpen(attachment)}
+                            >
+                              <Eye className="w-3.5 h-3.5 text-foreground" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {effectiveAttachments.length > 2 && (
+                    <button
+                      onClick={() => setShowAllBesideAttachments(!showAllBesideAttachments)}
+                      className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-0.5"
+                    >
+                      +{effectiveAttachments.length - 2} {t('more')}
+                    </button>
+                  )}
+                  {/* Floating popup for remaining attachments */}
+                  {showAllBesideAttachments && effectiveAttachments.length > 2 && (
+                    <>
+                      <div className="fixed inset-0 z-40" onClick={() => setShowAllBesideAttachments(false)} />
+                      <div className="absolute top-full right-0 mt-1 z-50 bg-background border border-border rounded-lg shadow-lg p-2 flex flex-col gap-1 min-w-[220px]">
+                        {effectiveAttachments.slice(2).map((attachment) => {
+                          const FileIcon = getFileIcon(attachment.name || undefined, attachment.type);
+                          const isPreviewable = isFilePreviewable(attachment.name || undefined, attachment.type);
+                          const opensPreview = isPreviewable && mailAttachmentAction === 'preview';
+                          return (
+                            <div
+                              key={attachment.id}
+                              className="flex items-center gap-1.5 px-2 py-1 rounded-md group relative cursor-default w-full"
+                            >
+                              <FileIcon className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                              <span className="text-xs text-foreground truncate max-w-[180px]">
+                                {getAttachmentDisplayName(attachment.name, attachment.type)}
+                              </span>
+                              <span className="text-[10px] text-muted-foreground ml-auto flex-shrink-0">
+                                {formatFileSize(attachment.size)}
+                              </span>
+                              <div className="absolute inset-y-0 right-0 rounded-r-md bg-background/95 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 px-1.5">
+                                <button
+                                  className="p-1 hover:bg-accent rounded transition-colors"
+                                  title={t('download')}
+                                  onClick={() => { handleEffectiveAttachmentDownload(attachment); setShowAllBesideAttachments(false); }}
+                                >
+                                  <Download className="w-3.5 h-3.5 text-foreground" />
+                                </button>
+                                {opensPreview && (
+                                  <button
+                                    className="p-1 hover:bg-accent rounded transition-colors"
+                                    title={tFiles('preview')}
+                                    onClick={() => { handleEffectiveAttachmentOpen(attachment); setShowAllBesideAttachments(false); }}
+                                  >
+                                    <Eye className="w-3.5 h-3.5 text-foreground" />
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
           </div>
       </div>
 
-      {/* === ATTACHMENTS (integrated into header) === */}
-      {effectiveAttachments.length > 0 && (
-        <div className="bg-background border-b border-border px-4 lg:px-6 py-3">
-          <div className="flex items-start gap-2 flex-wrap">
+      {/* === ATTACHMENTS below header (below-header mode, desktop only) === */}
+      {attachmentPosition === 'below-header' && effectiveAttachments.length > 0 && (
+        <div className="hidden lg:block bg-background border-b border-border px-4 lg:px-6 py-2">
+          <div className="flex items-center gap-2 flex-wrap">
             {effectiveAttachments.map((attachment) => {
               const FileIcon = getFileIcon(attachment.name || undefined, attachment.type);
               const isPreviewable = isFilePreviewable(attachment.name || undefined, attachment.type);
               const opensPreview = isPreviewable && mailAttachmentAction === 'preview';
               return (
-                <button
+                <div
                   key={attachment.id}
-                  className="inline-flex items-center gap-2 px-3 py-2 bg-muted/60 hover:bg-accent rounded-lg transition-colors group border border-border/50"
-                  title={`${opensPreview ? tFiles('preview') : t('download')} ${attachment.name || 'Unnamed'} (${formatFileSize(attachment.size)})`}
-                  onClick={() => handleEffectiveAttachmentOpen(attachment)}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-muted/60 rounded-md border border-border/50 group relative cursor-default"
                 >
                   <FileIcon className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                  <div className="flex flex-col items-start min-w-0">
-                    <span className="text-sm text-foreground truncate max-w-[200px]">
-                      {attachment.name || "Unnamed"}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {formatFileSize(attachment.size)}
-                    </span>
+                  <span className="text-sm text-foreground truncate max-w-[200px]">
+                    {getAttachmentDisplayName(attachment.name, attachment.type)}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {formatFileSize(attachment.size)}
+                  </span>
+                  <div className="absolute inset-y-0 right-0 rounded-r-md bg-background/95 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 px-1.5">
+                    <button
+                      className="p-1 hover:bg-accent rounded transition-colors"
+                      title={t('download')}
+                      onClick={() => handleEffectiveAttachmentDownload(attachment)}
+                    >
+                      <Download className="w-4 h-4 text-foreground" />
+                    </button>
+                    {opensPreview && (
+                      <button
+                        className="p-1 hover:bg-accent rounded transition-colors"
+                        title={tFiles('preview')}
+                        onClick={() => handleEffectiveAttachmentOpen(attachment)}
+                      >
+                        <Eye className="w-4 h-4 text-foreground" />
+                      </button>
+                    )}
                   </div>
-                  {opensPreview ? (
-                    <Eye className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
-                  ) : (
-                    <Download className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
-                  )}
-                </button>
+                </div>
               );
             })}
           </div>
         </div>
       )}
+
+        {/* Mobile/Tablet Attachments */}
+        {effectiveAttachments.length > 0 && (
+          <div className="lg:hidden bg-background border-b border-border px-4 py-2">
+            <div className="relative flex items-center gap-1.5 flex-wrap">
+              {effectiveAttachments.slice(0, 2).map((attachment) => {
+                const FileIcon = getFileIcon(attachment.name || undefined, attachment.type);
+                const isPreviewable = isFilePreviewable(attachment.name || undefined, attachment.type);
+                const opensPreview = isPreviewable && mailAttachmentAction === 'preview';
+                return (
+                  <div
+                    key={attachment.id}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-muted/60 rounded-md border border-border/50 group relative cursor-default"
+                  >
+                    <FileIcon className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                    <span className="text-sm text-foreground truncate max-w-[200px]">
+                      {getAttachmentDisplayName(attachment.name, attachment.type)}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {formatFileSize(attachment.size)}
+                    </span>
+                    <div className="absolute inset-y-0 right-0 rounded-r-md bg-background/95 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 px-1.5">
+                      <button
+                        className="p-1 hover:bg-accent rounded transition-colors"
+                        title={t('download')}
+                        onClick={() => handleEffectiveAttachmentDownload(attachment)}
+                      >
+                        <Download className="w-4 h-4 text-foreground" />
+                      </button>
+                      {opensPreview && (
+                        <button
+                          className="p-1 hover:bg-accent rounded transition-colors"
+                          title={tFiles('preview')}
+                          onClick={() => handleEffectiveAttachmentOpen(attachment)}
+                        >
+                          <Eye className="w-4 h-4 text-foreground" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+              {effectiveAttachments.length > 2 && (
+                <button
+                  onClick={() => setShowAllMobileAttachments(!showAllMobileAttachments)}
+                  className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-0.5"
+                >
+                  +{effectiveAttachments.length - 2} {t('more')}
+                </button>
+              )}
+              {showAllMobileAttachments && effectiveAttachments.length > 2 && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setShowAllMobileAttachments(false)} />
+                  <div className="absolute top-full left-0 mt-1 z-50 bg-background border border-border rounded-lg shadow-lg p-2 flex flex-col gap-1 min-w-[220px]">
+                    {effectiveAttachments.slice(2).map((attachment) => {
+                      const FileIcon = getFileIcon(attachment.name || undefined, attachment.type);
+                      const isPreviewable = isFilePreviewable(attachment.name || undefined, attachment.type);
+                      const opensPreview = isPreviewable && mailAttachmentAction === 'preview';
+                      return (
+                        <div
+                          key={attachment.id}
+                          className="flex items-center gap-1.5 px-2 py-1 rounded-md group relative cursor-default w-full"
+                        >
+                          <FileIcon className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                          <span className="text-xs text-foreground truncate max-w-[180px]">
+                            {getAttachmentDisplayName(attachment.name, attachment.type)}
+                          </span>
+                          <span className="text-[10px] text-muted-foreground ml-auto flex-shrink-0">
+                            {formatFileSize(attachment.size)}
+                          </span>
+                          <div className="absolute inset-y-0 right-0 rounded-r-md bg-background/95 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 px-1.5">
+                            <button
+                              className="p-1 hover:bg-accent rounded transition-colors"
+                              title={t('download')}
+                              onClick={() => { handleEffectiveAttachmentDownload(attachment); setShowAllMobileAttachments(false); }}
+                            >
+                              <Download className="w-3.5 h-3.5 text-foreground" />
+                            </button>
+                            {opensPreview && (
+                              <button
+                                className="p-1 hover:bg-accent rounded transition-colors"
+                                title={tFiles('preview')}
+                                onClick={() => { handleEffectiveAttachmentOpen(attachment); setShowAllMobileAttachments(false); }}
+                              >
+                                <Eye className="w-3.5 h-3.5 text-foreground" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Mobile/Tablet Sender Info - scrolls with content */}
         <div className="lg:hidden bg-background border-b border-border px-4" style={{ paddingBlock: 'var(--density-header-py)' }}>
@@ -3949,8 +4245,8 @@ export function EmailViewer({
               />
             </button>
             <div className="flex-1 min-w-0">
-              {/* Mobile 2-line layout */}
-              <div className="flex items-center gap-2 flex-wrap">
+              {/* Row 1: Sender name + badges */}
+              <div className="flex items-center gap-1.5 flex-wrap">
                 <button
                   onClick={() => sender?.email && handleViewContactSidebar(null, sender.email)}
                   className="text-sm font-semibold text-foreground hover:text-primary hover:underline transition-colors cursor-pointer text-left"
@@ -3958,43 +4254,42 @@ export function EmailViewer({
                   {sender?.name || sender?.email || t('unknown_sender')}
                 </button>
                 <EmailIdentityBadge email={email} identities={identities} />
-              </div>
-              <div className="mt-1 flex items-center gap-1 text-sm text-muted-foreground flex-wrap">
-                {sender?.email && sender?.name && (
-                  <>
-                    <span className="truncate">{sender.email}</span>
-                    {shouldShowUnsubBanner && listHeaders?.listUnsubscribe && (
-                      <UnsubscribeBanner
-                        listUnsubscribe={listHeaders.listUnsubscribe}
-                        senderEmail={email?.from?.[0]?.email || ''}
-                        onDismiss={() => {
-                          const messageId = email?.messageId || '';
-                          const newSet = new Set(dismissedUnsubBanners).add(messageId);
-                          setDismissedUnsubBanners(newSet);
-                          localStorage.setItem('dismissed-unsub-banners', JSON.stringify([...newSet]));
-                        }}
-                      />
-                    )}
-                    <span>·</span>
-                  </>
+                {shouldShowUnsubBanner && listHeaders?.listUnsubscribe && (
+                  <UnsubscribeBanner
+                    listUnsubscribe={listHeaders.listUnsubscribe}
+                    senderEmail={email?.from?.[0]?.email || ''}
+                    onDismiss={() => {
+                      const messageId = email?.messageId || '';
+                      const newSet = new Set(dismissedUnsubBanners).add(messageId);
+                      setDismissedUnsubBanners(newSet);
+                      localStorage.setItem('dismissed-unsub-banners', JSON.stringify([...newSet]));
+                    }}
+                  />
                 )}
+              </div>
+              {/* Email address under name */}
+              {sender?.email && sender?.name && (
+                <div className="text-xs text-muted-foreground mt-0.5 truncate">{sender.email}</div>
+              )}
+              {/* Row 2: Recipients */}
+              <div className="mt-0.5 flex items-center gap-1 text-sm text-muted-foreground flex-wrap">
                 {email.to && email.to.length > 0 && (
                   <>
                     <span>→ {t('recipient_to_prefix')}</span>
                     {renderClickableRecipients(email.to, currentUserEmail, t, handleViewContactSidebar)}
                   </>
                 )}
+                {email.cc && email.cc.length > 0 && (
+                  <>
+                    <span className="text-muted-foreground/50">|</span>
+                    <span>CC:</span>
+                    {renderClickableRecipients(email.cc, currentUserEmail, t, handleViewContactSidebar)}
+                    {email.cc.length > 2 && (
+                      <span>+{email.cc.length - 2}</span>
+                    )}
+                  </>
+                )}
               </div>
-              {/* CC line (mobile - only if present) */}
-              {email.cc && email.cc.length > 0 && (
-                <div className="mt-1 flex items-center gap-1 text-sm">
-                  <span className="text-muted-foreground">CC:</span>
-                  {renderClickableRecipients(email.cc, currentUserEmail, t, handleViewContactSidebar)}
-                  {email.cc.length > 2 && (
-                    <span className="text-muted-foreground">+{email.cc.length - 2}</span>
-                  )}
-                </div>
-              )}
             </div>
           </div>
         </div>

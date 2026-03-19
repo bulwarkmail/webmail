@@ -210,6 +210,7 @@
     "attachments": "Anhänge",
     "important": "Wichtig",
     "download": "Herunterladen",
+    "download_all": "Alle herunterladen",
     "from": "Von",
     "to": "An",
     "cc": "CC",
@@ -401,7 +402,8 @@
     },
     "previous": "Zurück",
     "next": "Weiter",
-    "send": "Senden"
+    "send": "Senden",
+    "more": "mehr"
   },
   "email_composer": {
     "new_message": "Neue Nachricht",
@@ -752,6 +754,12 @@
         "description": "Festlegen, ob ein Dateianhang beim Anklicken in der Vorschau geöffnet oder sofort heruntergeladen wird",
         "preview": "Wenn möglich in Vorschau öffnen",
         "download": "Sofort herunterladen"
+      },
+      "attachment_position": {
+        "label": "Anhangsposition",
+        "description": "Wo Anhänge im E-Mail-Header angezeigt werden",
+        "beside-sender": "Neben dem Absender",
+        "below-header": "Unter dem Header"
       },
       "emails_per_page": {
         "25": "25 E-Mails",
@@ -1947,6 +1955,12 @@
       "deleted": "Abonnement entfernt",
       "delete_error": "Abonnement konnte nicht entfernt werden",
       "last_refreshed": "Zuletzt aktualisiert: {time}"
+    },
+    "tasks": {
+      "no_tasks": "Keine Aufgaben",
+      "no_title": "(Kein Titel)",
+      "mark_complete": "Als erledigt markieren",
+      "mark_incomplete": "Als unerledigt markieren"
     }
   },
   "advanced_search": {
