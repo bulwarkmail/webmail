@@ -34,7 +34,7 @@ interface AuthState {
   login: (serverUrl: string, username: string, password: string, totp?: string, rememberMe?: boolean) => Promise<boolean>;
   loginWithOAuth: (serverUrl: string, code: string, codeVerifier: string, redirectUri: string) => Promise<boolean>;
   refreshAccessToken: () => Promise<string | null>;
-  logout: () => void;
+  logout: () => Promise<void>;
   logoutAll: () => void;
   switchAccount: (accountId: string) => Promise<void>;
   checkAuth: () => Promise<void>;
@@ -264,10 +264,12 @@ export const useAuthStore = create<AuthState>()(
             ? (accountStore.getAccountById(accountId)?.cookieSlot ?? accountStore.getNextCookieSlot())
             : accountStore.getNextCookieSlot();
 
-          // Snapshot current account if switching away
+          // Snapshot current account if switching away and clear stores so
+          // the new account starts with a clean email/contact/calendar state.
           const prevAccountId = get().activeAccountId;
           if (prevAccountId && prevAccountId !== accountId) {
             snapshotAccount(prevAccountId);
+            clearAllStores();
           }
 
           // Store client in multi-account map
@@ -390,10 +392,12 @@ export const useAuthStore = create<AuthState>()(
           // Register in account store
           const accountId = generateAccountId(username, serverUrl);
 
-          // Snapshot current account if switching away
+          // Snapshot current account if switching away and clear stores so
+          // the new account starts with a clean email/contact/calendar state.
           const prevAccountId = get().activeAccountId;
           if (prevAccountId && prevAccountId !== accountId) {
             snapshotAccount(prevAccountId);
+            clearAllStores();
           }
 
           clients.set(accountId, client);
@@ -506,7 +510,7 @@ export const useAuthStore = create<AuthState>()(
         return promise;
       },
 
-      logout: () => {
+      logout: async () => {
         const state = get();
         const wasOAuth = state.authMode === 'oauth';
         const accountId = state.activeAccountId;
@@ -515,6 +519,11 @@ export const useAuthStore = create<AuthState>()(
         const slot = account?.cookieSlot ?? 0;
 
         clearRefreshTimer(accountId ?? undefined);
+
+        // Null out the client BEFORE disconnecting so the page doesn't fire
+        // data-loading effects with the stale disconnected client while
+        // stores are being cleared.
+        set({ client: null });
         state.client?.disconnect();
 
         // Remove client from multi-account map
@@ -536,10 +545,55 @@ export const useAuthStore = create<AuthState>()(
           clearAllStores();
 
           // Restore next account
-          const nextClient = clients.get(nextAccount.id);
+          let nextClient = clients.get(nextAccount.id);
+
+          // If the client isn't in memory, try to restore it from the session
+          if (!nextClient) {
+            try {
+              if (nextAccount.authMode === 'oauth') {
+                const res = await fetch(`/api/auth/token?slot=${nextAccount.cookieSlot}`, { method: 'PUT' });
+                if (res.ok) {
+                  const { access_token, expires_in } = await res.json();
+                  const refreshFn = get().refreshAccessToken;
+                  nextClient = JMAPClient.withBearer(nextAccount.serverUrl, access_token, nextAccount.username, () => refreshFn());
+                  nextClient.onConnectionChange((connected) => {
+                    if (get().activeAccountId === nextAccount.id) {
+                      set({ connectionLost: !connected });
+                    }
+                    accountStore.updateAccount(nextAccount.id, { isConnected: connected });
+                  });
+                  await nextClient.connect();
+                  clients.set(nextAccount.id, nextClient);
+                  scheduleRefresh(expires_in, get().refreshAccessToken, nextAccount.id);
+                }
+              } else if (nextAccount.authMode === 'basic' && nextAccount.rememberMe) {
+                const res = await fetch(`/api/auth/session?slot=${nextAccount.cookieSlot}`);
+                if (res.ok) {
+                  const { serverUrl: sUrl, username: uName, password: pwd } = await res.json();
+                  nextClient = new JMAPClient(sUrl, uName, pwd);
+                  nextClient.onConnectionChange((connected) => {
+                    if (get().activeAccountId === nextAccount.id) {
+                      set({ connectionLost: !connected });
+                    }
+                    accountStore.updateAccount(nextAccount.id, { isConnected: connected });
+                  });
+                  await nextClient.connect();
+                  clients.set(nextAccount.id, nextClient);
+                }
+              }
+            } catch (err) {
+              debug.error(`Failed to restore next account ${nextAccount.id} during logout:`, err);
+              nextClient = undefined;
+            }
+          }
+
           if (nextClient) {
             const restored = restoreAccount(nextAccount.id);
             accountStore.setActiveAccount(nextAccount.id);
+
+            // Build identity state up front so the name updates atomically
+            const restoredIdentities = restored ? useIdentityStore.getState().identities : [];
+            const restoredPrimary = restoredIdentities[0] ?? null;
 
             set({
               isAuthenticated: true,
@@ -552,6 +606,8 @@ export const useAuthStore = create<AuthState>()(
               connectionLost: false,
               error: null,
               activeAccountId: nextAccount.id,
+              identities: restoredIdentities,
+              primaryIdentity: restoredPrimary,
             });
 
             if (!restored) {
@@ -560,13 +616,32 @@ export const useAuthStore = create<AuthState>()(
                 const { identities, primaryIdentity } = loadIdentities(rawIds, nextAccount.username);
                 set({ identities, primaryIdentity });
               }).catch((err) => debug.error('Failed to load identities after switch:', err));
-            } else {
-              const identityState = useIdentityStore.getState();
-              set({
-                identities: identityState.identities,
-                primaryIdentity: identityState.identities[0] ?? null,
-              });
             }
+          } else {
+            // Could not restore the next account — remove it and do a full logout
+            debug.error(`Cannot restore next account ${nextAccount.id}, performing full logout`);
+            evictAccount(nextAccount.id);
+            accountStore.removeAccount(nextAccount.id);
+
+            set({
+              isAuthenticated: false,
+              serverUrl: null,
+              username: null,
+              client: null,
+              identities: [],
+              primaryIdentity: null,
+              authMode: 'basic',
+              rememberMe: false,
+              accessToken: null,
+              tokenExpiresAt: null,
+              connectionLost: false,
+              error: null,
+              activeAccountId: null,
+            });
+
+            localStorage.removeItem('auth-storage');
+            clearAllStores();
+            redirectToLogin();
           }
         } else {
           // No accounts remaining — full logout
@@ -784,6 +859,10 @@ export const useAuthStore = create<AuthState>()(
         accountStore.setActiveAccount(accountId);
         accountStore.updateAccount(accountId, { isConnected: true, hasError: false, errorMessage: undefined });
 
+        // Build identity state up front so the name updates atomically
+        const restoredIdentities = restored ? useIdentityStore.getState().identities : [];
+        const restoredPrimary = restoredIdentities[0] ?? null;
+
         set({
           isAuthenticated: true,
           isLoading: false,
@@ -795,6 +874,8 @@ export const useAuthStore = create<AuthState>()(
           connectionLost: false,
           error: null,
           activeAccountId: accountId,
+          identities: restoredIdentities,
+          primaryIdentity: restoredPrimary,
         });
 
         if (!restored) {
@@ -806,12 +887,6 @@ export const useAuthStore = create<AuthState>()(
           } catch (err) {
             debug.error(`Failed to load data for ${accountId}:`, err);
           }
-        } else {
-          const identityState = useIdentityStore.getState();
-          set({
-            identities: identityState.identities,
-            primaryIdentity: identityState.identities[0] ?? null,
-          });
         }
 
         // Sync settings

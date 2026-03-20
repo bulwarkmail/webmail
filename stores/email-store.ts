@@ -239,15 +239,17 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     try {
       const mailboxes = await client.getAllMailboxes();
 
-      // Auto-select inbox if no mailbox is currently selected
+      // Auto-select inbox if no mailbox is selected or the current selection
+      // doesn't exist in the fetched list (e.g. after an account switch)
       const currentSelectedMailbox = get().selectedMailbox;
-      if (!currentSelectedMailbox) {
+      const selectionValid = currentSelectedMailbox && mailboxes.some(m => m.id === currentSelectedMailbox);
+      if (!selectionValid) {
         // Find inbox from PRIMARY account (not shared accounts)
         const inboxMailbox = mailboxes.find(m => m.role === 'inbox' && !m.isShared);
         if (inboxMailbox) {
           set({ mailboxes, selectedMailbox: inboxMailbox.id, isLoading: false });
         } else {
-          set({ mailboxes, isLoading: false });
+          set({ mailboxes, selectedMailbox: '', isLoading: false });
         }
       } else {
         set({ mailboxes, isLoading: false });

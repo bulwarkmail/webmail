@@ -8,6 +8,7 @@ import { useEmailStore } from '@/stores/email-store';
 import { useContactStore } from '@/stores/contact-store';
 import { useCalendarStore } from '@/stores/calendar-store';
 import { useFilterStore } from '@/stores/filter-store';
+import { DEFAULT_SEARCH_FILTERS } from '@/lib/jmap/search-utils';
 import { useIdentityStore } from '@/stores/identity-store';
 import { useVacationStore } from '@/stores/vacation-store';
 
@@ -97,6 +98,19 @@ export function clearAllStores(): void {
     error: null,
     searchQuery: '',
     quota: null,
+    isPushConnected: false,
+    lastPushUpdate: null,
+    newEmailNotification: null,
+    selectedEmailIds: new Set<string>(),
+    hasMoreEmails: false,
+    totalEmails: 0,
+    expandedThreadIds: new Set<string>(),
+    threadEmailsCache: new Map(),
+    isLoadingThread: null,
+    selectedKeyword: null,
+    tagCounts: {},
+    searchFilters: { ...DEFAULT_SEARCH_FILTERS },
+    isAdvancedSearchOpen: false,
   });
   useIdentityStore.getState().clearIdentities();
   useContactStore.getState().clearContacts();
