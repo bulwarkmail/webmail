@@ -45,7 +45,6 @@ export interface SidebarApp {
   url: string;
   icon: string;       // Lucide icon name (e.g. 'Globe', 'Rss')
   openMode: 'tab' | 'inline'; // Open in new tab or embed inline
-  showOnMobile?: boolean; // Show in mobile bottom nav (default false)
 }
 
 // Available color palette for keywords
@@ -106,9 +105,6 @@ interface SettingsState {
   // Privacy & Security
   sessionTimeout: number; // minutes (0 = never)
   trustedSenders: string[]; // Email addresses that can load external content
-
-  // Calendar
-  showTimeInMonthView: boolean;
 
   // Calendar Notifications
   calendarNotificationsEnabled: boolean;
@@ -205,9 +201,6 @@ const DEFAULT_SETTINGS = {
   sessionTimeout: 0, // Never
   trustedSenders: [] as string[],
 
-  // Calendar
-  showTimeInMonthView: false,
-
   // Calendar Notifications
   calendarNotificationsEnabled: true,
   calendarNotificationSound: true,
@@ -288,7 +281,6 @@ export const useSettingsStore = create<SettingsState>()(
           sendConfirmation: state.sendConfirmation,
           defaultReplyMode: state.defaultReplyMode,
           sessionTimeout: state.sessionTimeout,
-          showTimeInMonthView: state.showTimeInMonthView,
           calendarNotificationsEnabled: state.calendarNotificationsEnabled,
           calendarNotificationSound: state.calendarNotificationSound,
           calendarInvitationParsingEnabled: state.calendarInvitationParsingEnabled,

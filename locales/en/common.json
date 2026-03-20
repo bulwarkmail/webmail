@@ -137,8 +137,7 @@
     "show_all": "All",
     "no_icons_found": "No icons found",
     "inline_badge": "Inline",
-    "tab_badge": "Tab",
-    "show_on_mobile": "Show on Mobile"
+    "tab_badge": "Tab"
   },
   "email_list": {
     "no_emails": "No messages found",
@@ -1827,9 +1826,7 @@
       "notification_sound": "Notification sound",
       "notification_sound_desc": "Play a sound for calendar alerts",
       "invitation_parsing": "Parse email invitations",
-      "invitation_parsing_desc": "Detect calendar invitations in email attachments and show calendar actions",
-      "show_time_in_month_view": "Show start time in month view",
-      "show_time_in_month_view_desc": "Display the event start time alongside the title in month view"
+      "invitation_parsing_desc": "Detect calendar invitations in email attachments and show calendar actions"
     },
     "days": {
       "monday": "Monday",

@@ -70,11 +70,8 @@ export default function Home() {
   const [isLoadingConversation, setIsLoadingConversation] = useState(false);
   const [previewAttachment, setPreviewAttachment] = useState<{ blobId: string; name: string; type?: string } | null>(null);
   const markAsReadTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const { isAuthenticated, client, logout, checkAuth, isLoading: authLoading, connectionLost, activeAccountId } = useAuthStore();
+  const { isAuthenticated, client, logout, checkAuth, isLoading: authLoading, connectionLost } = useAuthStore();
   const { identities } = useIdentityStore();
-
-  // Track account switches to force data reload
-  const lastLoadedAccountRef = useRef<string | null>(null);
 
   // Mobile/tablet responsive hooks
   const { isMobile, isTablet } = useDeviceDetection();
@@ -292,19 +289,9 @@ export default function Home() {
     }
   }, [initialCheckDone, isAuthenticated, authLoading, router]);
 
-  // Load mailboxes and emails when authenticated
-  // Re-fetches on initial load (mailboxes empty) or when account switches
+  // Load mailboxes and emails when authenticated (only if not already loaded)
   useEffect(() => {
-    const accountChanged = lastLoadedAccountRef.current !== null && lastLoadedAccountRef.current !== activeAccountId;
-    if (isAuthenticated && client && (mailboxes.length === 0 || accountChanged)) {
-      lastLoadedAccountRef.current = activeAccountId;
-
-      // Clear stale selected email from the previous account so the viewer
-      // doesn't flash old content while fresh data loads.
-      if (accountChanged) {
-        selectEmail(null);
-      }
-
+    if (isAuthenticated && client && mailboxes.length === 0) {
       const loadData = async () => {
         try {
           // First fetch mailboxes and quota (inbox will be auto-selected in fetchMailboxes)
@@ -350,18 +337,15 @@ export default function Home() {
         }
       };
       loadData();
-    } else if (isAuthenticated && client && lastLoadedAccountRef.current === null) {
-      // First render with existing data (e.g. restored from snapshot) — just record the account
-      lastLoadedAccountRef.current = activeAccountId;
     }
 
-    // Cleanup push notifications on unmount or client change
+    // Cleanup push notifications on unmount
     return () => {
       if (client) {
         client.closePushNotifications();
       }
     };
-  }, [isAuthenticated, client, mailboxes.length, activeAccountId, fetchMailboxes, fetchEmails, fetchQuota, fetchTagCounts, handleStateChange, setPushConnected, selectEmail]);
+  }, [isAuthenticated, client, mailboxes.length, fetchMailboxes, fetchEmails, fetchQuota, fetchTagCounts, handleStateChange, setPushConnected]);
 
   // Auto-fetch full email content when an email is auto-selected (e.g. after delete/archive)
   useEffect(() => {
@@ -487,9 +471,7 @@ export default function Home() {
   };
 
   const handleEditDraft = (email?: Email) => {
-    // Guard: when used directly as an onClick handler, the click event is passed
-    // as the first argument. Detect this and fall back to selectedEmail.
-    const draft = (email && 'mailboxIds' in email) ? email : selectedEmail;
+    const draft = email || selectedEmail;
     if (!draft) return;
     const bodyText = draft.bodyValues
       ? Object.values(draft.bodyValues).map(v => v.value).join('\n')

@@ -1,5 +1,30 @@
 # Changelog
 
+## 1.4.5 (2026-03-20)
+
+### Features
+
+- **Calendar**: Add prev/next navigation buttons and date label to desktop calendar toolbar
+- **Calendar**: Add pending event preview functionality to calendar views and event modal
+- **Calendar**: Add setting to show event start time in month view
+- **Contacts**: Implement pagination for fetching contacts with maxObjectsInGet capability
+- **Email**: Add attachment position setting in email settings
+- **Layout**: Add mobile visibility toggle for sidebar apps
+- **Error**: Add NotFound component to handle 404 errors and redirect unauthenticated users
+
+### Fixes
+
+- **Auth**: Enhance account switching logic and clear stores on account change
+- **Auth**: Improve account restoration logic and handle stale accounts
+- **Auth**: Improve draft handling in email composer and enhance session cookie verification
+- **Calendar**: Expand recurring events in CalendarEvent/query so individual occurrences are returned (#65)
+- **Calendar**: Validate event start field when fetching calendar events
+- **Calendar**: Auto-scroll agenda view to today's events and include today's date in groups
+- **Calendar**: Correct JSX syntax in CalendarToolbar component
+- **Dependencies**: Update flatted to 3.4.2
+- **DevOps**: Use native ARM runners instead of QEMU for Docker builds
+- **DevOps**: Enhance health check with detailed memory diagnostics and stable liveness probe
+
 ## 1.4.4 (2026-03-19)
 
 ### Features
