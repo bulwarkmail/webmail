@@ -1,23 +1,8 @@
 name: Publish Docker Image
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "Dockerfile"
-      - ".dockerignore"
-      - "app/**"
-      - "components/**"
-      - "contexts/**"
-      - "hooks/**"
-      - "lib/**"
-      - "stores/**"
-      - "locales/**"
-      - "public/**"
-      - "package.json"
-      - "package-lock.json"
-      - ".github/workflows/docker-publish.yml"
-  workflow_dispatch:
+  release:
+    types: [published]
 
 env:
   IMAGE_NAME: ghcr.io/${{ github.repository }}
@@ -113,7 +98,13 @@ jobs:
         with:
           images: ${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=main,enable={{is_default_branch}}
+            type=raw,value=latest
+            type=semver,pattern=v{{version}}
+            type=semver,pattern={{version}}
+            type=semver,pattern=v{{major}}.{{minor}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern=v{{major}}
+            type=semver,pattern={{major}}
             type=sha,prefix=
 
       - name: Create manifest list and push
