@@ -8,7 +8,7 @@
 import * as pkijs from 'pkijs';
 import * as asn1js from 'asn1js';
 import type { SmimeKeyRecord } from './types';
-import { getLinerCryptoEngine } from './crypto-engine';
+import { getLinerCryptoEngine, withLinerEngine } from './crypto-engine';
 
 export interface DecryptionInput {
   /** Raw CMS EnvelopedData bytes (DER) */
@@ -360,17 +360,20 @@ async function decryptWithKey(
   const certAsn1 = asn1js.fromBER(keyRecord.certificate);
   const cert = new pkijs.Certificate({ schema: certAsn1.result });
 
-  // Use webcrypto-liner engine for legacy algorithm support (e.g. 3DES)
-  const cryptoEngine = getLinerCryptoEngine();
+  // Use withLinerEngine to set the global pkijs engine to webcrypto-liner.
+  // This is required because pkijs internally may use getEngine() for
+  // OID lookups and crypto operations. Without this, 3DES-encrypted
+  // messages fail because the default engine doesn't know about DES-EDE3-CBC.
+  return withLinerEngine(async () => {
+    const cryptoEngine = getLinerCryptoEngine();
 
-  const result = await envelopedData.decrypt(
-    recipientIndex,
-    {
-      recipientCertificate: cert,
-      recipientPrivateKey: privateKey,
-    },
-    cryptoEngine,
-  );
-
-  return result;
+    return envelopedData.decrypt(
+      recipientIndex,
+      {
+        recipientCertificate: cert,
+        recipientPrivateKey: privateKey,
+      },
+      cryptoEngine,
+    );
+  });
 }

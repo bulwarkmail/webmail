@@ -145,11 +145,50 @@ function passwordToBMP(password: ArrayBuffer): Uint8Array {
   return bmp;
 }
 
+// ── CMS content encryption OIDs (for EnvelopedData decryption) ─────
+const OID_DES_EDE3_CBC = '1.2.840.113549.3.7'; // des-EDE3-CBC (3DES)
+const OID_DES_CBC = '1.3.14.3.2.7';            // desCBC
+const OID_RC2_CBC = '1.2.840.113549.3.2';      // rc2CBC
+
 /**
- * Extended CryptoEngine that handles legacy PKCS#12 PBE algorithms.
- * Falls through to the base CryptoEngine for everything else.
+ * Extended CryptoEngine that handles legacy algorithms (3DES, etc.)
+ * not recognized by pkijs's default CryptoEngine.
+ *
+ * - Adds OID→algorithm mappings for DES-EDE3-CBC so that
+ *   EnvelopedData.decrypt() can process 3DES-encrypted S/MIME messages.
+ * - Handles legacy PKCS#12 PBE algorithms via custom KDF.
  */
 class Pkcs12CryptoEngine extends pkijs.CryptoEngine {
+  /**
+   * Extend OID→algorithm mapping with legacy algorithms that webcrypto-liner
+   * supports but pkijs does not know about.
+   */
+  getAlgorithmByOID(oid: string, safety?: boolean, target?: string): object {
+    switch (oid) {
+      case OID_DES_EDE3_CBC:
+        return { name: 'DES-EDE3-CBC', length: 192 };
+      case OID_DES_CBC:
+        return { name: 'DES-CBC', length: 64 };
+      case OID_RC2_CBC:
+        return { name: 'RC2-CBC', length: 128 };
+      default:
+        return super.getAlgorithmByOID(oid, safety, target);
+    }
+  }
+
+  getOIDByAlgorithm(algorithm: { name: string; length?: number }, safety?: boolean, target?: string): string {
+    switch (algorithm.name.toUpperCase()) {
+      case 'DES-EDE3-CBC':
+        return OID_DES_EDE3_CBC;
+      case 'DES-CBC':
+        return OID_DES_CBC;
+      case 'RC2-CBC':
+        return OID_RC2_CBC;
+      default:
+        return super.getOIDByAlgorithm(algorithm, safety, target);
+    }
+  }
+
   async decryptEncryptedContentInfo(
     parameters: Parameters<pkijs.CryptoEngine['decryptEncryptedContentInfo']>[0],
   ): Promise<ArrayBuffer> {
@@ -182,9 +221,11 @@ class Pkcs12CryptoEngine extends pkijs.CryptoEngine {
     const ivBytes = await pkcs12KDF(bmpPassword, salt, iterations, 2, ivLen);
 
     // Import key via webcrypto-liner (supports DES-EDE3-CBC)
+    const keyData = new Uint8Array(keyBytes.buffer as ArrayBuffer, keyBytes.byteOffset, keyBytes.byteLength);
     const cryptoKey = await this.importKey(
       'raw',
-      new Uint8Array(keyBytes.buffer as ArrayBuffer, keyBytes.byteOffset, keyBytes.byteLength) as unknown as BufferSource,
+      keyData,
+      // eslint-disable-next-line no-undef
       { name: algName, length: keyLen * 8 } as Algorithm,
       false,
       ['decrypt'],
@@ -193,6 +234,7 @@ class Pkcs12CryptoEngine extends pkijs.CryptoEngine {
     // Decrypt
     const ciphertext = parameters.encryptedContentInfo.getEncryptedContent();
     return this.decrypt(
+      // eslint-disable-next-line no-undef
       { name: algName, iv: ivBytes } as Algorithm,
       cryptoKey,
       ciphertext,
