@@ -122,10 +122,15 @@ describe('JMAPClient contact methods', () => {
   describe('getContacts', () => {
     it('should return contacts from server', async () => {
       const client = createClient();
-      mockFetch({
+      const spy = vi.spyOn(globalThis, 'fetch');
+      mockFetchOnce(spy, {
         methodResponses: [
-          ['ContactCard/query', { ids: ['contact-1'] }, '0'],
-          ['ContactCard/get', { list: [mockContact] }, '1'],
+          ['ContactCard/query', { ids: ['contact-1'] }, 'q'],
+        ],
+      });
+      mockFetchOnce(spy, {
+        methodResponses: [
+          ['ContactCard/get', { list: [mockContact] }, 'g'],
         ],
       });
 
