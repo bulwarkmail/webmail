@@ -774,6 +774,7 @@
         "below-header": "Sous l'en-tête"
       },
       "emails_per_page": {
+        "10": "10 emails",
         "25": "25 emails",
         "50": "50 emails",
         "100": "100 emails",

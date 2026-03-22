@@ -774,6 +774,7 @@
         "below-header": "Onder de kop"
       },
       "emails_per_page": {
+        "10": "10 e-mails",
         "25": "25 e-mails",
         "50": "50 e-mails",
         "100": "100 e-mails",

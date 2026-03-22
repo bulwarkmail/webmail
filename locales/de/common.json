@@ -774,6 +774,7 @@
         "below-header": "Unter dem Header"
       },
       "emails_per_page": {
+        "10": "10 E-Mails",
         "25": "25 E-Mails",
         "50": "50 E-Mails",
         "100": "100 E-Mails",

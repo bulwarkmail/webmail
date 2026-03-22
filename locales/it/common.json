@@ -774,6 +774,7 @@
         "below-header": "Sotto l'intestazione"
       },
       "emails_per_page": {
+        "10": "10 messaggi",
         "25": "25 messaggi",
         "50": "50 messaggi",
         "100": "100 messaggi",

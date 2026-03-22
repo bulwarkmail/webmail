@@ -249,6 +249,7 @@ export function EmailSettings() {
           value={emailsPerPage.toString()}
           onChange={(value) => updateSetting('emailsPerPage', parseInt(value))}
           options={[
+            { value: '10', label: t('emails_per_page.10') },
             { value: '25', label: t('emails_per_page.25') },
             { value: '50', label: t('emails_per_page.50') },
             { value: '100', label: t('emails_per_page.100') },

@@ -774,6 +774,7 @@
         "below-header": "Debajo del encabezado"
       },
       "emails_per_page": {
+        "10": "10 correos",
         "25": "25 correos",
         "50": "50 correos",
         "100": "100 correos",
