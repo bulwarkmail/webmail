@@ -12,6 +12,7 @@ A modern, self-hosted webmail client for [Stalwart Mail Server](https://stalw.ar
 Built with Next.js and the JMAP protocol.
 
 [![License: AGPL v3](https://img.shields.io/badge/license-AGPL%20v3-blue.svg)](LICENSE)
+[![Discord](https://img.shields.io/discord/123456789012345678?color=7289da&label=discord&logo=discord&logoColor=white)](https://discord.gg/tYCujymGrT)
 [![Version](https://img.shields.io/badge/version-1.4.7-green.svg)](CHANGELOG.md)
 [![Docker](https://img.shields.io/badge/docker-ghcr.io%2Fbulwarkmail%2Fwebmail-blue)](https://ghcr.io/bulwarkmail/webmail)
 
