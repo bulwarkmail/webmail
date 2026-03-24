@@ -1102,6 +1102,12 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
           if (dateRange && selectedCalendarIds.length > 0) {
             calendarStore.fetchEvents(client, dateRange.start, dateRange.end);
           }
+          // Refresh tasks when calendar events change (e.g. task created via CalDAV)
+          const { useTaskStore } = await import('./task-store');
+          const taskStore = useTaskStore.getState();
+          if (taskStore.tasks.length > 0 || calendarStore.viewMode === 'tasks') {
+            taskStore.fetchTasks(client);
+          }
         }
       }
 

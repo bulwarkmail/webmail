@@ -3178,9 +3178,24 @@ export class JMAPClient implements IJMAPClient {
   async getCalendarTasks(calendarIds?: string[], targetAccountId?: string): Promise<CalendarTask[]> {
     try {
       const events = await this.getCalendarEvents(calendarIds, targetAccountId);
-      return events.filter((e): e is CalendarTask & CalendarEvent =>
-        (e as unknown as CalendarTask)['@type'] === 'Task'
-      ) as unknown as CalendarTask[];
+      return events.filter((e) => {
+        const obj = e as unknown as Record<string, unknown>;
+        const type = obj['@type'];
+        // Explicit @type check (case-insensitive to handle server variations)
+        if (typeof type === 'string' && type.toLowerCase() === 'task') return true;
+        // Fallback: detect tasks created via CalDAV (e.g. Thunderbird) where @type
+        // may be missing. The "progress" property is exclusive to JSCalendar Task
+        // objects and never appears on Event objects.
+        if (type !== 'Event' && 'progress' in obj && typeof obj.progress === 'string') return true;
+        return false;
+      }).map((e) => {
+        const task = e as unknown as CalendarTask;
+        // Normalize @type for tasks detected by fallback heuristic
+        if (task['@type'] !== 'Task') {
+          (task as unknown as Record<string, unknown>)['@type'] = 'Task';
+        }
+        return task;
+      });
     } catch (error) {
       console.error('Failed to get calendar tasks:', error);
       return [];
