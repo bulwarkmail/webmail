@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { debug } from '@/lib/debug';
+import { useAuthStore } from './auth-store';
 
 interface AccountSecurityState {
   // Detection
@@ -42,14 +43,14 @@ interface AccountSecurityState {
   clearState: () => void;
 }
 
-/**
- * Get authorization headers for API requests.
- * Returns headers object with auth credentials.
- */
 function getApiHeaders(): Record<string, string> {
-  // We rely on the proxy routes which read from session cookie
-  // No additional headers needed for cookie-based auth
-  return {};
+  const { client } = useAuthStore.getState();
+  if (!client) return {};
+  return {
+    'Authorization': client.getAuthHeader(),
+    'X-JMAP-Server-URL': client.getServerUrl(),
+    'X-JMAP-Username': client.getUsername(),
+  };
 }
 
 export const useAccountSecurityStore = create<AccountSecurityState>()((set, get) => ({

@@ -1002,6 +1002,14 @@
         "enabled": "Encryption at rest enabled",
         "disabled_success": "Encryption at rest disabled",
         "error": "Failed to update encryption settings"
+      },
+      "email_client": {
+        "title": "Email Client Setup",
+        "description": "Use these credentials to configure your desktop or mobile email client (Thunderbird, Apple Mail, Outlook, etc.)",
+        "jmap_username_label": "JMAP Username",
+        "copy": "Copy",
+        "copied": "Copied",
+        "password_instructions": "Use your JMAP username above along with an app password to sign in to your email client. Create an app password in the section above if you haven't already."
       }
     },
     "identities": {

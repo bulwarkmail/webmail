@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { Shield, Key, Smartphone, Lock, Trash2, Plus, Eye, EyeOff, Copy, Check, Loader2 } from 'lucide-react';
+import { Shield, Key, Smartphone, Lock, Trash2, Plus, Eye, EyeOff, Copy, Check, Loader2, Monitor } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SettingsSection, SettingItem, ToggleSwitch } from './settings-section';
@@ -440,20 +440,74 @@ function EncryptionSection() {
   );
 }
 
+function EmailClientSection() {
+  const t = useTranslations('settings.security');
+  const { client } = useAuthStore();
+  const [copied, setCopied] = useState(false);
+
+  const jmapUsername = client?.getUsername() || '';
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(jmapUsername).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-2">
+        <Monitor className="w-4 h-4 text-muted-foreground" />
+        <h4 className="text-sm font-medium text-foreground">{t('email_client.title')}</h4>
+      </div>
+      <p className="text-xs text-muted-foreground">{t('email_client.description')}</p>
+      <div className="p-3 bg-muted/70 dark:bg-muted/40 rounded-md space-y-2">
+        <div>
+          <label className="text-xs text-muted-foreground mb-1 block">
+            {t('email_client.jmap_username_label')}
+          </label>
+          <div className="flex rounded-lg">
+            <input
+              type="text"
+              readOnly
+              value={jmapUsername}
+              className="py-2 px-3 block w-full bg-background border border-border border-e-transparent rounded-s-lg text-sm text-foreground focus:z-10 focus:border-ring focus:ring-ring"
+            />
+            <button
+              type="button"
+              onClick={handleCopy}
+              className="h-[38px] px-3 shrink-0 inline-flex items-center gap-1.5 rounded-e-lg border border-border bg-muted text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+              {copied ? t('email_client.copied') : t('email_client.copy')}
+            </button>
+          </div>
+        </div>
+        <p className="text-xs text-muted-foreground pt-1">{t('email_client.password_instructions')}</p>
+      </div>
+    </div>
+  );
+}
+
 export function AccountSecuritySettings() {
   const t = useTranslations('settings.security');
-  const { isStalwart, isProbing, probe, fetchAll } = useAccountSecurityStore();
-  const { isAuthenticated } = useAuthStore();
+  const { isStalwart, isProbing, probe, fetchAll, fetchAuthInfo } = useAccountSecurityStore();
+  const { isAuthenticated, authMode } = useAuthStore();
+  const isOAuth = authMode === 'oauth';
 
   useEffect(() => {
     if (isAuthenticated && isStalwart === null) {
       probe().then((detected) => {
         if (detected) {
-          fetchAll();
+          if (isOAuth) {
+            fetchAuthInfo();
+          } else {
+            fetchAll();
+          }
         }
       });
     }
-  }, [isAuthenticated, isStalwart, probe, fetchAll]);
+  }, [isAuthenticated, isStalwart, probe, fetchAll, fetchAuthInfo, isOAuth]);
 
   if (isProbing) {
     return (
@@ -477,40 +531,44 @@ export function AccountSecuritySettings() {
   return (
     <SettingsSection title={t('title')} description={t('description')}>
       <div className="space-y-6">
-        {/* Password Change */}
-        <PasswordChangeSection />
+        {!isOAuth && (
+          <>
+            <PasswordChangeSection />
+            <div className="border-t border-border" />
+            <DisplayNameSection />
+            <div className="border-t border-border" />
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <Shield className="w-4 h-4 text-muted-foreground" />
+                <h4 className="text-sm font-medium text-foreground">{t('totp.section_title')}</h4>
+              </div>
+              <TotpSection />
+            </div>
+            <div className="border-t border-border" />
+          </>
+        )}
 
-        <div className="border-t border-border" />
-
-        {/* Display Name */}
-        <DisplayNameSection />
-
-        <div className="border-t border-border" />
-
-        {/* Two-Factor Authentication */}
-        <div>
-          <div className="flex items-center gap-2 mb-3">
-            <Shield className="w-4 h-4 text-muted-foreground" />
-            <h4 className="text-sm font-medium text-foreground">{t('totp.section_title')}</h4>
-          </div>
-          <TotpSection />
-        </div>
-
-        <div className="border-t border-border" />
-
-        {/* App Passwords */}
         <AppPasswordsSection />
 
-        <div className="border-t border-border" />
+        {isOAuth && (
+          <>
+            <div className="border-t border-border" />
+            <EmailClientSection />
+          </>
+        )}
 
-        {/* Encryption at Rest */}
-        <div>
-          <div className="flex items-center gap-2 mb-3">
-            <Lock className="w-4 h-4 text-muted-foreground" />
-            <h4 className="text-sm font-medium text-foreground">{t('encryption.section_title')}</h4>
-          </div>
-          <EncryptionSection />
-        </div>
+        {!isOAuth && (
+          <>
+            <div className="border-t border-border" />
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <Lock className="w-4 h-4 text-muted-foreground" />
+                <h4 className="text-sm font-medium text-foreground">{t('encryption.section_title')}</h4>
+              </div>
+              <EncryptionSection />
+            </div>
+          </>
+        )}
       </div>
     </SettingsSection>
   );
