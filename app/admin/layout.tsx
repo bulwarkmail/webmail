@@ -19,15 +19,35 @@ import { cn } from '@/lib/utils';
 import { useConfig } from '@/hooks/use-config';
 import { useThemeStore } from '@/stores/theme-store';
 
-const NAV_ITEMS = [
-  { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/admin/settings', label: 'Settings', icon: Settings },
-  { href: '/admin/branding', label: 'Branding', icon: Palette },
-  { href: '/admin/auth', label: 'Authentication', icon: Shield },
-  { href: '/admin/policy', label: 'Policy', icon: Scale },
-  { href: '/admin/plugins', label: 'Plugins', icon: Puzzle },
-  { href: '/admin/themes', label: 'Themes', icon: SwatchBook },
-  { href: '/admin/logs', label: 'Audit Log', icon: ScrollText },
+const NAV_GROUPS = [
+  {
+    label: 'Overview',
+    items: [
+      { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
+    ],
+  },
+  {
+    label: 'Configuration',
+    items: [
+      { href: '/admin/settings', label: 'Settings', icon: Settings },
+      { href: '/admin/branding', label: 'Branding', icon: Palette },
+      { href: '/admin/auth', label: 'Authentication', icon: Shield },
+      { href: '/admin/policy', label: 'Policy', icon: Scale },
+    ],
+  },
+  {
+    label: 'Extensions',
+    items: [
+      { href: '/admin/plugins', label: 'Plugins', icon: Puzzle },
+      { href: '/admin/themes', label: 'Themes', icon: SwatchBook },
+    ],
+  },
+  {
+    label: 'System',
+    items: [
+      { href: '/admin/logs', label: 'Audit Log', icon: ScrollText },
+    ],
+  },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -41,9 +61,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     : (appLogoLightUrl || appLogoDarkUrl || loginLogoLightUrl);
 
   useEffect(() => {
-    checkAuth();
+    if (pathname !== '/admin/login') {
+      checkAuth();
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [pathname]);
 
   async function checkAuth() {
     try {
@@ -84,8 +106,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <div className="min-h-screen flex bg-background">
       {/* Sidebar */}
-      <aside className="w-60 border-r border-border bg-secondary/30 flex flex-col">
-        <div className="h-14 flex items-center px-4 border-b border-border">
+      <aside className="w-60 border-r border-border bg-secondary flex flex-col sticky top-0 h-screen">
+        <div className="h-14 flex items-center px-4 border-b border-border shrink-0">
           {logoUrl ? (
             <img src={logoUrl} alt="" className="w-5 h-5 object-contain mr-2" />
           ) : (
@@ -94,40 +116,63 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <span className="font-semibold text-sm text-foreground">Admin Panel</span>
         </div>
 
-        <nav className="flex-1 py-2 px-2 space-y-0.5">
-          {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
-            const active = href === '/admin' ? pathname === '/admin' : pathname.startsWith(href);
-            return (
-              <Link
-                key={href}
-                href={href}
-                className={cn(
-                  'flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-colors',
-                  active
-                    ? 'bg-accent text-accent-foreground font-medium'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-                )}
-              >
-                <Icon className="w-4 h-4" />
-                {label}
-              </Link>
-            );
-          })}
-        </nav>
+        <div className="flex-1 overflow-y-auto py-2">
+          <div className="px-2 space-y-0.5">
+            {NAV_GROUPS.map((group, groupIndex) => (
+              <div key={group.label}>
+                {groupIndex > 0 && <div className="mx-1 my-2 border-t border-border" />}
+                <div className="px-3 pt-2.5 pb-1">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    {group.label}
+                  </span>
+                </div>
+                {group.items.map(({ href, label, icon: Icon }) => {
+                  const active = href === '/admin' ? pathname === '/admin' : pathname.startsWith(href);
+                  return (
+                    <Link
+                      key={href}
+                      href={href}
+                      className={cn(
+                        'w-full text-left px-3 py-2 rounded-md text-sm transition-colors duration-150 flex items-center gap-2.5',
+                        active
+                          ? 'bg-accent text-accent-foreground font-medium'
+                          : 'hover:bg-muted text-foreground'
+                      )}
+                    >
+                      <Icon className={cn(
+                        'w-4 h-4 shrink-0',
+                        active ? 'text-accent-foreground' : 'text-muted-foreground'
+                      )} />
+                      {label}
+                    </Link>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+        </div>
 
-        <div className="p-2 border-t border-border space-y-0.5">
+        <div className="px-2 py-2 border-t border-border space-y-0.5 shrink-0">
           <Link
             href="/admin/change-password"
-            className="flex items-center gap-2.5 px-3 py-2 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
+            className={cn(
+              'w-full text-left px-3 py-2 rounded-md text-sm transition-colors duration-150 flex items-center gap-2.5',
+              pathname === '/admin/change-password'
+                ? 'bg-accent text-accent-foreground font-medium'
+                : 'hover:bg-muted text-foreground'
+            )}
           >
-            <KeyRound className="w-4 h-4" />
+            <KeyRound className={cn(
+              'w-4 h-4 shrink-0',
+              pathname === '/admin/change-password' ? 'text-accent-foreground' : 'text-muted-foreground'
+            )} />
             Change Password
           </Link>
           <button
             onClick={handleLogout}
-            className="flex items-center gap-2.5 px-3 py-2 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors w-full text-left"
+            className="w-full text-left px-3 py-2 rounded-md text-sm transition-colors duration-150 flex items-center gap-2.5 hover:bg-muted text-foreground"
           >
-            <LogOut className="w-4 h-4" />
+            <LogOut className="w-4 h-4 shrink-0 text-muted-foreground" />
             Sign out
           </button>
         </div>

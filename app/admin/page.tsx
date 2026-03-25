@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Server, AlertTriangle, Clock, Globe, Package, Palette, Shield, Activity } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
+import { SettingsSection, SettingItem, ToggleSwitch } from '@/components/settings/settings-section';
 import type { AuditEntry } from '@/lib/admin/types';
 
 interface AdminStatus {
@@ -57,7 +58,6 @@ export default function AdminDashboardPage() {
       setConfig(configData);
     }
 
-    // Plugin/theme/policy stats
     if (pluginRes?.ok) {
       const plugins = await pluginRes.json();
       setPluginCount(Array.isArray(plugins) ? plugins.length : 0);
@@ -73,7 +73,6 @@ export default function AdminDashboardPage() {
       setPolicyRuleCount(restrictionCount + disabledGates);
     }
 
-    // JMAP health check
     if (configData?.jmapServerUrl) {
       try {
         const jmapRes = await fetch('/api/config');
@@ -83,7 +82,6 @@ export default function AdminDashboardPage() {
       }
     }
 
-    // Build warnings
     const w: string[] = [];
     if (adminConfigRes.ok) {
       const sources = await adminConfigRes.json();
@@ -101,55 +99,10 @@ export default function AdminDashboardPage() {
   }
 
   const jmapUrl = config?.jmapServerUrl || '—';
+  const jmapHostname = jmapUrl !== '—' ? (() => { try { return new URL(jmapUrl).hostname; } catch { return jmapUrl; } })() : '—';
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-foreground">Dashboard</h1>
-        <p className="text-sm text-muted-foreground mt-1">Server overview and recent activity</p>
-      </div>
-
-      {/* Status cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <StatusCard
-          icon={<Server className="w-4 h-4" />}
-          label="Application"
-          value={config?.appName || '—'}
-        />
-        <StatusCard
-          icon={<Globe className="w-4 h-4" />}
-          label="JMAP Server"
-          value={jmapUrl ? (() => { try { return new URL(jmapUrl).hostname; } catch { return jmapUrl; } })() : '—'}
-          detail={jmapUrl}
-        />
-        <StatusCard
-          icon={<Clock className="w-4 h-4" />}
-          label="Last Login"
-          value={status?.lastLogin ? new Date(status.lastLogin).toLocaleString() : 'Never'}
-        />
-      </div>
-
-      {/* Feature status row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <FeaturePill label="Admin" active={!!status?.enabled} />
-        <FeaturePill label="Settings Sync" active={!!config?.settingsSyncEnabled} />
-        <FeaturePill label="OAuth" active={!!config?.oauthEnabled} />
-        <FeaturePill label="Stalwart" active={config?.stalwartFeaturesEnabled !== false} />
-      </div>
-
-      {/* Quick stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard icon={<Package className="w-4 h-4" />} label="Plugins" value={pluginCount} />
-        <StatCard icon={<Palette className="w-4 h-4" />} label="Themes" value={themeCount} />
-        <StatCard icon={<Shield className="w-4 h-4" />} label="Policy Rules" value={policyRuleCount} />
-        <StatCard
-          icon={<Activity className="w-4 h-4" />}
-          label="JMAP Health"
-          value={jmapHealth === 'ok' ? 'Connected' : jmapHealth === 'error' ? 'Error' : '—'}
-          status={jmapHealth === 'ok' ? 'success' : jmapHealth === 'error' ? 'error' : undefined}
-        />
-      </div>
-
+    <div className="max-w-3xl space-y-8">
       {/* Warnings */}
       {warnings.map((msg, i) => (
         <div key={i} className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/30 p-4">
@@ -170,72 +123,81 @@ export default function AdminDashboardPage() {
         </div>
       )}
 
-      {/* Recent activity */}
-      <div>
-        <h2 className="text-lg font-medium text-foreground mb-3">Recent Activity</h2>
-        <div className="border border-border rounded-lg divide-y divide-border">
-          {recentActivity.length === 0 ? (
-            <div className="px-4 py-8 text-center text-sm text-muted-foreground">
-              No activity recorded yet
-            </div>
-          ) : (
-            recentActivity.map((entry, i) => (
-              <div key={i} className="px-4 py-3 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="text-xs font-mono px-2 py-0.5 rounded bg-muted text-muted-foreground">
-                    {entry.action}
-                  </span>
-                  <span className="text-sm text-foreground">
-                    {formatDetail(entry.detail)}
-                  </span>
-                </div>
-                <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                  <span>{entry.ip}</span>
-                  <span>{new Date(entry.ts).toLocaleString()}</span>
-                </div>
+      {/* Server Info */}
+      <SettingsSection title="Server" description="Application and connection details">
+        <SettingItem label="Application">
+          <span className="text-sm text-foreground">{config?.appName || '—'}</span>
+        </SettingItem>
+        <SettingItem label="JMAP Server" description={jmapUrl !== '—' ? jmapUrl : undefined}>
+          <span className="text-sm text-foreground">{jmapHostname}</span>
+        </SettingItem>
+        <SettingItem label="JMAP Connection">
+          <span className={`inline-flex items-center gap-1.5 text-sm font-medium ${
+            jmapHealth === 'ok' ? 'text-green-600 dark:text-green-400' : jmapHealth === 'error' ? 'text-red-600 dark:text-red-400' : 'text-muted-foreground'
+          }`}>
+            <span className={`w-2 h-2 rounded-full ${
+              jmapHealth === 'ok' ? 'bg-green-500' : jmapHealth === 'error' ? 'bg-red-500' : 'bg-muted-foreground/40'
+            }`} />
+            {jmapHealth === 'ok' ? 'Connected' : jmapHealth === 'error' ? 'Error' : 'Unknown'}
+          </span>
+        </SettingItem>
+        <SettingItem label="Last Login">
+          <span className="text-sm text-foreground">
+            {status?.lastLogin ? new Date(status.lastLogin).toLocaleString() : 'Never'}
+          </span>
+        </SettingItem>
+      </SettingsSection>
+
+      {/* Features */}
+      <SettingsSection title="Features" description="Enabled integrations and modules">
+        <SettingItem label="Admin Panel" description="Administrative access to server configuration">
+          <ToggleSwitch checked={!!status?.enabled} onChange={() => {}} disabled />
+        </SettingItem>
+        <SettingItem label="Settings Sync" description="Synchronize user settings across devices">
+          <ToggleSwitch checked={!!config?.settingsSyncEnabled} onChange={() => {}} disabled />
+        </SettingItem>
+        <SettingItem label="OAuth" description="OAuth authentication provider">
+          <ToggleSwitch checked={!!config?.oauthEnabled} onChange={() => {}} disabled />
+        </SettingItem>
+        <SettingItem label="Stalwart Integration" description="Stalwart mail server features">
+          <ToggleSwitch checked={config?.stalwartFeaturesEnabled !== false} onChange={() => {}} disabled />
+        </SettingItem>
+      </SettingsSection>
+
+      {/* Extensions */}
+      <SettingsSection title="Extensions" description="Installed plugins, themes, and policy rules">
+        <SettingItem label="Plugins">
+          <span className="text-sm text-foreground">{pluginCount}</span>
+        </SettingItem>
+        <SettingItem label="Themes">
+          <span className="text-sm text-foreground">{themeCount}</span>
+        </SettingItem>
+        <SettingItem label="Policy Rules">
+          <span className="text-sm text-foreground">{policyRuleCount}</span>
+        </SettingItem>
+      </SettingsSection>
+
+      {/* Recent Activity */}
+      <SettingsSection title="Recent Activity" description="Latest administrative actions">
+        {recentActivity.length === 0 ? (
+          <div className="py-4 text-sm text-muted-foreground">
+            No activity recorded yet
+          </div>
+        ) : (
+          recentActivity.map((entry, i) => (
+            <SettingItem
+              key={i}
+              label={entry.action}
+              description={formatDetail(entry.detail) || undefined}
+            >
+              <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                <span>{entry.ip}</span>
+                <span>{new Date(entry.ts).toLocaleString()}</span>
               </div>
-            ))
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function StatusCard({ icon, label, value, detail }: { icon: React.ReactNode; label: string; value: string; detail?: string }) {
-  return (
-    <div className="border border-border rounded-lg p-4 bg-secondary/20">
-      <div className="flex items-center gap-2 text-muted-foreground mb-2">
-        {icon}
-        <span className="text-xs font-medium uppercase tracking-wider">{label}</span>
-      </div>
-      <div className="text-lg font-semibold text-foreground truncate">{value}</div>
-      {detail && <p className="text-xs text-muted-foreground mt-1 truncate">{detail}</p>}
-    </div>
-  );
-}
-
-function FeaturePill({ label, active }: { label: string; active: boolean }) {
-  return (
-    <div className="flex items-center gap-2 border border-border rounded-md px-3 py-2">
-      <span className={`w-2 h-2 rounded-full ${active ? 'bg-green-500' : 'bg-muted-foreground/40'}`} />
-      <span className="text-xs font-medium text-foreground">{label}</span>
-      <span className={`text-xs ml-auto ${active ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground'}`}>
-        {active ? 'On' : 'Off'}
-      </span>
-    </div>
-  );
-}
-
-function StatCard({ icon, label, value, status }: { icon: React.ReactNode; label: string; value: string | number; status?: 'success' | 'error' }) {
-  const statusColor = status === 'success' ? 'text-green-600 dark:text-green-400' : status === 'error' ? 'text-red-600 dark:text-red-400' : 'text-foreground';
-  return (
-    <div className="border border-border rounded-md px-3 py-2 bg-secondary/20">
-      <div className="flex items-center gap-2 text-muted-foreground mb-1">
-        {icon}
-        <span className="text-xs font-medium uppercase tracking-wider">{label}</span>
-      </div>
-      <div className={`text-sm font-semibold ${statusColor}`}>{value}</div>
+            </SettingItem>
+          ))
+        )}
+      </SettingsSection>
     </div>
   );
 }
