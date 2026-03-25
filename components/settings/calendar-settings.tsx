@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { useCalendarStore, CalendarViewMode } from '@/stores/calendar-store';
 import { useSettingsStore } from '@/stores/settings-store';
+import { usePolicyStore } from '@/stores/policy-store';
 import { SettingsSection, SettingItem, Select, RadioGroup, ToggleSwitch } from './settings-section';
 
 export function CalendarSettings() {
@@ -20,6 +21,7 @@ export function CalendarSettings() {
     showTasksOnCalendar,
     updateSetting,
   } = useSettingsStore();
+  const { isFeatureEnabled } = usePolicyStore();
 
   return (
     <SettingsSection title={t('title')}>
@@ -78,6 +80,8 @@ export function CalendarSettings() {
         />
       </SettingItem>
 
+      {isFeatureEnabled('calendarTasksEnabled') && (
+      <>
       <SettingItem
         label={t('enable_tasks')}
         description={t('enable_tasks_desc')}
@@ -98,6 +102,8 @@ export function CalendarSettings() {
             onChange={(checked) => updateSetting('showTasksOnCalendar', checked)}
           />
         </SettingItem>
+      )}
+      </>
       )}
 
     </SettingsSection>

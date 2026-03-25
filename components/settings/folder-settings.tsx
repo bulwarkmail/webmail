@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useEmailStore } from '@/stores/email-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { useSettingsStore } from '@/stores/settings-store';
+import { usePolicyStore } from '@/stores/policy-store';
 import { toast } from '@/stores/toast-store';
 import { SettingsSection, SettingItem, Select } from './settings-section';
 import {
@@ -100,6 +101,8 @@ export function FolderSettings() {
   const { client } = useAuthStore();
   const { mailboxes, createMailbox, renameMailbox, deleteMailbox, setMailboxRole } = useEmailStore();
   const { folderIcons, setFolderIcon } = useSettingsStore();
+  const { isFeatureEnabled } = usePolicyStore();
+  const folderIconsAllowed = isFeatureEnabled('folderIconsEnabled');
 
   const [isCreating, setIsCreating] = useState(false);
   const [creatingParentId, setCreatingParentId] = useState<string | null>(null);
@@ -380,22 +383,31 @@ export function FolderSettings() {
               <span className="w-4.5 flex-shrink-0" />
             )}
             <div className="relative flex-shrink-0">
-              <button
-                onClick={() => setIconPickerId(iconPickerId === mb.id ? null : mb.id)}
-                className={cn(
-                  "p-1 rounded-md transition-colors",
-                  iconPickerId === mb.id
-                    ? "bg-accent"
-                    : "hover:bg-accent"
-                )}
-                title={t('change_icon')}
-              >
-                <Icon className={cn(
-                  "w-4 h-4",
-                  mb.role ? "text-primary" : "text-muted-foreground"
-                )} />
-              </button>
-              {iconPickerId === mb.id && (
+              {folderIconsAllowed ? (
+                <button
+                  onClick={() => setIconPickerId(iconPickerId === mb.id ? null : mb.id)}
+                  className={cn(
+                    "p-1 rounded-md transition-colors",
+                    iconPickerId === mb.id
+                      ? "bg-accent"
+                      : "hover:bg-accent"
+                  )}
+                  title={t('change_icon')}
+                >
+                  <Icon className={cn(
+                    "w-4 h-4",
+                    mb.role ? "text-primary" : "text-muted-foreground"
+                  )} />
+                </button>
+              ) : (
+                <span className="p-1">
+                  <Icon className={cn(
+                    "w-4 h-4",
+                    mb.role ? "text-primary" : "text-muted-foreground"
+                  )} />
+                </span>
+              )}
+              {folderIconsAllowed && iconPickerId === mb.id && (
                 <IconPicker
                   currentIcon={getIconName(mb)}
                   onSelect={(iconName) => {

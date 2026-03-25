@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { usePluginStore } from '@/stores/plugin-store';
+import { usePolicyStore } from '@/stores/policy-store';
 import { SettingsSection, SettingItem, ToggleSwitch } from './settings-section';
 import { cn } from '@/lib/utils';
 import { Upload, Trash2, AlertTriangle, Puzzle } from 'lucide-react';
@@ -19,9 +20,14 @@ const STATUS_COLORS: Record<PluginStatus, string> = {
 
 export function PluginsSettings() {
   const { plugins, installPlugin, uninstallPlugin, enablePlugin, disablePlugin, updatePluginSettings } = usePluginStore();
+  const { isFeatureEnabled } = usePolicyStore();
   const [isUploading, setIsUploading] = useState(false);
   const [expandedPlugin, setExpandedPlugin] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  if (!isFeatureEnabled('pluginsEnabled')) {
+    return null;
+  }
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

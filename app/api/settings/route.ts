@@ -129,8 +129,24 @@ export async function POST(request: NextRequest) {
     const filteredSettings = { ...settings };
     for (const key of Object.keys(filteredSettings)) {
       const restriction = policy.restrictions[key];
-      if (restriction?.locked) {
+      if (!restriction) continue;
+      if (restriction.locked) {
         delete filteredSettings[key];
+        continue;
+      }
+      const value = filteredSettings[key];
+      if (restriction.allowedValues && restriction.allowedValues.length > 0) {
+        if (!restriction.allowedValues.includes(value)) {
+          delete filteredSettings[key];
+        }
+      }
+      if (typeof value === 'number') {
+        if (restriction.min !== undefined && value < restriction.min) {
+          delete filteredSettings[key];
+        }
+        if (restriction.max !== undefined && value > restriction.max) {
+          delete filteredSettings[key];
+        }
       }
     }
 
