@@ -803,6 +803,10 @@
         "label": "Desactivar agrupación de conversaciones",
         "description": "Mostrar correos como mensajes individuales en lugar de agruparlos por conversación"
       },
+      "plain_text_mode": {
+        "label": "Solo texto sin formato",
+        "description": "Desactivar el editor de texto enriquecido y enviar todos los correos solo como texto sin formato, incluyendo respuestas y reenvíos"
+      },
       "show_preview": {
         "label": "Mostrar Vista Previa",
         "description": "Mostrar vista previa del correo en la lista"

@@ -807,6 +807,10 @@
         "label": "Disable Conversation Grouping",
         "description": "Show emails as individual messages instead of grouped by conversation"
       },
+      "plain_text_mode": {
+        "label": "Plain Text Only",
+        "description": "Disable the rich text editor and send all emails as plain text only, including replies and forwards"
+      },
       "attachment_click_action": {
         "label": "Attachment Click Action",
         "description": "Choose whether clicking a file attachment previews it or downloads it immediately",

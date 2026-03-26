@@ -803,6 +803,10 @@
         "label": "Conversatiegroepering uitschakelen",
         "description": "Toon e-mails als afzonderlijke berichten in plaats van gegroepeerd op gesprek"
       },
+      "plain_text_mode": {
+        "label": "Alleen platte tekst",
+        "description": "Schakel de rich text-editor uit en verzend alle e-mails alleen als platte tekst, inclusief antwoorden en doorgestuurde berichten"
+      },
       "show_preview": {
         "label": "Voorbeeldtekst tonen",
         "description": "E-mailvoorbeeld weergeven in de lijst"

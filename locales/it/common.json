@@ -803,6 +803,10 @@
         "label": "Disabilita raggruppamento conversazioni",
         "description": "Mostra le email come messaggi singoli anziché raggruppati per conversazione"
       },
+      "plain_text_mode": {
+        "label": "Solo testo normale",
+        "description": "Disabilita l'editor di testo formattato e invia tutte le email solo come testo normale, incluse risposte e inoltri"
+      },
       "show_preview": {
         "label": "Mostra anteprima testo",
         "description": "Visualizza l'anteprima del messaggio nell'elenco"

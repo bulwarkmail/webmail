@@ -807,6 +807,10 @@
         "label": "Konversationsgruppierung deaktivieren",
         "description": "E-Mails als einzelne Nachrichten statt nach Konversation gruppiert anzeigen"
       },
+      "plain_text_mode": {
+        "label": "Nur Klartext",
+        "description": "Rich-Text-Editor deaktivieren und alle E-Mails nur als Klartext senden, einschließlich Antworten und Weiterleitungen"
+      },
       "attachment_click_action": {
         "label": "Aktion beim Klick auf Anhänge",
         "description": "Festlegen, ob ein Dateianhang beim Anklicken in der Vorschau geöffnet oder sofort heruntergeladen wird",

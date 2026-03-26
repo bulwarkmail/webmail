@@ -803,6 +803,10 @@
         "label": "Desativar agrupamento de conversas",
         "description": "Mostrar e-mails como mensagens individuais em vez de agrupados por conversa"
       },
+      "plain_text_mode": {
+        "label": "Apenas texto simples",
+        "description": "Desativar o editor de texto formatado e enviar todos os e-mails apenas como texto simples, incluindo respostas e encaminhamentos"
+      },
       "show_preview": {
         "label": "Mostrar Texto de Visualização",
         "description": "Exibir visualização do e-mail na lista"

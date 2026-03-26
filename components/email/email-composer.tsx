@@ -99,6 +99,7 @@ export function EmailComposer({
   const t = useTranslations('email_composer');
   const tCommon = useTranslations('common');
   const timeFormat = useSettingsStore((state) => state.timeFormat);
+  const plainTextMode = useSettingsStore((state) => state.plainTextMode);
 
   // Initialize with reply/forward data if provided
   const getInitialTo = () => {
@@ -134,6 +135,26 @@ export function EmailComposer({
   };
 
   const getInitialBody = () => {
+    if (plainTextMode) {
+      // Plain text mode: produce plain text body with no HTML
+      const prefix = initialDraftText || "";
+      if (!replyTo?.body && !replyTo?.htmlBody) return prefix;
+
+      const date = replyTo.receivedAt ? formatDateTime(replyTo.receivedAt, timeFormat, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }) : "";
+      const from = replyTo.from?.[0];
+      const fromStr = from ? `${from.name || from.email}` : tCommon('unknown');
+
+      const originalText = replyTo.body || (replyTo.htmlBody ? htmlToPlainText(replyTo.htmlBody) : '');
+      const quotedText = originalText.split('\n').map(line => `> ${line}`).join('\n');
+
+      if (mode === 'forward') {
+        return `${prefix}\n\n---------- Forwarded message ----------\nFrom: ${fromStr}\nDate: ${date}\nSubject: ${replyTo.subject || ''}\n\n${originalText}`;
+      } else if (mode === 'reply' || mode === 'replyAll') {
+        return `${prefix}\n\nOn ${date}, ${fromStr} wrote:\n${quotedText}`;
+      }
+      return prefix;
+    }
+
     const prefix = initialDraftText ? `<p>${initialDraftText.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>')}</p>` : "";
     if (!replyTo?.body && !replyTo?.htmlBody) return prefix;
 
@@ -369,12 +390,14 @@ export function EmailComposer({
       ? substitutePlaceholders(template.body, filledValues)
       : template.body;
 
-    // Convert template plain text body to HTML for the rich text editor
-    const htmlBody = `<p>${filledBody.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>')}</p>`;
+    // In plain text mode, use template body as-is; otherwise convert to HTML
+    const bodyContent = plainTextMode
+      ? filledBody
+      : `<p>${filledBody.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>')}</p>`;
 
     if (mode === 'compose') {
       setSubject(filledSubject);
-      setBody(htmlBody);
+      setBody(bodyContent);
       if (template.defaultRecipients?.to?.length) {
         setTo(template.defaultRecipients.to.join(', ') + ', ');
       }
@@ -387,7 +410,7 @@ export function EmailComposer({
         setShowBcc(true);
       }
     } else {
-      setBody((prev) => htmlBody + prev);
+      setBody((prev) => bodyContent + (plainTextMode ? '\n' : '') + prev);
     }
 
     if (template.identityId) {
@@ -395,7 +418,7 @@ export function EmailComposer({
     }
 
     setShowTemplatePicker(false);
-  }, [mode]);
+  }, [mode, plainTextMode]);
 
   useEffect(() => {
     const handleTemplateKey = (e: KeyboardEvent) => {
@@ -530,7 +553,7 @@ export function EmailComposer({
     const ccAddresses = cc.split(",").map(e => e.trim()).filter(Boolean);
     const bccAddresses = bcc.split(",").map(e => e.trim()).filter(Boolean);
 
-    if (!toAddresses.length && !subject && !htmlToPlainText(body).trim()) {
+    if (!toAddresses.length && !subject && !(plainTextMode ? body.trim() : htmlToPlainText(body).trim())) {
       return null;
     }
 
@@ -566,7 +589,7 @@ export function EmailComposer({
       const savedDraftId = await client.createDraft(
         toAddresses,
         subject || t('no_subject'),
-        htmlToPlainText(body),
+        plainTextMode ? body : htmlToPlainText(body),
         ccAddresses,
         bccAddresses,
         currentIdentity?.id,
@@ -630,7 +653,7 @@ export function EmailComposer({
   }, []);
 
   const toAddresses = to.split(",").map(e => e.trim()).filter(Boolean);
-  const bodyPlainText = htmlToPlainText(body).trim();
+  const bodyPlainText = plainTextMode ? body.trim() : htmlToPlainText(body).trim();
   const hasContent = bodyPlainText || attachments.some(att => att.blobId && !att.uploading);
   const canSend = toAddresses.length > 0 && !!subject && hasContent;
 
@@ -680,8 +703,8 @@ export function EmailComposer({
         : currentIdentity.email
       : undefined;
 
-    // Body is already HTML from the rich text editor.
-    // Build HTML signature block
+    // Body is already HTML from the rich text editor (or plain text in plain text mode).
+    // Build HTML signature block (used only in rich text mode)
     const buildSignatureHtml = (): string => {
       if (currentIdentity?.htmlSignature) {
         return `<br><br>-- <br>${sanitizeEmailHtml(currentIdentity.htmlSignature)}`;
@@ -692,13 +715,14 @@ export function EmailComposer({
       return '';
     };
 
-    const signatureHtml = buildSignatureHtml();
+    // In plain text mode, send text/plain only (no HTML body)
+    const finalBody = plainTextMode
+      ? appendPlainTextSignature(body, currentIdentity)
+      : appendPlainTextSignature(htmlToPlainText(body), currentIdentity);
 
-    // Build final HTML body: editor content + signature
-    const finalHtmlBody = `<div>${body}</div>${signatureHtml}`;
-
-    // Generate plain text version from the HTML body for multipart/alternative
-    const finalBody = appendPlainTextSignature(htmlToPlainText(body), currentIdentity);
+    const finalHtmlBody = plainTextMode
+      ? undefined
+      : `<div>${body}</div>${buildSignatureHtml()}`;
 
     try {
       // S/MIME send pipeline: build raw MIME → sign → encrypt → sendRawEmail
@@ -1101,24 +1125,47 @@ export function EmailComposer({
           </div>
         </div>
 
-        {/* Body - Rich Text Editor */}
-        <RichTextEditor
-          content={body}
-          onChange={(html) => {
-            setBody(html);
-            if (validationErrors.body) setValidationErrors(prev => ({ ...prev, body: false }));
-          }}
-          onImageUpload={handleImageUpload}
-          placeholder={t('body_placeholder')}
-          hasError={validationErrors.body}
-        />
+        {/* Body */}
+        {plainTextMode ? (
+          <textarea
+            value={body}
+            onChange={(e) => {
+              setBody(e.target.value);
+              if (validationErrors.body) setValidationErrors(prev => ({ ...prev, body: false }));
+            }}
+            placeholder={t('body_placeholder')}
+            className={cn(
+              "w-full min-h-[300px] px-4 py-3 text-sm text-foreground bg-transparent resize-y focus:outline-none font-mono",
+              validationErrors.body && "ring-2 ring-red-500 dark:ring-red-400 rounded"
+            )}
+            style={{ height: 'calc(100vh - 350px)' }}
+            aria-invalid={validationErrors.body || undefined}
+          />
+        ) : (
+          <RichTextEditor
+            content={body}
+            onChange={(html) => {
+              setBody(html);
+              if (validationErrors.body) setValidationErrors(prev => ({ ...prev, body: false }));
+            }}
+            onImageUpload={handleImageUpload}
+            placeholder={t('body_placeholder')}
+            hasError={validationErrors.body}
+          />
+        )}
 
-        {composerSignatureHtml && (
+        {plainTextMode ? (
+          getPlainTextSignature(currentIdentity) ? (
+            <div className="px-4 pb-3 text-sm leading-6 text-muted-foreground break-words whitespace-pre-wrap font-mono">
+              {'-- \n'}{getPlainTextSignature(currentIdentity)}
+            </div>
+          ) : null
+        ) : composerSignatureHtml ? (
           <div
             className="px-4 pb-3 text-sm leading-6 text-foreground break-words [&_a]:text-primary [&_a]:underline-offset-2 [&_a:hover]:underline"
             dangerouslySetInnerHTML={{ __html: `<div>-- </div>${composerSignatureHtml}` }}
           />
-        )}
+        ) : null}
       </div>
 
         {/* Attachments */}

@@ -803,6 +803,10 @@
         "label": "Désactiver le regroupement par conversation",
         "description": "Afficher les e-mails comme messages individuels plutôt que groupés par conversation"
       },
+      "plain_text_mode": {
+        "label": "Texte brut uniquement",
+        "description": "Désactiver l'éditeur de texte enrichi et envoyer tous les e-mails en texte brut uniquement, y compris les réponses et les transferts"
+      },
       "show_preview": {
         "label": "Afficher l'aperçu",
         "description": "Afficher l'aperçu de l'email dans la liste"
