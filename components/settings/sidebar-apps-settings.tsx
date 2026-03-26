@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { Plus, Pencil, Trash2, ExternalLink, PanelRight, GripVertical } from "lucide-react";
 import { icons as lucideIcons, type LucideIcon } from "lucide-react";
@@ -180,10 +180,12 @@ function AppForm({
 export function SidebarAppsSettings() {
   const t = useTranslations("settings.sidebar_apps");
   const tApps = useTranslations("sidebar_apps");
-  const { sidebarApps, keepAppsLoaded, addSidebarApp, updateSidebarApp, removeSidebarApp, updateSetting } = useSettingsStore();
+  const { sidebarApps, keepAppsLoaded, addSidebarApp, updateSidebarApp, removeSidebarApp, reorderSidebarApps, updateSetting } = useSettingsStore();
   const [editingApp, setEditingApp] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const { dialogProps: confirmDialogProps, confirm: confirmDialog } = useConfirmDialog();
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const draggedIndexRef = useRef<number | null>(null);
 
   const handleAdd = useCallback((data: SidebarAppFormData) => {
     const id = `app-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
@@ -207,6 +209,34 @@ export function SidebarAppsSettings() {
     removeSidebarApp(app.id);
   }, [confirmDialog, tApps, removeSidebarApp]);
 
+  const handleDragStart = useCallback((e: React.DragEvent, index: number) => {
+    draggedIndexRef.current = index;
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", String(index));
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    setDragOverIndex(index);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    setDragOverIndex(null);
+    const fromIndex = draggedIndexRef.current;
+    if (fromIndex === null || fromIndex === dropIndex) return;
+    const newApps = [...sidebarApps];
+    const [moved] = newApps.splice(fromIndex, 1);
+    newApps.splice(dropIndex, 0, moved);
+    reorderSidebarApps(newApps);
+  }, [sidebarApps, reorderSidebarApps]);
+
+  const handleDragEnd = useCallback(() => {
+    draggedIndexRef.current = null;
+    setDragOverIndex(null);
+  }, []);
+
   return (
     <>
       <SettingsSection title={t("title")} description={t("description")}>
@@ -224,7 +254,7 @@ export function SidebarAppsSettings() {
             <p className="text-sm text-muted-foreground py-4 text-center">{tApps("no_apps_hint")}</p>
           )}
 
-          {sidebarApps.map((app) => {
+          {sidebarApps.map((app, index) => {
             if (editingApp === app.id) {
               return (
                 <AppForm
@@ -240,9 +270,21 @@ export function SidebarAppsSettings() {
             return (
               <div
                 key={app.id}
-                className="flex items-center gap-3 p-3 border border-border rounded-lg hover:bg-muted/50 transition-colors"
+                draggable
+                onDragStart={(e) => handleDragStart(e, index)}
+                onDragOver={(e) => handleDragOver(e, index)}
+                onDrop={(e) => handleDrop(e, index)}
+                onDragEnd={handleDragEnd}
+                className={cn(
+                  "flex items-center gap-3 p-3 border rounded-lg transition-colors",
+                  dragOverIndex === index
+                    ? "border-primary bg-primary/5"
+                    : "border-border hover:bg-muted/50"
+                )}
               >
-                <GripVertical className="w-4 h-4 text-muted-foreground/50 flex-shrink-0" />
+                <div className="cursor-grab active:cursor-grabbing text-muted-foreground/50 hover:text-muted-foreground flex-shrink-0">
+                  <GripVertical className="w-4 h-4" />
+                </div>
                 <div className="w-8 h-8 rounded-md bg-muted flex items-center justify-center flex-shrink-0">
                   {AppIcon ? <AppIcon className="w-4 h-4" /> : null}
                 </div>
