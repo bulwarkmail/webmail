@@ -70,10 +70,16 @@ export const useAccountSecurityStore = create<AccountSecurityState>()((set, get)
   error: null,
 
   probe: async () => {
+    const headers = getApiHeaders();
+    if (!headers['Authorization']) {
+      // Client not ready yet; caller (via authLoading guard) should retry
+      set({ isProbing: false });
+      return false;
+    }
     set({ isProbing: true });
     try {
       const response = await fetch('/api/account/stalwart/probe', {
-        headers: getApiHeaders(),
+        headers,
       });
       const data = await response.json();
       const isStalwart = data.isStalwart === true;

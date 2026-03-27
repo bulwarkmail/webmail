@@ -492,11 +492,11 @@ function EmailClientSection() {
 export function AccountSecuritySettings() {
   const t = useTranslations('settings.security');
   const { isStalwart, isProbing, probe, fetchAll, fetchAuthInfo } = useAccountSecurityStore();
-  const { isAuthenticated, authMode } = useAuthStore();
+  const { isAuthenticated, authMode, isLoading: authLoading } = useAuthStore();
   const isOAuth = authMode === 'oauth';
 
   useEffect(() => {
-    if (isAuthenticated && isStalwart === null) {
+    if (isAuthenticated && !authLoading && isStalwart === null) {
       probe().then((detected) => {
         if (detected) {
           if (isOAuth) {
@@ -507,7 +507,7 @@ export function AccountSecuritySettings() {
         }
       });
     }
-  }, [isAuthenticated, isStalwart, probe, fetchAll, fetchAuthInfo, isOAuth]);
+  }, [isAuthenticated, authLoading, isStalwart, probe, fetchAll, fetchAuthInfo, isOAuth]);
 
   if (isProbing) {
     return (
