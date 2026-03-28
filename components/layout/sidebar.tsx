@@ -428,9 +428,16 @@ export function Sidebar({
   onUnreadFilterClick,
   className,
 }: SidebarProps) {
+  const router = useRouter();
   const { sidebarCollapsed: isCollapsed, toggleSidebarCollapsed } = useUIStore();
   const { primaryIdentity: _primaryIdentity } = useAuthStore();
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
+  const [foldersExpanded, setFoldersExpanded] = useState(() => {
+    try {
+      const stored = localStorage.getItem('sidebarFoldersExpanded');
+      return stored !== null ? JSON.parse(stored) : true;
+    } catch { return true; }
+  });
   const [tagsExpanded, setTagsExpanded] = useState(() => {
     try {
       const stored = localStorage.getItem('sidebarTagsExpanded');
@@ -554,24 +561,103 @@ export function Sidebar({
       {/* Mailbox List */}
       <div className="flex-1 overflow-y-auto" data-tour="sidebar">
         <div className="py-1">
-          {mailboxes.length === 0 ? (
-            <div className="px-4 py-2 text-sm text-muted-foreground">
-              {!isCollapsed && t("loading_mailboxes")}
-            </div>
-          ) : (
+          {/* Folders Section Header */}
+          <div
+            style={{ paddingBlock: 'var(--density-sidebar-py)' }}
+            className={cn(
+              "group w-full flex items-center max-lg:min-h-[44px] text-sm transition-all duration-200 font-medium",
+              isCollapsed ? "justify-center px-1" : "px-2",
+              "text-foreground hover:bg-muted"
+            )}
+          >
+            {!isCollapsed && (
+              <button
+                onClick={() => {
+                  setFoldersExpanded((prev: boolean) => {
+                    const next = !prev;
+                    try { localStorage.setItem('sidebarFoldersExpanded', JSON.stringify(next)); } catch { /* */ }
+                    return next;
+                  });
+                }}
+                className={cn(
+                  "p-0.5 rounded mr-1 transition-all duration-200",
+                  "hover:bg-muted active:bg-accent"
+                )}
+                title={foldersExpanded ? t('collapse_tooltip') : t('expand_tooltip')}
+              >
+                {foldersExpanded ? (
+                  <ChevronDown className="w-3 h-3 text-muted-foreground" />
+                ) : (
+                  <ChevronRight className="w-3 h-3 text-muted-foreground" />
+                )}
+              </button>
+            )}
+
+            <button
+              onClick={() => {
+                if (isCollapsed) return;
+                setFoldersExpanded((prev: boolean) => {
+                  const next = !prev;
+                  try { localStorage.setItem('sidebarFoldersExpanded', JSON.stringify(next)); } catch { /* */ }
+                  return next;
+                });
+              }}
+              className={cn(
+                "flex items-center px-1 rounded",
+                "transition-colors duration-150",
+                isCollapsed ? "justify-center" : "flex-1 text-left"
+              )}
+              style={{ paddingBlock: 'var(--density-sidebar-py)', ...(isCollapsed ? {} : { paddingLeft: '4px' }) }}
+              title={isCollapsed ? t("folders") : undefined}
+            >
+              <Folder className={cn(
+                "w-4 h-4 flex-shrink-0 transition-colors",
+                !isCollapsed && "mr-2",
+                foldersExpanded && "text-primary"
+              )} />
+              {!isCollapsed && (
+                <span className="flex-1 truncate">{t("folders")}</span>
+              )}
+            </button>
+
+            {!isCollapsed && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  try { localStorage.setItem('settings-active-tab', 'folders'); } catch { /* */ }
+                  router.push('/settings');
+                }}
+                className="p-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-150 hover:bg-muted active:bg-accent ml-auto mr-1"
+                title={t('settings')}
+              >
+                <Settings className="w-3 h-3 text-muted-foreground" />
+              </button>
+            )}
+          </div>
+
+          {/* Folder Items */}
+          {((foldersExpanded && !isCollapsed) || isCollapsed) && (
             <>
-              {mailboxTree.map((node) => (
-                <MailboxTreeItem
-                  key={node.id}
-                  node={node}
-                  selectedMailbox={selectedKeyword ? "" : selectedMailbox}
-                  expandedFolders={expandedFolders}
-                  onMailboxSelect={onMailboxSelect}
-                  onToggleExpand={handleToggleExpand}
-                  isCollapsed={isCollapsed}
-                  onUnreadFilterClick={onUnreadFilterClick}
-                />
-              ))}
+              {mailboxes.length === 0 ? (
+                <div className="px-4 py-2 text-sm text-muted-foreground">
+                  {!isCollapsed && t("loading_mailboxes")}
+                </div>
+              ) : (
+                <>
+                  {mailboxTree.map((node) => (
+                    <MailboxTreeItem
+                      key={node.id}
+                      node={node}
+                      selectedMailbox={selectedKeyword ? "" : selectedMailbox}
+                      expandedFolders={expandedFolders}
+                      onMailboxSelect={onMailboxSelect}
+                      onToggleExpand={handleToggleExpand}
+                      isCollapsed={isCollapsed}
+                      onUnreadFilterClick={onUnreadFilterClick}
+                    />
+                  ))}
+                </>
+              )}
             </>
           )}
         </div>
@@ -636,6 +722,20 @@ export function Sidebar({
                   <span className="flex-1 truncate">{t("tags")}</span>
                 )}
               </button>
+
+              {!isCollapsed && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    try { localStorage.setItem('settings-active-tab', 'keywords'); } catch { /* */ }
+                    router.push('/settings');
+                  }}
+                  className="p-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-150 hover:bg-muted active:bg-accent ml-auto mr-1"
+                  title={t('settings')}
+                >
+                  <Settings className="w-3 h-3 text-muted-foreground" />
+                </button>
+              )}
             </div>
 
             {((tagsExpanded && !isCollapsed) || isCollapsed) && (

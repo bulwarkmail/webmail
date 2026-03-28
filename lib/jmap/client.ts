@@ -3907,6 +3907,10 @@ export class JMAPClient implements IJMAPClient {
   private pollingStates: { [key: string]: string } = {};
   private sseAbortController: AbortController | null = null;
   private sseReconnectTimeout: NodeJS.Timeout | null = null;
+  private ssePingTimer: NodeJS.Timeout | null = null;
+  private lastSSEActivity: number = 0;
+  private visibilityHandler: (() => void) | null = null;
+  private onlineHandler: (() => void) | null = null;
 
   private static readonly STATE_TYPE_MAP: Record<string, string> = {
     'Mailbox/get': 'Mailbox',
@@ -3918,6 +3922,7 @@ export class JMAPClient implements IJMAPClient {
 
   private static readonly POLLING_INTERVAL = 3_000;
   private static readonly SSE_RECONNECT_DELAY = 3_000;
+  private static readonly SSE_PING_TIMEOUT = 90_000; // 3x the 30s ping interval
 
   setupPushNotifications(): boolean {
     const eventSourceUrl = this.getEventSourceUrl();
@@ -3926,6 +3931,7 @@ export class JMAPClient implements IJMAPClient {
     } else {
       this.startPollingFallback();
     }
+    this.setupBrowserEventListeners();
     return true;
   }
 
@@ -3966,10 +3972,15 @@ export class JMAPClient implements IJMAPClient {
     const decoder = new TextDecoder();
     let buffer = '';
 
+    this.lastSSEActivity = Date.now();
+    this.startSSEPingMonitor();
+
     try {
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
+
+        this.lastSSEActivity = Date.now();
 
         buffer += decoder.decode(value, { stream: true });
         const parts = buffer.split('\n\n');
@@ -3982,6 +3993,8 @@ export class JMAPClient implements IJMAPClient {
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') return;
     }
+
+    this.stopSSEPingMonitor();
 
     // Stream ended — reconnect unless we were intentionally closed
     if (this.sseAbortController && !this.sseAbortController.signal.aborted) {
@@ -4155,8 +4168,68 @@ export class JMAPClient implements IJMAPClient {
       this.eventSource.close();
       this.eventSource = null;
     }
+    this.stopSSEPingMonitor();
+    this.cleanupBrowserEventListeners();
     this.stateChangeCallback = null;
     this.pollingStates = {};
+  }
+
+  private startSSEPingMonitor(): void {
+    this.stopSSEPingMonitor();
+    this.ssePingTimer = setInterval(() => {
+      if (Date.now() - this.lastSSEActivity > JMAPClient.SSE_PING_TIMEOUT) {
+        // SSE connection is stale — abort and reconnect
+        this.stopSSEPingMonitor();
+        if (this.sseAbortController) {
+          this.sseAbortController.abort();
+          this.sseAbortController = null;
+        }
+        this.scheduleSSEReconnect();
+      }
+    }, 30_000);
+  }
+
+  private stopSSEPingMonitor(): void {
+    if (this.ssePingTimer) {
+      clearInterval(this.ssePingTimer);
+      this.ssePingTimer = null;
+    }
+  }
+
+  private setupBrowserEventListeners(): void {
+    if (typeof document !== 'undefined') {
+      this.visibilityHandler = () => {
+        if (!document.hidden) {
+          // Tab became visible — immediately check for state changes
+          this.checkForStateChanges();
+        }
+      };
+      document.addEventListener('visibilitychange', this.visibilityHandler);
+    }
+
+    if (typeof window !== 'undefined') {
+      this.onlineHandler = () => {
+        // Network reconnected — reconnect SSE or force a poll
+        const eventSourceUrl = this.getEventSourceUrl();
+        if (eventSourceUrl && !this.sseAbortController) {
+          this.connectSSE(eventSourceUrl);
+        } else {
+          this.checkForStateChanges();
+        }
+      };
+      window.addEventListener('online', this.onlineHandler);
+    }
+  }
+
+  private cleanupBrowserEventListeners(): void {
+    if (this.visibilityHandler && typeof document !== 'undefined') {
+      document.removeEventListener('visibilitychange', this.visibilityHandler);
+      this.visibilityHandler = null;
+    }
+    if (this.onlineHandler && typeof window !== 'undefined') {
+      window.removeEventListener('online', this.onlineHandler);
+      this.onlineHandler = null;
+    }
   }
 
   onConnectionChange(callback: (connected: boolean) => void): void {
