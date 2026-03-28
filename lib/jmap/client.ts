@@ -140,6 +140,39 @@ const CALENDAR_EVENT_PROPERTIES = [
   'isOrigin',
 ] as const;
 
+// Task-specific properties for CalendarEvent/get when fetching Task objects
+const CALENDAR_TASK_PROPERTIES = [
+  'id',
+  '@type',
+  'uid',
+  'calendarIds',
+  'title',
+  'description',
+  'descriptionContentType',
+  'created',
+  'updated',
+  'start',
+  'due',
+  'duration',
+  'timeZone',
+  'showWithoutTime',
+  'utcStart',
+  'utcEnd',
+  'progress',
+  'progressUpdated',
+  'priority',
+  'privacy',
+  'color',
+  'keywords',
+  'categories',
+  'recurrenceRules',
+  'recurrenceOverrides',
+  'excludedRecurrenceRules',
+  'useDefaultAlerts',
+  'alerts',
+  'relatedTo',
+] as const;
+
 function getCalendarEventDebugSnapshot(event: Partial<CalendarEvent> | null | undefined): Record<string, unknown> | null {
   if (!event) {
     return null;
@@ -3362,36 +3395,228 @@ export class JMAPClient implements IJMAPClient {
   // ─── Calendar Tasks (JSCalendar Task objects via CalendarEvent endpoints) ───
 
   async getCalendarTasks(calendarIds?: string[], targetAccountId?: string): Promise<CalendarTask[]> {
+    const accountId = targetAccountId || this.getCalendarsAccountId();
+    debug.group('CalendarTask/fetch');
+    debug.log('CalendarTask/fetch start', { accountId, calendarIds: calendarIds || 'all' });
+
     try {
-      const events = await this.getCalendarEvents(calendarIds, targetAccountId);
-      return events.filter((e) => {
-        const obj = e as unknown as Record<string, unknown>;
-        const type = obj['@type'];
-        // Explicit @type check (case-insensitive to handle server variations)
-        if (typeof type === 'string' && type.toLowerCase() === 'task') return true;
-        // Fallback: detect tasks created via CalDAV (e.g. Thunderbird) where @type
-        // may be missing. The "progress" property is exclusive to JSCalendar Task
-        // objects and never appears on Event objects.
-        if (type !== 'Event' && 'progress' in obj && typeof obj.progress === 'string') return true;
-        return false;
-      }).map((e) => {
-        const task = { ...e } as unknown as CalendarTask;
-        // Normalize @type for tasks detected by fallback heuristic
-        if (task['@type'] !== 'Task') {
-          (task as unknown as Record<string, unknown>)['@type'] = 'Task';
-        }
-        return task;
-      });
+      // Strategy 1: query with types filter (JMAP spec compliant)
+      const filter: Record<string, unknown> = { types: ['Task'] };
+      if (calendarIds && calendarIds.length > 0) {
+        filter.inCalendars = calendarIds;
+      }
+
+      debug.log('CalendarTask/fetch query filter', filter);
+
+      const response = await this.request([
+        ["CalendarEvent/query", { accountId, filter, limit: 1000 }, "0"],
+        ["CalendarEvent/get", {
+          accountId,
+          properties: [...CALENDAR_TASK_PROPERTIES],
+          "#ids": { resultOf: "0", name: "CalendarEvent/query", path: "/ids" },
+        }, "1"]
+      ], this.calendarUsing());
+
+      const queryResponse = response.methodResponses?.[0];
+      const getResponse = response.methodResponses?.[1];
+
+      debug.log('CalendarTask/fetch query method', queryResponse?.[0]);
+      debug.log('CalendarTask/fetch query result', queryResponse?.[1]);
+
+      if (queryResponse?.[0] === "error") {
+        debug.warn('CalendarTask/fetch types filter not supported, falling back to full scan', queryResponse[1]);
+        const tasks = await this.getCalendarTasksFallback(calendarIds, targetAccountId);
+        debug.log('CalendarTask/fetch fallback returned', tasks.length, 'tasks');
+        debug.groupEnd();
+        return tasks;
+      }
+
+      if (getResponse?.[0] === "CalendarEvent/get") {
+        const list = (getResponse[1].list || []) as CalendarTask[];
+        const queryIds = queryResponse?.[1]?.ids || [];
+        debug.log('CalendarTask/fetch query returned', queryIds.length, 'ids:', queryIds);
+        debug.log('CalendarTask/fetch get returned', list.length, 'objects');
+        list.forEach((task, i) => {
+          debug.log(`CalendarTask/fetch [${i}]`, {
+            id: task.id,
+            uid: task.uid,
+            '@type': task['@type'],
+            title: task.title,
+            due: task.due,
+            start: task.start,
+            progress: task.progress,
+            showWithoutTime: task.showWithoutTime,
+            calendarIds: task.calendarIds,
+          });
+        });
+
+        const results = list.map((task) => ({
+          ...task,
+          '@type': 'Task' as const,
+        }));
+        debug.log('CalendarTask/fetch complete,', results.length, 'tasks');
+        debug.groupEnd();
+        return results;
+      }
+
+      debug.warn('CalendarTask/fetch unexpected response shape', response.methodResponses);
+      debug.groupEnd();
+      return [];
     } catch (error) {
-      console.error('Failed to get calendar tasks:', error);
+      debug.error('CalendarTask/fetch failed', error);
+      debug.groupEnd();
       return [];
     }
   }
 
+  /**
+   * Fallback for servers that don't support the `types` filter in CalendarEvent/query.
+   * Uses CalendarEvent/get with ids:null to fetch ALL calendar objects (JMAP spec),
+   * since CalendarEvent/query may only return Event-type objects on some servers.
+   */
+  private async getCalendarTasksFallback(calendarIds?: string[], targetAccountId?: string): Promise<CalendarTask[]> {
+    const accountId = targetAccountId || this.getCalendarsAccountId();
+    debug.log('CalendarTask/fallback using CalendarEvent/get ids:null to fetch all objects');
+
+    // CalendarEvent/get with ids:null returns ALL calendar objects regardless of @type
+    const response = await this.request([
+      ["CalendarEvent/get", {
+        accountId,
+        ids: null,
+        properties: [...CALENDAR_TASK_PROPERTIES],
+      }, "0"]
+    ], this.calendarUsing());
+
+    if (response.methodResponses?.[0]?.[0] !== "CalendarEvent/get") {
+      debug.warn('CalendarTask/fallback unexpected response', response.methodResponses?.[0]);
+      return [];
+    }
+
+    const allObjects = (response.methodResponses[0][1].list || []) as Record<string, unknown>[];
+    debug.log('CalendarTask/fallback total calendar objects returned:', allObjects.length);
+
+    const tasks: CalendarTask[] = [];
+    const calendarIdSet = calendarIds ? new Set(calendarIds) : null;
+
+    allObjects.forEach((obj) => {
+      const type = obj['@type'];
+      const isExplicitTask = typeof type === 'string' && type.toLowerCase() === 'task';
+      // CalDAV-created tasks (e.g. Thunderbird) may have progress but no @type
+      const isCalDavTask = type !== 'Event' && 'progress' in obj && typeof obj.progress === 'string';
+
+      debug.log('CalendarTask/fallback scan', {
+        id: obj.id,
+        '@type': type,
+        title: obj.title,
+        hasProgress: 'progress' in obj,
+        progress: obj.progress,
+        due: obj.due,
+        isExplicitTask,
+        isCalDavTask,
+      });
+
+      if (!isExplicitTask && !isCalDavTask) return;
+
+      // Filter by calendar if requested
+      if (calendarIdSet) {
+        const objCalendarIds = obj.calendarIds as Record<string, boolean> | undefined;
+        if (objCalendarIds && !Object.keys(objCalendarIds).some(id => calendarIdSet.has(id))) {
+          debug.log('CalendarTask/fallback skipping task (not in requested calendars)', obj.id);
+          return;
+        }
+      }
+
+      tasks.push({ ...obj, '@type': 'Task' as const } as CalendarTask);
+    });
+
+    debug.log('CalendarTask/fallback detected', tasks.length, 'tasks');
+    tasks.forEach((t, i) => {
+      debug.log(`CalendarTask/fallback [${i}]`, {
+        id: t.id,
+        uid: t.uid,
+        title: t.title,
+        due: t.due,
+        progress: t.progress,
+        showWithoutTime: t.showWithoutTime,
+        calendarIds: t.calendarIds,
+      });
+    });
+
+    return tasks;
+  }
+
   async createCalendarTask(task: Partial<CalendarTask>, targetAccountId?: string): Promise<CalendarTask> {
-    const event = { ...task, '@type': 'Task' } as unknown as Partial<CalendarEvent>;
-    const created = await this.createCalendarEvent(event, false, targetAccountId);
-    return created as unknown as CalendarTask;
+    const accountId = targetAccountId || this.getCalendarsAccountId();
+    const { '@type': _type, ...taskData } = task;
+    const cleanTask = { ...taskData, '@type': 'Task' };
+
+    debug.group('CalendarTask/create');
+    debug.log('CalendarTask/create accountId', accountId);
+    debug.log('CalendarTask/create outgoing payload', cleanTask);
+
+    const response = await this.request([
+      ["CalendarEvent/set", {
+        accountId,
+        sendSchedulingMessages: false,
+        create: { "new-task": cleanTask },
+      }, "0"]
+    ], this.calendarUsing());
+
+    const result = response.methodResponses?.[0]?.[1];
+    debug.log('CalendarTask/create raw set response', result);
+
+    if (result?.notCreated?.["new-task"]) {
+      const error = result.notCreated["new-task"];
+      debug.warn('CalendarTask/create REJECTED by server', error);
+      debug.groupEnd();
+      throw new Error(error.description || "Failed to create task");
+    }
+
+    const createdId = result?.created?.["new-task"]?.id;
+    const serverCreated = result?.created?.["new-task"];
+    debug.log('CalendarTask/create server acknowledged', { createdId, serverCreated });
+
+    if (!createdId) {
+      debug.warn('CalendarTask/create no id in server response');
+      debug.groupEnd();
+      throw new Error("Failed to create task — no id returned");
+    }
+
+    // Fetch back with task-specific properties
+    debug.log('CalendarTask/create re-fetching with task properties', { createdId, properties: [...CALENDAR_TASK_PROPERTIES] });
+    const getResponse = await this.request([
+      ["CalendarEvent/get", {
+        accountId,
+        properties: [...CALENDAR_TASK_PROPERTIES],
+        ids: [createdId],
+      }, "0"]
+    ], this.calendarUsing());
+
+    if (getResponse.methodResponses?.[0]?.[0] === "CalendarEvent/get") {
+      const list = getResponse.methodResponses[0][1].list || [];
+      const notFound = getResponse.methodResponses[0][1].notFound || [];
+      debug.log('CalendarTask/create get response', { found: list.length, notFound });
+      if (list[0]) {
+        const created = { ...list[0], '@type': 'Task' as const } as CalendarTask;
+        debug.log('CalendarTask/create final task object', {
+          id: created.id,
+          uid: created.uid,
+          '@type': created['@type'],
+          title: created.title,
+          due: created.due,
+          start: created.start,
+          progress: created.progress,
+          showWithoutTime: created.showWithoutTime,
+          calendarIds: created.calendarIds,
+        });
+        debug.groupEnd();
+        return created;
+      }
+    }
+
+    debug.warn('CalendarTask/create re-fetch returned nothing for id', createdId);
+    debug.groupEnd();
+    throw new Error("Failed to fetch created task");
   }
 
   async updateCalendarTask(taskId: string, updates: Partial<CalendarTask>, targetAccountId?: string): Promise<void> {

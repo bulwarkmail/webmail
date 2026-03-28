@@ -660,6 +660,7 @@ export interface CalendarEventFilter {
   attendee?: string;
   participationStatus?: string;
   uid?: string;
+  types?: string[];
 }
 
 // JMAP Push Notification Types (RFC 8620 Section 7)
