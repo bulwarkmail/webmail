@@ -33,6 +33,7 @@ export type MailAttachmentAction = 'preview' | 'download';
 export type AttachmentPosition = 'beside-sender' | 'below-header';
 export type ToolbarPosition = 'top' | 'below-subject';
 export type ArchiveMode = 'single' | 'year' | 'month';
+export type MailLayout = 'split' | 'focus';
 
 export type HoverAction = 'delete' | 'star' | 'markRead' | 'archive' | 'tag' | 'spam';
 export type HoverActionsMode = 'inline' | 'floating';
@@ -105,6 +106,7 @@ interface SettingsState {
   deleteAction: DeleteAction;
   permanentlyDeleteJunk: boolean; // Permanently delete emails from junk/spam instead of moving to trash
   showPreview: boolean;
+  mailLayout: MailLayout;
   emailsPerPage: number;
   externalContentPolicy: ExternalContentPolicy;
   mailAttachmentAction: MailAttachmentAction;
@@ -225,6 +227,7 @@ const DEFAULT_SETTINGS = {
   deleteAction: 'trash' as DeleteAction,
   permanentlyDeleteJunk: false,
   showPreview: true,
+  mailLayout: 'split' as MailLayout,
   emailsPerPage: 50,
   externalContentPolicy: 'ask' as ExternalContentPolicy,
   mailAttachmentAction: 'preview' as MailAttachmentAction,
@@ -335,6 +338,7 @@ export const useSettingsStore = create<SettingsState>()(
           markAsReadDelay: state.markAsReadDelay,
           deleteAction: state.deleteAction,
           showPreview: state.showPreview,
+          mailLayout: state.mailLayout,
           emailsPerPage: state.emailsPerPage,
           externalContentPolicy: state.externalContentPolicy,
           mailAttachmentAction: state.mailAttachmentAction,

@@ -59,7 +59,10 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
     const { selectedMailbox, selectedEmailIds, toggleEmailSelection, selectRangeEmails, clearSelection } = useEmailStore();
     const emailKeywords = useSettingsStore((state) => state.emailKeywords);
     const density = useSettingsStore((state) => state.density);
+    const mailLayout = useSettingsStore((state) => state.mailLayout);
     const isChecked = selectedEmailIds.has(email.id);
+    const isFocusedMailLayout = mailLayout === 'focus';
+    const inlinePreview = showPreview && email.preview ? ` ${email.preview}` : '';
 
     // Resolve color and keyword definition from keyword definitions if not passed directly
     const tagId = getEmailColorTag(email.keywords);
@@ -131,15 +134,19 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
         )}
         onClick={handleClick}
         onContextMenu={handleContextMenu}
-        style={{ minHeight: 'var(--list-item-height)' }}
+        style={{ minHeight: isFocusedMailLayout ? undefined : 'var(--list-item-height)' }}
       >
-        <div className="flex items-start px-3" style={{ gap: 'var(--density-item-gap)', paddingBlock: 'var(--density-item-py)' }}>
+        <div
+          className={cn('px-3', isFocusedMailLayout ? 'flex items-center py-2.5' : 'flex items-start')}
+          style={isFocusedMailLayout ? { gap: '12px' } : { gap: 'var(--density-item-gap)', paddingBlock: 'var(--density-item-py)' }}
+        >
           {/* Checkbox - only visible when in selection mode */}
           {selectedEmailIds.size > 0 && (
             <button
               onClick={handleCheckboxClick}
               className={cn(
-                "p-3 lg:p-1 rounded mt-2 flex-shrink-0 transition-all duration-200",
+                "p-3 lg:p-1 rounded flex-shrink-0 transition-all duration-200",
+                !isFocusedMailLayout && 'mt-2',
                 "hover:bg-muted/50 hover:scale-110",
                 "active:scale-95",
                 "animate-in fade-in zoom-in-95 duration-150",
@@ -160,7 +167,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
             </div>
           )}
 
-          {density !== 'extra-compact' && (
+          {!isFocusedMailLayout && density !== 'extra-compact' && (
             <Avatar
               name={sender?.name}
               email={sender?.email}
@@ -170,76 +177,121 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
           )}
 
           <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between gap-2 mb-1">
-              <div className="flex items-center gap-2 min-w-0 flex-1">
-                <span className={cn(
-                  "truncate text-sm",
-                  isUnread
-                    ? "font-bold text-foreground"
-                    : "font-medium text-muted-foreground"
-                )}>
-                  {sender?.name || sender?.email || "Unknown"}
-                </span>
-                <div className="flex items-center gap-1.5">
-                  {isStarred && (
-                    <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                  )}
-                  {isAnswered && !isForwarded && (
-                    <Reply className="w-3.5 h-3.5 text-muted-foreground" />
-                  )}
-                  {isForwarded && !isAnswered && (
-                    <Forward className="w-3.5 h-3.5 text-muted-foreground" />
-                  )}
+            {isFocusedMailLayout ? (
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex min-w-0 flex-1 items-center gap-3">
+                  <span className={cn(
+                    'w-32 shrink-0 truncate text-sm lg:w-40',
+                    isUnread ? 'font-semibold text-foreground' : 'font-medium text-foreground/80'
+                  )}>
+                    {sender?.name || sender?.email || 'Unknown'}
+                  </span>
+                  <div className="flex min-w-0 flex-1 items-center gap-2 text-sm">
+                    <span className={cn(
+                      'shrink-0 truncate',
+                      isUnread ? 'font-semibold text-foreground' : 'text-foreground/90'
+                    )}>
+                      {email.subject || '(no subject)'}
+                    </span>
+                    {inlinePreview && (
+                      <span className="min-w-0 truncate text-muted-foreground">{inlinePreview}</span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2.5 shrink-0">
+                  {isStarred && <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />}
+                  {isAnswered && !isForwarded && <Reply className="w-3.5 h-3.5 text-muted-foreground" />}
+                  {isForwarded && !isAnswered && <Forward className="w-3.5 h-3.5 text-muted-foreground" />}
                   {isAnswered && isForwarded && (
                     <>
                       <Reply className="w-3.5 h-3.5 text-muted-foreground" />
                       <Forward className="w-3.5 h-3.5 text-muted-foreground" />
                     </>
                   )}
-                  {email.hasAttachment && (
-                    <Paperclip className="w-3.5 h-3.5 text-muted-foreground" />
-                  )}
+                  {email.hasAttachment && <Paperclip className="w-3.5 h-3.5 text-muted-foreground" />}
+                  {resolvedKeywordDef && <span className={cn('h-2.5 w-2.5 rounded-full', KEYWORD_PALETTE[resolvedKeywordDef.color]?.dot || 'bg-gray-400')} />}
+                  <span className={cn(
+                    'text-xs tabular-nums',
+                    isUnread ? 'text-foreground font-semibold' : 'text-muted-foreground'
+                  )}>
+                    {formatDate(email.receivedAt)}
+                  </span>
                 </div>
               </div>
-              <div className="flex items-center gap-1.5 flex-shrink-0">
-                {resolvedKeywordDef && (
-                  <span className={cn(
-                    "inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium rounded-full",
-                    KEYWORD_PALETTE[resolvedKeywordDef.color]?.bg || "bg-muted"
-                  )}>
-                    <span className={cn("w-1.5 h-1.5 rounded-full", KEYWORD_PALETTE[resolvedKeywordDef.color]?.dot || "bg-gray-400")} />
-                    {resolvedKeywordDef.label}
-                  </span>
-                )}
-                <span className={cn(
-                  "text-xs tabular-nums",
+            ) : (
+              <>
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <span className={cn(
+                      "truncate text-sm",
+                      isUnread
+                        ? "font-bold text-foreground"
+                        : "font-medium text-muted-foreground"
+                    )}>
+                      {sender?.name || sender?.email || "Unknown"}
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      {isStarred && (
+                        <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                      )}
+                      {isAnswered && !isForwarded && (
+                        <Reply className="w-3.5 h-3.5 text-muted-foreground" />
+                      )}
+                      {isForwarded && !isAnswered && (
+                        <Forward className="w-3.5 h-3.5 text-muted-foreground" />
+                      )}
+                      {isAnswered && isForwarded && (
+                        <>
+                          <Reply className="w-3.5 h-3.5 text-muted-foreground" />
+                          <Forward className="w-3.5 h-3.5 text-muted-foreground" />
+                        </>
+                      )}
+                      {email.hasAttachment && (
+                        <Paperclip className="w-3.5 h-3.5 text-muted-foreground" />
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                    {resolvedKeywordDef && (
+                      <span className={cn(
+                        "inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium rounded-full",
+                        KEYWORD_PALETTE[resolvedKeywordDef.color]?.bg || "bg-muted"
+                      )}>
+                        <span className={cn("w-1.5 h-1.5 rounded-full", KEYWORD_PALETTE[resolvedKeywordDef.color]?.dot || "bg-gray-400")} />
+                        {resolvedKeywordDef.label}
+                      </span>
+                    )}
+                    <span className={cn(
+                      "text-xs tabular-nums",
+                      isUnread
+                        ? "text-foreground font-semibold"
+                        : "text-muted-foreground"
+                    )}>
+                      {formatDate(email.receivedAt)}
+                    </span>
+                  </div>
+                </div>
+
+                <div className={cn(
+                  "mb-1 line-clamp-1 text-sm",
                   isUnread
-                    ? "text-foreground font-semibold"
-                    : "text-muted-foreground"
+                    ? "font-semibold text-foreground"
+                    : "font-normal text-foreground/90"
                 )}>
-                  {formatDate(email.receivedAt)}
-                </span>
-              </div>
-            </div>
+                  {email.subject || "(no subject)"}
+                </div>
 
-            <div className={cn(
-              "mb-1 line-clamp-1 text-sm",
-              isUnread
-                ? "font-semibold text-foreground"
-                : "font-normal text-foreground/90"
-            )}>
-              {email.subject || "(no subject)"}
-            </div>
-
-            {showPreview && density !== 'extra-compact' && (
-              <p className={cn(
-                "text-sm leading-relaxed line-clamp-2",
-                isUnread
-                  ? "text-muted-foreground"
-                  : "text-muted-foreground/80"
-              )}>
-                {email.preview || "No preview available"}
-              </p>
+                {showPreview && density !== 'extra-compact' && (
+                  <p className={cn(
+                    "text-sm leading-relaxed line-clamp-2",
+                    isUnread
+                      ? "text-muted-foreground"
+                      : "text-muted-foreground/80"
+                  )}>
+                    {email.preview || "No preview available"}
+                  </p>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -281,8 +333,11 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
     const t = useTranslations('threads');
     const showPreview = useSettingsStore((state) => state.showPreview);
     const density = useSettingsStore((state) => state.density);
+    const mailLayout = useSettingsStore((state) => state.mailLayout);
     const isMobile = useUIStore((state) => state.isMobile);
     const { latestEmail, participantNames, hasUnread, hasStarred, hasAttachment, hasAnswered, hasForwarded, emailCount } = thread;
+    const isFocusedMailLayout = mailLayout === 'focus';
+    const inlinePreview = showPreview && latestEmail.preview ? ` ${latestEmail.preview}` : '';
 
     const { selectedMailbox, selectedEmailIds, toggleEmailSelection, selectRangeEmails, clearSelection } = useEmailStore();
 
@@ -406,15 +461,19 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
           )}
           onClick={handleHeaderClick}
           onContextMenu={handleContextMenu}
-          style={{ minHeight: 'var(--list-item-height)' }}
+          style={{ minHeight: isFocusedMailLayout ? undefined : 'var(--list-item-height)' }}
         >
-          <div className="flex items-start px-3" style={{ gap: 'var(--density-item-gap)', paddingBlock: 'var(--density-item-py)' }}>
+          <div
+            className={cn('px-3', isFocusedMailLayout ? 'flex items-center py-2.5' : 'flex items-start')}
+            style={isFocusedMailLayout ? { gap: '12px' } : { gap: 'var(--density-item-gap)', paddingBlock: 'var(--density-item-py)' }}
+          >
             {/* Checkbox for thread selection - only visible when in selection mode */}
             {selectedEmailIds.size > 0 && (
               <button
                 onClick={handleThreadCheckboxClick}
                 className={cn(
-                  "p-3 lg:p-1 rounded mt-2 flex-shrink-0 transition-all duration-200",
+                  "p-3 lg:p-1 rounded flex-shrink-0 transition-all duration-200",
+                  !isFocusedMailLayout && 'mt-2',
                   "hover:bg-muted/50 hover:scale-110",
                   "active:scale-95",
                   "animate-in fade-in zoom-in-95 duration-150",
@@ -429,7 +488,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
               </button>
             )}
 
-            {!isMobile && (
+            {!isMobile && !isFocusedMailLayout && (
               <button
                 data-expand-toggle
                 onClick={(e) => {
@@ -461,7 +520,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
               </div>
             )}
 
-            {density !== 'extra-compact' && (
+            {!isFocusedMailLayout && density !== 'extra-compact' && (
               <Avatar
                 name={latestEmail.from?.[0]?.name}
                 email={latestEmail.from?.[0]?.email}
@@ -471,88 +530,143 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
             )}
 
             <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between gap-2 mb-1">
-                <div className="flex items-center gap-2 min-w-0 flex-1">
-                  <span className={cn(
-                    "truncate text-sm",
-                    hasUnread
-                      ? "font-bold text-foreground"
-                      : "font-medium text-muted-foreground"
-                  )}>
-                    {participantNames.join(", ")}
-                  </span>
-                  <span
-                    className={cn(
-                      "flex-shrink-0 inline-flex items-center gap-0.5 px-1.5 py-0.5 text-xs rounded-full font-medium",
-                      hasUnread
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted text-muted-foreground"
-                    )}
-                    title={t('messages_tooltip', { count: emailCount })}
-                  >
-                    <MessageSquare className="w-3 h-3" />
-                    {emailCount}
-                  </span>
-                  <div className="flex items-center gap-1.5">
-                    {hasStarred && (
-                      <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                    )}
-                    {hasAnswered && !hasForwarded && (
-                      <Reply className="w-3.5 h-3.5 text-muted-foreground" />
-                    )}
-                    {hasForwarded && !hasAnswered && (
-                      <Forward className="w-3.5 h-3.5 text-muted-foreground" />
-                    )}
+              {isFocusedMailLayout ? (
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex min-w-0 flex-1 items-center gap-3">
+                    <span className={cn(
+                      'w-32 shrink-0 truncate text-sm lg:w-44',
+                      hasUnread ? 'font-semibold text-foreground' : 'font-medium text-foreground/80'
+                    )}>
+                      {participantNames.join(', ')}
+                    </span>
+                    <span
+                      className={cn(
+                        'inline-flex shrink-0 items-center gap-0.5 rounded-full px-1.5 py-0.5 text-xs font-medium',
+                        hasUnread ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                      )}
+                      title={t('messages_tooltip', { count: emailCount })}
+                    >
+                      <MessageSquare className="w-3 h-3" />
+                      {emailCount}
+                    </span>
+                    <div className="flex min-w-0 flex-1 items-center gap-2 text-sm">
+                      <span className={cn(
+                        'shrink-0 truncate',
+                        hasUnread ? 'font-semibold text-foreground' : 'text-foreground/90'
+                      )}>
+                        {latestEmail.subject || '(no subject)'}
+                      </span>
+                      {inlinePreview && (
+                        <span className="min-w-0 truncate text-muted-foreground">{inlinePreview}</span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2.5 shrink-0">
+                    {hasStarred && <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />}
+                    {hasAnswered && !hasForwarded && <Reply className="w-3.5 h-3.5 text-muted-foreground" />}
+                    {hasForwarded && !hasAnswered && <Forward className="w-3.5 h-3.5 text-muted-foreground" />}
                     {hasAnswered && hasForwarded && (
                       <>
                         <Reply className="w-3.5 h-3.5 text-muted-foreground" />
                         <Forward className="w-3.5 h-3.5 text-muted-foreground" />
                       </>
                     )}
-                    {hasAttachment && (
-                      <Paperclip className="w-3.5 h-3.5 text-muted-foreground" />
-                    )}
+                    {hasAttachment && <Paperclip className="w-3.5 h-3.5 text-muted-foreground" />}
+                    {keywordDef && <span className={cn('h-2.5 w-2.5 rounded-full', KEYWORD_PALETTE[keywordDef.color]?.dot || 'bg-gray-400')} />}
+                    <span className={cn(
+                      'text-xs tabular-nums',
+                      hasUnread ? 'text-foreground font-semibold' : 'text-muted-foreground'
+                    )}>
+                      {formatDate(latestEmail.receivedAt)}
+                    </span>
                   </div>
                 </div>
-                <div className="flex items-center gap-1.5 flex-shrink-0">
-                  {keywordDef && (
-                    <span className={cn(
-                      "inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium rounded-full",
-                      KEYWORD_PALETTE[keywordDef.color]?.bg || "bg-muted"
-                    )}>
-                      <span className={cn("w-1.5 h-1.5 rounded-full", KEYWORD_PALETTE[keywordDef.color]?.dot || "bg-gray-400")} />
-                      {keywordDef.label}
-                    </span>
-                  )}
-                  <span className={cn(
-                    "text-xs tabular-nums",
+              ) : (
+                <>
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      <span className={cn(
+                        "truncate text-sm",
+                        hasUnread
+                          ? "font-bold text-foreground"
+                          : "font-medium text-muted-foreground"
+                      )}>
+                        {participantNames.join(", ")}
+                      </span>
+                      <span
+                        className={cn(
+                          "flex-shrink-0 inline-flex items-center gap-0.5 px-1.5 py-0.5 text-xs rounded-full font-medium",
+                          hasUnread
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted text-muted-foreground"
+                        )}
+                        title={t('messages_tooltip', { count: emailCount })}
+                      >
+                        <MessageSquare className="w-3 h-3" />
+                        {emailCount}
+                      </span>
+                      <div className="flex items-center gap-1.5">
+                        {hasStarred && (
+                          <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                        )}
+                        {hasAnswered && !hasForwarded && (
+                          <Reply className="w-3.5 h-3.5 text-muted-foreground" />
+                        )}
+                        {hasForwarded && !hasAnswered && (
+                          <Forward className="w-3.5 h-3.5 text-muted-foreground" />
+                        )}
+                        {hasAnswered && hasForwarded && (
+                          <>
+                            <Reply className="w-3.5 h-3.5 text-muted-foreground" />
+                            <Forward className="w-3.5 h-3.5 text-muted-foreground" />
+                          </>
+                        )}
+                        {hasAttachment && (
+                          <Paperclip className="w-3.5 h-3.5 text-muted-foreground" />
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      {keywordDef && (
+                        <span className={cn(
+                          "inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium rounded-full",
+                          KEYWORD_PALETTE[keywordDef.color]?.bg || "bg-muted"
+                        )}>
+                          <span className={cn("w-1.5 h-1.5 rounded-full", KEYWORD_PALETTE[keywordDef.color]?.dot || "bg-gray-400")} />
+                          {keywordDef.label}
+                        </span>
+                      )}
+                      <span className={cn(
+                        "text-xs tabular-nums",
+                        hasUnread
+                          ? "text-foreground font-semibold"
+                          : "text-muted-foreground"
+                      )}>
+                        {formatDate(latestEmail.receivedAt)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className={cn(
+                    "mb-1 line-clamp-1 text-sm",
                     hasUnread
-                      ? "text-foreground font-semibold"
-                      : "text-muted-foreground"
+                      ? "font-semibold text-foreground"
+                      : "font-normal text-foreground/90"
                   )}>
-                    {formatDate(latestEmail.receivedAt)}
-                  </span>
-                </div>
-              </div>
+                    {latestEmail.subject || "(no subject)"}
+                  </div>
 
-              <div className={cn(
-                "mb-1 line-clamp-1 text-sm",
-                hasUnread
-                  ? "font-semibold text-foreground"
-                  : "font-normal text-foreground/90"
-              )}>
-                {latestEmail.subject || "(no subject)"}
-              </div>
-
-              {showPreview && density !== 'extra-compact' && (
-                <p className={cn(
-                  "text-sm leading-relaxed line-clamp-2",
-                  hasUnread
-                    ? "text-muted-foreground"
-                    : "text-muted-foreground/80"
-                )}>
-                  {latestEmail.preview || "No preview available"}
-                </p>
+                  {showPreview && density !== 'extra-compact' && (
+                    <p className={cn(
+                      "text-sm leading-relaxed line-clamp-2",
+                      hasUnread
+                        ? "text-muted-foreground"
+                        : "text-muted-foreground/80"
+                    )}>
+                      {latestEmail.preview || "No preview available"}
+                    </p>
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -570,7 +684,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
           />
         </div>
 
-        {isExpanded && !isMobile && (
+        {isExpanded && !isMobile && !isFocusedMailLayout && (
           <div className="bg-muted/20 animate-in slide-in-from-top-2 duration-200">
             {isLoading ? (
               <div className="py-4 flex items-center justify-center text-sm text-muted-foreground">

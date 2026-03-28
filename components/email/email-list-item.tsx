@@ -35,6 +35,7 @@ export function EmailListItem({ email, selected, onClick, onContextMenu, onToggl
   const { selectedEmailIds, toggleEmailSelection, selectRangeEmails, selectedMailbox, clearSelection } = useEmailStore();
   const showPreview = useSettingsStore((state) => state.showPreview);
   const density = useSettingsStore((state) => state.density);
+  const mailLayout = useSettingsStore((state) => state.mailLayout);
   const emailKeywords = useSettingsStore((state) => state.emailKeywords);
   const { identities } = useAuthStore();
   const isChecked = selectedEmailIds.has(email.id);
@@ -44,6 +45,8 @@ export function EmailListItem({ email, selected, onClick, onContextMenu, onToggl
   const isAnswered = email.keywords?.$answered;
   const isForwarded = email.keywords?.$forwarded;
   const sender = email.from?.[0];
+  const isFocusedMailLayout = mailLayout === 'focus';
+  const inlinePreview = showPreview && email.preview ? ` ${email.preview}` : '';
 
   // Resolve color tag using keyword definitions from settings
   const colorTagId = getEmailColorTag(email.keywords);
@@ -114,15 +117,19 @@ export function EmailListItem({ email, selected, onClick, onContextMenu, onToggl
         }
       }}
       onContextMenu={handleContextMenu}
-      style={{ minHeight: 'var(--list-item-height)' }}
+      style={{ minHeight: isFocusedMailLayout ? undefined : 'var(--list-item-height)' }}
     >
-      <div className="flex items-start px-4" style={{ gap: 'var(--density-item-gap)', paddingBlock: 'var(--density-item-py)' }}>
+      <div
+        className={cn('px-4', isFocusedMailLayout ? 'flex items-center py-2.5' : 'flex items-start')}
+        style={isFocusedMailLayout ? { gap: '12px' } : { gap: 'var(--density-item-gap)', paddingBlock: 'var(--density-item-py)' }}
+      >
         {/* Checkbox - only visible when in selection mode */}
         {selectedEmailIds.size > 0 && (
           <button
             onClick={handleCheckboxClick}
             className={cn(
-              "p-3 lg:p-1 rounded mt-2 flex-shrink-0 transition-all duration-200",
+              "p-3 lg:p-1 rounded flex-shrink-0 transition-all duration-200",
+              !isFocusedMailLayout && 'mt-2',
               "hover:bg-muted/50 hover:scale-110",
               "active:scale-95",
               "animate-in fade-in zoom-in-95 duration-150",
@@ -145,7 +152,7 @@ export function EmailListItem({ email, selected, onClick, onContextMenu, onToggl
         )}
 
         {/* Avatar */}
-        {density !== 'extra-compact' && (
+        {!isFocusedMailLayout && density !== 'extra-compact' && (
           <Avatar
             name={sender?.name}
             email={sender?.email}
@@ -156,85 +163,131 @@ export function EmailListItem({ email, selected, onClick, onContextMenu, onToggl
 
         {/* Content */}
         <div className="flex-1 min-w-0">
-          {/* First Line: Sender and Date */}
-          <div className="flex items-center justify-between gap-2 mb-1">
-            <div className="flex items-center gap-2 min-w-0 flex-1">
-              <span className={cn(
-                "truncate text-sm",
-                isUnread
-                  ? "font-bold text-foreground"
-                  : "font-medium text-muted-foreground"
-              )}>
-                {sender?.name || sender?.email || "Unknown"}
-              </span>
-              <div className="flex items-center gap-1.5">
-                {isStarred && (
-                  <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                )}
-                {isImportant && (
-                  <span className="px-1.5 py-0.5 text-xs bg-warning/15 text-warning dark:text-warning rounded font-medium">
-                    Important
+          {isFocusedMailLayout ? (
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex min-w-0 flex-1 items-center gap-3">
+                <span className={cn(
+                  'w-32 shrink-0 truncate text-sm lg:w-40',
+                  isUnread ? 'font-semibold text-foreground' : 'font-medium text-foreground/80'
+                )}>
+                  {sender?.name || sender?.email || 'Unknown'}
+                </span>
+                <div className="flex min-w-0 flex-1 items-center gap-2 text-sm">
+                  <span className={cn(
+                    'shrink-0 truncate',
+                    isUnread ? 'font-semibold text-foreground' : 'text-foreground/90'
+                  )}>
+                    {email.subject || t('no_subject')}
                   </span>
-                )}
-                <EmailIdentityBadge email={email} identities={identities} compact={true} />
-                {isAnswered && !isForwarded && (
-                  <Reply className="w-3.5 h-3.5 text-muted-foreground" />
-                )}
-                {isForwarded && !isAnswered && (
-                  <Forward className="w-3.5 h-3.5 text-muted-foreground" />
-                )}
+                  {inlinePreview && (
+                    <span className="min-w-0 truncate text-muted-foreground">{inlinePreview}</span>
+                  )}
+                </div>
+              </div>
+              <div className="flex items-center gap-2.5 shrink-0">
+                {isStarred && <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />}
+                {isImportant && <span className="h-2 w-2 rounded-full bg-warning" />}
+                {isAnswered && !isForwarded && <Reply className="w-3.5 h-3.5 text-muted-foreground" />}
+                {isForwarded && !isAnswered && <Forward className="w-3.5 h-3.5 text-muted-foreground" />}
                 {isAnswered && isForwarded && (
                   <>
                     <Reply className="w-3.5 h-3.5 text-muted-foreground" />
                     <Forward className="w-3.5 h-3.5 text-muted-foreground" />
                   </>
                 )}
-                {email.hasAttachment && (
-                  <Paperclip className="w-3.5 h-3.5 text-muted-foreground" />
-                )}
+                {email.hasAttachment && <Paperclip className="w-3.5 h-3.5 text-muted-foreground" />}
+                {keywordDef && <span className={cn('h-2.5 w-2.5 rounded-full', KEYWORD_PALETTE[keywordDef.color]?.dot || 'bg-gray-400')} />}
+                <span className={cn(
+                  'text-xs tabular-nums',
+                  isUnread ? 'text-foreground font-semibold' : 'text-muted-foreground'
+                )}>
+                  {formatDate(email.receivedAt)}
+                </span>
               </div>
             </div>
-            <div className="flex items-center gap-1.5 flex-shrink-0">
-              {keywordDef && (
-                <span className={cn(
-                  "inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium rounded-full",
-                  KEYWORD_PALETTE[keywordDef.color]?.bg || "bg-muted"
-                )}>
-                  <span className={cn("w-1.5 h-1.5 rounded-full", KEYWORD_PALETTE[keywordDef.color]?.dot || "bg-gray-400")} />
-                  {keywordDef.label}
-                </span>
-              )}
-              <span className={cn(
-                "text-xs tabular-nums",
+          ) : (
+            <>
+              {/* First Line: Sender and Date */}
+              <div className="flex items-center justify-between gap-2 mb-1">
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <span className={cn(
+                    "truncate text-sm",
+                    isUnread
+                      ? "font-bold text-foreground"
+                      : "font-medium text-muted-foreground"
+                  )}>
+                    {sender?.name || sender?.email || "Unknown"}
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    {isStarred && (
+                      <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                    )}
+                    {isImportant && (
+                      <span className="px-1.5 py-0.5 text-xs bg-warning/15 text-warning dark:text-warning rounded font-medium">
+                        Important
+                      </span>
+                    )}
+                    <EmailIdentityBadge email={email} identities={identities} compact={true} />
+                    {isAnswered && !isForwarded && (
+                      <Reply className="w-3.5 h-3.5 text-muted-foreground" />
+                    )}
+                    {isForwarded && !isAnswered && (
+                      <Forward className="w-3.5 h-3.5 text-muted-foreground" />
+                    )}
+                    {isAnswered && isForwarded && (
+                      <>
+                        <Reply className="w-3.5 h-3.5 text-muted-foreground" />
+                        <Forward className="w-3.5 h-3.5 text-muted-foreground" />
+                      </>
+                    )}
+                    {email.hasAttachment && (
+                      <Paperclip className="w-3.5 h-3.5 text-muted-foreground" />
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  {keywordDef && (
+                    <span className={cn(
+                      "inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium rounded-full",
+                      KEYWORD_PALETTE[keywordDef.color]?.bg || "bg-muted"
+                    )}>
+                      <span className={cn("w-1.5 h-1.5 rounded-full", KEYWORD_PALETTE[keywordDef.color]?.dot || "bg-gray-400")} />
+                      {keywordDef.label}
+                    </span>
+                  )}
+                  <span className={cn(
+                    "text-xs tabular-nums",
+                    isUnread
+                      ? "text-foreground font-semibold"
+                      : "text-muted-foreground"
+                  )}>
+                    {formatDate(email.receivedAt)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Second Line: Subject */}
+              <div className={cn(
+                "mb-1 line-clamp-1 text-sm",
                 isUnread
-                  ? "text-foreground font-semibold"
-                  : "text-muted-foreground"
+                  ? "font-semibold text-foreground"
+                  : "font-normal text-foreground/90"
               )}>
-                {formatDate(email.receivedAt)}
-              </span>
-            </div>
-          </div>
+                {email.subject || t('no_subject')}
+              </div>
 
-          {/* Second Line: Subject */}
-          <div className={cn(
-            "mb-1 line-clamp-1 text-sm",
-            isUnread
-              ? "font-semibold text-foreground"
-              : "font-normal text-foreground/90"
-          )}>
-            {email.subject || t('no_subject')}
-          </div>
-
-          {/* Third Line: Preview (controlled by showPreview setting) */}
-          {showPreview && density !== 'extra-compact' && (
-            <p className={cn(
-              "text-sm leading-relaxed line-clamp-2",
-              isUnread
-                ? "text-muted-foreground"
-                : "text-muted-foreground/80"
-            )}>
-              {email.preview || "No preview available"}
-            </p>
+              {/* Third Line: Preview (controlled by showPreview setting) */}
+              {showPreview && density !== 'extra-compact' && (
+                <p className={cn(
+                  "text-sm leading-relaxed line-clamp-2",
+                  isUnread
+                    ? "text-muted-foreground"
+                    : "text-muted-foreground/80"
+                )}>
+                  {email.preview || "No preview available"}
+                </p>
+              )}
+            </>
           )}
         </div>
       </div>

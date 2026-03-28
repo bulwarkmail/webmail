@@ -53,6 +53,7 @@ export default function Home() {
   const t = useTranslations();
   const tCommon = useTranslations('common');
   const { appName } = useConfig();
+  const mailLayout = useSettingsStore((state) => state.mailLayout);
   const [showComposer, setShowComposer] = useState(false);
   const [composerMode, setComposerMode] = useState<'compose' | 'reply' | 'replyAll' | 'forward'>('compose');
   const [composerDraftText, setComposerDraftText] = useState("");
@@ -970,6 +971,10 @@ export default function Home() {
 
   // Get current mailbox name for mobile header
   const currentMailboxName = mailboxes.find(m => m.id === selectedMailbox)?.name || "Inbox";
+  const isFocusedMailLayout = mailLayout === 'focus';
+  const hasViewerContent = showComposer || Boolean(conversationThread) || Boolean(selectedEmail);
+  const shouldCollapseListPane = (isTablet && !tabletListVisible) || (!isMobile && isFocusedMailLayout && hasViewerContent);
+  const shouldHideViewerPane = !isMobile && isFocusedMailLayout && !hasViewerContent;
 
   // Handle email selection with mobile view switching
   const handleEmailSelect = async (email: { id: string }) => {
@@ -1020,6 +1025,9 @@ export default function Home() {
       setConversationEmails([]);
     }
     selectEmail(null);
+    if (isTablet) {
+      setTabletListVisible(true);
+    }
     setActiveView("list");
   };
 
@@ -1202,10 +1210,9 @@ export default function Home() {
               // Tablet/Desktop: fixed width with collapse animation
               "md:flex-shrink-0 md:shadow-sm",
               !isResizing && "transition-all duration-200 ease-out",
-              // Tablet: collapse when email selected
-              isTablet && !tabletListVisible && "md:w-0 md:opacity-0 md:overflow-hidden md:border-r-0"
+              shouldCollapseListPane && "md:w-0 md:opacity-0 md:overflow-hidden md:border-r-0"
             )}
-            style={!isMobile && !(isTablet && !tabletListVisible) ? { width: emailListWidth } : undefined}
+            style={!isMobile && !shouldCollapseListPane ? { width: emailListWidth } : undefined}
           >
             {/* Mobile Header for List View */}
             <MobileHeader
@@ -1507,7 +1514,7 @@ export default function Home() {
           </div>
 
           {/* Email list resize handle (desktop only) */}
-          {!isMobile && !isTablet && (
+          {!isMobile && !isTablet && !isFocusedMailLayout && (
             <ResizeHandle
               onResizeStart={() => { dragStartWidth.current = emailListWidth; setIsResizing(true); }}
               onResize={(delta) => setEmailListWidth(dragStartWidth.current + delta)}
@@ -1524,7 +1531,8 @@ export default function Home() {
               "max-md:fixed max-md:inset-0 max-md:z-30",
               isMobile && activeView !== "viewer" && "max-md:hidden",
               // Tablet/Desktop: relative
-              "md:relative"
+              "md:relative",
+              shouldHideViewerPane && "md:hidden"
             )}
           >
             {/* Inline Composer - shown in viewer pane */}
@@ -1652,10 +1660,7 @@ export default function Home() {
                     }}
                     onDownloadAttachment={handleDownloadAttachment}
                     onQuickReply={handleQuickReply}
-                    onBack={() => {
-                      setTabletListVisible(true);
-                      selectEmail(null);
-                    }}
+                    onBack={handleMobileBack}
                     onNavigateNext={handleNavigateNext}
                     onNavigatePrev={handleNavigatePrev}
                     onShowShortcuts={() => setShowShortcutsModal(true)}

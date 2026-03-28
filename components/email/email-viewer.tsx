@@ -887,8 +887,10 @@ export function EmailViewer({
   const emailKeywords = useSettingsStore((state) => state.emailKeywords);
   const toolbarPosition = useSettingsStore((state) => state.toolbarPosition);
   const showToolbarLabels = useSettingsStore((state) => state.showToolbarLabels);
+  const mailLayout = useSettingsStore((state) => state.mailLayout);
   const calendarInvitationParsingEnabled = useSettingsStore((state) => state.calendarInvitationParsingEnabled);
   const timeFormat = useSettingsStore((state) => state.timeFormat);
+  const isFocusedMailLayout = mailLayout === 'focus';
 
   // Detect if current mailbox is Junk folder
   const isInJunkFolder = currentMailboxRole === 'junk';
@@ -2790,7 +2792,7 @@ export function EmailViewer({
     <>
       {/* Left: Reply actions */}
       <div className={cn("flex items-center gap-0", showBackButton ? "sm:gap-1" : "sm:gap-0.5")}>
-        {showBackButton && isTablet && !tabletListVisible && onBack && (
+        {showBackButton && ((isTablet && !tabletListVisible) || (isFocusedMailLayout && !isMobile)) && onBack && (
           <Button
             variant="ghost"
             size="icon"
@@ -3524,7 +3526,7 @@ export function EmailViewer({
         <div className="px-4 lg:px-6" style={{ paddingBlock: 'var(--density-header-py)' }}>
           <div className="flex items-start justify-between gap-2 lg:gap-4">
             {/* Back button (for below-subject mode on tablet) */}
-            {toolbarPosition === 'below-subject' && isTablet && !tabletListVisible && onBack && (
+            {toolbarPosition === 'below-subject' && ((isTablet && !tabletListVisible) || (isFocusedMailLayout && !isMobile)) && onBack && (
               <Button
                 variant="ghost"
                 size="icon"

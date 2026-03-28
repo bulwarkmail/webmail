@@ -38,6 +38,7 @@ describe('EmailListItem tag badge', () => {
     useSettingsStore.setState({
       emailKeywords: [...DEFAULT_KEYWORDS],
       showPreview: false,
+      mailLayout: 'split',
     });
     useEmailStore.setState({
       selectedEmailIds: new Set<string>(),
@@ -103,5 +104,18 @@ describe('EmailListItem tag badge', () => {
     const email = makeEmail({ subject: 'Hello World' });
     render(<EmailListItem email={email} />);
     expect(screen.getByText('Hello World')).toBeInTheDocument();
+  });
+
+  it('renders inline preview text in focused mail layout', () => {
+    useSettingsStore.setState({
+      showPreview: true,
+      mailLayout: 'focus',
+    });
+    const email = makeEmail({ preview: 'Inline preview content' });
+    const { container } = render(<EmailListItem email={email} />);
+
+    expect(screen.getByText('Test Subject')).toBeInTheDocument();
+    expect(screen.getByText(/Inline preview content/)).toBeInTheDocument();
+    expect(container.querySelector('p')).toBeNull();
   });
 });

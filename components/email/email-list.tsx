@@ -103,11 +103,16 @@ export function EmailList({
   const parentRef = useRef<HTMLDivElement>(null);
   const density = useSettingsStore((state) => state.density);
   const showPreview = useSettingsStore((state) => state.showPreview);
+  const mailLayout = useSettingsStore((state) => state.mailLayout);
+  const isFocusedMailLayout = mailLayout === 'focus';
 
   const estimateSize = useCallback(() => {
+    if (isFocusedMailLayout) {
+      return { 'extra-compact': 32, compact: 40, regular: 46, comfortable: 54 }[density];
+    }
     const base = { 'extra-compact': 32, compact: 60, regular: 84, comfortable: 104 }[density];
     return (showPreview && density !== 'extra-compact') ? base + 36 : base;
-  }, [density, showPreview]);
+  }, [density, isFocusedMailLayout, showPreview]);
 
   const virtualizer = useVirtualizer({
     count: threadGroups.length,
@@ -244,7 +249,7 @@ export function EmailList({
   useEffect(() => {
     virtualizer.measure();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [density, showPreview]);
+  }, [density, isFocusedMailLayout, showPreview]);
 
   return (
     <div className={cn("flex flex-col min-h-0", className)}>

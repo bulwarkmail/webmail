@@ -28,6 +28,7 @@ const RESTRICTABLE_SETTINGS = [
   { key: 'markAsReadDelay', label: 'Mark as Read Delay', category: 'Email', type: 'number' },
   { key: 'deleteAction', label: 'Delete Action', category: 'Email', type: 'enum', allowedValues: ['trash', 'permanent'] },
   { key: 'showPreview', label: 'Show Preview', category: 'Email', type: 'boolean' },
+  { key: 'mailLayout', label: 'Mail Layout', category: 'Email', type: 'enum', allowedValues: ['split', 'focus'] },
   { key: 'emailsPerPage', label: 'Emails Per Page', category: 'Email', type: 'number' },
   { key: 'externalContentPolicy', label: 'External Content Policy', category: 'Email', type: 'enum', allowedValues: ['allow', 'block', 'ask'] },
   { key: 'sendConfirmation', label: 'Send Confirmation', category: 'Composer', type: 'boolean' },

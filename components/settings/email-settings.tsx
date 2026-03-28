@@ -4,15 +4,91 @@ import { useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { useConfig } from '@/hooks/use-config';
 import { useSettingsStore } from '@/stores/settings-store';
-import type { ArchiveMode, HoverAction } from '@/stores/settings-store';
+import type { ArchiveMode, HoverAction, MailLayout } from '@/stores/settings-store';
 import { ALL_HOVER_ACTIONS } from '@/stores/settings-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { useEmailStore } from '@/stores/email-store';
 import { cn } from '@/lib/utils';
-import { SettingsSection, SettingItem, Select, ToggleSwitch } from './settings-section';
+import { RadioGroup, SettingsSection, SettingItem, Select, ToggleSwitch } from './settings-section';
 import { TrustedSendersModal } from '@/components/trusted-senders-modal';
 import { ChevronRight, AlertTriangle, FolderSync, Loader2, Mail } from 'lucide-react';
 import { usePolicyStore } from '@/stores/policy-store';
+
+const MAIL_LAYOUT_PREVIEW_ROWS = [
+  { sender: 'Alice', subject: 'Quarterly roadmap', preview: 'The draft is ready for review.', selected: false },
+  { sender: 'Nadia', subject: 'Design sync', preview: 'Pushed updated mocks and notes.', selected: true },
+  { sender: 'Billing', subject: 'Invoice 1042', preview: 'Your receipt is attached.', selected: false },
+];
+
+function MailLayoutPreview({
+  value,
+  t,
+}: {
+  value: MailLayout;
+  t: (key: string) => string;
+}) {
+  const isSplit = value === 'split';
+
+  return (
+    <div className="mt-3 rounded-xl border border-border bg-background p-3">
+      <div>
+        <div className="text-sm font-medium text-foreground">{t(`mail_layout.${value}`)}</div>
+        <div className="mt-1 text-xs text-muted-foreground">{t(`mail_layout.${value}_description`)}</div>
+      </div>
+
+      <div className="mt-3 overflow-hidden rounded-lg border border-border bg-muted/20">
+        <div className="flex h-28">
+          <div className="w-11 border-r border-border bg-muted/40" />
+
+          {isSplit ? (
+            <>
+              <div className="w-28 border-r border-border bg-background">
+                {MAIL_LAYOUT_PREVIEW_ROWS.map((row) => (
+                  <div
+                    key={row.subject}
+                    className={cn(
+                      'border-b border-border px-2 py-1.5 text-[10px] last:border-b-0',
+                      row.selected && 'bg-primary/10'
+                    )}
+                  >
+                    <div className="truncate font-medium text-foreground">{row.sender}</div>
+                    <div className="truncate text-muted-foreground">{row.subject}</div>
+                  </div>
+                ))}
+              </div>
+              <div className="flex-1 bg-background px-3 py-2">
+                <div className="h-2.5 w-20 rounded bg-foreground/10" />
+                <div className="mt-2 h-2 w-full rounded bg-foreground/10" />
+                <div className="mt-1.5 h-2 w-5/6 rounded bg-foreground/10" />
+                <div className="mt-1.5 h-2 w-2/3 rounded bg-foreground/10" />
+              </div>
+            </>
+          ) : (
+            <div className="flex-1 bg-background px-2 py-2">
+              <div className="space-y-1.5">
+                {MAIL_LAYOUT_PREVIEW_ROWS.map((row) => (
+                  <div
+                    key={row.subject}
+                    className={cn(
+                      'rounded-md px-2 py-1 text-[10px]',
+                      row.selected ? 'bg-primary/10' : 'bg-muted/20'
+                    )}
+                  >
+                    <div className="truncate text-foreground">
+                      <span className="font-medium">{row.sender}</span>
+                      <span className="mx-1.5 text-muted-foreground">{row.subject}</span>
+                      <span className="text-muted-foreground/80">{row.preview}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function EmailSettings() {
   const t = useTranslations('settings.email_behavior');
@@ -39,6 +115,7 @@ export function EmailSettings() {
     deleteAction,
     permanentlyDeleteJunk,
     showPreview,
+    mailLayout,
     disableThreading,
     autoSelectReplyIdentity,
     plainTextMode,
@@ -62,6 +139,8 @@ export function EmailSettings() {
     if (count === 1) return t('trusted_senders.count_one');
     return t('trusted_senders.count_other', { count });
   };
+
+  const isFocusedLayout = mailLayout === 'focus';
 
   const handleReorganizeArchive = async () => {
     const { client } = useAuthStore.getState();
@@ -208,9 +287,29 @@ export function EmailSettings() {
         />
       </SettingItem>
 
+      {!isSettingHidden('mailLayout') && (
+      <SettingItem label={t('mail_layout.label')} description={t('mail_layout.description')} locked={isSettingLocked('mailLayout')}>
+        <div className="w-[22rem] max-w-full">
+          <RadioGroup
+            value={mailLayout}
+            onChange={(value) => updateSetting('mailLayout', value as MailLayout)}
+            options={[
+              { value: 'split', label: t('mail_layout.split') },
+              { value: 'focus', label: t('mail_layout.focus') },
+            ]}
+          />
+          <MailLayoutPreview value={mailLayout} t={t} />
+        </div>
+      </SettingItem>
+      )}
+
       {/* Show Preview */}
       {!isSettingHidden('showPreview') && (
-      <SettingItem label={t('show_preview.label')} description={t('show_preview.description')} locked={isSettingLocked('showPreview')}>
+      <SettingItem
+        label={t('show_preview.label')}
+        description={isFocusedLayout ? t('show_preview.focus_description') : t('show_preview.description')}
+        locked={isSettingLocked('showPreview')}
+      >
         <ToggleSwitch checked={showPreview} onChange={(checked) => updateSetting('showPreview', checked)} />
       </SettingItem>
       )}

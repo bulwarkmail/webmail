@@ -799,9 +799,18 @@
         "label": "Permanently Delete Junk",
         "description": "Permanently delete emails from the Junk/Spam folder instead of moving them to Trash"
       },
+      "mail_layout": {
+        "label": "Mail Layout",
+        "description": "Choose between the classic split reading pane and a Gmail-style focused reading flow.",
+        "split": "Split pane",
+        "split_description": "Keep the message list and reading pane visible side by side.",
+        "focus": "Focused list",
+        "focus_description": "Show one line per message and open mail full-width while keeping the folder sidebar visible."
+      },
       "show_preview": {
         "label": "Show Preview Text",
-        "description": "Display email preview in the list"
+        "description": "Display email preview in the list",
+        "focus_description": "Display inline preview text inside the focused one-line message list"
       },
       "disable_threading": {
         "label": "Disable Conversation Grouping",
