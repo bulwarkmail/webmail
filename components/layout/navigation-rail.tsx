@@ -20,6 +20,7 @@ import { useAccountStore } from "@/stores/account-store";
 import { getInitials } from "@/lib/account-utils";
 import { cn, formatFileSize } from "@/lib/utils";
 import { PluginSlot } from "@/components/plugins/plugin-slot";
+import { KeyboardShortcutsModal } from "@/components/keyboard-shortcuts-modal";
 
 interface NavItem {
   id: string;
@@ -182,6 +183,7 @@ export function NavigationRail({
   const logoutBtnRef = useRef<HTMLButtonElement>(null);
   const logoutPopoverRef = useRef<HTMLDivElement>(null);
   const [logoutPopoverStyle, setLogoutPopoverStyle] = useState<React.CSSProperties>({});
+  const [showShortcutsModal, setShowShortcutsModal] = useState(false);
 
   const updateLogoutPosition = useCallback(() => {
     if (!logoutBtnRef.current) return;
@@ -549,6 +551,22 @@ export function NavigationRail({
             <Keyboard className="w-[18px] h-[18px]" />
           </button>
         )}
+        {!onShowShortcuts && (
+          <>
+            <button
+              onClick={() => setShowShortcutsModal(true)}
+              data-tour="nav-shortcuts"
+              className="flex items-center justify-center w-10 h-10 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              title={t("keyboard_shortcuts")}
+            >
+              <Keyboard className="w-[18px] h-[18px]" />
+            </button>
+            <KeyboardShortcutsModal
+              isOpen={showShortcutsModal}
+              onClose={() => setShowShortcutsModal(false)}
+            />
+          </>
+        )}
 
         {quota && quota.total > 0 && (
           <div data-tour="storage-quota">
@@ -556,26 +574,12 @@ export function NavigationRail({
           </div>
         )}
 
-        {isPushConnected != null && (
-          <span
-            className="relative group"
-            title={isPushConnected ? t("push_connected") : t("push_disconnected")}
-          >
-            <span
-              className={cn(
-                "inline-block w-1.5 h-1.5 rounded-full transition-all duration-300",
-                isPushConnected ? "bg-green-500" : "bg-muted-foreground/40"
-              )}
-            />
-          </span>
-        )}
-
         {onLogout && showRailAccountList && accounts.length > 0 && (
           <>
-            <div className="w-8 border-t" style={{ borderColor: 'rgba(128, 128, 128, 0.3)' }} />
+            <div className="w-8 border-t my-1" style={{ borderColor: 'rgba(128, 128, 128, 0.3)' }} />
 
             {/* Account circles */}
-            <div className="flex flex-col items-center gap-2">
+            <div className="flex flex-col items-center gap-3">
             {accounts.map((account) => {
               const isActive = account.id === activeAccountId;
               const initials = getInitials(account.displayName || account.label, account.email || account.username);
@@ -586,7 +590,7 @@ export function NavigationRail({
                     if (!isActive) switchAccount(account.id);
                   }}
                   className={cn(
-                    "relative flex items-center justify-center w-9 h-9 rounded-full text-white text-xs font-medium transition-all flex-shrink-0",
+                    "relative flex items-center justify-center w-8 h-8 rounded-full text-white text-[11px] font-medium transition-all flex-shrink-0",
                     isActive
                       ? "ring-2 ring-primary ring-offset-2 ring-offset-background"
                       : "opacity-70 hover:opacity-100"
