@@ -1960,6 +1960,12 @@
       "hours_before": "{count, plural, one {# hour before} other {# hours before}}",
       "days_before": "{count, plural, one {# day before} other {# days before}}"
     },
+    "jitsi": {
+      "title": "Video Meeting",
+      "add_meeting": "Add Jitsi Meeting",
+      "creating": "Creating meeting…",
+      "join": "Join Jitsi Meeting"
+    },
     "settings": {
       "title": "Calendar settings",
       "default_view": "Default view",

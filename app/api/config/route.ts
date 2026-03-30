@@ -51,5 +51,6 @@ export async function GET() {
     autoSsoEnabled: configManager.get<boolean>('autoSsoEnabled', false),
     embeddedMode: !!allowedFrameAncestors && allowedFrameAncestors !== "'none'",
     parentOrigin: configManager.get<string>('parentOrigin', ''),
+    jitsiEnabled: !!process.env.JITSI_URL,
   });
 }

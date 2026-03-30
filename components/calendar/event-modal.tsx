@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { X, Trash2, Check, Users, CalendarDays, Copy, Pencil, Clock, MapPin, Video, Repeat, Bell, AlignLeft } from "lucide-react";
+import { useConfig } from "@/hooks/use-config";
 import { format, parseISO, addHours, addDays } from "date-fns";
 import type { CalendarEvent, Calendar, CalendarParticipant } from "@/lib/jmap/types";
 import { parseDuration, getEventColor } from "./event-card";
@@ -232,6 +233,30 @@ export function EventModal({
   });
   const [sendInvitations, setSendInvitations] = useState(true);
 
+  const { jitsiEnabled } = useConfig();
+  const [isCreatingJitsi, setIsCreatingJitsi] = useState(false);
+
+  const handleCreateJitsiMeeting = useCallback(async () => {
+    if (isCreatingJitsi) return;
+    setIsCreatingJitsi(true);
+    try {
+      const response = await fetch("/api/jitsi", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          eventTitle: title.trim() || "meeting",
+          userEmail: currentUserEmails[0],
+        }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setVirtualLocation(data.url);
+      }
+    } finally {
+      setIsCreatingJitsi(false);
+    }
+  }, [title, currentUserEmails, isCreatingJitsi]);
+
   // Report live preview to parent for grid outline
   useEffect(() => {
     if (!onPreviewChange || isEdit) return;
@@ -320,7 +345,7 @@ export function EventModal({
       data.virtualLocations = {
         vl1: {
           "@type": "VirtualLocation",
-          name: null,
+          name: trimmedTitle,
           description: null,
           uri: virtualLocation.trim(),
           features: null,
@@ -810,6 +835,12 @@ export function EventModal({
               placeholder="https://meet.example.com/..."
               maxLength={2000}
             />
+            {jitsiEnabled && !virtualLocation.trim() && (
+              <Button type="button" variant="outline" size="sm" onClick={handleCreateJitsiMeeting} disabled={isCreatingJitsi} className="w-full mt-1.5">
+                <Video className="w-4 h-4 mr-1.5" />
+                {isCreatingJitsi ? t("jitsi.creating") : t("jitsi.add_meeting")}
+              </Button>
+            )}
           </div>
 
           <div>

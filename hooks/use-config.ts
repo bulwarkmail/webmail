@@ -28,6 +28,7 @@ interface ConfigData {
   allowCustomJmapEndpoint: boolean;
   embeddedMode: boolean;
   parentOrigin: string;
+  jitsiEnabled: boolean;
 }
 
 interface AppConfig extends ConfigData {
@@ -104,6 +105,7 @@ export function useConfig(): AppConfig {
     allowCustomJmapEndpoint: configCache?.allowCustomJmapEndpoint || false,
     embeddedMode: configCache?.embeddedMode || false,
     parentOrigin: configCache?.parentOrigin || '',
+    jitsiEnabled: configCache?.jitsiEnabled || false,
     isLoading: !configCache,
     error: null,
   });
@@ -136,6 +138,7 @@ export function useConfig(): AppConfig {
         allowCustomJmapEndpoint: configCache.allowCustomJmapEndpoint,
         embeddedMode: configCache.embeddedMode,
         parentOrigin: configCache.parentOrigin,
+        jitsiEnabled: configCache.jitsiEnabled,
         isLoading: false,
         error: null,
       });
@@ -169,6 +172,7 @@ export function useConfig(): AppConfig {
           allowCustomJmapEndpoint: data.allowCustomJmapEndpoint,
           embeddedMode: data.embeddedMode,
           parentOrigin: data.parentOrigin,
+          jitsiEnabled: data.jitsiEnabled,
           isLoading: false,
           error: null,
         });
