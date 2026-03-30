@@ -1648,19 +1648,28 @@ export class JMAPClient implements IJMAPClient {
     }
 
     let finalIdentityId = identityId;
-    if (!finalIdentityId) {
+    let identityReplyTo: EmailAddress[] | undefined;
+    {
       const identityResponse = await this.request([
         ["Identity/get", { accountId: this.accountId }, "0"]
       ]);
 
-      finalIdentityId = this.accountId;
+      if (!finalIdentityId) {
+        finalIdentityId = this.accountId;
+      }
       if (identityResponse.methodResponses?.[0]?.[0] === "Identity/get") {
-        const identities = (identityResponse.methodResponses[0][1].list || []) as { id: string; email: string }[];
+        const identities = (identityResponse.methodResponses[0][1].list || []) as Identity[];
         if (identities.length > 0) {
-          const target = fromEmail || this.username;
-          const matchingIdentity = identities.find((id) => id.email === target)
-            || (!target.includes('@') ? identities.find((id) => id.email.split('@')[0] === target) : undefined);
-          finalIdentityId = matchingIdentity?.id || identities[0].id;
+          if (!identityId) {
+            const target = fromEmail || this.username;
+            const matchingIdentity = identities.find((id) => id.email === target)
+              || (!target.includes('@') ? identities.find((id) => id.email.split('@')[0] === target) : undefined);
+            finalIdentityId = matchingIdentity?.id || identities[0].id;
+            identityReplyTo = matchingIdentity?.replyTo || identities[0].replyTo;
+          } else {
+            const matchedIdentity = identities.find((id) => id.id === identityId);
+            identityReplyTo = matchedIdentity?.replyTo;
+          }
         }
       }
     }
@@ -1668,6 +1677,7 @@ export class JMAPClient implements IJMAPClient {
     // Always create a new email with the final body content
     const emailCreate: Record<string, unknown> = {
       from: [{ ...(fromName ? { name: fromName } : {}), email: fromEmail || this.username }],
+      replyTo: identityReplyTo?.length ? identityReplyTo : undefined,
       to: to.map(email => ({ email })),
       cc: cc?.map(email => ({ email })),
       bcc: bcc?.map(email => ({ email })),

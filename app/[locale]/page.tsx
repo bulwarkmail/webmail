@@ -1551,6 +1551,7 @@ export default function Home() {
                   mode={pendingDraft?.mode ?? composerMode}
                   replyTo={pendingDraft?.replyTo ?? (selectedEmail ? {
                     from: selectedEmail.from,
+                    replyToAddresses: selectedEmail.replyTo,
                     to: selectedEmail.to,
                     cc: selectedEmail.cc,
                     bcc: selectedEmail.bcc,

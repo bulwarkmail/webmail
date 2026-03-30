@@ -77,6 +77,7 @@ interface EmailComposerProps {
   mode?: 'compose' | 'reply' | 'replyAll' | 'forward';
   replyTo?: {
     from?: { email?: string; name?: string }[];
+    replyToAddresses?: { email?: string; name?: string }[];
     to?: { email?: string; name?: string }[];
     cc?: { email?: string; name?: string }[];
     bcc?: { email?: string; name?: string }[];
@@ -107,13 +108,15 @@ export function EmailComposer({
   // Initialize with reply/forward data if provided
   const getInitialTo = () => {
     if (!replyTo) return "";
+    // RFC 5322: use Reply-To header if present, otherwise fall back to From
+    const replyTarget = replyTo.replyToAddresses?.length
+      ? replyTo.replyToAddresses.filter(r => r.email).map(r => r.email).join(", ")
+      : replyTo.from?.[0]?.email || "";
     if (mode === 'reply') {
-      const email = replyTo.from?.[0]?.email || "";
-      return email ? email + ', ' : "";
+      return replyTarget ? replyTarget + ', ' : "";
     } else if (mode === 'replyAll') {
-      const from = replyTo.from?.[0]?.email || "";
       const originalTo = replyTo.to?.filter(r => r.email).map(r => r.email).join(", ") || "";
-      const combined = [from, originalTo].filter(Boolean).join(", ");
+      const combined = [replyTarget, originalTo].filter(Boolean).join(", ");
       return combined ? combined + ', ' : "";
     }
     return "";
