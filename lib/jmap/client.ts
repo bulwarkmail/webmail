@@ -95,6 +95,24 @@ const EMAIL_LIST_PROPERTIES = [
   "hasAttachment",
 ] as const;
 
+/**
+ * Detect whether a calendar object returned by the server is actually a
+ * task (VTODO) rather than an event (VEVENT).  CalDAV clients like
+ * Thunderbird create VTODOs that Stalwart exposes through the
+ * CalendarEvent endpoints without a reliable `@type` discriminator.
+ */
+function isTaskObject(obj: { '@type'?: string; progress?: unknown; due?: unknown; percentComplete?: unknown }): boolean {
+  const type = obj['@type'];
+  if (typeof type === 'string' && type.toLowerCase() === 'task') return true;
+  // CalDAV-created tasks may lack @type='Task' — detect by task-specific fields
+  if (type !== 'Event' && (
+    ('progress' in obj && typeof obj.progress === 'string') ||
+    ('due' in obj && obj.due != null) ||
+    ('percentComplete' in obj)
+  )) return true;
+  return false;
+}
+
 const CALENDAR_EVENT_PROPERTIES = [
   'id',
   '@type',
@@ -3190,6 +3208,7 @@ export class JMAPClient implements IJMAPClient {
 
     if (response.methodResponses?.[1]?.[0] === "CalendarEvent/get") {
       return ((response.methodResponses[1][1].list || []) as CalendarEvent[])
+        .filter((event) => !isTaskObject(event))
         .map((event) => normalizeCalendarEventLike(event));
     }
     return [];
@@ -3268,6 +3287,7 @@ export class JMAPClient implements IJMAPClient {
 
       if (response.methodResponses?.[1]?.[0] === "CalendarEvent/get") {
         return ((response.methodResponses[1][1].list || []) as CalendarEvent[])
+          .filter((event) => !isTaskObject(event))
           .map((event) => normalizeCalendarEventLike(event));
       }
       return [];
@@ -3638,6 +3658,18 @@ export class JMAPClient implements IJMAPClient {
         const queryIds = queryResponse?.[1]?.ids || [];
         debug.log('CalendarTask/fetch query returned', queryIds.length, 'ids:', queryIds);
         debug.log('CalendarTask/fetch get returned', list.length, 'objects');
+
+        // If the types filter returned 0 results, the server may have silently
+        // ignored it (e.g. Stalwart with CalDAV-created VTODOs). Fall back to
+        // a full scan so we can detect tasks by their properties.
+        if (queryIds.length === 0) {
+          debug.warn('CalendarTask/fetch types filter returned 0 results, falling back to full scan');
+          const tasks = await this.getCalendarTasksFallback(calendarIds, targetAccountId);
+          debug.log('CalendarTask/fetch fallback returned', tasks.length, 'tasks');
+          debug.groupEnd();
+          return tasks;
+        }
+
         list.forEach((task, i) => {
           debug.log(`CalendarTask/fetch [${i}]`, {
             id: task.id,
@@ -3703,8 +3735,13 @@ export class JMAPClient implements IJMAPClient {
     allObjects.forEach((obj) => {
       const type = obj['@type'];
       const isExplicitTask = typeof type === 'string' && type.toLowerCase() === 'task';
-      // CalDAV-created tasks (e.g. Thunderbird) may have progress but no @type
-      const isCalDavTask = type !== 'Event' && 'progress' in obj && typeof obj.progress === 'string';
+      // CalDAV-created tasks (e.g. Thunderbird) may lack @type or have @type
+      // set to something other than 'Event'. Detect them by the presence of
+      // task-specific fields: progress, due, or percentComplete.
+      const hasTaskFields = ('progress' in obj && typeof obj.progress === 'string')
+        || ('due' in obj && obj.due != null)
+        || ('percentComplete' in obj);
+      const isCalDavTask = type !== 'Event' && hasTaskFields;
 
       debug.log('CalendarTask/fallback scan', {
         id: obj.id,
