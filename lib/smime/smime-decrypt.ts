@@ -42,6 +42,18 @@ export async function smimeDecrypt(input: DecryptionInput): Promise<DecryptionRe
   const contentInfo = parseContentInfo(cmsBytes);
   const envelopedData = extractEnvelopedData(contentInfo);
 
+  // Log CMS algorithm details for diagnostics
+  const contentEncOid = envelopedData.encryptedContentInfo?.contentEncryptionAlgorithm?.algorithmId;
+  const recipientAlgs = envelopedData.recipientInfos?.map((ri) =>
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (ri as any).value?.keyEncryptionAlgorithm?.algorithmId as string | undefined,
+  );
+  console.debug('[S/MIME] CMS algorithms:', {
+    contentEncryption: contentEncOid,
+    keyTransport: recipientAlgs,
+    legacyKeysAvailable: legacyUnlockedKeys?.size ?? 0,
+  });
+
   // Find matching key records
   const matchedRecords = findMatchingKeyRecords(envelopedData, keyRecords);
 
@@ -75,9 +87,11 @@ export async function smimeDecrypt(input: DecryptionInput): Promise<DecryptionRe
         mimeBytes: new Uint8Array(decrypted),
         keyRecordId: keyRecord.id,
       };
-    } catch {
+    } catch (oaepError) {
       // RSA-OAEP key didn't work, try legacy RSAES-PKCS1-v1_5 key
+      console.debug('[S/MIME] RSA-OAEP decrypt failed:', oaepError instanceof Error ? oaepError.message : oaepError);
       const legacyKey = legacyUnlockedKeys?.get(keyRecord.id);
+      console.debug('[S/MIME] legacy key available:', !!legacyKey, legacyKey ? { algorithm: (legacyKey as CryptoKey).algorithm } : undefined);
       if (legacyKey) {
         try {
           const decrypted = await decryptWithKey(envelopedData, recipientIndex, legacyKey, keyRecord);
@@ -85,8 +99,9 @@ export async function smimeDecrypt(input: DecryptionInput): Promise<DecryptionRe
             mimeBytes: new Uint8Array(decrypted),
             keyRecordId: keyRecord.id,
           };
-        } catch {
+        } catch (legacyError) {
           // Legacy key also didn't work, try the next record
+          console.debug('[S/MIME] RSAES-PKCS1-v1_5 decrypt also failed:', legacyError instanceof Error ? legacyError.message : legacyError);
         }
       }
       continue;

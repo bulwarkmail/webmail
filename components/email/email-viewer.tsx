@@ -1546,7 +1546,12 @@ export function EmailViewer({
         if (detection.type === 'enveloped-data') {
           // Encrypted message
             const { keyRecords, unlockedDecryptionKeys, unlockedLegacyDecryptionKeys } = smimeStore;
-            smimeDebug('[S/MIME] decrypt attempt:', { keyRecordCount: keyRecords.length, unlockedKeyCount: unlockedDecryptionKeys.size, keyRecordIds: keyRecords.map(k => k.id) });
+            smimeDebug('[S/MIME] decrypt attempt:', {
+              keyRecordCount: keyRecords.length,
+              unlockedKeyCount: unlockedDecryptionKeys.size,
+              legacyKeyCount: unlockedLegacyDecryptionKeys.size,
+              keyRecordIds: keyRecords.map(k => k.id),
+            });
 
           // Short-circuit: no keys imported at all
           if (keyRecords.length === 0) {

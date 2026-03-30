@@ -298,8 +298,12 @@ export async function unlockPrivateKey(
         false,
         ['decrypt'],
       );
-    } catch {
-      // webcrypto-liner may not be available or key format unsupported
+      console.debug('[S/MIME] legacy RSAES-PKCS1-v1_5 key imported successfully:', {
+        algorithm: legacyDecryptionKey.algorithm,
+        usages: legacyDecryptionKey.usages,
+      });
+    } catch (err) {
+      console.warn('[S/MIME] legacy RSAES-PKCS1-v1_5 key import failed:', err);
     }
   }
 
