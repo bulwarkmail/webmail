@@ -19,6 +19,9 @@ export interface IJMAPClient {
   getServerUrl(): string;
   getAuthHeader(): string;
   updateAccessToken(token: string): void;
+  upgradeToBearer(accessToken: string, onRefresh?: () => Promise<string | null>): void;
+  enableTotpReauth(basePassword: string, callback: () => Promise<string | null>): void;
+  updateBasicAuth(newPassword: string): void;
   getAccountId(): string;
   getUsername(): string;
 

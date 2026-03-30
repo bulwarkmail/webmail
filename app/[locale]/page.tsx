@@ -30,6 +30,7 @@ import {
   ComposerErrorFallback,
 } from "@/components/error";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { TotpReauthDialog } from "@/components/totp-reauth-dialog";
 import { DragDropProvider } from "@/contexts/drag-drop-context";
 import { isFilterEmpty, activeFilterCount } from "@/lib/jmap/search-utils";
 import { WelcomeBanner } from "@/components/ui/welcome-banner";
@@ -1726,6 +1727,7 @@ export default function Home() {
 
         <SidebarAppsModal isOpen={showAppsModal} onClose={closeAppsModal} />
         <ConfirmDialog {...confirmDialogProps} />
+        <TotpReauthDialog />
       </div>
     </DragDropProvider>
   );

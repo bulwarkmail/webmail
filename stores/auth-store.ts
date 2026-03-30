@@ -52,6 +52,7 @@ interface AuthState {
 
 const ERROR_PATTERNS: Array<{ key: string; matches: string[] }> = [
   { key: 'cors_blocked', matches: ['CORS_ERROR'] },
+  { key: 'totp_required', matches: ['TOTP_REQUIRED'] },
   { key: 'invalid_credentials', matches: ['Invalid username or password', '401', 'Unauthorized'] },
   { key: 'connection_failed', matches: ['network', 'Failed to fetch', 'NetworkError', 'ECONNREFUSED', 'Load failed', 'cancelled'] },
   { key: 'server_error', matches: ['500', '502', '503', '504', 'Internal Server Error', 'Service Unavailable'] },
@@ -371,6 +372,47 @@ export const useAuthStore = create<AuthState>()(
             clearAllStores();
           }
 
+          // When TOTP was used, try to upgrade to token-based auth so the
+          // session survives TOTP rotation (basic auth embeds the TOTP in
+          // every request, which expires after ~30 seconds).
+          let upgradedToOAuth = false;
+          let oauthAccessToken: string | null = null;
+          let oauthExpiresIn = 0;
+
+          if (totp) {
+            try {
+              const tokenRes = await fetch('/api/auth/totp-token-exchange', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ serverUrl, username, password: effectivePassword, slot: cookieSlot }),
+              });
+              if (tokenRes.ok) {
+                const { access_token, expires_in, has_refresh_token } = await tokenRes.json();
+                // Upgrade client to Bearer auth
+                client.upgradeToBearer(access_token, () => get().refreshAccessToken());
+                oauthAccessToken = access_token;
+                oauthExpiresIn = expires_in;
+                upgradedToOAuth = true;
+                debug.log('TOTP login upgraded to token-based auth (has_refresh_token=' + has_refresh_token + ')');
+              } else {
+                const errorBody = await tokenRes.json().catch(() => ({ error: 'unknown' }));
+                debug.warn('TOTP token exchange failed:', tokenRes.status, errorBody);
+              }
+            } catch (err) {
+              debug.warn('TOTP token exchange error:', err);
+            }
+
+            // If token exchange failed, enable TOTP re-auth prompt so the
+            // client can ask for a fresh code on 401 instead of disconnecting.
+            if (!upgradedToOAuth) {
+              const { useTotpReauthStore } = await import('@/stores/totp-reauth-store');
+              client.enableTotpReauth(password, () => useTotpReauthStore.getState().requestTotp());
+              debug.log('TOTP re-auth enabled — user will be prompted for fresh codes on session expiry');
+            }
+          }
+
+          const effectiveAuthMode = upgradedToOAuth ? 'oauth' : 'basic';
+
           // Store client in multi-account map
           clients.set(accountId, client);
           bindClientStatusHandlers(client, set, get, accountId);
@@ -379,7 +421,7 @@ export const useAuthStore = create<AuthState>()(
             label: primaryIdentity?.name || username,
             serverUrl,
             username,
-            authMode: 'basic',
+            authMode: effectiveAuthMode,
             rememberMe: !!rememberMe,
             displayName: primaryIdentity?.name || username,
             email: primaryIdentity?.email || username,
@@ -392,6 +434,7 @@ export const useAuthStore = create<AuthState>()(
 
           // Update account entry in case it already existed (addAccount is a no-op for existing accounts)
           accountStore.updateAccount(accountId, {
+            authMode: effectiveAuthMode,
             rememberMe: !!rememberMe,
             isConnected: true,
             hasError: false,
@@ -402,7 +445,8 @@ export const useAuthStore = create<AuthState>()(
           // Store session cookie BEFORE setting isAuthenticated to avoid a race
           // condition: setting isAuthenticated triggers navigation to the main page,
           // whose checkAuth() would try to read the cookie before it was stored.
-          if (rememberMe) {
+          if (rememberMe && !upgradedToOAuth) {
+            // For basic auth (no TOTP or TOTP upgrade failed), store encrypted credentials
             try {
               const res = await fetch(`/api/auth/session?slot=${cookieSlot}`, {
                 method: 'POST',
@@ -426,14 +470,19 @@ export const useAuthStore = create<AuthState>()(
             ...getClientRateLimitState(client),
             identities,
             primaryIdentity,
-            authMode: 'basic',
+            authMode: effectiveAuthMode,
             rememberMe: !!rememberMe,
-            accessToken: null,
-            tokenExpiresAt: null,
+            accessToken: oauthAccessToken,
+            tokenExpiresAt: oauthAccessToken ? Date.now() + oauthExpiresIn * 1000 : null,
             connectionLost: false,
             error: null,
             activeAccountId: accountId,
           });
+
+          // Schedule token refresh for TOTP-upgraded sessions
+          if (upgradedToOAuth && oauthExpiresIn > 0) {
+            scheduleRefresh(oauthExpiresIn, get().refreshAccessToken, accountId);
+          }
 
           // Sync settings from server (only if enabled)
           fetchConfig().then(config => {

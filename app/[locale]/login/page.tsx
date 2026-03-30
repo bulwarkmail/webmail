@@ -98,6 +98,14 @@ export default function LoginPage() {
     prevError.current = error;
   }, [error]);
 
+  // Auto-show and focus TOTP field when server requires it
+  useEffect(() => {
+    if (error === 'totp_required') {
+      setShowTotpField(true);
+      setTimeout(() => totpInputRef.current?.focus(), 100);
+    }
+  }, [error]);
+
   useEffect(() => {
     if (!serverUrl) return;
     const saved = localStorage.getItem("webmail_usernames");
@@ -890,7 +898,10 @@ export default function LoginPage() {
                         maxLength={6}
                         value={totpCode}
                         onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, ''))}
-                        className="h-11 px-3.5 bg-muted/40 border-border/60 rounded-xl focus:bg-background focus:border-primary/50 transition-all duration-200 text-center font-mono tracking-widest"
+                        className={cn(
+                          "h-11 px-3.5 bg-muted/40 border-border/60 rounded-xl focus:bg-background focus:border-primary/50 transition-all duration-200 text-center font-mono tracking-widest",
+                          error === 'totp_required' && "border-primary ring-2 ring-primary/30"
+                        )}
                         placeholder={t("totp_placeholder")}
                         autoComplete="one-time-code"
                         aria-label={t("totp_label")}

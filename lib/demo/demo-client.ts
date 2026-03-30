@@ -41,6 +41,9 @@ export class DemoJMAPClient implements IJMAPClient {
   getServerUrl(): string { return 'https://demo.example.com'; }
   getAuthHeader(): string { return 'Bearer demo-token'; }
   updateAccessToken(): void { /* no-op */ }
+  upgradeToBearer(): void { /* no-op */ }
+  enableTotpReauth(): void { /* no-op */ }
+  updateBasicAuth(): void { /* no-op */ }
   getAccountId(): string { return 'demo-account'; }
   getUsername(): string { return 'demo@example.com'; }
 

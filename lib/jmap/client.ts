@@ -227,9 +227,11 @@ export class JMAPClient implements IJMAPClient {
   private serverUrl: string;
   private username: string;
   private password: string;
+  private basePassword: string = '';
   private authHeader: string;
   private authMode: 'basic' | 'bearer' = 'basic';
   private onTokenRefresh?: () => Promise<string | null>;
+  private onTotpRequired?: () => Promise<string | null>;
   private apiUrl: string = "";
   private accountId: string = "";
   private downloadUrl: string = "";
@@ -270,6 +272,29 @@ export class JMAPClient implements IJMAPClient {
 
   updateAccessToken(token: string): void {
     this.authHeader = `Bearer ${token}`;
+  }
+
+  /** Upgrade an existing basic-auth client to bearer-token auth (e.g. after TOTP token exchange). */
+  upgradeToBearer(accessToken: string, onRefresh?: () => Promise<string | null>): void {
+    this.authMode = 'bearer';
+    this.authHeader = `Bearer ${accessToken}`;
+    this.onTokenRefresh = onRefresh;
+  }
+
+  /**
+   * Enable TOTP re-authentication for basic-auth sessions.
+   * When a 401 is received, the callback is invoked to get a fresh TOTP code.
+   * The base password (without TOTP) is stored so we can construct new credentials.
+   */
+  enableTotpReauth(basePassword: string, callback: () => Promise<string | null>): void {
+    this.basePassword = basePassword;
+    this.onTotpRequired = callback;
+  }
+
+  /** Update basic-auth credentials with a new password (e.g. password$newTotp). */
+  updateBasicAuth(newPassword: string): void {
+    this.password = newPassword;
+    this.authHeader = `Basic ${btoa(`${this.username}:${newPassword}`)}`;
   }
 
   getAuthHeader(): string {
@@ -324,7 +349,21 @@ export class JMAPClient implements IJMAPClient {
           const retryHeaders = { ...init?.headers as Record<string, string>, 'Authorization': this.authHeader };
           response = await fetch(url, { ...init, headers: retryHeaders });
         } catch {
-          // Session refresh failed — return original 401 response
+          // Session refresh failed — if TOTP was used, try re-auth with fresh TOTP
+          if (this.onTotpRequired && this.basePassword) {
+            try {
+              const newTotp = await this.onTotpRequired();
+              if (newTotp) {
+                this.updateBasicAuth(`${this.basePassword}$${newTotp}`);
+                await this.refreshSession();
+                this.connectionChangeCallback?.(true);
+                const retryHeaders = { ...init?.headers as Record<string, string>, 'Authorization': this.authHeader };
+                response = await fetch(url, { ...init, headers: retryHeaders });
+              }
+            } catch {
+              // TOTP re-auth also failed — return original 401
+            }
+          }
         } finally {
           this.reconnecting = false;
         }
@@ -367,6 +406,16 @@ export class JMAPClient implements IJMAPClient {
           throw new Error(this.authMode === 'bearer'
             ? 'Authentication failed - token may be expired'
             : 'Invalid username or password');
+        }
+        if (sessionResponse.status === 402) {
+          try {
+            const body = await sessionResponse.json();
+            if (body?.title?.toLowerCase().includes('totp')) {
+              throw new Error('TOTP_REQUIRED');
+            }
+          } catch (e) {
+            if (e instanceof Error && e.message === 'TOTP_REQUIRED') throw e;
+          }
         }
         throw new Error(`Failed to get session: ${sessionResponse.status}`);
       }
