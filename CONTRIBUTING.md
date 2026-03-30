@@ -195,7 +195,7 @@ webmail/
 - **Never commit sensitive data** (API keys, passwords, etc.)
 - **Sanitize user input** and email content
 - **Block external content** by default for privacy
-- Report security vulnerabilities privately
+- Report security vulnerabilities privately (e.g. bulwark@rbm.systems)
 
 ## Questions?
 
