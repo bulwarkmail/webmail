@@ -1820,12 +1820,12 @@ export function EmailViewer({
 
     const tnefAtt = email.attachments.find(att => isTnefAttachment(att.name, att.type));
     if (!tnefAtt?.blobId) {
-      debug.log('TNEF: No winmail.dat attachment found in email', email?.id);
+      debug.log('email', 'TNEF: No winmail.dat attachment found in email', email?.id);
       return;
     }
 
-    debug.group('TNEF Processing');
-    debug.log('Found TNEF attachment:', tnefAtt.name, 'type:', tnefAtt.type, 'blobId:', tnefAtt.blobId, 'size:', tnefAtt.size);
+    debug.group('TNEF Processing', 'email');
+    debug.log('email', 'Found TNEF attachment:', tnefAtt.name, 'type:', tnefAtt.type, 'blobId:', tnefAtt.blobId, 'size:', tnefAtt.size);
 
     // Check if the email already has a usable HTML body with real content
     // Outlook often forwards TNEF emails with an HTML body that's just Word
@@ -1835,46 +1835,46 @@ export function EmailViewer({
     let hasRealHtmlBody = !!htmlValue;
     if (hasRealHtmlBody && htmlValue && isHtmlBodyEffectivelyEmpty(htmlValue)) {
       hasRealHtmlBody = false;
-      debug.log('TNEF: Email HTML body is effectively empty (only boilerplate/whitespace), treating as no body');
+      debug.log('email', 'TNEF: Email HTML body is effectively empty (only boilerplate/whitespace), treating as no body');
     }
     if (hasRealHtmlBody) {
-      debug.log('TNEF: Email has real HTML body, will extract attachments only');
+      debug.log('email', 'TNEF: Email has real HTML body, will extract attachments only');
     } else {
-      debug.log('TNEF: Email has no usable HTML body, proceeding with full TNEF extraction');
+      debug.log('email', 'TNEF: Email has no usable HTML body, proceeding with full TNEF extraction');
     }
 
     let cancelled = false;
 
     async function processTnef() {
       try {
-        debug.time('TNEF fetch blob');
+        debug.time('TNEF fetch blob', 'email');
         const blobBytes = await client!.fetchBlobArrayBuffer(tnefAtt!.blobId!);
-        debug.timeEnd('TNEF fetch blob');
-        debug.log('TNEF: Fetched blob, size:', blobBytes.byteLength, 'bytes');
+        debug.timeEnd('TNEF fetch blob', 'email');
+        debug.log('email', 'TNEF: Fetched blob, size:', blobBytes.byteLength, 'bytes');
 
         if (cancelled) {
-          debug.log('TNEF: Processing cancelled after fetch');
+          debug.log('email', 'TNEF: Processing cancelled after fetch');
           debug.groupEnd();
           return;
         }
         if (blobBytes.byteLength === 0) {
-          debug.warn('TNEF: Fetched blob is empty (0 bytes)');
+          debug.warn('email', 'TNEF: Fetched blob is empty (0 bytes)');
           debug.groupEnd();
           return;
         }
 
         const tnefData = new Uint8Array(blobBytes);
-        debug.time('TNEF parse');
+        debug.time('TNEF parse', 'email');
         const parsed = parseTnef(tnefData);
-        debug.timeEnd('TNEF parse');
+        debug.timeEnd('TNEF parse', 'email');
 
         if (cancelled) {
-          debug.log('TNEF: Processing cancelled after parse');
+          debug.log('email', 'TNEF: Processing cancelled after parse');
           debug.groupEnd();
           return;
         }
 
-        debug.log('TNEF parse result — htmlBody:', !!parsed.htmlBody, '(' + (parsed.htmlBody?.length ?? 0) + ' chars)', ', body:', !!parsed.body, '(' + (parsed.body?.length ?? 0) + ' chars)', ', attachments:', parsed.attachments.length);
+        debug.log('email', 'TNEF parse result — htmlBody:', !!parsed.htmlBody, '(' + (parsed.htmlBody?.length ?? 0) + ' chars)', ', body:', !!parsed.body, '(' + (parsed.body?.length ?? 0) + ' chars)', ', attachments:', parsed.attachments.length);
 
         if (parsed.htmlBody && !hasRealHtmlBody) {
           setTnefHtml(parsed.htmlBody);
@@ -1884,11 +1884,11 @@ export function EmailViewer({
         }
         if (parsed.attachments.length > 0) {
           setTnefAttachments(parsed.attachments);
-          debug.log('TNEF extracted attachments:', parsed.attachments.map(a => a.name + ' (' + a.mimeType + ', ' + a.data.byteLength + ' bytes)').join(', '));
+          debug.log('email', 'TNEF extracted attachments:', parsed.attachments.map(a => a.name + ' (' + a.mimeType + ', ' + a.data.byteLength + ' bytes)').join(', '));
         }
 
         if (!parsed.htmlBody && !parsed.body && parsed.attachments.length === 0) {
-          debug.warn('TNEF: Parsing succeeded but no content was extracted — the winmail.dat may use an unsupported format');
+          debug.warn('email', 'TNEF: Parsing succeeded but no content was extracted — the winmail.dat may use an unsupported format');
         }
 
         debug.groupEnd();
@@ -1926,13 +1926,13 @@ export function EmailViewer({
     const hasRealText = !!textValue;
 
     if (hasRealHtml || hasRealText) {
-      debug.log('Embedded RFC822: Outer email has real body content, not unwrapping');
+      debug.log('email', 'Embedded RFC822: Outer email has real body content, not unwrapping');
       return;
     }
 
-    debug.group('Embedded RFC822 Unwrapping');
-    debug.log('Found message/rfc822 attachment:', rfc822Att.name, 'blobId:', rfc822Att.blobId, 'size:', rfc822Att.size);
-    debug.log('Outer email body is empty, will unwrap embedded email');
+    debug.group('Embedded RFC822 Unwrapping', 'email');
+    debug.log('email', 'Found message/rfc822 attachment:', rfc822Att.name, 'blobId:', rfc822Att.blobId, 'size:', rfc822Att.size);
+    debug.log('email', 'Outer email body is empty, will unwrap embedded email');
 
     let cancelled = false;
 
@@ -1941,7 +1941,7 @@ export function EmailViewer({
         const blobBytes = await client!.fetchBlobArrayBuffer(rfc822Att!.blobId!);
         if (cancelled) { debug.groupEnd(); return; }
         if (blobBytes.byteLength === 0) {
-          debug.warn('Embedded RFC822: Fetched blob is empty');
+          debug.warn('email', 'Embedded RFC822: Fetched blob is empty');
           debug.groupEnd();
           return;
         }
@@ -1951,7 +1951,7 @@ export function EmailViewer({
         const parsed = await parser.parse(new Uint8Array(blobBytes));
         if (cancelled) { debug.groupEnd(); return; }
 
-        debug.log('Embedded RFC822 parsed — html:', !!parsed.html, '(' + (parsed.html?.length ?? 0) + ' chars)',
+        debug.log('email', 'Embedded RFC822 parsed — html:', !!parsed.html, '(' + (parsed.html?.length ?? 0) + ' chars)',
           ', text:', !!parsed.text, '(' + (parsed.text?.length ?? 0) + ' chars)',
           ', attachments:', parsed.attachments?.length ?? 0);
 
@@ -1963,7 +1963,7 @@ export function EmailViewer({
         }
         if (parsed.attachments && parsed.attachments.length > 0) {
           setEmbeddedEmailAttachments(parsed.attachments as PostalMimeAttachment[]);
-          debug.log('Embedded RFC822 attachments:', parsed.attachments.map(
+          debug.log('email', 'Embedded RFC822 attachments:', parsed.attachments.map(
             a => (a.filename || 'unnamed') + ' (' + a.mimeType + ')'
           ).join(', '));
         }

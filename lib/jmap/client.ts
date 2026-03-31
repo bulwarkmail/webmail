@@ -670,12 +670,12 @@ export class JMAPClient implements IJMAPClient {
       if (response.methodResponses?.[0]?.[0] === "Mailbox/get") {
         const rawMailboxes = (response.methodResponses[0][1].list || []) as JMAPMailbox[];
 
-        debug.log(`[JMAP Mailbox] getMailboxes returned ${rawMailboxes.length} mailboxes for account ${this.accountId}`);
+        debug.log('jmap', `[JMAP Mailbox] getMailboxes returned ${rawMailboxes.length} mailboxes for account ${this.accountId}`);
 
         // Warn if response might be truncated
         const maxObjects = this.getMaxObjectsInGet();
         if (rawMailboxes.length >= maxObjects) {
-          debug.warn(
+          debug.warn('jmap', 
             `[JMAP Mailbox] Response contains ${rawMailboxes.length} mailboxes which equals maxObjectsInGet (${maxObjects}). ` +
             `Some mailboxes may be missing — nested folders could appear orphaned at root level.`
           );
@@ -685,7 +685,7 @@ export class JMAPClient implements IJMAPClient {
         const returnedIds = new Set(rawMailboxes.map(mb => mb.id));
         const missingParents = rawMailboxes.filter(mb => mb.parentId && !returnedIds.has(mb.parentId));
         if (missingParents.length > 0) {
-          debug.warn(
+          debug.warn('jmap', 
             `[JMAP Mailbox] ${missingParents.length} mailbox(es) reference parentId not in response (will be orphaned):`,
             missingParents.map(mb => ({ id: mb.id, name: mb.name, parentId: mb.parentId }))
           );
@@ -755,12 +755,12 @@ export class JMAPClient implements IJMAPClient {
           if (response.methodResponses?.[0]?.[0] === "Mailbox/get") {
             const rawMailboxes = (response.methodResponses[0][1].list || []) as JMAPMailbox[];
 
-            debug.log(`[JMAP Mailbox] getAllMailboxes: account ${accountId} returned ${rawMailboxes.length} mailboxes (isPrimary: ${isPrimary})`);
+            debug.log('jmap', `[JMAP Mailbox] getAllMailboxes: account ${accountId} returned ${rawMailboxes.length} mailboxes (isPrimary: ${isPrimary})`);
 
             // Warn if response might be truncated
             const maxObjects = this.getMaxObjectsInGet();
             if (rawMailboxes.length >= maxObjects) {
-              debug.warn(
+              debug.warn('jmap', 
                 `[JMAP Mailbox] Account ${accountId}: response contains ${rawMailboxes.length} mailboxes which equals maxObjectsInGet (${maxObjects}). ` +
                 `Some mailboxes may be missing.`
               );
@@ -1995,7 +1995,7 @@ export class JMAPClient implements IJMAPClient {
     lines.push('END:VCALENDAR');
     const icsContent = lines.join('\r\n') + '\r\n';
 
-    debug.log('[iMIP] Generated ICS:\n' + icsContent);
+    debug.log('calendar', '[iMIP] Generated ICS:\n' + icsContent);
 
     const statusLabels: Record<string, string> = {
       ACCEPTED: 'Accepted',
@@ -2005,7 +2005,7 @@ export class JMAPClient implements IJMAPClient {
     const statusLabel = statusLabels[opts.status] || opts.status;
     const subject = `${statusLabel}: ${opts.summary || 'Event'}`;
 
-    debug.log('[iMIP] identityId:', finalIdentityId);
+    debug.log('calendar', '[iMIP] identityId:', finalIdentityId);
 
     const emailId = `imip-reply-${Date.now()}`;
     const emailCreate: Record<string, unknown> = {
@@ -2038,12 +2038,12 @@ export class JMAPClient implements IJMAPClient {
       }, "1"],
     ];
 
-    debug.log('[iMIP] Sending JMAP request with', methodCalls.length, 'method calls');
-    debug.log('[iMIP] Email create payload:', JSON.stringify(emailCreate, null, 2));
+    debug.log('calendar', '[iMIP] Sending JMAP request with', methodCalls.length, 'method calls');
+    debug.log('calendar', '[iMIP] Email create payload:', JSON.stringify(emailCreate, null, 2));
 
     const response = await this.request(methodCalls);
 
-    debug.log('[iMIP] JMAP response:', JSON.stringify(response.methodResponses, null, 2));
+    debug.log('calendar', '[iMIP] JMAP response:', JSON.stringify(response.methodResponses, null, 2));
 
     if (response.methodResponses) {
       for (const [methodName, result] of response.methodResponses) {
@@ -2058,7 +2058,7 @@ export class JMAPClient implements IJMAPClient {
         }
       }
     }
-    debug.log('[iMIP] sendImipReply completed successfully');
+    debug.log('calendar', '[iMIP] sendImipReply completed successfully');
   }
 
   /**
@@ -2222,7 +2222,7 @@ export class JMAPClient implements IJMAPClient {
   async sendImipCancellation(event: CalendarEvent): Promise<void> {
     if (!event.participants) return;
     if (event.status && event.status !== 'cancelled') {
-      debug.warn('sendImipCancellation called on non-cancelled event, status:', event.status);
+      debug.warn('calendar', 'sendImipCancellation called on non-cancelled event, status:', event.status);
     }
 
     const mailboxes = await this.getMailboxes();
@@ -3361,8 +3361,8 @@ export class JMAPClient implements IJMAPClient {
     const { originalId: _oi, originalCalendarIds: _oc, accountId: _ai, accountName: _an, isShared: _is, ...cleanEvent } = event as CalendarEvent;
     cleanRecurrenceRules(cleanEvent as unknown as Record<string, unknown>);
 
-    debug.group('CalendarEvent/create');
-    debug.log('CalendarEvent/create outgoing payload', {
+    debug.group('CalendarEvent/create', 'calendar');
+    debug.log('calendar', 'CalendarEvent/create outgoing payload', {
       accountId,
       sendSchedulingMessages,
       eventKeys: Object.keys(cleanEvent),
@@ -3382,40 +3382,40 @@ export class JMAPClient implements IJMAPClient {
       ["CalendarEvent/set", setArgs, "0"]
     ], this.calendarUsing());
 
-    debug.log('CalendarEvent/create raw set response', response.methodResponses?.[0]?.[1] || null);
+    debug.log('calendar', 'CalendarEvent/create raw set response', response.methodResponses?.[0]?.[1] || null);
 
     if (response.methodResponses?.[0]?.[0] === "CalendarEvent/set") {
       const result = response.methodResponses[0][1];
 
       if (result.notCreated?.["new-event"]) {
         const error = result.notCreated["new-event"];
-        debug.warn('CalendarEvent/create notCreated', error);
-        debug.warn('CalendarEvent/create invalid properties', error.properties);
-        debug.warn('CalendarEvent/create sent keys', Object.keys(cleanEvent));
+        debug.warn('calendar', 'CalendarEvent/create notCreated', error);
+        debug.warn('calendar', 'CalendarEvent/create invalid properties', error.properties);
+        debug.warn('calendar', 'CalendarEvent/create sent keys', Object.keys(cleanEvent));
         debug.groupEnd();
         throw new Error(error.description || "Failed to create calendar event");
       }
 
       const createdId = result.created?.["new-event"]?.id;
-      debug.log('CalendarEvent/create server acknowledged created id', {
+      debug.log('calendar', 'CalendarEvent/create server acknowledged created id', {
         createdId,
         created: result.created?.['new-event'] || null,
       });
 
       if (createdId) {
         const created = await this.getCalendarEvent(createdId, targetAccountId);
-        debug.log('CalendarEvent/create fetched created event', getCalendarEventDebugSnapshot(created));
+        debug.log('calendar', 'CalendarEvent/create fetched created event', getCalendarEventDebugSnapshot(created));
 
         if (created?.uid) {
           try {
             const verificationMatches = await this.queryCalendarEvents({ uid: created.uid }, undefined, undefined, targetAccountId);
-            debug.log('CalendarEvent/create verification query by uid', {
+            debug.log('calendar', 'CalendarEvent/create verification query by uid', {
               uid: created.uid,
               matchCount: verificationMatches.length,
               matches: verificationMatches.map((match) => getCalendarEventDebugSnapshot(match)),
             });
           } catch (verificationError) {
-            debug.warn('CalendarEvent/create verification query failed', verificationError);
+            debug.warn('calendar', 'CalendarEvent/create verification query failed', verificationError);
           }
         }
 
@@ -3424,7 +3424,7 @@ export class JMAPClient implements IJMAPClient {
           return created;
         }
 
-        debug.warn('CalendarEvent/create server returned created id but CalendarEvent/get returned null', {
+        debug.warn('calendar', 'CalendarEvent/create server returned created id but CalendarEvent/get returned null', {
           createdId,
           targetAccountId,
         });
@@ -3455,7 +3455,7 @@ export class JMAPClient implements IJMAPClient {
       createMap[`new-${i}`] = clean;
     }
 
-    debug.log('CalendarEvent/batchCreate', { count: events.length, accountId });
+    debug.log('calendar', 'CalendarEvent/batchCreate', { count: events.length, accountId });
 
     const response = await this.request([
       ["CalendarEvent/set", { accountId, create: createMap }, "0"]
@@ -3471,7 +3471,7 @@ export class JMAPClient implements IJMAPClient {
         if (result.created?.[key]?.id) {
           createdIds.push(result.created[key].id);
         } else if (result.notCreated?.[key]) {
-          debug.warn(`CalendarEvent/batchCreate failed for ${key}`, result.notCreated[key]);
+          debug.warn('calendar', `CalendarEvent/batchCreate failed for ${key}`, result.notCreated[key]);
           failed.push(key);
         }
       }
@@ -3496,7 +3496,7 @@ export class JMAPClient implements IJMAPClient {
       createdEvents = list.map((e: CalendarEvent) => normalizeCalendarEventLike(e));
     }
 
-    debug.log('CalendarEvent/batchCreate result', {
+    debug.log('calendar', 'CalendarEvent/batchCreate result', {
       requested: events.length,
       created: createdEvents.length,
       failed: failed.length,
@@ -3527,7 +3527,7 @@ export class JMAPClient implements IJMAPClient {
       setArgs.sendSchedulingMessages = sendSchedulingMessages;
     }
 
-    debug.log('CalendarEvent/set update request', { eventId, accountId, cleanUpdateKeys: Object.keys(cleanUpdates), sendSchedulingMessages });
+    debug.log('calendar', 'CalendarEvent/set update request', { eventId, accountId, cleanUpdateKeys: Object.keys(cleanUpdates), sendSchedulingMessages });
 
     const response = await this.request([
       ["CalendarEvent/set", setArgs, "0"]
@@ -3549,7 +3549,7 @@ export class JMAPClient implements IJMAPClient {
         debug.error('CalendarEvent/set notUpdated', { eventId, error });
         throw new Error(error.description || "Failed to update calendar event");
       }
-      debug.log('CalendarEvent/set update success', { eventId, updated: result.updated ? Object.keys(result.updated) : null });
+      debug.log('calendar', 'CalendarEvent/set update success', { eventId, updated: result.updated ? Object.keys(result.updated) : null });
       return;
     }
 
@@ -3600,7 +3600,7 @@ export class JMAPClient implements IJMAPClient {
       setArgs.sendSchedulingMessages = sendSchedulingMessages;
     }
 
-    debug.log('CalendarEvent/set destroy request', { eventId, accountId, sendSchedulingMessages });
+    debug.log('calendar', 'CalendarEvent/set destroy request', { eventId, accountId, sendSchedulingMessages });
 
     const response = await this.request([
       ["CalendarEvent/set", setArgs, "0"]
@@ -3622,7 +3622,7 @@ export class JMAPClient implements IJMAPClient {
         debug.error('CalendarEvent/set notDestroyed', { eventId, error });
         throw new Error(error.description || "Failed to delete calendar event");
       }
-      debug.log('CalendarEvent/set destroy success', { eventId, destroyed: result.destroyed });
+      debug.log('calendar', 'CalendarEvent/set destroy success', { eventId, destroyed: result.destroyed });
       return;
     }
 
@@ -3654,8 +3654,8 @@ export class JMAPClient implements IJMAPClient {
 
   async getCalendarTasks(calendarIds?: string[], targetAccountId?: string): Promise<CalendarTask[]> {
     const accountId = targetAccountId || this.getCalendarsAccountId();
-    debug.group('CalendarTask/fetch');
-    debug.log('CalendarTask/fetch start', { accountId, calendarIds: calendarIds || 'all' });
+    debug.group('CalendarTask/fetch', 'tasks');
+    debug.log('tasks', 'CalendarTask/fetch start', { accountId, calendarIds: calendarIds || 'all' });
 
     try {
       // Strategy 1: query with types filter (JMAP spec compliant)
@@ -3664,7 +3664,7 @@ export class JMAPClient implements IJMAPClient {
         filter.inCalendars = calendarIds;
       }
 
-      debug.log('CalendarTask/fetch query filter', filter);
+      debug.log('tasks', 'CalendarTask/fetch query filter', filter);
 
       const response = await this.request([
         ["CalendarEvent/query", { accountId, filter, limit: 1000 }, "0"],
@@ -3678,13 +3678,13 @@ export class JMAPClient implements IJMAPClient {
       const queryResponse = response.methodResponses?.[0];
       const getResponse = response.methodResponses?.[1];
 
-      debug.log('CalendarTask/fetch query method', queryResponse?.[0]);
-      debug.log('CalendarTask/fetch query result', queryResponse?.[1]);
+      debug.log('tasks', 'CalendarTask/fetch query method', queryResponse?.[0]);
+      debug.log('tasks', 'CalendarTask/fetch query result', queryResponse?.[1]);
 
       if (queryResponse?.[0] === "error") {
-        debug.warn('CalendarTask/fetch types filter not supported, falling back to full scan', queryResponse[1]);
+        debug.warn('tasks', 'CalendarTask/fetch types filter not supported, falling back to full scan', queryResponse[1]);
         const tasks = await this.getCalendarTasksFallback(calendarIds, targetAccountId);
-        debug.log('CalendarTask/fetch fallback returned', tasks.length, 'tasks');
+        debug.log('tasks', 'CalendarTask/fetch fallback returned', tasks.length, 'tasks');
         debug.groupEnd();
         return tasks;
       }
@@ -3692,22 +3692,22 @@ export class JMAPClient implements IJMAPClient {
       if (getResponse?.[0] === "CalendarEvent/get") {
         const list = (getResponse[1].list || []) as CalendarTask[];
         const queryIds = queryResponse?.[1]?.ids || [];
-        debug.log('CalendarTask/fetch query returned', queryIds.length, 'ids:', queryIds);
-        debug.log('CalendarTask/fetch get returned', list.length, 'objects');
+        debug.log('calendar', 'CalendarTask/fetch query returned', queryIds.length, 'ids:', queryIds);
+        debug.log('calendar', 'CalendarTask/fetch get returned', list.length, 'objects');
 
         // If the types filter returned 0 results, the server may have silently
         // ignored it (e.g. Stalwart with CalDAV-created VTODOs). Fall back to
         // a full scan so we can detect tasks by their properties.
         if (queryIds.length === 0) {
-          debug.warn('CalendarTask/fetch types filter returned 0 results, falling back to full scan');
+          debug.warn('tasks', 'CalendarTask/fetch types filter returned 0 results, falling back to full scan');
           const tasks = await this.getCalendarTasksFallback(calendarIds, targetAccountId);
-          debug.log('CalendarTask/fetch fallback returned', tasks.length, 'tasks');
+          debug.log('tasks', 'CalendarTask/fetch fallback returned', tasks.length, 'tasks');
           debug.groupEnd();
           return tasks;
         }
 
         list.forEach((task, i) => {
-          debug.log(`CalendarTask/fetch [${i}]`, {
+          debug.log('tasks', `CalendarTask/fetch [${i}]`, {
             id: task.id,
             uid: task.uid,
             '@type': task['@type'],
@@ -3724,12 +3724,12 @@ export class JMAPClient implements IJMAPClient {
           ...task,
           '@type': 'Task' as const,
         }));
-        debug.log('CalendarTask/fetch complete,', results.length, 'tasks');
+        debug.log('tasks', 'CalendarTask/fetch complete,', results.length, 'tasks');
         debug.groupEnd();
         return results;
       }
 
-      debug.warn('CalendarTask/fetch unexpected response shape', response.methodResponses);
+      debug.warn('tasks', 'CalendarTask/fetch unexpected response shape', response.methodResponses);
       debug.groupEnd();
       return [];
     } catch (error) {
@@ -3746,7 +3746,7 @@ export class JMAPClient implements IJMAPClient {
    */
   private async getCalendarTasksFallback(calendarIds?: string[], targetAccountId?: string): Promise<CalendarTask[]> {
     const accountId = targetAccountId || this.getCalendarsAccountId();
-    debug.log('CalendarTask/fallback using CalendarEvent/get ids:null to fetch all objects');
+    debug.log('calendar', 'CalendarTask/fallback using CalendarEvent/get ids:null to fetch all objects');
 
     // CalendarEvent/get with ids:null returns ALL calendar objects regardless of @type
     const response = await this.request([
@@ -3758,12 +3758,12 @@ export class JMAPClient implements IJMAPClient {
     ], this.calendarUsing());
 
     if (response.methodResponses?.[0]?.[0] !== "CalendarEvent/get") {
-      debug.warn('CalendarTask/fallback unexpected response', response.methodResponses?.[0]);
+      debug.warn('calendar', 'CalendarTask/fallback unexpected response', response.methodResponses?.[0]);
       return [];
     }
 
     const allObjects = (response.methodResponses[0][1].list || []) as Record<string, unknown>[];
-    debug.log('CalendarTask/fallback total calendar objects returned:', allObjects.length);
+    debug.log('tasks', 'CalendarTask/fallback total calendar objects returned:', allObjects.length);
 
     const tasks: CalendarTask[] = [];
     const calendarIdSet = calendarIds ? new Set(calendarIds) : null;
@@ -3779,7 +3779,7 @@ export class JMAPClient implements IJMAPClient {
         || ('percentComplete' in obj);
       const isCalDavTask = type !== 'Event' && hasTaskFields;
 
-      debug.log('CalendarTask/fallback scan', {
+      debug.log('tasks', 'CalendarTask/fallback scan', {
         id: obj.id,
         '@type': type,
         title: obj.title,
@@ -3796,7 +3796,7 @@ export class JMAPClient implements IJMAPClient {
       if (calendarIdSet) {
         const objCalendarIds = obj.calendarIds as Record<string, boolean> | undefined;
         if (objCalendarIds && !Object.keys(objCalendarIds).some(id => calendarIdSet.has(id))) {
-          debug.log('CalendarTask/fallback skipping task (not in requested calendars)', obj.id);
+          debug.log('tasks', 'CalendarTask/fallback skipping task (not in requested calendars)', obj.id);
           return;
         }
       }
@@ -3804,9 +3804,9 @@ export class JMAPClient implements IJMAPClient {
       tasks.push({ ...obj, '@type': 'Task' as const } as CalendarTask);
     });
 
-    debug.log('CalendarTask/fallback detected', tasks.length, 'tasks');
+    debug.log('tasks', 'CalendarTask/fallback detected', tasks.length, 'tasks');
     tasks.forEach((t, i) => {
-      debug.log(`CalendarTask/fallback [${i}]`, {
+      debug.log('tasks', `CalendarTask/fallback [${i}]`, {
         id: t.id,
         uid: t.uid,
         title: t.title,
@@ -3825,9 +3825,9 @@ export class JMAPClient implements IJMAPClient {
     const { '@type': _type, ...taskData } = task;
     const cleanTask = { ...taskData, '@type': 'Task' };
 
-    debug.group('CalendarTask/create');
-    debug.log('CalendarTask/create accountId', accountId);
-    debug.log('CalendarTask/create outgoing payload', cleanTask);
+    debug.group('CalendarTask/create', 'tasks');
+    debug.log('tasks', 'CalendarTask/create accountId', accountId);
+    debug.log('tasks', 'CalendarTask/create outgoing payload', cleanTask);
 
     const response = await this.request([
       ["CalendarEvent/set", {
@@ -3838,27 +3838,27 @@ export class JMAPClient implements IJMAPClient {
     ], this.calendarUsing());
 
     const result = response.methodResponses?.[0]?.[1];
-    debug.log('CalendarTask/create raw set response', result);
+    debug.log('tasks', 'CalendarTask/create raw set response', result);
 
     if (result?.notCreated?.["new-task"]) {
       const error = result.notCreated["new-task"];
-      debug.warn('CalendarTask/create REJECTED by server', error);
+      debug.warn('tasks', 'CalendarTask/create REJECTED by server', error);
       debug.groupEnd();
       throw new Error(error.description || "Failed to create task");
     }
 
     const createdId = result?.created?.["new-task"]?.id;
     const serverCreated = result?.created?.["new-task"];
-    debug.log('CalendarTask/create server acknowledged', { createdId, serverCreated });
+    debug.log('tasks', 'CalendarTask/create server acknowledged', { createdId, serverCreated });
 
     if (!createdId) {
-      debug.warn('CalendarTask/create no id in server response');
+      debug.warn('tasks', 'CalendarTask/create no id in server response');
       debug.groupEnd();
       throw new Error("Failed to create task — no id returned");
     }
 
     // Fetch back with task-specific properties
-    debug.log('CalendarTask/create re-fetching with task properties', { createdId, properties: [...CALENDAR_TASK_PROPERTIES] });
+    debug.log('calendar', 'CalendarTask/create re-fetching with task properties', { createdId, properties: [...CALENDAR_TASK_PROPERTIES] });
     const getResponse = await this.request([
       ["CalendarEvent/get", {
         accountId,
@@ -3870,10 +3870,10 @@ export class JMAPClient implements IJMAPClient {
     if (getResponse.methodResponses?.[0]?.[0] === "CalendarEvent/get") {
       const list = getResponse.methodResponses[0][1].list || [];
       const notFound = getResponse.methodResponses[0][1].notFound || [];
-      debug.log('CalendarTask/create get response', { found: list.length, notFound });
+      debug.log('calendar', 'CalendarTask/create get response', { found: list.length, notFound });
       if (list[0]) {
         const created = { ...list[0], '@type': 'Task' as const } as CalendarTask;
-        debug.log('CalendarTask/create final task object', {
+        debug.log('tasks', 'CalendarTask/create final task object', {
           id: created.id,
           uid: created.uid,
           '@type': created['@type'],
@@ -3889,7 +3889,7 @@ export class JMAPClient implements IJMAPClient {
       }
     }
 
-    debug.warn('CalendarTask/create re-fetch returned nothing for id', createdId);
+    debug.warn('tasks', 'CalendarTask/create re-fetch returned nothing for id', createdId);
     debug.groupEnd();
     throw new Error("Failed to fetch created task");
   }

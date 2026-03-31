@@ -352,13 +352,13 @@ export default function Home() {
 
             if (pushEnabled) {
               setPushConnected(true);
-              debug.log('[Push] Push notifications successfully enabled');
+              debug.log('push', '[Push] Push notifications successfully enabled');
             } else {
-              debug.log('[Push] Push notifications not available on this server');
+              debug.log('push', '[Push] Push notifications not available on this server');
             }
           } catch (error) {
             // Push notifications are optional - don't break the app if they fail
-            debug.log('[Push] Failed to setup push notifications:', error);
+            debug.log('push', '[Push] Failed to setup push notifications:', error);
           }
         } catch (error) {
           console.error('Error loading email data:', error);
@@ -392,7 +392,7 @@ export default function Home() {
   useEffect(() => {
     // Clear any existing timeout when email changes
     if (markAsReadTimeoutRef.current) {
-      debug.log('[Mark as Read] Clearing previous timeout');
+      debug.log('email', '[Mark as Read] Clearing previous timeout');
       clearTimeout(markAsReadTimeoutRef.current);
       markAsReadTimeoutRef.current = null;
     }
@@ -404,20 +404,20 @@ export default function Home() {
 
     // Get current setting value
     const markAsReadDelay = useSettingsStore.getState().markAsReadDelay;
-    debug.log('[Mark as Read] Delay setting:', markAsReadDelay, 'ms for email:', selectedEmail.id);
+    debug.log('email', '[Mark as Read] Delay setting:', markAsReadDelay, 'ms for email:', selectedEmail.id);
 
     if (markAsReadDelay === -1) {
       // Never mark as read automatically
-      debug.log('[Mark as Read] Never mode - email will stay unread');
+      debug.log('email', '[Mark as Read] Never mode - email will stay unread');
     } else if (markAsReadDelay === 0) {
       // Mark as read instantly
-      debug.log('[Mark as Read] Instant mode - marking as read now');
+      debug.log('email', '[Mark as Read] Instant mode - marking as read now');
       markAsRead(client, selectedEmail.id, true);
     } else {
       // Mark as read after delay
-      debug.log('[Mark as Read] Delayed mode - will mark as read in', markAsReadDelay, 'ms');
+      debug.log('email', '[Mark as Read] Delayed mode - will mark as read in', markAsReadDelay, 'ms');
       markAsReadTimeoutRef.current = setTimeout(() => {
-        debug.log('[Mark as Read] Timeout fired - marking as read now');
+        debug.log('email', '[Mark as Read] Timeout fired - marking as read now');
         markAsRead(client, selectedEmail.id, true);
         markAsReadTimeoutRef.current = null;
       }, markAsReadDelay);
@@ -426,7 +426,7 @@ export default function Home() {
     // Cleanup on unmount or when dependencies change
     return () => {
       if (markAsReadTimeoutRef.current) {
-        debug.log('[Mark as Read] Cleanup - clearing timeout');
+        debug.log('email', '[Mark as Read] Cleanup - clearing timeout');
         clearTimeout(markAsReadTimeoutRef.current);
         markAsReadTimeoutRef.current = null;
       }
@@ -441,7 +441,7 @@ export default function Home() {
       if (emailNotificationsEnabled && emailNotificationSound) {
         playNotificationSound(notificationSoundChoice);
       }
-      debug.log('New email received:', newEmailNotification.subject);
+      debug.log('email', 'New email received:', newEmailNotification.subject);
       clearNewEmailNotification();
     }
   }, [newEmailNotification, clearNewEmailNotification]);

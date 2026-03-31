@@ -197,7 +197,7 @@ export const useCalendarStore = create<CalendarStore>()(
           // Expand recurring events client-side (Stalwart doesn't support
           // mutations on synthetic IDs from server-side expandRecurrences)
           const events = expandRecurringEvents(validEvents, start, end);
-          debug.log('Calendar fetchEvents completed', {
+          debug.log('calendar', 'Calendar fetchEvents completed', {
             start,
             end,
             rawCount: rawEvents.length,
@@ -206,7 +206,7 @@ export const useCalendarStore = create<CalendarStore>()(
             droppedEvents,
           });
           if (droppedEvents > 0) {
-            debug.warn('Calendar fetchEvents dropped malformed events without a start field', { droppedEvents });
+            debug.warn('calendar', 'Calendar fetchEvents dropped malformed events without a start field', { droppedEvents });
           }
           set({ events, isLoadingEvents: false, dateRange: { start, end } });
         } catch (error) {
@@ -237,7 +237,7 @@ export const useCalendarStore = create<CalendarStore>()(
           if (event.originalCalendarIds) {
             cleanEvent.calendarIds = event.originalCalendarIds;
           }
-          debug.log('Calendar createEvent request', {
+          debug.log('calendar', 'Calendar createEvent request', {
             event: getStoreEventDebugSnapshot(cleanEvent),
             sendSchedulingMessages,
             targetAccountId,
@@ -256,7 +256,7 @@ export const useCalendarStore = create<CalendarStore>()(
             ? mappedCreated.start >= currentDateRange.start && mappedCreated.start <= currentDateRange.end
             : null;
 
-          debug.log('Calendar createEvent response', {
+          debug.log('calendar', 'Calendar createEvent response', {
             created: getStoreEventDebugSnapshot(created),
             mappedCreated: getStoreEventDebugSnapshot(mappedCreated),
             isVisible,
@@ -265,21 +265,21 @@ export const useCalendarStore = create<CalendarStore>()(
           });
 
           if (!isVisible) {
-            debug.warn('Created event is hidden by current calendar filters', {
+            debug.warn('calendar', 'Created event is hidden by current calendar filters', {
               selectedCalendarIds,
               createdCalendarIds,
             });
           }
 
           if (inCurrentDateRange === false) {
-            debug.warn('Created event is outside the currently loaded date range', {
+            debug.warn('calendar', 'Created event is outside the currently loaded date range', {
               currentDateRange,
               createdStart: mappedCreated.start,
             });
           }
 
           if (mappedCreated.showWithoutTime && mappedCreated.timeZone !== null) {
-            debug.warn('Created all-day event came back with a non-null timeZone', {
+            debug.warn('calendar', 'Created all-day event came back with a non-null timeZone', {
               timeZone: mappedCreated.timeZone,
               event: getStoreEventDebugSnapshot(mappedCreated),
             });
@@ -301,7 +301,7 @@ export const useCalendarStore = create<CalendarStore>()(
           const storeEvent = get().events.find(e => e.id === id);
           const realId = storeEvent?.originalId || id;
           const targetAccountId = storeEvent?.accountId;
-          debug.log('Calendar updateEvent', {
+          debug.log('calendar', 'Calendar updateEvent', {
             storeId: id,
             realId,
             uid: storeEvent?.uid,
@@ -445,20 +445,20 @@ export const useCalendarStore = create<CalendarStore>()(
               await client.updateCalendarEvent(eventId, { calendarIds } as Partial<CalendarEvent>, undefined, targetAccountId);
               linked++;
             } catch (err) {
-              debug.warn(`Import: failed to link event ${eventId} to target calendar:`, err);
+              debug.warn('calendar', `Import: failed to link event ${eventId} to target calendar:`, err);
             }
           }
 
           if (linked > 0) {
-            debug.log(`Import: linked ${linked} existing events to target calendar`);
+            debug.log('calendar', `Import: linked ${linked} existing events to target calendar`);
           }
           const skipped = eventsToProcess.length - newEvents.length - eventsToLink.length;
           if (skipped > 0) {
-            debug.log(`Import: skipped ${skipped} events already in target calendar`);
+            debug.log('calendar', `Import: skipped ${skipped} events already in target calendar`);
           }
           eventsToProcess = newEvents;
         } catch (error) {
-          debug.warn('Could not fetch existing events for deduplication, proceeding without:', error);
+          debug.warn('calendar', 'Could not fetch existing events for deduplication, proceeding without:', error);
         }
 
         // Prepare all events for batch creation
@@ -543,7 +543,7 @@ export const useCalendarStore = create<CalendarStore>()(
             const { created, failed } = await client.batchCreateCalendarEvents(batch, targetAccountId);
             imported += created.length;
             if (failed.length > 0) {
-              debug.warn(`Import batch ${i / BATCH_SIZE + 1}: ${failed.length} events failed`);
+              debug.warn('calendar', `Import batch ${i / BATCH_SIZE + 1}: ${failed.length} events failed`);
             }
           } catch (error) {
             debug.error(`Import batch ${i / BATCH_SIZE + 1} failed:`, error);
@@ -577,7 +577,7 @@ export const useCalendarStore = create<CalendarStore>()(
               debug.error('Failed to send cancellation emails:', e);
             }
           }
-          debug.log('Calendar deleteEvent', {
+          debug.log('calendar', 'Calendar deleteEvent', {
             storeId: id,
             realId,
             uid: storeEvent?.uid,
@@ -675,7 +675,7 @@ export const useCalendarStore = create<CalendarStore>()(
 
             // If we couldn't destroy any events, stop to avoid infinite loop
             if (destroyed.length === 0) {
-              debug.warn('Could not delete any events, stopping clear loop. Not destroyed:', ids.length);
+              debug.warn('calendar', 'Could not delete any events, stopping clear loop. Not destroyed:', ids.length);
               break;
             }
 
@@ -744,7 +744,7 @@ export const useCalendarStore = create<CalendarStore>()(
             await get().refreshICalSubscription(client, subscription.id);
           } catch {
             // Subscription created, initial fetch failed - user can retry
-            debug.warn('Initial subscription fetch failed for:', name);
+            debug.warn('calendar', 'Initial subscription fetch failed for:', name);
           }
 
           return subscription;
@@ -892,7 +892,7 @@ export const useCalendarStore = create<CalendarStore>()(
             try {
               await get().refreshICalSubscription(client, sub.id);
             } catch {
-              debug.warn('Failed to refresh subscription:', sub.name);
+              debug.warn('calendar', 'Failed to refresh subscription:', sub.name);
             }
           }
         }

@@ -152,8 +152,7 @@ function deduplicateMailboxes(mailboxes: Mailbox[]): Mailbox[] {
       removed.push({ id: mb.id, name: mb.name, matchedRole: matchedRole!.name, parentId: mb.parentId });
       // Warn if this removed mailbox is a parent of other mailboxes (orphan risk)
       if (referencedParentIds.has(mb.id)) {
-        debug.warn(
-          `[Mailbox Tree] Deduplication removed mailbox "${mb.name}" (id: ${mb.id}) which is a parent of other mailboxes. ` +
+        debug.warn('jmap', `[Mailbox Tree] Deduplication removed mailbox "${mb.name}" (id: ${mb.id}) which is a parent of other mailboxes. ` +
           `Matched role mailbox: "${matchedRole!.name}" (role: ${matchedRole!.role}). ` +
           `Children referencing parentId "${mb.id}" will be orphaned to root level.`
         );
@@ -162,7 +161,7 @@ function deduplicateMailboxes(mailboxes: Mailbox[]): Mailbox[] {
   });
 
   if (removed.length > 0) {
-    debug.log(`[Mailbox Tree] Deduplication removed ${removed.length} mailbox(es):`, removed);
+    debug.log('jmap', `[Mailbox Tree] Deduplication removed ${removed.length} mailbox(es):`, removed);
   }
 
   return result;
@@ -170,13 +169,13 @@ function deduplicateMailboxes(mailboxes: Mailbox[]): Mailbox[] {
 
 // Build a hierarchical tree structure from flat mailbox array
 export function buildMailboxTree(mailboxes: Mailbox[]): MailboxNode[] {
-  debug.log(`[Mailbox Tree] Building tree from ${mailboxes.length} mailboxes`);
+  debug.log('jmap', `[Mailbox Tree] Building tree from ${mailboxes.length} mailboxes`);
 
   // Deduplicate mailboxes first
   const deduplicated = deduplicateMailboxes(mailboxes);
 
   if (deduplicated.length !== mailboxes.length) {
-    debug.log(`[Mailbox Tree] After deduplication: ${deduplicated.length} mailboxes (removed ${mailboxes.length - deduplicated.length})`);
+    debug.log('jmap', `[Mailbox Tree] After deduplication: ${deduplicated.length} mailboxes (removed ${mailboxes.length - deduplicated.length})`);
   }
 
   // Separate own and shared mailboxes
@@ -223,8 +222,7 @@ export function buildMailboxTree(mailboxes: Mailbox[]): MailboxNode[] {
   });
 
   if (orphanedMailboxes.length > 0) {
-    debug.warn(
-      `[Mailbox Tree] ${orphanedMailboxes.length} orphaned mailbox(es) moved to root level (missing parent):`,
+    debug.warn('jmap', `[Mailbox Tree] ${orphanedMailboxes.length} orphaned mailbox(es) moved to root level (missing parent):`,
       orphanedMailboxes
     );
   }
@@ -241,8 +239,7 @@ export function buildMailboxTree(mailboxes: Mailbox[]): MailboxNode[] {
     }
     return max;
   };
-  debug.log(
-    `[Mailbox Tree] Built tree: ${rootMailboxes.length} root nodes, ` +
+  debug.log('jmap', `[Mailbox Tree] Built tree: ${rootMailboxes.length} root nodes, ` +
     `max depth: ${maxDepth(rootMailboxes)}, ` +
     `total own: ${ownMailboxes.length}, shared: ${sharedMailboxes.length}`
   );

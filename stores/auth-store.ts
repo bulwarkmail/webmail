@@ -393,13 +393,13 @@ export const useAuthStore = create<AuthState>()(
                 oauthAccessToken = access_token;
                 oauthExpiresIn = expires_in;
                 upgradedToOAuth = true;
-                debug.log('TOTP login upgraded to token-based auth (has_refresh_token=' + has_refresh_token + ')');
+                debug.log('auth', 'TOTP login upgraded to token-based auth (has_refresh_token=' + has_refresh_token + ')');
               } else {
                 const errorBody = await tokenRes.json().catch(() => ({ error: 'unknown' }));
-                debug.warn('TOTP token exchange failed:', tokenRes.status, errorBody);
+                debug.warn('auth', 'TOTP token exchange failed:', tokenRes.status, errorBody);
               }
             } catch (err) {
-              debug.warn('TOTP token exchange error:', err);
+              debug.warn('auth', 'TOTP token exchange error:', err);
             }
 
             // If token exchange failed, enable TOTP re-auth prompt so the
@@ -407,7 +407,7 @@ export const useAuthStore = create<AuthState>()(
             if (!upgradedToOAuth) {
               const { useTotpReauthStore } = await import('@/stores/totp-reauth-store');
               client.enableTotpReauth(password, () => useTotpReauthStore.getState().requestTotp());
-              debug.log('TOTP re-auth enabled — user will be prompted for fresh codes on session expiry');
+              debug.log('auth', 'TOTP re-auth enabled — user will be prompted for fresh codes on session expiry');
             }
           }
 

@@ -236,11 +236,11 @@ export function parseTnef(data: Uint8Array): TnefResult {
     attachments: [],
   };
 
-  debug.group('TNEF Parser');
-  debug.log('Input data size:', data.byteLength, 'bytes');
+  debug.group('TNEF Parser', 'email');
+  debug.log('email', 'Input data size:', data.byteLength, 'bytes');
 
   if (data.byteLength < 6) {
-    debug.warn('TNEF data too small (< 6 bytes), skipping');
+    debug.warn('email', 'TNEF data too small (< 6 bytes), skipping');
     debug.groupEnd();
     return result;
   }
@@ -249,11 +249,11 @@ export function parseTnef(data: Uint8Array): TnefResult {
 
   const signature = r.readUint32LE();
   if (signature !== TNEF_SIGNATURE) {
-    debug.warn('Invalid TNEF signature:', '0x' + signature.toString(16).toUpperCase(), '(expected 0x223E9F78)');
+    debug.warn('email', 'Invalid TNEF signature:', '0x' + signature.toString(16).toUpperCase(), '(expected 0x223E9F78)');
     debug.groupEnd();
     return result;
   }
-  debug.log('TNEF signature valid');
+  debug.log('email', 'TNEF signature valid');
 
   r.skip(2); // legacy key
 
@@ -268,7 +268,7 @@ export function parseTnef(data: Uint8Array): TnefResult {
     attrCount++;
 
     if (attrLen > r.remaining - 2) {
-      debug.warn('Attribute #' + attrCount + ': truncated data — need', attrLen, 'bytes but only', r.remaining - 2, 'available');
+      debug.warn('email', 'Attribute #' + attrCount + ': truncated data — need', attrLen, 'bytes but only', r.remaining - 2, 'available');
       break;
     }
 
@@ -276,17 +276,17 @@ export function parseTnef(data: Uint8Array): TnefResult {
     r.skip(2); // checksum
 
     const levelName = level === LVL_MESSAGE ? 'MESSAGE' : level === LVL_ATTACHMENT ? 'ATTACHMENT' : 'UNKNOWN(' + level + ')';
-    debug.log('Attribute #' + attrCount + ':', levelName, 'id=0x' + attrID.toString(16).toUpperCase(), 'len=' + attrLen);
+    debug.log('email', 'Attribute #' + attrCount + ':', levelName, 'id=0x' + attrID.toString(16).toUpperCase(), 'len=' + attrLen);
 
     if (level === LVL_MESSAGE) {
       if (attrID === attBody) {
         result.body = new TextDecoder('utf-8').decode(attrData);
-        debug.log('  → Extracted plain text body (' + result.body.length + ' chars)');
+        debug.log('email', '  → Extracted plain text body (' + result.body.length + ' chars)');
       } else if (attrID === attMAPIProps) {
         const props = parseMAPIProps(attrData);
-        debug.log('  → Parsed', props.size, 'MAPI properties from message');
+        debug.log('email', '  → Parsed', props.size, 'MAPI properties from message');
         props.forEach((val, propID) => {
-          debug.log('    MAPI prop 0x' + propID.toString(16).toUpperCase(), 'type=0x' + val.type.toString(16), 'value=' + (val.value instanceof Uint8Array ? val.value.byteLength + ' bytes' : val.value));
+          debug.log('email', '    MAPI prop 0x' + propID.toString(16).toUpperCase(), 'type=0x' + val.type.toString(16), 'value=' + (val.value instanceof Uint8Array ? val.value.byteLength + ' bytes' : val.value));
         });
 
         // HTML body
@@ -298,9 +298,9 @@ export function parseTnef(data: Uint8Array): TnefResult {
           } else {
             result.htmlBody = new TextDecoder('utf-8').decode(htmlProp.value);
           }
-          debug.log('  → Extracted HTML body (' + result.htmlBody.length + ' chars)');
+          debug.log('email', '  → Extracted HTML body (' + result.htmlBody.length + ' chars)');
         } else {
-          debug.log('  → No HTML body property (PR_BODY_HTML 0x1013) found in MAPI props');
+          debug.log('email', '  → No HTML body property (PR_BODY_HTML 0x1013) found in MAPI props');
         }
 
         // Plain text body from MAPI props (fallback)
@@ -308,9 +308,9 @@ export function parseTnef(data: Uint8Array): TnefResult {
           const bodyProp = props.get(PR_BODY);
           if (bodyProp?.value instanceof Uint8Array) {
             result.body = decodeMAPIString(bodyProp.value, bodyProp.type & 0x0FFF);
-            debug.log('  → Extracted plain text body from MAPI props (' + result.body.length + ' chars)');
+            debug.log('email', '  → Extracted plain text body from MAPI props (' + result.body.length + ' chars)');
           } else {
-            debug.log('  → No plain text body property (PR_BODY 0x1000) found in MAPI props');
+            debug.log('email', '  → No plain text body property (PR_BODY 0x1000) found in MAPI props');
           }
         }
       }
@@ -318,7 +318,7 @@ export function parseTnef(data: Uint8Array): TnefResult {
       if (attrID === attAttachRenddata) {
         // Start of a new attachment — flush previous
         if (curAttach?.data) {
-          debug.log('  → Flushing previous attachment:', curAttach.name, '(' + curAttach.mimeType + ',', curAttach.data.byteLength, 'bytes)');
+          debug.log('email', '  → Flushing previous attachment:', curAttach.name, '(' + curAttach.mimeType + ',', curAttach.data.byteLength, 'bytes)');
           result.attachments.push({
             name: curAttach.name,
             mimeType: curAttach.mimeType,
@@ -326,40 +326,40 @@ export function parseTnef(data: Uint8Array): TnefResult {
           });
         }
         curAttach = { name: 'attachment', mimeType: 'application/octet-stream', data: null };
-        debug.log('  → New attachment started');
+        debug.log('email', '  → New attachment started');
       } else if (attrID === attAttachTitle && curAttach) {
         let len = attrData.byteLength;
         if (len > 0 && attrData[len - 1] === 0) len--;
         curAttach.name = new TextDecoder('utf-8').decode(attrData.subarray(0, len));
-        debug.log('  → Attachment short name:', curAttach.name);
+        debug.log('email', '  → Attachment short name:', curAttach.name);
       } else if (attrID === attAttachData && curAttach) {
         curAttach.data = attrData;
-        debug.log('  → Attachment data (attAttachData):', attrData.byteLength, 'bytes');
+        debug.log('email', '  → Attachment data (attAttachData):', attrData.byteLength, 'bytes');
       } else if (attrID === attAttachment && curAttach) {
         const props = parseMAPIProps(attrData);
-        debug.log('  → Parsed', props.size, 'MAPI properties from attachment');
+        debug.log('email', '  → Parsed', props.size, 'MAPI properties from attachment');
         props.forEach((val, propID) => {
-          debug.log('    MAPI prop 0x' + propID.toString(16).toUpperCase(), 'type=0x' + val.type.toString(16), 'value=' + (val.value instanceof Uint8Array ? val.value.byteLength + ' bytes' : val.value));
+          debug.log('email', '    MAPI prop 0x' + propID.toString(16).toUpperCase(), 'type=0x' + val.type.toString(16), 'value=' + (val.value instanceof Uint8Array ? val.value.byteLength + ' bytes' : val.value));
         });
 
         const longName = props.get(PR_ATTACH_LONG_FILENAME);
         if (longName?.value instanceof Uint8Array) {
           curAttach.name = decodeMAPIString(longName.value, longName.type & 0x0FFF);
-          debug.log('  → Attachment long filename:', curAttach.name);
+          debug.log('email', '  → Attachment long filename:', curAttach.name);
         }
 
         const mimeTag = props.get(PR_ATTACH_MIME_TAG);
         if (mimeTag?.value instanceof Uint8Array) {
           curAttach.mimeType = decodeMAPIString(mimeTag.value, mimeTag.type & 0x0FFF);
-          debug.log('  → Attachment MIME type:', curAttach.mimeType);
+          debug.log('email', '  → Attachment MIME type:', curAttach.mimeType);
         }
 
         const attachData = props.get(PR_ATTACH_DATA_BIN);
         if (attachData?.value instanceof Uint8Array) {
           curAttach.data = attachData.value;
-          debug.log('  → Attachment data (PR_ATTACH_DATA_BIN):', attachData.value.byteLength, 'bytes');
+          debug.log('email', '  → Attachment data (PR_ATTACH_DATA_BIN):', attachData.value.byteLength, 'bytes');
         } else {
-          debug.log('  → No PR_ATTACH_DATA_BIN found in attachment MAPI props');
+          debug.log('email', '  → No PR_ATTACH_DATA_BIN found in attachment MAPI props');
         }
       }
     }
@@ -367,7 +367,7 @@ export function parseTnef(data: Uint8Array): TnefResult {
 
   // Flush last attachment
   if (curAttach?.data) {
-    debug.log('Flushing final attachment:', curAttach.name, '(' + curAttach.mimeType + ',', curAttach.data.byteLength, 'bytes)');
+    debug.log('email', 'Flushing final attachment:', curAttach.name, '(' + curAttach.mimeType + ',', curAttach.data.byteLength, 'bytes)');
     result.attachments.push({
       name: curAttach.name,
       mimeType: curAttach.mimeType,
@@ -375,9 +375,9 @@ export function parseTnef(data: Uint8Array): TnefResult {
     });
   }
 
-  debug.log('TNEF parsing complete — body:', !!result.body, ', htmlBody:', !!result.htmlBody, ', attachments:', result.attachments.length);
+  debug.log('email', 'TNEF parsing complete — body:', !!result.body, ', htmlBody:', !!result.htmlBody, ', attachments:', result.attachments.length);
   if (result.attachments.length > 0) {
-    debug.table(result.attachments.map(a => ({ name: a.name, mimeType: a.mimeType, size: a.data.byteLength })));
+    debug.table(result.attachments.map(a => ({ name: a.name, mimeType: a.mimeType, size: a.data.byteLength })), 'email');
   }
   debug.groupEnd();
 

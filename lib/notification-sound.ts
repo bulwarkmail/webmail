@@ -31,7 +31,7 @@ function playFile(file: string) {
   const audio = new Audio(file);
   audio.volume = 0.3;
   audio.play().catch((e) => {
-    debug.log('Could not play audio file, falling back to beep:', e);
+    debug.log('push', 'Could not play audio file, falling back to beep:', e);
     playBeep();
   });
 }
@@ -47,6 +47,6 @@ export function playNotificationSound(sound?: NotificationSoundChoice) {
       playBeep();
     }
   } catch (e) {
-    debug.log('Could not play notification sound:', e);
+    debug.log('push', 'Could not play notification sound:', e);
   }
 }

@@ -7,11 +7,12 @@ import { useConfig } from '@/hooks/use-config';
 import { SettingsSection, SettingItem, ToggleSwitch } from './settings-section';
 import { Button } from '@/components/ui/button';
 import { usePolicyStore } from '@/stores/policy-store';
+import { ALL_DEBUG_CATEGORIES } from '@/stores/settings-store';
 
 export function AdvancedSettings() {
   const t = useTranslations('settings.advanced');
   const tCommon = useTranslations('common');
-  const { debugMode, senderFavicons, settingsSyncDisabled, updateSetting, resetToDefaults, exportSettings, importSettings } =
+  const { debugMode, debugCategories, senderFavicons, settingsSyncDisabled, updateSetting, resetToDefaults, exportSettings, importSettings } =
     useSettingsStore();
   const { settingsSyncEnabled } = useConfig();
   const [showResetConfirm, setShowResetConfirm] = useState(false);
@@ -70,6 +71,30 @@ export function AdvancedSettings() {
       <SettingItem label={t('debug_mode.label')} description={t('debug_mode.description')} locked={isSettingLocked('debugMode')}>
         <ToggleSwitch checked={debugMode} onChange={(checked) => updateSetting('debugMode', checked)} />
       </SettingItem>
+      )}
+
+      {/* Debug Categories */}
+      {debugMode && !isSettingHidden('debugMode') && isFeatureEnabled('debugModeEnabled') && (
+        <div className="ml-4 border-l-2 border-muted pl-4 space-y-1">
+          <p className="text-xs text-muted-foreground mb-2">{t('debug_categories.description')}</p>
+          {ALL_DEBUG_CATEGORIES.map((cat) => (
+            <SettingItem
+              key={cat.id}
+              label={t(`debug_categories.${cat.labelKey}`)}
+              description={t(`debug_categories.${cat.labelKey}_description`)}
+            >
+              <ToggleSwitch
+                checked={debugCategories?.[cat.id] !== false}
+                onChange={(checked) => {
+                  updateSetting('debugCategories', {
+                    ...debugCategories,
+                    [cat.id]: checked,
+                  });
+                }}
+              />
+            </SettingItem>
+          ))}
+        </div>
       )}
 
       {/* Settings Sync */}

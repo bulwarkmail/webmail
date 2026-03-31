@@ -109,7 +109,7 @@ export function parseScript(content: string): ParseResult {
   try {
     metadata = JSON.parse(jsonStr);
   } catch (e) {
-    debug.warn('Failed to parse Sieve metadata JSON:', e);
+    debug.warn('filters', 'Failed to parse Sieve metadata JSON:', e);
     return OPAQUE;
   }
 

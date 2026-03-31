@@ -49,6 +49,18 @@ export const ALL_HOVER_ACTIONS: { id: HoverAction; labelKey: string }[] = [
   { id: 'spam', labelKey: 'spam' },
 ];
 
+export type DebugCategory = 'jmap' | 'calendar' | 'tasks' | 'auth' | 'filters' | 'email' | 'push';
+
+export const ALL_DEBUG_CATEGORIES: { id: DebugCategory; labelKey: string }[] = [
+  { id: 'jmap', labelKey: 'jmap' },
+  { id: 'calendar', labelKey: 'calendar' },
+  { id: 'tasks', labelKey: 'tasks' },
+  { id: 'auth', labelKey: 'auth' },
+  { id: 'filters', labelKey: 'filters' },
+  { id: 'email', labelKey: 'email' },
+  { id: 'push', labelKey: 'push' },
+];
+
 export interface KeywordDefinition {
   id: string;     // Used as JMAP keyword suffix: $label:<id>
   label: string;  // Display name
@@ -175,6 +187,7 @@ interface SettingsState {
 
   // Advanced
   debugMode: boolean;
+  debugCategories: Record<DebugCategory, boolean>;
   settingsSyncDisabled: boolean;
 
   // Actions
@@ -299,6 +312,15 @@ const DEFAULT_SETTINGS = {
 
   // Advanced
   debugMode: false,
+  debugCategories: {
+    jmap: true,
+    calendar: true,
+    tasks: true,
+    auth: true,
+    filters: true,
+    email: true,
+    push: true,
+  } as Record<DebugCategory, boolean>,
   settingsSyncDisabled: false,
 };
 
@@ -383,6 +405,7 @@ export const useSettingsStore = create<SettingsState>()(
           sidebarApps: state.sidebarApps,
           keepAppsLoaded: state.keepAppsLoaded,
           debugMode: state.debugMode,
+          debugCategories: state.debugCategories,
           settingsSyncDisabled: state.settingsSyncDisabled,
           // Cross-store settings
           theme: useThemeStore.getState().theme,

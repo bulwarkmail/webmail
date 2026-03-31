@@ -765,7 +765,7 @@ export default function CalendarPage() {
       return;
     }
 
-    debug.log('Calendar visibility summary', {
+    debug.log('calendar', 'Calendar visibility summary', {
       totalEvents: events.length,
       visibleEvents: visibleEvents.length,
       hiddenEvents: hiddenEvents.length,

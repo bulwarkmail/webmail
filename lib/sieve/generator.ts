@@ -147,7 +147,7 @@ export function generateScript(rules: FilterRule[], vacation?: VacationSieveConf
 
   for (const rule of enabledRules) {
     if (rule.conditions.length === 0 || rule.actions.length === 0) {
-      debug.warn(`Skipping rule "${rule.name}": empty conditions or actions`);
+      debug.warn('filters', `Skipping rule "${rule.name}": empty conditions or actions`);
       continue;
     }
 

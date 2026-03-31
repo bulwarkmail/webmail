@@ -1164,6 +1164,23 @@
         "label": "Debug Mode",
         "description": "Enable detailed logging for troubleshooting"
       },
+      "debug_categories": {
+        "description": "Select which categories to log. Disable categories you don't need to reduce console noise.",
+        "jmap": "JMAP Client",
+        "jmap_description": "Mailbox operations, email fetching, and JMAP protocol requests",
+        "calendar": "Calendar",
+        "calendar_description": "Calendar events, imports, and scheduling messages",
+        "tasks": "Tasks",
+        "tasks_description": "Calendar task creation, fetching, and updates",
+        "auth": "Authentication",
+        "auth_description": "Login, TOTP, token exchange, and session management",
+        "filters": "Filters",
+        "filters_description": "Sieve filter rules and vacation scripts",
+        "email": "Email Viewing",
+        "email_description": "Email rendering, TNEF processing, and mark-as-read",
+        "push": "Push Notifications",
+        "push_description": "Push notification setup and delivery"
+      },
       "settings_sync": {
         "label": "Settings Sync",
         "description": "Sync your settings across browsers and devices"

@@ -37,13 +37,13 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
   setShowCompleted: (show) => set({ showCompleted: show }),
 
   fetchTasks: async (client, calendarIds) => {
-    debug.log('TaskStore/fetchTasks start', { calendarIds: calendarIds || 'all' });
+    debug.log('tasks', 'TaskStore/fetchTasks start', { calendarIds: calendarIds || 'all' });
     set({ isLoading: true, error: null });
     try {
       const tasks = await client.getCalendarTasks(calendarIds);
-      debug.log('TaskStore/fetchTasks received', tasks.length, 'tasks');
+      debug.log('tasks', 'TaskStore/fetchTasks received', tasks.length, 'tasks');
       tasks.forEach((t, i) => {
-        debug.log(`TaskStore/fetchTasks [${i}]`, {
+        debug.log('tasks', `TaskStore/fetchTasks [${i}]`, {
           id: t.id, uid: t.uid, '@type': t['@type'],
           title: t.title, due: t.due, progress: t.progress,
           showWithoutTime: t.showWithoutTime, calendarIds: t.calendarIds,
@@ -57,9 +57,9 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
   },
 
   createTask: async (client, task) => {
-    debug.log('TaskStore/createTask', task);
+    debug.log('tasks', 'TaskStore/createTask', task);
     const created = await client.createCalendarTask(task);
-    debug.log('TaskStore/createTask result', { id: created.id, uid: created.uid, title: created.title });
+    debug.log('tasks', 'TaskStore/createTask result', { id: created.id, uid: created.uid, title: created.title });
     set({ tasks: [...get().tasks, created] });
     return created;
   },

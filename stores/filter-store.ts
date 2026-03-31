@@ -53,7 +53,7 @@ export const useFilterStore = create<FilterStore>()((set, get) => ({
       set({ sieveCapabilities: capabilities });
 
       const allScripts = await client.getSieveScripts();
-      debug.log('Sieve scripts fetched:', allScripts.length);
+      debug.log('filters', 'Sieve scripts fetched:', allScripts.length);
 
       // Skip the server-managed 'vacation' script (RFC 9661 §4) — it can only
       // be modified via VacationResponse/set, not SieveScript/set.
@@ -73,10 +73,10 @@ export const useFilterStore = create<FilterStore>()((set, get) => ({
       const result = parseScript(content);
 
       if (result.isOpaque) {
-        debug.log('Sieve script is opaque (hand-edited)');
+        debug.log('filters', 'Sieve script is opaque (hand-edited)');
         set({ isLoading: false, isOpaque: true, rules: [], vacationSettings: result.vacation || null });
       } else {
-        debug.log('Parsed', result.rules.length, 'filter rules');
+        debug.log('filters', 'Parsed', result.rules.length, 'filter rules');
         set({ isLoading: false, isOpaque: false, rules: result.rules, vacationSettings: result.vacation || null });
       }
     } catch (error) {
@@ -108,7 +108,7 @@ export const useFilterStore = create<FilterStore>()((set, get) => ({
       }
 
       set({ isSaving: false, rawScript: content });
-      debug.log('Filters saved successfully');
+      debug.log('filters', 'Filters saved successfully');
     } catch (error) {
       debug.error('Failed to save filters:', error);
       set({
@@ -212,7 +212,7 @@ export const useFilterStore = create<FilterStore>()((set, get) => ({
         });
       }
 
-      debug.log('Vacation synced to sieve script');
+      debug.log('filters', 'Vacation synced to sieve script');
     } catch (error) {
       debug.error('Failed to sync vacation to sieve script:', error);
     }
