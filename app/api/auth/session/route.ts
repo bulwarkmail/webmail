@@ -73,13 +73,17 @@ export async function GET(request: NextRequest) {
 
 /**
  * PUT — retrieve full credentials (including password) for session restoration.
- * Protected by Sec-Fetch-Site to ensure only same-origin browser requests succeed.
+ * Protected by multiple Sec-Fetch-* headers to ensure only same-origin
+ * browser fetch() requests succeed. Non-browser clients cannot forge these.
  */
 export async function PUT(request: NextRequest) {
   try {
-    // Block non-browser and cross-origin requests
+    // Require all Sec-Fetch-* headers to match a same-origin fetch() call.
+    // Browsers set these automatically and they cannot be overridden by JS.
     const secFetchSite = request.headers.get('sec-fetch-site');
-    if (secFetchSite !== 'same-origin') {
+    const secFetchMode = request.headers.get('sec-fetch-mode');
+    const secFetchDest = request.headers.get('sec-fetch-dest');
+    if (secFetchSite !== 'same-origin' || secFetchMode !== 'cors' || secFetchDest !== 'empty') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 

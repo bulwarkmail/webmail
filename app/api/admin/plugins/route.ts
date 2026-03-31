@@ -139,11 +139,17 @@ export async function POST(request: NextRequest) {
     }
     const code = await entryFile.async('string');
 
-    // Security warnings (logged but not blocking for admin)
+    // Security: block plugins containing dangerous JS patterns
     const warnings: string[] = [];
     for (const { pattern, label } of SUSPICIOUS_JS_PATTERNS) {
       if (pattern.test(code)) warnings.push(`Contains ${label}`);
       pattern.lastIndex = 0;
+    }
+    if (warnings.length > 0) {
+      return NextResponse.json(
+        { error: `Plugin rejected: ${warnings.join(', ')}. These patterns are not allowed for security reasons.` },
+        { status: 400 },
+      );
     }
 
     const now = new Date().toISOString();
@@ -165,9 +171,9 @@ export async function POST(request: NextRequest) {
     };
 
     await savePlugin(plugin, code);
-    await auditLog('plugin.install', { id: plugin.id, name: plugin.name, version: plugin.version, warnings }, ip);
+    await auditLog('plugin.install', { id: plugin.id, name: plugin.name, version: plugin.version }, ip);
 
-    return NextResponse.json({ plugin, warnings });
+    return NextResponse.json({ plugin });
   } catch (error) {
     logger.error('Plugin install error', { error: error instanceof Error ? error.message : 'Unknown error' });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

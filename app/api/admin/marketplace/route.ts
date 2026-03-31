@@ -196,6 +196,26 @@ export async function POST(request: NextRequest) {
 
       const code = await jsFile.async('string');
 
+      // Block plugins with dangerous JS patterns
+      const DANGEROUS_JS_PATTERNS = [
+        { pattern: /\beval\s*\(/g, label: 'eval()' },
+        { pattern: /\bnew\s+Function\s*\(/g, label: 'new Function()' },
+        { pattern: /document\.cookie/g, label: 'document.cookie' },
+        { pattern: /document\.write/g, label: 'document.write' },
+        { pattern: /innerHTML\s*=/g, label: 'innerHTML assignment' },
+      ];
+      const dangerousFindings: string[] = [];
+      for (const { pattern, label } of DANGEROUS_JS_PATTERNS) {
+        if (pattern.test(code)) dangerousFindings.push(label);
+        pattern.lastIndex = 0;
+      }
+      if (dangerousFindings.length > 0) {
+        return NextResponse.json(
+          { error: `Plugin rejected: contains ${dangerousFindings.join(', ')}. These patterns are not allowed for security reasons.` },
+          { status: 400 },
+        );
+      }
+
       // Validate permissions
       const permissions = Array.isArray(manifest.permissions) ? manifest.permissions as string[] : [];
       const validPerms = new Set(ALL_PERMISSIONS as readonly string[]);

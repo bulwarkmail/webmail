@@ -427,6 +427,7 @@ export const ALLOWED_PLUGIN_FILES = new Set([
 export const DISALLOWED_CSS_PATTERNS = [
   /@import\b/i,
   /url\s*\(\s*['"]?https?:/i,
+  /url\s*\(\s*['"]?data:/i,
   /expression\s*\(/i,
   /javascript\s*:/i,
   /-moz-binding/i,
