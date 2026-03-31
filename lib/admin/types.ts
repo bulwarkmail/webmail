@@ -37,6 +37,7 @@ export interface FeatureGates {
   debugModeEnabled: boolean;
   folderIconsEnabled: boolean;
   hoverActionsConfigEnabled: boolean;
+  filesEnabled: boolean;
 }
 
 export const DEFAULT_FEATURE_GATES: FeatureGates = {
@@ -54,6 +55,7 @@ export const DEFAULT_FEATURE_GATES: FeatureGates = {
   debugModeEnabled: true,
   folderIconsEnabled: true,
   hoverActionsConfigEnabled: true,
+  filesEnabled: true,
 };
 
 export interface ThemePolicy {

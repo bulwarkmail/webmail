@@ -169,6 +169,7 @@ export function NavigationRail({
   const sidebarApps = useSettingsStore((s) => s.sidebarApps);
   const showRailAccountList = useSettingsStore((s) => s.showRailAccountList);
   const sidebarAppsEnabled = usePolicyStore((s) => s.isFeatureEnabled('sidebarAppsEnabled'));
+  const filesEnabled = usePolicyStore((s) => s.isFeatureEnabled('filesEnabled'));
   const visibleSidebarApps = sidebarAppsEnabled ? sidebarApps : [];
   const inboxUnread = mailboxes.find(m => m.role === "inbox")?.unreadEmails || 0;
   const [isStalwartAdmin, setIsStalwartAdmin] = useState(false);
@@ -246,7 +247,7 @@ export function NavigationRail({
     { id: "mail", icon: Mail, labelKey: "mail", href: "/", badge: inboxUnread },
     { id: "calendar", icon: Calendar, labelKey: "calendar", href: "/calendar", hidden: !supportsCalendar },
     { id: "contacts", icon: BookUser, labelKey: "contacts", href: "/contacts" },
-    { id: "files", icon: HardDrive, labelKey: "files", href: "/files", hidden: supportsWebDAV === false },
+    { id: "files", icon: HardDrive, labelKey: "files", href: "/files", hidden: supportsWebDAV === false || !filesEnabled },
   ];
 
   const isSettingsActive = !activeAppId && pathname.startsWith("/settings");

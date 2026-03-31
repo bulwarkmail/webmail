@@ -116,11 +116,24 @@ export async function clearAdminSessionCookie(): Promise<void> {
 
 /**
  * Get the client IP from the request headers.
+ *
+ * Proxies typically *append* to X-Forwarded-For, so the last entry
+ * before our trusted proxy is the most reliable client IP. When a
+ * single reverse proxy sits in front of the app the rightmost entry
+ * is the one added by that proxy. We take the rightmost entry to
+ * avoid trusting attacker-controlled values prepended to the header.
+ *
+ * If you run behind multiple trusted proxies, set TRUSTED_PROXY_DEPTH
+ * to the number of trusted proxies (default 1).
  */
 export function getClientIP(request: Request): string {
   const forwarded = request.headers.get('x-forwarded-for');
   if (forwarded) {
-    return forwarded.split(',')[0].trim();
+    const parts = forwarded.split(',').map(s => s.trim()).filter(Boolean);
+    const depth = Math.max(1, parseInt(process.env.TRUSTED_PROXY_DEPTH || '1', 10));
+    // Take the entry at position (length - depth), clamped to 0
+    const index = Math.max(0, parts.length - depth);
+    return parts[index] || '0.0.0.0';
   }
   return request.headers.get('x-real-ip') || '0.0.0.0';
 }

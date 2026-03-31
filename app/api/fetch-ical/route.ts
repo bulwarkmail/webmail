@@ -64,20 +64,43 @@ export async function POST(request: NextRequest) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
 
-    const response = await fetch(url, {
-      signal: controller.signal,
-      headers: {
-        'Accept': 'text/calendar, application/ics, text/plain, */*',
-        'User-Agent': 'JMAP-Webmail/1.0 Calendar-Fetcher',
-      },
-      redirect: 'follow',
-    });
+    const MAX_REDIRECTS = 5;
+    let currentUrl = url;
+    let response: Response | undefined;
+
+    for (let i = 0; i <= MAX_REDIRECTS; i++) {
+      if (!isValidExternalUrl(currentUrl)) {
+        clearTimeout(timeout);
+        return NextResponse.json({ error: 'Redirect to disallowed URL' }, { status: 400 });
+      }
+
+      response = await fetch(currentUrl, {
+        signal: controller.signal,
+        headers: {
+          'Accept': 'text/calendar, application/ics, text/plain, */*',
+          'User-Agent': 'JMAP-Webmail/1.0 Calendar-Fetcher',
+        },
+        redirect: 'manual',
+      });
+
+      if (response.status >= 300 && response.status < 400) {
+        const location = response.headers.get('location');
+        if (!location) {
+          clearTimeout(timeout);
+          return NextResponse.json({ error: 'Redirect without Location header' }, { status: 502 });
+        }
+        // Resolve relative redirects
+        currentUrl = new URL(location, currentUrl).toString();
+        continue;
+      }
+      break;
+    }
 
     clearTimeout(timeout);
 
-    if (!response.ok) {
+    if (!response || !response.ok) {
       return NextResponse.json(
-        { error: `Remote server returned ${response.status}` },
+        { error: `Remote server returned ${response?.status ?? 'unknown'}` },
         { status: 502 }
       );
     }

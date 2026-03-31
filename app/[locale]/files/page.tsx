@@ -17,15 +17,18 @@ import { SidebarAppsModal } from "@/components/layout/sidebar-apps-modal";
 import { InlineAppView } from "@/components/layout/inline-app-view";
 import { useSidebarApps } from "@/hooks/use-sidebar-apps";
 import { useIsMobile } from "@/hooks/use-media-query";
+import { usePolicyStore } from "@/stores/policy-store";
 import { FileBrowser } from "@/components/files/file-browser";
 import { ImagePreviewModal } from "@/components/files/image-preview-modal";
 import { FilePreviewModal } from "@/components/files/file-preview-modal";
 import { loadFilesSettings } from "@/components/files/files-settings-dialog";
 import type { FolderLayout } from "@/components/files/files-settings-dialog";
+import { AlertTriangle } from "lucide-react";
 
 export default function FilesPage() {
   const router = useRouter();
   const t = useTranslations("files");
+  const filesEnabled = usePolicyStore((s) => s.isFeatureEnabled('filesEnabled'));
   const { isAuthenticated, logout, checkAuth, isLoading: authLoading, client } = useAuthStore();
   const { showAppsModal, inlineApp, loadedApps, handleManageApps, handleInlineApp, closeInlineApp, closeAppsModal } = useSidebarApps();
   const [initialCheckDone, setInitialCheckDone] = useState(() => useAuthStore.getState().isAuthenticated && !!useAuthStore.getState().client);
@@ -393,7 +396,15 @@ export default function FilesPage() {
             )}
 
             <div className="flex-1 min-h-0">
-              {supportsFiles === false ? (
+              {!filesEnabled ? (
+                <div className="flex items-center justify-center h-full">
+                  <div className="max-w-lg text-center space-y-3 px-4">
+                    <AlertTriangle className="w-10 h-10 text-yellow-500 mx-auto" />
+                    <p className="text-sm font-medium">Files feature is disabled by your administrator</p>
+                    <p className="text-xs text-muted-foreground">Large file uploads via WebDAV can cause Stalwart/RocksDB instability, including out-of-memory crashes and unrecoverable disk usage. Deleted files may not be immediately purged from blob storage. This feature is not recommended for production environments.</p>
+                  </div>
+                </div>
+              ) : supportsFiles === false ? (
                 <div className="flex items-center justify-center h-full">
                   <p className="text-sm text-muted-foreground">{t("not_available")}</p>
                 </div>

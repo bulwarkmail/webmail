@@ -1,8 +1,8 @@
 /**
  * Verify CMS SignedData (opaque signed) and extract the inner content.
  *
- * v1 performs cryptographic signature validation and cert validity checks
- * but does NOT implement full trust-chain or revocation validation.
+ * Performs cryptographic signature validation, cert validity checks,
+ * and trust-chain verification.
  */
 
 import * as pkijs from 'pkijs';
@@ -61,7 +61,7 @@ export async function smimeVerify(
     const verifyResult = await signedData.verify(
       {
         signer: 0,
-        checkChain: false, // v1: no trust-chain validation
+        checkChain: true,
       },
       cryptoEngine,
     );
