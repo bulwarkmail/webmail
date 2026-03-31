@@ -129,8 +129,8 @@ export interface PluginAPI {
     info: (message: string) => void;
     warning: (message: string) => void;
   };
-  auth: {
-    getHeaders: () => Record<string, string>;
+  http: {
+    post: (path: string, body: Record<string, unknown>) => Promise<{ ok: boolean; status: number; data: unknown }>;
   };
   storage: ReturnType<typeof createPluginStorage>;
   log: ReturnType<typeof createPluginLogger>;
@@ -644,15 +644,25 @@ export function createPluginAPI(plugin: InstalledPlugin): PluginAPI {
       warning: (message: string) => appToast.warning(message),
     },
 
-    auth: {
-      getHeaders: (): Record<string, string> => {
-        requirePermission(plugin, 'auth:read');
+    http: {
+      post: async (path: string, body: Record<string, unknown>) => {
+        requirePermission(plugin, 'http:post');
+        if (typeof path !== 'string' || !path.startsWith('/')) {
+          throw new Error('path must be an absolute path starting with /');
+        }
         const { client } = useAuthStore.getState();
-        if (!client) return {};
-        return {
-          'Authorization': client.getAuthHeader(),
-          'X-JMAP-Username': client.getUsername(),
-        };
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+        if (client) {
+          headers['Authorization'] = client.getAuthHeader();
+          headers['X-JMAP-Username'] = client.getUsername();
+        }
+        const res = await fetch(path, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(body),
+        });
+        const data = await res.json().catch(() => null);
+        return { ok: res.ok, status: res.status, data };
       },
     },
 
