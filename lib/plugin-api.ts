@@ -25,6 +25,7 @@ import {
   sidebarAppHooks,
 } from './plugin-hooks';
 import { toast as appToast } from '@/stores/toast-store';
+import { useAuthStore } from '@/stores/auth-store';
 
 // â”€â”€â”€ Permission helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
@@ -127,6 +128,9 @@ export interface PluginAPI {
     error: (message: string) => void;
     info: (message: string) => void;
     warning: (message: string) => void;
+  };
+  auth: {
+    getHeaders: () => Record<string, string>;
   };
   storage: ReturnType<typeof createPluginStorage>;
   log: ReturnType<typeof createPluginLogger>;
@@ -638,6 +642,18 @@ export function createPluginAPI(plugin: InstalledPlugin): PluginAPI {
       error: (message: string) => appToast.error(message),
       info: (message: string) => appToast.info(message),
       warning: (message: string) => appToast.warning(message),
+    },
+
+    auth: {
+      getHeaders: (): Record<string, string> => {
+        requirePermission(plugin, 'auth:read');
+        const { client } = useAuthStore.getState();
+        if (!client) return {};
+        return {
+          'Authorization': client.getAuthHeader(),
+          'X-JMAP-Username': client.getUsername(),
+        };
+      },
     },
 
     storage: createPluginStorage(plugin.id),

@@ -401,7 +401,7 @@ export const ALL_PERMISSIONS = [
   'vacation:read', 'vacation:write',
   'settings:read', 'settings:write',
   'security:read',
-  'auth:observe',
+  'auth:observe', 'auth:read',
   'ui:observe', 'ui:toolbar', 'ui:email-banner', 'ui:email-footer',
   'ui:composer-toolbar', 'ui:sidebar-widget', 'ui:settings-section',
   'ui:context-menu', 'ui:navigation-rail', 'ui:keyboard',
