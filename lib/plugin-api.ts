@@ -647,8 +647,12 @@ export function createPluginAPI(plugin: InstalledPlugin): PluginAPI {
     http: {
       post: async (path: string, body: Record<string, unknown>) => {
         requirePermission(plugin, 'http:post');
-        if (typeof path !== 'string' || !path.startsWith('/')) {
-          throw new Error('path must be an absolute path starting with /');
+        if (typeof path !== 'string' || !path.startsWith('/api/')) {
+          throw new Error('path must start with /api/');
+        }
+        const url = new URL(path, globalThis.location.origin);
+        if (url.origin !== globalThis.location.origin) {
+          throw new Error('path must resolve to the same origin');
         }
         const { client } = useAuthStore.getState();
         const headers: Record<string, string> = { 'Content-Type': 'application/json' };
@@ -656,7 +660,7 @@ export function createPluginAPI(plugin: InstalledPlugin): PluginAPI {
           headers['Authorization'] = client.getAuthHeader();
           headers['X-JMAP-Username'] = client.getUsername();
         }
-        const res = await fetch(path, {
+        const res = await fetch(url.pathname + url.search, {
           method: 'POST',
           headers,
           body: JSON.stringify(body),

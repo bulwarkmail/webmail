@@ -148,3 +148,46 @@ describe('toast bridge', () => {
     expect(api.toast.warning).toBeInstanceOf(Function);
   });
 });
+
+describe('http.post path validation', () => {
+  function makeApi(permissions: string[] = ['http:post']) {
+    return createPluginAPI(makePlugin({ permissions }));
+  }
+
+  it('rejects protocol-relative URLs like //evil.example', async () => {
+    const api = makeApi();
+    await expect(api.http.post('//evil.example/collect', {})).rejects.toThrow('must start with /api/');
+  });
+
+  it('rejects absolute URLs to other origins', async () => {
+    const api = makeApi();
+    await expect(api.http.post('https://evil.example/steal', {})).rejects.toThrow('must start with /api/');
+  });
+
+  it('rejects paths not under /api/', async () => {
+    const api = makeApi();
+    await expect(api.http.post('/other/path', {})).rejects.toThrow('must start with /api/');
+  });
+
+  it('rejects paths that use backslash to bypass the check', async () => {
+    const api = makeApi();
+    await expect(api.http.post('/api/\\@evil.example', {})).rejects.toThrow();
+  });
+
+  it('throws without http:post permission', async () => {
+    const api = makeApi([]);
+    await expect(api.http.post('/api/jitsi', {})).rejects.toThrow('lacks permission');
+  });
+
+  it('accepts a valid /api/ path', async () => {
+    const api = makeApi();
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ url: 'https://meet.example.com/room' }),
+    });
+    const result = await api.http.post('/api/jitsi', { eventTitle: 'test' });
+    expect(result.ok).toBe(true);
+    expect(result.data).toEqual({ url: 'https://meet.example.com/room' });
+  });
+});
