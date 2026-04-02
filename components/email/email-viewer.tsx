@@ -1152,9 +1152,27 @@ export function EmailViewer({
     }
   );
 
+  const autoMarkedEmailRef = useRef<string | null>(null);
+
+  // Reset auto-mark tracking when email changes
+  useEffect(() => {
+    autoMarkedEmailRef.current = null;
+  }, [email?.id]);
+
   useEffect(() => {
     // Mark as read when email is viewed, respecting the delay setting
-    if (!email || email.keywords?.$seen || !onMarkAsRead) {
+    if (!email || !onMarkAsRead) {
+      return;
+    }
+
+    // Already read — record that so manual unread toggle won't re-trigger auto-mark
+    if (email.keywords?.$seen) {
+      autoMarkedEmailRef.current = email.id;
+      return;
+    }
+
+    // Don't re-trigger if we already auto-marked this email (user may have toggled it back to unread)
+    if (autoMarkedEmailRef.current === email.id) {
       return;
     }
 
@@ -1167,17 +1185,18 @@ export function EmailViewer({
 
     // Instant mark
     if (markAsReadDelay === 0) {
+      autoMarkedEmailRef.current = email.id;
       onMarkAsRead(email.id, true);
       return;
     }
 
     // Delayed mark
     const timeout = setTimeout(() => {
+      autoMarkedEmailRef.current = email.id;
       onMarkAsRead(email.id, true);
     }, markAsReadDelay);
 
     return () => clearTimeout(timeout);
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- email?.id changes when email changes, which is the intended trigger
   }, [email?.id, email?.keywords?.$seen, onMarkAsRead]);
 
   // Reset external content permission and quick reply when email changes

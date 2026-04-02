@@ -94,7 +94,7 @@ export function EmailHoverActions({
         onToggleStar?.();
         break;
       case "markRead":
-        onMarkAsRead?.(!isUnread);
+        onMarkAsRead?.(isUnread);
         break;
       case "archive":
         onArchive?.();
