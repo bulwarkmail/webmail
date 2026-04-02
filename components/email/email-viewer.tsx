@@ -4507,7 +4507,7 @@ export function EmailViewer({
         {((hasBlockedContent && !allowExternalContent && externalContentPolicy !== 'allow') ||
           hasCalendarInvitation) && (
           <div className="border-b border-border bg-muted/30 isolate">
-            <div className="max-w-4xl mx-auto px-6 py-1.5">
+            <div className="max-w-6xl mx-auto px-6 py-1.5">
               <div className="flex flex-col gap-3 isolate">
                 {/* External Content Controls */}
                 {hasBlockedContent && !allowExternalContent && externalContentPolicy !== 'allow' && (

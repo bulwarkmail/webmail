@@ -754,49 +754,67 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
 
       {/* Content */}
       <div className="px-4 py-3 space-y-2.5">
-        {/* Event title */}
-        {summary?.title && (
-          <div className="flex items-start justify-between gap-2">
-            <h3 className={cn(
-              "text-base font-semibold leading-snug",
-              isCancellation ? "line-through text-muted-foreground" : "text-foreground"
-            )}>
-              {summary.title}
-            </h3>
-            {parsedEvent?.sequence != null && parsedEvent.sequence > 0 && (
-              <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground flex-shrink-0 whitespace-nowrap">
-                {t('event_updated', { sequence: parsedEvent.sequence })}
-              </span>
+        <div className="lg:flex lg:gap-6">
+          {/* Left: Event info */}
+          <div className="lg:flex-1 space-y-2.5 min-w-0">
+            {/* Event title */}
+            {summary?.title && (
+              <div className="flex items-start justify-between gap-2">
+                <h3 className={cn(
+                  "text-base font-semibold leading-snug",
+                  isCancellation ? "line-through text-muted-foreground" : "text-foreground"
+                )}>
+                  {summary.title}
+                </h3>
+                {parsedEvent?.sequence != null && parsedEvent.sequence > 0 && (
+                  <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground flex-shrink-0 whitespace-nowrap">
+                    {t('event_updated', { sequence: parsedEvent.sequence })}
+                  </span>
+                )}
+              </div>
             )}
-          </div>
-        )}
 
-        {/* Event details */}
-        <div className="space-y-1">
-          {summary?.start && (
-            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-              <Clock className="w-3.5 h-3.5 flex-shrink-0" />
-              <span>
-                {formatDateTime(summary.start)}
-                {summary.end && ` – ${formatDateTime(summary.end)}`}
-              </span>
+            {/* Event details */}
+            <div className="lg:flex lg:items-center lg:gap-4 lg:flex-wrap space-y-1 lg:space-y-0">
+              {summary?.start && (
+                <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                  <Clock className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span>
+                    {formatDateTime(summary.start)}
+                    {summary.end && ` – ${formatDateTime(summary.end)}`}
+                  </span>
+                </div>
+              )}
+              {summary?.location && (
+                <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                  <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span>{summary.location}</span>
+                </div>
+              )}
+              {summary?.organizer && (
+                <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                  <Users className="w-3.5 h-3.5 flex-shrink-0" />
+                  {t('organizer', { name: summary.organizer })}
+                </span>
+              )}
+              {summary && summary.attendeeCount > 0 && (
+                <span className="text-sm text-muted-foreground">{t('attendees', { count: summary.attendeeCount })}</span>
+              )}
             </div>
-          )}
-          {summary?.location && (
-            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-              <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
-              <span>{summary.location}</span>
-            </div>
-          )}
-          <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
-            {summary?.organizer && (
-              <span className="flex items-center gap-1.5">
-                <Users className="w-3.5 h-3.5 flex-shrink-0" />
-                {t('organizer', { name: summary.organizer })}
-              </span>
+          </div>
+
+          {/* Right: Info & actor messages on large screens */}
+          <div className="lg:flex-shrink-0 lg:text-right lg:max-w-xs mt-2.5 lg:mt-0 space-y-1">
+            {bannerInfo && (
+              <p className="text-xs text-muted-foreground leading-relaxed">{bannerInfo}</p>
             )}
-            {summary && summary.attendeeCount > 0 && (
-              <span>{t('attendees', { count: summary.attendeeCount })}</span>
+            {actorMessage && (
+              <p className="text-xs text-muted-foreground">{actorMessage}</p>
+            )}
+            {actorSummary?.participationComment && (
+              <p className="text-xs text-muted-foreground italic">
+                {t('actor_note', { comment: actorSummary.participationComment })}
+              </p>
             )}
           </div>
         </div>
@@ -838,23 +856,6 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
               </span>
             )}
           </div>
-        )}
-
-        {/* Info text */}
-        {bannerInfo && (
-          <p className="text-xs text-muted-foreground leading-relaxed">{bannerInfo}</p>
-        )}
-
-        {/* Actor message */}
-        {actorMessage && (
-          <p className="text-xs text-muted-foreground">{actorMessage}</p>
-        )}
-
-        {/* Actor comment */}
-        {actorSummary?.participationComment && (
-          <p className="text-xs text-muted-foreground italic">
-            {t('actor_note', { comment: actorSummary.participationComment })}
-          </p>
         )}
 
         {/* Proposed changes */}
