@@ -27,7 +27,7 @@ import {
 import { toast as appToast } from '@/stores/toast-store';
 import { useAuthStore } from '@/stores/auth-store';
 
-// â”€â”€â”€ Permission helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- Permission helpers --------------------------------------
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getPluginExternals(): any {
@@ -61,7 +61,7 @@ function guardedHook<T extends (...args: never[]) => unknown>(
   return bus.register(plugin.id, handler, order);
 }
 
-// â”€â”€â”€ Plugin-scoped storage â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- Plugin-scoped storage -----------------------------------
 
 function createPluginStorage(pluginId: string) {
   const prefix = `plugin:${pluginId}:`;
@@ -93,7 +93,7 @@ function createPluginStorage(pluginId: string) {
   };
 }
 
-// â”€â”€â”€ Plugin-scoped logger â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- Plugin-scoped logger ------------------------------------
 
 function createPluginLogger(pluginId: string) {
   const tag = `[plugin:${pluginId}]`;
@@ -105,7 +105,7 @@ function createPluginLogger(pluginId: string) {
   };
 }
 
-// â”€â”€â”€ PluginAPI interface â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- PluginAPI interface -------------------------------------
 
 export interface PluginAPI {
   plugin: { id: string; version: string; settings: Record<string, unknown> };
@@ -316,7 +316,7 @@ export interface PluginHooksAPI {
   onSidebarAppChange: (handler: (...args: unknown[]) => unknown) => Disposable;
 }
 
-// â”€â”€â”€ Permission mapping for hooks â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- Permission mapping for hooks ----------------------------
 
 const HOOK_PERMISSIONS: Record<string, Permission> = {
   // Email
@@ -465,7 +465,7 @@ const HOOK_BUSES: Record<string, { register: (pluginId: string, handler: (...arg
   ...Object.fromEntries(Object.entries(sidebarAppHooks)),
 };
 
-// â”€â”€â”€ Slot registration bridge â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- Slot registration bridge --------------------------------
 // Lazy import to avoid circular dependency â€” plugin-store imports plugin-api indirectly
 
 let registerSlotFn: ((name: SlotName, reg: { pluginId: string; component: React.ComponentType<Record<string, unknown>>; order: number }) => Disposable) | null = null;
@@ -487,7 +487,7 @@ function registerSlot(
   return registerSlotFn(slotName, { pluginId, component, order });
 }
 
-// â”€â”€â”€ Factory â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- Factory -------------------------------------------------
 
 export function createPluginAPI(plugin: InstalledPlugin): PluginAPI {
   // Build hooks proxy â€” each hook method checks permission and registers on the right bus

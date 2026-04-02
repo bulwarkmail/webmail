@@ -8,7 +8,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import * as ReactJSX from 'react/jsx-runtime';
 
-// â”€â”€â”€ Shared React (window.__PLUGIN_EXTERNALS__) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- Shared React (window.__PLUGIN_EXTERNALS__) -------------
 
 export function exposePluginExternals(): void {
   if (typeof window === 'undefined') return;
@@ -20,7 +20,7 @@ export function exposePluginExternals(): void {
   };
 }
 
-// â”€â”€â”€ Active plugin tracking â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- Active plugin tracking ----------------------------------
 
 interface ActivePlugin {
   id: string;
@@ -31,7 +31,7 @@ interface ActivePlugin {
 
 const activePlugins = new Map<string, ActivePlugin>();
 
-// â”€â”€â”€ Load a single plugin â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- Load a single plugin ------------------------------------
 
 type PluginStoreAccessor = {
   setPluginStatus: (id: string, status: InstalledPlugin['status'], error?: string) => void;
@@ -101,7 +101,7 @@ export async function loadPlugin(plugin: InstalledPlugin): Promise<void> {
   }
 }
 
-// â”€â”€â”€ Deactivate a single plugin â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- Deactivate a single plugin ------------------------------
 
 export function deactivatePlugin(pluginId: string): void {
   const active = activePlugins.get(pluginId);
@@ -127,7 +127,7 @@ export function deactivatePlugin(pluginId: string): void {
   console.info(`[plugin-loader] Plugin "${pluginId}" deactivated`);
 }
 
-// â”€â”€â”€ Activate all enabled plugins â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- Activate all enabled plugins ----------------------------
 
 export async function activateAllPlugins(plugins: InstalledPlugin[]): Promise<void> {
   // Ensure externals are exposed
@@ -139,7 +139,7 @@ export async function activateAllPlugins(plugins: InstalledPlugin[]): Promise<vo
   }
 }
 
-// â”€â”€â”€ Deactivate all plugins â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- Deactivate all plugins ---------------------------------
 
 export function deactivateAllPlugins(): void {
   for (const pluginId of [...activePlugins.keys()]) {
@@ -147,13 +147,13 @@ export function deactivateAllPlugins(): void {
   }
 }
 
-// â”€â”€â”€ Check if a plugin is active â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- Check if a plugin is active -----------------------------
 
 export function isPluginActive(pluginId: string): boolean {
   return activePlugins.has(pluginId);
 }
 
-// â”€â”€â”€ Setup auto-disable callback â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- Setup auto-disable callback -----------------------------
 
 export function setupAutoDisable(): void {
   pluginErrorTracker.setAutoDisableCallback((pluginId) => {

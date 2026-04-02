@@ -20,7 +20,7 @@ const STATUS_COLORS: Record<PluginStatus, string> = {
 
 export function PluginsSettings() {
   const { plugins, installPlugin, uninstallPlugin, enablePlugin, disablePlugin, updatePluginSettings, initializePlugins, initialized } = usePluginStore();
-  const { isFeatureEnabled, isPluginForceEnabled, fetchPolicy, loaded } = usePolicyStore();
+  const { isFeatureEnabled, isPluginForceEnabled, isPluginApproved, fetchPolicy, loaded } = usePolicyStore();
   const [isUploading, setIsUploading] = useState(false);
   const [expandedPlugin, setExpandedPlugin] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -75,6 +75,13 @@ export function PluginsSettings() {
       return;
     }
 
+    const requireApproval = isFeatureEnabled('requirePluginApproval');
+    const isApproved = plugin.adminApproved || plugin.managed || isPluginApproved(plugin.id);
+    if (!plugin.enabled && requireApproval && !isApproved) {
+      toast.info(`Plugin "${plugin.name}" requires admin approval before it can be enabled`);
+      return;
+    }
+
     if (plugin.enabled) {
       disablePlugin(plugin.id);
       toast.info(`Plugin "${plugin.name}" disabled`);
@@ -108,20 +115,26 @@ export function PluginsSettings() {
         </div>
       ) : (
         <div className="space-y-2">
-          {plugins.map(plugin => (
+          {plugins.map(plugin => {
+            const requireApproval = isFeatureEnabled('requirePluginApproval');
+            const isApproved = plugin.adminApproved || plugin.managed || isPluginApproved(plugin.id);
+            const needsApproval = requireApproval && !isApproved;
+            return (
             <PluginCard
               key={plugin.id}
               plugin={plugin}
               isExpanded={expandedPlugin === plugin.id}
               isForceEnabled={plugin.forceEnabled || isPluginForceEnabled(plugin.id)}
               isManaged={Boolean(plugin.managed)}
+              needsApproval={needsApproval}
               controlsDisabled={!initialized}
               onToggleExpand={() => setExpandedPlugin(expandedPlugin === plugin.id ? null : plugin.id)}
               onToggle={() => handleToggle(plugin)}
               onUninstall={() => handleUninstall(plugin)}
               onUpdateSettings={(settings) => updatePluginSettings(plugin.id, settings)}
             />
-          ))}
+            );
+          })}
         </div>
       )}
 
@@ -166,6 +179,7 @@ interface PluginCardProps {
   isExpanded: boolean;
   isForceEnabled: boolean;
   isManaged: boolean;
+  needsApproval: boolean;
   controlsDisabled: boolean;
   onToggleExpand: () => void;
   onToggle: () => void;
@@ -173,7 +187,7 @@ interface PluginCardProps {
   onUpdateSettings: (settings: Record<string, unknown>) => void;
 }
 
-function PluginCard({ plugin, isExpanded, isForceEnabled, isManaged, controlsDisabled, onToggleExpand, onToggle, onUninstall, onUpdateSettings }: PluginCardProps) {
+function PluginCard({ plugin, isExpanded, isForceEnabled, isManaged, needsApproval, controlsDisabled, onToggleExpand, onToggle, onUninstall, onUpdateSettings }: PluginCardProps) {
   return (
     <div className={cn(
       'rounded-lg border transition-colors',
@@ -197,6 +211,11 @@ function PluginCard({ plugin, isExpanded, isForceEnabled, isManaged, controlsDis
                 <Server className="w-2.5 h-2.5" /> Managed
               </span>
             )}
+            {needsApproval && (
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400">
+                Awaiting approval
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-2 mt-0.5">
             <span className="text-xs text-muted-foreground">{plugin.author}</span>
@@ -206,7 +225,7 @@ function PluginCard({ plugin, isExpanded, isForceEnabled, isManaged, controlsDis
         </div>
 
         <div className="flex items-center gap-2 flex-shrink-0">
-          <ToggleSwitch checked={plugin.enabled} onChange={onToggle} disabled={controlsDisabled || isForceEnabled} />
+          <ToggleSwitch checked={plugin.enabled} onChange={onToggle} disabled={controlsDisabled || isForceEnabled || needsApproval} />
         </div>
       </div>
 
@@ -215,6 +234,10 @@ function PluginCard({ plugin, isExpanded, isForceEnabled, isManaged, controlsDis
         <div className="border-t border-border p-3 space-y-3">
           {isForceEnabled && (
             <p className="text-xs text-amber-600 dark:text-amber-400">This plugin is forced by an administrator and cannot be disabled or uninstalled.</p>
+          )}
+
+          {needsApproval && (
+            <p className="text-xs text-orange-600 dark:text-orange-400">This plugin is awaiting admin approval and cannot be enabled until an administrator approves it.</p>
           )}
 
           {/* Description */}

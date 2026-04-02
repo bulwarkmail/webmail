@@ -60,6 +60,15 @@ export default function AdminPluginsPage() {
     setMessage(null);
   }
 
+  function toggleRequirePluginApproval() {
+    setPolicy(prev => ({
+      ...prev,
+      features: { ...prev.features, requirePluginApproval: !prev.features.requirePluginApproval },
+    }));
+    setPolicyDirty(true);
+    setMessage(null);
+  }
+
   async function handleSavePolicy() {
     setSavingPolicy(true);
     setMessage(null);
@@ -248,6 +257,7 @@ export default function AdminPluginsPage() {
 
   const pluginsEnabled = policy.features.pluginsEnabled ?? true;
   const pluginsUploadEnabled = policy.features.pluginsUploadEnabled ?? true;
+  const requirePluginApproval = policy.features.requirePluginApproval ?? true;
 
   return (
     <div className="space-y-6">
@@ -317,6 +327,17 @@ export default function AdminPluginsPage() {
             <button onClick={togglePluginsUploadEnabled}
               className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${pluginsUploadEnabled ? 'bg-primary' : 'bg-muted-foreground/25 dark:bg-muted-foreground/50'}`}>
               <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-background shadow transition-transform ${pluginsUploadEnabled ? 'translate-x-[18px]' : 'translate-x-[3px]'}`} />
+            </button>
+          </div>
+
+          <div className="px-4 py-3 flex items-center justify-between gap-4">
+            <div>
+              <span className="text-sm text-foreground">Require Admin Approval</span>
+              <p className="text-xs text-muted-foreground mt-0.5">User-uploaded plugins must be approved by an admin before they can be enabled</p>
+            </div>
+            <button onClick={toggleRequirePluginApproval}
+              className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${requirePluginApproval ? 'bg-primary' : 'bg-muted-foreground/25 dark:bg-muted-foreground/50'}`}>
+              <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-background shadow transition-transform ${requirePluginApproval ? 'translate-x-[18px]' : 'translate-x-[3px]'}`} />
             </button>
           </div>
 

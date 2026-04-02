@@ -79,6 +79,8 @@ export interface InstalledPlugin {
   managed?: boolean;
   // True when plugin is admin-enforced and cannot be disabled locally.
   forceEnabled?: boolean;
+  // True when plugin has been approved by an admin. Unapproved plugins cannot be enabled.
+  adminApproved?: boolean;
   settingsSchema?: Record<string, SettingFieldSchema>;
   settings: Record<string, unknown>;
 }

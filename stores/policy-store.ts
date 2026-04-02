@@ -15,6 +15,7 @@ interface PolicyState {
   getForcedThemeId: (availableThemeIds?: string[]) => string | null;
   isThemeDisabled: (themeId: string, isBuiltIn: boolean) => boolean;
   isPluginForceEnabled: (pluginId: string) => boolean;
+  isPluginApproved: (pluginId: string) => boolean;
   isThemeForceEnabled: (themeId: string) => boolean;
 }
 
@@ -82,6 +83,10 @@ export const usePolicyStore = create<PolicyState>()((set, get) => ({
 
   isPluginForceEnabled: (pluginId) => {
     return (get().policy.forceEnabledPlugins || []).includes(pluginId);
+  },
+
+  isPluginApproved: (pluginId) => {
+    return (get().policy.approvedPlugins || []).includes(pluginId);
   },
 
   isThemeForceEnabled: (themeId) => {

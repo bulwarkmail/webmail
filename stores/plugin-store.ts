@@ -94,6 +94,7 @@ export const usePluginStore = create<PluginStoreState>()(
           status: 'installed',
           managed: false,
           forceEnabled: false,
+          adminApproved: false, // Requires admin approval before it can be enabled
           settings: existing?.settings ?? {},
           settingsSchema: manifest.settingsSchema,
         };
@@ -143,6 +144,11 @@ export const usePluginStore = create<PluginStoreState>()(
         const { plugins } = get();
         const plugin = plugins.find(p => p.id === id);
         if (!plugin) return;
+
+        // Block enabling if plugin requires admin approval and hasn't been approved
+        const requireApproval = usePolicyStore.getState().isFeatureEnabled('requirePluginApproval');
+        const isApproved = plugin.adminApproved || plugin.managed || usePolicyStore.getState().isPluginApproved(id);
+        if (requireApproval && !isApproved) return;
 
         // Ensure bridges are wired before loading (may not have run initializePlugins yet)
         setPluginStoreAccessor({ setPluginStatus: get().setPluginStatus });
@@ -393,6 +399,7 @@ async function syncServerPlugins(
           status: sp.forceEnabled ? 'enabled' : 'installed',
           managed: true,
           forceEnabled: sp.forceEnabled,
+          adminApproved: true, // Server-managed plugins are always approved
           settings: {},
         };
 

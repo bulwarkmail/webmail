@@ -25,6 +25,7 @@ export interface SettingRestriction {
 export interface FeatureGates {
   pluginsEnabled: boolean;
   pluginsUploadEnabled: boolean;
+  requirePluginApproval: boolean;
   themesEnabled: boolean;
   sidebarAppsEnabled: boolean;
   userThemesEnabled: boolean;
@@ -41,8 +42,9 @@ export interface FeatureGates {
 }
 
 export const DEFAULT_FEATURE_GATES: FeatureGates = {
-  pluginsEnabled: true,
+  pluginsEnabled: false,
   pluginsUploadEnabled: true,
+  requirePluginApproval: true,
   themesEnabled: true,
   sidebarAppsEnabled: true,
   userThemesEnabled: true,
@@ -80,6 +82,8 @@ export interface SettingsPolicy {
   themePolicy: ThemePolicy;
   /** Plugin IDs that are force-enabled (users cannot disable) */
   forceEnabledPlugins: string[];
+  /** Plugin IDs that have been approved by admin (users can enable) */
+  approvedPlugins: string[];
   /** Theme IDs that are force-enabled (users cannot deactivate) */
   forceEnabledThemes: string[];
 }
@@ -90,6 +94,7 @@ export const DEFAULT_POLICY: SettingsPolicy = {
   defaults: {},
   themePolicy: { ...DEFAULT_THEME_POLICY },
   forceEnabledPlugins: [],
+  approvedPlugins: [],
   forceEnabledThemes: [],
 };
 
