@@ -93,6 +93,18 @@ export function RecipientPopover({ name, email, displayLabel, onViewContact, cla
     return () => document.removeEventListener("keydown", handler);
   }, [isOpen]);
 
+  // Close on scroll so the popover does not float while content moves.
+  useEffect(() => {
+    if (!isOpen) return;
+    const handler = () => handleClose();
+    document.addEventListener("scroll", handler, true);
+    window.addEventListener("resize", handler);
+    return () => {
+      document.removeEventListener("scroll", handler, true);
+      window.removeEventListener("resize", handler);
+    };
+  }, [isOpen]);
+
   const handleViewContact = () => {
     if (onViewContact) {
       onViewContact(contact ?? null, email);
