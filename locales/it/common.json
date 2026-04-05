@@ -1211,6 +1211,9 @@
         "label": "Importa impostazioni",
         "description": "Carica impostazioni da file JSON",
         "button": "Importa"
+      },
+      "about": {
+        "title": "Bulwark Webmail"
       }
     },
     "sidebar_apps": {
