@@ -1211,6 +1211,9 @@
         "label": "Импортировать настройки",
         "description": "Загрузить настройки из файла JSON",
         "button": "Импортировать"
+      },
+      "about": {
+        "title": "Bulwark Webmail"
       }
     },
     "sidebar_apps": {

@@ -1211,6 +1211,9 @@
         "label": "Instellingen importeren",
         "description": "Upload instellingen vanuit JSON-bestand",
         "button": "Importeren"
+      },
+      "about": {
+        "title": "Bulwark Webmail"
       }
     },
     "sidebar_apps": {

@@ -1211,6 +1211,9 @@
         "label": "Importer les paramètres",
         "description": "Charger les paramètres depuis un fichier JSON",
         "button": "Importer"
+      },
+      "about": {
+        "title": "Bulwark Webmail"
       }
     },
     "sidebar_apps": {

@@ -1211,6 +1211,9 @@
         "label": "設定をインポート",
         "description": "JSONファイルから設定をアップロード",
         "button": "インポート"
+      },
+      "about": {
+        "title": "Bulwark Webmail"
       }
     },
     "sidebar_apps": {
