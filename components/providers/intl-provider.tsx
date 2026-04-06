@@ -11,6 +11,7 @@ import esMessages from '@/locales/es/common.json';
 import itMessages from '@/locales/it/common.json';
 import deMessages from '@/locales/de/common.json';
 import nlMessages from '@/locales/nl/common.json';
+import plMessages from '@/locales/pl/common.json';
 import ptMessages from '@/locales/pt/common.json';
 import ruMessages from '@/locales/ru/common.json';
 
@@ -24,6 +25,7 @@ const ALL_MESSAGES = {
   it: itMessages,
   de: deMessages,
   nl: nlMessages,
+  pl: plMessages,
   pt: ptMessages,
   ru: ruMessages,
 };

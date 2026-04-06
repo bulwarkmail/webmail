@@ -17,6 +17,7 @@ export function LanguageSwitcher({ className }: { className?: string }) {
     { value: 'it', label: 'Italiano' },
     { value: 'de', label: 'Deutsch' },
     { value: 'nl', label: 'Nederlands' },
+    { value: 'pl', label: 'Polski' },
     { value: 'pt', label: 'Português' },
     { value: 'ru', label: 'Русский' }
   ];
