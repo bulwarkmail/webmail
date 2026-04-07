@@ -1,8 +1,9 @@
 import { logger } from '@/lib/logger';
 import { discoverOAuth } from '@/lib/oauth/discovery';
 import type { OAuthMetadata } from '@/lib/oauth/discovery';
+import { readFileEnv } from '@/lib/read-file-env';
 
-const CLIENT_SECRET = process.env.OAUTH_CLIENT_SECRET || '';
+const CLIENT_SECRET = process.env.OAUTH_CLIENT_SECRET || readFileEnv(process.env.OAUTH_CLIENT_SECRET_FILE) || '';
 
 export function getRequiredConfig() {
   const clientId = process.env.OAUTH_CLIENT_ID;

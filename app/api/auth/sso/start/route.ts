@@ -7,13 +7,14 @@ import { getRequiredConfig } from '@/lib/oauth/token-exchange';
 import { discoverOAuth } from '@/lib/oauth/discovery';
 import { OAUTH_SCOPES } from '@/lib/oauth/tokens';
 import { getCookieOptions } from '@/lib/oauth/cookie-config';
+import { readFileEnv } from '@/lib/read-file-env';
 
 const SSO_PENDING_COOKIE = 'sso_pending';
 const SSO_PENDING_MAX_AGE = 300; // 5 minutes
 
 export async function POST(request: NextRequest) {
   try {
-    if (!process.env.SESSION_SECRET) {
+    if (!process.env.SESSION_SECRET && !readFileEnv(process.env.SESSION_SECRET_FILE)) {
       return NextResponse.json({ error: 'SESSION_SECRET is required for SSO' }, { status: 500 });
     }
 

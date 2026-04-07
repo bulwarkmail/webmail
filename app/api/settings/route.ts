@@ -6,6 +6,7 @@ import { sessionCookieName } from '@/lib/auth/session-cookie';
 import { readStalwartAuthContextFromStore } from '@/lib/stalwart/auth-context';
 import { saveUserSettings, loadUserSettings, deleteUserSettings } from '@/lib/settings-sync';
 import { configManager } from '@/lib/admin/config-manager';
+import { readFileEnv } from '@/lib/read-file-env';
 
 function classifyError(error: unknown): { message: string; status: number } {
   const code = (error as NodeJS.ErrnoException).code;
@@ -48,7 +49,7 @@ function classifyError(error: unknown): { message: string; status: number } {
 }
 
 function isEnabled(): boolean {
-  return process.env.SETTINGS_SYNC_ENABLED === 'true' && !!process.env.SESSION_SECRET;
+  return process.env.SETTINGS_SYNC_ENABLED === 'true' && (!!process.env.SESSION_SECRET || !!readFileEnv(process.env.SESSION_SECRET_FILE));
 }
 
 /** Strip trailing slashes so differently-formatted URLs still match. */

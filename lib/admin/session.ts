@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { createCipheriv, createDecipheriv, randomBytes, createHash } from 'node:crypto';
+import { readFileEnv } from '@/lib/read-file-env';
 import { ADMIN_SESSION_COOKIE, DEFAULT_ADMIN_SESSION_TTL } from './types';
 import type { AdminSessionPayload } from './types';
 
@@ -11,7 +12,7 @@ const TAG_LENGTH = 16;
 const MIN_SECRET_LENGTH = 32;
 
 function getKey(): Buffer {
-  const secret = process.env.SESSION_SECRET;
+  const secret = process.env.SESSION_SECRET || readFileEnv(process.env.SESSION_SECRET_FILE);
   if (!secret) throw new Error('SESSION_SECRET not configured');
   if (secret.length < MIN_SECRET_LENGTH) {
     throw new Error(

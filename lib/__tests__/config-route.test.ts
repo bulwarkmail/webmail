@@ -1,3 +1,4 @@
+import { unlink, writeFileSync } from "fs";
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 // Mock NextResponse before importing the route
@@ -24,6 +25,7 @@ describe('config API route', () => {
     delete process.env.OAUTH_CLIENT_ID;
     delete process.env.OAUTH_ISSUER_URL;
     delete process.env.SESSION_SECRET;
+    delete process.env.SESSION_SECRET_FILE;
     delete process.env.SETTINGS_SYNC_ENABLED;
     delete process.env.STALWART_FEATURES;
     delete process.env.DEV_MOCK_JMAP;
@@ -129,6 +131,19 @@ describe('config API route', () => {
     const config = await getConfig();
 
     expect(config.rememberMeEnabled).toBe(true);
+	});
+
+  it('should enable rememberMe when SESSION_SECRET_FILE is set', async () => {
+    writeFileSync('./session-secret', 'test-secret');
+    process.env.SESSION_SECRET_FILE = './session-secret';
+
+    const config = await getConfig();
+
+    unlink('./session-secret', (err) => {
+      if (err) throw err;
+    });
+
+    expect(config.rememberMeEnabled).toBe(true);
   });
 
   it('should enable settingsSync only when both SESSION_SECRET and SETTINGS_SYNC_ENABLED are set', async () => {
@@ -138,6 +153,23 @@ describe('config API route', () => {
 
     process.env.SESSION_SECRET = 'test-secret';
     const config2 = await getConfig();
+    expect(config2.settingsSyncEnabled).toBe(true);
+	});
+
+  it('should enable settingsSync only when both SESSION_SECRET_FILE and SETTINGS_SYNC_ENABLED are set', async () => {
+    process.env.SETTINGS_SYNC_ENABLED = 'true';
+    const config1 = await getConfig();
+    expect(config1.settingsSyncEnabled).toBe(false);
+
+    writeFileSync('./session-secret', 'test-secret');
+    process.env.SESSION_SECRET_FILE = './session-secret';
+
+    const config2 = await getConfig();
+
+    unlink('./session-secret', (err) => {
+      if (err) throw err;
+    });
+
     expect(config2.settingsSyncEnabled).toBe(true);
   });
 

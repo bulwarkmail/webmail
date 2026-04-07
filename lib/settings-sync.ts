@@ -3,13 +3,14 @@ import { readFile, writeFile, unlink, mkdir, rename } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { logger } from '@/lib/logger';
+import { readFileEnv } from '@/lib/read-file-env';
 
 const ALGORITHM = 'aes-256-gcm';
 const IV_LENGTH = 12;
 const TAG_LENGTH = 16;
 
 function getKey(): Buffer {
-  const secret = process.env.SESSION_SECRET;
+  const secret = process.env.SESSION_SECRET || readFileEnv(process.env.SESSION_SECRET_FILE);
   if (!secret) throw new Error('SESSION_SECRET not configured');
   return createHash('sha256').update(secret).digest();
 }
