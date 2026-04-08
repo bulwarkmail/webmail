@@ -19,6 +19,7 @@ import { useUIStore } from "@/stores/ui-store";
 import { useDeviceDetection } from "@/hooks/use-media-query";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
+import { useBrowserNavigation, type NavSnapshot } from "@/hooks/use-browser-navigation";
 import { debug } from "@/lib/debug";
 import { playNotificationSound } from "@/lib/notification-sound";
 import { cn } from "@/lib/utils";
@@ -142,6 +143,102 @@ export default function Home() {
     fetchTagCounts,
     fetchEmailContent,
   } = useEmailStore();
+
+  // Browser back / forward integration. The restore handler reads the
+  // latest values from a ref so we don't have to recreate the callback on
+  // every render (and so the popstate listener is never stale).
+  const navRestoreStateRef = useRef({
+    client,
+    emails,
+    mailboxes,
+    selectedMailbox,
+    selectedEmailId: selectedEmail?.id ?? null,
+    conversationThreadId: null as string | null,
+  });
+  navRestoreStateRef.current.client = client;
+  navRestoreStateRef.current.emails = emails;
+  navRestoreStateRef.current.mailboxes = mailboxes;
+  navRestoreStateRef.current.selectedMailbox = selectedMailbox;
+  navRestoreStateRef.current.selectedEmailId = selectedEmail?.id ?? null;
+  navRestoreStateRef.current.conversationThreadId = conversationThread?.threadId ?? null;
+
+  const handleNavRestore = useCallback(async (state: NavSnapshot) => {
+    const ctx = navRestoreStateRef.current;
+
+    // Restore sidebar overlay state.
+    setSidebarOpen(state.sidebarOpen);
+
+    // Restore composer visibility.
+    if (!state.composerOpen) {
+      setShowComposer(false);
+    }
+
+    // Derive the mobile view from the saved snapshot. The view is a
+    // function of which content the user is looking at: an email, a
+    // thread, the composer, or the bare list.
+    const derivedView: "list" | "viewer" =
+      state.emailId || state.threadId || state.composerOpen ? "viewer" : "list";
+    setActiveView(derivedView);
+
+    // Restore mailbox selection. selectMailbox clears the current email,
+    // which is fine because we re-apply the saved email below.
+    if (state.mailboxId && state.mailboxId !== ctx.selectedMailbox) {
+      selectMailbox(state.mailboxId);
+      if (ctx.client) {
+        try {
+          await fetchEmails(ctx.client, state.mailboxId);
+        } catch (error) {
+          debug.error('Failed to fetch emails on history restore:', error);
+        }
+      }
+    }
+
+    // Restore conversation thread (mobile only). We can clear it directly,
+    // but reopening requires the thread group; if the user pressed forward
+    // to return to a thread, we silently skip — back navigation always works.
+    if ((state.threadId ?? null) !== ctx.conversationThreadId) {
+      if (state.threadId === null) {
+        setConversationThread(null);
+        setConversationEmails([]);
+      }
+    }
+
+    // Restore email selection.
+    if (state.emailId !== ctx.selectedEmailId) {
+      if (state.emailId === null) {
+        selectEmail(null);
+      } else {
+        // Try the in-memory list first; the existing useEffect will fetch
+        // body content if it's missing.
+        const found = ctx.emails.find(e => e.id === state.emailId);
+        if (found) {
+          selectEmail(found);
+        } else if (ctx.client) {
+          // Email isn't in the current list (e.g. mailbox just changed).
+          // Fetch it directly.
+          try {
+            const mailbox = ctx.mailboxes.find(mb => mb.id === state.mailboxId);
+            const accountId = mailbox?.isShared ? mailbox.accountId : undefined;
+            const fullEmail = await ctx.client.getEmail(state.emailId, accountId);
+            if (fullEmail) selectEmail(fullEmail);
+          } catch (error) {
+            debug.error('Failed to fetch email on history restore:', error);
+          }
+        }
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useBrowserNavigation({
+    mailboxId: selectedMailbox,
+    emailId: selectedEmail?.id ?? null,
+    threadId: conversationThread?.threadId ?? null,
+    composerOpen: showComposer,
+    sidebarOpen,
+    onRestore: handleNavRestore,
+    enabled: isAuthenticated && mailboxes.length > 0,
+  });
 
   // Keyboard shortcuts handlers
   const keyboardHandlers = useMemo(() => ({
@@ -1018,9 +1115,16 @@ export default function Home() {
     }
   };
 
-  // Handle back navigation from viewer on mobile
+  // Handle back navigation from viewer on mobile.
+  // Delegate to the browser history stack so this button is equivalent to
+  // the OS back button / mouse back button — popstate then restores the
+  // previous snapshot via handleNavRestore. The viewer is only reachable
+  // from a state that pushed history, so back() always lands on an app entry.
   const handleMobileBack = () => {
-    // If in conversation view, clear it
+    if (typeof window !== 'undefined') {
+      window.history.back();
+      return;
+    }
     if (conversationThread) {
       setConversationThread(null);
       setConversationEmails([]);
