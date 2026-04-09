@@ -32,7 +32,7 @@ interface EmailListItemProps {
 
 export function EmailListItem({ email, selected, onClick, onContextMenu, onToggleStar, onMarkAsRead, onDelete, onArchive, onSetColorTag, onMarkAsSpam }: EmailListItemProps) {
   const t = useTranslations('email_viewer');
-  const { selectedEmailIds, toggleEmailSelection, selectRangeEmails, selectedMailbox, clearSelection } = useEmailStore();
+  const { selectedEmailIds, toggleEmailSelection, selectRangeEmails, selectedMailbox, mailboxes, clearSelection } = useEmailStore();
   const showPreview = useSettingsStore((state) => state.showPreview);
   const density = useSettingsStore((state) => state.density);
   const mailLayout = useSettingsStore((state) => state.mailLayout);
@@ -44,7 +44,10 @@ export function EmailListItem({ email, selected, onClick, onContextMenu, onToggl
   const isImportant = email.keywords?.["$important"];
   const isAnswered = email.keywords?.$answered;
   const isForwarded = email.keywords?.$forwarded;
-  const sender = email.from?.[0];
+  // In Sent/Drafts folders, show recipient instead of sender (which is always "me")
+  const currentMailboxRole = mailboxes.find(mb => mb.id === selectedMailbox)?.role;
+  const showRecipient = currentMailboxRole === 'sent' || currentMailboxRole === 'drafts';
+  const sender = showRecipient ? (email.to?.[0] ?? email.from?.[0]) : email.from?.[0];
   const isFocusedMailLayout = mailLayout === 'focus';
   const inlinePreview = showPreview && email.preview ? ` ${email.preview}` : '';
 

@@ -55,8 +55,11 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
     const isStarred = email.keywords?.$flagged;
     const isAnswered = email.keywords?.$answered;
     const isForwarded = email.keywords?.$forwarded;
-    const sender = email.from?.[0];
-    const { selectedMailbox, selectedEmailIds, toggleEmailSelection, selectRangeEmails, clearSelection } = useEmailStore();
+    const { selectedMailbox, mailboxes, selectedEmailIds, toggleEmailSelection, selectRangeEmails, clearSelection } = useEmailStore();
+    // In Sent/Drafts folders, show recipient instead of sender (which is always "me")
+    const currentMailboxRole = mailboxes.find(mb => mb.id === selectedMailbox)?.role;
+    const showRecipient = currentMailboxRole === 'sent' || currentMailboxRole === 'drafts';
+    const sender = showRecipient ? (email.to?.[0] ?? email.from?.[0]) : email.from?.[0];
     const emailKeywords = useSettingsStore((state) => state.emailKeywords);
     const density = useSettingsStore((state) => state.density);
     const mailLayout = useSettingsStore((state) => state.mailLayout);
@@ -339,7 +342,16 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
     const isFocusedMailLayout = mailLayout === 'focus';
     const inlinePreview = showPreview && latestEmail.preview ? ` ${latestEmail.preview}` : '';
 
-    const { selectedMailbox, selectedEmailIds, toggleEmailSelection, selectRangeEmails, clearSelection } = useEmailStore();
+    const { selectedMailbox, mailboxes, selectedEmailIds, toggleEmailSelection, selectRangeEmails, clearSelection } = useEmailStore();
+    // In Sent/Drafts folders, show recipient instead of sender (which is always "me")
+    const currentMailboxRole = mailboxes.find(mb => mb.id === selectedMailbox)?.role;
+    const showRecipient = currentMailboxRole === 'sent' || currentMailboxRole === 'drafts';
+    const displayNames = showRecipient
+      ? Array.from(new Set(
+          thread.emails.flatMap(e => (e.to ?? []).map(r => r.name || r.email.split('@')[0]))
+        )).slice(0, 4)
+      : participantNames;
+    const avatarPerson = showRecipient ? latestEmail.to?.[0] : latestEmail.from?.[0];
 
     const { dragHandlers, isDragging: isThreadDragging } = useEmailDrag({
       email: latestEmail,
@@ -522,8 +534,8 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
 
             {!isFocusedMailLayout && density !== 'extra-compact' && (
               <Avatar
-                name={latestEmail.from?.[0]?.name}
-                email={latestEmail.from?.[0]?.email}
+                name={avatarPerson?.name}
+                email={avatarPerson?.email}
                 size="md"
                 className="flex-shrink-0 shadow-sm"
               />
@@ -537,7 +549,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                       'w-32 shrink-0 truncate text-sm lg:w-44',
                       hasUnread ? 'font-semibold text-foreground' : 'font-medium text-foreground/80'
                     )}>
-                      {participantNames.join(', ')}
+                      {displayNames.join(', ')}
                     </span>
                     <span
                       className={cn(
@@ -591,7 +603,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                           ? "font-bold text-foreground"
                           : "font-medium text-muted-foreground"
                       )}>
-                        {participantNames.join(", ")}
+                        {displayNames.join(", ")}
                       </span>
                       <span
                         className={cn(
