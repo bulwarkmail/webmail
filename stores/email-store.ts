@@ -1241,7 +1241,18 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       // Get emails per page from settings
       const emailsPerPage = useSettingsStore.getState().emailsPerPage;
 
-      const result = await client.getEmails(jmapMailboxId, accountId, emailsPerPage, 0);
+      // Respect active search filters / query so that a push-triggered refresh
+      // does not silently replace a filtered list with an unfiltered one.
+      const { searchQuery, searchFilters } = get();
+      const hasFilters = !isFilterEmpty(searchFilters);
+
+      let result;
+      if (hasFilters || searchQuery) {
+        const filter = buildJMAPFilter(searchQuery, searchFilters, jmapMailboxId);
+        result = await client.advancedSearchEmails(filter, accountId, emailsPerPage, 0);
+      } else {
+        result = await client.getEmails(jmapMailboxId, accountId, emailsPerPage, 0);
+      }
 
       const currentEmails = get().emails;
 
