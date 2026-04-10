@@ -911,7 +911,6 @@ function CategoryComboBox({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState("");
-  const wrapperRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Parse current keywords from comma-separated string
@@ -946,17 +945,6 @@ function CategoryComboBox({
     onChange(next);
   }, [currentKeywords, onChange]);
 
-  // Close dropdown on outside click
-  useEffect(() => {
-    if (!isOpen) return;
-    const handler = (e: MouseEvent) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [isOpen]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
@@ -970,7 +958,7 @@ function CategoryComboBox({
   };
 
   return (
-    <div ref={wrapperRef} className="relative">
+    <div className="relative">
       {/* Keyword badges */}
       {currentKeywords.length > 0 && (
         <div className="flex flex-wrap gap-1.5 mb-2">
@@ -998,6 +986,7 @@ function CategoryComboBox({
         value={inputValue}
         onChange={(e) => { setInputValue(e.target.value); setIsOpen(true); }}
         onFocus={() => setIsOpen(true)}
+        onBlur={() => setIsOpen(false)}
         onKeyDown={handleKeyDown}
         placeholder={currentKeywords.length === 0 ? placeholder : ""}
       />
@@ -1005,7 +994,7 @@ function CategoryComboBox({
 
       {/* Dropdown */}
       {isOpen && (suggestions.length > 0 || canAddNew) && (
-        <div className="absolute left-0 right-0 top-[calc(100%-1.5rem)] mt-1 rounded-md border border-border bg-popover text-popover-foreground shadow-md z-50 max-h-48 overflow-y-auto py-1">
+        <div className="absolute left-0 right-0 top-[calc(100%-1.5rem)] mt-1 rounded-md border border-border bg-popover text-popover-foreground shadow-md z-50 max-h-48 overflow-y-auto py-1" onMouseDown={(e) => e.preventDefault()}>
           {suggestions.map(kw => (
             <button
               key={kw}
