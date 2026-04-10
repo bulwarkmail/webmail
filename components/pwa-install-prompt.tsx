@@ -8,12 +8,16 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
 
+const DISMISSED_KEY = "pwa-install-dismissed";
+
 export function PWAInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] =
     useState<BeforeInstallPromptEvent | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
 
   useEffect(() => {
+    if (localStorage.getItem(DISMISSED_KEY)) return;
+
     const handler = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
@@ -43,6 +47,11 @@ export function PWAInstallPrompt() {
     setShowPrompt(false);
   };
 
+  const handleDismissForever = () => {
+    localStorage.setItem(DISMISSED_KEY, "1");
+    setShowPrompt(false);
+  };
+
   if (!showPrompt || !deferredPrompt) {
     return null;
   }
@@ -69,18 +78,26 @@ export function PWAInstallPrompt() {
           <X className="w-4 h-4" />
         </button>
       </div>
-      <div className="flex gap-2">
+      <div className="flex flex-col gap-2">
+        <div className="flex gap-2">
+          <button
+            onClick={handleDismiss}
+            className="flex-1 px-3 py-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 bg-neutral-100 dark:bg-neutral-800 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors"
+          >
+            Not now
+          </button>
+          <button
+            onClick={handleInstall}
+            className="flex-1 px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded hover:bg-blue-700 transition-colors"
+          >
+            Install
+          </button>
+        </div>
         <button
-          onClick={handleDismiss}
-          className="flex-1 px-3 py-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 bg-neutral-100 dark:bg-neutral-800 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors"
+          onClick={handleDismissForever}
+          className="w-full text-xs text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors text-center"
         >
-          Not now
-        </button>
-        <button
-          onClick={handleInstall}
-          className="flex-1 px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded hover:bg-blue-700 transition-colors"
-        >
-          Install
+          Don&apos;t remind me again
         </button>
       </div>
     </div>
