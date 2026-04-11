@@ -312,7 +312,9 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       const { selectedKeyword } = get();
       const keywordFilter = selectedKeyword ? `$label:${selectedKeyword}` : undefined;
 
-      const result = await client.getEmails(jmapMailboxId, accountId, emailsPerPage, 0, keywordFilter);
+      // When filtering by tag, omit the mailbox constraint so emails across
+      // all folders that carry the tag are returned.
+      const result = await client.getEmails(selectedKeyword ? undefined : jmapMailboxId, accountId, emailsPerPage, 0, keywordFilter);
       set({
         emails: result.emails,
         hasMoreEmails: result.hasMore,
@@ -372,7 +374,8 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         // Use originalId for JMAP queries (shared mailboxes use namespaced IDs in the store)
         const jmapMailboxId = mailbox?.originalId || selectedMailbox;
 
-        result = await client.getEmails(jmapMailboxId, accountId, emailsPerPage, position, selectedKeyword ? `$label:${selectedKeyword}` : undefined);
+        // When filtering by tag, omit the mailbox constraint (same rationale as fetchEmails).
+        result = await client.getEmails(selectedKeyword ? undefined : jmapMailboxId, accountId, emailsPerPage, position, selectedKeyword ? `$label:${selectedKeyword}` : undefined);
       }
 
       // Use fresh state when merging to avoid overwriting concurrent updates
