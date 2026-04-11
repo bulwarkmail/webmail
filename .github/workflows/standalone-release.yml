@@ -1,0 +1,68 @@
+name: Publish Standalone Tarball on Release
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            arch: amd64
+          - os: ubuntu-24.04-arm
+            arch: arm64
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build standalone
+        run: npm run build
+
+      - name: Package tarball
+        env:
+          REF_NAME: ${{ github.ref_name }}
+          ARCH: ${{ matrix.arch }}
+        run: |
+          VERSION="${REF_NAME#v}"
+          TARBALL="bulwark-standalone-${VERSION}-linux-${ARCH}.tar.gz"
+
+          mkdir -p bulwark-standalone
+          cp -r .next/standalone/. bulwark-standalone/
+          cp -r .next/static bulwark-standalone/.next/static
+          cp -r public bulwark-standalone/public
+
+          tar -czf "$TARBALL" bulwark-standalone/
+          echo "TARBALL=$TARBALL" >> "$GITHUB_ENV"
+
+      - name: Upload release asset
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG_NAME: ${{ github.event.release.tag_name }}
+        run: gh release upload "$TAG_NAME" "$TARBALL" --clobber
+
+      - name: Upload artifact (workflow_dispatch)
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: standalone-${{ matrix.arch }}
+          path: ${{ env.TARBALL }}
+          retention-days: 7
