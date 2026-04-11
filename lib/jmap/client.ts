@@ -2818,6 +2818,27 @@ export class JMAPClient implements IJMAPClient {
     }
   }
 
+  async createAddressBook(name: string): Promise<AddressBook> {
+    const accountId = this.getContactsAccountId();
+    const response = await this.request([
+      ["AddressBook/set", {
+        accountId,
+        create: { "new-book": { name } },
+      }, "0"]
+    ], this.contactUsing());
+
+    if (response.methodResponses?.[0]?.[0] === "AddressBook/set") {
+      const result = response.methodResponses[0][1];
+      const created = result.created?.["new-book"];
+      if (created) {
+        return { id: created.id, name, ...created } as AddressBook;
+      }
+      const err = result.notCreated?.["new-book"];
+      throw new Error(err?.description || "Failed to create address book");
+    }
+    throw new Error("Failed to create address book");
+  }
+
   async updateAddressBook(addressBookId: string, updates: Partial<AddressBook>, targetAccountId?: string): Promise<void> {
     const accountId = targetAccountId || this.getContactsAccountId();
     // Only forward server-settable properties

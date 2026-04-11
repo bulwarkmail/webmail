@@ -178,6 +178,7 @@ export interface IJMAPClient {
   getContactsAccountId(): string;
   getAddressBooks(): Promise<AddressBook[]>;
   getAllAddressBooks(): Promise<AddressBook[]>;
+  createAddressBook(name: string): Promise<AddressBook>;
   updateAddressBook(addressBookId: string, updates: Partial<AddressBook>, targetAccountId?: string): Promise<void>;
   getContacts(addressBookId?: string): Promise<ContactCard[]>;
   getAllContacts(): Promise<ContactCard[]>;

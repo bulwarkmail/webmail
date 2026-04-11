@@ -893,7 +893,10 @@
         "remove": "Remove",
         "close": "Close",
         "invalid_email": "Please enter a valid email address",
-        "already_added": "This sender is already trusted"
+        "already_added": "This sender is already trusted",
+        "save_error": "Failed to save — check the Contacts debug log for details",
+        "use_address_book_label": "Sync with address book",
+        "use_address_book_description": "Store trusted senders in a dedicated \"Trusted Senders\" address book so they sync across all your devices"
       },
       "hover_actions": {
         "label": "Quick Hover Actions",
@@ -1197,7 +1200,9 @@
         "email": "Email Viewing",
         "email_description": "Email rendering, TNEF processing, and mark-as-read",
         "push": "Push Notifications",
-        "push_description": "Push notification setup and delivery"
+        "push_description": "Push notification setup and delivery",
+        "contacts": "Contacts & Address Books",
+        "contacts_description": "Contact sync, address book operations, and trusted senders"
       },
       "settings_sync": {
         "label": "Settings Sync",

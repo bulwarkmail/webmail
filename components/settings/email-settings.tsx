@@ -13,6 +13,7 @@ import { RadioGroup, SettingsSection, SettingItem, Select, ToggleSwitch } from '
 import { TrustedSendersModal } from '@/components/trusted-senders-modal';
 import { ChevronRight, AlertTriangle, FolderSync, Loader2, Mail, X } from 'lucide-react';
 import { usePolicyStore } from '@/stores/policy-store';
+import { useContactStore } from '@/stores/contact-store';
 
 const MAIL_LAYOUT_PREVIEW_ROWS = [
   { sender: 'Alice', subject: 'Quarterly roadmap', preview: 'The draft is ready for review.', selected: false },
@@ -131,14 +132,16 @@ export function EmailSettings() {
     hoverActionsMode,
     hoverActionsCorner,
     trustedSenders,
+    trustedSendersAddressBook,
     attachmentReminderEnabled,
     attachmentReminderKeywords,
     updateSetting,
   } = useSettingsStore();
+  const { trustedSenderEmails } = useContactStore();
 
   // Get count label for trusted senders button
   const getTrustedSendersCount = () => {
-    const count = trustedSenders.length;
+    const count = trustedSendersAddressBook ? trustedSenderEmails.length : trustedSenders.length;
     if (count === 0) return t('trusted_senders.count_zero');
     if (count === 1) return t('trusted_senders.count_one');
     return t('trusted_senders.count_other', { count });
@@ -570,6 +573,14 @@ export function EmailSettings() {
           <span className="text-sm text-foreground">{getTrustedSendersCount()}</span>
           <ChevronRight className="w-4 h-4 text-muted-foreground" />
         </button>
+      </SettingItem>
+
+      {/* Trusted Senders — address book storage */}
+      <SettingItem label={t('trusted_senders.use_address_book_label')} description={t('trusted_senders.use_address_book_description')}>
+        <ToggleSwitch
+          checked={trustedSendersAddressBook}
+          onChange={(checked) => updateSetting('trustedSendersAddressBook', checked)}
+        />
       </SettingItem>
 
       {/* Trusted Senders Modal */}

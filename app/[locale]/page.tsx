@@ -14,6 +14,7 @@ import { KeyboardShortcutsModal } from "@/components/keyboard-shortcuts-modal";
 import { useEmailStore } from "@/stores/email-store";
 import { useAuthStore, redirectToLogin } from "@/stores/auth-store";
 import { useSettingsStore } from "@/stores/settings-store";
+import { useContactStore } from "@/stores/contact-store";
 import { useIdentityStore } from "@/stores/identity-store";
 import { useUIStore } from "@/stores/ui-store";
 import { useDeviceDetection } from "@/hooks/use-media-query";
@@ -80,6 +81,15 @@ export default function Home() {
   const { isAuthenticated, client, logout, checkAuth, isLoading: authLoading, connectionLost, isRateLimited, rateLimitUntil } = useAuthStore();
   const { identities } = useIdentityStore();
   useIdentitySync();
+  const trustedSendersAddressBook = useSettingsStore((state) => state.trustedSendersAddressBook);
+  const { loadTrustedSendersBook, trustedSendersLoaded } = useContactStore();
+
+  // Load trusted senders address book when feature is enabled
+  useEffect(() => {
+    if (trustedSendersAddressBook && client && !trustedSendersLoaded) {
+      loadTrustedSendersBook(client);
+    }
+  }, [trustedSendersAddressBook, client, trustedSendersLoaded, loadTrustedSendersBook]);
 
   useEffect(() => {
     if (!isRateLimited || !rateLimitUntil) {

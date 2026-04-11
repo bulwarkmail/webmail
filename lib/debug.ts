@@ -104,7 +104,7 @@ export const debug = {
   }
 };
 
-const CATEGORY_KEYS = new Set<string>(['jmap', 'calendar', 'tasks', 'auth', 'filters', 'email', 'push']);
+const CATEGORY_KEYS = new Set<string>(['jmap', 'calendar', 'tasks', 'auth', 'filters', 'email', 'push', 'contacts']);
 function isCategoryKey(value: string): value is DebugCategory {
   return CATEGORY_KEYS.has(value);
 }

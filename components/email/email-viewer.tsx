@@ -888,6 +888,9 @@ export function EmailViewer({
   const attachmentPosition = useSettingsStore((state) => state.attachmentPosition);
   const addTrustedSender = useSettingsStore((state) => state.addTrustedSender);
   const isSenderTrusted = useSettingsStore((state) => state.isSenderTrusted);
+  const trustedSendersAddressBook = useSettingsStore((state) => state.trustedSendersAddressBook);
+  const isTrustedAddressBookSender = useContactStore((state) => state.isTrustedAddressBookSender);
+  const addToTrustedSendersBook = useContactStore((state) => state.addToTrustedSendersBook);
   const emailKeywords = useSettingsStore((state) => state.emailKeywords);
   const toolbarPosition = useSettingsStore((state) => state.toolbarPosition);
   const showToolbarLabels = useSettingsStore((state) => state.showToolbarLabels);
@@ -2311,9 +2314,11 @@ export function EmailViewer({
         // Use shared sanitization config as base (more secure)
         const sanitizeConfig = { ...EMAIL_SANITIZE_CONFIG };
 
-        // Check if sender is trusted
+        // Check if sender is trusted (localStorage list or address book)
         const senderEmail = email.from?.[0]?.email?.toLowerCase();
-        const senderIsTrusted = senderEmail ? isSenderTrusted(senderEmail) : false;
+        const senderIsTrusted = senderEmail
+          ? isSenderTrusted(senderEmail) || (trustedSendersAddressBook && isTrustedAddressBookSender(senderEmail))
+          : false;
 
         // Block external content based on policy:
         // 'allow' = never block, 'block' = always block (unless trusted), 'ask' = block until user allows or trusted
@@ -2420,7 +2425,7 @@ export function EmailViewer({
       html: '<p style="color: var(--color-muted-foreground);">No content available</p>',
       isHtml: false
     };
-  }, [email, allowExternalContent, hasBlockedContent, externalContentPolicy, isSenderTrusted, cidBlobUrls]);
+  }, [email, allowExternalContent, hasBlockedContent, externalContentPolicy, isSenderTrusted, isTrustedAddressBookSender, trustedSendersAddressBook, cidBlobUrls]);
 
   // Override email content with S/MIME decrypted content when available
   const effectiveEmailContent = useMemo(() => {
@@ -4565,7 +4570,11 @@ export function EmailViewer({
                         onClick={() => {
                           const senderEmail = email.from?.[0]?.email;
                           if (senderEmail) {
-                            addTrustedSender(senderEmail);
+                            if (trustedSendersAddressBook && client) {
+                              addToTrustedSendersBook(client, senderEmail).catch(console.error);
+                            } else {
+                              addTrustedSender(senderEmail);
+                            }
                             setAllowExternalContent(true);
                           }
                         }}

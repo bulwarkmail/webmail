@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useSettingsStore } from "@/stores/settings-store";
+import { useContactStore } from "@/stores/contact-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { isFilePreviewable } from "@/lib/file-preview";
 
@@ -84,6 +85,9 @@ export function ThreadConversationView({
   const externalContentPolicy = useSettingsStore((state) => state.externalContentPolicy);
   const addTrustedSender = useSettingsStore((state) => state.addTrustedSender);
   const isSenderTrusted = useSettingsStore((state) => state.isSenderTrusted);
+  const trustedSendersAddressBook = useSettingsStore((state) => state.trustedSendersAddressBook);
+  const isTrustedAddressBookSender = useContactStore((state) => state.isTrustedAddressBookSender);
+  const addToTrustedSendersBook = useContactStore((state) => state.addToTrustedSendersBook);
 
   // Track which emails are expanded (most recent by default)
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
@@ -164,7 +168,9 @@ export function ThreadConversationView({
         <div className="space-y-3" style={{ padding: 'var(--density-card-p)' }}>
           {emails.map((email, index) => {
             const senderEmail = email.from?.[0]?.email?.toLowerCase();
-            const senderIsTrusted = senderEmail ? isSenderTrusted(senderEmail) : false;
+            const senderIsTrusted = senderEmail
+              ? isSenderTrusted(senderEmail) || (trustedSendersAddressBook && isTrustedAddressBookSender(senderEmail))
+              : false;
             return (
               <EmailCard
                 key={email.id}
@@ -175,7 +181,11 @@ export function ThreadConversationView({
                 onToggleExpanded={() => toggleExpanded(email.id)}
                 onAllowExternal={() => toggleAllowExternal(email.id)}
                 onTrustSender={senderEmail ? () => {
-                  addTrustedSender(senderEmail);
+                  if (trustedSendersAddressBook && client) {
+                    addToTrustedSendersBook(client, senderEmail).catch(console.error);
+                  } else {
+                    addTrustedSender(senderEmail);
+                  }
                   toggleAllowExternal(email.id);
                 } : undefined}
                 onReply={onReply ? () => onReply(email) : undefined}
