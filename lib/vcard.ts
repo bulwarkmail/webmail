@@ -564,7 +564,7 @@ function generateSingleVCard(contact: ContactCard): string {
   const suffix = components.find(c => c.kind === "suffix")?.value || "";
   const additional = components.find(c => c.kind === "additional")?.value || "";
 
-  const fn = [prefix, given, additional, surname, suffix].filter(Boolean).join(" ");
+  const fn = [prefix, given, additional, surname, suffix].filter(Boolean).join(" ") || contact.name?.full || "";
   if (fn) {
     lines.push(`FN:${encodeValue(fn)}`);
     lines.push(`N:${encodeValue(surname)};${encodeValue(given)};${encodeValue(additional)};${encodeValue(prefix)};${encodeValue(suffix)}`);

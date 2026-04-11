@@ -5,15 +5,24 @@ import type { IJMAPClient } from '@/lib/jmap/client-interface';
 import { generateUUID } from '@/lib/utils';
 
 export function getContactDisplayName(contact: ContactCard): string {
-  if (contact.name?.components) {
-    const given = contact.name.components.find(c => c.kind === 'given')?.value || '';
-    const surname = contact.name.components.find(c => c.kind === 'surname')?.value || '';
-    const full = [given, surname].filter(Boolean).join(' ');
-    if (full) return full;
+  if (contact.name) {
+    // Try given + surname from components first
+    if (contact.name.components && contact.name.components.length > 0) {
+      const given = contact.name.components.find(c => c.kind === 'given')?.value || '';
+      const surname = contact.name.components.find(c => c.kind === 'surname')?.value || '';
+      const full = [given, surname].filter(Boolean).join(' ');
+      if (full) return full;
+    }
+    // Fall back to name.full (RFC 9553 — used by Stalwart and other JMAP servers)
+    if (contact.name.full) return contact.name.full;
   }
   if (contact.nicknames) {
     const nick = Object.values(contact.nicknames)[0];
     if (nick?.name) return nick.name;
+  }
+  if (contact.organizations) {
+    const org = Object.values(contact.organizations)[0];
+    if (org?.name) return org.name;
   }
   if (contact.emails) {
     const email = Object.values(contact.emails)[0];

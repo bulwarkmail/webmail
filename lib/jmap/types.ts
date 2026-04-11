@@ -203,12 +203,14 @@ export interface ContactCard {
 }
 
 export interface ContactName {
-  components: NameComponent[];
+  components?: NameComponent[];
   isOrdered?: boolean;
+  full?: string;
+  defaultSeparator?: string;
 }
 
 export interface NameComponent {
-  kind: 'given' | 'surname' | 'prefix' | 'suffix' | 'additional' | 'separator' | 'credential';
+  kind: 'given' | 'surname' | 'prefix' | 'suffix' | 'additional' | 'separator' | 'credential' | 'title' | 'middle' | 'given2' | 'surname2' | 'generation';
   value: string;
 }
 
