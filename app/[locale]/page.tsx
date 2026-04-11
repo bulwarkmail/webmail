@@ -61,6 +61,7 @@ export default function Home() {
   const [composerMode, setComposerMode] = useState<'compose' | 'reply' | 'replyAll' | 'forward'>('compose');
   const [composerDraftText, setComposerDraftText] = useState("");
   const [pendingDraft, setPendingDraft] = useState<ComposerDraftData | null>(null);
+  const [composerSessionId, setComposerSessionId] = useState(0);
   const { dialogProps: confirmDialogProps, confirm: confirmDialog } = useConfirmDialog();
   const { showAppsModal, inlineApp, loadedApps, handleManageApps, handleInlineApp, closeInlineApp, closeAppsModal } = useSidebarApps();
   const [initialCheckDone, setInitialCheckDone] = useState(() => useAuthStore.getState().isAuthenticated && !!useAuthStore.getState().client);
@@ -642,6 +643,16 @@ export default function Home() {
     const htmlBody = draft.htmlBody?.[0]?.partId && draft.bodyValues?.[draft.htmlBody[0].partId]
       ? draft.bodyValues[draft.htmlBody[0].partId].value
       : undefined;
+
+    // Try to find the identity that matches the draft's from address to preserve it
+    const draftFromEmail = draft.from?.[0]?.email;
+    const matchedIdentity = draftFromEmail
+      ? identities.find(id => id.email === draftFromEmail)
+      : null;
+
+    // Increment session ID to force the composer to remount with fresh state,
+    // even if it was already open (e.g. right-clicking a draft while composing).
+    setComposerSessionId(id => id + 1);
     setPendingDraft({
       to: draft.to?.map(a => a.email).filter(Boolean).join(', ') || '',
       cc: draft.cc?.map(a => a.email).filter(Boolean).join(', ') || '',
@@ -650,7 +661,7 @@ export default function Home() {
       body: htmlBody || bodyText,
       showCc: (draft.cc?.length || 0) > 0,
       showBcc: (draft.bcc?.length || 0) > 0,
-      selectedIdentityId: null,
+      selectedIdentityId: matchedIdentity?.id ?? null,
       subAddressTag: '',
       mode: 'compose',
       draftId: draft.id,
@@ -1662,8 +1673,9 @@ export default function Home() {
                 }}
               >
                 <EmailComposer
+                  key={composerSessionId}
                   mode={pendingDraft?.mode ?? composerMode}
-                  replyTo={pendingDraft?.replyTo ?? (selectedEmail ? {
+                  replyTo={pendingDraft !== null ? pendingDraft.replyTo : (selectedEmail ? {
                     from: selectedEmail.from,
                     replyToAddresses: selectedEmail.replyTo,
                     to: selectedEmail.to,
