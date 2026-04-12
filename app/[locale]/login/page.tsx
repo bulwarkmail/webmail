@@ -15,6 +15,7 @@ import { AlertCircle, Loader2, X, Info, Eye, EyeOff, LogIn, Sun, Moon, Monitor, 
 import { discoverOAuth, type OAuthMetadata } from "@/lib/oauth/discovery";
 import { generateCodeVerifier, generateCodeChallenge, generateState } from "@/lib/oauth/pkce";
 import { OAUTH_SCOPES } from "@/lib/oauth/tokens";
+import { apiPath } from "@/lib/api-path";
 
 const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || "0.0.0";
 const GIT_COMMIT = process.env.NEXT_PUBLIC_GIT_COMMIT || "unknown";
@@ -232,7 +233,7 @@ export default function LoginPage() {
     setOauthLoading(true);
     try {
       const redirectUri = `${window.location.origin}/${params.locale}/auth/callback`;
-      const res = await fetch('/api/auth/sso/start', {
+      const res = await fetch(apiPath('/api/auth/sso/start'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

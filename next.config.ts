@@ -18,15 +18,21 @@ try {
   // VERSION file not found
 }
 
+// Support serving under a sub-path (e.g. "/webmail") via NEXT_PUBLIC_BASE_PATH.
+// Must be set at build time — Next.js bakes it into the output.
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
+
 const nextConfig: NextConfig = {
   output: "standalone",
   allowedDevOrigins: ["192.168.1.51"],
   turbopack: {
     root: import.meta.dirname,
   },
+  ...(basePath ? { basePath } : {}),
   env: {
     NEXT_PUBLIC_GIT_COMMIT: gitCommitHash,
     NEXT_PUBLIC_APP_VERSION: appVersion,
+    NEXT_PUBLIC_BASE_PATH: basePath,
   },
 };
 

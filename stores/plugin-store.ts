@@ -15,6 +15,7 @@ import { loadPlugin, deactivatePlugin, setPluginStoreAccessor, setupAutoDisable 
 import { setSlotRegistrationBridge } from '@/lib/plugin-api';
 import { removeAllPluginHooks } from '@/lib/plugin-hooks';
 import { usePolicyStore } from '@/stores/policy-store';
+import { apiPath } from "@/lib/api-path";
 
 // ─── Slot State ──────────────────────────────────────────────
 
@@ -363,7 +364,7 @@ async function syncServerPlugins(
   set: (partial: Partial<PluginStoreState> | ((state: PluginStoreState) => Partial<PluginStoreState>)) => void,
 ): Promise<void> {
   try {
-    const res = await fetch('/api/plugins');
+    const res = await fetch(apiPath('/api/plugins'));
     if (!res.ok) return;
 
     const data: { plugins: ServerPluginInfo[] } = await res.json();
@@ -484,7 +485,7 @@ async function syncServerPlugins(
 
 async function downloadPluginBundle(pluginId: string): Promise<string | null> {
   try {
-    const res = await fetch(`/api/admin/plugins/${encodeURIComponent(pluginId)}/bundle`);
+    const res = await fetch(apiPath(`/api/admin/plugins/${encodeURIComponent(pluginId)}/bundle`));
     if (!res.ok) return null;
     return await res.text();
   } catch {

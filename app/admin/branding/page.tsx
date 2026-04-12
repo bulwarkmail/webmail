@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Save, Loader2, RotateCcw, ImageIcon, Upload, Trash2 } from 'lucide-react';
+import { apiPath } from "@/lib/api-path";
 
 interface ConfigEntry {
   value: unknown;
@@ -38,7 +39,7 @@ export default function AdminBrandingPage() {
 
   async function fetchConfig() {
     setLoading(true);
-    const res = await fetch('/api/admin/config');
+    const res = await fetch(apiPath('/api/admin/config'));
     if (res.ok) setConfig(await res.json());
     setLoading(false);
   }
@@ -58,7 +59,7 @@ export default function AdminBrandingPage() {
     setSaving(true);
     setMessage(null);
 
-    const res = await fetch('/api/admin/config', {
+    const res = await fetch(apiPath('/api/admin/config'), {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(edits),
@@ -83,7 +84,7 @@ export default function AdminBrandingPage() {
     formData.append('file', file);
     formData.append('slot', slot);
 
-    const res = await fetch('/api/admin/branding', {
+    const res = await fetch(apiPath('/api/admin/branding'), {
       method: 'POST',
       body: formData,
     });
@@ -112,7 +113,7 @@ export default function AdminBrandingPage() {
   async function handleDeleteUpload(slot: string) {
     setMessage(null);
 
-    const res = await fetch('/api/admin/branding', {
+    const res = await fetch(apiPath('/api/admin/branding'), {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ slot }),
@@ -133,7 +134,7 @@ export default function AdminBrandingPage() {
   }
 
   async function handleRevert(key: string) {
-    const res = await fetch('/api/admin/config', {
+    const res = await fetch(apiPath('/api/admin/config'), {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ key }),

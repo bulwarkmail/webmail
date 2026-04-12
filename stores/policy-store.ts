@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { SettingsPolicy, FeatureGates, SettingRestriction, ThemePolicy } from '@/lib/admin/types';
 import { DEFAULT_POLICY, DEFAULT_THEME_POLICY } from '@/lib/admin/types';
+import { apiPath } from "@/lib/api-path";
 
 interface PolicyState {
   policy: SettingsPolicy;
@@ -25,7 +26,7 @@ export const usePolicyStore = create<PolicyState>()((set, get) => ({
 
   fetchPolicy: async () => {
     try {
-      const res = await fetch('/api/admin/policy');
+      const res = await fetch(apiPath('/api/admin/policy'));
       if (res.ok) {
         const data = await res.json();
         set({ policy: data, loaded: true });

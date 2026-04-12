@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { usePolicyStore } from '@/stores/policy-store';
+import { apiPath } from "@/lib/api-path";
 
 interface ConfigData {
   appName: string;
@@ -50,7 +51,7 @@ export async function fetchConfig(): Promise<ConfigData> {
   }
 
   // Start a new fetch
-  configPromise = fetch('/api/config')
+  configPromise = fetch(apiPath('/api/config'))
     .then((res) => {
       if (!res.ok) {
         throw new Error('Failed to fetch config');

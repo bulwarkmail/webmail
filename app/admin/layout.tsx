@@ -27,6 +27,7 @@ import { useThemeStore } from '@/stores/theme-store';
 import { getActiveAccountSlotHeaders } from '@/lib/auth/active-account-slot';
 
 import { useAuthStore } from '@/stores/auth-store';
+import { apiPath } from "@/lib/api-path";
 
 const NAV_GROUPS = [
   {
@@ -85,7 +86,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   async function checkAuth() {
     try {
       const jmapHeaders = getJmapHeaders();
-      const res = await fetch('/api/admin/auth', { headers: jmapHeaders });
+      const res = await fetch(apiPath('/api/admin/auth'), { headers: jmapHeaders });
       const data = await res.json();
 
       const stalwartAdmin = data.stalwartAdmin === true;
@@ -104,7 +105,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       // If Stalwart admin but not yet authenticated, auto-login
       if (stalwartAdmin) {
-        const loginRes = await fetch('/api/admin/auth', {
+        const loginRes = await fetch(apiPath('/api/admin/auth'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', ...jmapHeaders },
           body: JSON.stringify({ stalwartAuth: true }),
@@ -122,7 +123,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   async function handleLogout() {
-    await fetch('/api/admin/auth', { method: 'DELETE' });
+    await fetch(apiPath('/api/admin/auth'), { method: 'DELETE' });
     router.replace('/admin/login');
   }
 
