@@ -34,8 +34,16 @@ export function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const isAdminRoute = pathname === '/admin' || pathname.startsWith('/admin/');
 
+  // When localePrefix is 'always', paths that already have a locale prefix
+  // (e.g. /en/settings) should not be re-processed by the intl middleware —
+  // doing so can trigger rewrite loops when combined with a proxy basePath.
+  const locales = routing.locales as readonly string[];
+  const hasLocalePrefix = locales.some(
+    (l) => pathname === `/${l}` || pathname.startsWith(`/${l}/`)
+  );
+
   let intlResponse: ReturnType<typeof intlMiddleware> | null = null;
-  if (!isAdminRoute) {
+  if (!isAdminRoute && !hasLocalePrefix) {
     try {
       intlResponse = intlMiddleware(request);
     } catch (error) {
