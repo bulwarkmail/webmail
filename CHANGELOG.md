@@ -1,5 +1,29 @@
 # Changelog
 
+## 1.4.13 (2026-04-12)
+
+### Features
+
+- **Contacts**: Store trusted senders in a dedicated JMAP address book (#176)
+- **Email**: Warn on send when attachment keyword found but no file attached (#172)
+- **Email**: Enable keyword reordering (#174) and multi-tag support per email (#173)
+- **PWA**: Add "don't remind me again" option to install prompt
+- **Auth**: Add `SESSION_SECRET_FILE` and `OAUTH_CLIENT_SECRET_FILE` environment variable support
+- **Plugins**: Add `onAvatarResolve` plugin hook
+- **Docker**: Publish main and dev branches as separate GHCR packages
+
+### Fixes
+
+- **Email**: Style links in plain text emails
+- **Email**: Seed list history entry when app initializes on an email view
+- **Email**: Remount composer on draft edit and preserve identity (#60)
+- **Contacts**: Display contact names stored in `name.full` (#179)
+- **Contacts**: Fix category dropdown blocking Save button in contact form (#177)
+- **Contacts**: Resolve TS error from optional `name.components` in vCard parser
+- **Search**: Search all folders when filtering emails by tag (#175)
+- **Auth**: Include mount prefix in SSO redirect URI when app is served under a subpath
+- **PWA**: Correct PWA icons with proper sizing, transparency, and dark/light mode support
+
 ## 1.4.12 (2026-04-09)
 
 Thank you for your donations:
