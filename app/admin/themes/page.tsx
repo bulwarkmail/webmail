@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { Upload, Trash2, Power, PowerOff, Loader2, Palette, Save, Shield, Lock, LockOpen } from 'lucide-react';
 import type { SettingsPolicy } from '@/lib/admin/types';
 import { DEFAULT_POLICY, DEFAULT_THEME_POLICY } from '@/lib/admin/types';
+import { apiFetch } from '@/lib/browser-navigation';
 
 const BUILTIN_THEME_OPTIONS = [
   { id: 'builtin-nord', name: 'Nord' },
@@ -38,7 +39,7 @@ export default function AdminThemesPage() {
 
   async function fetchPolicy() {
     try {
-      const res = await fetch('/api/admin/policy');
+      const res = await apiFetch('/api/admin/policy');
       if (res.ok) {
         const data = await res.json();
         setPolicy({
@@ -122,7 +123,7 @@ export default function AdminThemesPage() {
     setSavingPolicy(true);
     setMessage(null);
     try {
-      const res = await fetch('/api/admin/policy', {
+      const res = await apiFetch('/api/admin/policy', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(policy),
@@ -144,7 +145,7 @@ export default function AdminThemesPage() {
   async function fetchThemes() {
     setLoading(true);
     try {
-      const res = await fetch('/api/admin/themes');
+      const res = await apiFetch('/api/admin/themes');
       if (res.ok) setThemes(await res.json());
     } finally {
       setLoading(false);
@@ -162,7 +163,7 @@ export default function AdminThemesPage() {
     formData.append('file', file);
 
     try {
-      const res = await fetch('/api/admin/themes', {
+      const res = await apiFetch('/api/admin/themes', {
         method: 'POST',
         body: formData,
       });
@@ -185,7 +186,7 @@ export default function AdminThemesPage() {
 
   async function toggleTheme(id: string, enabled: boolean) {
     setMessage(null);
-    const res = await fetch('/api/admin/themes', {
+    const res = await apiFetch('/api/admin/themes', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, enabled }),
@@ -204,7 +205,7 @@ export default function AdminThemesPage() {
     const body: Record<string, unknown> = { id, forceEnabled };
     if (forceEnabled) body.enabled = true;
 
-    const res = await fetch('/api/admin/themes', {
+    const res = await apiFetch('/api/admin/themes', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
@@ -237,7 +238,7 @@ export default function AdminThemesPage() {
     }
     let failed = 0;
     for (const t of disabled) {
-      const res = await fetch('/api/admin/themes', {
+      const res = await apiFetch('/api/admin/themes', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: t.id, enabled: true }),
@@ -262,7 +263,7 @@ export default function AdminThemesPage() {
     }
     let failed = 0;
     for (const t of enabled) {
-      const res = await fetch('/api/admin/themes', {
+      const res = await apiFetch('/api/admin/themes', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: t.id, enabled: false }),
@@ -282,7 +283,7 @@ export default function AdminThemesPage() {
     if (!confirm(`Remove theme "${name}"? This cannot be undone.`)) return;
 
     setMessage(null);
-    const res = await fetch('/api/admin/themes', {
+    const res = await apiFetch('/api/admin/themes', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id }),

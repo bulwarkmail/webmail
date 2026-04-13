@@ -7,6 +7,7 @@ import { normalizeAllDayDuration } from '@/lib/calendar-utils';
 import { sanitizeOutgoingCalendarEventData } from '@/lib/calendar-event-normalization';
 import { expandRecurringEvents } from '@/lib/recurrence-expansion';
 import { generateUUID } from '@/lib/utils';
+import { apiFetch } from '@/lib/browser-navigation';
 
 export type CalendarViewMode = 'month' | 'week' | 'day' | 'agenda' | 'tasks';
 
@@ -809,7 +810,7 @@ export const useCalendarStore = create<CalendarStore>()(
         if (!sub) return;
 
         try {
-          const response = await fetch('/api/fetch-ical', {
+          const response = await apiFetch('/api/fetch-ical', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ url: sub.url }),

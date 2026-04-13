@@ -6,6 +6,7 @@ import { injectThemeCSS, removeThemeCSS, sanitizeThemeCSS } from '@/lib/theme-lo
 import { extractTheme } from '@/lib/plugin-validator';
 import { BUILTIN_THEMES } from '@/lib/builtin-themes';
 import { usePolicyStore } from '@/stores/policy-store';
+import { apiFetch } from '@/lib/browser-navigation';
 
 type Theme = 'light' | 'dark' | 'system';
 
@@ -299,7 +300,7 @@ export const useThemeStore = create<ThemeState>()(
 
         themeSyncPromise = (async () => {
           try {
-            const res = await fetch('/api/plugins');
+            const res = await apiFetch('/api/plugins');
             if (!res.ok) return;
 
             const data: { themes: ServerThemeInfo[] } = await res.json();
@@ -480,7 +481,7 @@ function dedupeInstalledThemes(themes: InstalledTheme[]): InstalledTheme[] {
 
 async function downloadThemeCSS(themeId: string): Promise<string | null> {
   try {
-    const res = await fetch(`/api/admin/themes/${encodeURIComponent(themeId)}/css`);
+    const res = await apiFetch(`/api/admin/themes/${encodeURIComponent(themeId)}/css`);
     if (!res.ok) return null;
     return await res.text();
   } catch {

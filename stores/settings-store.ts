@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 import { useThemeStore } from './theme-store';
 import { useLocaleStore } from './locale-store';
 import type { NotificationSoundChoice } from '@/lib/notification-sound';
+import { apiFetch } from '@/lib/browser-navigation';
 
 // Use console directly to avoid circular dependency with lib/debug.ts
 // (debug.ts imports useSettingsStore for debugMode check)
@@ -611,7 +612,7 @@ export const useSettingsStore = create<SettingsState>()(
       loadFromServer: async (username: string, serverUrl: string) => {
         try {
           syncLog('Loading settings from server for', username);
-          const res = await fetch('/api/settings', {
+          const res = await apiFetch('/api/settings', {
             headers: {
               'x-settings-username': username,
               'x-settings-server': serverUrl,
@@ -747,7 +748,7 @@ if (typeof window !== 'undefined') {
   const syncToServer = async (retries = 1): Promise<void> => {
     const settings = JSON.parse(useSettingsStore.getState().exportSettings());
     syncLog('Syncing settings to server...');
-    const res = await fetch('/api/settings', {
+    const res = await apiFetch('/api/settings', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username: syncUsername, serverUrl: syncServerUrl, settings }),

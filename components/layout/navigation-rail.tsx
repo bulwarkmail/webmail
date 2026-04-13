@@ -22,6 +22,7 @@ import { getInitials } from "@/lib/account-utils";
 import { cn, formatFileSize } from "@/lib/utils";
 import { PluginSlot } from "@/components/plugins/plugin-slot";
 import { KeyboardShortcutsModal } from "@/components/keyboard-shortcuts-modal";
+import { apiFetch } from "@/lib/browser-navigation";
 
 interface NavItem {
   id: string;
@@ -222,13 +223,13 @@ export function NavigationRail({
     let cancelled = false;
     const headers = getActiveAccountSlotHeaders();
     if (!headers['X-JMAP-Cookie-Slot']) return;
-    fetch('/api/admin/stalwart-check', { headers })
+    apiFetch('/api/admin/stalwart-check', { headers })
       .then(res => res.json())
       .then(data => {
         if (!cancelled && data.isStalwartAdmin) {
           setIsStalwartAdmin(true);
           // Pre-create admin session so /admin works even after full page navigation
-          fetch('/api/admin/auth', {
+          apiFetch('/api/admin/auth', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', ...headers },
             body: JSON.stringify({ stalwartAuth: true }),

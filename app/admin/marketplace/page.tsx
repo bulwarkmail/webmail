@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { Search, Download, Check, Loader2, Store, Puzzle, SwatchBook, Star, Filter } from 'lucide-react';
+import { apiFetch } from '@/lib/browser-navigation';
 
 interface Extension {
   slug: string;
@@ -57,7 +58,7 @@ export default function AdminMarketplacePage() {
       params.set('perPage', String(perPage));
       params.set('sort', 'newest');
 
-      const res = await fetch(`/api/admin/marketplace?${params}`);
+      const res = await apiFetch(`/api/admin/marketplace?${params}`);
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         setError(data.error || 'Failed to connect to extension directory');
@@ -95,7 +96,7 @@ export default function AdminMarketplacePage() {
     setMessage(null);
 
     try {
-      const res = await fetch('/api/admin/marketplace', {
+      const res = await apiFetch('/api/admin/marketplace', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
