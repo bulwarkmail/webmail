@@ -12,6 +12,7 @@ import { cn, formatDateTime } from '@/lib/utils';
 import { ICalImportModal } from '@/components/calendar/ical-import-modal';
 import { ICalSubscriptionModal } from '@/components/calendar/ical-subscription-modal';
 import { useSettingsStore } from '@/stores/settings-store';
+import { apiFetch } from '@/lib/browser-navigation';
 
 const CALENDAR_COLORS = [
   "#3b82f6", // blue
@@ -202,7 +203,7 @@ export function CalendarManagementSettings() {
 
     const controller = new AbortController();
 
-    fetch('/api/caldav/discover', {
+    apiFetch('/api/caldav/discover', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -12,7 +12,7 @@ import { useAccountStore } from './account-store';
 import { fetchConfig } from '@/hooks/use-config';
 import { debug } from '@/lib/debug';
 import { generateAccountId } from '@/lib/account-utils';
-import { replaceWindowLocation, getPathPrefix, getLocaleFromPath } from '@/lib/browser-navigation';
+import { replaceWindowLocation, getPathPrefix, getLocaleFromPath, apiFetch } from '@/lib/browser-navigation';
 import { notifyParent } from '@/lib/iframe-bridge';
 import { snapshotAccount, restoreAccount, clearAllStores, evictAccount, evictAll } from '@/lib/account-state-manager';
 import type { Identity } from '@/lib/jmap/types';
@@ -95,7 +95,7 @@ async function syncStalwartAuthContext(
   slot: number,
 ): Promise<void> {
   try {
-    const response = await fetch('/api/auth/stalwart-context', {
+    const response = await apiFetch('/api/auth/stalwart-context', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ serverUrl, username, authHeader, slot }),
@@ -403,7 +403,7 @@ export const useAuthStore = create<AuthState>()(
 
           if (totp) {
             try {
-              const tokenRes = await fetch('/api/auth/totp-token-exchange', {
+              const tokenRes = await apiFetch('/api/auth/totp-token-exchange', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ serverUrl, username, password: effectivePassword, slot: cookieSlot }),
@@ -470,7 +470,7 @@ export const useAuthStore = create<AuthState>()(
           if (rememberMe && !upgradedToOAuth) {
             // For basic auth (no TOTP or TOTP upgrade failed), store encrypted credentials
             try {
-              const res = await fetch(`/api/auth/session?slot=${cookieSlot}`, {
+              const res = await apiFetch(`/api/auth/session?slot=${cookieSlot}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ serverUrl, username, password: effectivePassword, slot: cookieSlot }),
@@ -607,7 +607,7 @@ export const useAuthStore = create<AuthState>()(
             : 0;
           const slot = pendingSlot >= 0 && pendingSlot <= 4 ? pendingSlot : accountStore.getNextCookieSlot();
 
-          const tokenRes = await fetch(`/api/auth/token?slot=${slot}`, {
+          const tokenRes = await apiFetch(`/api/auth/token?slot=${slot}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ code, code_verifier: codeVerifier, redirect_uri: redirectUri, slot }),
@@ -718,7 +718,7 @@ export const useAuthStore = create<AuthState>()(
 
         try {
           // Server-side SSO: the server holds the PKCE verifier in an encrypted cookie
-          const ssoRes = await fetch('/api/auth/sso/complete', {
+          const ssoRes = await apiFetch('/api/auth/sso/complete', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
@@ -841,7 +841,7 @@ export const useAuthStore = create<AuthState>()(
 
         const promise = (async () => {
           try {
-            const res = await fetch(`/api/auth/token?slot=${slot}`, { method: 'PUT' });
+            const res = await apiFetch(`/api/auth/token?slot=${slot}`, { method: 'PUT' });
 
             if (!res.ok) {
               notifyParent('sso:session-expired');
@@ -963,9 +963,9 @@ export const useAuthStore = create<AuthState>()(
           }
 
           // Background cookie cleanup for the removed account
-          fetch(`/api/auth/session?slot=${slot}`, { method: 'DELETE', keepalive: true }).catch(() => {});
+          apiFetch(`/api/auth/session?slot=${slot}`, { method: 'DELETE', keepalive: true }).catch(() => {});
           if (wasOAuth) {
-            fetch(`/api/auth/token?slot=${slot}`, { method: 'DELETE', keepalive: true }).catch(() => {});
+            apiFetch(`/api/auth/token?slot=${slot}`, { method: 'DELETE', keepalive: true }).catch(() => {});
           }
           return;
         }
@@ -977,9 +977,9 @@ export const useAuthStore = create<AuthState>()(
 
         // Background cookie/token cleanup — keepalive ensures completion during navigation
         if (!wasDemoMode) {
-          fetch(`/api/auth/session?slot=${slot}`, { method: 'DELETE', keepalive: true }).catch(() => {});
+          apiFetch(`/api/auth/session?slot=${slot}`, { method: 'DELETE', keepalive: true }).catch(() => {});
           if (wasOAuth) {
-            fetch(`/api/auth/token?slot=${slot}`, { method: 'DELETE', keepalive: true }).catch(() => {});
+            apiFetch(`/api/auth/token?slot=${slot}`, { method: 'DELETE', keepalive: true }).catch(() => {});
           }
         }
 
@@ -1006,8 +1006,8 @@ export const useAuthStore = create<AuthState>()(
         }
 
         // Background cookie/token cleanup
-        fetch('/api/auth/session?all=true', { method: 'DELETE', keepalive: true }).catch(() => {});
-        fetch('/api/auth/token?all=true', { method: 'DELETE', keepalive: true }).catch(() => {});
+        apiFetch('/api/auth/session?all=true', { method: 'DELETE', keepalive: true }).catch(() => {});
+        apiFetch('/api/auth/token?all=true', { method: 'DELETE', keepalive: true }).catch(() => {});
 
         redirectToLogin();
       },
@@ -1041,7 +1041,7 @@ export const useAuthStore = create<AuthState>()(
           // Client not connected — try to restore
           try {
             if (targetAccount.authMode === 'oauth') {
-              const res = await fetch(`/api/auth/token?slot=${targetAccount.cookieSlot}`, { method: 'PUT' });
+              const res = await apiFetch(`/api/auth/token?slot=${targetAccount.cookieSlot}`, { method: 'PUT' });
               if (res.ok) {
                 const { access_token, expires_in } = await res.json();
                 const refreshFn = get().refreshAccessToken;
@@ -1058,7 +1058,7 @@ export const useAuthStore = create<AuthState>()(
                 );
               }
             } else if (targetAccount.authMode === 'basic' && targetAccount.rememberMe) {
-              const res = await fetch(`/api/auth/session?slot=${targetAccount.cookieSlot}`, { method: 'PUT' });
+              const res = await apiFetch(`/api/auth/session?slot=${targetAccount.cookieSlot}`, { method: 'PUT' });
               if (res.ok) {
                 const { serverUrl, username, password } = await res.json();
                 targetClient = new JMAPClient(serverUrl, username, password);
@@ -1107,7 +1107,7 @@ export const useAuthStore = create<AuthState>()(
           // Cannot restore — remove the stale account and redirect to login
           evictAccount(accountId);
           accountStore.removeAccount(accountId);
-          fetch(`/api/auth/session?slot=${targetAccount.cookieSlot}`, { method: 'DELETE' }).catch(() => {});
+          apiFetch(`/api/auth/session?slot=${targetAccount.cookieSlot}`, { method: 'DELETE' }).catch(() => {});
 
           // Restore the previous account if still available
           if (state.activeAccountId && state.activeAccountId !== accountId) {
@@ -1210,7 +1210,7 @@ export const useAuthStore = create<AuthState>()(
 
             try {
               if (account.authMode === 'oauth') {
-                const res = await fetch(`/api/auth/token?slot=${account.cookieSlot}`, { method: 'PUT' });
+                const res = await apiFetch(`/api/auth/token?slot=${account.cookieSlot}`, { method: 'PUT' });
                 if (res.ok) {
                   const { access_token, expires_in } = await res.json();
                   const refreshFn = get().refreshAccessToken;
@@ -1225,7 +1225,7 @@ export const useAuthStore = create<AuthState>()(
                   throw new Error(`Token refresh failed: ${res.status}`);
                 }
               } else if (account.authMode === 'basic' && account.rememberMe) {
-                const res = await fetch(`/api/auth/session?slot=${account.cookieSlot}`, { method: 'PUT' });
+                const res = await apiFetch(`/api/auth/session?slot=${account.cookieSlot}`, { method: 'PUT' });
                 if (res.ok) {
                   const { serverUrl, username, password } = await res.json();
                   const client = new JMAPClient(serverUrl, username, password);
@@ -1255,7 +1255,7 @@ export const useAuthStore = create<AuthState>()(
               // again rather than seeing a stale error entry forever.
               evictAccount(account.id);
               accountStore.removeAccount(account.id);
-              fetch(`/api/auth/session?slot=${account.cookieSlot}`, { method: 'DELETE' }).catch(() => {});
+              apiFetch(`/api/auth/session?slot=${account.cookieSlot}`, { method: 'DELETE' }).catch(() => {});
             }
           }
 
@@ -1417,7 +1417,7 @@ export const useAuthStore = create<AuthState>()(
           if (state.authMode === 'basic') {
             set({ isLoading: true, isRateLimited: false, rateLimitUntil: null });
             try {
-              const res = await fetch('/api/auth/session', { method: 'PUT' });
+              const res = await apiFetch('/api/auth/session', { method: 'PUT' });
               if (res.ok) {
                 const data = await res.json();
                 if (!data.serverUrl || !data.username || !data.password) {

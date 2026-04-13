@@ -26,6 +26,7 @@ import {
 } from './plugin-hooks';
 import { toast as appToast } from '@/stores/toast-store';
 import { useAuthStore } from '@/stores/auth-store';
+import { apiFetch } from '@/lib/browser-navigation';
 
 // --- Permission helpers --------------------------------------
 
@@ -682,20 +683,20 @@ export function createPluginAPI(plugin: InstalledPlugin): PluginAPI {
     admin: {
       getConfig: async (key: string) => {
         requirePermission(plugin, 'admin:config');
-        const res = await fetch(`/api/admin/plugins/${encodeURIComponent(plugin.id)}/config`);
+        const res = await apiFetch(`/api/admin/plugins/${encodeURIComponent(plugin.id)}/config`);
         if (!res.ok) return null;
         const data = await res.json();
         return data[key] ?? null;
       },
       getAllConfig: async () => {
         requirePermission(plugin, 'admin:config');
-        const res = await fetch(`/api/admin/plugins/${encodeURIComponent(plugin.id)}/config`);
+        const res = await apiFetch(`/api/admin/plugins/${encodeURIComponent(plugin.id)}/config`);
         if (!res.ok) return {};
         return res.json();
       },
       setConfig: async (key: string, value: unknown) => {
         requirePermission(plugin, 'admin:config');
-        await fetch(`/api/admin/plugins/${encodeURIComponent(plugin.id)}/config`, {
+        await apiFetch(`/api/admin/plugins/${encodeURIComponent(plugin.id)}/config`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ key, value }),
@@ -703,7 +704,7 @@ export function createPluginAPI(plugin: InstalledPlugin): PluginAPI {
       },
       deleteConfig: async (key: string) => {
         requirePermission(plugin, 'admin:config');
-        await fetch(`/api/admin/plugins/${encodeURIComponent(plugin.id)}/config`, {
+        await apiFetch(`/api/admin/plugins/${encodeURIComponent(plugin.id)}/config`, {
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ key }),

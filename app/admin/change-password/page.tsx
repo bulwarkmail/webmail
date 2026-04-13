@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Lock } from 'lucide-react';
+import { apiFetch } from '@/lib/browser-navigation';
 
 export default function ChangePasswordPage() {
   const router = useRouter();
@@ -28,7 +29,7 @@ export default function ChangePasswordPage() {
     }
 
     setLoading(true);
-    const res = await fetch('/api/admin/change-password', {
+    const res = await apiFetch('/api/admin/change-password', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ currentPassword, newPassword }),

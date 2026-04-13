@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { SettingsSection, SettingItem, ToggleSwitch } from '@/components/settings/settings-section';
 import type { AuditEntry } from '@/lib/admin/types';
+import { apiFetch } from '@/lib/browser-navigation';
 
 interface AdminStatus {
   enabled: boolean;
@@ -38,13 +39,13 @@ export default function AdminDashboardPage() {
 
   async function fetchDashboardData() {
     const [statusRes, auditRes, configRes, adminConfigRes, pluginRes, themeRes, policyRes] = await Promise.all([
-      fetch('/api/admin/auth'),
-      fetch('/api/admin/audit?limit=10'),
-      fetch('/api/config'),
-      fetch('/api/admin/config'),
-      fetch('/api/admin/plugins').catch(() => null),
-      fetch('/api/admin/themes').catch(() => null),
-      fetch('/api/admin/policy').catch(() => null),
+      apiFetch('/api/admin/auth'),
+      apiFetch('/api/admin/audit?limit=10'),
+      apiFetch('/api/config'),
+      apiFetch('/api/admin/config'),
+      apiFetch('/api/admin/plugins').catch(() => null),
+      apiFetch('/api/admin/themes').catch(() => null),
+      apiFetch('/api/admin/policy').catch(() => null),
     ]);
 
     if (statusRes.ok) setStatus(await statusRes.json());
@@ -75,7 +76,7 @@ export default function AdminDashboardPage() {
 
     if (configData?.jmapServerUrl) {
       try {
-        const jmapRes = await fetch('/api/config');
+        const jmapRes = await apiFetch('/api/config');
         setJmapHealth(jmapRes.ok ? 'ok' : 'error');
       } catch {
         setJmapHealth('error');

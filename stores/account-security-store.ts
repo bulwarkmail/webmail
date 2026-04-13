@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { debug } from '@/lib/debug';
 import { getActiveAccountSlotHeaders } from '@/lib/auth/active-account-slot';
+import { apiFetch } from '@/lib/browser-navigation';
 
 interface AccountSecurityState {
   // Detection
@@ -66,7 +67,7 @@ export const useAccountSecurityStore = create<AccountSecurityState>()((set, get)
   probe: async () => {
     set({ isProbing: true });
     try {
-      const response = await fetch('/api/account/stalwart/probe', {
+      const response = await apiFetch('/api/account/stalwart/probe', {
         headers: getApiHeaders(),
       });
       const data = await response.json();
@@ -83,7 +84,7 @@ export const useAccountSecurityStore = create<AccountSecurityState>()((set, get)
   fetchAuthInfo: async () => {
     set({ isLoadingAuth: true, error: null });
     try {
-      const response = await fetch('/api/account/stalwart/auth', {
+      const response = await apiFetch('/api/account/stalwart/auth', {
         headers: getApiHeaders(),
       });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -105,7 +106,7 @@ export const useAccountSecurityStore = create<AccountSecurityState>()((set, get)
   fetchCryptoInfo: async () => {
     set({ isLoadingCrypto: true, error: null });
     try {
-      const response = await fetch('/api/account/stalwart/crypto', {
+      const response = await apiFetch('/api/account/stalwart/crypto', {
         headers: getApiHeaders(),
       });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -126,7 +127,7 @@ export const useAccountSecurityStore = create<AccountSecurityState>()((set, get)
   fetchPrincipal: async () => {
     set({ isLoadingPrincipal: true, error: null });
     try {
-      const response = await fetch('/api/account/stalwart/principal', {
+      const response = await apiFetch('/api/account/stalwart/principal', {
         headers: getApiHeaders(),
       });
       if (!response.ok) {
@@ -169,7 +170,7 @@ export const useAccountSecurityStore = create<AccountSecurityState>()((set, get)
   changePassword: async (currentPassword, newPassword) => {
     set({ isSaving: true, error: null });
     try {
-      const response = await fetch('/api/account/stalwart/password', {
+      const response = await apiFetch('/api/account/stalwart/password', {
         method: 'POST',
         headers: { ...getApiHeaders(), 'Content-Type': 'application/json' },
         body: JSON.stringify({ currentPassword, newPassword }),
@@ -193,7 +194,7 @@ export const useAccountSecurityStore = create<AccountSecurityState>()((set, get)
   updateDisplayName: async (displayName) => {
     set({ isSaving: true, error: null });
     try {
-      const response = await fetch('/api/account/stalwart/principal', {
+      const response = await apiFetch('/api/account/stalwart/principal', {
         method: 'PATCH',
         headers: { ...getApiHeaders(), 'Content-Type': 'application/json' },
         body: JSON.stringify([
@@ -219,7 +220,7 @@ export const useAccountSecurityStore = create<AccountSecurityState>()((set, get)
   enableTotp: async () => {
     set({ isSaving: true, error: null });
     try {
-      const response = await fetch('/api/account/stalwart/auth', {
+      const response = await apiFetch('/api/account/stalwart/auth', {
         method: 'POST',
         headers: { ...getApiHeaders(), 'Content-Type': 'application/json' },
         body: JSON.stringify([{ type: 'enableOtpAuth' }]),
@@ -245,7 +246,7 @@ export const useAccountSecurityStore = create<AccountSecurityState>()((set, get)
   disableTotp: async () => {
     set({ isSaving: true, error: null });
     try {
-      const response = await fetch('/api/account/stalwart/auth', {
+      const response = await apiFetch('/api/account/stalwart/auth', {
         method: 'POST',
         headers: { ...getApiHeaders(), 'Content-Type': 'application/json' },
         body: JSON.stringify([{ type: 'disableOtpAuth' }]),
@@ -269,7 +270,7 @@ export const useAccountSecurityStore = create<AccountSecurityState>()((set, get)
   addAppPassword: async (name, password) => {
     set({ isSaving: true, error: null });
     try {
-      const response = await fetch('/api/account/stalwart/auth', {
+      const response = await apiFetch('/api/account/stalwart/auth', {
         method: 'POST',
         headers: { ...getApiHeaders(), 'Content-Type': 'application/json' },
         body: JSON.stringify([{ type: 'addAppPassword', name, password }]),
@@ -295,7 +296,7 @@ export const useAccountSecurityStore = create<AccountSecurityState>()((set, get)
   removeAppPassword: async (name) => {
     set({ isSaving: true, error: null });
     try {
-      const response = await fetch('/api/account/stalwart/auth', {
+      const response = await apiFetch('/api/account/stalwart/auth', {
         method: 'POST',
         headers: { ...getApiHeaders(), 'Content-Type': 'application/json' },
         body: JSON.stringify([{ type: 'removeAppPassword', name }]),
@@ -321,7 +322,7 @@ export const useAccountSecurityStore = create<AccountSecurityState>()((set, get)
   updateEncryption: async (settings) => {
     set({ isSaving: true, error: null });
     try {
-      const response = await fetch('/api/account/stalwart/crypto', {
+      const response = await apiFetch('/api/account/stalwart/crypto', {
         method: 'POST',
         headers: { ...getApiHeaders(), 'Content-Type': 'application/json' },
         body: JSON.stringify(settings),

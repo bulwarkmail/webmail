@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Save, Loader2, Lock } from 'lucide-react';
 import type { SettingsPolicy, FeatureGates } from '@/lib/admin/types';
 import { DEFAULT_FEATURE_GATES, DEFAULT_POLICY } from '@/lib/admin/types';
+import { apiFetch } from '@/lib/browser-navigation';
 
 // Feature gates managed on their own admin pages (excluded from this list)
 const EXCLUDED_FEATURE_GATES: (keyof FeatureGates)[] = ['pluginsEnabled', 'pluginsUploadEnabled', 'themesEnabled', 'userThemesEnabled'];
@@ -54,7 +55,7 @@ export default function AdminPolicyPage() {
   async function fetchPolicy() {
     setLoading(true);
     try {
-      const res = await fetch('/api/admin/policy');
+      const res = await apiFetch('/api/admin/policy');
       if (res.ok) {
         const data = await res.json();
         setPolicy(data);
@@ -106,7 +107,7 @@ export default function AdminPolicyPage() {
     setSaving(true);
     setMessage(null);
 
-    const res = await fetch('/api/admin/policy', {
+    const res = await apiFetch('/api/admin/policy', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(policy),

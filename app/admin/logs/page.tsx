@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { RefreshCw } from 'lucide-react';
 import type { AuditEntry } from '@/lib/admin/types';
+import { apiFetch } from '@/lib/browser-navigation';
 
 export default function AdminLogsPage() {
   const [entries, setEntries] = useState<AuditEntry[]>([]);
@@ -17,7 +18,7 @@ export default function AdminLogsPage() {
     const params = new URLSearchParams({ page: String(page), limit: String(limit) });
     if (actionFilter) params.set('action', actionFilter);
 
-    const res = await fetch(`/api/admin/audit?${params}`);
+    const res = await apiFetch(`/api/admin/audit?${params}`);
     if (res.ok) {
       const data = await res.json();
       setEntries(data.entries || []);

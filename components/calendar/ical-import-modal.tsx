@@ -11,6 +11,7 @@ import { getEventStartDate } from "@/lib/calendar-utils";
 import { useCalendarStore } from "@/stores/calendar-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { toast } from "@/stores/toast-store";
+import { apiFetch } from "@/lib/browser-navigation";
 
 interface ICalImportModalProps {
   calendars: Calendar[];
@@ -126,7 +127,7 @@ export function ICalImportModal({ calendars, client, onClose }: ICalImportModalP
     setIsParsing(true);
 
     try {
-      const response = await fetch("/api/fetch-ical", {
+      const response = await apiFetch("/api/fetch-ical", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: trimmed }),

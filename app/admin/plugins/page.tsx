@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Upload, Trash2, Power, PowerOff, AlertTriangle, Loader2, Package, Save, Shield, Lock, LockOpen, Settings } from 'lucide-react';
 import type { SettingsPolicy } from '@/lib/admin/types';
 import { DEFAULT_POLICY } from '@/lib/admin/types';
+import { apiFetch } from '@/lib/browser-navigation';
 
 interface PluginEntry {
   id: string;
@@ -34,7 +35,7 @@ export default function AdminPluginsPage() {
 
   async function fetchPolicy() {
     try {
-      const res = await fetch('/api/admin/policy');
+      const res = await apiFetch('/api/admin/policy');
       if (res.ok) {
         const data = await res.json();
         setPolicy(data);
@@ -73,7 +74,7 @@ export default function AdminPluginsPage() {
     setSavingPolicy(true);
     setMessage(null);
     try {
-      const res = await fetch('/api/admin/policy', {
+      const res = await apiFetch('/api/admin/policy', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(policy),
@@ -95,7 +96,7 @@ export default function AdminPluginsPage() {
   async function fetchPlugins() {
     setLoading(true);
     try {
-      const res = await fetch('/api/admin/plugins');
+      const res = await apiFetch('/api/admin/plugins');
       if (res.ok) setPlugins(await res.json());
     } finally {
       setLoading(false);
@@ -113,7 +114,7 @@ export default function AdminPluginsPage() {
     formData.append('file', file);
 
     try {
-      const res = await fetch('/api/admin/plugins', {
+      const res = await apiFetch('/api/admin/plugins', {
         method: 'POST',
         body: formData,
       });
@@ -136,7 +137,7 @@ export default function AdminPluginsPage() {
 
   async function togglePlugin(id: string, enabled: boolean) {
     setMessage(null);
-    const res = await fetch('/api/admin/plugins', {
+    const res = await apiFetch('/api/admin/plugins', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, enabled }),
@@ -156,7 +157,7 @@ export default function AdminPluginsPage() {
     const body: Record<string, unknown> = { id, forceEnabled };
     if (forceEnabled) body.enabled = true;
 
-    const res = await fetch('/api/admin/plugins', {
+    const res = await apiFetch('/api/admin/plugins', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
@@ -190,7 +191,7 @@ export default function AdminPluginsPage() {
     }
     let failed = 0;
     for (const p of disabled) {
-      const res = await fetch('/api/admin/plugins', {
+      const res = await apiFetch('/api/admin/plugins', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: p.id, enabled: true }),
@@ -216,7 +217,7 @@ export default function AdminPluginsPage() {
     }
     let failed = 0;
     for (const p of enabled) {
-      const res = await fetch('/api/admin/plugins', {
+      const res = await apiFetch('/api/admin/plugins', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: p.id, enabled: false }),
@@ -236,7 +237,7 @@ export default function AdminPluginsPage() {
     if (!confirm(`Remove plugin "${name}"? This cannot be undone.`)) return;
 
     setMessage(null);
-    const res = await fetch('/api/admin/plugins', {
+    const res = await apiFetch('/api/admin/plugins', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id }),

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Save, Loader2, RotateCcw } from 'lucide-react';
+import { apiFetch } from '@/lib/browser-navigation';
 
 interface ConfigEntry {
   value: unknown;
@@ -19,7 +20,7 @@ export default function AdminAuthPage() {
 
   async function fetchConfig() {
     setLoading(true);
-    const res = await fetch('/api/admin/config');
+    const res = await apiFetch('/api/admin/config');
     if (res.ok) setConfig(await res.json());
     setLoading(false);
   }
@@ -39,7 +40,7 @@ export default function AdminAuthPage() {
     setSaving(true);
     setMessage(null);
 
-    const res = await fetch('/api/admin/config', {
+    const res = await apiFetch('/api/admin/config', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(edits),
@@ -57,7 +58,7 @@ export default function AdminAuthPage() {
   }
 
   async function handleRevert(key: string) {
-    const res = await fetch('/api/admin/config', {
+    const res = await apiFetch('/api/admin/config', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ key }),
