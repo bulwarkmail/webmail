@@ -22,7 +22,6 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: process.env.APP_NAME || process.env.NEXT_PUBLIC_APP_NAME || "Webmail",
     description: "Minimalist webmail client using JMAP protocol",
-    manifest: "/manifest.json",
     appleWebApp: {
       capable: true,
       statusBarStyle: "black-translucent",

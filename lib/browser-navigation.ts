@@ -57,6 +57,7 @@ export function getPathPrefix(locale?: string): string {
  *   // Browser at /webmail/en/inbox  → /webmail/api/jmap
  *   // Browser at /en/inbox          → /api/jmap
  */
+// eslint-disable-next-line no-undef
 export function apiFetch(input: string, init?: RequestInit): Promise<Response> {
   if (input.startsWith('/') && !input.startsWith('//')) {
     return fetch(getPathPrefix() + input, init);
