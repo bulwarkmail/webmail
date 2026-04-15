@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { X, Download } from "lucide-react";
+import { useConfig } from "@/hooks/use-config";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -14,6 +15,7 @@ export function PWAInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] =
     useState<BeforeInstallPromptEvent | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
+  const { appName, faviconUrl, appLogoLightUrl, appLogoDarkUrl } = useConfig();
 
   useEffect(() => {
     if (localStorage.getItem(DISMISSED_KEY)) return;
@@ -56,14 +58,31 @@ export function PWAInstallPrompt() {
     return null;
   }
 
+  const logoSrc = appLogoLightUrl || faviconUrl;
+
   return (
     <div className="fixed bottom-4 right-4 z-50 bg-white dark:bg-neutral-900 rounded-lg shadow-lg border border-neutral-200 dark:border-neutral-800 p-4 max-w-sm animate-in slide-in-from-bottom-4">
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-start gap-3">
-          <Download className="w-5 h-5 mt-0.5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+          {logoSrc ? (
+            <img
+              src={logoSrc}
+              alt={appName}
+              className="w-8 h-8 shrink-0 object-contain dark:hidden"
+            />
+          ) : (
+            <Download className="w-5 h-5 mt-0.5 text-blue-600 dark:text-blue-400 shrink-0" />
+          )}
+          {logoSrc && (
+            <img
+              src={appLogoDarkUrl || faviconUrl}
+              alt={appName}
+              className="w-8 h-8 shrink-0 object-contain hidden dark:block"
+            />
+          )}
           <div>
             <h3 className="font-semibold text-sm text-neutral-900 dark:text-white">
-              Install Bulwark
+              Install {appName}
             </h3>
             <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-1">
               Install our app for quick access and offline support.
