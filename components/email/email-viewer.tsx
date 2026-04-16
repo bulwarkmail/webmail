@@ -85,7 +85,7 @@ import { UnsubscribeBanner } from "./unsubscribe-banner";
 import { CalendarInvitationBanner } from "./calendar-invitation-banner";
 import { useTour } from "@/components/tour/tour-provider";
 import { SmimePassphraseDialog } from "@/components/settings/smime-passphrase-dialog";
-import { findCalendarAttachment } from "@/lib/calendar-invitation";
+import { findCalendarAttachment, isCalendarMimeType } from "@/lib/calendar-invitation";
 import { RecipientPopover } from "./recipient-popover";
 import { isFilePreviewable } from "@/lib/file-preview";
 import { SmimeStatusBanner } from "./smime-status-banner";
@@ -2084,11 +2084,15 @@ export function EmailViewer({
       }));
     }
 
+    const hasCalInvitation = calendarInvitationParsingEnabled && !!email && !!findCalendarAttachment(email);
     const jmapAttachments = (email?.attachments ?? [])
       // Hide winmail.dat when we have successfully extracted TNEF content or attachments
       .filter(att => !(tnefHtml || tnefText || tnefAttachments.length > 0) || !isTnefAttachment(att.name, att.type))
       // Hide message/rfc822 when we have unwrapped the embedded email
       .filter(att => !embeddedEmailUnwrapped || att.type !== 'message/rfc822')
+      // Hide calendar MIME parts (text/calendar, application/ics) when the invitation
+      // banner is shown — prevents raw ICS files appearing as spurious attachments.
+      .filter(att => !hasCalInvitation || !isCalendarMimeType(att.type))
       .map((attachment, index) => ({
         id: attachment.blobId || `${attachment.name || 'attachment'}-${index}`,
         name: attachment.name || null,
@@ -2119,7 +2123,7 @@ export function EmailViewer({
       }));
 
     return [...jmapAttachments, ...tnefExtracted, ...embeddedExtracted];
-  }, [email?.attachments, smimeDecryptedAttachments, tnefHtml, tnefText, tnefAttachments, embeddedEmailUnwrapped, embeddedEmailAttachments]);
+  }, [email?.attachments, smimeDecryptedAttachments, tnefHtml, tnefText, tnefAttachments, embeddedEmailUnwrapped, embeddedEmailAttachments, calendarInvitationParsingEnabled]);
 
   // Generate email source for viewing
   const generateEmailSource = (email: Email): string => {
