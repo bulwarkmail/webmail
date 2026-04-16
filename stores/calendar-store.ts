@@ -8,6 +8,7 @@ import { sanitizeOutgoingCalendarEventData } from '@/lib/calendar-event-normaliz
 import { expandRecurringEvents } from '@/lib/recurrence-expansion';
 import { generateUUID } from '@/lib/utils';
 import { apiFetch } from '@/lib/browser-navigation';
+import { BIRTHDAY_CALENDAR_ID } from '@/lib/birthday-calendar';
 
 export type CalendarViewMode = 'month' | 'week' | 'day' | 'agenda' | 'tasks';
 
@@ -174,7 +175,7 @@ export const useCalendarStore = create<CalendarStore>()(
           const calendars = await client.getAllCalendars();
           const { selectedCalendarIds } = get();
           const validIds = calendars.map(c => c.id);
-          const stillValid = selectedCalendarIds.filter(id => validIds.includes(id));
+          const stillValid = selectedCalendarIds.filter(id => validIds.includes(id) || id === BIRTHDAY_CALENDAR_ID);
           set({
             calendars,
             isLoading: false,
