@@ -6,7 +6,7 @@ import { CONFIG_ENV_MAP } from '@/lib/admin/types';
 import { logger } from '@/lib/logger';
 
 /**
- * GET /api/admin/config — Get full config with sources (admin-protected)
+ * GET /api/admin/config - Get full config with sources (admin-protected)
  */
 export async function GET() {
   try {
@@ -26,7 +26,7 @@ export async function GET() {
 }
 
 /**
- * PATCH /api/admin/config — Update config overrides (admin-protected)
+ * PATCH /api/admin/config - Update config overrides (admin-protected)
  */
 export async function PATCH(request: NextRequest) {
   try {
@@ -64,7 +64,7 @@ export async function PATCH(request: NextRequest) {
 }
 
 /**
- * DELETE /api/admin/config — Remove admin override for a key (revert to env/default)
+ * DELETE /api/admin/config - Remove admin override for a key (revert to env/default)
  */
 export async function DELETE(request: NextRequest) {
   try {

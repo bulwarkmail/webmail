@@ -199,7 +199,7 @@ export function ContactImportDialog({
                     </div>
                     <FileText className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium truncate">{cName || cEmail || "—"}</div>
+                      <div className="text-sm font-medium truncate">{cName || cEmail || "-"}</div>
                       {cEmail && cName && (
                         <div className="text-xs text-muted-foreground truncate">{cEmail}</div>
                       )}

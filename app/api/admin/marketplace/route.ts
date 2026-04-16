@@ -17,7 +17,7 @@ import { sanitizeThemeCSS, validateThemeCSSSafety } from '@/lib/theme-loader';
 const DIRECTORY_URL = process.env.EXTENSION_DIRECTORY_URL || 'http://localhost:3001';
 
 /**
- * GET /api/admin/marketplace — Search/browse the extension directory
+ * GET /api/admin/marketplace - Search/browse the extension directory
  * Proxies to the extension directory API
  */
 export async function GET(request: NextRequest) {
@@ -75,7 +75,7 @@ export async function GET(request: NextRequest) {
 }
 
 /**
- * POST /api/admin/marketplace — Install an extension from the directory
+ * POST /api/admin/marketplace - Install an extension from the directory
  * Body: { slug: string, version: string, type: 'plugin' | 'theme' }
  */
 export async function POST(request: NextRequest) {

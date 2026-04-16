@@ -412,7 +412,7 @@ export function FileBrowser({
   // Filter and sort resources
   const displayResources = useMemo(() => {
     let filtered = resources;
-    // In sidebar mode, folders are shown in the sidebar tree — hide them from the main list
+    // In sidebar mode, folders are shown in the sidebar tree - hide them from the main list
     if (folderLayout === "sidebar") {
       filtered = filtered.filter(r => !r.isDirectory);
     }
@@ -1466,7 +1466,7 @@ export function FileBrowser({
                     </div>
                   </td>
                   <td className="px-4 py-2.5 text-muted-foreground hidden md:table-cell tabular-nums">
-                    {resource.isDirectory ? "—" : formatFileSize(resource.contentLength)}
+                    {resource.isDirectory ? "-" : formatFileSize(resource.contentLength)}
                   </td>
                   <td className="px-4 py-2.5 text-muted-foreground hidden lg:table-cell tabular-nums">
                     {formatDate(resource.lastModified)}

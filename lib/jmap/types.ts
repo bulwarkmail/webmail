@@ -39,7 +39,7 @@ export interface Email {
   // S/MIME support
   blobId?: string;
   bodyStructure?: EmailBodyPart;
-  // Unified mailbox support — set when displaying emails from multiple accounts
+  // Unified mailbox support - set when displaying emails from multiple accounts
   accountId?: string;
   accountLabel?: string;
 }

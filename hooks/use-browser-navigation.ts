@@ -85,8 +85,8 @@ export function useBrowserNavigation({
       const state = raw ? (raw[STATE_KEY] as StoredNavState | undefined) : undefined;
       if (!state) return;
 
-      // Hold the "applying pop" flag for the entire restore — including any
-      // async work like fetching email content — so the resulting state
+      // Hold the "applying pop" flag for the entire restore - including any
+      // async work like fetching email content - so the resulting state
       // updates don't trigger a fresh history push that would undo the
       // user's back / forward navigation.
       popDepthRef.current += 1;

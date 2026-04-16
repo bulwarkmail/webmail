@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getPluginBundle, getPlugin } from '@/lib/admin/plugin-registry';
 
 /**
- * GET /api/admin/plugins/[id]/bundle — Serve plugin JS bundle
+ * GET /api/admin/plugins/[id]/bundle - Serve plugin JS bundle
  *
  * Public endpoint so the client-side plugin loader can fetch bundles.
  * Only serves plugins that exist in the registry and are enabled.

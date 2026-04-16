@@ -23,7 +23,7 @@ const SUSPICIOUS_JS_PATTERNS = [
 ];
 
 /**
- * GET /api/admin/plugins — List all admin-managed plugins
+ * GET /api/admin/plugins - List all admin-managed plugins
  */
 export async function GET() {
   try {
@@ -41,7 +41,7 @@ export async function GET() {
 }
 
 /**
- * POST /api/admin/plugins — Upload and install a plugin ZIP
+ * POST /api/admin/plugins - Upload and install a plugin ZIP
  */
 export async function POST(request: NextRequest) {
   try {
@@ -181,7 +181,7 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * PATCH /api/admin/plugins — Update plugin metadata (enable/disable)
+ * PATCH /api/admin/plugins - Update plugin metadata (enable/disable)
  * Body: { id: string, enabled: boolean }
  */
 export async function PATCH(request: NextRequest) {
@@ -218,7 +218,7 @@ export async function PATCH(request: NextRequest) {
 }
 
 /**
- * DELETE /api/admin/plugins — Remove a plugin
+ * DELETE /api/admin/plugins - Remove a plugin
  * Body: { id: string }
  */
 export async function DELETE(request: NextRequest) {

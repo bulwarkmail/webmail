@@ -57,7 +57,7 @@ export const useFilterStore = create<FilterStore>()((set, get) => ({
       const allScripts = await client.getSieveScripts();
       debug.log('filters', 'Sieve scripts fetched:', allScripts.length);
 
-      // Skip the server-managed 'vacation' script (RFC 9661 §4) — it can only
+      // Skip the server-managed 'vacation' script (RFC 9661 §4) - it can only
       // be modified via VacationResponse/set, not SieveScript/set.
       const scripts = allScripts.filter(s => s.name !== 'vacation');
 
@@ -224,7 +224,7 @@ export const useFilterStore = create<FilterStore>()((set, get) => ({
       const content = generateScript(rules, vacation.isEnabled ? vacation : undefined, { externalRequires });
 
       if (activeScript) {
-        // Preserve the script's current activation state — don't pass activate: true
+        // Preserve the script's current activation state - don't pass activate: true
         // unconditionally, as that would deactivate the server-managed 'vacation'
         // script and cause VacationResponse/get to return isEnabled: false.
         await client.updateSieveScript(activeScript.id, content, activeScript.isActive);

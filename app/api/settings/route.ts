@@ -135,7 +135,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Identity mismatch' }, { status: 403 });
     }
 
-    // Enforce admin policy — strip locked settings so users can't override them
+    // Enforce admin policy - strip locked settings so users can't override them
     await configManager.ensureLoaded();
     const policy = configManager.getPolicy();
     const filteredSettings = { ...settings };

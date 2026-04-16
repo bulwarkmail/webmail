@@ -14,7 +14,7 @@ const MIME_TYPES: Record<string, string> = {
 };
 
 /**
- * GET /api/admin/branding/[filename] — Serve uploaded branding images
+ * GET /api/admin/branding/[filename] - Serve uploaded branding images
  *
  * This endpoint is public (no admin auth) so browsers can load images.
  * Only files in the branding directory are served; directory traversal is prevented.

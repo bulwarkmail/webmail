@@ -187,7 +187,7 @@ function extractEmailAddresses(cert: pkijs.Certificate): string[] {
           names = gn.names;
         }
       } catch {
-        // Malformed SAN — skip gracefully
+        // Malformed SAN - skip gracefully
       }
     }
 

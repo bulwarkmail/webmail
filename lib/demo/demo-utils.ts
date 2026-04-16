@@ -7,9 +7,9 @@ export function generateDemoId(prefix: string = 'demo'): string {
 
 /**
  * Generate an ISO date string relative to "now".
- * @param daysOffset — whole days from today
- * @param hoursOffset — additional hours offset (default 0)
- * @param minutesOffset — additional minutes offset (default 0)
+ * @param daysOffset - whole days from today
+ * @param hoursOffset - additional hours offset (default 0)
+ * @param minutesOffset - additional minutes offset (default 0)
  */
 export function demoDate(daysOffset: number, hoursOffset: number = 0, minutesOffset: number = 0): string {
   const d = new Date();

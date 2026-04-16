@@ -45,11 +45,11 @@
     "imprint": "Informações legais",
     "privacy_policy": "Política de privacidade",
     "try_demo": "Experimentar demo",
-    "demo_description": "Explore com dados de exemplo — sem conta necessária",
+    "demo_description": "Explore com dados de exemplo - sem conta necessária",
     "demo_launching": "Iniciando demo...",
     "demo_login_button": "Iniciar demo",
     "demo_tagline": "Experimente um cliente de e-mail completo. Sem necessidade de conta.",
-    "demo_no_signup": "Sem registo — explore livremente com dados de exemplo",
+    "demo_no_signup": "Sem registo - explore livremente com dados de exemplo",
     "oauth_completing": "Concluindo login...",
     "oauth_error": {
       "title": "Falha na autenticação",
@@ -1166,7 +1166,7 @@
       "warnings": {
         "end_before_start": "A data de fim deve ser posterior à data de início",
         "start_in_past": "A data de início está no passado",
-        "empty_body": "O corpo da mensagem está vazio — os destinatários receberão uma resposta em branco"
+        "empty_body": "O corpo da mensagem está vazio - os destinatários receberão uma resposta em branco"
       }
     },
     "folders": {
@@ -2306,7 +2306,7 @@
   },
   "demo_welcome": {
     "title": "Bem-vindo ao Bulwark Mail",
-    "description": "Explore um cliente de webmail completo — diretamente no seu navegador. Todos os dados ficam no seu dispositivo, então teste tudo.",
+    "description": "Explore um cliente de webmail completo - diretamente no seu navegador. Todos os dados ficam no seu dispositivo, então teste tudo.",
     "feature_email": "Ler e escrever e-mails",
     "feature_organize": "Tags, estrelas e pastas",
     "feature_shortcuts": "Atalhos de teclado",
@@ -2533,15 +2533,15 @@
     "create_event_title": "Criar um evento",
     "create_event_desc": "Clique neste botão para criar um novo evento no calendário. Você pode definir um título, data, hora e adicionar participantes.",
     "event_modal_title": "Detalhes do evento",
-    "event_modal_desc": "Aqui está o formulário do evento. Preencha o título, escolha uma data e hora, adicione um local ou participantes. Clique em salvar quando terminar — ou feche e siga em frente.",
+    "event_modal_desc": "Aqui está o formulário do evento. Preencha o título, escolha uma data e hora, adicione um local ou participantes. Clique em salvar quando terminar - ou feche e siga em frente.",
     "contacts_list_title": "Seus contatos",
     "contacts_list_desc": "Aqui estão seus contatos. Clique em qualquer contato para ver seus detalhes à direita. Você também pode criar novos contatos, importar vCards ou organizar contatos em grupos.",
     "files_title": "Armazenamento de ficheiros",
     "settings_tabs_title": "Menu de configurações",
     "settings_tabs_desc": "Aqui estão todas as categorias de configurações. Personalize a aparência, gerencie identidades, configure filtros de e-mail, ajuste o calendário e muito mais.",
-    "files_desc": "O navegador de ficheiros permite carregar, organizar e partilhar ficheiros — como uma nuvem pessoal integrada no seu e-mail.",
+    "files_desc": "O navegador de ficheiros permite carregar, organizar e partilhar ficheiros - como uma nuvem pessoal integrada no seu e-mail.",
     "demo_banner_title": "Controlos de demonstração",
-    "demo_banner_desc": "Está no modo de demonstração — tudo permanece no seu navegador. Clique em 'Repor Demonstração' a qualquer momento para recomeçar com dados limpos.",
+    "demo_banner_desc": "Está no modo de demonstração - tudo permanece no seu navegador. Clique em 'Repor Demonstração' a qualquer momento para recomeçar com dados limpos.",
     "quota_title": "Utilização do armazenamento",
     "quota_desc": "Acompanhe o tamanho da sua caixa de correio aqui. O círculo preenche-se à medida que utiliza mais espaço."
   },

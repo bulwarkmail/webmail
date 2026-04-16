@@ -19,7 +19,7 @@ function makeBulwarkRule(overrides: Partial<FilterRule> = {}): FilterRule {
 }
 
 describe('external rule preservation (issue #201)', () => {
-  describe('parser — external rule recognition', () => {
+  describe('parser - external rule recognition', () => {
     it('parses a Roundcube-style rule with "# rule:[Name]" comment', () => {
       const script = `require ["fileinto"];\n\n# rule:[Archive Newsletters]\nif header :contains "List-Id" "news" {\n    fileinto "Newsletters";\n}\n`;
       const result = parseScript(script);
@@ -84,7 +84,7 @@ describe('external rule preservation (issue #201)', () => {
     });
   });
 
-  describe('parser — mixed Bulwark + external', () => {
+  describe('parser - mixed Bulwark + external', () => {
     it('returns Bulwark rules from metadata and external rules from the rest', () => {
       const bulwark = [makeBulwarkRule({ name: 'Bulwark A' })];
       const bulwarkScript = generateScript(bulwark);
@@ -113,7 +113,7 @@ describe('external rule preservation (issue #201)', () => {
     });
   });
 
-  describe('generator — external splice', () => {
+  describe('generator - external splice', () => {
     it('appends external rawBlocks verbatim after Bulwark-managed output', () => {
       const externalRule: FilterRule = {
         id: 'ext-0',
@@ -253,7 +253,7 @@ describe('external rule preservation (issue #201)', () => {
       const externalBefore = parsed.rules.filter(r => r.origin === 'external');
       expect(externalBefore).toHaveLength(1);
 
-      // Simulate a user edit — update the Bulwark rule name
+      // Simulate a user edit - update the Bulwark rule name
       const edited = parsed.rules.map(r => (r.origin === 'external' || r.origin === 'opaque' ? r : { ...r, name: 'Mine (edited)' }));
       const regenerated = generateScript(edited, parsed.vacation, { externalRequires: parsed.externalRequires });
       const reparsed = parseScript(regenerated);

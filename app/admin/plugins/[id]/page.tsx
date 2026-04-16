@@ -231,7 +231,7 @@ export default function PluginConfigPage() {
                     onChange={(e) => setFormValues(prev => ({ ...prev, [key]: e.target.value }))}
                     className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                   >
-                    <option value="">— Select —</option>
+                    <option value="">- Select -</option>
                     {field.options.map(opt => (
                       <option key={opt.value} value={opt.value}>{opt.label}</option>
                     ))}

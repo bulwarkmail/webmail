@@ -5,7 +5,7 @@ import { auditLog } from '@/lib/admin/audit';
 import { logger } from '@/lib/logger';
 
 /**
- * POST /api/admin/change-password — Change admin password
+ * POST /api/admin/change-password - Change admin password
  */
 export async function POST(request: NextRequest) {
   try {

@@ -490,7 +490,7 @@ export function FolderSettings() {
 
   return (
     <div className="space-y-8">
-      {/* Folder List — primary section */}
+      {/* Folder List - primary section */}
       <SettingsSection title={t('folder_list')} description={t('folder_list_description')}>
         <div className="space-y-0.5">
           {folderTree.length === 0 ? (
@@ -516,7 +516,7 @@ export function FolderSettings() {
         )}
       </SettingsSection>
 
-      {/* Standard Folder Roles — advanced section */}
+      {/* Standard Folder Roles - advanced section */}
       <SettingsSection title={t('standard_roles')} description={t('standard_roles_description')}>
         {STANDARD_ROLES.map((role) => {
           // Disambiguate duplicate folder names by appending parent path

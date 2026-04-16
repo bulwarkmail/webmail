@@ -224,7 +224,7 @@ export const useFileStore = create<FileState>((set, get) => ({
     try { localStorage.setItem('files-path-stack', JSON.stringify(newStack)); } catch { /* ignore */ }
 
     try {
-      // Always fetch all nodes from root — Stalwart doesn't support parentId nesting
+      // Always fetch all nodes from root - Stalwart doesn't support parentId nesting
       const allNodes = await client.listFileNodes(null);
       const prefix = getPathPrefix(newPath);
       const filteredNodes = filterNodesByPrefix(allNodes, prefix);
@@ -389,7 +389,7 @@ export const useFileStore = create<FileState>((set, get) => ({
       try {
         await client.createFileDirectory(fullDirName, null);
       } catch {
-        // Directory may already exist — ignore
+        // Directory may already exist - ignore
       }
     }
 

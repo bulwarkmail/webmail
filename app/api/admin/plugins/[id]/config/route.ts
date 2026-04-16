@@ -4,7 +4,7 @@ import { getPluginConfig, setPluginConfig, deletePluginConfigKey } from '@/lib/a
 import { requireAdminAuth } from '@/lib/admin/session';
 
 /**
- * GET /api/admin/plugins/[id]/config — Read all config for a plugin
+ * GET /api/admin/plugins/[id]/config - Read all config for a plugin
  *
  * Returns the full config object for admin-configured plugin settings.
  * This endpoint is accessible from the client-side plugin API.
@@ -35,7 +35,7 @@ export async function GET(
 }
 
 /**
- * PUT /api/admin/plugins/[id]/config — Set a config key
+ * PUT /api/admin/plugins/[id]/config - Set a config key
  *
  * Body: { key: string, value: unknown }
  * Requires admin authentication (checked via admin session).
@@ -83,7 +83,7 @@ export async function PUT(
 }
 
 /**
- * DELETE /api/admin/plugins/[id]/config — Delete a config key
+ * DELETE /api/admin/plugins/[id]/config - Delete a config key
  *
  * Body: { key: string }
  */

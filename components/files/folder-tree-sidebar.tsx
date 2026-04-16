@@ -58,7 +58,7 @@ export function FolderTreeSidebar({ currentPath, onNavigate, listByParentId, wid
           };
         });
 
-      // Don't cache empty root results — empty root likely means client wasn't ready yet
+      // Don't cache empty root results - empty root likely means client wasn't ready yet
       if (folders.length > 0 || parentId !== null) {
         setChildrenCache(prev => new Map(prev).set(cacheKey, folders));
       }

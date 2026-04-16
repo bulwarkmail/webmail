@@ -45,11 +45,11 @@
     "imprint": "Impressum",
     "privacy_policy": "Datenschutz",
     "try_demo": "Demo testen",
-    "demo_description": "Erkunden Sie mit Beispieldaten — kein Konto nötig",
+    "demo_description": "Erkunden Sie mit Beispieldaten - kein Konto nötig",
     "demo_launching": "Demo wird gestartet...",
     "demo_login_button": "Demo starten",
     "demo_tagline": "Erleben Sie einen voll ausgestatteten E-Mail-Client. Kein Konto erforderlich.",
-    "demo_no_signup": "Keine Registrierung nötig — erkunden Sie frei mit Beispieldaten",
+    "demo_no_signup": "Keine Registrierung nötig - erkunden Sie frei mit Beispieldaten",
     "oauth_completing": "Anmeldung wird abgeschlossen...",
     "oauth_error": {
       "title": "Authentifizierung fehlgeschlagen",
@@ -1166,7 +1166,7 @@
       "warnings": {
         "end_before_start": "Das Enddatum muss nach dem Startdatum liegen",
         "start_in_past": "Das Startdatum liegt in der Vergangenheit",
-        "empty_body": "Der Nachrichtentext ist leer — Empfänger erhalten eine leere Antwort"
+        "empty_body": "Der Nachrichtentext ist leer - Empfänger erhalten eine leere Antwort"
       }
     },
     "folders": {
@@ -2306,7 +2306,7 @@
   },
   "demo_welcome": {
     "title": "Willkommen bei Bulwark Mail",
-    "description": "Entdecken Sie einen voll ausgestatteten Webmail-Client — direkt in Ihrem Browser. Alle Daten bleiben auf Ihrem Gerät, also testen Sie alles.",
+    "description": "Entdecken Sie einen voll ausgestatteten Webmail-Client - direkt in Ihrem Browser. Alle Daten bleiben auf Ihrem Gerät, also testen Sie alles.",
     "feature_email": "E-Mails lesen & verfassen",
     "feature_organize": "Tags, Sterne & Ordner",
     "feature_shortcuts": "Tastenkürzel",
@@ -2533,7 +2533,7 @@
     "create_event_title": "Ereignis erstellen",
     "create_event_desc": "Klicken Sie auf diese Schaltfläche, um ein neues Kalenderereignis zu erstellen. Sie können Titel, Datum, Uhrzeit und Teilnehmer festlegen.",
     "event_modal_title": "Ereignisdetails",
-    "event_modal_desc": "Hier ist das Ereignisformular. Geben Sie den Titel ein, wählen Sie Datum und Uhrzeit, fügen Sie einen Ort oder Teilnehmer hinzu. Klicken Sie auf Speichern, wenn Sie fertig sind — oder schließen Sie es und fahren Sie fort.",
+    "event_modal_desc": "Hier ist das Ereignisformular. Geben Sie den Titel ein, wählen Sie Datum und Uhrzeit, fügen Sie einen Ort oder Teilnehmer hinzu. Klicken Sie auf Speichern, wenn Sie fertig sind - oder schließen Sie es und fahren Sie fort.",
     "contacts_list_title": "Ihre Kontakte",
     "contacts_list_desc": "Hier sind Ihre Kontakte. Klicken Sie auf einen Kontakt, um Details zu sehen. Sie können neue Kontakte erstellen oder vCards importieren.",
     "files_title": "Dateispeicher",
@@ -2541,7 +2541,7 @@
     "settings_tabs_desc": "Hier finden Sie alle Einstellungskategorien. Passen Sie das Erscheinungsbild an, verwalten Sie Identitäten, richten Sie E-Mail-Filter ein, konfigurieren Sie Ihren Kalender und vieles mehr.",
     "files_desc": "Ihr Dateibrowser zum Hochladen, Organisieren und Teilen von Dateien.",
     "demo_banner_title": "Demo-Steuerung",
-    "demo_banner_desc": "Sie sind im Demo-Modus — alles bleibt in Ihrem Browser. Klicken Sie jederzeit auf 'Demo zurücksetzen'.",
+    "demo_banner_desc": "Sie sind im Demo-Modus - alles bleibt in Ihrem Browser. Klicken Sie jederzeit auf 'Demo zurücksetzen'.",
     "quota_title": "Speichernutzung",
     "quota_desc": "Verfolgen Sie Ihre Postfachgröße hier. Der Kreis füllt sich mit zunehmendem Verbrauch."
   },

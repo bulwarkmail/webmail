@@ -90,7 +90,7 @@ export function ContactListItem({ contact, isSelected, isChecked, hasSelection, 
 
       <div className="flex-1 min-w-0">
         <div className="text-sm font-medium truncate">
-          {name || email || "—"}
+          {name || email || "-"}
         </div>
         {density !== 'extra-compact' && email && name && (
           <div className="text-xs text-muted-foreground truncate">{email}</div>

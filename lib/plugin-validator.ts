@@ -116,7 +116,7 @@ function checkJSSecurity(code: string): string[] {
   const warnings: string[] = [];
   for (const { pattern, label } of SUSPICIOUS_JS_PATTERNS) {
     if (pattern.test(code)) {
-      warnings.push(`Contains ${label} — review for security`);
+      warnings.push(`Contains ${label} - review for security`);
     }
     pattern.lastIndex = 0; // reset regex
   }

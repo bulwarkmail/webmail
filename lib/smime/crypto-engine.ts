@@ -21,7 +21,7 @@ import * as pkijs from 'pkijs';
 // webcrypto-liner exports a Crypto constructor at runtime that extends native
 // Web Crypto with legacy algorithms (3DES, etc.). Its type declarations only
 // expose the type alias, so we import the module dynamically and cast.
-// Import the ES module build directly — the package's "browser" field points
+// Import the ES module build directly - the package's "browser" field points
 // to a shim-only build that has no named exports (no setCrypto, Crypto, etc.).
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const liner = require('webcrypto-liner/build/index.es.js') as {
@@ -55,7 +55,7 @@ function pbeConfig(oid: string): { keyLen: number; ivLen: number; algName: strin
 }
 
 /**
- * PKCS#12 key derivation — RFC 7292, Appendix B.
+ * PKCS#12 key derivation - RFC 7292, Appendix B.
  *
  * @param password  BMP-encoded password (with trailing 0x00 0x00)
  * @param salt      raw salt bytes

@@ -87,7 +87,7 @@ export function ContactDetail({ contact, onEdit, onDelete, isMobile, className }
         try {
           let derBytes: ArrayBuffer | string | null = null;
           if (key.uri.startsWith('data:')) {
-            // data URI — extract base64 content
+            // data URI - extract base64 content
             const commaIdx = key.uri.indexOf(',');
             if (commaIdx === -1) continue;
             const b64 = key.uri.substring(commaIdx + 1);
@@ -178,7 +178,7 @@ export function ContactDetail({ contact, onEdit, onDelete, isMobile, className }
           <div className="flex items-center gap-4">
             <Avatar name={name} email={email} size={isMobile ? "md" : "lg"} />
             <div className="min-w-0 flex-1">
-              <h2 className={cn("font-semibold truncate", isMobile ? "text-lg" : "text-xl")}>{name || "—"}</h2>
+              <h2 className={cn("font-semibold truncate", isMobile ? "text-lg" : "text-xl")}>{name || "-"}</h2>
               {hasNickname && (
                 <p className="text-sm text-muted-foreground truncate">&ldquo;{nicknames.map(n => n.name).join(", ")}&rdquo;</p>
               )}
@@ -278,7 +278,7 @@ export function ContactDetail({ contact, onEdit, onDelete, isMobile, className }
                 <div key={i} className="text-sm">
                   {o.name}
                   {o.units && o.units.length > 0 && (
-                    <span className="text-muted-foreground"> — {o.units.map(u => u.name).join(", ")}</span>
+                    <span className="text-muted-foreground"> - {o.units.map(u => u.name).join(", ")}</span>
                   )}
                 </div>
               ))}
@@ -371,7 +371,7 @@ export function ContactDetail({ contact, onEdit, onDelete, isMobile, className }
                 {contact.speakToAs.pronouns && (() => {
                   const firstPronoun = Object.values(contact.speakToAs!.pronouns!)[0]?.pronouns;
                   return firstPronoun ? (
-                    <span className="text-muted-foreground">{contact.speakToAs!.grammaticalGender ? " — " : ""}{firstPronoun}</span>
+                    <span className="text-muted-foreground">{contact.speakToAs!.grammaticalGender ? " - " : ""}{firstPronoun}</span>
                   ) : null;
                 })()}
               </div>

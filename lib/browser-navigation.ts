@@ -50,7 +50,7 @@ export function getPathPrefix(locale?: string): string {
  * through unchanged.
  *
  * Server code (route handlers, layout files running at SSR) should keep using
- * the raw Fetch API — the mount prefix is a browser-only concept.
+ * the raw Fetch API - the mount prefix is a browser-only concept.
  *
  * @example
  *   await apiFetch('/api/jmap', { method: 'POST', body })

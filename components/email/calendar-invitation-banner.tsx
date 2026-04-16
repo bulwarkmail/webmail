@@ -527,7 +527,7 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
       || null;
 
     // Send the iMIP REPLY email to the organizer (client-side scheduling).
-    // Called after updating the local calendar event. Best-effort — if it
+    // Called after updating the local calendar event. Best-effort - if it
     // fails we still report the RSVP as sent since the calendar was updated.
     const sendImipReply = async () => {
       if (!organizerEmail || !parsedEvent?.uid || !currentUserEmail) {

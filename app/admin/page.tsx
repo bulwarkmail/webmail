@@ -99,8 +99,8 @@ export default function AdminDashboardPage() {
     setWarnings(w);
   }
 
-  const jmapUrl = config?.jmapServerUrl || '—';
-  const jmapHostname = jmapUrl !== '—' ? (() => { try { return new URL(jmapUrl).hostname; } catch { return jmapUrl; } })() : '—';
+  const jmapUrl = config?.jmapServerUrl || '-';
+  const jmapHostname = jmapUrl !== '-' ? (() => { try { return new URL(jmapUrl).hostname; } catch { return jmapUrl; } })() : '-';
 
   return (
     <div className="max-w-3xl space-y-8">
@@ -127,9 +127,9 @@ export default function AdminDashboardPage() {
       {/* Server Info */}
       <SettingsSection title="Server" description="Application and connection details">
         <SettingItem label="Application">
-          <span className="text-sm text-foreground">{config?.appName || '—'}</span>
+          <span className="text-sm text-foreground">{config?.appName || '-'}</span>
         </SettingItem>
-        <SettingItem label="JMAP Server" description={jmapUrl !== '—' ? jmapUrl : undefined}>
+        <SettingItem label="JMAP Server" description={jmapUrl !== '-' ? jmapUrl : undefined}>
           <span className="text-sm text-foreground">{jmapHostname}</span>
         </SettingItem>
         <SettingItem label="JMAP Connection">

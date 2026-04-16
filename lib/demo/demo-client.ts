@@ -6,7 +6,7 @@ import { generateDemoId } from './demo-utils';
 
 /**
  * In-memory JMAP client for demo mode.
- * All data lives in memory — no network calls, no cookies.
+ * All data lives in memory - no network calls, no cookies.
  */
 export class DemoJMAPClient implements IJMAPClient {
   private data: DemoData;

@@ -14,7 +14,7 @@ export function getContactDisplayName(contact: ContactCard): string {
       const full = [given, surname].filter(Boolean).join(' ');
       if (full) return full;
     }
-    // Fall back to name.full (RFC 9553 — used by Stalwart and other JMAP servers)
+    // Fall back to name.full (RFC 9553 - used by Stalwart and other JMAP servers)
     if (contact.name.full) return contact.name.full;
   }
   if (contact.nicknames) {

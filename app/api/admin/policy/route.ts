@@ -6,7 +6,7 @@ import { logger } from '@/lib/logger';
 import type { SettingsPolicy } from '@/lib/admin/types';
 
 /**
- * GET /api/admin/policy — Get settings policy (NOT admin-protected — users read this)
+ * GET /api/admin/policy - Get settings policy (NOT admin-protected - users read this)
  */
 export async function GET() {
   try {
@@ -22,7 +22,7 @@ export async function GET() {
 }
 
 /**
- * PUT /api/admin/policy — Update settings policy (admin-protected)
+ * PUT /api/admin/policy - Update settings policy (admin-protected)
  */
 export async function PUT(request: NextRequest) {
   try {

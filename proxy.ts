@@ -30,12 +30,12 @@ export function proxy(request: NextRequest) {
     `frame-ancestors ${frameAncestors}`,
   ].join("; ");
 
-  // Skip intl middleware for /admin routes — they have their own layout
+  // Skip intl middleware for /admin routes - they have their own layout
   const pathname = request.nextUrl.pathname;
   const isAdminRoute = pathname === '/admin' || pathname.startsWith('/admin/');
 
   // When localePrefix is 'always', paths that already have a locale prefix
-  // (e.g. /en/settings) should not be re-processed by the intl middleware —
+  // (e.g. /en/settings) should not be re-processed by the intl middleware -
   // doing so can trigger rewrite loops when combined with a proxy basePath.
   const locales = routing.locales as readonly string[];
   const hasLocalePrefix = locales.some(

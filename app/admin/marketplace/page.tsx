@@ -117,7 +117,7 @@ export default function AdminMarketplacePage() {
         setMessage({ type: 'error', text: data.error || 'Installation failed' });
       }
     } catch {
-      setMessage({ type: 'error', text: 'Installation failed — network error' });
+      setMessage({ type: 'error', text: 'Installation failed - network error' });
     } finally {
       setInstalling(null);
     }

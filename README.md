@@ -26,16 +26,16 @@ Built with Next.js and the JMAP protocol.
 <tr>
 <td width="50%">
 
-<img src="screenshots/inbox.png" width="100%" alt="Inbox — three-pane layout with sidebar, email list, and viewer (dark mode)">
+<img src="screenshots/inbox.png" width="100%" alt="Inbox - three-pane layout with sidebar, email list, and viewer (dark mode)">
 
-**Mail** — Three-pane layout with sidebar, email list, and viewer
+**Mail** - Three-pane layout with sidebar, email list, and viewer
 
 </td>
 <td width="50%">
 
 <img src="screenshots/calendar.png" width="100%" alt="Calendar">
 
-**Calendar** — Month, week, day, and agenda views with event management
+**Calendar** - Month, week, day, and agenda views with event management
 
 </td>
 </tr>
@@ -44,14 +44,14 @@ Built with Next.js and the JMAP protocol.
 
 <img src="screenshots/contacts.png" width="100%" alt="Contacts">
 
-**Contacts** — Contact management with groups and vCard support
+**Contacts** - Contact management with groups and vCard support
 
 </td>
 <td width="50%">
 
 <img src="screenshots/files.png" width="100%" alt="File browser">
 
-**Files** — Cloud file browser with upload, preview, and folder navigation
+**Files** - Cloud file browser with upload, preview, and folder navigation
 
 </td>
 </tr>
@@ -63,16 +63,16 @@ Built with Next.js and the JMAP protocol.
 <tr>
 <td width="50%">
 
-<img src="screenshots/inbox%20whitemode.png" width="100%" alt="Inbox — light mode">
+<img src="screenshots/inbox%20whitemode.png" width="100%" alt="Inbox - light mode">
 
-**Light mode** — Full theme support with intelligent color transformation
+**Light mode** - Full theme support with intelligent color transformation
 
 </td>
 <td width="50%">
 
 <img src="screenshots/settings.png" width="100%" alt="Settings">
 
-**Settings** — Appearance, identities, filters, templates, and more
+**Settings** - Appearance, identities, filters, templates, and more
 
 </td>
 </tr>
@@ -81,7 +81,7 @@ Built with Next.js and the JMAP protocol.
 
 <img src="screenshots/login.png" width="100%" alt="Login page">
 
-**Login** — Configurable branding with OAuth2/OIDC and 2FA support
+**Login** - Configurable branding with OAuth2/OIDC and 2FA support
 
 </td>
 <td width="50%">
@@ -95,29 +95,29 @@ Built with Next.js and the JMAP protocol.
 ### Mail
 
 - **Read, compose, reply, reply-all, forward** with rich HTML rendering and a Tiptap-based rich text editor (inline image upload, drag-and-drop embedding)
-- **Threading** — Gmail-style inline expansion with thread navigation; optional conversation threading toggle
-- **Unified mailbox** — view emails across all accounts in a single list
+- **Threading** - Gmail-style inline expansion with thread navigation; optional conversation threading toggle
+- **Unified mailbox** - view emails across all accounts in a single list
 - **Draft auto-save** with discard confirmation; full draft editing with identity preservation
-- **Attachments** — upload, download, and inline preview; attachment-keyword warning if a file is forgotten
-- **Search** — full-text with JMAP filter panel, search chips, cross-mailbox queries, wildcard support, and OR conditions
-- **Batch operations** — multi-select with checkboxes, archive, delete, move, tag
-- **Archive modes** — archive directly or organize archived mail by year or month
+- **Attachments** - upload, download, and inline preview; attachment-keyword warning if a file is forgotten
+- **Search** - full-text with JMAP filter panel, search chips, cross-mailbox queries, wildcard support, and OR conditions
+- **Batch operations** - multi-select with checkboxes, archive, delete, move, tag
+- **Archive modes** - archive directly or organize archived mail by year or month
 - **Print** emails directly from the viewer
 - **Answered/forwarded status icons** in email list and thread views
 - **Multi-tag per email** with color labels, reorderable tags, and drag-and-drop tag assignment
 - **Star/unstar** with configurable mark-as-read delay
 - **Virtual scrolling** for large mailboxes
 - **Quick reply** from the viewer
-- **Hover actions** — configurable quick-action buttons on email rows with customizable placement
-- **Sender avatars** — favicon-based with negative caching for performance
+- **Hover actions** - configurable quick-action buttons on email rows with customizable placement
+- **Sender avatars** - favicon-based with negative caching for performance
 - **Recipient popover** for quick contact interaction
 - **Plain text composer mode** and auto-select reply identity
 - **Reply-to addresses** support in the composer
-- **TNEF support** — extract Outlook `winmail.dat` message bodies and attachments automatically
+- **TNEF support** - extract Outlook `winmail.dat` message bodies and attachments automatically
 - **message/rfc822 unwrapping** for embedded messages
-- **Folder management** — create, rename, delete folders with icon picker and subfolder support
-- **Tag counts** — unread and total counts displayed in sidebar
-- **Browser history sync** — back/forward navigation mirrors mail view state
+- **Folder management** - create, rename, delete folders with icon picker and subfolder support
+- **Tag counts** - unread and total counts displayed in sidebar
+- **Browser history sync** - back/forward navigation mirrors mail view state
 
 ### Calendar
 
@@ -125,13 +125,13 @@ Built with Next.js and the JMAP protocol.
 - **Event hover preview** popover with configurable details
 - **Drag-and-drop rescheduling**, click-drag or double-click creation, edge-resize (15-min snap)
 - **Recurring events** with edit/delete scope (this / this and following / all) and client-side recurrence expansion
-- **Participant scheduling** — iMIP invitations sent on create and update (RFC 5545/6047 compliant), organizer/attendee UI, RSVP with trust assessment
-- **Inline calendar invitations** in email viewer — auto-detect `.ics`, RSVP, import
+- **Participant scheduling** - iMIP invitations sent on create and update (RFC 5545/6047 compliant), organizer/attendee UI, RSVP with trust assessment
+- **Inline calendar invitations** in email viewer - auto-detect `.ics`, RSVP, import
 - **iCalendar import** with preview, bulk create, and UID deduplication
 - **iCal / webcal subscriptions** with editing and batch import
-- **Birthday calendar** — auto-generated from contacts
-- **Virtual locations** — video conference URLs as first-class event fields
-- **Task management** — create, edit, and track tasks with due dates, priority, and completion status; external CalDAV client detection (Thunderbird)
+- **Birthday calendar** - auto-generated from contacts
+- **Virtual locations** - video conference URLs as first-class event fields
+- **Task management** - create, edit, and track tasks with due dates, priority, and completion status; external CalDAV client detection (Thunderbird)
 - **Shared calendars** with visual grouping in the sidebar
 - **CalDAV discovery** with automatic calendar home resolution for multi-account setups
 - **Week numbers** in mini-calendar sidebar
@@ -141,66 +141,66 @@ Built with Next.js and the JMAP protocol.
 ### Contacts
 
 - **Contact management** with JMAP sync (RFC 9553/9610) and local fallback
-- **Multiple address books** — create, rename, drag-and-drop between books, with editor picker in contact form
+- **Multiple address books** - create, rename, drag-and-drop between books, with editor picker in contact form
 - **Collapsible sidebar** with address book grouping and bulk operations
 - **Contact groups** with group expansion and member management
 - **vCard import/export** (RFC 6350) with duplicate detection
 - **Trusted senders** stored in a dedicated JMAP address book
 - **Autocomplete** in composer (To/Cc/Bcc)
-- **Bulk operations** — multi-select, delete, group add, export
+- **Bulk operations** - multi-select, delete, group add, export
 
 ### Filters & Automation
 
 - **Server-side email filters** via JMAP Sieve Scripts (RFC 9661)
-- **Visual rule builder** — conditions (From, To, Subject, Size, Body…) and actions (Move, Forward, Star, Discard…) with an expanded visual view
-- **External rule preservation** — rules authored in other clients are displayed and preserved
+- **Visual rule builder** - conditions (From, To, Subject, Size, Body…) and actions (Move, Forward, Star, Discard…) with an expanded visual view
+- **External rule preservation** - rules authored in other clients are displayed and preserved
 - **Raw Sieve editor** with syntax validation
 - **Vacation responder** with date range scheduling and sidebar indicator
-- **Email templates** — reusable, categorized, with placeholder auto-fill (`{{recipientName}}`, `{{date}}`, etc.)
+- **Email templates** - reusable, categorized, with placeholder auto-fill (`{{recipientName}}`, `{{date}}`, etc.)
 
 ### Files
 
 - **File browser** with JMAP FileNode cloud storage (Stalwart native)
 - **Upload and download** files with progress tracking, folder upload, and streamed WebDAV PUT (no in-memory buffering)
-- **Dynamic upload limits** — respects the server-configured maximum upload size
+- **Dynamic upload limits** - respects the server-configured maximum upload size
 - **Folder navigation** with breadcrumb path and tree sidebar
 - **Grid and list views** with sorting by name, size, or date
-- **Clipboard operations** — cut, copy, paste, duplicate files
+- **Clipboard operations** - cut, copy, paste, duplicate files
 - **File preview** for images, text, audio, video, and more
 - **Favorites and recent files** for quick access
-- **Bulk operations** — multi-select, delete, move, download
+- **Bulk operations** - multi-select, delete, move, download
 
 ### Security & Privacy
 
-- **External content blocked** by default — trusted senders list for auto-load
+- **External content blocked** by default - trusted senders list for auto-load
 - **HTML sanitization** via DOMPurify with XSS prevention
-- **S/MIME** — manage certificates, sign outgoing mail, encrypt to recipients, decrypt messages, and verify signatures; self-signed certificate detection; legacy 3DES / PBE support; per-account key isolation
+- **S/MIME** - manage certificates, sign outgoing mail, encrypt to recipients, decrypt messages, and verify signatures; self-signed certificate detection; legacy 3DES / PBE support; per-account key isolation
 - **SPF/DKIM/DMARC** status indicators
 - **OAuth2/OIDC with PKCE** for SSO (Keycloak, Authentik, or built-in), with OAuth-only mode, OAuth app passwords, configurable scopes, and non-interactive SSO for embedded/iframe deployments
 - **TOTP two-factor authentication**
-- **Account security panel** — manage passwords and 2FA via Stalwart admin API
-- **"Remember me"** — AES-256-GCM encrypted httpOnly cookie (opt-in)
-- **Security headers** — enforced CSP with per-request nonce, X-Frame-Options, Referrer-Policy; SSRF redirect validation; PDF iframe sandbox; IP spoofing prevention
-- **Plugin hardening** — dangerous-pattern detection, admin approval required, secure HTTP proxy API (no auth-header exposure)
+- **Account security panel** - manage passwords and 2FA via Stalwart admin API
+- **"Remember me"** - AES-256-GCM encrypted httpOnly cookie (opt-in)
+- **Security headers** - enforced CSP with per-request nonce, X-Frame-Options, Referrer-Policy; SSRF redirect validation; PDF iframe sandbox; IP spoofing prevention
+- **Plugin hardening** - dangerous-pattern detection, admin approval required, secure HTTP proxy API (no auth-header exposure)
 - **Newsletter unsubscribe** (RFC 2369)
 
 ### Interface
 
-- **Three-pane layout** — sidebar, email list, viewer with resizable columns
+- **Three-pane layout** - sidebar, email list, viewer with resizable columns
 - **Dark and light themes** with intelligent email color transformation
 - **Always-light email rendering** option for problematic HTML messages in dark theme
-- **Responsive** — desktop sidebar + mobile bottom tab bar with tablet support
-- **Keyboard shortcuts** — full navigation without a mouse
+- **Responsive** - desktop sidebar + mobile bottom tab bar with tablet support
+- **Keyboard shortcuts** - full navigation without a mouse
 - **Drag-and-drop** email organization between mailboxes and tag assignment
-- **Interactive guided tour** — onboarding walkthrough for new users
+- **Interactive guided tour** - onboarding walkthrough for new users
 - **Right-click context menus**, toast notifications with undo, form validation with shake feedback
 - **Customizable toolbar** position, custom favicon, sidebar/login logos, and login page branding
-- **Sidebar apps** — pin custom tools to the navigation rail with drag-and-drop reordering, mobile visibility toggles, and inline or new-tab launch modes
-- **Settings sync** — preferences synchronized with the server (encrypted)
+- **Sidebar apps** - pin custom tools to the navigation rail with drag-and-drop reordering, mobile visibility toggles, and inline or new-tab launch modes
+- **Settings sync** - preferences synchronized with the server (encrypted)
 - **Storage quota** display
 - **Version badge** in settings
 - **Focused mode** with proper viewport bounds
-- **Accessibility** — WCAG AA contrast, reduced-motion support, focus trap, screen reader live regions
+- **Accessibility** - WCAG AA contrast, reduced-motion support, focus trap, screen reader live regions
 
 ### Internationalization
 
@@ -212,32 +212,32 @@ Automatic browser detection with persistent preference. Configurable locale URL 
 
 - **Multiple sender identities** with per-identity signatures
 - **Automatic identity synchronization** and refresh to keep the identity manager aligned with server-side changes
-- **Sub-addressing** — `user+tag@domain.com` with contextual tag suggestions
+- **Sub-addressing** - `user+tag@domain.com` with contextual tag suggestions
 - **Identity badges** in viewer and email list
 
 ### Multi-Account
 
 - **Up to 5 simultaneous accounts** with instant switching and per-account session persistence
 - **Account switcher** with connection status, default account selection, and per-account logout
-- **Per-account settings** — encrypted settings storage with server-side sync
+- **Per-account settings** - encrypted settings storage with server-side sync
 - **Shared folders** across accounts
-- **Custom JMAP server endpoints** — optionally let users connect to any JMAP server from the login form (`ALLOW_CUSTOM_JMAP_ENDPOINT`)
+- **Custom JMAP server endpoints** - optionally let users connect to any JMAP server from the login form (`ALLOW_CUSTOM_JMAP_ENDPOINT`)
 
 ### Admin & Extensibility
 
-- **Stalwart admin dashboard** — sidebar access with reorganized dashboard and dedicated policy sections
-- **Plugin system** — schema-driven admin config UI, render and intercept hooks, `onAvatarResolve` and i18n APIs, calendar event action slots, forced enable/disable and managed policy enforcement
-- **Themes** — upload, enforce, and manage admin-controlled themes with ZIP bundles
-- **Extension marketplace** — browse and install plugins/themes from a configurable directory (`EXTENSION_DIRECTORY_URL`)
-- **Bundled plugins** — Jitsi Meet calendar integration
+- **Stalwart admin dashboard** - sidebar access with reorganized dashboard and dedicated policy sections
+- **Plugin system** - schema-driven admin config UI, render and intercept hooks, `onAvatarResolve` and i18n APIs, calendar event action slots, forced enable/disable and managed policy enforcement
+- **Themes** - upload, enforce, and manage admin-controlled themes with ZIP bundles
+- **Extension marketplace** - browse and install plugins/themes from a configurable directory (`EXTENSION_DIRECTORY_URL`)
+- **Bundled plugins** - Jitsi Meet calendar integration
 
 ### Operations
 
-- **Progressive Web App (PWA)** — installable with service worker, install prompt, and dynamic manifest (app name, description, icons, theme and background colors)
-- **Automatic update check** — server logs when a newer release is available
+- **Progressive Web App (PWA)** - installable with service worker, install prompt, and dynamic manifest (app name, description, icons, theme and background colors)
+- **Automatic update check** - server logs when a newer release is available
 - **Logging categories** with `text` or `json` formats for log aggregation
-- **Docker images** — release (`main`) and development (`dev`) channels on GHCR
-- **Demo mode** — try the webmail with fixture data for emails, calendars, contacts, files, filters, identities, and mailboxes — no mail server required
+- **Docker images** - release (`main`) and development (`dev`) channels on GHCR
+- **Demo mode** - try the webmail with fixture data for emails, calendars, contacts, files, filters, identities, and mailboxes - no mail server required
 
 ---
 
@@ -255,7 +255,7 @@ Or with Docker Compose:
 
 ```bash
 cp .env.example .env.local
-# Edit .env.local — set JMAP_SERVER_URL
+# Edit .env.local - set JMAP_SERVER_URL
 docker compose up -d
 ```
 
@@ -266,7 +266,7 @@ git clone https://github.com/bulwarkmail/webmail.git
 cd webmail
 npm install
 cp .env.example .env.local
-# Edit .env.local — set JMAP_SERVER_URL
+# Edit .env.local - set JMAP_SERVER_URL
 npm run build && npm start
 ```
 
@@ -290,7 +290,7 @@ JMAP_SERVER_URL=https://mail.example.com
 APP_NAME=My Webmail
 ```
 
-All variables are **runtime** — Docker deployments can be configured without rebuilding.
+All variables are **runtime** - Docker deployments can be configured without rebuilding.
 
 <details>
 <summary>Server Listen Address</summary>
@@ -424,7 +424,7 @@ LOG_LEVEL=info                       # "error", "warn", "info", "debug"
 
 ## Why Stalwart?
 
-[Stalwart](https://github.com/stalwartlabs/mail-server) is a mail server written in Rust with **native JMAP support** — not IMAP/SMTP with JMAP bolted on. It handles JMAP, IMAP, SMTP, and ManageSieve in a single binary. Self-hosted, no third-party dependencies.
+[Stalwart](https://github.com/stalwartlabs/mail-server) is a mail server written in Rust with **native JMAP support** - not IMAP/SMTP with JMAP bolted on. It handles JMAP, IMAP, SMTP, and ManageSieve in a single binary. Self-hosted, no third-party dependencies.
 
 ## Contributing
 

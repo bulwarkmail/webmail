@@ -14,7 +14,7 @@ interface RecipientPopoverProps {
   email: string;
   /** Display label override (e.g. "me") */
   displayLabel?: string;
-  /** Called when user clicks "View contact" — receives the contact and email */
+  /** Called when user clicks "View contact" - receives the contact and email */
   onViewContact?: (contact: ContactCard | null, email: string) => void;
   className?: string;
 }

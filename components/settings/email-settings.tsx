@@ -575,7 +575,7 @@ export function EmailSettings() {
         </button>
       </SettingItem>
 
-      {/* Trusted Senders — address book storage */}
+      {/* Trusted Senders - address book storage */}
       <SettingItem label={t('trusted_senders.use_address_book_label')} description={t('trusted_senders.use_address_book_description')}>
         <ToggleSwitch
           checked={trustedSendersAddressBook}

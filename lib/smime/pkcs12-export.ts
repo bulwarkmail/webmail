@@ -106,7 +106,7 @@ export async function exportPkcs12(
     parsedValue: {
       safeContents: [
         {
-          privacyMode: 0, // no extra encryption — key bag is already shrouded
+          privacyMode: 0, // no extra encryption - key bag is already shrouded
           value: new pkijs.SafeContents({
             safeBags: [keyBagSafe],
           }),

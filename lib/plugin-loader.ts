@@ -1,4 +1,4 @@
-﻿// Plugin Loader — loads and activates plugins via blob URL dynamic import
+﻿// Plugin Loader - loads and activates plugins via blob URL dynamic import
 
 import type { InstalledPlugin, Disposable } from './plugin-types';
 import { pluginStorage } from './plugin-storage';

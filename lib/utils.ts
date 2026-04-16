@@ -139,7 +139,7 @@ function deduplicateMailboxes(mailboxes: Mailbox[]): Mailbox[] {
       return;
     }
 
-    // Never deduplicate nested mailboxes — only root-level folders can be
+    // Never deduplicate nested mailboxes - only root-level folders can be
     // duplicates of role-based mailboxes. Removing a nested folder that happens
     // to share a name with a role folder (e.g. a subfolder named "Sent") would
     // orphan its children to root level. (GitHub #118)

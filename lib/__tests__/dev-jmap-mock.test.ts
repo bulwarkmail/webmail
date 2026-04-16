@@ -69,7 +69,7 @@ describe('dev-jmap mock server', () => {
     });
   });
 
-  describe('POST /api — Mailbox/get', () => {
+  describe('POST /api - Mailbox/get', () => {
     it('should return list of mailboxes', async () => {
       const req = makeRequest('http://localhost:3000/api/dev-jmap/api', {
         method: 'POST',
@@ -88,7 +88,7 @@ describe('dev-jmap mock server', () => {
     });
   });
 
-  describe('POST /api — Email/query', () => {
+  describe('POST /api - Email/query', () => {
     it('should filter by mailbox', async () => {
       const req = makeRequest('http://localhost:3000/api/dev-jmap/api', {
         method: 'POST',
@@ -117,7 +117,7 @@ describe('dev-jmap mock server', () => {
     });
   });
 
-  describe('POST /api — Email/get', () => {
+  describe('POST /api - Email/get', () => {
     it('should return emails by ids', async () => {
       const req = makeRequest('http://localhost:3000/api/dev-jmap/api', {
         method: 'POST',
@@ -150,7 +150,7 @@ describe('dev-jmap mock server', () => {
     });
   });
 
-  describe('POST /api — Email/set', () => {
+  describe('POST /api - Email/set', () => {
     it('should update email keywords', async () => {
       const req = makeRequest('http://localhost:3000/api/dev-jmap/api', {
         method: 'POST',
@@ -166,7 +166,7 @@ describe('dev-jmap mock server', () => {
     });
   });
 
-  describe('POST /api — Identity/get', () => {
+  describe('POST /api - Identity/get', () => {
     it('should return identities', async () => {
       const req = makeRequest('http://localhost:3000/api/dev-jmap/api', {
         method: 'POST',
@@ -183,7 +183,7 @@ describe('dev-jmap mock server', () => {
     });
   });
 
-  describe('POST /api — unknown method', () => {
+  describe('POST /api - unknown method', () => {
     it('should return error for unknown methods', async () => {
       const req = makeRequest('http://localhost:3000/api/dev-jmap/api', {
         method: 'POST',
@@ -199,7 +199,7 @@ describe('dev-jmap mock server', () => {
     });
   });
 
-  describe('POST /api — back-references', () => {
+  describe('POST /api - back-references', () => {
     it('should resolve #ids from Email/query result', async () => {
       const req = makeRequest('http://localhost:3000/api/dev-jmap/api', {
         method: 'POST',
@@ -220,7 +220,7 @@ describe('dev-jmap mock server', () => {
     });
   });
 
-  describe('POST /api — invalid request', () => {
+  describe('POST /api - invalid request', () => {
     it('should return 400 for missing methodCalls', async () => {
       const req = makeRequest('http://localhost:3000/api/dev-jmap/api', {
         method: 'POST',

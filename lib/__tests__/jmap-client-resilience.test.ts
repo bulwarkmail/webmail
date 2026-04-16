@@ -68,7 +68,7 @@ describe('JMAPClient resilience', () => {
     return client;
   }
 
-  describe('authenticatedFetch — network error retry', () => {
+  describe('authenticatedFetch - network error retry', () => {
     it('retries once on transient network error', async () => {
       const client = await createConnectedClient();
       const echoResponse = { methodResponses: [['Core/echo', { ping: 'pong' }, '0']] };
@@ -95,7 +95,7 @@ describe('JMAPClient resilience', () => {
     });
   });
 
-  describe('authenticatedFetch — basic auth 401 session refresh', () => {
+  describe('authenticatedFetch - basic auth 401 session refresh', () => {
     it('refreshes session and retries on 401 for API requests', async () => {
       const client = await createConnectedClient();
       const refreshedSession = makeSession({ apiUrl: 'https://mail.example.com/jmap/api-v2' });
@@ -138,12 +138,12 @@ describe('JMAPClient resilience', () => {
 
       // connect() should throw without trying to refresh session (would cause infinite recursion)
       await expect(client.connect()).rejects.toThrow('Invalid username or password');
-      // Only one fetch call — no refresh attempt
+      // Only one fetch call - no refresh attempt
       expect(fetchSpy).toHaveBeenCalledTimes(1);
     });
   });
 
-  describe('authenticatedFetch — bearer token refresh', () => {
+  describe('authenticatedFetch - bearer token refresh', () => {
     it('refreshes token and retries on 401 for bearer mode', async () => {
       const tokenRefresh = vi.fn().mockResolvedValue('new-token-456');
       const session = makeSession();
@@ -172,7 +172,7 @@ describe('JMAPClient resilience', () => {
     });
   });
 
-  describe('authenticatedFetch — 429 rate limiting', () => {
+  describe('authenticatedFetch - 429 rate limiting', () => {
     it('stops sending authenticated requests until the retry window expires', async () => {
       const client = await createConnectedClient();
 
@@ -258,7 +258,7 @@ describe('JMAPClient resilience', () => {
       // So ping throws, keep-alive catches it, fires false
       // Then reconnect → connect() → authenticatedFetch(sessionUrl) succeeds
       fetchSpy
-        // ping fails — network error, retry also fails
+        // ping fails - network error, retry also fails
         .mockRejectedValueOnce(new TypeError('Failed to fetch'))
         .mockRejectedValueOnce(new TypeError('Failed to fetch'))
         // reconnect → connect() → session URL succeeds

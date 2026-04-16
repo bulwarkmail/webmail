@@ -13,7 +13,7 @@ import { useIdentityStore } from '@/stores/identity-store';
 import { useVacationStore } from '@/stores/vacation-store';
 import { useSmimeStore } from '@/stores/smime-store';
 
-// Minimal snapshot shapes — we only capture what we need
+// Minimal snapshot shapes - we only capture what we need
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type StoreSnapshot = Record<string, any>;
 

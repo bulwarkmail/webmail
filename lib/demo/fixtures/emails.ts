@@ -63,8 +63,8 @@ export function createDemoEmails(): Email[] {
       textBody: [{ partId: '1', blobId: 'blob-5', size: 450, type: 'text/plain' }],
       htmlBody: [{ partId: '2', blobId: 'blob-6', size: 650, type: 'text/html' }],
       bodyValues: {
-        '1': { value: 'Hi team,\n\nI wanted to share the updated timeline for our Q4 deliverables:\n\n- Phase 1: Design review — Oct 15\n- Phase 2: Development — Nov 1-30\n- Phase 3: Testing — Dec 1-15\n- Phase 4: Launch — Dec 20\n\nPlease review and let me know if you see any conflicts.\n\nBest,\nAlice' },
-        '2': { value: '<p>Hi team,</p><p>I wanted to share the updated timeline for our Q4 deliverables:</p><ul><li>Phase 1: Design review — Oct 15</li><li>Phase 2: Development — Nov 1-30</li><li>Phase 3: Testing — Dec 1-15</li><li>Phase 4: Launch — Dec 20</li></ul><p>Please review and let me know if you see any conflicts.</p><p>Best,<br>Alice</p>' },
+        '1': { value: 'Hi team,\n\nI wanted to share the updated timeline for our Q4 deliverables:\n\n- Phase 1: Design review - Oct 15\n- Phase 2: Development - Nov 1-30\n- Phase 3: Testing - Dec 1-15\n- Phase 4: Launch - Dec 20\n\nPlease review and let me know if you see any conflicts.\n\nBest,\nAlice' },
+        '2': { value: '<p>Hi team,</p><p>I wanted to share the updated timeline for our Q4 deliverables:</p><ul><li>Phase 1: Design review - Oct 15</li><li>Phase 2: Development - Nov 1-30</li><li>Phase 3: Testing - Dec 1-15</li><li>Phase 4: Launch - Dec 20</li></ul><p>Please review and let me know if you see any conflicts.</p><p>Best,<br>Alice</p>' },
       },
       messageId: '<q4-timeline-1@example.com>',
     },
@@ -83,7 +83,7 @@ export function createDemoEmails(): Email[] {
       hasAttachment: false,
       textBody: [{ partId: '1', blobId: 'blob-7', size: 520, type: 'text/plain' }],
       bodyValues: {
-        '1': { value: 'Looks good to me! One concern: the testing window might be tight given the holidays. Could we start testing a few days earlier?\n\nAlso, should we set up a shared doc for tracking blockers?\n\n— Bob' },
+        '1': { value: 'Looks good to me! One concern: the testing window might be tight given the holidays. Could we start testing a few days earlier?\n\nAlso, should we set up a shared doc for tracking blockers?\n\n- Bob' },
       },
       messageId: '<q4-timeline-2@example.com>',
       inReplyTo: ['<q4-timeline-1@example.com>'],
@@ -104,7 +104,7 @@ export function createDemoEmails(): Email[] {
       hasAttachment: false,
       textBody: [{ partId: '1', blobId: 'blob-8', size: 400, type: 'text/plain' }],
       bodyValues: {
-        '1': { value: 'Great point Bob. Let\'s move testing to Nov 28. I\'ll create the shared doc today and share the link.\n\nUpdated timeline:\n- Design review: Oct 15\n- Development: Nov 1-27\n- Testing: Nov 28 - Dec 15\n- Launch: Dec 20\n\n— Alice' },
+        '1': { value: 'Great point Bob. Let\'s move testing to Nov 28. I\'ll create the shared doc today and share the link.\n\nUpdated timeline:\n- Design review: Oct 15\n- Development: Nov 1-27\n- Testing: Nov 28 - Dec 15\n- Launch: Dec 20\n\n- Alice' },
       },
       messageId: '<q4-timeline-3@example.com>',
       inReplyTo: ['<q4-timeline-2@example.com>'],
@@ -291,7 +291,7 @@ export function createDemoEmails(): Email[] {
       hasAttachment: false,
       textBody: [{ partId: '1', blobId: 'blob-17', size: 480, type: 'text/plain' }],
       bodyValues: {
-        '1': { value: 'Hey,\n\nI\'ve been thinking about our rate limiting approach and wanted to propose:\n\n1. Token bucket algorithm instead of fixed window\n2. Per-endpoint limits rather than global\n3. Graduated response (warn → throttle → block)\n\nThoughts? I can put together a more detailed RFC if we agree on the direction.\n\n— Bob' },
+        '1': { value: 'Hey,\n\nI\'ve been thinking about our rate limiting approach and wanted to propose:\n\n1. Token bucket algorithm instead of fixed window\n2. Per-endpoint limits rather than global\n3. Graduated response (warn → throttle → block)\n\nThoughts? I can put together a more detailed RFC if we agree on the direction.\n\n- Bob' },
       },
       messageId: '<project-2@example.com>',
     },

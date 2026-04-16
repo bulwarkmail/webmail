@@ -740,7 +740,7 @@ function ContactSidebarPanel({
                   <div key={i} className="text-sm">
                     {o.name}
                     {o.units && o.units.length > 0 && (
-                      <span className="text-muted-foreground"> — {o.units.map(u => u.name).join(", ")}</span>
+                      <span className="text-muted-foreground"> - {o.units.map(u => u.name).join(", ")}</span>
                     )}
                   </div>
                 ))}
@@ -1170,7 +1170,7 @@ export function EmailViewer({
       return;
     }
 
-    // Already read — record that so manual unread toggle won't re-trigger auto-mark
+    // Already read - record that so manual unread toggle won't re-trigger auto-mark
     if (email.keywords?.$seen) {
       autoMarkedEmailRef.current = email.id;
       return;
@@ -1644,7 +1644,7 @@ export function EmailViewer({
             // Check if inner content is also signed
             const nestedSignedData = extractNestedSignedDataCandidate(parsed, result.mimeBytes);
             if (nestedSignedData) {
-              // Nested sign-then-encrypt — verify inner signature
+              // Nested sign-then-encrypt - verify inner signature
               const innerBytes = normalizeCmsBytes(nestedSignedData.bytes);
               smimeDebug('[S/MIME] nested signed-data candidate:', {
                 source: nestedSignedData.source,
@@ -1853,7 +1853,7 @@ export function EmailViewer({
 
     // Check if the email already has a usable HTML body with real content
     // Outlook often forwards TNEF emails with an HTML body that's just Word
-    // boilerplate (CSS + &nbsp;) — treat these as effectively empty.
+    // boilerplate (CSS + &nbsp;) - treat these as effectively empty.
     const htmlPartId = email.htmlBody?.[0]?.partId;
     const htmlValue = htmlPartId ? email.bodyValues?.[htmlPartId]?.value?.trim() : '';
     let hasRealHtmlBody = !!htmlValue;
@@ -1898,7 +1898,7 @@ export function EmailViewer({
           return;
         }
 
-        debug.log('email', 'TNEF parse result — htmlBody:', !!parsed.htmlBody, '(' + (parsed.htmlBody?.length ?? 0) + ' chars)', ', body:', !!parsed.body, '(' + (parsed.body?.length ?? 0) + ' chars)', ', attachments:', parsed.attachments.length);
+        debug.log('email', 'TNEF parse result - htmlBody:', !!parsed.htmlBody, '(' + (parsed.htmlBody?.length ?? 0) + ' chars)', ', body:', !!parsed.body, '(' + (parsed.body?.length ?? 0) + ' chars)', ', attachments:', parsed.attachments.length);
 
         if (parsed.htmlBody && !hasRealHtmlBody) {
           setTnefHtml(parsed.htmlBody);
@@ -1912,7 +1912,7 @@ export function EmailViewer({
         }
 
         if (!parsed.htmlBody && !parsed.body && parsed.attachments.length === 0) {
-          debug.warn('email', 'TNEF: Parsing succeeded but no content was extracted — the winmail.dat may use an unsupported format');
+          debug.warn('email', 'TNEF: Parsing succeeded but no content was extracted - the winmail.dat may use an unsupported format');
         }
 
         debug.groupEnd();
@@ -1975,7 +1975,7 @@ export function EmailViewer({
         const parsed = await parser.parse(new Uint8Array(blobBytes));
         if (cancelled) { debug.groupEnd(); return; }
 
-        debug.log('email', 'Embedded RFC822 parsed — html:', !!parsed.html, '(' + (parsed.html?.length ?? 0) + ' chars)',
+        debug.log('email', 'Embedded RFC822 parsed - html:', !!parsed.html, '(' + (parsed.html?.length ?? 0) + ' chars)',
           ', text:', !!parsed.text, '(' + (parsed.text?.length ?? 0) + ' chars)',
           ', attachments:', parsed.attachments?.length ?? 0);
 
@@ -2091,7 +2091,7 @@ export function EmailViewer({
       // Hide message/rfc822 when we have unwrapped the embedded email
       .filter(att => !embeddedEmailUnwrapped || att.type !== 'message/rfc822')
       // Hide calendar MIME parts (text/calendar, application/ics) when the invitation
-      // banner is shown — prevents raw ICS files appearing as spurious attachments.
+      // banner is shown - prevents raw ICS files appearing as spurious attachments.
       .filter(att => !hasCalInvitation || !isCalendarMimeType(att.type))
       .map((attachment, index) => ({
         id: attachment.blobId || `${attachment.name || 'attachment'}-${index}`,
@@ -2961,7 +2961,7 @@ export function EmailViewer({
         <PluginSlot name="toolbar-actions" />
       </div>
 
-      {/* Right: Organize actions — order: archive, delete, move, star, tag, spam, read state, print, view source */}
+      {/* Right: Organize actions - order: archive, delete, move, star, tag, spam, read state, print, view source */}
       <div className="flex items-center gap-0 sm:gap-0.5">
         {isLoading && (
           <div className="mr-2 flex items-center gap-1.5 text-muted-foreground">
@@ -3058,7 +3058,7 @@ export function EmailViewer({
           <span className="text-[10px] leading-tight sm:hidden">{isStarred ? t('tooltips.unstar') : t('tooltips.star')}</span>
         </Button>
 
-        {/* Tag Picker — hidden on mobile, overflows to More menu */}
+        {/* Tag Picker - hidden on mobile, overflows to More menu */}
         <div data-overflow-item data-overflow-priority="6" className="hidden sm:flex items-center">
         <div className="w-px h-5 bg-border mx-0.5" />
         <div ref={tagMenuRef} className="relative">
@@ -3127,7 +3127,7 @@ export function EmailViewer({
         </div>
         </div>
 
-        {/* Spam — hidden on mobile, overflows to More menu */}
+        {/* Spam - hidden on mobile, overflows to More menu */}
         {(onMarkAsSpam || onUndoSpam) && (
           <Button
             variant="ghost"
@@ -3149,7 +3149,7 @@ export function EmailViewer({
           </Button>
         )}
 
-        {/* Toggle read state — hidden on mobile, overflows to More menu */}
+        {/* Toggle read state - hidden on mobile, overflows to More menu */}
         <Button
           variant="ghost"
           size="sm"
@@ -3162,7 +3162,7 @@ export function EmailViewer({
           {isUnread ? <MailOpen className="w-4 h-4" /> : <Mail className="w-4 h-4" />}
         </Button>
 
-        {/* Print — hidden on mobile, overflows to More menu */}
+        {/* Print - hidden on mobile, overflows to More menu */}
         <Button
           variant="ghost"
           size="sm"
@@ -3176,7 +3176,7 @@ export function EmailViewer({
           {showToolbarLabels && <span className="hidden sm:inline text-sm">{t('print')}</span>}
         </Button>
 
-        {/* View source — hidden on mobile, overflows to More menu */}
+        {/* View source - hidden on mobile, overflows to More menu */}
         <Button
           variant="ghost"
           size="sm"
@@ -3204,7 +3204,7 @@ export function EmailViewer({
           </Button>
         )}
 
-        {/* More menu — click-based */}
+        {/* More menu - click-based */}
         <div ref={moreMenuRef} className="relative">
           <Button
             variant="ghost"
@@ -3250,7 +3250,7 @@ export function EmailViewer({
                 <Archive className="w-4 h-4" />
                 {t('archive')}
               </button>
-              {/* Overflow: move to folder — submenu */}
+              {/* Overflow: move to folder - submenu */}
               {moveTree.length > 0 && onMoveToMailbox && (
                 <div className={cn("relative", hiddenPriorities.has(5) ? "" : "sm:hidden")}
                   onMouseEnter={() => setMoreMenuSub('move')}
@@ -3302,7 +3302,7 @@ export function EmailViewer({
                   )}
                 </div>
               )}
-              {/* Overflow: tag — submenu */}
+              {/* Overflow: tag - submenu */}
               {colorOptions.length > 0 && (
                 <div className={cn("relative", hiddenPriorities.has(6) ? "" : "sm:hidden")}
                   onMouseEnter={() => setMoreMenuSub('tag')}
@@ -4039,7 +4039,7 @@ export function EmailViewer({
                                   <div className="flex-1">
                                     <div className="text-xs font-medium text-gray-900 dark:text-gray-100 flex items-center gap-1">
                                       Spam Score
-                                      <InfoTooltip text="A score assigned by the server based on spam analysis. Lower is better — scores above 5 are likely spam" />
+                                      <InfoTooltip text="A score assigned by the server based on spam analysis. Lower is better - scores above 5 are likely spam" />
                                     </div>
                                     <div className={cn(
                                       "text-xs",

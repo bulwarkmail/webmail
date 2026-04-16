@@ -30,7 +30,7 @@ async function checkStalwartAdmin(request: NextRequest): Promise<boolean> {
 }
 
 /**
- * POST /api/admin/auth — Login
+ * POST /api/admin/auth - Login
  */
 export async function POST(request: NextRequest) {
   try {
@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * GET /api/admin/auth — Check session status
+ * GET /api/admin/auth - Check session status
  * Also checks if the user is a Stalwart admin (admin panel enabled even without password).
  */
 export async function GET(request: NextRequest) {
@@ -136,7 +136,7 @@ export async function GET(request: NextRequest) {
 }
 
 /**
- * DELETE /api/admin/auth — Logout
+ * DELETE /api/admin/auth - Logout
  */
 export async function DELETE(request: NextRequest) {
   try {

@@ -6,14 +6,14 @@ Thank you for your donations:
 
 - _You? [Become a sponsor!](https://github.com/sponsors/bulwarkmail)_
 
-
 **One-time**
+
 - [@mkorthaus-private](https://github.com/mkorthaus-private)
 - [@boris22100](https://github.com/boris22100)
 
 **Monthly**
-- [@pr0ton11](https://github.com/pr0ton11)
 
+- [@pr0ton11](https://github.com/pr0ton11)
 
 ### Features
 
@@ -45,10 +45,12 @@ Thank you for your donations:
 Thank you for your donations:
 
 **One-time**
+
 - [@boris22100](https://github.com/boris22100)
 - [@mkorthaus-private](https://github.com/mkorthaus-private)
 
 **Monthly**
+
 - _You? [Become a sponsor!](https://github.com/sponsors/bulwarkmail)_
 
 ### Features
@@ -78,9 +80,11 @@ Thank you for your donations:
 Thank you for your donations:
 
 **One-time**
+
 - [@mkorthaus-private](https://github.com/mkorthaus-private)
 
 **Monthly**
+
 - _You? [Become a sponsor!](https://github.com/sponsors/bulwarkmail)_
 
 ### Features
@@ -476,7 +480,7 @@ Thank you for your donations:
 ### Fixes
 
 - **Context menu**: Fix "Move to folder" submenu closing when scrolling the folder list or moving the mouse to the submenu (#19)
-- **Move to folder**: Fix emails not actually moving on the server — JMAP response errors were silently ignored and shared account IDs were not resolved correctly
+- **Move to folder**: Fix emails not actually moving on the server - JMAP response errors were silently ignored and shared account IDs were not resolved correctly
 - **Dependencies**: Update tailwindcss, lucide-react, @tanstack/react-virtual, @typescript-eslint/\*, globals, @types/node
 
 ## 1.1.1 (2026-02-28)
@@ -486,7 +490,7 @@ Thank you for your donations:
 - **Email viewer**: Show/hide details toggle now stays in place when expanded instead of jumping to the bottom of the details section (#18)
 - **Email viewer**: Details toggle text is now properly translated (was hardcoded in English)
 - **Instrumentation**: Resolve Edge Runtime warnings by splitting Node.js-only code into a separate module
-- **Security**: Patch minimatch ReDoS vulnerability (CVE-2026-27903) — upgrade 9.0.6→9.0.9 and 3.1.3→3.1.5
+- **Security**: Patch minimatch ReDoS vulnerability (CVE-2026-27903) - upgrade 9.0.6→9.0.9 and 3.1.3→3.1.5
 
 ## 1.1.0 (2026-02-28)
 

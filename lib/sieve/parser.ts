@@ -233,7 +233,7 @@ function extractRequireTokens(stmt: string): string[] {
 
 /**
  * Extract the last contiguous block of comments immediately preceding a
- * statement — comments separated from the statement by a blank line are not
+ * statement - comments separated from the statement by a blank line are not
  * considered its leading commentary (they likely belong to the previous
  * block, e.g. a trailing "# Nextcloud Mail - end" marker).
  */
@@ -341,7 +341,7 @@ function parseAtom(raw: string): FilterCondition | null {
     } else if (tag === 'is') {
       comparator = negated ? 'not_is' : 'is';
     } else {
-      // :matches — distinguish starts_with / ends_with / matches
+      // :matches - distinguish starts_with / ends_with / matches
       const starPositions = [...value].reduce<number[]>((acc, ch, idx) => (ch === '*' ? [...acc, idx] : acc), []);
       if (starPositions.length === 1 && starPositions[0] === value.length - 1) {
         comparator = 'starts_with';
@@ -591,7 +591,7 @@ export function parseScript(content: string): ParseResult {
     };
   }
 
-  // No metadata — check vacation-only first
+  // No metadata - check vacation-only first
   const vacationOnly = detectVacationOnlyScript(content);
   if (vacationOnly) return vacationOnly;
 
@@ -599,7 +599,7 @@ export function parseScript(content: string): ParseResult {
   const external = parseExternalRules(content, 'ext');
 
   if (!external.hasContent) {
-    // Entirely empty or whitespace/comments only — treat as empty, editable.
+    // Entirely empty or whitespace/comments only - treat as empty, editable.
     return { rules: [], isOpaque: false, externalRequires: [] };
   }
 

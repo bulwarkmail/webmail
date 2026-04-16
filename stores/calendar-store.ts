@@ -374,7 +374,7 @@ export const useCalendarStore = create<CalendarStore>()(
 
       rsvpEvent: async (client, eventId, participantId, status, replyTo) => {
         set({ error: null });
-        // JMAP participant IDs are opaque strings — they can contain @, ., :, / etc.
+        // JMAP participant IDs are opaque strings - they can contain @, ., :, / etc.
         // Only reject empty or obviously malicious values (path traversal).
         if (!participantId || participantId.includes('..')) {
           set({ error: 'Invalid participant ID' });
@@ -448,15 +448,15 @@ export const useCalendarStore = create<CalendarStore>()(
 
           for (const e of eventsToProcess) {
             if (!e.uid || !uidToEvent.has(e.uid)) {
-              // UID doesn't exist on server — create it
+              // UID doesn't exist on server - create it
               newEvents.push(e);
             } else {
               const existing = uidToEvent.get(e.uid)!;
               if (existing.calendarIds[realCalendarId]) {
-                // Already in target calendar — skip
+                // Already in target calendar - skip
                 continue;
               }
-              // Exists in another calendar — link to target calendar
+              // Exists in another calendar - link to target calendar
               eventsToLink.push({
                 eventId: existing.id,
                 calendarIds: { ...existing.calendarIds, [realCalendarId]: true },

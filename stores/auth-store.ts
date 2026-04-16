@@ -430,7 +430,7 @@ export const useAuthStore = create<AuthState>()(
             if (!upgradedToOAuth) {
               const { useTotpReauthStore } = await import('@/stores/totp-reauth-store');
               client.enableTotpReauth(password, () => useTotpReauthStore.getState().requestTotp());
-              debug.log('auth', 'TOTP re-auth enabled — user will be prompted for fresh codes on session expiry');
+              debug.log('auth', 'TOTP re-auth enabled - user will be prompted for fresh codes on session expiry');
             }
           }
 
@@ -920,7 +920,7 @@ export const useAuthStore = create<AuthState>()(
         const remainingAccounts = accountStore.accounts;
 
         if (remainingAccounts.length > 0 && !wasDemoMode) {
-          // Switch to the next account — this is the one path that stays in-app
+          // Switch to the next account - this is the one path that stays in-app
           const nextAccount = remainingAccounts[0];
           clearAllStores();
 
@@ -955,7 +955,7 @@ export const useAuthStore = create<AuthState>()(
               }).catch((err) => debug.error('Failed to load identities after switch:', err));
             }
           } else {
-            // Client not in memory — clear everything and redirect.
+            // Client not in memory - clear everything and redirect.
             // Trying to async-restore during logout caused the original bug.
             debug.error(`Cannot restore next account ${nextAccount.id}, performing full logout`);
             evictAccount(nextAccount.id);
@@ -971,12 +971,12 @@ export const useAuthStore = create<AuthState>()(
           return;
         }
 
-        // No accounts remaining (or demo mode) — full logout + redirect
+        // No accounts remaining (or demo mode) - full logout + redirect
         performFullLogout(set);
 
         notifyParent('sso:logout');
 
-        // Background cookie/token cleanup — keepalive ensures completion during navigation
+        // Background cookie/token cleanup - keepalive ensures completion during navigation
         if (!wasDemoMode) {
           apiFetch(`/api/auth/session?slot=${slot}`, { method: 'DELETE', keepalive: true }).catch(() => {});
           if (wasOAuth) {
@@ -984,7 +984,7 @@ export const useAuthStore = create<AuthState>()(
           }
         }
 
-        // Redirect to login — this is synchronous and happens AFTER all state is cleared
+        // Redirect to login - this is synchronous and happens AFTER all state is cleared
         redirectToLogin();
       },
 
@@ -1039,7 +1039,7 @@ export const useAuthStore = create<AuthState>()(
         let targetRestoreRateLimited = false;
 
         if (!targetClient) {
-          // Client not connected — try to restore
+          // Client not connected - try to restore
           try {
             if (targetAccount.authMode === 'oauth') {
               const res = await apiFetch(`/api/auth/token?slot=${targetAccount.cookieSlot}`, { method: 'PUT' });
@@ -1105,7 +1105,7 @@ export const useAuthStore = create<AuthState>()(
             return;
           }
 
-          // Cannot restore — remove the stale account and redirect to login
+          // Cannot restore - remove the stale account and redirect to login
           evictAccount(accountId);
           accountStore.removeAccount(accountId);
           apiFetch(`/api/auth/session?slot=${targetAccount.cookieSlot}`, { method: 'DELETE' }).catch(() => {});
@@ -1239,7 +1239,7 @@ export const useAuthStore = create<AuthState>()(
                   throw new Error(`Session cookie missing: ${res.status}`);
                 }
               } else {
-                // Basic auth without rememberMe — can't restore
+                // Basic auth without rememberMe - can't restore
                 throw new Error('No saved session');
               }
             } catch (err) {
@@ -1523,7 +1523,7 @@ export const useAuthStore = create<AuthState>()(
           const { identities, primaryIdentity } = loadIdentities(rawIdentities, username);
           set({ identities, primaryIdentity });
         } catch {
-          // Silently fail — background sync should not surface errors to the user
+          // Silently fail - background sync should not surface errors to the user
         }
       },
 
@@ -1538,7 +1538,7 @@ export const useAuthStore = create<AuthState>()(
     {
       name: 'auth-storage',
       partialize: (state) => {
-        // Don't persist unauthenticated state — prevents resurrecting stale sessions
+        // Don't persist unauthenticated state - prevents resurrecting stale sessions
         if (!state.isAuthenticated) return {};
         return {
           serverUrl: state.serverUrl,

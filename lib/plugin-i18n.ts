@@ -1,4 +1,4 @@
-// Plugin i18n registry — manages per-plugin translation tables
+// Plugin i18n registry - manages per-plugin translation tables
 //
 // Each plugin gets its own namespace keyed by:
 //   pluginId → locale → { messageKey → translated string }
@@ -105,7 +105,7 @@ export function createPluginI18n(pluginId: string) {
     t(key: string, params?: Record<string, string | number>): string {
       const template = resolve(pluginId, key);
       if (template !== undefined) return interpolate(template, params);
-      return key; // never throw — just return the key
+      return key; // never throw - just return the key
     },
 
     /** The current app locale (e.g. "en", "de", "fr") */

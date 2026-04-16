@@ -115,7 +115,7 @@ export async function initAdminPassword(): Promise<boolean> {
   }
 
   if (isHashed(envPassword)) {
-    // Already hashed in env — save to file
+    // Already hashed in env - save to file
     const data: AdminData = {
       passwordHash: envPassword,
       createdAt: new Date().toISOString(),
@@ -129,7 +129,7 @@ export async function initAdminPassword(): Promise<boolean> {
     return true;
   }
 
-  // Cleartext — hash it
+  // Cleartext - hash it
   const hash = await hashPassword(envPassword);
   const data: AdminData = {
     passwordHash: hash,

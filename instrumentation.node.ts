@@ -38,7 +38,7 @@ if (process.env.NODE_ENV === "production") {
       if (!SEMVER_RE.test(remote)) return;
       if (compareVersions(current, remote) > 0) {
         console.info(
-          `Update available: v${remote} — https://github.com/bulwarkmail/webmail`
+          `Update available: v${remote} - https://github.com/bulwarkmail/webmail`
         );
       }
     })

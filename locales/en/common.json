@@ -45,11 +45,11 @@
     "imprint": "Imprint",
     "privacy_policy": "Privacy Policy",
     "try_demo": "Try Demo",
-    "demo_description": "Explore with sample data — no account needed",
+    "demo_description": "Explore with sample data - no account needed",
     "demo_launching": "Launching demo...",
     "demo_login_button": "Launch Demo",
     "demo_tagline": "Experience a full-featured email client. No account required.",
-    "demo_no_signup": "No signup needed — explore freely with sample data",
+    "demo_no_signup": "No signup needed - explore freely with sample data",
     "oauth_completing": "Completing sign in...",
     "oauth_error": {
       "title": "Authentication Failed",
@@ -928,7 +928,7 @@
         "close": "Close",
         "invalid_email": "Please enter a valid email address",
         "already_added": "This sender is already trusted",
-        "save_error": "Failed to save — check the Contacts debug log for details",
+        "save_error": "Failed to save - check the Contacts debug log for details",
         "use_address_book_label": "Sync with address book",
         "use_address_book_description": "Store trusted senders in a dedicated \"Trusted Senders\" address book so they sync across all your devices"
       },
@@ -1171,7 +1171,7 @@
       "warnings": {
         "end_before_start": "End date must be after start date",
         "start_in_past": "Start date is in the past",
-        "empty_body": "Message body is empty — recipients will receive a blank reply"
+        "empty_body": "Message body is empty - recipients will receive a blank reply"
       }
     },
     "folders": {
@@ -2313,7 +2313,7 @@
   },
   "demo_welcome": {
     "title": "Welcome to Bulwark Mail",
-    "description": "Explore a fully-featured webmail client — right in your browser. All data stays on your device, so feel free to test everything.",
+    "description": "Explore a fully-featured webmail client - right in your browser. All data stays on your device, so feel free to test everything.",
     "feature_email": "Read & compose email",
     "feature_organize": "Tags, stars & folders",
     "feature_shortcuts": "Keyboard shortcuts",
@@ -2540,15 +2540,15 @@
     "create_event_title": "Create an event",
     "create_event_desc": "Click this button to create a new calendar event. You can set a title, date, time, and add participants.",
     "event_modal_title": "Event details",
-    "event_modal_desc": "Here's the event form. Fill in the title, pick a date and time, add a location or participants. Hit save when you're done — or close it and move on.",
+    "event_modal_desc": "Here's the event form. Fill in the title, pick a date and time, add a location or participants. Hit save when you're done - or close it and move on.",
     "contacts_list_title": "Your contacts",
     "contacts_list_desc": "Here are your contacts. Click any contact to see their full details on the right. You can also create new contacts, import vCards, or organize contacts into groups.",
     "settings_tabs_title": "Settings menu",
     "settings_tabs_desc": "Here are all the settings categories. Customize your appearance, manage identities, set up email filters, configure your calendar, and much more.",
     "files_title": "File storage",
-    "files_desc": "Your file browser lets you upload, organize, and share files — like a personal cloud drive built into your mail.",
+    "files_desc": "Your file browser lets you upload, organize, and share files - like a personal cloud drive built into your mail.",
     "demo_banner_title": "Demo controls",
-    "demo_banner_desc": "You're in demo mode — everything stays in your browser. Hit 'Reset Demo' anytime to start fresh with clean sample data.",
+    "demo_banner_desc": "You're in demo mode - everything stays in your browser. Hit 'Reset Demo' anytime to start fresh with clean sample data.",
     "quota_title": "Storage usage",
     "quota_desc": "Track your mailbox size here. The circle fills up as you use more space."
   },

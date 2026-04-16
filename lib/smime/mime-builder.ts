@@ -275,7 +275,7 @@ function cmsToBase64Blob(data: Blob | ArrayBuffer | Uint8Array): Blob {
   } else if (data instanceof ArrayBuffer) {
     bytes = new Uint8Array(data);
   } else {
-    // Blob — we need sync; caller should have converted. Fallback to empty.
+    // Blob - we need sync; caller should have converted. Fallback to empty.
     bytes = new Uint8Array(0);
   }
   const b64 = base64Encode(bytes.buffer as ArrayBuffer);

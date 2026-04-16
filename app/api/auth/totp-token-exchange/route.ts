@@ -66,7 +66,7 @@ async function findTokenEndpoint(serverUrl: string): Promise<string | null> {
         return url;
       }
     } catch {
-      // Network error — endpoint not reachable
+      // Network error - endpoint not reachable
     }
   }
 

@@ -125,7 +125,7 @@ function readMAPIFixedValue(r: BinaryReader, propType: number): Uint8Array | num
     case PT_CLSID:
       return r.readBytes(16);
     default:
-      // Unknown/unsupported type — try to read as fixed 4 bytes
+      // Unknown/unsupported type - try to read as fixed 4 bytes
       if (r.remaining >= 4) {
         return r.readBytes(4);
       }
@@ -268,7 +268,7 @@ export function parseTnef(data: Uint8Array): TnefResult {
     attrCount++;
 
     if (attrLen > r.remaining - 2) {
-      debug.warn('email', 'Attribute #' + attrCount + ': truncated data — need', attrLen, 'bytes but only', r.remaining - 2, 'available');
+      debug.warn('email', 'Attribute #' + attrCount + ': truncated data - need', attrLen, 'bytes but only', r.remaining - 2, 'available');
       break;
     }
 
@@ -316,7 +316,7 @@ export function parseTnef(data: Uint8Array): TnefResult {
       }
     } else if (level === LVL_ATTACHMENT) {
       if (attrID === attAttachRenddata) {
-        // Start of a new attachment — flush previous
+        // Start of a new attachment - flush previous
         if (curAttach?.data) {
           debug.log('email', '  → Flushing previous attachment:', curAttach.name, '(' + curAttach.mimeType + ',', curAttach.data.byteLength, 'bytes)');
           result.attachments.push({
@@ -375,7 +375,7 @@ export function parseTnef(data: Uint8Array): TnefResult {
     });
   }
 
-  debug.log('email', 'TNEF parsing complete — body:', !!result.body, ', htmlBody:', !!result.htmlBody, ', attachments:', result.attachments.length);
+  debug.log('email', 'TNEF parsing complete - body:', !!result.body, ', htmlBody:', !!result.htmlBody, ', attachments:', result.attachments.length);
   if (result.attachments.length > 0) {
     debug.table(result.attachments.map(a => ({ name: a.name, mimeType: a.mimeType, size: a.data.byteLength })), 'email');
   }

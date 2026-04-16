@@ -149,7 +149,7 @@ interface SmimeStore extends SmimePersistedState {
   // Loaded from IndexedDB
   keyRecords: SmimeKeyRecord[];
   publicCerts: SmimePublicCert[];
-  // Runtime only — never persisted
+  // Runtime only - never persisted
   unlockedKeys: Map<string, CryptoKey>;
   unlockedDecryptionKeys: Map<string, CryptoKey>;
   unlockedLegacyDecryptionKeys: Map<string, CryptoKey>;
@@ -282,7 +282,7 @@ export const useSmimeStore = create<SmimeStore>()(
         set({ isLoading: true, error: null });
         try {
           const cert = parseCertificatePemOrDer(data);
-          // Always re-encode to DER — input might be PEM text (string or ArrayBuffer)
+          // Always re-encode to DER - input might be PEM text (string or ArrayBuffer)
           const der = cert.toSchema(true).toBER(false);
           const info = await extractCertificateInfo(cert, der);
           const email = info.emailAddresses[0] ?? '';

@@ -132,7 +132,7 @@ export async function smimeVerify(
 function parseContentInfo(der: ArrayBuffer): pkijs.ContentInfo {
   const asn1 = asn1js.fromBER(der);
   if (asn1.offset === -1) {
-    throw new Error('Invalid ASN.1 data — cannot parse CMS structure');
+    throw new Error('Invalid ASN.1 data - cannot parse CMS structure');
   }
   return new pkijs.ContentInfo({ schema: asn1.result });
 }

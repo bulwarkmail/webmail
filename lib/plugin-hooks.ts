@@ -1,4 +1,4 @@
-// Plugin Hook Bus — event bus system for plugin lifecycle hooks
+// Plugin Hook Bus - event bus system for plugin lifecycle hooks
 
 import type { Disposable } from './plugin-types';
 
@@ -108,7 +108,7 @@ export class HookBus<T extends (...args: any[]) => any> {
     return this.handlers.length;
   }
 
-  /** Fire all handlers (observer pattern — no return values used) */
+  /** Fire all handlers (observer pattern - no return values used) */
   async emit(...args: Parameters<T>): Promise<void> {
     for (const { pluginId, handler } of this.handlers) {
       if (pluginErrorTracker.isDisabled(pluginId)) continue;
@@ -132,7 +132,7 @@ export class HookBus<T extends (...args: any[]) => any> {
     }
   }
 
-  /** Fire handlers as interceptors — any returning false cancels the operation */
+  /** Fire handlers as interceptors - any returning false cancels the operation */
   async intercept(...args: Parameters<T>): Promise<boolean> {
     for (const { pluginId, handler } of this.handlers) {
       if (pluginErrorTracker.isDisabled(pluginId)) continue;
@@ -146,7 +146,7 @@ export class HookBus<T extends (...args: any[]) => any> {
     return true;
   }
 
-  /** Fire handlers as transforms — each receives the output of the previous */
+  /** Fire handlers as transforms - each receives the output of the previous */
   async transform<V>(initial: V, ...rest: unknown[]): Promise<V> {
     let value = initial;
     for (const { pluginId, handler } of this.handlers) {
@@ -172,7 +172,7 @@ export const emailHooks = {
   onEmailClose: new HookBus(),
   onEmailContentRender: new HookBus(),
   onThreadExpand: new HookBus(),
-  // Intercept hook — fires before the composer opens.
+  // Intercept hook - fires before the composer opens.
   // Handlers receive ComposeOptions and may mutate fields in place.
   // Return false to cancel opening the composer.
   onBeforeCompose: new HookBus(),
@@ -204,7 +204,7 @@ export const emailHooks = {
   onNewEmailReceived: new HookBus(),
   onPushConnectionChange: new HookBus(),
   onQuotaChange: new HookBus(),
-  // Intercept hook — fired when a mailto: link is clicked.
+  // Intercept hook - fired when a mailto: link is clicked.
   // Return false to prevent the browser from opening the system mail client.
   onMailtoIntercept: new HookBus(),
 };
@@ -261,7 +261,7 @@ export const fileHooks = {
   onDirectoryCreate: new HookBus(),
   onBeforeFileDelete: new HookBus(),
   onAfterFileDelete: new HookBus(),
-  // Intercept hook — fires before a file is renamed.
+  // Intercept hook - fires before a file is renamed.
   // Receives { file: FileResourceView, newName: string }.
   // Return false to cancel the rename.
   onBeforeFileRename: new HookBus(),
@@ -423,7 +423,7 @@ export const avatarHooks = {
 
 // §7.22 Render Hooks
 export const renderHooks = {
-  // Transform hook — runs for each visible email list row.
+  // Transform hook - runs for each visible email list row.
   // Initial value: EmailListBadge[]  (always starts as [])
   // Second argument: { emailId: string; email: EmailReadView }
   // Handlers return a new (or extended) badges array.

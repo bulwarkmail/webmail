@@ -95,7 +95,7 @@ export async function GET(request: NextRequest) {
 }
 
 /**
- * PUT — retrieve full credentials (including password) for session restoration.
+ * PUT - retrieve full credentials (including password) for session restoration.
  * Protected by multiple Sec-Fetch-* headers to ensure only same-origin
  * browser fetch() requests succeed. Non-browser clients cannot forge these.
  */

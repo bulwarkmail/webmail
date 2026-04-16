@@ -69,7 +69,7 @@ export function detectSmime(
           supported: true,
         };
       }
-      // Generic pkcs7-mime without explicit smime-type — try bodyStructure
+      // Generic pkcs7-mime without explicit smime-type - try bodyStructure
       const part = findCmsPart(bodyStructure, null);
       if (part) {
         const partType = inferSmimeType(part);

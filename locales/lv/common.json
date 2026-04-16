@@ -45,11 +45,11 @@
     "imprint": "Rekvizīti",
     "privacy_policy": "Privātuma politika",
     "try_demo": "Izmēģināt demo",
-    "demo_description": "Izpētiet ar paraugdatiem — konts nav nepieciešams",
+    "demo_description": "Izpētiet ar paraugdatiem - konts nav nepieciešams",
     "demo_launching": "Demo palaišana...",
     "demo_login_button": "Palaist demo",
     "demo_tagline": "Izmēģiniet pilnvērtīgu e-pasta klientu bez konta izveides.",
-    "demo_no_signup": "Reģistrācija nav nepieciešama — brīvi pētiet paraugdatus",
+    "demo_no_signup": "Reģistrācija nav nepieciešama - brīvi pētiet paraugdatus",
     "oauth_completing": "Pabeidz pierakstīšanos...",
     "oauth_error": {
       "title": "Autentifikācijas kļūda",
@@ -497,7 +497,7 @@
     "smime_sign_off": "Iespējot S/MIME parakstu",
     "smime_encrypt_on": "S/MIME šifrēšana iespējota",
     "smime_encrypt_off": "Iespējot S/MIME šifrēšanu",
-    "smime_encrypt_unavailable": "S/MIME šifrēšana nav pieejama — trūkst saņēmēja sertifikāta",
+    "smime_encrypt_unavailable": "S/MIME šifrēšana nav pieejama - trūkst saņēmēja sertifikāta",
     "smime_unlock_title": "Atbloķēt S/MIME atslēgu",
     "smime_unlock_message": "Ievadiet paroli, lai atbloķētu savu S/MIME parakstīšanas atslēgu.",
     "smime_unlock_button": "Atbloķēt",
@@ -1166,7 +1166,7 @@
       "warnings": {
         "end_before_start": "Beigu datumam jābūt vēlāk par sākuma datumu",
         "start_in_past": "Sākuma datums ir pagātnē",
-        "empty_body": "Ziņojuma teksts ir tukšs — saņēmēji saņems tukšu atbildi"
+        "empty_body": "Ziņojuma teksts ir tukšs - saņēmēji saņems tukšu atbildi"
       }
     },
     "folders": {
@@ -2537,11 +2537,11 @@
     "contacts_list_title": "Jūsu kontakti",
     "contacts_list_desc": "Skatīt un rediģēt kontaktus, importēt vCard vai veidot grupas.",
     "settings_tabs_title": "Iestatījumu izvēlne",
-    "settings_tabs_desc": "Šeit atradīsiet visas iestatījumu kategorijas — no izskata līdz drošībai.",
+    "settings_tabs_desc": "Šeit atradīsiet visas iestatījumu kategorijas - no izskata līdz drošībai.",
     "files_title": "Failu krātuve",
     "files_desc": "Failu pārvaldnieks ļauj augšupielādēt un organizēt failus kā personīgo mākoņkrātuvi.",
     "demo_banner_title": "Demo vadība",
-    "demo_banner_desc": "Jūs esat demo režīmā — visi dati paliek jūsu pārlūkā. Nospiediet «Atiestatīt demo», lai sāktu no jauna.",
+    "demo_banner_desc": "Jūs esat demo režīmā - visi dati paliek jūsu pārlūkā. Nospiediet «Atiestatīt demo», lai sāktu no jauna.",
     "quota_title": "Krātuves izmantošana",
     "quota_desc": "Sekojiet līdzi savas pastkastes aizpildījumam šeit."
   },

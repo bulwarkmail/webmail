@@ -112,7 +112,7 @@ function createPluginLogger(pluginId: string) {
 
 export interface PluginAPI {
   plugin: { id: string; version: string; settings: Record<string, unknown> };
-  /** Localisation API — register translations and call t() to get strings */
+  /** Localisation API - register translations and call t() to get strings */
   i18n: PluginI18n;
   ui: {
     registerToolbarAction: (action: ToolbarAction) => Disposable;
@@ -154,7 +154,7 @@ export interface PluginHooksAPI {
   onEmailClose: (handler: () => void) => Disposable;
   onEmailContentRender: (handler: (...args: unknown[]) => unknown) => Disposable;
   onThreadExpand: (handler: (...args: unknown[]) => unknown) => Disposable;
-  /** Intercept — receives ComposeOptions, may mutate fields, return false to cancel */
+  /** Intercept - receives ComposeOptions, may mutate fields, return false to cancel */
   onBeforeCompose: (handler: (options: import('./plugin-types').ComposeOptions) => boolean | void | Promise<boolean | void>) => Disposable;
   onComposerOpen: (handler: (...args: unknown[]) => unknown) => Disposable;
   onBeforeEmailSend: (handler: (...args: unknown[]) => unknown) => Disposable;
@@ -184,7 +184,7 @@ export interface PluginHooksAPI {
   onNewEmailReceived: (handler: (...args: unknown[]) => unknown) => Disposable;
   onPushConnectionChange: (handler: (...args: unknown[]) => unknown) => Disposable;
   onQuotaChange: (handler: (...args: unknown[]) => unknown) => Disposable;
-  /** Intercept — receives MailtoContext, return false to prevent the system mail client */
+  /** Intercept - receives MailtoContext, return false to prevent the system mail client */
   onMailtoIntercept: (handler: (ctx: import('./plugin-types').MailtoContext) => boolean | void | Promise<boolean | void>) => Disposable;
   // Calendar
   onCalendarEventOpen: (handler: (...args: unknown[]) => unknown) => Disposable;
@@ -228,7 +228,7 @@ export interface PluginHooksAPI {
   onDirectoryCreate: (handler: (...args: unknown[]) => unknown) => Disposable;
   onBeforeFileDelete: (handler: (...args: unknown[]) => unknown) => Disposable;
   onAfterFileDelete: (handler: (...args: unknown[]) => unknown) => Disposable;
-  /** Intercept — receives { file: FileResourceView, newName: string }, return false to cancel */
+  /** Intercept - receives { file: FileResourceView, newName: string }, return false to cancel */
   onBeforeFileRename: (handler: (ctx: { file: import('./plugin-types').FileResourceView; newName: string }) => boolean | void | Promise<boolean | void>) => Disposable;
   onFileRename: (handler: (...args: unknown[]) => unknown) => Disposable;
   onFileMove: (handler: (...args: unknown[]) => unknown) => Disposable;
@@ -331,7 +331,7 @@ export interface PluginHooksAPI {
   onSidebarAppChange: (handler: (...args: unknown[]) => unknown) => Disposable;
   // Avatar
   onAvatarResolve: (handler: (...args: unknown[]) => unknown) => Disposable;
-  // Render — transform hook for email list row badges
+  // Render - transform hook for email list row badges
   // Handler: (badges: EmailListBadge[], ctx: { emailId: string; email: EmailReadView }) => EmailListBadge[]
   onEmailListItemRender: (handler: (...args: unknown[]) => unknown) => Disposable;
 }

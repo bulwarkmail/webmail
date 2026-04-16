@@ -33,7 +33,7 @@ function sanitizeFilename(name: string): string {
 }
 
 /**
- * POST /api/admin/branding — Upload a branding image file
+ * POST /api/admin/branding - Upload a branding image file
  *
  * Expects multipart/form-data with:
  *   - file: the image file
@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * DELETE /api/admin/branding — Remove an uploaded branding file
+ * DELETE /api/admin/branding - Remove an uploaded branding file
  *
  * Expects JSON body: { slot: string }
  */

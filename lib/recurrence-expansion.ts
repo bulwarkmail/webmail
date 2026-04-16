@@ -24,7 +24,7 @@ const INDEX_TO_DAY: string[] = ['su', 'mo', 'tu', 'we', 'th', 'fr', 'sa'];
  * store can use it for mutations.
  *
  * Non-recurring events are returned as-is. For recurring events the master is
- * **not** returned — only expanded instances within the range.
+ * **not** returned - only expanded instances within the range.
  */
 export function expandRecurringEvents(
   events: CalendarEvent[],
@@ -46,7 +46,7 @@ export function expandRecurringEvents(
   }
 
   for (const event of events) {
-    // Skip override instances returned by the server — they belong to a
+    // Skip override instances returned by the server - they belong to a
     // master recurring event and are already handled via recurrenceOverrides.
     if (event.recurrenceId && event.uid && recurringUids.has(event.uid)) {
       continue;
@@ -165,7 +165,7 @@ function createOccurrence(
 }
 
 // ---------------------------------------------------------------------------
-// §3.3.3.1 — Implicit byX property addition
+// §3.3.3.1 - Implicit byX property addition
 // ---------------------------------------------------------------------------
 function addImplicitByX(
   rule: CalendarRecurrenceRule,
@@ -211,7 +211,7 @@ function addImplicitByX(
 }
 
 // ---------------------------------------------------------------------------
-// §3.3.3.1 — Generate occurrence dates
+// §3.3.3.1 - Generate occurrence dates
 // ---------------------------------------------------------------------------
 function generateDates(
   eventStart: Date,

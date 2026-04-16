@@ -22,7 +22,7 @@ const DENSITY_PREVIEW: Record<Density, { py: string; gap: string; showAvatar: bo
 function DensityPreview({ density }: { density: Density }) {
   const cfg = DENSITY_PREVIEW[density];
   const rows = [
-    { unread: true,  sender: 'Alice Johnson',  subject: 'Project update — Q1 roadmap', preview: 'Here are the latest numbers from…' },
+    { unread: true,  sender: 'Alice Johnson',  subject: 'Project update - Q1 roadmap', preview: 'Here are the latest numbers from…' },
     { unread: false, sender: 'Bob Smith',       subject: 'Re: Meeting notes',           preview: 'Thanks, will review and get back...' },
     { unread: true,  sender: 'Carol Lee',       subject: 'Invoice #4092',               preview: 'Please find attached the invoice…' },
   ];

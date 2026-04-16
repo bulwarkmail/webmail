@@ -195,7 +195,7 @@ export interface KeyboardShortcut {
 }
 
 // ─── Read-Only View Types ────────────────────────────────────
-// Projected views exposed to plugins — no direct store references
+// Projected views exposed to plugins - no direct store references
 
 export interface EmailReadView {
   id: string;
@@ -415,7 +415,7 @@ export interface ComposeOptions {
  * A small visual indicator injected into an email list row via onEmailListItemRender.
  */
 export interface EmailListBadge {
-  /** Stable unique key within the plugin — used as React key */
+  /** Stable unique key within the plugin - used as React key */
   key: string;
   /** Short label text displayed in the badge */
   label: string;

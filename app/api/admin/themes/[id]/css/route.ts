@@ -3,7 +3,7 @@ import { getThemeCSS, getThemeRegistry } from '@/lib/admin/plugin-registry';
 import { logger } from '@/lib/logger';
 
 /**
- * GET /api/admin/themes/[id]/css — Serve theme CSS to clients
+ * GET /api/admin/themes/[id]/css - Serve theme CSS to clients
  */
 export async function GET(
   _request: NextRequest,

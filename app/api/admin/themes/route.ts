@@ -14,7 +14,7 @@ import { MAX_THEME_SIZE } from '@/lib/plugin-types';
 import { sanitizeThemeCSS, validateThemeCSSSafety } from '@/lib/theme-loader';
 
 /**
- * GET /api/admin/themes — List all admin-managed themes
+ * GET /api/admin/themes - List all admin-managed themes
  */
 export async function GET() {
   try {
@@ -32,7 +32,7 @@ export async function GET() {
 }
 
 /**
- * POST /api/admin/themes — Upload and install a theme ZIP
+ * POST /api/admin/themes - Upload and install a theme ZIP
  */
 export async function POST(request: NextRequest) {
   try {
@@ -151,7 +151,7 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * PATCH /api/admin/themes — Update theme metadata (enable/disable)
+ * PATCH /api/admin/themes - Update theme metadata (enable/disable)
  * Body: { id: string, enabled: boolean }
  */
 export async function PATCH(request: NextRequest) {
@@ -188,7 +188,7 @@ export async function PATCH(request: NextRequest) {
 }
 
 /**
- * DELETE /api/admin/themes — Remove a theme
+ * DELETE /api/admin/themes - Remove a theme
  * Body: { id: string }
  */
 export async function DELETE(request: NextRequest) {

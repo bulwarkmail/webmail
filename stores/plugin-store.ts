@@ -1,4 +1,4 @@
-// Plugin store — manages installed plugins, slot registrations, and lifecycle
+// Plugin store - manages installed plugins, slot registrations, and lifecycle
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
@@ -274,7 +274,7 @@ export const usePluginStore = create<PluginStoreState>()(
           status: p.enabled ? 'enabled' : 'installed',
           error: undefined,
         })),
-        // Don't persist slots — they are runtime-only, rebuilt on load
+        // Don't persist slots - they are runtime-only, rebuilt on load
       }),
       onRehydrateStorage: () => {
         return (state) => {
@@ -381,7 +381,7 @@ async function syncServerPlugins(
       const local = get().plugins.find(p => p.id === sp.id);
 
       if (!local) {
-        // New server plugin — download and install
+        // New server plugin - download and install
         const code = await downloadPluginBundle(sp.id);
         if (!code) continue;
 
@@ -411,7 +411,7 @@ async function syncServerPlugins(
           return { plugins: [...state.plugins, plugin] };
         });
       } else if (local.version !== sp.version) {
-        // Version changed — re-download bundle
+        // Version changed - re-download bundle
         const code = await downloadPluginBundle(sp.id);
         if (!code) continue;
 
@@ -478,7 +478,7 @@ async function syncServerPlugins(
     // Persist current server plugin IDs for future cleanup
     setServerManagedPluginIds(serverPluginIds);
   } catch {
-    // Sync failure is non-fatal — client continues with local plugins
+    // Sync failure is non-fatal - client continues with local plugins
     console.warn('[plugin-store] Server plugin sync failed, using local plugins only');
   }
 }

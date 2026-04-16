@@ -45,11 +45,11 @@
     "imprint": "Colofon",
     "privacy_policy": "Privacybeleid",
     "try_demo": "Demo proberen",
-    "demo_description": "Verken met voorbeeldgegevens — geen account nodig",
+    "demo_description": "Verken met voorbeeldgegevens - geen account nodig",
     "demo_launching": "Demo starten...",
     "demo_login_button": "Demo starten",
     "demo_tagline": "Ervaar een complete e-mailclient. Geen account nodig.",
-    "demo_no_signup": "Geen registratie nodig — verken vrij met voorbeeldgegevens",
+    "demo_no_signup": "Geen registratie nodig - verken vrij met voorbeeldgegevens",
     "oauth_completing": "Aanmelding voltooien...",
     "oauth_error": {
       "title": "Authenticatie mislukt",
@@ -1166,7 +1166,7 @@
       "warnings": {
         "end_before_start": "De einddatum moet na de startdatum liggen",
         "start_in_past": "De startdatum ligt in het verleden",
-        "empty_body": "De berichttekst is leeg — ontvangers krijgen een leeg antwoord"
+        "empty_body": "De berichttekst is leeg - ontvangers krijgen een leeg antwoord"
       }
     },
     "folders": {
@@ -2306,7 +2306,7 @@
   },
   "demo_welcome": {
     "title": "Welkom bij Bulwark Mail",
-    "description": "Ontdek een volwaardige webmail-client — rechtstreeks in je browser. Alle gegevens blijven op je apparaat, dus test gerust alles.",
+    "description": "Ontdek een volwaardige webmail-client - rechtstreeks in je browser. Alle gegevens blijven op je apparaat, dus test gerust alles.",
     "feature_email": "E-mails lezen en schrijven",
     "feature_organize": "Tags, sterren en mappen",
     "feature_shortcuts": "Sneltoetsen",
@@ -2533,15 +2533,15 @@
     "create_event_title": "Evenement aanmaken",
     "create_event_desc": "Klik op deze knop om een nieuw agenda-evenement aan te maken. U kunt een titel, datum, tijd en deelnemers instellen.",
     "event_modal_title": "Evenementdetails",
-    "event_modal_desc": "Hier is het evenementformulier. Vul de titel in, kies een datum en tijd, voeg een locatie of deelnemers toe. Klik op opslaan als u klaar bent — of sluit het en ga verder.",
+    "event_modal_desc": "Hier is het evenementformulier. Vul de titel in, kies een datum en tijd, voeg een locatie of deelnemers toe. Klik op opslaan als u klaar bent - of sluit het en ga verder.",
     "contacts_list_title": "Uw contacten",
     "contacts_list_desc": "Hier zijn uw contacten. Klik op een contact om de details rechts te bekijken. U kunt ook nieuwe contacten aanmaken, vCards importeren of contacten in groepen organiseren.",
     "files_title": "Bestandsopslag",
     "settings_tabs_title": "Instellingenmenu",
     "settings_tabs_desc": "Hier vindt u alle instellingscategorieën. Pas het uiterlijk aan, beheer identiteiten, stel e-mailfilters in, configureer uw agenda en nog veel meer.",
-    "files_desc": "Uw bestandsbrowser laat u bestanden uploaden, organiseren en delen — als een persoonlijke cloud geïntegreerd in uw mail.",
+    "files_desc": "Uw bestandsbrowser laat u bestanden uploaden, organiseren en delen - als een persoonlijke cloud geïntegreerd in uw mail.",
     "demo_banner_title": "Demo-bediening",
-    "demo_banner_desc": "U bent in demomodus — alles blijft in uw browser. Klik op 'Demo resetten' om opnieuw te beginnen met schone voorbeeldgegevens.",
+    "demo_banner_desc": "U bent in demomodus - alles blijft in uw browser. Klik op 'Demo resetten' om opnieuw te beginnen met schone voorbeeldgegevens.",
     "quota_title": "Opslaggebruik",
     "quota_desc": "Volg de grootte van uw mailbox hier. De cirkel vult zich naarmate u meer ruimte gebruikt."
   },

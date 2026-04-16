@@ -61,7 +61,7 @@ export const useAccountStore = create<AccountState>()(
 
         const id = generateAccountId(entry.username, entry.serverUrl);
         if (state.accounts.some((a) => a.id === id)) {
-          // Already exists — update mutable fields and return existing id
+          // Already exists - update mutable fields and return existing id
           set((s) => ({
             accounts: s.accounts.map((a) =>
               a.id === id

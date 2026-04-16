@@ -89,7 +89,7 @@ export async function importPkcs12(
             cert = certBag.parsedValue;
             der = cert.toSchema(true).toBER(false);
           } else if (certBag.certId === '1.2.840.113549.1.9.22.1' && certBag.certValue) {
-            // x509Certificate — extract DER from the OCTET STRING
+            // x509Certificate - extract DER from the OCTET STRING
             const certDerBytes = (certBag.certValue as asn1js.OctetString).valueBlock.valueHexView;
             const certAsn1 = asn1js.fromBER(certDerBytes);
             if (certAsn1.offset !== -1) {

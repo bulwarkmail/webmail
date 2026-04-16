@@ -1166,7 +1166,7 @@
       "warnings": {
         "end_before_start": "结束日期必须晚于开始日期",
         "start_in_past": "开始日期已在过去",
-        "empty_body": "邮件正文为空——收件人将收到空白回复"
+        "empty_body": "邮件正文为空--收件人将收到空白回复"
       }
     },
     "folders": {
@@ -2306,7 +2306,7 @@
   },
   "demo_welcome": {
     "title": "欢迎使用 Bulwark Mail",
-    "description": "探索功能齐全的网页邮件客户端——就在您的浏览器中。所有数据都保留在您的设备上，请随意体验所有功能。",
+    "description": "探索功能齐全的网页邮件客户端--就在您的浏览器中。所有数据都保留在您的设备上，请随意体验所有功能。",
     "feature_email": "阅读和撰写邮件",
     "feature_organize": "标签、星标和文件夹",
     "feature_shortcuts": "键盘快捷键",

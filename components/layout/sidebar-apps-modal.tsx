@@ -155,7 +155,7 @@ function SidebarAppForm({
           {t('icon_label')} <span className="text-destructive">*</span>
           {SelectedIcon && (
             <span className="inline-flex items-center gap-1.5 ml-2 text-muted-foreground font-normal">
-              — <SelectedIcon className="w-4 h-4" /> {formData.icon}
+              - <SelectedIcon className="w-4 h-4" /> {formData.icon}
             </span>
           )}
         </label>

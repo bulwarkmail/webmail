@@ -507,7 +507,7 @@ export function ContactForm({ contact, addressBooks, allKeywords, onSave, onCanc
             </div>
           )}
 
-          {/* Name & Identity — full width */}
+          {/* Name & Identity - full width */}
           <div className="md:col-span-2 xl:col-span-3">
           <FormSection icon={User} title={t("section_identity")} category="contact">
             <div className="grid grid-cols-[auto_1fr_1fr_auto] gap-2">
@@ -575,7 +575,7 @@ export function ContactForm({ contact, addressBooks, allKeywords, onSave, onCanc
                         setEmails(next);
                       }}
                     >
-                      <option value="">—</option>
+                      <option value="">-</option>
                       <option value="work">{t("context_work")}</option>
                       <option value="private">{t("context_private")}</option>
                     </Select>
@@ -639,7 +639,7 @@ export function ContactForm({ contact, addressBooks, allKeywords, onSave, onCanc
                       setPhones(next);
                     }}
                   >
-                    <option value="">—</option>
+                    <option value="">-</option>
                     <option value="work">{t("context_work")}</option>
                     <option value="private">{t("context_private")}</option>
                   </Select>
@@ -677,7 +677,7 @@ export function ContactForm({ contact, addressBooks, allKeywords, onSave, onCanc
             </div>
           </FormSection>
 
-          {/* Addresses — full width */}
+          {/* Addresses - full width */}
           <div className="md:col-span-2 xl:col-span-3">
           <FormSection icon={MapPin} title={t("addresses")} collapsible defaultOpen category="location">
             <div className="space-y-3">
@@ -698,7 +698,7 @@ export function ContactForm({ contact, addressBooks, allKeywords, onSave, onCanc
                       value={addr.context}
                       onChange={(e) => { const n = [...addresses]; n[i] = { ...n[i], context: e.target.value as AddressEntry["context"] }; setAddresses(n); }}
                     >
-                      <option value="">—</option>
+                      <option value="">-</option>
                       <option value="work">{t("context_work")}</option>
                       <option value="private">{t("context_private")}</option>
                     </Select>
@@ -833,7 +833,7 @@ export function ContactForm({ contact, addressBooks, allKeywords, onSave, onCanc
               <div>
                 <label className="text-xs text-muted-foreground mb-1 block">{t("gender_sex")}</label>
                 <Select value={genderSex} onChange={(e) => setGenderSex(e.target.value)} className="w-full">
-                  <option value="">—</option>
+                  <option value="">-</option>
                   <option value="masculine">{t("gender_male")}</option>
                   <option value="feminine">{t("gender_female")}</option>
                   <option value="other">{t("gender_other")}</option>
@@ -866,7 +866,7 @@ export function ContactForm({ contact, addressBooks, allKeywords, onSave, onCanc
             </div>
           </FormSection>
 
-          {/* Notes — full width */}
+          {/* Notes - full width */}
           <div className="md:col-span-2 xl:col-span-3">
           <FormSection icon={StickyNote} title={t("note")} collapsible defaultOpen category="notes">
             <textarea

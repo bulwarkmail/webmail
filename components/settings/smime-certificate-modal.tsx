@@ -40,7 +40,7 @@ export function SmimeCertificateModal({
     { label: t("cert_email"), value: record.email },
     {
       label: t("cert_validity"),
-      value: `${new Date(record.notBefore).toLocaleDateString()} — ${new Date(record.notAfter).toLocaleDateString()}`,
+      value: `${new Date(record.notBefore).toLocaleDateString()} - ${new Date(record.notAfter).toLocaleDateString()}`,
     },
     { label: t("cert_fingerprint"), value: record.fingerprint },
   ];

@@ -123,7 +123,7 @@ export function TourOverlay() {
   // Wait for target element to appear, then show
   useEffect(() => {
     if (!step) return;
-    console.log(`[Tour] Step ${currentStep + 1}/${totalSteps}: "${step.id}" — target: ${step.target}, placement: ${step.placement}, interactive: ${!!step.interactive}`);
+    console.log(`[Tour] Step ${currentStep + 1}/${totalSteps}: "${step.id}" - target: ${step.target}, placement: ${step.placement}, interactive: ${!!step.interactive}`);
     setVisible(false);
     // Keep old targetRect and tooltipPos so the cutout/tooltip animate to the new position
     // instead of disappearing and reappearing
@@ -178,7 +178,7 @@ export function TourOverlay() {
         clearInterval(interval);
         if (attempts >= maxAttempts && !cancelled) {
           // Skip this step if element never appears
-          console.warn(`[Tour] Step ${currentStep + 1} "${step.id}": SKIPPED — element never appeared after ${maxAttempts} attempts`);
+          console.warn(`[Tour] Step ${currentStep + 1} "${step.id}": SKIPPED - element never appeared after ${maxAttempts} attempts`);
           nextStepRef.current();
         }
       }

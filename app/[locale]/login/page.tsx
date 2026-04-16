@@ -255,7 +255,7 @@ export default function LoginPage() {
         try {
           window.top!.location.href = authorize_url;
         } catch {
-          // Cross-origin restriction — fall back to current frame
+          // Cross-origin restriction - fall back to current frame
           window.location.href = authorize_url;
         }
       } else {
@@ -759,7 +759,7 @@ export default function LoginPage() {
                   )}
                 </Button>
                 <p className="text-center text-xs text-muted-foreground">
-                  Dev mode — logging in as dev@localhost
+                  Dev mode - logging in as dev@localhost
                 </p>
               </div>
             ) : oauthOnly ? (

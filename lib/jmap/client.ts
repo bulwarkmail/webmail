@@ -104,7 +104,7 @@ const EMAIL_LIST_PROPERTIES = [
 function isTaskObject(obj: { '@type'?: string; progress?: unknown; due?: unknown; percentComplete?: unknown }): boolean {
   const type = obj['@type'];
   if (typeof type === 'string' && type.toLowerCase() === 'task') return true;
-  // CalDAV-created tasks may lack @type='Task' — detect by task-specific fields
+  // CalDAV-created tasks may lack @type='Task' - detect by task-specific fields
   if (type !== 'Event' && (
     ('progress' in obj && typeof obj.progress === 'string') ||
     ('due' in obj && obj.due != null) ||
@@ -189,7 +189,7 @@ const CALENDAR_TASK_PROPERTIES = [
   'useDefaultAlerts',
   'alerts',
   'relatedTo',
-  'percentComplete',  // Task-only per RFC 8984 §5.2.4 — used in detection heuristic
+  'percentComplete',  // Task-only per RFC 8984 §5.2.4 - used in detection heuristic
 ] as const;
 
 /**
@@ -209,7 +209,7 @@ function cleanRecurrenceRules(event: Record<string, unknown>): void {
     if (rules === undefined) continue;
     delete event[pluralKey];
     if (!Array.isArray(rules)) {
-      // null means "remove recurrence" — pass through with the correct key
+      // null means "remove recurrence" - pass through with the correct key
       event[singularKey] = rules;
       continue;
     }
@@ -398,7 +398,7 @@ export class JMAPClient implements IJMAPClient {
       response = await fetch(url, { ...init, headers });
     }
 
-    // Handle 429 rate limiting — stop immediately, do not retry
+    // Handle 429 rate limiting - stop immediately, do not retry
     if (response.status === 429) {
       const retryAfterMs = JMAPClient.parseRetryAfter(response);
       this.setRateLimited(retryAfterMs);
@@ -414,7 +414,7 @@ export class JMAPClient implements IJMAPClient {
           response = await fetch(url, { ...init, headers: retryHeaders });
         }
       } else if (this.authMode === 'basic' && !this.reconnecting && url !== `${this.serverUrl}/.well-known/jmap`) {
-        // JMAP session may have expired — re-establish and retry once
+        // JMAP session may have expired - re-establish and retry once
         this.reconnecting = true;
         try {
           await this.refreshSession();
@@ -422,7 +422,7 @@ export class JMAPClient implements IJMAPClient {
           const retryHeaders = { ...init?.headers as Record<string, string>, 'Authorization': this.authHeader };
           response = await fetch(url, { ...init, headers: retryHeaders });
         } catch {
-          // Session refresh failed — if TOTP was used, try re-auth with fresh TOTP
+          // Session refresh failed - if TOTP was used, try re-auth with fresh TOTP
           if (this.onTotpRequired && this.basePassword) {
             try {
               const newTotp = await this.onTotpRequired();
@@ -434,7 +434,7 @@ export class JMAPClient implements IJMAPClient {
                 response = await fetch(url, { ...init, headers: retryHeaders });
               }
             } catch {
-              // TOTP re-auth also failed — return original 401
+              // TOTP re-auth also failed - return original 401
             }
           }
         } finally {
@@ -697,7 +697,7 @@ export class JMAPClient implements IJMAPClient {
         if (rawMailboxes.length >= maxObjects) {
           debug.warn('jmap', 
             `[JMAP Mailbox] Response contains ${rawMailboxes.length} mailboxes which equals maxObjectsInGet (${maxObjects}). ` +
-            `Some mailboxes may be missing — nested folders could appear orphaned at root level.`
+            `Some mailboxes may be missing - nested folders could appear orphaned at root level.`
           );
         }
 
@@ -850,7 +850,7 @@ export class JMAPClient implements IJMAPClient {
 
       if (response.methodResponses?.[1]?.[0] === "Email/get" && getResponse) {
         const emails = (getResponse.list || []) as Email[];
-        // Sort client-side as safety net — some servers may not honour
+        // Sort client-side as safety net - some servers may not honour
         // the query sort for large mailboxes without additional filters.
         emails.sort((a: Email, b: Email) =>
           new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime()
@@ -2814,7 +2814,7 @@ export class JMAPClient implements IJMAPClient {
     for (const [id, account] of Object.entries(this.accounts)) {
       if (id === primaryId) continue;
       // Include accounts that either advertise calendar capability
-      // or are non-personal (shared/group) accounts — Stalwart doesn't
+      // or are non-personal (shared/group) accounts - Stalwart doesn't
       // always advertise capabilities on group accounts even when they
       // have calendar resources.
       if (account.accountCapabilities?.["urn:ietf:params:jmap:calendars"] || !account.isPersonal) {
@@ -2830,7 +2830,7 @@ export class JMAPClient implements IJMAPClient {
     for (const [id, account] of Object.entries(this.accounts)) {
       if (id === primaryId) continue;
       // Include accounts that either advertise contacts capability
-      // or are non-personal (shared/group) accounts — Stalwart doesn't
+      // or are non-personal (shared/group) accounts - Stalwart doesn't
       // always advertise capabilities on group accounts even when they
       // have contact resources.
       if (account.accountCapabilities?.["urn:ietf:params:jmap:contacts"] || !account.isPersonal) {
@@ -3976,7 +3976,7 @@ export class JMAPClient implements IJMAPClient {
       // CalDAV-created tasks (e.g. Thunderbird) may lack @type or have @type
       // set to something other than 'Event'. Detect them by the presence of
       // task-specific keys (due, progress, percentComplete), which RFC 8984 §5.2
-      // defines as Task-only — a VEVENT will never include them in the response.
+      // defines as Task-only - a VEVENT will never include them in the response.
       // We check for key presence (even if null) because Stalwart may return null
       // instead of the RFC defaults (e.g. progress default is "needs-action").
       // @see https://www.rfc-editor.org/rfc/rfc8984#section-5.2
@@ -4060,7 +4060,7 @@ export class JMAPClient implements IJMAPClient {
     if (!createdId) {
       debug.warn('tasks', 'CalendarTask/create no id in server response');
       debug.groupEnd();
-      throw new Error("Failed to create task — no id returned");
+      throw new Error("Failed to create task - no id returned");
     }
 
     // Fetch back with task-specific properties
@@ -4230,7 +4230,7 @@ export class JMAPClient implements IJMAPClient {
   async createFileDirectory(name: string, parentId: string | null): Promise<FileNode> {
     const accountId = this.getFilesAccountId();
 
-    // Stalwart requires a blobId even for directories — upload an empty blob
+    // Stalwart requires a blobId even for directories - upload an empty blob
     const emptyBlob = new File([], name, { type: 'application/x-directory' });
     const { blobId } = await this.uploadBlob(emptyBlob);
 
@@ -4489,7 +4489,7 @@ export class JMAPClient implements IJMAPClient {
 
     this.stopSSEPingMonitor();
 
-    // Stream ended — reconnect unless we were intentionally closed
+    // Stream ended - reconnect unless we were intentionally closed
     if (this.sseAbortController && !this.sseAbortController.signal.aborted) {
       this.scheduleSSEReconnect();
     }
@@ -4512,7 +4512,7 @@ export class JMAPClient implements IJMAPClient {
         const change = JSON.parse(dataLines.join('\n')) as StateChange;
         this.stateChangeCallback?.(change);
       } catch {
-        // Malformed SSE data — ignore
+        // Malformed SSE data - ignore
       }
     }
   }
@@ -4671,7 +4671,7 @@ export class JMAPClient implements IJMAPClient {
     this.stopSSEPingMonitor();
     this.ssePingTimer = setInterval(() => {
       if (Date.now() - this.lastSSEActivity > JMAPClient.SSE_PING_TIMEOUT) {
-        // SSE connection is stale — abort and reconnect
+        // SSE connection is stale - abort and reconnect
         this.stopSSEPingMonitor();
         if (this.sseAbortController) {
           this.sseAbortController.abort();
@@ -4693,7 +4693,7 @@ export class JMAPClient implements IJMAPClient {
     if (typeof document !== 'undefined') {
       this.visibilityHandler = () => {
         if (!document.hidden) {
-          // Tab became visible — immediately check for state changes
+          // Tab became visible - immediately check for state changes
           this.checkForStateChanges();
         }
       };
@@ -4702,7 +4702,7 @@ export class JMAPClient implements IJMAPClient {
 
     if (typeof window !== 'undefined') {
       this.onlineHandler = () => {
-        // Network reconnected — reconnect SSE or force a poll
+        // Network reconnected - reconnect SSE or force a poll
         const eventSourceUrl = this.getEventSourceUrl();
         if (eventSourceUrl && !this.sseAbortController) {
           this.connectSSE(eventSourceUrl);

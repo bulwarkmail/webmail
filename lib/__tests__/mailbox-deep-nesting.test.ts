@@ -267,13 +267,13 @@ describe('GitHub #118: duplicate subfolder names cause depth-4 orphaning', () =>
   it('should keep nested folders when a subfolder has the same name as a role mailbox', () => {
     // Reporter's exact scenario: two subfolders with the same name.
     // The dedup uses substring matching and removes non-role folders whose name
-    // matches a role folder — even if they're deep in the tree with children.
+    // matches a role folder - even if they're deep in the tree with children.
     const mailboxes = [
       makeMailbox({ id: 'inbox', name: 'Inbox', role: 'inbox' }),
       makeMailbox({ id: 'sent-role', name: 'Sent', role: 'sent' }),
       // User-created subfolder also named "Sent" nested under Inbox
       makeMailbox({ id: 'sent-custom', name: 'Sent', parentId: 'inbox' }),
-      // Child of the custom "Sent" folder — becomes orphaned if parent is deduped
+      // Child of the custom "Sent" folder - becomes orphaned if parent is deduped
       makeMailbox({ id: 'sent-child', name: 'Archive', parentId: 'sent-custom' }),
     ];
 
@@ -281,7 +281,7 @@ describe('GitHub #118: duplicate subfolder names cause depth-4 orphaning', () =>
     const flat = flattenMailboxTree(tree);
     const rootIds = tree.map(n => n.id);
 
-    // sent-custom MUST be kept because it has children — removing it orphans sent-child
+    // sent-custom MUST be kept because it has children - removing it orphans sent-child
     const sentCustom = flat.find(n => n.id === 'sent-custom');
     expect(sentCustom).toBeDefined();
     expect(sentCustom!.depth).toBe(1); // nested under Inbox
@@ -293,7 +293,7 @@ describe('GitHub #118: duplicate subfolder names cause depth-4 orphaning', () =>
   });
 
   it('should keep nested folders when name is substring of a role name', () => {
-    // "Draft" is a substring of "Drafts" — dedup removes it, orphaning children
+    // "Draft" is a substring of "Drafts" - dedup removes it, orphaning children
     const mailboxes = [
       makeMailbox({ id: 'inbox', name: 'Inbox', role: 'inbox' }),
       makeMailbox({ id: 'drafts-role', name: 'Drafts', role: 'drafts' }),
@@ -343,22 +343,22 @@ describe('GitHub #118: duplicate subfolder names cause depth-4 orphaning', () =>
 
   it('should only dedup root-level non-role mailboxes that duplicate role mailboxes', () => {
     // Dedup should only remove mailboxes that are BOTH:
-    // 1. At root level (no parentId) — same structural position as role mailbox
+    // 1. At root level (no parentId) - same structural position as role mailbox
     // 2. Name-matching a role mailbox
     // Nested mailboxes with matching names should always be kept.
     const mailboxes = [
       makeMailbox({ id: 'inbox', name: 'Inbox', role: 'inbox' }),
       makeMailbox({ id: 'sent-role', name: 'Sent', role: 'sent' }),
-      makeMailbox({ id: 'sent-dup', name: 'Sent Mail' }), // root-level duplicate — OK to remove
+      makeMailbox({ id: 'sent-dup', name: 'Sent Mail' }), // root-level duplicate - OK to remove
       makeMailbox({ id: 'proj', name: 'Projects', parentId: 'inbox' }),
-      makeMailbox({ id: 'sent-nested', name: 'Sent', parentId: 'proj' }), // nested — must keep
+      makeMailbox({ id: 'sent-nested', name: 'Sent', parentId: 'proj' }), // nested - must keep
       makeMailbox({ id: 'report', name: 'Report', parentId: 'sent-nested' }),
     ];
 
     const tree = buildMailboxTree(mailboxes);
     const flat = flattenMailboxTree(tree);
 
-    // "Sent Mail" at root (no parentId) can be deduped — that's fine
+    // "Sent Mail" at root (no parentId) can be deduped - that's fine
     // But "Sent" nested under Projects must be kept
     const sentNested = flat.find(n => n.id === 'sent-nested');
     expect(sentNested).toBeDefined();
@@ -377,7 +377,7 @@ describe('mailbox orphan behavior (missing parent)', () => {
     const mailboxes = [
       makeMailbox({ id: 'inbox', name: 'INBOX', role: 'inbox' }),
       makeMailbox({ id: 'privat', name: 'PRIVAT', parentId: 'inbox' }),
-      // 'bookings' is MISSING — simulating truncated JMAP response
+      // 'bookings' is MISSING - simulating truncated JMAP response
       makeMailbox({ id: 'hotel2', name: 'HOTEL2', parentId: 'bookings' }),
       makeMailbox({ id: 'restaurant', name: 'RESTAURANT', parentId: 'hotel2' }),
     ];

@@ -35,7 +35,7 @@ function OAuthCallbackInner() {
     const savedState = sessionStorage.getItem("oauth_state");
 
     if (savedState) {
-      // Classic flow — sessionStorage has the PKCE state (same-tab OAuth)
+      // Classic flow - sessionStorage has the PKCE state (same-tab OAuth)
       if (!state || state !== savedState) {
         setError("invalid_state");
         return;
@@ -76,7 +76,7 @@ function OAuthCallbackInner() {
           setError("token_exchange_failed");
         });
     } else if (state) {
-      // Server-side SSO flow — state was stored in encrypted httpOnly cookie
+      // Server-side SSO flow - state was stored in encrypted httpOnly cookie
       const ssoPrefix = getPathPrefix(params.locale as string);
       loginWithServerSso(code, state)
         .then((success) => {

@@ -4,7 +4,7 @@ import { readAuditLog } from '@/lib/admin/audit';
 import { logger } from '@/lib/logger';
 
 /**
- * GET /api/admin/audit — Get paginated audit log entries (admin-protected)
+ * GET /api/admin/audit - Get paginated audit log entries (admin-protected)
  */
 export async function GET(request: NextRequest) {
   try {

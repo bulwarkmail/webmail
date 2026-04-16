@@ -6,7 +6,7 @@ import { parseCertificateDer } from './certificate-utils';
  * Produce an opaque CMS SignedData wrapping the given MIME content.
  *
  * Content type: application/pkcs7-mime; smime-type=signed-data
- * This is the "opaque" form — the content is embedded inside the CMS structure.
+ * This is the "opaque" form - the content is embedded inside the CMS structure.
  */
 export async function smimeSign(
   mimeBytes: Uint8Array,

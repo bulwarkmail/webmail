@@ -17,7 +17,7 @@ if anyof(header :is "From" "ceo@company.com", header :is "From" "board@company.c
 
 # --- External rules (managed outside Bulwark) ---
 
-# rule:[Finance — auto-file invoices]
+# rule:[Finance - auto-file invoices]
 if allof(header :contains "From" "billing@", header :contains "Subject" "invoice") {
     fileinto :copy "Finance/Invoices";
     keep;

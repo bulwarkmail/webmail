@@ -3,10 +3,10 @@ import { getPluginRegistry, getThemeRegistry } from '@/lib/admin/plugin-registry
 import { logger } from '@/lib/logger';
 
 /**
- * GET /api/plugins — Public endpoint for clients to discover server-managed plugins & themes
+ * GET /api/plugins - Public endpoint for clients to discover server-managed plugins & themes
  *
  * Returns all enabled plugins and themes so the client can sync them to IndexedDB.
- * No admin auth required — this is how regular users receive plugins/themes.
+ * No admin auth required - this is how regular users receive plugins/themes.
  */
 export async function GET() {
   try {

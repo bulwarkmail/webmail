@@ -1089,7 +1089,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
             return mb.accountId === acctId;
           });
           if (!trashMailbox) {
-            // No trash available for this account — fall back to destroy so the action isn't silently dropped.
+            // No trash available for this account - fall back to destroy so the action isn't silently dropped.
             await acctClient.batchDeleteEmails(ids);
             return;
           }
@@ -1732,7 +1732,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         receivedAt: new Date(Date.now() - 3600000).toISOString(),
         from: [{ name: "Emily Chen", email: "emily.chen@gmail.com" }],
         to: [{ email: "you@example.com" }],
-        subject: "Re: Dashboard Redesign v2 — feedback",
+        subject: "Re: Dashboard Redesign v2 - feedback",
         preview: "Hey! I just pushed the updated mockups to Figma. I incorporated all the feedback from last week's meeting. Let me know what you think about the new nav...",
         hasAttachment: true,
       },
@@ -1784,7 +1784,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         receivedAt: new Date(Date.now() - 108000000).toISOString(),
         from: [{ name: "Sarah Kim", email: "sarah.kim@proton.me" }],
         to: [{ email: "you@example.com" }],
-        subject: "Conference talk proposal — need your review",
+        subject: "Conference talk proposal - need your review",
         preview: "I'm submitting a talk to ReactConf about our email client architecture. Could you take a look at my abstract before the deadline on Friday?...",
         hasAttachment: true,
       },

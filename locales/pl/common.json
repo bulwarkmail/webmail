@@ -45,11 +45,11 @@
     "imprint": "Impressum",
     "privacy_policy": "Polityka prywatności",
     "try_demo": "Wypróbuj demo",
-    "demo_description": "Poznaj aplikację z przykładowymi danymi — bez potrzeby zakładania konta",
+    "demo_description": "Poznaj aplikację z przykładowymi danymi - bez potrzeby zakładania konta",
     "demo_launching": "Uruchamianie demo...",
     "demo_login_button": "Uruchom demo",
     "demo_tagline": "Wypróbuj w pełni funkcjonalnego klienta poczty. Konto nie jest wymagane.",
-    "demo_no_signup": "Bez rejestracji — eksploruj swobodnie z przykładowymi danymi",
+    "demo_no_signup": "Bez rejestracji - eksploruj swobodnie z przykładowymi danymi",
     "oauth_completing": "Kończenie logowania...",
     "oauth_error": {
       "title": "Uwierzytelnianie nie powiodło się",
@@ -1166,7 +1166,7 @@
       "warnings": {
         "end_before_start": "Data zakończenia musi być późniejsza niż data rozpoczęcia",
         "start_in_past": "Data rozpoczęcia jest w przeszłości",
-        "empty_body": "Treść wiadomości jest pusta — odbiorcy otrzymają pustą odpowiedź"
+        "empty_body": "Treść wiadomości jest pusta - odbiorcy otrzymają pustą odpowiedź"
       }
     },
     "folders": {
@@ -2306,7 +2306,7 @@
   },
   "demo_welcome": {
     "title": "Witaj w Bulwark Mail",
-    "description": "Poznaj w pełni funkcjonalnego klienta poczty webowej — bezpośrednio w przeglądarce. Wszystkie dane pozostają na Twoim urządzeniu, więc możesz śmiało wszystko przetestować.",
+    "description": "Poznaj w pełni funkcjonalnego klienta poczty webowej - bezpośrednio w przeglądarce. Wszystkie dane pozostają na Twoim urządzeniu, więc możesz śmiało wszystko przetestować.",
     "feature_email": "Czytaj i pisz wiadomości e-mail",
     "feature_organize": "Etykiety, gwiazdki i foldery",
     "feature_shortcuts": "Skróty klawiszowe",
@@ -2533,15 +2533,15 @@
     "create_event_title": "Utwórz wydarzenie",
     "create_event_desc": "Kliknij ten przycisk, aby utworzyć nowe wydarzenie w kalendarzu. Możesz ustawić tytuł, datę, godzinę i dodać uczestników.",
     "event_modal_title": "Szczegóły wydarzenia",
-    "event_modal_desc": "To jest formularz wydarzenia. Uzupełnij tytuł, wybierz datę i godzinę, dodaj lokalizację albo uczestników. Gdy skończysz, kliknij zapisz — albo zamknij okno i przejdź dalej.",
+    "event_modal_desc": "To jest formularz wydarzenia. Uzupełnij tytuł, wybierz datę i godzinę, dodaj lokalizację albo uczestników. Gdy skończysz, kliknij zapisz - albo zamknij okno i przejdź dalej.",
     "contacts_list_title": "Twoje kontakty",
     "contacts_list_desc": "Tutaj są Twoje kontakty. Kliknij dowolny kontakt, aby zobaczyć jego pełne dane po prawej stronie. Możesz też tworzyć nowe kontakty, importować vCardy i organizować kontakty w grupy.",
     "settings_tabs_title": "Menu ustawień",
     "settings_tabs_desc": "Tutaj znajdują się wszystkie kategorie ustawień. Dostosuj wygląd, zarządzaj tożsamościami, skonfiguruj filtry poczty, ustawienia kalendarza i wiele więcej.",
     "files_title": "Przechowywanie plików",
-    "files_desc": "Przeglądarka plików pozwala przesyłać, porządkować i udostępniać pliki — jak osobisty dysk w chmurze wbudowany w Twoją pocztę.",
+    "files_desc": "Przeglądarka plików pozwala przesyłać, porządkować i udostępniać pliki - jak osobisty dysk w chmurze wbudowany w Twoją pocztę.",
     "demo_banner_title": "Sterowanie wersją demo",
-    "demo_banner_desc": "Jesteś w trybie demo — wszystko pozostaje w Twojej przeglądarce. W każdej chwili kliknij „Reset Demo”, aby zacząć od nowa z czystymi danymi przykładowymi.",
+    "demo_banner_desc": "Jesteś w trybie demo - wszystko pozostaje w Twojej przeglądarce. W każdej chwili kliknij „Reset Demo”, aby zacząć od nowa z czystymi danymi przykładowymi.",
     "quota_title": "Wykorzystanie miejsca",
     "quota_desc": "Tutaj możesz śledzić rozmiar swojej skrzynki pocztowej. Okrąg wypełnia się wraz ze wzrostem użycia przestrzeni."
   },

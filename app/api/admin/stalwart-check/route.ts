@@ -5,7 +5,7 @@ import { getStalwartCredentials } from '@/lib/stalwart/credentials';
 /**
  * GET /api/admin/stalwart-check
  * Check if the currently logged-in user is a Stalwart admin.
- * Probes the admin-only principal-list endpoint — if the user can access it, they're an admin.
+ * Probes the admin-only principal-list endpoint - if the user can access it, they're an admin.
  */
 export async function GET(request: NextRequest) {
   try {

@@ -256,7 +256,7 @@ export default function Home() {
 
     // Restore conversation thread (mobile only). We can clear it directly,
     // but reopening requires the thread group; if the user pressed forward
-    // to return to a thread, we silently skip — back navigation always works.
+    // to return to a thread, we silently skip - back navigation always works.
     if ((state.threadId ?? null) !== ctx.conversationThreadId) {
       if (state.threadId === null) {
         setConversationThread(null);
@@ -826,7 +826,7 @@ export default function Home() {
         if (archiveMode === 'year') {
           await moveThreadToMailbox(client, emailToArchive.id, yearMailbox.id);
         } else {
-          // archiveMode === 'month' — find or create month subfolder under year
+          // archiveMode === 'month' - find or create month subfolder under year
           const yearId = yearMailbox.originalId || yearMailbox.id;
           let monthMailbox = mailboxes.find(
             m => m.name === month && m.parentId === yearId
@@ -1255,7 +1255,7 @@ export default function Home() {
 
   // Handle back navigation from viewer on mobile.
   // Delegate to the browser history stack so this button is equivalent to
-  // the OS back button / mouse back button — popstate then restores the
+  // the OS back button / mouse back button - popstate then restores the
   // previous snapshot via handleNavRestore. The viewer is only reachable
   // from a state that pushed history, so back() always lands on an app entry.
   const handleMobileBack = () => {

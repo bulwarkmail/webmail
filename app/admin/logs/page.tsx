@@ -139,7 +139,7 @@ export default function AdminLogsPage() {
 }
 
 function formatDetail(detail: Record<string, unknown>): string {
-  if (!detail || Object.keys(detail).length === 0) return '—';
+  if (!detail || Object.keys(detail).length === 0) return '-';
   if (detail.reason) return String(detail.reason);
   if (detail.key) return `${detail.key}: ${JSON.stringify(detail.old)} → ${JSON.stringify(detail.new)}`;
   if (detail.changes && Array.isArray(detail.changes)) {

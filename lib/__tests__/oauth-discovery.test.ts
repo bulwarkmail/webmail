@@ -92,7 +92,7 @@ describe('oauth/discovery', () => {
     expect(consoleSpy).toHaveBeenCalled();
   });
 
-  it('caches results — second call for same server URL does not re-fetch', async () => {
+  it('caches results - second call for same server URL does not re-fetch', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValueOnce({
       ok: true,
       json: () => Promise.resolve(VALID_METADATA),

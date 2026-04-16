@@ -52,7 +52,7 @@ export function validateThemeSelectors(css: string): string[] {
     // Inside @media blocks, also allow :root and .dark
     if (selector === ':root' || selector === '.dark') continue;
 
-    warnings.push(`Non-standard selector "${selector}" — themes should only use :root and .dark`);
+    warnings.push(`Non-standard selector "${selector}" - themes should only use :root and .dark`);
   }
 
   return warnings;

@@ -78,7 +78,7 @@ export async function smimeDecrypt(input: DecryptionInput): Promise<DecryptionRe
           continue;
         }
       }
-      continue; // Key exists but isn't unlocked — skip, caller should unlock first
+      continue; // Key exists but isn't unlocked - skip, caller should unlock first
     }
 
     try {
@@ -170,7 +170,7 @@ export function normalizeCmsBytes(raw: ArrayBuffer): ArrayBuffer {
 
   const bytes = new Uint8Array(raw);
 
-  // Already valid DER — starts with ASN.1 SEQUENCE tag
+  // Already valid DER - starts with ASN.1 SEQUENCE tag
   if (bytes[0] === 0x30) {
     return raw;
   }
@@ -272,19 +272,19 @@ export function normalizeCmsBytes(raw: ArrayBuffer): ArrayBuffer {
     }
   }
 
-  // Not decodable — return original bytes
+  // Not decodable - return original bytes
   return raw;
 }
 
 function parseContentInfo(der: ArrayBuffer): pkijs.ContentInfo {
   const asn1 = asn1js.fromBER(der);
   if (asn1.offset === -1) {
-    throw new Error('Invalid ASN.1 data — cannot parse CMS envelope');
+    throw new Error('Invalid ASN.1 data - cannot parse CMS envelope');
   }
   try {
     return new pkijs.ContentInfo({ schema: asn1.result });
   } catch {
-    throw new Error('Invalid ASN.1 data — cannot parse CMS envelope');
+    throw new Error('Invalid ASN.1 data - cannot parse CMS envelope');
   }
 }
 
