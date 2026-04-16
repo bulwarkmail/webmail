@@ -16,6 +16,7 @@ interface FilterStore {
   isOpaque: boolean;
   rawScript: string;
   vacationSettings: VacationSieveConfig | null;
+  externalRequires: string[];
 
   setSupported: (supported: boolean) => void;
   fetchFilters: (client: IJMAPClient) => Promise<void>;
@@ -43,6 +44,7 @@ export const useFilterStore = create<FilterStore>()((set, get) => ({
   isOpaque: false,
   rawScript: '',
   vacationSettings: null,
+  externalRequires: [],
 
   setSupported: (supported) => set({ isSupported: supported }),
 
@@ -74,10 +76,22 @@ export const useFilterStore = create<FilterStore>()((set, get) => ({
 
       if (result.isOpaque) {
         debug.log('filters', 'Sieve script is opaque (hand-edited)');
-        set({ isLoading: false, isOpaque: true, rules: [], vacationSettings: result.vacation || null });
+        set({
+          isLoading: false,
+          isOpaque: true,
+          rules: [],
+          vacationSettings: result.vacation || null,
+          externalRequires: result.externalRequires,
+        });
       } else {
         debug.log('filters', 'Parsed', result.rules.length, 'filter rules');
-        set({ isLoading: false, isOpaque: false, rules: result.rules, vacationSettings: result.vacation || null });
+        set({
+          isLoading: false,
+          isOpaque: false,
+          rules: result.rules,
+          vacationSettings: result.vacation || null,
+          externalRequires: result.externalRequires,
+        });
       }
     } catch (error) {
       debug.error('Failed to fetch filters:', error);
@@ -91,13 +105,13 @@ export const useFilterStore = create<FilterStore>()((set, get) => ({
   saveFilters: async (client) => {
     set({ isSaving: true, error: null });
     try {
-      const { isOpaque, rawScript, rules, activeScriptId, vacationSettings } = get();
+      const { isOpaque, rawScript, rules, activeScriptId, vacationSettings, externalRequires } = get();
 
       let content: string;
       if (isOpaque) {
         content = rawScript;
       } else {
-        content = generateScript(rules, vacationSettings || undefined);
+        content = generateScript(rules, vacationSettings || undefined, { externalRequires });
       }
 
       if (activeScriptId) {
@@ -124,40 +138,60 @@ export const useFilterStore = create<FilterStore>()((set, get) => ({
   },
 
   addRule: (rule) => {
-    set((state) => ({ rules: [...state.rules, rule] }));
+    // Insert new bulwark rules before external/opaque rules so Bulwark's
+    // managed section stays contiguous.
+    set((state) => {
+      const bulwark = state.rules.filter(r => !r.origin || r.origin === 'bulwark');
+      const external = state.rules.filter(r => r.origin === 'external' || r.origin === 'opaque');
+      return { rules: [...bulwark, rule, ...external] };
+    });
   },
 
   updateRule: (ruleId, updates) => {
     set((state) => ({
-      rules: state.rules.map(r => r.id === ruleId ? { ...r, ...updates } : r),
+      rules: state.rules.map(r => {
+        if (r.id !== ruleId) return r;
+        if (r.origin === 'external' || r.origin === 'opaque') return r; // read-only
+        return { ...r, ...updates };
+      }),
     }));
   },
 
   deleteRule: (ruleId) => {
     set((state) => ({
-      rules: state.rules.filter(r => r.id !== ruleId),
+      rules: state.rules.filter(r => {
+        if (r.id !== ruleId) return true;
+        return r.origin === 'external' || r.origin === 'opaque';
+      }),
     }));
   },
 
   reorderRules: (ruleIds) => {
+    // Only reorder bulwark rules; external rules always stay at the end in
+    // their original order.
     set((state) => {
-      const ruleMap = new Map(state.rules.map(r => [r.id, r]));
-      const reordered = ruleIds.map(id => ruleMap.get(id)).filter(Boolean) as FilterRule[];
-      return { rules: reordered };
+      const bulwarkMap = new Map(
+        state.rules.filter(r => !r.origin || r.origin === 'bulwark').map(r => [r.id, r]),
+      );
+      const external = state.rules.filter(r => r.origin === 'external' || r.origin === 'opaque');
+      const reordered = ruleIds.map(id => bulwarkMap.get(id)).filter(Boolean) as FilterRule[];
+      return { rules: [...reordered, ...external] };
     });
   },
 
   toggleRule: (ruleId) => {
     set((state) => ({
-      rules: state.rules.map(r =>
-        r.id === ruleId ? { ...r, enabled: !r.enabled } : r
-      ),
+      rules: state.rules.map(r => {
+        if (r.id !== ruleId) return r;
+        if (r.origin === 'external' || r.origin === 'opaque') return r; // read-only
+        return { ...r, enabled: !r.enabled };
+      }),
     }));
   },
 
   setRawScript: (content) => set({ rawScript: content }),
 
-  resetToVisualBuilder: () => set({ isOpaque: false, rawScript: '', rules: [] }),
+  resetToVisualBuilder: () => set({ isOpaque: false, rawScript: '', rules: [], externalRequires: [] }),
 
   syncVacationToScript: async (client, vacation) => {
     try {
@@ -173,6 +207,7 @@ export const useFilterStore = create<FilterStore>()((set, get) => ({
       const activeScript = scripts.find(s => s.isActive) || scripts[0];
 
       let rules = previousRules;
+      let externalRequires = get().externalRequires;
 
       // If there's an active script, try to parse our metadata from it.
       // If the server overwrote it (no metadata), fall back to stored rules.
@@ -181,11 +216,12 @@ export const useFilterStore = create<FilterStore>()((set, get) => ({
         const parsed = parseScript(content);
         if (!parsed.isOpaque) {
           rules = parsed.rules;
+          externalRequires = parsed.externalRequires;
         }
       }
 
       // Generate a combined script with our metadata, rules, and vacation
-      const content = generateScript(rules, vacation.isEnabled ? vacation : undefined);
+      const content = generateScript(rules, vacation.isEnabled ? vacation : undefined, { externalRequires });
 
       if (activeScript) {
         // Preserve the script's current activation state — don't pass activate: true
@@ -198,6 +234,7 @@ export const useFilterStore = create<FilterStore>()((set, get) => ({
           rules,
           vacationSettings: vacation,
           isOpaque: false,
+          externalRequires,
         });
       } else {
         // Don't activate; there may be a server-managed 'vacation' script active.
@@ -209,6 +246,7 @@ export const useFilterStore = create<FilterStore>()((set, get) => ({
           rules,
           vacationSettings: vacation,
           isOpaque: false,
+          externalRequires,
         });
       }
 
@@ -229,5 +267,6 @@ export const useFilterStore = create<FilterStore>()((set, get) => ({
     isOpaque: false,
     rawScript: '',
     vacationSettings: null,
+    externalRequires: [],
   }),
 }));

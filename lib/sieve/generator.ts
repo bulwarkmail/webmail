@@ -111,11 +111,47 @@ function computeRequires(rules: FilterRule[], vacation?: VacationSieveConfig): s
     }
   }
 
-  return [...extensions].sort();
+  return [...extensions];
 }
 
-export function generateScript(rules: FilterRule[], vacation?: VacationSieveConfig): string {
-  const metadata: FilterMetadata = { version: 1, rules };
+function stripRuleForMetadata(r: FilterRule): Omit<FilterRule, 'origin' | 'originLabel' | 'rawBlock'> {
+  return {
+    id: r.id,
+    name: r.name,
+    enabled: r.enabled,
+    matchType: r.matchType,
+    conditions: r.conditions,
+    actions: r.actions,
+    stopProcessing: r.stopProcessing,
+  };
+}
+
+export interface GenerateOptions {
+  /**
+   * Require extensions used by external (non-Bulwark) rules that we must
+   * preserve in the top-level `require` directive. Duplicates with Bulwark's
+   * own requires are deduplicated.
+   */
+  externalRequires?: string[];
+}
+
+export function generateScript(
+  rules: FilterRule[],
+  vacation?: VacationSieveConfig,
+  options: GenerateOptions = {},
+): string {
+  // Partition rules by origin. Treat missing origin as 'bulwark' for back-compat.
+  const bulwarkRules: FilterRule[] = [];
+  const externalRules: FilterRule[] = [];
+  for (const r of rules) {
+    if (r.origin && r.origin !== 'bulwark') externalRules.push(r);
+    else bulwarkRules.push(r);
+  }
+
+  const metadata: FilterMetadata = {
+    version: 1,
+    rules: bulwarkRules.map(stripRuleForMetadata) as FilterRule[],
+  };
   if (vacation?.isEnabled) {
     metadata.vacation = vacation;
   }
@@ -127,9 +163,12 @@ export function generateScript(rules: FilterRule[], vacation?: VacationSieveConf
   lines.push('@metadata:end */');
   lines.push('');
 
-  const requires = computeRequires(rules, vacation);
-  if (requires.length > 0) {
-    lines.push(`require [${requires.map(r => `"${r}"`).join(', ')}];`);
+  const bulwarkRequires = computeRequires(bulwarkRules, vacation);
+  const externalRequires = options.externalRequires ?? [];
+  const allRequires = [...new Set([...bulwarkRequires, ...externalRequires])].sort();
+
+  if (allRequires.length > 0) {
+    lines.push(`require [${allRequires.map(r => `"${r}"`).join(', ')}];`);
   }
 
   if (vacation?.isEnabled) {
@@ -143,9 +182,9 @@ export function generateScript(rules: FilterRule[], vacation?: VacationSieveConf
     lines.push(`vacation ${vacationParts.join(' ')};`);
   }
 
-  const enabledRules = rules.filter(r => r.enabled);
+  const enabledBulwarkRules = bulwarkRules.filter(r => r.enabled);
 
-  for (const rule of enabledRules) {
+  for (const rule of enabledBulwarkRules) {
     if (rule.conditions.length === 0 || rule.actions.length === 0) {
       debug.warn('filters', `Skipping rule "${rule.name}": empty conditions or actions`);
       continue;
@@ -180,6 +219,17 @@ export function generateScript(rules: FilterRule[], vacation?: VacationSieveConf
       lines.push(`    ${actionLine}`);
     }
     lines.push('}');
+  }
+
+  // Append preserved external rules verbatim. Each rawBlock already carries its
+  // own leading comments and trailing whitespace from the source script.
+  if (externalRules.length > 0) {
+    lines.push('');
+    lines.push('# --- External rules (managed outside Bulwark) ---');
+    for (const ext of externalRules) {
+      if (!ext.rawBlock) continue;
+      lines.push(ext.rawBlock.replace(/\s+$/, ''));
+    }
   }
 
   lines.push('');

@@ -25,10 +25,14 @@ describe('parseScript', () => {
     expect(result.rules).toEqual(rules);
   });
 
-  it('returns isOpaque for missing metadata', () => {
+  it('parses external rules when no Bulwark metadata is present', () => {
     const result = parseScript('require ["fileinto"];\nif header :contains "From" "x" { fileinto "Y"; }');
-    expect(result.isOpaque).toBe(true);
-    expect(result.rules).toEqual([]);
+    expect(result.isOpaque).toBe(false);
+    expect(result.rules).toHaveLength(1);
+    expect(result.rules[0].origin).toBe('external');
+    expect(result.rules[0].conditions[0]).toMatchObject({ field: 'from', comparator: 'contains', value: 'x' });
+    expect(result.rules[0].actions[0]).toEqual({ type: 'move', value: 'Y' });
+    expect(result.externalRequires).toContain('fileinto');
   });
 
   it('returns isOpaque for corrupted JSON', () => {
@@ -90,9 +94,10 @@ describe('parseScript', () => {
     expect(result.isOpaque).toBe(true);
   });
 
-  it('returns isOpaque for empty string', () => {
+  it('treats an empty string as an empty, editable script (not opaque)', () => {
     const result = parseScript('');
-    expect(result.isOpaque).toBe(true);
+    expect(result.isOpaque).toBe(false);
+    expect(result.rules).toEqual([]);
   });
 
   describe('round-trip', () => {

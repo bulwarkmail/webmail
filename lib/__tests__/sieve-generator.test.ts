@@ -196,10 +196,15 @@ describe('sieve generator', () => {
       expect(result.vacation?.isEnabled).toBe(true);
     });
 
-    it('should mark as opaque when real filter rules exist alongside vacation', () => {
+    it('parses filter rules alongside vacation as external when no metadata is present', () => {
       const script = `require ["vacation", "fileinto"];\n\nvacation "Away";\n\nif header :contains "From" "boss@example.com" {\n    fileinto "Important";\n}\n`;
       const result = parseScript(script);
-      expect(result.isOpaque).toBe(true);
+      // New behavior: preserve both the vacation statement (as opaque) and
+      // the if-block (as a structured external rule) instead of dropping them.
+      expect(result.isOpaque).toBe(false);
+      const ifRule = result.rules.find(r => r.origin === 'external');
+      expect(ifRule?.conditions[0]).toMatchObject({ field: 'from', comparator: 'contains', value: 'boss@example.com' });
+      expect(ifRule?.actions[0]).toEqual({ type: 'move', value: 'Important' });
     });
 
     it('should handle Stalwart :mime format vacation script', () => {

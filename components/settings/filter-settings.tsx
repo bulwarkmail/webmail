@@ -23,7 +23,12 @@ import {
   Filter,
   RotateCcw,
   PalmtreeIcon,
+  Lock,
 } from "lucide-react";
+
+function isReadonlyRule(r: FilterRule): boolean {
+  return r.origin === "external" || r.origin === "opaque";
+}
 
 function RuleSummary({ rule }: { rule: FilterRule }) {
   const t = useTranslations("settings.filters");
@@ -429,90 +434,137 @@ export function FilterSettings() {
 
         {!isOpaque && rules.length > 0 && (
           <div className="space-y-1" role="list" aria-label={t("rule_list")}>
-            {rules.map((rule, index) => (
-              <div
-                key={rule.id}
-                role="listitem"
-                draggable
-                onDragStart={(e) => handleDragStart(e, index)}
-                onDragOver={(e) => handleDragOver(e, index)}
-                onDrop={(e) => handleDrop(e, index)}
-                onDragEnd={handleDragEnd}
-                className={`flex items-start gap-3 p-3 rounded-md border transition-colors ${
-                  dragOverIndex === index
-                    ? "border-primary bg-primary/5"
-                    : "border-border hover:bg-muted/50"
-                } ${!rule.enabled ? "opacity-60" : ""}`}
-              >
+            {rules.map((rule, index) => {
+              const readonly = isReadonlyRule(rule);
+
+              if (readonly) {
+                const label = rule.originLabel || t("origin_external");
+                const tooltip = t("managed_by_tooltip", { source: label });
+                const hasStructuredSummary =
+                  rule.origin === "external" &&
+                  rule.conditions.length > 0 &&
+                  rule.actions.length > 0;
+                return (
+                  <div
+                    key={rule.id}
+                    role="listitem"
+                    className="flex items-start gap-3 p-3 rounded-md border border-border"
+                    title={tooltip}
+                  >
+                    <div className="pt-0.5 text-muted-foreground" aria-label={tooltip}>
+                      <Lock className="w-4 h-4" />
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-sm font-medium text-foreground truncate">
+                          {rule.name}
+                        </p>
+                        <span className="inline-flex items-baseline px-1.5 py-px rounded-sm bg-muted/60 text-muted-foreground text-[10px]">
+                          {label}
+                        </span>
+                      </div>
+                      {hasStructuredSummary ? (
+                        expandedFilterView ? (
+                          <VisualRuleSummary rule={rule} />
+                        ) : (
+                          <RuleSummary rule={rule} />
+                        )
+                      ) : rule.rawBlock ? (
+                        <pre className="mt-1.5 text-xs font-mono whitespace-pre-wrap break-all text-muted-foreground bg-muted rounded p-2 max-h-32 overflow-y-auto">
+                          {rule.rawBlock.trim()}
+                        </pre>
+                      ) : null}
+                    </div>
+                  </div>
+                );
+              }
+
+              return (
                 <div
-                  className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground pt-0.5"
-                  aria-label={t("drag_to_reorder")}
+                  key={rule.id}
+                  role="listitem"
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, index)}
+                  onDragOver={(e) => handleDragOver(e, index)}
+                  onDrop={(e) => handleDrop(e, index)}
+                  onDragEnd={handleDragEnd}
+                  className={`flex items-start gap-3 p-3 rounded-md border transition-colors ${
+                    dragOverIndex === index
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:bg-muted/50"
+                  } ${!rule.enabled ? "opacity-60" : ""}`}
                 >
-                  <GripVertical className="w-4 h-4" />
-                </div>
+                  <div
+                    className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground pt-0.5"
+                    aria-label={t("drag_to_reorder")}
+                  >
+                    <GripVertical className="w-4 h-4" />
+                  </div>
 
-                <div className="pt-0.5">
-                  <ToggleSwitch
-                    checked={rule.enabled}
-                    onChange={() => handleToggle(rule.id)}
-                  />
-                </div>
+                  <div className="pt-0.5">
+                    <ToggleSwitch
+                      checked={rule.enabled}
+                      onChange={() => handleToggle(rule.id)}
+                    />
+                  </div>
 
-                <div
-                  className="flex-1 min-w-0 cursor-pointer"
-                  onClick={() => {
-                    setEditingRule(rule);
-                    setShowRuleModal(true);
-                  }}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
+                  <div
+                    className="flex-1 min-w-0 cursor-pointer"
+                    onClick={() => {
                       setEditingRule(rule);
                       setShowRuleModal(true);
-                    }
-                  }}
-                >
-                  <p className="text-sm font-medium text-foreground truncate">
-                    {rule.name}
-                  </p>
-                  {expandedFilterView ? (
-                    <VisualRuleSummary rule={rule} />
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setEditingRule(rule);
+                        setShowRuleModal(true);
+                      }
+                    }}
+                  >
+                    <p className="text-sm font-medium text-foreground truncate">
+                      {rule.name}
+                    </p>
+                    {expandedFilterView ? (
+                      <VisualRuleSummary rule={rule} />
+                    ) : (
+                      <RuleSummary rule={rule} />
+                    )}
+                  </div>
+
+                  {deleteConfirmId === rule.id ? (
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleDelete(rule.id)}
+                      >
+                        {t("confirm_delete")}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setDeleteConfirmId(null)}
+                      >
+                        {t("cancel")}
+                      </Button>
+                    </div>
                   ) : (
-                    <RuleSummary rule={rule} />
+                    <button
+                      type="button"
+                      onClick={() => setDeleteConfirmId(rule.id)}
+                      className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-red-600 dark:hover:text-red-400 transition-colors"
+                      aria-label={t("delete_rule")}
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
                   )}
                 </div>
-
-                {deleteConfirmId === rule.id ? (
-                  <div className="flex items-center gap-1">
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => handleDelete(rule.id)}
-                    >
-                      {t("confirm_delete")}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setDeleteConfirmId(null)}
-                    >
-                      {t("cancel")}
-                    </Button>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => setDeleteConfirmId(rule.id)}
-                    className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-red-600 dark:hover:text-red-400 transition-colors"
-                    aria-label={t("delete_rule")}
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </SettingsSection>

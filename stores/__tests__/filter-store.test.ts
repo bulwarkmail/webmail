@@ -151,15 +151,26 @@ describe('filter-store', () => {
   });
 
   describe('fetchFilters', () => {
-    it('should set isOpaque for scripts without metadata', async () => {
+    it('parses external rules from scripts without metadata', async () => {
       const mockClient = {
         getSieveCapabilities: () => null,
         getSieveScripts: async () => [{ id: 's1', name: 'main', blobId: 'b1', isActive: true }],
         getSieveScriptContent: async () => 'require ["fileinto"];\nif header :contains "From" "x" { fileinto "Y"; }',
       };
       await useFilterStore.getState().fetchFilters(mockClient as unknown as IJMAPClient);
+      expect(useFilterStore.getState().isOpaque).toBe(false);
+      expect(useFilterStore.getState().rules).toHaveLength(1);
+      expect(useFilterStore.getState().rules[0].origin).toBe('external');
+    });
+
+    it('sets isOpaque for truly unparseable content', async () => {
+      const mockClient = {
+        getSieveCapabilities: () => null,
+        getSieveScripts: async () => [{ id: 's1', name: 'main', blobId: 'b1', isActive: true }],
+        getSieveScriptContent: async () => '/* @metadata:begin\n{corrupt\n@metadata:end */',
+      };
+      await useFilterStore.getState().fetchFilters(mockClient as unknown as IJMAPClient);
       expect(useFilterStore.getState().isOpaque).toBe(true);
-      expect(useFilterStore.getState().rules).toEqual([]);
     });
 
     it('should parse rules from metadata-bearing script', async () => {

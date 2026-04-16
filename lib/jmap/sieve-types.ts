@@ -39,6 +39,8 @@ export interface FilterAction {
   value?: string;
 }
 
+export type FilterOrigin = 'bulwark' | 'external' | 'opaque';
+
 export interface FilterRule {
   id: string;
   name: string;
@@ -47,6 +49,9 @@ export interface FilterRule {
   conditions: FilterCondition[];
   actions: FilterAction[];
   stopProcessing: boolean;
+  origin?: FilterOrigin;
+  originLabel?: string;
+  rawBlock?: string;
 }
 
 export interface VacationSieveConfig {

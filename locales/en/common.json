@@ -1416,7 +1416,9 @@
       "rule_summary": {
         "conditions_count": "{count, plural, one {# condition} other {# conditions}}",
         "actions_count": "{count, plural, one {# action} other {# actions}}"
-      }
+      },
+      "origin_external": "External",
+      "managed_by_tooltip": "Managed by {source}. Edit it in that app, or use the raw Sieve editor."
     },
     "templates": {
       "title": "Email Templates",
