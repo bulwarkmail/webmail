@@ -288,6 +288,13 @@ export const useCalendarStore = create<CalendarStore>()(
           }
 
           set((state) => ({ events: [...state.events, mappedCreated] }));
+          if (sendSchedulingMessages && created.participants) {
+            try {
+              await client.sendImipInvitation(created);
+            } catch (e) {
+              debug.error('Failed to send invitation emails:', e);
+            }
+          }
           return mappedCreated;
         } catch (error) {
           debug.error('Failed to create event:', error);
@@ -342,6 +349,22 @@ export const useCalendarStore = create<CalendarStore>()(
               return merged;
             }),
           }));
+          if (sendSchedulingMessages) {
+            const mergedParticipants = cleanUpdates.participants ?? storeEvent?.participants;
+            if (mergedParticipants) {
+              const eventForInvitation = {
+                ...(storeEvent ?? {}),
+                ...cleanUpdates,
+                id: realId,
+                participants: mergedParticipants,
+              } as import('@/lib/jmap/types').CalendarEvent;
+              try {
+                await client.sendImipInvitation(eventForInvitation);
+              } catch (e) {
+                debug.error('Failed to send invitation emails:', e);
+              }
+            }
+          }
         } catch (error) {
           debug.error('Failed to update event:', error);
           set({ error: 'Failed to update event' });
