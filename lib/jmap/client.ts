@@ -274,6 +274,25 @@ function computeHasMore(position: number, emailCount: number, total: number, lim
   return emailCount === limit;
 }
 
+/**
+ * Fold a single iCalendar content line per RFC 5545 §3.1.
+ * Lines longer than 75 octets MUST be split with CRLF + a single linear white space character.
+ * We fold at 74 characters to leave room for the leading space on continuation lines.
+ * @see https://www.rfc-editor.org/rfc/rfc5545#section-3.1
+ */
+function foldIcsLine(line: string): string {
+  const MAX = 74;
+  if (line.length <= MAX) return line;
+  const chunks: string[] = [];
+  chunks.push(line.slice(0, MAX));
+  let pos = MAX;
+  while (pos < line.length) {
+    chunks.push(' ' + line.slice(pos, pos + MAX - 1));
+    pos += MAX - 1;
+  }
+  return chunks.join('\r\n');
+}
+
 export class JMAPClient implements IJMAPClient {
   private static readonly RATE_LIMIT_TOAST_THROTTLE_MS = 10_000;
 
@@ -2017,7 +2036,7 @@ export class JMAPClient implements IJMAPClient {
     lines.push(`ATTENDEE;PARTSTAT=${opts.status}${attCn}:mailto:${opts.attendeeEmail}`);
     lines.push('END:VEVENT');
     lines.push('END:VCALENDAR');
-    const icsContent = lines.join('\r\n') + '\r\n';
+    const icsContent = lines.map(foldIcsLine).join('\r\n') + '\r\n';
 
     debug.log('calendar', '[iMIP] Generated ICS:\n' + icsContent);
 
@@ -2039,10 +2058,16 @@ export class JMAPClient implements IJMAPClient {
       keywords: { "$seen": true, "$draft": true },
       mailboxIds: { [draftsMailbox.id]: true },
       bodyStructure: {
-        type: 'multipart/alternative',
+        // RFC 6047 §3 requires multipart/mixed when a text/calendar part is present.
+        // Using multipart/alternative causes most clients to ignore the iTIP method.
+        // @see https://www.rfc-editor.org/rfc/rfc6047#section-3
+        // @see https://devguide.calconnect.org/iMIP/iMIPBest-Practices/
+        // Note: Gmail-to-Gmail events use Google's internal scheduling API, not iMIP.
+        // This fix targets non-Gmail organizers and external CalDAV servers.
+        type: 'multipart/mixed',
         subParts: [
           { partId: 'text', type: 'text/plain' },
-          { partId: 'cal', type: 'text/calendar; method=REPLY' },
+          { partId: 'cal', type: 'text/calendar; method=REPLY; charset=UTF-8', disposition: 'inline', name: 'reply.ics' },
         ],
       },
       bodyValues: {
@@ -2195,7 +2220,7 @@ export class JMAPClient implements IJMAPClient {
 
     lines.push('END:VEVENT');
     lines.push('END:VCALENDAR');
-    const icsContent = lines.join('\r\n') + '\r\n';
+    const icsContent = lines.map(foldIcsLine).join('\r\n') + '\r\n';
 
     const subject = `Invitation: ${event.title || 'Event'}`;
     const toAddresses = attendees
@@ -2212,10 +2237,11 @@ export class JMAPClient implements IJMAPClient {
       keywords: { "$seen": true, "$draft": true },
       mailboxIds: { [draftsMailbox.id]: true },
       bodyStructure: {
-        type: 'multipart/alternative',
+        // See RFC 6047 §3: https://www.rfc-editor.org/rfc/rfc6047#section-3
+        type: 'multipart/mixed',
         subParts: [
           { partId: 'text', type: 'text/plain' },
-          { partId: 'cal', type: 'text/calendar; method=REQUEST' },
+          { partId: 'cal', type: 'text/calendar; method=REQUEST; charset=UTF-8', disposition: 'inline', name: 'invite.ics' },
         ],
       },
       bodyValues: {
@@ -2342,7 +2368,7 @@ export class JMAPClient implements IJMAPClient {
 
     lines.push('END:VEVENT');
     lines.push('END:VCALENDAR');
-    const icsContent = lines.join('\r\n') + '\r\n';
+    const icsContent = lines.map(foldIcsLine).join('\r\n') + '\r\n';
 
     const subject = `Cancelled: ${event.title || 'Event'}`;
     const toAddresses = attendees
@@ -2359,10 +2385,11 @@ export class JMAPClient implements IJMAPClient {
       keywords: { "$seen": true, "$draft": true },
       mailboxIds: { [draftsMailbox.id]: true },
       bodyStructure: {
-        type: 'multipart/alternative',
+        // See RFC 6047 §3: https://www.rfc-editor.org/rfc/rfc6047#section-3
+        type: 'multipart/mixed',
         subParts: [
           { partId: 'text', type: 'text/plain' },
-          { partId: 'cal', type: 'text/calendar; method=CANCEL' },
+          { partId: 'cal', type: 'text/calendar; method=CANCEL; charset=UTF-8', disposition: 'inline', name: 'cancel.ics' },
         ],
       },
       bodyValues: {
