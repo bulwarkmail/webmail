@@ -67,7 +67,7 @@ function parseContentType(value?: string | null): { mimeType: string; params: Re
   };
 }
 
-function isCalendarMimeType(value?: string | null): boolean {
+export function isCalendarMimeType(value?: string | null): boolean {
   const { mimeType } = parseContentType(value);
   return mimeType === 'text/calendar' || mimeType === 'application/ics' || mimeType === 'application/icalendar';
 }
