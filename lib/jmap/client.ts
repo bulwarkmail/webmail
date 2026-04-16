@@ -189,6 +189,7 @@ const CALENDAR_TASK_PROPERTIES = [
   'useDefaultAlerts',
   'alerts',
   'relatedTo',
+  'percentComplete',  // Task-only per RFC 8984 §5.2.4 — used in detection heuristic
 ] as const;
 
 /**
@@ -3974,9 +3975,13 @@ export class JMAPClient implements IJMAPClient {
       const isExplicitTask = typeof type === 'string' && type.toLowerCase() === 'task';
       // CalDAV-created tasks (e.g. Thunderbird) may lack @type or have @type
       // set to something other than 'Event'. Detect them by the presence of
-      // task-specific fields: progress, due, or percentComplete.
-      const hasTaskFields = ('progress' in obj && typeof obj.progress === 'string')
-        || ('due' in obj && obj.due != null)
+      // task-specific keys (due, progress, percentComplete), which RFC 8984 §5.2
+      // defines as Task-only — a VEVENT will never include them in the response.
+      // We check for key presence (even if null) because Stalwart may return null
+      // instead of the RFC defaults (e.g. progress default is "needs-action").
+      // @see https://www.rfc-editor.org/rfc/rfc8984#section-5.2
+      const hasTaskFields = ('due' in obj)
+        || ('progress' in obj)
         || ('percentComplete' in obj);
       const isCalDavTask = type !== 'Event' && hasTaskFields;
 
