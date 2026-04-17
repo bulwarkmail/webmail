@@ -21,6 +21,11 @@ const OPAQUE: ParseResult = { rules: [], isOpaque: true, externalRequires: [] };
 const METADATA_BEGIN = '/* @metadata:begin';
 const METADATA_END = '@metadata:end */';
 
+const NEXTCLOUD_BLOCK_MARKER = "### Nextcloud Mail: Filters ### DON'T EDIT ###";
+
+const BULWARK_EXTERNAL_HEADER_RE =
+  /^[ \t]*#[ \t]*---[ \t]*External rules \(managed outside Bulwark\)[ \t]*---[ \t]*\r?\n/m;
+
 const FIELD_FROM_HEADER: Record<string, FilterConditionField> = {
   from: 'from',
   to: 'to',
@@ -496,6 +501,103 @@ function makeOpaqueRule(block: TopBlock, idPrefix: string, index: number): Filte
   };
 }
 
+function escapeRegex(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Nextcloud Mail wraps its managed filter region with a pair of
+ * `### Nextcloud Mail: Filters ### DON'T EDIT ###` markers and typically
+ * emits two such regions — one enclosing its own `require [...]` line and
+ * another enclosing the if-blocks it generates from its `# FILTER: [...]`
+ * JSON comments. Parsing the interior blocks individually loses the outer
+ * markers (causing later rules to fall back to "External") and mis-attaches
+ * them to neighboring blocks on round-trip.
+ *
+ * Treat each marker-pair as one opaque external rule so the whole region
+ * round-trips verbatim, merge any require tokens into the top-level list,
+ * and drop regions that carry nothing but a require (their extensions are
+ * already represented in the merged require line).
+ */
+function extractNextcloudRegions(content: string): {
+  cleaned: string;
+  rules: FilterRule[];
+  requires: string[];
+} {
+  const marker = NEXTCLOUD_BLOCK_MARKER;
+  const positions: number[] = [];
+  let searchFrom = 0;
+  while (true) {
+    const idx = content.indexOf(marker, searchFrom);
+    if (idx === -1) break;
+    const atLineStart = idx === 0 || content[idx - 1] === '\n';
+    if (atLineStart) positions.push(idx);
+    searchFrom = idx + marker.length;
+  }
+
+  if (positions.length < 2) {
+    return { cleaned: content, rules: [], requires: [] };
+  }
+
+  const rules: FilterRule[] = [];
+  const requires: string[] = [];
+  const markerRe = new RegExp(escapeRegex(marker), 'g');
+
+  let cleaned = '';
+  let cursor = 0;
+
+  for (let i = 0; i + 1 < positions.length; i += 2) {
+    const start = positions[i];
+    const closeStart = positions[i + 1];
+    const lineEnd = content.indexOf('\n', closeStart + marker.length);
+    const end = lineEnd === -1 ? content.length : lineEnd + 1;
+
+    cleaned += content.slice(cursor, start);
+    const raw = content.slice(start, end);
+
+    for (const m of raw.matchAll(/require\s+\[([\s\S]*?)\]\s*;/g)) {
+      for (const tok of m[1].matchAll(/"([^"]+)"/g)) {
+        if (!requires.includes(tok[1])) requires.push(tok[1]);
+      }
+    }
+    const singleReq = /require\s+"([^"]+)"\s*;/.exec(raw);
+    if (singleReq && !requires.includes(singleReq[1])) requires.push(singleReq[1]);
+
+    const stripped = raw
+      .replace(markerRe, '')
+      .replace(/require\s+\[[\s\S]*?\]\s*;/g, '')
+      .replace(/require\s+"[^"]+"\s*;/g, '')
+      .replace(/"(?:[^"\\]|\\.)*"/g, '""')
+      .replace(/#[^\n]*/g, '')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .trim();
+
+    if (stripped.length > 0) {
+      rules.push({
+        id: `nextcloud-${rules.length}`,
+        name: 'Nextcloud Mail filters',
+        enabled: true,
+        matchType: 'all',
+        conditions: [],
+        actions: [],
+        stopProcessing: false,
+        origin: 'opaque',
+        originLabel: 'Nextcloud',
+        rawBlock: raw,
+      });
+    }
+
+    cursor = end;
+  }
+
+  cleaned += content.slice(cursor);
+  return { cleaned, rules, requires };
+}
+
+function stripBulwarkExternalHeader(content: string): string {
+  return content.replace(BULWARK_EXTERNAL_HEADER_RE, '');
+}
+
 function parseExternalRules(
   content: string,
   idPrefix: string,
@@ -557,17 +659,25 @@ export function parseScript(content: string): ParseResult {
       if (!isValidRule(rule)) return OPAQUE;
     }
 
-    // Scan the portion AFTER the metadata block for external rules.
-    const afterMetadata = content.slice(endIdx + METADATA_END.length);
-    const external = parseExternalRules(afterMetadata, 'ext');
+    // Scan the portion AFTER the metadata block for external rules. A prior
+    // Bulwark save may have emitted its "External rules" header here; strip
+    // it so it does not get re-attached to the first external rule's rawBlock
+    // and written out twice on the next save.
+    const afterMetadata = stripBulwarkExternalHeader(
+      content.slice(endIdx + METADATA_END.length),
+    );
+    const nextcloud = extractNextcloudRegions(afterMetadata);
+    const external = parseExternalRules(nextcloud.cleaned, 'ext');
 
     // Parsed bulwark rules intentionally omit an explicit `origin` field so
     // round-trip equality with metadata-only callers holds. Absence of origin
     // is treated as 'bulwark' everywhere downstream.
     const bulwarkRules: FilterRule[] = metadata.rules;
 
-    // Exclude requires and the vacation line that we emit ourselves from externalRequires.
-    const externalRequires = external.externalRequires;
+    const externalRequires = [
+      ...external.externalRequires,
+      ...nextcloud.requires.filter(r => !external.externalRequires.includes(r)),
+    ];
 
     // Drop any external "rules" that are really the bulwark-managed if-blocks or vacation.
     // Recognizable by the leading comment "# Rule: <name>" or "# Vacation auto-reply".
@@ -584,7 +694,7 @@ export function parseScript(content: string): ParseResult {
     });
 
     return {
-      rules: [...bulwarkRules, ...filteredExternal],
+      rules: [...bulwarkRules, ...nextcloud.rules, ...filteredExternal],
       isOpaque: false,
       vacation: metadata.vacation,
       externalRequires,
@@ -595,18 +705,29 @@ export function parseScript(content: string): ParseResult {
   const vacationOnly = detectVacationOnlyScript(content);
   if (vacationOnly) return vacationOnly;
 
-  // Try to parse the whole script as external rules.
-  const external = parseExternalRules(content, 'ext');
+  // Extract Nextcloud-managed marker regions first so their interior is not
+  // parsed as a series of loose if-blocks (which would lose the outer markers
+  // and mis-label later blocks as generic "External").
+  const nextcloud = extractNextcloudRegions(content);
+  const external = parseExternalRules(nextcloud.cleaned, 'ext');
 
-  if (!external.hasContent) {
+  const allRules = [...nextcloud.rules, ...external.rules];
+  const allRequires = [
+    ...external.externalRequires,
+    ...nextcloud.requires.filter(r => !external.externalRequires.includes(r)),
+  ];
+
+  if (!external.hasContent && allRules.length === 0) {
     // Entirely empty or whitespace/comments only - treat as empty, editable.
-    return { rules: [], isOpaque: false, externalRequires: [] };
+    // Preserve any require tokens lifted out of Nextcloud marker regions so
+    // they can be re-emitted in the top-level require line.
+    return { rules: [], isOpaque: false, externalRequires: allRequires };
   }
 
   // If at least one block parsed into a structured rule, expose them as external.
   const anyParsed = external.rules.some(r => r.origin === 'external');
-  if (anyParsed || external.rules.length > 0) {
-    return { rules: external.rules, isOpaque: false, externalRequires: external.externalRequires };
+  if (anyParsed || allRules.length > 0) {
+    return { rules: allRules, isOpaque: false, externalRequires: allRequires };
   }
 
   return OPAQUE;
