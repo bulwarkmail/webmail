@@ -264,4 +264,94 @@ describe('external rule preservation (issue #201)', () => {
       expect(externalAfter[0].conditions[0]).toMatchObject({ field: 'header', headerName: 'X-Spam' });
     });
   });
+
+  describe('Nextcloud Mail marker regions', () => {
+    const NEXTCLOUD_MARKER = "### Nextcloud Mail: Filters ### DON'T EDIT ###";
+
+    const nextcloudScript = [
+      NEXTCLOUD_MARKER,
+      'require ["imap4flags", "fileinto"];',
+      NEXTCLOUD_MARKER,
+      '',
+      NEXTCLOUD_MARKER,
+      '# FILTER: [{"name":"Wetterwarnungen"}]',
+      'if header :contains "From" "weather@x.com" {',
+      '    fileinto "Weather";',
+      '}',
+      '',
+      '# PayPal',
+      'if header :contains "From" "paypal.de" {',
+      '    addflag "$paypal";',
+      '}',
+      NEXTCLOUD_MARKER,
+      '',
+    ].join('\n');
+
+    it('collapses a Nextcloud marker-pair region into one opaque rule labeled "Nextcloud"', () => {
+      const result = parseScript(nextcloudScript);
+      const nextcloud = result.rules.filter(r => r.originLabel === 'Nextcloud');
+      expect(nextcloud).toHaveLength(1);
+      expect(nextcloud[0].origin).toBe('opaque');
+      // Every marker that wrapped actual rule content survives in the rawBlock.
+      const markerCount = (nextcloud[0].rawBlock || '').split(NEXTCLOUD_MARKER).length - 1;
+      expect(markerCount).toBe(2);
+      // Inner if-blocks are not exposed as separate external rules.
+      expect(result.rules.filter(r => r.originLabel === 'External')).toHaveLength(0);
+    });
+
+    it('merges require tokens from inside Nextcloud regions into externalRequires', () => {
+      const result = parseScript(nextcloudScript);
+      expect(result.externalRequires).toEqual(expect.arrayContaining(['imap4flags', 'fileinto']));
+    });
+
+    it('drops require-only Nextcloud regions (no separate opaque rule for them)', () => {
+      const script = [
+        NEXTCLOUD_MARKER,
+        'require ["fileinto"];',
+        NEXTCLOUD_MARKER,
+        '',
+      ].join('\n');
+      const result = parseScript(script);
+      expect(result.rules).toHaveLength(0);
+      expect(result.externalRequires).toContain('fileinto');
+    });
+
+    it('round-trips a Nextcloud region verbatim through parse → generate → parse', () => {
+      const bulwark = makeBulwarkRule({ name: 'Test' });
+      const initial = `${generateScript([bulwark])}\n${nextcloudScript}`;
+
+      const parsed = parseScript(initial);
+      const regenerated = generateScript(parsed.rules, parsed.vacation, {
+        externalRequires: parsed.externalRequires,
+      });
+
+      // Both wrapping markers remain, in the right positions.
+      const firstMarker = regenerated.indexOf(NEXTCLOUD_MARKER);
+      const lastMarker = regenerated.lastIndexOf(NEXTCLOUD_MARKER);
+      expect(firstMarker).toBeGreaterThanOrEqual(0);
+      expect(lastMarker).toBeGreaterThan(firstMarker);
+      expect(regenerated).toContain('# FILTER: [{"name":"Wetterwarnungen"}]');
+      expect(regenerated).toContain('# PayPal');
+
+      const reparsed = parseScript(regenerated);
+      expect(reparsed.rules.filter(r => r.originLabel === 'Nextcloud')).toHaveLength(1);
+      expect(reparsed.rules.filter(r => r.originLabel === 'External')).toHaveLength(0);
+    });
+
+    it('does not emit duplicate "External rules" headers across repeated saves', () => {
+      const bulwark = makeBulwarkRule({ name: 'Test' });
+      const initial = `${generateScript([bulwark])}\n${nextcloudScript}`;
+
+      let script = initial;
+      for (let i = 0; i < 3; i++) {
+        const parsed = parseScript(script);
+        script = generateScript(parsed.rules, parsed.vacation, {
+          externalRequires: parsed.externalRequires,
+        });
+      }
+
+      const headerCount = (script.match(/# --- External rules \(managed outside Bulwark\) ---/g) || []).length;
+      expect(headerCount).toBe(1);
+    });
+  });
 });
