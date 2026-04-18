@@ -72,6 +72,7 @@ export default [
       "node_modules/**",
       "repos/**",
       "data/admin/plugins/**",
+      "public/**/*.js",
       "*.config.js",
       "*.config.mjs",
       "e2e/**",
