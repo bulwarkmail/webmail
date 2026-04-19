@@ -21,6 +21,7 @@ import { useIdentityStore } from "@/stores/identity-store";
 import { useUIStore } from "@/stores/ui-store";
 import { useDeviceDetection } from "@/hooks/use-media-query";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
+import { useRefreshGesture } from "@/hooks/use-refresh-gesture";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { useBrowserNavigation, type NavSnapshot } from "@/hooks/use-browser-navigation";
 import { debug } from "@/lib/debug";
@@ -406,6 +407,20 @@ export default function Home() {
     emails,
     selectedEmailId: selectedEmail?.id,
     handlers: keyboardHandlers,
+  });
+
+  // Intercept browser refresh gestures (F5, Ctrl/Cmd+R, pull-to-refresh)
+  // and refresh mail data via JMAP instead of reloading the page.
+  useRefreshGesture({
+    enabled: isAuthenticated && !!client,
+    onRefresh: async () => {
+      if (!client) return;
+      const state = useEmailStore.getState();
+      await Promise.all([
+        state.fetchMailboxes(client),
+        state.selectedMailbox ? state.fetchEmails(client, state.selectedMailbox) : state.fetchEmails(client),
+      ]);
+    },
   });
 
   // Update page title based on context

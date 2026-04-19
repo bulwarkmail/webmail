@@ -32,6 +32,7 @@ import { EventModal, type PendingEventPreview } from "@/components/calendar/even
 import { EventDetailPopover } from "@/components/calendar/event-detail-popover";
 import { EventContextMenu } from "@/components/calendar/event-context-menu";
 import { useContextMenu } from "@/hooks/use-context-menu";
+import { useRefreshGesture } from "@/hooks/use-refresh-gesture";
 import { downloadEventICS } from "@/lib/calendar-ics-export";
 import { ICalImportModal } from "@/components/calendar/ical-import-modal";
 import { ICalSubscriptionModal } from "@/components/calendar/ical-subscription-modal";
@@ -431,6 +432,20 @@ export default function CalendarPage() {
       await fetchEvents(client, currentRange.start, currentRange.end);
     }
   }, [client, fetchEvents]);
+
+  // Intercept browser refresh gestures (F5, Ctrl/Cmd+R, pull-to-refresh)
+  // and refresh calendar data via JMAP instead of reloading the page.
+  useRefreshGesture({
+    enabled: isAuthenticated && !!client,
+    onRefresh: async () => {
+      if (!client) return;
+      await Promise.all([
+        fetchCalendars(client),
+        refetchCurrentRange(),
+        refreshAllSubscriptions(client),
+      ]);
+    },
+  });
 
   const focusCalendarOnEvent = useCallback((event: Pick<Partial<CalendarEvent>, "start" | "utcStart" | "showWithoutTime">) => {
     if (!event.start) {

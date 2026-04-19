@@ -17,6 +17,7 @@ import { SidebarAppsModal } from "@/components/layout/sidebar-apps-modal";
 import { InlineAppView } from "@/components/layout/inline-app-view";
 import { useSidebarApps } from "@/hooks/use-sidebar-apps";
 import { useIsMobile } from "@/hooks/use-media-query";
+import { useRefreshGesture } from "@/hooks/use-refresh-gesture";
 import { usePolicyStore } from "@/stores/policy-store";
 import { FileBrowser } from "@/components/files/file-browser";
 import { ImagePreviewModal } from "@/components/files/image-preview-modal";
@@ -126,6 +127,15 @@ export default function FilesPage() {
       initClient(client);
     }
   }, [isAuthenticated, client, initClient]);
+
+  // Intercept browser refresh gestures (F5, Ctrl/Cmd+R, pull-to-refresh)
+  // and refresh files via JMAP instead of reloading the page.
+  useRefreshGesture({
+    enabled: isAuthenticated && !!client && supportsFiles === true,
+    onRefresh: async () => {
+      await refresh();
+    },
+  });
 
   // Check support and load root after client is initialized
   const storeClient = useFileStore(s => s.client);

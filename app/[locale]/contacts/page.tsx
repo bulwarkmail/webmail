@@ -26,6 +26,7 @@ import { InlineAppView } from "@/components/layout/inline-app-view";
 import { useSidebarApps } from "@/hooks/use-sidebar-apps";
 import { ResizeHandle } from "@/components/layout/resize-handle";
 import { useIsMobile } from "@/hooks/use-media-query";
+import { useRefreshGesture } from "@/hooks/use-refresh-gesture";
 import type { ContactCard, AddressBook } from "@/lib/jmap/types";
 
 type View =
@@ -122,6 +123,16 @@ export default function ContactsPage() {
       fetchContacts(client);
     }
   }, [client, supportsSync, fetchContacts]);
+
+  // Intercept browser refresh gestures (F5, Ctrl/Cmd+R, pull-to-refresh)
+  // and refresh contacts via JMAP instead of reloading the page.
+  useRefreshGesture({
+    enabled: isAuthenticated && !!client && supportsSync,
+    onRefresh: async () => {
+      if (!client) return;
+      await fetchContacts(client);
+    },
+  });
 
   const groups = useMemo(() => contacts.filter(c => c.kind === 'group'), [contacts]);
   const individuals = useMemo(() => contacts.filter(c => c.kind !== 'group'), [contacts]);

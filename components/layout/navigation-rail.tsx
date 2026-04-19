@@ -275,7 +275,7 @@ export function NavigationRail({
               href={item.href}
               onClick={activeAppId ? () => onCloseInlineApp?.() : undefined}
               className={cn(
-                "flex flex-col items-center justify-center gap-1 py-2 px-3 min-w-[64px] min-h-[44px] shrink-0",
+                "flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px]",
                 "transition-colors duration-150",
                 isActive
                   ? "text-primary"
@@ -294,7 +294,7 @@ export function NavigationRail({
                   <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-0.5 rounded-full bg-primary" />
                 )}
               </div>
-              <span className="text-[10px] font-medium leading-tight">{t(item.labelKey)}</span>
+              <span className="text-[10px] font-medium leading-tight truncate max-w-full">{t(item.labelKey)}</span>
             </Link>
           );
         })}
@@ -316,7 +316,7 @@ export function NavigationRail({
                 }
               }}
               className={cn(
-                "flex flex-col items-center justify-center gap-1 py-2 px-3 min-w-[64px] min-h-[44px] shrink-0",
+                "flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px]",
                 "transition-colors duration-150",
                 isActive
                   ? "text-primary"
@@ -329,7 +329,7 @@ export function NavigationRail({
                   <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-0.5 rounded-full bg-primary" />
                 )}
               </div>
-              <span className="text-[10px] font-medium leading-tight truncate max-w-[64px]">{app.name}</span>
+              <span className="text-[10px] font-medium leading-tight truncate max-w-full">{app.name}</span>
             </button>
           );
         })}
@@ -339,13 +339,13 @@ export function NavigationRail({
           <NextLink
             href="/admin"
             className={cn(
-              "flex flex-col items-center justify-center gap-1 py-2 px-3 min-w-[64px] min-h-[44px] shrink-0",
+              "flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px]",
               "transition-colors duration-150",
               "text-muted-foreground hover:text-foreground"
             )}
           >
             <Shield className="w-5 h-5" />
-            <span className="text-[10px] font-medium leading-tight">{t("admin") || "Admin"}</span>
+            <span className="text-[10px] font-medium leading-tight truncate max-w-full">{t("admin") || "Admin"}</span>
           </NextLink>
         )}
 
@@ -354,7 +354,7 @@ export function NavigationRail({
           href="/settings"
           onClick={activeAppId ? () => onCloseInlineApp?.() : undefined}
           className={cn(
-            "flex flex-col items-center justify-center gap-1 py-2 px-3 min-w-[64px] min-h-[44px] shrink-0",
+            "flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px]",
             "transition-colors duration-150",
             isSettingsActive
               ? "text-primary"
@@ -368,7 +368,7 @@ export function NavigationRail({
               <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-0.5 rounded-full bg-primary" />
             )}
           </div>
-          <span className="text-[10px] font-medium leading-tight">{t("settings")}</span>
+          <span className="text-[10px] font-medium leading-tight truncate max-w-full">{t("settings")}</span>
         </Link>
       </nav>
     );
