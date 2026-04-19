@@ -446,12 +446,39 @@ export class JMAPClient implements IJMAPClient {
     return response;
   }
 
-  private async refreshSession(): Promise<void> {
-    const sessionUrl = `${this.serverUrl}/.well-known/jmap`;
-    const response = await fetch(sessionUrl, {
+  /**
+   * Fetch the JMAP session, transparently handling servers that redirect
+   * /.well-known/jmap to a canonical session URL (e.g. Stalwart → /jmap/session).
+   *
+   * Safari strips the Authorization header on cross-origin redirects even when
+   * the redirect destination is same-origin as the original request, and some
+   * reverse-auth proxies (e.g. Pangolin) admit the redirected request via a
+   * cookie without the Authorization header. Stalwart responds to an
+   * unauthenticated /jmap/session with 200 + empty accounts rather than 401,
+   * so the drop is silent and downstream parsing fails with "No mail account
+   * found in session".
+   *
+   * Detect that case (response.redirected, empty accounts, empty username)
+   * and retry directly against the final URL so we can re-send Authorization.
+   */
+  private async fetchSessionResponse(): Promise<Response> {
+    const discoveryUrl = `${this.serverUrl}/.well-known/jmap`;
+    const response = await this.authenticatedFetch(discoveryUrl, { method: 'GET' });
+    if (!response.ok || !response.redirected) return response;
+
+    const peek = await response.clone().json().catch(() => null);
+    const hasAccounts = peek && Object.keys(peek.accounts || {}).length > 0;
+    const hasUsername = typeof peek?.username === 'string' && peek.username.length > 0;
+    if (hasAccounts || hasUsername) return response;
+
+    return fetch(response.url, {
       method: 'GET',
       headers: { 'Authorization': this.authHeader },
     });
+  }
+
+  private async refreshSession(): Promise<void> {
+    const response = await this.fetchSessionResponse();
 
     if (!response.ok) {
       throw new Error(`Session refresh failed: ${response.status}`);
@@ -470,9 +497,7 @@ export class JMAPClient implements IJMAPClient {
     const sessionUrl = `${this.serverUrl}/.well-known/jmap`;
 
     try {
-      const sessionResponse = await this.authenticatedFetch(sessionUrl, {
-        method: 'GET',
-      });
+      const sessionResponse = await this.fetchSessionResponse();
 
       if (!sessionResponse.ok) {
         if (sessionResponse.status === 401) {
