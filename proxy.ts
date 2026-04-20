@@ -28,6 +28,7 @@ export function proxy(request: NextRequest) {
     `base-uri 'self'`,
     `form-action 'self'`,
     `frame-ancestors ${frameAncestors}`,
+    `media-src 'self' blob:`,
   ].join("; ");
 
   // Skip intl middleware for /admin routes - they have their own layout
