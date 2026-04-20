@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
 import { subscriptionStore } from '@/lib/push/store';
-import { sendUnifiedPush } from '@/lib/push/unified-push';
+import { sendFcmPush } from '@/lib/push/fcm';
 import { isValidSubscriptionId } from '@/lib/push/validation';
 import type { JmapPushBody } from '@/lib/push/types';
 
@@ -15,8 +15,8 @@ import type { JmapPushBody } from '@/lib/push/types';
  *   { "@type": "StateChange",      changed: { [accountId]: { [type]: state } } }
  *
  * PushVerification is terminated here — cached against the subscription so
- * the client can poll it. StateChange is fanned out as an Expo push so the
- * mobile app wakes and re-fetches with its own credentials.
+ * the client can poll it. StateChange is fanned out via FCM so the mobile
+ * app wakes and re-fetches with its own credentials.
  */
 
 function getAllowedOrigin(): string | null {
@@ -75,10 +75,15 @@ export async function POST(
     }
 
     if (body['@type'] === 'StateChange') {
-      const ok = await sendUnifiedPush(record, body);
+      const result = await sendFcmPush(record, body);
       record.lastPushAt = Date.now();
       await subscriptionStore.put(id, record);
-      return NextResponse.json({ ok });
+      if (result.unregistered) {
+        // FCM told us the token is no longer valid — drop the subscription
+        // so the device re-registers on next launch.
+        await subscriptionStore.delete(id);
+      }
+      return NextResponse.json({ ok: result.ok });
     }
 
     return NextResponse.json({ error: 'Unsupported JMAP push type' }, { status: 400 });
