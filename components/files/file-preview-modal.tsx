@@ -221,11 +221,10 @@ export function FilePreviewModal({ name, onClose, onDownload, getFileContent }: 
         )}
 
         {!loading && !error && fileType === "pdf" && objectUrl && (
-          <iframe
-            src={objectUrl}
-            sandbox="allow-scripts"
-            className="w-full max-w-5xl h-full rounded-lg bg-white"
-            title={name}
+          <object
+          data={objectUrl}
+          type="application/pdf"
+          className="w-full max-w-5xl h-full rounded-lg bg-white"
           />
         )}
 
