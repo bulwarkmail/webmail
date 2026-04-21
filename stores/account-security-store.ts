@@ -190,8 +190,7 @@ export const useAccountSecurityStore = create<AccountSecurityState>()((set, get)
       const acc = result.list?.[0];
       const aliasAddresses = acc?.aliases
         ? Object.values(acc.aliases)
-            .filter((a) => a?.enabled !== false && a?.name)
-            .map((a) => a?.name!)
+            .flatMap((a) => (a && a.enabled !== false && a.name ? [a.name] : []))
         : [];
       const primaryEmail = acc?.name ? [acc.name] : [];
       set({

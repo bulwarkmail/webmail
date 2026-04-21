@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import QRCode from 'qrcode';
 import * as OTPAuth from 'otpauth';
@@ -294,7 +294,6 @@ function TotpSection() {
           <p className="text-xs text-muted-foreground">{t('totp.setup_instructions')}</p>
           {qrDataUrl && (
             <div className="flex justify-center">
-              { /* eslint-disable-next-line @next/next/no-img-element */ }
               <img src={qrDataUrl} alt="TOTP QR code" className="rounded bg-white p-2" />
             </div>
           )}
