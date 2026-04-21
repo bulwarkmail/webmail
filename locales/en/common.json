@@ -426,7 +426,9 @@
       "cancel_info": "The organizer has cancelled this event.",
       "event_updated": "Update #{sequence}",
       "event_status_tentative": "Tentative",
-      "event_status_cancelled": "Cancelled"
+      "event_status_cancelled": "Cancelled",
+      "expand": "Show details",
+      "collapse": "Hide details"
     },
     "send": "Send",
     "more": "more"

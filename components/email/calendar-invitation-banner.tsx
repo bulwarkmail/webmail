@@ -15,6 +15,7 @@ import {
   X,
   AlertCircle,
   ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import { useTranslations, useFormatter } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
@@ -372,6 +373,7 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
   const [showCalendarPicker, setShowCalendarPicker] = useState(false);
   const [selectedCalendarId, setSelectedCalendarId] = useState<string>('');
   const [rawIcsMethod, setRawIcsMethod] = useState<InvitationMethod>('unknown');
+  const [isCollapsed, setIsCollapsed] = useState(true);
 
   const attachment = findCalendarAttachment(email);
 
@@ -442,6 +444,8 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
   const summary = parsedEvent ? formatEventSummary(parsedEvent) : null;
   const isCancellation = method === 'cancel';
   const isResponseOnly = method === 'reply' || method === 'refresh' || method === 'counter' || method === 'declinecounter';
+  const canCollapse = method === 'reply';
+  const showDetails = !canCollapse || !isCollapsed;
   const allowsRsvp = method === 'request';
   const allowsImport = method === 'request' || method === 'publish' || method === 'add' || method === 'unknown';
 
@@ -750,9 +754,22 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
           )}
           <span className="text-sm font-medium text-foreground truncate">{bannerTitle}</span>
         </div>
+        {canCollapse && (
+          <button
+            type="button"
+            onClick={() => setIsCollapsed((prev) => !prev)}
+            aria-expanded={!isCollapsed}
+            aria-label={isCollapsed ? t('expand') : t('collapse')}
+            title={isCollapsed ? t('expand') : t('collapse')}
+            className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors flex-shrink-0"
+          >
+            {isCollapsed ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+          </button>
+        )}
       </div>
 
       {/* Content */}
+      {showDetails && (
       <div className="px-4 py-3 space-y-2.5">
         <div className="lg:flex lg:gap-6">
           {/* Left: Event info */}
@@ -894,8 +911,10 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
           </div>
         )}
       </div>
+      )}
 
       {/* Actions */}
+      {showDetails && (
       <div className="px-4 py-2.5 border-t border-border bg-muted/20 flex items-center gap-2 flex-wrap">
         {canRespond && (
           <>
@@ -1020,6 +1039,7 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
           <Loader2 className="w-4 h-4 animate-spin text-muted-foreground ml-auto" />
         )}
       </div>
+      )}
     </div>
   );
 }
