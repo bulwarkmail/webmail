@@ -137,6 +137,7 @@ export function ContactList({
   const t = useTranslations("contacts");
   const locale = useLocale();
   const density = useSettingsStore((state) => state.density);
+  const groupByLetter = useSettingsStore((state) => state.groupContactsByLetter);
   const { contextMenu, openContextMenu, closeContextMenu, menuRef } = useContextMenu<ContactCard>();
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [filters, setFilters] = useState<ListFilters>(EMPTY_FILTERS);
@@ -528,43 +529,50 @@ export function ContactList({
             )}
           </div>
         ) : (
-          <div>
-            {groupedSections.map(({ letter, items }) => (
-              <section key={letter}>
-                <div className="sticky top-0 z-10 px-4 py-0.5 bg-background/90 backdrop-blur-sm text-[11px] font-medium text-muted-foreground/70 uppercase tracking-wide">
-                  {letter}
-                </div>
-                {items.map((contact) => (
-                  <ContactListItem
-                    key={contact.id}
-                    contact={contact}
-                    isSelected={contact.id === selectedContactId}
-                    isChecked={selectedContactIds.has(contact.id)}
-                    hasSelection={hasSelection}
-                    density={density}
-                    selectedContactIds={selectedContactIds}
-                    onClick={(e) => {
-                      if (e.ctrlKey || e.metaKey) {
-                        e.preventDefault();
-                        onToggleSelection(contact.id);
-                      } else if (e.shiftKey) {
-                        e.preventDefault();
-                        onSelectRangeContacts(contact.id, sortedIds);
-                      } else {
-                        if (hasSelection) onClearSelection();
-                        onSelectContact(contact.id);
-                      }
-                    }}
-                    onCheckboxClick={(e) => {
-                      e.stopPropagation();
-                      onToggleSelection(contact.id);
-                    }}
-                    onContextMenu={(e, c) => openContextMenu(e, c)}
-                  />
+          (() => {
+            const renderItem = (contact: ContactCard) => (
+              <ContactListItem
+                key={contact.id}
+                contact={contact}
+                isSelected={contact.id === selectedContactId}
+                isChecked={selectedContactIds.has(contact.id)}
+                hasSelection={hasSelection}
+                density={density}
+                selectedContactIds={selectedContactIds}
+                onClick={(e) => {
+                  if (e.ctrlKey || e.metaKey) {
+                    e.preventDefault();
+                    onToggleSelection(contact.id);
+                  } else if (e.shiftKey) {
+                    e.preventDefault();
+                    onSelectRangeContacts(contact.id, sortedIds);
+                  } else {
+                    if (hasSelection) onClearSelection();
+                    onSelectContact(contact.id);
+                  }
+                }}
+                onCheckboxClick={(e) => {
+                  e.stopPropagation();
+                  onToggleSelection(contact.id);
+                }}
+                onContextMenu={(e, c) => openContextMenu(e, c)}
+              />
+            );
+            return groupByLetter ? (
+              <div>
+                {groupedSections.map(({ letter, items }) => (
+                  <section key={letter}>
+                    <div className="sticky top-0 z-10 px-4 py-0.5 bg-background/90 backdrop-blur-sm text-[11px] font-medium text-muted-foreground/70 uppercase tracking-wide">
+                      {letter}
+                    </div>
+                    {items.map(renderItem)}
+                  </section>
                 ))}
-              </section>
-            ))}
-          </div>
+              </div>
+            ) : (
+              <div>{sorted.map(renderItem)}</div>
+            );
+          })()
         )}
       </div>
 

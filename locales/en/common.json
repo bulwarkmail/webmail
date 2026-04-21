@@ -1322,6 +1322,8 @@
     "contacts": {
       "title": "Contacts",
       "description": "Import and export your contacts",
+      "group_by_letter_label": "Group by first letter",
+      "group_by_letter_description": "Show alphabetical section headers in the contact list",
       "import_label": "Import Contacts",
       "import_description": "Import contacts from a vCard (.vcf) file",
       "export_label": "Export Contacts",

@@ -160,6 +160,9 @@ interface SettingsState {
   showBirthdayCalendar: boolean;
   birthdayCalendarColor: string;
 
+  // Contacts Display
+  groupContactsByLetter: boolean;
+
   // Email Notifications
   emailNotificationsEnabled: boolean;
   emailNotificationSound: boolean;
@@ -303,6 +306,9 @@ const DEFAULT_SETTINGS = {
   // Contact Birthday Calendar
   showBirthdayCalendar: false,
   birthdayCalendarColor: '#eab308',
+
+  // Contacts Display
+  groupContactsByLetter: true,
 
   // Email Notifications
   emailNotificationsEnabled: true,
@@ -459,6 +465,7 @@ export const useSettingsStore = create<SettingsState>()(
           showTasksOnCalendar: state.showTasksOnCalendar,
           showBirthdayCalendar: state.showBirthdayCalendar,
           birthdayCalendarColor: state.birthdayCalendarColor,
+          groupContactsByLetter: state.groupContactsByLetter,
           expandedFilterView: state.expandedFilterView,
           showTimeInMonthView: state.showTimeInMonthView,
           showWeekNumbers: state.showWeekNumbers,

@@ -4,11 +4,12 @@ import { useState, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { Upload, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { SettingsSection, SettingItem } from "./settings-section";
+import { SettingsSection, SettingItem, ToggleSwitch } from "./settings-section";
 import { ContactImportDialog } from "@/components/contacts/contact-import-dialog";
 import { exportContacts } from "@/components/contacts/contact-export";
 import { useContactStore } from "@/stores/contact-store";
 import { useAuthStore } from "@/stores/auth-store";
+import { useSettingsStore } from "@/stores/settings-store";
 import { toast } from "@/stores/toast-store";
 
 export function ContactsSettings() {
@@ -20,6 +21,8 @@ export function ContactsSettings() {
     supportsSync,
     importContacts,
   } = useContactStore();
+  const groupContactsByLetter = useSettingsStore((s) => s.groupContactsByLetter);
+  const updateSetting = useSettingsStore((s) => s.updateSetting);
   const [showImport, setShowImport] = useState(false);
 
   const individuals = contacts.filter(c => c.kind !== "group");
@@ -55,6 +58,16 @@ export function ContactsSettings() {
       title={tSettings("title")}
       description={tSettings("description")}
     >
+      <SettingItem
+        label={tSettings("group_by_letter_label")}
+        description={tSettings("group_by_letter_description")}
+      >
+        <ToggleSwitch
+          checked={groupContactsByLetter}
+          onChange={(checked) => updateSetting("groupContactsByLetter", checked)}
+        />
+      </SettingItem>
+
       <SettingItem
         label={tSettings("import_label")}
         description={tSettings("import_description")}
