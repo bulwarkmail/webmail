@@ -99,7 +99,8 @@ export function EmailListItem({ email, selected, onClick, onContextMenu, onToggl
             : "bg-background"
         ),
         selected && !colorTag && "shadow-sm",
-        !colorTag && !selected && "hover:bg-muted hover:shadow-sm",
+        !colorTag && !selected && !isChecked && "hover:bg-muted hover:shadow-sm",
+        !colorTag && (selected || isChecked) && "hover:bg-accent hover:shadow-sm",
         colorTag && "hover:brightness-95 dark:hover:brightness-110",
         isUnread && !selected && !colorTag && "bg-warning/10",
         // Add visual feedback for checked state
@@ -302,7 +303,7 @@ export function EmailListItem({ email, selected, onClick, onContextMenu, onToggl
       {/* Hover Quick Actions */}
       <EmailHoverActions
         email={email}
-        backgroundClassName={colorTag ? colorTag : (selected ? "bg-selection" : "bg-muted")}
+        backgroundClassName={colorTag ? colorTag : ((selected || isChecked) ? "bg-accent" : "bg-muted")}
         onToggleStar={onToggleStar}
         onMarkAsRead={onMarkAsRead}
         onDelete={onDelete}

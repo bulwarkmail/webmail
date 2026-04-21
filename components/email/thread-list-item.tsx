@@ -133,7 +133,8 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
               : "bg-background"
           ),
           selected && !resolvedColorTag && "shadow-sm",
-          !resolvedColorTag && !selected && "hover:bg-muted hover:shadow-sm",
+          !resolvedColorTag && !selected && !isChecked && "hover:bg-muted hover:shadow-sm",
+          !resolvedColorTag && (selected || isChecked) && "hover:bg-accent hover:shadow-sm",
           resolvedColorTag && "hover:brightness-95 dark:hover:brightness-110",
           isUnread && !resolvedColorTag && "bg-accent/30",
           isChecked && "ring-2 ring-primary/20 bg-accent/40",
@@ -323,7 +324,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
         {/* Hover Quick Actions */}
         <EmailHoverActions
           email={email}
-          backgroundClassName={resolvedColorTag ? resolvedColorTag : (selected ? "bg-accent" : "bg-muted")}
+          backgroundClassName={resolvedColorTag ? resolvedColorTag : ((selected || isChecked) ? "bg-accent" : "bg-muted")}
           onToggleStar={onToggleStar}
           onMarkAsRead={onMarkAsRead}
           onDelete={onDelete}
@@ -487,7 +488,8 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                 : "bg-background"
             ),
             isSelected && !colorTag && "shadow-sm",
-            !colorTag && !isSelected && "hover:bg-muted hover:shadow-sm",
+            !colorTag && !isSelected && !isChecked && "hover:bg-muted hover:shadow-sm",
+            !colorTag && (isSelected || isChecked) && "hover:bg-accent hover:shadow-sm",
             colorTag && "hover:brightness-95 dark:hover:brightness-110",
             hasUnread && !colorTag && !isSelected && "bg-accent/30",
             isExpanded && "border-b border-border/50",
@@ -725,7 +727,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
           {/* Hover Quick Actions for thread header */}
           <EmailHoverActions
             email={latestEmail}
-            backgroundClassName={colorTag ? colorTag : (isSelected ? "bg-accent" : "bg-muted")}
+            backgroundClassName={colorTag ? colorTag : ((isSelected || isChecked) ? "bg-accent" : "bg-muted")}
             onToggleStar={onToggleStar ? () => onToggleStar(latestEmail) : undefined}
             onMarkAsRead={onMarkAsRead ? (read) => onMarkAsRead(latestEmail, read) : undefined}
             onDelete={onDelete ? () => onDelete(latestEmail) : undefined}

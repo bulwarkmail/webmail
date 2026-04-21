@@ -274,7 +274,10 @@ export function ContactList({
                   if (allSelected) onClearSelection();
                   else onSelectAll(sortedIds);
                 } else if (sortedIds.length > 0) {
-                  onToggleSelection(sortedIds[0]);
+                  const target = selectedContactId && sortedIds.includes(selectedContactId)
+                    ? selectedContactId
+                    : sortedIds[0];
+                  onToggleSelection(target);
                 }
               }}
               className={cn(

@@ -1499,9 +1499,12 @@ export default function Home() {
                         } else {
                           selectAllEmails();
                         }
-                      } else {
-                        // Enter selection mode by selecting the first email
-                        if (emails.length > 0) toggleEmailSelection(emails[0].id);
+                      } else if (emails.length > 0) {
+                        const currentId = selectedEmail?.id;
+                        const target = currentId && emails.some((e) => e.id === currentId)
+                          ? currentId
+                          : emails[0].id;
+                        toggleEmailSelection(target);
                       }
                     }}
                     className={cn(
