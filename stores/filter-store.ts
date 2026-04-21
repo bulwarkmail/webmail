@@ -29,7 +29,6 @@ interface FilterStore {
   toggleRule: (ruleId: string) => void;
   setRawScript: (content: string) => void;
   resetToVisualBuilder: () => void;
-  syncVacationToScript: (client: IJMAPClient, vacation: VacationSieveConfig) => Promise<void>;
   clearState: () => void;
 }
 
@@ -192,69 +191,6 @@ export const useFilterStore = create<FilterStore>()((set, get) => ({
   setRawScript: (content) => set({ rawScript: content }),
 
   resetToVisualBuilder: () => set({ isOpaque: false, rawScript: '', rules: [], externalRequires: [] }),
-
-  syncVacationToScript: async (client, vacation) => {
-    try {
-      // Preserve current rules before re-fetching, since the server
-      // may have overwritten our script with a vacation-only one.
-      const { rules: previousRules } = get();
-
-      // Always re-fetch scripts from the server to get the current state
-      // after Stalwart may have rewritten the active script.
-      const allScripts = await client.getSieveScripts();
-      // Skip the server-managed 'vacation' script (RFC 9661 §4)
-      const scripts = allScripts.filter(s => s.name !== 'vacation');
-      const activeScript = scripts.find(s => s.isActive) || scripts[0];
-
-      let rules = previousRules;
-      let externalRequires = get().externalRequires;
-
-      // If there's an active script, try to parse our metadata from it.
-      // If the server overwrote it (no metadata), fall back to stored rules.
-      if (activeScript) {
-        const content = await client.getSieveScriptContent(activeScript.blobId);
-        const parsed = parseScript(content);
-        if (!parsed.isOpaque) {
-          rules = parsed.rules;
-          externalRequires = parsed.externalRequires;
-        }
-      }
-
-      // Generate a combined script with our metadata, rules, and vacation
-      const content = generateScript(rules, vacation.isEnabled ? vacation : undefined, { externalRequires });
-
-      if (activeScript) {
-        // Preserve the script's current activation state - don't pass activate: true
-        // unconditionally, as that would deactivate the server-managed 'vacation'
-        // script and cause VacationResponse/get to return isEnabled: false.
-        await client.updateSieveScript(activeScript.id, content, activeScript.isActive);
-        set({
-          activeScriptId: activeScript.id,
-          rawScript: content,
-          rules,
-          vacationSettings: vacation,
-          isOpaque: false,
-          externalRequires,
-        });
-      } else {
-        // Don't activate; there may be a server-managed 'vacation' script active.
-        // The filters script will be activated when the user saves filters normally.
-        const script = await client.createSieveScript('filters', content, false);
-        set({
-          activeScriptId: script.id,
-          rawScript: content,
-          rules,
-          vacationSettings: vacation,
-          isOpaque: false,
-          externalRequires,
-        });
-      }
-
-      debug.log('filters', 'Vacation synced to sieve script');
-    } catch (error) {
-      debug.error('Failed to sync vacation to sieve script:', error);
-    }
-  },
 
   clearState: () => set({
     rules: [],

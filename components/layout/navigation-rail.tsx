@@ -223,11 +223,12 @@ export function NavigationRail({
     let cancelled = false;
     const headers = getActiveAccountSlotHeaders();
     if (!headers['X-JMAP-Cookie-Slot']) return;
-    apiFetch('/api/admin/stalwart-check', { headers })
+    apiFetch('/api/admin/auth', { headers })
       .then(res => res.json())
       .then(data => {
-        if (!cancelled && data.isStalwartAdmin) {
-          setIsStalwartAdmin(true);
+        if (cancelled || !data.stalwartAdmin) return;
+        setIsStalwartAdmin(true);
+        if (!data.authenticated) {
           // Pre-create admin session so /admin works even after full page navigation
           apiFetch('/api/admin/auth', {
             method: 'POST',

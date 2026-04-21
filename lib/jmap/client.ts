@@ -2558,6 +2558,13 @@ export class JMAPClient implements IJMAPClient {
     return capability in this.capabilities;
   }
 
+  /** Check whether a capability is present on the primary account. */
+  hasAccountCapability(capability: string, accountId?: string): boolean {
+    const id = accountId || this.accountId;
+    const caps = this.session?.accounts?.[id]?.accountCapabilities;
+    return !!caps && capability in caps;
+  }
+
   getMaxSizeUpload(): number {
     const coreCapability = this.capabilities["urn:ietf:params:jmap:core"] as { maxSizeUpload?: number } | undefined;
     return coreCapability?.maxSizeUpload || 0;

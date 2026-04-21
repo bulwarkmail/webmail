@@ -27,6 +27,7 @@ export interface IJMAPClient {
 
   // ── Capabilities ──────────────────────────────────────────────
   getCapabilities(): Record<string, unknown>;
+  hasAccountCapability(capability: string, accountId?: string): boolean;
   getMaxSizeUpload(): number;
   getMaxCallsInRequest(): number;
   getMaxObjectsInGet(): number;

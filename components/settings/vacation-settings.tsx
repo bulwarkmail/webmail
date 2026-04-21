@@ -5,7 +5,6 @@ import { useTranslations } from 'next-intl';
 import { SettingsSection, SettingItem, ToggleSwitch } from './settings-section';
 import { Button } from '@/components/ui/button';
 import { useVacationStore } from '@/stores/vacation-store';
-import { useFilterStore } from '@/stores/filter-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { Loader2, AlertTriangle, Eye, EyeOff } from 'lucide-react';
 import { toast } from '@/stores/toast-store';
@@ -103,19 +102,6 @@ export function VacationSettings() {
         subject: localSubject,
         textBody: localTextBody,
       });
-
-      // Re-save the filter script to preserve metadata and include vacation block.
-      // This prevents the server from injecting vacation Sieve code that destroys
-      // the metadata comment the visual filter builder relies on.
-      try {
-        await useFilterStore.getState().syncVacationToScript(client, {
-          isEnabled: localEnabled,
-          subject: localSubject,
-          textBody: localTextBody,
-        });
-      } catch {
-        // Non-critical: vacation was saved via JMAP, script sync is best-effort
-      }
 
       toast.success(tNotifications('vacation_saved'));
     } catch (error) {

@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
     }
 
     const davPath = request.headers.get('X-WebDAV-Path') || '/';
-    const baseUrl = creds.apiUrl.replace(/\/$/, '');
+    const baseUrl = creds.serverUrl.replace(/\/$/, '');
     const targetUrl = buildDavTargetUrl(baseUrl, creds.username, davPath);
 
     // Build headers for the upstream request

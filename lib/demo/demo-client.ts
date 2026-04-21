@@ -49,6 +49,10 @@ export class DemoJMAPClient implements IJMAPClient {
 
   // ── Capabilities ──────────────────────────────────────────────
 
+  hasAccountCapability(_capability: string, _accountId?: string): boolean {
+    return false;
+  }
+
   getCapabilities(): Record<string, unknown> {
     return {
       'urn:ietf:params:jmap:core': { maxSizeUpload: 50_000_000, maxCallsInRequest: 16, maxObjectsInGet: 500 },

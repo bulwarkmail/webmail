@@ -7,20 +7,38 @@ import { logger } from '@/lib/logger';
 import { getStalwartCredentials } from '@/lib/stalwart/credentials';
 
 /**
- * Check if the current user is a Stalwart admin by probing an admin-only endpoint.
+ * Permissions that indicate Stalwart admin privileges.
+ * If the authenticated user has at least one of these, they can manage
+ * system-level resources and are considered an admin.
+ */
+const ADMIN_PERMISSIONS = [
+  'sysAccountQuery',
+  'sysTenantQuery',
+  'sysSystemSettingsGet',
+];
+
+/**
+ * Check if the current user is a Stalwart admin by inspecting the
+ * permissions list returned by Stalwart's /api/account endpoint.
  */
 async function checkStalwartAdmin(request: NextRequest): Promise<boolean> {
   try {
     const creds = await getStalwartCredentials(request);
     if (!creds) return false;
 
-    // Probe admin-only endpoint: listing principals requires admin privileges
-    const response = await fetch(`${creds.apiUrl}/api/principal?limit=1`, {
+    const response = await fetch(`${creds.serverUrl}/api/account`, {
       method: 'GET',
       headers: { 'Authorization': creds.authHeader },
     });
 
-    const isAdmin = response.ok;
+    if (!response.ok) {
+      logger.info('Stalwart admin check (auth)', { username: creds.username, status: response.status, isAdmin: false });
+      return false;
+    }
+
+    const data = await response.json() as { permissions?: string[] };
+    const permissions = Array.isArray(data.permissions) ? data.permissions : [];
+    const isAdmin = ADMIN_PERMISSIONS.some(p => permissions.includes(p));
     logger.info('Stalwart admin check (auth)', { username: creds.username, status: response.status, isAdmin });
     return isAdmin;
   } catch (error) {

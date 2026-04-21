@@ -1,423 +1,336 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { useAccountSecurityStore } from '../account-security-store';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-function mockFetchResponse(status: number, body?: unknown): Response {
-  return new Response(body ? JSON.stringify(body) : null, {
-    status,
-    headers: { 'Content-Type': 'application/json' },
-  });
+vi.mock('@/lib/stalwart/jmap-passthrough', () => ({
+  stalwartJmap: vi.fn(),
+  requireResult: <T,>(responses: Array<[string, unknown, string]>, method: string): T => {
+    const match = responses.find(r => r[0] === method);
+    if (!match) throw new Error(`Missing ${method}`);
+    return match[1] as T;
+  },
+}));
+
+vi.mock('@/stores/auth-store', () => ({
+  useAuthStore: {
+    getState: () => ({
+      client: {
+        getAccountId: () => 'acc-primary',
+        hasAccountCapability: (cap: string) => cap === 'urn:stalwart:jmap',
+      },
+    }),
+  },
+}));
+
+import { useAccountSecurityStore } from '../account-security-store';
+import { stalwartJmap } from '@/lib/stalwart/jmap-passthrough';
+
+const mockedJmap = stalwartJmap as unknown as ReturnType<typeof vi.fn>;
+
+function resetStore() {
+  useAccountSecurityStore.getState().clearState();
 }
 
-const defaultState = {
-  isStalwart: null,
-  isProbing: false,
-  otpEnabled: false,
-  appPasswords: [],
-  isLoadingAuth: false,
-  encryptionType: 'disabled',
-  isLoadingCrypto: false,
-  displayName: '',
-  emails: [],
-  quota: 0,
-  roles: [],
-  isLoadingPrincipal: false,
-  isSaving: false,
-  error: null,
-};
-
-describe('AccountSecurityStore', () => {
-  let fetchSpy: ReturnType<typeof vi.spyOn>;
-
+describe('account-security-store', () => {
   beforeEach(() => {
-    useAccountSecurityStore.setState(defaultState);
-    fetchSpy = vi.spyOn(globalThis, 'fetch');
-  });
-
-  afterEach(() => {
-    fetchSpy.mockRestore();
+    mockedJmap.mockReset();
+    resetStore();
   });
 
   describe('probe', () => {
-    it('sets isStalwart to true when probe succeeds', async () => {
-      fetchSpy.mockResolvedValueOnce(mockFetchResponse(200, { isStalwart: true }));
-
-      const result = await useAccountSecurityStore.getState().probe();
-
-      expect(result).toBe(true);
+    it('sets isStalwart=true when the account has the urn:stalwart:jmap capability', async () => {
+      const ok = await useAccountSecurityStore.getState().probe();
+      expect(ok).toBe(true);
       expect(useAccountSecurityStore.getState().isStalwart).toBe(true);
-      expect(useAccountSecurityStore.getState().isProbing).toBe(false);
-    });
-
-    it('sets isStalwart to false when probe returns false', async () => {
-      fetchSpy.mockResolvedValueOnce(mockFetchResponse(200, { isStalwart: false }));
-
-      const result = await useAccountSecurityStore.getState().probe();
-
-      expect(result).toBe(false);
-      expect(useAccountSecurityStore.getState().isStalwart).toBe(false);
-    });
-
-    it('sets isStalwart to false on network error', async () => {
-      fetchSpy.mockRejectedValueOnce(new TypeError('Network error'));
-
-      const result = await useAccountSecurityStore.getState().probe();
-
-      expect(result).toBe(false);
-      expect(useAccountSecurityStore.getState().isStalwart).toBe(false);
       expect(useAccountSecurityStore.getState().isProbing).toBe(false);
     });
   });
 
   describe('fetchAuthInfo', () => {
-    it('populates auth info on success', async () => {
-      fetchSpy.mockResolvedValueOnce(
-        mockFetchResponse(200, { data: { otpEnabled: true, appPasswords: ['app1', 'app2'] } })
-      );
+    it('reports TOTP enabled when AccountPassword singleton has otpUrl', async () => {
+      mockedJmap.mockResolvedValueOnce([
+        ['x:AccountPassword/get', { list: [{ id: 'singleton', otpAuth: { otpUrl: 'otpauth://totp/x' } }] }, '0'],
+        ['x:AppPassword/query', { ids: [] }, '1'],
+      ]);
 
       await useAccountSecurityStore.getState().fetchAuthInfo();
 
-      const state = useAccountSecurityStore.getState();
-      expect(state.otpEnabled).toBe(true);
-      expect(state.appPasswords).toEqual(['app1', 'app2']);
-      expect(state.isLoadingAuth).toBe(false);
-      expect(state.error).toBeNull();
+      expect(useAccountSecurityStore.getState().otpEnabled).toBe(true);
+      expect(useAccountSecurityStore.getState().appPasswords).toEqual([]);
     });
 
-    it('sets defaults when data fields are missing', async () => {
-      fetchSpy.mockResolvedValueOnce(mockFetchResponse(200, { data: {} }));
+    it('reports TOTP disabled when otpAuth is empty', async () => {
+      mockedJmap.mockResolvedValueOnce([
+        ['x:AccountPassword/get', { list: [{ id: 'singleton', otpAuth: {} }] }, '0'],
+        ['x:AppPassword/query', { ids: [] }, '1'],
+      ]);
 
       await useAccountSecurityStore.getState().fetchAuthInfo();
 
-      const state = useAccountSecurityStore.getState();
-      expect(state.otpEnabled).toBe(false);
-      expect(state.appPasswords).toEqual([]);
+      expect(useAccountSecurityStore.getState().otpEnabled).toBe(false);
     });
 
-    it('sets error on HTTP failure', async () => {
-      fetchSpy.mockResolvedValueOnce(mockFetchResponse(500));
+    it('resolves app password rows via a follow-up Get when query returns ids', async () => {
+      mockedJmap
+        .mockResolvedValueOnce([
+          ['x:AccountPassword/get', { list: [{ otpAuth: {} }] }, '0'],
+          ['x:AppPassword/query', { ids: ['p1'] }, '1'],
+        ])
+        .mockResolvedValueOnce([
+          ['x:AppPassword/get', {
+            list: [{
+              id: 'p1',
+              description: 'Thunderbird',
+              createdAt: '2026-01-01T00:00:00Z',
+              expiresAt: null,
+              allowedIps: { '10.0.0.1': true },
+            }],
+          }, '0'],
+        ]);
 
       await useAccountSecurityStore.getState().fetchAuthInfo();
 
-      const state = useAccountSecurityStore.getState();
-      expect(state.isLoadingAuth).toBe(false);
-      expect(state.error).toBe('HTTP 500');
+      const pw = useAccountSecurityStore.getState().appPasswords[0];
+      expect(pw).toMatchObject({
+        id: 'p1',
+        description: 'Thunderbird',
+        createdAt: '2026-01-01T00:00:00Z',
+        expiresAt: null,
+        allowedIps: ['10.0.0.1'],
+      });
+      expect(mockedJmap).toHaveBeenCalledTimes(2);
     });
 
-    it('sets error on network failure', async () => {
-      fetchSpy.mockRejectedValueOnce(new Error('Connection refused'));
+    it('records error on failure and clears loading flag', async () => {
+      mockedJmap.mockRejectedValueOnce(new Error('boom'));
 
       await useAccountSecurityStore.getState().fetchAuthInfo();
 
-      const state = useAccountSecurityStore.getState();
-      expect(state.isLoadingAuth).toBe(false);
-      expect(state.error).toBe('Connection refused');
+      expect(useAccountSecurityStore.getState().isLoadingAuth).toBe(false);
+      expect(useAccountSecurityStore.getState().error).toBe('boom');
     });
   });
 
   describe('fetchCryptoInfo', () => {
-    it('populates crypto info on success', async () => {
-      fetchSpy.mockResolvedValueOnce(
-        mockFetchResponse(200, { data: { type: 'pgp' } })
-      );
+    it('reads encryption type from encryptionAtRest.@type', async () => {
+      mockedJmap.mockResolvedValueOnce([
+        ['x:AccountSettings/get', { list: [{ encryptionAtRest: { '@type': 'Aes256' } }] }, '0'],
+      ]);
 
       await useAccountSecurityStore.getState().fetchCryptoInfo();
 
-      const state = useAccountSecurityStore.getState();
-      expect(state.encryptionType).toBe('pgp');
-      expect(state.isLoadingCrypto).toBe(false);
+      expect(useAccountSecurityStore.getState().encryptionType).toBe('Aes256');
     });
 
-    it('defaults to disabled when type is missing', async () => {
-      fetchSpy.mockResolvedValueOnce(mockFetchResponse(200, { data: {} }));
+    it('defaults to Disabled when @type is missing or unknown', async () => {
+      mockedJmap.mockResolvedValueOnce([
+        ['x:AccountSettings/get', { list: [{ encryptionAtRest: null }] }, '0'],
+      ]);
 
       await useAccountSecurityStore.getState().fetchCryptoInfo();
 
-      expect(useAccountSecurityStore.getState().encryptionType).toBe('disabled');
-    });
-
-    it('sets error on failure', async () => {
-      fetchSpy.mockResolvedValueOnce(mockFetchResponse(403));
-
-      await useAccountSecurityStore.getState().fetchCryptoInfo();
-
-      expect(useAccountSecurityStore.getState().error).toBe('HTTP 403');
+      expect(useAccountSecurityStore.getState().encryptionType).toBe('Disabled');
     });
   });
 
   describe('fetchPrincipal', () => {
-    it('populates principal info on success', async () => {
-      fetchSpy.mockResolvedValueOnce(
-        mockFetchResponse(200, {
-          data: {
-            description: 'John Doe',
-            emails: ['john@example.com', 'doe@example.com'],
-            quota: 5000000,
-            roles: ['user', 'admin'],
-          },
-        })
-      );
+    it('combines primary name with enabled aliases and exposes quota/roles', async () => {
+      mockedJmap.mockResolvedValueOnce([
+        ['x:Account/get', {
+          list: [{
+            name: 'user@example.com',
+            description: 'Display User',
+            aliases: {
+              a1: { name: 'alias1@example.com', enabled: true },
+              a2: { name: 'alias2@example.com', enabled: false },
+              a3: { name: 'alias3@example.com', enabled: true },
+            },
+            quotas: { maxDiskQuota: 5_000_000 },
+            roles: { '@type': 'User' },
+          }],
+        }, '0'],
+      ]);
 
       await useAccountSecurityStore.getState().fetchPrincipal();
 
       const state = useAccountSecurityStore.getState();
-      expect(state.displayName).toBe('John Doe');
-      expect(state.emails).toEqual(['john@example.com', 'doe@example.com']);
-      expect(state.quota).toBe(5000000);
-      expect(state.roles).toEqual(['user', 'admin']);
-      expect(state.isLoadingPrincipal).toBe(false);
+      expect(state.displayName).toBe('Display User');
+      expect(state.emails).toEqual(['user@example.com', 'alias1@example.com', 'alias3@example.com']);
+      expect(state.quota).toBe(5_000_000);
+      expect(state.roles).toEqual(['User']);
     });
 
-    it('handles single email string as array', async () => {
-      fetchSpy.mockResolvedValueOnce(
-        mockFetchResponse(200, {
-          data: { description: 'User', emails: 'single@example.com', quota: 0, roles: [] },
-        })
-      );
+    it('swallows forbidden errors (non-admins cannot read their own Account) without setting error', async () => {
+      mockedJmap.mockRejectedValueOnce(new Error('Forbidden: missing sysAccountGet permission'));
 
       await useAccountSecurityStore.getState().fetchPrincipal();
 
-      expect(useAccountSecurityStore.getState().emails).toEqual(['single@example.com']);
+      expect(useAccountSecurityStore.getState().isLoadingPrincipal).toBe(false);
+      expect(useAccountSecurityStore.getState().error).toBeNull();
     });
 
-    it('handles missing emails gracefully', async () => {
-      fetchSpy.mockResolvedValueOnce(
-        mockFetchResponse(200, { data: { description: 'User' } })
-      );
+    it('records non-forbidden errors', async () => {
+      mockedJmap.mockRejectedValueOnce(new Error('network down'));
 
       await useAccountSecurityStore.getState().fetchPrincipal();
 
-      expect(useAccountSecurityStore.getState().emails).toEqual([]);
-    });
-
-    it('sets defaults when fields are missing', async () => {
-      fetchSpy.mockResolvedValueOnce(mockFetchResponse(200, { data: {} }));
-
-      await useAccountSecurityStore.getState().fetchPrincipal();
-
-      const state = useAccountSecurityStore.getState();
-      expect(state.displayName).toBe('');
-      expect(state.emails).toEqual([]);
-      expect(state.quota).toBe(0);
-      expect(state.roles).toEqual([]);
-    });
-  });
-
-  describe('fetchAll', () => {
-    it('calls all three fetch methods in parallel', async () => {
-      fetchSpy
-        .mockResolvedValueOnce(mockFetchResponse(200, { data: { otpEnabled: false, appPasswords: [] } }))
-        .mockResolvedValueOnce(mockFetchResponse(200, { data: { type: 'smime' } }))
-        .mockResolvedValueOnce(mockFetchResponse(200, { data: { description: 'Test', emails: [], quota: 0, roles: [] } }));
-
-      await useAccountSecurityStore.getState().fetchAll();
-
-      const state = useAccountSecurityStore.getState();
-      expect(state.encryptionType).toBe('smime');
-      expect(state.displayName).toBe('Test');
-      expect(state.isLoadingAuth).toBe(false);
-      expect(state.isLoadingCrypto).toBe(false);
-      expect(state.isLoadingPrincipal).toBe(false);
-    });
-
-    it('continues even if one fetch fails', async () => {
-      fetchSpy
-        .mockResolvedValueOnce(mockFetchResponse(500)) // auth fails
-        .mockResolvedValueOnce(mockFetchResponse(200, { data: { type: 'pgp' } }))
-        .mockResolvedValueOnce(mockFetchResponse(200, { data: { description: 'OK', emails: [], quota: 0, roles: [] } }));
-
-      await useAccountSecurityStore.getState().fetchAll();
-
-      const state = useAccountSecurityStore.getState();
-      expect(state.encryptionType).toBe('pgp');
-      expect(state.displayName).toBe('OK');
+      expect(useAccountSecurityStore.getState().error).toBe('network down');
     });
   });
 
   describe('changePassword', () => {
-    it('sends POST with currentPassword and newPassword', async () => {
-      fetchSpy.mockResolvedValueOnce(mockFetchResponse(200, { ok: true }));
+    it('calls x:AccountPassword/set with currentSecret and secret', async () => {
+      mockedJmap.mockResolvedValueOnce([
+        ['x:AccountPassword/set', { updated: { singleton: null } }, '0'],
+      ]);
 
-      await useAccountSecurityStore.getState().changePassword('oldpass', 'newpass123');
+      await useAccountSecurityStore.getState().changePassword('old', 'new');
 
-      expect(fetchSpy).toHaveBeenCalledWith('/api/account/stalwart/password', expect.objectContaining({
-        method: 'POST',
-        body: JSON.stringify({ currentPassword: 'oldpass', newPassword: 'newpass123' }),
-      }));
-      expect(useAccountSecurityStore.getState().isSaving).toBe(false);
+      const calls = mockedJmap.mock.calls[0][0];
+      expect(calls).toEqual([[
+        'x:AccountPassword/set',
+        {
+          accountId: 'acc-primary',
+          update: { singleton: { currentSecret: 'old', secret: 'new' } },
+        },
+        '0',
+      ]]);
     });
 
-    it('throws and sets error on failure', async () => {
-      fetchSpy.mockResolvedValueOnce(mockFetchResponse(403, { error: 'Current password is incorrect' }));
+    it('propagates errors and records state', async () => {
+      mockedJmap.mockRejectedValueOnce(new Error('forbidden'));
 
-      await expect(
-        useAccountSecurityStore.getState().changePassword('wrong', 'newpass123')
-      ).rejects.toThrow('Current password is incorrect');
-
+      await expect(useAccountSecurityStore.getState().changePassword('x', 'y')).rejects.toThrow('forbidden');
+      expect(useAccountSecurityStore.getState().error).toBe('forbidden');
       expect(useAccountSecurityStore.getState().isSaving).toBe(false);
-      expect(useAccountSecurityStore.getState().error).toBe('Current password is incorrect');
     });
   });
 
   describe('updateDisplayName', () => {
-    it('sends PATCH and updates local state on success', async () => {
-      fetchSpy.mockResolvedValueOnce(mockFetchResponse(200, { data: null }));
+    it('patches AccountSettings.description and updates local state', async () => {
+      mockedJmap.mockResolvedValueOnce([
+        ['x:AccountSettings/set', { updated: { singleton: null } }, '0'],
+      ]);
 
       await useAccountSecurityStore.getState().updateDisplayName('New Name');
 
-      const state = useAccountSecurityStore.getState();
-      expect(state.displayName).toBe('New Name');
-      expect(state.isSaving).toBe(false);
-
-      const body = JSON.parse(fetchSpy.mock.calls[0][1]?.body as string);
-      expect(body).toEqual([{ action: 'set', field: 'description', value: 'New Name' }]);
-    });
-
-    it('throws and sets error on failure', async () => {
-      fetchSpy.mockResolvedValueOnce(mockFetchResponse(500, { error: 'Server error' }));
-
-      await expect(
-        useAccountSecurityStore.getState().updateDisplayName('Name')
-      ).rejects.toThrow('Server error');
-
-      expect(useAccountSecurityStore.getState().isSaving).toBe(false);
+      expect(useAccountSecurityStore.getState().displayName).toBe('New Name');
+      const args = mockedJmap.mock.calls[0][0][0][1];
+      expect(args).toEqual({ accountId: 'acc-primary', update: { singleton: { description: 'New Name' } } });
     });
   });
 
-  describe('enableTotp', () => {
-    it('sends enableOtpAuth and returns TOTP URL', async () => {
-      const totpUrl = 'otpauth://totp/user@example.com?secret=ABC';
-      fetchSpy.mockResolvedValueOnce(mockFetchResponse(200, { data: totpUrl }));
+  describe('enableTotp / disableTotp', () => {
+    it('enableTotp sends currentSecret + otpAuth.otpUrl + otpCode', async () => {
+      mockedJmap.mockResolvedValueOnce([
+        ['x:AccountPassword/set', { updated: { singleton: null } }, '0'],
+      ]);
 
-      const result = await useAccountSecurityStore.getState().enableTotp();
+      await useAccountSecurityStore.getState().enableTotp('pw', 'otpauth://totp/x?secret=S', '123456');
 
-      expect(result).toBe(totpUrl);
       expect(useAccountSecurityStore.getState().otpEnabled).toBe(true);
-      expect(useAccountSecurityStore.getState().isSaving).toBe(false);
-
-      const body = JSON.parse(fetchSpy.mock.calls[0][1]?.body as string);
-      expect(body).toEqual([{ type: 'enableOtpAuth' }]);
+      const args = mockedJmap.mock.calls[0][0][0][1];
+      expect(args.update.singleton).toEqual({
+        currentSecret: 'pw',
+        otpAuth: { otpUrl: 'otpauth://totp/x?secret=S', otpCode: '123456' },
+      });
     });
 
-    it('throws and preserves otpEnabled=false on failure', async () => {
-      fetchSpy.mockResolvedValueOnce(mockFetchResponse(400, { error: 'TOTP error' }));
-
-      await expect(
-        useAccountSecurityStore.getState().enableTotp()
-      ).rejects.toThrow('TOTP error');
-
-      expect(useAccountSecurityStore.getState().otpEnabled).toBe(false);
-    });
-  });
-
-  describe('disableTotp', () => {
-    it('sends disableOtpAuth and sets otpEnabled to false', async () => {
+    it('disableTotp clears otpUrl', async () => {
       useAccountSecurityStore.setState({ otpEnabled: true });
-      fetchSpy.mockResolvedValueOnce(mockFetchResponse(200, { data: null }));
+      mockedJmap.mockResolvedValueOnce([
+        ['x:AccountPassword/set', { updated: { singleton: null } }, '0'],
+      ]);
 
-      await useAccountSecurityStore.getState().disableTotp();
+      await useAccountSecurityStore.getState().disableTotp('pw');
 
       expect(useAccountSecurityStore.getState().otpEnabled).toBe(false);
-      expect(useAccountSecurityStore.getState().isSaving).toBe(false);
+      const args = mockedJmap.mock.calls[0][0][0][1];
+      expect(args.update.singleton).toEqual({ currentSecret: 'pw', otpAuth: { otpUrl: null } });
     });
   });
 
-  describe('addAppPassword', () => {
-    it('sends addAppPassword and refreshes auth info', async () => {
-      // First call: POST addAppPassword
-      fetchSpy.mockResolvedValueOnce(mockFetchResponse(200, { data: null }));
-      // Second call: fetchAuthInfo refresh
-      fetchSpy.mockResolvedValueOnce(
-        mockFetchResponse(200, { data: { otpEnabled: false, appPasswords: ['Thunderbird'] } })
-      );
+  describe('createAppPassword', () => {
+    it('returns the server-generated id and secret then refreshes auth info', async () => {
+      mockedJmap
+        .mockResolvedValueOnce([
+          ['x:AppPassword/set', { created: { new: { id: 'p-new', secret: 'S3CR3T' } } }, '0'],
+        ])
+        .mockResolvedValueOnce([
+          ['x:AccountPassword/get', { list: [{ otpAuth: {} }] }, '0'],
+          ['x:AppPassword/query', { ids: [] }, '1'],
+        ]);
 
-      await useAccountSecurityStore.getState().addAppPassword('Thunderbird', 'secret');
+      const result = await useAccountSecurityStore.getState().createAppPassword('CLI', '2026-12-01T00:00:00Z');
 
-      const state = useAccountSecurityStore.getState();
-      expect(state.appPasswords).toEqual(['Thunderbird']);
-      expect(state.isSaving).toBe(false);
+      expect(result).toEqual({ id: 'p-new', secret: 'S3CR3T' });
 
-      const body = JSON.parse(fetchSpy.mock.calls[0][1]?.body as string);
-      expect(body).toEqual([{ type: 'addAppPassword', name: 'Thunderbird', password: 'secret' }]);
+      const createArgs = mockedJmap.mock.calls[0][0][0][1];
+      expect(createArgs.create.new).toEqual({ description: 'CLI', expiresAt: '2026-12-01T00:00:00Z' });
+      expect(mockedJmap).toHaveBeenCalledTimes(2);
     });
 
-    it('throws on failure', async () => {
-      fetchSpy.mockResolvedValueOnce(mockFetchResponse(500, { error: 'Server down' }));
+    it('throws with server-provided description when notCreated is returned', async () => {
+      mockedJmap.mockResolvedValueOnce([
+        ['x:AppPassword/set', { notCreated: { new: { type: 'invalidProperties', description: 'description too short' } } }, '0'],
+      ]);
 
       await expect(
-        useAccountSecurityStore.getState().addAppPassword('App', 'pass')
-      ).rejects.toThrow('Server down');
+        useAccountSecurityStore.getState().createAppPassword('x')
+      ).rejects.toThrow('description too short');
+    });
+
+    it('throws when the server does not return a secret', async () => {
+      mockedJmap.mockResolvedValueOnce([
+        ['x:AppPassword/set', { created: { new: { id: 'p' } } }, '0'],
+      ]);
+
+      await expect(
+        useAccountSecurityStore.getState().createAppPassword('x')
+      ).rejects.toThrow(/did not return/i);
     });
   });
 
   describe('removeAppPassword', () => {
-    it('sends removeAppPassword and refreshes auth info', async () => {
-      useAccountSecurityStore.setState({ appPasswords: ['Thunderbird', 'iPhone'] });
+    it('calls AppPassword/set with destroy and refreshes auth info', async () => {
+      mockedJmap
+        .mockResolvedValueOnce([['x:AppPassword/set', { destroyed: ['p1'] }, '0']])
+        .mockResolvedValueOnce([
+          ['x:AccountPassword/get', { list: [{ otpAuth: {} }] }, '0'],
+          ['x:AppPassword/query', { ids: [] }, '1'],
+        ]);
 
-      // First call: POST removeAppPassword
-      fetchSpy.mockResolvedValueOnce(mockFetchResponse(200, { data: null }));
-      // Second call: fetchAuthInfo refresh
-      fetchSpy.mockResolvedValueOnce(
-        mockFetchResponse(200, { data: { otpEnabled: false, appPasswords: ['iPhone'] } })
-      );
+      await useAccountSecurityStore.getState().removeAppPassword('p1');
 
-      await useAccountSecurityStore.getState().removeAppPassword('Thunderbird');
-
-      expect(useAccountSecurityStore.getState().appPasswords).toEqual(['iPhone']);
-
-      const body = JSON.parse(fetchSpy.mock.calls[0][1]?.body as string);
-      expect(body).toEqual([{ type: 'removeAppPassword', name: 'Thunderbird' }]);
-    });
-  });
-
-  describe('updateEncryption', () => {
-    it('sends crypto settings and updates local encryptionType', async () => {
-      fetchSpy.mockResolvedValueOnce(mockFetchResponse(200, { data: null }));
-
-      await useAccountSecurityStore.getState().updateEncryption({ type: 'pgp' });
-
-      expect(useAccountSecurityStore.getState().encryptionType).toBe('pgp');
-      expect(useAccountSecurityStore.getState().isSaving).toBe(false);
-    });
-
-    it('throws on failure without changing encryptionType', async () => {
-      useAccountSecurityStore.setState({ encryptionType: 'disabled' });
-      fetchSpy.mockResolvedValueOnce(mockFetchResponse(500, { error: 'Encryption error' }));
-
-      await expect(
-        useAccountSecurityStore.getState().updateEncryption({ type: 'pgp' })
-      ).rejects.toThrow('Encryption error');
-
-      expect(useAccountSecurityStore.getState().encryptionType).toBe('disabled');
+      const args = mockedJmap.mock.calls[0][0][0][1];
+      expect(args).toEqual({ accountId: 'acc-primary', destroy: ['p1'] });
+      expect(mockedJmap).toHaveBeenCalledTimes(2);
     });
   });
 
   describe('clearState', () => {
-    it('resets all state to defaults', () => {
+    it('resets all derived fields back to defaults', () => {
       useAccountSecurityStore.setState({
         isStalwart: true,
         otpEnabled: true,
-        appPasswords: ['app1'],
-        encryptionType: 'pgp',
-        displayName: 'Test User',
-        emails: ['test@example.com'],
-        quota: 5000000,
-        roles: ['admin'],
-        error: 'some error',
+        appPasswords: [{ id: 'p', description: 'd', createdAt: null, expiresAt: null, allowedIps: [] }],
+        encryptionType: 'Aes256',
+        displayName: 'user',
+        emails: ['a@b'],
+        quota: 10,
+        roles: ['User'],
+        error: 'x',
       });
 
       useAccountSecurityStore.getState().clearState();
 
       const state = useAccountSecurityStore.getState();
       expect(state.isStalwart).toBeNull();
-      expect(state.isProbing).toBe(false);
       expect(state.otpEnabled).toBe(false);
       expect(state.appPasswords).toEqual([]);
-      expect(state.encryptionType).toBe('disabled');
+      expect(state.encryptionType).toBe('Disabled');
       expect(state.displayName).toBe('');
       expect(state.emails).toEqual([]);
       expect(state.quota).toBe(0);
       expect(state.roles).toEqual([]);
-      expect(state.isSaving).toBe(false);
       expect(state.error).toBeNull();
     });
   });
