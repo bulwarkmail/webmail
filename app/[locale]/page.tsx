@@ -820,8 +820,11 @@ export default function Home() {
   const handleArchive = async (emailToArchive: Email | null = selectedEmail) => {
     if (!client || !emailToArchive) return;
 
-    // Find archive mailbox
-    const archiveMailbox = mailboxes.find(m => m.role === "archive" || m.name.toLowerCase() === "archive");
+    // Read fresh mailboxes from the store — batch archive calls this in a loop,
+    // and each iteration needs to see folders created by prior iterations.
+    const currentMailboxes = useEmailStore.getState().mailboxes;
+
+    const archiveMailbox = currentMailboxes.find(m => m.role === "archive" || m.name.toLowerCase() === "archive");
     if (!archiveMailbox) return;
 
     const { archiveMode } = useSettingsStore.getState();
@@ -830,14 +833,12 @@ export default function Home() {
       if (archiveMode === 'single') {
         await moveThreadToMailbox(client, emailToArchive.id, archiveMailbox.id);
       } else {
-        // Determine year/month from the email's received date
         const emailDate = new Date(emailToArchive.receivedAt);
         const year = emailDate.getFullYear().toString();
         const month = (emailDate.getMonth() + 1).toString().padStart(2, '0');
         const archiveId = archiveMailbox.originalId || archiveMailbox.id;
 
-        // Find or create year subfolder under archive
-        let yearMailbox = mailboxes.find(
+        let yearMailbox = currentMailboxes.find(
           m => m.name === year && m.parentId === archiveId
         );
         if (!yearMailbox) {
@@ -848,9 +849,9 @@ export default function Home() {
         if (archiveMode === 'year') {
           await moveThreadToMailbox(client, emailToArchive.id, yearMailbox.id);
         } else {
-          // archiveMode === 'month' - find or create month subfolder under year
           const yearId = yearMailbox.originalId || yearMailbox.id;
-          let monthMailbox = mailboxes.find(
+          const afterYear = useEmailStore.getState().mailboxes;
+          let monthMailbox = afterYear.find(
             m => m.name === month && m.parentId === yearId
           );
           if (!monthMailbox) {
