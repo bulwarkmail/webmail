@@ -493,7 +493,10 @@ export default function Home() {
   // Load mailboxes and emails when authenticated (only if not already loaded)
   useEffect(() => {
     if (isAuthenticated && client && mailboxes.length === 0) {
-      const loadData = async () => {
+      let retryTimer: ReturnType<typeof setTimeout> | null = null;
+      let cancelled = false;
+
+      const loadData = async (attempt = 1) => {
         try {
           // First fetch mailboxes and quota (inbox will be auto-selected in fetchMailboxes)
           await Promise.all([
@@ -504,6 +507,15 @@ export default function Home() {
           // Get the selected mailbox (should be inbox by default)
           const state = useEmailStore.getState();
           const selectedMailboxId = state.selectedMailbox;
+
+          // On first login the server may still be provisioning mailboxes.
+          // Retry a few times with back-off before giving up.
+          if (state.mailboxes.length === 0 && attempt <= 5 && !cancelled) {
+            const delay = Math.min(1000 * attempt, 5000);
+            debug.log('jmap', `[Mailbox] No mailboxes returned (attempt ${attempt}), retrying in ${delay}ms`);
+            retryTimer = setTimeout(() => loadData(attempt + 1), delay);
+            return;
+          }
 
           // Fetch emails for the selected mailbox
           if (selectedMailboxId) {
@@ -538,6 +550,12 @@ export default function Home() {
         }
       };
       loadData();
+
+      return () => {
+        cancelled = true;
+        if (retryTimer) clearTimeout(retryTimer);
+        client.closePushNotifications();
+      };
     }
 
     // Cleanup push notifications on unmount
