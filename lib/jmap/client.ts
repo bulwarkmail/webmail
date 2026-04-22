@@ -1,6 +1,6 @@
 import type { Email, Mailbox, StateChange, AccountStates, Thread, Identity, EmailAddress, ContactCard, AddressBook, VacationResponse, Calendar, CalendarEvent, CalendarEventFilter, CalendarTask, FileNode, FileNodeFilter } from "./types";
 import type { SieveScript, SieveCapabilities } from "./sieve-types";
-import type { IJMAPClient } from "./client-interface";
+import type { IJMAPClient, StalwartAppPassword, StalwartAccountPassword, StalwartAccountInfo } from "./client-interface";
 import { toWildcardQuery } from "./search-utils";
 import { debug } from "@/lib/debug";
 import { normalizeCalendarEventLike } from "@/lib/calendar-event-normalization";
@@ -2613,6 +2613,13 @@ export class JMAPClient implements IJMAPClient {
     return this.hasCapability("urn:ietf:params:jmap:sieve");
   }
 
+  supportsStalwartManagement(): boolean {
+    // urn:stalwart:jmap is advertised per-account in accountCapabilities, not at session root
+    if (this.hasCapability("urn:stalwart:jmap")) return true;
+    const account = this.accounts[this.accountId];
+    return !!account?.accountCapabilities?.["urn:stalwart:jmap"];
+  }
+
   getSieveAccountId(): string {
     const sieveAccount = this.session?.primaryAccounts?.["urn:ietf:params:jmap:sieve"];
     return sieveAccount || this.accountId;
@@ -4976,6 +4983,199 @@ export class JMAPClient implements IJMAPClient {
         const firstErr = Object.values(r.notCreated)[0];
         throw new Error(firstErr?.description || firstErr?.type || 'Failed to send raw email');
       }
+    }
+  }
+
+  // ─── Stalwart management via JMAP (urn:stalwart:jmap) ─────────
+
+  private stalwartUsing(): string[] {
+    return ["urn:ietf:params:jmap:core", "urn:stalwart:jmap"];
+  }
+
+  private stalwartAccountId(): string {
+    return this.session?.primaryAccounts?.["urn:stalwart:jmap"] || this.accountId;
+  }
+
+  private throwOnStalwartError(response: JMAPResponse): void {
+    for (const [methodName, result] of response.methodResponses ?? []) {
+      if (methodName === 'error' || methodName.endsWith('/error')) {
+        const err = result as { type?: string; description?: string };
+        throw new Error(err.description || err.type || 'JMAP error');
+      }
+    }
+  }
+
+  async stalwartGetAppPasswords(): Promise<StalwartAppPassword[]> {
+    const accountId = this.stalwartAccountId();
+    const response = await this.request([
+      ["x:AppPassword/get", { accountId }, "0"],
+    ], this.stalwartUsing());
+    this.throwOnStalwartError(response);
+    const result = response.methodResponses?.[0]?.[1] as { list?: StalwartAppPassword[] } | undefined;
+    return (result?.list ?? []).map(ap => ({
+      id: ap.id,
+      description: ap.description,
+      secret: ap.secret,
+      createdAt: ap.createdAt,
+    }));
+  }
+
+  async stalwartCreateAppPassword(description: string): Promise<StalwartAppPassword> {
+    const accountId = this.stalwartAccountId();
+    const response = await this.request([
+      ["x:AppPassword/set", {
+        accountId,
+        create: { "new": { description, permissions: { "@type": "Inherit" } } },
+      }, "0"],
+    ], this.stalwartUsing());
+    this.throwOnStalwartError(response);
+    const result = response.methodResponses?.[0]?.[1] as {
+      created?: Record<string, StalwartAppPassword>;
+      notCreated?: Record<string, { type?: string; description?: string }>;
+    } | undefined;
+    if (result?.notCreated) {
+      const firstErr = Object.values(result.notCreated)[0];
+      throw new Error(firstErr?.description || firstErr?.type || 'Failed to create app password');
+    }
+    const created = result?.created?.["new"] || (result?.created && Object.values(result.created)[0]);
+    if (!created) {
+      throw new Error('No app password returned from server');
+    }
+    return created;
+  }
+
+  async stalwartDestroyAppPassword(id: string): Promise<void> {
+    const accountId = this.stalwartAccountId();
+    const response = await this.request([
+      ["x:AppPassword/set", { accountId, destroy: [id] }, "0"],
+    ], this.stalwartUsing());
+    this.throwOnStalwartError(response);
+    const result = response.methodResponses?.[0]?.[1] as {
+      notDestroyed?: Record<string, { type?: string; description?: string }>;
+    } | undefined;
+    if (result?.notDestroyed?.[id]) {
+      const err = result.notDestroyed[id];
+      throw new Error(err.description || err.type || 'Failed to remove app password');
+    }
+  }
+
+  async stalwartGetAccountPassword(): Promise<StalwartAccountPassword> {
+    const accountId = this.stalwartAccountId();
+    const response = await this.request([
+      ["x:AccountPassword/get", { accountId, ids: ["singleton"] }, "0"],
+    ], this.stalwartUsing());
+    this.throwOnStalwartError(response);
+    const result = response.methodResponses?.[0]?.[1] as { list?: StalwartAccountPassword[] } | undefined;
+    return result?.list?.[0] ?? {};
+  }
+
+  async stalwartEnableTotp(): Promise<string> {
+    const accountId = this.stalwartAccountId();
+    const response = await this.request([
+      ["x:AccountPassword/set", {
+        accountId,
+        update: { singleton: { otpAuth: { otpUrl: "" } } },
+      }, "0"],
+    ], this.stalwartUsing());
+    this.throwOnStalwartError(response);
+    const result = response.methodResponses?.[0]?.[1] as {
+      updated?: Record<string, { otpAuth?: { otpUrl?: string } } | null>;
+      notUpdated?: Record<string, { type?: string; description?: string }>;
+    } | undefined;
+    if (result?.notUpdated?.singleton) {
+      throw new Error(result.notUpdated.singleton.description || 'Failed to enable TOTP');
+    }
+    return result?.updated?.singleton?.otpAuth?.otpUrl || '';
+  }
+
+  async stalwartDisableTotp(): Promise<void> {
+    const accountId = this.stalwartAccountId();
+    const response = await this.request([
+      ["x:AccountPassword/set", {
+        accountId,
+        update: { singleton: { otpAuth: null } },
+      }, "0"],
+    ], this.stalwartUsing());
+    this.throwOnStalwartError(response);
+    const result = response.methodResponses?.[0]?.[1] as {
+      notUpdated?: Record<string, { type?: string; description?: string }>;
+    } | undefined;
+    if (result?.notUpdated?.singleton) {
+      throw new Error(result.notUpdated.singleton.description || 'Failed to disable TOTP');
+    }
+  }
+
+  async stalwartGetAccountInfo(): Promise<StalwartAccountInfo> {
+    const accountId = this.stalwartAccountId();
+    const response = await this.request([
+      ["x:Account/get", { accountId, ids: [accountId] }, "0"],
+    ], this.stalwartUsing());
+    this.throwOnStalwartError(response);
+    const result = response.methodResponses?.[0]?.[1] as { list?: StalwartAccountInfo[] } | undefined;
+    return result?.list?.[0] ?? {};
+  }
+
+  async stalwartUpdateDisplayName(displayName: string): Promise<void> {
+    const accountId = this.stalwartAccountId();
+    const response = await this.request([
+      ["x:Account/set", {
+        accountId,
+        update: { [accountId]: { description: displayName } },
+      }, "0"],
+    ], this.stalwartUsing());
+    this.throwOnStalwartError(response);
+    const result = response.methodResponses?.[0]?.[1] as {
+      notUpdated?: Record<string, { type?: string; description?: string }>;
+    } | undefined;
+    if (result?.notUpdated?.[accountId]) {
+      const err = result.notUpdated[accountId];
+      throw new Error(err.description || err.type || 'Failed to update display name');
+    }
+  }
+
+  async stalwartChangePassword(currentPassword: string, newPassword: string): Promise<void> {
+    const accountId = this.stalwartAccountId();
+    const response = await this.request([
+      ["x:AccountPassword/set", {
+        accountId,
+        update: { singleton: { currentPassword, newPassword } },
+      }, "0"],
+    ], this.stalwartUsing());
+    this.throwOnStalwartError(response);
+    const result = response.methodResponses?.[0]?.[1] as {
+      notUpdated?: Record<string, { type?: string; description?: string }>;
+    } | undefined;
+    if (result?.notUpdated?.singleton) {
+      throw new Error(result.notUpdated.singleton.description || 'Failed to change password');
+    }
+  }
+
+  async stalwartGetEncryption(): Promise<string> {
+    const accountId = this.stalwartAccountId();
+    const response = await this.request([
+      ["x:AccountPassword/get", { accountId, ids: ["singleton"] }, "0"],
+    ], this.stalwartUsing());
+    this.throwOnStalwartError(response);
+    const result = response.methodResponses?.[0]?.[1] as {
+      list?: Array<{ encryption?: { type?: string } }>;
+    } | undefined;
+    return result?.list?.[0]?.encryption?.type ?? 'disabled';
+  }
+
+  async stalwartUpdateEncryption(settings: { type: string; algo?: string; certs?: string }): Promise<void> {
+    const accountId = this.stalwartAccountId();
+    const response = await this.request([
+      ["x:AccountPassword/set", {
+        accountId,
+        update: { singleton: { encryption: settings } },
+      }, "0"],
+    ], this.stalwartUsing());
+    this.throwOnStalwartError(response);
+    const result = response.methodResponses?.[0]?.[1] as {
+      notUpdated?: Record<string, { type?: string; description?: string }>;
+    } | undefined;
+    if (result?.notUpdated?.singleton) {
+      throw new Error(result.notUpdated.singleton.description || 'Failed to update encryption');
     }
   }
 }

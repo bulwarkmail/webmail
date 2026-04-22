@@ -1,4 +1,4 @@
-import type { IJMAPClient } from '@/lib/jmap/client-interface';
+import type { IJMAPClient, StalwartAppPassword, StalwartAccountPassword, StalwartAccountInfo } from '@/lib/jmap/client-interface';
 import type { Email, Mailbox, StateChange, AccountStates, Thread, Identity, EmailAddress, ContactCard, AddressBook, VacationResponse, Calendar, CalendarEvent, CalendarEventFilter, CalendarTask, FileNode } from '@/lib/jmap/types';
 import type { SieveScript, SieveCapabilities } from '@/lib/jmap/sieve-types';
 import { getDemoData, type DemoData } from './demo-data';
@@ -74,6 +74,20 @@ export class DemoJMAPClient implements IJMAPClient {
   supportsCalendars(): boolean { return true; }
   supportsSieve(): boolean { return true; }
   supportsFiles(): boolean { return true; }
+  supportsStalwartManagement(): boolean { return false; }
+
+  // ── Stalwart management stubs (not available in demo) ────────
+  async stalwartGetAppPasswords(): Promise<StalwartAppPassword[]> { return []; }
+  async stalwartCreateAppPassword(): Promise<StalwartAppPassword> { throw new Error('Not available in demo'); }
+  async stalwartDestroyAppPassword(): Promise<void> { throw new Error('Not available in demo'); }
+  async stalwartGetAccountPassword(): Promise<StalwartAccountPassword> { return {}; }
+  async stalwartEnableTotp(): Promise<string> { throw new Error('Not available in demo'); }
+  async stalwartDisableTotp(): Promise<void> { throw new Error('Not available in demo'); }
+  async stalwartGetAccountInfo(): Promise<StalwartAccountInfo> { return {}; }
+  async stalwartUpdateDisplayName(): Promise<void> { throw new Error('Not available in demo'); }
+  async stalwartChangePassword(): Promise<void> { throw new Error('Not available in demo'); }
+  async stalwartGetEncryption(): Promise<string> { return 'disabled'; }
+  async stalwartUpdateEncryption(): Promise<void> { throw new Error('Not available in demo'); }
 
   // ── Push / state ──────────────────────────────────────────────
 

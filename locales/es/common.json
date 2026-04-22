@@ -1092,7 +1092,9 @@
         "removed": "Contraseña de aplicación eliminada",
         "add_error": "No se pudo crear la contraseña de aplicación",
         "remove_error": "No se pudo eliminar la contraseña de aplicación",
-        "none": "No hay contraseñas de aplicación configuradas"
+        "none": "No hay contraseñas de aplicación configuradas",
+        "secret_instructions": "Copy this password now — it will not be shown again.",
+        "done": "Done"
       },
       "encryption": {
         "section_title": "Cifrado en reposo",

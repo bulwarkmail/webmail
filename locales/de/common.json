@@ -1092,7 +1092,9 @@
         "removed": "App-Passwort entfernt",
         "add_error": "App-Passwort konnte nicht erstellt werden",
         "remove_error": "App-Passwort konnte nicht entfernt werden",
-        "none": "Keine App-Passwörter konfiguriert"
+        "none": "Keine App-Passwörter konfiguriert",
+        "secret_instructions": "Copy this password now — it will not be shown again.",
+        "done": "Done"
       },
       "encryption": {
         "section_title": "Verschlüsselung im Ruhezustand",

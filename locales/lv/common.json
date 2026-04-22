@@ -1092,7 +1092,9 @@
         "removed": "Lietotnes parole izdzēsta",
         "add_error": "Neizdevās izveidot lietotnes paroli",
         "remove_error": "Neizdevās izdzēst lietotnes paroli",
-        "none": "Lietotņu paroles nav iestatītas"
+        "none": "Lietotņu paroles nav iestatītas",
+        "secret_instructions": "Copy this password now — it will not be shown again.",
+        "done": "Done"
       },
       "encryption": {
         "section_title": "Krātuves šifrēšana",

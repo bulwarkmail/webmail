@@ -1092,7 +1092,9 @@
         "removed": "App-wachtwoord verwijderd",
         "add_error": "Kan app-wachtwoord niet aanmaken",
         "remove_error": "Kan app-wachtwoord niet verwijderen",
-        "none": "Geen app-wachtwoorden geconfigureerd"
+        "none": "Geen app-wachtwoorden geconfigureerd",
+        "secret_instructions": "Copy this password now — it will not be shown again.",
+        "done": "Done"
       },
       "encryption": {
         "section_title": "Versleuteling in rust",

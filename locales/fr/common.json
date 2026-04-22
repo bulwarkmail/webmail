@@ -1092,7 +1092,9 @@
         "removed": "Mot de passe d'application supprimé",
         "add_error": "Impossible de créer le mot de passe d'application",
         "remove_error": "Impossible de supprimer le mot de passe d'application",
-        "none": "Aucun mot de passe d'application configuré"
+        "none": "Aucun mot de passe d'application configuré",
+        "secret_instructions": "Copy this password now — it will not be shown again.",
+        "done": "Done"
       },
       "encryption": {
         "section_title": "Chiffrement au repos",

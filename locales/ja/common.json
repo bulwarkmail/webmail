@@ -1092,7 +1092,9 @@
         "removed": "アプリパスワードが削除されました",
         "add_error": "アプリパスワードを作成できませんでした",
         "remove_error": "アプリパスワードを削除できませんでした",
-        "none": "アプリパスワードは設定されていません"
+        "none": "アプリパスワードは設定されていません",
+        "secret_instructions": "Copy this password now — it will not be shown again.",
+        "done": "Done"
       },
       "encryption": {
         "section_title": "保存時の暗号化",

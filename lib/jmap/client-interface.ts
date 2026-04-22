@@ -242,4 +242,39 @@ export interface IJMAPClient {
   importRawEmail(blob: Blob, mailboxIds: Record<string, boolean>, keywords?: Record<string, boolean>): Promise<string>;
   submitEmail(emailId: string, identityId: string): Promise<void>;
   sendRawEmail(blob: Blob, identityId: string, sentMailboxId: string, draftMailboxId?: string): Promise<void>;
+
+  // ── Stalwart management (JMAP, requires urn:stalwart:jmap) ───
+  supportsStalwartManagement(): boolean;
+  stalwartGetAppPasswords(): Promise<StalwartAppPassword[]>;
+  stalwartCreateAppPassword(description: string): Promise<StalwartAppPassword>;
+  stalwartDestroyAppPassword(id: string): Promise<void>;
+  stalwartGetAccountPassword(): Promise<StalwartAccountPassword>;
+  stalwartEnableTotp(): Promise<string>;
+  stalwartDisableTotp(): Promise<void>;
+  stalwartGetAccountInfo(): Promise<StalwartAccountInfo>;
+  stalwartUpdateDisplayName(displayName: string): Promise<void>;
+  stalwartChangePassword(currentPassword: string, newPassword: string): Promise<void>;
+  stalwartGetEncryption(): Promise<string>;
+  stalwartUpdateEncryption(settings: { type: string; algo?: string; certs?: string }): Promise<void>;
+}
+
+// ── Stalwart management types ─────────────────────────────────
+
+export interface StalwartAppPassword {
+  id: string;
+  description: string;
+  secret?: string;
+  createdAt?: string;
+}
+
+export interface StalwartAccountPassword {
+  otpAuth?: { otpUrl?: string } | null;
+}
+
+export interface StalwartAccountInfo {
+  name?: string;
+  description?: string;
+  emails?: string[];
+  quota?: number;
+  roles?: string[];
 }

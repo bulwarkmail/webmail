@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { debug } from '@/lib/debug';
 import { getActiveAccountSlotHeaders } from '@/lib/auth/active-account-slot';
 import { apiFetch } from '@/lib/browser-navigation';
+import type { IJMAPClient } from '@/lib/jmap/client-interface';
 
 interface AccountSecurityState {
   // Detection
@@ -28,25 +29,174 @@ interface AccountSecurityState {
   isSaving: boolean;
   error: string | null;
 
-  // Actions
-  probe: () => Promise<boolean>;
-  fetchAuthInfo: () => Promise<void>;
-  fetchCryptoInfo: () => Promise<void>;
-  fetchPrincipal: () => Promise<void>;
-  fetchAll: () => Promise<void>;
-  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
-  updateDisplayName: (displayName: string) => Promise<void>;
-  enableTotp: () => Promise<string>;
-  disableTotp: () => Promise<void>;
-  addAppPassword: (name: string, password: string) => Promise<void>;
-  removeAppPassword: (name: string) => Promise<void>;
-  updateEncryption: (settings: { type: string; algo?: string; certs?: string }) => Promise<void>;
+  // Actions — client param enables JMAP path when non-null, falls back to REST otherwise
+  probe: (client: IJMAPClient | null) => Promise<boolean>;
+  fetchAuthInfo: (client: IJMAPClient | null) => Promise<void>;
+  fetchCryptoInfo: (client: IJMAPClient | null) => Promise<void>;
+  fetchPrincipal: (client: IJMAPClient | null) => Promise<void>;
+  fetchAll: (client: IJMAPClient | null) => Promise<void>;
+  changePassword: (client: IJMAPClient | null, currentPassword: string, newPassword: string) => Promise<void>;
+  updateDisplayName: (client: IJMAPClient | null, displayName: string) => Promise<void>;
+  enableTotp: (client: IJMAPClient | null) => Promise<string>;
+  disableTotp: (client: IJMAPClient | null) => Promise<void>;
+  addAppPassword: (client: IJMAPClient | null, name: string, password: string) => Promise<string | undefined>;
+  removeAppPassword: (client: IJMAPClient | null, name: string) => Promise<void>;
+  updateEncryption: (client: IJMAPClient | null, settings: { type: string; algo?: string; certs?: string }) => Promise<void>;
   clearState: () => void;
 }
 
 function getApiHeaders(): Record<string, string> {
   return getActiveAccountSlotHeaders();
 }
+
+/** Return the client only if it supports Stalwart JMAP management. */
+function jmap(client: IJMAPClient | null): IJMAPClient | null {
+  return client?.supportsStalwartManagement() ? client : null;
+}
+
+// ── BEGIN LEGACY REST FALLBACK ──────────────────────────────────
+// The functions below proxy through Next.js API routes to Stalwart's
+// REST API (pre-0.16). They can be removed once Stalwart <0.16
+// support is dropped.
+
+async function legacyProbe(): Promise<boolean> {
+  const response = await apiFetch('/api/account/stalwart/probe', {
+    headers: getApiHeaders(),
+  });
+  const data = await response.json();
+  return data.isStalwart === true;
+}
+
+async function legacyFetchAuthInfo(): Promise<{ otpEnabled: boolean; appPasswords: string[] }> {
+  const response = await apiFetch('/api/account/stalwart/auth', {
+    headers: getApiHeaders(),
+  });
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  const data = await response.json();
+  return {
+    otpEnabled: data.data?.otpEnabled ?? false,
+    appPasswords: data.data?.appPasswords ?? [],
+  };
+}
+
+async function legacyFetchCryptoInfo(): Promise<string> {
+  const response = await apiFetch('/api/account/stalwart/crypto', {
+    headers: getApiHeaders(),
+  });
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  const data = await response.json();
+  return data.data?.type ?? 'disabled';
+}
+
+async function legacyFetchPrincipal(): Promise<{ description: string; emails: string[]; quota: number; roles: string[] }> {
+  const response = await apiFetch('/api/account/stalwart/principal', {
+    headers: getApiHeaders(),
+  });
+  if (!response.ok) {
+    if (response.status === 403) {
+      return { description: '', emails: [], quota: 0, roles: [] };
+    }
+    throw new Error(`HTTP ${response.status}`);
+  }
+  const data = await response.json();
+  const principal = data.data;
+  return {
+    description: principal?.description ?? '',
+    emails: Array.isArray(principal?.emails) ? principal.emails : principal?.emails ? [principal.emails] : [],
+    quota: principal?.quota ?? 0,
+    roles: principal?.roles ?? [],
+  };
+}
+
+async function legacyChangePassword(currentPassword: string, newPassword: string): Promise<void> {
+  const response = await apiFetch('/api/account/stalwart/password', {
+    method: 'POST',
+    headers: { ...getApiHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ currentPassword, newPassword }),
+  });
+  if (!response.ok) {
+    const data = await response.json();
+    throw new Error(data.error || `HTTP ${response.status}`);
+  }
+}
+
+async function legacyUpdateDisplayName(displayName: string): Promise<void> {
+  const response = await apiFetch('/api/account/stalwart/principal', {
+    method: 'PATCH',
+    headers: { ...getApiHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify([
+      { action: 'set', field: 'description', value: displayName },
+    ]),
+  });
+  if (!response.ok) {
+    const data = await response.json();
+    throw new Error(data.error || `HTTP ${response.status}`);
+  }
+}
+
+async function legacyEnableTotp(): Promise<string> {
+  const response = await apiFetch('/api/account/stalwart/auth', {
+    method: 'POST',
+    headers: { ...getApiHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify([{ type: 'enableOtpAuth' }]),
+  });
+  if (!response.ok) {
+    const data = await response.json();
+    throw new Error(data.error || data.details || `HTTP ${response.status}`);
+  }
+  const data = await response.json();
+  return data.data;
+}
+
+async function legacyDisableTotp(): Promise<void> {
+  const response = await apiFetch('/api/account/stalwart/auth', {
+    method: 'POST',
+    headers: { ...getApiHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify([{ type: 'disableOtpAuth' }]),
+  });
+  if (!response.ok) {
+    const data = await response.json();
+    throw new Error(data.error || data.details || `HTTP ${response.status}`);
+  }
+}
+
+async function legacyAddAppPassword(name: string, password: string): Promise<void> {
+  const response = await apiFetch('/api/account/stalwart/auth', {
+    method: 'POST',
+    headers: { ...getApiHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify([{ type: 'addAppPassword', name, password }]),
+  });
+  if (!response.ok) {
+    const data = await response.json();
+    throw new Error(data.error || data.details || `HTTP ${response.status}`);
+  }
+}
+
+async function legacyRemoveAppPassword(name: string): Promise<void> {
+  const response = await apiFetch('/api/account/stalwart/auth', {
+    method: 'POST',
+    headers: { ...getApiHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify([{ type: 'removeAppPassword', name }]),
+  });
+  if (!response.ok) {
+    const data = await response.json();
+    throw new Error(data.error || data.details || `HTTP ${response.status}`);
+  }
+}
+
+async function legacyUpdateEncryption(settings: { type: string; algo?: string; certs?: string }): Promise<void> {
+  const response = await apiFetch('/api/account/stalwart/crypto', {
+    method: 'POST',
+    headers: { ...getApiHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify(settings),
+  });
+  if (!response.ok) {
+    const data = await response.json();
+    throw new Error(data.error || data.details || `HTTP ${response.status}`);
+  }
+}
+
+// ── END LEGACY REST FALLBACK ────────────────────────────────────
 
 export const useAccountSecurityStore = create<AccountSecurityState>()((set, get) => ({
   isStalwart: null,
@@ -64,14 +214,14 @@ export const useAccountSecurityStore = create<AccountSecurityState>()((set, get)
   isSaving: false,
   error: null,
 
-  probe: async () => {
+  probe: async (client) => {
     set({ isProbing: true });
     try {
-      const response = await apiFetch('/api/account/stalwart/probe', {
-        headers: getApiHeaders(),
-      });
-      const data = await response.json();
-      const isStalwart = data.isStalwart === true;
+      if (jmap(client)) {
+        set({ isStalwart: true, isProbing: false });
+        return true;
+      }
+      const isStalwart = await legacyProbe();
       set({ isStalwart, isProbing: false });
       return isStalwart;
     } catch (error) {
@@ -81,19 +231,28 @@ export const useAccountSecurityStore = create<AccountSecurityState>()((set, get)
     }
   },
 
-  fetchAuthInfo: async () => {
+  fetchAuthInfo: async (client) => {
     set({ isLoadingAuth: true, error: null });
     try {
-      const response = await apiFetch('/api/account/stalwart/auth', {
-        headers: getApiHeaders(),
-      });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const data = await response.json();
-      set({
-        otpEnabled: data.data?.otpEnabled ?? false,
-        appPasswords: data.data?.appPasswords ?? [],
-        isLoadingAuth: false,
-      });
+      const j = jmap(client);
+      if (j) {
+        const [appPasswords, accountPassword] = await Promise.all([
+          j.stalwartGetAppPasswords(),
+          j.stalwartGetAccountPassword(),
+        ]);
+        set({
+          otpEnabled: !!accountPassword.otpAuth?.otpUrl,
+          appPasswords: appPasswords.map(ap => ap.description),
+          isLoadingAuth: false,
+        });
+      } else {
+        const info = await legacyFetchAuthInfo();
+        set({
+          otpEnabled: info.otpEnabled,
+          appPasswords: info.appPasswords,
+          isLoadingAuth: false,
+        });
+      }
     } catch (error) {
       debug.error('Failed to fetch auth info:', error);
       set({
@@ -103,18 +262,17 @@ export const useAccountSecurityStore = create<AccountSecurityState>()((set, get)
     }
   },
 
-  fetchCryptoInfo: async () => {
+  fetchCryptoInfo: async (client) => {
     set({ isLoadingCrypto: true, error: null });
     try {
-      const response = await apiFetch('/api/account/stalwart/crypto', {
-        headers: getApiHeaders(),
-      });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const data = await response.json();
-      set({
-        encryptionType: data.data?.type ?? 'disabled',
-        isLoadingCrypto: false,
-      });
+      const j = jmap(client);
+      if (j) {
+        const encryptionType = await j.stalwartGetEncryption();
+        set({ encryptionType, isLoadingCrypto: false });
+      } else {
+        const encryptionType = await legacyFetchCryptoInfo();
+        set({ encryptionType, isLoadingCrypto: false });
+      }
     } catch (error) {
       debug.error('Failed to fetch crypto info:', error);
       set({
@@ -124,35 +282,29 @@ export const useAccountSecurityStore = create<AccountSecurityState>()((set, get)
     }
   },
 
-  fetchPrincipal: async () => {
+  fetchPrincipal: async (client) => {
     set({ isLoadingPrincipal: true, error: null });
     try {
-      const response = await apiFetch('/api/account/stalwart/principal', {
-        headers: getApiHeaders(),
-      });
-      if (!response.ok) {
-        if (response.status === 403) {
-          // User lacks permission to read principal (e.g. non-admin); treat as empty
-          set({
-            displayName: '',
-            emails: [],
-            quota: 0,
-            roles: [],
-            isLoadingPrincipal: false,
-          });
-          return;
-        }
-        throw new Error(`HTTP ${response.status}`);
+      const j = jmap(client);
+      if (j) {
+        const info = await j.stalwartGetAccountInfo();
+        set({
+          displayName: info.description ?? info.name ?? '',
+          emails: info.emails ?? [],
+          quota: info.quota ?? 0,
+          roles: info.roles ?? [],
+          isLoadingPrincipal: false,
+        });
+      } else {
+        const principal = await legacyFetchPrincipal();
+        set({
+          displayName: principal.description,
+          emails: principal.emails,
+          quota: principal.quota,
+          roles: principal.roles,
+          isLoadingPrincipal: false,
+        });
       }
-      const data = await response.json();
-      const principal = data.data;
-      set({
-        displayName: principal?.description ?? '',
-        emails: Array.isArray(principal?.emails) ? principal.emails : principal?.emails ? [principal.emails] : [],
-        quota: principal?.quota ?? 0,
-        roles: principal?.roles ?? [],
-        isLoadingPrincipal: false,
-      });
     } catch (error) {
       debug.error('Failed to fetch principal:', error);
       set({
@@ -162,25 +314,20 @@ export const useAccountSecurityStore = create<AccountSecurityState>()((set, get)
     }
   },
 
-  fetchAll: async () => {
+  fetchAll: async (client) => {
     const { fetchAuthInfo, fetchCryptoInfo, fetchPrincipal } = get();
-    await Promise.allSettled([fetchAuthInfo(), fetchCryptoInfo(), fetchPrincipal()]);
+    await Promise.allSettled([fetchAuthInfo(client), fetchCryptoInfo(client), fetchPrincipal(client)]);
   },
 
-  changePassword: async (currentPassword, newPassword) => {
+  changePassword: async (client, currentPassword, newPassword) => {
     set({ isSaving: true, error: null });
     try {
-      const response = await apiFetch('/api/account/stalwart/password', {
-        method: 'POST',
-        headers: { ...getApiHeaders(), 'Content-Type': 'application/json' },
-        body: JSON.stringify({ currentPassword, newPassword }),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || `HTTP ${response.status}`);
+      const j = jmap(client);
+      if (j) {
+        await j.stalwartChangePassword(currentPassword, newPassword);
+      } else {
+        await legacyChangePassword(currentPassword, newPassword);
       }
-
       set({ isSaving: false });
     } catch (error) {
       set({
@@ -191,22 +338,15 @@ export const useAccountSecurityStore = create<AccountSecurityState>()((set, get)
     }
   },
 
-  updateDisplayName: async (displayName) => {
+  updateDisplayName: async (client, displayName) => {
     set({ isSaving: true, error: null });
     try {
-      const response = await apiFetch('/api/account/stalwart/principal', {
-        method: 'PATCH',
-        headers: { ...getApiHeaders(), 'Content-Type': 'application/json' },
-        body: JSON.stringify([
-          { action: 'set', field: 'description', value: displayName },
-        ]),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || `HTTP ${response.status}`);
+      const j = jmap(client);
+      if (j) {
+        await j.stalwartUpdateDisplayName(displayName);
+      } else {
+        await legacyUpdateDisplayName(displayName);
       }
-
       set({ displayName, isSaving: false });
     } catch (error) {
       set({
@@ -217,23 +357,18 @@ export const useAccountSecurityStore = create<AccountSecurityState>()((set, get)
     }
   },
 
-  enableTotp: async () => {
+  enableTotp: async (client) => {
     set({ isSaving: true, error: null });
     try {
-      const response = await apiFetch('/api/account/stalwart/auth', {
-        method: 'POST',
-        headers: { ...getApiHeaders(), 'Content-Type': 'application/json' },
-        body: JSON.stringify([{ type: 'enableOtpAuth' }]),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || data.details || `HTTP ${response.status}`);
+      const j = jmap(client);
+      let url: string;
+      if (j) {
+        url = await j.stalwartEnableTotp();
+      } else {
+        url = await legacyEnableTotp();
       }
-
-      const data = await response.json();
       set({ otpEnabled: true, isSaving: false });
-      return data.data;
+      return url;
     } catch (error) {
       set({
         isSaving: false,
@@ -243,20 +378,15 @@ export const useAccountSecurityStore = create<AccountSecurityState>()((set, get)
     }
   },
 
-  disableTotp: async () => {
+  disableTotp: async (client) => {
     set({ isSaving: true, error: null });
     try {
-      const response = await apiFetch('/api/account/stalwart/auth', {
-        method: 'POST',
-        headers: { ...getApiHeaders(), 'Content-Type': 'application/json' },
-        body: JSON.stringify([{ type: 'disableOtpAuth' }]),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || data.details || `HTTP ${response.status}`);
+      const j = jmap(client);
+      if (j) {
+        await j.stalwartDisableTotp();
+      } else {
+        await legacyDisableTotp();
       }
-
       set({ otpEnabled: false, isSaving: false });
     } catch (error) {
       set({
@@ -267,23 +397,20 @@ export const useAccountSecurityStore = create<AccountSecurityState>()((set, get)
     }
   },
 
-  addAppPassword: async (name, password) => {
+  addAppPassword: async (client, name, password) => {
     set({ isSaving: true, error: null });
     try {
-      const response = await apiFetch('/api/account/stalwart/auth', {
-        method: 'POST',
-        headers: { ...getApiHeaders(), 'Content-Type': 'application/json' },
-        body: JSON.stringify([{ type: 'addAppPassword', name, password }]),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || data.details || `HTTP ${response.status}`);
+      let serverSecret: string | undefined;
+      const j = jmap(client);
+      if (j) {
+        const created = await j.stalwartCreateAppPassword(name);
+        serverSecret = created.secret;
+      } else {
+        await legacyAddAppPassword(name, password);
       }
-
-      // Refresh auth info to get updated app passwords list
-      await get().fetchAuthInfo();
+      await get().fetchAuthInfo(client);
       set({ isSaving: false });
+      return serverSecret;
     } catch (error) {
       set({
         isSaving: false,
@@ -293,22 +420,19 @@ export const useAccountSecurityStore = create<AccountSecurityState>()((set, get)
     }
   },
 
-  removeAppPassword: async (name) => {
+  removeAppPassword: async (client, name) => {
     set({ isSaving: true, error: null });
     try {
-      const response = await apiFetch('/api/account/stalwart/auth', {
-        method: 'POST',
-        headers: { ...getApiHeaders(), 'Content-Type': 'application/json' },
-        body: JSON.stringify([{ type: 'removeAppPassword', name }]),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || data.details || `HTTP ${response.status}`);
+      const j = jmap(client);
+      if (j) {
+        const passwords = await j.stalwartGetAppPasswords();
+        const match = passwords.find(ap => ap.description === name);
+        if (!match) throw new Error(`App password "${name}" not found`);
+        await j.stalwartDestroyAppPassword(match.id);
+      } else {
+        await legacyRemoveAppPassword(name);
       }
-
-      // Refresh auth info to get updated app passwords list
-      await get().fetchAuthInfo();
+      await get().fetchAuthInfo(client);
       set({ isSaving: false });
     } catch (error) {
       set({
@@ -319,20 +443,15 @@ export const useAccountSecurityStore = create<AccountSecurityState>()((set, get)
     }
   },
 
-  updateEncryption: async (settings) => {
+  updateEncryption: async (client, settings) => {
     set({ isSaving: true, error: null });
     try {
-      const response = await apiFetch('/api/account/stalwart/crypto', {
-        method: 'POST',
-        headers: { ...getApiHeaders(), 'Content-Type': 'application/json' },
-        body: JSON.stringify(settings),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || data.details || `HTTP ${response.status}`);
+      const j = jmap(client);
+      if (j) {
+        await j.stalwartUpdateEncryption(settings);
+      } else {
+        await legacyUpdateEncryption(settings);
       }
-
       set({ encryptionType: settings.type, isSaving: false });
     } catch (error) {
       set({

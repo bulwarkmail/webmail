@@ -1092,7 +1092,9 @@
         "removed": "应用密码已删除",
         "add_error": "创建应用密码失败",
         "remove_error": "无法删除应用密码",
-        "none": "未配置应用密码"
+        "none": "未配置应用密码",
+        "secret_instructions": "Copy this password now — it will not be shown again.",
+        "done": "Done"
       },
       "encryption": {
         "section_title": "静态加密",

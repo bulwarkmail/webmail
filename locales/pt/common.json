@@ -1092,7 +1092,9 @@
         "removed": "Senha de aplicativo removida",
         "add_error": "Não foi possível criar a senha de aplicativo",
         "remove_error": "Não foi possível remover a senha de aplicativo",
-        "none": "Nenhuma senha de aplicativo configurada"
+        "none": "Nenhuma senha de aplicativo configurada",
+        "secret_instructions": "Copy this password now — it will not be shown again.",
+        "done": "Done"
       },
       "encryption": {
         "section_title": "Criptografia em repouso",

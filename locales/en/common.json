@@ -1097,7 +1097,9 @@
         "removed": "App password removed",
         "add_error": "Failed to create app password",
         "remove_error": "Failed to remove app password",
-        "none": "No app passwords configured"
+        "none": "No app passwords configured",
+        "secret_instructions": "Copy this password now — it will not be shown again.",
+        "done": "Done"
       },
       "encryption": {
         "section_title": "Encryption at Rest",

@@ -1092,7 +1092,9 @@
         "removed": "앱 비밀번호가 삭제되었어요",
         "add_error": "앱 비밀번호를 만들지 못했어요",
         "remove_error": "앱 비밀번호를 삭제하지 못했어요",
-        "none": "설정된 앱 비밀번호가 없어요"
+        "none": "설정된 앱 비밀번호가 없어요",
+        "secret_instructions": "Copy this password now — it will not be shown again.",
+        "done": "Done"
       },
       "encryption": {
         "section_title": "저장 데이터 암호화",

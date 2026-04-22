@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 function PasswordChangeSection() {
   const t = useTranslations('settings.security');
   const { changePassword, isSaving } = useAccountSecurityStore();
+  const { client } = useAuthStore();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -35,7 +36,7 @@ function PasswordChangeSection() {
     }
 
     try {
-      await changePassword(currentPassword, newPassword);
+      await changePassword(client, currentPassword, newPassword);
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
@@ -125,6 +126,7 @@ function PasswordChangeSection() {
 function DisplayNameSection() {
   const t = useTranslations('settings.security');
   const { displayName, updateDisplayName, isSaving, isLoadingPrincipal } = useAccountSecurityStore();
+  const { client } = useAuthStore();
   const [name, setName] = useState(displayName);
   const [saved, setSaved] = useState(false);
 
@@ -134,7 +136,7 @@ function DisplayNameSection() {
 
   const handleSave = async () => {
     try {
-      await updateDisplayName(name);
+      await updateDisplayName(client, name);
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
       toast.success(t('display_name.success'));
@@ -175,17 +177,18 @@ function DisplayNameSection() {
 function TotpSection() {
   const t = useTranslations('settings.security');
   const { otpEnabled, enableTotp, disableTotp, isSaving, isLoadingAuth } = useAccountSecurityStore();
+  const { client } = useAuthStore();
   const [totpUrl, setTotpUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
   const handleToggle = async (enable: boolean) => {
     try {
       if (enable) {
-        const url = await enableTotp();
+        const url = await enableTotp(client);
         setTotpUrl(url);
         toast.success(t('totp.enabled'));
       } else {
-        await disableTotp();
+        await disableTotp(client);
         setTotpUrl(null);
         toast.success(t('totp.disabled'));
       }
@@ -253,10 +256,15 @@ function TotpSection() {
 function AppPasswordsSection() {
   const t = useTranslations('settings.security');
   const { appPasswords, addAppPassword, removeAppPassword, isSaving, isLoadingAuth } = useAccountSecurityStore();
+  const { client } = useAuthStore();
   const [showAdd, setShowAdd] = useState(false);
   const [newName, setNewName] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [generatedSecret, setGeneratedSecret] = useState<string | null>(null);
+  const [copiedSecret, setCopiedSecret] = useState(false);
+
+  const isJmap = !!client?.supportsStalwartManagement();
 
   const generatePassword = useCallback(() => {
     const chars = 'abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -277,10 +285,15 @@ function AppPasswordsSection() {
     const password = newPassword || generatePassword();
 
     try {
-      await addAppPassword(newName.trim(), password);
+      const serverSecret = await addAppPassword(client, newName.trim(), password);
+      if (serverSecret) {
+        setGeneratedSecret(serverSecret);
+        setCopiedSecret(false);
+      } else {
+        setShowAdd(false);
+      }
       setNewName('');
       setNewPassword('');
-      setShowAdd(false);
       toast.success(t('app_passwords.added'));
     } catch (err) {
       toast.error(t('app_passwords.add_error'), err instanceof Error ? err.message : undefined);
@@ -289,7 +302,7 @@ function AppPasswordsSection() {
 
   const handleRemove = async (name: string) => {
     try {
-      await removeAppPassword(name);
+      await removeAppPassword(client, name);
       toast.success(t('app_passwords.removed'));
     } catch (err) {
       toast.error(t('app_passwords.remove_error'), err instanceof Error ? err.message : undefined);
@@ -322,7 +335,28 @@ function AppPasswordsSection() {
       </div>
       <p className="text-xs text-muted-foreground">{t('app_passwords.description')}</p>
 
-      {showAdd && (
+      {generatedSecret && (
+        <div className="p-3 bg-muted rounded-md space-y-2">
+          <p className="text-xs text-muted-foreground">{t('app_passwords.secret_instructions')}</p>
+          <div className="flex items-center gap-2">
+            <code className="text-xs bg-background px-2 py-1 rounded border border-border flex-1 truncate">
+              {generatedSecret}
+            </code>
+            <Button variant="outline" size="sm" onClick={() => {
+              navigator.clipboard.writeText(generatedSecret);
+              setCopiedSecret(true);
+              setTimeout(() => setCopiedSecret(false), 2000);
+            }}>
+              {copiedSecret ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+            </Button>
+          </div>
+          <Button variant="ghost" size="sm" onClick={() => { setGeneratedSecret(null); setShowAdd(false); }}>
+            {t('app_passwords.done')}
+          </Button>
+        </div>
+      )}
+
+      {showAdd && !generatedSecret && (
         <form onSubmit={handleAdd} className="p-3 bg-muted rounded-md space-y-2">
           <div>
             <label className="text-xs text-muted-foreground mb-1 block">{t('app_passwords.name_label')}</label>
@@ -333,30 +367,32 @@ function AppPasswordsSection() {
               required
             />
           </div>
-          <div>
-            <label className="text-xs text-muted-foreground mb-1 block">{t('app_passwords.password_label')}</label>
-            <div className="flex gap-2">
-              <div className="relative flex-1">
-                <Input
-                  type={showPassword ? 'text' : 'password'}
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder={t('app_passwords.password_placeholder')}
-                  className="pr-10"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
+          {!isJmap && (
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">{t('app_passwords.password_label')}</label>
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Input
+                    type={showPassword ? 'text' : 'password'}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder={t('app_passwords.password_placeholder')}
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                <Button type="button" variant="outline" size="sm" onClick={() => setNewPassword(generatePassword())}>
+                  {t('app_passwords.generate')}
+                </Button>
               </div>
-              <Button type="button" variant="outline" size="sm" onClick={() => setNewPassword(generatePassword())}>
-                {t('app_passwords.generate')}
-              </Button>
             </div>
-          </div>
+          )}
           <div className="flex gap-2">
             <Button type="submit" size="sm" disabled={isSaving || !newName.trim()}>
               {isSaving ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : null}
@@ -396,14 +432,15 @@ function AppPasswordsSection() {
 function EncryptionSection() {
   const t = useTranslations('settings.security');
   const { encryptionType, updateEncryption, isSaving, isLoadingCrypto } = useAccountSecurityStore();
+  const { client } = useAuthStore();
 
   const handleToggle = async (enabled: boolean) => {
     try {
       if (enabled) {
-        await updateEncryption({ type: 'pgp', algo: 'Aes256' });
+        await updateEncryption(client, { type: 'pgp', algo: 'Aes256' });
         toast.success(t('encryption.enabled'));
       } else {
-        await updateEncryption({ type: 'disabled' });
+        await updateEncryption(client, { type: 'disabled' });
         toast.success(t('encryption.disabled_success'));
       }
     } catch (err) {
@@ -493,22 +530,22 @@ function EmailClientSection() {
 export function AccountSecuritySettings() {
   const t = useTranslations('settings.security');
   const { isStalwart, isProbing, probe, fetchAll, fetchAuthInfo } = useAccountSecurityStore();
-  const { isAuthenticated, authMode } = useAuthStore();
+  const { isAuthenticated, authMode, client } = useAuthStore();
   const isOAuth = authMode === 'oauth';
 
   useEffect(() => {
-    if (isAuthenticated && isStalwart === null) {
-      probe().then((detected) => {
+    if (isAuthenticated && client && isStalwart === null) {
+      probe(client).then((detected) => {
         if (detected) {
           if (isOAuth) {
-            fetchAuthInfo();
+            fetchAuthInfo(client);
           } else {
-            fetchAll();
+            fetchAll(client);
           }
         }
       });
     }
-  }, [isAuthenticated, isStalwart, probe, fetchAll, fetchAuthInfo, isOAuth]);
+  }, [isAuthenticated, isStalwart, probe, fetchAll, fetchAuthInfo, isOAuth, client]);
 
   if (isProbing) {
     return (

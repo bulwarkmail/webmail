@@ -25,6 +25,9 @@ const defaultState = {
   error: null,
 };
 
+// All tests pass null as client to exercise the legacy REST fallback path.
+const NO_CLIENT = null;
+
 describe('AccountSecurityStore', () => {
   let fetchSpy: ReturnType<typeof vi.spyOn>;
 
@@ -41,7 +44,7 @@ describe('AccountSecurityStore', () => {
     it('sets isStalwart to true when probe succeeds', async () => {
       fetchSpy.mockResolvedValueOnce(mockFetchResponse(200, { isStalwart: true }));
 
-      const result = await useAccountSecurityStore.getState().probe();
+      const result = await useAccountSecurityStore.getState().probe(NO_CLIENT);
 
       expect(result).toBe(true);
       expect(useAccountSecurityStore.getState().isStalwart).toBe(true);
@@ -51,7 +54,7 @@ describe('AccountSecurityStore', () => {
     it('sets isStalwart to false when probe returns false', async () => {
       fetchSpy.mockResolvedValueOnce(mockFetchResponse(200, { isStalwart: false }));
 
-      const result = await useAccountSecurityStore.getState().probe();
+      const result = await useAccountSecurityStore.getState().probe(NO_CLIENT);
 
       expect(result).toBe(false);
       expect(useAccountSecurityStore.getState().isStalwart).toBe(false);
@@ -60,7 +63,7 @@ describe('AccountSecurityStore', () => {
     it('sets isStalwart to false on network error', async () => {
       fetchSpy.mockRejectedValueOnce(new TypeError('Network error'));
 
-      const result = await useAccountSecurityStore.getState().probe();
+      const result = await useAccountSecurityStore.getState().probe(NO_CLIENT);
 
       expect(result).toBe(false);
       expect(useAccountSecurityStore.getState().isStalwart).toBe(false);
@@ -74,7 +77,7 @@ describe('AccountSecurityStore', () => {
         mockFetchResponse(200, { data: { otpEnabled: true, appPasswords: ['app1', 'app2'] } })
       );
 
-      await useAccountSecurityStore.getState().fetchAuthInfo();
+      await useAccountSecurityStore.getState().fetchAuthInfo(NO_CLIENT);
 
       const state = useAccountSecurityStore.getState();
       expect(state.otpEnabled).toBe(true);
@@ -86,7 +89,7 @@ describe('AccountSecurityStore', () => {
     it('sets defaults when data fields are missing', async () => {
       fetchSpy.mockResolvedValueOnce(mockFetchResponse(200, { data: {} }));
 
-      await useAccountSecurityStore.getState().fetchAuthInfo();
+      await useAccountSecurityStore.getState().fetchAuthInfo(NO_CLIENT);
 
       const state = useAccountSecurityStore.getState();
       expect(state.otpEnabled).toBe(false);
@@ -96,7 +99,7 @@ describe('AccountSecurityStore', () => {
     it('sets error on HTTP failure', async () => {
       fetchSpy.mockResolvedValueOnce(mockFetchResponse(500));
 
-      await useAccountSecurityStore.getState().fetchAuthInfo();
+      await useAccountSecurityStore.getState().fetchAuthInfo(NO_CLIENT);
 
       const state = useAccountSecurityStore.getState();
       expect(state.isLoadingAuth).toBe(false);
@@ -106,7 +109,7 @@ describe('AccountSecurityStore', () => {
     it('sets error on network failure', async () => {
       fetchSpy.mockRejectedValueOnce(new Error('Connection refused'));
 
-      await useAccountSecurityStore.getState().fetchAuthInfo();
+      await useAccountSecurityStore.getState().fetchAuthInfo(NO_CLIENT);
 
       const state = useAccountSecurityStore.getState();
       expect(state.isLoadingAuth).toBe(false);
@@ -120,7 +123,7 @@ describe('AccountSecurityStore', () => {
         mockFetchResponse(200, { data: { type: 'pgp' } })
       );
 
-      await useAccountSecurityStore.getState().fetchCryptoInfo();
+      await useAccountSecurityStore.getState().fetchCryptoInfo(NO_CLIENT);
 
       const state = useAccountSecurityStore.getState();
       expect(state.encryptionType).toBe('pgp');
@@ -130,7 +133,7 @@ describe('AccountSecurityStore', () => {
     it('defaults to disabled when type is missing', async () => {
       fetchSpy.mockResolvedValueOnce(mockFetchResponse(200, { data: {} }));
 
-      await useAccountSecurityStore.getState().fetchCryptoInfo();
+      await useAccountSecurityStore.getState().fetchCryptoInfo(NO_CLIENT);
 
       expect(useAccountSecurityStore.getState().encryptionType).toBe('disabled');
     });
@@ -138,7 +141,7 @@ describe('AccountSecurityStore', () => {
     it('sets error on failure', async () => {
       fetchSpy.mockResolvedValueOnce(mockFetchResponse(403));
 
-      await useAccountSecurityStore.getState().fetchCryptoInfo();
+      await useAccountSecurityStore.getState().fetchCryptoInfo(NO_CLIENT);
 
       expect(useAccountSecurityStore.getState().error).toBe('HTTP 403');
     });
@@ -157,7 +160,7 @@ describe('AccountSecurityStore', () => {
         })
       );
 
-      await useAccountSecurityStore.getState().fetchPrincipal();
+      await useAccountSecurityStore.getState().fetchPrincipal(NO_CLIENT);
 
       const state = useAccountSecurityStore.getState();
       expect(state.displayName).toBe('John Doe');
@@ -174,7 +177,7 @@ describe('AccountSecurityStore', () => {
         })
       );
 
-      await useAccountSecurityStore.getState().fetchPrincipal();
+      await useAccountSecurityStore.getState().fetchPrincipal(NO_CLIENT);
 
       expect(useAccountSecurityStore.getState().emails).toEqual(['single@example.com']);
     });
@@ -184,7 +187,7 @@ describe('AccountSecurityStore', () => {
         mockFetchResponse(200, { data: { description: 'User' } })
       );
 
-      await useAccountSecurityStore.getState().fetchPrincipal();
+      await useAccountSecurityStore.getState().fetchPrincipal(NO_CLIENT);
 
       expect(useAccountSecurityStore.getState().emails).toEqual([]);
     });
@@ -192,7 +195,7 @@ describe('AccountSecurityStore', () => {
     it('sets defaults when fields are missing', async () => {
       fetchSpy.mockResolvedValueOnce(mockFetchResponse(200, { data: {} }));
 
-      await useAccountSecurityStore.getState().fetchPrincipal();
+      await useAccountSecurityStore.getState().fetchPrincipal(NO_CLIENT);
 
       const state = useAccountSecurityStore.getState();
       expect(state.displayName).toBe('');
@@ -209,7 +212,7 @@ describe('AccountSecurityStore', () => {
         .mockResolvedValueOnce(mockFetchResponse(200, { data: { type: 'smime' } }))
         .mockResolvedValueOnce(mockFetchResponse(200, { data: { description: 'Test', emails: [], quota: 0, roles: [] } }));
 
-      await useAccountSecurityStore.getState().fetchAll();
+      await useAccountSecurityStore.getState().fetchAll(NO_CLIENT);
 
       const state = useAccountSecurityStore.getState();
       expect(state.encryptionType).toBe('smime');
@@ -225,7 +228,7 @@ describe('AccountSecurityStore', () => {
         .mockResolvedValueOnce(mockFetchResponse(200, { data: { type: 'pgp' } }))
         .mockResolvedValueOnce(mockFetchResponse(200, { data: { description: 'OK', emails: [], quota: 0, roles: [] } }));
 
-      await useAccountSecurityStore.getState().fetchAll();
+      await useAccountSecurityStore.getState().fetchAll(NO_CLIENT);
 
       const state = useAccountSecurityStore.getState();
       expect(state.encryptionType).toBe('pgp');
@@ -237,7 +240,7 @@ describe('AccountSecurityStore', () => {
     it('sends POST with currentPassword and newPassword', async () => {
       fetchSpy.mockResolvedValueOnce(mockFetchResponse(200, { ok: true }));
 
-      await useAccountSecurityStore.getState().changePassword('oldpass', 'newpass123');
+      await useAccountSecurityStore.getState().changePassword(NO_CLIENT, 'oldpass', 'newpass123');
 
       expect(fetchSpy).toHaveBeenCalledWith('/api/account/stalwart/password', expect.objectContaining({
         method: 'POST',
@@ -250,7 +253,7 @@ describe('AccountSecurityStore', () => {
       fetchSpy.mockResolvedValueOnce(mockFetchResponse(403, { error: 'Current password is incorrect' }));
 
       await expect(
-        useAccountSecurityStore.getState().changePassword('wrong', 'newpass123')
+        useAccountSecurityStore.getState().changePassword(NO_CLIENT, 'wrong', 'newpass123')
       ).rejects.toThrow('Current password is incorrect');
 
       expect(useAccountSecurityStore.getState().isSaving).toBe(false);
@@ -262,7 +265,7 @@ describe('AccountSecurityStore', () => {
     it('sends PATCH and updates local state on success', async () => {
       fetchSpy.mockResolvedValueOnce(mockFetchResponse(200, { data: null }));
 
-      await useAccountSecurityStore.getState().updateDisplayName('New Name');
+      await useAccountSecurityStore.getState().updateDisplayName(NO_CLIENT, 'New Name');
 
       const state = useAccountSecurityStore.getState();
       expect(state.displayName).toBe('New Name');
@@ -276,7 +279,7 @@ describe('AccountSecurityStore', () => {
       fetchSpy.mockResolvedValueOnce(mockFetchResponse(500, { error: 'Server error' }));
 
       await expect(
-        useAccountSecurityStore.getState().updateDisplayName('Name')
+        useAccountSecurityStore.getState().updateDisplayName(NO_CLIENT, 'Name')
       ).rejects.toThrow('Server error');
 
       expect(useAccountSecurityStore.getState().isSaving).toBe(false);
@@ -288,7 +291,7 @@ describe('AccountSecurityStore', () => {
       const totpUrl = 'otpauth://totp/user@example.com?secret=ABC';
       fetchSpy.mockResolvedValueOnce(mockFetchResponse(200, { data: totpUrl }));
 
-      const result = await useAccountSecurityStore.getState().enableTotp();
+      const result = await useAccountSecurityStore.getState().enableTotp(NO_CLIENT);
 
       expect(result).toBe(totpUrl);
       expect(useAccountSecurityStore.getState().otpEnabled).toBe(true);
@@ -302,7 +305,7 @@ describe('AccountSecurityStore', () => {
       fetchSpy.mockResolvedValueOnce(mockFetchResponse(400, { error: 'TOTP error' }));
 
       await expect(
-        useAccountSecurityStore.getState().enableTotp()
+        useAccountSecurityStore.getState().enableTotp(NO_CLIENT)
       ).rejects.toThrow('TOTP error');
 
       expect(useAccountSecurityStore.getState().otpEnabled).toBe(false);
@@ -314,7 +317,7 @@ describe('AccountSecurityStore', () => {
       useAccountSecurityStore.setState({ otpEnabled: true });
       fetchSpy.mockResolvedValueOnce(mockFetchResponse(200, { data: null }));
 
-      await useAccountSecurityStore.getState().disableTotp();
+      await useAccountSecurityStore.getState().disableTotp(NO_CLIENT);
 
       expect(useAccountSecurityStore.getState().otpEnabled).toBe(false);
       expect(useAccountSecurityStore.getState().isSaving).toBe(false);
@@ -330,7 +333,7 @@ describe('AccountSecurityStore', () => {
         mockFetchResponse(200, { data: { otpEnabled: false, appPasswords: ['Thunderbird'] } })
       );
 
-      await useAccountSecurityStore.getState().addAppPassword('Thunderbird', 'secret');
+      await useAccountSecurityStore.getState().addAppPassword(NO_CLIENT, 'Thunderbird', 'secret');
 
       const state = useAccountSecurityStore.getState();
       expect(state.appPasswords).toEqual(['Thunderbird']);
@@ -344,7 +347,7 @@ describe('AccountSecurityStore', () => {
       fetchSpy.mockResolvedValueOnce(mockFetchResponse(500, { error: 'Server down' }));
 
       await expect(
-        useAccountSecurityStore.getState().addAppPassword('App', 'pass')
+        useAccountSecurityStore.getState().addAppPassword(NO_CLIENT, 'App', 'pass')
       ).rejects.toThrow('Server down');
     });
   });
@@ -360,7 +363,7 @@ describe('AccountSecurityStore', () => {
         mockFetchResponse(200, { data: { otpEnabled: false, appPasswords: ['iPhone'] } })
       );
 
-      await useAccountSecurityStore.getState().removeAppPassword('Thunderbird');
+      await useAccountSecurityStore.getState().removeAppPassword(NO_CLIENT, 'Thunderbird');
 
       expect(useAccountSecurityStore.getState().appPasswords).toEqual(['iPhone']);
 
@@ -373,7 +376,7 @@ describe('AccountSecurityStore', () => {
     it('sends crypto settings and updates local encryptionType', async () => {
       fetchSpy.mockResolvedValueOnce(mockFetchResponse(200, { data: null }));
 
-      await useAccountSecurityStore.getState().updateEncryption({ type: 'pgp' });
+      await useAccountSecurityStore.getState().updateEncryption(NO_CLIENT, { type: 'pgp' });
 
       expect(useAccountSecurityStore.getState().encryptionType).toBe('pgp');
       expect(useAccountSecurityStore.getState().isSaving).toBe(false);
@@ -384,7 +387,7 @@ describe('AccountSecurityStore', () => {
       fetchSpy.mockResolvedValueOnce(mockFetchResponse(500, { error: 'Encryption error' }));
 
       await expect(
-        useAccountSecurityStore.getState().updateEncryption({ type: 'pgp' })
+        useAccountSecurityStore.getState().updateEncryption(NO_CLIENT, { type: 'pgp' })
       ).rejects.toThrow('Encryption error');
 
       expect(useAccountSecurityStore.getState().encryptionType).toBe('disabled');

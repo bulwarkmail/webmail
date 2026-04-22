@@ -1092,7 +1092,9 @@
         "removed": "Пароль приложения удалён",
         "add_error": "Не удалось создать пароль приложения",
         "remove_error": "Не удалось удалить пароль приложения",
-        "none": "Пароли приложений не настроены"
+        "none": "Пароли приложений не настроены",
+        "secret_instructions": "Copy this password now — it will not be shown again.",
+        "done": "Done"
       },
       "encryption": {
         "section_title": "Шифрование хранилища",

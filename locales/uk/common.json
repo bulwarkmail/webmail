@@ -1092,7 +1092,9 @@
         "removed": "Пароль програми видалено",
         "add_error": "Не вдалося створити пароль програми",
         "remove_error": "Не вдалося видалити пароль програми",
-        "none": "Паролі програм не налаштовано"
+        "none": "Паролі програм не налаштовано",
+        "secret_instructions": "Copy this password now — it will not be shown again.",
+        "done": "Done"
       },
       "encryption": {
         "section_title": "Шифрування в спокої",

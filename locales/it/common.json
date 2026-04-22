@@ -1092,7 +1092,9 @@
         "removed": "Password per l'app rimossa",
         "add_error": "Impossibile creare la password per l'app",
         "remove_error": "Impossibile rimuovere la password per l'app",
-        "none": "Nessuna password per le app configurata"
+        "none": "Nessuna password per le app configurata",
+        "secret_instructions": "Copy this password now — it will not be shown again.",
+        "done": "Done"
       },
       "encryption": {
         "section_title": "Crittografia a riposo",

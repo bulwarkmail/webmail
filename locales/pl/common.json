@@ -1092,7 +1092,9 @@
         "removed": "Hasło aplikacji zostało usunięte",
         "add_error": "Nie udało się utworzyć hasła aplikacji",
         "remove_error": "Nie udało się usunąć hasła aplikacji",
-        "none": "Brak skonfigurowanych haseł aplikacji"
+        "none": "Brak skonfigurowanych haseł aplikacji",
+        "secret_instructions": "Copy this password now — it will not be shown again.",
+        "done": "Done"
       },
       "encryption": {
         "section_title": "Szyfrowanie danych w spoczynku",
