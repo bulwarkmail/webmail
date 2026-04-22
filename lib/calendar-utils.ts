@@ -219,10 +219,26 @@ export function layoutOverlappingEvents(
     return (b.endMinutes - b.startMinutes) - (a.endMinutes - a.startMinutes);
   });
 
-  const columns: { event: CalendarEvent; end: number }[][] = [];
   const result: TimedEventLayout[] = [];
+  let columns: { event: CalendarEvent; end: number }[][] = [];
+  let clusterStart = 0;
+  let clusterMaxEnd = 0;
+
+  const flushCluster = () => {
+    const total = columns.length;
+    for (let i = clusterStart; i < result.length; i++) {
+      result[i].totalColumns = total;
+    }
+  };
 
   for (const event of sorted) {
+    if (columns.length > 0 && event.startMinutes >= clusterMaxEnd) {
+      flushCluster();
+      clusterStart = result.length;
+      columns = [];
+      clusterMaxEnd = 0;
+    }
+
     let placed = false;
     for (let col = 0; col < columns.length; col++) {
       if (columns[col].every(e => e.end <= event.startMinutes)) {
@@ -236,10 +252,10 @@ export function layoutOverlappingEvents(
       columns.push([{ event: event.event, end: event.endMinutes }]);
       result.push({ ...event, column: columns.length - 1, totalColumns: 0 });
     }
+    clusterMaxEnd = Math.max(clusterMaxEnd, event.endMinutes);
   }
 
-  const total = columns.length;
-  result.forEach(r => r.totalColumns = total);
+  flushCluster();
   return result;
 }
 
