@@ -1254,9 +1254,9 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         isLoading: false
       });
 
-      // Refresh emails to get updated list
+      // Refresh emails to get updated list (honors active search/filters)
       if (!get().isUnifiedView) {
-        await get().fetchEmails(client, get().selectedMailbox);
+        await get().refreshCurrentMailbox(client);
       }
     } catch (error) {
       set({
@@ -1267,7 +1267,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   },
 
   batchArchive: async (client) => {
-    const { selectedEmailIds, emails, mailboxes, fetchMailboxes, fetchEmails, selectedMailbox } = get();
+    const { selectedEmailIds, emails, mailboxes, fetchMailboxes } = get();
     if (selectedEmailIds.size === 0) return;
 
     const archiveMailbox = mailboxes.find(m => m.role === 'archive' || m.name.toLowerCase() === 'archive');
@@ -1293,7 +1293,8 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       set({ emails: remaining, selectedEmailIds: new Set(), isLoading: false });
 
       await fetchMailboxes(client);
-      await fetchEmails(client, selectedMailbox);
+      // Refresh the current mailbox view (honors active search/filters)
+      await get().refreshCurrentMailbox(client);
     } catch (error) {
       set({
         error: error instanceof Error ? error.message : 'Failed to archive emails',
