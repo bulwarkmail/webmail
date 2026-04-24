@@ -45,9 +45,22 @@ export function FlagKR(props: FlagProps) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3 2" width={W} height={H} className={flagClass} {...props}>
       <rect width="3" height="2" fill="#fff" />
-      <circle cx="1.5" cy="1" r="0.55" fill="#CD2E3A" />
-      <path d="M1.5,1 a0.275,0.275 0 0,1 0,0.55 a0.275,0.275 0 0,0 0,-0.55" fill="#0047A0" />
-      <path d="M1.5,1 a0.275,0.275 0 0,0 0,-0.55 a0.275,0.275 0 0,1 0,0.55" fill="#0047A0" />
+      <path d="M1.5 0.5 a0.45 0.45 0 1 1 0 0.9 a0.45 0.45 0 1 0 0 -0.9" fill="#CD2E3A" />
+      <path d="M1.5 1.5 a0.45 0.45 0 1 1 0 -0.9 a0.45 0.45 0 1 0 0 0.9" fill="#0047A0" />
+      <circle cx="1.5" cy="0.8" r="0.225" fill="#0047A0" />
+      <circle cx="1.5" cy="1.2" r="0.225" fill="#CD2E3A" />
+      <g stroke="#000" strokeWidth="0.06" strokeLinecap="round">
+        <line x1="0.42" y1="0.35" x2="0.78" y2="0.35" />
+        <line x1="0.42" y1="0.46" x2="0.78" y2="0.46" />
+        <line x1="0.42" y1="0.57" x2="0.78" y2="0.57" />
+        <line x1="2.22" y1="0.35" x2="2.58" y2="0.35" />
+        <line x1="2.22" y1="0.57" x2="2.58" y2="0.57" />
+        <line x1="0.42" y1="1.43" x2="0.78" y2="1.43" />
+        <line x1="0.42" y1="1.65" x2="0.78" y2="1.65" />
+        <line x1="2.22" y1="1.43" x2="2.58" y2="1.43" />
+        <line x1="2.22" y1="1.54" x2="2.58" y2="1.54" />
+        <line x1="2.22" y1="1.65" x2="2.58" y2="1.65" />
+      </g>
     </svg>
   );
 }
