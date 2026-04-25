@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { flagComponents } from './flag-icons';
 
 const languages = [
+	{ value: 'cs', label: 'Česky' },
   { value: 'en', label: 'English' },
   { value: 'fr', label: 'Français' },
   { value: 'ja', label: '日本語' },
