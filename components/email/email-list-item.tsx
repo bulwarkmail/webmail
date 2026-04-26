@@ -288,7 +288,7 @@ export function EmailListItem({ email, selected, onClick, onContextMenu, onToggl
               </div>
 
               {/* Third Line: Preview (controlled by showPreview setting) */}
-              {showPreview && density !== 'extra-compact' && (
+              {showPreview && density !== 'extra-compact' && density !== 'compact' && (
                 <p className={cn(
                   "text-sm leading-relaxed line-clamp-2",
                   isUnread

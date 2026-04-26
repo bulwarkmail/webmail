@@ -51,6 +51,53 @@ function unfoldLines(vcf: string): string {
   return vcf.replace(/\r\n[ \t]/g, "").replace(/\r\n/g, "\n").replace(/\r/g, "\n");
 }
 
+// vCard 2.1 quoted-printable soft line breaks: a line ending in `=` continues
+// onto the next line. This is distinct from RFC 5545/6350 line folding (which
+// uses leading whitespace and is already handled in unfoldLines). Only merge
+// when the originating line declares ENCODING=QUOTED-PRINTABLE so we don't
+// accidentally splice unrelated lines.
+function joinQpSoftBreaks(lines: string[]): string[] {
+  const result: string[] = [];
+  let i = 0;
+  while (i < lines.length) {
+    let line = lines[i];
+    if (/;ENCODING=QUOTED-PRINTABLE/i.test(line)) {
+      while (line.endsWith("=") && i + 1 < lines.length) {
+        i++;
+        line = line.slice(0, -1) + lines[i];
+      }
+    }
+    result.push(line);
+    i++;
+  }
+  return result;
+}
+
+function decodeQuotedPrintable(input: string, charset?: string): string {
+  const cleaned = input.replace(/=\r?\n/g, "");
+  const bytes: number[] = [];
+  let i = 0;
+  while (i < cleaned.length) {
+    const ch = cleaned[i];
+    if (ch === "=" && i + 2 < cleaned.length) {
+      const hex = cleaned.substring(i + 1, i + 3);
+      if (/^[0-9A-Fa-f]{2}$/.test(hex)) {
+        bytes.push(parseInt(hex, 16));
+        i += 3;
+        continue;
+      }
+    }
+    bytes.push(cleaned.charCodeAt(i) & 0xff);
+    i += 1;
+  }
+  const label = (charset || "utf-8").toLowerCase();
+  try {
+    return new TextDecoder(label).decode(new Uint8Array(bytes));
+  } catch {
+    return new TextDecoder("utf-8").decode(new Uint8Array(bytes));
+  }
+}
+
 function decodeValue(raw: string): string {
   return raw
     .replace(/\\n/gi, "\n")
@@ -77,7 +124,9 @@ function parseParams(paramStr: string): Record<string, string> {
       params[part.substring(0, eq).toUpperCase()] = part.substring(eq + 1).replace(/"/g, "");
     } else {
       const upper = part.toUpperCase();
-      if (["WORK", "HOME", "CELL", "FAX", "VOICE", "PREF", "PAGER", "VIDEO", "TEXT", "TEXTPHONE"].includes(upper)) {
+      if (upper === "QUOTED-PRINTABLE" || upper === "BASE64") {
+        params.ENCODING = upper;
+      } else if (["WORK", "HOME", "CELL", "FAX", "VOICE", "PREF", "PAGER", "VIDEO", "TEXT", "TEXTPHONE"].includes(upper)) {
         params.TYPE = params.TYPE ? `${params.TYPE},${upper}` : upper;
       }
     }
@@ -118,7 +167,7 @@ function contextToType(contexts: Record<string, boolean> | undefined): string {
 
 export function parseVCard(vcfString: string): ContactCard[] {
   const text = unfoldLines(vcfString);
-  const lines = text.split("\n");
+  const lines = joinQpSoftBreaks(text.split("\n"));
   const contacts: ContactCard[] = [];
   let current: Record<string, string[]> | null = null;
 
@@ -163,8 +212,13 @@ function buildContact(raw: Record<string, string[]>): ContactCard | null {
     const paramStr = semiIdx > 0 ? fullKey.substring(semiIdx + 1) : "";
     const params = parseParams(paramStr);
 
+    const isQuotedPrintable = params.ENCODING?.toUpperCase() === "QUOTED-PRINTABLE";
+
     for (const rawValue of values) {
-      const val = decodeValue(rawValue);
+      const decoded = isQuotedPrintable
+        ? decodeQuotedPrintable(rawValue, params.CHARSET)
+        : rawValue;
+      const val = decodeValue(decoded);
 
       switch (propName) {
         case "FN":
@@ -182,13 +236,17 @@ function buildContact(raw: Record<string, string[]>): ContactCard | null {
           break;
 
         case "N": {
+          // vCard N: family;given;additional;prefix;suffix  (RFC 6350 §6.2.2)
+          // Mapped to JSContact-standard kinds (RFC 9553 §2.2.1):
+          //   prefix→title, additional→given2, suffix→generation.
+          // Pushed in natural display order so `isOrdered: true` renders correctly.
           const nParts = val.split(";");
           const components: NameComponent[] = [];
-          if (nParts[3]) components.push({ kind: "prefix", value: nParts[3] });
+          if (nParts[3]) components.push({ kind: "title", value: nParts[3] });
           if (nParts[1]) components.push({ kind: "given", value: nParts[1] });
-          if (nParts[2]) components.push({ kind: "additional", value: nParts[2] });
+          if (nParts[2]) components.push({ kind: "given2", value: nParts[2] });
           if (nParts[0]) components.push({ kind: "surname", value: nParts[0] });
-          if (nParts[4]) components.push({ kind: "suffix", value: nParts[4] });
+          if (nParts[4]) components.push({ kind: "generation", value: nParts[4] });
           if (components.length > 0) {
             card.name = { components, isOrdered: true };
           }
@@ -558,11 +616,14 @@ function generateSingleVCard(contact: ContactCard): string {
   }
 
   const components = contact.name?.components || [];
-  const given = components.find(c => c.kind === "given")?.value || "";
-  const surname = components.find(c => c.kind === "surname")?.value || "";
-  const prefix = components.find(c => c.kind === "prefix")?.value || "";
-  const suffix = components.find(c => c.kind === "suffix")?.value || "";
-  const additional = components.find(c => c.kind === "additional")?.value || "";
+  const findKind = (...kinds: string[]) =>
+    components.find(c => kinds.includes(c.kind))?.value || "";
+  const given = findKind("given");
+  const surname = findKind("surname");
+  // Accept JSContact-standard kinds (RFC 9553) and legacy vCard-style aliases.
+  const prefix = findKind("title", "prefix");
+  const suffix = findKind("generation", "suffix");
+  const additional = findKind("given2", "additional", "middle");
 
   const fn = [prefix, given, additional, surname, suffix].filter(Boolean).join(" ") || contact.name?.full || "";
   if (fn) {

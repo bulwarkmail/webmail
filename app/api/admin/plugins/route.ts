@@ -8,6 +8,10 @@ import {
   deletePlugin as removePlugin,
   type ServerPlugin,
 } from '@/lib/admin/plugin-registry';
+import {
+  sanitizeFrameOrigins,
+  invalidateFrameOriginsCache,
+} from '@/lib/admin/csp-frame-origins';
 
 // Server-side extraction using the same validation logic
 // ZIP parsing needs to happen on the server for admin-uploaded plugins
@@ -152,6 +156,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const declaredFrameOrigins = sanitizeFrameOrigins(manifest.frameOrigins);
+
     const now = new Date().toISOString();
     const plugin: ServerPlugin = {
       id: manifest.id as string,
@@ -166,12 +172,16 @@ export async function POST(request: NextRequest) {
       ...(manifest.configSchema && typeof manifest.configSchema === 'object'
         ? { configSchema: manifest.configSchema as ServerPlugin['configSchema'] }
         : {}),
+      ...(declaredFrameOrigins.length > 0
+        ? { frameOrigins: declaredFrameOrigins }
+        : {}),
       installedAt: now,
       updatedAt: now,
     };
 
     await savePlugin(plugin, code);
-    await auditLog('plugin.install', { id: plugin.id, name: plugin.name, version: plugin.version }, ip);
+    invalidateFrameOriginsCache();
+    await auditLog('plugin.install', { id: plugin.id, name: plugin.name, version: plugin.version, frameOrigins: declaredFrameOrigins }, ip);
 
     return NextResponse.json({ plugin });
   } catch (error) {
@@ -209,6 +219,11 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Plugin not found' }, { status: 404 });
     }
 
+    // Enable/disable changes the set of plugins contributing frame origins.
+    if (typeof updates.enabled === 'boolean' || typeof updates.forceEnabled === 'boolean') {
+      invalidateFrameOriginsCache();
+    }
+
     await auditLog('plugin.update', { id, ...updates }, ip);
     return NextResponse.json({ plugin: updated });
   } catch (error) {
@@ -238,6 +253,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Plugin not found' }, { status: 404 });
     }
 
+    invalidateFrameOriginsCache();
     await auditLog('plugin.delete', { id }, ip);
     return NextResponse.json({ success: true });
   } catch (error) {

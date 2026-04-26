@@ -31,6 +31,8 @@ import {
 } from "lucide-react";
 import { cn, buildMailboxTree, MailboxNode } from "@/lib/utils";
 import { Mailbox } from "@/lib/jmap/types";
+import { useContextMenu } from "@/hooks/use-context-menu";
+import { MailboxContextMenu, type MailboxContextTarget } from "./mailbox-context-menu";
 import { useAccountStore } from '@/stores/account-store';
 import { UNIFIED_MAILBOX_IDS } from '@/lib/jmap/types';
 import type { UnifiedMailboxRole } from '@/lib/jmap/types';
@@ -56,6 +58,15 @@ interface SidebarProps {
   onCompose?: () => void;
   onSidebarClose?: () => void;
   onUnreadFilterClick?: (mailboxId: string) => void;
+  onMarkFolderRead?: (mailboxId: string) => void;
+  onMarkFolderTreeRead?: (mailboxId: string) => void;
+  onMarkAllFoldersRead?: () => void;
+  onEmptyFolder?: (mailboxId: string) => void;
+  onCreateSubfolder?: (parentId: string) => void;
+  onCreateFolder?: () => void;
+  onRenameFolder?: (mailboxId: string) => void;
+  onDeleteFolder?: (mailboxId: string) => void;
+  onRefreshMailboxes?: () => void;
   className?: string;
 }
 
@@ -187,6 +198,7 @@ interface SidebarRowProps {
   dropHandlers?: Record<string, unknown>;
   isValidDropTarget?: boolean;
   isInvalidDropTarget?: boolean;
+  onContextMenu?: (e: React.MouseEvent) => void;
 }
 
 function SidebarRow({
@@ -206,6 +218,7 @@ function SidebarRow({
   dropHandlers,
   isValidDropTarget,
   isInvalidDropTarget,
+  onContextMenu,
 }: SidebarRowProps) {
   const t = useTranslations('sidebar');
   const leftPad = isCollapsed ? 0 : ROW_PX_BASE + depth * INDENT_STEP;
@@ -213,6 +226,7 @@ function SidebarRow({
   return (
     <div
       {...(dropHandlers || {})}
+      onContextMenu={onContextMenu}
       style={{ paddingBlock: 'var(--density-sidebar-py)' }}
       className={cn(
         "group w-full flex items-center max-lg:min-h-[44px] text-sm transition-colors duration-150",
@@ -365,6 +379,7 @@ function MailboxTreeItem({
   isCollapsed,
   onUnreadFilterClick,
   colorful,
+  onContextMenu,
 }: {
   node: MailboxNode;
   selectedMailbox: string;
@@ -374,6 +389,7 @@ function MailboxTreeItem({
   isCollapsed: boolean;
   onUnreadFilterClick?: (mailboxId: string) => void;
   colorful: boolean;
+  onContextMenu?: (e: React.MouseEvent, node: MailboxNode) => void;
 }) {
   const tNotifications = useTranslations('notifications');
   const hasChildren = node.children.length > 0;
@@ -423,6 +439,7 @@ function MailboxTreeItem({
         dropHandlers={globalDragging ? (dropHandlers as Record<string, unknown>) : undefined}
         isValidDropTarget={isValidDropTarget}
         isInvalidDropTarget={isInvalidDropTarget}
+        onContextMenu={onContextMenu && !isVirtualNode ? (e) => onContextMenu(e, node) : undefined}
       />
 
       {hasChildren && isExpanded && !isCollapsed && node.children.map((child) => (
@@ -436,6 +453,7 @@ function MailboxTreeItem({
           isCollapsed={isCollapsed}
           onUnreadFilterClick={onUnreadFilterClick}
           colorful={colorful}
+          onContextMenu={onContextMenu}
         />
       ))}
     </>
@@ -610,6 +628,15 @@ export function Sidebar({
   onCompose: _onCompose,
   onSidebarClose,
   onUnreadFilterClick,
+  onMarkFolderRead,
+  onMarkFolderTreeRead,
+  onMarkAllFoldersRead,
+  onEmptyFolder,
+  onCreateSubfolder,
+  onCreateFolder,
+  onRenameFolder,
+  onDeleteFolder,
+  onRefreshMailboxes,
   className,
 }: SidebarProps) {
   const router = useRouter();
@@ -790,6 +817,23 @@ export function Sidebar({
     router.push('/settings');
   };
 
+  const {
+    contextMenu: mailboxContextMenu,
+    openContextMenu: openMailboxContextMenu,
+    closeContextMenu: closeMailboxContextMenu,
+    menuRef: mailboxMenuRef,
+  } = useContextMenu<MailboxContextTarget>();
+
+  const handleMailboxContextMenu = (e: React.MouseEvent, node: MailboxNode) => {
+    const mailbox = mailboxes.find(mb => mb.id === node.id);
+    if (!mailbox) return;
+    openMailboxContextMenu(e, { kind: "mailbox", mailbox, hasChildren: node.children.length > 0 });
+  };
+
+  const handleFoldersHeaderContextMenu = (e: React.MouseEvent) => {
+    openMailboxContextMenu(e, { kind: "folders-section" });
+  };
+
   return (
     <div
       className={cn(
@@ -866,7 +910,7 @@ export function Sidebar({
           </div>
         )}
 
-        <div>
+        <div onContextMenu={handleFoldersHeaderContextMenu}>
           <SidebarSectionHeader
             label={t("folders")}
             expanded={foldersExpanded}
@@ -894,6 +938,7 @@ export function Sidebar({
                     isCollapsed={isCollapsed}
                     onUnreadFilterClick={onUnreadFilterClick}
                     colorful={colorfulSidebarIcons}
+                    onContextMenu={handleMailboxContextMenu}
                   />
                 ))
               )}
@@ -934,6 +979,7 @@ export function Sidebar({
                           isCollapsed={isCollapsed}
                           onUnreadFilterClick={onUnreadFilterClick}
                           colorful={colorfulSidebarIcons}
+                          onContextMenu={handleMailboxContextMenu}
                         />
                       ))}
                     </div>
@@ -975,6 +1021,23 @@ export function Sidebar({
 
         {!isCollapsed && <PluginSlot name="sidebar-widget" className="border-t border-border" />}
       </div>
+
+      <MailboxContextMenu
+        target={mailboxContextMenu.data}
+        position={mailboxContextMenu.position}
+        isOpen={mailboxContextMenu.isOpen}
+        onClose={closeMailboxContextMenu}
+        menuRef={mailboxMenuRef}
+        onMarkFolderRead={onMarkFolderRead}
+        onMarkFolderTreeRead={onMarkFolderTreeRead}
+        onMarkAllFoldersRead={onMarkAllFoldersRead}
+        onEmptyFolder={onEmptyFolder}
+        onCreateSubfolder={onCreateSubfolder}
+        onCreateFolder={onCreateFolder}
+        onRenameFolder={onRenameFolder}
+        onDeleteFolder={onDeleteFolder}
+        onRefresh={onRefreshMailboxes}
+      />
     </div>
   );
 }

@@ -1361,6 +1361,99 @@ export class JMAPClient implements IJMAPClient {
     return totalDestroyed;
   }
 
+  async markMailboxAsRead(mailboxId: string, accountId?: string): Promise<number> {
+    const targetAccountId = accountId || this.accountId;
+    let totalMarked = 0;
+    let hasMore = true;
+
+    while (hasMore) {
+      const queryResponse = await this.request([
+        ["Email/query", {
+          accountId: targetAccountId,
+          filter: {
+            operator: "AND",
+            conditions: [
+              { inMailbox: mailboxId },
+              { notKeyword: "$seen" },
+            ],
+          },
+          limit: 500,
+        }, "0"],
+      ]);
+
+      const ids: string[] = queryResponse.methodResponses?.[0]?.[1]?.ids || [];
+      if (ids.length === 0) break;
+
+      const updates = Object.fromEntries(
+        ids.map((id) => [id, { "keywords/$seen": true }])
+      );
+
+      await this.request([
+        ["Email/set", { accountId: targetAccountId, update: updates }, "0"],
+      ]);
+
+      totalMarked += ids.length;
+      hasMore = ids.length === 500;
+    }
+
+    return totalMarked;
+  }
+
+  async markAllAsRead(excludeMailboxIds: string[] = [], accountId?: string): Promise<number> {
+    const targetAccountId = accountId || this.accountId;
+    const excludeSet = new Set(excludeMailboxIds);
+    let totalMarked = 0;
+    let hasMore = true;
+    let position = 0;
+
+    while (hasMore) {
+      const response = await this.request([
+        ["Email/query", {
+          accountId: targetAccountId,
+          filter: { notKeyword: "$seen" },
+          limit: 500,
+          position,
+        }, "0"],
+        ["Email/get", {
+          accountId: targetAccountId,
+          "#ids": { resultOf: "0", name: "Email/query", path: "/ids" },
+          properties: ["id", "mailboxIds"],
+        }, "1"],
+      ]);
+
+      const queryResult = response.methodResponses?.[0]?.[1];
+      const getResult = response.methodResponses?.[1]?.[1];
+      const ids: string[] = queryResult?.ids || [];
+      const emails: Array<{ id: string; mailboxIds?: Record<string, boolean> }> = getResult?.list || [];
+
+      if (ids.length === 0) break;
+
+      const targetIds = excludeSet.size === 0
+        ? ids
+        : emails
+            .filter(e => {
+              const mbIds = e.mailboxIds ? Object.keys(e.mailboxIds) : [];
+              return mbIds.some(id => !excludeSet.has(id));
+            })
+            .map(e => e.id);
+
+      if (targetIds.length > 0) {
+        const updates = Object.fromEntries(
+          targetIds.map((id) => [id, { "keywords/$seen": true }])
+        );
+        await this.request([
+          ["Email/set", { accountId: targetAccountId, update: updates }, "0"],
+        ]);
+        totalMarked += targetIds.length;
+      }
+
+      hasMore = ids.length === 500;
+      position += ids.length;
+    }
+
+    return totalMarked;
+  }
+
   async markAsSpam(emailId: string, accountId?: string): Promise<void> {
     const targetAccountId = accountId || this.accountId;
 

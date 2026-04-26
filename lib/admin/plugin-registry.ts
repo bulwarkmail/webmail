@@ -41,6 +41,11 @@ export interface ServerPlugin {
   configSchema?: Record<string, PluginConfigField>;
   installedAt: string;
   updatedAt: string;
+  /**
+   * Validated CSP origins (https-only, single-origin form) the plugin may
+   * embed. Merged into the host frame-src by the proxy.
+   */
+  frameOrigins?: string[];
 }
 
 export interface ServerTheme {

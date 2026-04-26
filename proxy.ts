@@ -1,10 +1,21 @@
 import { type NextRequest, NextResponse } from "next/server";
 import createIntlMiddleware from "next-intl/middleware";
 import { routing } from "./i18n/routing";
+import { getEnabledPluginFrameOrigins } from "./lib/admin/csp-frame-origins";
 
 const intlMiddleware = createIntlMiddleware(routing);
 
-export function proxy(request: NextRequest) {
+// Next 16's Proxy always runs on Node.js runtime and route-segment config
+// (e.g. `export const config = { matcher }`) is no longer allowed in the
+// proxy file. We replicate the previous matcher inline by short-circuiting
+// requests for API routes, Next internals and static assets.
+const PROXY_SKIP_PATTERN = /^\/(?:api|_next)(?:\/|$)|\.[^/]+$/;
+
+export async function proxy(request: NextRequest) {
+  if (PROXY_SKIP_PATTERN.test(request.nextUrl.pathname)) {
+    return NextResponse.next();
+  }
+
   const nonce = crypto.randomUUID();
   const isDev = process.env.NODE_ENV === "development";
 
@@ -16,6 +27,14 @@ export function proxy(request: NextRequest) {
 
   const frameAncestors = process.env.ALLOWED_FRAME_ANCESTORS?.trim() || "'none'";
 
+  // Plugins may declare iframe origins they need (e.g. for embedded video).
+  // Each origin is validated at install time and re-validated here.
+  const pluginFrameOrigins = await getEnabledPluginFrameOrigins();
+  const frameSrc =
+    pluginFrameOrigins.length > 0
+      ? `frame-src 'self' blob: ${pluginFrameOrigins.join(" ")}`
+      : `frame-src 'self' blob:`;
+
   const csp = [
     `default-src 'self'`,
     `script-src ${scriptSrc}`,
@@ -23,7 +42,7 @@ export function proxy(request: NextRequest) {
     `img-src 'self' data: blob: https:`,
     `font-src 'self'`,
     `connect-src ${connectSrc}`,
-    `frame-src 'self' blob:`,
+    frameSrc,
     `object-src 'none'`,
     `base-uri 'self'`,
     `form-action 'self'`,
@@ -78,7 +97,3 @@ export function proxy(request: NextRequest) {
 
   return response;
 }
-
-export const config = {
-  matcher: ["/((?!api|_next|.*\\..*).*)"],
-};

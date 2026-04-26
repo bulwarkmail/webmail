@@ -10,6 +10,10 @@ import {
   type ServerPlugin,
   type ServerTheme,
 } from '@/lib/admin/plugin-registry';
+import {
+  sanitizeFrameOrigins,
+  invalidateFrameOriginsCache,
+} from '@/lib/admin/csp-frame-origins';
 import JSZip from 'jszip';
 import { MAX_PLUGIN_SIZE, MAX_THEME_SIZE, ALL_PERMISSIONS, ALLOWED_PLUGIN_FILES } from '@/lib/plugin-types';
 import { sanitizeThemeCSS, validateThemeCSSSafety } from '@/lib/theme-loader';
@@ -226,6 +230,22 @@ export async function POST(request: NextRequest) {
         warnings.push(`Unknown permissions: ${unknownPerms.join(', ')}`);
       }
 
+      // Plugins may declare iframe origins they need for embedded content.
+      // Anything that doesn't pass strict origin validation is silently
+      // dropped — the plugin still installs, but those origins are not
+      // added to the host CSP.
+      const declaredFrameOrigins = sanitizeFrameOrigins(manifest.frameOrigins);
+      const droppedFrameOrigins = Array.isArray(manifest.frameOrigins)
+        ? (manifest.frameOrigins as unknown[]).filter(
+            (v) => typeof v !== 'string' || !declaredFrameOrigins.includes(v),
+          )
+        : [];
+      if (droppedFrameOrigins.length > 0) {
+        warnings.push(
+          `Ignored invalid frameOrigins: ${droppedFrameOrigins.join(', ')}`,
+        );
+      }
+
       const plugin: ServerPlugin = {
         id: (manifest.id as string) || slug,
         name: (manifest.name as string) || slug,
@@ -238,10 +258,14 @@ export async function POST(request: NextRequest) {
         enabled: true,
         installedAt: now,
         updatedAt: now,
+        ...(declaredFrameOrigins.length > 0
+          ? { frameOrigins: declaredFrameOrigins }
+          : {}),
       };
 
       await savePlugin(plugin, code);
-      await auditLog('marketplace.install_plugin', { id: plugin.id, name: plugin.name, version: plugin.version, slug }, ip);
+      invalidateFrameOriginsCache();
+      await auditLog('marketplace.install_plugin', { id: plugin.id, name: plugin.name, version: plugin.version, slug, frameOrigins: declaredFrameOrigins }, ip);
 
       return NextResponse.json({ success: true, plugin, warnings });
     }

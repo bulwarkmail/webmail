@@ -41,6 +41,14 @@ export interface PluginManifest {
    * so plugins can use api.i18n.t() without calling addTranslations() first.
    */
   locales?: Record<string, Record<string, string>>;
+  /**
+   * External origins this plugin may embed in iframes (e.g. for YouTube,
+   * Vimeo, Jitsi). Each entry is a single CSP origin like
+   *   "https://www.youtube-nocookie.com"
+   *   "https://*.example.com:8443"
+   * Validated at install time and merged into the host CSP `frame-src`.
+   */
+  frameOrigins?: string[];
 }
 
 export interface SettingFieldSchema {
@@ -101,6 +109,8 @@ export type SlotName =
   | 'email-banner'
   | 'email-footer'
   | 'composer-toolbar'
+  | 'composer-sidebar'
+  | 'composer-sidebar-right'
   | 'sidebar-widget'
   | 'email-detail-sidebar'
   | 'settings-section'
@@ -150,6 +160,12 @@ export interface SidebarWidget {
   label: string;
   render: React.ComponentType;
   order?: number;
+  /**
+   * For composer sidebars, choose which side of the New Message dialog the
+   * panel renders on. Defaults to `'left'` for backwards compatibility.
+   * Ignored by other sidebar slots.
+   */
+  side?: 'left' | 'right';
 }
 
 export interface ContextMenuItem {
@@ -495,7 +511,8 @@ export const ALL_PERMISSIONS = [
   'auth:observe',
   'http:post',
   'ui:observe', 'ui:toolbar', 'ui:email-banner', 'ui:email-footer',
-  'ui:composer-toolbar', 'ui:sidebar-widget', 'ui:settings-section',
+  'ui:composer-toolbar', 'ui:composer-sidebar',
+  'ui:sidebar-widget', 'ui:settings-section',
   'ui:context-menu', 'ui:navigation-rail', 'ui:keyboard',
   'ui:calendar-action', 'ui:admin-page',
   'admin:config',

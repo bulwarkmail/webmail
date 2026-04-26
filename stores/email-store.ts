@@ -118,6 +118,7 @@ interface EmailStore {
   deleteMailbox: (client: IJMAPClient, mailboxId: string) => Promise<void>;
   setMailboxRole: (client: IJMAPClient, mailboxId: string, role: string | null) => Promise<void>;
   emptyMailbox: (client: IJMAPClient, mailboxId: string) => Promise<void>;
+  markMailboxAsRead: (client: IJMAPClient, mailboxId: string) => Promise<number>;
 
   // Unified mailbox operations
   fetchUnifiedEmails: (accounts: UnifiedAccountClient[], role: UnifiedMailboxRole) => Promise<void>;
@@ -1746,6 +1747,39 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         error: error instanceof Error ? error.message : 'Failed to empty folder',
         isLoading: false,
       });
+      throw error;
+    }
+  },
+
+  markMailboxAsRead: async (client, mailboxId) => {
+    try {
+      const mailbox = get().mailboxes.find(mb => mb.id === mailboxId);
+      const accountId = mailbox?.isShared ? mailbox.accountId : undefined;
+      const jmapMailboxId = mailbox?.originalId || mailboxId;
+
+      const count = await client.markMailboxAsRead(jmapMailboxId, accountId);
+
+      // Update local state: mark all emails currently visible in this mailbox as read,
+      // and zero-out the mailbox unread counter.
+      set((state) => ({
+        emails: state.emails.map(e =>
+          e.mailboxIds && e.mailboxIds[mailboxId]
+            ? { ...e, keywords: { ...e.keywords, $seen: true } }
+            : e
+        ),
+        selectedEmail: state.selectedEmail && state.selectedEmail.mailboxIds?.[mailboxId]
+          ? { ...state.selectedEmail, keywords: { ...state.selectedEmail.keywords, $seen: true } }
+          : state.selectedEmail,
+        mailboxes: state.mailboxes.map(mb =>
+          mb.id === mailboxId
+            ? { ...mb, unreadEmails: 0, unreadThreads: 0 }
+            : mb
+        ),
+      }));
+
+      return count;
+    } catch (error) {
+      set({ error: error instanceof Error ? error.message : 'Failed to mark folder as read' });
       throw error;
     }
   },

@@ -34,11 +34,11 @@ describe("parseVCard", () => {
     expect(result).toHaveLength(1);
     const components = result[0].name?.components || [];
     expect(components).toEqual([
-      { kind: "prefix", value: "Mr." },
+      { kind: "title", value: "Mr." },
       { kind: "given", value: "John" },
-      { kind: "additional", value: "Michael" },
+      { kind: "given2", value: "Michael" },
       { kind: "surname", value: "Doe" },
-      { kind: "suffix", value: "Jr." },
+      { kind: "generation", value: "Jr." },
     ]);
   });
 
@@ -50,6 +50,21 @@ describe("parseVCard", () => {
     const components = result[0].name?.components || [];
     expect(components.find((c) => c.kind === "given")?.value).toBe("John");
     expect(components.find((c) => c.kind === "surname")?.value).toBe("Doe");
+  });
+
+  it("maps prefix and middle name to RFC 9553 standard kinds (issue #224)", () => {
+    // N: family;given;additional;prefix;suffix (RFC 6350 order)
+    const withPrefix = parseVCard(`BEGIN:VCARD\r\nVERSION:3.0\r\nN:Smith;John;;Mr.;\r\nEMAIL:j@example.com\r\nEND:VCARD`);
+    const c1 = withPrefix[0].name?.components || [];
+    expect(c1.find((c) => c.kind === "surname")?.value).toBe("Smith");
+    expect(c1.find((c) => c.kind === "given")?.value).toBe("John");
+    expect(c1.find((c) => c.kind === "title")?.value).toBe("Mr.");
+
+    const withMiddle = parseVCard(`BEGIN:VCARD\r\nVERSION:3.0\r\nN:Smith;John;Mike;;\r\nEMAIL:j@example.com\r\nEND:VCARD`);
+    const c2 = withMiddle[0].name?.components || [];
+    expect(c2.find((c) => c.kind === "surname")?.value).toBe("Smith");
+    expect(c2.find((c) => c.kind === "given")?.value).toBe("John");
+    expect(c2.find((c) => c.kind === "given2")?.value).toBe("Mike");
   });
 
   it("parses vCard with phone, org, and address", () => {
@@ -202,6 +217,60 @@ describe("parseVCard", () => {
     const result = parseVCard(vcf);
     expect(result).toHaveLength(1);
     expect(result[0].kind).toBe("group");
+  });
+
+  it("decodes ENCODING=QUOTED-PRINTABLE values with UTF-8 charset", () => {
+    const vcf = [
+      "BEGIN:VCARD",
+      "VERSION:2.1",
+      "N;CHARSET=UTF-8;ENCODING=QUOTED-PRINTABLE:M=C3=BCller;Hans;;;",
+      "FN;CHARSET=UTF-8;ENCODING=QUOTED-PRINTABLE:Hans M=C3=BCller",
+      "NOTE;CHARSET=UTF-8;ENCODING=QUOTED-PRINTABLE:Caf=C3=A9 stra=C3=9Fe",
+      "EMAIL:hans@example.com",
+      "END:VCARD",
+    ].join("\r\n");
+
+    const result = parseVCard(vcf);
+    expect(result).toHaveLength(1);
+    const card = result[0];
+
+    const components = card.name?.components || [];
+    expect(components.find((c) => c.kind === "given")?.value).toBe("Hans");
+    expect(components.find((c) => c.kind === "surname")?.value).toBe("Müller");
+    expect(card.notes?.n0?.note).toBe("Café straße");
+  });
+
+  it("joins QUOTED-PRINTABLE soft line breaks (= at end of line)", () => {
+    const vcf = [
+      "BEGIN:VCARD",
+      "VERSION:2.1",
+      "FN;CHARSET=UTF-8;ENCODING=QUOTED-PRINTABLE:Hans=20J=",
+      "=C3=BCrgen=20M=C3=BCller",
+      "EMAIL:hj@example.com",
+      "END:VCARD",
+    ].join("\r\n");
+
+    const result = parseVCard(vcf);
+    expect(result).toHaveLength(1);
+    const components = result[0].name?.components || [];
+    const given = components.find((c) => c.kind === "given")?.value;
+    const surname = components.find((c) => c.kind === "surname")?.value;
+    expect(given).toBe("Hans");
+    expect(surname).toBe("Jürgen Müller");
+  });
+
+  it("recognizes bare QUOTED-PRINTABLE encoding parameter (vCard 2.1 style)", () => {
+    const vcf = [
+      "BEGIN:VCARD",
+      "VERSION:2.1",
+      "FN;QUOTED-PRINTABLE;CHARSET=UTF-8:Caf=C3=A9",
+      "EMAIL:c@example.com",
+      "END:VCARD",
+    ].join("\r\n");
+
+    const result = parseVCard(vcf);
+    const components = result[0].name?.components || [];
+    expect(components.find((c) => c.kind === "given")?.value).toBe("Café");
   });
 
   it("parses GENDER, LOGO, SOUND, LABEL, CALURI, CALADRURI, FBURL, SOURCE", () => {

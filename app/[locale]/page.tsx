@@ -14,6 +14,7 @@ import { useAccountStore } from "@/stores/account-store";
 import type { UnifiedAccountClient } from "@/lib/unified-mailbox";
 import { KeyboardShortcutsModal } from "@/components/keyboard-shortcuts-modal";
 import { useEmailStore } from "@/stores/email-store";
+import { toast } from "@/stores/toast-store";
 import { useAuthStore, redirectToLogin } from "@/stores/auth-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useContactStore } from "@/stores/contact-store";
@@ -23,6 +24,7 @@ import { useDeviceDetection } from "@/hooks/use-media-query";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import { useRefreshGesture } from "@/hooks/use-refresh-gesture";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
+import { usePromptDialog } from "@/hooks/use-prompt-dialog";
 import { useBrowserNavigation, type NavSnapshot } from "@/hooks/use-browser-navigation";
 import { debug } from "@/lib/debug";
 import { playNotificationSound } from "@/lib/notification-sound";
@@ -35,6 +37,7 @@ import {
   ComposerErrorFallback,
 } from "@/components/error";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { PromptDialog } from "@/components/ui/prompt-dialog";
 import { TotpReauthDialog } from "@/components/totp-reauth-dialog";
 import { DragDropProvider } from "@/contexts/drag-drop-context";
 import { isFilterEmpty, activeFilterCount } from "@/lib/jmap/search-utils";
@@ -67,6 +70,7 @@ export default function Home() {
   const [pendingDraft, setPendingDraft] = useState<ComposerDraftData | null>(null);
   const [composerSessionId, setComposerSessionId] = useState(0);
   const { dialogProps: confirmDialogProps, confirm: confirmDialog } = useConfirmDialog();
+  const { dialogProps: promptDialogProps, prompt: promptDialog } = usePromptDialog();
   const { showAppsModal, inlineApp, loadedApps, handleManageApps, handleInlineApp, closeInlineApp, closeAppsModal } = useSidebarApps();
   const [initialCheckDone, setInitialCheckDone] = useState(() => useAuthStore.getState().isAuthenticated && !!useAuthStore.getState().client);
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
@@ -162,6 +166,11 @@ export default function Home() {
     fetchUnifiedEmails: fetchUnifiedEmailsAction,
     refreshUnifiedCounts,
     exitUnifiedView,
+    emptyMailbox,
+    markMailboxAsRead,
+    createMailbox,
+    renameMailbox,
+    deleteMailbox,
   } = useEmailStore();
 
   const enableUnifiedMailbox = useSettingsStore((s) => s.enableUnifiedMailbox);
@@ -1097,6 +1106,197 @@ export default function Home() {
     }
   };
 
+  const tCtxMenu = t;
+
+  const handleMarkFolderRead = async (mailboxId: string) => {
+    if (!client) return;
+    try {
+      const count = await markMailboxAsRead(client, mailboxId);
+      await fetchMailboxes(client);
+      if (selectedMailbox === mailboxId) await fetchEmails(client, mailboxId);
+      if (count > 0) {
+        toast.success(tCtxMenu('mailbox_context_menu.toast_marked_read_count', { count }));
+      } else {
+        toast.success(tCtxMenu('mailbox_context_menu.toast_already_read'));
+      }
+    } catch {
+      toast.error(tCtxMenu('mailbox_context_menu.toast_error_mark_read'));
+    }
+  };
+
+  const handleMarkFolderTreeRead = async (mailboxId: string) => {
+    if (!client) return;
+    const collectIds = (rootId: string): string[] => {
+      const ids: string[] = [rootId];
+      const stack = [rootId];
+      while (stack.length > 0) {
+        const current = stack.pop()!;
+        for (const mb of mailboxes) {
+          if (mb.parentId === current) {
+            ids.push(mb.id);
+            stack.push(mb.id);
+          }
+        }
+      }
+      return ids;
+    };
+
+    try {
+      const ids = collectIds(mailboxId);
+      let total = 0;
+      for (const id of ids) {
+        total += await markMailboxAsRead(client, id);
+      }
+      await fetchMailboxes(client);
+      if (selectedMailbox && ids.includes(selectedMailbox)) await fetchEmails(client, selectedMailbox);
+      if (total > 0) {
+        toast.success(tCtxMenu('mailbox_context_menu.toast_marked_read_count', { count: total }));
+      } else {
+        toast.success(tCtxMenu('mailbox_context_menu.toast_already_read'));
+      }
+    } catch {
+      toast.error(tCtxMenu('mailbox_context_menu.toast_error_mark_read'));
+    }
+  };
+
+  const handleMarkAllFoldersRead = async () => {
+    if (!client) return;
+
+    const confirmed = await confirmDialog({
+      title: tCtxMenu('mailbox_context_menu.mark_all_confirm_title'),
+      message: tCtxMenu('mailbox_context_menu.mark_all_confirm_message'),
+      confirmText: tCtxMenu('mailbox_context_menu.mark_all_folders_read'),
+      variant: "default",
+    });
+    if (!confirmed) return;
+
+    try {
+      const total = await client.markAllAsRead();
+      await fetchMailboxes(client);
+      if (selectedMailbox) await fetchEmails(client, selectedMailbox);
+      if (total > 0) {
+        toast.success(tCtxMenu('mailbox_context_menu.toast_marked_read_count', { count: total }));
+      } else {
+        toast.success(tCtxMenu('mailbox_context_menu.toast_already_read'));
+      }
+    } catch {
+      toast.error(tCtxMenu('mailbox_context_menu.toast_error_mark_read'));
+    }
+  };
+
+  const handleEmptyFolderFromContextMenu = async (mailboxId: string) => {
+    if (!client) return;
+    const mailbox = mailboxes.find(mb => mb.id === mailboxId);
+    if (!mailbox) return;
+
+    const confirmed = await confirmDialog({
+      title: tCtxMenu('email_list.empty_folder.confirm_title'),
+      message: tCtxMenu('email_list.empty_folder.confirm_message'),
+      confirmText: tCtxMenu('email_list.empty_folder.confirm_button'),
+      variant: "destructive",
+    });
+    if (!confirmed) return;
+
+    try {
+      await emptyMailbox(client, mailboxId);
+      toast.success(tCtxMenu('mailbox_context_menu.toast_emptied'));
+    } catch {
+      toast.error(tCtxMenu('mailbox_context_menu.toast_error_empty'));
+    }
+  };
+
+  const handleCreateSubfolderFromContextMenu = async (parentId: string) => {
+    if (!client) return;
+    const name = await promptDialog({
+      title: tCtxMenu('mailbox_context_menu.new_subfolder'),
+      message: tCtxMenu('mailbox_context_menu.prompt_new_subfolder'),
+      placeholder: tCtxMenu('mailbox_context_menu.placeholder_folder_name'),
+      confirmText: tCtxMenu('mailbox_context_menu.create'),
+    });
+    if (!name) return;
+    try {
+      await createMailbox(client, name, parentId);
+      toast.success(tCtxMenu('mailbox_context_menu.toast_folder_created'));
+    } catch {
+      toast.error(tCtxMenu('mailbox_context_menu.toast_error_create'));
+    }
+  };
+
+  const handleCreateFolderFromContextMenu = async () => {
+    if (!client) return;
+    const name = await promptDialog({
+      title: tCtxMenu('mailbox_context_menu.new_folder'),
+      message: tCtxMenu('mailbox_context_menu.prompt_new_folder'),
+      placeholder: tCtxMenu('mailbox_context_menu.placeholder_folder_name'),
+      confirmText: tCtxMenu('mailbox_context_menu.create'),
+    });
+    if (!name) return;
+    try {
+      await createMailbox(client, name);
+      toast.success(tCtxMenu('mailbox_context_menu.toast_folder_created'));
+    } catch {
+      toast.error(tCtxMenu('mailbox_context_menu.toast_error_create'));
+    }
+  };
+
+  const handleRenameFolderFromContextMenu = async (mailboxId: string) => {
+    if (!client) return;
+    const mailbox = mailboxes.find(mb => mb.id === mailboxId);
+    if (!mailbox) return;
+    const name = await promptDialog({
+      title: tCtxMenu('mailbox_context_menu.rename'),
+      message: tCtxMenu('mailbox_context_menu.prompt_rename'),
+      placeholder: tCtxMenu('mailbox_context_menu.placeholder_folder_name'),
+      defaultValue: mailbox.name,
+      confirmText: tCtxMenu('mailbox_context_menu.rename_confirm'),
+    });
+    if (!name || name === mailbox.name) return;
+    try {
+      await renameMailbox(client, mailboxId, name);
+      toast.success(tCtxMenu('mailbox_context_menu.toast_folder_renamed'));
+    } catch {
+      toast.error(tCtxMenu('mailbox_context_menu.toast_error_rename'));
+    }
+  };
+
+  const handleDeleteFolderFromContextMenu = async (mailboxId: string) => {
+    if (!client) return;
+    const mailbox = mailboxes.find(mb => mb.id === mailboxId);
+    if (!mailbox) return;
+
+    const confirmed = await confirmDialog({
+      title: tCtxMenu('mailbox_context_menu.delete_confirm_title'),
+      message: tCtxMenu('mailbox_context_menu.delete_confirm_message', { name: mailbox.name }),
+      confirmText: tCtxMenu('mailbox_context_menu.delete_folder'),
+      variant: "destructive",
+    });
+    if (!confirmed) return;
+
+    try {
+      await deleteMailbox(client, mailboxId);
+      toast.success(tCtxMenu('mailbox_context_menu.toast_folder_deleted'));
+    } catch (err: unknown) {
+      const jmapType = (err as Error & { jmapType?: string })?.jmapType;
+      if (jmapType === 'mailboxHasChild') {
+        toast.error(tCtxMenu('mailbox_context_menu.toast_error_delete_has_children'));
+      } else if (jmapType === 'mailboxHasEmail') {
+        toast.error(tCtxMenu('mailbox_context_menu.toast_error_delete_has_email'));
+      } else {
+        toast.error(tCtxMenu('mailbox_context_menu.toast_error_delete'));
+      }
+    }
+  };
+
+  const handleRefreshMailboxes = async () => {
+    if (!client) return;
+    try {
+      await fetchMailboxes(client);
+      if (selectedMailbox) await fetchEmails(client, selectedMailbox);
+    } catch {
+      // silent
+    }
+  };
+
   const handleLogout = logout;
 
   const handleSearch = async (query: string) => {
@@ -1454,6 +1654,15 @@ export default function Home() {
               onMailboxSelect={handleMailboxSelect}
               onTagSelect={handleTagSelect}
               onUnreadFilterClick={handleUnreadFilterClick}
+              onMarkFolderRead={handleMarkFolderRead}
+              onMarkFolderTreeRead={handleMarkFolderTreeRead}
+              onMarkAllFoldersRead={handleMarkAllFoldersRead}
+              onEmptyFolder={handleEmptyFolderFromContextMenu}
+              onCreateSubfolder={handleCreateSubfolderFromContextMenu}
+              onCreateFolder={handleCreateFolderFromContextMenu}
+              onRenameFolder={handleRenameFolderFromContextMenu}
+              onDeleteFolder={handleDeleteFolderFromContextMenu}
+              onRefreshMailboxes={handleRefreshMailboxes}
               onCompose={() => {
                 setComposerMode('compose');
                 setShowComposer(true);
@@ -2005,6 +2214,7 @@ export default function Home() {
 
         <SidebarAppsModal isOpen={showAppsModal} onClose={closeAppsModal} />
         <ConfirmDialog {...confirmDialogProps} />
+        <PromptDialog {...promptDialogProps} />
         <TotpReauthDialog />
       </div>
     </DragDropProvider>

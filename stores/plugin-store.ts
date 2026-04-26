@@ -20,7 +20,7 @@ import { apiFetch } from '@/lib/browser-navigation';
 // ─── Slot State ──────────────────────────────────────────────
 
 const SLOT_NAMES: SlotName[] = [
-  'toolbar-actions', 'email-banner', 'email-footer', 'composer-toolbar',
+  'toolbar-actions', 'email-banner', 'email-footer', 'composer-toolbar', 'composer-sidebar', 'composer-sidebar-right',
   'sidebar-widget', 'email-detail-sidebar', 'settings-section', 'context-menu-email', 'navigation-rail-bottom',
   'calendar-event-actions', 'admin-plugin-page',
 ];

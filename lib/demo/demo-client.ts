@@ -312,6 +312,33 @@ export class DemoJMAPClient implements IJMAPClient {
     return removed;
   }
 
+  async markMailboxAsRead(mailboxId: string): Promise<number> {
+    let count = 0;
+    for (const email of this.data.emails) {
+      if (email.mailboxIds[mailboxId] && email.keywords.$seen !== true) {
+        email.keywords.$seen = true;
+        count++;
+      }
+    }
+    this.recalcMailboxCounts();
+    return count;
+  }
+
+  async markAllAsRead(excludeMailboxIds: string[] = []): Promise<number> {
+    const excluded = new Set(excludeMailboxIds);
+    let count = 0;
+    for (const email of this.data.emails) {
+      if (email.keywords.$seen === true) continue;
+      const mbIds = Object.keys(email.mailboxIds);
+      const onlyInExcluded = mbIds.length > 0 && mbIds.every(id => excluded.has(id));
+      if (onlyInExcluded) continue;
+      email.keywords.$seen = true;
+      count++;
+    }
+    this.recalcMailboxCounts();
+    return count;
+  }
+
   async markAsSpam(emailId: string): Promise<void> {
     const email = this.data.emails.find(e => e.id === emailId);
     const junkMb = this.data.mailboxes.find(m => m.role === 'junk');

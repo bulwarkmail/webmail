@@ -1,5 +1,31 @@
 # Changelog
 
+## 1.5.2 (2026-04-25)
+
+### Features
+
+- **Plugins**: New `composer-sidebar` slot and `ui:composer-sidebar` permission — plugins can now render a panel on the left side of the New Message dialog. See `repos/subway-surfers` for an example
+- **Plugins**: Manifests can declare `frameOrigins` — a strictly-validated list of `https://host` origins the plugin needs to embed. The proxy reads the union from enabled plugins and merges it into the host CSP `frame-src`, so the host CSP no longer needs to know about specific embed providers
+
+## 1.5.1 (2026-04-25)
+
+### Features
+
+- **Stalwart**: OAuth auto-setup with dialog and validation for origin and issuer URLs
+- **Mail**: Right-click context menu on the folders sidebar
+- **Mail**: Replace folder `prompt()` calls with a proper modal dialog
+- **Calendar**: Add 'Today' button to the desktop calendar toolbar
+- **Junk**: Setting to show avatars in the Junk folder (off by default)
+
+### Fixes
+
+- **Admin**: Restore admin panel after Stalwart v0.16 REST API removal
+- **Viewer**: Restore broken viewer toolbar actions and improve the mobile menu (#220)
+- **Folders**: Stop flicker on background folder refresh
+- **Email**: Preserve search/filter on batch move and archive
+- **Email**: Preserve search/filter when moving emails via drag-drop
+- **i18n**: Improve Korean flag
+
 ## 1.5.0 (2026-04-22)
 
 ### Breaking Changes

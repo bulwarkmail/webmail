@@ -309,7 +309,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                   {email.subject || "(no subject)"}
                 </div>
 
-                {showPreview && density !== 'extra-compact' && (
+                {showPreview && density !== 'extra-compact' && density !== 'compact' && (
                   <p className={cn(
                     "text-sm leading-relaxed line-clamp-2",
                     isUnread
@@ -715,7 +715,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                     {latestEmail.subject || "(no subject)"}
                   </div>
 
-                  {showPreview && density !== 'extra-compact' && (
+                  {showPreview && density !== 'extra-compact' && density !== 'compact' && (
                     <p className={cn(
                       "text-sm leading-relaxed line-clamp-2",
                       hasUnread

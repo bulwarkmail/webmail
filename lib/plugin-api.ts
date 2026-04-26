@@ -121,6 +121,7 @@ export interface PluginAPI {
     registerSettingsSection: (section: SettingsSection) => Disposable;
     registerComposerAction: (action: ComposerAction) => Disposable;
     registerSidebarWidget: (widget: SidebarWidget) => Disposable;
+    registerComposerSidebar: (widget: SidebarWidget) => Disposable;
     registerDetailSidebar: (widget: SidebarWidget) => Disposable;
     registerContextMenuItem: (item: ContextMenuItem) => Disposable;
     registerNavigationRailItem: (component: React.ComponentType) => Disposable;
@@ -607,6 +608,12 @@ export function createPluginAPI(plugin: InstalledPlugin): PluginAPI {
       registerSidebarWidget: (widget: SidebarWidget) => {
         requirePermission(plugin, 'ui:sidebar-widget');
         return registerSlot(plugin.id, 'sidebar-widget', widget.render as React.ComponentType<Record<string, unknown>>, widget.order ?? 100);
+      },
+
+      registerComposerSidebar: (widget: SidebarWidget) => {
+        requirePermission(plugin, 'ui:composer-sidebar');
+        const slot = widget.side === 'right' ? 'composer-sidebar-right' : 'composer-sidebar';
+        return registerSlot(plugin.id, slot, widget.render as React.ComponentType<Record<string, unknown>>, widget.order ?? 100);
       },
 
       registerDetailSidebar: (widget: SidebarWidget) => {
