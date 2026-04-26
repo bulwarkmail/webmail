@@ -20,7 +20,7 @@
       "generic": "Ocorreu um erro. Por favor, tente novamente.",
       "totp_required": "É necessário um código de autenticação de dois fatores. Insira seu código abaixo.",
       "totp_invalid": "Código de autenticação inválido. Verifique seu aplicativo de autenticação.",
-      "oauth_discovery_failed": "SSO está ativado mas o provedor de identidade não pôde ser contactado. Verifique sua configuração OAuth."
+      "oauth_discovery_failed": "SSO está ativado mas o provedor de identidade não pôde ser contatado. Verifique sua configuração OAuth."
     },
     "show_password": "Mostrar senha",
     "hide_password": "Ocultar senha",
@@ -669,7 +669,7 @@
       "security": "Segurança",
       "encryption": "Criptografia",
       "files": "Arquivos",
-      "contacts": "Contactos",
+      "contacts": "Contatos",
       "sidebar_apps": "Apps da barra lateral",
       "notifications": "Notificações",
       "layout": "Layout",
@@ -1322,12 +1322,12 @@
       "manage_description": "Adicionar, editar ou remover apps personalizados da barra lateral"
     },
     "contacts": {
-      "title": "Contactos",
-      "description": "Importar e exportar os seus contactos",
-      "import_label": "Importar contactos",
-      "import_description": "Importar contactos de um ficheiro vCard (.vcf)",
-      "export_label": "Exportar contactos",
-      "export_description": "Exportar todos os contactos como ficheiro vCard (.vcf)",
+      "title": "Contatos",
+      "description": "Importar e exportar os seus contatos",
+      "import_label": "Importar contatos",
+      "import_description": "Importar contatos de um ficheiro vCard (.vcf)",
+      "export_label": "Exportar contatos",
+      "export_description": "Exportar todos os contatos como ficheiro vCard (.vcf)",
       "manage_title": "Catálogos de endereços",
       "manage_description": "Renomeie seus catálogos de endereços",
       "no_address_books": "Nenhum catálogo de endereços encontrado",
@@ -1874,7 +1874,7 @@
       "cert_already_imported": "Certificado já importado",
       "cert_imported": "Certificado importado",
       "cert_import_failed": "Falha ao importar o certificado",
-      "section_contact": "Contact details",
+      "section_contact": "Detalhes do contato",
       "section_work": "Work",
       "section_personal": "Personal",
       "email_default_label": "Email",
@@ -2243,7 +2243,7 @@
       "hover_preview_delay_2s": "Atraso de 2 segundos",
       "hover_preview_off": "Desativado",
       "show_birthday_calendar": "Calendário de aniversários",
-      "show_birthday_calendar_desc": "Mostrar um calendário virtual com os aniversários dos seus contactos"
+      "show_birthday_calendar_desc": "Mostrar um calendário virtual com os aniversários dos seus contatos"
     },
     "days": {
       "monday": "Segunda-feira",
