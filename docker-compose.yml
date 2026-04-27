@@ -8,6 +8,11 @@ services:
       - PORT=3000
     env_file:
       - .env.local
+    volumes:
+      # Encrypted user settings (SETTINGS_DATA_DIR).
+      - bulwark-settings:/app/data/settings
+      # Admin dashboard state: config, password hash, plugins, audit logs (ADMIN_DATA_DIR).
+      - bulwark-admin:/app/data/admin
     healthcheck:
       test:
         [
@@ -23,3 +28,7 @@ services:
       retries: 3
       start_period: 10s
     restart: unless-stopped
+
+volumes:
+  bulwark-settings:
+  bulwark-admin:
