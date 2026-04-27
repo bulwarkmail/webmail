@@ -335,7 +335,7 @@ export function NavigationRail({
           );
         })}
 
-        {/* Admin (Stalwart admins) — hard nav because /admin lives outside the [locale] tree */}
+        {/* Admin (Stalwart admins) - hard nav because /admin lives outside the [locale] tree */}
         {isStalwartAdmin && (
           <a
             href="/admin"

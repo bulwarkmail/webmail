@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
     const queryEntry = queryRes.methodResponses?.[0];
     if (!queryEntry || queryEntry[0] === 'error') {
       return NextResponse.json({
-        error: 'Stalwart denied OAuthClient/query — your Stalwart account likely lacks admin permissions.',
+        error: 'Stalwart denied OAuthClient/query - your Stalwart account likely lacks admin permissions.',
         detail: queryEntry?.[1],
       }, { status: 403 });
     }
@@ -187,7 +187,7 @@ export async function POST(request: NextRequest) {
     const setEntry = setRes.methodResponses?.[0];
     if (!setEntry || setEntry[0] === 'error') {
       return NextResponse.json({
-        error: 'Stalwart denied OAuthClient/set — admin permissions required.',
+        error: 'Stalwart denied OAuthClient/set - admin permissions required.',
         detail: setEntry?.[1],
       }, { status: 403 });
     }

@@ -51,6 +51,13 @@ configManager.load()
   .then(() => {
     console.info("Admin dashboard initialized");
   })
+  .then(async () => {
+    // Anonymous telemetry - opt-in, off until admin consents.
+    // See https://bulwarkmail.org/docs/legal/privacy/telemetry
+    const { startScheduler, markProcessStart } = await import("./lib/telemetry");
+    markProcessStart();
+    await startScheduler();
+  })
   .catch((err) => {
     console.warn("Admin dashboard init skipped:", err instanceof Error ? err.message : err);
   });

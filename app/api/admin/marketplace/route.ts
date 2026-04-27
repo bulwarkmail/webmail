@@ -232,7 +232,7 @@ export async function POST(request: NextRequest) {
 
       // Plugins may declare iframe origins they need for embedded content.
       // Anything that doesn't pass strict origin validation is silently
-      // dropped — the plugin still installs, but those origins are not
+      // dropped - the plugin still installs, but those origins are not
       // added to the host CSP.
       const declaredFrameOrigins = sanitizeFrameOrigins(manifest.frameOrigins);
       const droppedFrameOrigins = Array.isArray(manifest.frameOrigins)

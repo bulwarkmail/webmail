@@ -5,7 +5,7 @@
  * domains in the host CSP.
  *
  * Origins are validated at install time and re-validated here as defense in
- * depth — any malformed value is dropped so a corrupted registry can never
+ * depth - any malformed value is dropped so a corrupted registry can never
  * inject arbitrary CSP fragments.
  */
 
@@ -65,7 +65,7 @@ const CACHE_TTL_MS = 5_000;
  * the server-side registry, deduped and validated.
  *
  * Returns an empty array on any failure (missing file, parse error, …) so
- * a broken registry only ever shrinks the CSP — never widens it.
+ * a broken registry only ever shrinks the CSP - never widens it.
  */
 export async function getEnabledPluginFrameOrigins(): Promise<string[]> {
   const now = Date.now();

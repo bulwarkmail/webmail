@@ -4,8 +4,8 @@
 
 ### Features
 
-- **Plugins**: New `composer-sidebar` slot and `ui:composer-sidebar` permission — plugins can now render a panel on either side of the New Message dialog. See `repos/subway-surfers` for an example
-- **Plugins**: Manifests can declare `frameOrigins` — a strictly-validated list of `https://host` origins the plugin needs to embed. The proxy reads the union from enabled plugins and merges it into the host CSP `frame-src`, so the host CSP no longer needs to know about specific embed providers
+- **Plugins**: New `composer-sidebar` slot and `ui:composer-sidebar` permission - plugins can now render a panel on either side of the New Message dialog. See `repos/subway-surfers` for an example
+- **Plugins**: Manifests can declare `frameOrigins` - a strictly-validated list of `https://host` origins the plugin needs to embed. The proxy reads the union from enabled plugins and merges it into the host CSP `frame-src`, so the host CSP no longer needs to know about specific embed providers
 - **Calendar/Contacts**: JMAP sharing for calendars and address books
 - **i18n**: Czech language support
 
