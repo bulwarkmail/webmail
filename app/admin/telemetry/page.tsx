@@ -13,6 +13,7 @@ interface TelemetryStatus {
   lastSentAt: string | null;
   nextScheduledAt: string | null;
   payloadPreview: Record<string, unknown>;
+  accountCounts: { total: number; active7d: number };
 }
 
 function timeAgo(iso: string | null): string {
@@ -170,6 +171,21 @@ export default function AdminTelemetryPage() {
           <dd>{timeAgo(status.nextScheduledAt)}</dd>
           <dt className="text-muted-foreground">Consented at</dt>
           <dd>{status.consentedAt ? new Date(status.consentedAt).toLocaleString() : '-'}</dd>
+        </dl>
+      </section>
+
+      <section className="rounded-lg border p-4 space-y-2">
+        <div className="font-medium">Account activity</div>
+        <p className="text-sm text-muted-foreground">
+          Unique accounts that have logged in over the last 90 days. Identities are stored as a
+          per-instance HMAC, never as plaintext usernames. These are the numbers reported in the
+          heartbeat as bucketed ranges.
+        </p>
+        <dl className="grid grid-cols-2 gap-2 text-sm pt-1">
+          <dt className="text-muted-foreground">Total (90d)</dt>
+          <dd className="font-mono">{status.accountCounts?.total ?? 0}</dd>
+          <dt className="text-muted-foreground">Active (7d)</dt>
+          <dd className="font-mono">{status.accountCounts?.active7d ?? 0}</dd>
         </dl>
       </section>
 

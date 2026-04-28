@@ -10,6 +10,7 @@ import {
   setStalwartAuthContextInStore,
 } from '@/lib/stalwart/auth-context';
 import { configManager } from '@/lib/admin/config-manager';
+import { recordLogin } from '@/lib/telemetry/login-tracker';
 
 const COOKIE_OPTIONS = {
   ...getCookieOptions(),
@@ -49,6 +50,8 @@ export async function POST(request: NextRequest) {
       username,
       authHeader,
     });
+
+    void recordLogin(username, normalizedServerUrl);
 
     return NextResponse.json({ ok: true });
   } catch (error) {

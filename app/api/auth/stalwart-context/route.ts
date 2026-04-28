@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
 import { JmapAuthVerificationError, verifyJmapAuth } from '@/lib/auth/verify-jmap-auth';
 import { setStalwartAuthContext } from '@/lib/stalwart/auth-context';
+import { recordLogin } from '@/lib/telemetry/login-tracker';
 
 function getSlot(request: NextRequest, bodySlot: unknown): number {
   if (typeof bodySlot === 'number' && bodySlot >= 0 && bodySlot <= 4) {
@@ -31,6 +32,8 @@ export async function POST(request: NextRequest) {
       username,
       authHeader,
     });
+
+    void recordLogin(username, normalizedServerUrl);
 
     return NextResponse.json({ ok: true });
   } catch (error) {

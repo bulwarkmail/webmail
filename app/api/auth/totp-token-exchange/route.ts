@@ -7,6 +7,7 @@ import { getCookieOptions } from '@/lib/oauth/cookie-config';
 import { readFileEnv } from '@/lib/read-file-env';
 import { configManager } from '@/lib/admin/config-manager';
 import { isPublicHttpUrl } from '@/lib/security/url-guard';
+import { recordLogin } from '@/lib/telemetry/login-tracker';
 
 /**
  * Exchange basic auth credentials (with TOTP appended) for OAuth tokens.
@@ -117,7 +118,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'no_token_endpoint', detail: 'Could not discover OAuth token endpoint on the mail server' }, { status: 404 });
     }
 
-    return await attemptAllStrategies(tokenEndpoint, username, password, slot);
+    return await attemptAllStrategies(tokenEndpoint, upstreamUrl, username, password, slot);
   } catch (error) {
     logger.error('TOTP token exchange error', { error: error instanceof Error ? error.message : 'Unknown error' });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -126,6 +127,7 @@ export async function POST(request: NextRequest) {
 
 async function attemptAllStrategies(
   tokenEndpoint: string,
+  serverUrl: string,
   username: string,
   password: string,
   slot: number,
@@ -144,6 +146,7 @@ async function attemptAllStrategies(
     const result = await tryTokenRequest(tokenEndpoint, params);
     if (result.ok) {
       logger.info('TOTP token exchange succeeded (ROPC with client_id)');
+      void recordLogin(username, serverUrl);
       return await storeAndRespond(result.tokens, slot);
     }
     attempts.push({ strategy: 'ROPC with client_id', error: result.error });
@@ -155,6 +158,7 @@ async function attemptAllStrategies(
     const result = await tryTokenRequest(tokenEndpoint, params);
     if (result.ok) {
       logger.info('TOTP token exchange succeeded (ROPC without client_id)');
+      void recordLogin(username, serverUrl);
       return await storeAndRespond(result.tokens, slot);
     }
     attempts.push({ strategy: 'ROPC without client_id', error: result.error });
@@ -166,6 +170,7 @@ async function attemptAllStrategies(
     const result = await tryTokenRequest(tokenEndpoint, params, { 'Authorization': basicAuth });
     if (result.ok) {
       logger.info('TOTP token exchange succeeded (Basic Auth header)');
+      void recordLogin(username, serverUrl);
       return await storeAndRespond(result.tokens, slot);
     }
     attempts.push({ strategy: 'Basic Auth header', error: result.error });
@@ -177,6 +182,7 @@ async function attemptAllStrategies(
     const result = await tryTokenRequest(tokenEndpoint, params, { 'Authorization': basicAuth });
     if (result.ok) {
       logger.info('TOTP token exchange succeeded (client_credentials + Basic Auth)');
+      void recordLogin(username, serverUrl);
       return await storeAndRespond(result.tokens, slot);
     }
     attempts.push({ strategy: 'client_credentials + Basic Auth', error: result.error });

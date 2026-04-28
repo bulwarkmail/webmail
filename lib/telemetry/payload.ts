@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { configManager } from '@/lib/admin/config-manager';
-import { logger } from '@/lib/logger';
 import { getInstanceId } from './state';
+import { getLoginCounts } from './login-tracker';
 import type {
   TelemetryPayload,
   TelemetryFeatures,
@@ -75,30 +75,10 @@ async function readFeatures(): Promise<TelemetryFeatures> {
   };
 }
 
-async function countAccounts(): Promise<{ total: number; active7d: number }> {
-  // Best-effort. If Stalwart's admin endpoint isn't reachable from here we
-  // return 0 / 0 - the heartbeat still fires.
-  try {
-    const adminUrl = process.env.STALWART_MGMT_URL || process.env.STALWART_ADMIN_URL;
-    const adminUser = process.env.STALWART_ADMIN_USER;
-    const adminPass = process.env.STALWART_ADMIN_PASSWORD;
-    if (!adminUrl || !adminUser || !adminPass) return { total: 0, active7d: 0 };
-    const auth = Buffer.from(`${adminUser}:${adminPass}`).toString('base64');
-    const res = await fetch(`${adminUrl.replace(/\/$/, '')}/api/principal?type=individual`, {
-      headers: { authorization: `Basic ${auth}` },
-      signal: AbortSignal.timeout(2000),
-    });
-    if (!res.ok) return { total: 0, active7d: 0 };
-    const body = await res.json() as { data?: { total?: number } };
-    const total = Number(body?.data?.total ?? 0);
-    return { total, active7d: total };
-  } catch (err) {
-    logger.debug?.('telemetry: account count probe failed', {
-      error: err instanceof Error ? err.message : String(err),
-    });
-    return { total: 0, active7d: 0 };
-  }
-}
+// Account counts come from the local login tracker, which records a per-
+// instance HMAC of every successful login plus the timestamp. Total = unique
+// identities seen in the last 90 days; active7d = identities with a login in
+// the last 7 days.
 
 async function countExtensions(): Promise<{ extensions: number; themes: number }> {
   try {
@@ -117,7 +97,7 @@ export async function buildPayload(): Promise<TelemetryPayload> {
   const instance_id = await getInstanceId();
   const { version, build } = readPackage();
   const features = await readFeatures();
-  const accounts = await countAccounts();
+  const accounts = await getLoginCounts();
   const exts = await countExtensions();
   const uptime_days = Math.min(
     365,

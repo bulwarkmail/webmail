@@ -10,6 +10,7 @@ import {
   sendOnce,
   reschedule,
   DEFAULT_ENDPOINT,
+  getLoginCounts,
 } from '@/lib/telemetry';
 
 /**
@@ -23,7 +24,10 @@ export async function GET() {
     if ('error' in auth) return auth.error;
 
     const { consent, source, state } = await effectiveConsent();
-    const payload = await buildPayload();
+    const [payload, accountCounts] = await Promise.all([
+      buildPayload(),
+      getLoginCounts(),
+    ]);
 
     return NextResponse.json(
       {
@@ -35,6 +39,7 @@ export async function GET() {
         nextScheduledAt: state.nextScheduledAt,
         defaultEndpoint: DEFAULT_ENDPOINT,
         payloadPreview: payload,
+        accountCounts,
       },
       { headers: { 'Cache-Control': 'no-store' } },
     );

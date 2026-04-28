@@ -31,6 +31,7 @@ export default function AdminDashboardPage() {
   const [pluginCount, setPluginCount] = useState(0);
   const [themeCount, setThemeCount] = useState(0);
   const [policyRuleCount, setPolicyRuleCount] = useState(0);
+  const [accountCounts, setAccountCounts] = useState<{ total: number; active7d: number } | null>(null);
   const [jmapHealth, setJmapHealth] = useState<'unknown' | 'ok' | 'error'>('unknown');
 
   useEffect(() => {
@@ -38,7 +39,7 @@ export default function AdminDashboardPage() {
   }, []);
 
   async function fetchDashboardData() {
-    const [statusRes, auditRes, configRes, adminConfigRes, pluginRes, themeRes, policyRes] = await Promise.all([
+    const [statusRes, auditRes, configRes, adminConfigRes, pluginRes, themeRes, policyRes, telemetryRes] = await Promise.all([
       apiFetch('/api/admin/auth'),
       apiFetch('/api/admin/audit?limit=10'),
       apiFetch('/api/config'),
@@ -46,6 +47,7 @@ export default function AdminDashboardPage() {
       apiFetch('/api/admin/plugins').catch(() => null),
       apiFetch('/api/admin/themes').catch(() => null),
       apiFetch('/api/admin/policy').catch(() => null),
+      apiFetch('/api/admin/telemetry').catch(() => null),
     ]);
 
     if (statusRes.ok) setStatus(await statusRes.json());
@@ -72,6 +74,12 @@ export default function AdminDashboardPage() {
       const restrictionCount = policy.restrictions ? Object.keys(policy.restrictions).length : 0;
       const disabledGates = policy.features ? Object.values(policy.features).filter((v: unknown) => !v).length : 0;
       setPolicyRuleCount(restrictionCount + disabledGates);
+    }
+    if (telemetryRes?.ok) {
+      const telemetry = await telemetryRes.json();
+      if (telemetry.accountCounts && typeof telemetry.accountCounts.total === 'number') {
+        setAccountCounts(telemetry.accountCounts);
+      }
     }
 
     if (configData?.jmapServerUrl) {
@@ -162,6 +170,16 @@ export default function AdminDashboardPage() {
         </SettingItem>
         <SettingItem label="Stalwart Integration" description="Stalwart mail server features">
           <ToggleSwitch checked={config?.stalwartFeaturesEnabled !== false} onChange={() => {}} disabled />
+        </SettingItem>
+      </SettingsSection>
+
+      {/* Accounts */}
+      <SettingsSection title="Accounts" description="Unique logins recorded over the last 90 days">
+        <SettingItem label="Total accounts" description="Distinct identities seen in the retention window">
+          <span className="text-sm text-foreground">{accountCounts?.total ?? '-'}</span>
+        </SettingItem>
+        <SettingItem label="Active in last 7 days" description="Identities with a login in the past week">
+          <span className="text-sm text-foreground">{accountCounts?.active7d ?? '-'}</span>
         </SettingItem>
       </SettingsSection>
 
