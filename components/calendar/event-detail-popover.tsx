@@ -253,6 +253,14 @@ export function EventDetailPopover({
 
   const hasParticipants = participants.length > 0;
 
+  const formatEventDate = useCallback((startDate: Date): string => {
+    const dayOfWeek = format(startDate, "EEE").toLowerCase();
+    const month = format(startDate, "MMM").toLowerCase();
+    const day = format(startDate, "d");
+    const year = format(startDate, "yyyy");
+    return `${t(`days.${dayOfWeek}`)}, ${t(`months.${month}`)} ${day}, ${year}`;
+  }, [t]);
+
   const popover = (
     <div
       ref={popoverRef}
@@ -329,7 +337,7 @@ export function EventDetailPopover({
           <Clock className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
           <div className="text-sm">
             <span className="font-medium text-foreground">
-              {format(startDate, "EEE, MMM d, yyyy")}
+              {formatEventDate(startDate)}
             </span>
             {event.showWithoutTime ? (
               <span className="text-muted-foreground ml-1.5">{t("events.all_day")}</span>
