@@ -2261,6 +2261,20 @@
       "sat": "Sam",
       "sun": "Dim"
     },
+    "months": {
+      "jan": "Jan",
+      "feb": "Fév",
+      "mar": "Mar",
+      "apr": "Avr",
+      "may": "Mai",
+      "jun": "Juin",
+      "jul": "Juil",
+      "aug": "Aoû",
+      "sep": "Sep",
+      "oct": "Oct",
+      "nov": "Nov",
+      "dec": "Déc"
+    },
     "notifications": {
       "event_created": "Événement créé",
       "event_updated": "Événement mis à jour",
