@@ -2261,6 +2261,20 @@
       "sat": "Sáb",
       "sun": "Dom"
     },
+    "months": {
+      "jan": "Jan",
+      "feb": "Fev",
+      "mar": "Mar",
+      "apr": "Abr",
+      "may": "Mai",
+      "jun": "Jun",
+      "jul": "Jul",
+      "aug": "Ago",
+      "sep": "Set",
+      "oct": "Out",
+      "nov": "Nov",
+      "dec": "Dez"
+    },
     "notifications": {
       "event_created": "Evento criado",
       "event_updated": "Evento atualizado",
