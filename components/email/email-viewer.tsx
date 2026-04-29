@@ -2285,7 +2285,7 @@ export function EmailViewer({
 
   // Sanitize and prepare email HTML content
   const emailContent = useMemo(() => {
-    if (!email) return { html: "", isHtml: false };
+    if (!email) return { html: "", isHtml: false, hasStyleTag: false };
 
     // Check if we have body values
     if (email.bodyValues) {
@@ -2402,7 +2402,8 @@ export function EmailViewer({
 
         return {
           html: cleanHtml,
-          isHtml: true
+          isHtml: true,
+          hasStyleTag: /<style[\s>]/i.test(htmlContent),
         };
       }
 
@@ -2412,7 +2413,8 @@ export function EmailViewer({
 
         return {
           html: plainTextToSafeHtml(textContent),
-          isHtml: false
+          isHtml: false,
+          hasStyleTag: false,
         };
       }
     }
@@ -2426,13 +2428,15 @@ export function EmailViewer({
 
       return {
         html: `<div style="color: var(--color-muted-foreground); font-style: italic;">${previewHtml}</div>`,
-        isHtml: false
+        isHtml: false,
+        hasStyleTag: false,
       };
     }
 
     return {
       html: '<p style="color: var(--color-muted-foreground);">No content available</p>',
-      isHtml: false
+      isHtml: false,
+      hasStyleTag: false,
     };
     // Intentionally omit allowExternalContent and trust state from deps:
     // toggling permission imperatively unblocks content via restoreBlockedContent
@@ -2450,26 +2454,26 @@ export function EmailViewer({
         }
       );
       const cleanHtml = DOMPurify.sanitize(htmlWithCidUrls, EMAIL_IFRAME_SANITIZE_CONFIG);
-      return { html: cleanHtml, isHtml: true };
+      return { html: cleanHtml, isHtml: true, hasStyleTag: /<style[\s>]/i.test(smimeDecryptedHtml) };
     }
     if (smimeDecryptedText) {
-      return { html: plainTextToSafeHtml(smimeDecryptedText), isHtml: false };
+      return { html: plainTextToSafeHtml(smimeDecryptedText), isHtml: false, hasStyleTag: false };
     }
     // TNEF (winmail.dat) extracted content
     if (tnefHtml) {
       const cleanHtml = DOMPurify.sanitize(tnefHtml, EMAIL_IFRAME_SANITIZE_CONFIG);
-      return { html: cleanHtml, isHtml: true };
+      return { html: cleanHtml, isHtml: true, hasStyleTag: /<style[\s>]/i.test(tnefHtml) };
     }
     if (tnefText) {
-      return { html: plainTextToSafeHtml(tnefText), isHtml: false };
+      return { html: plainTextToSafeHtml(tnefText), isHtml: false, hasStyleTag: false };
     }
     // Embedded message/rfc822 unwrapped content
     if (embeddedEmailHtml) {
       const cleanHtml = DOMPurify.sanitize(embeddedEmailHtml, EMAIL_IFRAME_SANITIZE_CONFIG);
-      return { html: cleanHtml, isHtml: true };
+      return { html: cleanHtml, isHtml: true, hasStyleTag: /<style[\s>]/i.test(embeddedEmailHtml) };
     }
     if (embeddedEmailText) {
-      return { html: plainTextToSafeHtml(embeddedEmailText), isHtml: false };
+      return { html: plainTextToSafeHtml(embeddedEmailText), isHtml: false, hasStyleTag: false };
     }
     return emailContent;
   }, [cidBlobUrls, emailContent, smimeDecryptedHtml, smimeDecryptedText, tnefHtml, tnefText, embeddedEmailHtml, embeddedEmailText]);
@@ -2613,8 +2617,7 @@ export function EmailViewer({
 
     // Bare HTML emails (no <style>) tend to be plain prose without their own
     // layout — give them the same padding as plain-text mails (.email-content-text).
-    const hasStyleTag = /<style[\s>]/i.test(effectiveEmailContent.html);
-    const bodyPadding = hasStyleTag ? '0' : '1rem 1.25rem';
+    const bodyPadding = effectiveEmailContent.hasStyleTag ? '0' : '1rem 1.25rem';
 
     return `<!DOCTYPE html>
 <html style="color-scheme: ${colorScheme};"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
