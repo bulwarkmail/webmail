@@ -19,7 +19,19 @@ export const DEFAULT_RELAY_BASE_URL =
 const SUBSCRIPTION_EXPIRES_DAYS = 90;
 const SUBSCRIPTION_REFRESH_THRESHOLD_DAYS = 7;
 
-const PUSH_TYPES = ['Email', 'EmailDelivery', 'Mailbox'] as const;
+// Only `EmailDelivery` state-changes when new mail is actually delivered.
+// `Email` fires for any mutation (sending, drafting, moving, marking read,
+// deleting) and `Mailbox` fires for mailbox edits — both produced spurious
+// system notifications, so we keep them out of the push subscription.
+// In-app sync uses a separate StateChange channel and is unaffected.
+const PUSH_TYPES = ['EmailDelivery'] as const;
+
+function sameTypes(a: readonly string[] | null | undefined, b: readonly string[]): boolean {
+  if (!a || a.length !== b.length) return false;
+  const sortedA = [...a].sort();
+  const sortedB = [...b].sort();
+  return sortedA.every((t, i) => t === sortedB[i]);
+}
 
 export interface EnableWebPushParams {
   client: IJMAPClient;
@@ -190,17 +202,20 @@ async function pollVerificationCode(
 
 async function refreshSubscriptionExpires(
   client: IJMAPClient,
-  sub: { id: string; expires: string | null },
+  sub: { id: string; expires: string | null; types: string[] | null },
 ): Promise<boolean> {
-  if (sub.expires) {
+  const typesNeedUpdate = !sameTypes(sub.types, PUSH_TYPES);
+  if (!typesNeedUpdate && sub.expires) {
     const remainingMs = new Date(sub.expires).getTime() - Date.now();
     const thresholdMs = SUBSCRIPTION_REFRESH_THRESHOLD_DAYS * 24 * 60 * 60 * 1000;
     if (Number.isFinite(remainingMs) && remainingMs > thresholdMs) return true;
   }
   try {
-    return await client.updatePushSubscription(sub.id, {
+    const patch: { expires?: string; types?: string[] } = {
       expires: expiresFromNow(SUBSCRIPTION_EXPIRES_DAYS),
-    });
+    };
+    if (typesNeedUpdate) patch.types = [...PUSH_TYPES];
+    return await client.updatePushSubscription(sub.id, patch);
   } catch {
     return false;
   }

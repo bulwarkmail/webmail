@@ -63,6 +63,15 @@ async function handlePush(event) {
     ? preview.unreadTotal
     : 0;
 
+  // The push subscription is scoped to EmailDelivery, but we still see the
+  // occasional wake-up that does not correspond to a new unread message
+  // (legacy subscription with broader types, races with marking-as-read,
+  // verification pings). Without a concrete unread email to surface, stay
+  // silent rather than firing a generic "New mail" toast for a non-event.
+  if (!email && unreadTotal === 0) {
+    return;
+  }
+
   let title;
   let body;
   let tag = "bulwark-mail";
