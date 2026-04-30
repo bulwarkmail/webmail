@@ -152,6 +152,18 @@ export function FlagRU(props: FlagProps) {
   );
 }
 
+/** Turkey - Red with white crescent and star */
+export function FlagTR(props: FlagProps) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 20" width={W} height={H} className={flagClass} {...props}>
+      <rect width="30" height="20" fill="#E30A17" />
+      <circle cx="10" cy="10" r="6" fill="#fff" />
+      <circle cx="11.5" cy="10" r="5" fill="#E30A17" />
+      <polygon points="19.5,7.8 19.994,9.32 21.592,9.32 20.299,10.26 20.793,11.78 19.5,10.84 18.207,11.78 18.701,10.26 17.408,9.32 19.006,9.32" fill="#fff" />
+    </svg>
+  );
+}
+
 /** Ukraine – Blue, Yellow horizontal */
 export function FlagUA(props: FlagProps) {
   return (
@@ -192,6 +204,7 @@ export const flagComponents: Record<string, (props: FlagProps) => ReactElement> 
   pl: FlagPL,
   pt: FlagBR,
   ru: FlagRU,
+  tr: FlagTR,
   uk: FlagUA,
   zh: FlagCN,
 };

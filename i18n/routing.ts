@@ -13,7 +13,7 @@ const localePrefix = (process.env.NEXT_PUBLIC_LOCALE_PREFIX ?? 'never') as
   | 'as-needed';
 
 export const routing = defineRouting({
-  locales: ['cs', 'en', 'fr', 'de', 'es', 'it', 'ja', 'ko', 'lv', 'nl', 'pl', 'pt', 'ru', 'uk', 'zh'],
+  locales: ['cs', 'en', 'fr', 'de', 'es', 'it', 'ja', 'ko', 'lv', 'nl', 'pl', 'pt', 'ru', 'tr', 'uk', 'zh'],
   defaultLocale: 'en',
   localePrefix
 });
