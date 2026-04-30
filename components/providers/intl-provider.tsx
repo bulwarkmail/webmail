@@ -16,12 +16,13 @@ import nlMessages from '@/locales/nl/common.json';
 import plMessages from '@/locales/pl/common.json';
 import ptMessages from '@/locales/pt/common.json';
 import ruMessages from '@/locales/ru/common.json';
+import trMessages from '@/locales/tr/common.json';
 import ukMessages from '@/locales/uk/common.json';
 import zhMessages from '@/locales/zh/common.json';
 
 // Pre-loaded translations (loaded at build time, not runtime)
 const ALL_MESSAGES = {
-	cs: csMessages,
+  cs: csMessages,
   en: enMessages,
   fr: frMessages,
   ja: jaMessages,
@@ -34,6 +35,7 @@ const ALL_MESSAGES = {
   pl: plMessages,
   pt: ptMessages,
   ru: ruMessages,
+  tr: trMessages,
   uk: ukMessages,
   zh: zhMessages,
 };
