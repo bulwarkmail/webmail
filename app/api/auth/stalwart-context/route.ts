@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
 import { JmapAuthVerificationError, verifyJmapAuth } from '@/lib/auth/verify-jmap-auth';
 import { setStalwartAuthContext } from '@/lib/stalwart/auth-context';
+import { configManager } from '@/lib/admin/config-manager';
+import { isPublicHttpUrl } from '@/lib/security/url-guard';
 import { recordLogin } from '@/lib/telemetry/login-tracker';
 
 function getSlot(request: NextRequest, bodySlot: unknown): number {
@@ -24,8 +26,35 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
+    // Pin the upstream URL to the configured JMAP server so an unauthenticated
+    // caller cannot point this route at internal hosts. Only when no server URL
+    // is configured AND the deployment explicitly allows custom JMAP endpoints
+    // do we honor the body URL — and even then it must be a public URL.
+    await configManager.ensureLoaded();
+    const configuredServerUrl =
+      configManager.get<string>('jmapServerUrl', '') ||
+      process.env.JMAP_SERVER_URL ||
+      process.env.NEXT_PUBLIC_JMAP_SERVER_URL ||
+      '';
+    const allowCustomEndpoint = configManager.get<boolean>('allowCustomJmapEndpoint', false);
+
+    let upstreamUrl: string;
+    let upstreamTrusted: boolean;
+    if (configuredServerUrl) {
+      upstreamUrl = configuredServerUrl;
+      upstreamTrusted = true;
+    } else if (allowCustomEndpoint) {
+      if (!(await isPublicHttpUrl(serverUrl))) {
+        return NextResponse.json({ error: 'Server URL is not allowed' }, { status: 400 });
+      }
+      upstreamUrl = serverUrl;
+      upstreamTrusted = false;
+    } else {
+      return NextResponse.json({ error: 'JMAP server not configured' }, { status: 500 });
+    }
+
     const slot = getSlot(request, bodySlot);
-    const normalizedServerUrl = await verifyJmapAuth(serverUrl, authHeader);
+    const normalizedServerUrl = await verifyJmapAuth(upstreamUrl, authHeader, { trusted: upstreamTrusted });
 
     await setStalwartAuthContext(slot, {
       serverUrl: normalizedServerUrl,

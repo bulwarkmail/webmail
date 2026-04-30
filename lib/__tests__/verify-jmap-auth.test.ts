@@ -138,4 +138,38 @@ describe('verifyJmapAuth SSRF protection', () => {
     });
     expect(fetchSpy).not.toHaveBeenCalled();
   });
+
+  it('with trusted=true, accepts a hostname resolving to a private IP', async () => {
+    lookup.mockResolvedValue([{ address: '10.0.20.5', family: 4 }]);
+    fetchSpy.mockResolvedValueOnce(
+      new Response(JSON.stringify({ apiUrl: 'https://mail.internal/api', accounts: {} }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      }),
+    );
+    const { verifyJmapAuth } = await load();
+    await expect(
+      verifyJmapAuth('https://mail.internal', 'Bearer x', { trusted: true }),
+    ).resolves.toBe('https://mail.internal');
+    expect(fetchSpy).toHaveBeenCalledWith(
+      'https://mail.internal/.well-known/jmap',
+      expect.objectContaining({ redirect: 'manual' }),
+    );
+  });
+
+  it('with trusted=true, still rejects unsupported protocols', async () => {
+    const { verifyJmapAuth } = await load();
+    await expect(
+      verifyJmapAuth('file:///etc/passwd', 'Bearer x', { trusted: true }),
+    ).rejects.toMatchObject({ status: 400 });
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it('with trusted=true, still rejects an invalid Authorization header', async () => {
+    const { verifyJmapAuth } = await load();
+    await expect(
+      verifyJmapAuth('https://mail.internal', 'NotAuth', { trusted: true }),
+    ).rejects.toMatchObject({ status: 400 });
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
 });

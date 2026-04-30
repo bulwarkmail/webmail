@@ -40,11 +40,15 @@ export function validateProxyAuthHeader(authHeader: string): void {
   }
 }
 
-export async function verifyJmapAuth(serverUrl: string, authHeader: string): Promise<string> {
+export async function verifyJmapAuth(
+  serverUrl: string,
+  authHeader: string,
+  options: { trusted?: boolean } = {},
+): Promise<string> {
   const normalizedServerUrl = normalizeJmapServerUrl(serverUrl);
   validateProxyAuthHeader(authHeader);
 
-  if (!(await isPublicHttpUrl(normalizedServerUrl))) {
+  if (!options.trusted && !(await isPublicHttpUrl(normalizedServerUrl))) {
     throw new JmapAuthVerificationError('Server URL is not allowed', 400);
   }
 
@@ -56,7 +60,7 @@ export async function verifyJmapAuth(serverUrl: string, authHeader: string): Pro
     let response: Response | undefined;
 
     for (let i = 0; i <= MAX_REDIRECTS; i++) {
-      if (!(await isPublicHttpUrl(currentUrl))) {
+      if (!options.trusted && !(await isPublicHttpUrl(currentUrl))) {
         throw new JmapAuthVerificationError('Server URL is not allowed', 400);
       }
 
