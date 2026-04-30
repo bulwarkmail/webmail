@@ -424,7 +424,9 @@
       "cancel_info": "主催者がこのイベントをキャンセルしました。",
       "event_updated": "更新 #{sequence}",
       "event_status_tentative": "仮",
-      "event_status_cancelled": "キャンセル済み"
+      "event_status_cancelled": "キャンセル済み",
+      "collapse": "詳細を非表示",
+      "expand": "詳細を表示"
     },
     "previous": "前へ",
     "next": "次へ",
@@ -508,7 +510,10 @@
       "message": "メッセージに「{keyword}」が含まれていますが、ファイルが添付されていません。このまま送信しますか？",
       "send_anyway": "そのまま送信",
       "back": "編集に戻る"
-    }
+    },
+    "add_link": "リンクを追加",
+    "link_url_prompt": "URLを入力してください",
+    "sending": "送信中..."
   },
   "confirm_dialog": {
     "confirm": "確認",
@@ -801,6 +806,23 @@
         "sound_desc": "カレンダーリマインダーの音を鳴らす",
         "invitation_parsing": "メール招待を解析",
         "invitation_parsing_desc": "メール添付ファイルのカレンダー招待を検出し、カレンダーアクションを表示"
+      },
+      "push": {
+        "confirm_disable_message": "このデバイスは、サイトが閉じているときに通知を受信しなくなります。",
+        "confirm_disable_title": "バックグラウンド通知を無効にしますか？",
+        "description": "このサイトが閉じているときに新着メールのシステム通知を受信します。Bulwark プッシュリレー経由で配信され、リレーがメール内容を見ることはありません。",
+        "disable": "無効化",
+        "enable": "有効化",
+        "ios_hint": "iOS では、最初にサイトをホーム画面にインストールしてください。Safari はインストールされた PWA にのみ Web Push を配信します。",
+        "reenable": "再登録",
+        "relay_desc": "デフォルトはホストされた Bulwark リレーです。セルフホストする場合のみ変更してください。",
+        "relay_label": "プッシュリレー",
+        "relay_placeholder": "https://notifications.relay.example.com",
+        "status_active": "このデバイスで有効",
+        "status_busy": "処理中…",
+        "status_inactive": "このデバイスでは有効になっていません",
+        "status_unsupported": "このブラウザは Web Push をサポートしていません",
+        "title": "バックグラウンド通知"
       }
     },
     "language_region": {
@@ -1333,7 +1355,9 @@
       "no_address_books": "アドレス帳が見つかりません",
       "categories_title": "カテゴリ",
       "categories_description": "連絡先カテゴリの名前を変更",
-      "no_categories": "カテゴリが見つかりません"
+      "no_categories": "カテゴリが見つかりません",
+      "group_by_letter_description": "連絡先リストにアルファベット順のセクション見出しを表示",
+      "group_by_letter_label": "頭文字でグループ化"
     },
     "filters": {
       "title": "メールフィルター",
@@ -2129,7 +2153,11 @@
       "tomorrow_header": "明日",
       "export_ics": ".icsとしてエクスポート",
       "copy_title": "タイトルをコピー",
-      "copy_link": "会議リンクをコピー"
+      "copy_link": "会議リンクをコピー",
+      "go_to_today": "今日に移動",
+      "new_all_day_event": "新しい終日イベント",
+      "new_event": "新しいイベント",
+      "new_task": "新しいタスク"
     },
     "detail": {
       "add_note": "メモを追加...",
@@ -2428,6 +2456,20 @@
       "due_today": "今日が期限",
       "due_tomorrow": "明日が期限",
       "overdue": "期限切れ"
+    },
+    "months": {
+      "jan": "1月",
+      "feb": "2月",
+      "mar": "3月",
+      "apr": "4月",
+      "may": "5月",
+      "jun": "6月",
+      "jul": "7月",
+      "aug": "8月",
+      "sep": "9月",
+      "oct": "10月",
+      "nov": "11月",
+      "dec": "12月"
     }
   },
   "advanced_search": {

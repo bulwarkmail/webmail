@@ -424,7 +424,9 @@
       "cancel_info": "L'organisateur a annulé cet événement.",
       "event_updated": "Mise à jour #{sequence}",
       "event_status_tentative": "Provisoire",
-      "event_status_cancelled": "Annulé"
+      "event_status_cancelled": "Annulé",
+      "collapse": "Masquer les détails",
+      "expand": "Afficher les détails"
     },
     "previous": "Précédent",
     "next": "Suivant",
@@ -508,7 +510,10 @@
       "message": "Votre message mentionne \"{keyword}\" mais aucun fichier n'est joint. Envoyer quand même ?",
       "send_anyway": "Envoyer quand même",
       "back": "Retour à l'édition"
-    }
+    },
+    "add_link": "Ajouter un lien",
+    "link_url_prompt": "Saisissez l'URL",
+    "sending": "Envoi..."
   },
   "confirm_dialog": {
     "confirm": "Confirmer",
@@ -801,6 +806,23 @@
         "sound_desc": "Jouer un son pour les rappels de calendrier",
         "invitation_parsing": "Analyser les invitations par e-mail",
         "invitation_parsing_desc": "Détecter les invitations de calendrier dans les pièces jointes et afficher les actions de calendrier"
+      },
+      "push": {
+        "confirm_disable_message": "Cet appareil cessera de recevoir des alertes lorsque le site est fermé.",
+        "confirm_disable_title": "Désactiver les notifications en arrière-plan ?",
+        "description": "Recevez des notifications système pour les nouveaux courriers quand ce site est fermé. Livré via le relais push Bulwark ; le relais ne voit jamais le contenu des courriers.",
+        "disable": "Désactiver",
+        "enable": "Activer",
+        "ios_hint": "Sur iOS, installez d'abord le site sur l'écran d'accueil – Safari ne livre Web Push qu'aux PWA installées.",
+        "reenable": "Réenregistrer",
+        "relay_desc": "Utilise par défaut le relais Bulwark hébergé. Ne le changez que si vous l'hébergez vous-même.",
+        "relay_label": "Relais push",
+        "relay_placeholder": "https://notifications.relay.example.com",
+        "status_active": "Actif sur cet appareil",
+        "status_busy": "Traitement en cours…",
+        "status_inactive": "Non activé sur cet appareil",
+        "status_unsupported": "Ce navigateur ne prend pas en charge Web Push",
+        "title": "Notifications en arrière-plan"
       }
     },
     "language_region": {
@@ -1333,7 +1355,9 @@
       "no_address_books": "Aucun carnet d'adresses trouvé",
       "categories_title": "Catégories",
       "categories_description": "Renommer les catégories de contacts",
-      "no_categories": "Aucune catégorie trouvée"
+      "no_categories": "Aucune catégorie trouvée",
+      "group_by_letter_description": "Afficher des en-têtes alphabétiques dans la liste de contacts",
+      "group_by_letter_label": "Grouper par première lettre"
     },
     "filters": {
       "title": "Filtres de courrier",
@@ -2129,7 +2153,11 @@
       "tomorrow_header": "Demain",
       "export_ics": "Exporter en .ics",
       "copy_title": "Copier le titre",
-      "copy_link": "Copier le lien de réunion"
+      "copy_link": "Copier le lien de réunion",
+      "go_to_today": "Aller à aujourd'hui",
+      "new_all_day_event": "Nouvel événement sur la journée",
+      "new_event": "Nouvel événement",
+      "new_task": "Nouvelle tâche"
     },
     "detail": {
       "add_note": "Ajouter une note...",
@@ -2262,18 +2290,18 @@
       "sun": "Dim"
     },
     "months": {
-      "jan": "Jan",
-      "feb": "Fév",
-      "mar": "Mar",
-      "apr": "Avr",
-      "may": "Mai",
-      "jun": "Juin",
-      "jul": "Juil",
-      "aug": "Aoû",
-      "sep": "Sep",
-      "oct": "Oct",
-      "nov": "Nov",
-      "dec": "Déc"
+      "jan": "janv.",
+      "feb": "févr.",
+      "mar": "mars",
+      "apr": "avr.",
+      "may": "mai",
+      "jun": "juin",
+      "jul": "juil.",
+      "aug": "août",
+      "sep": "sept.",
+      "oct": "oct.",
+      "nov": "nov.",
+      "dec": "déc."
     },
     "notifications": {
       "event_created": "Événement créé",

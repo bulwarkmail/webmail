@@ -424,7 +424,9 @@
       "cancel_info": "De organisator heeft dit evenement geannuleerd.",
       "event_updated": "Update #{sequence}",
       "event_status_tentative": "Voorlopig",
-      "event_status_cancelled": "Geannuleerd"
+      "event_status_cancelled": "Geannuleerd",
+      "collapse": "Details verbergen",
+      "expand": "Details tonen"
     },
     "previous": "Vorige",
     "next": "Volgende",
@@ -508,7 +510,10 @@
       "message": "Uw bericht vermeldt \"{keyword}\" maar er is geen bestand bijgevoegd. Toch verzenden?",
       "send_anyway": "Toch verzenden",
       "back": "Terug naar bewerken"
-    }
+    },
+    "add_link": "Link toevoegen",
+    "link_url_prompt": "Voer de URL in",
+    "sending": "Bezig met verzenden..."
   },
   "confirm_dialog": {
     "confirm": "Bevestigen",
@@ -801,6 +806,23 @@
         "sound_desc": "Een geluid afspelen voor agendaherinneringen",
         "invitation_parsing": "E-mailuitnodigingen herkennen",
         "invitation_parsing_desc": "Agenda-uitnodigingen in e-mailbijlagen detecteren en agendaacties tonen"
+      },
+      "push": {
+        "confirm_disable_message": "Dit apparaat ontvangt geen meldingen meer als de site is gesloten.",
+        "confirm_disable_title": "Achtergrondmeldingen uitschakelen?",
+        "description": "Ontvang systeemmeldingen voor nieuwe e-mail wanneer deze site gesloten is. Geleverd via de Bulwark-pushrelay; de relay ziet nooit e-mailinhoud.",
+        "disable": "Uitschakelen",
+        "enable": "Inschakelen",
+        "ios_hint": "Installeer de site op iOS eerst op het beginscherm – Safari levert Web Push alleen aan geïnstalleerde PWA's.",
+        "reenable": "Opnieuw registreren",
+        "relay_desc": "Gebruikt standaard de gehoste Bulwark-relay. Wijzig alleen als je zelf hostt.",
+        "relay_label": "Push-relay",
+        "relay_placeholder": "https://notifications.relay.example.com",
+        "status_active": "Actief op dit apparaat",
+        "status_busy": "Bezig…",
+        "status_inactive": "Niet ingeschakeld op dit apparaat",
+        "status_unsupported": "Deze browser ondersteunt geen Web Push",
+        "title": "Achtergrondmeldingen"
       }
     },
     "language_region": {
@@ -1333,7 +1355,9 @@
       "no_address_books": "Geen adresboeken gevonden",
       "categories_title": "Categorieën",
       "categories_description": "Contactcategorieën hernoemen",
-      "no_categories": "Geen categorieën gevonden"
+      "no_categories": "Geen categorieën gevonden",
+      "group_by_letter_description": "Toon alfabetische sectiekoppen in de contactenlijst",
+      "group_by_letter_label": "Groeperen op eerste letter"
     },
     "filters": {
       "title": "E-mailfilters",
@@ -2129,7 +2153,11 @@
       "tomorrow_header": "Morgen",
       "export_ics": "Exporteren als .ics",
       "copy_title": "Titel kopiëren",
-      "copy_link": "Vergaderlink kopiëren"
+      "copy_link": "Vergaderlink kopiëren",
+      "go_to_today": "Ga naar vandaag",
+      "new_all_day_event": "Nieuwe dagvullende afspraak",
+      "new_event": "Nieuwe afspraak",
+      "new_task": "Nieuwe taak"
     },
     "detail": {
       "add_note": "Notitie toevoegen...",
@@ -2428,6 +2456,20 @@
       "due_today": "Vervalt vandaag",
       "due_tomorrow": "Vervalt morgen",
       "overdue": "Achterstallig"
+    },
+    "months": {
+      "jan": "jan",
+      "feb": "feb",
+      "mar": "mrt",
+      "apr": "apr",
+      "may": "mei",
+      "jun": "jun",
+      "jul": "jul",
+      "aug": "aug",
+      "sep": "sep",
+      "oct": "okt",
+      "nov": "nov",
+      "dec": "dec"
     }
   },
   "advanced_search": {

@@ -426,7 +426,9 @@
       "cancel_info": "组织者已取消此活动。",
       "event_updated": "更新 #{sequence}",
       "event_status_tentative": "暂定",
-      "event_status_cancelled": "已取消"
+      "event_status_cancelled": "已取消",
+      "collapse": "隐藏详情",
+      "expand": "显示详情"
     },
     "send": "发送",
     "more": "更多"
@@ -508,7 +510,10 @@
       "message": "您的消息中提到了“{keyword}”，但未附加任何文件。仍然发送吗？",
       "send_anyway": "仍然发送",
       "back": "返回编辑"
-    }
+    },
+    "add_link": "添加链接",
+    "link_url_prompt": "输入 URL",
+    "sending": "发送中..."
   },
   "confirm_dialog": {
     "confirm": "确认",
@@ -801,6 +806,23 @@
         "sound_desc": "播放日历提醒的音频提醒",
         "invitation_parsing": "解析邮件邀请",
         "invitation_parsing_desc": "检测邮件附件中的日历邀请并显示日历操作"
+      },
+      "push": {
+        "confirm_disable_message": "当网站关闭时，此设备将停止接收提醒。",
+        "confirm_disable_title": "禁用后台通知？",
+        "description": "在此网站关闭时接收新邮件的系统通知。通过 Bulwark 推送中继传送；中继永远不会看到邮件内容。",
+        "disable": "禁用",
+        "enable": "启用",
+        "ios_hint": "在 iOS 上，请先将网站安装到主屏幕 – Safari 仅向已安装的 PWA 发送 Web Push。",
+        "reenable": "重新注册",
+        "relay_desc": "默认使用托管的 Bulwark 中继。仅当您自托管时才更改。",
+        "relay_label": "推送中继",
+        "relay_placeholder": "https://notifications.relay.example.com",
+        "status_active": "在此设备上活动",
+        "status_busy": "工作中…",
+        "status_inactive": "在此设备上未启用",
+        "status_unsupported": "此浏览器不支持 Web Push",
+        "title": "后台通知"
       }
     },
     "language_region": {
@@ -1333,7 +1355,9 @@
       "no_address_books": "未找到地址簿",
       "categories_title": "类别",
       "categories_description": "重命名联系人类别",
-      "no_categories": "未找到类别"
+      "no_categories": "未找到类别",
+      "group_by_letter_description": "在联系人列表中显示按字母顺序排列的分节标题",
+      "group_by_letter_label": "按首字母分组"
     },
     "filters": {
       "title": "邮件过滤器",
@@ -2129,7 +2153,11 @@
       "tomorrow_header": "明天",
       "export_ics": "导出为 .ics",
       "copy_title": "复制标题",
-      "copy_link": "复制会议链接"
+      "copy_link": "复制会议链接",
+      "go_to_today": "前往今天",
+      "new_all_day_event": "新建全天事件",
+      "new_event": "新建事件",
+      "new_task": "新建任务"
     },
     "detail": {
       "add_note": "添加注释...",
@@ -2428,6 +2456,20 @@
       "due_today": "今天",
       "due_tomorrow": "明天",
       "overdue": "逾期"
+    },
+    "months": {
+      "jan": "1月",
+      "feb": "2月",
+      "mar": "3月",
+      "apr": "4月",
+      "may": "5月",
+      "jun": "6月",
+      "jul": "7月",
+      "aug": "8月",
+      "sep": "9月",
+      "oct": "10月",
+      "nov": "11月",
+      "dec": "12月"
     }
   },
   "advanced_search": {

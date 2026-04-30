@@ -424,7 +424,9 @@
       "cancel_info": "L'organizzatore ha annullato questo evento.",
       "event_updated": "Aggiornamento #{sequence}",
       "event_status_tentative": "Provvisorio",
-      "event_status_cancelled": "Annullato"
+      "event_status_cancelled": "Annullato",
+      "collapse": "Nascondi dettagli",
+      "expand": "Mostra dettagli"
     },
     "previous": "Precedente",
     "next": "Successivo",
@@ -508,7 +510,10 @@
       "message": "Il tuo messaggio menziona \"{keyword}\" ma nessun file è allegato. Inviare comunque?",
       "send_anyway": "Invia comunque",
       "back": "Torna alla modifica"
-    }
+    },
+    "add_link": "Aggiungi link",
+    "link_url_prompt": "Inserisci l'URL",
+    "sending": "Invio in corso..."
   },
   "confirm_dialog": {
     "confirm": "Conferma",
@@ -801,6 +806,23 @@
         "sound_desc": "Riproduci un suono per i promemoria del calendario",
         "invitation_parsing": "Analizza inviti via e-mail",
         "invitation_parsing_desc": "Rileva inviti calendario negli allegati e mostra azioni calendario"
+      },
+      "push": {
+        "confirm_disable_message": "Questo dispositivo non riceverà più avvisi quando il sito è chiuso.",
+        "confirm_disable_title": "Disabilitare le notifiche in background?",
+        "description": "Ricevi notifiche di sistema per la nuova posta quando questo sito è chiuso. Consegnato tramite il relay push Bulwark; il relay non vede mai il contenuto della posta.",
+        "disable": "Disabilita",
+        "enable": "Abilita",
+        "ios_hint": "Su iOS, installa prima il sito sulla schermata Home: Safari consegna Web Push solo alle PWA installate.",
+        "reenable": "Registra di nuovo",
+        "relay_desc": "Per impostazione predefinita usa il relay Bulwark ospitato. Cambialo solo se ospiti in autonomia.",
+        "relay_label": "Relay push",
+        "relay_placeholder": "https://notifications.relay.example.com",
+        "status_active": "Attivo su questo dispositivo",
+        "status_busy": "In elaborazione…",
+        "status_inactive": "Non abilitato su questo dispositivo",
+        "status_unsupported": "Questo browser non supporta Web Push",
+        "title": "Notifiche in background"
       }
     },
     "language_region": {
@@ -1333,7 +1355,9 @@
       "no_address_books": "Nessuna rubrica trovata",
       "categories_title": "Categorie",
       "categories_description": "Rinomina le categorie dei contatti",
-      "no_categories": "Nessuna categoria trovata"
+      "no_categories": "Nessuna categoria trovata",
+      "group_by_letter_description": "Mostra intestazioni alfabetiche nell'elenco dei contatti",
+      "group_by_letter_label": "Raggruppa per prima lettera"
     },
     "filters": {
       "title": "Filtri email",
@@ -2129,7 +2153,11 @@
       "tomorrow_header": "Domani",
       "export_ics": "Esporta come .ics",
       "copy_title": "Copia titolo",
-      "copy_link": "Copia link riunione"
+      "copy_link": "Copia link riunione",
+      "go_to_today": "Vai a oggi",
+      "new_all_day_event": "Nuovo evento giornata intera",
+      "new_event": "Nuovo evento",
+      "new_task": "Nuova attività"
     },
     "detail": {
       "add_note": "Aggiungi una nota...",
@@ -2428,6 +2456,20 @@
       "due_today": "Scade oggi",
       "due_tomorrow": "Scade domani",
       "overdue": "Scaduta"
+    },
+    "months": {
+      "jan": "gen",
+      "feb": "feb",
+      "mar": "mar",
+      "apr": "apr",
+      "may": "mag",
+      "jun": "giu",
+      "jul": "lug",
+      "aug": "ago",
+      "sep": "set",
+      "oct": "ott",
+      "nov": "nov",
+      "dec": "dic"
     }
   },
   "advanced_search": {

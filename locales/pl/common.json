@@ -426,7 +426,9 @@
       "cancel_info": "Organizator anulował to wydarzenie.",
       "event_updated": "Aktualizacja #{sequence}",
       "event_status_tentative": "Wstępne",
-      "event_status_cancelled": "Anulowane"
+      "event_status_cancelled": "Anulowane",
+      "collapse": "Ukryj szczegóły",
+      "expand": "Pokaż szczegóły"
     },
     "send": "Wyślij",
     "more": "więcej"
@@ -508,7 +510,10 @@
       "message": "Twoja wiadomość wspomina o \"{keyword}\", ale nie załączono żadnego pliku. Wysłać mimo to?",
       "send_anyway": "Wyślij mimo to",
       "back": "Wróć do edycji"
-    }
+    },
+    "add_link": "Dodaj link",
+    "link_url_prompt": "Wprowadź adres URL",
+    "sending": "Wysyłanie..."
   },
   "confirm_dialog": {
     "confirm": "Potwierdź",
@@ -801,6 +806,23 @@
         "sound_desc": "Odtwarzaj sygnał dźwiękowy dla przypomnień kalendarza",
         "invitation_parsing": "Rozpoznawaj zaproszenia e-mail",
         "invitation_parsing_desc": "Wykrywaj zaproszenia kalendarzowe w załącznikach wiadomości e-mail i pokazuj akcje kalendarza"
+      },
+      "push": {
+        "confirm_disable_message": "To urządzenie przestanie otrzymywać powiadomienia, gdy strona jest zamknięta.",
+        "confirm_disable_title": "Wyłączyć powiadomienia w tle?",
+        "description": "Otrzymuj powiadomienia systemowe o nowych wiadomościach, gdy ta strona jest zamknięta. Dostarczane przez przekaźnik push Bulwark; przekaźnik nigdy nie widzi treści wiadomości.",
+        "disable": "Wyłącz",
+        "enable": "Włącz",
+        "ios_hint": "W systemie iOS najpierw zainstaluj stronę na ekranie głównym – Safari dostarcza Web Push tylko zainstalowanym PWA.",
+        "reenable": "Zarejestruj ponownie",
+        "relay_desc": "Domyślnie używa hostowanego przekaźnika Bulwark. Zmień tylko jeśli hostujesz samodzielnie.",
+        "relay_label": "Przekaźnik push",
+        "relay_placeholder": "https://notifications.relay.example.com",
+        "status_active": "Aktywne na tym urządzeniu",
+        "status_busy": "Przetwarzanie…",
+        "status_inactive": "Niewłączone na tym urządzeniu",
+        "status_unsupported": "Ta przeglądarka nie obsługuje Web Push",
+        "title": "Powiadomienia w tle"
       }
     },
     "language_region": {
@@ -1333,7 +1355,9 @@
       "no_address_books": "Nie znaleziono książek adresowych",
       "categories_title": "Kategorie",
       "categories_description": "Zmień nazwy kategorii kontaktów",
-      "no_categories": "Nie znaleziono kategorii"
+      "no_categories": "Nie znaleziono kategorii",
+      "group_by_letter_description": "Pokaż alfabetyczne nagłówki sekcji na liście kontaktów",
+      "group_by_letter_label": "Grupuj według pierwszej litery"
     },
     "filters": {
       "title": "Filtry wiadomości e-mail",
@@ -2129,7 +2153,11 @@
       "tomorrow_header": "Jutro",
       "export_ics": "Eksportuj jako .ics",
       "copy_title": "Kopiuj tytuł",
-      "copy_link": "Kopiuj link do spotkania"
+      "copy_link": "Kopiuj link do spotkania",
+      "go_to_today": "Przejdź do dzisiaj",
+      "new_all_day_event": "Nowe wydarzenie całodniowe",
+      "new_event": "Nowe wydarzenie",
+      "new_task": "Nowe zadanie"
     },
     "detail": {
       "add_note": "Dodaj notatkę...",
@@ -2428,6 +2456,20 @@
       "due_today": "Dzisiaj",
       "due_tomorrow": "Jutro",
       "overdue": "Zaległe"
+    },
+    "months": {
+      "jan": "sty",
+      "feb": "lut",
+      "mar": "mar",
+      "apr": "kwi",
+      "may": "maj",
+      "jun": "cze",
+      "jul": "lip",
+      "aug": "sie",
+      "sep": "wrz",
+      "oct": "paź",
+      "nov": "lis",
+      "dec": "gru"
     }
   },
   "advanced_search": {

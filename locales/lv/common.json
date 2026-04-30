@@ -426,7 +426,9 @@
       "cancel_info": "Organizators atcēla šo pasākumu.",
       "event_updated": "Atjauninājums Nr. {sequence}",
       "event_status_tentative": "Pagaidām",
-      "event_status_cancelled": "Atcelts"
+      "event_status_cancelled": "Atcelts",
+      "collapse": "Paslēpt detaļas",
+      "expand": "Rādīt detaļas"
     },
     "send": "Sūtīt",
     "more": "vairāk"
@@ -508,7 +510,10 @@
       "message": "Jūsu ziņojumā minēts \"{keyword}\", bet nav pievienots neviens fails. Vai tomēr sūtīt?",
       "send_anyway": "Sūtīt tik un tā",
       "back": "Atpakaļ pie rediģēšanas"
-    }
+    },
+    "add_link": "Pievienot saiti",
+    "link_url_prompt": "Ievadiet URL",
+    "sending": "Sūta..."
   },
   "confirm_dialog": {
     "confirm": "Apstiprināt",
@@ -801,6 +806,23 @@
         "sound_desc": "Atskaņot skaņas signālu kalendāra atgādinājumiem",
         "invitation_parsing": "Atpazīt uzaicinājumus e-pastā",
         "invitation_parsing_desc": "Noteikt kalendāra uzaicinājumus pielikumos un rādīt kalendāra darbības"
+      },
+      "push": {
+        "confirm_disable_message": "Šī ierīce vairs nesaņems brīdinājumus, kad vietne būs aizvērta.",
+        "confirm_disable_title": "Atspējot fona paziņojumus?",
+        "description": "Saņem sistēmas paziņojumus par jaunu pastu, kad šī vietne ir aizvērta. Piegādāts caur Bulwark push releju; relejs nekad neredz pasta saturu.",
+        "disable": "Atspējot",
+        "enable": "Iespējot",
+        "ios_hint": "Operētājsistēmā iOS vispirms instalējiet vietni sākuma ekrānā – Safari piegādā Web Push tikai instalētajām PWA.",
+        "reenable": "Reģistrēt vēlreiz",
+        "relay_desc": "Pēc noklusējuma izmanto izmitināto Bulwark releju. Mainiet tikai tad, ja izmitināt pats.",
+        "relay_label": "Push relejs",
+        "relay_placeholder": "https://notifications.relay.example.com",
+        "status_active": "Aktīvs šajā ierīcē",
+        "status_busy": "Notiek darbs…",
+        "status_inactive": "Nav iespējots šajā ierīcē",
+        "status_unsupported": "Šī pārlūkprogramma neatbalsta Web Push",
+        "title": "Fona paziņojumi"
       }
     },
     "language_region": {
@@ -1333,7 +1355,9 @@
       "no_address_books": "Adrešu grāmatas nav atrastas",
       "categories_title": "Kategorijas",
       "categories_description": "Pārdēvēt kontaktu kategorijas",
-      "no_categories": "Kategorijas nav atrastas"
+      "no_categories": "Kategorijas nav atrastas",
+      "group_by_letter_description": "Rādīt alfabētiskos sadaļu virsrakstus kontaktu sarakstā",
+      "group_by_letter_label": "Grupēt pēc pirmā burta"
     },
     "filters": {
       "title": "Pasta filtri",
@@ -2128,7 +2152,11 @@
       "tomorrow_header": "Rīt",
       "export_ics": "Eksportēt kā .ics",
       "copy_title": "Kopēt nosaukumu",
-      "copy_link": "Kopēt sapulces saiti"
+      "copy_link": "Kopēt sapulces saiti",
+      "go_to_today": "Pāriet uz šodienu",
+      "new_all_day_event": "Jauns visas dienas notikums",
+      "new_event": "Jauns notikums",
+      "new_task": "Jauns uzdevums"
     },
     "detail": {
       "add_note": "Pievienot piezīmi...",
@@ -2428,7 +2456,21 @@
       "due_tomorrow": "Rīt",
       "overdue": "Kavēts"
     },
-    "birthday_calendar": "Dzimšanas dienas"
+    "birthday_calendar": "Dzimšanas dienas",
+    "months": {
+      "jan": "janv.",
+      "feb": "febr.",
+      "mar": "marts",
+      "apr": "apr.",
+      "may": "maijs",
+      "jun": "jūn.",
+      "jul": "jūl.",
+      "aug": "aug.",
+      "sep": "sept.",
+      "oct": "okt.",
+      "nov": "nov.",
+      "dec": "dec."
+    }
   },
   "advanced_search": {
     "title": "Izvērstā meklēšana",

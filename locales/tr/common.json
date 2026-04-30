@@ -456,7 +456,7 @@
     "saving": "Kaydediliyor...",
     "sending": "Gönderiliyor...",
     "add_link": "Bağlantı ekle",
-    "link_url_prompt": "URL girin",
+    "link_url_prompt": "URL'yi girin",
     "draft_saved": "Taslak kaydedildi",
     "save_failed": "Kaydedilemedi",
     "to_placeholder": "Alıcı e-posta adresleri",
@@ -806,6 +806,23 @@
         "sound_desc": "Takvim hatırlatıcıları için sesli uyarı çal",
         "invitation_parsing": "E-posta davetlerini ayrıştır",
         "invitation_parsing_desc": "E-posta eklerindeki takvim davetlerini algıla ve takvim işlemlerini göster"
+      },
+      "push": {
+        "confirm_disable_message": "Bu cihaz, site kapalıyken uyarı almayı durduracak.",
+        "confirm_disable_title": "Arka plan bildirimleri devre dışı bırakılsın mı?",
+        "description": "Bu site kapalıyken yeni postalar için sistem bildirimleri alın. Bulwark push röle aracılığıyla iletilir; röle posta içeriğini asla görmez.",
+        "disable": "Devre dışı bırak",
+        "enable": "Etkinleştir",
+        "ios_hint": "iOS'ta önce siteyi ana ekranınıza yükleyin – Safari Web Push'u yalnızca yüklü PWA'lara teslim eder.",
+        "reenable": "Yeniden kaydet",
+        "relay_desc": "Varsayılan olarak barındırılan Bulwark rölesini kullanır. Yalnızca kendiniz barındırıyorsanız değiştirin.",
+        "relay_label": "Push röle",
+        "relay_placeholder": "https://notifications.relay.example.com",
+        "status_active": "Bu cihazda etkin",
+        "status_busy": "Çalışıyor…",
+        "status_inactive": "Bu cihazda etkinleştirilmedi",
+        "status_unsupported": "Bu tarayıcı Web Push'u desteklemiyor",
+        "title": "Arka plan bildirimleri"
       }
     },
     "language_region": {
@@ -1330,7 +1347,7 @@
       "title": "Kişiler",
       "description": "Kişilerinizi içe ve dışa aktarın",
       "group_by_letter_label": "İlk harfe göre grupla",
-      "group_by_letter_description": "Kişi listesinde alfabetik bölüm başlıklarını göster",
+      "group_by_letter_description": "Kişi listesinde alfabetik bölüm başlıkları göster",
       "import_label": "Kişileri İçe Aktar",
       "import_description": "Kişileri bir vCard (.vcf) dosyasından içe aktarın",
       "export_label": "Kişileri Dışa Aktar",
@@ -2138,7 +2155,7 @@
       "copy_title": "Başlığı kopyala",
       "copy_link": "Toplantı bağlantısını kopyala",
       "new_event": "Yeni etkinlik",
-      "new_all_day_event": "Yeni tüm gün etkinliği",
+      "new_all_day_event": "Yeni tüm gün etkinlik",
       "new_task": "Yeni görev",
       "go_to_today": "Bugüne git"
     },

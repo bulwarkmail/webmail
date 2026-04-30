@@ -426,7 +426,9 @@
       "cancel_info": "주최자가 이 일정을 취소했어요.",
       "event_updated": "업데이트 #{sequence}",
       "event_status_tentative": "미정",
-      "event_status_cancelled": "취소됨"
+      "event_status_cancelled": "취소됨",
+      "collapse": "세부정보 숨기기",
+      "expand": "세부정보 표시"
     },
     "send": "보내기",
     "more": "더보기"
@@ -508,7 +510,10 @@
       "message": "메시지에 \"{keyword}\"이(가) 언급되어 있지만 파일이 첨부되지 않았습니다. 그래도 보내시겠습니까?",
       "send_anyway": "그래도 보내기",
       "back": "편집으로 돌아가기"
-    }
+    },
+    "add_link": "링크 추가",
+    "link_url_prompt": "URL을 입력하세요",
+    "sending": "전송 중..."
   },
   "confirm_dialog": {
     "confirm": "확인",
@@ -801,6 +806,23 @@
         "sound_desc": "일정 알림이 올 때 소리로 알려줘요",
         "invitation_parsing": "이메일 초대장 분석",
         "invitation_parsing_desc": "이메일 첨부파일에서 캘린더 초대장을 감지하고 캘린더에 표시해요"
+      },
+      "push": {
+        "confirm_disable_message": "이 사이트가 닫혀 있을 때 이 기기는 알림을 더 이상 받지 않습니다.",
+        "confirm_disable_title": "백그라운드 알림을 비활성화하시겠습니까?",
+        "description": "이 사이트가 닫혀 있을 때 새 메일에 대한 시스템 알림을 받습니다. Bulwark 푸시 릴레이를 통해 전달되며, 릴레이는 메일 내용을 절대 보지 않습니다.",
+        "disable": "비활성화",
+        "enable": "활성화",
+        "ios_hint": "iOS에서는 먼저 사이트를 홈 화면에 설치하세요. Safari는 설치된 PWA에만 Web Push를 전달합니다.",
+        "reenable": "다시 등록",
+        "relay_desc": "기본값은 호스팅된 Bulwark 릴레이입니다. 셀프 호스팅 시에만 변경하세요.",
+        "relay_label": "푸시 릴레이",
+        "relay_placeholder": "https://notifications.relay.example.com",
+        "status_active": "이 기기에서 활성",
+        "status_busy": "처리 중…",
+        "status_inactive": "이 기기에서 활성화되지 않음",
+        "status_unsupported": "이 브라우저는 Web Push를 지원하지 않습니다",
+        "title": "백그라운드 알림"
       }
     },
     "language_region": {
@@ -1333,7 +1355,9 @@
       "no_address_books": "주소록을 찾을 수 없음",
       "categories_title": "카테고리",
       "categories_description": "연락처 카테고리 이름 변경",
-      "no_categories": "카테고리를 찾을 수 없음"
+      "no_categories": "카테고리를 찾을 수 없음",
+      "group_by_letter_description": "연락처 목록에 알파벳순 섹션 헤더 표시",
+      "group_by_letter_label": "첫 글자로 그룹화"
     },
     "filters": {
       "title": "이메일 필터",
@@ -2129,7 +2153,11 @@
       "tomorrow_header": "내일",
       "export_ics": ".ics로 내보내기",
       "copy_title": "제목 복사",
-      "copy_link": "회의 링크 복사"
+      "copy_link": "회의 링크 복사",
+      "go_to_today": "오늘로 이동",
+      "new_all_day_event": "새 종일 이벤트",
+      "new_event": "새 이벤트",
+      "new_task": "새 작업"
     },
     "detail": {
       "add_note": "메모 추가...",
@@ -2428,6 +2456,20 @@
       "due_today": "오늘 마감",
       "due_tomorrow": "내일 마감",
       "overdue": "기한 지남"
+    },
+    "months": {
+      "jan": "1월",
+      "feb": "2월",
+      "mar": "3월",
+      "apr": "4월",
+      "may": "5월",
+      "jun": "6월",
+      "jul": "7월",
+      "aug": "8월",
+      "sep": "9월",
+      "oct": "10월",
+      "nov": "11월",
+      "dec": "12월"
     }
   },
   "advanced_search": {

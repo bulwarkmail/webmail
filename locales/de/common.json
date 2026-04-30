@@ -424,7 +424,9 @@
       "cancel_info": "Der Organisator hat diesen Termin abgesagt.",
       "event_updated": "Aktualisierung #{sequence}",
       "event_status_tentative": "Vorläufig",
-      "event_status_cancelled": "Abgesagt"
+      "event_status_cancelled": "Abgesagt",
+      "collapse": "Details ausblenden",
+      "expand": "Details anzeigen"
     },
     "previous": "Zurück",
     "next": "Weiter",
@@ -508,7 +510,10 @@
       "message": "Ihre Nachricht enthält \"{keyword}\", aber es ist keine Datei angehängt. Trotzdem senden?",
       "send_anyway": "Trotzdem senden",
       "back": "Zurück zur Bearbeitung"
-    }
+    },
+    "add_link": "Link hinzufügen",
+    "link_url_prompt": "URL eingeben",
+    "sending": "Wird gesendet..."
   },
   "confirm_dialog": {
     "confirm": "Bestätigen",
@@ -801,6 +806,23 @@
         "sound_desc": "Einen Ton für Kalendererinnerungen abspielen",
         "invitation_parsing": "E-Mail-Einladungen erkennen",
         "invitation_parsing_desc": "Kalendereinladungen in E-Mail-Anhängen erkennen und Kalenderaktionen anzeigen"
+      },
+      "push": {
+        "confirm_disable_message": "Dieses Gerät erhält keine Benachrichtigungen mehr, wenn die Seite geschlossen ist.",
+        "confirm_disable_title": "Hintergrundbenachrichtigungen deaktivieren?",
+        "description": "Systembenachrichtigungen für neue E-Mails empfangen, wenn diese Seite geschlossen ist. Zustellung über das Bulwark Push-Relay; das Relay sieht niemals E-Mail-Inhalte.",
+        "disable": "Deaktivieren",
+        "enable": "Aktivieren",
+        "ios_hint": "Installieren Sie die Seite unter iOS zuerst auf dem Startbildschirm – Safari liefert Web Push nur an installierte PWAs.",
+        "reenable": "Neu registrieren",
+        "relay_desc": "Standardmäßig wird das gehostete Bulwark-Relay verwendet. Nur ändern, wenn Sie selbst hosten.",
+        "relay_label": "Push-Relay",
+        "relay_placeholder": "https://notifications.relay.example.com",
+        "status_active": "Auf diesem Gerät aktiv",
+        "status_busy": "Wird verarbeitet…",
+        "status_inactive": "Auf diesem Gerät nicht aktiviert",
+        "status_unsupported": "Dieser Browser unterstützt Web Push nicht",
+        "title": "Hintergrundbenachrichtigungen"
       }
     },
     "language_region": {
@@ -1333,7 +1355,9 @@
       "no_address_books": "Keine Adressbücher gefunden",
       "categories_title": "Kategorien",
       "categories_description": "Kontaktkategorien umbenennen",
-      "no_categories": "Keine Kategorien gefunden"
+      "no_categories": "Keine Kategorien gefunden",
+      "group_by_letter_description": "Alphabetische Abschnittsüberschriften in der Kontaktliste anzeigen",
+      "group_by_letter_label": "Nach Anfangsbuchstaben gruppieren"
     },
     "filters": {
       "title": "E-Mail-Filter",
@@ -2129,7 +2153,11 @@
       "tomorrow_header": "Morgen",
       "export_ics": "Als .ics exportieren",
       "copy_title": "Titel kopieren",
-      "copy_link": "Meeting-Link kopieren"
+      "copy_link": "Meeting-Link kopieren",
+      "go_to_today": "Zu heute",
+      "new_all_day_event": "Neuer ganztägiger Termin",
+      "new_event": "Neuer Termin",
+      "new_task": "Neue Aufgabe"
     },
     "detail": {
       "add_note": "Notiz hinzufügen...",
@@ -2428,6 +2456,20 @@
       "due_today": "Heute fällig",
       "due_tomorrow": "Morgen fällig",
       "overdue": "Überfällig"
+    },
+    "months": {
+      "jan": "Jan",
+      "feb": "Feb",
+      "mar": "Mär",
+      "apr": "Apr",
+      "may": "Mai",
+      "jun": "Jun",
+      "jul": "Jul",
+      "aug": "Aug",
+      "sep": "Sep",
+      "oct": "Okt",
+      "nov": "Nov",
+      "dec": "Dez"
     }
   },
   "advanced_search": {

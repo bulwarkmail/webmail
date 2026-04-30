@@ -127,6 +127,7 @@
     "demo_tour": "Průvodce",
     "tags": "Štítky",
     "folders": "Složky",
+    "shared": "Sdílené",
     "mail": "Pošta",
     "nav_label": "Navigace",
     "add_app": "Aplikace"
@@ -426,8 +427,8 @@
       "event_updated": "Aktualizace #{sequence}",
       "event_status_tentative": "Nezávazně",
       "event_status_cancelled": "Zrušeno",
-      "expand": "Zobrazit detaily",
-      "collapse": "Skrýt detaily"
+      "expand": "Zobrazit podrobnosti",
+      "collapse": "Skrýt podrobnosti"
     },
     "send": "Odeslat",
     "more": "více"
@@ -509,7 +510,10 @@
       "message": "Vaše zpráva obsahuje slovo \"{keyword}\", ale není k ní připojen žádný soubor. Přesto odeslat?",
       "send_anyway": "Přesto odeslat",
       "back": "Zpět k úpravám"
-    }
+    },
+    "add_link": "Přidat odkaz",
+    "link_url_prompt": "Zadejte URL",
+    "sending": "Odesílání..."
   },
   "confirm_dialog": {
     "confirm": "Potvrdit",
@@ -602,7 +606,6 @@
   },
   "language": {
     "title": "Jazyk",
-    "czech": "Česky",
     "english": "English",
     "french": "Français",
     "japanese": "日本語",
@@ -614,7 +617,6 @@
     "portuguese": "Português",
     "russian": "Русский",
     "select_language": "Vybrat jazyk",
-    "switch_to_czech": "Přepnout na češtinu",
     "switch_to_english": "Přepnout na angličtinu",
     "switch_to_french": "Přepnout na francouzštinu",
     "switch_to_japanese": "Přepnout na japonštinu",
@@ -804,6 +806,23 @@
         "sound_desc": "Přehrát zvukové upozornění pro připomenutí kalendáře",
         "invitation_parsing": "Rozpoznávat e-mailové pozvánky",
         "invitation_parsing_desc": "Rozpoznávat pozvánky kalendáře v přílohách e-mailů a zobrazovat akce kalendáře"
+      },
+      "push": {
+        "confirm_disable_message": "Toto zařízení přestane přijímat upozornění, když je web zavřený.",
+        "confirm_disable_title": "Zakázat oznámení na pozadí?",
+        "description": "Přijímat systémová oznámení o nové poště, když je tento web zavřený. Doručováno přes push relay Bulwark; relay nikdy nevidí obsah pošty.",
+        "disable": "Zakázat",
+        "enable": "Povolit",
+        "ios_hint": "Na iOS nejprve nainstalujte web na domovskou obrazovku – Safari doručuje Web Push pouze nainstalovaným PWA.",
+        "reenable": "Znovu zaregistrovat",
+        "relay_desc": "Výchozí je hostovaný relay Bulwark. Změňte pouze pokud používáte vlastní hosting.",
+        "relay_label": "Push relay",
+        "relay_placeholder": "https://notifications.relay.example.com",
+        "status_active": "Aktivní na tomto zařízení",
+        "status_busy": "Pracuji…",
+        "status_inactive": "Není povoleno na tomto zařízení",
+        "status_unsupported": "Tento prohlížeč nepodporuje Web Push",
+        "title": "Oznámení na pozadí"
       }
     },
     "language_region": {
@@ -1327,8 +1346,8 @@
     "contacts": {
       "title": "Kontakty",
       "description": "Import a export kontaktů",
-      "group_by_letter_label": "Seskupit podle prvního písmene",
-      "group_by_letter_description": "Zobrazovat abecední nadpisy v seznamu kontaktů",
+      "group_by_letter_label": "Seskupit podle prvního písmena",
+      "group_by_letter_description": "Zobrazit záhlaví sekcí podle abecedy v seznamu kontaktů",
       "import_label": "Importovat kontakty",
       "import_description": "Importovat kontakty ze souboru vCard (.vcf)",
       "export_label": "Exportovat kontakty",
@@ -2134,7 +2153,11 @@
       "tomorrow_header": "Zítra",
       "export_ics": "Exportovat jako .ics",
       "copy_title": "Kopírovat název",
-      "copy_link": "Kopírovat odkaz na schůzku"
+      "copy_link": "Kopírovat odkaz na schůzku",
+      "go_to_today": "Přejít na dnešek",
+      "new_all_day_event": "Nová celodenní událost",
+      "new_event": "Nová událost",
+      "new_task": "Nový úkol"
     },
     "detail": {
       "add_note": "Přidat poznámku...",
@@ -2433,6 +2456,20 @@
       "due_today": "Dnes",
       "due_tomorrow": "Zítra",
       "overdue": "Po termínu"
+    },
+    "months": {
+      "jan": "led",
+      "feb": "úno",
+      "mar": "bře",
+      "apr": "dub",
+      "may": "kvě",
+      "jun": "čvn",
+      "jul": "čvc",
+      "aug": "srp",
+      "sep": "zář",
+      "oct": "říj",
+      "nov": "lis",
+      "dec": "pro"
     }
   },
   "advanced_search": {
