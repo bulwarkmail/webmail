@@ -21,6 +21,7 @@ import {
 import { PluginSlot } from "@/components/plugins/plugin-slot";
 import { useSettingsStore } from "@/stores/settings-store";
 import { generateUUID } from "@/lib/utils";
+import { useFormatEventDate } from "@/hooks/use-format-event-date";
 
 export interface PendingEventPreview {
   start: Date;
@@ -128,15 +129,7 @@ export function EventModal({
   const timeFormat = useSettingsStore((s) => s.timeFormat);
   const timeDisplayFmt = timeFormat === "12h" ? "h:mm a" : "HH:mm";
   const isEdit = !!event;
-
-  const formatEventDate = useCallback((startD: Date): string => {
-    const dayOfWeek = format(startD, "EEE").toLowerCase();
-    const month = format(startD, "MMM").toLowerCase();
-    const day = format(startD, "d");
-    const year = format(startD, "yyyy");
-    return `${t(`days.${dayOfWeek}`)}, ${t(`months.${month}`)} ${day}, ${year}`;
-  }, [t]);
-
+  const formatEventDate = useFormatEventDate();
   const [mode, setMode] = useState<"view" | "edit">(isEdit ? "view" : "edit");
 
   const userIsOrganizer = useMemo(() => {
