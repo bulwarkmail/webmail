@@ -906,6 +906,11 @@
         "label": "Seleccionar dirección de respuesta automáticamente",
         "description": "Al responder, cambia automáticamente la dirección del remitente a la identidad que recibió el mensaje original"
       },
+      "sub_address_delimiter": {
+        "label": "Delimitador de sub-dirección",
+        "description": "Carácter que separa tu nombre de usuario de la etiqueta de sub-dirección. Usa el delimitador que utilice tu servidor de correo (por ejemplo, usuario{delimiter}etiqueta@dominio.com).",
+        "option": "{delimiter}  (usuario{delimiter}etiqueta@dominio.com)"
+      },
       "show_preview": {
         "label": "Mostrar Vista Previa",
         "description": "Mostrar vista previa del correo en la lista",
@@ -1756,7 +1761,7 @@
       "use_address": "Usar Esta Dirección",
       "invalid_tag": "La etiqueta debe ser solo alfanumérica y guiones",
       "tag_too_long": "La etiqueta debe tener 30 caracteres o menos",
-      "help_text": "Los correos enviados a usuario+etiqueta@dominio.com llegarán a su bandeja de entrada",
+      "help_text": "Los correos enviados a usuario{delimiter}etiqueta@dominio.com llegarán a su bandeja de entrada",
       "validation": {
         "empty": "La etiqueta no puede estar vacía",
         "too_long": "La etiqueta debe tener {max} caracteres o menos",

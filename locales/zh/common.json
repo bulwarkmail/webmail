@@ -911,6 +911,11 @@
         "label": "自动选择回复地址",
         "description": "回复时自动将发件人地址切换为最初收到该邮件的身份"
       },
+      "sub_address_delimiter": {
+        "label": "子地址分隔符",
+        "description": "用于分隔用户名和子地址标签的字符。请选择与您的邮件服务器一致的分隔符（例如 user{delimiter}tag@domain.com）。",
+        "option": "{delimiter}  (user{delimiter}tag@domain.com)"
+      },
       "attachment_click_action": {
         "label": "附件单击操作",
         "description": "选择点击附件时是预览还是直接下载",
@@ -1756,7 +1761,7 @@
       "use_address": "使用此地址",
       "invalid_tag": "标签只能是字母数字和破折号",
       "tag_too_long": "标签不得超过 30 个字符",
-      "help_text": "发送到 user+tag@domain.com 的邮件将送达您的收件箱",
+      "help_text": "发送到 user{delimiter}tag@domain.com 的邮件将送达您的收件箱",
       "validation": {
         "empty": "标签不能为空",
         "too_long": "标签不得超过 {max} 个字符",

@@ -906,6 +906,11 @@
         "label": "Seleziona automaticamente l'indirizzo di risposta",
         "description": "Quando rispondi, passa automaticamente l'indirizzo mittente all'identità che ha ricevuto il messaggio originale"
       },
+      "sub_address_delimiter": {
+        "label": "Delimitatore sub-indirizzo",
+        "description": "Carattere che separa il tuo nome utente dall'etichetta del sub-indirizzo. Usa il delimitatore configurato sul tuo server di posta (es. utente{delimiter}tag@dominio.com).",
+        "option": "{delimiter}  (utente{delimiter}tag@dominio.com)"
+      },
       "show_preview": {
         "label": "Mostra anteprima testo",
         "description": "Visualizza l'anteprima del messaggio nell'elenco",
@@ -1756,7 +1761,7 @@
       "use_address": "Usa questo indirizzo",
       "invalid_tag": "Il tag deve contenere solo caratteri alfanumerici e trattini",
       "tag_too_long": "Il tag deve essere di massimo 30 caratteri",
-      "help_text": "I messaggi inviati a utente+tag@dominio.com arriveranno nella tua casella di posta",
+      "help_text": "I messaggi inviati a utente{delimiter}tag@dominio.com arriveranno nella tua casella di posta",
       "validation": {
         "empty": "Il tag non può essere vuoto",
         "too_long": "Il tag deve essere di massimo {max} caratteri",

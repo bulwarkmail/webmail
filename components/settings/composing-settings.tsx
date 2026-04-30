@@ -4,8 +4,12 @@ import { useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { useConfig } from '@/hooks/use-config';
 import { useSettingsStore } from '@/stores/settings-store';
-import { SettingsSection, SettingItem, ToggleSwitch } from './settings-section';
+import { SettingsSection, SettingItem, Select, ToggleSwitch } from './settings-section';
 import { Mail, X } from 'lucide-react';
+import {
+  SUPPORTED_SUB_ADDRESS_DELIMITERS,
+  type SubAddressDelimiter,
+} from '@/lib/sub-addressing';
 
 export function ComposingSettings() {
   const t = useTranslations('settings.email_behavior');
@@ -17,6 +21,7 @@ export function ComposingSettings() {
     autoSelectReplyIdentity,
     attachmentReminderEnabled,
     attachmentReminderKeywords,
+    subAddressDelimiter,
     updateSetting,
   } = useSettingsStore();
 
@@ -37,6 +42,20 @@ export function ComposingSettings() {
         <ToggleSwitch
           checked={autoSelectReplyIdentity}
           onChange={(checked) => updateSetting('autoSelectReplyIdentity', checked)}
+        />
+      </SettingItem>
+
+      <SettingItem
+        label={t('sub_address_delimiter.label')}
+        description={t('sub_address_delimiter.description', { delimiter: subAddressDelimiter })}
+      >
+        <Select
+          value={subAddressDelimiter}
+          onChange={(value) => updateSetting('subAddressDelimiter', value as SubAddressDelimiter)}
+          options={SUPPORTED_SUB_ADDRESS_DELIMITERS.map((delim) => ({
+            value: delim,
+            label: t('sub_address_delimiter.option', { delimiter: delim }),
+          }))}
         />
       </SettingItem>
 

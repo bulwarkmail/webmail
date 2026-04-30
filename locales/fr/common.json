@@ -906,6 +906,11 @@
         "label": "Sélection automatique de l'adresse de réponse",
         "description": "Lors d'une réponse, bascule automatiquement l'adresse d'expédition vers l'identité qui a reçu le message d'origine"
       },
+      "sub_address_delimiter": {
+        "label": "Délimiteur de sous-adresse",
+        "description": "Caractère séparant votre nom d'utilisateur de l'étiquette de sous-adresse. Utilisez le délimiteur configuré sur votre serveur de messagerie (par ex. utilisateur{delimiter}tag@domaine.com).",
+        "option": "{delimiter}  (utilisateur{delimiter}tag@domaine.com)"
+      },
       "show_preview": {
         "label": "Afficher l'aperçu",
         "description": "Afficher l'aperçu de l'email dans la liste",
@@ -1756,7 +1761,7 @@
       "use_address": "Utiliser cette adresse",
       "invalid_tag": "Le tag doit contenir uniquement des lettres, chiffres et tirets",
       "tag_too_long": "Le tag doit faire 30 caractères ou moins",
-      "help_text": "Les emails envoyés à utilisateur+tag@domaine.com arriveront dans votre boîte de réception",
+      "help_text": "Les emails envoyés à utilisateur{delimiter}tag@domaine.com arriveront dans votre boîte de réception",
       "validation": {
         "empty": "Le tag ne peut pas être vide",
         "too_long": "Le tag doit faire {max} caractères ou moins",

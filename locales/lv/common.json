@@ -906,6 +906,11 @@
         "label": "Automātiski izvēlēties atbildes adresi",
         "description": "Atbildot automātiski izmantot to kontu, uz kuru vēstule tika saņemta"
       },
+      "sub_address_delimiter": {
+        "label": "Apakšadreses atdalītājs",
+        "description": "Zīme, kas atdala lietotājvārdu no apakšadreses tagu. Izvēlieties atdalītāju, ko lieto jūsu pasta serveris (piem. lietotajs{delimiter}tags@domens.lv).",
+        "option": "{delimiter}  (lietotajs{delimiter}tags@domens.lv)"
+      },
       "show_preview": {
         "label": "Rādīt priekšskatījuma tekstu",
         "description": "Rādīt vēstules fragmentu sarakstā",
@@ -1756,7 +1761,7 @@
       "use_address": "Izmantot šo adresi",
       "invalid_tag": "Tags var saturēt tikai burtus, ciparus un domuzīmes",
       "tag_too_long": "Tags nedrīkst pārsniegt 30 rakstzīmes",
-      "help_text": "Vēstules uz lietotajs+tags@domens.lv nonāks jūsu pastkastē",
+      "help_text": "Vēstules uz lietotajs{delimiter}tags@domens.lv nonāks jūsu pastkastē",
       "validation": {
         "empty": "Tags nevar būt tukšs",
         "too_long": "Tags nedrīkst pārsniegt {max} rakstzīmes",

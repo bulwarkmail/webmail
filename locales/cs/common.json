@@ -911,6 +911,11 @@
         "label": "Automaticky vybírat adresu pro odpověď",
         "description": "Při odpovídání automaticky přepnout adresu odesílatele na identitu, která původně obdržela zprávu"
       },
+      "sub_address_delimiter": {
+        "label": "Oddělovač sub-adresy",
+        "description": "Znak oddělující uživatelské jméno od sub-adresy. Zvolte oddělovač používaný vaším poštovním serverem (např. uzivatel{delimiter}stitek@domena.cz).",
+        "option": "{delimiter}  (uzivatel{delimiter}stitek@domena.cz)"
+      },
       "attachment_click_action": {
         "label": "Akce po kliknutí na přílohu",
         "description": "Vyberte, zda má kliknutí na přílohu zobrazit náhled, nebo ji ihned stáhnout",
@@ -1756,7 +1761,7 @@
       "use_address": "Použít tuto adresu",
       "invalid_tag": "Štítek může obsahovat pouze písmena, číslice a pomlčky",
       "tag_too_long": "Štítek může mít maximálně 30 znaků",
-      "help_text": "Zprávy odeslané na adresu uzivatel+stitek@domena.cz budou doručeny do vaší doručené pošty",
+      "help_text": "Zprávy odeslané na adresu uzivatel{delimiter}stitek@domena.cz budou doručeny do vaší doručené pošty",
       "validation": {
         "empty": "Štítek nesmí být prázdný",
         "too_long": "Štítek může mít maximálně {max} znaků",

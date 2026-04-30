@@ -911,6 +911,11 @@
         "label": "Automatycznie wybieraj adres odpowiedzi",
         "description": "Podczas odpowiadania automatycznie przełączaj adres nadawcy na tożsamość, która pierwotnie otrzymała wiadomość"
       },
+      "sub_address_delimiter": {
+        "label": "Separator sub-adresu",
+        "description": "Znak oddzielający Twoją nazwę użytkownika od tagu sub-adresu. Użyj separatora zgodnego z Twoim serwerem pocztowym (np. user{delimiter}tag@domain.com).",
+        "option": "{delimiter}  (user{delimiter}tag@domain.com)"
+      },
       "attachment_click_action": {
         "label": "Akcja po kliknięciu załącznika",
         "description": "Wybierz, czy kliknięcie załącznika pliku ma pokazać podgląd, czy od razu go pobrać",
@@ -1756,7 +1761,7 @@
       "use_address": "Użyj tego adresu",
       "invalid_tag": "Tag może zawierać tylko litery, cyfry i myślniki",
       "tag_too_long": "Tag może mieć maksymalnie 30 znaków",
-      "help_text": "Wiadomości wysłane na adres user+tag@domain.com trafią do Twojej skrzynki odbiorczej",
+      "help_text": "Wiadomości wysłane na adres user{delimiter}tag@domain.com trafią do Twojej skrzynki odbiorczej",
       "validation": {
         "empty": "Tag nie może być pusty",
         "too_long": "Tag może mieć maksymalnie {max} znaków",

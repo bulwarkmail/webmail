@@ -911,6 +911,11 @@
         "label": "Antwortadresse automatisch wählen",
         "description": "Beim Antworten die Absenderadresse automatisch auf die Identität umstellen, die die ursprüngliche Nachricht erhalten hat"
       },
+      "sub_address_delimiter": {
+        "label": "Sub-Adress-Trennzeichen",
+        "description": "Zeichen, das Ihren Benutzernamen vom Sub-Adress-Tag trennt. Verwenden Sie das von Ihrem Mailserver verwendete Trennzeichen (z. B. benutzer{delimiter}tag@domain.de).",
+        "option": "{delimiter}  (benutzer{delimiter}tag@domain.de)"
+      },
       "attachment_click_action": {
         "label": "Aktion beim Klick auf Anhänge",
         "description": "Festlegen, ob ein Dateianhang beim Anklicken in der Vorschau geöffnet oder sofort heruntergeladen wird",
@@ -1756,7 +1761,7 @@
       "use_address": "Diese Adresse verwenden",
       "invalid_tag": "Tag darf nur alphanumerisch und Bindestriche enthalten",
       "tag_too_long": "Tag darf maximal 30 Zeichen lang sein",
-      "help_text": "E-Mails an benutzer+tag@domain.de werden in Ihrem Posteingang ankommen",
+      "help_text": "E-Mails an benutzer{delimiter}tag@domain.de werden in Ihrem Posteingang ankommen",
       "validation": {
         "empty": "Tag darf nicht leer sein",
         "too_long": "Tag darf maximal {max} Zeichen lang sein",

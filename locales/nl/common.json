@@ -906,6 +906,11 @@
         "label": "Antwoordadres automatisch selecteren",
         "description": "Schakel bij het beantwoorden automatisch het Van-adres om naar de identiteit die het oorspronkelijke bericht ontving"
       },
+      "sub_address_delimiter": {
+        "label": "Sub-adres scheidingsteken",
+        "description": "Teken dat je gebruikersnaam scheidt van het sub-adres-label. Gebruik het scheidingsteken dat je mailserver gebruikt (bv. gebruiker{delimiter}tag@domein.nl).",
+        "option": "{delimiter}  (gebruiker{delimiter}tag@domein.nl)"
+      },
       "show_preview": {
         "label": "Voorbeeldtekst tonen",
         "description": "E-mailvoorbeeld weergeven in de lijst",
@@ -1756,7 +1761,7 @@
       "use_address": "Dit adres gebruiken",
       "invalid_tag": "Tag mag alleen letters, cijfers en streepjes bevatten",
       "tag_too_long": "Tag mag maximaal 30 tekens bevatten",
-      "help_text": "E-mails verzonden naar gebruiker+tag@domein.nl komen in je postvak IN aan",
+      "help_text": "E-mails verzonden naar gebruiker{delimiter}tag@domein.nl komen in je postvak IN aan",
       "validation": {
         "empty": "Tag mag niet leeg zijn",
         "too_long": "Tag mag maximaal {max} tekens bevatten",

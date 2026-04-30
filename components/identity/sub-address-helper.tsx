@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useIdentityStore } from '@/stores/identity-store';
+import { useSettingsStore } from '@/stores/settings-store';
 import {
   generateSubAddress,
   extractDomain,
@@ -35,6 +36,7 @@ export function SubAddressHelper({
   const popoverRef = useRef<HTMLDivElement>(null);
 
   const { subAddress, addRecentTag, addTagSuggestion } = useIdentityStore();
+  const subAddressDelimiter = useSettingsStore((state) => state.subAddressDelimiter);
 
   // Get suggestions based on recipient (memoized for performance)
   const suggestions = useMemo(() => {
@@ -47,7 +49,7 @@ export function SubAddressHelper({
   }, [recipientEmails]);
 
   // Generate preview
-  const preview = tag ? generateSubAddress(baseEmail, tag) : baseEmail;
+  const preview = tag ? generateSubAddress(baseEmail, tag, subAddressDelimiter) : baseEmail;
 
   // Close popover when clicking outside
   useEffect(() => {
@@ -226,7 +228,7 @@ export function SubAddressHelper({
 
           {/* Help Text */}
           <div className="mb-3 text-xs text-muted-foreground">
-            {t('help_text')}
+            {t('help_text', { delimiter: subAddressDelimiter })}
           </div>
 
           {/* Use Address Button */}

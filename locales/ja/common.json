@@ -906,6 +906,11 @@
         "label": "返信元アドレスを自動選択",
         "description": "返信時に、元のメッセージを受信したIDへ差出人アドレスを自動的に切り替えます"
       },
+      "sub_address_delimiter": {
+        "label": "サブアドレス区切り文字",
+        "description": "ユーザー名とサブアドレスタグを区切る文字です。お使いのメールサーバーが使用する区切り文字に合わせてください（例: user{delimiter}tag@domain.com）。",
+        "option": "{delimiter}  (user{delimiter}tag@domain.com)"
+      },
       "show_preview": {
         "label": "プレビューテキストを表示",
         "description": "リストにメールのプレビューを表示",
@@ -1756,7 +1761,7 @@
       "use_address": "このアドレスを使用",
       "invalid_tag": "タグは英数字とハイフンのみ使用できます",
       "tag_too_long": "タグは30文字以内にしてください",
-      "help_text": "user+tag@domain.comに送信されたメールは受信トレイに届きます",
+      "help_text": "user{delimiter}tag@domain.comに送信されたメールは受信トレイに届きます",
       "validation": {
         "empty": "タグは空にできません",
         "too_long": "タグは{max}文字以内にしてください",

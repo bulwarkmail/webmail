@@ -124,6 +124,7 @@ export function EmailComposer({
   const tCommon = useTranslations('common');
   const timeFormat = useSettingsStore((state) => state.timeFormat);
   const plainTextMode = useSettingsStore((state) => state.plainTextMode);
+  const subAddressDelimiter = useSettingsStore((state) => state.subAddressDelimiter);
   const autoSelectReplyIdentity = useSettingsStore((state) => state.autoSelectReplyIdentity);
   const attachmentReminderEnabled = useSettingsStore((state) => state.attachmentReminderEnabled);
   const attachmentReminderKeywords = useSettingsStore((state) => state.attachmentReminderKeywords);
@@ -729,7 +730,7 @@ export function EmailComposer({
     // Generate sub-addressed email if tag is set
     const fromEmail = currentIdentity?.email
       ? subAddressTag
-        ? generateSubAddress(currentIdentity.email, subAddressTag)
+        ? generateSubAddress(currentIdentity.email, subAddressTag, subAddressDelimiter)
         : currentIdentity.email
       : undefined;
 
@@ -906,7 +907,7 @@ export function EmailComposer({
 
     const fromEmail = currentIdentity?.email
       ? subAddressTag
-        ? generateSubAddress(currentIdentity.email, subAddressTag)
+        ? generateSubAddress(currentIdentity.email, subAddressTag, subAddressDelimiter)
         : currentIdentity.email
       : undefined;
 
@@ -1215,7 +1216,7 @@ export function EmailComposer({
                 >
                   {identities.map((identity) => {
                     const displayEmail = subAddressTag
-                      ? generateSubAddress(identity.email, subAddressTag)
+                      ? generateSubAddress(identity.email, subAddressTag, subAddressDelimiter)
                       : identity.email;
                     return (
                       <option key={identity.id} value={identity.id}>
@@ -1228,7 +1229,7 @@ export function EmailComposer({
                 <span className="text-sm text-foreground flex-1 truncate">
                   {subAddressTag ? (
                     <span className="font-mono">
-                      {generateSubAddress(primaryIdentity?.email || '', subAddressTag)}
+                      {generateSubAddress(primaryIdentity?.email || '', subAddressTag, subAddressDelimiter)}
                     </span>
                   ) : (
                     <>

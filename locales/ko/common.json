@@ -911,6 +911,11 @@
         "label": "답장 시 보내는 사람 자동 선택",
         "description": "답장할 때 메일을 받았던 주소로 보내는 사람을 자동으로 변경해요"
       },
+      "sub_address_delimiter": {
+        "label": "서브 주소 구분자",
+        "description": "사용자 이름과 서브 주소 태그를 나누는 문자예요. 메일 서버가 사용하는 구분자에 맞춰 주세요 (예: user{delimiter}tag@domain.com).",
+        "option": "{delimiter}  (user{delimiter}tag@domain.com)"
+      },
       "attachment_click_action": {
         "label": "첨부파일 클릭 동작",
         "description": "파일을 클릭했을 때 미리보기를 할지, 바로 다운로드할지 선택해 주세요",
@@ -1756,7 +1761,7 @@
       "use_address": "이 주소 사용하기",
       "invalid_tag": "태그는 알파벳, 숫자, 대시(-)만 쓸 수 있어요",
       "tag_too_long": "태그는 30자 이하여야 해요",
-      "help_text": "user+tag@domain.com 으로 보낸 메일은 내 받은편지함으로 들어와요",
+      "help_text": "user{delimiter}tag@domain.com 으로 보낸 메일은 내 받은편지함으로 들어와요",
       "validation": {
         "empty": "태그를 비워둘 수 없어요",
         "too_long": "태그는 {max}자 이하여야 해요",

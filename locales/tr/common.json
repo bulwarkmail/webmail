@@ -911,6 +911,11 @@
         "label": "Yanıt Adresini Otomatik Seç",
         "description": "Yanıtlarken, Kimden adresini iletiyi başlangıçta alan kimliğe otomatik olarak değiştir"
       },
+      "sub_address_delimiter": {
+        "label": "Alt Adres Ayırıcı",
+        "description": "Kullanıcı adını alt adres etiketinden ayıran karakter. Posta sunucunuzun kullandığı ayırıcıyı seçin (ör. kullanici{delimiter}etiket@domain.com).",
+        "option": "{delimiter}  (kullanici{delimiter}etiket@domain.com)"
+      },
       "attachment_click_action": {
         "label": "Ek Tıklama İşlemi",
         "description": "Bir dosya ekine tıklandığında önizleme mi yoksa anında indirme mi yapılacağını seçin",
@@ -1756,7 +1761,7 @@
       "use_address": "Bu Adresi Kullan",
       "invalid_tag": "Etiket yalnızca harf, rakam ve tire içermelidir",
       "tag_too_long": "Etiket en fazla 30 karakter olmalıdır",
-      "help_text": "kullanici+etiket@domain.com adresine gönderilen e-postalar gelen kutunuza ulaşır",
+      "help_text": "kullanici{delimiter}etiket@domain.com adresine gönderilen e-postalar gelen kutunuza ulaşır",
       "validation": {
         "empty": "Etiket boş olamaz",
         "too_long": "Etiket en fazla {max} karakter olmalıdır",

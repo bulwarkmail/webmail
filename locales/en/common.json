@@ -911,6 +911,11 @@
         "label": "Auto-select Reply Address",
         "description": "When replying, automatically switch the From address to the identity that originally received the message"
       },
+      "sub_address_delimiter": {
+        "label": "Sub-Address Delimiter",
+        "description": "Character separating your username from a sub-address tag. Match the delimiter your mail server uses (e.g. user{delimiter}tag@domain.com).",
+        "option": "{delimiter}  (user{delimiter}tag@domain.com)"
+      },
       "attachment_click_action": {
         "label": "Attachment Click Action",
         "description": "Choose whether clicking a file attachment previews it or downloads it immediately",
@@ -1756,7 +1761,7 @@
       "use_address": "Use This Address",
       "invalid_tag": "Tag must be alphanumeric and dashes only",
       "tag_too_long": "Tag must be 30 characters or less",
-      "help_text": "Emails sent to user+tag@domain.com will arrive in your inbox",
+      "help_text": "Emails sent to user{delimiter}tag@domain.com will arrive in your inbox",
       "validation": {
         "empty": "Tag cannot be empty",
         "too_long": "Tag must be {max} characters or less",

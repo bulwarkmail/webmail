@@ -4,6 +4,11 @@ import { useThemeStore } from './theme-store';
 import { useLocaleStore } from './locale-store';
 import type { NotificationSoundChoice } from '@/lib/notification-sound';
 import { apiFetch } from '@/lib/browser-navigation';
+import {
+  DEFAULT_SUB_ADDRESS_DELIMITER,
+  isSupportedSubAddressDelimiter,
+  type SubAddressDelimiter,
+} from '@/lib/sub-addressing';
 
 // Use console directly to avoid circular dependency with lib/debug.ts
 // (debug.ts imports useSettingsStore for debugMode check)
@@ -138,6 +143,7 @@ interface SettingsState {
   defaultReplyMode: ReplyMode;
   autoSelectReplyIdentity: boolean;
   plainTextMode: boolean; // Send plain text only (no rich text editor)
+  subAddressDelimiter: SubAddressDelimiter; // Character separating user from tag (e.g. "user+tag@")
 
   // Privacy & Security
   sessionTimeout: number; // minutes (0 = never)
@@ -286,6 +292,7 @@ const DEFAULT_SETTINGS = {
   defaultReplyMode: 'reply' as ReplyMode,
   autoSelectReplyIdentity: false,
   plainTextMode: false,
+  subAddressDelimiter: DEFAULT_SUB_ADDRESS_DELIMITER as SubAddressDelimiter,
 
   // Privacy & Security
   sessionTimeout: 0, // Never
@@ -456,6 +463,7 @@ export const useSettingsStore = create<SettingsState>()(
           defaultReplyMode: state.defaultReplyMode,
           autoSelectReplyIdentity: state.autoSelectReplyIdentity,
           plainTextMode: state.plainTextMode,
+          subAddressDelimiter: state.subAddressDelimiter,
           sessionTimeout: state.sessionTimeout,
           emailNotificationsEnabled: state.emailNotificationsEnabled,
           emailNotificationSound: state.emailNotificationSound,
@@ -508,6 +516,9 @@ export const useSettingsStore = create<SettingsState>()(
           // Apply settings
           Object.keys(settings).forEach((key) => {
             if (key in DEFAULT_SETTINGS) {
+              if (key === 'subAddressDelimiter' && !isSupportedSubAddressDelimiter(settings[key])) {
+                return;
+              }
               set({ [key]: settings[key] });
             }
           });
