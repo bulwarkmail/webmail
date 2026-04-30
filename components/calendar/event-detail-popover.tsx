@@ -19,6 +19,7 @@ import {
   getUserStatus,
   getParticipantList,
 } from "@/lib/calendar-participants";
+import { useFormatEventDate } from "@/hooks/use-format-event-date";
 
 interface EventDetailPopoverProps {
   event: CalendarEvent;
@@ -253,13 +254,7 @@ export function EventDetailPopover({
 
   const hasParticipants = participants.length > 0;
 
-  const formatEventDate = useCallback((startDate: Date): string => {
-    const dayOfWeek = format(startDate, "EEE").toLowerCase();
-    const month = format(startDate, "MMM").toLowerCase();
-    const day = format(startDate, "d");
-    const year = format(startDate, "yyyy");
-    return `${t(`days.${dayOfWeek}`)}, ${t(`months.${month}`)} ${day}, ${year}`;
-  }, [t]);
+  const formatEventDate = useFormatEventDate();
 
   const popover = (
     <div
