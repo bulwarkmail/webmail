@@ -1028,6 +1028,7 @@ export function Sidebar({
         isOpen={mailboxContextMenu.isOpen}
         onClose={closeMailboxContextMenu}
         menuRef={mailboxMenuRef}
+        mailboxes={mailboxes}
         onMarkFolderRead={onMarkFolderRead}
         onMarkFolderTreeRead={onMarkFolderTreeRead}
         onMarkAllFoldersRead={onMarkAllFoldersRead}

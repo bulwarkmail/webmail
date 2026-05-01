@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { Mailbox } from "@/lib/jmap/types";
+import { getMailboxPath } from "@/lib/utils";
 import {
   ContextMenu,
   ContextMenuItem,
@@ -34,6 +35,7 @@ interface MailboxContextMenuProps {
   isOpen: boolean;
   onClose: () => void;
   menuRef: React.RefObject<HTMLDivElement | null>;
+  mailboxes: Mailbox[];
   onMarkFolderRead?: (mailboxId: string) => void;
   onMarkFolderTreeRead?: (mailboxId: string) => void;
   onMarkAllFoldersRead?: () => void;
@@ -51,6 +53,7 @@ export function MailboxContextMenu({
   isOpen,
   onClose,
   menuRef,
+  mailboxes,
   onMarkFolderRead,
   onMarkFolderTreeRead,
   onMarkAllFoldersRead,
@@ -109,7 +112,7 @@ export function MailboxContextMenu({
 
   return (
     <ContextMenu ref={menuRef} isOpen={isOpen} position={position} onClose={onClose}>
-      <ContextMenuHeader>{mailbox.name}</ContextMenuHeader>
+      <ContextMenuHeader>{getMailboxPath(mailbox, mailboxes)}</ContextMenuHeader>
 
       <ContextMenuItem
         icon={MailOpen}
