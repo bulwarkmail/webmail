@@ -184,6 +184,7 @@
     "batch_actions": {
       "select": "Zaznacz wiadomości",
       "select_all": "Zaznacz wszystkie",
+      "selected_messages": "Wybrano {count, plural, one {1 wiadomość} other {# wiadomości}} e-mail",
       "mark_read": "Oznacz jako przeczytane",
       "mark_unread": "Oznacz jako nieprzeczytane",
       "delete": "Usuń",

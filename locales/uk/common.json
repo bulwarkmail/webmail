@@ -184,6 +184,7 @@
     "batch_actions": {
       "select": "Виберіть електронні листи",
       "select_all": "Вибрати все",
+      "selected_messages": "Вибрано {count, plural, one {1 електронний лист} other {# електронні листи}}",
       "mark_read": "Позначити як прочитане",
       "mark_unread": "Позначити як непрочитане",
       "delete": "Видалити",

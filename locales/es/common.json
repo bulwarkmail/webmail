@@ -184,6 +184,7 @@
     "batch_actions": {
       "select": "Seleccionar correos",
       "select_all": "Seleccionar todo",
+      "selected_messages": "{count, plural, one {1 correo electrónico seleccionado} other {# correos electrónicos seleccionados}}",
       "mark_read": "Marcar como leído",
       "mark_unread": "Marcar como no leído",
       "delete": "Eliminar",

@@ -184,6 +184,7 @@
     "batch_actions": {
       "select": "Vybrat zprávy",
       "select_all": "Vybrat vše",
+      "selected_messages": "{count, plural, one {Vybraný 1 e-mail} other {Vybrané # e-maily}}",
       "mark_read": "Označit jako přečtené",
       "mark_unread": "Označit jako nepřečtené",
       "delete": "Odstranit",

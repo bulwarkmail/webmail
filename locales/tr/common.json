@@ -184,6 +184,7 @@
     "batch_actions": {
       "select": "E-postaları seç",
       "select_all": "Tümünü seç",
+      "selected_messages": "{count, plural, one {1 e-posta} other {# e-posta}} seçildi",
       "mark_read": "Okundu olarak işaretle",
       "mark_unread": "Okunmadı olarak işaretle",
       "delete": "Sil",

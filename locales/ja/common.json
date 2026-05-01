@@ -184,6 +184,7 @@
     "batch_actions": {
       "select": "メールを選択",
       "select_all": "すべて選択",
+      "selected_messages": "{count, plural, one {1} other {#}}通のメールが選択されました",
       "mark_read": "既読にする",
       "mark_unread": "未読にする",
       "delete": "削除",

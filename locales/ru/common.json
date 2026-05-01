@@ -184,6 +184,7 @@
     "batch_actions": {
       "select": "Выбрать письма",
       "select_all": "Выбрать все",
+      "selected_messages": "Выбрано {count, plural, one {1 письмо} other {# письма}}",
       "mark_read": "Отметить прочитанными",
       "mark_unread": "Отметить непрочитанными",
       "delete": "Удалить",
