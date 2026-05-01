@@ -15,6 +15,7 @@ import {
   Puzzle,
   SwatchBook,
   Activity,
+  Package,
   Mail,
   Calendar,
   BookUser,
@@ -30,6 +31,7 @@ import { useThemeStore } from '@/stores/theme-store';
 import { getActiveAccountSlotHeaders } from '@/lib/auth/active-account-slot';
 
 import { useAuthStore } from '@/stores/auth-store';
+import { useUpdateStore, selectHasUpdate } from '@/stores/update-store';
 import { apiFetch } from '@/lib/browser-navigation';
 
 const NAV_GROUPS = [
@@ -59,6 +61,7 @@ const NAV_GROUPS = [
   {
     label: 'System',
     items: [
+      { href: '/admin/version', label: 'Version', icon: Package },
       { href: '/admin/telemetry', label: 'Telemetry', icon: Activity },
       { href: '/admin/logs', label: 'Audit Log', icon: ScrollText },
     ],
@@ -77,6 +80,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const logoUrl = resolvedTheme === 'dark'
     ? (appLogoDarkUrl || appLogoLightUrl || loginLogoDarkUrl)
     : (appLogoLightUrl || appLogoDarkUrl || loginLogoLightUrl);
+
+  // Match the navigation rail: red for security/deprecated, amber for normal.
+  const hasUpdate = useUpdateStore(selectHasUpdate);
+  const updateSeverity = useUpdateStore((s) => s.status?.severity);
+  const startUpdatePolling = useUpdateStore((s) => s.startPolling);
+  useEffect(() => { startUpdatePolling(); }, [startUpdatePolling]);
+  const updateImportant = updateSeverity === 'security' || updateSeverity === 'deprecated';
 
   useEffect(() => {
     setMobileNavOpen(false);
@@ -170,6 +180,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </div>
               {group.items.map(({ href, label, icon: Icon }) => {
                 const active = href === '/admin' ? pathname === '/admin' : pathname.startsWith(href);
+                const showDot = href === '/admin/version' && hasUpdate;
                 return (
                   <Link
                     key={href}
@@ -181,10 +192,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         : 'hover:bg-muted text-foreground'
                     )}
                   >
-                    <Icon className={cn(
-                      'w-4 h-4 shrink-0',
-                      active ? 'text-accent-foreground' : 'text-muted-foreground'
-                    )} />
+                    <span className="relative shrink-0">
+                      <Icon className={cn(
+                        'w-4 h-4',
+                        active ? 'text-accent-foreground' : 'text-muted-foreground'
+                      )} />
+                      {showDot && (
+                        <span
+                          className={cn(
+                            'absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full ring-2',
+                            active ? 'ring-accent' : 'ring-background',
+                            updateImportant ? 'bg-red-500' : 'bg-amber-500',
+                          )}
+                          aria-label={updateImportant ? 'Important update available' : 'Update available'}
+                        />
+                      )}
+                    </span>
                     {label}
                   </Link>
                 );

@@ -16,6 +16,7 @@ import { useSettingsStore } from "@/stores/settings-store";
 import { usePolicyStore } from "@/stores/policy-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { useAccountStore } from "@/stores/account-store";
+import { useUpdateStore, selectHasUpdate } from "@/stores/update-store";
 import { getActiveAccountSlotHeaders } from "@/lib/auth/active-account-slot";
 import { getInitials, MAX_ACCOUNTS } from "@/lib/account-utils";
 import { cn, formatFileSize } from "@/lib/utils";
@@ -175,6 +176,11 @@ export function NavigationRail({
   const visibleSidebarApps = sidebarAppsEnabled ? sidebarApps : [];
   const inboxUnread = mailboxes.find(m => m.role === "inbox")?.unreadEmails || 0;
   const [isStalwartAdmin, setIsStalwartAdmin] = useState(false);
+  const hasUpdate = useUpdateStore(selectHasUpdate);
+  const updateSeverity = useUpdateStore((s) => s.status?.severity);
+  const startUpdatePolling = useUpdateStore((s) => s.startPolling);
+  useEffect(() => { startUpdatePolling(); }, [startUpdatePolling]);
+  const updateImportant = updateSeverity === 'security' || updateSeverity === 'deprecated';
 
   // Account list for rail
   const accounts = useAccountStore((s) => s.accounts);
@@ -345,7 +351,18 @@ export function NavigationRail({
               "text-muted-foreground hover:text-foreground"
             )}
           >
-            <Shield className="w-5 h-5" />
+            <span className="relative">
+              <Shield className="w-5 h-5" />
+              {hasUpdate && (
+                <span
+                  className={cn(
+                    "absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full ring-2 ring-background",
+                    updateImportant ? "bg-red-500" : "bg-amber-500",
+                  )}
+                  aria-label={updateImportant ? "Important update available" : "Update available"}
+                />
+              )}
+            </span>
             <span className="text-[10px] font-medium leading-tight truncate max-w-full">{t("admin") || "Admin"}</span>
           </a>
         )}
@@ -515,10 +532,19 @@ export function NavigationRail({
         {isStalwartAdmin && (
           <a
             href="/admin"
-            className="flex items-center justify-center w-10 h-10 rounded-md transition-colors text-muted-foreground hover:text-foreground hover:bg-muted"
+            className="flex items-center justify-center w-10 h-10 rounded-md transition-colors text-muted-foreground hover:text-foreground hover:bg-muted relative"
             title={t("admin") || "Admin"}
           >
             <Shield className="w-[18px] h-[18px]" />
+            {hasUpdate && (
+              <span
+                className={cn(
+                  "absolute top-2 right-2 w-2 h-2 rounded-full ring-2 ring-background",
+                  updateImportant ? "bg-red-500" : "bg-amber-500",
+                )}
+                aria-label={updateImportant ? "Important update available" : "Update available"}
+              />
+            )}
           </a>
         )}
 

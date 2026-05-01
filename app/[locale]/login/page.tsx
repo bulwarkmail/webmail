@@ -16,6 +16,7 @@ import { AlertCircle, Loader2, X, Info, Eye, EyeOff, LogIn, Sun, Moon, Monitor, 
 import { discoverOAuth, type OAuthMetadata } from "@/lib/oauth/discovery";
 import { generateCodeVerifier, generateCodeChallenge, generateState } from "@/lib/oauth/pkce";
 import { OAUTH_SCOPES } from "@/lib/oauth/tokens";
+import { useUpdateStore, selectBanner } from "@/stores/update-store";
 
 const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || "0.0.0";
 const GIT_COMMIT = process.env.NEXT_PUBLIC_GIT_COMMIT || "unknown";
@@ -28,7 +29,13 @@ const THEME_OPTIONS = [
 
 function VersionBadge() {
   const [copied, setCopied] = useState(false);
-  const versionInfo = `Version: ${APP_VERSION}\nBuild: ${GIT_COMMIT}`;
+  const banner = useUpdateStore(useShallow(selectBanner));
+  const dismiss = useUpdateStore((s) => s.dismiss);
+  const startPolling = useUpdateStore((s) => s.startPolling);
+
+  useEffect(() => { startPolling(); }, [startPolling]);
+
+  const versionInfo = `Version: ${APP_VERSION}\nBuild: ${GIT_COMMIT}${banner?.latest ? `\nLatest: ${banner.latest}` : ""}`;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(versionInfo).then(() => {
@@ -37,16 +44,49 @@ function VersionBadge() {
     });
   };
 
+  const isRed = banner?.variant === "red";
+  const triggerText = !banner
+    ? `v${APP_VERSION}`
+    : banner.severity === "security"
+      ? "Security update available"
+      : banner.severity === "deprecated"
+        ? "Version no longer supported"
+        : "New version available";
+
+  const triggerColor = !banner
+    ? "text-muted-foreground/40"
+    : isRed
+      ? "text-red-600/80 dark:text-red-400/80 hover:text-red-600 dark:hover:text-red-400"
+      : "text-amber-600/80 dark:text-amber-400/80 hover:text-amber-600 dark:hover:text-amber-400";
+
+  const triggerClass = cn(
+    "peer text-center text-xs transition-colors",
+    triggerColor,
+    banner?.url ? "cursor-pointer underline-offset-2 hover:underline" : "cursor-default",
+  );
+
+  const trigger = banner?.url ? (
+    <a href={banner.url} target="_blank" rel="noopener noreferrer" className={triggerClass}>
+      {triggerText}
+    </a>
+  ) : (
+    <p className={triggerClass}>{triggerText}</p>
+  );
+
   return (
     <div className="relative inline-flex justify-center">
-      <p className="peer text-center text-xs text-muted-foreground/40 cursor-default">
-        v{APP_VERSION}
-      </p>
+      {trigger}
       <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 px-3 py-2 rounded-md bg-popover text-popover-foreground text-xs shadow-md border border-border opacity-0 peer-hover:opacity-100 hover:opacity-100 transition-opacity whitespace-nowrap z-10">
         <div className="flex items-center gap-2">
           <div className="space-y-0.5">
             <p>Version: <span className="font-medium">{APP_VERSION}</span></p>
             <p>Build: <span className="font-medium">{GIT_COMMIT}</span></p>
+            {banner?.latest && (
+              <p>Latest: <span className="font-medium">{banner.latest}</span></p>
+            )}
+            {banner?.advisory && (
+              <p className="text-red-500 dark:text-red-400">{banner.advisory}</p>
+            )}
           </div>
           <button
             onClick={handleCopy}
@@ -55,6 +95,15 @@ function VersionBadge() {
           >
             {copied ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
           </button>
+          {banner?.dismissible && (
+            <button
+              onClick={dismiss}
+              className="p-1 rounded hover:bg-muted transition-colors"
+              aria-label="Dismiss update notice"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
       </div>
     </div>

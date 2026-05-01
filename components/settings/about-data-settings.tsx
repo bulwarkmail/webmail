@@ -1,17 +1,50 @@
 "use client";
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useSettingsStore } from '@/stores/settings-store';
 import { useConfig } from '@/hooks/use-config';
 import { SettingsSection, SettingItem, ToggleSwitch } from './settings-section';
 import { Button } from '@/components/ui/button';
 import { usePolicyStore } from '@/stores/policy-store';
+import { useUpdateStore } from '@/stores/update-store';
 import { ExternalLink } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { SpamSiegeGame } from './spam-siege-game';
 
 const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || "0.0.0";
 const GIT_COMMIT = process.env.NEXT_PUBLIC_GIT_COMMIT || "unknown";
+
+function VersionUpdateTag() {
+  const status = useUpdateStore((s) => s.status);
+  const startPolling = useUpdateStore((s) => s.startPolling);
+
+  useEffect(() => {
+    startPolling();
+  }, [startPolling]);
+
+  if (!status?.updateAvailable) return null;
+  if (status.severity === 'unknown' || status.severity === 'none') return null;
+
+  const important = status.severity === 'security' || status.severity === 'deprecated';
+  const label =
+    status.severity === 'security' ? 'security'
+    : status.severity === 'deprecated' ? 'deprecated'
+    : status.latest ?? 'update';
+
+  return (
+    <span
+      className={cn(
+        "ml-2 inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium align-middle",
+        important
+          ? "bg-red-500/15 text-red-700 dark:text-red-300"
+          : "bg-amber-500/15 text-amber-700 dark:text-amber-300",
+      )}
+    >
+      {important ? label : `update: ${label}`}
+    </span>
+  );
+}
 
 export function AboutDataSettings() {
   const t = useTranslations('settings.advanced');
@@ -106,6 +139,7 @@ export function AboutDataSettings() {
               </p>
               <p className="text-xs text-muted-foreground group-hover/about:translate-x-0.5 group-active/about:translate-y-px transition-transform">
                 v{APP_VERSION} <span className="text-muted-foreground/60">({GIT_COMMIT})</span>
+                <VersionUpdateTag />
               </p>
             </div>
           </button>
