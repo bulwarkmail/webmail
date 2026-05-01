@@ -306,7 +306,20 @@
         "fail": "DMARC Fail",
         "none": "No DMARC"
       },
-      "spam_score": "Spam Score"
+      "spam_score": "Spam Score",
+      "tooltip_spf": "Sender Policy Framework: Verifies that the sending server is authorized to send email on behalf of the domain",
+      "tooltip_dkim": "DomainKeys Identified Mail: Confirms the email was not altered in transit using a cryptographic signature",
+      "tooltip_dmarc": "Domain-based Message Authentication, Reporting & Conformance: Ensures SPF and DKIM align with the sender's domain and sets a policy for failures",
+      "policy": "Policy",
+      "result": {
+        "pass": "Pass",
+        "fail": "Fail",
+        "softfail": "Soft fail",
+        "neutral": "Neutral",
+        "permerror": "Permanent error",
+        "temperror": "Temporary error",
+        "none": "None"
+      }
     },
     "headers": {
       "routing": "Routing",

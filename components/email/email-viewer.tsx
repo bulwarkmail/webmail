@@ -4116,7 +4116,21 @@ export function EmailViewer({
                       </div>
                       <div className="bg-background p-4 space-y-3">
                         {/* Authentication Results */}
-                        {email.authenticationResults && (
+                        {email.authenticationResults && (() => {
+                          const translateAuthResult = (result?: string) => {
+                            const r = (result || '').toLowerCase();
+                            switch (r) {
+                              case 'pass': return t('authentication.result.pass');
+                              case 'fail': return t('authentication.result.fail');
+                              case 'softfail': return t('authentication.result.softfail');
+                              case 'neutral': return t('authentication.result.neutral');
+                              case 'permerror': return t('authentication.result.permerror');
+                              case 'temperror': return t('authentication.result.temperror');
+                              case 'none': return t('authentication.result.none');
+                              default: return result || '';
+                            }
+                          };
+                          return (
                           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                             {/* SPF Check */}
                             {email.authenticationResults.spf && (
@@ -4137,10 +4151,10 @@ export function EmailViewer({
                                   <div className="flex-1">
                                     <div className="text-xs font-medium text-gray-900 dark:text-gray-100 flex items-center gap-1">
                                       SPF
-                                      <InfoTooltip text="Sender Policy Framework: Verifies that the sending server is authorized to send email on behalf of the domain" />
+                                      <InfoTooltip text={t('authentication.tooltip_spf')} />
                                     </div>
-                                    <div className={cn("text-xs capitalize", getSecurityStatus(email.authenticationResults.spf.result).color)}>
-                                      {email.authenticationResults.spf.result}
+                                    <div className={cn("text-xs", getSecurityStatus(email.authenticationResults.spf.result).color)}>
+                                      {translateAuthResult(email.authenticationResults.spf.result)}
                                     </div>
                                   </div>
                                 </div>
@@ -4171,10 +4185,10 @@ export function EmailViewer({
                                   <div className="flex-1">
                                     <div className="text-xs font-medium text-gray-900 dark:text-gray-100 flex items-center gap-1">
                                       DKIM
-                                      <InfoTooltip text="DomainKeys Identified Mail: Confirms the email was not altered in transit using a cryptographic signature" />
+                                      <InfoTooltip text={t('authentication.tooltip_dkim')} />
                                     </div>
-                                    <div className={cn("text-xs capitalize", getSecurityStatus(email.authenticationResults.dkim.result).color)}>
-                                      {email.authenticationResults.dkim.result}
+                                    <div className={cn("text-xs", getSecurityStatus(email.authenticationResults.dkim.result).color)}>
+                                      {translateAuthResult(email.authenticationResults.dkim.result)}
                                     </div>
                                   </div>
                                 </div>
@@ -4205,16 +4219,16 @@ export function EmailViewer({
                                   <div className="flex-1">
                                     <div className="text-xs font-medium text-gray-900 dark:text-gray-100 flex items-center gap-1">
                                       DMARC
-                                      <InfoTooltip text="Domain-based Message Authentication, Reporting & Conformance: Ensures SPF and DKIM align with the sender's domain and sets a policy for failures" />
+                                      <InfoTooltip text={t('authentication.tooltip_dmarc')} />
                                     </div>
-                                    <div className={cn("text-xs capitalize", getSecurityStatus(email.authenticationResults.dmarc.result).color)}>
-                                      {email.authenticationResults.dmarc.result}
+                                    <div className={cn("text-xs", getSecurityStatus(email.authenticationResults.dmarc.result).color)}>
+                                      {translateAuthResult(email.authenticationResults.dmarc.result)}
                                     </div>
                                   </div>
                                 </div>
                                 {email.authenticationResults.dmarc.policy && (
                                   <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                                    Policy: {email.authenticationResults.dmarc.policy}
+                                    {t('authentication.policy')}: {email.authenticationResults.dmarc.policy}
                                   </div>
                                 )}
                               </div>
@@ -4258,7 +4272,8 @@ export function EmailViewer({
                               </div>
                             )}
                           </div>
-                        )}
+                          );
+                        })()}
 
                         {/* AI Analysis (X-Spam-LLM) - Full width card */}
                         {email.spamLLM && (
