@@ -139,6 +139,7 @@ export default function Home() {
     deleteEmail,
     markAsRead,
     toggleStar,
+    setEmailKeywordsLocal,
     moveToMailbox,
     moveThreadToMailbox,
     searchEmails,
@@ -1085,11 +1086,9 @@ export default function Home() {
       // Update email keywords via JMAP
       await client.updateEmailKeywords(emailId, keywords);
 
-      // Update local state
-      selectEmail(email.id === selectedEmail?.id ? { ...email, keywords } : selectedEmail);
-
-      // Refresh emails list to show color in list
-      await fetchEmails(client, selectedMailbox);
+      // Patch the email in place so the list keeps its scroll/pagination state
+      // instead of being reset to the first page by a full refetch.
+      setEmailKeywordsLocal(emailId, keywords);
 
       // Refresh tag counts
       fetchTagCounts(client);

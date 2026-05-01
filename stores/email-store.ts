@@ -85,6 +85,7 @@ interface EmailStore {
   clearSearchFilters: () => void;
   toggleAdvancedSearch: () => void;
   toggleStar: (client: IJMAPClient, emailId: string) => Promise<void>;
+  setEmailKeywordsLocal: (emailId: string, keywords: Record<string, boolean>) => void;
 
   // Batch operations
   batchMarkAsRead: (client: IJMAPClient, read: boolean) => Promise<void>;
@@ -1055,6 +1056,17 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       });
       throw error;
     }
+  },
+
+  setEmailKeywordsLocal: (emailId, keywords) => {
+    set((state) => ({
+      emails: state.emails.map(e =>
+        e.id === emailId ? { ...e, keywords: { ...keywords } } : e
+      ),
+      selectedEmail: state.selectedEmail?.id === emailId
+        ? { ...state.selectedEmail, keywords: { ...keywords } }
+        : state.selectedEmail,
+    }));
   },
 
   // Batch operations
