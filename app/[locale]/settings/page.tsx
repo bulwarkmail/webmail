@@ -330,9 +330,7 @@ export default function SettingsPage() {
           </div>
 
           <div className="flex-1 overflow-y-auto p-4">
-            <div className="bg-card border border-border rounded-lg p-4">
-              {renderTabContent()}
-            </div>
+            {renderTabContent()}
           </div>
 
           <NavigationRail
@@ -515,17 +513,8 @@ export default function SettingsPage() {
       />
 
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-3xl mx-auto p-8">
-          <div className="mb-6">
-            <div className="flex items-center gap-2.5 mb-2">
-              <SettingsIcon className="w-6 h-6 text-muted-foreground" />
-              <h1 className="text-2xl font-semibold text-foreground">{t('title')}</h1>
-            </div>
-          </div>
-
-          <div className="bg-card border border-border rounded-lg p-6">
-            {renderTabContent()}
-          </div>
+        <div className="max-w-3xl mx-auto px-6 py-6">
+          {renderTabContent()}
         </div>
       </div>
       </>
