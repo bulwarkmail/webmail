@@ -1009,6 +1009,10 @@
       "hide_inline_image_attachments": {
         "label": "Hide inline images from attachments",
         "description": "Images embedded in the message body are not listed as separate attachments"
+      },
+      "attachment_image_previews": {
+        "label": "Show image previews in attachments",
+        "description": "Render image attachments as thumbnail cards instead of generic file icons"
       }
     },
     "composer": {

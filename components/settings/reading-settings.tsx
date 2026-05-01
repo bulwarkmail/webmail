@@ -34,6 +34,7 @@ export function ReadingSettings() {
     hoverActionsMode,
     hoverActionsCorner,
     hideInlineImageAttachments,
+    attachmentImagePreviewsEnabled,
     updateSetting,
   } = useSettingsStore();
 
@@ -203,6 +204,13 @@ export function ReadingSettings() {
         <ToggleSwitch
           checked={hideInlineImageAttachments}
           onChange={(checked) => updateSetting('hideInlineImageAttachments', checked)}
+        />
+      </SettingItem>
+
+      <SettingItem label={t('attachment_image_previews.label')} description={t('attachment_image_previews.description')}>
+        <ToggleSwitch
+          checked={attachmentImagePreviewsEnabled}
+          onChange={(checked) => updateSetting('attachmentImagePreviewsEnabled', checked)}
         />
       </SettingItem>
 

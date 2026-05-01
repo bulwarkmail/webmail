@@ -897,6 +897,7 @@ export function EmailViewer({
   const mailLayout = useSettingsStore((state) => state.mailLayout);
   const calendarInvitationParsingEnabled = useSettingsStore((state) => state.calendarInvitationParsingEnabled);
   const hideInlineImageAttachments = useSettingsStore((state) => state.hideInlineImageAttachments);
+  const attachmentImagePreviewsEnabled = useSettingsStore((state) => state.attachmentImagePreviewsEnabled);
   const timeFormat = useSettingsStore((state) => state.timeFormat);
   const isFocusedMailLayout = mailLayout === 'focus';
 
@@ -926,6 +927,7 @@ export function EmailViewer({
   const [visibleBelowHeaderCount, setVisibleBelowHeaderCount] = useState<number | null>(null);
   const belowHeaderRowRef = useRef<HTMLDivElement>(null);
   const belowHeaderGhostRef = useRef<HTMLDivElement>(null);
+  const [imageThumbUrls, setImageThumbUrls] = useState<Record<string, string>>({});
   const [allowExternalContent, setAllowExternalContent] = useState(false);
   const [hasBlockedContent, setHasBlockedContent] = useState(false);
   const [cidBlobUrls, setCidBlobUrls] = useState<Record<string, string>>({});
@@ -2170,7 +2172,7 @@ export function EmailViewer({
     const ro = new ResizeObserver(measure);
     ro.observe(container);
     return () => ro.disconnect();
-  }, [effectiveAttachments, attachmentPosition]);
+  }, [effectiveAttachments, attachmentPosition, imageThumbUrls]);
 
   // Generate email source for viewing
   const generateEmailSource = (email: Email): string => {
@@ -2616,6 +2618,65 @@ export function EmailViewer({
     anchor.remove();
     setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
   }, [onDownloadAttachment]);
+
+  // Pre-fetch object URLs for image attachments so their actual contents can be
+  // rendered as thumbnails inside the chip. Skips images larger than 10 MB.
+  useEffect(() => {
+    let cancelled = false;
+    const createdUrls: string[] = [];
+
+    if (!attachmentImagePreviewsEnabled) {
+      setImageThumbUrls({});
+      return;
+    }
+
+    const imageAttachments = effectiveAttachments.filter(
+      (att) => (att.type || '').startsWith('image/') && att.size <= 10_000_000,
+    );
+
+    if (imageAttachments.length === 0) {
+      setImageThumbUrls({});
+      return;
+    }
+
+    (async () => {
+      const next: Record<string, string> = {};
+      await Promise.all(imageAttachments.map(async (att) => {
+        let url: string | undefined;
+        try {
+          if (att.blobId && client) {
+            url = await client.fetchBlobAsObjectUrl(att.blobId, att.name || 'thumb', att.type);
+          } else if (att.decryptedAttachment) {
+            const bytes = getAttachmentContentBytes(att.decryptedAttachment);
+            if (!bytes || bytes.byteLength === 0) return;
+            const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+            url = URL.createObjectURL(new Blob([buffer], { type: att.type || 'application/octet-stream' }));
+          } else if (att.tnefData) {
+            const buffer = att.tnefData.buffer.slice(
+              att.tnefData.byteOffset,
+              att.tnefData.byteOffset + att.tnefData.byteLength,
+            ) as ArrayBuffer;
+            url = URL.createObjectURL(new Blob([buffer], { type: att.type || 'application/octet-stream' }));
+          }
+        } catch {
+          return;
+        }
+        if (!url) return;
+        if (cancelled) {
+          URL.revokeObjectURL(url);
+          return;
+        }
+        createdUrls.push(url);
+        next[att.id] = url;
+      }));
+      if (!cancelled) setImageThumbUrls(next);
+    })();
+
+    return () => {
+      cancelled = true;
+      createdUrls.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [effectiveAttachments, client, attachmentImagePreviewsEnabled]);
 
   // Iframe for rendering HTML emails true-to-life
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -4343,23 +4404,47 @@ export function EmailViewer({
                     const FileIcon = getFileIcon(attachment.name || undefined, attachment.type);
                     const isPreviewable = isFilePreviewable(attachment.name || undefined, attachment.type);
                     const opensPreview = isPreviewable && mailAttachmentAction === 'preview';
+                    const thumbUrl = imageThumbUrls[attachment.id];
                     return (
                       <div
                         key={attachment.id}
-                        className="inline-flex items-center gap-1.5 px-2 py-1 bg-muted/60 rounded-md border border-border/50 group relative cursor-default"
+                        className={cn(
+                          "bg-muted/60 hover:bg-muted rounded-md border border-border/50 group relative cursor-pointer overflow-hidden",
+                          thumbUrl
+                            ? "inline-flex flex-col w-40"
+                            : "inline-flex items-center gap-1.5 px-2 py-1",
+                        )}
+                        title={`${opensPreview ? tFiles('preview') : t('download')} ${getAttachmentDisplayName(attachment.name, attachment.type)}`}
+                        onClick={() => handleEffectiveAttachmentOpen(attachment)}
                       >
-                        <FileIcon className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-                        <span className="text-xs text-foreground truncate max-w-[140px]">
-                          {getAttachmentDisplayName(attachment.name, attachment.type)}
-                        </span>
-                        <span className="text-[10px] text-muted-foreground">
-                          {formatFileSize(attachment.size)}
-                        </span>
-                        <div className="absolute inset-y-0 right-0 rounded-r-md bg-background/95 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 px-1.5">
+                        {thumbUrl && (
+                          <div className="w-full h-16 bg-background/40 flex items-center justify-center overflow-hidden">
+                            <img src={thumbUrl} alt="" className="w-full h-full object-cover" loading="lazy" />
+                          </div>
+                        )}
+                        <div className={cn(
+                          "flex items-center gap-1.5",
+                          thumbUrl && "px-2 py-1 border-t border-border/50 w-full",
+                        )}>
+                          <FileIcon className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                          <span className={cn(
+                            "text-xs text-foreground truncate",
+                            thumbUrl ? "flex-1 min-w-0" : "max-w-[140px]",
+                          )}>
+                            {getAttachmentDisplayName(attachment.name, attachment.type)}
+                          </span>
+                          <span className="text-[10px] text-muted-foreground flex-shrink-0">
+                            {formatFileSize(attachment.size)}
+                          </span>
+                        </div>
+                        <div className={cn(
+                          "absolute bg-background/95 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 px-1.5 rounded-md",
+                          thumbUrl ? "top-1 right-1" : "inset-y-0 right-0 rounded-l-none rounded-r-md",
+                        )}>
                           <button
                             className="p-1 hover:bg-accent rounded transition-colors"
                             title={t('download')}
-                            onClick={() => handleEffectiveAttachmentDownload(attachment)}
+                            onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentDownload(attachment); }}
                           >
                             <Download className="w-3.5 h-3.5 text-foreground" />
                           </button>
@@ -4367,7 +4452,7 @@ export function EmailViewer({
                             <button
                               className="p-1 hover:bg-accent rounded transition-colors"
                               title={tFiles('preview')}
-                              onClick={() => handleEffectiveAttachmentOpen(attachment)}
+                              onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentOpen(attachment); }}
                             >
                               <Eye className="w-3.5 h-3.5 text-foreground" />
                             </button>
@@ -4396,7 +4481,9 @@ export function EmailViewer({
                           return (
                             <div
                               key={attachment.id}
-                              className="flex items-center gap-1.5 px-2 py-1 rounded-md group relative cursor-default w-full"
+                              className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-muted/60 group relative cursor-pointer w-full"
+                              title={`${opensPreview ? tFiles('preview') : t('download')} ${getAttachmentDisplayName(attachment.name, attachment.type)}`}
+                              onClick={() => { handleEffectiveAttachmentOpen(attachment); setShowAllBesideAttachments(false); }}
                             >
                               <FileIcon className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
                               <span className="text-xs text-foreground truncate max-w-[180px]">
@@ -4409,7 +4496,7 @@ export function EmailViewer({
                                 <button
                                   className="p-1 hover:bg-accent rounded transition-colors"
                                   title={t('download')}
-                                  onClick={() => { handleEffectiveAttachmentDownload(attachment); setShowAllBesideAttachments(false); }}
+                                  onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentDownload(attachment); setShowAllBesideAttachments(false); }}
                                 >
                                   <Download className="w-3.5 h-3.5 text-foreground" />
                                 </button>
@@ -4417,7 +4504,7 @@ export function EmailViewer({
                                   <button
                                     className="p-1 hover:bg-accent rounded transition-colors"
                                     title={tFiles('preview')}
-                                    onClick={() => { handleEffectiveAttachmentOpen(attachment); setShowAllBesideAttachments(false); }}
+                                    onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentOpen(attachment); setShowAllBesideAttachments(false); }}
                                   >
                                     <Eye className="w-3.5 h-3.5 text-foreground" />
                                   </button>
@@ -4447,6 +4534,18 @@ export function EmailViewer({
             >
               {effectiveAttachments.map((attachment) => {
                 const FileIcon = getFileIcon(attachment.name || undefined, attachment.type);
+                const hasThumb = !!imageThumbUrls[attachment.id];
+                if (hasThumb) {
+                  // Image chip is a fixed-width vertical card; only its width
+                  // matters for the row-fit measurement.
+                  return (
+                    <div
+                      key={`ghost-${attachment.id}`}
+                      className="inline-block w-44 rounded-md border border-border/50 flex-shrink-0"
+                      style={{ height: 1 }}
+                    />
+                  );
+                }
                 return (
                   <div
                     key={`ghost-${attachment.id}`}
@@ -4469,23 +4568,52 @@ export function EmailViewer({
               const FileIcon = getFileIcon(attachment.name || undefined, attachment.type);
               const isPreviewable = isFilePreviewable(attachment.name || undefined, attachment.type);
               const opensPreview = isPreviewable && mailAttachmentAction === 'preview';
+              const thumbUrl = imageThumbUrls[attachment.id];
               return (
                 <div
                   key={attachment.id}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-muted/60 rounded-md border border-border/50 group relative cursor-default flex-shrink-0"
+                  className={cn(
+                    "bg-muted/60 hover:bg-muted rounded-md border border-border/50 group relative cursor-pointer flex-shrink-0 overflow-hidden",
+                    thumbUrl
+                      ? "inline-flex flex-col w-44"
+                      : "inline-flex items-center gap-1.5 px-2.5 py-1.5",
+                  )}
+                  title={`${opensPreview ? tFiles('preview') : t('download')} ${getAttachmentDisplayName(attachment.name, attachment.type)}`}
+                  onClick={() => handleEffectiveAttachmentOpen(attachment)}
                 >
-                  <FileIcon className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                  <span className="text-sm text-foreground truncate max-w-[200px]">
-                    {getAttachmentDisplayName(attachment.name, attachment.type)}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {formatFileSize(attachment.size)}
-                  </span>
-                  <div className="absolute inset-y-0 right-0 rounded-r-md bg-background/95 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 px-1.5">
+                  {thumbUrl && (
+                    <div className="w-full h-20 bg-background/40 flex items-center justify-center overflow-hidden">
+                      <img
+                        src={thumbUrl}
+                        alt=""
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                    </div>
+                  )}
+                  <div className={cn(
+                    "flex items-center gap-1.5",
+                    thumbUrl && "px-2 py-1.5 border-t border-border/50 w-full",
+                  )}>
+                    <FileIcon className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                    <span className={cn(
+                      "text-sm text-foreground truncate",
+                      thumbUrl ? "flex-1 min-w-0" : "max-w-[200px]",
+                    )}>
+                      {getAttachmentDisplayName(attachment.name, attachment.type)}
+                    </span>
+                    <span className="text-xs text-muted-foreground flex-shrink-0">
+                      {formatFileSize(attachment.size)}
+                    </span>
+                  </div>
+                  <div className={cn(
+                    "absolute rounded-md bg-background/95 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 px-1.5",
+                    thumbUrl ? "top-1 right-1" : "inset-y-0 right-0 rounded-r-md rounded-l-none",
+                  )}>
                     <button
                       className="p-1 hover:bg-accent rounded transition-colors"
                       title={t('download')}
-                      onClick={() => handleEffectiveAttachmentDownload(attachment)}
+                      onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentDownload(attachment); }}
                     >
                       <Download className="w-4 h-4 text-foreground" />
                     </button>
@@ -4493,7 +4621,7 @@ export function EmailViewer({
                       <button
                         className="p-1 hover:bg-accent rounded transition-colors"
                         title={tFiles('preview')}
-                        onClick={() => handleEffectiveAttachmentOpen(attachment)}
+                        onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentOpen(attachment); }}
                       >
                         <Eye className="w-4 h-4 text-foreground" />
                       </button>
@@ -4521,7 +4649,9 @@ export function EmailViewer({
                     return (
                       <div
                         key={attachment.id}
-                        className="flex items-center gap-1.5 px-2 py-1 rounded-md group relative cursor-default w-full"
+                        className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-muted/60 group relative cursor-pointer w-full"
+                        title={`${opensPreview ? tFiles('preview') : t('download')} ${getAttachmentDisplayName(attachment.name, attachment.type)}`}
+                        onClick={() => { handleEffectiveAttachmentOpen(attachment); setShowAllBelowHeaderAttachments(false); }}
                       >
                         <FileIcon className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                         <span className="text-sm text-foreground truncate max-w-[220px]">
@@ -4534,7 +4664,7 @@ export function EmailViewer({
                           <button
                             className="p-1 hover:bg-accent rounded transition-colors"
                             title={t('download')}
-                            onClick={() => { handleEffectiveAttachmentDownload(attachment); setShowAllBelowHeaderAttachments(false); }}
+                            onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentDownload(attachment); setShowAllBelowHeaderAttachments(false); }}
                           >
                             <Download className="w-4 h-4 text-foreground" />
                           </button>
@@ -4542,7 +4672,7 @@ export function EmailViewer({
                             <button
                               className="p-1 hover:bg-accent rounded transition-colors"
                               title={tFiles('preview')}
-                              onClick={() => { handleEffectiveAttachmentOpen(attachment); setShowAllBelowHeaderAttachments(false); }}
+                              onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentOpen(attachment); setShowAllBelowHeaderAttachments(false); }}
                             >
                               <Eye className="w-4 h-4 text-foreground" />
                             </button>
@@ -4566,23 +4696,47 @@ export function EmailViewer({
                 const FileIcon = getFileIcon(attachment.name || undefined, attachment.type);
                 const isPreviewable = isFilePreviewable(attachment.name || undefined, attachment.type);
                 const opensPreview = isPreviewable && mailAttachmentAction === 'preview';
+                const thumbUrl = imageThumbUrls[attachment.id];
                 return (
                   <div
                     key={attachment.id}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-muted/60 rounded-md border border-border/50 group relative cursor-default"
+                    className={cn(
+                      "bg-muted/60 hover:bg-muted rounded-md border border-border/50 group relative cursor-pointer overflow-hidden",
+                      thumbUrl
+                        ? "inline-flex flex-col w-44"
+                        : "inline-flex items-center gap-1.5 px-2.5 py-1.5",
+                    )}
+                    title={`${opensPreview ? tFiles('preview') : t('download')} ${getAttachmentDisplayName(attachment.name, attachment.type)}`}
+                    onClick={() => handleEffectiveAttachmentOpen(attachment)}
                   >
-                    <FileIcon className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                    <span className="text-sm text-foreground truncate max-w-[200px]">
-                      {getAttachmentDisplayName(attachment.name, attachment.type)}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {formatFileSize(attachment.size)}
-                    </span>
-                    <div className="absolute inset-y-0 right-0 rounded-r-md bg-background/95 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 px-1.5">
+                    {thumbUrl && (
+                      <div className="w-full h-20 bg-background/40 flex items-center justify-center overflow-hidden">
+                        <img src={thumbUrl} alt="" className="w-full h-full object-cover" loading="lazy" />
+                      </div>
+                    )}
+                    <div className={cn(
+                      "flex items-center gap-1.5",
+                      thumbUrl && "px-2 py-1.5 border-t border-border/50 w-full",
+                    )}>
+                      <FileIcon className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                      <span className={cn(
+                        "text-sm text-foreground truncate",
+                        thumbUrl ? "flex-1 min-w-0" : "max-w-[200px]",
+                      )}>
+                        {getAttachmentDisplayName(attachment.name, attachment.type)}
+                      </span>
+                      <span className="text-xs text-muted-foreground flex-shrink-0">
+                        {formatFileSize(attachment.size)}
+                      </span>
+                    </div>
+                    <div className={cn(
+                      "absolute bg-background/95 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 px-1.5 rounded-md",
+                      thumbUrl ? "top-1 right-1" : "inset-y-0 right-0 rounded-l-none rounded-r-md",
+                    )}>
                       <button
                         className="p-1 hover:bg-accent rounded transition-colors"
                         title={t('download')}
-                        onClick={() => handleEffectiveAttachmentDownload(attachment)}
+                        onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentDownload(attachment); }}
                       >
                         <Download className="w-4 h-4 text-foreground" />
                       </button>
@@ -4590,7 +4744,7 @@ export function EmailViewer({
                         <button
                           className="p-1 hover:bg-accent rounded transition-colors"
                           title={tFiles('preview')}
-                          onClick={() => handleEffectiveAttachmentOpen(attachment)}
+                          onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentOpen(attachment); }}
                         >
                           <Eye className="w-4 h-4 text-foreground" />
                         </button>
@@ -4618,7 +4772,9 @@ export function EmailViewer({
                       return (
                         <div
                           key={attachment.id}
-                          className="flex items-center gap-1.5 px-2 py-1 rounded-md group relative cursor-default w-full"
+                          className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-muted/60 group relative cursor-pointer w-full"
+                          title={`${opensPreview ? tFiles('preview') : t('download')} ${getAttachmentDisplayName(attachment.name, attachment.type)}`}
+                          onClick={() => { handleEffectiveAttachmentOpen(attachment); setShowAllMobileAttachments(false); }}
                         >
                           <FileIcon className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
                           <span className="text-xs text-foreground truncate max-w-[180px]">
@@ -4631,7 +4787,7 @@ export function EmailViewer({
                             <button
                               className="p-1 hover:bg-accent rounded transition-colors"
                               title={t('download')}
-                              onClick={() => { handleEffectiveAttachmentDownload(attachment); setShowAllMobileAttachments(false); }}
+                              onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentDownload(attachment); setShowAllMobileAttachments(false); }}
                             >
                               <Download className="w-3.5 h-3.5 text-foreground" />
                             </button>
@@ -4639,7 +4795,7 @@ export function EmailViewer({
                               <button
                                 className="p-1 hover:bg-accent rounded transition-colors"
                                 title={tFiles('preview')}
-                                onClick={() => { handleEffectiveAttachmentOpen(attachment); setShowAllMobileAttachments(false); }}
+                                onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentOpen(attachment); setShowAllMobileAttachments(false); }}
                               >
                                 <Eye className="w-3.5 h-3.5 text-foreground" />
                               </button>
@@ -5173,6 +5329,7 @@ export function EmailViewer({
         }}
       />
     )}
+
     </div>
   );
 }

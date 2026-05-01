@@ -211,6 +211,10 @@ interface SettingsState {
   // attachment list shown above the message body.
   hideInlineImageAttachments: boolean;
 
+  // Render image attachments as thumbnail cards (preview the actual image
+  // contents inside the chip) instead of generic file icons.
+  attachmentImagePreviewsEnabled: boolean;
+
   // Sidebar Apps
   sidebarApps: SidebarApp[];
   keepAppsLoaded: boolean;
@@ -384,6 +388,7 @@ const DEFAULT_SETTINGS = {
   ] as string[],
 
   hideInlineImageAttachments: true,
+  attachmentImagePreviewsEnabled: true,
 
   // Sidebar Apps
   sidebarApps: [] as SidebarApp[],
@@ -491,6 +496,7 @@ export const useSettingsStore = create<SettingsState>()(
           attachmentReminderEnabled: state.attachmentReminderEnabled,
           attachmentReminderKeywords: state.attachmentReminderKeywords,
           hideInlineImageAttachments: state.hideInlineImageAttachments,
+          attachmentImagePreviewsEnabled: state.attachmentImagePreviewsEnabled,
           sidebarApps: state.sidebarApps,
           keepAppsLoaded: state.keepAppsLoaded,
           debugMode: state.debugMode,
