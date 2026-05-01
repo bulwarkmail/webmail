@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useLayoutEffect, useRef } from "react";
 
 interface Position {
   x: number;
@@ -21,7 +21,8 @@ interface UseContextMenuReturn<T> {
 }
 
 const MENU_WIDTH = 200;
-const MENU_HEIGHT = 320; // Approximate max height
+const MENU_HEIGHT = 320; // Initial estimate; refined after mount via layout effect
+const VIEWPORT_MARGIN = 10;
 
 export function useContextMenu<T>(): UseContextMenuReturn<T> {
   const [contextMenu, setContextMenu] = useState<ContextMenuState<T>>({
@@ -40,21 +41,47 @@ export function useContextMenu<T>(): UseContextMenuReturn<T> {
     let y = clientY;
 
     // Adjust for right edge
-    if (x + MENU_WIDTH > viewportWidth - 10) {
-      x = viewportWidth - MENU_WIDTH - 10;
+    if (x + MENU_WIDTH > viewportWidth - VIEWPORT_MARGIN) {
+      x = viewportWidth - MENU_WIDTH - VIEWPORT_MARGIN;
     }
 
     // Adjust for bottom edge
-    if (y + MENU_HEIGHT > viewportHeight - 10) {
-      y = viewportHeight - MENU_HEIGHT - 10;
+    if (y + MENU_HEIGHT > viewportHeight - VIEWPORT_MARGIN) {
+      y = viewportHeight - MENU_HEIGHT - VIEWPORT_MARGIN;
     }
 
     // Ensure minimum position
-    x = Math.max(10, x);
-    y = Math.max(10, y);
+    x = Math.max(VIEWPORT_MARGIN, x);
+    y = Math.max(VIEWPORT_MARGIN, y);
 
     return { x, y };
   }, []);
+
+  // Re-clamp position once we can measure the actual rendered menu — the
+  // initial estimate uses a fixed height which can be too small for menus
+  // with many items, causing the bottom to be clipped off-screen.
+  useLayoutEffect(() => {
+    if (!contextMenu.isOpen || !menuRef.current) return;
+    const rect = menuRef.current.getBoundingClientRect();
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    let x = contextMenu.position.x;
+    let y = contextMenu.position.y;
+
+    if (x + rect.width > viewportWidth - VIEWPORT_MARGIN) {
+      x = viewportWidth - rect.width - VIEWPORT_MARGIN;
+    }
+    if (y + rect.height > viewportHeight - VIEWPORT_MARGIN) {
+      y = viewportHeight - rect.height - VIEWPORT_MARGIN;
+    }
+    x = Math.max(VIEWPORT_MARGIN, x);
+    y = Math.max(VIEWPORT_MARGIN, y);
+
+    if (x !== contextMenu.position.x || y !== contextMenu.position.y) {
+      setContextMenu((prev) => ({ ...prev, position: { x, y } }));
+    }
+  }, [contextMenu.isOpen, contextMenu.position.x, contextMenu.position.y]);
 
   const openContextMenu = useCallback((e: React.MouseEvent, data: T) => {
     e.preventDefault();
