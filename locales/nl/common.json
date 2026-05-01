@@ -185,6 +185,7 @@
       "select": "E-mails selecteren",
       "select_all": "Alles selecteren",
       "mark_read": "Markeren als gelezen",
+      "selected_messages": "{count, plural, one {1 e-mail} other {# e-mails}} geselecteerd",
       "mark_unread": "Markeren als ongelezen",
       "delete": "Verwijderen",
       "delete_confirm_title": "E-mails verwijderen",

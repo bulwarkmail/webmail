@@ -40,17 +40,53 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Incomplete JMAP session' }, { status: 502 });
     }
 
-    // Find the inbox, then pull the most recent unread message in it. We use
-    // a single batched JMAP request with back-references so this round-trip
-    // is one POST regardless of how many messages exist.
+    const inboxRes = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        Authorization: creds.authHeader,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        using: ['urn:ietf:params:jmap:core', 'urn:ietf:params:jmap:mail'],
+        methodCalls: [
+          [
+            'Mailbox/query',
+            { accountId, filter: { role: 'inbox' }, limit: 1 },
+            'mb',
+          ],
+        ],
+      }),
+    });
+
+    if (!inboxRes.ok) {
+      return NextResponse.json({ error: 'JMAP mailbox query failed' }, { status: 502 });
+    }
+
+    const inboxData = (await inboxRes.json()) as {
+      methodResponses: [string, Record<string, unknown>, string][];
+    };
+
+    const inboxBody = inboxData.methodResponses.find(
+      ([method]) => method === 'Mailbox/query',
+    )?.[1] as { ids?: string[] } | undefined;
+
+    const inboxId = inboxBody?.ids?.[0];
+
+    if (!inboxId) {
+      return NextResponse.json({
+        email: null,
+        unreadTotal: 0,
+      }, {
+        headers: {
+          'Cache-Control': 'no-store',
+        },
+      });
+    }
+
+    // Pull the most recent unread message from the resolved Inbox mailbox.
     const requestBody = {
       using: ['urn:ietf:params:jmap:core', 'urn:ietf:params:jmap:mail'],
       methodCalls: [
-        [
-          'Mailbox/query',
-          { accountId, filter: { role: 'inbox' }, limit: 1 },
-          'mb',
-        ],
         [
           'Email/query',
           {
@@ -58,7 +94,7 @@ export async function GET(request: NextRequest) {
             filter: {
               operator: 'AND',
               conditions: [
-                { inMailbox: { resultOf: 'mb', name: 'Mailbox/query', path: '/ids/0' } },
+                { inMailbox: inboxId },
                 { notKeyword: '$seen' },
               ],
             },

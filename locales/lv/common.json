@@ -184,6 +184,7 @@
     "batch_actions": {
       "select": "Atlasīt vēstules",
       "select_all": "Atlasīt visas",
+      "selected_messages": "{count, plural, one {Izvēlēta 1 e-pasta vēstule} other {Izvēlētas # e-pasta vēstules}}",
       "mark_read": "Atzīmēt kā izlasītu",
       "mark_unread": "Atzīmēt kā nelasītu",
       "delete": "Dzēst",

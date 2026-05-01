@@ -184,6 +184,7 @@
     "batch_actions": {
       "select": "选择邮件",
       "select_all": "全选",
+      "selected_messages": "已選取 {count, plural, one {1} other {#}} 封電子郵件",
       "mark_read": "标记为已读",
       "mark_unread": "标记为未读",
       "delete": "删除",
