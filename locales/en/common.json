@@ -184,6 +184,7 @@
     "batch_actions": {
       "select": "Select emails",
       "select_all": "Select all",
+      "selected_messages": "{count, plural, one {1 email} other {# emails}} selected",
       "mark_read": "Mark as read",
       "mark_unread": "Mark as unread",
       "delete": "Delete",
