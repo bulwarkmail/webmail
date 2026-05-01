@@ -29,6 +29,25 @@ export type MailboxContextTarget =
   | { kind: "mailbox"; mailbox: Mailbox; hasChildren: boolean }
   | { kind: "folders-section" };
 
+const PATH_SEPARATOR = " › ";
+const MAX_PATH_LENGTH = 40;
+const MAX_SEGMENT_LENGTH = 16;
+
+function truncateSegment(name: string): string {
+  return name.length > MAX_SEGMENT_LENGTH
+    ? `${name.slice(0, MAX_SEGMENT_LENGTH - 1)}…`
+    : name;
+}
+
+function shortenPath(fullPath: string): string {
+  if (fullPath.length <= MAX_PATH_LENGTH) return fullPath;
+  const segments = fullPath.split(PATH_SEPARATOR);
+  if (segments.length <= 2) return segments.map(truncateSegment).join(PATH_SEPARATOR);
+  const first = truncateSegment(segments[0]);
+  const last = truncateSegment(segments[segments.length - 1]);
+  return `${first}${PATH_SEPARATOR}…${PATH_SEPARATOR}${last}`;
+}
+
 interface MailboxContextMenuProps {
   target: MailboxContextTarget | null;
   position: Position;
@@ -110,9 +129,14 @@ export function MailboxContextMenu({
   const canSetSeen = mailbox.myRights?.maySetSeen !== false;
   const canRemoveItems = mailbox.myRights?.mayRemoveItems !== false;
 
+  const fullPath = getMailboxPath(mailbox, mailboxes);
+  const displayPath = shortenPath(fullPath);
+
   return (
     <ContextMenu ref={menuRef} isOpen={isOpen} position={position} onClose={onClose}>
-      <ContextMenuHeader>{getMailboxPath(mailbox, mailboxes)}</ContextMenuHeader>
+      <ContextMenuHeader>
+        <span title={fullPath}>{displayPath}</span>
+      </ContextMenuHeader>
 
       <ContextMenuItem
         icon={MailOpen}
