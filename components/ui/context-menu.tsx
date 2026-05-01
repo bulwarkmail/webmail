@@ -158,22 +158,41 @@ export function ContextMenuSubMenu({
   children,
 }: ContextMenuSubMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [subMenuPosition, setSubMenuPosition] = useState<"right" | "left">("right");
+  const [subMenuPos, setSubMenuPos] = useState<Position | null>(null);
   const itemRef = useRef<HTMLDivElement>(null);
   const subMenuRef = useRef<HTMLDivElement>(null);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
-    if (isOpen && itemRef.current) {
-      const rect = itemRef.current.getBoundingClientRect();
-      const viewportWidth = window.innerWidth;
-
-      if (rect.right + 200 > viewportWidth - 10) {
-        setSubMenuPosition("left");
-      } else {
-        setSubMenuPosition("right");
-      }
+  useLayoutEffect(() => {
+    if (!isOpen) {
+      setSubMenuPos(null);
+      return;
     }
+    const itemEl = itemRef.current;
+    const subEl = subMenuRef.current;
+    if (!itemEl || !subEl) return;
+
+    const itemRect = itemEl.getBoundingClientRect();
+    const subRect = subEl.getBoundingClientRect();
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+
+    let left: number;
+    if (itemRect.right + subRect.width <= vw - VIEWPORT_MARGIN) {
+      left = itemRect.right;
+    } else if (itemRect.left - subRect.width >= VIEWPORT_MARGIN) {
+      left = itemRect.left - subRect.width;
+    } else {
+      left = Math.max(VIEWPORT_MARGIN, vw - subRect.width - VIEWPORT_MARGIN);
+    }
+
+    let top = itemRect.top;
+    if (top + subRect.height > vh - VIEWPORT_MARGIN) {
+      top = vh - subRect.height - VIEWPORT_MARGIN;
+    }
+    top = Math.max(VIEWPORT_MARGIN, top);
+
+    setSubMenuPos({ x: left, y: top });
   }, [isOpen]);
 
   useEffect(() => {
@@ -220,13 +239,17 @@ export function ContextMenuSubMenu({
         <div
           ref={subMenuRef}
           className={cn(
-            "absolute top-0 min-w-[180px] bg-background rounded-md shadow-lg border border-border",
-            "animate-in fade-in-0 zoom-in-95 duration-100",
-            subMenuPosition === "right" ? "left-full" : "right-full"
+            "fixed z-50 min-w-[180px] bg-background rounded-md shadow-lg border border-border",
+            "animate-in fade-in-0 zoom-in-95 duration-100"
           )}
+          style={{
+            left: subMenuPos?.x ?? 0,
+            top: subMenuPos?.y ?? 0,
+            visibility: subMenuPos ? "visible" : "hidden",
+          }}
           role="menu"
         >
-          <div className="py-1 max-h-[300px] overflow-y-auto">
+          <div className="py-1 max-h-[min(300px,calc(100vh-40px))] overflow-y-auto">
             {children}
           </div>
         </div>
