@@ -53,11 +53,9 @@ A modern, self-hosted webmail client for [Stalwart Mail Server](https://stalw.ar
 </tr>
 </table>
 
-> **Anonymous telemetry is on by default** since 1.5.3. Each instance sends a daily heartbeat (version, platform, bucketed account counts, feature toggles - no message data, no PII). Disable from **Admin → Telemetry**, by setting `BULWARK_TELEMETRY=off`, or by clearing the endpoint. Full schema: [privacy notice](https://bulwarkmail.org/docs/legal/privacy/telemetry).
-
 ## Overview
 
-Bulwark is a full webmail suite – not just an inbox. It bundles the four apps most self-hosters end up wanting on the same login:
+Bulwark is a full webmail suite, not just an inbox. It bundles the four apps most self-hosters end up wanting on the same login:
 
 - **Mail** – threading, unified inbox, full-text search, Sieve filters, S/MIME, templates
 - **Calendar** – month/week/day/agenda, recurring events, iMIP invitations, CalDAV subscriptions
