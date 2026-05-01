@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
-import { useRouter } from "@/i18n/navigation";
+import { useRouter, usePathname } from "@/i18n/navigation";
 import { useAuthStore } from "@/stores/auth-store";
 import { useCalendarStore } from "@/stores/calendar-store";
 import { useWebDAVStore } from "@/stores/webdav-store";
@@ -34,6 +34,7 @@ export function useTour() {
 
 export function TourProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
   const { isDemoMode } = useAuthStore();
   const { supportsCalendar } = useCalendarStore();
   const { supportsWebDAV } = useWebDAVStore();
@@ -63,9 +64,16 @@ export function TourProvider({ children }: { children: ReactNode }) {
     // If the resume step is beyond the current steps, start from 0
     if (resumeStep >= steps.length) resumeStep = 0;
 
+    // Most steps live on the mailbox — navigate there (or to the step's specific page)
+    // so we don't start the tour on a page where the targets don't exist.
+    const targetPage = steps[resumeStep]?.page ?? "/";
+    if (pathname !== targetPage) {
+      router.push(targetPage);
+    }
+
     setCurrentStep(resumeStep);
     setIsActive(true);
-  }, [steps.length]);
+  }, [steps, pathname, router]);
 
   const stopTour = useCallback(() => {
     setIsActive(false);
@@ -90,14 +98,17 @@ export function TourProvider({ children }: { children: ReactNode }) {
     }
     const next = currentStep + 1;
     const nextStepDef = steps[next];
+    const currentStepDef = steps[currentStep];
     setCurrentStep(next);
     try {
       localStorage.setItem(TOUR_CURRENT_STEP_KEY, String(next));
     } catch { /* */ }
 
-    // Navigate if the next step requires a different page
-    if (nextStepDef?.page) {
-      router.push(nextStepDef.page);
+    // Navigate when the next step is on a different page (treat "no page" as the mailbox)
+    const nextPage = nextStepDef?.page ?? "/";
+    const currentPage = currentStepDef?.page ?? "/";
+    if (nextPage !== currentPage) {
+      router.push(nextPage);
     }
   }, [currentStep, steps, completeTour, router]);
 
