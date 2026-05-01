@@ -4,11 +4,20 @@ import { execSync } from "child_process";
 import { readFileSync } from "fs";
 import { join } from "path";
 
-let gitCommitHash = "unknown";
-try {
-  gitCommitHash = execSync("git rev-parse --short HEAD").toString().trim();
-} catch {
-  // git not available
+// Prefer an explicit build arg (passed in by CI / Docker, where .git is
+// excluded from the build context) and fall back to `git rev-parse` for
+// local builds.
+let gitCommitHash = process.env.GIT_COMMIT?.trim() || "";
+if (!gitCommitHash) {
+  try {
+    gitCommitHash = execSync("git rev-parse --short HEAD").toString().trim();
+  } catch {
+    gitCommitHash = "unknown";
+  }
+}
+// Normalise full 40-char SHAs (e.g. ${{ github.sha }}) to the short form.
+if (/^[0-9a-f]{40}$/i.test(gitCommitHash)) {
+  gitCommitHash = gitCommitHash.slice(0, 7);
 }
 
 let appVersion = "0.0.0";
