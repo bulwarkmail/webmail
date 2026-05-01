@@ -210,46 +210,48 @@ export default function MarketplacePreviewPage() {
       </Link>
 
       {/* Header */}
-      <div className="flex items-start gap-4">
-        <div className="w-14 h-14 rounded-lg bg-muted flex items-center justify-center shrink-0">
-          {isPlugin ? (
-            <Puzzle className="w-7 h-7 text-muted-foreground" />
-          ) : (
-            <SwatchBook className="w-7 h-7 text-muted-foreground" />
-          )}
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-semibold text-foreground truncate">{ext.name}</h1>
-            {ext.featured && <Star className="w-4 h-4 text-warning fill-warning shrink-0" />}
-            {data.installed && (
-              <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400 font-medium">
-                <Check className="w-3 h-3" /> Installed
-              </span>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+        <div className="flex items-start gap-4 flex-1 min-w-0">
+          <div className="w-14 h-14 rounded-lg bg-muted flex items-center justify-center shrink-0">
+            {isPlugin ? (
+              <Puzzle className="w-7 h-7 text-muted-foreground" />
+            ) : (
+              <SwatchBook className="w-7 h-7 text-muted-foreground" />
             )}
           </div>
-          <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground flex-wrap">
-            <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
-              isPlugin
-                ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/30 dark:text-blue-400'
-                : 'bg-purple-100 text-purple-700 dark:bg-purple-950/30 dark:text-purple-400'
-            }`}>
-              {isPlugin ? (ext.pluginType || 'plugin') : 'theme'}
-            </span>
-            {ext.author && (
-              <span>by {ext.author.displayName}</span>
-            )}
-            {ext.latestVersion && <span>v{ext.latestVersion}</span>}
-            {ext.license && <span>{ext.license}</span>}
-            <span className="inline-flex items-center gap-1">
-              <Download className="w-3 h-3" />
-              {ext.totalDownloads.toLocaleString()}
-            </span>
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <h1 className="text-2xl font-semibold text-foreground break-words min-w-0">{ext.name}</h1>
+              {ext.featured && <Star className="w-4 h-4 text-warning fill-warning shrink-0" />}
+              {data.installed && (
+                <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400 font-medium">
+                  <Check className="w-3 h-3" /> Installed
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground flex-wrap">
+              <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
+                isPlugin
+                  ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/30 dark:text-blue-400'
+                  : 'bg-purple-100 text-purple-700 dark:bg-purple-950/30 dark:text-purple-400'
+              }`}>
+                {isPlugin ? (ext.pluginType || 'plugin') : 'theme'}
+              </span>
+              {ext.author && (
+                <span>by {ext.author.displayName}</span>
+              )}
+              {ext.latestVersion && <span>v{ext.latestVersion}</span>}
+              {ext.license && <span>{ext.license}</span>}
+              <span className="inline-flex items-center gap-1">
+                <Download className="w-3 h-3" />
+                {ext.totalDownloads.toLocaleString()}
+              </span>
+            </div>
           </div>
         </div>
 
         {/* Action buttons */}
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
           {data.installed ? (
             <>
               <Link

@@ -114,7 +114,7 @@ export default function AdminTelemetryPage() {
   const isOn = status.consent === 'on';
 
   return (
-    <div className="max-w-3xl mx-auto p-6 space-y-6">
+    <div className="space-y-6">
       <header className="space-y-2">
         <h1 className="text-2xl font-semibold">Anonymous Usage Stats</h1>
         <p className="text-sm text-muted-foreground">
@@ -133,8 +133,8 @@ export default function AdminTelemetryPage() {
       </header>
 
       <section className="rounded-lg border p-4 space-y-3">
-        <div className="flex items-center justify-between">
-          <div>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="min-w-0">
             <div className="font-medium">Status</div>
             <div className="text-sm text-muted-foreground">
               {status.consent === 'pending' && 'Initialising - no heartbeats sent yet.'}
@@ -195,19 +195,19 @@ export default function AdminTelemetryPage() {
           Where heartbeats are sent. Defaults to the project's collector. Point at your own collector
           (open source at <code>bulwarkmail/dashboard</code>) or clear this field to disable sending.
         </p>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <input
             type="url"
             value={endpointDraft}
             onChange={(e) => setEndpointDraft(e.target.value)}
             placeholder={status.defaultEndpoint}
-            className="flex-1 px-3 py-1.5 rounded-md border bg-background"
+            className="flex-1 min-w-0 px-3 py-1.5 rounded-md border bg-background"
           />
           <button
             type="button"
             disabled={busy === 'endpoint' || endpointDraft === status.endpoint}
             onClick={() => void saveEndpoint()}
-            className="px-3 py-1.5 rounded-md border bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 inline-flex items-center gap-1"
+            className="shrink-0 px-3 py-1.5 rounded-md border bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 inline-flex items-center justify-center gap-1"
           >
             <Save className="h-4 w-4" /> Save
           </button>
@@ -215,8 +215,8 @@ export default function AdminTelemetryPage() {
       </section>
 
       <section className="rounded-lg border p-4 space-y-3">
-        <div className="flex items-center justify-between">
-          <div>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="min-w-0">
             <div className="font-medium">Payload preview</div>
             <div className="text-sm text-muted-foreground">
               Exactly what the next heartbeat would send from this install, right now.
@@ -226,7 +226,7 @@ export default function AdminTelemetryPage() {
             type="button"
             disabled={busy === 'send' || !isOn}
             onClick={() => void sendNow()}
-            className="px-3 py-1.5 rounded-md border bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 inline-flex items-center gap-1"
+            className="shrink-0 px-3 py-1.5 rounded-md border bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 inline-flex items-center gap-1"
           >
             <Send className="h-4 w-4" /> Send now
           </button>

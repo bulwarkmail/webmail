@@ -86,8 +86,8 @@ export default function AdminSettingsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
           <h1 className="text-2xl font-semibold text-foreground">Server Settings</h1>
           <p className="text-sm text-muted-foreground mt-1">General server configuration</p>
         </div>
@@ -166,21 +166,21 @@ function TextSetting({ label, configKey, value, source, onChange, onRevert, plac
   onChange: (key: string, value: unknown) => void; onRevert: (key: string) => void; placeholder?: string;
 }) {
   return (
-    <div className="px-4 py-3 flex items-center justify-between gap-4">
+    <div className="px-4 py-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
       <div className="flex items-center gap-2 min-w-0">
-        <label className="text-sm text-foreground whitespace-nowrap">{label}</label>
+        <label className="text-sm text-foreground">{label}</label>
         <SourceBadge source={source} />
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 w-full sm:w-auto">
         <input
           type="text"
           value={value ?? ''}
           onChange={(e) => onChange(configKey, e.target.value)}
           placeholder={placeholder}
-          className="h-8 w-64 rounded-md border border-input bg-background px-2.5 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="h-8 w-full sm:w-64 rounded-md border border-input bg-background px-2.5 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         />
         {source === 'admin' && (
-          <button onClick={() => onRevert(configKey)} className="text-muted-foreground hover:text-foreground" title="Revert to default">
+          <button onClick={() => onRevert(configKey)} className="shrink-0 text-muted-foreground hover:text-foreground" title="Revert to default">
             <RotateCcw className="w-3.5 h-3.5" />
           </button>
         )}
@@ -194,7 +194,7 @@ function ToggleSetting({ label, description, configKey, value, source, onChange,
   onChange: (key: string, value: unknown) => void; onRevert: (key: string) => void;
 }) {
   return (
-    <div className="px-4 py-3 flex items-center justify-between gap-4">
+    <div className="px-4 py-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
       <div className="min-w-0">
         <div className="flex items-center gap-2">
           <span className="text-sm text-foreground">{label}</span>
@@ -202,7 +202,7 @@ function ToggleSetting({ label, description, configKey, value, source, onChange,
         </div>
         {description && <p className="text-xs text-muted-foreground mt-0.5">{description}</p>}
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 shrink-0">
         <button
           onClick={() => onChange(configKey, !value)}
           className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${value ? 'bg-primary' : 'bg-muted-foreground/25 dark:bg-muted-foreground/50'}`}
@@ -224,12 +224,12 @@ function SelectSetting({ label, configKey, value, source, options, onChange, onR
   onChange: (key: string, value: unknown) => void; onRevert: (key: string) => void;
 }) {
   return (
-    <div className="px-4 py-3 flex items-center justify-between gap-4">
-      <div className="flex items-center gap-2">
+    <div className="px-4 py-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+      <div className="flex items-center gap-2 min-w-0">
         <span className="text-sm text-foreground">{label}</span>
         <SourceBadge source={source} />
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 shrink-0">
         <select
           value={value ?? ''}
           onChange={(e) => onChange(configKey, e.target.value)}

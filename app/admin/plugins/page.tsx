@@ -262,12 +262,12 @@ export default function AdminPluginsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
           <h1 className="text-2xl font-semibold text-foreground">Plugins</h1>
           <p className="text-sm text-muted-foreground mt-1">Manage plugins and plugin policy for all users</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {policyDirty && (
             <button
               onClick={handleSavePolicy}
@@ -309,7 +309,7 @@ export default function AdminPluginsPage() {
           <p className="text-xs text-muted-foreground mt-0.5">Control plugin availability for users</p>
         </div>
         <div className="divide-y divide-border">
-          <div className="px-4 py-3 flex items-center justify-between gap-4">
+          <div className="px-4 py-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
             <div>
               <span className="text-sm text-foreground">Plugins Enabled</span>
               <p className="text-xs text-muted-foreground mt-0.5">Allow the plugin system to load and run plugins for users</p>
@@ -320,7 +320,7 @@ export default function AdminPluginsPage() {
             </button>
           </div>
 
-          <div className="px-4 py-3 flex items-center justify-between gap-4">
+          <div className="px-4 py-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
             <div>
               <span className="text-sm text-foreground">User Plugin Uploads</span>
               <p className="text-xs text-muted-foreground mt-0.5">Allow users to upload plugin ZIP files in Settings</p>
@@ -331,7 +331,7 @@ export default function AdminPluginsPage() {
             </button>
           </div>
 
-          <div className="px-4 py-3 flex items-center justify-between gap-4">
+          <div className="px-4 py-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
             <div>
               <span className="text-sm text-foreground">Require Admin Approval</span>
               <p className="text-xs text-muted-foreground mt-0.5">User-uploaded plugins must be approved by an admin before they can be enabled</p>
@@ -344,7 +344,7 @@ export default function AdminPluginsPage() {
 
           {/* Force enable / disable all */}
           {plugins.length > 0 && (
-            <div className="px-4 py-3 flex items-center justify-between gap-4">
+            <div className="px-4 py-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
               <div>
                 <span className="text-sm text-foreground">Force Enable / Disable All</span>
                 <p className="text-xs text-muted-foreground mt-0.5">Bulk toggle all deployed plugins at once</p>
@@ -388,9 +388,9 @@ export default function AdminPluginsPage() {
         ) : (
           <div className="divide-y divide-border">
             {plugins.map(plugin => (
-              <div key={plugin.id} className="px-4 py-4 flex items-center justify-between gap-4">
+              <div key={plugin.id} className="px-4 py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                     <span className="text-sm font-medium text-foreground">{plugin.name}</span>
                     <span className="text-xs text-muted-foreground">v{plugin.version}</span>
                     <span className={`text-xs px-1.5 py-0.5 rounded ${plugin.enabled ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400' : 'bg-muted text-muted-foreground'}`}>

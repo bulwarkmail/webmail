@@ -129,8 +129,8 @@ export default function AdminAuthPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
           <h1 className="text-2xl font-semibold text-foreground">Authentication</h1>
           <p className="text-sm text-muted-foreground mt-1">OAuth, SSO, and session configuration</p>
         </div>
@@ -154,7 +154,7 @@ export default function AdminAuthPage() {
 
       {/* Auto-setup */}
       <div className="rounded-lg border border-primary/30 bg-primary/5 p-4">
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-primary shrink-0" />
@@ -314,7 +314,7 @@ function Text({ label, description, configKey, value, source, onChange, onRevert
   onChange: (k: string, v: unknown) => void; onRevert: (k: string) => void; placeholder?: string; type?: string;
 }) {
   return (
-    <div className="px-4 py-3 flex items-center justify-between gap-4">
+    <div className="px-4 py-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
       <div className="min-w-0">
         <div className="flex items-center gap-2">
           <span className="text-sm text-foreground">{label}</span>
@@ -322,11 +322,11 @@ function Text({ label, description, configKey, value, source, onChange, onRevert
         </div>
         {description && <p className="text-xs text-muted-foreground mt-0.5">{description}</p>}
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 w-full sm:w-auto">
         <input type={type} value={value ?? ''} onChange={(e) => onChange(configKey, e.target.value)} placeholder={placeholder}
-          className="h-8 w-64 rounded-md border border-input bg-background px-2.5 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+          className="h-8 w-full sm:w-64 rounded-md border border-input bg-background px-2.5 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
         {source === 'admin' && (
-          <button onClick={() => onRevert(configKey)} className="text-muted-foreground hover:text-foreground" title="Revert"><RotateCcw className="w-3.5 h-3.5" /></button>
+          <button onClick={() => onRevert(configKey)} className="shrink-0 text-muted-foreground hover:text-foreground" title="Revert"><RotateCcw className="w-3.5 h-3.5" /></button>
         )}
       </div>
     </div>
@@ -338,7 +338,7 @@ function Toggle({ label, description, configKey, value, source, onChange, onReve
   onChange: (k: string, v: unknown) => void; onRevert: (k: string) => void;
 }) {
   return (
-    <div className="px-4 py-3 flex items-center justify-between gap-4">
+    <div className="px-4 py-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
       <div className="min-w-0">
         <div className="flex items-center gap-2">
           <span className="text-sm text-foreground">{label}</span>
@@ -346,7 +346,7 @@ function Toggle({ label, description, configKey, value, source, onChange, onReve
         </div>
         {description && <p className="text-xs text-muted-foreground mt-0.5">{description}</p>}
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 shrink-0">
         <button onClick={() => onChange(configKey, !value)}
           className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${value ? 'bg-primary' : 'bg-muted-foreground/25 dark:bg-muted-foreground/50'}`}>
           <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-background shadow transition-transform ${value ? 'translate-x-[18px]' : 'translate-x-[3px]'}`} />
@@ -364,12 +364,12 @@ function Select({ label, configKey, value, source, options, onChange, onRevert }
   onChange: (k: string, v: unknown) => void; onRevert: (k: string) => void;
 }) {
   return (
-    <div className="px-4 py-3 flex items-center justify-between gap-4">
-      <div className="flex items-center gap-2">
+    <div className="px-4 py-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+      <div className="flex items-center gap-2 min-w-0">
         <span className="text-sm text-foreground">{label}</span>
         <SourceBadge source={source} />
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 shrink-0">
         <select value={value ?? ''} onChange={(e) => onChange(configKey, e.target.value)}
           className="h-8 rounded-md border border-input bg-background px-2.5 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
           {options.map(o => <option key={o} value={o}>{o}</option>)}

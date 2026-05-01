@@ -44,8 +44,8 @@ interface SettingItemProps {
 
 export function SettingItem({ label, description, children, locked }: SettingItemProps) {
   return (
-    <div className={cn("flex items-start justify-between py-3 border-b border-border last:border-0", locked && "opacity-60")}>
-      <div className="flex-1 pr-4">
+    <div className={cn("flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4 py-3 border-b border-border last:border-0", locked && "opacity-60")}>
+      <div className="flex-1 min-w-0 sm:pr-4">
         <div className="flex items-center gap-1.5">
           <label className="text-sm font-medium text-foreground">{label}</label>
           {locked && <Lock className="w-3 h-3 text-muted-foreground" aria-label="Managed by administrator" />}

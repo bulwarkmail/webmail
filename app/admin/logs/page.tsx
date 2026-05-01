@@ -33,8 +33,8 @@ export default function AdminLogsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
           <h1 className="text-2xl font-semibold text-foreground">Audit Log</h1>
           <p className="text-sm text-muted-foreground mt-1">{total} total entries</p>
         </div>
@@ -52,7 +52,7 @@ export default function AdminLogsPage() {
         <select
           value={actionFilter}
           onChange={(e) => { setActionFilter(e.target.value); setPage(1); }}
-          className="h-8 rounded-md border border-input bg-background px-2.5 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="h-8 w-full sm:w-auto rounded-md border border-input bg-background px-2.5 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <option value="">All actions</option>
           <option value="admin.login">Login</option>
@@ -66,15 +66,43 @@ export default function AdminLogsPage() {
         </select>
       </div>
 
-      {/* Table */}
-      <div className="border border-border rounded-lg overflow-hidden">
+      {/* Mobile cards */}
+      <div className="sm:hidden space-y-2">
+        {loading && entries.length === 0 ? (
+          <div className="rounded-lg border border-border px-4 py-8 text-center text-sm text-muted-foreground">Loading...</div>
+        ) : entries.length === 0 ? (
+          <div className="rounded-lg border border-border px-4 py-8 text-center text-sm text-muted-foreground">No entries found</div>
+        ) : (
+          entries.map((entry, i) => (
+            <div key={i} className="rounded-lg border border-border p-3 space-y-1.5">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs font-mono px-2 py-0.5 rounded bg-muted text-muted-foreground truncate">
+                  {entry.action}
+                </span>
+                <span className="text-[11px] text-muted-foreground whitespace-nowrap">
+                  {new Date(entry.ts).toLocaleString()}
+                </span>
+              </div>
+              <div className="text-xs text-foreground break-words">
+                {formatDetail(entry.detail)}
+              </div>
+              <div className="text-[11px] text-muted-foreground font-mono">
+                {entry.ip}
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Desktop table */}
+      <div className="hidden sm:block border border-border rounded-lg overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border bg-muted/30">
-              <th className="text-left px-4 py-2 font-medium text-muted-foreground">Time</th>
-              <th className="text-left px-4 py-2 font-medium text-muted-foreground">Action</th>
+              <th className="text-left px-4 py-2 font-medium text-muted-foreground whitespace-nowrap">Time</th>
+              <th className="text-left px-4 py-2 font-medium text-muted-foreground whitespace-nowrap">Action</th>
               <th className="text-left px-4 py-2 font-medium text-muted-foreground">Details</th>
-              <th className="text-left px-4 py-2 font-medium text-muted-foreground">IP</th>
+              <th className="text-left px-4 py-2 font-medium text-muted-foreground whitespace-nowrap">IP</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">

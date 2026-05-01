@@ -132,8 +132,8 @@ export default function AdminPolicyPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
           <h1 className="text-2xl font-semibold text-foreground">User Policy</h1>
           <p className="text-sm text-muted-foreground mt-1">Control which features and settings users can access</p>
         </div>
@@ -170,13 +170,13 @@ export default function AdminPolicyPage() {
             const { label, description } = meta;
             const enabled = policy.features[key];
             return (
-              <div key={key} className="px-4 py-3 flex items-center justify-between gap-4">
-                <div>
+              <div key={key} className="px-4 py-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                <div className="min-w-0">
                   <span className="text-sm text-foreground">{label}</span>
                   <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
                 </div>
                 <button onClick={() => toggleFeature(key)}
-                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${enabled ? 'bg-primary' : 'bg-muted-foreground/25 dark:bg-muted-foreground/50'}`}>
+                  className={`shrink-0 relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${enabled ? 'bg-primary' : 'bg-muted-foreground/25 dark:bg-muted-foreground/50'}`}>
                   <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-background shadow transition-transform ${enabled ? 'translate-x-[18px]' : 'translate-x-[3px]'}`} />
                 </button>
               </div>
@@ -195,9 +195,9 @@ export default function AdminPolicyPage() {
             {RESTRICTABLE_SETTINGS.filter(s => s.category === category).map(setting => {
               const restriction = policy.restrictions[setting.key] || {};
               return (
-                <div key={setting.key} className="px-4 py-3 flex items-center justify-between gap-4">
+                <div key={setting.key} className="px-4 py-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                   <span className="text-sm text-foreground">{setting.label}</span>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 shrink-0">
                     <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer">
                       <input type="checkbox" checked={!!restriction.locked} onChange={() => toggleLocked(setting.key)}
                         className="rounded border-input" />

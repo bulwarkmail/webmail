@@ -307,12 +307,12 @@ export default function AdminThemesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
           <h1 className="text-2xl font-semibold text-foreground">Themes</h1>
           <p className="text-sm text-muted-foreground mt-1">Manage themes and theme policy for all users</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {policyDirty && (
             <button
               onClick={handleSavePolicy}
@@ -356,37 +356,37 @@ export default function AdminThemesPage() {
 
         <div className="divide-y divide-border">
           {/* Master toggle */}
-          <div className="px-4 py-3 flex items-center justify-between gap-4">
-            <div>
+          <div className="px-4 py-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+            <div className="min-w-0">
               <span className="text-sm text-foreground">Themes Enabled</span>
               <p className="text-xs text-muted-foreground mt-0.5">Allow users to select and apply themes</p>
             </div>
             <button onClick={toggleThemesEnabled}
-              className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${themesEnabled ? 'bg-primary' : 'bg-muted-foreground/25 dark:bg-muted-foreground/50'}`}>
+              className={`shrink-0 relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${themesEnabled ? 'bg-primary' : 'bg-muted-foreground/25 dark:bg-muted-foreground/50'}`}>
               <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-background shadow transition-transform ${themesEnabled ? 'translate-x-[18px]' : 'translate-x-[3px]'}`} />
             </button>
           </div>
 
           {/* User uploads toggle */}
-          <div className="px-4 py-3 flex items-center justify-between gap-4">
-            <div>
+          <div className="px-4 py-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+            <div className="min-w-0">
               <span className="text-sm text-foreground">User Theme Uploads</span>
               <p className="text-xs text-muted-foreground mt-0.5">Allow users to upload their own theme files</p>
             </div>
             <button onClick={toggleUserThemeUploads}
-              className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${userThemesEnabled ? 'bg-primary' : 'bg-muted-foreground/25 dark:bg-muted-foreground/50'}`}>
+              className={`shrink-0 relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${userThemesEnabled ? 'bg-primary' : 'bg-muted-foreground/25 dark:bg-muted-foreground/50'}`}>
               <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-background shadow transition-transform ${userThemesEnabled ? 'translate-x-[18px]' : 'translate-x-[3px]'}`} />
             </button>
           </div>
 
           {/* Force enable / disable all */}
           {themes.length > 0 && (
-            <div className="px-4 py-3 flex items-center justify-between gap-4">
-              <div>
+            <div className="px-4 py-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+              <div className="min-w-0">
                 <span className="text-sm text-foreground">Force Enable / Disable All</span>
                 <p className="text-xs text-muted-foreground mt-0.5">Bulk toggle all deployed themes at once</p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 shrink-0">
                 <button
                   onClick={forceEnableAll}
                   className="inline-flex items-center gap-1.5 h-7 px-3 rounded-md bg-emerald-600 text-white text-xs font-medium hover:bg-emerald-700 transition-colors"
@@ -407,15 +407,15 @@ export default function AdminThemesPage() {
 
           {/* Default Theme */}
           <div className="px-4 py-3">
-            <div className="flex items-center justify-between gap-4">
-              <div>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+              <div className="min-w-0">
                 <span className="text-sm text-foreground">Default Theme</span>
                 <p className="text-xs text-muted-foreground mt-0.5">Theme applied when users have not chosen one</p>
               </div>
               <select
                 value={policy.themePolicy?.defaultThemeId || ''}
                 onChange={(e) => setDefaultTheme(e.target.value || null)}
-                className="h-8 px-2 rounded-md border border-input bg-background text-sm text-foreground"
+                className="h-8 px-2 w-full sm:w-auto shrink-0 rounded-md border border-input bg-background text-sm text-foreground"
               >
                 <option value="">System Default</option>
                 <optgroup label="Built-in">
@@ -498,9 +498,9 @@ export default function AdminThemesPage() {
         ) : (
           <div className="divide-y divide-border">
             {themes.map(theme => (
-              <div key={theme.id} className="px-4 py-4 flex items-center justify-between gap-4">
+              <div key={theme.id} className="px-4 py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                     <span className="text-sm font-medium text-foreground">{theme.name}</span>
                     <span className="text-xs text-muted-foreground">v{theme.version}</span>
                     <span className={`text-xs px-1.5 py-0.5 rounded ${theme.enabled ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400' : 'bg-muted text-muted-foreground'}`}>
