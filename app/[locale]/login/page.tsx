@@ -30,7 +30,6 @@ const THEME_OPTIONS = [
 function VersionBadge() {
   const [copied, setCopied] = useState(false);
   const banner = useUpdateStore(useShallow(selectBanner));
-  const dismiss = useUpdateStore((s) => s.dismiss);
   const startPolling = useUpdateStore((s) => s.startPolling);
 
   useEffect(() => { startPolling(); }, [startPolling]);
@@ -95,15 +94,6 @@ function VersionBadge() {
           >
             {copied ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
           </button>
-          {banner?.dismissible && (
-            <button
-              onClick={dismiss}
-              className="p-1 rounded hover:bg-muted transition-colors"
-              aria-label="Dismiss update notice"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          )}
         </div>
       </div>
     </div>
