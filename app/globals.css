@@ -70,7 +70,7 @@
 }
 
 .dark {
-  --color-border: #262626;
+  --color-border: rgba(128, 128, 128, 0.3);
   --color-input: #262626;
   --color-ring: #d4d4d4;
   --color-background: #0a0a0a;
