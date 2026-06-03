@@ -904,11 +904,11 @@ export function Sidebar({
   };
 
   const openFolderSettings = () => {
-    try { localStorage.setItem('settings-active-tab', 'folders'); } catch { /* */ }
+    try { sessionStorage.setItem('settings-deep-link-tab', 'folders'); } catch { /* */ }
     router.push('/settings');
   };
   const openKeywordSettings = () => {
-    try { localStorage.setItem('settings-active-tab', 'keywords'); } catch { /* */ }
+    try { sessionStorage.setItem('settings-deep-link-tab', 'keywords'); } catch { /* */ }
     router.push('/settings');
   };
 

@@ -335,6 +335,14 @@ const LEGACY_TAB_MAP: Record<string, Tab> = {
 
 function readPersistedTab(): Tab {
   try {
+    // One-shot deep link from the sidebar section gears (Folders / Tags).
+    // Used only as the initial tab and intentionally NOT written to
+    // 'settings-active-tab', so a gear click never becomes the persisted
+    // default that the regular Settings button lands on. Cleared on mount.
+    const deepLink = sessionStorage.getItem('settings-deep-link-tab');
+    if (deepLink) {
+      return (deepLink in LEGACY_TAB_MAP ? LEGACY_TAB_MAP[deepLink] : deepLink) as Tab;
+    }
     const saved = localStorage.getItem('settings-active-tab');
     if (!saved) return 'appearance';
     if (saved in LEGACY_TAB_MAP) {
@@ -360,6 +368,11 @@ export default function SettingsPage() {
   const { stalwartFeaturesEnabled } = useConfig();
   const { isFeatureEnabled } = usePolicyStore();
   const [activeTab, setActiveTab] = useState<Tab>(readPersistedTab);
+  // Consume the one-shot deep-link key so a section gear only steers this one
+  // open, never the persisted default for future Settings-button clicks.
+  useEffect(() => {
+    try { sessionStorage.removeItem('settings-deep-link-tab'); } catch { /* ignore */ }
+  }, []);
   const [mobileShowContent, setMobileShowContent] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [pendingHighlight, setPendingHighlight] = useState<{ tab: Tab; label: string; pluginId?: string } | null>(null);
@@ -933,7 +946,7 @@ export default function SettingsPage() {
                   return (
                     <div key={tab.id}>
                       <button
-                        onClick={() => setActiveTab(tab.id)}
+                        onClick={() => handleTabSelect(tab.id)}
                         className={cn(
                           'w-full text-left px-3 py-2 rounded-md text-sm transition-colors duration-150 flex items-center gap-2.5',
                           effectiveActiveTab === tab.id
