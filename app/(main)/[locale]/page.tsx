@@ -2466,7 +2466,7 @@ export default function Home() {
                 ),
             inlineApp && "hidden"
           )}
-          style={!isMobile && !isTablet ? { width: sidebarCollapsed ? 64 : sidebarWidth } : undefined}
+          style={!isMobile && !isTablet ? { width: sidebarCollapsed ? 48 : sidebarWidth } : undefined}
         >
           <ErrorBoundary fallback={SidebarErrorFallback}>
             <Sidebar
