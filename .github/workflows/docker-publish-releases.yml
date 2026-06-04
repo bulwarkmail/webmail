@@ -70,6 +70,34 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
+      - name: Build and push subpath image by digest
+        id: build_subpath
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: ${{ matrix.platform }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            GIT_COMMIT=${{ github.sha }}
+            NEXT_PUBLIC_BASE_PATH=/webmail
+          outputs: type=image,name=${{ env.IMAGE_NAME }},push-by-digest=true,name-canonical=true,push=true
+          cache-from: type=gha,scope=${{ matrix.platform }}-subpath
+          cache-to: type=gha,mode=max,scope=${{ matrix.platform }}-subpath
+
+      - name: Export subpath digest
+        run: |
+          mkdir -p /tmp/digests-subpath
+          digest="${{ steps.build_subpath.outputs.digest }}"
+          touch "/tmp/digests-subpath/${digest#sha256:}"
+
+      - name: Upload subpath digest
+        uses: actions/upload-artifact@v4
+        with:
+          name: subpath-digests-${{ matrix.platform == 'linux/amd64' && 'amd64' || 'arm64' }}
+          path: /tmp/digests-subpath/*
+          if-no-files-found: error
+          retention-days: 1
+
   merge:
     runs-on: ubuntu-latest
     needs: build
@@ -83,6 +111,13 @@ jobs:
         with:
           path: /tmp/digests
           pattern: digests-*
+          merge-multiple: true
+
+      - name: Download subpath digests
+        uses: actions/download-artifact@v4
+        with:
+          path: /tmp/digests-subpath
+          pattern: subpath-digests-*
           merge-multiple: true
 
       - name: Set up Docker Buildx
@@ -118,3 +153,27 @@ jobs:
       - name: Inspect image
         run: |
           docker buildx imagetools inspect ${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
+
+      - name: Extract subpath metadata
+        id: meta_subpath
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest-subpath
+            type=semver,pattern=v{{version}}-subpath
+            type=semver,pattern={{version}}-subpath
+            type=semver,pattern=v{{major}}.{{minor}}-subpath
+            type=semver,pattern={{major}}.{{minor}}-subpath
+            type=semver,pattern=v{{major}}-subpath
+            type=semver,pattern={{major}}-subpath
+
+      - name: Create subpath manifest list and push
+        working-directory: /tmp/digests-subpath
+        run: |
+          docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf '${{ env.IMAGE_NAME }}@sha256:%s ' *)
+
+      - name: Inspect subpath image
+        run: |
+          docker buildx imagetools inspect ${{ env.IMAGE_NAME }}:${{ steps.meta_subpath.outputs.version }}

@@ -267,7 +267,9 @@ NEXT_PUBLIC_BASE_PATH=/webmail
 NEXT_PUBLIC_LOCALE_PREFIX=always     # avoids next-intl rewrite loops
 ```
 
-Unlike most other variables, `NEXT_PUBLIC_BASE_PATH` is read at **build time** because Next.js bakes it into emitted asset URLs. To use it with the published Docker image, build your own image with the variable set:
+Unlike most other variables, `NEXT_PUBLIC_BASE_PATH` is read at **build time** because Next.js bakes it into emitted asset URLs. Release images with `/webmail` baked in are published with the `-subpath` tag suffix, e.g. `ghcr.io/bulwarkmail/webmail:v1.7.1-subpath`.
+
+For other prefixes, build your own image with the variable set:
 
 ```bash
 docker build --build-arg NEXT_PUBLIC_BASE_PATH=/webmail -t bulwark-webmail .
