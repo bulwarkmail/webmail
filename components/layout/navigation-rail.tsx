@@ -546,7 +546,7 @@ export function NavigationRail({
         })}
 
         {/* Manage apps button */}
-        {onManageApps && (
+        {sidebarAppsEnabled && onManageApps && (
           <button
             onClick={onManageApps}
             className={cn(
