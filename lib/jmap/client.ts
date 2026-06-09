@@ -2078,7 +2078,7 @@ export class JMAPClient implements IJMAPClient {
       cc: cc?.length ? cc.map(email => ({ email })) : undefined,
       bcc: bcc?.length ? bcc.map(email => ({ email })) : undefined,
       subject,
-      keywords: { "$draft": true },
+      keywords: { "$seen": true, "$draft": true },
       mailboxIds: { [draftsMailbox.id]: true },
       bodyValues: htmlBody
         ? { "text": { value: body }, "html": { value: htmlBody } }
@@ -6002,6 +6002,7 @@ export class JMAPClient implements IJMAPClient {
     const update: Record<string, unknown> = {
       [`mailboxIds/${draftMailboxId}`]: true,
       'keywords/$draft': true,
+      'keywords/$seen': true,
     };
     if (sentMailboxId) {
       update[`mailboxIds/${sentMailboxId}`] = null;
