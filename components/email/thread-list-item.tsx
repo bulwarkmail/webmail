@@ -24,6 +24,7 @@ interface ThreadListItemProps {
   isLoading?: boolean;
   expandedEmails?: Email[];
   onToggleExpand: () => void;
+  onCollapseAllThreads?: () => void;
   onEmailSelect: (email: Email) => void;
   onEmailDoubleClick?: (email: Email) => void;
   onContextMenu?: (e: React.MouseEvent, email: Email) => void;
@@ -384,6 +385,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
     isLoading = false,
     expandedEmails,
     onToggleExpand,
+    onCollapseAllThreads,
     onEmailSelect,
     onEmailDoubleClick,
     onContextMenu,
@@ -515,6 +517,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
       } else {
         if (selectedEmailIds.size > 0) clearSelection();
         if (!isExpanded) {
+          onCollapseAllThreads?.();
           onToggleExpand();
         }
         onEmailSelect(latestEmail);
@@ -581,32 +584,6 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
               </button>
             )}
 
-            {!isMobile && !isFocusedMailLayout && (
-              <button
-                data-expand-toggle
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onToggleExpand();
-                }}
-                className={cn(
-                  "p-1 rounded mt-2 flex-shrink-0 transition-all duration-200",
-                  "hover:bg-muted/50 hover:scale-110",
-                  "active:scale-95",
-                  "text-muted-foreground hover:text-foreground"
-                )}
-                aria-expanded={isExpanded}
-                aria-label={t('toggle_thread')}
-              >
-                {isLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : isExpanded ? (
-                  <ChevronDown className="w-4 h-4" />
-                ) : (
-                  <ChevronRight className="w-4 h-4" />
-                )}
-              </button>
-            )}
-
             {hasUnread && (
               <div className="absolute left-1 top-1/2 -translate-y-1/2">
                 <Circle className="w-2 h-2 fill-unread text-unread" />
@@ -614,13 +591,42 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
             )}
 
             {density !== 'extra-compact' && (
-              <Avatar
-                name={avatarPerson?.name}
-                email={avatarPerson?.email}
-                size={isFocusedMailLayout ? "sm" : "md"}
-                className="flex-shrink-0 shadow-sm"
-                disableImages={hideJunkAvatarImages}
-              />
+              <div className="relative flex-shrink-0">
+                <Avatar
+                  name={avatarPerson?.name}
+                  email={avatarPerson?.email}
+                  size={isFocusedMailLayout ? "sm" : "md"}
+                  className="shadow-sm"
+                  disableImages={hideJunkAvatarImages}
+                />
+                {!isMobile && !isFocusedMailLayout && (
+                  <button
+                    data-expand-toggle
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onToggleExpand();
+                    }}
+                    className={cn(
+                      "absolute -bottom-2.5 left-1/2 -translate-x-1/2 p-0.5 rounded-full",
+                      "transition-all duration-200",
+                      "hover:bg-muted/50 hover:scale-110",
+                      "active:scale-95",
+                      "text-muted-foreground hover:text-foreground",
+                      "bg-background border border-border"
+                    )}
+                    aria-expanded={isExpanded}
+                    aria-label={t('toggle_thread')}
+                  >
+                    {isLoading ? (
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                    ) : isExpanded ? (
+                      <ChevronDown className="w-3 h-3" />
+                    ) : (
+                      <ChevronRight className="w-3 h-3" />
+                    )}
+                  </button>
+                )}
+              </div>
             )}
 
             <div className="flex-1 min-w-0">

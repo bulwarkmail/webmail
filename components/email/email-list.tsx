@@ -101,6 +101,7 @@ export function EmailList({
     toggleThreadExpansion,
     fetchThreadEmails,
     markThreadAsRead,
+    collapseAllThreads,
     threadEmailCounts,
     searchFilters,
     setSearchFilters,
@@ -477,7 +478,18 @@ export function EmailList({
                       isLoading={isLoadingThread === thread.threadId}
                       expandedEmails={threadEmailsCache.get(thread.threadId)}
                       onToggleExpand={() => handleToggleThreadExpansion(thread.threadId)}
-                      onEmailSelect={(email) => onEmailSelect?.(email)}
+                      onCollapseAllThreads={collapseAllThreads}
+                      onEmailSelect={(email) => {
+                        // Collapse expanded threads when selecting an email outside the expanded thread
+                        const currentExpanded = useEmailStore.getState().expandedThreadIds;
+                        if (currentExpanded.size > 0) {
+                          // Check if the selected email belongs to any expanded thread via its threadId
+                          if (!email.threadId || !currentExpanded.has(email.threadId)) {
+                            collapseAllThreads();
+                          }
+                        }
+                        onEmailSelect?.(email);
+                      }}
                       onEmailDoubleClick={onEmailDoubleClick ? (email) => onEmailDoubleClick(email) : undefined}
                       onContextMenu={openContextMenu}
                       onOpenConversation={onOpenConversation}
