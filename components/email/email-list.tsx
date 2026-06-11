@@ -100,6 +100,8 @@ export function EmailList({
     isLoadingThread,
     toggleThreadExpansion,
     fetchThreadEmails,
+    markThreadAsRead,
+    threadEmailCounts,
     searchFilters,
     setSearchFilters,
     clearSearchFilters,
@@ -110,9 +112,9 @@ export function EmailList({
   const disableThreading = useSettingsStore((state) => state.disableThreading);
 
   const threadGroups = useMemo(() => {
-    const groups = groupEmailsByThread(emails, disableThreading || isScheduledView);
+    const groups = groupEmailsByThread(emails, disableThreading || isScheduledView, threadEmailCounts);
     return sortThreadGroups(groups);
-  }, [emails, disableThreading, isScheduledView]);
+  }, [emails, disableThreading, isScheduledView, threadEmailCounts]);
 
   const { contextMenu, openContextMenu, closeContextMenu, menuRef } = useContextMenu<Email>();
   const { dialogProps: confirmDialogProps, confirm: confirmDialog } = useConfirmDialog();
@@ -250,10 +252,12 @@ export function EmailList({
     if (!isExpanded && client) {
       toggleThreadExpansion(threadId);
       await fetchThreadEmails(client, threadId);
+      // Mark all unread emails in this thread as read
+      void markThreadAsRead(client, threadId);
     } else {
       toggleThreadExpansion(threadId);
     }
-  }, [client, expandedThreadIds, toggleThreadExpansion, fetchThreadEmails]);
+  }, [client, expandedThreadIds, toggleThreadExpansion, fetchThreadEmails, markThreadAsRead]);
 
   // Range-based load more: trigger when last visible item is near the end.
   // Debounce to prevent rapid cascade when thread grouping reduces item

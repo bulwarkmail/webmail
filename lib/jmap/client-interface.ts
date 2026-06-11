@@ -117,6 +117,7 @@ export interface IJMAPClient {
 
   // ── Threads ───────────────────────────────────────────────────
   getThread(threadId: string, accountId?: string): Promise<Thread | null>;
+  getThreads(threadIds: string[], accountId?: string): Promise<Thread[]>;
   getThreadEmails(threadId: string, accountId?: string): Promise<Email[]>;
 
   // ── Compose / Send ────────────────────────────────────────────

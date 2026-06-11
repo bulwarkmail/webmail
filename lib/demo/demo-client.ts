@@ -388,6 +388,16 @@ export class DemoJMAPClient implements IJMAPClient {
     return { id: threadId, emailIds: emails.map(e => e.id) };
   }
 
+  async getThreads(threadIds: string[]): Promise<Thread[]> {
+    return threadIds
+      .map(tid => {
+        const emails = this.data.emails.filter(e => e.threadId === tid);
+        if (emails.length === 0) return null;
+        return { id: tid, emailIds: emails.map(e => e.id) };
+      })
+      .filter((t): t is Thread => t !== null);
+  }
+
   async getThreadEmails(threadId: string): Promise<Email[]> {
     return this.data.emails
       .filter(e => e.threadId === threadId)

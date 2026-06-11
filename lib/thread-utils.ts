@@ -5,8 +5,16 @@ import type { Email, ThreadGroup } from "./jmap/types";
  * Single-email threads are still returned as ThreadGroups with emailCount=1.
  * When disableThreading is true, each email is placed into its own group using
  * its message ID as the key, so the list shows individual messages.
+ *
+ * @param threadEmailCounts - Optional map of threadId → total email count across
+ *   all folders (from Thread/get). When provided, emailCount reflects the full
+ *   thread size rather than just the emails in the current folder.
  */
-export function groupEmailsByThread(emails: Email[], disableThreading = false): ThreadGroup[] {
+export function groupEmailsByThread(
+  emails: Email[],
+  disableThreading = false,
+  threadEmailCounts?: Map<string, number>,
+): ThreadGroup[] {
   if (!emails || emails.length === 0) {
     return [];
   }
@@ -53,7 +61,7 @@ export function groupEmailsByThread(emails: Email[], disableThreading = false): 
       hasAttachment,
       hasAnswered,
       hasForwarded,
-      emailCount: sortedEmails.length,
+      emailCount: threadEmailCounts?.get(threadId) ?? sortedEmails.length,
     });
   }
 

@@ -1903,6 +1903,24 @@ export class JMAPClient implements IJMAPClient {
     }
   }
 
+  async getThreads(threadIds: string[], accountId?: string): Promise<Thread[]> {
+    if (threadIds.length === 0) return [];
+    try {
+      const targetAccountId = accountId || this.accountId;
+      const response = await this.request([
+        ["Thread/get", { accountId: targetAccountId, ids: threadIds }, "0"],
+      ]);
+
+      if (response.methodResponses?.[0]?.[0] === "Thread/get") {
+        return (response.methodResponses[0][1].list || []) as Thread[];
+      }
+      return [];
+    } catch (error) {
+      console.error('Failed to get threads:', error);
+      return [];
+    }
+  }
+
   async getThreadEmails(threadId: string, accountId?: string): Promise<Email[]> {
     try {
       const targetAccountId = accountId || this.accountId;

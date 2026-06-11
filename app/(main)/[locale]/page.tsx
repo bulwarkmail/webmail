@@ -334,6 +334,7 @@ export default function Home() {
     viewingAccountId,
     selectAccountMailbox,
     setViewingAccount,
+    refreshCurrentMailbox,
   } = useEmailStore();
 
   // Pro shell: populate per-account mailbox cache so the sidebar can render
@@ -1164,7 +1165,26 @@ export default function Home() {
       }
 
       // Refresh the current mailbox to update the UI
-      if (!isScheduledView) await fetchEmails(client, selectedMailbox);
+      if (!isScheduledView) {
+        await refreshCurrentMailbox(client);
+        // Re-fetch the replied thread's cross-folder data so the expanded
+        // view shows the newly sent reply without collapsing.
+        if (originalEmailId) {
+          const emailState = useEmailStore.getState();
+          const repliedEmail = emailState.emails.find(e => e.id === originalEmailId);
+          if (repliedEmail?.threadId && emailState.expandedThreadIds.has(repliedEmail.threadId)) {
+            const accountId = client.getAccountId();
+            const fullEmails = await client.getThreadEmails(repliedEmail.threadId, accountId);
+            if (fullEmails.length > 0) {
+              useEmailStore.setState((state) => {
+                const c = new Map(state.threadEmailsCache);
+                c.set(repliedEmail.threadId!, fullEmails);
+                return { threadEmailsCache: c };
+              });
+            }
+          }
+        }
+      }
     } catch (error) {
       console.error("Failed to send email:", error);
     }
@@ -2197,7 +2217,22 @@ export default function Home() {
     }
 
     // Refresh emails to show the sent reply
-    await fetchEmails(client, selectedMailbox);
+    await refreshCurrentMailbox(client);
+    // Re-fetch the replied thread's cross-folder data so the expanded
+    // view shows the newly sent reply without collapsing.
+    const emailState = useEmailStore.getState();
+    const repliedEmail = emailState.emails.find(e => e.id === originalEmailId);
+    if (repliedEmail?.threadId && emailState.expandedThreadIds.has(repliedEmail.threadId)) {
+      const accountId = client.getAccountId();
+      const fullEmails = await client.getThreadEmails(repliedEmail.threadId, accountId);
+      if (fullEmails.length > 0) {
+        useEmailStore.setState((state) => {
+          const c = new Map(state.threadEmailsCache);
+          c.set(repliedEmail.threadId!, fullEmails);
+          return { threadEmailsCache: c };
+        });
+      }
+    }
   };
 
   // Show loading state while checking auth

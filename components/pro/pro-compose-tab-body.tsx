@@ -26,6 +26,7 @@ export function ProComposeTabBody({ tabId, data }: ProComposeTabBodyProps) {
   const client = useAuthStore((s) => s.client);
   const sendEmail = useEmailStore((s) => s.sendEmail);
   const fetchEmails = useEmailStore((s) => s.fetchEmails);
+  const refreshCurrentMailbox = useEmailStore((s) => s.refreshCurrentMailbox);
   const fetchScheduledEmails = useEmailStore((s) => s.fetchScheduledEmails);
   const refreshScheduledMetadata = useEmailStore((s) => s.refreshScheduledMetadata);
   const selectedMailbox = useEmailStore((s) => s.selectedMailbox);
@@ -92,7 +93,24 @@ export function ProComposeTabBody({ tabId, data }: ProComposeTabBodyProps) {
 
       // Refresh the currently-active mail list so the new sent message /
       // updated keyword status shows up.
-      await fetchEmails(client, selectedMailbox);
+      await refreshCurrentMailbox(client);
+      // Re-fetch the replied thread's cross-folder data so the expanded
+      // view shows the newly sent reply without collapsing.
+      if (data.sourceEmailId) {
+        const emailState = useEmailStore.getState();
+        const repliedEmail = emailState.emails.find(e => e.id === data.sourceEmailId);
+        if (repliedEmail?.threadId && emailState.expandedThreadIds.has(repliedEmail.threadId)) {
+          const accountId = client.getAccountId();
+          const fullEmails = await client.getThreadEmails(repliedEmail.threadId, accountId);
+          if (fullEmails.length > 0) {
+            useEmailStore.setState((state) => {
+              const c = new Map(state.threadEmailsCache);
+              c.set(repliedEmail.threadId!, fullEmails);
+              return { threadEmailsCache: c };
+            });
+          }
+        }
+      }
       closeTab(tabIdRef.current);
     } catch (error) {
       console.error('Failed to send email:', error);

@@ -60,6 +60,8 @@ interface EmailStore {
   expandedThreadIds: Set<string>;
   threadEmailsCache: Map<string, Email[]>;
   isLoadingThread: string | null;
+  // Full thread email counts (from Thread/get across all folders)
+  threadEmailCounts: Map<string, number>;
 
   // Keyword/tag filter
   selectedKeyword: string | null;
@@ -199,6 +201,8 @@ interface EmailStore {
   fetchThreadEmails: (client: IJMAPClient, threadId: string) => Promise<Email[]>;
   collapseAllThreads: () => void;
   updateThreadCache: (threadId: string, emails: Email[]) => void;
+  fetchThreadEmailCounts: (client: IJMAPClient) => Promise<void>;
+  markThreadAsRead: (client: IJMAPClient, threadId: string) => Promise<void>;
 
   // Mailbox management
   createMailbox: (client: IJMAPClient, name: string, parentId?: string) => Promise<void>;
@@ -492,6 +496,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   expandedThreadIds: new Set(),
   threadEmailsCache: new Map(),
   isLoadingThread: null,
+  threadEmailCounts: new Map(),
 
   // Keyword/tag filter
   selectedKeyword: null,
@@ -538,6 +543,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     selectedKeyword: null,
     expandedThreadIds: new Set(),
     threadEmailsCache: new Map(),
+    threadEmailCounts: new Map(),
     isLoadingThread: null,
   }),
   fetchAccountMailboxes: async (client, accountId) => {
@@ -568,6 +574,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     selectedEmailIds: new Set(),
     expandedThreadIds: new Set(),
     threadEmailsCache: new Map(),
+    threadEmailCounts: new Map(),
   }),
   fetchTagCounts: async (client) => {
     try {
@@ -590,6 +597,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     selectedKeyword: null,
     expandedThreadIds: new Set(),
     threadEmailsCache: new Map(),
+    threadEmailCounts: new Map(),
     isLoadingThread: null,
   }),
   setLoading: (loading) => set({ isLoading: loading }),
@@ -739,8 +747,14 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         emails: annotateScheduledEmails(result.emails, get().scheduledSubmissionByEmailId),
         hasMoreEmails: result.hasMore,
         totalEmails: result.total,
+        // Clear thread caches since the email list was fully replaced
+        threadEmailsCache: new Map(),
+        expandedThreadIds: new Set(),
+        isLoadingThread: null,
         isLoading: false
       });
+      // Fetch full thread counts in the background (non-blocking)
+      void get().fetchThreadEmailCounts(client);
     } catch (error) {
       console.error('Failed to fetch emails:', error);
       set({
@@ -863,6 +877,10 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         totalEmails: result.total,
         isLoadingMore: false
       });
+      // Fetch full thread counts for newly loaded threads in the background
+      if (newEmails.length > 0) {
+        void get().fetchThreadEmailCounts(client);
+      }
     } catch (error) {
       console.error('Failed to load more emails:', error);
       set({
@@ -1154,7 +1172,23 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
             ? { ...state.selectedEmail, keywords: { ...state.selectedEmail.keywords, $seen: read } }
             : state.selectedEmail,
           mailboxes: updatedMailboxes,
-          processingReadStatus: newProcessingSet
+          processingReadStatus: newProcessingSet,
+          // Also update threadEmailsCache so expanded dropdowns reflect the change
+          threadEmailsCache: (() => {
+            let updated = false;
+            const newCache = new Map(state.threadEmailsCache);
+            for (const [tid, cachedEmails] of newCache) {
+              const idx = cachedEmails.findIndex(e => e.id === emailId);
+              if (idx !== -1) {
+                newCache.set(tid, cachedEmails.map((e, i) =>
+                  i === idx ? { ...e, keywords: { ...e.keywords, $seen: read } } : e
+                ));
+                updated = true;
+                break;
+              }
+            }
+            return updated ? newCache : state.threadEmailsCache;
+          })(),
         };
       });
     } catch (error) {
@@ -2264,11 +2298,74 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         // hasMore should reflect whether there are still more emails beyond
         // what we have loaded, using the fresh total from the server.
         const hasMore = merged.length < (result.total || 0);
-        set({
-          emails: merged,
-          hasMoreEmails: hasMore,
-          totalEmails: result.total,
+
+        // Invalidate thread email caches for threads whose composition changed
+        // so expanded threads pick up new/removed emails.
+        const prevThreadIds = new Set(currentEmails.map(e => e.threadId));
+        const nextThreadIds = new Set(merged.map(e => e.threadId));
+        const changedThreadIds = new Set<string>();
+        for (const tid of prevThreadIds) {
+          if (!nextThreadIds.has(tid)) changedThreadIds.add(tid);
+        }
+        for (const tid of nextThreadIds) {
+          if (!prevThreadIds.has(tid)) changedThreadIds.add(tid);
+        }
+        // Also check threads where the set of email IDs changed
+        const prevEmailsByThread = new Map<string, Set<string>>();
+        for (const e of currentEmails) {
+          if (!prevEmailsByThread.has(e.threadId)) prevEmailsByThread.set(e.threadId, new Set());
+          prevEmailsByThread.get(e.threadId)!.add(e.id);
+        }
+        const nextEmailsByThread = new Map<string, Set<string>>();
+        for (const e of merged) {
+          if (!nextEmailsByThread.has(e.threadId)) nextEmailsByThread.set(e.threadId, new Set());
+          nextEmailsByThread.get(e.threadId)!.add(e.id);
+        }
+        for (const [tid, nextIds] of nextEmailsByThread) {
+          const prevIds = prevEmailsByThread.get(tid);
+          if (!prevIds || prevIds.size !== nextIds.size) {
+            changedThreadIds.add(tid);
+          } else {
+            for (const id of nextIds) {
+              if (!prevIds.has(id)) { changedThreadIds.add(tid); break; }
+            }
+          }
+        }
+
+        set((state) => {
+          const newCache = new Map(state.threadEmailsCache);
+          for (const tid of changedThreadIds) {
+            newCache.delete(tid);
+          }
+          return {
+            emails: merged,
+            hasMoreEmails: hasMore,
+            totalEmails: result.total,
+            threadEmailsCache: newCache,
+          };
         });
+
+        // Re-fetch cross-folder thread data for any currently expanded threads
+        // so they show the complete conversation (not just current-folder emails).
+        const expandedNow = get().expandedThreadIds;
+        if (expandedNow.size > 0) {
+          const effectiveClient2 = resolveActionClient(client);
+          const accountId = effectiveClient2.getAccountId();
+          for (const tid of expandedNow) {
+            void effectiveClient2.getThreadEmails(tid, accountId).then((fullEmails) => {
+              if (fullEmails.length > 0) {
+                set((state) => {
+                  const c = new Map(state.threadEmailsCache);
+                  c.set(tid, fullEmails);
+                  return { threadEmailsCache: c };
+                });
+              }
+            });
+          }
+        }
+
+        // Fetch full thread counts in the background (non-blocking)
+        void get().fetchThreadEmailCounts(client);
       }
     } catch (error) {
       console.error('Failed to refresh current mailbox:', error);
@@ -2338,6 +2435,90 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     }
   },
 
+  markThreadAsRead: async (client, threadId) => {
+    const state = get();
+    const threadEmails = state.threadEmailsCache.get(threadId) ?? [];
+    const mainEmails = state.emails.filter(e => e.threadId === threadId);
+
+    // Combine unique emails from both sources
+    const allEmailMap = new Map<string, Email>();
+    for (const e of mainEmails) allEmailMap.set(e.id, e);
+    for (const e of threadEmails) allEmailMap.set(e.id, e);
+
+    const unreadIds = Array.from(allEmailMap.values())
+      .filter(e => !e.keywords?.$seen)
+      .map(e => e.id);
+
+    if (unreadIds.length === 0) return;
+
+    // Group by account for unified view support
+    const emailsById = new Map<string, Email>();
+    for (const e of allEmailMap.values()) emailsById.set(e.id, e);
+
+    // Group unread IDs by account client
+    const groups = new Map<IJMAPClient, string[]>();
+    for (const id of unreadIds) {
+      const email = emailsById.get(id)!;
+      const { client: actionClient } = resolveEmailActionContext(email, client);
+      if (!groups.has(actionClient)) groups.set(actionClient, []);
+      groups.get(actionClient)!.push(id);
+    }
+
+    // Mark all as read on the server
+    try {
+      await Promise.all(
+        Array.from(groups.entries()).map(([actionClient, emailIds]) =>
+          actionClient.batchMarkAsRead(emailIds, true)
+        )
+      );
+    } catch (error) {
+      console.error('Failed to mark thread as read:', error);
+      return;
+    }
+
+    // Update local state
+    set((state) => {
+      const unreadSet = new Set(unreadIds);
+
+      const updatedEmails = state.emails.map(e =>
+        unreadSet.has(e.id) ? { ...e, keywords: { ...e.keywords, $seen: true } } : e
+      );
+
+      // Update threadEmailsCache
+      const newCache = new Map(state.threadEmailsCache);
+      const cached = newCache.get(threadId);
+      if (cached) {
+        newCache.set(threadId, cached.map(e =>
+          unreadSet.has(e.id) ? { ...e, keywords: { ...e.keywords, $seen: true } } : e
+        ));
+      }
+
+      // Update mailbox unread counters
+      const affectedEmails = state.emails.filter(e => unreadSet.has(e.id));
+      const updatedMailboxes = state.mailboxes.map(mailbox => {
+        let delta = 0;
+        for (const email of affectedEmails) {
+          if (email.mailboxIds?.[mailbox.id]) delta -= 1;
+        }
+        if (delta === 0) return mailbox;
+        return {
+          ...mailbox,
+          unreadEmails: Math.max(0, mailbox.unreadEmails + delta),
+          unreadThreads: Math.max(0, mailbox.unreadThreads + delta),
+        };
+      });
+
+      return {
+        emails: updatedEmails,
+        threadEmailsCache: newCache,
+        mailboxes: updatedMailboxes,
+        selectedEmail: state.selectedEmail && unreadSet.has(state.selectedEmail.id)
+          ? { ...state.selectedEmail, keywords: { ...state.selectedEmail.keywords, $seen: true } }
+          : state.selectedEmail,
+      };
+    });
+  },
+
   collapseAllThreads: () => {
     set({
       expandedThreadIds: new Set(),
@@ -2349,6 +2530,27 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     const newCache = new Map(get().threadEmailsCache);
     newCache.set(threadId, emails);
     set({ threadEmailsCache: newCache });
+  },
+
+  fetchThreadEmailCounts: async (client) => {
+    const { emails } = get();
+    if (emails.length === 0) return;
+
+    const uniqueThreadIds = [...new Set(emails.map(e => e.threadId).filter(Boolean))];
+    if (uniqueThreadIds.length === 0) return;
+
+    try {
+      const effectiveClient = resolveActionClient(client);
+      const threads = await effectiveClient.getThreads(uniqueThreadIds);
+
+      const newCounts = new Map(get().threadEmailCounts);
+      for (const thread of threads) {
+        newCounts.set(thread.id, thread.emailIds?.length ?? 0);
+      }
+      set({ threadEmailCounts: newCounts });
+    } catch {
+      // Non-critical — fall back to inbox-only counts
+    }
   },
 
   // Mailbox management
