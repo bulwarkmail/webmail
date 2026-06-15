@@ -121,9 +121,9 @@ const emails: MockEmail[] = [
   },
   {
     id: 'email-002', threadId: 'thread-002', mailboxIds: { 'mb-inbox': true }, keywords: { $seen: true, $flagged: true, '$label:blue': true }, size: 5100, receivedAt: daysAgo(1),
-    from: [{ name: 'Pierre Dubois', email: 'pierre@dubois.example' }],
+    from: [{ name: 'Dubois, Pierre', email: 'pierre@dubois.example' }],
     to: [{ name: 'Dev User', email: 'dev@localhost' }],
-    cc: [{ name: 'Karel de Vries', email: 'karel@devries.example' }],
+    cc: [{ name: 'de Vries, Karel', email: 'karel@devries.example' }],
     subject: 'Project Update - Q1 Review',
     preview: 'Salut team, I wanted to share the latest project numbers. We are on track to meet our targets for Q1.',
     hasAttachment: true,
