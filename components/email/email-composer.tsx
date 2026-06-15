@@ -45,6 +45,8 @@ import { computeReplyThreadingHeaders } from "@/lib/email-threading";
 import {
   rewriteCidImagesForEditor,
   replaceInlineImagePlaceholders,
+  removeChipFromFieldValue,
+  addChipToFieldValue,
 } from "@/lib/email-composer-utils";
 import { RichTextEditor } from "@/components/email/rich-text-editor";
 import type { Editor } from "@tiptap/react";
@@ -436,6 +438,8 @@ export function EmailComposer({
   const [body, setBody] = useState(initialData?.body ?? getInitialBody());
   const [showCc, setShowCc] = useState(initialData?.showCc ?? !!getInitialCc());
   const [showBcc, setShowBcc] = useState(initialData?.showBcc ?? false);
+  const [isDraggingChipOverCc, setIsDraggingChipOverCc] = useState(false);
+  const [isDraggingChipOverBcc, setIsDraggingChipOverBcc] = useState(false);
   const [requestReadReceipt, setRequestReadReceipt] = useState(requestReadReceiptDefault);
   const [draftId, setDraftId] = useState<string | null>(initialData?.draftId ?? null);
   // Mirror of draftId for synchronous reads inside chained saves; React's
@@ -865,6 +869,14 @@ export function EmailComposer({
       proseMirror?.focus();
     }
   }, [plainTextMode]);
+
+  const handleMoveChip = useCallback((chip: string, fromField: 'to' | 'cc' | 'bcc', toField: 'to' | 'cc' | 'bcc') => {
+    const setters = { to: setTo, cc: setCc, bcc: setBcc };
+    setters[fromField](prev => removeChipFromFieldValue(prev, chip));
+    setters[toField](prev => addChipToFieldValue(prev, chip));
+    if (toField === 'cc') setShowCc(true);
+    if (toField === 'bcc') setShowBcc(true);
+  }, [setTo, setCc, setBcc, setShowCc, setShowBcc]);
 
   const handleAutocomplete = useCallback((value: string, field: 'to' | 'cc' | 'bcc') => {
     if (autocompleteTimeoutRef.current) {
@@ -2126,13 +2138,30 @@ export function EmailComposer({
               validationError={validationErrors.to}
               validationMessage={t('validation.recipient_required')}
               onTab={focusSubject}
+              onMoveChip={handleMoveChip}
             />
             <div className="flex gap-0.5 shrink-0">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowCc(!showCc)}
-                className="text-xs h-7 px-2"
+                className={cn("text-xs h-7 px-2", isDraggingChipOverCc && "ring-2 ring-primary/50")}
+                onDragOver={(e) => {
+                  if (!e.dataTransfer.types.includes('application/x-recipient-chip')) return;
+                  e.preventDefault();
+                  e.dataTransfer.dropEffect = 'move';
+                  setIsDraggingChipOverCc(true);
+                }}
+                onDragLeave={() => setIsDraggingChipOverCc(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setIsDraggingChipOverCc(false);
+                  const raw = e.dataTransfer.getData('application/x-recipient-chip');
+                  if (!raw) return;
+                  const { chip, fromField } = JSON.parse(raw) as { chip: string; fromField: 'to' | 'cc' | 'bcc' };
+                  if (fromField !== 'cc') handleMoveChip(chip, fromField, 'cc');
+                  setShowCc(true);
+                }}
               >
                 Cc
               </Button>
@@ -2140,7 +2169,23 @@ export function EmailComposer({
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowBcc(!showBcc)}
-                className="text-xs h-7 px-2"
+                className={cn("text-xs h-7 px-2", isDraggingChipOverBcc && "ring-2 ring-primary/50")}
+                onDragOver={(e) => {
+                  if (!e.dataTransfer.types.includes('application/x-recipient-chip')) return;
+                  e.preventDefault();
+                  e.dataTransfer.dropEffect = 'move';
+                  setIsDraggingChipOverBcc(true);
+                }}
+                onDragLeave={() => setIsDraggingChipOverBcc(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setIsDraggingChipOverBcc(false);
+                  const raw = e.dataTransfer.getData('application/x-recipient-chip');
+                  if (!raw) return;
+                  const { chip, fromField } = JSON.parse(raw) as { chip: string; fromField: 'to' | 'cc' | 'bcc' };
+                  if (fromField !== 'bcc') handleMoveChip(chip, fromField, 'bcc');
+                  setShowBcc(true);
+                }}
               >
                 Bcc
               </Button>
@@ -2165,6 +2210,7 @@ export function EmailComposer({
                 autoSelectedIndex={autoSelectedIndex}
                 dropdownRef={ccDropdownRef}
                 onInsertAutocomplete={insertAutocomplete}
+                onMoveChip={handleMoveChip}
               />
             </div>
           )}
@@ -2187,6 +2233,7 @@ export function EmailComposer({
                 autoSelectedIndex={autoSelectedIndex}
                 dropdownRef={bccDropdownRef}
                 onInsertAutocomplete={insertAutocomplete}
+                onMoveChip={handleMoveChip}
               />
             </div>
           )}
@@ -2731,6 +2778,7 @@ function RecipientChipInput({
   validationError,
   validationMessage,
   onTab,
+  onMoveChip,
 }: {
   value: string;
   onChange: (value: string) => void;
@@ -2748,12 +2796,15 @@ function RecipientChipInput({
   validationError?: boolean;
   validationMessage?: string;
   onTab?: () => void;
+  onMoveChip: (chip: string, fromField: 'to' | 'cc' | 'bcc', toField: 'to' | 'cc' | 'bcc') => void;
 }) {
   const t = useTranslations('email_composer');
   const tCommon = useTranslations('common');
   const { contextMenu, openContextMenu, closeContextMenu, menuRef } = useContextMenu<{ index: number; chip: string }>();
   const [editingChip, setEditingChip] = useState<{ index: number; chip: string; editType: 'email' | 'name' } | null>(null);
   const [editValue, setEditValue] = useState('');
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
   const editInputRef = useRef<HTMLInputElement | null>(null);
 
   const allParts = value.split(',').map(s => s.trim()).filter(Boolean);
@@ -2920,14 +2971,41 @@ function RecipientChipInput({
     onAutoBlur(e, field);
   };
 
+  const handleContainerDragOver = (e: React.DragEvent) => {
+    if (!e.dataTransfer.types.includes('application/x-recipient-chip')) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setIsDragOver(true);
+  };
+
+  const handleContainerDragLeave = (e: React.DragEvent) => {
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setIsDragOver(false);
+    }
+  };
+
+  const handleContainerDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    const raw = e.dataTransfer.getData('application/x-recipient-chip');
+    if (!raw) return;
+    const { chip: draggedChip, fromField } = JSON.parse(raw) as { chip: string; fromField: 'to' | 'cc' | 'bcc' };
+    if (fromField === field) return;
+    onMoveChip(draggedChip, fromField, field);
+  };
+
   return (
     <div className="flex-1 relative min-w-0">
       <div
         className={cn(
           "flex flex-wrap items-center gap-1 min-h-[32px] cursor-text",
-          validationError && "ring-2 ring-red-500 dark:ring-red-400 rounded"
+          validationError && "ring-2 ring-red-500 dark:ring-red-400 rounded",
+          isDragOver && "ring-2 ring-primary/50 rounded bg-accent/20"
         )}
         onClick={() => inputRef.current?.focus()}
+        onDragOver={handleContainerDragOver}
+        onDragLeave={handleContainerDragLeave}
+        onDrop={handleContainerDrop}
       >
         {chips.map((chip, i) => {
           const isEditing = editingChip?.index === i;
@@ -2935,11 +3013,20 @@ function RecipientChipInput({
           return (
             <span
               key={`${chip}-${i}`}
+              draggable={!isEditing}
+              onDragStart={(e) => {
+                e.stopPropagation();
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('application/x-recipient-chip', JSON.stringify({ chip, fromField: field }));
+                setDraggingIndex(i);
+              }}
+              onDragEnd={() => setDraggingIndex(null)}
               className={cn(
                 "inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-sm border border-border transition-colors",
                 isEditing
                   ? "bg-background ring-1 ring-ring"
-                  : "bg-secondary text-secondary-foreground hover:bg-accent"
+                  : "bg-secondary text-secondary-foreground hover:bg-accent cursor-grab active:cursor-grabbing",
+                !isEditing && draggingIndex === i && "opacity-50"
               )}
               onContextMenu={isEditing ? undefined : (e) => handleContextMenu(e, i, chip)}
             >

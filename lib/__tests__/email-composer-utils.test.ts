@@ -4,6 +4,8 @@ import {
   rewriteCidImagesForEditor,
   replaceInlineImagePlaceholders,
   INLINE_IMAGE_PLACEHOLDER,
+  removeChipFromFieldValue,
+  addChipToFieldValue,
 } from "../email-composer-utils";
 
 describe("plainTextToComposerBody", () => {
@@ -110,5 +112,62 @@ describe("replaceInlineImagePlaceholders", () => {
       new Map([["abc", "data:image/png;base64,AAAA"]])
     );
     expect(out).toBe(html);
+  });
+});
+
+describe("removeChipFromFieldValue", () => {
+  it("removes the target chip and preserves others", () => {
+    const result = removeChipFromFieldValue("alice@example.com, bob@example.com, ", "alice@example.com");
+    expect(result).toBe("bob@example.com, ");
+  });
+
+  it("removes a chip with a display name", () => {
+    const result = removeChipFromFieldValue("Alice <alice@example.com>, bob@example.com, ", "Alice <alice@example.com>");
+    expect(result).toBe("bob@example.com, ");
+  });
+
+  it("handles removing the only chip", () => {
+    const result = removeChipFromFieldValue("alice@example.com, ", "alice@example.com");
+    expect(result).toBe("");
+  });
+
+  it("returns the value unchanged when chip is not found", () => {
+    const value = "alice@example.com, bob@example.com, ";
+    expect(removeChipFromFieldValue(value, "carol@example.com")).toBe(value);
+  });
+
+  it("preserves in-progress input text after removing a chip", () => {
+    const result = removeChipFromFieldValue("alice@example.com, bob@example.com, car", "alice@example.com");
+    expect(result).toBe("bob@example.com, car");
+  });
+
+  it("handles an empty field value", () => {
+    expect(removeChipFromFieldValue("", "alice@example.com")).toBe("");
+  });
+
+  it("removes only the first occurrence when chip appears multiple times", () => {
+    const result = removeChipFromFieldValue("alice@example.com, alice@example.com, bob@example.com, ", "alice@example.com");
+    expect(result).toBe("alice@example.com, bob@example.com, ");
+  });
+});
+
+describe("addChipToFieldValue", () => {
+  it("appends a chip to a field with existing chips", () => {
+    const result = addChipToFieldValue("alice@example.com, ", "bob@example.com");
+    expect(result).toBe("alice@example.com, bob@example.com, ");
+  });
+
+  it("appends a chip to an empty field", () => {
+    expect(addChipToFieldValue("", "alice@example.com")).toBe("alice@example.com, ");
+  });
+
+  it("preserves in-progress input text when appending", () => {
+    const result = addChipToFieldValue("alice@example.com, bob", "carol@example.com");
+    expect(result).toBe("alice@example.com, carol@example.com, bob");
+  });
+
+  it("appends a chip with a display name", () => {
+    const result = addChipToFieldValue("alice@example.com, ", "Bob <bob@example.com>");
+    expect(result).toBe("alice@example.com, Bob <bob@example.com>, ");
   });
 });

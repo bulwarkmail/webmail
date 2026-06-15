@@ -53,6 +53,39 @@ export function rewriteCidImagesForEditor(html: string): string {
 }
 
 /**
+ * Parses the chip array and trailing in-progress input text from a
+ * comma-separated recipient field value (e.g. "Alice <a@x.com>, bob@x.com, b").
+ * A trailing comma means "bob@x.com" is a committed chip and "b" is the live input.
+ */
+function parseFieldValue(fieldValue: string): { chips: string[]; inputText: string } {
+  const allParts = fieldValue.split(',').map(s => s.trim()).filter(Boolean);
+  const hasTrailingComma = fieldValue.trimEnd().endsWith(',');
+  const chips = hasTrailingComma ? allParts : allParts.slice(0, -1);
+  const inputText = hasTrailingComma ? '' : (allParts[allParts.length - 1] ?? '');
+  return { chips, inputText };
+}
+
+function buildFieldValue(chips: string[], inputText: string): string {
+  if (chips.length === 0) return inputText;
+  return chips.join(', ') + ', ' + inputText;
+}
+
+/** Removes the first occurrence of `chip` from a recipient field value string. */
+export function removeChipFromFieldValue(fieldValue: string, chip: string): string {
+  const { chips, inputText } = parseFieldValue(fieldValue);
+  const idx = chips.indexOf(chip);
+  if (idx === -1) return fieldValue;
+  const remaining = chips.filter((_, i) => i !== idx);
+  return buildFieldValue(remaining, inputText);
+}
+
+/** Appends `chip` as a committed entry to a recipient field value string. */
+export function addChipToFieldValue(fieldValue: string, chip: string): string {
+  const { chips, inputText } = parseFieldValue(fieldValue);
+  return buildFieldValue([...chips, chip], inputText);
+}
+
+/**
  * Replaces the placeholder src on `<img data-cid="...">` elements with the
  * resolved data URL once the inline blob has been fetched. Leaves images
  * whose src has been edited away from the placeholder/cid alone.
