@@ -45,8 +45,11 @@ import { computeReplyThreadingHeaders } from "@/lib/email-threading";
 import {
   rewriteCidImagesForEditor,
   replaceInlineImagePlaceholders,
-  removeChipFromFieldValue,
-  addChipToFieldValue,
+  formatRecipient,
+  parseRecipient,
+  parseRecipientList,
+  formatRecipientList,
+  type Recipient,
 } from "@/lib/email-composer-utils";
 import { RichTextEditor } from "@/components/email/rich-text-editor";
 import type { Editor } from "@tiptap/react";
@@ -280,46 +283,34 @@ export function EmailComposer({
   const shouldEmbedSignatureInNewMail = mode === 'compose' && hasInitialSignature;
 
   // Format a single EmailAddress for display in the composer input
-  const formatAddr = (r: { name?: string; email?: string }) =>
-    r.email ? (r.name && r.name !== r.email ? `${r.name} <${r.email}>` : r.email) : "";
-
-  // Parse a recipient string that may be "Name <email>" or bare "email"
-  const parseRecipient = (s: string): { name?: string; email: string } => {
-    const trimmed = s.trim();
-    const angleMatch = trimmed.match(/^(.+?)\s*<([^>]+)>$/);
-    if (angleMatch) {
-      return { name: angleMatch[1].trim(), email: angleMatch[2].trim() };
-    }
-    return { email: trimmed };
-  };
+  const toRecipient = (r: { name?: string; email?: string }): Recipient =>
+    ({ name: r.name && r.name !== r.email ? r.name : undefined, email: r.email ?? "" });
 
   // Initialize with reply/forward data if provided
-  const getInitialTo = () => {
-    if (!replyTo) return "";
+  const getInitialTo = (): Recipient[] => {
+    if (!replyTo) return [];
     // RFC 5322: use Reply-To header if present, otherwise fall back to From
     const replyTarget = replyTo.replyToAddresses?.length
-      ? replyTo.replyToAddresses.filter(r => r.email).map(formatAddr).join(", ")
-      : (replyTo.from?.[0] ? formatAddr(replyTo.from[0]) : "");
+      ? replyTo.replyToAddresses.filter(r => r.email).map(toRecipient)
+      : (replyTo.from?.[0]?.email ? [toRecipient(replyTo.from[0])] : []);
     if (mode === 'reply') {
-      return replyTarget ? replyTarget + ', ' : "";
+      return replyTarget;
     } else if (mode === 'replyAll') {
       const ownEmails = new Set(identities.map(i => i.email?.trim().toLowerCase()).filter(Boolean));
-      const originalTo = replyTo.to
-        ?.filter(r => r.email && !ownEmails.has(r.email.trim().toLowerCase()))
-        .map(formatAddr).join(", ") || "";
-      const combined = [replyTarget, originalTo].filter(Boolean).join(", ");
-      return combined ? combined + ', ' : "";
+      const originalTo = (replyTo.to ?? [])
+        .filter(r => r.email && !ownEmails.has(r.email.trim().toLowerCase()))
+        .map(toRecipient);
+      return [...replyTarget, ...originalTo];
     }
-    return "";
+    return [];
   };
 
-  const getInitialCc = () => {
-    if (!replyTo || mode !== 'replyAll') return "";
+  const getInitialCc = (): Recipient[] => {
+    if (!replyTo || mode !== 'replyAll') return [];
     const ownEmails = new Set(identities.map(i => i.email?.trim().toLowerCase()).filter(Boolean));
-    const cc = replyTo.cc
-      ?.filter(r => r.email && !ownEmails.has(r.email.trim().toLowerCase()))
-      .map(formatAddr).join(", ") || "";
-    return cc ? cc + ', ' : "";
+    return (replyTo.cc ?? [])
+      .filter(r => r.email && !ownEmails.has(r.email.trim().toLowerCase()))
+      .map(toRecipient);
   };
 
   const getInitialSubject = () => {
@@ -459,13 +450,25 @@ export function EmailComposer({
     return prefix;
   };
 
-  const [to, setTo] = useState(initialData?.to ?? getInitialTo());
-  const [cc, setCc] = useState(initialData?.cc ?? getInitialCc());
-  const [bcc, setBcc] = useState(initialData?.bcc ?? "");
+  // Committed recipients are structured arrays; the in-progress text the user
+  // is typing lives in a separate `*Input` string per field. This keeps a
+  // display name containing a comma (e.g. "Doo, John") intact instead of
+  // tearing it apart on a delimiter.
+  const [to, setTo] = useState<Recipient[]>(initialData ? parseRecipientList(initialData.to) : getInitialTo());
+  const [cc, setCc] = useState<Recipient[]>(initialData ? parseRecipientList(initialData.cc) : getInitialCc());
+  const [bcc, setBcc] = useState<Recipient[]>(initialData ? parseRecipientList(initialData.bcc) : []);
+  const [toInput, setToInput] = useState('');
+  const [ccInput, setCcInput] = useState('');
+  const [bccInput, setBccInput] = useState('');
   const [subject, setSubject] = useState(initialData?.subject ?? getInitialSubject());
   const [body, setBody] = useState(initialData?.body ?? getInitialBody());
-  const [showCc, setShowCc] = useState(initialData?.showCc ?? !!getInitialCc());
+  const [showCc, setShowCc] = useState(initialData?.showCc ?? getInitialCc().length > 0);
   const [showBcc, setShowBcc] = useState(initialData?.showBcc ?? false);
+  // Committed recipients plus any not-yet-committed text the user has typed.
+  // Send/validation/draft paths treat a typed-but-uncommitted address as a
+  // real recipient, matching the previous string-based behavior.
+  const withInput = (chips: Recipient[], input: string): Recipient[] =>
+    input.trim() ? [...chips, parseRecipient(input)] : chips;
   const [isDraggingChipOverCc, setIsDraggingChipOverCc] = useState(false);
   const [isDraggingChipOverBcc, setIsDraggingChipOverBcc] = useState(false);
   const [requestReadReceipt, setRequestReadReceipt] = useState(requestReadReceiptDefault);
@@ -794,10 +797,11 @@ export function EmailComposer({
   const canSmimeSign = !!smimeKeyRecord;
   const canSmimeEncrypt = (() => {
     if (!smimeKeyRecord) return false;
-    const toAddrs = to.split(',').map(e => e.trim()).filter(Boolean);
-    const ccAddrs = cc.split(',').map(e => e.trim()).filter(Boolean);
-    const bccAddrs = bcc.split(',').map(e => e.trim()).filter(Boolean);
-    const allRecipients = [...toAddrs, ...ccAddrs, ...bccAddrs];
+    const allRecipients = [
+      ...withInput(to, toInput),
+      ...withInput(cc, ccInput),
+      ...withInput(bcc, bccInput),
+    ].map(r => r.email);
     if (allRecipients.length === 0) return false;
     const { missing } = smimeStore.getRecipientCerts(allRecipients);
     return missing.length === 0;
@@ -813,15 +817,21 @@ export function EmailComposer({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentSmimeIdentityId]);
 
+  // Serialized recipient strings for ComposerDraftData (string-shaped) and for
+  // by-value dirty comparison. Folds in any uncommitted typed text.
+  const toStr = formatRecipientList(withInput(to, toInput));
+  const ccStr = formatRecipientList(withInput(cc, ccInput));
+  const bccStr = formatRecipientList(withInput(bcc, bccInput));
+
   // Keep a ref to current state for the unmount save
-  const stateRef = useRef({ to, cc, bcc, subject, body, showCc, showBcc, selectedIdentityId, subAddressTag, draftId, fromOverrideEnabled, fromOverrideEmail, fromOverrideName });
-  stateRef.current = { to, cc, bcc, subject, body, showCc, showBcc, selectedIdentityId, subAddressTag, draftId, fromOverrideEnabled, fromOverrideEmail, fromOverrideName };
+  const stateRef = useRef({ to: toStr, cc: ccStr, bcc: bccStr, subject, body, showCc, showBcc, selectedIdentityId, subAddressTag, draftId, fromOverrideEnabled, fromOverrideEmail, fromOverrideName });
+  stateRef.current = { to: toStr, cc: ccStr, bcc: bccStr, subject, body, showCc, showBcc, selectedIdentityId, subAddressTag, draftId, fromOverrideEnabled, fromOverrideEmail, fromOverrideName };
 
   // Track initial values for dirty detection (captured once on first render)
-  const initialValuesRef = useRef({ to, cc, bcc, subject, body, attachmentCount: attachments.length });
+  const initialValuesRef = useRef({ to: toStr, cc: ccStr, bcc: bccStr, subject, body, attachmentCount: attachments.length });
   const isDirtyRef = useRef(false);
-  isDirtyRef.current = to !== initialValuesRef.current.to || cc !== initialValuesRef.current.cc ||
-    bcc !== initialValuesRef.current.bcc || subject !== initialValuesRef.current.subject ||
+  isDirtyRef.current = toStr !== initialValuesRef.current.to || ccStr !== initialValuesRef.current.cc ||
+    bccStr !== initialValuesRef.current.bcc || subject !== initialValuesRef.current.subject ||
     body !== initialValuesRef.current.body || attachments.length > initialValuesRef.current.attachmentCount;
 
   // Ref to latest saveDraft for use in event handlers with stale closures
@@ -898,21 +908,26 @@ export function EmailComposer({
     }
   }, [plainTextMode]);
 
-  const handleMoveChip = useCallback((chip: string, fromField: 'to' | 'cc' | 'bcc', toField: 'to' | 'cc' | 'bcc') => {
+  const handleMoveChip = useCallback((recipient: Recipient, fromField: 'to' | 'cc' | 'bcc', toField: 'to' | 'cc' | 'bcc') => {
+    if (fromField === toField) return;
     const setters = { to: setTo, cc: setCc, bcc: setBcc };
-    setters[fromField](prev => removeChipFromFieldValue(prev, chip));
-    setters[toField](prev => addChipToFieldValue(prev, chip));
+    const sameRecipient = (a: Recipient, b: Recipient) => a.email === b.email && (a.name ?? '') === (b.name ?? '');
+    setters[fromField](prev => {
+      const idx = prev.findIndex(r => sameRecipient(r, recipient));
+      return idx === -1 ? prev : prev.filter((_, i) => i !== idx);
+    });
+    setters[toField](prev => prev.some(r => sameRecipient(r, recipient)) ? prev : [...prev, recipient]);
     if (toField === 'cc') setShowCc(true);
     if (toField === 'bcc') setShowBcc(true);
   }, [setTo, setCc, setBcc, setShowCc, setShowBcc]);
 
-  const handleAutocomplete = useCallback((value: string, field: 'to' | 'cc' | 'bcc') => {
+  const handleAutocomplete = useCallback((inputText: string, field: 'to' | 'cc' | 'bcc') => {
     if (autocompleteTimeoutRef.current) {
       clearTimeout(autocompleteTimeoutRef.current);
     }
 
-    const lastPart = value.split(',').pop()?.trim() || '';
-    if (lastPart.length < 1) {
+    const query = inputText.trim();
+    if (query.length < 1) {
       setAutocompleteResults([]);
       setActiveAutoField(null);
       setAutoSelectedIndex(-1);
@@ -920,10 +935,10 @@ export function EmailComposer({
     }
 
     autocompleteTimeoutRef.current = setTimeout(async () => {
-      const localResults = getAutocomplete(lastPart);
+      const localResults = getAutocomplete(query);
       // Let plugins contribute extra suggestions (Slack handles, GitHub, CRM, …).
       const initial: RecipientSuggestion[] = localResults.map(r => ({ name: r.name, email: r.email }));
-      const merged = await contactHooks.onProvideRecipientSuggestions.transform(initial, { query: lastPart });
+      const merged = await contactHooks.onProvideRecipientSuggestions.transform(initial, { query });
       setAutocompleteResults(merged.map(s => ({ name: s.name, email: s.email })));
       setActiveAutoField(merged.length > 0 ? field : null);
       setAutoSelectedIndex(-1);
@@ -932,17 +947,10 @@ export function EmailComposer({
 
   const insertAutocomplete = (suggestion: { name: string; email: string }, field: 'to' | 'cc' | 'bcc') => {
     const setter = field === 'to' ? setTo : field === 'cc' ? setCc : setBcc;
-    const getter = field === 'to' ? to : field === 'cc' ? cc : bcc;
+    const inputSetter = field === 'to' ? setToInput : field === 'cc' ? setCcInput : setBccInput;
 
-    const parts = getter.split(',').map(s => s.trim()).filter(Boolean);
-    if (!getter.trimEnd().endsWith(',') && parts.length > 0) {
-      parts.pop();
-    }
-    const formatted = suggestion.name && suggestion.name !== suggestion.email
-      ? `${suggestion.name} <${suggestion.email}>`
-      : suggestion.email;
-    parts.push(formatted);
-    setter(parts.join(', ') + ', ');
+    setter(prev => [...prev, toRecipient(suggestion)]);
+    inputSetter('');
     setAutocompleteResults([]);
     setActiveAutoField(null);
     setAutoSelectedIndex(-1);
@@ -999,14 +1007,14 @@ export function EmailComposer({
       setSubject(filledSubject);
       setBody(bodyContent);
       if (template.defaultRecipients?.to?.length) {
-        setTo(template.defaultRecipients.to.join(', ') + ', ');
+        setTo(template.defaultRecipients.to.map(parseRecipient));
       }
       if (template.defaultRecipients?.cc?.length) {
-        setCc(template.defaultRecipients.cc.join(', ') + ', ');
+        setCc(template.defaultRecipients.cc.map(parseRecipient));
         setShowCc(true);
       }
       if (template.defaultRecipients?.bcc?.length) {
-        setBcc(template.defaultRecipients.bcc.join(', ') + ', ');
+        setBcc(template.defaultRecipients.bcc.map(parseRecipient));
         setShowBcc(true);
       }
     } else {
@@ -1233,9 +1241,9 @@ export function EmailComposer({
   const saveDraftOnce = async (): Promise<string | null> => {
     if (!client || !composerClient) return null;
 
-    const toAddresses = to.split(",").map(e => e.trim()).filter(Boolean);
-    const ccAddresses = cc.split(",").map(e => e.trim()).filter(Boolean);
-    const bccAddresses = bcc.split(",").map(e => e.trim()).filter(Boolean);
+    const toAddresses = withInput(to, toInput).map(r => formatRecipient(r.name, r.email));
+    const ccAddresses = withInput(cc, ccInput).map(r => formatRecipient(r.name, r.email));
+    const bccAddresses = withInput(bcc, bccInput).map(r => formatRecipient(r.name, r.email));
 
     if (!toAddresses.length && !subject && !(plainTextMode ? body.trim() : htmlToPlainText(body).trim())) {
       return null;
@@ -1358,9 +1366,9 @@ export function EmailComposer({
       saveTimeoutRef.current = null;
       // Plugin observers (AI assist, grammar, …) get a debounced snapshot here.
       emailHooks.onDraftChange.emit({
-        to: to.split(',').map(s => s.trim()).filter(Boolean),
-        cc: cc.split(',').map(s => s.trim()).filter(Boolean),
-        bcc: bcc.split(',').map(s => s.trim()).filter(Boolean),
+        to: withInput(to, toInput).map(r => formatRecipient(r.name, r.email)),
+        cc: withInput(cc, ccInput).map(r => formatRecipient(r.name, r.email)),
+        bcc: withInput(bcc, bccInput).map(r => formatRecipient(r.name, r.email)),
         subject,
         htmlBody: plainTextMode ? '' : body,
         textBody: plainTextMode ? body : htmlToPlainText(body),
@@ -1379,7 +1387,7 @@ export function EmailComposer({
       }
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps -- saveDraft reads current state when called, not when effect is set up
-  }, [to, cc, bcc, subject, body, attachments]);
+  }, [toStr, ccStr, bccStr, subject, body, attachments]);
 
   useEffect(() => {
     return () => {
@@ -1389,7 +1397,7 @@ export function EmailComposer({
     };
   }, []);
 
-  const toAddresses = to.split(",").map(e => e.trim()).filter(Boolean);
+  const toAddresses = withInput(to, toInput);
   const bodyPlainText = plainTextMode ? body.trim() : htmlToPlainText(body).trim();
   const hasContent = bodyPlainText || attachments.some(att => att.blobId && !att.uploading);
   const canSend = toAddresses.length > 0 && !!subject && hasContent;
@@ -1473,8 +1481,8 @@ export function EmailComposer({
   };
 
   const handleSend = async (skipAttachmentCheck = false, delayedUntil?: string) => {
-    const ccAddresses = cc.split(",").map(e => e.trim()).filter(Boolean);
-    const bccAddresses = bcc.split(",").map(e => e.trim()).filter(Boolean);
+    const ccAddresses = withInput(cc, ccInput);
+    const bccAddresses = withInput(bcc, bccInput);
 
     if (!canSend) {
       const errors: { to?: boolean; subject?: boolean; body?: boolean } = {};
@@ -1596,9 +1604,9 @@ export function EmailComposer({
       // guards, etc.). Returning false from any handler aborts before either
       // the S/MIME or standard JMAP path runs.
       const sendablePreview: OutgoingEmail = {
-        to: toAddresses,
-        cc: ccAddresses,
-        bcc: bccAddresses,
+        to: toAddresses.map(r => formatRecipient(r.name, r.email)),
+        cc: ccAddresses.map(r => formatRecipient(r.name, r.email)),
+        bcc: bccAddresses.map(r => formatRecipient(r.name, r.email)),
         subject,
         htmlBody: finalHtmlBody || '',
         textBody: finalBody,
@@ -1686,9 +1694,9 @@ export function EmailComposer({
           : undefined;
         const mimeBytes = buildMimeMessage({
           from: { name: currentIdentity.name || undefined, email: fromEmail || currentIdentity.email },
-          to: toAddresses.map(parseRecipient),
-          cc: ccAddresses.length > 0 ? ccAddresses.map(parseRecipient) : undefined,
-          bcc: bccAddresses.length > 0 ? bccAddresses.map(parseRecipient) : undefined,
+          to: toAddresses,
+          cc: ccAddresses.length > 0 ? ccAddresses : undefined,
+          bcc: bccAddresses.length > 0 ? bccAddresses : undefined,
           subject,
           inReplyTo: mimeInReplyTo,
           references: mimeReferences,
@@ -1701,8 +1709,8 @@ export function EmailComposer({
 
         const smimeHeaders = {
           from: { name: currentIdentity.name || undefined, email: fromEmail || currentIdentity.email },
-          to: toAddresses.map(parseRecipient),
-          cc: ccAddresses.length > 0 ? ccAddresses.map(parseRecipient) : undefined,
+          to: toAddresses,
+          cc: ccAddresses.length > 0 ? ccAddresses : undefined,
           subject,
           inReplyTo: mimeInReplyTo,
           references: mimeReferences,
@@ -1724,7 +1732,7 @@ export function EmailComposer({
 
         // 6. Encrypt if enabled
         if (smimeEncrypt_ && smimeKeyRecord) {
-          const allRecipients = [...toAddresses, ...ccAddresses, ...bccAddresses].map(s => parseRecipient(s).email);
+          const allRecipients = [...toAddresses, ...ccAddresses, ...bccAddresses].map(r => r.email);
           const { found, missing } = smimeStore.getRecipientCerts(allRecipients);
           if (missing.length > 0) {
             throw new Error(`Missing certificates for: ${missing.join(', ')}`);
@@ -1741,7 +1749,7 @@ export function EmailComposer({
         }
 
         // 7. Send via raw email path
-        const result = await sendRawEmail(client, payload, currentIdentity.id, effectiveDelayedUntil, [...toAddresses, ...ccAddresses, ...bccAddresses].map(s => parseRecipient(s).email));
+        const result = await sendRawEmail(client, payload, currentIdentity.id, effectiveDelayedUntil, [...toAddresses, ...ccAddresses, ...bccAddresses].map(r => r.email));
         if (effectiveDelayedUntil && finalDraftId) {
           client.deleteEmail(finalDraftId).catch(err => {
             debug.warn('email', 'Scheduled S/MIME send created, but plaintext draft cleanup failed:', err);
@@ -1762,9 +1770,9 @@ export function EmailComposer({
         // Let plugins (signatures, link-rewriting, encryption, AI rewrite, …)
         // transform the outgoing message immediately before submission.
         const transformInput: OutgoingEmail = {
-          to: toAddresses,
-          cc: ccAddresses,
-          bcc: bccAddresses,
+          to: toAddresses.map(r => formatRecipient(r.name, r.email)),
+          cc: ccAddresses.map(r => formatRecipient(r.name, r.email)),
+          bcc: bccAddresses.map(r => formatRecipient(r.name, r.email)),
           subject,
           htmlBody: finalHtmlBody || '',
           textBody: finalBody,
@@ -1817,9 +1825,12 @@ export function EmailComposer({
         }
       }
 
-      setTo("");
-      setCc("");
-      setBcc("");
+      setTo([]);
+      setCc([]);
+      setBcc([]);
+      setToInput("");
+      setCcInput("");
+      setBccInput("");
       setSubject("");
       setBody("");
       draftIdRef.current = null;
@@ -2102,7 +2113,7 @@ export function EmailComposer({
                       ? identities.find(id => id.id === selectedIdentityId)?.email
                       : primaryIdentity?.email) || ''
                   }
-                  recipientEmails={to.split(',').map(e => e.trim()).filter(Boolean)}
+                  recipientEmails={withInput(to, toInput).map(r => r.email)}
                   onSelectTag={setSubAddressTag}
                 />
               )}
@@ -2147,11 +2158,13 @@ export function EmailComposer({
           <div className={cn("flex items-center gap-2 px-4 py-2.5 border-b border-border/50 relative", shakeField === 'to' && "animate-shake")}>
             <span className="text-sm text-muted-foreground w-12 md:w-16 shrink-0">{t('to')}:</span>
             <RecipientChipInput
-              value={to}
-              onChange={(v) => {
-                setTo(v);
+              chips={to}
+              onChipsChange={(next) => {
+                setTo(next);
                 if (validationErrors.to) setValidationErrors(prev => ({ ...prev, to: false }));
               }}
+              inputText={toInput}
+              onInputChange={setToInput}
               inputRef={toInputRef}
               placeholder={t('to_placeholder')}
               field="to"
@@ -2186,8 +2199,8 @@ export function EmailComposer({
                   setIsDraggingChipOverCc(false);
                   const raw = e.dataTransfer.getData('application/x-recipient-chip');
                   if (!raw) return;
-                  const { chip, fromField } = JSON.parse(raw) as { chip: string; fromField: 'to' | 'cc' | 'bcc' };
-                  if (fromField !== 'cc') handleMoveChip(chip, fromField, 'cc');
+                  const { recipient, fromField } = JSON.parse(raw) as { recipient: Recipient; fromField: 'to' | 'cc' | 'bcc' };
+                  if (fromField !== 'cc') handleMoveChip(recipient, fromField, 'cc');
                   setShowCc(true);
                 }}
               >
@@ -2210,8 +2223,8 @@ export function EmailComposer({
                   setIsDraggingChipOverBcc(false);
                   const raw = e.dataTransfer.getData('application/x-recipient-chip');
                   if (!raw) return;
-                  const { chip, fromField } = JSON.parse(raw) as { chip: string; fromField: 'to' | 'cc' | 'bcc' };
-                  if (fromField !== 'bcc') handleMoveChip(chip, fromField, 'bcc');
+                  const { recipient, fromField } = JSON.parse(raw) as { recipient: Recipient; fromField: 'to' | 'cc' | 'bcc' };
+                  if (fromField !== 'bcc') handleMoveChip(recipient, fromField, 'bcc');
                   setShowBcc(true);
                 }}
               >
@@ -2225,8 +2238,10 @@ export function EmailComposer({
             <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/50 relative">
               <span className="text-sm text-muted-foreground w-12 md:w-16 shrink-0">{t('cc_label')}</span>
               <RecipientChipInput
-                value={cc}
-                onChange={setCc}
+                chips={cc}
+                onChipsChange={setCc}
+                inputText={ccInput}
+                onInputChange={setCcInput}
                 inputRef={ccInputRef}
                 placeholder={t('cc_placeholder')}
                 field="cc"
@@ -2248,8 +2263,10 @@ export function EmailComposer({
             <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/50 relative">
               <span className="text-sm text-muted-foreground w-12 md:w-16 shrink-0">{t('bcc_label')}</span>
               <RecipientChipInput
-                value={bcc}
-                onChange={setBcc}
+                chips={bcc}
+                onChipsChange={setBcc}
+                inputText={bccInput}
+                onInputChange={setBccInput}
                 inputRef={bccInputRef}
                 placeholder={t('bcc_placeholder')}
                 field="bcc"
@@ -2584,9 +2601,9 @@ export function EmailComposer({
               initialData={{
                 subject,
                 body,
-                to: to.split(',').map(s => s.trim()).filter(Boolean),
-                cc: cc.split(',').map(s => s.trim()).filter(Boolean),
-                bcc: bcc.split(',').map(s => s.trim()).filter(Boolean),
+                to: withInput(to, toInput).map(r => formatRecipient(r.name, r.email)),
+                cc: withInput(cc, ccInput).map(r => formatRecipient(r.name, r.email)),
+                bcc: withInput(bcc, bccInput).map(r => formatRecipient(r.name, r.email)),
               }}
               onSave={(data) => {
                 addTemplate(data);
@@ -2790,8 +2807,10 @@ const AutocompleteDropdown = React.forwardRef<HTMLDivElement, {
 });
 
 function RecipientChipInput({
-  value,
-  onChange,
+  chips,
+  onChipsChange,
+  inputText,
+  onInputChange,
   inputRef,
   placeholder,
   field,
@@ -2808,12 +2827,14 @@ function RecipientChipInput({
   onTab,
   onMoveChip,
 }: {
-  value: string;
-  onChange: (value: string) => void;
+  chips: Recipient[];
+  onChipsChange: (chips: Recipient[]) => void;
+  inputText: string;
+  onInputChange: (text: string) => void;
   inputRef: React.RefObject<HTMLInputElement | null>;
   placeholder: string;
   field: 'to' | 'cc' | 'bcc';
-  onAutocomplete: (value: string, field: 'to' | 'cc' | 'bcc') => void;
+  onAutocomplete: (inputText: string, field: 'to' | 'cc' | 'bcc') => void;
   onAutoKeyDown: (e: React.KeyboardEvent, field: 'to' | 'cc' | 'bcc') => void;
   onAutoBlur: (e: React.FocusEvent, field: 'to' | 'cc' | 'bcc') => void;
   activeAutoField: 'to' | 'cc' | 'bcc' | null;
@@ -2824,21 +2845,16 @@ function RecipientChipInput({
   validationError?: boolean;
   validationMessage?: string;
   onTab?: () => void;
-  onMoveChip: (chip: string, fromField: 'to' | 'cc' | 'bcc', toField: 'to' | 'cc' | 'bcc') => void;
+  onMoveChip: (recipient: Recipient, fromField: 'to' | 'cc' | 'bcc', toField: 'to' | 'cc' | 'bcc') => void;
 }) {
   const t = useTranslations('email_composer');
   const tCommon = useTranslations('common');
-  const { contextMenu, openContextMenu, closeContextMenu, menuRef } = useContextMenu<{ index: number; chip: string }>();
-  const [editingChip, setEditingChip] = useState<{ index: number; chip: string; editType: 'email' | 'name' } | null>(null);
+  const { contextMenu, openContextMenu, closeContextMenu, menuRef } = useContextMenu<{ index: number; recipient: Recipient }>();
+  const [editingChip, setEditingChip] = useState<{ index: number; editType: 'email' | 'name' } | null>(null);
   const [editValue, setEditValue] = useState('');
   const [isDragOver, setIsDragOver] = useState(false);
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
   const editInputRef = useRef<HTMLInputElement | null>(null);
-
-  const allParts = value.split(',').map(s => s.trim()).filter(Boolean);
-  const hasTrailingComma = value.trimEnd().endsWith(',');
-  const chips = hasTrailingComma ? allParts : allParts.slice(0, -1);
-  const inputText = hasTrailingComma ? '' : (allParts[allParts.length - 1] || '');
 
   // Focus edit input when editing starts
   useEffect(() => {
@@ -2852,70 +2868,50 @@ function RecipientChipInput({
     }
   }, [editingChip]);
 
-  // Parse a chip string to extract name and email
-  const parseChip = (chip: string): { name?: string; email: string } => {
-    const angleMatch = chip.match(/^(.+?)\s*<([^>]+)>$/);
-    if (angleMatch) {
-      return { name: angleMatch[1].trim(), email: angleMatch[2].trim() };
-    }
-    return { email: chip };
-  };
-
-  // Format a chip for display
-  const formatChipDisplay = (chip: string): string => {
-    const parsed = parseChip(chip);
-    if (parsed.name && parsed.name !== parsed.email) {
-      return `${parsed.name} (${parsed.email})`;
-    }
-    return parsed.email;
-  };
+  // Format a recipient for display in a chip / context menu
+  const formatChipDisplay = (r: Recipient): string =>
+    r.name && r.name !== r.email ? `${r.name} (${r.email})` : r.email;
 
   // Handle saving an edited chip
   const handleSaveEdit = (newValue: string) => {
     if (!editingChip) return;
     const { index, editType } = editingChip;
     const chip = chips[index];
-    const parsed = parseChip(chip);
+    if (!chip) {
+      setEditingChip(null);
+      return;
+    }
+    const trimmedNew = newValue.trim();
 
-    let newChip: string;
+    let newChip: Recipient;
     if (editType === 'email') {
-      // Update email, keep name
-      const trimmedNew = newValue.trim();
+      // Update email, keep name. Empty email is a no-op (can't drop the email).
       if (!trimmedNew) {
         setEditingChip(null);
         return;
       }
-      newChip = parsed.name ? `${parsed.name} <${trimmedNew}>` : trimmedNew;
+      newChip = { name: chip.name, email: trimmedNew };
     } else {
-      // Update name, keep email
-      const trimmedNew = newValue.trim();
-      if (trimmedNew) {
-        newChip = `${trimmedNew} <${parsed.email}>`;
-      } else {
-        // Name cleared, remove from format
-        newChip = parsed.email;
-      }
+      // Update name, keep email. Empty name clears the display name.
+      newChip = { name: trimmedNew || undefined, email: chip.email };
     }
 
-    // Replace the chip in the value
     const newChips = [...chips];
     newChips[index] = newChip;
-    onChange(newChips.join(', ') + ', ');
+    onChipsChange(newChips);
     setEditingChip(null);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newInputText = e.target.value;
-    const chipPart = chips.length > 0 ? chips.join(', ') + ', ' : '';
-    const newValue = chipPart + newInputText;
-    onChange(newValue);
-    onAutocomplete(newValue, field);
+    onInputChange(newInputText);
+    onAutocomplete(newInputText, field);
   };
 
   const commitCurrentInput = () => {
     if (inputText.trim()) {
-      const newChips = [...chips, inputText.trim()];
-      onChange(newChips.join(', ') + ', ');
+      onChipsChange([...chips, parseRecipient(inputText)]);
+      onInputChange('');
     }
   };
 
@@ -2946,45 +2942,39 @@ function RecipientChipInput({
       return;
     }
 
+    // Backspace on an empty input pulls the last chip back into the input for
+    // quick editing.
     if (e.key === 'Backspace' && !inputText && chips.length > 0) {
       const lastChip = chips[chips.length - 1];
-      const remainingChips = chips.slice(0, -1);
-      const chipPart = remainingChips.length > 0 ? remainingChips.join(', ') + ', ' : '';
-      onChange(chipPart + lastChip);
+      onChipsChange(chips.slice(0, -1));
+      onInputChange(formatRecipient(lastChip.name, lastChip.email));
       return;
     }
   };
 
   const handleChipRemove = (index: number, e: React.MouseEvent) => {
     e.stopPropagation();
-    const remainingChips = chips.filter((_, i) => i !== index);
-    if (remainingChips.length > 0) {
-      onChange(remainingChips.join(', ') + ', ' + inputText);
-    } else {
-      onChange(inputText);
-    }
+    onChipsChange(chips.filter((_, i) => i !== index));
   };
 
-  const handleContextMenu = (e: React.MouseEvent, index: number, chip: string) => {
-    openContextMenu(e, { index, chip });
+  const handleContextMenu = (e: React.MouseEvent, index: number, recipient: Recipient) => {
+    openContextMenu(e, { index, recipient });
   };
 
   const handleEditEmail = () => {
     if (!contextMenu.data) return;
-    const { index, chip } = contextMenu.data;
-    const parsed = parseChip(chip);
+    const { index, recipient } = contextMenu.data;
     closeContextMenu();
-    setEditValue(parsed.email);
-    setEditingChip({ index, chip, editType: 'email' });
+    setEditValue(recipient.email);
+    setEditingChip({ index, editType: 'email' });
   };
 
   const handleEditName = () => {
     if (!contextMenu.data) return;
-    const { index, chip } = contextMenu.data;
-    const parsed = parseChip(chip);
+    const { index, recipient } = contextMenu.data;
     closeContextMenu();
-    setEditValue(parsed.name || '');
-    setEditingChip({ index, chip, editType: 'name' });
+    setEditValue(recipient.name || '');
+    setEditingChip({ index, editType: 'name' });
   };
 
   const handleBlur = (e: React.FocusEvent) => {
@@ -2992,10 +2982,7 @@ function RecipientChipInput({
     if (relatedTarget && dropdownRef.current?.contains(relatedTarget)) {
       return;
     }
-    if (inputText.trim()) {
-      const newChips = [...chips, inputText.trim()];
-      onChange(newChips.join(', ') + ', ');
-    }
+    commitCurrentInput();
     onAutoBlur(e, field);
   };
 
@@ -3017,9 +3004,9 @@ function RecipientChipInput({
     setIsDragOver(false);
     const raw = e.dataTransfer.getData('application/x-recipient-chip');
     if (!raw) return;
-    const { chip: draggedChip, fromField } = JSON.parse(raw) as { chip: string; fromField: 'to' | 'cc' | 'bcc' };
+    const { recipient, fromField } = JSON.parse(raw) as { recipient: Recipient; fromField: 'to' | 'cc' | 'bcc' };
     if (fromField === field) return;
-    onMoveChip(draggedChip, fromField, field);
+    onMoveChip(recipient, fromField, field);
   };
 
   return (
@@ -3040,14 +3027,14 @@ function RecipientChipInput({
           const chipDisplay = formatChipDisplay(chip);
           return (
             <span
-              key={`${chip}-${i}`}
+              key={`${chip.email}-${i}`}
               draggable={!isEditing}
               onDragStart={(e) => {
                 e.stopPropagation();
                 e.dataTransfer.effectAllowed = 'move';
-                e.dataTransfer.setData('application/x-recipient-chip', JSON.stringify({ chip, fromField: field }));
+                e.dataTransfer.setData('application/x-recipient-chip', JSON.stringify({ recipient: chip, fromField: field }));
                 // Show the address while dragging, matching the email-list drag preview.
-                const dragPreview = createChipDragPreview(parseChip(chip).email);
+                const dragPreview = createChipDragPreview(chip.email);
                 e.dataTransfer.setDragImage(dragPreview, 0, 0);
                 requestAnimationFrame(() => dragPreview.remove());
                 setDraggingIndex(i);
@@ -3159,7 +3146,7 @@ function RecipientChipInput({
         {contextMenu.data && (
           <>
             <div className="px-3 py-1.5 text-xs font-medium text-muted-foreground truncate max-w-[200px]">
-              {formatChipDisplay(contextMenu.data.chip)}
+              {formatChipDisplay(contextMenu.data.recipient)}
             </div>
             <ContextMenuSeparator />
             <ContextMenuItem label={t('recipient_edit_email')} onClick={handleEditEmail} />

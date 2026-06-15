@@ -237,7 +237,7 @@ describe('RecipientChipInput drag and drop', () => {
     expect(chipSpan).toHaveAttribute('draggable', 'true');
   });
 
-  it('onDragStart encodes chip value and source field into dataTransfer', async () => {
+  it('onDragStart encodes the recipient and source field into dataTransfer', async () => {
     render(<EmailComposer initialData={BASE_DATA} />);
 
     const chipText = await screen.findByText('alice@example.com');
@@ -247,7 +247,21 @@ describe('RecipientChipInput drag and drop', () => {
     fireEvent.dragStart(chipSpan, { dataTransfer: dt });
 
     const payload = JSON.parse(dt.getData('application/x-recipient-chip'));
-    expect(payload).toEqual({ chip: 'alice@example.com', fromField: 'to' });
+    expect(payload).toEqual({ recipient: { email: 'alice@example.com' }, fromField: 'to' });
+  });
+
+  it('keeps a display name with a comma in a single chip (array model)', async () => {
+    render(<EmailComposer initialData={{ ...BASE_DATA, to: '"Doo, John" <john@doo.org>, ' }} />);
+
+    // One chip, displayed as "Doo, John (john@doo.org)" — not split on the comma.
+    const chip = await screen.findByText('Doo, John (john@doo.org)');
+    const chipSpan = chip.closest('[draggable]') as HTMLElement;
+    expect(chipSpan).not.toBeNull();
+
+    const dt = new MockDataTransfer();
+    fireEvent.dragStart(chipSpan, { dataTransfer: dt });
+    const payload = JSON.parse(dt.getData('application/x-recipient-chip'));
+    expect(payload).toEqual({ recipient: { name: 'Doo, John', email: 'john@doo.org' }, fromField: 'to' });
   });
 
   it('onDragEnd clears the opacity class on the chip', async () => {
@@ -277,7 +291,7 @@ describe('RecipientChipInput drag and drop', () => {
     if (!ccContainer) return;
 
     const dt = new MockDataTransfer();
-    dt.setData('application/x-recipient-chip', JSON.stringify({ chip: 'alice@example.com', fromField: 'to' }));
+    dt.setData('application/x-recipient-chip', JSON.stringify({ recipient: { email: 'alice@example.com' }, fromField: 'to' }));
 
     fireEvent.dragOver(ccContainer, { dataTransfer: dt });
     expect(ccContainer.className).toContain('ring-primary');
@@ -297,7 +311,7 @@ describe('RecipientChipInput drag and drop', () => {
     if (!toContainer || !ccContainer) return;
 
     const dt = new MockDataTransfer();
-    dt.setData('application/x-recipient-chip', JSON.stringify({ chip: 'alice@example.com', fromField: 'to' }));
+    dt.setData('application/x-recipient-chip', JSON.stringify({ recipient: { email: 'alice@example.com' }, fromField: 'to' }));
     fireEvent.dragOver(ccContainer, { dataTransfer: dt });
     act(() => {
       fireEvent.drop(ccContainer, { dataTransfer: dt });
@@ -319,7 +333,7 @@ describe('RecipientChipInput drag and drop', () => {
     const toContainer = allContainers.find(el => el.querySelector('[draggable]')) as HTMLElement;
 
     const dt = new MockDataTransfer();
-    dt.setData('application/x-recipient-chip', JSON.stringify({ chip: 'alice@example.com', fromField: 'to' }));
+    dt.setData('application/x-recipient-chip', JSON.stringify({ recipient: { email: 'alice@example.com' }, fromField: 'to' }));
     fireEvent.dragOver(toContainer, { dataTransfer: dt });
     act(() => {
       fireEvent.drop(toContainer, { dataTransfer: dt });
@@ -336,7 +350,7 @@ describe('RecipientChipInput drag and drop', () => {
     const ccButton = screen.getByRole('button', { name: 'Cc' });
 
     const dt = new MockDataTransfer();
-    dt.setData('application/x-recipient-chip', JSON.stringify({ chip: 'alice@example.com', fromField: 'to' }));
+    dt.setData('application/x-recipient-chip', JSON.stringify({ recipient: { email: 'alice@example.com' }, fromField: 'to' }));
     fireEvent.dragOver(ccButton, { dataTransfer: dt });
     act(() => {
       fireEvent.drop(ccButton, { dataTransfer: dt });

@@ -4,8 +4,11 @@ import {
   rewriteCidImagesForEditor,
   replaceInlineImagePlaceholders,
   INLINE_IMAGE_PLACEHOLDER,
-  removeChipFromFieldValue,
-  addChipToFieldValue,
+  splitRecipients,
+  formatRecipient,
+  parseRecipient,
+  parseRecipientList,
+  formatRecipientList,
 } from "../email-composer-utils";
 
 describe("plainTextToComposerBody", () => {
@@ -115,59 +118,83 @@ describe("replaceInlineImagePlaceholders", () => {
   });
 });
 
-describe("removeChipFromFieldValue", () => {
-  it("removes the target chip and preserves others", () => {
-    const result = removeChipFromFieldValue("alice@example.com, bob@example.com, ", "alice@example.com");
-    expect(result).toBe("bob@example.com, ");
+describe("splitRecipients", () => {
+  it("splits a plain comma-separated list", () => {
+    expect(splitRecipients("alice@x.com, bob@x.com")).toEqual([
+      "alice@x.com",
+      "bob@x.com",
+    ]);
   });
 
-  it("removes a chip with a display name", () => {
-    const result = removeChipFromFieldValue("Alice <alice@example.com>, bob@example.com, ", "Alice <alice@example.com>");
-    expect(result).toBe("bob@example.com, ");
+  it("trims whitespace and drops empty segments", () => {
+    expect(splitRecipients("  alice@x.com ,, bob@x.com ,")).toEqual([
+      "alice@x.com",
+      "bob@x.com",
+    ]);
   });
 
-  it("handles removing the only chip", () => {
-    const result = removeChipFromFieldValue("alice@example.com, ", "alice@example.com");
-    expect(result).toBe("");
+  it("keeps a quoted display name containing a comma intact", () => {
+    expect(splitRecipients('"Doo, John" <john@doo.org>, alice@x.com')).toEqual([
+      '"Doo, John" <john@doo.org>',
+      "alice@x.com",
+    ]);
   });
 
-  it("returns the value unchanged when chip is not found", () => {
-    const value = "alice@example.com, bob@example.com, ";
-    expect(removeChipFromFieldValue(value, "carol@example.com")).toBe(value);
+  it("does not split on a comma inside angle brackets", () => {
+    expect(splitRecipients("Group <a,b@x.com>, c@x.com")).toEqual([
+      "Group <a,b@x.com>",
+      "c@x.com",
+    ]);
   });
 
-  it("preserves in-progress input text after removing a chip", () => {
-    const result = removeChipFromFieldValue("alice@example.com, bob@example.com, car", "alice@example.com");
-    expect(result).toBe("bob@example.com, car");
-  });
-
-  it("handles an empty field value", () => {
-    expect(removeChipFromFieldValue("", "alice@example.com")).toBe("");
-  });
-
-  it("removes only the first occurrence when chip appears multiple times", () => {
-    const result = removeChipFromFieldValue("alice@example.com, alice@example.com, bob@example.com, ", "alice@example.com");
-    expect(result).toBe("alice@example.com, bob@example.com, ");
+  it("returns an empty array for an empty string", () => {
+    expect(splitRecipients("")).toEqual([]);
   });
 });
 
-describe("addChipToFieldValue", () => {
-  it("appends a chip to a field with existing chips", () => {
-    const result = addChipToFieldValue("alice@example.com, ", "bob@example.com");
-    expect(result).toBe("alice@example.com, bob@example.com, ");
+describe("formatRecipient / parseRecipient", () => {
+  it("returns a bare email when there is no name", () => {
+    expect(formatRecipient(undefined, "a@x.com")).toBe("a@x.com");
   });
 
-  it("appends a chip to an empty field", () => {
-    expect(addChipToFieldValue("", "alice@example.com")).toBe("alice@example.com, ");
+  it("returns a bare email when the name equals the email", () => {
+    expect(formatRecipient("a@x.com", "a@x.com")).toBe("a@x.com");
   });
 
-  it("preserves in-progress input text when appending", () => {
-    const result = addChipToFieldValue("alice@example.com, bob", "carol@example.com");
-    expect(result).toBe("alice@example.com, carol@example.com, bob");
+  it("formats a simple name without quoting", () => {
+    expect(formatRecipient("Alice", "a@x.com")).toBe("Alice <a@x.com>");
   });
 
-  it("appends a chip with a display name", () => {
-    const result = addChipToFieldValue("alice@example.com, ", "Bob <bob@example.com>");
-    expect(result).toBe("alice@example.com, Bob <bob@example.com>, ");
+  it("quotes a name containing a comma", () => {
+    expect(formatRecipient("Doo, John", "john@doo.org")).toBe(
+      '"Doo, John" <john@doo.org>'
+    );
+  });
+
+  it("parses a bare email", () => {
+    expect(parseRecipient("a@x.com")).toEqual({ email: "a@x.com" });
+  });
+
+  it("parses and unquotes a quoted comma name", () => {
+    expect(parseRecipient('"Doo, John" <john@doo.org>')).toEqual({
+      name: "Doo, John",
+      email: "john@doo.org",
+    });
+  });
+});
+
+describe("parseRecipientList / formatRecipientList", () => {
+  it("round-trips a comma-name recipient through serialize + parse", () => {
+    const list = [
+      { name: "Doo, John", email: "john@doo.org" },
+      { email: "alice@x.com" },
+    ];
+    const serialized = formatRecipientList(list);
+    expect(serialized).toBe('"Doo, John" <john@doo.org>, alice@x.com');
+    expect(parseRecipientList(serialized)).toEqual(list);
+  });
+
+  it("parses an empty string to an empty array", () => {
+    expect(parseRecipientList("")).toEqual([]);
   });
 });

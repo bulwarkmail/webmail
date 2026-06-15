@@ -52,37 +52,92 @@ export function rewriteCidImagesForEditor(html: string): string {
   return touched ? doc.body.innerHTML : html;
 }
 
+/** A composer recipient. Display name is optional; email is required. */
+export type Recipient = { name?: string; email: string };
+
 /**
- * Parses the chip array and trailing in-progress input text from a
- * comma-separated recipient field value (e.g. "Alice <a@x.com>, bob@x.com, b").
- * A trailing comma means "bob@x.com" is a committed chip and "b" is the live input.
+ * Splits a comma-separated recipient string into individual entries. Commas
+ * inside a quoted display name (`"Doo, John" <john@doo.org>`) or angle brackets
+ * (`<a,b@x>`) are treated as literal, not separators. Only used at the
+ * (de)serialization boundary — the live composer state is an array, so the UI
+ * never round-trips through this. Trims each part and drops empties.
  */
-function parseFieldValue(fieldValue: string): { chips: string[]; inputText: string } {
-  const allParts = fieldValue.split(',').map(s => s.trim()).filter(Boolean);
-  const hasTrailingComma = fieldValue.trimEnd().endsWith(',');
-  const chips = hasTrailingComma ? allParts : allParts.slice(0, -1);
-  const inputText = hasTrailingComma ? '' : (allParts[allParts.length - 1] ?? '');
-  return { chips, inputText };
+export function splitRecipients(value: string): string[] {
+  const result: string[] = [];
+  let current = '';
+  let inQuotes = false;
+  let inAngle = false;
+  for (const ch of value) {
+    if (ch === '"') {
+      inQuotes = !inQuotes;
+      current += ch;
+    } else if (ch === '<' && !inQuotes) {
+      inAngle = true;
+      current += ch;
+    } else if (ch === '>' && !inQuotes) {
+      inAngle = false;
+      current += ch;
+    } else if (ch === ',' && !inQuotes && !inAngle) {
+      const trimmed = current.trim();
+      if (trimmed) result.push(trimmed);
+      current = '';
+    } else {
+      current += ch;
+    }
+  }
+  const trimmed = current.trim();
+  if (trimmed) result.push(trimmed);
+  return result;
 }
 
-function buildFieldValue(chips: string[], inputText: string): string {
-  if (chips.length === 0) return inputText;
-  return chips.join(', ') + ', ' + inputText;
+// Display names containing any of these must be wrapped in a quoted-string so
+// they survive comma-splitting at the serialization boundary and round-trip.
+const NAME_NEEDS_QUOTING = /[,<>"@;:]/;
+
+/**
+ * Formats a recipient as a string. Bare email when there's no distinct name;
+ * otherwise `Name <email>`, RFC 5322 quoting the name when it contains a comma
+ * or other special character.
+ */
+export function formatRecipient(name: string | undefined, email: string): string {
+  const trimmedName = name?.trim();
+  if (!trimmedName || trimmedName === email) return email;
+  const quoted = NAME_NEEDS_QUOTING.test(trimmedName)
+    ? `"${trimmedName.replace(/(["\\])/g, '\\$1')}"`
+    : trimmedName;
+  return `${quoted} <${email}>`;
 }
 
-/** Removes the first occurrence of `chip` from a recipient field value string. */
-export function removeChipFromFieldValue(fieldValue: string, chip: string): string {
-  const { chips, inputText } = parseFieldValue(fieldValue);
-  const idx = chips.indexOf(chip);
-  if (idx === -1) return fieldValue;
-  const remaining = chips.filter((_, i) => i !== idx);
-  return buildFieldValue(remaining, inputText);
+/** Strips a surrounding quoted-string (and its escapes) from a display name. */
+function unquoteName(name: string): string {
+  const trimmed = name.trim();
+  if (trimmed.length >= 2 && trimmed.startsWith('"') && trimmed.endsWith('"')) {
+    return trimmed.slice(1, -1).replace(/\\(["\\])/g, '$1');
+  }
+  return trimmed;
 }
 
-/** Appends `chip` as a committed entry to a recipient field value string. */
-export function addChipToFieldValue(fieldValue: string, chip: string): string {
-  const { chips, inputText } = parseFieldValue(fieldValue);
-  return buildFieldValue([...chips, chip], inputText);
+/**
+ * Parses a single recipient string (`Name <email>`, `"Quoted, Name" <email>`,
+ * or bare `email`) into a {@link Recipient}. The display name is unquoted.
+ */
+export function parseRecipient(s: string): Recipient {
+  const trimmed = s.trim();
+  const angleMatch = trimmed.match(/^(.+?)\s*<([^>]+)>$/);
+  if (angleMatch) {
+    return { name: unquoteName(angleMatch[1]), email: angleMatch[2].trim() };
+  }
+  return { email: trimmed };
+}
+
+/** Parses a serialized comma-separated recipient string into an array. */
+export function parseRecipientList(value: string): Recipient[] {
+  return splitRecipients(value).map(parseRecipient);
+}
+
+/** Serializes a recipient array into a comma-separated string. */
+export function formatRecipientList(recipients: Recipient[]): string {
+  return recipients.map((r) => formatRecipient(r.name, r.email)).join(', ');
 }
 
 /**
