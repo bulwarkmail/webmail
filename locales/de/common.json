@@ -544,7 +544,25 @@
     "reschedule_prompt": "Neues Datum/Uhrzeit eingeben, z. B. 2026-05-04T15:30",
     "scheduled_actions_only": "Die Geplant-Ansicht unterstützt nur Planungsaktionen",
     "undo_send_scheduled": "Nachricht ist zum Senden geplant",
-    "undo_send": "Senden rückgängig"
+    "undo_send": "Senden rückgängig",
+    "contact_sidebar": {
+      "title": "Kontakt",
+      "close": "Seitenleiste schließen",
+      "action_email": "E-Mail",
+      "action_email_title": "E-Mail senden",
+      "action_copy": "Kopieren",
+      "action_copy_title": "E-Mail-Adresse kopieren",
+      "action_edit_title": "Kontakt bearbeiten",
+      "section_emails": "E-Mail-Adressen",
+      "section_phones": "Telefonnummern",
+      "section_organizations": "Organisationen",
+      "section_addresses": "Adressen",
+      "section_notes": "Notizen",
+      "not_in_contacts": "Nicht in Ihren Kontakten",
+      "add_to_contacts": "Zu Kontakten hinzufügen",
+      "copied": "Kopiert!",
+      "copy_failed": "Kopieren fehlgeschlagen"
+    }
   },
   "email_composer": {
     "read_receipt_on": "Lesebestätigung angefordert (klicken zum Deaktivieren)",

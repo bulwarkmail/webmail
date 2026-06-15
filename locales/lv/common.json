@@ -544,7 +544,25 @@
     "reschedule_prompt": "Ievadiet jaunu datumu/laiku, piem. 2026-05-04T15:30",
     "scheduled_actions_only": "Ieplānoto skatā ir pieejamas tikai ieplānošanas darbības",
     "undo_send_scheduled": "Ziņojums ir ieplānots nosūtīšanai",
-    "undo_send": "Atsaukt sūtīšanu"
+    "undo_send": "Atsaukt sūtīšanu",
+    "contact_sidebar": {
+      "title": "Contact",
+      "close": "Close sidebar",
+      "action_email": "Email",
+      "action_email_title": "Send email",
+      "action_copy": "Copy",
+      "action_copy_title": "Copy email",
+      "action_edit_title": "Edit contact",
+      "section_emails": "Emails",
+      "section_phones": "Phones",
+      "section_organizations": "Organizations",
+      "section_addresses": "Addresses",
+      "section_notes": "Notes",
+      "not_in_contacts": "Not in your contacts",
+      "add_to_contacts": "Add to contacts",
+      "copied": "Copied!",
+      "copy_failed": "Failed to copy"
+    }
   },
   "email_composer": {
     "read_receipt_on": "Pieprasīts lasīšanas apstiprinājums (noklikšķiniet, lai atspējotu)",

@@ -173,12 +173,13 @@ export default function ContactsPage() {
     const addEmail = searchParams.get('addEmail');
     const addName = searchParams.get('addName');
     const from = searchParams.get('from');
+    const viewParam = searchParams.get('view');
     if (!contactId && !addEmail && !from) return;
     intentAppliedRef.current = true;
     if (from === 'email') setReturnToEmail(true);
     if (contactId) {
       setSelectedContact(contactId);
-      setView('detail');
+      setView(viewParam === 'edit' ? 'edit' : 'detail');
     } else if (addEmail) {
       setCreatePrefill({ email: addEmail, name: addName ?? undefined });
       setSelectedContact(null);

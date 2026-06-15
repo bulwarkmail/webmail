@@ -544,7 +544,25 @@
     "reschedule_prompt": "새 날짜/시간을 입력하세요. 예: 2026-05-04T15:30",
     "scheduled_actions_only": "예약됨 보기에서는 예약 작업만 사용할 수 있습니다",
     "undo_send_scheduled": "메시지가 보내기로 예약되었습니다",
-    "undo_send": "보내기 실행 취소"
+    "undo_send": "보내기 실행 취소",
+    "contact_sidebar": {
+      "title": "Contact",
+      "close": "Close sidebar",
+      "action_email": "Email",
+      "action_email_title": "Send email",
+      "action_copy": "Copy",
+      "action_copy_title": "Copy email",
+      "action_edit_title": "Edit contact",
+      "section_emails": "Emails",
+      "section_phones": "Phones",
+      "section_organizations": "Organizations",
+      "section_addresses": "Addresses",
+      "section_notes": "Notes",
+      "not_in_contacts": "Not in your contacts",
+      "add_to_contacts": "Add to contacts",
+      "copied": "Copied!",
+      "copy_failed": "Failed to copy"
+    }
   },
   "email_composer": {
     "read_receipt_on": "읽음 확인 요청됨 (클릭하여 해제)",

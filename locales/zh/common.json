@@ -544,7 +544,25 @@
     "reschedule_prompt": "输入新的日期/时间，例如 2026-05-04T15:30",
     "scheduled_actions_only": "计划发送视图仅支持计划操作",
     "undo_send_scheduled": "邮件已计划发送",
-    "undo_send": "撤销发送"
+    "undo_send": "撤销发送",
+    "contact_sidebar": {
+      "title": "Contact",
+      "close": "Close sidebar",
+      "action_email": "Email",
+      "action_email_title": "Send email",
+      "action_copy": "Copy",
+      "action_copy_title": "Copy email",
+      "action_edit_title": "Edit contact",
+      "section_emails": "Emails",
+      "section_phones": "Phones",
+      "section_organizations": "Organizations",
+      "section_addresses": "Addresses",
+      "section_notes": "Notes",
+      "not_in_contacts": "Not in your contacts",
+      "add_to_contacts": "Add to contacts",
+      "copied": "Copied!",
+      "copy_failed": "Failed to copy"
+    }
   },
   "email_composer": {
     "read_receipt_on": "已请求已读回执（点击以关闭）",

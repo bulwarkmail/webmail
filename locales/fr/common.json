@@ -544,7 +544,25 @@
     "reschedule_prompt": "Saisissez une nouvelle date/heure, p. ex. 2026-05-04T15:30",
     "scheduled_actions_only": "La vue Planifiés prend uniquement en charge les actions de planification",
     "undo_send_scheduled": "Message planifié pour envoi",
-    "undo_send": "Annuler l’envoi"
+    "undo_send": "Annuler l’envoi",
+    "contact_sidebar": {
+      "title": "Contact",
+      "close": "Fermer le panneau",
+      "action_email": "E-mail",
+      "action_email_title": "Envoyer un e-mail",
+      "action_copy": "Copier",
+      "action_copy_title": "Copier l'adresse e-mail",
+      "action_edit_title": "Modifier le contact",
+      "section_emails": "E-mails",
+      "section_phones": "Téléphones",
+      "section_organizations": "Organisations",
+      "section_addresses": "Adresses",
+      "section_notes": "Notes",
+      "not_in_contacts": "Pas dans vos contacts",
+      "add_to_contacts": "Ajouter aux contacts",
+      "copied": "Copié !",
+      "copy_failed": "Échec de la copie"
+    }
   },
   "email_composer": {
     "read_receipt_on": "Accusé de lecture demandé (cliquez pour désactiver)",

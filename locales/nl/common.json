@@ -544,7 +544,25 @@
     "reschedule_prompt": "Voer een nieuwe datum/tijd in, bijv. 2026-05-04T15:30",
     "scheduled_actions_only": "De geplande weergave ondersteunt alleen geplande acties",
     "undo_send_scheduled": "Bericht gepland voor verzending",
-    "undo_send": "Verzenden ongedaan maken"
+    "undo_send": "Verzenden ongedaan maken",
+    "contact_sidebar": {
+      "title": "Contact",
+      "close": "Close sidebar",
+      "action_email": "Email",
+      "action_email_title": "Send email",
+      "action_copy": "Copy",
+      "action_copy_title": "Copy email",
+      "action_edit_title": "Edit contact",
+      "section_emails": "Emails",
+      "section_phones": "Phones",
+      "section_organizations": "Organizations",
+      "section_addresses": "Addresses",
+      "section_notes": "Notes",
+      "not_in_contacts": "Not in your contacts",
+      "add_to_contacts": "Add to contacts",
+      "copied": "Copied!",
+      "copy_failed": "Failed to copy"
+    }
   },
   "email_composer": {
     "read_receipt_on": "Leesbevestiging aangevraagd (klik om uit te schakelen)",

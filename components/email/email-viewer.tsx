@@ -609,19 +609,23 @@ function renderClickableRecipients(
 }
 
 // Contact sidebar panel that slides in from the right on desktop
-function ContactSidebarPanel({
+export function ContactSidebarPanel({
   email,
   contact,
   senderName,
   onClose,
   onAddToContacts,
+  onEditContact,
 }: {
   email: string;
   contact: ContactCard | null;
   senderName?: string;
   onClose: () => void;
   onAddToContacts?: (email: string, name?: string) => void;
+  onEditContact?: () => void;
 }) {
+  const t = useTranslations('email_viewer');
+  const tCommon = useTranslations('common');
   const name = contact ? getContactDisplayName(contact) : senderName || null;
   const primaryEmail = contact ? getContactPrimaryEmail(contact) : email;
   const emails = contact?.emails ? Object.values(contact.emails) : [];
@@ -633,9 +637,9 @@ function ContactSidebarPanel({
   const handleCopy = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      toast.success("Copied!");
+      toast.success(t('contact_sidebar.copied'));
     } catch {
-      toast.error("Failed to copy");
+      toast.error(t('contact_sidebar.copy_failed'));
     }
   };
 
@@ -643,11 +647,11 @@ function ContactSidebarPanel({
     <div className="w-[320px] shrink-0 border-l border-border bg-background flex flex-col h-full animate-in slide-in-from-right-5 duration-200">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-        <h3 className="text-sm font-semibold text-foreground truncate">Contact</h3>
+        <h3 className="text-sm font-semibold text-foreground truncate">{t('contact_sidebar.title')}</h3>
         <button
           onClick={onClose}
           className="p-1 rounded hover:bg-muted transition-colors"
-          aria-label="Close sidebar"
+          aria-label={t('contact_sidebar.close')}
         >
           <PanelRightClose className="w-4 h-4 text-muted-foreground" />
         </button>
@@ -685,19 +689,29 @@ function ContactSidebarPanel({
           <a
             href={`mailto:${primaryEmail}`}
             className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground px-3 py-2 rounded-md hover:bg-muted transition-colors border border-border"
-            title="Send email"
+            title={t('contact_sidebar.action_email_title')}
           >
             <Send className="w-3.5 h-3.5" />
-            Email
+            {t('contact_sidebar.action_email')}
           </a>
           <button
             onClick={() => handleCopy(primaryEmail)}
             className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground px-3 py-2 rounded-md hover:bg-muted transition-colors border border-border"
-            title="Copy email"
+            title={t('contact_sidebar.action_copy_title')}
           >
             <Copy className="w-3.5 h-3.5" />
-            Copy
+            {t('contact_sidebar.action_copy')}
           </button>
+          {contact && onEditContact && (
+            <button
+              onClick={onEditContact}
+              className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground px-3 py-2 rounded-md hover:bg-muted transition-colors border border-border"
+              title={t('contact_sidebar.action_edit_title')}
+            >
+              <EditIcon className="w-3.5 h-3.5" />
+              {tCommon('edit')}
+            </button>
+          )}
         </div>
 
         {/* Details sections */}
@@ -705,7 +719,7 @@ function ContactSidebarPanel({
           <div className="px-4 pb-4 space-y-4">
             {/* Emails */}
             {emails.length > 0 && (
-              <SidebarSection icon={Mail} title="Emails">
+              <SidebarSection icon={Mail} title={t('contact_sidebar.section_emails')}>
                 {emails.map((e, i) => (
                   <div key={i} className="flex items-center gap-2 group">
                     <a href={`mailto:${e.address}`} className="text-sm text-primary hover:underline truncate">
@@ -725,7 +739,7 @@ function ContactSidebarPanel({
 
             {/* Phones */}
             {phones.length > 0 && (
-              <SidebarSection icon={Phone} title="Phones">
+              <SidebarSection icon={Phone} title={t('contact_sidebar.section_phones')}>
                 {phones.map((p, i) => (
                   <div key={i} className="flex items-center gap-2 group">
                     <a href={`tel:${p.number}`} className="text-sm text-primary hover:underline">
@@ -745,7 +759,7 @@ function ContactSidebarPanel({
 
             {/* Organizations */}
             {orgs.length > 1 && (
-              <SidebarSection icon={Building} title="Organizations">
+              <SidebarSection icon={Building} title={t('contact_sidebar.section_organizations')}>
                 {orgs.map((o, i) => (
                   <div key={i} className="text-sm">
                     {o.name}
@@ -759,7 +773,7 @@ function ContactSidebarPanel({
 
             {/* Addresses */}
             {addresses.length > 0 && (
-              <SidebarSection icon={MapPin} title="Addresses">
+              <SidebarSection icon={MapPin} title={t('contact_sidebar.section_addresses')}>
                 {addresses.map((a, i) => (
                   <div key={i} className="text-sm text-muted-foreground">
                     {a.full || a.fullAddress
@@ -774,7 +788,7 @@ function ContactSidebarPanel({
 
             {/* Notes */}
             {notes.length > 0 && (
-              <SidebarSection icon={StickyNote} title="Notes">
+              <SidebarSection icon={StickyNote} title={t('contact_sidebar.section_notes')}>
                 {notes.map((n, i) => (
                   <p key={i} className="text-sm text-muted-foreground whitespace-pre-wrap">{n.note}</p>
                 ))}
@@ -787,7 +801,7 @@ function ContactSidebarPanel({
         {!contact && (
           <div className="px-4 pb-4 text-center space-y-3">
             <p className="text-xs text-muted-foreground">
-              Not in your contacts
+              {t('contact_sidebar.not_in_contacts')}
             </p>
             {onAddToContacts && (
               <button
@@ -795,7 +809,7 @@ function ContactSidebarPanel({
                 className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:text-primary/80 px-3 py-2 rounded-md hover:bg-muted transition-colors border border-border"
               >
                 <Mail className="w-3.5 h-3.5" />
-                Add to contacts
+                {t('contact_sidebar.add_to_contacts')}
               </button>
             )}
           </div>
@@ -5840,6 +5854,10 @@ export function EmailViewer({
           return allRecipients.find(r => r.email.toLowerCase() === contactSidebarEmail.toLowerCase())?.name;
         })()}
         onClose={() => setContactSidebarEmail(null)}
+        onEditContact={sidebarContact ? () => {
+          router.push(`/contacts?contactId=${sidebarContact.id}&view=edit`);
+          setContactSidebarEmail(null);
+        } : undefined}
         onAddToContacts={(addr, name) => {
           const { createContact, addLocalContact, supportsSync } = useContactStore.getState();
           const client = useAuthStore.getState().client;
