@@ -2230,11 +2230,10 @@ export default function Home() {
       setShowComposer(false);
     }
 
-    // waiting for the body fetch - avoids the loading flicker.
+    // Find the list-level email for metadata (accountId, scheduled flags, etc.)
+    // but don't select it yet — wait for the full fetch to avoid a toolbar flash
+    // caused by rendering with the stub (no bodyValues) then re-rendering with the full email.
     const listEmail = activeEmails.find(e => e.id === email.id);
-    if (listEmail) {
-      selectEmail(listEmail);
-    }
 
     setLoadingEmail(true);
 

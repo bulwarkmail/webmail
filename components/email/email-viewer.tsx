@@ -3831,19 +3831,22 @@ export function EmailViewer({
         </Button>
 
         {/* Dark/light mode toggle for HTML emails */}
-        {effectiveEmailContent.isHtml && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setEmailViewDarkOverride(prev => prev === null ? !(resolvedTheme === 'dark') : !prev)}
-            data-overflow-item
-            data-overflow-priority="11"
-            className="hidden sm:inline-flex h-8 gap-1.5"
-            title={isDark ? 'View in light mode' : 'View in dark mode'}
-          >
-            {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-          </Button>
-        )}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setEmailViewDarkOverride(prev => prev === null ? !(resolvedTheme === 'dark') : !prev)}
+          data-overflow-item
+          data-overflow-priority="11"
+          className={cn(
+            "hidden sm:inline-flex h-8 gap-1.5",
+            !effectiveEmailContent.isHtml && "invisible pointer-events-none"
+          )}
+          title={isDark ? 'View in light mode' : 'View in dark mode'}
+          tabIndex={effectiveEmailContent.isHtml ? 0 : -1}
+          aria-hidden={!effectiveEmailContent.isHtml}
+        >
+          {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+        </Button>
 
         {/* More menu - click-based */}
         <div ref={moreMenuRef} className="relative">
@@ -4084,9 +4087,8 @@ export function EmailViewer({
 
   return (
     <div
-      key={email.id}
       data-tour="email-viewer"
-      className={cn("flex-1 flex flex-row h-full bg-background overflow-hidden animate-in fade-in duration-300 relative", className)}
+      className={cn("flex-1 flex flex-row h-full bg-background overflow-hidden relative", className)}
     >
     {/* Mobile More menu sidebar overlay */}
     {!isScheduled && isMobile && moreMenuOpen && (
