@@ -1331,6 +1331,10 @@ export function EmailViewer({
     }, markAsReadDelay);
 
     return () => clearTimeout(timeout);
+    // Keyed to email id + $seen only: depending on the whole `email` object
+    // would reset the mark-as-read delay timer whenever any unrelated email
+    // field updates (e.g. a background re-fetch).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [email?.id, email?.keywords?.$seen, onMarkAsRead]);
 
   // Reset external content permission and quick reply when email changes
@@ -2260,6 +2264,11 @@ export function EmailViewer({
       }));
 
     return [...jmapAttachments, ...tnefExtracted, ...embeddedExtracted];
+    // The memo derives only from `email.attachments` (findCalendarAttachment
+    // scans that array); depending on the whole `email` object would rebuild the
+    // attachment list — and its downstream layout measurement — on every email
+    // field change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [email?.attachments, smimeDecryptedAttachments, tnefHtml, tnefText, tnefAttachments, embeddedEmailUnwrapped, embeddedEmailAttachments, calendarInvitationParsingEnabled, hideInlineImageAttachments]);
 
   // Measure attachment chips in the below-header row to determine how many fit
@@ -2968,7 +2977,7 @@ export function EmailViewer({
   ${wordHtmlCSS}
   ${darkModeCSS}
 </style></head><body>${effectiveEmailContent.html}<style>html,body{height:auto!important;min-height:0!important;max-height:none!important}</style></body></html>`;
-  }, [effectiveEmailContent.html, effectiveEmailContent.isHtml, isDark, emailHasNativeDarkMode]);
+  }, [effectiveEmailContent.html, effectiveEmailContent.isHtml, effectiveEmailContent.hasStyleTag, isDark, emailHasNativeDarkMode]);
 
   // Imperatively restore blocked external content inside the iframe document.
   // Avoids re-rendering the iframe srcDoc (which would reload and flash) when
@@ -3414,6 +3423,9 @@ export function EmailViewer({
     if (autoMdnRef.current === email.id) return;
     autoMdnRef.current = email.id;
     sendReadReceiptNow(true).catch(() => { autoMdnRef.current = null; });
+    // email is already captured via email?.id and sendReadReceiptNow (which
+    // depends on `email`); the autoMdnRef guard prevents a double send.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [readReceiptResponse, shouldOfferReadReceipt, email?.id, sendReadReceiptNow]);
 
   // Show loading skeleton while email is being fetched

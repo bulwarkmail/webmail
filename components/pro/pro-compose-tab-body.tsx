@@ -25,11 +25,9 @@ export function ProComposeTabBody({ tabId, data }: ProComposeTabBodyProps) {
   const t = useTranslations();
   const client = useAuthStore((s) => s.client);
   const sendEmail = useEmailStore((s) => s.sendEmail);
-  const fetchEmails = useEmailStore((s) => s.fetchEmails);
   const refreshCurrentMailbox = useEmailStore((s) => s.refreshCurrentMailbox);
   const fetchScheduledEmails = useEmailStore((s) => s.fetchScheduledEmails);
   const refreshScheduledMetadata = useEmailStore((s) => s.refreshScheduledMetadata);
-  const selectedMailbox = useEmailStore((s) => s.selectedMailbox);
   const isScheduledView = useEmailStore((s) => s.isScheduledView);
   const closeTab = useProTabStore((s) => s.closeTab);
   const updateTabTitle = useProTabStore((s) => s.updateTabTitle);
@@ -116,7 +114,7 @@ export function ProComposeTabBody({ tabId, data }: ProComposeTabBodyProps) {
       console.error('Failed to send email:', error);
       toast.error(t('notifications.error_sending'));
     }
-  }, [client, sendEmail, fetchEmails, selectedMailbox, closeTab, data.sourceEmailId, data.mode, t, handleScheduledSendCreated]);
+  }, [client, sendEmail, closeTab, data.sourceEmailId, data.mode, t, handleScheduledSendCreated, refreshCurrentMailbox]);
 
   const handleClose = useCallback(() => {
     closeTab(tabIdRef.current);

@@ -646,6 +646,11 @@ export function EmailComposer({
     if (nextHtml !== currentHtml) {
       editor.commands.setContent(nextHtml, { emitUpdate: true });
     }
+    // Intentionally keyed to the signature-relevant fields plus the internal
+    // prev*Ref guards above; depending on the whole `signatureIdentity` object
+    // would re-run on unrelated identity-field changes and re-splice the
+    // signature into the live editor.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [signatureIdentity?.id, signatureIdentity?.htmlSignature, signatureIdentity?.textSignature, signatureSeparatorEnabled, signaturePosition, mode, plainTextMode]);
 
   useEffect(() => {
