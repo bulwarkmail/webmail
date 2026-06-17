@@ -58,7 +58,7 @@ describe('snapshotAccount / restoreAccount', () => {
     expect(useVacationStore.getState().isEnabled).toBe(true);
   });
 
-  it('CHARACTERISATION: only snapshotted fields are restored; others survive', () => {
+  it('resets fields outside the snapshot subset to their defaults (no cross-account leak)', () => {
     // isLoading is NOT part of the email snapshot subset.
     useEmailStore.setState({ selectedMailbox: 'a-in', isLoading: false });
     snapshotAccount('A');
@@ -66,11 +66,11 @@ describe('snapshotAccount / restoreAccount', () => {
 
     restoreAccount('A');
 
-    expect(useEmailStore.getState().selectedMailbox).toBe('a-in'); // restored
-    expect(useEmailStore.getState().isLoading).toBe(true); // NOT restored (merge)
+    expect(useEmailStore.getState().selectedMailbox).toBe('a-in'); // captured → restored
+    expect(useEmailStore.getState().isLoading).toBe(false); // uncaptured → reset, not leaked
   });
 
-  it('CHARACTERISATION: snapshot stores array references, not deep clones', () => {
+  it('decouples the snapshot from later in-place mutation of the source array', () => {
     const arr = [makeEmail({ id: '1' })];
     useEmailStore.setState({ emails: arr });
     snapshotAccount('A');
@@ -78,8 +78,8 @@ describe('snapshotAccount / restoreAccount', () => {
     useEmailStore.setState({ emails: [] });
 
     restoreAccount('A');
-    // The post-snapshot mutation leaked into the snapshot.
-    expect(useEmailStore.getState().emails.map((e) => e.id)).toEqual(['1', '2']);
+    // The post-snapshot mutation did NOT leak into the snapshot.
+    expect(useEmailStore.getState().emails.map((e) => e.id)).toEqual(['1']);
   });
 
   it('returns false and leaves stores untouched for an unknown account', () => {

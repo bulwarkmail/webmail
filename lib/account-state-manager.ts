@@ -37,33 +37,37 @@ export function snapshotAccount(accountId: string): void {
   const identityState = useIdentityStore.getState();
   const vacationState = useVacationStore.getState();
 
+  // Copy the captured collections so the snapshot is decoupled from the live
+  // store: a later in-place mutation (e.g. an array push/splice, or stamping
+  // fields onto a shared email object) must not retroactively corrupt a
+  // snapshot taken earlier.
   cache.set(accountId, {
     email: {
-      emails: emailState.emails,
-      mailboxes: emailState.mailboxes,
+      emails: [...emailState.emails],
+      mailboxes: [...emailState.mailboxes],
       selectedEmail: emailState.selectedEmail,
       selectedMailbox: emailState.selectedMailbox,
       searchQuery: emailState.searchQuery,
-      quota: emailState.quota,
+      quota: emailState.quota ? { ...emailState.quota } : emailState.quota,
     },
     contact: {
-      contacts: contactState.contacts,
-      addressBooks: contactState.addressBooks,
+      contacts: [...contactState.contacts],
+      addressBooks: [...contactState.addressBooks],
       supportsSync: contactState.supportsSync,
     },
     calendar: {
-      calendars: calendarState.calendars,
-      events: calendarState.events,
-      selectedCalendarIds: calendarState.selectedCalendarIds,
+      calendars: [...calendarState.calendars],
+      events: [...calendarState.events],
+      selectedCalendarIds: [...calendarState.selectedCalendarIds],
       viewMode: calendarState.viewMode,
       supportsCalendar: calendarState.supportsCalendar,
     },
     filter: {
-      rules: filterState.rules,
+      rules: [...filterState.rules],
       isSupported: filterState.isSupported,
     },
     identity: {
-      identities: identityState.identities,
+      identities: [...identityState.identities],
       preferredPrimaryId: identityState.preferredPrimaryId,
     },
     vacation: {
@@ -73,10 +77,21 @@ export function snapshotAccount(accountId: string): void {
   });
 }
 
-/** Restore cached store states for the given account. Returns false if no cache exists. */
+/**
+ * Restore cached store states for the given account. Returns false if no cache
+ * exists.
+ *
+ * The snapshot only captures a subset of each store's fields (the loaded data),
+ * so we reset every store to its baseline first. Without this, fields outside
+ * the captured subset (e.g. email selection, loading flags, tag counts) would
+ * carry over from whatever account was active, leaking state across accounts.
+ * `setState` merges, so the captured fields are then layered back on top.
+ */
 export function restoreAccount(accountId: string): boolean {
   const snapshot = cache.get(accountId);
   if (!snapshot) return false;
+
+  clearAllStores();
 
   useEmailStore.setState(snapshot.email);
   useContactStore.setState(snapshot.contact);
