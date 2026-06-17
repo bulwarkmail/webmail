@@ -289,7 +289,7 @@ export const useContactStore = create<ContactStore>()(
             const email = p.email?.trim();
             if (!email) continue;
             entries.push({
-              name: p.name || email,
+              name: p.description || p.name || email,
               email,
               description: p.description ?? undefined,
             });
@@ -556,9 +556,20 @@ export const useContactStore = create<ContactStore>()(
           for (const p of directoryPrincipals) {
             if (results.length >= 10) break;
             const addr = p.email.toLowerCase();
-            if (seen.has(addr)) continue;
-            if (p.name.toLowerCase().includes(lower) || addr.includes(lower)) {
-              results.push({ name: p.name, email: p.email });
+            if (seen.has(addr)) {
+              const betterName = p.description || p.name;
+              if (betterName && betterName !== p.email) {
+                const existing = results.find(r => r.email.toLowerCase() === addr);
+                if (existing && (!existing.name || existing.name === existing.email)) {
+                  existing.name = betterName;
+                }
+              }
+              continue;
+            }
+            if (p.name.toLowerCase().includes(lower) || addr.includes(lower) || (p.description && p.description.toLowerCase().includes(lower))) {
+              const displayName = p.description || p.name;
+              const name = displayName !== p.email ? displayName : '';
+              results.push({ name, email: p.email });
               seen.add(addr);
             }
           }
