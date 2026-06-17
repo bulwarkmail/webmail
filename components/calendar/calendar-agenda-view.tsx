@@ -5,7 +5,7 @@ import { useTranslations, useFormatter } from "next-intl";
 import { format, isToday, isTomorrow, startOfDay } from "date-fns";
 import { MapPin, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { parseDuration, getEventColor } from "./event-card";
+import { getEventColor } from "./event-card";
 import { getEventDayBounds, getEventEndDate, getEventStartDate, getPrimaryCalendarId } from "@/lib/calendar-utils";
 import { getParticipantCount } from "@/lib/calendar-participants";
 import type { CalendarEvent, Calendar } from "@/lib/jmap/types";
@@ -147,7 +147,6 @@ export function CalendarAgendaView({
               const calendar = calId ? calendarMap.get(calId) : undefined;
               const color = getEventColor(ev, calendar);
               const start = getEventStartDate(ev);
-              const durMin = parseDuration(ev.duration);
               const end = getEventEndDate(ev);
               const locationName = ev.locations
                 ? Object.values(ev.locations)[0]?.name

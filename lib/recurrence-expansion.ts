@@ -784,7 +784,6 @@ function nthWeekdayInYear(date: Date, nth: number): number {
     const firstYd = getDayOfYear(first);
     return Math.floor((yd - firstYd) / 7) + 1;
   } else {
-    const daysInYear = isLeapYear(date.getFullYear()) ? 366 : 365;
     const dec31 = new Date(date.getFullYear(), 11, 31);
     let last = dec31;
     while (last.getDay() !== weekday) last = addDays(last, -1);

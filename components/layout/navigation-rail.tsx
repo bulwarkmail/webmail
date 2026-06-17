@@ -166,7 +166,6 @@ export function NavigationRail({
   collapsed = false,
   className,
   quota,
-  isPushConnected,
   onLogout,
   onShowShortcuts,
   onManageApps,

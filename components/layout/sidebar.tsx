@@ -169,7 +169,6 @@ function getIconClass(isSelected: boolean, isVirtual: boolean, colorful: boolean
 function SidebarRowCounts({
   unread,
   total,
-  isSelected,
   onUnreadClick,
 }: {
   unread?: number;

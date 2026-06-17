@@ -201,7 +201,6 @@ export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onDupli
   const notes = contact.notes ? Object.values(contact.notes) : [];
   const titles = contact.titles ? Object.values(contact.titles) : [];
   const jobTitles = titles.filter(t => t.kind !== "role");
-  const roles = titles.filter(t => t.kind === "role");
   const onlineServices = contact.onlineServices ? Object.values(contact.onlineServices) : [];
   const anniversaries = contact.anniversaries ? Object.values(contact.anniversaries) : [];
   const keywords = contact.keywords ? Object.keys(contact.keywords).filter(k => contact.keywords![k]) : [];

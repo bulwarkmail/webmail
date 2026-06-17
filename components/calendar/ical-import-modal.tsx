@@ -4,7 +4,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { X, Upload, Check, Loader2, RefreshCw, Globe } from "lucide-react";
-import { format, parseISO } from "date-fns";
+import { format } from "date-fns";
 import type { CalendarEvent, Calendar } from "@/lib/jmap/types";
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
 import { getEventStartDate } from "@/lib/calendar-utils";

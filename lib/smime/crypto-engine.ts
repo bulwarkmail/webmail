@@ -225,7 +225,6 @@ class Pkcs12CryptoEngine extends pkijs.CryptoEngine {
     const cryptoKey = await this.importKey(
       'raw',
       keyData,
-      // eslint-disable-next-line no-undef
       { name: algName, length: keyLen * 8 } as Algorithm,
       false,
       ['decrypt'],
@@ -234,7 +233,6 @@ class Pkcs12CryptoEngine extends pkijs.CryptoEngine {
     // Decrypt
     const ciphertext = parameters.encryptedContentInfo.getEncryptedContent();
     return this.decrypt(
-      // eslint-disable-next-line no-undef
       { name: algName, iv: ivBytes } as Algorithm,
       cryptoKey,
       ciphertext,

@@ -19,7 +19,7 @@ import {
   invalidateFrameOriginsCache,
 } from '@/lib/admin/csp-frame-origins';
 import JSZip from 'jszip';
-import { MAX_PLUGIN_SIZE, MAX_THEME_SIZE, ALL_PERMISSIONS, ALLOWED_PLUGIN_FILES } from '@/lib/plugin-types';
+import { MAX_PLUGIN_SIZE, MAX_THEME_SIZE, ALL_PERMISSIONS } from '@/lib/plugin-types';
 import { sanitizeThemeCSS, validateThemeCSSSafety } from '@/lib/theme-loader';
 import { configManager } from '@/lib/admin/config-manager';
 

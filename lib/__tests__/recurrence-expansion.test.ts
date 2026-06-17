@@ -1,6 +1,15 @@
 import { describe, it, expect } from 'vitest';
 import { expandRecurringEvents } from '../recurrence-expansion';
-import type { CalendarEvent } from '@/lib/jmap/types';
+import type { CalendarEvent, CalendarRecurrenceRule } from '@/lib/jmap/types';
+
+/**
+ * Helper: builds a recurrence-rule fixture from only the fields a test cares
+ * about. Cast-only (no defaults injected) so the expansion logic sees exactly
+ * the same partial rule the tests previously passed via `as any`.
+ */
+function rule(partial: Partial<CalendarRecurrenceRule>): CalendarRecurrenceRule {
+  return partial as CalendarRecurrenceRule;
+}
 
 /** Helper: create a minimal CalendarEvent for testing recurrence */
 function makeEvent(overrides: Partial<CalendarEvent> = {}): CalendarEvent {
@@ -41,7 +50,7 @@ describe('expandRecurringEvents', () => {
   describe('daily frequency', () => {
     it('expands daily events within range', () => {
       const event = makeEvent({
-        recurrenceRules: [{ '@type': 'RecurrenceRule', frequency: 'daily' } as any],
+        recurrenceRules: [rule({ '@type': 'RecurrenceRule', frequency: 'daily' })],
       });
       const result = expand(event, '2025-01-06T00:00:00', '2025-01-09T00:00:00');
       expect(starts(result)).toEqual([
@@ -53,7 +62,7 @@ describe('expandRecurringEvents', () => {
 
     it('respects interval', () => {
       const event = makeEvent({
-        recurrenceRules: [{ '@type': 'RecurrenceRule', frequency: 'daily', interval: 2 } as any],
+        recurrenceRules: [rule({ '@type': 'RecurrenceRule', frequency: 'daily', interval: 2 })],
       });
       const result = expand(event, '2025-01-06T00:00:00', '2025-01-12T00:00:00');
       expect(starts(result)).toEqual([
@@ -65,7 +74,7 @@ describe('expandRecurringEvents', () => {
 
     it('respects count', () => {
       const event = makeEvent({
-        recurrenceRules: [{ '@type': 'RecurrenceRule', frequency: 'daily', count: 3 } as any],
+        recurrenceRules: [rule({ '@type': 'RecurrenceRule', frequency: 'daily', count: 3 })],
       });
       const result = expand(event, '2025-01-06T00:00:00', '2025-12-31T00:00:00');
       expect(result).toHaveLength(3);
@@ -73,7 +82,7 @@ describe('expandRecurringEvents', () => {
 
     it('respects until', () => {
       const event = makeEvent({
-        recurrenceRules: [{ '@type': 'RecurrenceRule', frequency: 'daily', until: '2025-01-08T09:00:00' } as any],
+        recurrenceRules: [rule({ '@type': 'RecurrenceRule', frequency: 'daily', until: '2025-01-08T09:00:00' })],
       });
       const result = expand(event, '2025-01-06T00:00:00', '2025-12-31T00:00:00');
       expect(result).toHaveLength(3);
@@ -86,7 +95,7 @@ describe('expandRecurringEvents', () => {
   describe('weekly frequency', () => {
     it('expands weekly with implicit byDay (same weekday as start)', () => {
       const event = makeEvent({
-        recurrenceRules: [{ '@type': 'RecurrenceRule', frequency: 'weekly' } as any],
+        recurrenceRules: [rule({ '@type': 'RecurrenceRule', frequency: 'weekly' })],
       });
       // Jan 6 is Monday, so every Monday
       const result = expand(event, '2025-01-06T00:00:00', '2025-01-28T00:00:00');
@@ -100,11 +109,11 @@ describe('expandRecurringEvents', () => {
 
     it('expands weekly with explicit byDay (MWF)', () => {
       const event = makeEvent({
-        recurrenceRules: [{
+        recurrenceRules: [rule({
           '@type': 'RecurrenceRule',
           frequency: 'weekly',
           byDay: [{ day: 'mo' }, { day: 'we' }, { day: 'fr' }],
-        } as any],
+        })],
       });
       const result = expand(event, '2025-01-06T00:00:00', '2025-01-13T00:00:00');
       expect(starts(result)).toEqual([
@@ -116,12 +125,12 @@ describe('expandRecurringEvents', () => {
 
     it('expands weekly with interval=2', () => {
       const event = makeEvent({
-        recurrenceRules: [{
+        recurrenceRules: [rule({
           '@type': 'RecurrenceRule',
           frequency: 'weekly',
           interval: 2,
           byDay: [{ day: 'mo' }],
-        } as any],
+        })],
       });
       const result = expand(event, '2025-01-06T00:00:00', '2025-02-03T00:00:00');
       expect(starts(result)).toEqual([
@@ -138,7 +147,7 @@ describe('expandRecurringEvents', () => {
     it('expands monthly with implicit byMonthDay', () => {
       const event = makeEvent({
         start: '2025-01-15T10:00:00',
-        recurrenceRules: [{ '@type': 'RecurrenceRule', frequency: 'monthly' } as any],
+        recurrenceRules: [rule({ '@type': 'RecurrenceRule', frequency: 'monthly' })],
       });
       const result = expand(event, '2025-01-01T00:00:00', '2025-04-01T00:00:00');
       expect(starts(result)).toEqual([
@@ -151,11 +160,11 @@ describe('expandRecurringEvents', () => {
     it('expands monthly with byMonthDay', () => {
       const event = makeEvent({
         start: '2025-01-01T08:00:00',
-        recurrenceRules: [{
+        recurrenceRules: [rule({
           '@type': 'RecurrenceRule',
           frequency: 'monthly',
           byMonthDay: [1, 15],
-        } as any],
+        })],
       });
       const result = expand(event, '2025-01-01T00:00:00', '2025-02-28T00:00:00');
       expect(starts(result)).toEqual([
@@ -169,11 +178,11 @@ describe('expandRecurringEvents', () => {
     it('expands monthly with negative byMonthDay (-1 = last day)', () => {
       const event = makeEvent({
         start: '2025-01-31T08:00:00',
-        recurrenceRules: [{
+        recurrenceRules: [rule({
           '@type': 'RecurrenceRule',
           frequency: 'monthly',
           byMonthDay: [-1],
-        } as any],
+        })],
       });
       const result = expand(event, '2025-01-01T00:00:00', '2025-04-01T00:00:00');
       const days = result.map(e => e.start.substring(0, 10));
@@ -183,11 +192,11 @@ describe('expandRecurringEvents', () => {
     it('expands monthly with byDay + nthOfPeriod (2nd Tuesday)', () => {
       const event = makeEvent({
         start: '2025-01-14T09:00:00', // 2nd Tuesday
-        recurrenceRules: [{
+        recurrenceRules: [rule({
           '@type': 'RecurrenceRule',
           frequency: 'monthly',
           byDay: [{ day: 'tu', nthOfPeriod: 2 }],
-        } as any],
+        })],
       });
       const result = expand(event, '2025-01-01T00:00:00', '2025-04-01T00:00:00');
       const days = result.map(e => e.start.substring(0, 10));
@@ -197,11 +206,11 @@ describe('expandRecurringEvents', () => {
     it('expands monthly with byDay nthOfPeriod=-1 (last Friday)', () => {
       const event = makeEvent({
         start: '2025-01-31T09:00:00', // last Friday of Jan
-        recurrenceRules: [{
+        recurrenceRules: [rule({
           '@type': 'RecurrenceRule',
           frequency: 'monthly',
           byDay: [{ day: 'fr', nthOfPeriod: -1 }],
-        } as any],
+        })],
       });
       const result = expand(event, '2025-01-01T00:00:00', '2025-04-01T00:00:00');
       const days = result.map(e => e.start.substring(0, 10));
@@ -216,7 +225,7 @@ describe('expandRecurringEvents', () => {
     it('expands yearly on the same date', () => {
       const event = makeEvent({
         start: '2023-03-15T12:00:00',
-        recurrenceRules: [{ '@type': 'RecurrenceRule', frequency: 'yearly' } as any],
+        recurrenceRules: [rule({ '@type': 'RecurrenceRule', frequency: 'yearly' })],
       });
       const result = expand(event, '2023-01-01T00:00:00', '2026-01-01T00:00:00');
       expect(starts(result)).toEqual([
@@ -229,12 +238,12 @@ describe('expandRecurringEvents', () => {
     it('expands yearly with byMonth and byDay (last Friday of November = Thanksgiving-ish)', () => {
       const event = makeEvent({
         start: '2025-11-28T09:00:00', // last Friday of Nov 2025
-        recurrenceRules: [{
+        recurrenceRules: [rule({
           '@type': 'RecurrenceRule',
           frequency: 'yearly',
           byMonth: ['11'],
           byDay: [{ day: 'fr', nthOfPeriod: -1 }],
-        } as any],
+        })],
       });
       const result = expand(event, '2025-01-01T00:00:00', '2028-01-01T00:00:00');
       const days = result.map(e => e.start.substring(0, 10));
@@ -246,12 +255,12 @@ describe('expandRecurringEvents', () => {
       const event = makeEvent({
         start: '2025-07-04T00:00:00',
         showWithoutTime: true,
-        recurrenceRules: [{
+        recurrenceRules: [rule({
           '@type': 'RecurrenceRule',
           frequency: 'yearly',
           byMonth: ['7'],
           byMonthDay: [4],
-        } as any],
+        })],
       });
       const result = expand(event, '2025-01-01T00:00:00', '2028-01-01T00:00:00');
       expect(result).toHaveLength(3);
@@ -265,12 +274,12 @@ describe('expandRecurringEvents', () => {
     it('selects first and last from monthly byDay expansion', () => {
       const event = makeEvent({
         start: '2025-01-06T10:00:00',
-        recurrenceRules: [{
+        recurrenceRules: [rule({
           '@type': 'RecurrenceRule',
           frequency: 'monthly',
           byDay: [{ day: 'mo' }, { day: 'tu' }, { day: 'we' }, { day: 'th' }, { day: 'fr' }],
           bySetPosition: [1, -1], // first and last weekday of month
-        } as any],
+        })],
       });
       const result = expand(event, '2025-01-01T00:00:00', '2025-03-01T00:00:00');
       const days = result.map(e => e.start.substring(0, 10));
@@ -289,7 +298,7 @@ describe('expandRecurringEvents', () => {
   describe('recurrenceOverrides', () => {
     it('applies overrides to matching occurrences', () => {
       const event = makeEvent({
-        recurrenceRules: [{ '@type': 'RecurrenceRule', frequency: 'daily' } as any],
+        recurrenceRules: [rule({ '@type': 'RecurrenceRule', frequency: 'daily' })],
         recurrenceOverrides: {
           '2025-01-07T09:00:00': { title: 'Modified' },
         },
@@ -301,9 +310,9 @@ describe('expandRecurringEvents', () => {
 
     it('excludes occurrences marked as excluded', () => {
       const event = makeEvent({
-        recurrenceRules: [{ '@type': 'RecurrenceRule', frequency: 'daily' } as any],
+        recurrenceRules: [rule({ '@type': 'RecurrenceRule', frequency: 'daily' })],
         recurrenceOverrides: {
-          '2025-01-07T09:00:00': { excluded: true } as any,
+          '2025-01-07T09:00:00': { excluded: true } as Partial<CalendarEvent> & { excluded?: boolean },
         },
       });
       const result = expand(event, '2025-01-06T00:00:00', '2025-01-09T00:00:00');
@@ -313,7 +322,7 @@ describe('expandRecurringEvents', () => {
 
     it('adds RDATE-style overrides not generated by rules', () => {
       const event = makeEvent({
-        recurrenceRules: [{ '@type': 'RecurrenceRule', frequency: 'weekly' } as any],
+        recurrenceRules: [rule({ '@type': 'RecurrenceRule', frequency: 'weekly' })],
         recurrenceOverrides: {
           '2025-01-08T09:00:00': { title: 'Extra Wednesday' }, // Not a Monday
         },
@@ -329,12 +338,12 @@ describe('expandRecurringEvents', () => {
   describe('excludedRecurrenceRules', () => {
     it('removes occurrences generated by excluded rules', () => {
       const event = makeEvent({
-        recurrenceRules: [{ '@type': 'RecurrenceRule', frequency: 'daily' } as any],
-        excludedRecurrenceRules: [{
+        recurrenceRules: [rule({ '@type': 'RecurrenceRule', frequency: 'daily' })],
+        excludedRecurrenceRules: [rule({
           '@type': 'RecurrenceRule',
           frequency: 'weekly',
           byDay: [{ day: 'tu' }],
-        } as any],
+        })],
       });
       // Jan 6-12 2025: Mon-Sun, Tuesday Jan 7 excluded
       const result = expand(event, '2025-01-06T00:00:00', '2025-01-13T00:00:00');
@@ -353,7 +362,7 @@ describe('expandRecurringEvents', () => {
     it('expands a daily series started years before the visible range', () => {
       const event = makeEvent({
         start: '2022-01-03T09:00:00',
-        recurrenceRules: [{ '@type': 'RecurrenceRule', frequency: 'daily' } as any],
+        recurrenceRules: [rule({ '@type': 'RecurrenceRule', frequency: 'daily' })],
       });
       const result = expand(event, '2025-06-02T00:00:00', '2025-06-05T00:00:00');
       expect(starts(result)).toEqual([
@@ -366,7 +375,7 @@ describe('expandRecurringEvents', () => {
     it('expands a weekly series started years before the visible range', () => {
       const event = makeEvent({
         start: '2020-01-06T09:00:00', // Monday
-        recurrenceRules: [{ '@type': 'RecurrenceRule', frequency: 'weekly' } as any],
+        recurrenceRules: [rule({ '@type': 'RecurrenceRule', frequency: 'weekly' })],
       });
       const result = expand(event, '2025-06-01T00:00:00', '2025-06-30T00:00:00');
       const days = result.map(e => e.start.substring(0, 10));
@@ -376,7 +385,7 @@ describe('expandRecurringEvents', () => {
     it('still respects count for old series (no fast-forward shortcut)', () => {
       const event = makeEvent({
         start: '2025-01-06T09:00:00',
-        recurrenceRules: [{ '@type': 'RecurrenceRule', frequency: 'daily', count: 5 } as any],
+        recurrenceRules: [rule({ '@type': 'RecurrenceRule', frequency: 'daily', count: 5 })],
       });
       // Range far after the 5 occurrences ran out
       const result = expand(event, '2025-06-01T00:00:00', '2025-06-30T00:00:00');
@@ -395,13 +404,13 @@ describe('expandRecurringEvents', () => {
         timeZone: 'America/New_York',
         utcStart: '2025-03-03T15:00:00Z',
         utcEnd: '2025-03-03T16:00:00Z',
-        recurrenceRules: [{ '@type': 'RecurrenceRule', frequency: 'weekly' } as any],
+        recurrenceRules: [rule({ '@type': 'RecurrenceRule', frequency: 'weekly' })],
       } as Partial<CalendarEvent>);
       const result = expand(event, '2025-03-03T00:00:00', '2025-03-17T00:00:00');
-      const utcStarts = result.map(e => (e as any).utcStart);
+      const utcStarts = result.map(e => e.utcStart);
       expect(utcStarts[0]).toBe('2025-03-03T15:00:00.000Z'); // EST: 10:00 -5
       expect(utcStarts[1]).toBe('2025-03-10T14:00:00.000Z'); // EDT: 10:00 -4
-      const utcEnds = result.map(e => (e as any).utcEnd);
+      const utcEnds = result.map(e => e.utcEnd);
       expect(utcEnds[1]).toBe('2025-03-10T15:00:00.000Z');
     });
   });
@@ -414,7 +423,7 @@ describe('expandRecurringEvents', () => {
       const event = makeEvent({
         start: '2025-01-06T00:00:00',
         showWithoutTime: true,
-        recurrenceRules: [{ '@type': 'RecurrenceRule', frequency: 'weekly' } as any],
+        recurrenceRules: [rule({ '@type': 'RecurrenceRule', frequency: 'weekly' })],
       });
       const result = expand(event, '2025-01-06T00:00:00', '2025-01-28T00:00:00');
       expect(result).toHaveLength(4); // 4 Mondays: 6, 13, 20, 27
@@ -427,7 +436,7 @@ describe('expandRecurringEvents', () => {
   describe('edge cases', () => {
     it('does not exceed 500 occurrences', () => {
       const event = makeEvent({
-        recurrenceRules: [{ '@type': 'RecurrenceRule', frequency: 'daily' } as any],
+        recurrenceRules: [rule({ '@type': 'RecurrenceRule', frequency: 'daily' })],
       });
       const result = expand(event, '2025-01-01T00:00:00', '2030-01-01T00:00:00');
       expect(result.length).toBeLessThanOrEqual(500);
@@ -436,7 +445,7 @@ describe('expandRecurringEvents', () => {
     it('handles invalid start date gracefully', () => {
       const event = makeEvent({
         start: 'invalid',
-        recurrenceRules: [{ '@type': 'RecurrenceRule', frequency: 'daily' } as any],
+        recurrenceRules: [rule({ '@type': 'RecurrenceRule', frequency: 'daily' })],
       });
       const result = expand(event, '2025-01-01T00:00:00', '2025-02-01T00:00:00');
       expect(result).toHaveLength(0);
@@ -444,7 +453,7 @@ describe('expandRecurringEvents', () => {
 
     it('generates synthetic IDs for occurrences', () => {
       const event = makeEvent({
-        recurrenceRules: [{ '@type': 'RecurrenceRule', frequency: 'daily' } as any],
+        recurrenceRules: [rule({ '@type': 'RecurrenceRule', frequency: 'daily' })],
       });
       const result = expand(event, '2025-01-06T00:00:00', '2025-01-08T00:00:00');
       expect(result[0].id).toBe('evt1:2025-01-06T09:00:00');
@@ -453,7 +462,7 @@ describe('expandRecurringEvents', () => {
 
     it('preserves originalId pointing to master', () => {
       const event = makeEvent({
-        recurrenceRules: [{ '@type': 'RecurrenceRule', frequency: 'daily' } as any],
+        recurrenceRules: [rule({ '@type': 'RecurrenceRule', frequency: 'daily' })],
       });
       const result = expand(event, '2025-01-06T00:00:00', '2025-01-08T00:00:00');
       expect(result[0].originalId).toBe('evt1');
@@ -465,7 +474,7 @@ describe('expandRecurringEvents', () => {
         id: 'master1',
         uid: 'shared-uid',
         start: '2025-01-06T09:00:00',
-        recurrenceRules: [{ '@type': 'RecurrenceRule', frequency: 'weekly' } as any],
+        recurrenceRules: [rule({ '@type': 'RecurrenceRule', frequency: 'weekly' })],
       });
       const override1 = makeEvent({
         id: 'override1',
@@ -527,10 +536,10 @@ describe('expandRecurringEvents', () => {
       const event = makeEvent({
         start: '2026-09-01T12:00:00',
         utcStart: '2026-09-01T10:00:00Z',
-        recurrenceRules: [{ '@type': 'RecurrenceRule', frequency: 'weekly' } as any],
+        recurrenceRules: [rule({ '@type': 'RecurrenceRule', frequency: 'weekly' })],
       });
       const result = expand(event, '2026-09-01T00:00:00', '2026-10-01T00:00:00');
-      const utcStarts = result.map(e => (e as any).utcStart);
+      const utcStarts = result.map(e => e.utcStart);
       // Each occurrence should have a unique utcStart
       expect(new Set(utcStarts).size).toBe(result.length);
       // First occurrence keeps master's UTC offset relationship
@@ -545,10 +554,10 @@ describe('expandRecurringEvents', () => {
         duration: 'PT1H',
         utcStart: '2026-09-01T10:00:00Z',
         utcEnd: '2026-09-01T11:00:00Z',
-        recurrenceRules: [{ '@type': 'RecurrenceRule', frequency: 'weekly' } as any],
+        recurrenceRules: [rule({ '@type': 'RecurrenceRule', frequency: 'weekly' })],
       });
       const result = expand(event, '2026-09-01T00:00:00', '2026-10-01T00:00:00');
-      const utcEnds = result.map(e => (e as any).utcEnd);
+      const utcEnds = result.map(e => e.utcEnd);
       // Each occurrence should have a unique utcEnd
       expect(new Set(utcEnds).size).toBe(result.length);
       expect(utcEnds[0]).toContain('2026-09-01');
@@ -559,7 +568,7 @@ describe('expandRecurringEvents', () => {
     it('does not set utcStart when master has none', () => {
       const event = makeEvent({
         start: '2025-01-06T09:00:00',
-        recurrenceRules: [{ '@type': 'RecurrenceRule', frequency: 'daily' } as any],
+        recurrenceRules: [rule({ '@type': 'RecurrenceRule', frequency: 'daily' })],
       });
       const result = expand(event, '2025-01-06T00:00:00', '2025-01-08T00:00:00');
       expect(result[0].utcStart).toBeUndefined();

@@ -1,6 +1,6 @@
 import type { ContactCard, CalendarEvent, Calendar, PartialDate, Timestamp } from '@/lib/jmap/types';
 import { getContactDisplayName } from '@/stores/contact-store';
-import { format, eachYearOfInterval, parseISO } from 'date-fns';
+import { eachYearOfInterval, parseISO } from 'date-fns';
 
 export const BIRTHDAY_CALENDAR_ID = '__birthday-calendar__';
 export const BIRTHDAY_CALENDAR_COLOR = '#eab308'; // Yellow

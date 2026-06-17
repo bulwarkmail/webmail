@@ -617,7 +617,6 @@ export function EventModal({
 
   if (isAttendeeMode && event) {
     const startD = getEventStartDate(event);
-    const durMin = parseDuration(event.duration);
     const endD = getEventEndDate(event);
     const locationName = event.locations ? Object.values(event.locations)[0]?.name : null;
     const participants = getParticipantList(event);
