@@ -95,13 +95,16 @@ export async function fetchUnifiedEmails(
 
     const { account, result } = outcome.value;
 
-    // Decorate each email with the source account info.
-    for (const email of result.emails) {
-      email.accountId = account.accountId;
-      email.accountLabel = account.accountLabel;
-    }
+    // Decorate each email with the source account info. Copy rather than
+    // mutate the objects the client returned, so callers that retain those
+    // references are not affected by this merge.
+    const decorated = result.emails.map((email) => ({
+      ...email,
+      accountId: account.accountId,
+      accountLabel: account.accountLabel,
+    }));
 
-    mergedEmails = mergedEmails.concat(result.emails);
+    mergedEmails = mergedEmails.concat(decorated);
     totalSum += result.total;
     if (result.hasMore) {
       anyHasMore = true;
@@ -220,11 +223,13 @@ async function fanOutUnifiedQuery(
   for (const outcome of results) {
     if (outcome.status !== 'fulfilled' || outcome.value === null) continue;
     const { account, result } = outcome.value;
-    for (const email of result.emails) {
-      email.accountId = account.accountId;
-      email.accountLabel = account.accountLabel;
-    }
-    mergedEmails = mergedEmails.concat(result.emails);
+    // Copy rather than mutate the client-returned objects (see fetchUnifiedEmails).
+    const decorated = result.emails.map((email) => ({
+      ...email,
+      accountId: account.accountId,
+      accountLabel: account.accountLabel,
+    }));
+    mergedEmails = mergedEmails.concat(decorated);
     totalSum += result.total;
     if (result.hasMore) anyHasMore = true;
   }
