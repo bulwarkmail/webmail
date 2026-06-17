@@ -41,11 +41,11 @@ describe('emailExportFilename', () => {
     expect(emailExportFilename(makeEmail({}), '{unknown_token}')).toBe('email.eml');
   });
 
-  it('CHARACTERISATION: per-token sanitise caps each value at 80 chars', () => {
-    // sanitizePart defaults to maxLen=80, applied per {token} during render —
-    // so a single long {subject} is truncated to 80 well before the 200 cap.
+  it('lets a single long token reach the 200-char filename cap', () => {
+    // Each {token} is now capped at FILENAME_MAX_LEN (200), so the overall
+    // filename limit governs instead of an earlier 80-char per-token cap.
     const out = emailExportFilename(makeEmail({ subject: 'a'.repeat(300) }), '{subject}');
-    expect(out).toBe('a'.repeat(80) + '.eml');
+    expect(out).toBe('a'.repeat(200) + '.eml');
   });
 });
 
