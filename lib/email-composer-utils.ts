@@ -1,3 +1,5 @@
+import { isValidEmail } from "@/lib/validation";
+
 const HTML_ESCAPE_MAP = {
   "&": "&amp;",
   "<": "&lt;",
@@ -56,13 +58,16 @@ export function rewriteCidImagesForEditor(html: string): string {
 export type Recipient = { name?: string; email: string };
 
 /**
- * Splits a comma-separated recipient string into individual entries. Commas
- * inside a quoted display name (`"Doo, John" <john@doo.org>`) or angle brackets
- * (`<a,b@x>`) are treated as literal, not separators. Only used at the
- * (de)serialization boundary — the live composer state is an array, so the UI
- * never round-trips through this. Trims each part and drops empties.
+ * Splits a recipient string into individual entries on any character in
+ * `separators`, treating those characters as literal when they sit inside a
+ * quoted display name (`"Doo, John" <john@doo.org>`) or angle brackets
+ * (`<a,b@x>`). Trims each part and drops empties.
+ *
+ * Defaults to comma-only, the (de)serialization boundary used by the composer
+ * state and mailto handling. Pasted lists pass a wider set (see
+ * {@link splitPasteEntries}) because they also use `;` and line breaks.
  */
-export function splitRecipients(value: string): string[] {
+export function splitRecipients(value: string, separators = ','): string[] {
   const result: string[] = [];
   let current = '';
   let inQuotes = false;
@@ -77,7 +82,7 @@ export function splitRecipients(value: string): string[] {
     } else if (ch === '>' && !inQuotes) {
       inAngle = false;
       current += ch;
-    } else if (ch === ',' && !inQuotes && !inAngle) {
+    } else if (separators.includes(ch) && !inQuotes && !inAngle) {
       const trimmed = current.trim();
       if (trimmed) result.push(trimmed);
       current = '';
@@ -138,6 +143,71 @@ export function parseRecipientList(value: string): Recipient[] {
 /** Serializes a recipient array into a comma-separated string. */
 export function formatRecipientList(recipients: Recipient[]): string {
   return recipients.map((r) => formatRecipient(r.name, r.email)).join(', ');
+}
+
+/**
+ * Top-level split of a pasted block into recipient entries on commas,
+ * semicolons and newlines (separators inside a quoted name or angle brackets
+ * stay literal). Broader than the comma-only default of {@link splitRecipients}
+ * because pasted lists also use `;` and line breaks as separators.
+ */
+function splitPasteEntries(value: string): string[] {
+  return splitRecipients(value, ',;\n\r');
+}
+
+/**
+ * Splits pasted text into recipient candidates and partitions them: valid email
+ * addresses become `Recipient`s (deduped case-insensitively against
+ * `existingEmails` and within the paste), and everything else is returned as
+ * `invalid` for the caller to drop back into the input field.
+ *
+ * Handles both structured and bare lists, preserving display names:
+ * - `"Name <email>"` (the whole recipient quoted), `Name <email>`, and
+ *   `"Doe, John" <email>` entries are kept intact with their display name.
+ * - Bare-address dumps (`a@x.com b@y.com`, spreadsheet columns, comma/space/
+ *   semicolon/newline separated) split into one chip per address.
+ * - A token wrapped in angle brackets (`<a@x.com>`) is unwrapped before
+ *   validating, so an `a <a@x.com>` fragment still yields the address.
+ */
+export function splitPastedRecipients(
+  text: string,
+  existingEmails: string[] = [],
+): { valid: Recipient[]; invalid: string[] } {
+  const seen = new Set(existingEmails.map((e) => e.toLowerCase()));
+  const valid: Recipient[] = [];
+  const invalid: string[] = [];
+
+  // Adds a recipient if its address is valid and unseen. Returns true when the
+  // entry is fully handled (valid or a known duplicate) so the caller can stop.
+  const tryAdd = (r: Recipient): boolean => {
+    if (!isValidEmail(r.email)) return false;
+    const key = r.email.toLowerCase();
+    if (!seen.has(key)) {
+      seen.add(key);
+      valid.push(r.name ? { name: r.name, email: r.email } : { email: r.email });
+    }
+    return true;
+  };
+
+  // Split on commas, semicolons and newlines in a quote/angle-aware way so a
+  // `"Doe, John" <j@x.com>` or fully-quoted `"Name <email>"` entry stays a
+  // single recipient (separators inside the name or the address are literal).
+  for (const entry of splitPasteEntries(text)) {
+    // 1. Structured: `Name <email>`, a bare address, or the whole
+    //    `Name <email>` wrapped in quotes (unwrap once and retry).
+    if (tryAdd(parseRecipient(entry))) continue;
+    const unwrapped = unquoteName(entry);
+    if (unwrapped !== entry && tryAdd(parseRecipient(unwrapped))) continue;
+
+    // 2. Fallback: a bare-address run (`a@x.com b@y.com`) or a
+    //    `John Doe <j@x.com>` fragment where only the <addr> is valid.
+    //    Whitespace/semicolon-tokenize; leftover tokens stay behind.
+    for (const token of entry.split(/[\s;]+/).map((t) => t.trim()).filter(Boolean)) {
+      if (!tryAdd({ email: token.replace(/^<|>$/g, '') })) invalid.push(token);
+    }
+  }
+
+  return { valid, invalid };
 }
 
 /**

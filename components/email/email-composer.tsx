@@ -49,6 +49,7 @@ import {
   parseRecipient,
   parseRecipientList,
   formatRecipientList,
+  splitPastedRecipients,
   type Recipient,
 } from "@/lib/email-composer-utils";
 import { RichTextEditor } from "@/components/email/rich-text-editor";
@@ -2919,6 +2920,20 @@ function RecipientChipInput({
     }
   };
 
+  // Pasting a list of addresses (comma/semicolon/whitespace separated) splits
+  // into one chip per valid address; anything that isn't a valid address is
+  // left in the input for the user to fix. A single address with no separator
+  // falls through to the browser's normal paste so it stays editable.
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const text = e.clipboardData.getData('text');
+    if (!/[\s,;]/.test(text.trim())) return;
+    const { valid, invalid } = splitPastedRecipients(text, chips.map(c => c.email));
+    if (valid.length === 0) return;
+    e.preventDefault();
+    onChipsChange([...chips, ...valid]);
+    onInputChange([inputText.trim(), invalid.join(' ')].filter(Boolean).join(' '));
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (activeAutoField === field && autocompleteResults.length > 0) {
       if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Escape' ||
@@ -3113,6 +3128,7 @@ function RecipientChipInput({
             value={inputText}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
+            onPaste={handlePaste}
             onBlur={handleBlur}
             className="flex-1 min-w-[120px] border-0 outline-none h-7 text-sm bg-transparent text-foreground placeholder:text-muted-foreground"
             role="combobox"

@@ -1,10 +1,10 @@
-import { render, screen, act } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { fireEvent } from '@testing-library/dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import React from 'react';
 import { EmailComposer } from '../email-composer';
 
-// ─── Heavy component mocks ────────────────────────────────────────────────────
+// ─── Heavy component mocks (mirrors recipient-chip-drag.test.tsx) ──────────────
 
 vi.mock('@/components/email/rich-text-editor', () => ({
   RichTextEditor: ({ onChange }: { onChange?: (html: string) => void }) => (
@@ -26,7 +26,6 @@ vi.mock('@/hooks/use-pro-multi-account-identities', () => ({
 }));
 
 // ─── Store mocks ──────────────────────────────────────────────────────────────
-// vi.mock factories are hoisted, so all values must be defined inline.
 
 vi.mock('@/stores/auth-store', () => {
   const state = {
@@ -185,33 +184,10 @@ vi.mock('@/components/email/quoted-html', () => ({
 }));
 vi.mock('@/lib/template-utils', () => ({ substitutePlaceholders: (s: string) => s }));
 
-// ─── DataTransfer polyfill ────────────────────────────────────────────────────
-
-/** jsdom's built-in DataTransfer doesn't fully support setData/getData in synthetic drag events. */
-class MockDataTransfer {
-  private _data: Record<string, string> = {};
-  types: string[] = [];
-  effectAllowed = '';
-  dropEffect = '';
-
-  setData(type: string, data: string) {
-    this._data[type] = data;
-    if (!this.types.includes(type)) this.types.push(type);
-  }
-
-  getData(type: string): string {
-    return this._data[type] ?? '';
-  }
-
-  setDragImage(_image: Element, _x: number, _y: number) {
-    // no-op: jsdom has no rendering, but the chip drag handler calls this.
-  }
-}
-
 // ─── Shared test data ─────────────────────────────────────────────────────────
 
-const BASE_DATA = {
-  to: 'alice@example.com, ',
+const EMPTY_DATA = {
+  to: '',
   cc: '',
   bcc: '',
   subject: '',
@@ -224,141 +200,118 @@ const BASE_DATA = {
   draftId: null,
 };
 
+/** next-intl is mocked to return the key, so the To placeholder is "to_placeholder". */
+const toInput = () => screen.getByPlaceholderText('to_placeholder') as HTMLInputElement;
+const ccInput = () => screen.getByPlaceholderText('cc_placeholder') as HTMLInputElement;
+
+const paste = (input: HTMLElement, text: string) =>
+  fireEvent.paste(input, { clipboardData: { getData: () => text } });
+
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
-describe('RecipientChipInput drag and drop', () => {
+describe('RecipientChipInput paste', () => {
   beforeEach(() => { vi.clearAllMocks(); });
 
-  it('renders recipient chips with draggable="true"', async () => {
-    render(<EmailComposer initialData={BASE_DATA} />);
+  it('splits a pasted list (comma / semicolon / whitespace) into one chip per address', () => {
+    render(<EmailComposer initialData={EMPTY_DATA} />);
+    const input = toInput(); // capture once — placeholder disappears once chips exist
+    paste(input, 'a@x.com b@y.com; c@z.com');
 
-    const chipText = await screen.findByText('alice@example.com');
-    const chipSpan = chipText.closest('[draggable]');
-    expect(chipSpan).not.toBeNull();
-    expect(chipSpan).toHaveAttribute('draggable', 'true');
+    expect(screen.getByText('a@x.com')).toBeInTheDocument();
+    expect(screen.getByText('b@y.com')).toBeInTheDocument();
+    expect(screen.getByText('c@z.com')).toBeInTheDocument();
+    // all consumed → input cleared
+    expect(input.value).toBe('');
   });
 
-  it('onDragStart encodes the recipient and source field into dataTransfer', async () => {
-    render(<EmailComposer initialData={BASE_DATA} />);
+  it('chips the valid addresses and leaves invalid text in the input', () => {
+    render(<EmailComposer initialData={EMPTY_DATA} />);
+    const input = toInput();
+    paste(input, 'foo bar a@x.com');
 
-    const chipText = await screen.findByText('alice@example.com');
-    const chipSpan = chipText.closest('[draggable]') as HTMLElement;
-
-    const dt = new MockDataTransfer();
-    fireEvent.dragStart(chipSpan, { dataTransfer: dt });
-
-    const payload = JSON.parse(dt.getData('application/x-recipient-chip'));
-    expect(payload).toEqual({ recipient: { email: 'alice@example.com' }, fromField: 'to' });
+    expect(screen.getByText('a@x.com')).toBeInTheDocument();
+    expect(input.value).toBe('foo bar');
   });
 
-  it('keeps a display name with a comma in a single chip (array model)', async () => {
-    render(<EmailComposer initialData={{ ...BASE_DATA, to: '"Doo, John" <john@doo.org>, ' }} />);
+  it('does not pre-empt a single-address paste (no delimiter → normal editing)', () => {
+    render(<EmailComposer initialData={EMPTY_DATA} />);
+    paste(toInput(), 'single@x.com');
 
-    // One chip, displayed as "Doo, John (john@doo.org)" — not split on the comma.
-    const chip = await screen.findByText('Doo, John (john@doo.org)');
-    const chipSpan = chip.closest('[draggable]') as HTMLElement;
-    expect(chipSpan).not.toBeNull();
-
-    const dt = new MockDataTransfer();
-    fireEvent.dragStart(chipSpan, { dataTransfer: dt });
-    const payload = JSON.parse(dt.getData('application/x-recipient-chip'));
-    expect(payload).toEqual({ recipient: { name: 'Doo, John', email: 'john@doo.org' }, fromField: 'to' });
+    // The handler bailed out, so no chip was created from the single token.
+    expect(screen.queryByText('single@x.com')).not.toBeInTheDocument();
   });
 
-  it('onDragEnd clears the opacity class on the chip', async () => {
-    render(<EmailComposer initialData={BASE_DATA} />);
+  it('keeps display names from a fully-quoted "Name <email>" list', () => {
+    render(<EmailComposer initialData={EMPTY_DATA} />);
+    const input = toInput();
+    paste(input, '"Alice Smith <alice@x.com>", "Alex Smith <alex@x.com>"');
 
-    const chipText = await screen.findByText('alice@example.com');
-    const chipSpan = chipText.closest('[draggable]') as HTMLElement;
-
-    fireEvent.dragStart(chipSpan, { dataTransfer: new MockDataTransfer() });
-    expect(chipSpan.className).toContain('opacity-50');
-
-    fireEvent.dragEnd(chipSpan);
-    expect(chipSpan.className).not.toContain('opacity-50');
+    // Chips render as "Name (email)" when a display name is present.
+    expect(screen.getByText('Alice Smith (alice@x.com)')).toBeInTheDocument();
+    expect(screen.getByText('Alex Smith (alex@x.com)')).toBeInTheDocument();
+    expect(input.value).toBe('');
   });
 
-  it('dragOver on a different field container adds ring indicator; dragLeave removes it', async () => {
-    render(<EmailComposer initialData={BASE_DATA} />);
+  it('keeps a `Name <email>` pair as a single named chip', () => {
+    render(<EmailComposer initialData={EMPTY_DATA} />);
+    const input = toInput();
+    paste(input, 'John Doe <j@x.com>, jane@y.com');
 
-    await screen.findByText('alice@example.com');
-
-    // The flex-wrap containers are the actual drop zones
-    const allContainers = Array.from(document.querySelectorAll('[class*="flex-wrap"]'));
-    // To-container has the draggable chip; cc-container doesn't
-    const toContainer = allContainers.find(el => el.querySelector('[draggable]')) as HTMLElement;
-    const ccContainer = allContainers.find(el => el !== toContainer) as HTMLElement;
-
-    if (!ccContainer) return;
-
-    const dt = new MockDataTransfer();
-    dt.setData('application/x-recipient-chip', JSON.stringify({ recipient: { email: 'alice@example.com' }, fromField: 'to' }));
-
-    fireEvent.dragOver(ccContainer, { dataTransfer: dt });
-    expect(ccContainer.className).toContain('ring-primary');
-
-    fireEvent.dragLeave(ccContainer, { relatedTarget: null });
-    expect(ccContainer.className).not.toContain('ring-primary');
+    expect(screen.getByText('John Doe (j@x.com)')).toBeInTheDocument();
+    expect(screen.getByText('jane@y.com')).toBeInTheDocument();
+    expect(input.value).toBe('');
   });
 
-  it('drop on a different field container moves the chip', async () => {
-    render(<EmailComposer initialData={BASE_DATA} />);
-    await screen.findByText('alice@example.com');
+  it('keeps a comma inside a quoted display name intact', () => {
+    render(<EmailComposer initialData={EMPTY_DATA} />);
+    const input = toInput();
+    paste(input, '"Doe, John" <j@x.com>; bob@z.com');
 
-    const allContainers = Array.from(document.querySelectorAll('[class*="flex-wrap"]'));
-    const toContainer = allContainers.find(el => el.querySelector('[draggable]')) as HTMLElement;
-    const ccContainer = allContainers.find(el => el !== toContainer) as HTMLElement;
-
-    if (!toContainer || !ccContainer) return;
-
-    const dt = new MockDataTransfer();
-    dt.setData('application/x-recipient-chip', JSON.stringify({ recipient: { email: 'alice@example.com' }, fromField: 'to' }));
-    fireEvent.dragOver(ccContainer, { dataTransfer: dt });
-    act(() => {
-      fireEvent.drop(ccContainer, { dataTransfer: dt });
-    });
-
-    // Chip should still appear exactly once (moved, not duplicated or lost)
-    await screen.findByText('alice@example.com');
-    expect(screen.getAllByText('alice@example.com')).toHaveLength(1);
-
-    // The To container must now be empty
-    expect(toContainer.querySelectorAll('[draggable]')).toHaveLength(0);
+    expect(screen.getByText('Doe, John (j@x.com)')).toBeInTheDocument();
+    expect(screen.getByText('bob@z.com')).toBeInTheDocument();
+    expect(input.value).toBe('');
   });
 
-  it('drop on the same field container is a no-op', async () => {
-    render(<EmailComposer initialData={BASE_DATA} />);
-    await screen.findByText('alice@example.com');
+  it('splits a newline-separated block (e.g. a spreadsheet column)', () => {
+    render(<EmailComposer initialData={EMPTY_DATA} />);
+    const input = toInput();
+    paste(input, 'a@x.com\nb@y.com\nc@z.com');
 
-    const allContainers = Array.from(document.querySelectorAll('[class*="flex-wrap"]'));
-    const toContainer = allContainers.find(el => el.querySelector('[draggable]')) as HTMLElement;
-
-    const dt = new MockDataTransfer();
-    dt.setData('application/x-recipient-chip', JSON.stringify({ recipient: { email: 'alice@example.com' }, fromField: 'to' }));
-    fireEvent.dragOver(toContainer, { dataTransfer: dt });
-    act(() => {
-      fireEvent.drop(toContainer, { dataTransfer: dt });
-    });
-
-    // Chip stays present exactly once
-    expect(screen.getAllByText('alice@example.com')).toHaveLength(1);
+    expect(screen.getByText('a@x.com')).toBeInTheDocument();
+    expect(screen.getByText('b@y.com')).toBeInTheDocument();
+    expect(screen.getByText('c@z.com')).toBeInTheDocument();
+    expect(input.value).toBe('');
   });
 
-  it('dropping a chip onto the hidden Cc button shows the CC field', async () => {
-    render(<EmailComposer initialData={{ ...BASE_DATA, showCc: false, showBcc: false }} />);
-    await screen.findByText('alice@example.com');
+  it('dedupes case-insensitively within the paste and against existing chips', () => {
+    render(<EmailComposer initialData={EMPTY_DATA} />);
+    const input = toInput(); // DOM node persists across pastes (placeholder just clears)
+    paste(input, 'a@x.com, A@X.com, b@y.com'); // within-paste dup collapses
+    paste(input, 'A@X.COM, c@z.com'); // dup of an existing chip is dropped
 
-    const ccButton = screen.getByRole('button', { name: 'Cc' });
+    expect(screen.getByText('b@y.com')).toBeInTheDocument();
+    expect(screen.getByText('c@z.com')).toBeInTheDocument();
+    // a@x.com appears exactly once despite three case variants across two pastes.
+    expect(screen.getAllByText('a@x.com')).toHaveLength(1);
+    expect(screen.queryByText('A@X.COM')).not.toBeInTheDocument();
+    expect(input.value).toBe('');
+  });
 
-    const dt = new MockDataTransfer();
-    dt.setData('application/x-recipient-chip', JSON.stringify({ recipient: { email: 'alice@example.com' }, fromField: 'to' }));
-    fireEvent.dragOver(ccButton, { dataTransfer: dt });
-    act(() => {
-      fireEvent.drop(ccButton, { dataTransfer: dt });
-    });
+  it('chips the valid (named) entries and leaves a non-address token behind', () => {
+    render(<EmailComposer initialData={EMPTY_DATA} />);
+    const input = toInput();
+    paste(input, '"VIP" <vip@x.com>, not-an-email, b@y.com');
 
-    // cc_label is rendered by the mock translation as its key string
-    const ccLabel = await screen.findByText('cc_label');
-    expect(ccLabel).toBeInTheDocument();
+    expect(screen.getByText('VIP (vip@x.com)')).toBeInTheDocument();
+    expect(screen.getByText('b@y.com')).toBeInTheDocument();
+    expect(input.value).toBe('not-an-email');
+  });
+
+  it('works on the Cc field (shared handler)', () => {
+    render(<EmailComposer initialData={EMPTY_DATA} />);
+    paste(ccInput(), 'x@a.com; y@b.com');
+
+    expect(screen.getByText('x@a.com')).toBeInTheDocument();
+    expect(screen.getByText('y@b.com')).toBeInTheDocument();
   });
 });

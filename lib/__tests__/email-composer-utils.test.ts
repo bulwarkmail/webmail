@@ -9,6 +9,7 @@ import {
   parseRecipient,
   parseRecipientList,
   formatRecipientList,
+  splitPastedRecipients,
 } from "../email-composer-utils";
 
 describe("plainTextToComposerBody", () => {
@@ -150,6 +151,16 @@ describe("splitRecipients", () => {
   it("returns an empty array for an empty string", () => {
     expect(splitRecipients("")).toEqual([]);
   });
+
+  it("only splits on the given separators (default comma keeps semicolons/newlines literal)", () => {
+    expect(splitRecipients("a@x.com; b@y.com")).toEqual(["a@x.com; b@y.com"]);
+  });
+
+  it("splits on a wider separator set while keeping quotes/angles literal", () => {
+    expect(
+      splitRecipients('"Doo, John" <john@doo.org>; a@x.com\nb@y.com', ',;\n\r'),
+    ).toEqual(['"Doo, John" <john@doo.org>', "a@x.com", "b@y.com"]);
+  });
 });
 
 describe("formatRecipient / parseRecipient", () => {
@@ -196,5 +207,70 @@ describe("parseRecipientList / formatRecipientList", () => {
 
   it("parses an empty string to an empty array", () => {
     expect(parseRecipientList("")).toEqual([]);
+  });
+});
+
+describe("splitPastedRecipients", () => {
+  it("splits on commas, semicolons and whitespace (incl. newline/tab)", () => {
+    const { valid, invalid } = splitPastedRecipients(
+      "a@x.com, b@y.com; c@z.com\nd@w.com\te@v.com f@u.com",
+    );
+    expect(valid.map((r) => r.email)).toEqual([
+      "a@x.com", "b@y.com", "c@z.com", "d@w.com", "e@v.com", "f@u.com",
+    ]);
+    expect(invalid).toEqual([]);
+  });
+
+  it("collapses runs of mixed separators and drops empties", () => {
+    const { valid } = splitPastedRecipients("  a@x.com ,;  , b@y.com  ");
+    expect(valid.map((r) => r.email)).toEqual(["a@x.com", "b@y.com"]);
+  });
+
+  it("partitions invalid tokens into `invalid`, keeping valid as chips", () => {
+    const { valid, invalid } = splitPastedRecipients("a@x.com not-an-email b@y.com");
+    expect(valid.map((r) => r.email)).toEqual(["a@x.com", "b@y.com"]);
+    expect(invalid).toEqual(["not-an-email"]);
+  });
+
+  it("unwraps an angle-bracketed token before validating", () => {
+    const { valid } = splitPastedRecipients("<a@x.com>");
+    expect(valid).toEqual([{ email: "a@x.com" }]);
+  });
+
+  it("keeps a `Name <email>` pair as a single chip with its display name", () => {
+    const { valid, invalid } = splitPastedRecipients("John Doe <j@x.com>");
+    expect(valid).toEqual([{ name: "John Doe", email: "j@x.com" }]);
+    expect(invalid).toEqual([]);
+  });
+
+  it("keeps a fully-quoted `\"Name <email>\"` entry with its display name", () => {
+    const { valid, invalid } = splitPastedRecipients(
+      '"Alice Smith <alice@x.com>", "Alex Smith <alex@x.com>"',
+    );
+    expect(valid).toEqual([
+      { name: "Alice Smith", email: "alice@x.com" },
+      { name: "Alex Smith", email: "alex@x.com" },
+    ]);
+    expect(invalid).toEqual([]);
+  });
+
+  it("keeps a comma inside a quoted display name intact", () => {
+    const { valid } = splitPastedRecipients('"Doe, John" <j@x.com>; bob@z.com');
+    expect(valid).toEqual([
+      { name: "Doe, John", email: "j@x.com" },
+      { email: "bob@z.com" },
+    ]);
+  });
+
+  it("dedupes case-insensitively within the paste and against existing emails", () => {
+    const { valid } = splitPastedRecipients(
+      "a@x.com A@X.com b@y.com c@z.com",
+      ["B@Y.com"],
+    );
+    expect(valid.map((r) => r.email)).toEqual(["a@x.com", "c@z.com"]);
+  });
+
+  it("returns empty arrays for blank input", () => {
+    expect(splitPastedRecipients("   ")).toEqual({ valid: [], invalid: [] });
   });
 });
