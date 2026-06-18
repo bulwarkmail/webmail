@@ -8,6 +8,7 @@ import { discoverOAuth } from '@/lib/oauth/discovery';
 import { getOauthScopes } from '@/lib/oauth/tokens';
 import { getCookieOptions } from '@/lib/oauth/cookie-config';
 import { hasSessionSecret } from '@/lib/auth/session-secret';
+import { configManager } from '@/lib/admin/config-manager';
 
 const SSO_PENDING_COOKIE = 'sso_pending';
 const SSO_PENDING_MAX_AGE = 300; // 5 minutes
@@ -102,8 +103,12 @@ export async function POST(request: NextRequest) {
       maxAge: SSO_PENDING_MAX_AGE,
     });
 
-    // Build authorize URL
-    const authUrl = new URL(metadata.authorization_endpoint);
+    // Build authorize URL. OAUTH_AUTHORIZE_URL, when set, overrides only the
+    // user-facing authorize endpoint (e.g. a per-brand login host). Discovery,
+    // token exchange and refresh keep using the canonical discovered endpoints.
+    const authorizeOverride =
+      configManager.get<string>('oauthAuthorizeUrl', '') || process.env.OAUTH_AUTHORIZE_URL;
+    const authUrl = new URL(authorizeOverride?.trim() || metadata.authorization_endpoint);
     authUrl.searchParams.set('response_type', 'code');
     authUrl.searchParams.set('client_id', clientId);
     authUrl.searchParams.set('redirect_uri', redirect_uri);
