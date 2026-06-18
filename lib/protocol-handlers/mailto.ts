@@ -1,3 +1,5 @@
+import { splitRecipients as splitRecipientString } from "@/lib/email-composer-utils";
+
 export interface ParsedMailto {
   to: string[];
   cc: string[];
@@ -25,10 +27,9 @@ function stripBodyControlChars(value: string): string {
 }
 
 function splitRecipients(value: string): string[] {
-  return stripControlChars(value)
-    .split(",")
-    .map((recipient) => recipient.trim())
-    .filter(Boolean);
+  // Quote/angle-aware split so a `"Doe, John" <john@doo.org>` display name with
+  // an embedded comma stays a single recipient instead of being torn in two.
+  return splitRecipientString(stripControlChars(value));
 }
 
 type QueryParam = {

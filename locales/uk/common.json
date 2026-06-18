@@ -2359,7 +2359,12 @@
       "members_label": "Члени",
       "search_members": "Пошук контактів для додавання...",
       "no_members": "У цій групі немає учасників",
-      "member_count": "{count, plural, =0 {Немає учасників} one {1 учасник} few {# учасники} many {# учасників} other {# учасників}}"
+      "member_count": "{count, plural, =0 {Немає учасників} one {1 учасник} few {# учасники} many {# учасників} other {# учасників}}",
+      "send_email": "Send email to group",
+      "send_email_to": "To",
+      "send_email_cc": "Cc",
+      "send_email_bcc": "Bcc",
+      "no_member_emails": "This group has no members with an email address."
     },
     "import": {
       "title": "Імпортувати контакти",

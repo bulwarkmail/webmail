@@ -18,7 +18,9 @@ import { ContactImportDialog } from "@/components/contacts/contact-import-dialog
 import { RenameDialog } from "@/components/files/rename-dialog";
 import { exportContacts } from "@/components/contacts/contact-export";
 import { AppTopBannerSlot } from "@/components/plugins/app-top-banner-slot";
-import { useContactStore, getContactDisplayName } from "@/stores/contact-store";
+import { useContactStore, getContactDisplayName, getContactPrimaryEmail } from "@/stores/contact-store";
+import { savePendingMailto } from "@/lib/protocol-handlers/session";
+import { formatRecipient } from "@/lib/email-composer-utils";
 import { useAuthStore, redirectToLogin } from "@/stores/auth-store";
 import { useEmailStore } from "@/stores/email-store";
 import { usePolicyStore } from "@/stores/policy-store";
@@ -461,6 +463,51 @@ export default function ContactsPage() {
     setView("group-edit");
   }, []);
 
+  // Open the in-app composer in the current session rather than routing through
+  // a mailto: URL. `window.location='mailto:'` hands off to the OS handler
+  // (which may open a different mail app), and the mailto protocol round-trip
+  // reloads the app - dropping the in-memory per-account JMAP clients of a
+  // multi-account session, which reads as a logout. Stashing the recipients and
+  // doing a client-side router.push keeps the session and the active account
+  // intact; the main route consumes the pending compose and opens the composer
+  // (see consumePendingMailto in page.tsx).
+  const openComposeInApp = useCallback((recipients: string[], field: "to" | "cc" | "bcc") => {
+    savePendingMailto({
+      to: field === "to" ? recipients : [],
+      cc: field === "cc" ? recipients : [],
+      bcc: field === "bcc" ? recipients : [],
+      subject: "",
+      body: "",
+    });
+    router.push("/");
+  }, [router]);
+
+  const handleComposeGroupFromSidebar = useCallback((groupId: string, field: "to" | "cc" | "bcc") => {
+    // Format each member as "Name <email>" so the composer keeps the display
+    // name (round-trips via formatRecipient -> parseRecipientList). Dedupe by
+    // email, case-insensitively; members without an email are skipped.
+    const seen = new Set<string>();
+    const recipients: string[] = [];
+    for (const member of getGroupMembers(groupId)) {
+      const email = getContactPrimaryEmail(member).trim();
+      const key = email.toLowerCase();
+      if (!email || seen.has(key)) continue;
+      seen.add(key);
+      recipients.push(formatRecipient(getContactDisplayName(member), email));
+    }
+    if (recipients.length === 0) {
+      toast.error(t("groups.no_member_emails"));
+      return;
+    }
+    openComposeInApp(recipients, field);
+  }, [getGroupMembers, t, openComposeInApp]);
+
+  const handleComposeContact = useCallback((contact: ContactCard) => {
+    const email = getContactPrimaryEmail(contact).trim();
+    if (!email) return;
+    openComposeInApp([formatRecipient(getContactDisplayName(contact), email)], "to");
+  }, [openComposeInApp]);
+
   const handleDeleteGroupFromSidebar = useCallback(async (groupId: string) => {
     const confirmed = await confirmDialog({
       title: t("groups.delete_confirm_title"),
@@ -625,6 +672,7 @@ export default function ContactsPage() {
             onEdit={handleEditGroup}
             onDelete={handleDeleteGroup}
             onRemoveMember={handleRemoveGroupMember}
+            onComposeGroup={(field) => handleComposeGroupFromSidebar(selectedGroup.id, field)}
             isMobile={isMobile}
             onSelectMember={(id) => {
               setSelectedContact(id);
@@ -702,6 +750,11 @@ export default function ContactsPage() {
             contact={selectedContact}
             onEdit={handleEdit}
             onDelete={handleDelete}
+            onCompose={
+              selectedContact
+                ? () => handleComposeContact(selectedContact)
+                : undefined
+            }
             onAddToGroup={
               selectedContact
                 ? () => handleAddContactToGroup(selectedContact.id)
@@ -807,6 +860,7 @@ export default function ContactsPage() {
                       onImport={() => setShowImportDialog(true)}
                       onEditGroup={handleEditGroupFromSidebar}
                       onDeleteGroup={handleDeleteGroupFromSidebar}
+                      onComposeGroup={handleComposeGroupFromSidebar}
                       onDropContacts={handleDropContacts}
                       onDropContactsToCategory={handleDropContactsToCategory}
                       onRenameAddressBook={client ? (book) => setRenamingAddressBook(book) : undefined}

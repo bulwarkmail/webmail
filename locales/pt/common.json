@@ -2359,7 +2359,12 @@
       "members_label": "Membros",
       "search_members": "Pesquisar contatos para adicionar...",
       "no_members": "Nenhum membro neste grupo",
-      "member_count": "{count, plural, =0 {Nenhum membro} one {1 membro} other {# membros}}"
+      "member_count": "{count, plural, =0 {Nenhum membro} one {1 membro} other {# membros}}",
+      "send_email": "Send email to group",
+      "send_email_to": "To",
+      "send_email_cc": "Cc",
+      "send_email_bcc": "Bcc",
+      "no_member_emails": "This group has no members with an email address."
     },
     "import": {
       "title": "Importar contatos",

@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { Users, Pencil, Trash2, UserMinus } from "lucide-react";
+import { Users, Pencil, Trash2, UserMinus, Mail } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -15,6 +15,8 @@ interface ContactGroupDetailProps {
   onDelete: () => void;
   onRemoveMember: (memberId: string) => void;
   onSelectMember: (id: string) => void;
+  /** Compose an email to every member with the recipients placed in `field`. */
+  onComposeGroup?: (field: "to" | "cc" | "bcc") => void;
   isMobile?: boolean;
   className?: string;
 }
@@ -26,11 +28,13 @@ export function ContactGroupDetail({
   onDelete,
   onRemoveMember,
   onSelectMember,
+  onComposeGroup,
   isMobile,
   className,
 }: ContactGroupDetailProps) {
   const t = useTranslations("contacts");
   const groupName = getContactDisplayName(group);
+  const hasEmailMembers = members.some((m) => getContactPrimaryEmail(m).trim());
 
   return (
     <div className={cn("flex flex-col h-full overflow-y-auto", className)}>
@@ -62,6 +66,25 @@ export function ContactGroupDetail({
             </Button>
           </div>
         </div>
+        {onComposeGroup && hasEmailMembers && (
+          <div className="flex flex-wrap items-center gap-2 mt-4">
+            <Mail className="w-4 h-4 text-muted-foreground" aria-hidden />
+            <span className="text-sm text-muted-foreground">{t("groups.send_email")}</span>
+            <div className="inline-flex gap-1">
+              {(["to", "cc", "bcc"] as const).map((field) => (
+                <Button
+                  key={field}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onComposeGroup(field)}
+                  className="touch-manipulation"
+                >
+                  {t(`groups.send_email_${field}`)}
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="px-6 py-4">

@@ -2359,7 +2359,12 @@
       "members_label": "Leden",
       "search_members": "Contacten zoeken om toe te voegen...",
       "no_members": "Geen leden in deze groep",
-      "member_count": "{count, plural, =0 {Geen leden} one {1 lid} other {# leden}}"
+      "member_count": "{count, plural, =0 {Geen leden} one {1 lid} other {# leden}}",
+      "send_email": "Send email to group",
+      "send_email_to": "To",
+      "send_email_cc": "Cc",
+      "send_email_bcc": "Bcc",
+      "no_member_emails": "This group has no members with an email address."
     },
     "import": {
       "title": "Contacten importeren",

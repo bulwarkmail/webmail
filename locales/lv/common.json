@@ -2355,7 +2355,12 @@
       "members_label": "Dalībnieki",
       "search_members": "Meklēt kontaktus, ko pievienot...",
       "no_members": "Šajā grupā nav dalībnieku",
-      "member_count": "{count, plural, =0 {Nav dalībnieku} one {1 dalībnieks} other {# dalībnieki}}"
+      "member_count": "{count, plural, =0 {Nav dalībnieku} one {1 dalībnieks} other {# dalībnieki}}",
+      "send_email": "Send email to group",
+      "send_email_to": "To",
+      "send_email_cc": "Cc",
+      "send_email_bcc": "Bcc",
+      "no_member_emails": "This group has no members with an email address."
     },
     "import": {
       "title": "Kontaktu imports",

@@ -2,10 +2,10 @@
 
 import { useMemo, useState, useCallback, useEffect, useRef, type DragEvent } from "react";
 import { useTranslations } from "next-intl";
-import { BookUser, User, Users, Plus, Share2, Book, ChevronRight, ChevronDown, UserPlus, UsersRound, Upload, Tag, Pencil, Trash2, Settings } from "lucide-react";
+import { BookUser, User, Users, Plus, Share2, Book, ChevronRight, ChevronDown, UserPlus, UsersRound, Upload, Tag, Pencil, Trash2, Settings, Mail } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { ContextMenu, ContextMenuItem, ContextMenuSeparator } from "@/components/ui/context-menu";
+import { ContextMenu, ContextMenuItem, ContextMenuSeparator, ContextMenuSubMenu } from "@/components/ui/context-menu";
 import { useContextMenu } from "@/hooks/use-context-menu";
 import { cn } from "@/lib/utils";
 import type { ContactCard, AddressBook } from "@/lib/jmap/types";
@@ -25,6 +25,7 @@ interface ContactsSidebarProps {
   onImport?: () => void;
   onEditGroup?: (groupId: string) => void;
   onDeleteGroup?: (groupId: string) => void;
+  onComposeGroup?: (groupId: string, field: "to" | "cc" | "bcc") => void;
   onDropContacts?: (contactIds: string[], addressBook: AddressBook) => void;
   onDropContactsToCategory?: (contactIds: string[], keyword: string) => void;
   onRenameAddressBook?: (addressBook: AddressBook) => void;
@@ -93,6 +94,7 @@ export function ContactsSidebar({
   onImport,
   onEditGroup,
   onDeleteGroup,
+  onComposeGroup,
   onDropContacts,
   onDropContactsToCategory,
   onRenameAddressBook,
@@ -684,6 +686,21 @@ export function ContactsSidebar({
               onEditGroup?.(groupContextMenu.data!.id);
             }}
           />
+          {onComposeGroup && (
+            <ContextMenuSubMenu icon={Mail} label={t("groups.send_email")}>
+              {(["to", "cc", "bcc"] as const).map((field) => (
+                <ContextMenuItem
+                  key={field}
+                  label={t(`groups.send_email_${field}`)}
+                  onClick={() => {
+                    const groupId = groupContextMenu.data!.id;
+                    closeGroupContextMenu();
+                    onComposeGroup(groupId, field);
+                  }}
+                />
+              ))}
+            </ContextMenuSubMenu>
+          )}
           <ContextMenuSeparator />
           <ContextMenuItem
             icon={Trash2}

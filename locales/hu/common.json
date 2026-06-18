@@ -2360,7 +2360,12 @@
       "members_label": "Tagok",
       "search_members": "Névjegyek keresése a hozzáadáshoz...",
       "no_members": "Nincs tag ebben a csoportban",
-      "member_count": "{count, plural, =0 {Nincs tag} one {1 tag} other {# tag}}"
+      "member_count": "{count, plural, =0 {Nincs tag} one {1 tag} other {# tag}}",
+      "send_email": "Send email to group",
+      "send_email_to": "To",
+      "send_email_cc": "Cc",
+      "send_email_bcc": "Bcc",
+      "no_member_emails": "This group has no members with an email address."
     },
     "import": {
       "title": "Névjegyek importálása",

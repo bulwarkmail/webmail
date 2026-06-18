@@ -32,6 +32,8 @@ interface ContactDetailProps {
   onDelete: () => void;
   onAddToGroup?: () => void;
   onDuplicate?: () => void;
+  /** Compose an email to this contact in the app (no OS mailto handoff). */
+  onCompose?: () => void;
   isMobile?: boolean;
   className?: string;
 }
@@ -115,7 +117,7 @@ function formatDate(dateInput: AnniversaryDate): string {
   return dateStr;
 }
 
-export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onDuplicate, isMobile, className }: ContactDetailProps) {
+export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onDuplicate, onCompose, isMobile, className }: ContactDetailProps) {
   const t = useTranslations("contacts");
   const smimeStore = useSmimeStore();
   const [parsedCerts, setParsedCerts] = useState<Map<number, CertificateInfo>>(new Map());
@@ -260,14 +262,16 @@ export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onDupli
             </div>
           </div>
           <div className="flex gap-2 flex-shrink-0 flex-wrap">
-            {email && (
-              <a
-                href={`mailto:${email}`}
-                className="inline-flex items-center justify-center rounded-md font-medium h-9 px-3 text-sm border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors touch-manipulation"
+            {email && onCompose && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onCompose}
+                className="touch-manipulation"
               >
                 <Send className="w-4 h-4 mr-1" />
                 {t("detail.compose_email")}
-              </a>
+              </Button>
             )}
             {phone && (
               <a

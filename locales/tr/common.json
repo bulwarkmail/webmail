@@ -2359,7 +2359,12 @@
       "members_label": "Üyeler",
       "search_members": "Eklemek için kişileri arayın...",
       "no_members": "Bu grupta üye yok",
-      "member_count": "{count, plural, =0 {Üye yok} one {1 üye} other {# üye}}"
+      "member_count": "{count, plural, =0 {Üye yok} one {1 üye} other {# üye}}",
+      "send_email": "Send email to group",
+      "send_email_to": "To",
+      "send_email_cc": "Cc",
+      "send_email_bcc": "Bcc",
+      "no_member_emails": "This group has no members with an email address."
     },
     "import": {
       "title": "Kişileri İçe Aktar",

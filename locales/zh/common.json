@@ -2359,7 +2359,12 @@
       "members_label": "成员",
       "search_members": "搜索联系人以添加...",
       "no_members": "该群组中没有成员",
-      "member_count": "{count, plural, =0 {无成员} one {1 位成员} other {# 位成员}}"
+      "member_count": "{count, plural, =0 {无成员} one {1 位成员} other {# 位成员}}",
+      "send_email": "Send email to group",
+      "send_email_to": "To",
+      "send_email_cc": "Cc",
+      "send_email_bcc": "Bcc",
+      "no_member_emails": "This group has no members with an email address."
     },
     "import": {
       "title": "导入联系人",

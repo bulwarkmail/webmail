@@ -2359,7 +2359,12 @@
       "members_label": "멤버",
       "search_members": "추가할 연락처 검색...",
       "no_members": "이 그룹에는 멤버가 없어요",
-      "member_count": "멤버 {count}명"
+      "member_count": "멤버 {count}명",
+      "send_email": "Send email to group",
+      "send_email_to": "To",
+      "send_email_cc": "Cc",
+      "send_email_bcc": "Bcc",
+      "no_member_emails": "This group has no members with an email address."
     },
     "import": {
       "title": "연락처 가져오기",

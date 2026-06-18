@@ -2359,7 +2359,12 @@
       "members_label": "Участники",
       "search_members": "Поиск контактов для добавления...",
       "no_members": "В этой группе нет участников",
-      "member_count": "{count, plural, =0 {Нет участников} one {1 участник} other {# участников}}"
+      "member_count": "{count, plural, =0 {Нет участников} one {1 участник} other {# участников}}",
+      "send_email": "Send email to group",
+      "send_email_to": "To",
+      "send_email_cc": "Cc",
+      "send_email_bcc": "Bcc",
+      "no_member_emails": "This group has no members with an email address."
     },
     "import": {
       "title": "Импорт контактов",

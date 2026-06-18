@@ -2359,7 +2359,12 @@
       "members_label": "メンバー",
       "search_members": "追加する連絡先を検索...",
       "no_members": "このグループにメンバーがいません",
-      "member_count": "{count, plural, =0 {メンバーなし} other {#人のメンバー}}"
+      "member_count": "{count, plural, =0 {メンバーなし} other {#人のメンバー}}",
+      "send_email": "Send email to group",
+      "send_email_to": "To",
+      "send_email_cc": "Cc",
+      "send_email_bcc": "Bcc",
+      "no_member_emails": "This group has no members with an email address."
     },
     "import": {
       "title": "連絡先をインポート",
