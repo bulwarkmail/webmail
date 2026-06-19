@@ -207,10 +207,10 @@ describe('getSecurityStatus', () => {
     expect(status.color).toContain('red');
   });
 
-  it('returns amber for softfail', () => {
+  it('returns a warning color for softfail', () => {
     const status = getSecurityStatus('softfail');
     expect(status.icon).toBe('alert');
-    expect(status.color).toContain('amber');
+    expect(status.color).toContain('warning');
   });
 
   it('returns amber for neutral and temperror', () => {

@@ -3367,7 +3367,16 @@ export class JMAPClient implements IJMAPClient {
   }
 
   private getSubmissionAccountId(accountId?: string): string {
-    return accountId || this.session?.primaryAccounts?.['urn:ietf:params:jmap:submission'] || this.accountId;
+    // The requested (mail) account may not host EmailSubmission objects — JMAP
+    // allows submission to live in a separate account (session
+    // primaryAccounts['…:submission']). Only honour the requested account when
+    // it actually advertises the submission capability; otherwise fall back to
+    // the account JMAP designates for submission.
+    const submissionPrimary = this.session?.primaryAccounts?.['urn:ietf:params:jmap:submission'];
+    if (accountId && this.session?.accounts?.[accountId]?.accountCapabilities?.['urn:ietf:params:jmap:submission']) {
+      return accountId;
+    }
+    return submissionPrimary || accountId || this.accountId;
   }
 
   private getSubmissionCapability(accountId?: string): SubmissionCapability | undefined {
