@@ -20,6 +20,7 @@ const languages = [
   { value: 'nl', label: 'Nederlands' },
   { value: 'pl', label: 'Polski' },
   { value: 'pt', label: 'Português' },
+  { value: 'ro', label: 'Română' },
   { value: 'tr', label: 'Türkçe' },
   { value: 'ru', label: 'Русский' },
   { value: 'uk', label: 'Українська' },

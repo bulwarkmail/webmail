@@ -222,6 +222,17 @@ export function FlagDK(props: FlagProps) {
   );
 }
 
+/** Romania – Vertical blue, yellow, red tricolour */
+export function FlagRO(props: FlagProps) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3 2" width={W} height={H} className={flagClass} {...props}>
+      <rect width="1" height="2" fill="#002B7F" />
+      <rect x="1" width="1" height="2" fill="#FCD116" />
+      <rect x="2" width="1" height="2" fill="#CE1126" />
+    </svg>
+  );
+}
+
 /** Map locale codes to flag components */
 export const flagComponents: Record<string, (props: FlagProps) => ReactElement> = {
   cs: FlagCS,
@@ -238,6 +249,7 @@ export const flagComponents: Record<string, (props: FlagProps) => ReactElement> 
   nl: FlagNL,
   pl: FlagPL,
   pt: FlagBR,
+  ro: FlagRO,
   ru: FlagRU,
   tr: FlagTR,
   uk: FlagUA,
