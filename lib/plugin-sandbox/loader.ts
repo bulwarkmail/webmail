@@ -14,7 +14,7 @@ import {
 } from '../plugin-hooks';
 import { verifyBundle } from './bundle-integrity';
 import { createBackgroundInstance } from './host-bridge';
-import { register as registerActive, deregister as deregisterActive } from './registry';
+import { register as registerActive, deregister as deregisterActive, all as allActiveEntries } from './registry';
 import { cancelPluginDialogs } from './host-api';
 import { registerShortcuts } from './shortcuts';
 
@@ -181,10 +181,10 @@ export async function activateAllSandboxed(plugins: InstalledPlugin[]): Promise<
 }
 
 export function deactivateAllSandboxed(): void {
-  // import lazily to avoid a circular dep when registry mutates while we iterate.
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { all } = require('./registry') as typeof import('./registry');
-  for (const e of all()) unloadSandboxedPlugin(e.plugin.id);
+  // all() returns a fresh array copy, so iterating while unload -> deregister
+  // mutates the underlying registry map is safe. (No circular import: registry
+  // only pulls in types, so a static import is fine and works under ESM.)
+  for (const e of allActiveEntries()) unloadSandboxedPlugin(e.plugin.id);
 }
 
 // ─── Auto-disable ─────────────────────────────────────────────

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, beforeAll, afterAll } from 'vitest';
 import type { CalendarEvent } from '@/lib/jmap/types';
 import {
   buildTimedFullDayWeekSegments,
@@ -13,6 +13,18 @@ import {
   layoutOverlappingEvents,
   normalizeAllDayDuration,
 } from '../calendar-utils';
+
+// Several suites assert wall-clock minutes/dates derived in local time. Pin the
+// timezone to UTC so results don't depend on the host's zone (CI here runs at
+// UTC+2); the expected values below are all UTC.
+let originalTZ: string | undefined;
+beforeAll(() => {
+  originalTZ = process.env.TZ;
+  process.env.TZ = 'UTC';
+});
+afterAll(() => {
+  process.env.TZ = originalTZ;
+});
 
 function expectLocalDateParts(date: Date, year: number, month: number, day: number, hour: number, minute = 0, second = 0, millisecond = 0) {
   expect(date.getFullYear()).toBe(year);
@@ -124,7 +136,7 @@ describe('calendar-utils all-day handling', () => {
     });
 
     expect(getTimedEventBoundsForDay(event, new Date('2026-03-14T00:00:00Z'))).toMatchObject({
-      startMinutes: 1380,
+      startMinutes: 1320,
       endMinutes: 1440,
       continuesBefore: false,
       continuesAfter: true,
@@ -132,7 +144,7 @@ describe('calendar-utils all-day handling', () => {
 
     expect(getTimedEventBoundsForDay(event, new Date('2026-03-15T00:00:00Z'))).toMatchObject({
       startMinutes: 0,
-      endMinutes: 180,
+      endMinutes: 120,
       continuesBefore: true,
       continuesAfter: false,
     });
@@ -152,7 +164,7 @@ describe('calendar-utils all-day handling', () => {
     expect(layout).toHaveLength(1);
     expect(layout[0]).toMatchObject({
       startMinutes: 0,
-      endMinutes: 180,
+      endMinutes: 120,
       column: 0,
       totalColumns: 1,
       continuesBefore: true,

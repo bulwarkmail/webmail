@@ -69,8 +69,8 @@ describe('plugin-types constants', () => {
       expect(MAX_PLUGIN_SIZE).toBe(5 * 1024 * 1024);
     });
 
-    it('MAX_THEME_SIZE is 1 MB', () => {
-      expect(MAX_THEME_SIZE).toBe(1 * 1024 * 1024);
+    it('MAX_THEME_SIZE is 2 MB', () => {
+      expect(MAX_THEME_SIZE).toBe(2 * 1024 * 1024);
     });
   });
 

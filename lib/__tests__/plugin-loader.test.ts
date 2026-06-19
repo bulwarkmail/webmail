@@ -15,14 +15,12 @@ beforeEach(() => {
 });
 
 describe('exposePluginExternals', () => {
-  it('sets window.__PLUGIN_EXTERNALS__ with React, ReactDOM, ReactJSX', () => {
+  it('is a no-op that does not publish globals (sandbox injects React per-iframe)', () => {
     exposePluginExternals();
+    // The blob-import loader that needed window.__PLUGIN_EXTERNALS__ is gone;
+    // exposePluginExternals is kept only as a no-op for legacy callers.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const externals = (globalThis as any).__PLUGIN_EXTERNALS__;
-    expect(externals).toBeDefined();
-    expect(externals.React).toBeDefined();
-    expect(externals.ReactDOM).toBeDefined();
-    expect(externals.ReactJSX).toBeDefined();
+    expect((globalThis as any).__PLUGIN_EXTERNALS__).toBeUndefined();
   });
 });
 

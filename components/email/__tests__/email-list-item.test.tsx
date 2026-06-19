@@ -68,10 +68,12 @@ describe('EmailListItem tag badge', () => {
     expect(screen.getByText('Blue')).toBeInTheDocument();
   });
 
-  it('does not show badge when keyword id not in settings', () => {
+  it('shows a gray fallback badge when keyword id is not in settings', () => {
     const email = makeEmail({ keywords: { $seen: true, '$label:unknown-tag': true } });
     render(<EmailListItem email={email} />);
-    expect(screen.queryByText('unknown-tag')).not.toBeInTheDocument();
+    // Unknown tags fall back to the raw id as label with a gray dot
+    // (see email-list-item.tsx: keywordDefs fallback).
+    expect(screen.getByText('unknown-tag')).toBeInTheDocument();
   });
 
   it('shows custom keyword label', () => {
