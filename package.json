@@ -25,8 +25,8 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "next lint",
-    "lint:fix": "next lint --fix",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "test:translations": "vitest run --no-isolate lib/__tests__/translations.test.ts",
     "prepare": "husky",
     "typecheck": "tsc --noEmit"
