@@ -17,7 +17,7 @@ const GIT_COMMIT = process.env.NEXT_PUBLIC_GIT_COMMIT || "unknown";
 export function AdvancedSettings() {
   const t = useTranslations('settings.advanced');
   const tCommon = useTranslations('common');
-  const { debugMode, debugCategories, senderFavicons, settingsSyncDisabled, updateSetting, resetToDefaults, exportSettings, importSettings } =
+  const { debugMode, debugCategories, senderFavicons, senderAvatars, settingsSyncDisabled, updateSetting, resetToDefaults, exportSettings, importSettings } =
     useSettingsStore();
   const { settingsSyncEnabled } = useConfig();
   const [showResetConfirm, setShowResetConfirm] = useState(false);
@@ -164,6 +164,11 @@ export function AdvancedSettings() {
       {/* Sender Favicons (Experimental) */}
       <SettingItem label={t('sender_favicons.label')} description={t('sender_favicons.description')}>
         <ToggleSwitch checked={senderFavicons} onChange={(checked) => updateSetting('senderFavicons', checked)} />
+      </SettingItem>
+
+      {/* Sender Avatars / Libravatar (Experimental) */}
+      <SettingItem label={t('sender_avatars.label')} description={t('sender_avatars.description')}>
+        <ToggleSwitch checked={senderAvatars} onChange={(checked) => updateSetting('senderAvatars', checked)} />
       </SettingItem>
 
       {/* Export Settings */}

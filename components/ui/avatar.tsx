@@ -63,6 +63,8 @@ function getRootDomain(domain: string): string {
 // Module-level cache of domains whose favicons failed to load.
 // Shared across all Avatar instances to avoid re-requesting known-bad domains.
 const failedFaviconDomains = new Set<string>();
+// Emails whose Libravatar lookup 404'd this session — don't retry.
+const failedAvatarEmails = new Set<string>();
 // Personal email domains where the favicon is the mail provider logo, not the sender
 const PERSONAL_DOMAINS = new Set([
   "gmail.com", "googlemail.com", "outlook.com", "hotmail.com", "live.com",
@@ -144,6 +146,7 @@ interface AvatarProps {
 export function Avatar({ name, email, contactPhotoUri, size = "md", className }: AvatarProps) {
   const [imgError, setImgError] = useState(false);
   const senderFavicons = useSettingsStore((s) => s.senderFavicons);
+  const senderAvatars = useSettingsStore((s) => s.senderAvatars);
   const contacts = useContactStore((s) => s.contacts);
   const { devMode } = useConfig();
 
@@ -199,22 +202,36 @@ export function Avatar({ name, email, contactPhotoUri, size = "md", className }:
   };
 
   const profilePic = email && domain ? getProfilePictureUrl(email, domain, devMode, name) : null;
+  const avatarPx = size === "lg" ? 96 : size === "sm" ? 64 : 80;
+  const avatarFailed = email ? failedAvatarEmails.has(email.toLowerCase()) : false;
+  // Libravatar (federated, privacy-friendly) avatar for any address, resolved
+  // server-side via /api/libravatar (SRV federation + central fallback).
+  const libravatarSrc =
+    senderAvatars && email && !avatarFailed && !imgError && !domainFailed
+      ? `/api/libravatar?email=${encodeURIComponent(email)}&s=${avatarPx}`
+      : null;
   const showFavicon =
     senderFavicons && faviconDomain && !PERSONAL_DOMAINS.has(faviconDomain) && !imgError && !domainFailed;
 
   // Priority: contact photo > custom avatar > profile picture > company favicon > initials
   const customAvatar = devMode && email ? CUSTOM_AVATARS[email.toLowerCase()] : null;
   const imgSrc = !imgError && !domainFailed
-    ? resolvedContactPhoto || customAvatar || profilePic || (showFavicon ? `/api/favicon?domain=${encodeURIComponent(faviconDomain!)}` : null)
+    ? resolvedContactPhoto || customAvatar || profilePic || libravatarSrc || (showFavicon ? `/api/favicon?domain=${encodeURIComponent(faviconDomain!)}` : null)
     : (resolvedContactPhoto || customAvatar || profilePic || null);
 
   const handleImgError = useCallback(() => {
+    // A failed Libravatar lookup shouldn't poison the favicon domain — record
+    // it separately so the next render falls through to favicon/initials.
+    if (libravatarSrc && imgSrc === libravatarSrc && email) {
+      failedAvatarEmails.add(email.toLowerCase());
+    }
     setImgError(true);
-    // If this was a favicon URL (not a contact photo, custom avatar or profile pic), remember the domain
-    if (faviconDomain && !resolvedContactPhoto && !customAvatar && !profilePic) {
+    // If this was a favicon URL (not a contact photo, custom avatar, profile
+    // pic or libravatar), remember the domain.
+    if (faviconDomain && !resolvedContactPhoto && !customAvatar && !profilePic && !libravatarSrc) {
       failedFaviconDomains.add(faviconDomain);
     }
-  }, [faviconDomain, resolvedContactPhoto, customAvatar, profilePic]);
+  }, [faviconDomain, resolvedContactPhoto, customAvatar, profilePic, libravatarSrc, imgSrc, email]);
 
   return (
     <div

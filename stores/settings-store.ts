@@ -178,6 +178,7 @@ interface SettingsState {
 
   // Experimental
   senderFavicons: boolean;
+  senderAvatars: boolean;
 
   // Folders
   folderIcons: Record<string, string>; // mailboxId -> icon name
@@ -307,6 +308,7 @@ const DEFAULT_SETTINGS = {
 
   // Experimental
   senderFavicons: true,
+  senderAvatars: true,
 
   // Folders
   folderIcons: {} as Record<string, string>,
@@ -410,6 +412,7 @@ export const useSettingsStore = create<SettingsState>()(
           hideAccountSwitcher: state.hideAccountSwitcher,
           showRailAccountList: state.showRailAccountList,
           senderFavicons: state.senderFavicons,
+          senderAvatars: state.senderAvatars,
           folderIcons: state.folderIcons,
           emailKeywords: state.emailKeywords,
           sidebarApps: state.sidebarApps,

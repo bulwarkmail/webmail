@@ -1192,6 +1192,10 @@
         "label": "Sender Favicons (Experimental)",
         "description": "Show website icons as profile pictures for business senders"
       },
+      "sender_avatars": {
+        "label": "Sender Avatars (Experimental)",
+        "description": "Show Libravatar profile pictures for senders and recipients (federated, privacy-friendly)"
+      },
       "keyboard_shortcuts": {
         "label": "Keyboard Shortcuts",
         "description": "View available keyboard shortcuts",
