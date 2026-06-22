@@ -188,7 +188,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
           )}
 
           {isUnread && (
-            <div className="absolute left-1 top-1/2 -translate-y-1/2">
+            <div className="absolute left-0.5 top-1/2 -translate-y-1/2">
               <Circle className="w-2 h-2 fill-unread text-unread" />
             </div>
           )}
@@ -585,7 +585,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
             )}
 
             {hasUnread && (
-              <div className="absolute left-1 top-1/2 -translate-y-1/2">
+              <div className="absolute left-0.5 top-1/2 -translate-y-1/2">
                 <Circle className="w-2 h-2 fill-unread text-unread" />
               </div>
             )}
