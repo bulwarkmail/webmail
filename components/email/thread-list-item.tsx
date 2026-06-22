@@ -222,13 +222,13 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                   </span>
                   <div className="flex min-w-0 flex-1 items-center gap-2 text-sm">
                     <span className={cn(
-                      'shrink-0 truncate',
+                      'min-w-0 truncate',
                       isUnread ? 'font-semibold text-foreground' : 'text-foreground/90'
                     )}>
                       {email.subject || '(no subject)'}
                     </span>
                     {inlinePreview && (
-                      <span className="min-w-0 truncate text-muted-foreground">{inlinePreview}</span>
+                      <span className="min-w-0 shrink-[9999] truncate text-muted-foreground">{inlinePreview}</span>
                     )}
                   </div>
                 </div>
@@ -658,13 +658,13 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                     </span>
                     <div className="flex min-w-0 flex-1 items-center gap-2 text-sm">
                       <span className={cn(
-                        'shrink-0 truncate',
+                        'min-w-0 truncate',
                         hasUnread ? 'font-semibold text-foreground' : 'text-foreground/90'
                       )}>
                         {latestEmail.subject || '(no subject)'}
                       </span>
                       {inlinePreview && (
-                        <span className="min-w-0 truncate text-muted-foreground">{inlinePreview}</span>
+                        <span className="min-w-0 shrink-[9999] truncate text-muted-foreground">{inlinePreview}</span>
                       )}
                     </div>
                   </div>

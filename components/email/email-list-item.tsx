@@ -191,13 +191,13 @@ export function EmailListItem({ email, selected, onClick, onDoubleClick, onConte
                 </span>
                 <div className="flex min-w-0 flex-1 items-center gap-2 text-sm">
                   <span className={cn(
-                    'shrink-0 truncate',
+                    'min-w-0 truncate',
                     isUnread ? 'font-semibold text-foreground' : 'text-foreground/90'
                   )}>
                     {email.subject || t('no_subject')}
                   </span>
                   {inlinePreview && (
-                    <span className="min-w-0 truncate text-muted-foreground">{inlinePreview}</span>
+                    <span className="min-w-0 shrink-[9999] truncate text-muted-foreground">{inlinePreview}</span>
                   )}
                 </div>
               </div>
