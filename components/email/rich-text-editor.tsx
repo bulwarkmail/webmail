@@ -64,6 +64,15 @@ const styledBlockAttributes = {
     renderHTML: (attrs: Record<string, string | null>) =>
       attrs.class ? { class: attrs.class } : {},
   },
+  // Per-block auto direction: the browser picks LTR/RTL from each block's first
+  // strong character, so Hebrew/Arabic paragraphs flip to RTL as you type. The
+  // attribute serializes into the sent HTML, so recipients see the same direction.
+  dir: {
+    default: "auto" as string | null,
+    parseHTML: (el: HTMLElement) => el.getAttribute("dir"),
+    renderHTML: (attrs: Record<string, string | null>) =>
+      attrs.dir ? { dir: attrs.dir } : {},
+  },
   "data-signature-block": {
     default: null as string | null,
     parseHTML: (el: HTMLElement) => el.getAttribute("data-signature-block"),
@@ -240,6 +249,8 @@ export function RichTextEditor({
     editorProps: {
       attributes: {
         class: "tiptap min-h-[100px] px-4 py-3 text-sm text-foreground",
+        // Auto-detect overall direction; per-block dir (above) handles mixed content.
+        dir: "auto",
       },
       handleDrop: (view, event) => {
         const upload = onImageUploadRef.current;

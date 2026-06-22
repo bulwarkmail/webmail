@@ -2316,6 +2316,7 @@ export function EmailComposer({
             <Input
               ref={subjectInputRef}
               type="text"
+              dir="auto"
               placeholder={t('subject_placeholder')}
               value={subject}
               onChange={(e) => {
@@ -2341,6 +2342,7 @@ export function EmailComposer({
         {plainTextMode ? (
           <textarea
             ref={bodyRef}
+            dir="auto"
             value={body}
             onChange={(e) => {
               setBody(e.target.value);
