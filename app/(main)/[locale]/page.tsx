@@ -3108,6 +3108,9 @@ export default function Home() {
                     onMarkAsRead={async (emailId, read) => {
                       if (client) {
                         await markAsRead(client, emailId, read);
+                        // Marking an open message unread returns to the list (Gmail-style):
+                        // staying in the reading pane would just re-mark it read on view.
+                        if (!read) handleMobileBack();
                       }
                     }}
                     onDownloadAttachment={handleDownloadAttachment}
