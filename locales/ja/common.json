@@ -1880,7 +1880,8 @@
       "validation": {
         "empty": "テンプレート名は必須です",
         "too_long": "テンプレート名は200文字以内にしてください"
-      }
+      },
+      "image_too_large": "Image too large (max 1 MB)"
     },
     "files": {
       "display": {

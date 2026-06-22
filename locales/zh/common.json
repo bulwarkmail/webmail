@@ -1880,7 +1880,8 @@
       "validation": {
         "empty": "模板名称为必填项",
         "too_long": "模板名称不得超过 200 个字符"
-      }
+      },
+      "image_too_large": "Image too large (max 1 MB)"
     },
     "files": {
       "display": {

@@ -1880,7 +1880,8 @@
       "validation": {
         "empty": "Şablon adı gerekli",
         "too_long": "Şablon adı en fazla 200 karakter olmalıdır"
-      }
+      },
+      "image_too_large": "Image too large (max 1 MB)"
     },
     "files": {
       "display": {

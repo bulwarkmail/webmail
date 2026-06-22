@@ -1880,7 +1880,8 @@
       "validation": {
         "empty": "Název šablony je vyžadován",
         "too_long": "Název šablony může mít maximálně 200 znaků"
-      }
+      },
+      "image_too_large": "Image too large (max 1 MB)"
     },
     "files": {
       "display": {

@@ -1,16 +1,25 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
+import type { Editor } from '@tiptap/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { RichTextEditor, type InlineImageUpload } from '@/components/email/rich-text-editor';
 import { Star, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { validateTemplateName } from '@/lib/template-utils';
+import { sanitizeEmailHtml, plainTextToSafeHtml } from '@/lib/email-sanitization';
 import { BUILT_IN_PLACEHOLDERS } from '@/lib/template-types';
 import type { EmailTemplate } from '@/lib/template-types';
 import { useTemplateStore } from '@/stores/template-store';
 import { useAuthStore } from '@/stores/auth-store';
+import { toast } from '@/stores/toast-store';
+
+// Inline template images are stored as base64 data URIs inside the template
+// (localStorage-backed). Cap each image so a couple of logos don't blow the
+// ~5 MB localStorage budget. base64 inflates bytes ~33%.
+const MAX_TEMPLATE_IMAGE_BYTES = 1024 * 1024; // 1 MB
 
 
 interface TemplateFormProps {
@@ -37,7 +46,14 @@ export function TemplateForm({ template, initialData, onSave, onCancel }: Templa
   const [name, setName] = useState(template?.name || '');
   const [category, setCategory] = useState(template?.category || '');
   const [subject, setSubject] = useState(template?.subject || initialData?.subject || '');
-  const [body, setBody] = useState(template?.body || initialData?.body || '');
+  // Existing HTML templates load as-is; legacy plain-text bodies are converted
+  // to safe HTML so they render in the rich editor. initialData (e.g. "save as
+  // template" from the composer) is already HTML.
+  const initialBodyHtml = template
+    ? (template.bodyIsHtml ? template.body : plainTextToSafeHtml(template.body || ''))
+    : (initialData?.body || '');
+  const [body, setBody] = useState(initialBodyHtml);
+  const editorRef = useRef<Editor | null>(null);
   const [toRecipients, setToRecipients] = useState(
     template?.defaultRecipients?.to?.join(', ') || initialData?.to?.join(', ') || ''
   );
@@ -75,7 +91,8 @@ export function TemplateForm({ template, initialData, onSave, onCancel }: Templa
     onSave({
       name: name.trim(),
       subject,
-      body,
+      body: sanitizeEmailHtml(body),
+      bodyIsHtml: true,
       category: category.trim(),
       defaultRecipients: to.length || cc.length || bcc.length
         ? { to: to.length ? to : undefined, cc: cc.length ? cc : undefined, bcc: bcc.length ? bcc : undefined }
@@ -89,11 +106,36 @@ export function TemplateForm({ template, initialData, onSave, onCancel }: Templa
     const tag = `{{${placeholder}}}`;
     if (field === 'subject') {
       setSubject((prev) => prev + tag);
+    } else if (editorRef.current) {
+      editorRef.current.chain().focus().insertContent(tag).run();
     } else {
       setBody((prev) => prev + tag);
     }
     setShowPlaceholderMenu(null);
   };
+
+  const handleImageUpload = useCallback(
+    async (file: File): Promise<InlineImageUpload | null> => {
+      if (file.size > MAX_TEMPLATE_IMAGE_BYTES) {
+        toast.error(tSettings('image_too_large'));
+        return null;
+      }
+      const dataUrl = await new Promise<string | null>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve((e.target?.result as string) ?? null);
+        reader.onerror = () => resolve(null);
+        reader.readAsDataURL(file);
+      });
+      if (!dataUrl) {
+        toast.error(tComposer('upload_failed', { filename: file.name }));
+        return null;
+      }
+      // No cid: templates have no send context. The data URI is the image;
+      // the compose/send path handles inlining when the template is used.
+      return { src: dataUrl };
+    },
+    [tSettings, tComposer],
+  );
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -183,13 +225,16 @@ export function TemplateForm({ template, initialData, onSave, onCancel }: Templa
             )}
           </div>
         </div>
-        <textarea
-          value={body}
-          onChange={(e) => setBody(e.target.value)}
-          placeholder={tSettings('body_placeholder')}
-          rows={6}
-          className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-y"
-        />
+        <div className="mt-1">
+          <RichTextEditor
+            content={body}
+            onChange={setBody}
+            onImageUpload={handleImageUpload}
+            onEditorReady={(ed) => { editorRef.current = ed; }}
+            placeholder={tSettings('body_placeholder')}
+            className="min-h-[180px]"
+          />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">

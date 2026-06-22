@@ -1880,7 +1880,8 @@
       "validation": {
         "empty": "Sjabloonnaam is verplicht",
         "too_long": "Sjabloonnaam mag maximaal 200 tekens zijn"
-      }
+      },
+      "image_too_large": "Image too large (max 1 MB)"
     },
     "files": {
       "display": {

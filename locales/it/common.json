@@ -1880,7 +1880,8 @@
       "validation": {
         "empty": "Il nome del modello è obbligatorio",
         "too_long": "Il nome del modello non deve superare i 200 caratteri"
-      }
+      },
+      "image_too_large": "Image too large (max 1 MB)"
     },
     "files": {
       "display": {

@@ -1887,7 +1887,8 @@
       "validation": {
         "empty": "Template name is required",
         "too_long": "Template name must be 200 characters or less"
-      }
+      },
+      "image_too_large": "Image too large (max 1 MB)"
     },
     "files": {
       "display": {

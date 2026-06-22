@@ -1880,7 +1880,8 @@
       "validation": {
         "empty": "Название шаблона обязательно",
         "too_long": "Название шаблона не должно превышать 200 символов"
-      }
+      },
+      "image_too_large": "Image too large (max 1 MB)"
     },
     "files": {
       "display": {

@@ -1880,7 +1880,8 @@
       "validation": {
         "empty": "템플릿 이름이 필요해요",
         "too_long": "템플릿 이름은 200자 이하여야 해요"
-      }
+      },
+      "image_too_large": "Image too large (max 1 MB)"
     },
     "files": {
       "display": {

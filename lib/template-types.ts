@@ -3,6 +3,8 @@ export interface EmailTemplate {
   name: string;
   subject: string;
   body: string;
+  /** True when `body` is HTML (rich editor). Absent/false = legacy plain text. */
+  bodyIsHtml?: boolean;
   category: string;
   defaultRecipients?: {
     to?: string[];

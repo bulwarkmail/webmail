@@ -1880,7 +1880,8 @@
       "validation": {
         "empty": "Потрібно вказати назву шаблону",
         "too_long": "Назва шаблону має містити не більше 200 символів"
-      }
+      },
+      "image_too_large": "Image too large (max 1 MB)"
     },
     "files": {
       "display": {

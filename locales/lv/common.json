@@ -1880,7 +1880,8 @@
       "validation": {
         "empty": "Veidnes nosaukums ir obligāts",
         "too_long": "Veidnes nosaukums nedrīkst pārsniegt 200 rakstzīmes"
-      }
+      },
+      "image_too_large": "Image too large (max 1 MB)"
     },
     "files": {
       "display": {

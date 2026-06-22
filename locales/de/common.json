@@ -1880,7 +1880,8 @@
       "validation": {
         "empty": "Vorlagenname ist erforderlich",
         "too_long": "Vorlagenname darf maximal 200 Zeichen haben"
-      }
+      },
+      "image_too_large": "Image too large (max 1 MB)"
     },
     "files": {
       "display": {

@@ -1087,10 +1087,13 @@ export function EmailComposer({
       ? substitutePlaceholders(template.body, filledValues)
       : template.body;
 
-    // In plain text mode, use template body as-is; otherwise convert to HTML
-    const bodyContent = plainTextMode
-      ? filledBody
-      : `<p>${filledBody.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>')}</p>`;
+    // HTML templates (rich editor) carry markup; legacy templates are plain text.
+    // Plain-text compose mode flattens HTML; rich mode escapes/wraps plain bodies.
+    const bodyContent = template.bodyIsHtml
+      ? (plainTextMode ? htmlToPlainText(filledBody) : sanitizeEmailHtml(filledBody))
+      : (plainTextMode
+          ? filledBody
+          : `<p>${filledBody.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>')}</p>`);
 
     if (mode === 'compose') {
       setSubject(filledSubject);

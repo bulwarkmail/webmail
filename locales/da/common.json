@@ -1883,7 +1883,8 @@
       "validation": {
         "empty": "Skabelonnavn er påkrævet",
         "too_long": "Skabelonnavn skal være 200 tegn eller mindre"
-      }
+      },
+      "image_too_large": "Image too large (max 1 MB)"
     },
     "files": {
       "display": {

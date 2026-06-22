@@ -1880,7 +1880,8 @@
       "validation": {
         "empty": "Nazwa szablonu jest wymagana",
         "too_long": "Nazwa szablonu musi mieć maksymalnie 200 znaków"
-      }
+      },
+      "image_too_large": "Image too large (max 1 MB)"
     },
     "files": {
       "display": {

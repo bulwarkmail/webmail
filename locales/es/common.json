@@ -1880,7 +1880,8 @@
       "validation": {
         "empty": "El nombre de la plantilla es obligatorio",
         "too_long": "El nombre de la plantilla no debe superar los 200 caracteres"
-      }
+      },
+      "image_too_large": "Image too large (max 1 MB)"
     },
     "files": {
       "display": {
