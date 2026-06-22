@@ -1490,7 +1490,16 @@ export function EmailComposer({
     };
   };
 
+  // Guard against double-submit. Rapid Send clicks (or a click racing the
+  // keyboard shortcut) used to invoke handleSend once per click before the
+  // first submission resolved, sending the message multiple times. The ref is
+  // a synchronous re-entry guard - state updates are async and wouldn't block a
+  // second click in the same tick - and isSending drives button disabling.
+  const [isSending, setIsSending] = useState(false);
+  const isSendingRef = useRef(false);
+
   const handleSend = async (skipAttachmentCheck = false, delayedUntil?: string) => {
+    if (isSendingRef.current) return;
     const ccAddresses = withInput(cc, ccInput);
     const bccAddresses = withInput(bcc, bccInput);
 
@@ -1524,6 +1533,11 @@ export function EmailComposer({
         }
       }
     }
+
+    // Past every "don't send" early return - mark the send in flight so a
+    // second click is a no-op until this resolves (reset in the finally below).
+    isSendingRef.current = true;
+    setIsSending(true);
 
     // Resolve the freshest draftId we can. Two cases:
     //   1. An autosave is currently in flight - wait for it; don't issue a
@@ -1855,6 +1869,9 @@ export function EmailComposer({
     } catch (err) {
       debug.error('Failed to send email:', err);
       toast.error(err instanceof Error ? err.message : t('send_failed'));
+    } finally {
+      isSendingRef.current = false;
+      setIsSending(false);
     }
   };
 
@@ -2034,7 +2051,7 @@ export function EmailComposer({
         {/* Mobile: send button in header */}
         <Button
           onClick={() => handleSend()}
-          disabled={!canSend}
+          disabled={!canSend || isSending}
           title={getSendTooltip()}
           size="sm"
           className="md:hidden h-9 px-4"
@@ -2541,7 +2558,7 @@ export function EmailComposer({
               <div ref={sendMenuRef} className="relative hidden md:inline-flex">
                 <Button
                   onClick={() => handleSend()}
-                  disabled={!canSend}
+                  disabled={!canSend || isSending}
                   title={getSendTooltip()}
                   className="rounded-r-none border-r border-primary-foreground/20"
                 >
@@ -2551,7 +2568,7 @@ export function EmailComposer({
                 <Button
                   type="button"
                   onClick={() => setShowSendMenu((open) => !open)}
-                  disabled={!canSend}
+                  disabled={!canSend || isSending}
                   title={t('schedule_send')}
                   className="rounded-l-none px-2"
                   aria-haspopup="menu"
@@ -2579,7 +2596,7 @@ export function EmailComposer({
             ) : (
               <Button
                 onClick={() => handleSend()}
-                disabled={!canSend}
+                disabled={!canSend || isSending}
                 title={getSendTooltip()}
                 className="hidden md:inline-flex"
               >
@@ -2642,7 +2659,7 @@ export function EmailComposer({
             {scheduleError && <p className="mt-2 text-sm text-destructive">{scheduleError}</p>}
             <div className="mt-5 flex justify-end gap-2">
               <Button variant="ghost" onClick={() => setShowScheduleDialog(false)}>{tCommon('cancel')}</Button>
-              <Button onClick={handleScheduleSend} disabled={!canSend}>{t('schedule_send')}</Button>
+              <Button onClick={handleScheduleSend} disabled={!canSend || isSending}>{t('schedule_send')}</Button>
             </div>
           </div>
         </div>
