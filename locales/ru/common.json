@@ -1226,6 +1226,10 @@
         "off": "Выкл.",
         "seconds": "{seconds} сек.",
         "unsupported": "Текущая учетная запись не заявляет поддержку отложенной отправки. Настройка сохранится для других учетных записей."
+      },
+      "return_to_list_after_action": {
+        "label": "Return to list after delete or mark unread",
+        "description": "After deleting or marking the open message unread, go back to the message list instead of opening the next message."
       }
     },
     "composer": {

@@ -1229,6 +1229,10 @@
         "off": "Kikapcsolva",
         "seconds": "{seconds} másodperc",
         "unsupported": "A jelenlegi fiók nem támogatja a késleltetett küldést. A beállítás más fiókokhoz elmentésre kerül."
+      },
+      "return_to_list_after_action": {
+        "label": "Return to list after delete or mark unread",
+        "description": "After deleting or marking the open message unread, go back to the message list instead of opening the next message."
       }
     },
     "composer": {

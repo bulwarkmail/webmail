@@ -1226,6 +1226,10 @@
         "off": "끔",
         "seconds": "{seconds}초",
         "unsupported": "현재 계정은 지연 보내기 지원을 알리지 않습니다. 설정은 다른 계정을 위해 계속 저장됩니다."
+      },
+      "return_to_list_after_action": {
+        "label": "Return to list after delete or mark unread",
+        "description": "After deleting or marking the open message unread, go back to the message list instead of opening the next message."
       }
     },
     "composer": {

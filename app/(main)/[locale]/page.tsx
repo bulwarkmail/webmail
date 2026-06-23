@@ -3110,7 +3110,7 @@ export default function Home() {
                         await markAsRead(client, emailId, read);
                         // Marking an open message unread returns to the list (Gmail-style):
                         // staying in the reading pane would just re-mark it read on view.
-                        if (!read) handleMobileBack();
+                        if (!read && useSettingsStore.getState().returnToListAfterAction) handleMobileBack();
                       }
                     }}
                     onDownloadAttachment={handleDownloadAttachment}

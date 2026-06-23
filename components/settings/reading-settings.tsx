@@ -22,6 +22,7 @@ export function ReadingSettings() {
     markAsReadDelay,
     deleteAction,
     permanentlyDeleteJunk,
+    returnToListAfterAction,
     showPreview,
     mailLayout,
     disableThreading,
@@ -173,6 +174,13 @@ export function ReadingSettings() {
         <ToggleSwitch
           checked={permanentlyDeleteJunk}
           onChange={(checked) => updateSetting('permanentlyDeleteJunk', checked)}
+        />
+      </SettingItem>
+
+      <SettingItem label={t('return_to_list_after_action.label')} description={t('return_to_list_after_action.description')}>
+        <ToggleSwitch
+          checked={returnToListAfterAction}
+          onChange={(checked) => updateSetting('returnToListAfterAction', checked)}
         />
       </SettingItem>
 
