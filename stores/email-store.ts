@@ -321,15 +321,19 @@ function resolveActionMailboxes(): Mailbox[] {
 
 /**
  * Resolves the JMAP mailbox ids that make up the gated "All Mail" view for the
- * active/viewing account. Honors the per-user `allMailFolderIds` setting; when
- * unset (null) it defaults to every non-special (no-role) folder. Shared
+ * active/viewing account. Honors that account's `allMailFolderIds` entry; when
+ * not configured it defaults to every non-special (no-role) folder. Shared
  * folders are excluded - All Mail is scoped to a single account. Returns
  * JMAP-side ids (originalId for namespaced mailboxes).
  */
 function resolveAllMailJmapIds(): string[] {
   const mailboxes = resolveActionMailboxes().filter((mb) => !mb.isShared);
-  const configured = useSettingsStore.getState().allMailFolderIds;
-  const selected = configured === null
+  // Per-account selection: read the entry for the account the view is scoped to
+  // (the Pro viewing override, else the global active account). A missing entry
+  // = "not configured" -> all no-role folders; an explicit [] = no folders.
+  const accountId = useEmailStore.getState().viewingAccountId ?? useAuthStore.getState().activeAccountId;
+  const configured = accountId ? useSettingsStore.getState().allMailFolderIds[accountId] : undefined;
+  const selected = configured === undefined
     ? mailboxes.filter((mb) => !mb.role)
     : mailboxes.filter((mb) => configured.includes(mb.id));
   return selected.map((mb) => mb.originalId || mb.id);

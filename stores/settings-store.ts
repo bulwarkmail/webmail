@@ -15,6 +15,11 @@ const syncLog = (...args: unknown[]) => console.log('[SETTINGS_SYNC]', ...args);
 const syncWarn = (...args: unknown[]) => console.warn('[SETTINGS_SYNC]', ...args);
 const syncError = (...args: unknown[]) => console.error('[SETTINGS_SYNC]', ...args);
 
+/** True for a non-null, non-array plain object (the allMailFolderIds map shape). */
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
 // Settings sync state (module-level, not persisted)
 let syncEnabled = false;
 let syncUsername: string | null = null;
@@ -220,7 +225,10 @@ interface SettingsState {
   // configured, in which case the view defaults to all non-special (no-role)
   // folders of the active account.
   enableAllMailView: boolean;
-  allMailFolderIds: string[] | null;
+  // Per-account "All Mail" folder selection, keyed by AccountEntry.id. A
+  // missing entry = "not configured" -> defaults to every no-role folder; an
+  // explicit [] = "no folders". (Replaced the legacy global string[] | null.)
+  allMailFolderIds: Record<string, string[]>;
 
   // Email Display
   disableThreading: boolean; // Show emails as individual messages instead of grouped by conversation
@@ -407,7 +415,7 @@ const DEFAULT_SETTINGS = {
 
   // All Mail view (gated)
   enableAllMailView: false,
-  allMailFolderIds: null as string[] | null,
+  allMailFolderIds: {} as Record<string, string[]>,
 
   // Email Display
   disableThreading: false,
@@ -630,6 +638,11 @@ export const useSettingsStore = create<SettingsState>()(
                 set({ sendDelaySeconds: 0 });
                 return;
               }
+              // Ignore a legacy global allMailFolderIds (string[] | null) or any
+              // non-record value - this build keys it per account.
+              if (key === 'allMailFolderIds' && !isPlainRecord(settings[key])) {
+                return;
+              }
               if (DEVICE_LOCAL_SETTING_KEYS.has(key)) {
                 return;
               }
@@ -820,7 +833,7 @@ export const useSettingsStore = create<SettingsState>()(
     }),
     {
       name: 'settings-storage',
-      version: 4,
+      version: 5,
       migrate: (persisted, version) => {
         const state = persisted as Record<string, unknown>;
         if (version < 2 && state.listDensity) {
@@ -840,11 +853,25 @@ export const useSettingsStore = create<SettingsState>()(
         if (version < 4) {
           state.dateFormat = 'smart';
         }
+        // v5: allMailFolderIds went from a global `string[] | null` to a
+        // per-account `Record<accountId, string[]>`. The legacy global list
+        // can't be attributed to a specific account here (the active account
+        // isn't known at migrate time), so it's dropped - each account starts
+        // "not configured" (defaults to all no-role folders).
+        if (version < 5 || !isPlainRecord(state.allMailFolderIds)) {
+          state.allMailFolderIds = {};
+        }
         return state as unknown as SettingsState;
       },
       onRehydrateStorage: () => {
         return (state) => {
           if (state) {
+            // Defensive: a legacy global array or any non-record value (e.g.
+            // synced from an older client) is coerced to an empty map so
+            // per-account consumers never see a non-record.
+            if (!isPlainRecord(state.allMailFolderIds)) {
+              state.allMailFolderIds = {};
+            }
             applyFontSize(state.fontSize);
             applyDensity(state.density);
             applyAnimations(state.animationsEnabled);

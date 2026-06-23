@@ -121,24 +121,37 @@ export function LayoutSettings() {
   const { toolbarPosition, showToolbarLabels, hideAccountSwitcher, showRailAccountList, enableUnifiedMailbox, includeGroupInUnified, enableAllMailView, allMailFolderIds, colorfulSidebarIcons, mailLayout, proInterface, updateSetting } = useSettingsStore();
   const { isSettingLocked, isSettingHidden, isFeatureEnabled } = usePolicyStore();
   const accounts = useAccountStore(s => s.accounts);
+  const activeAccountId = useAccountStore(s => s.activeAccountId);
   const mailboxes = useEmailStore(s => s.mailboxes);
   const hasGroupInboxes = useMemo(() => mailboxes.some(m => m.isShared), [mailboxes]);
   const allMailViewAllowed = isFeatureEnabled('allMailViewEnabled');
 
-  // Own (non-shared) folders and the current All Mail selection. `null` =
-  // never configured, which defaults to all non-special (no-role) folders.
+  // Own (non-shared) folders and the active account's All Mail selection. The
+  // selection is per account: a missing entry = never configured, which
+  // defaults to all no-role folders; an explicit [] = no folders.
   const ownMailboxes = useMemo(() => mailboxes.filter(m => !m.isShared), [mailboxes]);
+  const currentAllMailEntry = activeAccountId ? allMailFolderIds[activeAccountId] : undefined;
   const allMailSelected = new Set(
-    allMailFolderIds === null
+    currentAllMailEntry === undefined
       ? ownMailboxes.filter(m => !m.role).map(m => m.id)
-      : allMailFolderIds
+      : currentAllMailEntry
   );
   const toggleAllMailFolder = (id: string) => {
+    if (!activeAccountId) return;
     const next = new Set(allMailSelected);
     if (next.has(id)) next.delete(id);
     else next.add(id);
-    updateSetting('allMailFolderIds', ownMailboxes.filter(m => next.has(m.id)).map(m => m.id));
+    updateSetting('allMailFolderIds', {
+      ...allMailFolderIds,
+      [activeAccountId]: ownMailboxes.filter(m => next.has(m.id)).map(m => m.id),
+    });
   };
+  // Name the account the selection applies to, but only when more than one is
+  // logged in (otherwise it's unambiguous).
+  const activeAccount = accounts.find(a => a.id === activeAccountId);
+  const allMailAccountHint = accounts.length > 1 && activeAccount
+    ? t('all_mail.account_hint', { account: activeAccount.displayName || activeAccount.email })
+    : null;
 
   return (
     <SettingsSection title={t('title')} description={t('description')}>
@@ -244,6 +257,9 @@ export function LayoutSettings() {
           <div>
             <div className="text-sm font-medium text-foreground">{t('all_mail.folders_label')}</div>
             <div className="text-xs text-muted-foreground">{t('all_mail.folders_description')}</div>
+            {allMailAccountHint && (
+              <div className="text-xs italic text-muted-foreground mt-0.5">{allMailAccountHint}</div>
+            )}
           </div>
           {ownMailboxes.length === 0 ? (
             <p className="text-xs text-muted-foreground">{t('all_mail.no_folders')}</p>

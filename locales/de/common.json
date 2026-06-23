@@ -919,6 +919,7 @@
         "description": "Show an \"All Mail\" entry above your folders that merges messages from across this account's folders into one list.",
         "folders_label": "Folders in All Mail",
         "folders_description": "Choose which folders are merged into the All Mail view.",
+        "account_hint": "Gilt für {account}.",
         "no_folders": "No folders available."
       },
       "colorful_sidebar_icons": {

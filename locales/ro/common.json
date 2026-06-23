@@ -922,6 +922,7 @@
         "description": "Afișați o intrare „Toate mesajele” deasupra folderelor, care reunește mesajele din toate folderele acestui cont într-o singură listă.",
         "folders_label": "Dosare în „Toate mesajele”",
         "folders_description": "Alegeți ce dosare să fie incluse în vizualizarea „Toate mesajele”.",
+        "account_hint": "Se aplică pentru {account}.",
         "no_folders": "Nu sunt disponibile foldere."
       },
       "colorful_sidebar_icons": {
