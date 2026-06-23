@@ -3099,7 +3099,15 @@ export default function Home() {
                     onReply={handleReply}
                     onReplyAll={handleReplyAll}
                     onForward={handleForward}
-                    onDelete={() => handleDelete()}
+                    onDelete={() => {
+                      // Deleting the open message returns to the list (Gmail-style),
+                      // not the next email. Deselect first so the store's
+                      // remove-and-advance sees no selection and doesn't auto-open
+                      // the next message; then delete the captured email.
+                      const target = selectedEmail;
+                      handleMobileBack();
+                      handleDelete(target);
+                    }}
                     onArchive={() => handleArchive()}
                     onToggleStar={handleToggleStar}
                     onSetColorTag={handleSetColorTag}
