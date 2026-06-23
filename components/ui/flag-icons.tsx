@@ -233,6 +233,18 @@ export function FlagRO(props: FlagProps) {
   );
 }
 
+/** Iran – Green, White, Red horizontal with emblem (simplified) */
+export function FlagIR(props: FlagProps) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 3" width={W} height={H} className={flagClass} {...props}>
+      <rect width="4" height="1" fill="#239F40" />
+      <rect y="1" width="4" height="1" fill="#fff" />
+      <rect y="2" width="4" height="1" fill="#DA0000" />
+      <circle cx="2" cy="1.5" r="0.3" fill="#DA0000" />
+    </svg>
+  );
+}
+
 /** Map locale codes to flag components */
 export const flagComponents: Record<string, (props: FlagProps) => ReactElement> = {
   cs: FlagCS,
@@ -254,4 +266,5 @@ export const flagComponents: Record<string, (props: FlagProps) => ReactElement> 
   tr: FlagTR,
   uk: FlagUA,
   zh: FlagCN,
+  fa: FlagIR,
 };

@@ -12,6 +12,7 @@ const languages = [
   { value: 'da', label: 'Dansk' },
   { value: 'de', label: 'Deutsch' },
   { value: 'en', label: 'English' },
+  { value: 'fa', label: 'فارسی' },
   { value: 'es', label: 'Español' },
   { value: 'fr', label: 'Français' },
   { value: 'it', label: 'Italiano' },
