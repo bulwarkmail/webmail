@@ -15,6 +15,7 @@ import { sanitizeSignatureHtml, sanitizeEmailHtml } from "@/lib/email-sanitizati
 import { buildReplySubject, buildForwardSubject } from "@/lib/subject-prefix";
 import { isFilePreviewable } from "@/lib/file-preview";
 import { buildQuotedHtmlBlock, serializeEditorContent } from "@/components/email/quoted-html";
+import { buildSignatureBlock } from "@/components/email/signature-block";
 import { emailHooks, contactHooks } from "@/lib/plugin-hooks";
 import type { OutgoingEmail, RecipientSuggestion } from "@/lib/plugin-types";
 import { useAuthStore } from "@/stores/auth-store";
@@ -188,11 +189,13 @@ type SignatureIdentityLike = {
   textSignature?: string;
 } | null | undefined;
 
-// Render the embedded signature for "above quote" mode. Bracketed with
-// `data-signature-block` marker paragraphs so we can swap the inner content
-// when the user switches identity without losing the surrounding draft or
-// quoted message. The markers are preserved through TipTap by the
-// StyledParagraph extension.
+// Render the embedded signature. Bracketed with `data-signature-block` marker
+// paragraphs so we can swap the inner content when the user switches identity
+// without losing the surrounding draft or quoted message. The markers are
+// preserved through TipTap by the StyledParagraph extension. The HTML
+// signature itself is wrapped in a SignatureBlock atom node so its inline
+// styling survives the editor (see signature-block.ts) instead of being
+// flattened by the schema.
 function buildEmbeddedSignatureHtml(
   identity: SignatureIdentityLike,
   options: { embed: boolean; separator: boolean }
@@ -203,7 +206,7 @@ function buildEmbeddedSignatureHtml(
     : `<p data-signature-block="start"></p>`;
   const endMarker = `<p data-signature-block="end"></p>`;
   if (identity?.htmlSignature) {
-    return `${startMarker}${sanitizeSignatureHtml(identity.htmlSignature)}${endMarker}`;
+    return `${startMarker}${buildSignatureBlock(sanitizeSignatureHtml(identity.htmlSignature))}${endMarker}`;
   }
   if (identity?.textSignature) {
     const escaped = identity.textSignature

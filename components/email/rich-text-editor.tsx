@@ -17,6 +17,7 @@ import { TableRow } from "@tiptap/extension-table-row";
 import { TableHeader } from "@tiptap/extension-table-header";
 import { TableCell } from "@tiptap/extension-table-cell";
 import { QuotedHtml, serializeEditorContent } from "@/components/email/quoted-html";
+import { SignatureBlock } from "@/components/email/signature-block";
 import { cn } from "@/lib/utils";
 import {
   Bold,
@@ -235,6 +236,10 @@ export function RichTextEditor({
       // Quoted/forwarded original email body - held verbatim as an atomic
       // node so layout-heavy HTML survives 1:1 (see quoted-html.ts).
       QuotedHtml,
+      // Identity signature - held verbatim as a non-editable atomic node so
+      // rich/branded signatures keep their inline styling in the editor and
+      // in the sent mail (see signature-block.ts).
+      SignatureBlock,
     ],
     content,
     editorProps: {
