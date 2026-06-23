@@ -137,6 +137,7 @@ interface SettingsState {
   markAsReadDelay: number; // milliseconds (0 = instant, -1 = never)
   deleteAction: DeleteAction;
   permanentlyDeleteJunk: boolean; // Permanently delete emails from junk/spam instead of moving to trash
+  returnToListAfterAction: boolean; // After delete / mark-unread in an open message, return to the list instead of opening the next message
   showPreview: boolean;
   mailLayout: MailLayout;
   emailsPerPage: number;
@@ -330,6 +331,7 @@ const DEFAULT_SETTINGS = {
   markAsReadDelay: 0, // Instant
   deleteAction: 'trash' as DeleteAction,
   permanentlyDeleteJunk: false,
+  returnToListAfterAction: true,
   showPreview: true,
   mailLayout: 'split' as MailLayout,
   emailsPerPage: 50,
@@ -533,6 +535,7 @@ export const useSettingsStore = create<SettingsState>()(
           firstDayOfWeek: state.firstDayOfWeek,
           markAsReadDelay: state.markAsReadDelay,
           deleteAction: state.deleteAction,
+          returnToListAfterAction: state.returnToListAfterAction,
           showPreview: state.showPreview,
           mailLayout: state.mailLayout,
           emailsPerPage: state.emailsPerPage,

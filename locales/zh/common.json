@@ -1226,6 +1226,10 @@
         "off": "关闭",
         "seconds": "{seconds} 秒",
         "unsupported": "当前账户未声明支持延迟发送。该设置仍会为其他账户保存。"
+      },
+      "return_to_list_after_action": {
+        "label": "Return to list after delete or mark unread",
+        "description": "After deleting or marking the open message unread, go back to the message list instead of opening the next message."
       }
     },
     "composer": {

@@ -3101,11 +3101,13 @@ export default function Home() {
                     onForward={handleForward}
                     onDelete={() => {
                       // Deleting the open message returns to the list (Gmail-style),
-                      // not the next email. Deselect first so the store's
-                      // remove-and-advance sees no selection and doesn't auto-open
-                      // the next message; then delete the captured email.
+                      // not the next email — unless the user turned the setting off.
+                      // Deselect first so the store's remove-and-advance sees no
+                      // selection and doesn't auto-open the next message.
                       const target = selectedEmail;
-                      handleMobileBack();
+                      if (useSettingsStore.getState().returnToListAfterAction) {
+                        handleMobileBack();
+                      }
                       handleDelete(target);
                     }}
                     onArchive={() => handleArchive()}
