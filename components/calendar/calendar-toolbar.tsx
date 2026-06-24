@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useTranslations, useFormatter } from "next-intl";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Plus, Upload, CalendarDays, Globe, ChevronDown, ArrowLeft, Menu } from "lucide-react";
-import { addDays, startOfWeek } from "date-fns";
+import { startOfWeek } from "date-fns";
 import { cn } from "@/lib/utils";
 import type { CalendarViewMode } from "@/stores/calendar-store";
 import type { Calendar } from "@/lib/jmap/types";
+import { useCalendarLocale } from "@/hooks/use-calendar-locale";
 
 interface CalendarToolbarProps {
   selectedDate: Date;
@@ -50,7 +51,14 @@ export function CalendarToolbar({
   onMenuClick,
 }: CalendarToolbarProps) {
   const t = useTranslations("calendar");
-  const formatter = useFormatter();
+  const {
+    weekStartsOn,
+    formatMonthYear,
+    formatMonthYearShort,
+    formatWeekRange,
+    formatWeekRangeShort,
+    formatFullDate,
+  } = useCalendarLocale();
   const views: CalendarViewMode[] = enableCalendarTasks
     ? ["month", "week", "day", "agenda", "tasks"]
     : ["month", "week", "day", "agenda"];
@@ -72,28 +80,22 @@ export function CalendarToolbar({
     switch (viewMode) {
       case "month":
         return isMobile
-          ? formatter.dateTime(selectedDate, { month: "short", year: "numeric" })
-          : formatter.dateTime(selectedDate, { month: "long", year: "numeric" });
+          ? formatMonthYearShort(selectedDate)
+          : formatMonthYear(selectedDate);
       case "week": {
-        const ws = startOfWeek(selectedDate, { weekStartsOn: firstDayOfWeek as 0 | 1 });
-        const we = addDays(ws, 6);
-        if (isMobile) {
-          return `${formatter.dateTime(ws, { month: "short", day: "numeric" })} – ${formatter.dateTime(we, { day: "numeric" })}`;
-        }
-        const sameMonth = ws.getMonth() === we.getMonth();
-        if (sameMonth) {
-          return `${formatter.dateTime(ws, { month: "short", day: "numeric" })} – ${formatter.dateTime(we, { day: "numeric" })}, ${we.getFullYear()}`;
-        }
-        return `${formatter.dateTime(ws, { month: "short", day: "numeric" })} – ${formatter.dateTime(we, { month: "short", day: "numeric" })}, ${we.getFullYear()}`;
+        const ws = startOfWeek(selectedDate, { weekStartsOn });
+        return isMobile
+          ? formatWeekRangeShort(ws)
+          : formatWeekRange(ws);
       }
       case "day":
         return isMobile
-          ? formatter.dateTime(selectedDate, { weekday: "short", month: "short", day: "numeric" })
-          : formatter.dateTime(selectedDate, { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+          ? formatFullDate(selectedDate)
+          : formatFullDate(selectedDate);
       case "agenda":
         return isMobile
-          ? formatter.dateTime(selectedDate, { month: "short", year: "numeric" })
-          : formatter.dateTime(selectedDate, { month: "long", year: "numeric" });
+          ? formatMonthYearShort(selectedDate)
+          : formatMonthYear(selectedDate);
       case "tasks":
         return t("views.tasks");
     }

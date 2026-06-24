@@ -2846,7 +2846,19 @@
       "sep": "9월",
       "oct": "10월",
       "nov": "11월",
-      "dec": "12월"
+      "dec": "12월",
+      "far": "Farvardin",
+      "ord": "Ordibehesht",
+      "kho": "Khordad",
+      "tir": "Tir",
+      "mor": "Mordad",
+      "sha": "Shahrivar",
+      "meh": "Mehr",
+      "aba": "Aban",
+      "aza": "Azar",
+      "dey": "Dey",
+      "bah": "Bahman",
+      "esf": "Esfand"
     },
     "nav_open_menu": "메뉴 열기"
   },

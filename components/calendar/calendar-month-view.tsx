@@ -1,11 +1,8 @@
 "use client";
 
 import { useMemo, useState, useCallback, type DragEvent } from "react";
-import { useTranslations, useFormatter } from "next-intl";
-import {
-  startOfMonth, endOfMonth, startOfWeek, endOfWeek,
-  eachDayOfInterval, isSameDay, isSameMonth, isToday, format, parseISO,
-} from "date-fns";
+import { useTranslations } from "next-intl";
+import { format, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
 import { EventCard } from "./event-card";
 import { buildWeekSegments, getEventDayBounds, getPrimaryCalendarId } from "@/lib/calendar-utils";
@@ -14,6 +11,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import { useCalendarStore } from "@/stores/calendar-store";
 import type { PendingEventPreview } from "./event-modal";
 import { toast } from "@/stores/toast-store";
+import { useCalendarLocale } from "@/hooks/use-calendar-locale";
 
 interface CalendarMonthViewProps {
   selectedDate: Date;
@@ -47,16 +45,21 @@ export function CalendarMonthView({
   pendingPreview,
 }: CalendarMonthViewProps) {
   const t = useTranslations("calendar");
-  const intlFormatter = useFormatter();
-  const weekStart = (firstDayOfWeek === 0 ? 0 : 1) as 0 | 1;
+  const {
+    weekStartsOn,
+    dayHeaderKeys,
+    getMonthGridDays,
+    checkIsToday,
+    checkIsSameMonth,
+    checkIsSameDay,
+    formatDayNumber,
+    formatFullDate,
+  } = useCalendarLocale();
 
-  const days = useMemo(() => {
-    const monthStart = startOfMonth(selectedDate);
-    const monthEnd = endOfMonth(selectedDate);
-    const gridStart = startOfWeek(monthStart, { weekStartsOn: weekStart });
-    const gridEnd = endOfWeek(monthEnd, { weekStartsOn: weekStart });
-    return eachDayOfInterval({ start: gridStart, end: gridEnd });
-  }, [selectedDate, weekStart]);
+  const days = useMemo(
+    () => getMonthGridDays(selectedDate),
+    [selectedDate, getMonthGridDays],
+  );
 
   const calendarMap = useMemo(() => {
     const map = new Map<string, Calendar>();
@@ -82,10 +85,6 @@ export function CalendarMonthView({
     });
     return map;
   }, [events]);
-
-  const dayHeaders = firstDayOfWeek === 0
-    ? ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const
-    : ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
 
   const weeks = useMemo(() => {
     const result: Date[][] = [];
@@ -141,9 +140,9 @@ export function CalendarMonthView({
   }, [t]);
 
   return (
-    <div className="flex flex-col flex-1 overflow-hidden" role="grid" aria-label={intlFormatter.dateTime(selectedDate, { month: "long", year: "numeric" })}>
+    <div className="flex flex-col flex-1 overflow-hidden" role="grid" aria-label={formatFullDate(selectedDate)}>
       <div className="grid grid-cols-7 border-b border-border" role="row">
-        {dayHeaders.map((d) => (
+        {dayHeaderKeys.map((d) => (
           <div key={d} role="columnheader" className={cn(
             "text-center text-xs font-medium text-muted-foreground py-2 border-r border-border last:border-r-0",
             isMobile && "py-1.5 text-[11px]"
@@ -161,12 +160,12 @@ export function CalendarMonthView({
           )} role="row" style={isMobile ? undefined : { minHeight: Math.max(100, 34 + rowCount * 22 + 8) }}>
             <div className="grid grid-cols-7 h-full">
             {week.map((day) => {
-              const inMonth = isSameMonth(day, selectedDate);
-              const selected = isSameDay(day, selectedDate);
-              const today = isToday(day);
+              const inMonth = checkIsSameMonth(day, selectedDate);
+              const selected = checkIsSameDay(day, selectedDate);
+              const today = checkIsToday(day);
               const key = format(day, "yyyy-MM-dd");
               const dayEvents = eventsByDate.get(key) || [];
-              const fullDateLabel = intlFormatter.dateTime(day, { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+              const fullDateLabel = formatFullDate(day);
 
               return (
                 <div
@@ -199,7 +198,7 @@ export function CalendarMonthView({
                         inMonth && !selected && !today && "font-medium"
                       )}
                     >
-                      {format(day, "d")}
+                      {formatDayNumber(day)}
                     </span>
                   </div>
                   {isMobile ? (
@@ -219,7 +218,7 @@ export function CalendarMonthView({
                       {dayEvents.length > 3 && (
                         <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/40" />
                       )}
-                      {pendingPreview && isSameDay(pendingPreview.start, day) && (
+                      {pendingPreview && checkIsSameDay(pendingPreview.start, day) && (
                         <span
                           className="w-1.5 h-1.5 rounded-full border border-dashed"
                           style={{ borderColor: calendarMap.get(pendingPreview.calendarId)?.color || "#3b82f6" }}
@@ -233,7 +232,7 @@ export function CalendarMonthView({
             </div>
 
             {!isMobile && pendingPreview && (() => {
-              const previewDayIdx = week.findIndex(d => isSameDay(d, pendingPreview.start));
+              const previewDayIdx = week.findIndex(d => checkIsSameDay(d, pendingPreview.start));
               if (previewDayIdx === -1) return null;
               const previewRow = rowCount;
               const cal = calendarMap.get(pendingPreview.calendarId);

@@ -1,24 +1,18 @@
 "use client";
 
 import { useState, useMemo, Fragment } from "react";
-import { useTranslations, useFormatter } from "next-intl";
+import { useTranslations } from "next-intl";
 import { ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
 import {
-  startOfMonth, endOfMonth, startOfWeek, endOfWeek,
   addMonths, subMonths, addYears, subYears, setMonth, setYear,
-  eachDayOfInterval, getMonth, getYear, getISOWeek, getWeek,
-  isSameDay, isSameMonth, isToday, format,
+  getISOWeek, getWeek, format,
 } from "date-fns";
 import { cn } from "@/lib/utils";
 import { getEventDayBounds } from "@/lib/calendar-utils";
 import type { CalendarEvent } from "@/lib/jmap/types";
+import { useCalendarLocale } from "@/hooks/use-calendar-locale";
 
 type PickerView = "days" | "months" | "years";
-
-const MONTH_LABELS = [
-  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-];
 
 interface MiniCalendarProps {
   selectedDate: Date;
@@ -40,17 +34,25 @@ export function MiniCalendar({
   showWeekNumbers = false,
 }: MiniCalendarProps) {
   const t = useTranslations("calendar");
-  const intlFormatter = useFormatter();
-  const weekStart = (firstDayOfWeek === 0 ? 0 : 1) as 0 | 1;
+  const {
+    weekStartsOn,
+    dayHeaderKeys,
+    getMonthGridDays,
+    checkIsToday,
+    checkIsSameMonth,
+    checkIsSameDay,
+    formatDayNumber,
+    formatMonthYear,
+    getMonth,
+    getYear,
+    monthLabelKeys,
+  } = useCalendarLocale();
   const [pickerView, setPickerView] = useState<PickerView>("days");
 
-  const days = useMemo(() => {
-    const monthStart = startOfMonth(displayMonth);
-    const monthEnd = endOfMonth(displayMonth);
-    const gridStart = startOfWeek(monthStart, { weekStartsOn: weekStart });
-    const gridEnd = endOfWeek(monthEnd, { weekStartsOn: weekStart });
-    return eachDayOfInterval({ start: gridStart, end: gridEnd });
-  }, [displayMonth, weekStart]);
+  const days = useMemo(
+    () => getMonthGridDays(displayMonth),
+    [displayMonth, getMonthGridDays],
+  );
 
   const eventDates = useMemo(() => {
     const set = new Set<string>();
@@ -67,20 +69,16 @@ export function MiniCalendar({
     return set;
   }, [events]);
 
-  const dayHeaders = firstDayOfWeek === 0
-    ? ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const
-    : ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
-
   // Compute week numbers for each row (one per 7-day chunk)
   const weekNumbers = useMemo(() => {
     if (!showWeekNumbers) return [];
     const nums: number[] = [];
     for (let i = 0; i < days.length; i += 7) {
       // Use the first day of each row to determine the week number
-      nums.push(weekStart === 1 ? getISOWeek(days[i]) : getWeek(days[i], { weekStartsOn: 0 }));
+      nums.push(weekStartsOn === 1 ? getISOWeek(days[i]) : getWeek(days[i], { weekStartsOn: 0 }));
     }
     return nums;
-  }, [days, showWeekNumbers, weekStart]);
+  }, [days, showWeekNumbers, weekStartsOn]);
 
   const currentYear = getYear(displayMonth);
   const currentMonth = getMonth(displayMonth);
@@ -116,7 +114,7 @@ export function MiniCalendar({
 
   const headerLabel =
     pickerView === "days"
-      ? intlFormatter.dateTime(displayMonth, { month: "long", year: "numeric" })
+      ? formatMonthYear(displayMonth)
       : pickerView === "months"
         ? String(currentYear)
         : `${decadeStart}\u2013${decadeStart + 9}`;
@@ -160,15 +158,15 @@ export function MiniCalendar({
           {showWeekNumbers && (
             <div className="text-center text-[10px] font-medium text-muted-foreground py-1 w-5" />
           )}
-          {dayHeaders.map((d) => (
+          {dayHeaderKeys.map((d) => (
             <div key={d} className="text-center text-[10px] font-medium text-muted-foreground py-1">
               {t(`days.${d}`)}
             </div>
           ))}
           {days.map((day, index) => {
-            const inMonth = isSameMonth(day, displayMonth);
-            const selected = isSameDay(day, selectedDate);
-            const today = isToday(day);
+            const inMonth = checkIsSameMonth(day, displayMonth);
+            const selected = checkIsSameDay(day, selectedDate);
+            const today = checkIsToday(day);
             const hasEvent = eventDates.has(format(day, "yyyy-MM-dd"));
             const isFirstDayOfRow = index % 7 === 0;
 
@@ -193,7 +191,7 @@ export function MiniCalendar({
                     selected && "bg-primary text-primary-foreground"
                   )}
                 >
-                  {format(day, "d")}
+                  {formatDayNumber(day)}
                   {hasEvent && !selected && (
                     <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary" />
                   )}
@@ -206,7 +204,7 @@ export function MiniCalendar({
 
       {pickerView === "months" && (
         <div className="grid grid-cols-3 gap-1 py-1">
-          {MONTH_LABELS.map((label, i) => {
+          {monthLabelKeys.map((labelKey, i) => {
             const isCurrentMonth = i === currentMonth && currentYear === getYear(new Date());
             const isSelected = i === getMonth(selectedDate) && currentYear === getYear(selectedDate);
             return (
@@ -220,7 +218,7 @@ export function MiniCalendar({
                   !isSelected && !isCurrentMonth && "hover:bg-muted"
                 )}
               >
-                {label}
+                {t(`months.${labelKey}`)}
               </button>
             );
           })}

@@ -91,6 +91,7 @@ export function LanguageSettings() {
           onChange={(value) => updateSetting('firstDayOfWeek', parseInt(value) as FirstDayOfWeek)}
           options={[
             { value: '1', label: tDays('monday') },
+            { value: '6', label: tDays('saturday') },
             { value: '0', label: tDays('sunday') },
           ]}
         />

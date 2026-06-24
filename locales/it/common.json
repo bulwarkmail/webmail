@@ -2846,7 +2846,19 @@
       "sep": "set",
       "oct": "ott",
       "nov": "nov",
-      "dec": "dic"
+      "dec": "dic",
+      "far": "Farvardin",
+      "ord": "Ordibehesht",
+      "kho": "Khordad",
+      "tir": "Tir",
+      "mor": "Mordad",
+      "sha": "Shahrivar",
+      "meh": "Mehr",
+      "aba": "Aban",
+      "aza": "Azar",
+      "dey": "Dey",
+      "bah": "Bahman",
+      "esf": "Esfand"
     },
     "nav_open_menu": "Apri menu"
   },

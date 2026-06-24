@@ -58,7 +58,7 @@ export function CalendarWeekView({
   const intlFormatter = useFormatter();
   const scrollRef = useRef<HTMLDivElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
-  const weekStart = (firstDayOfWeek === 0 ? 0 : 1) as 0 | 1;
+  const weekStart = (firstDayOfWeek === 0 ? 0 : firstDayOfWeek === 6 ? 6 : 1) as 0 | 1 | 6;
 
   const weekDays = useMemo(() => {
     const start = startOfWeek(selectedDate, { weekStartsOn: weekStart });

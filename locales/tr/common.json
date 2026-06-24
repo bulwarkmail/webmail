@@ -2665,7 +2665,19 @@
       "sep": "Eyl",
       "oct": "Eki",
       "nov": "Kas",
-      "dec": "Ara"
+      "dec": "Ara",
+      "far": "Farvardin",
+      "ord": "Ordibehesht",
+      "kho": "Khordad",
+      "tir": "Tir",
+      "mor": "Mordad",
+      "sha": "Shahrivar",
+      "meh": "Mehr",
+      "aba": "Aban",
+      "aza": "Azar",
+      "dey": "Dey",
+      "bah": "Bahman",
+      "esf": "Esfand"
     },
     "notifications": {
       "event_created": "Etkinlik oluşturuldu",

@@ -2665,7 +2665,19 @@
       "sep": "Sep",
       "oct": "Oct",
       "nov": "Nov",
-      "dec": "Dec"
+      "dec": "Dec",
+      "far": "Farvardin",
+      "ord": "Ordibehesht",
+      "kho": "Khordad",
+      "tir": "Tir",
+      "mor": "Mordad",
+      "sha": "Shahrivar",
+      "meh": "Mehr",
+      "aba": "Aban",
+      "aza": "Azar",
+      "dey": "Dey",
+      "bah": "Bahman",
+      "esf": "Esfand"
     },
     "notifications": {
       "event_created": "Event created",
