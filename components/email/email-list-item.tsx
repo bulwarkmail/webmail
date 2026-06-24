@@ -143,26 +143,24 @@ export function EmailListItem({ email, selected, onClick, onDoubleClick, onConte
         className={cn('px-4', isFocusedMailLayout ? 'flex items-center' : 'flex items-start')}
         style={{ gap: 'var(--density-item-gap)', paddingBlock: 'var(--density-item-py)' }}
       >
-        {/* Checkbox - only visible when in selection mode */}
-        {selectedEmailIds.size > 0 && (
-          <button
-            onClick={handleCheckboxClick}
-            className={cn(
-              "p-3 lg:p-1 rounded flex-shrink-0 transition-all duration-200",
-              !isFocusedMailLayout && 'mt-2',
-              "hover:bg-muted/50 hover:scale-110",
-              "active:scale-95",
-              "animate-in fade-in zoom-in-95 duration-150",
-              isChecked && "text-primary"
-            )}
-          >
-            {isChecked ? (
-              <CheckSquare className="w-4 h-4 animate-in zoom-in-50 duration-200" />
-            ) : (
-              <Square className="w-4 h-4 text-muted-foreground opacity-60 hover:opacity-100 transition-opacity" />
-            )}
-          </button>
-        )}
+        {/* Selection checkbox - always visible so selecting is discoverable and you
+            never have to enter "select mode" (which used to grab the first row). */}
+        <button
+          onClick={handleCheckboxClick}
+          className={cn(
+            "p-3 lg:p-1 rounded flex-shrink-0 transition-all duration-200",
+            !isFocusedMailLayout && 'mt-2',
+            "hover:bg-muted/50 hover:scale-110",
+            "active:scale-95",
+            isChecked && "text-primary"
+          )}
+        >
+          {isChecked ? (
+            <CheckSquare className="w-4 h-4 animate-in zoom-in-50 duration-200" />
+          ) : (
+            <Square className="w-4 h-4 text-muted-foreground opacity-60 hover:opacity-100 transition-opacity" />
+          )}
+        </button>
 
         {/* Unread indicator */}
         {isUnread && (
