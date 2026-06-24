@@ -2961,6 +2961,12 @@ export function EmailViewer({
      fit - the latter wraps header text to one character per line, which reads
      as 90deg-rotated vertical headers (issue #409). */
   html { overflow: hidden; height: auto !important; }
+  /* Some emails put height:100% on a full-bleed wrapper table/div (not html/body),
+     which - with body's overflow:hidden - clips the content to a sliver, and the
+     scrollHeight-based auto-resize then locks the iframe short (a Box.co.il
+     verification email rendered as a logo-only 150px strip). Neutralise the
+     full-height trick on any element so the body grows to its content. */
+  [style*="height:100%"], [style*="height: 100%"] { height: auto !important; }
   body { margin: 0; padding: ${bodyPadding}; overflow-x: auto; overflow-y: hidden; height: auto !important; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 14px; line-height: 1.6; color: #1a1a1a; background: #ffffff; word-wrap: break-word; overflow-wrap: break-word; }
   @media (max-width: 640px) { body { padding-left: ${mobileBodyPaddingX}; padding-right: ${mobileBodyPaddingX}; } }
   img { max-width: 100% !important; height: auto !important; }
@@ -3008,15 +3014,30 @@ export function EmailViewer({
       const doc = iframe.contentDocument;
       if (doc?.body) {
         // Auto-resize iframe to fit content
-        const resizeObserver = new ResizeObserver(() => {
-          const height = doc.documentElement.scrollHeight;
+        // Measure max(documentElement, body): a height:100% wrapper can leave
+        // documentElement.scrollHeight short while the real content lives in body.
+        const applyHeight = () => {
+          if (iframe.contentDocument !== doc) return; // navigated away; stale
+          const height = Math.max(doc.documentElement.scrollHeight, doc.body.scrollHeight);
           iframe.style.height = height + 'px';
           lastBodyHeightRef.current = height;
-        });
+        };
+        const resizeObserver = new ResizeObserver(applyHeight);
         resizeObserver.observe(doc.body);
-        const initialHeight = doc.documentElement.scrollHeight;
-        iframe.style.height = initialHeight + 'px';
-        lastBodyHeightRef.current = initialHeight;
+        applyHeight();
+        // The ResizeObserver only fires on body's border box; a content overflow
+        // that grows scrollHeight without resizing that box (e.g. a height:100%
+        // wrapper, or images that reflow the layout after onload) is otherwise
+        // missed and the iframe stays short. Re-measure on a fixed cadence over a
+        // short settle window, then stop — a self-clearing catch-all that does
+        // not depend on image load/error events firing (blocked images may fire
+        // neither). Cheap: ~12 scrollHeight reads, no early-stop heuristic to
+        // mis-trigger on a brief-stable-then-grow reflow.
+        const poll = window.setInterval(() => {
+          if (iframe.contentDocument !== doc) { window.clearInterval(poll); return; }
+          applyHeight();
+        }, 200);
+        window.setTimeout(() => window.clearInterval(poll), 2400);
         setIframeReady(true);
 
         // Make links open in new tab
