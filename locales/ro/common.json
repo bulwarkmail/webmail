@@ -565,7 +565,8 @@
       "add_to_contacts": "Adaugă la contacte",
       "copied": "Copiat!",
       "copy_failed": "Copierea a eșuat"
-    }
+    },
+    "send_now": "Send now"
   },
   "email_composer": {
     "read_receipt_on": "Solicitare confirmare de citire (faceți clic pentru a dezactiva)",

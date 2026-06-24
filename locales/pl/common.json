@@ -565,7 +565,8 @@
       "add_to_contacts": "Dodaj do kontaktów",
       "copied": "Skopiowano!",
       "copy_failed": "Nie udało się skopiować"
-    }
+    },
+    "send_now": "Send now"
   },
   "email_composer": {
     "read_receipt_on": "Zażądano potwierdzenia przeczytania (kliknij, aby wyłączyć)",

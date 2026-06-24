@@ -565,7 +565,8 @@
       "add_to_contacts": "Hozzáadás a névjegyekhez",
       "copied": "Másolva!",
       "copy_failed": "A másolás nem sikerült"
-    }
+    },
+    "send_now": "Send now"
   },
   "email_composer": {
     "read_receipt_on": "Olvasási visszaigazolás kérve (kattints a letiltáshoz)",

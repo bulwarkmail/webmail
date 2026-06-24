@@ -565,7 +565,8 @@
       "add_to_contacts": "Přidat do kontaktů",
       "copied": "Zkopírováno!",
       "copy_failed": "Kopírování se nezdařilo"
-    }
+    },
+    "send_now": "Send now"
   },
   "email_composer": {
     "read_receipt_on": "Vyžádáno potvrzení o přečtení (kliknutím vypnete)",

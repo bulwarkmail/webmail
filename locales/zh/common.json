@@ -565,7 +565,8 @@
       "add_to_contacts": "添加到联系人",
       "copied": "已复制！",
       "copy_failed": "复制失败"
-    }
+    },
+    "send_now": "Send now"
   },
   "email_composer": {
     "read_receipt_on": "已请求已读回执（点击以关闭）",

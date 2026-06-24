@@ -3515,7 +3515,17 @@ export function EmailViewer({
         )}
         {isScheduled && canCancelScheduled && (
           <>
-            <Button variant="default" size="sm" onClick={onCancelScheduled} className="sm:flex sm:h-8" title={t('cancel_scheduled_send')}>
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => onRescheduleScheduled?.(new Date(Date.now() + 1000).toISOString())}
+              className="sm:flex sm:h-8"
+              title={t('send_now')}
+            >
+              <Send className="w-4 h-4" />
+              {showToolbarLabels && <span className="hidden sm:inline text-sm">{t('send_now')}</span>}
+            </Button>
+            <Button variant="ghost" size="sm" onClick={onCancelScheduled} className="sm:flex sm:h-8" title={t('cancel_scheduled_send')}>
               <X className="w-4 h-4" />
               <span className="hidden sm:inline text-sm">{t('cancel_scheduled_send')}</span>
             </Button>
@@ -5029,6 +5039,7 @@ export function EmailViewer({
               <div className="flex items-center gap-2">
                 {canCancelScheduled && (
                   <>
+                    <Button size="sm" variant="default" onClick={() => onRescheduleScheduled?.(new Date(Date.now() + 1000).toISOString())}>{t('send_now')}</Button>
                     <Button size="sm" variant="outline" onClick={onCancelScheduled}>{t('cancel_scheduled_send')}</Button>
                     <Button
                       size="sm"

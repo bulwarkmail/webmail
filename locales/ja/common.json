@@ -565,7 +565,8 @@
       "add_to_contacts": "連絡先に追加",
       "copied": "コピーしました！",
       "copy_failed": "コピーに失敗しました"
-    }
+    },
+    "send_now": "Send now"
   },
   "email_composer": {
     "read_receipt_on": "開封確認を要求中（クリックで無効化）",

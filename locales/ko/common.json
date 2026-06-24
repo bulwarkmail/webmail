@@ -565,7 +565,8 @@
       "add_to_contacts": "연락처에 추가",
       "copied": "복사됨!",
       "copy_failed": "복사하지 못했습니다"
-    }
+    },
+    "send_now": "Send now"
   },
   "email_composer": {
     "read_receipt_on": "읽음 확인 요청됨 (클릭하여 해제)",

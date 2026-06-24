@@ -565,7 +565,8 @@
       "add_to_contacts": "Tilføj til kontakter",
       "copied": "Kopieret!",
       "copy_failed": "Kunne ikke kopiere"
-    }
+    },
+    "send_now": "Send now"
   },
   "email_composer": {
     "read_receipt_on": "Læsekvittering anmodet (klik for at deaktivere)",

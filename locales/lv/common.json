@@ -565,7 +565,8 @@
       "add_to_contacts": "Pievienot kontaktpersonām",
       "copied": "Nokopēts!",
       "copy_failed": "Neizdevās nokopēt"
-    }
+    },
+    "send_now": "Send now"
   },
   "email_composer": {
     "read_receipt_on": "Pieprasīts lasīšanas apstiprinājums (noklikšķiniet, lai atspējotu)",
