@@ -65,6 +65,25 @@ function htmlToPlainText(html: string): string {
   return htmlToPlainTextShared(html, { paragraphSpacing: true });
 }
 
+// Decode a base64/percent-encoded data: image URI into a File so it can be
+// uploaded as a real inline attachment (template images are stored as data:
+// URIs; without this they would ship as raw data: URIs and get stripped by
+// Gmail/Outlook).
+function dataUriToFile(uri: string, name: string): File | null {
+  const m = uri.match(/^data:([^;,]+)(;base64)?,([\s\S]*)$/);
+  if (!m) return null;
+  const mime = m[1] || 'application/octet-stream';
+  try {
+    const bytes = m[2]
+      ? Uint8Array.from(atob(m[3]), (c) => c.charCodeAt(0))
+      : new TextEncoder().encode(decodeURIComponent(m[3]));
+    const ext = (mime.split('/')[1] || 'png').split('+')[0];
+    return new File([bytes], name.includes('.') ? name : `${name}.${ext}`, { type: mime });
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Build a floating drag image showing the recipient's address, mirroring the
  * email-list drag preview so dragging a chip feels consistent. The element is
@@ -1079,7 +1098,40 @@ export function EmailComposer({
     }
   };
 
-  const handleTemplateSelect = useCallback((template: EmailTemplate, filledValues: Record<string, string>) => {
+  const handleImageUpload = useCallback(async (
+    file: File,
+  ): Promise<{ src: string; cid: string } | null> => {
+    if (!client) return null;
+    try {
+      const readAsDataUrl = new Promise<string | null>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve((e.target?.result as string) ?? null);
+        reader.onerror = () => resolve(null);
+        reader.readAsDataURL(file);
+      });
+      const [{ blobId }, dataUrl] = await Promise.all([
+        client.uploadBlob(file),
+        readAsDataUrl,
+      ]);
+      if (!dataUrl) throw new Error('Failed to read image as data URL');
+      const cid = `${generateUUID()}@webmail`;
+      inlineImagesRef.current.push({
+        cid,
+        blobId,
+        type: file.type || 'application/octet-stream',
+        name: file.name,
+        size: file.size,
+        dataUrl,
+      });
+      return { src: dataUrl, cid };
+    } catch (error) {
+      debug.error(`Failed to upload inline image ${file.name}:`, error);
+      toast.error(t('upload_failed', { filename: file.name }));
+      return null;
+    }
+  }, [client, t]);
+
+  const handleTemplateSelect = useCallback(async (template: EmailTemplate, filledValues: Record<string, string>) => {
     const filledSubject = Object.keys(filledValues).length > 0
       ? substitutePlaceholders(template.subject, filledValues)
       : template.subject;
@@ -1095,17 +1147,41 @@ export function EmailComposer({
           ? filledBody
           : `<p>${filledBody.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>')}</p>`);
 
+    // Register the template's inline data: images as real blob+cid attachments
+    // (via the same path as dropped images) and tag them data-cid, so the send
+    // path rewrites them to cid: refs. Otherwise they ship as raw data: URIs
+    // and are stripped by Gmail/Outlook.
+    let finalBody = bodyContent;
+    if (template.bodyIsHtml && !plainTextMode && client && bodyContent.includes('data:image/')) {
+      const doc = new DOMParser().parseFromString(`<body>${bodyContent}</body>`, 'text/html');
+      let changed = false;
+      for (const img of Array.from(doc.querySelectorAll('img'))) {
+        const src = img.getAttribute('src') || '';
+        if (!src.startsWith('data:image/') || img.getAttribute('data-cid')) continue;
+        const file = dataUriToFile(src, img.getAttribute('alt') || 'image');
+        if (!file) continue;
+        const uploaded = await handleImageUpload(file);
+        if (uploaded?.cid) {
+          img.setAttribute('data-cid', uploaded.cid);
+          changed = true;
+        }
+      }
+      if (changed) finalBody = doc.body.innerHTML;
+    }
+
     if (mode === 'compose') {
       setSubject(filledSubject);
       // Compose bodies carry the embedded signature (see
       // shouldEmbedSignatureInNewMail) and the send path assumes it stays
       // there, so replace only the message content, not the signature block.
+      // Use finalBody so the template's inline images (rewritten to cid) are
+      // preserved; in plain-text mode finalBody === bodyContent.
       if (plainTextMode) {
         setBody(shouldEmbedSignatureInNewMail
-          ? appendPlainTextSignature(bodyContent, signatureIdentity, { separator: signatureSeparatorEnabled })
-          : bodyContent);
+          ? appendPlainTextSignature(finalBody, signatureIdentity, { separator: signatureSeparatorEnabled })
+          : finalBody);
       } else {
-        setBody((prev) => spliceTemplateAboveSignature(prev, bodyContent));
+        setBody((prev) => spliceTemplateAboveSignature(prev, finalBody));
       }
       if (template.defaultRecipients?.to?.length) {
         setTo(template.defaultRecipients.to.map(parseRecipient));
@@ -1119,7 +1195,7 @@ export function EmailComposer({
         setShowBcc(true);
       }
     } else {
-      setBody((prev) => bodyContent + (plainTextMode ? '\n' : '') + prev);
+      setBody((prev) => finalBody + (plainTextMode ? '\n' : '') + prev);
     }
 
     if (template.identityId) {
@@ -1127,7 +1203,7 @@ export function EmailComposer({
     }
 
     setShowTemplatePicker(false);
-  }, [mode, plainTextMode, shouldEmbedSignatureInNewMail, signatureIdentity, signatureSeparatorEnabled]);
+  }, [mode, plainTextMode, client, handleImageUpload, shouldEmbedSignatureInNewMail, signatureIdentity, signatureSeparatorEnabled]);
 
   useEffect(() => {
     const handleTemplateKey = (e: KeyboardEvent) => {
@@ -1219,38 +1295,6 @@ export function EmailComposer({
     }
   }, [client, t]);
 
-  const handleImageUpload = useCallback(async (
-    file: File,
-  ): Promise<{ src: string; cid: string } | null> => {
-    if (!client) return null;
-    try {
-      const readAsDataUrl = new Promise<string | null>((resolve) => {
-        const reader = new FileReader();
-        reader.onload = (e) => resolve((e.target?.result as string) ?? null);
-        reader.onerror = () => resolve(null);
-        reader.readAsDataURL(file);
-      });
-      const [{ blobId }, dataUrl] = await Promise.all([
-        client.uploadBlob(file),
-        readAsDataUrl,
-      ]);
-      if (!dataUrl) throw new Error('Failed to read image as data URL');
-      const cid = `${generateUUID()}@webmail`;
-      inlineImagesRef.current.push({
-        cid,
-        blobId,
-        type: file.type || 'application/octet-stream',
-        name: file.name,
-        size: file.size,
-        dataUrl,
-      });
-      return { src: dataUrl, cid };
-    } catch (error) {
-      debug.error(`Failed to upload inline image ${file.name}:`, error);
-      toast.error(t('upload_failed', { filename: file.name }));
-      return null;
-    }
-  }, [client, t]);
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!event.target.files) return;
