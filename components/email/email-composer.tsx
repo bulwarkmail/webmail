@@ -11,7 +11,7 @@ import { debug } from "@/lib/debug";
 import { toast } from "@/stores/toast-store";
 import { useContextMenu } from "@/hooks/use-context-menu";
 import { ContextMenu, ContextMenuItem, ContextMenuSeparator } from "@/components/ui/context-menu";
-import { sanitizeSignatureHtml, sanitizeEmailHtml } from "@/lib/email-sanitization";
+import { sanitizeSignatureHtml, sanitizeEmailHtml, escapeHtml } from "@/lib/email-sanitization";
 import { buildReplySubject, buildForwardSubject } from "@/lib/subject-prefix";
 import { isFilePreviewable } from "@/lib/file-preview";
 import { buildQuotedHtmlBlock, serializeEditorContent } from "@/components/email/quoted-html";
@@ -344,9 +344,8 @@ export function EmailComposer({
 
       const date = replyTo.receivedAt ? formatDateTime(replyTo.receivedAt, timeFormat, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }) : "";
       const from = replyTo.from?.[0];
-      const fromStr = from ? `${from.name || from.email}` : tCommon('unknown');
-      // Forward "From:" shows the full sender incl. address; reply line keeps
-      // the bare name (reads naturally in the localized "On … wrote:" line).
+      // Forward "From:" and the reply "On … wrote:" line both show the full
+      // sender incl. address ("Name <email>"), like Gmail/Outlook (#482).
       const fromStrFull = from
         ? (from.name && from.email && from.name !== from.email
             ? `${from.name} <${from.email}>`
@@ -374,7 +373,7 @@ export function EmailComposer({
       if (mode === 'forward') {
         return `${prefix}${signatureBlock}\n\n${tQuote('forwarded_separator')}\n${tQuote('from_label')}: ${fromStrFull}\n${tQuote('date_label')}: ${date}\n${tQuote('subject_label')}: ${replyTo.subject || ''}\n\n${originalText}`;
       } else if (mode === 'reply' || mode === 'replyAll') {
-        return `${prefix}${signatureBlock}\n\n${tQuote('reply_line', { date, from: fromStr })}\n${quotedText}`;
+        return `${prefix}${signatureBlock}\n\n${tQuote('reply_line', { date, from: fromStrFull })}\n${quotedText}`;
       }
       return prefix;
     }
@@ -396,7 +395,7 @@ export function EmailComposer({
 
     const date = replyTo.receivedAt ? formatDateTime(replyTo.receivedAt, timeFormat, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }) : "";
     const from = replyTo.from?.[0];
-    const fromStr = from ? `${from.name || from.email}` : tCommon('unknown');
+    // Forward and reply quote lines both show the full "Name <email>" sender (#482).
     const fromStrFull = from
       ? (from.name && from.email && from.name !== from.email
           ? `${from.name} <${from.email}>`
@@ -431,9 +430,11 @@ export function EmailComposer({
 
     // Build quoted content as HTML
     if (replyTo.htmlBody && (mode === 'reply' || mode === 'replyAll' || mode === 'forward')) {
+      // HTML-escape user-controlled values: an unescaped sender "Name <email>"
+      // has its "<email>" eaten as a bogus HTML tag by the rich-text editor (#482).
       const quoteHeader = mode === 'forward'
-        ? `${tQuote('forwarded_separator')}<br>${tQuote('from_label')}: ${fromStrFull}<br>${tQuote('date_label')}: ${date}<br>${tQuote('subject_label')}: ${replyTo.subject || ''}<br><br>`
-        : `${tQuote('reply_line', { date, from: fromStr })}<br>`;
+        ? `${tQuote('forwarded_separator')}<br>${tQuote('from_label')}: ${escapeHtml(fromStrFull)}<br>${tQuote('date_label')}: ${escapeHtml(date)}<br>${tQuote('subject_label')}: ${escapeHtml(replyTo.subject || '')}<br><br>`
+        : `${tQuote('reply_line', { date: escapeHtml(date), from: escapeHtml(fromStrFull) })}<br>`;
       // Embed the original as a QuotedHtml island (verbatim, schema-free) so
       // its layout survives the editor round-trip. Sanitize first to strip
       // scripts/styles/head; cid rewrite afterwards so data-cid markers
@@ -447,9 +448,9 @@ export function EmailComposer({
     if (replyTo.body) {
       const escapedOriginal = replyTo.body.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
       if (mode === 'forward') {
-        return `${prefix}${signatureBlock}<br><br>${tQuote('forwarded_separator')}<br>${tQuote('from_label')}: ${fromStrFull}<br>${tQuote('date_label')}: ${date}<br>${tQuote('subject_label')}: ${replyTo.subject || ''}<br><br>${escapedOriginal}`;
+        return `${prefix}${signatureBlock}<br><br>${tQuote('forwarded_separator')}<br>${tQuote('from_label')}: ${escapeHtml(fromStrFull)}<br>${tQuote('date_label')}: ${escapeHtml(date)}<br>${tQuote('subject_label')}: ${escapeHtml(replyTo.subject || '')}<br><br>${escapedOriginal}`;
       } else if (mode === 'reply' || mode === 'replyAll') {
-        return `${prefix}${signatureBlock}<br><br>${tQuote('reply_line', { date, from: fromStr })}<br><blockquote style="margin:0 0 0 0.8ex;border-left:2px solid #ccc;padding-left:1ex">${escapedOriginal}</blockquote>`;
+        return `${prefix}${signatureBlock}<br><br>${tQuote('reply_line', { date: escapeHtml(date), from: escapeHtml(fromStrFull) })}<br><blockquote style="margin:0 0 0 0.8ex;border-left:2px solid #ccc;padding-left:1ex">${escapedOriginal}</blockquote>`;
       }
     }
     return prefix;

@@ -8,6 +8,7 @@
 
 import { formatDateTime } from "@/lib/utils";
 import { emailHooks } from "@/lib/plugin-hooks";
+import { escapeHtml } from "@/lib/email-sanitization";
 import type { QuoteHeader, QuoteHeaderContext } from "@/lib/plugin-types";
 
 // Localized label set the caller passes in. Labels live on the client where
@@ -62,10 +63,8 @@ function defaultHeader(args: BuildArgs): QuoteHeader {
       })
     : "";
   const from = email.from?.[0];
-  const fromStr = from ? `${from.name || from.email}` : unknownLabel;
-  // Forward header "From:" shows the full sender incl. address ("Name
-  // <email>"), like every mail client. The reply line keeps the bare name
-  // (reads more naturally in "On … wrote:").
+  // Both the forward "From:" line and the reply "On … wrote:" line show the
+  // full sender incl. address ("Name <email>"), like Gmail/Outlook (#482).
   const fromStrFull = from
     ? (from.name && from.email && from.name !== from.email
         ? `${from.name} <${from.email}>`
@@ -75,13 +74,19 @@ function defaultHeader(args: BuildArgs): QuoteHeader {
 
   if (mode === "forward") {
     const text = `${labels.forwardedSeparator}\n${labels.fromLabel}: ${fromStrFull}\n${labels.dateLabel}: ${date}\n${labels.subjectLabel}: ${subject}\n`;
-    const html = `<div>${labels.forwardedSeparator}<br>${labels.fromLabel}: ${fromStrFull}<br>${labels.dateLabel}: ${date}<br>${labels.subjectLabel}: ${subject}<br><br></div>`;
+    // Escape the interpolated values for the HTML variant: the sender string is
+    // "Name <email>", and the unescaped "<email>" would be parsed as an HTML tag
+    // by the rich-text composer and silently dropped (#482). Subject/name are
+    // likewise user-controlled. Label/separator strings are trusted i18n text.
+    const html = `<div>${labels.forwardedSeparator}<br>${labels.fromLabel}: ${escapeHtml(fromStrFull)}<br>${labels.dateLabel}: ${escapeHtml(date)}<br>${labels.subjectLabel}: ${escapeHtml(subject)}<br><br></div>`;
     return { html, text, wrapInBlockquote: false };
   }
 
-  const replyLine = labels.formatReplyLine({ date, from: fromStr });
-  const text = `${replyLine}\n`;
-  const html = `<div>${replyLine}<br></div>`;
+  const text = `${labels.formatReplyLine({ date, from: fromStrFull })}\n`;
+  // Escape the interpolated sender/date for the HTML reply line: the sender is
+  // now "Name <email>", and the unescaped "<email>" would be parsed as an HTML
+  // tag by the rich-text composer and dropped (#482). Label template is trusted.
+  const html = `<div>${labels.formatReplyLine({ date: escapeHtml(date), from: escapeHtml(fromStrFull) })}<br></div>`;
   return { html, text, wrapInBlockquote: true };
 }
 
