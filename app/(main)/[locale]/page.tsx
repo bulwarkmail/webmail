@@ -3118,6 +3118,12 @@ export default function Home() {
                     onMarkAsRead={async (emailId, read) => {
                       if (client) {
                         await markAsRead(client, emailId, read);
+                        // Marking the open message unread returns to the list
+                        // (Gmail-style, gated on returnToListAfterAction). Staying
+                        // in the reading pane would just re-mark it read on view.
+                        if (!read && useSettingsStore.getState().returnToListAfterAction) {
+                          handleMobileBack();
+                        }
                       }
                     }}
                     onDownloadAttachment={handleDownloadAttachment}
