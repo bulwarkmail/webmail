@@ -628,6 +628,11 @@
     },
     "use_template": "Template",
     "save_as_template": "Save as Template",
+    "text_direction": {
+      "toggle": "Toggle text direction (LTR / RTL)",
+      "ltr": "Left-to-right",
+      "rtl": "Right-to-left"
+    },
     "validation": {
       "recipient_required": "Add a recipient to send",
       "subject_required": "Add a subject",
