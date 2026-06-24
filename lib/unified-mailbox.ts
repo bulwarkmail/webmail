@@ -119,16 +119,19 @@ export async function fetchUnifiedEmails(
 
     const { account, result } = outcome.value;
 
-    // Decorate each email with the source account info.
-    for (const email of result.emails) {
-      email.accountId = account.accountId;
-      email.accountLabel = account.accountLabel;
-      email.sourceClientAccountId = account.clientAccountId;
-      email.sourceAccountId = account.jmapAccountId;
-      email.sourceFolder = resolveSourceFolderName(email, account.mailboxes);
-    }
+    // Decorate each email with the source account info. The per-account client
+    // returns shared object references; decorate shallow copies instead of
+    // mutating them in place so retained callers/snapshots aren't corrupted.
+    const decorated = result.emails.map((email) => ({
+      ...email,
+      accountId: account.accountId,
+      accountLabel: account.accountLabel,
+      sourceClientAccountId: account.clientAccountId,
+      sourceAccountId: account.jmapAccountId,
+      sourceFolder: resolveSourceFolderName(email, account.mailboxes),
+    }));
 
-    mergedEmails = mergedEmails.concat(result.emails);
+    mergedEmails = mergedEmails.concat(decorated);
     totalSum += result.total;
     if (result.hasMore) {
       anyHasMore = true;
@@ -247,14 +250,16 @@ async function fanOutUnifiedQuery(
   for (const outcome of results) {
     if (outcome.status !== 'fulfilled' || outcome.value === null) continue;
     const { account, result } = outcome.value;
-    for (const email of result.emails) {
-      email.accountId = account.accountId;
-      email.accountLabel = account.accountLabel;
-      email.sourceClientAccountId = account.clientAccountId;
-      email.sourceAccountId = account.jmapAccountId;
-      email.sourceFolder = resolveSourceFolderName(email, account.mailboxes);
-    }
-    mergedEmails = mergedEmails.concat(result.emails);
+    // Decorate shallow copies, not the shared client-returned objects.
+    const decorated = result.emails.map((email) => ({
+      ...email,
+      accountId: account.accountId,
+      accountLabel: account.accountLabel,
+      sourceClientAccountId: account.clientAccountId,
+      sourceAccountId: account.jmapAccountId,
+      sourceFolder: resolveSourceFolderName(email, account.mailboxes),
+    }));
+    mergedEmails = mergedEmails.concat(decorated);
     totalSum += result.total;
     if (result.hasMore) anyHasMore = true;
   }
@@ -383,14 +388,16 @@ async function fanOutCrossQuery(
   for (const outcome of results) {
     if (outcome.status !== 'fulfilled' || outcome.value === null) continue;
     const { account, result } = outcome.value;
-    for (const email of result.emails) {
-      email.accountId = account.accountId;
-      email.accountLabel = account.accountLabel;
-      email.sourceClientAccountId = account.clientAccountId;
-      email.sourceAccountId = account.jmapAccountId;
-      email.sourceFolder = resolveSourceFolderName(email, account.mailboxes);
-    }
-    mergedEmails = mergedEmails.concat(result.emails);
+    // Decorate shallow copies, not the shared client-returned objects.
+    const decorated = result.emails.map((email) => ({
+      ...email,
+      accountId: account.accountId,
+      accountLabel: account.accountLabel,
+      sourceClientAccountId: account.clientAccountId,
+      sourceAccountId: account.jmapAccountId,
+      sourceFolder: resolveSourceFolderName(email, account.mailboxes),
+    }));
+    mergedEmails = mergedEmails.concat(decorated);
     totalSum += result.total;
     if (result.hasMore) anyHasMore = true;
   }

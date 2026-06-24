@@ -120,16 +120,17 @@ describe('fetchUnifiedEmails', () => {
     expect(result).toEqual({ emails: [], total: 0, hasMore: false, errors: new Map() });
   });
 
-  it('CHARACTERISATION: mutates the source email objects in place (shared reference)', async () => {
+  it('does NOT mutate the source email objects (decorates copies)', async () => {
     const original = makeEmail('m1', '2026-01-01T00:00:00Z');
     const acc = makeAccount(
       { accountId: 'A', accountLabel: 'Label A', mailboxes: [makeMailbox({ role: 'inbox' })] },
       { getEmails: vi.fn(async (): Promise<FetchResult> => ({ emails: [original], total: 1, hasMore: false })) },
     );
-    await fetchUnifiedEmails([acc], 'inbox', 20, 0);
-    // The very object passed back by the client was mutated, not a copy.
-    expect(original.accountId).toBe('A');
-    expect(original.accountLabel).toBe('Label A');
+    const res = await fetchUnifiedEmails([acc], 'inbox', 20, 0);
+    // The returned email carries the account info, but the client's object is untouched.
+    expect(res.emails[0]).toMatchObject({ id: 'm1', accountId: 'A', accountLabel: 'Label A' });
+    expect('accountId' in original).toBe(false);
+    expect('accountLabel' in original).toBe(false);
   });
 });
 
