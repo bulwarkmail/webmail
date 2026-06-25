@@ -20,7 +20,7 @@ type ScheduledSubmissionMetadata = {
 
 const VIRTUAL_SCHEDULED_MAILBOX_ID = '__scheduled__';
 
-type PendingUndoSend = { submissionId: string; emailId?: string; sendAt: string; isSmime: boolean };
+type PendingUndoSend = { submissionId: string; emailId?: string; identityId?: string; sendAt: string; isSmime: boolean };
 
 interface EmailStore {
   emails: Email[];
@@ -1196,7 +1196,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       set({
         isLoading: false,
         pendingUndoSend: result.scheduled && result.emailSubmissionId && result.sendAt
-          ? { submissionId: result.emailSubmissionId, emailId: result.emailId, sendAt: result.sendAt, isSmime: false }
+          ? { submissionId: result.emailSubmissionId, emailId: result.emailId, identityId, sendAt: result.sendAt, isSmime: false }
           : get().pendingUndoSend,
       });
       return result;
@@ -1220,7 +1220,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       set({
         isLoading: false,
         pendingUndoSend: result.scheduled && result.emailSubmissionId && result.sendAt
-          ? { submissionId: result.emailSubmissionId, emailId: result.emailId, sendAt: result.sendAt, isSmime: true }
+          ? { submissionId: result.emailSubmissionId, emailId: result.emailId, identityId, sendAt: result.sendAt, isSmime: true }
           : get().pendingUndoSend,
       });
       return result;

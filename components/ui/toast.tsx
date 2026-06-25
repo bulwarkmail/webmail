@@ -21,6 +21,7 @@ export interface Toast {
   onClick?: () => void;
   icon?: React.ReactNode;
   action?: ToastAction;
+  secondaryAction?: ToastAction;
 }
 
 interface ToastProps {
@@ -117,25 +118,48 @@ export function ToastItem({ toast, onClose }: ToastProps) {
           {toast.message && (
             <p className="text-[12px] mt-1 text-muted-foreground leading-snug">{toast.message}</p>
           )}
-          {toast.action && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                try {
-                  toast.action!.onClick();
-                  dismiss();
-                } catch {
-                  // Don't close toast on error so user can retry
-                }
-              }}
-              className={cn(
-                "mt-2 text-[12px] font-semibold px-2.5 py-1 rounded-md transition-colors",
-                "bg-foreground/5 hover:bg-foreground/10 dark:bg-white/10 dark:hover:bg-white/15",
-                "text-foreground"
+          {(toast.action || toast.secondaryAction) && (
+            <div className="mt-2 flex items-center gap-2">
+              {toast.secondaryAction && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    try {
+                      toast.secondaryAction!.onClick();
+                      dismiss();
+                    } catch {
+                      // Don't close toast on error so user can retry
+                    }
+                  }}
+                  className={cn(
+                    "text-[12px] font-semibold px-2.5 py-1 rounded-md transition-colors",
+                    "bg-primary text-primary-foreground hover:bg-primary/90"
+                  )}
+                >
+                  {toast.secondaryAction.label}
+                </button>
               )}
-            >
-              {toast.action.label}
-            </button>
+              {toast.action && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    try {
+                      toast.action!.onClick();
+                      dismiss();
+                    } catch {
+                      // Don't close toast on error so user can retry
+                    }
+                  }}
+                  className={cn(
+                    "text-[12px] font-semibold px-2.5 py-1 rounded-md transition-colors",
+                    "bg-foreground/5 hover:bg-foreground/10 dark:bg-white/10 dark:hover:bg-white/15",
+                    "text-foreground"
+                  )}
+                >
+                  {toast.action.label}
+                </button>
+              )}
+            </div>
           )}
         </div>
 

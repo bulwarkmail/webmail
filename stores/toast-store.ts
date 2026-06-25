@@ -38,6 +38,7 @@ export const useToastStore = create<ToastStore>((set) => ({
 interface ToastOptions {
   message?: string;
   action?: ToastAction;
+  secondaryAction?: ToastAction;
   duration?: number;
 }
 
@@ -48,6 +49,7 @@ function showToast(type: Toast["type"], title: string, options?: string | ToastO
     title,
     message: opts?.message,
     action: opts?.action,
+    secondaryAction: opts?.secondaryAction,
     duration: opts?.duration ?? defaultDuration,
   });
 }

@@ -1371,6 +1371,27 @@ export default function Home() {
 
     toast.success(t('email_viewer.scheduled_send_created'), {
       duration: undoDurationMs,
+      secondaryAction: (pending.emailId && pending.identityId)
+        ? {
+            label: t('email_viewer.send_now'),
+            onClick: () => {
+              void (async () => {
+                try {
+                  await client.rescheduleEmailSubmission(
+                    pending.submissionId,
+                    pending.emailId!,
+                    pending.identityId!,
+                    new Date(Date.now() + 1000).toISOString(),
+                  );
+                  clearPendingUndoSend();
+                  if (isScheduledView) await fetchScheduledEmails(client);
+                } catch (error) {
+                  console.error('Failed to send now:', error);
+                }
+              })();
+            },
+          }
+        : undefined,
       action: {
         label: t('email_viewer.undo_send'),
         onClick: () => {
