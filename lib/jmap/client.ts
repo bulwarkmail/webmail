@@ -1240,10 +1240,10 @@ export class JMAPClient implements IJMAPClient {
       email.authenticationResults = parseAuthenticationResults(value);
     }
 
-    for (const headerName of ['X-Spam-Status', 'X-Spam-Result', 'X-Rspamd-Score']) {
+    for (const headerName of ['X-Spam-Score', 'X-Spam-Status', 'X-Spam-Result', 'X-Rspamd-Score']) {
       if (!headersRecord[headerName]) continue;
       const value = Array.isArray(headersRecord[headerName]) ? headersRecord[headerName][0] : headersRecord[headerName];
-      const spamResult = parseSpamScore(value as string);
+      const spamResult = parseSpamScore((value as string).trim());
       if (spamResult) {
         email.spamScore = spamResult.score;
         email.spamStatus = spamResult.status;
