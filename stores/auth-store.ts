@@ -296,6 +296,29 @@ function scheduleRefresh(expiresIn: number, refreshFn: () => Promise<string | nu
   }
 }
 
+/**
+ * Derive the accountId a *connected* client actually belongs to, using the
+ * same canonicalisation as login (primary-identity email for OAuth, else the
+ * JMAP session username). Lets a caller detect a slot->token mapping that
+ * resolves to the wrong account before it surfaces as the wrong mailbox.
+ * Returns null when it can't determine the identity (treated as "don't block").
+ */
+export async function connectedAccountId(client: JMAPClient, serverUrl: string): Promise<string | null> {
+  try {
+    const jmapUsername = client.getUsername();
+    let canonical = jmapUsername;
+    try {
+      const { primaryIdentity } = loadIdentities(await client.getIdentities(), jmapUsername);
+      canonical = primaryIdentity?.email || jmapUsername;
+    } catch {
+      /* identities unavailable — fall back to the JMAP session username */
+    }
+    return generateAccountId(canonical, serverUrl);
+  } catch {
+    return null;
+  }
+}
+
 function clearRefreshTimer(accountId?: string): void {
   if (accountId) {
     const timer = refreshTimers.get(accountId);
@@ -1203,6 +1226,26 @@ export const useAuthStore = create<AuthState>()(
 
           set({ isLoading: false });
           // Redirect to login so the user can re-authenticate
+          replaceWindowLocation(getLocaleLoginPath());
+          return;
+        }
+
+        // GUARD: verify the connected session actually belongs to the target
+        // account before we bind it. A corrupted slot->token mapping (e.g.
+        // persisted client state left over from an older build, or any future
+        // slot desync) can hand back a *different* account's token; the
+        // connection then succeeds and we would silently show the wrong
+        // mailbox. On mismatch, drop the poisoned cookies for this slot and
+        // force a clean re-auth instead of surfacing someone else's mail.
+        const connectedId = await connectedAccountId(targetClient, targetAccount.serverUrl);
+        if (connectedId && connectedId !== accountId) {
+          debug.error(`switchAccount: slot ${targetAccount.cookieSlot} for ${accountId} resolved to ${connectedId} — forcing re-auth`);
+          clients.delete(accountId);
+          try { targetClient.disconnect(); } catch { /* noop */ }
+          apiFetch(`/api/auth/token?slot=${targetAccount.cookieSlot}`, { method: 'DELETE' }).catch(() => {});
+          apiFetch(`/api/auth/session?slot=${targetAccount.cookieSlot}`, { method: 'DELETE' }).catch(() => {});
+          accountStore.updateAccount(accountId, { isConnected: false, hasError: true, errorMessage: 'session_mismatch' });
+          set({ isLoading: false, error: 'connection_failed', activeAccountId: state.activeAccountId });
           replaceWindowLocation(getLocaleLoginPath());
           return;
         }
