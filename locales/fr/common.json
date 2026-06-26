@@ -1594,6 +1594,11 @@
         "description": "Voir les raccourcis clavier disponibles",
         "button": "Voir les raccourcis"
       },
+      "refresh_cache": {
+        "label": "Refresh cached data",
+        "description": "Reload contacts, calendars, and folders from the server. Keeps your accounts and sessions \u2014 fixes a stale or wrong view without signing out.",
+        "button": "Refresh"
+      },
       "reset_settings": {
         "label": "Réinitialiser les paramètres",
         "description": "Restaurer tous les paramètres par défaut",

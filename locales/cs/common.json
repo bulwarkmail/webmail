@@ -1594,6 +1594,11 @@
         "description": "Zobrazit dostupné klávesové zkratky",
         "button": "Zobrazit zkratky"
       },
+      "refresh_cache": {
+        "label": "Refresh cached data",
+        "description": "Reload contacts, calendars, and folders from the server. Keeps your accounts and sessions \u2014 fixes a stale or wrong view without signing out.",
+        "button": "Refresh"
+      },
       "reset_settings": {
         "label": "Resetovat nastavení",
         "description": "Obnovit všechna nastavení na výchozí hodnoty",

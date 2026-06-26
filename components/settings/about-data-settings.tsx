@@ -11,6 +11,7 @@ import { useUpdateStore } from '@/stores/update-store';
 import { ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getPathPrefix } from '@/lib/browser-navigation';
+import { clearCachedData } from '@/lib/clear-cached-data';
 import { SpamSiegeGame } from './spam-siege-game';
 
 const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || "0.0.0";
@@ -54,6 +55,7 @@ export function AboutDataSettings() {
     useSettingsStore();
   const { settingsSyncEnabled } = useConfig();
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [showRefreshConfirm, setShowRefreshConfirm] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { isFeatureEnabled } = usePolicyStore();
   const [showGame, setShowGame] = useState(false);
@@ -103,6 +105,15 @@ export function AboutDataSettings() {
       }
     };
     reader.readAsText(file);
+  };
+
+  const handleRefreshCache = () => {
+    if (showRefreshConfirm) {
+      clearCachedData(); // reloads the page
+    } else {
+      setShowRefreshConfirm(true);
+      setTimeout(() => setShowRefreshConfirm(false), 5000);
+    }
   };
 
   const handleReset = () => {
@@ -186,6 +197,16 @@ export function AboutDataSettings() {
           </>
         </SettingItem>
         )}
+
+        <SettingItem label={t('refresh_cache.label')} description={t('refresh_cache.description')}>
+          <Button
+            variant={showRefreshConfirm ? 'default' : 'outline'}
+            size="sm"
+            onClick={handleRefreshCache}
+          >
+            {showRefreshConfirm ? tCommon('yes') : t('refresh_cache.button')}
+          </Button>
+        </SettingItem>
 
         <SettingItem label={t('reset_settings.label')} description={t('reset_settings.description')}>
           <Button
