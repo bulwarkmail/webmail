@@ -178,13 +178,6 @@ interface SettingsState {
   requestReadReceiptDefault: boolean; // Pre-check "request read receipt" in the composer
   readReceiptResponse: ReadReceiptResponse; // How to respond to incoming read-receipt requests
 
-  // Identities
-  // Per-account default ("preferred primary") sender identity, keyed by
-  // username (the same key settings sync uses). A JMAP identity id is only
-  // meaningful within its own account, so this must be account-scoped. Synced
-  // so the choice survives a new browser / cleared site data (#507).
-  preferredIdentityIds: Record<string, string | null>;
-
   // Privacy & Security
   sessionTimeout: number; // minutes (0 = never)
   trustedSenders: string[]; // Email addresses that can load external content
@@ -257,6 +250,12 @@ interface SettingsState {
   // missing entry = "not configured" -> defaults to every no-role folder; an
   // explicit [] = "no folders". (Replaced the legacy global string[] | null.)
   allMailFolderIds: Record<string, string[]>;
+
+  // Per-account default sender identity, keyed by AccountEntry.id -> JMAP
+  // Identity id. Synced (and exported) so the chosen default survives clearing
+  // site data and follows the user across browsers/devices (issue #507). Kept
+  // per account because JMAP identity ids are account-scoped and would collide.
+  preferredIdentityIds: Record<string, string>;
 
   // Email Display
   disableThreading: boolean; // Show emails as individual messages instead of grouped by conversation
@@ -396,9 +395,6 @@ const DEFAULT_SETTINGS = {
   requestReadReceiptDefault: false,
   readReceiptResponse: 'ask' as ReadReceiptResponse,
 
-  // Identities
-  preferredIdentityIds: {} as Record<string, string | null>,
-
   // Privacy & Security
   sessionTimeout: 0, // Never
   trustedSenders: [] as string[],
@@ -452,6 +448,7 @@ const DEFAULT_SETTINGS = {
   // All Mail view (gated)
   enableAllMailView: false,
   allMailFolderIds: {} as Record<string, string[]>,
+  preferredIdentityIds: {} as Record<string, string>,
 
   enableCrossUnreadView: false,
   enableCrossStarredView: false,
@@ -609,7 +606,6 @@ export const useSettingsStore = create<SettingsState>()(
           signatureSeparatorEnabled: state.signatureSeparatorEnabled,
           requestReadReceiptDefault: state.requestReadReceiptDefault,
           readReceiptResponse: state.readReceiptResponse,
-          preferredIdentityIds: state.preferredIdentityIds,
           sessionTimeout: state.sessionTimeout,
           emailNotificationsEnabled: state.emailNotificationsEnabled,
           emailNotificationSound: state.emailNotificationSound,
@@ -637,6 +633,7 @@ export const useSettingsStore = create<SettingsState>()(
           includeGroupInUnified: state.includeGroupInUnified,
           enableAllMailView: state.enableAllMailView,
           allMailFolderIds: state.allMailFolderIds,
+          preferredIdentityIds: state.preferredIdentityIds,
           enableCrossUnreadView: state.enableCrossUnreadView,
           enableCrossStarredView: state.enableCrossStarredView,
           enableCrossAllView: state.enableCrossAllView,
@@ -694,8 +691,8 @@ export const useSettingsStore = create<SettingsState>()(
               if (key === 'allMailFolderIds' && !isPlainRecord(settings[key])) {
                 return;
               }
-              // Defensive: a non-record (e.g. a legacy scalar) would break the
-              // per-account map lookups - ignore it.
+              // Per-account map (accountId -> identityId); ignore any legacy
+              // global/non-record value rather than corrupting the map.
               if (key === 'preferredIdentityIds' && !isPlainRecord(settings[key])) {
                 return;
               }
@@ -877,14 +874,10 @@ export const useSettingsStore = create<SettingsState>()(
             get().importSettings(JSON.stringify(settings));
             isLoadingFromServer = false;
             syncLog('Settings loaded from server successfully');
-            // Re-apply the (possibly server-updated) per-account preferred
-            // sender identity to the already-loaded identities, so a fresh
-            // browser reflects the synced default without waiting for the next
-            // identity refresh. Dynamic import avoids a static import cycle
-            // (auth-store imports this store). (#507)
-            import('./auth-store')
-              .then(({ useAuthStore }) => useAuthStore.getState().applyPreferredIdentityOrdering())
-              .catch(() => {});
+            // The per-account preferred sender identity (#507) is re-applied by
+            // applyPreferredIdentity() in auth-store, invoked from the
+            // loadFromServer().finally() of every login / switch / restore path,
+            // so no extra hook is needed here.
             return true;
           }
           return false;
@@ -897,7 +890,7 @@ export const useSettingsStore = create<SettingsState>()(
     }),
     {
       name: 'settings-storage',
-      version: 5,
+      version: 6,
       migrate: (persisted, version) => {
         const state = persisted as Record<string, unknown>;
         if (version < 2 && state.listDensity) {
@@ -924,6 +917,11 @@ export const useSettingsStore = create<SettingsState>()(
         // "not configured" (defaults to all no-role folders).
         if (version < 5 || !isPlainRecord(state.allMailFolderIds)) {
           state.allMailFolderIds = {};
+        }
+        // v6: introduced the per-account default-identity map (issue #507).
+        // Coerce any missing/legacy value to an empty record.
+        if (version < 6 || !isPlainRecord(state.preferredIdentityIds)) {
+          state.preferredIdentityIds = {};
         }
         return state as unknown as SettingsState;
       },

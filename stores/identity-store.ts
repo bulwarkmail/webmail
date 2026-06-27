@@ -123,7 +123,14 @@ export const useIdentityStore = create<IdentityStore>()(
     }),
     {
       name: 'identity-storage',
-      // Only persist sub-addressing data, not identities (they're server-side)
+      // Only persist sub-addressing data, not identities (they're server-side).
+      // The default sender identity (`preferredPrimaryId`) is the per-account
+      // value for the *active* account; it is kept here purely as a local
+      // fallback so the choice survives a reload when settings sync is off.
+      // The durable, cross-device, exportable source of truth is the synced
+      // settings store, keyed per account (`preferredIdentityIds`), which is
+      // re-applied via applyPreferredIdentity() once server settings load and
+      // overrides this value per account (issue #507).
       partialize: (state) => ({
         subAddress: state.subAddress,
         preferredPrimaryId: state.preferredPrimaryId,

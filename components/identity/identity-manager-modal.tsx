@@ -9,6 +9,7 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { IdentityForm } from './identity-form';
 import { useIdentityStore } from '@/stores/identity-store';
 import { useAuthStore } from '@/stores/auth-store';
+import { useAccountStore } from '@/stores/account-store';
 import { useSettingsStore } from '@/stores/settings-store';
 
 function useSyncIdentities() {
@@ -207,15 +208,16 @@ export function IdentityManagerModal({ isOpen, onClose }: IdentityManagerModalPr
 
   const handleSetPrimary = useCallback((identity: Identity) => {
     setPreferredPrimary(identity.id);
-    // Persist to the synced settings (keyed by username, matching how
-    // loadIdentities reads it back) so the choice survives a new browser /
-    // cleared site data and reaches other devices (#507).
-    const username = useAuthStore.getState().username || '';
-    if (username) {
+    // Persist the choice per account in the synced settings store so it
+    // survives clearing site data, follows the user across devices, and shows
+    // up in exported settings (issue #507). JMAP identity ids are account-
+    // scoped, so the default is keyed by the active account.
+    const activeAccountId = useAccountStore.getState().activeAccountId;
+    if (activeAccountId) {
       const current = useSettingsStore.getState().preferredIdentityIds;
       useSettingsStore.getState().updateSetting('preferredIdentityIds', {
         ...current,
-        [username]: identity.id,
+        [activeAccountId]: identity.id,
       });
     }
     // Re-sort: move the preferred identity to the front

@@ -49,7 +49,6 @@ interface AuthState {
   clearError: () => void;
   syncIdentities: () => void;
   refreshIdentities: () => Promise<void>;
-  applyPreferredIdentityOrdering: () => void;
   getClientForAccount: (accountId: string) => JMAPClient | undefined;
   getAllConnectedClients: () => Map<string, JMAPClient>;
 }
@@ -198,25 +197,16 @@ function sortIdentities(rawIdentities: Identity[], username: string): Identity[]
 }
 
 function loadIdentities(rawIdentities: Identity[], username: string): { identities: Identity[]; primaryIdentity: Identity | null } {
-  const settings = useSettingsStore.getState();
-  const preferredMap = settings.preferredIdentityIds || {};
-  let preferredPrimaryId = preferredMap[username] ?? null;
-
-  // One-time migration: builds before #507 stored the preferred identity only
-  // in the browser-local identity-storage (never synced). If the synced
-  // settings have no entry for this account yet, adopt that legacy local value
-  // and write it into the synced settings so it persists across devices.
-  if (preferredPrimaryId == null) {
-    const legacy = useIdentityStore.getState().preferredPrimaryId;
-    if (legacy) {
-      preferredPrimaryId = legacy;
-      settings.updateSetting('preferredIdentityIds', { ...preferredMap, [username]: legacy });
-    }
-  }
+  // The synced per-account default sender identity (#507) is keyed by
+  // AccountEntry.id and re-applied by applyPreferredIdentity() once
+  // loadFromServer resolves (the accountId isn't known here). At load time we
+  // only honour the browser-local fallback (identity-storage) so the ordering
+  // is stable before - or entirely without - settings sync.
+  const preferredPrimaryId = useIdentityStore.getState().preferredPrimaryId;
 
   const identities = sortIdentities(rawIdentities, username);
 
-  // If user has a preferred primary, move it to front
+  // If a local preferred primary is set, move it to the front.
   if (preferredPrimaryId) {
     const idx = identities.findIndex((id) => id.id === preferredPrimaryId);
     if (idx > 0) {
@@ -227,10 +217,58 @@ function loadIdentities(rawIdentities: Identity[], username: string): { identiti
 
   const primaryIdentity = identities[0] ?? null;
   useIdentityStore.getState().setIdentities(identities);
-  // Mirror the resolved choice into the identity store so the identity-manager
-  // UI (the ⭐ marker) reflects the active account's preferred identity.
-  useIdentityStore.setState({ preferredPrimaryId });
   return { identities, primaryIdentity };
+}
+
+/**
+ * Re-apply the per-account default sender identity once synced settings are
+ * available (issue #507). The choice is stored server-side in the settings
+ * store (`preferredIdentityIds`, keyed by AccountEntry.id), so it can only be
+ * applied after `loadFromServer` resolves. It reorders the account's identities
+ * so the preferred one is primary - the composer defaults its `From` to
+ * identities[0]. No-op when nothing is configured for the account.
+ *
+ * Also performs the one-time migration of the pre-#507 browser-local default
+ * (identity-storage) into the synced per-account map, keyed by accountId.
+ *
+ * @param accountId The account to apply for; defaults to the active account.
+ */
+export function applyPreferredIdentity(accountId?: string | null): void {
+  const targetId = accountId ?? useAccountStore.getState().activeAccountId;
+  if (!targetId) return;
+
+  const idStore = useIdentityStore.getState();
+  // Only touch the live identity store when it currently holds this account's
+  // identities (true for the active account). Switching snapshots/restores the
+  // ordering per account, so a background account's order is restored later.
+  // The local fallback below also belongs to the active account, so gate first.
+  if (useAccountStore.getState().activeAccountId !== targetId) return;
+
+  let preferred = useSettingsStore.getState().preferredIdentityIds[targetId] ?? null;
+
+  // One-time migration: before #507 the default lived only in the browser-local
+  // identity-storage (never synced). If the synced map has no entry for this
+  // account yet, adopt that local value and persist it (keyed by accountId) so
+  // it follows the user across devices.
+  if (!preferred) {
+    const legacy = idStore.preferredPrimaryId;
+    if (legacy) {
+      preferred = legacy;
+      const current = useSettingsStore.getState().preferredIdentityIds;
+      useSettingsStore.getState().updateSetting('preferredIdentityIds', { ...current, [targetId]: legacy });
+    }
+  }
+  if (!preferred) return;
+
+  idStore.setPreferredPrimary(preferred);
+  const ids = [...idStore.identities];
+  const idx = ids.findIndex((i) => i.id === preferred);
+  if (idx > 0) {
+    const [p] = ids.splice(idx, 1);
+    ids.unshift(p);
+    idStore.setIdentities(ids);
+  }
+  useAuthStore.setState({ identities: ids, primaryIdentity: ids[0] ?? null });
 }
 
 function getLocaleLoginPath(): string {
@@ -638,6 +676,7 @@ export const useAuthStore = create<AuthState>()(
             if (!config.settingsSyncEnabled) return;
             useSettingsStore.getState().loadFromServer(username, serverUrl).finally(() => {
               useSettingsStore.getState().enableSync(username, serverUrl);
+              applyPreferredIdentity(accountId);
             });
           }).catch(() => {});
 
@@ -840,6 +879,7 @@ export const useAuthStore = create<AuthState>()(
             if (!config.settingsSyncEnabled) return;
             useSettingsStore.getState().loadFromServer(username, serverUrl).finally(() => {
               useSettingsStore.getState().enableSync(username, serverUrl);
+              applyPreferredIdentity(accountId);
             });
           }).catch(() => {});
 
@@ -977,6 +1017,7 @@ export const useAuthStore = create<AuthState>()(
             if (!cfg.settingsSyncEnabled) return;
             useSettingsStore.getState().loadFromServer(username, ssoServerUrl).finally(() => {
               useSettingsStore.getState().enableSync(username, ssoServerUrl);
+              applyPreferredIdentity(accountId);
             });
           }).catch(() => {});
 
@@ -1363,6 +1404,7 @@ export const useAuthStore = create<AuthState>()(
           if (!config.settingsSyncEnabled) return;
           useSettingsStore.getState().loadFromServer(targetAccount.username, targetAccount.serverUrl).finally(() => {
             useSettingsStore.getState().enableSync(targetAccount.username, targetAccount.serverUrl);
+            applyPreferredIdentity(targetAccount.id);
           });
         }).catch(() => {});
       },
@@ -1534,6 +1576,7 @@ export const useAuthStore = create<AuthState>()(
               if (!config.settingsSyncEnabled) return;
               useSettingsStore.getState().loadFromServer(targetAccount.username, targetAccount.serverUrl).finally(() => {
                 useSettingsStore.getState().enableSync(targetAccount.username, targetAccount.serverUrl);
+                applyPreferredIdentity(targetAccount.id);
               });
             }).catch(() => {});
             return;
@@ -1647,6 +1690,7 @@ export const useAuthStore = create<AuthState>()(
                   if (!config.settingsSyncEnabled) return;
                   useSettingsStore.getState().loadFromServer(state.username || '', state.serverUrl!).finally(() => {
                     useSettingsStore.getState().enableSync(state.username || '', state.serverUrl!);
+                    applyPreferredIdentity(accountId);
                   });
                 }).catch(() => {});
                 return;
@@ -1718,6 +1762,7 @@ export const useAuthStore = create<AuthState>()(
                   if (!config.settingsSyncEnabled) return;
                   useSettingsStore.getState().loadFromServer(username, serverUrl).finally(() => {
                     useSettingsStore.getState().enableSync(username, serverUrl);
+                    applyPreferredIdentity(accountId);
                   });
                 }).catch(() => {});
                 return;
@@ -1759,25 +1804,6 @@ export const useAuthStore = create<AuthState>()(
         const identities = identityState.identities;
         const primaryIdentity = identities[0] ?? null;
         set({ identities, primaryIdentity });
-      },
-
-      // Re-sort the already-loaded identities to honor the active account's
-      // synced preferred-primary identity, without a network round-trip. Used
-      // after settings load from the server so a fresh browser reflects the
-      // synced default (#507).
-      applyPreferredIdentityOrdering: () => {
-        const { username, identities } = get();
-        if (!username || identities.length === 0) return;
-        const preferredId = useSettingsStore.getState().preferredIdentityIds?.[username] ?? null;
-        useIdentityStore.setState({ preferredPrimaryId: preferredId });
-        if (!preferredId) return;
-        const idx = identities.findIndex((id) => id.id === preferredId);
-        if (idx <= 0) return; // already first, or not present
-        const reordered = [...identities];
-        const [preferred] = reordered.splice(idx, 1);
-        reordered.unshift(preferred);
-        useIdentityStore.getState().setIdentities(reordered);
-        set({ identities: reordered, primaryIdentity: reordered[0] ?? null });
       },
 
       refreshIdentities: async () => {
