@@ -18,6 +18,10 @@ import { notifyParent } from '@/lib/iframe-bridge';
 import { snapshotAccount, restoreAccount, clearAllStores, evictAccount, evictAll } from '@/lib/account-state-manager';
 import type { Identity } from '@/lib/jmap/types';
 
+import { aurionApi, aurionSession, aurionStorage, runInitialIndexing, verifyAndSyncRouting } from '@/lib/aurion';//AURION
+import type { SecurityMode } from 'aurion-crypto-sdk';// AURION
+import { cryptoWorkerBridge } from '@/lib/aurion/worker-bridge';//AURION
+
 interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
@@ -36,8 +40,9 @@ interface AuthState {
   connectionLost: boolean;
   activeAccountId: string | null;
   isDemoMode: boolean;
+  securityMode: SecurityMode;// AURION
 
-  login: (serverUrl: string, username: string, password: string, totp?: string, rememberMe?: boolean) => Promise<boolean>;
+  login: (serverUrl: string, username: string, password: string, totp?: string, rememberMe?: boolean, securityMode?: SecurityMode, mailPassword?: string) => Promise<boolean>;
   loginWithOAuth: (serverUrl: string, code: string, codeVerifier: string, redirectUri: string, serverId?: string) => Promise<boolean>;
   loginWithServerSso: (code: string, state: string) => Promise<boolean>;
   loginDemo: () => Promise<boolean>;
@@ -327,6 +332,7 @@ function clearAllRefreshTimers(): void {
  */
 function performFullLogout(set: (state: Partial<AuthState>) => void): void {
   useSettingsStore.getState().disableSync();
+  aurionSession.clearSession().catch((err) => debug.error('Aurion wipe error:', err));// AURION
 
   set({
     isAuthenticated: false,
@@ -376,18 +382,113 @@ export const useAuthStore = create<AuthState>()(
       connectionLost: false,
       activeAccountId: null,
       isDemoMode: false,
+      securityMode: 'Confort',//AURION
 
-      login: async (serverUrl, username, password, totp, rememberMe) => {
+     login: async (serverUrl, username, password, totp, rememberMe, securityMode = 'Confort', mailPassword?: string) => {//AURION
         const effectivePassword = totp ? `${password}$${totp}` : password;
         set({ isLoading: true, error: null, isRateLimited: false, rateLimitUntil: null });
 
         try {
-          const client = new JMAPClient(serverUrl, username, effectivePassword);
+          //
+          //
+          //-----------------------BEGIN AURION--------------
+          //
+          //
+          // Import des singletons Aurion exportés depuis lib/aurion/index.ts
+         
+
+          // ==========================================
+          // INTERCEPTION & LOGIQUE CIPHER AURION
+          // ==========================================
+          
+          // 1. Récupération des sels de dérivation depuis l'infrastructure Aurion Network
+          const salts = await aurionApi.getSalts(username);
+
+          // 2. Initialisation du Vault en RAM (calcul de h0)
+          // Si mode 'Confort', h0 est persisté de manière opaque dans IndexedDB via le storageDriver interne
+          await aurionSession.unlockVault(password); 
+
+          // 3. Récupération / Détermination du mot de passe JMAP effectif
+          let jmapPassword = '';
+
+          if (securityMode === 'Confort') {
+            // Le serveur renvoie les données de session nécessaires (contenant le jeton et l'état)
+            const authState = await aurionApi.login(username, password, salts.salt_server);
+            
+            // Extraction de la chaîne chiffrée provenant du backend
+            const encryptedMailCreds = (await aurionApi.getServerLogin()).server_password_encrypted;
+            
+            // Déchiffrement local à l'aide de la session active (qui utilise h0 en interne)
+            jmapPassword = await aurionSession.decryptMailCredentials(encryptedMailCreds);
+
+          } else if (securityMode === 'Parano') {
+            // Validation ZKP auprès du serveur Aurion pour authentifier la session
+            await aurionApi.login(username, password, salts.salt_server);
+
+            // CORRECTION : Utilisation de notre driver IndexedDB (aurionStorage) à la place de localStorage
+            const localCiphertext = await aurionStorage.getItem(`aurion_creds_${username}`);
+            
+            if (!localCiphertext) {
+              // 2. CAS DE L'ONBOARDING : Si le bloc n'existe pas, le mot de passe en clair est obligatoire
+              if (!mailPassword) {
+                throw new Error("PREMIER_ACCES_APPAREIL : Le mot de passe de messagerie est requis pour configurer cet appareil.");
+              }
+
+              // On utilise le mot de passe fourni en clair pour cette session
+              jmapPassword = mailPassword;
+
+              // 3. PERSISTANCE POUR LE FUTUR : On chiffre le mot de passe avec h0 (RAM) 
+              // pour créer le bloc local dans IndexedDB
+              const newCiphertext = await aurionSession.encryptMailCredentials(mailPassword);
+              await aurionStorage.setItem(`aurion_creds_${username}`, newCiphertext);
+              
+              debug.log('auth', 'Appareil provisionné avec succès en mode Parano (Bloc chiffré créé dans IndexedDB).');
+            } else {
+              // 4. CAS STANDARD : Le bloc existe, on le déchiffre normalement avec h0
+              jmapPassword = await aurionSession.decryptMailCredentials(localCiphertext);
+            }
+
+          } else if (securityMode === 'Extreme') {
+            // En mode Extreme, l'utilisateur doit fournir son mot de passe de messagerie JMAP en clair.
+            if (!mailPassword) {
+              throw new Error("Mail password is required for Extreme mode");
+            }
+            jmapPassword = mailPassword;
+
+            // Simple validation ZKP auprès du serveur Aurion pour initialiser le token réseau
+            await aurionApi.login(username, password, salts.salt_server);
+          }
+
+          // Gestion du TOTP JMAP si applicable sur le mot de passe effectif déchiffré
+          const effectiveJmapPassword = totp ? `${jmapPassword}$${totp}` : jmapPassword;
+          
+          // Connexion au serveur JMAP classique sous-jacent avec le vrai mot de passe de messagerie déchiffré
+          
+          
+          const client = new JMAPClient(serverUrl, username, effectiveJmapPassword);
           await client.connect();
+
+          // 4. Déchiffrement et montage du Keyring OpenPGP en RAM volatile
+          const keyContainer = await aurionApi.getEncryptedPrivateKey();
+          await aurionSession.decryptAndLoadPrivateKeys(keyContainer.keys, salts.salt_client);
+          await cryptoWorkerBridge.initWorkerSession(
+            aurionSession,
+                  keyContainer.keys, 
+                  salts.salt_client, 
+                  aurionSession.h0
+                );
+          
+          //
+          //
+          //-----------------------END AURION--------------
+          //
+          //
 
           // Resolve account/slot info up front so writes can start immediately.
           const accountStore = useAccountStore.getState();
           const accountId = generateAccountId(username, serverUrl);
+          await runInitialIndexing(client, accountId);// AURION
+          await verifyAndSyncRouting(); //AURION
           const cookieSlot = accountStore.hasAccount(username, serverUrl)
             ? (accountStore.getAccountById(accountId)?.cookieSlot ?? accountStore.getNextCookieSlot())
             : accountStore.getNextCookieSlot();
@@ -1262,6 +1363,18 @@ export const useAuthStore = create<AuthState>()(
           await get().loginDemo();
           return;
         }
+        // ==========================================
+        // 1. BEGIN AURION : SÉCURITÉ DES MODES VOLATILES (RAM SÉCHÉE APRÈS F5)
+        // ==========================================
+        const currentSecurityMode = get().securityMode;
+        
+        // Si on est en mode Parano/Extreme et que l'état crypto en RAM est mort (F5)
+        if ((currentSecurityMode === 'Parano' || currentSecurityMode === 'Extreme') && !aurionSession.isUnlocked()) {
+          debug.warn('auth', `RAM cleared after F5 in ${currentSecurityMode} mode. Forcing re-authentication.`);
+          get().logout();
+          return;
+        }
+        // ==========================================
 
         // Orphan-cookie adoption - when no accounts are registered but a
         // basic-auth session cookie is present (set by /api/auth/impersonate
@@ -1344,6 +1457,16 @@ export const useAuthStore = create<AuthState>()(
                   throw new Error(`Token refresh failed: ${res.status}`);
                 }
               } else {
+                // ==========================================
+                // 2. BEGIN AURION : AUTO-UNLOCK INTERNE (Mode Confort)
+                // ==========================================
+                if (currentSecurityMode === 'Confort' && !aurionSession.isUnlocked()) {
+                  const isVaultUnlocked = await aurionSession.tryAutoUnlock();
+                  if (!isVaultUnlocked) {
+                    throw new Error("Aurion Vault hardware key missing or corrupted in IndexedDB.");
+                  }
+                }
+                //==========================================
                 const res = await apiFetch(`/api/auth/session?slot=${account.cookieSlot}`, { method: 'PUT' });
                 if (res.ok) {
                   const { serverUrl, username, password } = await res.json();
@@ -1380,6 +1503,29 @@ export const useAuthStore = create<AuthState>()(
           const targetAccount = accountStore.getAccountById(targetId);
           if (targetClient && targetAccount) {
             accountStore.setActiveAccount(targetId);
+            // ==========================================
+            // 3. ANCHOR AURION : REMONTAGE DU KEYRING PGP DE L'UTILISATEUR ACTIF
+            // ==========================================
+            if (aurionSession.isUnlocked()) {
+              try {
+                const salts = await aurionApi.getSalts(targetAccount.username);
+                const keyContainer = await aurionApi.getEncryptedPrivateKey();
+                await aurionSession.decryptAndLoadPrivateKeys(keyContainer.keys, salts.salt_client);
+                debug.log('auth', `Aurion OpenPGP Keyring loaded successfully for ${targetAccount.username}`);
+                // avec le h0 pour qu'il fasse son propre déchiffrement isolé
+                await cryptoWorkerBridge.initWorkerSession(
+                  aurionSession,
+                  keyContainer.keys, 
+                  salts.salt_client, 
+                  aurionSession.h0
+                );
+                await runInitialIndexing(targetClient, targetId);//AURION
+                await verifyAndSyncRouting();//AURION
+              } catch (cryptoErr) {
+                debug.error('Failed to load Aurion PGP Keys during session restoration:', cryptoErr);
+              }
+            }
+            
             const { identities, primaryIdentity } = loadIdentities(await targetClient.getIdentities(), targetAccount.username);
             initializeFeatureStores(targetClient);
 
@@ -1664,6 +1810,7 @@ export const useAuthStore = create<AuthState>()(
             : undefined,
           rememberMe: state.rememberMe,
           activeAccountId: state.activeAccountId,
+          securityMode: state.securityMode//AURION
         };
       },
     }

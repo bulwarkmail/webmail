@@ -1,5 +1,8 @@
 "use client";
 
+import { aurionApi } from "@/lib/aurion"; //AURION
+import { ShieldAlert, Shield } from "lucide-react";//AURION
+
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { useTranslations } from "next-intl";
@@ -136,6 +139,7 @@ interface EmailComposerProps {
     references?: string[];
     delayedUntil?: string;
     requestReadReceipt?: boolean;
+    resolvedPublicKeys?: Record<string, string | null>;// AURION
   }) => void | Promise<void>;
   onScheduledSendCreated?: () => void | Promise<void>;
   onClose?: () => void;
@@ -170,6 +174,8 @@ interface EmailComposerProps {
     quoteHeaderText?: string;
     /** Mirror of QuoteHeader.wrapInBlockquote. Defaults to true. */
     quoteWrapInBlockquote?: boolean;
+    /**AURION  A map of resolved public keys for the recipients. */
+    resolvedPublicKeys?: Record<string, string | null>;
   };
 }
 
@@ -1506,6 +1512,15 @@ export function EmailComposer({
     if (isSendingRef.current) return;
     const ccAddresses = withInput(cc, ccInput);
     const bccAddresses = withInput(bcc, bccInput);
+    // BEGIN AURION
+    // 1. On filtre le keyCache pour ne garder que les chaînes de clés publiques (armored)
+const resolvedPublicKeys: Record<string, string> = {};
+Object.entries(keyCache).forEach(([email, val]) => {
+  if (typeof val === 'string' && val.trim().length > 0) {
+    resolvedPublicKeys[email] = val;
+  }
+});
+// END AURION
 
     if (!canSend) {
       const errors: { to?: boolean; subject?: boolean; body?: boolean } = {};
@@ -1838,6 +1853,7 @@ export function EmailComposer({
           references: threadingHeaders?.references,
           requestReadReceipt,
           delayedUntil: effectiveDelayedUntil,
+          resolvedPublicKeys// AURION
         });
 
         if (mode === 'reply' || mode === 'replyAll') {
@@ -1998,6 +2014,51 @@ export function EmailComposer({
       if (!e.repeat && composerClient?.hasDelayedSend()) openScheduleDialog();
     }
   };
+
+  // BEGIN AURION
+  // Cache local des statuts des clés : { "email@domain.com": true/false }
+// 1. Le cache stocke désormais : null (pas de clé), string (clé trouvée) ou undefined (pas encore testé)
+const [keyCache, setKeyCache] = useState<Record<string, string | null>>({});
+
+useEffect(() => {
+  const allEmails = [
+    ...(to || []),
+    ...(cc || []),
+    ...(bcc || []) // Optionnel : inclure les bcc si nécessaire
+  ]
+    .map(r => (typeof r === 'string' ? r : r.email))
+    .filter(Boolean)
+    .map(email => email.toLowerCase().trim());
+
+  if (allEmails.length === 0) return;
+
+  allEmails.forEach(async (email) => {
+    if (keyCache[email] !== undefined) return; // Déjà traité, on ignore
+
+    try {
+      const response = await aurionApi.getPublicKey(email);
+      // On suppose que response contient le bloc textuel de la clé (ex: response.publicKey ou response.armored)
+      // Ajuste 'response.publicKey' selon la structure réelle de ton Promise<PublicKeyResponse>
+      const armoredKey = response.armored_key || null; 
+      
+      setKeyCache(prev => ({ ...prev, [email]: armoredKey }));
+    } catch (err) {
+      // 404 ou erreur réseau = pas de clé disponible
+      setKeyCache(prev => ({ ...prev, [email]: null }));
+    }
+  });
+}, [to, cc, bcc]);
+
+// 2. Calcul des états globaux mis à jour pour la compatibilité avec la nouvelle structure
+const activeEmails = [...(to || []), ...(cc || [])].map(r => r.email?.toLowerCase().trim()).filter(Boolean);
+const totalRecipients = activeEmails.length;
+
+// Une clé existe si la valeur en cache est une chaîne de caractères non vide
+const encryptedCount = activeEmails.filter(email => typeof keyCache[email] === 'string').length;
+
+const isAllEncrypted = totalRecipients > 0 && encryptedCount === totalRecipients;
+const isPartiallyEncrypted = totalRecipients > 0 && encryptedCount > 0 && encryptedCount < totalRecipients;
+// END AURION
 
   return (
     <div ref={composerRootRef} className={cn("flex h-full bg-background", className)}>
@@ -2190,6 +2251,7 @@ export function EmailComposer({
             <span className="text-sm text-muted-foreground w-12 md:w-16 shrink-0">{t('to')}:</span>
             <RecipientChipInput
               chips={to}
+              keyCache={keyCache}// AURION
               onChipsChange={(next) => {
                 setTo(next);
                 if (validationErrors.to) setValidationErrors(prev => ({ ...prev, to: false }));
@@ -2270,6 +2332,7 @@ export function EmailComposer({
               <span className="text-sm text-muted-foreground w-12 md:w-16 shrink-0">{t('cc_label')}</span>
               <RecipientChipInput
                 chips={cc}
+                keyCache={keyCache}// AURION
                 onChipsChange={setCc}
                 inputText={ccInput}
                 onInputChange={setCcInput}
@@ -2295,6 +2358,7 @@ export function EmailComposer({
               <span className="text-sm text-muted-foreground w-12 md:w-16 shrink-0">{t('bcc_label')}</span>
               <RecipientChipInput
                 chips={bcc}
+                keyCache={keyCache}// AURION
                 onChipsChange={setBcc}
                 inputText={bccInput}
                 onInputChange={setBccInput}
@@ -2550,6 +2614,36 @@ export function EmailComposer({
           </div>
 
           {/* Right side - Discard + Send (desktop) */}
+          <div className="flex items-center gap-2 w-full justify-between"></div>
+          {/* AURION INDICATEUR GLOBAL DE CHIFFREMENT (Placé à gauche dans la barre) */}
+            <div className="flex items-center gap-2 mr-auto">
+              {totalRecipients > 0 && (
+                <div className={cn(
+                  "flex items-center gap-2 px-3 py-1 text-xs font-medium rounded-lg border shadow-sm transition-all duration-300",
+                  isAllEncrypted && "bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-950/40 dark:border-emerald-900 dark:text-emerald-300",
+                  isPartiallyEncrypted && "bg-amber-50 border-amber-200 text-amber-800 dark:bg-amber-950/40 dark:border-amber-900 dark:text-amber-300",
+                  !isAllEncrypted && !isPartiallyEncrypted && "bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-950/40 dark:border-blue-900 dark:text-blue-300"
+                )}>
+                  {isAllEncrypted ? (
+                    <>
+                      <ShieldCheck className="h-4 w-4 text-emerald-500 animate-pulse" />
+                      <span>Chiffrement E2E Actif ({encryptedCount}/{totalRecipients})</span>
+                    </>
+                  ) : isPartiallyEncrypted ? (
+                    <>
+                      <Shield className="h-4 w-4 text-amber-500" />
+                      <span>Flux Hybride : Stockage chiffré uniquement ({encryptedCount}/{totalRecipients} clés)</span>
+                    </>
+                  ) : (
+                    <>
+                      <Lock className="h-4 w-4 text-blue-500" />
+                      <span>Zéro-Knowledge local actif</span>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+
           <div className="flex items-center gap-2">
             <button
               type="button"
@@ -2839,6 +2933,7 @@ const AutocompleteDropdown = React.forwardRef<HTMLDivElement, {
 
 function RecipientChipInput({
   chips,
+  keyCache = {}, // Injection de la valeur par défaut pour éviter tout crash si indéfini
   onChipsChange,
   inputText,
   onInputChange,
@@ -2859,6 +2954,7 @@ function RecipientChipInput({
   onMoveChip,
 }: {
   chips: Recipient[];
+  keyCache?: Record<string, string | null>; // AURION
   onChipsChange: (chips: Recipient[]) => void;
   inputText: string;
   onInputChange: (text: string) => void;
@@ -3070,6 +3166,12 @@ function RecipientChipInput({
         {chips.map((chip, i) => {
           const isEditing = editingChip?.index === i;
           const chipDisplay = formatChipDisplay(chip);
+          // BEGIN AURION
+          // Calcul de la correspondance cryptographique du destinataire
+          const emailKey = chip.email?.toLowerCase().trim();
+          const hasKey = keyCache[emailKey] !== null && keyCache[emailKey] !== undefined;
+          const isResolved = keyCache[emailKey] !== undefined;
+          // END AURION
           return (
             <span
               key={`${chip.email}-${i}`}
@@ -3089,7 +3191,17 @@ function RecipientChipInput({
                 "inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-sm border border-border transition-colors",
                 isEditing
                   ? "bg-background ring-1 ring-ring"
-                  : "bg-secondary text-secondary-foreground hover:bg-accent cursor-grab active:cursor-grabbing",
+                  : cn(
+                      "cursor-grab active:cursor-grabbing",
+                      // BEGIN AURION
+                      // 🟢 Destinataire avec Clé Aurion (Vert émeraude)
+                      hasKey && "bg-emerald-500/10 text-emerald-700 border-emerald-500/30 hover:bg-emerald-500/20 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/20 dark:hover:bg-emerald-500/25",
+                      // ⚪ Destinataire sans Clé (Neutre classique)
+                      isResolved && !hasKey && "bg-secondary text-secondary-foreground hover:bg-accent",
+                      // ⏳ En cours de traitement/résolution API (Animation asynchrone)
+                      !isResolved && "bg-secondary/40 text-secondary-foreground/60 border-dashed animate-pulse"
+                      // END AURION
+                    ),
                 !isEditing && draggingIndex === i && "opacity-50"
               )}
               onContextMenu={isEditing ? undefined : (e) => handleContextMenu(e, i, chip)}
@@ -3122,7 +3234,13 @@ function RecipientChipInput({
                   data-bwignore="true"
                 />
               ) : (
-                <span className="truncate max-w-[200px]">{chipDisplay}</span>
+                // BEGIN AURION
+                <span className="flex items-center gap-1 truncate max-w-[200px]">
+                  {/* bouclier vert si la clé publique est présente */}
+                  {!isEditing && hasKey && <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />}
+                  <span className="truncate">{chipDisplay}</span>
+                </span>
+                // END AURION
               )}
               <button
                 type="button"

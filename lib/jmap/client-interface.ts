@@ -152,6 +152,7 @@ export interface IJMAPClient {
     delayedUntil?: string,
     envelopeMailFrom?: string,
     options?: { requestReadReceipt?: boolean },
+    resolvedPublicKeys?: Record<string, string | null>// AURION
   ): Promise<SendEmailResult>;
 
   importEmail(

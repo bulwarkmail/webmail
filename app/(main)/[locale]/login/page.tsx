@@ -18,6 +18,7 @@ import { type OAuthMetadata } from "@/lib/oauth/discovery";
 import { generateCodeVerifier, generateCodeChallenge, generateState } from "@/lib/oauth/pkce";
 import { useUpdateStore, selectBanner } from "@/stores/update-store";
 import type { PublicJmapServerEntry } from "@/lib/admin/jmap-servers";
+import type { SecurityMode } from 'aurion-crypto-sdk';// AURION
 
 function findServerByDomain(servers: PublicJmapServerEntry[], email: string | undefined): PublicJmapServerEntry | undefined {
   if (!email || !email.includes("@")) return undefined;
@@ -139,6 +140,7 @@ export default function LoginPage() {
   const [formData, setFormData] = useState({
     username: "",
     password: "",
+    securityMode: "Confort" as SecurityMode // AURION
   });
   const [jmapEndpoint, setJmapEndpoint] = useState("");
   const [selectedServerId, setSelectedServerId] = useState<string | null>(null);
@@ -155,6 +157,14 @@ export default function LoginPage() {
   const effectiveOauthIssuerUrl = selectedServer?.oauth?.issuerUrl || globalOauthIssuerUrl;
   const [totpCode, setTotpCode] = useState("");
   const [showTotpField, setShowTotpField] = useState(false);
+  const [mailPassword, setMailPassword] = useState("");// AURION
+  const [showMailPassword, setShowMailPassword] = useState(false);// AURION
+
+  // Ensure mail password field is shown when security mode is not 'confort'
+  useEffect(() => {
+    setShowMailPassword(formData.securityMode !== "Confort");
+  }, [formData.securityMode]);
+
   const [rememberMe, setRememberMe] = useState(false);
   const [sessionExpired, setSessionExpired] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -627,7 +637,9 @@ export default function LoginPage() {
       formData.username,
       formData.password,
       totpCode || undefined,
-      rememberMe
+      rememberMe,
+      formData.securityMode || undefined,//AURION
+      mailPassword || undefined//AURION
     );
 
     if (success) {
@@ -1141,6 +1153,43 @@ export default function LoginPage() {
                       </button>
                     </div>
                   </div>
+                  
+                  
+                  {/* MailPassword toggle / field  AURION*/}
+                  {/* Security mode select */}
+                  <div className="space-y-1.5">
+                    <label htmlFor="securityMode" className="block text-sm font-medium text-foreground">
+                      Mode de sécurité Aurion
+                    </label>
+                    <select
+                      id="securityMode"
+                      value={formData.securityMode}
+                      onChange={(e) => setFormData({ ...formData, securityMode: e.target.value as SecurityMode })}
+                      className="w-full h-8 text-sm rounded-md border border-input bg-background px-3 text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
+                    >
+                      <option value="Confort">Confort</option>
+                      <option value="Parano">Parano</option>
+                      <option value="Extreme">Extreme</option>
+                    </select>
+                  </div>
+                  {showMailPassword && (
+                  
+                    <div className="space-y-1.5">
+                      <label htmlFor="mailPassword" className="block text-sm font-medium text-foreground">
+                        Mail Server Password
+                      </label>
+                      <Input
+                        id="mailPassword"
+                        type={showPassword ? "text" : "password"}
+                        value={mailPassword}
+                        onChange={(e) => setMailPassword(e.target.value)}
+                        className="h-11 px-3.5 pr-11 bg-muted/40 border-border/60 rounded-xl focus:bg-background focus:border-primary/50 transition-all duration-200"
+                        placeholder={t("password_placeholder")}
+                        required
+                        autoComplete="current-password"
+                      />
+                    </div>
+                  )}
 
                   {/* 2FA toggle / field */}
                   {!showTotpField ? (

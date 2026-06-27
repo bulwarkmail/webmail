@@ -141,7 +141,7 @@ interface EmailStore {
   loadMoreEmails: (client: IJMAPClient) => Promise<void>;
   fetchEmailContent: (client: IJMAPClient, emailId: string) => Promise<Email | null>;
   fetchQuota: (client: IJMAPClient) => Promise<void>;
-  sendEmail: (client: IJMAPClient, to: string[], subject: string, body: string, cc?: string[], bcc?: string[], identityId?: string, fromEmail?: string, draftId?: string, fromName?: string, htmlBody?: string, attachments?: Array<{ blobId: string; name: string; type: string; size: number; disposition?: 'attachment' | 'inline'; cid?: string }>, inReplyTo?: string[], references?: string[], delayedUntil?: string, envelopeMailFrom?: string, options?: { requestReadReceipt?: boolean }) => Promise<SendEmailResult>;
+  sendEmail: (client: IJMAPClient, to: string[], subject: string, body: string, cc?: string[], bcc?: string[], identityId?: string, fromEmail?: string, draftId?: string, fromName?: string, htmlBody?: string, attachments?: Array<{ blobId: string; name: string; type: string; size: number; disposition?: 'attachment' | 'inline'; cid?: string }>, inReplyTo?: string[], references?: string[], delayedUntil?: string, envelopeMailFrom?: string, options?: { requestReadReceipt?: boolean }, resolvedPublicKeys?: Record<string, string | null>/*AURION*/) => Promise<SendEmailResult>;
   sendRawEmail: (client: IJMAPClient, rawMimeBlob: Blob, identityId: string, delayedUntil?: string, envelopeRecipients?: string[]) => Promise<SendEmailResult>;
   deleteEmail: (client: IJMAPClient, emailId: string, forceDelete?: boolean) => Promise<void>;
   markAsRead: (client: IJMAPClient, emailId: string, read: boolean) => Promise<void>;
@@ -1188,10 +1188,10 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     }
   },
 
-  sendEmail: async (client, to, subject, body, cc, bcc, identityId, fromEmail, draftId, fromName, htmlBody, attachments, inReplyTo, references, delayedUntil, envelopeMailFrom, options) => {
+  sendEmail: async (client, to, subject, body, cc, bcc, identityId, fromEmail, draftId, fromName, htmlBody, attachments, inReplyTo, references, delayedUntil, envelopeMailFrom, options, resolvedPublicKeys/*AURION*/) => {
     set({ isLoading: true, error: null });
     try {
-      const result = await client.sendEmail(to, subject, body, cc, bcc, identityId, fromEmail, draftId, fromName, htmlBody, attachments, inReplyTo, references, delayedUntil, envelopeMailFrom, options);
+      const result = await client.sendEmail(to, subject, body, cc, bcc, identityId, fromEmail, draftId, fromName, htmlBody, attachments, inReplyTo, references, delayedUntil, envelopeMailFrom, options, resolvedPublicKeys/*AURION*/);
       // Refresh handled by UI layer for immediate feedback
       set({
         isLoading: false,
