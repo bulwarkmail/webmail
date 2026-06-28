@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
-import { Check, Plus, LogOut, Star, ChevronDown, AlertCircle } from "lucide-react";
+import { Check, Plus, LogOut, Star, ChevronDown, AlertCircle, GripVertical } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useAccountStore, type AccountEntry } from "@/stores/account-store";
 import { useAuthStore } from "@/stores/auth-store";
-import { getMaxAccounts } from "@/lib/account-utils";
+import { getMaxAccounts, sortDefaultFirst, reorderNonDefaultIds } from "@/lib/account-utils";
 import { cn } from "@/lib/utils";
 import { useRouter } from "@/i18n/navigation";
 import { Avatar } from "@/components/ui/avatar";
@@ -40,6 +40,7 @@ export function AccountSwitcher({ variant = "rail", className }: AccountSwitcher
 
   const accounts = useAccountStore((s) => s.accounts);
   const setDefaultAccount = useAccountStore((s) => s.setDefaultAccount);
+  const reorderAccounts = useAccountStore((s) => s.reorderAccounts);
   // Read activeAccountId from authStore so the selector matches the actually-loaded
   // session (primaryIdentity, JMAP client). accountStore.activeAccountId is a separate
   // persisted copy that can drift out of sync across hydration / partial persist writes.
@@ -113,6 +114,32 @@ export function AccountSwitcher({ variant = "rail", className }: AccountSwitcher
     setDefaultAccount(accountId);
   };
 
+  // Display order: default account pinned to the top, the rest reorderable.
+  const displayAccounts = useMemo(() => sortDefaultFirst(accounts), [accounts]);
+
+  // Drag-to-rearrange (non-default accounts only; the default stays pinned).
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [dragOverId, setDragOverId] = useState<string | null>(null);
+  const resetDrag = () => { setDragId(null); setDragOverId(null); };
+
+  const handleDragStart = (e: React.DragEvent, id: string) => {
+    setDragId(id);
+    e.dataTransfer.effectAllowed = "move";
+  };
+  const handleDragOver = (e: React.DragEvent, overId: string) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    if (overId !== dragOverId) setDragOverId(overId);
+  };
+  const handleDrop = (e: React.DragEvent, overId: string) => {
+    e.preventDefault();
+    if (dragId) {
+      const next = reorderNonDefaultIds(accounts, dragId, overId);
+      if (next) reorderAccounts(next);
+    }
+    resetDrag();
+  };
+
   // Show the account's own identity, not the preferred sending identity -
   // primaryIdentity can be an alias (e.g. info@korazo.net) that differs from
   // the actually logged-in account (info@linusrath.de).
@@ -167,15 +194,29 @@ export function AccountSwitcher({ variant = "rail", className }: AccountSwitcher
         >
           {/* Account List */}
           <div className="py-1 max-h-64 overflow-y-auto">
-            {accounts.map((account) => {
+            {displayAccounts.map((account) => {
               const isActive = account.id === activeAccountId;
+              const isDraggable = !account.isDefault && accounts.length > 2;
               return (
-                <button
+                <div
                   key={account.id}
+                  draggable={isDraggable}
+                  onDragStart={isDraggable ? (e) => handleDragStart(e, account.id) : undefined}
+                  onDragOver={isDraggable ? (e) => handleDragOver(e, account.id) : undefined}
+                  onDrop={isDraggable ? (e) => handleDrop(e, account.id) : undefined}
+                  onDragEnd={isDraggable ? resetDrag : undefined}
+                  className={cn(
+                    "group/acct relative",
+                    dragId === account.id && "opacity-50",
+                    dragOverId === account.id && dragId !== account.id && "border-t-2 border-primary"
+                  )}
+                >
+                <button
                   onClick={() => handleSwitch(account.id)}
                   className={cn(
                     "w-full flex items-start gap-3 px-3 py-2.5 text-left transition-colors",
-                    isActive ? "bg-accent/50" : "hover:bg-muted"
+                    isActive ? "bg-accent/50" : "hover:bg-muted",
+                    isDraggable && "pe-7"
                   )}
                   role="menuitem"
                   disabled={isActive}
@@ -215,6 +256,15 @@ export function AccountSwitcher({ variant = "rail", className }: AccountSwitcher
                     </div>
                   </div>
                 </button>
+                {isDraggable && (
+                  <span
+                    aria-hidden
+                    className="pointer-events-none absolute end-2 top-1/2 -translate-y-1/2 text-muted-foreground/50 opacity-0 transition-opacity group-hover/acct:opacity-100"
+                  >
+                    <GripVertical className="w-4 h-4" />
+                  </span>
+                )}
+                </div>
               );
             })}
           </div>

@@ -102,3 +102,41 @@ export function isHttp2Available(): boolean {
 export function getMaxAccounts(): number {
   return isHttp2Available() ? MAX_ACCOUNT_SLOTS : MAX_ACCOUNTS_HTTP1;
 }
+
+/** Minimal shape needed to order accounts (structural — avoids importing AccountEntry). */
+export interface OrderableAccount {
+  id: string;
+  isDefault: boolean;
+}
+
+/**
+ * Display order for the account switcher: the default account first, then the
+ * remaining accounts in their stored order. Pure — does not mutate the input.
+ */
+export function sortDefaultFirst<T extends OrderableAccount>(accounts: T[]): T[] {
+  const defaults = accounts.filter((a) => a.isDefault);
+  const rest = accounts.filter((a) => !a.isDefault);
+  return [...defaults, ...rest];
+}
+
+/**
+ * Compute the new full account-id order after dragging `dragId` onto `overId`.
+ * Default account(s) stay pinned to the front; only non-default accounts are
+ * reordered (`dragId` is inserted at `overId`'s position among them).
+ * Returns null when the move is a no-op or invalid (e.g. a default is involved).
+ */
+export function reorderNonDefaultIds(
+  accounts: OrderableAccount[],
+  dragId: string,
+  overId: string,
+): string[] | null {
+  if (dragId === overId) return null;
+  const defaults = accounts.filter((a) => a.isDefault).map((a) => a.id);
+  const nonDefault = accounts.filter((a) => !a.isDefault).map((a) => a.id);
+  const from = nonDefault.indexOf(dragId);
+  const to = nonDefault.indexOf(overId);
+  if (from < 0 || to < 0) return null;
+  const [moved] = nonDefault.splice(from, 1);
+  nonDefault.splice(to, 0, moved);
+  return [...defaults, ...nonDefault];
+}
