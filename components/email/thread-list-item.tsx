@@ -4,7 +4,7 @@ import React, { useCallback } from "react";
 import { formatDate, formatDateTime, stripInvisibleLeading } from "@/lib/utils";
 import { Email, ThreadGroup, ALL_MAIL_MAILBOX_ID } from "@/lib/jmap/types";
 import { cn } from "@/lib/utils";
-import { Avatar } from "@/components/ui/avatar";
+import { SelectableAvatar } from "@/components/email/selectable-avatar";
 import { Paperclip, Star, Circle, ChevronRight, ChevronDown, Loader2, MessageSquare, CheckSquare, Square, Reply, Forward, CalendarClock, Folder } from "lucide-react";
 import { useSettingsStore, KEYWORD_PALETTE } from "@/stores/settings-store";
 import { useUIStore } from "@/stores/ui-store";
@@ -75,6 +75,7 @@ interface SingleEmailItemProps {
 const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
   function SingleEmailItem({ email, selected, onClick, onDoubleClick, onContextMenu, showPreview, colorTag, onToggleStar, onMarkAsRead, onDelete, onArchive, onSetColorTag, onMarkAsSpam, onUndoSpam }, ref) {
     const t = useTranslations('email_viewer');
+    const tBatch = useTranslations('email_list.batch_actions');
     const isUnread = !email.keywords?.$seen;
     const isStarred = email.keywords?.$flagged;
     const isAnswered = email.keywords?.$answered;
@@ -221,12 +222,15 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
           )}
 
           {density !== 'extra-compact' && (
-            <Avatar
+            <SelectableAvatar
               name={sender?.name}
               email={sender?.email}
               size={isFocusedMailLayout ? "sm" : "md"}
               className="flex-shrink-0 shadow-sm"
               disableImages={hideJunkAvatarImages}
+              checked={isChecked}
+              onToggle={() => toggleEmailSelection(email.id)}
+              selectLabel={tBatch('select')}
             />
           )}
 
@@ -431,6 +435,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
   }, ref) {
     const t = useTranslations('threads');
     const tEmailViewer = useTranslations('email_viewer');
+    const tBatch = useTranslations('email_list.batch_actions');
     const showPreview = useSettingsStore((state) => state.showPreview);
     const density = useSettingsStore((state) => state.density);
     const mailLayout = useSettingsStore((state) => state.mailLayout);
@@ -515,13 +520,8 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
 
     const emailsToShow = expandedEmails || thread.emails;
 
-    const handleThreadCheckboxClick = (e: React.MouseEvent) => {
-      e.stopPropagation();
-      if (e.shiftKey) {
-        selectRangeEmails(latestEmail.id);
-        return;
-      }
-      // Toggle selection for all emails in this thread
+    // Toggle selection for all emails in this thread.
+    const toggleThreadSelection = () => {
       const allSelected = thread.emails.every(em => selectedEmailIds.has(em.id));
       const newSelection = new Set(selectedEmailIds);
       thread.emails.forEach(em => {
@@ -532,6 +532,15 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
         }
       });
       useEmailStore.setState({ selectedEmailIds: newSelection, lastSelectedEmailId: latestEmail.id });
+    };
+
+    const handleThreadCheckboxClick = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (e.shiftKey) {
+        selectRangeEmails(latestEmail.id);
+        return;
+      }
+      toggleThreadSelection();
     };
 
     const handleHeaderClick = (e: React.MouseEvent) => {
@@ -633,12 +642,15 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
 
             {density !== 'extra-compact' && (
               <div className="relative flex-shrink-0">
-                <Avatar
+                <SelectableAvatar
                   name={avatarPerson?.name}
                   email={avatarPerson?.email}
                   size={isFocusedMailLayout ? "sm" : "md"}
                   className="shadow-sm"
                   disableImages={hideJunkAvatarImages}
+                  checked={isChecked}
+                  onToggle={toggleThreadSelection}
+                  selectLabel={tBatch('select')}
                 />
                 {!isMobile && !isFocusedMailLayout && (
                   <button

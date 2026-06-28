@@ -5,7 +5,7 @@ import { useCallback } from "react";
 import { formatDate, stripInvisibleLeading } from "@/lib/utils";
 import { Email } from "@/lib/jmap/types";
 import { cn } from "@/lib/utils";
-import { Avatar } from "@/components/ui/avatar";
+import { SelectableAvatar } from "@/components/email/selectable-avatar";
 import { Paperclip, Star, Circle, CheckSquare, Square, Reply, Forward } from "lucide-react";
 import { useEmailStore } from "@/stores/email-store";
 import { useSettingsStore, KEYWORD_PALETTE } from "@/stores/settings-store";
@@ -34,6 +34,7 @@ interface EmailListItemProps {
 
 export function EmailListItem({ email, selected, onClick, onDoubleClick, onContextMenu, onToggleStar, onMarkAsRead, onDelete, onArchive, onSetColorTag, onMarkAsSpam, onUndoSpam }: EmailListItemProps) {
   const t = useTranslations('email_viewer');
+  const tBatch = useTranslations('email_list.batch_actions');
   const { selectedEmailIds, toggleEmailSelection, selectRangeEmails, selectedMailbox, mailboxes, clearSelection, isUnifiedView, unifiedRole } = useEmailStore();
   const showPreview = useSettingsStore((state) => state.showPreview);
   const density = useSettingsStore((state) => state.density);
@@ -180,12 +181,15 @@ export function EmailListItem({ email, selected, onClick, onDoubleClick, onConte
 
         {/* Avatar */}
         {density !== 'extra-compact' && (
-          <Avatar
+          <SelectableAvatar
             name={sender?.name}
             email={sender?.email}
             size={isFocusedMailLayout ? "sm" : "md"}
             className="flex-shrink-0 shadow-sm"
             disableImages={hideJunkAvatarImages}
+            checked={isChecked}
+            onToggle={() => toggleEmailSelection(email.id)}
+            selectLabel={tBatch('select')}
           />
         )}
 
