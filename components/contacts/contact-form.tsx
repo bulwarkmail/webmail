@@ -525,6 +525,11 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
       mediaMap[photoKey] = { kind: "photo", uri: photoUri, mediaType: photoMediaType };
     }
 
+    // Set mediaVluae to null if we are removing media, so the server removes it
+    const hadMedia = !!contact?.media && Object.keys(contact.media).length > 0;
+    const mediaValue: Record<string, ContactMedia> | null | undefined =
+      Object.keys(mediaMap).length > 0 ? mediaMap : (hadMedia ? null : undefined);
+
     const data: Partial<ContactCard> = {
       name: { components: nameComponents, isOrdered: true },
       nicknames: nickname.trim() ? { n0: { name: nickname.trim() } } : undefined,
@@ -551,7 +556,7 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
       calendarUri: calendarUri.trim() || undefined,
       schedulingUri: schedulingUri.trim() || undefined,
       freeBusyUri: freeBusyUri.trim() || undefined,
-      media: Object.keys(mediaMap).length > 0 ? mediaMap : undefined,
+      media: mediaValue as Record<string, ContactMedia> | undefined,
       ...(selectedBookId ? { addressBookIds: { [selectedBookId]: true } } : {}),
     };
 
