@@ -132,6 +132,42 @@ describe('isOrganizer', () => {
     const event = makeEvent({ org: orgParticipant });
     expect(isOrganizer(event, [])).toBe(false);
   });
+
+  it('matches the event-level organizerCalendarAddress when no owner role is set', () => {
+    // Stalwart / imported self-organized events: the user's participant only
+    // carries `attendee`, the organizer lives in organizerCalendarAddress.
+    const event = makeEvent({
+      self: {
+        '@type': 'Participant',
+        name: 'Alice',
+        email: '',
+        roles: { attendee: true },
+        participationStatus: 'accepted',
+        sendTo: { imip: 'mailto:alice@example.com' },
+        kind: 'individual',
+      },
+    });
+    event.organizerCalendarAddress = 'mailto:alice@example.com';
+    expect(isOrganizer(event, ['alice@example.com'])).toBe(true);
+  });
+
+  it('matches the event-level organizerCalendarAddress case-insensitively', () => {
+    const event = makeEvent({ att1: attendeeParticipant });
+    event.organizerCalendarAddress = 'mailto:Alice@Example.com';
+    expect(isOrganizer(event, ['alice@example.com'])).toBe(true);
+  });
+
+  it('falls back to replyTo when organizerCalendarAddress is absent', () => {
+    const event = makeEvent({ att1: attendeeParticipant });
+    event.replyTo = { imip: 'mailto:alice@example.com' };
+    expect(isOrganizer(event, ['alice@example.com'])).toBe(true);
+  });
+
+  it('returns false when the event organizer is someone else', () => {
+    const event = makeEvent({ att1: attendeeParticipant });
+    event.organizerCalendarAddress = 'mailto:someoneelse@example.com';
+    expect(isOrganizer(event, ['alice@example.com'])).toBe(false);
+  });
 });
 
 describe('getUserParticipantId', () => {

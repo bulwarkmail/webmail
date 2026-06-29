@@ -35,12 +35,39 @@ function participantMatchesEmail(p: CalendarParticipant, lowerEmails: string[]):
   return false;
 }
 
+/**
+ * Collects the event-level organizer calendar address(es).
+ * Stalwart conveys the organizer via `organizerCalendarAddress` / `replyTo`
+ * rather than a participant `roles.owner` flag, so self-organized events
+ * imported from another server have no owner participant to match against.
+ */
+function getEventOrganizerEmails(event: CalendarEvent): string[] {
+  const emails: string[] = [];
+  if (event.organizerCalendarAddress) {
+    emails.push(event.organizerCalendarAddress.replace(/^mailto:/i, '').toLowerCase());
+  }
+  if (event.replyTo) {
+    for (const addr of Object.values(event.replyTo)) {
+      emails.push(addr.replace(/^mailto:/i, '').toLowerCase());
+    }
+  }
+  return emails.filter(Boolean);
+}
+
 export function isOrganizer(event: CalendarEvent, userEmails: string[]): boolean {
-  if (!event.participants) return false;
+  if (userEmails.length === 0) return false;
   const lower = userEmails.map(e => e.toLowerCase());
-  return Object.values(event.participants).some(p =>
-    p.roles?.owner && participantMatchesEmail(p, lower)
-  );
+
+  if (event.participants) {
+    const ownerMatch = Object.values(event.participants).some(p =>
+      p.roles?.owner && participantMatchesEmail(p, lower)
+    );
+    if (ownerMatch) return true;
+  }
+
+  // Fall back to the event-level organizer address (Stalwart / imported events
+  // mark the organizer here instead of via a participant `owner` role).
+  return getEventOrganizerEmails(event).some(email => lower.includes(email));
 }
 
 export function getUserParticipantId(event: CalendarEvent, userEmails: string[]): string | null {
