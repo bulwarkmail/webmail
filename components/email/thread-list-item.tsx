@@ -134,7 +134,11 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
 
     const handleCheckboxClick = (e: React.MouseEvent) => {
       e.stopPropagation();
-      toggleEmailSelection(email.id);
+      if (e.shiftKey) {
+        selectRangeEmails(email.id);
+      } else {
+        toggleEmailSelection(email.id);
+      }
     };
 
     const handleContextMenu = (e: React.MouseEvent) => {
@@ -513,6 +517,10 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
 
     const handleThreadCheckboxClick = (e: React.MouseEvent) => {
       e.stopPropagation();
+      if (e.shiftKey) {
+        selectRangeEmails(latestEmail.id);
+        return;
+      }
       // Toggle selection for all emails in this thread
       const allSelected = thread.emails.every(em => selectedEmailIds.has(em.id));
       const newSelection = new Set(selectedEmailIds);

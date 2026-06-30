@@ -87,7 +87,14 @@ export function EmailListItem({ email, selected, onClick, onDoubleClick, onConte
 
   const handleCheckboxClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    toggleEmailSelection(email.id);
+    if (e.shiftKey) {
+      // Shift-click extends the selection from the anchor to here, like
+      // shift-clicking the row (the checkbox stops propagation, so the
+      // row's shift handler never runs — replicate it here).
+      selectRangeEmails(email.id);
+    } else {
+      toggleEmailSelection(email.id);
+    }
   };
 
   const handleContextMenu = (e: React.MouseEvent) => {
