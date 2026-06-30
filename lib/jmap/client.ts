@@ -26,6 +26,9 @@ export class RateLimitError extends Error {
 
 // JMAP protocol types - these are intentionally flexible due to server variations
 interface JMAPSession {
+  // The authenticated login (JMAP spec Session.username) — server-confirmed,
+  // unlike the client-side constructor username or the sending identity.
+  username?: string;
   apiUrl: string;
   downloadUrl: string;
   uploadUrl?: string;
@@ -3410,6 +3413,14 @@ export class JMAPClient implements IJMAPClient {
 
   getUsername(): string {
     return this.username || this.session?.accounts?.[this.accountId]?.name || '';
+  }
+
+  // Server-confirmed authenticated login from the JMAP Session object. Use
+  // this (not getUsername(), which echoes the constructor arg, nor the
+  // sending identity) to verify a slot's token resolved to the expected
+  // account.
+  getSessionUsername(): string | undefined {
+    return this.session?.username;
   }
 
   supportsEmailSubmission(): boolean {

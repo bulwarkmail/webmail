@@ -1,52 +1,68 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { connectedAccountId } from '../auth-store';
-import { useIdentityStore } from '../identity-store';
+import { describe, it, expect } from 'vitest';
+import { connectedAccountCandidates } from '../auth-store';
 import type { Identity } from '@/lib/jmap/types';
 
-// Covers the make-or-break bit of the account-switch identity guard: the
-// connected session's accountId must be derived with the SAME canonicalisation
-// as login (primary-identity email for OAuth, where the JMAP session username
-// is often a preferred_username claim, not the address). Comparing the raw
-// JMAP username would both false-positive on OAuth and miss real desyncs.
+// The account-switch guard force-re-auths only when the connected session
+// matches NONE of its server-confirmed identifiers. accountId is generated
+// from the primary-identity email (OAuth) OR the login username (basic), so
+// the candidate set must cover both: the JMAP Session.username (authenticated
+// login) and the primary sending-identity email.
 
 const SERVER = 'https://mail.example.com';
 
-const fakeClient = (jmapUsername: string, identities: Identity[] | Error) =>
+const fakeClient = (opts: {
+  sessionUsername?: string;
+  constructorUsername?: string;
+  identities?: Identity[] | Error;
+}) =>
   ({
-    getUsername: () => jmapUsername,
+    getSessionUsername: () => opts.sessionUsername,
+    getUsername: () => opts.constructorUsername ?? '',
     getIdentities: async () => {
-      if (identities instanceof Error) throw identities;
-      return identities;
+      if (opts.identities instanceof Error) throw opts.identities;
+      return opts.identities ?? [];
     },
   }) as never;
 
 const id = (over: Partial<Identity> = {}): Identity => ({
-  id: 'id-1',
-  name: 'Real User',
-  email: 'real@example.com',
-  mayDelete: true,
-  ...over,
+  id: 'id-1', name: 'Real User', email: 'real@example.com', mayDelete: true, ...over,
 });
 
-describe('connectedAccountId (account-switch guard)', () => {
-  beforeEach(() => {
-    useIdentityStore.setState({ identities: [], preferredPrimaryId: null } as never);
+describe('connectedAccountCandidates (account-switch guard)', () => {
+  it('includes the primary-identity email (OAuth registers by email)', async () => {
+    const out = await connectedAccountCandidates(
+      fakeClient({ sessionUsername: 'preferred_user', identities: [id()] }), SERVER,
+    );
+    expect(out).toContain('real@example.com@mail.example.com');
   });
 
-  it('derives from the primary-identity EMAIL, not the JMAP session username', async () => {
-    // OAuth: JMAP username is a preferred_username claim, the real address lives
-    // on the identity. The id must be built from the email.
-    const result = await connectedAccountId(fakeClient('preferred_user', [id()]), SERVER);
-    expect(result).toBe('real@example.com@mail.example.com');
+  it('includes the session login username (basic auth registers by login)', async () => {
+    // support@ case: login is the email, but the primary sending identity is a
+    // different address. The login must still be accepted.
+    const out = await connectedAccountCandidates(
+      fakeClient({ sessionUsername: 'support@linux-hosting.co.il', identities: [id({ email: 'alias@elsewhere.com' })] }),
+      SERVER,
+    );
+    expect(out).toContain('support@linux-hosting.co.il@mail.example.com');
+    expect(out).toContain('alias@elsewhere.com@mail.example.com');
   });
 
-  it('falls back to the JMAP username when identities cannot be fetched', async () => {
-    const result = await connectedAccountId(fakeClient('basic@example.com', new Error('no idents')), SERVER);
-    expect(result).toBe('basic@example.com@mail.example.com');
+  it('excludes the constructor username (cannot mask a desync)', async () => {
+    // A desynced slot: client built for support@ but the token resolves to
+    // shuki@. Candidates come only from the server (session + identities),
+    // never the constructor echo, so support@ is NOT among them.
+    const out = await connectedAccountCandidates(
+      fakeClient({ sessionUsername: 'shuki@linux-hosting.co.il', constructorUsername: 'support@linux-hosting.co.il', identities: [id({ email: 'shuki@linux-hosting.co.il' })] }),
+      SERVER,
+    );
+    expect(out).not.toContain('support@linux-hosting.co.il@mail.example.com');
+    expect(out).toContain('shuki@linux-hosting.co.il@mail.example.com');
   });
 
-  it('returns null when the session identity cannot be determined at all', async () => {
-    const broken = { getUsername: () => { throw new Error('disconnected'); } } as never;
-    expect(await connectedAccountId(broken, SERVER)).toBeNull();
+  it('returns empty when nothing can be confirmed (caller must not bounce)', async () => {
+    const out = await connectedAccountCandidates(
+      fakeClient({ sessionUsername: undefined, identities: new Error('no idents') }), SERVER,
+    );
+    expect(out).toEqual([]);
   });
 });

@@ -303,20 +303,27 @@ function scheduleRefresh(expiresIn: number, refreshFn: () => Promise<string | nu
  * resolves to the wrong account before it surfaces as the wrong mailbox.
  * Returns null when it can't determine the identity (treated as "don't block").
  */
-export async function connectedAccountId(client: JMAPClient, serverUrl: string): Promise<string | null> {
+export async function connectedAccountCandidates(client: JMAPClient, serverUrl: string): Promise<string[]> {
+  // accountId is generated differently per auth mode: OAuth/SSO registers from
+  // the primary-identity EMAIL, basic auth from the typed login username. A
+  // single derivation can't match both, so collect every server-confirmed
+  // identifier the connected session exposes — the JMAP Session.username
+  // (authenticated login) and the primary sending-identity email — and let the
+  // caller accept the session if the target accountId matches ANY of them.
+  // Deliberately excludes client.getUsername(), which echoes the constructor
+  // username (always the target) and would defeat the desync check. An empty
+  // result means nothing could be confirmed → the caller should NOT force a
+  // re-auth.
+  const ids = new Set<string>();
   try {
-    const jmapUsername = client.getUsername();
-    let canonical = jmapUsername;
-    try {
-      const { primaryIdentity } = loadIdentities(await client.getIdentities(), jmapUsername);
-      canonical = primaryIdentity?.email || jmapUsername;
-    } catch {
-      /* identities unavailable — fall back to the JMAP session username */
-    }
-    return generateAccountId(canonical, serverUrl);
-  } catch {
-    return null;
-  }
+    const sessionUser = client.getSessionUsername();
+    if (sessionUser) ids.add(generateAccountId(sessionUser, serverUrl));
+  } catch { /* session unavailable */ }
+  try {
+    const { primaryIdentity } = loadIdentities(await client.getIdentities(), client.getUsername());
+    if (primaryIdentity?.email) ids.add(generateAccountId(primaryIdentity.email, serverUrl));
+  } catch { /* identities unavailable */ }
+  return [...ids];
 }
 
 function clearRefreshTimer(accountId?: string): void {
@@ -1237,9 +1244,9 @@ export const useAuthStore = create<AuthState>()(
         // connection then succeeds and we would silently show the wrong
         // mailbox. On mismatch, drop the poisoned cookies for this slot and
         // force a clean re-auth instead of surfacing someone else's mail.
-        const connectedId = await connectedAccountId(targetClient, targetAccount.serverUrl);
-        if (connectedId && connectedId !== accountId) {
-          debug.error(`switchAccount: slot ${targetAccount.cookieSlot} for ${accountId} resolved to ${connectedId} — forcing re-auth`);
+        const connectedCandidates = await connectedAccountCandidates(targetClient, targetAccount.serverUrl);
+        if (connectedCandidates.length > 0 && !connectedCandidates.includes(accountId)) {
+          debug.error(`switchAccount: slot ${targetAccount.cookieSlot} for ${accountId} resolved to [${connectedCandidates.join(", ")}] — forcing re-auth`);
           clients.delete(accountId);
           try { targetClient.disconnect(); } catch { /* noop */ }
           apiFetch(`/api/auth/token?slot=${targetAccount.cookieSlot}`, { method: 'DELETE' }).catch(() => {});
