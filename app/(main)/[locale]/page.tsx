@@ -3084,6 +3084,11 @@ export default function Home() {
                 <EmailComposer
                   key={composerSessionId}
                   mode={pendingDraft?.mode ?? composerMode}
+                  composeFromAccountEmail={
+                    useAccountStore
+                      .getState()
+                      .getAccountById(viewingAccountId ?? activeAccountId ?? '')?.email
+                  }
                   replyTo={pendingDraft !== null ? pendingDraft.replyTo : (selectedEmail ? {
                     from: selectedEmail.from,
                     replyToAddresses: selectedEmail.replyTo,

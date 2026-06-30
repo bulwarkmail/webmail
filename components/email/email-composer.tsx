@@ -35,7 +35,7 @@ import { TemplatePicker } from "@/components/templates/template-picker";
 import { TemplateForm } from "@/components/templates/template-form";
 import type { EmailTemplate } from "@/lib/template-types";
 import { appendPlainTextSignature, getPlainTextSignature } from "@/lib/signature-utils";
-import { resolveReplyFrom } from "@/lib/reply-identity";
+import { findComposeIdentityId, resolveReplyFrom } from "@/lib/reply-identity";
 import { computeReplyThreadingHeaders } from "@/lib/email-threading";
 import {
   rewriteCidImagesForEditor,
@@ -146,6 +146,15 @@ interface EmailComposerProps {
   initialDraftText?: string;
   initialData?: ComposerDraftData | null;
   mode?: 'compose' | 'reply' | 'replyAll' | 'forward';
+  /**
+   * Email of the mailbox/account the user is viewing when they start a new
+   * message. When set (and `autoSelectReplyIdentity` is on), a fresh compose
+   * preselects the identity matching this address instead of the primary
+   * identity, so "New message" from info@ defaults its From to info@. Mirrors
+   * the reply-time identity match; ignored for reply/replyAll/forward (those
+   * resolve from the original recipients).
+   */
+  composeFromAccountEmail?: string;
   replyTo?: {
     from?: { email?: string; name?: string }[];
     replyToAddresses?: { email?: string; name?: string }[];
@@ -243,6 +252,7 @@ export function EmailComposer({
   initialDraftText,
   initialData,
   mode = 'compose',
+  composeFromAccountEmail,
   replyTo
 }: EmailComposerProps) {
   const t = useTranslations('email_composer');
@@ -675,6 +685,19 @@ export function EmailComposer({
   useEffect(() => {
     if (!autoSelectReplyIdentity) return;
     if (selectedIdentityId || initialData?.selectedIdentityId) return;
+
+    // New message started from a specific mailbox/account: default the From to
+    // that mailbox's identity instead of the primary one, so composing while
+    // viewing info@ sends as info@. Reply/forward fall through to the
+    // recipient-based resolution below.
+    if (mode === 'compose') {
+      const composeIdentityId = findComposeIdentityId(identities, composeFromAccountEmail);
+      if (composeIdentityId) {
+        setSelectedIdentityId(composeIdentityId);
+      }
+      return;
+    }
+
     if (mode !== 'reply' && mode !== 'replyAll') return;
 
     const resolved = resolveReplyFrom(identities, {
@@ -708,6 +731,7 @@ export function EmailComposer({
     }
   }, [
     autoSelectReplyIdentity,
+    composeFromAccountEmail,
     fromOverrideEnabled,
     identities,
     initialData?.selectedIdentityId,
