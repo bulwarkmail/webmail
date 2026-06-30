@@ -139,7 +139,7 @@ export default function ProHome() {
   const focusedPaneId = useProTabStore((s) => s.focusedPaneId);
   const loadedTabIds = useProTabStore((s) => s.loadedTabIds);
   const openTab = useProTabStore((s) => s.openTab);
-  const closeTab = useProTabStore((s) => s.closeTab);
+  const requestCloseTab = useProTabStore((s) => s.requestCloseTab);
   const setActiveTab = useProTabStore((s) => s.setActiveTab);
   const setFocusedPane = useProTabStore((s) => s.setFocusedPane);
   const moveTabToPane = useProTabStore((s) => s.moveTabToPane);
@@ -354,7 +354,7 @@ export default function ProHome() {
                 activeMainTabId={activeMainTabId}
                 activeSplitTabId={activeSplitTabId}
                 onActivate={setActiveTab}
-                onClose={closeTab}
+                onClose={requestCloseTab}
                 onDragStateChange={setIsTabDragging}
               />
 

@@ -133,6 +133,13 @@ interface EmailComposerProps {
   }) => void | Promise<void>;
   onScheduledSendCreated?: () => void | Promise<void>;
   onClose?: () => void;
+  /**
+   * When provided, the composer assigns its close handler to `current`. The
+   * handler shows the unsaved-changes dialog when the draft is dirty, so a
+   * host (e.g. the Pro tab bar's close button) can route an external close
+   * request through the same guard instead of discarding silently.
+   */
+  requestCloseRef?: React.MutableRefObject<(() => void) | null>;
   onDiscardDraft?: (draftId: string) => void;
   onSaveState?: (data: ComposerDraftData) => void;
   className?: string;
@@ -229,6 +236,7 @@ export function EmailComposer({
   onSend,
   onScheduledSendCreated,
   onClose,
+  requestCloseRef,
   onDiscardDraft,
   onSaveState,
   className,
@@ -1814,6 +1822,17 @@ export function EmailComposer({
       cleanClose();
     }
   };
+
+  // Expose the dirty-aware close handler so external hosts (e.g. the Pro tab
+  // bar) can trigger the same "Save or discard draft?" guard. Re-assigned on
+  // every render to capture the latest closure over the live refs/state.
+  useEffect(() => {
+    if (!requestCloseRef) return;
+    requestCloseRef.current = handleClose;
+    return () => {
+      requestCloseRef.current = null;
+    };
+  });
 
   const handleComposerKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.defaultPrevented) return;

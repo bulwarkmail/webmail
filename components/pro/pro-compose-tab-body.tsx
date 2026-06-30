@@ -7,7 +7,7 @@ import { ErrorBoundary, ComposerErrorFallback } from "@/components/error";
 import { useAuthStore } from "@/stores/auth-store";
 import { useEmailStore } from "@/stores/email-store";
 import { toast } from "@/stores/toast-store";
-import { useProTabStore, type ProComposeTabData } from "@/stores/pro-tab-store";
+import { useProTabStore, registerProTabCloseInterceptor, type ProComposeTabData } from "@/stores/pro-tab-store";
 import { debug } from "@/lib/debug";
 
 interface ProComposeTabBodyProps {
@@ -37,6 +37,10 @@ export function ProComposeTabBody({ tabId, data }: ProComposeTabBodyProps) {
   // `key={sessionId}` doesn't churn.
   const tabIdRef = useRef(tabId);
   tabIdRef.current = tabId;
+
+  // Set by the composer to its dirty-aware close handler. Lets the Pro tab
+  // bar's "X" route through the same "Save or discard draft?" guard.
+  const requestCloseRef = useRef<(() => void) | null>(null);
 
   const handleScheduledSendCreated = useCallback(async () => {
     if (client) {
@@ -120,6 +124,20 @@ export function ProComposeTabBody({ tabId, data }: ProComposeTabBodyProps) {
     closeTab(tabIdRef.current);
   }, [closeTab]);
 
+  // Register a close interceptor so closing the tab from the tab bar (the
+  // "X" button or middle-click) goes through the composer's unsaved-changes
+  // guard, mirroring the non-Pro inline composer.
+  useEffect(() => {
+    const id = tabIdRef.current;
+    return registerProTabCloseInterceptor(id, () => {
+      if (requestCloseRef.current) {
+        requestCloseRef.current();
+      } else {
+        closeTab(id);
+      }
+    });
+  }, [closeTab]);
+
   const handleDiscardDraft = useCallback(async (draftId: string) => {
     if (!client) return;
     try {
@@ -160,6 +178,7 @@ export function ProComposeTabBody({ tabId, data }: ProComposeTabBodyProps) {
           onSend={handleSend}
           onScheduledSendCreated={handleScheduledSendCreated}
           onClose={handleClose}
+          requestCloseRef={requestCloseRef}
           onDiscardDraft={handleDiscardDraft}
           onSaveState={handleSaveState}
           className="flex-1"
