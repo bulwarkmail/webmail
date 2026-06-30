@@ -6,6 +6,7 @@ import { EmailViewer } from "@/components/email/email-viewer";
 import { ErrorBoundary, EmailViewerErrorFallback } from "@/components/error";
 import { useAuthStore } from "@/stores/auth-store";
 import { useEmailStore } from "@/stores/email-store";
+import { useIdentityStore } from "@/stores/identity-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { toast } from "@/stores/toast-store";
 import { useProTabStore, type ProEmailTabData, type ProReplyContext } from "@/stores/pro-tab-store";
@@ -56,6 +57,7 @@ export function ProEmailTabBody({ tabId, data }: ProEmailTabBodyProps) {
   const setEmailKeywordsLocal = useEmailStore((s) => s.setEmailKeywordsLocal);
   const mailboxes = useEmailStore((s) => s.mailboxes);
   const settingsKeywords = useSettingsStore((s) => s.emailKeywords);
+  const identities = useIdentityStore((s) => s.identities);
 
   const closeTab = useProTabStore((s) => s.closeTab);
   const openComposeTab = useProTabStore((s) => s.openComposeTab);
@@ -227,6 +229,44 @@ export function ProEmailTabBody({ tabId, data }: ProEmailTabBodyProps) {
     handleReply(body);
   }, [handleReply]);
 
+  const handleEditDraft = useCallback(() => {
+    if (!email) return;
+
+    const bodyText = email.bodyValues
+      ? Object.values(email.bodyValues).map((v) => v.value).join('\n')
+      : '';
+    const htmlBody = email.htmlBody?.[0]?.partId && email.bodyValues?.[email.htmlBody[0].partId]
+      ? email.bodyValues[email.htmlBody[0].partId].value
+      : undefined;
+
+    // Preserve the identity that matches the draft's From address.
+    const draftFromEmail = email.from?.[0]?.email;
+    const matchedIdentity = draftFromEmail
+      ? identities.find((id) => id.email === draftFromEmail)
+      : null;
+
+    composerSessionIdRef.current += 1;
+    openComposeTab({
+      sessionId: composerSessionIdRef.current,
+      mode: 'compose',
+      title: email.subject || t('email_composer.new_message'),
+      initialData: {
+        to: email.to?.map((a) => a.email).filter(Boolean).join(', ') || '',
+        cc: email.cc?.map((a) => a.email).filter(Boolean).join(', ') || '',
+        bcc: email.bcc?.map((a) => a.email).filter(Boolean).join(', ') || '',
+        subject: email.subject || '',
+        body: htmlBody || bodyText,
+        showCc: (email.cc?.length || 0) > 0,
+        showBcc: (email.bcc?.length || 0) > 0,
+        selectedIdentityId: matchedIdentity?.id ?? null,
+        subAddressTag: '',
+        mode: 'compose',
+        draftId: email.id,
+      },
+    });
+    closeTab(tabId);
+  }, [email, identities, openComposeTab, closeTab, tabId, t]);
+
   return (
     <div className="flex h-full w-full flex-col bg-background">
       <ErrorBoundary fallback={EmailViewerErrorFallback}>
@@ -243,6 +283,7 @@ export function ProEmailTabBody({ tabId, data }: ProEmailTabBodyProps) {
           onSetColorTag={handleSetColorTag}
           onDownloadAttachment={handleDownloadAttachment}
           onQuickReply={handleQuickReply}
+          onEditDraft={handleEditDraft}
           onMoveToMailbox={handleMoveToMailbox}
           currentUserEmail={client?.getUsername()}
           currentUserName={client?.getUsername()?.split('@')[0]}
