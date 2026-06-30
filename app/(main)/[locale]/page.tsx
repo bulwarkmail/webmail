@@ -1172,18 +1172,22 @@ export default function Home() {
         return;
       }
 
-      // Mark the original email with $answered or $forwarded keyword
-      if (originalEmailId && (effectiveMode === 'reply' || effectiveMode === 'replyAll')) {
+      // Mark the original email with $answered or $forwarded keyword. Route the
+      // write to the email's own account so the flag lands on shared/group-mailbox
+      // messages instead of being dropped against the reaching account. (#281)
+      if (originalEmailId && (effectiveMode === 'reply' || effectiveMode === 'replyAll' || effectiveMode === 'forward')) {
+        const s = useEmailStore.getState();
+        const orig = s.emails.find(e => e.id === originalEmailId);
+        const kwClientId = s.isUnifiedView ? orig?.sourceClientAccountId : undefined;
+        const kwAccountId = s.isUnifiedView ? orig?.sourceAccountId : undefined;
+        const kwClient = kwClientId
+          ? (useAuthStore.getState().getClientForAccount(kwClientId) ?? client)
+          : client;
+        const keyword = effectiveMode === 'forward' ? '$forwarded' : '$answered';
         try {
-          await client.setKeyword(originalEmailId, '$answered');
+          await kwClient.setKeyword(originalEmailId, keyword, kwAccountId);
         } catch (e) {
-          debug.error('Failed to set $answered keyword:', e);
-        }
-      } else if (originalEmailId && effectiveMode === 'forward') {
-        try {
-          await client.setKeyword(originalEmailId, '$forwarded');
-        } catch (e) {
-          debug.error('Failed to set $forwarded keyword:', e);
+          debug.error(`Failed to set ${keyword} keyword:`, e);
         }
       }
 
@@ -1663,8 +1667,20 @@ export default function Home() {
         }
       }
 
+      // In unified view route the write to the email's own account, reached
+      // through the login it is reachable via (`sourceClientAccountId`) and
+      // applied to its owning JMAP account (`sourceAccountId`). For personal
+      // sources these resolve to the account itself, so behavior is unchanged.
+      // Without this, tags on shared/group-mailbox messages are written to the
+      // reaching account and silently dropped by the server. (#281)
+      const tagClientId = isUnifiedView ? email.sourceClientAccountId : undefined;
+      const tagAccountId = isUnifiedView ? email.sourceAccountId : undefined;
+      const tagClient = tagClientId
+        ? (useAuthStore.getState().getClientForAccount(tagClientId) ?? client)
+        : client;
+
       // Update email keywords via JMAP
-      await client.updateEmailKeywords(emailId, keywords);
+      await tagClient.updateEmailKeywords(emailId, keywords, tagAccountId);
 
       // Patch the email in place so the list keeps its scroll/pagination state
       // instead of being reset to the first page by a full refetch.
@@ -2271,11 +2287,22 @@ export default function Home() {
       return;
     }
 
-    // Mark the original email as answered
-    try {
-      await client.setKeyword(originalEmailId, '$answered');
-    } catch (e) {
-      debug.error('Failed to set $answered keyword:', e);
+    // Mark the original email as answered. Route the write to the email's own
+    // account so the flag lands on shared/group-mailbox messages instead of
+    // being dropped against the reaching account. (#281)
+    {
+      const s = useEmailStore.getState();
+      const orig = s.emails.find(e => e.id === originalEmailId);
+      const kwClientId = s.isUnifiedView ? orig?.sourceClientAccountId : undefined;
+      const kwAccountId = s.isUnifiedView ? orig?.sourceAccountId : undefined;
+      const kwClient = kwClientId
+        ? (useAuthStore.getState().getClientForAccount(kwClientId) ?? client)
+        : client;
+      try {
+        await kwClient.setKeyword(originalEmailId, '$answered', kwAccountId);
+      } catch (e) {
+        debug.error('Failed to set $answered keyword:', e);
+      }
     }
 
     // Refresh emails to show the sent reply

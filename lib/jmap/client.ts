@@ -1301,10 +1301,10 @@ export class JMAPClient implements IJMAPClient {
     ]);
   }
 
-  async updateEmailKeywords(emailId: string, keywords: Record<string, boolean>): Promise<void> {
+  async updateEmailKeywords(emailId: string, keywords: Record<string, boolean>, accountId?: string): Promise<void> {
     await this.request([
       ["Email/set", {
-        accountId: this.accountId,
+        accountId: accountId || this.accountId,
         update: {
           [emailId]: {
             keywords,
@@ -1314,10 +1314,10 @@ export class JMAPClient implements IJMAPClient {
     ]);
   }
 
-  async setKeyword(emailId: string, keyword: string): Promise<void> {
+  async setKeyword(emailId: string, keyword: string, accountId?: string): Promise<void> {
     await this.request([
       ["Email/set", {
-        accountId: this.accountId,
+        accountId: accountId || this.accountId,
         update: {
           [emailId]: {
             [`keywords/${keyword}`]: true,

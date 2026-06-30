@@ -94,8 +94,8 @@ export interface IJMAPClient {
   markAsRead(emailId: string, read?: boolean, accountId?: string): Promise<void>;
   batchMarkAsRead(emailIds: string[], read?: boolean, accountId?: string): Promise<void>;
   toggleStar(emailId: string, starred: boolean, accountId?: string): Promise<void>;
-  updateEmailKeywords(emailId: string, keywords: Record<string, boolean>): Promise<void>;
-  setKeyword(emailId: string, keyword: string): Promise<void>;
+  updateEmailKeywords(emailId: string, keywords: Record<string, boolean>, accountId?: string): Promise<void>;
+  setKeyword(emailId: string, keyword: string, accountId?: string): Promise<void>;
   migrateKeyword(oldKeyword: string, newKeyword: string): Promise<number>;
   deleteEmail(emailId: string, accountId?: string): Promise<void>;
   moveToTrash(emailId: string, trashMailboxId: string, accountId?: string, markAsRead?: boolean): Promise<void>;

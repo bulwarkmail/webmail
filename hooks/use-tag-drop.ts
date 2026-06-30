@@ -74,14 +74,26 @@ export function useTagDrop({ tagId, onSuccess, onError }: UseTagDropOptions): Us
 
       for (const emailId of emailIds) {
         // Read fresh state to avoid stale closures
-        const currentEmails = useEmailStore.getState().emails;
-        const email = currentEmails.find(em => em.id === emailId);
+        const emailState = useEmailStore.getState();
+        const email = emailState.emails.find(em => em.id === emailId);
         const keywords = { ...(email?.keywords || {}) };
 
         // Add the tag without removing existing ones
         keywords[`$label:${tagId}`] = true;
 
-        await client.updateEmailKeywords(emailId, keywords);
+        // In unified view route the write to the email's own account, reached
+        // through the login it is reachable via (`sourceClientAccountId`) and
+        // applied to its owning JMAP account (`sourceAccountId`). For personal
+        // sources these resolve to the account itself, so behavior is unchanged.
+        // Without this, tags on shared/group-mailbox messages are written to the
+        // reaching account and silently dropped by the server. (#281)
+        const tagClientId = emailState.isUnifiedView ? email?.sourceClientAccountId : undefined;
+        const tagAccountId = emailState.isUnifiedView ? email?.sourceAccountId : undefined;
+        const tagClient = tagClientId
+          ? (useAuthStore.getState().getClientForAccount(tagClientId) ?? client)
+          : client;
+
+        await tagClient.updateEmailKeywords(emailId, keywords, tagAccountId);
       }
 
       // Refresh the email list
