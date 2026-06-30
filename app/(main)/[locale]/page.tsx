@@ -2667,7 +2667,9 @@ export default function Home() {
           <div
             className={cn(
               "relative flex flex-col bg-background",
-              isHorizontalMailLayout ? "md:w-full md:h-auto" : "h-full border-r border-border",
+              isHorizontalMailLayout
+                ? (shouldHideHorizontalViewerPane ? "md:w-full md:min-h-0" : "md:w-full md:h-auto")
+                : "h-full border-r border-border",
               // Mobile: full width, hidden when viewing email
               "max-md:flex-1 max-md:border-r-0 max-md:border-b-0",
               isMobile && activeView !== "list" && "max-md:hidden",
