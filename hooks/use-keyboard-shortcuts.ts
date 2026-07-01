@@ -55,6 +55,19 @@ function isInputFocused(): boolean {
   return isInput || isContentEditable;
 }
 
+// Latin letter shortcuts must fire regardless of the active keyboard layout
+// (e.g. Cyrillic, Greek): derive the physical letter from event.code
+// (KeyA..KeyZ) instead of the layout-dependent event.key. Non-letter keys keep
+// event.key, which is either layout-independent (arrows, Enter, Escape) or
+// intentionally symbol-based (#, !, ?, /).
+function physicalShortcutKey(event: KeyboardEvent): string {
+  const code = event.code;
+  if (code && code.length === 4 && code.startsWith("Key")) {
+    return code.charAt(3).toLowerCase();
+  }
+  return event.key.toLowerCase();
+}
+
 export function useKeyboardShortcuts({
   enabled = true,
   emails,
@@ -75,7 +88,7 @@ export function useKeyboardShortcuts({
       if (isInputFocused()) return;
 
       const h = handlersRef.current;
-      const key = event.key.toLowerCase();
+      const key = physicalShortcutKey(event);
       const hasModifier = event.ctrlKey || event.metaKey || event.altKey;
 
       // Shortcuts that work with modifiers
