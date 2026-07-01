@@ -55,15 +55,25 @@ function isInputFocused(): boolean {
   return isInput || isContentEditable;
 }
 
-// Latin letter shortcuts must fire regardless of the active keyboard layout
-// (e.g. Cyrillic, Greek): derive the physical letter from event.code
-// (KeyA..KeyZ) instead of the layout-dependent event.key. Non-letter keys keep
-// event.key, which is either layout-independent (arrows, Enter, Escape) or
-// intentionally symbol-based (#, !, ?, /).
+// Shortcuts must fire regardless of the active keyboard layout (e.g. Cyrillic,
+// Greek). Derive the key from the PHYSICAL key (event.code) instead of the
+// layout-dependent event.key: letters from KeyA..KeyZ, and the symbol shortcuts
+// (/, ?, #, !) from their US-QWERTY positions so they stay reachable on non-Latin
+// layouts. Arrows/Enter/Escape keep event.key, which is already layout-neutral.
 function physicalShortcutKey(event: KeyboardEvent): string {
   const code = event.code;
   if (code && code.length === 4 && code.startsWith("Key")) {
     return code.charAt(3).toLowerCase();
+  }
+  switch (code) {
+    case "Slash":
+      return event.shiftKey ? "?" : "/";
+    case "Digit1":
+      if (event.shiftKey) return "!";
+      break;
+    case "Digit3":
+      if (event.shiftKey) return "#";
+      break;
   }
   return event.key.toLowerCase();
 }
