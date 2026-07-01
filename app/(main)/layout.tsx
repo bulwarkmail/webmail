@@ -62,7 +62,13 @@ export async function generateMetadata(): Promise<Metadata> {
     formatDetection: {
       telephone: false,
     },
-    icons: { icon: withBasePath(faviconUrl) },
+    icons: {
+      icon: withBasePath(faviconUrl),
+      apple: [
+        { url: withBasePath("/icon-192x192.png"), sizes: "192x192", type: "image/png" },
+        { url: withBasePath("/icon-512x512.png"), sizes: "512x512", type: "image/png" },
+      ],
+    },
   };
 }
 
@@ -86,6 +92,7 @@ export default async function RootLayout({
           content={process.env.APP_NAME || process.env.NEXT_PUBLIC_APP_NAME || "Webmail"}
         />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <link rel="apple-touch-icon" href={withBasePath("/api/apple-touch-icon")} />
         {parentOrigin && (
           <meta name="parent-origin" content={parentOrigin} />
         )}

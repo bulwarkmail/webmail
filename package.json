@@ -63,6 +63,7 @@
     "qrcode": "^1.5.4",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
+    "sharp": "^0.35.3",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.4.0",
     "webcrypto-liner": "^1.4.3",
