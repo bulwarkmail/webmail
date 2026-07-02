@@ -1253,8 +1253,8 @@
         "unsupported": "当前账户未声明支持延迟发送。该设置仍会为其他账户保存。"
       },
       "return_to_list_after_action": {
-        "label": "Return to list after delete or mark unread",
-        "description": "After deleting or marking the open message unread, go back to the message list instead of opening the next message."
+        "label": "删除或标记为未读后返回列表",
+        "description": "删除打开的邮件或将其标记为未读后，返回邮件列表而不是打开下一封邮件。"
       }
     },
     "composer": {

@@ -1253,8 +1253,8 @@
         "unsupported": "Поточний обліковий запис не повідомляє про підтримку відкладеного надсилання. Налаштування залишиться збереженим для інших облікових записів."
       },
       "return_to_list_after_action": {
-        "label": "Return to list after delete or mark unread",
-        "description": "After deleting or marking the open message unread, go back to the message list instead of opening the next message."
+        "label": "Повернення до списку після видалення або позначення як непрочитане",
+        "description": "Після видалення або позначення відкритого листа як непрочитаного повертатися до списку листів замість відкриття наступного."
       }
     },
     "composer": {
