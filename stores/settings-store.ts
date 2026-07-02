@@ -39,6 +39,14 @@ export type SignaturePosition = 'above_quote' | 'below_quote';
 /** How to handle an incoming Disposition-Notification-To (read-receipt) request. */
 export type ReadReceiptResponse = 'ask' | 'always' | 'never';
 export type DateFormat = 'smart' | 'relative' | 'full';
+/**
+ * Regional ordering of numeric dates, independent of the `DateFormat` style.
+ *   - `auto`  — follow the UI language (today's behaviour).
+ *   - `iso`   — ISO 8601, `YYYY-MM-DD`.
+ *   - `en-GB` — Day/Month/Year (`DD/MM/YYYY`).
+ *   - `en-US` — Month/Day/Year (`MM/DD/YYYY`).
+ */
+export type DateLocale = 'auto' | 'iso' | 'en-GB' | 'en-US';
 export type TimeFormat = '12h' | '24h';
 export type FirstDayOfWeek = 0 | 1; // 0 = Sunday, 1 = Monday
 export type ExternalContentPolicy = 'ask' | 'block' | 'allow';
@@ -135,6 +143,7 @@ interface SettingsState {
 
   // Language & Region
   dateFormat: DateFormat;
+  dateLocale: DateLocale;
   timeFormat: TimeFormat;
   firstDayOfWeek: FirstDayOfWeek;
 
@@ -346,6 +355,7 @@ const DEFAULT_SETTINGS = {
 
   // Language & Region
   dateFormat: 'smart' as DateFormat,
+  dateLocale: 'auto' as DateLocale,
   timeFormat: '24h' as TimeFormat,
   firstDayOfWeek: 1 as FirstDayOfWeek, // Monday
 
@@ -561,6 +571,7 @@ export const useSettingsStore = create<SettingsState>()(
           density: state.density,
           animationsEnabled: state.animationsEnabled,
           dateFormat: state.dateFormat,
+          dateLocale: state.dateLocale,
           timeFormat: state.timeFormat,
           firstDayOfWeek: state.firstDayOfWeek,
           markAsReadDelay: state.markAsReadDelay,

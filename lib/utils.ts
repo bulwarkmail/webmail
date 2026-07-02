@@ -5,6 +5,7 @@ import type { UnifiedMailboxRole } from "./jmap/types";
 import { debug } from "./debug";
 import { useLocaleStore } from "@/stores/locale-store";
 import { useSettingsStore } from "@/stores/settings-store";
+import type { DateLocale } from "@/stores/settings-store";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -43,6 +44,32 @@ export function generateUUID(): string {
 }
 
 /**
+ * Resolve the Intl locale used to render NUMERIC date parts, honouring the
+ * user's regional `dateLocale` override while leaving weekday/month names on
+ * the UI language. `auto` returns `fallback` unchanged (prior behaviour); the
+ * explicit regions force a fixed numeric ordering (#456):
+ *   - `iso`   → `en-CA`  (YYYY-MM-DD)
+ *   - `en-GB` → `en-GB`  (DD/MM/YYYY)
+ *   - `en-US` → `en-US`  (MM/DD/YYYY)
+ */
+function resolveDateLocale<T extends string | undefined>(
+  dateLocale: DateLocale,
+  fallback: T,
+): string | T {
+  switch (dateLocale) {
+    case "iso":
+      return "en-CA";
+    case "en-GB":
+      return "en-GB";
+    case "en-US":
+      return "en-US";
+    case "auto":
+    default:
+      return fallback;
+  }
+}
+
+/**
  * Formats a received-at date for the email list. The output style is
  * controlled by the `dateFormat` user setting:
  *
@@ -53,8 +80,13 @@ export function generateUUID(): string {
  *   - `relative` — legacy en-US relative format ("1h ago", "2d ago").
  *   - `full` — always the full locale date+time.
  *
- * Both the locale (from the language picker) and 12h/24h preference are
- * read via `getState()` so this stays SSR-safe.
+ * The numeric date ordering is additionally governed by the `dateLocale`
+ * region setting (`auto` = follow the UI language, unchanged; or a fixed
+ * ISO / DD-MM / MM-DD ordering). Weekday and month names always follow the
+ * UI language.
+ *
+ * The locale (from the language picker), the region override and the 12h/24h
+ * preference are all read via `getState()` so this stays SSR-safe.
  */
 export function formatDate(date: Date | string): string {
   const d = typeof date === "string" ? new Date(date) : date;
@@ -62,10 +94,14 @@ export function formatDate(date: Date | string): string {
 
   const localeRaw = useLocaleStore.getState().locale;
   const locale = localeRaw && localeRaw.length > 0 ? localeRaw : "en";
-  // `en` alone resolves to en-US in Intl; everything else uses the language
-  // subtag as-is and lets the runtime pick a sensible default region.
-  const intlLocale = locale === "en" ? "en-US" : locale;
-  const { dateFormat, timeFormat } = useSettingsStore.getState();
+  // Names (weekday, month) follow the UI language: `en` alone resolves to
+  // en-US in Intl; everything else uses the language subtag as-is and lets
+  // the runtime pick a sensible default region.
+  const uiLocale = locale === "en" ? "en-US" : locale;
+  const { dateFormat, dateLocale, timeFormat } = useSettingsStore.getState();
+  // Numeric dates additionally honour the regional `dateLocale` override
+  // (defaults to `auto` = the UI language, preserving prior behaviour). (#456)
+  const numericLocale = resolveDateLocale(dateLocale, uiLocale);
   const hour12 = timeFormat === "12h";
 
   if (dateFormat === "relative") {
@@ -77,7 +113,7 @@ export function formatDate(date: Date | string): string {
     if (minutes < 60) return `${minutes}m ago`;
     if (hours < 24) return `${hours}h ago`;
     if (days < 7) return `${days}d ago`;
-    return d.toLocaleDateString(intlLocale, {
+    return d.toLocaleDateString(uiLocale, {
       month: "short",
       day: "numeric",
       year: d.getFullYear() !== now.getFullYear() ? "numeric" : undefined,
@@ -85,7 +121,7 @@ export function formatDate(date: Date | string): string {
   }
 
   if (dateFormat === "full") {
-    return d.toLocaleString(intlLocale, {
+    return d.toLocaleString(numericLocale, {
       year: "numeric",
       month: "2-digit",
       day: "2-digit",
@@ -96,7 +132,7 @@ export function formatDate(date: Date | string): string {
   }
 
   // 'smart' (default)
-  const timeStr = d.toLocaleTimeString(intlLocale, {
+  const timeStr = d.toLocaleTimeString(uiLocale, {
     hour: "2-digit",
     minute: "2-digit",
     hour12,
@@ -113,12 +149,12 @@ export function formatDate(date: Date | string): string {
     // German Intl outputs "Fr." with a trailing dot for `weekday: 'short'`;
     // strip it so the result reads cleanly next to the time.
     const weekday = d
-      .toLocaleDateString(intlLocale, { weekday: "short" })
+      .toLocaleDateString(uiLocale, { weekday: "short" })
       .replace(/\.$/, "");
     return `${weekday} ${timeStr}`;
   }
 
-  return d.toLocaleDateString(intlLocale, {
+  return d.toLocaleDateString(numericLocale, {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
@@ -144,6 +180,11 @@ export function formatDateTime(
   const d = typeof date === 'string' ? new Date(date) : date;
   if (isNaN(d.getTime())) return typeof date === 'string' ? date : '';
 
+  // Honour the regional `dateLocale` override; `auto` keeps the previous
+  // `undefined` (runtime default) locale so existing behaviour is unchanged. (#456)
+  const { dateLocale } = useSettingsStore.getState();
+  const effectiveLocale = resolveDateLocale(dateLocale, undefined);
+
   const localeOptions: Intl.DateTimeFormatOptions = {};
   if (options?.weekday) localeOptions.weekday = options.weekday;
   if (options?.year) localeOptions.year = options.year;
@@ -158,7 +199,7 @@ export function formatDateTime(
     if (options?.timeZoneName) localeOptions.timeZoneName = options.timeZoneName;
   }
 
-  return d.toLocaleString(undefined, localeOptions);
+  return d.toLocaleString(effectiveLocale, localeOptions);
 }
 
 // Marketing emails pad the preheader with whitespace, format chars (soft

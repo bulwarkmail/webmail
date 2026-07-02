@@ -1047,6 +1047,14 @@
         "preview_this_week": "Tento týden:",
         "preview_older": "Starší:"
       },
+      "date_locale": {
+        "label": "Date format region",
+        "description": "How numeric dates are ordered (day, month, year)",
+        "auto": "Automatic (match language)",
+        "iso": "ISO 8601 (YYYY-MM-DD)",
+        "dmy": "Day/Month/Year",
+        "mdy": "Month/Day/Year"
+      },
       "time_format": {
         "label": "Formát času",
         "description": "Vyberte 12hodinový nebo 24hodinový formát času",

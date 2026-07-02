@@ -1047,6 +1047,14 @@
         "preview_this_week": "本周：",
         "preview_older": "更早："
       },
+      "date_locale": {
+        "label": "Date format region",
+        "description": "How numeric dates are ordered (day, month, year)",
+        "auto": "Automatic (match language)",
+        "iso": "ISO 8601 (YYYY-MM-DD)",
+        "dmy": "Day/Month/Year",
+        "mdy": "Month/Day/Year"
+      },
       "time_format": {
         "label": "时间格式",
         "description": "选择 12 小时制或 24 小时制",

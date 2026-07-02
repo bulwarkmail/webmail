@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
 import { useLocaleStore } from '@/stores/locale-store';
 import { useSettingsStore } from '@/stores/settings-store';
-import type { DateFormat, TimeFormat, FirstDayOfWeek } from '@/stores/settings-store';
+import type { DateFormat, DateLocale, TimeFormat, FirstDayOfWeek } from '@/stores/settings-store';
 import { formatDate } from '@/lib/utils';
 import { SettingsSection, SettingItem, Select, RadioGroup } from './settings-section';
 
@@ -13,7 +13,7 @@ export function LanguageSettings() {
   const t = useTranslations('settings.language_region');
   const tDays = useTranslations('calendar.days');
 
-  const { dateFormat, timeFormat, firstDayOfWeek, updateSetting } = useSettingsStore();
+  const { dateFormat, dateLocale, timeFormat, firstDayOfWeek, updateSetting } = useSettingsStore();
 
   // Subscribe to locale changes so the preview re-renders on language switch
   // (formatDate reads it via getState() and would otherwise stay stale).
@@ -23,7 +23,7 @@ export function LanguageSettings() {
     // Build sample timestamps for each bucket so users see what their pick
     // will look like in practice. Use offsets relative to "now" so the
     // bucketing is stable even though the wall-clock keeps moving.
-    void locale; void dateFormat; void timeFormat;
+    void locale; void dateFormat; void dateLocale; void timeFormat;
     const now = new Date();
     const today = new Date(now);
     today.setHours(15, 31, 0, 0);
@@ -38,7 +38,7 @@ export function LanguageSettings() {
       thisWeek: formatDate(thisWeek),
       older: formatDate(older),
     };
-  }, [locale, dateFormat, timeFormat]);
+  }, [locale, dateFormat, dateLocale, timeFormat]);
 
   return (
     <SettingsSection title={t('title')} description={t('description')}>
@@ -72,6 +72,19 @@ export function LanguageSettings() {
             </div>
           </div>
         </div>
+      </SettingItem>
+
+      <SettingItem label={t('date_locale.label')} description={t('date_locale.description')}>
+        <Select
+          value={dateLocale}
+          onChange={(value) => updateSetting('dateLocale', value as DateLocale)}
+          options={[
+            { value: 'auto', label: t('date_locale.auto') },
+            { value: 'iso', label: t('date_locale.iso') },
+            { value: 'en-GB', label: t('date_locale.dmy') },
+            { value: 'en-US', label: t('date_locale.mdy') },
+          ]}
+        />
       </SettingItem>
 
       <SettingItem label={t('time_format.label')} description={t('time_format.description')}>

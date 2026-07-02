@@ -1047,6 +1047,14 @@
         "preview_this_week": "Šajā nedēļā:",
         "preview_older": "Vecāks:"
       },
+      "date_locale": {
+        "label": "Date format region",
+        "description": "How numeric dates are ordered (day, month, year)",
+        "auto": "Automatic (match language)",
+        "iso": "ISO 8601 (YYYY-MM-DD)",
+        "dmy": "Day/Month/Year",
+        "mdy": "Month/Day/Year"
+      },
       "time_format": {
         "label": "Laika formāts",
         "description": "Izvēlieties starp 12 vai 24 stundu formātu",

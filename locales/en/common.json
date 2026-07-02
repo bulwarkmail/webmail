@@ -1050,6 +1050,14 @@
         "preview_this_week": "This week:",
         "preview_older": "Older:"
       },
+      "date_locale": {
+        "label": "Date format region",
+        "description": "How numeric dates are ordered (day, month, year)",
+        "auto": "Automatic (match language)",
+        "iso": "ISO 8601 (YYYY-MM-DD)",
+        "dmy": "Day/Month/Year",
+        "mdy": "Month/Day/Year"
+      },
       "time_format": {
         "label": "Time Format",
         "description": "Choose between 12-hour or 24-hour clock",
