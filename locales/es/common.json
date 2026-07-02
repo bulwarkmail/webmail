@@ -675,7 +675,9 @@
     "recipient_edit_email": "Editar dirección de correo",
     "recipient_edit_name": "Editar nombre para mostrar",
     "recipient_email_placeholder": "Dirección de correo",
-    "recipient_name_placeholder": "Nombre para mostrar"
+    "recipient_name_placeholder": "Nombre para mostrar",
+    "autocomplete_search_server": "Buscar en el servidor",
+    "autocomplete_searching": "Buscando..."
   },
   "confirm_dialog": {
     "confirm": "Confirmar",

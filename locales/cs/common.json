@@ -675,7 +675,9 @@
     "recipient_edit_email": "Upravit e-mailovou adresu",
     "recipient_edit_name": "Upravit zobrazované jméno",
     "recipient_email_placeholder": "E-mailová adresa",
-    "recipient_name_placeholder": "Zobrazované jméno"
+    "recipient_name_placeholder": "Zobrazované jméno",
+    "autocomplete_search_server": "Hledat na serveru",
+    "autocomplete_searching": "Hledání..."
   },
   "confirm_dialog": {
     "confirm": "Potvrdit",

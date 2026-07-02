@@ -675,7 +675,9 @@
     "recipient_edit_email": "Змінити адресу ел. пошти",
     "recipient_edit_name": "Змінити відображуване ім'я",
     "recipient_email_placeholder": "Адреса ел. пошти",
-    "recipient_name_placeholder": "Відображуване ім'я"
+    "recipient_name_placeholder": "Відображуване ім'я",
+    "autocomplete_search_server": "Шукати на сервері",
+    "autocomplete_searching": "Пошук..."
   },
   "confirm_dialog": {
     "confirm": "Підтвердити",

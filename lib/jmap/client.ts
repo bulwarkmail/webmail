@@ -1887,6 +1887,53 @@ export class JMAPClient implements IJMAPClient {
     }
   }
 
+  async searchSentRecipients(query: string, sentMailboxId: string, accountId?: string, limit: number = 60): Promise<Array<{ name: string; email: string }>> {
+    const q = query.trim();
+    if (!q || !sentMailboxId) return [];
+    try {
+      const targetAccountId = accountId || this.accountId;
+      const response = await this.request([
+        ["Email/query", {
+          accountId: targetAccountId,
+          filter: {
+            operator: "AND",
+            conditions: [
+              { inMailbox: sentMailboxId },
+              { operator: "OR", conditions: [{ to: q }, { cc: q }] },
+            ],
+          },
+          sort: [{ property: "receivedAt", isAscending: false }],
+          limit,
+        }, "0"],
+        // Fetch ONLY the recipient fields - no subject/preview/body/attachments.
+        ["Email/get", {
+          accountId: targetAccountId,
+          "#ids": { resultOf: "0", name: "Email/query", path: "/ids" },
+          properties: ["to", "cc"],
+        }, "1"],
+      ]);
+      const emails = (response.methodResponses?.[1]?.[1]?.list || []) as Email[];
+      const lower = q.toLowerCase();
+      const byEmail = new Map<string, { name: string; email: string }>();
+      for (const email of emails) {
+        for (const r of [...(email.to || []), ...(email.cc || [])]) {
+          if (!r.email) continue;
+          const key = r.email.toLowerCase().trim();
+          if (!key || byEmail.has(key)) continue;
+          // The query matched *some* recipient of the message; keep only the
+          // addresses that actually match, not every co-recipient.
+          if (key.includes(lower) || (r.name && r.name.toLowerCase().includes(lower))) {
+            byEmail.set(key, { name: (r.name || "").trim(), email: r.email });
+          }
+        }
+      }
+      return Array.from(byEmail.values());
+    } catch (error) {
+      console.error('Recipient search failed:', error);
+      return [];
+    }
+  }
+
   async getThread(threadId: string, accountId?: string): Promise<Thread | null> {
     try {
       const targetAccountId = accountId || this.accountId;

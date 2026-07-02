@@ -121,7 +121,7 @@ export default function Home() {
   useIdentitySync();
   const trustedSendersAddressBook = useSettingsStore((state) => state.trustedSendersAddressBook);
   const sendDelaySeconds = useSettingsStore((state) => state.sendDelaySeconds);
-  const { loadTrustedSendersBook, trustedSendersLoaded } = useContactStore();
+  const { loadTrustedSendersBook, trustedSendersLoaded, loadRecentRecipients } = useContactStore();
 
   const promptForRescheduleDelayedUntil = useCallback((): string | null => {
     const value = window.prompt(t('email_viewer.reschedule_prompt'));
@@ -341,6 +341,15 @@ export default function Home() {
     setViewingAccount,
     refreshCurrentMailbox,
   } = useEmailStore();
+
+  // Load recent recipients (from the Sent folder) for compose autocomplete.
+  // Runs once when the Sent mailbox is known; the store guards against reloads.
+  useEffect(() => {
+    const sent = mailboxes.find((m) => m.role === 'sent');
+    if (client && sent) {
+      loadRecentRecipients(client, sent.originalId || sent.id);
+    }
+  }, [client, mailboxes, loadRecentRecipients]);
 
   // Pro shell: populate per-account mailbox cache so the sidebar can render
   // every connected account Thunderbird-style.

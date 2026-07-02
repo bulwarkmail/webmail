@@ -675,7 +675,9 @@
     "recipient_edit_email": "Editați adresa de e-mail",
     "recipient_edit_name": "Editați numele afișat",
     "recipient_email_placeholder": "Adresă de e-mail",
-    "recipient_name_placeholder": "Numele afișat"
+    "recipient_name_placeholder": "Numele afișat",
+    "autocomplete_search_server": "Caută pe server",
+    "autocomplete_searching": "Se caută..."
   },
   "confirm_dialog": {
     "confirm": "Confirmare",

@@ -675,7 +675,9 @@
     "recipient_edit_email": "Rediģēt e-pasta adresi",
     "recipient_edit_name": "Rediģēt parādāmo vārdu",
     "recipient_email_placeholder": "E-pasta adrese",
-    "recipient_name_placeholder": "Parādāmais vārds"
+    "recipient_name_placeholder": "Parādāmais vārds",
+    "autocomplete_search_server": "Meklēt serverī",
+    "autocomplete_searching": "Meklē..."
   },
   "confirm_dialog": {
     "confirm": "Apstiprināt",

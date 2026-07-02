@@ -675,7 +675,9 @@
     "recipient_edit_email": "E-posta adresini düzenle",
     "recipient_edit_name": "Görünen adı düzenle",
     "recipient_email_placeholder": "E-posta adresi",
-    "recipient_name_placeholder": "Görünen ad"
+    "recipient_name_placeholder": "Görünen ad",
+    "autocomplete_search_server": "Sunucuda ara",
+    "autocomplete_searching": "Aranıyor..."
   },
   "confirm_dialog": {
     "confirm": "Onayla",

@@ -675,7 +675,9 @@
     "recipient_edit_email": "E-mailadres bewerken",
     "recipient_edit_name": "Weergavenaam bewerken",
     "recipient_email_placeholder": "E-mailadres",
-    "recipient_name_placeholder": "Weergavenaam"
+    "recipient_name_placeholder": "Weergavenaam",
+    "autocomplete_search_server": "Op de server zoeken",
+    "autocomplete_searching": "Bezig met zoeken..."
   },
   "confirm_dialog": {
     "confirm": "Bevestigen",

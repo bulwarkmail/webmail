@@ -675,7 +675,9 @@
     "recipient_edit_email": "メールアドレスを編集",
     "recipient_edit_name": "表示名を編集",
     "recipient_email_placeholder": "メールアドレス",
-    "recipient_name_placeholder": "表示名"
+    "recipient_name_placeholder": "表示名",
+    "autocomplete_search_server": "サーバーを検索",
+    "autocomplete_searching": "検索中..."
   },
   "confirm_dialog": {
     "confirm": "確認",

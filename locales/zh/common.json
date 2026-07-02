@@ -675,7 +675,9 @@
     "recipient_edit_email": "编辑电子邮件地址",
     "recipient_edit_name": "编辑显示名称",
     "recipient_email_placeholder": "电子邮件地址",
-    "recipient_name_placeholder": "显示名称"
+    "recipient_name_placeholder": "显示名称",
+    "autocomplete_search_server": "在服务器上搜索",
+    "autocomplete_searching": "搜索中..."
   },
   "confirm_dialog": {
     "confirm": "确认",

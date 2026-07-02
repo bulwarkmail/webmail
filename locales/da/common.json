@@ -675,7 +675,9 @@
     "recipient_edit_email": "Rediger e-mailadresse",
     "recipient_edit_name": "Rediger visningsnavn",
     "recipient_email_placeholder": "E-mailadresse",
-    "recipient_name_placeholder": "Visningsnavn"
+    "recipient_name_placeholder": "Visningsnavn",
+    "autocomplete_search_server": "Søg på serveren",
+    "autocomplete_searching": "Søger..."
   },
   "confirm_dialog": {
     "confirm": "Bekræft",

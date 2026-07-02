@@ -675,7 +675,9 @@
     "recipient_edit_email": "Изменить адрес эл. почты",
     "recipient_edit_name": "Изменить отображаемое имя",
     "recipient_email_placeholder": "Адрес эл. почты",
-    "recipient_name_placeholder": "Отображаемое имя"
+    "recipient_name_placeholder": "Отображаемое имя",
+    "autocomplete_search_server": "Искать на сервере",
+    "autocomplete_searching": "Поиск..."
   },
   "confirm_dialog": {
     "confirm": "Подтвердить",

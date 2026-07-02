@@ -675,7 +675,9 @@
     "recipient_edit_email": "이메일 주소 편집",
     "recipient_edit_name": "표시 이름 편집",
     "recipient_email_placeholder": "이메일 주소",
-    "recipient_name_placeholder": "표시 이름"
+    "recipient_name_placeholder": "표시 이름",
+    "autocomplete_search_server": "서버에서 검색",
+    "autocomplete_searching": "검색 중..."
   },
   "confirm_dialog": {
     "confirm": "확인",

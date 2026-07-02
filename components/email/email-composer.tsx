@@ -5,7 +5,7 @@ import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { X, Paperclip, Send, Save, Check, Loader2, AlertCircle, FileText, BookmarkPlus, CalendarClock, ChevronDown, MailCheck } from "lucide-react";
+import { X, Paperclip, Send, Save, Check, Loader2, AlertCircle, FileText, BookmarkPlus, CalendarClock, ChevronDown, MailCheck, Search } from "lucide-react";
 import { cn, formatFileSize, formatDateTime, generateUUID } from "@/lib/utils";
 import { debug } from "@/lib/debug";
 import { toast } from "@/stores/toast-store";
@@ -819,6 +819,10 @@ export function EmailComposer({
       ? `<div>${getPlainTextSignature(signatureIdentity).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>')}</div>`
       : '';
   const getAutocomplete = useContactStore((s) => s.getAutocomplete);
+  const searchRecipients = useContactStore((s) => s.searchRecipients);
+  // Whether a Sent mailbox is known so the on-demand server search is worth
+  // offering (falls back to hiding the "search the server" row otherwise).
+  const canSearchServer = useContactStore((s) => s.sentMailboxId != null);
   const addToTrustedSendersBook = useContactStore((s) => s.addToTrustedSendersBook);
   const addTrustedSender = useSettingsStore((s) => s.addTrustedSender);
   const trustedSendersAddressBook = useSettingsStore((s) => s.trustedSendersAddressBook);
@@ -894,6 +898,10 @@ export function EmailComposer({
   const [autocompleteResults, setAutocompleteResults] = useState<Array<{ name: string; email: string }>>([]);
   const [activeAutoField, setActiveAutoField] = useState<'to' | 'cc' | 'bcc' | null>(null);
   const [autoSelectedIndex, setAutoSelectedIndex] = useState(-1);
+  // Current trimmed query behind the open dropdown, plus the in-flight flag for
+  // the on-demand Sent-folder lookup ("search the server" row).
+  const [autoQuery, setAutoQuery] = useState('');
+  const [isSearchingServer, setIsSearchingServer] = useState(false);
   const autocompleteTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const toInputRef = useRef<HTMLInputElement>(null);
   const ccInputRef = useRef<HTMLInputElement>(null);
@@ -941,8 +949,10 @@ export function EmailComposer({
       setAutocompleteResults([]);
       setActiveAutoField(null);
       setAutoSelectedIndex(-1);
+      setAutoQuery('');
       return;
     }
+    setAutoQuery(query);
 
     autocompleteTimeoutRef.current = setTimeout(async () => {
       const localResults = getAutocomplete(query);
@@ -950,10 +960,39 @@ export function EmailComposer({
       const initial: RecipientSuggestion[] = localResults.map(r => ({ name: r.name, email: r.email }));
       const merged = await contactHooks.onProvideRecipientSuggestions.transform(initial, { query });
       setAutocompleteResults(merged.map(s => ({ name: s.name, email: s.email })));
-      setActiveAutoField(merged.length > 0 ? field : null);
+      // Keep the dropdown open even without local hits when a server search is
+      // available, so the "search the server" row stays reachable (OWA-style).
+      setActiveAutoField(merged.length > 0 || canSearchServer ? field : null);
       setAutoSelectedIndex(-1);
     }, 200);
-  }, [getAutocomplete]);
+  }, [getAutocomplete, canSearchServer]);
+
+  // On-demand: search the Sent folder server-side for recipients matching the
+  // current query and merge fresh hits into the open dropdown (deduped by email).
+  const handleServerSearch = useCallback(async () => {
+    const query = autoQuery.trim();
+    if (!composerClient || !query || isSearchingServer) return;
+    setIsSearchingServer(true);
+    try {
+      const serverResults = await searchRecipients(composerClient, query);
+      setAutocompleteResults((prev) => {
+        const seen = new Set(prev.map((r) => r.email.toLowerCase()));
+        const merged = [...prev];
+        for (const r of serverResults) {
+          const key = r.email.toLowerCase();
+          if (!seen.has(key)) {
+            seen.add(key);
+            merged.push(r);
+          }
+        }
+        return merged;
+      });
+    } catch {
+      // Best-effort: a failed lookup just leaves the local suggestions in place.
+    } finally {
+      setIsSearchingServer(false);
+    }
+  }, [autoQuery, composerClient, isSearchingServer, searchRecipients]);
 
   const insertAutocomplete = (suggestion: { name: string; email: string }, field: 'to' | 'cc' | 'bcc') => {
     const setter = field === 'to' ? setTo : field === 'cc' ? setCc : setBcc;
@@ -2107,6 +2146,10 @@ export function EmailComposer({
               autoSelectedIndex={autoSelectedIndex}
               dropdownRef={toDropdownRef}
               onInsertAutocomplete={insertAutocomplete}
+              canSearchServer={canSearchServer}
+              onServerSearch={handleServerSearch}
+              isSearchingServer={isSearchingServer}
+              serverSearchQuery={autoQuery}
               validationError={validationErrors.to}
               validationMessage={t('validation.recipient_required')}
               onTab={focusSubject}
@@ -2184,6 +2227,10 @@ export function EmailComposer({
                 autoSelectedIndex={autoSelectedIndex}
                 dropdownRef={ccDropdownRef}
                 onInsertAutocomplete={insertAutocomplete}
+                canSearchServer={canSearchServer}
+                onServerSearch={handleServerSearch}
+                isSearchingServer={isSearchingServer}
+                serverSearchQuery={autoQuery}
                 onMoveChip={handleMoveChip}
               />
             </div>
@@ -2209,6 +2256,10 @@ export function EmailComposer({
                 autoSelectedIndex={autoSelectedIndex}
                 dropdownRef={bccDropdownRef}
                 onInsertAutocomplete={insertAutocomplete}
+                canSearchServer={canSearchServer}
+                onServerSearch={handleServerSearch}
+                isSearchingServer={isSearchingServer}
+                serverSearchQuery={autoQuery}
                 onMoveChip={handleMoveChip}
               />
             </div>
@@ -2630,7 +2681,10 @@ const AutocompleteDropdown = React.forwardRef<HTMLDivElement, {
   results: Array<{ name: string; email: string }>;
   selectedIndex: number;
   onSelect: (suggestion: { name: string; email: string }) => void;
-}>(function AutocompleteDropdown({ id, results, selectedIndex, onSelect }, ref) {
+  onSearchServer?: () => void;
+  isSearchingServer?: boolean;
+}>(function AutocompleteDropdown({ id, results, selectedIndex, onSelect, onSearchServer, isSearchingServer }, ref) {
+  const t = useTranslations('email_composer');
   return (
     <div ref={ref} id={id} role="listbox" className="absolute top-full left-0 right-0 z-50 mt-1 bg-background border border-border rounded-md shadow-lg max-h-48 overflow-y-auto">
       {results.map((r, i) => (
@@ -2656,6 +2710,27 @@ const AutocompleteDropdown = React.forwardRef<HTMLDivElement, {
           )}
         </button>
       ))}
+      {onSearchServer && (
+        <button
+          type="button"
+          disabled={isSearchingServer}
+          className={cn(
+            "w-full px-3 py-2 text-left text-sm flex items-center gap-2 text-muted-foreground hover:bg-muted disabled:opacity-60 disabled:cursor-default",
+            results.length > 0 && "border-t border-border"
+          )}
+          onMouseDown={(e) => {
+            e.preventDefault();
+            if (!isSearchingServer) onSearchServer();
+          }}
+        >
+          {isSearchingServer
+            ? <Loader2 className="w-4 h-4 shrink-0 animate-spin" />
+            : <Search className="w-4 h-4 shrink-0" />}
+          <span className="truncate">
+            {isSearchingServer ? t('autocomplete_searching') : t('autocomplete_search_server')}
+          </span>
+        </button>
+      )}
     </div>
   );
 });
@@ -2676,6 +2751,10 @@ function RecipientChipInput({
   autoSelectedIndex,
   dropdownRef,
   onInsertAutocomplete,
+  canSearchServer,
+  onServerSearch,
+  isSearchingServer,
+  serverSearchQuery,
   validationError,
   validationMessage,
   onTab,
@@ -2696,6 +2775,10 @@ function RecipientChipInput({
   autoSelectedIndex: number;
   dropdownRef: React.RefObject<HTMLDivElement | null>;
   onInsertAutocomplete: (suggestion: { name: string; email: string }, field: 'to' | 'cc' | 'bcc') => void;
+  canSearchServer: boolean;
+  onServerSearch: () => void;
+  isSearchingServer: boolean;
+  serverSearchQuery: string;
   validationError?: boolean;
   validationMessage?: string;
   onTab?: () => void;
@@ -2997,13 +3080,16 @@ function RecipientChipInput({
       {validationError && validationMessage && (
         <p className="text-xs text-red-600 dark:text-red-400 mt-0.5">{validationMessage}</p>
       )}
-      {activeAutoField === field && autocompleteResults.length > 0 && (
+      {activeAutoField === field &&
+        (autocompleteResults.length > 0 || (canSearchServer && serverSearchQuery.length > 0)) && (
         <AutocompleteDropdown
           ref={dropdownRef}
           id={`autocomplete-${field}`}
           results={autocompleteResults}
           selectedIndex={autoSelectedIndex}
           onSelect={(suggestion) => onInsertAutocomplete(suggestion, field)}
+          onSearchServer={canSearchServer && serverSearchQuery.length > 0 ? onServerSearch : undefined}
+          isSearchingServer={isSearchingServer}
         />
       )}
       <ContextMenu

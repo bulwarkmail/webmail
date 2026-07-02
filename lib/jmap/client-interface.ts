@@ -89,6 +89,13 @@ export interface IJMAPClient {
     limit?: number,
     position?: number,
   ): Promise<{ emails: Email[]; hasMore: boolean; total: number }>;
+  /**
+   * Lean recipient search for compose autocomplete ("search the server" action):
+   * finds messages in `sentMailboxId` whose to/cc matches `query` and returns
+   * only the matching addresses (fetches just the `to`/`cc` properties - no
+   * bodies or attachments), deduped.
+   */
+  searchSentRecipients(query: string, sentMailboxId: string, accountId?: string, limit?: number): Promise<Array<{ name: string; email: string }>>;
 
   // ── Email mutations ───────────────────────────────────────────
   markAsRead(emailId: string, read?: boolean, accountId?: string): Promise<void>;

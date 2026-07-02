@@ -675,7 +675,9 @@
     "recipient_edit_email": "E-mail-cím szerkesztése",
     "recipient_edit_name": "Megjelenített név szerkesztése",
     "recipient_email_placeholder": "E-mail-cím",
-    "recipient_name_placeholder": "Megjelenített név"
+    "recipient_name_placeholder": "Megjelenített név",
+    "autocomplete_search_server": "Keresés a kiszolgálón",
+    "autocomplete_searching": "Keresés..."
   },
   "confirm_dialog": {
     "confirm": "Megerősítés",

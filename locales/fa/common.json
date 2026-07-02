@@ -675,7 +675,9 @@
     "recipient_edit_email": "ویرایش آدرس ایمیل",
     "recipient_edit_name": "ویرایش نام نمایشی",
     "recipient_email_placeholder": "آدرس ایمیل",
-    "recipient_name_placeholder": "نام نمایشی"
+    "recipient_name_placeholder": "نام نمایشی",
+    "autocomplete_search_server": "جستجو در سرور",
+    "autocomplete_searching": "در حال جستجو..."
   },
   "confirm_dialog": {
     "confirm": "تأیید",

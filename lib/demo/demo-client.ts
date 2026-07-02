@@ -209,6 +209,23 @@ export class DemoJMAPClient implements IJMAPClient {
     return { emails, hasMore: position + limit < total, total };
   }
 
+  async searchSentRecipients(query: string, _sentMailboxId: string, _accountId?: string, _limit: number = 60): Promise<Array<{ name: string; email: string }>> {
+    const q = query.trim().toLowerCase();
+    if (!q) return [];
+    const byEmail = new Map<string, { name: string; email: string }>();
+    for (const email of this.data.emails) {
+      for (const r of [...(email.to || []), ...(email.cc || [])]) {
+        if (!r.email) continue;
+        const key = r.email.toLowerCase();
+        if (byEmail.has(key)) continue;
+        if (key.includes(q) || (r.name && r.name.toLowerCase().includes(q))) {
+          byEmail.set(key, { name: r.name || '', email: r.email });
+        }
+      }
+    }
+    return Array.from(byEmail.values());
+  }
+
   // ── Email mutations ───────────────────────────────────────────
 
   async markAsRead(emailId: string, read: boolean = true): Promise<void> {
