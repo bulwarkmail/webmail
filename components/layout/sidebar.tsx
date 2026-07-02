@@ -853,6 +853,20 @@ export function Sidebar({
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't hijack Arrow keys while the user is typing. This is a global
+      // window listener, so without this guard typing in a new email (the
+      // contentEditable composer, the subject field, search, etc.) toggled the
+      // selected mailbox's subfolders open/closed on ArrowLeft/ArrowRight.
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.tagName === 'SELECT' ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
       if (!selectedMailbox || isCollapsed) return;
 
       const findNode = (nodes: MailboxNode[]): MailboxNode | null => {
