@@ -12,7 +12,7 @@ const localePrefix = (process.env.NEXT_PUBLIC_LOCALE_PREFIX ?? 'never') as
   | 'always'
   | 'as-needed';
 
-const SUPPORTED_LOCALES = ['cs', 'da', 'de', 'en', 'es', 'fa', 'fr', 'hu', 'it', 'ja', 'ko', 'lv', 'nl', 'pl', 'pt', 'ro', 'ru', 'tr', 'uk', 'zh'] as const;
+const SUPPORTED_LOCALES = ['cs', 'da', 'de', 'en', 'es', 'fa', 'fr', 'hu', 'it', 'ja', 'ko', 'lv', 'nl', 'pl', 'pt', 'ro', 'ru', 'sk', 'tr', 'uk', 'zh'] as const;
 
 // Fallback locale used when the visitor's Accept-Language header does not
 // match any supported locale (and no NEXT_LOCALE cookie is set yet). Admins

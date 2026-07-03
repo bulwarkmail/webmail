@@ -20,6 +20,7 @@ import plMessages from '@/locales/pl/common.json';
 import ptMessages from '@/locales/pt/common.json';
 import roMessages from '@/locales/ro/common.json';
 import ruMessages from '@/locales/ru/common.json';
+import skMessages from '@/locales/sk/common.json';
 import trMessages from '@/locales/tr/common.json';
 import ukMessages from '@/locales/uk/common.json';
 import zhMessages from '@/locales/zh/common.json';
@@ -43,6 +44,7 @@ const ALL_MESSAGES = {
   pt: ptMessages,
   ro: roMessages,
   ru: ruMessages,
+  sk: skMessages,
   tr: trMessages,
   uk: ukMessages,
   zh: zhMessages,
