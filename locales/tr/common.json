@@ -635,7 +635,9 @@
     "validation": {
       "recipient_required": "Göndermek için bir alıcı ekleyin",
       "subject_required": "Bir konu ekleyin",
-      "body_required": "Bir ileti yazın veya dosya ekleyin"
+      "body_required": "Bir ileti yazın veya dosya ekleyin",
+      "attachments_uploading": "Ekler hâlâ yükleniyor — yükleme bitince gönderilecek",
+      "attachment_upload_failed": "Gönderilmedi - bir ek yüklenemedi. Eki kaldırıp tekrar deneyin."
     },
     "upload_progress": "{uploaded} / {total} yükleniyor",
     "upload_cancel": "Yüklemeyi iptal et",

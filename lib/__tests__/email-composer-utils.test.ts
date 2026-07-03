@@ -10,6 +10,7 @@ import {
   parseRecipientList,
   formatRecipientList,
   splitPastedRecipients,
+  waitForPendingUploads,
 } from "../email-composer-utils";
 
 describe("plainTextToComposerBody", () => {
@@ -272,5 +273,79 @@ describe("splitPastedRecipients", () => {
 
   it("returns empty arrays for blank input", () => {
     expect(splitPastedRecipients("   ")).toEqual({ valid: [], invalid: [] });
+  });
+});
+
+describe("waitForPendingUploads", () => {
+  const att = (over: Partial<{ uploading: boolean; error: boolean }> = {}) => ({
+    name: "file.pdf",
+    type: "application/pdf",
+    size: 100,
+    ...over,
+  });
+
+  it("resolves 'completed' immediately when nothing is uploading", async () => {
+    const result = await waitForPendingUploads(
+      () => [att({}), att({})],
+      () => false,
+      1
+    );
+    expect(result).toBe("completed");
+  });
+
+  it("polls until in-flight uploads finish, then resolves 'completed'", async () => {
+    let list = [att({ uploading: true }), att({})];
+    setTimeout(() => {
+      list = [att({}), att({})];
+    }, 10);
+    const result = await waitForPendingUploads(() => list, () => false, 1);
+    expect(result).toBe("completed");
+  });
+
+  it("resolves 'failed' when an upload finishes with an error during the wait", async () => {
+    let list = [att({ uploading: true })];
+    setTimeout(() => {
+      list = [att({ error: true })];
+    }, 10);
+    const result = await waitForPendingUploads(() => list, () => false, 1);
+    expect(result).toBe("failed");
+  });
+
+  it("resolves 'failed' when another attachment is already errored once uploads finish", async () => {
+    let list = [att({ uploading: true }), att({ error: true })];
+    setTimeout(() => {
+      list = [att({}), att({ error: true })];
+    }, 10);
+    const result = await waitForPendingUploads(() => list, () => false, 1);
+    expect(result).toBe("failed");
+  });
+
+  it("resolves 'cancelled' when cancellation is signalled mid-wait", async () => {
+    let cancelled = false;
+    const list = [att({ uploading: true })];
+    setTimeout(() => {
+      cancelled = true;
+    }, 10);
+    const result = await waitForPendingUploads(
+      () => list,
+      () => cancelled,
+      1
+    );
+    expect(result).toBe("cancelled");
+  });
+
+  it("prefers 'cancelled' over 'failed' when the draft is closed while an errored upload is pending", async () => {
+    let cancelled = false;
+    let list = [att({ uploading: true })];
+    setTimeout(() => {
+      list = [att({ error: true, uploading: true })];
+      cancelled = true;
+    }, 10);
+    const result = await waitForPendingUploads(
+      () => list,
+      () => cancelled,
+      1
+    );
+    expect(result).toBe("cancelled");
   });
 });

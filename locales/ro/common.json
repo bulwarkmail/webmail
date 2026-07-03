@@ -635,7 +635,9 @@
     "validation": {
       "recipient_required": "Adăugați un destinatar căruia să îi trimiteți mesajul",
       "subject_required": "Adăugați un subiect",
-      "body_required": "Scrieți un mesaj sau atașați un fișier"
+      "body_required": "Scrieți un mesaj sau atașați un fișier",
+      "attachments_uploading": "Atașamentele încă se încarcă — se va trimite imediat ce se termină",
+      "attachment_upload_failed": "Netrimis - încărcarea unui atașament a eșuat. Eliminați-l și încercați din nou."
     },
     "upload_progress": "Încărcare {uploaded} / {total}",
     "upload_cancel": "Anulează încărcarea",

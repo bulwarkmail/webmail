@@ -235,3 +235,34 @@ export function replaceInlineImagePlaceholders(
   });
   return changed ? doc.body.innerHTML : html;
 }
+
+export type PendingUploadLike = {
+  uploading?: boolean;
+  error?: boolean;
+};
+
+export type PendingUploadWaitResult = "completed" | "cancelled" | "failed";
+
+/**
+ * Wait for in-flight attachment uploads to settle before sending.
+ *
+ * Polls `getAttachments` until nothing is `uploading`, checking
+ * `isCancelled` between polls (composer closed / draft discarded).
+ * Resolves:
+ * - "cancelled" - cancellation was signalled while waiting
+ * - "failed"    - uploads settled but at least one attachment errored;
+ *                 the caller must NOT auto-send (the user may not be
+ *                 looking at the composer to notice the failed chip)
+ * - "completed" - all uploads finished cleanly, safe to proceed
+ */
+export async function waitForPendingUploads(
+  getAttachments: () => readonly PendingUploadLike[],
+  isCancelled: () => boolean,
+  pollMs = 150
+): Promise<PendingUploadWaitResult> {
+  while (getAttachments().some((att) => att.uploading)) {
+    if (isCancelled()) return "cancelled";
+    await new Promise((resolve) => setTimeout(resolve, pollMs));
+  }
+  return getAttachments().some((att) => att.error) ? "failed" : "completed";
+}

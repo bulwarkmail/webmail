@@ -634,7 +634,9 @@
     "validation": {
       "recipient_required": "Tilføj en modtager for at sende",
       "subject_required": "Tilføj et emne",
-      "body_required": "Skriv en besked eller vedhæft en fil"
+      "body_required": "Skriv en besked eller vedhæft en fil",
+      "attachments_uploading": "Vedhæftninger uploades stadig — sendes, når de er færdige",
+      "attachment_upload_failed": "Ikke sendt - en vedhæftet fil kunne ikke uploades. Fjern den, og prøv igen."
     },
     "upload_progress": "Uploader {uploaded} / {total}",
     "upload_cancel": "Annuller upload",

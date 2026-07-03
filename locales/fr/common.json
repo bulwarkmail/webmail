@@ -632,7 +632,9 @@
     "validation": {
       "recipient_required": "Ajoutez un destinataire pour envoyer",
       "subject_required": "Ajoutez un objet",
-      "body_required": "Rédigez un message ou joignez un fichier"
+      "body_required": "Rédigez un message ou joignez un fichier",
+      "attachments_uploading": "Les pièces jointes sont en cours d'envoi — le message partira une fois terminé",
+      "attachment_upload_failed": "Non envoyé - le téléversement d'une pièce jointe a échoué. Supprimez-la et réessayez."
     },
     "upload_progress": "Envoi {uploaded} / {total}",
     "upload_cancel": "Annuler l'envoi",

@@ -632,7 +632,9 @@
     "validation": {
       "recipient_required": "Norādiet vismaz vienu saņēmēju",
       "subject_required": "Norādiet tematu",
-      "body_required": "Ierakstiet ziņojumu vai pievienojiet failu"
+      "body_required": "Ierakstiet ziņojumu vai pievienojiet failu",
+      "attachments_uploading": "Pielikumi joprojām tiek augšupielādēti — nosūtīs, tiklīdz tas pabeigts",
+      "attachment_upload_failed": "Nav nosūtīts - pielikumu neizdevās augšupielādēt. Noņemiet to un mēģiniet vēlreiz."
     },
     "upload_progress": "Augšupielāde {uploaded} / {total}",
     "upload_cancel": "Atcelt augšupielādi",

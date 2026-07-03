@@ -632,7 +632,9 @@
     "validation": {
       "recipient_required": "送信するには宛先を追加してください",
       "subject_required": "件名を追加してください",
-      "body_required": "メッセージを入力するかファイルを添付してください"
+      "body_required": "メッセージを入力するかファイルを添付してください",
+      "attachments_uploading": "添付ファイルをアップロード中です。完了次第送信します",
+      "attachment_upload_failed": "送信されませんでした。添付ファイルのアップロードに失敗しました。削除してもう一度お試しください。"
     },
     "upload_progress": "アップロード中 {uploaded} / {total}",
     "upload_cancel": "アップロードをキャンセル",

@@ -45,6 +45,7 @@ import {
   parseRecipientList,
   formatRecipientList,
   splitPastedRecipients,
+  waitForPendingUploads,
   type Recipient,
 } from "@/lib/email-composer-utils";
 import { RichTextEditor } from "@/components/email/rich-text-editor";
@@ -1413,6 +1414,7 @@ export function EmailComposer({
   const canSend = toAddresses.length > 0 && !!subject && hasContent;
 
   const getSendTooltip = (): string | undefined => {
+    if (isWaitingForUploads) return t('validation.attachments_uploading');
     if (canSend) return undefined;
     if (toAddresses.length === 0) return t('validation.recipient_required');
     if (!subject) return t('validation.subject_required');
@@ -1498,8 +1500,43 @@ export function EmailComposer({
   const [isSending, setIsSending] = useState(false);
   const isSendingRef = useRef(false);
 
+  // Attachments still uploading when Send is clicked used to be silently
+  // dropped from the outgoing message (the filters below exclude anything
+  // with uploading:true). attachmentsRef gives handleSend a way to read the
+  // freshest attachment state after waiting on in-flight uploads, since the
+  // `attachments` closure captured at click time won't reflect uploads that
+  // finish during that wait.
+  const attachmentsRef = useRef<ComposerAttachment[]>(attachments);
+  useEffect(() => {
+    attachmentsRef.current = attachments;
+  }, [attachments]);
+  const [isWaitingForUploads, setIsWaitingForUploads] = useState(false);
+  const sendCancelledRef = useRef(false);
+
   const handleSend = async (skipAttachmentCheck = false, delayedUntil?: string) => {
     if (isSendingRef.current) return;
+
+    if (attachmentsRef.current.some(att => att.uploading)) {
+      isSendingRef.current = true;
+      setIsSending(true);
+      setIsWaitingForUploads(true);
+      const uploadResult = await waitForPendingUploads(
+        () => attachmentsRef.current,
+        () => sendCancelledRef.current
+      );
+      setIsWaitingForUploads(false);
+      isSendingRef.current = false;
+      setIsSending(false);
+      if (uploadResult === 'cancelled') return;
+      if (uploadResult === 'failed') {
+        // An upload broke while we were waiting - the user may not be
+        // looking at the composer, so auto-sending would silently drop
+        // the failed attachment. Abort and let them decide.
+        toast.error(t('validation.attachment_upload_failed'));
+        return;
+      }
+    }
+
     const ccAddresses = withInput(cc, ccInput);
     const bccAddresses = withInput(bcc, bccInput);
 
@@ -1520,7 +1557,7 @@ export function EmailComposer({
 
     // Attachment reminder check
     if (!skipAttachmentCheck && attachmentReminderEnabled) {
-      const hasAttachments = attachments.some(att => att.blobId && !att.uploading && !att.error);
+      const hasAttachments = attachmentsRef.current.some(att => att.blobId && !att.uploading && !att.error);
       if (!hasAttachments) {
         const bodyText = htmlToPlainText(body);
         const searchText = `${subject} ${bodyText}`.toLowerCase();
@@ -1636,7 +1673,7 @@ export function EmailComposer({
         textBody: finalBody,
         identityId: currentIdentity?.id || '',
         fromEmail,
-        attachments: attachments
+        attachments: attachmentsRef.current
           .filter(att => att.blobId && !att.uploading && !att.error)
           .map(a => ({ name: a.name, type: a.type || 'application/octet-stream', size: a.size })),
         inReplyTo: threadingHeaders?.inReplyTo?.[0],
@@ -1663,7 +1700,7 @@ export function EmailComposer({
         references: threadingHeaders?.references,
         delayedUntil: effectiveDelayedUntil,
         attachments: [
-          ...attachments
+          ...attachmentsRef.current
             .filter(att => att.blobId && !att.uploading && !att.error)
             .map(a => ({ name: a.name, type: a.type || 'application/octet-stream', size: a.size, blobId: a.blobId })),
           ...inlineAttachments.map(a => ({ name: a.name, type: a.type, size: a.size, blobId: a.blobId, cid: a.cid })),
@@ -1680,7 +1717,7 @@ export function EmailComposer({
       } else {
         // Standard JMAP send path
         // Collect uploaded attachment blobIds for the send request
-        const uploadedAttachments: Array<{ blobId: string; name: string; type: string; size: number; disposition?: 'attachment' | 'inline'; cid?: string }> = attachments
+        const uploadedAttachments: Array<{ blobId: string; name: string; type: string; size: number; disposition?: 'attachment' | 'inline'; cid?: string }> = attachmentsRef.current
           .filter(att => att.blobId && !att.uploading && !att.error)
           .map(att => ({ blobId: att.blobId!, name: att.name, type: att.type || 'application/octet-stream', size: att.size }));
         uploadedAttachments.push(...inlineAttachments);
@@ -1807,6 +1844,7 @@ export function EmailComposer({
   }, []);
 
   const cleanClose = () => {
+    sendCancelledRef.current = true;
     explicitCloseRef.current = true;
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
@@ -1816,6 +1854,7 @@ export function EmailComposer({
   };
 
   const handleSaveDraftAndClose = async () => {
+    sendCancelledRef.current = true;
     explicitCloseRef.current = true;
     setShowCloseDialog(false);
     if (saveTimeoutRef.current) {
@@ -1827,6 +1866,7 @@ export function EmailComposer({
   };
 
   const handleDiscardAndClose = () => {
+    sendCancelledRef.current = true;
     explicitCloseRef.current = true;
     setShowCloseDialog(false);
     if (saveTimeoutRef.current) {

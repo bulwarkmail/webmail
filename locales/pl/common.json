@@ -632,7 +632,9 @@
     "validation": {
       "recipient_required": "Dodaj odbiorcę, aby wysłać",
       "subject_required": "Dodaj temat",
-      "body_required": "Napisz wiadomość lub załącz plik"
+      "body_required": "Napisz wiadomość lub załącz plik",
+      "attachments_uploading": "Załączniki wciąż się przesyłają — wiadomość zostanie wysłana po zakończeniu",
+      "attachment_upload_failed": "Nie wysłano - nie udało się przesłać załącznika. Usuń go i spróbuj ponownie."
     },
     "upload_progress": "Przesyłanie {uploaded} / {total}",
     "upload_cancel": "Anuluj przesyłanie",

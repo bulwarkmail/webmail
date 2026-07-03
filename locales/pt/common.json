@@ -632,7 +632,9 @@
     "validation": {
       "recipient_required": "Adicione um destinatário para enviar",
       "subject_required": "Adicione um assunto",
-      "body_required": "Escreva uma mensagem ou anexe um arquivo"
+      "body_required": "Escreva uma mensagem ou anexe um arquivo",
+      "attachments_uploading": "Os anexos ainda estão sendo enviados — será enviado assim que terminar",
+      "attachment_upload_failed": "Não enviado - falha ao carregar um anexo. Remova-o e tente novamente."
     },
     "upload_progress": "Enviando {uploaded} / {total}",
     "upload_cancel": "Cancelar envio",

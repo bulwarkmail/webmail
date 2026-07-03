@@ -632,7 +632,9 @@
     "validation": {
       "recipient_required": "보내려면 받는 사람을 추가해 주세요",
       "subject_required": "제목을 입력해 주세요",
-      "body_required": "메시지를 작성하거나 파일을 첨부해 주세요"
+      "body_required": "메시지를 작성하거나 파일을 첨부해 주세요",
+      "attachments_uploading": "첨부 파일을 업로드하는 중입니다. 완료되면 자동으로 전송됩니다",
+      "attachment_upload_failed": "전송되지 않았습니다. 첨부 파일 업로드에 실패했습니다. 해당 파일을 제거하고 다시 시도하세요."
     },
     "upload_progress": "{uploaded} / {total} 업로드 중",
     "upload_cancel": "업로드 취소",

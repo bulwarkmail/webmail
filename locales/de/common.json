@@ -632,7 +632,9 @@
     "validation": {
       "recipient_required": "Empfänger hinzufügen zum Senden",
       "subject_required": "Betreff hinzufügen",
-      "body_required": "Nachricht schreiben oder Datei anhängen"
+      "body_required": "Nachricht schreiben oder Datei anhängen",
+      "attachments_uploading": "Anhänge werden noch hochgeladen – wird gesendet, sobald sie fertig sind",
+      "attachment_upload_failed": "Nicht gesendet - ein Anhang konnte nicht hochgeladen werden. Entfernen Sie ihn und versuchen Sie es erneut."
     },
     "upload_progress": "Hochladen {uploaded} / {total}",
     "upload_cancel": "Hochladen abbrechen",

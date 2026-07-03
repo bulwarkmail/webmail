@@ -632,7 +632,9 @@
     "validation": {
       "recipient_required": "Aggiungi un destinatario per inviare",
       "subject_required": "Aggiungi un oggetto",
-      "body_required": "Scrivi un messaggio o allega un file"
+      "body_required": "Scrivi un messaggio o allega un file",
+      "attachments_uploading": "Gli allegati sono ancora in fase di caricamento: verrà inviato al termine",
+      "attachment_upload_failed": "Non inviato: caricamento di un allegato non riuscito. Rimuovilo e riprova."
     },
     "upload_progress": "Caricamento {uploaded} / {total}",
     "upload_cancel": "Annulla caricamento",

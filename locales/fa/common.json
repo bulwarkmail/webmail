@@ -635,7 +635,9 @@
     "validation": {
       "recipient_required": "یک گیرنده اضافه کنید",
       "subject_required": "یک موضوع اضافه کنید",
-      "body_required": "پیامی بنویسید یا فایلی پیوست کنید"
+      "body_required": "پیامی بنویسید یا فایلی پیوست کنید",
+      "attachments_uploading": "پیوست‌ها هنوز در حال بارگذاری هستند — پس از اتمام ارسال می‌شود",
+      "attachment_upload_failed": "ارسال نشد - بارگذاری یک پیوست ناموفق بود. آن را حذف کنید و دوباره تلاش کنید."
     },
     "upload_progress": "در حال بارگذاری {uploaded} / {total}",
     "upload_cancel": "لغو بارگذاری",

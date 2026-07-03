@@ -632,7 +632,9 @@
     "validation": {
       "recipient_required": "Voeg een ontvanger toe om te verzenden",
       "subject_required": "Voeg een onderwerp toe",
-      "body_required": "Schrijf een bericht of voeg een bestand toe"
+      "body_required": "Schrijf een bericht of voeg een bestand toe",
+      "attachments_uploading": "Bijlagen worden nog geüpload — wordt verzonden zodra dit klaar is",
+      "attachment_upload_failed": "Niet verzonden - een bijlage kon niet worden geüpload. Verwijder deze en probeer het opnieuw."
     },
     "upload_progress": "Uploaden {uploaded} / {total}",
     "upload_cancel": "Upload annuleren",

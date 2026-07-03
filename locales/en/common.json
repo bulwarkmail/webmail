@@ -635,7 +635,9 @@
     "validation": {
       "recipient_required": "Add a recipient to send",
       "subject_required": "Add a subject",
-      "body_required": "Write a message or attach a file"
+      "body_required": "Write a message or attach a file",
+      "attachments_uploading": "Attachments are still uploading — sending as soon as they finish",
+      "attachment_upload_failed": "Not sent — an attachment failed to upload. Remove it and try again."
     },
     "upload_progress": "Uploading {uploaded} / {total}",
     "upload_cancel": "Cancel upload",

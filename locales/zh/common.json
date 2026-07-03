@@ -632,7 +632,9 @@
     "validation": {
       "recipient_required": "请添加收件人",
       "subject_required": "请添加主题",
-      "body_required": "请输入邮件内容或添加附件"
+      "body_required": "请输入邮件内容或添加附件",
+      "attachments_uploading": "附件仍在上传中，上传完成后将自动发送",
+      "attachment_upload_failed": "未发送 - 附件上传失败。请移除该附件后重试。"
     },
     "upload_progress": "正在上传 {uploaded} / {total}",
     "upload_cancel": "取消上传",
