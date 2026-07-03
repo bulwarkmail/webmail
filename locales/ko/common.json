@@ -138,7 +138,9 @@
     "scheduled": "예약됨",
     "unified_all_unread": "모든 읽지 않음",
     "unified_all_starred": "모든 별표",
-    "unified_all_mail": "모든 메일"
+    "unified_all_mail": "모든 메일",
+    "remove_account": "Remove account",
+    "remove_account_confirm": "Remove {account} from this device? You can add it back later."
   },
   "protocol_handlers": {
     "title": "기본 앱",

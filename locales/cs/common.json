@@ -138,7 +138,9 @@
     "scheduled": "Naplánováno",
     "unified_all_unread": "Vše nepřečtené",
     "unified_all_starred": "Vše s hvězdičkou",
-    "unified_all_mail": "Veškerá pošta"
+    "unified_all_mail": "Veškerá pošta",
+    "remove_account": "Remove account",
+    "remove_account_confirm": "Remove {account} from this device? You can add it back later."
   },
   "protocol_handlers": {
     "title": "Výchozí aplikace",

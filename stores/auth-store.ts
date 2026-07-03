@@ -44,6 +44,7 @@ interface AuthState {
   refreshAccessToken: () => Promise<string | null>;
   logout: () => void;
   logoutAll: () => void;
+  removeAccount: (accountId: string) => void;
   switchAccount: (accountId: string) => Promise<void>;
   checkAuth: () => Promise<void>;
   clearError: () => void;
@@ -1211,6 +1212,31 @@ export const useAuthStore = create<AuthState>()(
 
         // Redirect to login - this is synchronous and happens AFTER all state is cleared
         redirectToLogin();
+      },
+
+      // Remove a specific (typically non-active) account: tear down its client,
+      // drop it from the registry, and clear its per-slot cookies. If asked to
+      // remove the active account, defer to logout() which handles switching
+      // away or redirecting.
+      removeAccount: (accountId: string) => {
+        if (accountId === get().activeAccountId) { get().logout(); return; }
+        const accountStore = useAccountStore.getState();
+        const account = accountStore.getAccountById(accountId);
+        if (!account) return;
+        const slot = account.cookieSlot ?? 0;
+        const wasOAuth = account.authMode === 'oauth';
+
+        clearRefreshTimer(accountId);
+        const client = clients.get(accountId);
+        if (client) { try { client.disconnect(); } catch { /* noop */ } }
+        clients.delete(accountId);
+        evictAccount(accountId);
+        accountStore.removeAccount(accountId);
+
+        apiFetch(`/api/auth/session?slot=${slot}`, { method: 'DELETE', keepalive: true }).catch(() => {});
+        if (wasOAuth) {
+          apiFetch(`/api/auth/token?slot=${slot}`, { method: 'DELETE', keepalive: true }).catch(() => {});
+        }
       },
 
       logoutAll: () => {

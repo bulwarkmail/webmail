@@ -138,7 +138,9 @@
     "scheduled": "已计划",
     "unified_all_unread": "全部未读",
     "unified_all_starred": "全部加星标",
-    "unified_all_mail": "全部邮件"
+    "unified_all_mail": "全部邮件",
+    "remove_account": "Remove account",
+    "remove_account_confirm": "Remove {account} from this device? You can add it back later."
   },
   "protocol_handlers": {
     "title": "默认应用",

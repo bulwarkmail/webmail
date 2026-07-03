@@ -138,7 +138,9 @@
     "scheduled": "Ütemezett",
     "unified_all_unread": "Összes olvasatlan",
     "unified_all_starred": "Összes csillagozott",
-    "unified_all_mail": "Összes levél"
+    "unified_all_mail": "Összes levél",
+    "remove_account": "Remove account",
+    "remove_account_confirm": "Remove {account} from this device? You can add it back later."
   },
   "protocol_handlers": {
     "title": "Alapértelmezett alkalmazások",

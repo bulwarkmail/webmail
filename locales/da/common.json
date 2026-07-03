@@ -138,7 +138,9 @@
     "scheduled": "Planlagt",
     "unified_all_unread": "Alle ulæste",
     "unified_all_starred": "Alle med stjerne",
-    "unified_all_mail": "Al post"
+    "unified_all_mail": "Al post",
+    "remove_account": "Remove account",
+    "remove_account_confirm": "Remove {account} from this device? You can add it back later."
   },
   "protocol_handlers": {
     "title": "Standardapps",

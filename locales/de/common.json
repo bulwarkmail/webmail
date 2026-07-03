@@ -138,7 +138,9 @@
     "scheduled": "Geplant",
     "unified_all_unread": "Alle ungelesenen",
     "unified_all_starred": "Alle markierten",
-    "unified_all_mail": "Alle Mails"
+    "unified_all_mail": "Alle Mails",
+    "remove_account": "Remove account",
+    "remove_account_confirm": "Remove {account} from this device? You can add it back later."
   },
   "protocol_handlers": {
     "title": "Standard-Apps",

@@ -138,7 +138,9 @@
     "scheduled": "予約済み",
     "unified_all_unread": "すべての未読",
     "unified_all_starred": "すべてのスター付き",
-    "unified_all_mail": "すべてのメール"
+    "unified_all_mail": "すべてのメール",
+    "remove_account": "Remove account",
+    "remove_account_confirm": "Remove {account} from this device? You can add it back later."
   },
   "protocol_handlers": {
     "title": "既定のアプリ",

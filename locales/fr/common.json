@@ -138,7 +138,9 @@
     "scheduled": "Planifiés",
     "unified_all_unread": "Tous les non lus",
     "unified_all_starred": "Tous les favoris",
-    "unified_all_mail": "Tout le courrier"
+    "unified_all_mail": "Tout le courrier",
+    "remove_account": "Remove account",
+    "remove_account_confirm": "Remove {account} from this device? You can add it back later."
   },
   "protocol_handlers": {
     "title": "Applications par défaut",

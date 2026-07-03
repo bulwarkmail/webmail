@@ -138,7 +138,9 @@
     "scheduled": "Programat",
     "unified_all_unread": "Toate necitite",
     "unified_all_starred": "Toate cu stea",
-    "unified_all_mail": "Toată poșta"
+    "unified_all_mail": "Toată poșta",
+    "remove_account": "Remove account",
+    "remove_account_confirm": "Remove {account} from this device? You can add it back later."
   },
   "protocol_handlers": {
     "title": "Aplicații implicite",

@@ -138,7 +138,9 @@
     "scheduled": "Gepland",
     "unified_all_unread": "Alle ongelezen",
     "unified_all_starred": "Alle met ster",
-    "unified_all_mail": "Alle e-mail"
+    "unified_all_mail": "Alle e-mail",
+    "remove_account": "Remove account",
+    "remove_account_confirm": "Remove {account} from this device? You can add it back later."
   },
   "protocol_handlers": {
     "title": "Standaardapps",
