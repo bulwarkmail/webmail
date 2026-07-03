@@ -752,6 +752,19 @@ export function EmailViewer({
   const [quickReplyText, setQuickReplyText] = useState("");
   const [isQuickReplyFocused, setIsQuickReplyFocused] = useState(false);
   const [isSendingQuickReply, setIsSendingQuickReply] = useState(false);
+  const handleSendQuickReply = async () => {
+    if (!quickReplyText.trim() || !onQuickReply || isSendingQuickReply) return;
+    setIsSendingQuickReply(true);
+    try {
+      await onQuickReply(quickReplyText);
+      setQuickReplyText("");
+      setIsQuickReplyFocused(false);
+    } catch (error) {
+      console.error("Failed to send quick reply:", error);
+    } finally {
+      setIsSendingQuickReply(false);
+    }
+  };
   const [showSourceModal, setShowSourceModal] = useState(false);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const [moreMenuSub, setMoreMenuSub] = useState<'move' | 'tag' | null>(null);
@@ -4713,6 +4726,12 @@ export function EmailViewer({
                     value={quickReplyText}
                     onChange={(e) => setQuickReplyText(e.target.value)}
                     onFocus={() => setIsQuickReplyFocused(true)}
+                    onKeyDown={(e) => {
+                      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+                        e.preventDefault();
+                        void handleSendQuickReply();
+                      }
+                    }}
                     placeholder={t('quick_reply_placeholder')}
                     className={cn(
                       "w-full px-3 py-2 text-sm border border-border bg-background text-foreground rounded-lg",
@@ -4757,20 +4776,7 @@ export function EmailViewer({
                         </Button>
                         <Button
                           size="sm"
-                          onClick={async () => {
-                            if (!quickReplyText.trim() || !onQuickReply) return;
-
-                            setIsSendingQuickReply(true);
-                            try {
-                              await onQuickReply(quickReplyText);
-                              setQuickReplyText("");
-                              setIsQuickReplyFocused(false);
-                            } catch (error) {
-                              console.error("Failed to send quick reply:", error);
-                            } finally {
-                              setIsSendingQuickReply(false);
-                            }
-                          }}
+                          onClick={handleSendQuickReply}
                           disabled={!quickReplyText.trim() || isSendingQuickReply}
                         >
                           {isSendingQuickReply ? (
