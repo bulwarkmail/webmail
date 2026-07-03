@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { useRouter } from '@/i18n/navigation';
 import { getMaxAccounts } from '@/lib/account-utils';
 import { formatFileSize, cn } from '@/lib/utils';
+import { PluginSlot } from '@/components/plugins/plugin-slot';
 
 function hostnameOf(serverUrl: string): string {
   try { return new URL(serverUrl).hostname; } catch { return serverUrl; }
@@ -179,6 +180,8 @@ export function AccountSettings() {
           </SettingItem>
         )}
       </SettingsSection>
+
+      <PluginSlot name="settings-section" />
 
       {/* Logged-in accounts list */}
       {accounts.length > 0 && (
