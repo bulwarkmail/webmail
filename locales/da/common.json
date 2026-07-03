@@ -940,6 +940,10 @@
         "label": "Farverige sidepane-ikoner",
         "description": "Farvelæg mappe- og tag-ikoner efter type (blå indbakke, rød spam, grøn sendt osv.). Deaktivér for et monokromt sidepanel."
       },
+      "tint_list_rows": {
+        "label": "Tint List Rows by Tag Color",
+        "description": "Shade each message row with its first tag color. Disable to keep rows plain; tag dots and chips still show the color."
+      },
       "show_folder_total_count": {
         "label": "Vis samlet antal beskeder",
         "description": "Viser det samlede antal beskeder ud for mapper og tags sammen med antallet af ulæste. Slå fra for kun at vise ulæste."

@@ -940,6 +940,10 @@
         "label": "Colorful Sidebar Icons",
         "description": "Tint folder and tag icons by type (blue Inbox, red Junk, green Sent, etc.). Disable for a monochrome sidebar."
       },
+      "tint_list_rows": {
+        "label": "Tint List Rows by Tag Color",
+        "description": "Shade each message row with its first tag color. Disable to keep rows plain; tag dots and chips still show the color."
+      },
       "show_folder_total_count": {
         "label": "Show Total Message Count",
         "description": "Show the total message count next to folders and tags, alongside the unread count. Disable to show only unread counts."

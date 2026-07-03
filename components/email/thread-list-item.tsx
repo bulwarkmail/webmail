@@ -89,6 +89,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
     const showRecipient = currentMailboxRole === 'sent' || currentMailboxRole === 'drafts';
     const sender = showRecipient ? (email.to?.[0] ?? email.from?.[0]) : email.from?.[0];
     const emailKeywords = useSettingsStore((state) => state.emailKeywords);
+    const tintListRowsByTag = useSettingsStore((state) => state.tintListRowsByTag);
     const density = useSettingsStore((state) => state.density);
     const mailLayout = useSettingsStore((state) => state.mailLayout);
     const timeFormat = useSettingsStore((state) => state.timeFormat);
@@ -112,7 +113,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
     const tagIds = getEmailColorTags(email.keywords);
     const resolvedKeywordDefs = tagIds.map(id => emailKeywords.find(k => k.id === id) ?? { id, label: id, color: 'gray' });
     const resolvedKeywordDef = resolvedKeywordDefs[0] ?? null;
-    const resolvedColorTag = (() => {
+    const resolvedColorTag = !tintListRowsByTag ? null : (() => {
       if (colorTag) return colorTag;
       return resolvedKeywordDef ? KEYWORD_PALETTE[resolvedKeywordDef.color]?.bg ?? null : null;
     })();
@@ -488,8 +489,9 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
 
     const threadColor = getThreadColorTag(thread.emails);
     const emailKeywordDefs = useSettingsStore((state) => state.emailKeywords);
+    const tintListRowsByTag = useSettingsStore((state) => state.tintListRowsByTag);
     const keywordDef = threadColor ? (emailKeywordDefs.find(k => k.id === threadColor) ?? { id: threadColor, label: threadColor, color: 'gray' }) : null;
-    const colorTag = keywordDef ? KEYWORD_PALETTE[keywordDef.color]?.bg ?? null : null;
+    const colorTag = (tintListRowsByTag && keywordDef) ? KEYWORD_PALETTE[keywordDef.color]?.bg ?? null : null;
 
     const isSelected = selectedEmailId === latestEmail.id ||
       thread.emails.some(e => e.id === selectedEmailId);

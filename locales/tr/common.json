@@ -937,6 +937,10 @@
         "label": "Renkli Kenar Çubuğu Simgeleri",
         "description": "Klasör ve etiket simgelerini türe göre renklendir (mavi Gelen Kutusu, kırmızı İstem Dışı vb.). Tek renkli kenar çubuğu için kapatın."
       },
+      "tint_list_rows": {
+        "label": "Tint List Rows by Tag Color",
+        "description": "Shade each message row with its first tag color. Disable to keep rows plain; tag dots and chips still show the color."
+      },
       "show_folder_total_count": {
         "label": "Toplam mesaj sayısını göster",
         "description": "Klasörlerin ve etiketlerin yanında, okunmamış sayısının yanı sıra toplam mesaj sayısını gösterir. Yalnızca okunmamışları göstermek için devre dışı bırakın."

@@ -937,6 +937,10 @@
         "label": "Gekleurde zijbalkpictogrammen",
         "description": "Kleur map- en tagpictogrammen op type (blauw Postvak IN, rood Spam, groen Verzonden, enz.). Schakel uit voor een monochrome zijbalk."
       },
+      "tint_list_rows": {
+        "label": "Tint List Rows by Tag Color",
+        "description": "Shade each message row with its first tag color. Disable to keep rows plain; tag dots and chips still show the color."
+      },
       "show_folder_total_count": {
         "label": "Totaal aantal berichten tonen",
         "description": "Toont het totale aantal berichten naast mappen en labels, naast het aantal ongelezen berichten. Schakel uit om alleen ongelezen aantallen te tonen."

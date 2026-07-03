@@ -40,6 +40,7 @@ export function EmailListItem({ email, selected, onClick, onDoubleClick, onConte
   const density = useSettingsStore((state) => state.density);
   const mailLayout = useSettingsStore((state) => state.mailLayout);
   const emailKeywords = useSettingsStore((state) => state.emailKeywords);
+  const tintListRowsByTag = useSettingsStore((state) => state.tintListRowsByTag);
   const showAvatarsInJunk = useSettingsStore((state) => state.showAvatarsInJunk);
   const { identities } = useAuthStore();
   const isChecked = selectedEmailIds.has(email.id);
@@ -67,7 +68,7 @@ export function EmailListItem({ email, selected, onClick, onDoubleClick, onConte
   const keywordDefs = colorTagIds.map(id => emailKeywords.find(k => k.id === id) ?? { id, label: id, color: 'gray' });
   // Use first tag for background coloring
   const keywordDef = keywordDefs[0] ?? null;
-  const colorTag = keywordDef ? KEYWORD_PALETTE[keywordDef.color]?.bg ?? null : null;
+  const colorTag = (tintListRowsByTag && keywordDef) ? KEYWORD_PALETTE[keywordDef.color]?.bg ?? null : null;
 
   // Drag and drop functionality
   const { dragHandlers, isDragging } = useEmailDrag({

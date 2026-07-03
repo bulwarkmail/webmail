@@ -937,6 +937,10 @@
         "label": "Icônes colorées dans la barre latérale",
         "description": "Colore les icônes de dossiers et d'étiquettes par type (Boîte de réception en bleu, Indésirable en rouge, Envoyés en vert, etc.). Désactivez pour une barre latérale monochrome."
       },
+      "tint_list_rows": {
+        "label": "Tint List Rows by Tag Color",
+        "description": "Shade each message row with its first tag color. Disable to keep rows plain; tag dots and chips still show the color."
+      },
       "show_folder_total_count": {
         "label": "Afficher le nombre total de messages",
         "description": "Affiche le nombre total de messages à côté des dossiers et des étiquettes, en plus du nombre de messages non lus. Désactivez pour n'afficher que les messages non lus."

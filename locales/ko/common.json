@@ -937,6 +937,10 @@
         "label": "컬러풀한 사이드바 아이콘",
         "description": "폴더와 태그 아이콘을 유형별로 색상 표시합니다(받은편지함 파란색, 스팸 빨간색, 보낸편지함 녹색 등). 모노크롬 사이드바를 원하면 비활성화하세요."
       },
+      "tint_list_rows": {
+        "label": "Tint List Rows by Tag Color",
+        "description": "Shade each message row with its first tag color. Disable to keep rows plain; tag dots and chips still show the color."
+      },
       "show_folder_total_count": {
         "label": "전체 메시지 수 표시",
         "description": "읽지 않은 수와 함께 폴더 및 태그 옆에 전체 메시지 수를 표시합니다. 읽지 않은 수만 표시하려면 비활성화하세요."

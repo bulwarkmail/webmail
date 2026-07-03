@@ -940,6 +940,10 @@
         "label": "Pictograme colorate în bara laterală",
         "description": "Colorați pictogramele folderelor și etichetelor în funcție de tip (albastru pentru „Inbox”, roșu pentru „Junk”, verde pentru „Sent” etc.). Dezactivați această opțiune pentru o bară laterală monocromă."
       },
+      "tint_list_rows": {
+        "label": "Tint List Rows by Tag Color",
+        "description": "Shade each message row with its first tag color. Disable to keep rows plain; tag dots and chips still show the color."
+      },
       "show_folder_total_count": {
         "label": "Afișează numărul total de mesaje",
         "description": "Afișează numărul total de mesaje lângă foldere și etichete, pe lângă numărul celor necitite. Dezactivează pentru a afișa doar mesajele necitite."

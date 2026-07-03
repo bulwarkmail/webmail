@@ -940,6 +940,10 @@
         "label": "Színes oldalsáv ikonok",
         "description": "Mappa és címke ikonok színezése típus szerint (kék Beérkező, piros Spam, zöld Elküldött, stb.). Kapcsold ki az egyszínű oldalsávhoz."
       },
+      "tint_list_rows": {
+        "label": "Tint List Rows by Tag Color",
+        "description": "Shade each message row with its first tag color. Disable to keep rows plain; tag dots and chips still show the color."
+      },
       "show_folder_total_count": {
         "label": "Összes üzenet számának megjelenítése",
         "description": "Megjeleníti az üzenetek teljes számát a mappák és címkék mellett, az olvasatlanok számán túl. Kapcsolja ki, ha csak az olvasatlanok számát szeretné látni."

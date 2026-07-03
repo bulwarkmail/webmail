@@ -937,6 +937,10 @@
         "label": "Barevné ikony postranního panelu",
         "description": "Obarví ikony složek a štítků podle typu (modré Doručené, červený Spam, zelené Odeslané atd.). Vypněte pro jednobarevný postranní panel."
       },
+      "tint_list_rows": {
+        "label": "Tint List Rows by Tag Color",
+        "description": "Shade each message row with its first tag color. Disable to keep rows plain; tag dots and chips still show the color."
+      },
       "show_folder_total_count": {
         "label": "Zobrazit celkový počet zpráv",
         "description": "Zobrazí celkový počet zpráv vedle složek a štítků spolu s počtem nepřečtených. Vypněte pro zobrazení pouze nepřečtených."

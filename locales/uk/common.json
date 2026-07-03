@@ -937,6 +937,10 @@
         "label": "Кольорові значки бічної панелі",
         "description": "Забарвлюйте значки папок і тегів за типом (синя «Вхідні», червоний «Спам», зелена «Надіслані» тощо). Вимкніть для монохромної бічної панелі."
       },
+      "tint_list_rows": {
+        "label": "Tint List Rows by Tag Color",
+        "description": "Shade each message row with its first tag color. Disable to keep rows plain; tag dots and chips still show the color."
+      },
       "show_folder_total_count": {
         "label": "Показувати загальну кількість повідомлень",
         "description": "Показує загальну кількість повідомлень поруч із теками та мітками, разом із кількістю непрочитаних. Вимкніть, щоб показувати лише непрочитані."

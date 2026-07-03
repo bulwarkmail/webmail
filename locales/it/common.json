@@ -937,6 +937,10 @@
         "label": "Icone colorate nella barra laterale",
         "description": "Colora le icone di cartelle ed etichette per tipo (Posta in arrivo blu, Spam rosso, Inviati verde, ecc.). Disattiva per una barra laterale monocromatica."
       },
+      "tint_list_rows": {
+        "label": "Tint List Rows by Tag Color",
+        "description": "Shade each message row with its first tag color. Disable to keep rows plain; tag dots and chips still show the color."
+      },
       "show_folder_total_count": {
         "label": "Mostra il numero totale di messaggi",
         "description": "Mostra il numero totale di messaggi accanto a cartelle ed etichette, insieme al conteggio dei non letti. Disattiva per mostrare solo i non letti."

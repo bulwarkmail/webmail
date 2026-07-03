@@ -937,6 +937,10 @@
         "label": "Krāsainas sānjoslas ikonas",
         "description": "Iekrāsojiet mapju un birku ikonas pēc to veida (zila Iesūtne, sarkana Mēstules, zaļa Nosūtītie utt.). Atspējojiet, lai iegūtu vienkrāsainu sānjoslu."
       },
+      "tint_list_rows": {
+        "label": "Tint List Rows by Tag Color",
+        "description": "Shade each message row with its first tag color. Disable to keep rows plain; tag dots and chips still show the color."
+      },
       "show_folder_total_count": {
         "label": "Rādīt kopējo ziņojumu skaitu",
         "description": "Rāda kopējo ziņojumu skaitu blakus mapēm un tagiem, kā arī nelasīto ziņojumu skaitu. Atspējojiet, lai rādītu tikai nelasītos."

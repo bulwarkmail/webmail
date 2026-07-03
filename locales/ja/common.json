@@ -937,6 +937,10 @@
         "label": "カラフルなサイドバーアイコン",
         "description": "フォルダーとタグのアイコンを種類別に色分けします（受信トレイは青、迷惑メールは赤、送信済みは緑など）。モノクロのサイドバーにするには無効にしてください。"
       },
+      "tint_list_rows": {
+        "label": "Tint List Rows by Tag Color",
+        "description": "Shade each message row with its first tag color. Disable to keep rows plain; tag dots and chips still show the color."
+      },
       "show_folder_total_count": {
         "label": "メッセージの総数を表示",
         "description": "フォルダーやタグの横に、未読数に加えてメッセージの総数を表示します。未読数のみを表示するには無効にします。"

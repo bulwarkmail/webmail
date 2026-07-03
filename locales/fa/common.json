@@ -940,6 +940,10 @@
         "label": "آیکون‌های رنگی نوار کناری",
         "description": "رنگ‌آمیزی آیکون‌های پوشه و برچسب بر اساس نوع"
       },
+      "tint_list_rows": {
+        "label": "Tint List Rows by Tag Color",
+        "description": "Shade each message row with its first tag color. Disable to keep rows plain; tag dots and chips still show the color."
+      },
       "show_folder_total_count": {
         "label": "نمایش تعداد کل پیام‌ها",
         "description": "تعداد کل پیام‌ها را در کنار پوشه‌ها و برچسب‌ها، همراه با تعداد خوانده‌نشده‌ها نمایش می‌دهد. برای نمایش فقط تعداد خوانده‌نشده‌ها غیرفعال کنید."

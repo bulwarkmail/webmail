@@ -937,6 +937,10 @@
         "label": "Farebné ikony postranného panela",
         "description": "Ofarbí ikony priečinkov a štítkov podľa typu. Vypnite pre jednofarebný postranný panel."
       },
+      "tint_list_rows": {
+        "label": "Tint List Rows by Tag Color",
+        "description": "Shade each message row with its first tag color. Disable to keep rows plain; tag dots and chips still show the color."
+      },
       "show_folder_total_count": {
         "label": "Zobraziť celkový počet správ",
         "description": "Zobraziť celkový počet správ vedľa priečinkov a štítkov spolu s počtom neprečítaných."

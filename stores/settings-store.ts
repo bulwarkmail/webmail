@@ -261,6 +261,7 @@ interface SettingsState {
 
   // Sidebar
   colorfulSidebarIcons: boolean; // Tint folder icons by role (inbox blue, junk red, etc.)
+  tintListRowsByTag: boolean; // Tint mail-list rows by the first tag color
   showFolderTotalCount: boolean; // Show total message count next to folders/tags (alongside unread)
 
   // Folders
@@ -458,6 +459,7 @@ const DEFAULT_SETTINGS = {
 
   // Sidebar
   colorfulSidebarIcons: true,
+  tintListRowsByTag: true,
   showFolderTotalCount: true,
 
   // Folders
@@ -634,6 +636,7 @@ export const useSettingsStore = create<SettingsState>()(
           senderFavicons: state.senderFavicons,
           showAvatarsInJunk: state.showAvatarsInJunk,
           colorfulSidebarIcons: state.colorfulSidebarIcons,
+          tintListRowsByTag: state.tintListRowsByTag,
           showFolderTotalCount: state.showFolderTotalCount,
           folderIcons: state.folderIcons,
           emailKeywords: state.emailKeywords,
