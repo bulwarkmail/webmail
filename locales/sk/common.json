@@ -635,7 +635,9 @@
     "validation": {
       "recipient_required": "Pridajte príjemcu na odoslanie",
       "subject_required": "Pridajte predmet",
-      "body_required": "Napíšte správu alebo priložte súbor"
+      "body_required": "Napíšte správu alebo priložte súbor",
+      "attachments_uploading": "Prílohy sa stále nahrávajú - odošle sa hneď po ich dokončení",
+      "attachment_upload_failed": "Neodoslané - prílohu sa nepodarilo nahrať. Odstráňte ju a skúste to znova."
     },
     "upload_progress": "Nahrávanie {uploaded} / {total}",
     "upload_cancel": "Zrušiť nahrávanie",
@@ -675,7 +677,9 @@
     "recipient_edit_email": "Upraviť e-mailovú adresu",
     "recipient_edit_name": "Upraviť zobrazené meno",
     "recipient_email_placeholder": "E-mailová adresa",
-    "recipient_name_placeholder": "Zobrazené meno"
+    "recipient_name_placeholder": "Zobrazené meno",
+    "autocomplete_search_server": "Hľadať na serveri",
+    "autocomplete_searching": "Hľadanie..."
   },
   "confirm_dialog": {
     "confirm": "Potvrdiť",
@@ -1050,6 +1054,14 @@
         "preview_today": "Dnes:",
         "preview_this_week": "Tento týždeň:",
         "preview_older": "Staršie:"
+      },
+      "date_locale": {
+        "label": "Date format region",
+        "description": "How numeric dates are ordered (day, month, year)",
+        "auto": "Automatic (match language)",
+        "iso": "ISO 8601 (YYYY-MM-DD)",
+        "dmy": "Day/Month/Year",
+        "mdy": "Month/Day/Year"
       },
       "time_format": {
         "label": "Formát času",
