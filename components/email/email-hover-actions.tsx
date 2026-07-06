@@ -21,6 +21,8 @@ interface EmailHoverActionsProps {
   // the spam quick-action flips to "not spam".
   isInJunk?: boolean;
   onUndoSpam?: () => void;
+  // Hidden where marking spam is meaningless for self-authored mail (Drafts, Sent).
+  spamApplicable?: boolean;
 }
 
 const ACTION_CONFIG: Record<HoverAction, {
@@ -78,6 +80,7 @@ export function EmailHoverActions({
   onMarkAsSpam,
   isInJunk = false,
   onUndoSpam,
+  spamApplicable = true,
 }: EmailHoverActionsProps) {
   const hoverActions = useSettingsStore((state) => state.hoverActions);
   const hoverActionsMode = useSettingsStore((state) => state.hoverActionsMode);
@@ -121,6 +124,7 @@ export function EmailHoverActions({
   const actionButtons = hoverActions.map((actionId) => {
     const config = ACTION_CONFIG[actionId];
     if (!config) return null;
+    if (actionId === "spam" && !spamApplicable) return null;
     const Icon = config.icon;
 
     // In a junk context the spam action becomes "not spam".

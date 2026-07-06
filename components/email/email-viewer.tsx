@@ -693,6 +693,9 @@ export function EmailViewer({
 
   // Detect if current mailbox is Junk folder
   const isInJunkFolder = currentMailboxRole === 'junk';
+  // Marking your own outgoing mail as spam makes no sense - hide the action
+  // in Sent, Drafts and Scheduled.
+  const spamApplicable = !['sent', 'drafts', 'scheduled'].includes(currentMailboxRole || '');
 
   // Detect if the email is a draft
   const isDraft = email?.keywords?.['$draft'] === true;
@@ -2922,7 +2925,7 @@ export function EmailViewer({
         </div>
 
         {/* Spam */}
-        {(onMarkAsSpam || onUndoSpam) && (
+        {spamApplicable && (onMarkAsSpam || onUndoSpam) && (
           <Button
             variant="ghost"
             size="sm"
@@ -3156,7 +3159,7 @@ export function EmailViewer({
                 </div>
               )}
               {/* Overflow: spam */}
-              {(onMarkAsSpam || onUndoSpam) && (
+              {spamApplicable && (onMarkAsSpam || onUndoSpam) && (
                 <button
                   onClick={() => { (isInJunkFolder ? onUndoSpam : onMarkAsSpam)?.(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
                   className={cn("w-full px-3 py-1.5 text-sm text-left hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(7) ? "" : "sm:hidden")}

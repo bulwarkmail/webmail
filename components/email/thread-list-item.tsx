@@ -405,6 +405,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
             onMarkAsSpam={onMarkAsSpam}
             onUndoSpam={onUndoSpam}
             isInJunk={currentMailboxRole === 'junk'}
+            spamApplicable={!['sent', 'drafts', 'scheduled'].includes(currentMailboxRole || '')}
           />
         )}
       </div>
@@ -875,6 +876,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
               onMarkAsSpam={onMarkAsSpam ? () => onMarkAsSpam(latestEmail) : undefined}
               onUndoSpam={onUndoSpam ? () => onUndoSpam(latestEmail) : undefined}
               isInJunk={currentMailboxRole === 'junk'}
+              spamApplicable={!['sent', 'drafts', 'scheduled'].includes(currentMailboxRole || '')}
             />
           )}
         </div>

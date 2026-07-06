@@ -153,6 +153,9 @@ export function EmailContextMenu({
   const currentColors = getCurrentColors(email.keywords);
   const showBatchActions = isMultiSelect && selectedCount > 1;
   const isInJunkFolder = currentMailboxRole === 'junk';
+  // Marking your own outgoing mail as spam makes no sense - hide the action
+  // in Sent, Drafts and Scheduled.
+  const spamApplicable = !['sent', 'drafts', 'scheduled'].includes(currentMailboxRole || '');
   const isScheduled = email.isScheduled === true;
   const canCancelScheduled = isScheduled && email.scheduledUndoStatus === 'pending';
 
@@ -385,22 +388,26 @@ export function EmailContextMenu({
         </ContextMenuSubMenu>
       )}
 
-      <ContextMenuSeparator />
+      {/* Spam - contextual based on folder; pointless on own outgoing mail */}
+      {spamApplicable && (
+        <>
+          <ContextMenuSeparator />
 
-      {/* Spam - contextual based on folder */}
-      <ContextMenuItem
-        icon={isInJunkFolder ? ShieldCheck : ShieldAlert}
-        label={isInJunkFolder ? t("not_spam") : t("mark_as_spam")}
-        onClick={() =>
-          handleAction(
-            showBatchActions
-              ? (isInJunkFolder ? onBatchUndoSpam! : onBatchMarkAsSpam!)
-              : (isInJunkFolder ? onUndoSpam! : onMarkAsSpam!)
-          )
-        }
-        disabled={showBatchActions ? (isInJunkFolder ? !onBatchUndoSpam : !onBatchMarkAsSpam) : (isInJunkFolder ? !onUndoSpam : !onMarkAsSpam)}
-        destructive={!isInJunkFolder}
-      />
+          <ContextMenuItem
+            icon={isInJunkFolder ? ShieldCheck : ShieldAlert}
+            label={isInJunkFolder ? t("not_spam") : t("mark_as_spam")}
+            onClick={() =>
+              handleAction(
+                showBatchActions
+                  ? (isInJunkFolder ? onBatchUndoSpam! : onBatchMarkAsSpam!)
+                  : (isInJunkFolder ? onUndoSpam! : onMarkAsSpam!)
+              )
+            }
+            disabled={showBatchActions ? (isInJunkFolder ? !onBatchUndoSpam : !onBatchMarkAsSpam) : (isInJunkFolder ? !onUndoSpam : !onMarkAsSpam)}
+            destructive={!isInJunkFolder}
+          />
+        </>
+      )}
 
       <ContextMenuSeparator />
 

@@ -621,6 +621,10 @@ export default function Home() {
     onToggleSpam: async () => {
       if (isScheduledView) return;
       const currentMailbox = mailboxes.find(m => m.id === selectedMailbox);
+      // Marking your own outgoing mail as spam makes no sense - the toolbar
+      // and menus hide the action in Sent/Drafts/Scheduled, so the shortcut
+      // is a no-op there too.
+      if (['sent', 'drafts', 'scheduled'].includes(currentMailbox?.role || '')) return;
       const isInJunk = currentMailbox?.role === 'junk';
       if (selectedEmailIds.size > 0 && client) {
         const ids = Array.from(selectedEmailIds);

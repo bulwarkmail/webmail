@@ -338,6 +338,7 @@ export function EmailListItem({ email, selected, onClick, onDoubleClick, onConte
         onMarkAsSpam={onMarkAsSpam}
         onUndoSpam={onUndoSpam}
         isInJunk={currentMailboxRole === 'junk'}
+        spamApplicable={!['sent', 'drafts', 'scheduled'].includes(currentMailboxRole || '')}
       />
     </div>
   );
