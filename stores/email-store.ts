@@ -2278,10 +2278,44 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       const alsoMarkRead = useSettingsStore.getState().deleteAction === 'trash-and-read' && isUnread;
       await actionClient.markAsSpam(emailId, accountId, alsoMarkRead);
 
-      set(state => ({
-        emails: state.emails.filter(e => e.id !== emailId),
-        selectedEmail: getNextSelectedEmail(state, emailId),
-      }));
+      // Same junk resolution the client used for the move itself.
+      const junkMailbox = mailboxes.find(m =>
+        accountId ? (m.role === 'junk' && m.accountId === accountId) : (m.role === 'junk' && !m.isShared)
+      );
+      // After marking read in the same request, the email arrives in junk as read.
+      const arrivesUnread = isUnread && !alsoMarkRead;
+
+      set(state => {
+        // Counter changes go to the email's own account list; source and junk
+        // live in the same account. (#281)
+        const mailboxPatch = applyMailboxCounterUpdate(state, email, (mailbox) => {
+          if (emailInMailbox(email, mailbox)) {
+            return {
+              ...mailbox,
+              totalEmails: Math.max(0, mailbox.totalEmails - 1),
+              unreadEmails: isUnread ? Math.max(0, mailbox.unreadEmails - 1) : mailbox.unreadEmails,
+              totalThreads: Math.max(0, mailbox.totalThreads - 1),
+              unreadThreads: isUnread ? Math.max(0, mailbox.unreadThreads - 1) : mailbox.unreadThreads,
+            };
+          }
+          if (junkMailbox && mailbox.id === junkMailbox.id) {
+            return {
+              ...mailbox,
+              totalEmails: mailbox.totalEmails + 1,
+              unreadEmails: arrivesUnread ? mailbox.unreadEmails + 1 : mailbox.unreadEmails,
+              totalThreads: mailbox.totalThreads + 1,
+              unreadThreads: arrivesUnread ? mailbox.unreadThreads + 1 : mailbox.unreadThreads,
+            };
+          }
+          return mailbox;
+        });
+
+        return {
+          emails: state.emails.filter(e => e.id !== emailId),
+          selectedEmail: getNextSelectedEmail(state, emailId),
+          ...mailboxPatch,
+        };
+      });
     } catch (error) {
       console.error('Failed to mark as spam:', error);
       throw error;
@@ -2340,6 +2374,15 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
 
     try {
       await undoClient.undoSpam(emailId, targetMailboxId, accountId);
+
+      // Drop the restored mail from the current junk view and advance the open
+      // message to the next one, mirroring markAsSpam. Without this the viewer
+      // stays stuck on the mail that just left the folder.
+      set(state => ({
+        emails: state.emails.filter(e => e.id !== emailId),
+        selectedEmail: getNextSelectedEmail(state, emailId),
+      }));
+
       // Refresh the view the user is actually looking at.
       if (get().isUnifiedView && get().crossView) {
         const includeGroup = useSettingsStore.getState().includeGroupInUnified;
@@ -2352,6 +2395,11 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       } else {
         await get().fetchEmails(client, selectedMailbox);
       }
+
+      // Folder counts don't move on their own without a reliable JMAP push
+      // (often absent on subpath/cross-origin deploys), so refresh them here so
+      // the junk folder's badge drops right away.
+      void get().fetchMailboxes(client);
     } catch (error) {
       console.error('Failed to restore email:', error);
       throw error;
@@ -2375,11 +2423,52 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         await effectiveClient.markAsSpam(emailId, currentMailbox.accountId, markRead);
       }
 
-      set(state => ({
-        emails: state.emails.filter(e => !emailIds.includes(e.id)),
-        selectedEmail: emailIds.includes(state.selectedEmail?.id || '') ? null : state.selectedEmail,
-        selectedEmailIds: new Set(),
-      }));
+      // Adjust counters and drop the emails from the current view. Junk is
+      // resolved the same way the client did for the move itself.
+      const affected = emails.filter(e => emailIds.includes(e.id));
+      const junkMailbox = mailboxes.find(m =>
+        currentMailbox.accountId
+          ? (m.role === 'junk' && m.accountId === currentMailbox.accountId)
+          : (m.role === 'junk' && !m.isShared)
+      );
+      let junkTotal = 0;
+      let junkUnread = 0;
+      for (const e of affected) {
+        junkTotal += 1;
+        // After marking read in the same request, the email arrives in junk as read.
+        if (!e.keywords?.$seen && !alsoMarkRead) junkUnread += 1;
+      }
+
+      set(state => {
+        // Decrement source folders per the email's own account list (#281).
+        const patch = applyBatchMailboxCounterUpdate(state, affected, (mb, group) => {
+          let dTotal = 0;
+          let dUnread = 0;
+          for (const e of group as Email[]) {
+            if (emailInMailbox(e, mb)) {
+              dTotal--;
+              if (!e.keywords?.$seen) dUnread--;
+            }
+          }
+          return dTotal === 0 && dUnread === 0 ? mb : {
+            ...mb,
+            totalEmails: Math.max(0, mb.totalEmails + dTotal),
+            unreadEmails: Math.max(0, mb.unreadEmails + dUnread),
+          };
+        });
+        // The junk folder (picked from the active/viewing list) gains them.
+        if (junkMailbox) {
+          patch.mailboxes = patch.mailboxes.map(mb => mb.id === junkMailbox.id
+            ? { ...mb, totalEmails: mb.totalEmails + junkTotal, unreadEmails: mb.unreadEmails + junkUnread }
+            : mb);
+        }
+        return {
+          emails: state.emails.filter(e => !emailIds.includes(e.id)),
+          selectedEmail: emailIds.includes(state.selectedEmail?.id || '') ? null : state.selectedEmail,
+          selectedEmailIds: new Set(),
+          ...patch,
+        };
+      });
     } catch (error) {
       console.error('Failed to batch mark as spam:', error);
       throw error;
@@ -2409,11 +2498,41 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         await effectiveClient.undoSpam(emailId, inboxMailbox.originalId || inboxMailbox.id, accountId);
       }
 
-      set(state => ({
-        emails: state.emails.filter(e => !emailIds.includes(e.id)),
-        selectedEmail: emailIds.includes(state.selectedEmail?.id || '') ? null : state.selectedEmail,
-        selectedEmailIds: new Set(),
-      }));
+      // Adjust counters and drop the restored emails from the junk view.
+      const affected = get().emails.filter(e => emailIds.includes(e.id));
+      let unreadDelta = 0;
+      for (const e of affected) {
+        if (!e.keywords?.$seen) unreadDelta += 1;
+      }
+
+      set(state => {
+        // Decrement source folders per the email's own account list (#281).
+        const patch = applyBatchMailboxCounterUpdate(state, affected, (mb, group) => {
+          let dTotal = 0;
+          let dUnread = 0;
+          for (const e of group as Email[]) {
+            if (emailInMailbox(e, mb)) {
+              dTotal--;
+              if (!e.keywords?.$seen) dUnread--;
+            }
+          }
+          return dTotal === 0 && dUnread === 0 ? mb : {
+            ...mb,
+            totalEmails: Math.max(0, mb.totalEmails + dTotal),
+            unreadEmails: Math.max(0, mb.unreadEmails + dUnread),
+          };
+        });
+        // The inbox (picked from the active/viewing list) gains them.
+        patch.mailboxes = patch.mailboxes.map(mb => mb.id === inboxMailbox.id
+          ? { ...mb, totalEmails: mb.totalEmails + affected.length, unreadEmails: mb.unreadEmails + unreadDelta }
+          : mb);
+        return {
+          emails: state.emails.filter(e => !emailIds.includes(e.id)),
+          selectedEmail: emailIds.includes(state.selectedEmail?.id || '') ? null : state.selectedEmail,
+          selectedEmailIds: new Set(),
+          ...patch,
+        };
+      });
     } catch (error) {
       console.error('Failed to batch restore emails:', error);
       throw error;
