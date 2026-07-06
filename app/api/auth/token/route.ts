@@ -82,9 +82,16 @@ export async function PUT(request: NextRequest) {
     if (!tokenResponse.ok) {
       const errorText = await tokenResponse.text();
       logger.error('Token refresh failed', { status: tokenResponse.status, error: errorText });
-      cookieStore.delete(cookieName);
-      cookieStore.delete(refreshTokenServerCookieName(slot));
-      return NextResponse.json({ error: 'Refresh failed' }, { status: 401 });
+      // Drop the refresh token only when the server definitively rejected it
+      // (invalid/expired/revoked grant). A 5xx or 429 is an outage - keeping
+      // the cookie lets the session resume once the server is back.
+      const status = tokenResponse.status;
+      if (status === 400 || status === 401 || status === 403) {
+        cookieStore.delete(cookieName);
+        cookieStore.delete(refreshTokenServerCookieName(slot));
+        return NextResponse.json({ error: 'Refresh failed' }, { status: 401 });
+      }
+      return NextResponse.json({ error: 'Token endpoint unavailable' }, { status: 503 });
     }
 
     const tokens = await tokenResponse.json();

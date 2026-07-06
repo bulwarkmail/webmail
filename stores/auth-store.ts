@@ -75,6 +75,32 @@ function isRateLimitError(error: unknown): error is RateLimitError {
   return error instanceof RateLimitError;
 }
 
+// An auth/session endpoint answered with a server-side error (5xx) - an
+// outage, not a rejection of our credentials.
+class TransientAuthError extends Error {
+  constructor(message: string, readonly status: number) {
+    super(`${message}: ${status}`);
+  }
+}
+
+// True when a restore/refresh attempt failed because the server could not be
+// reached (network error) or answered 5xx (restart, maintenance, proxy
+// hiccup). Such failures must keep the account and its cookies - "stay signed
+// in" has to survive downtime and offline spells. Only a definitive rejection
+// (401/400) may evict. Mirrors the rate-limit carve-out (#104).
+function isTransientAuthError(error: unknown): boolean {
+  if (error instanceof TransientAuthError) return true;
+  // fetch() rejects with TypeError when the network is unreachable.
+  if (error instanceof TypeError) return true;
+  // JMAPClient.connect()/refreshSession() embed the HTTP status in the
+  // message - a 5xx there is the server being down, not an auth failure.
+  if (error instanceof Error) {
+    const m = error.message.match(/(?:Failed to get session|Session refresh failed): (\d{3})/);
+    if (m) return m[1].startsWith('5');
+  }
+  return false;
+}
+
 function getClientRateLimitState(client: IJMAPClient | null): Pick<AuthState, 'isRateLimited' | 'rateLimitUntil'> {
   if (!client) {
     return { isRateLimited: false, rateLimitUntil: null };
@@ -293,6 +319,10 @@ let refreshPromise: Promise<string | null> | null = null;
 const clients = new Map<string, JMAPClient>();
 const refreshTimers = new Map<string, ReturnType<typeof setTimeout>>();
 const refreshPromises = new Map<string, Promise<string | null>>();
+
+// Pseudo-expiry passed to scheduleRefresh when a refresh failed transiently:
+// the "expiry - 60s" math below turns 90 into a retry in ~30 seconds.
+const TOKEN_REFRESH_RETRY_SECONDS = 90;
 
 function scheduleRefresh(expiresIn: number, refreshFn: () => Promise<string | null>, accountId?: string): void {
   if (accountId) {
@@ -948,9 +978,18 @@ export const useAuthStore = create<AuthState>()(
             const res = await apiFetch(`/api/auth/token?slot=${slot}`, { method: 'PUT' });
 
             if (!res.ok) {
-              notifyParent('sso:session-expired');
-              markSessionExpired();
-              get().logout();
+              // Only a definitive 401 ends the session. Anything else (5xx
+              // while the server restarts, proxy errors) is an outage - keep
+              // the session and retry shortly so "stay signed in" survives
+              // maintenance windows and offline spells.
+              if (res.status === 401) {
+                notifyParent('sso:session-expired');
+                markSessionExpired();
+                get().logout();
+                return null;
+              }
+              debug.error(`Token refresh unavailable (${res.status}), retrying shortly`);
+              scheduleRefresh(TOKEN_REFRESH_RETRY_SECONDS, get().refreshAccessToken, accountId ?? undefined);
               return null;
             }
 
@@ -975,10 +1014,10 @@ export const useAuthStore = create<AuthState>()(
             scheduleRefresh(expires_in, get().refreshAccessToken, accountId ?? undefined);
             return access_token;
           } catch (error) {
-            debug.error('Token refresh failed:', error);
-            notifyParent('sso:session-expired');
-            markSessionExpired();
-            get().logout();
+            // Network failure (offline, Wi-Fi switch, server unreachable) -
+            // not a rejection. Keep the session and retry shortly.
+            debug.error('Token refresh failed, retrying shortly:', error);
+            scheduleRefresh(TOKEN_REFRESH_RETRY_SECONDS, get().refreshAccessToken, accountId ?? undefined);
             return null;
           } finally {
             refreshPromise = null;
@@ -1374,6 +1413,8 @@ export const useAuthStore = create<AuthState>()(
                   scheduleRefresh(expires_in, get().refreshAccessToken, account.id);
                   await syncStalwartAuthContext(account.serverUrl, account.username, client.getAuthHeader(), account.cookieSlot);
                   accountStore.updateAccount(account.id, { isConnected: true, hasError: false });
+                } else if (res.status >= 500) {
+                  throw new TransientAuthError('Token refresh failed', res.status);
                 } else {
                   throw new Error(`Token refresh failed: ${res.status}`);
                 }
@@ -1387,6 +1428,8 @@ export const useAuthStore = create<AuthState>()(
                   clients.set(account.id, client);
                   await syncStalwartAuthContext(serverUrl, username, client.getAuthHeader(), account.cookieSlot);
                   accountStore.updateAccount(account.id, { isConnected: true, hasError: false });
+                } else if (res.status >= 500) {
+                  throw new TransientAuthError('Session restore failed', res.status);
                 } else {
                   throw new Error(`Session cookie missing: ${res.status}`);
                 }
@@ -1398,6 +1441,18 @@ export const useAuthStore = create<AuthState>()(
                   isConnected: false,
                   hasError: true,
                   errorMessage: 'Temporarily rate limited by server',
+                });
+                continue;
+              }
+              // Outage or offline - keep the account (and its cookies) so the
+              // session resumes once the server is reachable again. Same
+              // treatment as the rate-limit case above; only a definitive
+              // rejection below evicts.
+              if (isTransientAuthError(err)) {
+                accountStore.updateAccount(account.id, {
+                  isConnected: false,
+                  hasError: true,
+                  errorMessage: 'Server unreachable',
                 });
                 continue;
               }
@@ -1627,7 +1682,7 @@ export const useAuthStore = create<AuthState>()(
               }
             } catch (error) {
               debug.error('Basic session restore failed:', error);
-              if (isRateLimitError(error)) {
+              if (isRateLimitError(error) || isTransientAuthError(error)) {
                 set({ isLoading: false, error: 'connection_failed', isRateLimited: false, rateLimitUntil: null });
                 return;
               }
