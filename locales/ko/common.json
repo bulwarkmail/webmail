@@ -1954,6 +1954,8 @@
     "mark_unread": "읽지 않은 상태로 표시",
     "star": "별표 달기",
     "unstar": "별표 해제",
+    "pin": "고정",
+    "unpin": "고정 해제",
     "move_to": "이동...",
     "archive": "보관",
     "delete": "삭제",

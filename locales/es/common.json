@@ -1954,6 +1954,8 @@
     "mark_unread": "Marcar como No Leído",
     "star": "Destacar",
     "unstar": "Quitar Destacado",
+    "pin": "Anclar",
+    "unpin": "Desanclar",
     "move_to": "Mover a...",
     "archive": "Archivar",
     "delete": "Eliminar",

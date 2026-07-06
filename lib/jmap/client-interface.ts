@@ -78,7 +78,9 @@ export interface IJMAPClient {
   deleteMailbox(mailboxId: string): Promise<void>;
 
   // ── Emails ────────────────────────────────────────────────────
-  getEmails(mailboxId?: string, accountId?: string, limit?: number, position?: number, hasKeyword?: string): Promise<{ emails: Email[]; hasMore: boolean; total: number }>;
+  // `pinnedFirst` sorts emails carrying the $pinned keyword to the top
+  // (server-side hasKeyword sort comparator, RFC 8621), then receivedAt desc.
+  getEmails(mailboxId?: string, accountId?: string, limit?: number, position?: number, hasKeyword?: string, pinnedFirst?: boolean): Promise<{ emails: Email[]; hasMore: boolean; total: number }>;
   getEmailsInMailbox(mailboxId: string): Promise<Email[]>;
   getEmail(emailId: string, accountId?: string): Promise<Email | null>;
   getTagCounts(tagIds: string[]): Promise<Record<string, { total: number; unread: number }>>;

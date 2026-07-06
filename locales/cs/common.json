@@ -1954,6 +1954,8 @@
     "mark_unread": "Označit jako nepřečtené",
     "star": "Označit hvězdičkou",
     "unstar": "Odebrat hvězdičku",
+    "pin": "Připnout",
+    "unpin": "Odepnout",
     "move_to": "Přesunout do...",
     "archive": "Archivovat",
     "delete": "Odstranit",

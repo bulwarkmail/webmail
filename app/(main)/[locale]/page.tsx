@@ -1652,6 +1652,45 @@ export default function Home() {
     }
   };
 
+  const handleTogglePinned = async (emailToPin: Email) => {
+    if (!client) return;
+
+    try {
+      const email = emails.find(e => e.id === emailToPin.id) ?? emailToPin;
+      const isPinned = email.keywords?.['$pinned'] === true;
+      // JMAP keywords are a set of present keys - drop the key to unpin
+      // rather than writing a false value.
+      const keywords = { ...email.keywords };
+      if (isPinned) {
+        delete keywords['$pinned'];
+      } else {
+        keywords['$pinned'] = true;
+      }
+
+      // Same unified-view routing as color tags: write to the email's own
+      // account via the login it is reachable through. (#281)
+      const pinClientId = isUnifiedView ? email.sourceClientAccountId : undefined;
+      const pinAccountId = isUnifiedView ? email.sourceAccountId : undefined;
+      const pinClient = pinClientId
+        ? (useAuthStore.getState().getClientForAccount(pinClientId) ?? client)
+        : client;
+
+      await pinClient.updateEmailKeywords(email.id, keywords, pinAccountId);
+
+      // Patch in place so the icon flips immediately, then refetch the first
+      // page so the mail floats/sinks per the server's pinned-first sort.
+      // Skip the refetch where that sort does not apply (unified views) or
+      // where it would replace a tag-filtered list (refreshCurrentMailbox
+      // fetches by folder only).
+      setEmailKeywordsLocal(email.id, keywords);
+      if (!isUnifiedView && !useEmailStore.getState().selectedKeyword) {
+        void refreshCurrentMailbox(client);
+      }
+    } catch (error) {
+      console.error("Failed to toggle pin:", error);
+    }
+  };
+
   const handleSetColorTag = async (emailId: string, color: string | null) => {
     if (!client) return;
 
@@ -3041,6 +3080,9 @@ export default function Home() {
                   if (client) {
                     await toggleStar(client, email.id);
                   }
+                }}
+                onTogglePinned={async (email) => {
+                  await handleTogglePinned(email);
                 }}
                 onDelete={async (email) => {
                   await handleDelete(email);

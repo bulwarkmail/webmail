@@ -1954,6 +1954,8 @@
     "mark_unread": "标记为未读",
     "star": "加星标",
     "unstar": "取消星标",
+    "pin": "固定",
+    "unpin": "取消固定",
     "move_to": "移动到…",
     "archive": "归档",
     "delete": "删除",

@@ -217,6 +217,7 @@ export interface ThreadGroup {
   participantNames: string[];// Unique participant names
   hasUnread: boolean;        // Any unread emails in thread
   hasStarred: boolean;       // Any starred emails in thread
+  hasPinned: boolean;        // Any pinned emails in thread ($pinned keyword)
   hasAttachment: boolean;    // Any email has attachment
   hasAnswered: boolean;      // Any email has been replied to
   hasForwarded: boolean;     // Any email has been forwarded

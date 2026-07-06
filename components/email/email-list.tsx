@@ -35,6 +35,7 @@ interface EmailListProps {
   onForward?: (email: Email) => void;
   onMarkAsRead?: (email: Email, read: boolean) => void;
   onToggleStar?: (email: Email) => void;
+  onTogglePinned?: (email: Email) => void;
   onDelete?: (email: Email) => void;
   onArchive?: (email: Email) => void;
   onSetColorTag?: (emailId: string, color: string | null) => void;
@@ -64,6 +65,7 @@ export function EmailList({
   onForward,
   onMarkAsRead,
   onToggleStar,
+  onTogglePinned,
   onDelete,
   onArchive,
   onSetColorTag,
@@ -551,6 +553,7 @@ export function EmailList({
           onForward={() => onForward?.(contextMenu.data!)}
           onMarkAsRead={(read) => onMarkAsRead?.(contextMenu.data!, read)}
           onToggleStar={() => onToggleStar?.(contextMenu.data!)}
+          onTogglePinned={onTogglePinned ? () => onTogglePinned(contextMenu.data!) : undefined}
           onDelete={() => onDelete?.(contextMenu.data!)}
           onArchive={() => onArchive?.(contextMenu.data!)}
           onSetColorTag={(color) => onSetColorTag?.(contextMenu.data!.id, color)}

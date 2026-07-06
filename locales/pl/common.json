@@ -1954,6 +1954,8 @@
     "mark_unread": "Oznacz jako nieprzeczytane",
     "star": "Oznacz gwiazdką",
     "unstar": "Usuń gwiazdkę",
+    "pin": "Przypnij",
+    "unpin": "Odepnij",
     "move_to": "Przenieś do...",
     "archive": "Archiwizuj",
     "delete": "Usuń",

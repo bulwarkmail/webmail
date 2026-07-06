@@ -116,36 +116,46 @@ describe('groupEmailsByThread', () => {
 });
 
 describe('sortThreadGroups', () => {
+  const makeGroup = (threadId: string, receivedAt: string, hasPinned = false): ThreadGroup => ({
+    threadId,
+    emails: [makeEmail({ receivedAt })],
+    latestEmail: makeEmail({ receivedAt }),
+    participantNames: ['A'],
+    hasUnread: false,
+    hasStarred: false,
+    hasPinned,
+    hasAttachment: false,
+    hasAnswered: false,
+    hasForwarded: false,
+    emailCount: 1,
+  });
+
   it('sorts groups by latestEmail.receivedAt descending', () => {
-    const groups: ThreadGroup[] = [
-      {
-        threadId: 'old',
-        emails: [makeEmail({ receivedAt: '2024-01-01T00:00:00Z' })],
-        latestEmail: makeEmail({ receivedAt: '2024-01-01T00:00:00Z' }),
-        participantNames: ['A'],
-        hasUnread: false,
-        hasStarred: false,
-        hasAttachment: false,
-        hasAnswered: false,
-        hasForwarded: false,
-        emailCount: 1,
-      },
-      {
-        threadId: 'new',
-        emails: [makeEmail({ receivedAt: '2024-06-01T00:00:00Z' })],
-        latestEmail: makeEmail({ receivedAt: '2024-06-01T00:00:00Z' }),
-        participantNames: ['B'],
-        hasUnread: false,
-        hasStarred: false,
-        hasAttachment: false,
-        hasAnswered: false,
-        hasForwarded: false,
-        emailCount: 1,
-      },
+    const groups = [
+      makeGroup('old', '2024-01-01T00:00:00Z'),
+      makeGroup('new', '2024-06-01T00:00:00Z'),
     ];
     const sorted = sortThreadGroups(groups);
     expect(sorted[0].threadId).toBe('new');
     expect(sorted[1].threadId).toBe('old');
+  });
+
+  it('keeps pinned threads on top regardless of date', () => {
+    const groups = [
+      makeGroup('newest', '2024-06-01T00:00:00Z'),
+      makeGroup('old-pinned', '2024-01-01T00:00:00Z', true),
+      makeGroup('mid', '2024-03-01T00:00:00Z'),
+    ];
+    const sorted = sortThreadGroups(groups);
+    expect(sorted.map(g => g.threadId)).toEqual(['old-pinned', 'newest', 'mid']);
+  });
+
+  it('detects hasPinned from the $pinned keyword', () => {
+    const emails = [
+      makeEmail({ id: 'e1', keywords: { $seen: true } }),
+      makeEmail({ id: 'e2', keywords: { $seen: true, '$pinned': true } }),
+    ];
+    expect(groupEmailsByThread(emails)[0].hasPinned).toBe(true);
   });
 });
 
@@ -188,6 +198,7 @@ describe('mergeThreadEmails', () => {
       participantNames: ['Alice'],
       hasUnread: false,
       hasStarred: false,
+      hasPinned: false,
       hasAttachment: false,
       hasAnswered: false,
       hasForwarded: false,
@@ -210,6 +221,7 @@ describe('mergeThreadEmails', () => {
       participantNames: ['Alice'],
       hasUnread: false,
       hasStarred: false,
+      hasPinned: false,
       hasAttachment: false,
       hasAnswered: false,
       hasForwarded: false,

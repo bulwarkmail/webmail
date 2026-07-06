@@ -17,6 +17,8 @@ import {
   Mail,
   MailOpen,
   Star,
+  Pin,
+  PinOff,
   Trash2,
   Archive,
   FolderInput,
@@ -59,6 +61,7 @@ interface EmailContextMenuProps {
   onForward?: () => void;
   onMarkAsRead?: (read: boolean) => void;
   onToggleStar?: () => void;
+  onTogglePinned?: () => void;
   onDelete?: () => void;
   onArchive?: () => void;
   onSetColorTag?: (color: string | null) => void;
@@ -126,6 +129,7 @@ export function EmailContextMenu({
   onForward,
   onMarkAsRead,
   onToggleStar,
+  onTogglePinned,
   onDelete,
   onArchive,
   onSetColorTag,
@@ -149,6 +153,7 @@ export function EmailContextMenu({
   const emailKeywords = useSettingsStore((state) => state.emailKeywords);
   const isUnread = !email.keywords?.$seen;
   const isStarred = email.keywords?.$flagged;
+  const isPinned = email.keywords?.['$pinned'] === true;
   const isDraft = email.keywords?.['$draft'] === true;
   const currentColors = getCurrentColors(email.keywords);
   const showBatchActions = isMultiSelect && selectedCount > 1;
@@ -349,6 +354,15 @@ export function EmailContextMenu({
           label={isStarred ? t("unstar") : t("star")}
           onClick={() => handleAction(onToggleStar!)}
           disabled={!onToggleStar}
+        />
+      )}
+
+      {/* Pin/Unpin - only for single email; pinned mails float to the top of the list */}
+      {!showBatchActions && onTogglePinned && (
+        <ContextMenuItem
+          icon={isPinned ? PinOff : Pin}
+          label={isPinned ? t("unpin") : t("pin")}
+          onClick={() => handleAction(onTogglePinned)}
         />
       )}
 

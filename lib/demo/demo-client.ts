@@ -151,12 +151,16 @@ export class DemoJMAPClient implements IJMAPClient {
 
   // ── Emails ────────────────────────────────────────────────────
 
-  async getEmails(mailboxId?: string, _accountId?: string, limit: number = 50, position: number = 0): Promise<{ emails: Email[]; hasMore: boolean; total: number }> {
+  async getEmails(mailboxId?: string, _accountId?: string, limit: number = 50, position: number = 0, _hasKeyword?: string, pinnedFirst?: boolean): Promise<{ emails: Email[]; hasMore: boolean; total: number }> {
     let filtered = this.data.emails;
     if (mailboxId) {
       filtered = filtered.filter(e => e.mailboxIds[mailboxId]);
     }
-    filtered.sort((a, b) => new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime());
+    const pinRank = (e: Email) => (pinnedFirst && e.keywords?.['$pinned'] ? 1 : 0);
+    filtered.sort((a, b) =>
+      pinRank(b) - pinRank(a) ||
+      new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime()
+    );
     const total = filtered.length;
     const emails = filtered.slice(position, position + limit);
     return { emails, hasMore: position + limit < total, total };

@@ -1954,6 +1954,8 @@
     "mark_unread": "Okunmadı Olarak İşaretle",
     "star": "Yıldız Ekle",
     "unstar": "Yıldızı Kaldır",
+    "pin": "Sabitle",
+    "unpin": "Sabitlemeyi kaldır",
     "move_to": "Şuraya taşı...",
     "archive": "Arşivle",
     "delete": "Sil",

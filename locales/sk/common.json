@@ -1943,6 +1943,8 @@
     "mark_unread": "Označiť ako neprečítané",
     "star": "Hviezdička",
     "unstar": "Odstrániť hviezdičku",
+    "pin": "Pripnúť",
+    "unpin": "Odopnúť",
     "move_to": "Presunúť do...",
     "archive": "Archivovať",
     "delete": "Odstrániť",

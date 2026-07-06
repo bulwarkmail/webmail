@@ -1954,6 +1954,8 @@
     "mark_unread": "Markeren als ongelezen",
     "star": "Ster toevoegen",
     "unstar": "Ster verwijderen",
+    "pin": "Vastmaken",
+    "unpin": "Losmaken",
     "move_to": "Verplaatsen naar...",
     "archive": "Archiveren",
     "delete": "Verwijderen",

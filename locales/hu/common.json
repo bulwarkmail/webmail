@@ -1954,6 +1954,8 @@
     "mark_unread": "Olvasatlannak jelölés",
     "star": "Csillagozás",
     "unstar": "Csillagozás megszüntetése",
+    "pin": "Rögzítés",
+    "unpin": "Rögzítés feloldása",
     "move_to": "Áthelyezés ide...",
     "archive": "Archiválás",
     "delete": "Törlés",

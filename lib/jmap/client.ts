@@ -1053,7 +1053,7 @@ export class JMAPClient implements IJMAPClient {
     }
   }
 
-  async getEmails(mailboxId?: string, accountId?: string, limit: number = 50, position: number = 0, hasKeyword?: string): Promise<{ emails: Email[], hasMore: boolean, total: number }> {
+  async getEmails(mailboxId?: string, accountId?: string, limit: number = 50, position: number = 0, hasKeyword?: string, pinnedFirst?: boolean): Promise<{ emails: Email[], hasMore: boolean, total: number }> {
     try {
       const targetAccountId = accountId || this.accountId;
       const filter: { inMailbox?: string; hasKeyword?: string } = {};
@@ -1063,12 +1063,20 @@ export class JMAPClient implements IJMAPClient {
       if (hasKeyword) {
         filter.hasKeyword = hasKeyword;
       }
+      // Pinned-first uses the hasKeyword sort comparator (RFC 8621 §4.4.2);
+      // every page of a view must use the same sort or pagination tears.
+      const sort = pinnedFirst
+        ? [
+            { property: "hasKeyword", keyword: "$pinned", isAscending: false },
+            { property: "receivedAt", isAscending: false },
+          ]
+        : [{ property: "receivedAt", isAscending: false }];
 
       const response = await this.request([
         ["Email/query", {
           accountId: targetAccountId,
           filter,
-          sort: [{ property: "receivedAt", isAscending: false }],
+          sort,
           limit,
           position,
           calculateTotal: true,
@@ -1087,7 +1095,10 @@ export class JMAPClient implements IJMAPClient {
         const emails = (getResponse.list || []) as Email[];
         // Sort client-side as safety net - some servers may not honour
         // the query sort for large mailboxes without additional filters.
+        // Must mirror the query sort, or it would undo the pinned-first order.
+        const pinRank = (e: Email) => (pinnedFirst && e.keywords?.['$pinned'] ? 1 : 0);
         emails.sort((a: Email, b: Email) =>
+          pinRank(b) - pinRank(a) ||
           new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime()
         );
         const total = queryResponse?.total || 0;

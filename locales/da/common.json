@@ -1954,6 +1954,8 @@
     "mark_unread": "Markér som ulæst",
     "star": "Stjernemarkér",
     "unstar": "Fjern stjerne",
+    "pin": "Fastgør",
+    "unpin": "Frigør",
     "move_to": "Flyt til...",
     "archive": "Arkivér",
     "delete": "Slet",

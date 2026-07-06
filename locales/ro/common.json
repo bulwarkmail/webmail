@@ -1954,6 +1954,8 @@
     "mark_unread": "Marcați ca necitit",
     "star": "Stea",
     "unstar": "Anulează marcarea cu stea",
+    "pin": "Fixează",
+    "unpin": "Anulează fixarea",
     "move_to": "Mergi la...",
     "archive": "Arhivează",
     "delete": "Șterge",

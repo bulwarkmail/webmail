@@ -1954,6 +1954,8 @@
     "mark_unread": "Atzīmēt kā nelasītu",
     "star": "Pievienot zvaigznīti",
     "unstar": "Noņemt zvaigznīti",
+    "pin": "Piespraust",
+    "unpin": "Atspraust",
     "move_to": "Pārvietot uz...",
     "archive": "Arhivēt",
     "delete": "Dzēst",

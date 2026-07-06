@@ -1954,6 +1954,8 @@
     "mark_unread": "Als ungelesen markieren",
     "star": "Stern hinzufügen",
     "unstar": "Stern entfernen",
+    "pin": "Anheften",
+    "unpin": "Lösen",
     "move_to": "Verschieben nach...",
     "archive": "Archivieren",
     "delete": "Löschen",

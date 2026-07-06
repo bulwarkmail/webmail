@@ -1954,6 +1954,8 @@
     "mark_unread": "Segna come non letto",
     "star": "Aggiungi stella",
     "unstar": "Rimuovi stella",
+    "pin": "Fissa",
+    "unpin": "Non fissare più",
     "move_to": "Sposta in...",
     "archive": "Archivia",
     "delete": "Elimina",

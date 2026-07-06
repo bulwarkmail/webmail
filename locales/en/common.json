@@ -1954,6 +1954,8 @@
     "mark_unread": "Mark as Unread",
     "star": "Star",
     "unstar": "Unstar",
+    "pin": "Pin",
+    "unpin": "Unpin",
     "move_to": "Move to...",
     "archive": "Archive",
     "delete": "Delete",

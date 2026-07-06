@@ -5,7 +5,7 @@ import { formatDate, formatDateTime, stripInvisibleLeading } from "@/lib/utils";
 import { Email, ThreadGroup, ALL_MAIL_MAILBOX_ID } from "@/lib/jmap/types";
 import { cn } from "@/lib/utils";
 import { SelectableAvatar } from "@/components/email/selectable-avatar";
-import { Paperclip, Star, Circle, ChevronRight, ChevronDown, Loader2, MessageSquare, CheckSquare, Square, Reply, Forward, CalendarClock, Folder } from "lucide-react";
+import { Paperclip, Star, Pin, Circle, ChevronRight, ChevronDown, Loader2, MessageSquare, CheckSquare, Square, Reply, Forward, CalendarClock, Folder } from "lucide-react";
 import { useSettingsStore, KEYWORD_PALETTE } from "@/stores/settings-store";
 import { useUIStore } from "@/stores/ui-store";
 import { useEmailStore } from "@/stores/email-store";
@@ -78,6 +78,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
     const tBatch = useTranslations('email_list.batch_actions');
     const isUnread = !email.keywords?.$seen;
     const isStarred = email.keywords?.$flagged;
+    const isPinned = email.keywords?.['$pinned'] === true;
     const isAnswered = email.keywords?.$answered;
     const isForwarded = email.keywords?.$forwarded;
     const { selectedMailbox, mailboxes, selectedEmailIds, toggleEmailSelection, selectRangeEmails, clearSelection, isUnifiedView, unifiedRole } = useEmailStore();
@@ -264,6 +265,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                   </div>
                 </div>
                 <div className="flex items-center gap-2.5 shrink-0">
+                  {isPinned && <Pin className="w-3.5 h-3.5 text-primary" />}
                   {isStarred && <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />}
                   {isAnswered && !isForwarded && <Reply className="w-3.5 h-3.5 text-muted-foreground" />}
                   {isForwarded && !isAnswered && <Forward className="w-3.5 h-3.5 text-muted-foreground" />}
@@ -316,6 +318,9 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                       {sender?.name || sender?.email || "Unknown"}
                     </span>
                     <div className="flex items-center gap-1.5">
+                      {isPinned && (
+                        <Pin className="w-3.5 h-3.5 text-primary" />
+                      )}
                       {isStarred && (
                         <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
                       )}
@@ -443,7 +448,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
     const timeFormat = useSettingsStore((state) => state.timeFormat);
     const showAvatarsInJunk = useSettingsStore((state) => state.showAvatarsInJunk);
     const isMobile = useUIStore((state) => state.isMobile);
-    const { latestEmail, participantNames, hasUnread, hasStarred, hasAttachment, hasAnswered, hasForwarded, emailCount } = thread;
+    const { latestEmail, participantNames, hasUnread, hasStarred, hasPinned, hasAttachment, hasAnswered, hasForwarded, emailCount } = thread;
     // The horizontal one-line "focus" layout doesn't fit on narrow screens; fall back to multi-line on mobile.
     const isFocusedMailLayout = mailLayout === 'focus' && !isMobile;
     const trimmedPreview = stripInvisibleLeading(latestEmail.preview ?? '');
@@ -723,6 +728,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                     </div>
                   </div>
                   <div className="flex items-center gap-2.5 shrink-0">
+                    {hasPinned && <Pin className="w-3.5 h-3.5 text-primary" />}
                     {hasStarred && <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />}
                     {hasAnswered && !hasForwarded && <Reply className="w-3.5 h-3.5 text-muted-foreground" />}
                     {hasForwarded && !hasAnswered && <Forward className="w-3.5 h-3.5 text-muted-foreground" />}
@@ -787,6 +793,9 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                         {emailCount}
                       </span>
                       <div className="flex items-center gap-1.5">
+                        {hasPinned && (
+                          <Pin className="w-3.5 h-3.5 text-primary" />
+                        )}
                         {hasStarred && (
                           <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
                         )}

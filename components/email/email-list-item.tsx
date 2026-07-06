@@ -6,7 +6,7 @@ import { formatDate, stripInvisibleLeading } from "@/lib/utils";
 import { Email } from "@/lib/jmap/types";
 import { cn } from "@/lib/utils";
 import { SelectableAvatar } from "@/components/email/selectable-avatar";
-import { Paperclip, Star, Circle, CheckSquare, Square, Reply, Forward } from "lucide-react";
+import { Paperclip, Star, Pin, Circle, CheckSquare, Square, Reply, Forward } from "lucide-react";
 import { useEmailStore } from "@/stores/email-store";
 import { useSettingsStore, KEYWORD_PALETTE } from "@/stores/settings-store";
 import { useAuthStore } from "@/stores/auth-store";
@@ -45,6 +45,7 @@ export function EmailListItem({ email, selected, onClick, onDoubleClick, onConte
   const isChecked = selectedEmailIds.has(email.id);
   const isUnread = !email.keywords?.$seen;
   const isStarred = email.keywords?.$flagged;
+  const isPinned = email.keywords?.['$pinned'] === true;
   const isImportant = email.keywords?.["$important"];
   const isAnswered = email.keywords?.$answered;
   const isForwarded = email.keywords?.$forwarded;
@@ -217,6 +218,7 @@ export function EmailListItem({ email, selected, onClick, onDoubleClick, onConte
                 </div>
               </div>
               <div className="flex items-center gap-2.5 shrink-0">
+                {isPinned && <Pin className="w-3.5 h-3.5 text-primary" />}
                 {isStarred && <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />}
                 {isImportant && <span className="h-2 w-2 rounded-full bg-warning" />}
                 {isAnswered && !isForwarded && <Reply className="w-3.5 h-3.5 text-muted-foreground" />}
@@ -253,6 +255,9 @@ export function EmailListItem({ email, selected, onClick, onDoubleClick, onConte
                     {sender?.name || sender?.email || "Unknown"}
                   </span>
                   <div className="flex items-center gap-1.5">
+                    {isPinned && (
+                      <Pin className="w-3.5 h-3.5 text-primary" />
+                    )}
                     {isStarred && (
                       <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
                     )}

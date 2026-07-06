@@ -945,7 +945,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
 
       // When filtering by tag, omit the mailbox constraint so emails across
       // all folders that carry the tag are returned.
-      const result = await effectiveClient.getEmails(selectedKeyword ? undefined : jmapMailboxId, accountId, emailsPerPage, 0, keywordFilter);
+      const result = await effectiveClient.getEmails(selectedKeyword ? undefined : jmapMailboxId, accountId, emailsPerPage, 0, keywordFilter, true);
       set({
         emails: annotateScheduledEmails(result.emails, get().scheduledSubmissionByEmailId),
         hasMoreEmails: result.hasMore,
@@ -1108,7 +1108,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         const jmapMailboxId = mailbox?.originalId || selectedMailbox;
 
         // When filtering by tag, omit the mailbox constraint (same rationale as fetchEmails).
-        result = await effectiveClient.getEmails(selectedKeyword ? undefined : jmapMailboxId, accountId, emailsPerPage, position, selectedKeyword ? `$label:${selectedKeyword}` : undefined);
+        result = await effectiveClient.getEmails(selectedKeyword ? undefined : jmapMailboxId, accountId, emailsPerPage, position, selectedKeyword ? `$label:${selectedKeyword}` : undefined, true);
       }
 
       if (selectedMailbox === ALL_MAIL_MAILBOX_ID) {
@@ -2643,7 +2643,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         const filter = buildJMAPFilter(searchQuery, searchFilters, jmapMailboxId);
         result = await effectiveClient.advancedSearchEmails(filter, accountId, emailsPerPage, 0);
       } else {
-        result = await effectiveClient.getEmails(jmapMailboxId, accountId, emailsPerPage, 0);
+        result = await effectiveClient.getEmails(jmapMailboxId, accountId, emailsPerPage, 0, undefined, true);
       }
 
       const currentEmails = get().emails;
@@ -2653,7 +2653,9 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       // Without these guards the toast/sound also fires when sending,
       // saving drafts, or moving/deleting the top message in any mailbox,
       // because all of those change the first-email id of the current view.
-      const newFirst = result.emails[0];
+      // Pinned mails sit above the date order, so the newest mail is the
+      // first NON-pinned entry (a just-arrived mail cannot be pinned yet).
+      const newFirst = result.emails.find(e => !e.keywords?.['$pinned']) ?? result.emails[0];
       if (
         newFirst &&
         mailbox?.role === 'inbox' &&
