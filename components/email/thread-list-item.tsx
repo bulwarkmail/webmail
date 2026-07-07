@@ -166,6 +166,10 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
         ref={ref}
         {...dragHandlers}
         {...longPressHandlers}
+        data-testid="email-list-item"
+        data-email-id={email.id}
+        data-subject={email.subject || ''}
+        data-unread={isUnread ? 'true' : 'false'}
         className={cn(
           "relative group cursor-pointer select-none transition-shadow duration-200 border-b border-border overflow-hidden",
           resolvedColorTag ? resolvedColorTag : (

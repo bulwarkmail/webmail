@@ -151,6 +151,8 @@ export function AccountSwitcher({ variant = "rail", className }: AccountSwitcher
       <button
         ref={buttonRef}
         onClick={() => setOpen(!open)}
+        data-testid="account-switcher"
+        data-active-account-id={activeAccountId ?? undefined}
         className={cn(
           "flex items-center gap-2 rounded-md transition-colors",
           variant === "rail"
@@ -213,6 +215,9 @@ export function AccountSwitcher({ variant = "rail", className }: AccountSwitcher
                 >
                 <button
                   onClick={() => handleSwitch(account.id)}
+                  data-testid="account-option"
+                  data-account-id={account.id}
+                  data-account-email={account.email || account.username}
                   className={cn(
                     "w-full flex items-start gap-3 px-3 py-2.5 text-start transition-colors",
                     isActive ? "bg-accent/50" : "hover:bg-muted",
@@ -274,6 +279,7 @@ export function AccountSwitcher({ variant = "rail", className }: AccountSwitcher
             <div className="border-t border-border">
               <button
                 onClick={handleAddAccount}
+                data-testid="add-account"
                 className="w-full flex items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
                 role="menuitem"
               >

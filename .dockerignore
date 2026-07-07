@@ -9,3 +9,8 @@ scripts/
 TODO.md
 *.md
 !README.md
+# Sibling projects / test harness - not part of the webmail image
+examples/
+integration/
+e2e/
+**/node_modules

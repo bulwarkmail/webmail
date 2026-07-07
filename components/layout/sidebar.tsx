@@ -220,8 +220,13 @@ function SidebarRowCounts({
   ) : null;
 
   return (
-    <span className="ms-2 flex-shrink-0 flex items-baseline gap-1" title={totalCount > 0 ? `${unreadCount} unread / ${totalCount} total` : `${unreadCount} unread`}>
-
+    <span
+      className="ms-2 flex-shrink-0 flex items-baseline gap-1"
+      title={totalCount > 0 ? `${unreadCount} unread / ${totalCount} total` : `${unreadCount} unread`}
+      data-testid="folder-counts"
+      data-unread={unreadCount}
+      data-total={totalCount}
+    >
       {unreadNode}
       {unreadCount > 0 && totalCount > 0 && (
         <span className="text-xs text-muted-foreground/60">/</span>
@@ -249,6 +254,10 @@ interface SidebarRowProps {
   isValidDropTarget?: boolean;
   isInvalidDropTarget?: boolean;
   onContextMenu?: (e: React.MouseEvent) => void;
+  /** Stable identifiers for integration tests (not user-visible). */
+  testRole?: string | null;
+  testName?: string;
+  testMailboxId?: string;
 }
 
 function SidebarRow({
@@ -269,6 +278,9 @@ function SidebarRow({
   isValidDropTarget,
   isInvalidDropTarget,
   onContextMenu,
+  testRole,
+  testName,
+  testMailboxId,
 }: SidebarRowProps) {
   const t = useTranslations('sidebar');
   const leftPad = isCollapsed ? 0 : ROW_PX_BASE + depth * INDENT_STEP;
@@ -277,6 +289,10 @@ function SidebarRow({
     <div
       {...(dropHandlers || {})}
       onContextMenu={onContextMenu}
+      data-testid="folder-row"
+      data-folder-role={testRole ?? undefined}
+      data-folder-name={testName ?? undefined}
+      data-mailbox-id={testMailboxId ?? undefined}
       style={{ paddingBlock: 'var(--density-sidebar-py)' }}
       className={cn(
         "group w-full flex items-center max-lg:min-h-[44px] text-sm transition-colors duration-150",
@@ -477,6 +493,9 @@ function MailboxTreeItem({
       <SidebarRow
         icon={<Icon className={getIconClass(isSelected, isVirtualNode, colorful, roleKey)} />}
         label={label}
+        testRole={node.role}
+        testName={node.name}
+        testMailboxId={node.id}
         depth={node.depth}
         isSelected={isSelected}
         isVirtual={isVirtualNode}
@@ -1047,6 +1066,9 @@ export function Sidebar({
                       key={unifiedId}
                       icon={<Icon className={getIconClass(isSelected, false, colorfulSidebarIcons, count.role)} />}
                       label={t(`unified_${count.role}`)}
+                      testRole={count.role}
+                      testName={`unified-${count.role}`}
+                      testMailboxId={unifiedId}
                       depth={0}
                       isSelected={isSelected}
                       unread={count.unreadEmails}
@@ -1068,6 +1090,8 @@ export function Sidebar({
                       key={id}
                       icon={<Icon className={getIconClass(isSelected, false, colorfulSidebarIcons)} />}
                       label={label}
+                      testName={id}
+                      testMailboxId={id}
                       depth={0}
                       isSelected={isSelected}
                       unread={unread}

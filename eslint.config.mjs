@@ -79,6 +79,8 @@ export default [
       "e2e/**",
       "local-data/**/*.mjs",
       "benchmark/**",
+      "examples/**",
+      "integration/**",
     ],
   },
 ];

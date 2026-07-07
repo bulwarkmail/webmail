@@ -1,0 +1,7 @@
+{
+  "features": {
+    "unifiedCrossAccountEnabled": true,
+    "crossUnreadViewEnabled": true,
+    "crossAllViewEnabled": true
+  }
+}

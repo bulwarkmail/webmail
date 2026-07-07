@@ -1,0 +1,10 @@
+# Local docker env (copied from .env.example)
+.env
+
+# Arch-specific stalwart-cli binary, fetched by stalwart/prepare-stalwart-cli.sh
+stalwart/stalwart-cli
+
+# Playwright/test artifacts
+node_modules/
+test-results/
+playwright-report/

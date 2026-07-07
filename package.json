@@ -28,6 +28,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test:translations": "vitest run --no-isolate lib/__tests__/translations.test.ts",
+    "test:integration": "bash integration/run-tests.sh",
     "prepare": "husky",
     "typecheck": "tsc --noEmit"
   },
