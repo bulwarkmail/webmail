@@ -75,7 +75,7 @@ import { appLifecycleHooks, uiHooks, routerHooks, toastHooks, emailHooks } from 
 import { emailToReadView } from "@/lib/plugin-projection";
 import { buildQuoteHeader } from "@/lib/quote-header";
 import { buildReplySubject, buildForwardSubject } from "@/lib/subject-prefix";
-import { useLocaleStore } from "@/stores/locale-store";
+import { getEffectiveLocale } from '@/i18n/detect-locale';
 import type { QuoteHeader } from "@/lib/plugin-types";
 
 const SCHEDULED_MAILBOX_ID = '__scheduled__';
@@ -1280,7 +1280,7 @@ export default function Home() {
         },
         newTo,
         newCc,
-        locale: useLocaleStore.getState().locale,
+        locale: getEffectiveLocale(),
         timeFormat: useSettingsStore.getState().timeFormat,
         unknownLabel: tCommon('unknown'),
         labels: {
@@ -2761,17 +2761,17 @@ export default function Home() {
               "relative flex flex-col bg-background",
               isHorizontalMailLayout
                 ? (shouldHideHorizontalViewerPane ? "md:w-full md:min-h-0" : "md:w-full md:h-auto")
-                : "h-full border-r border-border",
+                : "h-full border-e border-border",
               // Mobile: full width, hidden when viewing email
-              "max-md:flex-1 max-md:border-r-0 max-md:border-b-0",
+              "max-md:flex-1 max-md:border-e-0 max-md:border-b-0",
               isMobile && activeView !== "list" && "max-md:hidden",
               // Tablet/Desktop: fixed width with collapse animation
-              !isHorizontalMailLayout && (shouldHideViewerPane ? "md:flex-1 md:border-r-0" : "md:flex-shrink-0"),
+              !isHorizontalMailLayout && (shouldHideViewerPane ? "md:flex-1 md:border-e-0" : "md:flex-shrink-0"),
               isHorizontalMailLayout && (shouldHideHorizontalViewerPane ? "md:flex-1" : "md:flex-shrink-0"),
               isHorizontalMailLayout && !shouldHideHorizontalViewerPane && "md:shadow-[0_8px_12px_-6px_rgba(0,0,0,0.18)] dark:md:shadow-[0_8px_14px_-6px_rgba(0,0,0,0.55)]",
               !isHorizontalMailLayout && "md:shadow-sm",
               !isResizing && "transition-all duration-200 ease-out",
-              shouldCollapseListPane && "md:w-0 md:opacity-0 md:overflow-hidden md:border-r-0"
+              shouldCollapseListPane && "md:w-0 md:opacity-0 md:overflow-hidden md:border-e-0"
             )}
             style={
               isMobile
@@ -2824,13 +2824,13 @@ export default function Home() {
                     )}
                   </button>
                   <form onSubmit={(e) => { e.preventDefault(); if (searchQuery.trim()) handleSearch(searchQuery); }} className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                       type="text"
                       placeholder={t("sidebar.search_placeholder_hint")}
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className={cn("pl-9 h-9", searchQuery && "pr-8")}
+                      className={cn("ps-9 h-9", searchQuery && "pe-8")}
                       data-search-input
                       data-tour="search-input"
                       disabled={isUnifiedView || isScheduledView}
@@ -2840,7 +2840,7 @@ export default function Home() {
                       <button
                         type="button"
                         onClick={handleClearSearch}
-                        className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                        className="absolute end-2 top-1/2 transform -translate-y-1/2 p-1 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
                         aria-label={t("sidebar.clear_search")}
                       >
                         <X className="w-4 h-4" />
@@ -2897,7 +2897,7 @@ export default function Home() {
                     </div>
                     <div className="flex items-center gap-1">
                       <Button variant="ghost" size="sm" onClick={() => { clearSearchFilters(); setShowAdvancedFields(false); if (client) advancedSearch(client); }} className="h-7 px-2 text-xs text-muted-foreground">
-                        <RotateCcw className="w-3 h-3 mr-1" />
+                        <RotateCcw className="w-3 h-3 me-1" />
                         {t("advanced_search.clear")}
                       </Button>
                     </div>
@@ -3122,7 +3122,7 @@ export default function Home() {
               }}
               className={cn(
                 "absolute z-40 rounded-full shadow-lg",
-                isMobile ? "bottom-4 right-4 h-14 w-14" : "bottom-4 right-4 h-12 w-12"
+                isMobile ? "bottom-4 end-4 h-14 w-14" : "bottom-4 end-4 h-12 w-12"
               )}
               aria-label={t('sidebar.compose')}
               title={t('sidebar.compose_hint')}
@@ -3250,13 +3250,13 @@ export default function Home() {
                   setShowComposer(true);
                   if (isMobile) setActiveView('viewer');
                 }}
-                className="flex items-center gap-3 px-4 py-2.5 bg-primary/10 border-b border-primary/20 hover:bg-primary/15 transition-colors cursor-pointer w-full text-left"
+                className="flex items-center gap-3 px-4 py-2.5 bg-primary/10 border-b border-primary/20 hover:bg-primary/15 transition-colors cursor-pointer w-full text-start"
               >
                 <PenLine className="w-4 h-4 text-primary shrink-0" />
                 <div className="flex-1 min-w-0">
                   <span className="text-sm font-medium text-primary">{t('email_composer.continue_draft')}</span>
                   {pendingDraft.subject && (
-                    <span className="text-xs text-muted-foreground ml-2 truncate">{pendingDraft.subject}</span>
+                    <span className="text-xs text-muted-foreground ms-2 truncate">{pendingDraft.subject}</span>
                   )}
                 </div>
                 <X

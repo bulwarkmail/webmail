@@ -38,11 +38,11 @@ export default function LocaleError({
         </p>
         <div className="flex gap-3 justify-center">
           <Button variant="outline" onClick={() => router.push('/')}>
-            <Home className="w-4 h-4 mr-2" />
+            <Home className="w-4 h-4 me-2" />
             {t("go_home")}
           </Button>
           <Button onClick={reset}>
-            <RefreshCw className="w-4 h-4 mr-2" />
+            <RefreshCw className="w-4 h-4 me-2" />
             {t("try_again")}
           </Button>
         </div>

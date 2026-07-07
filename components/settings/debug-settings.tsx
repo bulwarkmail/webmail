@@ -25,7 +25,7 @@ export function DebugSettings() {
       </SettingItem>
 
       {debugMode && (
-        <div className="ml-4 border-l-2 border-muted pl-4 space-y-1">
+        <div className="ms-4 border-s-2 border-muted ps-4 space-y-1">
           <p className="text-xs text-muted-foreground mb-2">{t('debug_categories.description')}</p>
           {ALL_DEBUG_CATEGORIES.map((cat) => (
             <SettingItem

@@ -229,7 +229,7 @@ export function ContactActivity({ contact }: ContactActivityProps) {
                   key={email.id}
                   type="button"
                   onClick={() => handleOpenEmail(email)}
-                  className="w-full text-left flex items-start gap-3 px-2 py-2 rounded-md hover:bg-muted/60 transition-colors touch-manipulation"
+                  className="w-full text-start flex items-start gap-3 px-2 py-2 rounded-md hover:bg-muted/60 transition-colors touch-manipulation"
                 >
                   <Avatar name={sender.name} email={sender.address} size="sm" />
                   <div className="flex-1 min-w-0">
@@ -277,7 +277,7 @@ export function ContactActivity({ contact }: ContactActivityProps) {
                       key={event.id}
                       type="button"
                       onClick={() => handleOpenEvent(event)}
-                      className="w-full text-left flex items-baseline gap-3 px-2 py-2 rounded-md hover:bg-muted/60 transition-colors touch-manipulation"
+                      className="w-full text-start flex items-baseline gap-3 px-2 py-2 rounded-md hover:bg-muted/60 transition-colors touch-manipulation"
                     >
                       <span className="text-xs text-muted-foreground tabular-nums w-20 flex-shrink-0">
                         {formatEventTime(event)}

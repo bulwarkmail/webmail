@@ -44,7 +44,7 @@ export function TaskToolbar({
         ))}
       </div>
 
-      <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer select-none ml-2">
+      <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer select-none ms-2">
         <input
           type="checkbox"
           checked={showCompleted}
@@ -57,7 +57,7 @@ export function TaskToolbar({
       <div className="flex-1" />
 
       <Button size="sm" onClick={onCreateTask}>
-        <Plus className="w-4 h-4 mr-1" />
+        <Plus className="w-4 h-4 me-1" />
         {t("tasks.create")}
       </Button>
     </div>

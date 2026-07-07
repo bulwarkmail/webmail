@@ -1275,6 +1275,10 @@
       "return_to_list_after_action": {
         "label": "Return to list after delete or mark unread",
         "description": "After deleting or marking the open message unread, go back to the message list instead of opening the next message."
+      },
+      "rtl_editing": {
+        "label": "Right-to-left editing support",
+        "description": "Adds a direction button to the composer toolbar so you can set paragraphs left-to-right or right-to-left"
       }
     },
     "composer": {

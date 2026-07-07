@@ -76,7 +76,7 @@ export function TemplatePicker({ isOpen, onClose, onSelect }: TemplatePickerProp
       key={template.id}
       type="button"
       onClick={() => handleSelectTemplate(template)}
-      className="w-full text-left p-3 rounded-md hover:bg-muted transition-colors group"
+      className="w-full text-start p-3 rounded-md hover:bg-muted transition-colors group"
     >
       <div className="flex items-center gap-2">
         {template.isFavorite && (
@@ -155,7 +155,7 @@ export function TemplatePicker({ isOpen, onClose, onSelect }: TemplatePickerProp
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t('search_placeholder')}
-                className="pl-9 h-9"
+                className="ps-9 h-9"
                 autoFocus
               />
             </div>

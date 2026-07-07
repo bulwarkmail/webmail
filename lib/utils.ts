@@ -3,7 +3,7 @@ import { twMerge } from "tailwind-merge";
 import { Mailbox, UNIFIED_MAILBOX_IDS } from "./jmap/types";
 import type { UnifiedMailboxRole } from "./jmap/types";
 import { debug } from "./debug";
-import { useLocaleStore } from "@/stores/locale-store";
+import { getEffectiveLocale } from '@/i18n/detect-locale';
 import { useSettingsStore } from "@/stores/settings-store";
 import type { DateLocale } from "@/stores/settings-store";
 
@@ -92,8 +92,7 @@ export function formatDate(date: Date | string): string {
   const d = typeof date === "string" ? new Date(date) : date;
   const now = new Date();
 
-  const localeRaw = useLocaleStore.getState().locale;
-  const locale = localeRaw && localeRaw.length > 0 ? localeRaw : "en";
+  const locale = getEffectiveLocale();
   // Names (weekday, month) follow the UI language: `en` alone resolves to
   // en-US in Intl; everything else uses the language subtag as-is and lets
   // the runtime pick a sensible default region.
@@ -109,10 +108,13 @@ export function formatDate(date: Date | string): string {
     const minutes = Math.floor(diff / 60000);
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
-    if (minutes < 1) return "Just now";
-    if (minutes < 60) return `${minutes}m ago`;
-    if (hours < 24) return `${hours}h ago`;
-    if (days < 7) return `${days}d ago`;
+    // Natural, fully localized relative time ("an hour ago" / "לפני שעה",
+    // "2 days ago" / "לפני יומיים") with correct singular/dual/plural per locale.
+    const rtf = new Intl.RelativeTimeFormat(uiLocale, { numeric: "auto" });
+    if (minutes < 1) return rtf.format(0, "second");
+    if (minutes < 60) return rtf.format(-minutes, "minute");
+    if (hours < 24) return rtf.format(-hours, "hour");
+    if (days < 7) return rtf.format(-days, "day");
     return d.toLocaleDateString(uiLocale, {
       month: "short",
       day: "numeric",

@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { getLocaleDirection } from "@/i18n/direction";
 import { Geist, Geist_Mono } from "next/font/google";
 import { headers } from "next/headers";
 import { getLocale, getTranslations } from "next-intl/server";
@@ -76,7 +77,7 @@ export default async function RootLayout({
   const parentOrigin = process.env.NEXT_PUBLIC_PARENT_ORIGIN || "";
 
   return (
-    <html lang={locale} suppressHydrationWarning>
+    <html lang={locale} dir={getLocaleDirection(locale)} suppressHydrationWarning>
       <head>
         <meta name="theme-color" content="#ffffff" />
         <meta name="mobile-web-app-capable" content="yes" />

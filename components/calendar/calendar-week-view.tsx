@@ -211,7 +211,7 @@ export function CalendarWeekView({
       <div className={cn("flex min-h-0 flex-col flex-1", isMobile && "min-w-[880px]")}>      {hasAllDay && (
         <div className="flex border-b border-border">
           <div
-            className={cn("flex-shrink-0 text-[10px] text-muted-foreground p-1 text-right", isMobile ? "w-10 sticky left-0 z-10 bg-background" : "w-14")}
+            className={cn("flex-shrink-0 text-[10px] text-muted-foreground p-1 text-end", isMobile ? "w-10 sticky left-0 z-10 bg-background" : "w-14")}
             style={{ minHeight: Math.max(28, (allDayRowCount + taskRowCount) * 24 + 4) }}
           >
             {t("events.all_day")}
@@ -306,7 +306,7 @@ export function CalendarWeekView({
 
       <div className="flex border-b border-border" role="row">
         <div className={cn("flex-shrink-0", isMobile ? "w-10 sticky left-0 z-10 bg-background" : "w-14")} />
-        <div className="flex-1 border-l border-border grid grid-cols-7">
+        <div className="flex-1 border-s border-border grid grid-cols-7">
           {weekDays.map((day) => {
             const todayCol = isToday(day);
             const selected = isSameDay(day, selectedDate);
@@ -318,7 +318,7 @@ export function CalendarWeekView({
                 role="columnheader"
                 aria-label={fullLabel}
                 className={cn(
-                  "text-center py-2 text-sm border-r border-border last:border-r-0 transition-colors touch-manipulation",
+                  "text-center py-2 text-sm border-e border-border last:border-e-0 transition-colors touch-manipulation",
                   "hover:bg-muted/50",
                   todayCol && "font-bold",
                 )}
@@ -345,7 +345,7 @@ export function CalendarWeekView({
             {HOURS.map((h) => (
               <div
                 key={h}
-                className="relative text-muted-foreground text-right pr-2"
+                className="relative text-muted-foreground text-end pe-2"
                 style={{ height: HOUR_HEIGHT }}
               >
                 {h > 0 && (
@@ -357,7 +357,7 @@ export function CalendarWeekView({
             ))}
           </div>
 
-          <div className="flex-1 border-l border-border relative grid grid-cols-7">
+          <div className="flex-1 border-s border-border relative grid grid-cols-7">
             {weekDays.map((day) => {
               const key = format(day, "yyyy-MM-dd");
               const dayEvents = timedEvents.get(key) || [];
@@ -367,7 +367,7 @@ export function CalendarWeekView({
               return (
                 <div
                   key={key}
-                  className="relative border-r border-border last:border-r-0"
+                  className="relative border-e border-border last:border-e-0"
                   role="row"
                   aria-label={intlFormatter.dateTime(day, { weekday: "long", month: "long", day: "numeric" })}
                   onPointerDown={(e) => handleGridPointerDown(e, key, day)}
@@ -448,7 +448,7 @@ export function CalendarWeekView({
                       style={{ top: (nowMinutes / 60) * HOUR_HEIGHT }}
                     >
                       <div className="flex items-center">
-                        <div className="w-2 h-2 rounded-full bg-destructive -ml-1" />
+                        <div className="w-2 h-2 rounded-full bg-destructive -ms-1" />
                         <div className="flex-1 h-px bg-destructive" />
                       </div>
                     </div>
@@ -482,7 +482,7 @@ export function CalendarWeekView({
                       style={{ top: (dropTarget.minutes / 60) * HOUR_HEIGHT }}
                     >
                       <div className="flex items-center">
-                        <div className="w-2 h-2 rounded-full bg-primary -ml-1" />
+                        <div className="w-2 h-2 rounded-full bg-primary -ms-1" />
                         <div className="flex-1 h-0.5 bg-primary rounded-full" />
                       </div>
                       <div className="absolute -top-4 left-2 text-[10px] font-medium text-primary bg-background/90 px-1 rounded shadow-sm">

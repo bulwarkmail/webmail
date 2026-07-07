@@ -212,7 +212,7 @@ export function PdfMobileViewer({ url }: { url: string }) {
             size="sm"
             onClick={() => window.open(url, "_blank", "noopener,noreferrer")}
           >
-            <ExternalLink className="w-4 h-4 mr-2" />
+            <ExternalLink className="w-4 h-4 me-2" />
             {t("open_in_new_tab")}
           </Button>
         </div>

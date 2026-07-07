@@ -101,7 +101,7 @@ export function ToastItem({ toast, onClose }: ToastProps) {
       {/* Left accent bar */}
       <div className={cn("absolute left-0 top-0 bottom-0 w-1", progressBarStyles[toast.type])} />
 
-      <div className="flex items-start gap-3 p-3.5 pl-4.5 flex-1 min-w-0">
+      <div className="flex items-start gap-3 p-3.5 ps-4.5 flex-1 min-w-0">
         {/* Icon */}
         {toast.icon !== undefined ? (
           toast.icon

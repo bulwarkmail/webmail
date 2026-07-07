@@ -145,7 +145,7 @@ export function CalendarMonthView({
       <div className="grid grid-cols-7 border-b border-border" role="row">
         {dayHeaders.map((d) => (
           <div key={d} role="columnheader" className={cn(
-            "text-center text-xs font-medium text-muted-foreground py-2 border-r border-border last:border-r-0",
+            "text-center text-xs font-medium text-muted-foreground py-2 border-e border-border last:border-e-0",
             isMobile && "py-1.5 text-[11px]"
           )}>
             {isMobile ? t(`days.${d}`).slice(0, 2) : t(`days.${d}`)}
@@ -181,7 +181,7 @@ export function CalendarMonthView({
                   onDragLeave={handleCellDragLeave}
                   onDrop={(e) => handleCellDrop(e, day)}
                   className={cn(
-                    "border-r border-border last:border-r-0 p-1 cursor-pointer transition-colors touch-manipulation",
+                    "border-e border-border last:border-e-0 p-1 cursor-pointer transition-colors touch-manipulation",
                     !inMonth && "bg-muted/30",
                     "hover:bg-muted/50",
                     selected && isMobile && "bg-primary/10",

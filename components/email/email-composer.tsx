@@ -1982,7 +1982,7 @@ export function EmailComposer({
     <div ref={composerRootRef} className={cn("flex h-full bg-background", className)}>
       <PluginSlot
         name="composer-sidebar"
-        className="hidden md:flex shrink-0 h-full overflow-hidden border-r border-border"
+        className="hidden md:flex shrink-0 h-full overflow-hidden border-e border-border"
       />
       {/* Right-side composer sidebar slot is rendered after the main content div below. */}
     <div
@@ -2039,7 +2039,7 @@ export function EmailComposer({
           size="sm"
           className="md:hidden h-9 px-4"
         >
-          <Send className="w-4 h-4 mr-1.5" />
+          <Send className="w-4 h-4 me-1.5" />
           {t('send')}
         </Button>
       </div>
@@ -2437,7 +2437,7 @@ export function EmailComposer({
                     )}
                     <button
                       onClick={() => removeAttachment(index)}
-                      className="ml-1 hover:text-red-500 min-w-[20px] min-h-[20px] flex items-center justify-center"
+                      className="ms-1 hover:text-red-500 min-w-[20px] min-h-[20px] flex items-center justify-center"
                       title={att.uploading ? t('upload_cancel') : undefined}
                     >
                       <X className="w-3 h-3" />
@@ -2532,9 +2532,9 @@ export function EmailComposer({
                   onClick={() => handleSend()}
                   disabled={!canSend || isSending}
                   title={getSendTooltip()}
-                  className="rounded-r-none border-r border-primary-foreground/20"
+                  className="rounded-e-none border-e border-primary-foreground/20"
                 >
-                  <Send className="w-4 h-4 mr-2" />
+                  <Send className="w-4 h-4 me-2" />
                   {t('send')}
                 </Button>
                 <Button
@@ -2542,7 +2542,7 @@ export function EmailComposer({
                   onClick={() => setShowSendMenu((open) => !open)}
                   disabled={!canSend || isSending}
                   title={t('schedule_send')}
-                  className="rounded-l-none px-2"
+                  className="rounded-s-none px-2"
                   aria-haspopup="menu"
                   aria-expanded={showSendMenu}
                 >
@@ -2557,7 +2557,7 @@ export function EmailComposer({
                       type="button"
                       role="menuitem"
                       onClick={openScheduleDialog}
-                      className="flex w-full items-center gap-2 rounded-sm px-3 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground"
+                      className="flex w-full items-center gap-2 rounded-sm px-3 py-2 text-start text-sm hover:bg-accent hover:text-accent-foreground"
                     >
                       <CalendarClock className="w-4 h-4" />
                       {t('schedule_send')}
@@ -2572,7 +2572,7 @@ export function EmailComposer({
                 title={getSendTooltip()}
                 className="hidden md:inline-flex"
               >
-                <Send className="w-4 h-4 mr-2" />
+                <Send className="w-4 h-4 me-2" />
                 {t('send')}
               </Button>
             )}
@@ -2691,7 +2691,7 @@ export function EmailComposer({
                 {t('discard')}
               </Button>
               <Button onClick={handleSaveDraftAndClose}>
-                <Save className="w-4 h-4 mr-2" />
+                <Save className="w-4 h-4 me-2" />
                 {t('save_draft')}
               </Button>
             </div>
@@ -2710,7 +2710,7 @@ export function EmailComposer({
     </div>
       <PluginSlot
         name="composer-sidebar-right"
-        className="hidden md:flex shrink-0 h-full overflow-hidden border-l border-border"
+        className="hidden md:flex shrink-0 h-full overflow-hidden border-s border-border"
       />
     </div>
   );
@@ -2735,7 +2735,7 @@ const AutocompleteDropdown = React.forwardRef<HTMLDivElement, {
           role="option"
           aria-selected={i === selectedIndex}
           className={cn(
-            "w-full px-3 py-2 text-left text-sm flex items-center gap-2",
+            "w-full px-3 py-2 text-start text-sm flex items-center gap-2",
             i === selectedIndex ? "bg-accent text-accent-foreground" : "hover:bg-muted"
           )}
           onMouseDown={(e) => {

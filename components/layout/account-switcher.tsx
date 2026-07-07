@@ -155,7 +155,7 @@ export function AccountSwitcher({ variant = "rail", className }: AccountSwitcher
           "flex items-center gap-2 rounded-md transition-colors",
           variant === "rail"
             ? "justify-center w-10 h-10 hover:bg-muted"
-            : "w-full px-2 py-1.5 hover:bg-muted text-left min-w-0",
+            : "w-full px-2 py-1.5 hover:bg-muted text-start min-w-0",
           className
         )}
         title={variant === "rail" ? (displayName || displayEmail) : undefined}
@@ -214,7 +214,7 @@ export function AccountSwitcher({ variant = "rail", className }: AccountSwitcher
                 <button
                   onClick={() => handleSwitch(account.id)}
                   className={cn(
-                    "w-full flex items-start gap-3 px-3 py-2.5 text-left transition-colors",
+                    "w-full flex items-start gap-3 px-3 py-2.5 text-start transition-colors",
                     isActive ? "bg-accent/50" : "hover:bg-muted",
                     isDraggable && "pe-7"
                   )}

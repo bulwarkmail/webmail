@@ -223,7 +223,7 @@ export function AccountSettings() {
                 onClick={handleAddAccount}
                 className="w-full"
               >
-                <Plus className="w-4 h-4 mr-2" />
+                <Plus className="w-4 h-4 me-2" />
                 {t('accounts.add')}
               </Button>
             )}
@@ -245,7 +245,7 @@ export function AccountSettings() {
                   onClick={() => handleManageShared(acc)}
                   disabled={!editable}
                   className={cn(
-                    'flex items-center gap-3 w-full p-3 border border-border rounded-lg text-left transition-colors',
+                    'flex items-center gap-3 w-full p-3 border border-border rounded-lg text-start transition-colors',
                     editable ? 'hover:bg-muted/50 cursor-pointer' : 'opacity-60 cursor-not-allowed',
                   )}
                 >
@@ -359,7 +359,7 @@ function AccountRow({
         onClick={onSwitch}
         disabled={isActive}
         className={cn(
-          'min-w-0 flex-1 text-left',
+          'min-w-0 flex-1 text-start',
           !isActive && 'cursor-pointer'
         )}
         title={isActive ? labels.active : labels.switchTo}

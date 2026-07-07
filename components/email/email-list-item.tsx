@@ -176,7 +176,7 @@ export function EmailListItem({ email, selected, onClick, onDoubleClick, onConte
 
         {/* Unread indicator */}
         {isUnread && (
-          <div className="absolute left-0.5 top-1/2 -translate-y-1/2">
+          <div className="absolute start-0.5 top-1/2 -translate-y-1/2">
             <Circle className="w-2 h-2 fill-unread text-unread" />
           </div>
         )}

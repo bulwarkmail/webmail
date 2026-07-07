@@ -487,7 +487,7 @@ export function FilterSettings() {
               try { localStorage.setItem('settings-active-tab', 'vacation'); } catch { /* ignore */ }
               window.dispatchEvent(new CustomEvent('settings-tab-change', { detail: 'vacation' }));
             }}
-            className="flex items-center gap-3 w-full p-3 rounded-md border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors text-left"
+            className="flex items-center gap-3 w-full p-3 rounded-md border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors text-start"
           >
             <div className="flex items-center justify-center w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/40">
               <PalmtreeIcon className="w-4 h-4 text-green-600 dark:text-green-400" />
@@ -661,7 +661,7 @@ export function FilterSettings() {
                 setShowRuleModal(true);
               }}
             >
-              <Plus className="w-4 h-4 mr-1" />
+              <Plus className="w-4 h-4 me-1" />
               {t("add_rule")}
             </Button>
           )}
@@ -670,7 +670,7 @@ export function FilterSettings() {
             size="sm"
             onClick={() => setShowSieveEditor(true)}
           >
-            <Code className="w-4 h-4 mr-1" />
+            <Code className="w-4 h-4 me-1" />
             {t("raw_editor")}
           </Button>
         </div>

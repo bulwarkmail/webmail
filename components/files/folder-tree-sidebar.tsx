@@ -135,7 +135,7 @@ export function FolderTreeSidebar({ currentPath, onNavigate, listByParentId, wid
   return (
     <div
       className={cn(
-        "border-r border-border bg-secondary overflow-hidden shrink-0 flex flex-col h-full",
+        "border-e border-border bg-secondary overflow-hidden shrink-0 flex flex-col h-full",
         !isResizing && "transition-[width] duration-300"
       )}
       style={{ width: `${width}px` }}
@@ -154,10 +154,10 @@ export function FolderTreeSidebar({ currentPath, onNavigate, listByParentId, wid
         >
           <button
             onClick={() => handleFolderClick("/", null)}
-            className="flex items-center px-1 rounded transition-colors duration-150 flex-1 text-left"
+            className="flex items-center px-1 rounded transition-colors duration-150 flex-1 text-start"
             style={{ paddingBlock: "var(--density-sidebar-py)", paddingLeft: "24px" }}
           >
-            <Home className={cn("w-4 h-4 flex-shrink-0 mr-2 transition-colors")} />
+            <Home className={cn("w-4 h-4 flex-shrink-0 me-2 transition-colors")} />
             <span className="truncate">{t("breadcrumb_root")}</span>
           </button>
         </div>
@@ -207,11 +207,11 @@ export function FolderTreeSidebar({ currentPath, onNavigate, listByParentId, wid
                 >
                   <button
                     onClick={() => handleFolderClick(path, r.id)}
-                    className="flex items-center px-1 rounded transition-colors duration-150 flex-1 text-left min-w-0"
+                    className="flex items-center px-1 rounded transition-colors duration-150 flex-1 text-start min-w-0"
                     style={{ paddingBlock: "var(--density-sidebar-py)", paddingLeft: "24px" }}
                     title={r.ownerName ? t("shared_by", { name: r.ownerName }) : r.name}
                   >
-                    <Folder className="w-4 h-4 flex-shrink-0 mr-2 text-primary" />
+                    <Folder className="w-4 h-4 flex-shrink-0 me-2 text-primary" />
                     <span className="truncate">{r.name}</span>
                   </button>
                 </div>
@@ -281,7 +281,7 @@ function FolderTreeItem({
               onToggleExpand(node.id, node.path);
             }}
             className={cn(
-              "p-0.5 rounded mr-1 transition-all duration-200",
+              "p-0.5 rounded me-1 transition-all duration-200",
               "hover:bg-muted active:bg-accent"
             )}
             style={{ marginLeft: `${indentPx}px` }}
@@ -297,14 +297,14 @@ function FolderTreeItem({
         {/* Folder name */}
         <button
           onClick={() => onFolderClick(node.path, node.id)}
-          className="flex items-center px-1 rounded transition-colors duration-150 flex-1 text-left"
+          className="flex items-center px-1 rounded transition-colors duration-150 flex-1 text-start"
           style={{
             paddingBlock: "var(--density-sidebar-py)",
             paddingLeft: hasChildren ? "4px" : `${indentPx + 24}px`,
           }}
         >
           <Icon className={cn(
-            "w-4 h-4 flex-shrink-0 mr-2 transition-colors",
+            "w-4 h-4 flex-shrink-0 me-2 transition-colors",
             isExpanded && hasChildren && "text-primary",
             !hasChildren && depth > 0 && "text-muted-foreground"
           )} />

@@ -81,7 +81,7 @@ export function SearchChips({
           <button
             type="button"
             onClick={() => onRemoveFilter(chip.key)}
-            className="ml-0.5 p-0.5 rounded-full hover:bg-primary/20 transition-colors"
+            className="ms-0.5 p-0.5 rounded-full hover:bg-primary/20 transition-colors"
           >
             <X className="w-3 h-3" />
           </button>

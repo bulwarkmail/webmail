@@ -302,7 +302,7 @@ export function TaskModal({
               className="text-destructive hover:text-destructive"
               onClick={() => onDelete(task.id)}
             >
-              <Trash2 className="h-4 w-4 mr-1" />
+              <Trash2 className="h-4 w-4 me-1" />
               {t("tasks.delete")}
             </Button>
           )}

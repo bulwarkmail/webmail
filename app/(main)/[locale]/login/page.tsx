@@ -725,7 +725,7 @@ export default function LoginPage() {
                     )}
                   >
                     <Icon className="w-4 h-4" />
-                    <span className="flex-1 text-left">{option.label}</span>
+                    <span className="flex-1 text-start">{option.label}</span>
                     {isActive && <Check className="w-3.5 h-3.5 text-primary" />}
                   </button>
                 );
@@ -874,7 +874,7 @@ export default function LoginPage() {
                   )}
                 >
                   <Icon className="w-4 h-4" />
-                  <span className="flex-1 text-left">{option.label}</span>
+                  <span className="flex-1 text-start">{option.label}</span>
                   {isActive && <Check className="w-3.5 h-3.5 text-primary" />}
                 </button>
               );
@@ -1133,7 +1133,7 @@ export default function LoginPage() {
                         type={showPassword ? "text" : "password"}
                         value={formData.password}
                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                        className="h-11 px-3.5 pr-11 bg-muted/40 border-border/60 rounded-xl focus:bg-background focus:border-primary/50 transition-all duration-200"
+                        className="h-11 px-3.5 pe-11 bg-muted/40 border-border/60 rounded-xl focus:bg-background focus:border-primary/50 transition-all duration-200"
                         placeholder={t("password_placeholder")}
                         required
                         autoComplete="current-password"
@@ -1253,9 +1253,9 @@ export default function LoginPage() {
                       disabled={oauthLoading || isLoading}
                     >
                       {oauthLoading ? (
-                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                        <Loader2 className="w-4 h-4 animate-spin me-2" />
                       ) : (
-                        <LogIn className="w-4 h-4 mr-2" />
+                        <LogIn className="w-4 h-4 me-2" />
                       )}
                       {t("sign_in_sso")}
                     </Button>

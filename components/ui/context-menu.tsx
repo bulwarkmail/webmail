@@ -123,7 +123,7 @@ export function ContextMenuItem({
       role="menuitem"
       disabled={disabled}
       className={cn(
-        "w-full px-3 py-1.5 text-sm text-left flex items-center gap-2",
+        "w-full px-3 py-1.5 text-sm text-start flex items-center gap-2",
         "transition-colors duration-150",
         "focus:outline-none focus:bg-muted",
         disabled && "opacity-50 cursor-not-allowed",
@@ -139,7 +139,7 @@ export function ContextMenuItem({
       {Icon && <Icon className="w-4 h-4 flex-shrink-0" />}
       <span className="flex-1">{label}</span>
       {shortcut && (
-        <span className="text-xs text-muted-foreground ml-auto">{shortcut}</span>
+        <span className="text-xs text-muted-foreground ms-auto">{shortcut}</span>
       )}
     </button>
   );

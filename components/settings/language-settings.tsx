@@ -57,7 +57,7 @@ export function LanguageSettings() {
               { value: 'full', label: t('date_format.full') },
             ]}
           />
-          <div className="text-xs text-muted-foreground text-right space-y-0.5 font-mono">
+          <div className="text-xs text-muted-foreground text-end space-y-0.5 font-mono">
             <div>
               <span className="opacity-70">{t('date_format.preview_today')} </span>
               <span className="text-foreground/90">{preview.today}</span>

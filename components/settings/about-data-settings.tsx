@@ -36,7 +36,7 @@ function VersionUpdateTag() {
   return (
     <span
       className={cn(
-        "ml-2 inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium align-middle",
+        "ms-2 inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium align-middle",
         important
           ? "bg-red-500/15 text-red-700 dark:text-red-300"
           : "bg-amber-500/15 text-amber-700 dark:text-amber-300",
@@ -121,7 +121,7 @@ export function AboutDataSettings() {
       {showGame && <SpamSiegeGame onClose={() => setShowGame(false)} />}
       <div className="rounded-lg border border-border bg-card p-5 mb-6">
         <div className="flex items-center gap-4">
-          <button onClick={handleLogoClick} className="flex items-center gap-4 flex-1 text-left focus:outline-none group/about cursor-pointer" aria-label="About">
+          <button onClick={handleLogoClick} className="flex items-center gap-4 flex-1 text-start focus:outline-none group/about cursor-pointer" aria-label="About">
             <div className="shrink-0">
               <img
                 src={`${getPathPrefix()}/branding/Bulwark_Logo_Color.svg`}

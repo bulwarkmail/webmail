@@ -104,7 +104,7 @@ export function TemplateManagerModal({ isOpen, onClose }: TemplateManagerModalPr
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder={t('search_placeholder')}
-                  className="pl-9"
+                  className="ps-9"
                 />
               </div>
               <Button

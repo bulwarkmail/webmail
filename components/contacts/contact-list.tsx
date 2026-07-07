@@ -310,7 +310,7 @@ export function ContactList({
                 placeholder={t("search_placeholder")}
                 value={searchQuery}
                 onChange={(e) => onSearchChange(e.target.value)}
-                className={cn("pl-9 h-9", searchQuery && "pr-8")}
+                className={cn("ps-9 h-9", searchQuery && "pe-8")}
               />
               {searchQuery && (
                 <button
@@ -359,7 +359,7 @@ export function ContactList({
                   onClick={() => setFilters(EMPTY_FILTERS)}
                   className="h-7 px-2 text-xs"
                 >
-                  <RotateCcw className="w-3 h-3 mr-1" />
+                  <RotateCcw className="w-3 h-3 me-1" />
                   {t("filters.clear")}
                 </Button>
                 <Button
@@ -479,11 +479,11 @@ export function ContactList({
           </span>
           <div className="flex-1" />
           <Button variant="ghost" size="sm" onClick={onBulkAddToGroup} className="h-7 text-xs">
-            <Users className="w-3.5 h-3.5 mr-1" />
+            <Users className="w-3.5 h-3.5 me-1" />
             {t("bulk.add_to_group")}
           </Button>
           <Button variant="ghost" size="sm" onClick={onBulkExport} className="h-7 text-xs">
-            <Download className="w-3.5 h-3.5 mr-1" />
+            <Download className="w-3.5 h-3.5 me-1" />
             {t("bulk.export")}
           </Button>
           <Button
@@ -492,7 +492,7 @@ export function ContactList({
             onClick={onBulkDelete}
             className="h-7 text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
           >
-            <Trash2 className="w-3.5 h-3.5 mr-1" />
+            <Trash2 className="w-3.5 h-3.5 me-1" />
             {t("bulk.delete")}
           </Button>
           <Button variant="ghost" size="icon" onClick={onClearSelection} className="h-7 w-7">
@@ -526,7 +526,7 @@ export function ContactList({
                   )}
                   {activeFilters > 0 && (
                     <Button variant="outline" size="sm" onClick={() => setFilters(EMPTY_FILTERS)}>
-                      <RotateCcw className="w-3.5 h-3.5 mr-1" />
+                      <RotateCcw className="w-3.5 h-3.5 me-1" />
                       {t("filters.clear")}
                     </Button>
                   )}
@@ -538,7 +538,7 @@ export function ContactList({
                 <p className="text-sm font-medium text-foreground">{t("empty_state_title")}</p>
                 <p className="text-xs text-muted-foreground mt-1">{t("empty_state_subtitle")}</p>
                 <Button size="sm" className="mt-3" onClick={onCreateNew}>
-                  <UserPlus className="w-4 h-4 mr-1.5" />
+                  <UserPlus className="w-4 h-4 me-1.5" />
                   {t("create_new")}
                 </Button>
               </>

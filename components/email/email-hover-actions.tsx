@@ -181,16 +181,17 @@ export function EmailHoverActions({
 
   return (
     <div
-      className="absolute right-0 top-0 bottom-0 z-10 hidden group-hover:flex items-center"
+      className="absolute end-0 top-0 bottom-0 z-10 hidden group-hover:flex items-center"
     >
       <div
-        className={cn("w-8 h-full", hoverBackgroundClassName)}
-        style={{
-          WebkitMaskImage: "linear-gradient(to right, transparent, black)",
-          maskImage: "linear-gradient(to right, transparent, black)",
-        }}
+        className={cn(
+          "w-8 h-full",
+          "[mask-image:linear-gradient(to_right,transparent,black)] [-webkit-mask-image:linear-gradient(to_right,transparent,black)]",
+          "rtl:[mask-image:linear-gradient(to_left,transparent,black)] rtl:[-webkit-mask-image:linear-gradient(to_left,transparent,black)]",
+          hoverBackgroundClassName,
+        )}
       />
-      <div className={cn("flex items-center gap-0.5 h-full pr-3 pl-0.5", hoverBackgroundClassName)}>
+      <div className={cn("flex items-center gap-0.5 h-full pe-3 ps-0.5", hoverBackgroundClassName)}>
         {actionButtons}
       </div>
     </div>

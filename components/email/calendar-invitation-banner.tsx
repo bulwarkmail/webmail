@@ -1053,7 +1053,7 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
                         setShowCalendarPicker(false);
                         handleImport(cal.id);
                       }}
-                      className="w-full px-3 py-1.5 text-sm text-left hover:bg-muted flex items-center gap-2"
+                      className="w-full px-3 py-1.5 text-sm text-start hover:bg-muted flex items-center gap-2"
                     >
                       <span
                         className="w-3 h-3 rounded-full flex-shrink-0"
@@ -1095,7 +1095,7 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
           )}
 
           {isProcessing && (
-            <Loader2 className="w-4 h-4 animate-spin text-muted-foreground ml-auto" />
+            <Loader2 className="w-4 h-4 animate-spin text-muted-foreground ms-auto" />
           )}
         </div>
         )}

@@ -417,9 +417,9 @@ export function EmailList({
             className="text-destructive border-destructive/30 hover:bg-destructive/10 text-xs"
           >
             {isProcessing ? (
-              <Loader2 className="w-3 h-3 animate-spin mr-1" />
+              <Loader2 className="w-3 h-3 animate-spin me-1" />
             ) : (
-              <Trash2 className="w-3 h-3 mr-1" />
+              <Trash2 className="w-3 h-3 me-1" />
             )}
             {t('empty_folder.button')}
           </Button>

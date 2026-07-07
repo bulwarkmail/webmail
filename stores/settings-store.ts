@@ -170,6 +170,7 @@ interface SettingsState {
   defaultReplyMode: ReplyMode;
   autoSelectReplyIdentity: boolean;
   plainTextMode: boolean; // Send plain text only (no rich text editor)
+  rtlEditingSupport: boolean; // Show a per-paragraph LTR/RTL direction control in the composer (Gmail-style)
   subAddressDelimiter: string; // Character separating user from tag (e.g. "user+tag@")
   sendDelaySeconds: SendDelaySeconds;
   signaturePosition: SignaturePosition; // Position of the signature relative to quoted text in replies/forwards
@@ -383,6 +384,7 @@ const DEFAULT_SETTINGS = {
   defaultReplyMode: 'reply' as ReplyMode,
   autoSelectReplyIdentity: false,
   plainTextMode: false,
+  rtlEditingSupport: false,
   subAddressDelimiter: DEFAULT_SUB_ADDRESS_DELIMITER,
   sendDelaySeconds: 0 as SendDelaySeconds,
   signaturePosition: 'below_quote' as SignaturePosition,
@@ -596,6 +598,7 @@ export const useSettingsStore = create<SettingsState>()(
           defaultReplyMode: state.defaultReplyMode,
           autoSelectReplyIdentity: state.autoSelectReplyIdentity,
           plainTextMode: state.plainTextMode,
+          rtlEditingSupport: state.rtlEditingSupport,
           subAddressDelimiter: state.subAddressDelimiter,
           sendDelaySeconds: state.sendDelaySeconds,
           signaturePosition: state.signaturePosition,

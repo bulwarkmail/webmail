@@ -1,13 +1,17 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { NextIntlClientProvider } from 'next-intl';
 import { useLocaleStore } from '@/stores/locale-store';
 import csMessages from '@/locales/cs/common.json';
 import daMessages from '@/locales/da/common.json';
 import deMessages from '@/locales/de/common.json';
+import { getLocaleDirection } from '@/i18n/direction';
+import { mergeMessages } from '@/i18n/merge-messages';
+import { detectBrowserLocale } from '@/i18n/detect-locale';
 import enMessages from '@/locales/en/common.json';
 import esMessages from '@/locales/es/common.json';
+import heMessages from '@/locales/he/common.json';
 import faMessages from '@/locales/fa/common.json';
 import frMessages from '@/locales/fr/common.json';
 import huMessages from '@/locales/hu/common.json';
@@ -32,6 +36,7 @@ const ALL_MESSAGES = {
   de: deMessages,
   en: enMessages,
   es: esMessages,
+  he: heMessages,
   fa: faMessages,
   fr: frMessages,
   hu: huMessages,
@@ -58,7 +63,6 @@ interface IntlProviderProps {
 
 export function IntlProvider({ locale: initialLocale, children }: IntlProviderProps) {
   const currentLocale = useLocaleStore((state) => state.locale);
-  const setLocale = useLocaleStore((state) => state.setLocale);
   const [activeLocale, setActiveLocale] = useState(initialLocale);
   const [timeZone, setTimeZone] = useState<string>('UTC');
 
@@ -74,27 +78,38 @@ export function IntlProvider({ locale: initialLocale, children }: IntlProviderPr
     }
   }, []);
 
-  // First mount: seed the store from the server-resolved locale if nothing is persisted.
+  // Resolve the active locale from the user's stored choice. Empty or 'auto'
+  // means "follow the browser" (English default); a specific code forces it and
+  // is never overridden by detection.
   useEffect(() => {
-    if (!currentLocale) {
-      setLocale(initialLocale);
-    } else {
-      setActiveLocale(currentLocale);
-    }
+    setActiveLocale(
+      !currentLocale || currentLocale === 'auto'
+        ? detectBrowserLocale(initialLocale)
+        : currentLocale
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Switch locale immediately when store changes
-  useEffect(() => {
-    if (currentLocale) {
-      setActiveLocale(currentLocale);
-    }
   }, [currentLocale]);
+
+  // Keep <html> lang/dir in sync with the active locale (RTL for he/fa).
+  useEffect(() => {
+    document.documentElement.lang = activeLocale;
+    document.documentElement.dir = getLocaleDirection(activeLocale);
+  }, [activeLocale]);
+
+  // Fall back to English for any key the active locale has not translated, so
+  // untranslated strings show English text instead of a raw message key.
+  const messages = useMemo(
+    () => mergeMessages(
+      ALL_MESSAGES.en as Record<string, unknown>,
+      (ALL_MESSAGES[activeLocale as keyof typeof ALL_MESSAGES] ?? {}) as Record<string, unknown>
+    ),
+    [activeLocale]
+  );
 
   return (
     <NextIntlClientProvider
       locale={activeLocale}
-      messages={ALL_MESSAGES[activeLocale as keyof typeof ALL_MESSAGES] ?? ALL_MESSAGES.en}
+      messages={messages}
       timeZone={timeZone}
     >
       {children}

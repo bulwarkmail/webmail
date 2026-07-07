@@ -174,7 +174,7 @@ function ShortcutRow({
   return (
     <div className="flex items-center justify-between py-1.5">
       <span className="text-sm text-muted-foreground">{description}</span>
-      <div className="flex items-center gap-1.5 ml-4">
+      <div className="flex items-center gap-1.5 ms-4">
         {keys.map((key, index) => (
           <span key={index}>
             {index > 0 && <span className="text-muted-foreground/50 mx-1 text-xs">or</span>}

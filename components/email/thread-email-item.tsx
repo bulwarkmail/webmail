@@ -86,8 +86,8 @@ export function ThreadEmailItem({
       {...longPressHandlers}
       className={cn(
         "relative cursor-pointer select-none transition-all duration-150",
-        "pl-12 pr-4",
-        "border-l-2 border-l-transparent",
+        "ps-12 pe-4",
+        "border-s-2 border-l-transparent",
         selected
           ? "bg-selection border-l-primary"
           : "hover:bg-muted/50",
@@ -130,7 +130,7 @@ export function ThreadEmailItem({
 
         {/* Unread indicator */}
         {isUnread && (
-          <div className="absolute left-7 top-1/2 -translate-y-1/2">
+          <div className="absolute start-7 top-1/2 -translate-y-1/2">
             <Circle className="w-1.5 h-1.5 fill-unread text-unread" />
           </div>
         )}

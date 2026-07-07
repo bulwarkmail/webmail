@@ -334,7 +334,7 @@ export function EmailContextMenu({
                       </div>
                     )}
                     {node.children.length > 0 && (
-                      <div className="pl-4">
+                      <div className="ps-4">
                         {renderNodes(node.children)}
                       </div>
                     )}
@@ -377,7 +377,7 @@ export function EmailContextMenu({
                 role="menuitem"
                 onClick={() => handleAction(() => onSetColorTag?.(option.value))}
                 className={cn(
-                  "w-full px-3 py-1.5 text-sm text-left flex items-center gap-2 hover:bg-muted cursor-pointer",
+                  "w-full px-3 py-1.5 text-sm text-start flex items-center gap-2 hover:bg-muted cursor-pointer",
                   isActive && "bg-accent font-medium"
                 )}
               >

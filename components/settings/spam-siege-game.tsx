@@ -304,7 +304,7 @@ export function SpamSiegeGame({ onClose }: { onClose: () => void }) {
                   Close
                 </Button>
                 <Button size="sm" onClick={startGame}>
-                  <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
+                  <RotateCcw className="w-3.5 h-3.5 me-1.5" />
                   Again
                 </Button>
               </div>

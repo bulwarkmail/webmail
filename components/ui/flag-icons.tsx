@@ -245,6 +245,21 @@ export function FlagIR(props: FlagProps) {
   );
 }
 
+/** Israel – white field, two blue stripes, Star of David */
+export function FlagIL(props: FlagProps) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 160" width={W} height={H} className={flagClass} {...props}>
+      <rect width="220" height="160" fill="#fff" />
+      <rect width="220" height="20" y="25" fill="#0038b8" />
+      <rect width="220" height="20" y="115" fill="#0038b8" />
+      <g fill="none" stroke="#0038b8" strokeWidth="5.5">
+        <path d="M110 58 L91 91 L129 91 Z" />
+        <path d="M110 102 L91 69 L129 69 Z" />
+      </g>
+    </svg>
+  );
+}
+
 const skShield =
   "m269.993 459.98-3.906-1.867c-25.267-12.173-56.294-30.4-81.294-58.133" +
   "-25-27.733-43.8-65.307-43.8-114.24 0-93.6 4.52-136.68 4.52-136.68" +
@@ -280,7 +295,7 @@ export function FlagSK(props: FlagProps) {
   );
 }
 
-
+/** Map locale codes to flag components */
 export const flagComponents: Record<string, (props: FlagProps) => ReactElement> = {
   cs: FlagCS,
   sk: FlagSK,
@@ -303,4 +318,5 @@ export const flagComponents: Record<string, (props: FlagProps) => ReactElement> 
   uk: FlagUA,
   zh: FlagCN,
   fa: FlagIR,
+  he: FlagIL,
 };

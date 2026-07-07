@@ -204,7 +204,7 @@ export function TrustedSendersModal({ isOpen, onClose }: TrustedSendersModalProp
                 placeholder={t("search_placeholder")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 text-sm bg-muted border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50"
+                className="w-full ps-9 pe-3 py-2 text-sm bg-muted border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50"
               />
             </div>
           </div>

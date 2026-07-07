@@ -111,7 +111,7 @@ export function WelcomeBanner() {
             onClick={() => { dismiss(); startTour(); }}
             className="text-xs h-7"
           >
-            <PlayCircle className="w-3.5 h-3.5 mr-1" />
+            <PlayCircle className="w-3.5 h-3.5 me-1" />
             {t("start_tour")}
           </Button>
           <Button
@@ -120,7 +120,7 @@ export function WelcomeBanner() {
             onClick={() => { dismiss(); router.push('/settings'); }}
             className="text-xs h-7"
           >
-            <Settings className="w-3.5 h-3.5 mr-1" />
+            <Settings className="w-3.5 h-3.5 me-1" />
             {t("settings")}
           </Button>
           <Button

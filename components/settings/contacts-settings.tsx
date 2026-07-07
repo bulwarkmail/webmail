@@ -73,7 +73,7 @@ export function ContactsSettings() {
         description={tSettings("import_description")}
       >
         <Button variant="outline" size="sm" onClick={() => setShowImport(true)}>
-          <Upload className="w-4 h-4 mr-2" />
+          <Upload className="w-4 h-4 me-2" />
           {t("import.title")}
         </Button>
       </SettingItem>
@@ -88,7 +88,7 @@ export function ContactsSettings() {
           onClick={handleExport}
           disabled={individuals.length === 0}
         >
-          <Download className="w-4 h-4 mr-2" />
+          <Download className="w-4 h-4 me-2" />
           {t("export.title")}
         </Button>
       </SettingItem>

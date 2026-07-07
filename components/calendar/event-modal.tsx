@@ -666,11 +666,11 @@ export function EventModal({
                   <div className="text-sm">
                     <div>
                       <span className="font-medium">{formatEventDate(startD)}</span>
-                      <span className="text-muted-foreground ml-2">{format(startD, timeDisplayFmt)}</span>
+                      <span className="text-muted-foreground ms-2">{format(startD, timeDisplayFmt)}</span>
                     </div>
                     <div>
                       <span className="font-medium">{formatEventDate(endD)}</span>
-                      <span className="text-muted-foreground ml-2">{format(endD, timeDisplayFmt)}</span>
+                      <span className="text-muted-foreground ms-2">{format(endD, timeDisplayFmt)}</span>
                     </div>
                   </div>
                 );
@@ -679,7 +679,7 @@ export function EventModal({
                 <div className="text-sm">
                   <span className="font-medium">{formatEventDate(startD)}</span>
                   {!event.showWithoutTime && (
-                    <span className="text-muted-foreground ml-2">
+                    <span className="text-muted-foreground ms-2">
                       {format(startD, timeDisplayFmt)} – {format(endD, timeDisplayFmt)}
                     </span>
                   )}
@@ -701,7 +701,7 @@ export function EventModal({
                   <Users className="w-4 h-4" />
                   {t("participants.title")}
                 </div>
-                <div className="space-y-1 pl-5">
+                <div className="space-y-1 ps-5">
                   {participants.map(p => (
                     <div key={p.id} className="flex items-center justify-between text-sm">
                       <span className="truncate">{p.name || p.email}</span>
@@ -726,7 +726,7 @@ export function EventModal({
                   ? "bg-success hover:bg-success/80 text-success-foreground"
                   : "text-success border-success/30 hover:bg-success/10"}
               >
-                {userCurrentStatus === "accepted" && <Check className="w-4 h-4 mr-1" />}
+                {userCurrentStatus === "accepted" && <Check className="w-4 h-4 me-1" />}
                 {t("participants.accepted")}
               </Button>
               <Button
@@ -737,7 +737,7 @@ export function EventModal({
                   ? "bg-warning hover:bg-warning/80 text-warning-foreground"
                   : "border border-warning/30 text-warning hover:bg-warning/10"}
               >
-                {userCurrentStatus === "tentative" && <Check className="w-4 h-4 mr-1" />}
+                {userCurrentStatus === "tentative" && <Check className="w-4 h-4 me-1" />}
                 {t("participants.tentative")}
               </Button>
               <Button
@@ -748,7 +748,7 @@ export function EventModal({
                   ? "bg-destructive hover:bg-destructive/80 text-destructive-foreground"
                   : "text-destructive hover:bg-destructive/10"}
               >
-                {userCurrentStatus === "declined" && <Check className="w-4 h-4 mr-1" />}
+                {userCurrentStatus === "declined" && <Check className="w-4 h-4 me-1" />}
                 {t("participants.declined")}
               </Button>
             </div>
@@ -784,7 +784,7 @@ export function EventModal({
               <h2 className="text-lg font-semibold truncate">{event.title || t("events.no_title")}</h2>
             </div>
             {eventCalendar && (
-              <p className="text-xs text-muted-foreground mt-0.5 pl-[18px]">{eventCalendar.name}</p>
+              <p className="text-xs text-muted-foreground mt-0.5 ps-[18px]">{eventCalendar.name}</p>
             )}
           </div>
           <button onClick={onClose} className="p-1.5 rounded-md hover:bg-muted transition-colors duration-150 flex-shrink-0 mt-0.5 text-muted-foreground hover:text-foreground" aria-label={t("form.cancel")}>
@@ -816,13 +816,13 @@ export function EventModal({
                       <>
                         <div className="font-medium text-foreground">
                           {formatEventDate(startD)}
-                          <span className="ml-1.5 font-normal text-muted-foreground">
+                          <span className="ms-1.5 font-normal text-muted-foreground">
                             {format(startD, timeDisplayFmt)}
                           </span>
                         </div>
                         <div className="font-medium text-foreground">
                           {formatEventDate(endD)}
-                          <span className="ml-1.5 font-normal text-muted-foreground">
+                          <span className="ms-1.5 font-normal text-muted-foreground">
                             {format(endD, timeDisplayFmt)}
                           </span>
                         </div>
@@ -838,11 +838,11 @@ export function EventModal({
                         {formatEventDate(startD)}
                       </span>
                       {event.showWithoutTime ? (
-                        <span className="text-muted-foreground ml-1.5">{t("events.all_day")}</span>
+                        <span className="text-muted-foreground ms-1.5">{t("events.all_day")}</span>
                       ) : (
                         <div className="text-muted-foreground">
                           {format(startD, timeDisplayFmt)} – {format(endD, timeDisplayFmt)}
-                          <span className="ml-1.5 text-xs">({formatDurationDisplay(durMin)})</span>
+                          <span className="ms-1.5 text-xs">({formatDurationDisplay(durMin)})</span>
                         </div>
                       )}
                     </>
@@ -889,7 +889,7 @@ export function EventModal({
                         <span className="truncate text-foreground">
                           {p.name || p.email}
                           {p.isOrganizer && (
-                            <span className="text-muted-foreground ml-1">({t("participants.organizer").toLowerCase()})</span>
+                            <span className="text-muted-foreground ms-1">({t("participants.organizer").toLowerCase()})</span>
                           )}
                         </span>
                         <StatusBadge status={p.status} isOrganizer={p.isOrganizer} t={t} />
@@ -942,21 +942,21 @@ export function EventModal({
                 </div>
               ) : (
                 <Button variant="ghost" size="sm" onClick={() => setShowDeleteConfirm(true)} className="text-destructive">
-                  <Trash2 className="w-4 h-4 mr-1" />
+                  <Trash2 className="w-4 h-4 me-1" />
                   {t("events.delete")}
                 </Button>
               )
             )}
             {onDuplicate && !showDeleteConfirm && (
               <Button variant="ghost" size="sm" onClick={handleDuplicate} aria-label={t("events.duplicate")}>
-                <Copy className="w-4 h-4 mr-1" />
+                <Copy className="w-4 h-4 me-1" />
                 {t("events.duplicate")}
               </Button>
             )}
           </div>
           {!showDeleteConfirm && (
             <Button onClick={() => setMode("edit")}>
-              <Pencil className="w-4 h-4 mr-1" />
+              <Pencil className="w-4 h-4 me-1" />
               {t("events.edit")}
             </Button>
           )}
@@ -1320,7 +1320,7 @@ export function EventModal({
                 onClick={() => setShowDeleteConfirm(true)}
                 className="text-red-600 dark:text-red-400"
               >
-                <Trash2 className="w-4 h-4 mr-1" />
+                <Trash2 className="w-4 h-4 me-1" />
                 {t("events.delete")}
               </Button>
             )
@@ -1332,7 +1332,7 @@ export function EventModal({
               onClick={handleDuplicate}
               aria-label={t("events.duplicate")}
             >
-              <Copy className="w-4 h-4 mr-1" />
+              <Copy className="w-4 h-4 me-1" />
               {t("events.duplicate")}
             </Button>
           )}

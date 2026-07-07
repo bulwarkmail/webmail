@@ -128,7 +128,7 @@ export function SubAddressHelper({
         title={t('button_tooltip')}
         className="h-8 px-2"
       >
-        <Plus className="w-4 h-4 mr-1" />
+        <Plus className="w-4 h-4 me-1" />
         <Tag className="w-4 h-4" />
       </Button>
 

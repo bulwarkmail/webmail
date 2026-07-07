@@ -21,7 +21,7 @@ export function PageErrorFallback({ error: _error, resetError, t }: FallbackProp
           {t("page_error_description")}
         </p>
         <Button onClick={resetError}>
-          <RefreshCw className="w-4 h-4 mr-2" />
+          <RefreshCw className="w-4 h-4 me-2" />
           {t("try_again")}
         </Button>
       </div>
@@ -34,13 +34,13 @@ export function PageErrorFallback({ error: _error, resetError, t }: FallbackProp
  */
 export function SidebarErrorFallback({ resetError, t }: FallbackProps) {
   return (
-    <div className="w-64 h-full border-r border-border bg-secondary flex flex-col items-center justify-center p-4">
+    <div className="w-64 h-full border-e border-border bg-secondary flex flex-col items-center justify-center p-4">
       <FolderOpen className="w-10 h-10 text-muted-foreground mb-3" />
       <p className="text-sm text-muted-foreground text-center mb-4">
         {t("sidebar_error")}
       </p>
       <Button variant="outline" size="sm" onClick={resetError}>
-        <RefreshCw className="w-3 h-3 mr-1" />
+        <RefreshCw className="w-3 h-3 me-1" />
         {t("reload")}
       </Button>
     </div>
@@ -58,7 +58,7 @@ export function EmailListErrorFallback({ resetError, t }: FallbackProps) {
         {t("email_list_error")}
       </p>
       <Button variant="outline" size="sm" onClick={resetError}>
-        <RefreshCw className="w-4 h-4 mr-2" />
+        <RefreshCw className="w-4 h-4 me-2" />
         {t("reload_emails")}
       </Button>
     </div>
@@ -81,7 +81,7 @@ export function EmailViewerErrorFallback({ resetError, t }: FallbackProps) {
         {t("viewer_error_description")}
       </p>
       <Button onClick={resetError}>
-        <RefreshCw className="w-4 h-4 mr-2" />
+        <RefreshCw className="w-4 h-4 me-2" />
         {t("try_again")}
       </Button>
     </div>
@@ -119,7 +119,7 @@ export function SettingsErrorFallback({ resetError, t }: FallbackProps) {
         {t("settings_error_description")}
       </p>
       <Button onClick={resetError}>
-        <RefreshCw className="w-4 h-4 mr-2" />
+        <RefreshCw className="w-4 h-4 me-2" />
         {t("reload_settings")}
       </Button>
     </div>

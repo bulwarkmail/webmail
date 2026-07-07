@@ -65,7 +65,7 @@ export default function ChangePasswordPage() {
               value={currentPassword}
               onChange={e => setCurrentPassword(e.target.value)}
               required
-              className="w-full h-9 pl-9 pr-3 rounded-md border border-input bg-background text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="w-full h-9 ps-9 pe-3 rounded-md border border-input bg-background text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               autoComplete="current-password"
             />
           </div>

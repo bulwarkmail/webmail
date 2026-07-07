@@ -104,7 +104,7 @@ export function TemplateSettings() {
             onClick={handleExport}
             disabled={templates.length === 0}
           >
-            <Download className="w-4 h-4 mr-1" />
+            <Download className="w-4 h-4 me-1" />
             {t('export')}
           </Button>
           <div>
@@ -120,7 +120,7 @@ export function TemplateSettings() {
               size="sm"
               onClick={() => fileInputRef.current?.click()}
             >
-              <Upload className="w-4 h-4 mr-1" />
+              <Upload className="w-4 h-4 me-1" />
               {t('import')}
             </Button>
           </div>

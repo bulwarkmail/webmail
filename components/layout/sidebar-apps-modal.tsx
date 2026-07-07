@@ -154,7 +154,7 @@ function SidebarAppForm({
         <label className="block text-sm font-medium mb-2">
           {t('icon_label')} <span className="text-destructive">*</span>
           {SelectedIcon && (
-            <span className="inline-flex items-center gap-1.5 ml-2 text-muted-foreground font-normal">
+            <span className="inline-flex items-center gap-1.5 ms-2 text-muted-foreground font-normal">
               - <SelectedIcon className="w-4 h-4" /> {formData.icon}
             </span>
           )}
@@ -275,7 +275,7 @@ export function SidebarAppsModal({ isOpen, onClose }: SidebarAppsModalProps) {
               onClick={() => setIsCreating(true)}
               className="mb-6 w-full sm:w-auto"
             >
-              <Plus className="w-4 h-4 mr-2" />
+              <Plus className="w-4 h-4 me-2" />
               {t('add_new')}
             </Button>
           )}

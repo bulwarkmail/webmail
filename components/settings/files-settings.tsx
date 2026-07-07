@@ -84,8 +84,8 @@ function FilesSettingsPreview({ settings }: { settings: FilesSettings }) {
     <div className="flex-1 min-w-0 overflow-hidden">
       <div className="flex items-center gap-3 px-2 py-1 text-[10px] font-medium text-muted-foreground border-b border-border bg-muted/50">
         <span className="flex-1 min-w-0">Name</span>
-        <span className="w-14 text-right">Size</span>
-        <span className="w-16 text-right">Modified</span>
+        <span className="w-14 text-end">Size</span>
+        <span className="w-16 text-end">Modified</span>
       </div>
       {sortedFiles.map((file) => (
         <div
@@ -103,10 +103,10 @@ function FilesSettingsPreview({ settings }: { settings: FilesSettings }) {
           <span className={cn("flex-1 min-w-0 truncate text-[11px]", file.isFolder && "font-medium")}>
             {file.name}
           </span>
-          <span className="w-14 text-right text-[10px] text-muted-foreground tabular-nums">
+          <span className="w-14 text-end text-[10px] text-muted-foreground tabular-nums">
             {formatSize(file.size)}
           </span>
-          <span className="w-16 text-right text-[10px] text-muted-foreground tabular-nums">
+          <span className="w-16 text-end text-[10px] text-muted-foreground tabular-nums">
             {file.modified.slice(5)}
           </span>
         </div>
@@ -142,7 +142,7 @@ function FilesSettingsPreview({ settings }: { settings: FilesSettings }) {
   );
 
   const sidebar = settings.folderLayout === "sidebar" && (
-    <div className="w-24 border-r border-border bg-muted/30 py-1.5 flex-shrink-0">
+    <div className="w-24 border-e border-border bg-muted/30 py-1.5 flex-shrink-0">
       <div className="flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium text-foreground">
         <Home className="w-3 h-3 flex-shrink-0" />
         <span className="truncate">Files</span>

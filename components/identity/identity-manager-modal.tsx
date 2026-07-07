@@ -275,7 +275,7 @@ export function IdentityManagerModal({ isOpen, onClose }: IdentityManagerModalPr
               onClick={() => setIsCreating(true)}
               className="mb-6 w-full sm:w-auto"
             >
-              <Plus className="w-4 h-4 mr-2" />
+              <Plus className="w-4 h-4 me-2" />
               {t('create_new')}
             </Button>
           )}
