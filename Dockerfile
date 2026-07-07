@@ -8,6 +8,10 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # at build time, so it cannot be changed without rebuilding.
 ARG NEXT_PUBLIC_BASE_PATH=
 ENV NEXT_PUBLIC_BASE_PATH=$NEXT_PUBLIC_BASE_PATH
+# Optional: avoid next-intl rewrite loops when served under a subpath.
+# Baked in at build time.
+ARG NEXT_PUBLIC_LOCALE_PREFIX=
+ENV NEXT_PUBLIC_LOCALE_PREFIX=$NEXT_PUBLIC_LOCALE_PREFIX
 # Optional: fallback UI locale (e.g. tr, de, fr) used when the visitor's
 # Accept-Language header does not match any supported locale. Baked in at
 # build time because next-intl wires it into client-side routing too.
