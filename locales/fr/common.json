@@ -807,6 +807,7 @@
     "nl": "Nederlands",
     "pl": "Polski",
     "pt": "Português",
+    "he": "עברית",
     "ru": "Русский",
     "sk": "Slovenčina",
     "uk": "Українська",
@@ -1272,6 +1273,10 @@
       "return_to_list_after_action": {
         "label": "Revenir à la liste après suppression ou marquage comme non lu",
         "description": "Après avoir supprimé ou marqué comme non lu le message ouvert, revenir à la liste des messages au lieu d'ouvrir le message suivant."
+      },
+      "rtl_editing": {
+        "label": "Prise en charge de la saisie de droite à gauche",
+        "description": "Ajoute un bouton de direction à la barre d'outils de l'éditeur pour mettre les paragraphes de gauche à droite ou de droite à gauche"
       }
     },
     "composer": {

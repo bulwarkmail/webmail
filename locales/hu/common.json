@@ -807,6 +807,7 @@
     "nl": "Nederlands",
     "pl": "Polski",
     "pt": "Português",
+    "he": "עברית",
     "ru": "Русский",
     "sk": "Slovenčina",
     "uk": "Українська",
@@ -1275,6 +1276,10 @@
       "return_to_list_after_action": {
         "label": "Visszatérés a listához törlés vagy olvasatlanként jelölés után",
         "description": "A megnyitott üzenet törlése vagy olvasatlanként való megjelölése után visszatérés az üzenetlistához a következő üzenet megnyitása helyett."
+      },
+      "rtl_editing": {
+        "label": "Jobbról balra írás támogatása",
+        "description": "Iránygombot ad a szerkesztő eszköztárához, amellyel a bekezdések balról jobbra vagy jobbról balra állíthatók"
       }
     },
     "composer": {

@@ -807,6 +807,7 @@
     "nl": "Nederlands",
     "pl": "Polski",
     "pt": "Português",
+    "he": "עברית",
     "ru": "Русский",
     "sk": "Slovenčina",
     "uk": "Українська",
@@ -1275,6 +1276,10 @@
       "return_to_list_after_action": {
         "label": "Vend tilbage til listen efter sletning eller markering som ulæst",
         "description": "Efter sletning eller markering af den åbne besked som ulæst vendes der tilbage til beskedlisten i stedet for at åbne den næste besked."
+      },
+      "rtl_editing": {
+        "label": "Understøttelse af højre-mod-venstre-redigering",
+        "description": "Tilføjer en retningsknap til værktøjslinjen i editoren, så afsnit kan sættes venstre-mod-højre eller højre-mod-venstre"
       }
     },
     "composer": {

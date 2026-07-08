@@ -807,6 +807,7 @@
     "nl": "Nederlands",
     "pl": "Polski",
     "pt": "Português",
+    "he": "עברית",
     "ru": "Русский",
     "sk": "Slovenčina",
     "uk": "Українська",
@@ -1272,6 +1273,10 @@
       "return_to_list_after_action": {
         "label": "削除または未読にした後に一覧へ戻る",
         "description": "開いているメッセージを削除または未読にした後、次のメッセージを開かずにメッセージ一覧へ戻ります。"
+      },
+      "rtl_editing": {
+        "label": "右から左への編集サポート",
+        "description": "エディターのツールバーに文字方向ボタンを追加し、段落を左から右または右から左に設定できます"
       }
     },
     "composer": {

@@ -807,6 +807,7 @@
     "nl": "Nederlands",
     "pl": "Polski",
     "pt": "Português",
+    "he": "עברית",
     "ru": "Русский",
     "sk": "Slovenčina",
     "uk": "Українська",
@@ -1272,6 +1273,10 @@
       "return_to_list_after_action": {
         "label": "Torna all'elenco dopo l'eliminazione o il contrassegno come non letto",
         "description": "Dopo aver eliminato o segnato come non letto il messaggio aperto, torna all'elenco dei messaggi invece di aprire il messaggio successivo."
+      },
+      "rtl_editing": {
+        "label": "Supporto alla scrittura da destra a sinistra",
+        "description": "Aggiunge un pulsante di direzione alla barra degli strumenti dell'editor per impostare i paragrafi da sinistra a destra o da destra a sinistra"
       }
     },
     "composer": {

@@ -807,6 +807,7 @@
     "nl": "Nederlands",
     "pl": "Polski",
     "pt": "Português",
+    "he": "עברית",
     "ru": "Русский",
     "sk": "Slovenčina",
     "uk": "Українська",
@@ -1272,6 +1273,10 @@
       "return_to_list_after_action": {
         "label": "Powrót do listy po usunięciu lub oznaczeniu jako nieprzeczytane",
         "description": "Po usunięciu lub oznaczeniu otwartej wiadomości jako nieprzeczytanej wróć do listy wiadomości zamiast otwierać następną."
+      },
+      "rtl_editing": {
+        "label": "Obsługa edycji od prawej do lewej",
+        "description": "Dodaje przycisk kierunku do paska narzędzi edytora, pozwalający ustawić akapity od lewej do prawej lub od prawej do lewej"
       }
     },
     "composer": {

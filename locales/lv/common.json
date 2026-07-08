@@ -807,6 +807,7 @@
     "nl": "Nederlands",
     "pl": "Polski",
     "pt": "Português",
+    "he": "עברית",
     "ru": "Русский",
     "sk": "Slovenčina",
     "uk": "Українська",
@@ -1272,6 +1273,10 @@
       "return_to_list_after_action": {
         "label": "Atgriezties sarakstā pēc dzēšanas vai atzīmēšanas kā nelasītu",
         "description": "Pēc atvērtā ziņojuma dzēšanas vai atzīmēšanas kā nelasīta atgriezieties ziņojumu sarakstā, nevis atveriet nākamo ziņojumu."
+      },
+      "rtl_editing": {
+        "label": "Rakstīšanas no labās uz kreiso atbalsts",
+        "description": "Pievieno redaktora rīkjoslai virziena pogu, ar kuru rindkopas var iestatīt no kreisās uz labo vai no labās uz kreiso"
       }
     },
     "composer": {

@@ -807,6 +807,7 @@
     "nl": "Nederlands",
     "pl": "Polski",
     "pt": "Português",
+    "he": "עברית",
     "ru": "Русский",
     "sk": "Slovenčina",
     "uk": "Українська",
@@ -1272,6 +1273,10 @@
       "return_to_list_after_action": {
         "label": "Terug naar lijst na verwijderen of markeren als ongelezen",
         "description": "Na het verwijderen of als ongelezen markeren van het geopende bericht terugkeren naar de berichtenlijst in plaats van het volgende bericht te openen."
+      },
+      "rtl_editing": {
+        "label": "Ondersteuning voor rechts-naar-links bewerken",
+        "description": "Voegt een richtingsknop toe aan de werkbalk van de editor waarmee alinea's links-naar-rechts of rechts-naar-links kunnen worden ingesteld"
       }
     },
     "composer": {

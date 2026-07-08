@@ -807,6 +807,7 @@
     "nl": "Nederlands",
     "pl": "Polski",
     "pt": "Português",
+    "he": "עברית",
     "ru": "Русский",
     "sk": "Slovenčina",
     "uk": "Українська",
@@ -1272,6 +1273,10 @@
       "return_to_list_after_action": {
         "label": "删除或标记为未读后返回列表",
         "description": "删除打开的邮件或将其标记为未读后，返回邮件列表而不是打开下一封邮件。"
+      },
+      "rtl_editing": {
+        "label": "从右到左编辑支持",
+        "description": "在编辑器工具栏中添加方向按钮，可将段落设置为从左到右或从右到左"
       }
     },
     "composer": {

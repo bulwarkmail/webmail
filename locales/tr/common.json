@@ -807,6 +807,7 @@
     "nl": "Nederlands",
     "pl": "Polski",
     "pt": "Português",
+    "he": "עברית",
     "ru": "Русский",
     "sk": "Slovenčina",
     "uk": "Українська",
@@ -1272,6 +1273,10 @@
       "return_to_list_after_action": {
         "label": "Silme veya okunmadı olarak işaretlemeden sonra listeye dön",
         "description": "Açık iletiyi sildikten veya okunmadı olarak işaretledikten sonra, sonraki iletiyi açmak yerine ileti listesine dön."
+      },
+      "rtl_editing": {
+        "label": "Sağdan sola düzenleme desteği",
+        "description": "Düzenleyici araç çubuğuna paragrafları soldan sağa veya sağdan sola ayarlayabileceğiniz bir yön düğmesi ekler"
       }
     },
     "composer": {

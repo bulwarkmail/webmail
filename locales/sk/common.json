@@ -807,6 +807,7 @@
     "nl": "Nederlands",
     "pl": "Polski",
     "pt": "Português",
+    "he": "עברית",
     "ru": "Русский",
     "sk": "Slovenčina",
     "uk": "Українська",
@@ -1275,6 +1276,10 @@
       "return_to_list_after_action": {
         "label": "Vrátiť sa na zoznam po odstránení alebo označení ako neprečítané",
         "description": "Po odstránení alebo označení otvorenej správy ako neprečítanej sa vrátiť na zoznam správ."
+      },
+      "rtl_editing": {
+        "label": "Podpora písania sprava doľava",
+        "description": "Pridá do panela nástrojov editora tlačidlo smeru textu, ktorým možno odseky nastaviť zľava doprava alebo sprava doľava"
       }
     },
     "composer": {

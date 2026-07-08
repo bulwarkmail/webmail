@@ -807,6 +807,7 @@
     "nl": "Nederlands",
     "pl": "Polski",
     "pt": "Português",
+    "he": "עברית",
     "ru": "Русский",
     "sk": "Slovenčina",
     "uk": "Українська",
@@ -1272,6 +1273,10 @@
       "return_to_list_after_action": {
         "label": "삭제 또는 읽지 않음으로 표시 후 목록으로 돌아가기",
         "description": "열려 있는 메시지를 삭제하거나 읽지 않음으로 표시한 후 다음 메시지를 열지 않고 메시지 목록으로 돌아갑니다."
+      },
+      "rtl_editing": {
+        "label": "오른쪽에서 왼쪽 편집 지원",
+        "description": "편집기 도구 모음에 방향 버튼을 추가하여 단락을 왼쪽에서 오른쪽 또는 오른쪽에서 왼쪽으로 설정할 수 있습니다"
       }
     },
     "composer": {

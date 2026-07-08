@@ -807,6 +807,7 @@
     "nl": "Nederlands",
     "pl": "Polski",
     "pt": "Português",
+    "he": "עברית",
     "ru": "Русский",
     "sk": "Slovenčina",
     "uk": "Українська",
@@ -1272,6 +1273,10 @@
       "return_to_list_after_action": {
         "label": "Nach Löschen oder Ungelesen-Markieren zur Liste zurückkehren",
         "description": "Nach dem Löschen oder Als-ungelesen-Markieren der geöffneten E-Mail zurück zur Liste, statt die nächste E-Mail zu öffnen."
+      },
+      "rtl_editing": {
+        "label": "Unterstützung für Rechts-nach-links-Bearbeitung",
+        "description": "Fügt der Editor-Symbolleiste eine Schreibrichtungs-Schaltfläche hinzu, mit der Absätze auf links-nach-rechts oder rechts-nach-links gestellt werden können"
       }
     },
     "composer": {

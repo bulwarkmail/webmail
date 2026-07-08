@@ -807,6 +807,7 @@
     "nl": "Nederlands",
     "pl": "Polski",
     "pt": "Português",
+    "he": "עברית",
     "ru": "Русский",
     "sk": "Slovenčina",
     "uk": "Українська",
@@ -1272,6 +1273,10 @@
       "return_to_list_after_action": {
         "label": "Návrat do seznamu po smazání nebo označení jako nepřečtené",
         "description": "Po smazání nebo označení otevřené zprávy jako nepřečtené se vrátit do seznamu zpráv místo otevření následující zprávy."
+      },
+      "rtl_editing": {
+        "label": "Podpora psaní zprava doleva",
+        "description": "Přidá do panelu nástrojů editoru tlačítko směru textu, kterým lze odstavce nastavit zleva doprava nebo zprava doleva"
       }
     },
     "composer": {

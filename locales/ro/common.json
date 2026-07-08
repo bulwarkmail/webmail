@@ -807,6 +807,7 @@
     "nl": "Nederlands",
     "pl": "Poloneză",
     "pt": "Portugheză",
+    "he": "עברית",
     "ru": "Русский",
     "sk": "Slovacă",
     "uk": "Ukrainiană",
@@ -1275,6 +1276,10 @@
       "return_to_list_after_action": {
         "label": "Revenire la listă după ștergere sau marcare ca necitit",
         "description": "După ștergerea sau marcarea mesajului deschis ca necitit, reveniți la lista de mesaje în loc să deschideți mesajul următor."
+      },
+      "rtl_editing": {
+        "label": "Suport pentru editare de la dreapta la stânga",
+        "description": "Adaugă un buton de direcție în bara de instrumente a editorului, cu care paragrafele pot fi setate de la stânga la dreapta sau de la dreapta la stânga"
       }
     },
     "composer": {

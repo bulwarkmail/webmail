@@ -584,7 +584,9 @@
     "validation": {
       "recipient_required": "הוסף נמען לשליחה",
       "subject_required": "הוסף נושא",
-      "body_required": "כתוב הודעה או צרף קובץ"
+      "body_required": "כתוב הודעה או צרף קובץ",
+      "attachments_uploading": "קבצים מצורפים עדיין בהעלאה - ההודעה תישלח מיד בסיום",
+      "attachment_upload_failed": "לא נשלח - העלאת קובץ מצורף נכשלה. הסירו אותו ונסו שוב."
     },
     "upload_progress": "מעלה את{uploaded}/{total}",
     "upload_cancel": "בטל העלאה",
@@ -640,7 +642,9 @@
     "recipient_edit_email": "ערוך כתובת דוא״ל",
     "recipient_edit_name": "ערוך שם תצוגה",
     "recipient_email_placeholder": "כתובת דוא״ל",
-    "recipient_name_placeholder": "שם תצוגה"
+    "recipient_name_placeholder": "שם תצוגה",
+    "autocomplete_search_server": "חיפוש בשרת",
+    "autocomplete_searching": "מחפש..."
   },
   "confirm_dialog": {
     "confirm": "אשר",
@@ -768,7 +772,9 @@
     "nl": "Nederlands",
     "pl": "Polski",
     "pt": "Português",
+    "he": "עברית",
     "ru": "Русский",
+    "sk": "Slovenčina",
     "uk": "Українська",
     "zh": "简体中文",
     "fa": "فارسی",
@@ -898,6 +904,14 @@
         "label": "סמלי סרגל צד צבעוניים",
         "description": "צבע אייקונים של תיקיות וקוביות לפי סוג (כחול Inbox, אדום Junk, ירוק Sent וכו׳). השבת עבור סרגל צד חד צבע."
       },
+      "tint_list_rows": {
+        "label": "צביעת שורות הרשימה לפי צבע התגית",
+        "description": "צובע כל שורת הודעה בצבע התגית הראשונה שלה. כבו כדי להשאיר את השורות ללא צבע; נקודות ותוויות התגיות עדיין יציגו את הצבע."
+      },
+      "show_folder_total_count": {
+        "label": "הצגת מספר ההודעות הכולל",
+        "description": "מציג את מספר ההודעות הכולל לצד תיקיות ותגיות, לצד מספר ההודעות שלא נקראו. כבו כדי להציג רק את מספר ההודעות שלא נקראו."
+      },
       "pro_interface": {
         "label": "ממשק Pro (ניסיוני)",
         "description": "פריסה של משתמש כוח לשולחן עבודה בלבד עם גלישה מרובת-הודעות וזרימות עבודה חוצות-חשבונות. הממשק הסטנדרטי אינו מושפע; תוכל להחזור בכל עת.",
@@ -1007,6 +1021,14 @@
         "preview_today": "היום:",
         "preview_this_week": "השבוע הזה:",
         "preview_older": "ישן יותר:"
+      },
+      "date_locale": {
+        "label": "Date format region",
+        "description": "How numeric dates are ordered (day, month, year)",
+        "auto": "Automatic (match language)",
+        "iso": "ISO 8601 (YYYY-MM-DD)",
+        "dmy": "Day/Month/Year",
+        "mdy": "Month/Day/Year"
       },
       "time_format": {
         "label": "פורמט זמן",
@@ -1908,6 +1930,8 @@
     "mark_unread": "סמן כלא נקרא",
     "star": "כוכב",
     "unstar": "הסר כוכב",
+    "pin": "הצמד",
+    "unpin": "בטל הצמדה",
     "move_to": "העבר ל...",
     "archive": "ארכיון",
     "delete": "לִמְחוֹק",

@@ -807,6 +807,7 @@
     "nl": "Nederlands",
     "pl": "Polski",
     "pt": "Português",
+    "he": "עברית",
     "ru": "Русский",
     "sk": "Slovenčina",
     "uk": "Українська",
@@ -1272,6 +1273,10 @@
       "return_to_list_after_action": {
         "label": "Voltar à lista após eliminar ou marcar como não lido",
         "description": "Depois de eliminar ou marcar como não lida a mensagem aberta, voltar à lista de mensagens em vez de abrir a mensagem seguinte."
+      },
+      "rtl_editing": {
+        "label": "Suporte à edição da direita para a esquerda",
+        "description": "Adiciona um botão de direção à barra de ferramentas do editor para definir parágrafos da esquerda para a direita ou da direita para a esquerda"
       }
     },
     "composer": {
