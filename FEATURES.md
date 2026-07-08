@@ -4,7 +4,9 @@
 
 - Read, compose, reply, reply-all, and forward with a Tiptap rich text editor (inline images, drag-and-drop embedding, tables)
 - Gmail-style threading with inline expansion and an optional conversation toggle
-- Unified mailbox view across all connected accounts
+- Unified mailbox view across all connected accounts – combined Inbox, Sent, Drafts, Junk, Archive, and Trash, with group/shared accounts optionally merged in
+- Cross-account "All accounts" views – All unread, All starred, and All mail spanning every account (including shared/group folders); each aggregate list labels the source folder of every message
+- "All Mail" view that merges an account's folders (with a configurable folder selection) into a single list
 - Three selectable mail layouts: split (three-pane), focused list, and reading pane at bottom
 - Draft auto-save with identity preservation, persisted HTML body, and proper `In-Reply-To` / `References` headers on replies
 - Attachment upload, download, drag-out to local file system, and inline preview – images, inline PDF on desktop and mobile, composer attachments (click to open), and `.eml` (`message/rfc822`) attachments rendered like an email; image thumbnails and forgotten-attachment warning
@@ -115,6 +117,7 @@ Automatic browser detection with persistent preference. Configurable locale URL 
 - Configurable signature position (above or below quoted text)
 - Sub-addressing (`user+tag@domain.com`) with configurable delimiter and contextual tag suggestions
 - Shared folders across accounts
+- Shared / group (delegated) accounts: their folders appear alongside your own and can be merged into the unified and "All accounts" views ("Include group inboxes"); their messages are fully actionable there – open, mark read, spam / not-spam, move, delete, and archive – with folder unread counts kept in sync
 - Multiple JMAP servers per deployment with optional auto-pick by email domain
 - Optional custom JMAP endpoints on the login form (`ALLOW_CUSTOM_JMAP_ENDPOINT`)
 
@@ -122,6 +125,7 @@ Automatic browser detection with persistent preference. Configurable locale URL 
 
 - Web setup wizard for first launch – guides through JMAP server(s), OAuth/OIDC, session secret, logging, branding (with file upload), and admin password; persists to the admin config dir, no `.env.local` editing required
 - Stalwart admin dashboard with dedicated policy sections, collapsed into a single tabbed page
+- Admin policy gates for the aggregate mail views – enable or disable the "All Mail" and the cross-account "All unread / starred / all" entries org-wide; each gated view still respects the user's own toggle
 - Split admin storage: `ADMIN_CONFIG_DIR` (operator-authored, mountable read-only after setup) and `ADMIN_STATE_DIR` (runtime audit log and login timestamps)
 - File-based secrets for JSON config: `passwordHashFile` (admin password), `sessionSecretFile`, and `oauthClientSecretFile` for Docker/Kubernetes secret mounts
 - Admin toggle for search-engine indexing (`robots.txt` / `noindex`)

@@ -222,6 +222,20 @@ describe('account-security-store', () => {
       expect(useAccountSecurityStore.getState().error).toBe('forbidden');
       expect(useAccountSecurityStore.getState().isSaving).toBe(false);
     });
+
+    it('throws the server message when the set comes back as notUpdated (HTTP 200)', async () => {
+      mockedJmap.mockResolvedValueOnce([
+        ['x:AccountPassword/set', {
+          notUpdated: { singleton: { type: 'invalidProperties', description: 'Current password is incorrect' } },
+        }, '0'],
+      ]);
+
+      await expect(
+        useAccountSecurityStore.getState().changePassword('wrong', 'new'),
+      ).rejects.toThrow('Current password is incorrect');
+      expect(useAccountSecurityStore.getState().error).toBe('Current password is incorrect');
+      expect(useAccountSecurityStore.getState().isSaving).toBe(false);
+    });
   });
 
   describe('updateDisplayName', () => {

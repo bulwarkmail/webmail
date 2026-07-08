@@ -302,6 +302,19 @@ describe('getPendingAlerts', () => {
     expect(result).toHaveLength(0);
   });
 
+  it('skips alerts for cancelled events', () => {
+    // iTIP CANCEL marks the attendee's copy with status "cancelled" instead
+    // of deleting it (#572) - its reminders must not fire.
+    const event = makeEvent({
+      status: 'cancelled',
+      alerts: { 'a1': makeAlert() },
+    });
+    const calendars = [makeCalendar()];
+    const now = fiveMinBefore + 1000;
+    const result = getPendingAlerts([event], calendars, new Set(), now);
+    expect(result).toHaveLength(0);
+  });
+
   it('skips email action alerts', () => {
     const event = makeEvent({
       alerts: { 'a1': makeAlert({ action: 'email' }) },

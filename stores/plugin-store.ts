@@ -3,7 +3,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { InstalledPlugin, PluginStatus } from '@/lib/plugin-types';
+import type { InstalledPlugin, PluginStatus, PluginTier } from '@/lib/plugin-types';
 import { pluginStorage } from '@/lib/plugin-storage';
 import { extractPlugin } from '@/lib/plugin-validator';
 import { loadPlugin, deactivatePlugin, setPluginStoreAccessor, setupAutoDisable, setSandboxLocale } from '@/lib/plugin-loader';
@@ -76,6 +76,7 @@ export const usePluginStore = create<PluginStoreState>()(
           author: manifest.author,
           description: manifest.description,
           type: manifest.type,
+          ...(manifest.tier ? { tier: manifest.tier } : {}),
           permissions: manifest.permissions,
           entrypoint: manifest.entrypoint,
           enabled: false, // Start disabled, user must enable
@@ -324,6 +325,8 @@ interface ServerPluginInfo {
   author: string;
   description: string;
   type: string;
+  /** Requested execution tier (privileged plugins run same-origin). */
+  tier?: PluginTier;
   permissions: string[];
   entrypoint: string;
   forceEnabled: boolean;
@@ -357,6 +360,7 @@ function serverMeta(sp: ServerPluginInfo) {
     description: sp.description,
     permissions: sp.permissions,
     entrypoint: sp.entrypoint,
+    ...(sp.tier ? { tier: sp.tier } : {}),
     managed: true as const,
     forceEnabled: sp.forceEnabled,
     bundleHash: sp.bundleHash,

@@ -444,7 +444,7 @@ export function ICalImportModal({ calendars, client, onClose, initialUrl }: ICal
                 onClick={handleImport}
                 disabled={selectedIndices.size === 0}
               >
-                <Check className="w-4 h-4 mr-1" />
+                <Check className="w-4 h-4 me-1" />
                 {t("import_button")} ({selectedIndices.size})
               </Button>
             )}

@@ -14,6 +14,7 @@ import {
 } from '../plugin-hooks';
 import { verifyBundle } from './bundle-integrity';
 import { createBackgroundInstance } from './host-bridge';
+import { resolvePluginTier } from './tier';
 import { register as registerActive, deregister as deregisterActive, all as allActiveEntries } from './registry';
 import { cancelPluginDialogs } from './host-api';
 import { registerShortcuts } from './shortcuts';
@@ -93,11 +94,22 @@ export async function loadSandboxedPlugin(plugin: InstalledPlugin): Promise<void
 
   let background: ReturnType<typeof createBackgroundInstance> | null = null;
   try {
+    // Decide the execution tier BEFORE creating any iframe. A refused privileged
+    // request is a hard error (never silently downgraded to null-origin).
+    const resolution = resolvePluginTier(plugin);
+    if (resolution.tier === null) {
+      storeAccessor?.setPluginStatus(plugin.id, 'error', resolution.error);
+      console.error(`[plugin-sandbox] "${plugin.id}" tier refused: ${resolution.error}`);
+      return;
+    }
+    const tier = resolution.tier;
+
     const code = await getBundleCode(plugin);
     background = createBackgroundInstance({
       plugin,
       code,
       locale: currentLocale,
+      tier,
     });
 
     // Wait for the background runtime to evaluate the bundle, register hooks,
@@ -138,6 +150,7 @@ export async function loadSandboxedPlugin(plugin: InstalledPlugin): Promise<void
     registerActive({
       plugin,
       code,
+      tier,
       background: bg,
       slotOffers: info.slots,
       hookDisposables,

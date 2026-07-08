@@ -134,7 +134,10 @@
     "mail": "ایمیل",
     "nav_label": "ناوبری",
     "add_app": "برنامه‌ها",
-    "scheduled": "زمان‌بندی شده"
+    "scheduled": "زمان‌بندی شده",
+    "unified_all_mail": "همه ایمیل‌ها",
+    "unified_all_starred": "همه ستاره‌دارها",
+    "unified_all_unread": "همه خوانده‌نشده‌ها"
   },
   "protocol_handlers": {
     "title": "برنامه‌های پیش‌فرض",
@@ -562,7 +565,8 @@
       "add_to_contacts": "افزودن به مخاطبین",
       "copied": "کپی شد!",
       "copy_failed": "کپی ناموفق بود"
-    }
+    },
+    "send_now": "ارسال فوری"
   },
   "email_composer": {
     "read_receipt_on": "درخواست تأیید خواندن فعال (کلیک برای غیرفعال کردن)",
@@ -628,15 +632,12 @@
     },
     "use_template": "قالب",
     "save_as_template": "ذخیره به عنوان قالب",
-    "text_direction": {
-      "toggle": "تغییر جهت متن (چپ‌به‌راست / راست‌به‌چپ)",
-      "ltr": "چپ‌به‌راست",
-      "rtl": "راست‌به‌چپ"
-    },
     "validation": {
       "recipient_required": "یک گیرنده اضافه کنید",
       "subject_required": "یک موضوع اضافه کنید",
-      "body_required": "پیامی بنویسید یا فایلی پیوست کنید"
+      "body_required": "پیامی بنویسید یا فایلی پیوست کنید",
+      "attachments_uploading": "پیوست‌ها هنوز در حال بارگذاری هستند — پس از اتمام ارسال می‌شود",
+      "attachment_upload_failed": "ارسال نشد - بارگذاری یک پیوست ناموفق بود. آن را حذف کنید و دوباره تلاش کنید."
     },
     "upload_progress": "در حال بارگذاری {uploaded} / {total}",
     "upload_cancel": "لغو بارگذاری",
@@ -676,7 +677,14 @@
     "recipient_edit_email": "ویرایش آدرس ایمیل",
     "recipient_edit_name": "ویرایش نام نمایشی",
     "recipient_email_placeholder": "آدرس ایمیل",
-    "recipient_name_placeholder": "نام نمایشی"
+    "recipient_name_placeholder": "نام نمایشی",
+    "autocomplete_search_server": "جستجو در سرور",
+    "autocomplete_searching": "در حال جستجو...",
+    "text_direction": {
+      "toggle": "تغییر جهت متن (چپ‌به‌راست / راست‌به‌چپ)",
+      "ltr": "چپ‌به‌راست",
+      "rtl": "راست‌به‌چپ"
+    }
   },
   "confirm_dialog": {
     "confirm": "تأیید",
@@ -805,6 +813,7 @@
     "pl": "Polski",
     "pt": "Português",
     "ru": "Русский",
+    "sk": "Slovenčina",
     "uk": "Українська",
     "zh": "简体中文",
     "fa": "فارسی",
@@ -930,17 +939,38 @@
         "description": "نمایش گزینه \"همه ایمیل‌ها\" بالای پوشه‌ها",
         "folders_label": "پوشه‌ها در همه ایمیل‌ها",
         "folders_description": "انتخاب کنید کدام پوشه‌ها ادغام شوند",
-        "no_folders": "پوشه‌ای موجود نیست"
+        "no_folders": "پوشه‌ای موجود نیست",
+        "account_hint": "برای {account} اعمال می‌شود."
       },
       "colorful_sidebar_icons": {
         "label": "آیکون‌های رنگی نوار کناری",
         "description": "رنگ‌آمیزی آیکون‌های پوشه و برچسب بر اساس نوع"
+      },
+      "tint_list_rows": {
+        "label": "Tint List Rows by Tag Color",
+        "description": "Shade each message row with its first tag color. Disable to keep rows plain; tag dots and chips still show the color."
+      },
+      "show_folder_total_count": {
+        "label": "نمایش تعداد کل پیام‌ها",
+        "description": "تعداد کل پیام‌ها را در کنار پوشه‌ها و برچسب‌ها، همراه با تعداد خوانده‌نشده‌ها نمایش می‌دهد. برای نمایش فقط تعداد خوانده‌نشده‌ها غیرفعال کنید."
       },
       "pro_interface": {
         "label": "رابط حرفه‌ای (آزمایشی)",
         "description": "چیدمان قدرت-کاربری فقط دسکتاپ",
         "open_label": "باز کردن رابط حرفه‌ای",
         "back_to_standard": "بازگشت به استاندارد"
+      },
+      "cross_all": {
+        "label": "همه حساب‌ها: همه ایمیل‌ها",
+        "description": "نمایش یک مورد در بخش همه حساب‌ها که همه ایمیل‌های همه حساب‌ها را فهرست می‌کند، شامل همه پوشه‌ها به جز هرزنامه، ارسال‌شده، بایگانی، زباله‌دان و پیش‌نویس‌ها."
+      },
+      "cross_starred": {
+        "label": "همه حساب‌ها: ستاره‌دار",
+        "description": "نمایش یک مورد در بخش همه حساب‌ها که ایمیل‌های ستاره‌دار همه حساب‌ها را فهرست می‌کند، شامل همه پوشه‌ها به جز هرزنامه، ارسال‌شده، بایگانی، زباله‌دان و پیش‌نویس‌ها."
+      },
+      "cross_unread": {
+        "label": "همه حساب‌ها: خوانده‌نشده",
+        "description": "نمایش یک مورد در بخش همه حساب‌ها که ایمیل‌های خوانده‌نشده همه حساب‌ها را فهرست می‌کند، شامل همه پوشه‌ها به جز هرزنامه، ارسال‌شده، بایگانی، زباله‌دان و پیش‌نویس‌ها."
       }
     },
     "keywords": {
@@ -1033,6 +1063,14 @@
         "preview_today": "امروز:",
         "preview_this_week": "این هفته:",
         "preview_older": "قدیمی‌تر:"
+      },
+      "date_locale": {
+        "label": "Date format region",
+        "description": "How numeric dates are ordered (day, month, year)",
+        "auto": "Automatic (match language)",
+        "iso": "ISO 8601 (YYYY-MM-DD)",
+        "dmy": "Day/Month/Year",
+        "mdy": "Month/Day/Year"
       },
       "time_format": {
         "label": "فرمت زمان",
@@ -1205,7 +1243,8 @@
         "corner_top-left": "بالا چپ",
         "corner_top-right": "بالا راست",
         "corner_bottom-left": "پایین چپ",
-        "corner_bottom-right": "پایین راست"
+        "corner_bottom-right": "پایین راست",
+        "not_spam": "هرزنامه نیست"
       },
       "default_mail_program": {
         "label": "برنامه ایمیل پیش‌فرض",
@@ -1237,6 +1276,10 @@
         "off": "خاموش",
         "seconds": "{seconds} ثانیه",
         "unsupported": "پشتیبانی نمی‌شود"
+      },
+      "return_to_list_after_action": {
+        "label": "بازگشت به فهرست پس از حذف یا علامت‌گذاری به‌عنوان خوانده‌نشده",
+        "description": "پس از حذف یا علامت‌گذاری پیام باز به‌عنوان خوانده‌نشده، به‌جای باز کردن پیام بعدی به فهرست پیام‌ها بازگردید."
       }
     },
     "composer": {
@@ -1922,6 +1965,8 @@
     "mark_unread": "علامت‌گذاری خوانده نشده",
     "star": "ستاره‌دار",
     "unstar": "حذف ستاره",
+    "pin": "سنجاق کردن",
+    "unpin": "برداشتن سنجاق",
     "move_to": "انتقال به...",
     "archive": "بایگانی",
     "delete": "حذف",
@@ -2157,6 +2202,9 @@
       "title": "اشتراکی"
     },
     "address_books": {
+      "create": "دفترچه آدرس جدید",
+      "created": "دفترچه آدرس ایجاد شد",
+      "create_failed": "ایجاد دفترچه آدرس ناموفق بود",
       "title": "دفترچه‌های آدرس من",
       "shared_prefix": "اشتراکی: {name}",
       "moved": "مخاطب به {name} منتقل شد",

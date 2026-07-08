@@ -4,6 +4,7 @@
 
 import type { Email } from '@/lib/jmap/types';
 import type { EmailReadView } from '@/lib/plugin-types';
+import { generateEmailSource } from '@/lib/email-source';
 
 // Resolve a message's plain-text body from its JMAP body parts. Plugins that
 // translate or scan content need the real body, not just the short `preview`
@@ -54,6 +55,8 @@ export function emailToReadView(email: Email): EmailReadView {
     hasAttachment: email.hasAttachment,
     preview: email.preview || '',
     text: plainTextFromEmail(email),
+    headers: email.headers,
+    source: generateEmailSource(email),
     keywords: Object.keys(email.keywords || {}).filter(k => email.keywords[k]),
     auth: email.authenticationResults,
   };

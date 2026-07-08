@@ -134,7 +134,10 @@
     "nav_label": "Navigation",
     "add_app": "Apps",
     "shared": "Geteilt",
-    "scheduled": "Geplant"
+    "scheduled": "Geplant",
+    "unified_all_unread": "Alle ungelesenen",
+    "unified_all_starred": "Alle markierten",
+    "unified_all_mail": "Alle Mails"
   },
   "protocol_handlers": {
     "title": "Standard-Apps",
@@ -562,7 +565,8 @@
       "add_to_contacts": "Zu Kontakten hinzufügen",
       "copied": "Kopiert!",
       "copy_failed": "Kopieren fehlgeschlagen"
-    }
+    },
+    "send_now": "Jetzt senden"
   },
   "email_composer": {
     "read_receipt_on": "Lesebestätigung angefordert (klicken zum Deaktivieren)",
@@ -628,7 +632,9 @@
     "validation": {
       "recipient_required": "Empfänger hinzufügen zum Senden",
       "subject_required": "Betreff hinzufügen",
-      "body_required": "Nachricht schreiben oder Datei anhängen"
+      "body_required": "Nachricht schreiben oder Datei anhängen",
+      "attachments_uploading": "Anhänge werden noch hochgeladen – wird gesendet, sobald sie fertig sind",
+      "attachment_upload_failed": "Nicht gesendet - ein Anhang konnte nicht hochgeladen werden. Entfernen Sie ihn und versuchen Sie es erneut."
     },
     "upload_progress": "Hochladen {uploaded} / {total}",
     "upload_cancel": "Hochladen abbrechen",
@@ -671,7 +677,9 @@
     "recipient_edit_email": "E-Mail-Adresse bearbeiten",
     "recipient_edit_name": "Anzeigenamen bearbeiten",
     "recipient_email_placeholder": "E-Mail-Adresse",
-    "recipient_name_placeholder": "Anzeigename"
+    "recipient_name_placeholder": "Anzeigename",
+    "autocomplete_search_server": "Auf dem Server suchen",
+    "autocomplete_searching": "Suche läuft..."
   },
   "confirm_dialog": {
     "confirm": "Bestätigen",
@@ -800,8 +808,12 @@
     "pl": "Polski",
     "pt": "Português",
     "ru": "Русский",
+    "sk": "Slovenčina",
     "uk": "Українська",
-    "zh": "简体中文"
+    "zh": "简体中文",
+    "fa": "فارسی",
+    "farsi": "فارسی",
+    "switch_to_farsi": "Zu Farsi wechseln"
   },
   "settings": {
     "title": "Einstellungen",
@@ -919,17 +931,38 @@
         "description": "Show an \"All Mail\" entry above your folders that merges messages from across this account's folders into one list.",
         "folders_label": "Folders in All Mail",
         "folders_description": "Choose which folders are merged into the All Mail view.",
+        "account_hint": "Gilt für {account}.",
         "no_folders": "No folders available."
       },
       "colorful_sidebar_icons": {
         "label": "Farbige Seitenleistensymbole",
         "description": "Ordner- und Tag-Symbole nach Typ einfärben (blauer Posteingang, roter Spam, grüner Gesendet usw.). Für eine monochrome Seitenleiste deaktivieren."
       },
+      "tint_list_rows": {
+        "label": "Tint List Rows by Tag Color",
+        "description": "Shade each message row with its first tag color. Disable to keep rows plain; tag dots and chips still show the color."
+      },
+      "show_folder_total_count": {
+        "label": "Gesamtzahl der Nachrichten anzeigen",
+        "description": "Zeigt neben Ordnern und Tags die Gesamtzahl der Nachrichten zusätzlich zur Anzahl ungelesener Nachrichten an. Deaktivieren, um nur ungelesene Nachrichten anzuzeigen."
+      },
       "pro_interface": {
         "label": "Pro-Oberfläche (experimentell)",
         "description": "Desktop-Power-User-Layout mit Multi-Tab-Nachrichtenansicht und kontoübergreifenden Workflows. Die Standardoberfläche bleibt unverändert; Sie können jederzeit zurückwechseln.",
         "open_label": "Pro-Oberfläche öffnen",
         "back_to_standard": "Zurück zum Standard"
+      },
+      "cross_unread": {
+        "label": "Alle Konten: Ungelesen",
+        "description": "Zeigt in der Sektion „All accounts“ einen Eintrag mit ungelesenen Mails über alle Konten, über alle Ordner außer Junk, Gesendet, Archiv, Papierkorb und Entwürfe."
+      },
+      "cross_starred": {
+        "label": "Alle Konten: Markiert",
+        "description": "Zeigt in der Sektion „All accounts“ einen Eintrag mit markierten Mails über alle Konten, über alle Ordner außer Junk, Gesendet, Archiv, Papierkorb und Entwürfe."
+      },
+      "cross_all": {
+        "label": "Alle Konten: Alle Mails",
+        "description": "Zeigt in der Sektion „All accounts“ einen Eintrag mit allen Mails über alle Konten, über alle Ordner außer Junk, Gesendet, Archiv, Papierkorb und Entwürfe."
       }
     },
     "keywords": {
@@ -1022,6 +1055,14 @@
         "preview_today": "Heute:",
         "preview_this_week": "Diese Woche:",
         "preview_older": "Älter:"
+      },
+      "date_locale": {
+        "label": "Date format region",
+        "description": "How numeric dates are ordered (day, month, year)",
+        "auto": "Automatic (match language)",
+        "iso": "ISO 8601 (YYYY-MM-DD)",
+        "dmy": "Day/Month/Year",
+        "mdy": "Month/Day/Year"
       },
       "time_format": {
         "label": "Zeitformat",
@@ -1186,6 +1227,7 @@
         "archive": "Archivieren",
         "tag": "Label",
         "spam": "Als Spam markieren",
+        "not_spam": "Kein Spam",
         "none_selected": "Keine Aktionen ausgewählt",
         "mode_label": "Anzeigemodus",
         "mode_inline": "Eingebettet",
@@ -1226,6 +1268,10 @@
         "off": "Aus",
         "seconds": "{seconds} Sekunden",
         "unsupported": "Das aktuelle Konto meldet keine Unterstützung für verzögertes Senden. Die Einstellung bleibt für andere Konten gespeichert."
+      },
+      "return_to_list_after_action": {
+        "label": "Nach Löschen oder Ungelesen-Markieren zur Liste zurückkehren",
+        "description": "Nach dem Löschen oder Als-ungelesen-Markieren der geöffneten E-Mail zurück zur Liste, statt die nächste E-Mail zu öffnen."
       }
     },
     "composer": {
@@ -1913,6 +1959,8 @@
     "mark_unread": "Als ungelesen markieren",
     "star": "Stern hinzufügen",
     "unstar": "Stern entfernen",
+    "pin": "Anheften",
+    "unpin": "Lösen",
     "move_to": "Verschieben nach...",
     "archive": "Archivieren",
     "delete": "Löschen",
@@ -2147,6 +2195,9 @@
       "title": "Geteilt"
     },
     "address_books": {
+      "create": "Neues Adressbuch",
+      "created": "Adressbuch erstellt",
+      "create_failed": "Adressbuch konnte nicht erstellt werden",
       "title": "Meine Adressbücher",
       "shared_prefix": "Geteilt: {name}",
       "moved": "Kontakt verschoben nach {name}",

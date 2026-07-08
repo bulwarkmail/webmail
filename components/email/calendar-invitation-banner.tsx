@@ -582,7 +582,12 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
         } else {
           await updateEvent(client, eventForRsvp.id, {
             participants: repairedParticipants,
-            replyTo: replyToForRsvp ?? undefined,
+            // Stalwart routes the iTIP REPLY via the stored ORGANIZER
+            // (organizerCalendarAddress; the RFC 8984 replyTo is retired).
+            // Only repair a missing organizer - attendees may not modify it.
+            ...(replyToForRsvp?.imip && !eventForRsvp.organizerCalendarAddress
+              ? { organizerCalendarAddress: replyToForRsvp.imip }
+              : {}),
           }, true);
           setRsvpStatus(status);
           setActionNotice(t('rsvp_sent'));
@@ -1048,7 +1053,7 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
                         setShowCalendarPicker(false);
                         handleImport(cal.id);
                       }}
-                      className="w-full px-3 py-1.5 text-sm text-left hover:bg-muted flex items-center gap-2"
+                      className="w-full px-3 py-1.5 text-sm text-start hover:bg-muted flex items-center gap-2"
                     >
                       <span
                         className="w-3 h-3 rounded-full flex-shrink-0"
@@ -1090,7 +1095,7 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
           )}
 
           {isProcessing && (
-            <Loader2 className="w-4 h-4 animate-spin text-muted-foreground ml-auto" />
+            <Loader2 className="w-4 h-4 animate-spin text-muted-foreground ms-auto" />
           )}
         </div>
         )}

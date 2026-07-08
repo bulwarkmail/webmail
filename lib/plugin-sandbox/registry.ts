@@ -6,7 +6,7 @@
 // `useSyncExternalStore` sees a stable reference between unrelated renders.
 // The cache is invalidated whenever the set of active plugins changes.
 
-import type { Disposable, InstalledPlugin, SlotName } from '../plugin-types';
+import type { Disposable, InstalledPlugin, SlotName, PluginTier } from '../plugin-types';
 import type { SandboxInstance } from './host-bridge';
 
 export interface SlotOffer {
@@ -19,6 +19,9 @@ export interface ActivePlugin {
   plugin: InstalledPlugin;
   /** Verified bundle source. Reused when spinning up slot iframes. */
   code: string;
+  /** Resolved execution tier. Slot iframes must use the SAME tier as the
+   * background instance, so `PluginIframeSlot` reads it from here. */
+  tier: PluginTier;
   background: SandboxInstance;
   slotOffers: SlotOffer[];
   hookDisposables: Disposable[];

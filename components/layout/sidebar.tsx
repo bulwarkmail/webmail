@@ -34,13 +34,15 @@ import {
   CalendarClock,
   BellOff,
   Mails,
+  MailOpen,
 } from "lucide-react";
 import { cn, buildMailboxTree, MailboxNode } from "@/lib/utils";
+import { localizeMailboxName } from "@/lib/mailbox-label";
 import { Mailbox } from "@/lib/jmap/types";
 import { useContextMenu } from "@/hooks/use-context-menu";
 import { MailboxContextMenu, type MailboxContextTarget } from "./mailbox-context-menu";
 import { useAccountStore } from '@/stores/account-store';
-import { UNIFIED_MAILBOX_IDS } from '@/lib/jmap/types';
+import { UNIFIED_MAILBOX_IDS, CROSS_VIEW_IDS } from '@/lib/jmap/types';
 import type { UnifiedMailboxRole } from '@/lib/jmap/types';
 import { useDragDropContext } from "@/contexts/drag-drop-context";
 import { useMailboxDrop } from "@/hooks/use-mailbox-drop";
@@ -79,6 +81,12 @@ interface SidebarProps {
   showScheduledMailbox?: boolean;
   /** Gated "All Mail" virtual folder that merges all of the account's folders. */
   showAllMailMailbox?: boolean;
+  /** Gated cross-account views in the "All accounts" section. */
+  showCrossUnread?: boolean;
+  showCrossStarred?: boolean;
+  showCrossAll?: boolean;
+  /** Unread total across all cross-view folders (badge for unread/all). */
+  crossUnreadCount?: number;
   className?: string;
   /**
    * Multi-account (Pro) mode props. When `multiAccountMode` is true, the
@@ -176,8 +184,9 @@ function SidebarRowCounts({
   isSelected: boolean;
   onUnreadClick?: () => void;
 }) {
+  const showFolderTotalCount = useSettingsStore(s => s.showFolderTotalCount);
   const unreadCount = unread ?? 0;
-  const totalCount = total ?? 0;
+  const totalCount = showFolderTotalCount ? (total ?? 0) : 0;
 
   if (unreadCount === 0 && totalCount === 0) return null;
 
@@ -211,7 +220,8 @@ function SidebarRowCounts({
   ) : null;
 
   return (
-    <span className="ml-2 flex-shrink-0 flex items-baseline gap-1" title={`${unreadCount} unread / ${totalCount} total`}>
+    <span className="ms-2 flex-shrink-0 flex items-baseline gap-1" title={totalCount > 0 ? `${unreadCount} unread / ${totalCount} total` : `${unreadCount} unread`}>
+
       {unreadNode}
       {unreadCount > 0 && totalCount > 0 && (
         <span className="text-xs text-muted-foreground/60">/</span>
@@ -270,12 +280,12 @@ function SidebarRow({
       style={{ paddingBlock: 'var(--density-sidebar-py)' }}
       className={cn(
         "group w-full flex items-center max-lg:min-h-[44px] text-sm transition-colors duration-150",
-        isCollapsed ? "justify-center px-1" : "pr-2",
+        isCollapsed ? "justify-center px-1" : "pe-2",
         isVirtual
           ? "text-muted-foreground"
           : isSelected
-            ? "bg-accent text-accent-foreground font-semibold border-l-2 border-primary"
-            : "hover:bg-muted/50 text-foreground border-l-2 border-transparent",
+            ? "bg-accent text-accent-foreground font-semibold border-s-2 border-primary"
+            : "hover:bg-muted/50 text-foreground border-s-2 border-transparent",
         isValidDropTarget && "bg-primary/20 ring-2 ring-primary ring-inset",
         isInvalidDropTarget && "bg-destructive/10 ring-2 ring-destructive/30 ring-inset opacity-50"
       )}
@@ -312,7 +322,7 @@ function SidebarRow({
         disabled={isVirtual}
         className={cn(
           "flex items-center gap-2 min-w-0 transition-colors",
-          isCollapsed ? "justify-center" : "flex-1 text-left",
+          isCollapsed ? "justify-center" : "flex-1 text-start",
           isVirtual && "cursor-default select-none"
         )}
         title={isCollapsed ? label : undefined}
@@ -381,8 +391,8 @@ function SidebarSectionHeader({
       ) : (
         <ChevronRight className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
       )}
-      {icon && <span className="ml-1.5 flex-shrink-0">{icon}</span>}
-      <span className={cn(textClass, icon ? "ml-1.5" : "ml-1.5")}>
+      {icon && <span className="ms-1.5 flex-shrink-0">{icon}</span>}
+      <span className={cn(textClass, icon ? "ms-1.5" : "ms-1.5")}>
         {label}
       </span>
       {onSettings && (
@@ -400,7 +410,7 @@ function SidebarSectionHeader({
               onSettings();
             }
           }}
-          className="ml-auto p-1 rounded text-muted-foreground/70 hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+          className="ms-auto p-1 rounded text-muted-foreground/70 hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
           title={settingsTitle}
         >
           <Settings className="w-3.5 h-3.5" />
@@ -432,12 +442,14 @@ function MailboxTreeItem({
   onContextMenu?: (e: React.MouseEvent, node: MailboxNode) => void;
 }) {
   const tNotifications = useTranslations('notifications');
+  const tSidebar = useTranslations('sidebar');
   const hasChildren = node.children.length > 0;
   const isExpanded = expandedFolders.has(node.id);
   const Icon = getIconForMailbox(node.role, node.name, hasChildren, isExpanded, node.isShared, node.id);
   const isVirtualNode = node.id.startsWith('shared-');
   const isSelected = selectedMailbox === node.id;
   const roleKey = resolveRoleKey(node.role, node.name);
+  const label = localizeMailboxName(node.role, node.name, (k) => tSidebar(`mailboxes.${k}`));
 
   const { isDragging: globalDragging } = useDragDropContext();
   const { dropHandlers, isValidDropTarget, isInvalidDropTarget } = useMailboxDrop({
@@ -464,7 +476,7 @@ function MailboxTreeItem({
     <>
       <SidebarRow
         icon={<Icon className={getIconClass(isSelected, isVirtualNode, colorful, roleKey)} />}
-        label={node.name}
+        label={label}
         depth={node.depth}
         isSelected={isSelected}
         isVirtual={isVirtualNode}
@@ -654,7 +666,7 @@ function VacationBanner() {
     >
       <Palmtree className="w-3.5 h-3.5 flex-shrink-0" />
       <span className="truncate font-medium">{t("vacation_active")}</span>
-      <Settings className="w-3 h-3 ml-auto flex-shrink-0 opacity-60" />
+      <Settings className="w-3 h-3 ms-auto flex-shrink-0 opacity-60" />
     </button>
   );
 }
@@ -681,6 +693,10 @@ export function Sidebar({
   scheduledTotal = 0,
   showScheduledMailbox = false,
   showAllMailMailbox = false,
+  showCrossUnread = false,
+  showCrossStarred = false,
+  showCrossAll = false,
+  crossUnreadCount = 0,
   className,
   multiAccountMode = false,
   accountMailboxes,
@@ -796,8 +812,14 @@ export function Sidebar({
     });
   };
 
+  // When the app renders its own virtual "Scheduled" folder (for delayed
+  // sends, driven by EmailSubmission), hide the server-provided scheduled
+  // mailbox (e.g. Stalwart's auto-created Scheduled folder, role === 'scheduled')
+  // so it does not appear twice. (#495)
+  const isServerScheduledNode = (n: MailboxNode) => showScheduledMailbox && n.role === 'scheduled';
+
   const mailboxTree = buildMailboxTree(mailboxes);
-  const ownTree = mailboxTree.filter(n => !n.id.startsWith('shared-account-'));
+  const ownTree = mailboxTree.filter(n => !n.id.startsWith('shared-account-') && !isServerScheduledNode(n));
   const sharedAccounts = mailboxTree.filter(n => n.id.startsWith('shared-account-'));
 
   // Multi-account mode (Pro shell): render every connected account as its
@@ -812,7 +834,7 @@ export function Sidebar({
           ? mailboxes
           : (accountMailboxes?.[account.id] ?? []);
         const tree = buildMailboxTree(accountMailboxList).filter(
-          (n) => !n.id.startsWith('shared-account-')
+          (n) => !n.id.startsWith('shared-account-') && !(isActive && isServerScheduledNode(n))
         );
         return { account, isActive, tree };
       })
@@ -832,6 +854,20 @@ export function Sidebar({
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't hijack Arrow keys while the user is typing. This is a global
+      // window listener, so without this guard typing in a new email (the
+      // contentEditable composer, the subject field, search, etc.) toggled the
+      // selected mailbox's subfolders open/closed on ArrowLeft/ArrowRight.
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.tagName === 'SELECT' ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
       if (!selectedMailbox || isCollapsed) return;
 
       const findNode = (nodes: MailboxNode[]): MailboxNode | null => {
@@ -935,7 +971,7 @@ export function Sidebar({
   return (
     <div
       className={cn(
-        "relative flex flex-col h-full border-r transition-all duration-300 overflow-hidden",
+        "relative flex flex-col h-full border-e transition-all duration-300 overflow-hidden",
         "bg-secondary border-border",
         "max-lg:w-full",
         isCollapsed ? "lg:w-12" : "lg:w-full",
@@ -991,7 +1027,7 @@ export function Sidebar({
             isCollapsed={isCollapsed}
           />
         )}
-        {showUnified && (
+        {(showUnified || showCrossUnread || showCrossStarred || showCrossAll) && (
           <div>
             <SidebarSectionHeader
               label={t("all_accounts")}
@@ -1002,7 +1038,7 @@ export function Sidebar({
             />
             {((unifiedExpanded && !isCollapsed) || isCollapsed) && (
               <>
-                {unifiedCounts.map((count) => {
+                {showUnified && unifiedCounts.map((count) => {
                   const unifiedId = UNIFIED_MAILBOX_IDS[count.role];
                   const Icon = getUnifiedIcon(count.role);
                   const isSelected = !selectedKeyword && selectedMailbox === unifiedId;
@@ -1016,6 +1052,26 @@ export function Sidebar({
                       unread={count.unreadEmails}
                       total={count.totalEmails}
                       onClick={() => onMailboxSelect?.(unifiedId)}
+                      isCollapsed={isCollapsed}
+                    />
+                  );
+                })}
+                {[
+                  { show: showCrossUnread, id: CROSS_VIEW_IDS.unread, Icon: MailOpen, label: t('unified_all_unread'), unread: crossUnreadCount },
+                  { show: showCrossStarred, id: CROSS_VIEW_IDS.starred, Icon: Star, label: t('unified_all_starred'), unread: undefined as number | undefined },
+                  { show: showCrossAll, id: CROSS_VIEW_IDS.all, Icon: Mails, label: t('unified_all_mail'), unread: crossUnreadCount },
+                ].map(({ show, id, Icon, label, unread }) => {
+                  if (!show) return null;
+                  const isSelected = !selectedKeyword && selectedMailbox === id;
+                  return (
+                    <SidebarRow
+                      key={id}
+                      icon={<Icon className={getIconClass(isSelected, false, colorfulSidebarIcons)} />}
+                      label={label}
+                      depth={0}
+                      isSelected={isSelected}
+                      unread={unread}
+                      onClick={() => onMailboxSelect?.(id)}
                       isCollapsed={isCollapsed}
                     />
                   );

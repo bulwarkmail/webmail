@@ -4,6 +4,8 @@ import { Node as TiptapNode, mergeAttributes } from "@tiptap/core";
 import { DOMSerializer } from "@tiptap/pm/model";
 import type { Editor } from "@tiptap/react";
 
+import { buildSignatureBlock } from "@/components/email/signature-block";
+
 // Marker attribute that identifies the quoted-original wrapper in serialized
 // HTML, so parseHTML can recognise it on the way back in.
 export const QUOTED_HTML_MARKER = "data-quoted-html";
@@ -164,6 +166,13 @@ export function serializeEditorContent(editor: Editor): string {
       // round-trips: re-opening parses this back into a QuotedHtml node
       // instead of letting the schema mangle the raw table layout again.
       parts.push(buildQuotedHtmlBlock((node.attrs.html as string) || ""));
+      return;
+    }
+    if (node.type.name === "signatureBlock") {
+      // Same rationale as quotedHtml: inline the verbatim signature HTML so the
+      // styled signature reaches the recipient (and a saved draft round-trips)
+      // instead of the schema-flattened version.
+      parts.push(buildSignatureBlock((node.attrs.html as string) || ""));
       return;
     }
     const fragment = serializer.serializeNode(node);

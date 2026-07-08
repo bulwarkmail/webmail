@@ -477,7 +477,7 @@ export default function FilesPage() {
                     onClick={() => router.push("/")}
                     className="justify-start"
                   >
-                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    <ArrowLeft className="w-4 h-4 me-2" />
                     {t("title")}
                   </Button>
                 </div>
@@ -611,7 +611,7 @@ export default function FilesPage() {
                   : '0%' }}
               />
             </div>
-            <p className="mt-2 text-xs text-muted-foreground tabular-nums text-right">
+            <p className="mt-2 text-xs text-muted-foreground tabular-nums text-end">
               {migrationProgress.current} / {migrationProgress.total}
             </p>
           </div>

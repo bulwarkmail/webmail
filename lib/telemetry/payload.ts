@@ -65,7 +65,7 @@ async function readFeatures(): Promise<TelemetryFeatures> {
   return {
     // Booleans only. We read whether a feature is enabled - never any
     // config value beyond a presence check.
-    calendar:      gates.calendarTasksEnabled === true,
+    calendar:      gates.calendarEnabled === true,
     contacts:      gates.contactsEnabled === true,
     files:         gates.filesEnabled === true,
     extensions:    gates.pluginsEnabled === true,

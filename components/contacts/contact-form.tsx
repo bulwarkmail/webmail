@@ -72,7 +72,7 @@ function FormSection({ icon: Icon, title, children, collapsible, defaultOpen = t
       <button
         type="button"
         className={cn(
-          "flex items-center gap-2 w-full text-left",
+          "flex items-center gap-2 w-full text-start",
           collapsible ? "cursor-pointer" : "cursor-default"
         )}
         onClick={() => collapsible && setOpen(!open)}
@@ -525,6 +525,11 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
       mediaMap[photoKey] = { kind: "photo", uri: photoUri, mediaType: photoMediaType };
     }
 
+    // Set mediaVluae to null if we are removing media, so the server removes it
+    const hadMedia = !!contact?.media && Object.keys(contact.media).length > 0;
+    const mediaValue: Record<string, ContactMedia> | null | undefined =
+      Object.keys(mediaMap).length > 0 ? mediaMap : (hadMedia ? null : undefined);
+
     const data: Partial<ContactCard> = {
       name: { components: nameComponents, isOrdered: true },
       nicknames: nickname.trim() ? { n0: { name: nickname.trim() } } : undefined,
@@ -551,7 +556,7 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
       calendarUri: calendarUri.trim() || undefined,
       schedulingUri: schedulingUri.trim() || undefined,
       freeBusyUri: freeBusyUri.trim() || undefined,
-      media: Object.keys(mediaMap).length > 0 ? mediaMap : undefined,
+      media: mediaValue as Record<string, ContactMedia> | undefined,
       ...(selectedBookId ? { addressBookIds: { [selectedBookId]: true } } : {}),
     };
 
@@ -731,12 +736,12 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
                     )}
                   </div>
                   {emailErrors[i] && (
-                    <p className="text-xs text-red-600 dark:text-red-400 mt-1 ml-1">{emailErrors[i]}</p>
+                    <p className="text-xs text-red-600 dark:text-red-400 mt-1 ms-1">{emailErrors[i]}</p>
                   )}
                 </div>
               ))}
               <Button type="button" variant="ghost" size="sm" onClick={() => setEmails([...emails, { address: "", context: "" }])} className="text-xs">
-                <Plus className="w-3 h-3 mr-1" />
+                <Plus className="w-3 h-3 me-1" />
                 {t("add_email")}
               </Button>
             </div>
@@ -794,7 +799,7 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
                 </div>
               ))}
               <Button type="button" variant="ghost" size="sm" onClick={() => setPhones([...phones, { number: "", context: "", feature: "" }])} className="text-xs">
-                <Plus className="w-3 h-3 mr-1" />
+                <Plus className="w-3 h-3 me-1" />
                 {t("add_phone")}
               </Button>
             </div>
@@ -850,7 +855,7 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
                 </div>
               ))}
               <Button type="button" variant="ghost" size="sm" onClick={() => setAddresses([...addresses, { street: "", locality: "", region: "", postcode: "", country: "", context: "" }])} className="text-xs">
-                <Plus className="w-3 h-3 mr-1" />
+                <Plus className="w-3 h-3 me-1" />
                 {t("add_address")}
               </Button>
             </div>
@@ -879,7 +884,7 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
                 </div>
               ))}
               <Button type="button" variant="ghost" size="sm" onClick={() => setOnlineServices([...onlineServices, { uri: "", service: "", label: "" }])} className="text-xs">
-                <Plus className="w-3 h-3 mr-1" />
+                <Plus className="w-3 h-3 me-1" />
                 {t("add_online_service")}
               </Button>
             </div>
@@ -911,7 +916,7 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
                 </div>
               ))}
               <Button type="button" variant="ghost" size="sm" onClick={() => setAnniversaries([...anniversaries, { date: "", kind: "birth" }])} className="text-xs">
-                <Plus className="w-3 h-3 mr-1" />
+                <Plus className="w-3 h-3 me-1" />
                 {t("add_anniversary")}
               </Button>
             </div>
@@ -952,7 +957,7 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
                 </div>
               ))}
               <Button type="button" variant="ghost" size="sm" onClick={() => setPersonalInfoEntries([...personalInfoEntries, { value: "", kind: "hobby", level: "" }])} className="text-xs">
-                <Plus className="w-3 h-3 mr-1" />
+                <Plus className="w-3 h-3 me-1" />
                 {t("add_personal_info")}
               </Button>
             </div>
@@ -1140,7 +1145,7 @@ function CategoryComboBox({
             <button
               key={kw}
               type="button"
-              className="w-full flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-accent transition-colors text-left"
+              className="w-full flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-accent transition-colors text-start"
               onClick={() => { addKeyword(kw); inputRef.current?.focus(); }}
             >
               <Tag className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
@@ -1150,7 +1155,7 @@ function CategoryComboBox({
           {canAddNew && (
             <button
               type="button"
-              className="w-full flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-accent transition-colors text-left text-primary"
+              className="w-full flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-accent transition-colors text-start text-primary"
               onClick={() => { addKeyword(inputValue); inputRef.current?.focus(); }}
             >
               <Plus className="w-3.5 h-3.5 flex-shrink-0" />

@@ -118,7 +118,8 @@ export function parseAuthenticationResults(header: string): AuthenticationResult
  */
 export function parseSpamScore(header: string): { score: number; status: string } | null {
   // Try X-Spam-Status format: "No, score=-0.25"
-  const statusMatch = header.match(/^(Yes|No),?\s+score=([-\d.]+)/i);
+  // And try X-Spam-Score format (Stalwart): "ham, score=-0.25"
+  const statusMatch = header.match(/^(Yes|No|spam|ham),?\s+score=([-\d.]+)/i);
   if (statusMatch) {
     return {
       status: statusMatch[1].toLowerCase(),

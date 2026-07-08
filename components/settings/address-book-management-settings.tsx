@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Book, Pencil, Share2, Tag, Users } from "lucide-react";
+import { Book, BookPlus, Pencil, Share2, Tag, Users } from "lucide-react";
 import { useContactStore } from "@/stores/contact-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { useManagedAccountStore } from "@/stores/managed-account-store";
@@ -11,6 +11,7 @@ import { SettingsSection } from "./settings-section";
 import { cn } from "@/lib/utils";
 import type { AddressBook, AddressBookRights } from "@/lib/jmap/types";
 import { ShareCollectionDialog } from "./share-collection-dialog";
+import { RenameDialog } from "@/components/files/rename-dialog";
 
 function AddressBookEditRow({
   initial,
@@ -73,10 +74,11 @@ export function AddressBookManagementSettings() {
   const tSettings = useTranslations("settings.contacts");
   const { client } = useAuthStore();
   const managedAccountId = useManagedAccountStore((s) => s.managedAccountId);
-  const { addressBooks, contacts, supportsSync, fetchAddressBooks, renameAddressBook, shareAddressBook, renameKeyword } = useContactStore();
+  const { addressBooks, contacts, supportsSync, fetchAddressBooks, createAddressBook, renameAddressBook, shareAddressBook, renameKeyword } = useContactStore();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingKeyword, setEditingKeyword] = useState<string | null>(null);
   const [sharingId, setSharingId] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -84,6 +86,21 @@ export function AddressBookManagementSettings() {
       fetchAddressBooks(client);
     }
   }, [client, addressBooks.length, fetchAddressBooks]);
+
+  const handleCreate = async (name: string) => {
+    if (!client) return;
+    setIsLoading(true);
+    try {
+      await createAddressBook(client, name);
+      await fetchAddressBooks(client);
+      setCreating(false);
+      toast.success(t("created"));
+    } catch {
+      toast.error(t("create_failed"));
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleUpdate = async (book: AddressBook, newName: string) => {
     if (!client) return;
@@ -226,6 +243,19 @@ export function AddressBookManagementSettings() {
         {addressBooks.length === 0 && (
           <p className="text-sm text-muted-foreground py-2">{tSettings("no_address_books")}</p>
         )}
+
+        {/* Creating targets the user's own account, so hide it while scoped to a
+            managed (shared) account. */}
+        {!managedAccountId && client && (
+          <button
+            type="button"
+            onClick={() => setCreating(true)}
+            className="flex items-center gap-2 py-2.5 px-3 w-full rounded-md border border-dashed border-border text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+          >
+            <BookPlus className="w-4 h-4 flex-shrink-0" />
+            {t("create")}
+          </button>
+        )}
       </div>
     </SettingsSection>
 
@@ -276,6 +306,16 @@ export function AddressBookManagementSettings() {
         </div>
       </SettingsSection>
     </div>
+    )}
+
+    {creating && (
+      <RenameDialog
+        currentName=""
+        title={t("create")}
+        label={t("name_label")}
+        onCancel={() => setCreating(false)}
+        onConfirm={handleCreate}
+      />
     )}
 
     {sharingId && client && (() => {

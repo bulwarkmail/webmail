@@ -1,4 +1,5 @@
 import { isValidEmail } from "@/lib/validation";
+import { htmlToPlainText } from "@/lib/html-to-text";
 
 const HTML_ESCAPE_MAP = {
   "&": "&amp;",
@@ -52,6 +53,60 @@ export function rewriteCidImagesForEditor(html: string): string {
     touched = true;
   });
   return touched ? doc.body.innerHTML : html;
+}
+
+/**
+ * Reduce a composer body to just the user-authored text for the attachment
+ * reminder's keyword scan, dropping the quoted original of a reply/forward.
+ *
+ * Scanning the whole body triggered false positives whenever the quoted message
+ * mentioned an attachment - common, since the original often did carry one, and
+ * the default keyword list is broad and multilingual (#570). We strip:
+ *   - HTML mode: the QuotedHtml island ([data-quoted-html]) and any <blockquote>
+ *     (the wrapper used when the original had no HTML part), then convert to text.
+ *   - Plain-text mode: lines prefixed with ">" (the reply quote).
+ *   - Both modes: everything from the "Forwarded message" separator onward, which
+ *     also removes the forwarded From/Date/Subject header lines and the bare
+ *     forwarded original (which carries no blockquote/island wrapper).
+ *
+ * `forwardedSeparator` is the localized quote_header.forwarded_separator string;
+ * pass it so the forward cut works in the active locale.
+ */
+export function extractUserAuthoredText(
+  body: string,
+  options: { plainTextMode: boolean; forwardedSeparator?: string }
+): string {
+  const { plainTextMode, forwardedSeparator } = options;
+
+  let text: string;
+  if (plainTextMode) {
+    text = body
+      .split("\n")
+      .filter((line) => !/^\s*>/.test(line))
+      .join("\n");
+  } else {
+    const doc = new DOMParser().parseFromString(`<body>${body}</body>`, "text/html");
+    doc
+      .querySelectorAll("[data-quoted-html], blockquote")
+      .forEach((el) => el.remove());
+    text = htmlToPlainText(doc.body.innerHTML, { paragraphSpacing: true });
+  }
+
+  // Cut everything from the forwarded-message separator onward. htmlToPlainText
+  // collapses the separator's internal whitespace, so match with a
+  // whitespace-flexible, regex-escaped pattern rather than an exact string.
+  const trimmedSeparator = forwardedSeparator?.trim();
+  if (trimmedSeparator) {
+    const pattern = trimmedSeparator
+      .replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+      .replace(/\s+/g, "\\s+");
+    const match = text.match(new RegExp(pattern));
+    if (match && match.index !== undefined) {
+      text = text.slice(0, match.index);
+    }
+  }
+
+  return text;
 }
 
 /** A composer recipient. Display name is optional; email is required. */
@@ -234,4 +289,35 @@ export function replaceInlineImagePlaceholders(
     changed = true;
   });
   return changed ? doc.body.innerHTML : html;
+}
+
+export type PendingUploadLike = {
+  uploading?: boolean;
+  error?: boolean;
+};
+
+export type PendingUploadWaitResult = "completed" | "cancelled" | "failed";
+
+/**
+ * Wait for in-flight attachment uploads to settle before sending.
+ *
+ * Polls `getAttachments` until nothing is `uploading`, checking
+ * `isCancelled` between polls (composer closed / draft discarded).
+ * Resolves:
+ * - "cancelled" - cancellation was signalled while waiting
+ * - "failed"    - uploads settled but at least one attachment errored;
+ *                 the caller must NOT auto-send (the user may not be
+ *                 looking at the composer to notice the failed chip)
+ * - "completed" - all uploads finished cleanly, safe to proceed
+ */
+export async function waitForPendingUploads(
+  getAttachments: () => readonly PendingUploadLike[],
+  isCancelled: () => boolean,
+  pollMs = 150
+): Promise<PendingUploadWaitResult> {
+  while (getAttachments().some((att) => att.uploading)) {
+    if (isCancelled()) return "cancelled";
+    await new Promise((resolve) => setTimeout(resolve, pollMs));
+  }
+  return getAttachments().some((att) => att.error) ? "failed" : "completed";
 }

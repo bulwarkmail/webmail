@@ -87,6 +87,12 @@ interface ProTabState {
   openComposeTab: (data: ProComposeTabData) => string;
   openEmailTab: (data: ProEmailTabData) => string;
   closeTab: (id: string) => void;
+  /**
+   * Request closing a tab, honouring any registered close interceptor (e.g. a
+   * compose tab with unsaved changes that wants to show the "Save or discard
+   * draft?" dialog first). Falls back to `closeTab` when none is registered.
+   */
+  requestCloseTab: (id: string) => void;
   setActiveTab: (id: string) => void;
   setFocusedPane: (paneId: ProPaneId) => void;
 
@@ -130,6 +136,21 @@ const HOME_TAB: ProTab = {
   closeable: false,
   paneId: 'main',
 };
+
+/**
+ * Module-level registry of tab close interceptors. Kept outside the persisted
+ * Zustand state so functions are never serialised. A compose tab registers a
+ * handler here so an external close request (tab-bar "X", middle-click) routes
+ * through the composer's unsaved-changes guard instead of closing instantly.
+ */
+const closeInterceptors = new Map<string, () => void>();
+
+export function registerProTabCloseInterceptor(id: string, fn: () => void): () => void {
+  closeInterceptors.set(id, fn);
+  return () => {
+    if (closeInterceptors.get(id) === fn) closeInterceptors.delete(id);
+  };
+}
 
 function makeId(): string {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -265,10 +286,22 @@ export const useProTabStore = create<ProTabState>()(
         return newTab.id;
       },
 
+      requestCloseTab: (id) => {
+        const interceptor = closeInterceptors.get(id);
+        if (interceptor) {
+          interceptor();
+          return;
+        }
+        get().closeTab(id);
+      },
+
       closeTab: (id) => {
         const state = get();
         const tab = state.tabs.find((t) => t.id === id);
         if (!tab || !tab.closeable) return;
+
+        // Drop any registered close interceptor for this tab.
+        closeInterceptors.delete(id);
 
         const removedPane = tab.paneId;
         const newTabs = state.tabs.filter((t) => t.id !== id);

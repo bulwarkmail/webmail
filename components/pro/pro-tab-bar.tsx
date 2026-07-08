@@ -171,7 +171,7 @@ export function ProTabBar({
             className={cn(
               "group relative flex items-center gap-1.5 px-3 h-9 text-sm cursor-pointer select-none transition-colors",
               "min-w-0 flex-1 basis-0 max-w-[200px] [min-width:80px]",
-              "border-r border-border first:border-l",
+              "border-e border-border first:border-s",
               isActive
                 ? "bg-background text-foreground"
                 : "text-muted-foreground hover:bg-muted hover:text-foreground",
@@ -193,7 +193,7 @@ export function ProTabBar({
                   onClose(tab.id);
                 }}
                 className={cn(
-                  "ml-1 flex items-center justify-center w-4 h-4 rounded-sm transition-colors flex-shrink-0",
+                  "ms-1 flex items-center justify-center w-4 h-4 rounded-sm transition-colors flex-shrink-0",
                   "text-muted-foreground hover:bg-muted-foreground/20 hover:text-foreground",
                   !isActive && "opacity-0 group-hover:opacity-100 focus-visible:opacity-100",
                 )}

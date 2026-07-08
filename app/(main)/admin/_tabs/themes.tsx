@@ -5,12 +5,11 @@ import { Upload, Trash2, Power, PowerOff, Loader2, Palette, Save, Shield, Lock, 
 import type { SettingsPolicy } from '@/lib/admin/types';
 import { DEFAULT_POLICY, DEFAULT_THEME_POLICY } from '@/lib/admin/types';
 import { apiFetch } from '@/lib/browser-navigation';
+import { BUILTIN_THEMES } from '@/lib/builtin-themes';
 
-const BUILTIN_THEME_OPTIONS = [
-  { id: 'builtin-nord', name: 'Nord' },
-  { id: 'builtin-catppuccin', name: 'Catppuccin' },
-  { id: 'builtin-solarized', name: 'Solarized' },
-];
+// Derive from the single source of truth so newly added built-in themes show
+// up here automatically (was previously a hardcoded subset — see #496).
+const BUILTIN_THEME_OPTIONS = BUILTIN_THEMES.map(t => ({ id: t.id, name: t.name }));
 
 interface ThemeEntry {
   id: string;

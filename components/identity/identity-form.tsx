@@ -352,7 +352,7 @@ function SignatureByteCounter({ id, value }: { id: string; value: string }) {
       aria-live="polite"
     >
       {t('signature_byte_counter', { bytes, max: SIGNATURE_MAX_BYTES })}
-      {atLimit && <span className="ml-1">{t('signature_byte_limit_reached')}</span>}
+      {atLimit && <span className="ms-1">{t('signature_byte_limit_reached')}</span>}
     </p>
   );
 }

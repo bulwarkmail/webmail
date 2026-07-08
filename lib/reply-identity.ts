@@ -67,6 +67,34 @@ export function findReplyIdentityId(
   return baseIdentity?.id ?? null;
 }
 
+/**
+ * Pick the identity to use for a NEW message started while viewing a specific
+ * mailbox/account. Matches the active mailbox's address to a configured
+ * identity (exact, then `+tag`-stripped) so composing from info@ defaults its
+ * From to info@. Returns `null` when no address is given or none matches, so
+ * the caller keeps the primary identity.
+ */
+export function findComposeIdentityId(
+  identities: Identity[],
+  accountEmail?: string | null,
+): string | null {
+  const email = accountEmail?.trim();
+  if (identities.length === 0 || !email) {
+    return null;
+  }
+
+  const exact = normalizeEmailAddress(email);
+  const exactIdentity = identities.find((identity) => normalizeEmailAddress(identity.email) === exact);
+  if (exactIdentity) {
+    return exactIdentity.id;
+  }
+
+  const base = normalizeBaseEmailAddress(email);
+  const baseIdentity = identities.find((identity) => normalizeBaseEmailAddress(identity.email) === base);
+
+  return baseIdentity?.id ?? null;
+}
+
 export interface ReplyFromResolution {
   /** Identity to use for JMAP `identityId` and the SMTP envelope MAIL FROM. */
   identityId: string;

@@ -341,6 +341,7 @@ export async function POST(request: NextRequest) {
         author: (manifest.author as string) || 'Unknown',
         description: (manifest.description as string) || '',
         type: (manifest.type as string) || 'hook',
+        ...(manifest.tier === 'privileged' ? { tier: 'privileged' } : {}),
         permissions,
         entrypoint,
         enabled: existingPlugin?.enabled ?? true,

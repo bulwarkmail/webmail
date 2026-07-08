@@ -221,7 +221,7 @@ export function RecipientPopover({ name, email, displayLabel, onViewContact, cla
               {onViewContact && (
                 <button
                   onClick={handleViewContact}
-                  className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground px-2 py-1.5 rounded hover:bg-muted transition-colors ml-auto"
+                  className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground px-2 py-1.5 rounded hover:bg-muted transition-colors ms-auto"
                   title={contact ? "View contact" : "View details"}
                 >
                   {contact ? <ExternalLink className="w-3.5 h-3.5" /> : <UserPlus className="w-3.5 h-3.5" />}

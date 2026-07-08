@@ -95,7 +95,7 @@ export function IconPicker({ value, onChange, className }: IconPickerProps) {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={t('search_icons')}
-            className="pl-8 h-8 text-xs"
+            className="ps-8 h-8 text-xs"
           />
           {search && (
             <button

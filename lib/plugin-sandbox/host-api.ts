@@ -6,8 +6,20 @@ import type { InstalledPlugin, Permission } from '../plugin-types';
 import { IMPLICIT_PERMISSIONS } from '../plugin-types';
 import { toast as appToast } from '@/stores/toast-store';
 import { useAuthStore } from '@/stores/auth-store';
+import { useEmailStore } from '@/stores/email-store';
 import { apiFetch } from '../browser-navigation';
 import { awaitDialog } from './host-dialog';
+
+/**
+ * Methods only callable from the privileged (same-origin) tier. These expose
+ * raw message bytes and raw submission, which an untrusted null-origin plugin
+ * must never reach. Enforced in `dispatchApiCall` IN ADDITION to the per-method
+ * permission gate.
+ */
+const PRIVILEGED_ONLY_METHODS = new Set<string>([
+  'jmap.fetchBlob',
+  'jmap.sendRaw',
+]);
 
 const PERM_PER_METHOD: Record<string, Permission | null> = {
   // storage is unscoped by the manifest - implicit.
@@ -23,6 +35,9 @@ const PERM_PER_METHOD: Record<string, Permission | null> = {
   // http
   'http.post': 'http:post',
   'http.fetch': 'http:fetch',
+  // jmap (privileged-tier only; see PRIVILEGED_ONLY_METHODS)
+  'jmap.fetchBlob': 'email:blob-read',
+  'jmap.sendRaw': 'email:raw-send',
   // admin
   'admin.getConfig': 'admin:config',
   'admin.getAllConfig': 'admin:config',
@@ -201,6 +216,53 @@ async function doHttpFetch(plugin: InstalledPlugin, rawUrl: string, init?: Plugi
   };
 }
 
+// ─── jmap (privileged tier) ───────────────────────────────────
+
+/**
+ * Fetch the raw bytes of a blob by id, using the host's authenticated JMAP
+ * client. The plugin decides WHICH blobId to fetch (e.g. a pkcs7-mime part, or
+ * the full RFC822 message blob) and runs its own detection; the host only
+ * exposes the byte-fetch primitive. Returns a Uint8Array (structured-cloneable
+ * across the postMessage boundary).
+ */
+async function doJmapFetchBlob(blobId: string, opts?: { name?: string; type?: string }): Promise<Uint8Array> {
+  if (typeof blobId !== 'string' || !blobId) throw new Error('jmap.fetchBlob: blobId required');
+  const { client } = useAuthStore.getState();
+  if (!client) throw new Error('jmap.fetchBlob: no active session');
+  const buf = await client.fetchBlobArrayBuffer(blobId, opts?.name, opts?.type);
+  return new Uint8Array(buf);
+}
+
+/**
+ * Submit a fully-formed raw RFC822 message (e.g. one a plugin has signed and/or
+ * encrypted) via the host's raw-send path, which also files it into Sent. The
+ * plugin passes raw bytes; the host wraps them in a Blob.
+ */
+async function doJmapSendRaw(
+  rawBytes: ArrayBuffer | ArrayBufferView,
+  identityId: string,
+  opts?: { delayedUntil?: string; envelopeRecipients?: string[] },
+): Promise<unknown> {
+  if (typeof identityId !== 'string' || !identityId) throw new Error('jmap.sendRaw: identityId required');
+  const { client } = useAuthStore.getState();
+  if (!client) throw new Error('jmap.sendRaw: no active session');
+  const view = rawBytes instanceof ArrayBuffer
+    ? new Uint8Array(rawBytes)
+    : new Uint8Array(rawBytes.buffer, rawBytes.byteOffset, rawBytes.byteLength);
+  // Copy into a fresh ArrayBuffer-backed array so the Blob part is definitely
+  // ArrayBuffer (not SharedArrayBuffer) — also detaches from the caller's view.
+  const copy = new Uint8Array(view.byteLength);
+  copy.set(view);
+  const blob = new Blob([copy.buffer], { type: 'message/rfc822' });
+  return useEmailStore.getState().sendRawEmail(
+    client,
+    blob,
+    identityId,
+    opts?.delayedUntil,
+    opts?.envelopeRecipients,
+  );
+}
+
 // ─── admin config (same as before) ────────────────────────────
 
 async function adminGetAll(pluginId: string): Promise<Record<string, unknown>> {
@@ -234,7 +296,15 @@ export async function dispatchApiCall(
   plugin: InstalledPlugin,
   method: string,
   args: unknown[],
+  opts?: { privileged?: boolean },
 ): Promise<unknown> {
+  // Tier gate: privileged-only methods are refused for untrusted (null-origin)
+  // instances even if the permission is somehow present. Defence-in-depth on
+  // top of the load-time tier resolution.
+  if (PRIVILEGED_ONLY_METHODS.has(method) && !opts?.privileged) {
+    throw new Error(`Method "${method}" requires the privileged plugin tier`);
+  }
+
   // Permission gate
   const requiredPerm = PERM_PER_METHOD[method];
   if (requiredPerm !== undefined && requiredPerm !== null) {
@@ -258,6 +328,13 @@ export async function dispatchApiCall(
 
     case 'http.post':  return doHttpPost(plugin, args[0] as string, args[1]);
     case 'http.fetch': return doHttpFetch(plugin, args[0] as string, args[1] as PluginFetchInit | undefined);
+
+    case 'jmap.fetchBlob': return doJmapFetchBlob(args[0] as string, args[1] as { name?: string; type?: string } | undefined);
+    case 'jmap.sendRaw':   return doJmapSendRaw(
+      args[0] as ArrayBuffer | ArrayBufferView,
+      args[1] as string,
+      args[2] as { delayedUntil?: string; envelopeRecipients?: string[] } | undefined,
+    );
 
     case 'admin.getConfig':    return adminGet(plugin.id, args[0] as string);
     case 'admin.getAllConfig': return adminGetAll(plugin.id);

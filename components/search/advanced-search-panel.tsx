@@ -84,7 +84,7 @@ export function AdvancedSearchPanel({
           <span className="text-sm font-medium text-foreground">{t("title")}</span>
           <div className="flex items-center gap-1">
             <Button variant="ghost" size="sm" onClick={handleClear} className="h-7 px-2 text-xs">
-              <RotateCcw className="w-3 h-3 mr-1" />
+              <RotateCcw className="w-3 h-3 me-1" />
               {t("clear")}
             </Button>
             <Button variant="ghost" size="icon" onClick={onClose} className="h-7 w-7">

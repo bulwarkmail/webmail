@@ -68,7 +68,7 @@ export function FileUploadArea({ onUpload, onUploadFolder, onCreateFolder, onCre
             size="sm"
             onClick={onCreateFolder}
           >
-            <FolderPlus className="w-4 h-4 mr-2" />
+            <FolderPlus className="w-4 h-4 me-2" />
             {t("new_folder")}
           </Button>
           {onCreateTextFile && (
@@ -77,7 +77,7 @@ export function FileUploadArea({ onUpload, onUploadFolder, onCreateFolder, onCre
               size="sm"
               onClick={onCreateTextFile}
             >
-              <FilePlus className="w-4 h-4 mr-2" />
+              <FilePlus className="w-4 h-4 me-2" />
               {t("new_text_file")}
             </Button>
           )}

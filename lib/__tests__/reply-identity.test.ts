@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { findReplyIdentityId, resolveReplyFrom } from '../reply-identity';
+import { findComposeIdentityId, findReplyIdentityId, resolveReplyFrom } from '../reply-identity';
 import type { Identity } from '../jmap/types';
 
 const identities: Identity[] = [
@@ -48,6 +48,29 @@ describe('findReplyIdentityId', () => {
     });
 
     expect(selected).toBeNull();
+  });
+});
+
+describe('findComposeIdentityId', () => {
+  it('matches the identity of the active mailbox', () => {
+    expect(findComposeIdentityId(identities, 'harry@secondary.com')).toBe('secondary');
+  });
+
+  it('matches case-insensitively', () => {
+    expect(findComposeIdentityId(identities, 'HARRY@PRIMARY.COM')).toBe('primary');
+  });
+
+  it('strips +tag before matching', () => {
+    expect(findComposeIdentityId(identities, 'harry+news@secondary.com')).toBe('secondary');
+  });
+
+  it('returns null when the active mailbox has no matching identity', () => {
+    expect(findComposeIdentityId(identities, 'other@example.com')).toBeNull();
+  });
+
+  it('returns null when no active mailbox email is given', () => {
+    expect(findComposeIdentityId(identities, undefined)).toBeNull();
+    expect(findComposeIdentityId(identities, '')).toBeNull();
   });
 });
 

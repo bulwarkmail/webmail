@@ -44,9 +44,10 @@ export function groupEmailsByThread(
     // Collect unique participant names from all emails in thread
     const participantNames = getThreadParticipants(sortedEmails);
 
-    // Check for unread, starred, and attachments
+    // Check for unread, starred, pinned, and attachments
     const hasUnread = sortedEmails.some(e => !e.keywords?.$seen);
     const hasStarred = sortedEmails.some(e => e.keywords?.$flagged);
+    const hasPinned = sortedEmails.some(e => e.keywords?.['$pinned']);
     const hasAttachment = sortedEmails.some(e => e.hasAttachment);
     const hasAnswered = sortedEmails.some(e => e.keywords?.$answered);
     const hasForwarded = sortedEmails.some(e => e.keywords?.$forwarded);
@@ -58,6 +59,7 @@ export function groupEmailsByThread(
       participantNames,
       hasUnread,
       hasStarred,
+      hasPinned,
       hasAttachment,
       hasAnswered,
       hasForwarded,
@@ -70,10 +72,14 @@ export function groupEmailsByThread(
 
 /**
  * Sorts thread groups by their latest email's receivedAt date (newest first).
+ * Threads containing a pinned email ($pinned keyword) stay on top, mirroring
+ * the server-side pinned-first sort of the email list.
  */
 export function sortThreadGroups(groups: ThreadGroup[]): ThreadGroup[] {
   return [...groups].sort(
-    (a, b) => new Date(b.latestEmail.receivedAt).getTime() - new Date(a.latestEmail.receivedAt).getTime()
+    (a, b) =>
+      (b.hasPinned ? 1 : 0) - (a.hasPinned ? 1 : 0) ||
+      new Date(b.latestEmail.receivedAt).getTime() - new Date(a.latestEmail.receivedAt).getTime()
   );
 }
 
@@ -136,6 +142,7 @@ export function mergeThreadEmails(
   const participantNames = getThreadParticipants(mergedEmails);
   const hasUnread = mergedEmails.some(e => !e.keywords?.$seen);
   const hasStarred = mergedEmails.some(e => e.keywords?.$flagged);
+  const hasPinned = mergedEmails.some(e => e.keywords?.['$pinned']);
   const hasAttachment = mergedEmails.some(e => e.hasAttachment);
   const hasAnswered = mergedEmails.some(e => e.keywords?.$answered);
   const hasForwarded = mergedEmails.some(e => e.keywords?.$forwarded);
@@ -147,6 +154,7 @@ export function mergeThreadEmails(
     participantNames,
     hasUnread,
     hasStarred,
+    hasPinned,
     hasAttachment,
     hasAnswered,
     hasForwarded,

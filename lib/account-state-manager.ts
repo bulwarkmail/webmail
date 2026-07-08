@@ -11,7 +11,6 @@ import { useFilterStore } from '@/stores/filter-store';
 import { DEFAULT_SEARCH_FILTERS } from '@/lib/jmap/search-utils';
 import { useIdentityStore } from '@/stores/identity-store';
 import { useVacationStore } from '@/stores/vacation-store';
-import { useSmimeStore } from '@/stores/smime-store';
 
 // Minimal snapshot shapes - we only capture what we need
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -133,7 +132,6 @@ export function clearAllStores(): void {
   useVacationStore.getState().clearState();
   useCalendarStore.getState().clearState();
   useFilterStore.getState().clearState();
-  useSmimeStore.getState().clearState();
 }
 
 /** Evict cached state for one account */

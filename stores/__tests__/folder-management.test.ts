@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useEmailStore } from '../email-store';
 import type { Mailbox } from '@/lib/jmap/types';
+import { UNIFIED_MAILBOX_IDS } from '@/lib/jmap/types';
 
 function makeMailbox(overrides: Partial<Mailbox> = {}): Mailbox {
   return {
@@ -264,6 +265,43 @@ describe('email-store folder management', () => {
       ).rejects.toThrow();
 
       expect(useEmailStore.getState().error).toBe('Role update failed');
+    });
+  });
+
+  // Regression: a background fetchMailboxes (e.g. push-driven after deleting
+  // drafts in "All Drafts") must not reset a virtual unified/cross-view selection
+  // to the inbox, which would jump the user out of the view they're in.
+  describe('fetchMailboxes selection preservation', () => {
+    it('keeps a unified-view selection (e.g. All Drafts) on background refresh', async () => {
+      useEmailStore.setState({
+        mailboxes: [inbox, sent, trash, custom],
+        selectedMailbox: UNIFIED_MAILBOX_IDS.drafts,
+        isUnifiedView: true,
+      });
+      // Fresh list (not initial load) that does NOT contain the virtual id.
+      const client = makeMockClient({
+        getAllMailboxes: vi.fn().mockResolvedValue([inbox, sent, trash, custom]),
+      });
+
+      await useEmailStore.getState().fetchMailboxes(client);
+
+      expect(useEmailStore.getState().selectedMailbox).toBe(UNIFIED_MAILBOX_IDS.drafts);
+    });
+
+    it('still falls back to inbox when a real selection no longer exists', async () => {
+      useEmailStore.setState({
+        mailboxes: [inbox, sent, trash, custom],
+        selectedMailbox: 'custom-1',
+        isUnifiedView: false,
+      });
+      // custom-1 is gone from the refreshed list.
+      const client = makeMockClient({
+        getAllMailboxes: vi.fn().mockResolvedValue([inbox, sent, trash]),
+      });
+
+      await useEmailStore.getState().fetchMailboxes(client);
+
+      expect(useEmailStore.getState().selectedMailbox).toBe('inbox-1');
     });
   });
 });

@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { debug } from '@/lib/debug';
 import { useAuthStore } from '@/stores/auth-store';
-import { stalwartJmap, requireResult } from '@/lib/stalwart/jmap-passthrough';
+import { stalwartJmap, requireResult, type JmapMethodResponse } from '@/lib/stalwart/jmap-passthrough';
 
 export type EncryptionType = 'Disabled' | 'Aes128' | 'Aes256';
 
@@ -170,6 +170,23 @@ async function removeCredential(
       error: error instanceof Error ? error.message : fallbackError,
     });
     throw error;
+  }
+}
+
+/**
+ * A JMAP `/set` reports per-object failures (wrong current password, weak
+ * password, …) inside `notUpdated` with an HTTP 200 — `stalwartJmap` does not
+ * throw for these. Inspect the response and surface the server's message so the
+ * UI doesn't report a failed change as successful.
+ */
+function requireAccountPasswordUpdate(responses: JmapMethodResponse[], fallbackError: string): void {
+  const result = requireResult<{
+    updated?: Record<string, unknown>;
+    notUpdated?: Record<string, { type?: string; description?: string }>;
+  }>(responses, 'x:AccountPassword/set');
+  const failed = result.notUpdated?.singleton;
+  if (failed) {
+    throw new Error(failed.description || failed.type || fallbackError);
   }
 }
 
@@ -344,7 +361,7 @@ export const useAccountSecurityStore = create<AccountSecurityState>()((set, get)
     set({ isSaving: true, error: null });
     try {
       const accountId = getPrimaryAccountId();
-      await stalwartJmap([
+      const responses = await stalwartJmap([
         [
           'x:AccountPassword/set',
           {
@@ -354,6 +371,7 @@ export const useAccountSecurityStore = create<AccountSecurityState>()((set, get)
           '0',
         ],
       ]);
+      requireAccountPasswordUpdate(responses, 'Failed to change password');
       set({ isSaving: false });
     } catch (error) {
       set({
@@ -389,7 +407,7 @@ export const useAccountSecurityStore = create<AccountSecurityState>()((set, get)
     set({ isSaving: true, error: null });
     try {
       const accountId = getPrimaryAccountId();
-      await stalwartJmap([
+      const responses = await stalwartJmap([
         [
           'x:AccountPassword/set',
           {
@@ -404,6 +422,7 @@ export const useAccountSecurityStore = create<AccountSecurityState>()((set, get)
           '0',
         ],
       ]);
+      requireAccountPasswordUpdate(responses, 'Failed to enable TOTP');
       set({ otpEnabled: true, isSaving: false });
     } catch (error) {
       set({
@@ -418,7 +437,7 @@ export const useAccountSecurityStore = create<AccountSecurityState>()((set, get)
     set({ isSaving: true, error: null });
     try {
       const accountId = getPrimaryAccountId();
-      await stalwartJmap([
+      const responses = await stalwartJmap([
         [
           'x:AccountPassword/set',
           {
@@ -433,6 +452,7 @@ export const useAccountSecurityStore = create<AccountSecurityState>()((set, get)
           '0',
         ],
       ]);
+      requireAccountPasswordUpdate(responses, 'Failed to disable TOTP');
       set({ otpEnabled: false, isSaving: false });
     } catch (error) {
       set({

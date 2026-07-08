@@ -134,7 +134,10 @@
     "nav_label": "ナビゲーション",
     "add_app": "アプリ",
     "shared": "共有",
-    "scheduled": "予約済み"
+    "scheduled": "予約済み",
+    "unified_all_unread": "すべての未読",
+    "unified_all_starred": "すべてのスター付き",
+    "unified_all_mail": "すべてのメール"
   },
   "protocol_handlers": {
     "title": "既定のアプリ",
@@ -562,7 +565,8 @@
       "add_to_contacts": "連絡先に追加",
       "copied": "コピーしました！",
       "copy_failed": "コピーに失敗しました"
-    }
+    },
+    "send_now": "今すぐ送信"
   },
   "email_composer": {
     "read_receipt_on": "開封確認を要求中（クリックで無効化）",
@@ -628,7 +632,9 @@
     "validation": {
       "recipient_required": "送信するには宛先を追加してください",
       "subject_required": "件名を追加してください",
-      "body_required": "メッセージを入力するかファイルを添付してください"
+      "body_required": "メッセージを入力するかファイルを添付してください",
+      "attachments_uploading": "添付ファイルをアップロード中です。完了次第送信します",
+      "attachment_upload_failed": "送信されませんでした。添付ファイルのアップロードに失敗しました。削除してもう一度お試しください。"
     },
     "upload_progress": "アップロード中 {uploaded} / {total}",
     "upload_cancel": "アップロードをキャンセル",
@@ -671,7 +677,9 @@
     "recipient_edit_email": "メールアドレスを編集",
     "recipient_edit_name": "表示名を編集",
     "recipient_email_placeholder": "メールアドレス",
-    "recipient_name_placeholder": "表示名"
+    "recipient_name_placeholder": "表示名",
+    "autocomplete_search_server": "サーバーを検索",
+    "autocomplete_searching": "検索中..."
   },
   "confirm_dialog": {
     "confirm": "確認",
@@ -800,8 +808,12 @@
     "pl": "Polski",
     "pt": "Português",
     "ru": "Русский",
+    "sk": "Slovenčina",
     "uk": "Українська",
-    "zh": "简体中文"
+    "zh": "简体中文",
+    "fa": "فارسی",
+    "farsi": "فارسی",
+    "switch_to_farsi": "ペルシア語に切り替え"
   },
   "settings": {
     "title": "設定",
@@ -919,17 +931,38 @@
         "description": "Show an \"All Mail\" entry above your folders that merges messages from across this account's folders into one list.",
         "folders_label": "Folders in All Mail",
         "folders_description": "Choose which folders are merged into the All Mail view.",
+        "account_hint": "Applies to {account}.",
         "no_folders": "No folders available."
       },
       "colorful_sidebar_icons": {
         "label": "カラフルなサイドバーアイコン",
         "description": "フォルダーとタグのアイコンを種類別に色分けします（受信トレイは青、迷惑メールは赤、送信済みは緑など）。モノクロのサイドバーにするには無効にしてください。"
       },
+      "tint_list_rows": {
+        "label": "Tint List Rows by Tag Color",
+        "description": "Shade each message row with its first tag color. Disable to keep rows plain; tag dots and chips still show the color."
+      },
+      "show_folder_total_count": {
+        "label": "メッセージの総数を表示",
+        "description": "フォルダーやタグの横に、未読数に加えてメッセージの総数を表示します。未読数のみを表示するには無効にします。"
+      },
       "pro_interface": {
         "label": "Pro インターフェイス（実験的）",
         "description": "デスクトップ専用のパワーユーザー向けレイアウトで、マルチタブのメッセージ閲覧やアカウント横断のワークフローに対応します。標準インターフェイスには影響せず、いつでも元に戻せます。",
         "open_label": "Pro インターフェイスを開く",
         "back_to_standard": "標準に戻る"
+      },
+      "cross_unread": {
+        "label": "すべてのアカウント: 未読",
+        "description": "「すべてのアカウント」セクションに、すべてのアカウントの未読メールを一覧表示する項目を表示します。迷惑メール、送信済み、アーカイブ、ゴミ箱、下書きを除くすべてのフォルダーが対象です。"
+      },
+      "cross_starred": {
+        "label": "すべてのアカウント: スター付き",
+        "description": "「すべてのアカウント」セクションに、すべてのアカウントのスター付きメールを一覧表示する項目を表示します。迷惑メール、送信済み、アーカイブ、ゴミ箱、下書きを除くすべてのフォルダーが対象です。"
+      },
+      "cross_all": {
+        "label": "すべてのアカウント: すべてのメール",
+        "description": "「すべてのアカウント」セクションに、すべてのアカウントのすべてのメールを一覧表示する項目を表示します。迷惑メール、送信済み、アーカイブ、ゴミ箱、下書きを除くすべてのフォルダーが対象です。"
       }
     },
     "keywords": {
@@ -1022,6 +1055,14 @@
         "preview_today": "今日:",
         "preview_this_week": "今週:",
         "preview_older": "それ以前:"
+      },
+      "date_locale": {
+        "label": "Date format region",
+        "description": "How numeric dates are ordered (day, month, year)",
+        "auto": "Automatic (match language)",
+        "iso": "ISO 8601 (YYYY-MM-DD)",
+        "dmy": "Day/Month/Year",
+        "mdy": "Month/Day/Year"
       },
       "time_format": {
         "label": "時刻形式",
@@ -1186,6 +1227,7 @@
         "archive": "アーカイブ",
         "tag": "ラベル",
         "spam": "スパムとしてマーク",
+        "not_spam": "迷惑メールではない",
         "none_selected": "アクションが選択されていません",
         "mode_label": "表示モード",
         "mode_inline": "インライン",
@@ -1226,6 +1268,10 @@
         "off": "オフ",
         "seconds": "{seconds} 秒",
         "unsupported": "現在のアカウントは遅延送信のサポートを通知していません。この設定は他のアカウント用に保存されます。"
+      },
+      "return_to_list_after_action": {
+        "label": "削除または未読にした後に一覧へ戻る",
+        "description": "開いているメッセージを削除または未読にした後、次のメッセージを開かずにメッセージ一覧へ戻ります。"
       }
     },
     "composer": {
@@ -1913,6 +1959,8 @@
     "mark_unread": "未読にする",
     "star": "スターを付ける",
     "unstar": "スターを外す",
+    "pin": "ピン留め",
+    "unpin": "ピン留めを外す",
     "move_to": "移動...",
     "archive": "アーカイブ",
     "delete": "削除",
@@ -2147,6 +2195,9 @@
       "title": "共有"
     },
     "address_books": {
+      "create": "新しいアドレス帳",
+      "created": "アドレス帳を作成しました",
+      "create_failed": "アドレス帳の作成に失敗しました",
       "title": "マイアドレス帳",
       "shared_prefix": "共有: {name}",
       "moved": "連絡先を {name} に移動しました",

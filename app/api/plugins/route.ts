@@ -37,6 +37,9 @@ export async function GET() {
       author: p.author,
       description: p.description,
       type: p.type,
+      // Requested execution tier; clients gate the same-origin privileged
+      // sandbox on this (plus signature + approval + consent).
+      tier: p.tier,
       permissions: p.permissions,
       entrypoint: p.entrypoint,
       // Policy is the canonical source for force-enable. The per-plugin field

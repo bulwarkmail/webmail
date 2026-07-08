@@ -107,6 +107,9 @@ export function buildParticipantMap(
 
   const generateId = () => generateUUID();
 
+  // calendarAddress is the scheduling address in draft-ietf-calext-jscalendarbis
+  // (implemented by Stalwart); the RFC 8984 sendTo property is retired there and
+  // stored as an inert JSPROP, so it is intentionally not sent.
   participants[generateId()] = {
     '@type': 'Participant',
     name: organizer.name,
@@ -115,7 +118,6 @@ export function buildParticipantMap(
     roles: { owner: true, attendee: true },
     participationStatus: 'accepted',
     scheduleAgent: 'server',
-    sendTo: { imip: `mailto:${organizer.email}` },
     expectReply: false,
     kind: 'individual',
   };
@@ -129,7 +131,6 @@ export function buildParticipantMap(
       roles: { attendee: true },
       participationStatus: 'needs-action',
       scheduleAgent: 'server',
-      sendTo: { imip: `mailto:${a.email}` },
       expectReply: true,
       kind: 'individual',
     };

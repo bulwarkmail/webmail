@@ -121,7 +121,7 @@ export class DemoJMAPClient implements IJMAPClient {
   async getMailboxes(_accountId?: string): Promise<Mailbox[]> { return [...this.data.mailboxes]; }
   async getAllMailboxes(): Promise<Mailbox[]> { return [...this.data.mailboxes]; }
 
-  async createMailbox(name: string, parentId?: string): Promise<Mailbox> {
+  async createMailbox(name: string, parentId?: string, _accountId?: string): Promise<Mailbox> {
     const mb: Mailbox = {
       id: generateDemoId('mailbox'),
       name,
@@ -151,12 +151,16 @@ export class DemoJMAPClient implements IJMAPClient {
 
   // ── Emails ────────────────────────────────────────────────────
 
-  async getEmails(mailboxId?: string, _accountId?: string, limit: number = 50, position: number = 0): Promise<{ emails: Email[]; hasMore: boolean; total: number }> {
+  async getEmails(mailboxId?: string, _accountId?: string, limit: number = 50, position: number = 0, _hasKeyword?: string, pinnedFirst?: boolean): Promise<{ emails: Email[]; hasMore: boolean; total: number }> {
     let filtered = this.data.emails;
     if (mailboxId) {
       filtered = filtered.filter(e => e.mailboxIds[mailboxId]);
     }
-    filtered.sort((a, b) => new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime());
+    const pinRank = (e: Email) => (pinnedFirst && e.keywords?.['$pinned'] ? 1 : 0);
+    filtered.sort((a, b) =>
+      pinRank(b) - pinRank(a) ||
+      new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime()
+    );
     const total = filtered.length;
     const emails = filtered.slice(position, position + limit);
     return { emails, hasMore: position + limit < total, total };
@@ -209,6 +213,23 @@ export class DemoJMAPClient implements IJMAPClient {
     return { emails, hasMore: position + limit < total, total };
   }
 
+  async searchSentRecipients(query: string, _sentMailboxId: string, _accountId?: string, _limit: number = 60): Promise<Array<{ name: string; email: string }>> {
+    const q = query.trim().toLowerCase();
+    if (!q) return [];
+    const byEmail = new Map<string, { name: string; email: string }>();
+    for (const email of this.data.emails) {
+      for (const r of [...(email.to || []), ...(email.cc || [])]) {
+        if (!r.email) continue;
+        const key = r.email.toLowerCase();
+        if (byEmail.has(key)) continue;
+        if (key.includes(q) || (r.name && r.name.toLowerCase().includes(q))) {
+          byEmail.set(key, { name: r.name || '', email: r.email });
+        }
+      }
+    }
+    return Array.from(byEmail.values());
+  }
+
   // ── Email mutations ───────────────────────────────────────────
 
   async markAsRead(emailId: string, read: boolean = true): Promise<void> {
@@ -222,7 +243,7 @@ export class DemoJMAPClient implements IJMAPClient {
     this.recalcMailboxCounts();
   }
 
-  async batchMarkAsRead(emailIds: string[], read: boolean = true): Promise<void> {
+  async batchMarkAsRead(emailIds: string[], read: boolean = true, _accountId?: string): Promise<void> {
     for (const id of emailIds) {
       const email = this.data.emails.find(e => e.id === id);
       if (email) {
@@ -233,7 +254,7 @@ export class DemoJMAPClient implements IJMAPClient {
     this.recalcMailboxCounts();
   }
 
-  async toggleStar(emailId: string, starred: boolean): Promise<void> {
+  async toggleStar(emailId: string, starred: boolean, _accountId?: string): Promise<void> {
     const email = this.data.emails.find(e => e.id === emailId);
     if (!email) return;
     if (starred) email.keywords.$flagged = true;
@@ -275,7 +296,7 @@ export class DemoJMAPClient implements IJMAPClient {
     this.recalcMailboxCounts();
   }
 
-  async batchDeleteEmails(emailIds: string[]): Promise<void> {
+  async batchDeleteEmails(emailIds: string[], _accountId?: string): Promise<void> {
     const idSet = new Set(emailIds);
     this.data.emails = this.data.emails.filter(e => !idSet.has(e.id));
     this.recalcMailboxCounts();

@@ -84,6 +84,7 @@ export default function ContactsPage() {
     bulkDeleteContacts,
     bulkAddToGroup,
     moveContactToAddressBook,
+    createAddressBook,
     renameAddressBook,
     removeAddressBook,
     shareAddressBook,
@@ -95,6 +96,7 @@ export default function ContactsPage() {
   const [activeCategory, setActiveCategory] = useState<ContactCategory>("all");
   const [showImportDialog, setShowImportDialog] = useState(false);
   const [renamingAddressBook, setRenamingAddressBook] = useState<AddressBook | null>(null);
+  const [creatingAddressBook, setCreatingAddressBook] = useState(false);
   const [sharingAddressBookId, setSharingAddressBookId] = useState<string | null>(null);
   const [defaultBookIdForCreate, setDefaultBookIdForCreate] = useState<string | undefined>(undefined);
   const [createPrefill, setCreatePrefill] = useState<{ email?: string; name?: string } | undefined>(undefined);
@@ -299,6 +301,34 @@ export default function ContactsPage() {
       toast.error(t("toast.error_update"));
     }
   }, [client, supportsSync, contacts, updateContact, updateLocalContact, t]);
+
+  // Refresh address books (and contacts) after a structural change, staying
+  // multi-account aware so a freshly created book lands in the sidebar.
+  const refreshAddressBooks = useCallback(async () => {
+    if (!client) return;
+    if (multiAccountEnabled && accountClients.length > 0) {
+      const activeId = useAuthStore.getState().activeAccountId;
+      if (activeId) {
+        const { fetchAllAccountsAddressBooks } = useContactStore.getState();
+        await fetchAllAccountsAddressBooks(accountClients, activeId);
+        return;
+      }
+    }
+    await useContactStore.getState().fetchAddressBooks(client);
+  }, [client, multiAccountEnabled, accountClients]);
+
+  const handleCreateAddressBook = useCallback(async (name: string) => {
+    if (!client) return;
+    try {
+      await createAddressBook(client, name);
+      await refreshAddressBooks();
+      toast.success(t("address_books.created"));
+      setCreatingAddressBook(false);
+    } catch (error) {
+      console.error('Failed to create address book:', error);
+      toast.error(t("address_books.create_failed"));
+    }
+  }, [client, createAddressBook, refreshAddressBooks, t]);
 
   const handleImportContacts = useCallback(async (importedContacts: ContactCard[]) => {
     return importContacts(
@@ -721,7 +751,7 @@ export default function ContactsPage() {
                   <button
                     key={group.id}
                     onClick={() => handleBulkAddToGroupConfirm(group.id)}
-                    className="w-full flex items-center gap-3 px-6 py-3 text-left hover:bg-muted transition-colors"
+                    className="w-full flex items-center gap-3 px-6 py-3 text-start hover:bg-muted transition-colors"
                   >
                     <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                       <Users className="w-4 h-4 text-primary" />
@@ -839,7 +869,7 @@ export default function ContactsPage() {
                 <>
                   <div
                     className={cn(
-                      "border-r border-border flex flex-col flex-shrink-0 bg-background",
+                      "border-e border-border flex flex-col flex-shrink-0 bg-background",
                       !isSidebarResizing && "transition-[width] duration-300",
                       isNarrow && cn(
                         "absolute inset-y-0 left-0 z-50 w-72 pt-[env(safe-area-inset-top)]",
@@ -857,6 +887,7 @@ export default function ContactsPage() {
                       onSelectCategory={handleSelectCategory}
                       onCreateGroup={handleCreateGroup}
                       onCreateContact={handleCreateNew}
+                      onCreateAddressBook={client ? () => setCreatingAddressBook(true) : undefined}
                       onImport={() => setShowImportDialog(true)}
                       onEditGroup={handleEditGroupFromSidebar}
                       onDeleteGroup={handleDeleteGroupFromSidebar}
@@ -906,7 +937,7 @@ export default function ContactsPage() {
               <div
                 data-tour="contacts-list"
                 className={cn(
-                  "border-r border-border bg-background flex flex-col flex-shrink-0",
+                  "border-e border-border bg-background flex flex-col flex-shrink-0",
                   isMobile ? "w-full" : "",
                   !isListResizing && !isMobile && "transition-[width] duration-300"
                 )}
@@ -960,7 +991,7 @@ export default function ContactsPage() {
                     onClick={mobileBackToList}
                     className="touch-manipulation"
                   >
-                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    <ArrowLeft className="w-4 h-4 me-2" />
                     {returnToEmail ? t("back_to_email") : t("back_to_contacts")}
                   </Button>
                 </div>
@@ -1004,6 +1035,15 @@ export default function ContactsPage() {
               toast.error(t("category_rename_failed"));
             }
           }}
+        />
+      )}
+      {creatingAddressBook && (
+        <RenameDialog
+          currentName=""
+          title={t("address_books.create")}
+          label={t("address_books.name_label")}
+          onCancel={() => setCreatingAddressBook(false)}
+          onConfirm={handleCreateAddressBook}
         />
       )}
       {renamingAddressBook && (

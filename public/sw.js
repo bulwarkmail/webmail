@@ -169,8 +169,10 @@ async function handlePush(event) {
   await self.registration.showNotification(title, {
     body,
     tag,
-    icon: `${BASE_PATH}/icon-192x192.png`,
-    badge: `${BASE_PATH}/icon-192x192.png`,
+    // Branded app icon via the PWA-icon endpoint (admin-configured, else the
+    // built-in default). The static /icon-192x192.png ignored admin branding.
+    icon: `${BASE_PATH}/api/pwa-icon/192`,
+    badge: `${BASE_PATH}/api/pwa-icon/192`,
     data,
     renotify: true,
   });
@@ -281,8 +283,8 @@ async function showMailtoFocusNotification(state) {
     await self.registration.showNotification(state.focusNotificationTitle || "Bulwark", {
       body: state.focusNotificationBody || "The request was opened in Bulwark. Click to bring it to the front.",
       tag: "bulwark-mailto-focus",
-      icon: `${BASE_PATH}/icon-192x192.png`,
-      badge: `${BASE_PATH}/icon-192x192.png`,
+      icon: `${BASE_PATH}/api/pwa-icon/192`,
+      badge: `${BASE_PATH}/api/pwa-icon/192`,
       data: { kind: "protocol-mailto-focus" },
       renotify: true,
     });

@@ -285,7 +285,10 @@ describe('buildParticipantMap', () => {
     expect(org!.roles).toEqual({ owner: true, attendee: true });
     expect(org!.participationStatus).toBe('accepted');
     expect(org!.scheduleAgent).toBe('server');
-    expect(org!.sendTo).toEqual({ imip: 'mailto:alice@example.com' });
+    // sendTo is retired in draft-ietf-calext-jscalendarbis; the scheduling
+    // address is carried by calendarAddress instead.
+    expect(org!.sendTo).toBeUndefined();
+    expect(org!.calendarAddress).toBe('mailto:alice@example.com');
     expect(org!.expectReply).toBe(false);
 
     const att0 = entries.find(p => p.email === 'bob@example.com');

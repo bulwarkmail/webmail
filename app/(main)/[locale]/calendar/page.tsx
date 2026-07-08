@@ -16,6 +16,7 @@ import { useEmailStore } from "@/stores/email-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useIdentityStore } from "@/stores/identity-store";
 import { useAccountStore } from "@/stores/account-store";
+import { usePolicyStore } from "@/stores/policy-store";
 import { toast } from "@/stores/toast-store";
 import { useIsDesktop, useIsMobile } from "@/hooks/use-media-query";
 import { Button } from "@/components/ui/button";
@@ -97,6 +98,7 @@ export default function CalendarPage() {
     removeCalendar, clearCalendarEvents,
     refreshAllSubscriptions, icalSubscriptions,
   } = useCalendarStore();
+  const calendarEnabled = usePolicyStore((s) => s.isFeatureEnabled('calendarEnabled'));
   const { firstDayOfWeek, timeFormat, showWeekNumbers, enableCalendarTasks, showTasksOnCalendar, calendarHoverPreview, showBirthdayCalendar, birthdayCalendarColor, updateSetting } = useSettingsStore();
   const sharedCalendarColors = useSettingsStore((s) => s.sharedCalendarColors);
   const setSharedCalendarColor = useSettingsStore((s) => s.setSharedCalendarColor);
@@ -179,10 +181,13 @@ export default function CalendarPage() {
     if (initialCheckDone && !isAuthenticated && !authLoading) {
       try { sessionStorage.setItem('redirect_after_login', window.location.pathname); } catch { /* ignore */ }
       redirectToLogin();
+    } else if (client && !calendarEnabled) {
+      // Calendar disabled by admin policy - send the user back to mail.
+      router.push("/");
     } else if (client && !supportsCalendar && !pendingWebcalAccountChoice && !isProtocolAccountSwitching && !pendingSubscription && !showWebcalActionChoice && !hasPendingWebcal()) {
       router.push("/");
     }
-  }, [initialCheckDone, isAuthenticated, authLoading, client, supportsCalendar, pendingWebcalAccountChoice, isProtocolAccountSwitching, pendingSubscription, showWebcalActionChoice, router]);
+  }, [initialCheckDone, isAuthenticated, authLoading, client, calendarEnabled, supportsCalendar, pendingWebcalAccountChoice, isProtocolAccountSwitching, pendingSubscription, showWebcalActionChoice, router]);
 
   useEffect(() => {
     if (error) {
@@ -1144,13 +1149,13 @@ export default function CalendarPage() {
         </div>
         <div className="px-6 py-4 space-y-3">
           <Button variant="outline" className="w-full justify-start h-auto py-3" onClick={handleImportWebcal}>
-            <span className="text-left">
+            <span className="text-start">
               <span className="block font-medium">{tWebcalAction("import_title")}</span>
               <span className="block text-xs text-muted-foreground mt-0.5">{tWebcalAction("import_description")}</span>
             </span>
           </Button>
           <Button variant="outline" className="w-full justify-start h-auto py-3" onClick={handleSubscribeWebcal}>
-            <span className="text-left">
+            <span className="text-start">
               <span className="block font-medium">{tWebcalAction("subscribe_title")}</span>
               <span className="block text-xs text-muted-foreground mt-0.5">{tWebcalAction("subscribe_description")}</span>
             </span>
@@ -1164,6 +1169,7 @@ export default function CalendarPage() {
   ) : null;
 
   if (!isAuthenticated) return null;
+  if (!calendarEnabled) return null;
   if (!supportsCalendar) return renderWebcalAccountPicker();
 
   const renderView = () => {
@@ -1330,7 +1336,7 @@ export default function CalendarPage() {
         <>
           <div
             className={cn(
-              "border-r border-border bg-secondary overflow-y-auto flex-shrink-0 p-3",
+              "border-e border-border bg-secondary overflow-y-auto flex-shrink-0 p-3",
               !isResizing && "transition-[width] duration-300",
               isNarrow && cn(
                 "absolute inset-y-0 left-0 z-50 w-72 pt-[env(safe-area-inset-top)]",
@@ -1469,7 +1475,7 @@ export default function CalendarPage() {
 
           {/* Desktop event panel */}
           {!isMobile && showEventModal && (
-            <div className="w-[400px] border-l border-border flex-shrink-0 overflow-hidden">
+            <div className="w-[400px] border-s border-border flex-shrink-0 overflow-hidden">
               <EventModal
                 key={editEvent?.id ?? 'new'}
                 event={editEvent}
@@ -1492,7 +1498,7 @@ export default function CalendarPage() {
 
           {/* Desktop task panel */}
           {!isMobile && showTaskModal && (
-            <div className="w-[400px] border-l border-border flex-shrink-0 overflow-hidden">
+            <div className="w-[400px] border-s border-border flex-shrink-0 overflow-hidden">
               <TaskModal
                 key={editTask?.id ?? 'new-task'}
                 task={editTask}

@@ -59,10 +59,12 @@ export async function GET(
     domainOverrides.pwaIconUrl ||
     domainOverrides.faviconUrl ||
     (sources.pwaIconUrl?.source !== 'default' ? (sources.pwaIconUrl?.value as string) : '') ||
-    (sources.faviconUrl?.source !== 'default' ? (sources.faviconUrl?.value as string) : '');
-  if (!iconUrl) {
-    return new NextResponse('No PWA icon configured', { status: 404 });
-  }
+    (sources.faviconUrl?.source !== 'default' ? (sources.faviconUrl?.value as string) : '') ||
+    // Fall back to the built-in default so this endpoint ALWAYS returns an app
+    // icon (custom if configured, else the bundled default). This lets callers
+    // that can't run the custom-vs-default check themselves - notably the
+    // service worker's notifications - use a single stable URL.
+    `/icon-${size}x${size}.png`;
 
   const pngHeaders = {
     'Content-Type': 'image/png',

@@ -249,6 +249,16 @@ export const emailHooks = {
   // recipients change. Handler receives a DraftView snapshot. Use for AI
   // assistants, grammar checkers, etc.
   onDraftChange: new HookBus(),
+  // Intercept hook - fires at the very TOP of the composer send path, before
+  // the host builds and submits the message. Handler receives a ComposeSend
+  // request (draft fields, recipients, identityId, attachments, and the user's
+  // sign/encrypt intent) and may TAKE OVER sending entirely: build a raw MIME
+  // message, sign/encrypt it, and submit it via `api.jmap.sendRaw`. Returning
+  // false signals "I handled the send" and the host SKIPS its default
+  // submission. Returning anything else (incl. undefined) lets the host send
+  // normally. This is the send-takeover hook used by the S/MIME plugin to
+  // replace the former native sign+encrypt+sendRaw pipeline.
+  onComposeSend: new HookBus(),
 };
 
 // §7.2 Calendar Hooks
@@ -520,6 +530,18 @@ export const renderHooks = {
   // Handlers return a new (or extended) badges array.
   // Rendered by the email list row component next to the subject line.
   onEmailListItemRender: new HookBus(),
+  // Transform hook - runs when an email is opened, BEFORE the viewer computes
+  // the body it will render. Initial value: RenderableBody { html, text,
+  // attachments, handledBy? }. Second argument: MessageContext { id,
+  // bodyStructure, attachments, blobId, contentType, from }. A handler may
+  // inspect the message (e.g. detect S/MIME), fetch the raw blob via
+  // `api.jmap.fetchBlob`, decrypt/verify in-frame, and return a REPLACED body
+  // with `handledBy` set plus optional `verification` status. Return undefined
+  // (or the unchanged value) to pass through. The host still runs the returned
+  // HTML through its sanitizer — plugin output is not trusted blindly. This is
+  // the render-takeover hook used by the S/MIME plugin to replace the former
+  // native detect/decrypt/verify path in the viewer.
+  onRenderEmailBody: new HookBus(),
 };
 
 // ─── Aggregate: remove all handlers for a plugin across all buses ───

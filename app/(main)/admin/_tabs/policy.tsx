@@ -13,6 +13,7 @@ const FEATURE_GATE_LABELS: Partial<Record<keyof FeatureGates, { label: string; d
   settingsExportEnabled: { label: 'Settings Export/Import', description: 'Allow users to export and import settings JSON' },
   customKeywordsEnabled: { label: 'Custom Keywords', description: 'Allow user-created labels and tags' },
   templatesEnabled: { label: 'Email Templates', description: 'Allow email template creation and library' },
+  calendarEnabled: { label: 'Calendar', description: 'Enable calendar features and views' },
   calendarTasksEnabled: { label: 'Calendar Tasks', description: 'Show task panel in calendar view' },
   contactsEnabled: { label: 'Contacts', description: 'Enable contacts/address book features' },
   smimeEnabled: { label: 'S/MIME', description: 'Enable certificate management and email signing' },
@@ -21,7 +22,10 @@ const FEATURE_GATE_LABELS: Partial<Record<keyof FeatureGates, { label: string; d
   folderIconsEnabled: { label: 'Folder Icons', description: 'Allow custom folder icon picker' },
   hoverActionsConfigEnabled: { label: 'Hover Actions Config', description: 'Allow users to customize email hover actions' },
   filesEnabled: { label: 'Files (WebDAV)', description: 'Enable file storage via WebDAV. WARNING: Large uploads can cause Stalwart/RocksDB instability. Not recommended for production.' },
-  allMailViewEnabled: { label: 'All Mail View', description: 'Show a virtual "All Mail" folder that merges messages from across an account’s folders into one list. Users choose which folders are included.' },
+  allMailViewEnabled: { label: 'All Mail View', description: 'Show a virtual "All Mail" folder that merges messages from across an account’s folders into one list. Users choose which folders are included. Requires the per-user toggle in Settings → Appearance.' },
+  crossUnreadViewEnabled: { label: 'All Accounts: Unread', description: 'Allow an "All unread" entry in the All accounts section that lists unread mail across every account (incl. shared folders), spanning all folders except junk, sent, archive, trash and drafts. Requires the matching per-user toggle in Settings → Appearance.' },
+  crossStarredViewEnabled: { label: 'All Accounts: Starred', description: 'Allow an "All starred" entry in the All accounts section that lists flagged/starred mail across every account (incl. shared folders), spanning all folders except junk, sent, archive, trash and drafts. Requires the matching per-user toggle in Settings → Appearance.' },
+  crossAllViewEnabled: { label: 'All Accounts: All Mail', description: 'Allow an "All mail" entry in the All accounts section that lists all mail across every account (incl. shared folders), spanning all folders except junk, sent, archive, trash and drafts. Requires the matching per-user toggle in Settings → Appearance.' },
 };
 
 const RESTRICTABLE_SETTINGS = [

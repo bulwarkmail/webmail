@@ -49,6 +49,7 @@ interface AuthState {
   clearError: () => void;
   syncIdentities: () => void;
   refreshIdentities: () => Promise<void>;
+  applyPreferredIdentityOrdering: () => void;
   getClientForAccount: (accountId: string) => JMAPClient | undefined;
   getAllConnectedClients: () => Map<string, JMAPClient>;
 }
@@ -72,6 +73,32 @@ function classifyLoginError(error: unknown): string {
 
 function isRateLimitError(error: unknown): error is RateLimitError {
   return error instanceof RateLimitError;
+}
+
+// An auth/session endpoint answered with a server-side error (5xx) - an
+// outage, not a rejection of our credentials.
+class TransientAuthError extends Error {
+  constructor(message: string, readonly status: number) {
+    super(`${message}: ${status}`);
+  }
+}
+
+// True when a restore/refresh attempt failed because the server could not be
+// reached (network error) or answered 5xx (restart, maintenance, proxy
+// hiccup). Such failures must keep the account and its cookies - "stay signed
+// in" has to survive downtime and offline spells. Only a definitive rejection
+// (401/400) may evict. Mirrors the rate-limit carve-out (#104).
+function isTransientAuthError(error: unknown): boolean {
+  if (error instanceof TransientAuthError) return true;
+  // fetch() rejects with TypeError when the network is unreachable.
+  if (error instanceof TypeError) return true;
+  // JMAPClient.connect()/refreshSession() embed the HTTP status in the
+  // message - a 5xx there is the server being down, not an auth failure.
+  if (error instanceof Error) {
+    const m = error.message.match(/(?:Failed to get session|Session refresh failed): (\d{3})/);
+    if (m) return m[1].startsWith('5');
+  }
+  return false;
 }
 
 function getClientRateLimitState(client: IJMAPClient | null): Pick<AuthState, 'isRateLimited' | 'rateLimitUntil'> {
@@ -171,7 +198,22 @@ function sortIdentities(rawIdentities: Identity[], username: string): Identity[]
 }
 
 function loadIdentities(rawIdentities: Identity[], username: string): { identities: Identity[]; primaryIdentity: Identity | null } {
-  const preferredPrimaryId = useIdentityStore.getState().preferredPrimaryId;
+  const settings = useSettingsStore.getState();
+  const preferredMap = settings.preferredIdentityIds || {};
+  let preferredPrimaryId = preferredMap[username] ?? null;
+
+  // One-time migration: builds before #507 stored the preferred identity only
+  // in the browser-local identity-storage (never synced). If the synced
+  // settings have no entry for this account yet, adopt that legacy local value
+  // and write it into the synced settings so it persists across devices.
+  if (preferredPrimaryId == null) {
+    const legacy = useIdentityStore.getState().preferredPrimaryId;
+    if (legacy) {
+      preferredPrimaryId = legacy;
+      settings.updateSetting('preferredIdentityIds', { ...preferredMap, [username]: legacy });
+    }
+  }
+
   const identities = sortIdentities(rawIdentities, username);
 
   // If user has a preferred primary, move it to front
@@ -185,6 +227,9 @@ function loadIdentities(rawIdentities: Identity[], username: string): { identiti
 
   const primaryIdentity = identities[0] ?? null;
   useIdentityStore.getState().setIdentities(identities);
+  // Mirror the resolved choice into the identity store so the identity-manager
+  // UI (the ⭐ marker) reflects the active account's preferred identity.
+  useIdentityStore.setState({ preferredPrimaryId });
   return { identities, primaryIdentity };
 }
 
@@ -274,6 +319,10 @@ let refreshPromise: Promise<string | null> | null = null;
 const clients = new Map<string, JMAPClient>();
 const refreshTimers = new Map<string, ReturnType<typeof setTimeout>>();
 const refreshPromises = new Map<string, Promise<string | null>>();
+
+// Pseudo-expiry passed to scheduleRefresh when a refresh failed transiently:
+// the "expiry - 60s" math below turns 90 into a retry in ~30 seconds.
+const TOKEN_REFRESH_RETRY_SECONDS = 90;
 
 function scheduleRefresh(expiresIn: number, refreshFn: () => Promise<string | null>, accountId?: string): void {
   if (accountId) {
@@ -378,19 +427,79 @@ export const useAuthStore = create<AuthState>()(
       isDemoMode: false,
 
       login: async (serverUrl, username, password, totp, rememberMe) => {
-        const effectivePassword = totp ? `${password}$${totp}` : password;
         set({ isLoading: true, error: null, isRateLimited: false, rateLimitUntil: null });
 
         try {
-          const client = new JMAPClient(serverUrl, username, effectivePassword);
-          await client.connect();
-
-          // Resolve account/slot info up front so writes can start immediately.
+          // Resolve account/slot info up front so the TOTP exchange can target
+          // the right per-account refresh-token cookie slot.
           const accountStore = useAccountStore.getState();
           const accountId = generateAccountId(username, serverUrl);
           const cookieSlot = accountStore.hasAccount(username, serverUrl)
             ? (accountStore.getAccountById(accountId)?.cookieSlot ?? accountStore.getNextCookieSlot())
             : accountStore.getNextCookieSlot();
+
+          let client: JMAPClient;
+          let upgradedToOAuth = false;
+          let oauthAccessToken: string | null = null;
+          let oauthExpiresIn = 0;
+
+          if (totp) {
+            // Stalwart 0.16+ dropped the `password$totp` basic-auth convention;
+            // the MFA code must be exchanged for tokens via the structured login
+            // endpoint (handled server-side). Token auth also survives TOTP
+            // rotation, unlike basic auth which embeds the ~30s code per request.
+            let bearerToken: string | null = null;
+            try {
+              // The callback URL the OAuth client already registers; the route
+              // needs an identical redirect URI for the login + token-exchange
+              // steps (and registered when require_client_registration is on).
+              const redirectUri = typeof window !== 'undefined'
+                ? `${window.location.origin}${getPathPrefix()}/${getLocaleFromPath()}/auth/callback`
+                : '';
+              const tokenRes = await apiFetch('/api/auth/totp-token-exchange', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                // server_id isn't passed - the route looks up the server entry by
+                // serverUrl, so per-server OAuth still applies for password+TOTP.
+                body: JSON.stringify({ serverUrl, username, password, totp, slot: cookieSlot, redirectUri }),
+              });
+              if (tokenRes.ok) {
+                const { access_token, expires_in, has_refresh_token } = await tokenRes.json();
+                bearerToken = access_token;
+                oauthExpiresIn = expires_in;
+                debug.log('auth', 'TOTP login exchanged for token-based auth (has_refresh_token=' + has_refresh_token + ')');
+              } else {
+                const errorBody = await tokenRes.json().catch(() => ({ error: 'unknown' }));
+                // A correct password with a missing/invalid MFA token surfaces as
+                // a TOTP prompt rather than a generic failure.
+                if (errorBody?.error === 'totp_required') {
+                  throw new Error('TOTP_REQUIRED');
+                }
+                debug.warn('auth', 'TOTP login exchange failed, trying legacy basic auth:', tokenRes.status, errorBody);
+              }
+            } catch (err) {
+              if (err instanceof Error && err.message === 'TOTP_REQUIRED') throw err;
+              debug.warn('auth', 'TOTP login exchange error, trying legacy basic auth:', err);
+            }
+
+            if (bearerToken) {
+              client = JMAPClient.withBearer(serverUrl, bearerToken, username, () => get().refreshAccessToken());
+              await client.connect();
+              oauthAccessToken = bearerToken;
+              upgradedToOAuth = true;
+            } else {
+              // Legacy fallback for pre-0.16 Stalwart, which accepts the TOTP
+              // appended to the password over basic auth.
+              client = new JMAPClient(serverUrl, username, `${password}$${totp}`);
+              await client.connect();
+              const { useTotpReauthStore } = await import('@/stores/totp-reauth-store');
+              client.enableTotpReauth(password, () => useTotpReauthStore.getState().requestTotp());
+              debug.log('auth', 'TOTP re-auth enabled (legacy basic-auth path)');
+            }
+          } else {
+            client = new JMAPClient(serverUrl, username, password);
+            await client.connect();
+          }
 
           // Snapshot/clear before kicking off any feature-store fetches so they
           // don't write into stores we're about to wipe.
@@ -400,53 +509,8 @@ export const useAuthStore = create<AuthState>()(
             clearAllStores();
           }
 
-          // Identities can fly in parallel with everything below. JMAPClient
-          // captures the auth header per-request, so the optional TOTP upgrade
-          // doesn't affect this already-issued request.
+          // Identities can fly in parallel with everything below.
           const identitiesPromise = client.getIdentities();
-
-          // When TOTP was used, try to upgrade to token-based auth so the
-          // session survives TOTP rotation (basic auth embeds the TOTP in
-          // every request, which expires after ~30 seconds). Must complete
-          // before stalwart-context reads the auth header.
-          let upgradedToOAuth = false;
-          let oauthAccessToken: string | null = null;
-          let oauthExpiresIn = 0;
-
-          if (totp) {
-            try {
-              const tokenRes = await apiFetch('/api/auth/totp-token-exchange', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ serverUrl, username, password: effectivePassword, slot: cookieSlot }),
-                // Note: server_id isn't passed here - the route looks up the
-                // server entry by serverUrl, so per-server OAuth still applies
-                // for password+TOTP logins through the dropdown.
-              });
-              if (tokenRes.ok) {
-                const { access_token, expires_in, has_refresh_token } = await tokenRes.json();
-                // Upgrade client to Bearer auth
-                client.upgradeToBearer(access_token, () => get().refreshAccessToken());
-                oauthAccessToken = access_token;
-                oauthExpiresIn = expires_in;
-                upgradedToOAuth = true;
-                debug.log('auth', 'TOTP login upgraded to token-based auth (has_refresh_token=' + has_refresh_token + ')');
-              } else {
-                const errorBody = await tokenRes.json().catch(() => ({ error: 'unknown' }));
-                debug.warn('auth', 'TOTP token exchange failed:', tokenRes.status, errorBody);
-              }
-            } catch (err) {
-              debug.warn('auth', 'TOTP token exchange error:', err);
-            }
-
-            // If token exchange failed, enable TOTP re-auth prompt so the
-            // client can ask for a fresh code on 401 instead of disconnecting.
-            if (!upgradedToOAuth) {
-              const { useTotpReauthStore } = await import('@/stores/totp-reauth-store');
-              client.enableTotpReauth(password, () => useTotpReauthStore.getState().requestTotp());
-              debug.log('auth', 'TOTP re-auth enabled - user will be prompted for fresh codes on session expiry');
-            }
-          }
 
           const effectiveAuthMode = upgradedToOAuth ? 'oauth' : 'basic';
 
@@ -458,7 +522,7 @@ export const useAuthStore = create<AuthState>()(
             ? apiFetch(`/api/auth/session?slot=${cookieSlot}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ serverUrl, username, password: effectivePassword, slot: cookieSlot }),
+                body: JSON.stringify({ serverUrl, username, password, slot: cookieSlot }),
               }).then((res) => {
                 if (!res.ok) debug.error('Failed to store session: server returned', res.status);
               }).catch((err) => debug.error('Failed to store session:', err))
@@ -914,9 +978,18 @@ export const useAuthStore = create<AuthState>()(
             const res = await apiFetch(`/api/auth/token?slot=${slot}`, { method: 'PUT' });
 
             if (!res.ok) {
-              notifyParent('sso:session-expired');
-              markSessionExpired();
-              get().logout();
+              // Only a definitive 401 ends the session. Anything else (5xx
+              // while the server restarts, proxy errors) is an outage - keep
+              // the session and retry shortly so "stay signed in" survives
+              // maintenance windows and offline spells.
+              if (res.status === 401) {
+                notifyParent('sso:session-expired');
+                markSessionExpired();
+                get().logout();
+                return null;
+              }
+              debug.error(`Token refresh unavailable (${res.status}), retrying shortly`);
+              scheduleRefresh(TOKEN_REFRESH_RETRY_SECONDS, get().refreshAccessToken, accountId ?? undefined);
               return null;
             }
 
@@ -941,10 +1014,10 @@ export const useAuthStore = create<AuthState>()(
             scheduleRefresh(expires_in, get().refreshAccessToken, accountId ?? undefined);
             return access_token;
           } catch (error) {
-            debug.error('Token refresh failed:', error);
-            notifyParent('sso:session-expired');
-            markSessionExpired();
-            get().logout();
+            // Network failure (offline, Wi-Fi switch, server unreachable) -
+            // not a rejection. Keep the session and retry shortly.
+            debug.error('Token refresh failed, retrying shortly:', error);
+            scheduleRefresh(TOKEN_REFRESH_RETRY_SECONDS, get().refreshAccessToken, accountId ?? undefined);
             return null;
           } finally {
             refreshPromise = null;
@@ -1340,6 +1413,8 @@ export const useAuthStore = create<AuthState>()(
                   scheduleRefresh(expires_in, get().refreshAccessToken, account.id);
                   await syncStalwartAuthContext(account.serverUrl, account.username, client.getAuthHeader(), account.cookieSlot);
                   accountStore.updateAccount(account.id, { isConnected: true, hasError: false });
+                } else if (res.status >= 500) {
+                  throw new TransientAuthError('Token refresh failed', res.status);
                 } else {
                   throw new Error(`Token refresh failed: ${res.status}`);
                 }
@@ -1353,6 +1428,8 @@ export const useAuthStore = create<AuthState>()(
                   clients.set(account.id, client);
                   await syncStalwartAuthContext(serverUrl, username, client.getAuthHeader(), account.cookieSlot);
                   accountStore.updateAccount(account.id, { isConnected: true, hasError: false });
+                } else if (res.status >= 500) {
+                  throw new TransientAuthError('Session restore failed', res.status);
                 } else {
                   throw new Error(`Session cookie missing: ${res.status}`);
                 }
@@ -1364,6 +1441,18 @@ export const useAuthStore = create<AuthState>()(
                   isConnected: false,
                   hasError: true,
                   errorMessage: 'Temporarily rate limited by server',
+                });
+                continue;
+              }
+              // Outage or offline - keep the account (and its cookies) so the
+              // session resumes once the server is reachable again. Same
+              // treatment as the rate-limit case above; only a definitive
+              // rejection below evicts.
+              if (isTransientAuthError(err)) {
+                accountStore.updateAccount(account.id, {
+                  isConnected: false,
+                  hasError: true,
+                  errorMessage: 'Server unreachable',
                 });
                 continue;
               }
@@ -1593,7 +1682,7 @@ export const useAuthStore = create<AuthState>()(
               }
             } catch (error) {
               debug.error('Basic session restore failed:', error);
-              if (isRateLimitError(error)) {
+              if (isRateLimitError(error) || isTransientAuthError(error)) {
                 set({ isLoading: false, error: 'connection_failed', isRateLimited: false, rateLimitUntil: null });
                 return;
               }
@@ -1628,6 +1717,25 @@ export const useAuthStore = create<AuthState>()(
         const identities = identityState.identities;
         const primaryIdentity = identities[0] ?? null;
         set({ identities, primaryIdentity });
+      },
+
+      // Re-sort the already-loaded identities to honor the active account's
+      // synced preferred-primary identity, without a network round-trip. Used
+      // after settings load from the server so a fresh browser reflects the
+      // synced default (#507).
+      applyPreferredIdentityOrdering: () => {
+        const { username, identities } = get();
+        if (!username || identities.length === 0) return;
+        const preferredId = useSettingsStore.getState().preferredIdentityIds?.[username] ?? null;
+        useIdentityStore.setState({ preferredPrimaryId: preferredId });
+        if (!preferredId) return;
+        const idx = identities.findIndex((id) => id.id === preferredId);
+        if (idx <= 0) return; // already first, or not present
+        const reordered = [...identities];
+        const [preferred] = reordered.splice(idx, 1);
+        reordered.unshift(preferred);
+        useIdentityStore.getState().setIdentities(reordered);
+        set({ identities: reordered, primaryIdentity: reordered[0] ?? null });
       },
 
       refreshIdentities: async () => {

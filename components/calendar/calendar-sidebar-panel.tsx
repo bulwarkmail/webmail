@@ -397,7 +397,7 @@ export function CalendarSidebarPanel({
           <ListTodo className="w-4 h-4 text-muted-foreground" />
           <span>{t('tasks.label')}</span>
           {pendingTaskCount > 0 && (
-            <span className="ml-auto text-xs text-muted-foreground">{pendingTaskCount}</span>
+            <span className="ms-auto text-xs text-muted-foreground">{pendingTaskCount}</span>
           )}
           {overdueTaskCount > 0 && (
             <span className="text-xs text-destructive font-medium">{overdueTaskCount} {t('tasks.filter_overdue').toLowerCase()}</span>
@@ -437,7 +437,7 @@ export function CalendarSidebarPanel({
                           onCreateCalendar();
                         }
                       }}
-                      className="ml-auto p-0.5 rounded text-muted-foreground/70 opacity-0 group-hover:opacity-100 hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+                      className="ms-auto p-0.5 rounded text-muted-foreground/70 opacity-0 group-hover:opacity-100 hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
                       title={tMgmt('add_calendar')}
                     >
                       <Plus className="w-3 h-3" />
@@ -445,7 +445,7 @@ export function CalendarSidebarPanel({
                   )}
                 </button>
                 {expanded && (
-                  <div className="mt-1 pl-3">
+                  <div className="mt-1 ps-3">
                     {owned.length > 0 && (
                       <div>
                         <div className="px-1 mb-1 text-[10px] font-medium text-muted-foreground/80 uppercase tracking-wider">

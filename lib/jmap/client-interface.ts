@@ -40,7 +40,7 @@ export interface IJMAPClient {
   supportsContacts(): boolean;
   supportsCalendars(): boolean;
   supportsSieve(): boolean;
-  supportsFiles(): boolean;
+  supportsFiles(accountId?: string): boolean;
 
   // ── Push / state ──────────────────────────────────────────────
   setupPushNotifications(): boolean;
@@ -73,12 +73,14 @@ export interface IJMAPClient {
   // ── Mailboxes ─────────────────────────────────────────────────
   getMailboxes(accountId?: string): Promise<Mailbox[]>;
   getAllMailboxes(): Promise<Mailbox[]>;
-  createMailbox(name: string, parentId?: string): Promise<Mailbox>;
+  createMailbox(name: string, parentId?: string, accountId?: string): Promise<Mailbox>;
   updateMailbox(mailboxId: string, changes: { name?: string; parentId?: string | null; role?: string | null; sortOrder?: number }): Promise<void>;
   deleteMailbox(mailboxId: string): Promise<void>;
 
   // ── Emails ────────────────────────────────────────────────────
-  getEmails(mailboxId?: string, accountId?: string, limit?: number, position?: number, hasKeyword?: string): Promise<{ emails: Email[]; hasMore: boolean; total: number }>;
+  // `pinnedFirst` sorts emails carrying the $pinned keyword to the top
+  // (server-side hasKeyword sort comparator, RFC 8621), then receivedAt desc.
+  getEmails(mailboxId?: string, accountId?: string, limit?: number, position?: number, hasKeyword?: string, pinnedFirst?: boolean): Promise<{ emails: Email[]; hasMore: boolean; total: number }>;
   getEmailsInMailbox(mailboxId: string): Promise<Email[]>;
   getEmail(emailId: string, accountId?: string): Promise<Email | null>;
   getTagCounts(tagIds: string[]): Promise<Record<string, { total: number; unread: number }>>;
@@ -89,17 +91,24 @@ export interface IJMAPClient {
     limit?: number,
     position?: number,
   ): Promise<{ emails: Email[]; hasMore: boolean; total: number }>;
+  /**
+   * Lean recipient search for compose autocomplete ("search the server" action):
+   * finds messages in `sentMailboxId` whose to/cc matches `query` and returns
+   * only the matching addresses (fetches just the `to`/`cc` properties - no
+   * bodies or attachments), deduped.
+   */
+  searchSentRecipients(query: string, sentMailboxId: string, accountId?: string, limit?: number): Promise<Array<{ name: string; email: string }>>;
 
   // ── Email mutations ───────────────────────────────────────────
   markAsRead(emailId: string, read?: boolean, accountId?: string): Promise<void>;
-  batchMarkAsRead(emailIds: string[], read?: boolean): Promise<void>;
-  toggleStar(emailId: string, starred: boolean): Promise<void>;
-  updateEmailKeywords(emailId: string, keywords: Record<string, boolean>): Promise<void>;
-  setKeyword(emailId: string, keyword: string): Promise<void>;
+  batchMarkAsRead(emailIds: string[], read?: boolean, accountId?: string): Promise<void>;
+  toggleStar(emailId: string, starred: boolean, accountId?: string): Promise<void>;
+  updateEmailKeywords(emailId: string, keywords: Record<string, boolean>, accountId?: string): Promise<void>;
+  setKeyword(emailId: string, keyword: string, accountId?: string): Promise<void>;
   migrateKeyword(oldKeyword: string, newKeyword: string): Promise<number>;
   deleteEmail(emailId: string, accountId?: string): Promise<void>;
   moveToTrash(emailId: string, trashMailboxId: string, accountId?: string, markAsRead?: boolean): Promise<void>;
-  batchDeleteEmails(emailIds: string[]): Promise<void>;
+  batchDeleteEmails(emailIds: string[], accountId?: string): Promise<void>;
   batchMoveEmails(emailIds: string[], toMailboxId: string, accountId?: string, markAsRead?: boolean): Promise<void>;
   batchArchiveEmails(
     emails: Array<{ id: string; receivedAt: string }>,

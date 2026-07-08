@@ -160,6 +160,7 @@ export function FilterSettings() {
   const tNotifications = useTranslations("notifications");
   const { client } = useAuthStore();
   const storeMailboxes = useEmailStore((s) => s.mailboxes);
+  const fetchMailboxes = useEmailStore((s) => s.fetchMailboxes);
   const expandedFilterView = useSettingsStore((s) => s.expandedFilterView);
   const updateSetting = useSettingsStore((s) => s.updateSetting);
 
@@ -211,6 +212,22 @@ export function FilterSettings() {
       });
     return () => { cancelled = true; };
   }, [client, managedAccountId]);
+
+  // The "move to" folder list for the primary account comes from the email
+  // store, which is normally populated when the mail view mounts. When the app
+  // is opened or refreshed directly on Settings (the mail view never mounted),
+  // that store is empty, leaving the rule editor's folder dropdown blank. Fetch
+  // mailboxes on demand here so Filters never depends on having visited Inbox
+  // first. fetchMailboxes guards against transient empty results and selecting
+  // an inbox, so it's safe to call independently; a ref keeps it to one attempt
+  // per client.
+  const primaryFetchClientRef = useRef<typeof client | null>(null);
+  useEffect(() => {
+    if (managedAccountId || !client || storeMailboxes.length > 0) return;
+    if (primaryFetchClientRef.current === client) return;
+    primaryFetchClientRef.current = client;
+    void fetchMailboxes(client);
+  }, [client, managedAccountId, storeMailboxes.length, fetchMailboxes]);
 
   const mailboxes = managedAccountId ? scopedMailboxes : storeMailboxes;
 
@@ -470,7 +487,7 @@ export function FilterSettings() {
               try { localStorage.setItem('settings-active-tab', 'vacation'); } catch { /* ignore */ }
               window.dispatchEvent(new CustomEvent('settings-tab-change', { detail: 'vacation' }));
             }}
-            className="flex items-center gap-3 w-full p-3 rounded-md border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors text-left"
+            className="flex items-center gap-3 w-full p-3 rounded-md border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors text-start"
           >
             <div className="flex items-center justify-center w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/40">
               <PalmtreeIcon className="w-4 h-4 text-green-600 dark:text-green-400" />
@@ -644,7 +661,7 @@ export function FilterSettings() {
                 setShowRuleModal(true);
               }}
             >
-              <Plus className="w-4 h-4 mr-1" />
+              <Plus className="w-4 h-4 me-1" />
               {t("add_rule")}
             </Button>
           )}
@@ -653,7 +670,7 @@ export function FilterSettings() {
             size="sm"
             onClick={() => setShowSieveEditor(true)}
           >
-            <Code className="w-4 h-4 mr-1" />
+            <Code className="w-4 h-4 me-1" />
             {t("raw_editor")}
           </Button>
         </div>

@@ -49,6 +49,7 @@ set +u
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
 set -u
 ENV_FILE="${SCRIPT_DIR}/.env.local"
+REPO_URL="https://github.com/bulwarkmail/webmail.git"
 
 # Config values (defaults)
 CFG_APP_NAME="Bulwark Webmail"
@@ -1196,6 +1197,58 @@ update_docker_compose_port() {
     fi
 }
 
+# Ensure a source checkout is available for build-based deployments.
+# When setup.sh is run on its own (e.g. piped via `curl ... | bash`), SCRIPT_DIR
+# resolves to the user's cwd, which has no package.json -- so npm/compose run in
+# the wrong place. In that case, clone the repo and repoint SCRIPT_DIR at it.
+ensure_repo() {
+    # Already inside a checkout -- nothing to do.
+    [[ -f "${SCRIPT_DIR}/package.json" ]] && return 0
+
+    echo ""
+    echo -e "  ${WARN} ${YELLOW}No source checkout found in ${SCRIPT_DIR}.${RESET}"
+    echo -e "       ${DIM}(setup.sh was run on its own, e.g. via curl | bash)${RESET}"
+    echo ""
+
+    if [[ "$DRY_RUN" == true ]]; then
+        echo -e "    ${DIM}[dry-run] Would clone ${REPO_URL} into ./webmail${RESET}"
+        return 0
+    fi
+
+    if ! command -v git &>/dev/null; then
+        echo -e "    ${FAIL} ${RED}git is required to fetch the source but was not found.${RESET}"
+        echo -e "         ${DIM}Install git, or clone the repo manually and run setup.sh from inside it:${RESET}"
+        echo -e "         ${CYAN}git clone ${REPO_URL}${RESET}"
+        echo -e "         ${CYAN}cd webmail && bash setup.sh${RESET}"
+        show_cursor
+        exit 1
+    fi
+
+    local target="$(pwd)/webmail"
+    prompt_value "Directory to clone the source into" "$target" "target"
+
+    if [[ -e "$target" && -n "$(ls -A "$target" 2>/dev/null)" ]]; then
+        if [[ -f "$target/package.json" ]]; then
+            echo -e "    ${OK} Using existing checkout at ${target}"
+        else
+            echo -e "    ${FAIL} ${RED}${target} exists and is not an empty dir or a checkout.${RESET}"
+            show_cursor
+            exit 1
+        fi
+    else
+        (git clone --depth 1 "$REPO_URL" "$target" >/dev/null 2>&1) &
+        spinner $! "Cloning ${REPO_URL}"
+        if [[ ! -f "$target/package.json" ]]; then
+            echo -e "    ${FAIL} ${RED}Clone failed -- ${target}/package.json not found.${RESET}"
+            show_cursor
+            exit 1
+        fi
+    fi
+
+    SCRIPT_DIR="$target"
+    ENV_FILE="${SCRIPT_DIR}/.env.local"
+}
+
 run_deployment() {
     echo ""
 
@@ -1297,6 +1350,14 @@ screen_complete() {
 
     echo -e "  ${BOLD}Configuration${RESET}"
     echo ""
+
+    # Build-based methods need the repo source. If we're running detached
+    # (curl | bash), fetch it now and repoint SCRIPT_DIR/ENV_FILE before we
+    # write .env.local or run the build.
+    if [[ "$CFG_DEPLOY_METHOD" == "node" || "$CFG_DEPLOY_METHOD" == "compose" ]]; then
+        ensure_repo
+    fi
+
     write_env_file
 
     run_deployment

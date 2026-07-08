@@ -62,6 +62,27 @@ describe('ContactForm', () => {
     expect(phoneAfter.length).toBe(phoneBefore.length + 1);
   });
 
+  it('sends media: null when an existing photo is removed', async () => {
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    const contactWithPhoto: ContactCard = {
+      ...existingContact,
+      media: {
+        photo: { kind: 'photo', uri: 'data:image/png;base64,AAAA', mediaType: 'image/png' },
+      },
+    };
+    render(<ContactForm contact={contactWithPhoto} onSave={onSave} onCancel={vi.fn()} />);
+
+    fireEvent.click(screen.getByText('remove_photo'));
+    fireEvent.submit(screen.getByText('save').closest('form')!);
+
+    await waitFor(() => {
+      expect(onSave).toHaveBeenCalledOnce();
+    });
+
+    const savedData = onSave.mock.calls[0][0];
+    expect(savedData.media).toBeNull();
+  });
+
   it('submits form data correctly', async () => {
     const onSave = vi.fn().mockResolvedValue(undefined);
     render(<ContactForm onSave={onSave} onCancel={vi.fn()} />);

@@ -227,6 +227,15 @@ export function attachmentDownloadFilename(
   return `${transformedStem}.${transformedExt}`;
 }
 
+// Name for a .zip bundling every attachment of a single email, e.g.
+// `attachments_Invoice March.zip`. Falls back to `attachments.zip` when the
+// subject is empty or sanitises away to nothing.
+export function attachmentsBundleFilename(email: Email | null | undefined): string {
+  const subject = email?.subject?.trim();
+  const stem = subject ? sanitizePart(subject, FILENAME_MAX_LEN) : "";
+  return stem ? `attachments_${stem}.zip` : "attachments.zip";
+}
+
 export function bundleVars(count: number, iso?: string): Record<string, string> {
   const dp = dateParts(iso ?? new Date().toISOString());
   return { ...dp, count: String(count) };

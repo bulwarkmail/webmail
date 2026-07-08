@@ -96,10 +96,10 @@ export function LogsTab() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border bg-muted/30">
-              <th className="text-left px-4 py-2 font-medium text-muted-foreground whitespace-nowrap">Time</th>
-              <th className="text-left px-4 py-2 font-medium text-muted-foreground whitespace-nowrap">Action</th>
-              <th className="text-left px-4 py-2 font-medium text-muted-foreground">Details</th>
-              <th className="text-left px-4 py-2 font-medium text-muted-foreground whitespace-nowrap">IP</th>
+              <th className="text-start px-4 py-2 font-medium text-muted-foreground whitespace-nowrap">Time</th>
+              <th className="text-start px-4 py-2 font-medium text-muted-foreground whitespace-nowrap">Action</th>
+              <th className="text-start px-4 py-2 font-medium text-muted-foreground">Details</th>
+              <th className="text-start px-4 py-2 font-medium text-muted-foreground whitespace-nowrap">IP</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">

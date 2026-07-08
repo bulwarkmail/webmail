@@ -290,20 +290,23 @@ export function EventDetailPopover({
               className="w-2.5 h-2.5 rounded-full flex-shrink-0"
               style={{ backgroundColor: color }}
             />
-            <h3 className="text-base font-semibold truncate text-foreground">
+            <h3 className={cn(
+              "text-base font-semibold truncate text-foreground",
+              event.status === "cancelled" && "line-through text-muted-foreground"
+            )}>
               {event.title || t("events.no_title")}
             </h3>
           </div>
           {calendar && (
-            <p className="text-xs text-muted-foreground mt-0.5 pl-[18px]">
+            <p className="text-xs text-muted-foreground mt-0.5 ps-[18px]">
               {calendar.name}
               {event.status === "tentative" && (
-                <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-warning/15 text-warning">
+                <span className="ms-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-warning/15 text-warning">
                   {t("detail.tentative")}
                 </span>
               )}
               {event.status === "cancelled" && (
-                <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 line-through">
+                <span className="ms-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 line-through">
                   {t("detail.cancelled")}
                 </span>
               )}
@@ -343,13 +346,13 @@ export function EventDetailPopover({
                 <>
                   <div className="font-medium text-foreground">
                     {formatEventDate(startDate)}
-                    <span className="ml-1.5 font-normal text-muted-foreground">
+                    <span className="ms-1.5 font-normal text-muted-foreground">
                       {formatTime(startDate)}
                     </span>
                   </div>
                   <div className="font-medium text-foreground">
                     {formatEventDate(endDate)}
-                    <span className="ml-1.5 font-normal text-muted-foreground">
+                    <span className="ms-1.5 font-normal text-muted-foreground">
                       {formatTime(endDate)}
                     </span>
                   </div>
@@ -364,11 +367,11 @@ export function EventDetailPopover({
                   {formatEventDate(startDate)}
                 </span>
                 {event.showWithoutTime ? (
-                  <span className="text-muted-foreground ml-1.5">{t("events.all_day")}</span>
+                  <span className="text-muted-foreground ms-1.5">{t("events.all_day")}</span>
                 ) : (
                   <div className="text-muted-foreground">
                     {formatTime(startDate)} – {formatTime(endDate)}
-                    <span className="ml-1.5 text-xs">({formatDurationDisplay(durationMinutes)})</span>
+                    <span className="ms-1.5 text-xs">({formatDurationDisplay(durationMinutes)})</span>
                   </div>
                 )}
               </>
@@ -434,7 +437,7 @@ export function EventDetailPopover({
                     <span className="truncate text-foreground">
                       {p.name || p.email}
                       {p.isOrganizer && (
-                        <span className="text-muted-foreground ml-1">
+                        <span className="text-muted-foreground ms-1">
                           ({t("participants.organizer").toLowerCase()})
                         </span>
                       )}
@@ -512,7 +515,7 @@ export function EventDetailPopover({
                   disabled={!noteText.trim() || isSavingNote}
                   className="h-7 text-xs"
                 >
-                  <Send className="w-3 h-3 mr-1" />
+                  <Send className="w-3 h-3 me-1" />
                   {t("detail.save_note")}
                 </Button>
               </div>
@@ -546,7 +549,7 @@ export function EventDetailPopover({
                   : "text-success border-success/30 hover:bg-success/10"
               }
             >
-              {userCurrentStatus === "accepted" && <Check className="w-3.5 h-3.5 mr-1" />}
+              {userCurrentStatus === "accepted" && <Check className="w-3.5 h-3.5 me-1" />}
               {t("participants.accepted")}
             </Button>
             <Button
@@ -559,7 +562,7 @@ export function EventDetailPopover({
                   : "border border-warning/30 text-warning hover:bg-warning/10"
               }
             >
-              {userCurrentStatus === "tentative" && <Check className="w-3.5 h-3.5 mr-1" />}
+              {userCurrentStatus === "tentative" && <Check className="w-3.5 h-3.5 me-1" />}
               {t("participants.tentative")}
             </Button>
             <Button
@@ -572,7 +575,7 @@ export function EventDetailPopover({
                   : "text-destructive hover:bg-destructive/10"
               }
             >
-              {userCurrentStatus === "declined" && <Check className="w-3.5 h-3.5 mr-1" />}
+              {userCurrentStatus === "declined" && <Check className="w-3.5 h-3.5 me-1" />}
               {t("participants.declined")}
             </Button>
           </div>
@@ -606,7 +609,7 @@ export function EventDetailPopover({
         ) : (
           <>
             <Button variant="default" size="sm" onClick={onEdit} className="h-7 text-xs">
-              <Pencil className="w-3.5 h-3.5 mr-1" />
+              <Pencil className="w-3.5 h-3.5 me-1" />
               {t("events.edit")}
             </Button>
             <Button
@@ -616,7 +619,7 @@ export function EventDetailPopover({
               className="h-7 text-xs"
               title={t("events.duplicate")}
             >
-              <Copy className="w-3.5 h-3.5 mr-1" />
+              <Copy className="w-3.5 h-3.5 me-1" />
               {t("events.duplicate")}
             </Button>
             <div className="flex-1" />

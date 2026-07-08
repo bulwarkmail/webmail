@@ -134,7 +134,10 @@
     "nav_label": "Navigatie",
     "add_app": "Apps",
     "shared": "Gedeeld",
-    "scheduled": "Gepland"
+    "scheduled": "Gepland",
+    "unified_all_unread": "Alle ongelezen",
+    "unified_all_starred": "Alle met ster",
+    "unified_all_mail": "Alle e-mail"
   },
   "protocol_handlers": {
     "title": "Standaardapps",
@@ -562,7 +565,8 @@
       "add_to_contacts": "Aan contacten toevoegen",
       "copied": "Gekopieerd!",
       "copy_failed": "Kopiëren mislukt"
-    }
+    },
+    "send_now": "Nu verzenden"
   },
   "email_composer": {
     "read_receipt_on": "Leesbevestiging aangevraagd (klik om uit te schakelen)",
@@ -628,7 +632,9 @@
     "validation": {
       "recipient_required": "Voeg een ontvanger toe om te verzenden",
       "subject_required": "Voeg een onderwerp toe",
-      "body_required": "Schrijf een bericht of voeg een bestand toe"
+      "body_required": "Schrijf een bericht of voeg een bestand toe",
+      "attachments_uploading": "Bijlagen worden nog geüpload — wordt verzonden zodra dit klaar is",
+      "attachment_upload_failed": "Niet verzonden - een bijlage kon niet worden geüpload. Verwijder deze en probeer het opnieuw."
     },
     "upload_progress": "Uploaden {uploaded} / {total}",
     "upload_cancel": "Upload annuleren",
@@ -671,7 +677,9 @@
     "recipient_edit_email": "E-mailadres bewerken",
     "recipient_edit_name": "Weergavenaam bewerken",
     "recipient_email_placeholder": "E-mailadres",
-    "recipient_name_placeholder": "Weergavenaam"
+    "recipient_name_placeholder": "Weergavenaam",
+    "autocomplete_search_server": "Op de server zoeken",
+    "autocomplete_searching": "Bezig met zoeken..."
   },
   "confirm_dialog": {
     "confirm": "Bevestigen",
@@ -800,8 +808,12 @@
     "pl": "Polski",
     "pt": "Português",
     "ru": "Русский",
+    "sk": "Slovenčina",
     "uk": "Українська",
-    "zh": "简体中文"
+    "zh": "简体中文",
+    "fa": "فارسی",
+    "farsi": "فارسی",
+    "switch_to_farsi": "Overschakelen naar Farsi"
   },
   "settings": {
     "title": "Instellingen",
@@ -919,17 +931,38 @@
         "description": "Show an \"All Mail\" entry above your folders that merges messages from across this account's folders into one list.",
         "folders_label": "Folders in All Mail",
         "folders_description": "Choose which folders are merged into the All Mail view.",
+        "account_hint": "Applies to {account}.",
         "no_folders": "No folders available."
       },
       "colorful_sidebar_icons": {
         "label": "Gekleurde zijbalkpictogrammen",
         "description": "Kleur map- en tagpictogrammen op type (blauw Postvak IN, rood Spam, groen Verzonden, enz.). Schakel uit voor een monochrome zijbalk."
       },
+      "tint_list_rows": {
+        "label": "Tint List Rows by Tag Color",
+        "description": "Shade each message row with its first tag color. Disable to keep rows plain; tag dots and chips still show the color."
+      },
+      "show_folder_total_count": {
+        "label": "Totaal aantal berichten tonen",
+        "description": "Toont het totale aantal berichten naast mappen en labels, naast het aantal ongelezen berichten. Schakel uit om alleen ongelezen aantallen te tonen."
+      },
       "pro_interface": {
         "label": "Pro-interface (experimenteel)",
         "description": "Power user-indeling alleen voor desktop met meertabs berichtweergave en accountoverschrijdende workflows. De standaardinterface blijft onveranderd; u kunt op elk moment terugkeren.",
         "open_label": "Pro-interface openen",
         "back_to_standard": "Terug naar standaard"
+      },
+      "cross_unread": {
+        "label": "Alle accounts: Ongelezen",
+        "description": "Toont een item in de sectie Alle accounts met ongelezen e-mail van alle accounts, in alle mappen behalve ongewenst, verzonden, archief, prullenbak en concepten."
+      },
+      "cross_starred": {
+        "label": "Alle accounts: Met ster",
+        "description": "Toont een item in de sectie Alle accounts met e-mail met ster van alle accounts, in alle mappen behalve ongewenst, verzonden, archief, prullenbak en concepten."
+      },
+      "cross_all": {
+        "label": "Alle accounts: Alle e-mail",
+        "description": "Toont een item in de sectie Alle accounts met alle e-mail van alle accounts, in alle mappen behalve ongewenst, verzonden, archief, prullenbak en concepten."
       }
     },
     "keywords": {
@@ -1022,6 +1055,14 @@
         "preview_today": "Vandaag:",
         "preview_this_week": "Deze week:",
         "preview_older": "Ouder:"
+      },
+      "date_locale": {
+        "label": "Date format region",
+        "description": "How numeric dates are ordered (day, month, year)",
+        "auto": "Automatic (match language)",
+        "iso": "ISO 8601 (YYYY-MM-DD)",
+        "dmy": "Day/Month/Year",
+        "mdy": "Month/Day/Year"
       },
       "time_format": {
         "label": "Tijdnotatie",
@@ -1186,6 +1227,7 @@
         "archive": "Archiveren",
         "tag": "Label",
         "spam": "Markeer als spam",
+        "not_spam": "Geen spam",
         "none_selected": "Geen acties geselecteerd",
         "mode_label": "Weergavemodus",
         "mode_inline": "Inline",
@@ -1226,6 +1268,10 @@
         "off": "Uit",
         "seconds": "{seconds} seconden",
         "unsupported": "Het huidige account meldt geen ondersteuning voor vertraagd verzenden. De instelling blijft opgeslagen voor andere accounts."
+      },
+      "return_to_list_after_action": {
+        "label": "Terug naar lijst na verwijderen of markeren als ongelezen",
+        "description": "Na het verwijderen of als ongelezen markeren van het geopende bericht terugkeren naar de berichtenlijst in plaats van het volgende bericht te openen."
       }
     },
     "composer": {
@@ -1913,6 +1959,8 @@
     "mark_unread": "Markeren als ongelezen",
     "star": "Ster toevoegen",
     "unstar": "Ster verwijderen",
+    "pin": "Vastmaken",
+    "unpin": "Losmaken",
     "move_to": "Verplaatsen naar...",
     "archive": "Archiveren",
     "delete": "Verwijderen",
@@ -2147,6 +2195,9 @@
       "title": "Gedeeld"
     },
     "address_books": {
+      "create": "Nieuw adresboek",
+      "created": "Adresboek aangemaakt",
+      "create_failed": "Kan adresboek niet aanmaken",
       "title": "Mijn Adresboeken",
       "shared_prefix": "Gedeeld: {name}",
       "moved": "Contact verplaatst naar {name}",

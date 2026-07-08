@@ -1,5 +1,71 @@
 # Changelog
 
+## 1.7.6 (2026-06-28)
+
+### Breaking Changes
+
+- **S/MIME**: The built-in S/MIME implementation has been removed from core and re-delivered through the new generic crypto plugin hooks (privileged same-origin plugin tier). S/MIME signing, encryption, decryption, certificate management, and the related settings UI now live in a plugin rather than the main app. Deployments that relied on built-in S/MIME must install the S/MIME crypto plugin to retain those features.
+
+### Features
+
+- **Plugins**: Privileged same-origin plugin tier with a crypto API surface
+- **Plugins**: Plugin hooks for email details, headers, and source
+- **Mail**: Option to hide the total message count on folders (#498)
+
+### Fixes
+
+- **Mail**: Hide the server scheduled folder when the virtual one is shown (#495)
+- **Mail**: Stop the unified mailbox from mutating client-returned email objects
+- **Composer**: HTML-escape sender and subject in the reply/forward quote header (#482)
+- **Calendar**: Send calendar invites by setting `organizerCalendarAddress`
+- **Identity**: Sync the default identity (`preferredPrimaryId`) to server settings (#507)
+- **Auth**: Support MFA login via the structured auth endpoint
+- **Admin**: Show all built-in themes in the admin theme controls (#496)
+- **i18n**: Add missing translation keys across 19 locales
+
+## 1.7.5 (2026-06-24)
+
+### Features
+
+- **Mail**: Cross-account "All accounts" views with full group/shared-account support
+- **Mail**: Per-account "All Mail" folder selection
+- **Mail**: "Download all" button to bundle attachments into a zip (#466)
+- **Mail**: Return to the list after deleting or marking the open message unread — configurable (default on)
+- **Mail**: Collapse-all-threads action in thread-list selection
+- **Calendar**: Option to disable the calendar
+- **Composer**: Send-now button on scheduled/delayed messages
+- **Composer**: Email a contact or group via the in-app composer
+- **Composer**: Split a pasted address list into recipient chips
+- **Contacts**: "New address book" creation UI (#415)
+- **OAuth**: `OAUTH_AUTHORIZE_URL` to override the authorize endpoint
+- **i18n**: Farsi (fa) locale — complete (2654 strings)
+- **i18n**: Romanian (ro) locale
+
+### Fixes
+
+- **Composer**: Keep HTML signature styling in the editor and on send
+- **Composer**: Guard Send against double-submit
+- **Composer**: Strip display names from the `EmailSubmission` envelope addresses
+- **Calendar**: Disable iMIP scheduling on calendar import (#411)
+- **Mail**: Localize special-folder names by JMAP role (#404)
+- **Mail**: Block remaining email tracking vectors (#457)
+- **Mail**: Route counter and unread updates to the email's own account in aggregate views
+- **Mail**: Fix blank space in plain-text emails
+- **Mail**: Fix toolbar re-render when opening emails
+- **Mail**: Truncate long subjects so they don't overlap the timestamp
+- **Mail**: Strip reply/forward prefixes followed by a full-width colon
+- **Mail**: Add breathing room between the unread dot and the avatar
+- **Mail**: Isolate per-account state snapshots from leakage and mutation
+- **Mail**: Cap filename tokens at the full 200-char limit
+- **Spam**: Fetch mailboxes with `accountId` in `markAsSpam`
+- **Filters**: Load mailboxes when opened directly (#485)
+- **Settings**: Surface server errors on password change and TOTP toggle
+- **Send now**: Gate the toolbar label and translate `send_now` across locales
+- **Directory**: Fix fetching display names
+- **Push**: Reap only relay-confirmed-dead leftover subscriptions
+- **i18n**: Add the missing fa locale to the client `IntlProvider` messages map
+- **i18n**: Add missing translation keys across 19 locales
+
 ## 1.7.4 (2026-06-15)
 
 ### Features

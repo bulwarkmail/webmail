@@ -134,7 +134,10 @@
     "nav_label": "Navigācija",
     "add_app": "Lietotnes",
     "shared": "Koplietots",
-    "scheduled": "Ieplānots"
+    "scheduled": "Ieplānots",
+    "unified_all_unread": "Visi nelasītie",
+    "unified_all_starred": "Visi ar zvaigzni",
+    "unified_all_mail": "Visas vēstules"
   },
   "protocol_handlers": {
     "title": "Noklusējuma lietotnes",
@@ -562,7 +565,8 @@
       "add_to_contacts": "Pievienot kontaktpersonām",
       "copied": "Nokopēts!",
       "copy_failed": "Neizdevās nokopēt"
-    }
+    },
+    "send_now": "Sūtīt tagad"
   },
   "email_composer": {
     "read_receipt_on": "Pieprasīts lasīšanas apstiprinājums (noklikšķiniet, lai atspējotu)",
@@ -628,7 +632,9 @@
     "validation": {
       "recipient_required": "Norādiet vismaz vienu saņēmēju",
       "subject_required": "Norādiet tematu",
-      "body_required": "Ierakstiet ziņojumu vai pievienojiet failu"
+      "body_required": "Ierakstiet ziņojumu vai pievienojiet failu",
+      "attachments_uploading": "Pielikumi joprojām tiek augšupielādēti — nosūtīs, tiklīdz tas pabeigts",
+      "attachment_upload_failed": "Nav nosūtīts - pielikumu neizdevās augšupielādēt. Noņemiet to un mēģiniet vēlreiz."
     },
     "upload_progress": "Augšupielāde {uploaded} / {total}",
     "upload_cancel": "Atcelt augšupielādi",
@@ -671,7 +677,9 @@
     "recipient_edit_email": "Rediģēt e-pasta adresi",
     "recipient_edit_name": "Rediģēt parādāmo vārdu",
     "recipient_email_placeholder": "E-pasta adrese",
-    "recipient_name_placeholder": "Parādāmais vārds"
+    "recipient_name_placeholder": "Parādāmais vārds",
+    "autocomplete_search_server": "Meklēt serverī",
+    "autocomplete_searching": "Meklē..."
   },
   "confirm_dialog": {
     "confirm": "Apstiprināt",
@@ -800,8 +808,12 @@
     "pl": "Polski",
     "pt": "Português",
     "ru": "Русский",
+    "sk": "Slovenčina",
     "uk": "Українська",
-    "zh": "简体中文"
+    "zh": "简体中文",
+    "fa": "فارسی",
+    "farsi": "فارسی",
+    "switch_to_farsi": "Pārslēgt uz persiešu valodu"
   },
   "settings": {
     "title": "Iestatījumi",
@@ -919,17 +931,38 @@
         "description": "Show an \"All Mail\" entry above your folders that merges messages from across this account's folders into one list.",
         "folders_label": "Folders in All Mail",
         "folders_description": "Choose which folders are merged into the All Mail view.",
+        "account_hint": "Applies to {account}.",
         "no_folders": "No folders available."
       },
       "colorful_sidebar_icons": {
         "label": "Krāsainas sānjoslas ikonas",
         "description": "Iekrāsojiet mapju un birku ikonas pēc to veida (zila Iesūtne, sarkana Mēstules, zaļa Nosūtītie utt.). Atspējojiet, lai iegūtu vienkrāsainu sānjoslu."
       },
+      "tint_list_rows": {
+        "label": "Tint List Rows by Tag Color",
+        "description": "Shade each message row with its first tag color. Disable to keep rows plain; tag dots and chips still show the color."
+      },
+      "show_folder_total_count": {
+        "label": "Rādīt kopējo ziņojumu skaitu",
+        "description": "Rāda kopējo ziņojumu skaitu blakus mapēm un tagiem, kā arī nelasīto ziņojumu skaitu. Atspējojiet, lai rādītu tikai nelasītos."
+      },
       "pro_interface": {
         "label": "Pro saskarne (eksperimentāla)",
         "description": "Tikai darbvirsmas pieredzējušu lietotāju izkārtojums ar ziņojumu pārlūkošanu vairākās cilnēs un kontu pārvaldību. Standarta saskarne netiek ietekmēta; varat jebkurā brīdī pārslēgties atpakaļ.",
         "open_label": "Atvērt Pro saskarni",
         "back_to_standard": "Atpakaļ uz standartu"
+      },
+      "cross_unread": {
+        "label": "Visi konti: Nelasītie",
+        "description": "Rāda ierakstu sadaļā “Visi konti”, kas uzskaita nelasītās vēstules no visiem kontiem, aptverot visas mapes, izņemot mēstules, nosūtītās, arhīvu, miskasti un melnrakstus."
+      },
+      "cross_starred": {
+        "label": "Visi konti: Ar zvaigzni",
+        "description": "Rāda ierakstu sadaļā “Visi konti”, kas uzskaita ar zvaigzni atzīmētās vēstules no visiem kontiem, aptverot visas mapes, izņemot mēstules, nosūtītās, arhīvu, miskasti un melnrakstus."
+      },
+      "cross_all": {
+        "label": "Visi konti: Visas vēstules",
+        "description": "Rāda ierakstu sadaļā “Visi konti”, kas uzskaita visas vēstules no visiem kontiem, aptverot visas mapes, izņemot mēstules, nosūtītās, arhīvu, miskasti un melnrakstus."
       }
     },
     "keywords": {
@@ -1022,6 +1055,14 @@
         "preview_today": "Šodien:",
         "preview_this_week": "Šajā nedēļā:",
         "preview_older": "Vecāks:"
+      },
+      "date_locale": {
+        "label": "Date format region",
+        "description": "How numeric dates are ordered (day, month, year)",
+        "auto": "Automatic (match language)",
+        "iso": "ISO 8601 (YYYY-MM-DD)",
+        "dmy": "Day/Month/Year",
+        "mdy": "Month/Day/Year"
       },
       "time_format": {
         "label": "Laika formāts",
@@ -1186,6 +1227,7 @@
         "archive": "Arhivēt",
         "tag": "Tags",
         "spam": "Mēstule",
+        "not_spam": "Nav mēstule",
         "none_selected": "Nav atlasītu darbību",
         "mode_label": "Attēlošanas režīms",
         "mode_inline": "Iebūvēts",
@@ -1226,6 +1268,10 @@
         "off": "Izslēgts",
         "seconds": "{seconds} sekundes",
         "unsupported": "Pašreizējais konts neziņo par aizturētas sūtīšanas atbalstu. Iestatījums joprojām tiks saglabāts citiem kontiem."
+      },
+      "return_to_list_after_action": {
+        "label": "Atgriezties sarakstā pēc dzēšanas vai atzīmēšanas kā nelasītu",
+        "description": "Pēc atvērtā ziņojuma dzēšanas vai atzīmēšanas kā nelasīta atgriezieties ziņojumu sarakstā, nevis atveriet nākamo ziņojumu."
       }
     },
     "composer": {
@@ -1913,6 +1959,8 @@
     "mark_unread": "Atzīmēt kā nelasītu",
     "star": "Pievienot zvaigznīti",
     "unstar": "Noņemt zvaigznīti",
+    "pin": "Piespraust",
+    "unpin": "Atspraust",
     "move_to": "Pārvietot uz...",
     "archive": "Arhivēt",
     "delete": "Dzēst",
@@ -2143,6 +2191,9 @@
       "title": "Koplietotie"
     },
     "address_books": {
+      "create": "Jauna adrešu grāmata",
+      "created": "Adrešu grāmata izveidota",
+      "create_failed": "Neizdevās izveidot adrešu grāmatu",
       "title": "Manas adrešu grāmatas",
       "shared_prefix": "Koplietotā: {name}",
       "moved": "Kontakts pārvietots uz {name}",

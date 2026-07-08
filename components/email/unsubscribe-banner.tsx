@@ -96,7 +96,7 @@ export function UnsubscribeBanner({
 
   if (success) {
     return (
-      <span className="inline-flex items-center gap-1 ml-1">
+      <span className="inline-flex items-center gap-1 ms-1">
         <CheckCircle className="w-3 h-3 text-green-600 dark:text-green-400" />
         <span className="text-xs text-green-600 dark:text-green-400">
           {t(unsubMethod === 'http'
@@ -110,7 +110,7 @@ export function UnsubscribeBanner({
 
   if (error) {
     return (
-      <span className="inline-flex items-center gap-1 ml-1">
+      <span className="inline-flex items-center gap-1 ms-1">
         <AlertCircle className="w-3 h-3 text-red-500 dark:text-red-400" />
         <button
           onClick={onDismiss}

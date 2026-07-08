@@ -171,7 +171,7 @@ export function MarketplaceTab() {
             placeholder="Search extensions..."
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            className="w-full h-9 pl-9 pr-3 rounded-md border border-input bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-ring"
+            className="w-full h-9 ps-9 pe-3 rounded-md border border-input bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-ring"
           />
         </div>
         <div className="flex items-center gap-1 rounded-md border border-input bg-background p-0.5 self-start sm:self-auto">
@@ -210,7 +210,7 @@ export function MarketplaceTab() {
       {loading && !error && (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-          <span className="ml-2 text-sm text-muted-foreground">Searching extensions...</span>
+          <span className="ms-2 text-sm text-muted-foreground">Searching extensions...</span>
         </div>
       )}
 

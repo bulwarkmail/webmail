@@ -45,6 +45,7 @@ interface JMAPAccount {
 interface JMAPQuota {
   resourceType?: string;
   scope?: string;
+  types?: string[];
   used?: number;
   hardLimit?: number;
   limit?: number;
@@ -459,8 +460,11 @@ function sanitizeIdentityDisplayName(name: string | undefined | null): string {
 }
 
 function normalizeEnvelopeRecipients(recipients?: Array<string | EmailAddress>): Array<{ email: string }> {
+  // The JMAP envelope rcptTo/mailFrom take a bare addr-spec, not an RFC 5322
+  // mailbox. `to`/`cc`/`bcc` may arrive as "Name <addr>"; strip the display
+  // name or the submission validator rejects the whole envelope (#…).
   return (recipients || [])
-    .map((recipient) => typeof recipient === 'string' ? recipient : recipient.email)
+    .map((recipient) => typeof recipient === 'string' ? parseRecipientString(recipient).email : recipient.email)
     .map((email) => email.trim())
     .filter(Boolean)
     .map((email) => ({ email }));
@@ -699,7 +703,10 @@ export class JMAPClient implements IJMAPClient {
         if (sessionResponse.status === 402) {
           try {
             const body = await sessionResponse.json();
-            if (body?.title?.toLowerCase().includes('totp')) {
+            // Older Stalwart titled this "TOTP code required"; 0.16+ uses the
+            // generic "MFA code required" - accept either to trigger the prompt.
+            const title = body?.title?.toLowerCase() ?? '';
+            if (title.includes('totp') || title.includes('mfa')) {
               throw new Error('TOTP_REQUIRED');
             }
           } catch (e) {
@@ -872,16 +879,24 @@ export class JMAPClient implements IJMAPClient {
   }
 
   async getQuota(): Promise<{ used: number; total: number } | null> {
+    if (!this.supportsQuota()) return null;
+
     try {
       const response = await this.request([
         ["Quota/get", {
           accountId: this.accountId,
         }, "0"]
-      ]);
+      ], ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:quota"]);
 
       if (response.methodResponses?.[0]?.[0] === "Quota/get") {
         const quotas = (response.methodResponses[0][1].list || []) as JMAPQuota[];
-        const mailQuota = quotas.find((q) => q.resourceType === "mail" || q.scope === "mail");
+        const coversMail = (q: JMAPQuota) =>
+          !q.types?.length || q.types.some((t) => t === "Email" || t === "Mail");
+        // storage quotas use resourceType "octets" (e.g. Stalwart, with
+        // scope "account"); fall back to the pre-RFC "mail" shape for older servers.
+        const mailQuota =
+          quotas.find((q) => q.resourceType === "octets" && coversMail(q)) ||
+          quotas.find((q) => q.resourceType === "mail" || q.scope === "mail");
 
         if (mailQuota) {
           return {
@@ -1047,7 +1062,7 @@ export class JMAPClient implements IJMAPClient {
     }
   }
 
-  async getEmails(mailboxId?: string, accountId?: string, limit: number = 50, position: number = 0, hasKeyword?: string): Promise<{ emails: Email[], hasMore: boolean, total: number }> {
+  async getEmails(mailboxId?: string, accountId?: string, limit: number = 50, position: number = 0, hasKeyword?: string, pinnedFirst?: boolean): Promise<{ emails: Email[], hasMore: boolean, total: number }> {
     try {
       const targetAccountId = accountId || this.accountId;
       const filter: { inMailbox?: string; hasKeyword?: string } = {};
@@ -1057,12 +1072,20 @@ export class JMAPClient implements IJMAPClient {
       if (hasKeyword) {
         filter.hasKeyword = hasKeyword;
       }
+      // Pinned-first uses the hasKeyword sort comparator (RFC 8621 §4.4.2);
+      // every page of a view must use the same sort or pagination tears.
+      const sort = pinnedFirst
+        ? [
+            { property: "hasKeyword", keyword: "$pinned", isAscending: false },
+            { property: "receivedAt", isAscending: false },
+          ]
+        : [{ property: "receivedAt", isAscending: false }];
 
       const response = await this.request([
         ["Email/query", {
           accountId: targetAccountId,
           filter,
-          sort: [{ property: "receivedAt", isAscending: false }],
+          sort,
           limit,
           position,
           calculateTotal: true,
@@ -1081,7 +1104,10 @@ export class JMAPClient implements IJMAPClient {
         const emails = (getResponse.list || []) as Email[];
         // Sort client-side as safety net - some servers may not honour
         // the query sort for large mailboxes without additional filters.
+        // Must mirror the query sort, or it would undo the pinned-first order.
+        const pinRank = (e: Email) => (pinnedFirst && e.keywords?.['$pinned'] ? 1 : 0);
         emails.sort((a: Email, b: Email) =>
+          pinRank(b) - pinRank(a) ||
           new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime()
         );
         const total = queryResponse?.total || 0;
@@ -1237,10 +1263,10 @@ export class JMAPClient implements IJMAPClient {
       email.authenticationResults = parseAuthenticationResults(value);
     }
 
-    for (const headerName of ['X-Spam-Status', 'X-Spam-Result', 'X-Rspamd-Score']) {
+    for (const headerName of ['X-Spam-Score', 'X-Spam-Status', 'X-Spam-Result', 'X-Rspamd-Score']) {
       if (!headersRecord[headerName]) continue;
       const value = Array.isArray(headersRecord[headerName]) ? headersRecord[headerName][0] : headersRecord[headerName];
-      const spamResult = parseSpamScore(value as string);
+      const spamResult = parseSpamScore((value as string).trim());
       if (spamResult) {
         email.spamScore = spamResult.score;
         email.spamStatus = spamResult.status;
@@ -1273,19 +1299,19 @@ export class JMAPClient implements IJMAPClient {
     ]);
   }
 
-  async batchMarkAsRead(emailIds: string[], read: boolean = true): Promise<void> {
+  async batchMarkAsRead(emailIds: string[], read: boolean = true, accountId?: string): Promise<void> {
     if (emailIds.length === 0) return;
 
     const updates = Object.fromEntries(emailIds.map(id => [id, { "keywords/$seen": read }]));
     await this.request([
-      ["Email/set", { accountId: this.accountId, update: updates }, "0"],
+      ["Email/set", { accountId: accountId || this.accountId, update: updates }, "0"],
     ]);
   }
 
-  async toggleStar(emailId: string, starred: boolean): Promise<void> {
+  async toggleStar(emailId: string, starred: boolean, accountId?: string): Promise<void> {
     await this.request([
       ["Email/set", {
-        accountId: this.accountId,
+        accountId: accountId || this.accountId,
         update: {
           [emailId]: {
             "keywords/$flagged": starred,
@@ -1295,10 +1321,10 @@ export class JMAPClient implements IJMAPClient {
     ]);
   }
 
-  async updateEmailKeywords(emailId: string, keywords: Record<string, boolean>): Promise<void> {
+  async updateEmailKeywords(emailId: string, keywords: Record<string, boolean>, accountId?: string): Promise<void> {
     await this.request([
       ["Email/set", {
-        accountId: this.accountId,
+        accountId: accountId || this.accountId,
         update: {
           [emailId]: {
             keywords,
@@ -1308,10 +1334,10 @@ export class JMAPClient implements IJMAPClient {
     ]);
   }
 
-  async setKeyword(emailId: string, keyword: string): Promise<void> {
+  async setKeyword(emailId: string, keyword: string, accountId?: string): Promise<void> {
     await this.request([
       ["Email/set", {
-        accountId: this.accountId,
+        accountId: accountId || this.accountId,
         update: {
           [emailId]: {
             [`keywords/${keyword}`]: true,
@@ -1391,12 +1417,12 @@ export class JMAPClient implements IJMAPClient {
     ]);
   }
 
-  async batchDeleteEmails(emailIds: string[]): Promise<void> {
+  async batchDeleteEmails(emailIds: string[], accountId?: string): Promise<void> {
     if (emailIds.length === 0) return;
 
     await this.request([
       ["Email/set", {
-        accountId: this.accountId,
+        accountId: accountId || this.accountId,
         destroy: emailIds,
       }, "0"],
     ]);
@@ -1709,7 +1735,7 @@ export class JMAPClient implements IJMAPClient {
     ]);
   }
 
-  async createMailbox(name: string, parentId?: string): Promise<Mailbox> {
+  async createMailbox(name: string, parentId?: string, accountId?: string): Promise<Mailbox> {
     const createId = `new-${Date.now()}`;
     const createData: Record<string, unknown> = { name };
     if (parentId) {
@@ -1718,7 +1744,7 @@ export class JMAPClient implements IJMAPClient {
 
     const response = await this.request([
       ["Mailbox/set", {
-        accountId: this.accountId,
+        accountId: accountId || this.accountId,
         create: { [createId]: createData },
       }, "0"],
     ]);
@@ -1878,6 +1904,53 @@ export class JMAPClient implements IJMAPClient {
     } catch (error) {
       console.error('Advanced search failed:', error);
       throw error;
+    }
+  }
+
+  async searchSentRecipients(query: string, sentMailboxId: string, accountId?: string, limit: number = 60): Promise<Array<{ name: string; email: string }>> {
+    const q = query.trim();
+    if (!q || !sentMailboxId) return [];
+    try {
+      const targetAccountId = accountId || this.accountId;
+      const response = await this.request([
+        ["Email/query", {
+          accountId: targetAccountId,
+          filter: {
+            operator: "AND",
+            conditions: [
+              { inMailbox: sentMailboxId },
+              { operator: "OR", conditions: [{ to: q }, { cc: q }] },
+            ],
+          },
+          sort: [{ property: "receivedAt", isAscending: false }],
+          limit,
+        }, "0"],
+        // Fetch ONLY the recipient fields - no subject/preview/body/attachments.
+        ["Email/get", {
+          accountId: targetAccountId,
+          "#ids": { resultOf: "0", name: "Email/query", path: "/ids" },
+          properties: ["to", "cc"],
+        }, "1"],
+      ]);
+      const emails = (response.methodResponses?.[1]?.[1]?.list || []) as Email[];
+      const lower = q.toLowerCase();
+      const byEmail = new Map<string, { name: string; email: string }>();
+      for (const email of emails) {
+        for (const r of [...(email.to || []), ...(email.cc || [])]) {
+          if (!r.email) continue;
+          const key = r.email.toLowerCase().trim();
+          if (!key || byEmail.has(key)) continue;
+          // The query matched *some* recipient of the message; keep only the
+          // addresses that actually match, not every co-recipient.
+          if (key.includes(lower) || (r.name && r.name.toLowerCase().includes(lower))) {
+            byEmail.set(key, { name: (r.name || "").trim(), email: r.email });
+          }
+        }
+      }
+      return Array.from(byEmail.values());
+    } catch (error) {
+      console.error('Recipient search failed:', error);
+      return [];
     }
   }
 
@@ -2388,13 +2461,10 @@ export class JMAPClient implements IJMAPClient {
     const buildSubmissionCreate = (submissionId: string): Record<string, unknown> => {
       const create: Record<string, unknown> = { emailId: `#${emailId}`, identityId: finalIdentityId };
       if (holdForSeconds || envelopeMailFrom) {
-        const envelopeRecipients = [...to, ...(cc || []), ...(bcc || [])]
-          .map((email) => email.trim())
-          .filter(Boolean)
-          .map((email) => ({ email }));
+        const envelopeRecipients = normalizeEnvelopeRecipients([...to, ...(cc || []), ...(bcc || [])]);
         create.envelope = {
           mailFrom: {
-            email: envelopeMailFrom || fromEmail || this.username,
+            email: parseRecipientString(envelopeMailFrom || fromEmail || this.username).email,
             ...(holdForSeconds ? { parameters: { HOLDFOR: String(holdForSeconds) } } : {}),
           },
           rcptTo: envelopeRecipients,
@@ -4738,8 +4808,14 @@ export class JMAPClient implements IJMAPClient {
 
     debug.log('calendar', 'CalendarEvent/batchCreate', { count: events.length, accountId });
 
+    // Never emit iMIP scheduling messages when importing. Imported events often
+    // carry an organizer/participants where the current user is the organizer;
+    // without this, Stalwart tries to send invitation emails to every attendee
+    // synchronously during CalendarEvent/set, which is both wrong (importing a
+    // calendar should not spam invites) and can block the request indefinitely,
+    // leaving the import spinner spinning forever (#411).
     const response = await this.request([
-      ["CalendarEvent/set", { accountId, create: createMap }, "0"]
+      ["CalendarEvent/set", { accountId, sendSchedulingMessages: false, create: createMap }, "0"]
     ], this.calendarUsing());
 
     const createdIds: string[] = [];
@@ -5133,14 +5209,30 @@ export class JMAPClient implements IJMAPClient {
 
   // ─── JMAP FileNode methods (draft-ietf-jmap-filenode) ───
 
-  supportsFiles(): boolean {
-    return this.hasCapability("urn:ietf:params:jmap:filenode");
+  supportsFiles(accountId?: string): boolean {
+    // Gate on the ACCOUNT capability, not the server-wide session capability.
+    // A server can advertise urn:ietf:params:jmap:filenode while a specific
+    // account has its jmap-file-node-* permissions revoked, in which case the
+    // capability is absent from that account's accountCapabilities and every
+    // FileNode action fails with an authorization error (#563). Mirror
+    // getFilesCapableAccountIds(): non-personal (shared/group) accounts don't
+    // always advertise per-account, so treat those as capable.
+    const id = accountId || this.accountId;
+    const account = this.accounts[id];
+    if (!account) return false;
+    return !!account.accountCapabilities?.["urn:ietf:params:jmap:filenode"] || !account.isPersonal;
   }
 
   async probeFileNodeSupport(): Promise<boolean> {
     // Some servers support FileNode without advertising a specific capability.
     // Try a minimal FileNode/query to detect support at runtime.
     if (this.supportsFiles()) return true;
+    // If the server advertises FileNode server-wide but this account's
+    // accountCapabilities omits it, that's an explicit per-account denial (#563)
+    // - don't probe (the probe would only confirm the revoked account can't use
+    // it, or worse mislead). Only fall through for servers that don't advertise
+    // the capability at all.
+    if (this.hasCapability("urn:ietf:params:jmap:filenode")) return false;
     if (!this.apiUrl) return false;
     try {
       const accountId = this.getFilesAccountId();

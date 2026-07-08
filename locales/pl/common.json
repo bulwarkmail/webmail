@@ -134,7 +134,10 @@
     "nav_label": "Nawigacja",
     "add_app": "Aplikacje",
     "shared": "Udostępnione",
-    "scheduled": "Zaplanowane"
+    "scheduled": "Zaplanowane",
+    "unified_all_unread": "Wszystkie nieprzeczytane",
+    "unified_all_starred": "Wszystkie oznaczone gwiazdką",
+    "unified_all_mail": "Cała poczta"
   },
   "protocol_handlers": {
     "title": "Aplikacje domyślne",
@@ -562,7 +565,8 @@
       "add_to_contacts": "Dodaj do kontaktów",
       "copied": "Skopiowano!",
       "copy_failed": "Nie udało się skopiować"
-    }
+    },
+    "send_now": "Wyślij teraz"
   },
   "email_composer": {
     "read_receipt_on": "Zażądano potwierdzenia przeczytania (kliknij, aby wyłączyć)",
@@ -628,7 +632,9 @@
     "validation": {
       "recipient_required": "Dodaj odbiorcę, aby wysłać",
       "subject_required": "Dodaj temat",
-      "body_required": "Napisz wiadomość lub załącz plik"
+      "body_required": "Napisz wiadomość lub załącz plik",
+      "attachments_uploading": "Załączniki wciąż się przesyłają — wiadomość zostanie wysłana po zakończeniu",
+      "attachment_upload_failed": "Nie wysłano - nie udało się przesłać załącznika. Usuń go i spróbuj ponownie."
     },
     "upload_progress": "Przesyłanie {uploaded} / {total}",
     "upload_cancel": "Anuluj przesyłanie",
@@ -671,7 +677,9 @@
     "recipient_edit_email": "Edytuj adres e-mail",
     "recipient_edit_name": "Edytuj wyświetlaną nazwę",
     "recipient_email_placeholder": "Adres e-mail",
-    "recipient_name_placeholder": "Wyświetlana nazwa"
+    "recipient_name_placeholder": "Wyświetlana nazwa",
+    "autocomplete_search_server": "Szukaj na serwerze",
+    "autocomplete_searching": "Wyszukiwanie..."
   },
   "confirm_dialog": {
     "confirm": "Potwierdź",
@@ -800,8 +808,12 @@
     "pl": "Polski",
     "pt": "Português",
     "ru": "Русский",
+    "sk": "Slovenčina",
     "uk": "Українська",
-    "zh": "简体中文"
+    "zh": "简体中文",
+    "fa": "فارسی",
+    "farsi": "فارسی",
+    "switch_to_farsi": "Przełącz na perski"
   },
   "settings": {
     "title": "Ustawienia",
@@ -919,17 +931,38 @@
         "description": "Show an \"All Mail\" entry above your folders that merges messages from across this account's folders into one list.",
         "folders_label": "Folders in All Mail",
         "folders_description": "Choose which folders are merged into the All Mail view.",
+        "account_hint": "Applies to {account}.",
         "no_folders": "No folders available."
       },
       "colorful_sidebar_icons": {
         "label": "Kolorowe ikony paska bocznego",
         "description": "Koloruj ikony folderów i tagów według typu (niebieska Skrzynka odbiorcza, czerwona Spam, zielona Wysłane itp.). Wyłącz, aby uzyskać monochromatyczny pasek boczny."
       },
+      "tint_list_rows": {
+        "label": "Tint List Rows by Tag Color",
+        "description": "Shade each message row with its first tag color. Disable to keep rows plain; tag dots and chips still show the color."
+      },
+      "show_folder_total_count": {
+        "label": "Pokaż łączną liczbę wiadomości",
+        "description": "Pokazuje łączną liczbę wiadomości obok folderów i etykiet, obok liczby nieprzeczytanych. Wyłącz, aby pokazywać tylko nieprzeczytane."
+      },
       "pro_interface": {
         "label": "Interfejs Pro (eksperymentalny)",
         "description": "Układ dla zaawansowanych użytkowników (tylko na komputerze) z przeglądaniem wiadomości w wielu kartach i obiegami pracy między kontami. Standardowy interfejs pozostaje nietknięty; możesz wrócić w dowolnej chwili.",
         "open_label": "Otwórz interfejs Pro",
         "back_to_standard": "Powrót do standardu"
+      },
+      "cross_unread": {
+        "label": "Wszystkie konta: Nieprzeczytane",
+        "description": "Pokazuje pozycję w sekcji Wszystkie konta z nieprzeczytaną pocztą ze wszystkich kont, obejmującą wszystkie foldery oprócz spamu, wysłanych, archiwum, kosza i roboczych."
+      },
+      "cross_starred": {
+        "label": "Wszystkie konta: Oznaczone gwiazdką",
+        "description": "Pokazuje pozycję w sekcji Wszystkie konta z pocztą oznaczoną gwiazdką ze wszystkich kont, obejmującą wszystkie foldery oprócz spamu, wysłanych, archiwum, kosza i roboczych."
+      },
+      "cross_all": {
+        "label": "Wszystkie konta: Cała poczta",
+        "description": "Pokazuje pozycję w sekcji Wszystkie konta z całą pocztą ze wszystkich kont, obejmującą wszystkie foldery oprócz spamu, wysłanych, archiwum, kosza i roboczych."
       }
     },
     "keywords": {
@@ -1022,6 +1055,14 @@
         "preview_today": "Dzisiaj:",
         "preview_this_week": "W tym tygodniu:",
         "preview_older": "Starsze:"
+      },
+      "date_locale": {
+        "label": "Date format region",
+        "description": "How numeric dates are ordered (day, month, year)",
+        "auto": "Automatic (match language)",
+        "iso": "ISO 8601 (YYYY-MM-DD)",
+        "dmy": "Day/Month/Year",
+        "mdy": "Month/Day/Year"
       },
       "time_format": {
         "label": "Format czasu",
@@ -1186,6 +1227,7 @@
         "archive": "Archiwizuj",
         "tag": "Etykieta",
         "spam": "Oznacz jako spam",
+        "not_spam": "Nie spam",
         "none_selected": "Nie wybrano żadnych akcji",
         "mode_label": "Tryb wyświetlania",
         "mode_inline": "Wbudowany",
@@ -1226,6 +1268,10 @@
         "off": "Wyłączone",
         "seconds": "{seconds} sekund",
         "unsupported": "Bieżące konto nie zgłasza obsługi opóźnionej wysyłki. Ustawienie pozostanie zapisane dla innych kont."
+      },
+      "return_to_list_after_action": {
+        "label": "Powrót do listy po usunięciu lub oznaczeniu jako nieprzeczytane",
+        "description": "Po usunięciu lub oznaczeniu otwartej wiadomości jako nieprzeczytanej wróć do listy wiadomości zamiast otwierać następną."
       }
     },
     "composer": {
@@ -1913,6 +1959,8 @@
     "mark_unread": "Oznacz jako nieprzeczytane",
     "star": "Oznacz gwiazdką",
     "unstar": "Usuń gwiazdkę",
+    "pin": "Przypnij",
+    "unpin": "Odepnij",
     "move_to": "Przenieś do...",
     "archive": "Archiwizuj",
     "delete": "Usuń",
@@ -2147,6 +2195,9 @@
       "title": "Udostępnione"
     },
     "address_books": {
+      "create": "Nowa książka adresowa",
+      "created": "Utworzono książkę adresową",
+      "create_failed": "Nie udało się utworzyć książki adresowej",
       "title": "Moje książki adresowe",
       "shared_prefix": "Udostępnione: {name}",
       "moved": "Kontakt przeniesiono do {name}",

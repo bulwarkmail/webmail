@@ -133,8 +133,15 @@ export default function LoginPage() {
   const isMobileHandoff = Boolean(mobileRedirectUri);
   const { login, loginDemo, isLoading, error, clearError, isAuthenticated } = useAuthStore();
   const { theme, setTheme, initializeTheme } = useThemeStore(useShallow((s) => ({ theme: s.theme, setTheme: s.setTheme, initializeTheme: s.initializeTheme })));
-  const { appName, jmapServerUrl: configuredServerUrl, oauthEnabled, oauthOnly, oauthClientId: globalOauthClientId, oauthIssuerUrl: globalOauthIssuerUrl, oauthScopes, rememberMeEnabled, devMode, demoMode, loginLogoLightUrl, loginLogoDarkUrl, loginCompanyName, loginImprintUrl, loginPrivacyPolicyUrl, loginWebsiteUrl, isLoading: configLoading, error: configError, autoSsoEnabled, embeddedMode: _embeddedMode, allowCustomJmapEndpoint, jmapServers, jmapServerAutoPickByDomain } = useConfig();
+  const { appName, jmapServerUrl: configuredServerUrl, oauthEnabled, oauthOnly, oauthClientId: globalOauthClientId, oauthIssuerUrl: globalOauthIssuerUrl, oauthScopes, rememberMeEnabled, devMode, demoMode, loginLogoLightUrl, loginLogoDarkUrl, loginCompanyName, loginImprintUrl, loginPrivacyPolicyUrl, loginWebsiteUrl, loginLogoMaxHeight, loginLogoMaxWidth, loginShowHeading, loginShowSubtitle, isLoading: configLoading, error: configError, autoSsoEnabled, embeddedMode: _embeddedMode, allowCustomJmapEndpoint, jmapServers, jmapServerAutoPickByDomain } = useConfig();
   const resolvedTheme = useThemeStore((s) => s.resolvedTheme);
+
+  // Login logo sizing: when a max height/width is configured, drop the fixed
+  // 64×64 box so the logo (e.g. a wide wordmark) can render at its true size.
+  const hasLogoSize = Boolean(loginLogoMaxHeight || loginLogoMaxWidth);
+  const loginLogoStyle = hasLogoSize
+    ? { maxHeight: loginLogoMaxHeight || undefined, maxWidth: loginLogoMaxWidth || undefined }
+    : undefined;
 
   const [formData, setFormData] = useState({
     username: "",
@@ -718,7 +725,7 @@ export default function LoginPage() {
                     )}
                   >
                     <Icon className="w-4 h-4" />
-                    <span className="flex-1 text-left">{option.label}</span>
+                    <span className="flex-1 text-start">{option.label}</span>
                     {isActive && <Check className="w-3.5 h-3.5 text-primary" />}
                   </button>
                 );
@@ -867,7 +874,7 @@ export default function LoginPage() {
                   )}
                 >
                   <Icon className="w-4 h-4" />
-                  <span className="flex-1 text-left">{option.label}</span>
+                  <span className="flex-1 text-start">{option.label}</span>
                   {isActive && <Check className="w-3.5 h-3.5 text-primary" />}
                 </button>
               );
@@ -881,19 +888,24 @@ export default function LoginPage() {
         <div className="rounded-2xl border border-border/60 bg-background/80 backdrop-blur-sm shadow-xl shadow-black/5 dark:shadow-black/20 overflow-hidden">
           {/* Header section with logo */}
           <div className="px-8 pt-10 pb-6 text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 mb-5">
+            <div className={cn("inline-flex items-center justify-center mb-5", !hasLogoSize && "w-16 h-16")}>
               <img
                 src={withBasePath(resolvedTheme === 'dark' ? loginLogoDarkUrl : loginLogoLightUrl)}
                 alt={appName}
-                className="max-w-16 max-h-16 object-contain"
+                className={cn("object-contain", !hasLogoSize && "max-w-16 max-h-16")}
+                style={loginLogoStyle}
               />
             </div>
-            <h1 className="text-2xl font-semibold text-foreground tracking-tight">
-              {isAddAccountMode ? t("add_account_title") : appName}
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1.5">
-              {isAddAccountMode ? t("add_account_subtitle") : (t("title") !== appName ? t("title") : "Sign in to your account")}
-            </p>
+            {loginShowHeading && (
+              <h1 className="text-2xl font-semibold text-foreground tracking-tight">
+                {isAddAccountMode ? t("add_account_title") : appName}
+              </h1>
+            )}
+            {loginShowSubtitle && (
+              <p className="text-sm text-muted-foreground mt-1.5">
+                {isAddAccountMode ? t("add_account_subtitle") : (t("title") !== appName ? t("title") : "Sign in to your account")}
+              </p>
+            )}
           </div>
 
           {/* Form section */}
@@ -1121,7 +1133,7 @@ export default function LoginPage() {
                         type={showPassword ? "text" : "password"}
                         value={formData.password}
                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                        className="h-11 px-3.5 pr-11 bg-muted/40 border-border/60 rounded-xl focus:bg-background focus:border-primary/50 transition-all duration-200"
+                        className="h-11 px-3.5 pe-11 bg-muted/40 border-border/60 rounded-xl focus:bg-background focus:border-primary/50 transition-all duration-200"
                         placeholder={t("password_placeholder")}
                         required
                         autoComplete="current-password"
@@ -1241,9 +1253,9 @@ export default function LoginPage() {
                       disabled={oauthLoading || isLoading}
                     >
                       {oauthLoading ? (
-                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                        <Loader2 className="w-4 h-4 animate-spin me-2" />
                       ) : (
-                        <LogIn className="w-4 h-4 mr-2" />
+                        <LogIn className="w-4 h-4 me-2" />
                       )}
                       {t("sign_in_sso")}
                     </Button>

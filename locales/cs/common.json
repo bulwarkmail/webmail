@@ -134,7 +134,10 @@
     "mail": "Pošta",
     "nav_label": "Navigace",
     "add_app": "Aplikace",
-    "scheduled": "Naplánováno"
+    "scheduled": "Naplánováno",
+    "unified_all_unread": "Vše nepřečtené",
+    "unified_all_starred": "Vše s hvězdičkou",
+    "unified_all_mail": "Veškerá pošta"
   },
   "protocol_handlers": {
     "title": "Výchozí aplikace",
@@ -562,7 +565,8 @@
       "add_to_contacts": "Přidat do kontaktů",
       "copied": "Zkopírováno!",
       "copy_failed": "Kopírování se nezdařilo"
-    }
+    },
+    "send_now": "Odeslat nyní"
   },
   "email_composer": {
     "read_receipt_on": "Vyžádáno potvrzení o přečtení (kliknutím vypnete)",
@@ -628,7 +632,9 @@
     "validation": {
       "recipient_required": "Chcete-li zprávu odeslat, přidejte příjemce",
       "subject_required": "Přidejte předmět",
-      "body_required": "Napište zprávu nebo připojte soubor"
+      "body_required": "Napište zprávu nebo připojte soubor",
+      "attachments_uploading": "Přílohy se stále nahrávají – odeslání proběhne po dokončení",
+      "attachment_upload_failed": "Neodesláno - přílohu se nepodařilo nahrát. Odeberte ji a zkuste to znovu."
     },
     "upload_progress": "Nahrávání {uploaded} / {total}",
     "upload_cancel": "Zrušit nahrávání",
@@ -671,7 +677,9 @@
     "recipient_edit_email": "Upravit e-mailovou adresu",
     "recipient_edit_name": "Upravit zobrazované jméno",
     "recipient_email_placeholder": "E-mailová adresa",
-    "recipient_name_placeholder": "Zobrazované jméno"
+    "recipient_name_placeholder": "Zobrazované jméno",
+    "autocomplete_search_server": "Hledat na serveru",
+    "autocomplete_searching": "Hledání..."
   },
   "confirm_dialog": {
     "confirm": "Potvrdit",
@@ -800,8 +808,12 @@
     "pl": "Polski",
     "pt": "Português",
     "ru": "Русский",
+    "sk": "Slovenčina",
     "uk": "Українська",
-    "zh": "简体中文"
+    "zh": "简体中文",
+    "fa": "فارسی",
+    "farsi": "فارسی",
+    "switch_to_farsi": "Přepnout na perštinu"
   },
   "settings": {
     "title": "Nastavení",
@@ -919,17 +931,38 @@
         "description": "Show an \"All Mail\" entry above your folders that merges messages from across this account's folders into one list.",
         "folders_label": "Folders in All Mail",
         "folders_description": "Choose which folders are merged into the All Mail view.",
+        "account_hint": "Applies to {account}.",
         "no_folders": "No folders available."
       },
       "colorful_sidebar_icons": {
         "label": "Barevné ikony postranního panelu",
         "description": "Obarví ikony složek a štítků podle typu (modré Doručené, červený Spam, zelené Odeslané atd.). Vypněte pro jednobarevný postranní panel."
       },
+      "tint_list_rows": {
+        "label": "Tint List Rows by Tag Color",
+        "description": "Shade each message row with its first tag color. Disable to keep rows plain; tag dots and chips still show the color."
+      },
+      "show_folder_total_count": {
+        "label": "Zobrazit celkový počet zpráv",
+        "description": "Zobrazí celkový počet zpráv vedle složek a štítků spolu s počtem nepřečtených. Vypněte pro zobrazení pouze nepřečtených."
+      },
       "pro_interface": {
         "label": "Pro rozhraní (experimentální)",
         "description": "Rozložení pro pokročilé uživatele pouze pro stolní počítače s prohlížením zpráv na více kartách a pracovními postupy napříč účty. Standardní rozhraní zůstává nedotčeno; kdykoli se můžete vrátit.",
         "open_label": "Otevřít Pro rozhraní",
         "back_to_standard": "Zpět na standard"
+      },
+      "cross_unread": {
+        "label": "Všechny účty: Nepřečtené",
+        "description": "Zobrazí v sekci Všechny účty položku s nepřečtenou poštou ze všech účtů, napříč všemi složkami kromě spamu, odeslané, archivu, koše a konceptů."
+      },
+      "cross_starred": {
+        "label": "Všechny účty: S hvězdičkou",
+        "description": "Zobrazí v sekci Všechny účty položku s poštou s hvězdičkou ze všech účtů, napříč všemi složkami kromě spamu, odeslané, archivu, koše a konceptů."
+      },
+      "cross_all": {
+        "label": "Všechny účty: Veškerá pošta",
+        "description": "Zobrazí v sekci Všechny účty položku s veškerou poštou ze všech účtů, napříč všemi složkami kromě spamu, odeslané, archivu, koše a konceptů."
       }
     },
     "keywords": {
@@ -1022,6 +1055,14 @@
         "preview_today": "Dnes:",
         "preview_this_week": "Tento týden:",
         "preview_older": "Starší:"
+      },
+      "date_locale": {
+        "label": "Date format region",
+        "description": "How numeric dates are ordered (day, month, year)",
+        "auto": "Automatic (match language)",
+        "iso": "ISO 8601 (YYYY-MM-DD)",
+        "dmy": "Day/Month/Year",
+        "mdy": "Month/Day/Year"
       },
       "time_format": {
         "label": "Formát času",
@@ -1186,6 +1227,7 @@
         "archive": "Archivovat",
         "tag": "Štítek",
         "spam": "Označit jako spam",
+        "not_spam": "Není spam",
         "none_selected": "Nebyly vybrány žádné akce",
         "mode_label": "Režim zobrazení",
         "mode_inline": "Vložené",
@@ -1226,6 +1268,10 @@
         "off": "Vypnuto",
         "seconds": "{seconds} sekund",
         "unsupported": "Aktuální účet neoznamuje podporu odloženého odeslání. Nastavení zůstane uloženo pro jiné účty."
+      },
+      "return_to_list_after_action": {
+        "label": "Návrat do seznamu po smazání nebo označení jako nepřečtené",
+        "description": "Po smazání nebo označení otevřené zprávy jako nepřečtené se vrátit do seznamu zpráv místo otevření následující zprávy."
       }
     },
     "composer": {
@@ -1913,6 +1959,8 @@
     "mark_unread": "Označit jako nepřečtené",
     "star": "Označit hvězdičkou",
     "unstar": "Odebrat hvězdičku",
+    "pin": "Připnout",
+    "unpin": "Odepnout",
     "move_to": "Přesunout do...",
     "archive": "Archivovat",
     "delete": "Odstranit",
@@ -2147,6 +2195,9 @@
       "title": "Sdílené"
     },
     "address_books": {
+      "create": "Nový adresář",
+      "created": "Adresář vytvořen",
+      "create_failed": "Nepodařilo se vytvořit adresář",
       "title": "Moje adresáře",
       "shared_prefix": "Sdílené: {name}",
       "moved": "Kontakt přesunut do {name}",

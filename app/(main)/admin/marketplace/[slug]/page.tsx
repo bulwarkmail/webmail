@@ -186,7 +186,7 @@ export default function MarketplacePreviewPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12 text-muted-foreground text-sm">
-        <Loader2 className="w-4 h-4 animate-spin mr-2" />
+        <Loader2 className="w-4 h-4 animate-spin me-2" />
         Loading...
       </div>
     );
@@ -512,7 +512,7 @@ export default function MarketplacePreviewPage() {
         <section className="border border-border rounded-lg">
           <button
             onClick={() => setShowManifest(v => !v)}
-            className="w-full flex items-center justify-between gap-2 px-4 py-3 text-left hover:bg-muted/30 transition-colors"
+            className="w-full flex items-center justify-between gap-2 px-4 py-3 text-start hover:bg-muted/30 transition-colors"
           >
             <div className="flex items-center gap-2">
               <FileCode className="w-4 h-4 text-muted-foreground" />
@@ -532,7 +532,7 @@ export default function MarketplacePreviewPage() {
         <section className="border border-border rounded-lg">
           <button
             onClick={() => setShowSource(v => !v)}
-            className="w-full flex items-center justify-between gap-2 px-4 py-3 text-left hover:bg-muted/30 transition-colors"
+            className="w-full flex items-center justify-between gap-2 px-4 py-3 text-start hover:bg-muted/30 transition-colors"
           >
             <div className="flex items-center gap-2">
               <FileCode className="w-4 h-4 text-muted-foreground" />

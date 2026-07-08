@@ -64,8 +64,10 @@ function buildPrefixRegex(tokens: string[]): RegExp {
   // Sort by length DESC so longer tokens (e.g. "Пересл") win over their
   // shorter prefixes (e.g. "Пер") during alternation matching.
   escaped.sort((a, b) => b.length - a.length);
+  // Accept both the ASCII colon and the full-width colon "：" (U+FF1A) that CJK
+  // mail clients emit after a localized prefix (e.g. "回复：foo").
   return new RegExp(
-    `^\\s*(?:${escaped.join("|")})(?:\\[\\d+\\]|\\*\\d*)?\\s*:\\s*`,
+    `^\\s*(?:${escaped.join("|")})(?:\\[\\d+\\]|\\*\\d*)?\\s*[:\\uFF1A]\\s*`,
     "i",
   );
 }

@@ -8,7 +8,7 @@
 // the boundary must be structured-cloneable: no functions, no DOM nodes, no
 // class instances.
 
-import type { SlotName } from '../plugin-types';
+import type { SlotName, PluginTier } from '../plugin-types';
 import type { ThemeSnapshot } from './host-theme';
 
 // ─── Sandbox mode ────────────────────────────────────────────
@@ -19,6 +19,12 @@ export type SandboxMode = 'background' | 'slot';
 export interface BackgroundInit {
   mode: 'background';
   pluginId: string;
+  /**
+   * Execution tier. 'privileged' iframes are same-origin (real WebCrypto +
+   * IndexedDB); 'untrusted' iframes are null-origin. Decided host-side by
+   * `resolvePluginTier`; the sandbox itself does not act on this field.
+   */
+  tier: PluginTier;
   /** Trimmed manifest visible to the plugin. No host secrets. */
   manifest: {
     id: string;
@@ -38,6 +44,8 @@ export interface BackgroundInit {
 export interface SlotInit {
   mode: 'slot';
   pluginId: string;
+  /** Execution tier (mirrors `BackgroundInit.tier`). */
+  tier: PluginTier;
   /** Slot name the iframe should render a component for. */
   slot: SlotName;
   /** Same bundle code as the background instance. */
@@ -217,13 +225,23 @@ export function isSandboxMessage(value: unknown): value is SandboxToHost {
 
 // ─── Constants ───────────────────────────────────────────────
 
-/** Path used for the sandbox iframe `src`. Matched in `proxy.ts` for CSP. */
+/** Path used for the untrusted (null-origin) sandbox iframe `src`. Matched in
+ * `proxy.ts` for CSP. */
 export const SANDBOX_PATH = '/plugin-sandbox';
+
+/**
+ * Path used for the privileged (same-origin) sandbox iframe `src`. A distinct
+ * route so the iframe gets `allow-same-origin` (real WebCrypto + IndexedDB)
+ * while keeping the same CSP relaxations as the untrusted sandbox. Matched in
+ * `proxy.ts`. Renders the identical `SandboxRuntime`.
+ */
+export const SANDBOX_PRIVILEGED_PATH = '/plugin-sandbox-privileged';
 
 /** Methods callable by a plugin via api-request. Host enforces permissions. */
 export const API_METHODS = [
   'storage.get', 'storage.set', 'storage.remove', 'storage.keys',
   'http.post', 'http.fetch',
+  'jmap.fetchBlob', 'jmap.sendRaw',
   'admin.getConfig', 'admin.getAllConfig', 'admin.setConfig', 'admin.deleteConfig',
   'toast.success', 'toast.error', 'toast.info', 'toast.warning',
   'ui.confirm', 'ui.alert', 'ui.openExternalUrl',

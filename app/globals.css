@@ -660,13 +660,13 @@ body {
 
 .tiptap ul {
   list-style-type: disc;
-  padding-left: 1.5rem;
+  padding-inline-start: 1.5rem;
   margin: 0.25rem 0;
 }
 
 .tiptap ol {
   list-style-type: decimal;
-  padding-left: 1.5rem;
+  padding-inline-start: 1.5rem;
   margin: 0.25rem 0;
 }
 
@@ -675,8 +675,8 @@ body {
 }
 
 .tiptap blockquote {
-  border-left: 3px solid var(--color-border);
-  padding-left: 1rem;
+  border-inline-start: 3px solid var(--color-border);
+  padding-inline-start: 1rem;
   margin: 0.5rem 0;
   color: var(--color-muted-foreground);
 }
@@ -719,7 +719,7 @@ body {
 
 .tiptap p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
-  float: left;
+  float: inline-start;
   color: var(--color-muted-foreground);
   pointer-events: none;
   height: 0;
@@ -807,4 +807,21 @@ body {
   outline-offset: 10px;
   border-radius: 8px;
   animation: settings-search-pulse 1.6s ease-in-out forwards;
+}
+
+/* RTL: mirror directional icons (chevrons/arrows) so prev/next, back/forward,
+   and panel-collapse affordances point the correct way in right-to-left layouts.
+   lucide-react emits a `lucide-<name>` class per icon, so we target the
+   directional ones only — vertical chevrons (up/down) are intentionally left. */
+[dir="rtl"] .lucide-chevron-left,
+[dir="rtl"] .lucide-chevron-right,
+[dir="rtl"] .lucide-chevrons-left,
+[dir="rtl"] .lucide-chevrons-right,
+[dir="rtl"] .lucide-arrow-left,
+[dir="rtl"] .lucide-arrow-right,
+[dir="rtl"] .lucide-arrow-big-left,
+[dir="rtl"] .lucide-arrow-big-right,
+[dir="rtl"] .lucide-panel-left,
+[dir="rtl"] .lucide-panel-right {
+  transform: scaleX(-1);
 }

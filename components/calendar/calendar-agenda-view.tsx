@@ -131,7 +131,7 @@ export function CalendarAgendaView({
             )}>
               {formatDateHeader(group.date)}
             </span>
-            <span className="text-xs text-muted-foreground ml-2">
+            <span className="text-xs text-muted-foreground ms-2">
               {intlFormatter.dateTime(group.date, { month: "short", day: "numeric", year: "numeric" })}
             </span>
           </div>
@@ -148,6 +148,9 @@ export function CalendarAgendaView({
               const color = getEventColor(ev, calendar);
               const start = getEventStartDate(ev);
               const end = getEventEndDate(ev);
+              // iTIP CANCEL marks the attendee's copy with status "cancelled"
+              // instead of deleting it (#572).
+              const isCancelled = ev.status === "cancelled";
               const locationName = ev.locations
                 ? Object.values(ev.locations)[0]?.name
                 : null;
@@ -159,7 +162,10 @@ export function CalendarAgendaView({
                   onMouseEnter={(e) => onHoverEvent?.(ev, e.currentTarget.getBoundingClientRect())}
                   onMouseLeave={() => onHoverLeave?.()}
                   onContextMenu={onContextMenuEvent ? (e) => onContextMenuEvent(e, ev) : undefined}
-                  className="w-full flex items-start px-4 hover:bg-muted/50 transition-colors text-left"
+                  className={cn(
+                    "w-full flex items-start px-4 hover:bg-muted/50 transition-colors text-start",
+                    isCancelled && "opacity-60"
+                  )}
                   style={{ gap: 'var(--density-item-gap)', paddingBlock: 'var(--density-item-py)' }}
                 >
                   <div className="flex flex-col items-center pt-0.5 min-w-[60px]">
@@ -181,7 +187,7 @@ export function CalendarAgendaView({
                   />
 
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium truncate">
+                    <div className={cn("text-sm font-medium truncate", isCancelled && "line-through")}>
                       {ev.title || t("events.no_title")}
                     </div>
                     {locationName && (

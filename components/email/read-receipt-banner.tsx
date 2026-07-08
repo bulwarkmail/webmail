@@ -31,7 +31,7 @@ export function ReadReceiptBanner({ requestedBy, onSend, onIgnore }: ReadReceipt
       <MailCheck className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" />
       <span className="text-foreground">{t('prompt')}</span>
       <span className="break-all text-muted-foreground">{requestedBy}</span>
-      <div className="ml-auto flex items-center gap-2">
+      <div className="ms-auto flex items-center gap-2">
         <button
           onClick={async () => {
             setState('sending');

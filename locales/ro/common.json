@@ -134,7 +134,10 @@
     "mail": "E-mail",
     "nav_label": "Navigare",
     "add_app": "Aplicații",
-    "scheduled": "Programat"
+    "scheduled": "Programat",
+    "unified_all_unread": "Toate necitite",
+    "unified_all_starred": "Toate cu stea",
+    "unified_all_mail": "Toată poșta"
   },
   "protocol_handlers": {
     "title": "Aplicații implicite",
@@ -562,7 +565,8 @@
       "add_to_contacts": "Adaugă la contacte",
       "copied": "Copiat!",
       "copy_failed": "Copierea a eșuat"
-    }
+    },
+    "send_now": "Trimite acum"
   },
   "email_composer": {
     "read_receipt_on": "Solicitare confirmare de citire (faceți clic pentru a dezactiva)",
@@ -631,7 +635,9 @@
     "validation": {
       "recipient_required": "Adăugați un destinatar căruia să îi trimiteți mesajul",
       "subject_required": "Adăugați un subiect",
-      "body_required": "Scrieți un mesaj sau atașați un fișier"
+      "body_required": "Scrieți un mesaj sau atașați un fișier",
+      "attachments_uploading": "Atașamentele încă se încarcă — se va trimite imediat ce se termină",
+      "attachment_upload_failed": "Netrimis - încărcarea unui atașament a eșuat. Eliminați-l și încercați din nou."
     },
     "upload_progress": "Încărcare {uploaded} / {total}",
     "upload_cancel": "Anulează încărcarea",
@@ -671,7 +677,9 @@
     "recipient_edit_email": "Editați adresa de e-mail",
     "recipient_edit_name": "Editați numele afișat",
     "recipient_email_placeholder": "Adresă de e-mail",
-    "recipient_name_placeholder": "Numele afișat"
+    "recipient_name_placeholder": "Numele afișat",
+    "autocomplete_search_server": "Caută pe server",
+    "autocomplete_searching": "Se caută..."
   },
   "confirm_dialog": {
     "confirm": "Confirmare",
@@ -800,8 +808,12 @@
     "pl": "Poloneză",
     "pt": "Portugheză",
     "ru": "Русский",
+    "sk": "Slovacă",
     "uk": "Ukrainiană",
-    "zh": "Chineză simplificată"
+    "zh": "Chineză simplificată",
+    "fa": "فارسی",
+    "farsi": "فارسی",
+    "switch_to_farsi": "Comută la persană"
   },
   "settings": {
     "title": "Setări",
@@ -922,17 +934,38 @@
         "description": "Afișați o intrare „Toate mesajele” deasupra folderelor, care reunește mesajele din toate folderele acestui cont într-o singură listă.",
         "folders_label": "Dosare în „Toate mesajele”",
         "folders_description": "Alegeți ce dosare să fie incluse în vizualizarea „Toate mesajele”.",
+        "account_hint": "Se aplică pentru {account}.",
         "no_folders": "Nu sunt disponibile foldere."
       },
       "colorful_sidebar_icons": {
         "label": "Pictograme colorate în bara laterală",
         "description": "Colorați pictogramele folderelor și etichetelor în funcție de tip (albastru pentru „Inbox”, roșu pentru „Junk”, verde pentru „Sent” etc.). Dezactivați această opțiune pentru o bară laterală monocromă."
       },
+      "tint_list_rows": {
+        "label": "Tint List Rows by Tag Color",
+        "description": "Shade each message row with its first tag color. Disable to keep rows plain; tag dots and chips still show the color."
+      },
+      "show_folder_total_count": {
+        "label": "Afișează numărul total de mesaje",
+        "description": "Afișează numărul total de mesaje lângă foldere și etichete, pe lângă numărul celor necitite. Dezactivează pentru a afișa doar mesajele necitite."
+      },
       "pro_interface": {
         "label": "Interfață Pro (experimentală)",
         "description": "Aspect destinat utilizatorilor avansați, disponibil doar pe desktop, cu navigare prin mesaje în mai multe file și fluxuri de lucru între conturi. Interfața standard nu este afectată; puteți reveni la aceasta în orice moment.",
         "open_label": "Interfața Open Pro",
         "back_to_standard": "Înapoi la standard"
+      },
+      "cross_unread": {
+        "label": "Toate conturile: Necitite",
+        "description": "Afișează în secțiunea Toate conturile o intrare cu poșta necitită din toate conturile, în toate folderele cu excepția spam, trimise, arhivă, coș și ciorne."
+      },
+      "cross_starred": {
+        "label": "Toate conturile: Cu stea",
+        "description": "Afișează în secțiunea Toate conturile o intrare cu poșta cu stea din toate conturile, în toate folderele cu excepția spam, trimise, arhivă, coș și ciorne."
+      },
+      "cross_all": {
+        "label": "Toate conturile: Toată poșta",
+        "description": "Afișează în secțiunea Toate conturile o intrare cu toată poșta din toate conturile, în toate folderele cu excepția spam, trimise, arhivă, coș și ciorne."
       }
     },
     "keywords": {
@@ -1025,6 +1058,14 @@
         "preview_today": "Astăzi:",
         "preview_this_week": "În această săptămână:",
         "preview_older": "Versiune anterioară:"
+      },
+      "date_locale": {
+        "label": "Date format region",
+        "description": "How numeric dates are ordered (day, month, year)",
+        "auto": "Automatic (match language)",
+        "iso": "ISO 8601 (YYYY-MM-DD)",
+        "dmy": "Day/Month/Year",
+        "mdy": "Month/Day/Year"
       },
       "time_format": {
         "label": "Formatul orei",
@@ -1189,6 +1230,7 @@
         "archive": "Arhivează",
         "tag": "Etichetă",
         "spam": "Marcați ca spam",
+        "not_spam": "Nu este spam",
         "none_selected": "Nu sunt selectate acțiuni",
         "mode_label": "Modul de afișare",
         "mode_inline": "În text",
@@ -1229,6 +1271,10 @@
         "off": "Oprit",
         "seconds": "{seconds} secunde",
         "unsupported": "Contul curent nu indică faptul că acceptă trimiterea amânată. Setarea este totuși salvată pentru alte conturi."
+      },
+      "return_to_list_after_action": {
+        "label": "Revenire la listă după ștergere sau marcare ca necitit",
+        "description": "După ștergerea sau marcarea mesajului deschis ca necitit, reveniți la lista de mesaje în loc să deschideți mesajul următor."
       }
     },
     "composer": {
@@ -1913,6 +1959,8 @@
     "mark_unread": "Marcați ca necitit",
     "star": "Stea",
     "unstar": "Anulează marcarea cu stea",
+    "pin": "Fixează",
+    "unpin": "Anulează fixarea",
     "move_to": "Mergi la...",
     "archive": "Arhivează",
     "delete": "Șterge",
@@ -2148,6 +2196,9 @@
       "title": "Partajat"
     },
     "address_books": {
+      "create": "Agendă nouă",
+      "created": "Agendă creată",
+      "create_failed": "Nu s-a putut crea agenda",
       "title": "Agendele mele de adrese",
       "shared_prefix": "Partajat: {name}",
       "moved": "Contactul a fost mutat la {name}",

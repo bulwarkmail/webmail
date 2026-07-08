@@ -284,7 +284,7 @@ export function ShareCollectionDialog({
                         value={preset}
                         onChange={(e) => handleSetRights(principalId, e.target.value as RolePreset)}
                         disabled={savingId === principalId}
-                        className="appearance-none rounded-md border border-input bg-background pl-3 pr-8 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
+                        className="appearance-none rounded-md border border-input bg-background ps-3 pe-8 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
                       >
                         {presetOptions.map((p) => (
                           <option key={p} value={p}>{t(`preset.${p}`)}</option>
@@ -318,7 +318,7 @@ export function ShareCollectionDialog({
               onClick={() => setShowAdd(true)}
               className="w-full"
             >
-              <UserPlus className="w-4 h-4 mr-2" />
+              <UserPlus className="w-4 h-4 me-2" />
               {t("add_person")}
             </Button>
           )}
@@ -336,7 +336,7 @@ export function ShareCollectionDialog({
               <div className="max-h-48 overflow-y-auto -mx-1">
                 {loadingPrincipals && (
                   <div className="flex items-center justify-center py-4 text-muted-foreground">
-                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    <Loader2 className="w-4 h-4 animate-spin me-2" />
                     {t("loading_principals")}
                   </div>
                 )}
@@ -350,7 +350,7 @@ export function ShareCollectionDialog({
                     key={p.id}
                     onClick={() => handleAdd(p)}
                     disabled={savingId === p.id}
-                    className="w-full text-left px-3 py-2 rounded-md hover:bg-muted disabled:opacity-50 transition-colors"
+                    className="w-full text-start px-3 py-2 rounded-md hover:bg-muted disabled:opacity-50 transition-colors"
                   >
                     <div className="flex items-center gap-2">
                       <Avatar

@@ -155,7 +155,7 @@ export function PluginConfigPanel({ pluginId, onBack }: Props) {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12 text-muted-foreground text-sm">
-        <Loader2 className="w-4 h-4 animate-spin mr-2" />
+        <Loader2 className="w-4 h-4 animate-spin me-2" />
         Loading...
       </div>
     );
@@ -217,7 +217,7 @@ export function PluginConfigPanel({ pluginId, onBack }: Props) {
               <div key={key}>
                 <label className="text-sm font-medium text-foreground block mb-1">
                   {field.label}
-                  {field.required && <span className="text-destructive ml-0.5">*</span>}
+                  {field.required && <span className="text-destructive ms-0.5">*</span>}
                 </label>
                 {field.description && (
                   <p className="text-xs text-muted-foreground mb-1.5">{field.description}</p>
@@ -250,7 +250,7 @@ export function PluginConfigPanel({ pluginId, onBack }: Props) {
                       value={formValues[key] ?? ''}
                       onChange={(e) => setFormValues(prev => ({ ...prev, [key]: e.target.value }))}
                       placeholder={config[key] ? '••••••••  (unchanged)' : (field.placeholder || '')}
-                      className="w-full h-9 px-3 pr-10 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring font-mono"
+                      className="w-full h-9 px-3 pe-10 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring font-mono"
                     />
                     <button
                       type="button"

@@ -1,11 +1,22 @@
-import type { Email, Mailbox, UnifiedMailboxRole } from '@/lib/jmap/types';
+import type { Email, Mailbox, UnifiedMailboxRole, CrossView } from '@/lib/jmap/types';
+import { CROSS_EXCLUDED_ROLES } from '@/lib/jmap/types';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
 
 export interface UnifiedAccountClient {
+  // Display reference (avatar color / label). For personal entries this is the
+  // AccountEntry.id; for shared entries it is the JMAP owner id (see Email.accountId).
   accountId: string;
   accountLabel: string;
   client: IJMAPClient;
   mailboxes: Mailbox[];
+  // AccountEntry.id of the logged-in client this entry uses (`getClientForAccount`
+  // key). Stamped onto each email as `sourceClientAccountId` so single-email and
+  // batch actions can resolve the reaching client without scanning capabilities.
+  clientAccountId: string;
+  // JMAP account id of the data this entry reads (personal: the client's primary;
+  // shared: the owner id). Stamped onto each email as `sourceAccountId` and passed
+  // as the JMAP `accountId` for owner-scoped routing + mailbox-id namespacing.
+  jmapAccountId: string;
   // When true, this entry represents a group/shared account owned by
   // `accountId` but accessed through someone else's `client`. JMAP requests
   // must use the mailbox's `originalId` and explicitly target this accountId
@@ -29,6 +40,19 @@ export interface UnifiedMailboxCounts {
 const ALL_UNIFIED_ROLES: UnifiedMailboxRole[] = [
   'inbox', 'sent', 'drafts', 'trash', 'archive', 'junk',
 ];
+
+/**
+ * Resolves the display name of the folder an email lives in, for the aggregate
+ * "All …" views. Matches the email's mailbox membership against the account's
+ * mailbox list (originalId for shared/namespaced mailboxes). Returns the first
+ * match, or undefined if none of the account's known folders contain it.
+ */
+export function resolveSourceFolderName(email: Email, mailboxes: Mailbox[]): string | undefined {
+  for (const m of mailboxes) {
+    if (email.mailboxIds?.[m.originalId ?? m.id]) return m.name;
+  }
+  return undefined;
+}
 
 /**
  * Finds the first mailbox matching the given role.
@@ -95,13 +119,19 @@ export async function fetchUnifiedEmails(
 
     const { account, result } = outcome.value;
 
-    // Decorate each email with the source account info.
-    for (const email of result.emails) {
-      email.accountId = account.accountId;
-      email.accountLabel = account.accountLabel;
-    }
+    // Decorate each email with the source account info. The per-account client
+    // returns shared object references; decorate shallow copies instead of
+    // mutating them in place so retained callers/snapshots aren't corrupted.
+    const decorated = result.emails.map((email) => ({
+      ...email,
+      accountId: account.accountId,
+      accountLabel: account.accountLabel,
+      sourceClientAccountId: account.clientAccountId,
+      sourceAccountId: account.jmapAccountId,
+      sourceFolder: resolveSourceFolderName(email, account.mailboxes),
+    }));
 
-    mergedEmails = mergedEmails.concat(result.emails);
+    mergedEmails = mergedEmails.concat(decorated);
     totalSum += result.total;
     if (result.hasMore) {
       anyHasMore = true;
@@ -220,11 +250,16 @@ async function fanOutUnifiedQuery(
   for (const outcome of results) {
     if (outcome.status !== 'fulfilled' || outcome.value === null) continue;
     const { account, result } = outcome.value;
-    for (const email of result.emails) {
-      email.accountId = account.accountId;
-      email.accountLabel = account.accountLabel;
-    }
-    mergedEmails = mergedEmails.concat(result.emails);
+    // Decorate shallow copies, not the shared client-returned objects.
+    const decorated = result.emails.map((email) => ({
+      ...email,
+      accountId: account.accountId,
+      accountLabel: account.accountLabel,
+      sourceClientAccountId: account.clientAccountId,
+      sourceAccountId: account.jmapAccountId,
+      sourceFolder: resolveSourceFolderName(email, account.mailboxes),
+    }));
+    mergedEmails = mergedEmails.concat(decorated);
     totalSum += result.total;
     if (result.hasMore) anyHasMore = true;
   }
@@ -267,6 +302,147 @@ export function fetchUnifiedMailboxCounts(
   }
 
   return counts;
+}
+
+// ─── Cross-account views (unread / starred / all) ─────────────────────────────
+//
+// These merge messages across EVERY account (including shared) and across all
+// folders except the CROSS_EXCLUDED_ROLES (junk, sent, archive, trash, drafts),
+// i.e. inbox + custom folders, into one date-sorted list. Unlike the per-role
+// unified fan-out above, the query spans many mailboxes per account, so the
+// filter is built from each account's included-mailbox ids.
+
+/**
+ * Mailboxes of an account included in the cross-account views: everything whose
+ * role is not excluded (inbox + custom/no-role folders).
+ */
+export function getCrossIncludedMailboxes(account: UnifiedAccountClient): Mailbox[] {
+  return account.mailboxes.filter((m) => !CROSS_EXCLUDED_ROLES.has(m.role ?? ''));
+}
+
+/**
+ * Builds the JMAP Email/query filter for a cross-account view over the given
+ * JMAP-side mailbox ids. `all` is just the mailbox membership; `unread` and
+ * `starred` AND a keyword condition onto it.
+ */
+export function buildCrossFilter(
+  view: CrossView,
+  jmapMailboxIds: string[],
+): Record<string, unknown> {
+  const inAny: Record<string, unknown> = jmapMailboxIds.length === 1
+    ? { inMailbox: jmapMailboxIds[0] }
+    : { operator: 'OR', conditions: jmapMailboxIds.map((id) => ({ inMailbox: id })) };
+  if (view === 'all') return inAny;
+  const keyword = view === 'unread' ? { notKeyword: '$seen' } : { hasKeyword: '$flagged' };
+  return { operator: 'AND', conditions: [inAny, keyword] };
+}
+
+/**
+ * Total unread count across every account's included cross-view mailboxes. Used
+ * for the unread badge on the "All unread" and "All mail" entries. Mirrors the
+ * unified count behaviour (sum of per-mailbox unread metadata, no extra query).
+ */
+export function getCrossUnreadTotal(accounts: UnifiedAccountClient[]): number {
+  let unread = 0;
+  for (const account of accounts) {
+    for (const m of getCrossIncludedMailboxes(account)) unread += m.unreadEmails;
+  }
+  return unread;
+}
+
+async function fanOutCrossQuery(
+  accounts: UnifiedAccountClient[],
+  run: (
+    account: UnifiedAccountClient,
+    jmapAccountId: string | undefined,
+    includedJmapIds: string[],
+  ) => Promise<{ emails: Email[]; total: number; hasMore: boolean }>,
+): Promise<UnifiedFetchResult> {
+  const errors = new Map<string, string>();
+
+  type AccountResult = {
+    account: UnifiedAccountClient;
+    result: { emails: Email[]; total: number; hasMore: boolean };
+  } | null;
+
+  const promises = accounts.map(async (account): Promise<AccountResult> => {
+    const included = getCrossIncludedMailboxes(account);
+    if (included.length === 0) return null;
+    const jmapAccountId = account.isShared ? account.accountId : undefined;
+    const includedJmapIds = included.map((m) => account.isShared ? (m.originalId ?? m.id) : m.id);
+    try {
+      const result = await run(account, jmapAccountId, includedJmapIds);
+      return { account, result };
+    } catch (err) {
+      errors.set(account.accountId, err instanceof Error ? err.message : String(err));
+      return null;
+    }
+  });
+
+  const results = await Promise.allSettled(promises);
+
+  let mergedEmails: Email[] = [];
+  let totalSum = 0;
+  let anyHasMore = false;
+
+  for (const outcome of results) {
+    if (outcome.status !== 'fulfilled' || outcome.value === null) continue;
+    const { account, result } = outcome.value;
+    // Decorate shallow copies, not the shared client-returned objects.
+    const decorated = result.emails.map((email) => ({
+      ...email,
+      accountId: account.accountId,
+      accountLabel: account.accountLabel,
+      sourceClientAccountId: account.clientAccountId,
+      sourceAccountId: account.jmapAccountId,
+      sourceFolder: resolveSourceFolderName(email, account.mailboxes),
+    }));
+    mergedEmails = mergedEmails.concat(decorated);
+    totalSum += result.total;
+    if (result.hasMore) anyHasMore = true;
+  }
+
+  mergedEmails.sort((a, b) => {
+    const dateA = new Date(a.receivedAt).getTime();
+    const dateB = new Date(b.receivedAt).getTime();
+    return dateB - dateA;
+  });
+
+  return { emails: mergedEmails, total: totalSum, hasMore: anyHasMore, errors };
+}
+
+/**
+ * Fetches a cross-account view (browse), merging and date-sorting across all
+ * accounts. Per-account failures are collected in the errors map.
+ */
+export async function fetchCrossViewEmails(
+  accounts: UnifiedAccountClient[],
+  view: CrossView,
+  limit: number,
+  position: number,
+): Promise<UnifiedFetchResult> {
+  return fanOutCrossQuery(accounts, (account, jmapAccountId, ids) =>
+    account.client.advancedSearchEmails(buildCrossFilter(view, ids), jmapAccountId, limit, position));
+}
+
+/**
+ * Text search within a cross-account view: the view filter AND a free-text
+ * condition, fanned out across accounts.
+ */
+export async function searchCrossViewEmails(
+  accounts: UnifiedAccountClient[],
+  view: CrossView,
+  query: string,
+  limit: number,
+  position: number,
+): Promise<UnifiedFetchResult> {
+  return fanOutCrossQuery(accounts, (account, jmapAccountId, ids) =>
+    account.client.advancedSearchEmails(
+      { operator: 'AND', conditions: [buildCrossFilter(view, ids), { text: query }] },
+      jmapAccountId,
+      limit,
+      position,
+    ));
 }
 
 /**

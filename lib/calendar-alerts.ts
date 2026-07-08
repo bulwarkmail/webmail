@@ -103,6 +103,8 @@ export function getPendingAlerts(
   const pending: PendingAlert[] = [];
 
   for (const event of events) {
+    if (event.status === 'cancelled') continue;
+
     const alerts = getEffectiveAlerts(event, calendars);
     if (!alerts) continue;
 

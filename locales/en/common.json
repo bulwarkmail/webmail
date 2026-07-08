@@ -134,7 +134,10 @@
     "mail": "Mail",
     "nav_label": "Navigation",
     "add_app": "Apps",
-    "scheduled": "Scheduled"
+    "scheduled": "Scheduled",
+    "unified_all_unread": "All unread",
+    "unified_all_starred": "All starred",
+    "unified_all_mail": "All mail"
   },
   "protocol_handlers": {
     "title": "Default apps",
@@ -562,7 +565,8 @@
       "add_to_contacts": "Add to contacts",
       "copied": "Copied!",
       "copy_failed": "Failed to copy"
-    }
+    },
+    "send_now": "Send now"
   },
   "email_composer": {
     "read_receipt_on": "Read receipt requested (click to disable)",
@@ -631,7 +635,9 @@
     "validation": {
       "recipient_required": "Add a recipient to send",
       "subject_required": "Add a subject",
-      "body_required": "Write a message or attach a file"
+      "body_required": "Write a message or attach a file",
+      "attachments_uploading": "Attachments are still uploading — sending as soon as they finish",
+      "attachment_upload_failed": "Not sent — an attachment failed to upload. Remove it and try again."
     },
     "upload_progress": "Uploading {uploaded} / {total}",
     "upload_cancel": "Cancel upload",
@@ -671,7 +677,9 @@
     "recipient_edit_email": "Edit email address",
     "recipient_edit_name": "Edit display name",
     "recipient_email_placeholder": "Email address",
-    "recipient_name_placeholder": "Display name"
+    "recipient_name_placeholder": "Display name",
+    "autocomplete_search_server": "Search the server",
+    "autocomplete_searching": "Searching..."
   },
   "confirm_dialog": {
     "confirm": "Confirm",
@@ -800,8 +808,12 @@
     "pl": "Polski",
     "pt": "Português",
     "ru": "Русский",
+    "sk": "Slovenčina",
     "uk": "Українська",
-    "zh": "简体中文"
+    "zh": "简体中文",
+    "fa": "فارسی",
+    "farsi": "فارسی",
+    "switch_to_farsi": "Switch to Farsi"
   },
   "settings": {
     "title": "Settings",
@@ -922,17 +934,38 @@
         "description": "Show an \"All Mail\" entry above your folders that merges messages from across this account's folders into one list.",
         "folders_label": "Folders in All Mail",
         "folders_description": "Choose which folders are merged into the All Mail view.",
+        "account_hint": "Applies to {account}.",
         "no_folders": "No folders available."
       },
       "colorful_sidebar_icons": {
         "label": "Colorful Sidebar Icons",
         "description": "Tint folder and tag icons by type (blue Inbox, red Junk, green Sent, etc.). Disable for a monochrome sidebar."
       },
+      "tint_list_rows": {
+        "label": "Tint List Rows by Tag Color",
+        "description": "Shade each message row with its first tag color. Disable to keep rows plain; tag dots and chips still show the color."
+      },
+      "show_folder_total_count": {
+        "label": "Show Total Message Count",
+        "description": "Show the total message count next to folders and tags, alongside the unread count. Disable to show only unread counts."
+      },
       "pro_interface": {
         "label": "Pro Interface (Experimental)",
         "description": "Desktop-only power-user layout with multi-tab message browsing and cross-account workflows. The standard interface is unaffected; you can switch back at any time.",
         "open_label": "Open Pro Interface",
         "back_to_standard": "Back to standard"
+      },
+      "cross_unread": {
+        "label": "All accounts: Unread",
+        "description": "Show an entry in the All accounts section listing unread mail across every account, spanning all folders except junk, sent, archive, trash and drafts."
+      },
+      "cross_starred": {
+        "label": "All accounts: Starred",
+        "description": "Show an entry in the All accounts section listing starred mail across every account, spanning all folders except junk, sent, archive, trash and drafts."
+      },
+      "cross_all": {
+        "label": "All accounts: All mail",
+        "description": "Show an entry in the All accounts section listing all mail across every account, spanning all folders except junk, sent, archive, trash and drafts."
       }
     },
     "keywords": {
@@ -1025,6 +1058,14 @@
         "preview_today": "Today:",
         "preview_this_week": "This week:",
         "preview_older": "Older:"
+      },
+      "date_locale": {
+        "label": "Date format region",
+        "description": "How numeric dates are ordered (day, month, year)",
+        "auto": "Automatic (match language)",
+        "iso": "ISO 8601 (YYYY-MM-DD)",
+        "dmy": "Day/Month/Year",
+        "mdy": "Month/Day/Year"
       },
       "time_format": {
         "label": "Time Format",
@@ -1189,6 +1230,7 @@
         "archive": "Archive",
         "tag": "Tag",
         "spam": "Mark as Spam",
+        "not_spam": "Not Spam",
         "none_selected": "No actions selected",
         "mode_label": "Display Mode",
         "mode_inline": "Inline",
@@ -1229,6 +1271,14 @@
         "off": "Off",
         "seconds": "{seconds} seconds",
         "unsupported": "The current account does not advertise delayed-send support. The setting is still saved for other accounts."
+      },
+      "return_to_list_after_action": {
+        "label": "Return to list after delete or mark unread",
+        "description": "After deleting or marking the open message unread, go back to the message list instead of opening the next message."
+      },
+      "rtl_editing": {
+        "label": "Right-to-left editing support",
+        "description": "Adds a direction button to the composer toolbar so you can set paragraphs left-to-right or right-to-left"
       }
     },
     "composer": {
@@ -1913,6 +1963,8 @@
     "mark_unread": "Mark as Unread",
     "star": "Star",
     "unstar": "Unstar",
+    "pin": "Pin",
+    "unpin": "Unpin",
     "move_to": "Move to...",
     "archive": "Archive",
     "delete": "Delete",
@@ -2148,6 +2200,9 @@
       "title": "Shared"
     },
     "address_books": {
+      "create": "New address book",
+      "created": "Address book created",
+      "create_failed": "Failed to create address book",
       "title": "My Address Books",
       "shared_prefix": "Shared: {name}",
       "moved": "Contact moved to {name}",

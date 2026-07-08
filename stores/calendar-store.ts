@@ -567,10 +567,13 @@ export const useCalendarStore = create<CalendarStore>()(
           const escapedId = participantId.replace(/~/g, '~0').replace(/\//g, '~1');
           const patchKey = `participants/${escapedId}/participationStatus`;
           const patch: Record<string, unknown> = { [patchKey]: status };
-          // Include replyTo so the server knows where to deliver the iTIP reply
-          // (may be missing if the event was imported or auto-created without it).
-          if (replyTo) {
-            patch.replyTo = replyTo;
+          // Stalwart routes the iTIP REPLY to the stored ORGANIZER
+          // (organizerCalendarAddress); the RFC 8984 replyTo property is retired
+          // in jscalendarbis and ignored. Repair events that are missing the
+          // organizer (e.g. imported ones), but never touch an existing one -
+          // attendees may not modify the ORGANIZER.
+          if (replyTo?.imip && storeEvent && !storeEvent.organizerCalendarAddress) {
+            patch.organizerCalendarAddress = replyTo.imip;
           }
           await client.updateCalendarEvent(
             realId,
@@ -677,9 +680,11 @@ export const useCalendarStore = create<CalendarStore>()(
                 '@type': 'Participant',
                 name: p.name,
                 email: p.email,
-                calendarAddress: p.calendarAddress,
+                // calendarAddress carries the scheduling address in jscalendarbis
+                // (Stalwart); sendTo is retired there, so it only serves as a
+                // fallback source for events parsed from legacy RFC 8984 data.
+                calendarAddress: p.calendarAddress || p.sendTo?.imip,
                 description: p.description,
-                sendTo: p.sendTo,
                 kind: p.kind,
                 roles: p.roles,
                 participationStatus: p.participationStatus,
@@ -719,7 +724,11 @@ export const useCalendarStore = create<CalendarStore>()(
             keywords: src.keywords,
             categories: src.categories,
             locale: src.locale,
-            replyTo: src.replyTo || (src.organizerCalendarAddress ? { imip: src.organizerCalendarAddress } : undefined),
+            // Stalwart derives the iCalendar ORGANIZER solely from
+            // organizerCalendarAddress (replyTo is retired in jscalendarbis);
+            // dropping it here would strip the ORGANIZER from imported invites
+            // and break RSVP replies afterwards.
+            organizerCalendarAddress: src.organizerCalendarAddress || src.replyTo?.imip,
             locations: src.locations,
             virtualLocations: src.virtualLocations,
             links: src.links,

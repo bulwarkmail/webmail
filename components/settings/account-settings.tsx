@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { useRouter } from '@/i18n/navigation';
 import { getMaxAccounts } from '@/lib/account-utils';
 import { formatFileSize, cn } from '@/lib/utils';
+import { PluginSlot } from '@/components/plugins/plugin-slot';
 
 function hostnameOf(serverUrl: string): string {
   try { return new URL(serverUrl).hostname; } catch { return serverUrl; }
@@ -52,7 +53,7 @@ export function AccountSettings() {
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const draggedIndexRef = useRef<number | null>(null);
 
-  const quotaPercentage = quota ? Math.round((quota.used / quota.total) * 100) : 0;
+  const quotaPercentage = quota && quota.total > 0 ? Math.min(Math.round((quota.used / quota.total) * 100), 100) : 0;
   const displayName = primaryIdentity?.name || account?.displayName || (isDemoMode ? 'Demo User' : undefined);
   const email = primaryIdentity?.email || account?.email || username;
   const max = getMaxAccounts();
@@ -180,6 +181,8 @@ export function AccountSettings() {
         )}
       </SettingsSection>
 
+      <PluginSlot name="settings-section" />
+
       {/* Logged-in accounts list */}
       {accounts.length > 0 && (
         <SettingsSection title={t('accounts.title')} description={t('accounts.description')}>
@@ -220,7 +223,7 @@ export function AccountSettings() {
                 onClick={handleAddAccount}
                 className="w-full"
               >
-                <Plus className="w-4 h-4 mr-2" />
+                <Plus className="w-4 h-4 me-2" />
                 {t('accounts.add')}
               </Button>
             )}
@@ -242,7 +245,7 @@ export function AccountSettings() {
                   onClick={() => handleManageShared(acc)}
                   disabled={!editable}
                   className={cn(
-                    'flex items-center gap-3 w-full p-3 border border-border rounded-lg text-left transition-colors',
+                    'flex items-center gap-3 w-full p-3 border border-border rounded-lg text-start transition-colors',
                     editable ? 'hover:bg-muted/50 cursor-pointer' : 'opacity-60 cursor-not-allowed',
                   )}
                 >
@@ -356,7 +359,7 @@ function AccountRow({
         onClick={onSwitch}
         disabled={isActive}
         className={cn(
-          'min-w-0 flex-1 text-left',
+          'min-w-0 flex-1 text-start',
           !isActive && 'cursor-pointer'
         )}
         title={isActive ? labels.active : labels.switchTo}

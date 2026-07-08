@@ -134,7 +134,10 @@
     "nav_label": "导航",
     "add_app": "应用",
     "shared": "共享",
-    "scheduled": "已计划"
+    "scheduled": "已计划",
+    "unified_all_unread": "全部未读",
+    "unified_all_starred": "全部加星标",
+    "unified_all_mail": "全部邮件"
   },
   "protocol_handlers": {
     "title": "默认应用",
@@ -562,7 +565,8 @@
       "add_to_contacts": "添加到联系人",
       "copied": "已复制！",
       "copy_failed": "复制失败"
-    }
+    },
+    "send_now": "立即发送"
   },
   "email_composer": {
     "read_receipt_on": "已请求已读回执（点击以关闭）",
@@ -628,7 +632,9 @@
     "validation": {
       "recipient_required": "请添加收件人",
       "subject_required": "请添加主题",
-      "body_required": "请输入邮件内容或添加附件"
+      "body_required": "请输入邮件内容或添加附件",
+      "attachments_uploading": "附件仍在上传中，上传完成后将自动发送",
+      "attachment_upload_failed": "未发送 - 附件上传失败。请移除该附件后重试。"
     },
     "upload_progress": "正在上传 {uploaded} / {total}",
     "upload_cancel": "取消上传",
@@ -671,7 +677,9 @@
     "recipient_edit_email": "编辑电子邮件地址",
     "recipient_edit_name": "编辑显示名称",
     "recipient_email_placeholder": "电子邮件地址",
-    "recipient_name_placeholder": "显示名称"
+    "recipient_name_placeholder": "显示名称",
+    "autocomplete_search_server": "在服务器上搜索",
+    "autocomplete_searching": "搜索中..."
   },
   "confirm_dialog": {
     "confirm": "确认",
@@ -800,8 +808,12 @@
     "pl": "Polski",
     "pt": "Português",
     "ru": "Русский",
+    "sk": "Slovenčina",
     "uk": "Українська",
-    "zh": "简体中文"
+    "zh": "简体中文",
+    "fa": "فارسی",
+    "farsi": "فارسی",
+    "switch_to_farsi": "切换到波斯语"
   },
   "settings": {
     "title": "设置",
@@ -919,17 +931,38 @@
         "description": "Show an \"All Mail\" entry above your folders that merges messages from across this account's folders into one list.",
         "folders_label": "Folders in All Mail",
         "folders_description": "Choose which folders are merged into the All Mail view.",
+        "account_hint": "Applies to {account}.",
         "no_folders": "No folders available."
       },
       "colorful_sidebar_icons": {
         "label": "彩色侧边栏图标",
         "description": "按类型为文件夹和标签图标着色（蓝色收件箱、红色垃圾邮件、绿色已发送等）。禁用以获得单色侧边栏。"
       },
+      "tint_list_rows": {
+        "label": "Tint List Rows by Tag Color",
+        "description": "Shade each message row with its first tag color. Disable to keep rows plain; tag dots and chips still show the color."
+      },
+      "show_folder_total_count": {
+        "label": "显示邮件总数",
+        "description": "在文件夹和标签旁边显示邮件总数，以及未读数量。停用后仅显示未读数量。"
+      },
       "pro_interface": {
         "label": "Pro 界面（实验性）",
         "description": "仅限桌面的高级用户布局，支持多标签消息浏览和跨账户工作流。标准界面不受影响，您可以随时切换回来。",
         "open_label": "打开 Pro 界面",
         "back_to_standard": "返回标准"
+      },
+      "cross_unread": {
+        "label": "所有账户：未读",
+        "description": "在“所有账户”部分显示一个条目，列出所有账户的未读邮件，涵盖除垃圾邮件、已发送、归档、废纸篓和草稿之外的所有文件夹。"
+      },
+      "cross_starred": {
+        "label": "所有账户：加星标",
+        "description": "在“所有账户”部分显示一个条目，列出所有账户的加星标邮件，涵盖除垃圾邮件、已发送、归档、废纸篓和草稿之外的所有文件夹。"
+      },
+      "cross_all": {
+        "label": "所有账户：全部邮件",
+        "description": "在“所有账户”部分显示一个条目，列出所有账户的全部邮件，涵盖除垃圾邮件、已发送、归档、废纸篓和草稿之外的所有文件夹。"
       }
     },
     "keywords": {
@@ -1022,6 +1055,14 @@
         "preview_today": "今天：",
         "preview_this_week": "本周：",
         "preview_older": "更早："
+      },
+      "date_locale": {
+        "label": "Date format region",
+        "description": "How numeric dates are ordered (day, month, year)",
+        "auto": "Automatic (match language)",
+        "iso": "ISO 8601 (YYYY-MM-DD)",
+        "dmy": "Day/Month/Year",
+        "mdy": "Month/Day/Year"
       },
       "time_format": {
         "label": "时间格式",
@@ -1186,6 +1227,7 @@
         "archive": "归档",
         "tag": "标签",
         "spam": "标记为垃圾邮件",
+        "not_spam": "非垃圾邮件",
         "none_selected": "未选择任何操作",
         "mode_label": "显示模式",
         "mode_inline": "内嵌",
@@ -1226,6 +1268,10 @@
         "off": "关闭",
         "seconds": "{seconds} 秒",
         "unsupported": "当前账户未声明支持延迟发送。该设置仍会为其他账户保存。"
+      },
+      "return_to_list_after_action": {
+        "label": "删除或标记为未读后返回列表",
+        "description": "删除打开的邮件或将其标记为未读后，返回邮件列表而不是打开下一封邮件。"
       }
     },
     "composer": {
@@ -1913,6 +1959,8 @@
     "mark_unread": "标记为未读",
     "star": "加星标",
     "unstar": "取消星标",
+    "pin": "固定",
+    "unpin": "取消固定",
     "move_to": "移动到…",
     "archive": "归档",
     "delete": "删除",
@@ -2147,6 +2195,9 @@
       "title": "共享"
     },
     "address_books": {
+      "create": "新建通讯录",
+      "created": "通讯录已创建",
+      "create_failed": "创建通讯录失败",
       "title": "我的地址簿",
       "shared_prefix": "共享：{name}",
       "moved": "联系人已移至 {name}",

@@ -121,3 +121,34 @@ describe('EmailListItem tag badge', () => {
     expect(container.querySelector('p')).toBeNull();
   });
 });
+
+describe('EmailListItem shift-range checkbox', () => {
+  beforeEach(() => {
+    useSettingsStore.setState({ emailKeywords: [...DEFAULT_KEYWORDS], showPreview: false, mailLayout: 'split' });
+  });
+
+  it('shift-clicking the checkbox extends the selection from the anchor', () => {
+    const e1 = makeEmail({ id: 'e1', threadId: 't1' });
+    const e2 = makeEmail({ id: 'e2', threadId: 't2' });
+    const e3 = makeEmail({ id: 'e3', threadId: 't3' });
+    // selection mode active (so the checkbox renders), anchor on e1
+    useEmailStore.setState({
+      emails: [e1, e2, e3],
+      selectedEmailIds: new Set(['e1']),
+      lastSelectedEmailId: 'e1',
+      selectedMailbox: 'inbox',
+    });
+
+    render(<EmailListItem email={e3} />);
+    // the checkbox is the first button in the row (shown in selection mode)
+    const checkbox = screen.getAllByRole('button')[0];
+    act(() => {
+      checkbox.dispatchEvent(new MouseEvent('click', { bubbles: true, shiftKey: true }));
+    });
+
+    const sel = useEmailStore.getState().selectedEmailIds;
+    expect(sel.has('e1')).toBe(true);
+    expect(sel.has('e2')).toBe(true); // the in-between row got filled in
+    expect(sel.has('e3')).toBe(true);
+  });
+});

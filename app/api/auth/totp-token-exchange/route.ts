@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { logger } from '@/lib/logger';
-import { discoverOAuth } from '@/lib/oauth/discovery';
-import { getDiscoveryValidator } from '@/lib/oauth/token-exchange';
 import { refreshTokenCookieName, refreshTokenServerCookieName } from '@/lib/oauth/tokens';
 import { getCookieOptions } from '@/lib/oauth/cookie-config';
 import { readFileEnv } from '@/lib/read-file-env';
@@ -11,81 +9,173 @@ import { isPublicHttpUrl } from '@/lib/security/url-guard';
 import { recordLogin } from '@/lib/telemetry/login-tracker';
 import { parseJmapServers, findServerByUrl, findServerById } from '@/lib/admin/jmap-servers';
 import { MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
+import { generateCodeVerifier, generateCodeChallenge } from '@/lib/oauth/pkce';
 
 /**
- * Exchange basic auth credentials (with TOTP appended) for OAuth tokens.
+ * Exchange a password + (optional) TOTP code for OAuth tokens.
  *
- * This allows 2FA users who log in with basic auth + TOTP to upgrade
- * to token-based auth, avoiding session expiry when the TOTP rotates.
+ * Stalwart 0.16+ no longer accepts the legacy `password$totp` convention over
+ * HTTP Basic auth: its Basic decoder hardcodes `mfa_token: None` and never
+ * splits the secret on `$`, so any TOTP appended to the password is verified
+ * verbatim against the password hash and fails. The MFA token must instead be
+ * supplied as a distinct field through the structured login endpoint.
  *
- * Tries three strategies:
- * 1. ROPC grant with client_id (if OAUTH_CLIENT_ID is set)
- * 2. ROPC grant without client_id
- * 3. ROPC grant authenticated via Basic Auth header (Stalwart-style)
+ * This route drives that flow server-side (avoiding browser CORS against the
+ * mail server, same as OAuth discovery):
+ *   1. POST {serverUrl}/api/auth  -> authenticate with a separate `mfaToken`,
+ *      receiving a short-lived authorization `clientCode`.
+ *   2. POST {serverUrl}/auth/token (grant_type=authorization_code) -> exchange
+ *      the code (with PKCE) for access/refresh tokens.
+ *
+ * Token-based auth also survives TOTP rotation, unlike basic auth which embeds
+ * the (≈30s) code in every request.
  */
 
-async function tryTokenRequest(
-  tokenEndpoint: string,
-  params: URLSearchParams,
-  extraHeaders?: Record<string, string>,
-): Promise<{ ok: true; tokens: { access_token: string; expires_in?: number; refresh_token?: string } } | { ok: false; status: number; error: string }> {
-  try {
-    const headers: Record<string, string> = { 'Content-Type': 'application/x-www-form-urlencoded', ...extraHeaders };
-    const response = await fetch(tokenEndpoint, {
-      method: 'POST',
-      headers,
-      body: params.toString(),
-    });
+// Fallback OAuth client id used when no client is configured. Stalwart accepts
+// any client id unless `require_client_registration` is enabled (default off);
+// when it is enabled the admin must configure `oauthClientId` with this
+// redirect URI registered.
+const DEFAULT_CLIENT_ID = 'bulwark-webmail';
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      return { ok: false, status: response.status, error: errorText.substring(0, 500) };
-    }
-
-    const tokens = await response.json();
-    if (!tokens.access_token) {
-      return { ok: false, status: 502, error: 'Response missing access_token' };
-    }
-
-    return { ok: true, tokens };
-  } catch (err) {
-    return { ok: false, status: 0, error: err instanceof Error ? err.message : String(err) };
-  }
+interface LoginResult {
+  type?: string;
+  // The response keeps snake_case: only the LoginResponse variant *tags* are
+  // camelCased server-side, not the struct fields (the request fields are).
+  client_code?: string;
 }
 
-async function findTokenEndpoint(serverUrl: string, adminTrusted: boolean): Promise<string | null> {
-  // Admin-trusted callers (matched server entry or configured JMAP server URL)
-  // honor the `oauthAllowPrivateEndpoints` opt-in. User-supplied URLs always
-  // go through the SSRF validator regardless of the setting.
-  const validateEndpoint = adminTrusted ? getDiscoveryValidator() : isPublicHttpUrl;
-  // 1. Try OAuth discovery
-  const metadata = await discoverOAuth(serverUrl, { validateEndpoint });
-  if (metadata?.token_endpoint) return metadata.token_endpoint;
+function trimUrl(url: string): string {
+  return url.replace(/\/+$/, '');
+}
 
-  // 2. Try common Stalwart token endpoint paths directly
-  const candidates = [
-    `${serverUrl}/auth/token`,
-    `${serverUrl}/api/oauth/token`,
-  ];
+async function attemptLogin(
+  upstreamUrl: string,
+  username: string,
+  password: string,
+  totp: string | undefined,
+  redirectUri: string,
+  slot: number,
+  serverId: string | null,
+): Promise<NextResponse> {
+  const base = trimUrl(upstreamUrl);
 
-  for (const url of candidates) {
-    try {
-      // A POST with no body should return 400 (bad request) rather than 404 if the endpoint exists
-      const probe = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'grant_type=probe' });
-      if (probe.status !== 404 && probe.status !== 405) {
-        return url;
-      }
-    } catch {
-      // Network error - endpoint not reachable
+  // Per-server OAuth credentials override the global ones when the requested
+  // server entry has its own oauth block configured.
+  const serverList = parseJmapServers(configManager.get<unknown>('jmapServers', []));
+  const entry = findServerById(serverList, serverId);
+  const clientId = entry?.oauth?.clientId
+    || configManager.get<string>('oauthClientId', '')
+    || process.env.OAUTH_CLIENT_ID
+    || DEFAULT_CLIENT_ID;
+  const clientSecret = entry?.oauth?.clientSecret
+    || configManager.get<string>('oauthClientSecret', '')
+    || process.env.OAUTH_CLIENT_SECRET
+    || readFileEnv(process.env.OAUTH_CLIENT_SECRET_FILE)
+    || '';
+
+  // PKCE proves the token exchange originates from the same client that
+  // initiated the login, so no client secret is required for public clients.
+  const verifier = generateCodeVerifier();
+  const challenge = await generateCodeChallenge(verifier);
+
+  // Step 1: structured login with a separate MFA token.
+  let login: LoginResult;
+  try {
+    const loginResponse = await fetch(`${base}/api/auth`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'authCode',
+        accountName: username,
+        accountSecret: password,
+        ...(totp ? { mfaToken: totp } : {}),
+        clientId,
+        redirectUri,
+        codeChallenge: challenge,
+        codeChallengeMethod: 'S256',
+      }),
+    });
+
+    if (!loginResponse.ok) {
+      const detail = (await loginResponse.text()).substring(0, 500);
+      logger.warn('TOTP login: /api/auth rejected request', { status: loginResponse.status });
+      // A 404 means the server predates the structured login endpoint; let the
+      // caller fall back to the legacy basic-auth path.
+      return NextResponse.json(
+        { error: loginResponse.status === 404 ? 'login_endpoint_missing' : 'login_failed', detail },
+        { status: loginResponse.status === 404 ? 404 : 502 },
+      );
     }
+
+    login = await loginResponse.json();
+  } catch (err) {
+    logger.warn('TOTP login: /api/auth request failed', { error: err instanceof Error ? err.message : String(err) });
+    return NextResponse.json({ error: 'login_unreachable' }, { status: 502 });
   }
 
-  return null;
+  switch (login.type) {
+    case 'authenticated':
+      break;
+    case 'mfaRequired':
+      return NextResponse.json({ error: 'totp_required' }, { status: 401 });
+    case 'failure':
+    default:
+      return NextResponse.json({ error: 'invalid_credentials' }, { status: 401 });
+  }
+
+  if (!login.client_code) {
+    logger.warn('TOTP login: authenticated response missing client_code');
+    return NextResponse.json({ error: 'login_failed' }, { status: 502 });
+  }
+
+  // Step 2: exchange the authorization code for tokens.
+  const tokenParams = new URLSearchParams({
+    grant_type: 'authorization_code',
+    code: login.client_code,
+    client_id: clientId,
+    redirect_uri: redirectUri,
+    code_verifier: verifier,
+  });
+  // Confidential clients still send their secret; harmless for public clients.
+  if (clientSecret) tokenParams.set('client_secret', clientSecret);
+
+  let tokens: { access_token?: string; expires_in?: number; refresh_token?: string };
+  try {
+    const tokenResponse = await fetch(`${base}/auth/token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: tokenParams.toString(),
+    });
+
+    if (!tokenResponse.ok) {
+      const detail = (await tokenResponse.text()).substring(0, 500);
+      logger.warn('TOTP login: token exchange failed', { status: tokenResponse.status, detail });
+      return NextResponse.json({ error: 'token_exchange_failed', detail }, { status: 502 });
+    }
+
+    tokens = await tokenResponse.json();
+  } catch (err) {
+    logger.warn('TOTP login: token endpoint failed', { error: err instanceof Error ? err.message : String(err) });
+    return NextResponse.json({ error: 'token_exchange_failed' }, { status: 502 });
+  }
+
+  if (!tokens.access_token) {
+    return NextResponse.json({ error: 'token_exchange_failed', detail: 'Response missing access_token' }, { status: 502 });
+  }
+
+  logger.info('TOTP login succeeded');
+  void recordLogin(username, base);
+  return await storeAndRespond(
+    { access_token: tokens.access_token, expires_in: tokens.expires_in, refresh_token: tokens.refresh_token },
+    slot,
+    serverId,
+  );
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const { serverUrl, username, password, slot: bodySlot, server_id: bodyServerId } = await request.json();
+    const { serverUrl, username, password, totp, slot: bodySlot, server_id: bodyServerId, redirectUri: bodyRedirectUri } =
+      await request.json();
 
     if (!serverUrl || !username || !password) {
       return NextResponse.json({ error: 'Missing required parameters' }, { status: 400 });
@@ -93,6 +183,7 @@ export async function POST(request: NextRequest) {
 
     const slot = typeof bodySlot === 'number' && bodySlot >= 0 && bodySlot < MAX_ACCOUNT_SLOTS ? bodySlot : 0;
     const requestedServerId = typeof bodyServerId === 'string' && bodyServerId ? bodyServerId : null;
+    const totpCode = typeof totp === 'string' && totp ? totp : undefined;
 
     // Pin the upstream URL to a configured JMAP server. The list of allowed
     // servers is `jmapServerUrl` plus any entry from `jmapServers`. Only when
@@ -110,20 +201,17 @@ export async function POST(request: NextRequest) {
 
     let upstreamUrl: string;
     let resolvedServerId: string | null = null;
-    let adminTrusted = false;
     const requestedEntry = findServerById(serverList, requestedServerId);
     const matchedEntry = requestedEntry || findServerByUrl(serverList, serverUrl);
 
     if (matchedEntry) {
       upstreamUrl = matchedEntry.url;
       resolvedServerId = matchedEntry.id;
-      adminTrusted = true;
     } else if (configuredServerUrl) {
       upstreamUrl = configuredServerUrl;
-      adminTrusted = true;
     } else if (allowCustomEndpoint) {
       if (!(await isPublicHttpUrl(serverUrl))) {
-        logger.warn('TOTP token exchange: rejected non-public server URL');
+        logger.warn('TOTP login: rejected non-public server URL');
         return NextResponse.json({ error: 'invalid_server_url' }, { status: 400 });
       }
       upstreamUrl = serverUrl;
@@ -131,98 +219,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'jmap_server_not_configured' }, { status: 500 });
     }
 
-    const tokenEndpoint = await findTokenEndpoint(upstreamUrl, adminTrusted);
-    if (!tokenEndpoint) {
-      logger.warn('TOTP token exchange: no token endpoint found');
-      return NextResponse.json({ error: 'no_token_endpoint', detail: 'Could not discover OAuth token endpoint on the mail server' }, { status: 404 });
-    }
+    // The redirect URI must be identical in the login and token-exchange steps,
+    // and (when require_client_registration is on) registered for the client.
+    // Prefer the browser-supplied callback URL the OAuth client already uses;
+    // fall back to the upstream URL so the two steps still agree.
+    const redirectUri =
+      typeof bodyRedirectUri === 'string' && /^https?:\/\//.test(bodyRedirectUri)
+        ? bodyRedirectUri
+        : trimUrl(upstreamUrl);
 
-    return await attemptAllStrategies(tokenEndpoint, upstreamUrl, username, password, slot, resolvedServerId);
+    return await attemptLogin(upstreamUrl, username, password, totpCode, redirectUri, slot, resolvedServerId);
   } catch (error) {
-    logger.error('TOTP token exchange error', { error: error instanceof Error ? error.message : 'Unknown error' });
+    logger.error('TOTP login error', { error: error instanceof Error ? error.message : 'Unknown error' });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
-
-async function attemptAllStrategies(
-  tokenEndpoint: string,
-  serverUrl: string,
-  username: string,
-  password: string,
-  slot: number,
-  serverId: string | null,
-): Promise<NextResponse> {
-  logger.info('TOTP token exchange: found token endpoint', { tokenEndpoint });
-
-  // Per-server OAuth credentials override the global ones when the requested
-  // server entry has its own oauth block configured.
-  const serverList = parseJmapServers(configManager.get<unknown>('jmapServers', []));
-  const entry = findServerById(serverList, serverId);
-  const clientId = entry?.oauth?.clientId
-    || configManager.get<string>('oauthClientId', '')
-    || process.env.OAUTH_CLIENT_ID;
-  const clientSecret = entry?.oauth?.clientSecret
-    || configManager.get<string>('oauthClientSecret', '')
-    || process.env.OAUTH_CLIENT_SECRET
-    || readFileEnv(process.env.OAUTH_CLIENT_SECRET_FILE);
-  const basicAuth = `Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`;
-  const attempts: Array<{ strategy: string; error: string }> = [];
-
-  // Strategy 1: ROPC with client_id (if configured)
-  if (clientId) {
-    const params = new URLSearchParams({ grant_type: 'password', username, password, client_id: clientId });
-    if (clientSecret) params.set('client_secret', clientSecret);
-    const result = await tryTokenRequest(tokenEndpoint, params);
-    if (result.ok) {
-      logger.info('TOTP token exchange succeeded (ROPC with client_id)');
-      void recordLogin(username, serverUrl);
-      return await storeAndRespond(result.tokens, slot, serverId);
-    }
-    attempts.push({ strategy: 'ROPC with client_id', error: result.error });
-  }
-
-  // Strategy 2: ROPC without client_id
-  {
-    const params = new URLSearchParams({ grant_type: 'password', username, password });
-    const result = await tryTokenRequest(tokenEndpoint, params);
-    if (result.ok) {
-      logger.info('TOTP token exchange succeeded (ROPC without client_id)');
-      void recordLogin(username, serverUrl);
-      return await storeAndRespond(result.tokens, slot, serverId);
-    }
-    attempts.push({ strategy: 'ROPC without client_id', error: result.error });
-  }
-
-  // Strategy 3: Basic Auth header on token endpoint (some servers accept this)
-  {
-    const params = new URLSearchParams({ grant_type: 'password' });
-    const result = await tryTokenRequest(tokenEndpoint, params, { 'Authorization': basicAuth });
-    if (result.ok) {
-      logger.info('TOTP token exchange succeeded (Basic Auth header)');
-      void recordLogin(username, serverUrl);
-      return await storeAndRespond(result.tokens, slot, serverId);
-    }
-    attempts.push({ strategy: 'Basic Auth header', error: result.error });
-  }
-
-  // Strategy 4: client_credentials with Basic Auth (last resort)
-  {
-    const params = new URLSearchParams({ grant_type: 'client_credentials' });
-    const result = await tryTokenRequest(tokenEndpoint, params, { 'Authorization': basicAuth });
-    if (result.ok) {
-      logger.info('TOTP token exchange succeeded (client_credentials + Basic Auth)');
-      void recordLogin(username, serverUrl);
-      return await storeAndRespond(result.tokens, slot, serverId);
-    }
-    attempts.push({ strategy: 'client_credentials + Basic Auth', error: result.error });
-  }
-
-  logger.warn('TOTP token exchange: all strategies failed', { attempts });
-  return NextResponse.json({
-    error: 'token_exchange_failed',
-    detail: 'All token exchange strategies failed',
-    attempts,
-  }, { status: 502 });
 }
 
 async function storeAndRespond(

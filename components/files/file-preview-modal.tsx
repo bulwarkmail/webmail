@@ -68,11 +68,11 @@ function SimpleMarkdown({ content }: { content: string }) {
     } else if (line.startsWith("---") || line.startsWith("***")) {
       elements.push(<hr key={i} className="my-4 border-border" />);
     } else if (line.startsWith("- ") || line.startsWith("* ")) {
-      elements.push(<li key={i} className="ml-4 list-disc">{processInline(line.slice(2))}</li>);
+      elements.push(<li key={i} className="ms-4 list-disc">{processInline(line.slice(2))}</li>);
     } else if (/^\d+\. /.test(line)) {
-      elements.push(<li key={i} className="ml-4 list-decimal">{processInline(line.replace(/^\d+\. /, ""))}</li>);
+      elements.push(<li key={i} className="ms-4 list-decimal">{processInline(line.replace(/^\d+\. /, ""))}</li>);
     } else if (line.startsWith("> ")) {
-      elements.push(<blockquote key={i} className="border-l-4 border-border pl-4 italic text-muted-foreground my-2">{processInline(line.slice(2))}</blockquote>);
+      elements.push(<blockquote key={i} className="border-s-4 border-border ps-4 italic text-muted-foreground my-2">{processInline(line.slice(2))}</blockquote>);
     } else if (line.startsWith("```")) {
       // Code block - collect until closing ```
       const codeLines: string[] = [];

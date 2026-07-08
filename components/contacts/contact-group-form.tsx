@@ -114,7 +114,7 @@ export function ContactGroupForm({
               placeholder={t("groups.search_members")}
               value={memberSearch}
               onChange={(e) => setMemberSearch(e.target.value)}
-              className="pl-9"
+              className="ps-9"
             />
           </div>
 
@@ -134,7 +134,7 @@ export function ContactGroupForm({
                     type="button"
                     onClick={() => toggleMember(contact.id)}
                     className={cn(
-                      "w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors",
+                      "w-full flex items-center gap-3 px-3 py-2.5 text-start transition-colors",
                       "hover:bg-muted",
                       isSelected && "bg-primary/5"
                     )}

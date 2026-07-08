@@ -88,7 +88,10 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
     try { return format(d, fmt); } catch { return "--:--"; }
   };
   const timeString = `${safeFormat(startDate, timeFmt)} – ${safeFormat(endTime, timeFmt)}`;
-  const ariaLabel = `${event.title || t("events.no_title")}, ${timeString}${calendarName ? `, ${calendarName}` : ""}`;
+  // iTIP CANCEL marks the attendee's copy with status "cancelled" instead of
+  // deleting it (#572) - render it struck through and dimmed.
+  const isCancelled = event.status === "cancelled";
+  const ariaLabel = `${event.title || t("events.no_title")}, ${timeString}${calendarName ? `, ${calendarName}` : ""}${isCancelled ? `, ${t("detail.cancelled")}` : ""}`;
 
   const handleDragStart = useCallback((e: DragEvent) => {
     e.stopPropagation();
@@ -131,11 +134,12 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
         aria-label={ariaLabel}
         {...dragProps}
         className={cn(
-          "flex items-center gap-1 w-full text-left text-xs px-1 py-0.5 rounded truncate",
+          "flex items-center gap-1 w-full text-start text-xs px-1 py-0.5 rounded truncate",
           "min-h-[44px] sm:min-h-0",
           "hover:opacity-80 transition-opacity",
           isSelected && "ring-2 ring-primary",
           isBeingDragged && "opacity-50",
+          isCancelled && !isBeingDragged && "opacity-60",
           className
         )}
         style={{ backgroundColor: `${color}20`, color, ...style }}
@@ -144,7 +148,7 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
           className="w-1.5 h-1.5 rounded-full flex-shrink-0"
           style={{ backgroundColor: color }}
         />
-        <span className="truncate">{event.title || t("events.no_title")}</span>
+        <span className={cn("truncate", isCancelled && "line-through")}>{event.title || t("events.no_title")}</span>
       </button>
     );
   }
@@ -159,12 +163,13 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
         aria-label={ariaLabel}
         {...dragProps}
         className={cn(
-          "w-full h-full text-left rounded-r px-1.5 py-0.5 text-xs overflow-hidden",
+          "w-full h-full text-start rounded-r px-1.5 py-0.5 text-xs overflow-hidden",
           "hover:opacity-90 transition-opacity cursor-pointer",
           continuesAfter && "rounded-r-sm",
-          continuesAfter && "pr-2",
+          continuesAfter && "pe-2",
           isSelected && "ring-2 ring-primary",
           isBeingDragged && "opacity-50",
+          isCancelled && !isBeingDragged && "opacity-60",
           className
         )}
         style={{ backgroundColor: `${color}24`, borderLeft: `3px solid ${color}`, color, ...style }}
@@ -173,7 +178,7 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
           {showTimeInMonthView && !event.showWithoutTime && (
             <span className="flex-shrink-0 opacity-80">{format(startDate, timeFmt)}</span>
           )}
-          <span className="truncate font-medium">{event.title || t("events.no_title")}</span>
+          <span className={cn("truncate font-medium", isCancelled && "line-through")}>{event.title || t("events.no_title")}</span>
         </div>
       </button>
     );
@@ -189,15 +194,16 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
       {...dragProps}
       data-calendar-event
       className={cn(
-        "w-full h-full text-left rounded-r px-1.5 py-0.5 text-xs overflow-hidden",
+        "w-full h-full text-start rounded-r px-1.5 py-0.5 text-xs overflow-hidden",
         "hover:opacity-90 transition-opacity cursor-pointer",
         isSelected && "ring-2 ring-primary",
         isBeingDragged && "opacity-50",
+        isCancelled && !isBeingDragged && "opacity-60",
         className
       )}
       style={{ backgroundColor: `${color}30`, borderLeft: `3px solid ${color}`, color, ...style }}
     >
-      <div className="font-medium truncate">{event.title || t("events.no_title")}</div>
+      <div className={cn("font-medium truncate", isCancelled && "line-through")}>{event.title || t("events.no_title")}</div>
       {!event.showWithoutTime && (
         <div className="opacity-80 text-[10px]">
           {timeString}

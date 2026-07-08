@@ -134,7 +134,10 @@
     "mail": "Mail",
     "nav_label": "Navigation",
     "add_app": "Apps",
-    "scheduled": "Planlagt"
+    "scheduled": "Planlagt",
+    "unified_all_unread": "Alle ulæste",
+    "unified_all_starred": "Alle med stjerne",
+    "unified_all_mail": "Al post"
   },
   "protocol_handlers": {
     "title": "Standardapps",
@@ -562,7 +565,8 @@
       "add_to_contacts": "Tilføj til kontakter",
       "copied": "Kopieret!",
       "copy_failed": "Kunne ikke kopiere"
-    }
+    },
+    "send_now": "Send nu"
   },
   "email_composer": {
     "read_receipt_on": "Læsekvittering anmodet (klik for at deaktivere)",
@@ -630,7 +634,9 @@
     "validation": {
       "recipient_required": "Tilføj en modtager for at sende",
       "subject_required": "Tilføj et emne",
-      "body_required": "Skriv en besked eller vedhæft en fil"
+      "body_required": "Skriv en besked eller vedhæft en fil",
+      "attachments_uploading": "Vedhæftninger uploades stadig — sendes, når de er færdige",
+      "attachment_upload_failed": "Ikke sendt - en vedhæftet fil kunne ikke uploades. Fjern den, og prøv igen."
     },
     "upload_progress": "Uploader {uploaded} / {total}",
     "upload_cancel": "Annuller upload",
@@ -671,7 +677,9 @@
     "recipient_edit_email": "Rediger e-mailadresse",
     "recipient_edit_name": "Rediger visningsnavn",
     "recipient_email_placeholder": "E-mailadresse",
-    "recipient_name_placeholder": "Visningsnavn"
+    "recipient_name_placeholder": "Visningsnavn",
+    "autocomplete_search_server": "Søg på serveren",
+    "autocomplete_searching": "Søger..."
   },
   "confirm_dialog": {
     "confirm": "Bekræft",
@@ -800,8 +808,12 @@
     "pl": "Polski",
     "pt": "Português",
     "ru": "Русский",
+    "sk": "Slovenčina",
     "uk": "Українська",
-    "zh": "简体中文"
+    "zh": "简体中文",
+    "fa": "فارسی",
+    "farsi": "فارسی",
+    "switch_to_farsi": "Skift til farsi"
   },
   "settings": {
     "title": "Indstillinger",
@@ -922,17 +934,38 @@
         "description": "Show an \"All Mail\" entry above your folders that merges messages from across this account's folders into one list.",
         "folders_label": "Folders in All Mail",
         "folders_description": "Choose which folders are merged into the All Mail view.",
+        "account_hint": "Applies to {account}.",
         "no_folders": "No folders available."
       },
       "colorful_sidebar_icons": {
         "label": "Farverige sidepane-ikoner",
         "description": "Farvelæg mappe- og tag-ikoner efter type (blå indbakke, rød spam, grøn sendt osv.). Deaktivér for et monokromt sidepanel."
       },
+      "tint_list_rows": {
+        "label": "Tint List Rows by Tag Color",
+        "description": "Shade each message row with its first tag color. Disable to keep rows plain; tag dots and chips still show the color."
+      },
+      "show_folder_total_count": {
+        "label": "Vis samlet antal beskeder",
+        "description": "Viser det samlede antal beskeder ud for mapper og tags sammen med antallet af ulæste. Slå fra for kun at vise ulæste."
+      },
       "pro_interface": {
         "label": "Pro-grænseflade (eksperimentel)",
         "description": "Power user-layout kun til skrivebordet med beskedvisning på flere faner og arbejdsforløb på tværs af konti. Standardgrænsefladen påvirkes ikke; du kan skifte tilbage når som helst.",
         "open_label": "Åbn Pro-grænsefladen",
         "back_to_standard": "Tilbage til standard"
+      },
+      "cross_unread": {
+        "label": "Alle konti: Ulæste",
+        "description": "Viser en post i sektionen Alle konti med ulæst post fra alle konti, på tværs af alle mapper undtagen spam, sendt, arkiv, papirkurv og kladder."
+      },
+      "cross_starred": {
+        "label": "Alle konti: Med stjerne",
+        "description": "Viser en post i sektionen Alle konti med post med stjerne fra alle konti, på tværs af alle mapper undtagen spam, sendt, arkiv, papirkurv og kladder."
+      },
+      "cross_all": {
+        "label": "Alle konti: Al post",
+        "description": "Viser en post i sektionen Alle konti med al post fra alle konti, på tværs af alle mapper undtagen spam, sendt, arkiv, papirkurv og kladder."
       }
     },
     "keywords": {
@@ -1025,6 +1058,14 @@
         "preview_today": "I dag:",
         "preview_this_week": "Denne uge:",
         "preview_older": "Ældre:"
+      },
+      "date_locale": {
+        "label": "Date format region",
+        "description": "How numeric dates are ordered (day, month, year)",
+        "auto": "Automatic (match language)",
+        "iso": "ISO 8601 (YYYY-MM-DD)",
+        "dmy": "Day/Month/Year",
+        "mdy": "Month/Day/Year"
       },
       "time_format": {
         "label": "Tidsformat",
@@ -1189,6 +1230,7 @@
         "archive": "Arkivér",
         "tag": "Tag",
         "spam": "Markér som spam",
+        "not_spam": "Ikke spam",
         "none_selected": "Ingen handlinger valgt",
         "mode_label": "Visningstilstand",
         "mode_inline": "Indlejret",
@@ -1229,6 +1271,10 @@
         "off": "Fra",
         "seconds": "{seconds} sekunder",
         "unsupported": "Den aktuelle konto annoncerer ikke understøttelse af forsinket afsendelse. Indstillingen gemmes stadig for andre konti."
+      },
+      "return_to_list_after_action": {
+        "label": "Vend tilbage til listen efter sletning eller markering som ulæst",
+        "description": "Efter sletning eller markering af den åbne besked som ulæst vendes der tilbage til beskedlisten i stedet for at åbne den næste besked."
       }
     },
     "composer": {
@@ -1913,6 +1959,8 @@
     "mark_unread": "Markér som ulæst",
     "star": "Stjernemarkér",
     "unstar": "Fjern stjerne",
+    "pin": "Fastgør",
+    "unpin": "Frigør",
     "move_to": "Flyt til...",
     "archive": "Arkivér",
     "delete": "Slet",
@@ -2147,6 +2195,9 @@
       "title": "Delt"
     },
     "address_books": {
+      "create": "Ny adressebog",
+      "created": "Adressebog oprettet",
+      "create_failed": "Kunne ikke oprette adressebog",
       "title": "Mine adressebøger",
       "shared_prefix": "Delt: {name}",
       "moved": "Kontakt flyttet til {name}",

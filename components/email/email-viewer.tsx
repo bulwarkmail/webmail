@@ -3,7 +3,7 @@
 import { useState, useEffect, useLayoutEffect, useMemo, useRef, useCallback } from "react";
 import DOMPurify from "dompurify";
 import { Email, ContactCard, Mailbox } from "@/lib/jmap/types";
-import { emailExportFilename, attachmentDownloadFilename, DEFAULT_EMAIL_TEMPLATE, DEFAULT_ATTACHMENT_TEMPLATE } from "@/lib/download-filename";
+import { emailExportFilename, attachmentDownloadFilename, attachmentsBundleFilename, DEFAULT_EMAIL_TEMPLATE, DEFAULT_ATTACHMENT_TEMPLATE } from "@/lib/download-filename";
 import { EML_IMPORT_ACCEPT, expandImportableEmails } from "@/lib/eml-import";
 import { EMAIL_IFRAME_SANITIZE_CONFIG, blockExternalResourcesOnNode, collapseBlockedImageContainers, escapeHtml, plainTextToSafeHtml, sanitizeEmailHtml, sanitizePlainTextRenderedHtml } from "@/lib/email-sanitization";
 import { hasMeaningfulHtmlBody } from "@/lib/signature-utils";
@@ -13,6 +13,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { formatFileSize, cn, buildMailboxTree, MailboxNode, formatDateTime, generateUUID } from "@/lib/utils";
 import { getSecurityStatus, extractListHeaders } from "@/lib/email-headers";
 import { emailToReadView } from "@/lib/plugin-projection";
+import { generateEmailSource } from "@/lib/email-source";
 import {
   Reply,
   ReplyAll,
@@ -87,23 +88,16 @@ import { ReadReceiptBanner } from "./read-receipt-banner";
 import { stripCrossAccountIdentityPrefix } from "@/hooks/use-pro-multi-account-identities";
 import { useTour } from "@/components/tour/tour-provider";
 import { useIsEmbedded } from "@/hooks/use-is-embedded";
-import { SmimePassphraseDialog } from "@/components/settings/smime-passphrase-dialog";
 import { findCalendarAttachment, isCalendarMimeType } from "@/lib/calendar-invitation";
 import { RecipientPopover } from "./recipient-popover";
 import { isFilePreviewable, isMimeTypeSafeForInlinePreview } from "@/lib/file-preview";
-import { SmimeStatusBanner } from "./smime-status-banner";
-import { detectSmime } from "@/lib/smime/smime-detect";
-import { smimeDecrypt, SmimeKeyLockedError, normalizeCmsBytes } from "@/lib/smime/smime-decrypt";
-import { smimeVerify } from "@/lib/smime/smime-verify";
-import { useSmimeStore } from "@/stores/smime-store";
-import type { SmimeStatus } from "@/lib/smime/types";
 import { parseTnef, isTnefAttachment } from "@/lib/tnef";
 import { debug } from "@/lib/debug";
 import type { TnefAttachment } from "@/lib/tnef";
 import { PluginSlot } from "@/components/plugins/plugin-slot";
 import { usePluginSlotOffers } from "@/hooks/use-plugin-slot-offers";
 import { ResizeHandle } from "@/components/layout/resize-handle";
-import { emailHooks, uiHooks } from "@/lib/plugin-hooks";
+import { emailHooks, uiHooks, renderHooks } from "@/lib/plugin-hooks";
 import type { AttachmentInfo, AttachmentPreview } from "@/lib/plugin-types";
 import { useAttachmentDrag, isDragOutSupported, type AttachmentDragSource } from "@/hooks/use-attachment-drag";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
@@ -252,64 +246,6 @@ const _formatRecipients = (
   return displayRecipients.join(', ');
 };
 
-function parseMimeHeaders(headerText: string): Map<string, string> {
-  const headers = new Map<string, string>();
-  const lines = headerText.split(/\r?\n/);
-  let currentKey: string | null = null;
-
-  for (const line of lines) {
-    if (!line) continue;
-    if (/^[ \t]/.test(line) && currentKey) {
-      headers.set(currentKey, `${headers.get(currentKey) || ''} ${line.trim()}`.trim());
-      continue;
-    }
-
-    const separatorIndex = line.indexOf(':');
-    if (separatorIndex <= 0) continue;
-
-    currentKey = line.slice(0, separatorIndex).trim().toLowerCase();
-    headers.set(currentKey, line.slice(separatorIndex + 1).trim());
-  }
-
-  return headers;
-}
-
-function getMimeBoundary(contentType: string): string | null {
-  const match = contentType.match(/boundary=(?:"([^"]+)"|([^;\s]+))/i);
-  return match?.[1] || match?.[2] || null;
-}
-
-function decodeQuotedPrintableUtf8(input: string): string {
-  const normalized = input.replace(/=(\r?\n)/g, '');
-  const bytes: number[] = [];
-
-  for (let index = 0; index < normalized.length; index++) {
-    if (normalized[index] === '=' && /^[0-9A-Fa-f]{2}$/.test(normalized.slice(index + 1, index + 3))) {
-      bytes.push(parseInt(normalized.slice(index + 1, index + 3), 16));
-      index += 2;
-      continue;
-    }
-    bytes.push(normalized.charCodeAt(index) & 0xff);
-  }
-
-  return new TextDecoder().decode(new Uint8Array(bytes));
-}
-
-function decodeBase64Utf8(input: string): string {
-  const cleaned = input.replace(/\s/g, '');
-  if (!cleaned) return '';
-  try {
-    const binary = atob(cleaned);
-    const bytes = new Uint8Array(binary.length);
-    for (let index = 0; index < binary.length; index++) {
-      bytes[index] = binary.charCodeAt(index);
-    }
-    return new TextDecoder().decode(bytes);
-  } catch {
-    return input;
-  }
-}
-
 function decodeBase64Bytes(input: string): Uint8Array | null {
   const cleaned = input.replace(/\s/g, '');
   if (!cleaned) return null;
@@ -324,21 +260,6 @@ function decodeBase64Bytes(input: string): Uint8Array | null {
   } catch {
     return null;
   }
-}
-
-function splitMimeHeadersAndBody(rawText: string): { headerText: string; bodyText: string } {
-  const separatorMatch = rawText.match(/\r?\n\r?\n/);
-  const separatorIndex = separatorMatch?.index ?? -1;
-  const separator = separatorMatch?.[0] ?? '';
-
-  if (separatorIndex < 0) {
-    return { headerText: '', bodyText: rawText };
-  }
-
-  return {
-    headerText: rawText.slice(0, separatorIndex),
-    bodyText: rawText.slice(separatorIndex + separator.length),
-  };
 }
 
 function getAttachmentContentBytes(attachment: {
@@ -365,89 +286,6 @@ function getAttachmentContentBytes(attachment: {
   return null;
 }
 
-function extractNestedSignedDataCandidate(
-  parsed: { attachments?: Array<unknown>; headers?: Array<{ key: string; value: string }> },
-  rawBytes: Uint8Array,
-): { source: string; bytes: ArrayBuffer } | null {
-  const topLevelContentType = (parsed.headers?.find(h => h.key === 'content-type')?.value || '').toLowerCase();
-  if (topLevelContentType.includes('application/pkcs7-mime') && topLevelContentType.includes('signed-data')) {
-    const rawText = new TextDecoder().decode(rawBytes);
-    const { bodyText } = splitMimeHeadersAndBody(rawText);
-    const topLevelTransferEncoding = (
-      parsed.headers?.find(h => h.key === 'content-transfer-encoding')?.value || ''
-    ).toLowerCase();
-
-    if (topLevelTransferEncoding.includes('base64')) {
-      const decoded = decodeBase64Bytes(bodyText);
-      if (decoded) {
-        return {
-          source: 'top-level-content-type-body',
-          bytes: decoded.buffer.slice(decoded.byteOffset, decoded.byteOffset + decoded.byteLength) as ArrayBuffer,
-        };
-      }
-    }
-
-    const bodyBytes = new TextEncoder().encode(bodyText);
-    return {
-      source: 'top-level-content-type-body-text',
-      bytes: bodyBytes.buffer.slice(bodyBytes.byteOffset, bodyBytes.byteOffset + bodyBytes.byteLength) as ArrayBuffer,
-    };
-  }
-
-  const rawText = new TextDecoder().decode(rawBytes);
-  const messageContent = splitMimeHeadersAndBody(rawText).bodyText;
-  const { headerText, bodyText } = splitMimeHeadersAndBody(messageContent);
-  const bodyHeaders = parseMimeHeaders(headerText);
-  const bodyContentType = (bodyHeaders.get('content-type') || '').toLowerCase();
-  const bodyTransferEncoding = (bodyHeaders.get('content-transfer-encoding') || '').toLowerCase();
-
-  if (bodyContentType.includes('application/pkcs7-mime') && bodyContentType.includes('signed-data')) {
-    if (bodyTransferEncoding.includes('base64')) {
-      const decoded = decodeBase64Bytes(bodyText);
-      if (decoded) {
-        return {
-          source: 'message-body-signed-data',
-          bytes: decoded.buffer.slice(decoded.byteOffset, decoded.byteOffset + decoded.byteLength) as ArrayBuffer,
-        };
-      }
-    }
-
-    const bodyBytes = new TextEncoder().encode(bodyText);
-    return {
-      source: 'message-body-signed-data-text',
-      bytes: bodyBytes.buffer.slice(bodyBytes.byteOffset, bodyBytes.byteOffset + bodyBytes.byteLength) as ArrayBuffer,
-    };
-  }
-
-  const nestedAttachment = parsed.attachments?.find(attachment => {
-    const mimeType = ((attachment as { mimeType?: string }).mimeType || '').toLowerCase();
-    const filename = ((attachment as { filename?: string | null }).filename || '').toLowerCase();
-    return mimeType.includes('application/pkcs7-mime') || filename.endsWith('.p7m');
-  }) as {
-    filename?: string | null;
-    mimeType?: string;
-    encoding?: 'base64' | 'utf8';
-    content?: ArrayBuffer | Uint8Array | string;
-  } | undefined;
-
-  if (!nestedAttachment) {
-    return null;
-  }
-
-  const attachmentBytes = getAttachmentContentBytes(nestedAttachment);
-  if (!attachmentBytes) {
-    return null;
-  }
-
-  return {
-    source: nestedAttachment.mimeType || nestedAttachment.filename || 'attachment-signed-data',
-    bytes: attachmentBytes.buffer.slice(
-      attachmentBytes.byteOffset,
-      attachmentBytes.byteOffset + attachmentBytes.byteLength,
-    ) as ArrayBuffer,
-  };
-}
-
 /**
  * Check if an HTML body string is effectively empty (just boilerplate/whitespace).
  * Outlook often generates HTML bodies with Word CSS + &nbsp; but no real text.
@@ -461,106 +299,6 @@ function isHtmlBodyEffectivelyEmpty(html: string): boolean {
     .replace(/\s+/g, '')
     .trim();
   return textContent.length === 0;
-}
-
-function extractMimePartContent(rawText: string, depth = 0): { html: string | null; text: string | null } {
-  if (depth > 6) {
-    const trimmed = rawText.trim();
-    return { html: null, text: trimmed || null };
-  }
-
-  const separatorMatch = rawText.match(/\r?\n\r?\n/);
-  const separatorIndex = separatorMatch?.index ?? -1;
-  const separator = separatorMatch?.[0] ?? '';
-
-  const headerText = separatorIndex >= 0 ? rawText.slice(0, separatorIndex) : '';
-  const bodyText = separatorIndex >= 0 ? rawText.slice(separatorIndex + separator.length) : rawText;
-  const headers = parseMimeHeaders(headerText);
-  const contentType = (headers.get('content-type') || '').toLowerCase();
-  const transferEncoding = (headers.get('content-transfer-encoding') || '').toLowerCase();
-
-  if (contentType.includes('multipart/')) {
-    const boundary = getMimeBoundary(contentType);
-    if (boundary) {
-      const boundaryMarker = `--${boundary}`;
-      const sections = bodyText.split(boundaryMarker);
-      let bestHtml: string | null = null;
-      let bestText: string | null = null;
-
-      for (const section of sections) {
-        const trimmedSection = section.trim();
-        if (!trimmedSection || trimmedSection === '--') continue;
-        const normalizedSection = trimmedSection.endsWith('--')
-          ? trimmedSection.slice(0, -2).trim()
-          : trimmedSection;
-        const extracted = extractMimePartContent(normalizedSection, depth + 1);
-        if (extracted.html && !bestHtml) {
-          bestHtml = extracted.html;
-        }
-        if (extracted.text && !bestText) {
-          bestText = extracted.text;
-        }
-        if (bestHtml && bestText) break;
-      }
-
-      return { html: bestHtml, text: bestText };
-    }
-  }
-
-  if (contentType.includes('message/rfc822')) {
-    return extractMimePartContent(bodyText, depth + 1);
-  }
-
-  let decodedBody = bodyText;
-  if (transferEncoding.includes('quoted-printable')) {
-    decodedBody = decodeQuotedPrintableUtf8(bodyText);
-  } else if (transferEncoding.includes('base64')) {
-    decodedBody = decodeBase64Utf8(bodyText);
-  }
-
-  const trimmedBody = decodedBody.trim();
-  if (!trimmedBody) {
-    return { html: null, text: null };
-  }
-
-  if (contentType.includes('text/html')) {
-    return { html: decodedBody, text: null };
-  }
-
-  if (contentType.includes('text/plain')) {
-    return { html: null, text: decodedBody };
-  }
-
-  if (/^\s*</.test(trimmedBody) && /<html|<body|<div|<p|<table|<br/i.test(trimmedBody)) {
-    return { html: decodedBody, text: null };
-  }
-
-  return { html: null, text: decodedBody };
-}
-
-function getRenderableSmimeContent(
-  parsed: { html?: string; text?: string; attachments?: Array<unknown> },
-  rawBytes: Uint8Array,
-): { html: string | null; text: string | null; fallbackUsed: boolean } {
-  const parsedHtml = parsed.html?.trim() ? parsed.html : null;
-  const parsedText = parsed.text?.trim() ? parsed.text : null;
-
-  if (parsedHtml || parsedText) {
-    return { html: parsedHtml, text: parsedText, fallbackUsed: false };
-  }
-
-  const rawText = new TextDecoder().decode(rawBytes);
-  const fallback = extractMimePartContent(rawText);
-  if (fallback.html || fallback.text) {
-    return { html: fallback.html, text: fallback.text, fallbackUsed: true };
-  }
-
-  const trimmed = rawText.trim();
-  return {
-    html: null,
-    text: trimmed || null,
-    fallbackUsed: !!trimmed,
-  };
 }
 
 interface EffectiveAttachment {
@@ -595,7 +333,7 @@ function renderClickableRecipients(
 
     return (
       <span key={r.email + index} className="inline-flex items-center">
-        {index > 0 && <span className="text-muted-foreground mr-1">,</span>}
+        {index > 0 && <span className="text-muted-foreground me-1">,</span>}
         <RecipientPopover
           name={r.name}
           email={r.email}
@@ -644,7 +382,7 @@ export function ContactSidebarPanel({
   };
 
   return (
-    <div className="w-[320px] shrink-0 border-l border-border bg-background flex flex-col h-full animate-in slide-in-from-right-5 duration-200">
+    <div className="w-[320px] shrink-0 border-s border-border bg-background flex flex-col h-full animate-in slide-in-from-right-5 duration-200">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border">
         <h3 className="text-sm font-semibold text-foreground truncate">{t('contact_sidebar.title')}</h3>
@@ -869,7 +607,7 @@ function SidebarSection({ icon: Icon, title, children }: { icon: React.Component
         <Icon className="w-3.5 h-3.5 text-muted-foreground" />
         <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{title}</h4>
       </div>
-      <div className="space-y-1 pl-5.5">{children}</div>
+      <div className="space-y-1 ps-5.5">{children}</div>
     </div>
   );
 }
@@ -910,7 +648,6 @@ export function EmailViewer({
   const tComposer = useTranslations('email_composer');
   const tNotifications = useTranslations('notifications');
   const tCommon = useTranslations('common');
-  const tSmime = useTranslations('smime');
   const tFiles = useTranslations('files');
   const tDemoWelcome = useTranslations('demo_welcome');
   const tWelcome = useTranslations('welcome');
@@ -956,6 +693,9 @@ export function EmailViewer({
 
   // Detect if current mailbox is Junk folder
   const isInJunkFolder = currentMailboxRole === 'junk';
+  // Marking your own outgoing mail as spam makes no sense - hide the action
+  // in Sent, Drafts and Scheduled.
+  const spamApplicable = !['sent', 'drafts', 'scheduled'].includes(currentMailboxRole || '');
 
   // Detect if the email is a draft
   const isDraft = email?.keywords?.['$draft'] === true;
@@ -1004,6 +744,7 @@ export function EmailViewer({
   const [showAllBesideAttachments, setShowAllBesideAttachments] = useState(false);
   const [showAllMobileAttachments, setShowAllMobileAttachments] = useState(false);
   const [showAllBelowHeaderAttachments, setShowAllBelowHeaderAttachments] = useState(false);
+  const [isDownloadingAll, setIsDownloadingAll] = useState(false);
   const [visibleBelowHeaderCount, setVisibleBelowHeaderCount] = useState<number | null>(null);
   const belowHeaderRowRef = useRef<HTMLDivElement>(null);
   const belowHeaderGhostRef = useRef<HTMLDivElement>(null);
@@ -1014,6 +755,19 @@ export function EmailViewer({
   const [quickReplyText, setQuickReplyText] = useState("");
   const [isQuickReplyFocused, setIsQuickReplyFocused] = useState(false);
   const [isSendingQuickReply, setIsSendingQuickReply] = useState(false);
+  const handleSendQuickReply = async () => {
+    if (!quickReplyText.trim() || !onQuickReply || isSendingQuickReply) return;
+    setIsSendingQuickReply(true);
+    try {
+      await onQuickReply(quickReplyText);
+      setQuickReplyText("");
+      setIsQuickReplyFocused(false);
+    } catch (error) {
+      console.error("Failed to send quick reply:", error);
+    } finally {
+      setIsSendingQuickReply(false);
+    }
+  };
   const [showSourceModal, setShowSourceModal] = useState(false);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const [moreMenuSub, setMoreMenuSub] = useState<'move' | 'tag' | null>(null);
@@ -1027,15 +781,12 @@ export function EmailViewer({
   const currentColors = getCurrentColors(email?.keywords);
   const currentColor = currentColors[0] ?? null;
 
-  // S/MIME state
-  const [smimeStatus, setSmimeStatus] = useState<SmimeStatus | null>(null);
-  const [smimeDecryptedHtml, setSmimeDecryptedHtml] = useState<string | null>(null);
-  const [smimeDecryptedText, setSmimeDecryptedText] = useState<string | null>(null);
-  const [smimeDecryptedAttachments, setSmimeDecryptedAttachments] = useState<PostalMimeAttachment[]>([]);
-  const [smimeUnlockDialogOpen, setSmimeUnlockDialogOpen] = useState(false);
-  const [smimeUnlockTargetId, setSmimeUnlockTargetId] = useState<string | null>(null);
-  const [smimeUnlockError, setSmimeUnlockError] = useState<string | null>(null);
-  const smimeStore = useSmimeStore();
+  // Crypto-plugin rendered body (S/MIME, PGP, …) — populated by the generic
+  // onRenderEmailBody hook. Verification/decryption status UI is provided by the
+  // crypto plugin's own email-banner slot, so the host keeps no S/MIME state.
+  const [pluginRenderedHtml, setPluginRenderedHtml] = useState<string | null>(null);
+  const [pluginRenderedText, setPluginRenderedText] = useState<string | null>(null);
+  const [pluginRenderedAttachments, setPluginRenderedAttachments] = useState<PostalMimeAttachment[]>([]);
 
   // TNEF (winmail.dat) support
   const [tnefHtml, setTnefHtml] = useState<string | null>(null);
@@ -1052,6 +803,9 @@ export function EmailViewer({
   // sessions so the panel reopens the way the user last left it.
   const detailSlots = usePluginSlotOffers('email-detail-sidebar');
   const hasDetailSidebar = detailSlots.length > 0;
+  // Whether any plugin offers a "more details" section, so we only render the
+  // bottom plugin category wrapper when something will fill it.
+  const hasDetailsSlotOffers = usePluginSlotOffers('email-details-section').length > 0;
   const [detailSidebarCollapsed, setDetailSidebarCollapsed] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
     try { return localStorage.getItem('emailDetailSidebarCollapsed') === '1'; } catch { return false; }
@@ -1072,11 +826,6 @@ export function EmailViewer({
     try { localStorage.setItem('emailDetailSidebarWidth', String(detailSidebarWidth)); } catch { /* ignore */ }
   }, [detailSidebarWidth]);
 
-  // Ensure S/MIME key records are loaded from IndexedDB
-  useLayoutEffect(() => {
-    smimeStore.load(activeAccountId ?? undefined);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeAccountId]);
 
   // Build mailbox tree for move-to dropdown
   const moveTargetIds = useMemo(() => new Set(
@@ -1347,13 +1096,9 @@ export function EmailViewer({
     setIsQuickReplyFocused(false);
     setShowSourceModal(false);
     setEmailViewDarkOverride(null);
-    setSmimeStatus(null);
-    setSmimeDecryptedHtml(null);
-    setSmimeDecryptedText(null);
-    setSmimeDecryptedAttachments([]);
-    setSmimeUnlockDialogOpen(false);
-    setSmimeUnlockTargetId(null);
-    setSmimeUnlockError(null);
+    setPluginRenderedHtml(null);
+    setPluginRenderedText(null);
+    setPluginRenderedAttachments([]);
     setTnefHtml(null);
     setTnefText(null);
     setTnefAttachments([]);
@@ -1363,613 +1108,82 @@ export function EmailViewer({
     setEmbeddedEmailUnwrapped(false);
   }, [email?.id, externalContentPolicy]);
 
-  const prepareSmimeUnlock = useCallback((keyRecordId: string) => {
-    setSmimeUnlockTargetId(keyRecordId);
-    setSmimeUnlockError(null);
-  }, []);
-
-  const openSmimeUnlockDialog = useCallback(() => {
-    if (!smimeUnlockTargetId) {
-      return;
-    }
-
-    setSmimeUnlockDialogOpen(true);
-  }, [smimeUnlockTargetId]);
-
-  const handleSmimeUnlockSubmit = useCallback(async (passphrase: string) => {
-    if (!smimeUnlockTargetId) {
-      return;
-    }
-
-    try {
-      await smimeStore.unlockKey(smimeUnlockTargetId, passphrase);
-      setSmimeUnlockDialogOpen(false);
-      setSmimeUnlockTargetId(null);
-      setSmimeUnlockError(null);
-    } catch (error) {
-      setSmimeUnlockError(error instanceof Error ? error.message : 'Unlock failed');
-    }
-  }, [smimeStore, smimeUnlockTargetId]);
-
-  // S/MIME detection and processing
+  // Crypto-plugin body takeover (S/MIME, PGP, …). A privileged crypto plugin
+  // can fetch the raw message via api.jmap.fetchBlob, decrypt/verify it, and
+  // return a replaced body through the onRenderEmailBody hook. The host stays
+  // crypto-agnostic; the plugin renders its own verification/encryption status
+  // via its email-banner slot. Falls through to normal rendering otherwise.
   useEffect(() => {
-    if (!email || !client) return;
-
-    const smimeDebug = (...args: unknown[]) => {
-      if (useSettingsStore.getState().debugMode) {
-        console.debug(...args);
-      }
-    };
-
-    const smimeWarn = (...args: unknown[]) => {
-      if (useSettingsStore.getState().debugMode) {
-        console.warn(...args);
-      }
-    };
-
-    const smimeError = (...args: unknown[]) => {
-      console.error(...args);
-    };
-
-    const rawContentType = email.headers?.['content-type'] || email.headers?.['Content-Type'];
-    const contentType = Array.isArray(rawContentType) ? rawContentType[0] : rawContentType;
-    const detection = detectSmime(
-      contentType,
-      email.bodyStructure as Parameters<typeof detectSmime>[1],
-      email.attachments as Parameters<typeof detectSmime>[2],
-    );
-
-    smimeDebug('[S/MIME] detection:', { contentType, bodyStructure: email.bodyStructure, attachments: email.attachments, detection });
-
-    if (!detection.type) return;
-
-    // Unsupported type (e.g., detached signature)
-    if (!detection.supported) {
-      setSmimeStatus({
-        isSigned: detection.type === 'detached-sig',
-        isEncrypted: false,
-        unsupportedReason: 'Detached S/MIME signatures are not yet supported',
-      });
-      return;
-    }
-
-    if (!detection.blobId) return;
-
+    if (!email) return;
     let cancelled = false;
 
-    async function processSmime() {
+    const dataUrlToBytes = (dataUrl: string): Uint8Array | null => {
       try {
-        const toHex = (bytes: Uint8Array, count: number) =>
-          Array.from(bytes.slice(0, count)).map(b => b.toString(16).padStart(2, '0')).join(' ');
+        const comma = dataUrl.indexOf(',');
+        if (comma < 0) return null;
+        const meta = dataUrl.slice(0, comma);
+        const data = dataUrl.slice(comma + 1);
+        if (meta.includes(';base64')) {
+          const bin = atob(data);
+          const u8 = new Uint8Array(bin.length);
+          for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+          return u8;
+        }
+        return new TextEncoder().encode(decodeURIComponent(data));
+      } catch {
+        return null;
+      }
+    };
 
-        const toAsciiPreview = (bytes: Uint8Array, count: number) => {
-          try {
-            return new TextDecoder().decode(bytes.slice(0, count));
-          } catch {
-            return '';
-          }
+    (async () => {
+      try {
+        const rawContentType = email.headers?.['content-type'] || email.headers?.['Content-Type'];
+        const contentType = Array.isArray(rawContentType) ? rawContentType[0] : rawContentType;
+        const initialBody = { html: '', text: '', attachments: [] as unknown[] };
+        const ctx = {
+          id: email.id,
+          contentType,
+          bodyStructure: email.bodyStructure,
+          attachments: email.attachments,
+          blobId: email.blobId,
+          from: email.from,
         };
-
-        const toExactArrayBuffer = (view: Uint8Array): ArrayBuffer =>
-          view.buffer.slice(view.byteOffset, view.byteOffset + view.byteLength) as ArrayBuffer;
-
-        const cmsCandidates: Array<{ source: string; raw: ArrayBuffer }> = [];
-
-        const findPartById = (
-          part: Parameters<typeof detectSmime>[1],
-          targetPartId: string,
-        ): Parameters<typeof detectSmime>[1] | undefined => {
-          if (!part) return undefined;
-          if (part.partId === targetPartId) return part;
-          if (part.subParts) {
-            for (const sub of part.subParts) {
-              const found = findPartById(sub as Parameters<typeof detectSmime>[1], targetPartId);
-              if (found) return found;
-            }
-          }
-          return undefined;
+        const result = await renderHooks.onRenderEmailBody.transform(initialBody, ctx) as {
+          html?: string;
+          text?: string;
+          attachments?: Array<{ name?: string; type?: string; size?: number; dataUrl?: string; cid?: string }>;
+          handledBy?: string;
         };
-
-        const detectedPart = detection.partId
-          ? findPartById(email!.bodyStructure as Parameters<typeof detectSmime>[1], detection.partId)
-          : undefined;
-        const detectedPartName = detectedPart?.name || 'smime.p7m';
-        const detectedPartType = detectedPart?.type || 'application/pkcs7-mime';
-
-        const detectedPartSize = (detectedPart as { size?: number } | undefined)?.size;
-        if (detectedPartSize === 0) {
-          smimeWarn('[S/MIME] detected part has size=0; trying multiple blob fetch variants', {
-            partId: detection.partId,
-            blobId: detection.blobId,
-            name: detectedPartName,
-            type: detectedPartType,
-          });
+        if (cancelled) return;
+        if (!result || !result.handledBy) {
+          setPluginRenderedHtml(null);
+          setPluginRenderedText(null);
+          setPluginRenderedAttachments([]);
+          return;
         }
-
-        // Primary source: Blob/download endpoint
-        try {
-          const blobBytes = await client!.fetchBlobArrayBuffer(detection.blobId!);
-          if (blobBytes.byteLength > 0) {
-            cmsCandidates.push({ source: 'blob-default', raw: blobBytes });
-          }
-          smimeWarn('[S/MIME] blob-default fetch result:', {
-            byteLength: blobBytes.byteLength,
-          });
-        } catch (error) {
-          smimeWarn('[S/MIME] blob fetch failed:', error);
-          // Fallback sources below may still work
-        }
-
-        // Variant source: same blob with explicit part name/type in URL template
-        try {
-          const typedBlobBytes = await client!.fetchBlobArrayBuffer(
-            detection.blobId!,
-            detectedPartName,
-            detectedPartType,
-          );
-          if (typedBlobBytes.byteLength > 0) {
-            cmsCandidates.push({ source: 'blob-typed', raw: typedBlobBytes });
-          }
-          smimeWarn('[S/MIME] blob-typed fetch result:', {
-            byteLength: typedBlobBytes.byteLength,
-            name: detectedPartName,
-            type: detectedPartType,
-          });
-        } catch (error) {
-          smimeWarn('[S/MIME] typed blob fetch failed:', error);
-        }
-
-        // Fallback source: bodyValues entry for the detected S/MIME part
-        const bodyValue = detection.partId ? email!.bodyValues?.[detection.partId]?.value : undefined;
-        const bodyValueMeta = detection.partId ? email!.bodyValues?.[detection.partId] : undefined;
-        smimeWarn('[S/MIME] bodyValues candidate:', {
-          partId: detection.partId,
-          exists: !!bodyValueMeta,
-          valueLength: bodyValue?.length ?? 0,
-          isTruncated: bodyValueMeta?.isTruncated ?? false,
-          isEncodingProblem: bodyValueMeta?.isEncodingProblem ?? false,
-        });
-        if (bodyValue) {
-          const bodyValueBytes = new TextEncoder().encode(bodyValue);
-          cmsCandidates.push({ source: 'bodyValues', raw: toExactArrayBuffer(bodyValueBytes) });
-        }
-
-        // Fallback source: fetch full RFC822 blob and extract CMS bytes from message body
-        // Some servers return empty bytes for part blobId=0 while Email.blobId still has full content.
-        if (email!.blobId) {
-          try {
-            const fullMessageBytes = await client!.fetchBlobArrayBuffer(
-              email!.blobId,
-              'message.eml',
-              'message/rfc822',
-            );
-            if (fullMessageBytes.byteLength > 0) {
-              cmsCandidates.push({ source: 'email-blob', raw: fullMessageBytes });
-            }
-            smimeWarn('[S/MIME] email-blob fetch result:', {
-              blobId: email!.blobId,
-              byteLength: fullMessageBytes.byteLength,
-            });
-          } catch (error) {
-            smimeWarn('[S/MIME] email-blob fetch failed:', error);
-          }
-        } else {
-          smimeWarn('[S/MIME] email-blob unavailable: Email.blobId not present');
-        }
-
-        if (cmsCandidates.length === 0) {
-          throw new Error('No usable CMS bytes found (blob-default/blob-typed/bodyValues/email-blob all empty)');
-        }
-
-        const expandedCandidates: Array<{ source: string; raw: ArrayBuffer }> = [];
-
-        for (const candidate of cmsCandidates) {
-          expandedCandidates.push(candidate);
-
-          if (candidate.source === 'email-blob') {
-            // Candidate 1: raw message body (strip RFC822 headers)
-            try {
-              const fullText = new TextDecoder().decode(candidate.raw);
-              const headerEnd = fullText.search(/\r?\n\r?\n/);
-              if (headerEnd >= 0) {
-                const headerSep = fullText.slice(headerEnd).match(/^\r?\n\r?\n/)?.[0] ?? '\r\n\r\n';
-                const bodyText = fullText.slice(headerEnd + headerSep.length);
-                if (bodyText.trim().length > 0) {
-                  const bodyBytes = new TextEncoder().encode(bodyText);
-                  expandedCandidates.push({
-                    source: 'email-blob-body',
-                    raw: toExactArrayBuffer(bodyBytes),
-                  });
-                }
-              }
-            } catch {
-              // ignore extraction failures
-            }
-
-            // Candidate 2: parse MIME and extract pkcs7 attachment content
-            try {
-              const { default: PostalMime } = await import('postal-mime');
-              const parser = new PostalMime();
-              const parsedFull = await parser.parse(candidate.raw);
-              const smimeAttachment = parsedFull.attachments?.find(att => {
-                const mimeType = ((att as { mimeType?: string }).mimeType || '').toLowerCase();
-                const filename = ((att as { filename?: string }).filename || '').toLowerCase();
-                return mimeType.includes('application/pkcs7-mime') || filename.endsWith('.p7m');
-              });
-
-              if (smimeAttachment) {
-                const content = (smimeAttachment as { content?: unknown }).content;
-                if (content instanceof Uint8Array) {
-                  expandedCandidates.push({
-                    source: 'email-blob-attachment',
-                    raw: toExactArrayBuffer(content),
-                  });
-                } else if (content instanceof ArrayBuffer) {
-                  expandedCandidates.push({
-                    source: 'email-blob-attachment',
-                    raw: content,
-                  });
-                } else if (typeof content === 'string') {
-                  const contentBytes = new TextEncoder().encode(content);
-                  expandedCandidates.push({
-                    source: 'email-blob-attachment',
-                    raw: toExactArrayBuffer(contentBytes),
-                  });
-                }
-              }
-            } catch (error) {
-              smimeWarn('[S/MIME] email-blob MIME parse/extract failed:', error);
-            }
-          }
-        }
-
-        const normalizedCandidates = expandedCandidates.map(candidate => ({
-          source: candidate.source,
-          raw: candidate.raw,
-          normalized: normalizeCmsBytes(candidate.raw),
-        }));
-
-        const candidateSummaries = normalizedCandidates.map((candidate, index) => {
-          const rawBytes = new Uint8Array(candidate.raw);
-          const normalizedBytes = new Uint8Array(candidate.normalized);
-          return {
-            index,
-            source: candidate.source,
-            rawLength: candidate.raw.byteLength,
-            normalizedLength: candidate.normalized.byteLength,
-            rawFirstBytesHex: toHex(rawBytes, 24),
-            normalizedFirstBytesHex: toHex(normalizedBytes, 24),
-            rawAsciiPreview: toAsciiPreview(rawBytes, 180),
-          };
-        });
-
-        smimeWarn('[S/MIME] CMS candidates:', {
-          detection,
-          candidateCount: candidateSummaries.length,
-          candidates: candidateSummaries,
-        });
-
-        if (useSettingsStore.getState().debugMode && typeof window !== 'undefined') {
-          const debugPayload = {
-            emailId: email!.id,
-            detection,
-            generatedAt: new Date().toISOString(),
-            candidates: candidateSummaries,
-          };
-
-          const exportCandidate = (index = 0, normalized = true) => {
-            const candidate = normalizedCandidates[index];
-            if (!candidate) {
-              throw new Error(`Invalid candidate index: ${index}`);
-            }
-            const bytes = normalized ? candidate.normalized : candidate.raw;
-            const mode = normalized ? 'normalized' : 'raw';
-            const filename = `smime-${email!.id}-${candidate.source}-${index}-${mode}.p7m`;
-            const blob = new Blob([bytes], { type: 'application/pkcs7-mime' });
-            const url = URL.createObjectURL(blob);
-            const anchor = document.createElement('a');
-            anchor.href = url;
-            anchor.download = filename;
-            document.body.appendChild(anchor);
-            anchor.click();
-            anchor.remove();
-            setTimeout(() => URL.revokeObjectURL(url), 1000);
-            return { filename, byteLength: bytes.byteLength, source: candidate.source, mode };
-          };
-
-          (window as unknown as {
-            __smimeDebugLast?: unknown;
-            __smimeDebugExport?: (index?: number, normalized?: boolean) => unknown;
-          }).__smimeDebugLast = debugPayload;
-          (window as unknown as {
-            __smimeDebugLast?: unknown;
-            __smimeDebugExport?: (index?: number, normalized?: boolean) => unknown;
-          }).__smimeDebugExport = exportCandidate;
-
-          smimeWarn('[S/MIME] debug helpers ready: window.__smimeDebugLast, window.__smimeDebugExport(index, normalized=true)');
-        }
-
-        const isCmsParseError = (error: unknown) => {
-          if (!(error instanceof Error)) return false;
-          return (
-            error.message.includes('Invalid ASN.1 data') ||
-            error.message.includes('Unexpected CMS content type') ||
-            error.message.includes('Object\'s schema was not verified against input data for ContentInfo')
-          );
-        };
-
-        const fromEmail = email!.from?.[0]?.email;
-
-        if (detection.type === 'enveloped-data') {
-          // Encrypted message
-            const { keyRecords, unlockedDecryptionKeys, unlockedLegacyDecryptionKeys } = smimeStore;
-            smimeDebug('[S/MIME] decrypt attempt:', {
-              keyRecordCount: keyRecords.length,
-              unlockedKeyCount: unlockedDecryptionKeys.size,
-              legacyKeyCount: unlockedLegacyDecryptionKeys.size,
-              keyRecordIds: keyRecords.map(k => k.id),
-            });
-
-          // Short-circuit: no keys imported at all
-          if (keyRecords.length === 0) {
-            smimeDebug('[S/MIME] no key records available, skipping decrypt');
-            setSmimeStatus({
-              isSigned: false,
-              isEncrypted: true,
-              decryptionError: 'no-key',
-            });
-            return;
-          }
-
-          try {
-            let result: Awaited<ReturnType<typeof smimeDecrypt>> | null = null;
-            let lastError: unknown = null;
-
-            for (const candidate of normalizedCandidates) {
-              try {
-                result = await smimeDecrypt({
-                  cmsBytes: candidate.normalized,
-                  keyRecords,
-                    unlockedKeys: unlockedDecryptionKeys,
-                    legacyUnlockedKeys: unlockedLegacyDecryptionKeys,
-                });
-                smimeDebug('[S/MIME] decrypt success with candidate:', {
-                  source: candidate.source,
-                  byteLength: candidate.normalized.byteLength,
-                });
-                break;
-              } catch (error) {
-                lastError = error;
-                smimeWarn('[S/MIME] decrypt candidate failed:', {
-                  source: candidate.source,
-                  error: error instanceof Error ? error.message : String(error),
-                });
-                // SmimeKeyLockedError should bubble up immediately so the UI can prompt for passphrase
-                if (error instanceof SmimeKeyLockedError) {
-                  throw error;
-                }
-                // For other errors (CMS parse, decrypt failure), try the next candidate
-              }
-            }
-
-            if (!result) {
-              throw lastError instanceof Error ? lastError : new Error('Decryption failed');
-            }
-
-            if (cancelled) return;
-
-            // Parse inner MIME
-            const { default: PostalMime } = await import('postal-mime');
-            const parser = new PostalMime();
-            const parsed = await parser.parse(result.mimeBytes);
-            if (cancelled) return;
-            const parsedContent = getRenderableSmimeContent(parsed, result.mimeBytes);
-            smimeDebug('[S/MIME] decrypted MIME parsed:', {
-              subject: parsed.subject,
-              htmlLength: parsed.html?.length ?? 0,
-              textLength: parsed.text?.length ?? 0,
-              attachmentCount: parsed.attachments?.length ?? 0,
-              fallbackUsed: parsedContent.fallbackUsed,
-              renderHtmlLength: parsedContent.html?.length ?? 0,
-              renderTextLength: parsedContent.text?.length ?? 0,
-            });
-
-            // Check if inner content is also signed
-            const nestedSignedData = extractNestedSignedDataCandidate(parsed, result.mimeBytes);
-            if (nestedSignedData) {
-              // Nested sign-then-encrypt - verify inner signature
-              const innerBytes = normalizeCmsBytes(nestedSignedData.bytes);
-              smimeDebug('[S/MIME] nested signed-data candidate:', {
-                source: nestedSignedData.source,
-                byteLength: innerBytes.byteLength,
-              });
-              try {
-                const verifyResult = await smimeVerify(innerBytes, fromEmail);
-                if (cancelled) return;
-                // Parse the verified inner content
-                const innerParsed = await new PostalMime().parse(verifyResult.mimeBytes);
-                if (cancelled) return;
-                const innerParsedContent = getRenderableSmimeContent(innerParsed, verifyResult.mimeBytes);
-                smimeDebug('[S/MIME] verified inner MIME parsed:', {
-                  subject: innerParsed.subject,
-                  htmlLength: innerParsed.html?.length ?? 0,
-                  textLength: innerParsed.text?.length ?? 0,
-                  attachmentCount: innerParsed.attachments?.length ?? 0,
-                  fallbackUsed: innerParsedContent.fallbackUsed,
-                  renderHtmlLength: innerParsedContent.html?.length ?? 0,
-                  renderTextLength: innerParsedContent.text?.length ?? 0,
-                });
-                setSmimeDecryptedHtml(innerParsedContent.html);
-                setSmimeDecryptedText(innerParsedContent.text);
-                setSmimeDecryptedAttachments(innerParsed.attachments ?? []);
-                setSmimeStatus({
-                  ...verifyResult.status,
-                  isEncrypted: true,
-                  decryptionSuccess: true,
-                });
-                // Auto-import signer cert if enabled
-                if (smimeStore.autoImportSignerCerts && verifyResult.status.signatureValid && verifyResult.status.signerCert) {
-                  const existing = smimeStore.getPublicCertForEmail(verifyResult.status.signerCert.email);
-                  if (!existing) {
-                    try {
-                      await smimeStore.importPublicCert(verifyResult.status.signerCert.certificate, 'signed-email');
-                      smimeDebug('[S/MIME] auto-imported signer cert:', { email: verifyResult.status.signerCert.email, fingerprint: verifyResult.status.signerCert.fingerprint });
-                    } catch (importErr) {
-                      smimeError('[S/MIME] auto-import signer cert failed:', importErr);
-                    }
-                  } else {
-                    smimeDebug('[S/MIME] signer cert already imported:', { email: existing.email, fingerprint: existing.fingerprint });
-                  }
-                } else if (verifyResult.status.signatureValid && verifyResult.status.signerCert) {
-                  smimeDebug('[S/MIME] auto-import disabled, skipping signer cert:', { email: verifyResult.status.signerCert.email });
-                }
-              } catch (error) {
-                smimeError('[S/MIME] nested signature verify failed:', {
-                  source: nestedSignedData.source,
-                  error: error instanceof Error ? error.message : String(error),
-                });
-                // Verification failed but decryption worked
-                setSmimeDecryptedHtml(parsedContent.html);
-                setSmimeDecryptedText(parsedContent.text);
-                setSmimeDecryptedAttachments((parsed.attachments ?? []) as PostalMimeAttachment[]);
-                setSmimeStatus({
-                  isSigned: false,
-                  isEncrypted: true,
-                  decryptionSuccess: true,
-                });
-              }
-            } else {
-              setSmimeDecryptedHtml(parsedContent.html);
-              setSmimeDecryptedText(parsedContent.text);
-              setSmimeDecryptedAttachments((parsed.attachments ?? []) as PostalMimeAttachment[]);
-              setSmimeStatus({
-                isSigned: false,
-                isEncrypted: true,
-                decryptionSuccess: true,
-              });
-            }
-          } catch (err) {
-            if (cancelled) return;
-            smimeError('[S/MIME] decrypt error:', err);
-            if (err instanceof SmimeKeyLockedError) {
-              prepareSmimeUnlock(err.keyRecordId);
-              setSmimeStatus({
-                isSigned: false,
-                isEncrypted: true,
-                decryptionError: 'locked',
-              });
-            } else {
-              const errMsg = err instanceof Error ? err.message : 'Decryption failed';
-              const isNoKeyError = errMsg.includes('No imported S/MIME key matches');
-              setSmimeStatus({
-                isSigned: false,
-                isEncrypted: true,
-                decryptionError: isNoKeyError ? 'no-key' : errMsg,
-              });
-            }
-          }
-        } else if (detection.type === 'signed-data') {
-          // Signed message
-          try {
-            let result: Awaited<ReturnType<typeof smimeVerify>> | null = null;
-            let lastError: unknown = null;
-
-            for (const candidate of normalizedCandidates) {
-              try {
-                result = await smimeVerify(candidate.normalized, fromEmail);
-                smimeDebug('[S/MIME] verify success with candidate:', {
-                  source: candidate.source,
-                  byteLength: candidate.normalized.byteLength,
-                });
-                break;
-              } catch (error) {
-                lastError = error;
-                smimeWarn('[S/MIME] verify candidate failed:', {
-                  source: candidate.source,
-                  error: error instanceof Error ? error.message : String(error),
-                });
-                if (!isCmsParseError(error)) {
-                  throw error;
-                }
-              }
-            }
-
-            if (!result) {
-              throw lastError instanceof Error ? lastError : new Error('Verification failed');
-            }
-
-            if (cancelled) return;
-
-            // Parse inner MIME
-            const { default: PostalMime } = await import('postal-mime');
-            const parser = new PostalMime();
-            const parsed = await parser.parse(result.mimeBytes);
-            if (cancelled) return;
-            const parsedContent = getRenderableSmimeContent(parsed, result.mimeBytes);
-            smimeDebug('[S/MIME] verified MIME parsed:', {
-              subject: parsed.subject,
-              htmlLength: parsed.html?.length ?? 0,
-              textLength: parsed.text?.length ?? 0,
-              attachmentCount: parsed.attachments?.length ?? 0,
-              fallbackUsed: parsedContent.fallbackUsed,
-              renderHtmlLength: parsedContent.html?.length ?? 0,
-              renderTextLength: parsedContent.text?.length ?? 0,
-            });
-
-            setSmimeDecryptedHtml(parsedContent.html);
-            setSmimeDecryptedText(parsedContent.text);
-            setSmimeDecryptedAttachments((parsed.attachments ?? []) as PostalMimeAttachment[]);
-            setSmimeStatus(result.status);
-            // Auto-import signer cert if enabled
-            if (smimeStore.autoImportSignerCerts && result.status.signatureValid && result.status.signerCert) {
-              const existing = smimeStore.getPublicCertForEmail(result.status.signerCert.email);
-              if (!existing) {
-                try {
-                  await smimeStore.importPublicCert(result.status.signerCert.certificate, 'signed-email');
-                  smimeDebug('[S/MIME] auto-imported signer cert:', { email: result.status.signerCert.email, fingerprint: result.status.signerCert.fingerprint });
-                } catch (importErr) {
-                  smimeError('[S/MIME] auto-import signer cert failed:', importErr);
-                }
-              } else {
-                smimeDebug('[S/MIME] signer cert already imported:', { email: existing.email, fingerprint: existing.fingerprint });
-              }
-            } else if (result.status.signatureValid && result.status.signerCert) {
-              smimeDebug('[S/MIME] auto-import disabled, skipping signer cert:', { email: result.status.signerCert.email });
-            }
-          } catch (err) {
-            if (cancelled) return;
-            setSmimeStatus({
-              isSigned: true,
-              isEncrypted: false,
-              signatureValid: false,
-              signatureError: err instanceof Error ? err.message : 'Verification failed',
-            });
-          }
-        }
+        setPluginRenderedHtml(typeof result.html === 'string' && result.html ? result.html : null);
+        setPluginRenderedText(typeof result.text === 'string' && result.text ? result.text : null);
+        // Normalise the plugin's attachment shape into the PostalMime-like shape
+        // the viewer's download / inline-image machinery already understands.
+        const atts = Array.isArray(result.attachments) ? result.attachments : [];
+        const decoded = atts.map((a) => ({
+          filename: a.name ?? null,
+          mimeType: a.type || 'application/octet-stream',
+          contentId: a.cid,
+          content: (a.dataUrl ? dataUrlToBytes(a.dataUrl) : null) ?? new Uint8Array(0),
+        } as unknown as PostalMimeAttachment));
+        setPluginRenderedAttachments(decoded);
       } catch (err) {
         if (cancelled) return;
-        smimeError('[S/MIME] processing failed before decrypt/verify:', err);
-        // Failed to fetch CMS blob
-        setSmimeStatus({
-          isSigned: false,
-          isEncrypted: detection.type === 'enveloped-data',
-          decryptionError: err instanceof Error ? err.message : 'Failed to fetch encrypted content',
-        });
+        debug.error('onRenderEmailBody hook failed:', err);
+        setPluginRenderedHtml(null);
+        setPluginRenderedText(null);
+        setPluginRenderedAttachments([]);
       }
-    }
+    })();
 
-    processSmime();
     return () => { cancelled = true; };
-  }, [
-    email,
-    client,
-    prepareSmimeUnlock,
-    smimeStore.autoImportSignerCerts,
-    smimeStore.keyRecords,
-    smimeStore.unlockedDecryptionKeys,
-    smimeStore.unlockedLegacyDecryptionKeys,
-    smimeStore,
-  ]);
+  }, [email]);
 
   // TNEF (winmail.dat) detection and processing
   useEffect(() => {
@@ -2142,7 +1356,7 @@ export function EmailViewer({
     let cancelled = false;
     const objectUrls: string[] = [];
 
-    const decryptedCidAttachments = smimeDecryptedAttachments.filter(att => att.contentId);
+    const decryptedCidAttachments = pluginRenderedAttachments.filter(att => att.contentId);
     if (decryptedCidAttachments.length > 0) {
       const urls: Record<string, string> = {};
 
@@ -2203,11 +1417,11 @@ export function EmailViewer({
       cancelled = true;
       objectUrls.forEach(url => URL.revokeObjectURL(url));
     };
-  }, [client, email?.id, smimeDecryptedAttachments, email?.attachments]);
+  }, [client, email?.id, pluginRenderedAttachments, email?.attachments]);
 
   const effectiveAttachments = useMemo<EffectiveAttachment[]>(() => {
-    if (smimeDecryptedAttachments.length > 0) {
-      return smimeDecryptedAttachments
+    if (pluginRenderedAttachments.length > 0) {
+      return pluginRenderedAttachments
         .filter(att => !(hideInlineImageAttachments && att.contentId && (att.mimeType || '').startsWith('image/')))
         .map((attachment, index) => ({
           id: `smime-${index}-${attachment.filename || attachment.mimeType}`,
@@ -2269,7 +1483,7 @@ export function EmailViewer({
     // attachment list — and its downstream layout measurement — on every email
     // field change.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [email?.attachments, smimeDecryptedAttachments, tnefHtml, tnefText, tnefAttachments, embeddedEmailUnwrapped, embeddedEmailAttachments, calendarInvitationParsingEnabled, hideInlineImageAttachments]);
+  }, [email?.attachments, pluginRenderedAttachments, tnefHtml, tnefText, tnefAttachments, embeddedEmailUnwrapped, embeddedEmailAttachments, calendarInvitationParsingEnabled, hideInlineImageAttachments]);
 
   // Measure attachment chips in the below-header row to determine how many fit
   // on a single line; the rest collapse into a "+N attachments" overflow pill.
@@ -2309,144 +1523,6 @@ export function EmailViewer({
   }, [effectiveAttachments, attachmentPosition, imageThumbUrls]);
 
   // Generate email source for viewing
-  const generateEmailSource = (email: Email): string => {
-    let source = '';
-
-    // Headers
-    source += '=== EMAIL HEADERS ===\n\n';
-    if (email.messageId) source += `Message-ID: ${email.messageId}\n`;
-    if (email.from) source += `From: ${email.from.map(a => a.name ? `${a.name} <${a.email}>` : a.email).join(', ')}\n`;
-    if (email.to) source += `To: ${email.to.map(a => a.name ? `${a.name} <${a.email}>` : a.email).join(', ')}\n`;
-    if (email.cc) source += `Cc: ${email.cc.map(a => a.name ? `${a.name} <${a.email}>` : a.email).join(', ')}\n`;
-    if (email.bcc) source += `Bcc: ${email.bcc.map(a => a.name ? `${a.name} <${a.email}>` : a.email).join(', ')}\n`;
-    if (email.replyTo) source += `Reply-To: ${email.replyTo.map(a => a.name ? `${a.name} <${a.email}>` : a.email).join(', ')}\n`;
-    if (email.subject) source += `Subject: ${email.subject}\n`;
-    if (email.sentAt) source += `Date: ${new Date(email.sentAt).toUTCString()}\n`;
-    if (email.receivedAt) source += `Received-At: ${new Date(email.receivedAt).toUTCString()}\n`;
-    if (email.inReplyTo) source += `In-Reply-To: ${email.inReplyTo.join(', ')}\n`;
-    if (email.references) source += `References: ${email.references.join(', ')}\n`;
-
-    // Additional headers
-    if (email.headers) {
-      source += '\n--- Additional Headers ---\n';
-      // Headers should now always be a Record after client processing
-      Object.entries(email.headers).forEach(([key, value]) => {
-        const val = Array.isArray(value) ? value.join('\n    ') : String(value);
-        source += `${key}: ${val}\n`;
-      });
-    }
-
-    // Authentication results
-    if (email.authenticationResults) {
-      source += '\n--- Authentication Results ---\n';
-      if (email.authenticationResults.spf) {
-        source += `SPF: ${email.authenticationResults.spf.result}`;
-        if (email.authenticationResults.spf.domain) source += ` (${email.authenticationResults.spf.domain})`;
-        source += '\n';
-      }
-      if (email.authenticationResults.dkim) {
-        source += `DKIM: ${email.authenticationResults.dkim.result}`;
-        if (email.authenticationResults.dkim.domain) source += ` (${email.authenticationResults.dkim.domain})`;
-        source += '\n';
-      }
-      if (email.authenticationResults.dmarc) {
-        source += `DMARC: ${email.authenticationResults.dmarc.result}`;
-        if (email.authenticationResults.dmarc.policy) source += ` policy=${email.authenticationResults.dmarc.policy}`;
-        source += '\n';
-      }
-    }
-
-    if (email.spamScore !== undefined) {
-      source += `Spam Score: ${email.spamScore}`;
-      if (email.spamStatus) source += ` (${email.spamStatus})`;
-      source += '\n';
-    }
-
-    // Metadata
-    source += '\n=== EMAIL METADATA ===\n\n';
-    source += `Email ID: ${email.id}\n`;
-    source += `Thread ID: ${email.threadId}\n`;
-    source += `Size: ${formatFileSize(email.size)}\n`;
-    source += `Has Attachment: ${email.hasAttachment ? 'Yes' : 'No'}\n`;
-    if (email.keywords) {
-      const keywords = Object.entries(email.keywords)
-        .filter(([_, v]) => v)
-        .map(([k]) => k)
-        .join(', ');
-      if (keywords) source += `Keywords: ${keywords}\n`;
-    }
-
-    // Attachments
-    if (email.attachments && email.attachments.length > 0) {
-      source += '\n=== ATTACHMENTS ===\n\n';
-      email.attachments.forEach((att, i) => {
-        source += `[${i + 1}] ${att.name || 'Unnamed'}\n`;
-        source += `    Type: ${att.type}\n`;
-        source += `    Size: ${formatFileSize(att.size)}\n`;
-        source += `    Blob ID: ${att.blobId}\n`;
-        if (att.cid) source += `    Content-ID: ${att.cid}\n`;
-        source += '\n';
-      });
-    }
-
-    // Body content
-    source += '\n=== EMAIL BODY ===\n\n';
-
-    let hasBodyContent = false;
-
-    // Text version
-    if (email.textBody?.[0]?.partId && email.bodyValues?.[email.textBody[0].partId]) {
-      const textValue = email.bodyValues[email.textBody[0].partId].value;
-      if (textValue && textValue.trim()) {
-        source += '--- Plain Text Version ---\n\n';
-        source += textValue;
-        source += '\n\n';
-        hasBodyContent = true;
-      }
-    }
-
-    // HTML version
-    if (email.htmlBody?.[0]?.partId && email.bodyValues?.[email.htmlBody[0].partId]) {
-      const htmlValue = email.bodyValues[email.htmlBody[0].partId].value;
-      if (htmlValue && htmlValue.trim()) {
-        source += '--- HTML Version ---\n\n';
-        source += htmlValue;
-        source += '\n\n';
-        hasBodyContent = true;
-      }
-    }
-
-    // All body values if we haven't found content yet
-    if (!hasBodyContent && email.bodyValues) {
-      const bodyKeys = Object.keys(email.bodyValues);
-      if (bodyKeys.length > 0) {
-        source += '--- Body Parts ---\n\n';
-        bodyKeys.forEach((key, index) => {
-          const bodyValue = email.bodyValues![key].value;
-          if (bodyValue && bodyValue.trim()) {
-            source += `Part ${index + 1} (${key}):\n`;
-            source += bodyValue;
-            source += '\n\n';
-            hasBodyContent = true;
-          }
-        });
-      }
-    }
-
-    // Preview if no body
-    if (!hasBodyContent && email.preview) {
-      source += '--- Preview Only ---\n\n';
-      source += email.preview;
-      source += '\n';
-    }
-
-    if (!hasBodyContent && !email.preview) {
-      source += '(No body content available)\n';
-    }
-
-    return source;
-  };
-
   const copySourceToClipboard = async () => {
     if (!email) return;
 
@@ -2621,18 +1697,18 @@ export function EmailViewer({
 
   // Override email content with S/MIME decrypted content when available
   const effectiveEmailContent = useMemo(() => {
-    if (smimeDecryptedHtml) {
-      const htmlWithCidUrls = smimeDecryptedHtml.replace(
+    if (pluginRenderedHtml) {
+      const htmlWithCidUrls = pluginRenderedHtml.replace(
         /\bcid:([^"'\s)]+)/gi,
         (_match, cidRef) => {
           return cidBlobUrls[cidRef] || 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
         }
       );
       const cleanHtml = DOMPurify.sanitize(htmlWithCidUrls, EMAIL_IFRAME_SANITIZE_CONFIG);
-      return { html: cleanHtml, isHtml: true, hasStyleTag: /<style[\s>]/i.test(smimeDecryptedHtml), externalBlocked: false };
+      return { html: cleanHtml, isHtml: true, hasStyleTag: /<style[\s>]/i.test(pluginRenderedHtml), externalBlocked: false };
     }
-    if (smimeDecryptedText) {
-      return { html: plainTextToSafeHtml(smimeDecryptedText), isHtml: false, hasStyleTag: false, externalBlocked: false };
+    if (pluginRenderedText) {
+      return { html: plainTextToSafeHtml(pluginRenderedText), isHtml: false, hasStyleTag: false, externalBlocked: false };
     }
     // TNEF (winmail.dat) extracted content
     if (tnefHtml) {
@@ -2651,7 +1727,7 @@ export function EmailViewer({
       return { html: plainTextToSafeHtml(embeddedEmailText), isHtml: false, hasStyleTag: false, externalBlocked: false };
     }
     return emailContent;
-  }, [cidBlobUrls, emailContent, smimeDecryptedHtml, smimeDecryptedText, tnefHtml, tnefText, embeddedEmailHtml, embeddedEmailText]);
+  }, [cidBlobUrls, emailContent, pluginRenderedHtml, pluginRenderedText, tnefHtml, tnefText, embeddedEmailHtml, embeddedEmailText]);
 
   const resolveAttachmentName = useCallback(
     (attachment: EffectiveAttachment) => {
@@ -2788,6 +1864,86 @@ export function EmailViewer({
     anchor.remove();
     setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
   }, [onDownloadAttachment, email?.id, resolveAttachmentName]);
+
+  // Bundle every attachment of this email into a single .zip and download it.
+  // Fetches blob-backed attachments through the JMAP client and reuses already
+  // decoded bytes for S/MIME-decrypted and TNEF-extracted ones. Individual
+  // failures are skipped so a single bad blob doesn't sink the whole archive.
+  const handleDownloadAllAttachments = useCallback(async () => {
+    if (isDownloadingAll || effectiveAttachments.length === 0) return;
+    setIsDownloadingAll(true);
+    try {
+      const { default: JSZip } = await import('jszip');
+      const zip = new JSZip();
+      const used = new Set<string>();
+      // Zip entries must be unique; suffix collisions with " (n)" before the
+      // extension so duplicates stay recognisable.
+      const uniqueName = (raw: string): string => {
+        const base = raw || 'attachment';
+        if (!used.has(base)) { used.add(base); return base; }
+        const dot = base.lastIndexOf('.');
+        const stem = dot > 0 ? base.slice(0, dot) : base;
+        const ext = dot > 0 ? base.slice(dot) : '';
+        let i = 1;
+        let candidate = `${stem} (${i})${ext}`;
+        while (used.has(candidate)) { i++; candidate = `${stem} (${i})${ext}`; }
+        used.add(candidate);
+        return candidate;
+      };
+
+      let added = 0;
+      for (const attachment of effectiveAttachments) {
+        const entryName = uniqueName(getAttachmentDisplayName(attachment.name, attachment.type));
+        try {
+          if (attachment.blobId && client) {
+            const blob = await client.fetchBlob(attachment.blobId, attachment.name || entryName, attachment.type);
+            zip.file(entryName, blob);
+            added++;
+          } else if (attachment.tnefData) {
+            zip.file(entryName, attachment.tnefData);
+            added++;
+          } else if (attachment.decryptedAttachment) {
+            const bytes = getAttachmentContentBytes(attachment.decryptedAttachment);
+            if (bytes && bytes.byteLength > 0) {
+              zip.file(entryName, bytes);
+              added++;
+            }
+          }
+        } catch {
+          // Skip individual failures; remaining attachments still bundle.
+        }
+      }
+
+      if (added === 0) return;
+
+      const zipBlob = await zip.generateAsync({ type: 'blob', mimeType: 'application/zip' });
+      const objectUrl = URL.createObjectURL(zipBlob);
+      const anchor = document.createElement('a');
+      anchor.href = objectUrl;
+      anchor.download = attachmentsBundleFilename(email);
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
+    } finally {
+      setIsDownloadingAll(false);
+    }
+  }, [isDownloadingAll, effectiveAttachments, client, email]);
+
+  // Shared "Download all" chip, shown only when bundling is worthwhile (2+).
+  const downloadAllButton = effectiveAttachments.length > 1 ? (
+    <button
+      onClick={(e) => { e.stopPropagation(); handleDownloadAllAttachments(); }}
+      disabled={isDownloadingAll}
+      title={t('download_all')}
+      className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/60 rounded-md border border-border/50 transition-colors flex-shrink-0 disabled:opacity-60 disabled:cursor-wait"
+    >
+      {isDownloadingAll
+        ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+        : <FileArchive className="w-3.5 h-3.5" />}
+      {t('download_all')}
+    </button>
+  ) : null;
 
   // Pre-fetch object URLs for image attachments so their actual contents can be
   // rendered as thumbnails inside the chip. Skips images larger than 10 MB.
@@ -2961,6 +2117,12 @@ export function EmailViewer({
      fit - the latter wraps header text to one character per line, which reads
      as 90deg-rotated vertical headers (issue #409). */
   html { overflow: hidden; height: auto !important; }
+  /* Some emails put height:100% on a full-bleed wrapper table/div (not html/body),
+     which - with body's overflow:hidden - clips the content to a sliver, and the
+     scrollHeight-based auto-resize then locks the iframe short (a Box.co.il
+     verification email rendered as a logo-only 150px strip). Neutralise the
+     full-height trick on any element so the body grows to its content. */
+  [style*="height:100%"], [style*="height: 100%"] { height: auto !important; }
   body { margin: 0; padding: ${bodyPadding}; overflow-x: auto; overflow-y: hidden; height: auto !important; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 14px; line-height: 1.6; color: #1a1a1a; background: #ffffff; word-wrap: break-word; overflow-wrap: break-word; }
   @media (max-width: 640px) { body { padding-left: ${mobileBodyPaddingX}; padding-right: ${mobileBodyPaddingX}; } }
   img { max-width: 100% !important; height: auto !important; }
@@ -3008,16 +2170,51 @@ export function EmailViewer({
       const doc = iframe.contentDocument;
       if (doc?.body) {
         // Auto-resize iframe to fit content
-        const resizeObserver = new ResizeObserver(() => {
-          const height = doc.documentElement.scrollHeight;
+        // Measure max(documentElement, body): a height:100% wrapper can leave
+        // documentElement.scrollHeight short while the real content lives in body.
+        const applyHeight = () => {
+          if (iframe.contentDocument !== doc) return; // navigated away; stale
+          const height = Math.max(doc.documentElement.scrollHeight, doc.body.scrollHeight);
           iframe.style.height = height + 'px';
           lastBodyHeightRef.current = height;
-        });
+        };
+        const resizeObserver = new ResizeObserver(applyHeight);
         resizeObserver.observe(doc.body);
-        const initialHeight = doc.documentElement.scrollHeight;
-        iframe.style.height = initialHeight + 'px';
-        lastBodyHeightRef.current = initialHeight;
+        applyHeight();
+        // The ResizeObserver only fires on body's border box; a content overflow
+        // that grows scrollHeight without resizing that box (e.g. a height:100%
+        // wrapper, or images that reflow the layout after onload) is otherwise
+        // missed and the iframe stays short. Re-measure on a fixed cadence over a
+        // short settle window, then stop — a self-clearing catch-all that does
+        // not depend on image load/error events firing (blocked images may fire
+        // neither). Cheap: ~12 scrollHeight reads, no early-stop heuristic to
+        // mis-trigger on a brief-stable-then-grow reflow.
+        const poll = window.setInterval(() => {
+          if (iframe.contentDocument !== doc) { window.clearInterval(poll); return; }
+          applyHeight();
+        }, 200);
+        window.setTimeout(() => window.clearInterval(poll), 2400);
         setIframeReady(true);
+
+        // Hide images that fail to load (dead/mixed-content/unreachable external
+        // URLs) rather than leaving the browser's broken-image placeholder and
+        // alt text, which read as stray label text in an otherwise image-only
+        // email (e.g. a blocked "logo" alt). Blocked images already carry a 1x1
+        // transparent pixel (naturalWidth 1) and display:none, so they're skipped.
+        const hideIfBroken = (img: HTMLImageElement) => {
+          if (img.complete && img.naturalWidth === 0 && img.getAttribute('src')) {
+            img.style.display = 'none';
+          }
+        };
+        doc.querySelectorAll('img').forEach((el) => {
+          const img = el as HTMLImageElement;
+          if (img.complete) {
+            hideIfBroken(img);
+          } else {
+            img.addEventListener('error', () => { img.style.display = 'none'; }, { once: true });
+            img.addEventListener('load', () => hideIfBroken(img), { once: true });
+          }
+        });
 
         // Make links open in new tab
         doc.querySelectorAll('a').forEach(a => {
@@ -3440,7 +2637,7 @@ export function EmailViewer({
             <h3 className="text-xl font-semibold text-foreground mb-3">{tDemoWelcome('title')}</h3>
             <p className="text-sm text-muted-foreground mb-6 leading-relaxed">{tDemoWelcome('description')}</p>
             <div className="flex flex-col gap-3 items-center">
-              <div className="grid grid-cols-2 gap-3 text-left text-sm text-muted-foreground w-full">
+              <div className="grid grid-cols-2 gap-3 text-start text-sm text-muted-foreground w-full">
                 <div className="flex items-center gap-2">
                   <Mail className="w-4 h-4 text-primary shrink-0" />
                   <span>{tDemoWelcome('feature_email')}</span>
@@ -3482,7 +2679,7 @@ export function EmailViewer({
             <p className="text-muted-foreground">{t('no_conversation_description')}</p>
             {onCompose && (
               <Button onClick={onCompose} className="mt-6" title={t('compose_hint')}>
-                <PenSquare className="w-4 h-4 mr-2" />
+                <PenSquare className="w-4 h-4 me-2" />
                 {t('compose')}
               </Button>
             )}
@@ -3507,7 +2704,7 @@ export function EmailViewer({
             variant="ghost"
             size="icon"
             onClick={onBack}
-            className="h-9 w-9 flex-shrink-0 -ml-1"
+            className="h-9 w-9 flex-shrink-0 -ms-1"
             aria-label={t('back_to_list')}
           >
             <ChevronLeft className="w-5 h-5" />
@@ -3515,9 +2712,19 @@ export function EmailViewer({
         )}
         {isScheduled && canCancelScheduled && (
           <>
-            <Button variant="default" size="sm" onClick={onCancelScheduled} className="sm:flex sm:h-8" title={t('cancel_scheduled_send')}>
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => onRescheduleScheduled?.(new Date(Date.now() + 1000).toISOString())}
+              className="sm:flex sm:h-8"
+              title={t('send_now')}
+            >
+              <Send className="w-4 h-4" />
+              {showToolbarLabels && <span className="hidden sm:inline text-sm">{t('send_now')}</span>}
+            </Button>
+            <Button variant="ghost" size="sm" onClick={onCancelScheduled} className="sm:flex sm:h-8" title={t('cancel_scheduled_send')}>
               <X className="w-4 h-4" />
-              <span className="hidden sm:inline text-sm">{t('cancel_scheduled_send')}</span>
+              {showToolbarLabels && <span className="hidden sm:inline text-sm">{t('cancel_scheduled_send')}</span>}
             </Button>
             <Button
               variant="ghost"
@@ -3632,7 +2839,7 @@ export function EmailViewer({
               {showToolbarLabels && <span className="text-[10px] leading-tight sm:text-sm">{t('move')}</span>}
             </Button>
             {moveMenuOpen && (
-              <div className="absolute right-0 top-full mt-1 py-1 w-48 max-h-72 overflow-y-auto bg-background rounded-lg shadow-lg border border-border z-10">
+              <div className="absolute end-0 top-full mt-1 py-1 w-48 max-h-72 overflow-y-auto bg-background rounded-lg shadow-lg border border-border z-10">
                 {(() => {
                   const renderNodes = (nodes: MailboxNode[], depth = 0) => {
                     return nodes.map((node) => {
@@ -3643,7 +2850,7 @@ export function EmailViewer({
                           {isTarget ? (
                             <button
                               onClick={() => { onMoveToMailbox(node.id); setMoveMenuOpen(false); }}
-                              className="w-full px-3 py-1.5 text-sm text-left hover:bg-muted flex items-center gap-2"
+                              className="w-full px-3 py-1.5 text-sm text-start hover:bg-muted flex items-center gap-2"
                               style={{ paddingLeft: `${0.75 + depth * 1}rem` }}
                             >
                               <Icon className="w-4 h-4 flex-shrink-0" />
@@ -3703,7 +2910,7 @@ export function EmailViewer({
             )}
           </button>
           {tagMenuOpen && (
-            <div className="absolute right-0 top-full mt-1 py-1 w-40 bg-background rounded-lg shadow-lg border border-border z-10">
+            <div className="absolute end-0 top-full mt-1 py-1 w-40 bg-background rounded-lg shadow-lg border border-border z-10">
               {colorOptions.map((option) => {
                 const isActive = currentColors.includes(option.value);
                 return (
@@ -3711,13 +2918,13 @@ export function EmailViewer({
                     key={option.value}
                     onClick={() => { if (email) onSetColorTag?.(email.id, option.value); setTagMenuOpen(false); }}
                     className={cn(
-                      "w-full px-3 py-1.5 text-sm text-left hover:bg-muted flex items-center gap-2",
+                      "w-full px-3 py-1.5 text-sm text-start hover:bg-muted flex items-center gap-2",
                       isActive && "bg-accent font-medium"
                     )}
                   >
                     <span className={cn("w-3 h-3 rounded-full flex-shrink-0", option.color)} />
                     <span className="truncate">{option.name}</span>
-                    {isActive && <Check className="w-3 h-3 ml-auto flex-shrink-0 text-foreground" />}
+                    {isActive && <Check className="w-3 h-3 ms-auto flex-shrink-0 text-foreground" />}
                   </button>
                 );
               })}
@@ -3726,7 +2933,7 @@ export function EmailViewer({
                   <div className="h-px bg-border my-1" />
                   <button
                     onClick={() => { if (email) onSetColorTag?.(email.id, null); setTagMenuOpen(false); }}
-                    className="w-full px-3 py-1.5 text-sm text-left hover:bg-muted flex items-center gap-2 text-muted-foreground"
+                    className="w-full px-3 py-1.5 text-sm text-start hover:bg-muted flex items-center gap-2 text-muted-foreground"
                   >
                     <X className="w-3 h-3 flex-shrink-0" />
                     <span>{t('remove_color')}</span>
@@ -3739,7 +2946,7 @@ export function EmailViewer({
         </div>
 
         {/* Spam */}
-        {(onMarkAsSpam || onUndoSpam) && (
+        {spamApplicable && (onMarkAsSpam || onUndoSpam) && (
           <Button
             variant="ghost"
             size="sm"
@@ -3830,11 +3037,11 @@ export function EmailViewer({
             <span className="text-[10px] leading-tight sm:hidden">{t('more_actions')}</span>
           </Button>
           {moreMenuOpen && !isMobile && (
-            <div className="absolute right-0 top-full mt-1 w-48 bg-background rounded-md shadow-lg border border-border z-10 py-1">
+            <div className="absolute end-0 top-full mt-1 w-48 bg-background rounded-md shadow-lg border border-border z-10 py-1">
               {/* Star toggle */}
               <button
                 onClick={() => { onToggleStar?.(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
-                className="w-full px-3 py-1.5 text-sm text-left hover:bg-muted text-foreground flex items-center gap-2"
+                className="w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2"
               >
                 <Star className={cn("w-4 h-4", isStarred && "fill-yellow-400 text-yellow-400")} />
                 {isStarred ? t('tooltips.unstar') : t('tooltips.star')}
@@ -3842,7 +3049,7 @@ export function EmailViewer({
               {/* Overflow: reply */}
               <button
                 onClick={() => { onReply?.(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
-                className={cn("w-full px-3 py-1.5 text-sm text-left hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(1) ? "" : "sm:hidden")}
+                className={cn("w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(1) ? "" : "sm:hidden")}
               >
                 <Reply className="w-4 h-4" />
                 {t('reply')}
@@ -3850,7 +3057,7 @@ export function EmailViewer({
               {/* Overflow: reply all */}
               <button
                 onClick={() => { onReplyAll?.(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
-                className={cn("w-full px-3 py-1.5 text-sm text-left hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(2) ? "" : "sm:hidden")}
+                className={cn("w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(2) ? "" : "sm:hidden")}
               >
                 <ReplyAll className="w-4 h-4" />
                 {t('reply_all')}
@@ -3858,7 +3065,7 @@ export function EmailViewer({
               {/* Overflow: forward */}
               <button
                 onClick={() => { onForward?.(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
-                className={cn("w-full px-3 py-1.5 text-sm text-left hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(3) ? "" : "sm:hidden")}
+                className={cn("w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(3) ? "" : "sm:hidden")}
               >
                 <Forward className="w-4 h-4" />
                 {t('forward')}
@@ -3866,7 +3073,7 @@ export function EmailViewer({
               {/* Overflow: archive */}
               <button
                 onClick={() => { onArchive?.(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
-                className={cn("w-full px-3 py-1.5 text-sm text-left hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(4) ? "" : "sm:hidden")}
+                className={cn("w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(4) ? "" : "sm:hidden")}
               >
                 <Archive className="w-4 h-4" />
                 {t('archive')}
@@ -3879,14 +3086,14 @@ export function EmailViewer({
                 >
                   <button
                     onClick={() => setMoreMenuSub(moreMenuSub === 'move' ? null : 'move')}
-                    className="w-full px-3 py-1.5 text-sm text-left hover:bg-muted text-foreground flex items-center gap-2"
+                    className="w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2"
                   >
                     <FolderInput className="w-4 h-4" />
                     <span className="flex-1">{t('move_to')}</span>
                     <ChevronRight className="w-3 h-3 text-muted-foreground" />
                   </button>
                   {moreMenuSub === 'move' && (
-                    <div className="absolute right-full top-0 mr-1 py-1 w-48 max-h-72 overflow-y-auto bg-background rounded-md shadow-lg border border-border z-10">
+                    <div className="absolute end-full top-0 me-1 py-1 w-48 max-h-72 overflow-y-auto bg-background rounded-md shadow-lg border border-border z-10">
                       {(() => {
                         const renderMobileNodes = (nodes: MailboxNode[], depth = 0) => {
                           return nodes.map((node) => {
@@ -3897,7 +3104,7 @@ export function EmailViewer({
                                 {isTarget ? (
                                   <button
                                     onClick={() => { onMoveToMailbox(node.id); setMoreMenuOpen(false); setMoreMenuSub(null); }}
-                                    className="w-full px-3 py-1.5 text-sm text-left hover:bg-muted flex items-center gap-2"
+                                    className="w-full px-3 py-1.5 text-sm text-start hover:bg-muted flex items-center gap-2"
                                     style={{ paddingLeft: `${0.75 + depth * 1}rem` }}
                                   >
                                     <Icon className="w-4 h-4 flex-shrink-0" />
@@ -3931,14 +3138,14 @@ export function EmailViewer({
                 >
                   <button
                     onClick={() => setMoreMenuSub(moreMenuSub === 'tag' ? null : 'tag')}
-                    className="w-full px-3 py-1.5 text-sm text-left hover:bg-muted text-foreground flex items-center gap-2"
+                    className="w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2"
                   >
                     <Tag className="w-4 h-4" />
                     <span className="flex-1">{t('tag')}</span>
                     <ChevronRight className="w-3 h-3 text-muted-foreground" />
                   </button>
                   {moreMenuSub === 'tag' && (
-                    <div className="absolute right-full top-0 mr-1 py-1 w-40 bg-background rounded-md shadow-lg border border-border z-10">
+                    <div className="absolute end-full top-0 me-1 py-1 w-40 bg-background rounded-md shadow-lg border border-border z-10">
                       {colorOptions.map((option) => {
                         const isActive = currentColors.includes(option.value);
                         return (
@@ -3946,13 +3153,13 @@ export function EmailViewer({
                             key={option.value}
                             onClick={() => { if (email) onSetColorTag?.(email.id, option.value); setMoreMenuOpen(false); setMoreMenuSub(null); }}
                             className={cn(
-                              "w-full px-3 py-1.5 text-sm text-left hover:bg-muted flex items-center gap-2",
+                              "w-full px-3 py-1.5 text-sm text-start hover:bg-muted flex items-center gap-2",
                               isActive && "bg-accent font-medium"
                             )}
                           >
                             <span className={cn("w-3 h-3 rounded-full flex-shrink-0", option.color)} />
                             <span className="truncate">{option.name}</span>
-                            {isActive && <Check className="w-3 h-3 ml-auto flex-shrink-0 text-foreground" />}
+                            {isActive && <Check className="w-3 h-3 ms-auto flex-shrink-0 text-foreground" />}
                           </button>
                         );
                       })}
@@ -3961,7 +3168,7 @@ export function EmailViewer({
                           <div className="h-px bg-border my-1" />
                           <button
                             onClick={() => { if (email) onSetColorTag?.(email.id, null); setMoreMenuOpen(false); setMoreMenuSub(null); }}
-                            className="w-full px-3 py-1.5 text-sm text-left hover:bg-muted flex items-center gap-2 text-muted-foreground"
+                            className="w-full px-3 py-1.5 text-sm text-start hover:bg-muted flex items-center gap-2 text-muted-foreground"
                           >
                             <X className="w-3 h-3 flex-shrink-0" />
                             <span>{t('remove_color')}</span>
@@ -3973,10 +3180,10 @@ export function EmailViewer({
                 </div>
               )}
               {/* Overflow: spam */}
-              {(onMarkAsSpam || onUndoSpam) && (
+              {spamApplicable && (onMarkAsSpam || onUndoSpam) && (
                 <button
                   onClick={() => { (isInJunkFolder ? onUndoSpam : onMarkAsSpam)?.(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
-                  className={cn("w-full px-3 py-1.5 text-sm text-left hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(7) ? "" : "sm:hidden")}
+                  className={cn("w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(7) ? "" : "sm:hidden")}
                 >
                   {isInJunkFolder ? (
                     <ShieldCheck className="h-4 w-4 text-green-600 dark:text-green-400" />
@@ -3989,7 +3196,7 @@ export function EmailViewer({
               {/* Overflow: toggle read */}
               <button
                 onClick={() => { onMarkAsRead?.(email.id, isUnread); setMoreMenuOpen(false); setMoreMenuSub(null); }}
-                className={cn("w-full px-3 py-1.5 text-sm text-left hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(8) ? "" : "sm:hidden")}
+                className={cn("w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(8) ? "" : "sm:hidden")}
               >
                 {isUnread ? <MailOpen className="w-4 h-4" /> : <Mail className="w-4 h-4" />}
                 {isUnread ? t('mark_read') : t('mark_unread')}
@@ -3997,7 +3204,7 @@ export function EmailViewer({
               {/* Overflow: print */}
               <button
                 onClick={() => { handlePrint(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
-                className={cn("w-full px-3 py-1.5 text-sm text-left hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(9) ? "" : "sm:hidden")}
+                className={cn("w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(9) ? "" : "sm:hidden")}
               >
                 <Printer className="w-4 h-4" />
                 {t('print')}
@@ -4005,7 +3212,7 @@ export function EmailViewer({
               {/* Overflow: view source */}
               <button
                 onClick={() => { setShowSourceModal(true); setMoreMenuOpen(false); setMoreMenuSub(null); }}
-                className={cn("w-full px-3 py-1.5 text-sm text-left hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(10) ? "" : "sm:hidden")}
+                className={cn("w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(10) ? "" : "sm:hidden")}
               >
                 <Code className="w-4 h-4" />
                 {t('view_source')}
@@ -4014,7 +3221,7 @@ export function EmailViewer({
               {effectiveEmailContent.isHtml && (
                 <button
                   onClick={() => { setEmailViewDarkOverride(prev => prev === null ? !(resolvedTheme === 'dark') : !prev); setMoreMenuOpen(false); setMoreMenuSub(null); }}
-                  className={cn("w-full px-3 py-1.5 text-sm text-left hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(11) ? "" : "sm:hidden")}
+                  className={cn("w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(11) ? "" : "sm:hidden")}
                 >
                   {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
                   {isDark ? 'View in light mode' : 'View in dark mode'}
@@ -4024,7 +3231,7 @@ export function EmailViewer({
               {/* Export email */}
               <button
                 onClick={() => { handleExportEmail(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
-                className="w-full px-3 py-1.5 text-sm text-left hover:bg-muted text-foreground flex items-center gap-2"
+                className="w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2"
               >
                 <Download className="w-4 h-4" />
                 {t('export_email')}
@@ -4032,7 +3239,7 @@ export function EmailViewer({
               {/* Import email */}
               <button
                 onClick={() => { handleImportEmail(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
-                className="w-full px-3 py-1.5 text-sm text-left hover:bg-muted text-foreground flex items-center gap-2"
+                className="w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2"
               >
                 <Upload className="w-4 h-4" />
                 {t('import_email')}
@@ -4040,7 +3247,7 @@ export function EmailViewer({
               {onShowShortcuts && (
                 <button
                   onClick={() => { onShowShortcuts(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
-                  className="w-full px-3 py-1.5 text-sm text-left hover:bg-muted text-foreground flex items-center gap-2"
+                  className="w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2"
                 >
                   <Keyboard className="w-4 h-4" />
                   {t('keyboard_shortcuts')}
@@ -4068,7 +3275,7 @@ export function EmailViewer({
     )}
     {!isScheduled && isMobile && (
       <div className={cn(
-        "fixed inset-y-0 right-0 w-72 bg-background border-l border-border z-[70] sm:hidden",
+        "fixed inset-y-0 right-0 w-72 bg-background border-s border-border z-[70] sm:hidden",
         "transform transition-transform duration-300 ease-in-out",
         "flex flex-col",
         moreMenuOpen ? "translate-x-0" : "translate-x-full"
@@ -4077,7 +3284,7 @@ export function EmailViewer({
           {moreMenuSub ? (
             <button
               onClick={() => setMoreMenuSub(null)}
-              className="flex items-center gap-1 -ml-2 px-2 py-1 rounded hover:bg-muted text-sm font-semibold text-foreground"
+              className="flex items-center gap-1 -ms-2 px-2 py-1 rounded hover:bg-muted text-sm font-semibold text-foreground"
             >
               <ChevronLeft className="w-5 h-5" />
               {moreMenuSub === 'move' ? t('move_to') : t('tag')}
@@ -4095,7 +3302,7 @@ export function EmailViewer({
               {/* Star toggle */}
               <button
                 onClick={() => { onToggleStar?.(); setMoreMenuOpen(false); }}
-                className="w-full px-4 py-3 min-h-[44px] text-sm text-left hover:bg-muted text-foreground flex items-center gap-3"
+                className="w-full px-4 py-3 min-h-[44px] text-sm text-start hover:bg-muted text-foreground flex items-center gap-3"
               >
                 <Star className={cn("w-5 h-5", isStarred && "fill-yellow-400 text-yellow-400")} />
                 {isStarred ? t('tooltips.unstar') : t('tooltips.star')}
@@ -4104,12 +3311,12 @@ export function EmailViewer({
               {colorOptions.length > 0 && (
                 <button
                   onClick={() => setMoreMenuSub('tag')}
-                  className="w-full px-4 py-3 min-h-[44px] text-sm text-left hover:bg-muted text-foreground flex items-center gap-3"
+                  className="w-full px-4 py-3 min-h-[44px] text-sm text-start hover:bg-muted text-foreground flex items-center gap-3"
                 >
                   <Tag className="w-5 h-5" />
                   <span className="flex-1">{t('tag')}</span>
                   {currentColors.length > 0 && (
-                    <div className="flex -space-x-1 mr-1">
+                    <div className="flex -space-x-1 me-1">
                       {currentColors.slice(0, 3).map((c) => {
                         const opt = colorOptions.find((o) => o.value === c);
                         return opt ? <span key={c} className={cn("w-3 h-3 rounded-full border border-background", opt.color)} /> : null;
@@ -4121,14 +3328,14 @@ export function EmailViewer({
               )}
               <button
                 onClick={() => { handlePrint(); setMoreMenuOpen(false); }}
-                className="w-full px-4 py-3 min-h-[44px] text-sm text-left hover:bg-muted text-foreground flex items-center gap-3"
+                className="w-full px-4 py-3 min-h-[44px] text-sm text-start hover:bg-muted text-foreground flex items-center gap-3"
               >
                 <Printer className="w-5 h-5" />
                 {t('print')}
               </button>
               <button
                 onClick={() => { setShowSourceModal(true); setMoreMenuOpen(false); }}
-                className="w-full px-4 py-3 min-h-[44px] text-sm text-left hover:bg-muted text-foreground flex items-center gap-3"
+                className="w-full px-4 py-3 min-h-[44px] text-sm text-start hover:bg-muted text-foreground flex items-center gap-3"
               >
                 <Code className="w-5 h-5" />
                 {t('view_source')}
@@ -4136,7 +3343,7 @@ export function EmailViewer({
               {effectiveEmailContent.isHtml && (
                 <button
                   onClick={() => { setEmailViewDarkOverride(prev => prev === null ? !(resolvedTheme === 'dark') : !prev); setMoreMenuOpen(false); }}
-                  className="w-full px-4 py-3 min-h-[44px] text-sm text-left hover:bg-muted text-foreground flex items-center gap-3"
+                  className="w-full px-4 py-3 min-h-[44px] text-sm text-start hover:bg-muted text-foreground flex items-center gap-3"
                 >
                   {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
                   {isDark ? 'View in light mode' : 'View in dark mode'}
@@ -4145,14 +3352,14 @@ export function EmailViewer({
               <div className="h-px bg-border my-1" />
               <button
                 onClick={() => { handleExportEmail(); setMoreMenuOpen(false); }}
-                className="w-full px-4 py-3 min-h-[44px] text-sm text-left hover:bg-muted text-foreground flex items-center gap-3"
+                className="w-full px-4 py-3 min-h-[44px] text-sm text-start hover:bg-muted text-foreground flex items-center gap-3"
               >
                 <Download className="w-5 h-5" />
                 {t('export_email')}
               </button>
               <button
                 onClick={() => { handleImportEmail(); setMoreMenuOpen(false); }}
-                className="w-full px-4 py-3 min-h-[44px] text-sm text-left hover:bg-muted text-foreground flex items-center gap-3"
+                className="w-full px-4 py-3 min-h-[44px] text-sm text-start hover:bg-muted text-foreground flex items-center gap-3"
               >
                 <Upload className="w-5 h-5" />
                 {t('import_email')}
@@ -4160,7 +3367,7 @@ export function EmailViewer({
               {onShowShortcuts && (
                 <button
                   onClick={() => { onShowShortcuts(); setMoreMenuOpen(false); }}
-                  className="w-full px-4 py-3 min-h-[44px] text-sm text-left hover:bg-muted text-foreground flex items-center gap-3"
+                  className="w-full px-4 py-3 min-h-[44px] text-sm text-start hover:bg-muted text-foreground flex items-center gap-3"
                 >
                   <Keyboard className="w-5 h-5" />
                   {t('keyboard_shortcuts')}
@@ -4178,7 +3385,7 @@ export function EmailViewer({
                     {isTarget ? (
                       <button
                         onClick={() => { onMoveToMailbox(node.id); setMoreMenuOpen(false); setMoreMenuSub(null); }}
-                        className="w-full px-4 py-2.5 min-h-[44px] text-sm text-left hover:bg-muted flex items-center gap-3"
+                        className="w-full px-4 py-2.5 min-h-[44px] text-sm text-start hover:bg-muted flex items-center gap-3"
                         style={{ paddingLeft: `${1 + depth * 1}rem` }}
                       >
                         <Icon className="w-5 h-5 flex-shrink-0" />
@@ -4209,20 +3416,20 @@ export function EmailViewer({
                     key={option.value}
                     onClick={() => { if (email) onSetColorTag?.(email.id, option.value); setMoreMenuOpen(false); setMoreMenuSub(null); }}
                     className={cn(
-                      "w-full px-4 py-2.5 min-h-[44px] text-sm text-left hover:bg-muted flex items-center gap-3",
+                      "w-full px-4 py-2.5 min-h-[44px] text-sm text-start hover:bg-muted flex items-center gap-3",
                       isActive && "bg-accent font-medium"
                     )}
                   >
                     <span className={cn("w-3.5 h-3.5 rounded-full flex-shrink-0", option.color)} />
                     <span className="truncate">{option.name}</span>
-                    {isActive && <Check className="w-4 h-4 ml-auto flex-shrink-0 text-foreground" />}
+                    {isActive && <Check className="w-4 h-4 ms-auto flex-shrink-0 text-foreground" />}
                   </button>
                 );
               })}
               {currentColors.length > 0 && (
                 <button
                   onClick={() => { if (email) onSetColorTag?.(email.id, null); setMoreMenuOpen(false); setMoreMenuSub(null); }}
-                  className="w-full px-4 py-2.5 min-h-[44px] text-sm text-left hover:bg-muted flex items-center gap-3 text-muted-foreground"
+                  className="w-full px-4 py-2.5 min-h-[44px] text-sm text-start hover:bg-muted flex items-center gap-3 text-muted-foreground"
                 >
                   <X className="w-4 h-4 flex-shrink-0" />
                   <span>{t('remove_color')}</span>
@@ -4262,7 +3469,7 @@ export function EmailViewer({
                 variant="ghost"
                 size="icon"
                 onClick={onBack}
-                className="h-11 w-11 lg:h-10 lg:w-10 flex-shrink-0 -ml-2"
+                className="h-11 w-11 lg:h-10 lg:w-10 flex-shrink-0 -ms-2"
                 aria-label={t('back_to_list')}
               >
                 <ChevronLeft className="w-5 h-5" />
@@ -4306,7 +3513,7 @@ export function EmailViewer({
               </div>
             </div>
             {/* Date/time on the right of subject row - hidden on mobile, shown next to sender */}
-            <div className="hidden sm:block flex-shrink-0 text-right">
+            <div className="hidden sm:block flex-shrink-0 text-end">
               <span className="text-xs lg:text-sm text-muted-foreground whitespace-nowrap">
                 {formatDateTime(email.receivedAt, timeFormat, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
               </span>
@@ -4362,7 +3569,7 @@ export function EmailViewer({
                         name={sender?.name}
                         email={sender.email}
                         onViewContact={handleViewContactSidebar}
-                        className="font-semibold text-left"
+                        className="font-semibold text-start"
                       />
                     ) : (
                       <span className="font-semibold text-foreground">{t('unknown_sender')}</span>
@@ -4426,7 +3633,7 @@ export function EmailViewer({
                 )}
                 <button
                   onClick={() => setShowFullHeaders(!showFullHeaders)}
-                  className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors ml-1"
+                  className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors ms-1"
                 >
                   {showFullHeaders ? (
                     <>
@@ -4523,6 +3730,7 @@ export function EmailViewer({
                       +{effectiveAttachments.length - 2} {t('more')}
                     </button>
                   )}
+                  {downloadAllButton}
                   {/* Floating popup for remaining attachments */}
                   {showAllBesideAttachments && effectiveAttachments.length > 2 && (
                     <>
@@ -4548,7 +3756,7 @@ export function EmailViewer({
                               <span className="text-xs text-foreground truncate max-w-[180px]">
                                 {getAttachmentDisplayName(attachment.name, attachment.type)}
                               </span>
-                              <span className="text-[10px] text-muted-foreground ml-auto flex-shrink-0">
+                              <span className="text-[10px] text-muted-foreground ms-auto flex-shrink-0">
                                 {formatFileSize(attachment.size)}
                               </span>
                               <div className="absolute inset-y-0 right-0 rounded-r-md bg-background/95 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 px-1.5">
@@ -4606,7 +3814,7 @@ export function EmailViewer({
                     name={sender?.name}
                     email={sender.email}
                     onViewContact={handleViewContactSidebar}
-                    className="text-sm font-semibold text-left"
+                    className="text-sm font-semibold text-start"
                   />
                 ) : (
                   <span className="text-sm font-semibold text-foreground">{t('unknown_sender')}</span>
@@ -4649,7 +3857,7 @@ export function EmailViewer({
                 )}
                 <button
                   onClick={() => setShowFullHeaders(!showFullHeaders)}
-                  className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors ml-1"
+                  className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors ms-1"
                 >
                   {showFullHeaders ? (
                     <>
@@ -4666,7 +3874,7 @@ export function EmailViewer({
               </div>
             </div>
             {/* Date/time + size on the right (mobile) */}
-            <div className="sm:hidden flex-shrink-0 text-right ml-2">
+            <div className="sm:hidden flex-shrink-0 text-end ms-2">
               <span className="text-xs text-muted-foreground whitespace-nowrap">
                 {formatDateTime(email.receivedAt, timeFormat, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
               </span>
@@ -4769,6 +3977,22 @@ export function EmailViewer({
           const hasListInfo = !!(listHeaders?.listId || listHeaders?.listUnsubscribe || listHeaders?.listHelp || listHeaders?.listPost);
           const hasAuthSection = !!(auth?.spf || auth?.dkim || auth?.dmarc || auth?.iprev || email.spamScore !== undefined || email.spamLLM);
 
+          // Projected, read-only view handed to plugins that render in the
+          // "more details" panel. Includes the parsed `headers` map and full
+          // `source` so plugins can inspect raw headers / message source.
+          // Built lazily here - only when the details panel is expanded.
+          const detailsView = emailToReadView(email);
+          // Lets a plugin add rows under an existing category. The plugin's
+          // own `shouldShow({ email, category })` decides which category it
+          // appears under (or `category === null` for the new bottom section).
+          const CategorySlot = ({ category }: { category: string }) => (
+            <PluginSlot
+              name="email-details-section"
+              className="mt-2 empty:mt-0"
+              extraProps={{ email: detailsView, category }}
+            />
+          );
+
           return (
             <div className="bg-background border-b border-border px-4 lg:px-6" style={{ paddingBlock: 'var(--density-header-py)' }}>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-10 gap-y-5">
@@ -4782,7 +4006,7 @@ export function EmailViewer({
                           email={sender?.email || ''}
                           displayLabel={sender?.name && sender?.email ? `${sender.name} <${sender.email}>` : undefined}
                           onViewContact={handleViewContactSidebar}
-                          className="text-sm text-left"
+                          className="text-sm text-start"
                         />
                       </div>
                     </Row>
@@ -4826,6 +4050,7 @@ export function EmailViewer({
                       )}
                     </Row>
                   </dl>
+                  <CategorySlot category="recipients_routing" />
                 </section>
 
                 {hasAuthSection && (
@@ -4911,6 +4136,7 @@ export function EmailViewer({
                         </div>
                       </div>
                     )}
+                    <CategorySlot category="authentication_security" />
                   </section>
                 )}
 
@@ -4945,6 +4171,7 @@ export function EmailViewer({
                         <Row label={t('details.thread_id')} mono>{email.threadId}</Row>
                       )}
                     </dl>
+                    <CategorySlot category="identifiers_threading" />
                   </section>
                 )}
 
@@ -4972,6 +4199,7 @@ export function EmailViewer({
                       <Row label={t('details.account')}>{email.accountLabel}</Row>
                     )}
                   </dl>
+                  <CategorySlot category="message_properties" />
                 </section>
 
                 {hasListInfo && (
@@ -4997,24 +4225,24 @@ export function EmailViewer({
                         <Row label={t('details.list_post')}><span className="break-all">{listHeaders.listPost}</span></Row>
                       )}
                     </dl>
+                    <CategorySlot category="mailing_list" />
+                  </section>
+                )}
+
+                {/* Plugin-supplied category. Plugins whose shouldShow accepts
+                    `category === null` render their own titled section here. */}
+                {hasDetailsSlotOffers && (
+                  <section className="lg:col-span-2 min-w-0">
+                    <PluginSlot
+                      name="email-details-section"
+                      extraProps={{ email: detailsView, category: null }}
+                    />
                   </section>
                 )}
               </div>
             </div>
           );
         })()}
-
-        {/* S/MIME Status Banner */}
-        {smimeStatus && (
-          <div className="border-b border-border bg-muted/30">
-            <div className="px-6 py-1.5">
-              <SmimeStatusBanner
-                status={smimeStatus}
-                onUnlockKey={smimeUnlockTargetId ? openSmimeUnlockDialog : undefined}
-              />
-            </div>
-          </div>
-        )}
 
         {/* Scheduled Banner */}
         {isScheduled && (
@@ -5029,6 +4257,7 @@ export function EmailViewer({
               <div className="flex items-center gap-2">
                 {canCancelScheduled && (
                   <>
+                    <Button size="sm" variant="default" onClick={() => onRescheduleScheduled?.(new Date(Date.now() + 1000).toISOString())}>{t('send_now')}</Button>
                     <Button size="sm" variant="outline" onClick={onCancelScheduled}>{t('cancel_scheduled_send')}</Button>
                     <Button
                       size="sm"
@@ -5072,18 +4301,6 @@ export function EmailViewer({
             </div>
           </div>
         )}
-
-        <SmimePassphraseDialog
-          isOpen={smimeUnlockDialogOpen}
-          onClose={() => {
-            setSmimeUnlockDialogOpen(false);
-            setSmimeUnlockError(null);
-          }}
-          onSubmit={handleSmimeUnlockSubmit}
-          title={tSmime('unlock_key')}
-          description={tSmime('unlock_key_desc')}
-          error={smimeUnlockError}
-        />
 
         {/* Unified Notification Banner - External Content + Calendar Invitation + Read Receipt */}
         {((hasBlockedContent && !allowExternalContent && externalContentPolicy !== 'allow') ||
@@ -5170,8 +4387,8 @@ export function EmailViewer({
       {/* === ATTACHMENTS below header (below-header mode, desktop only) === */}
       {attachmentPosition === 'below-header' && effectiveAttachments.length > 0 && (
         <div className="hidden lg:block bg-background border-b border-border px-4 lg:px-6 py-2">
-          <div className="relative">
-          <div ref={belowHeaderRowRef} className="relative flex items-center gap-2 overflow-hidden">
+          <div className="relative flex items-center gap-2">
+          <div ref={belowHeaderRowRef} className="relative flex items-center gap-2 overflow-hidden flex-1 min-w-0">
             {/* Hidden ghost row used purely for measuring chip widths */}
             <div
               ref={belowHeaderGhostRef}
@@ -5292,6 +4509,7 @@ export function EmailViewer({
               </button>
             )}
           </div>
+            {downloadAllButton}
             {showAllBelowHeaderAttachments && visibleBelowHeaderCount !== null && effectiveAttachments.length > visibleBelowHeaderCount && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setShowAllBelowHeaderAttachments(false)} />
@@ -5316,7 +4534,7 @@ export function EmailViewer({
                         <span className="text-sm text-foreground truncate max-w-[220px]">
                           {getAttachmentDisplayName(attachment.name, attachment.type)}
                         </span>
-                        <span className="text-xs text-muted-foreground ml-auto flex-shrink-0">
+                        <span className="text-xs text-muted-foreground ms-auto flex-shrink-0">
                           {formatFileSize(attachment.size)}
                         </span>
                         <div className="absolute inset-y-0 right-0 rounded-r-md bg-background/95 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 px-1.5">
@@ -5429,6 +4647,7 @@ export function EmailViewer({
                   +{effectiveAttachments.length - 2} {t('more')}
                 </button>
               )}
+              {downloadAllButton}
               {showAllMobileAttachments && effectiveAttachments.length > 2 && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setShowAllMobileAttachments(false)} />
@@ -5453,7 +4672,7 @@ export function EmailViewer({
                           <span className="text-xs text-foreground truncate max-w-[180px]">
                             {getAttachmentDisplayName(attachment.name, attachment.type)}
                           </span>
-                          <span className="text-[10px] text-muted-foreground ml-auto flex-shrink-0">
+                          <span className="text-[10px] text-muted-foreground ms-auto flex-shrink-0">
                             {formatFileSize(attachment.size)}
                           </span>
                           <div className="absolute inset-y-0 right-0 rounded-r-md bg-background/95 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 px-1.5">
@@ -5551,6 +4770,12 @@ export function EmailViewer({
                     value={quickReplyText}
                     onChange={(e) => setQuickReplyText(e.target.value)}
                     onFocus={() => setIsQuickReplyFocused(true)}
+                    onKeyDown={(e) => {
+                      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+                        e.preventDefault();
+                        void handleSendQuickReply();
+                      }
+                    }}
                     placeholder={t('quick_reply_placeholder')}
                     className={cn(
                       "w-full px-3 py-2 text-sm border border-border bg-background text-foreground rounded-lg",
@@ -5590,35 +4815,22 @@ export function EmailViewer({
                           disabled={isSendingQuickReply}
                           className="text-muted-foreground"
                         >
-                          <MoreVertical className="w-4 h-4 mr-1" />
+                          <MoreVertical className="w-4 h-4 me-1" />
                           {t('more_options')}
                         </Button>
                         <Button
                           size="sm"
-                          onClick={async () => {
-                            if (!quickReplyText.trim() || !onQuickReply) return;
-
-                            setIsSendingQuickReply(true);
-                            try {
-                              await onQuickReply(quickReplyText);
-                              setQuickReplyText("");
-                              setIsQuickReplyFocused(false);
-                            } catch (error) {
-                              console.error("Failed to send quick reply:", error);
-                            } finally {
-                              setIsSendingQuickReply(false);
-                            }
-                          }}
+                          onClick={handleSendQuickReply}
                           disabled={!quickReplyText.trim() || isSendingQuickReply}
                         >
                           {isSendingQuickReply ? (
                             <>
-                              <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                              <Loader2 className="w-4 h-4 me-1 animate-spin" />
                               {t('sending')}
                             </>
                           ) : (
                             <>
-                              <Reply className="w-4 h-4 mr-1" />
+                              <Reply className="w-4 h-4 me-1" />
                               {t('send')}
                             </>
                           )}
@@ -5754,7 +4966,7 @@ export function EmailViewer({
       <>
         {/* Collapse toggle when sidebar is collapsed */}
         {detailSidebarCollapsed && (
-          <div className="flex flex-col items-center border-l border-border bg-background">
+          <div className="flex flex-col items-center border-s border-border bg-background">
             <Button
               variant="ghost"
               size="icon"
@@ -5778,7 +4990,7 @@ export function EmailViewer({
               onDoubleClick={() => setDetailSidebarWidth(280)}
             />
             <div
-              className="flex flex-col h-full border-l border-border bg-background overflow-hidden"
+              className="flex flex-col h-full border-s border-border bg-background overflow-hidden"
               style={{ width: detailSidebarWidth, minWidth: detailSidebarWidth }}
             >
               <div className="flex items-center justify-end px-1 py-1 border-b border-border shrink-0">

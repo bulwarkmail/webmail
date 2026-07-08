@@ -35,6 +35,7 @@ interface EmailListProps {
   onForward?: (email: Email) => void;
   onMarkAsRead?: (email: Email, read: boolean) => void;
   onToggleStar?: (email: Email) => void;
+  onTogglePinned?: (email: Email) => void;
   onDelete?: (email: Email) => void;
   onArchive?: (email: Email) => void;
   onSetColorTag?: (emailId: string, color: string | null) => void;
@@ -64,6 +65,7 @@ export function EmailList({
   onForward,
   onMarkAsRead,
   onToggleStar,
+  onTogglePinned,
   onDelete,
   onArchive,
   onSetColorTag,
@@ -108,7 +110,17 @@ export function EmailList({
     clearSearchFilters,
     advancedSearch,
     searchQuery,
+    isUnifiedView,
+    unifiedRole,
   } = useEmailStore();
+
+  // In aggregate role-views (e.g. "All Junk") the selected mailbox is virtual, so
+  // there is no concrete mailbox to read the role from. Fall back to the unified
+  // role so contextual actions (e.g. mark-as-spam ↔ not-spam) behave as if inside
+  // that role's folder.
+  const effectiveMailboxRole =
+    mailboxes.find(m => m.id === selectedMailbox)?.role
+    ?? (isUnifiedView ? (unifiedRole ?? undefined) : undefined);
 
   const disableThreading = useSettingsStore((state) => state.disableThreading);
 
@@ -405,9 +417,9 @@ export function EmailList({
             className="text-destructive border-destructive/30 hover:bg-destructive/10 text-xs"
           >
             {isProcessing ? (
-              <Loader2 className="w-3 h-3 animate-spin mr-1" />
+              <Loader2 className="w-3 h-3 animate-spin me-1" />
             ) : (
-              <Trash2 className="w-3 h-3 mr-1" />
+              <Trash2 className="w-3 h-3 me-1" />
             )}
             {t('empty_folder.button')}
           </Button>
@@ -499,6 +511,7 @@ export function EmailList({
                       onArchive={onArchive ? (email) => onArchive(email) : undefined}
                       onSetColorTag={onSetColorTag}
                       onMarkAsSpam={onMarkAsSpam ? (email) => onMarkAsSpam(email) : undefined}
+                      onUndoSpam={onUndoSpam ? (email) => onUndoSpam(email) : undefined}
                     />
                   </div>
                 );
@@ -532,7 +545,7 @@ export function EmailList({
           menuRef={menuRef}
           mailboxes={mailboxes}
           selectedMailbox={selectedMailbox}
-          currentMailboxRole={mailboxes.find(m => m.id === selectedMailbox)?.role}
+          currentMailboxRole={effectiveMailboxRole}
           isMultiSelect={selectedEmailIds.has(contextMenu.data.id)}
           selectedCount={selectedEmailIds.size}
           onReply={() => onReply?.(contextMenu.data!)}
@@ -540,6 +553,7 @@ export function EmailList({
           onForward={() => onForward?.(contextMenu.data!)}
           onMarkAsRead={(read) => onMarkAsRead?.(contextMenu.data!, read)}
           onToggleStar={() => onToggleStar?.(contextMenu.data!)}
+          onTogglePinned={onTogglePinned ? () => onTogglePinned(contextMenu.data!) : undefined}
           onDelete={() => onDelete?.(contextMenu.data!)}
           onArchive={() => onArchive?.(contextMenu.data!)}
           onSetColorTag={(color) => onSetColorTag?.(contextMenu.data!.id, color)}

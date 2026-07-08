@@ -5,32 +5,27 @@ import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { X, Paperclip, Send, Save, Check, Loader2, AlertCircle, FileText, BookmarkPlus, ShieldCheck, Lock, CalendarClock, ChevronDown, MailCheck } from "lucide-react";
+import { X, Paperclip, Send, Save, Check, Loader2, AlertCircle, FileText, BookmarkPlus, CalendarClock, ChevronDown, MailCheck, Search } from "lucide-react";
 import { cn, formatFileSize, formatDateTime, generateUUID } from "@/lib/utils";
 import { debug } from "@/lib/debug";
 import { toast } from "@/stores/toast-store";
 import { useContextMenu } from "@/hooks/use-context-menu";
 import { ContextMenu, ContextMenuItem, ContextMenuSeparator } from "@/components/ui/context-menu";
-import { sanitizeSignatureHtml, sanitizeEmailHtml } from "@/lib/email-sanitization";
+import { sanitizeSignatureHtml, sanitizeEmailHtml, escapeHtml } from "@/lib/email-sanitization";
 import { buildReplySubject, buildForwardSubject } from "@/lib/subject-prefix";
 import { isFilePreviewable } from "@/lib/file-preview";
 import { buildQuotedHtmlBlock, serializeEditorContent } from "@/components/email/quoted-html";
+import { buildSignatureBlock } from "@/components/email/signature-block";
 import { emailHooks, contactHooks } from "@/lib/plugin-hooks";
 import type { OutgoingEmail, RecipientSuggestion } from "@/lib/plugin-types";
 import { useAuthStore } from "@/stores/auth-store";
 import { useIdentityStore } from "@/stores/identity-store";
 import { useProMultiAccountIdentities, stripCrossAccountIdentityPrefix } from "@/hooks/use-pro-multi-account-identities";
 import { useAccountStore } from "@/stores/account-store";
-import { useSmimeStore } from "@/stores/smime-store";
-import { useEmailStore } from "@/stores/email-store";
 import { useSettingsStore } from "@/stores/settings-store";
-import { buildMimeMessage, wrapCmsAsSmimeMessage } from "@/lib/smime/mime-builder";
-import type { MimeAttachment } from "@/lib/smime/mime-builder";
-import { smimeSign } from "@/lib/smime/smime-sign";
 import { PluginSlot } from "@/components/plugins/plugin-slot";
 import { Avatar } from "@/components/ui/avatar";
 import { FilePreviewModal } from "@/components/files/file-preview-modal";
-import { smimeEncrypt } from "@/lib/smime/smime-encrypt";
 import { useContactStore } from "@/stores/contact-store";
 import { useTemplateStore } from "@/stores/template-store";
 import { SubAddressHelper } from "@/components/identity/sub-address-helper";
@@ -40,7 +35,7 @@ import { TemplatePicker } from "@/components/templates/template-picker";
 import { TemplateForm } from "@/components/templates/template-form";
 import type { EmailTemplate } from "@/lib/template-types";
 import { appendPlainTextSignature, getPlainTextSignature } from "@/lib/signature-utils";
-import { resolveReplyFrom } from "@/lib/reply-identity";
+import { findComposeIdentityId, resolveReplyFrom } from "@/lib/reply-identity";
 import { computeReplyThreadingHeaders } from "@/lib/email-threading";
 import {
   rewriteCidImagesForEditor,
@@ -50,8 +45,11 @@ import {
   parseRecipientList,
   formatRecipientList,
   splitPastedRecipients,
+  waitForPendingUploads,
+  extractUserAuthoredText,
   type Recipient,
 } from "@/lib/email-composer-utils";
+import { isValidEmail } from "@/lib/validation";
 import { RichTextEditor } from "@/components/email/rich-text-editor";
 import type { Editor } from "@tiptap/react";
 import { htmlToPlainText as htmlToPlainTextShared } from "@/lib/html-to-text";
@@ -138,12 +136,28 @@ interface EmailComposerProps {
   }) => void | Promise<void>;
   onScheduledSendCreated?: () => void | Promise<void>;
   onClose?: () => void;
+  /**
+   * When provided, the composer assigns its close handler to `current`. The
+   * handler shows the unsaved-changes dialog when the draft is dirty, so a
+   * host (e.g. the Pro tab bar's close button) can route an external close
+   * request through the same guard instead of discarding silently.
+   */
+  requestCloseRef?: React.MutableRefObject<(() => void) | null>;
   onDiscardDraft?: (draftId: string) => void;
   onSaveState?: (data: ComposerDraftData) => void;
   className?: string;
   initialDraftText?: string;
   initialData?: ComposerDraftData | null;
   mode?: 'compose' | 'reply' | 'replyAll' | 'forward';
+  /**
+   * Email of the mailbox/account the user is viewing when they start a new
+   * message. When set (and `autoSelectReplyIdentity` is on), a fresh compose
+   * preselects the identity matching this address instead of the primary
+   * identity, so "New message" from info@ defaults its From to info@. Mirrors
+   * the reply-time identity match; ignored for reply/replyAll/forward (those
+   * resolve from the original recipients).
+   */
+  composeFromAccountEmail?: string;
   replyTo?: {
     from?: { email?: string; name?: string }[];
     replyToAddresses?: { email?: string; name?: string }[];
@@ -188,11 +202,13 @@ type SignatureIdentityLike = {
   textSignature?: string;
 } | null | undefined;
 
-// Render the embedded signature for "above quote" mode. Bracketed with
-// `data-signature-block` marker paragraphs so we can swap the inner content
-// when the user switches identity without losing the surrounding draft or
-// quoted message. The markers are preserved through TipTap by the
-// StyledParagraph extension.
+// Render the embedded signature. Bracketed with `data-signature-block` marker
+// paragraphs so we can swap the inner content when the user switches identity
+// without losing the surrounding draft or quoted message. The markers are
+// preserved through TipTap by the StyledParagraph extension. The HTML
+// signature itself is wrapped in a SignatureBlock atom node so its inline
+// styling survives the editor (see signature-block.ts) instead of being
+// flattened by the schema.
 function buildEmbeddedSignatureHtml(
   identity: SignatureIdentityLike,
   options: { embed: boolean; separator: boolean }
@@ -203,7 +219,7 @@ function buildEmbeddedSignatureHtml(
     : `<p data-signature-block="start"></p>`;
   const endMarker = `<p data-signature-block="end"></p>`;
   if (identity?.htmlSignature) {
-    return `${startMarker}${sanitizeSignatureHtml(identity.htmlSignature)}${endMarker}`;
+    return `${startMarker}${buildSignatureBlock(sanitizeSignatureHtml(identity.htmlSignature))}${endMarker}`;
   }
   if (identity?.textSignature) {
     const escaped = identity.textSignature
@@ -232,12 +248,14 @@ export function EmailComposer({
   onSend,
   onScheduledSendCreated,
   onClose,
+  requestCloseRef,
   onDiscardDraft,
   onSaveState,
   className,
   initialDraftText,
   initialData,
   mode = 'compose',
+  composeFromAccountEmail,
   replyTo
 }: EmailComposerProps) {
   const t = useTranslations('email_composer');
@@ -344,9 +362,8 @@ export function EmailComposer({
 
       const date = replyTo.receivedAt ? formatDateTime(replyTo.receivedAt, timeFormat, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }) : "";
       const from = replyTo.from?.[0];
-      const fromStr = from ? `${from.name || from.email}` : tCommon('unknown');
-      // Forward "From:" shows the full sender incl. address; reply line keeps
-      // the bare name (reads naturally in the localized "On … wrote:" line).
+      // Forward "From:" and the reply "On … wrote:" line both show the full
+      // sender incl. address ("Name <email>"), like Gmail/Outlook (#482).
       const fromStrFull = from
         ? (from.name && from.email && from.name !== from.email
             ? `${from.name} <${from.email}>`
@@ -374,7 +391,7 @@ export function EmailComposer({
       if (mode === 'forward') {
         return `${prefix}${signatureBlock}\n\n${tQuote('forwarded_separator')}\n${tQuote('from_label')}: ${fromStrFull}\n${tQuote('date_label')}: ${date}\n${tQuote('subject_label')}: ${replyTo.subject || ''}\n\n${originalText}`;
       } else if (mode === 'reply' || mode === 'replyAll') {
-        return `${prefix}${signatureBlock}\n\n${tQuote('reply_line', { date, from: fromStr })}\n${quotedText}`;
+        return `${prefix}${signatureBlock}\n\n${tQuote('reply_line', { date, from: fromStrFull })}\n${quotedText}`;
       }
       return prefix;
     }
@@ -396,7 +413,7 @@ export function EmailComposer({
 
     const date = replyTo.receivedAt ? formatDateTime(replyTo.receivedAt, timeFormat, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }) : "";
     const from = replyTo.from?.[0];
-    const fromStr = from ? `${from.name || from.email}` : tCommon('unknown');
+    // Forward and reply quote lines both show the full "Name <email>" sender (#482).
     const fromStrFull = from
       ? (from.name && from.email && from.name !== from.email
           ? `${from.name} <${from.email}>`
@@ -431,9 +448,11 @@ export function EmailComposer({
 
     // Build quoted content as HTML
     if (replyTo.htmlBody && (mode === 'reply' || mode === 'replyAll' || mode === 'forward')) {
+      // HTML-escape user-controlled values: an unescaped sender "Name <email>"
+      // has its "<email>" eaten as a bogus HTML tag by the rich-text editor (#482).
       const quoteHeader = mode === 'forward'
-        ? `${tQuote('forwarded_separator')}<br>${tQuote('from_label')}: ${fromStrFull}<br>${tQuote('date_label')}: ${date}<br>${tQuote('subject_label')}: ${replyTo.subject || ''}<br><br>`
-        : `${tQuote('reply_line', { date, from: fromStr })}<br>`;
+        ? `${tQuote('forwarded_separator')}<br>${tQuote('from_label')}: ${escapeHtml(fromStrFull)}<br>${tQuote('date_label')}: ${escapeHtml(date)}<br>${tQuote('subject_label')}: ${escapeHtml(replyTo.subject || '')}<br><br>`
+        : `${tQuote('reply_line', { date: escapeHtml(date), from: escapeHtml(fromStrFull) })}<br>`;
       // Embed the original as a QuotedHtml island (verbatim, schema-free) so
       // its layout survives the editor round-trip. Sanitize first to strip
       // scripts/styles/head; cid rewrite afterwards so data-cid markers
@@ -447,9 +466,9 @@ export function EmailComposer({
     if (replyTo.body) {
       const escapedOriginal = replyTo.body.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
       if (mode === 'forward') {
-        return `${prefix}${signatureBlock}<br><br>${tQuote('forwarded_separator')}<br>${tQuote('from_label')}: ${fromStrFull}<br>${tQuote('date_label')}: ${date}<br>${tQuote('subject_label')}: ${replyTo.subject || ''}<br><br>${escapedOriginal}`;
+        return `${prefix}${signatureBlock}<br><br>${tQuote('forwarded_separator')}<br>${tQuote('from_label')}: ${escapeHtml(fromStrFull)}<br>${tQuote('date_label')}: ${escapeHtml(date)}<br>${tQuote('subject_label')}: ${escapeHtml(replyTo.subject || '')}<br><br>${escapedOriginal}`;
       } else if (mode === 'reply' || mode === 'replyAll') {
-        return `${prefix}${signatureBlock}<br><br>${tQuote('reply_line', { date, from: fromStr })}<br><blockquote style="margin:0 0 0 0.8ex;border-left:2px solid #ccc;padding-left:1ex">${escapedOriginal}</blockquote>`;
+        return `${prefix}${signatureBlock}<br><br>${tQuote('reply_line', { date: escapeHtml(date), from: escapeHtml(fromStrFull) })}<br><blockquote style="margin:0 0 0 0.8ex;border-left:2px solid #ccc;padding-left:1ex">${escapedOriginal}</blockquote>`;
       }
     }
     return prefix;
@@ -518,11 +537,6 @@ export function EmailComposer({
   const [showCloseDialog, setShowCloseDialog] = useState(false);
   const [showAllAttachments, setShowAllAttachments] = useState(false);
   const [previewAttachment, setPreviewAttachment] = useState<ComposerAttachment | null>(null);
-  const [smimeSign_, setSmimeSign] = useState(false);
-  const [smimeEncrypt_, setSmimeEncrypt] = useState(false);
-  const [smimePassphrasePrompt, setSmimePassphrasePrompt] = useState<{ keyId: string; resolve: (passphrase: string) => void; reject: () => void } | null>(null);
-  const [smimePassphraseInput, setSmimePassphraseInput] = useState('');
-  const [smimePassphraseError, setSmimePassphraseError] = useState('');
   const [showAttachmentWarning, setShowAttachmentWarning] = useState(false);
   const [attachmentWarningKeyword, setAttachmentWarningKeyword] = useState('');
   const [attachmentWarningDelayedUntil, setAttachmentWarningDelayedUntil] = useState<string | undefined>();
@@ -674,6 +688,19 @@ export function EmailComposer({
   useEffect(() => {
     if (!autoSelectReplyIdentity) return;
     if (selectedIdentityId || initialData?.selectedIdentityId) return;
+
+    // New message started from a specific mailbox/account: default the From to
+    // that mailbox's identity instead of the primary one, so composing while
+    // viewing info@ sends as info@. Reply/forward fall through to the
+    // recipient-based resolution below.
+    if (mode === 'compose') {
+      const composeIdentityId = findComposeIdentityId(identities, composeFromAccountEmail);
+      if (composeIdentityId) {
+        setSelectedIdentityId(composeIdentityId);
+      }
+      return;
+    }
+
     if (mode !== 'reply' && mode !== 'replyAll') return;
 
     const resolved = resolveReplyFrom(identities, {
@@ -707,6 +734,7 @@ export function EmailComposer({
     }
   }, [
     autoSelectReplyIdentity,
+    composeFromAccountEmail,
     fromOverrideEnabled,
     identities,
     initialData?.selectedIdentityId,
@@ -794,38 +822,17 @@ export function EmailComposer({
       ? `<div>${getPlainTextSignature(signatureIdentity).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>')}</div>`
       : '';
   const getAutocomplete = useContactStore((s) => s.getAutocomplete);
+  const searchRecipients = useContactStore((s) => s.searchRecipients);
+  // Whether a Sent mailbox is known so the on-demand server search is worth
+  // offering (falls back to hiding the "search the server" row otherwise).
+  const canSearchServer = useContactStore((s) => s.sentMailboxId != null);
   const addToTrustedSendersBook = useContactStore((s) => s.addToTrustedSendersBook);
   const addTrustedSender = useSettingsStore((s) => s.addTrustedSender);
   const trustedSendersAddressBook = useSettingsStore((s) => s.trustedSendersAddressBook);
   const addTemplate = useTemplateStore((s) => s.addTemplate);
-  const sendRawEmail = useEmailStore((s) => s.sendRawEmail);
-  const smimeStore = useSmimeStore();
-
-  // Determine S/MIME availability for the selected identity
-  const currentSmimeIdentityId = selectedIdentityId || primaryIdentity?.id;
-  const smimeKeyRecord = currentSmimeIdentityId ? smimeStore.getKeyRecordForIdentity(currentSmimeIdentityId) : undefined;
-  const canSmimeSign = !!smimeKeyRecord;
-  const canSmimeEncrypt = (() => {
-    if (!smimeKeyRecord) return false;
-    const allRecipients = [
-      ...withInput(to, toInput),
-      ...withInput(cc, ccInput),
-      ...withInput(bcc, bccInput),
-    ].map(r => r.email);
-    if (allRecipients.length === 0) return false;
-    const { missing } = smimeStore.getRecipientCerts(allRecipients);
-    return missing.length === 0;
-  })();
-
-  // Initialize S/MIME defaults from store when identity changes
-  useEffect(() => {
-    if (currentSmimeIdentityId) {
-      setSmimeSign(!!smimeStore.defaultSignIdentity[currentSmimeIdentityId] && canSmimeSign);
-    }
-    setSmimeEncrypt(smimeStore.defaultEncrypt && canSmimeEncrypt);
-  // Only run when identity changes, not on every recipient edit
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentSmimeIdentityId]);
+  // Sign/encrypt is provided by crypto plugins (S/MIME, PGP) via the
+  // composer-toolbar slot + the onComposeSend hook — the host stays
+  // crypto-agnostic.
 
   // Serialized recipient strings for ComposerDraftData (string-shaped) and for
   // by-value dirty comparison. Folds in any uncommitted typed text.
@@ -894,6 +901,10 @@ export function EmailComposer({
   const [autocompleteResults, setAutocompleteResults] = useState<Array<{ name: string; email: string }>>([]);
   const [activeAutoField, setActiveAutoField] = useState<'to' | 'cc' | 'bcc' | null>(null);
   const [autoSelectedIndex, setAutoSelectedIndex] = useState(-1);
+  // Current trimmed query behind the open dropdown, plus the in-flight flag for
+  // the on-demand Sent-folder lookup ("search the server" row).
+  const [autoQuery, setAutoQuery] = useState('');
+  const [isSearchingServer, setIsSearchingServer] = useState(false);
   const autocompleteTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const toInputRef = useRef<HTMLInputElement>(null);
   const ccInputRef = useRef<HTMLInputElement>(null);
@@ -941,8 +952,10 @@ export function EmailComposer({
       setAutocompleteResults([]);
       setActiveAutoField(null);
       setAutoSelectedIndex(-1);
+      setAutoQuery('');
       return;
     }
+    setAutoQuery(query);
 
     autocompleteTimeoutRef.current = setTimeout(async () => {
       const localResults = getAutocomplete(query);
@@ -950,10 +963,39 @@ export function EmailComposer({
       const initial: RecipientSuggestion[] = localResults.map(r => ({ name: r.name, email: r.email }));
       const merged = await contactHooks.onProvideRecipientSuggestions.transform(initial, { query });
       setAutocompleteResults(merged.map(s => ({ name: s.name, email: s.email })));
-      setActiveAutoField(merged.length > 0 ? field : null);
+      // Keep the dropdown open even without local hits when a server search is
+      // available, so the "search the server" row stays reachable (OWA-style).
+      setActiveAutoField(merged.length > 0 || canSearchServer ? field : null);
       setAutoSelectedIndex(-1);
     }, 200);
-  }, [getAutocomplete]);
+  }, [getAutocomplete, canSearchServer]);
+
+  // On-demand: search the Sent folder server-side for recipients matching the
+  // current query and merge fresh hits into the open dropdown (deduped by email).
+  const handleServerSearch = useCallback(async () => {
+    const query = autoQuery.trim();
+    if (!composerClient || !query || isSearchingServer) return;
+    setIsSearchingServer(true);
+    try {
+      const serverResults = await searchRecipients(composerClient, query);
+      setAutocompleteResults((prev) => {
+        const seen = new Set(prev.map((r) => r.email.toLowerCase()));
+        const merged = [...prev];
+        for (const r of serverResults) {
+          const key = r.email.toLowerCase();
+          if (!seen.has(key)) {
+            seen.add(key);
+            merged.push(r);
+          }
+        }
+        return merged;
+      });
+    } catch {
+      // Best-effort: a failed lookup just leaves the local suggestions in place.
+    } finally {
+      setIsSearchingServer(false);
+    }
+  }, [autoQuery, composerClient, isSearchingServer, searchRecipients]);
 
   const insertAutocomplete = (suggestion: { name: string; email: string }, field: 'to' | 'cc' | 'bcc') => {
     const setter = field === 'to' ? setTo : field === 'cc' ? setCc : setBcc;
@@ -1413,6 +1455,7 @@ export function EmailComposer({
   const canSend = toAddresses.length > 0 && !!subject && hasContent;
 
   const getSendTooltip = (): string | undefined => {
+    if (isWaitingForUploads) return t('validation.attachments_uploading');
     if (canSend) return undefined;
     if (toAddresses.length === 0) return t('validation.recipient_required');
     if (!subject) return t('validation.subject_required');
@@ -1498,8 +1541,43 @@ export function EmailComposer({
   const [isSending, setIsSending] = useState(false);
   const isSendingRef = useRef(false);
 
+  // Attachments still uploading when Send is clicked used to be silently
+  // dropped from the outgoing message (the filters below exclude anything
+  // with uploading:true). attachmentsRef gives handleSend a way to read the
+  // freshest attachment state after waiting on in-flight uploads, since the
+  // `attachments` closure captured at click time won't reflect uploads that
+  // finish during that wait.
+  const attachmentsRef = useRef<ComposerAttachment[]>(attachments);
+  useEffect(() => {
+    attachmentsRef.current = attachments;
+  }, [attachments]);
+  const [isWaitingForUploads, setIsWaitingForUploads] = useState(false);
+  const sendCancelledRef = useRef(false);
+
   const handleSend = async (skipAttachmentCheck = false, delayedUntil?: string) => {
     if (isSendingRef.current) return;
+
+    if (attachmentsRef.current.some(att => att.uploading)) {
+      isSendingRef.current = true;
+      setIsSending(true);
+      setIsWaitingForUploads(true);
+      const uploadResult = await waitForPendingUploads(
+        () => attachmentsRef.current,
+        () => sendCancelledRef.current
+      );
+      setIsWaitingForUploads(false);
+      isSendingRef.current = false;
+      setIsSending(false);
+      if (uploadResult === 'cancelled') return;
+      if (uploadResult === 'failed') {
+        // An upload broke while we were waiting - the user may not be
+        // looking at the composer, so auto-sending would silently drop
+        // the failed attachment. Abort and let them decide.
+        toast.error(t('validation.attachment_upload_failed'));
+        return;
+      }
+    }
+
     const ccAddresses = withInput(cc, ccInput);
     const bccAddresses = withInput(bcc, bccInput);
 
@@ -1520,9 +1598,15 @@ export function EmailComposer({
 
     // Attachment reminder check
     if (!skipAttachmentCheck && attachmentReminderEnabled) {
-      const hasAttachments = attachments.some(att => att.blobId && !att.uploading && !att.error);
+      const hasAttachments = attachmentsRef.current.some(att => att.blobId && !att.uploading && !att.error);
       if (!hasAttachments) {
-        const bodyText = htmlToPlainText(body);
+        // Scan only the user-authored text: the quoted original of a
+        // reply/forward often mentions an attachment itself, which used to fire
+        // the reminder even when the user typed no keyword and added nothing (#570).
+        const bodyText = extractUserAuthoredText(body, {
+          plainTextMode,
+          forwardedSeparator: tQuote('forwarded_separator'),
+        });
         const searchText = `${subject} ${bodyText}`.toLowerCase();
         const matched = attachmentReminderKeywords.find(kw => searchText.includes(kw.toLowerCase()));
         if (matched) {
@@ -1636,7 +1720,7 @@ export function EmailComposer({
         textBody: finalBody,
         identityId: currentIdentity?.id || '',
         fromEmail,
-        attachments: attachments
+        attachments: attachmentsRef.current
           .filter(att => att.blobId && !att.uploading && !att.error)
           .map(a => ({ name: a.name, type: a.type || 'application/octet-stream', size: a.size })),
         inReplyTo: threadingHeaders?.inReplyTo?.[0],
@@ -1644,149 +1728,43 @@ export function EmailComposer({
       const sendAllowed = await emailHooks.onBeforeEmailSend.intercept(sendablePreview);
       if (!sendAllowed) return;
 
-      // S/MIME send pipeline: build raw MIME → sign → encrypt → sendRawEmail
-      if ((smimeSign_ || smimeEncrypt_) && client && currentIdentity?.id) {
-        // S/MIME keys are scoped to one JMAP account's identity - sending
-        // from a cross-account identity via S/MIME would mix accounts'
-        // certs/clients. Refuse upfront and tell the user to switch.
-        const crossAccount = stripCrossAccountIdentityPrefix(currentIdentity.id);
-        if (crossAccount.localAccountId) {
-          throw new Error('S/MIME sending from another account’s identity is not supported. Switch to that account first.');
-        }
-        // 1. Resolve S/MIME key
-        if (smimeSign_ && !smimeKeyRecord) {
-          throw new Error('No S/MIME key bound to this identity');
-        }
-        // S/MIME binds to the identity's key; sending from an override address
-        // would produce a signature whose Subject differs from the visible
-        // From, which most clients reject or flag. Refuse up front.
-        if (overrideActive) {
-          throw new Error('Cannot use From override with S/MIME - disable one to send.');
-        }
-
-        // 2. Ensure key is unlocked for signing
-        if (smimeSign_ && smimeKeyRecord && !smimeStore.isKeyUnlocked(smimeKeyRecord.id)) {
-          const passphrase = await new Promise<string>((resolve, reject) => {
-            setSmimePassphrasePrompt({ keyId: smimeKeyRecord.id, resolve, reject });
-          });
-          try {
-            await smimeStore.unlockKey(smimeKeyRecord.id, passphrase);
-          } finally {
-            setSmimePassphrasePrompt(null);
-            setSmimePassphraseInput('');
-            setSmimePassphraseError('');
-          }
-        }
-
-        // 3. Resolve attachments as ArrayBuffers
-        const mimeAttachments: MimeAttachment[] = [];
-        for (const att of attachments) {
-          if (att.error || att.uploading) continue;
-          let content: ArrayBuffer;
-          if (att.file && att.file.size > 0) {
-            content = await att.file.arrayBuffer();
-          } else if (att.blobId && client) {
-            content = await client.fetchBlobArrayBuffer(att.blobId, att.name, att.type);
-          } else {
-            continue;
-          }
-          mimeAttachments.push({
-            filename: att.name,
-            contentType: att.type || 'application/octet-stream',
-            content,
+      // Hand off to a crypto plugin (S/MIME, PGP, …) if one wants to take over
+      // the send: it builds raw MIME, signs/encrypts, and submits via
+      // api.jmap.sendRaw. A handler returning false means "I sent it" — the
+      // host then skips its own plaintext submission but still cleans up the
+      // draft (and fires the scheduled-send callback for a delayed send).
+      const composeSendRequest = {
+        to: toAddresses.map(r => formatRecipient(r.name, r.email)),
+        cc: ccAddresses.map(r => formatRecipient(r.name, r.email)),
+        bcc: bccAddresses.map(r => formatRecipient(r.name, r.email)),
+        subject,
+        htmlBody: finalHtmlBody || '',
+        textBody: finalBody,
+        identityId: currentIdentity?.id || '',
+        fromEmail,
+        fromName,
+        inReplyTo: threadingHeaders?.inReplyTo?.[0],
+        references: threadingHeaders?.references,
+        delayedUntil: effectiveDelayedUntil,
+        attachments: [
+          ...attachmentsRef.current
+            .filter(att => att.blobId && !att.uploading && !att.error)
+            .map(a => ({ name: a.name, type: a.type || 'application/octet-stream', size: a.size, blobId: a.blobId })),
+          ...inlineAttachments.map(a => ({ name: a.name, type: a.type, size: a.size, blobId: a.blobId, cid: a.cid })),
+        ],
+      };
+      const sendHandledByPlugin = (await emailHooks.onComposeSend.intercept(composeSendRequest)) === false;
+      if (sendHandledByPlugin) {
+        if (finalDraftId) {
+          client?.deleteEmail(finalDraftId).catch((err) => {
+            debug.warn('email', 'Plugin handled the send, but draft cleanup failed:', err);
           });
         }
-        for (const inline of inlineAttachments) {
-          if (!client) break;
-          const content = await client.fetchBlobArrayBuffer(inline.blobId, inline.name, inline.type);
-          mimeAttachments.push({
-            filename: inline.name,
-            contentType: inline.type,
-            content,
-            cid: inline.cid,
-          });
-        }
-
-        // 4. Build canonical MIME
-        // mime-builder takes inReplyTo as a single ref-form msg-id (with brackets);
-        // references stays an array. threadingHeaders contains bare msg-ids.
-        const mimeInReplyTo = threadingHeaders?.inReplyTo[0]
-          ? `<${threadingHeaders.inReplyTo[0]}>`
-          : undefined;
-        const mimeReferences = threadingHeaders?.references.length
-          ? threadingHeaders.references.map(id => `<${id}>`)
-          : undefined;
-        const mimeBytes = buildMimeMessage({
-          from: { name: currentIdentity.name || undefined, email: fromEmail || currentIdentity.email },
-          to: toAddresses,
-          cc: ccAddresses.length > 0 ? ccAddresses : undefined,
-          bcc: bccAddresses.length > 0 ? bccAddresses : undefined,
-          subject,
-          inReplyTo: mimeInReplyTo,
-          references: mimeReferences,
-          textBody: finalBody,
-          htmlBody: finalHtmlBody,
-          attachments: mimeAttachments.length > 0 ? mimeAttachments : undefined,
-        });
-
-        let payload: Blob = new Blob([mimeBytes.buffer as ArrayBuffer], { type: 'message/rfc822' });
-
-        const smimeHeaders = {
-          from: { name: currentIdentity.name || undefined, email: fromEmail || currentIdentity.email },
-          to: toAddresses,
-          cc: ccAddresses.length > 0 ? ccAddresses : undefined,
-          subject,
-          inReplyTo: mimeInReplyTo,
-          references: mimeReferences,
-        };
-
-        // 5. Sign if enabled
-        if (smimeSign_ && smimeKeyRecord) {
-          const privateKey = smimeStore.getUnlockedKey(smimeKeyRecord.id);
-          if (!privateKey) throw new Error('S/MIME key is not unlocked');
-          const cmsBlob = await smimeSign(
-            mimeBytes,
-            privateKey,
-            smimeKeyRecord.certificate,
-            smimeKeyRecord.certificateChain || [],
-          );
-          const cmsBytes = new Uint8Array(await cmsBlob.arrayBuffer());
-          payload = wrapCmsAsSmimeMessage(cmsBytes, { ...smimeHeaders, smimeType: 'signed-data' });
-        }
-
-        // 6. Encrypt if enabled
-        if (smimeEncrypt_ && smimeKeyRecord) {
-          const allRecipients = [...toAddresses, ...ccAddresses, ...bccAddresses].map(r => r.email);
-          const { found, missing } = smimeStore.getRecipientCerts(allRecipients);
-          if (missing.length > 0) {
-            throw new Error(`Missing certificates for: ${missing.join(', ')}`);
-          }
-          const recipientCertsDer = found.map(c => c.certificate instanceof ArrayBuffer ? c.certificate : new Uint8Array(c.certificate as ArrayBuffer).buffer);
-          const payloadBytes = new Uint8Array(await payload.arrayBuffer());
-          const cmsBlob = await smimeEncrypt(
-            payloadBytes,
-            recipientCertsDer,
-            smimeKeyRecord.certificate,
-          );
-          const cmsBytes = new Uint8Array(await cmsBlob.arrayBuffer());
-          payload = wrapCmsAsSmimeMessage(cmsBytes, { ...smimeHeaders, smimeType: 'enveloped-data' });
-        }
-
-        // 7. Send via raw email path
-        const result = await sendRawEmail(client, payload, currentIdentity.id, effectiveDelayedUntil, [...toAddresses, ...ccAddresses, ...bccAddresses].map(r => r.email));
-        if (effectiveDelayedUntil && finalDraftId) {
-          client.deleteEmail(finalDraftId).catch(err => {
-            debug.warn('email', 'Scheduled S/MIME send created, but plaintext draft cleanup failed:', err);
-            toast.warning(t('schedule_send_cleanup_warning'));
-          });
-        }
-        if (result.scheduled) {
-          await onScheduledSendCreated?.();
-        }
+        if (effectiveDelayedUntil) await onScheduledSendCreated?.();
       } else {
         // Standard JMAP send path
         // Collect uploaded attachment blobIds for the send request
-        const uploadedAttachments: Array<{ blobId: string; name: string; type: string; size: number; disposition?: 'attachment' | 'inline'; cid?: string }> = attachments
+        const uploadedAttachments: Array<{ blobId: string; name: string; type: string; size: number; disposition?: 'attachment' | 'inline'; cid?: string }> = attachmentsRef.current
           .filter(att => att.blobId && !att.uploading && !att.error)
           .map(att => ({ blobId: att.blobId!, name: att.name, type: att.type || 'application/octet-stream', size: att.size }));
         uploadedAttachments.push(...inlineAttachments);
@@ -1913,6 +1891,7 @@ export function EmailComposer({
   }, []);
 
   const cleanClose = () => {
+    sendCancelledRef.current = true;
     explicitCloseRef.current = true;
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
@@ -1922,6 +1901,7 @@ export function EmailComposer({
   };
 
   const handleSaveDraftAndClose = async () => {
+    sendCancelledRef.current = true;
     explicitCloseRef.current = true;
     setShowCloseDialog(false);
     if (saveTimeoutRef.current) {
@@ -1933,6 +1913,7 @@ export function EmailComposer({
   };
 
   const handleDiscardAndClose = () => {
+    sendCancelledRef.current = true;
     explicitCloseRef.current = true;
     setShowCloseDialog(false);
     if (saveTimeoutRef.current) {
@@ -1953,6 +1934,17 @@ export function EmailComposer({
     }
   };
 
+  // Expose the dirty-aware close handler so external hosts (e.g. the Pro tab
+  // bar) can trigger the same "Save or discard draft?" guard. Re-assigned on
+  // every render to capture the latest closure over the live refs/state.
+  useEffect(() => {
+    if (!requestCloseRef) return;
+    requestCloseRef.current = handleClose;
+    return () => {
+      requestCloseRef.current = null;
+    };
+  });
+
   const handleComposerKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.defaultPrevented) return;
 
@@ -1966,7 +1958,6 @@ export function EmailComposer({
       showTemplatePicker ||
       showSaveAsTemplate ||
       showScheduleDialog ||
-      smimePassphrasePrompt ||
       showAttachmentWarning ||
       showCloseDialog
     ) return;
@@ -1999,7 +1990,7 @@ export function EmailComposer({
     <div ref={composerRootRef} className={cn("flex h-full bg-background", className)}>
       <PluginSlot
         name="composer-sidebar"
-        className="hidden md:flex shrink-0 h-full overflow-hidden border-r border-border"
+        className="hidden md:flex shrink-0 h-full overflow-hidden border-e border-border"
       />
       {/* Right-side composer sidebar slot is rendered after the main content div below. */}
     <div
@@ -2056,7 +2047,7 @@ export function EmailComposer({
           size="sm"
           className="md:hidden h-9 px-4"
         >
-          <Send className="w-4 h-4 mr-1.5" />
+          <Send className="w-4 h-4 me-1.5" />
           {t('send')}
         </Button>
       </div>
@@ -2203,6 +2194,10 @@ export function EmailComposer({
               autoSelectedIndex={autoSelectedIndex}
               dropdownRef={toDropdownRef}
               onInsertAutocomplete={insertAutocomplete}
+              canSearchServer={canSearchServer}
+              onServerSearch={handleServerSearch}
+              isSearchingServer={isSearchingServer}
+              serverSearchQuery={autoQuery}
               validationError={validationErrors.to}
               validationMessage={t('validation.recipient_required')}
               onTab={focusSubject}
@@ -2280,6 +2275,10 @@ export function EmailComposer({
                 autoSelectedIndex={autoSelectedIndex}
                 dropdownRef={ccDropdownRef}
                 onInsertAutocomplete={insertAutocomplete}
+                canSearchServer={canSearchServer}
+                onServerSearch={handleServerSearch}
+                isSearchingServer={isSearchingServer}
+                serverSearchQuery={autoQuery}
                 onMoveChip={handleMoveChip}
               />
             </div>
@@ -2305,6 +2304,10 @@ export function EmailComposer({
                 autoSelectedIndex={autoSelectedIndex}
                 dropdownRef={bccDropdownRef}
                 onInsertAutocomplete={insertAutocomplete}
+                canSearchServer={canSearchServer}
+                onServerSearch={handleServerSearch}
+                isSearchingServer={isSearchingServer}
+                serverSearchQuery={autoQuery}
                 onMoveChip={handleMoveChip}
               />
             </div>
@@ -2442,7 +2445,7 @@ export function EmailComposer({
                     )}
                     <button
                       onClick={() => removeAttachment(index)}
-                      className="ml-1 hover:text-red-500 min-w-[20px] min-h-[20px] flex items-center justify-center"
+                      className="ms-1 hover:text-red-500 min-w-[20px] min-h-[20px] flex items-center justify-center"
                       title={att.uploading ? t('upload_cancel') : undefined}
                     >
                       <X className="w-3 h-3" />
@@ -2502,31 +2505,8 @@ export function EmailComposer({
             >
               <BookmarkPlus className="w-4 h-4" />
             </Button>
-            {/* S/MIME toggles */}
-            {canSmimeSign && (
-              <>
-                <div className="w-px h-5 bg-border mx-1" />
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setSmimeSign(v => !v)}
-                  className={cn("h-9 w-9", smimeSign_ && "bg-primary/10 text-primary")}
-                  title={smimeSign_ ? t('smime_sign_on') : t('smime_sign_off')}
-                >
-                  <ShieldCheck className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setSmimeEncrypt(v => !v)}
-                  disabled={!canSmimeEncrypt}
-                  className={cn("h-9 w-9", smimeEncrypt_ && "bg-primary/10 text-primary")}
-                  title={smimeEncrypt_ ? t('smime_encrypt_on') : canSmimeEncrypt ? t('smime_encrypt_off') : t('smime_encrypt_unavailable')}
-                >
-                  <Lock className="w-4 h-4" />
-                </Button>
-              </>
-            )}
+            {/* Sign/encrypt controls are contributed by crypto plugins via the
+                composer-toolbar slot (rendered below). */}
 
             {/* Read-receipt request toggle */}
             <Button
@@ -2560,9 +2540,9 @@ export function EmailComposer({
                   onClick={() => handleSend()}
                   disabled={!canSend || isSending}
                   title={getSendTooltip()}
-                  className="rounded-r-none border-r border-primary-foreground/20"
+                  className="rounded-e-none border-e border-primary-foreground/20"
                 >
-                  <Send className="w-4 h-4 mr-2" />
+                  <Send className="w-4 h-4 me-2" />
                   {t('send')}
                 </Button>
                 <Button
@@ -2570,7 +2550,7 @@ export function EmailComposer({
                   onClick={() => setShowSendMenu((open) => !open)}
                   disabled={!canSend || isSending}
                   title={t('schedule_send')}
-                  className="rounded-l-none px-2"
+                  className="rounded-s-none px-2"
                   aria-haspopup="menu"
                   aria-expanded={showSendMenu}
                 >
@@ -2585,7 +2565,7 @@ export function EmailComposer({
                       type="button"
                       role="menuitem"
                       onClick={openScheduleDialog}
-                      className="flex w-full items-center gap-2 rounded-sm px-3 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground"
+                      className="flex w-full items-center gap-2 rounded-sm px-3 py-2 text-start text-sm hover:bg-accent hover:text-accent-foreground"
                     >
                       <CalendarClock className="w-4 h-4" />
                       {t('schedule_send')}
@@ -2600,7 +2580,7 @@ export function EmailComposer({
                 title={getSendTooltip()}
                 className="hidden md:inline-flex"
               >
-                <Send className="w-4 h-4 mr-2" />
+                <Send className="w-4 h-4 me-2" />
                 {t('send')}
               </Button>
             )}
@@ -2665,60 +2645,6 @@ export function EmailComposer({
         </div>
       )}
 
-      {/* S/MIME passphrase prompt */}
-      {smimePassphrasePrompt && (
-        <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-[1px] flex items-center justify-center z-[60] p-4 animate-in fade-in duration-150"
-        >
-          <div
-            role="dialog"
-            aria-modal="true"
-            onClick={(e) => e.stopPropagation()}
-            className="bg-background border border-border rounded-lg shadow-xl w-full max-w-sm animate-in zoom-in-95 duration-200"
-          >
-            <div className="p-6">
-              <h2 className="text-lg font-semibold text-foreground">{t('smime_unlock_title')}</h2>
-              <p className="mt-2 text-sm text-muted-foreground">{t('smime_unlock_message')}</p>
-              <input
-                type="password"
-                autoFocus
-                value={smimePassphraseInput}
-                onChange={(e) => {
-                  setSmimePassphraseInput(e.target.value);
-                  setSmimePassphraseError('');
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && smimePassphraseInput) {
-                    smimePassphrasePrompt.resolve(smimePassphraseInput);
-                  }
-                }}
-                placeholder={t('smime_passphrase_placeholder')}
-                className="mt-3 w-full px-3 py-2 border border-border rounded-md text-sm bg-background text-foreground outline-none focus:ring-2 focus:ring-primary"
-              />
-              {smimePassphraseError && (
-                <p className="mt-1 text-xs text-red-500">{smimePassphraseError}</p>
-              )}
-            </div>
-            <div className="flex items-center justify-end gap-3 px-6 pb-6">
-              <Button variant="outline" onClick={() => {
-                smimePassphrasePrompt.reject();
-                setSmimePassphrasePrompt(null);
-                setSmimePassphraseInput('');
-                setSmimePassphraseError('');
-              }}>
-                {t('cancel')}
-              </Button>
-              <Button
-                disabled={!smimePassphraseInput}
-                onClick={() => smimePassphrasePrompt.resolve(smimePassphraseInput)}
-              >
-                {t('smime_unlock_button')}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {showAttachmentWarning && (
         <div
           className="fixed inset-0 bg-black/50 backdrop-blur-[1px] flex items-center justify-center z-[60] p-4 animate-in fade-in duration-150"
@@ -2773,7 +2699,7 @@ export function EmailComposer({
                 {t('discard')}
               </Button>
               <Button onClick={handleSaveDraftAndClose}>
-                <Save className="w-4 h-4 mr-2" />
+                <Save className="w-4 h-4 me-2" />
                 {t('save_draft')}
               </Button>
             </div>
@@ -2792,7 +2718,7 @@ export function EmailComposer({
     </div>
       <PluginSlot
         name="composer-sidebar-right"
-        className="hidden md:flex shrink-0 h-full overflow-hidden border-l border-border"
+        className="hidden md:flex shrink-0 h-full overflow-hidden border-s border-border"
       />
     </div>
   );
@@ -2803,7 +2729,10 @@ const AutocompleteDropdown = React.forwardRef<HTMLDivElement, {
   results: Array<{ name: string; email: string }>;
   selectedIndex: number;
   onSelect: (suggestion: { name: string; email: string }) => void;
-}>(function AutocompleteDropdown({ id, results, selectedIndex, onSelect }, ref) {
+  onSearchServer?: () => void;
+  isSearchingServer?: boolean;
+}>(function AutocompleteDropdown({ id, results, selectedIndex, onSelect, onSearchServer, isSearchingServer }, ref) {
+  const t = useTranslations('email_composer');
   return (
     <div ref={ref} id={id} role="listbox" className="absolute top-full left-0 right-0 z-50 mt-1 bg-background border border-border rounded-md shadow-lg max-h-48 overflow-y-auto">
       {results.map((r, i) => (
@@ -2814,7 +2743,7 @@ const AutocompleteDropdown = React.forwardRef<HTMLDivElement, {
           role="option"
           aria-selected={i === selectedIndex}
           className={cn(
-            "w-full px-3 py-2 text-left text-sm flex items-center gap-2",
+            "w-full px-3 py-2 text-start text-sm flex items-center gap-2",
             i === selectedIndex ? "bg-accent text-accent-foreground" : "hover:bg-muted"
           )}
           onMouseDown={(e) => {
@@ -2829,6 +2758,27 @@ const AutocompleteDropdown = React.forwardRef<HTMLDivElement, {
           )}
         </button>
       ))}
+      {onSearchServer && (
+        <button
+          type="button"
+          disabled={isSearchingServer}
+          className={cn(
+            "w-full px-3 py-2 text-left text-sm flex items-center gap-2 text-muted-foreground hover:bg-muted disabled:opacity-60 disabled:cursor-default",
+            results.length > 0 && "border-t border-border"
+          )}
+          onMouseDown={(e) => {
+            e.preventDefault();
+            if (!isSearchingServer) onSearchServer();
+          }}
+        >
+          {isSearchingServer
+            ? <Loader2 className="w-4 h-4 shrink-0 animate-spin" />
+            : <Search className="w-4 h-4 shrink-0" />}
+          <span className="truncate">
+            {isSearchingServer ? t('autocomplete_searching') : t('autocomplete_search_server')}
+          </span>
+        </button>
+      )}
     </div>
   );
 });
@@ -2849,6 +2799,10 @@ function RecipientChipInput({
   autoSelectedIndex,
   dropdownRef,
   onInsertAutocomplete,
+  canSearchServer,
+  onServerSearch,
+  isSearchingServer,
+  serverSearchQuery,
   validationError,
   validationMessage,
   onTab,
@@ -2869,6 +2823,10 @@ function RecipientChipInput({
   autoSelectedIndex: number;
   dropdownRef: React.RefObject<HTMLDivElement | null>;
   onInsertAutocomplete: (suggestion: { name: string; email: string }, field: 'to' | 'cc' | 'bcc') => void;
+  canSearchServer: boolean;
+  onServerSearch: () => void;
+  isSearchingServer: boolean;
+  serverSearchQuery: string;
   validationError?: boolean;
   validationMessage?: string;
   onTab?: () => void;
@@ -2965,7 +2923,15 @@ function RecipientChipInput({
       }
     }
 
-    if ((e.key === ' ' || e.key === 'Enter' || e.key === 'Tab') && inputText.trim()) {
+    // Enter / Tab commit whatever is typed. Space only commits when the input
+    // is already a complete email address; otherwise Space is a normal
+    // character so a name search like "John Doe" can continue past the space
+    // instead of committing "John" as a bogus recipient (#571).
+    const trimmedInput = inputText.trim();
+    const commitOnKey =
+      ((e.key === 'Enter' || e.key === 'Tab') && trimmedInput) ||
+      (e.key === ' ' && isValidEmail(trimmedInput));
+    if (commitOnKey) {
       if (e.key !== 'Tab') e.preventDefault();
       commitCurrentInput();
       if (e.key === 'Tab' && onTab) {
@@ -3170,13 +3136,16 @@ function RecipientChipInput({
       {validationError && validationMessage && (
         <p className="text-xs text-red-600 dark:text-red-400 mt-0.5">{validationMessage}</p>
       )}
-      {activeAutoField === field && autocompleteResults.length > 0 && (
+      {activeAutoField === field &&
+        (autocompleteResults.length > 0 || (canSearchServer && serverSearchQuery.length > 0)) && (
         <AutocompleteDropdown
           ref={dropdownRef}
           id={`autocomplete-${field}`}
           results={autocompleteResults}
           selectedIndex={autoSelectedIndex}
           onSelect={(suggestion) => onInsertAutocomplete(suggestion, field)}
+          onSearchServer={canSearchServer && serverSearchQuery.length > 0 ? onServerSearch : undefined}
+          isSearchingServer={isSearchingServer}
         />
       )}
       <ContextMenu

@@ -330,7 +330,7 @@ export function SidebarAppsSettings() {
               onClick={() => setShowAddForm(true)}
               className="w-full"
             >
-              <Plus className="w-4 h-4 mr-2" />
+              <Plus className="w-4 h-4 me-2" />
               {tApps("add_new")}
             </Button>
           )}

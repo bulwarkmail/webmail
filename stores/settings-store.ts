@@ -15,6 +15,11 @@ const syncLog = (...args: unknown[]) => console.log('[SETTINGS_SYNC]', ...args);
 const syncWarn = (...args: unknown[]) => console.warn('[SETTINGS_SYNC]', ...args);
 const syncError = (...args: unknown[]) => console.error('[SETTINGS_SYNC]', ...args);
 
+/** True for a non-null, non-array plain object (the allMailFolderIds map shape). */
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
 // Settings sync state (module-level, not persisted)
 let syncEnabled = false;
 let syncUsername: string | null = null;
@@ -34,6 +39,14 @@ export type SignaturePosition = 'above_quote' | 'below_quote';
 /** How to handle an incoming Disposition-Notification-To (read-receipt) request. */
 export type ReadReceiptResponse = 'ask' | 'always' | 'never';
 export type DateFormat = 'smart' | 'relative' | 'full';
+/**
+ * Regional ordering of numeric dates, independent of the `DateFormat` style.
+ *   - `auto`  — follow the UI language (today's behaviour).
+ *   - `iso`   — ISO 8601, `YYYY-MM-DD`.
+ *   - `en-GB` — Day/Month/Year (`DD/MM/YYYY`).
+ *   - `en-US` — Month/Day/Year (`MM/DD/YYYY`).
+ */
+export type DateLocale = 'auto' | 'iso' | 'en-GB' | 'en-US';
 export type TimeFormat = '12h' | '24h';
 export type FirstDayOfWeek = 0 | 1 | 6; // 0 = Sunday, 1 = Monday, 6 = Saturday
 export type ExternalContentPolicy = 'ask' | 'block' | 'allow';
@@ -130,6 +143,7 @@ interface SettingsState {
 
   // Language & Region
   dateFormat: DateFormat;
+  dateLocale: DateLocale;
   timeFormat: TimeFormat;
   firstDayOfWeek: FirstDayOfWeek;
 
@@ -137,6 +151,7 @@ interface SettingsState {
   markAsReadDelay: number; // milliseconds (0 = instant, -1 = never)
   deleteAction: DeleteAction;
   permanentlyDeleteJunk: boolean; // Permanently delete emails from junk/spam instead of moving to trash
+  returnToListAfterAction: boolean; // After delete / mark-unread in an open message, return to the list instead of opening the next message
   showPreview: boolean;
   mailLayout: MailLayout;
   emailsPerPage: number;
@@ -155,12 +170,20 @@ interface SettingsState {
   defaultReplyMode: ReplyMode;
   autoSelectReplyIdentity: boolean;
   plainTextMode: boolean; // Send plain text only (no rich text editor)
+  rtlEditingSupport: boolean; // Show a per-paragraph LTR/RTL direction control in the composer (Gmail-style)
   subAddressDelimiter: string; // Character separating user from tag (e.g. "user+tag@")
   sendDelaySeconds: SendDelaySeconds;
   signaturePosition: SignaturePosition; // Position of the signature relative to quoted text in replies/forwards
   signatureSeparatorEnabled: boolean; // Prefix the signature with the RFC 3676 "-- " delimiter
   requestReadReceiptDefault: boolean; // Pre-check "request read receipt" in the composer
   readReceiptResponse: ReadReceiptResponse; // How to respond to incoming read-receipt requests
+
+  // Identities
+  // Per-account default ("preferred primary") sender identity, keyed by
+  // username (the same key settings sync uses). A JMAP identity id is only
+  // meaningful within its own account, so this must be account-scoped. Synced
+  // so the choice survives a new browser / cleared site data (#507).
+  preferredIdentityIds: Record<string, string | null>;
 
   // Privacy & Security
   sessionTimeout: number; // minutes (0 = never)
@@ -220,7 +243,16 @@ interface SettingsState {
   // configured, in which case the view defaults to all non-special (no-role)
   // folders of the active account.
   enableAllMailView: boolean;
-  allMailFolderIds: string[] | null;
+
+  // Cross-account "All accounts" views (gated per-view by the admin policy)
+  enableCrossUnreadView: boolean;
+  enableCrossStarredView: boolean;
+  enableCrossAllView: boolean;
+
+  // Per-account "All Mail" folder selection, keyed by AccountEntry.id. A
+  // missing entry = "not configured" -> defaults to every no-role folder; an
+  // explicit [] = "no folders". (Replaced the legacy global string[] | null.)
+  allMailFolderIds: Record<string, string[]>;
 
   // Email Display
   disableThreading: boolean; // Show emails as individual messages instead of grouped by conversation
@@ -230,6 +262,8 @@ interface SettingsState {
 
   // Sidebar
   colorfulSidebarIcons: boolean; // Tint folder icons by role (inbox blue, junk red, etc.)
+  tintListRowsByTag: boolean; // Tint mail-list rows by the first tag color
+  showFolderTotalCount: boolean; // Show total message count next to folders/tags (alongside unread)
 
   // Folders
   folderIcons: Record<string, string>; // mailboxId -> icon name
@@ -323,6 +357,7 @@ const DEFAULT_SETTINGS = {
 
   // Language & Region
   dateFormat: 'smart' as DateFormat,
+  dateLocale: 'auto' as DateLocale,
   timeFormat: '24h' as TimeFormat,
   firstDayOfWeek: 1 as FirstDayOfWeek, // Monday
 
@@ -330,6 +365,7 @@ const DEFAULT_SETTINGS = {
   markAsReadDelay: 0, // Instant
   deleteAction: 'trash' as DeleteAction,
   permanentlyDeleteJunk: false,
+  returnToListAfterAction: true,
   showPreview: true,
   mailLayout: 'split' as MailLayout,
   emailsPerPage: 50,
@@ -348,12 +384,16 @@ const DEFAULT_SETTINGS = {
   defaultReplyMode: 'reply' as ReplyMode,
   autoSelectReplyIdentity: false,
   plainTextMode: false,
+  rtlEditingSupport: false,
   subAddressDelimiter: DEFAULT_SUB_ADDRESS_DELIMITER,
   sendDelaySeconds: 0 as SendDelaySeconds,
   signaturePosition: 'below_quote' as SignaturePosition,
   signatureSeparatorEnabled: true,
   requestReadReceiptDefault: false,
   readReceiptResponse: 'ask' as ReadReceiptResponse,
+
+  // Identities
+  preferredIdentityIds: {} as Record<string, string | null>,
 
   // Privacy & Security
   sessionTimeout: 0, // Never
@@ -407,7 +447,11 @@ const DEFAULT_SETTINGS = {
 
   // All Mail view (gated)
   enableAllMailView: false,
-  allMailFolderIds: null as string[] | null,
+  allMailFolderIds: {} as Record<string, string[]>,
+
+  enableCrossUnreadView: false,
+  enableCrossStarredView: false,
+  enableCrossAllView: false,
 
   // Email Display
   disableThreading: false,
@@ -417,6 +461,8 @@ const DEFAULT_SETTINGS = {
 
   // Sidebar
   colorfulSidebarIcons: true,
+  tintListRowsByTag: true,
+  showFolderTotalCount: true,
 
   // Folders
   folderIcons: {} as Record<string, string>,
@@ -529,10 +575,12 @@ export const useSettingsStore = create<SettingsState>()(
           density: state.density,
           animationsEnabled: state.animationsEnabled,
           dateFormat: state.dateFormat,
+          dateLocale: state.dateLocale,
           timeFormat: state.timeFormat,
           firstDayOfWeek: state.firstDayOfWeek,
           markAsReadDelay: state.markAsReadDelay,
           deleteAction: state.deleteAction,
+          returnToListAfterAction: state.returnToListAfterAction,
           showPreview: state.showPreview,
           mailLayout: state.mailLayout,
           emailsPerPage: state.emailsPerPage,
@@ -550,12 +598,14 @@ export const useSettingsStore = create<SettingsState>()(
           defaultReplyMode: state.defaultReplyMode,
           autoSelectReplyIdentity: state.autoSelectReplyIdentity,
           plainTextMode: state.plainTextMode,
+          rtlEditingSupport: state.rtlEditingSupport,
           subAddressDelimiter: state.subAddressDelimiter,
           sendDelaySeconds: state.sendDelaySeconds,
           signaturePosition: state.signaturePosition,
           signatureSeparatorEnabled: state.signatureSeparatorEnabled,
           requestReadReceiptDefault: state.requestReadReceiptDefault,
           readReceiptResponse: state.readReceiptResponse,
+          preferredIdentityIds: state.preferredIdentityIds,
           sessionTimeout: state.sessionTimeout,
           emailNotificationsEnabled: state.emailNotificationsEnabled,
           emailNotificationSound: state.emailNotificationSound,
@@ -583,9 +633,14 @@ export const useSettingsStore = create<SettingsState>()(
           includeGroupInUnified: state.includeGroupInUnified,
           enableAllMailView: state.enableAllMailView,
           allMailFolderIds: state.allMailFolderIds,
+          enableCrossUnreadView: state.enableCrossUnreadView,
+          enableCrossStarredView: state.enableCrossStarredView,
+          enableCrossAllView: state.enableCrossAllView,
           senderFavicons: state.senderFavicons,
           showAvatarsInJunk: state.showAvatarsInJunk,
           colorfulSidebarIcons: state.colorfulSidebarIcons,
+          tintListRowsByTag: state.tintListRowsByTag,
+          showFolderTotalCount: state.showFolderTotalCount,
           folderIcons: state.folderIcons,
           emailKeywords: state.emailKeywords,
           attachmentReminderEnabled: state.attachmentReminderEnabled,
@@ -628,6 +683,16 @@ export const useSettingsStore = create<SettingsState>()(
               }
               if (key === 'sendDelaySeconds' && ![0, 10, 30, 60].includes(settings[key])) {
                 set({ sendDelaySeconds: 0 });
+                return;
+              }
+              // Ignore a legacy global allMailFolderIds (string[] | null) or any
+              // non-record value - this build keys it per account.
+              if (key === 'allMailFolderIds' && !isPlainRecord(settings[key])) {
+                return;
+              }
+              // Defensive: a non-record (e.g. a legacy scalar) would break the
+              // per-account map lookups - ignore it.
+              if (key === 'preferredIdentityIds' && !isPlainRecord(settings[key])) {
                 return;
               }
               if (DEVICE_LOCAL_SETTING_KEYS.has(key)) {
@@ -808,6 +873,14 @@ export const useSettingsStore = create<SettingsState>()(
             get().importSettings(JSON.stringify(settings));
             isLoadingFromServer = false;
             syncLog('Settings loaded from server successfully');
+            // Re-apply the (possibly server-updated) per-account preferred
+            // sender identity to the already-loaded identities, so a fresh
+            // browser reflects the synced default without waiting for the next
+            // identity refresh. Dynamic import avoids a static import cycle
+            // (auth-store imports this store). (#507)
+            import('./auth-store')
+              .then(({ useAuthStore }) => useAuthStore.getState().applyPreferredIdentityOrdering())
+              .catch(() => {});
             return true;
           }
           return false;
@@ -820,7 +893,7 @@ export const useSettingsStore = create<SettingsState>()(
     }),
     {
       name: 'settings-storage',
-      version: 4,
+      version: 5,
       migrate: (persisted, version) => {
         const state = persisted as Record<string, unknown>;
         if (version < 2 && state.listDensity) {
@@ -840,11 +913,28 @@ export const useSettingsStore = create<SettingsState>()(
         if (version < 4) {
           state.dateFormat = 'smart';
         }
+        // v5: allMailFolderIds went from a global `string[] | null` to a
+        // per-account `Record<accountId, string[]>`. The legacy global list
+        // can't be attributed to a specific account here (the active account
+        // isn't known at migrate time), so it's dropped - each account starts
+        // "not configured" (defaults to all no-role folders).
+        if (version < 5 || !isPlainRecord(state.allMailFolderIds)) {
+          state.allMailFolderIds = {};
+        }
         return state as unknown as SettingsState;
       },
       onRehydrateStorage: () => {
         return (state) => {
           if (state) {
+            // Defensive: a legacy global array or any non-record value (e.g.
+            // synced from an older client) is coerced to an empty map so
+            // per-account consumers never see a non-record.
+            if (!isPlainRecord(state.allMailFolderIds)) {
+              state.allMailFolderIds = {};
+            }
+            if (!isPlainRecord(state.preferredIdentityIds)) {
+              state.preferredIdentityIds = {};
+            }
             applyFontSize(state.fontSize);
             applyDensity(state.density);
             applyAnimations(state.animationsEnabled);

@@ -11,7 +11,7 @@ import type { ComposerDraftData } from "@/components/email/email-composer";
 import { ProtocolAccountPicker } from "@/components/protocol/protocol-account-picker";
 import { ThreadConversationView } from "@/components/email/thread-conversation-view";
 import { MobileHeader } from "@/components/layout/mobile-header";
-import { ThreadGroup, Email, isUnifiedMailboxId, UNIFIED_ROLE_BY_ID, ALL_MAIL_MAILBOX_ID } from "@/lib/jmap/types";
+import { ThreadGroup, Email, Mailbox, isUnifiedMailboxId, UNIFIED_ROLE_BY_ID, ALL_MAIL_MAILBOX_ID, CROSS_VIEW_BY_ID, isCrossViewId } from "@/lib/jmap/types";
 import { useAccountStore } from "@/stores/account-store";
 import { usePolicyStore } from "@/stores/policy-store";
 import type { UnifiedAccountClient } from "@/lib/unified-mailbox";
@@ -32,6 +32,7 @@ import { useBrowserNavigation, type NavSnapshot } from "@/hooks/use-browser-navi
 import { debug } from "@/lib/debug";
 import { playNotificationSound } from "@/lib/notification-sound";
 import { cn } from "@/lib/utils";
+import { localizeMailboxName } from "@/lib/mailbox-label";
 import {
   ErrorBoundary,
   SidebarErrorFallback,
@@ -74,7 +75,7 @@ import { appLifecycleHooks, uiHooks, routerHooks, toastHooks, emailHooks } from 
 import { emailToReadView } from "@/lib/plugin-projection";
 import { buildQuoteHeader } from "@/lib/quote-header";
 import { buildReplySubject, buildForwardSubject } from "@/lib/subject-prefix";
-import { useLocaleStore } from "@/stores/locale-store";
+import { getEffectiveLocale } from '@/i18n/detect-locale';
 import type { QuoteHeader } from "@/lib/plugin-types";
 
 const SCHEDULED_MAILBOX_ID = '__scheduled__';
@@ -120,7 +121,7 @@ export default function Home() {
   useIdentitySync();
   const trustedSendersAddressBook = useSettingsStore((state) => state.trustedSendersAddressBook);
   const sendDelaySeconds = useSettingsStore((state) => state.sendDelaySeconds);
-  const { loadTrustedSendersBook, trustedSendersLoaded } = useContactStore();
+  const { loadTrustedSendersBook, trustedSendersLoaded, loadRecentRecipients } = useContactStore();
 
   const promptForRescheduleDelayedUntil = useCallback((): string | null => {
     const value = window.prompt(t('email_viewer.reschedule_prompt'));
@@ -319,7 +320,10 @@ export default function Home() {
     clearPendingUndoSend,
     pendingUndoSend,
     fetchUnifiedEmails: fetchUnifiedEmailsAction,
+    fetchCrossView: fetchCrossViewAction,
     refreshUnifiedCounts,
+    refreshCrossCounts,
+    crossUnreadCount,
     exitUnifiedView,
     emptyMailbox,
     markMailboxAsRead,
@@ -338,6 +342,15 @@ export default function Home() {
     refreshCurrentMailbox,
   } = useEmailStore();
 
+  // Load recent recipients (from the Sent folder) for compose autocomplete.
+  // Runs once when the Sent mailbox is known; the store guards against reloads.
+  useEffect(() => {
+    const sent = mailboxes.find((m) => m.role === 'sent');
+    if (client && sent) {
+      loadRecentRecipients(client, sent.originalId || sent.id);
+    }
+  }, [client, mailboxes, loadRecentRecipients]);
+
   // Pro shell: populate per-account mailbox cache so the sidebar can render
   // every connected account Thunderbird-style.
   useProMultiAccountMailboxes();
@@ -347,6 +360,19 @@ export default function Home() {
   const delayedSendSupported = client?.hasDelayedSend() ?? true;
   const allMailViewEnabled = usePolicyStore((s) => s.isFeatureEnabled('allMailViewEnabled'));
   const showAllMailMailbox = allMailViewEnabled && enableAllMailView;
+
+  // Cross-account "All accounts" views: a sub-feature of the unified mailbox, so
+  // they require Unified Mailbox to be enabled, plus the admin gate and the
+  // per-user setting. Hooks are called unconditionally.
+  const crossUnreadGate = usePolicyStore((s) => s.isFeatureEnabled('crossUnreadViewEnabled'));
+  const crossStarredGate = usePolicyStore((s) => s.isFeatureEnabled('crossStarredViewEnabled'));
+  const crossAllGate = usePolicyStore((s) => s.isFeatureEnabled('crossAllViewEnabled'));
+  const enableCrossUnreadView = useSettingsStore((s) => s.enableCrossUnreadView);
+  const enableCrossStarredView = useSettingsStore((s) => s.enableCrossStarredView);
+  const enableCrossAllView = useSettingsStore((s) => s.enableCrossAllView);
+  const showCrossUnread = enableUnifiedMailbox && crossUnreadGate && enableCrossUnreadView;
+  const showCrossStarred = enableUnifiedMailbox && crossStarredGate && enableCrossStarredView;
+  const showCrossAll = enableUnifiedMailbox && crossAllGate && enableCrossAllView;
   const activeEmails = isScheduledView ? scheduledEmails : emails;
   const activeHasMore = isScheduledView ? scheduledHasMore : hasMoreEmails;
   const activeIsLoading = isScheduledView ? isLoadingScheduled : isLoading;
@@ -595,6 +621,10 @@ export default function Home() {
     onToggleSpam: async () => {
       if (isScheduledView) return;
       const currentMailbox = mailboxes.find(m => m.id === selectedMailbox);
+      // Marking your own outgoing mail as spam makes no sense - the toolbar
+      // and menus hide the action in Sent/Drafts/Scheduled, so the shortcut
+      // is a no-op there too.
+      if (['sent', 'drafts', 'scheduled'].includes(currentMailbox?.role || '')) return;
       const isInJunk = currentMailbox?.role === 'junk';
       if (selectedEmailIds.size > 0 && client) {
         const ids = Array.from(selectedEmailIds);
@@ -718,7 +748,7 @@ export default function Home() {
       // Mailbox view
       const mailbox = mailboxes.find(mb => mb.id === selectedMailbox);
       if (mailbox) {
-        const mailboxName = mailbox.name;
+        const mailboxName = localizeMailboxName(mailbox.role, mailbox.name, (k) => t(`sidebar.mailboxes.${k}`));
         const unreadCount = mailbox.unreadEmails || 0;
         title = unreadCount > 0
           ? `${mailboxName} (${unreadCount}) - ${appName}`
@@ -986,14 +1016,16 @@ export default function Home() {
   // recounting happened"). The Pro shell always renders the unified mailbox
   // regardless of the user setting, so refresh when embedded too.
   useEffect(() => {
-    if (!enableUnifiedMailbox && !isEmbedded) return;
+    const anyCross = showCrossUnread || showCrossStarred || showCrossAll;
+    if (!enableUnifiedMailbox && !isEmbedded && !anyCross) return;
     if (!isAuthenticated || !client) return;
     buildPopulatedUnifiedAccounts().then((built) => {
       const hasGroupEntry = built.some((b) => b.isShared);
+      if (anyCross) refreshCrossCounts(built);
       if (built.length < 2 && !hasGroupEntry && !isEmbedded) return;
       refreshUnifiedCounts(built);
     });
-  }, [enableUnifiedMailbox, includeGroupInUnified, isEmbedded, isAuthenticated, client, mailboxes, connectedAccountsSignature, buildPopulatedUnifiedAccounts, refreshUnifiedCounts]);
+  }, [enableUnifiedMailbox, includeGroupInUnified, isEmbedded, isAuthenticated, client, mailboxes, connectedAccountsSignature, buildPopulatedUnifiedAccounts, refreshUnifiedCounts, refreshCrossCounts, showCrossUnread, showCrossStarred, showCrossAll]);
 
   // System-notification click handler. The push SW navigates the user back
   // here with `?email=<id>` (specific email it built the toast from) or
@@ -1039,8 +1071,8 @@ export default function Home() {
     // Skip when handleEmailSelect already started a fetch (it sets isLoadingEmail before
     // calling selectEmail on the stub), to avoid a duplicate request.
     if (!selectedEmail.bodyValues && !isLoadingEmail) {
-      const perAccountClient = isUnifiedView && selectedEmail.accountId
-        ? useAuthStore.getState().getClientForAccount(selectedEmail.accountId)
+      const perAccountClient = isUnifiedView && selectedEmail.sourceClientAccountId
+        ? useAuthStore.getState().getClientForAccount(selectedEmail.sourceClientAccountId)
         : undefined;
       const fetchClient = perAccountClient ?? client;
       setLoadingEmail(true);
@@ -1153,18 +1185,22 @@ export default function Home() {
         return;
       }
 
-      // Mark the original email with $answered or $forwarded keyword
-      if (originalEmailId && (effectiveMode === 'reply' || effectiveMode === 'replyAll')) {
+      // Mark the original email with $answered or $forwarded keyword. Route the
+      // write to the email's own account so the flag lands on shared/group-mailbox
+      // messages instead of being dropped against the reaching account. (#281)
+      if (originalEmailId && (effectiveMode === 'reply' || effectiveMode === 'replyAll' || effectiveMode === 'forward')) {
+        const s = useEmailStore.getState();
+        const orig = s.emails.find(e => e.id === originalEmailId);
+        const kwClientId = s.isUnifiedView ? orig?.sourceClientAccountId : undefined;
+        const kwAccountId = s.isUnifiedView ? orig?.sourceAccountId : undefined;
+        const kwClient = kwClientId
+          ? (useAuthStore.getState().getClientForAccount(kwClientId) ?? client)
+          : client;
+        const keyword = effectiveMode === 'forward' ? '$forwarded' : '$answered';
         try {
-          await client.setKeyword(originalEmailId, '$answered');
+          await kwClient.setKeyword(originalEmailId, keyword, kwAccountId);
         } catch (e) {
-          debug.error('Failed to set $answered keyword:', e);
-        }
-      } else if (originalEmailId && effectiveMode === 'forward') {
-        try {
-          await client.setKeyword(originalEmailId, '$forwarded');
-        } catch (e) {
-          debug.error('Failed to set $forwarded keyword:', e);
+          debug.error(`Failed to set ${keyword} keyword:`, e);
         }
       }
 
@@ -1177,8 +1213,15 @@ export default function Home() {
           const emailState = useEmailStore.getState();
           const repliedEmail = emailState.emails.find(e => e.id === originalEmailId);
           if (repliedEmail?.threadId && emailState.expandedThreadIds.has(repliedEmail.threadId)) {
-            const accountId = client.getAccountId();
-            const fullEmails = await client.getThreadEmails(repliedEmail.threadId, accountId);
+            // Route to the email's own account so shared/group threads refresh
+            // from the right server, not the active one. (#281)
+            const threadClient = emailState.isUnifiedView && repliedEmail.sourceClientAccountId
+              ? (useAuthStore.getState().getClientForAccount(repliedEmail.sourceClientAccountId) ?? client)
+              : client;
+            const accountId = emailState.isUnifiedView && repliedEmail.sourceAccountId
+              ? repliedEmail.sourceAccountId
+              : client.getAccountId();
+            const fullEmails = await threadClient.getThreadEmails(repliedEmail.threadId, accountId);
             if (fullEmails.length > 0) {
               useEmailStore.setState((state) => {
                 const c = new Map(state.threadEmailsCache);
@@ -1237,7 +1280,7 @@ export default function Home() {
         },
         newTo,
         newCc,
-        locale: useLocaleStore.getState().locale,
+        locale: getEffectiveLocale(),
         timeFormat: useSettingsStore.getState().timeFormat,
         unknownLabel: tCommon('unknown'),
         labels: {
@@ -1414,10 +1457,11 @@ export default function Home() {
     if (!client || !emailToDelete) return;
 
     // In unified view the trash destination and current-folder check must come
-    // from the email's own account, not the active one. (#281)
+    // from the email's own account, not the active one. The owning account's
+    // mailbox list is cached under its JMAP id (`sourceAccountId`). (#281)
     const actionMailboxes =
-      isUnifiedView && emailToDelete.accountId
-        ? (accountMailboxes[emailToDelete.accountId] ?? mailboxes)
+      isUnifiedView && emailToDelete.sourceAccountId
+        ? (accountMailboxes[emailToDelete.sourceAccountId] ?? mailboxes)
         : mailboxes;
 
     // Check if we're currently in the trash or junk folder. In unified view the
@@ -1446,11 +1490,17 @@ export default function Home() {
         console.error("Failed to permanently delete email:", error);
       }
     } else {
-      // Not in trash: always move to trash (in the email's own account).
+      // Not in trash: always move to trash (in the email's own account). Scope
+      // the trash lookup to the email's account: for a shared/group source every
+      // mailbox in the list is `isShared`, so we match by accountId instead of
+      // excluding shared (otherwise no trash is found and the delete fails). (#281)
+      const sourceAccountId = isUnifiedView ? emailToDelete.sourceAccountId : undefined;
+      const matchesScope = (m: Mailbox) =>
+        sourceAccountId ? m.accountId === sourceAccountId : !m.isShared;
       const trashMailbox =
-        actionMailboxes.find(m => m.role === 'trash' && !m.isShared) ??
+        actionMailboxes.find(m => m.role === 'trash' && matchesScope(m)) ??
         actionMailboxes.find(m => {
-          if (m.isShared) return false;
+          if (!matchesScope(m)) return false;
           const lower = m.name.toLowerCase();
           return lower.includes('trash') || lower.includes('deleted');
         });
@@ -1473,11 +1523,14 @@ export default function Home() {
     if (!client || !emailToArchive) return;
 
     // In unified view the archive folder (and any year/month subfolders we
-    // create) must live in the email's own account, reached through that
-    // account's client. (#281)
-    const archiveAccountId = isUnifiedView ? emailToArchive.accountId : undefined;
-    const archiveClient = archiveAccountId
-      ? (useAuthStore.getState().getClientForAccount(archiveAccountId) ?? client)
+    // create) must live in the email's own account, reached through the login it
+    // is reachable via (`sourceClientAccountId`) and routed to its owning JMAP
+    // account (`sourceAccountId`). For personal sources these resolve to the
+    // account itself, so behavior is unchanged. (#281)
+    const archiveClientId = isUnifiedView ? emailToArchive.sourceClientAccountId : undefined;
+    const archiveAccountId = isUnifiedView ? emailToArchive.sourceAccountId : undefined;
+    const archiveClient = archiveClientId
+      ? (useAuthStore.getState().getClientForAccount(archiveClientId) ?? client)
       : client;
     // Read fresh mailboxes from the store – batch archive calls this in a loop,
     // and each iteration needs to see folders created by prior iterations.
@@ -1512,7 +1565,7 @@ export default function Home() {
           m => m.name === year && m.parentId === archiveId
         );
         if (!yearMailbox) {
-          yearMailbox = await archiveClient.createMailbox(year, archiveId);
+          yearMailbox = await archiveClient.createMailbox(year, archiveId, archiveAccountId);
           await refreshMailboxes();
         }
 
@@ -1525,7 +1578,7 @@ export default function Home() {
             m => m.name === month && m.parentId === yearId
           );
           if (!monthMailbox) {
-            monthMailbox = await archiveClient.createMailbox(month, yearId);
+            monthMailbox = await archiveClient.createMailbox(month, yearId, archiveAccountId);
             await refreshMailboxes();
           }
           await moveThreadToMailbox(client, emailToArchive.id, monthMailbox.id);
@@ -1599,6 +1652,45 @@ export default function Home() {
     }
   };
 
+  const handleTogglePinned = async (emailToPin: Email) => {
+    if (!client) return;
+
+    try {
+      const email = emails.find(e => e.id === emailToPin.id) ?? emailToPin;
+      const isPinned = email.keywords?.['$pinned'] === true;
+      // JMAP keywords are a set of present keys - drop the key to unpin
+      // rather than writing a false value.
+      const keywords = { ...email.keywords };
+      if (isPinned) {
+        delete keywords['$pinned'];
+      } else {
+        keywords['$pinned'] = true;
+      }
+
+      // Same unified-view routing as color tags: write to the email's own
+      // account via the login it is reachable through. (#281)
+      const pinClientId = isUnifiedView ? email.sourceClientAccountId : undefined;
+      const pinAccountId = isUnifiedView ? email.sourceAccountId : undefined;
+      const pinClient = pinClientId
+        ? (useAuthStore.getState().getClientForAccount(pinClientId) ?? client)
+        : client;
+
+      await pinClient.updateEmailKeywords(email.id, keywords, pinAccountId);
+
+      // Patch in place so the icon flips immediately, then refetch the first
+      // page so the mail floats/sinks per the server's pinned-first sort.
+      // Skip the refetch where that sort does not apply (unified views) or
+      // where it would replace a tag-filtered list (refreshCurrentMailbox
+      // fetches by folder only).
+      setEmailKeywordsLocal(email.id, keywords);
+      if (!isUnifiedView && !useEmailStore.getState().selectedKeyword) {
+        void refreshCurrentMailbox(client);
+      }
+    } catch (error) {
+      console.error("Failed to toggle pin:", error);
+    }
+  };
+
   const handleSetColorTag = async (emailId: string, color: string | null) => {
     if (!client) return;
 
@@ -1618,7 +1710,7 @@ export default function Home() {
         });
       } else {
         const jmapKey = `$label:${color}`;
-        if (keywords[jmapKey] === true) {
+        if (keywords[jmapKey]) {
           // Toggle off if already active
           keywords[jmapKey] = false;
         } else {
@@ -1627,8 +1719,20 @@ export default function Home() {
         }
       }
 
+      // In unified view route the write to the email's own account, reached
+      // through the login it is reachable via (`sourceClientAccountId`) and
+      // applied to its owning JMAP account (`sourceAccountId`). For personal
+      // sources these resolve to the account itself, so behavior is unchanged.
+      // Without this, tags on shared/group-mailbox messages are written to the
+      // reaching account and silently dropped by the server. (#281)
+      const tagClientId = isUnifiedView ? email.sourceClientAccountId : undefined;
+      const tagAccountId = isUnifiedView ? email.sourceAccountId : undefined;
+      const tagClient = tagClientId
+        ? (useAuthStore.getState().getClientForAccount(tagClientId) ?? client)
+        : client;
+
       // Update email keywords via JMAP
-      await client.updateEmailKeywords(emailId, keywords);
+      await tagClient.updateEmailKeywords(emailId, keywords, tagAccountId);
 
       // Patch the email in place so the list keeps its scroll/pagination state
       // instead of being reset to the first page by a full refetch.
@@ -1666,7 +1770,15 @@ export default function Home() {
       setTabletListVisible(true);
     }
     if (viewingClient) {
-      await fetchEmails(viewingClient, mailboxId);
+      // Keep an active search applied when switching folders (#553); the
+      // store actions resolve the viewing account's client internally.
+      if (!isFilterEmpty(searchFilters)) {
+        await advancedSearch(viewingClient);
+      } else if (searchQuery) {
+        await searchEmails(viewingClient, searchQuery);
+      } else {
+        await fetchEmails(viewingClient, mailboxId);
+      }
     }
   };
 
@@ -1714,6 +1826,28 @@ export default function Home() {
       return;
     }
 
+    if (isCrossViewId(mailboxId)) {
+      setScheduledView(false);
+      const view = CROSS_VIEW_BY_ID[mailboxId];
+      if (!view) return;
+
+      selectMailbox(mailboxId);
+      selectEmail(null);
+
+      if (isMobile) {
+        setSidebarOpen(false);
+        setActiveView("list");
+      }
+      if (isTablet) {
+        setTabletListVisible(true);
+      }
+
+      const populated = await buildPopulatedUnifiedAccounts();
+      await fetchCrossViewAction(populated, view);
+      refreshCrossCounts(populated);
+      return;
+    }
+
     if (isUnifiedView) {
       exitUnifiedView();
     }
@@ -1734,8 +1868,13 @@ export default function Home() {
     }
 
     if (client) {
-      // If there's an active search, re-run it in the new mailbox
-      if (searchQuery) {
+      // If there's an active search, re-run it in the new mailbox. Advanced
+      // filters must go through advancedSearch (which also includes the text
+      // query) — falling back to fetchEmails would silently drop them while
+      // the UI still shows them as active (#553).
+      if (!isFilterEmpty(searchFilters)) {
+        await advancedSearch(client);
+      } else if (searchQuery) {
         await searchEmails(client, searchQuery);
       } else {
         await fetchEmails(client, mailboxId);
@@ -2213,11 +2352,22 @@ export default function Home() {
       return;
     }
 
-    // Mark the original email as answered
-    try {
-      await client.setKeyword(originalEmailId, '$answered');
-    } catch (e) {
-      debug.error('Failed to set $answered keyword:', e);
+    // Mark the original email as answered. Route the write to the email's own
+    // account so the flag lands on shared/group-mailbox messages instead of
+    // being dropped against the reaching account. (#281)
+    {
+      const s = useEmailStore.getState();
+      const orig = s.emails.find(e => e.id === originalEmailId);
+      const kwClientId = s.isUnifiedView ? orig?.sourceClientAccountId : undefined;
+      const kwAccountId = s.isUnifiedView ? orig?.sourceAccountId : undefined;
+      const kwClient = kwClientId
+        ? (useAuthStore.getState().getClientForAccount(kwClientId) ?? client)
+        : client;
+      try {
+        await kwClient.setKeyword(originalEmailId, '$answered', kwAccountId);
+      } catch (e) {
+        debug.error('Failed to set $answered keyword:', e);
+      }
     }
 
     // Refresh emails to show the sent reply
@@ -2227,8 +2377,15 @@ export default function Home() {
     const emailState = useEmailStore.getState();
     const repliedEmail = emailState.emails.find(e => e.id === originalEmailId);
     if (repliedEmail?.threadId && emailState.expandedThreadIds.has(repliedEmail.threadId)) {
-      const accountId = client.getAccountId();
-      const fullEmails = await client.getThreadEmails(repliedEmail.threadId, accountId);
+      // Route to the email's own account so shared/group threads refresh from
+      // the right server, not the active one. (#281)
+      const threadClient = emailState.isUnifiedView && repliedEmail.sourceClientAccountId
+        ? (useAuthStore.getState().getClientForAccount(repliedEmail.sourceClientAccountId) ?? client)
+        : client;
+      const accountId = emailState.isUnifiedView && repliedEmail.sourceAccountId
+        ? repliedEmail.sourceAccountId
+        : client.getAccountId();
+      const fullEmails = await threadClient.getThreadEmails(repliedEmail.threadId, accountId);
       if (fullEmails.length > 0) {
         useEmailStore.setState((state) => {
           const c = new Map(state.threadEmailsCache);
@@ -2256,7 +2413,12 @@ export default function Home() {
     ? t('sidebar.scheduled')
     : selectedMailbox === ALL_MAIL_MAILBOX_ID
       ? t('sidebar.mailboxes.all_mail')
-      : mailboxes.find(m => m.id === selectedMailbox)?.name || "Inbox";
+      : (() => {
+          const mb = mailboxes.find(m => m.id === selectedMailbox);
+          return mb
+            ? localizeMailboxName(mb.role, mb.name, (k) => t(`sidebar.mailboxes.${k}`))
+            : "Inbox";
+        })();
   const isFocusedMailLayout = mailLayout === 'focus';
   const isHorizontalMailLayout = mailLayout === 'horizontal' && !isMobile && !isTablet;
   const hasViewerContent = showComposer || Boolean(conversationThread) || Boolean(selectedEmail);
@@ -2292,21 +2454,25 @@ export default function Home() {
 
     // Fetch the full content
     try {
-      // In unified view each email carries its own accountId. Use that
-      // account's client so we fetch from the server that actually owns it.
-      const emailAccountId = isUnifiedView ? listEmail?.accountId : undefined;
-      const perAccountClient = emailAccountId
-        ? useAuthStore.getState().getClientForAccount(emailAccountId)
+      // In unified view each email carries its source reference: the login it is
+      // reachable through (`sourceClientAccountId`) and its owning JMAP account
+      // (`sourceAccountId`). Resolve both so we fetch from the server that actually
+      // owns it — works uniformly for personal and shared/group sources, since for
+      // personal the owning account equals the client's primary (no-op). (#281)
+      const sourceClientId = isUnifiedView ? listEmail?.sourceClientAccountId : undefined;
+      const perAccountClient = sourceClientId
+        ? useAuthStore.getState().getClientForAccount(sourceClientId)
         : undefined;
       const fetchClient = perAccountClient ?? client;
 
-      // For shared folders on the primary client, we still need to pass the
-      // shared account's id. In unified view we use the per-account client
-      // directly, so no explicit accountId is needed.
-      const mailbox = mailboxes.find(mb => mb.id === selectedMailbox);
-      const accountId = perAccountClient
-        ? undefined
-        : mailbox?.isShared ? mailbox.accountId : undefined;
+      const accountId = isUnifiedView
+        ? listEmail?.sourceAccountId
+        : (() => {
+            // Non-unified: shared folders on the active client still need their
+            // owner accountId passed explicitly.
+            const mailbox = mailboxes.find(mb => mb.id === selectedMailbox);
+            return mailbox?.isShared ? mailbox.accountId : undefined;
+          })();
 
       const fullEmail = await fetchClient.getEmail(email.id, accountId);
       if (fullEmail) {
@@ -2318,9 +2484,13 @@ export default function Home() {
           fullEmail.isScheduled = true;
           fullEmail.isSmimeScheduled = listEmail.isSmimeScheduled;
         }
-        if (emailAccountId) {
-          fullEmail.accountId = emailAccountId;
-          fullEmail.accountLabel = listEmail?.accountLabel;
+        // Re-stamp the source reference so later actions on the open email
+        // resolve to the right account (the fetched object lacks these).
+        if (isUnifiedView && listEmail) {
+          fullEmail.accountId = listEmail.accountId;
+          fullEmail.accountLabel = listEmail.accountLabel;
+          fullEmail.sourceClientAccountId = listEmail.sourceClientAccountId;
+          fullEmail.sourceAccountId = listEmail.sourceAccountId;
         }
         selectEmail(fullEmail);
         // Mark-as-read logic is now handled by useEffect
@@ -2369,8 +2539,27 @@ export default function Home() {
     setActiveView("viewer");
 
     try {
-      // Fetch complete thread emails
-      const emails = await client.getThreadEmails(thread.threadId);
+      // In unified/aggregate views the thread may belong to another (possibly
+      // shared/group) account. Route the fetch to the login it's reachable
+      // through (`sourceClientAccountId`) and pass its owning JMAP account
+      // (`sourceAccountId`) so the thread loads from the right server instead of
+      // the active one (which doesn't have it → empty/body-less). (#281)
+      const ref = thread.emails?.[0];
+      const threadClient = isUnifiedView && ref?.sourceClientAccountId
+        ? (useAuthStore.getState().getClientForAccount(ref.sourceClientAccountId) ?? client)
+        : client;
+      const threadAccountId = isUnifiedView ? ref?.sourceAccountId : undefined;
+      const emails = await threadClient.getThreadEmails(thread.threadId, threadAccountId);
+      // Re-stamp the source reference so conversation actions (reply/move/…)
+      // resolve to the right account; the fetched objects don't carry it.
+      if (isUnifiedView && ref) {
+        for (const e of emails) {
+          e.accountId = ref.accountId;
+          e.accountLabel = ref.accountLabel;
+          e.sourceClientAccountId = ref.sourceClientAccountId;
+          e.sourceAccountId = ref.sourceAccountId;
+        }
+      }
       setConversationEmails(emails);
     } catch (error) {
       console.error('Failed to fetch thread emails:', error);
@@ -2518,6 +2707,10 @@ export default function Home() {
               scheduledTotal={scheduledTotal}
               showScheduledMailbox={delayedSendSupported}
               showAllMailMailbox={showAllMailMailbox}
+              showCrossUnread={showCrossUnread}
+              showCrossStarred={showCrossStarred}
+              showCrossAll={showCrossAll}
+              crossUnreadCount={crossUnreadCount}
               onMailboxSelect={handleMailboxSelect}
               onTagSelect={handleTagSelect}
               onUnreadFilterClick={handleUnreadFilterClick}
@@ -2566,17 +2759,19 @@ export default function Home() {
           <div
             className={cn(
               "relative flex flex-col bg-background",
-              isHorizontalMailLayout ? "md:w-full md:h-auto" : "h-full border-r border-border",
+              isHorizontalMailLayout
+                ? (shouldHideHorizontalViewerPane ? "md:w-full md:min-h-0" : "md:w-full md:h-auto")
+                : "h-full border-e border-border",
               // Mobile: full width, hidden when viewing email
-              "max-md:flex-1 max-md:border-r-0 max-md:border-b-0",
+              "max-md:flex-1 max-md:border-e-0 max-md:border-b-0",
               isMobile && activeView !== "list" && "max-md:hidden",
               // Tablet/Desktop: fixed width with collapse animation
-              !isHorizontalMailLayout && (shouldHideViewerPane ? "md:flex-1 md:border-r-0" : "md:flex-shrink-0"),
+              !isHorizontalMailLayout && (shouldHideViewerPane ? "md:flex-1 md:border-e-0" : "md:flex-shrink-0"),
               isHorizontalMailLayout && (shouldHideHorizontalViewerPane ? "md:flex-1" : "md:flex-shrink-0"),
               isHorizontalMailLayout && !shouldHideHorizontalViewerPane && "md:shadow-[0_8px_12px_-6px_rgba(0,0,0,0.18)] dark:md:shadow-[0_8px_14px_-6px_rgba(0,0,0,0.55)]",
               !isHorizontalMailLayout && "md:shadow-sm",
               !isResizing && "transition-all duration-200 ease-out",
-              shouldCollapseListPane && "md:w-0 md:opacity-0 md:overflow-hidden md:border-r-0"
+              shouldCollapseListPane && "md:w-0 md:opacity-0 md:overflow-hidden md:border-e-0"
             )}
             style={
               isMobile
@@ -2629,13 +2824,13 @@ export default function Home() {
                     )}
                   </button>
                   <form onSubmit={(e) => { e.preventDefault(); if (searchQuery.trim()) handleSearch(searchQuery); }} className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                       type="text"
                       placeholder={t("sidebar.search_placeholder_hint")}
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className={cn("pl-9 h-9", searchQuery && "pr-8")}
+                      className={cn("ps-9 h-9", searchQuery && "pe-8")}
                       data-search-input
                       data-tour="search-input"
                       disabled={isUnifiedView || isScheduledView}
@@ -2645,7 +2840,7 @@ export default function Home() {
                       <button
                         type="button"
                         onClick={handleClearSearch}
-                        className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                        className="absolute end-2 top-1/2 transform -translate-y-1/2 p-1 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
                         aria-label={t("sidebar.clear_search")}
                       >
                         <X className="w-4 h-4" />
@@ -2685,24 +2880,24 @@ export default function Home() {
                         icon={<Paperclip className="w-3.5 h-3.5" />}
                         label={t("advanced_search.has_attachment")}
                         value={searchFilters.hasAttachment}
-                        onClick={() => { const next = searchFilters.hasAttachment === null ? true : searchFilters.hasAttachment === true ? false : null; setSearchFilters({ hasAttachment: next }); handleAdvancedSearch(); }}
+                        onClick={() => { const next = searchFilters.hasAttachment === null ? true : searchFilters.hasAttachment ? false : null; setSearchFilters({ hasAttachment: next }); handleAdvancedSearch(); }}
                       />
                       <ToggleChip
                         icon={<Star className="w-3.5 h-3.5" />}
                         label={t("advanced_search.starred")}
                         value={searchFilters.isStarred}
-                        onClick={() => { const next = searchFilters.isStarred === null ? true : searchFilters.isStarred === true ? false : null; setSearchFilters({ isStarred: next }); handleAdvancedSearch(); }}
+                        onClick={() => { const next = searchFilters.isStarred === null ? true : searchFilters.isStarred ? false : null; setSearchFilters({ isStarred: next }); handleAdvancedSearch(); }}
                       />
                       <ToggleChip
                         icon={searchFilters.isUnread === false ? <MailOpen className="w-3.5 h-3.5" /> : <Mail className="w-3.5 h-3.5" />}
                         label={searchFilters.isUnread === false ? t("advanced_search.read") : t("advanced_search.unread")}
                         value={searchFilters.isUnread}
-                        onClick={() => { const next = searchFilters.isUnread === null ? true : searchFilters.isUnread === true ? false : null; setSearchFilters({ isUnread: next }); handleAdvancedSearch(); }}
+                        onClick={() => { const next = searchFilters.isUnread === null ? true : searchFilters.isUnread ? false : null; setSearchFilters({ isUnread: next }); handleAdvancedSearch(); }}
                       />
                     </div>
                     <div className="flex items-center gap-1">
                       <Button variant="ghost" size="sm" onClick={() => { clearSearchFilters(); setShowAdvancedFields(false); if (client) advancedSearch(client); }} className="h-7 px-2 text-xs text-muted-foreground">
-                        <RotateCcw className="w-3 h-3 mr-1" />
+                        <RotateCcw className="w-3 h-3 me-1" />
                         {t("advanced_search.clear")}
                       </Button>
                     </div>
@@ -2886,6 +3081,9 @@ export default function Home() {
                     await toggleStar(client, email.id);
                   }
                 }}
+                onTogglePinned={async (email) => {
+                  await handleTogglePinned(email);
+                }}
                 onDelete={async (email) => {
                   await handleDelete(email);
                 }}
@@ -2924,7 +3122,7 @@ export default function Home() {
               }}
               className={cn(
                 "absolute z-40 rounded-full shadow-lg",
-                isMobile ? "bottom-4 right-4 h-14 w-14" : "bottom-4 right-4 h-12 w-12"
+                isMobile ? "bottom-4 end-4 h-14 w-14" : "bottom-4 end-4 h-12 w-12"
               )}
               aria-label={t('sidebar.compose')}
               title={t('sidebar.compose_hint')}
@@ -2983,6 +3181,11 @@ export default function Home() {
                 <EmailComposer
                   key={composerSessionId}
                   mode={pendingDraft?.mode ?? composerMode}
+                  composeFromAccountEmail={
+                    useAccountStore
+                      .getState()
+                      .getAccountById(viewingAccountId ?? activeAccountId ?? '')?.email
+                  }
                   replyTo={pendingDraft !== null ? pendingDraft.replyTo : (selectedEmail ? {
                     from: selectedEmail.from,
                     replyToAddresses: selectedEmail.replyTo,
@@ -3047,13 +3250,13 @@ export default function Home() {
                   setShowComposer(true);
                   if (isMobile) setActiveView('viewer');
                 }}
-                className="flex items-center gap-3 px-4 py-2.5 bg-primary/10 border-b border-primary/20 hover:bg-primary/15 transition-colors cursor-pointer w-full text-left"
+                className="flex items-center gap-3 px-4 py-2.5 bg-primary/10 border-b border-primary/20 hover:bg-primary/15 transition-colors cursor-pointer w-full text-start"
               >
                 <PenLine className="w-4 h-4 text-primary shrink-0" />
                 <div className="flex-1 min-w-0">
                   <span className="text-sm font-medium text-primary">{t('email_composer.continue_draft')}</span>
                   {pendingDraft.subject && (
-                    <span className="text-xs text-muted-foreground ml-2 truncate">{pendingDraft.subject}</span>
+                    <span className="text-xs text-muted-foreground ms-2 truncate">{pendingDraft.subject}</span>
                   )}
                 </div>
                 <X
@@ -3099,7 +3302,17 @@ export default function Home() {
                     onReply={handleReply}
                     onReplyAll={handleReplyAll}
                     onForward={handleForward}
-                    onDelete={() => handleDelete()}
+                    onDelete={() => {
+                      // Deleting the open message returns to the list (Gmail-style),
+                      // not the next email — unless the user turned the setting off.
+                      // Deselect first so the store's remove-and-advance sees no
+                      // selection and doesn't auto-open the next message.
+                      const target = selectedEmail;
+                      if (useSettingsStore.getState().returnToListAfterAction) {
+                        handleMobileBack();
+                      }
+                      handleDelete(target);
+                    }}
                     onArchive={() => handleArchive()}
                     onToggleStar={handleToggleStar}
                     onSetColorTag={handleSetColorTag}
@@ -3108,6 +3321,12 @@ export default function Home() {
                     onMarkAsRead={async (emailId, read) => {
                       if (client) {
                         await markAsRead(client, emailId, read);
+                        // Marking the open message unread returns to the list
+                        // (Gmail-style, gated on returnToListAfterAction). Staying
+                        // in the reading pane would just re-mark it read on view.
+                        if (!read && useSettingsStore.getState().returnToListAfterAction) {
+                          handleMobileBack();
+                        }
                       }
                     }}
                     onDownloadAttachment={handleDownloadAttachment}
@@ -3142,7 +3361,7 @@ export default function Home() {
                     }}
                     currentUserEmail={client?.getUsername()}
                     currentUserName={client?.getUsername()?.split("@")[0]}
-                    currentMailboxRole={mailboxes.find(m => m.id === selectedMailbox)?.role}
+                    currentMailboxRole={mailboxes.find(m => m.id === selectedMailbox)?.role ?? (isUnifiedView ? (unifiedRole ?? undefined) : undefined)}
                     mailboxes={mailboxes}
                     selectedMailbox={selectedMailbox}
                     onMoveToMailbox={async (mailboxId) => {

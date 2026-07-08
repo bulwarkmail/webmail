@@ -150,7 +150,7 @@ export function ThreadConversationView({
       <div className="flex items-center px-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 sticky top-0 z-10" style={{ gap: 'var(--density-item-gap)', paddingBlock: 'var(--density-header-py)' }}>
         <button
           onClick={onBack}
-          className="p-2 -ml-2 rounded-full hover:bg-muted transition-colors"
+          className="p-2 -ms-2 rounded-full hover:bg-muted transition-colors"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
@@ -488,13 +488,13 @@ function EmailCard({
     <div className={cn(
       "rounded-lg border border-border overflow-hidden transition-all duration-200",
       isExpanded ? "bg-background shadow-sm" : "bg-muted/30",
-      isUnread && !isExpanded && "border-l-2 border-l-primary"
+      isUnread && !isExpanded && "border-s-2 border-l-primary"
     )}>
       {/* Card Header - Always visible */}
       <button
         onClick={onToggleExpanded}
         className={cn(
-          "w-full flex items-start text-left transition-colors",
+          "w-full flex items-start text-start transition-colors",
           !isExpanded && "hover:bg-muted/50"
         )}
         style={{ gap: 'var(--density-item-gap)', padding: 'var(--density-card-p)' }}
@@ -657,7 +657,7 @@ function EmailCard({
                 }}
                 className="flex-1"
               >
-                <Reply className="w-4 h-4 mr-2" />
+                <Reply className="w-4 h-4 me-2" />
                 {t("email_viewer.reply")}
               </Button>
             )}
@@ -671,7 +671,7 @@ function EmailCard({
                 }}
                 className="flex-1"
               >
-                <ReplyAll className="w-4 h-4 mr-2" />
+                <ReplyAll className="w-4 h-4 me-2" />
                 {t("email_viewer.reply_all")}
               </Button>
             )}
@@ -685,7 +685,7 @@ function EmailCard({
                 }}
                 className="flex-1"
               >
-                <Forward className="w-4 h-4 mr-2" />
+                <Forward className="w-4 h-4 me-2" />
                 {t("email_viewer.forward")}
               </Button>
             )}

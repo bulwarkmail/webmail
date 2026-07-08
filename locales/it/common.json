@@ -134,7 +134,10 @@
     "nav_label": "Navigazione",
     "add_app": "App",
     "shared": "Condiviso",
-    "scheduled": "Programmate"
+    "scheduled": "Programmate",
+    "unified_all_unread": "Tutti i non letti",
+    "unified_all_starred": "Tutti gli speciali",
+    "unified_all_mail": "Tutta la posta"
   },
   "protocol_handlers": {
     "title": "App predefinite",
@@ -562,7 +565,8 @@
       "add_to_contacts": "Aggiungi ai contatti",
       "copied": "Copiato!",
       "copy_failed": "Copia non riuscita"
-    }
+    },
+    "send_now": "Invia ora"
   },
   "email_composer": {
     "read_receipt_on": "Conferma di lettura richiesta (clicca per disattivare)",
@@ -628,7 +632,9 @@
     "validation": {
       "recipient_required": "Aggiungi un destinatario per inviare",
       "subject_required": "Aggiungi un oggetto",
-      "body_required": "Scrivi un messaggio o allega un file"
+      "body_required": "Scrivi un messaggio o allega un file",
+      "attachments_uploading": "Gli allegati sono ancora in fase di caricamento: verrà inviato al termine",
+      "attachment_upload_failed": "Non inviato: caricamento di un allegato non riuscito. Rimuovilo e riprova."
     },
     "upload_progress": "Caricamento {uploaded} / {total}",
     "upload_cancel": "Annulla caricamento",
@@ -671,7 +677,9 @@
     "recipient_edit_email": "Modifica indirizzo email",
     "recipient_edit_name": "Modifica nome visualizzato",
     "recipient_email_placeholder": "Indirizzo email",
-    "recipient_name_placeholder": "Nome visualizzato"
+    "recipient_name_placeholder": "Nome visualizzato",
+    "autocomplete_search_server": "Cerca nel server",
+    "autocomplete_searching": "Ricerca in corso..."
   },
   "confirm_dialog": {
     "confirm": "Conferma",
@@ -800,8 +808,12 @@
     "pl": "Polski",
     "pt": "Português",
     "ru": "Русский",
+    "sk": "Slovenčina",
     "uk": "Українська",
-    "zh": "简体中文"
+    "zh": "简体中文",
+    "fa": "فارسی",
+    "farsi": "فارسی",
+    "switch_to_farsi": "Passa al persiano"
   },
   "settings": {
     "title": "Impostazioni",
@@ -919,17 +931,38 @@
         "description": "Show an \"All Mail\" entry above your folders that merges messages from across this account's folders into one list.",
         "folders_label": "Folders in All Mail",
         "folders_description": "Choose which folders are merged into the All Mail view.",
+        "account_hint": "Applies to {account}.",
         "no_folders": "No folders available."
       },
       "colorful_sidebar_icons": {
         "label": "Icone colorate nella barra laterale",
         "description": "Colora le icone di cartelle ed etichette per tipo (Posta in arrivo blu, Spam rosso, Inviati verde, ecc.). Disattiva per una barra laterale monocromatica."
       },
+      "tint_list_rows": {
+        "label": "Tint List Rows by Tag Color",
+        "description": "Shade each message row with its first tag color. Disable to keep rows plain; tag dots and chips still show the color."
+      },
+      "show_folder_total_count": {
+        "label": "Mostra il numero totale di messaggi",
+        "description": "Mostra il numero totale di messaggi accanto a cartelle ed etichette, insieme al conteggio dei non letti. Disattiva per mostrare solo i non letti."
+      },
       "pro_interface": {
         "label": "Interfaccia Pro (sperimentale)",
         "description": "Layout per utenti esperti solo desktop con esplorazione messaggi a più schede e flussi tra account. L'interfaccia standard non è influenzata; puoi tornare indietro in qualsiasi momento.",
         "open_label": "Apri interfaccia Pro",
         "back_to_standard": "Torna allo standard"
+      },
+      "cross_unread": {
+        "label": "Tutti gli account: Non letti",
+        "description": "Mostra una voce nella sezione Tutti gli account che elenca la posta non letta di tutti gli account, in tutte le cartelle tranne posta indesiderata, inviata, archivio, cestino e bozze."
+      },
+      "cross_starred": {
+        "label": "Tutti gli account: Speciali",
+        "description": "Mostra una voce nella sezione Tutti gli account che elenca la posta speciale di tutti gli account, in tutte le cartelle tranne posta indesiderata, inviata, archivio, cestino e bozze."
+      },
+      "cross_all": {
+        "label": "Tutti gli account: Tutta la posta",
+        "description": "Mostra una voce nella sezione Tutti gli account che elenca tutta la posta di tutti gli account, in tutte le cartelle tranne posta indesiderata, inviata, archivio, cestino e bozze."
       }
     },
     "keywords": {
@@ -1022,6 +1055,14 @@
         "preview_today": "Oggi:",
         "preview_this_week": "Questa settimana:",
         "preview_older": "Più vecchio:"
+      },
+      "date_locale": {
+        "label": "Date format region",
+        "description": "How numeric dates are ordered (day, month, year)",
+        "auto": "Automatic (match language)",
+        "iso": "ISO 8601 (YYYY-MM-DD)",
+        "dmy": "Day/Month/Year",
+        "mdy": "Month/Day/Year"
       },
       "time_format": {
         "label": "Formato ora",
@@ -1186,6 +1227,7 @@
         "archive": "Archivia",
         "tag": "Etichetta",
         "spam": "Segna come spam",
+        "not_spam": "Non spam",
         "none_selected": "Nessuna azione selezionata",
         "mode_label": "Modalità di visualizzazione",
         "mode_inline": "In linea",
@@ -1226,6 +1268,10 @@
         "off": "Disattivato",
         "seconds": "{seconds} secondi",
         "unsupported": "L’account corrente non dichiara il supporto all’invio ritardato. L’impostazione resta salvata per altri account."
+      },
+      "return_to_list_after_action": {
+        "label": "Torna all'elenco dopo l'eliminazione o il contrassegno come non letto",
+        "description": "Dopo aver eliminato o segnato come non letto il messaggio aperto, torna all'elenco dei messaggi invece di aprire il messaggio successivo."
       }
     },
     "composer": {
@@ -1913,6 +1959,8 @@
     "mark_unread": "Segna come non letto",
     "star": "Aggiungi stella",
     "unstar": "Rimuovi stella",
+    "pin": "Fissa",
+    "unpin": "Non fissare più",
     "move_to": "Sposta in...",
     "archive": "Archivia",
     "delete": "Elimina",
@@ -2147,6 +2195,9 @@
       "title": "Condivisi"
     },
     "address_books": {
+      "create": "Nuova rubrica",
+      "created": "Rubrica creata",
+      "create_failed": "Impossibile creare la rubrica",
       "title": "Le mie Rubriche",
       "shared_prefix": "Condiviso: {name}",
       "moved": "Contatto spostato in {name}",

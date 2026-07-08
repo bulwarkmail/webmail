@@ -1679,7 +1679,8 @@ function handleEmailSubmissionGet(args: MethodArgs, callId: string): MethodResul
 }
 
 function handleQuotaGet(_args: MethodArgs, callId: string): MethodResult {
-  return ['Quota/get', { accountId: ACCOUNT_ID, state: nextState(), list: [{ resourceType: 'mail', scope: 'mail', used: 52428800, hardLimit: 1073741824 }], notFound: [] }, callId];
+  // mirroring Stalwart: resourceType "octets", scope "account"
+  return ['Quota/get', { accountId: ACCOUNT_ID, state: nextState(), list: [{ id: 'quota-1', resourceType: 'octets', scope: 'account', types: ['Email', 'SieveScript'], used: 52428800, hardLimit: 1073741824 }], notFound: [] }, callId];
 }
 
 function handleVacationResponseGet(_args: MethodArgs, callId: string): MethodResult {

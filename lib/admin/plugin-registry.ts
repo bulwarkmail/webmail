@@ -47,6 +47,9 @@ export interface ServerPlugin {
   author: string;
   description: string;
   type: string;
+  /** Requested execution tier ('untrusted' | 'privileged'). Privileged plugins
+   * run in a same-origin sandbox and require admin approval + consent. */
+  tier?: string;
   permissions: string[];
   entrypoint: string;
   enabled: boolean;

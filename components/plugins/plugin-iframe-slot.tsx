@@ -52,6 +52,7 @@ export function PluginIframeSlot({ pluginId, slot, extraProps }: Props) {
       slot,
       code: active.code,
       locale,
+      tier: active.tier,
       extraProps: extraProps ?? {},
       hostContainer: wrapperRef.current,
       onResize: (h) => setHeight(h),

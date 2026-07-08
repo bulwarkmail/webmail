@@ -141,7 +141,7 @@ export function AppearanceSettings() {
           onClick={() => { resetTourCompletion(); startTour(); }}
           className="text-xs h-7"
         >
-          <PlayCircle className="w-3.5 h-3.5 mr-1" />
+          <PlayCircle className="w-3.5 h-3.5 me-1" />
           {tTour('restart_button')}
         </Button>
       </SettingItem>

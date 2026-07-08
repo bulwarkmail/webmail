@@ -218,7 +218,7 @@ export function CalendarDayView({
             {HOURS.map((h) => (
               <div
                 key={h}
-                className="relative text-muted-foreground text-right pr-2"
+                className="relative text-muted-foreground text-end pe-2"
                 style={{ height: HOUR_HEIGHT }}
               >
                 {h > 0 && (
@@ -231,7 +231,7 @@ export function CalendarDayView({
           </div>
 
           <div
-            className="flex-1 relative border-l border-border"
+            className="flex-1 relative border-s border-border"
             role="row"
             aria-label={t("views.day")}
             onPointerDown={(e) => handleGridPointerDown(e, dayKey, selectedDate)}
@@ -312,7 +312,7 @@ export function CalendarDayView({
                 style={{ top: (nowMinutes / 60) * HOUR_HEIGHT }}
               >
                 <div className="flex items-center">
-                  <div className="w-2.5 h-2.5 rounded-full bg-destructive -ml-1" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-destructive -ms-1" />
                   <div className="flex-1 h-px bg-destructive" />
                 </div>
               </div>
@@ -346,7 +346,7 @@ export function CalendarDayView({
                 style={{ top: (dropTarget.minutes / 60) * HOUR_HEIGHT }}
               >
                 <div className="flex items-center">
-                  <div className="w-2.5 h-2.5 rounded-full bg-primary -ml-1" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-primary -ms-1" />
                   <div className="flex-1 h-0.5 bg-primary rounded-full" />
                 </div>
                 <div className="absolute -top-4 left-2 text-[10px] font-medium text-primary bg-background/90 px-1 rounded shadow-sm">

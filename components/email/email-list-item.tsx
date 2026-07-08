@@ -5,8 +5,8 @@ import { useCallback } from "react";
 import { formatDate, stripInvisibleLeading } from "@/lib/utils";
 import { Email } from "@/lib/jmap/types";
 import { cn } from "@/lib/utils";
-import { Avatar } from "@/components/ui/avatar";
-import { Paperclip, Star, Circle, CheckSquare, Square, Reply, Forward } from "lucide-react";
+import { SelectableAvatar } from "@/components/email/selectable-avatar";
+import { Paperclip, Star, Pin, Circle, CheckSquare, Square, Reply, Forward } from "lucide-react";
 import { useEmailStore } from "@/stores/email-store";
 import { useSettingsStore, KEYWORD_PALETTE } from "@/stores/settings-store";
 import { useAuthStore } from "@/stores/auth-store";
@@ -29,25 +29,32 @@ interface EmailListItemProps {
   onArchive?: () => void;
   onSetColorTag?: (color: string | null) => void;
   onMarkAsSpam?: () => void;
+  onUndoSpam?: () => void;
 }
 
-export function EmailListItem({ email, selected, onClick, onDoubleClick, onContextMenu, onToggleStar, onMarkAsRead, onDelete, onArchive, onSetColorTag, onMarkAsSpam }: EmailListItemProps) {
+export function EmailListItem({ email, selected, onClick, onDoubleClick, onContextMenu, onToggleStar, onMarkAsRead, onDelete, onArchive, onSetColorTag, onMarkAsSpam, onUndoSpam }: EmailListItemProps) {
   const t = useTranslations('email_viewer');
-  const { selectedEmailIds, toggleEmailSelection, selectRangeEmails, selectedMailbox, mailboxes, clearSelection } = useEmailStore();
+  const tBatch = useTranslations('email_list.batch_actions');
+  const { selectedEmailIds, toggleEmailSelection, selectRangeEmails, selectedMailbox, mailboxes, clearSelection, isUnifiedView, unifiedRole } = useEmailStore();
   const showPreview = useSettingsStore((state) => state.showPreview);
   const density = useSettingsStore((state) => state.density);
   const mailLayout = useSettingsStore((state) => state.mailLayout);
   const emailKeywords = useSettingsStore((state) => state.emailKeywords);
+  const tintListRowsByTag = useSettingsStore((state) => state.tintListRowsByTag);
   const showAvatarsInJunk = useSettingsStore((state) => state.showAvatarsInJunk);
   const { identities } = useAuthStore();
   const isChecked = selectedEmailIds.has(email.id);
   const isUnread = !email.keywords?.$seen;
   const isStarred = email.keywords?.$flagged;
+  const isPinned = email.keywords?.['$pinned'] === true;
   const isImportant = email.keywords?.["$important"];
   const isAnswered = email.keywords?.$answered;
   const isForwarded = email.keywords?.$forwarded;
-  // In Sent/Drafts folders, show recipient instead of sender (which is always "me")
-  const currentMailboxRole = mailboxes.find(mb => mb.id === selectedMailbox)?.role;
+  // In Sent/Drafts folders, show recipient instead of sender (which is always "me").
+  // In aggregate role-views the selected mailbox is virtual → fall back to the
+  // unified role so junk-contextual UI (spam ↔ not-spam) and avatar hiding work.
+  const currentMailboxRole = mailboxes.find(mb => mb.id === selectedMailbox)?.role
+    ?? (isUnifiedView ? (unifiedRole ?? undefined) : undefined);
   const showRecipient = currentMailboxRole === 'sent' || currentMailboxRole === 'drafts';
   const sender = showRecipient ? (email.to?.[0] ?? email.from?.[0]) : email.from?.[0];
   const isMobile = useUIStore((state) => state.isMobile);
@@ -62,7 +69,7 @@ export function EmailListItem({ email, selected, onClick, onDoubleClick, onConte
   const keywordDefs = colorTagIds.map(id => emailKeywords.find(k => k.id === id) ?? { id, label: id, color: 'gray' });
   // Use first tag for background coloring
   const keywordDef = keywordDefs[0] ?? null;
-  const colorTag = keywordDef ? KEYWORD_PALETTE[keywordDef.color]?.bg ?? null : null;
+  const colorTag = (tintListRowsByTag && keywordDef) ? KEYWORD_PALETTE[keywordDef.color]?.bg ?? null : null;
 
   // Drag and drop functionality
   const { dragHandlers, isDragging } = useEmailDrag({
@@ -83,7 +90,14 @@ export function EmailListItem({ email, selected, onClick, onDoubleClick, onConte
 
   const handleCheckboxClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    toggleEmailSelection(email.id);
+    if (e.shiftKey) {
+      // Shift-click extends the selection from the anchor to here, like
+      // shift-clicking the row (the checkbox stops propagation, so the
+      // row's shift handler never runs — replicate it here).
+      selectRangeEmails(email.id);
+    } else {
+      toggleEmailSelection(email.id);
+    }
   };
 
   const handleContextMenu = (e: React.MouseEvent) => {
@@ -162,19 +176,22 @@ export function EmailListItem({ email, selected, onClick, onDoubleClick, onConte
 
         {/* Unread indicator */}
         {isUnread && (
-          <div className="absolute left-0.5 top-1/2 -translate-y-1/2">
+          <div className="absolute start-0.5 top-1/2 -translate-y-1/2">
             <Circle className="w-2 h-2 fill-unread text-unread" />
           </div>
         )}
 
         {/* Avatar */}
         {density !== 'extra-compact' && (
-          <Avatar
+          <SelectableAvatar
             name={sender?.name}
             email={sender?.email}
             size={isFocusedMailLayout ? "sm" : "md"}
             className="flex-shrink-0 shadow-sm"
             disableImages={hideJunkAvatarImages}
+            checked={isChecked}
+            onToggle={() => toggleEmailSelection(email.id)}
+            selectLabel={tBatch('select')}
           />
         )}
 
@@ -191,17 +208,18 @@ export function EmailListItem({ email, selected, onClick, onDoubleClick, onConte
                 </span>
                 <div className="flex min-w-0 flex-1 items-center gap-2 text-sm">
                   <span className={cn(
-                    'shrink-0 truncate',
+                    'min-w-0 truncate',
                     isUnread ? 'font-semibold text-foreground' : 'text-foreground/90'
                   )}>
                     {email.subject || t('no_subject')}
                   </span>
                   {inlinePreview && (
-                    <span className="min-w-0 truncate text-muted-foreground">{inlinePreview}</span>
+                    <span className="min-w-0 shrink-[9999] truncate text-muted-foreground">{inlinePreview}</span>
                   )}
                 </div>
               </div>
               <div className="flex items-center gap-2.5 shrink-0">
+                {isPinned && <Pin className="w-3.5 h-3.5 text-primary" />}
                 {isStarred && <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />}
                 {isImportant && <span className="h-2 w-2 rounded-full bg-warning" />}
                 {isAnswered && !isForwarded && <Reply className="w-3.5 h-3.5 text-muted-foreground" />}
@@ -238,6 +256,9 @@ export function EmailListItem({ email, selected, onClick, onDoubleClick, onConte
                     {sender?.name || sender?.email || "Unknown"}
                   </span>
                   <div className="flex items-center gap-1.5">
+                    {isPinned && (
+                      <Pin className="w-3.5 h-3.5 text-primary" />
+                    )}
                     {isStarred && (
                       <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
                     )}
@@ -321,6 +342,9 @@ export function EmailListItem({ email, selected, onClick, onDoubleClick, onConte
         onArchive={onArchive}
         onSetColorTag={onSetColorTag}
         onMarkAsSpam={onMarkAsSpam}
+        onUndoSpam={onUndoSpam}
+        isInJunk={currentMailboxRole === 'junk'}
+        spamApplicable={!['sent', 'drafts', 'scheduled'].includes(currentMailboxRole || '')}
       />
     </div>
   );

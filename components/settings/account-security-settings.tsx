@@ -69,7 +69,7 @@ function PasswordChangeSection() {
               onChange={(e) => setCurrentPassword(e.target.value)}
               required
               autoComplete="current-password"
-              className="pr-10"
+              className="pe-10"
             />
             <button
               type="button"
@@ -90,7 +90,7 @@ function PasswordChangeSection() {
               required
               minLength={8}
               autoComplete="new-password"
-              className="pr-10"
+              className="pe-10"
             />
             <button
               type="button"
@@ -120,7 +120,7 @@ function PasswordChangeSection() {
           size="sm"
           disabled={isSaving || !currentPassword || !newPassword || !confirmPassword}
         >
-          {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+          {isSaving ? <Loader2 className="w-4 h-4 me-2 animate-spin" /> : null}
           {t('password.submit')}
         </Button>
       </form>
@@ -294,7 +294,7 @@ function TotpSection() {
       </SettingItem>
 
       {setupUrl && (
-        <div className="ml-4 p-3 bg-muted rounded-md space-y-3">
+        <div className="ms-4 p-3 bg-muted rounded-md space-y-3">
           <p className="text-xs text-muted-foreground">{t('totp.setup_instructions')}</p>
           {qrDataUrl && (
             <div className="flex justify-center">
@@ -315,7 +315,7 @@ function TotpSection() {
           {setupError && <p className="text-xs text-destructive">{setupError}</p>}
           <div className="flex gap-2">
             <Button size="sm" onClick={confirmSetup} disabled={isSaving || !password || !otpCode}>
-              {isSaving ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : null}
+              {isSaving ? <Loader2 className="w-4 h-4 me-1 animate-spin" /> : null}
               {t('totp.confirm')}
             </Button>
             <Button size="sm" variant="ghost" onClick={cancelSetup}>{t('app_passwords.cancel')}</Button>
@@ -324,7 +324,7 @@ function TotpSection() {
       )}
 
       {disableOpen && (
-        <div className="ml-4 p-3 bg-muted rounded-md space-y-2">
+        <div className="ms-4 p-3 bg-muted rounded-md space-y-2">
           <p className="text-xs text-muted-foreground">{t('totp.disable_confirm_prompt')}</p>
           <Input
             type="password"
@@ -336,7 +336,7 @@ function TotpSection() {
           {setupError && <p className="text-xs text-destructive">{setupError}</p>}
           <div className="flex gap-2">
             <Button size="sm" variant="destructive" onClick={handleDisable} disabled={isSaving || !password}>
-              {isSaving ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : null}
+              {isSaving ? <Loader2 className="w-4 h-4 me-1 animate-spin" /> : null}
               {t('totp.disable')}
             </Button>
             <Button size="sm" variant="ghost" onClick={() => { setDisableOpen(false); setPassword(''); setSetupError(null); }}>
@@ -470,7 +470,7 @@ function CredentialSection({ icon: Icon, i18nNamespace, entries, onCreate, onRem
           <h4 className="text-sm font-medium text-foreground">{tk('title')}</h4>
         </div>
         <Button variant="outline" size="sm" onClick={() => setShowAdd(!showAdd)}>
-          <Plus className="w-3 h-3 mr-1" />
+          <Plus className="w-3 h-3 me-1" />
           {t('app_passwords.add')}
         </Button>
       </div>
@@ -521,7 +521,7 @@ function CredentialSection({ icon: Icon, i18nNamespace, entries, onCreate, onRem
           </div>
           <div className="flex gap-2">
             <Button type="submit" size="sm" disabled={isSaving || !newDescription.trim()}>
-              {isSaving ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : null}
+              {isSaving ? <Loader2 className="w-4 h-4 me-1 animate-spin" /> : null}
               {t('app_passwords.create')}
             </Button>
             <Button type="button" variant="ghost" size="sm" onClick={() => setShowAdd(false)}>
@@ -768,9 +768,9 @@ function LinkDeviceSection() {
 
       <Button variant="outline" size="sm" onClick={() => void generate()} disabled={loading}>
         {loading ? (
-          <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+          <Loader2 className="w-3 h-3 me-1 animate-spin" />
         ) : (
-          <QrCode className="w-3 h-3 mr-1" />
+          <QrCode className="w-3 h-3 me-1" />
         )}
         {hasGenerated ? t('link_device.regenerate') : t('link_device.generate')}
       </Button>

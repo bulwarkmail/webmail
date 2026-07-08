@@ -7,9 +7,9 @@
 // `event.source === iframe.contentWindow`. The iframe's runtime pins the
 // parent on the first inbound message.
 
-import type { InstalledPlugin, SlotName } from '../plugin-types';
+import type { InstalledPlugin, SlotName, PluginTier } from '../plugin-types';
 import { dispatchApiCall } from './host-api';
-import { SANDBOX_PATH } from './protocol';
+import { SANDBOX_PATH, SANDBOX_PRIVILEGED_PATH } from './protocol';
 import { withBasePath } from '../browser-navigation';
 import { snapshotHostTheme, type ThemeSnapshot } from './host-theme';
 import type {
@@ -55,6 +55,8 @@ export interface BackgroundOptions {
   plugin: InstalledPlugin;
   code: string;
   locale: string;
+  /** Resolved execution tier (from `resolvePluginTier`). */
+  tier: PluginTier;
   /** Where the hidden iframe should attach. Defaults to document.body. */
   hostContainer?: HTMLElement;
 }
@@ -64,6 +66,8 @@ export interface SlotOptions {
   slot: SlotName;
   code: string;
   locale: string;
+  /** Resolved execution tier (from `resolvePluginTier`). */
+  tier: PluginTier;
   extraProps: Record<string, unknown>;
   /** Container element the visible slot iframe is mounted into. */
   hostContainer: HTMLElement;
@@ -83,6 +87,8 @@ export class SandboxInstance {
   readonly iframe: HTMLIFrameElement;
   readonly pluginId: string;
   readonly mode: 'background' | 'slot';
+  /** True for the same-origin privileged tier; gates the origin assertion. */
+  readonly privileged: boolean;
 
   readyPromise: Promise<void>;
   initPromise: Promise<InitDoneInfo>;
@@ -106,6 +112,7 @@ export class SandboxInstance {
   ) {
     this.pluginId = plugin.id;
     this.mode = initPayload.mode;
+    this.privileged = initPayload.tier === 'privileged';
 
     // Slot iframes get `extraProps`; encode any function values now so the
     // structured-clone send doesn't drop them.
@@ -120,12 +127,15 @@ export class SandboxInstance {
     });
 
     this.iframe = document.createElement('iframe');
-    // Dev-only: Next's HMR/dev runtime refuses requests from the opaque
-    // ("null") origin a strict sandbox produces, so the iframe never
-    // hydrates and `sandbox-ready` is never posted. Add allow-same-origin
-    // in dev so the iframe shares the host's origin and HMR works.
-    // Production keeps the strict opaque-origin sandbox.
-    const sandboxFlags = process.env.NODE_ENV === 'development'
+    // Privileged tier: same-origin in BOTH dev and prod so the iframe gets real
+    // `crypto.subtle` + IndexedDB and can run its own bundled crypto libs. The
+    // postMessage RPC membrane still applies; the trust gate is enforced
+    // host-side (signature + admin approval) BEFORE this instance is created.
+    // Untrusted tier: null-origin in prod; dev adds allow-same-origin only
+    // because Next's HMR/dev runtime refuses requests from the opaque ("null")
+    // origin a strict sandbox produces (the iframe would never hydrate and
+    // `sandbox-ready` would never post).
+    const sandboxFlags = this.privileged || process.env.NODE_ENV === 'development'
       ? 'allow-scripts allow-same-origin'
       : 'allow-scripts';
     this.iframe.setAttribute('sandbox', sandboxFlags);
@@ -148,7 +158,9 @@ export class SandboxInstance {
     // Prefix with the mount path so the sandbox route resolves under a
     // subpath deployment (NEXT_PUBLIC_BASE_PATH=/webmail). A bare
     // "/plugin-sandbox" would hit the origin root and 404, breaking plugins.
-    this.iframe.src = withBasePath(SANDBOX_PATH);
+    // Privileged plugins load the same-origin route so the CSP/allow-same-origin
+    // pairing is consistent.
+    this.iframe.src = withBasePath(this.privileged ? SANDBOX_PRIVILEGED_PATH : SANDBOX_PATH);
 
     this.listener = (ev) => this.onMessage(ev);
     window.addEventListener('message', this.listener);
@@ -174,6 +186,11 @@ export class SandboxInstance {
   private onMessage(ev: MessageEvent): void {
     if (this.destroyed) return;
     if (ev.source !== this.iframe.contentWindow) return;
+    // Privileged iframes are same-origin, so we can additionally pin the origin
+    // (defence-in-depth on top of the contentWindow check). Untrusted iframes
+    // are null-origin (event.origin === "null") in prod and can't be pinned
+    // this way, so the contentWindow check above is the sole gate for them.
+    if (this.privileged && ev.origin !== window.location.origin) return;
     const msg = ev.data as SandboxToHost;
     if (!msg || typeof (msg as { type?: unknown }).type !== 'string') return;
 
@@ -194,7 +211,7 @@ export class SandboxInstance {
         const { id, method, args } = msg;
         void (async () => {
           try {
-            const result = await dispatchApiCall(this.plugin, method, args ?? []);
+            const result = await dispatchApiCall(this.plugin, method, args ?? [], { privileged: this.privileged });
             this.send({ type: 'api-response', id, ok: true, result });
           } catch (err) {
             this.send({ type: 'api-response', id, ok: false, error: (err as Error).message ?? String(err) });
@@ -318,6 +335,7 @@ export function createBackgroundInstance(opts: BackgroundOptions): SandboxInstan
   const payload: InitPayload = {
     mode: 'background',
     pluginId: opts.plugin.id,
+    tier: opts.tier,
     manifest: {
       id: opts.plugin.id,
       version: opts.plugin.version,
@@ -341,6 +359,7 @@ export function createSlotInstance(opts: SlotOptions): SandboxInstance {
   const payload: InitPayload = {
     mode: 'slot',
     pluginId: opts.plugin.id,
+    tier: opts.tier,
     slot: opts.slot,
     code: opts.code,
     manifest: {

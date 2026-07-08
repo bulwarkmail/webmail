@@ -100,7 +100,7 @@ export function SieveEditorModal({
 
           <div className="flex-1 min-h-0 flex border border-border rounded-md overflow-hidden">
             <div
-              className="w-10 flex-shrink-0 bg-muted border-r border-border py-2 text-right pr-2 select-none overflow-hidden"
+              className="w-10 flex-shrink-0 bg-muted border-e border-border py-2 text-end pe-2 select-none overflow-hidden"
               aria-hidden="true"
             >
               {Array.from({ length: lineCount }, (_, i) => (
@@ -172,7 +172,7 @@ export function SieveEditorModal({
           >
             {isValidating ? (
               <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                <Loader2 className="w-4 h-4 me-2 animate-spin" />
                 {t("validating")}
               </>
             ) : (

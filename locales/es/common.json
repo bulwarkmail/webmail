@@ -134,7 +134,10 @@
     "nav_label": "Navegación",
     "add_app": "Apps",
     "shared": "Compartido",
-    "scheduled": "Programados"
+    "scheduled": "Programados",
+    "unified_all_unread": "Todo no leído",
+    "unified_all_starred": "Todo destacado",
+    "unified_all_mail": "Todo el correo"
   },
   "protocol_handlers": {
     "title": "Aplicaciones predeterminadas",
@@ -562,7 +565,8 @@
       "add_to_contacts": "Añadir a contactos",
       "copied": "¡Copiado!",
       "copy_failed": "Error al copiar"
-    }
+    },
+    "send_now": "Enviar ahora"
   },
   "email_composer": {
     "read_receipt_on": "Confirmación de lectura solicitada (haz clic para desactivar)",
@@ -628,7 +632,9 @@
     "validation": {
       "recipient_required": "Agregue un destinatario para enviar",
       "subject_required": "Agregue un asunto",
-      "body_required": "Escriba un mensaje o adjunte un archivo"
+      "body_required": "Escriba un mensaje o adjunte un archivo",
+      "attachments_uploading": "Los archivos adjuntos aún se están subiendo; se enviará en cuanto terminen",
+      "attachment_upload_failed": "No enviado: no se pudo subir un adjunto. Elimínalo e inténtalo de nuevo."
     },
     "upload_progress": "Subiendo {uploaded} / {total}",
     "upload_cancel": "Cancelar subida",
@@ -671,7 +677,9 @@
     "recipient_edit_email": "Editar dirección de correo",
     "recipient_edit_name": "Editar nombre para mostrar",
     "recipient_email_placeholder": "Dirección de correo",
-    "recipient_name_placeholder": "Nombre para mostrar"
+    "recipient_name_placeholder": "Nombre para mostrar",
+    "autocomplete_search_server": "Buscar en el servidor",
+    "autocomplete_searching": "Buscando..."
   },
   "confirm_dialog": {
     "confirm": "Confirmar",
@@ -800,8 +808,12 @@
     "pl": "Polski",
     "pt": "Português",
     "ru": "Русский",
+    "sk": "Slovenčina",
     "uk": "Українська",
-    "zh": "简体中文"
+    "zh": "简体中文",
+    "fa": "فارسی",
+    "farsi": "فارسی",
+    "switch_to_farsi": "Cambiar a farsi"
   },
   "settings": {
     "title": "Configuración",
@@ -919,17 +931,38 @@
         "description": "Show an \"All Mail\" entry above your folders that merges messages from across this account's folders into one list.",
         "folders_label": "Folders in All Mail",
         "folders_description": "Choose which folders are merged into the All Mail view.",
+        "account_hint": "Applies to {account}.",
         "no_folders": "No folders available."
       },
       "colorful_sidebar_icons": {
         "label": "Iconos de barra lateral a color",
         "description": "Colorea los iconos de carpetas y etiquetas según su tipo (azul para Bandeja de entrada, rojo para Spam, verde para Enviados, etc.). Desactívalo para una barra lateral monocroma."
       },
+      "tint_list_rows": {
+        "label": "Tint List Rows by Tag Color",
+        "description": "Shade each message row with its first tag color. Disable to keep rows plain; tag dots and chips still show the color."
+      },
+      "show_folder_total_count": {
+        "label": "Mostrar el número total de mensajes",
+        "description": "Muestra el número total de mensajes junto a las carpetas y etiquetas, además del número de mensajes no leídos. Desactívalo para mostrar solo los no leídos."
+      },
       "pro_interface": {
         "label": "Interfaz Pro (experimental)",
         "description": "Diseño de escritorio para usuarios avanzados con exploración de mensajes en varias pestañas y flujos de trabajo entre cuentas. La interfaz estándar no se ve afectada; puedes volver en cualquier momento.",
         "open_label": "Abrir interfaz Pro",
         "back_to_standard": "Volver al estándar"
+      },
+      "cross_unread": {
+        "label": "Todas las cuentas: No leído",
+        "description": "Muestra una entrada en la sección Todas las cuentas con el correo no leído de todas las cuentas, abarcando todas las carpetas excepto spam, enviados, archivo, papelera y borradores."
+      },
+      "cross_starred": {
+        "label": "Todas las cuentas: Destacado",
+        "description": "Muestra una entrada en la sección Todas las cuentas con el correo destacado de todas las cuentas, abarcando todas las carpetas excepto spam, enviados, archivo, papelera y borradores."
+      },
+      "cross_all": {
+        "label": "Todas las cuentas: Todo el correo",
+        "description": "Muestra una entrada en la sección Todas las cuentas con todo el correo de todas las cuentas, abarcando todas las carpetas excepto spam, enviados, archivo, papelera y borradores."
       }
     },
     "keywords": {
@@ -1022,6 +1055,14 @@
         "preview_today": "Hoy:",
         "preview_this_week": "Esta semana:",
         "preview_older": "Más antiguo:"
+      },
+      "date_locale": {
+        "label": "Date format region",
+        "description": "How numeric dates are ordered (day, month, year)",
+        "auto": "Automatic (match language)",
+        "iso": "ISO 8601 (YYYY-MM-DD)",
+        "dmy": "Day/Month/Year",
+        "mdy": "Month/Day/Year"
       },
       "time_format": {
         "label": "Formato de Hora",
@@ -1186,6 +1227,7 @@
         "archive": "Archivar",
         "tag": "Etiqueta",
         "spam": "Marcar como spam",
+        "not_spam": "No es spam",
         "none_selected": "No hay acciones seleccionadas",
         "mode_label": "Modo de visualización",
         "mode_inline": "En línea",
@@ -1226,6 +1268,10 @@
         "off": "Desactivado",
         "seconds": "{seconds} segundos",
         "unsupported": "La cuenta actual no anuncia compatibilidad con envío demorado. La opción seguirá guardada para otras cuentas."
+      },
+      "return_to_list_after_action": {
+        "label": "Volver a la lista tras eliminar o marcar como no leído",
+        "description": "Después de eliminar o marcar como no leído el mensaje abierto, volver a la lista de mensajes en lugar de abrir el mensaje siguiente."
       }
     },
     "composer": {
@@ -1913,6 +1959,8 @@
     "mark_unread": "Marcar como No Leído",
     "star": "Destacar",
     "unstar": "Quitar Destacado",
+    "pin": "Anclar",
+    "unpin": "Desanclar",
     "move_to": "Mover a...",
     "archive": "Archivar",
     "delete": "Eliminar",
@@ -2147,6 +2195,9 @@
       "title": "Compartidos"
     },
     "address_books": {
+      "create": "Nueva libreta de direcciones",
+      "created": "Libreta de direcciones creada",
+      "create_failed": "No se pudo crear la libreta de direcciones",
       "title": "Mis Libretas de Direcciones",
       "shared_prefix": "Compartido: {name}",
       "moved": "Contacto movido a {name}",

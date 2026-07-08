@@ -139,7 +139,7 @@ function ThemeCard({ name, author, preview, css, isDark, isDefaultTheme, isActiv
         onClick={onActivate}
         disabled={disabled}
         className={cn(
-          'flex flex-col items-center p-3 rounded-xl border-2 transition-all text-left w-full disabled:cursor-not-allowed disabled:opacity-60',
+          'flex flex-col items-center p-3 rounded-xl border-2 transition-all text-start w-full disabled:cursor-not-allowed disabled:opacity-60',
           isActive
             ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
             : 'border-border hover:border-primary/40 bg-card',

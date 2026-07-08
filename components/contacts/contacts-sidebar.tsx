@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useCallback, useEffect, useRef, type DragEvent } from "react";
 import { useTranslations } from "next-intl";
-import { BookUser, User, Users, Plus, Share2, Book, ChevronRight, ChevronDown, UserPlus, UsersRound, Upload, Tag, Pencil, Trash2, Settings, Mail } from "lucide-react";
+import { BookUser, User, Users, Plus, Share2, Book, BookPlus, ChevronRight, ChevronDown, UserPlus, UsersRound, Upload, Tag, Pencil, Trash2, Settings, Mail } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ContextMenu, ContextMenuItem, ContextMenuSeparator, ContextMenuSubMenu } from "@/components/ui/context-menu";
@@ -22,6 +22,7 @@ interface ContactsSidebarProps {
   onSelectCategory: (category: ContactCategory) => void;
   onCreateGroup: () => void;
   onCreateContact: () => void;
+  onCreateAddressBook?: () => void;
   onImport?: () => void;
   onEditGroup?: (groupId: string) => void;
   onDeleteGroup?: (groupId: string) => void;
@@ -91,6 +92,7 @@ export function ContactsSidebar({
   onSelectCategory,
   onCreateGroup,
   onCreateContact,
+  onCreateAddressBook,
   onImport,
   onEditGroup,
   onDeleteGroup,
@@ -285,22 +287,31 @@ export function ContactsSidebar({
               className="absolute right-0 top-full mt-1 w-44 rounded-md border border-border bg-background text-foreground shadow-md z-50 py-1"
             >
               <button
-                className="w-full flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-accent transition-colors text-left"
+                className="w-full flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-accent transition-colors text-start"
                 onClick={() => { setShowMenu(false); onCreateContact(); }}
               >
                 <UserPlus className="w-4 h-4" />
                 {t("create_new")}
               </button>
               <button
-                className="w-full flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-accent transition-colors text-left"
+                className="w-full flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-accent transition-colors text-start"
                 onClick={() => { setShowMenu(false); onCreateGroup(); }}
               >
                 <UsersRound className="w-4 h-4" />
                 {t("groups.create")}
               </button>
+              {onCreateAddressBook && (
+                <button
+                  className="w-full flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-accent transition-colors text-start"
+                  onClick={() => { setShowMenu(false); onCreateAddressBook(); }}
+                >
+                  <BookPlus className="w-4 h-4" />
+                  {t("address_books.create")}
+                </button>
+              )}
               {onImport && (
                 <button
-                  className="w-full flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-accent transition-colors text-left"
+                  className="w-full flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-accent transition-colors text-start"
                   onClick={() => { setShowMenu(false); onImport(); }}
                 >
                   <Upload className="w-4 h-4" />
@@ -327,7 +338,7 @@ export function ContactsSidebar({
         >
           <BookUser className="w-4 h-4 flex-shrink-0" />
           <span className="truncate">{t("tabs.all")}</span>
-          <span className="ml-auto text-xs text-muted-foreground tabular-nums">
+          <span className="ms-auto text-xs text-muted-foreground tabular-nums">
             {individuals.length}
           </span>
         </button>
@@ -344,7 +355,7 @@ export function ContactsSidebar({
                 <div className="flex items-center px-3 py-1 group">
                   <button
                     onClick={() => toggleSection(sectionKey)}
-                    className="flex items-center gap-1 flex-1 min-w-0 text-left"
+                    className="flex items-center gap-1 flex-1 min-w-0 text-start"
                   >
                     {expanded ? (
                       <ChevronDown className="w-3 h-3 text-muted-foreground" />
@@ -358,7 +369,7 @@ export function ContactsSidebar({
                   </button>
                 </div>
                 {expanded && (
-                  <div className="pl-2">
+                  <div className="ps-2">
                     {owned.length > 0 && (
                       <div className="mt-1">
                         <div className="px-3 py-0.5 text-[10px] font-medium text-muted-foreground/80 uppercase tracking-wider">
@@ -407,7 +418,7 @@ export function ContactsSidebar({
               <div className="flex items-center px-3 py-1 group">
                 <button
                   onClick={() => toggleSection("addressBooks")}
-                  className="flex items-center gap-1 flex-1 text-left"
+                  className="flex items-center gap-1 flex-1 text-start"
                 >
                   {collapsed.addressBooks ? (
                     <ChevronRight className="w-3 h-3 text-muted-foreground" />
@@ -450,7 +461,7 @@ export function ContactsSidebar({
           <div className="mt-2">
             <button
               onClick={() => toggleSection("groups")}
-              className="flex items-center gap-1 px-3 py-1 w-full text-left group"
+              className="flex items-center gap-1 px-3 py-1 w-full text-start group"
             >
               {collapsed.groups ? (
                 <ChevronRight className="w-3 h-3 text-muted-foreground" />
@@ -472,7 +483,7 @@ export function ContactsSidebar({
                   onClick={() => onSelectCategory({ groupId: group.id })}
                   onContextMenu={(e) => openGroupContextMenu(e, group)}
                   className={cn(
-                    "w-full flex items-center gap-2 pl-5 pr-3 text-sm transition-colors",
+                    "w-full flex items-center gap-2 ps-5 pe-3 text-sm transition-colors",
                     isActive
                       ? "bg-accent text-accent-foreground font-medium"
                       : "text-foreground/80 hover:bg-muted"
@@ -481,7 +492,7 @@ export function ContactsSidebar({
                 >
                   <Users className="w-4 h-4 flex-shrink-0" />
                   <span className="truncate">{getContactDisplayName(group)}</span>
-                  <span className="ml-auto text-xs text-muted-foreground tabular-nums">
+                  <span className="ms-auto text-xs text-muted-foreground tabular-nums">
                     {memberCount}
                   </span>
                 </button>
@@ -494,7 +505,7 @@ export function ContactsSidebar({
         <div className="mt-2">
           <button
             onClick={() => toggleSection("categories")}
-            className="flex items-center gap-1 px-3 py-1 w-full text-left group"
+            className="flex items-center gap-1 px-3 py-1 w-full text-start group"
           >
             {collapsed.categories ? (
               <ChevronRight className="w-3 h-3 text-muted-foreground" />
@@ -512,7 +523,7 @@ export function ContactsSidebar({
               <button
                 onClick={() => onSelectCategory("uncategorized")}
                 className={cn(
-                  "w-full flex items-center gap-2 pl-5 pr-3 text-sm transition-colors",
+                  "w-full flex items-center gap-2 ps-5 pe-3 text-sm transition-colors",
                   activeCategory === "uncategorized"
                     ? "bg-accent text-accent-foreground font-medium"
                     : "text-foreground/80 hover:bg-muted"
@@ -521,7 +532,7 @@ export function ContactsSidebar({
               >
                 <Tag className="w-3.5 h-3.5 flex-shrink-0 opacity-50" />
                 <span className="truncate italic">{t("no_category")}</span>
-                <span className="ml-auto text-xs text-muted-foreground tabular-nums">
+                <span className="ms-auto text-xs text-muted-foreground tabular-nums">
                   {uncategorizedCount}
                 </span>
               </button>
@@ -550,7 +561,7 @@ export function ContactsSidebar({
             <div className="flex items-center px-3 py-1 group">
               <button
                 onClick={() => toggleSection(`shared-${group.accountId}`)}
-                className="flex items-center gap-1 flex-1 min-w-0 text-left"
+                className="flex items-center gap-1 flex-1 min-w-0 text-start"
               >
                 {collapsed[`shared-${group.accountId}`] ? (
                   <ChevronRight className="w-3 h-3 text-muted-foreground" />
@@ -768,7 +779,7 @@ function CategoryItem({
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       className={cn(
-        "w-full flex items-center gap-2 pl-5 pr-3 text-sm transition-colors",
+        "w-full flex items-center gap-2 ps-5 pe-3 text-sm transition-colors",
         isActive
           ? "bg-accent text-accent-foreground font-medium"
           : "text-foreground/80 hover:bg-muted",
@@ -778,7 +789,7 @@ function CategoryItem({
     >
       <Tag className="w-3.5 h-3.5 flex-shrink-0" />
       <span className="truncate">{keyword}</span>
-      <span className="ml-auto text-xs text-muted-foreground tabular-nums">
+      <span className="ms-auto text-xs text-muted-foreground tabular-nums">
         {count}
       </span>
     </button>
@@ -836,7 +847,7 @@ function AddressBookItem({
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       className={cn(
-        "w-full flex items-center gap-2 pl-5 pr-3 text-sm transition-colors",
+        "w-full flex items-center gap-2 ps-5 pe-3 text-sm transition-colors",
         isActive
           ? "bg-accent text-accent-foreground font-medium"
           : "text-foreground/80 hover:bg-muted",
@@ -847,11 +858,11 @@ function AddressBookItem({
       <Book className="w-4 h-4 flex-shrink-0" />
       <span className="truncate">{book.name}</span>
       {!book.isShared && Object.keys(book.shareWith || {}).length > 0 && (
-        <Users className="w-3 h-3 text-muted-foreground flex-shrink-0 ml-auto" />
+        <Users className="w-3 h-3 text-muted-foreground flex-shrink-0 ms-auto" />
       )}
       <span className={cn(
         "text-xs text-muted-foreground tabular-nums",
-        !(!book.isShared && Object.keys(book.shareWith || {}).length > 0) && "ml-auto"
+        !(!book.isShared && Object.keys(book.shareWith || {}).length > 0) && "ms-auto"
       )}>
         {contactCount}
       </span>

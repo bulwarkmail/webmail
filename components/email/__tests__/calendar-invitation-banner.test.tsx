@@ -540,7 +540,9 @@ describe('CalendarInvitationBanner', () => {
         mocks.clientMock,
         'event-8',
         expect.objectContaining({
-          replyTo: { imip: 'mailto:organizer@example.com' },
+          // The stored event lacks an ORGANIZER, so the RSVP repair writes
+          // organizerCalendarAddress (replyTo is retired in jscalendarbis).
+          organizerCalendarAddress: 'mailto:organizer@example.com',
           participants: expect.objectContaining({
             attendee: expect.objectContaining({
               participationStatus: 'accepted',

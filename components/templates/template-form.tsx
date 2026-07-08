@@ -142,7 +142,7 @@ export function TemplateForm({ template, initialData, onSave, onCancel }: Templa
               className="h-6 px-2 text-xs"
               onClick={() => setShowPlaceholderMenu(showPlaceholderMenu === 'subject' ? null : 'subject')}
             >
-              <Plus className="w-3 h-3 mr-1" />
+              <Plus className="w-3 h-3 me-1" />
               {t('placeholder')}
             </Button>
             {showPlaceholderMenu === 'subject' && (
@@ -172,7 +172,7 @@ export function TemplateForm({ template, initialData, onSave, onCancel }: Templa
               className="h-6 px-2 text-xs"
               onClick={() => setShowPlaceholderMenu(showPlaceholderMenu === 'body' ? null : 'body')}
             >
-              <Plus className="w-3 h-3 mr-1" />
+              <Plus className="w-3 h-3 me-1" />
               {t('placeholder')}
             </Button>
             {showPlaceholderMenu === 'body' && (
@@ -281,11 +281,11 @@ function PlaceholderDropdown({
             <button
               key={p}
               type="button"
-              className="w-full text-left px-3 py-1.5 text-sm rounded hover:bg-muted transition-colors"
+              className="w-full text-start px-3 py-1.5 text-sm rounded hover:bg-muted transition-colors"
               onClick={() => onSelect(p)}
             >
               <span className="font-mono text-xs text-primary">{`{{${p}}}`}</span>
-              <span className="ml-2 text-muted-foreground">{t(`placeholders.${p}`)}</span>
+              <span className="ms-2 text-muted-foreground">{t(`placeholders.${p}`)}</span>
             </button>
           ))}
         </div>

@@ -55,6 +55,29 @@ function isInputFocused(): boolean {
   return isInput || isContentEditable;
 }
 
+// Shortcuts must fire regardless of the active keyboard layout (e.g. Cyrillic,
+// Greek). Derive the key from the PHYSICAL key (event.code) instead of the
+// layout-dependent event.key: letters from KeyA..KeyZ, and the symbol shortcuts
+// (/, ?, #, !) from their US-QWERTY positions so they stay reachable on non-Latin
+// layouts. Arrows/Enter/Escape keep event.key, which is already layout-neutral.
+function physicalShortcutKey(event: KeyboardEvent): string {
+  const code = event.code;
+  if (code && code.length === 4 && code.startsWith("Key")) {
+    return code.charAt(3).toLowerCase();
+  }
+  switch (code) {
+    case "Slash":
+      return event.shiftKey ? "?" : "/";
+    case "Digit1":
+      if (event.shiftKey) return "!";
+      break;
+    case "Digit3":
+      if (event.shiftKey) return "#";
+      break;
+  }
+  return event.key.toLowerCase();
+}
+
 export function useKeyboardShortcuts({
   enabled = true,
   emails,
@@ -75,7 +98,7 @@ export function useKeyboardShortcuts({
       if (isInputFocused()) return;
 
       const h = handlersRef.current;
-      const key = event.key.toLowerCase();
+      const key = physicalShortcutKey(event);
       const hasModifier = event.ctrlKey || event.metaKey || event.altKey;
 
       // Shortcuts that work with modifiers

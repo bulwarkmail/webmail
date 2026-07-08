@@ -134,7 +134,10 @@
     "nav_label": "Navigation",
     "add_app": "Apps",
     "shared": "Partagé",
-    "scheduled": "Planifiés"
+    "scheduled": "Planifiés",
+    "unified_all_unread": "Tous les non lus",
+    "unified_all_starred": "Tous les favoris",
+    "unified_all_mail": "Tout le courrier"
   },
   "protocol_handlers": {
     "title": "Applications par défaut",
@@ -562,7 +565,8 @@
       "add_to_contacts": "Ajouter aux contacts",
       "copied": "Copié !",
       "copy_failed": "Échec de la copie"
-    }
+    },
+    "send_now": "Envoyer maintenant"
   },
   "email_composer": {
     "read_receipt_on": "Accusé de lecture demandé (cliquez pour désactiver)",
@@ -628,7 +632,9 @@
     "validation": {
       "recipient_required": "Ajoutez un destinataire pour envoyer",
       "subject_required": "Ajoutez un objet",
-      "body_required": "Rédigez un message ou joignez un fichier"
+      "body_required": "Rédigez un message ou joignez un fichier",
+      "attachments_uploading": "Les pièces jointes sont en cours d'envoi — le message partira une fois terminé",
+      "attachment_upload_failed": "Non envoyé - le téléversement d'une pièce jointe a échoué. Supprimez-la et réessayez."
     },
     "upload_progress": "Envoi {uploaded} / {total}",
     "upload_cancel": "Annuler l'envoi",
@@ -671,7 +677,9 @@
     "recipient_edit_email": "Modifier l'adresse e-mail",
     "recipient_edit_name": "Modifier le nom d'affichage",
     "recipient_email_placeholder": "Adresse e-mail",
-    "recipient_name_placeholder": "Nom d'affichage"
+    "recipient_name_placeholder": "Nom d'affichage",
+    "autocomplete_search_server": "Rechercher sur le serveur",
+    "autocomplete_searching": "Recherche en cours..."
   },
   "confirm_dialog": {
     "confirm": "Confirmer",
@@ -800,8 +808,12 @@
     "pl": "Polski",
     "pt": "Português",
     "ru": "Русский",
+    "sk": "Slovenčina",
     "uk": "Українська",
-    "zh": "简体中文"
+    "zh": "简体中文",
+    "fa": "فارسی",
+    "farsi": "فارسی",
+    "switch_to_farsi": "Passer au persan"
   },
   "settings": {
     "title": "Paramètres",
@@ -919,17 +931,38 @@
         "description": "Show an \"All Mail\" entry above your folders that merges messages from across this account's folders into one list.",
         "folders_label": "Folders in All Mail",
         "folders_description": "Choose which folders are merged into the All Mail view.",
+        "account_hint": "Applies to {account}.",
         "no_folders": "No folders available."
       },
       "colorful_sidebar_icons": {
         "label": "Icônes colorées dans la barre latérale",
         "description": "Colore les icônes de dossiers et d'étiquettes par type (Boîte de réception en bleu, Indésirable en rouge, Envoyés en vert, etc.). Désactivez pour une barre latérale monochrome."
       },
+      "tint_list_rows": {
+        "label": "Tint List Rows by Tag Color",
+        "description": "Shade each message row with its first tag color. Disable to keep rows plain; tag dots and chips still show the color."
+      },
+      "show_folder_total_count": {
+        "label": "Afficher le nombre total de messages",
+        "description": "Affiche le nombre total de messages à côté des dossiers et des étiquettes, en plus du nombre de messages non lus. Désactivez pour n'afficher que les messages non lus."
+      },
       "pro_interface": {
         "label": "Interface Pro (expérimental)",
         "description": "Disposition pour utilisateurs avancés (bureau uniquement) avec navigation des messages multi-onglets et flux de travail multi-comptes. L'interface standard n'est pas affectée ; vous pouvez revenir à tout moment.",
         "open_label": "Ouvrir l'interface Pro",
         "back_to_standard": "Retour au standard"
+      },
+      "cross_unread": {
+        "label": "Tous les comptes : Non lus",
+        "description": "Affiche une entrée dans la section Tous les comptes répertoriant les messages non lus de tous les comptes, couvrant tous les dossiers sauf indésirables, envoyés, archives, corbeille et brouillons."
+      },
+      "cross_starred": {
+        "label": "Tous les comptes : Favoris",
+        "description": "Affiche une entrée dans la section Tous les comptes répertoriant les messages favoris de tous les comptes, couvrant tous les dossiers sauf indésirables, envoyés, archives, corbeille et brouillons."
+      },
+      "cross_all": {
+        "label": "Tous les comptes : Tout le courrier",
+        "description": "Affiche une entrée dans la section Tous les comptes répertoriant tout le courrier de tous les comptes, couvrant tous les dossiers sauf indésirables, envoyés, archives, corbeille et brouillons."
       }
     },
     "keywords": {
@@ -1022,6 +1055,14 @@
         "preview_today": "Aujourd'hui :",
         "preview_this_week": "Cette semaine :",
         "preview_older": "Plus ancien :"
+      },
+      "date_locale": {
+        "label": "Date format region",
+        "description": "How numeric dates are ordered (day, month, year)",
+        "auto": "Automatic (match language)",
+        "iso": "ISO 8601 (YYYY-MM-DD)",
+        "dmy": "Day/Month/Year",
+        "mdy": "Month/Day/Year"
       },
       "time_format": {
         "label": "Format d'heure",
@@ -1186,6 +1227,7 @@
         "archive": "Archiver",
         "tag": "Étiquette",
         "spam": "Marquer comme spam",
+        "not_spam": "Non indésirable",
         "none_selected": "Aucune action sélectionnée",
         "mode_label": "Mode d'affichage",
         "mode_inline": "En ligne",
@@ -1226,6 +1268,10 @@
         "off": "Désactivé",
         "seconds": "{seconds} secondes",
         "unsupported": "Le compte actuel n’annonce pas la prise en charge de l’envoi différé. Le réglage reste enregistré pour d’autres comptes."
+      },
+      "return_to_list_after_action": {
+        "label": "Revenir à la liste après suppression ou marquage comme non lu",
+        "description": "Après avoir supprimé ou marqué comme non lu le message ouvert, revenir à la liste des messages au lieu d'ouvrir le message suivant."
       }
     },
     "composer": {
@@ -1913,6 +1959,8 @@
     "mark_unread": "Marquer comme non lu",
     "star": "Marquer comme favori",
     "unstar": "Retirer des favoris",
+    "pin": "Épingler",
+    "unpin": "Désépingler",
     "move_to": "Déplacer vers...",
     "archive": "Archiver",
     "delete": "Supprimer",
@@ -2147,6 +2195,9 @@
       "title": "Partagés"
     },
     "address_books": {
+      "create": "Nouveau carnet d'adresses",
+      "created": "Carnet d'adresses créé",
+      "create_failed": "Échec de la création du carnet d'adresses",
       "title": "Mes Carnets d'adresses",
       "shared_prefix": "Partagé : {name}",
       "moved": "Contact déplacé vers {name}",

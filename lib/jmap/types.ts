@@ -58,9 +58,27 @@ export interface Email {
   // S/MIME support
   blobId?: string;
   bodyStructure?: EmailBodyPart;
-  // Unified mailbox support - set when displaying emails from multiple accounts
+  // Unified mailbox support - set when displaying emails from multiple accounts.
+  // `accountId` is a DISPLAY-only reference (avatar color / label / badge) and may
+  // hold either an AccountEntry.id (personal) or the JMAP owner id (shared). For
+  // resolving the client + JMAP routing use the two dedicated fields below, which
+  // are always set on aggregated emails and unambiguous.
   accountId?: string;
   accountLabel?: string;
+  // AccountEntry.id of the logged-in client through which this email is reachable.
+  // Always a real login key → `useAuthStore.getClientForAccount(...)` resolves it.
+  // For personal sources this equals the account itself; for shared/group sources
+  // it is the delegating login (the shared account has no own login).
+  sourceClientAccountId?: string;
+  // JMAP account id of the email's owning account (personal: the client's primary;
+  // shared/group: the owner account). Always safe to pass as the JMAP `accountId`
+  // argument — equal to the client's primary for personal sources, so it is a no-op
+  // there, and triggers owner-scoped routing + mailbox-id namespacing for shared.
+  sourceAccountId?: string;
+  // Name of the email's originating folder, stamped for the aggregate "All …"
+  // views (All Mail, unified, cross-account) so the list can show where each
+  // message lives. Transient/client-only, not part of the JMAP object.
+  sourceFolder?: string;
   // Client-only scheduled-send metadata, populated from EmailSubmission/query.
   scheduledSendAt?: string;
   emailSubmissionId?: string;
@@ -199,6 +217,7 @@ export interface ThreadGroup {
   participantNames: string[];// Unique participant names
   hasUnread: boolean;        // Any unread emails in thread
   hasStarred: boolean;       // Any starred emails in thread
+  hasPinned: boolean;        // Any pinned emails in thread ($pinned keyword)
   hasAttachment: boolean;    // Any email has attachment
   hasAnswered: boolean;      // Any email has been replied to
   hasForwarded: boolean;     // Any email has been forwarded
@@ -879,3 +898,38 @@ export function isUnifiedMailboxId(id: string): boolean {
  * included is a per-user setting (see `allMailFolderIds`).
  */
 export const ALL_MAIL_MAILBOX_ID = '__all_mail__';
+
+/**
+ * Cross-account "All …" views shown in the unified ("All accounts") section.
+ * Each merges messages across EVERY account (including shared/group folders),
+ * spanning all folders except junk/spam, sent, archive, trash and drafts, in
+ * one date-sorted list. Distinct from the per-role unified ids (one role across
+ * accounts) and from ALL_MAIL_MAILBOX_ID (all folders of a single account).
+ */
+export const CROSS_UNREAD = '__cross_unread__';
+export const CROSS_STARRED = '__cross_starred__';
+export const CROSS_ALL = '__cross_all__';
+
+export type CrossView = 'unread' | 'starred' | 'all';
+
+export const CROSS_VIEW_IDS: Record<CrossView, string> = {
+  unread: CROSS_UNREAD,
+  starred: CROSS_STARRED,
+  all: CROSS_ALL,
+};
+
+export const CROSS_VIEW_BY_ID: Record<string, CrossView> = Object.fromEntries(
+  Object.entries(CROSS_VIEW_IDS).map(([view, id]) => [id, view as CrossView])
+) as Record<string, CrossView>;
+
+export function isCrossViewId(id: string): boolean {
+  return id in CROSS_VIEW_BY_ID;
+}
+
+/**
+ * Mailbox roles excluded from the cross-account views. Everything else (inbox
+ * and custom/no-role folders) is included.
+ */
+export const CROSS_EXCLUDED_ROLES: ReadonlySet<string> = new Set([
+  'junk', 'sent', 'archive', 'trash', 'drafts',
+]);

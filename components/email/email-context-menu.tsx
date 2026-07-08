@@ -17,6 +17,8 @@ import {
   Mail,
   MailOpen,
   Star,
+  Pin,
+  PinOff,
   Trash2,
   Archive,
   FolderInput,
@@ -34,6 +36,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { cn, buildMailboxTree, MailboxNode } from "@/lib/utils";
+import { localizeMailboxName } from "@/lib/mailbox-label";
 import { useSettingsStore, KEYWORD_PALETTE } from "@/stores/settings-store";
 
 interface Position {
@@ -58,6 +61,7 @@ interface EmailContextMenuProps {
   onForward?: () => void;
   onMarkAsRead?: (read: boolean) => void;
   onToggleStar?: () => void;
+  onTogglePinned?: () => void;
   onDelete?: () => void;
   onArchive?: () => void;
   onSetColorTag?: (color: string | null) => void;
@@ -125,6 +129,7 @@ export function EmailContextMenu({
   onForward,
   onMarkAsRead,
   onToggleStar,
+  onTogglePinned,
   onDelete,
   onArchive,
   onSetColorTag,
@@ -143,14 +148,19 @@ export function EmailContextMenu({
   onRescheduleScheduled,
 }: EmailContextMenuProps) {
   const t = useTranslations("context_menu");
+  const tSidebar = useTranslations("sidebar");
   const _tColor = useTranslations("email_viewer.color_tag");
   const emailKeywords = useSettingsStore((state) => state.emailKeywords);
   const isUnread = !email.keywords?.$seen;
   const isStarred = email.keywords?.$flagged;
+  const isPinned = email.keywords?.['$pinned'] === true;
   const isDraft = email.keywords?.['$draft'] === true;
   const currentColors = getCurrentColors(email.keywords);
   const showBatchActions = isMultiSelect && selectedCount > 1;
   const isInJunkFolder = currentMailboxRole === 'junk';
+  // Marking your own outgoing mail as spam makes no sense - hide the action
+  // in Sent, Drafts and Scheduled.
+  const spamApplicable = !['sent', 'drafts', 'scheduled'].includes(currentMailboxRole || '');
   const isScheduled = email.isScheduled === true;
   const canCancelScheduled = isScheduled && email.scheduledUndoStatus === 'pending';
 
@@ -302,12 +312,13 @@ export function EmailContextMenu({
               return nodes.map((node) => {
                 const Icon = getMailboxIcon(node.role);
                 const isTarget = moveTargetIds.has(node.id);
+                const nodeLabel = localizeMailboxName(node.role, node.name, (k) => tSidebar(`mailboxes.${k}`));
                 return (
                   <div key={node.id}>
                     {isTarget ? (
                       <ContextMenuItem
                         icon={Icon}
-                        label={node.name}
+                        label={nodeLabel}
                         onClick={() =>
                           handleAction(() =>
                             showBatchActions
@@ -319,11 +330,11 @@ export function EmailContextMenu({
                     ) : (
                       <div className="px-3 py-1.5 text-sm flex items-center gap-2 text-muted-foreground">
                         <Icon className="w-4 h-4 flex-shrink-0" />
-                        <span>{node.name}</span>
+                        <span>{nodeLabel}</span>
                       </div>
                     )}
                     {node.children.length > 0 && (
-                      <div className="pl-4">
+                      <div className="ps-4">
                         {renderNodes(node.children)}
                       </div>
                     )}
@@ -346,6 +357,15 @@ export function EmailContextMenu({
         />
       )}
 
+      {/* Pin/Unpin - only for single email; pinned mails float to the top of the list */}
+      {!showBatchActions && onTogglePinned && (
+        <ContextMenuItem
+          icon={isPinned ? PinOff : Pin}
+          label={isPinned ? t("unpin") : t("pin")}
+          onClick={() => handleAction(onTogglePinned)}
+        />
+      )}
+
       {/* Set tag submenu - only for single email */}
       {!showBatchActions && (
         <ContextMenuSubMenu icon={Tag} label={t("color_tag")}>
@@ -357,7 +377,7 @@ export function EmailContextMenu({
                 role="menuitem"
                 onClick={() => handleAction(() => onSetColorTag?.(option.value))}
                 className={cn(
-                  "w-full px-3 py-1.5 text-sm text-left flex items-center gap-2 hover:bg-muted cursor-pointer",
+                  "w-full px-3 py-1.5 text-sm text-start flex items-center gap-2 hover:bg-muted cursor-pointer",
                   isActive && "bg-accent font-medium"
                 )}
               >
@@ -382,22 +402,26 @@ export function EmailContextMenu({
         </ContextMenuSubMenu>
       )}
 
-      <ContextMenuSeparator />
+      {/* Spam - contextual based on folder; pointless on own outgoing mail */}
+      {spamApplicable && (
+        <>
+          <ContextMenuSeparator />
 
-      {/* Spam - contextual based on folder */}
-      <ContextMenuItem
-        icon={isInJunkFolder ? ShieldCheck : ShieldAlert}
-        label={isInJunkFolder ? t("not_spam") : t("mark_as_spam")}
-        onClick={() =>
-          handleAction(
-            showBatchActions
-              ? (isInJunkFolder ? onBatchUndoSpam! : onBatchMarkAsSpam!)
-              : (isInJunkFolder ? onUndoSpam! : onMarkAsSpam!)
-          )
-        }
-        disabled={showBatchActions ? (isInJunkFolder ? !onBatchUndoSpam : !onBatchMarkAsSpam) : (isInJunkFolder ? !onUndoSpam : !onMarkAsSpam)}
-        destructive={!isInJunkFolder}
-      />
+          <ContextMenuItem
+            icon={isInJunkFolder ? ShieldCheck : ShieldAlert}
+            label={isInJunkFolder ? t("not_spam") : t("mark_as_spam")}
+            onClick={() =>
+              handleAction(
+                showBatchActions
+                  ? (isInJunkFolder ? onBatchUndoSpam! : onBatchMarkAsSpam!)
+                  : (isInJunkFolder ? onUndoSpam! : onMarkAsSpam!)
+              )
+            }
+            disabled={showBatchActions ? (isInJunkFolder ? !onBatchUndoSpam : !onBatchMarkAsSpam) : (isInJunkFolder ? !onUndoSpam : !onMarkAsSpam)}
+            destructive={!isInJunkFolder}
+          />
+        </>
+      )}
 
       <ContextMenuSeparator />
 

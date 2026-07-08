@@ -220,7 +220,7 @@ export function JmapServersSection({ value, source, onChange, onRevert }: Props)
               Per-server OAuth (optional, overrides global)
             </button>
             {d.oauthExpanded && (
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pl-4 border-l border-border">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 ps-4 border-s border-border">
                 <div>
                   <label className="block text-[11px] font-medium text-muted-foreground mb-1">OAuth Client ID</label>
                   <input

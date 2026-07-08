@@ -175,6 +175,20 @@ function buildPluginApi(manifest: PluginManifest) {
       post: (path: string, body: Record<string, unknown>) => callApi('http.post', [path, body]),
       fetch: (url: string, init?: unknown) => callApi('http.fetch', [url, init]),
     },
+    // Privileged-tier only (same-origin plugins). Calls throw for untrusted
+    // plugins (the host refuses the method) — these power crypto plugins that
+    // need raw message bytes and raw submission.
+    jmap: {
+      /** Fetch a blob's raw bytes by id. Resolves to a Uint8Array. */
+      fetchBlob: (blobId: string, opts?: { name?: string; type?: string }) =>
+        callApi('jmap.fetchBlob', [blobId, opts]) as Promise<Uint8Array>,
+      /** Submit a fully-formed raw RFC822 message (already signed/encrypted). */
+      sendRaw: (
+        rawBytes: ArrayBuffer | ArrayBufferView,
+        identityId: string,
+        opts?: { delayedUntil?: string; envelopeRecipients?: string[] },
+      ) => callApi('jmap.sendRaw', [rawBytes, identityId, opts]),
+    },
     toast: {
       success: (m: string) => { void callApi('toast.success', [m]); },
       error: (m: string) => { void callApi('toast.error', [m]); },

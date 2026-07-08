@@ -183,6 +183,7 @@ export async function POST(request: NextRequest) {
       author: manifest.author as string,
       description: (manifest.description as string) || '',
       type: manifest.type as string,
+      ...(manifest.tier === 'privileged' ? { tier: 'privileged' } : {}),
       permissions: (manifest.permissions as string[]) || [],
       entrypoint: manifest.entrypoint as string,
       enabled: true,

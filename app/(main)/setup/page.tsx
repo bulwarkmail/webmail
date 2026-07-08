@@ -780,7 +780,7 @@ function ServerStep({ config, setConfig, onNext }: Pick<StepProps, 'config' | 's
                   </p>
                 </div>
               </div>
-              <label className="mt-3 ml-[3.25rem] flex items-center gap-2 cursor-pointer">
+              <label className="mt-3 ms-[3.25rem] flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={confirmedNonJmap}
@@ -870,7 +870,7 @@ function ServerStep({ config, setConfig, onNext }: Pick<StepProps, 'config' | 's
             )}
 
             {hasRowErrors && (
-              <ul className="text-xs text-destructive list-disc pl-5 space-y-0.5">
+              <ul className="text-xs text-destructive list-disc ps-5 space-y-0.5">
                 {rowErrors.map((err, i) => (
                   <li key={i}>{err}</li>
                 ))}
@@ -1384,7 +1384,7 @@ function BrandingAsset({
       </div>
 
       {showUrlField && (
-        <div className="mt-3 pl-[4.75rem]">
+        <div className="mt-3 ps-[4.75rem]">
           <Input
             value={value}
             onChange={onChange}
@@ -1394,7 +1394,7 @@ function BrandingAsset({
       )}
 
       {uploadError && (
-        <p className="mt-2 pl-[4.75rem] text-xs text-destructive">{uploadError}</p>
+        <p className="mt-2 ps-[4.75rem] text-xs text-destructive">{uploadError}</p>
       )}
     </div>
   );
@@ -1601,7 +1601,7 @@ function SummaryRow({ label, value, mono }: { label: string; value: string; mono
   return (
     <div className="flex justify-between items-baseline gap-3 text-sm">
       <span className="text-muted-foreground shrink-0">{label}</span>
-      <span className={'text-foreground text-right truncate min-w-0 ' + (mono ? 'font-mono text-xs' : '')}>
+      <span className={'text-foreground text-end truncate min-w-0 ' + (mono ? 'font-mono text-xs' : '')}>
         {value || <span className="text-muted-foreground italic">-</span>}
       </span>
     </div>
