@@ -436,7 +436,9 @@
       "confirm_button": "Onayla",
       "cancel": "İptal",
       "success_http": "Abonelik iptali sayfası yeni sekmede açıldı",
-      "success_mailto": "Abonelik iptali isteği e-posta istemcinize gönderildi",
+      "success_mailto": "Abonelikten çıkma e-postası gönderildi",
+      "confirm_message_http": "Abonelikten çıkma sayfası yeni sekmede açılacak.",
+      "confirm_message_mailto": "Gönderene abonelikten çıkma e-postası gönderilecek.",
       "error": "Abonelik iptal edilemedi",
       "dismiss": "Kapat"
     },

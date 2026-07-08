@@ -434,7 +434,9 @@
       "confirm_button": "Bestätigen",
       "cancel": "Abbrechen",
       "success_http": "Abmeldeseite in neuem Tab geöffnet",
-      "success_mailto": "Abmeldeanfrage an Ihr E-Mail-Programm gesendet",
+      "success_mailto": "Abmelde-E-Mail gesendet",
+      "confirm_message_http": "Die Abmeldeseite wird in einem neuen Tab geöffnet.",
+      "confirm_message_mailto": "Es wird eine Abmelde-E-Mail an den Absender gesendet.",
       "error": "Abmeldung nicht möglich",
       "dismiss": "Schließen"
     },

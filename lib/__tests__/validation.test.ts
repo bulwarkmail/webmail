@@ -5,6 +5,7 @@ import {
   getEmailValidationError,
   isValidUnsubscribeUrl,
   parseUnsubscribeUrls,
+  parseMailtoUrl,
 } from '../validation';
 
 describe('validation', () => {
@@ -357,5 +358,35 @@ describe('validation', () => {
       expect(result.http).toBe('https://example.com/unsub');
       expect(result.preferred).toBe('http');
     });
+  });
+});
+
+describe('parseMailtoUrl', () => {
+  it('parses address, subject and body', () => {
+    const r = parseMailtoUrl('mailto:list@example.com?subject=Unsubscribe%20123&body=Please%20remove');
+    expect(r).toEqual({ to: ['list@example.com'], subject: 'Unsubscribe 123', body: 'Please remove' });
+  });
+
+  it('keeps a literal plus (RFC 6068 uses percent-encoding only)', () => {
+    const r = parseMailtoUrl('mailto:owner+unsub@example.com?subject=a+b');
+    expect(r?.to).toEqual(['owner+unsub@example.com']);
+    expect(r?.subject).toBe('a+b');
+  });
+
+  it('supports multiple recipients and the to param', () => {
+    const r = parseMailtoUrl('mailto:a@example.com,b@example.com?to=c@example.com');
+    expect(r?.to).toEqual(['a@example.com', 'b@example.com', 'c@example.com']);
+  });
+
+  it('returns null without a valid recipient', () => {
+    expect(parseMailtoUrl('mailto:?subject=x')).toBeNull();
+    expect(parseMailtoUrl('mailto:not-an-address')).toBeNull();
+    expect(parseMailtoUrl('https://example.com/unsub')).toBeNull();
+  });
+
+  it('survives malformed percent-encoding', () => {
+    const r = parseMailtoUrl('mailto:list@example.com?subject=%E0%A4%A');
+    expect(r?.to).toEqual(['list@example.com']);
+    expect(r?.subject).toBe('%E0%A4%A');
   });
 });

@@ -434,7 +434,9 @@
       "confirm_button": "Confirmar",
       "cancel": "Cancelar",
       "success_http": "Página de cancelamento aberta em nova aba",
-      "success_mailto": "Solicitação de cancelamento enviada para seu cliente de e-mail",
+      "success_mailto": "E-mail de cancelamento enviado",
+      "confirm_message_http": "A página de cancelamento será aberta em uma nova aba.",
+      "confirm_message_mailto": "Um e-mail de cancelamento será enviado ao remetente.",
       "error": "Não foi possível cancelar a inscrição",
       "dismiss": "Dispensar"
     },

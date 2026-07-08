@@ -434,7 +434,9 @@
       "confirm_button": "Confirmar",
       "cancel": "Cancelar",
       "success_http": "Página de cancelación de suscripción abierta en nueva pestaña",
-      "success_mailto": "Solicitud de cancelación enviada a su cliente de correo",
+      "success_mailto": "Correo de cancelación enviado",
+      "confirm_message_http": "La página de cancelación se abrirá en una pestaña nueva.",
+      "confirm_message_mailto": "Se enviará un correo de cancelación al remitente.",
       "error": "No se pudo cancelar la suscripción",
       "dismiss": "Descartar"
     },

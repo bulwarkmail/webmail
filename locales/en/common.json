@@ -461,7 +461,9 @@
       "confirm_button": "Confirm",
       "cancel": "Cancel",
       "success_http": "Unsubscribe page opened in new tab",
-      "success_mailto": "Unsubscribe request sent to your email client",
+      "success_mailto": "Unsubscribe email sent",
+      "confirm_message_http": "The unsubscribe page will open in a new tab.",
+      "confirm_message_mailto": "An unsubscribe email will be sent to the sender.",
       "error": "Unable to unsubscribe",
       "dismiss": "Dismiss"
     },

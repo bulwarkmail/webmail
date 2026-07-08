@@ -436,7 +436,9 @@
       "confirm_button": "确认",
       "cancel": "取消",
       "success_http": "取消订阅页面已在新标签页中打开",
-      "success_mailto": "取消订阅请求已发送",
+      "success_mailto": "退订邮件已发送",
+      "confirm_message_http": "退订页面将在新标签页中打开。",
+      "confirm_message_mailto": "将向发件人发送退订邮件。",
       "error": "无法取消订阅",
       "dismiss": "关闭"
     },

@@ -434,7 +434,9 @@
       "confirm_button": "Bevestigen",
       "cancel": "Annuleren",
       "success_http": "Uitschrijfpagina geopend in nieuw tabblad",
-      "success_mailto": "Uitschrijfverzoek verzonden naar je e-mailclient",
+      "success_mailto": "Afmeldingsmail verzonden",
+      "confirm_message_http": "De afmeldpagina wordt in een nieuw tabblad geopend.",
+      "confirm_message_mailto": "Er wordt een afmeldingsmail naar de afzender gestuurd.",
       "error": "Kan niet uitschrijven",
       "dismiss": "Sluiten"
     },

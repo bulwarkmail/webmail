@@ -461,7 +461,9 @@
       "confirm_button": "Potvrdiť",
       "cancel": "Zrušiť",
       "success_http": "Stránka pre odhlásenie bola otvorená v novej karte",
-      "success_mailto": "Požiadavka na odhlásenie bola odoslaná do e-mailového klienta",
+      "success_mailto": "E-mail na odhlásenie bol odoslaný",
+      "confirm_message_http": "Stránka odhlásenia sa otvorí na novej karte.",
+      "confirm_message_mailto": "Odosielateľovi bude odoslaný e-mail na odhlásenie.",
       "error": "Odber sa nedá odhlásiť",
       "dismiss": "Zavrieť"
     },

@@ -714,6 +714,28 @@ export function EmailViewer({
   const { tabletListVisible } = useUIStore();
   const { identities, client, isDemoMode, activeAccountId } = useAuthStore();
   const activeAccount = useAccountStore((s) => s.accounts.find((a) => a.id === activeAccountId));
+
+  // List-Unsubscribe mailto: send the message ourselves - this is a webmail
+  // client, handing a mailto: URL to the OS mail handler goes nowhere for
+  // most users. Route to the email's own account in unified views and prefer
+  // the identity that received the newsletter, so the list can match the
+  // subscriber; sendEmail resolves the identity (with its own fallback to
+  // the account default) from the address we pass.
+  const handleSendMailtoUnsubscribe = async (fields: { to: string[]; subject?: string; body?: string }) => {
+    const sendClient = (email?.sourceClientAccountId
+      ? useAuthStore.getState().getClientForAccount(email.sourceClientAccountId)
+      : undefined) ?? client;
+    if (!sendClient) throw new Error('Not connected');
+
+    const recipientAddresses = [...(email?.to ?? []), ...(email?.cc ?? [])].map(r => r.email?.toLowerCase());
+    // In unified views the owning account's identities are not loaded here -
+    // pass nothing and let its client fall back to its default identity.
+    const fromIdentity = email?.sourceClientAccountId
+      ? undefined
+      : identities.find(i => i.email && recipientAddresses.includes(i.email.toLowerCase()));
+
+    await sendClient.sendEmail(fields.to, fields.subject ?? '', fields.body ?? '', undefined, undefined, fromIdentity?.id, fromIdentity?.email, undefined, fromIdentity?.name);
+  };
   const promptForRescheduleDelayedUntil = useCallback((): string | null => {
     const value = window.prompt(t('reschedule_prompt'));
     if (!value) return null;
@@ -3579,6 +3601,7 @@ export function EmailViewer({
                       <UnsubscribeBanner
                         listUnsubscribe={listHeaders.listUnsubscribe}
                         senderEmail={email?.from?.[0]?.email || ''}
+                        onSendMailtoUnsubscribe={handleSendMailtoUnsubscribe}
                         onDismiss={() => {
                           const messageId = email?.messageId || '';
                           const newSet = new Set(dismissedUnsubBanners).add(messageId);
@@ -3824,6 +3847,7 @@ export function EmailViewer({
                   <UnsubscribeBanner
                     listUnsubscribe={listHeaders.listUnsubscribe}
                     senderEmail={email?.from?.[0]?.email || ''}
+                    onSendMailtoUnsubscribe={handleSendMailtoUnsubscribe}
                     onDismiss={() => {
                       const messageId = email?.messageId || '';
                       const newSet = new Set(dismissedUnsubBanners).add(messageId);

@@ -436,7 +436,9 @@
       "confirm_button": "Potwierdź",
       "cancel": "Anuluj",
       "success_http": "Strona wypisania otwarta w nowej karcie",
-      "success_mailto": "Żądanie wypisania wysłane do klienta poczty",
+      "success_mailto": "Wysłano e-mail rezygnacji z subskrypcji",
+      "confirm_message_http": "Strona rezygnacji z subskrypcji otworzy się w nowej karcie.",
+      "confirm_message_mailto": "Do nadawcy zostanie wysłany e-mail rezygnacji z subskrypcji.",
       "error": "Nie można się wypisać",
       "dismiss": "Zamknij"
     },

@@ -461,7 +461,9 @@
       "confirm_button": "Bekræft",
       "cancel": "Annuller",
       "success_http": "Afmeldingsside åbnet i ny fane",
-      "success_mailto": "Afmeldingsanmodning sendt til din e-mailklient",
+      "success_mailto": "Afmeldings-e-mail sendt",
+      "confirm_message_http": "Afmeldingssiden åbnes i en ny fane.",
+      "confirm_message_mailto": "Der sendes en afmeldings-e-mail til afsenderen.",
       "error": "Kan ikke afmelde",
       "dismiss": "Afvis"
     },

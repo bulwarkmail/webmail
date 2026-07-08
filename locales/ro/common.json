@@ -461,7 +461,9 @@
       "confirm_button": "Confirmare",
       "cancel": "Anulează",
       "success_http": "Pagina de dezabonare se deschide într-o filă nouă",
-      "success_mailto": "Cerere de dezabonare trimisă către clientul dvs. de e-mail",
+      "success_mailto": "E-mailul de dezabonare a fost trimis",
+      "confirm_message_http": "Pagina de dezabonare se va deschide într-o filă nouă.",
+      "confirm_message_mailto": "Un e-mail de dezabonare va fi trimis expeditorului.",
       "error": "Nu se poate dezabona",
       "dismiss": "Ignoră"
     },

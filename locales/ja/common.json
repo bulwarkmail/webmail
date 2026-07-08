@@ -434,7 +434,9 @@
       "confirm_button": "確認",
       "cancel": "キャンセル",
       "success_http": "購読解除ページを新しいタブで開きました",
-      "success_mailto": "購読解除リクエストをメールクライアントに送信しました",
+      "success_mailto": "配信停止メールを送信しました",
+      "confirm_message_http": "配信停止ページを新しいタブで開きます。",
+      "confirm_message_mailto": "送信者に配信停止メールを送信します。",
       "error": "購読解除できませんでした",
       "dismiss": "閉じる"
     },

@@ -121,3 +121,47 @@ export function parseUnsubscribeUrls(header: string): {
 
   return { http, mailto, preferred };
 }
+
+/**
+ * Parse a mailto: URL into its parts so the client can send the message
+ * itself. Query values are percent-decoded manually rather than via
+ * URLSearchParams because RFC 6068 uses %-encoding only - a literal "+"
+ * in a subject or address must stay a plus, not become a space.
+ * @param url - mailto: URL, e.g. "mailto:a@b.c?subject=Unsubscribe%20123"
+ * @returns Recipients plus optional subject/body, or null without a valid recipient
+ */
+export function parseMailtoUrl(url: string): { to: string[]; subject?: string; body?: string } | null {
+  if (!url?.startsWith('mailto:')) return null;
+
+  const rest = url.slice(7);
+  const queryIndex = rest.indexOf('?');
+  const addressPart = queryIndex === -1 ? rest : rest.slice(0, queryIndex);
+  const query = queryIndex === -1 ? '' : rest.slice(queryIndex + 1);
+
+  const decode = (value: string): string => {
+    try {
+      return decodeURIComponent(value);
+    } catch {
+      return value;
+    }
+  };
+
+  const to = addressPart
+    .split(',')
+    .map(a => decode(a).trim())
+    .filter(a => isValidEmail(a));
+
+  let subject: string | undefined;
+  let body: string | undefined;
+  for (const pair of query.split('&')) {
+    const eq = pair.indexOf('=');
+    if (eq === -1) continue;
+    const key = pair.slice(0, eq).toLowerCase();
+    const value = decode(pair.slice(eq + 1));
+    if (key === 'subject') subject = value;
+    else if (key === 'body') body = value;
+    else if (key === 'to' && isValidEmail(value.trim())) to.push(value.trim());
+  }
+
+  return to.length > 0 ? { to, subject, body } : null;
+}

@@ -436,7 +436,9 @@
       "confirm_button": "확인",
       "cancel": "취소",
       "success_http": "새 탭에서 구독 취소 페이지가 열렸어요",
-      "success_mailto": "이메일 클라이언트를 통해 구독 취소 요청이 전송되었어요",
+      "success_mailto": "수신 거부 이메일을 보냈습니다",
+      "confirm_message_http": "수신 거부 페이지가 새 탭에서 열립니다.",
+      "confirm_message_mailto": "발신자에게 수신 거부 이메일을 보냅니다.",
       "error": "구독을 취소할 수 없어요",
       "dismiss": "닫기"
     },

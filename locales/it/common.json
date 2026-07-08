@@ -434,7 +434,9 @@
       "confirm_button": "Conferma",
       "cancel": "Annulla",
       "success_http": "Pagina di annullamento iscrizione aperta in una nuova scheda",
-      "success_mailto": "Richiesta di annullamento iscrizione inviata al tuo client email",
+      "success_mailto": "Email di disiscrizione inviata",
+      "confirm_message_http": "La pagina di disiscrizione si aprirà in una nuova scheda.",
+      "confirm_message_mailto": "Verrà inviata un'email di disiscrizione al mittente.",
       "error": "Impossibile annullare l'iscrizione",
       "dismiss": "Ignora"
     },

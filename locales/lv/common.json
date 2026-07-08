@@ -436,7 +436,9 @@
       "confirm_button": "Apstiprināt",
       "cancel": "Atcelt",
       "success_http": "Atteikšanās lapa atvērta jaunā cilnē",
-      "success_mailto": "Atteikšanās pieprasījums nosūtīts",
+      "success_mailto": "Atrakstīšanās e-pasts nosūtīts",
+      "confirm_message_http": "Atrakstīšanās lapa tiks atvērta jaunā cilnē.",
+      "confirm_message_mailto": "Sūtītājam tiks nosūtīts atrakstīšanās e-pasts.",
       "error": "Neizdevās atteikties",
       "dismiss": "Aizvērt"
     },

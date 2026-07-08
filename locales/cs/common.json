@@ -436,7 +436,9 @@
       "confirm_button": "Potvrdit",
       "cancel": "Zrušit",
       "success_http": "Stránka pro odhlášení byla otevřena na nové kartě",
-      "success_mailto": "Požadavek na odhlášení byl odeslán do e-mailového klienta",
+      "success_mailto": "Odhlašovací e-mail byl odeslán",
+      "confirm_message_http": "Odhlašovací stránka se otevře na nové kartě.",
+      "confirm_message_mailto": "Odesílateli bude zaslán odhlašovací e-mail.",
       "error": "Odběr nelze odhlásit",
       "dismiss": "Zavřít"
     },

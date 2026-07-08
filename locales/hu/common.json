@@ -461,7 +461,9 @@
       "confirm_button": "Megerősítés",
       "cancel": "Mégse",
       "success_http": "Leiratkozási oldal megnyílt egy új lapon",
-      "success_mailto": "Leiratkozási kérelem elküldve az e-mail kliensnek",
+      "success_mailto": "Leiratkozó e-mail elküldve",
+      "confirm_message_http": "A leiratkozási oldal új lapon nyílik meg.",
+      "confirm_message_mailto": "Leiratkozó e-mailt küldünk a feladónak.",
       "error": "Nem sikerült leiratkozni",
       "dismiss": "Elutasítás"
     },

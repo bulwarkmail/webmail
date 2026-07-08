@@ -434,7 +434,9 @@
       "confirm_button": "Confirmer",
       "cancel": "Annuler",
       "success_http": "Page de désabonnement ouverte dans un nouvel onglet",
-      "success_mailto": "Demande de désabonnement envoyée à votre client mail",
+      "success_mailto": "E-mail de désabonnement envoyé",
+      "confirm_message_http": "La page de désabonnement s'ouvrira dans un nouvel onglet.",
+      "confirm_message_mailto": "Un e-mail de désabonnement sera envoyé à l'expéditeur.",
       "error": "Impossible de se désabonner",
       "dismiss": "Ignorer"
     },
