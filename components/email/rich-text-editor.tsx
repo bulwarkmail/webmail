@@ -8,7 +8,7 @@ import Heading from "@tiptap/extension-heading";
 import Underline from "@tiptap/extension-underline";
 import Link from "@tiptap/extension-link";
 import TextAlign from "@tiptap/extension-text-align";
-import { TextDirection } from "@/components/email/text-direction";
+import { TextDirection, detectTextDirection, type TextDirectionValue } from "@/components/email/text-direction-extension";
 import { TextStyle } from "@tiptap/extension-text-style";
 import Color from "@tiptap/extension-color";
 import { ResizableImage } from "@/components/email/resizable-image";
@@ -44,6 +44,7 @@ import {
   Trash2,
   Rows3,
   Columns3,
+  ArrowLeftRight,
 } from "lucide-react";
 
 export interface InlineImageUpload {
@@ -244,6 +245,8 @@ export function RichTextEditor({
       // rich/branded signatures keep their inline styling in the editor and
       // in the sent mail (see signature-block.ts).
       SignatureBlock,
+      // Text direction (LTR / RTL) — adds dir attribute to headings & paragraphs
+      // and provides setTextDirection / toggleTextDirection commands.
       TextDirection,
     ],
     content,
@@ -298,6 +301,30 @@ export function RichTextEditor({
       // serializeEditorContent (not getHTML) so the verbatim quoted-original
       // HTML held in the QuotedHtml atom node is emitted intact.
       onChange(serializeEditorContent(editor));
+
+      // Auto-detect RTL direction: when the user types in a paragraph that
+      // doesn't yet have an explicit dir set, inspect the first strong
+      // character and auto-apply the matching direction. Deferred via
+      // queueMicrotask to avoid dispatching inside the update cycle.
+      const { state } = editor;
+      const { from } = state.selection;
+      const $pos = state.doc.resolve(from);
+      const node = $pos.node($pos.depth);
+      if (node && (node.type.name === "paragraph" || node.type.name === "heading")) {
+        const existingDir = node.attrs.dir as string | null;
+        if (!existingDir) {
+          const text = node.textContent;
+          if (text.trim().length > 0) {
+            const detected = detectTextDirection(text);
+            if (detected === "rtl") {
+              // Only auto-apply RTL; LTR is the default visual appearance
+              queueMicrotask(() => {
+                editor.commands.setTextDirection("rtl");
+              });
+            }
+          }
+        }
+      }
     },
     immediatelyRender: false,
   });
@@ -474,6 +501,32 @@ export function RichTextEditor({
             <ArrowLeftRight className="w-4 h-4" />
           </ToolbarButton>
         )}
+
+        <ToolbarSeparator />
+
+        {(() => {
+          const currentDir: TextDirectionValue =
+            editor.getAttributes("paragraph").dir ||
+            editor.getAttributes("heading").dir;
+          const isRtl = currentDir === "rtl";
+          return (
+            <ToolbarButton
+              active={isRtl}
+              onClick={() => editor.chain().focus().toggleTextDirection().run()}
+              title={`Toggle text direction (${isRtl ? "RTL → LTR" : "LTR → RTL"})`}
+            >
+              <ArrowLeftRight className="w-4 h-4" />
+              <span
+                className={cn(
+                  "text-[10px] font-bold ml-0.5",
+                  isRtl ? "text-accent-foreground" : "text-muted-foreground"
+                )}
+              >
+                {isRtl ? "RTL" : "LTR"}
+              </span>
+            </ToolbarButton>
+          );
+        })()}
 
         <ToolbarSeparator />
 

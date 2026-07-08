@@ -750,7 +750,7 @@ body {
   background-color: var(--color-muted) !important;
   color: var(--color-foreground) !important;
   font-weight: 600;
-  text-align: left;
+  text-align: start;
 }
 
 .tiptap table p {
@@ -771,13 +771,31 @@ body {
   bottom: -2px;
   pointer-events: none;
   position: absolute;
-  right: -2px;
+  inset-inline-end: -2px;
   top: 0;
   width: 4px;
 }
 
 .tiptap.resize-cursor {
   cursor: col-resize;
+}
+
+/* RTL direction overrides — when a paragraph or heading has dir="rtl",
+   ensure block-level visual cues also flip to the opposite side. */
+.tiptap [dir="rtl"] blockquote,
+.tiptap blockquote[dir="rtl"] {
+  border-inline-start: none;
+  border-inline-end: 3px solid var(--color-border);
+  padding-inline-start: 0;
+  padding-inline-end: 1rem;
+}
+
+.tiptap [dir="rtl"] ul,
+.tiptap ul[dir="rtl"],
+.tiptap [dir="rtl"] ol,
+.tiptap ol[dir="rtl"] {
+  padding-inline-start: 0;
+  padding-inline-end: 1.5rem;
 }
 
 /* Smooth halo applied to a setting row when the user clicks a sub-result in

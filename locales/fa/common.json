@@ -632,6 +632,11 @@
     },
     "use_template": "قالب",
     "save_as_template": "ذخیره به عنوان قالب",
+    "text_direction": {
+      "toggle": "تغییر جهت متن (چپ‌به‌راست / راست‌به‌چپ)",
+      "ltr": "چپ‌به‌راست",
+      "rtl": "راست‌به‌چپ"
+    },
     "validation": {
       "recipient_required": "یک گیرنده اضافه کنید",
       "subject_required": "یک موضوع اضافه کنید",
