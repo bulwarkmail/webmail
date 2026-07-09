@@ -188,7 +188,11 @@ interface SettingsState {
   // Privacy & Security
   sessionTimeout: number; // minutes (0 = never)
   trustedSenders: string[]; // Email addresses that can load external content
-  trustedSendersAddressBook: boolean; // Store trusted senders in a dedicated JMAP address book
+  // Store trusted senders in a dedicated JMAP address book so they sync across
+  // devices. `null` means "not yet decided": resolved on first connect to
+  // `true` when the server supports contacts, otherwise left off. Once the user
+  // toggles it, it holds a concrete boolean and is never auto-changed again.
+  trustedSendersAddressBook: boolean | null;
 
   // Filters
   expandedFilterView: boolean;
@@ -398,7 +402,7 @@ const DEFAULT_SETTINGS = {
   // Privacy & Security
   sessionTimeout: 0, // Never
   trustedSenders: [] as string[],
-  trustedSendersAddressBook: false,
+  trustedSendersAddressBook: null as boolean | null,
 
   // Filters
   expandedFilterView: false,

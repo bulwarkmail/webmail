@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useSettingsStore } from '@/stores/settings-store';
 import { SettingsSection, SettingItem, Select, ToggleSwitch } from './settings-section';
@@ -8,6 +8,7 @@ import { TrustedSendersModal } from '@/components/trusted-senders-modal';
 import { ChevronRight } from 'lucide-react';
 import { usePolicyStore } from '@/stores/policy-store';
 import { useContactStore } from '@/stores/contact-store';
+import { useAuthStore } from '@/stores/auth-store';
 
 export function ContentSendersSettings() {
   const t = useTranslations('settings.email_behavior');
@@ -21,7 +22,15 @@ export function ContentSendersSettings() {
     trustedSendersAddressBook,
     updateSetting,
   } = useSettingsStore();
-  const { trustedSenderEmails } = useContactStore();
+  const { trustedSenderEmails, trustedSendersLoaded, loadTrustedSendersBook } = useContactStore();
+  const client = useAuthStore((state) => state.client);
+
+  // Load the address book so the count reflects the synced senders, not 0.
+  useEffect(() => {
+    if (trustedSendersAddressBook && client && !trustedSendersLoaded) {
+      loadTrustedSendersBook(client);
+    }
+  }, [trustedSendersAddressBook, client, trustedSendersLoaded, loadTrustedSendersBook]);
 
   const getTrustedSendersCount = () => {
     const count = trustedSendersAddressBook ? trustedSenderEmails.length : trustedSenders.length;
@@ -67,7 +76,7 @@ export function ContentSendersSettings() {
 
       <SettingItem label={t('trusted_senders.use_address_book_label')} description={t('trusted_senders.use_address_book_description')}>
         <ToggleSwitch
-          checked={trustedSendersAddressBook}
+          checked={!!trustedSendersAddressBook}
           onChange={(checked) => updateSetting('trustedSendersAddressBook', checked)}
         />
       </SettingItem>

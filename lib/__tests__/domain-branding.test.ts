@@ -111,6 +111,16 @@ describe('pickRequestHost', () => {
   it('lower-cases the result', () => {
     expect(pickRequestHost(mockHeaders({ host: 'EXAMPLE.com' }))).toBe('example.com');
   });
+
+  it('handles a ReadonlyHeaders-shaped object with an internal `headers` field', () => {
+    // `await headers()` returns Next's ReadonlyHeaders, which exposes `.get`
+    // directly but also carries an internal `headers` property. Ensure we use
+    // its own `.get` rather than descending into `.headers` (#585).
+    const readonlyLike = Object.assign(mockHeaders({ host: 'ro.example.com' }), {
+      headers: { notCallable: true },
+    });
+    expect(pickRequestHost(readonlyLike as unknown as Headers)).toBe('ro.example.com');
+  });
 });
 
 describe('matchDomainBranding', () => {

@@ -2723,7 +2723,19 @@
       "sep": "sep",
       "oct": "okt",
       "nov": "nov",
-      "dec": "dec"
+      "dec": "dec",
+      "far": "Farvardin",
+      "ord": "Ordibehesht",
+      "kho": "Khordad",
+      "tir": "Tir",
+      "mor": "Mordad",
+      "sha": "Shahrivar",
+      "meh": "Mehr",
+      "aba": "Aban",
+      "aza": "Azar",
+      "dey": "Dey",
+      "bah": "Bahman",
+      "esf": "Esfand"
     },
     "notifications": {
       "event_created": "Udalosť bola vytvorená",

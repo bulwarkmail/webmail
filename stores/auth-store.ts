@@ -280,6 +280,13 @@ function initializeFeatureStores(client: IJMAPClient): void {
     contactStore.setSupportsSync(true);
     contactStore.fetchAddressBooks(client).catch((err) => debug.error('Failed to fetch address books:', err));
     contactStore.fetchContacts(client).catch((err) => debug.error('Failed to fetch contacts:', err));
+
+    // Default trusted-sender syncing on when contacts are available, unless the
+    // user has already made an explicit choice (`null` = not yet decided).
+    const settings = useSettingsStore.getState();
+    if (settings.trustedSendersAddressBook === null) {
+      settings.updateSetting('trustedSendersAddressBook', true);
+    }
   } else {
     useContactStore.getState().setSupportsSync(false);
   }

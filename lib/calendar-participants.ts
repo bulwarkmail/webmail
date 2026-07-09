@@ -115,7 +115,10 @@ export function buildParticipantMap(
     name: organizer.name,
     email: organizer.email,
     calendarAddress: `mailto:${organizer.email}`,
-    roles: { owner: true, attendee: true },
+    // owner only, NOT attendee: with roles.attendee set, Stalwart's server-side
+    // scheduling emits the organizer as an ATTENDEE line in addition to the
+    // ORGANIZER line, so the recipient sees the organizer listed twice.
+    roles: { owner: true },
     participationStatus: 'accepted',
     scheduleAgent: 'server',
     expectReply: false,

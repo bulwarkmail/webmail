@@ -113,7 +113,15 @@ type HeadersLike = Headers | { get(name: string): string | null };
  * host header is set.
  */
 export function pickRequestHost(headersOrReq: NextRequest | HeadersLike): string | null {
-  const headers: HeadersLike = 'headers' in headersOrReq ? (headersOrReq as NextRequest).headers : headersOrReq;
+  // A Headers / ReadonlyHeaders exposes `.get` directly; a NextRequest carries
+  // its headers under `.headers`. Discriminate on the callable `.get` rather
+  // than the presence of a `headers` property, since ReadonlyHeaders (returned
+  // by `await headers()`) also has an internal `headers` field (#585).
+  const candidate = headersOrReq as { get?: unknown };
+  const headers: HeadersLike =
+    typeof candidate.get === 'function'
+      ? (headersOrReq as HeadersLike)
+      : (headersOrReq as NextRequest).headers;
   const raw = headers.get('x-forwarded-host') || headers.get('host');
   if (!raw) return null;
   const first = raw.split(',')[0]?.trim();

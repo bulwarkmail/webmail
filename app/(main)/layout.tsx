@@ -5,6 +5,11 @@ import { headers } from "next/headers";
 import { getLocale, getTranslations } from "next-intl/server";
 import { ServiceWorkerRegistration } from "@/components/service-worker-registration";
 import { configManager } from "@/lib/admin/config-manager";
+import {
+  matchDomainBranding,
+  parseDomainBranding,
+  pickRequestHost,
+} from "@/lib/admin/domain-branding";
 import { withBasePath } from "@/lib/browser-navigation";
 import { locales } from "@/i18n/routing";
 import "../globals.css";
@@ -39,7 +44,19 @@ export const viewport: Viewport = {
 
 export async function generateMetadata(): Promise<Metadata> {
   await configManager.ensureLoaded();
-  const faviconUrl = configManager.get<string>("faviconUrl", "/branding/Bulwark_Favicon.svg");
+  // The <head> favicon must honor per-domain branding, exactly like
+  // /api/config, app/manifest.ts, and /api/pwa-icon already do. Resolve the
+  // request host and prefer its override; fall back to the global
+  // admin/env/default value when the host has no favicon override (#585).
+  const host = pickRequestHost(await headers());
+  const domainOverride = matchDomainBranding(
+    host,
+    parseDomainBranding(configManager.get<unknown>("domainBranding", [])),
+  ).faviconUrl;
+  const faviconUrl =
+    domainOverride && domainOverride.length > 0
+      ? domainOverride
+      : configManager.get<string>("faviconUrl", "/branding/Bulwark_Favicon.svg");
   // Localize the <head> description to match the UI language; a hardcoded
   // English description is another signal that makes Chrome offer to
   // "translate this page". Resolve the locale from the request path, since this

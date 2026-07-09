@@ -282,7 +282,7 @@ describe('buildParticipantMap', () => {
     expect(org).toBeDefined();
     expect(org!.name).toBe('Alice');
     expect(org!.email).toBe('alice@example.com');
-    expect(org!.roles).toEqual({ owner: true, attendee: true });
+    expect(org!.roles).toEqual({ owner: true });
     expect(org!.participationStatus).toBe('accepted');
     expect(org!.scheduleAgent).toBe('server');
     // sendTo is retired in draft-ietf-calext-jscalendarbis; the scheduling
@@ -312,7 +312,7 @@ describe('buildParticipantMap', () => {
     expect(Object.keys(map)).toHaveLength(1);
     const org = Object.values(map)[0];
     expect(org).toBeDefined();
-    expect(org.roles).toEqual({ owner: true, attendee: true });
+    expect(org.roles).toEqual({ owner: true });
   });
 
   it('sets @type to Participant for all entries', () => {
