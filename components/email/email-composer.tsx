@@ -5,7 +5,7 @@ import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { X, Paperclip, Send, Save, Check, Loader2, AlertCircle, FileText, BookmarkPlus, CalendarClock, ChevronDown, MailCheck, Search } from "lucide-react";
+import { X, Paperclip, Send, Save, Check, Loader2, AlertCircle, FileText, BookmarkPlus, CalendarClock, ChevronDown, MailCheck, Search, Users } from "lucide-react";
 import { cn, formatFileSize, formatDateTime, generateUUID } from "@/lib/utils";
 import { debug } from "@/lib/debug";
 import { toast } from "@/stores/toast-store";
@@ -26,7 +26,7 @@ import { useSettingsStore } from "@/stores/settings-store";
 import { PluginSlot } from "@/components/plugins/plugin-slot";
 import { Avatar } from "@/components/ui/avatar";
 import { FilePreviewModal } from "@/components/files/file-preview-modal";
-import { useContactStore } from "@/stores/contact-store";
+import { useContactStore, getContactDisplayName, getContactPrimaryEmail } from "@/stores/contact-store";
 import { useTemplateStore } from "@/stores/template-store";
 import { SubAddressHelper } from "@/components/identity/sub-address-helper";
 import { generateSubAddress } from "@/lib/sub-addressing";
@@ -44,6 +44,7 @@ import {
   parseRecipient,
   parseRecipientList,
   formatRecipientList,
+  expandRecipients,
   splitPastedRecipients,
   waitForPendingUploads,
   extractUserAuthoredText,
@@ -91,6 +92,10 @@ function createChipDragPreview(label: string): HTMLElement {
   document.body.appendChild(preview);
   return preview;
 }
+
+// An autocomplete entry: a person, or a contact group (empty email) that
+// inserts as a single chip and expands into its members on send.
+type SuggestionItem = { name: string; email: string; group?: { id: string; memberCount: number } };
 
 export interface ComposerDraftData {
   to: string;
@@ -823,6 +828,7 @@ export function EmailComposer({
       ? `<div>${getPlainTextSignature(signatureIdentity).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>')}</div>`
       : '';
   const getAutocomplete = useContactStore((s) => s.getAutocomplete);
+  const getGroupMembers = useContactStore((s) => s.getGroupMembers);
   const searchRecipients = useContactStore((s) => s.searchRecipients);
   // Whether a Sent mailbox is known so the on-demand server search is worth
   // offering (falls back to hiding the "search the server" row otherwise).
@@ -899,7 +905,7 @@ export function EmailComposer({
     }
   }, [mode]);
 
-  const [autocompleteResults, setAutocompleteResults] = useState<Array<{ name: string; email: string }>>([]);
+  const [autocompleteResults, setAutocompleteResults] = useState<Array<SuggestionItem>>([]);
   const [activeAutoField, setActiveAutoField] = useState<'to' | 'cc' | 'bcc' | null>(null);
   const [autoSelectedIndex, setAutoSelectedIndex] = useState(-1);
   // Current trimmed query behind the open dropdown, plus the in-flight flag for
@@ -933,7 +939,9 @@ export function EmailComposer({
   const handleMoveChip = useCallback((recipient: Recipient, fromField: 'to' | 'cc' | 'bcc', toField: 'to' | 'cc' | 'bcc') => {
     if (fromField === toField) return;
     const setters = { to: setTo, cc: setCc, bcc: setBcc };
-    const sameRecipient = (a: Recipient, b: Recipient) => a.email === b.email && (a.name ?? '') === (b.name ?? '');
+    const groupKey = (r: Recipient) => r.group ? r.group.members.map(m => m.email.toLowerCase()).join(',') : '';
+    const sameRecipient = (a: Recipient, b: Recipient) =>
+      a.email === b.email && (a.name ?? '') === (b.name ?? '') && groupKey(a) === groupKey(b);
     setters[fromField](prev => {
       const idx = prev.findIndex(r => sameRecipient(r, recipient));
       return idx === -1 ? prev : prev.filter((_, i) => i !== idx);
@@ -961,9 +969,9 @@ export function EmailComposer({
     autocompleteTimeoutRef.current = setTimeout(async () => {
       const localResults = getAutocomplete(query);
       // Let plugins contribute extra suggestions (Slack handles, GitHub, CRM, …).
-      const initial: RecipientSuggestion[] = localResults.map(r => ({ name: r.name, email: r.email }));
+      const initial: RecipientSuggestion[] = localResults.map(r => ({ name: r.name, email: r.email, group: r.group }));
       const merged = await contactHooks.onProvideRecipientSuggestions.transform(initial, { query });
-      setAutocompleteResults(merged.map(s => ({ name: s.name, email: s.email })));
+      setAutocompleteResults(merged.map(s => ({ name: s.name, email: s.email, group: s.group })));
       // Keep the dropdown open even without local hits when a server search is
       // available, so the "search the server" row stays reachable (OWA-style).
       setActiveAutoField(merged.length > 0 || canSearchServer ? field : null);
@@ -998,11 +1006,30 @@ export function EmailComposer({
     }
   }, [autoQuery, composerClient, isSearchingServer, searchRecipients]);
 
-  const insertAutocomplete = (suggestion: { name: string; email: string }, field: 'to' | 'cc' | 'bcc') => {
+  const insertAutocomplete = (suggestion: SuggestionItem, field: 'to' | 'cc' | 'bcc') => {
     const setter = field === 'to' ? setTo : field === 'cc' ? setCc : setBcc;
     const inputSetter = field === 'to' ? setToInput : field === 'cc' ? setCcInput : setBccInput;
 
-    setter(prev => [...prev, toRecipient(suggestion)]);
+    if (suggestion.group) {
+      // Insert the group as a single chip carrying a snapshot of its members
+      // (deduped, members without an address skipped). The chip is expanded
+      // into the members when the message is sent or saved as a draft.
+      const seen = new Set<string>();
+      const members: Array<{ name?: string; email: string }> = [];
+      for (const m of getGroupMembers(suggestion.group.id)) {
+        const email = getContactPrimaryEmail(m).trim();
+        const key = email.toLowerCase();
+        if (!email || seen.has(key)) continue;
+        seen.add(key);
+        const name = getContactDisplayName(m);
+        members.push({ name: name && name !== email ? name : undefined, email });
+      }
+      if (members.length > 0) {
+        setter(prev => [...prev, { name: suggestion.name, email: '', group: { members } }]);
+      }
+    } else {
+      setter(prev => [...prev, toRecipient(suggestion)]);
+    }
     inputSetter('');
     setAutocompleteResults([]);
     setActiveAutoField(null);
@@ -1303,9 +1330,9 @@ export function EmailComposer({
   const saveDraftOnce = async (): Promise<string | null> => {
     if (!client || !composerClient) return null;
 
-    const toAddresses = withInput(to, toInput).map(r => formatRecipient(r.name, r.email));
-    const ccAddresses = withInput(cc, ccInput).map(r => formatRecipient(r.name, r.email));
-    const bccAddresses = withInput(bcc, bccInput).map(r => formatRecipient(r.name, r.email));
+    const toAddresses = expandRecipients(withInput(to, toInput)).map(r => formatRecipient(r.name, r.email));
+    const ccAddresses = expandRecipients(withInput(cc, ccInput)).map(r => formatRecipient(r.name, r.email));
+    const bccAddresses = expandRecipients(withInput(bcc, bccInput)).map(r => formatRecipient(r.name, r.email));
 
     if (!toAddresses.length && !subject && !(plainTextMode ? body.trim() : htmlToPlainText(body).trim())) {
       return null;
@@ -1474,7 +1501,9 @@ export function EmailComposer({
     };
   }, []);
 
-  const toAddresses = withInput(to, toInput);
+  // Groups expand here so validation and every outgoing payload see the
+  // actual member addresses.
+  const toAddresses = expandRecipients(withInput(to, toInput));
   const bodyPlainText = plainTextMode ? body.trim() : htmlToPlainText(body).trim();
   const hasContent = bodyPlainText || attachments.some(att => att.blobId && !att.uploading);
   const canSend = toAddresses.length > 0 && !!subject && hasContent;
@@ -1603,8 +1632,8 @@ export function EmailComposer({
       }
     }
 
-    const ccAddresses = withInput(cc, ccInput);
-    const bccAddresses = withInput(bcc, bccInput);
+    const ccAddresses = expandRecipients(withInput(cc, ccInput));
+    const bccAddresses = expandRecipients(withInput(bcc, bccInput));
 
     if (!canSend) {
       const errors: { to?: boolean; subject?: boolean; body?: boolean } = {};
@@ -2751,13 +2780,14 @@ export function EmailComposer({
 
 const AutocompleteDropdown = React.forwardRef<HTMLDivElement, {
   id: string;
-  results: Array<{ name: string; email: string }>;
+  results: Array<SuggestionItem>;
   selectedIndex: number;
-  onSelect: (suggestion: { name: string; email: string }) => void;
+  onSelect: (suggestion: SuggestionItem) => void;
   onSearchServer?: () => void;
   isSearchingServer?: boolean;
 }>(function AutocompleteDropdown({ id, results, selectedIndex, onSelect, onSearchServer, isSearchingServer }, ref) {
   const t = useTranslations('email_composer');
+  const tContacts = useTranslations('contacts');
   return (
     <div ref={ref} id={id} role="listbox" className="absolute top-full left-0 right-0 z-50 mt-1 bg-background border border-border rounded-md shadow-lg max-h-48 overflow-y-auto">
       {results.map((r, i) => (
@@ -2776,9 +2806,19 @@ const AutocompleteDropdown = React.forwardRef<HTMLDivElement, {
             onSelect(r);
           }}
         >
-          <Avatar name={r.name} email={r.email} size="sm" className="shrink-0 w-6 h-6 text-[10px]" />
+          {r.group ? (
+            <span className="shrink-0 w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
+              <Users className="w-3.5 h-3.5 text-primary" aria-hidden />
+            </span>
+          ) : (
+            <Avatar name={r.name} email={r.email} size="sm" className="shrink-0 w-6 h-6 text-[10px]" />
+          )}
           <span className="font-medium truncate">{r.name || r.email}</span>
-          {r.name && (
+          {r.group ? (
+            <span className="text-muted-foreground truncate">
+              {tContacts('groups.member_count', { count: r.group.memberCount })}
+            </span>
+          ) : r.name && (
             <span className="text-muted-foreground truncate">&lt;{r.email}&gt;</span>
           )}
         </button>
@@ -2844,10 +2884,10 @@ function RecipientChipInput({
   onAutoKeyDown: (e: React.KeyboardEvent, field: 'to' | 'cc' | 'bcc') => void;
   onAutoBlur: (e: React.FocusEvent, field: 'to' | 'cc' | 'bcc') => void;
   activeAutoField: 'to' | 'cc' | 'bcc' | null;
-  autocompleteResults: Array<{ name: string; email: string }>;
+  autocompleteResults: Array<SuggestionItem>;
   autoSelectedIndex: number;
   dropdownRef: React.RefObject<HTMLDivElement | null>;
-  onInsertAutocomplete: (suggestion: { name: string; email: string }, field: 'to' | 'cc' | 'bcc') => void;
+  onInsertAutocomplete: (suggestion: SuggestionItem, field: 'to' | 'cc' | 'bcc') => void;
   canSearchServer: boolean;
   onServerSearch: () => void;
   isSearchingServer: boolean;
@@ -2880,7 +2920,9 @@ function RecipientChipInput({
 
   // Format a recipient for display in a chip / context menu
   const formatChipDisplay = (r: Recipient): string =>
-    r.name && r.name !== r.email ? `${r.name} (${r.email})` : r.email;
+    r.group
+      ? `${r.name || 'Group'} (${r.group.members.length})`
+      : r.name && r.name !== r.email ? `${r.name} (${r.email})` : r.email;
 
   // Handle saving an edited chip
   const handleSaveEdit = (newValue: string) => {
@@ -2900,10 +2942,10 @@ function RecipientChipInput({
         setEditingChip(null);
         return;
       }
-      newChip = { name: chip.name, email: trimmedNew };
+      newChip = { ...chip, email: trimmedNew };
     } else {
       // Update name, keep email. Empty name clears the display name.
-      newChip = { name: trimmedNew || undefined, email: chip.email };
+      newChip = { ...chip, name: trimmedNew || undefined };
     }
 
     const newChips = [...chips];
@@ -3066,7 +3108,7 @@ function RecipientChipInput({
                 e.dataTransfer.effectAllowed = 'move';
                 e.dataTransfer.setData('application/x-recipient-chip', JSON.stringify({ recipient: chip, fromField: field }));
                 // Show the address while dragging, matching the email-list drag preview.
-                const dragPreview = createChipDragPreview(chip.email);
+                const dragPreview = createChipDragPreview(chip.group ? chipDisplay : chip.email);
                 e.dataTransfer.setDragImage(dragPreview, 0, 0);
                 requestAnimationFrame(() => dragPreview.remove());
                 setDraggingIndex(i);
@@ -3109,7 +3151,13 @@ function RecipientChipInput({
                   data-bwignore="true"
                 />
               ) : (
-                <span className="truncate max-w-[200px]">{chipDisplay}</span>
+                <span
+                  className="inline-flex items-center gap-1 max-w-[200px]"
+                  title={chip.group ? chip.group.members.map(m => m.email).join(', ') : undefined}
+                >
+                  {chip.group && <Users className="w-3 h-3 shrink-0" aria-hidden />}
+                  <span className="truncate">{chipDisplay}</span>
+                </span>
               )}
               <button
                 type="button"
@@ -3185,7 +3233,9 @@ function RecipientChipInput({
               {formatChipDisplay(contextMenu.data.recipient)}
             </div>
             <ContextMenuSeparator />
-            <ContextMenuItem label={t('recipient_edit_email')} onClick={handleEditEmail} />
+            {!contextMenu.data.recipient.group && (
+              <ContextMenuItem label={t('recipient_edit_email')} onClick={handleEditEmail} />
+            )}
             <ContextMenuItem label={t('recipient_edit_name')} onClick={handleEditName} />
             <ContextMenuSeparator />
             <ContextMenuItem label={tCommon('delete')} onClick={() => {

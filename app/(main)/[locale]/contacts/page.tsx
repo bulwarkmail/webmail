@@ -20,7 +20,7 @@ import { exportContacts } from "@/components/contacts/contact-export";
 import { AppTopBannerSlot } from "@/components/plugins/app-top-banner-slot";
 import { useContactStore, getContactDisplayName, getContactPrimaryEmail } from "@/stores/contact-store";
 import { savePendingMailto } from "@/lib/protocol-handlers/session";
-import { formatRecipient } from "@/lib/email-composer-utils";
+import { formatRecipient, formatRecipientEntry, type Recipient } from "@/lib/email-composer-utils";
 import { useAuthStore, redirectToLogin } from "@/stores/auth-store";
 import { useEmailStore } from "@/stores/email-store";
 import { usePolicyStore } from "@/stores/policy-store";
@@ -513,23 +513,31 @@ export default function ContactsPage() {
   }, [router]);
 
   const handleComposeGroupFromSidebar = useCallback((groupId: string, field: "to" | "cc" | "bcc") => {
-    // Format each member as "Name <email>" so the composer keeps the display
-    // name (round-trips via formatRecipient -> parseRecipientList). Dedupe by
-    // email, case-insensitively; members without an email are skipped.
+    // Hand the composer a single group chip (RFC 5322 group syntax survives
+    // the string hand-off) instead of one entry per member - the chip expands
+    // into the members when the message is sent. Dedupe by email,
+    // case-insensitively; members without an email are skipped.
     const seen = new Set<string>();
-    const recipients: string[] = [];
+    const members: Array<{ name?: string; email: string }> = [];
     for (const member of getGroupMembers(groupId)) {
       const email = getContactPrimaryEmail(member).trim();
       const key = email.toLowerCase();
       if (!email || seen.has(key)) continue;
       seen.add(key);
-      recipients.push(formatRecipient(getContactDisplayName(member), email));
+      const name = getContactDisplayName(member);
+      members.push({ name: name && name !== email ? name : undefined, email });
     }
-    if (recipients.length === 0) {
+    if (members.length === 0) {
       toast.error(t("groups.no_member_emails"));
       return;
     }
-    openComposeInApp(recipients, field);
+    const group = useContactStore.getState().contacts.find((c) => c.id === groupId);
+    const chip: Recipient = {
+      name: (group && getContactDisplayName(group)) || "Group",
+      email: "",
+      group: { members },
+    };
+    openComposeInApp([formatRecipientEntry(chip)], field);
   }, [getGroupMembers, t, openComposeInApp]);
 
   const handleComposeContact = useCallback((contact: ContactCard) => {

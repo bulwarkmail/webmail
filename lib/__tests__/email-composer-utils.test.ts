@@ -12,7 +12,9 @@ import {
   splitPastedRecipients,
   waitForPendingUploads,
   extractUserAuthoredText,
-} from "../email-composer-utils";
+  formatRecipientEntry,
+  expandRecipients,
+} from '../email-composer-utils';
 
 const FORWARDED_SEPARATOR = "---------- Forwarded message ----------";
 
@@ -420,5 +422,58 @@ describe("waitForPendingUploads", () => {
       1
     );
     expect(result).toBe("cancelled");
+  });
+});
+
+describe('contact group recipients (RFC 5322 group syntax)', () => {
+  const group = {
+    name: 'Vertrieb',
+    email: '',
+    group: { members: [
+      { name: 'Anna Alt', email: 'anna@example.com' },
+      { email: 'bob@example.com' },
+    ] },
+  };
+
+  it('formats a group chip as RFC 5322 group syntax', () => {
+    expect(formatRecipientEntry(group)).toBe('Vertrieb: Anna Alt <anna@example.com>, bob@example.com;');
+  });
+
+  it('round-trips a group through format -> parse', () => {
+    const parsed = parseRecipientList(formatRecipientList([group, { email: 'solo@example.com' }]));
+    expect(parsed).toHaveLength(2);
+    expect(parsed[0].group?.members).toEqual([
+      { name: 'Anna Alt', email: 'anna@example.com' },
+      { email: 'bob@example.com' },
+    ]);
+    expect(parsed[0].name).toBe('Vertrieb');
+    expect(parsed[0].email).toBe('');
+    expect(parsed[1]).toEqual({ email: 'solo@example.com' });
+  });
+
+  it('quotes group names containing specials and round-trips them', () => {
+    const tricky = { name: 'Sales, EMEA', email: '', group: { members: [{ email: 'a@x.de' }] } };
+    const parsed = parseRecipientList(formatRecipientList([tricky]));
+    expect(parsed[0].name).toBe('Sales, EMEA');
+    expect(parsed[0].group?.members).toEqual([{ email: 'a@x.de' }]);
+  });
+
+  it('keeps commas inside a group while splitting a mixed list', () => {
+    const parsed = parseRecipientList('first@x.de, Team: a@x.de, b@x.de;, last@x.de');
+    expect(parsed.map(r => r.email || r.name)).toEqual(['first@x.de', 'Team', 'last@x.de']);
+    expect(parsed[1].group?.members).toHaveLength(2);
+  });
+
+  it('expandRecipients flattens groups and dedupes against individuals', () => {
+    const expanded = expandRecipients([
+      { name: 'Anna Alt', email: 'ANNA@example.com' },
+      group,
+      { email: 'bob@example.com' },
+    ]);
+    expect(expanded.map(r => r.email)).toEqual(['ANNA@example.com', 'bob@example.com']);
+  });
+
+  it('leaves plain recipients untouched by expansion', () => {
+    expect(expandRecipients([{ name: 'X', email: 'x@y.z' }])).toEqual([{ name: 'X', email: 'x@y.z' }]);
   });
 });

@@ -188,7 +188,7 @@ interface ContactStore {
   setActiveTab: (tab: 'all' | 'groups') => void;
   clearContacts: () => void;
 
-  getAutocomplete: (query: string) => Array<{ name: string; email: string }>;
+  getAutocomplete: (query: string) => Array<{ name: string; email: string; group?: { id: string; memberCount: number } }>;
 
   getGroups: () => ContactCard[];
   getIndividuals: () => ContactCard[];
@@ -527,20 +527,18 @@ export const useContactStore = create<ContactStore>()(
         if (!query || query.length < 1) return [];
 
         const lower = query.toLowerCase();
-        const results: Array<{ name: string; email: string }> = [];
+        const results: Array<{ name: string; email: string; group?: { id: string; memberCount: number } }> = [];
 
         for (const contact of contacts) {
           if (contact.kind === 'group') {
+            // Suggest the group itself as a single entry (Outlook-style);
+            // the composer turns it into one chip carrying the members.
             const groupName = getContactDisplayName(contact);
-            if (groupName.toLowerCase().includes(lower)) {
-              const members = get().getGroupMembers(contact.id);
-              for (const member of members) {
-                const memberName = getContactDisplayName(member);
-                const memberEmails = member.emails ? Object.values(member.emails) : [];
-                for (const emailEntry of memberEmails) {
-                  if (!emailEntry.address) continue;
-                  results.push({ name: memberName, email: emailEntry.address });
-                }
+            if (groupName && groupName.toLowerCase().includes(lower)) {
+              const memberCount = get().getGroupMembers(contact.id)
+                .filter(m => getContactPrimaryEmail(m).trim()).length;
+              if (memberCount > 0) {
+                results.push({ name: groupName, email: '', group: { id: contact.id, memberCount } });
               }
             }
             continue;

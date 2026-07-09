@@ -109,8 +109,17 @@ export function extractUserAuthoredText(
   return text;
 }
 
-/** A composer recipient. Display name is optional; email is required. */
-export type Recipient = { name?: string; email: string };
+/**
+ * A composer recipient. Display name is optional; email is required - except
+ * for contact-group chips, which carry their already-resolved members and an
+ * empty email. Group chips are expanded into their members when the message
+ * is sent or saved as a draft (see {@link expandRecipients}).
+ */
+export type Recipient = {
+  name?: string;
+  email: string;
+  group?: { members: Array<{ name?: string; email: string }> };
+};
 
 /**
  * Splits a recipient string into individual entries on any character in
@@ -127,6 +136,7 @@ export function splitRecipients(value: string, separators = ','): string[] {
   let current = '';
   let inQuotes = false;
   let inAngle = false;
+  let inGroup = false;
   for (const ch of value) {
     if (ch === '"') {
       inQuotes = !inQuotes;
@@ -137,7 +147,17 @@ export function splitRecipients(value: string, separators = ','): string[] {
     } else if (ch === '>' && !inQuotes) {
       inAngle = false;
       current += ch;
-    } else if (separators.includes(ch) && !inQuotes && !inAngle) {
+    } else if (ch === ':' && !inQuotes && !inAngle) {
+      // RFC 5322 group syntax ("Team: a@x, b@y;") - keep the whole group,
+      // separators inside it included, as a single entry. A colon inside a
+      // display name is always quoted (see NAME_NEEDS_QUOTING), so a bare
+      // colon reliably opens a group.
+      inGroup = true;
+      current += ch;
+    } else if (ch === ';' && inGroup && !inQuotes && !inAngle) {
+      inGroup = false;
+      current += ch;
+    } else if (separators.includes(ch) && !inQuotes && !inAngle && !inGroup) {
       const trimmed = current.trim();
       if (trimmed) result.push(trimmed);
       current = '';
@@ -177,12 +197,41 @@ function unquoteName(name: string): string {
   return trimmed;
 }
 
+/** Index of the first colon outside quotes/angle brackets, or -1. */
+function findTopLevelColon(value: string): number {
+  let inQuotes = false;
+  let inAngle = false;
+  for (let i = 0; i < value.length; i++) {
+    const ch = value[i];
+    if (ch === '"') inQuotes = !inQuotes;
+    else if (ch === '<' && !inQuotes) inAngle = true;
+    else if (ch === '>' && !inQuotes) inAngle = false;
+    else if (ch === ':' && !inQuotes && !inAngle) return i;
+  }
+  return -1;
+}
+
 /**
  * Parses a single recipient string (`Name <email>`, `"Quoted, Name" <email>`,
  * or bare `email`) into a {@link Recipient}. The display name is unquoted.
+ * RFC 5322 group syntax (`Team: a@x, b@y;`) parses into a group chip - it is
+ * how contact groups round-trip through the composer's string boundaries.
  */
 export function parseRecipient(s: string): Recipient {
   const trimmed = s.trim();
+  if (trimmed.endsWith(';')) {
+    const colon = findTopLevelColon(trimmed);
+    if (colon !== -1) {
+      const members = splitRecipients(trimmed.slice(colon + 1, -1))
+        .map(parseRecipient)
+        .filter((m) => m.email && !m.group);
+      // Only accept the group form when it actually carries members - typed
+      // garbage like "Subject: hello;" stays a plain (invalid) recipient.
+      if (members.length > 0) {
+        return { name: unquoteName(trimmed.slice(0, colon)), email: '', group: { members } };
+      }
+    }
+  }
   const angleMatch = trimmed.match(/^(.+?)\s*<([^>]+)>$/);
   if (angleMatch) {
     return { name: unquoteName(angleMatch[1]), email: angleMatch[2].trim() };
@@ -195,9 +244,46 @@ export function parseRecipientList(value: string): Recipient[] {
   return splitRecipients(value).map(parseRecipient);
 }
 
+/**
+ * Formats a single composer recipient, using RFC 5322 group syntax for
+ * contact-group chips so they survive the composer's string boundaries
+ * (draft data, dirty compare, the contacts-page hand-off).
+ */
+export function formatRecipientEntry(r: Recipient): string {
+  if (r.group) {
+    const name = r.name?.trim() || 'Group';
+    const quoted = NAME_NEEDS_QUOTING.test(name)
+      ? `"${name.replace(/(["\\])/g, '\\$1')}"`
+      : name;
+    const members = r.group.members.map((m) => formatRecipient(m.name, m.email)).join(', ');
+    return `${quoted}: ${members};`;
+  }
+  return formatRecipient(r.name, r.email);
+}
+
 /** Serializes a recipient array into a comma-separated string. */
 export function formatRecipientList(recipients: Recipient[]): string {
-  return recipients.map((r) => formatRecipient(r.name, r.email)).join(', ');
+  return recipients.map(formatRecipientEntry).join(', ');
+}
+
+/**
+ * Expands contact-group chips into their members for sending and
+ * draft-saving. Deduplicates case-insensitively by address across the whole
+ * list, keeping the first occurrence - an explicitly added individual wins
+ * over the same address arriving again via a group.
+ */
+export function expandRecipients(recipients: Recipient[]): Recipient[] {
+  const seen = new Set<string>();
+  const out: Recipient[] = [];
+  for (const r of recipients) {
+    for (const entry of r.group ? r.group.members : [r]) {
+      const key = entry.email.trim().toLowerCase();
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      out.push({ name: entry.name, email: entry.email });
+    }
+  }
+  return out;
 }
 
 /**

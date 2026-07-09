@@ -835,6 +835,11 @@ export interface RecipientSuggestion {
   /** Optional source label rendered as a small tag */
   source?: string;
   avatarUrl?: string;
+  /**
+   * Present when the suggestion is a contact group (empty email). Selecting
+   * it inserts a single group chip that expands into the members on send.
+   */
+  group?: { id: string; memberCount: number };
 }
 
 /**
