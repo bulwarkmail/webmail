@@ -654,7 +654,6 @@
     "continue_draft": "下書きを続ける",
     "close_draft_title": "下書きを保存または破棄しますか？",
     "close_draft_message": "未保存の変更があります。下書きとして保存しますか、それとも破棄しますか？",
-    "save_draft": "下書きを保存",
     "drop_files": "ファイルをドロップして添付",
     "show_less": "折りたたむ",
     "forgot_attachment": {

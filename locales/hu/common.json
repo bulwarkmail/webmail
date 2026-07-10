@@ -650,7 +650,6 @@
     "continue_draft": "Piszkozat folytatása",
     "close_draft_title": "Piszkozat mentése vagy elvetése?",
     "close_draft_message": "Nem mentett változtatások vannak. Szeretnéd piszkozatként menteni vagy elvetni?",
-    "save_draft": "Piszkozat mentése",
     "smime_sign_on": "S/MIME aláírás engedélyezve",
     "smime_sign_off": "S/MIME aláírás engedélyezése",
     "smime_encrypt_on": "S/MIME titkosítás engedélyezve",

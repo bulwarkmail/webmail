@@ -2754,7 +2754,7 @@ export function EmailComposer({
               </Button>
               <Button onClick={handleSaveDraftAndClose}>
                 <Save className="w-4 h-4 me-2" />
-                {t('save_draft')}
+                {tCommon('save')}
               </Button>
             </div>
           </div>

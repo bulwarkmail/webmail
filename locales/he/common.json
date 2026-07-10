@@ -599,7 +599,6 @@
     "continue_draft": "המשך טיוטה",
     "close_draft_title": "לשמור או למחוק טיוטה?",
     "close_draft_message": "יש לך שינויים שלא נשמרו. האם תרצה לשמור את זה כטיוטה או למחוק אותו?",
-    "save_draft": "שמור טיוטה",
     "smime_sign_on": "חתימת S/MIME מופעלת",
     "smime_sign_off": "אפשר חתימת S/MIME",
     "smime_encrypt_on": "הצפנת S/MIME מופעלת",

@@ -647,7 +647,6 @@
     "continue_draft": "Продолжить черновик",
     "close_draft_title": "Сохранить или удалить черновик?",
     "close_draft_message": "Есть несохранённые изменения. Сохранить как черновик или удалить?",
-    "save_draft": "Сохранить черновик",
     "smime_sign_on": "Подпись S/MIME включена",
     "smime_sign_off": "Включить подпись S/MIME",
     "smime_encrypt_on": "Шифрование S/MIME включено",

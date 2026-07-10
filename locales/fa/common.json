@@ -650,7 +650,6 @@
     "continue_draft": "ادامه پیش‌نویس",
     "close_draft_title": "ذخیره یا دور انداختن پیش‌نویس؟",
     "close_draft_message": "تغییرات ذخیره نشده دارید. ذخیره یا دور انداختن؟",
-    "save_draft": "ذخیره پیش‌نویس",
     "smime_sign_on": "امضای S/MIME فعال",
     "smime_sign_off": "فعال کردن امضای S/MIME",
     "smime_encrypt_on": "رمزنگاری S/MIME فعال",

@@ -650,7 +650,6 @@
     "continue_draft": "Taslağa devam et",
     "close_draft_title": "Taslak kaydedilsin mi yoksa silinsin mi?",
     "close_draft_message": "Kaydedilmemiş değişiklikleriniz var. Bunu taslak olarak kaydetmek ister misiniz yoksa vazgeçmek mi?",
-    "save_draft": "Taslağı Kaydet",
     "smime_sign_on": "S/MIME imzalama etkin",
     "smime_sign_off": "S/MIME imzalamayı etkinleştir",
     "smime_encrypt_on": "S/MIME şifreleme etkin",

@@ -650,7 +650,6 @@
     "continue_draft": "Continue draft",
     "close_draft_title": "Save or discard draft?",
     "close_draft_message": "You have unsaved changes. Would you like to save this as a draft or discard it?",
-    "save_draft": "Save Draft",
     "smime_sign_on": "S/MIME signing enabled",
     "smime_sign_off": "Enable S/MIME signing",
     "smime_encrypt_on": "S/MIME encryption enabled",

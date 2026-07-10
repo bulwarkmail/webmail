@@ -649,7 +649,6 @@
     "continue_draft": "Fortsæt kladde",
     "close_draft_title": "Gem eller kassér kladde?",
     "close_draft_message": "Du har ugemte ændringer. Vil du gemme dette som en kladde eller kassere det?",
-    "save_draft": "Gem kladde",
     "smime_sign_on": "S/MIME-signering aktiveret",
     "smime_sign_off": "Aktivér S/MIME-signering",
     "smime_encrypt_on": "S/MIME-kryptering aktiveret",

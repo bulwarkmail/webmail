@@ -647,7 +647,6 @@
     "continue_draft": "继续编辑草稿",
     "close_draft_title": "保存或丢弃草稿？",
     "close_draft_message": "您有未保存的更改。要将其保存为草稿还是丢弃？",
-    "save_draft": "保存草稿",
     "smime_sign_on": "S/MIME 签名已启用",
     "smime_sign_off": "启用 S/MIME 签名",
     "smime_encrypt_on": "S/MIME 加密已启用",

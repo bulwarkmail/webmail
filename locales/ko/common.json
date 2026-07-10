@@ -647,7 +647,6 @@
     "continue_draft": "이어서 작성하기",
     "close_draft_title": "임시보관함에 저장할까요?",
     "close_draft_message": "저장되지 않은 내용이 있어요. 임시보관함에 저장할까요, 아니면 삭제할까요?",
-    "save_draft": "임시보관",
     "smime_sign_on": "S/MIME 서명 켜짐",
     "smime_sign_off": "S/MIME 서명 켜기",
     "smime_encrypt_on": "S/MIME 암호화 켜짐",

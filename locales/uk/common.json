@@ -647,7 +647,6 @@
     "continue_draft": "Продовжити чернетку",
     "close_draft_title": "Зберегти чи видалити чернетку?",
     "close_draft_message": "У вас є незбережені зміни. Зберегти це як чернетку чи видалити?",
-    "save_draft": "Зберегти чернетку",
     "smime_sign_on": "Підпис S/MIME увімкнено",
     "smime_sign_off": "Увімкнути підпис S/MIME",
     "smime_encrypt_on": "Шифрування S/MIME увімкнено",

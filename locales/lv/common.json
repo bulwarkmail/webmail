@@ -647,7 +647,6 @@
     "continue_draft": "Turpināt melnrakstu",
     "close_draft_title": "Saglabāt vai atmest melnrakstu?",
     "close_draft_message": "Ir nesaglabātas izmaiņas. Vai vēlaties saglabāt kā melnrakstu vai atmest?",
-    "save_draft": "Saglabāt melnrakstu",
     "smime_sign_on": "S/MIME paraksts iespējots",
     "smime_sign_off": "Iespējot S/MIME parakstu",
     "smime_encrypt_on": "S/MIME šifrēšana iespējota",
