@@ -507,6 +507,14 @@ export class JMAPClient implements IJMAPClient {
   private session: JMAPSession | null = null;
   private lastPingTime: number = 0;
   private pingInterval: NodeJS.Timeout | null = null;
+  // Set by disconnect() so async callbacks that were already in flight
+  // (keep-alive ping, SSE error handlers) cannot revive timers or
+  // reconnect after an intentional sign-out (#588).
+  private intentionallyDisconnected = false;
+  // Consecutive keep-alive failures; failed pings skip upcoming ticks
+  // (30s -> 1m -> 2m -> ~5m) instead of hammering a down server (#588).
+  private pingFailureCount = 0;
+  private pingSkipRemaining = 0;
   private accounts: Record<string, JMAPAccount> = {};
   private eventSource: EventSource | null = null;
   private stateChangeCallback: ((change: StateChange) => void) | null = null;
@@ -689,6 +697,7 @@ export class JMAPClient implements IJMAPClient {
   }
 
   async connect(): Promise<void> {
+    this.intentionallyDisconnected = false;
     const sessionUrl = `${this.serverUrl}/.well-known/jmap`;
 
     try {
@@ -758,19 +767,33 @@ export class JMAPClient implements IJMAPClient {
     this.stopKeepAlive();
 
     this.pingInterval = setInterval(async () => {
+      if (this.intentionallyDisconnected) return;
       // Skip ping while rate-limited to avoid compounding auth failures
       if (this.isRateLimited()) return;
+      // Back off while the server is down: each consecutive failure skips
+      // more ticks (30s -> 1m -> 2m -> ~5m) instead of retrying flat-out.
+      if (this.pingSkipRemaining > 0) {
+        this.pingSkipRemaining--;
+        return;
+      }
       try {
         await this.ping();
+        this.pingFailureCount = 0;
         this.connectionChangeCallback?.(true);
       } catch (error) {
         if (error instanceof RateLimitError) {
           return;
         }
+        // A sign-out while the ping was in flight - stay down.
+        if (this.intentionallyDisconnected) return;
+        this.pingFailureCount++;
+        this.pingSkipRemaining = Math.min(2 ** this.pingFailureCount, 10) - 1;
         console.error('Keep-alive ping failed:', error);
         this.connectionChangeCallback?.(false);
         try {
           await this.reconnect();
+          this.pingFailureCount = 0;
+          this.pingSkipRemaining = 0;
           this.connectionChangeCallback?.(true);
         } catch (reconnectError) {
           console.error('Reconnection failed:', reconnectError);
@@ -803,10 +826,12 @@ export class JMAPClient implements IJMAPClient {
   }
 
   async reconnect(): Promise<void> {
+    if (this.intentionallyDisconnected) return;
     await this.connect();
   }
 
   disconnect(): void {
+    this.intentionallyDisconnected = true;
     this.stopKeepAlive();
     this.closePushNotifications();
     if (this.rateLimitTimeout) {
@@ -5758,6 +5783,7 @@ export class JMAPClient implements IJMAPClient {
   }
 
   private scheduleSSEReconnect(): void {
+    if (this.intentionallyDisconnected) return;
     const eventSourceUrl = this.getEventSourceUrl();
     if (!eventSourceUrl) {
       this.fallbackToPolling();
@@ -5783,6 +5809,7 @@ export class JMAPClient implements IJMAPClient {
   }
 
   private startPollingFallback(): void {
+    if (this.intentionallyDisconnected) return;
     if (this.isRateLimited()) {
       return;
     }

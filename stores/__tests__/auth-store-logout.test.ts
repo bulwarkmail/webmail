@@ -125,13 +125,61 @@ describe('auth-store logout redirects', () => {
     expect(sessionStorage.getItem('session_expired')).toBeNull();
     expect(replaceSpy).not.toHaveBeenCalled();
 
+    const countPuts = () => fetchMock.mock.calls.filter(
+      ([input, init]) => String(input) === '/api/auth/token?slot=0' && init?.method === 'PUT',
+    ).length;
+
     // A retry is armed: advancing past the ~30 s window fires a second PUT.
     await vi.advanceTimersByTimeAsync(31_000);
-    const refreshPuts = fetchMock.mock.calls.filter(
-      ([input, init]) => String(input) === '/api/auth/token?slot=0' && init?.method === 'PUT',
-    );
-    expect(refreshPuts.length).toBe(2);
+    expect(countPuts()).toBe(2);
     expect(useAuthStore.getState().isAuthenticated).toBe(true);
+
+    // Backoff: after the second failure the next retry waits ~60 s, not 30.
+    await vi.advanceTimersByTimeAsync(31_000);
+    expect(countPuts()).toBe(2);
+    await vi.advanceTimersByTimeAsync(30_000);
+    expect(countPuts()).toBe(3);
+  });
+
+  it('stops retrying when the user signs out during the outage (#588)', async () => {
+    vi.useFakeTimers();
+
+    let resolveInFlight: ((value: { ok: boolean; status: number; json: () => Promise<object> }) => void) | undefined;
+    const fetchMock = vi.fn(async (input: FetchInput, init?: FetchInit) => {
+      const url = String(input);
+      const method = init?.method ?? 'GET';
+
+      if (url === '/api/auth/token?slot=0' && method === 'PUT') {
+        return new Promise((resolve) => { resolveInFlight = resolve; });
+      }
+      if (method === 'DELETE') {
+        return { ok: true, json: async () => ({}) };
+      }
+      throw new Error(`Unexpected fetch call: ${method} ${url}`);
+    });
+
+    vi.stubGlobal('fetch', fetchMock);
+    vi.spyOn(browserNavigation, 'replaceWindowLocation').mockImplementation(() => {});
+
+    useAuthStore.setState({
+      isAuthenticated: true,
+      authMode: 'oauth',
+      activeAccountId: null,
+    });
+
+    // Refresh goes in flight, then the user signs out before it settles.
+    const pending = useAuthStore.getState().refreshAccessToken();
+    useAuthStore.getState().logout();
+    resolveInFlight!({ ok: false, status: 503, json: async () => ({}) });
+    await pending;
+
+    // The failure lands after the sign-out - no retry may be re-armed.
+    const countPuts = () => fetchMock.mock.calls.filter(
+      ([input, init]) => String(input) === '/api/auth/token?slot=0' && init?.method === 'PUT',
+    ).length;
+    expect(countPuts()).toBe(1);
+    await vi.advanceTimersByTimeAsync(600_000);
+    expect(countPuts()).toBe(1);
   });
 
   it('keeps the session when the refresh request fails with a network error', async () => {

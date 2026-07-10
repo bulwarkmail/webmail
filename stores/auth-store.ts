@@ -327,9 +327,34 @@ const clients = new Map<string, JMAPClient>();
 const refreshTimers = new Map<string, ReturnType<typeof setTimeout>>();
 const refreshPromises = new Map<string, Promise<string | null>>();
 
-// Pseudo-expiry passed to scheduleRefresh when a refresh failed transiently:
-// the "expiry - 60s" math below turns 90 into a retry in ~30 seconds.
-const TOKEN_REFRESH_RETRY_SECONDS = 90;
+// Retry backoff for transiently failed token refreshes (#588). The values
+// are pseudo-expiries for scheduleRefresh - its "expiry - 60s" math turns
+// them into delays of 30s, 1m, 2m and 5m (capped). Consecutive failures
+// climb the ladder; any success resets it.
+const TOKEN_REFRESH_RETRY_LADDER_SECONDS = [90, 120, 180, 360] as const;
+const refreshFailureCounts = new Map<string, number>();
+
+function nextRefreshRetrySeconds(accountId?: string): number {
+  const key = accountId ?? '__global__';
+  const failures = refreshFailureCounts.get(key) ?? 0;
+  refreshFailureCounts.set(key, failures + 1);
+  return TOKEN_REFRESH_RETRY_LADDER_SECONDS[
+    Math.min(failures, TOKEN_REFRESH_RETRY_LADDER_SECONDS.length - 1)
+  ];
+}
+
+function resetRefreshBackoff(accountId?: string): void {
+  refreshFailureCounts.delete(accountId ?? '__global__');
+}
+
+// Only re-arm a failed refresh while someone is still signed in to that
+// account. A sign-out during the outage - or while the request was in
+// flight - must end the retry loop instead of keeping it alive with
+// doomed requests (#588).
+function shouldRetryRefresh(accountId?: string): boolean {
+  if (accountId) return !!useAccountStore.getState().getAccountById(accountId);
+  return useAuthStore.getState().isAuthenticated;
+}
 
 function scheduleRefresh(expiresIn: number, refreshFn: () => Promise<string | null>, accountId?: string): void {
   if (accountId) {
@@ -360,11 +385,13 @@ function clearRefreshTimer(accountId?: string): void {
       refreshTimers.delete(accountId);
     }
     refreshPromises.delete(accountId);
+    refreshFailureCounts.delete(accountId);
   } else {
     if (refreshTimer) {
       clearTimeout(refreshTimer);
       refreshTimer = null;
     }
+    refreshFailureCounts.delete('__global__');
     refreshPromise = null;
   }
 }
@@ -375,6 +402,7 @@ function clearAllRefreshTimers(): void {
   for (const timer of refreshTimers.values()) clearTimeout(timer);
   refreshTimers.clear();
   refreshPromises.clear();
+  refreshFailureCounts.clear();
 }
 
 /**
@@ -990,13 +1018,17 @@ export const useAuthStore = create<AuthState>()(
               // the session and retry shortly so "stay signed in" survives
               // maintenance windows and offline spells.
               if (res.status === 401) {
+                resetRefreshBackoff(accountId ?? undefined);
                 notifyParent('sso:session-expired');
                 markSessionExpired();
                 get().logout();
                 return null;
               }
-              debug.error(`Token refresh unavailable (${res.status}), retrying shortly`);
-              scheduleRefresh(TOKEN_REFRESH_RETRY_SECONDS, get().refreshAccessToken, accountId ?? undefined);
+              if (shouldRetryRefresh(accountId ?? undefined)) {
+                const retryIn = nextRefreshRetrySeconds(accountId ?? undefined);
+                debug.error(`Token refresh unavailable (${res.status}), retrying with backoff`);
+                scheduleRefresh(retryIn, get().refreshAccessToken, accountId ?? undefined);
+              }
               return null;
             }
 
@@ -1018,13 +1050,16 @@ export const useAuthStore = create<AuthState>()(
               tokenExpiresAt: Date.now() + expires_in * 1000,
             });
 
+            resetRefreshBackoff(accountId ?? undefined);
             scheduleRefresh(expires_in, get().refreshAccessToken, accountId ?? undefined);
             return access_token;
           } catch (error) {
             // Network failure (offline, Wi-Fi switch, server unreachable) -
-            // not a rejection. Keep the session and retry shortly.
-            debug.error('Token refresh failed, retrying shortly:', error);
-            scheduleRefresh(TOKEN_REFRESH_RETRY_SECONDS, get().refreshAccessToken, accountId ?? undefined);
+            // not a rejection. Keep the session and retry with backoff.
+            debug.error('Token refresh failed, retrying with backoff:', error);
+            if (shouldRetryRefresh(accountId ?? undefined)) {
+              scheduleRefresh(nextRefreshRetrySeconds(accountId ?? undefined), get().refreshAccessToken, accountId ?? undefined);
+            }
             return null;
           } finally {
             refreshPromise = null;
