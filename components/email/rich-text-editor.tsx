@@ -41,6 +41,7 @@ import {
   Heading1,
   Heading2,
   Table as TableIcon,
+  Baseline,
   Trash2,
   Rows3,
   Columns3,
@@ -142,6 +143,14 @@ function ToolbarSeparator() {
 
 const TABLE_PICKER_ROWS = 6;
 const TABLE_PICKER_COLS = 8;
+
+// Preset text colours (2 x 8). Inline `style="color: …"` survives email
+// round-trips; the TextStyle/Color extensions are already registered to
+// preserve pasted colours - this palette just adds a UI to set them.
+const TEXT_COLORS = [
+  "#000000", "#5f6368", "#9aa0a6", "#c5221f", "#e8710a", "#f9ab00", "#188038", "#1967d2",
+  "#7627bb", "#c2185b", "#795548", "#fa5252", "#fd7e14", "#40c057", "#4dabf7", "#e64980",
+];
 
 function TableSizePicker({ onPick }: { onPick: (rows: number, cols: number) => void }) {
   const [hover, setHover] = useState<{ r: number; c: number } | null>(null);
@@ -336,6 +345,19 @@ export function RichTextEditor({
 
   const [tableMenuOpen, setTableMenuOpen] = useState(false);
   const tableWrapperRef = useRef<HTMLDivElement>(null);
+  const [colorMenuOpen, setColorMenuOpen] = useState(false);
+  const colorWrapperRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!colorMenuOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (colorWrapperRef.current && !colorWrapperRef.current.contains(e.target as Node)) {
+        setColorMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [colorMenuOpen]);
 
   useEffect(() => {
     if (!tableMenuOpen) return;
@@ -386,6 +408,49 @@ export function RichTextEditor({
         >
           <Strikethrough className="w-4 h-4" />
         </ToolbarButton>
+        <div ref={colorWrapperRef} className="relative">
+          <ToolbarButton
+            active={!!editor.getAttributes("textStyle").color}
+            onClick={() => setColorMenuOpen((v) => !v)}
+            title="Text color"
+          >
+            {/* The icon itself previews the active colour - no layout shift. */}
+            <Baseline className="w-4 h-4" style={{ color: editor.getAttributes("textStyle").color || undefined }} />
+          </ToolbarButton>
+          {colorMenuOpen && (
+            <div className="absolute z-50 top-full left-0 mt-1 bg-popover border border-border rounded-md shadow-md p-2">
+              <div className="grid gap-0.5" style={{ gridTemplateColumns: "repeat(8, 1fr)" }}>
+                {TEXT_COLORS.map((color) => (
+                  <button
+                    key={color}
+                    type="button"
+                    title={color}
+                    onClick={() => {
+                      editor.chain().focus().setColor(color).run();
+                      setColorMenuOpen(false);
+                    }}
+                    className={cn(
+                      "w-4 h-4 border border-border/60 rounded-[2px] transition-transform hover:scale-110",
+                      editor.getAttributes("textStyle").color === color && "ring-1 ring-ring ring-offset-1"
+                    )}
+                    style={{ backgroundColor: color }}
+                  />
+                ))}
+              </div>
+              <div className="h-px bg-border my-1.5" />
+              <button
+                type="button"
+                className="flex items-center gap-2 px-2 py-1 text-sm rounded hover:bg-accent text-start w-full"
+                onClick={() => {
+                  editor.chain().focus().unsetColor().run();
+                  setColorMenuOpen(false);
+                }}
+              >
+                <RemoveFormatting className="w-4 h-4" /> Remove color
+              </button>
+            </div>
+          )}
+        </div>
 
         <ToolbarSeparator />
 
