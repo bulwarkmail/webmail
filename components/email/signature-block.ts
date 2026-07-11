@@ -7,6 +7,23 @@ import { Node as TiptapNode, mergeAttributes } from "@tiptap/core";
 export const SIGNATURE_BLOCK_MARKER = "data-signature-block-node";
 
 /**
+ * Force every link in the rendered signature to open in a new tab.
+ *
+ * Applied to the NodeView's DOM only, never to `attrs.html` — that attribute is
+ * what serializeEditorContent emits into the sent message, and the recipient's
+ * copy should stay exactly as the user wrote it. Without this the composer's
+ * signature is a set of live, target-less anchors in the main document (the
+ * message body gets a sandboxed iframe; this does not), so one stray click
+ * navigates the whole app away and takes the unsent draft with it.
+ */
+function forceLinksToNewTab(root: HTMLElement): void {
+  root.querySelectorAll("a[href]").forEach((a) => {
+    a.setAttribute("target", "_blank");
+    a.setAttribute("rel", "noopener noreferrer");
+  });
+}
+
+/**
  * SignatureBlock — an atomic, NON-editable block node that carries the
  * *verbatim* HTML of the user's identity signature in its `html` attribute.
  *
@@ -61,6 +78,7 @@ export const SignatureBlock = TiptapNode.create({
       dom.setAttribute(SIGNATURE_BLOCK_MARKER, "");
       dom.className = "signature-block-island";
 
+
       // CRITICAL: render the signature inside a Shadow Root. The app's global
       // CSS (Tailwind preflight, .tiptap table/td rules, box-sizing resets)
       // would otherwise cascade INTO the signature and destroy its layout -
@@ -71,7 +89,12 @@ export const SignatureBlock = TiptapNode.create({
       const inner = document.createElement("div");
       // Read-only: a signature is inserted/removed as a unit, not edited inline.
       inner.contentEditable = "false";
-      inner.innerHTML = node.attrs.html || "";
+      // Track what we were given, not what's in the DOM: forceLinksToNewTab
+      // rewrites the markup, so inner.innerHTML no longer round-trips against
+      // attrs.html and comparing the two would rewrite on every transaction.
+      let appliedHtml = node.attrs.html || "";
+      inner.innerHTML = appliedHtml;
+      forceLinksToNewTab(inner);
       shadow.appendChild(inner);
 
       return {
@@ -83,8 +106,11 @@ export const SignatureBlock = TiptapNode.create({
         stopEvent: () => false,
         update: (updatedNode) => {
           if (updatedNode.type.name !== "signatureBlock") return false;
-          if (inner.innerHTML !== (updatedNode.attrs.html || "")) {
-            inner.innerHTML = updatedNode.attrs.html || "";
+          const nextHtml = updatedNode.attrs.html || "";
+          if (nextHtml !== appliedHtml) {
+            appliedHtml = nextHtml;
+            inner.innerHTML = nextHtml;
+            forceLinksToNewTab(inner);
           }
           return true;
         },

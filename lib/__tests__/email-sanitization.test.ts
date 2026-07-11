@@ -3,6 +3,7 @@ import DOMPurify from 'dompurify';
 import {
   sanitizeEmailHtml,
   sanitizeSignatureHtml,
+  sanitizeSignatureHtmlForDisplay,
   parseHtmlSafely,
   hasRichFormatting,
   plainTextToSafeHtml,
@@ -579,6 +580,43 @@ describe('email-sanitization', () => {
       const result = plainTextToSafeHtml('try javascript:alert(1) or file:///etc/passwd');
       expect(result).not.toContain('<a ');
       expect(result).toContain('javascript:alert(1)');
+    });
+  });
+
+  describe('sanitizeSignatureHtmlForDisplay', () => {
+    // Signatures render into the main document (identity-form preview, composer
+    // block), not the sandboxed iframe, so a target-less anchor navigates the
+    // whole app away and takes the unsaved draft/signature with it.
+    it('forces target=_blank and rel on signature links', () => {
+      const clean = sanitizeSignatureHtmlForDisplay('<p><a href="https://example.com">Site</a></p>');
+      expect(clean).toContain('target="_blank"');
+      expect(clean).toContain('rel="noopener noreferrer"');
+    });
+
+    it('overrides a target the user supplied themselves', () => {
+      const clean = sanitizeSignatureHtmlForDisplay('<a href="https://example.com" target="_top">x</a>');
+      expect(clean).toContain('target="_blank"');
+      expect(clean).not.toContain('_top');
+    });
+
+    it('keeps the image restrictions of the storage sanitizer', () => {
+      const clean = sanitizeSignatureHtmlForDisplay(
+        '<img src="http://insecure.example.com/l.png"><img src="https://cdn.example.com/l.png">',
+      );
+      expect(clean).not.toContain('insecure.example.com');
+      expect(clean).toContain('https://cdn.example.com/l.png');
+    });
+
+    it('does not leak target into the stored or sent signature', () => {
+      // sanitizeSignatureHtml feeds both storage and the outgoing message body.
+      const stored = sanitizeSignatureHtml('<p><a href="https://example.com">Site</a></p>');
+      expect(stored).toContain('href="https://example.com"');
+      expect(stored).not.toContain('target=');
+    });
+
+    it('handles empty input', () => {
+      expect(sanitizeSignatureHtmlForDisplay('')).toBe('');
+      expect(sanitizeSignatureHtmlForDisplay('   ')).toBe('');
     });
   });
 

@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import type { Identity, EmailAddress } from '@/lib/jmap/types';
-import { sanitizeSignatureHtml } from '@/lib/email-sanitization';
+import { sanitizeSignatureHtml, sanitizeSignatureHtmlForDisplay } from '@/lib/email-sanitization';
 import { getEmailValidationError, validateEmailList } from '@/lib/validation';
 
 // Stalwarts JMAP Identity/set caps signature fields at 2047 UTF-8 bytes
@@ -305,7 +305,7 @@ export function IdentityForm({ identity, onSave, onCancel }: IdentityFormProps) 
             <div className="text-xs text-muted-foreground mb-1">{tDisplay('preview')}</div>
             <div
               dangerouslySetInnerHTML={{
-                __html: sanitizeSignatureHtml(formData.htmlSignature)
+                __html: sanitizeSignatureHtmlForDisplay(formData.htmlSignature)
               }}
             />
           </div>

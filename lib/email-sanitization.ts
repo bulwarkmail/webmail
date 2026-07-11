@@ -79,26 +79,61 @@ export const SIGNATURE_SANITIZE_CONFIG = {
   FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover'],
 };
 
+/** Drop images whose src isn't https: or a base64 raster data: URI. */
+function restrictSignatureImages(node: Element): void {
+  if (node.tagName !== 'IMG') return;
+  const src = node.getAttribute('src');
+  if (!src || !/^(?:https:\/\/|data:image\/(?:png|jpe?g|gif|webp);base64,)/i.test(src)) {
+    node.remove();
+  }
+}
+
 /**
- * Sanitize HTML signature for storage and display.
+ * Sanitize an HTML signature for storage and for the outgoing message.
  * img src is restricted to https: or base64-embedded raster data: URIs
  * (png/jpeg/gif/webp). SVG is excluded because DOMPurify cannot inspect
  * bytes inside a data: URI. Images with a disallowed src are removed
  * entirely so they don't render as broken-image icons.
+ *
+ * Deliberately does NOT force target="_blank": what we store, and what the
+ * recipient receives, should stay as the user wrote it. Use
+ * `sanitizeSignatureHtmlForDisplay` for anything rendered in our own DOM.
  * @param html - User-provided HTML signature
  * @returns Sanitized signature (no scripts, no external resources)
  */
 export function sanitizeSignatureHtml(html: string): string {
   if (!html?.trim()) return '';
+  DOMPurify.addHook('afterSanitizeAttributes', restrictSignatureImages);
+  try {
+    return DOMPurify.sanitize(html, SIGNATURE_SANITIZE_CONFIG);
+  } finally {
+    DOMPurify.removeAllHooks();
+  }
+}
+
+const SIGNATURE_DISPLAY_CONFIG = {
+  ...SIGNATURE_SANITIZE_CONFIG,
+  ALLOWED_ATTR: [...SIGNATURE_SANITIZE_CONFIG.ALLOWED_ATTR, 'target', 'rel'],
+};
+
+/**
+ * Sanitize an HTML signature for rendering inside our own DOM — the identity
+ * form's live preview and the composer's signature block. Both inject into the
+ * main document rather than the sandboxed iframe used for message bodies, so a
+ * link without target="_blank" navigates the whole app away, taking any unsent
+ * draft or unsaved signature with it. Force every anchor to open a new tab.
+ */
+export function sanitizeSignatureHtmlForDisplay(html: string): string {
+  if (!html?.trim()) return '';
   DOMPurify.addHook('afterSanitizeAttributes', (node) => {
-    if (node.tagName !== 'IMG') return;
-    const src = node.getAttribute('src');
-    if (!src || !/^(?:https:\/\/|data:image\/(?:png|jpe?g|gif|webp);base64,)/i.test(src)) {
-      node.remove();
+    restrictSignatureImages(node);
+    if (node.tagName === 'A') {
+      node.setAttribute('target', '_blank');
+      node.setAttribute('rel', 'noopener noreferrer');
     }
   });
   try {
-    return DOMPurify.sanitize(html, SIGNATURE_SANITIZE_CONFIG);
+    return DOMPurify.sanitize(html, SIGNATURE_DISPLAY_CONFIG);
   } finally {
     DOMPurify.removeAllHooks();
   }

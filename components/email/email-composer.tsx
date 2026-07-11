@@ -11,7 +11,7 @@ import { debug } from "@/lib/debug";
 import { toast } from "@/stores/toast-store";
 import { useContextMenu } from "@/hooks/use-context-menu";
 import { ContextMenu, ContextMenuItem, ContextMenuSeparator } from "@/components/ui/context-menu";
-import { sanitizeSignatureHtml, sanitizeEmailHtml, escapeHtml } from "@/lib/email-sanitization";
+import { sanitizeSignatureHtml, sanitizeSignatureHtmlForDisplay, sanitizeEmailHtml, escapeHtml } from "@/lib/email-sanitization";
 import { buildReplySubject, buildForwardSubject } from "@/lib/subject-prefix";
 import { isFilePreviewable } from "@/lib/file-preview";
 import { buildQuotedHtmlBlock, serializeEditorContent } from "@/components/email/quoted-html";
@@ -823,7 +823,7 @@ export function EmailComposer({
   }, [composerClient, plainTextMode, mode]);
 
   const composerSignatureHtml = signatureIdentity?.htmlSignature
-    ? `<div>${sanitizeSignatureHtml(signatureIdentity.htmlSignature)}</div>`
+    ? `<div>${sanitizeSignatureHtmlForDisplay(signatureIdentity.htmlSignature)}</div>`
     : signatureIdentity?.textSignature
       ? `<div>${getPlainTextSignature(signatureIdentity).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>')}</div>`
       : '';
