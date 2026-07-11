@@ -148,7 +148,10 @@ vi.mock('@/lib/email-sanitization', () => ({
   parseHtmlSafely: (html: string) => new DOMParser().parseFromString(html, 'text/html'),
 }));
 
-vi.mock('@/lib/reply-identity', () => ({ resolveReplyFrom: () => null }));
+vi.mock('@/lib/reply-identity', () => ({
+  resolveReplyFrom: () => null,
+  findComposeIdentityId: () => null,
+}));
 vi.mock('@/lib/email-threading', () => ({
   computeReplyThreadingHeaders: () => ({ inReplyTo: [], references: [] }),
 }));
@@ -227,7 +230,7 @@ describe('RecipientChipInput drag and drop', () => {
     fireEvent.dragStart(chipSpan, { dataTransfer: dt });
 
     const payload = JSON.parse(dt.getData('application/x-recipient-chip'));
-    expect(payload).toEqual({ recipient: { email: 'alice@example.com' }, fromField: 'to' });
+    expect(payload).toEqual({ recipient: { email: 'alice@example.com' }, fromField: 'to', fromIndex: 0 });
   });
 
   it('keeps a display name with a comma in a single chip (array model)', async () => {
@@ -241,7 +244,7 @@ describe('RecipientChipInput drag and drop', () => {
     const dt = new MockDataTransfer();
     fireEvent.dragStart(chipSpan, { dataTransfer: dt });
     const payload = JSON.parse(dt.getData('application/x-recipient-chip'));
-    expect(payload).toEqual({ recipient: { name: 'Doo, John', email: 'john@doo.org' }, fromField: 'to' });
+    expect(payload).toEqual({ recipient: { name: 'Doo, John', email: 'john@doo.org' }, fromField: 'to', fromIndex: 0 });
   });
 
   it('onDragEnd clears the opacity class on the chip', async () => {
@@ -339,5 +342,122 @@ describe('RecipientChipInput drag and drop', () => {
     // cc_label is rendered by the mock translation as its key string
     const ccLabel = await screen.findByText('cc_label');
     expect(ccLabel).toBeInTheDocument();
+  });
+
+  // ─── Reordering within / across fields (#593) ─────────────────────────────────
+  // jsdom ignores `clientX` in fireEvent's init for drag events (it's a
+  // read-only MouseEvent getter) and gives every element a zero-size rect at
+  // (0,0). So we dispatch events with `clientX` forced via defineProperty; with
+  // the rect midpoint at 0, clientX>0 lands AFTER the hovered chip, <0 BEFORE.
+
+  const THREE = { ...BASE_DATA, to: 'alice@example.com, bob@example.com, carol@example.com, ' };
+
+  const chipByText = async (text: string) =>
+    (await screen.findByText(text)).closest('[draggable]') as HTMLElement;
+
+  /** Dispatch a drag event with a real clientX (fireEvent init drops it). */
+  const fireDnd = (type: 'dragover' | 'drop', el: HTMLElement, dt: MockDataTransfer, clientX: number) => {
+    const e = new Event(type, { bubbles: true, cancelable: true });
+    Object.defineProperty(e, 'clientX', { value: clientX });
+    Object.defineProperty(e, 'dataTransfer', { value: dt });
+    act(() => { fireEvent(el, e); });
+  };
+  const BEFORE = -100;
+  const AFTER = 100;
+
+  /** Ordered chip labels of the field-container that holds `anchorText`. */
+  const orderIn = (anchorText: string) => {
+    const containers = Array.from(document.querySelectorAll('[class*="flex-wrap"]'));
+    const c = containers.find(el =>
+      Array.from(el.querySelectorAll('[draggable]')).some(d => d.textContent?.includes(anchorText))
+    ) as HTMLElement;
+    return Array.from(c.querySelectorAll('[draggable]')).map(el => el.textContent?.trim() ?? '');
+  };
+
+  /** All draggable chips (across fields) whose label contains `text`. */
+  const draggableChipsWith = (text: string) =>
+    Array.from(document.querySelectorAll('[draggable]')).filter(el => el.textContent?.includes(text));
+
+  it('reorders a chip to the end of the same field (drop after the last chip)', async () => {
+    render(<EmailComposer initialData={THREE} />);
+    await screen.findByText('alice@example.com');
+    const alice = await chipByText('alice@example.com');
+    const carol = await chipByText('carol@example.com');
+
+    const dt = new MockDataTransfer();
+    fireEvent.dragStart(alice, { dataTransfer: dt });   // fromIndex 0
+    fireDnd('dragover', carol, dt, AFTER);              // after carol -> index 3
+    fireDnd('drop', carol, dt, AFTER);
+
+    expect(orderIn('bob@example.com')).toEqual([
+      'bob@example.com', 'carol@example.com', 'alice@example.com',
+    ]);
+  });
+
+  it('reorders a chip to the front of the same field (drop before the first chip)', async () => {
+    render(<EmailComposer initialData={THREE} />);
+    await screen.findByText('carol@example.com');
+    const carol = await chipByText('carol@example.com');
+    const alice = await chipByText('alice@example.com');
+
+    const dt = new MockDataTransfer();
+    fireEvent.dragStart(carol, { dataTransfer: dt });   // fromIndex 2
+    fireDnd('dragover', alice, dt, BEFORE);             // before alice -> index 0
+    fireDnd('drop', alice, dt, BEFORE);
+
+    expect(orderIn('alice@example.com')).toEqual([
+      'carol@example.com', 'alice@example.com', 'bob@example.com',
+    ]);
+  });
+
+  it('dropping a chip onto its own position leaves the order unchanged', async () => {
+    render(<EmailComposer initialData={THREE} />);
+    await screen.findByText('bob@example.com');
+    const bob = await chipByText('bob@example.com');
+
+    const dt = new MockDataTransfer();
+    fireEvent.dragStart(bob, { dataTransfer: dt });     // fromIndex 1
+    fireDnd('dragover', bob, dt, BEFORE);               // before itself -> index 1 (no-op)
+    fireDnd('drop', bob, dt, BEFORE);
+
+    expect(orderIn('bob@example.com')).toEqual([
+      'alice@example.com', 'bob@example.com', 'carol@example.com',
+    ]);
+  });
+
+  it('moves a chip into another field at the drop position (cross-field reorder)', async () => {
+    render(<EmailComposer initialData={{ ...BASE_DATA, to: 'alice@example.com, ', cc: 'x@example.com, y@example.com, ' }} />);
+    await screen.findByText('alice@example.com');
+    const alice = await chipByText('alice@example.com');       // To
+    const y = await chipByText('y@example.com');               // Cc
+
+    const dt = new MockDataTransfer();
+    fireEvent.dragStart(alice, { dataTransfer: dt });
+    fireDnd('dragover', y, dt, BEFORE);               // before y -> index 1 in Cc
+    fireDnd('drop', y, dt, BEFORE);
+
+    // alice lands between x and y; To no longer holds it (count only real chips,
+    // not the leftover jsdom drag-preview element)
+    expect(orderIn('x@example.com')).toEqual([
+      'x@example.com', 'alice@example.com', 'y@example.com',
+    ]);
+    expect(draggableChipsWith('alice@example.com')).toHaveLength(1);
+  });
+
+  it('shows a drop caret only while a chip is dragged over the field', async () => {
+    render(<EmailComposer initialData={THREE} />);
+    await screen.findByText('alice@example.com');
+    const alice = await chipByText('alice@example.com');
+    const bob = await chipByText('bob@example.com');
+
+    const dt = new MockDataTransfer();
+    fireEvent.dragStart(alice, { dataTransfer: dt });
+    expect(document.querySelector('[data-testid="recipient-drop-caret"]')).toBeNull();
+
+    fireDnd('dragover', bob, dt, BEFORE);
+    expect(document.querySelector('[data-testid="recipient-drop-caret"]')).not.toBeNull();
+
+    fireEvent.dragEnd(alice);
+    expect(document.querySelector('[data-testid="recipient-drop-caret"]')).toBeNull();
   });
 });

@@ -936,7 +936,10 @@ export function EmailComposer({
     }
   }, [plainTextMode]);
 
-  const handleMoveChip = useCallback((recipient: Recipient, fromField: 'to' | 'cc' | 'bcc', toField: 'to' | 'cc' | 'bcc') => {
+  // Move a chip from one recipient field to another. `toIndex`, when given,
+  // inserts at that position in the destination (drag-and-drop reordering,
+  // #593); omitted, it appends (e.g. dropping onto a hidden Cc/Bcc button).
+  const handleMoveChip = useCallback((recipient: Recipient, fromField: 'to' | 'cc' | 'bcc', toField: 'to' | 'cc' | 'bcc', toIndex?: number) => {
     if (fromField === toField) return;
     const setters = { to: setTo, cc: setCc, bcc: setBcc };
     const groupKey = (r: Recipient) => r.group ? r.group.members.map(m => m.email.toLowerCase()).join(',') : '';
@@ -946,7 +949,13 @@ export function EmailComposer({
       const idx = prev.findIndex(r => sameRecipient(r, recipient));
       return idx === -1 ? prev : prev.filter((_, i) => i !== idx);
     });
-    setters[toField](prev => prev.some(r => sameRecipient(r, recipient)) ? prev : [...prev, recipient]);
+    setters[toField](prev => {
+      if (prev.some(r => sameRecipient(r, recipient))) return prev;
+      const at = toIndex == null ? prev.length : Math.max(0, Math.min(toIndex, prev.length));
+      const next = [...prev];
+      next.splice(at, 0, recipient);
+      return next;
+    });
     if (toField === 'cc') setShowCc(true);
     if (toField === 'bcc') setShowBcc(true);
   }, [setTo, setCc, setBcc, setShowCc, setShowBcc]);
@@ -2895,7 +2904,7 @@ function RecipientChipInput({
   validationError?: boolean;
   validationMessage?: string;
   onTab?: () => void;
-  onMoveChip: (recipient: Recipient, fromField: 'to' | 'cc' | 'bcc', toField: 'to' | 'cc' | 'bcc') => void;
+  onMoveChip: (recipient: Recipient, fromField: 'to' | 'cc' | 'bcc', toField: 'to' | 'cc' | 'bcc', toIndex?: number) => void;
 }) {
   const t = useTranslations('email_composer');
   const tCommon = useTranslations('common');
@@ -2904,6 +2913,9 @@ function RecipientChipInput({
   const [editValue, setEditValue] = useState('');
   const [isDragOver, setIsDragOver] = useState(false);
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
+  // Gap (0..chips.length) a dragged chip would drop into; drives the insertion
+  // caret and positional drop for reordering (#593). null when not dragging.
+  const [dropIndex, setDropIndex] = useState<number | null>(null);
   const editInputRef = useRef<HTMLInputElement | null>(null);
 
   // Focus edit input when editing starts
@@ -3060,27 +3072,81 @@ function RecipientChipInput({
     onAutoBlur(e, field);
   };
 
+  const isChipDrag = (e: React.DragEvent) =>
+    e.dataTransfer.types.includes('application/x-recipient-chip');
+
+  // Dragging over empty container space (past the last chip / over the input)
+  // targets the end of the list.
   const handleContainerDragOver = (e: React.DragEvent) => {
-    if (!e.dataTransfer.types.includes('application/x-recipient-chip')) return;
+    if (!isChipDrag(e)) return;
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
     setIsDragOver(true);
+    setDropIndex(chips.length);
   };
 
   const handleContainerDragLeave = (e: React.DragEvent) => {
     if (!e.currentTarget.contains(e.relatedTarget as Node)) {
       setIsDragOver(false);
+      setDropIndex(null);
+    }
+  };
+
+  // Dragging over a chip picks the gap before or after it based on which half
+  // the pointer is in (mirrored for RTL). stopPropagation keeps the container
+  // handler from overriding this finer target.
+  const handleChipDragOver = (e: React.DragEvent, index: number) => {
+    if (!isChipDrag(e)) return;
+    e.preventDefault();
+    e.stopPropagation();
+    e.dataTransfer.dropEffect = 'move';
+    const rect = e.currentTarget.getBoundingClientRect();
+    const rtl = typeof window !== 'undefined' &&
+      getComputedStyle(e.currentTarget as Element).direction === 'rtl';
+    const past = rtl
+      ? e.clientX < rect.left + rect.width / 2
+      : e.clientX > rect.left + rect.width / 2;
+    setIsDragOver(true);
+    setDropIndex(past ? index + 1 : index);
+  };
+
+  // Insert the dragged chip at `target`. Same-field is a local reorder;
+  // cross-field routes through onMoveChip with the destination index (#593).
+  const performDrop = (e: React.DragEvent, target: number) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    setDropIndex(null);
+    setDraggingIndex(null);
+    const raw = e.dataTransfer.getData('application/x-recipient-chip');
+    if (!raw) return;
+    let payload: { recipient: Recipient; fromField: 'to' | 'cc' | 'bcc'; fromIndex?: number };
+    try {
+      payload = JSON.parse(raw);
+    } catch {
+      return;
+    }
+    const { recipient, fromField, fromIndex } = payload;
+    const to = Math.max(0, Math.min(target, chips.length));
+
+    if (fromField === field) {
+      const from = typeof fromIndex === 'number'
+        ? fromIndex
+        : chips.findIndex(c => c.email === recipient.email && (c.name ?? '') === (recipient.name ?? ''));
+      if (from < 0 || from >= chips.length) return;
+      // Removing the source before `to` shifts the target left by one.
+      const insertAt = to > from ? to - 1 : to;
+      if (insertAt === from) return; // dropped onto its own position
+      const next = [...chips];
+      const [moved] = next.splice(from, 1);
+      next.splice(insertAt, 0, moved);
+      onChipsChange(next);
+    } else {
+      onMoveChip(recipient, fromField, field, to);
     }
   };
 
   const handleContainerDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragOver(false);
-    const raw = e.dataTransfer.getData('application/x-recipient-chip');
-    if (!raw) return;
-    const { recipient, fromField } = JSON.parse(raw) as { recipient: Recipient; fromField: 'to' | 'cc' | 'bcc' };
-    if (fromField === field) return;
-    onMoveChip(recipient, fromField, field);
+    performDrop(e, dropIndex ?? chips.length);
   };
 
   return (
@@ -3100,20 +3166,29 @@ function RecipientChipInput({
           const isEditing = editingChip?.index === i;
           const chipDisplay = formatChipDisplay(chip);
           return (
+            <React.Fragment key={`${chip.email}-${i}`}>
+            {dropIndex === i && (
+              <span
+                aria-hidden
+                data-testid="recipient-drop-caret"
+                className="w-0.5 self-stretch min-h-[20px] rounded-full bg-primary pointer-events-none"
+              />
+            )}
             <span
-              key={`${chip.email}-${i}`}
               draggable={!isEditing}
               onDragStart={(e) => {
                 e.stopPropagation();
                 e.dataTransfer.effectAllowed = 'move';
-                e.dataTransfer.setData('application/x-recipient-chip', JSON.stringify({ recipient: chip, fromField: field }));
+                e.dataTransfer.setData('application/x-recipient-chip', JSON.stringify({ recipient: chip, fromField: field, fromIndex: i }));
                 // Show the address while dragging, matching the email-list drag preview.
                 const dragPreview = createChipDragPreview(chip.group ? chipDisplay : chip.email);
                 e.dataTransfer.setDragImage(dragPreview, 0, 0);
                 requestAnimationFrame(() => dragPreview.remove());
                 setDraggingIndex(i);
               }}
-              onDragEnd={() => setDraggingIndex(null)}
+              onDragEnd={() => { setDraggingIndex(null); setDropIndex(null); }}
+              onDragOver={(e) => handleChipDragOver(e, i)}
+              onDrop={(e) => { e.stopPropagation(); performDrop(e, dropIndex ?? i); }}
               className={cn(
                 "inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-sm border border-border transition-colors",
                 isEditing
@@ -3179,8 +3254,16 @@ function RecipientChipInput({
                 )}
               </button>
             </span>
+            </React.Fragment>
           );
         })}
+        {dropIndex === chips.length && chips.length > 0 && (
+          <span
+            aria-hidden
+            data-testid="recipient-drop-caret"
+            className="w-0.5 self-stretch min-h-[20px] rounded-full bg-primary pointer-events-none"
+          />
+        )}
         {!editingChip && (
           <input
             ref={inputRef}
