@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { headers } from "next/headers";
 import { getLocale, getTranslations } from "next-intl/server";
 import { ServiceWorkerRegistration } from "@/components/service-worker-registration";
+import { FaviconBadge } from "@/components/favicon-badge";
 import { configManager } from "@/lib/admin/config-manager";
 import {
   matchDomainBranding,
@@ -132,6 +133,7 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <ServiceWorkerRegistration />
+        <FaviconBadge />
         {children}
       </body>
     </html>

@@ -949,6 +949,10 @@
         "label": "Totaal aantal berichten tonen",
         "description": "Toont het totale aantal berichten naast mappen en labels, naast het aantal ongelezen berichten. Schakel uit om alleen ongelezen aantallen te tonen."
       },
+      "favicon_unread_badge": {
+        "label": "Unread Count on Tab Icon",
+        "description": "Show the inbox unread count as a badge on the browser tab icon, so new mail is visible when the tab is not focused. Disable to keep the icon unbadged."
+      },
       "pro_interface": {
         "label": "Pro-interface (experimenteel)",
         "description": "Power user-indeling alleen voor desktop met meertabs berichtweergave en accountoverschrijdende workflows. De standaardinterface blijft onveranderd; u kunt op elk moment terugkeren.",

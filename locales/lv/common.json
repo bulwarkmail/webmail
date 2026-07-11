@@ -949,6 +949,10 @@
         "label": "Rādīt kopējo ziņojumu skaitu",
         "description": "Rāda kopējo ziņojumu skaitu blakus mapēm un tagiem, kā arī nelasīto ziņojumu skaitu. Atspējojiet, lai rādītu tikai nelasītos."
       },
+      "favicon_unread_badge": {
+        "label": "Unread Count on Tab Icon",
+        "description": "Show the inbox unread count as a badge on the browser tab icon, so new mail is visible when the tab is not focused. Disable to keep the icon unbadged."
+      },
       "pro_interface": {
         "label": "Pro saskarne (eksperimentāla)",
         "description": "Tikai darbvirsmas pieredzējušu lietotāju izkārtojums ar ziņojumu pārlūkošanu vairākās cilnēs un kontu pārvaldību. Standarta saskarne netiek ietekmēta; varat jebkurā brīdī pārslēgties atpakaļ.",

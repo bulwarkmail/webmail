@@ -952,6 +952,10 @@
         "label": "Összes üzenet számának megjelenítése",
         "description": "Megjeleníti az üzenetek teljes számát a mappák és címkék mellett, az olvasatlanok számán túl. Kapcsolja ki, ha csak az olvasatlanok számát szeretné látni."
       },
+      "favicon_unread_badge": {
+        "label": "Unread Count on Tab Icon",
+        "description": "Show the inbox unread count as a badge on the browser tab icon, so new mail is visible when the tab is not focused. Disable to keep the icon unbadged."
+      },
       "pro_interface": {
         "label": "Pro felület (Kísérleti)",
         "description": "Asztali számítógépes erőfelhasználói elrendezés több lapos üzenetböngészéssel és fiókok közötti munkafolyamatokkal. A szabványos felületet nem érinti; bármikor visszaválthatsz.",

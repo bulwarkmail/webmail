@@ -949,6 +949,10 @@
         "label": "Zobrazit celkový počet zpráv",
         "description": "Zobrazí celkový počet zpráv vedle složek a štítků spolu s počtem nepřečtených. Vypněte pro zobrazení pouze nepřečtených."
       },
+      "favicon_unread_badge": {
+        "label": "Unread Count on Tab Icon",
+        "description": "Show the inbox unread count as a badge on the browser tab icon, so new mail is visible when the tab is not focused. Disable to keep the icon unbadged."
+      },
       "pro_interface": {
         "label": "Pro rozhraní (experimentální)",
         "description": "Rozložení pro pokročilé uživatele pouze pro stolní počítače s prohlížením zpráv na více kartách a pracovními postupy napříč účty. Standardní rozhraní zůstává nedotčeno; kdykoli se můžete vrátit.",

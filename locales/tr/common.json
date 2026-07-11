@@ -949,6 +949,10 @@
         "label": "Toplam mesaj sayısını göster",
         "description": "Klasörlerin ve etiketlerin yanında, okunmamış sayısının yanı sıra toplam mesaj sayısını gösterir. Yalnızca okunmamışları göstermek için devre dışı bırakın."
       },
+      "favicon_unread_badge": {
+        "label": "Unread Count on Tab Icon",
+        "description": "Show the inbox unread count as a badge on the browser tab icon, so new mail is visible when the tab is not focused. Disable to keep the icon unbadged."
+      },
       "pro_interface": {
         "label": "Pro Arayüz (Deneysel)",
         "description": "Yalnızca masaüstü için güçlü kullanıcı düzeni: çoklu sekmede ileti gezme ve hesaplar arası iş akışları. Standart arayüz etkilenmez; istediğiniz zaman geri dönebilirsiniz.",

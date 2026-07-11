@@ -949,6 +949,10 @@
         "label": "显示邮件总数",
         "description": "在文件夹和标签旁边显示邮件总数，以及未读数量。停用后仅显示未读数量。"
       },
+      "favicon_unread_badge": {
+        "label": "Unread Count on Tab Icon",
+        "description": "Show the inbox unread count as a badge on the browser tab icon, so new mail is visible when the tab is not focused. Disable to keep the icon unbadged."
+      },
       "pro_interface": {
         "label": "Pro 界面（实验性）",
         "description": "仅限桌面的高级用户布局，支持多标签消息浏览和跨账户工作流。标准界面不受影响，您可以随时切换回来。",

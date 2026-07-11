@@ -949,6 +949,10 @@
         "label": "メッセージの総数を表示",
         "description": "フォルダーやタグの横に、未読数に加えてメッセージの総数を表示します。未読数のみを表示するには無効にします。"
       },
+      "favicon_unread_badge": {
+        "label": "Unread Count on Tab Icon",
+        "description": "Show the inbox unread count as a badge on the browser tab icon, so new mail is visible when the tab is not focused. Disable to keep the icon unbadged."
+      },
       "pro_interface": {
         "label": "Pro インターフェイス（実験的）",
         "description": "デスクトップ専用のパワーユーザー向けレイアウトで、マルチタブのメッセージ閲覧やアカウント横断のワークフローに対応します。標準インターフェイスには影響せず、いつでも元に戻せます。",

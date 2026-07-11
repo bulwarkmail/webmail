@@ -949,6 +949,10 @@
         "label": "전체 메시지 수 표시",
         "description": "읽지 않은 수와 함께 폴더 및 태그 옆에 전체 메시지 수를 표시합니다. 읽지 않은 수만 표시하려면 비활성화하세요."
       },
+      "favicon_unread_badge": {
+        "label": "Unread Count on Tab Icon",
+        "description": "Show the inbox unread count as a badge on the browser tab icon, so new mail is visible when the tab is not focused. Disable to keep the icon unbadged."
+      },
       "pro_interface": {
         "label": "Pro 인터페이스 (실험적)",
         "description": "데스크톱 전용 파워 유저 레이아웃으로, 다중 탭 메시지 탐색과 계정 간 워크플로우를 지원합니다. 표준 인터페이스에는 영향이 없으며 언제든지 되돌릴 수 있습니다.",

@@ -952,6 +952,10 @@
         "label": "Vis samlet antal beskeder",
         "description": "Viser det samlede antal beskeder ud for mapper og tags sammen med antallet af ulæste. Slå fra for kun at vise ulæste."
       },
+      "favicon_unread_badge": {
+        "label": "Unread Count on Tab Icon",
+        "description": "Show the inbox unread count as a badge on the browser tab icon, so new mail is visible when the tab is not focused. Disable to keep the icon unbadged."
+      },
       "pro_interface": {
         "label": "Pro-grænseflade (eksperimentel)",
         "description": "Power user-layout kun til skrivebordet med beskedvisning på flere faner og arbejdsforløb på tværs af konti. Standardgrænsefladen påvirkes ikke; du kan skifte tilbage når som helst.",

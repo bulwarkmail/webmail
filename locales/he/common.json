@@ -914,6 +914,10 @@
         "label": "הצגת מספר ההודעות הכולל",
         "description": "מציג את מספר ההודעות הכולל לצד תיקיות ותגיות, לצד מספר ההודעות שלא נקראו. כבו כדי להציג רק את מספר ההודעות שלא נקראו."
       },
+      "favicon_unread_badge": {
+        "label": "Unread Count on Tab Icon",
+        "description": "Show the inbox unread count as a badge on the browser tab icon, so new mail is visible when the tab is not focused. Disable to keep the icon unbadged."
+      },
       "pro_interface": {
         "label": "ממשק Pro (ניסיוני)",
         "description": "פריסה של משתמש כוח לשולחן עבודה בלבד עם גלישה מרובת-הודעות וזרימות עבודה חוצות-חשבונות. הממשק הסטנדרטי אינו מושפע; תוכל להחזור בכל עת.",

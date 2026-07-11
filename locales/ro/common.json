@@ -952,6 +952,10 @@
         "label": "Afișează numărul total de mesaje",
         "description": "Afișează numărul total de mesaje lângă foldere și etichete, pe lângă numărul celor necitite. Dezactivează pentru a afișa doar mesajele necitite."
       },
+      "favicon_unread_badge": {
+        "label": "Unread Count on Tab Icon",
+        "description": "Show the inbox unread count as a badge on the browser tab icon, so new mail is visible when the tab is not focused. Disable to keep the icon unbadged."
+      },
       "pro_interface": {
         "label": "Interfață Pro (experimentală)",
         "description": "Aspect destinat utilizatorilor avansați, disponibil doar pe desktop, cu navigare prin mesaje în mai multe file și fluxuri de lucru între conturi. Interfața standard nu este afectată; puteți reveni la aceasta în orice moment.",

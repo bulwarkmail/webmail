@@ -949,6 +949,10 @@
         "label": "Mostrar el número total de mensajes",
         "description": "Muestra el número total de mensajes junto a las carpetas y etiquetas, además del número de mensajes no leídos. Desactívalo para mostrar solo los no leídos."
       },
+      "favicon_unread_badge": {
+        "label": "Unread Count on Tab Icon",
+        "description": "Show the inbox unread count as a badge on the browser tab icon, so new mail is visible when the tab is not focused. Disable to keep the icon unbadged."
+      },
       "pro_interface": {
         "label": "Interfaz Pro (experimental)",
         "description": "Diseño de escritorio para usuarios avanzados con exploración de mensajes en varias pestañas y flujos de trabajo entre cuentas. La interfaz estándar no se ve afectada; puedes volver en cualquier momento.",

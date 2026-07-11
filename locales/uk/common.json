@@ -949,6 +949,10 @@
         "label": "Показувати загальну кількість повідомлень",
         "description": "Показує загальну кількість повідомлень поруч із теками та мітками, разом із кількістю непрочитаних. Вимкніть, щоб показувати лише непрочитані."
       },
+      "favicon_unread_badge": {
+        "label": "Unread Count on Tab Icon",
+        "description": "Show the inbox unread count as a badge on the browser tab icon, so new mail is visible when the tab is not focused. Disable to keep the icon unbadged."
+      },
       "pro_interface": {
         "label": "Pro-інтерфейс (експериментальний)",
         "description": "Розкладка для досвідчених користувачів лише для настільного комп'ютера з переглядом повідомлень у кількох вкладках і робочими процесами між обліковими записами. Стандартний інтерфейс не змінюється; ви можете повернутися будь-коли.",

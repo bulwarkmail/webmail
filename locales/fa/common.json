@@ -952,6 +952,10 @@
         "label": "نمایش تعداد کل پیام‌ها",
         "description": "تعداد کل پیام‌ها را در کنار پوشه‌ها و برچسب‌ها، همراه با تعداد خوانده‌نشده‌ها نمایش می‌دهد. برای نمایش فقط تعداد خوانده‌نشده‌ها غیرفعال کنید."
       },
+      "favicon_unread_badge": {
+        "label": "Unread Count on Tab Icon",
+        "description": "Show the inbox unread count as a badge on the browser tab icon, so new mail is visible when the tab is not focused. Disable to keep the icon unbadged."
+      },
       "pro_interface": {
         "label": "رابط حرفه‌ای (آزمایشی)",
         "description": "چیدمان قدرت-کاربری فقط دسکتاپ",
