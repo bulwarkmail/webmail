@@ -132,6 +132,12 @@ export function sanitizeI18nHtml(html: string): string {
 const PLAIN_TEXT_RENDERED_CONFIG = {
   ALLOWED_TAGS: ['a', 'br', 'p', 'div', 'span'],
   ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'style'],
+  // DOMPurify URI-tests every attribute value not on its URI-safe list, so the
+  // strict ALLOWED_URI_REGEXP below would strip target="_blank" (and rel) —
+  // "_blank" is not a URI. This branch renders into the main document rather
+  // than the sandboxed iframe, so losing target turns every link into a
+  // whole-app navigation. Exempt the two from the URI check.
+  ADD_URI_SAFE_ATTR: ['target', 'rel'],
   ALLOW_DATA_ATTR: false,
   ALLOWED_URI_REGEXP: /^(?:https?:|mailto:|tel:|cid:|#)/i,
 };

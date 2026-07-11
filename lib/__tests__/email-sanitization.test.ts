@@ -6,6 +6,7 @@ import {
   parseHtmlSafely,
   hasRichFormatting,
   plainTextToSafeHtml,
+  sanitizePlainTextRenderedHtml,
   EMAIL_SANITIZE_CONFIG,
   EMAIL_IFRAME_SANITIZE_CONFIG,
   isExternalResourceUrl,
@@ -578,6 +579,26 @@ describe('email-sanitization', () => {
       const result = plainTextToSafeHtml('try javascript:alert(1) or file:///etc/passwd');
       expect(result).not.toContain('<a ');
       expect(result).toContain('javascript:alert(1)');
+    });
+  });
+
+  describe('sanitizePlainTextRenderedHtml', () => {
+    // This branch renders into the main document, not the sandboxed iframe, so
+    // an anchor that loses target="_blank" navigates the whole app away.
+    it('preserves target and rel on links emitted by plainTextToSafeHtml', () => {
+      const rendered = sanitizePlainTextRenderedHtml(
+        plainTextToSafeHtml('see https://github.com/honzup/webmail/pull/560'),
+      );
+      expect(rendered).toContain('target="_blank"');
+      expect(rendered).toContain('rel="noopener noreferrer"');
+    });
+
+    it('still strips dangerous schemes and tags', () => {
+      const rendered = sanitizePlainTextRenderedHtml(
+        '<a href="javascript:alert(1)" target="_blank">x</a><script>alert(1)</script>',
+      );
+      expect(rendered).not.toContain('javascript:');
+      expect(rendered).not.toContain('<script');
     });
   });
 });
