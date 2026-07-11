@@ -2103,7 +2103,18 @@ export function EmailViewer({
     // Word/Outlook HTML emails ship a <style> block but put their gutter in
     // @page margins (print-only), so they need a fallback body padding too.
     const isWordHtml = /class=["']?(?:Mso|WordSection)|<o:p[\s>/]|urn:schemas-microsoft-com:office:office/i.test(effectiveEmailContent.html);
-    const hasOwnLayout = effectiveEmailContent.hasStyleTag && !isWordHtml;
+    // A <style> tag alone is too weak a signal for "brings its own layout":
+    // many transactional mails (e.g. Namecheap receipts) ship a <style> block
+    // for web fonts yet have no outer gutter of their own, so zeroing the body
+    // padding glues their content to the corner. Only drop our default gutter
+    // when the mail paints a full-bleed background canvas - a width:100% element
+    // carrying a background colour - which is the one case where our padding
+    // shows as an ugly frame around the email's own background.
+    const emailHtml = effectiveEmailContent.html;
+    const hasFullBleedCanvas =
+      /<(?:table|div|body)\b[^>]*(?:\bwidth\s*=\s*["']?\s*100%|width\s*:\s*100%)[^>]*(?:\bbgcolor\s*=|background(?:-color)?\s*:)/i.test(emailHtml) ||
+      /<(?:table|div|body)\b[^>]*(?:\bbgcolor\s*=|background(?:-color)?\s*:)[^>]*(?:\bwidth\s*=\s*["']?\s*100%|width\s*:\s*100%)/i.test(emailHtml);
+    const hasOwnLayout = effectiveEmailContent.hasStyleTag && !isWordHtml && hasFullBleedCanvas;
     const bodyPadding = hasOwnLayout ? '0' : '1rem 1.25rem';
     const mobileBodyPaddingX = hasOwnLayout ? '0' : '0.75rem';
 
