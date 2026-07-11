@@ -147,7 +147,10 @@ vi.mock('@/lib/email-sanitization', () => ({
   parseHtmlSafely: (html: string) => new DOMParser().parseFromString(html, 'text/html'),
 }));
 
-vi.mock('@/lib/reply-identity', () => ({ resolveReplyFrom: () => null }));
+vi.mock('@/lib/reply-identity', () => ({
+  resolveReplyFrom: () => null,
+  findComposeIdentityId: () => null,
+}));
 vi.mock('@/lib/email-threading', () => ({
   computeReplyThreadingHeaders: () => ({ inReplyTo: [], references: [] }),
 }));
