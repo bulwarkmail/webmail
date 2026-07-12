@@ -1175,6 +1175,7 @@ export function EmailViewer({
           id: email.id,
           contentType,
           bodyStructure: email.bodyStructure,
+          bodyValues: email.bodyValues,
           attachments: email.attachments,
           blobId: email.blobId,
           from: email.from,
