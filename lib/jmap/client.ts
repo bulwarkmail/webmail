@@ -550,6 +550,43 @@ export class JMAPClient implements IJMAPClient {
     this.authHeader = `Bearer ${token}`;
   }
 
+  async getSomeEmails(emailsId: string[], accountId?: string): Promise<Email[]> {
+    try {
+      const targetAccountId = accountId || this.accountId;
+      if (!emailsId || emailsId.length === 0) {
+        return [];
+      }
+
+      const response = await this.request([
+        ["Email/get", {
+          accountId: targetAccountId,
+          ids: emailsId,
+          properties: [...EMAIL_LIST_PROPERTIES],
+        }, "0"],
+      ]);
+
+      const getResponse = response.methodResponses?.[0]?.[1];
+
+      if (response.methodResponses?.[0]?.[0] === "Email/get" && getResponse) {
+        const emails = (getResponse.list || []) as Email[];
+
+        emails.sort((a: Email, b: Email) =>
+          new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime()
+        );
+
+        if (accountId && accountId !== this.accountId) {
+          namespaceMailboxIds(emails, accountId);
+        }
+
+        return emails;
+      }
+
+      return [];
+    } catch (error) {
+      console.error('Failed to get specific emails:', error);
+      return [];
+    }
+  }
   /** Upgrade an existing basic-auth client to bearer-token auth (e.g. after TOTP token exchange). */
   upgradeToBearer(accessToken: string, onRefresh?: () => Promise<string | null>): void {
     this.authMode = 'bearer';

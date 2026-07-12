@@ -166,6 +166,19 @@ export class DemoJMAPClient implements IJMAPClient {
     return { emails, hasMore: position + limit < total, total };
   }
 
+  async getSomeEmails(emailsId: string[], _accountId?: string): Promise<Email[]> {
+    if (!emailsId || emailsId.length === 0) {
+      return [];
+    }
+    const filtered = this.data.emails.filter(e => emailsId.includes(e.id));
+
+    filtered.sort((a, b) => 
+      new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime()
+    );
+
+    return filtered;
+  }
+
   async getEmailsInMailbox(mailboxId: string): Promise<Email[]> {
     return this.data.emails.filter(e => e.mailboxIds[mailboxId]);
   }

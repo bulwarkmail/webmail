@@ -83,6 +83,7 @@ export interface IJMAPClient {
   getEmails(mailboxId?: string, accountId?: string, limit?: number, position?: number, hasKeyword?: string, pinnedFirst?: boolean): Promise<{ emails: Email[]; hasMore: boolean; total: number }>;
   getEmailsInMailbox(mailboxId: string): Promise<Email[]>;
   getEmail(emailId: string, accountId?: string): Promise<Email | null>;
+  getSomeEmails(emailsId: string[], accountId?: string): Promise<Email[]>
   getTagCounts(tagIds: string[]): Promise<Record<string, { total: number; unread: number }>>;
   searchEmails(query: string, mailboxId?: string, accountId?: string, limit?: number, position?: number): Promise<{ emails: Email[]; hasMore: boolean; total: number }>;
   advancedSearchEmails(

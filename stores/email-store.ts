@@ -918,8 +918,9 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         for (const email of result.emails) {
           email.sourceFolder = resolveSourceFolderName(email, allMailMailboxes);
         }
+        const enrichedEmails = await emailHooks.onEmailsFetched.transform(result.emails);
         set({
-          emails: annotateScheduledEmails(result.emails, get().scheduledSubmissionByEmailId),
+          emails: annotateScheduledEmails(enrichedEmails, get().scheduledSubmissionByEmailId),
           hasMoreEmails: result.hasMore,
           totalEmails: result.total,
           isLoading: false,
@@ -946,8 +947,9 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       // When filtering by tag, omit the mailbox constraint so emails across
       // all folders that carry the tag are returned.
       const result = await effectiveClient.getEmails(selectedKeyword ? undefined : jmapMailboxId, accountId, emailsPerPage, 0, keywordFilter, true);
+      const enrichedEmails = await emailHooks.onEmailsFetched.transform(result.emails);
       set({
-        emails: annotateScheduledEmails(result.emails, get().scheduledSubmissionByEmailId),
+        emails: annotateScheduledEmails(enrichedEmails, get().scheduledSubmissionByEmailId),
         hasMoreEmails: result.hasMore,
         totalEmails: result.total,
         // Clear thread caches since the email list was fully replaced
@@ -991,8 +993,9 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         const currentEmails = get().emails;
         const existingIds = new Set(currentEmails.map(e => e.id));
         const newEmails = result.emails.filter(e => !existingIds.has(e.id));
+        const enrichedNewEmails = await emailHooks.onEmailsFetched.transform(newEmails);
         set({
-          emails: [...currentEmails, ...newEmails],
+          emails: [...currentEmails, ...enrichedNewEmails],
           hasMoreEmails: result.hasMore,
           totalEmails: result.total,
           isLoadingMore: false,
@@ -1034,8 +1037,9 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         const currentEmails = get().emails;
         const existingIds = new Set(currentEmails.map(e => e.id));
         const newEmails = result.emails.filter(e => !existingIds.has(e.id));
+        const enrichedNewEmails = await emailHooks.onEmailsFetched.transform(newEmails);
         set({
-          emails: [...currentEmails, ...newEmails],
+          emails: [...currentEmails, ...enrichedNewEmails],
           hasMoreEmails: result.hasMore,
           totalEmails: result.total,
           isLoadingMore: false,
@@ -1127,14 +1131,15 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       const existingIds = new Set(currentEmails.map(e => e.id));
       const newEmails = annotateScheduledEmails(result.emails, get().scheduledSubmissionByEmailId).filter((e: Email) => !existingIds.has(e.id));
 
+      const enrichedNewEmails = await emailHooks.onEmailsFetched.transform(newEmails);
       set({
-        emails: [...currentEmails, ...newEmails],
+        emails: [...currentEmails, ...enrichedNewEmails],
         hasMoreEmails: result.hasMore,
         totalEmails: result.total,
         isLoadingMore: false
       });
       // Fetch full thread counts for newly loaded threads in the background
-      if (newEmails.length > 0) {
+      if (enrichedNewEmails.length > 0) {
         void get().fetchThreadEmailCounts(client);
       }
     } catch (error) {
@@ -1754,60 +1759,66 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   searchEmails: async (client, query) => {
     set({ isLoading: true, error: null, searchQuery: query, emails: [], hasMoreEmails: false, totalEmails: 0 }); // Clear emails for loading state
     try {
-      const { isUnifiedView, unifiedRole, crossView } = get();
+      const { isUnifiedView, unifiedRole, crossView, selectedMailbox, searchFilters } = get();
       const emailsPerPage = useSettingsStore.getState().emailsPerPage;
+
+      let result;
+      let accountId;
+      let unifiedErrors;
 
       if (isUnifiedView && crossView) {
         const includeGroup = useSettingsStore.getState().includeGroupInUnified;
         const built = await buildUnifiedAccountClients({ includeGroup });
-        const result = await searchCrossViewEmails(built, crossView, query, emailsPerPage, 0);
-        const externals = await emailHooks.onProvideSearchResults.transform([] as ExternalSearchResult[], { query, filters: get().searchFilters });
-        set({
-          emails: result.emails,
-          externalSearchResults: externals,
-          hasMoreEmails: result.hasMore,
-          totalEmails: result.total,
-          isLoading: false,
-          unifiedErrors: result.errors,
-        });
-        return;
-      }
-
-      if (isUnifiedView && unifiedRole) {
+        result = await searchCrossViewEmails(built, crossView, query, emailsPerPage, 0);
+        unifiedErrors = result.errors;
+        
+      } else if (isUnifiedView && unifiedRole) {
         const includeGroup = useSettingsStore.getState().includeGroupInUnified;
         const built = await buildUnifiedAccountClients({ includeGroup });
-        const result = await searchUnifiedEmails(built, unifiedRole, query, emailsPerPage, 0);
-        const externals = await emailHooks.onProvideSearchResults.transform([] as ExternalSearchResult[], { query, filters: get().searchFilters });
-        set({
-          emails: result.emails,
-          externalSearchResults: externals,
-          hasMoreEmails: result.hasMore,
-          totalEmails: result.total,
-          isLoading: false,
-          unifiedErrors: result.errors,
-        });
-        return;
+        result = await searchUnifiedEmails(built, unifiedRole, query, emailsPerPage, 0);
+        unifiedErrors = result.errors;
+
+      } else {
+        // Get the current mailbox to scope the search. In the All Mail view the
+        // search spans every folder of the account (no inMailbox constraint).
+        const isAllMail = selectedMailbox === ALL_MAIL_MAILBOX_ID;
+        const mailboxes = resolveActionMailboxes();
+        const mailbox = mailboxes.find(mb => mb.id === selectedMailbox);
+        // Use originalId for shared mailboxes
+        const jmapMailboxId = isAllMail ? undefined : (mailbox?.originalId || selectedMailbox);
+        // Only pass accountId for shared mailboxes, not for primary account
+        accountId = isAllMail ? undefined : (mailbox?.isShared ? mailbox.accountId : undefined);
+
+        result = await resolveActionClient(client).searchEmails(query, jmapMailboxId, accountId, emailsPerPage, 0);
       }
 
-      // Get the current mailbox to scope the search. In the All Mail view the
-      // search spans every folder of the account (no inMailbox constraint).
-      const selectedMailbox = get().selectedMailbox;
-      const isAllMail = selectedMailbox === ALL_MAIL_MAILBOX_ID;
-      const mailboxes = resolveActionMailboxes();
-      const mailbox = mailboxes.find(mb => mb.id === selectedMailbox);
-      // Use originalId for shared mailboxes
-      const jmapMailboxId = isAllMail ? undefined : (mailbox?.originalId || selectedMailbox);
-      // Only pass accountId for shared mailboxes, not for primary account
-      const accountId = isAllMail ? undefined : (mailbox?.isShared ? mailbox.accountId : undefined);
+      const hookEdit = await emailHooks.onSearchResults.transform({ 
+        newEmailIds: [] as string[], 
+        result: result, 
+        query: query, 
+        filters: searchFilters 
+      });
 
-      const result = await resolveActionClient(client).searchEmails(query, jmapMailboxId, accountId, emailsPerPage, 0);
-      const externals = await emailHooks.onProvideSearchResults.transform([] as ExternalSearchResult[], { query, filters: get().searchFilters });
+      result = hookEdit.result;
+      if (hookEdit.newEmailIds.length > 0) {
+        // in unified, accountId will be undefined and we will use the default.
+        const newEmails = await resolveActionClient(client).getSomeEmails(hookEdit.newEmailIds, accountId);
+        result.emails.push(...newEmails);
+        result.total += newEmails.length;
+      }
+
+      const externals = await emailHooks.onProvideSearchResults.transform([] as ExternalSearchResult[], { 
+        query, 
+        filters: searchFilters 
+      });
+      result.emails = await emailHooks.onEmailsFetched.transform(result.emails);
       set({
         emails: annotateScheduledEmails(result.emails, get().scheduledSubmissionByEmailId),
         externalSearchResults: externals,
         hasMoreEmails: result.hasMore,
         totalEmails: result.total,
-        isLoading: false
+        isLoading: false,
+        ...(unifiedErrors ? { unifiedErrors } : {}) 
       });
     } catch (error) {
       set({
@@ -1841,60 +1852,64 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
 
     try {
       const emailsPerPage = useSettingsStore.getState().emailsPerPage;
+      let result;
+      let accountId;
+      let unifiedErrors;
 
       if (isUnifiedView && crossView) {
         const includeGroup = useSettingsStore.getState().includeGroupInUnified;
         const built = await buildUnifiedAccountClients({ includeGroup });
-        const result = await searchCrossViewEmails(built, crossView, searchQuery, emailsPerPage, 0);
-        if (controller.signal.aborted) return;
-        const externals = await emailHooks.onProvideSearchResults.transform([] as ExternalSearchResult[], { query: searchQuery, filters: searchFilters });
-        set({
-          emails: result.emails,
-          externalSearchResults: externals,
-          hasMoreEmails: result.hasMore,
-          totalEmails: result.total,
-          isLoading: false,
-          unifiedErrors: result.errors,
-        });
-        return;
-      }
+        result = await searchCrossViewEmails(built, crossView, searchQuery, emailsPerPage, 0);
+        unifiedErrors = result.errors;
 
-      if (isUnifiedView && unifiedRole) {
+      } else if (isUnifiedView && unifiedRole) {
         const includeGroup = useSettingsStore.getState().includeGroupInUnified;
         const built = await buildUnifiedAccountClients({ includeGroup });
-        const result = await advancedSearchUnifiedEmails(
+        result = await advancedSearchUnifiedEmails(
           built,
           unifiedRole,
           (mailboxId) => buildJMAPFilter(searchQuery, searchFilters, mailboxId),
           emailsPerPage,
           0,
         );
-        if (controller.signal.aborted) return;
-        const externals = await emailHooks.onProvideSearchResults.transform([] as ExternalSearchResult[], { query: searchQuery, filters: searchFilters });
-        set({
-          emails: result.emails,
-          externalSearchResults: externals,
-          hasMoreEmails: result.hasMore,
-          totalEmails: result.total,
-          isLoading: false,
-          searchAbortController: null,
-          unifiedErrors: result.errors,
-        });
-        return;
+        unifiedErrors = result.errors;
+
+      } else {
+        const isAllMail = selectedMailbox === ALL_MAIL_MAILBOX_ID;
+        const mailbox = mailboxes.find(mb => mb.id === selectedMailbox);
+        const jmapMailboxId = isAllMail ? undefined : (mailbox?.originalId || selectedMailbox);
+        accountId = isAllMail ? undefined : (mailbox?.isShared ? mailbox.accountId : undefined);
+
+        const filter = buildJMAPFilter(searchQuery, searchFilters, jmapMailboxId);
+        result = await resolveActionClient(client).advancedSearchEmails(filter, accountId, emailsPerPage, 0);
       }
-
-      const isAllMail = selectedMailbox === ALL_MAIL_MAILBOX_ID;
-      const mailbox = mailboxes.find(mb => mb.id === selectedMailbox);
-      const jmapMailboxId = isAllMail ? undefined : (mailbox?.originalId || selectedMailbox);
-      const accountId = isAllMail ? undefined : (mailbox?.isShared ? mailbox.accountId : undefined);
-
-      const filter = buildJMAPFilter(searchQuery, searchFilters, jmapMailboxId);
-      const result = await resolveActionClient(client).advancedSearchEmails(filter, accountId, emailsPerPage, 0);
 
       if (controller.signal.aborted) return;
 
-      const externals = await emailHooks.onProvideSearchResults.transform([] as ExternalSearchResult[], { query: searchQuery, filters: searchFilters });
+      const hookEdit = await emailHooks.onSearchResults.transform({ 
+        newEmailIds: [] as string[], 
+        result: result, 
+        query: searchQuery, 
+        filters: searchFilters 
+      });
 
+      result = hookEdit.result;
+
+      if (hookEdit.newEmailIds.length > 0) {
+        const newEmails = await resolveActionClient(client).getSomeEmails(hookEdit.newEmailIds, accountId);
+        result.emails.push(...newEmails);
+        result.total += newEmails.length;
+      }
+
+      if (controller.signal.aborted) return;
+
+      const externals = await emailHooks.onProvideSearchResults.transform([] as ExternalSearchResult[], { 
+        query: searchQuery, 
+        filters: searchFilters 
+      });
+
+      if (controller.signal.aborted) return;
+      result.emails = await emailHooks.onEmailsFetched.transform(result.emails);
       set({
         emails: annotateScheduledEmails(result.emails, get().scheduledSubmissionByEmailId),
         externalSearchResults: externals,
@@ -1902,6 +1917,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         totalEmails: result.total,
         isLoading: false,
         searchAbortController: null,
+        ...(unifiedErrors ? { unifiedErrors } : {})
       });
     } catch (error) {
       if (controller.signal.aborted) return;
@@ -3284,6 +3300,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     try {
       const emailsPerPage = useSettingsStore.getState().emailsPerPage;
       const result = await client.getScheduledEmails(emailsPerPage, 0);
+      result.emails = await emailHooks.onEmailsFetched.transform(result.emails);
       const scheduledEmailIds = new Set(result.emails.map(email => email.id));
       const scheduledSubmissionByEmailId = new Map(result.emails.map(email => [email.id, {
         submissionId: email.emailSubmissionId,
@@ -3324,6 +3341,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     try {
       const emailsPerPage = useSettingsStore.getState().emailsPerPage;
       const result = await client.getScheduledEmails(emailsPerPage, scheduledNextPosition);
+      result.emails = await emailHooks.onEmailsFetched.transform(result.emails);
       const merged = [...scheduledEmails, ...result.emails.filter(email => !scheduledEmails.some(existing => existing.id === email.id))];
       const pendingUndoSend = get().pendingUndoSend;
       set({

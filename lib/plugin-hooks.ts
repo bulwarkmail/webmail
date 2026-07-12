@@ -272,6 +272,10 @@ export const emailHooks = {
   // normally. This is the send-takeover hook used by the S/MIME plugin to
   // replace the former native sign+encrypt+sendRaw pipeline.
   onComposeSend: new HookBus(),
+  // Transform hook - receive Email[] or ScheduledEmail[] just after there are fetched to 
+  // lets plugin edit emails before they are shown in row. Used to populate preview 
+  // field for encryption plugins.
+  onEmailsFetched: new HookBus(),
 };
 
 // §7.2 Calendar Hooks
