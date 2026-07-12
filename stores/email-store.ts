@@ -584,6 +584,37 @@ function applyBatchMailboxCounterUpdate(
   return { mailboxes, accountMailboxes };
 }
 
+// Sidebar tag badges render from `tagCounts`, which is *fetched from the server*
+// (`fetchTagCounts` -> `getTagCounts`) rather than derived from `state.emails`.
+// So a read/unread mutation has to keep it in step locally, exactly as it does
+// for `mailboxes[].unreadEmails` - otherwise the tag unread count (and the bold
+// tag name) stays stale until a full page reload.
+//
+// `changes` carries one entry per email whose read state *actually changed*
+// (callers already compute that), with delta -1 when it became read and +1 when
+// it became unread. Only `unread` moves: read state never changes tag
+// membership, so `total` is left alone.
+function applyTagCountReadDelta(
+  tagCounts: Record<string, { total: number; unread: number }>,
+  changes: Array<{ keywords?: Record<string, boolean>; delta: number }>,
+): Record<string, { total: number; unread: number }> {
+  const keywordIds = useSettingsStore.getState().emailKeywords.map(k => k.id);
+  if (keywordIds.length === 0) return tagCounts;
+
+  let next: Record<string, { total: number; unread: number }> | null = null;
+  for (const { keywords, delta } of changes) {
+    if (!keywords || delta === 0) continue;
+    for (const id of keywordIds) {
+      if (!keywords[`$label:${id}`]) continue;
+      const current = (next ?? tagCounts)[id];
+      if (!current) continue; // Tag not in the fetched counts yet; nothing to adjust.
+      next = next ?? { ...tagCounts };
+      next[id] = { total: current.total, unread: Math.max(0, current.unread + delta) };
+    }
+  }
+  return next ?? tagCounts;
+}
+
 // Per-mailbox counter map (for applyBatchMailboxCounterUpdate) for removing a
 // group of emails from a folder: decrement total (and unread for unseen) for
 // each group email that lives in the mailbox.
@@ -1416,6 +1447,11 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
             ? { ...state.selectedEmail, keywords: { ...state.selectedEmail.keywords, $seen: read } }
             : state.selectedEmail,
           ...mailboxPatch,
+          // Same delta, applied to every tag this email carries, so the sidebar
+          // tag badges track the folder counters instead of going stale.
+          tagCounts: applyTagCountReadDelta(state.tagCounts, [
+            { keywords: emailInState.keywords, delta },
+          ]),
           processingReadStatus: newProcessingSet,
           // Also update threadEmailsCache so expanded dropdowns reflect the change
           threadEmailsCache: (() => {
@@ -1960,14 +1996,24 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   },
 
   setEmailKeywordsLocal: (emailId, keywords) => {
-    set((state) => ({
-      emails: state.emails.map(e =>
-        e.id === emailId ? { ...e, keywords: { ...keywords } } : e
-      ),
-      selectedEmail: state.selectedEmail?.id === emailId
-        ? { ...state.selectedEmail, keywords: { ...keywords } }
-        : state.selectedEmail,
-    }));
+    set((state) => {
+      // This patch replaces the whole keyword map, so it can flip $seen as well
+      // as labels. Only a genuine read-state change moves the tag unread counts.
+      const previous = state.emails.find(e => e.id === emailId) ?? state.selectedEmail;
+      const wasRead = previous?.keywords?.$seen ?? false;
+      const isRead = keywords.$seen ?? false;
+      const delta = wasRead === isRead ? 0 : (isRead ? -1 : 1);
+
+      return {
+        emails: state.emails.map(e =>
+          e.id === emailId ? { ...e, keywords: { ...keywords } } : e
+        ),
+        selectedEmail: state.selectedEmail?.id === emailId
+          ? { ...state.selectedEmail, keywords: { ...keywords } }
+          : state.selectedEmail,
+        tagCounts: applyTagCountReadDelta(state.tagCounts, [{ keywords, delta }]),
+      };
+    });
   },
 
   // Batch operations
@@ -2025,9 +2071,19 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         };
       });
 
+      // Tag badges follow the same delta as the folder counters, counting only
+      // the emails whose read state actually changed.
+      const tagCounts = applyTagCountReadDelta(
+        get().tagCounts,
+        affectedEmails
+          .filter(email => (email.keywords?.$seen ?? false) !== read)
+          .map(email => ({ keywords: email.keywords, delta: read ? -1 : 1 })),
+      );
+
       set({
         emails: updatedEmails,
         ...mailboxPatch,
+        tagCounts,
         selectedEmailIds: new Set(),
         isLoading: false
       });
@@ -3141,6 +3197,14 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
             : mb
         ),
       }));
+
+      // Tag counts are refetched here rather than adjusted with a local delta
+      // (as markAsRead/batchMarkAsRead do). This is a server-side bulk operation
+      // over the *whole* mailbox, so it also marks emails that were never loaded
+      // into `state.emails` - a local delta would only see the loaded page and
+      // would leave the tag counts drifting high. Fire-and-forget: the folder
+      // counters above already update instantly.
+      void get().fetchTagCounts(client);
 
       return count;
     } catch (error) {
