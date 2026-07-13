@@ -244,7 +244,7 @@ export const API_METHODS = [
   'jmap.fetchBlob', 'jmap.sendRaw',
   'admin.getConfig', 'admin.getAllConfig', 'admin.setConfig', 'admin.deleteConfig',
   'toast.success', 'toast.error', 'toast.info', 'toast.warning',
-  'ui.confirm', 'ui.alert', 'ui.prompt', 'ui.rerenderEmail', 'ui.openExternalUrl',
+  'ui.confirm', 'ui.alert', 'ui.prompt', 'ui.rerenderEmail', 'ui.openExternalUrl', 'ui.downloadFile'
 ] as const;
 
 export type ApiMethod = (typeof API_METHODS)[number];
