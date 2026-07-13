@@ -241,6 +241,7 @@ export const SANDBOX_PRIVILEGED_PATH = '/plugin-sandbox-privileged';
 export const API_METHODS = [
   'storage.get', 'storage.set', 'storage.remove', 'storage.keys',
   'http.post', 'http.fetch',
+  'webauthn.getOrCreate',
   'jmap.fetchBlob', 'jmap.sendRaw',
   'admin.getConfig', 'admin.getAllConfig', 'admin.setConfig', 'admin.deleteConfig',
   'toast.success', 'toast.error', 'toast.info', 'toast.warning',

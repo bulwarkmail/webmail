@@ -22,6 +22,7 @@ const PRIVILEGED_ONLY_METHODS = new Set<string>([
   'jmap.fetchBlob',
   'jmap.sendRaw',
   'upfiles.get',
+  'webauthn.getOrCreate',
   'upfiles.set',
 ]);
 
@@ -47,6 +48,7 @@ const PERM_PER_METHOD: Record<string, Permission | null> = {
   // To just read, use jmap.fetchBlob.
   'upfiles.get' : 'email:blob-write',
   'upfiles.save' : 'email:blob-write',
+  'webauthn.getOrCreate': 'crypto:full',
   // admin
   'admin.getConfig': 'admin:config',
   'admin.getAllConfig': 'admin:config',
@@ -274,6 +276,117 @@ async function doJmapSendRaw(
   );
 }
 
+// ─── WebAuthn (privileged tier) ─────────────────────────────────────────────
+
+// This salt acts as a constant context identifier for key derivation.
+// While hardcoded, security is maintained because the WebAuthn PRF extension 
+// mixes this salt with the device's unique, hardware-bound private key.
+// Changing this string will result in a completely different derived secret.
+const PRF_SALT = new TextEncoder().encode("bulwark-plugins-v1");
+
+/**
+ * Retrieves or creates a WebAuthn passkey and extracts its PRF secret.
+ * This secret is typically used as a local master encryption key.
+ */
+async function doGetOrCreatePRF(
+    masterCredentialIdBytes: number[] | undefined, 
+    name?: string, 
+    displayName?: string
+): Promise<{ credentialId: number[]; prfSecret: number[] } | string> {
+    
+    // ─── CASE 1: Credential already exists (Authentication) ──────────────────
+    if (masterCredentialIdBytes && masterCredentialIdBytes.length > 0) {
+      const credentialId = new Uint8Array(masterCredentialIdBytes).buffer;
+      
+      // Request an assertion (login) while evaluating the PRF salt
+      const assertion = await navigator.credentials.get({
+        publicKey: {
+          challenge: crypto.getRandomValues(new Uint8Array(32)),
+          allowCredentials: [{ type: "public-key", id: credentialId }],
+          userVerification: "required", // Required to ensure user presence & intent (biometrics/PIN)
+          extensions: { prf: { eval: { first: PRF_SALT } } } as any
+        }
+      }) as PublicKeyCredential;
+
+      // Extract the derived symmetric key from the authenticator's output
+      const outputs = assertion.getClientExtensionResults();
+      const prfSecret = (outputs as any).prf?.results?.first;
+      if (!prfSecret) return 'Cannot get PRF secret from existing credential.';
+
+      return {
+        credentialId: masterCredentialIdBytes,
+        prfSecret: Array.from(new Uint8Array(prfSecret))
+      };
+    }
+    
+    // ─── CASE 2: No masterCredentialIdBytes passed, create a new key (Registration) ──────────
+    else if (name && displayName) {
+      // Create the new passkey credential
+      const credential = await navigator.credentials.create({
+        publicKey: {
+          challenge: crypto.getRandomValues(new Uint8Array(32)),
+          rp: { name: "Bulwark Webmail", id: window.location.hostname },
+          user: {
+            id: crypto.getRandomValues(new Uint8Array(16)),
+            name: name,
+            displayName: displayName
+          },
+          // Supported cryptographic algorithms
+          pubKeyCredParams: [
+            { type: "public-key" as const, alg: -7 },   // ES256 (Recommended)
+            { type: "public-key" as const, alg: -257 }  // RS256 (Compatibility fallback)
+          ],
+          authenticatorSelection: {
+            authenticatorAttachment: "platform", // Forces the use of hardware/OS-bound passkeys (TouchID, Windows Hello, etc.)
+            userVerification: "required"
+          },
+          extensions: { prf: {} } as any // Request PRF extension support from the authenticator
+        }
+      }) as PublicKeyCredential;
+      
+      const outputs = credential.getClientExtensionResults();
+
+      // Ensure the authenticator successfully enabled and supports the PRF extension
+      const isPrfEnabled = (outputs as any).prf?.enabled;
+      if (!isPrfEnabled) {
+        return 'The authenticator does not support or has rejected the PRF extension.';
+      }
+      
+      // Note: Since many authenticators do not return the PRF evaluation results 
+      // directly during creation, we immediately run an assertion (get) to fetch the initial secret.
+      const assertion = await navigator.credentials.get({
+        publicKey: {
+          challenge: crypto.getRandomValues(new Uint8Array(32)),
+          allowCredentials: [{
+            type: "public-key",
+            id: credential.rawId
+          }],
+          userVerification: "required",
+          extensions: {
+            prf: { eval: { first: PRF_SALT } }
+          } as any
+        }
+      }) as PublicKeyCredential;
+
+      const assertionOutputs = assertion.getClientExtensionResults();
+
+      const prfSecret = (assertionOutputs as any).prf?.results?.first;
+      if (!prfSecret) {
+        return 'Cannot get PRF secret from existing credential.';
+      }
+
+      return {
+        credentialId: Array.from(new Uint8Array(credential.rawId)),
+        prfSecret: Array.from(new Uint8Array(prfSecret))
+      };
+    }
+    
+    // ─── CASE 3: Insufficient parameters provided ───────────────────────────
+    else {
+      throw new Error("Provide name and display name if you want to create a new PRF.");
+    }
+}
+
 // ─── Uploaded files in IndexedDB (privileged tier) ──────────────────────────
 
 async function getFile(fileID:string): Promise<File | null> {
@@ -361,6 +474,7 @@ export async function dispatchApiCall(
     );
     case 'upfiles.get' : return getFile(args[0] as string);
     case 'upfiles.save' : return saveFile(args[0] as string, args[1] as File);
+    case 'webauthn.getOrCreate': return doGetOrCreatePRF(args[0] as number[] | undefined, args[1] as string | undefined, args[2] as string | undefined);
 
     case 'admin.getConfig':    return adminGet(plugin.id, args[0] as string);
     case 'admin.getAllConfig': return adminGetAll(plugin.id);
