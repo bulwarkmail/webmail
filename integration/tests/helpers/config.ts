@@ -43,3 +43,14 @@ export const ACCOUNTS = {
 } as const;
 
 export type AccountKey = keyof typeof ACCOUNTS;
+
+/**
+ * The shared *group* account provisioned by the bootstrap (a Stalwart Group
+ * principal, not a login). `carol` is made a member before her first login, so
+ * she sees the group's folders under "Shared" and can send as its address.
+ * Groups have no password of their own — access is via a member's session.
+ * (carol, rather than alice/bob, keeps the sync specs' accounts unshared.)
+ */
+export const GROUP = {
+  team: { user: 'team', email: `team@${DOMAIN}`, memberOf: 'carol' as AccountKey },
+} as const;

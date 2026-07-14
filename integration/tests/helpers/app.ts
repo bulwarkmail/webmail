@@ -169,6 +169,31 @@ export async function openFolder(page: Page, sel: FolderSelector): Promise<void>
   await folderRow(page, sel).first().click();
 }
 
+/** Open the "New message" composer and wait for it to render. */
+export async function openComposer(page: Page): Promise<Locator> {
+  await page.locator('[data-tour="compose-button"]').first().click();
+  const composer = page.locator('[data-testid="email-composer"]');
+  await composer.waitFor({ state: 'visible', timeout: 15000 });
+  return composer;
+}
+
+/**
+ * The sender addresses the composer's From control offers.
+ *
+ * With more than one identity the control is a <select> and each choice is an
+ * <option>; with a single identity it collapses to a static <span> that shows
+ * only that address. Returning the raw text of whichever is rendered lets a
+ * test assert on the *set of senders* without caring which shape it took.
+ */
+export async function composerFromOptions(page: Page): Promise<string[]> {
+  const from = page.locator('[data-testid="composer-from"]').first();
+  await from.waitFor({ state: 'visible', timeout: 10000 });
+  if ((await from.locator('option').count()) > 0) {
+    return from.locator('option').allTextContents();
+  }
+  return [await from.innerText()];
+}
+
 /** Locator for an email row by (exact) subject. */
 export function emailItem(page: Page, subject: string): Locator {
   return page.locator(`[data-testid="email-list-item"][data-subject="${subject}"]`);

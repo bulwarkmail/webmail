@@ -2143,6 +2143,7 @@ export function EmailComposer({
                 </div>
               ) : identities.length > 1 ? (
                 <select
+                  data-testid="composer-from"
                   value={selectedIdentityId || primaryIdentity?.id || ''}
                   onChange={(e) => setSelectedIdentityId(e.target.value)}
                   className="flex-1 bg-transparent text-sm text-foreground outline-none cursor-pointer hover:text-muted-foreground transition-colors min-w-0 truncate"
@@ -2174,7 +2175,7 @@ export function EmailComposer({
                       })}
                 </select>
               ) : (
-                <span className="text-sm text-foreground flex-1 truncate">
+                <span data-testid="composer-from" className="text-sm text-foreground flex-1 truncate">
                   {subAddressTag ? (
                     <span className="font-mono">
                       {generateSubAddress(primaryIdentity?.email || '', subAddressTag, subAddressDelimiter)}

@@ -108,6 +108,31 @@ if [ ! -f "${MARKER}" ]; then
     "${STALWART_CLI}" apply --file "${PLAN_ACCOUNTS}" --quiet
   rm -f "${PLAN_ACCOUNTS}"
 
+  # Make 'carol' a member of the 'team' group *before her first login*, so she
+  # already has the shared group mailbox (its folders show under "Shared") and
+  # the team@ send-as identity. This provisions the issue #569 scenario: the
+  # composer's From dropdown should then offer the group address. Membership is
+  # a set keyed by the group's server-assigned account id (see the User schema's
+  # memberGroupIds), so the ids are resolved here, mirroring DOMAIN_ID above.
+  # carol (not alice/bob) is used so the single-/multi-account sync specs, which
+  # drive alice and bob, keep a clean unshared environment.
+  q_account_id() {
+    STALWART_URL=${LOCAL_URL} STALWART_USER=admin STALWART_PASSWORD=${ADMIN_PASS} \
+      "${STALWART_CLI}" query Account --json 2>/dev/null \
+      | grep "\"emailAddress\":\"$1\"" \
+      | sed -E 's/.*"id":"([^"]+)".*/\1/'
+  }
+  CAROL_ID=$(q_account_id "carol@example.org")
+  TEAM_ID=$(q_account_id "team@example.org")
+  if [ -n "${CAROL_ID}" ] && [ -n "${TEAM_ID}" ]; then
+    log "Adding carol (${CAROL_ID}) to the team group (${TEAM_ID}) [issue #569]"
+    STALWART_URL=${LOCAL_URL} STALWART_USER=admin STALWART_PASSWORD=${ADMIN_PASS} \
+      "${STALWART_CLI}" update Account "${CAROL_ID}" \
+        --field "memberGroupIds={\"${TEAM_ID}\":true}" >/dev/null
+  else
+    log "WARNING: could not resolve account ids (carol='${CAROL_ID}' team='${TEAM_ID}'); skipping group membership"
+  fi
+
   # Default inbound throttles (sender->recipient + sender-IP) otherwise trip
   # 452 4.4.5 when a test blasts many messages. Stalwart re-seeds the defaults
   # on every start when absent, so deleting is useless; disable them instead,

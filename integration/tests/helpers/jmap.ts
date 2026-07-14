@@ -12,6 +12,8 @@ import { JMAP_URL } from './config';
 
 const CORE = 'urn:ietf:params:jmap:core';
 const MAIL = 'urn:ietf:params:jmap:mail';
+// Identity/* lives under the submission capability, not mail.
+const SUBMISSION = 'urn:ietf:params:jmap:submission';
 
 interface JmapMailbox {
   id: string;
@@ -28,6 +30,9 @@ export class JmapClient {
   private authHeader: string;
   private apiUrl: string;
   accountId = '';
+  /** Every account visible in this user's session (own + shared/group),
+   *  keyed by accountId -> account name (its email address). */
+  accounts: Record<string, string> = {};
 
   private constructor(private email: string, password: string) {
     this.authHeader = 'Basic ' + Buffer.from(`${email}:${password}`).toString('base64');
@@ -46,14 +51,25 @@ export class JmapClient {
     const primary = session.primaryAccounts?.[MAIL];
     if (!primary) throw new Error(`No mail account for ${email} in JMAP session`);
     c.accountId = primary;
+    c.accounts = Object.fromEntries(
+      Object.entries(session.accounts ?? {}).map(([id, a]) => [id, (a as { name: string }).name]),
+    );
     return c;
+  }
+
+  /** Names (email addresses) of the shared/group accounts this user can access,
+   *  i.e. everything in the session except the user's own primary account. */
+  sharedAccountNames(): string[] {
+    return Object.entries(this.accounts)
+      .filter(([id]) => id !== this.accountId)
+      .map(([, name]) => name);
   }
 
   async request(methodCalls: MethodCall[]): Promise<any> {
     const res = await fetch(this.apiUrl, {
       method: 'POST',
       headers: { Authorization: this.authHeader, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ using: [CORE, MAIL], methodCalls }),
+      body: JSON.stringify({ using: [CORE, MAIL, SUBMISSION], methodCalls }),
     });
     if (!res.ok) throw new Error(`JMAP request failed: ${res.status} ${await res.text()}`);
     return res.json();
