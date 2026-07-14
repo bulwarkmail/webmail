@@ -432,6 +432,17 @@ function stripMessageIdBrackets(id: string): string {
   return id.trim().replace(/^<+/, '').replace(/>+$/, '').trim();
 }
 
+// Generate a Message-ID for outgoing mail (bare msg-id, no angle brackets, per
+// RFC 8621 §4.1.2.3). Without one the server synthesizes it from its OS
+// hostname, which leaks internal names (e.g. @ip-10-0-12-97.ec2.internal) into
+// headers — an anti-spam signal and an information disclosure. Use the sender's
+// domain instead, matching what receivers expect a Message-ID to look like.
+function generateMessageId(fromEmail: string): string {
+  const at = fromEmail.lastIndexOf('@');
+  const domain = at > 0 ? fromEmail.slice(at + 1) : 'localhost';
+  return `${Date.now().toString(36)}.${crypto.randomUUID()}@${domain}`;
+}
+
 /**
  * Build a CalendarEvent/query filter restricting results to the given
  * calendars. Stalwart implements the singular `inCalendar` condition (one
@@ -2467,6 +2478,7 @@ export class JMAPClient implements IJMAPClient {
       cc: cc?.length ? cc.map(parseRecipientString) : undefined,
       bcc: bcc?.length ? bcc.map(parseRecipientString) : undefined,
       subject,
+      messageId: [generateMessageId(fromEmail || this.username)],
       inReplyTo: normalizedInReplyTo?.length ? normalizedInReplyTo : undefined,
       references: normalizedReferences?.length ? normalizedReferences : undefined,
       keywords: { "$seen": true, "$draft": true },
