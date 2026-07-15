@@ -91,6 +91,45 @@ export interface TokenResult {
   refresh_token?: string;
 }
 
+export interface UserInfoResult {
+  picture?: string;
+  avatar?: string;
+  avatar_url?: string;
+}
+
+function avatarFromUserInfo(data: unknown): string | undefined {
+  if (!data || typeof data !== 'object') return undefined;
+  const record = data as Record<string, unknown>;
+  const value = record.picture || record.avatar || record.avatar_url;
+  if (typeof value !== 'string') return undefined;
+  try {
+    const url = new URL(value);
+    if (url.protocol !== 'https:') return undefined;
+    return url.toString();
+  } catch {
+    return undefined;
+  }
+}
+
+export async function fetchUserInfoAvatar(
+  accessToken: string,
+  serverId?: string | null,
+): Promise<string | undefined> {
+  const metadata = await getMetadata(serverId);
+  if (!metadata?.userinfo_endpoint) return undefined;
+
+  const response = await fetch(metadata.userinfo_endpoint, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+
+  if (!response.ok) {
+    logger.warn('Userinfo request failed', { status: response.status });
+    return undefined;
+  }
+
+  return avatarFromUserInfo(await response.json());
+}
+
 export async function exchangeCodeForTokens(
   code: string,
   codeVerifier: string,

@@ -117,6 +117,7 @@ export function ProtocolAccountPicker({
                   size="md"
                   className="shrink-0"
                   disableFavicon
+                  contactPhotoUri={account.avatarUrl}
                   fallbackColor={account.avatarColor}
                 />
 

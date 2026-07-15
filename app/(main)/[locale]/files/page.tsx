@@ -422,6 +422,7 @@ export default function FilesPage() {
           label: a.label || a.email,
           email: a.email,
           avatarColor: a.avatarColor,
+          avatarUrl: a.avatarUrl,
         }))
     : [];
   const isAccountPicker = isEmbedded && currentFilesAccountId === null;

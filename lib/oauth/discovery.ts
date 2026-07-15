@@ -2,6 +2,7 @@ export interface OAuthMetadata {
   issuer: string;
   authorization_endpoint: string;
   token_endpoint: string;
+  userinfo_endpoint?: string;
   revocation_endpoint?: string;
   end_session_endpoint?: string;
 }
@@ -80,6 +81,7 @@ export async function discoverOAuth(
         const allPublic = await endpointsArePublic([
           data.authorization_endpoint,
           data.token_endpoint,
+          data.userinfo_endpoint,
           data.revocation_endpoint,
           data.end_session_endpoint,
         ], options?.validateEndpoint);
@@ -91,6 +93,7 @@ export async function discoverOAuth(
           issuer: data.issuer,
           authorization_endpoint: data.authorization_endpoint,
           token_endpoint: data.token_endpoint,
+          userinfo_endpoint: data.userinfo_endpoint,
           revocation_endpoint: data.revocation_endpoint,
           end_session_endpoint: data.end_session_endpoint,
         };

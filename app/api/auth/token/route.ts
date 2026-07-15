@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { logger } from '@/lib/logger';
 import { refreshTokenCookieName, refreshTokenServerCookieName } from '@/lib/oauth/tokens';
-import { exchangeCodeForTokens, buildOAuthParams, getMetadata, getTokenEndpoint } from '@/lib/oauth/token-exchange';
+import { exchangeCodeForTokens, buildOAuthParams, fetchUserInfoAvatar, getMetadata, getTokenEndpoint } from '@/lib/oauth/token-exchange';
 import { getCookieOptions } from '@/lib/oauth/cookie-config';
 import { MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
 
@@ -27,9 +27,12 @@ export async function POST(request: NextRequest) {
 
     const tokens = await exchangeCodeForTokens(code, code_verifier, redirect_uri, serverId);
 
+    const avatarUrl = await fetchUserInfoAvatar(tokens.access_token, serverId).catch(() => undefined);
+
     const response = NextResponse.json({
       access_token: tokens.access_token,
       expires_in: tokens.expires_in,
+      ...(avatarUrl ? { avatar_url: avatarUrl } : {}),
     });
 
     const cookieStore = await cookies();

@@ -342,6 +342,7 @@ function AccountRow({
           size="sm"
           className="w-9 h-9 text-sm"
           disableFavicon
+          contactPhotoUri={account.avatarUrl}
           fallbackColor={account.avatarColor}
         />
         {isActive && (

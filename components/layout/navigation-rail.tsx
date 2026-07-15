@@ -668,6 +668,7 @@ export function NavigationRail({
                     email={account.email || account.username}
                     size="sm"
                     disableFavicon
+                    contactPhotoUri={account.avatarUrl}
                     fallbackColor={account.avatarColor}
                   />
                   {isActive && (

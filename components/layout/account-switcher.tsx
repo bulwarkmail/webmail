@@ -25,6 +25,7 @@ function AccountAvatar({ account, size = "sm" }: { account: AccountEntry; size?:
       size="sm"
       className={cn("flex-shrink-0", size === "md" && "w-9 h-9 text-sm")}
       disableFavicon
+      contactPhotoUri={account.avatarUrl}
       fallbackColor={account.avatarColor}
     />
   );

@@ -4,6 +4,7 @@ import { logger } from '@/lib/logger';
 import { decryptPayload } from '@/lib/auth/crypto';
 import {
   exchangeCodeForTokens,
+  fetchUserInfoAvatar,
   getRequiredConfig,
   getTokenEndpoint,
 } from '@/lib/oauth/token-exchange';
@@ -73,6 +74,8 @@ export async function POST(request: NextRequest) {
     // Exchange code for tokens
     const tokens = await exchangeCodeForTokens(code, codeVerifier, redirectUri, pendingServerId);
 
+    const avatarUrl = await fetchUserInfoAvatar(tokens.access_token, pendingServerId).catch(() => undefined);
+
     // For the mobile handoff flow the tokens are handed back to the app
     // verbatim - we deliberately don't write any cookies on the webmail
     // origin (the mobile browser tab disposes of the session after the
@@ -110,12 +113,14 @@ export async function POST(request: NextRequest) {
         server_url: serverUrl,
         mobile_redirect_uri: mobileRedirectUri,
         mobile_state: mobileState,
+        ...(avatarUrl ? { avatar_url: avatarUrl } : {}),
       });
     }
 
     return NextResponse.json({
       access_token: tokens.access_token,
       expires_in: tokens.expires_in,
+      ...(avatarUrl ? { avatar_url: avatarUrl } : {}),
     });
   } catch (error) {
     // Clean up pending cookie on any error
