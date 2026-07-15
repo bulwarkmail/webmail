@@ -13,7 +13,12 @@ declare module "@tiptap/core" {
 
 /**
  * Adds a `dir` attribute to block nodes so the composer can mark individual
- * paragraphs/headings as LTR or RTL (Gmail-style right-to-left editing). The
+ * paragraphs/headings as LTR or RTL (Gmail-style right-to-left editing).
+ *
+ * The default is `"auto"`: each block detects its own direction from its first
+ * strong character, so a paragraph typed in English renders LTR and one typed
+ * in Hebrew renders RTL, per block, as you type. The toolbar toggle still pins
+ * an explicit `ltr`/`rtl` when you want to override the auto-detection, and the
  * attribute round-trips to HTML so the direction is preserved in the sent mail.
  */
 export const TextDirection = Extension.create({
@@ -29,10 +34,10 @@ export const TextDirection = Extension.create({
         types: this.options.types,
         attributes: {
           dir: {
-            default: null,
-            parseHTML: (element) => element.getAttribute("dir") || null,
+            default: "auto",
+            parseHTML: (element) => element.getAttribute("dir") || "auto",
             renderHTML: (attributes) =>
-              attributes.dir ? { dir: attributes.dir } : {},
+              attributes.dir ? { dir: attributes.dir } : { dir: "auto" },
           },
         },
       },
