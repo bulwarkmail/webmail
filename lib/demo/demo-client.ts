@@ -1096,11 +1096,12 @@ export class DemoJMAPClient implements IJMAPClient {
     return { scheduled: true, emailId, emailSubmissionId: replacement, sendAt: delayedUntil };
   }
 
-  async restoreEmailToDraft(emailId: string, draftMailboxId: string, sentMailboxId?: string): Promise<void> {
+  // Mirrors JMAPClient.restoreEmailToDraft: the third parameter is ignored and
+  // the message ends up in Drafts only (full mailboxIds replacement).
+  async restoreEmailToDraft(emailId: string, draftMailboxId: string, _sentMailboxId?: string): Promise<void> {
     const email = this.data.emails.find(e => e.id === emailId);
     if (!email) return;
-    email.mailboxIds[draftMailboxId] = true;
-    if (sentMailboxId) delete email.mailboxIds[sentMailboxId];
+    email.mailboxIds = { [draftMailboxId]: true };
     email.keywords.$draft = true;
     this.recalcMailboxCounts();
   }

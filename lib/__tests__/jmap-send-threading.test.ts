@@ -55,7 +55,7 @@ interface CapturedRequest {
  * Mailbox/get → Identity/get → Email/set + EmailSubmission/set.
  * Returns the captured request bodies for assertions.
  */
-function mockSendEmailFlow() {
+function mockSendEmailFlow(draftsId = 'mb-drafts', sentId = 'mb-sent') {
   const captured: CapturedRequest[] = [];
   const fetchSpy = vi.spyOn(globalThis, 'fetch');
 
@@ -71,8 +71,8 @@ function mockSendEmailFlow() {
           'Mailbox/get',
           {
             list: [
-              { id: 'mb-drafts', name: 'Drafts', role: 'drafts' },
-              { id: 'mb-sent', name: 'Sent', role: 'sent' },
+              { id: draftsId, name: 'Drafts', role: 'drafts' },
+              { id: sentId, name: 'Sent', role: 'sent' },
             ],
           },
           '0',
@@ -262,5 +262,76 @@ describe('JMAPClient.sendEmail threading headers', () => {
     expect(requestSpy).toHaveBeenCalledWith(expect.arrayContaining([
       expect.arrayContaining(['EmailSubmission/set', expect.objectContaining({ update: { 'sub-new': { undoStatus: 'canceled' } } })]),
     ]));
+  });
+});
+
+describe('JMAPClient post-send mailbox filing', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  function sentFilingPatch(captured: CapturedRequest[]): Record<string, unknown> {
+    const submissionCall = captured[2].methodCalls.find(call => call[0] === 'EmailSubmission/set');
+    expect(submissionCall).toBeDefined();
+    const onSuccess = (submissionCall![1] as {
+      onSuccessUpdateEmail: Record<string, Record<string, unknown>>;
+    }).onSuccessUpdateEmail;
+    return Object.values(onSuccess)[0];
+  }
+
+  it('files the sent message via a full mailboxIds replacement, never mailboxIds/<id> pointers', async () => {
+    const client = createClient();
+    const captured = mockSendEmailFlow();
+
+    await client.sendEmail(
+      ['recipient@example.com'], 'subject', 'body',
+      undefined, undefined, 'identity-1', 'user@example.com',
+    );
+
+    const patch = sentFilingPatch(captured);
+    // A `mailboxIds/<id>` JSON-pointer whose token is purely numeric (e.g. a
+    // Drafts folder whose JMAP id is "0") is rejected by Stalwart, silently
+    // stranding already-delivered mail in Drafts. The move must use a full
+    // `mailboxIds` replacement, which has no per-id pointer token.
+    expect(Object.keys(patch).some(key => key.startsWith('mailboxIds/'))).toBe(false);
+    expect(patch.mailboxIds).toEqual({ 'mb-sent': true });
+    expect(patch['keywords/$draft']).toBeNull();
+  });
+
+  it('files correctly when the Drafts mailbox id is a purely numeric string (Stalwart numeric-id bug)', async () => {
+    const client = createClient();
+    // Drafts id "0", Sent id "e": the old pointer form emitted `mailboxIds/0`,
+    // which Stalwart rejects with invalidProperties "Invalid patch value".
+    const captured = mockSendEmailFlow('0', 'e');
+
+    await client.sendEmail(
+      ['recipient@example.com'], 'subject', 'body',
+      undefined, undefined, 'identity-1', 'user@example.com',
+    );
+
+    const patch = sentFilingPatch(captured);
+    expect(Object.keys(patch).some(key => key.startsWith('mailboxIds/'))).toBe(false);
+    expect(patch.mailboxIds).toEqual({ e: true });
+  });
+
+  it('restoreEmailToDraft places the message in Drafts only via a full mailboxIds replacement', async () => {
+    const client = createClient();
+    let capturedUpdate: Record<string, unknown> | undefined;
+    vi.spyOn(client as unknown as { request: JMAPClient['request'] }, 'request')
+      .mockImplementation(async (methodCalls) => {
+        const args = methodCalls[0][1] as { update?: Record<string, Record<string, unknown>> };
+        capturedUpdate = args.update?.['email-1'];
+        return { methodResponses: [['Email/set', { updated: { 'email-1': null } }, '0']] };
+      });
+
+    // Third arg (Sent mailbox id) is intentionally ignored — the message must
+    // end up in Drafts only, with no leftover Sent membership. Drafts id "0"
+    // also exercises the numeric-id path in the reverse direction.
+    await client.restoreEmailToDraft('email-1', '0', 'e');
+
+    expect(capturedUpdate).toBeDefined();
+    expect(Object.keys(capturedUpdate!).some(key => key.startsWith('mailboxIds/'))).toBe(false);
+    expect(capturedUpdate!.mailboxIds).toEqual({ '0': true });
+    expect(capturedUpdate!['keywords/$draft']).toBe(true);
   });
 });
