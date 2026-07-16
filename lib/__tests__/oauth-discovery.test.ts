@@ -46,7 +46,8 @@ describe('oauth/discovery', () => {
     expect(result).toEqual(VALID_METADATA);
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(fetch).toHaveBeenCalledWith(
-      'https://mail.example.com/.well-known/oauth-authorization-server'
+      'https://mail.example.com/.well-known/oauth-authorization-server',
+      expect.objectContaining({ signal: expect.any(AbortSignal) }),
     );
   });
 
@@ -64,7 +65,8 @@ describe('oauth/discovery', () => {
     expect(fetch).toHaveBeenCalledTimes(2);
     expect(fetch).toHaveBeenNthCalledWith(
       2,
-      'https://fallback.example.com/.well-known/openid-configuration'
+      'https://fallback.example.com/.well-known/openid-configuration',
+      expect.objectContaining({ signal: expect.any(AbortSignal) }),
     );
   });
 
@@ -175,5 +177,84 @@ describe('oauth/discovery', () => {
     expect(first).toEqual(VALID_METADATA);
     expect(second).toEqual(VALID_METADATA);
     expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('bounds each discovery fetch with an AbortSignal timeout (no hang on unresponsive IdP)', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const fetchMock = vi.fn().mockRejectedValue(
+      Object.assign(new Error('The operation timed out'), { name: 'TimeoutError' }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await discoverOAuth('https://unresponsive.example.com', { validateEndpoint });
+
+    expect(result).toBeNull();
+    // Every discovery fetch must carry an AbortSignal so an unresponsive IdP is
+    // aborted (DISCOVERY_TIMEOUT_MS) instead of hanging the request - and, with
+    // it, the login page's SSO button.
+    expect(fetchMock.mock.calls.length).toBeGreaterThan(0);
+    for (const call of fetchMock.mock.calls) {
+      expect(call[1]).toEqual(expect.objectContaining({ signal: expect.any(AbortSignal) }));
+    }
+  });
+
+  it('retries once when the first attempt fails, then succeeds', async () => {
+    // Attempt 1: both well-known URLs fail. Attempt 2: first URL succeeds.
+    vi.stubGlobal('fetch', vi.fn()
+      .mockResolvedValueOnce({ ok: false, status: 503 })
+      .mockResolvedValueOnce({ ok: false, status: 503 })
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(VALID_METADATA) }));
+
+    const result = await discoverOAuth('https://flaky.example.com', { validateEndpoint });
+
+    expect(result).toEqual(VALID_METADATA);
+    // 2 failures (attempt 1) + 1 success (attempt 2 retry).
+    expect(fetch).toHaveBeenCalledTimes(3);
+  });
+
+  it('serves stale cached metadata when a refresh fails (keeps the SSO button up)', async () => {
+    vi.useFakeTimers();
+    try {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      // First call succeeds and caches the metadata.
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(VALID_METADATA),
+      }));
+      const first = await discoverOAuth('https://stale.example.com', { validateEndpoint });
+      expect(first).toEqual(VALID_METADATA);
+
+      // Expire the cache (positive TTL is 10 min).
+      vi.advanceTimersByTime(10 * 60 * 1000 + 1);
+
+      // Refresh now fails on every URL/attempt: the stale-but-usable value must
+      // be returned instead of null so the SSO button keeps rendering.
+      vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network down')));
+      const pending = discoverOAuth('https://stale.example.com', { validateEndpoint });
+      await vi.advanceTimersByTimeAsync(1000); // fire the retry backoff timer
+      const second = await pending;
+
+      expect(second).toEqual(VALID_METADATA);
+      expect(warnSpy).toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('negative-caches a total failure (no cached value) to avoid hammering the IdP', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const fetchMock = vi.fn().mockRejectedValue(new Error('network down'));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const first = await discoverOAuth('https://down.example.com', { validateEndpoint });
+    const callsAfterFirst = fetchMock.mock.calls.length;
+    const second = await discoverOAuth('https://down.example.com', { validateEndpoint });
+
+    expect(first).toBeNull();
+    expect(second).toBeNull();
+    // The immediate second call is short-circuited by the negative cache, so no
+    // additional fetches are made.
+    expect(fetchMock).toHaveBeenCalledTimes(callsAfterFirst);
   });
 });
