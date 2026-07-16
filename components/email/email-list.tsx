@@ -4,7 +4,7 @@ import { Email, ThreadGroup } from "@/lib/jmap/types";
 import { ThreadListItem } from "./thread-list-item";
 import { EmailContextMenu } from "./email-context-menu";
 import { cn } from "@/lib/utils";
-import { Trash2, Mail, MailX, MailOpen, Loader2, SearchX, AlertTriangle, CalendarClock } from "lucide-react";
+import { Trash2, Mail, MailX, MailOpen, Loader2, SearchX, AlertTriangle, CalendarClock, ShieldCheck } from "lucide-react";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -191,6 +191,22 @@ export function EmailList({
     }
   };
 
+  const handleBatchUndoSpam = async () => {
+    if (!client || isProcessing) return;
+    setIsProcessing(true);
+    try {
+      const emailIds = Array.from(selectedEmailIds);
+      await batchUndoSpam(client, emailIds);
+      const { toast } = await import('sonner');
+      toast.success(t('../email_viewer.spam.toast_not_spam_batch', { count: emailIds.length }));
+    } catch {
+      const { toast } = await import('sonner');
+      toast.error(t('../email_viewer.spam.error_not_spam'));
+    } finally {
+      setTimeout(() => setIsProcessing(false), 500);
+    }
+  };
+
   const handleBatchDelete = async () => {
     if (!client || isProcessing) return;
 
@@ -357,6 +373,22 @@ export function EmailList({
                 <Mail className="w-4 h-4" />
               )}
             </Button>
+            {effectiveMailboxRole === 'junk' && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleBatchUndoSpam}
+                title={t('../context_menu.not_spam')}
+                disabled={isProcessing}
+                className="text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100/50 dark:hover:bg-emerald-950/30 transition-colors disabled:opacity-50"
+              >
+                {isProcessing ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <ShieldCheck className="w-4 h-4" />
+                )}
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="sm"
