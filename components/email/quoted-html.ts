@@ -10,6 +10,10 @@ import { buildSignatureBlock } from "@/components/email/signature-block";
 // HTML, so parseHTML can recognise it on the way back in.
 export const QUOTED_HTML_MARKER = "data-quoted-html";
 
+// Reusable style for the quote bar when quoting email text (like in a reply).
+const QUOTE_BAR_STYLE =
+  "border-left:2px solid #c5c5c5;padding-left:12px;margin-top:8px;";
+
 /**
  * QuotedHtml — an atomic block node that carries the *verbatim* HTML of a
  * quoted/forwarded original email. The HTML is stored in the `html` attribute
@@ -68,8 +72,7 @@ export const QuotedHtml = TiptapNode.create({
       const dom = document.createElement("div");
       dom.setAttribute(QUOTED_HTML_MARKER, "");
       dom.className = "quoted-html-island";
-      dom.style.cssText =
-        "border-left:2px solid #c5c5c5;padding-left:12px;margin-top:8px;";
+      dom.style.cssText = QUOTE_BAR_STYLE;
 
       // CRITICAL: render the quoted email inside a Shadow Root. The app's
       // global CSS (Tailwind preflight, .tiptap table/td rules, box-sizing
@@ -192,5 +195,5 @@ export function serializeEditorContent(editor: Editor): string {
  * must be what serializeEditorContent emits too (round-trip consistency).
  */
 export function buildQuotedHtmlBlock(sanitizedInnerHtml: string): string {
-  return `<div ${QUOTED_HTML_MARKER}>${sanitizedInnerHtml}</div>`;
+  return `<div ${QUOTED_HTML_MARKER} style="${QUOTE_BAR_STYLE}">${sanitizedInnerHtml}</div>`;
 }
