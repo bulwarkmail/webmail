@@ -55,6 +55,7 @@ import { RichTextEditor } from "@/components/email/rich-text-editor";
 import type { Editor } from "@tiptap/react";
 import { htmlToPlainText as htmlToPlainTextShared } from "@/lib/html-to-text";
 import { fileStorage } from "@/lib/plugin-storage";
+import { usePolicyStore } from "@/stores/policy-store";
 
 /**
  * Derives the text/plain alternative from the composer's HTML body, preserving
@@ -289,6 +290,9 @@ export function EmailComposer({
     ? multiAccountIdentities.groups
     : [];
   const primaryIdentity = activeIdentities[0] ?? null;
+
+  const { isFeatureEnabled } = usePolicyStore();
+  const templatesEnabled = isFeatureEnabled('templatesEnabled');
 
   // The signature identity used when embedding the signature into the initial
   // body for "above quote" mode. Mirrors the signatureIdentity derivation
@@ -1132,6 +1136,7 @@ export function EmailComposer({
       const tag = target?.tagName?.toLowerCase();
       if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
       if (target?.getAttribute('contenteditable') === 'true') return;
+      if (!templatesEnabled) return;
       if (e.key === 't' && !e.ctrlKey && !e.metaKey && !e.altKey) {
         e.preventDefault();
         setShowTemplatePicker(true);
@@ -1139,7 +1144,7 @@ export function EmailComposer({
     };
     window.addEventListener('keydown', handleTemplateKey);
     return () => window.removeEventListener('keydown', handleTemplateKey);
-  }, []);
+  }, [templatesEnabled]);
 
   const addFiles = useCallback(async (files: File[]) => {
     if (!client || files.length === 0) return;
@@ -2562,24 +2567,26 @@ export function EmailComposer({
             >
               <Paperclip className="w-4 h-4" />
             </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setShowTemplatePicker(true)}
-              title={t('use_template')}
-              className="h-9 w-9"
-            >
-              <FileText className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setShowSaveAsTemplate(true)}
-              title={t('save_as_template')}
-              className="h-9 w-9"
-            >
-              <BookmarkPlus className="w-4 h-4" />
-            </Button>
+            {templatesEnabled && <>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowTemplatePicker(true)}
+                title={t('use_template')}
+                className="h-9 w-9"
+              >
+                <FileText className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowSaveAsTemplate(true)}
+                title={t('save_as_template')}
+                className="h-9 w-9"
+              >
+                <BookmarkPlus className="w-4 h-4" />
+              </Button>
+            </>}
             {/* Sign/encrypt controls are contributed by crypto plugins via the
                 composer-toolbar slot (rendered below). */}
 
