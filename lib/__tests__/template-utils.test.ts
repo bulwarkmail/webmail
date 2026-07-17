@@ -20,6 +20,7 @@ function makeTemplate(overrides: Partial<EmailTemplate> = {}): EmailTemplate {
     name: 'Test Template',
     subject: '',
     body: '',
+    isHTML: false,
     category: '',
     isFavorite: false,
     createdAt: '2026-01-01T00:00:00Z',

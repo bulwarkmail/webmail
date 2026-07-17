@@ -3,6 +3,7 @@ export interface EmailTemplate {
   name: string;
   subject: string;
   body: string;
+  isHTML?: boolean;
   category: string;
   defaultRecipients?: {
     to?: string[];

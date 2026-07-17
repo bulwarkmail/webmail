@@ -94,7 +94,7 @@ export function PlaceholderFillModal({
             <div className="mt-4 pt-4 border-t border-border">
               <p className="text-xs font-medium text-muted-foreground mb-2">{t('preview')}</p>
               <div className="text-sm text-foreground whitespace-pre-wrap p-3 rounded-md bg-muted/50 border border-border max-h-32 overflow-y-auto">
-                {preview}
+                {template.isHTML ? <div dangerouslySetInnerHTML={{ __html: preview }}></div> : preview}
               </div>
             </div>
           )}

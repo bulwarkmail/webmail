@@ -173,7 +173,8 @@ export function importTemplates(json: string): ImportResult {
       id: generateUUID(),
       name: sanitizeText(t.name),
       subject: sanitizeText(t.subject),
-      body: sanitizeText(t.body),
+      body: t.isHTML ? String(t.body || '') : sanitizeText(t.body),
+      isHTML: Boolean(t.isHTML),
       category: sanitizeText(t.category),
       defaultRecipients: recipients && typeof recipients === 'object'
         ? {

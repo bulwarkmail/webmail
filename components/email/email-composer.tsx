@@ -1088,7 +1088,7 @@ export function EmailComposer({
       : template.body;
 
     // In plain text mode, use template body as-is; otherwise convert to HTML
-    const bodyContent = plainTextMode
+    const bodyContent = plainTextMode || template.isHTML
       ? filledBody
       : `<p>${filledBody.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>')}</p>`;
 

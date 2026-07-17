@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Star, Plus } from 'lucide-react';
+import { Star, Plus, Square, CheckSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { validateTemplateName } from '@/lib/template-utils';
 import { BUILT_IN_PLACEHOLDERS } from '@/lib/template-types';
@@ -38,6 +38,7 @@ export function TemplateForm({ template, initialData, onSave, onCancel }: Templa
   const [category, setCategory] = useState(template?.category || '');
   const [subject, setSubject] = useState(template?.subject || initialData?.subject || '');
   const [body, setBody] = useState(template?.body || initialData?.body || '');
+  const [isHTML, setIsHTML] = useState(template?.isHTML || false);
   const [toRecipients, setToRecipients] = useState(
     template?.defaultRecipients?.to?.join(', ') || initialData?.to?.join(', ') || ''
   );
@@ -76,6 +77,7 @@ export function TemplateForm({ template, initialData, onSave, onCancel }: Templa
       name: name.trim(),
       subject,
       body,
+      isHTML,
       category: category.trim(),
       defaultRecipients: to.length || cc.length || bcc.length
         ? { to: to.length ? to : undefined, cc: cc.length ? cc : undefined, bcc: bcc.length ? bcc : undefined }
@@ -190,6 +192,14 @@ export function TemplateForm({ template, initialData, onSave, onCancel }: Templa
           rows={6}
           className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-y"
         />
+        <button
+          type="button"
+          onClick={() => setIsHTML(!isHTML)}
+          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          {isHTML ? <CheckSquare className={cn('w-4 h-4')}></CheckSquare> : <Square className={cn('w-4 h-4')}></Square>}
+          HTML
+        </button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
