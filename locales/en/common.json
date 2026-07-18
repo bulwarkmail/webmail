@@ -1571,6 +1571,8 @@
       "role_none": "None",
       "create_folder": "Create Folder",
       "create_subfolder": "Create Subfolder",
+      "reorder": "Drag to reorder",
+      "reorder_error": "Failed to reorder folders",
       "subfolder_of": "Inside {name}",
       "subfolder_name": "Subfolder name",
       "new_folder_name": "Folder name",

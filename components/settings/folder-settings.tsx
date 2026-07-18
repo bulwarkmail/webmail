@@ -17,7 +17,16 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { cn, buildMailboxTree, type MailboxNode } from '@/lib/utils';
-import { ChevronRight, ChevronDown } from 'lucide-react';
+import { ChevronRight, ChevronDown, GripVertical } from 'lucide-react';
+import {
+  DndContext, closestCenter, PointerSensor, KeyboardSensor,
+  useSensor, useSensors, type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  SortableContext, verticalListSortingStrategy, useSortable,
+  arrayMove, sortableKeyboardCoordinates,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 const STANDARD_ROLES = ['inbox', 'drafts', 'sent', 'trash', 'junk', 'archive'] as const;
 
@@ -102,10 +111,47 @@ function IconPicker({ currentIcon, onSelect, onClose }: {
   );
 }
 
+/**
+ * Wraps a folder row with a drag handle so it can be reordered within its
+ * sibling group. The handle carries the dnd-kit listeners; the rest of the row
+ * (buttons, inline editors) stays fully interactive.
+ */
+function SortableFolderRow({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 10 : undefined,
+    position: isDragging ? 'relative' : undefined,
+  };
+  return (
+    <div ref={setNodeRef} style={style} className="flex items-stretch">
+      <button
+        type="button"
+        {...attributes}
+        {...listeners}
+        className="flex items-center px-1 text-muted-foreground/40 hover:text-foreground cursor-grab active:cursor-grabbing touch-none rounded-md focus:outline-none focus:ring-2 focus:ring-ring flex-shrink-0"
+        title={title}
+        aria-label={title}
+      >
+        <GripVertical className="w-3.5 h-3.5" />
+      </button>
+      <div className="flex-1 min-w-0">{children}</div>
+    </div>
+  );
+}
+
 export function FolderSettings() {
   const t = useTranslations('settings.folders');
   const { client } = useAuthStore();
-  const { mailboxes, fetchMailboxes, createMailbox, renameMailbox, deleteMailbox, setMailboxRole } = useEmailStore();
+  const { mailboxes, fetchMailboxes, createMailbox, renameMailbox, deleteMailbox, setMailboxRole, reorderMailboxes } = useEmailStore();
+
+  const sensors = useSensors(
+    // Small activation distance so clicking the row's buttons still works.
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
   const { folderIcons, setFolderIcon } = useSettingsStore();
   const { isFeatureEnabled } = usePolicyStore();
   const folderIconsAllowed = isFeatureEnabled('folderIconsEnabled');
@@ -128,6 +174,31 @@ export function FolderSettings() {
 
   const ownMailboxes = mailboxes.filter(mb => !mb.isShared);
   const folderTree = buildMailboxTree(ownMailboxes);
+
+  // Reorder folders within a sibling group (same parent). Drops onto a folder
+  // in a different group are ignored — this reorders, it doesn't reparent.
+  const handleFolderDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id || !client) return;
+
+    const groups: MailboxNode[][] = [];
+    const collectGroups = (nodes: MailboxNode[]) => {
+      groups.push(nodes);
+      nodes.forEach(n => { if (n.children.length > 0) collectGroups(n.children); });
+    };
+    collectGroups(folderTree);
+
+    const group = groups.find(g => g.some(n => n.id === active.id));
+    if (!group) return;
+    const oldIndex = group.findIndex(n => n.id === active.id);
+    const newIndex = group.findIndex(n => n.id === over.id);
+    if (newIndex < 0) return; // dropped outside the active folder's sibling group
+
+    const orderedIds = arrayMove(group, oldIndex, newIndex).map(n => n.id);
+    reorderMailboxes(client, orderedIds).catch(() => {
+      toast.error(t('reorder_error'));
+    });
+  };
 
   const getRoleMailboxId = (role: string): string => {
     const mb = ownMailboxes.find(m => m.role === role);
@@ -385,6 +456,7 @@ export function FolderSettings() {
 
     return (
       <div key={mb.id}>
+        <SortableFolderRow id={mb.id} title={t('reorder')}>
         <div
           className="flex items-center justify-between py-2 px-3 rounded-md hover:bg-muted/50"
           style={{ paddingLeft: 12 + depth * 16 }}
@@ -482,12 +554,15 @@ export function FolderSettings() {
             )}
           </div>
         </div>
+        </SortableFolderRow>
         {/* Inline subfolder creation */}
         {renderCreateInline(mb.id, depth + 1)}
         {/* Render children if expanded */}
         {hasChildren && isExpanded && (
           <div>
-            {node.children.map(child => renderFolderNode(child))}
+            <SortableContext items={node.children.map(c => c.id)} strategy={verticalListSortingStrategy}>
+              {node.children.map(child => renderFolderNode(child))}
+            </SortableContext>
           </div>
         )}
       </div>
@@ -505,7 +580,11 @@ export function FolderSettings() {
               <p className="text-sm text-muted-foreground">{t('no_folders')}</p>
             </div>
           ) : (
-            folderTree.map(node => renderFolderNode(node))
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleFolderDragEnd}>
+              <SortableContext items={folderTree.map(n => n.id)} strategy={verticalListSortingStrategy}>
+                {folderTree.map(node => renderFolderNode(node))}
+              </SortableContext>
+            </DndContext>
           )}
         </div>
 

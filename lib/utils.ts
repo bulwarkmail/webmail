@@ -486,23 +486,26 @@ export function buildMailboxTree(mailboxes: Mailbox[]): MailboxNode[] {
         return a.isShared ? 1 : -1;
       }
 
-      // 2. Priority: Role-based ordering (inbox first, trash last, etc.)
+      // 2. Priority: user-defined order. When a folder has been explicitly
+      // reordered its sortOrder is non-zero and takes precedence over the
+      // default role/name ordering below. Untouched folders keep sortOrder 0,
+      // so the default arrangement is unchanged until the user drags something.
+      if (a.sortOrder !== b.sortOrder) {
+        return a.sortOrder - b.sortOrder;
+      }
+
+      // 3. Priority: Role-based ordering (inbox first, trash last, etc.)
       const aPriority = a.role ? (ROLE_PRIORITY[a.role] ?? 999) : 999;
       const bPriority = b.role ? (ROLE_PRIORITY[b.role] ?? 999) : 999;
       if (aPriority !== bPriority) {
         return aPriority - bPriority;
       }
 
-      // 3. Priority: Year folders (e.g., "2025", "2024") sorted numerically descending
+      // 4. Priority: Year folders (e.g., "2025", "2024") sorted numerically descending
       const aIsYear = /^\d{4}$/.test(a.name);
       const bIsYear = /^\d{4}$/.test(b.name);
       if (aIsYear && bIsYear) {
         return parseInt(b.name) - parseInt(a.name); // Descending: 2025, 2024, 2023...
-      }
-
-      // 4. Fallback: Server sortOrder
-      if (a.sortOrder !== b.sortOrder) {
-        return a.sortOrder - b.sortOrder;
       }
 
       // 5. Fallback: Alphabetical by name

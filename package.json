@@ -33,6 +33,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@tanstack/react-virtual": "^3.13.24",
     "@tiptap/extension-color": "^3.22.4",
     "@tiptap/extension-image": "^3.22.4",

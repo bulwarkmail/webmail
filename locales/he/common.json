@@ -1528,6 +1528,8 @@
       "role_none": "אין",
       "create_folder": "צור תיקיה",
       "create_subfolder": "צור תיקיית משנה",
+      "reorder": "גרור לשינוי הסדר",
+      "reorder_error": "שינוי סדר התיקיות נכשל",
       "subfolder_of": "בתוך{name}",
       "subfolder_name": "שם תיקיית משנה",
       "new_folder_name": "שם התיקיה",

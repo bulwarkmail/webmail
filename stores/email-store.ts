@@ -230,6 +230,7 @@ interface EmailStore {
   renameMailbox: (client: IJMAPClient, mailboxId: string, name: string) => Promise<void>;
   deleteMailbox: (client: IJMAPClient, mailboxId: string) => Promise<void>;
   setMailboxRole: (client: IJMAPClient, mailboxId: string, role: string | null) => Promise<void>;
+  reorderMailboxes: (client: IJMAPClient, orderedIds: string[]) => Promise<void>;
   emptyMailbox: (client: IJMAPClient, mailboxId: string) => Promise<void>;
   markMailboxAsRead: (client: IJMAPClient, mailboxId: string) => Promise<number>;
 
@@ -3185,6 +3186,45 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       }
     } catch (error) {
       set({ error: error instanceof Error ? error.message : 'Failed to update folder role' });
+      throw error;
+    }
+  },
+
+  reorderMailboxes: async (client, orderedIds) => {
+    // Assign a 1-based sortOrder to the given sibling group in its new order.
+    // sortOrder is the primary sort key (see buildMailboxTree), so this pins
+    // the folders' arrangement in the sidebar and settings.
+    const updates = orderedIds.map((id, idx) => ({ id, sortOrder: idx + 1 }));
+    const applyLocal = (list: Mailbox[]) =>
+      list.map(mb => {
+        const u = updates.find(x => x.id === mb.id);
+        return u ? { ...mb, sortOrder: u.sortOrder } : mb;
+      });
+    // Optimistic local update so the reorder is reflected immediately.
+    const viewingId = get().viewingAccountId;
+    if (viewingId) {
+      set((state) => ({
+        accountMailboxes: {
+          ...state.accountMailboxes,
+          [viewingId]: applyLocal(state.accountMailboxes[viewingId] ?? []),
+        },
+      }));
+    } else {
+      set({ mailboxes: applyLocal(get().mailboxes) });
+    }
+    try {
+      const effectiveClient = resolveActionClient(client);
+      for (const u of updates) {
+        await effectiveClient.updateMailbox(u.id, { sortOrder: u.sortOrder });
+      }
+    } catch (error) {
+      set({ error: error instanceof Error ? error.message : 'Failed to reorder folders' });
+      // Re-sync from server so local state doesn't drift from persisted order.
+      if (viewingId) {
+        await refreshMailboxesForViewingAccount(client);
+      } else {
+        await get().fetchMailboxes(client);
+      }
       throw error;
     }
   },
