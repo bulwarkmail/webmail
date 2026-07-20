@@ -3255,7 +3255,16 @@ function RecipientChipInput({
               onContextMenu={isEditing ? undefined : (e) => handleContextMenu(e, i, chip)}
             >
               {IconComponent ? (
-                <IconComponent className={`w-4 h-4 text-${customColor}`} />
+                                <IconComponent
+                   className={cn(
+                     "w-4 h-4",
+                     customColor === "success"
+                       ? "text-success"
+                       : customColor === "warning"
+                         ? "text-warning"
+                         : "text-destructive"
+                   )}
+                 />
               ) : null}
 
               {isEditing ? (

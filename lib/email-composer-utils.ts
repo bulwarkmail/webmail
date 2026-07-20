@@ -1,6 +1,6 @@
 import { isValidEmail } from "@/lib/validation";
 import { htmlToPlainText } from "@/lib/html-to-text";
-import { emailHooks } from "./plugin-hooks";
+import { emailHooks } from "@/lib/plugin-hooks";
 import { Ellipsis, Lock, TriangleAlert } from "lucide-react";
 
 const HTML_ESCAPE_MAP = {
