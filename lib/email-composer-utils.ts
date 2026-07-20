@@ -1,5 +1,7 @@
 import { isValidEmail } from "@/lib/validation";
 import { htmlToPlainText } from "@/lib/html-to-text";
+import { emailHooks } from "./plugin-hooks";
+import { Ellipsis, Lock, TriangleAlert } from "lucide-react";
 
 const HTML_ESCAPE_MAP = {
   "&": "&amp;",
@@ -110,6 +112,17 @@ export function extractUserAuthoredText(
 }
 
 /**
+ * Used for hook to let plugins enrich recipient chips with colors and icons. 
+ * The icon is a key into ICON_MAP, which maps to a lucide-react component.
+ */
+export const ICON_MAP = {
+  'lock': Lock,
+  'triangle-alert': TriangleAlert,
+  'ellipsis': Ellipsis,
+};
+type IconName = keyof typeof ICON_MAP;
+
+/**
  * A composer recipient. Display name is optional; email is required - except
  * for contact-group chips, which carry their already-resolved members and an
  * empty email. Group chips are expanded into their members when the message
@@ -119,6 +132,16 @@ export type Recipient = {
   name?: string;
   email: string;
   group?: { members: Array<{ name?: string; email: string }> };
+  extra?: {
+    color?: "success" | "destructive" | "warning"; // optional color for display purposes. May be populated by plugins via the onRecipientChipsChange hook.
+    icon?: IconName; // optional icon for display purposes. May be populated by plugins via the onRecipientChipsChange hook.
+    enriched?: boolean; // optional flag to indicate if the recipient has been enriched by plugins via the onRecipientChipsChange hook.
+  };
+};
+
+/** Enriches recipient chips with colors and icons. */
+export async function enrichChipsWithColorsAndIcons(chips: Recipient[]): Promise<Recipient[]> {
+  return await emailHooks.onRecipientChipsChange.transform(chips);
 };
 
 /**

@@ -276,6 +276,10 @@ export const emailHooks = {
   // lets plugin edit emails before they are shown in row. Used to populate preview 
   // field for encryption plugins.
   onEmailsFetched: new HookBus(),
+  // Transform hook - lets plugins edit the recipient chips in composer fields.
+  // They can add, remove, or modify chips (e.g. rewrite addresses, add colors/icons).
+  // Take Recipient[] as argument.
+  onRecipientChipsChange: new HookBus(),
 };
 
 // §7.2 Calendar Hooks
