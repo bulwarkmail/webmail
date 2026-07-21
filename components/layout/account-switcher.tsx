@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import { useAccountStore, type AccountEntry } from "@/stores/account-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { getMaxAccounts, sortDefaultFirst, reorderNonDefaultIds } from "@/lib/account-utils";
+import { isDocumentRTL } from "@/i18n/direction";
 import { cn } from "@/lib/utils";
 import { useRouter } from "@/i18n/navigation";
 import { Avatar } from "@/components/ui/avatar";
@@ -53,18 +54,35 @@ export function AccountSwitcher({ variant = "rail", className }: AccountSwitcher
   const updatePosition = useCallback(() => {
     if (!buttonRef.current) return;
     const rect = buttonRef.current.getBoundingClientRect();
+    const rtl = isDocumentRTL();
     if (variant === "rail") {
-      setPopoverStyle({
-        position: "fixed",
-        left: rect.right + 8,
-        bottom: Math.max(8, window.innerHeight - rect.bottom),
-      });
+      setPopoverStyle(
+        rtl
+          ? {
+              position: "fixed",
+              right: window.innerWidth - rect.left + 8,
+              bottom: Math.max(8, window.innerHeight - rect.bottom),
+            }
+          : {
+              position: "fixed",
+              left: rect.right + 8,
+              bottom: Math.max(8, window.innerHeight - rect.bottom),
+            }
+      );
     } else {
-      setPopoverStyle({
-        position: "fixed",
-        left: rect.left,
-        top: rect.bottom + 4,
-      });
+      setPopoverStyle(
+        rtl
+          ? {
+              position: "fixed",
+              right: window.innerWidth - rect.right,
+              top: rect.bottom + 4,
+            }
+          : {
+              position: "fixed",
+              left: rect.left,
+              top: rect.bottom + 4,
+            }
+      );
     }
   }, [variant]);
 

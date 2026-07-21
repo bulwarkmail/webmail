@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { useTranslations, useFormatter } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
+import { isDocumentRTL } from '@/i18n/direction';
 import { useAuthStore } from '@/stores/auth-store';
 import { useCalendarStore } from '@/stores/calendar-store';
 import { useSettingsStore } from '@/stores/settings-store';
@@ -374,7 +375,7 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
   const [actionError, setActionError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showCalendarPicker, setShowCalendarPicker] = useState(false);
-  const [pickerPosition, setPickerPosition] = useState<{ top: number; left: number } | null>(null);
+  const [pickerPosition, setPickerPosition] = useState<{ top: number; left?: number; right?: number } | null>(null);
   const pickerTriggerRef = useRef<HTMLButtonElement>(null);
   const [selectedCalendarId, setSelectedCalendarId] = useState<string>('');
   const [rawIcsMethod, setRawIcsMethod] = useState<InvitationMethod>('unknown');
@@ -1026,7 +1027,11 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
                   }
                   if (pickerTriggerRef.current) {
                     const rect = pickerTriggerRef.current.getBoundingClientRect();
-                    setPickerPosition({ top: rect.bottom + 4, left: rect.left });
+                    setPickerPosition(
+                      isDocumentRTL()
+                        ? { top: rect.bottom + 4, right: window.innerWidth - rect.right }
+                        : { top: rect.bottom + 4, left: rect.left }
+                    );
                   }
                   setShowCalendarPicker(true);
                 }}
@@ -1041,7 +1046,7 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
               {showCalendarPicker && calendars.length > 1 && pickerPosition && typeof document !== 'undefined' && createPortal(
                 <div
                   className="fixed w-52 bg-background rounded-lg shadow-lg border border-border z-50 py-1"
-                  style={{ top: pickerPosition.top, left: pickerPosition.left }}
+                  style={{ top: pickerPosition.top, left: pickerPosition.left, right: pickerPosition.right }}
                 >
                   <div className="px-3 py-1.5 text-xs font-medium text-muted-foreground">
                     {t('select_calendar')}

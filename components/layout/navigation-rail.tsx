@@ -18,6 +18,7 @@ import { useAccountStore } from "@/stores/account-store";
 import { useUpdateStore, selectHasUpdate } from "@/stores/update-store";
 import { getActiveAccountSlotHeaders } from "@/lib/auth/active-account-slot";
 import { getMaxAccounts } from "@/lib/account-utils";
+import { isDocumentRTL } from "@/i18n/direction";
 import { cn, formatFileSize } from "@/lib/utils";
 import { PluginSlot } from "@/components/plugins/plugin-slot";
 import { KeyboardShortcutsModal } from "@/components/keyboard-shortcuts-modal";
@@ -70,11 +71,19 @@ function StorageQuotaCircle({ quota, usagePercent }: { quota: { used: number; to
   const updatePosition = useCallback(() => {
     if (!buttonRef.current) return;
     const rect = buttonRef.current.getBoundingClientRect();
-    setPopoverStyle({
-      position: "fixed",
-      left: rect.right + 8,
-      bottom: window.innerHeight - rect.bottom,
-    });
+    setPopoverStyle(
+      isDocumentRTL()
+        ? {
+            position: "fixed",
+            right: window.innerWidth - rect.left + 8,
+            bottom: window.innerHeight - rect.bottom,
+          }
+        : {
+            position: "fixed",
+            left: rect.right + 8,
+            bottom: window.innerHeight - rect.bottom,
+          }
+    );
   }, []);
 
   useEffect(() => {
@@ -218,11 +227,19 @@ export function NavigationRail({
   const updateLogoutPosition = useCallback(() => {
     if (!logoutBtnRef.current) return;
     const rect = logoutBtnRef.current.getBoundingClientRect();
-    setLogoutPopoverStyle({
-      position: "fixed",
-      left: rect.right + 8,
-      bottom: Math.max(8, window.innerHeight - rect.bottom),
-    });
+    setLogoutPopoverStyle(
+      isDocumentRTL()
+        ? {
+            position: "fixed",
+            right: window.innerWidth - rect.left + 8,
+            bottom: Math.max(8, window.innerHeight - rect.bottom),
+          }
+        : {
+            position: "fixed",
+            left: rect.right + 8,
+            bottom: Math.max(8, window.innerHeight - rect.bottom),
+          }
+    );
   }, []);
 
   useEffect(() => {
