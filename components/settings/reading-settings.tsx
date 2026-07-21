@@ -35,6 +35,7 @@ export function ReadingSettings() {
     hoverActionsCorner,
     hideInlineImageAttachments,
     attachmentImagePreviewsEnabled,
+    messageSpacing,
     updateSetting,
   } = useSettingsStore();
 
@@ -110,6 +111,20 @@ export function ReadingSettings() {
             { value: '3000', label: t('mark_read.delay_3s') },
             { value: '5000', label: t('mark_read.delay_5s') },
             { value: '-1', label: t('mark_read.never') },
+          ]}
+        />
+      </SettingItem>
+      )}
+
+      {!isSettingHidden('messageSpacing') && (
+      <SettingItem label={t('message_spacing.label')} description={t('message_spacing.description')} locked={isSettingLocked('messageSpacing')}>
+        <Select
+          value={messageSpacing}
+          onChange={(value) => updateSetting('messageSpacing', value as typeof messageSpacing)}
+          options={[
+            { value: 'auto', label: t('message_spacing.auto') },
+            { value: 'always', label: t('message_spacing.always') },
+            { value: 'edge', label: t('message_spacing.edge') },
           ]}
         />
       </SettingItem>

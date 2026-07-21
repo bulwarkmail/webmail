@@ -55,6 +55,14 @@ export type AttachmentPosition = 'beside-sender' | 'below-header';
 export type ToolbarPosition = 'top' | 'below-subject';
 export type ArchiveMode = 'single' | 'year' | 'month';
 export type MailLayout = 'split' | 'focus' | 'horizontal';
+
+/**
+ * Spacing around a message body in the reader.
+ * - 'auto'  : add a gutter unless the email paints its own full-bleed background
+ * - 'always': always add the gutter
+ * - 'edge'  : never add one (render edge-to-edge)
+ */
+export type MessageSpacing = 'auto' | 'always' | 'edge';
 export type CalendarHoverPreview = 'off' | 'instant' | 'delay-500ms' | 'delay-1s' | 'delay-2s';
 export type SendDelaySeconds = 0 | 10 | 30 | 60;
 export type ProtocolOpenMode = 'active-session' | 'new-tab';
@@ -156,6 +164,7 @@ interface SettingsState {
   mailLayout: MailLayout;
   emailsPerPage: number;
   externalContentPolicy: ExternalContentPolicy;
+  messageSpacing: MessageSpacing; // Gutter around the message body in the reader
   mailAttachmentAction: MailAttachmentAction;
   attachmentPosition: AttachmentPosition;
   emailAlwaysLightMode: boolean; // Always render email content in light mode
@@ -378,6 +387,7 @@ const DEFAULT_SETTINGS = {
   mailLayout: 'split' as MailLayout,
   emailsPerPage: 50,
   externalContentPolicy: 'ask' as ExternalContentPolicy,
+  messageSpacing: 'auto' as MessageSpacing,
   mailAttachmentAction: 'preview' as MailAttachmentAction,
   attachmentPosition: 'beside-sender' as AttachmentPosition,
   emailAlwaysLightMode: false,
@@ -591,6 +601,7 @@ export const useSettingsStore = create<SettingsState>()(
           mailLayout: state.mailLayout,
           emailsPerPage: state.emailsPerPage,
           externalContentPolicy: state.externalContentPolicy,
+          messageSpacing: state.messageSpacing,
           mailAttachmentAction: state.mailAttachmentAction,
           attachmentPosition: state.attachmentPosition,
           archiveMode: state.archiveMode,

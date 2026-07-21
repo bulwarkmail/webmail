@@ -1121,6 +1121,13 @@
         "permanent": "Delete Permanently",
         "warning": "Emails will be permanently deleted and cannot be recovered. This action is irreversible."
       },
+      "message_spacing": {
+        "label": "Message Spacing",
+        "description": "Padding around the message body in the reader",
+        "auto": "Auto (recommended)",
+        "always": "Always add spacing",
+        "edge": "Edge to edge"
+      },
       "archive_mode": {
         "label": "Archive in",
         "description": "How to organize emails when archiving",

@@ -654,6 +654,7 @@ export function EmailViewer({
   const tDemoWelcome = useTranslations('demo_welcome');
   const tWelcome = useTranslations('welcome');
   const externalContentPolicy = useSettingsStore((state) => state.externalContentPolicy);
+  const messageSpacing = useSettingsStore((state) => state.messageSpacing);
   const mailAttachmentAction = useSettingsStore((state) => state.mailAttachmentAction);
   const attachmentPosition = useSettingsStore((state) => state.attachmentPosition);
   const addTrustedSender = useSettingsStore((state) => state.addTrustedSender);
@@ -2116,9 +2117,21 @@ export function EmailViewer({
     // Word/Outlook HTML emails ship a <style> block but put their gutter in
     // @page margins (print-only), so they need a fallback body padding too.
     const isWordHtml = /class=["']?(?:Mso|WordSection)|<o:p[\s>/]|urn:schemas-microsoft-com:office:office/i.test(effectiveEmailContent.html);
-    const hasOwnLayout = effectiveEmailContent.hasStyleTag && !isWordHtml;
-    const bodyPadding = hasOwnLayout ? '0' : '1rem 1.25rem';
-    const mobileBodyPaddingX = hasOwnLayout ? '0' : '0.75rem';
+    // "auto" spacing: only drop our gutter when the mail paints a full-bleed
+    // background canvas (a width:100% element carrying a background colour) --
+    // the one case where the gutter shows as a frame around the email's own
+    // background. A <style> tag alone is too weak a signal: plenty of
+    // transactional mails ship one for web fonts yet have no gutter of their
+    // own, and zeroing the padding glues their content to the corner.
+    const emailHtml = effectiveEmailContent.html;
+    const hasFullBleedCanvas =
+      /<(?:table|div|body)\b[^>]*(?:\bwidth\s*=\s*["']?\s*100%|width\s*:\s*100%)[^>]*(?:\bbgcolor\s*=|background(?:-color)?\s*:)/i.test(emailHtml) ||
+      /<(?:table|div|body)\b[^>]*(?:\bbgcolor\s*=|background(?:-color)?\s*:)[^>]*(?:\bwidth\s*=\s*["']?\s*100%|width\s*:\s*100%)/i.test(emailHtml);
+    const autoDropsGutter = effectiveEmailContent.hasStyleTag && !isWordHtml && hasFullBleedCanvas;
+    const dropGutter =
+      messageSpacing === 'edge' || (messageSpacing === 'auto' && autoDropsGutter);
+    const bodyPadding = dropGutter ? '0' : '1rem 1.25rem';
+    const mobileBodyPaddingX = dropGutter ? '0' : '0.75rem';
 
     // Word emails rely on empty <p class=MsoNormal>&nbsp;</p> spacers for vertical
     // rhythm. With our default line-height: 1.6 these stack into oversized gaps;
@@ -2179,7 +2192,7 @@ export function EmailViewer({
   ${wordHtmlCSS}
   ${darkModeCSS}
 </style></head><body>${effectiveEmailContent.html}<style>html,body{height:auto!important;min-height:0!important;max-height:none!important}</style></body></html>`;
-  }, [effectiveEmailContent.html, effectiveEmailContent.isHtml, effectiveEmailContent.hasStyleTag, effectiveEmailContent.externalBlocked, isDark, emailHasNativeDarkMode]);
+  }, [effectiveEmailContent.html, effectiveEmailContent.isHtml, effectiveEmailContent.hasStyleTag, effectiveEmailContent.externalBlocked, isDark, emailHasNativeDarkMode, messageSpacing]);
 
   // Unblocking external content is handled by rebuilding the iframe srcDoc:
   // toggling allowExternalContent (both "Load images" and "Trust sender" set
