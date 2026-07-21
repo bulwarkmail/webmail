@@ -274,18 +274,14 @@ const skCross =
   " 7.22 49.54 7.11-.62-20.5-6.6-46.33-6.6-46.33s12.3.96 17.22.96c4.92 0" +
   " 17.21-.96 17.21-.96s-5.97 25.83-6.6 46.33c12.18.1 29.72-.49 49.55-7.11" +
   " 0 0-.62 8.3-.62 17.98 0 9.67.62 17.98.62 17.98-19.86-6.64-37.42-7.22-49.6-7.12v32.37";
-/** Saudi Arabia – Green field with a stylized white sword (simplified) */
-export function FlagSA(props: FlagProps) {
+/** United Arab Emirates – Red hoist stripe, green/white/black horizontal bands */
+export function FlagAE(props: FlagProps) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 6 4" width={W} height={H} className={flagClass} {...props}>
-      <rect width="6" height="4" fill="#006C35" />
-      <g stroke="#fff" strokeWidth="0.14" strokeLinecap="round" fill="none">
-        <line x1="1.3" y1="2.55" x2="4.3" y2="2.55" />
-        <line x1="3.85" y1="2.15" x2="4.3" y2="2.55" />
-        <line x1="3.85" y1="2.95" x2="4.3" y2="2.55" />
-        <line x1="1.1" y1="2.3" x2="1.1" y2="2.8" />
-        <line x1="0.85" y1="2.3" x2="0.85" y2="2.8" />
-      </g>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 3" width={W} height={H} className={flagClass} {...props}>
+      <rect width="4" height="3" fill="#fff" />
+      <rect x="1" width="3" height="1" fill="#00732F" />
+      <rect x="1" y="2" width="3" height="1" fill="#000" />
+      <rect width="1" height="3" fill="#FF0000" />
     </svg>
   );
 }
@@ -335,5 +331,5 @@ export const flagComponents: Record<string, (props: FlagProps) => ReactElement> 
   zh: FlagCN,
   fa: FlagIR,
   he: FlagIL,
-  ar: FlagSA,
+  ar: FlagAE,
 };
