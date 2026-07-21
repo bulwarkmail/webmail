@@ -2217,11 +2217,11 @@ export function EmailComposer({
                       {generateSubAddress(primaryIdentity?.email || '', subAddressTag, subAddressDelimiter)}
                     </span>
                   ) : (
-                    <>
+                    <bdi>
                       {primaryIdentity?.name
                         ? `${primaryIdentity.name} <${primaryIdentity.email}>`
                         : primaryIdentity?.email || ''}
-                    </>
+                    </bdi>
                   )}
                 </span>
               )}

@@ -68,10 +68,10 @@ export function EmlPreview({ message }: { message: ParsedEml }) {
       <h2 className="text-lg font-semibold text-foreground break-words">{message.subject || ""}</h2>
       <div className="mt-2 space-y-0.5 text-sm text-muted-foreground border-b border-border pb-3">
         {message.from && (
-          <div><span className="font-medium text-foreground">{t("from")}: </span>{formatAddress(message.from)}</div>
+          <div><span className="font-medium text-foreground">{t("from")}: </span><bdi>{formatAddress(message.from)}</bdi></div>
         )}
         {message.to && message.to.length > 0 && (
-          <div><span className="font-medium text-foreground">{t("to")}: </span>{message.to.map(formatAddress).join(", ")}</div>
+          <div><span className="font-medium text-foreground">{t("to")}: </span><bdi>{message.to.map(formatAddress).join(", ")}</bdi></div>
         )}
         {message.date && (
           <div><span className="font-medium text-foreground">{t("date")}: </span>{new Date(message.date).toLocaleString()}</div>

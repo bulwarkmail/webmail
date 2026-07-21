@@ -135,7 +135,7 @@ export function RecipientPopover({ name, email, displayLabel, onViewContact, cla
           className
         )}
       >
-        {displayLabel || name || email}
+        <bdi>{displayLabel || name || email}</bdi>
       </button>
 
       {isOpen &&
