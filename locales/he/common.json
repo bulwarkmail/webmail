@@ -1519,7 +1519,7 @@
       "standard_roles": "תפקידי תיקייה סטנדרטיים",
       "standard_roles_description": "הקצה אילו תיקיות משמשות לתפקידי תיבת דואר סטנדרטיים כמו Inbox, Sent, Trash וכו׳.",
       "role_inbox": "תיבת דואר נכנס",
-      "role_drafts": "דַמקָה",
+      "role_drafts": "טיוטות",
       "role_sent": "נשלח",
       "role_trash": "אַשׁפָּה",
       "role_junk": "ספאם / זבל",
