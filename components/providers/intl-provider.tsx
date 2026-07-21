@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { NextIntlClientProvider } from 'next-intl';
 import { useLocaleStore } from '@/stores/locale-store';
+import arMessages from '@/locales/ar/common.json';
 import csMessages from '@/locales/cs/common.json';
 import daMessages from '@/locales/da/common.json';
 import deMessages from '@/locales/de/common.json';
@@ -31,6 +32,7 @@ import zhMessages from '@/locales/zh/common.json';
 
 // Pre-loaded translations (loaded at build time, not runtime)
 const ALL_MESSAGES = {
+  ar: arMessages,
   cs: csMessages,
   da: daMessages,
   de: deMessages,
