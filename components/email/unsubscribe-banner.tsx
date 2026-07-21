@@ -147,7 +147,7 @@ export function UnsubscribeBanner({
         {showConfirm && isDesktop && (
           <div
             ref={popoverRef}
-            className="absolute top-full left-0 mt-1 z-50 bg-background border border-border rounded-lg shadow-lg p-3 min-w-[220px]"
+            className="absolute top-full start-0 mt-1 z-50 bg-background border border-border rounded-lg shadow-lg p-3 min-w-[220px]"
           >
             <p className="text-sm text-foreground mb-2">
               {t('email_viewer.unsubscribe_banner.confirm_title')}

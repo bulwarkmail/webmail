@@ -2664,7 +2664,7 @@ export function EmailComposer({
                 {showSendMenu && (
                   <div
                     role="menu"
-                    className="absolute right-0 bottom-full z-50 mb-2 min-w-44 rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-lg"
+                    className="absolute end-0 bottom-full z-50 mb-2 min-w-44 rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-lg"
                   >
                     <button
                       type="button"

@@ -285,7 +285,7 @@ function PlaceholderDropdown({
   return (
     <>
       <div className="fixed inset-0 z-40" onClick={onClose} />
-      <div className="absolute right-0 top-full mt-1 z-50 bg-background border border-border rounded-md shadow-lg min-w-[180px]">
+      <div className="absolute end-0 top-full mt-1 z-50 bg-background border border-border rounded-md shadow-lg min-w-[180px]">
         <div className="p-1">
           {BUILT_IN_PLACEHOLDERS.map((p) => (
             <button

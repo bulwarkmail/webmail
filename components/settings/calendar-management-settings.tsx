@@ -475,7 +475,7 @@ export function CalendarManagementSettings() {
                 {colorPickerId === cal.id && (
                   <div
                     ref={colorPickerRef}
-                    className="absolute left-0 top-full mt-2 z-50 bg-background border border-border rounded-lg shadow-lg p-3 w-56"
+                    className="absolute start-0 top-full mt-2 z-50 bg-background border border-border rounded-lg shadow-lg p-3 w-56"
                   >
                     <CalendarColorPicker
                       value={color}

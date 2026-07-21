@@ -201,7 +201,7 @@ export function CalendarToolbar({
                   <CalendarDays className="w-4 h-4" />
                 </button>
                 {showCalendarDropdown && (
-                  <div className="absolute top-full right-0 mt-1 z-50 bg-popover border border-border rounded-lg shadow-lg p-2 min-w-[180px]">
+                  <div className="absolute top-full end-0 mt-1 z-50 bg-popover border border-border rounded-lg shadow-lg p-2 min-w-[180px]">
                     <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-1">
                       {t("my_calendars")}
                     </h3>
@@ -335,7 +335,7 @@ export function CalendarToolbar({
             <ChevronDown className="w-3 h-3 ms-1" />
           </Button>
           {showImportDropdown && (
-            <div className="absolute top-full right-0 mt-1 z-50 bg-background border border-border rounded-lg shadow-lg p-1 min-w-[180px]">
+            <div className="absolute top-full end-0 mt-1 z-50 bg-background border border-border rounded-lg shadow-lg p-1 min-w-[180px]">
               {onImport && (
                 <button
                   onClick={() => { onImport(); setShowImportDropdown(false); }}

@@ -81,7 +81,7 @@ function IconPicker({ currentIcon, onSelect, onClose }: {
   return (
     <div
       ref={ref}
-      className="absolute left-0 top-full mt-1 z-50 bg-background border border-border rounded-lg shadow-lg p-2 grid grid-cols-6 gap-1 w-52"
+      className="absolute start-0 top-full mt-1 z-50 bg-background border border-border rounded-lg shadow-lg p-2 grid grid-cols-6 gap-1 w-52"
     >
       {ICON_CHOICES.map(({ name, icon: Icon }) => (
         <button

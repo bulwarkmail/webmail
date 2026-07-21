@@ -418,7 +418,7 @@ export function RichTextEditor({
             <Baseline className="w-4 h-4" style={{ color: editor.getAttributes("textStyle").color || undefined }} />
           </ToolbarButton>
           {colorMenuOpen && (
-            <div className="absolute z-50 top-full left-0 mt-1 bg-popover border border-border rounded-md shadow-md p-2">
+            <div className="absolute z-50 top-full start-0 mt-1 bg-popover border border-border rounded-md shadow-md p-2">
               <div className="grid gap-0.5" style={{ gridTemplateColumns: "repeat(8, 1fr)" }}>
                 {TEXT_COLORS.map((color) => (
                   <button
@@ -559,7 +559,7 @@ export function RichTextEditor({
             <TableIcon className="w-4 h-4" />
           </ToolbarButton>
           {tableMenuOpen && (
-            <div className="absolute z-50 top-full left-0 mt-1 bg-popover border border-border rounded-md shadow-md p-2 min-w-[200px]">
+            <div className="absolute z-50 top-full start-0 mt-1 bg-popover border border-border rounded-md shadow-md p-2 min-w-[200px]">
               {editor.isActive("table") ? (
                 <div className="flex flex-col gap-0.5">
                   <button
