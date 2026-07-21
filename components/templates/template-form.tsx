@@ -242,7 +242,7 @@ export function TemplateForm({ template, initialData, onSave, onCancel }: Templa
           >
             <option value="">{tSettings('default_identity')}</option>
             {identities.map((id) => (
-              <option key={id.id} value={id.id}>
+              <option key={id.id} value={id.id} dir="ltr">
                 {id.name ? `${id.name} <${id.email}>` : id.email}
               </option>
             ))}

@@ -2192,7 +2192,7 @@ export function EmailComposer({
                               ? generateSubAddress(identity.email, subAddressTag, subAddressDelimiter)
                               : identity.email;
                             return (
-                              <option key={identity.id} value={identity.id}>
+                              <option key={identity.id} value={identity.id} dir="ltr">
                                 {identity.name ? `${identity.name} <${displayEmail}>` : displayEmail}
                               </option>
                             );
@@ -2204,7 +2204,7 @@ export function EmailComposer({
                           ? generateSubAddress(identity.email, subAddressTag, subAddressDelimiter)
                           : identity.email;
                         return (
-                          <option key={identity.id} value={identity.id}>
+                          <option key={identity.id} value={identity.id} dir="ltr">
                             {identity.name ? `${identity.name} <${displayEmail}>` : displayEmail}
                           </option>
                         );
