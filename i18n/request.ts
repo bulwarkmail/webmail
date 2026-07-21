@@ -33,6 +33,9 @@ export default getRequestConfig(async ({ requestLocale }) => {
   // Use static imports for better compatibility
   let messages;
   switch (locale) {
+    case 'ar':
+      messages = (await import('../locales/ar/common.json')).default;
+      break;
     case 'cs':
       messages = (await import('../locales/cs/common.json')).default;
       break;
