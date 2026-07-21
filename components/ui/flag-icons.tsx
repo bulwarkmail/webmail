@@ -274,14 +274,18 @@ const skCross =
   " 7.22 49.54 7.11-.62-20.5-6.6-46.33-6.6-46.33s12.3.96 17.22.96c4.92 0" +
   " 17.21-.96 17.21-.96s-5.97 25.83-6.6 46.33c12.18.1 29.72-.49 49.55-7.11" +
   " 0 0-.62 8.3-.62 17.98 0 9.67.62 17.98.62 17.98-19.86-6.64-37.42-7.22-49.6-7.12v32.37";
-/** Arabic – Pan-Arab colours (black/white/green horizontal, red hoist triangle) */
-export function FlagArab(props: FlagProps) {
+/** Saudi Arabia – Green field with a stylized white sword (simplified) */
+export function FlagSA(props: FlagProps) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 6 4" width={W} height={H} className={flagClass} {...props}>
-      <rect width="6" height="4" fill="#fff" />
-      <rect width="6" height="1.33" fill="#000" />
-      <rect y="2.67" width="6" height="1.33" fill="#007A3D" />
-      <polygon points="0,0 2.4,2 0,4" fill="#CE1126" />
+      <rect width="6" height="4" fill="#006C35" />
+      <g stroke="#fff" strokeWidth="0.14" strokeLinecap="round" fill="none">
+        <line x1="1.3" y1="2.55" x2="4.3" y2="2.55" />
+        <line x1="3.85" y1="2.15" x2="4.3" y2="2.55" />
+        <line x1="3.85" y1="2.95" x2="4.3" y2="2.55" />
+        <line x1="1.1" y1="2.3" x2="1.1" y2="2.8" />
+        <line x1="0.85" y1="2.3" x2="0.85" y2="2.8" />
+      </g>
     </svg>
   );
 }
@@ -331,5 +335,5 @@ export const flagComponents: Record<string, (props: FlagProps) => ReactElement> 
   zh: FlagCN,
   fa: FlagIR,
   he: FlagIL,
-  ar: FlagArab,
+  ar: FlagSA,
 };
