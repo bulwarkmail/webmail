@@ -80,6 +80,9 @@ export function EmailList({
   onRescheduleScheduled,
 }: EmailListProps) {
   const t = useTranslations('email_list');
+  // next-intl has no relative ("../") namespace navigation; cross-namespace keys
+  // must be absolute paths resolved from a root translator.
+  const tRoot = useTranslations();
   const { client } = useAuthStore();
   const {
     selectedEmailIds,
@@ -198,10 +201,10 @@ export function EmailList({
       const emailIds = Array.from(selectedEmailIds);
       await batchUndoSpam(client, emailIds);
       const { toast } = await import('sonner');
-      toast.success(t('../email_viewer.spam.toast_not_spam_batch', { count: emailIds.length }));
+      toast.success(tRoot('email_viewer.spam.toast_not_spam_batch', { count: emailIds.length }));
     } catch {
       const { toast } = await import('sonner');
-      toast.error(t('../email_viewer.spam.error_not_spam'));
+      toast.error(tRoot('email_viewer.spam.error_not_spam'));
     } finally {
       setTimeout(() => setIsProcessing(false), 500);
     }
@@ -378,7 +381,7 @@ export function EmailList({
                 variant="ghost"
                 size="sm"
                 onClick={handleBatchUndoSpam}
-                title={t('../context_menu.not_spam')}
+                title={tRoot('context_menu.not_spam')}
                 disabled={isProcessing}
                 className="text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100/50 dark:hover:bg-emerald-950/30 transition-colors disabled:opacity-50"
               >
@@ -614,11 +617,11 @@ export function EmailList({
                 await batchMarkAsSpam(client, emailIds);
                 const { toast } = await import('sonner');
                 toast.success(
-                  t('../email_viewer.spam.toast_batch', { count: emailIds.length })
+                  tRoot('email_viewer.spam.toast_batch', { count: emailIds.length })
                 );
               } catch {
                 const { toast } = await import('sonner');
-                toast.error(t('../email_viewer.spam.error'));
+                toast.error(tRoot('email_viewer.spam.error'));
               }
             }
           }}
@@ -629,11 +632,11 @@ export function EmailList({
                 await batchUndoSpam(client, emailIds);
                 const { toast } = await import('sonner');
                 toast.success(
-                  t('../email_viewer.spam.toast_not_spam_batch', { count: emailIds.length })
+                  tRoot('email_viewer.spam.toast_not_spam_batch', { count: emailIds.length })
                 );
               } catch {
                 const { toast } = await import('sonner');
-                toast.error(t('../email_viewer.spam.error_not_spam'));
+                toast.error(tRoot('email_viewer.spam.error_not_spam'));
               }
             }
           }}
