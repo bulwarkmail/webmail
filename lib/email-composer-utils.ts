@@ -305,7 +305,7 @@ export function formatRecipient(name: string | undefined, email: string): string
   const quoted = NAME_NEEDS_QUOTING.test(trimmedName)
     ? `"${trimmedName.replace(/(["\\])/g, '\\$1')}"`
     : trimmedName;
-  return `${quoted} <${email}>`;
+  return `${email}`;
 }
 
 /** Strips a surrounding quoted-string (and its escapes) from a display name. */
