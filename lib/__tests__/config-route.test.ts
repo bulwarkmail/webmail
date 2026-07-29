@@ -1,4 +1,4 @@
-import { mkdtempSync, unlink, writeFileSync } from "fs";
+import { mkdtempSync, rmSync, writeFileSync } from "fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
@@ -8,7 +8,14 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 // state on the developer's machine can't leak into these env-driven
 // assertions. Must happen before the first GET, because the config manager
 // singleton loads the directory once and caches it.
-process.env.ADMIN_CONFIG_DIR = mkdtempSync(path.join(tmpdir(), 'bw-config-route-'));
+const TEMP_DIR = mkdtempSync(path.join(tmpdir(), 'bw-config-route-'));
+process.env.ADMIN_CONFIG_DIR = TEMP_DIR;
+
+/**
+ * Backing file for the SESSION_SECRET_FILE tests. Kept in the temp dir rather
+ * than the working directory, which test runs share.
+ */
+const SECRET_FILE = path.join(TEMP_DIR, 'session-secret');
 
 // Mock NextResponse before importing the route
 vi.mock('next/server', () => ({
@@ -50,6 +57,7 @@ describe('config API route', () => {
 
   afterEach(() => {
     process.env = { ...originalEnv };
+    rmSync(SECRET_FILE, { force: true });
   });
 
   function mockRequest(headers: Record<string, string> = {}): unknown {
@@ -156,14 +164,10 @@ describe('config API route', () => {
 	});
 
   it('should enable rememberMe when SESSION_SECRET_FILE is set', async () => {
-    writeFileSync('./session-secret', 'test-secret');
-    process.env.SESSION_SECRET_FILE = './session-secret';
+    writeFileSync(SECRET_FILE, 'test-secret');
+    process.env.SESSION_SECRET_FILE = SECRET_FILE;
 
     const config = await getConfig();
-
-    unlink('./session-secret', (err) => {
-      if (err) throw err;
-    });
 
     expect(config.rememberMeEnabled).toBe(true);
   });
@@ -183,14 +187,10 @@ describe('config API route', () => {
     const config1 = await getConfig();
     expect(config1.settingsSyncEnabled).toBe(false);
 
-    writeFileSync('./session-secret', 'test-secret');
-    process.env.SESSION_SECRET_FILE = './session-secret';
+    writeFileSync(SECRET_FILE, 'test-secret');
+    process.env.SESSION_SECRET_FILE = SECRET_FILE;
 
     const config2 = await getConfig();
-
-    unlink('./session-secret', (err) => {
-      if (err) throw err;
-    });
 
     expect(config2.settingsSyncEnabled).toBe(true);
   });
