@@ -402,7 +402,7 @@ const DEFAULT_SETTINGS = {
   defaultReplyMode: 'reply' as ReplyMode,
   autoSelectReplyIdentity: false,
   plainTextMode: false,
-  rtlEditingSupport: false,
+  rtlEditingSupport: true,
   subAddressDelimiter: DEFAULT_SUB_ADDRESS_DELIMITER,
   sendDelaySeconds: 0 as SendDelaySeconds,
   signaturePosition: 'below_quote' as SignaturePosition,
