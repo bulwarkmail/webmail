@@ -937,64 +937,64 @@ export const useSettingsStore = create<SettingsState>()(
  */
 export function migrateSettings(persisted: unknown, version: number): SettingsState {
   const state = persisted as Record<string, unknown>;
-        if (version < 2 && state.listDensity) {
-          state.density = state.listDensity;
-          delete state.listDensity;
-        }
-        if (![0, 10, 30, 60].includes(state.sendDelaySeconds as number)) {
-          state.sendDelaySeconds = 0;
-        }
-        if (version < 3 && typeof state.protocolOpenMode !== 'string' && typeof state.protocolMailtoOpenMode === 'string') {
-          state.protocolOpenMode = state.protocolMailtoOpenMode;
-        }
-        delete state.protocolMailtoOpenMode;
-        // v4: `dateFormat` was repurposed from 'regional'|'iso'|'custom' to
-        // 'smart'|'relative'|'full'. The old setting was never read anywhere,
-        // so every persisted value maps to the new default.
-        if (version < 4) {
-          state.dateFormat = 'smart';
-        }
-        // v5: allMailFolderIds went from a global `string[] | null` to a
-        // per-account `Record<accountId, string[]>`. The legacy global list
-        // can't be attributed to a specific account here (the active account
-        // isn't known at migrate time), so it's dropped - each account starts
-        // "not configured" (defaults to all no-role folders).
-        if (version < 5 || !isPlainRecord(state.allMailFolderIds)) {
-          state.allMailFolderIds = {};
-        }
-        // "All accounts" was reworked into the account-bounded "Unified
-        // Mailbox". The standalone __all_mail__ view (`enableAllMailView`) was
-        // folded into the unified "All mail" entry (`enableCrossAllView`), and a
-        // `unifiedCrossAccount` toggle now governs whether the views span every
-        // logged-in account. Existing users keep their current behaviour:
-        //  - if any cross view was on, they were already cross-account -> keep it on
-        //  - else if only standalone All Mail was on, enable the account-bounded
-        //    unified "All mail" entry (folder selection carries over via allMailFolderIds)
-        // Guarded at <7 (not <6) so users who stopped at main's interim v6
-        // identity-map bump - which shipped without this rework - still receive it.
-        if (version < 7) {
-          const hadCross = !!(state.enableCrossUnreadView || state.enableCrossStarredView || state.enableCrossAllView);
-          if (hadCross) {
-            state.unifiedCrossAccount = true;
-          } else if (state.enableAllMailView) {
-            state.enableUnifiedMailbox = true;
-            state.enableCrossAllView = true;
-            state.unifiedCrossAccount = false;
-          }
-          delete state.enableAllMailView;
-          if (typeof state.unifiedCrossAccount !== 'boolean') state.unifiedCrossAccount = false;
-          // The reworked unified mailbox spans the account's own folders plus its
-          // shared/group folders, so enable shared inclusion for every migrated
-          // configuration (matches the new-install default).
-          state.includeGroupInUnified = true;
-        }
-        // Per-account default-identity map (issue #507). Coerce any
-        // missing/legacy value to an empty record. Guarded at <6 so users who
-        // already received it via main's v6 bump keep their populated map.
-        if (version < 6 || !isPlainRecord(state.preferredIdentityIds)) {
-          state.preferredIdentityIds = {};
-        }
-        return state as unknown as SettingsState;
+  if (version < 2 && state.listDensity) {
+    state.density = state.listDensity;
+    delete state.listDensity;
+  }
+  if (![0, 10, 30, 60].includes(state.sendDelaySeconds as number)) {
+    state.sendDelaySeconds = 0;
+  }
+  if (version < 3 && typeof state.protocolOpenMode !== 'string' && typeof state.protocolMailtoOpenMode === 'string') {
+    state.protocolOpenMode = state.protocolMailtoOpenMode;
+  }
+  delete state.protocolMailtoOpenMode;
+  // v4: `dateFormat` was repurposed from 'regional'|'iso'|'custom' to
+  // 'smart'|'relative'|'full'. The old setting was never read anywhere,
+  // so every persisted value maps to the new default.
+  if (version < 4) {
+    state.dateFormat = 'smart';
+  }
+  // v5: allMailFolderIds went from a global `string[] | null` to a
+  // per-account `Record<accountId, string[]>`. The legacy global list
+  // can't be attributed to a specific account here (the active account
+  // isn't known at migrate time), so it's dropped - each account starts
+  // "not configured" (defaults to all no-role folders).
+  if (version < 5 || !isPlainRecord(state.allMailFolderIds)) {
+    state.allMailFolderIds = {};
+  }
+  // "All accounts" was reworked into the account-bounded "Unified
+  // Mailbox". The standalone __all_mail__ view (`enableAllMailView`) was
+  // folded into the unified "All mail" entry (`enableCrossAllView`), and a
+  // `unifiedCrossAccount` toggle now governs whether the views span every
+  // logged-in account. Existing users keep their current behaviour:
+  //  - if any cross view was on, they were already cross-account -> keep it on
+  //  - else if only standalone All Mail was on, enable the account-bounded
+  //    unified "All mail" entry (folder selection carries over via allMailFolderIds)
+  // Guarded at <7 (not <6) so users who stopped at main's interim v6
+  // identity-map bump - which shipped without this rework - still receive it.
+  if (version < 7) {
+    const hadCross = !!(state.enableCrossUnreadView || state.enableCrossStarredView || state.enableCrossAllView);
+    if (hadCross) {
+      state.unifiedCrossAccount = true;
+    } else if (state.enableAllMailView) {
+      state.enableUnifiedMailbox = true;
+      state.enableCrossAllView = true;
+      state.unifiedCrossAccount = false;
+    }
+    delete state.enableAllMailView;
+    if (typeof state.unifiedCrossAccount !== 'boolean') state.unifiedCrossAccount = false;
+    // The reworked unified mailbox spans the account's own folders plus its
+    // shared/group folders, so enable shared inclusion for every migrated
+    // configuration (matches the new-install default).
+    state.includeGroupInUnified = true;
+  }
+  // Per-account default-identity map (issue #507). Coerce any
+  // missing/legacy value to an empty record. Guarded at <6 so users who
+  // already received it via main's v6 bump keep their populated map.
+  if (version < 6 || !isPlainRecord(state.preferredIdentityIds)) {
+    state.preferredIdentityIds = {};
+  }
+  return state as unknown as SettingsState;
 }
 
 // Helper functions to apply settings to DOM
