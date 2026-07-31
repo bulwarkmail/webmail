@@ -168,41 +168,59 @@ export const KEYWORD_PREFIX = "$label:";
 export const KEYWORD_PREFIX_LEGACY = "$color:";
 
 /**
- * Gets all active label/color tag IDs from email keywords.
+ * Gets every tag id set on a message.
  * Reads both the current $label: prefix and the legacy $color: prefix.
+ * A tag written under both spellings is one tag, so it is returned once.
  */
-export function getEmailColorTags(keywords: Record<string, boolean> | undefined): string[] {
+export function getEmailTagIds(keywords: Record<string, boolean> | undefined): string[] {
   if (!keywords) return [];
-  const tags: string[] = [];
+  const tags = new Set<string>();
   for (const key of Object.keys(keywords)) {
     if ((key.startsWith(KEYWORD_PREFIX) || key.startsWith(KEYWORD_PREFIX_LEGACY)) && keywords[key] === true) {
-      tags.push(
+      tags.add(
         key.startsWith(KEYWORD_PREFIX)
           ? key.slice(KEYWORD_PREFIX.length)
           : key.slice(KEYWORD_PREFIX_LEGACY.length)
       );
     }
   }
-  return tags;
+  return [...tags];
 }
 
 /**
- * Gets label/color tag from email keywords (if any).
+ * Gets the first tag id set on a message, if any.
  * Reads both the current $label: prefix and the legacy $color: prefix.
- * @deprecated Use getEmailColorTags for multi-tag support.
+ * @deprecated Use getEmailTagIds for multi-tag support.
  */
-export function getEmailColorTag(keywords: Record<string, boolean> | undefined): string | null {
-  const tags = getEmailColorTags(keywords);
+export function getEmailTagId(keywords: Record<string, boolean> | undefined): string | null {
+  const tags = getEmailTagIds(keywords);
   return tags.length > 0 ? tags[0] : null;
 }
 
 /**
- * Checks if a thread has any color tag (returns first found).
+ * The first tag id found anywhere in a thread, if any.
  */
-export function getThreadColorTag(emails: Email[]): string | null {
+export function getThreadTagId(emails: Email[]): string | null {
   for (const email of emails) {
-    const color = getEmailColorTag(email.keywords);
+    const color = getEmailTagId(email.keywords);
     if (color) return color;
   }
   return null;
+}
+
+/**
+ * Every tag anywhere in a thread, deduplicated.
+ *
+ * A collapsed thread row stands in for all its messages, so it has to account
+ * for all their tags - showing only the first message's would hide the rest
+ * with nothing to indicate they exist.
+ */
+export function getThreadTagIds(emails: Email[]): string[] {
+  const tags = new Set<string>();
+  for (const email of emails) {
+    for (const tag of getEmailTagIds(email.keywords)) {
+      tags.add(tag);
+    }
+  }
+  return [...tags];
 }

@@ -171,7 +171,9 @@ export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onDupli
 
   const hasNickname = nicknames.length > 0;
   const titleLine = jobTitles.length > 0 ? jobTitles.map(t => t.name).join(", ") : undefined;
-  const subtitleParts = [titleLine, orgs[0]?.name].filter(Boolean) as string[];
+  // On an organization card the org name is already the heading; don't repeat it.
+  const orgName = orgs[0]?.name;
+  const subtitleParts = [titleLine, orgName === name ? undefined : orgName].filter(Boolean) as string[];
   const hasContactDetails = emails.length > 0 || phones.length > 0 || addresses.length > 0 || onlineServices.length > 0;
   const hasWork = titles.length > 0 || orgs.length > 0;
   const hasGender = !!(contact.speakToAs && (contact.speakToAs.grammaticalGender || contact.speakToAs.pronouns));

@@ -108,7 +108,7 @@ const emails: MockEmail[] = [
   // =====================================================================
   {
     id: 'email-001', threadId: 'thread-001', mailboxIds: { 'mb-inbox': true }, keywords: {}, size: 4200, receivedAt: daysAgo(0),
-    from: [{ name: 'Sophie Example', email: 'sophie@eurotech.example' }],
+    from: [{ name: 'Sophie Müller', email: 'sophie@eurotech.example' }],
     to: [{ name: 'Dev User', email: 'dev@localhost' }], cc: [],
     subject: 'Willkommen bei Bulwark Webmail!',
     preview: 'Hallo! Welcome to Bulwark - a modern, open-source webmail client for Stalwart Mail Server, built fresh on JMAP.',
@@ -120,78 +120,137 @@ const emails: MockEmail[] = [
     },
   },
   {
-    id: 'email-002', threadId: 'thread-002', mailboxIds: { 'mb-inbox': true }, keywords: { $seen: true, $flagged: true, '$label:blue': true }, size: 5100, receivedAt: daysAgo(1),
-    from: [{ name: 'Dubois, Pierre', email: 'pierre@dubois.example' }],
+    id: 'email-002', threadId: 'thread-002', mailboxIds: { 'mb-inbox': true }, keywords: { $seen: true, $flagged: true, '$label:work/clients/acme': true }, size: 5100, receivedAt: daysAgo(1),
+    from: [{ name: 'Pierre Dubois', email: 'pierre@dubois.example' }],
     to: [{ name: 'Dev User', email: 'dev@localhost' }],
-    cc: [{ name: 'de Vries, Karel', email: 'karel@devries.example' }],
-    subject: 'Project Update - Q1 Review',
-    preview: 'Salut team, I wanted to share the latest project numbers. We are on track to meet our targets for Q1.',
+    cc: [{ name: 'Karel de Vries', email: 'karel@devries.example' }],
+    subject: 'Q1 numbers, and the part I want to talk about',
+    preview: 'The deck is attached. Short version: we land on target, but not the way we planned it.',
     hasAttachment: true,
-    textBody: [{ partId: 'p1', blobId: 'blob-003', size: 640, type: 'text/plain' }],
-    htmlBody: [{ partId: 'p2', blobId: 'blob-004', size: 820, type: 'text/html' }],
+    textBody: [{ partId: 'p1', blobId: 'blob-003', size: 780, type: 'text/plain' }],
+    htmlBody: [{ partId: 'p2', blobId: 'blob-004', size: 1600, type: 'text/html' }],
     bodyValues: {
-      p1: { value: 'Salut team,\n\nI wanted to share the latest project numbers. We are on track to meet our targets for Q1.\n\nKey highlights:\n- Revenue up 12%\n- New signups increased by 8%\n- Customer satisfaction at 94%\n\nLet me know if you have questions.\n\nCordialement,\nPierre' },
-      p2: { value: '<p>Salut team,</p><p>I wanted to share the latest project numbers. We are on track to meet our targets for Q1.</p><ul><li>Revenue up 12%</li><li>New signups increased by 8%</li><li>Customer satisfaction at 94%</li></ul><p>Let me know if you have questions.</p><p>Cordialement,<br>Pierre</p>' },
+      p1: { value: 'Hello both,\n\nThe deck is attached. Short version: we land on target, but not the way we planned it.\n\nRevenue: +12% against a +9% forecast. Almost all of it comes from the two enterprise renewals in February, so it is two customers, not a trend.\n\nSignups: +8%, which is under plan. The self-serve funnel loses people at the payment step, and it has done so for three quarters now.\n\nSupport satisfaction: 94% across 1.240 tickets.\n\nI would like twenty minutes on Thursday for the funnel drop-off before we commit to Q2 targets. The rest of the deck can be read offline.\n\nBien à vous,\nPierre' },
+      p2: { value: '<div style="font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#24292f;"><p>Hello both,</p><p>The deck is attached. Short version: we land on target, but not the way we planned it.</p><table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;font-size:14px;margin:18px 0;"><tr><td style="padding:7px 24px 7px 0;border-bottom:1px solid #e6e6e6;color:#57606a;">Revenue</td><td style="padding:7px 0;border-bottom:1px solid #e6e6e6;text-align:right;font-variant-numeric:tabular-nums;">+12%</td><td style="padding:7px 0 7px 18px;border-bottom:1px solid #e6e6e6;color:#57606a;">forecast +9%</td></tr><tr><td style="padding:7px 24px 7px 0;border-bottom:1px solid #e6e6e6;color:#57606a;">New signups</td><td style="padding:7px 0;border-bottom:1px solid #e6e6e6;text-align:right;font-variant-numeric:tabular-nums;">+8%</td><td style="padding:7px 0 7px 18px;border-bottom:1px solid #e6e6e6;color:#57606a;">forecast +15%</td></tr><tr><td style="padding:7px 24px 7px 0;color:#57606a;">Support satisfaction</td><td style="padding:7px 0;text-align:right;font-variant-numeric:tabular-nums;">94%</td><td style="padding:7px 0 7px 18px;color:#57606a;">1.240 tickets</td></tr></table><p>The revenue line is two enterprise renewals in February, so it is two customers, not a trend. The funnel loses people at the payment step and has done so for three quarters now.</p><p>I would like twenty minutes on Thursday for the drop-off before we commit to Q2 targets. The rest of the deck can be read offline.</p><p>Bien à vous,<br>Pierre</p></div>' },
     },
     attachments: [
       { partId: 'att1', blobId: 'blob-att-001', size: 24500, name: 'Q1-Bericht.pdf', type: 'application/pdf' },
     ],
   },
   {
-    id: 'email-003', threadId: 'thread-003', mailboxIds: { 'mb-inbox': true }, keywords: { $seen: true }, size: 3100, receivedAt: daysAgo(2),
+    id: 'email-003', threadId: 'thread-003', mailboxIds: { 'mb-inbox': true }, keywords: { $seen: true }, size: 2400, receivedAt: daysAgo(2),
     from: [{ name: 'Chiara Rossi', email: 'chiara@rossi.example' }],
     to: [{ name: 'Dev User', email: 'dev@localhost' }], cc: [],
-    subject: 'Pranzo domani?',
-    preview: 'Ciao! Are you free for lunch tomorrow? I know a great trattoria near the Herengracht.',
+    subject: 'Lunch tomorrow?',
+    preview: 'Are you free around 12:30? There is a new place on the Herengracht that does a decent risotto.',
     hasAttachment: false,
-    textBody: [{ partId: 'p1', blobId: 'blob-005', size: 180, type: 'text/plain' }],
-    htmlBody: [{ partId: 'p2', blobId: 'blob-006', size: 260, type: 'text/html' }],
+    textBody: [{ partId: 'p1', blobId: 'blob-005', size: 240, type: 'text/plain' }],
+    htmlBody: [{ partId: 'p2', blobId: 'blob-006', size: 320, type: 'text/html' }],
     bodyValues: {
-      p1: { value: 'Ciao!\n\nAre you free for lunch tomorrow? I know a great trattoria near the Herengracht. They do an amazing risotto ai funghi porcini.\n\nFammi sapere!\nChiara' },
-      p2: { value: '<p>Ciao!</p><p>Are you free for lunch tomorrow? I know a great trattoria near the Herengracht. They do an amazing risotto ai funghi porcini.</p><p>Fammi sapere!<br>Chiara</p>' },
+      p1: { value: 'Are you free around 12:30? There is a new place on the Herengracht that does a decent risotto, which is a low bar in this city, but they clear it.\n\nI have a call at 14:00, so it has to be a short one.\n\nChiara' },
+      p2: { value: '<div style="font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#24292f;"><p>Are you free around 12:30? There is a new place on the Herengracht that does a decent risotto, which is a low bar in this city, but they clear it.</p><p>I have a call at 14:00, so it has to be a short one.</p><p>Chiara</p></div>' },
     },
   },
   {
-    id: 'email-004', threadId: 'thread-004', mailboxIds: { 'mb-inbox': true }, keywords: { '$label:red': true }, size: 6200, receivedAt: daysAgo(0),
-    from: [{ name: 'GitHub Notifications', email: 'notifications@github.com' }],
+    id: 'email-004', threadId: 'thread-004', mailboxIds: { 'mb-inbox': true }, keywords: { '$label:work/clients': true, '$label:receipts': true }, size: 6200, receivedAt: daysAgo(0),
+    from: [{ name: 'GitHub', email: 'notifications@github.example' }],
     to: [{ name: 'Dev User', email: 'dev@localhost' }], cc: [],
-    subject: '[bulwark-webmail] New issue: Add dark mode toggle (#42)',
-    preview: 'A new issue has been opened by @contributor. It would be great to have a dark mode toggle in the settings panel.',
+    subject: '[bulwark-webmail] Theme choice is ignored after an OS theme change (#42)',
+    preview: 'karel-devries opened issue #42: setting the theme to Dark explicitly, then switching the OS to light, drops back to the OS theme on reload.',
     hasAttachment: false,
-    textBody: [{ partId: 'p1', blobId: 'blob-007', size: 350, type: 'text/plain' }],
-    htmlBody: [{ partId: 'p2', blobId: 'blob-008', size: 500, type: 'text/html' }],
+    textBody: [{ partId: 'p1', blobId: 'blob-007', size: 620, type: 'text/plain' }],
+    htmlBody: [{ partId: 'p2', blobId: 'blob-008', size: 980, type: 'text/html' }],
     bodyValues: {
-      p1: { value: 'A new issue has been opened by @contributor.\n\nTitle: Add dark mode toggle\n\nIt would be great to have a dark mode toggle in the settings panel. Currently users have to rely on system preferences.\n\n-\nReply to this email directly or view it on GitHub.' },
-      p2: { value: '<p>A new issue has been opened by <strong>@contributor</strong>.</p><h3>Add dark mode toggle</h3><p>It would be great to have a dark mode toggle in the settings panel. Currently users have to rely on system preferences.</p><hr><p><em>Reply to this email directly or view it on GitHub.</em></p>' },
+      p1: { value: '@karel-devries opened issue #42\n\nSteps:\n1. Settings > Appearance > Theme: Dark\n2. Switch the OS to its light theme\n3. Reload the page\n\nExpected: it stays dark, because the choice was explicit.\nActual: it follows the OS again.\n\nThe stored preference survives the reload (I can see it in localStorage), it just is not read before first paint. Firefox 128 on Fedora 41, reproduced in Chromium 133.\n\n-\nReply to this email directly, view it on GitHub, or unsubscribe.' },
+      p2: { value: '<div style="font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.6;color:#24292f;"><p style="margin:0 0 14px 0;"><strong>@karel-devries</strong> opened issue <a href="#" style="color:#0969da;text-decoration:none;">#42</a></p><div style="border-left:3px solid #d0d7de;padding:2px 0 2px 14px;color:#24292f;"><p style="margin:0 0 10px 0;">Steps:</p><ol style="margin:0 0 12px 0;padding-left:20px;"><li>Settings &rsaquo; Appearance &rsaquo; Theme: Dark</li><li>Switch the OS to its light theme</li><li>Reload the page</li></ol><p style="margin:0 0 10px 0;"><strong>Expected:</strong> it stays dark, because the choice was explicit.<br><strong>Actual:</strong> it follows the OS again.</p><p style="margin:0 0 10px 0;">The stored preference survives the reload (I can see it in <code style="background:#f6f8fa;padding:1px 5px;border-radius:3px;font-size:13px;">localStorage</code>), it just is not read before first paint.</p><p style="margin:0;">Firefox 128 on Fedora 41, reproduced in Chromium 133.</p></div><p style="margin:18px 0 0 0;color:#57606a;font-size:12px;border-top:1px solid #eaeef2;padding-top:12px;">Reply to this email directly, <a href="#" style="color:#57606a;">view it on GitHub</a>, or <a href="#" style="color:#57606a;">unsubscribe</a>.</p></div>' },
     },
   },
   {
-    id: 'email-005', threadId: 'thread-005', mailboxIds: { 'mb-inbox': true }, keywords: { $seen: true }, size: 2800, receivedAt: daysAgo(4),
-    from: [{ name: 'Newsletter', email: 'news@techdigest.example' }],
-    to: [{ name: 'Dev User', email: 'dev@localhost' }], cc: [],
-    subject: 'Your Weekly Tech Digest',
-    preview: 'This week in tech: new JavaScript runtime benchmarks, WebAssembly reaches 3.0, and more.',
+    id: 'email-005', threadId: 'thread-005', mailboxIds: { 'mb-inbox': true }, keywords: { $seen: true }, size: 3300, receivedAt: daysAgo(4),
+    from: [{ name: 'Bram Kuipers', email: 'bram@ietf-lists.example' }],
+    to: [{ name: 'jmap', email: 'jmap@ietf-lists.example' }], cc: [],
+    subject: 'Re: [jmap] $seen on a shared mailbox: per account or per message?',
+    preview: 'Per message. The keyword lives on the Email object and the Email object is shared, so marking it read in one account marks it read in the other.',
     hasAttachment: false,
-    textBody: [{ partId: 'p1', blobId: 'blob-009', size: 900, type: 'text/plain' }],
-    htmlBody: [{ partId: 'p2', blobId: 'blob-010', size: 1400, type: 'text/html' }],
+    textBody: [{ partId: 'p1', blobId: 'blob-009', size: 800, type: 'text/plain' }],
+    htmlBody: [],
     bodyValues: {
-      p1: { value: 'This week in tech:\n\n1. New JavaScript runtime benchmarks show 30% improvement\n2. WebAssembly reaches version 3.0\n3. CSS container queries gain full browser support\n4. TypeScript 6.0 release candidate announced\n\nRead more at techdigest.example' },
-      p2: { value: '<h2>Your Weekly Tech Digest</h2><ol><li>New JavaScript runtime benchmarks show 30% improvement</li><li>WebAssembly reaches version 3.0</li><li>CSS container queries gain full browser support</li><li>TypeScript 6.0 release candidate announced</li></ol><p><a href="#">Read more at techdigest.example</a></p>' },
+      p1: { value: 'On Tue, 24 Mar 2026 at 09:12, Astrid van der Berg wrote:\n> If two accounts have the same mailbox mapped, is $seen per account\n> or per message? We get bug reports either way.\n\nPer message. The keyword lives on the Email object, the Email object is shared, so marking it read in one account marks it read in the other. That is the reading most servers implement.\n\nIf you want per-account state you need per-account Email objects, which is what delegated mailboxes usually end up with anyway. RFC 8621 is quiet about the shared case, which is why your bug reports go both ways.\n\nWorth writing down in the interop notes before someone standardises the wrong half of it.\n\nBram\n--\njmap mailing list -- jmap@ietf-lists.example\nTo unsubscribe send an email to jmap-leave@ietf-lists.example' },
     },
   },
-  // Newsletter with full HTML
+  // Newsletter with a full HTML body
   {
-    id: 'email-013', threadId: 'thread-012', mailboxIds: { 'mb-inbox': true }, keywords: { '$label:purple': true }, size: 18200, receivedAt: daysAgo(0),
-    from: [{ name: 'Launchpad Weekly', email: 'hello@launchpad.example' }],
+    id: 'email-013', threadId: 'thread-012', mailboxIds: { 'mb-inbox': true }, keywords: { '$label:personal/finance': true }, size: 18200, receivedAt: daysAgo(0),
+    from: [{ name: 'Sidenote', email: 'post@sidenote.example' }],
     to: [{ name: 'Dev User', email: 'dev@localhost' }], cc: [],
-    subject: 'Launchpad Weekly #47 - The future of the open web',
-    preview: 'This week: WebAssembly Components hit 1.0, a deep dive into privacy-first analytics, and 5 tools we can\'t stop using.',
+    subject: 'Sidenote 47: the Component Model shipped and nobody has to care yet',
+    preview: 'Wasm components reached 1.0 last week. The spec is done, the toolchain is not, and that gap is the whole story.',
     hasAttachment: false,
-    textBody: [{ partId: 'p1', blobId: 'blob-020', size: 1200, type: 'text/plain' }],
-    htmlBody: [{ partId: 'p2', blobId: 'blob-021', size: 16000, type: 'text/html' }],
+    textBody: [{ partId: 'p1', blobId: 'blob-020', size: 1900, type: 'text/plain' }],
+    htmlBody: [{ partId: 'p2', blobId: 'blob-021', size: 9400, type: 'text/html' }],
     bodyValues: {
-      p1: { value: 'LAUNCHPAD WEEKLY #47\nThe future of the open web\n\nWebAssembly Components hit 1.0\nThe Component Model spec has reached 1.0, unlocking language-agnostic modules that run anywhere.\n\nDeep dive: Privacy-first analytics\nCookie banners are on their way out. We explore the next generation of analytics tools that respect user privacy by design.\n\n5 tools we can\'t stop using\n1. Vite 7 - lightning-fast builds\n2. Biome - unified lint + format\n3. Deno 4 - batteries included runtime\n4. TailwindCSS 4 - zero config styling\n5. Playwright - end-to-end testing\n\nYou received this because you subscribed at launchpad.example.\nUnsubscribe: https://launchpad.example/unsubscribe' },
-      p2: { value: '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head><body style="margin:0;padding:0;background-color:#1a1a2e;font-family:\'Segoe UI\',Roboto,Helvetica,Arial,sans-serif;color:#e0e0e0;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#1a1a2e;"><tr><td align="center" style="padding:40px 16px;"><table role="presentation" width="640" cellpadding="0" cellspacing="0" style="max-width:640px;width:100%;"><tr><td style="padding:24px 32px;text-align:center;"><span style="font-size:20px;font-weight:700;color:#a78bfa;letter-spacing:2px;">&#9670; LAUNCHPAD WEEKLY</span><br><span style="font-size:13px;color:#9ca3af;letter-spacing:1px;">ISSUE #47 &bull; MARCH 2026</span></td></tr><tr><td style="background:linear-gradient(135deg,#4c1d95 0%,#7c3aed 50%,#2563eb 100%);border-radius:16px 16px 0 0;padding:48px 40px 40px 40px;text-align:center;"><h1 style="margin:0 0 12px 0;font-size:32px;font-weight:800;color:#ffffff;line-height:1.2;">The future of the open web</h1><p style="margin:0;font-size:16px;color:#e0e7ff;line-height:1.5;">WebAssembly Components hit 1.0, privacy-first analytics take center stage, and 5 tools we can&#8217;t stop using.</p></td></tr><tr><td style="background-color:#16213e;padding:0;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td style="padding:36px 40px 32px 40px;border-bottom:1px solid #1e3a5f;"><span style="display:inline-block;background-color:#7c3aed;color:#fff;font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;letter-spacing:1px;margin-bottom:12px;">FEATURED</span><h2 style="margin:12px 0 8px 0;font-size:22px;font-weight:700;color:#f1f5f9;">WebAssembly Components hit 1.0</h2><p style="margin:0 0 16px 0;font-size:15px;color:#94a3b8;line-height:1.6;">The Component Model specification has officially reached 1.0, unlocking language-agnostic modules that compose and run anywhere&#8202;&#8212;&#8202;from the browser to the edge. This is a watershed moment for portable computing.</p><a href="#" style="display:inline-block;background-color:#7c3aed;color:#ffffff;font-size:14px;font-weight:600;text-decoration:none;padding:10px 24px;border-radius:8px;">Read the deep dive &rarr;</a></td></tr><tr><td style="padding:32px 40px;border-bottom:1px solid #1e3a5f;"><span style="display:inline-block;background-color:#2563eb;color:#fff;font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;letter-spacing:1px;margin-bottom:12px;">ANALYSIS</span><h2 style="margin:12px 0 8px 0;font-size:22px;font-weight:700;color:#f1f5f9;">Deep dive: Privacy-first analytics</h2><p style="margin:0 0 16px 0;font-size:15px;color:#94a3b8;line-height:1.6;">Cookie banners are on their way out. We explore the next generation of analytics platforms that respect user privacy by design&#8202;&#8212;&#8202;no consent dialogs required. From server-side aggregation to differential privacy, the landscape is shifting fast.</p><a href="#" style="display:inline-block;border:1px solid #7c3aed;color:#a78bfa;font-size:14px;font-weight:600;text-decoration:none;padding:10px 24px;border-radius:8px;">Explore the guide &rarr;</a></td></tr><tr><td style="padding:32px 40px;"><span style="display:inline-block;background-color:#0d9488;color:#fff;font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;letter-spacing:1px;margin-bottom:12px;">TOOLBOX</span><h2 style="margin:12px 0 16px 0;font-size:22px;font-weight:700;color:#f1f5f9;">5 tools we can&#8217;t stop using</h2><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td style="padding:12px 16px;background-color:#1e293b;border-radius:10px;margin-bottom:8px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td style="width:36px;vertical-align:top;"><span style="font-size:20px;font-weight:800;color:#7c3aed;">1</span></td><td><span style="font-size:15px;font-weight:600;color:#f1f5f9;">Vite 7</span><br><span style="font-size:13px;color:#94a3b8;">Lightning-fast builds with zero-config ESM support.</span></td></tr></table></td></tr><tr><td style="height:8px;"></td></tr><tr><td style="padding:12px 16px;background-color:#1e293b;border-radius:10px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td style="width:36px;vertical-align:top;"><span style="font-size:20px;font-weight:800;color:#7c3aed;">2</span></td><td><span style="font-size:15px;font-weight:600;color:#f1f5f9;">Biome</span><br><span style="font-size:13px;color:#94a3b8;">Unified linting and formatting in a single blazing-fast tool.</span></td></tr></table></td></tr><tr><td style="height:8px;"></td></tr><tr><td style="padding:12px 16px;background-color:#1e293b;border-radius:10px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td style="width:36px;vertical-align:top;"><span style="font-size:20px;font-weight:800;color:#7c3aed;">3</span></td><td><span style="font-size:15px;font-weight:600;color:#f1f5f9;">Deno 4</span><br><span style="font-size:13px;color:#94a3b8;">Batteries-included runtime with native TypeScript &amp; npm compat.</span></td></tr></table></td></tr><tr><td style="height:8px;"></td></tr><tr><td style="padding:12px 16px;background-color:#1e293b;border-radius:10px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td style="width:36px;vertical-align:top;"><span style="font-size:20px;font-weight:800;color:#7c3aed;">4</span></td><td><span style="font-size:15px;font-weight:600;color:#f1f5f9;">TailwindCSS 4</span><br><span style="font-size:13px;color:#94a3b8;">Zero-config utility-first CSS that just works.</span></td></tr></table></td></tr><tr><td style="height:8px;"></td></tr><tr><td style="padding:12px 16px;background-color:#1e293b;border-radius:10px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td style="width:36px;vertical-align:top;"><span style="font-size:20px;font-weight:800;color:#7c3aed;">5</span></td><td><span style="font-size:15px;font-weight:600;color:#f1f5f9;">Playwright</span><br><span style="font-size:13px;color:#94a3b8;">Reliable end-to-end testing across every browser.</span></td></tr></table></td></tr></table></td></tr></table></td></tr><tr><td style="background-color:#0f172a;border-radius:0 0 16px 16px;padding:28px 40px;text-align:center;border-top:1px solid #1e3a5f;"><p style="margin:0 0 6px 0;font-size:13px;color:#64748b;">You received this because you subscribed at <a href="#" style="color:#7c3aed;text-decoration:none;">launchpad.example</a></p><p style="margin:0;font-size:13px;color:#64748b;"><a href="#" style="color:#7c3aed;text-decoration:none;">Unsubscribe</a> &bull; <a href="#" style="color:#7c3aed;text-decoration:none;">Manage preferences</a> &bull; <a href="#" style="color:#7c3aed;text-decoration:none;">View in browser</a></p></td></tr></table></td></tr></table></body></html>' },
+      p1: { value: 'SIDENOTE 47\nA weekly letter about the web, from Berlin\n\n---\n\nTHE COMPONENT MODEL SHIPPED AND NOBODY HAS TO CARE YET\n\nWasm components reached 1.0 last week. The spec is done, the toolchain is not, and that gap is the whole story.\n\nWhat you get today: a Rust crate and a JS host that can pass a record across the boundary without hand-writing glue. What you do not get: a debugger that survives the boundary, or a bundler that treats a component as a first-class input. If you are shipping a WASM module today you will keep hand-writing the glue for another year, and that is fine.\n\nThe part that matters long term is the interface types, not the packaging. Once two languages agree on what a string is, the argument moves somewhere more interesting.\n\n---\n\nCOOKIE BANNERS ARE STILL LEGAL THEATRE\n\nEvery serious analytics tool now measures without setting an identifier: aggregate at the edge, drop the raw log, and answer at the level of a page and a day instead of a person.\n\nWe ran Plausible, Umami and a self-hosted Matomo against the same fortnight of traffic. Session counts landed within 4% of each other. Where they differ is what they cannot tell you: none of them will follow a visitor across two weeks, which is the point.\n\nIf your dashboard has a funnel with six steps and a cohort retention chart, you are still identifying people. Say so in the privacy notice and stop pretending the banner covers it.\n\n---\n\nFIVE LINKS\n\n1. A write-up of a Postgres index that got slower after ANALYZE, with the plan output.\n2. The CSS working group minutes on anchor positioning. Short, and it settles the popover argument.\n3. Someone rewrote git bisect as a 90-line shell script. Useful mainly as a reading exercise.\n4. Notes from a team that moved 40 services off Kubernetes and back onto three machines.\n5. A tiny font renderer in 500 lines of C. The hinting section is worth the read on its own.\n\n---\n\nSidenote UG, Torstraße 12, 10119 Berlin\nYou get this because you signed up at sidenote.example.\nUnsubscribe: sidenote.example/unsubscribe' },
+      p2: { value: `<div style="margin:0;padding:36px 16px;background:#f2efe8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:100%;background:#fffdf9;">
+  <tr><td style="padding:34px 40px 0 40px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+      <td style="font-family:Georgia,'Times New Roman',serif;font-size:22px;letter-spacing:0.02em;color:#20242a;">Sidenote</td>
+      <td align="right" style="font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:#a09880;">No. 47 &middot; 26 March</td>
+    </tr></table>
+    <p style="margin:8px 0 0 0;font-size:13px;color:#8d8674;">A weekly letter about the web, from Berlin</p>
+  </td></tr>
+  <tr><td style="padding:26px 40px 0 40px;"><div style="border-top:2px solid #20242a;"></div></td></tr>
+
+  <tr><td style="padding:26px 40px 0 40px;">
+    <h2 style="margin:0 0 12px 0;font-family:Georgia,'Times New Roman',serif;font-size:25px;line-height:1.25;font-weight:400;color:#20242a;">The Component Model shipped and nobody has to care yet</h2>
+    <p style="margin:0 0 14px 0;font-size:15px;line-height:1.7;color:#3c414a;">Wasm components reached 1.0 last week. The spec is done, the toolchain is not, and that gap is the whole story.</p>
+    <p style="margin:0 0 14px 0;font-size:15px;line-height:1.7;color:#3c414a;">What you get today is a Rust crate and a JS host that can pass a record across the boundary without hand-written glue. What you do not get is a debugger that survives that boundary, or a bundler that treats a component as a first-class input. If you ship a WASM module this year, you will keep writing the glue by hand, and that is a reasonable place to be.</p>
+    <p style="margin:0 0 18px 0;font-size:15px;line-height:1.7;color:#3c414a;">The durable part is the interface types, not the packaging. Once two languages agree on what a string is, the argument moves somewhere more interesting.</p>
+    <a href="#" style="font-size:14px;font-weight:600;color:#a03e21;text-decoration:none;border-bottom:1px solid #e0c8bd;padding-bottom:2px;">Read the full piece</a>
+  </td></tr>
+
+  <tr><td style="padding:30px 40px 0 40px;"><div style="border-top:1px solid #e6e0d2;"></div></td></tr>
+
+  <tr><td style="padding:26px 40px 0 40px;">
+    <h2 style="margin:0 0 12px 0;font-family:Georgia,'Times New Roman',serif;font-size:25px;line-height:1.25;font-weight:400;color:#20242a;">Cookie banners are still legal theatre</h2>
+    <p style="margin:0 0 14px 0;font-size:15px;line-height:1.7;color:#3c414a;">Every serious analytics tool now measures without setting an identifier: aggregate at the edge, drop the raw log, answer at the level of a page and a day instead of a person.</p>
+    <p style="margin:0 0 16px 0;font-size:15px;line-height:1.7;color:#3c414a;">We pointed three of them at the same fortnight of traffic.</p>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;font-size:14px;margin:0 0 16px 0;">
+      <tr>
+        <td style="padding:8px 0;border-bottom:1px solid #e6e0d2;color:#8d8674;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;">Tool</td>
+        <td align="right" style="padding:8px 0;border-bottom:1px solid #e6e0d2;color:#8d8674;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;">Sessions</td>
+        <td align="right" style="padding:8px 0;border-bottom:1px solid #e6e0d2;color:#8d8674;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;">Delta</td>
+      </tr>
+      <tr><td style="padding:9px 0;border-bottom:1px solid #f0ece1;color:#3c414a;">Plausible</td><td align="right" style="padding:9px 0;border-bottom:1px solid #f0ece1;font-variant-numeric:tabular-nums;color:#20242a;">41.208</td><td align="right" style="padding:9px 0;border-bottom:1px solid #f0ece1;color:#8d8674;">&mdash;</td></tr>
+      <tr><td style="padding:9px 0;border-bottom:1px solid #f0ece1;color:#3c414a;">Umami</td><td align="right" style="padding:9px 0;border-bottom:1px solid #f0ece1;font-variant-numeric:tabular-nums;color:#20242a;">40.114</td><td align="right" style="padding:9px 0;border-bottom:1px solid #f0ece1;color:#8d8674;">&minus;2,7%</td></tr>
+      <tr><td style="padding:9px 0;color:#3c414a;">Matomo (self-hosted)</td><td align="right" style="padding:9px 0;font-variant-numeric:tabular-nums;color:#20242a;">42.760</td><td align="right" style="padding:9px 0;color:#8d8674;">+3,8%</td></tr>
+    </table>
+    <p style="margin:0;font-size:15px;line-height:1.7;color:#3c414a;">Where they agree is the count. Where they differ is what they refuse to do: none of them will follow a visitor across two weeks. If your dashboard has a six-step funnel and a cohort retention chart, you are identifying people. Put that in the privacy notice and stop asking the banner to carry it.</p>
+  </td></tr>
+
+  <tr><td style="padding:30px 40px 0 40px;"><div style="border-top:1px solid #e6e0d2;"></div></td></tr>
+
+  <tr><td style="padding:24px 40px 0 40px;">
+    <p style="margin:0 0 14px 0;font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:#a09880;">Five links</p>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size:14px;line-height:1.6;color:#3c414a;">
+      <tr><td width="26" valign="top" style="padding:0 0 12px 0;font-family:Georgia,serif;color:#a09880;">1</td><td style="padding:0 0 12px 0;"><a href="#" style="color:#20242a;text-decoration:none;border-bottom:1px solid #ddd6c6;">A Postgres index that got slower after ANALYZE</a>, with the plan output.</td></tr>
+      <tr><td width="26" valign="top" style="padding:0 0 12px 0;font-family:Georgia,serif;color:#a09880;">2</td><td style="padding:0 0 12px 0;"><a href="#" style="color:#20242a;text-decoration:none;border-bottom:1px solid #ddd6c6;">CSSWG minutes on anchor positioning</a>. Short, and it settles the popover argument.</td></tr>
+      <tr><td width="26" valign="top" style="padding:0 0 12px 0;font-family:Georgia,serif;color:#a09880;">3</td><td style="padding:0 0 12px 0;"><a href="#" style="color:#20242a;text-decoration:none;border-bottom:1px solid #ddd6c6;">git bisect in 90 lines of shell</a>. Useful mainly as a reading exercise.</td></tr>
+      <tr><td width="26" valign="top" style="padding:0 0 12px 0;font-family:Georgia,serif;color:#a09880;">4</td><td style="padding:0 0 12px 0;"><a href="#" style="color:#20242a;text-decoration:none;border-bottom:1px solid #ddd6c6;">Forty services off Kubernetes, onto three machines</a>, with the bill before and after.</td></tr>
+      <tr><td width="26" valign="top" style="padding:0;font-family:Georgia,serif;color:#a09880;">5</td><td style="padding:0;"><a href="#" style="color:#20242a;text-decoration:none;border-bottom:1px solid #ddd6c6;">A font renderer in 500 lines of C</a>. The hinting section earns the read on its own.</td></tr>
+    </table>
+  </td></tr>
+
+  <tr><td style="padding:30px 40px 34px 40px;">
+    <div style="border-top:1px solid #e6e0d2;padding-top:18px;font-size:12px;line-height:1.75;color:#948d7c;">
+      Sidenote UG, Torstraße 12, 10119 Berlin<br>
+      You get this because you signed up at sidenote.example.
+      <a href="#" style="color:#948d7c;">Unsubscribe</a> &middot; <a href="#" style="color:#948d7c;">Read in the browser</a>
+    </div>
+  </td></tr>
+</table>
+</td></tr></table></div>` },
     },
   },
   // --- Additional inbox emails ---
@@ -199,105 +258,213 @@ const emails: MockEmail[] = [
     id: 'email-014', threadId: 'thread-013', mailboxIds: { 'mb-inbox': true }, keywords: {}, size: 3400, receivedAt: hoursAgo(2),
     from: [{ name: 'Lars Johansson', email: 'lars.johansson@fjord-systems.example' }],
     to: [{ name: 'Dev User', email: 'dev@localhost' }],
-    cc: [{ name: 'Sophie Example', email: 'sophie@eurotech.example' }, { name: 'Élise Moreau', email: 'elise.moreau@fjord-systems.example' }],
-    subject: 'Sprint planning - next week priorities',
-    preview: 'Hej team, here are the priorities for next sprint. Please review before our planning meeting tomorrow.',
+    cc: [{ name: 'Sophie Müller', email: 'sophie@eurotech.example' }, { name: 'Élise Moreau', email: 'elise.moreau@fjord-systems.example' }],
+    subject: 'Sprint priorities for next week',
+    preview: 'Five items, in order. If something here is wrong, say so before the meeting rather than in it.',
     hasAttachment: false,
-    textBody: [{ partId: 'p1', blobId: 'blob-030', size: 450, type: 'text/plain' }],
-    htmlBody: [{ partId: 'p2', blobId: 'blob-031', size: 600, type: 'text/html' }],
+    textBody: [{ partId: 'p1', blobId: 'blob-030', size: 620, type: 'text/plain' }],
+    htmlBody: [{ partId: 'p2', blobId: 'blob-031', size: 820, type: 'text/html' }],
     bodyValues: {
-      p1: { value: 'Hej team,\n\nHere are the priorities for next sprint:\n\n1. Finish JMAP calendar integration\n2. Fix email threading bug (#187)\n3. Implement contact group management\n4. Performance optimization for large mailboxes\n5. Accessibility audit follow-ups\n\nPlease review before our planning meeting tomorrow at 10:00.\n\nTack,\nLars' },
-      p2: { value: '<p>Hej team,</p><p>Here are the priorities for next sprint:</p><ol><li>Finish JMAP calendar integration</li><li>Fix email threading bug (#187)</li><li>Implement contact group management</li><li>Performance optimization for large mailboxes</li><li>Accessibility audit follow-ups</li></ol><p>Please review before our planning meeting tomorrow at 10:00.</p><p>Tack,<br>Lars</p>' },
+      p1: { value: 'Hej,\n\nFive items for next sprint, in order:\n\n1. Calendar: finish CalendarEvent/set so editing one occurrence stops dropping the other overrides\n2. Threading bug #187: messages with a rewritten Message-ID land in a thread of their own\n3. Contact groups: create, rename, membership\n4. Large mailboxes: the list view still fetches full Email objects to render a preview line\n5. Accessibility follow-ups, focus order in the composer first\n\nPlanning is tomorrow at 10:00 in room A. If something here is wrong, say so before the meeting rather than in it.\n\nLars' },
+      p2: { value: '<div style="font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#24292f;"><p>Hej,</p><p>Five items for next sprint, in order:</p><ol style="padding-left:20px;"><li style="margin-bottom:6px;"><strong>Calendar:</strong> finish <code style="background:#f6f8fa;padding:1px 5px;border-radius:3px;font-size:13px;">CalendarEvent/set</code> so editing one occurrence stops dropping the other overrides</li><li style="margin-bottom:6px;"><strong>Threading bug #187:</strong> messages with a rewritten Message-ID land in a thread of their own</li><li style="margin-bottom:6px;"><strong>Contact groups:</strong> create, rename, membership</li><li style="margin-bottom:6px;"><strong>Large mailboxes:</strong> the list view still fetches full Email objects to render a preview line</li><li>Accessibility follow-ups, focus order in the composer first</li></ol><p>Planning is tomorrow at 10:00 in room A. If something here is wrong, say so before the meeting rather than in it.</p><p>Lars</p></div>' },
     },
   },
   {
-    id: 'email-015', threadId: 'thread-014', mailboxIds: { 'mb-inbox': true }, keywords: { $seen: true }, size: 5800, receivedAt: hoursAgo(5),
-    from: [{ name: 'Booking.com', email: 'automated@booking.example' }],
+    id: 'email-015', threadId: 'thread-014', mailboxIds: { 'mb-inbox': true }, keywords: { $seen: true }, size: 9800, receivedAt: hoursAgo(5),
+    from: [{ name: 'Lago Stays', email: 'reservations@lagostays.example' }],
     to: [{ name: 'Dev User', email: 'dev@localhost' }], cc: [],
-    subject: 'Prenotazione Confermata - Lake Como, Mar 28–30',
-    preview: 'Your reservation has been confirmed. Check-in: March 28, 2026. Check-out: March 30, 2026.',
+    subject: 'Booking confirmed: Villa sul Lago, Bellagio (28–30 March)',
+    preview: 'Reservation LS-4419-BG is confirmed. Check-in Saturday 28 March from 15:00, check-out Monday 30 March by 11:00.',
     hasAttachment: true,
-    textBody: [{ partId: 'p1', blobId: 'blob-032', size: 500, type: 'text/plain' }],
-    htmlBody: [{ partId: 'p2', blobId: 'blob-033', size: 900, type: 'text/html' }],
+    textBody: [{ partId: 'p1', blobId: 'blob-032', size: 700, type: 'text/plain' }],
+    htmlBody: [{ partId: 'p2', blobId: 'blob-033', size: 5200, type: 'text/html' }],
     bodyValues: {
-      p1: { value: 'Your reservation has been confirmed!\n\nProperty: Villa sul Lago, Bellagio, Lake Como\nCheck-in: March 28, 2026 (15:00)\nCheck-out: March 30, 2026 (11:00)\nGuests: 2\nTotal: €385,00\n\nConfirmation code: EU42GDPR\n\nHouse rules and directions are in the attached PDF.' },
-      p2: { value: '<h2>Prenotazione Confermata!</h2><p>Your reservation at <strong>Villa sul Lago, Bellagio, Lake Como</strong> is confirmed.</p><table><tr><td>Check-in</td><td>March 28, 2026 (15:00)</td></tr><tr><td>Check-out</td><td>March 30, 2026 (11:00)</td></tr><tr><td>Guests</td><td>2</td></tr><tr><td>Total</td><td>€385,00</td></tr></table><p>Confirmation code: <strong>EU42GDPR</strong></p>' },
+      p1: { value: 'Reservation LS-4419-BG is confirmed.\n\nVilla sul Lago, Via Roma 8, 22021 Bellagio (CO), Italy\n\nCheck-in: Saturday 28 March, from 15:00\nCheck-out: Monday 30 March, by 11:00\nGuests: 2\n\n2 nights x €175,00 ... €350,00\nCleaning fee ......... €25,00\nTassa di soggiorno ... €10,00\nTotal ................ €385,00\n\nPaid in full. Free cancellation until 21 March, 23:59 CET.\n\nThe key box code is in the attached voucher. Parking is behind the building, the gate remote is on the kitchen table.\n\nMarco, your host, reads messages between 08:00 and 21:00: +39 031 950 118.' },
+      p2: { value: `<div style="margin:0;padding:32px 16px;background:#eef1ee;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center">
+<table role="presentation" width="580" cellpadding="0" cellspacing="0" border="0" style="width:580px;max-width:100%;background:#ffffff;">
+  <tr><td style="padding:26px 34px;border-bottom:1px solid #e7e9e6;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+      <td style="font-size:15px;font-weight:700;letter-spacing:0.04em;color:#2c4a3e;">LAGO STAYS</td>
+      <td align="right" style="font-size:12px;color:#7d8a83;">Reservation LS-4419-BG</td>
+    </tr></table>
+  </td></tr>
+
+  <tr><td style="padding:30px 34px 0 34px;">
+    <p style="margin:0 0 6px 0;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;color:#5b8c76;">Confirmed</p>
+    <h1 style="margin:0 0 6px 0;font-size:24px;line-height:1.3;font-weight:600;color:#1d2b25;">Villa sul Lago</h1>
+    <p style="margin:0;font-size:14px;line-height:1.6;color:#66736c;">Via Roma 8, 22021 Bellagio (CO), Italy</p>
+  </td></tr>
+
+  <tr><td style="padding:24px 34px 0 34px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e2e7e3;">
+      <tr>
+        <td width="50%" style="padding:16px 20px;border-right:1px solid #e2e7e3;">
+          <p style="margin:0 0 4px 0;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#8b9992;">Check-in</p>
+          <p style="margin:0;font-size:16px;font-weight:600;color:#1d2b25;">Sat 28 March</p>
+          <p style="margin:2px 0 0 0;font-size:13px;color:#66736c;">from 15:00</p>
+        </td>
+        <td width="50%" style="padding:16px 20px;">
+          <p style="margin:0 0 4px 0;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#8b9992;">Check-out</p>
+          <p style="margin:0;font-size:16px;font-weight:600;color:#1d2b25;">Mon 30 March</p>
+          <p style="margin:2px 0 0 0;font-size:13px;color:#66736c;">by 11:00</p>
+        </td>
+      </tr>
+      <tr><td colspan="2" style="padding:14px 20px;border-top:1px solid #e2e7e3;font-size:13px;color:#66736c;">2 guests &middot; 2 nights &middot; whole apartment, first floor</td></tr>
+    </table>
+  </td></tr>
+
+  <tr><td style="padding:24px 34px 0 34px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;font-size:14px;">
+      <tr><td style="padding:8px 0;border-bottom:1px solid #eef0ee;color:#4b5751;">2 nights &times; €175,00</td><td align="right" style="padding:8px 0;border-bottom:1px solid #eef0ee;font-variant-numeric:tabular-nums;color:#1d2b25;">€350,00</td></tr>
+      <tr><td style="padding:8px 0;border-bottom:1px solid #eef0ee;color:#4b5751;">Cleaning fee</td><td align="right" style="padding:8px 0;border-bottom:1px solid #eef0ee;font-variant-numeric:tabular-nums;color:#1d2b25;">€25,00</td></tr>
+      <tr><td style="padding:8px 0;border-bottom:1px solid #eef0ee;color:#4b5751;">Tassa di soggiorno (2 &times; €2,50 per night)</td><td align="right" style="padding:8px 0;border-bottom:1px solid #eef0ee;font-variant-numeric:tabular-nums;color:#1d2b25;">€10,00</td></tr>
+      <tr><td style="padding:12px 0;font-weight:600;color:#1d2b25;">Total, paid in full</td><td align="right" style="padding:12px 0;font-weight:600;font-size:16px;font-variant-numeric:tabular-nums;color:#1d2b25;">€385,00</td></tr>
+    </table>
+  </td></tr>
+
+  <tr><td style="padding:8px 34px 0 34px;">
+    <div style="background:#f4f7f4;padding:16px 20px;font-size:14px;line-height:1.65;color:#3f4b45;">
+      The key box code is in the attached voucher. Parking is behind the building; the gate remote is on the kitchen table.
+    </div>
+  </td></tr>
+
+  <tr><td style="padding:22px 34px 30px 34px;font-size:14px;line-height:1.7;color:#4b5751;">
+    Free cancellation until 21 March, 23:59 CET.<br>
+    Marco, your host, reads messages between 08:00 and 21:00: <a href="#" style="color:#2c4a3e;">+39 031 950 118</a>.
+  </td></tr>
+
+  <tr><td style="padding:16px 34px 22px 34px;border-top:1px solid #e7e9e6;font-size:12px;line-height:1.7;color:#8b9992;">
+    Lago Stays S.r.l., Via Statale 42, 22021 Bellagio (CO) &middot; P.IVA IT03948210131<br>
+    <a href="#" style="color:#8b9992;">Manage this booking</a> &middot; <a href="#" style="color:#8b9992;">Invoice</a>
+  </td></tr>
+</table>
+</td></tr></table></div>` },
     },
     attachments: [
-      { partId: 'att2', blobId: 'blob-att-002', size: 18200, name: 'conferma-prenotazione.pdf', type: 'application/pdf' },
+      { partId: 'att2', blobId: 'blob-att-002', size: 18200, name: 'voucher-LS-4419-BG.pdf', type: 'application/pdf' },
     ],
   },
   {
-    id: 'email-016', threadId: 'thread-015', mailboxIds: { 'mb-inbox': true }, keywords: { '$label:green': true }, size: 4100, receivedAt: hoursAgo(3),
+    id: 'email-016', threadId: 'thread-015', mailboxIds: { 'mb-inbox': true }, keywords: { '$label:personal': true }, size: 4100, receivedAt: hoursAgo(3),
     from: [{ name: 'Élise Moreau', email: 'elise.moreau@fjord-systems.example' }],
     to: [{ name: 'Dev User', email: 'dev@localhost' }], cc: [],
-    subject: 'Code review request: JMAP-342 contact import',
-    preview: 'Salut, I just pushed the contact vCard import feature. Could you review when you get a chance?',
+    subject: 'JMAP-342 is up: vCard import',
+    preview: 'Contact import from vCard is ready for review. The part I would like you to look at is the merge UI.',
     hasAttachment: false,
-    textBody: [{ partId: 'p1', blobId: 'blob-034', size: 380, type: 'text/plain' }],
-    htmlBody: [{ partId: 'p2', blobId: 'blob-035', size: 520, type: 'text/html' }],
+    textBody: [{ partId: 'p1', blobId: 'blob-034', size: 640, type: 'text/plain' }],
+    htmlBody: [{ partId: 'p2', blobId: 'blob-035', size: 860, type: 'text/html' }],
     bodyValues: {
-      p1: { value: 'Salut,\n\nI just pushed the contact vCard import feature (JMAP-342). Could you review when you get a chance?\n\nPR: https://github.example/bulwark-webmail/pull/342\n\nKey changes:\n- New vCard parser with v3/v4 support\n- Batch import with progress indicator\n- Duplicate detection and merge UI\n- Unit tests for edge cases\n\nMerci d\'avance,\nÉlise' },
-      p2: { value: '<p>Salut,</p><p>I just pushed the contact vCard import feature (<code>JMAP-342</code>). Could you review when you get a chance?</p><p>PR: <a href="#">bulwark-webmail/pull/342</a></p><h4>Key changes:</h4><ul><li>New vCard parser with v3/v4 support</li><li>Batch import with progress indicator</li><li>Duplicate detection and merge UI</li><li>Unit tests for edge cases</li></ul><p>Merci d\'avance,<br>Élise</p>' },
+      p1: { value: 'Salut,\n\nJMAP-342 is up: https://github.example/bulwark-webmail/pull/342\n\nWhat is in it: a parser for vCard 3.0 and 4.0, batch import with a progress bar, and duplicate detection that matches on UID first and falls back to the email address.\n\nWhat I would like you to look at: the merge dialogue when a duplicate has conflicting fields. I went with "keep both, mark one primary" and I am not convinced that is the right call. The alternative is a field-by-field picker, which is more clicks but less surprising.\n\nThe 3.0 tests are thin. I will add the line-folding cases before it merges.\n\nÉlise' },
+      p2: { value: '<div style="font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#24292f;"><p>Salut,</p><p>JMAP-342 is up: <a href="#" style="color:#0969da;text-decoration:none;">bulwark-webmail/pull/342</a></p><p><strong>What is in it:</strong> a parser for vCard 3.0 and 4.0, batch import with a progress bar, and duplicate detection that matches on UID first and falls back to the email address.</p><p><strong>What I would like you to look at:</strong> the merge dialogue when a duplicate has conflicting fields. I went with &ldquo;keep both, mark one primary&rdquo; and I am not convinced that is the right call. The alternative is a field-by-field picker, which is more clicks but less surprising.</p><p>The 3.0 tests are thin. I will add the line-folding cases before it merges.</p><p>Élise</p></div>' },
     },
   },
   {
     id: 'email-017', threadId: 'thread-016', mailboxIds: { 'mb-inbox': true }, keywords: { $seen: true }, size: 2900, receivedAt: daysAgo(1),
-    from: [{ name: 'GitHub', email: 'noreply@github.com' }],
+    from: [{ name: 'GitHub', email: 'noreply@github.example' }],
     to: [{ name: 'Dev User', email: 'dev@localhost' }], cc: [],
-    subject: '[GitHub] A new sign-in from Firefox on Linux',
-    preview: 'We noticed a new sign-in to your account from Firefox on Linux. If this was you, no action is needed.',
+    subject: 'A new sign-in from Firefox on Linux',
+    preview: 'Your account was signed in to from a browser we have not seen before. If this was you, there is nothing to do.',
     hasAttachment: false,
     textBody: [{ partId: 'p1', blobId: 'blob-036', size: 350, type: 'text/plain' }],
     htmlBody: [],
     bodyValues: {
-      p1: { value: 'Hi dev,\n\nWe noticed a new sign-in to your GitHub account.\n\nBrowser: Firefox 128\nOS: Linux (Fedora)\nLocation: Amsterdam, NL\nIP: 42.42.42.42\nTime: March 10, 2026 at 14:15 CET\n\nIf this was you, no action is needed. Don\'t Panic.\n\nIf you don\'t recognize this activity, please review your security settings.\n\nGitHub Security' },
+      p1: { value: 'Your account was signed in to from a browser we have not seen before.\n\nBrowser: Firefox 128\nOperating system: Linux (Fedora 41)\nLocation: Amsterdam, Netherlands\nIP address: 145.94.12.208\nWhen: 10 March 2026 at 14:15 CET\n\nIf this was you, there is nothing to do. If it was not, change your password and review your active sessions.\n\nGitHub Security' },
     },
   },
   {
-    id: 'email-018', threadId: 'thread-017', mailboxIds: { 'mb-inbox': true }, keywords: { $seen: true, $flagged: true, '$label:orange': true }, size: 4700, receivedAt: daysAgo(1),
-    from: [{ name: 'Hetzner Cloud', email: 'billing@hetzner.example' }],
+    id: 'email-018', threadId: 'thread-017', mailboxIds: { 'mb-inbox': true }, keywords: { $seen: true, $flagged: true, '$label:work': true }, size: 8900, receivedAt: daysAgo(1),
+    from: [{ name: 'Nordhost GmbH', email: 'rechnung@nordhost.example' }],
     to: [{ name: 'Dev User', email: 'dev@localhost' }], cc: [],
-    subject: 'Your Hetzner invoice is available - February 2026',
-    preview: 'Your Hetzner Cloud invoice for February 2026 is now available. Total: €1.337,42.',
+    subject: 'Invoice NH-2026-0284 for February',
+    preview: 'Your February invoice comes to €137,35 including VAT. It will be collected by SEPA direct debit on 12 March.',
     hasAttachment: true,
-    textBody: [{ partId: 'p1', blobId: 'blob-037', size: 400, type: 'text/plain' }],
-    htmlBody: [],
+    textBody: [{ partId: 'p1', blobId: 'blob-037', size: 720, type: 'text/plain' }],
+    htmlBody: [{ partId: 'p2', blobId: 'blob-070', size: 4600, type: 'text/html' }],
     bodyValues: {
-      p1: { value: 'Guten Tag,\n\nYour Hetzner Cloud invoice for February 2026 is now available.\n\nKundennummer: DE-4242-1337\nBilling period: Feb 1 – Feb 28, 2026\nTotal charges: €1.337,42\n\nService breakdown:\n- CX41 Dedicated: €41,20\n- Storage Box: €11,30\n- Managed Database: €47,10\n- Load Balancer: €7,43\n- Floating IPs: €8,39\n\nView your full invoice at console.hetzner.example/billing' },
+      p1: { value: 'Guten Tag,\n\nInvoice NH-2026-0284 covers 1 to 28 February 2026 for customer 4181-2260.\n\nDedicated server AX41 ........ €41,20\nStorage box BX11 ............. €11,30\nManaged PostgreSQL ........... €47,10\nLoad balancer LB11 ........... €7,43\nFloating IPv4 (3) ............ €8,39\n\nNet ......................... €115,42\nVAT 19% ...................... €21,93\nTotal ....................... €137,35\n\nThe amount will be collected from IBAN DE** **** **** **** **60 01 on 12 March 2026, mandate NH-M-77213.\n\nThe PDF is attached and stays available in the console for ten years.\n\nMit freundlichen Grüßen\nNordhost GmbH' },
+      p2: { value: `<div style="margin:0;padding:32px 16px;background:#f1f2f4;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center">
+<table role="presentation" width="580" cellpadding="0" cellspacing="0" border="0" style="width:580px;max-width:100%;background:#ffffff;border:1px solid #dfe2e6;">
+  <tr><td style="padding:24px 32px;background:#22303f;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+      <td style="font-size:15px;font-weight:600;letter-spacing:0.06em;color:#ffffff;">NORDHOST</td>
+      <td align="right" style="font-size:12px;color:#9fb0bf;">Invoice NH-2026-0284</td>
+    </tr></table>
+  </td></tr>
+
+  <tr><td style="padding:28px 32px 0 32px;">
+    <h1 style="margin:0 0 6px 0;font-size:21px;font-weight:600;color:#1c2733;">February 2026</h1>
+    <p style="margin:0;font-size:13px;color:#6b7885;">Billing period 1&ndash;28 February &middot; Customer 4181-2260</p>
+  </td></tr>
+
+  <tr><td style="padding:22px 32px 0 32px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;font-size:14px;">
+      <tr>
+        <td style="padding:8px 0;border-bottom:1px solid #e3e6ea;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:#8a95a1;">Service</td>
+        <td align="right" style="padding:8px 0;border-bottom:1px solid #e3e6ea;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:#8a95a1;">Net</td>
+      </tr>
+      <tr><td style="padding:9px 0;border-bottom:1px solid #eef0f2;color:#33414f;">Dedicated server AX41</td><td align="right" style="padding:9px 0;border-bottom:1px solid #eef0f2;font-variant-numeric:tabular-nums;color:#1c2733;">€41,20</td></tr>
+      <tr><td style="padding:9px 0;border-bottom:1px solid #eef0f2;color:#33414f;">Storage box BX11</td><td align="right" style="padding:9px 0;border-bottom:1px solid #eef0f2;font-variant-numeric:tabular-nums;color:#1c2733;">€11,30</td></tr>
+      <tr><td style="padding:9px 0;border-bottom:1px solid #eef0f2;color:#33414f;">Managed PostgreSQL</td><td align="right" style="padding:9px 0;border-bottom:1px solid #eef0f2;font-variant-numeric:tabular-nums;color:#1c2733;">€47,10</td></tr>
+      <tr><td style="padding:9px 0;border-bottom:1px solid #eef0f2;color:#33414f;">Load balancer LB11</td><td align="right" style="padding:9px 0;border-bottom:1px solid #eef0f2;font-variant-numeric:tabular-nums;color:#1c2733;">€7,43</td></tr>
+      <tr><td style="padding:9px 0;border-bottom:1px solid #eef0f2;color:#33414f;">Floating IPv4 &times; 3</td><td align="right" style="padding:9px 0;border-bottom:1px solid #eef0f2;font-variant-numeric:tabular-nums;color:#1c2733;">€8,39</td></tr>
+      <tr><td style="padding:10px 0;color:#6b7885;">Net</td><td align="right" style="padding:10px 0;font-variant-numeric:tabular-nums;color:#33414f;">€115,42</td></tr>
+      <tr><td style="padding:0 0 10px 0;border-bottom:1px solid #e3e6ea;color:#6b7885;">VAT 19%</td><td align="right" style="padding:0 0 10px 0;border-bottom:1px solid #e3e6ea;font-variant-numeric:tabular-nums;color:#33414f;">€21,93</td></tr>
+      <tr><td style="padding:14px 0;font-weight:600;color:#1c2733;">Total</td><td align="right" style="padding:14px 0;font-weight:600;font-size:18px;font-variant-numeric:tabular-nums;color:#1c2733;">€137,35</td></tr>
+    </table>
+  </td></tr>
+
+  <tr><td style="padding:4px 32px 0 32px;">
+    <div style="background:#f5f7f9;border-left:3px solid #22303f;padding:14px 18px;font-size:14px;line-height:1.65;color:#33414f;">
+      Collected by SEPA direct debit on <strong>12 March 2026</strong> from IBAN DE** **** **** **** **60 01, mandate NH-M-77213. No action needed.
+    </div>
+  </td></tr>
+
+  <tr><td style="padding:22px 32px 30px 32px;">
+    <a href="#" style="display:inline-block;border:1px solid #c9d0d7;color:#22303f;font-size:14px;font-weight:600;text-decoration:none;padding:10px 18px;">Open billing console</a>
+  </td></tr>
+
+  <tr><td style="padding:16px 32px 22px 32px;border-top:1px solid #e3e6ea;font-size:11px;line-height:1.75;color:#8a95a1;">
+    Nordhost GmbH, Speicherstraße 14, 20457 Hamburg &middot; Amtsgericht Hamburg HRB 118420<br>
+    Geschäftsführerin: Ines Kalb &middot; USt-IdNr. DE297441022<br>
+    The PDF stays available in the console for ten years.
+  </td></tr>
+</table>
+</td></tr></table></div>` },
     },
     attachments: [
-      { partId: 'att3', blobId: 'blob-att-003', size: 32100, name: 'Hetzner-Rechnung-Feb-2026.pdf', type: 'application/pdf' },
+      { partId: 'att3', blobId: 'blob-att-003', size: 32100, name: 'Rechnung-NH-2026-0284.pdf', type: 'application/pdf' },
     ],
   },
   {
     id: 'email-019', threadId: 'thread-018', mailboxIds: { 'mb-inbox': true }, keywords: { $seen: true }, size: 3600, receivedAt: daysAgo(2),
     from: [{ name: 'Astrid van der Berg', email: 'astrid@berglabs.example' }],
     to: [{ name: 'Dev User', email: 'dev@localhost' }, { name: 'Lars Johansson', email: 'lars.johansson@fjord-systems.example' }], cc: [],
-    subject: 'Meeting notes - API design review',
-    preview: 'Here are the notes from today\'s API design review session. Key decisions: REST for public API, gRPC for internal services.',
+    subject: 'Notes from the API design review',
+    preview: 'Four decisions and three action items. Correct me where I have written down the wrong thing.',
     hasAttachment: false,
-    textBody: [{ partId: 'p1', blobId: 'blob-038', size: 600, type: 'text/plain' }],
-    htmlBody: [{ partId: 'p2', blobId: 'blob-039', size: 800, type: 'text/html' }],
+    textBody: [{ partId: 'p1', blobId: 'blob-038', size: 780, type: 'text/plain' }],
+    htmlBody: [{ partId: 'p2', blobId: 'blob-039', size: 1000, type: 'text/html' }],
     bodyValues: {
-      p1: { value: 'Hoi allemaal,\n\nHere are the notes from today\'s API design review:\n\nDecisions:\n1. REST for public-facing APIs (OpenAPI 3.1 spec)\n2. gRPC for internal service communication\n3. GraphQL only for the dashboard BFF\n4. Rate limiting: 100 req/min for free tier, 1000 for pro\n\nAction items:\n- Dev: Draft OpenAPI spec by Friday\n- Lars: Set up gRPC proto repository\n- Astrid: Update architecture diagrams\n\nNext review: March 18, 2026\n\nGroetjes,\nAstrid' },
-      p2: { value: '<p>Hoi allemaal,</p><p>Here are the notes from today\'s API design review:</p><h3>Decisions:</h3><ol><li>REST for public-facing APIs (OpenAPI 3.1 spec)</li><li>gRPC for internal service communication</li><li>GraphQL only for the dashboard BFF</li><li>Rate limiting: 100 req/min for free tier, 1000 for pro</li></ol><h3>Action items:</h3><ul><li><strong>Dev:</strong> Draft OpenAPI spec by Friday</li><li><strong>Lars:</strong> Set up gRPC proto repository</li><li><strong>Astrid:</strong> Update architecture diagrams</li></ul><p>Next review: March 18, 2026</p><p>Groetjes,<br>Astrid</p>' },
+      p1: { value: 'Hoi,\n\nNotes from this morning. Correct me where I have written down the wrong thing.\n\nDecisions:\n1. REST for anything a customer touches, described in OpenAPI 3.1. Nobody wanted to hand a partner a proto file.\n2. gRPC between our own services, because the calendar sync is chatty and the payload is ours.\n3. GraphQL only in the dashboard BFF. It stays behind our own login.\n4. Rate limits: 100 requests per minute on free, 1.000 on pro, per token rather than per account.\n\nActions:\n- Dev: OpenAPI draft by Friday\n- Lars: proto repository and CI for it\n- Astrid: redraw the service diagram, the old one has two services that no longer exist\n\nNext review 18 March.\n\nGroeten,\nAstrid' },
+      p2: { value: '<div style="font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#24292f;"><p>Hoi,</p><p>Notes from this morning. Correct me where I have written down the wrong thing.</p><p style="margin-bottom:6px;"><strong>Decisions</strong></p><ol style="padding-left:20px;margin-top:0;"><li style="margin-bottom:6px;">REST for anything a customer touches, described in OpenAPI 3.1. Nobody wanted to hand a partner a proto file.</li><li style="margin-bottom:6px;">gRPC between our own services, because the calendar sync is chatty and the payload is ours.</li><li style="margin-bottom:6px;">GraphQL only in the dashboard BFF. It stays behind our own login.</li><li>Rate limits: 100 req/min on free, 1.000 on pro, per token rather than per account.</li></ol><p style="margin-bottom:6px;"><strong>Actions</strong></p><ul style="padding-left:20px;margin-top:0;"><li style="margin-bottom:6px;">Dev: OpenAPI draft by Friday</li><li style="margin-bottom:6px;">Lars: proto repository and CI for it</li><li>Astrid: redraw the service diagram, the old one has two services that no longer exist</li></ul><p>Next review 18 March.</p><p>Groeten,<br>Astrid</p></div>' },
     },
   },
   {
     id: 'email-020', threadId: 'thread-019', mailboxIds: { 'mb-inbox': true }, keywords: { $seen: true }, size: 5200, receivedAt: daysAgo(3),
     from: [{ name: 'Jacques Lefèvre', email: 'jacques@lefevre-avocats.example' }],
     to: [{ name: 'Dev User', email: 'dev@localhost' }], cc: [],
-    subject: 'Re: Partnership agreement - feedback',
-    preview: 'I reviewed the draft agreement. A few points need clarification around intellectual property clauses.',
+    subject: 'Re: Partnership agreement, three clauses to change',
+    preview: 'The draft is workable. Three clauses need to change before you sign anything.',
     hasAttachment: true,
-    textBody: [{ partId: 'p1', blobId: 'blob-040', size: 700, type: 'text/plain' }],
+    textBody: [{ partId: 'p1', blobId: 'blob-040', size: 820, type: 'text/plain' }],
     htmlBody: [],
     bodyValues: {
-      p1: { value: 'Bonjour,\n\nI reviewed the draft partnership agreement. Overall it looks good, but a few points need clarification:\n\n1. Article 4.2 - IP ownership clause is ambiguous. Should specify that pre-existing IP remains with original owner.\n2. Article 7.1 - Non-compete period of 24 months may be too restrictive under EU law. Suggest 12 months.\n3. Article 9.3 - Liability cap should be tied to contract value, not a fixed amount.\n\nI\'ve marked up the document with detailed comments (attached).\n\nLet me know when you\'d like to discuss.\n\nBien cordialement,\nJacques Lefèvre\nLefèvre & Associés' },
+      p1: { value: 'Bonjour,\n\nThe draft is workable. Three clauses need to change before you sign anything.\n\nArticle 4.2, intellectual property. As written, anything created during the partnership belongs to both parties, including work that predates it. Add a sentence that pre-existing IP stays with its owner and name your repositories in an annex.\n\nArticle 7.1, non-compete. Twenty-four months across the whole EU will not hold up in a French court and probably not in a German one either. Twelve months, limited to the two named market segments, survives.\n\nArticle 9.3, liability. A fixed cap of 50.000 euros is generous to them today and ruinous to you in year three. Tie it to the fees paid in the preceding twelve months.\n\nMy comments are in the attached document. I have left the rest alone, it is standard.\n\nCall me before you reply to them.\n\nBien cordialement,\nJacques Lefèvre\nLefèvre & Associés' },
     },
     attachments: [
-      { partId: 'att4', blobId: 'blob-att-004', size: 45000, name: 'Contrat-de-Partenariat-Annoté.docx', type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' },
+      { partId: 'att4', blobId: 'blob-att-004', size: 45000, name: 'Contrat-de-Partenariat-annote.docx', type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' },
     ],
   },
   {
@@ -305,80 +472,80 @@ const emails: MockEmail[] = [
     from: [{ name: 'Katrin Bauer', email: 'katrin.bauer@charite.example' }],
     to: [{ name: 'Dev User', email: 'dev@localhost' }],
     cc: [{ name: 'Pierre Dubois', email: 'pierre@dubois.example' }, { name: 'Chiara Rossi', email: 'chiara@rossi.example' }],
-    subject: 'Team outing - voting on activity',
-    preview: 'Hey everyone! Time to vote on next month\'s team outing. Options: Biergarten, Eurovision watch party, or cooking class.',
+    subject: 'Team evening: pick one',
+    preview: 'Three options for the team evening on 24 April. Reply with a letter, voting closes Friday.',
     hasAttachment: false,
-    textBody: [{ partId: 'p1', blobId: 'blob-041', size: 300, type: 'text/plain' }],
+    textBody: [{ partId: 'p1', blobId: 'blob-041', size: 340, type: 'text/plain' }],
     htmlBody: [],
     bodyValues: {
-      p1: { value: 'Hallo zusammen!\n\nTime to vote on next month\'s team outing. Please reply with your preference:\n\nA) Biergarten evening + Bretzel buffet\nB) Eurovision watch party (with scorecards!)\nC) Cooking class (Italian cuisine - pasta fresca)\n\nVoting closes Friday. Most votes wins!\n\nKatrin' },
+      p1: { value: 'Three options for the team evening on 24 April. Reply with a letter.\n\nA) Dinner at the Portuguese place near the office. Set menu, they can do vegetarian if we say so in advance.\nB) Boat tour, two hours, with something to drink on board. Cancelled if it rains.\nC) Pasta course, three hours, you eat what you make.\n\nVoting closes Friday. If we tie I will pick the cheapest.\n\nKatrin' },
     },
   },
   {
     id: 'email-022', threadId: 'thread-021', mailboxIds: { 'mb-inbox': true }, keywords: {}, size: 3200, receivedAt: hoursAgo(1),
-    from: [{ name: 'GitHub Notifications', email: 'notifications@github.com' }],
+    from: [{ name: 'GitHub', email: 'notifications@github.example' }],
     to: [{ name: 'Dev User', email: 'dev@localhost' }], cc: [],
-    subject: '[vcard-parser] PR merged: Add support for FBURL property (#89)',
-    preview: 'Your pull request #89 has been merged into main. Thanks for contributing!',
+    subject: '[vcard-parser] Pull request #89 merged: FBURL property',
+    preview: 'Your pull request was merged into main by @maintainer.',
     hasAttachment: false,
-    textBody: [{ partId: 'p1', blobId: 'blob-042', size: 280, type: 'text/plain' }],
+    textBody: [{ partId: 'p1', blobId: 'blob-042', size: 300, type: 'text/plain' }],
     htmlBody: [],
     bodyValues: {
-      p1: { value: 'Your pull request has been merged.\n\nRepository: vcard-parser\nPR #89: Add support for FBURL property\nMerged by: @maintainer\nBranch: feature/fburl → main\n\nCommits merged:\n- feat: parse FBURL property from vCard 4.0\n- test: add FBURL round-trip tests\n- docs: update README with FBURL example\n\n-\nReply to this email directly or view it on GitHub.' },
+      p1: { value: 'Merged #89 into main.\n\nvcard-parser: add support for the FBURL property\nfeature/fburl -> main, merged by @maintainer\n\n  feat: parse FBURL from vCard 4.0\n  test: FBURL round-trip cases\n  docs: FBURL example in the README\n\nThe release workflow picked it up, 2.4.0 is on the registry.\n\n-\nReply to this email directly, view it on GitHub, or unsubscribe.' },
     },
   },
   {
     id: 'email-023', threadId: 'thread-022', mailboxIds: { 'mb-inbox': true }, keywords: {}, size: 3800, receivedAt: hoursAgo(4),
-    from: [{ name: 'Support Team', email: 'support@saas-platform.example' }],
+    from: [{ name: 'Support', email: 'support@saas-platform.example' }],
     to: [{ name: 'Dev User', email: 'dev@localhost' }], cc: [],
-    subject: '[Ticket #4521] Escalation: API rate limit exceeded for enterprise account',
-    preview: 'A customer reported hitting rate limits despite being on the enterprise plan. This has been escalated to engineering.',
+    subject: 'Ticket #4521 escalated: enterprise account hitting the rate limit',
+    preview: 'EuroTech GmbH is on the enterprise plan and still getting 429s. Their bursts go over the limit, their average is well under it.',
     hasAttachment: false,
-    textBody: [{ partId: 'p1', blobId: 'blob-043', size: 500, type: 'text/plain' }],
+    textBody: [{ partId: 'p1', blobId: 'blob-043', size: 620, type: 'text/plain' }],
     htmlBody: [],
     bodyValues: {
-      p1: { value: 'Hallo Dev,\n\nTicket #4521 has been escalated to engineering.\n\nCustomer: EuroTech GmbH (Enterprise plan)\nIssue: API rate limit exceeded\nImpact: Production integration failing intermittently\n\nDetails:\n- Customer is hitting the 1000 req/min limit\n- Their usage pattern shows bursts of 2000+ req/min during peak hours\n- They\'re requesting a temporary increase to 5000 req/min\n\nCan you review the rate limiting config and advise?\n\nPriority: High\nSLA: 4 hours\n\nDanke,\nSupport Team' },
+      p1: { value: 'Ticket #4521 is with engineering now.\n\nCustomer: EuroTech GmbH, enterprise plan\nSymptom: 429 responses during their nightly sync, roughly 03:00 to 03:40 CET\n\nWhat the logs show: their average is 340 requests per minute, well under the 1.000 limit. The bursts hit 2.100 for about ninety seconds while the sync opens every mailbox at once.\n\nThey have asked for 5.000 per minute. I would rather we let them burst than raise the ceiling for everyone, but that is your call.\n\nSLA on this one is four hours and it started at 11:20.\n\nDanke,\nMirjam' },
     },
   },
   {
     id: 'email-024', threadId: 'thread-023', mailboxIds: { 'mb-inbox': true }, keywords: { $seen: true }, size: 7200, receivedAt: daysAgo(5),
-    from: [{ name: 'DEV Community', email: 'digest@dev.to.example' }],
+    from: [{ name: 'DEV Community', email: 'digest@dev-community.example' }],
     to: [{ name: 'Dev User', email: 'dev@localhost' }], cc: [],
-    subject: 'DEV Digest - Top posts this week',
-    preview: 'This week\'s top posts: "Why I switched from React to Solid", "Building a CLI tool in Rust", and more.',
+    subject: 'Most read this week',
+    preview: 'Why I moved off React and what it cost, a CLI in Rust without clap, and the state of CSS in 2026.',
     hasAttachment: false,
-    textBody: [{ partId: 'p1', blobId: 'blob-044', size: 800, type: 'text/plain' }],
-    htmlBody: [{ partId: 'p2', blobId: 'blob-045', size: 1200, type: 'text/html' }],
+    textBody: [{ partId: 'p1', blobId: 'blob-044', size: 780, type: 'text/plain' }],
+    htmlBody: [{ partId: 'p2', blobId: 'blob-045', size: 1300, type: 'text/html' }],
     bodyValues: {
-      p1: { value: 'DEV Digest - Top posts this week\n\n1. "Why I switched from React to Solid" by @webdev - 342 reactions\n2. "Building a CLI tool in Rust from scratch" by @rustacean - 289 reactions\n3. "The state of CSS in 2026" by @cssmaster - 256 reactions\n4. "Microservices are dead, long live modular monoliths" by @architect - 234 reactions\n5. "A beginner\'s guide to WebAssembly Components" by @wasmdev - 198 reactions\n\nHappy coding!\nThe DEV Team' },
-      p2: { value: '<h2>DEV Digest</h2><p>Top posts this week:</p><ol><li><strong>"Why I switched from React to Solid"</strong> - 342 reactions</li><li><strong>"Building a CLI tool in Rust from scratch"</strong> - 289 reactions</li><li><strong>"The state of CSS in 2026"</strong> - 256 reactions</li><li><strong>"Microservices are dead, long live modular monoliths"</strong> - 234 reactions</li><li><strong>"A beginner\'s guide to WebAssembly Components"</strong> - 198 reactions</li></ol><p>Happy coding!<br>The DEV Team</p>' },
+      p1: { value: 'Most read this week\n\n1. Why I moved off React and what it cost, by @webdev (342 reactions)\n2. Writing a CLI in Rust without clap, by @rustacean (289)\n3. The state of CSS in 2026, by @cssmaster (256)\n4. Microservices are dead, long live the modular monolith, by @architect (234)\n5. WebAssembly components for people who write JavaScript, by @wasmdev (198)\n\nManage what lands in your inbox: dev-community.example/settings' },
+      p2: { value: '<div style="font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#24292f;max-width:560px;"><p style="font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:#8a94a0;margin:0 0 14px 0;">Most read this week</p><table cellpadding="0" cellspacing="0" border="0" style="width:100%;font-size:15px;"><tr><td style="padding:0 0 12px 0;"><a href="#" style="color:#24292f;text-decoration:none;font-weight:600;">Why I moved off React and what it cost</a><br><span style="color:#6b7580;font-size:13px;">@webdev &middot; 342 reactions</span></td></tr><tr><td style="padding:0 0 12px 0;"><a href="#" style="color:#24292f;text-decoration:none;font-weight:600;">Writing a CLI in Rust without clap</a><br><span style="color:#6b7580;font-size:13px;">@rustacean &middot; 289 reactions</span></td></tr><tr><td style="padding:0 0 12px 0;"><a href="#" style="color:#24292f;text-decoration:none;font-weight:600;">The state of CSS in 2026</a><br><span style="color:#6b7580;font-size:13px;">@cssmaster &middot; 256 reactions</span></td></tr><tr><td style="padding:0 0 12px 0;"><a href="#" style="color:#24292f;text-decoration:none;font-weight:600;">Microservices are dead, long live the modular monolith</a><br><span style="color:#6b7580;font-size:13px;">@architect &middot; 234 reactions</span></td></tr><tr><td style="padding:0 0 4px 0;"><a href="#" style="color:#24292f;text-decoration:none;font-weight:600;">WebAssembly components for people who write JavaScript</a><br><span style="color:#6b7580;font-size:13px;">@wasmdev &middot; 198 reactions</span></td></tr></table><p style="border-top:1px solid #e6e9ec;margin-top:18px;padding-top:12px;font-size:12px;color:#8a94a0;"><a href="#" style="color:#8a94a0;">Manage what lands in your inbox</a></p></div>' },
     },
   },
   {
-    id: 'email-025', threadId: 'thread-024', mailboxIds: { 'mb-inbox': true }, keywords: { $seen: true, $flagged: true, '$label:blue': true }, size: 4100, receivedAt: daysAgo(6),
-    from: [{ name: 'Stripe Developer', email: 'developer-updates@stripe.example' }],
+    id: 'email-025', threadId: 'thread-024', mailboxIds: { 'mb-inbox': true }, keywords: { $seen: true, $flagged: true, '$color:work/archived': true }, size: 4100, receivedAt: daysAgo(6),
+    from: [{ name: 'Mollie Developers', email: 'developers@mollie.example' }],
     to: [{ name: 'Dev User', email: 'dev@localhost' }], cc: [],
-    subject: 'Action required: API v2023-10 deprecation on April 15, 2026',
-    preview: 'Stripe API version 2023-10 will be deprecated on April 15, 2026. Please upgrade to v2025-01 before then.',
+    subject: 'API version 2023-10 stops working on 15 April',
+    preview: 'Two of your API keys still send version 2023-10. After 15 April those calls return 410.',
     hasAttachment: false,
-    textBody: [{ partId: 'p1', blobId: 'blob-046', size: 550, type: 'text/plain' }],
+    textBody: [{ partId: 'p1', blobId: 'blob-046', size: 640, type: 'text/plain' }],
     htmlBody: [],
     bodyValues: {
-      p1: { value: 'Important: API Deprecation Notice\n\nStripe API version 2023-10 will be deprecated on April 15, 2026.\n\nWhat you need to do:\n1. Review the migration guide: https://stripe.example/docs/upgrades\n2. Update your API version to 2025-01\n3. Test your integration in test mode\n4. Deploy changes before April 15\n\nBreaking changes in v2025-01:\n- Payment Intent confirmation flow updated\n- Webhook event structure changes\n- Deprecated parameters removed\n\nQuestions? Contact developer-support@stripe.example\n\nStripe Developer Relations' },
+      p1: { value: 'Two of your API keys still send version 2023-10:\n\n  live_k4m...9tz   last used 2 hours ago\n  test_p1q...44b   last used yesterday\n\nAfter 15 April 2026 those calls return 410 Gone.\n\nWhat changes in 2025-01, for the endpoints you use:\n\n- Payment confirmation is a single call. The separate confirm step is gone.\n- Webhook payloads wrap the object in "data" and add "eventId".\n- The deprecated "metadata_json" parameter has been removed. Use "metadata".\n\nMigration guide: mollie.example/docs/upgrades/2025-01\nTest mode accepts the new version today, so you can switch one key and watch it.\n\nMollie Developer Relations' },
     },
   },
   {
     id: 'email-026', threadId: 'thread-013', mailboxIds: { 'mb-inbox': true }, keywords: {}, size: 2400, receivedAt: hoursAgo(1),
-    from: [{ name: 'Sophie Example', email: 'sophie@eurotech.example' }],
+    from: [{ name: 'Sophie Müller', email: 'sophie@eurotech.example' }],
     to: [{ name: 'Lars Johansson', email: 'lars.johansson@fjord-systems.example' }],
     cc: [{ name: 'Dev User', email: 'dev@localhost' }, { name: 'Élise Moreau', email: 'elise.moreau@fjord-systems.example' }],
-    subject: 'Re: Sprint planning - next week priorities',
-    preview: 'Looks good! I\'d also suggest we add the email signature editor to the list. I can take that one.',
+    subject: 'Re: Sprint priorities for next week',
+    preview: 'The order looks right. Can we add the signature editor? It is half done and it keeps coming back in support tickets.',
     hasAttachment: false,
-    textBody: [{ partId: 'p1', blobId: 'blob-047', size: 200, type: 'text/plain' }],
+    textBody: [{ partId: 'p1', blobId: 'blob-047', size: 260, type: 'text/plain' }],
     htmlBody: [],
     bodyValues: {
-      p1: { value: 'Sieht gut aus! I\'d also suggest we add the email signature editor to the list. I can take that one.\n\nAlso, can we move the planning meeting to 10:30? I have a conflict at 10.\n\nSophie' },
+      p1: { value: 'The order looks right.\n\nCan we add the signature editor? It is half done and it keeps coming back in support tickets. I can take it, it is two days at most.\n\nAlso: 10:30 instead of 10:00 for planning? I have a call that runs to the hour.\n\nSophie' },
     },
   },
   {
@@ -386,13 +553,13 @@ const emails: MockEmail[] = [
     from: [{ name: 'Liam Ó Donaill', email: 'liam.odonaill@finanz.example' }],
     to: [{ name: 'Dev User', email: 'dev@localhost' }],
     cc: [{ name: 'Nils Andersson', email: 'nils@digitaal.example' }],
-    subject: 'Q1 Budget Review - Meeting this Thursday',
-    preview: 'Hi, let\'s meet Thursday at 14:00 to review the Q1 engineering budget. Please bring your team\'s actuals.',
+    subject: 'Q1 budget review, Thursday 14:00',
+    preview: 'Bring your actual spend. The forecast column in the sheet is mine, the actuals column is yours and it is empty.',
     hasAttachment: true,
-    textBody: [{ partId: 'p1', blobId: 'blob-062', size: 350, type: 'text/plain' }],
+    textBody: [{ partId: 'p1', blobId: 'blob-062', size: 480, type: 'text/plain' }],
     htmlBody: [],
     bodyValues: {
-      p1: { value: 'Dia duit,\n\nLet\'s meet Thursday at 14:00 to review the Q1 engineering budget.\n\nAgenda:\n1. Actuals vs. forecast (see attached)\n2. Cloud infrastructure cost optimization\n3. Headcount planning for Q2\n4. Software license renewals\n\nPlease bring your team\'s actual spend numbers.\n\nMeeting room: Konferenzsaal B / Zoom link in calendar invite\n\nLiam' },
+      p1: { value: 'Thursday at 14:00, room B, one hour. Zoom link is in the calendar invitation.\n\nAgenda:\n1. Actuals against forecast\n2. Cloud spend, which is 18% over and I would like to know why before I ask upstairs\n3. Headcount for Q2\n4. Licence renewals, three of them run out in May\n\nBring your actual spend. The forecast column in the attached sheet is mine, the actuals column is yours and it is empty.\n\nLiam' },
     },
     attachments: [
       { partId: 'att9', blobId: 'blob-att-009', size: 54000, name: 'Q1-Budget-Vorlage.xlsx', type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' },
@@ -402,13 +569,13 @@ const emails: MockEmail[] = [
     id: 'email-041', threadId: 'thread-036', mailboxIds: { 'mb-inbox': true }, keywords: { $seen: true }, size: 2600, receivedAt: daysAgo(7),
     from: [{ name: 'María García', email: 'maria@garcia-design.example' }],
     to: [{ name: 'Dev User', email: 'dev@localhost' }], cc: [],
-    subject: 'Updated brand guidelines and component library',
-    preview: 'Hola! The new brand guidelines are finalized. I\'ve also updated the Figma component library.',
+    subject: 'Brand guidelines v2 and what it means for the app',
+    preview: 'The guidelines are final. Two changes touch the app: the primary colour and the heading font.',
     hasAttachment: true,
-    textBody: [{ partId: 'p1', blobId: 'blob-063', size: 350, type: 'text/plain' }],
+    textBody: [{ partId: 'p1', blobId: 'blob-063', size: 520, type: 'text/plain' }],
     htmlBody: [],
     bodyValues: {
-      p1: { value: '¡Hola!\n\nThe new brand guidelines are finalized. Key updates:\n\n- Primary color shifted to #7c3aed (from #6366f1)\n- New typography scale (Inter for body, Cal Sans for headings)\n- Updated icon set (Lucide → custom icon font)\n- Dark mode color tokens added\n\nI\'ve also updated the Figma component library. Link: figma.example/bulwark-webmail-v2\n\nBrand guidelines PDF attached.\n\nMaría' },
+      p1: { value: 'The guidelines are final. Two changes touch the app:\n\nPrimary colour moves from #6366f1 to #7c3aed. It passes AA on white at 14px, which the old one did not, so the small print in the composer stops being a problem.\n\nHeadings move to Cal Sans, body stays Inter. Only headings, so the change is two font faces, not twelve.\n\nThe icons and the dark mode tokens are in the Figma library, same file, page "App v2". Nothing there is new, I only named the tokens properly so they can be read by a script.\n\nPDF attached. Ask before you improvise a shade, I will say yes to most things.\n\nUn saludo,\nMaría' },
     },
     attachments: [
       { partId: 'att10', blobId: 'blob-att-010', size: 3200000, name: 'Markenrichtlinien-v2.pdf', type: 'application/pdf' },
@@ -419,26 +586,71 @@ const emails: MockEmail[] = [
     from: [{ name: 'Nils Andersson', email: 'nils@digitaal.example' }],
     to: [{ name: 'Dev User', email: 'dev@localhost' }], cc: [],
     subject: 'Fika next week?',
-    preview: 'Hej! Haven\'t caught up in a while. Free for a fika next week? Tuesday or Wednesday work best for me.',
+    preview: 'Tuesday or Wednesday work for me. There is a place on the Prinsengracht that has finally learned to make a kanelbulle.',
     hasAttachment: false,
-    textBody: [{ partId: 'p1', blobId: 'blob-064', size: 150, type: 'text/plain' }],
+    textBody: [{ partId: 'p1', blobId: 'blob-064', size: 180, type: 'text/plain' }],
     htmlBody: [],
     bodyValues: {
-      p1: { value: 'Hej!\n\nHaven\'t caught up in a while. Free for a fika next week? Tuesday or Wednesday work best for me.\n\nThere\'s a great new café on the Prinsengracht I\'ve been wanting to try - they do a wonderful kanelbulle.\n\nNils' },
+      p1: { value: 'Tuesday or Wednesday work for me, after 15:00 either day.\n\nThere is a place on the Prinsengracht that has finally learned to make a kanelbulle. Low bar, met.\n\nNils' },
     },
   },
   {
-    id: 'email-039', threadId: 'thread-034', mailboxIds: { 'mb-inbox': true }, keywords: {}, size: 3400, receivedAt: hoursAgo(0.25),
-    from: [{ name: 'CI/CD Pipeline', email: 'ci@github.example' }],
+    id: 'email-039', threadId: 'thread-034', mailboxIds: { 'mb-inbox': true }, keywords: {}, size: 6400, receivedAt: hoursAgo(0.25),
+    from: [{ name: 'CI', email: 'ci@fjord-systems.example' }],
     to: [{ name: 'Dev User', email: 'dev@localhost' }], cc: [],
-    subject: '❌ Build failed: main - bulwark-webmail #1337',
-    preview: 'Build #1337 on branch main failed. 2 test(s) failed in email-sanitization.test.ts.',
+    subject: '❌ bulwark-webmail #482 failed on main',
+    preview: 'Two tests failed in email-sanitization.test.ts. Both of them are about style attributes.',
     hasAttachment: false,
-    textBody: [{ partId: 'p1', blobId: 'blob-060', size: 450, type: 'text/plain' }],
-    htmlBody: [{ partId: 'p2', blobId: 'blob-061', size: 600, type: 'text/html' }],
+    textBody: [{ partId: 'p1', blobId: 'blob-060', size: 620, type: 'text/plain' }],
+    htmlBody: [{ partId: 'p2', blobId: 'blob-061', size: 3900, type: 'text/html' }],
     bodyValues: {
-      p1: { value: '❌ Build #1337 FAILED\n\nRepository: bulwark-webmail\nBranch: main\nCommit: a3f9c21 "fix: sanitize CSS in email body"\nTriggered by: @elise-moreau\n\nFailed tests:\n  ✗ email-sanitization.test.ts > should strip javascript: URLs\n  ✗ email-sanitization.test.ts > should handle nested style tags\n\nPassed: 247 | Failed: 2 | Skipped: 0\nDuration: 42.0s\n\nView full logs: https://github.example/bulwark-webmail/actions/runs/1337' },
-      p2: { value: '<h3>❌ Build #1337 FAILED</h3><table><tr><td>Repository</td><td>bulwark-webmail</td></tr><tr><td>Branch</td><td><code>main</code></td></tr><tr><td>Commit</td><td><code>a3f9c21</code> "fix: sanitize CSS in email body"</td></tr></table><h4>Failed tests:</h4><ul><li>❌ <code>email-sanitization.test.ts</code> &gt; should strip javascript: URLs</li><li>❌ <code>email-sanitization.test.ts</code> &gt; should handle nested style tags</li></ul><p><strong>Passed: 247</strong> | <strong style="color:red">Failed: 2</strong> | Skipped: 0</p>' },
+      p1: { value: 'Build #482 failed on main.\n\nCommit  a3f9c21  fix: sanitize CSS in email bodies\nAuthor  Élise Moreau\nRan     42s on ubuntu-24.04, node 22\n\n247 passed, 2 failed, 0 skipped\n\nFAIL  lib/__tests__/email-sanitization.test.ts\n  x strips javascript: URLs from style attributes\n      expected: <div style="">\n      received: <div style="background:url(javascript:alert(1))">\n  x drops @import inside a nested style tag\n      expected 0 matches for /@import/, got 1\n\nLogs: https://ci.fjord-systems.example/runs/482' },
+      p2: { value: `<div style="margin:0;padding:28px 16px;background:#f4f5f7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center">
+<table role="presentation" width="580" cellpadding="0" cellspacing="0" border="0" style="width:580px;max-width:100%;background:#ffffff;border:1px solid #e1e4e8;">
+  <tr><td style="padding:16px 26px;background:#b62324;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+      <td style="font-size:15px;font-weight:600;color:#ffffff;">Build #482 failed</td>
+      <td align="right" style="font-size:12px;color:#f3c8c8;">main &middot; 42s</td>
+    </tr></table>
+  </td></tr>
+
+  <tr><td style="padding:22px 26px 0 26px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size:13px;line-height:1.7;">
+      <tr><td width="90" style="color:#8b949e;">Repository</td><td style="color:#24292f;">bulwark-webmail</td></tr>
+      <tr><td style="color:#8b949e;">Commit</td><td style="color:#24292f;"><span style="font-family:'SF Mono',Menlo,Consolas,monospace;">a3f9c21</span> fix: sanitize CSS in email bodies</td></tr>
+      <tr><td style="color:#8b949e;">Author</td><td style="color:#24292f;">Élise Moreau</td></tr>
+      <tr><td style="color:#8b949e;">Runner</td><td style="color:#24292f;">ubuntu-24.04, node 22</td></tr>
+    </table>
+  </td></tr>
+
+  <tr><td style="padding:18px 26px 0 26px;">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="font-size:13px;">
+      <tr>
+        <td style="padding:6px 16px 6px 0;color:#1a7f37;"><strong>247</strong> passed</td>
+        <td style="padding:6px 16px 6px 0;color:#b62324;"><strong>2</strong> failed</td>
+        <td style="padding:6px 0;color:#8b949e;"><strong>0</strong> skipped</td>
+      </tr>
+    </table>
+  </td></tr>
+
+  <tr><td style="padding:12px 26px 0 26px;">
+    <div style="background:#0f1419;color:#d6dbe1;font-family:'SF Mono',Menlo,Consolas,monospace;font-size:12px;line-height:1.75;padding:16px 18px;overflow-x:auto;">
+      <span style="color:#8b949e;">FAIL</span> lib/__tests__/email-sanitization.test.ts<br>
+      &nbsp;&nbsp;<span style="color:#ff7b72;">&times;</span> strips javascript: URLs from style attributes<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#8b949e;">expected</span> <span style="color:#7ee787;">&lt;div style=""&gt;</span><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#8b949e;">received</span> <span style="color:#ff7b72;">&lt;div style="background:url(javascript:alert(1))"&gt;</span><br>
+      &nbsp;&nbsp;<span style="color:#ff7b72;">&times;</span> drops @import inside a nested style tag<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#8b949e;">expected</span> 0 matches for /@import/, <span style="color:#8b949e;">got</span> <span style="color:#ff7b72;">1</span>
+    </div>
+  </td></tr>
+
+  <tr><td style="padding:20px 26px 26px 26px;">
+    <a href="#" style="display:inline-block;background:#24292f;color:#ffffff;font-size:13px;font-weight:600;text-decoration:none;padding:9px 18px;">View the run</a>
+    <a href="#" style="display:inline-block;margin-left:10px;color:#57606a;font-size:13px;text-decoration:none;padding:9px 0;">Re-run failed tests</a>
+  </td></tr>
+</table>
+</td></tr></table></div>` },
     },
   },
   // =====================================================================
@@ -448,92 +660,92 @@ const emails: MockEmail[] = [
     id: 'email-006', threadId: 'thread-003', mailboxIds: { 'mb-sent': true }, keywords: { $seen: true }, size: 1800, receivedAt: daysAgo(2),
     from: [{ name: 'Dev User', email: 'dev@localhost' }],
     to: [{ name: 'Chiara Rossi', email: 'chiara@rossi.example' }], cc: [],
-    subject: 'Re: Pranzo domani?',
-    preview: 'Perfetto! Let\'s meet at noon.',
+    subject: 'Re: Lunch tomorrow?',
+    preview: '12:30 works. I will be the one already sitting down.',
     hasAttachment: false,
-    textBody: [{ partId: 'p1', blobId: 'blob-011', size: 80, type: 'text/plain' }],
+    textBody: [{ partId: 'p1', blobId: 'blob-011', size: 110, type: 'text/plain' }],
     htmlBody: [],
     bodyValues: {
-      p1: { value: 'Perfetto! Let\'s meet at noon by the Herengracht.\n\n- Dev User' },
+      p1: { value: '12:30 works. I will be the one already sitting down.\n\nIf the risotto is bad we are never speaking of this again.' },
     },
   },
   {
     id: 'email-007', threadId: 'thread-006', mailboxIds: { 'mb-sent': true }, keywords: { $seen: true }, size: 2200, receivedAt: daysAgo(3),
     from: [{ name: 'Dev User', email: 'dev@localhost' }],
     to: [{ name: 'Pierre Dubois', email: 'pierre@dubois.example' }], cc: [],
-    subject: 'Re: Project Update - Q1 Review',
-    preview: 'Merci Pierre, the numbers look great. I\'ll prepare the board presentation.',
+    subject: 'Re: Q1 numbers, and the part I want to talk about',
+    preview: 'Twenty minutes is fine. Can you send the funnel numbers per step beforehand?',
     hasAttachment: false,
-    textBody: [{ partId: 'p1', blobId: 'blob-012', size: 150, type: 'text/plain' }],
+    textBody: [{ partId: 'p1', blobId: 'blob-012', size: 210, type: 'text/plain' }],
     htmlBody: [],
     bodyValues: {
-      p1: { value: 'Merci Pierre, the numbers look great. I\'ll prepare the board presentation.\n\nCheers,\nDev User' },
+      p1: { value: 'Twenty minutes is fine, put it at the front of the call.\n\nCan you send the funnel numbers per step beforehand? If the drop is at payment details I would like to know whether it is the form or the card.\n\nDev' },
     },
   },
   {
     id: 'email-008', threadId: 'thread-007', mailboxIds: { 'mb-sent': true }, keywords: { $seen: true }, size: 3100, receivedAt: daysAgo(5),
     from: [{ name: 'Dev User', email: 'dev@localhost' }],
-    to: [{ name: 'Sophie Example', email: 'sophie@eurotech.example' }], cc: [],
-    subject: 'Design review feedback',
-    preview: 'Hallo Sophie, I reviewed the new mockups and have a few suggestions.',
+    to: [{ name: 'Sophie Müller', email: 'sophie@eurotech.example' }], cc: [],
+    subject: 'Mockup feedback',
+    preview: 'Three notes on the new screens, none of them blocking.',
     hasAttachment: false,
-    textBody: [{ partId: 'p1', blobId: 'blob-013', size: 300, type: 'text/plain' }],
+    textBody: [{ partId: 'p1', blobId: 'blob-013', size: 380, type: 'text/plain' }],
     htmlBody: [],
     bodyValues: {
-      p1: { value: 'Hallo Sophie,\n\nI reviewed the new mockups and have a few suggestions:\n\n1. The sidebar could use more contrast\n2. Consider adding breadcrumbs to the settings page\n3. The compose button placement looks good\n\nOverall great work!\n\nDev User' },
+      p1: { value: 'Three notes, none of them blocking.\n\nThe sidebar labels sit at about 3:1 against the background. On my laptop outdoors they disappear.\n\nSettings needs a way back out. Breadcrumbs or a title with the section name, either is fine.\n\nThe compose button where it is now is right. I was wrong about that in the last round.\n\nDev' },
     },
   },
   {
     id: 'email-027', threadId: 'thread-013', mailboxIds: { 'mb-sent': true }, keywords: { $seen: true }, size: 1900, receivedAt: hoursAgo(0.5),
     from: [{ name: 'Dev User', email: 'dev@localhost' }],
     to: [{ name: 'Lars Johansson', email: 'lars.johansson@fjord-systems.example' }],
-    cc: [{ name: 'Sophie Example', email: 'sophie@eurotech.example' }, { name: 'Élise Moreau', email: 'elise.moreau@fjord-systems.example' }],
-    subject: 'Re: Sprint planning - next week priorities',
-    preview: 'Great suggestions Sophie. 10:30 works for me. I\'ll update the calendar invite.',
+    cc: [{ name: 'Sophie Müller', email: 'sophie@eurotech.example' }, { name: 'Élise Moreau', email: 'elise.moreau@fjord-systems.example' }],
+    subject: 'Re: Sprint priorities for next week',
+    preview: '10:30 works. Signature editor goes in as item six, below the accessibility follow-ups.',
     hasAttachment: false,
-    textBody: [{ partId: 'p1', blobId: 'blob-048', size: 150, type: 'text/plain' }],
+    textBody: [{ partId: 'p1', blobId: 'blob-048', size: 220, type: 'text/plain' }],
     htmlBody: [],
     bodyValues: {
-      p1: { value: 'Great suggestions Sophie. 10:30 works for me. I\'ll update the calendar invite.\n\nLars - let\'s also add a stretch goal for the email template system if we finish early.\n\n- Dev User' },
+      p1: { value: '10:30 works, I moved the invitation.\n\nSignature editor goes in as item six, below the accessibility follow-ups. Sophie, if it really is two days, it lands. If it turns into four, it comes back out.\n\nDev' },
     },
   },
   {
     id: 'email-028', threadId: 'thread-015', mailboxIds: { 'mb-sent': true }, keywords: { $seen: true }, size: 2100, receivedAt: daysAgo(1),
     from: [{ name: 'Dev User', email: 'dev@localhost' }],
     to: [{ name: 'Élise Moreau', email: 'elise.moreau@fjord-systems.example' }], cc: [],
-    subject: 'Re: Code review request: JMAP-342 contact import',
-    preview: 'Nice work on the vCard parser! Left a few comments on the PR. Main concern is memory usage for large imports.',
+    subject: 'Re: JMAP-342 is up: vCard import',
+    preview: 'Comments are on the PR. Keep the merge dialogue as it is, but the import needs to stream.',
     hasAttachment: false,
-    textBody: [{ partId: 'p1', blobId: 'blob-049', size: 280, type: 'text/plain' }],
+    textBody: [{ partId: 'p1', blobId: 'blob-049', size: 340, type: 'text/plain' }],
     htmlBody: [],
     bodyValues: {
-      p1: { value: 'Nice work on the vCard parser! Left a few comments on the PR.\n\nMain concern: memory usage for large imports (1000+ contacts). Consider using a streaming parser instead of loading the entire file.\n\nAlso, the duplicate detection logic looks solid. Approved with minor changes.\n\n- Dev User' },
+      p1: { value: 'Comments are on the PR.\n\nKeep the merge dialogue as it is. "Keep both, mark one primary" is recoverable, a wrong field pick is not, and people will click through the picker without reading it.\n\nThe import reads the whole file into memory first. At 1.200 contacts my tab used 380 MB. Stream it and I will approve.\n\nDev' },
     },
   },
   {
     id: 'email-029', threadId: 'thread-018', mailboxIds: { 'mb-sent': true }, keywords: { $seen: true }, size: 1600, receivedAt: daysAgo(2),
     from: [{ name: 'Dev User', email: 'dev@localhost' }],
     to: [{ name: 'Astrid van der Berg', email: 'astrid@berglabs.example' }], cc: [],
-    subject: 'Re: Meeting notes - API design review',
-    preview: 'Thanks for the thorough notes Astrid. I\'ll have the OpenAPI spec draft ready by Friday.',
+    subject: 'Re: Notes from the API design review',
+    preview: 'One correction: the rate limit is per token, not per key. Draft lands Friday.',
     hasAttachment: false,
-    textBody: [{ partId: 'p1', blobId: 'blob-050', size: 120, type: 'text/plain' }],
+    textBody: [{ partId: 'p1', blobId: 'blob-050', size: 190, type: 'text/plain' }],
     htmlBody: [],
     bodyValues: {
-      p1: { value: 'Bedankt for the thorough notes Astrid. I\'ll have the OpenAPI spec draft ready by Friday.\n\n- Dev User' },
+      p1: { value: 'One correction: we said per token, and a customer can hold several. That matters for the enterprise ticket that is open right now.\n\nOpenAPI draft lands Friday.\n\nDev' },
     },
   },
   {
     id: 'email-030', threadId: 'thread-025', mailboxIds: { 'mb-sent': true }, keywords: { $seen: true }, size: 4800, receivedAt: daysAgo(4),
     from: [{ name: 'Dev User', email: 'dev@localhost' }],
     to: [{ name: 'Team', email: 'team@fjord-systems.example' }], cc: [],
-    subject: 'Proposal: Migrate from REST to JMAP for mail backend',
-    preview: 'I\'ve been researching JMAP as a replacement for our current REST-based mail backend. Here\'s the proposal.',
+    subject: 'Proposal: move the mail backend to JMAP',
+    preview: 'Our REST layer is a worse version of a protocol that already exists. The proposal is to stop maintaining it.',
     hasAttachment: true,
-    textBody: [{ partId: 'p1', blobId: 'blob-051', size: 900, type: 'text/plain' }],
+    textBody: [{ partId: 'p1', blobId: 'blob-051', size: 1100, type: 'text/plain' }],
     htmlBody: [],
     bodyValues: {
-      p1: { value: 'Hej team,\n\nI\'ve been researching JMAP (RFC 8620/8621) as a replacement for our current REST-based mail backend. Here\'s a summary:\n\nWhy JMAP?\n- Eliminates N+1 query problems with batch requests\n- Built-in push notifications via EventSource\n- Efficient delta sync reduces bandwidth by 60-80%\n- Standardized protocol with growing ecosystem\n\nProposed timeline:\n- Phase 1 (Mar): Proof of concept with mock server\n- Phase 2 (Apr): Core email operations\n- Phase 3 (May): Calendar & contacts integration\n- Phase 4 (Jun): Migration from legacy API\n\nFull proposal document attached.\n\n- Dev User' },
+      p1: { value: 'Our REST layer is a worse version of a protocol that already exists. The proposal is to stop maintaining it and speak JMAP (RFC 8620 and 8621) directly.\n\nWhat we get:\n\n- One request instead of the current fan-out. Opening a 40-message thread costs us 41 calls today.\n- Push over EventSource, so we can delete the polling worker and the Redis key it uses to deduplicate.\n- Delta sync. In the prototype, a warm sync of a 12.000-message mailbox moved 240 KB instead of 3,1 MB.\n\nWhat it costs:\n\n- Two people for roughly ten weeks.\n- A migration path for the three integrations that read our REST endpoints. Two are internal, one is a customer and needs notice.\n\nRough plan: prototype in March against a mock server, core mail in April, calendar and contacts in May, cut over in June with the old endpoints kept read-only until September.\n\nFull write-up attached, including the numbers behind the sync figure.\n\nDev' },
     },
     attachments: [
       { partId: 'att5', blobId: 'blob-att-005', size: 67000, name: 'JMAP-Migration-Proposal.pdf', type: 'application/pdf' },
@@ -546,39 +758,39 @@ const emails: MockEmail[] = [
     id: 'email-009', threadId: 'thread-008', mailboxIds: { 'mb-drafts': true }, keywords: { $draft: true }, size: 1200, receivedAt: daysAgo(0),
     from: [{ name: 'Dev User', email: 'dev@localhost' }],
     to: [{ name: 'Team', email: 'team@fjord-systems.example' }], cc: [],
-    subject: 'Meeting notes (draft)',
-    preview: 'Notes from today\'s standup meeting...',
+    subject: 'Standup notes',
+    preview: 'Blocked on the CalendarEvent/set override question...',
     hasAttachment: false,
-    textBody: [{ partId: 'p1', blobId: 'blob-014', size: 200, type: 'text/plain' }],
+    textBody: [{ partId: 'p1', blobId: 'blob-014', size: 220, type: 'text/plain' }],
     htmlBody: [],
     bodyValues: {
-      p1: { value: 'Notes from today\'s standup meeting:\n\n- TODO: fill in details\n- Action items: ...' },
+      p1: { value: 'Yesterday: threading bug, no cause yet\nToday: CalendarEvent/set overrides\nBlocked on: whether we keep the old override when the recurrence rule changes\n\nTODO: ask Lars before sending this' },
     },
   },
   {
     id: 'email-031', threadId: 'thread-026', mailboxIds: { 'mb-drafts': true }, keywords: { $draft: true }, size: 2400, receivedAt: hoursAgo(6),
     from: [{ name: 'Dev User', email: 'dev@localhost' }],
     to: [], cc: [],
-    subject: 'Blog post: Building a JMAP client from scratch (draft)',
-    preview: 'Introduction: JMAP is a modern, efficient protocol for email, calendar, and contacts...',
+    subject: 'Blog post: a JMAP client in 200 lines',
+    preview: 'IMAP makes you ask twelve times. JMAP lets you ask once. That is most of the difference...',
     hasAttachment: false,
-    textBody: [{ partId: 'p1', blobId: 'blob-052', size: 500, type: 'text/plain' }],
+    textBody: [{ partId: 'p1', blobId: 'blob-052', size: 560, type: 'text/plain' }],
     htmlBody: [],
     bodyValues: {
-      p1: { value: 'Building a JMAP Client from Scratch\n\nIntroduction:\nJMAP is a modern, efficient protocol for email, calendar, and contacts. Unlike IMAP, it uses JSON over HTTP, making it much easier to work with in web applications.\n\nIn this post, we\'ll build a minimal JMAP client in TypeScript that can:\n- Authenticate and discover capabilities\n- List mailboxes and messages\n- Send emails\n\n[TODO: Add code examples]\n[TODO: Add section on error handling]\n[TODO: Conclusion]' },
+      p1: { value: 'A JMAP client in 200 lines\n\nIMAP makes you ask twelve times. JMAP lets you ask once, and that is most of the difference. The rest is JSON over HTTP, which means the whole thing fits in a file you can read on a train.\n\nWe will get a session, list mailboxes, page through an inbox and send one message.\n\n[TODO: session discovery, mention the .well-known redirect trap]\n[TODO: back-references, this is the part people miss]\n[TODO: error handling, the "notCreated" shape is unusual]\n[TODO: closing, do not turn it into a manifesto]' },
     },
   },
   {
     id: 'email-032', threadId: 'thread-027', mailboxIds: { 'mb-drafts': true }, keywords: { $draft: true }, size: 1800, receivedAt: daysAgo(1),
     from: [{ name: 'Dev User', email: 'dev@localhost' }],
     to: [{ name: 'CFP Committee', email: 'cfp@fosdem.example' }], cc: [],
-    subject: 'Talk proposal: Modern email clients with JMAP',
-    preview: 'Title: Modern Email Clients with JMAP - From Protocol to Production...',
+    subject: 'Talk proposal: webmail on JMAP',
+    preview: 'Title: What a webmail client looks like when the protocol is on your side...',
     hasAttachment: false,
-    textBody: [{ partId: 'p1', blobId: 'blob-053', size: 400, type: 'text/plain' }],
+    textBody: [{ partId: 'p1', blobId: 'blob-053', size: 460, type: 'text/plain' }],
     htmlBody: [],
     bodyValues: {
-      p1: { value: 'Title: Modern Email Clients with JMAP - From Protocol to Production\n\nAbstract:\nThis talk explores building a full-featured webmail client using the JMAP protocol. We\'ll cover session negotiation, efficient data sync, real-time push notifications, and lessons learned.\n\nConference: FOSDEM 2027\nFormat: 30-minute talk\nLevel: Intermediate\n\n[TODO: Add speaker bio]\n[TODO: Complete outline]' },
+      p1: { value: 'Title: What a webmail client looks like when the protocol is on your side\n\nAbstract:\nWe built a webmail client on JMAP instead of an IMAP bridge. This talk covers what got easier (sync, push, search), what got harder (nothing else speaks it yet), and the three places where the spec left us to decide for ourselves.\n\nTrack: Modern Email\nFormat: 30 minutes\nLevel: intermediate\n\n[TODO: speaker bio, keep it to three lines]\n[TODO: outline, five bullets is enough]' },
     },
   },
   // =====================================================================
@@ -586,41 +798,41 @@ const emails: MockEmail[] = [
   // =====================================================================
   {
     id: 'email-010', threadId: 'thread-009', mailboxIds: { 'mb-junk': true }, keywords: {}, size: 4500, receivedAt: daysAgo(1),
-    from: [{ name: 'Totally Real Prince', email: 'prince@scam.example' }],
+    from: [{ name: 'EuroMillions Claims Dept', email: 'claims@euro-lotto-payout.example' }],
     to: [{ name: 'Dev User', email: 'dev@localhost' }], cc: [],
-    subject: 'You have won €1.000.000!!!',
-    preview: 'Congratulations! You have been selected as the winner of our international lottery.',
+    subject: 'FINAL NOTICE: your prize of €1.000.000 is waiting',
+    preview: 'Your email address was drawn in our international promotional draw. To release the funds we require your bank details.',
     hasAttachment: false,
-    textBody: [{ partId: 'p1', blobId: 'blob-015', size: 500, type: 'text/plain' }],
+    textBody: [{ partId: 'p1', blobId: 'blob-015', size: 520, type: 'text/plain' }],
     htmlBody: [],
     bodyValues: {
-      p1: { value: 'Congratulations!\n\nYou have been selected as the winner of our international lottery. To claim your prize, please send your IBAN details to...\n\nCeci n\'est pas un spam.' },
+      p1: { value: 'ATTENTION BENEFICIARY,\n\nYour email address was drawn in our international promotional draw held in Madrid. Prize: ONE MILLION EURO (€1.000.000,00).\n\nTo release the funds our processing office requires:\n1. Full name and address\n2. Copy of passport\n3. IBAN and BIC\n4. Processing fee of €450 (refundable)\n\nReply within 72 hours or the prize passes to the next beneficiary.\n\nMrs. Elizabeth Okon\nClaims Officer' },
     },
   },
   {
     id: 'email-033', threadId: 'thread-028', mailboxIds: { 'mb-junk': true }, keywords: {}, size: 2200, receivedAt: hoursAgo(8),
     from: [{ name: 'HTCPCP Service', email: 'noreply@teapot.example' }],
     to: [{ name: 'Dev User', email: 'dev@localhost' }], cc: [],
-    subject: '418 I\'m a Teapot - Your coffee request was denied',
-    preview: 'Per RFC 2324, this server is a teapot and cannot brew coffee. Please try a coffee pot instead.',
+    subject: '418 I am a teapot',
+    preview: 'Per RFC 2324 this server is a teapot. Your BREW request has been declined.',
     hasAttachment: false,
     textBody: [{ partId: 'p1', blobId: 'blob-054', size: 250, type: 'text/plain' }],
     htmlBody: [],
     bodyValues: {
-      p1: { value: 'HTTP/1.1 418 I\'m a Teapot\n\nPer RFC 2324 (Hyper Text Coffee Pot Control Protocol), this server is, in fact, a teapot. It is short and stout. It cannot brew coffee.\n\nPlease redirect your BREW request to a proper coffee pot.\n\nContent-Type: message/coffeepot\n\nThe teapot abides.' },
+      p1: { value: 'HTTP/1.1 418 I am a teapot\nContent-Type: message/coffeepot\n\nPer RFC 2324, this server is a teapot. It is short and stout. Your BREW request has been declined.\n\nPlease direct it at a device that can actually make coffee.' },
     },
   },
   {
     id: 'email-034', threadId: 'thread-029', mailboxIds: { 'mb-junk': true }, keywords: {}, size: 1900, receivedAt: daysAgo(2),
     from: [{ name: 'CryptoTrader Pro', email: 'earn@crypto-gains.example' }],
     to: [{ name: 'Dev User', email: 'dev@localhost' }], cc: [],
-    subject: 'Turn €100 into €10.000 in just 7 days! 🚀',
-    preview: 'Our AI trading bot has a 99.9% success rate. Start earning today!',
+    subject: 'Turn €100 into €10.000 in 7 days 🚀',
+    preview: 'Our trading bot closed 99,9% of positions in profit last month. Places are limited.',
     hasAttachment: false,
     textBody: [{ partId: 'p1', blobId: 'blob-055', size: 300, type: 'text/plain' }],
     htmlBody: [],
     bodyValues: {
-      p1: { value: 'LIMITED TIME OFFER!\n\nOur revolutionary AI trading bot:\n- 99.9% success rate\n- Guaranteed returns\n- No experience needed\n\nSign up now at crypto-gains.example!' },
+      p1: { value: 'LIMITED PLACES!!!\n\nOur trading bot closed 99,9% of positions in profit last month.\n\n- No experience needed\n- Withdraw any time*\n- Start with only €100\n\nSign up today at crypto-gains.example\n\n*after the 90 day qualifying period' },
     },
   },
   // =====================================================================
@@ -628,41 +840,41 @@ const emails: MockEmail[] = [
   // =====================================================================
   {
     id: 'email-011', threadId: 'thread-010', mailboxIds: { 'mb-archive': true }, keywords: { $seen: true }, size: 3800, receivedAt: daysAgo(14),
-    from: [{ name: 'HR Department', email: 'hr@fjord-systems.example' }],
+    from: [{ name: 'People & Culture', email: 'hr@fjord-systems.example' }],
     to: [{ name: 'Dev User', email: 'dev@localhost' }], cc: [],
-    subject: 'Updated Holiday Policy - EU Directive Compliance',
-    preview: 'Please review the updated paid leave policy effective next month, now with 30 days minimum.',
+    subject: 'Leave policy from 1 April',
+    preview: 'Annual leave goes to 30 days for everyone, and approval moves out of email and into the HR system.',
     hasAttachment: false,
-    textBody: [{ partId: 'p1', blobId: 'blob-016', size: 600, type: 'text/plain' }],
+    textBody: [{ partId: 'p1', blobId: 'blob-016', size: 620, type: 'text/plain' }],
     htmlBody: [],
     bodyValues: {
-      p1: { value: 'Hej team,\n\nPlease review the updated paid leave policy effective next month. Key changes include:\n\n- Minimum annual leave: 30 days (EU directive compliance)\n- New flexible Friday policy - Freitags um 14:00 Schluss\n- Simplified approval workflow\n- Fika breaks are now officially protected time\n\nFull details in the employee handbook.\n\nBästa hälsningar,\nHR Department' },
+      p1: { value: 'The leave policy changes on 1 April.\n\nAnnual leave goes to 30 days for everyone, including the two contracts that were on 25. Days already booked keep their approval.\n\nCarry-over is capped at 10 days and expires on 31 March of the following year. This is new, and it is the part people will read too late.\n\nApproval moves out of email and into the HR system. Your manager gets a notification, you get a calendar entry when it is approved.\n\nThe handbook has the full text. Questions go to hr@, not to your manager, we would rather answer once.\n\nPeople & Culture' },
     },
   },
   {
     id: 'email-012', threadId: 'thread-011', mailboxIds: { 'mb-archive': true }, keywords: { $seen: true, $flagged: true }, size: 2600, receivedAt: daysAgo(30),
-    from: [{ name: 'Sophie Example', email: 'sophie@eurotech.example' }],
+    from: [{ name: 'Sophie Müller', email: 'sophie@eurotech.example' }],
     to: [{ name: 'Dev User', email: 'dev@localhost' }], cc: [],
-    subject: 'Conference talk accepted!',
-    preview: 'Toll! Your talk proposal for the JMAP Conf has been accepted!',
+    subject: 'Your talk was accepted',
+    preview: 'Day one, 14:00, main hall. Thirty minutes plus ten for questions.',
     hasAttachment: false,
-    textBody: [{ partId: 'p1', blobId: 'blob-017', size: 350, type: 'text/plain' }],
+    textBody: [{ partId: 'p1', blobId: 'blob-017', size: 380, type: 'text/plain' }],
     htmlBody: [],
     bodyValues: {
-      p1: { value: 'Toll!\n\nYour talk proposal "Building Modern Webmail with JMAP" for the JMAP Conf in Amsterdam has been accepted!\n\nThe conference is scheduled for next month at the RAI. More details to follow.\n\nHerzlichen Glückwunsch!\nSophie' },
+      p1: { value: 'The committee took "Building modern webmail with JMAP" for the Amsterdam conference.\n\nDay one, 14:00, main hall. Thirty minutes plus ten for questions. They want slides by the Friday before, in PDF, because the last speaker who brought Keynote cost them twenty minutes.\n\nTravel is booked, hotel is not. Tell me if you want the one next to the RAI or the quiet one twenty minutes away.\n\nSophie' },
     },
   },
   {
     id: 'email-035', threadId: 'thread-030', mailboxIds: { 'mb-archive': true }, keywords: { $seen: true }, size: 4200, receivedAt: daysAgo(60),
-    from: [{ name: 'IT Abteilung', email: 'it@fjord-systems.example' }],
+    from: [{ name: 'IT', email: 'it@fjord-systems.example' }],
     to: [{ name: 'Dev User', email: 'dev@localhost' }], cc: [],
-    subject: 'Välkommen! Your development environment setup guide',
-    preview: 'Welcome to the team! Here\'s everything you need to set up your development environment.',
+    subject: 'Your development setup',
+    preview: 'Everything you need for the first day, in the order that works.',
     hasAttachment: true,
-    textBody: [{ partId: 'p1', blobId: 'blob-056', size: 800, type: 'text/plain' }],
+    textBody: [{ partId: 'p1', blobId: 'blob-056', size: 820, type: 'text/plain' }],
     htmlBody: [],
     bodyValues: {
-      p1: { value: 'Välkommen till laget!\n\nHere\'s your development environment setup guide:\n\n1. Clone the monorepo: git clone git@gitlab.example:fjord/monorepo.git\n2. Install dependencies: npm install\n3. Set up local database: docker-compose up -d\n4. Configure environment variables (see .env.example)\n5. Run the test suite: npm test\n\nAccess credentials:\n- Jira: your-email (SSO)\n- GitLab: your-email (SSO)\n- Hetzner Console: IAM user created, check Bitwarden\n\nQuestions? Reach out on #dev-onboarding in Mattermost.\n\nBästa hälsningar,\nIT Abteilung' },
+      p1: { value: 'Welcome. Everything you need for the first day, in the order that works:\n\n1. git clone git@gitlab.example:fjord/monorepo.git\n2. npm install (node 22, the repo pins it)\n3. docker compose up -d for Postgres and the mail server\n4. cp .env.example .env, then ask in #dev-onboarding for the two secrets that are not in it\n5. npm test, which should be green before you change anything\n\nAccounts: GitLab and Jira are behind SSO, so your login already works. The hosting console needs an IAM user, it is in your Bitwarden collection.\n\nThe setup guide is attached. It is a year old and mostly right. Where it is wrong, edit it, that is what it is for.\n\nIT' },
     },
     attachments: [
       { partId: 'att6', blobId: 'blob-att-006', size: 125000, name: 'Entwicklung-Setup-Guide.pdf', type: 'application/pdf' },
@@ -672,13 +884,13 @@ const emails: MockEmail[] = [
     id: 'email-036', threadId: 'thread-031', mailboxIds: { 'mb-archive': true }, keywords: { $seen: true, $flagged: true }, size: 3100, receivedAt: daysAgo(45),
     from: [{ name: 'ELSTER Online', email: 'noreply@elster.example' }],
     to: [{ name: 'Dev User', email: 'dev@localhost' }], cc: [],
-    subject: 'Ihre Steuererklärung 2025 - Dokumente bereit',
-    preview: 'Ihre Lohnsteuerbescheinigung und Steuerbescheid sind zum Download bereit.',
+    subject: 'Ihre Dokumente für die Steuererklärung 2025 stehen bereit',
+    preview: 'Lohnsteuerbescheinigung und Bescheinigung über gezahlte Kirchensteuer liegen im Postfach bereit.',
     hasAttachment: true,
-    textBody: [{ partId: 'p1', blobId: 'blob-057', size: 300, type: 'text/plain' }],
+    textBody: [{ partId: 'p1', blobId: 'blob-057', size: 380, type: 'text/plain' }],
     htmlBody: [],
     bodyValues: {
-      p1: { value: 'Sehr geehrte/r Steuerpflichtige/r,\n\nIhre Steuerdokumente für 2025 sind jetzt verfügbar:\n\n- Lohnsteuerbescheinigung\n- Steuerbescheid\n- Bescheinigung über Kirchensteuer\n\nAbgabefrist: 31. Juli 2026\n\nMelden Sie sich bei elster.example an, um Ihre Erklärung einzureichen.\n\nMit freundlichen Grüßen,\nFinanzamt' },
+      p1: { value: 'Sehr geehrte Steuerpflichtige, sehr geehrter Steuerpflichtiger,\n\nfolgende Dokumente stehen in Ihrem Postfach bereit:\n\n- Lohnsteuerbescheinigung 2025\n- Bescheinigung über gezahlte Kirchensteuer\n- Vorausgefüllte Steuererklärung (Entwurf)\n\nAbgabefrist ohne steuerliche Beratung: 31. Juli 2026.\n\nBitte melden Sie sich mit Ihrem Zertifikat unter elster.example an. Wir fordern Sie niemals per E-Mail zur Eingabe Ihrer Zugangsdaten auf.\n\nMit freundlichen Grüßen\nIhr Finanzamt' },
     },
     attachments: [
       { partId: 'att7', blobId: 'blob-att-007', size: 89000, name: 'Steuerdokumente-2025.pdf', type: 'application/pdf' },
@@ -689,16 +901,16 @@ const emails: MockEmail[] = [
     from: [{ name: 'Chiara Rossi', email: 'chiara@rossi.example' }],
     to: [{ name: 'Dev User', email: 'dev@localhost' }],
     cc: [{ name: 'Pierre Dubois', email: 'pierre@dubois.example' }],
-    subject: 'Team building photos from last Friday',
-    preview: 'Che bella serata! Sharing the photos from our team building event at the Biergarten.',
+    subject: 'Photos from Friday',
+    preview: 'Everything from Friday evening, unsorted. Tell me if you want one taken down.',
     hasAttachment: true,
-    textBody: [{ partId: 'p1', blobId: 'blob-058', size: 150, type: 'text/plain' }],
+    textBody: [{ partId: 'p1', blobId: 'blob-058', size: 200, type: 'text/plain' }],
     htmlBody: [],
     bodyValues: {
-      p1: { value: 'Che bella serata! 🎉\n\nSharing the photos from our team building event at the Biergarten am Prinsengracht. The Bretzel eating contest was legendary!\n\nPhotos attached. Feel free to share.\n\nChiara' },
+      p1: { value: 'Everything from Friday evening, unsorted, 84 of them.\n\nThere are four where Pierre is mid-sentence and looks furious. I kept them.\n\nTell me if you want one taken down before I put the album anywhere else.\n\nChiara' },
     },
     attachments: [
-      { partId: 'att8', blobId: 'blob-att-008', size: 2400000, name: 'teambuilding-fotos.zip', type: 'application/zip' },
+      { partId: 'att8', blobId: 'blob-att-008', size: 2400000, name: 'fotos-vrijdag.zip', type: 'application/zip' },
     ],
   },
   // =====================================================================
@@ -706,15 +918,16 @@ const emails: MockEmail[] = [
   // =====================================================================
   {
     id: 'email-038', threadId: 'thread-033', mailboxIds: { 'mb-trash': true }, keywords: { $seen: true }, size: 3500, receivedAt: daysAgo(1),
-    from: [{ name: 'SaaS Product', email: 'marketing@saas-product.example' }],
+    from: [{ name: 'Kanbanist', email: 'hello@kanbanist.example' }],
     to: [{ name: 'Dev User', email: 'dev@localhost' }], cc: [],
-    subject: '🎉 50% off annual plans - limited time!',
-    preview: 'Upgrade to our annual plan and save 50%. Offer expires this Sunday.',
+    subject: 'Your trial ends Sunday',
+    preview: 'Annual plans are 30% off until Sunday. After that your workspace goes read-only.',
     hasAttachment: false,
-    textBody: [{ partId: 'p1', blobId: 'blob-059', size: 400, type: 'text/plain' }],
-    htmlBody: [],
+    textBody: [{ partId: 'p1', blobId: 'blob-059', size: 420, type: 'text/plain' }],
+    htmlBody: [{ partId: 'p2', blobId: 'blob-065', size: 1200, type: 'text/html' }],
     bodyValues: {
-      p1: { value: 'Spring sale is here!\n\nUpgrade to our annual plan and save 50%.\n\nWhat you get:\n- Unlimited users\n- Priority support\n- Advanced analytics\n- Custom integrations\n\nOffer expires Sunday, March 15, 2026.\n\nUpgrade now at saas-product.example/pricing' },
+      p1: { value: 'Your trial ends on Sunday 15 March.\n\nAnnual plans are 30% off until then: €84 per user per year instead of €120.\n\nAfter Sunday your workspace stays readable for 30 days, then it is deleted. Exports are in Settings > Data.\n\nkanbanist.example/billing' },
+      p2: { value: '<div style="font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.65;color:#2b3038;max-width:520px;"><p style="margin:0 0 14px 0;">Your trial ends on <strong>Sunday 15 March</strong>.</p><p style="margin:0 0 18px 0;">Annual plans are 30% off until then: <strong>€84</strong> per user per year instead of €120.</p><p style="margin:0 0 20px 0;">After Sunday your workspace stays readable for 30 days, then it is deleted. Exports live in Settings &rsaquo; Data.</p><a href="#" style="display:inline-block;background:#2b3038;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;padding:11px 20px;">Choose a plan</a><p style="margin:22px 0 0 0;font-size:12px;color:#8a909a;border-top:1px solid #e8eaee;padding-top:12px;">Kanbanist BV, Keizersgracht 62, 1015 CS Amsterdam &middot; <a href="#" style="color:#8a909a;">Unsubscribe</a></p></div>' },
     },
   },
 ];
@@ -752,8 +965,8 @@ const IDENTITIES: MockIdentity[] = [
 // ---------------------------------------------------------------------------
 
 const addressBooks = [
-  { id: 'ab-1', name: 'Persönlich', isDefault: true },
-  { id: 'ab-2', name: 'Arbeit / Work', isDefault: false },
+  { id: 'ab-1', name: 'Personal', isDefault: true },
+  { id: 'ab-2', name: 'Work', isDefault: false },
 ];
 
 // Profile photos served straight from randomuser.me's CDN; the API at
@@ -770,7 +983,7 @@ const contacts = [
     phones: { p1: { number: '+49 30 8844 2200' } },
     organizations: { o1: { name: 'EuroTech GmbH' } },
     addresses: { a1: { street: [{ value: 'Kurfürstendamm 42' }], locality: 'Berlin', region: '', country: 'Germany', postcode: '10719' } },
-    notes: { n1: { note: 'Frontend lead. Always brings Kuchen to the office.' } },
+    notes: { n1: { note: 'Frontend lead at EuroTech. Reviews quickly, comments at length.' } },
     media: { photo1: { kind: 'photo' as const, uri: PORTRAIT('women', 14), mediaType: 'image/jpeg' } },
   },
   { id: 'contact-002', uid: 'urn:uuid:c0000002-0000-0000-0000-000000000002', addressBookIds: { 'ab-1': true }, kind: 'individual',
@@ -779,7 +992,7 @@ const contacts = [
     phones: { p1: { number: '+33 1 42 68 53 00' } },
     organizations: { o1: { name: 'Dubois Consulting' } },
     addresses: { a1: { street: [{ value: '42 Rue de Rivoli' }], locality: 'Paris', country: 'France', postcode: '75001' } },
-    notes: { n1: { note: 'Product manager. Knows every boulangerie in Paris.' } },
+    notes: { n1: { note: 'Product manager. Would rather have a call than a thread.' } },
     media: { photo1: { kind: 'photo' as const, uri: PORTRAIT('men', 23), mediaType: 'image/jpeg' } },
   },
   { id: 'contact-003', uid: 'urn:uuid:c0000003-0000-0000-0000-000000000003', addressBookIds: { 'ab-1': true }, kind: 'individual',
@@ -788,7 +1001,7 @@ const contacts = [
     phones: { p1: { number: '+39 02 7634 5678' } },
     organizations: { o1: { name: 'Rossi Design Studio' } },
     addresses: { a1: { street: [{ value: 'Via Montenapoleone 8' }], locality: 'Milano', country: 'Italy', postcode: '20121' } },
-    notes: { n1: { note: 'UX designer. Her risotto recipes are legendary.' } },
+    notes: { n1: { note: 'UX designer. Sends mockups as PDFs and will not be talked out of it.' } },
     media: { photo1: { kind: 'photo' as const, uri: PORTRAIT('women', 40), mediaType: 'image/jpeg' } },
   },
   { id: 'contact-004', uid: 'urn:uuid:c0000004-0000-0000-0000-000000000004', addressBookIds: { 'ab-1': true }, kind: 'individual',
@@ -796,7 +1009,7 @@ const contacts = [
     emails: { e1: { address: 'karel@devries.example' } },
     phones: { p1: { number: '+31 20 555 0142' } },
     addresses: { a1: { street: [{ value: 'Herengracht 142' }], locality: 'Amsterdam', country: 'Netherlands', postcode: '1015 BN' } },
-    notes: { n1: { note: 'Backend developer. Cycles to work rain or shine - true Dutchman.' } },
+    notes: { n1: { note: 'Backend developer. Filed half of our open issues, most of them valid.' } },
     media: { photo1: { kind: 'photo' as const, uri: PORTRAIT('men', 45), mediaType: 'image/jpeg' } },
   },
   { id: 'contact-005', uid: 'urn:uuid:c0000005-0000-0000-0000-000000000005', addressBookIds: { 'ab-1': true }, kind: 'individual',
@@ -805,7 +1018,7 @@ const contacts = [
     phones: { p1: { number: '+46 8 123 456 78' } },
     organizations: { o1: { name: 'Fjord Systems AB' } },
     addresses: { a1: { street: [{ value: 'Drottninggatan 42' }], locality: 'Stockholm', country: 'Sweden', postcode: '111 51' } },
-    notes: { n1: { note: 'Tech lead. FIKA is sacred. Do not schedule meetings during fika.' } },
+    notes: { n1: { note: 'Tech lead in Stockholm. Nothing after 15:00 his time.' } },
     media: { photo1: { kind: 'photo' as const, uri: PORTRAIT('men', 61), mediaType: 'image/jpeg' } },
   },
   { id: 'contact-006', uid: 'urn:uuid:c0000006-0000-0000-0000-000000000006', addressBookIds: { 'ab-1': true }, kind: 'individual',
@@ -814,7 +1027,7 @@ const contacts = [
     phones: { p1: { number: '+33 6 12 34 56 78' } },
     organizations: { o1: { name: 'Fjord Systems AB' } },
     addresses: { a1: { street: [{ value: '15 Boulevard Saint-Germain' }], locality: 'Paris', country: 'France', postcode: '75005' } },
-    notes: { n1: { note: 'Backend dev. Remote from Paris. Once fixed a production bug from a café terrace.' } },
+    notes: { n1: { note: 'Backend developer, remote from Paris. Overlaps with Stockholm until 17:00.' } },
     media: { photo1: { kind: 'photo' as const, uri: PORTRAIT('women', 29), mediaType: 'image/jpeg' } },
   },
   { id: 'contact-007', uid: 'urn:uuid:c0000007-0000-0000-0000-000000000007', addressBookIds: { 'ab-1': true }, kind: 'individual',
@@ -822,7 +1035,7 @@ const contacts = [
     emails: { e1: { address: 'francesco@bianchi.example' } },
     phones: { p1: { number: '+39 06 9876 5432' } },
     addresses: { a1: { street: [{ value: 'Via dei Condotti 22' }], locality: 'Roma', country: 'Italy', postcode: '00187' } },
-    notes: { n1: { note: 'Old university friend. Once tried to implement RFC 2549 (IP over Avian Carriers) with actual pigeons. It did not scale.' } },
+    notes: { n1: { note: 'Old university friend. Runs a bookshop in Rome and still argues about type systems.' } },
     media: { photo1: { kind: 'photo' as const, uri: PORTRAIT('men', 72), mediaType: 'image/jpeg' } },
   },
   { id: 'contact-008', uid: 'urn:uuid:c0000008-0000-0000-0000-000000000008', addressBookIds: { 'ab-1': true }, kind: 'individual',
@@ -831,7 +1044,7 @@ const contacts = [
     phones: { p1: { number: '+31 70 362 4242' } },
     organizations: { o1: { name: 'BergLabs' } },
     addresses: { a1: { street: [{ value: 'Prinsengracht 263' }], locality: 'Amsterdam', country: 'Netherlands', postcode: '1016 GV' } },
-    notes: { n1: { note: 'Solutions architect. Her whiteboard diagrams belong in a museum.' } },
+    notes: { n1: { note: 'Solutions architect. Keeps the service diagram, ask her before drawing another one.' } },
     media: { photo1: { kind: 'photo' as const, uri: PORTRAIT('women', 58), mediaType: 'image/jpeg' } },
   },
   { id: 'contact-009', uid: 'urn:uuid:c0000009-0000-0000-0000-000000000009', addressBookIds: { 'ab-1': true }, kind: 'individual',
@@ -840,7 +1053,7 @@ const contacts = [
     phones: { p1: { number: '+45 33 42 42 42' } },
     organizations: { o1: { name: 'Nielsen Konsult' } },
     addresses: { a1: { street: [{ value: 'Nyhavn 42' }], locality: 'København', country: 'Denmark', postcode: '1051' } },
-    notes: { n1: { note: 'Freelance DevOps. Speaks 5 languages. Kubernetes kubectl alias: k → kansen.' } },
+    notes: { n1: { note: 'Freelance SRE. On call for our deployment windows, invoices monthly.' } },
     media: { photo1: { kind: 'photo' as const, uri: PORTRAIT('men', 35), mediaType: 'image/jpeg' } },
   },
   { id: 'contact-010', uid: 'urn:uuid:c0000010-0000-0000-0000-000000000010', addressBookIds: { 'ab-1': true }, kind: 'individual',
@@ -849,7 +1062,7 @@ const contacts = [
     phones: { p1: { number: '+33 1 44 27 42 42' } },
     organizations: { o1: { name: 'Sorbonne Université' } },
     addresses: { a1: { street: [{ value: '21 Rue de l\'École de Médecine' }], locality: 'Paris', country: 'France', postcode: '75006' } },
-    notes: { n1: { note: 'Professor of computer science. Thesis on formal verification of email protocols.' } },
+    notes: { n1: { note: 'Professor of computer science. Works on formal verification of mail protocols.' } },
     media: { photo1: { kind: 'photo' as const, uri: PORTRAIT('women', 63), mediaType: 'image/jpeg' } },
   },
   // --- Work address book ---
@@ -859,7 +1072,7 @@ const contacts = [
     phones: { p1: { number: '+33 1 53 67 42 00' } },
     organizations: { o1: { name: 'Lefèvre & Associés' } },
     addresses: { a1: { street: [{ value: '8 Avenue de l\'Opéra' }], locality: 'Paris', country: 'France', postcode: '75001' } },
-    notes: { n1: { note: 'Lawyer. Specializes in IP and tech law. Always replies within 42 minutes.' } },
+    notes: { n1: { note: 'Contract and IP law. Bills in six-minute units, so keep the email short.' } },
     media: { photo1: { kind: 'photo' as const, uri: PORTRAIT('men', 81), mediaType: 'image/jpeg' } },
   },
   { id: 'contact-012', uid: 'urn:uuid:c0000012-0000-0000-0000-000000000012', addressBookIds: { 'ab-2': true }, kind: 'individual',
@@ -868,7 +1081,7 @@ const contacts = [
     phones: { p1: { number: '+49 30 450 570 000' } },
     organizations: { o1: { name: 'Charité Klinik Berlin' } },
     addresses: { a1: { street: [{ value: 'Charitéplatz 1' }], locality: 'Berlin', country: 'Germany', postcode: '10117' } },
-    notes: { n1: { note: 'Medical center admin. Organizes the best team events in Berlin.' } },
+    notes: { n1: { note: 'Organises the Berlin team evenings. Books everything three months ahead.' } },
     media: { photo1: { kind: 'photo' as const, uri: PORTRAIT('women', 26), mediaType: 'image/jpeg' } },
   },
   { id: 'contact-013', uid: 'urn:uuid:c0000013-0000-0000-0000-000000000013', addressBookIds: { 'ab-2': true }, kind: 'individual',
@@ -877,7 +1090,7 @@ const contacts = [
     phones: { p1: { number: '+353 1 677 4242' } },
     organizations: { o1: { name: 'Finanz Dublin' } },
     addresses: { a1: { street: [{ value: '42 St. Stephen\'s Green' }], locality: 'Dublin', country: 'Ireland', postcode: 'D02 HX65' } },
-    notes: { n1: { note: 'Finance lead. Can explain SEPA regulations over a pint of Guinness.' } },
+    notes: { n1: { note: 'Finance lead in Dublin. Wants the numbers before the meeting, not during it.' } },
     media: { photo1: { kind: 'photo' as const, uri: PORTRAIT('men', 19), mediaType: 'image/jpeg' } },
   },
   { id: 'contact-014', uid: 'urn:uuid:c0000014-0000-0000-0000-000000000014', addressBookIds: { 'ab-2': true }, kind: 'individual',
@@ -886,16 +1099,16 @@ const contacts = [
     phones: { p1: { number: '+34 91 420 4242' } },
     organizations: { o1: { name: 'García Design Studio' } },
     addresses: { a1: { street: [{ value: 'Calle Gran Vía 42' }], locality: 'Madrid', country: 'Spain', postcode: '28013' } },
-    notes: { n1: { note: 'Brand designer. Her color palettes are pure art. Siesta enthusiast.' } },
+    notes: { n1: { note: 'Brand designer. Owns the Figma library, ask before inventing a shade.' } },
     media: { photo1: { kind: 'photo' as const, uri: PORTRAIT('women', 50), mediaType: 'image/jpeg' } },
   },
   { id: 'contact-015', uid: 'urn:uuid:c0000015-0000-0000-0000-000000000015', addressBookIds: { 'ab-2': true }, kind: 'individual',
     name: { components: [{ kind: 'given', value: 'Nils' }, { kind: 'surname', value: 'Andersson' }] },
     emails: { e1: { address: 'nils@digitaal.example' } },
-    phones: { p1: { number: '+31 20 624 1337' } },
+    phones: { p1: { number: '+31 20 624 8815' } },
     organizations: { o1: { name: 'Digitaal BV' } },
     addresses: { a1: { street: [{ value: 'Vijzelstraat 42' }], locality: 'Amsterdam', country: 'Netherlands', postcode: '1017 HK' } },
-    notes: { n1: { note: 'Platform engineer. fika buddy. Appreciates a good kanelbulle.' } },
+    notes: { n1: { note: 'Platform engineer. Knows where the old DNS records are buried.' } },
     media: { photo1: { kind: 'photo' as const, uri: PORTRAIT('men', 57), mediaType: 'image/jpeg' } },
   },
   { id: 'contact-016', uid: 'urn:uuid:c0000016-0000-0000-0000-000000000016', addressBookIds: { 'ab-2': true }, kind: 'individual',
@@ -904,7 +1117,7 @@ const contacts = [
     phones: { p1: { number: '+48 22 505 4242' } },
     organizations: { o1: { name: 'Kowalska Marketing' } },
     addresses: { a1: { street: [{ value: 'ul. Nowy Świat 42' }], locality: 'Warszawa', country: 'Poland', postcode: '00-363' } },
-    notes: { n1: { note: 'Marketing strategist. Her campaign analytics dashboards are works of art.' } },
+    notes: { n1: { note: 'Marketing strategist. Runs the campaign reporting.' } },
     media: { photo1: { kind: 'photo' as const, uri: PORTRAIT('women', 71), mediaType: 'image/jpeg' } },
   },
   { id: 'contact-017', uid: 'urn:uuid:c0000017-0000-0000-0000-000000000017', addressBookIds: { 'ab-2': true }, kind: 'individual',
@@ -913,7 +1126,7 @@ const contacts = [
     phones: { p1: { number: '+353 86 123 4242' } },
     organizations: { o1: { name: 'Murphy Bau GmbH' } },
     addresses: { a1: { street: [{ value: 'Grafton Street 42' }], locality: 'Dublin', country: 'Ireland', postcode: 'D02 R296' } },
-    notes: { n1: { note: 'Construction project manager. Irish-German bilingual. Builds things that last.' } },
+    notes: { n1: { note: 'Runs the Dublin office fit-out. Reachable by phone, not by email.' } },
     media: { photo1: { kind: 'photo' as const, uri: PORTRAIT('men', 93), mediaType: 'image/jpeg' } },
   },
   { id: 'contact-018', uid: 'urn:uuid:c0000018-0000-0000-0000-000000000018', addressBookIds: { 'ab-2': true }, kind: 'individual',
@@ -922,7 +1135,7 @@ const contacts = [
     phones: { p1: { number: '+351 21 342 4242' } },
     organizations: { o1: { name: 'Ferreira Media' } },
     addresses: { a1: { street: [{ value: 'Rua Augusta 42' }], locality: 'Lisboa', country: 'Portugal', postcode: '1100-053' } },
-    notes: { n1: { note: 'Media consultant. Can turn any press release into poetry. Loves pastéis de nata.' } },
+    notes: { n1: { note: 'Media consultant. Handles press for the Lisbon launch.' } },
     media: { photo1: { kind: 'photo' as const, uri: PORTRAIT('women', 82), mediaType: 'image/jpeg' } },
   },
   { id: 'contact-019', uid: 'urn:uuid:c0000019-0000-0000-0000-000000000019', addressBookIds: { 'ab-2': true }, kind: 'individual',
@@ -931,7 +1144,7 @@ const contacts = [
     phones: { p1: { number: '+32 2 555 4242' } },
     organizations: { o1: { name: 'Dumont Conseil' } },
     addresses: { a1: { street: [{ value: 'Avenue Louise 42' }], locality: 'Bruxelles', country: 'Belgium', postcode: '1050' } },
-    notes: { n1: { note: 'Strategy consultant. Knows the difference between Belgian and French chocolate. Will argue passionately about it.' } },
+    notes: { n1: { note: 'Strategy consultant in Brussels. Good on procurement questions.' } },
     media: { photo1: { kind: 'photo' as const, uri: PORTRAIT('men', 4), mediaType: 'image/jpeg' } },
   },
   { id: 'contact-020', uid: 'urn:uuid:c0000020-0000-0000-0000-000000000020', addressBookIds: { 'ab-2': true }, kind: 'individual',
@@ -941,7 +1154,7 @@ const contacts = [
     organizations: { o1: { name: 'Lindgren Consulting' } },
     addresses: { a1: { street: [{ value: 'Strandvägen 42' }], locality: 'Stockholm', country: 'Sweden', postcode: '114 56' } },
     nicknames: { n1: { name: 'Anni' } },
-    notes: { n1: { note: 'Independent consultant specializing in GDPR compliance. Yes, she has opinions about cookie banners.' } },
+    notes: { n1: { note: 'Data protection consultant. Reviewed our privacy notice in January.' } },
     media: { photo1: { kind: 'photo' as const, uri: PORTRAIT('women', 36), mediaType: 'image/jpeg' } },
   },
   // --- Groups ---
@@ -967,11 +1180,11 @@ const contacts = [
 // ---------------------------------------------------------------------------
 
 const mockCalendars = [
-  { id: 'cal-1', name: 'Persönlich', color: '#4285f4', isVisible: true, isDefault: true },
-  { id: 'cal-2', name: 'Arbeit', color: '#0b8043', isVisible: true, isDefault: false },
+  { id: 'cal-1', name: 'Personal', color: '#4285f4', isVisible: true, isDefault: true },
+  { id: 'cal-2', name: 'Work', color: '#0b8043', isVisible: true, isDefault: false },
   { id: 'cal-3', name: 'Team', color: '#8e24aa', isVisible: true, isDefault: false },
-  { id: 'cal-4', name: 'Feiertage (EU)', color: '#f4511e', isVisible: true, isDefault: false },
-  { id: 'cal-5', name: 'Geburtstage', color: '#e67c73', isVisible: true, isDefault: false },
+  { id: 'cal-4', name: 'Public holidays', color: '#f4511e', isVisible: true, isDefault: false },
+  { id: 'cal-5', name: 'Birthdays', color: '#e67c73', isVisible: true, isDefault: false },
 ];
 
 function makeEvent(
@@ -1015,41 +1228,41 @@ const calendarEvents = [
     participants: {
       p1: participant('Dev User', 'dev@localhost', 'owner'),
       p2: participant('Lars Johansson', 'lars.johansson@fjord-systems.example'),
-      p3: participant('Sophie Example', 'sophie@eurotech.example'),
+      p3: participant('Sophie Müller', 'sophie@eurotech.example'),
       p4: participant('Élise Moreau', 'elise.moreau@fjord-systems.example'),
     },
     alerts: { a1: { trigger: { '@type': 'OffsetTrigger', offset: '-PT5M', relativeTo: 'start' }, action: 'display' } },
   }),
   makeEvent('evt-002', 'cal-2', 'Sprint Planning', localDateTime(1, 10, 30), 'PT1H30M', {
-    location: 'Konferenzsaal A',
+    location: 'Room A',
     participants: {
       p1: participant('Dev User', 'dev@localhost', 'owner'),
       p2: participant('Lars Johansson', 'lars.johansson@fjord-systems.example'),
-      p3: participant('Sophie Example', 'sophie@eurotech.example'),
+      p3: participant('Sophie Müller', 'sophie@eurotech.example'),
       p4: participant('Élise Moreau', 'elise.moreau@fjord-systems.example'),
       p5: participant('Astrid van der Berg', 'astrid@berglabs.example'),
     },
     recurrence: [{ frequency: 'weekly', byDay: [{ day: 'mo' }], interval: 2 }],
     alerts: { a1: { trigger: { '@type': 'OffsetTrigger', offset: '-PT10M', relativeTo: 'start' }, action: 'display' } },
   }),
-  makeEvent('evt-003', 'cal-2', '1:1 with Lars', localDateTime(0, 14, 0), 'PT42M', {
+  makeEvent('evt-003', 'cal-2', '1:1 with Lars', localDateTime(0, 14, 0), 'PT30M', {
     virtualLocations: { vl1: { uri: 'https://meet.example/lars-dev', name: 'Zoom' } },
     participants: {
       p1: participant('Dev User', 'dev@localhost', 'owner'),
       p2: participant('Lars Johansson', 'lars.johansson@fjord-systems.example'),
     },
-    description: 'Weekly catch-up. Duration: exactly 42 minutes - the answer to everything.',
+    description: 'Weekly catch-up.',
   }),
   makeEvent('evt-004', 'cal-2', 'Code Review Session', localDateTime(0, 16, 0), 'PT1H', {
-    location: 'Konferenzsaal B',
+    location: 'Room B',
     participants: {
       p1: participant('Dev User', 'dev@localhost', 'owner'),
       p2: participant('Élise Moreau', 'elise.moreau@fjord-systems.example'),
     },
-    description: 'Review JMAP-342 contact import PR.',
+    description: 'Walk through the vCard import PR, mainly the merge dialogue.',
   }),
   makeEvent('evt-005', 'cal-2', 'Architecture Review', localDateTime(2, 11, 0), 'PT1H30M', {
-    location: 'Konferenzsaal A',
+    location: 'Room A',
     participants: {
       p1: participant('Dev User', 'dev@localhost', 'owner'),
       p2: participant('Astrid van der Berg', 'astrid@berglabs.example'),
@@ -1063,13 +1276,13 @@ const calendarEvents = [
     virtualLocations: { vl1: { uri: 'https://meet.example/eurotech', name: 'Teams' } },
     participants: {
       p1: participant('Dev User', 'dev@localhost', 'owner'),
-      p2: participant('Sophie Example', 'sophie@eurotech.example'),
+      p2: participant('Sophie Müller', 'sophie@eurotech.example'),
       p3: participant('Pierre Dubois', 'pierre@dubois.example'),
     },
-    description: 'Discuss API rate limit escalation for EuroTech enterprise account.',
+    description: 'Rate limit escalation on the EuroTech account, ticket #4521.',
   }),
   makeEvent('evt-007', 'cal-2', 'Deployment Window', localDateTime(3, 22, 0), 'PT2H', {
-    description: 'Production deployment: JMAP calendar integration v2.3.\nRollback plan in Confluence.\nOn-call: Henrik Nielsen.',
+    description: 'Calendar integration v2.3 goes to production. The rollback plan is in the runbook, Henrik is on call.',
     participants: {
       p1: participant('Dev User', 'dev@localhost', 'owner'),
       p2: participant('Henrik Nielsen', 'henrik@nielsen-konsult.example'),
@@ -1080,7 +1293,7 @@ const calendarEvents = [
     },
   }),
   makeEvent('evt-008', 'cal-2', 'Q1 Budget Review', localDateTime(3, 14, 0), 'PT1H', {
-    location: 'Konferenzsaal B',
+    location: 'Room B',
     participants: {
       p1: participant('Liam Ó Donaill', 'liam.odonaill@finanz.example', 'owner'),
       p2: participant('Dev User', 'dev@localhost'),
@@ -1088,12 +1301,12 @@ const calendarEvents = [
     },
   }),
   makeEvent('evt-009', 'cal-2', 'Retro & Demo', localDateTime(4, 15, 0), 'PT1H30M', {
-    location: 'Konferenzsaal A',
+    location: 'Room A',
     virtualLocations: { vl1: { uri: 'https://meet.example/retro', name: 'Google Meet' } },
     participants: {
       p1: participant('Dev User', 'dev@localhost', 'owner'),
       p2: participant('Lars Johansson', 'lars.johansson@fjord-systems.example'),
-      p3: participant('Sophie Example', 'sophie@eurotech.example'),
+      p3: participant('Sophie Müller', 'sophie@eurotech.example'),
       p4: participant('Élise Moreau', 'elise.moreau@fjord-systems.example'),
       p5: participant('Astrid van der Berg', 'astrid@berglabs.example'),
       p6: participant('Pierre Dubois', 'pierre@dubois.example'),
@@ -1105,25 +1318,25 @@ const calendarEvents = [
     participants: {
       p1: participant('Dev User', 'dev@localhost'),
       p2: participant('María García', 'maria@garcia-design.example', 'owner'),
-      p3: participant('Sophie Example', 'sophie@eurotech.example'),
+      p3: participant('Sophie Müller', 'sophie@eurotech.example'),
     },
   }),
   makeEvent('evt-011', 'cal-2', 'API Deprecation Deadline', localDateTime(30, 0, 0), 'P1D', {
     showWithoutTime: true,
-    description: 'Stripe API v2023-10 deprecated. Must be on v2025-01 by today.',
+    description: 'Payment API v2023-10 stops answering today. Both keys have to be on v2025-01.',
     color: '#d50000',
   }),
 
   // ===== Team calendar (cal-3) - social & team =====
-  makeEvent('evt-012', 'cal-3', 'Biergarten Abend 🍺', localDateTime(5, 18, 0), 'PT3H', {
-    location: 'Biergarten am Prinsengracht, Amsterdam',
-    description: 'Monthly team social. Bretzel buffet included.\nVegetarian options: Käsespätzle, Kartoffelsalat.\nBring your own Dirndl/Lederhosen (optional but encouraged).',
+  makeEvent('evt-012', 'cal-3', 'Team evening', localDateTime(5, 18, 0), 'PT3H', {
+    location: 'Restaurante Fado, Zeedijk 62, Amsterdam',
+    description: 'Set menu, paid by the company. Vegetarian option has to be flagged by Wednesday.',
     participants: {
       p1: participant('Katrin Bauer', 'katrin.bauer@charite.example', 'owner'),
       p2: participant('Dev User', 'dev@localhost'),
       p3: participant('Pierre Dubois', 'pierre@dubois.example'),
       p4: participant('Chiara Rossi', 'chiara@rossi.example'),
-      p5: participant('Sophie Example', 'sophie@eurotech.example'),
+      p5: participant('Sophie Müller', 'sophie@eurotech.example'),
     },
   }),
   makeEvent('evt-013', 'cal-3', 'Team Retro: What went well?', localDateTime(-2, 16, 0), 'PT1H', {
@@ -1132,23 +1345,23 @@ const calendarEvents = [
       p1: participant('Dev User', 'dev@localhost', 'owner'),
       p2: participant('Lars Johansson', 'lars.johansson@fjord-systems.example'),
       p3: participant('Élise Moreau', 'elise.moreau@fjord-systems.example'),
-      p4: participant('Sophie Example', 'sophie@eurotech.example'),
+      p4: participant('Sophie Müller', 'sophie@eurotech.example'),
     },
   }),
-  makeEvent('evt-014', 'cal-3', 'Lunch & Learn: JMAP Protocol Deep Dive', localDateTime(4, 12, 0), 'PT1H', {
-    location: 'Kantine, 2. OG',
-    description: 'Presenter: Dev User\nTopic: How JMAP solves the N+1 problem and why it\'s better than IMAP for modern clients.\nPizza will be provided.',
+  makeEvent('evt-014', 'cal-3', 'Lunch & learn: how JMAP batches requests', localDateTime(4, 12, 0), 'PT1H', {
+    location: 'Canteen, second floor',
+    description: 'Dev User walks through batching and back-references, with the numbers from the prototype. Pizza at 12:00, talk at 12:15.',
     participants: {
       p1: participant('Dev User', 'dev@localhost', 'owner'),
       p2: participant('Astrid van der Berg', 'astrid@berglabs.example'),
       p3: participant('Isabelle Martin', 'isabelle.martin@sorbonne.example'),
     },
   }),
-  makeEvent('evt-015', 'cal-3', 'Eurovision Watch Party 🎤✨', localDateTime(60, 20, 0), 'PT4H', {
-    location: 'Sophie\'s apartment, Kreuzberg, Berlin',
-    description: 'Annual Eurovision Song Contest watch party!\n\nRules:\n1. Scorecards mandatory (printed copies provided)\n2. Drink when someone says "douze points"\n3. Best costume contest (prize: a waffle iron)\n4. No spoilers from the semis!\n\nBring: snacks from your home country.',
+  makeEvent('evt-015', 'cal-3', 'Quarterly all-hands', localDateTime(60, 15, 0), 'PT1H30M', {
+    location: 'Room A, and streamed',
+    description: 'Numbers, roadmap, questions. Send questions in advance if you want an answer that has been thought about.',
     participants: {
-      p1: participant('Sophie Example', 'sophie@eurotech.example', 'owner'),
+      p1: participant('Sophie Müller', 'sophie@eurotech.example', 'owner'),
       p2: participant('Dev User', 'dev@localhost'),
       p3: participant('Pierre Dubois', 'pierre@dubois.example'),
       p4: participant('Chiara Rossi', 'chiara@rossi.example'),
@@ -1156,9 +1369,9 @@ const calendarEvents = [
       p6: participant('Nils Andersson', 'nils@digitaal.example'),
     },
   }),
-  makeEvent('evt-016', 'cal-3', 'Cooking Class - Pasta Fresca', localDateTime(12, 18, 30), 'PT2H30M', {
-    location: 'La Cucina Cooking School, Jordaan, Amsterdam',
-    description: 'Team cooking class: fresh pasta from scratch.\nMenu: tagliatelle al ragù, ravioli ricotta e spinaci.\nChef: Chiara Rossi (guest instructor)',
+  makeEvent('evt-016', 'cal-3', 'Pasta course', localDateTime(12, 18, 30), 'PT2H30M', {
+    location: 'La Cucina, Jordaan, Amsterdam',
+    description: 'Three hours, you eat what you make. Chiara is teaching, which she volunteered for and may come to regret.',
     participants: {
       p1: participant('Chiara Rossi', 'chiara@rossi.example', 'owner'),
       p2: participant('Dev User', 'dev@localhost'),
@@ -1169,27 +1382,27 @@ const calendarEvents = [
 
   // ===== Personal calendar (cal-1) =====
   makeEvent('evt-017', 'cal-1', 'Fika with Nils', localDateTime(2, 15, 30), 'PT1H', {
-    location: 'Café de Flore, Prinsengracht, Amsterdam',
-    description: 'Catch-up over coffee and kanelbullar.',
+    location: 'Koffiehuis Prinsengracht, Amsterdam',
+    description: 'Catch-up over coffee.',
   }),
   makeEvent('evt-018', 'cal-1', 'Lake Como Weekend', localDateTime(14, 10, 0), 'P2D', {
     location: 'Villa sul Lago, Bellagio, Lake Como',
-    description: 'Weekend getaway.\nConfirmation: EU42GDPR\nCheck-in: 15:00\nCheck-out: 11:00',
+    description: 'Reservation LS-4419-BG.\nCheck-in from 15:00, check-out by 11:00.\nThe key box code is in the voucher.',
     showWithoutTime: true,
   }),
   makeEvent('evt-019', 'cal-1', 'Tandarts (Dentist)', localDateTime(7, 9, 30), 'PT45M', {
     location: 'Tandartspraktijk Centrum, Reguliersgracht 12, Amsterdam',
-    description: 'Regular check-up. Don\'t forget to floss!',
+    description: 'Six-month check-up.',
     alerts: { a1: { trigger: { '@type': 'OffsetTrigger', offset: '-PT1H', relativeTo: 'start' }, action: 'display' } },
   }),
   makeEvent('evt-020', 'cal-1', 'Albert Cuyp Markt', localDateTime(6, 10, 0), 'PT2H', {
     location: 'Albert Cuypstraat, Amsterdam',
-    description: 'Saturday market run.\nShopping list: stroopwafels, Gouda, tulips, fresh bread, olives.',
+    description: 'Market run. Bread, cheese, olives, and whatever looks good.',
     showWithoutTime: false,
   }),
   makeEvent('evt-021', 'cal-1', 'Cycling to Vondelpark', localDateTime(6, 14, 0), 'PT1H30M', {
     location: 'Vondelpark, Amsterdam',
-    description: 'Afternoon bike ride. Meet at the main entrance.',
+    description: 'Meet at the main entrance.',
   }),
   makeEvent('evt-022', 'cal-1', 'Yoga Class', localDateTime(0, 7, 0), 'PT1H', {
     location: 'De Nieuwe Yogaschool, Laurierstraat, Amsterdam',
@@ -1198,7 +1411,7 @@ const calendarEvents = [
   makeEvent('evt-023', 'cal-1', 'Dutch Language Lesson', localDateTime(1, 19, 0), 'PT1H30M', {
     location: 'Taleninstituut, Plantage Middenlaan, Amsterdam',
     recurrence: [{ frequency: 'weekly', byDay: [{ day: 'tu' }] }],
-    description: 'Semester 3 - past tense and separable verbs. Ik heb geprobeerd...',
+    description: 'Semester 3: past tense and separable verbs.',
   }),
   makeEvent('evt-024', 'cal-1', 'Call with Mum', localDateTime(0, 18, 30), 'PT30M', {
     recurrence: [{ frequency: 'weekly', byDay: [{ day: 'su' }] }],
@@ -1207,65 +1420,64 @@ const calendarEvents = [
   // Overlapping personal events
   makeEvent('evt-025', 'cal-1', 'Haircut', localDateTime(6, 14, 30), 'PT45M', {
     location: 'Kapper de Luxe, Utrechtsestraat, Amsterdam',
-    description: 'Overlaps with Vondelpark bike ride - need to reschedule one!',
+    description: 'Overlaps with the bike ride. One of them has to move.',
   }),
 
   // ===== Holiday calendar (cal-4) - all-day events =====
-  makeEvent('evt-026', 'cal-4', 'Koningsdag 🧡', localDateTime(42, 0, 0), 'P1D', {
+  makeEvent('evt-026', 'cal-4', 'Koningsdag', localDateTime(42, 0, 0), 'P1D', {
     showWithoutTime: true,
-    description: 'King\'s Day - national holiday in the Netherlands.\nWear orange! Visit a vrijmarkt. Eat tompouce.',
+    description: 'Public holiday in the Netherlands. Shops shut, the city centre is closed to cars.',
     color: '#ff6d00',
   }),
   makeEvent('evt-027', 'cal-4', 'Tag der Arbeit', localDateTime(48, 0, 0), 'P1D', {
     showWithoutTime: true,
-    description: 'Labour Day - public holiday in most EU countries.',
+    description: 'Public holiday in most of Europe. Stockholm and Berlin are closed.',
   }),
-  makeEvent('evt-028', 'cal-4', 'Europe Day 🇪🇺', localDateTime(55, 0, 0), 'P1D', {
+  makeEvent('evt-028', 'cal-4', 'Hemelvaartsdag', localDateTime(55, 0, 0), 'P1D', {
     showWithoutTime: true,
-    description: 'Anniversary of the Schuman Declaration (1950). The foundation of European integration.',
-    color: '#003399',
+    description: 'Public holiday in the Netherlands. Most people take the Friday as well.',
   }),
   makeEvent('evt-029', 'cal-4', 'Bevrijdingsdag', localDateTime(52, 0, 0), 'P1D', {
     showWithoutTime: true,
-    description: 'Liberation Day - Dutch national holiday commemorating the end of WWII occupation.',
+    description: 'Liberation Day. A holiday for us, not for every employer in the country.',
   }),
 
   // ===== Birthday calendar (cal-5) =====
-  makeEvent('evt-030', 'cal-5', '🎂 Sophie Example', localDateTime(8, 0, 0), 'P1D', {
+  makeEvent('evt-030', 'cal-5', '🎂 Sophie Müller', localDateTime(8, 0, 0), 'P1D', {
     showWithoutTime: true,
     recurrence: [{ frequency: 'yearly' }],
-    description: 'Don\'t forget to bring Kuchen!',
+    description: 'She has said twice that she wants nothing. Bring cake anyway.',
   }),
   makeEvent('evt-031', 'cal-5', '🎂 Chiara Rossi', localDateTime(21, 0, 0), 'P1D', {
     showWithoutTime: true,
     recurrence: [{ frequency: 'yearly' }],
-    description: 'She prefers tiramisu over cake.',
+    description: 'Tiramisu, not cake.',
   }),
   makeEvent('evt-032', 'cal-5', '🎂 Pierre Dubois', localDateTime(45, 0, 0), 'P1D', {
     showWithoutTime: true,
     recurrence: [{ frequency: 'yearly' }],
-    description: 'Likes a good Bordeaux.',
+    description: 'Wine, and he will notice which one.',
   }),
   makeEvent('evt-033', 'cal-5', '🎂 Lars Johansson', localDateTime(-3, 0, 0), 'P1D', {
     showWithoutTime: true,
     recurrence: [{ frequency: 'yearly' }],
-    description: 'Just passed! Hope you remembered.',
+    description: 'Was last week. It was not remembered.',
   }),
 
   // ===== JMAP Conf & travel (work calendar) =====
   makeEvent('evt-034', 'cal-2', 'JMAP Conf Amsterdam', localDateTime(28, 9, 0), 'P2D', {
     location: 'RAI Amsterdam Convention Centre',
     showWithoutTime: true,
-    description: 'Your talk: "Building Modern Webmail with JMAP" - Day 1, 14:00, Main Hall.\nDon\'t forget slide deck!',
+    description: 'Your talk is day one, 14:00, main hall. Slides as PDF to the organisers by the Friday before.',
     participants: {
       p1: participant('Dev User', 'dev@localhost'),
-      p2: participant('Sophie Example', 'sophie@eurotech.example'),
+      p2: participant('Sophie Müller', 'sophie@eurotech.example'),
       p3: participant('Isabelle Martin', 'isabelle.martin@sorbonne.example'),
     },
   }),
   makeEvent('evt-035', 'cal-2', 'FOSDEM Talk Prep', localDateTime(10, 13, 0), 'PT2H', {
     virtualLocations: { vl1: { uri: 'https://meet.example/fosdem-prep', name: 'Meet' } },
-    description: 'Rehearse FOSDEM 2027 talk proposal.\nTitle: "Modern Email Clients with JMAP - From Protocol to Production"',
+    description: 'Run through the FOSDEM proposal end to end and cut it down to 30 minutes.',
   }),
 ];
 
@@ -1827,6 +2039,35 @@ function resolveBackReferences(
 }
 
 // ---------------------------------------------------------------------------
+// Request limits
+// ---------------------------------------------------------------------------
+
+// Stalwart's defaults. Too many method calls fails the request whole
+// (RFC 8620 §3.6.1), an over-sized /get or /set fails that call
+// (`requestTooLarge`, §5.1 and §5.3). The mock enforces what it advertises so a
+// client that sends an unsplit batch fails here the way it fails in production.
+const MAX_CALLS_IN_REQUEST = 16;
+const MAX_OBJECTS_IN_GET = 500;
+const MAX_OBJECTS_IN_SET = 500;
+
+/** Objects a /set call touches, across all three of its maps (RFC 8620 §5.3). */
+function setObjectCount(args: MethodArgs): number {
+  const size = (value: unknown) => (Array.isArray(value) ? value.length : Object.keys(value || {}).length);
+  return size(args.create) + size(args.update) + size(args.destroy);
+}
+
+/** The method-level error a server returns for an over-sized /get or /set. */
+function tooLargeFor(method: string, args: MethodArgs, callId: string): MethodResult | null {
+  if (method.endsWith('/get') && Array.isArray(args.ids) && args.ids.length > MAX_OBJECTS_IN_GET) {
+    return ['error', { type: 'requestTooLarge', description: `More than ${MAX_OBJECTS_IN_GET} ids in ${method}` }, callId];
+  }
+  if (method.endsWith('/set') && setObjectCount(args) > MAX_OBJECTS_IN_SET) {
+    return ['error', { type: 'requestTooLarge', description: `More than ${MAX_OBJECTS_IN_SET} objects in ${method}` }, callId];
+  }
+  return null;
+}
+
+// ---------------------------------------------------------------------------
 // Route handlers
 // ---------------------------------------------------------------------------
 
@@ -1858,9 +2099,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
           maxConcurrentUpload: 4,
           maxSizeRequest: 10000000,
           maxConcurrentRequests: 4,
-          maxCallsInRequest: 16,
-          maxObjectsInGet: 500,
-          maxObjectsInSet: 500,
+          maxCallsInRequest: MAX_CALLS_IN_REQUEST,
+          maxObjectsInGet: MAX_OBJECTS_IN_GET,
+          maxObjectsInSet: MAX_OBJECTS_IN_SET,
           collationAlgorithms: ['i;ascii-casemap', 'i;ascii-numeric', 'i;unicode-casemap'],
         },
         'urn:ietf:params:jmap:mail': {},
@@ -2006,6 +2247,15 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         return NextResponse.json({ error: 'Invalid request: missing methodCalls' }, { status: 400 });
       }
 
+      if (methodCalls.length > MAX_CALLS_IN_REQUEST) {
+        return NextResponse.json({
+          type: 'urn:ietf:params:jmap:error:limit',
+          status: 400,
+          limit: 'maxCallsInRequest',
+          detail: `This request contains ${methodCalls.length} method calls, the maximum is ${MAX_CALLS_IN_REQUEST}.`,
+        }, { status: 400 });
+      }
+
       const responses: MethodResult[] = [];
 
       // Process method calls sequentially (to support back-references)
@@ -2015,8 +2265,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         // Use resolved args if available, otherwise original
         const args = i < resolved.length ? resolved[i][1] : methodCalls[i][1];
 
+        const tooLarge = tooLargeFor(method, args, callId);
         const handler = METHOD_HANDLERS[method];
-        if (handler) {
+        if (tooLarge) {
+          responses.push(tooLarge);
+        } else if (handler) {
           const result = handler(args, callId);
           responses.push(result);
         } else {

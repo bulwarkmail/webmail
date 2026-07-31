@@ -4,8 +4,10 @@ import {
   sortThreadGroups,
   getThreadParticipants,
   mergeThreadEmails,
-  getEmailColorTag,
-  getThreadColorTag,
+  getEmailTagId,
+  getEmailTagIds,
+  getThreadTagId,
+  getThreadTagIds,
 } from '../thread-utils';
 import type { Email, ThreadGroup } from '../jmap/types';
 
@@ -245,47 +247,71 @@ describe('mergeThreadEmails', () => {
   });
 });
 
-describe('getEmailColorTag', () => {
-  it('returns label from $label: keyword', () => {
-    expect(getEmailColorTag({ '$label:red': true, $seen: true })).toBe('red');
+describe('getEmailTagIds', () => {
+  it('gathers every tag set on the message', () => {
+    expect(getEmailTagIds({ '$label:red': true, '$label:work': true, $seen: true }))
+      .toEqual(['red', 'work']);
   });
 
-  it('returns label from legacy $color: keyword', () => {
-    expect(getEmailColorTag({ '$color:red': true, $seen: true })).toBe('red');
+  it('reads the legacy prefix alongside the current one', () => {
+    expect(getEmailTagIds({ '$label:red': true, '$color:blue': true })).toEqual(['red', 'blue']);
   });
 
-  it('returns null when no color keyword', () => {
-    expect(getEmailColorTag({ $seen: true, $flagged: true })).toBeNull();
-  });
-
-  it('returns null for undefined keywords', () => {
-    expect(getEmailColorTag(undefined)).toBeNull();
+  it('reports a tag written under both prefixes once', () => {
+    expect(getEmailTagIds({ '$label:red': true, '$color:red': true })).toEqual(['red']);
   });
 
   it('ignores keywords set to false', () => {
-    expect(getEmailColorTag({ '$label:red': false } as unknown as Record<string, boolean>)).toBeNull();
+    expect(getEmailTagIds({ '$label:red': false, '$label:work': true })).toEqual(['work']);
   });
 
-  it('prefers $label: over $color: when both exist', () => {
-    expect(getEmailColorTag({ '$label:blue': true, '$color:red': true })).toBe('blue');
-  });
-
-  it('handles custom keyword ids', () => {
-    expect(getEmailColorTag({ '$label:my-custom-tag': true })).toBe('my-custom-tag');
-  });
-
-  it('returns null for empty keywords object', () => {
-    expect(getEmailColorTag({})).toBeNull();
+  it('is empty for an untagged message or none at all', () => {
+    expect(getEmailTagIds({ $seen: true })).toEqual([]);
+    expect(getEmailTagIds(undefined)).toEqual([]);
   });
 });
 
-describe('getThreadColorTag', () => {
+describe('getEmailTagId', () => {
+  it('returns label from $label: keyword', () => {
+    expect(getEmailTagId({ '$label:red': true, $seen: true })).toBe('red');
+  });
+
+  it('returns label from legacy $color: keyword', () => {
+    expect(getEmailTagId({ '$color:red': true, $seen: true })).toBe('red');
+  });
+
+  it('returns null when no color keyword', () => {
+    expect(getEmailTagId({ $seen: true, $flagged: true })).toBeNull();
+  });
+
+  it('returns null for undefined keywords', () => {
+    expect(getEmailTagId(undefined)).toBeNull();
+  });
+
+  it('ignores keywords set to false', () => {
+    expect(getEmailTagId({ '$label:red': false } as unknown as Record<string, boolean>)).toBeNull();
+  });
+
+  it('prefers $label: over $color: when both exist', () => {
+    expect(getEmailTagId({ '$label:blue': true, '$color:red': true })).toBe('blue');
+  });
+
+  it('handles custom keyword ids', () => {
+    expect(getEmailTagId({ '$label:my-custom-tag': true })).toBe('my-custom-tag');
+  });
+
+  it('returns null for empty keywords object', () => {
+    expect(getEmailTagId({})).toBeNull();
+  });
+});
+
+describe('getThreadTagId', () => {
   it('returns first color found across thread emails', () => {
     const emails = [
       makeEmail({ id: 'e1', keywords: { $seen: true } }),
       makeEmail({ id: 'e2', keywords: { '$label:blue': true } }),
     ];
-    expect(getThreadColorTag(emails)).toBe('blue');
+    expect(getThreadTagId(emails)).toBe('blue');
   });
 
   it('returns null when no emails have color tags', () => {
@@ -293,7 +319,7 @@ describe('getThreadColorTag', () => {
       makeEmail({ id: 'e1', keywords: { $seen: true } }),
       makeEmail({ id: 'e2', keywords: { $flagged: true } }),
     ];
-    expect(getThreadColorTag(emails)).toBeNull();
+    expect(getThreadTagId(emails)).toBeNull();
   });
 
   it('returns first tag from earliest tagged email', () => {
@@ -301,7 +327,7 @@ describe('getThreadColorTag', () => {
       makeEmail({ id: 'e1', keywords: { '$label:red': true } }),
       makeEmail({ id: 'e2', keywords: { '$label:blue': true } }),
     ];
-    expect(getThreadColorTag(emails)).toBe('red');
+    expect(getThreadTagId(emails)).toBe('red');
   });
 
   it('returns legacy tag from thread emails', () => {
@@ -309,10 +335,41 @@ describe('getThreadColorTag', () => {
       makeEmail({ id: 'e1', keywords: { $seen: true } }),
       makeEmail({ id: 'e2', keywords: { '$color:green': true } }),
     ];
-    expect(getThreadColorTag(emails)).toBe('green');
+    expect(getThreadTagId(emails)).toBe('green');
   });
 
   it('returns null for empty email array', () => {
-    expect(getThreadColorTag([])).toBeNull();
+    expect(getThreadTagId([])).toBeNull();
+  });
+});
+
+describe('getThreadTagIds', () => {
+  it('gathers the tags of every message in the thread', () => {
+    const emails = [
+      makeEmail({ id: 'e1', keywords: { '$label:red': true } }),
+      makeEmail({ id: 'e2', keywords: { '$label:blue': true, '$label:green': true } }),
+    ];
+    expect(getThreadTagIds(emails).sort()).toEqual(['blue', 'green', 'red']);
+  });
+
+  it('reports a tag shared by several messages once', () => {
+    const emails = [
+      makeEmail({ id: 'e1', keywords: { '$label:red': true } }),
+      makeEmail({ id: 'e2', keywords: { '$label:red': true } }),
+    ];
+    expect(getThreadTagIds(emails)).toEqual(['red']);
+  });
+
+  it('reads the legacy prefix alongside the current one', () => {
+    const emails = [
+      makeEmail({ id: 'e1', keywords: { '$color:green': true } }),
+      makeEmail({ id: 'e2', keywords: { '$label:red': true } }),
+    ];
+    expect(getThreadTagIds(emails).sort()).toEqual(['green', 'red']);
+  });
+
+  it('is empty for an untagged or empty thread', () => {
+    expect(getThreadTagIds([makeEmail({ id: 'e1', keywords: { $seen: true } })])).toEqual([]);
+    expect(getThreadTagIds([])).toEqual([]);
   });
 });

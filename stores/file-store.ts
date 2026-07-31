@@ -174,7 +174,7 @@ function nodeToResource(node: FileNode): FileResource {
     isDirectory: isDir,
     contentType: isDir ? '' : node.type,
     contentLength: node.size,
-    lastModified: node.updated || node.created,
+    lastModified: node.modified || node.created,
     blobId: node.blobId,
     parentId: node.parentId,
     myRights: node.myRights,

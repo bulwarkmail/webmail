@@ -844,7 +844,9 @@ function buildContact(raw: Record<string, string[]>): ContactCard | null {
 
   const hasName = card.name && (card.name.components?.length ?? 0) > 0 || !!card.name?.full;
   const hasEmail = card.emails && Object.keys(card.emails).length > 0;
-  if (!hasName && !hasEmail && card.kind !== "group") return null;
+  // An organization name identifies the card just as well as a personal name.
+  const hasOrg = !!Object.values(card.organizations || {})[0]?.name;
+  if (!hasName && !hasEmail && !hasOrg && card.kind !== "group") return null;
 
   return card;
 }
@@ -882,7 +884,11 @@ function generateSingleVCard(contact: ContactCard): string {
   const suffix = findKind("generation", "suffix");
   const additional = findKind("given2", "additional", "middle");
 
-  const fn = [prefix, given, additional, surname, suffix].filter(Boolean).join(" ") || contact.name?.full || "";
+  // FN is mandatory in vCard, so fall back to the organization name for org cards.
+  const fn = [prefix, given, additional, surname, suffix].filter(Boolean).join(" ")
+    || contact.name?.full
+    || Object.values(contact.organizations || {})[0]?.name
+    || "";
   if (fn) {
     lines.push(`FN:${encodeValue(fn)}`);
     lines.push(`N:${encodeValue(surname)};${encodeValue(given)};${encodeValue(additional)};${encodeValue(prefix)};${encodeValue(suffix)}`);

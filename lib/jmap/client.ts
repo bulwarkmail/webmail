@@ -2,6 +2,7 @@ import type { Email, Mailbox, StateChange, AccountStates, Thread, Identity, Emai
 import type { SieveScript, SieveCapabilities } from "./sieve-types";
 import type { IJMAPClient } from "./client-interface";
 import { toWildcardQuery } from "./search-utils";
+import { batched, itemsPerRequest } from "./request-limits";
 import { debug } from "@/lib/debug";
 import { normalizeCalendarEventLike } from "@/lib/calendar-event-normalization";
 
@@ -606,31 +607,32 @@ export class JMAPClient implements IJMAPClient {
         return [];
       }
 
-      const response = await this.request([
-        ["Email/get", {
-          accountId: targetAccountId,
-          ids: emailsId,
-          properties: [...EMAIL_LIST_PROPERTIES],
-        }, "0"],
-      ]);
+      const emails: Email[] = [];
 
-      const getResponse = response.methodResponses?.[0]?.[1];
+      for (const batchIds of batched(emailsId, this.getMaxObjectsInGet())) {
+        const response = await this.request([
+          ["Email/get", {
+            accountId: targetAccountId,
+            ids: batchIds,
+            properties: [...EMAIL_LIST_PROPERTIES],
+          }, "0"],
+        ]);
 
-      if (response.methodResponses?.[0]?.[0] === "Email/get" && getResponse) {
-        const emails = (getResponse.list || []) as Email[];
-
-        emails.sort((a: Email, b: Email) =>
-          new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime()
-        );
-
-        if (accountId && accountId !== this.accountId) {
-          namespaceMailboxIds(emails, accountId);
+        const getResponse = response.methodResponses?.[0]?.[1];
+        if (response.methodResponses?.[0]?.[0] === "Email/get" && getResponse) {
+          emails.push(...((getResponse.list || []) as Email[]));
         }
-
-        return emails;
       }
 
-      return [];
+      emails.sort((a: Email, b: Email) =>
+        new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime()
+      );
+
+      if (accountId && accountId !== this.accountId) {
+        namespaceMailboxIds(emails, accountId);
+      }
+
+      return emails;
     } catch (error) {
       console.error('Failed to get specific emails:', error);
       return [];
@@ -1266,56 +1268,62 @@ export class JMAPClient implements IJMAPClient {
 
   async getTagCounts(tagIds: string[]): Promise<Record<string, { total: number; unread: number }>> {
     if (tagIds.length === 0) return {};
-    try {
-      const methodCalls: JMAPMethodCall[] = [];
-      for (let i = 0; i < tagIds.length; i++) {
-        const keyword = `$label:${tagIds[i]}`;
-        // Total count for this tag
-        methodCalls.push(["Email/query", {
-          accountId: this.accountId,
-          filter: { hasKeyword: keyword },
-          limit: 0,
-          calculateTotal: true,
-        }, `total_${i}`]);
-        // Unread count for this tag
-        methodCalls.push(["Email/query", {
-          accountId: this.accountId,
-          filter: {
-            operator: "AND",
-            conditions: [
-              { hasKeyword: keyword },
-              { notKeyword: "$seen" },
-            ],
-          },
-          limit: 0,
-          calculateTotal: true,
-        }, `unread_${i}`]);
+    const result: Record<string, { total: number; unread: number }> = {};
+
+    const CALLS_PER_TAG = 2;
+    const perRequest = itemsPerRequest(this.getMaxCallsInRequest(), CALLS_PER_TAG);
+
+    for (const batch of batched(tagIds, perRequest)) {
+      try {
+        const methodCalls: JMAPMethodCall[] = [];
+        for (let i = 0; i < batch.length; i++) {
+          const keyword = `$label:${batch[i]}`;
+          // Total count for this tag
+          methodCalls.push(["Email/query", {
+            accountId: this.accountId,
+            filter: { hasKeyword: keyword },
+            limit: 0,
+            calculateTotal: true,
+          }, `total_${i}`]);
+          // Unread count for this tag
+          methodCalls.push(["Email/query", {
+            accountId: this.accountId,
+            filter: {
+              operator: "AND",
+              conditions: [
+                { hasKeyword: keyword },
+                { notKeyword: "$seen" },
+              ],
+            },
+            limit: 0,
+            calculateTotal: true,
+          }, `unread_${i}`]);
+        }
+
+        const response = await this.request(methodCalls);
+
+        for (let i = 0; i < batch.length; i++) {
+          const totalResp = response.methodResponses?.[i * 2]?.[1];
+          const unreadResp = response.methodResponses?.[i * 2 + 1]?.[1];
+          result[batch[i]] = {
+            total: totalResp?.total ?? 0,
+            unread: unreadResp?.total ?? 0,
+          };
+        }
+      } catch (error) {
+        console.error('Failed to get tag counts:', error);
       }
-
-      const response = await this.request(methodCalls);
-      const result: Record<string, { total: number; unread: number }> = {};
-
-      for (let i = 0; i < tagIds.length; i++) {
-        const totalResp = response.methodResponses?.[i * 2]?.[1];
-        const unreadResp = response.methodResponses?.[i * 2 + 1]?.[1];
-        result[tagIds[i]] = {
-          total: totalResp?.total ?? 0,
-          unread: unreadResp?.total ?? 0,
-        };
-      }
-
-      return result;
-    } catch (error) {
-      console.error('Failed to get tag counts:', error);
-      return {};
     }
+
+    return result;
   }
 
   /**
    * Per-tab unread counts for message-list category tabs. One Email/query
-   * (limit 0, calculateTotal) per tab, batched in a single request. Each
-   * entry's `filter` is the tab's resolved FilterCondition/FilterOperator
-   * (null = no extra condition, i.e. all unread in the mailbox).
+   * (limit 0, calculateTotal) per tab, batched into as few requests as the
+   * server's method-call ceiling allows. Each entry's `filter` is the tab's
+   * resolved FilterCondition/FilterOperator (null = no extra condition, i.e.
+   * all unread in the mailbox).
    */
   async getCategoryUnreadCounts(
     mailboxId: string,
@@ -1324,31 +1332,34 @@ export class JMAPClient implements IJMAPClient {
   ): Promise<Record<string, number>> {
     if (tabs.length === 0) return {};
     const targetAccountId = accountId || this.accountId;
-    try {
-      const methodCalls: JMAPMethodCall[] = tabs.map((tab, i) => {
-        const conditions: Record<string, unknown>[] = [
-          { inMailbox: mailboxId },
-          { notKeyword: "$seen" },
-        ];
-        if (tab.filter) conditions.push(tab.filter);
-        return ["Email/query", {
-          accountId: targetAccountId,
-          filter: { operator: "AND", conditions },
-          limit: 0,
-          calculateTotal: true,
-        }, `tab_${i}`];
-      });
+    const result: Record<string, number> = {};
 
-      const response = await this.request(methodCalls);
-      const result: Record<string, number> = {};
-      for (let i = 0; i < tabs.length; i++) {
-        result[tabs[i].id] = response.methodResponses?.[i]?.[1]?.total ?? 0;
+    for (const batch of batched(tabs, this.getMaxCallsInRequest())) {
+      try {
+        const methodCalls: JMAPMethodCall[] = batch.map((tab, i) => {
+          const conditions: Record<string, unknown>[] = [
+            { inMailbox: mailboxId },
+            { notKeyword: "$seen" },
+          ];
+          if (tab.filter) conditions.push(tab.filter);
+          return ["Email/query", {
+            accountId: targetAccountId,
+            filter: { operator: "AND", conditions },
+            limit: 0,
+            calculateTotal: true,
+          }, `tab_${i}`];
+        });
+
+        const response = await this.request(methodCalls);
+        for (let i = 0; i < batch.length; i++) {
+          result[batch[i].id] = response.methodResponses?.[i]?.[1]?.total ?? 0;
+        }
+      } catch (error) {
+        console.error('Failed to get category tab counts:', error);
       }
-      return result;
-    } catch (error) {
-      console.error('Failed to get category tab counts:', error);
-      return {};
     }
+
+    return result;
   }
 
   async getEmail(emailId: string, accountId?: string): Promise<Email | null> {
@@ -1464,10 +1475,12 @@ export class JMAPClient implements IJMAPClient {
   async batchMarkAsRead(emailIds: string[], read: boolean = true, accountId?: string): Promise<void> {
     if (emailIds.length === 0) return;
 
-    const updates = Object.fromEntries(emailIds.map(id => [id, { "keywords/$seen": read }]));
-    await this.request([
-      ["Email/set", { accountId: accountId || this.accountId, update: updates }, "0"],
-    ]);
+    for (const batch of batched(emailIds, this.getMaxObjectsInSet())) {
+      const updates = Object.fromEntries(batch.map(id => [id, { "keywords/$seen": read }]));
+      await this.request([
+        ["Email/set", { accountId: accountId || this.accountId, update: updates }, "0"],
+      ]);
+    }
   }
 
   async toggleStar(emailId: string, starred: boolean, accountId?: string): Promise<void> {
@@ -1529,10 +1542,12 @@ export class JMAPClient implements IJMAPClient {
    */
   async batchUpdateKeywords(emailIds: string[], patch: Record<string, boolean | null>, accountId?: string): Promise<void> {
     if (emailIds.length === 0 || Object.keys(patch).length === 0) return;
-    const update = Object.fromEntries(emailIds.map(id => [id, { ...patch }]));
-    await this.request([
-      ["Email/set", { accountId: accountId || this.accountId, update }, "0"],
-    ]);
+    for (const batch of batched(emailIds, this.getMaxObjectsInSet())) {
+      const update = Object.fromEntries(batch.map(id => [id, { ...patch }]));
+      await this.request([
+        ["Email/set", { accountId: accountId || this.accountId, update }, "0"],
+      ]);
+    }
   }
 
   async migrateKeyword(oldKeyword: string, newKeyword: string): Promise<number> {
@@ -1562,9 +1577,7 @@ export class JMAPClient implements IJMAPClient {
     if (allIds.length === 0) return 0;
 
     // Batch update: remove old keyword, add new keyword using per-property patches
-    const updateBatchSize = 50;
-    for (let i = 0; i < allIds.length; i += updateBatchSize) {
-      const batch = allIds.slice(i, i + updateBatchSize);
+    for (const batch of batched(allIds, this.getMaxObjectsInSet())) {
       const update: Record<string, Record<string, boolean | null>> = {};
       for (const id of batch) {
         update[id] = {
@@ -1608,12 +1621,14 @@ export class JMAPClient implements IJMAPClient {
   async batchDeleteEmails(emailIds: string[], accountId?: string): Promise<void> {
     if (emailIds.length === 0) return;
 
-    await this.request([
-      ["Email/set", {
-        accountId: accountId || this.accountId,
-        destroy: emailIds,
-      }, "0"],
-    ]);
+    for (const batch of batched(emailIds, this.getMaxObjectsInSet())) {
+      await this.request([
+        ["Email/set", {
+          accountId: accountId || this.accountId,
+          destroy: batch,
+        }, "0"],
+      ]);
+    }
   }
 
   async batchMoveEmails(emailIds: string[], toMailboxId: string, accountId?: string, markAsRead?: boolean): Promise<void> {
@@ -1624,10 +1639,12 @@ export class JMAPClient implements IJMAPClient {
       if (markAsRead) patch["keywords/$seen"] = true;
       return patch;
     };
-    const updates = Object.fromEntries(emailIds.map(id => [id, buildPatch()]));
-    await this.request([
-      ["Email/set", { accountId: accountId || this.accountId, update: updates }, "0"],
-    ]);
+    for (const batch of batched(emailIds, this.getMaxObjectsInSet())) {
+      const updates = Object.fromEntries(batch.map(id => [id, buildPatch()]));
+      await this.request([
+        ["Email/set", { accountId: accountId || this.accountId, update: updates }, "0"],
+      ]);
+    }
   }
 
   async batchArchiveEmails(
@@ -1705,35 +1722,59 @@ export class JMAPClient implements IJMAPClient {
       updates[emailId] = { mailboxIds: { [destId]: true } };
     }
 
-    const methodCalls: JMAPMethodCall[] = [];
+    // Creation ids are scoped to the request that introduced them (RFC 8620
+    // §3.3), so "#<cid>" only resolves in the request carrying the Mailbox/set:
+    // the folders are created alongside the first batch of messages, and the
+    // ids they were assigned are substituted into every later batch.
+    const updateBatches = batched(Object.entries(updates), this.getMaxObjectsInSet());
     const hasCreates = Object.keys(createEntries).length > 0;
-    if (hasCreates) {
-      methodCalls.push(['Mailbox/set', { accountId: targetAccountId, create: createEntries }, '0']);
-    }
-    methodCalls.push(['Email/set', { accountId: targetAccountId, update: updates }, String(methodCalls.length)]);
+    let createdIdFor: Record<string, string> = {};
 
-    const response = await this.request(methodCalls);
+    for (let i = 0; i < updateBatches.length; i++) {
+      const batch: Array<[string, { mailboxIds: Record<string, true> }]> = i === 0
+        ? updateBatches[i]
+        : updateBatches[i].map(([emailId, patch]) => {
+          const [destId] = Object.keys(patch.mailboxIds);
+          const resolved = createdIdFor[destId];
+          return [emailId, resolved ? { mailboxIds: { [resolved]: true } as Record<string, true> } : patch];
+        });
 
-    if (hasCreates) {
-      const mailboxResult = response.methodResponses?.[0]?.[1];
-      const notCreated = mailboxResult?.notCreated as Record<string, { type?: string; properties?: string[]; description?: string }> | undefined;
-      const failures = notCreated ? Object.entries(notCreated) : [];
-      if (failures.length > 0) {
-        const [cid, err] = failures[0];
-        const parts = [err.type || 'unknown'];
-        if (err.properties?.length) parts.push(`properties=[${err.properties.join(', ')}]`);
-        if (err.description) parts.push(err.description);
-        throw new Error(`Failed to create archive folder '${cid}': ${parts.join(' – ')}`);
+      const methodCalls: JMAPMethodCall[] = [];
+      const withCreates = hasCreates && i === 0;
+      if (withCreates) {
+        methodCalls.push(['Mailbox/set', { accountId: targetAccountId, create: createEntries }, '0']);
       }
-    }
+      methodCalls.push(['Email/set', { accountId: targetAccountId, update: Object.fromEntries(batch) }, String(methodCalls.length)]);
 
-    const emailIdx = hasCreates ? 1 : 0;
-    const emailResult = response.methodResponses?.[emailIdx]?.[1];
-    const notUpdated = emailResult?.notUpdated as Record<string, { type?: string; description?: string }> | undefined;
-    const emailFailures = notUpdated ? Object.entries(notUpdated) : [];
-    if (emailFailures.length > 0) {
-      const [id, err] = emailFailures[0];
-      throw new Error(`Failed to move ${emailFailures.length} email(s), first: ${id} – ${err.type || 'unknown'}${err.description ? ` (${err.description})` : ''}`);
+      const response = await this.request(methodCalls);
+
+      if (withCreates) {
+        const mailboxResult = response.methodResponses?.[0]?.[1];
+        const notCreated = mailboxResult?.notCreated as Record<string, { type?: string; properties?: string[]; description?: string }> | undefined;
+        const failures = notCreated ? Object.entries(notCreated) : [];
+        if (failures.length > 0) {
+          const [cid, err] = failures[0];
+          const parts = [err.type || 'unknown'];
+          if (err.properties?.length) parts.push(`properties=[${err.properties.join(', ')}]`);
+          if (err.description) parts.push(err.description);
+          throw new Error(`Failed to create archive folder '${cid}': ${parts.join(' – ')}`);
+        }
+        const created = (mailboxResult?.created || {}) as Record<string, { id?: string }>;
+        createdIdFor = Object.fromEntries(
+          Object.entries(created)
+            .filter(([, mailbox]) => !!mailbox?.id)
+            .map(([cid, mailbox]) => [`#${cid}`, mailbox.id!]),
+        );
+      }
+
+      const emailIdx = withCreates ? 1 : 0;
+      const emailResult = response.methodResponses?.[emailIdx]?.[1];
+      const notUpdated = emailResult?.notUpdated as Record<string, { type?: string; description?: string }> | undefined;
+      const emailFailures = notUpdated ? Object.entries(notUpdated) : [];
+      if (emailFailures.length > 0) {
+        const [id, err] = emailFailures[0];
+        throw new Error(`Failed to move ${emailFailures.length} email(s), first: ${id} – ${err.type || 'unknown'}${err.description ? ` (${err.description})` : ''}`);
+      }
     }
   }
 
@@ -1758,15 +1799,19 @@ export class JMAPClient implements IJMAPClient {
 
   async emptyMailbox(mailboxId: string, accountId?: string): Promise<number> {
     const targetAccountId = accountId || this.accountId;
+    const batchSize = Math.min(500, this.getMaxObjectsInSet());
     let totalDestroyed = 0;
-    let hasMore = true;
 
-    while (hasMore) {
+    // Destroy in batches until the mailbox is empty. Never gate the loop on
+    // Email/query's `total`: it is only guaranteed when `calculateTotal` is
+    // requested, and Stalwart omits it otherwise, which used to stop the loop
+    // after the first batch and leave folders with >500 emails mostly intact.
+    while (true) {
       const response = await this.request([
         ["Email/query", {
           accountId: targetAccountId,
           filter: { inMailbox: mailboxId },
-          limit: 500,
+          limit: batchSize,
         }, "0"],
         ["Email/set", {
           accountId: targetAccountId,
@@ -1776,10 +1821,16 @@ export class JMAPClient implements IJMAPClient {
 
       const queryResult = response.methodResponses?.[0]?.[1];
       const setResult = response.methodResponses?.[1]?.[1];
+      const found: string[] = queryResult?.ids || [];
       const destroyed = setResult?.destroyed?.length || 0;
       totalDestroyed += destroyed;
 
-      hasMore = destroyed > 0 && (queryResult?.total || 0) > destroyed;
+      // Nothing left, or the server refused everything in this batch (missing
+      // permission, immutable mail) — stop instead of looping forever on the
+      // same ids.
+      if (found.length === 0 || destroyed === 0) break;
+      // A short page means we just handled the tail of the mailbox.
+      if (found.length < batchSize) break;
     }
 
     return totalDestroyed;
@@ -1787,6 +1838,7 @@ export class JMAPClient implements IJMAPClient {
 
   async markMailboxAsRead(mailboxId: string, accountId?: string): Promise<number> {
     const targetAccountId = accountId || this.accountId;
+    const pageSize = Math.min(500, this.getMaxObjectsInSet());
     let totalMarked = 0;
     let hasMore = true;
 
@@ -1801,7 +1853,7 @@ export class JMAPClient implements IJMAPClient {
               { notKeyword: "$seen" },
             ],
           },
-          limit: 500,
+          limit: pageSize,
         }, "0"],
       ]);
 
@@ -1817,7 +1869,7 @@ export class JMAPClient implements IJMAPClient {
       ]);
 
       totalMarked += ids.length;
-      hasMore = ids.length === 500;
+      hasMore = ids.length === pageSize;
     }
 
     return totalMarked;
@@ -1826,6 +1878,7 @@ export class JMAPClient implements IJMAPClient {
   async markAllAsRead(excludeMailboxIds: string[] = [], accountId?: string): Promise<number> {
     const targetAccountId = accountId || this.accountId;
     const excludeSet = new Set(excludeMailboxIds);
+    const pageSize = Math.min(500, this.getMaxObjectsInGet(), this.getMaxObjectsInSet());
     let totalMarked = 0;
     let hasMore = true;
     let position = 0;
@@ -1835,7 +1888,7 @@ export class JMAPClient implements IJMAPClient {
         ["Email/query", {
           accountId: targetAccountId,
           filter: { notKeyword: "$seen" },
-          limit: 500,
+          limit: pageSize,
           position,
         }, "0"],
         ["Email/get", {
@@ -1871,7 +1924,7 @@ export class JMAPClient implements IJMAPClient {
         totalMarked += targetIds.length;
       }
 
-      hasMore = ids.length === 500;
+      hasMore = ids.length === pageSize;
       position += ids.length;
     }
 
@@ -2183,14 +2236,19 @@ export class JMAPClient implements IJMAPClient {
     if (threadIds.length === 0) return [];
     try {
       const targetAccountId = accountId || this.accountId;
-      const response = await this.request([
-        ["Thread/get", { accountId: targetAccountId, ids: threadIds }, "0"],
-      ]);
+      const threads: Thread[] = [];
 
-      if (response.methodResponses?.[0]?.[0] === "Thread/get") {
-        return (response.methodResponses[0][1].list || []) as Thread[];
+      for (const batchIds of batched(threadIds, this.getMaxObjectsInGet())) {
+        const response = await this.request([
+          ["Thread/get", { accountId: targetAccountId, ids: batchIds }, "0"],
+        ]);
+
+        if (response.methodResponses?.[0]?.[0] === "Thread/get") {
+          threads.push(...((response.methodResponses[0][1].list || []) as Thread[]));
+        }
       }
-      return [];
+
+      return threads;
     } catch (error) {
       console.error('Failed to get threads:', error);
       return [];
@@ -2205,26 +2263,32 @@ export class JMAPClient implements IJMAPClient {
         return [];
       }
 
-      const response = await this.request([
-        ["Email/get", {
-          accountId: targetAccountId,
-          ids: thread.emailIds,
-          properties: [
-            ...EMAIL_LIST_PROPERTIES,
-            "textBody", "htmlBody", "bodyValues",
-            "attachments", "blobId", "sentAt", "bcc", "replyTo",
-            "messageId", "inReplyTo", "references", "headers", "bodyStructure",
-          ],
-          fetchTextBodyValues: true,
-          fetchHTMLBodyValues: true,
-          fetchAllBodyValues: true,
-          maxBodyValueBytes: 256000,
-        }, "0"],
-      ]);
+      const emails: Email[] = [];
 
-      if (response.methodResponses?.[0]?.[0] === "Email/get") {
-        const emails = response.methodResponses[0][1].list || [];
+      for (const batchIds of batched(thread.emailIds, this.getMaxObjectsInGet())) {
+        const response = await this.request([
+          ["Email/get", {
+            accountId: targetAccountId,
+            ids: batchIds,
+            properties: [
+              ...EMAIL_LIST_PROPERTIES,
+              "textBody", "htmlBody", "bodyValues",
+              "attachments", "blobId", "sentAt", "bcc", "replyTo",
+              "messageId", "inReplyTo", "references", "headers", "bodyStructure",
+            ],
+            fetchTextBodyValues: true,
+            fetchHTMLBodyValues: true,
+            fetchAllBodyValues: true,
+            maxBodyValueBytes: 256000,
+          }, "0"],
+        ]);
 
+        if (response.methodResponses?.[0]?.[0] === "Email/get") {
+          emails.push(...(response.methodResponses[0][1].list || []));
+        }
+      }
+
+      if (emails.length > 0) {
         if (accountId && accountId !== this.accountId) {
           namespaceMailboxIds(emails, accountId);
         }
@@ -3594,6 +3658,11 @@ export class JMAPClient implements IJMAPClient {
   getMaxObjectsInGet(): number {
     const coreCapability = this.capabilities["urn:ietf:params:jmap:core"] as { maxObjectsInGet?: number } | undefined;
     return coreCapability?.maxObjectsInGet || 500;
+  }
+
+  getMaxObjectsInSet(): number {
+    const coreCapability = this.capabilities["urn:ietf:params:jmap:core"] as { maxObjectsInSet?: number } | undefined;
+    return coreCapability?.maxObjectsInSet || 500;
   }
 
   getMaxDelayedSend(accountId?: string): number {
@@ -5050,38 +5119,41 @@ export class JMAPClient implements IJMAPClient {
 
     const accountId = targetAccountId || this.getCalendarsAccountId();
 
-    // Build the create map: { "new-0": event0, "new-1": event1, ... }
-    const createMap: Record<string, Partial<CalendarEvent>> = {};
-    for (let i = 0; i < events.length; i++) {
-      const { originalId: _oi, originalCalendarIds: _oc, accountId: _ai, accountName: _an, isShared: _is, ...clean } = events[i] as CalendarEvent;
-      cleanRecurrenceRules(clean as unknown as Record<string, unknown>);
-      createMap[`new-${i}`] = clean;
-    }
-
     debug.log('calendar', 'CalendarEvent/batchCreate', { count: events.length, accountId });
-
-    // Never emit iMIP scheduling messages when importing. Imported events often
-    // carry an organizer/participants where the current user is the organizer;
-    // without this, Stalwart tries to send invitation emails to every attendee
-    // synchronously during CalendarEvent/set, which is both wrong (importing a
-    // calendar should not spam invites) and can block the request indefinitely,
-    // leaving the import spinner spinning forever (#411).
-    const response = await this.request([
-      ["CalendarEvent/set", { accountId, sendSchedulingMessages: false, create: createMap }, "0"]
-    ], this.calendarUsing());
 
     const createdIds: string[] = [];
     const failed: string[] = [];
+    const indexed = events.map((event, index) => ({ event, index }));
 
-    if (response.methodResponses?.[0]?.[0] === "CalendarEvent/set") {
-      const result = response.methodResponses[0][1];
-      for (let i = 0; i < events.length; i++) {
-        const key = `new-${i}`;
-        if (result.created?.[key]?.id) {
-          createdIds.push(result.created[key].id);
-        } else if (result.notCreated?.[key]) {
-          debug.warn('calendar', `CalendarEvent/batchCreate failed for ${key}`, result.notCreated[key]);
-          failed.push(key);
+    for (const batch of batched(indexed, this.getMaxObjectsInSet())) {
+      // Build the create map: { "new-0": event0, "new-1": event1, ... }
+      const createMap: Record<string, Partial<CalendarEvent>> = {};
+      for (const { event, index } of batch) {
+        const { originalId: _oi, originalCalendarIds: _oc, accountId: _ai, accountName: _an, isShared: _is, ...clean } = event as CalendarEvent;
+        cleanRecurrenceRules(clean as unknown as Record<string, unknown>);
+        createMap[`new-${index}`] = clean;
+      }
+
+      // Never emit iMIP scheduling messages when importing. Imported events often
+      // carry an organizer/participants where the current user is the organizer;
+      // without this, Stalwart tries to send invitation emails to every attendee
+      // synchronously during CalendarEvent/set, which is both wrong (importing a
+      // calendar should not spam invites) and can block the request indefinitely,
+      // leaving the import spinner spinning forever (#411).
+      const response = await this.request([
+        ["CalendarEvent/set", { accountId, sendSchedulingMessages: false, create: createMap }, "0"]
+      ], this.calendarUsing());
+
+      if (response.methodResponses?.[0]?.[0] === "CalendarEvent/set") {
+        const result = response.methodResponses[0][1];
+        for (const { index } of batch) {
+          const key = `new-${index}`;
+          if (result.created?.[key]?.id) {
+            createdIds.push(result.created[key].id);
+          } else if (result.notCreated?.[key]) {
+            debug.warn('calendar', `CalendarEvent/batchCreate failed for ${key}`, result.notCreated[key]);
+            failed.push(key);
+          }
         }
       }
     }
@@ -5090,21 +5162,24 @@ export class JMAPClient implements IJMAPClient {
       return { created: [], failed };
     }
 
-    // Fetch all created events in a single CalendarEvent/get
+    // Fetch the created events back for their server-assigned properties
     const refetchTimeZone = getUserTimeZone();
-    const getResponse = await this.request([
-      ["CalendarEvent/get", {
-        accountId,
-        properties: [...CALENDAR_EVENT_PROPERTIES],
-        ids: createdIds,
-        ...(refetchTimeZone ? { timeZone: refetchTimeZone } : {}),
-      }, "0"]
-    ], this.calendarUsing());
+    const createdEvents: CalendarEvent[] = [];
 
-    let createdEvents: CalendarEvent[] = [];
-    if (getResponse.methodResponses?.[0]?.[0] === "CalendarEvent/get") {
-      const list = getResponse.methodResponses[0][1].list || [];
-      createdEvents = list.map((e: CalendarEvent) => normalizeCalendarEventLike(e));
+    for (const batchIds of batched(createdIds, this.getMaxObjectsInGet())) {
+      const getResponse = await this.request([
+        ["CalendarEvent/get", {
+          accountId,
+          properties: [...CALENDAR_EVENT_PROPERTIES],
+          ids: batchIds,
+          ...(refetchTimeZone ? { timeZone: refetchTimeZone } : {}),
+        }, "0"]
+      ], this.calendarUsing());
+
+      if (getResponse.methodResponses?.[0]?.[0] === "CalendarEvent/get") {
+        const list = getResponse.methodResponses[0][1].list || [];
+        createdEvents.push(...list.map((e: CalendarEvent) => normalizeCalendarEventLike(e)));
+      }
     }
 
     debug.log('calendar', 'CalendarEvent/batchCreate result', {
@@ -5255,17 +5330,19 @@ export class JMAPClient implements IJMAPClient {
     if (eventIds.length === 0) return { destroyed: [], notDestroyed: [] };
 
     const accountId = targetAccountId || this.getCalendarsAccountId();
-    const response = await this.request([
-      ["CalendarEvent/set", { accountId, destroy: eventIds }, "0"]
-    ], this.calendarUsing());
-
     const destroyed: string[] = [];
     const notDestroyed: string[] = [];
 
-    if (response.methodResponses?.[0]?.[0] === "CalendarEvent/set") {
-      const result = response.methodResponses[0][1];
-      if (result.destroyed) destroyed.push(...result.destroyed);
-      if (result.notDestroyed) notDestroyed.push(...Object.keys(result.notDestroyed));
+    for (const batch of batched(eventIds, this.getMaxObjectsInSet())) {
+      const response = await this.request([
+        ["CalendarEvent/set", { accountId, destroy: batch }, "0"]
+      ], this.calendarUsing());
+
+      if (response.methodResponses?.[0]?.[0] === "CalendarEvent/set") {
+        const result = response.methodResponses[0][1];
+        if (result.destroyed) destroyed.push(...result.destroyed);
+        if (result.notDestroyed) notDestroyed.push(...Object.keys(result.notDestroyed));
+      }
     }
 
     return { destroyed, notDestroyed };
@@ -5524,7 +5601,7 @@ export class JMAPClient implements IJMAPClient {
   }
 
   private static FILE_NODE_PROPERTIES = [
-    "id", "parentId", "name", "type", "blobId", "size", "created", "updated",
+    "id", "parentId", "name", "type", "blobId", "size", "created", "modified",
     // Stalwart omits shareWith/myRights from FileNode/get unless requested
     // explicitly, so the share dialog and indicators can't see existing
     // shares without naming them here (same as CALENDAR_PROPERTIES).
@@ -5778,62 +5855,69 @@ export class JMAPClient implements IJMAPClient {
    * throws for per-node failures (only for a whole-method error).
    */
   async updateFileNodes(updates: Record<string, Partial<Pick<FileNode, 'name' | 'parentId'>>>): Promise<{ updated: string[]; notUpdated: Record<string, string> }> {
-    const ids = Object.keys(updates);
-    if (ids.length === 0) return { updated: [], notUpdated: {} };
+    const entries = Object.entries(updates);
+    if (entries.length === 0) return { updated: [], notUpdated: {} };
     const accountId = this.getFilesAccountId();
 
-    const response = await this.request(
-      [["FileNode/set", { accountId, update: updates }, "fns0"]],
-      this.fileUsing(),
-    );
-
-    const result = response.methodResponses?.[0];
-    if (!result || result[0] === "error") {
-      throw new Error(result?.[1]?.description || "FileNode/set update failed");
-    }
-
-    const updatedMap: Record<string, unknown> = result[1].updated || {};
-    const notUpdatedMap: Record<string, { description?: string }> = result[1].notUpdated || {};
+    const updated: string[] = [];
     const notUpdated: Record<string, string> = {};
-    for (const id of Object.keys(notUpdatedMap)) {
-      notUpdated[id] = notUpdatedMap[id]?.description || 'not updated';
+
+    for (const batch of batched(entries, this.getMaxObjectsInSet())) {
+      const response = await this.request(
+        [["FileNode/set", { accountId, update: Object.fromEntries(batch) }, "fns0"]],
+        this.fileUsing(),
+      );
+
+      const result = response.methodResponses?.[0];
+      if (!result || result[0] === "error") {
+        throw new Error(result?.[1]?.description || "FileNode/set update failed");
+      }
+
+      const updatedMap: Record<string, unknown> = result[1].updated || {};
+      const notUpdatedMap: Record<string, { description?: string }> = result[1].notUpdated || {};
+      for (const id of Object.keys(notUpdatedMap)) {
+        notUpdated[id] = notUpdatedMap[id]?.description || 'not updated';
+      }
+      // Servers may omit the `updated` map; treat anything not rejected as updated.
+      updated.push(...(Object.keys(updatedMap).length > 0
+        ? Object.keys(updatedMap)
+        : batch.map(([id]) => id).filter(id => !(id in notUpdated))));
     }
-    // Servers may omit the `updated` map; treat anything not rejected as updated.
-    const updated = Object.keys(updatedMap).length > 0
-      ? Object.keys(updatedMap)
-      : ids.filter(id => !(id in notUpdated));
+
     return { updated, notUpdated };
   }
 
   async destroyFileNodes(ids: string[]): Promise<{ destroyed: string[]; notDestroyed: string[] }> {
     const accountId = this.getFilesAccountId();
+    const destroyed: string[] = [];
 
-    const response = await this.request(
-      [["FileNode/set", {
-        accountId,
-        destroy: ids,
-        onDestroyRemoveChildren: true,
-      }, "fns0"]],
-      this.fileUsing(),
-    );
+    for (const batch of batched(ids, this.getMaxObjectsInSet())) {
+      const response = await this.request(
+        [["FileNode/set", {
+          accountId,
+          destroy: batch,
+          onDestroyRemoveChildren: true,
+        }, "fns0"]],
+        this.fileUsing(),
+      );
 
-    const result = response.methodResponses?.[0];
-    if (!result || result[0] === "error") {
-      throw new Error(result?.[1]?.description || "FileNode/set destroy failed");
+      const result = response.methodResponses?.[0];
+      if (!result || result[0] === "error") {
+        throw new Error(result?.[1]?.description || "FileNode/set destroy failed");
+      }
+
+      const notDestroyedMap: Record<string, { type?: string; description?: string }> = result[1].notDestroyed || {};
+      const notDestroyedIds = Object.keys(notDestroyedMap);
+
+      if (notDestroyedIds.length > 0) {
+        const firstError = notDestroyedMap[notDestroyedIds[0]];
+        throw new Error(firstError?.description || `Failed to delete ${notDestroyedIds.length} file(s)`);
+      }
+
+      destroyed.push(...(result[1].destroyed || []));
     }
 
-    const notDestroyedMap: Record<string, { type?: string; description?: string }> = result[1].notDestroyed || {};
-    const notDestroyedIds = Object.keys(notDestroyedMap);
-
-    if (notDestroyedIds.length > 0) {
-      const firstError = notDestroyedMap[notDestroyedIds[0]];
-      throw new Error(firstError?.description || `Failed to delete ${notDestroyedIds.length} file(s)`);
-    }
-
-    return {
-      destroyed: result[1].destroyed || [],
-      notDestroyed: [],
-    };
+    return { destroyed, notDestroyed: [] };
   }
 
   async copyFileNode(id: string, newName: string, parentId: string | null): Promise<FileNode> {

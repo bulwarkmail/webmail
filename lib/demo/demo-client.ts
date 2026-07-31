@@ -56,7 +56,7 @@ export class DemoJMAPClient implements IJMAPClient {
 
   getCapabilities(): Record<string, unknown> {
     return {
-      'urn:ietf:params:jmap:core': { maxSizeUpload: 50_000_000, maxCallsInRequest: 16, maxObjectsInGet: 500 },
+      'urn:ietf:params:jmap:core': { maxSizeUpload: 50_000_000, maxCallsInRequest: 16, maxObjectsInGet: 500, maxObjectsInSet: 500 },
       'urn:ietf:params:jmap:mail': {},
       'urn:ietf:params:jmap:submission': { maxDelayedSend: 30 * 24 * 60 * 60, submissionExtensions: { FUTURERELEASE: true } },
       'urn:ietf:params:jmap:vacationresponse': {},
@@ -71,6 +71,7 @@ export class DemoJMAPClient implements IJMAPClient {
   getMaxSizeUpload(): number { return 50_000_000; }
   getMaxCallsInRequest(): number { return 16; }
   getMaxObjectsInGet(): number { return 500; }
+  getMaxObjectsInSet(): number { return 500; }
   getMaxDelayedSend(): number { return 30 * 24 * 60 * 60; }
   hasDelayedSend(): boolean { return true; }
   getEventSourceUrl(): string | null { return null; }
@@ -1046,7 +1047,7 @@ export class DemoJMAPClient implements IJMAPClient {
     const node: FileNode = {
       id: generateDemoId('file'),
       parentId, name, type: 'd', blobId: null, size: 0,
-      created: new Date().toISOString(), updated: new Date().toISOString(),
+      created: new Date().toISOString(), modified: new Date().toISOString(),
     };
     this.data.fileNodes.push(node);
     return node;
@@ -1056,7 +1057,7 @@ export class DemoJMAPClient implements IJMAPClient {
     const node: FileNode = {
       id: generateDemoId('file'),
       parentId, name, type, blobId, size,
-      created: new Date().toISOString(), updated: new Date().toISOString(),
+      created: new Date().toISOString(), modified: new Date().toISOString(),
     };
     this.data.fileNodes.push(node);
     return node;
@@ -1064,7 +1065,7 @@ export class DemoJMAPClient implements IJMAPClient {
 
   async updateFileNode(id: string, updates: Partial<Pick<FileNode, 'name' | 'parentId'>>): Promise<void> {
     const node = this.data.fileNodes.find(n => n.id === id);
-    if (node) Object.assign(node, updates, { updated: new Date().toISOString() });
+    if (node) Object.assign(node, updates, { modified: new Date().toISOString() });
   }
 
   async updateFileNodes(updates: Record<string, Partial<Pick<FileNode, 'name' | 'parentId'>>>): Promise<{ updated: string[]; notUpdated: Record<string, string> }> {
@@ -1072,7 +1073,7 @@ export class DemoJMAPClient implements IJMAPClient {
     for (const [id, patch] of Object.entries(updates)) {
       const node = this.data.fileNodes.find(n => n.id === id);
       if (node) {
-        Object.assign(node, patch, { updated: new Date().toISOString() });
+        Object.assign(node, patch, { modified: new Date().toISOString() });
         updated.push(id);
       }
     }

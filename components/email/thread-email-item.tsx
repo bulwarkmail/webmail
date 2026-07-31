@@ -12,6 +12,10 @@ import { useLongPress } from "@/hooks/use-long-press";
 import { useEmailStore } from "@/stores/email-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useUIStore } from "@/stores/ui-store";
+import { getEmailTagIds } from "@/lib/thread-utils";
+import { useKeywordFormat } from "@/hooks/use-keyword-format";
+import { useTagDisplay } from "@/hooks/use-tag-display";
+import { TagBadge } from "./tag-badge";
 
 interface ThreadEmailItemProps {
   email: Email;
@@ -35,6 +39,11 @@ export function ThreadEmailItem({
   const isStarred = email.keywords?.$flagged;
   const isAnswered = email.keywords?.$answered;
   const isForwarded = email.keywords?.$forwarded;
+  const { sortTagIds } = useKeywordFormat();
+  const { variant: tagVariant } = useTagDisplay();
+  // A message inside an expanded thread carries its own tags; the collapsed
+  // header pools them, so without this they disappear on the way in.
+  const tagIds = sortTagIds(getEmailTagIds(email.keywords));
   const sender = email.from?.[0];
   const { selectedMailbox, selectedEmailIds, toggleEmailSelection, selectRangeEmails, clearSelection } = useEmailStore();
   const density = useSettingsStore((state) => state.density);
@@ -178,6 +187,9 @@ export function ThreadEmailItem({
               {email.hasAttachment && (
                 <Paperclip className="w-3 h-3 text-muted-foreground" />
               )}
+              {tagIds.map((id) => (
+                <TagBadge key={id} tagId={id} variant={tagVariant} />
+              ))}
             </div>
 
             {/* Preview snippet */}

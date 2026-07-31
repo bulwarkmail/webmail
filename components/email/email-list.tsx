@@ -17,6 +17,7 @@ import { useContextMenu } from "@/hooks/use-context-menu";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { useTranslations } from "next-intl";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import { TagDisplayContext, useMeasuredTagDisplay } from "@/hooks/use-tag-display";
 import { SearchChips } from "@/components/search/search-chips";
 import { isFilterEmpty, DEFAULT_SEARCH_FILTERS } from "@/lib/jmap/search-utils";
 
@@ -39,7 +40,7 @@ interface EmailListProps {
   onTogglePinned?: (email: Email) => void;
   onDelete?: (email: Email) => void;
   onArchive?: (email: Email) => void;
-  onSetColorTag?: (emailId: string, color: string | null) => void;
+  onSetTag?: (emailId: string, tagId: string | null) => void;
   onMoveToMailbox?: (emailId: string, mailboxId: string) => void;
   onMarkAsSpam?: (email: Email) => void;
   onUndoSpam?: (email: Email) => void;
@@ -70,7 +71,7 @@ export function EmailList({
   onTogglePinned,
   onDelete,
   onArchive,
-  onSetColorTag,
+  onSetTag,
   onMarkAsSpam,
   onUndoSpam,
   onMoveToMailbox,
@@ -132,10 +133,20 @@ export function EmailList({
   }, [emails, disableThreading, isScheduledView, threadEmailCounts]);
 
   const { contextMenu, openContextMenu, closeContextMenu, menuRef } = useContextMenu<Email>();
+  /**
+   * The row the menu was opened on, as the list currently has it. The menu holds
+   * the message it was handed when it opened, but tags can be applied from
+   * inside it without dismissing it, so what it draws has to keep up.
+   */
+  const contextMenuEmail = contextMenu.data
+    ? emails.find((email) => email.id === contextMenu.data!.id) ?? contextMenu.data
+    : null;
   const { dialogProps: confirmDialogProps, confirm: confirmDialog } = useConfirmDialog();
 
   const [isProcessing, setIsProcessing] = useState(false);
   const parentRef = useRef<HTMLDivElement>(null);
+  // One tag treatment for the whole list, measured from the scroll container.
+  const tagDisplay = useMeasuredTagDisplay(parentRef);
   const density = useSettingsStore((state) => state.density);
   const showPreview = useSettingsStore((state) => state.showPreview);
   const mailLayout = useSettingsStore((state) => state.mailLayout);
@@ -332,6 +343,7 @@ export function EmailList({
   }, [density, isFocusedMailLayout, showPreview]);
 
   return (
+    <TagDisplayContext.Provider value={tagDisplay}>
     <div className={cn("flex flex-col min-h-0", className)}>
       {/* Batch Actions Toolbar */}
       <div
@@ -543,7 +555,7 @@ export function EmailList({
                       onMarkAsRead={onMarkAsRead ? (email, read) => onMarkAsRead(email, read) : undefined}
                       onDelete={onDelete ? (email) => onDelete(email) : undefined}
                       onArchive={onArchive ? (email) => onArchive(email) : undefined}
-                      onSetColorTag={onSetColorTag}
+                      onSetTag={onSetTag}
                       onMarkAsSpam={onMarkAsSpam ? (email) => onMarkAsSpam(email) : undefined}
                       onUndoSpam={onUndoSpam ? (email) => onUndoSpam(email) : undefined}
                     />
@@ -570,9 +582,9 @@ export function EmailList({
       </div>
 
       {/* Context Menu */}
-      {contextMenu.data && (
+      {contextMenuEmail && (
         <EmailContextMenu
-          email={contextMenu.data}
+          email={contextMenuEmail}
           position={contextMenu.position}
           isOpen={contextMenu.isOpen}
           onClose={closeContextMenu}
@@ -580,25 +592,25 @@ export function EmailList({
           mailboxes={mailboxes}
           selectedMailbox={selectedMailbox}
           currentMailboxRole={effectiveMailboxRole}
-          isMultiSelect={selectedEmailIds.has(contextMenu.data.id)}
+          isMultiSelect={selectedEmailIds.has(contextMenuEmail.id)}
           selectedCount={selectedEmailIds.size}
-          onReply={() => onReply?.(contextMenu.data!)}
-          onReplyAll={() => onReplyAll?.(contextMenu.data!)}
-          onForward={() => onForward?.(contextMenu.data!)}
-          onForwardAsAttachment={() => onForwardAsAttachment?.(contextMenu.data!)}
-          onMarkAsRead={(read) => onMarkAsRead?.(contextMenu.data!, read)}
-          onToggleStar={() => onToggleStar?.(contextMenu.data!)}
-          onTogglePinned={onTogglePinned ? () => onTogglePinned(contextMenu.data!) : undefined}
-          onDelete={() => onDelete?.(contextMenu.data!)}
-          onArchive={() => onArchive?.(contextMenu.data!)}
-          onSetColorTag={(color) => onSetColorTag?.(contextMenu.data!.id, color)}
-          onMoveToMailbox={(mailboxId) => onMoveToMailbox?.(contextMenu.data!.id, mailboxId)}
-          onMarkAsSpam={() => onMarkAsSpam?.(contextMenu.data!)}
-          onUndoSpam={() => onUndoSpam?.(contextMenu.data!)}
-          onEditDraft={() => onEditDraft?.(contextMenu.data!)}
-          onCancelScheduled={onCancelScheduled ? () => onCancelScheduled(contextMenu.data!) : undefined}
-          onCancelScheduledForEdit={onCancelScheduledForEdit ? () => onCancelScheduledForEdit(contextMenu.data!) : undefined}
-          onRescheduleScheduled={onRescheduleScheduled ? () => onRescheduleScheduled(contextMenu.data!) : undefined}
+          onReply={() => onReply?.(contextMenuEmail!)}
+          onReplyAll={() => onReplyAll?.(contextMenuEmail!)}
+          onForward={() => onForward?.(contextMenuEmail!)}
+          onForwardAsAttachment={() => onForwardAsAttachment?.(contextMenuEmail!)}
+          onMarkAsRead={(read) => onMarkAsRead?.(contextMenuEmail!, read)}
+          onToggleStar={() => onToggleStar?.(contextMenuEmail!)}
+          onTogglePinned={onTogglePinned ? () => onTogglePinned(contextMenuEmail!) : undefined}
+          onDelete={() => onDelete?.(contextMenuEmail!)}
+          onArchive={() => onArchive?.(contextMenuEmail!)}
+          onSetTag={(color) => onSetTag?.(contextMenuEmail!.id, color)}
+          onMoveToMailbox={(mailboxId) => onMoveToMailbox?.(contextMenuEmail!.id, mailboxId)}
+          onMarkAsSpam={() => onMarkAsSpam?.(contextMenuEmail!)}
+          onUndoSpam={() => onUndoSpam?.(contextMenuEmail!)}
+          onEditDraft={() => onEditDraft?.(contextMenuEmail!)}
+          onCancelScheduled={onCancelScheduled ? () => onCancelScheduled(contextMenuEmail!) : undefined}
+          onCancelScheduledForEdit={onCancelScheduledForEdit ? () => onCancelScheduledForEdit(contextMenuEmail!) : undefined}
+          onRescheduleScheduled={onRescheduleScheduled ? () => onRescheduleScheduled(contextMenuEmail!) : undefined}
           onBatchMarkAsRead={(read) => client && batchMarkAsRead(client, read)}
           onBatchDelete={() => client && batchDelete(client)}
           onBatchArchive={async () => {
@@ -645,5 +657,6 @@ export function EmailList({
 
       <ConfirmDialog {...confirmDialogProps} />
     </div>
+    </TagDisplayContext.Provider>
   );
 }

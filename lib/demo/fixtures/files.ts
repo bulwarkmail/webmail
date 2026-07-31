@@ -12,7 +12,7 @@ export function createDemoFileNodes(): FileNode[] {
       blobId: null,
       size: 0,
       created: demoDate(-30),
-      updated: demoDate(-2),
+      modified: demoDate(-2),
     },
     {
       id: 'demo-file-photos',
@@ -22,7 +22,7 @@ export function createDemoFileNodes(): FileNode[] {
       blobId: null,
       size: 0,
       created: demoDate(-30),
-      updated: demoDate(-5),
+      modified: demoDate(-5),
     },
 
     // Documents contents
@@ -34,7 +34,7 @@ export function createDemoFileNodes(): FileNode[] {
       blobId: 'demo-blob-file-1',
       size: 2150,
       created: demoDate(-7),
-      updated: demoDate(-2),
+      modified: demoDate(-2),
     },
     {
       id: 'demo-file-quarterly-report',
@@ -44,7 +44,7 @@ export function createDemoFileNodes(): FileNode[] {
       blobId: 'demo-blob-file-2',
       size: 148480,
       created: demoDate(-14),
-      updated: demoDate(-14),
+      modified: demoDate(-14),
     },
     {
       id: 'demo-file-todo',
@@ -54,7 +54,7 @@ export function createDemoFileNodes(): FileNode[] {
       blobId: 'demo-blob-file-3',
       size: 410,
       created: demoDate(-3),
-      updated: demoDate(-1),
+      modified: demoDate(-1),
     },
 
     // Photos contents
@@ -66,7 +66,7 @@ export function createDemoFileNodes(): FileNode[] {
       blobId: 'demo-blob-file-4',
       size: 1258291,
       created: demoDate(-10),
-      updated: demoDate(-10),
+      modified: demoDate(-10),
     },
     {
       id: 'demo-file-team-photo',
@@ -76,7 +76,7 @@ export function createDemoFileNodes(): FileNode[] {
       blobId: 'demo-blob-file-5',
       size: 911360,
       created: demoDate(-21),
-      updated: demoDate(-21),
+      modified: demoDate(-21),
     },
 
     // Root-level file
@@ -88,7 +88,7 @@ export function createDemoFileNodes(): FileNode[] {
       blobId: 'demo-blob-file-6',
       size: 68608,
       created: demoDate(-5),
-      updated: demoDate(-1),
+      modified: demoDate(-1),
     },
   ];
 }

@@ -34,6 +34,7 @@ import { debug } from "@/lib/debug";
 import { playNotificationSound } from "@/lib/notification-sound";
 import { cn } from "@/lib/utils";
 import { localizeMailboxName } from "@/lib/mailbox-label";
+import { KEYWORD_PREFIX, KEYWORD_PREFIX_LEGACY } from "@/lib/thread-utils";
 import {
   ErrorBoundary,
   SidebarErrorFallback,
@@ -61,7 +62,8 @@ import { isFilePreviewable } from "@/lib/file-preview";
 import { appendHtmlSignature, appendPlainTextSignature } from "@/lib/signature-utils";
 import { computeReplyThreadingHeaders } from "@/lib/email-threading";
 import { EML_IMPORT_ACCEPT, expandImportableEmails } from "@/lib/eml-import";
-import { findDraftIdentityId, resolveReplyFrom } from "@/lib/reply-identity";
+import { findDraftIdentityId, resolveReplyFrom, type ReplyFromResolution } from "@/lib/reply-identity";
+import { buildReplyRecipients, isSelfSent } from "@/lib/reply-recipients";
 import { useProMultiAccountIdentities } from "@/hooks/use-pro-multi-account-identities";
 import { Search, Filter, ChevronDown, X, Paperclip, Star, Mail, MailOpen, RotateCcw, PenSquare, PenLine, CheckSquare, Square, AlertTriangle } from "lucide-react";
 import { ResizeHandle } from "@/components/layout/resize-handle";
@@ -1833,7 +1835,7 @@ export default function Home() {
         keywords['$pinned'] = true;
       }
 
-      // Same unified-view routing as color tags: write to the email's own
+      // Same unified-view routing as tags: write to the email's own
       // account via the login it is reachable through. (#281)
       const pinClientId = isUnifiedView ? email.sourceClientAccountId : undefined;
       const pinAccountId = isUnifiedView ? email.sourceAccountId : undefined;
@@ -1857,31 +1859,35 @@ export default function Home() {
     }
   };
 
-  const handleSetColorTag = async (emailId: string, color: string | null) => {
+  const handleSetTag = async (emailId: string, tagId: string | null) => {
     if (!client) return;
 
     try {
-      // Remove any existing label/color tags
+      // Remove any existing tag keywords
       const email = emails.find(e => e.id === emailId);
       if (!email) return;
 
       const keywords = { ...email.keywords };
 
-      if (color === null) {
-        // Remove all label/color tags
+      if (tagId === null) {
+        // Remove all tag keywords
         Object.keys(keywords).forEach(key => {
-          if (key.startsWith("$label:") || key.startsWith("$color:")) {
+          if (key.startsWith(KEYWORD_PREFIX) || key.startsWith(KEYWORD_PREFIX_LEGACY)) {
             keywords[key] = false;
           }
         });
       } else {
-        const jmapKey = `$label:${color}`;
-        if (keywords[jmapKey]) {
-          // Toggle off if already active
-          keywords[jmapKey] = false;
+        // Both prefixes name the same tag when read, so taking one off has to
+        // clear whichever spellings are actually set.
+        const activeKeys = [KEYWORD_PREFIX + tagId, KEYWORD_PREFIX_LEGACY + tagId]
+          .filter(key => keywords[key]);
+        if (activeKeys.length > 0) {
+          activeKeys.forEach(key => {
+            keywords[key] = false;
+          });
         } else {
           // Add the tag without disturbing others
-          keywords[jmapKey] = true;
+          keywords[KEYWORD_PREFIX + tagId] = true;
         }
       }
 
@@ -1907,7 +1913,7 @@ export default function Home() {
       // Refresh tag counts
       fetchTagCounts(client);
     } catch (error) {
-      console.error("Failed to set color tag:", error);
+      console.error("Failed to set tag:", error);
     }
   };
 
@@ -2480,8 +2486,20 @@ export default function Home() {
   const handleQuickReply = async (body: string) => {
     if (!client || !selectedEmail) return;
 
-    const sender = selectedEmail.from?.[0];
-    if (!sender?.email) {
+    // Quick reply follows the same addressing rules as the composer: Reply-To
+    // over From, and for our own messages in a thread the original recipients
+    // instead of ourselves (#703).
+    const ownIdentityEmails = identities.map(i => i.email).filter(Boolean);
+    const replySource = {
+      from: selectedEmail.from,
+      replyToAddresses: selectedEmail.replyTo,
+      to: selectedEmail.to,
+      cc: selectedEmail.cc,
+    };
+    const recipients = buildReplyRecipients(replySource, 'reply', ownIdentityEmails).to
+      .map(r => r.email)
+      .filter((email): email is string => Boolean(email));
+    if (recipients.length === 0) {
       throw new Error("No sender email found");
     }
 
@@ -2490,14 +2508,21 @@ export default function Home() {
 
     // Decide the sending identity and (for domain-catch-all) an optional
     // header From override that matches the address the message was sent to.
+    // Our own message keeps the identity it was sent from - the recipients are
+    // the other party, so resolving from them would send as their address.
     // When the setting is off, fall through to primary-identity behavior.
-    const resolved = autoSelectReplyIdentity
-      ? resolveReplyFrom(identities, {
-          to: selectedEmail.to,
-          cc: selectedEmail.cc,
-          bcc: selectedEmail.bcc,
-        })
+    const selfSentIdentityId = isSelfSent(replySource, ownIdentityEmails)
+      ? findDraftIdentityId(identities, selectedEmail.from?.[0])
       : null;
+    const resolved: ReplyFromResolution | null = !autoSelectReplyIdentity
+      ? null
+      : selfSentIdentityId
+        ? { identityId: selfSentIdentityId }
+        : resolveReplyFrom(identities, {
+            to: selectedEmail.to,
+            cc: selectedEmail.cc,
+            bcc: selectedEmail.bcc,
+          });
     const sendingIdentity = resolved
       ? (identities.find((i) => i.id === resolved.identityId) || primaryIdentity)
       : primaryIdentity;
@@ -2544,7 +2569,7 @@ export default function Home() {
     // Send reply with just the body text
     const result = await sendEmail(
       client,
-      [sender.email],
+      recipients,
       buildReplySubject(selectedEmail.subject || "(no subject)", t('email_composer.prefix.reply')),
       finalBody,
       undefined,
@@ -3309,8 +3334,8 @@ export default function Home() {
                 onArchive={async (email) => {
                   await handleArchive(email);
                 }}
-                onSetColorTag={(emailId, color) => {
-                  handleSetColorTag(emailId, color);
+                onSetTag={(emailId, color) => {
+                  handleSetTag(emailId, color);
                 }}
                 onMoveToMailbox={async (emailId, mailboxId) => {
                   if (client) {
@@ -3534,7 +3559,7 @@ export default function Home() {
                     }}
                     onArchive={() => handleArchive()}
                     onToggleStar={handleToggleStar}
-                    onSetColorTag={handleSetColorTag}
+                    onSetTag={handleSetTag}
                     onMarkAsSpam={() => handleMarkAsSpam()}
                     onUndoSpam={() => handleUndoSpam()}
                     onMarkAsRead={async (emailId, read) => {

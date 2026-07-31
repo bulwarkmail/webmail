@@ -15,7 +15,7 @@ interface EmailHoverActionsProps {
   onMarkAsRead?: (read: boolean) => void;
   onDelete?: () => void;
   onArchive?: () => void;
-  onSetColorTag?: (color: string | null) => void;
+  onSetTag?: (tagId: string | null) => void;
   onMarkAsSpam?: () => void;
   // When the email lives in a junk folder (incl. the aggregate "All Junk" view)
   // the spam quick-action flips to "not spam".
@@ -76,7 +76,7 @@ export function EmailHoverActions({
   onMarkAsRead,
   onDelete,
   onArchive,
-  onSetColorTag,
+  onSetTag,
   onMarkAsSpam,
   isInJunk = false,
   onUndoSpam,
@@ -112,7 +112,7 @@ export function EmailHoverActions({
         onArchive?.();
         break;
       case "tag":
-        onSetColorTag?.(null);
+        onSetTag?.(null);
         break;
       case "spam":
         if (isInJunk) onUndoSpam?.();

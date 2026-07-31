@@ -25,12 +25,12 @@ function makeMockClient(initial: FileNode[] = []) {
     },
     async createFileDirectory(name: string, parentId: string | null) {
       // A real folder has no content blob (this is how Stalwart marks a container).
-      const node: FileNode = { id: `n${++seq}`, parentId, name, type: '', blobId: null, size: 0, created: now(), updated: now() };
+      const node: FileNode = { id: `n${++seq}`, parentId, name, type: '', blobId: null, size: 0, created: now(), modified: now() };
       nodes.push(node);
       return { ...node };
     },
     async createFileNode(name: string, blobId: string, type: string, size: number, parentId: string | null) {
-      const node: FileNode = { id: `n${++seq}`, parentId, name, type, blobId, size, created: now(), updated: now() };
+      const node: FileNode = { id: `n${++seq}`, parentId, name, type, blobId, size, created: now(), modified: now() };
       nodes.push(node);
       return { ...node };
     },
@@ -92,15 +92,15 @@ function makeMockClient(initial: FileNode[] = []) {
 }
 
 const dir = (id: string, name: string, parentId: string | null): FileNode => ({
-  id, parentId, name, type: 'd', blobId: null, size: 0, created: '', updated: '',
+  id, parentId, name, type: 'd', blobId: null, size: 0, created: '', modified: '',
 });
 // An old build's "folder": a directory-typed node that is actually a blob-backed
 // file, so the server won't let anything be parented under it.
 const marker = (id: string, name: string, parentId: string | null): FileNode => ({
-  id, parentId, name, type: 'd', blobId: `b-${id}`, size: 0, created: '', updated: '',
+  id, parentId, name, type: 'd', blobId: `b-${id}`, size: 0, created: '', modified: '',
 });
 const file = (id: string, name: string, parentId: string | null): FileNode => ({
-  id, parentId, name, type: 'text/plain', blobId: `b-${id}`, size: 10, created: '', updated: '',
+  id, parentId, name, type: 'text/plain', blobId: `b-${id}`, size: 10, created: '', modified: '',
 });
 
 describe('file-store hierarchy (issue #379)', () => {
@@ -343,7 +343,7 @@ describe('file-store hierarchy (issue #379)', () => {
     // containers). The migration must detect this and undo its marker rename.
     (client as unknown as { createFileDirectory: typeof client.createFileDirectory }).createFileDirectory =
       async (name: string, parentId: string | null) =>
-        ({ id: 'bad', parentId, name, type: 'd', blobId: 'b-bad', size: 0, created: '', updated: '' });
+        ({ id: 'bad', parentId, name, type: 'd', blobId: 'b-bad', size: 0, created: '', modified: '' });
     useFileStore.getState().initClient(client);
 
     expect(await useFileStore.getState().migrateLegacyFlatNodes()).toBe(false);
@@ -371,5 +371,43 @@ describe('file-store hierarchy (issue #379)', () => {
 
     await useFileStore.getState().deleteResource('Stuff');
     expect(client._nodes()).toHaveLength(0);
+  });
+});
+
+describe('file-store modification date (issue #700)', () => {
+  beforeEach(() => {
+    useFileStore.setState({
+      client: null,
+      currentParentId: null,
+      currentPath: '/',
+      pathStack: [{ id: null, name: '' }],
+      resources: [],
+      selectedResources: new Set(),
+      clipboard: null,
+      lastAction: null,
+    });
+  });
+
+  it('shows the server-maintained `modified` date, not `created`', async () => {
+    // Stalwart names the property `modified` (draft-ietf-jmap-filenode); there
+    // is no `updated`. Asking for the wrong name used to leave lastModified
+    // pinned to the creation date, so replacing a file looked unmodified.
+    const client = makeMockClient([
+      { ...file('notes', 'Notes.md', null), created: '2025-01-01T00:00:00Z', modified: '2026-07-30T12:00:00Z' },
+    ]);
+    useFileStore.getState().initClient(client);
+
+    await useFileStore.getState().navigate(null);
+    expect(useFileStore.getState().resources[0].lastModified).toBe('2026-07-30T12:00:00Z');
+  });
+
+  it('falls back to `created` when the server sends no `modified`', async () => {
+    const client = makeMockClient([
+      { ...file('notes', 'Notes.md', null), created: '2025-01-01T00:00:00Z', modified: '' },
+    ]);
+    useFileStore.getState().initClient(client);
+
+    await useFileStore.getState().navigate(null);
+    expect(useFileStore.getState().resources[0].lastModified).toBe('2025-01-01T00:00:00Z');
   });
 });

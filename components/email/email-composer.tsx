@@ -36,7 +36,8 @@ import { TemplatePicker } from "@/components/templates/template-picker";
 import { TemplateForm } from "@/components/templates/template-form";
 import type { EmailTemplate } from "@/lib/template-types";
 import { appendPlainTextSignature, getPlainTextSignature } from "@/lib/signature-utils";
-import { findComposeIdentityId, resolveReplyFrom } from "@/lib/reply-identity";
+import { findComposeIdentityId, findDraftIdentityId, resolveReplyFrom } from "@/lib/reply-identity";
+import { buildReplyRecipients, isSelfSent } from "@/lib/reply-recipients";
 import { computeReplyThreadingHeaders } from "@/lib/email-threading";
 import {
   rewriteCidImagesForEditor,
@@ -322,31 +323,17 @@ export function EmailComposer({
   const toRecipient = (r: { name?: string; email?: string }): Recipient =>
     ({ name: r.name && r.name !== r.email ? r.name : undefined, email: r.email ?? "" });
 
+  const ownIdentityEmails = identities.map(i => i.email).filter((e): e is string => Boolean(e));
+
   // Initialize with reply/forward data if provided
   const getInitialTo = (): Recipient[] => {
-    if (!replyTo) return [];
-    // RFC 5322: use Reply-To header if present, otherwise fall back to From
-    const replyTarget = replyTo.replyToAddresses?.length
-      ? replyTo.replyToAddresses.filter(r => r.email).map(toRecipient)
-      : (replyTo.from?.[0]?.email ? [toRecipient(replyTo.from[0])] : []);
-    if (mode === 'reply') {
-      return replyTarget;
-    } else if (mode === 'replyAll') {
-      const ownEmails = new Set(identities.map(i => i.email?.trim().toLowerCase()).filter(Boolean));
-      const originalTo = (replyTo.to ?? [])
-        .filter(r => r.email && !ownEmails.has(r.email.trim().toLowerCase()))
-        .map(toRecipient);
-      return [...replyTarget, ...originalTo];
-    }
-    return [];
+    if (mode !== 'reply' && mode !== 'replyAll') return [];
+    return buildReplyRecipients(replyTo, mode, ownIdentityEmails).to.map(toRecipient);
   };
 
   const getInitialCc = (): Recipient[] => {
-    if (!replyTo || mode !== 'replyAll') return [];
-    const ownEmails = new Set(identities.map(i => i.email?.trim().toLowerCase()).filter(Boolean));
-    return (replyTo.cc ?? [])
-      .filter(r => r.email && !ownEmails.has(r.email.trim().toLowerCase()))
-      .map(toRecipient);
+    if (mode !== 'replyAll') return [];
+    return buildReplyRecipients(replyTo, mode, ownIdentityEmails).cc.map(toRecipient);
   };
 
   const getInitialSubject = () => {
@@ -716,6 +703,18 @@ export function EmailComposer({
 
     if (mode !== 'reply' && mode !== 'replyAll') return;
 
+    // Replying to our own message in a thread (#703): keep sending as the
+    // identity that sent it. Resolving from the recipients here would pick the
+    // *other* party's address - and on a catch-all domain it would even set a
+    // From override to their address.
+    if (isSelfSent({ from: replyTo?.from }, identities.map(i => i.email).filter(Boolean))) {
+      const senderIdentityId = findDraftIdentityId(identities, replyTo?.from?.[0]);
+      if (senderIdentityId) {
+        setSelectedIdentityId(senderIdentityId);
+        return;
+      }
+    }
+
     const resolved = resolveReplyFrom(identities, {
       to: replyTo?.to,
       cc: replyTo?.cc,
@@ -755,6 +754,7 @@ export function EmailComposer({
     replyTo?.accountId,
     replyTo?.bcc,
     replyTo?.cc,
+    replyTo?.from,
     replyTo?.to,
     selectedIdentityId,
   ]);

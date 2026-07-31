@@ -18,6 +18,7 @@ import type {
 import type { Mailbox } from "@/lib/jmap/types";
 import { buildMailboxTree, flattenMailboxTree, type MailboxNode, generateUUID } from "@/lib/utils";
 import { useSettingsStore } from "@/stores/settings-store";
+import { useKeywordFormat } from "@/hooks/use-keyword-format";
 
 interface FilterRuleModalProps {
   rule?: FilterRule;
@@ -89,6 +90,7 @@ export function FilterRuleModal({
   const t = useTranslations("settings.filters");
   const isEdit = !!rule;
   const emailKeywords = useSettingsStore((state) => state.emailKeywords);
+  const { tagName } = useKeywordFormat();
 
   const [name, setName] = useState(rule?.name || "");
   const [matchType, setMatchType] = useState<"all" | "any">(rule?.matchType || "all");
@@ -477,7 +479,7 @@ export function FilterRuleModal({
                     >
                       <option value="">{t("label_placeholder")}</option>
                       {emailKeywords.map((kw) => (
-                        <option key={kw.id} value={kw.id}>{kw.label}</option>
+                        <option key={kw.id} value={kw.id}>{tagName(kw.id)}</option>
                       ))}
                     </select>
                   )}

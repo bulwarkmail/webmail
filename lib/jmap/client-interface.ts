@@ -31,6 +31,7 @@ export interface IJMAPClient {
   getMaxSizeUpload(): number;
   getMaxCallsInRequest(): number;
   getMaxObjectsInGet(): number;
+  getMaxObjectsInSet(): number;
   getMaxDelayedSend(accountId?: string): number;
   hasDelayedSend(accountId?: string): boolean;
   getEventSourceUrl(): string | null;

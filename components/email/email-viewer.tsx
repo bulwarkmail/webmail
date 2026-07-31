@@ -12,6 +12,11 @@ import { withBasePath } from "@/lib/browser-navigation";
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
 import { formatFileSize, cn, buildMailboxTree, MailboxNode, formatDateTime, generateUUID } from "@/lib/utils";
+import { TagBadge } from "./tag-badge";
+import { TagPicker } from "./tag-picker";
+import { useMeasuredTagDisplay } from "@/hooks/use-tag-display";
+import { useKeywordFormat } from "@/hooks/use-keyword-format";
+import { getEmailTagIds } from "@/lib/thread-utils";
 import { getSecurityStatus, extractListHeaders } from "@/lib/email-headers";
 import { emailToReadView } from "@/lib/plugin-projection";
 import { generateEmailSource } from "@/lib/email-source";
@@ -74,7 +79,7 @@ import {
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import type { Attachment as PostalMimeAttachment } from 'postal-mime';
-import { useSettingsStore, KEYWORD_PALETTE } from "@/stores/settings-store";
+import { useSettingsStore } from "@/stores/settings-store";
 import { useUIStore } from "@/stores/ui-store";
 import { useContactStore, getContactDisplayName, getContactPrimaryEmail } from "@/stores/contact-store";
 import { toast } from "@/stores/toast-store";
@@ -115,7 +120,7 @@ interface EmailViewerProps {
   onArchive?: () => void;
   onToggleStar?: () => void;
   onMarkAsRead?: (emailId: string, read: boolean) => void;
-  onSetColorTag?: (emailId: string, color: string | null) => void;
+  onSetTag?: (emailId: string, tagId: string | null) => void;
   onDownloadAttachment?: (blobId: string, name: string, type?: string, forceDownload?: boolean) => void;
   onQuickReply?: (body: string) => Promise<void>;
   onMarkAsSpam?: () => void;
@@ -200,19 +205,6 @@ const getAttachmentDisplayName = (name: string | null | undefined, mimeType?: st
   return 'Attachment';
 };
 
-const getCurrentColors = (keywords: Record<string, boolean> | undefined): string[] => {
-  if (!keywords) return [];
-  const tags: string[] = [];
-  for (const key of Object.keys(keywords)) {
-    if ((key.startsWith("$label:") || key.startsWith("$color:")) && keywords[key] === true) {
-      tags.push(
-        key.startsWith("$label:") ? key.slice("$label:".length) : key.slice("$color:".length)
-      );
-    }
-  }
-  return tags;
-};
-
 // Helper function to format recipients with contextual display
 const _formatRecipients = (
   recipients: Array<{ name?: string; email: string }> | undefined,
@@ -225,7 +217,7 @@ const _formatRecipients = (
   const firstRecipient = recipients[0];
   const isFirstRecipientMe = currentUserEmail &&
     (firstRecipient.email.toLowerCase() === currentUserEmail.toLowerCase() ||
-      firstRecipient.email.toLowerCase().startsWith(currentUserEmail.toLowerCase().split('@')[0] + '+'));
+     firstRecipient.email.toLowerCase().startsWith(currentUserEmail.toLowerCase().split('@')[0] + '+'));
 
   // If only one recipient and it's the current user, show "me"
   if (recipients.length === 1 && isFirstRecipientMe) {
@@ -332,7 +324,7 @@ function renderClickableRecipients(
   return visible.map((r, index) => {
     const isMe = currentUserEmail &&
       (r.email.toLowerCase() === currentUserEmail.toLowerCase() ||
-        r.email.toLowerCase().startsWith(currentUserEmail.toLowerCase().split('@')[0] + '+'));
+       r.email.toLowerCase().startsWith(currentUserEmail.toLowerCase().split('@')[0] + '+'));
 
     return (
       <span key={r.email + index} className="inline-flex items-center">
@@ -628,7 +620,7 @@ export function EmailViewer({
   onArchive,
   onToggleStar,
   onMarkAsRead,
-  onSetColorTag,
+  onSetTag,
   onDownloadAttachment,
   onQuickReply,
   onMarkAsSpam,
@@ -667,6 +659,7 @@ export function EmailViewer({
   const isTrustedAddressBookSender = useContactStore((state) => state.isTrustedAddressBookSender);
   const addToTrustedSendersBook = useContactStore((state) => state.addToTrustedSendersBook);
   const emailKeywords = useSettingsStore((state) => state.emailKeywords);
+  const { sortTagIds, tagColor } = useKeywordFormat();
   const toolbarPosition = useSettingsStore((state) => state.toolbarPosition);
   const showToolbarLabels = useSettingsStore((state) => state.showToolbarLabels);
   const mailLayout = useSettingsStore((state) => state.mailLayout);
@@ -709,12 +702,6 @@ export function EmailViewer({
   const isScheduled = email?.isScheduled === true;
   const canCancelScheduled = isScheduled && email?.scheduledUndoStatus === 'pending';
 
-  // Color options for email tags (from user-defined keyword settings)
-  const colorOptions = emailKeywords.map((kw) => ({
-    name: kw.label,
-    value: kw.id,
-    color: KEYWORD_PALETTE[kw.color]?.dot || 'bg-gray-500',
-  }));
 
   // Tablet list visibility
   const { isTablet, isMobile } = useDeviceDetection();
@@ -819,8 +806,13 @@ export function EmailViewer({
   const moveMenuRef = useRef<HTMLDivElement>(null);
   const toolbarRef = useRef<HTMLDivElement>(null);
   const [hiddenPriorities, setHiddenPriorities] = useState<Set<number>>(new Set());
-  const currentColors = getCurrentColors(email?.keywords);
-  const currentColor = currentColors[0] ?? null;
+  const currentTagIds = getEmailTagIds(email?.keywords);
+  const sortedTagIds = sortTagIds(currentTagIds);
+  // The header spans the reading pane, so it measures its own width rather than
+  // inheriting the message list's answer.
+  const headerTagsRef = useRef<HTMLDivElement>(null);
+  const { variant: headerTagVariant } = useMeasuredTagDisplay(headerTagsRef);
+  const currentColor = currentTagIds[0] ?? null;
 
   // Crypto-plugin rendered body (S/MIME, PGP, …) — populated by the generic
   // onRenderEmailBody hook. Verification/decryption status UI is provided by the
@@ -1018,7 +1010,7 @@ export function EmailViewer({
     showToolbarLabels,
     isLoading,
     moveTree.length,
-    colorOptions.length,
+    emailKeywords.length,
     currentColor,
     isInJunkFolder,
     isTablet,
@@ -1065,11 +1057,11 @@ export function EmailViewer({
 
   const sidebarContact = contactSidebarEmail
     ? contacts.find((c) => {
-      if (!c.emails) return false;
-      return Object.values(c.emails).some(
-        (e) => e.address.toLowerCase() === contactSidebarEmail.toLowerCase()
-      );
-    }) ?? null
+        if (!c.emails) return false;
+        return Object.values(c.emails).some(
+          (e) => e.address.toLowerCase() === contactSidebarEmail.toLowerCase()
+        );
+      }) ?? null
     : null;
 
   // Close contact sidebar when email changes
@@ -2347,7 +2339,7 @@ export function EmailViewer({
               const htmlEl = el as HTMLElement;
               // Skip elements already handled by CSS attribute selectors
               if (htmlEl.style.backgroundImage || htmlEl.style.background ||
-                htmlEl.hasAttribute('background') || htmlEl.hasAttribute('bgcolor')) return;
+                  htmlEl.hasAttribute('background') || htmlEl.hasAttribute('bgcolor')) return;
               // Skip leaf media elements (already re-inverted by CSS)
               const tag = htmlEl.tagName;
               if (['IMG', 'VIDEO', 'SVG', 'CANVAS', 'OBJECT', 'EMBED'].includes(tag)) return;
@@ -2874,515 +2866,444 @@ export function EmailViewer({
           </Button>
         )}
         {!isScheduled && !isDraft && (<>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onReply?.()}
-            data-overflow-item
-            data-overflow-priority="1"
-            className="hidden sm:flex sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0"
-            title={t('tooltips.reply')}
-          >
-            <Reply className="w-4 h-4" />
-            {showToolbarLabels && <span className="hidden sm:inline text-sm">{t('reply')}</span>}
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onReplyAll}
-            data-overflow-item
-            data-overflow-priority="2"
-            className="hidden sm:flex sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0 sm:px-3"
-            title={t('tooltips.reply_all')}
-          >
-            <ReplyAll className="w-4 h-4" />
-            {showToolbarLabels && <span className="hidden sm:inline text-sm">{t('reply_all')}</span>}
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onForward}
-            data-overflow-item
-            data-overflow-priority="3"
-            className="hidden sm:flex sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0"
-            title={t('tooltips.forward')}
-          >
-            <Forward className="w-4 h-4" />
-            {showToolbarLabels && <span className="hidden sm:inline text-sm">{t('forward')}</span>}
-          </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onReply?.()}
+          data-overflow-item
+          data-overflow-priority="1"
+          className="hidden sm:flex sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0"
+          title={t('tooltips.reply')}
+        >
+          <Reply className="w-4 h-4" />
+          {showToolbarLabels && <span className="hidden sm:inline text-sm">{t('reply')}</span>}
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onReplyAll}
+          data-overflow-item
+          data-overflow-priority="2"
+          className="hidden sm:flex sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0 sm:px-3"
+          title={t('tooltips.reply_all')}
+        >
+          <ReplyAll className="w-4 h-4" />
+          {showToolbarLabels && <span className="hidden sm:inline text-sm">{t('reply_all')}</span>}
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onForward}
+          data-overflow-item
+          data-overflow-priority="3"
+          className="hidden sm:flex sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0"
+          title={t('tooltips.forward')}
+        >
+          <Forward className="w-4 h-4" />
+          {showToolbarLabels && <span className="hidden sm:inline text-sm">{t('forward')}</span>}
+        </Button>
         </>)}
         <PluginSlot name="toolbar-actions" />
       </div>
 
       {/* Right: Organize actions - order: archive, delete, move, tag, spam, read state, print, view source */}
       {!isScheduled && (
-        <div className="flex items-center gap-0 sm:gap-0.5">
-          {/* Archive */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onArchive}
-            data-overflow-item
-            data-overflow-priority="4"
-            className="flex-col items-center gap-0.5 h-auto py-1.5 px-2 sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0"
-            title={t('tooltips.archive')}
-          >
-            <Archive className="w-4 h-4" />
-            {showToolbarLabels && <span className="text-[10px] leading-tight sm:text-sm">{t('archive')}</span>}
-          </Button>
-          {/* Delete */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onDelete}
-            className="flex-col items-center gap-0.5 h-auto py-1.5 px-2 sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0"
-            title={t('tooltips.delete')}
-          >
-            <Trash2 className="w-4 h-4" />
-            {showToolbarLabels && <span className="text-[10px] leading-tight sm:text-sm">{t('delete')}</span>}
-          </Button>
-          {/* Move to folder */}
-          {moveTree.length > 0 && onMoveToMailbox && (
-            <div ref={moveMenuRef} data-overflow-item data-overflow-priority="5" className="relative">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => { setMoveMenuOpen(!moveMenuOpen); setMoreMenuOpen(false); setTagMenuOpen(false); }}
-                className="flex-col items-center gap-0.5 h-auto py-1.5 px-2 sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0"
-                title={t('move_to')}
-              >
-                <FolderInput className="w-4 h-4" />
-                {showToolbarLabels && <span className="text-[10px] leading-tight sm:text-sm">{t('move')}</span>}
-              </Button>
-              {moveMenuOpen && (
-                <div className="absolute end-0 top-full mt-1 py-1 w-48 max-h-72 overflow-y-auto bg-background rounded-lg shadow-lg border border-border z-10">
-                  {(() => {
-                    const renderNodes = (nodes: MailboxNode[], depth = 0) => {
-                      return nodes.map((node) => {
-                        const Icon = getMoveMailboxIcon(node.role);
-                        const isTarget = moveTargetIds.has(node.id);
-                        return (
-                          <div key={node.id}>
-                            {isTarget ? (
-                              <button
-                                onClick={() => { onMoveToMailbox(node.id); setMoveMenuOpen(false); }}
-                                className="w-full px-3 py-1.5 text-sm text-start hover:bg-muted flex items-center gap-2"
-                                style={{ paddingLeft: `${0.75 + depth * 1}rem` }}
-                              >
-                                <Icon className="w-4 h-4 flex-shrink-0" />
-                                <span className="truncate">{node.name}</span>
-                              </button>
-                            ) : (
-                              <div
-                                className="px-3 py-1.5 text-sm flex items-center gap-2 text-muted-foreground"
-                                style={{ paddingLeft: `${0.75 + depth * 1}rem` }}
-                              >
-                                <Icon className="w-4 h-4 flex-shrink-0" />
-                                <span>{node.name}</span>
-                              </div>
-                            )}
-                            {node.children.length > 0 && renderNodes(node.children, depth + 1)}
-                          </div>
-                        );
-                      });
-                    };
-                    return renderNodes(moveTree);
-                  })()}
-                </div>
-              )}
-            </div>
-          )}
-          {/* Tag Picker - hidden on mobile, overflows to More menu */}
-          <div data-overflow-item data-overflow-priority="6" className="hidden sm:flex items-center">
-            <div className="w-px h-5 bg-border mx-0.5" />
-            <div ref={tagMenuRef} className="relative">
-              <button
-                onClick={() => { setTagMenuOpen(!tagMenuOpen); setMoreMenuOpen(false); setMoveMenuOpen(false); }}
-                className={cn(
-                  "h-8 rounded hover:bg-muted flex items-center gap-1.5 px-2",
-                  currentColors.length > 0 && "bg-muted/50"
-                )}
-                title={t('set_color')}
-              >
-                {currentColors.length > 0 ? (
-                  <>
-                    <span className="flex items-center gap-0.5">
-                      {currentColors.slice(0, 3).map((tagId) => {
-                        const kw = emailKeywords.find(k => k.id === tagId) ?? { id: tagId, label: tagId, color: 'gray' };
-                        return <span key={tagId} className={cn("w-3 h-3 rounded-full", KEYWORD_PALETTE[kw.color]?.dot || 'bg-gray-500')} />;
-                      })}
-                    </span>
-                    {showToolbarLabels && currentColors.length === 1 && (
-                      <span className="text-xs font-medium text-foreground">
-                        {emailKeywords.find(k => k.id === currentColors[0])?.label ?? currentColors[0]}
-                      </span>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    <Tag className="w-4 h-4 text-muted-foreground" />
-                    {showToolbarLabels && <span className="text-xs text-muted-foreground">{t('tag')}</span>}
-                  </>
-                )}
-              </button>
-              {tagMenuOpen && (
-                <div className="absolute end-0 top-full mt-1 py-1 w-40 bg-background rounded-lg shadow-lg border border-border z-10">
-                  {colorOptions.map((option) => {
-                    const isActive = currentColors.includes(option.value);
-                    return (
-                      <button
-                        key={option.value}
-                        onClick={() => { if (email) onSetColorTag?.(email.id, option.value); setTagMenuOpen(false); }}
-                        className={cn(
-                          "w-full px-3 py-1.5 text-sm text-start hover:bg-muted flex items-center gap-2",
-                          isActive && "bg-accent font-medium"
-                        )}
-                      >
-                        <span className={cn("w-3 h-3 rounded-full flex-shrink-0", option.color)} />
-                        <span className="truncate">{option.name}</span>
-                        {isActive && <Check className="w-3 h-3 ms-auto flex-shrink-0 text-foreground" />}
-                      </button>
-                    );
-                  })}
-                  {currentColors.length > 0 && (
-                    <>
-                      <div className="h-px bg-border my-1" />
-                      <button
-                        onClick={() => { if (email) onSetColorTag?.(email.id, null); setTagMenuOpen(false); }}
-                        className="w-full px-3 py-1.5 text-sm text-start hover:bg-muted flex items-center gap-2 text-muted-foreground"
-                      >
-                        <X className="w-3 h-3 flex-shrink-0" />
-                        <span>{t('remove_color')}</span>
-                      </button>
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Spam */}
-          {spamApplicable && (onMarkAsSpam || onUndoSpam) && (
+      <div className="flex items-center gap-0 sm:gap-0.5">
+        {/* Archive */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onArchive}
+          data-overflow-item
+          data-overflow-priority="4"
+          className="flex-col items-center gap-0.5 h-auto py-1.5 px-2 sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0"
+          title={t('tooltips.archive')}
+        >
+          <Archive className="w-4 h-4" />
+          {showToolbarLabels && <span className="text-[10px] leading-tight sm:text-sm">{t('archive')}</span>}
+        </Button>
+        {/* Delete */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onDelete}
+          className="flex-col items-center gap-0.5 h-auto py-1.5 px-2 sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0"
+          title={t('tooltips.delete')}
+        >
+          <Trash2 className="w-4 h-4" />
+          {showToolbarLabels && <span className="text-[10px] leading-tight sm:text-sm">{t('delete')}</span>}
+        </Button>
+        {/* Move to folder */}
+        {moveTree.length > 0 && onMoveToMailbox && (
+          <div ref={moveMenuRef} data-overflow-item data-overflow-priority="5" className="relative">
             <Button
               variant="ghost"
               size="sm"
-              onClick={isInJunkFolder ? onUndoSpam : onMarkAsSpam}
-              data-overflow-item
-              data-overflow-priority="7"
-              className={cn(
-                "flex-col items-center gap-0.5 h-auto py-1.5 px-2 sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0",
-                isInJunkFolder ? "hover:bg-green-50 dark:hover:bg-green-950/30" : "hover:bg-red-50 dark:hover:bg-red-950/30"
-              )}
-              title={isInJunkFolder ? t('spam.not_spam_title') : t('spam.button_title')}
+              onClick={() => { setMoveMenuOpen(!moveMenuOpen); setMoreMenuOpen(false); setTagMenuOpen(false); }}
+              className="flex-col items-center gap-0.5 h-auto py-1.5 px-2 sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0"
+              title={t('move_to')}
             >
-              {isInJunkFolder ? (
-                <ShieldCheck className="h-4 w-4 text-green-600 dark:text-green-400" />
-              ) : (
-                <ShieldAlert className="h-4 w-4 text-red-600 dark:text-red-400" />
-              )}
-              {showToolbarLabels && <span className="text-[10px] leading-tight sm:text-sm">{isInJunkFolder ? t('not_spam_short') : t('spam_short')}</span>}
+              <FolderInput className="w-4 h-4" />
+              {showToolbarLabels && <span className="text-[10px] leading-tight sm:text-sm">{t('move')}</span>}
             </Button>
-          )}
-
-          {/* Toggle read state */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onMarkAsRead?.(email.id, isUnread)}
-            data-overflow-item
-            data-overflow-priority="8"
-            className="flex-col items-center gap-0.5 h-auto py-1.5 px-2 sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0"
-            title={isUnread ? t('mark_read') : t('mark_unread')}
-          >
-            {isUnread ? <MailOpen className="w-4 h-4" /> : <Mail className="w-4 h-4" />}
-            {showToolbarLabels && <span className="text-[10px] leading-tight sm:text-sm">{isUnread ? t('read') : t('unread')}</span>}
-          </Button>
-
-          {/* Print - hidden on mobile, overflows to More menu */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handlePrint}
-            data-overflow-item
-            data-overflow-priority="9"
-            className="hidden sm:inline-flex h-8 gap-1.5"
-            title={t('print')}
-          >
-            <Printer className="w-4 h-4" />
-            {showToolbarLabels && <span className="hidden sm:inline text-sm">{t('print')}</span>}
-          </Button>
-
-          {/* View source - hidden on mobile, overflows to More menu */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowSourceModal(true)}
-            data-overflow-item
-            data-overflow-priority="10"
-            className="hidden sm:inline-flex h-8 gap-1.5"
-            title={t('view_source')}
-          >
-            <Code className="w-4 h-4" />
-          </Button>
-
-          {/* Dark/light mode toggle for HTML emails */}
-          {effectiveEmailContent.isHtml && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setEmailViewDarkOverride(prev => prev === null ? !(resolvedTheme === 'dark') : !prev)}
-              data-overflow-item
-              data-overflow-priority="11"
-              className="hidden sm:inline-flex h-8 gap-1.5"
-              title={isDark ? 'View in light mode' : 'View in dark mode'}
-            >
-              {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-            </Button>
-          )}
-
-          {/* More menu - click-based */}
-          <div ref={moreMenuRef} className="relative">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex-col items-center gap-0.5 h-auto py-1.5 px-2 sm:flex-row sm:h-8 sm:w-8 sm:gap-0 sm:py-0 sm:px-0"
-              title={t('more_actions')}
-              onClick={() => { setMoreMenuOpen(!moreMenuOpen); setMoreMenuSub(null); setTagMenuOpen(false); setMoveMenuOpen(false); }}
-            >
-              <MoreVertical className="w-4 h-4 text-muted-foreground" />
-              <span className="text-[10px] leading-tight sm:hidden">{t('more_actions')}</span>
-            </Button>
-            {moreMenuOpen && !isMobile && (
-              <div className="absolute end-0 top-full mt-1 w-48 bg-background rounded-md shadow-lg border border-border z-10 py-1">
-                {/* Star toggle */}
-                <button
-                  onClick={() => { onToggleStar?.(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
-                  className="w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2"
-                >
-                  <Star className={cn("w-4 h-4", isStarred && "fill-yellow-400 text-yellow-400")} />
-                  {isStarred ? t('tooltips.unstar') : t('tooltips.star')}
-                </button>
-                {/* Overflow: reply */}
-                <button
-                  onClick={() => { onReply?.(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
-                  className={cn("w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(1) ? "" : "sm:hidden")}
-                >
-                  <Reply className="w-4 h-4" />
-                  {t('reply')}
-                </button>
-                {/* Overflow: reply all */}
-                <button
-                  onClick={() => { onReplyAll?.(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
-                  className={cn("w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(2) ? "" : "sm:hidden")}
-                >
-                  <ReplyAll className="w-4 h-4" />
-                  {t('reply_all')}
-                </button>
-                {/* Overflow: forward */}
-                <button
-                  onClick={() => { onForward?.(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
-                  className={cn("w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(3) ? "" : "sm:hidden")}
-                >
-                  <Forward className="w-4 h-4" />
-                  {t('forward')}
-                </button>
-                {/* Overflow: archive */}
-                <button
-                  onClick={() => { onArchive?.(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
-                  className={cn("w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(4) ? "" : "sm:hidden")}
-                >
-                  <Archive className="w-4 h-4" />
-                  {t('archive')}
-                </button>
-                {/* Overflow: move to folder - submenu */}
-                {moveTree.length > 0 && onMoveToMailbox && (
-                  <div className={cn("relative", hiddenPriorities.has(5) ? "" : "sm:hidden")}
-                    onMouseEnter={() => setMoreMenuSub('move')}
-                    onMouseLeave={() => setMoreMenuSub(null)}
-                  >
-                    <button
-                      onClick={() => setMoreMenuSub(moreMenuSub === 'move' ? null : 'move')}
-                      className="w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2"
-                    >
-                      <FolderInput className="w-4 h-4" />
-                      <span className="flex-1">{t('move_to')}</span>
-                      <ChevronRight className="w-3 h-3 text-muted-foreground" />
-                    </button>
-                    {moreMenuSub === 'move' && (
-                      <div className="absolute end-full top-0 me-1 py-1 w-48 max-h-72 overflow-y-auto bg-background rounded-md shadow-lg border border-border z-10">
-                        {(() => {
-                          const renderMobileNodes = (nodes: MailboxNode[], depth = 0) => {
-                            return nodes.map((node) => {
-                              const Icon = getMoveMailboxIcon(node.role);
-                              const isTarget = moveTargetIds.has(node.id);
-                              return (
-                                <div key={node.id}>
-                                  {isTarget ? (
-                                    <button
-                                      onClick={() => { onMoveToMailbox(node.id); setMoreMenuOpen(false); setMoreMenuSub(null); }}
-                                      className="w-full px-3 py-1.5 text-sm text-start hover:bg-muted flex items-center gap-2"
-                                      style={{ paddingLeft: `${0.75 + depth * 1}rem` }}
-                                    >
-                                      <Icon className="w-4 h-4 flex-shrink-0" />
-                                      <span className="truncate">{node.name}</span>
-                                    </button>
-                                  ) : (
-                                    <div
-                                      className="px-3 py-1.5 text-sm flex items-center gap-2 text-muted-foreground"
-                                      style={{ paddingLeft: `${0.75 + depth * 1}rem` }}
-                                    >
-                                      <Icon className="w-4 h-4 flex-shrink-0" />
-                                      <span>{node.name}</span>
-                                    </div>
-                                  )}
-                                  {node.children.length > 0 && renderMobileNodes(node.children, depth + 1)}
-                                </div>
-                              );
-                            });
-                          };
-                          return renderMobileNodes(moveTree);
-                        })()}
-                      </div>
-                    )}
-                  </div>
-                )}
-                {/* Overflow: tag - submenu */}
-                {colorOptions.length > 0 && (
-                  <div className={cn("relative", hiddenPriorities.has(6) ? "" : "sm:hidden")}
-                    onMouseEnter={() => setMoreMenuSub('tag')}
-                    onMouseLeave={() => setMoreMenuSub(null)}
-                  >
-                    <button
-                      onClick={() => setMoreMenuSub(moreMenuSub === 'tag' ? null : 'tag')}
-                      className="w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2"
-                    >
-                      <Tag className="w-4 h-4" />
-                      <span className="flex-1">{t('tag')}</span>
-                      <ChevronRight className="w-3 h-3 text-muted-foreground" />
-                    </button>
-                    {moreMenuSub === 'tag' && (
-                      <div className="absolute end-full top-0 me-1 py-1 w-40 bg-background rounded-md shadow-lg border border-border z-10">
-                        {colorOptions.map((option) => {
-                          const isActive = currentColors.includes(option.value);
-                          return (
+            {moveMenuOpen && (
+              <div className="absolute end-0 top-full mt-1 py-1 w-48 max-h-72 overflow-y-auto bg-background rounded-lg shadow-lg border border-border z-10">
+                {(() => {
+                  const renderNodes = (nodes: MailboxNode[], depth = 0) => {
+                    return nodes.map((node) => {
+                      const Icon = getMoveMailboxIcon(node.role);
+                      const isTarget = moveTargetIds.has(node.id);
+                      return (
+                        <div key={node.id}>
+                          {isTarget ? (
                             <button
-                              key={option.value}
-                              onClick={() => { if (email) onSetColorTag?.(email.id, option.value); setMoreMenuOpen(false); setMoreMenuSub(null); }}
-                              className={cn(
-                                "w-full px-3 py-1.5 text-sm text-start hover:bg-muted flex items-center gap-2",
-                                isActive && "bg-accent font-medium"
-                              )}
+                              onClick={() => { onMoveToMailbox(node.id); setMoveMenuOpen(false); }}
+                              className="w-full px-3 py-1.5 text-sm text-start hover:bg-muted flex items-center gap-2"
+                              style={{ paddingLeft: `${0.75 + depth * 1}rem` }}
                             >
-                              <span className={cn("w-3 h-3 rounded-full flex-shrink-0", option.color)} />
-                              <span className="truncate">{option.name}</span>
-                              {isActive && <Check className="w-3 h-3 ms-auto flex-shrink-0 text-foreground" />}
+                              <Icon className="w-4 h-4 flex-shrink-0" />
+                              <span className="truncate">{node.name}</span>
                             </button>
-                          );
-                        })}
-                        {currentColors.length > 0 && (
-                          <>
-                            <div className="h-px bg-border my-1" />
-                            <button
-                              onClick={() => { if (email) onSetColorTag?.(email.id, null); setMoreMenuOpen(false); setMoreMenuSub(null); }}
-                              className="w-full px-3 py-1.5 text-sm text-start hover:bg-muted flex items-center gap-2 text-muted-foreground"
+                          ) : (
+                            <div
+                              className="px-3 py-1.5 text-sm flex items-center gap-2 text-muted-foreground"
+                              style={{ paddingLeft: `${0.75 + depth * 1}rem` }}
                             >
-                              <X className="w-3 h-3 flex-shrink-0" />
-                              <span>{t('remove_color')}</span>
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
-                {/* Overflow: spam */}
-                {spamApplicable && (onMarkAsSpam || onUndoSpam) && (
-                  <button
-                    onClick={() => { (isInJunkFolder ? onUndoSpam : onMarkAsSpam)?.(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
-                    className={cn("w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(7) ? "" : "sm:hidden")}
-                  >
-                    {isInJunkFolder ? (
-                      <ShieldCheck className="h-4 w-4 text-green-600 dark:text-green-400" />
-                    ) : (
-                      <ShieldAlert className="h-4 w-4 text-red-600 dark:text-red-400" />
-                    )}
-                    {isInJunkFolder ? t('spam.not_spam_title') : t('spam.button_title')}
-                  </button>
-                )}
-                {/* Overflow: toggle read */}
-                <button
-                  onClick={() => { onMarkAsRead?.(email.id, isUnread); setMoreMenuOpen(false); setMoreMenuSub(null); }}
-                  className={cn("w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(8) ? "" : "sm:hidden")}
-                >
-                  {isUnread ? <MailOpen className="w-4 h-4" /> : <Mail className="w-4 h-4" />}
-                  {isUnread ? t('mark_read') : t('mark_unread')}
-                </button>
-                {/* Overflow: print */}
-                <button
-                  onClick={() => { handlePrint(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
-                  className={cn("w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(9) ? "" : "sm:hidden")}
-                >
-                  <Printer className="w-4 h-4" />
-                  {t('print')}
-                </button>
-                {/* Overflow: view source */}
-                <button
-                  onClick={() => { setShowSourceModal(true); setMoreMenuOpen(false); setMoreMenuSub(null); }}
-                  className={cn("w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(10) ? "" : "sm:hidden")}
-                >
-                  <Code className="w-4 h-4" />
-                  {t('view_source')}
-                </button>
-                {/* Overflow: dark/light mode toggle */}
-                {effectiveEmailContent.isHtml && (
-                  <button
-                    onClick={() => { setEmailViewDarkOverride(prev => prev === null ? !(resolvedTheme === 'dark') : !prev); setMoreMenuOpen(false); setMoreMenuSub(null); }}
-                    className={cn("w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(11) ? "" : "sm:hidden")}
-                  >
-                    {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-                    {isDark ? 'View in light mode' : 'View in dark mode'}
-                  </button>
-                )}
-                <div className="h-px bg-border my-1" />
-                {/* Forward as attachment */}
-                {onForwardAsAttachment && email?.blobId && (
-                  <button
-                    onClick={() => { onForwardAsAttachment(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
-                    className="w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2"
-                  >
-                    <Paperclip className="w-4 h-4" />
-                    {t('forward_as_attachment')}
-                  </button>
-                )}
-                {/* Export email */}
-                <button
-                  onClick={() => { handleExportEmail(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
-                  className="w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2"
-                >
-                  <Download className="w-4 h-4" />
-                  {t('export_email')}
-                </button>
-                {/* Import email */}
-                <button
-                  onClick={() => { handleImportEmail(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
-                  className="w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2"
-                >
-                  <Upload className="w-4 h-4" />
-                  {t('import_email')}
-                </button>
-                {onShowShortcuts && (
-                  <button
-                    onClick={() => { onShowShortcuts(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
-                    className="w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2"
-                  >
-                    <Keyboard className="w-4 h-4" />
-                    {t('keyboard_shortcuts')}
-                  </button>
-                )}
+                              <Icon className="w-4 h-4 flex-shrink-0" />
+                              <span>{node.name}</span>
+                            </div>
+                          )}
+                          {node.children.length > 0 && renderNodes(node.children, depth + 1)}
+                        </div>
+                      );
+                    });
+                  };
+                  return renderNodes(moveTree);
+                })()}
               </div>
             )}
           </div>
+        )}
+        {/* Tag Picker - hidden on mobile, overflows to More menu */}
+        <div data-overflow-item data-overflow-priority="6" className="hidden sm:flex items-center">
+        <div className="w-px h-5 bg-border mx-0.5" />
+        <div ref={tagMenuRef} className="relative">
+          <button
+            onClick={() => { setTagMenuOpen(!tagMenuOpen); setMoreMenuOpen(false); setMoveMenuOpen(false); }}
+            className="h-8 rounded hover:bg-muted flex items-center gap-1.5 px-2"
+            title={t('set_tag')}
+          >
+            <Tag className="w-4 h-4" />
+            {showToolbarLabels && <span className="text-[10px] leading-tight sm:text-sm">{t('tag')}</span>}
+          </button>
+          {tagMenuOpen && (
+            <div className="absolute end-0 top-full mt-1 py-1 w-56 bg-background rounded-md shadow-lg border border-border z-10">
+              <TagPicker
+                selectedIds={currentTagIds}
+                onToggle={(tagId) => { if (email) onSetTag?.(email.id, tagId); }}
+              />
+            </div>
+          )}
         </div>
+        </div>
+
+        {/* Spam */}
+        {spamApplicable && (onMarkAsSpam || onUndoSpam) && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={isInJunkFolder ? onUndoSpam : onMarkAsSpam}
+            data-overflow-item
+            data-overflow-priority="7"
+            className={cn(
+              "flex-col items-center gap-0.5 h-auto py-1.5 px-2 sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0",
+              isInJunkFolder ? "hover:bg-green-50 dark:hover:bg-green-950/30" : "hover:bg-red-50 dark:hover:bg-red-950/30"
+            )}
+            title={isInJunkFolder ? t('spam.not_spam_title') : t('spam.button_title')}
+          >
+            {isInJunkFolder ? (
+              <ShieldCheck className="h-4 w-4 text-green-600 dark:text-green-400" />
+            ) : (
+              <ShieldAlert className="h-4 w-4 text-red-600 dark:text-red-400" />
+            )}
+            {showToolbarLabels && <span className="text-[10px] leading-tight sm:text-sm">{isInJunkFolder ? t('not_spam_short') : t('spam_short')}</span>}
+          </Button>
+        )}
+
+        {/* Toggle read state */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onMarkAsRead?.(email.id, isUnread)}
+          data-overflow-item
+          data-overflow-priority="8"
+          className="flex-col items-center gap-0.5 h-auto py-1.5 px-2 sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0"
+          title={isUnread ? t('mark_read') : t('mark_unread')}
+        >
+          {isUnread ? <MailOpen className="w-4 h-4" /> : <Mail className="w-4 h-4" />}
+          {showToolbarLabels && <span className="text-[10px] leading-tight sm:text-sm">{isUnread ? t('read') : t('unread')}</span>}
+        </Button>
+
+        {/* Print - hidden on mobile, overflows to More menu */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handlePrint}
+          data-overflow-item
+          data-overflow-priority="9"
+          className="hidden sm:inline-flex h-8 gap-1.5"
+          title={t('print')}
+        >
+          <Printer className="w-4 h-4" />
+          {showToolbarLabels && <span className="hidden sm:inline text-sm">{t('print')}</span>}
+        </Button>
+
+        {/* View source - hidden on mobile, overflows to More menu */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setShowSourceModal(true)}
+          data-overflow-item
+          data-overflow-priority="10"
+          className="hidden sm:inline-flex h-8 gap-1.5"
+          title={t('view_source')}
+        >
+          <Code className="w-4 h-4" />
+        </Button>
+
+        {/* Dark/light mode toggle for HTML emails */}
+        {effectiveEmailContent.isHtml && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setEmailViewDarkOverride(prev => prev === null ? !(resolvedTheme === 'dark') : !prev)}
+          data-overflow-item
+          data-overflow-priority="11"
+          className="hidden sm:inline-flex h-8 gap-1.5"
+          title={isDark ? 'View in light mode' : 'View in dark mode'}
+        >
+          {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+        </Button>
+        )}
+
+        {/* More menu - click-based */}
+        <div ref={moreMenuRef} className="relative">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="flex-col items-center gap-0.5 h-auto py-1.5 px-2 sm:flex-row sm:h-8 sm:w-8 sm:gap-0 sm:py-0 sm:px-0"
+            title={t('more_actions')}
+            onClick={() => { setMoreMenuOpen(!moreMenuOpen); setMoreMenuSub(null); setTagMenuOpen(false); setMoveMenuOpen(false); }}
+          >
+            <MoreVertical className="w-4 h-4 text-muted-foreground" />
+            <span className="text-[10px] leading-tight sm:hidden">{t('more_actions')}</span>
+          </Button>
+          {moreMenuOpen && !isMobile && (
+            <div className="absolute end-0 top-full mt-1 w-48 bg-background rounded-md shadow-lg border border-border z-10 py-1">
+              {/* Star toggle */}
+              <button
+                onClick={() => { onToggleStar?.(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
+                className="w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2"
+              >
+                <Star className={cn("w-4 h-4", isStarred && "fill-yellow-400 text-yellow-400")} />
+                {isStarred ? t('tooltips.unstar') : t('tooltips.star')}
+              </button>
+              {/* Overflow: reply */}
+              <button
+                onClick={() => { onReply?.(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
+                className={cn("w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(1) ? "" : "sm:hidden")}
+              >
+                <Reply className="w-4 h-4" />
+                {t('reply')}
+              </button>
+              {/* Overflow: reply all */}
+              <button
+                onClick={() => { onReplyAll?.(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
+                className={cn("w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(2) ? "" : "sm:hidden")}
+              >
+                <ReplyAll className="w-4 h-4" />
+                {t('reply_all')}
+              </button>
+              {/* Overflow: forward */}
+              <button
+                onClick={() => { onForward?.(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
+                className={cn("w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(3) ? "" : "sm:hidden")}
+              >
+                <Forward className="w-4 h-4" />
+                {t('forward')}
+              </button>
+              {/* Overflow: archive */}
+              <button
+                onClick={() => { onArchive?.(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
+                className={cn("w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(4) ? "" : "sm:hidden")}
+              >
+                <Archive className="w-4 h-4" />
+                {t('archive')}
+              </button>
+              {/* Overflow: move to folder - submenu */}
+              {moveTree.length > 0 && onMoveToMailbox && (
+                <div className={cn("relative", hiddenPriorities.has(5) ? "" : "sm:hidden")}
+                  onMouseEnter={() => setMoreMenuSub('move')}
+                  onMouseLeave={() => setMoreMenuSub(null)}
+                >
+                  <button
+                    onClick={() => setMoreMenuSub(moreMenuSub === 'move' ? null : 'move')}
+                    className="w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2"
+                  >
+                    <FolderInput className="w-4 h-4" />
+                    <span className="flex-1">{t('move_to')}</span>
+                    <ChevronRight className="w-3 h-3 text-muted-foreground" />
+                  </button>
+                  {moreMenuSub === 'move' && (
+                    <div className="absolute end-full top-0 me-1 py-1 w-48 max-h-72 overflow-y-auto bg-background rounded-md shadow-lg border border-border z-10">
+                      {(() => {
+                        const renderMobileNodes = (nodes: MailboxNode[], depth = 0) => {
+                          return nodes.map((node) => {
+                            const Icon = getMoveMailboxIcon(node.role);
+                            const isTarget = moveTargetIds.has(node.id);
+                            return (
+                              <div key={node.id}>
+                                {isTarget ? (
+                                  <button
+                                    onClick={() => { onMoveToMailbox(node.id); setMoreMenuOpen(false); setMoreMenuSub(null); }}
+                                    className="w-full px-3 py-1.5 text-sm text-start hover:bg-muted flex items-center gap-2"
+                                    style={{ paddingLeft: `${0.75 + depth * 1}rem` }}
+                                  >
+                                    <Icon className="w-4 h-4 flex-shrink-0" />
+                                    <span className="truncate">{node.name}</span>
+                                  </button>
+                                ) : (
+                                  <div
+                                    className="px-3 py-1.5 text-sm flex items-center gap-2 text-muted-foreground"
+                                    style={{ paddingLeft: `${0.75 + depth * 1}rem` }}
+                                  >
+                                    <Icon className="w-4 h-4 flex-shrink-0" />
+                                    <span>{node.name}</span>
+                                  </div>
+                                )}
+                                {node.children.length > 0 && renderMobileNodes(node.children, depth + 1)}
+                              </div>
+                            );
+                          });
+                        };
+                        return renderMobileNodes(moveTree);
+                      })()}
+                    </div>
+                  )}
+                </div>
+              )}
+              {/* Overflow: tag - submenu */}
+              {(emailKeywords.length > 0 || currentTagIds.length > 0) && (
+                <div className={cn("relative", hiddenPriorities.has(6) ? "" : "sm:hidden")}
+                  onMouseEnter={() => setMoreMenuSub('tag')}
+                  onMouseLeave={() => setMoreMenuSub(null)}
+                >
+                  <button
+                    onClick={() => setMoreMenuSub(moreMenuSub === 'tag' ? null : 'tag')}
+                    className="w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2"
+                  >
+                    <Tag className="w-4 h-4" />
+                    <span className="flex-1">{t('tag')}</span>
+                    <ChevronRight className="w-3 h-3 text-muted-foreground" />
+                  </button>
+                  {moreMenuSub === 'tag' && (
+                    <div className="absolute end-full top-0 me-1 py-1 w-56 bg-background rounded-md shadow-lg border border-border z-10">
+                      <TagPicker
+                        selectedIds={currentTagIds}
+                        onToggle={(tagId) => { if (email) onSetTag?.(email.id, tagId); }}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+              {/* Overflow: spam */}
+              {spamApplicable && (onMarkAsSpam || onUndoSpam) && (
+                <button
+                  onClick={() => { (isInJunkFolder ? onUndoSpam : onMarkAsSpam)?.(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
+                  className={cn("w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(7) ? "" : "sm:hidden")}
+                >
+                  {isInJunkFolder ? (
+                    <ShieldCheck className="h-4 w-4 text-green-600 dark:text-green-400" />
+                  ) : (
+                    <ShieldAlert className="h-4 w-4 text-red-600 dark:text-red-400" />
+                  )}
+                  {isInJunkFolder ? t('spam.not_spam_title') : t('spam.button_title')}
+                </button>
+              )}
+              {/* Overflow: toggle read */}
+              <button
+                onClick={() => { onMarkAsRead?.(email.id, isUnread); setMoreMenuOpen(false); setMoreMenuSub(null); }}
+                className={cn("w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(8) ? "" : "sm:hidden")}
+              >
+                {isUnread ? <MailOpen className="w-4 h-4" /> : <Mail className="w-4 h-4" />}
+                {isUnread ? t('mark_read') : t('mark_unread')}
+              </button>
+              {/* Overflow: print */}
+              <button
+                onClick={() => { handlePrint(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
+                className={cn("w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(9) ? "" : "sm:hidden")}
+              >
+                <Printer className="w-4 h-4" />
+                {t('print')}
+              </button>
+              {/* Overflow: view source */}
+              <button
+                onClick={() => { setShowSourceModal(true); setMoreMenuOpen(false); setMoreMenuSub(null); }}
+                className={cn("w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(10) ? "" : "sm:hidden")}
+              >
+                <Code className="w-4 h-4" />
+                {t('view_source')}
+              </button>
+              {/* Overflow: dark/light mode toggle */}
+              {effectiveEmailContent.isHtml && (
+                <button
+                  onClick={() => { setEmailViewDarkOverride(prev => prev === null ? !(resolvedTheme === 'dark') : !prev); setMoreMenuOpen(false); setMoreMenuSub(null); }}
+                  className={cn("w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(11) ? "" : "sm:hidden")}
+                >
+                  {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                  {isDark ? 'View in light mode' : 'View in dark mode'}
+                </button>
+              )}
+              <div className="h-px bg-border my-1" />
+              {/* Forward as attachment */}
+              {onForwardAsAttachment && email?.blobId && (
+                <button
+                  onClick={() => { onForwardAsAttachment(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
+                  className="w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2"
+                >
+                  <Paperclip className="w-4 h-4" />
+                  {t('forward_as_attachment')}
+                </button>
+              )}
+              {/* Export email */}
+              <button
+                onClick={() => { handleExportEmail(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
+                className="w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2"
+              >
+                <Download className="w-4 h-4" />
+                {t('export_email')}
+              </button>
+              {/* Import email */}
+              <button
+                onClick={() => { handleImportEmail(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
+                className="w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2"
+              >
+                <Upload className="w-4 h-4" />
+                {t('import_email')}
+              </button>
+              {onShowShortcuts && (
+                <button
+                  onClick={() => { onShowShortcuts(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
+                  className="w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2"
+                >
+                  <Keyboard className="w-4 h-4" />
+                  {t('keyboard_shortcuts')}
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
       )}
     </>
   );
@@ -3392,570 +3313,301 @@ export function EmailViewer({
       data-tour="email-viewer"
       className={cn("flex-1 flex flex-row h-full bg-background overflow-hidden relative", className)}
     >
-      {/* Mobile More menu sidebar overlay */}
-      {!isScheduled && isMobile && moreMenuOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-[60] sm:hidden"
-          onClick={() => setMoreMenuOpen(false)}
-        />
-      )}
-      {!isScheduled && isMobile && (
-        <div className={cn(
-          "fixed inset-y-0 right-0 w-72 bg-background border-s border-border z-[70] sm:hidden",
-          "transform transition-transform duration-300 ease-in-out",
-          "flex flex-col",
-          moreMenuOpen ? "translate-x-0" : "translate-x-full"
-        )}>
-          <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-            {moreMenuSub ? (
+    {/* Mobile More menu sidebar overlay */}
+    {!isScheduled && isMobile && moreMenuOpen && (
+      <div
+        className="fixed inset-0 bg-black/50 z-[60] sm:hidden"
+        onClick={() => setMoreMenuOpen(false)}
+      />
+    )}
+    {!isScheduled && isMobile && (
+      <div className={cn(
+        "fixed inset-y-0 right-0 w-72 bg-background border-s border-border z-[70] sm:hidden",
+        "transform transition-transform duration-300 ease-in-out",
+        "flex flex-col",
+        moreMenuOpen ? "translate-x-0" : "translate-x-full"
+      )}>
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+          {moreMenuSub ? (
+            <button
+              onClick={() => setMoreMenuSub(null)}
+              className="flex items-center gap-1 -ms-2 px-2 py-1 rounded hover:bg-muted text-sm font-semibold text-foreground"
+            >
+              <ChevronLeft className="w-5 h-5" />
+              {moreMenuSub === 'move' ? t('move_to') : t('tag')}
+            </button>
+          ) : (
+            <span className="text-sm font-semibold text-foreground">{t('more_actions')}</span>
+          )}
+          <Button variant="ghost" size="icon" onClick={() => { setMoreMenuOpen(false); setMoreMenuSub(null); }} className="h-9 w-9">
+            <X className="w-5 h-5" />
+          </Button>
+        </div>
+        <div className="flex-1 overflow-y-auto py-2">
+          {moreMenuSub === null && (
+            <>
+              {/* Star toggle */}
               <button
-                onClick={() => setMoreMenuSub(null)}
-                className="flex items-center gap-1 -ms-2 px-2 py-1 rounded hover:bg-muted text-sm font-semibold text-foreground"
+                onClick={() => { onToggleStar?.(); setMoreMenuOpen(false); }}
+                className="w-full px-4 py-3 min-h-[44px] text-sm text-start hover:bg-muted text-foreground flex items-center gap-3"
               >
-                <ChevronLeft className="w-5 h-5" />
-                {moreMenuSub === 'move' ? t('move_to') : t('tag')}
+                <Star className={cn("w-5 h-5", isStarred && "fill-yellow-400 text-yellow-400")} />
+                {isStarred ? t('tooltips.unstar') : t('tooltips.star')}
               </button>
-            ) : (
-              <span className="text-sm font-semibold text-foreground">{t('more_actions')}</span>
-            )}
-            <Button variant="ghost" size="icon" onClick={() => { setMoreMenuOpen(false); setMoreMenuSub(null); }} className="h-9 w-9">
-              <X className="w-5 h-5" />
-            </Button>
-          </div>
-          <div className="flex-1 overflow-y-auto py-2">
-            {moreMenuSub === null && (
-              <>
-                {/* Star toggle */}
+              {/* Tag (opens sub-view) */}
+              {(emailKeywords.length > 0 || currentTagIds.length > 0) && (
                 <button
-                  onClick={() => { onToggleStar?.(); setMoreMenuOpen(false); }}
+                  onClick={() => setMoreMenuSub('tag')}
                   className="w-full px-4 py-3 min-h-[44px] text-sm text-start hover:bg-muted text-foreground flex items-center gap-3"
                 >
-                  <Star className={cn("w-5 h-5", isStarred && "fill-yellow-400 text-yellow-400")} />
-                  {isStarred ? t('tooltips.unstar') : t('tooltips.star')}
+                  <Tag className="w-5 h-5" />
+                  <span className="flex-1">{t('tag')}</span>
+                  {currentTagIds.length > 0 && (
+                    <div className="flex -space-x-1 me-1">
+                      {sortedTagIds.slice(0, 3).map((tagId) => (
+                        <span
+                          key={tagId}
+                          className={cn("w-3 h-3 rounded-full border border-background", tagColor(tagId).dot)}
+                        />
+                      ))}
+                    </div>
+                  )}
+                  <ChevronRight className="w-4 h-4 text-muted-foreground" />
                 </button>
-                {/* Tag (opens sub-view) */}
-                {colorOptions.length > 0 && (
-                  <button
-                    onClick={() => setMoreMenuSub('tag')}
-                    className="w-full px-4 py-3 min-h-[44px] text-sm text-start hover:bg-muted text-foreground flex items-center gap-3"
-                  >
-                    <Tag className="w-5 h-5" />
-                    <span className="flex-1">{t('tag')}</span>
-                    {currentColors.length > 0 && (
-                      <div className="flex -space-x-1 me-1">
-                        {currentColors.slice(0, 3).map((c) => {
-                          const opt = colorOptions.find((o) => o.value === c);
-                          return opt ? <span key={c} className={cn("w-3 h-3 rounded-full border border-background", opt.color)} /> : null;
-                        })}
+              )}
+              <button
+                onClick={() => { handlePrint(); setMoreMenuOpen(false); }}
+                className="w-full px-4 py-3 min-h-[44px] text-sm text-start hover:bg-muted text-foreground flex items-center gap-3"
+              >
+                <Printer className="w-5 h-5" />
+                {t('print')}
+              </button>
+              <button
+                onClick={() => { setShowSourceModal(true); setMoreMenuOpen(false); }}
+                className="w-full px-4 py-3 min-h-[44px] text-sm text-start hover:bg-muted text-foreground flex items-center gap-3"
+              >
+                <Code className="w-5 h-5" />
+                {t('view_source')}
+              </button>
+              {effectiveEmailContent.isHtml && (
+                <button
+                  onClick={() => { setEmailViewDarkOverride(prev => prev === null ? !(resolvedTheme === 'dark') : !prev); setMoreMenuOpen(false); }}
+                  className="w-full px-4 py-3 min-h-[44px] text-sm text-start hover:bg-muted text-foreground flex items-center gap-3"
+                >
+                  {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                  {isDark ? 'View in light mode' : 'View in dark mode'}
+                </button>
+              )}
+              <div className="h-px bg-border my-1" />
+              {onForwardAsAttachment && email?.blobId && (
+                <button
+                  onClick={() => { onForwardAsAttachment(); setMoreMenuOpen(false); }}
+                  className="w-full px-4 py-3 min-h-[44px] text-sm text-start hover:bg-muted text-foreground flex items-center gap-3"
+                >
+                  <Paperclip className="w-5 h-5" />
+                  {t('forward_as_attachment')}
+                </button>
+              )}
+              <button
+                onClick={() => { handleExportEmail(); setMoreMenuOpen(false); }}
+                className="w-full px-4 py-3 min-h-[44px] text-sm text-start hover:bg-muted text-foreground flex items-center gap-3"
+              >
+                <Download className="w-5 h-5" />
+                {t('export_email')}
+              </button>
+              <button
+                onClick={() => { handleImportEmail(); setMoreMenuOpen(false); }}
+                className="w-full px-4 py-3 min-h-[44px] text-sm text-start hover:bg-muted text-foreground flex items-center gap-3"
+              >
+                <Upload className="w-5 h-5" />
+                {t('import_email')}
+              </button>
+              {onShowShortcuts && (
+                <button
+                  onClick={() => { onShowShortcuts(); setMoreMenuOpen(false); }}
+                  className="w-full px-4 py-3 min-h-[44px] text-sm text-start hover:bg-muted text-foreground flex items-center gap-3"
+                >
+                  <Keyboard className="w-5 h-5" />
+                  {t('keyboard_shortcuts')}
+                </button>
+              )}
+            </>
+          )}
+          {moreMenuSub === 'move' && moveTree.length > 0 && onMoveToMailbox && (() => {
+            const renderMobileNodes = (nodes: MailboxNode[], depth = 0) => {
+              return nodes.map((node) => {
+                const Icon = getMoveMailboxIcon(node.role);
+                const isTarget = moveTargetIds.has(node.id);
+                return (
+                  <div key={node.id}>
+                    {isTarget ? (
+                      <button
+                        onClick={() => { onMoveToMailbox(node.id); setMoreMenuOpen(false); setMoreMenuSub(null); }}
+                        className="w-full px-4 py-2.5 min-h-[44px] text-sm text-start hover:bg-muted flex items-center gap-3"
+                        style={{ paddingLeft: `${1 + depth * 1}rem` }}
+                      >
+                        <Icon className="w-5 h-5 flex-shrink-0" />
+                        <span className="truncate">{node.name}</span>
+                      </button>
+                    ) : (
+                      <div
+                        className="px-4 py-2.5 min-h-[44px] text-sm flex items-center gap-3 text-muted-foreground"
+                        style={{ paddingLeft: `${1 + depth * 1}rem` }}
+                      >
+                        <Icon className="w-5 h-5 flex-shrink-0" />
+                        <span>{node.name}</span>
                       </div>
                     )}
-                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                  </button>
-                )}
-                <button
-                  onClick={() => { handlePrint(); setMoreMenuOpen(false); }}
-                  className="w-full px-4 py-3 min-h-[44px] text-sm text-start hover:bg-muted text-foreground flex items-center gap-3"
-                >
-                  <Printer className="w-5 h-5" />
-                  {t('print')}
-                </button>
-                <button
-                  onClick={() => { setShowSourceModal(true); setMoreMenuOpen(false); }}
-                  className="w-full px-4 py-3 min-h-[44px] text-sm text-start hover:bg-muted text-foreground flex items-center gap-3"
-                >
-                  <Code className="w-5 h-5" />
-                  {t('view_source')}
-                </button>
-                {effectiveEmailContent.isHtml && (
-                  <button
-                    onClick={() => { setEmailViewDarkOverride(prev => prev === null ? !(resolvedTheme === 'dark') : !prev); setMoreMenuOpen(false); }}
-                    className="w-full px-4 py-3 min-h-[44px] text-sm text-start hover:bg-muted text-foreground flex items-center gap-3"
-                  >
-                    {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-                    {isDark ? 'View in light mode' : 'View in dark mode'}
-                  </button>
-                )}
-                <div className="h-px bg-border my-1" />
-                {onForwardAsAttachment && email?.blobId && (
-                  <button
-                    onClick={() => { onForwardAsAttachment(); setMoreMenuOpen(false); }}
-                    className="w-full px-4 py-3 min-h-[44px] text-sm text-start hover:bg-muted text-foreground flex items-center gap-3"
-                  >
-                    <Paperclip className="w-5 h-5" />
-                    {t('forward_as_attachment')}
-                  </button>
-                )}
-                <button
-                  onClick={() => { handleExportEmail(); setMoreMenuOpen(false); }}
-                  className="w-full px-4 py-3 min-h-[44px] text-sm text-start hover:bg-muted text-foreground flex items-center gap-3"
-                >
-                  <Download className="w-5 h-5" />
-                  {t('export_email')}
-                </button>
-                <button
-                  onClick={() => { handleImportEmail(); setMoreMenuOpen(false); }}
-                  className="w-full px-4 py-3 min-h-[44px] text-sm text-start hover:bg-muted text-foreground flex items-center gap-3"
-                >
-                  <Upload className="w-5 h-5" />
-                  {t('import_email')}
-                </button>
-                {onShowShortcuts && (
-                  <button
-                    onClick={() => { onShowShortcuts(); setMoreMenuOpen(false); }}
-                    className="w-full px-4 py-3 min-h-[44px] text-sm text-start hover:bg-muted text-foreground flex items-center gap-3"
-                  >
-                    <Keyboard className="w-5 h-5" />
-                    {t('keyboard_shortcuts')}
-                  </button>
-                )}
-              </>
-            )}
-            {moreMenuSub === 'move' && moveTree.length > 0 && onMoveToMailbox && (() => {
-              const renderMobileNodes = (nodes: MailboxNode[], depth = 0) => {
-                return nodes.map((node) => {
-                  const Icon = getMoveMailboxIcon(node.role);
-                  const isTarget = moveTargetIds.has(node.id);
-                  return (
-                    <div key={node.id}>
-                      {isTarget ? (
-                        <button
-                          onClick={() => { onMoveToMailbox(node.id); setMoreMenuOpen(false); setMoreMenuSub(null); }}
-                          className="w-full px-4 py-2.5 min-h-[44px] text-sm text-start hover:bg-muted flex items-center gap-3"
-                          style={{ paddingLeft: `${1 + depth * 1}rem` }}
-                        >
-                          <Icon className="w-5 h-5 flex-shrink-0" />
-                          <span className="truncate">{node.name}</span>
-                        </button>
-                      ) : (
-                        <div
-                          className="px-4 py-2.5 min-h-[44px] text-sm flex items-center gap-3 text-muted-foreground"
-                          style={{ paddingLeft: `${1 + depth * 1}rem` }}
-                        >
-                          <Icon className="w-5 h-5 flex-shrink-0" />
-                          <span>{node.name}</span>
-                        </div>
-                      )}
-                      {node.children.length > 0 && renderMobileNodes(node.children, depth + 1)}
-                    </div>
-                  );
-                });
-              };
-              return renderMobileNodes(moveTree);
-            })()}
-            {moreMenuSub === 'tag' && colorOptions.length > 0 && (
-              <>
-                {colorOptions.map((option) => {
-                  const isActive = currentColors.includes(option.value);
-                  return (
-                    <button
-                      key={option.value}
-                      onClick={() => { if (email) onSetColorTag?.(email.id, option.value); setMoreMenuOpen(false); setMoreMenuSub(null); }}
-                      className={cn(
-                        "w-full px-4 py-2.5 min-h-[44px] text-sm text-start hover:bg-muted flex items-center gap-3",
-                        isActive && "bg-accent font-medium"
-                      )}
-                    >
-                      <span className={cn("w-3.5 h-3.5 rounded-full flex-shrink-0", option.color)} />
-                      <span className="truncate">{option.name}</span>
-                      {isActive && <Check className="w-4 h-4 ms-auto flex-shrink-0 text-foreground" />}
-                    </button>
-                  );
-                })}
-                {currentColors.length > 0 && (
-                  <button
-                    onClick={() => { if (email) onSetColorTag?.(email.id, null); setMoreMenuOpen(false); setMoreMenuSub(null); }}
-                    className="w-full px-4 py-2.5 min-h-[44px] text-sm text-start hover:bg-muted flex items-center gap-3 text-muted-foreground"
-                  >
-                    <X className="w-4 h-4 flex-shrink-0" />
-                    <span>{t('remove_color')}</span>
-                  </button>
-                )}
-              </>
-            )}
+                    {node.children.length > 0 && renderMobileNodes(node.children, depth + 1)}
+                  </div>
+                );
+              });
+            };
+            return renderMobileNodes(moveTree);
+          })()}
+          {moreMenuSub === 'tag' && (
+            <TagPicker
+              touch
+              selectedIds={currentTagIds}
+              onToggle={(tagId) => { if (email) onSetTag?.(email.id, tagId); }}
+            />
+          )}
+        </div>
+      </div>
+    )}
+    {/* Main email content */}
+    <div className="flex-1 flex flex-col h-full overflow-hidden min-w-0">
+      {/* === TOOLBAR (top position) === */}
+      {toolbarPosition === 'top' && (
+        <div className={cn(
+          "bg-background border-b border-border",
+          "max-lg:sticky max-lg:top-0 max-lg:z-10"
+        )}>
+          <div className="px-2 sm:px-4 lg:px-6 h-14 flex items-center">
+            <div ref={toolbarRef} className="flex items-center justify-between gap-0.5 sm:gap-2 w-full">
+              {renderToolbarItems(true)}
+            </div>
           </div>
         </div>
       )}
-      {/* Main email content */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden min-w-0">
-        {/* === TOOLBAR (top position) === */}
-        {toolbarPosition === 'top' && (
-          <div className={cn(
-            "bg-background border-b border-border",
-            "max-lg:sticky max-lg:top-0 max-lg:z-10"
-          )}>
-            <div className="px-2 sm:px-4 lg:px-6 h-14 flex items-center">
-              <div ref={toolbarRef} className="flex items-center justify-between gap-0.5 sm:gap-2 w-full">
-                {renderToolbarItems(true)}
-              </div>
-            </div>
-          </div>
-        )}
 
-        {/* === SUBJECT BLOCK === */}
-        <div className={cn(
-          "bg-background border-b border-border",
-          toolbarPosition === 'below-subject' && "max-lg:sticky max-lg:top-0 max-lg:z-10"
-        )}>
-          <div className="px-4 lg:px-6" style={{ paddingBlock: 'var(--density-header-py)' }}>
-            <div className="flex items-start justify-between gap-2 lg:gap-4">
-              {/* Back button (for below-subject mode on tablet) */}
-              {toolbarPosition === 'below-subject' && (isMobile || (isTablet && !tabletListVisible) || (isFocusedMailLayout && !isMobile)) && onBack && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={onBack}
-                  className="h-11 w-11 lg:h-10 lg:w-10 flex-shrink-0 -ms-2"
-                  aria-label={t('back_to_list')}
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </Button>
-              )}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-start gap-2">
-                  <h1 className="text-lg lg:text-xl font-bold text-foreground tracking-tight break-words min-w-0">
-                    {email.subject || t('no_subject')}
-                  </h1>
-                  {/* Star inline with subject (top toolbar mode) */}
-                  {toolbarPosition === 'top' && (
-                    <button
-                      onClick={onToggleStar}
-                      className="flex-shrink-0 p-1 rounded hover:bg-muted transition-colors"
-                      title={isStarred ? t('tooltips.unstar') : t('tooltips.star')}
-                    >
-                      <Star className={cn(
-                        "w-4 h-4 lg:w-5 lg:h-5 transition-colors",
-                        isStarred ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground/40"
-                      )} />
-                    </button>
-                  )}
-                  {/* Color tag dots */}
-                  {currentColors.length > 0 && (
-                    <span className="flex items-center gap-0.5">
-                      {currentColors.map((tagId) => {
-                        const kw = emailKeywords.find(k => k.id === tagId) ?? { id: tagId, label: tagId, color: 'gray' };
-                        const dotClass = KEYWORD_PALETTE[kw.color]?.dot || 'bg-gray-500';
-                        return (
-                          <span key={tagId} className={cn("w-2.5 h-2.5 rounded-full flex-shrink-0", dotClass)} title={kw.label} />
-                        );
-                      })}
-                    </span>
-                  )}
-                  {isImportant && (
-                    <span className="px-1.5 lg:px-2 py-0.5 bg-warning/15 text-warning rounded-full text-xs font-medium whitespace-nowrap flex-shrink-0 self-center">
-                      {t('important')}
-                    </span>
-                  )}
-                </div>
-              </div>
-              {/* Date/time on the right of subject row - hidden on mobile, shown next to sender */}
-              <div className="hidden sm:block flex-shrink-0 text-end">
-                <span className="text-xs lg:text-sm text-muted-foreground whitespace-nowrap">
-                  {formatDateTime(email.receivedAt, timeFormat, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
-                </span>
-                {email.size > 0 && (
-                  <div className="text-xs text-muted-foreground/60">
-                    {formatFileSize(email.size)}
-                  </div>
+      {/* === SUBJECT BLOCK === */}
+      <div className={cn(
+        "bg-background border-b border-border",
+        toolbarPosition === 'below-subject' && "max-lg:sticky max-lg:top-0 max-lg:z-10"
+      )}>
+        <div className="px-4 lg:px-6" style={{ paddingBlock: 'var(--density-header-py)' }}>
+          <div className="flex items-start justify-between gap-2 lg:gap-4">
+            {/* Back button (for below-subject mode on tablet) */}
+            {toolbarPosition === 'below-subject' && (isMobile || (isTablet && !tabletListVisible) || (isFocusedMailLayout && !isMobile)) && onBack && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onBack}
+                className="h-11 w-11 lg:h-10 lg:w-10 flex-shrink-0 -ms-2"
+                aria-label={t('back_to_list')}
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </Button>
+            )}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-start gap-2">
+                <h1 className="text-lg lg:text-xl font-bold text-foreground tracking-tight break-words min-w-0">
+                  {email.subject || t('no_subject')}
+                </h1>
+                {/* Star inline with subject (top toolbar mode) */}
+                {toolbarPosition === 'top' && (
+                  <button
+                    onClick={onToggleStar}
+                    className="flex-shrink-0 p-1 rounded hover:bg-muted transition-colors"
+                    title={isStarred ? t('tooltips.unstar') : t('tooltips.star')}
+                  >
+                    <Star className={cn(
+                      "w-4 h-4 lg:w-5 lg:h-5 transition-colors",
+                      isStarred ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground/40"
+                    )} />
+                  </button>
+                )}
+                {isImportant && (
+                  <span className="px-1.5 lg:px-2 py-0.5 bg-warning/15 text-warning rounded-full text-xs font-medium whitespace-nowrap flex-shrink-0 self-center">
+                    {t('important')}
+                  </span>
                 )}
               </div>
+              {sortedTagIds.length > 0 && (
+                <div ref={headerTagsRef} className="mt-1.5 flex flex-wrap items-center gap-1">
+                  {sortedTagIds.map((tagId) => (
+                    <TagBadge
+                      key={tagId}
+                      tagId={tagId}
+                      variant={headerTagVariant}
+                      onRemove={onSetTag && email ? () => onSetTag(email.id, tagId) : undefined}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+            {/* Date/time on the right of subject row - hidden on mobile, shown next to sender */}
+            <div className="hidden sm:block flex-shrink-0 text-end">
+              <span className="text-xs lg:text-sm text-muted-foreground whitespace-nowrap">
+                {formatDateTime(email.receivedAt, timeFormat, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
+              </span>
+              {email.size > 0 && (
+                <div className="text-xs text-muted-foreground/60">
+                  {formatFileSize(email.size)}
+                </div>
+              )}
             </div>
           </div>
         </div>
+      </div>
 
-        {/* === TOOLBAR (below-subject position) === */}
-        {toolbarPosition === 'below-subject' && (
-          <div className="bg-background border-b border-border">
-            <div className="px-2 sm:px-4 lg:px-6 py-1 sm:py-1.5">
-              <div ref={toolbarRef} className="flex items-center justify-between gap-0.5 sm:gap-2">
-                {renderToolbarItems(false)}
-              </div>
+      {/* === TOOLBAR (below-subject position) === */}
+      {toolbarPosition === 'below-subject' && (
+        <div className="bg-background border-b border-border">
+          <div className="px-2 sm:px-4 lg:px-6 py-1 sm:py-1.5">
+            <div ref={toolbarRef} className="flex items-center justify-between gap-0.5 sm:gap-2">
+              {renderToolbarItems(false)}
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Email Content Area */}
-        <div className={cn("flex-1 overflow-auto overscroll-contain bg-muted/30", isMobile && "pb-[calc(3.25rem+env(safe-area-inset-bottom)/2)] sm:pb-0")}>
-          <div className="min-h-full flex flex-col">
+      {/* Email Content Area */}
+      <div className={cn("flex-1 overflow-auto overscroll-contain bg-muted/30", isMobile && "pb-[calc(3.25rem+env(safe-area-inset-bottom)/2)] sm:pb-0")}>
+      <div className="min-h-full flex flex-col">
 
-            {/* === SENDER INFO (Desktop) === */}
-            <div className="hidden lg:block bg-background border-b border-border px-6" style={{ paddingBlock: 'var(--density-header-py)' }}>
-              <div className="flex items-start" style={{ gap: 'var(--density-item-gap)' }}>
-                <button
-                  onClick={() => sender?.email && handleViewContactSidebar(null, sender.email)}
-                  className="cursor-pointer group flex-shrink-0"
-                  title={sender?.email || undefined}
-                >
-                  <Avatar
-                    name={sender?.name}
-                    email={sender?.email}
-                    size="lg"
-                    className="shadow-sm w-10 h-10 group-hover:ring-2 group-hover:ring-primary/30 transition-all"
-                  />
-                </button>
+      {/* === SENDER INFO (Desktop) === */}
+      <div className="hidden lg:block bg-background border-b border-border px-6" style={{ paddingBlock: 'var(--density-header-py)' }}>
+          <div className="flex items-start" style={{ gap: 'var(--density-item-gap)' }}>
+            <button
+              onClick={() => sender?.email && handleViewContactSidebar(null, sender.email)}
+              className="cursor-pointer group flex-shrink-0"
+              title={sender?.email || undefined}
+            >
+              <Avatar
+                name={sender?.name}
+                email={sender?.email}
+                size="lg"
+                className="shadow-sm w-10 h-10 group-hover:ring-2 group-hover:ring-primary/30 transition-all"
+              />
+            </button>
 
-                <div className="flex-1 min-w-0 flex gap-4">
-                  <div className="flex-1 min-w-0">
-                    {/* Row 1: Sender name + badges */}
-                    <div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          {sender?.email ? (
-                            <RecipientPopover
-                              name={sender?.name}
-                              email={sender.email}
-                              onViewContact={handleViewContactSidebar}
-                              className="font-semibold text-start"
-                            />
-                          ) : (
-                            <span className="font-semibold text-foreground">{t('unknown_sender')}</span>
-                          )}
-                          <EmailIdentityBadge email={email} identities={identities} />
-                          {shouldShowUnsubBanner && listHeaders?.listUnsubscribe && (
-                            <UnsubscribeBanner
-                              listUnsubscribe={listHeaders.listUnsubscribe}
-                              senderEmail={email?.from?.[0]?.email || ''}
-                              onSendMailtoUnsubscribe={handleSendMailtoUnsubscribe}
-                              onDismiss={() => {
-                                const messageId = email?.messageId || '';
-                                const newSet = new Set(dismissedUnsubBanners).add(messageId);
-                                setDismissedUnsubBanners(newSet);
-                                localStorage.setItem('dismissed-unsub-banners', JSON.stringify([...newSet]));
-                              }}
-                            />
-                          )}
-                        </div>
-                        {/* Email address under name */}
-                        {sender?.email && sender?.name && (
-                          <div className="text-sm text-muted-foreground mt-0.5 truncate">{sender.email}</div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Row 2: Recipients + Show details */}
-                    <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
-                      {email.to && email.to.length > 0 && (
-                        <>
-                          <span>{t('recipient_to_prefix')}</span>
-                          {renderClickableRecipients(email.to, currentUserEmail, t, handleViewContactSidebar)}
-                          {email.to.length > 2 && (
-                            <button
-                              onClick={() => setShowFullHeaders(!showFullHeaders)}
-                              className="text-blue-600 dark:text-blue-400 hover:underline text-sm"
-                            >
-                              {t('more_count', { count: email.to.length - 2 })}
-                            </button>
-                          )}
-                        </>
-                      )}
-                      {email.cc && email.cc.length > 0 && (
-                        <>
-                          <span className="text-muted-foreground/50">|</span>
-                          <span>CC:</span>
-                          {renderClickableRecipients(email.cc, currentUserEmail, t, handleViewContactSidebar)}
-                          {email.cc.length > 2 && (
-                            <span className="text-muted-foreground">+{email.cc.length - 2}</span>
-                          )}
-                        </>
-                      )}
-                      {email.bcc && email.bcc.length > 0 && (
-                        <>
-                          <span className="text-muted-foreground/50">|</span>
-                          <span>{t('bcc')}:</span>
-                          {renderClickableRecipients(email.bcc, currentUserEmail, t, handleViewContactSidebar)}
-                          {email.bcc.length > 2 && (
-                            <span className="text-muted-foreground">+{email.bcc.length - 2}</span>
-                          )}
-                        </>
-                      )}
-                      <button
-                        onClick={() => setShowFullHeaders(!showFullHeaders)}
-                        className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors ms-1"
-                      >
-                        {showFullHeaders ? (
-                          <>
-                            <ChevronUp className="w-3 h-3" />
-                            {t('hide_details')}
-                          </>
-                        ) : (
-                          <>
-                            <ChevronDown className="w-3 h-3" />
-                            {t('show_details')}
-                          </>
-                        )}
-                      </button>
-                    </div>
-
-
-                  </div>
-                  {/* Attachments on the right (beside-sender mode) */}
-                  {attachmentPosition === 'beside-sender' && effectiveAttachments.length > 0 && (
-                    <div className="relative flex flex-col items-end justify-start gap-1 flex-shrink-0 max-w-[50%]">
-                      {effectiveAttachments.slice(0, 2).map((attachment) => {
-                        const FileIcon = getFileIcon(attachment.name || undefined, attachment.type);
-                        const isPreviewable = isFilePreviewable(attachment.name || undefined, attachment.type);
-                        const opensPreview = isPreviewable && mailAttachmentAction === 'preview';
-                        const thumbUrl = imageThumbUrls[attachment.id];
-                        return (
-                          <DraggableAttachmentChip key={attachment.id} attachment={attachment} client={blobClient} accountId={blobAccountId} enabled={dragOutActive} downloadName={resolveAttachmentName(attachment)}>
-                            {(dragProps) => (
-                              <div
-                                className={cn(
-                                  "bg-muted/60 hover:bg-muted rounded-md border border-border/50 group relative cursor-pointer overflow-hidden",
-                                  thumbUrl
-                                    ? "inline-flex flex-col w-40"
-                                    : "inline-flex items-center gap-1.5 px-2 py-1",
-                                )}
-                                title={`${opensPreview ? tFiles('preview') : t('download')} ${getAttachmentDisplayName(attachment.name, attachment.type)}`}
-                                onClick={() => handleEffectiveAttachmentOpen(attachment)}
-                                data-testid="attachment"
-                                data-attachment-name={attachment.name}
-                                draggable={dragProps.draggable}
-                                onPointerEnter={dragProps.onPointerEnter}
-                                onDragStart={dragProps.onDragStart}
-                                onDragEnd={dragProps.onDragEnd}
-                              >
-                                {thumbUrl && (
-                                  <div className="w-full h-16 bg-background/40 flex items-center justify-center overflow-hidden">
-                                    <img src={thumbUrl} alt="" className="w-full h-full object-cover" loading="lazy" />
-                                  </div>
-                                )}
-                                <div className={cn(
-                                  "flex items-center gap-1.5",
-                                  thumbUrl && "px-2 py-1 border-t border-border/50 w-full",
-                                )}>
-                                  <FileIcon className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-                                  <span className={cn(
-                                    "text-xs text-foreground truncate",
-                                    thumbUrl ? "flex-1 min-w-0" : "max-w-[140px]",
-                                  )}>
-                                    {getAttachmentDisplayName(attachment.name, attachment.type)}
-                                  </span>
-                                  <span className="text-[10px] text-muted-foreground flex-shrink-0">
-                                    {formatFileSize(attachment.size)}
-                                  </span>
-                                </div>
-                                <div className={cn(
-                                  "absolute bg-background/95 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 px-1.5 rounded-md",
-                                  thumbUrl ? "top-1 end-1" : "inset-y-0 end-0 rounded-s-none rounded-e-md",
-                                )}>
-                                  <button
-                                    className="p-1 hover:bg-accent rounded transition-colors"
-                                    title={t('download')}
-                                    onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentDownload(attachment); }}
-                                  >
-                                    <Download className="w-3.5 h-3.5 text-foreground" />
-                                  </button>
-                                  {opensPreview && (
-                                    <button
-                                      className="p-1 hover:bg-accent rounded transition-colors"
-                                      title={tFiles('preview')}
-                                      onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentOpen(attachment); }}
-                                    >
-                                      <Eye className="w-3.5 h-3.5 text-foreground" />
-                                    </button>
-                                  )}
-                                </div>
-                              </div>
-                            )}
-                          </DraggableAttachmentChip>
-                        );
-                      })}
-                      {effectiveAttachments.length > 2 && (
-                        <button
-                          onClick={() => setShowAllBesideAttachments(!showAllBesideAttachments)}
-                          className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-0.5"
-                        >
-                          +{effectiveAttachments.length - 2} {t('more')}
-                        </button>
-                      )}
-                      {downloadAllButton}
-                      {/* Floating popup for remaining attachments */}
-                      {showAllBesideAttachments && effectiveAttachments.length > 2 && (
-                        <>
-                          <div className="fixed inset-0 z-40" onClick={() => setShowAllBesideAttachments(false)} />
-                          <div className="absolute top-full end-0 mt-1 z-50 bg-background border border-border rounded-lg shadow-lg p-2 flex flex-col gap-1 min-w-[220px]">
-                            {effectiveAttachments.slice(2).map((attachment) => {
-                              const FileIcon = getFileIcon(attachment.name || undefined, attachment.type);
-                              const isPreviewable = isFilePreviewable(attachment.name || undefined, attachment.type);
-                              const opensPreview = isPreviewable && mailAttachmentAction === 'preview';
-                              return (
-                                <DraggableAttachmentChip key={attachment.id} attachment={attachment} client={blobClient} accountId={blobAccountId} enabled={dragOutActive} downloadName={resolveAttachmentName(attachment)}>
-                                  {(dragProps) => (
-                                    <div
-                                      className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-muted/60 group relative cursor-pointer w-full"
-                                      title={`${opensPreview ? tFiles('preview') : t('download')} ${getAttachmentDisplayName(attachment.name, attachment.type)}`}
-                                      onClick={() => { handleEffectiveAttachmentOpen(attachment); setShowAllBesideAttachments(false); }}
-                                      draggable={dragProps.draggable}
-                                      onPointerEnter={dragProps.onPointerEnter}
-                                      onDragStart={dragProps.onDragStart}
-                                      onDragEnd={dragProps.onDragEnd}
-                                    >
-                                      <FileIcon className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-                                      <span className="text-xs text-foreground truncate max-w-[180px]">
-                                        {getAttachmentDisplayName(attachment.name, attachment.type)}
-                                      </span>
-                                      <span className="text-[10px] text-muted-foreground ms-auto flex-shrink-0">
-                                        {formatFileSize(attachment.size)}
-                                      </span>
-                                      <div className="absolute inset-y-0 end-0 rounded-e-md bg-background/95 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 px-1.5">
-                                        <button
-                                          className="p-1 hover:bg-accent rounded transition-colors"
-                                          title={t('download')}
-                                          onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentDownload(attachment); setShowAllBesideAttachments(false); }}
-                                        >
-                                          <Download className="w-3.5 h-3.5 text-foreground" />
-                                        </button>
-                                        {opensPreview && (
-                                          <button
-                                            className="p-1 hover:bg-accent rounded transition-colors"
-                                            title={tFiles('preview')}
-                                            onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentOpen(attachment); setShowAllBesideAttachments(false); }}
-                                          >
-                                            <Eye className="w-3.5 h-3.5 text-foreground" />
-                                          </button>
-                                        )}
-                                      </div>
-                                    </div>
-                                  )}
-                                </DraggableAttachmentChip>
-                              );
-                            })}
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Mobile/Tablet Sender Info - scrolls with content */}
-            <div className="lg:hidden bg-background border-b border-border px-4" style={{ paddingBlock: 'var(--density-header-py)' }}>
-              <div className="flex items-start" style={{ gap: 'var(--density-item-gap)' }}>
-                <button
-                  onClick={() => sender?.email && handleViewContactSidebar(null, sender.email)}
-                  className="cursor-pointer group flex-shrink-0"
-                  title={sender?.email || undefined}
-                >
-                  <Avatar
-                    name={sender?.name}
-                    email={sender?.email}
-                    size="lg"
-                    className="shadow-sm w-10 h-10 group-hover:ring-2 group-hover:ring-primary/30 transition-all"
-                  />
-                </button>
-                <div className="flex-1 min-w-0">
-                  {/* Row 1: Sender name + badges */}
-                  <div className="flex items-center gap-1.5 flex-wrap">
+            <div className="flex-1 min-w-0 flex gap-4">
+              <div className="flex-1 min-w-0">
+              {/* Row 1: Sender name + badges */}
+              <div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
                     {sender?.email ? (
                       <RecipientPopover
                         name={sender?.name}
                         email={sender.email}
                         onViewContact={handleViewContactSidebar}
-                        className="text-sm font-semibold text-start"
+                        className="font-semibold text-start"
                       />
                     ) : (
-                      <span className="text-sm font-semibold text-foreground">{t('unknown_sender')}</span>
+                      <span className="font-semibold text-foreground">{t('unknown_sender')}</span>
                     )}
                     <EmailIdentityBadge email={email} identities={identities} />
                     {shouldShowUnsubBanner && listHeaders?.listUnsubscribe && (
@@ -3974,744 +3626,70 @@ export function EmailViewer({
                   </div>
                   {/* Email address under name */}
                   {sender?.email && sender?.name && (
-                    <div className="text-xs text-muted-foreground mt-0.5 truncate">{sender.email}</div>
-                  )}
-                  {/* Row 2: Recipients */}
-                  <div className="mt-0.5 flex items-center gap-1 text-sm text-muted-foreground flex-wrap">
-                    {email.to && email.to.length > 0 && (
-                      <>
-                        <span>→ {t('recipient_to_prefix')}</span>
-                        {renderClickableRecipients(email.to, currentUserEmail, t, handleViewContactSidebar)}
-                      </>
-                    )}
-                    {email.cc && email.cc.length > 0 && (
-                      <>
-                        <span className="text-muted-foreground/50">|</span>
-                        <span>CC:</span>
-                        {renderClickableRecipients(email.cc, currentUserEmail, t, handleViewContactSidebar)}
-                        {email.cc.length > 2 && (
-                          <span>+{email.cc.length - 2}</span>
-                        )}
-                      </>
-                    )}
-                    <button
-                      onClick={() => setShowFullHeaders(!showFullHeaders)}
-                      className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors ms-1"
-                    >
-                      {showFullHeaders ? (
-                        <>
-                          <ChevronUp className="w-3 h-3" />
-                          {t('hide_details')}
-                        </>
-                      ) : (
-                        <>
-                          <ChevronDown className="w-3 h-3" />
-                          {t('show_details')}
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </div>
-                {/* Date/time + size on the right (mobile) */}
-                <div className="sm:hidden flex-shrink-0 text-end ms-2">
-                  <span className="text-xs text-muted-foreground whitespace-nowrap">
-                    {formatDateTime(email.receivedAt, timeFormat, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
-                  </span>
-                  {email.size > 0 && (
-                    <div className="text-xs text-muted-foreground/60">
-                      {formatFileSize(email.size)}
-                    </div>
+                    <div className="text-sm text-muted-foreground mt-0.5 truncate">{sender.email}</div>
                   )}
                 </div>
               </div>
-            </div>
 
-            {/* Expandable Details (shared across mobile/tablet/desktop) */}
-            {showFullHeaders && (() => {
-              const translateAuthResult = (result?: string) => {
-                const r = (result || '').toLowerCase();
-                switch (r) {
-                  case 'pass': return t('authentication.result.pass');
-                  case 'fail': return t('authentication.result.fail');
-                  case 'softfail': return t('authentication.result.softfail');
-                  case 'neutral': return t('authentication.result.neutral');
-                  case 'permerror': return t('authentication.result.permerror');
-                  case 'temperror': return t('authentication.result.temperror');
-                  case 'none': return t('authentication.result.none');
-                  default: return result || '';
-                }
-              };
-              const replyToDifferent = !!email.replyTo?.length &&
-                (!email.from || email.replyTo[0].email !== email.from[0]?.email);
-              const deliveryDeltaMs = email.sentAt && email.receivedAt
-                ? Math.abs(new Date(email.receivedAt).getTime() - new Date(email.sentAt).getTime())
-                : 0;
-              const formatDelta = (diff: number) => {
-                const minutes = Math.floor(diff / 60000);
-                const hours = Math.floor(minutes / 60);
-                const days = Math.floor(hours / 24);
-                const dayUnit = days > 1 ? t('time.days') : t('time.day');
-                const hourUnit = (hours % 24) > 1 ? t('time.hours') : t('time.hour');
-                const minuteUnit = (minutes % 60) > 1 ? t('time.minutes') : t('time.minute');
-                const minuteUnitSingle = minutes > 1 ? t('time.minutes') : t('time.minute');
-                if (days > 0) return `${days} ${dayUnit} ${hours % 24} ${hourUnit}`;
-                if (hours > 0) return `${hours} ${hourUnit} ${minutes % 60} ${minuteUnit}`;
-                return `${minutes} ${minuteUnitSingle}`;
-              };
-              const fullDate = (iso?: string) => iso
-                ? formatDateTime(iso, timeFormat, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', second: '2-digit', timeZoneName: 'short' })
-                : '-';
-              const auth = email.authenticationResults;
-              const totalAttachmentSize = effectiveAttachments.reduce((s, a) => s + (a.size || 0), 0);
-              const topMimeType = email.bodyStructure?.type;
-              const SectionHeader = ({ children }: { children: React.ReactNode }) => (
-                <div className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase mb-1.5">
-                  {children}
-                </div>
-              );
-              const Row = ({ label, children, mono }: { label: string; children: React.ReactNode; mono?: boolean }) => (
-                <>
-                  <dt className="text-muted-foreground text-xs pt-1">{label}</dt>
-                  <dd className={cn(
-                    "text-sm text-foreground min-w-0 break-words",
-                    mono && "font-mono text-xs",
-                  )}>{children}</dd>
-                </>
-              );
-              const AuthChip = ({ name, result, extra, tooltip }: { name: string; result?: string; extra?: React.ReactNode; tooltip?: string }) => {
-                if (!result) return null;
-                const status = getSecurityStatus(result);
-                const Icon = status.icon === 'check' ? Check
-                  : status.icon === 'x' ? X
-                    : status.icon === 'alert' ? AlertTriangle
-                      : Minus;
-                return (
-                  <span
-                    className={cn(
-                      "inline-flex items-center gap-1.5 px-2 py-1 rounded-md border text-xs",
-                      tooltip && "cursor-help",
-                      status.icon === 'check' && "bg-green-500/[0.07] border-green-500/30",
-                      status.icon === 'x' && "bg-red-500/[0.07] border-red-500/30",
-                      status.icon === 'alert' && "bg-amber-500/[0.07] border-amber-500/30",
-                      status.icon === 'minus' && "bg-muted/40 border-border",
-                    )}
-                    title={tooltip}
-                  >
-                    <Icon className={cn("w-3.5 h-3.5 flex-shrink-0", status.color)} />
-                    <span className="font-medium text-foreground">{name}</span>
-                    <span className={cn("text-[10px] uppercase tracking-wider", status.color)}>
-                      {translateAuthResult(result)}
-                    </span>
-                    {extra && (
-                      <>
-                        <span className="text-muted-foreground/50">·</span>
-                        <span className="text-muted-foreground">{extra}</span>
-                      </>
-                    )}
-                  </span>
-                );
-              };
-
-              const hasIdentifiers = !!(email.messageId || email.inReplyTo?.length || email.references?.length || email.threadId);
-              const hasListInfo = !!(listHeaders?.listId || listHeaders?.listUnsubscribe || listHeaders?.listHelp || listHeaders?.listPost);
-              const hasAuthSection = !!(auth?.spf || auth?.dkim || auth?.dmarc || auth?.iprev || email.spamScore !== undefined || email.spamLLM);
-
-              // Projected, read-only view handed to plugins that render in the
-              // "more details" panel. Includes the parsed `headers` map and full
-              // `source` so plugins can inspect raw headers / message source.
-              // Built lazily here - only when the details panel is expanded.
-              const detailsView = emailToReadView(email);
-              // Lets a plugin add rows under an existing category. The plugin's
-              // own `shouldShow({ email, category })` decides which category it
-              // appears under (or `category === null` for the new bottom section).
-              const CategorySlot = ({ category }: { category: string }) => (
-                <PluginSlot
-                  name="email-details-section"
-                  className="mt-2 empty:mt-0"
-                  extraProps={{ email: detailsView, category }}
-                />
-              );
-
-              return (
-                <div className="bg-background border-b border-border px-4 lg:px-6" style={{ paddingBlock: 'var(--density-header-py)' }}>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-10 gap-y-5">
-                    <section className="min-w-0">
-                      <SectionHeader>{t('details.recipients_routing')}</SectionHeader>
-                      <dl className="grid grid-cols-[7rem_1fr] gap-x-4 gap-y-1.5">
-                        <Row label={t('from')}>
-                          <div className="flex flex-wrap items-center gap-1">
-                            <RecipientPopover
-                              name={sender?.name}
-                              email={sender?.email || ''}
-                              displayLabel={sender?.name && sender?.email ? `${sender.name} <${sender.email}>` : undefined}
-                              onViewContact={handleViewContactSidebar}
-                              className="text-sm text-start"
-                            />
-                          </div>
-                        </Row>
-                        {replyToDifferent && (
-                          <Row label={t('reply_to_label').replace(':', '')}>
-                            <div className="flex flex-wrap items-center gap-1">
-                              {email.replyTo!.map((r, i) => (
-                                <RecipientPopover key={r.email + i} name={r.name} email={r.email} onViewContact={handleViewContactSidebar} className="text-sm" />
-                              ))}
-                            </div>
-                          </Row>
-                        )}
-                        {email.to && email.to.length > 0 && (
-                          <Row label={t('to')}>
-                            <div className="flex flex-wrap items-center gap-1">
-                              {renderClickableRecipients(email.to, currentUserEmail, t, handleViewContactSidebar, 100)}
-                            </div>
-                          </Row>
-                        )}
-                        {email.cc && email.cc.length > 0 && (
-                          <Row label={t('cc')}>
-                            <div className="flex flex-wrap items-center gap-1">
-                              {renderClickableRecipients(email.cc, currentUserEmail, t, handleViewContactSidebar, 100)}
-                            </div>
-                          </Row>
-                        )}
-                        {email.bcc && email.bcc.length > 0 && (
-                          <Row label={t('bcc')}>
-                            <div className="flex flex-wrap items-center gap-1">
-                              {renderClickableRecipients(email.bcc, currentUserEmail, t, handleViewContactSidebar, 100)}
-                            </div>
-                          </Row>
-                        )}
-                        {email.sentAt && (
-                          <Row label={t('details.sent')}>{fullDate(email.sentAt)}</Row>
-                        )}
-                        <Row label={t('details.received')}>
-                          {fullDate(email.receivedAt)}
-                          {deliveryDeltaMs > 60000 && (
-                            <span className="text-muted-foreground"> · {formatDelta(deliveryDeltaMs)} {t('details.delivery_time').toLowerCase()}</span>
-                          )}
-                        </Row>
-                      </dl>
-                      <CategorySlot category="recipients_routing" />
-                    </section>
-
-                    {hasAuthSection && (
-                      <section className="min-w-0">
-                        <SectionHeader>{t('details.authentication_security')}</SectionHeader>
-                        <div className="flex flex-wrap gap-1.5">
-                          {auth?.spf && (() => {
-                            // When multiple identities (HELO + MAIL FROM) were
-                            // evaluated, list each result in the tooltip for full
-                            // transparency; the chip itself shows the most severe.
-                            const breakdown = auth.spf.all && auth.spf.all.length > 1
-                              ? auth.spf.all
-                                .map((r) => {
-                                  const label = r.identity === 'mailfrom' ? 'MAIL FROM' : r.identity === 'helo' ? 'HELO' : 'SPF';
-                                  return `${label}: ${translateAuthResult(r.result)}${r.domain ? ` (${r.domain})` : ''}`;
-                                })
-                                .join('\n')
-                              : null;
-                            return (
-                              <AuthChip
-                                name="SPF"
-                                result={auth.spf.result}
-                                extra={auth.spf.domain}
-                                tooltip={breakdown ? `${t('authentication.tooltip_spf')}\n\n${breakdown}` : t('authentication.tooltip_spf')}
-                              />
-                            );
-                          })()}
-                          {auth?.dkim && (
-                            <AuthChip name="DKIM" result={auth.dkim.result} extra={auth.dkim.domain} tooltip={t('authentication.tooltip_dkim')} />
-                          )}
-                          {auth?.dmarc && (
-                            <AuthChip name="DMARC" result={auth.dmarc.result} extra={auth.dmarc.policy ? `${t('authentication.policy').toLowerCase()}: ${auth.dmarc.policy}` : undefined} tooltip={t('authentication.tooltip_dmarc')} />
-                          )}
-                          {auth?.iprev && (
-                            <AuthChip name={t('details.iprev')} result={auth.iprev.result} extra={auth.iprev.ip} />
-                          )}
-                          {email.spamScore !== undefined && (
-                            <span className={cn(
-                              "inline-flex items-center gap-1.5 px-2 py-1 rounded-md border text-xs",
-                              email.spamScore > 5 ? "bg-red-500/[0.07] border-red-500/30" :
-                                email.spamScore > 2 ? "bg-amber-500/[0.07] border-amber-500/30" :
-                                  "bg-green-500/[0.07] border-green-500/30",
-                            )}>
-                              <Shield className={cn(
-                                "w-3.5 h-3.5",
-                                email.spamScore > 5 ? "text-red-700 dark:text-red-400" :
-                                  email.spamScore > 2 ? "text-amber-700 dark:text-amber-400" :
-                                    "text-green-700 dark:text-green-400",
-                              )} />
-                              <span className="font-medium text-foreground">{t('authentication.spam_score')}</span>
-                              <span className={cn(
-                                "text-[10px] uppercase tracking-wider",
-                                email.spamScore > 5 ? "text-red-700 dark:text-red-400" :
-                                  email.spamScore > 2 ? "text-amber-700 dark:text-amber-400" :
-                                    "text-green-700 dark:text-green-400",
-                              )}>
-                                {email.spamScore.toFixed(1)}
-                              </span>
-                              {email.spamStatus && (
-                                <>
-                                  <span className="text-muted-foreground/50">·</span>
-                                  <span className="text-muted-foreground">{email.spamStatus}</span>
-                                </>
-                              )}
-                            </span>
-                          )}
-                        </div>
-                        {email.spamLLM && (
-                          <div className="mt-2 flex items-start gap-2 text-sm">
-                            {email.spamLLM.verdict === 'LEGITIMATE' ? <Brain className="w-4 h-4 mt-0.5 flex-shrink-0 text-green-700 dark:text-green-400" /> :
-                              email.spamLLM.verdict === 'SPAM' ? <ShieldAlert className="w-4 h-4 mt-0.5 flex-shrink-0 text-red-700 dark:text-red-400" /> :
-                                <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0 text-amber-700 dark:text-amber-400" />}
-                            <div className="min-w-0">
-                              <span className={cn(
-                                "font-medium",
-                                email.spamLLM.verdict === 'LEGITIMATE' ? "text-green-700 dark:text-green-400" :
-                                  email.spamLLM.verdict === 'SPAM' ? "text-red-700 dark:text-red-400" :
-                                    "text-amber-700 dark:text-amber-400",
-                              )}>
-                                {email.spamLLM.verdict}
-                              </span>
-                              <span className="text-muted-foreground"> · {email.spamLLM.explanation}</span>
-                            </div>
-                          </div>
-                        )}
-                        <CategorySlot category="authentication_security" />
-                      </section>
-                    )}
-
-                    {hasIdentifiers && (
-                      <section className="min-w-0">
-                        <SectionHeader>{t('details.identifiers_threading')}</SectionHeader>
-                        <dl className="grid grid-cols-[7rem_1fr] gap-x-4 gap-y-1.5">
-                          {email.messageId && (
-                            <Row label={t('headers.message_id')} mono>{email.messageId}</Row>
-                          )}
-                          {email.inReplyTo && email.inReplyTo.length > 0 && (
-                            <Row label={t('details.in_reply_to')} mono>
-                              <div className="space-y-0.5">
-                                {email.inReplyTo.map((id, i) => <div key={i} className="break-all">{id}</div>)}
-                              </div>
-                            </Row>
-                          )}
-                          {email.references && email.references.length > 0 && (
-                            <Row label={t('details.references')}>
-                              <details className="group">
-                                <summary className="cursor-pointer text-sm text-muted-foreground hover:text-foreground transition-colors list-none flex items-center gap-1">
-                                  <ChevronDown className="w-3 h-3 group-open:rotate-180 transition-transform" />
-                                  {t(email.references.length === 1 ? 'previous_messages' : 'previous_messages_plural', { count: email.references.length })}
-                                </summary>
-                                <div className="mt-1 space-y-0.5 font-mono text-xs">
-                                  {email.references.map((id, i) => <div key={i} className="break-all">{id}</div>)}
-                                </div>
-                              </details>
-                            </Row>
-                          )}
-                          {email.threadId && (
-                            <Row label={t('details.thread_id')} mono>{email.threadId}</Row>
-                          )}
-                        </dl>
-                        <CategorySlot category="identifiers_threading" />
-                      </section>
-                    )}
-
-                    <section className="min-w-0">
-                      <SectionHeader>{t('details.message_properties')}</SectionHeader>
-                      <dl className="grid grid-cols-[7rem_1fr] gap-x-4 gap-y-1.5">
-                        {email.subject !== undefined && (
-                          <Row label={t('subject')}>{email.subject || <span className="italic text-muted-foreground">{t('details.no_subject')}</span>}</Row>
-                        )}
-                        <Row label={t('details.size')}>
-                          {formatFileSize(email.size)}
-                          {topMimeType && (
-                            <span className="text-muted-foreground"> · <span className="font-mono text-xs">{topMimeType}</span></span>
-                          )}
-                        </Row>
-                        {effectiveAttachments.length > 0 && (
-                          <Row label={t('attachments')}>
-                            {t('details.attachments_summary', {
-                              count: effectiveAttachments.length,
-                              size: formatFileSize(totalAttachmentSize),
-                            })}
-                          </Row>
-                        )}
-                        {email.accountLabel && (
-                          <Row label={t('details.account')}>{email.accountLabel}</Row>
-                        )}
-                      </dl>
-                      <CategorySlot category="message_properties" />
-                    </section>
-
-                    {hasListInfo && (
-                      <section className="lg:col-span-2 min-w-0">
-                        <SectionHeader>{t('details.mailing_list')}</SectionHeader>
-                        <dl className="grid grid-cols-[7rem_1fr] gap-x-4 gap-y-1.5">
-                          {listHeaders?.listId && (
-                            <Row label={t('details.list_id')} mono>{listHeaders.listId}</Row>
-                          )}
-                          {listHeaders?.listUnsubscribe?.preferred && (
-                            <Row label={t('details.list_unsubscribe')}>
-                              <span className="break-all">
-                                {listHeaders.listUnsubscribe.preferred === 'http'
-                                  ? listHeaders.listUnsubscribe.http
-                                  : listHeaders.listUnsubscribe.mailto}
-                              </span>
-                            </Row>
-                          )}
-                          {listHeaders?.listHelp && (
-                            <Row label={t('details.list_help')}><span className="break-all">{listHeaders.listHelp}</span></Row>
-                          )}
-                          {listHeaders?.listPost && (
-                            <Row label={t('details.list_post')}><span className="break-all">{listHeaders.listPost}</span></Row>
-                          )}
-                        </dl>
-                        <CategorySlot category="mailing_list" />
-                      </section>
-                    )}
-
-                    {/* Plugin-supplied category. Plugins whose shouldShow accepts
-                    `category === null` render their own titled section here. */}
-                    {hasDetailsSlotOffers && (
-                      <section className="lg:col-span-2 min-w-0">
-                        <PluginSlot
-                          name="email-details-section"
-                          extraProps={{ email: detailsView, category: null }}
-                        />
-                      </section>
-                    )}
-                  </div>
-                </div>
-              );
-            })()}
-
-            {/* Scheduled Banner */}
-            {isScheduled && (
-              <div className="border-b border-border bg-primary/10">
-                <div className="max-w-4xl mx-auto px-6 py-2.5 flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 text-primary">
-                    <CalendarClock className="w-4 h-4" />
-                    <span className="text-sm font-medium">
-                      {t('scheduled_banner', { date: email.scheduledSendAt ? formatDateTime(email.scheduledSendAt, timeFormat) : '' })}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {canCancelScheduled && (
-                      <>
-                        <Button size="sm" variant="default" onClick={() => onRescheduleScheduled?.(new Date(Date.now() + 1000).toISOString())}>{t('send_now')}</Button>
-                        <Button size="sm" variant="outline" onClick={onCancelScheduled}>{t('cancel_scheduled_send')}</Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            const delayedUntil = promptForRescheduleDelayedUntil();
-                            if (delayedUntil) onRescheduleScheduled?.(delayedUntil);
-                          }}
-                        >
-                          {t('reschedule_send')}
-                        </Button>
-                        <Button size="sm" variant="outline" onClick={onCancelScheduledForEdit}>
-                          {email.isSmimeScheduled ? t('cancel_and_compose_again') : t('cancel_and_edit')}
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Draft Banner */}
-            {isDraft && (
-              <div className="border-b border-border bg-warning/10">
-                <div className="px-6 py-2.5 flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-warning">
-                    <File className="w-4 h-4" />
-                    <span className="text-sm font-medium">{t('draft_banner')}</span>
-                  </div>
-                  {onEditDraft && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => onEditDraft()}
-                      className="gap-1.5"
-                    >
-                      <EditIcon className="w-3.5 h-3.5" />
-                      {t('edit_draft')}
-                    </Button>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Unified Notification Banner - External Content + Calendar Invitation + Read Receipt */}
-            {((hasBlockedContent && !allowExternalContent && externalContentPolicy !== 'allow') ||
-              hasCalendarInvitation ||
-              (readReceiptResponse === 'ask' && shouldOfferReadReceipt)) && (
-                <div className="border-b border-border bg-muted/30 isolate">
-                  <div className="px-6 py-1.5">
-                    <div className="flex flex-col gap-3 isolate">
-                      {/* External Content Controls */}
-                      {hasBlockedContent && !allowExternalContent && externalContentPolicy !== 'allow' && (
-                        <div className="flex items-start gap-3 py-1">
-                          <div className="w-10 h-10 rounded-full bg-info/15 text-info flex items-center justify-center flex-shrink-0 shadow-sm">
-                            <Image className="w-5 h-5" />
-                          </div>
-                          <div className="flex-1 min-w-0 space-y-2">
-                            <div>
-                              <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                                External Content
-                              </div>
-                              <div className="text-sm font-medium text-foreground break-words">
-                                {t('external_content_warning')}
-                              </div>
-                            </div>
-                            <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
-                              {externalContentPolicy === 'ask' && (
-                                <button
-                                  onClick={() => setAllowExternalContent(true)}
-                                  className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground px-3 py-1.5 rounded-md border border-border hover:bg-muted transition-colors min-h-[36px]"
-                                >
-                                  <Image className="w-3.5 h-3.5" />
-                                  {t('load_external_content')}
-                                </button>
-                              )}
-                              {email.from?.[0]?.email && (
-                                <button
-                                  onClick={() => {
-                                    const senderEmail = email.from?.[0]?.email;
-                                    if (senderEmail) {
-                                      if (trustedSendersAddressBook && client) {
-                                        addToTrustedSendersBook(client, senderEmail).catch(console.error);
-                                      } else {
-                                        addTrustedSender(senderEmail);
-                                      }
-                                      setAllowExternalContent(true);
-                                    }
-                                  }}
-                                  className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground px-3 py-1.5 rounded-md border border-border hover:bg-muted transition-colors min-h-[36px]"
-                                >
-                                  <ShieldCheck className="w-3.5 h-3.5" />
-                                  {t('trust_sender')}
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-
-
-                      {/* Read-receipt (MDN) request banner — only in "ask" mode */}
-                      {readReceiptResponse === 'ask' && shouldOfferReadReceipt && readReceiptRequestedBy && (
-                        <div className="py-1">
-                          <ReadReceiptBanner
-                            requestedBy={readReceiptRequestedBy}
-                            onSend={() => sendReadReceiptNow(false)}
-                            onIgnore={ignoreReadReceipt}
-                          />
-                        </div>
-                      )}
-
-                      {/* Calendar Invitation Banner */}
-                      {hasCalendarInvitation && (
-                        <div className="py-1">
-                          <CalendarInvitationBanner email={email} />
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-            <PluginSlot name="email-banner" extraProps={{ email: emailToReadView(email) }} />
-
-            {/* === ATTACHMENTS below header (below-header mode, desktop only) === */}
-            {attachmentPosition === 'below-header' && effectiveAttachments.length > 0 && (
-              <div className="hidden lg:block bg-background border-b border-border px-4 lg:px-6 py-2">
-                <div className="relative flex items-center gap-2">
-                  <div ref={belowHeaderRowRef} className="relative flex items-center gap-2 overflow-hidden flex-1 min-w-0">
-                    {/* Hidden ghost row used purely for measuring chip widths */}
-                    <div
-                      ref={belowHeaderGhostRef}
-                      aria-hidden="true"
-                      className="absolute inset-y-0 left-0 right-0 flex items-center gap-2 invisible pointer-events-none whitespace-nowrap"
-                    >
-                      {effectiveAttachments.map((attachment) => {
-                        const FileIcon = getFileIcon(attachment.name || undefined, attachment.type);
-                        const hasThumb = !!imageThumbUrls[attachment.id];
-                        if (hasThumb) {
-                          // Image chip is a fixed-width vertical card; only its width
-                          // matters for the row-fit measurement.
-                          return (
-                            <div
-                              key={`ghost-${attachment.id}`}
-                              className="inline-block w-44 rounded-md border border-border/50 flex-shrink-0"
-                              style={{ height: 1 }}
-                            />
-                          );
-                        }
-                        return (
-                          <div
-                            key={`ghost-${attachment.id}`}
-                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-border/50 flex-shrink-0"
-                          >
-                            <FileIcon className="w-4 h-4" />
-                            <span className="text-sm truncate max-w-[200px]">
-                              {getAttachmentDisplayName(attachment.name, attachment.type)}
-                            </span>
-                            <span className="text-xs">
-                              {formatFileSize(attachment.size)}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                    {effectiveAttachments
-                      .slice(0, visibleBelowHeaderCount ?? effectiveAttachments.length)
-                      .map((attachment) => {
-                        const FileIcon = getFileIcon(attachment.name || undefined, attachment.type);
-                        const isPreviewable = isFilePreviewable(attachment.name || undefined, attachment.type);
-                        const opensPreview = isPreviewable && mailAttachmentAction === 'preview';
-                        const thumbUrl = imageThumbUrls[attachment.id];
-                        return (
-                          <DraggableAttachmentChip key={attachment.id} attachment={attachment} client={blobClient} accountId={blobAccountId} enabled={dragOutActive} downloadName={resolveAttachmentName(attachment)}>
-                            {(dragProps) => (
-                              <div
-                                className={cn(
-                                  "bg-muted/60 hover:bg-muted rounded-md border border-border/50 group relative cursor-pointer flex-shrink-0 overflow-hidden",
-                                  thumbUrl
-                                    ? "inline-flex flex-col w-44"
-                                    : "inline-flex items-center gap-1.5 px-2.5 py-1.5",
-                                )}
-                                title={`${opensPreview ? tFiles('preview') : t('download')} ${getAttachmentDisplayName(attachment.name, attachment.type)}`}
-                                onClick={() => handleEffectiveAttachmentOpen(attachment)}
-                                data-testid="attachment"
-                                data-attachment-name={attachment.name}
-                                draggable={dragProps.draggable}
-                                onPointerEnter={dragProps.onPointerEnter}
-                                onDragStart={dragProps.onDragStart}
-                                onDragEnd={dragProps.onDragEnd}
-                              >
-                                {thumbUrl && (
-                                  <div className="w-full h-20 bg-background/40 flex items-center justify-center overflow-hidden">
-                                    <img
-                                      src={thumbUrl}
-                                      alt=""
-                                      className="w-full h-full object-cover"
-                                      loading="lazy"
-                                    />
-                                  </div>
-                                )}
-                                <div className={cn(
-                                  "flex items-center gap-1.5",
-                                  thumbUrl && "px-2 py-1.5 border-t border-border/50 w-full",
-                                )}>
-                                  <FileIcon className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                                  <span className={cn(
-                                    "text-sm text-foreground truncate",
-                                    thumbUrl ? "flex-1 min-w-0" : "max-w-[200px]",
-                                  )}>
-                                    {getAttachmentDisplayName(attachment.name, attachment.type)}
-                                  </span>
-                                  <span className="text-xs text-muted-foreground flex-shrink-0">
-                                    {formatFileSize(attachment.size)}
-                                  </span>
-                                </div>
-                                <div className={cn(
-                                  "absolute rounded-md bg-background/95 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 px-1.5",
-                                  thumbUrl ? "top-1 end-1" : "inset-y-0 end-0 rounded-e-md rounded-s-none",
-                                )}>
-                                  <button
-                                    className="p-1 hover:bg-accent rounded transition-colors"
-                                    title={t('download')}
-                                    onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentDownload(attachment); }}
-                                  >
-                                    <Download className="w-4 h-4 text-foreground" />
-                                  </button>
-                                  {opensPreview && (
-                                    <button
-                                      className="p-1 hover:bg-accent rounded transition-colors"
-                                      title={tFiles('preview')}
-                                      onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentOpen(attachment); }}
-                                    >
-                                      <Eye className="w-4 h-4 text-foreground" />
-                                    </button>
-                                  )}
-                                </div>
-                              </div>
-                            )}
-                          </DraggableAttachmentChip>
-                        );
-                      })}
-                    {visibleBelowHeaderCount !== null && effectiveAttachments.length > visibleBelowHeaderCount && (
+              {/* Row 2: Recipients + Show details */}
+              <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
+                {email.to && email.to.length > 0 && (
+                  <>
+                    <span>{t('recipient_to_prefix')}</span>
+                    {renderClickableRecipients(email.to, currentUserEmail, t, handleViewContactSidebar)}
+                    {email.to.length > 2 && (
                       <button
-                        onClick={() => setShowAllBelowHeaderAttachments(!showAllBelowHeaderAttachments)}
-                        className="inline-flex items-center px-2.5 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/60 rounded-md border border-border/50 transition-colors flex-shrink-0"
+                        onClick={() => setShowFullHeaders(!showFullHeaders)}
+                        className="text-blue-600 dark:text-blue-400 hover:underline text-sm"
                       >
-                        +{effectiveAttachments.length - visibleBelowHeaderCount} {t('attachments').toLowerCase()}
+                        {t('more_count', { count: email.to.length - 2 })}
                       </button>
                     )}
-                  </div>
-                  {downloadAllButton}
-                  {showAllBelowHeaderAttachments && visibleBelowHeaderCount !== null && effectiveAttachments.length > visibleBelowHeaderCount && (
+                  </>
+                )}
+                {email.cc && email.cc.length > 0 && (
+                  <>
+                    <span className="text-muted-foreground/50">|</span>
+                    <span>CC:</span>
+                    {renderClickableRecipients(email.cc, currentUserEmail, t, handleViewContactSidebar)}
+                    {email.cc.length > 2 && (
+                      <span className="text-muted-foreground">+{email.cc.length - 2}</span>
+                    )}
+                  </>
+                )}
+                {email.bcc && email.bcc.length > 0 && (
+                  <>
+                    <span className="text-muted-foreground/50">|</span>
+                    <span>{t('bcc')}:</span>
+                    {renderClickableRecipients(email.bcc, currentUserEmail, t, handleViewContactSidebar)}
+                    {email.bcc.length > 2 && (
+                      <span className="text-muted-foreground">+{email.bcc.length - 2}</span>
+                    )}
+                  </>
+                )}
+                <button
+                  onClick={() => setShowFullHeaders(!showFullHeaders)}
+                  className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors ms-1"
+                >
+                  {showFullHeaders ? (
                     <>
-                      <div className="fixed inset-0 z-40" onClick={() => setShowAllBelowHeaderAttachments(false)} />
-                      <div className="absolute top-full end-0 mt-1 z-50 bg-background border border-border rounded-lg shadow-lg p-2 flex flex-col gap-1 min-w-[260px] max-h-[60vh] overflow-y-auto">
-                        {effectiveAttachments.slice(visibleBelowHeaderCount).map((attachment) => {
-                          const FileIcon = getFileIcon(attachment.name || undefined, attachment.type);
-                          const isPreviewable = isFilePreviewable(attachment.name || undefined, attachment.type);
-                          const opensPreview = isPreviewable && mailAttachmentAction === 'preview';
-                          return (
-                            <DraggableAttachmentChip key={attachment.id} attachment={attachment} client={blobClient} accountId={blobAccountId} enabled={dragOutActive} downloadName={resolveAttachmentName(attachment)}>
-                              {(dragProps) => (
-                                <div
-                                  className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-muted/60 group relative cursor-pointer w-full"
-                                  title={`${opensPreview ? tFiles('preview') : t('download')} ${getAttachmentDisplayName(attachment.name, attachment.type)}`}
-                                  onClick={() => { handleEffectiveAttachmentOpen(attachment); setShowAllBelowHeaderAttachments(false); }}
-                                  draggable={dragProps.draggable}
-                                  onPointerEnter={dragProps.onPointerEnter}
-                                  onDragStart={dragProps.onDragStart}
-                                  onDragEnd={dragProps.onDragEnd}
-                                >
-                                  <FileIcon className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                                  <span className="text-sm text-foreground truncate max-w-[220px]">
-                                    {getAttachmentDisplayName(attachment.name, attachment.type)}
-                                  </span>
-                                  <span className="text-xs text-muted-foreground ms-auto flex-shrink-0">
-                                    {formatFileSize(attachment.size)}
-                                  </span>
-                                  <div className="absolute inset-y-0 end-0 rounded-e-md bg-background/95 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 px-1.5">
-                                    <button
-                                      className="p-1 hover:bg-accent rounded transition-colors"
-                                      title={t('download')}
-                                      onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentDownload(attachment); setShowAllBelowHeaderAttachments(false); }}
-                                    >
-                                      <Download className="w-4 h-4 text-foreground" />
-                                    </button>
-                                    {opensPreview && (
-                                      <button
-                                        className="p-1 hover:bg-accent rounded transition-colors"
-                                        title={tFiles('preview')}
-                                        onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentOpen(attachment); setShowAllBelowHeaderAttachments(false); }}
-                                      >
-                                        <Eye className="w-4 h-4 text-foreground" />
-                                      </button>
-                                    )}
-                                  </div>
-                                </div>
-                              )}
-                            </DraggableAttachmentChip>
-                          );
-                        })}
-                      </div>
+                      <ChevronUp className="w-3 h-3" />
+                      {t('hide_details')}
+                    </>
+                  ) : (
+                    <>
+                      <ChevronDown className="w-3 h-3" />
+                      {t('show_details')}
                     </>
                   )}
-                </div>
+                </button>
               </div>
-            )}
 
-            {/* Mobile/Tablet Attachments */}
-            {effectiveAttachments.length > 0 && (
-              <div className="lg:hidden bg-background border-b border-border px-4 py-2">
-                <div className="relative flex items-center gap-1.5 flex-wrap">
+
+              </div>
+              {/* Attachments on the right (beside-sender mode) */}
+              {attachmentPosition === 'beside-sender' && effectiveAttachments.length > 0 && (
+                <div className="relative flex flex-col items-end justify-start gap-1 flex-shrink-0 max-w-[50%]">
                   {effectiveAttachments.slice(0, 2).map((attachment) => {
                     const FileIcon = getFileIcon(attachment.name || undefined, attachment.type);
                     const isPreviewable = isFilePreviewable(attachment.name || undefined, attachment.type);
@@ -4720,81 +3698,82 @@ export function EmailViewer({
                     return (
                       <DraggableAttachmentChip key={attachment.id} attachment={attachment} client={blobClient} accountId={blobAccountId} enabled={dragOutActive} downloadName={resolveAttachmentName(attachment)}>
                         {(dragProps) => (
-                          <div
-                            className={cn(
-                              "bg-muted/60 hover:bg-muted rounded-md border border-border/50 group relative cursor-pointer overflow-hidden",
-                              thumbUrl
-                                ? "inline-flex flex-col w-44"
-                                : "inline-flex items-center gap-1.5 px-2.5 py-1.5",
-                            )}
-                            title={`${opensPreview ? tFiles('preview') : t('download')} ${getAttachmentDisplayName(attachment.name, attachment.type)}`}
-                            onClick={() => handleEffectiveAttachmentOpen(attachment)}
-                            data-testid="attachment"
-                            data-attachment-name={attachment.name}
-                            draggable={dragProps.draggable}
-                            onPointerEnter={dragProps.onPointerEnter}
-                            onDragStart={dragProps.onDragStart}
-                            onDragEnd={dragProps.onDragEnd}
-                          >
-                            {thumbUrl && (
-                              <div className="w-full h-20 bg-background/40 flex items-center justify-center overflow-hidden">
-                                <img src={thumbUrl} alt="" className="w-full h-full object-cover" loading="lazy" />
-                              </div>
-                            )}
-                            <div className={cn(
-                              "flex items-center gap-1.5",
-                              thumbUrl && "px-2 py-1.5 border-t border-border/50 w-full",
-                            )}>
-                              <FileIcon className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                              <span className={cn(
-                                "text-sm text-foreground truncate",
-                                thumbUrl ? "flex-1 min-w-0" : "max-w-[200px]",
-                              )}>
-                                {getAttachmentDisplayName(attachment.name, attachment.type)}
-                              </span>
-                              <span className="text-xs text-muted-foreground flex-shrink-0">
-                                {formatFileSize(attachment.size)}
-                              </span>
-                            </div>
-                            <div className={cn(
-                              "absolute bg-background/95 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 px-1.5 rounded-md",
-                              thumbUrl ? "top-1 end-1" : "inset-y-0 end-0 rounded-s-none rounded-e-md",
-                            )}>
-                              <button
-                                className="p-1 hover:bg-accent rounded transition-colors"
-                                title={t('download')}
-                                onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentDownload(attachment); }}
-                              >
-                                <Download className="w-4 h-4 text-foreground" />
-                              </button>
-                              {opensPreview && (
-                                <button
-                                  className="p-1 hover:bg-accent rounded transition-colors"
-                                  title={tFiles('preview')}
-                                  onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentOpen(attachment); }}
-                                >
-                                  <Eye className="w-4 h-4 text-foreground" />
-                                </button>
-                              )}
-                            </div>
+                      <div
+                        className={cn(
+                          "bg-muted/60 hover:bg-muted rounded-md border border-border/50 group relative cursor-pointer overflow-hidden",
+                          thumbUrl
+                            ? "inline-flex flex-col w-40"
+                            : "inline-flex items-center gap-1.5 px-2 py-1",
+                        )}
+                        title={`${opensPreview ? tFiles('preview') : t('download')} ${getAttachmentDisplayName(attachment.name, attachment.type)}`}
+                        onClick={() => handleEffectiveAttachmentOpen(attachment)}
+                        data-testid="attachment"
+                        data-attachment-name={attachment.name}
+                        draggable={dragProps.draggable}
+                        onPointerEnter={dragProps.onPointerEnter}
+                        onDragStart={dragProps.onDragStart}
+                        onDragEnd={dragProps.onDragEnd}
+                      >
+                        {thumbUrl && (
+                          <div className="w-full h-16 bg-background/40 flex items-center justify-center overflow-hidden">
+                            <img src={thumbUrl} alt="" className="w-full h-full object-cover" loading="lazy" />
                           </div>
+                        )}
+                        <div className={cn(
+                          "flex items-center gap-1.5",
+                          thumbUrl && "px-2 py-1 border-t border-border/50 w-full",
+                        )}>
+                          <FileIcon className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                          <span className={cn(
+                            "text-xs text-foreground truncate",
+                            thumbUrl ? "flex-1 min-w-0" : "max-w-[140px]",
+                          )}>
+                            {getAttachmentDisplayName(attachment.name, attachment.type)}
+                          </span>
+                          <span className="text-[10px] text-muted-foreground flex-shrink-0">
+                            {formatFileSize(attachment.size)}
+                          </span>
+                        </div>
+                        <div className={cn(
+                          "absolute bg-background/95 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 px-1.5 rounded-md",
+                          thumbUrl ? "top-1 end-1" : "inset-y-0 end-0 rounded-s-none rounded-e-md",
+                        )}>
+                          <button
+                            className="p-1 hover:bg-accent rounded transition-colors"
+                            title={t('download')}
+                            onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentDownload(attachment); }}
+                          >
+                            <Download className="w-3.5 h-3.5 text-foreground" />
+                          </button>
+                          {opensPreview && (
+                            <button
+                              className="p-1 hover:bg-accent rounded transition-colors"
+                              title={tFiles('preview')}
+                              onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentOpen(attachment); }}
+                            >
+                              <Eye className="w-3.5 h-3.5 text-foreground" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
                         )}
                       </DraggableAttachmentChip>
                     );
                   })}
                   {effectiveAttachments.length > 2 && (
                     <button
-                      onClick={() => setShowAllMobileAttachments(!showAllMobileAttachments)}
+                      onClick={() => setShowAllBesideAttachments(!showAllBesideAttachments)}
                       className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-0.5"
                     >
                       +{effectiveAttachments.length - 2} {t('more')}
                     </button>
                   )}
                   {downloadAllButton}
-                  {showAllMobileAttachments && effectiveAttachments.length > 2 && (
+                  {/* Floating popup for remaining attachments */}
+                  {showAllBesideAttachments && effectiveAttachments.length > 2 && (
                     <>
-                      <div className="fixed inset-0 z-40" onClick={() => setShowAllMobileAttachments(false)} />
-                      <div className="absolute top-full start-0 mt-1 z-50 bg-background border border-border rounded-lg shadow-lg p-2 flex flex-col gap-1 min-w-[220px]">
+                      <div className="fixed inset-0 z-40" onClick={() => setShowAllBesideAttachments(false)} />
+                      <div className="absolute top-full end-0 mt-1 z-50 bg-background border border-border rounded-lg shadow-lg p-2 flex flex-col gap-1 min-w-[220px]">
                         {effectiveAttachments.slice(2).map((attachment) => {
                           const FileIcon = getFileIcon(attachment.name || undefined, attachment.type);
                           const isPreviewable = isFilePreviewable(attachment.name || undefined, attachment.type);
@@ -4802,41 +3781,41 @@ export function EmailViewer({
                           return (
                             <DraggableAttachmentChip key={attachment.id} attachment={attachment} client={blobClient} accountId={blobAccountId} enabled={dragOutActive} downloadName={resolveAttachmentName(attachment)}>
                               {(dragProps) => (
-                                <div
-                                  className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-muted/60 group relative cursor-pointer w-full"
-                                  title={`${opensPreview ? tFiles('preview') : t('download')} ${getAttachmentDisplayName(attachment.name, attachment.type)}`}
-                                  onClick={() => { handleEffectiveAttachmentOpen(attachment); setShowAllMobileAttachments(false); }}
-                                  draggable={dragProps.draggable}
-                                  onPointerEnter={dragProps.onPointerEnter}
-                                  onDragStart={dragProps.onDragStart}
-                                  onDragEnd={dragProps.onDragEnd}
+                            <div
+                              className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-muted/60 group relative cursor-pointer w-full"
+                              title={`${opensPreview ? tFiles('preview') : t('download')} ${getAttachmentDisplayName(attachment.name, attachment.type)}`}
+                              onClick={() => { handleEffectiveAttachmentOpen(attachment); setShowAllBesideAttachments(false); }}
+                              draggable={dragProps.draggable}
+                              onPointerEnter={dragProps.onPointerEnter}
+                              onDragStart={dragProps.onDragStart}
+                              onDragEnd={dragProps.onDragEnd}
+                            >
+                              <FileIcon className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                              <span className="text-xs text-foreground truncate max-w-[180px]">
+                                {getAttachmentDisplayName(attachment.name, attachment.type)}
+                              </span>
+                              <span className="text-[10px] text-muted-foreground ms-auto flex-shrink-0">
+                                {formatFileSize(attachment.size)}
+                              </span>
+                              <div className="absolute inset-y-0 end-0 rounded-e-md bg-background/95 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 px-1.5">
+                                <button
+                                  className="p-1 hover:bg-accent rounded transition-colors"
+                                  title={t('download')}
+                                  onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentDownload(attachment); setShowAllBesideAttachments(false); }}
                                 >
-                                  <FileIcon className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-                                  <span className="text-xs text-foreground truncate max-w-[180px]">
-                                    {getAttachmentDisplayName(attachment.name, attachment.type)}
-                                  </span>
-                                  <span className="text-[10px] text-muted-foreground ms-auto flex-shrink-0">
-                                    {formatFileSize(attachment.size)}
-                                  </span>
-                                  <div className="absolute inset-y-0 end-0 rounded-e-md bg-background/95 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 px-1.5">
-                                    <button
-                                      className="p-1 hover:bg-accent rounded transition-colors"
-                                      title={t('download')}
-                                      onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentDownload(attachment); setShowAllMobileAttachments(false); }}
-                                    >
-                                      <Download className="w-3.5 h-3.5 text-foreground" />
-                                    </button>
-                                    {opensPreview && (
-                                      <button
-                                        className="p-1 hover:bg-accent rounded transition-colors"
-                                        title={tFiles('preview')}
-                                        onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentOpen(attachment); setShowAllMobileAttachments(false); }}
-                                      >
-                                        <Eye className="w-3.5 h-3.5 text-foreground" />
-                                      </button>
-                                    )}
-                                  </div>
-                                </div>
+                                  <Download className="w-3.5 h-3.5 text-foreground" />
+                                </button>
+                                {opensPreview && (
+                                  <button
+                                    className="p-1 hover:bg-accent rounded transition-colors"
+                                    title={tFiles('preview')}
+                                    onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentOpen(attachment); setShowAllBesideAttachments(false); }}
+                                  >
+                                    <Eye className="w-3.5 h-3.5 text-foreground" />
+                                  </button>
+                                )}
+                              </div>
+                            </div>
                               )}
                             </DraggableAttachmentChip>
                           );
@@ -4845,353 +3824,1271 @@ export function EmailViewer({
                     </>
                   )}
                 </div>
-              </div>
-            )}
-
-            <div className="grow shrink-0 flex flex-col">
-
-              {/* Email Body */}
-              <div className={cn(
-                "email-content-wrapper overflow-x-auto",
-                !isDark && resolvedTheme === 'dark' ? "bg-white email-content-light" : "bg-background"
               )}
-                style={isDark ? { backgroundColor: '#121212' } : undefined}>
-                {isBodyLoading ? (
-                  <div
-                    className="space-y-3 px-6 py-4 animate-pulse"
-                    style={{ minHeight: `${lastBodyHeightRef.current}px` }}
-                  >
-                    <div className="h-2 bg-muted/15 rounded w-full"></div>
-                    <div className="h-2 bg-muted/15 rounded w-5/6"></div>
-                    <div className="h-2 bg-muted/15 rounded w-4/6"></div>
-                    <div className="h-2 bg-muted/15 rounded w-full"></div>
-                    <div className="h-2 bg-muted/15 rounded w-3/4"></div>
-                  </div>
-                ) : effectiveEmailContent.isHtml ? (
-                  <iframe
-                    ref={iframeRef}
-                    srcDoc={emailIframeSrcDoc}
-                    sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox"
-                    title="Email content"
-                    className="w-full border-0 block"
-                    scrolling="no"
-                    style={{ minHeight: '100px', colorScheme: isDark && emailHasNativeDarkMode ? 'light dark' : 'light' }}
-                    onLoad={handleIframeLoad}
+            </div>
+          </div>
+      </div>
+
+        {/* Mobile/Tablet Sender Info - scrolls with content */}
+        <div className="lg:hidden bg-background border-b border-border px-4" style={{ paddingBlock: 'var(--density-header-py)' }}>
+          <div className="flex items-start" style={{ gap: 'var(--density-item-gap)' }}>
+            <button
+              onClick={() => sender?.email && handleViewContactSidebar(null, sender.email)}
+              className="cursor-pointer group flex-shrink-0"
+              title={sender?.email || undefined}
+            >
+              <Avatar
+                name={sender?.name}
+                email={sender?.email}
+                size="lg"
+                className="shadow-sm w-10 h-10 group-hover:ring-2 group-hover:ring-primary/30 transition-all"
+              />
+            </button>
+            <div className="flex-1 min-w-0">
+              {/* Row 1: Sender name + badges */}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {sender?.email ? (
+                  <RecipientPopover
+                    name={sender?.name}
+                    email={sender.email}
+                    onViewContact={handleViewContactSidebar}
+                    className="text-sm font-semibold text-start"
                   />
                 ) : (
-                  <div
-                    className="email-content-text text-foreground"
-                    dangerouslySetInnerHTML={{ __html: sanitizePlainTextRenderedHtml(effectiveEmailContent.html) }}
-                    style={{
-                      fontFamily: 'ui-monospace, "SF Mono", Consolas, monospace',
-                      fontSize: '14px',
-                      lineHeight: '1.6',
-                      wordBreak: 'break-word',
-                      whiteSpace: 'pre-wrap',
+                  <span className="text-sm font-semibold text-foreground">{t('unknown_sender')}</span>
+                )}
+                <EmailIdentityBadge email={email} identities={identities} />
+                {shouldShowUnsubBanner && listHeaders?.listUnsubscribe && (
+                  <UnsubscribeBanner
+                    listUnsubscribe={listHeaders.listUnsubscribe}
+                    senderEmail={email?.from?.[0]?.email || ''}
+                    onSendMailtoUnsubscribe={handleSendMailtoUnsubscribe}
+                    onDismiss={() => {
+                      const messageId = email?.messageId || '';
+                      const newSet = new Set(dismissedUnsubBanners).add(messageId);
+                      setDismissedUnsubBanners(newSet);
+                      localStorage.setItem('dismissed-unsub-banners', JSON.stringify([...newSet]));
                     }}
                   />
                 )}
               </div>
-
-              <PluginSlot name="email-footer" />
-
-              {/* Quick Reply Section - hidden for drafts and while loading a new email */}
-              {!isDraft && !isScheduled && !isBodyLoading && (effectiveEmailContent.isHtml ? iframeReady : true) && (<div className="bg-background border-t border-border px-6 mt-auto" style={{ paddingBlock: 'var(--density-header-py)' }}>
-                <div className="flex items-start" style={{ gap: 'var(--density-item-gap)' }}>
-                  <div className="flex-shrink-0">
-                    <Avatar
-                      name={activeAccount?.displayName || currentUserName || "You"}
-                      email={activeAccount?.email || activeAccount?.username || currentUserEmail || ""}
-                      size="lg"
-                      className="shadow-sm w-10 h-10"
-                      disableFavicon
-                      fallbackColor={activeAccount?.avatarColor}
-                    />
-                  </div>
-                  <div className="flex-1 min-w-0 space-y-3">
-                    <textarea
-                      value={quickReplyText}
-                      onChange={(e) => setQuickReplyText(e.target.value)}
-                      onFocus={() => setIsQuickReplyFocused(true)}
-                      onKeyDown={(e) => {
-                        if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
-                          e.preventDefault();
-                          void handleSendQuickReply();
-                        }
-                      }}
-                      placeholder={t('quick_reply_placeholder')}
-                      className={cn(
-                        "w-full px-3 py-2 text-sm border border-border bg-background text-foreground rounded-lg",
-                        "hover:border-accent focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all",
-                        "resize-none"
-                      )}
-                      rows={isQuickReplyFocused || quickReplyText ? 3 : 2}
-                      disabled={isSendingQuickReply}
-                    />
-
-                    {/* Action buttons - show when focused or has text */}
-                    {(isQuickReplyFocused || quickReplyText) && (
-                      <div className="flex items-center justify-between gap-2 animate-in fade-in slide-in-from-top-1 duration-200">
-                        <div className="text-xs text-muted-foreground">
-                          {t('characters_count', { count: quickReplyText.length })}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setQuickReplyText("");
-                              setIsQuickReplyFocused(false);
-                            }}
-                            disabled={isSendingQuickReply}
-                          >
-                            {tCommon('cancel')}
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              onReply?.(quickReplyText);
-                              setQuickReplyText("");
-                              setIsQuickReplyFocused(false);
-                            }}
-                            disabled={isSendingQuickReply}
-                            className="text-muted-foreground"
-                          >
-                            <MoreVertical className="w-4 h-4 me-1" />
-                            {t('more_options')}
-                          </Button>
-                          <Button
-                            size="sm"
-                            onClick={handleSendQuickReply}
-                            disabled={!quickReplyText.trim() || isSendingQuickReply}
-                          >
-                            {isSendingQuickReply ? (
-                              <>
-                                <Loader2 className="w-4 h-4 me-1 animate-spin" />
-                                {t('sending')}
-                              </>
-                            ) : (
-                              <>
-                                <Reply className="w-4 h-4 me-1" />
-                                {t('send')}
-                              </>
-                            )}
-                          </Button>
-                        </div>
-                      </div>
+              {/* Email address under name */}
+              {sender?.email && sender?.name && (
+                <div className="text-xs text-muted-foreground mt-0.5 truncate">{sender.email}</div>
+              )}
+              {/* Row 2: Recipients */}
+              <div className="mt-0.5 flex items-center gap-1 text-sm text-muted-foreground flex-wrap">
+                {email.to && email.to.length > 0 && (
+                  <>
+                    <span>→ {t('recipient_to_prefix')}</span>
+                    {renderClickableRecipients(email.to, currentUserEmail, t, handleViewContactSidebar)}
+                  </>
+                )}
+                {email.cc && email.cc.length > 0 && (
+                  <>
+                    <span className="text-muted-foreground/50">|</span>
+                    <span>CC:</span>
+                    {renderClickableRecipients(email.cc, currentUserEmail, t, handleViewContactSidebar)}
+                    {email.cc.length > 2 && (
+                      <span>+{email.cc.length - 2}</span>
                     )}
-                  </div>
+                  </>
+                )}
+                <button
+                  onClick={() => setShowFullHeaders(!showFullHeaders)}
+                  className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors ms-1"
+                >
+                  {showFullHeaders ? (
+                    <>
+                      <ChevronUp className="w-3 h-3" />
+                      {t('hide_details')}
+                    </>
+                  ) : (
+                    <>
+                      <ChevronDown className="w-3 h-3" />
+                      {t('show_details')}
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+            {/* Date/time + size on the right (mobile) */}
+            <div className="sm:hidden flex-shrink-0 text-end ms-2">
+              <span className="text-xs text-muted-foreground whitespace-nowrap">
+                {formatDateTime(email.receivedAt, timeFormat, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
+              </span>
+              {email.size > 0 && (
+                <div className="text-xs text-muted-foreground/60">
+                  {formatFileSize(email.size)}
                 </div>
-              </div>)}
+              )}
             </div>
           </div>
         </div>
 
-        {/* Email Source Modal */}
-        {showSourceModal && email && (
-          <div
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-            onClick={() => setShowSourceModal(false)}
-          >
-            <div
-              className="bg-background rounded-lg shadow-2xl border border-border w-full max-w-4xl max-h-[90vh] flex flex-col"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Modal Header */}
-              <div className="flex items-center justify-between p-4 border-b border-border">
-                <div className="flex items-center gap-2">
-                  <Code className="w-5 h-5 text-primary" />
-                  <h2 className="text-lg font-semibold text-foreground">{t('email_source')}</h2>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={copySourceToClipboard}
-                    className="flex items-center gap-1.5"
-                  >
-                    <Copy className="w-4 h-4" />
-                    {t('copy_source')}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setShowSourceModal(false)}
-                    className="h-10 w-10 lg:h-8 lg:w-8"
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
+        {/* Expandable Details (shared across mobile/tablet/desktop) */}
+        {showFullHeaders && (() => {
+          const translateAuthResult = (result?: string) => {
+            const r = (result || '').toLowerCase();
+            switch (r) {
+              case 'pass': return t('authentication.result.pass');
+              case 'fail': return t('authentication.result.fail');
+              case 'softfail': return t('authentication.result.softfail');
+              case 'neutral': return t('authentication.result.neutral');
+              case 'permerror': return t('authentication.result.permerror');
+              case 'temperror': return t('authentication.result.temperror');
+              case 'none': return t('authentication.result.none');
+              default: return result || '';
+            }
+          };
+          const replyToDifferent = !!email.replyTo?.length &&
+            (!email.from || email.replyTo[0].email !== email.from[0]?.email);
+          const deliveryDeltaMs = email.sentAt && email.receivedAt
+            ? Math.abs(new Date(email.receivedAt).getTime() - new Date(email.sentAt).getTime())
+            : 0;
+          const formatDelta = (diff: number) => {
+            const minutes = Math.floor(diff / 60000);
+            const hours = Math.floor(minutes / 60);
+            const days = Math.floor(hours / 24);
+            const dayUnit = days > 1 ? t('time.days') : t('time.day');
+            const hourUnit = (hours % 24) > 1 ? t('time.hours') : t('time.hour');
+            const minuteUnit = (minutes % 60) > 1 ? t('time.minutes') : t('time.minute');
+            const minuteUnitSingle = minutes > 1 ? t('time.minutes') : t('time.minute');
+            if (days > 0) return `${days} ${dayUnit} ${hours % 24} ${hourUnit}`;
+            if (hours > 0) return `${hours} ${hourUnit} ${minutes % 60} ${minuteUnit}`;
+            return `${minutes} ${minuteUnitSingle}`;
+          };
+          const fullDate = (iso?: string) => iso
+            ? formatDateTime(iso, timeFormat, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', second: '2-digit', timeZoneName: 'short' })
+            : '-';
+          const auth = email.authenticationResults;
+          const totalAttachmentSize = effectiveAttachments.reduce((s, a) => s + (a.size || 0), 0);
+          const topMimeType = email.bodyStructure?.type;
+          const SectionHeader = ({ children }: { children: React.ReactNode }) => (
+            <div className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase mb-1.5">
+              {children}
+            </div>
+          );
+          const Row = ({ label, children, mono }: { label: string; children: React.ReactNode; mono?: boolean }) => (
+            <>
+              <dt className="text-muted-foreground text-xs pt-1">{label}</dt>
+              <dd className={cn(
+                "text-sm text-foreground min-w-0 break-words",
+                mono && "font-mono text-xs",
+              )}>{children}</dd>
+            </>
+          );
+          const AuthChip = ({ name, result, extra, tooltip }: { name: string; result?: string; extra?: React.ReactNode; tooltip?: string }) => {
+            if (!result) return null;
+            const status = getSecurityStatus(result);
+            const Icon = status.icon === 'check' ? Check
+              : status.icon === 'x' ? X
+              : status.icon === 'alert' ? AlertTriangle
+              : Minus;
+            return (
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1.5 px-2 py-1 rounded-md border text-xs",
+                  tooltip && "cursor-help",
+                  status.icon === 'check' && "bg-green-500/[0.07] border-green-500/30",
+                  status.icon === 'x' && "bg-red-500/[0.07] border-red-500/30",
+                  status.icon === 'alert' && "bg-amber-500/[0.07] border-amber-500/30",
+                  status.icon === 'minus' && "bg-muted/40 border-border",
+                )}
+                title={tooltip}
+              >
+                <Icon className={cn("w-3.5 h-3.5 flex-shrink-0", status.color)} />
+                <span className="font-medium text-foreground">{name}</span>
+                <span className={cn("text-[10px] uppercase tracking-wider", status.color)}>
+                  {translateAuthResult(result)}
+                </span>
+                {extra && (
+                  <>
+                    <span className="text-muted-foreground/50">·</span>
+                    <span className="text-muted-foreground">{extra}</span>
+                  </>
+                )}
+              </span>
+            );
+          };
 
-              {/* Modal Content */}
-              <div className="flex-1 overflow-auto p-4 bg-muted/30">
-                <pre className="text-xs font-mono text-foreground whitespace-pre-wrap break-words bg-background border border-border rounded-lg p-4">
-                  {generateEmailSource(email)}
-                </pre>
+          const hasIdentifiers = !!(email.messageId || email.inReplyTo?.length || email.references?.length || email.threadId);
+          const hasListInfo = !!(listHeaders?.listId || listHeaders?.listUnsubscribe || listHeaders?.listHelp || listHeaders?.listPost);
+          const hasAuthSection = !!(auth?.spf || auth?.dkim || auth?.dmarc || auth?.iprev || email.spamScore !== undefined || email.spamLLM);
+
+          // Projected, read-only view handed to plugins that render in the
+          // "more details" panel. Includes the parsed `headers` map and full
+          // `source` so plugins can inspect raw headers / message source.
+          // Built lazily here - only when the details panel is expanded.
+          const detailsView = emailToReadView(email);
+          // Lets a plugin add rows under an existing category. The plugin's
+          // own `shouldShow({ email, category })` decides which category it
+          // appears under (or `category === null` for the new bottom section).
+          const CategorySlot = ({ category }: { category: string }) => (
+            <PluginSlot
+              name="email-details-section"
+              className="mt-2 empty:mt-0"
+              extraProps={{ email: detailsView, category }}
+            />
+          );
+
+          return (
+            <div className="bg-background border-b border-border px-4 lg:px-6" style={{ paddingBlock: 'var(--density-header-py)' }}>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-10 gap-y-5">
+                <section className="min-w-0">
+                  <SectionHeader>{t('details.recipients_routing')}</SectionHeader>
+                  <dl className="grid grid-cols-[7rem_1fr] gap-x-4 gap-y-1.5">
+                    <Row label={t('from')}>
+                      <div className="flex flex-wrap items-center gap-1">
+                        <RecipientPopover
+                          name={sender?.name}
+                          email={sender?.email || ''}
+                          displayLabel={sender?.name && sender?.email ? `${sender.name} <${sender.email}>` : undefined}
+                          onViewContact={handleViewContactSidebar}
+                          className="text-sm text-start"
+                        />
+                      </div>
+                    </Row>
+                    {replyToDifferent && (
+                      <Row label={t('reply_to_label').replace(':', '')}>
+                        <div className="flex flex-wrap items-center gap-1">
+                          {email.replyTo!.map((r, i) => (
+                            <RecipientPopover key={r.email + i} name={r.name} email={r.email} onViewContact={handleViewContactSidebar} className="text-sm" />
+                          ))}
+                        </div>
+                      </Row>
+                    )}
+                    {email.to && email.to.length > 0 && (
+                      <Row label={t('to')}>
+                        <div className="flex flex-wrap items-center gap-1">
+                          {renderClickableRecipients(email.to, currentUserEmail, t, handleViewContactSidebar, 100)}
+                        </div>
+                      </Row>
+                    )}
+                    {email.cc && email.cc.length > 0 && (
+                      <Row label={t('cc')}>
+                        <div className="flex flex-wrap items-center gap-1">
+                          {renderClickableRecipients(email.cc, currentUserEmail, t, handleViewContactSidebar, 100)}
+                        </div>
+                      </Row>
+                    )}
+                    {email.bcc && email.bcc.length > 0 && (
+                      <Row label={t('bcc')}>
+                        <div className="flex flex-wrap items-center gap-1">
+                          {renderClickableRecipients(email.bcc, currentUserEmail, t, handleViewContactSidebar, 100)}
+                        </div>
+                      </Row>
+                    )}
+                    {email.sentAt && (
+                      <Row label={t('details.sent')}>{fullDate(email.sentAt)}</Row>
+                    )}
+                    <Row label={t('details.received')}>
+                      {fullDate(email.receivedAt)}
+                      {deliveryDeltaMs > 60000 && (
+                        <span className="text-muted-foreground"> · {formatDelta(deliveryDeltaMs)} {t('details.delivery_time').toLowerCase()}</span>
+                      )}
+                    </Row>
+                  </dl>
+                  <CategorySlot category="recipients_routing" />
+                </section>
+
+                {hasAuthSection && (
+                  <section className="min-w-0">
+                    <SectionHeader>{t('details.authentication_security')}</SectionHeader>
+                    <div className="flex flex-wrap gap-1.5">
+                      {auth?.spf && (() => {
+                        // When multiple identities (HELO + MAIL FROM) were
+                        // evaluated, list each result in the tooltip for full
+                        // transparency; the chip itself shows the most severe.
+                        const breakdown = auth.spf.all && auth.spf.all.length > 1
+                          ? auth.spf.all
+                              .map((r) => {
+                                const label = r.identity === 'mailfrom' ? 'MAIL FROM' : r.identity === 'helo' ? 'HELO' : 'SPF';
+                                return `${label}: ${translateAuthResult(r.result)}${r.domain ? ` (${r.domain})` : ''}`;
+                              })
+                              .join('\n')
+                          : null;
+                        return (
+                          <AuthChip
+                            name="SPF"
+                            result={auth.spf.result}
+                            extra={auth.spf.domain}
+                            tooltip={breakdown ? `${t('authentication.tooltip_spf')}\n\n${breakdown}` : t('authentication.tooltip_spf')}
+                          />
+                        );
+                      })()}
+                      {auth?.dkim && (
+                        <AuthChip name="DKIM" result={auth.dkim.result} extra={auth.dkim.domain} tooltip={t('authentication.tooltip_dkim')} />
+                      )}
+                      {auth?.dmarc && (
+                        <AuthChip name="DMARC" result={auth.dmarc.result} extra={auth.dmarc.policy ? `${t('authentication.policy').toLowerCase()}: ${auth.dmarc.policy}` : undefined} tooltip={t('authentication.tooltip_dmarc')} />
+                      )}
+                      {auth?.iprev && (
+                        <AuthChip name={t('details.iprev')} result={auth.iprev.result} extra={auth.iprev.ip} />
+                      )}
+                      {email.spamScore !== undefined && (
+                        <span className={cn(
+                          "inline-flex items-center gap-1.5 px-2 py-1 rounded-md border text-xs",
+                          email.spamScore > 5 ? "bg-red-500/[0.07] border-red-500/30" :
+                          email.spamScore > 2 ? "bg-amber-500/[0.07] border-amber-500/30" :
+                          "bg-green-500/[0.07] border-green-500/30",
+                        )}>
+                          <Shield className={cn(
+                            "w-3.5 h-3.5",
+                            email.spamScore > 5 ? "text-red-700 dark:text-red-400" :
+                            email.spamScore > 2 ? "text-amber-700 dark:text-amber-400" :
+                            "text-green-700 dark:text-green-400",
+                          )} />
+                          <span className="font-medium text-foreground">{t('authentication.spam_score')}</span>
+                          <span className={cn(
+                            "text-[10px] uppercase tracking-wider",
+                            email.spamScore > 5 ? "text-red-700 dark:text-red-400" :
+                            email.spamScore > 2 ? "text-amber-700 dark:text-amber-400" :
+                            "text-green-700 dark:text-green-400",
+                          )}>
+                            {email.spamScore.toFixed(1)}
+                          </span>
+                          {email.spamStatus && (
+                            <>
+                              <span className="text-muted-foreground/50">·</span>
+                              <span className="text-muted-foreground">{email.spamStatus}</span>
+                            </>
+                          )}
+                        </span>
+                      )}
+                    </div>
+                    {email.spamLLM && (
+                      <div className="mt-2 flex items-start gap-2 text-sm">
+                        {email.spamLLM.verdict === 'LEGITIMATE' ? <Brain className="w-4 h-4 mt-0.5 flex-shrink-0 text-green-700 dark:text-green-400" /> :
+                         email.spamLLM.verdict === 'SPAM' ? <ShieldAlert className="w-4 h-4 mt-0.5 flex-shrink-0 text-red-700 dark:text-red-400" /> :
+                         <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0 text-amber-700 dark:text-amber-400" />}
+                        <div className="min-w-0">
+                          <span className={cn(
+                            "font-medium",
+                            email.spamLLM.verdict === 'LEGITIMATE' ? "text-green-700 dark:text-green-400" :
+                            email.spamLLM.verdict === 'SPAM' ? "text-red-700 dark:text-red-400" :
+                            "text-amber-700 dark:text-amber-400",
+                          )}>
+                            {email.spamLLM.verdict}
+                          </span>
+                          <span className="text-muted-foreground"> · {email.spamLLM.explanation}</span>
+                        </div>
+                      </div>
+                    )}
+                    <CategorySlot category="authentication_security" />
+                  </section>
+                )}
+
+                {hasIdentifiers && (
+                  <section className="min-w-0">
+                    <SectionHeader>{t('details.identifiers_threading')}</SectionHeader>
+                    <dl className="grid grid-cols-[7rem_1fr] gap-x-4 gap-y-1.5">
+                      {email.messageId && (
+                        <Row label={t('headers.message_id')} mono>{email.messageId}</Row>
+                      )}
+                      {email.inReplyTo && email.inReplyTo.length > 0 && (
+                        <Row label={t('details.in_reply_to')} mono>
+                          <div className="space-y-0.5">
+                            {email.inReplyTo.map((id, i) => <div key={i} className="break-all">{id}</div>)}
+                          </div>
+                        </Row>
+                      )}
+                      {email.references && email.references.length > 0 && (
+                        <Row label={t('details.references')}>
+                          <details className="group">
+                            <summary className="cursor-pointer text-sm text-muted-foreground hover:text-foreground transition-colors list-none flex items-center gap-1">
+                              <ChevronDown className="w-3 h-3 group-open:rotate-180 transition-transform" />
+                              {t(email.references.length === 1 ? 'previous_messages' : 'previous_messages_plural', { count: email.references.length })}
+                            </summary>
+                            <div className="mt-1 space-y-0.5 font-mono text-xs">
+                              {email.references.map((id, i) => <div key={i} className="break-all">{id}</div>)}
+                            </div>
+                          </details>
+                        </Row>
+                      )}
+                      {email.threadId && (
+                        <Row label={t('details.thread_id')} mono>{email.threadId}</Row>
+                      )}
+                    </dl>
+                    <CategorySlot category="identifiers_threading" />
+                  </section>
+                )}
+
+                <section className="min-w-0">
+                  <SectionHeader>{t('details.message_properties')}</SectionHeader>
+                  <dl className="grid grid-cols-[7rem_1fr] gap-x-4 gap-y-1.5">
+                    {email.subject !== undefined && (
+                      <Row label={t('subject')}>{email.subject || <span className="italic text-muted-foreground">{t('details.no_subject')}</span>}</Row>
+                    )}
+                    <Row label={t('details.size')}>
+                      {formatFileSize(email.size)}
+                      {topMimeType && (
+                        <span className="text-muted-foreground"> · <span className="font-mono text-xs">{topMimeType}</span></span>
+                      )}
+                    </Row>
+                    {effectiveAttachments.length > 0 && (
+                      <Row label={t('attachments')}>
+                        {t('details.attachments_summary', {
+                          count: effectiveAttachments.length,
+                          size: formatFileSize(totalAttachmentSize),
+                        })}
+                      </Row>
+                    )}
+                    {email.accountLabel && (
+                      <Row label={t('details.account')}>{email.accountLabel}</Row>
+                    )}
+                  </dl>
+                  <CategorySlot category="message_properties" />
+                </section>
+
+                {hasListInfo && (
+                  <section className="lg:col-span-2 min-w-0">
+                    <SectionHeader>{t('details.mailing_list')}</SectionHeader>
+                    <dl className="grid grid-cols-[7rem_1fr] gap-x-4 gap-y-1.5">
+                      {listHeaders?.listId && (
+                        <Row label={t('details.list_id')} mono>{listHeaders.listId}</Row>
+                      )}
+                      {listHeaders?.listUnsubscribe?.preferred && (
+                        <Row label={t('details.list_unsubscribe')}>
+                          <span className="break-all">
+                            {listHeaders.listUnsubscribe.preferred === 'http'
+                              ? listHeaders.listUnsubscribe.http
+                              : listHeaders.listUnsubscribe.mailto}
+                          </span>
+                        </Row>
+                      )}
+                      {listHeaders?.listHelp && (
+                        <Row label={t('details.list_help')}><span className="break-all">{listHeaders.listHelp}</span></Row>
+                      )}
+                      {listHeaders?.listPost && (
+                        <Row label={t('details.list_post')}><span className="break-all">{listHeaders.listPost}</span></Row>
+                      )}
+                    </dl>
+                    <CategorySlot category="mailing_list" />
+                  </section>
+                )}
+
+                {/* Plugin-supplied category. Plugins whose shouldShow accepts
+                    `category === null` render their own titled section here. */}
+                {hasDetailsSlotOffers && (
+                  <section className="lg:col-span-2 min-w-0">
+                    <PluginSlot
+                      name="email-details-section"
+                      extraProps={{ email: detailsView, category: null }}
+                    />
+                  </section>
+                )}
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* Scheduled Banner */}
+        {isScheduled && (
+          <div className="border-b border-border bg-primary/10">
+            <div className="max-w-4xl mx-auto px-6 py-2.5 flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2 text-primary">
+                <CalendarClock className="w-4 h-4" />
+                <span className="text-sm font-medium">
+                  {t('scheduled_banner', { date: email.scheduledSendAt ? formatDateTime(email.scheduledSendAt, timeFormat) : '' })}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                {canCancelScheduled && (
+                  <>
+                    <Button size="sm" variant="default" onClick={() => onRescheduleScheduled?.(new Date(Date.now() + 1000).toISOString())}>{t('send_now')}</Button>
+                    <Button size="sm" variant="outline" onClick={onCancelScheduled}>{t('cancel_scheduled_send')}</Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        const delayedUntil = promptForRescheduleDelayedUntil();
+                        if (delayedUntil) onRescheduleScheduled?.(delayedUntil);
+                      }}
+                    >
+                      {t('reschedule_send')}
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={onCancelScheduledForEdit}>
+                      {email.isSmimeScheduled ? t('cancel_and_compose_again') : t('cancel_and_edit')}
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           </div>
         )}
+
+        {/* Draft Banner */}
+        {isDraft && (
+          <div className="border-b border-border bg-warning/10">
+            <div className="px-6 py-2.5 flex items-center justify-between">
+              <div className="flex items-center gap-2 text-warning">
+                <File className="w-4 h-4" />
+                <span className="text-sm font-medium">{t('draft_banner')}</span>
+              </div>
+              {onEditDraft && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => onEditDraft()}
+                  className="gap-1.5"
+                >
+                  <EditIcon className="w-3.5 h-3.5" />
+                  {t('edit_draft')}
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Unified Notification Banner - External Content + Calendar Invitation + Read Receipt */}
+        {((hasBlockedContent && !allowExternalContent && externalContentPolicy !== 'allow') ||
+          hasCalendarInvitation ||
+          (readReceiptResponse === 'ask' && shouldOfferReadReceipt)) && (
+          <div className="border-b border-border bg-muted/30 isolate">
+            <div className="px-6 py-1.5">
+              <div className="flex flex-col gap-3 isolate">
+                {/* External Content Controls */}
+                {hasBlockedContent && !allowExternalContent && externalContentPolicy !== 'allow' && (
+                  <div className="flex items-start gap-3 py-1">
+                    <div className="w-10 h-10 rounded-full bg-info/15 text-info flex items-center justify-center flex-shrink-0 shadow-sm">
+                      <Image className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1 min-w-0 space-y-2">
+                      <div>
+                        <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                          External Content
+                        </div>
+                        <div className="text-sm font-medium text-foreground break-words">
+                          {t('external_content_warning')}
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                        {externalContentPolicy === 'ask' && (
+                          <button
+                            onClick={() => setAllowExternalContent(true)}
+                            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground px-3 py-1.5 rounded-md border border-border hover:bg-muted transition-colors min-h-[36px]"
+                          >
+                            <Image className="w-3.5 h-3.5" />
+                            {t('load_external_content')}
+                          </button>
+                        )}
+                        {email.from?.[0]?.email && (
+                          <button
+                            onClick={() => {
+                              const senderEmail = email.from?.[0]?.email;
+                              if (senderEmail) {
+                                if (trustedSendersAddressBook && client) {
+                                  addToTrustedSendersBook(client, senderEmail).catch(console.error);
+                                } else {
+                                  addTrustedSender(senderEmail);
+                                }
+                                setAllowExternalContent(true);
+                              }
+                            }}
+                            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground px-3 py-1.5 rounded-md border border-border hover:bg-muted transition-colors min-h-[36px]"
+                          >
+                            <ShieldCheck className="w-3.5 h-3.5" />
+                            {t('trust_sender')}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+
+
+                {/* Read-receipt (MDN) request banner — only in "ask" mode */}
+                {readReceiptResponse === 'ask' && shouldOfferReadReceipt && readReceiptRequestedBy && (
+                  <div className="py-1">
+                    <ReadReceiptBanner
+                      requestedBy={readReceiptRequestedBy}
+                      onSend={() => sendReadReceiptNow(false)}
+                      onIgnore={ignoreReadReceipt}
+                    />
+                  </div>
+                )}
+
+                {/* Calendar Invitation Banner */}
+                {hasCalendarInvitation && (
+                  <div className="py-1">
+                    <CalendarInvitationBanner email={email} />
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        <PluginSlot name="email-banner" extraProps={{ email: emailToReadView(email) }} />
+
+      {/* === ATTACHMENTS below header (below-header mode, desktop only) === */}
+      {attachmentPosition === 'below-header' && effectiveAttachments.length > 0 && (
+        <div className="hidden lg:block bg-background border-b border-border px-4 lg:px-6 py-2">
+          <div className="relative flex items-center gap-2">
+          <div ref={belowHeaderRowRef} className="relative flex items-center gap-2 overflow-hidden flex-1 min-w-0">
+            {/* Hidden ghost row used purely for measuring chip widths */}
+            <div
+              ref={belowHeaderGhostRef}
+              aria-hidden="true"
+              className="absolute inset-y-0 left-0 right-0 flex items-center gap-2 invisible pointer-events-none whitespace-nowrap"
+            >
+              {effectiveAttachments.map((attachment) => {
+                const FileIcon = getFileIcon(attachment.name || undefined, attachment.type);
+                const hasThumb = !!imageThumbUrls[attachment.id];
+                if (hasThumb) {
+                  // Image chip is a fixed-width vertical card; only its width
+                  // matters for the row-fit measurement.
+                  return (
+                    <div
+                      key={`ghost-${attachment.id}`}
+                      className="inline-block w-44 rounded-md border border-border/50 flex-shrink-0"
+                      style={{ height: 1 }}
+                    />
+                  );
+                }
+                return (
+                  <div
+                    key={`ghost-${attachment.id}`}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-border/50 flex-shrink-0"
+                  >
+                    <FileIcon className="w-4 h-4" />
+                    <span className="text-sm truncate max-w-[200px]">
+                      {getAttachmentDisplayName(attachment.name, attachment.type)}
+                    </span>
+                    <span className="text-xs">
+                      {formatFileSize(attachment.size)}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+            {effectiveAttachments
+              .slice(0, visibleBelowHeaderCount ?? effectiveAttachments.length)
+              .map((attachment) => {
+              const FileIcon = getFileIcon(attachment.name || undefined, attachment.type);
+              const isPreviewable = isFilePreviewable(attachment.name || undefined, attachment.type);
+              const opensPreview = isPreviewable && mailAttachmentAction === 'preview';
+              const thumbUrl = imageThumbUrls[attachment.id];
+              return (
+                <DraggableAttachmentChip key={attachment.id} attachment={attachment} client={blobClient} accountId={blobAccountId} enabled={dragOutActive} downloadName={resolveAttachmentName(attachment)}>
+                  {(dragProps) => (
+                <div
+                  className={cn(
+                    "bg-muted/60 hover:bg-muted rounded-md border border-border/50 group relative cursor-pointer flex-shrink-0 overflow-hidden",
+                    thumbUrl
+                      ? "inline-flex flex-col w-44"
+                      : "inline-flex items-center gap-1.5 px-2.5 py-1.5",
+                  )}
+                  title={`${opensPreview ? tFiles('preview') : t('download')} ${getAttachmentDisplayName(attachment.name, attachment.type)}`}
+                  onClick={() => handleEffectiveAttachmentOpen(attachment)}
+                  data-testid="attachment"
+                  data-attachment-name={attachment.name}
+                  draggable={dragProps.draggable}
+                  onPointerEnter={dragProps.onPointerEnter}
+                  onDragStart={dragProps.onDragStart}
+                  onDragEnd={dragProps.onDragEnd}
+                >
+                  {thumbUrl && (
+                    <div className="w-full h-20 bg-background/40 flex items-center justify-center overflow-hidden">
+                      <img
+                        src={thumbUrl}
+                        alt=""
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                    </div>
+                  )}
+                  <div className={cn(
+                    "flex items-center gap-1.5",
+                    thumbUrl && "px-2 py-1.5 border-t border-border/50 w-full",
+                  )}>
+                    <FileIcon className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                    <span className={cn(
+                      "text-sm text-foreground truncate",
+                      thumbUrl ? "flex-1 min-w-0" : "max-w-[200px]",
+                    )}>
+                      {getAttachmentDisplayName(attachment.name, attachment.type)}
+                    </span>
+                    <span className="text-xs text-muted-foreground flex-shrink-0">
+                      {formatFileSize(attachment.size)}
+                    </span>
+                  </div>
+                  <div className={cn(
+                    "absolute rounded-md bg-background/95 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 px-1.5",
+                    thumbUrl ? "top-1 end-1" : "inset-y-0 end-0 rounded-e-md rounded-s-none",
+                  )}>
+                    <button
+                      className="p-1 hover:bg-accent rounded transition-colors"
+                      title={t('download')}
+                      onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentDownload(attachment); }}
+                    >
+                      <Download className="w-4 h-4 text-foreground" />
+                    </button>
+                    {opensPreview && (
+                      <button
+                        className="p-1 hover:bg-accent rounded transition-colors"
+                        title={tFiles('preview')}
+                        onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentOpen(attachment); }}
+                      >
+                        <Eye className="w-4 h-4 text-foreground" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+                  )}
+                </DraggableAttachmentChip>
+              );
+            })}
+            {visibleBelowHeaderCount !== null && effectiveAttachments.length > visibleBelowHeaderCount && (
+              <button
+                onClick={() => setShowAllBelowHeaderAttachments(!showAllBelowHeaderAttachments)}
+                className="inline-flex items-center px-2.5 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/60 rounded-md border border-border/50 transition-colors flex-shrink-0"
+              >
+                +{effectiveAttachments.length - visibleBelowHeaderCount} {t('attachments').toLowerCase()}
+              </button>
+            )}
+          </div>
+            {downloadAllButton}
+            {showAllBelowHeaderAttachments && visibleBelowHeaderCount !== null && effectiveAttachments.length > visibleBelowHeaderCount && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setShowAllBelowHeaderAttachments(false)} />
+                <div className="absolute top-full end-0 mt-1 z-50 bg-background border border-border rounded-lg shadow-lg p-2 flex flex-col gap-1 min-w-[260px] max-h-[60vh] overflow-y-auto">
+                  {effectiveAttachments.slice(visibleBelowHeaderCount).map((attachment) => {
+                    const FileIcon = getFileIcon(attachment.name || undefined, attachment.type);
+                    const isPreviewable = isFilePreviewable(attachment.name || undefined, attachment.type);
+                    const opensPreview = isPreviewable && mailAttachmentAction === 'preview';
+                    return (
+                      <DraggableAttachmentChip key={attachment.id} attachment={attachment} client={blobClient} accountId={blobAccountId} enabled={dragOutActive} downloadName={resolveAttachmentName(attachment)}>
+                        {(dragProps) => (
+                      <div
+                        className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-muted/60 group relative cursor-pointer w-full"
+                        title={`${opensPreview ? tFiles('preview') : t('download')} ${getAttachmentDisplayName(attachment.name, attachment.type)}`}
+                        onClick={() => { handleEffectiveAttachmentOpen(attachment); setShowAllBelowHeaderAttachments(false); }}
+                        draggable={dragProps.draggable}
+                        onPointerEnter={dragProps.onPointerEnter}
+                        onDragStart={dragProps.onDragStart}
+                        onDragEnd={dragProps.onDragEnd}
+                      >
+                        <FileIcon className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                        <span className="text-sm text-foreground truncate max-w-[220px]">
+                          {getAttachmentDisplayName(attachment.name, attachment.type)}
+                        </span>
+                        <span className="text-xs text-muted-foreground ms-auto flex-shrink-0">
+                          {formatFileSize(attachment.size)}
+                        </span>
+                        <div className="absolute inset-y-0 end-0 rounded-e-md bg-background/95 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 px-1.5">
+                          <button
+                            className="p-1 hover:bg-accent rounded transition-colors"
+                            title={t('download')}
+                            onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentDownload(attachment); setShowAllBelowHeaderAttachments(false); }}
+                          >
+                            <Download className="w-4 h-4 text-foreground" />
+                          </button>
+                          {opensPreview && (
+                            <button
+                              className="p-1 hover:bg-accent rounded transition-colors"
+                              title={tFiles('preview')}
+                              onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentOpen(attachment); setShowAllBelowHeaderAttachments(false); }}
+                            >
+                              <Eye className="w-4 h-4 text-foreground" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                        )}
+                      </DraggableAttachmentChip>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+        {/* Mobile/Tablet Attachments */}
+        {effectiveAttachments.length > 0 && (
+          <div className="lg:hidden bg-background border-b border-border px-4 py-2">
+            <div className="relative flex items-center gap-1.5 flex-wrap">
+              {effectiveAttachments.slice(0, 2).map((attachment) => {
+                const FileIcon = getFileIcon(attachment.name || undefined, attachment.type);
+                const isPreviewable = isFilePreviewable(attachment.name || undefined, attachment.type);
+                const opensPreview = isPreviewable && mailAttachmentAction === 'preview';
+                const thumbUrl = imageThumbUrls[attachment.id];
+                return (
+                  <DraggableAttachmentChip key={attachment.id} attachment={attachment} client={blobClient} accountId={blobAccountId} enabled={dragOutActive} downloadName={resolveAttachmentName(attachment)}>
+                    {(dragProps) => (
+                  <div
+                    className={cn(
+                      "bg-muted/60 hover:bg-muted rounded-md border border-border/50 group relative cursor-pointer overflow-hidden",
+                      thumbUrl
+                        ? "inline-flex flex-col w-44"
+                        : "inline-flex items-center gap-1.5 px-2.5 py-1.5",
+                    )}
+                    title={`${opensPreview ? tFiles('preview') : t('download')} ${getAttachmentDisplayName(attachment.name, attachment.type)}`}
+                    onClick={() => handleEffectiveAttachmentOpen(attachment)}
+                    data-testid="attachment"
+                    data-attachment-name={attachment.name}
+                    draggable={dragProps.draggable}
+                    onPointerEnter={dragProps.onPointerEnter}
+                    onDragStart={dragProps.onDragStart}
+                    onDragEnd={dragProps.onDragEnd}
+                  >
+                    {thumbUrl && (
+                      <div className="w-full h-20 bg-background/40 flex items-center justify-center overflow-hidden">
+                        <img src={thumbUrl} alt="" className="w-full h-full object-cover" loading="lazy" />
+                      </div>
+                    )}
+                    <div className={cn(
+                      "flex items-center gap-1.5",
+                      thumbUrl && "px-2 py-1.5 border-t border-border/50 w-full",
+                    )}>
+                      <FileIcon className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                      <span className={cn(
+                        "text-sm text-foreground truncate",
+                        thumbUrl ? "flex-1 min-w-0" : "max-w-[200px]",
+                      )}>
+                        {getAttachmentDisplayName(attachment.name, attachment.type)}
+                      </span>
+                      <span className="text-xs text-muted-foreground flex-shrink-0">
+                        {formatFileSize(attachment.size)}
+                      </span>
+                    </div>
+                    <div className={cn(
+                      "absolute bg-background/95 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 px-1.5 rounded-md",
+                      thumbUrl ? "top-1 end-1" : "inset-y-0 end-0 rounded-s-none rounded-e-md",
+                    )}>
+                      <button
+                        className="p-1 hover:bg-accent rounded transition-colors"
+                        title={t('download')}
+                        onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentDownload(attachment); }}
+                      >
+                        <Download className="w-4 h-4 text-foreground" />
+                      </button>
+                      {opensPreview && (
+                        <button
+                          className="p-1 hover:bg-accent rounded transition-colors"
+                          title={tFiles('preview')}
+                          onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentOpen(attachment); }}
+                        >
+                          <Eye className="w-4 h-4 text-foreground" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                    )}
+                  </DraggableAttachmentChip>
+                );
+              })}
+              {effectiveAttachments.length > 2 && (
+                <button
+                  onClick={() => setShowAllMobileAttachments(!showAllMobileAttachments)}
+                  className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-0.5"
+                >
+                  +{effectiveAttachments.length - 2} {t('more')}
+                </button>
+              )}
+              {downloadAllButton}
+              {showAllMobileAttachments && effectiveAttachments.length > 2 && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setShowAllMobileAttachments(false)} />
+                  <div className="absolute top-full start-0 mt-1 z-50 bg-background border border-border rounded-lg shadow-lg p-2 flex flex-col gap-1 min-w-[220px]">
+                    {effectiveAttachments.slice(2).map((attachment) => {
+                      const FileIcon = getFileIcon(attachment.name || undefined, attachment.type);
+                      const isPreviewable = isFilePreviewable(attachment.name || undefined, attachment.type);
+                      const opensPreview = isPreviewable && mailAttachmentAction === 'preview';
+                      return (
+                        <DraggableAttachmentChip key={attachment.id} attachment={attachment} client={blobClient} accountId={blobAccountId} enabled={dragOutActive} downloadName={resolveAttachmentName(attachment)}>
+                          {(dragProps) => (
+                        <div
+                          className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-muted/60 group relative cursor-pointer w-full"
+                          title={`${opensPreview ? tFiles('preview') : t('download')} ${getAttachmentDisplayName(attachment.name, attachment.type)}`}
+                          onClick={() => { handleEffectiveAttachmentOpen(attachment); setShowAllMobileAttachments(false); }}
+                          draggable={dragProps.draggable}
+                          onPointerEnter={dragProps.onPointerEnter}
+                          onDragStart={dragProps.onDragStart}
+                          onDragEnd={dragProps.onDragEnd}
+                        >
+                          <FileIcon className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                          <span className="text-xs text-foreground truncate max-w-[180px]">
+                            {getAttachmentDisplayName(attachment.name, attachment.type)}
+                          </span>
+                          <span className="text-[10px] text-muted-foreground ms-auto flex-shrink-0">
+                            {formatFileSize(attachment.size)}
+                          </span>
+                          <div className="absolute inset-y-0 end-0 rounded-e-md bg-background/95 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 px-1.5">
+                            <button
+                              className="p-1 hover:bg-accent rounded transition-colors"
+                              title={t('download')}
+                              onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentDownload(attachment); setShowAllMobileAttachments(false); }}
+                            >
+                              <Download className="w-3.5 h-3.5 text-foreground" />
+                            </button>
+                            {opensPreview && (
+                              <button
+                                className="p-1 hover:bg-accent rounded transition-colors"
+                                title={tFiles('preview')}
+                                onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentOpen(attachment); setShowAllMobileAttachments(false); }}
+                              >
+                                <Eye className="w-3.5 h-3.5 text-foreground" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                          )}
+                        </DraggableAttachmentChip>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
+        <div className="grow shrink-0 flex flex-col">
+
+          {/* Email Body */}
+          <div className={cn(
+            "email-content-wrapper overflow-x-auto",
+            !isDark && resolvedTheme === 'dark' ? "bg-white email-content-light" : "bg-background"
+          )}
+          style={isDark ? { backgroundColor: '#121212' } : undefined}>
+            {isBodyLoading ? (
+              <div
+                className="space-y-3 px-6 py-4 animate-pulse"
+                style={{ minHeight: `${lastBodyHeightRef.current}px` }}
+              >
+                <div className="h-2 bg-muted/15 rounded w-full"></div>
+                <div className="h-2 bg-muted/15 rounded w-5/6"></div>
+                <div className="h-2 bg-muted/15 rounded w-4/6"></div>
+                <div className="h-2 bg-muted/15 rounded w-full"></div>
+                <div className="h-2 bg-muted/15 rounded w-3/4"></div>
+              </div>
+            ) : effectiveEmailContent.isHtml ? (
+              <iframe
+                ref={iframeRef}
+                srcDoc={emailIframeSrcDoc}
+                sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox"
+                title="Email content"
+                className="w-full border-0 block"
+                scrolling="no"
+                style={{ minHeight: '100px', colorScheme: isDark && emailHasNativeDarkMode ? 'light dark' : 'light' }}
+                onLoad={handleIframeLoad}
+              />
+            ) : (
+              <div
+                className="email-content-text text-foreground"
+                dangerouslySetInnerHTML={{ __html: sanitizePlainTextRenderedHtml(effectiveEmailContent.html) }}
+                style={{
+                  fontFamily: 'ui-monospace, "SF Mono", Consolas, monospace',
+                  fontSize: '14px',
+                  lineHeight: '1.6',
+                  wordBreak: 'break-word',
+                  whiteSpace: 'pre-wrap',
+                }}
+              />
+            )}
+          </div>
+
+          <PluginSlot name="email-footer" />
+
+          {/* Quick Reply Section - hidden for drafts and while loading a new email */}
+          {!isDraft && !isScheduled && !isBodyLoading && (effectiveEmailContent.isHtml ? iframeReady : true) && (<div className="bg-background border-t border-border px-6 mt-auto" style={{ paddingBlock: 'var(--density-header-py)' }}>
+            <div className="flex items-start" style={{ gap: 'var(--density-item-gap)' }}>
+              <div className="flex-shrink-0">
+                <Avatar
+                  name={activeAccount?.displayName || currentUserName || "You"}
+                  email={activeAccount?.email || activeAccount?.username || currentUserEmail || ""}
+                  size="lg"
+                  className="shadow-sm w-10 h-10"
+                  disableFavicon
+                  fallbackColor={activeAccount?.avatarColor}
+                />
+              </div>
+              <div className="flex-1 min-w-0 space-y-3">
+                  <textarea
+                    value={quickReplyText}
+                    onChange={(e) => setQuickReplyText(e.target.value)}
+                    onFocus={() => setIsQuickReplyFocused(true)}
+                    onKeyDown={(e) => {
+                      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+                        e.preventDefault();
+                        void handleSendQuickReply();
+                      }
+                    }}
+                    placeholder={t('quick_reply_placeholder')}
+                    className={cn(
+                      "w-full px-3 py-2 text-sm border border-border bg-background text-foreground rounded-lg",
+                      "hover:border-accent focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all",
+                      "resize-none"
+                    )}
+                    rows={isQuickReplyFocused || quickReplyText ? 3 : 2}
+                    disabled={isSendingQuickReply}
+                  />
+
+                  {/* Action buttons - show when focused or has text */}
+                  {(isQuickReplyFocused || quickReplyText) && (
+                    <div className="flex items-center justify-between gap-2 animate-in fade-in slide-in-from-top-1 duration-200">
+                      <div className="text-xs text-muted-foreground">
+                        {t('characters_count', { count: quickReplyText.length })}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setQuickReplyText("");
+                            setIsQuickReplyFocused(false);
+                          }}
+                          disabled={isSendingQuickReply}
+                        >
+                          {tCommon('cancel')}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            onReply?.(quickReplyText);
+                            setQuickReplyText("");
+                            setIsQuickReplyFocused(false);
+                          }}
+                          disabled={isSendingQuickReply}
+                          className="text-muted-foreground"
+                        >
+                          <MoreVertical className="w-4 h-4 me-1" />
+                          {t('more_options')}
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={handleSendQuickReply}
+                          disabled={!quickReplyText.trim() || isSendingQuickReply}
+                        >
+                          {isSendingQuickReply ? (
+                            <>
+                              <Loader2 className="w-4 h-4 me-1 animate-spin" />
+                              {t('sending')}
+                            </>
+                          ) : (
+                            <>
+                              <Reply className="w-4 h-4 me-1" />
+                              {t('send')}
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+              </div>
+            </div>
+          </div>)}
+        </div>
+      </div>
       </div>
 
-      {/* Mobile bottom action bar */}
-      {isMobile && (
-        <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border sm:hidden overflow-hidden pb-[calc(env(safe-area-inset-bottom)/2)]">
-          <div className="flex items-center overflow-x-auto mobile-scroll-hidden">
-            <button
-              onClick={onNavigatePrev}
-              disabled={!onNavigatePrev}
-              className={cn(
-                "flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px] transition-colors duration-150",
-                onNavigatePrev ? "text-muted-foreground active:text-foreground" : "text-muted-foreground/30"
-              )}
-              aria-label={t('tooltips.previous')}
-            >
-              <ChevronLeft className="w-5 h-5" />
-              <span className="text-[10px] font-medium leading-tight truncate max-w-full">{t('previous')}</span>
-            </button>
-            {isDraft && onEditDraft ? (
-              <button
-                onClick={() => onEditDraft()}
-                className="flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px] text-primary active:text-primary/80 transition-colors duration-150"
-                aria-label={t('tooltips.edit_draft')}
-              >
-                <EditIcon className="w-5 h-5" />
-                <span className="text-[10px] font-medium leading-tight truncate max-w-full">{t('edit_draft')}</span>
-              </button>
-            ) : (
-              <>
-                <button
-                  onClick={() => onReply?.()}
-                  className="flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px] text-muted-foreground active:text-foreground transition-colors duration-150"
-                  aria-label={t('tooltips.reply')}
-                >
-                  <Reply className="w-5 h-5" />
-                  <span className="text-[10px] font-medium leading-tight truncate max-w-full">{t('reply')}</span>
-                </button>
-                <button
-                  onClick={onReplyAll}
-                  className="flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px] text-muted-foreground active:text-foreground transition-colors duration-150"
-                  aria-label={t('tooltips.reply_all')}
-                >
-                  <ReplyAll className="w-5 h-5" />
-                  <span className="text-[10px] font-medium leading-tight truncate max-w-full">{t('reply_all')}</span>
-                </button>
-                <button
-                  onClick={onForward}
-                  className="flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px] text-muted-foreground active:text-foreground transition-colors duration-150"
-                  aria-label={t('tooltips.forward')}
-                >
-                  <Forward className="w-5 h-5" />
-                  <span className="text-[10px] font-medium leading-tight truncate max-w-full">{t('forward')}</span>
-                </button>
-              </>)}
-            <button
-              onClick={onNavigateNext}
-              disabled={!onNavigateNext}
-              className={cn(
-                "flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px] transition-colors duration-150",
-                onNavigateNext ? "text-muted-foreground active:text-foreground" : "text-muted-foreground/30"
-              )}
-              aria-label={t('tooltips.next')}
-            >
-              <ChevronRight className="w-5 h-5" />
-              <span className="text-[10px] font-medium leading-tight truncate max-w-full">{t('next')}</span>
-            </button>
-          </div>
-        </nav>
-      )}
-
-      {/* Plugin Detail Sidebar - resizable, collapsible */}
-      {hasDetailSidebar && !isMobile && (
-        <>
-          {/* Collapse toggle when sidebar is collapsed */}
-          {detailSidebarCollapsed && (
-            <div className="flex flex-col items-center border-s border-border bg-background">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setDetailSidebarCollapsed(false)}
-                className="h-8 w-8 m-1"
-                aria-label="Expand panel"
-              >
-                <PanelRightOpen className="w-4 h-4" />
-              </Button>
-            </div>
-          )}
-          {!detailSidebarCollapsed && (
-            <>
-              <ResizeHandle
-                onResizeStart={() => { detailSidebarWidthRef.current = detailSidebarWidth; }}
-                onResize={(delta) => {
-                  const newWidth = Math.max(200, Math.min(500, detailSidebarWidthRef.current - delta));
-                  setDetailSidebarWidth(newWidth);
-                }}
-                onResizeEnd={() => { detailSidebarWidthRef.current = detailSidebarWidth; }}
-                onDoubleClick={() => setDetailSidebarWidth(280)}
-              />
-              <div
-                className="flex flex-col h-full border-s border-border bg-background overflow-hidden"
-                style={{ width: detailSidebarWidth, minWidth: detailSidebarWidth }}
-              >
-                <div className="flex items-center justify-end px-1 py-1 border-b border-border shrink-0">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setDetailSidebarCollapsed(true)}
-                    className="h-7 w-7"
-                    aria-label="Collapse panel"
-                  >
-                    <PanelRightClose className="w-4 h-4" />
-                  </Button>
-                </div>
-                <div className="flex-1 overflow-y-auto">
-                  <PluginSlot name="email-detail-sidebar" extraProps={{ email }} />
-                </div>
+      {/* Email Source Modal */}
+      {showSourceModal && email && (
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={() => setShowSourceModal(false)}
+        >
+          <div
+            className="bg-background rounded-lg shadow-2xl border border-border w-full max-w-4xl max-h-[90vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-4 border-b border-border">
+              <div className="flex items-center gap-2">
+                <Code className="w-5 h-5 text-primary" />
+                <h2 className="text-lg font-semibold text-foreground">{t('email_source')}</h2>
               </div>
-            </>
-          )}
-        </>
-      )}
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={copySourceToClipboard}
+                  className="flex items-center gap-1.5"
+                >
+                  <Copy className="w-4 h-4" />
+                  {t('copy_source')}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowSourceModal(false)}
+                  className="h-10 w-10 lg:h-8 lg:w-8"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
 
-      {/* Contact Detail Sidebar - desktop only */}
-      {contactSidebarEmail && !isMobileDevice && (
-        <ContactSidebarPanel
-          email={contactSidebarEmail}
-          contact={sidebarContact}
-          senderName={(() => {
-            const allRecipients = [...(email?.from || []), ...(email?.to || []), ...(email?.cc || []), ...(email?.bcc || []), ...(email?.replyTo || [])];
-            return allRecipients.find(r => r.email.toLowerCase() === contactSidebarEmail.toLowerCase())?.name;
-          })()}
-          onClose={() => setContactSidebarEmail(null)}
-          onEditContact={sidebarContact ? () => {
-            router.push(`/contacts?contactId=${sidebarContact.id}&view=edit`);
-            setContactSidebarEmail(null);
-          } : undefined}
-          onAddToContacts={(addr, name) => {
-            const { createContact, addLocalContact, supportsSync } = useContactStore.getState();
-            const client = useAuthStore.getState().client;
-            const contactData: Partial<ContactCard> = {
-              emails: { email: { address: addr } },
-              ...(name ? {
-                name: {
-                  components: name.includes(' ')
-                    ? [{ kind: 'given' as const, value: name.split(' ')[0] }, { kind: 'surname' as const, value: name.split(' ').slice(1).join(' ') }]
-                    : [{ kind: 'given' as const, value: name }]
-                }
-              } : {}),
-            };
-            if (client && supportsSync) {
-              createContact(client, contactData).then(() => toast.success('Contact added'));
-            } else {
-              addLocalContact({ id: `local-${generateUUID()}`, addressBookIds: {}, ...contactData } as ContactCard);
-              toast.success('Contact added');
-            }
-          }}
-        />
+            {/* Modal Content */}
+            <div className="flex-1 overflow-auto p-4 bg-muted/30">
+              <pre className="text-xs font-mono text-foreground whitespace-pre-wrap break-words bg-background border border-border rounded-lg p-4">
+                {generateEmailSource(email)}
+              </pre>
+            </div>
+          </div>
+        </div>
       )}
+    </div>
+
+    {/* Mobile bottom action bar */}
+    {isMobile && (
+      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border sm:hidden overflow-hidden pb-[calc(env(safe-area-inset-bottom)/2)]">
+        <div className="flex items-center overflow-x-auto mobile-scroll-hidden">
+          <button
+            onClick={onNavigatePrev}
+            disabled={!onNavigatePrev}
+            className={cn(
+              "flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px] transition-colors duration-150",
+              onNavigatePrev ? "text-muted-foreground active:text-foreground" : "text-muted-foreground/30"
+            )}
+            aria-label={t('tooltips.previous')}
+          >
+            <ChevronLeft className="w-5 h-5" />
+            <span className="text-[10px] font-medium leading-tight truncate max-w-full">{t('previous')}</span>
+          </button>
+          {isDraft && onEditDraft ? (
+            <button
+              onClick={() => onEditDraft()}
+              className="flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px] text-primary active:text-primary/80 transition-colors duration-150"
+              aria-label={t('tooltips.edit_draft')}
+            >
+              <EditIcon className="w-5 h-5" />
+              <span className="text-[10px] font-medium leading-tight truncate max-w-full">{t('edit_draft')}</span>
+            </button>
+          ) : (
+          <>
+          <button
+            onClick={() => onReply?.()}
+            className="flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px] text-muted-foreground active:text-foreground transition-colors duration-150"
+            aria-label={t('tooltips.reply')}
+          >
+            <Reply className="w-5 h-5" />
+            <span className="text-[10px] font-medium leading-tight truncate max-w-full">{t('reply')}</span>
+          </button>
+          <button
+            onClick={onReplyAll}
+            className="flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px] text-muted-foreground active:text-foreground transition-colors duration-150"
+            aria-label={t('tooltips.reply_all')}
+          >
+            <ReplyAll className="w-5 h-5" />
+            <span className="text-[10px] font-medium leading-tight truncate max-w-full">{t('reply_all')}</span>
+          </button>
+          <button
+            onClick={onForward}
+            className="flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px] text-muted-foreground active:text-foreground transition-colors duration-150"
+            aria-label={t('tooltips.forward')}
+          >
+            <Forward className="w-5 h-5" />
+            <span className="text-[10px] font-medium leading-tight truncate max-w-full">{t('forward')}</span>
+          </button>
+          </>)}
+          <button
+            onClick={onNavigateNext}
+            disabled={!onNavigateNext}
+            className={cn(
+              "flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px] transition-colors duration-150",
+              onNavigateNext ? "text-muted-foreground active:text-foreground" : "text-muted-foreground/30"
+            )}
+            aria-label={t('tooltips.next')}
+          >
+            <ChevronRight className="w-5 h-5" />
+            <span className="text-[10px] font-medium leading-tight truncate max-w-full">{t('next')}</span>
+          </button>
+        </div>
+      </nav>
+    )}
+
+    {/* Plugin Detail Sidebar - resizable, collapsible */}
+    {hasDetailSidebar && !isMobile && (
+      <>
+        {/* Collapse toggle when sidebar is collapsed */}
+        {detailSidebarCollapsed && (
+          <div className="flex flex-col items-center border-s border-border bg-background">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setDetailSidebarCollapsed(false)}
+              className="h-8 w-8 m-1"
+              aria-label="Expand panel"
+            >
+              <PanelRightOpen className="w-4 h-4" />
+            </Button>
+          </div>
+        )}
+        {!detailSidebarCollapsed && (
+          <>
+            <ResizeHandle
+              onResizeStart={() => { detailSidebarWidthRef.current = detailSidebarWidth; }}
+              onResize={(delta) => {
+                const newWidth = Math.max(200, Math.min(500, detailSidebarWidthRef.current - delta));
+                setDetailSidebarWidth(newWidth);
+              }}
+              onResizeEnd={() => { detailSidebarWidthRef.current = detailSidebarWidth; }}
+              onDoubleClick={() => setDetailSidebarWidth(280)}
+            />
+            <div
+              className="flex flex-col h-full border-s border-border bg-background overflow-hidden"
+              style={{ width: detailSidebarWidth, minWidth: detailSidebarWidth }}
+            >
+              <div className="flex items-center justify-end px-1 py-1 border-b border-border shrink-0">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setDetailSidebarCollapsed(true)}
+                  className="h-7 w-7"
+                  aria-label="Collapse panel"
+                >
+                  <PanelRightClose className="w-4 h-4" />
+                </Button>
+              </div>
+              <div className="flex-1 overflow-y-auto">
+                <PluginSlot name="email-detail-sidebar" extraProps={{ email }} />
+              </div>
+            </div>
+          </>
+        )}
+      </>
+    )}
+
+    {/* Contact Detail Sidebar - desktop only */}
+    {contactSidebarEmail && !isMobileDevice && (
+      <ContactSidebarPanel
+        email={contactSidebarEmail}
+        contact={sidebarContact}
+        senderName={(() => {
+          const allRecipients = [...(email?.from || []), ...(email?.to || []), ...(email?.cc || []), ...(email?.bcc || []), ...(email?.replyTo || [])];
+          return allRecipients.find(r => r.email.toLowerCase() === contactSidebarEmail.toLowerCase())?.name;
+        })()}
+        onClose={() => setContactSidebarEmail(null)}
+        onEditContact={sidebarContact ? () => {
+          router.push(`/contacts?contactId=${sidebarContact.id}&view=edit`);
+          setContactSidebarEmail(null);
+        } : undefined}
+        onAddToContacts={(addr, name) => {
+          const { createContact, addLocalContact, supportsSync } = useContactStore.getState();
+          const client = useAuthStore.getState().client;
+          const contactData: Partial<ContactCard> = {
+            emails: { email: { address: addr } },
+            ...(name ? { name: { components: name.includes(' ')
+              ? [{ kind: 'given' as const, value: name.split(' ')[0] }, { kind: 'surname' as const, value: name.split(' ').slice(1).join(' ') }]
+              : [{ kind: 'given' as const, value: name }]
+            }} : {}),
+          };
+          if (client && supportsSync) {
+            createContact(client, contactData).then(() => toast.success('Contact added'));
+          } else {
+            addLocalContact({ id: `local-${generateUUID()}`, addressBookIds: {}, ...contactData } as ContactCard);
+            toast.success('Contact added');
+          }
+        }}
+      />
+    )}
 
     </div>
   );

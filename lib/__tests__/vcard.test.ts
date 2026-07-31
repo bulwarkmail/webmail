@@ -445,6 +445,48 @@ describe("generateVCard", () => {
     const vcf = generateVCard([contact]);
     expect(vcf).toContain("NOTE:Has comma\\, semicolon\\; and newline\\nhere");
   });
+
+  it("uses the organization name as FN for organization cards (issue #701)", () => {
+    const contact: ContactCard = {
+      id: "c4",
+      addressBookIds: {},
+      kind: "org",
+      name: { full: "Acme Corp" },
+      organizations: { o0: { name: "Acme Corp" } },
+    };
+
+    const vcf = generateVCard([contact]);
+    expect(vcf).toContain("KIND:org");
+    expect(vcf).toContain("FN:Acme Corp");
+    expect(vcf).toContain("ORG:Acme Corp");
+  });
+
+  it("falls back to ORG for FN when the card has no name at all", () => {
+    const contact: ContactCard = {
+      id: "c5",
+      addressBookIds: {},
+      kind: "org",
+      organizations: { o0: { name: "Acme Corp" } },
+    };
+
+    expect(generateVCard([contact])).toContain("FN:Acme Corp");
+  });
+});
+
+describe("organization-only cards (issue #701)", () => {
+  it("keeps a vCard that has only an organization name", () => {
+    const parsed = parseVCard([
+      "BEGIN:VCARD",
+      "VERSION:4.0",
+      "KIND:org",
+      "ORG:Acme Corp",
+      "END:VCARD",
+    ].join("\r\n"));
+
+    expect(parsed).toHaveLength(1);
+    expect(parsed[0].kind).toBe("org");
+    expect(parsed[0].organizations?.o0.name).toBe("Acme Corp");
+  });
 });
 
 describe("round-trip: parse → generate → parse", () => {
