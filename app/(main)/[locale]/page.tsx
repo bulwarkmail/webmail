@@ -53,6 +53,7 @@ import { SidebarAppsModal } from "@/components/layout/sidebar-apps-modal";
 import { InlineAppView } from "@/components/layout/inline-app-view";
 import { useSidebarApps } from "@/hooks/use-sidebar-apps";
 import { useIdentitySync } from "@/hooks/use-identity-sync";
+import { useResumeConnectivity } from "@/hooks/use-resume-connectivity";
 import { useIsEmbedded } from "@/hooks/use-is-embedded";
 import { useProTabStore } from "@/stores/pro-tab-store";
 import { useProMultiAccountMailboxes } from "@/hooks/use-pro-multi-account-mailboxes";
@@ -125,6 +126,7 @@ export default function Home() {
   const { identities } = useIdentityStore();
   const multiAccountIdentities = useProMultiAccountIdentities();
   useIdentitySync();
+  useResumeConnectivity();
   const trustedSendersAddressBook = useSettingsStore((state) => state.trustedSendersAddressBook);
   const sendDelaySeconds = useSettingsStore((state) => state.sendDelaySeconds);
   const { loadTrustedSendersBook, trustedSendersLoaded, loadRecentRecipients } = useContactStore();
