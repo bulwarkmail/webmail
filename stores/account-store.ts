@@ -37,6 +37,15 @@ export interface AccountEntry {
   /** Whether this account had a connection error */
   hasError: boolean;
   errorMessage?: string;
+  /**
+   * The account is signed out (refresh token rejected or basic-auth session
+   * cookie missing / decrypt-failed) but not evicted. Settings, identities,
+   * push subscriptions and offline cache stay put; the switcher shows a
+   * "Sign in again" affordance instead of the account label so a single tap
+   * restores the session without re-adding the account. Cleared on the next
+   * successful login for this account.
+   */
+  needsReauth?: boolean;
   /** Whether this is the default account (loaded on app start) */
   isDefault: boolean;
 }
