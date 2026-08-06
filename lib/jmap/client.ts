@@ -1019,6 +1019,7 @@ export class JMAPClient implements IJMAPClient {
   }
 
   private rewriteSessionUrl(url: string): string {
+    if (process.env.NEXT_PUBLIC_JMAP_REWRITE_SESSION_URLS === 'false') return url;
     try {
       const parsed = new URL(url);
       const server = new URL(this.serverUrl);
