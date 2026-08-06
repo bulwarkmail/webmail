@@ -418,9 +418,10 @@ export function EventModal({
 
     const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
+    const trimmedDescription = description.trim();
+
     const data: Partial<CalendarEvent> = {
       title: trimmedTitle,
-      description: description.trim(),
       start: startStr,
       duration,
       timeZone: allDay ? null : timeZone,
@@ -430,6 +431,13 @@ export function EventModal({
       freeBusyStatus: "busy",
       privacy: "public",
     };
+
+    // On an existing event the empty string is how a description gets cleared, but
+    // sending it on creation writes a `DESCRIPTION:` with nothing after it — which
+    // invitation e-mails then render as a "Description" heading over blank space.
+    if (trimmedDescription || event) {
+      data.description = trimmedDescription;
+    }
 
     if (!event) {
       data.uid = generateUUID();
