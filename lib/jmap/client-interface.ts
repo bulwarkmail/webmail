@@ -14,6 +14,15 @@ export interface IJMAPClient {
   disconnect(): void;
   reconnect(): Promise<void>;
   ping(): Promise<void>;
+  /**
+   * Force an immediate connectivity check, bypassing the keep-alive backoff.
+   * Called when the tab becomes visible again or the browser reports the
+   * network came back — situations where we know something changed and the
+   * ~5-min backoff would otherwise strand the "reconnecting…" banner.
+   * Fires the connectionChange callback on success, and triggers a reconnect
+   * attempt on failure.
+   */
+  resumeConnectivity(): Promise<void>;
 
   // ── Session / auth accessors ──────────────────────────────────
   getServerUrl(): string;

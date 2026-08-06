@@ -1004,6 +1004,52 @@ export class JMAPClient implements IJMAPClient {
     await this.connect();
   }
 
+  /**
+   * Force an immediate connectivity check that bypasses `pingSkipRemaining`.
+   *
+   * The keep-alive loop backs off exponentially on failure (up to ~5 min
+   * between attempts). That's the right behaviour while the tab is dormant,
+   * but wrong when we have a reason to believe things have changed: the tab
+   * just became visible, the network came back, the user's about to interact.
+   * In those cases the "reconnecting…" banner would otherwise stick around
+   * for minutes despite the underlying issue being gone.
+   *
+   * On success this fires the connection callback (clearing the banner) and
+   * resets the backoff counters. On failure it drops through to `reconnect()`
+   * so the caller doesn't have to duplicate the re-establish logic.
+   */
+  async resumeConnectivity(): Promise<void> {
+    if (this.intentionallyDisconnected) return;
+    if (this.isRateLimited()) return;
+    // Reset the skip counter so the next scheduled tick fires immediately if
+    // this manual attempt also fails.
+    this.pingSkipRemaining = 0;
+    try {
+      // ping() throws if !this.apiUrl, so short-circuit through reconnect()
+      // in that case (session was never fully established).
+      if (!this.apiUrl) {
+        await this.reconnect();
+      } else {
+        await this.ping();
+      }
+      this.pingFailureCount = 0;
+      this.connectionChangeCallback?.(true);
+    } catch {
+      // Ping/session refresh failed — try a full reconnect once. Errors bubble
+      // up so callers can log; the banner state is already false from the
+      // last ping tick or will be set by the next scheduled ping.
+      try {
+        await this.reconnect();
+        this.pingFailureCount = 0;
+        this.pingSkipRemaining = 0;
+        this.connectionChangeCallback?.(true);
+      } catch (reconnectError) {
+        // Leave the banner as-is; the next keep-alive tick will retry.
+        console.error('resumeConnectivity: reconnect failed:', reconnectError);
+      }
+    }
+  }
+
   disconnect(): void {
     this.intentionallyDisconnected = true;
     this.stopKeepAlive();

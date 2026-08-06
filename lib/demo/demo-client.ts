@@ -36,6 +36,11 @@ export class DemoJMAPClient implements IJMAPClient {
 
   async reconnect(): Promise<void> { /* no-op */ }
   async ping(): Promise<void> { /* no-op */ }
+  async resumeConnectivity(): Promise<void> {
+    // The demo client is always "connected"; just re-notify listeners so any
+    // stale banner clears.
+    this.connectionCallback?.(true);
+  }
 
   // ── Session / auth accessors ──────────────────────────────────
 

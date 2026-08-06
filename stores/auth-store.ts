@@ -45,6 +45,15 @@ interface AuthState {
   refreshAccessToken: () => Promise<string | null>;
   logout: () => Promise<void>;
   logoutAll: () => Promise<void>;
+  /**
+   * Sign an account out without evicting it. Used when the server rejects a
+   * refresh token (or a basic-auth session cookie fails to decrypt): the
+   * account entry, its identities, subscriptions and cached settings all
+   * survive so the user re-signs in from the switcher rather than re-adding
+   * the account from scratch. `logout()` still exists for user-initiated
+   * sign-out and burns the account entry as before.
+   */
+  softSignOut: (accountId: string, reason?: string) => void;
   removeAccount: (accountId: string) => void;
   switchAccount: (accountId: string) => Promise<void>;
   checkAuth: () => Promise<void>;
@@ -711,6 +720,10 @@ export const useAuthStore = create<AuthState>()(
             isConnected: true,
             hasError: false,
             errorMessage: undefined,
+            // Reaching this success path means the credentials are good again;
+            // the soft-signed-out flag from a previous refresh failure must be
+            // cleared so the switcher stops showing "Sign in again".
+            needsReauth: false,
             lastLoginAt: Date.now(),
           });
 
@@ -1137,15 +1150,25 @@ export const useAuthStore = create<AuthState>()(
             const res = await apiFetch(`/api/auth/token?slot=${slot}`, { method: 'PUT' });
 
             if (!res.ok) {
-              // Only a definitive 401 ends the session. Anything else (5xx
-              // while the server restarts, proxy errors) is an outage - keep
-              // the session and retry shortly so "stay signed in" survives
-              // maintenance windows and offline spells.
+              // A definitive 401 from the token endpoint means the server
+              // dropped this refresh token (rotation, restart, actual
+              // revocation). Previously this triggered a full logout that
+              // evicted the account entry and forced the user to re-enter
+              // both server and credentials from scratch. Soft-signout keeps
+              // settings/identities/subscriptions and lets the switcher
+              // offer a one-tap re-auth. Anything else (5xx, proxy errors)
+              // remains a transient outage and retries with backoff.
               if (res.status === 401) {
                 resetRefreshBackoff(accountId ?? undefined);
                 notifyParent('sso:session-expired');
                 markSessionExpired();
-                get().logout();
+                if (accountId) {
+                  get().softSignOut(accountId, 'session_expired');
+                } else {
+                  // No active account bound (shouldn't happen for a running
+                  // refresh, but be defensive) — fall back to full logout.
+                  get().logout();
+                }
                 return null;
               }
               if (shouldRetryRefresh(accountId ?? undefined)) {
@@ -1306,6 +1329,92 @@ export const useAuthStore = create<AuthState>()(
         }
 
         // Redirect to login - this is synchronous and happens AFTER all state is cleared
+        redirectToLogin();
+      },
+
+      // Sign an account out without evicting it: disconnect its client, mark
+      // it needsReauth=true (so the switcher offers "Sign in again to X"),
+      // clear the cookies its refresh path failed on, but keep the account
+      // entry — its settings, identities, subscriptions and cached data all
+      // stay put so the next sign-in restores everything.
+      //
+      // If the account is the active one, we behave like logout(): switch to
+      // any other connected account, otherwise clear the shell state and send
+      // the user to the login screen. The distinguishing feature is that the
+      // affected account's registry entry survives.
+      softSignOut: (accountId: string, reason?: string) => {
+        const state = get();
+        const accountStore = useAccountStore.getState();
+        const account = accountStore.getAccountById(accountId);
+        if (!account) return;
+        const slot = account.cookieSlot ?? 0;
+        const wasOAuth = account.authMode === 'oauth';
+        const wasActive = state.activeAccountId === accountId;
+
+        // Kill the client and any pending refresh timers first so no stale
+        // requests fire against a session we know is dead.
+        clearRefreshTimer(accountId);
+        const client = clients.get(accountId);
+        if (client) { try { client.disconnect(); } catch { /* noop */ } }
+        clients.delete(accountId);
+        evictAccount(accountId);
+
+        accountStore.updateAccount(accountId, {
+          isConnected: false,
+          hasError: true,
+          needsReauth: true,
+          errorMessage: reason || 'session_expired',
+        });
+
+        // Drop the cookies the server rejected. Not doing this leaves a stale
+        // encrypted blob around; a later restore attempt would loop on the
+        // same failure.
+        apiFetch(`/api/auth/session?slot=${slot}`, { method: 'DELETE', keepalive: true }).catch(() => {});
+        if (wasOAuth) {
+          apiFetch(`/api/auth/token?slot=${slot}`, { method: 'DELETE', keepalive: true }).catch(() => {});
+        }
+
+        if (!wasActive) return;
+
+        // Active-account signout: prefer switching to another still-connected
+        // account. Snapshot the current account's per-store data before we
+        // clear the shell so a hypothetical later switch-back finds it intact.
+        snapshotAccount(accountId);
+
+        const nextAccount = accountStore.accounts.find(
+          (a) => a.id !== accountId && clients.has(a.id) && !a.needsReauth,
+        );
+
+        if (nextAccount) {
+          const nextClient = clients.get(nextAccount.id)!;
+          clearAllStores();
+          const restored = restoreAccount(nextAccount.id);
+          accountStore.setActiveAccount(nextAccount.id);
+          const restoredIdentities = restored ? useIdentityStore.getState().identities : [];
+          set({
+            isAuthenticated: true,
+            isLoading: false,
+            serverUrl: nextAccount.serverUrl,
+            username: nextAccount.username,
+            client: nextClient,
+            authMode: nextAccount.authMode,
+            rememberMe: nextAccount.rememberMe,
+            connectionLost: false,
+            error: null,
+            activeAccountId: nextAccount.id,
+            identities: restoredIdentities,
+            primaryIdentity: restoredIdentities[0] ?? null,
+          });
+          if (!restored) {
+            initializeFeatureStores(nextClient);
+          }
+          return;
+        }
+
+        // Nothing to switch to: clear the shell and send the user to login.
+        // The account entry survives, so the login page can show it in a
+        // "Sign in again to <email>" affordance once that UI ships.
+        performFullLogout(set);
         redirectToLogin();
       },
 
@@ -1721,11 +1830,24 @@ export const useAuthStore = create<AuthState>()(
                 });
                 continue;
               }
-              // Remove unrestorable accounts so the user is prompted to log in
-              // again rather than seeing a stale error entry forever.
+              // Definitive rejection (401/400 from token refresh, or a basic
+              // session cookie that failed to decrypt): mark the account
+              // needsReauth and drop the cookies, but keep the entry so the
+              // switcher can offer a one-tap re-auth. Full eviction — the old
+              // behaviour, which threw away identities, subscriptions and
+              // synced settings — is now user-initiated only, via
+              // removeAccount / logout.
               evictAccount(account.id);
-              accountStore.removeAccount(account.id);
+              accountStore.updateAccount(account.id, {
+                isConnected: false,
+                hasError: true,
+                needsReauth: true,
+                errorMessage: err instanceof Error ? err.message : 'session_expired',
+              });
               apiFetch(`/api/auth/session?slot=${account.cookieSlot}`, { method: 'DELETE' }).catch(() => {});
+              if (account.authMode === 'oauth') {
+                apiFetch(`/api/auth/token?slot=${account.cookieSlot}`, { method: 'DELETE' }).catch(() => {});
+              }
             }
           }
 
