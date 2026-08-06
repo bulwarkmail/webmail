@@ -361,6 +361,23 @@ describe('buildParticipantMap', () => {
     });
   });
 
+  it('omits blank names rather than sending an empty one', () => {
+    const map = buildParticipantMap(
+      { name: '', email: 'alice@example.com' },
+      [
+        { name: '   ', email: 'bob@example.com' },
+        { name: '  Carol  ', email: 'carol@example.com' },
+      ]
+    );
+    const entries = Object.values(map);
+
+    // An empty name becomes a bare `CN=` downstream, which renders as a dangling
+    // "- Organizer" and as guests listed with nothing before their address.
+    expect(entries.find(p => p.email === 'alice@example.com')).not.toHaveProperty('name');
+    expect(entries.find(p => p.email === 'bob@example.com')).not.toHaveProperty('name');
+    expect(entries.find(p => p.email === 'carol@example.com')!.name).toBe('Carol');
+  });
+
   it('sets kind to individual for all entries', () => {
     const map = buildParticipantMap(
       { name: 'Alice', email: 'alice@example.com' },
