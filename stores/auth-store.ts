@@ -649,6 +649,9 @@ export const useAuthStore = create<AuthState>()(
               client.enableTotpReauth(password, () => useTotpReauthStore.getState().requestTotp());
               debug.log('auth', 'TOTP re-auth enabled (legacy basic-auth path)');
             }
+          } else if (process.env.NEXT_PUBLIC_JMAP_AUTH_MODE === 'bearer') {
+            client = JMAPClient.withBearer(serverUrl, password, username);
+            await client.connect();
           } else {
             client = new JMAPClient(serverUrl, username, password);
             await client.connect();
