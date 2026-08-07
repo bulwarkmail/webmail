@@ -113,6 +113,7 @@ export function CalendarApp({ linkSegments }: CalendarAppProps = {}) {
   const sharedCalendarColors = useSettingsStore((s) => s.sharedCalendarColors);
   const setSharedCalendarColor = useSettingsStore((s) => s.setSharedCalendarColor);
   const removeSharedCalendarColor = useSettingsStore((s) => s.removeSharedCalendarColor);
+  const defaultCalendarForNewEvents = useSettingsStore((s) => s.defaultCalendarForNewEvents);
   const taskStore = useTaskStore();
   const fetchTasksFn = useTaskStore(state => state.fetchTasks);
   const { identities } = useIdentityStore();
@@ -133,7 +134,6 @@ export function CalendarApp({ linkSegments }: CalendarAppProps = {}) {
   const [isProtocolAccountSwitching, setIsProtocolAccountSwitching] = useState(false);
   const [editingSubscription, setEditingSubscription] = useState<string | null>(null);
   const [sharingCalendarId, setSharingCalendarId] = useState<string | null>(null);
-  const [defaultCalendarIdForCreate, setDefaultCalendarIdForCreate] = useState<string | undefined>(undefined);
   const [showCreateCalendar, setShowCreateCalendar] = useState(false);
   const { dialogProps: confirmDialogProps, confirm: confirmAction } = useConfirmDialog();
   const tMgmt = useTranslations("calendar.management");
@@ -1443,7 +1443,6 @@ export function CalendarApp({ linkSegments }: CalendarAppProps = {}) {
               }}
               onShareCalendar={client ? (cal) => setSharingCalendarId(cal.id) : undefined}
               onCreateEvent={(cal: Calendar) => {
-                setDefaultCalendarIdForCreate(cal.id);
                 openCreateModal();
               }}
               onClearCalendar={client ? async (cal: Calendar) => {
@@ -1545,12 +1544,12 @@ export function CalendarApp({ linkSegments }: CalendarAppProps = {}) {
                 defaultDate={defaultModalDate}
                 defaultEndDate={defaultModalEndDate}
                 defaultAllDay={defaultModalAllDay}
-                defaultCalendarId={defaultCalendarIdForCreate}
+                defaultCalendarId={defaultCalendarForNewEvents}
                 onSave={handleSaveEvent}
                 onDelete={handleDeleteEvent}
                 onDuplicate={handleDuplicateEvent}
                 onRsvp={handleRsvp}
-                onClose={() => { setShowEventModal(false); setEditEvent(null); setPendingPreview(null); setDefaultCalendarIdForCreate(undefined); setDefaultModalAllDay(false); }}
+                onClose={() => { setShowEventModal(false); setEditEvent(null); setPendingPreview(null); setDefaultModalAllDay(false); }}
                 onPreviewChange={setPendingPreview}
                 currentUserEmails={currentUserEmails}
                 isMobile={false}
@@ -1675,12 +1674,12 @@ export function CalendarApp({ linkSegments }: CalendarAppProps = {}) {
           defaultDate={defaultModalDate}
           defaultEndDate={defaultModalEndDate}
           defaultAllDay={defaultModalAllDay}
-          defaultCalendarId={defaultCalendarIdForCreate}
+          defaultCalendarId={defaultCalendarForNewEvents}
           onSave={handleSaveEvent}
           onDelete={handleDeleteEvent}
           onDuplicate={handleDuplicateEvent}
           onRsvp={handleRsvp}
-          onClose={() => { setShowEventModal(false); setEditEvent(null); setDefaultCalendarIdForCreate(undefined); setDefaultModalAllDay(false); }}
+          onClose={() => { setShowEventModal(false); setEditEvent(null); setDefaultModalAllDay(false); }}
           currentUserEmails={currentUserEmails}
           isMobile={true}
         />

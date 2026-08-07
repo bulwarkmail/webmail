@@ -6,7 +6,7 @@ import { useCalendarStore } from '@/stores/calendar-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { getActiveAccountSlotHeaders } from '@/lib/auth/active-account-slot';
 import { toast } from '@/stores/toast-store';
-import { SettingsSection } from './settings-section';
+import {Select, SettingItem, SettingsSection} from './settings-section';
 import { Plus, Pencil, Trash2, Calendar as CalendarIcon, Copy, Link, Upload, Globe, RefreshCw, Eraser, Users } from 'lucide-react';
 import { ShareCollectionDialog } from './share-collection-dialog';
 import type { CalendarRights } from '@/lib/jmap/types';
@@ -165,7 +165,7 @@ export function CalendarManagementSettings() {
   const [refreshingSubId, setRefreshingSubId] = useState<string | null>(null);
   const tImport = useTranslations('calendar.import');
   const tSub = useTranslations('calendar.subscription');
-  const timeFormat = useSettingsStore((s) => s.timeFormat);
+  const {timeFormat, defaultCalendarForNewEvents, updateSetting} = useSettingsStore();
   const sharedCalendarColors = useSettingsStore((s) => s.sharedCalendarColors);
   const setSharedCalendarColor = useSettingsStore((s) => s.setSharedCalendarColor);
   const colorPickerRef = useRef<HTMLDivElement>(null);
@@ -703,6 +703,26 @@ export function CalendarManagementSettings() {
           })}
         </div>
       )}
+
+      <SettingItem
+          label={t('default_calendar_for_new_events')}
+      >
+        <Select
+            value={defaultCalendarForNewEvents || calendars
+                .filter(cal => !isSubscriptionCalendar(cal.id))
+                .filter(cal => !managedAccountId || cal.accountId === managedAccountId)[0].id}
+            onChange={(value) => updateSetting('defaultCalendarForNewEvents', value as string)}
+            options={calendars
+                .filter(cal => !isSubscriptionCalendar(cal.id))
+                .filter(cal => !managedAccountId || cal.accountId === managedAccountId)
+                .map((cal) => {
+                  return {
+                    value: cal.id,
+                    label: cal.name
+                  }
+                })}
+        />
+      </SettingItem>
 
       {showImportModal && client && (
         <ICalImportModal

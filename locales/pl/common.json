@@ -2922,7 +2922,8 @@
       "copy_url": "Kopiuj adres URL CalDAV",
       "url_copied": "Adres URL CalDAV skopiowano do schowka",
       "share": "Udostępnij kalendarz",
-      "new_event_in_calendar": "Nowe wydarzenie w tym kalendarzu"
+      "new_event_in_calendar": "Nowe wydarzenie w tym kalendarzu",
+      "default_calendar_for_new_events": "Domyślny kalendarz dla nowych wydarzeń"
     },
     "subscription": {
       "title": "Subskrypcja iCal",
