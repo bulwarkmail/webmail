@@ -593,3 +593,7 @@ export function getMailboxPath(
   }
   return names.join(separator);
 }
+
+export function hasSubscribedChildren(node: MailboxNode): boolean {
+  return node.children.some(n => n.isSubscribed || hasSubscribedChildren(n))
+}
