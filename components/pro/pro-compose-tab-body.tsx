@@ -40,7 +40,7 @@ export function ProComposeTabBody({ tabId, data }: ProComposeTabBodyProps) {
 
   // Set by the composer to its dirty-aware close handler. Lets the Pro tab
   // bar's "X" route through the same "Save or discard draft?" guard.
-  const requestCloseRef = useRef<(() => void) | null>(null);
+  const requestCloseRef = useRef<((afterClose?: () => void) => void) | null>(null);
 
   const handleScheduledSendCreated = useCallback(async () => {
     if (client) {

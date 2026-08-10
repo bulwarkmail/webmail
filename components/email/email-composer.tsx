@@ -155,8 +155,12 @@ interface EmailComposerProps {
    * handler shows the unsaved-changes dialog when the draft is dirty, so a
    * host (e.g. the Pro tab bar's close button) can route an external close
    * request through the same guard instead of discarding silently.
+   *
+   * A host replacing this session with another one (e.g. a mailto: click)
+   * can pass a follow-up that runs once the composer has actually closed.
+   * Cancelling the dialog drops it, so the draft simply stays put.
    */
-  requestCloseRef?: React.MutableRefObject<(() => void) | null>;
+  requestCloseRef?: React.MutableRefObject<((afterClose?: () => void) => void) | null>;
   onDiscardDraft?: (draftId: string) => void;
   onSaveState?: (data: ComposerDraftData) => void;
   className?: string;
@@ -574,7 +578,7 @@ export function EmailComposer({
 
   const closeDialogRef = useFocusTrap({
     isActive: showCloseDialog,
-    onEscape: () => setShowCloseDialog(false),
+    onEscape: () => dismissCloseDialog(),
     restoreFocus: true,
   });
 
@@ -2123,6 +2127,29 @@ export function EmailComposer({
     return () => window.removeEventListener('keydown', handleSendShortcut);
   }, []);
 
+  // A host can hand a follow-up to requestCloseRef - "close this session, then
+  // do that". It runs only once the composer really closes, never when the
+  // guard dialog is cancelled, and never before onClose has had its say.
+  const afterCloseRef = useRef<(() => void) | null>(null);
+
+  const emitClose = () => {
+    onClose?.();
+    const afterClose = afterCloseRef.current;
+    afterCloseRef.current = null;
+    // A save that the server refused resets explicitCloseRef so the unmount
+    // stash hands the text back to the host's continue-draft slot (#702). The
+    // draft is still alive in that case, so a follow-up that would replace it
+    // must not run - the rescue outranks the request that triggered it.
+    if (explicitCloseRef.current) {
+      afterClose?.();
+    }
+  };
+
+  const dismissCloseDialog = () => {
+    afterCloseRef.current = null;
+    setShowCloseDialog(false);
+  };
+
   const cleanClose = () => {
     sendCancelledRef.current = true;
     explicitCloseRef.current = true;
@@ -2130,7 +2157,7 @@ export function EmailComposer({
       clearTimeout(saveTimeoutRef.current);
     }
     stateRef.current = { to: '', cc: '', bcc: '', subject: '', body: '', showCc: false, showBcc: false, selectedIdentityId: null, subAddressTag: '', draftId: null, fromOverrideEnabled: false, fromOverrideEmail: '', fromOverrideName: '' };
-    onClose?.();
+    emitClose();
   };
 
   const handleSaveDraftAndClose = async () => {
@@ -2157,7 +2184,7 @@ export function EmailComposer({
         stateRef.current = { to: '', cc: '', bcc: '', subject: '', body: '', showCc: false, showBcc: false, selectedIdentityId: null, subAddressTag: '', draftId: null, fromOverrideEnabled: false, fromOverrideEmail: '', fromOverrideName: '' };
       }
     } finally {
-      onClose?.();
+      emitClose();
     }
   };
 
@@ -2172,10 +2199,11 @@ export function EmailComposer({
       onDiscardDraft(draftId);
     }
     stateRef.current = { to: '', cc: '', bcc: '', subject: '', body: '', showCc: false, showBcc: false, selectedIdentityId: null, subAddressTag: '', draftId: null, fromOverrideEnabled: false, fromOverrideEmail: '', fromOverrideName: '' };
-    onClose?.();
+    emitClose();
   };
 
-  const handleClose = () => {
+  const handleClose = (afterClose?: () => void) => {
+    afterCloseRef.current = afterClose ?? null;
     if (isDirtyRef.current) {
       setShowCloseDialog(true);
     } else {
@@ -2264,7 +2292,7 @@ export function EmailComposer({
       {/* Header - mobile: clean bar with close/send, desktop: title bar */}
       <div className="flex items-center justify-between px-4 py-3 border-b bg-background">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={handleClose} className="h-9 w-9 md:h-8 md:w-8">
+          <Button variant="ghost" size="icon" onClick={() => handleClose()} className="h-9 w-9 md:h-8 md:w-8">
             <X className="w-5 h-5 md:w-4 md:h-4" />
           </Button>
           <div className="flex items-center gap-2" data-testid="composer-save-status" data-status={saveStatus}>
@@ -2777,7 +2805,7 @@ export function EmailComposer({
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={handleClose}
+              onClick={() => handleClose()}
               className="text-sm text-muted-foreground hover:text-red-500 transition-colors px-2 py-1"
             >
               {t('discard')}
@@ -2981,7 +3009,7 @@ export function EmailComposer({
       {showCloseDialog && (
         <div
           className="fixed inset-0 bg-black/50 backdrop-blur-[1px] flex items-center justify-center z-[60] p-4 animate-in fade-in duration-150"
-          onClick={() => setShowCloseDialog(false)}
+          onClick={() => dismissCloseDialog()}
         >
           <div
             ref={closeDialogRef}
@@ -2995,7 +3023,7 @@ export function EmailComposer({
               <p className="mt-2 text-sm text-muted-foreground">{t('close_draft_message')}</p>
             </div>
             <div className="flex items-center justify-end gap-3 px-6 pb-6">
-              <Button variant="outline" onClick={() => setShowCloseDialog(false)}>
+              <Button variant="outline" onClick={() => dismissCloseDialog()}>
                 {t('cancel')}
               </Button>
               <Button variant="destructive" onClick={handleDiscardAndClose}>

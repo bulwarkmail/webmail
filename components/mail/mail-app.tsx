@@ -116,6 +116,10 @@ export function MailApp({ linkSegments }: MailAppProps = {}) {
   // Cleared on close so a subsequent "compose new" doesn't reuse stale state.
   const [composerQuoteHeader, setComposerQuoteHeader] = useState<QuoteHeader | null>(null);
   const suppressComposerStateSaveSessionRef = useRef<number | null>(null);
+  // The inline composer publishes its dirty-aware close here (the Pro tab bar
+  // already uses the same seam), so entry points that replace the session can
+  // ask before discarding unsaved text.
+  const composerRequestCloseRef = useRef<((afterClose?: () => void) => void) | null>(null);
   const { dialogProps: confirmDialogProps, confirm: confirmDialog } = useConfirmDialog();
   const { dialogProps: promptDialogProps, prompt: promptDialog } = usePromptDialog();
   const { showAppsModal, inlineApp, loadedApps, handleManageApps, handleInlineApp, closeInlineApp, closeAppsModal } = useSidebarApps();
@@ -933,12 +937,12 @@ export function MailApp({ linkSegments }: MailAppProps = {}) {
     }
   }, [initialCheckDone, isAuthenticated, authLoading]);
 
-  const openMailtoDraft = useCallback((pending: ParsedMailto) => {
+  const applyMailtoDraft = useCallback((pending: ParsedMailto, suppressOutgoingStash: boolean) => {
     const body = useSettingsStore.getState().plainTextMode
       ? pending.body
       : plainTextToComposerBody(pending.body);
 
-    if (showComposer) {
+    if (suppressOutgoingStash) {
       suppressComposerStateSaveSessionRef.current = composerSessionId;
     }
     setComposerSessionId((id) => id + 1);
@@ -958,7 +962,24 @@ export function MailApp({ linkSegments }: MailAppProps = {}) {
     setComposerMode("compose");
     setShowComposer(true);
     if (isMobile) setActiveView("viewer");
-  }, [composerSessionId, isMobile, setActiveView, showComposer]);
+  }, [composerSessionId, isMobile, setActiveView]);
+
+  const openMailtoDraft = useCallback((pending: ParsedMailto) => {
+    // A live composer owns text the user has not sent. Replacing it outright
+    // used to drop that text on the floor - the stash suppression below is an
+    // ordering fix, not a decision anyone made. Route the request through the
+    // composer's own "Save or discard draft?" guard instead and open the
+    // mailto draft only once it has actually closed; cancelling leaves the
+    // draft alone. No suppression on that path: when a save fails the composer
+    // deliberately hands its text back to the continue-draft slot (#702), and
+    // that rescue must win over this request.
+    const requestClose = composerRequestCloseRef.current;
+    if (showComposer && requestClose) {
+      requestClose(() => applyMailtoDraft(pending, false));
+      return;
+    }
+    applyMailtoDraft(pending, showComposer);
+  }, [applyMailtoDraft, showComposer]);
 
   const openMailtoForAccount = useCallback(async (pending: ParsedMailto, accountId: string) => {
     setIsProtocolAccountSwitching(true);
@@ -3723,6 +3744,7 @@ export function MailApp({ linkSegments }: MailAppProps = {}) {
                       setActiveView('list');
                     }
                   }}
+                  requestCloseRef={composerRequestCloseRef}
                   onDiscardDraft={(draftId) => {
                     handleDiscardDraft(draftId);
                     setPendingDraft(null);
