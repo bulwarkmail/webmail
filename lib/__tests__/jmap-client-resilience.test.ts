@@ -46,8 +46,18 @@ function mockFetchResponseWithHeaders(status: number, headers: Record<string, st
   });
 }
 
+/**
+ * A mock answering every call with its own Response, for the tests that cannot
+ * say how many calls to expect. A body reads once, so a single shared Response
+ * would leave the second reader with "Body has already been read".
+ */
+function respondEveryTime(status: number, body?: unknown): () => Promise<Response> {
+  return () => Promise.resolve(mockFetchResponse(status, body));
+}
+
 describe('JMAPClient resilience', () => {
   let fetchSpy: ReturnType<typeof vi.spyOn>;
+  const connectedClients: JMAPClient[] = [];
 
   beforeEach(() => {
     fetchSpy = vi.spyOn(globalThis, 'fetch');
@@ -55,6 +65,10 @@ describe('JMAPClient resilience', () => {
   });
 
   afterEach(() => {
+    // Connecting starts a keep-alive interval that outlives the test unless it
+    // is stopped here, and its ping then consumes a later test's mocked fetch.
+    connectedClients.forEach((client) => client.disconnect());
+    connectedClients.length = 0;
     fetchSpy.mockRestore();
     vi.useRealTimers();
   });
@@ -71,6 +85,7 @@ describe('JMAPClient resilience', () => {
       const client = new JMAPClient('https://mail.example.com', 'user@test.com', 'pass123');
       await client.connect();
       fetchSpy.mockReset();
+      connectedClients.push(client);
       return client;
     }
 
@@ -79,6 +94,7 @@ describe('JMAPClient resilience', () => {
     const client = JMAPClient.withBearer('https://mail.example.com', 'token123', 'user@test.com');
     await client.connect();
     fetchSpy.mockReset();
+    connectedClients.push(client);
     return client;
   }
 
@@ -323,7 +339,7 @@ describe('JMAPClient resilience', () => {
       client.onConnectionChange(callback);
 
       const echoResponse = { methodResponses: [['Core/echo', { ping: 'pong' }, '0']] };
-      fetchSpy.mockResolvedValue(mockFetchResponse(200, echoResponse));
+      fetchSpy.mockImplementation(respondEveryTime(200, echoResponse));
 
       // Advance past keep-alive interval (30s)
       await vi.advanceTimersByTimeAsync(30_000);
@@ -427,7 +443,7 @@ describe('JMAPClient resilience', () => {
       client.disconnect();
 
       // Advancing timers should not trigger any ping
-      fetchSpy.mockResolvedValue(mockFetchResponse(200, { methodResponses: [['Core/echo', { ping: 'pong' }, '0']] }));
+      fetchSpy.mockImplementation(respondEveryTime(200, { methodResponses: [['Core/echo', { ping: 'pong' }, '0']] }));
       await vi.advanceTimersByTimeAsync(60_000);
 
       expect(callback).not.toHaveBeenCalled();
