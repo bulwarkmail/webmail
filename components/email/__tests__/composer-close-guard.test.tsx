@@ -2,6 +2,7 @@ import { render, screen, fireEvent, waitFor, act, within } from '@testing-librar
 import { describe, it, expect, vi } from 'vitest';
 import React from 'react';
 import { EmailComposer } from '../email-composer';
+import { useAuthStore } from '@/stores/auth-store';
 
 // ─── Heavy component mocks (mirrors reply-addressing.test.tsx) ────────────────
 
@@ -139,6 +140,7 @@ vi.mock('@/lib/plugin-hooks', () => ({
     getRecipientSuggestions: { call: async () => [] },
     onRecipientChipsChange: { transform: async (chips: unknown) => chips },
     onDraftChange: { emit: () => {} },
+    onBeforeDraftAutoSave: { transform: async (draft: unknown) => draft },
     onBeforeEmailSend: { intercept: async () => true },
     onComposeSend: { intercept: async () => true },
     onTransformOutgoingEmail: { transform: async (email: unknown) => email },
@@ -197,7 +199,7 @@ function renderWithCloseRef(props: Record<string, unknown> = {}) {
   const requestCloseRef = { current: null } as React.MutableRefObject<((afterClose?: () => void) => void) | null>;
   const afterClose = vi.fn();
   const onClose = vi.fn();
-  render(
+  const view = render(
     <EmailComposer
       initialData={DIRTY_DRAFT}
       requestCloseRef={requestCloseRef}
@@ -209,7 +211,7 @@ function renderWithCloseRef(props: Record<string, unknown> = {}) {
   fireEvent.change(screen.getByDisplayValue('Half-written'), {
     target: { value: 'Half-written more' },
   });
-  return { requestCloseRef, afterClose, onClose };
+  return { requestCloseRef, afterClose, onClose, unmount: view.unmount };
 }
 
 describe('composer close guard with a follow-up', () => {
@@ -273,5 +275,40 @@ describe('composer close guard with a follow-up', () => {
     fireEvent.click(within(dialog).getByText('save'));
 
     await waitFor(() => expect(afterClose).toHaveBeenCalledTimes(1));
+  });
+
+  it('drops the follow-up when the save fails and the rescue takes over', async () => {
+    // When the server refuses the draft, the composer text survives only via
+    // the unmount stash into the continue-draft slot (#702). That rescue
+    // outranks the request that triggered the close, so the follow-up must
+    // never fire - otherwise the new session would bury the stashed text.
+    const createDraft = vi.fn().mockRejectedValue(new Error('server refused'));
+    useAuthStore.setState({
+      client: { createDraft, hasDelayedSend: () => false, getMaxDelayedSend: () => 0 } as never,
+    });
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      const onSaveState = vi.fn();
+      const { requestCloseRef, afterClose, onClose, unmount } = renderWithCloseRef({ onSaveState });
+
+      act(() => requestCloseRef.current!(afterClose));
+      const dialog = await screen.findByRole('alertdialog');
+      fireEvent.click(within(dialog).getByText('save'));
+
+      // The host still gets its close - the composer must not stay stuck -
+      // but the follow-up is dropped because the text was never persisted.
+      await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
+      expect(createDraft).toHaveBeenCalled();
+      expect(afterClose).not.toHaveBeenCalled();
+
+      // The rescue itself: unmounting stashes the live text on the host.
+      unmount();
+      expect(onSaveState).toHaveBeenCalledWith(
+        expect.objectContaining({ subject: 'Half-written more' }),
+      );
+    } finally {
+      useAuthStore.setState({ client: null });
+      consoleError.mockRestore();
+    }
   });
 });
