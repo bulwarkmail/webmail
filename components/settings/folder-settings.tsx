@@ -14,6 +14,7 @@ import {
   Star, Heart, Bookmark, Tag, Flag, Briefcase, Users,
   Bell, Zap, Globe, Lock, Eye, MessageSquare, Mail,
   AlertTriangle, NotebookPen, CalendarClock, BellOff,
+  EyeOff,
   type LucideIcon,
 } from 'lucide-react';
 import { cn, buildMailboxTree, type MailboxNode } from '@/lib/utils';
@@ -154,7 +155,7 @@ function SortableFolderRow({ id, title, children }: { id: string; title: string;
 export function FolderSettings() {
   const t = useTranslations('settings.folders');
   const { client } = useAuthStore();
-  const { mailboxes, fetchMailboxes, createMailbox, renameMailbox, deleteMailbox, setMailboxRole, reorderMailboxes, moveMailbox } = useEmailStore();
+  const { mailboxes, fetchMailboxes, createMailbox, renameMailbox, deleteMailbox, setMailboxRole, setMailboxSubscription, reorderMailboxes, moveMailbox } = useEmailStore();
 
   const sensors = useSensors(
     // Small activation distance so clicking the row's buttons still works.
@@ -388,6 +389,19 @@ export function FolderSettings() {
     setEditingName(mb.name);
   };
 
+  const handleFolderSubscription = async (mailboxId: string, subscribe: boolean) => {
+    if (!client) return;
+    setIsLoading(true);
+    try {
+      await setMailboxSubscription(client, mailboxId, subscribe);
+    } catch (error) {
+      console.error('Failed to update folder subscription:', error);
+      toast.error('Failed to update folder subscription');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const cancelEdit = () => {
     setEditingId(null);
     setEditingName('');
@@ -577,7 +591,7 @@ export function FolderSettings() {
                 />
               )}
             </div>
-            <span className="text-sm text-foreground truncate">{mb.name}</span>
+            <span className={cn("text-sm truncate", mb.isSubscribed ? "text-foreground" : "line-through text-muted-foreground")}>{mb.name}</span>
             {mb.role && (
               <span className="text-xs px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium flex-shrink-0">
                 {t(`role_${mb.role}`)}
@@ -590,6 +604,15 @@ export function FolderSettings() {
             )}
           </div>
           <div className="flex items-center gap-0.5">
+            {mb.role == null &&
+              <button
+                onClick={() => handleFolderSubscription(mb.id, !mb.isSubscribed)}
+                className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors"
+                title={mb.isSubscribed ? t('unsubscribe_mailbox') : t('subscribe_mailbox')}
+              >
+                  {mb.isSubscribed ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+              </button>
+            }
             {mb.myRights?.mayCreateChild && (
               <button
                 onClick={() => startCreateSubfolder(mb.id)}
