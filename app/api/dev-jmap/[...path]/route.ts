@@ -37,6 +37,8 @@ interface MockMailbox {
   sortOrder: number;
   totalEmails: number;
   unreadEmails: number;
+  parentId?: string;
+  isSubscribed: boolean;
 }
 
 interface MockEmail {
@@ -64,12 +66,15 @@ function nextState(): string {
 }
 
 const mailboxes: MockMailbox[] = [
-  { id: 'mb-inbox', name: 'Inbox', role: 'inbox', sortOrder: 1, totalEmails: 5, unreadEmails: 2 },
-  { id: 'mb-drafts', name: 'Drafts', role: 'drafts', sortOrder: 2, totalEmails: 1, unreadEmails: 0 },
-  { id: 'mb-sent', name: 'Sent', role: 'sent', sortOrder: 3, totalEmails: 3, unreadEmails: 0 },
-  { id: 'mb-junk', name: 'Junk', role: 'junk', sortOrder: 4, totalEmails: 1, unreadEmails: 1 },
-  { id: 'mb-trash', name: 'Trash', role: 'trash', sortOrder: 5, totalEmails: 0, unreadEmails: 0 },
-  { id: 'mb-archive', name: 'Archive', role: 'archive', sortOrder: 6, totalEmails: 2, unreadEmails: 0 },
+  { id: 'mb-inbox', name: 'Inbox', role: 'inbox', sortOrder: 1, totalEmails: 5, unreadEmails: 2, isSubscribed: true },
+  { id: 'mb-drafts', name: 'Drafts', role: 'drafts', sortOrder: 2, totalEmails: 1, unreadEmails: 0, isSubscribed: true },
+  { id: 'mb-sent', name: 'Sent', role: 'sent', sortOrder: 3, totalEmails: 3, unreadEmails: 0, isSubscribed: true },
+  { id: 'mb-junk', name: 'Junk', role: 'junk', sortOrder: 4, totalEmails: 1, unreadEmails: 1, isSubscribed: true },
+  { id: 'mb-trash', name: 'Trash', role: 'trash', sortOrder: 5, totalEmails: 0, unreadEmails: 0, isSubscribed: true },
+  { id: 'mb-archive', name: 'Archive', role: 'archive', sortOrder: 6, totalEmails: 2, unreadEmails: 0, isSubscribed: true },
+  { id: 'mb-invoices', name: 'Invoices', role: null, sortOrder: 7, totalEmails: 8, unreadEmails: 0, isSubscribed: true },
+  { id: 'mb-invoices-2025', name: '2025', role: null, sortOrder: 8, totalEmails: 8, unreadEmails: 0, parentId: "mb-invoices", isSubscribed: false },
+  { id: 'mb-invoices-2026', name: '2026', role: null, sortOrder: 9, totalEmails: 8, unreadEmails: 0, parentId: "mb-invoices", isSubscribed: true },
 ];
 
 function recomputeMailboxCounts(): void {
@@ -1544,6 +1549,8 @@ function handleMailboxSet(args: MethodArgs, callId: string): MethodResult {
         sortOrder: mailboxes.length + 1,
         totalEmails: 0,
         unreadEmails: 0,
+        parentId: typeof data.parentId === 'string' ? (data.parentId as string) : undefined,
+        isSubscribed: data.isSubscribed !== false,
       });
       created[key] = { id: newId };
     }
@@ -1556,6 +1563,7 @@ function handleMailboxSet(args: MethodArgs, callId: string): MethodResult {
       if (mb) {
         if (changes.name !== undefined) mb.name = changes.name as string;
         if (changes.sortOrder !== undefined) mb.sortOrder = changes.sortOrder as number;
+        if (changes.isSubscribed !== undefined) mb.isSubscribed = changes.isSubscribed as boolean;
         updated[id] = null;
       }
     }
