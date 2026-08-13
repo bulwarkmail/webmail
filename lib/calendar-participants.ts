@@ -27,9 +27,12 @@ function participantMatchesEmail(p: CalendarParticipant, lowerEmails: string[]):
     if (addr && lowerEmails.includes(addr)) return true;
   }
   if (p.sendTo) {
-    for (const addr of Object.values(p.sendTo)) {
-      const normalized = addr.replace(/^mailto:/i, '').toLowerCase();
-      if (normalized && lowerEmails.includes(normalized)) return true;
+    for (const [key, val] of Object.entries(p.sendTo)) {
+      const uri = typeof val === 'object' ? key : val;
+      if (typeof uri === 'string') {
+        const normalized = uri.replace(/^mailto:/i, '').toLowerCase();
+        if (normalized && lowerEmails.includes(normalized)) return true;
+      }
     }
   }
   return false;
@@ -39,7 +42,12 @@ function participantMatchesEmail(p: CalendarParticipant, lowerEmails: string[]):
 function getParticipantEmail(p: CalendarParticipant): string {
   if (p.email) return p.email;
   if (p.calendarAddress) return p.calendarAddress.replace(/^mailto:/i, '');
-  if (p.sendTo?.imip) return p.sendTo.imip.replace(/^mailto:/i, '');
+  if (p.sendTo) {
+    for (const [key, val] of Object.entries(p.sendTo)) {
+      const uri = typeof val === 'object' ? key : val;
+      if (typeof uri === 'string') return uri.replace(/^mailto:/i, '');
+    }
+  }
   return '';
 }
 
@@ -55,8 +63,14 @@ export function getEventOrganizerEmails(event: CalendarEvent): string[] {
     emails.push(event.organizerCalendarAddress.replace(/^mailto:/i, '').toLowerCase());
   }
   if (event.replyTo) {
-    for (const addr of Object.values(event.replyTo)) {
-      emails.push(addr.replace(/^mailto:/i, '').toLowerCase());
+    // In newer JSCalendar (implemented by Stalwart), replyTo is a String[Link] where keys are URIs.
+    // In older specs, it was a String[String] where values were URIs.
+    // We check if the values are objects (Link). If so, the keys are the URIs.
+    for (const [key, val] of Object.entries(event.replyTo)) {
+      const uri = typeof val === 'object' ? key : val;
+      if (typeof uri === 'string') {
+        emails.push(uri.replace(/^mailto:/i, '').toLowerCase());
+      }
     }
   }
   return emails.filter(Boolean);
