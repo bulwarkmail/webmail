@@ -169,26 +169,31 @@ export function EventDetailPopover({
     });
   }, [event, calendar, currentUserEmails, isSubscriptionCalendar]);
   const canEditBody = editability === "editable";
-  const effectiveUserEmails = useMemo(() => {
-    const emails = new Set(currentUserEmails);
-    if (calendar?.accountName) emails.add(calendar.accountName);
-    return Array.from(emails);
-  }, [currentUserEmails, calendar]);
+  const primaryViewEmail = calendar?.accountName;
+  
+  const userParticipantId = useMemo(() => {
+    if (primaryViewEmail) {
+      const id = getUserParticipantId(event, [primaryViewEmail]);
+      if (id) return id;
+    }
+    return getUserParticipantId(event, currentUserEmails);
+  }, [event, primaryViewEmail, currentUserEmails]);
 
-  const userParticipantId = useMemo(
-    () => getUserParticipantId(event, effectiveUserEmails),
-    [event, effectiveUserEmails]
-  );
+  const userCurrentStatus = useMemo(() => {
+    if (primaryViewEmail) {
+      const status = getUserStatus(event, [primaryViewEmail]);
+      if (status) return status;
+    }
+    return getUserStatus(event, currentUserEmails);
+  }, [event, primaryViewEmail, currentUserEmails]);
 
-  const userCurrentStatus = useMemo(
-    () => getUserStatus(event, effectiveUserEmails),
-    [event, effectiveUserEmails]
-  );
-
-  const isUserOrganizer = useMemo(
-    () => isOrganizer(event, effectiveUserEmails),
-    [event, effectiveUserEmails]
-  );
+  const isUserOrganizer = useMemo(() => {
+    if (userParticipantId) {
+      const p = getParticipantList(event).find((p) => p.id === userParticipantId);
+      if (p) return p.isOrganizer;
+    }
+    return isOrganizer(event, primaryViewEmail ? [primaryViewEmail] : currentUserEmails);
+  }, [event, userParticipantId, primaryViewEmail, currentUserEmails]);
 
   const formatTime = useCallback(
     (d: Date) => format(d, timeFormat === "12h" ? "h:mm a" : "HH:mm"),

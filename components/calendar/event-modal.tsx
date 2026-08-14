@@ -208,17 +208,26 @@ export function EventModal({
     return calendars.find(c => event.calendarIds && event.calendarIds[c.id]);
   }, [event, calendars]);
 
-  const effectiveUserEmails = useMemo(() => {
-    const emails = new Set(currentUserEmails);
-    if (eventCalendar?.accountName) emails.add(eventCalendar.accountName);
-    return Array.from(emails);
-  }, [currentUserEmails, eventCalendar]);
+  const primaryViewEmail = eventCalendar?.accountName;
+
+  const userParticipantId = useMemo(() => {
+    if (!event) return null;
+    if (primaryViewEmail) {
+      const id = getUserParticipantId(event, [primaryViewEmail]);
+      if (id) return id;
+    }
+    return getUserParticipantId(event, currentUserEmails);
+  }, [event, primaryViewEmail, currentUserEmails]);
 
   const userIsOrganizer = useMemo(() => {
     if (!event) return true;
     if (!event.participants) return true;
-    return isOrganizer(event, effectiveUserEmails);
-  }, [event, effectiveUserEmails]);
+    if (userParticipantId) {
+      const p = getParticipantList(event).find((p) => p.id === userParticipantId);
+      if (p) return p.isOrganizer;
+    }
+    return isOrganizer(event, primaryViewEmail ? [primaryViewEmail] : currentUserEmails);
+  }, [event, userParticipantId, primaryViewEmail, currentUserEmails]);
 
   // Gate affordances on calendar rights, not identity (see calendar-editability).
   const editability = useMemo(() => {
@@ -233,15 +242,14 @@ export function EventModal({
   const canEditBody = editability === "editable";
   const rsvpMode = editability === "rsvp-only";
 
-  const userParticipantId = useMemo(() => {
-    if (!event) return null;
-    return getUserParticipantId(event, effectiveUserEmails);
-  }, [event, effectiveUserEmails]);
-
   const userCurrentStatus = useMemo(() => {
     if (!event) return null;
-    return getUserStatus(event, effectiveUserEmails);
-  }, [event, effectiveUserEmails]);
+    if (primaryViewEmail) {
+      const status = getUserStatus(event, [primaryViewEmail]);
+      if (status) return status;
+    }
+    return getUserStatus(event, currentUserEmails);
+  }, [event, primaryViewEmail, currentUserEmails]);
 
   const existingParticipants = useMemo(() => {
     if (!event) return [];
