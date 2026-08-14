@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import {
   ArrowRight,
@@ -363,7 +363,7 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
   const format = useFormatter();
   const router = useRouter();
   const client = useAuthStore((s) => s.client);
-  const currentUserEmail = useAuthStore((s) => s.primaryIdentity?.email);
+  const identities = useAuthStore((s) => s.identities);
   const calendarInvitationParsingEnabled = useSettingsStore((s) => s.calendarInvitationParsingEnabled);
   const timeFormat = useSettingsStore((s) => s.timeFormat);
   const { calendars, supportsCalendar, importEvents, rsvpEvent, updateEvent, events: storeEvents, setSelectedDate } = useCalendarStore();
@@ -453,10 +453,17 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
 
   useEffect(() => {
     if (calendars.length > 0 && !selectedCalendarId) {
-      const defaultCal = calendars.find((c) => c.isDefault) || calendars[0];
+      let defaultCal = null;
+      if (email.sourceAccountId) {
+        defaultCal = calendars.find((c) => c.isDefault && c.accountId === email.sourceAccountId) 
+          || calendars.find((c) => c.accountId === email.sourceAccountId);
+      }
+      if (!defaultCal) {
+        defaultCal = calendars.find((c) => c.isDefault) || calendars[0];
+      }
       setSelectedCalendarId(defaultCal.id);
     }
-  }, [calendars, selectedCalendarId]);
+  }, [calendars, selectedCalendarId, email.sourceAccountId]);
 
   useEffect(() => {
     if (!showCalendarPicker) return;
@@ -480,21 +487,85 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
   const allowsRsvp = method === 'request';
   const allowsImport = method === 'request' || method === 'publish' || method === 'add' || method === 'unknown';
 
-  const existingEvent = parsedEvent?.uid
-    ? storeEvents.find((e) => e.uid === parsedEvent.uid)
-    : null;
+  const existingEvent = useMemo(() => {
+    if (!parsedEvent?.uid) return null;
+    
+    // If we are viewing an email in a specific account (e.g., a shared mailbox),
+    // we MUST only match events that exist in that account's calendars.
+    // Otherwise, an attendee viewing a shared inbox might mistakenly grab the 
+    // Organizer's copy of the event (which has the same UID) from their primary 
+    // account. If they RSVP on the Organizer's copy, the server will blast an 
+    // "Updated Invitation" to everyone instead of sending an RSVP!
+    if (email.sourceAccountId) {
+      const match = storeEvents.find((e) => e.uid === parsedEvent.uid && e.accountId === email.sourceAccountId);
+      if (match) return match;
+      
+      // Do NOT fall back to other accounts. If it's not in the target account,
+      // it must be imported as a new event before RSVPing.
+      return null;
+    }
+    
+    // Fallback for non-unified single-account views
+    return storeEvents.find((e) => e.uid === parsedEvent.uid) || null;
+  }, [parsedEvent?.uid, storeEvents, email.sourceAccountId]);
 
-  const currentUserParticipant = existingEvent && currentUserEmail
-    ? findParticipantByEmail(existingEvent, currentUserEmail)
-    : null;
+  const eventToCheck = existingEvent || parsedEvent;
 
-  const fallbackParsedParticipant = !currentUserParticipant && parsedEvent && currentUserEmail
-    ? findParticipantByEmail(parsedEvent, currentUserEmail)
-    : null;
+  const myParticipantObj = useMemo(() => {
+    if (!eventToCheck || !identities?.length) return null;
+    
+    const allRecips = new Set([
+      ...(email.to || []).map((a) => a.email?.toLowerCase()),
+      ...(email.cc || []).map((a) => a.email?.toLowerCase()),
+    ].filter(Boolean));
 
-  const participantForUser = currentUserParticipant || fallbackParsedParticipant;
-  // Accept participant if they have attendee role OR if they are not exclusively an organizer
-  // Some JMAP servers may not set roles.attendee explicitly in CalendarEvent/parse results
+    const m = rawIcsMethod !== 'unknown' ? rawIcsMethod : (eventToCheck as any).method?.toLowerCase();
+
+    // Find all participants from the event that match either our identities OR the To/Cc headers
+    const candidateEmails = new Set([
+      ...identities.map(id => id.email.toLowerCase()),
+      ...allRecips
+    ]);
+
+    const candidates = Array.from(candidateEmails).map(emailAddr => {
+      const p = findParticipantByEmail(eventToCheck, emailAddr);
+      return p ? { email: emailAddr, participant: p } : null;
+    }).filter((x): x is NonNullable<typeof x> => Boolean(x));
+
+    if (candidates.length === 0) return null;
+
+    if (m === 'request') {
+      // For invites, we act as the attendee
+      const myAttendee = candidates.find(p => p.participant.participant.roles?.attendee && identities.some(id => id.email.toLowerCase() === p.email));
+      if (myAttendee) return myAttendee;
+      
+      const addressedAttendee = candidates.find(p => p.participant.participant.roles?.attendee && allRecips.has(p.email));
+      if (addressedAttendee) return addressedAttendee;
+      
+      const anyAttendee = candidates.find(p => p.participant.participant.roles?.attendee);
+      if (anyAttendee) return anyAttendee;
+    } else if (m === 'reply') {
+      // For RSVPs, we act as the organizer
+      const myOrganizer = candidates.find(p => (p.participant.participant.roles?.owner || p.participant.participant.roles?.chair) && identities.some(id => id.email.toLowerCase() === p.email));
+      if (myOrganizer) return myOrganizer;
+      
+      const addressedOrganizer = candidates.find(p => (p.participant.participant.roles?.owner || p.participant.participant.roles?.chair) && allRecips.has(p.email));
+      if (addressedOrganizer) return addressedOrganizer;
+    }
+
+    // Fallback: prefer explicitly addressed recipient, then our identity
+    const addressed = candidates.find(p => allRecips.has(p.email));
+    if (addressed) return addressed;
+    
+    const myId = candidates.find(p => identities.some(id => id.email.toLowerCase() === p.email));
+    if (myId) return myId;
+
+    return candidates[0];
+  }, [eventToCheck, identities, email, rawIcsMethod]);
+
+  const participantForUser = myParticipantObj?.participant || null;
+  const currentUserEmail = myParticipantObj?.email || identities?.[0]?.email;
+
   const isOnlyOrganizer = participantForUser?.participant.roles
     ? (participantForUser.participant.roles.owner || participantForUser.participant.roles.chair)
       && !participantForUser.participant.roles.attendee
@@ -600,6 +671,8 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
         const imported = await importEvents(client, [parsedEvent], calId);
         if (imported > 0) {
           const newEvent = useCalendarStore.getState().events.find(
+            (e) => e.uid === parsedEvent.uid && (!email.sourceAccountId || e.accountId === email.sourceAccountId)
+          ) || useCalendarStore.getState().events.find(
             (e) => e.uid === parsedEvent.uid
           );
           const participant = myParticipant

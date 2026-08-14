@@ -18,6 +18,7 @@ import {
   getUserParticipantId,
   getUserStatus,
   getParticipantList,
+  isOrganizer,
 } from "@/lib/calendar-participants";
 import { getEventEditability } from "@/lib/calendar-editability";
 import { useFormatEventDate } from "@/hooks/use-format-event-date";
@@ -168,8 +169,6 @@ export function EventDetailPopover({
     });
   }, [event, calendar, currentUserEmails, isSubscriptionCalendar]);
   const canEditBody = editability === "editable";
-  const rsvpMode = editability === "rsvp-only";
-
   const userParticipantId = useMemo(
     () => getUserParticipantId(event, currentUserEmails),
     [event, currentUserEmails]
@@ -177,6 +176,11 @@ export function EventDetailPopover({
 
   const userCurrentStatus = useMemo(
     () => getUserStatus(event, currentUserEmails),
+    [event, currentUserEmails]
+  );
+
+  const isUserOrganizer = useMemo(
+    () => isOrganizer(event, currentUserEmails),
     [event, currentUserEmails]
   );
 
@@ -537,7 +541,7 @@ export function EventDetailPopover({
       )}
 
       {/* RSVP Bar (for attendees) */}
-      {rsvpMode && onRsvp && userParticipantId && (
+      {!isUserOrganizer && onRsvp && userParticipantId && (
         <div className="px-4 py-3 border-t border-border">
           <p className="text-xs font-medium text-muted-foreground mb-2">
             {t("participants.rsvp_label")}

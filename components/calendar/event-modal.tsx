@@ -578,17 +578,30 @@ export function EventModal({
     }
 
     if (effectiveAttendees.length > 0 && currentUserEmails.length > 0) {
-      const organizerEmail = currentUserEmails[0];
-      const organizerName = existingParticipants.find(p => p.isOrganizer)?.name || "";
-      data.participants = buildParticipantMap(
-        { name: organizerName, email: organizerEmail },
-        effectiveAttendees
-      ) as Record<string, CalendarParticipant>;
-      // Stalwart (calcard) derives the iCalendar ORGANIZER property solely from
-      // organizerCalendarAddress; without it no ORGANIZER is emitted and iTIP
-      // scheduling is silently skipped (NoSchedulingInfo), so no invites are sent.
-      // The RFC 8984 replyTo property is retired in jscalendarbis and ignored.
-      data.organizerCalendarAddress = `mailto:${organizerEmail}`;
+      const existingOrganizer = existingParticipants.find(p => p.isOrganizer);
+      let organizerEmail = existingOrganizer?.email;
+      let organizerName = existingOrganizer?.name || "";
+
+      if (!organizerEmail) {
+        const selectedCal = calendars.find(c => c.id === calendarId);
+        if (selectedCal?.isShared && selectedCal.accountName && selectedCal.accountName.includes('@')) {
+          organizerEmail = selectedCal.accountName;
+        } else {
+          organizerEmail = currentUserEmails[0] || "";
+        }
+      }
+
+      if (organizerEmail) {
+        data.participants = buildParticipantMap(
+          { name: organizerName, email: organizerEmail },
+          effectiveAttendees
+        ) as Record<string, CalendarParticipant>;
+        // Stalwart (calcard) derives the iCalendar ORGANIZER property solely from
+        // organizerCalendarAddress; without it no ORGANIZER is emitted and iTIP
+        // scheduling is silently skipped (NoSchedulingInfo), so no invites are sent.
+        // The RFC 8984 replyTo property is retired in jscalendarbis and ignored.
+        data.organizerCalendarAddress = `mailto:${organizerEmail}`;
+      }
     } else if (effectiveAttendees.length === 0 && event?.participants) {
       data.participants = null;
       // Also clear the retired replyTo that older releases (<= 1.7.6) wrote.
