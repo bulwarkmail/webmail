@@ -203,11 +203,22 @@ export function EventModal({
   const formatEventDate = useFormatEventDate();
   const [mode, setMode] = useState<"view" | "edit">(isEdit ? "view" : "edit");
 
+  const eventCalendar = useMemo(() => {
+    if (!event) return undefined;
+    return calendars.find(c => event.calendarIds && event.calendarIds[c.id]);
+  }, [event, calendars]);
+
+  const effectiveUserEmails = useMemo(() => {
+    const emails = new Set(currentUserEmails);
+    if (eventCalendar?.accountName) emails.add(eventCalendar.accountName);
+    return Array.from(emails);
+  }, [currentUserEmails, eventCalendar]);
+
   const userIsOrganizer = useMemo(() => {
     if (!event) return true;
     if (!event.participants) return true;
-    return isOrganizer(event, currentUserEmails);
-  }, [event, currentUserEmails]);
+    return isOrganizer(event, effectiveUserEmails);
+  }, [event, effectiveUserEmails]);
 
   // Gate affordances on calendar rights, not identity (see calendar-editability).
   const editability = useMemo(() => {
@@ -224,13 +235,13 @@ export function EventModal({
 
   const userParticipantId = useMemo(() => {
     if (!event) return null;
-    return getUserParticipantId(event, currentUserEmails);
-  }, [event, currentUserEmails]);
+    return getUserParticipantId(event, effectiveUserEmails);
+  }, [event, effectiveUserEmails]);
 
   const userCurrentStatus = useMemo(() => {
     if (!event) return null;
-    return getUserStatus(event, currentUserEmails);
-  }, [event, currentUserEmails]);
+    return getUserStatus(event, effectiveUserEmails);
+  }, [event, effectiveUserEmails]);
 
   const existingParticipants = useMemo(() => {
     if (!event) return [];
@@ -789,46 +800,48 @@ export function EventModal({
           </div>
         </div>
 
-        <div className="px-6 py-4 border-t border-border flex-shrink-0">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">{t("participants.rsvp_label")}</span>
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                variant={userCurrentStatus === "accepted" ? "default" : "outline"}
-                onClick={() => handleRsvp("accepted")}
-                className={userCurrentStatus === "accepted"
-                  ? "bg-success hover:bg-success/80 text-success-foreground"
-                  : "text-success border-success/30 hover:bg-success/10"}
-              >
-                {userCurrentStatus === "accepted" && <Check className="w-4 h-4 me-1" />}
-                {t("participants.accepted")}
-              </Button>
-              <Button
-                size="sm"
-                variant={userCurrentStatus === "tentative" ? "default" : "outline"}
-                onClick={() => handleRsvp("tentative")}
-                className={userCurrentStatus === "tentative"
-                  ? "bg-warning hover:bg-warning/80 text-warning-foreground"
-                  : "border border-warning/30 text-warning hover:bg-warning/10"}
-              >
-                {userCurrentStatus === "tentative" && <Check className="w-4 h-4 me-1" />}
-                {t("participants.tentative")}
-              </Button>
-              <Button
-                size="sm"
-                variant={userCurrentStatus === "declined" ? "default" : "ghost"}
-                onClick={() => handleRsvp("declined")}
-                className={userCurrentStatus === "declined"
-                  ? "bg-destructive hover:bg-destructive/80 text-destructive-foreground"
-                  : "text-destructive hover:bg-destructive/10"}
-              >
-                {userCurrentStatus === "declined" && <Check className="w-4 h-4 me-1" />}
-                {t("participants.declined")}
-              </Button>
+        {!userIsOrganizer && userParticipantId && (
+          <div className="px-6 py-4 border-t border-border flex-shrink-0">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">{t("participants.rsvp_label")}</span>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant={userCurrentStatus === "accepted" ? "default" : "outline"}
+                  onClick={() => handleRsvp("accepted")}
+                  className={userCurrentStatus === "accepted"
+                    ? "bg-success hover:bg-success/80 text-success-foreground"
+                    : "text-success border-success/30 hover:bg-success/10"}
+                >
+                  {userCurrentStatus === "accepted" && <Check className="w-4 h-4 me-1" />}
+                  {t("participants.accepted")}
+                </Button>
+                <Button
+                  size="sm"
+                  variant={userCurrentStatus === "tentative" ? "default" : "outline"}
+                  onClick={() => handleRsvp("tentative")}
+                  className={userCurrentStatus === "tentative"
+                    ? "bg-warning hover:bg-warning/80 text-warning-foreground"
+                    : "border border-warning/30 text-warning hover:bg-warning/10"}
+                >
+                  {userCurrentStatus === "tentative" && <Check className="w-4 h-4 me-1" />}
+                  {t("participants.tentative")}
+                </Button>
+                <Button
+                  size="sm"
+                  variant={userCurrentStatus === "declined" ? "default" : "ghost"}
+                  onClick={() => handleRsvp("declined")}
+                  className={userCurrentStatus === "declined"
+                    ? "bg-destructive hover:bg-destructive/80 text-destructive-foreground"
+                    : "text-destructive hover:bg-destructive/10"}
+                >
+                  {userCurrentStatus === "declined" && <Check className="w-4 h-4 me-1" />}
+                  {t("participants.declined")}
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
     );
   }

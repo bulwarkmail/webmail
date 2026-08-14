@@ -1,0 +1,10 @@
+### Description
+This PR fixes a bug where the Bulwark calendar UI completely crashes (white screen) when attempting to open calendar events that are fetched from a server using the newer JMAP Calendar specification (such as Stalwart).
+
+### Cause
+In earlier JMAP specifications, the `replyTo` property in `CalendarEvent` was represented as a `String[String]` map (e.g. `{"imip": "mailto:email@example.com"}`). However, newer specifications and servers like Stalwart represent `replyTo` as a `String[Link]` object where the keys are the URIs themselves (e.g. `{"mailto:email@example.com": {"@type": "Link"}}`). 
+
+Because Bulwark was iterating over `Object.values()` and assuming they were Strings instead of Objects, it would call `.replace()` on a Link object, throwing a TypeError and crashing the entire React frontend.
+
+### Fix
+Updated `lib/calendar-participants.ts` to correctly check if the values inside `replyTo` and `sendTo` are objects. If they are, it correctly extracts the URI from the key instead of the value, preventing the crash while remaining backwards compatible.

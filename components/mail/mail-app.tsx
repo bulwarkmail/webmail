@@ -2964,7 +2964,7 @@ export function MailApp({ linkSegments }: MailAppProps = {}) {
         }
         // Re-stamp the source reference so later actions on the open email
         // resolve to the right account (the fetched object lacks these).
-        if (isUnifiedView && listEmail) {
+        if (listEmail) {
           fullEmail.accountId = listEmail.accountId;
           fullEmail.accountLabel = listEmail.accountLabel;
           fullEmail.sourceClientAccountId = listEmail.sourceClientAccountId;
@@ -3030,7 +3030,7 @@ export function MailApp({ linkSegments }: MailAppProps = {}) {
       const emails = await threadClient.getThreadEmails(thread.threadId, threadAccountId);
       // Re-stamp the source reference so conversation actions (reply/move/…)
       // resolve to the right account; the fetched objects don't carry it.
-      if (isUnifiedView && ref) {
+      if (ref) {
         for (const e of emails) {
           e.accountId = ref.accountId;
           e.accountLabel = ref.accountLabel;

@@ -169,19 +169,25 @@ export function EventDetailPopover({
     });
   }, [event, calendar, currentUserEmails, isSubscriptionCalendar]);
   const canEditBody = editability === "editable";
+  const effectiveUserEmails = useMemo(() => {
+    const emails = new Set(currentUserEmails);
+    if (calendar?.accountName) emails.add(calendar.accountName);
+    return Array.from(emails);
+  }, [currentUserEmails, calendar]);
+
   const userParticipantId = useMemo(
-    () => getUserParticipantId(event, currentUserEmails),
-    [event, currentUserEmails]
+    () => getUserParticipantId(event, effectiveUserEmails),
+    [event, effectiveUserEmails]
   );
 
   const userCurrentStatus = useMemo(
-    () => getUserStatus(event, currentUserEmails),
-    [event, currentUserEmails]
+    () => getUserStatus(event, effectiveUserEmails),
+    [event, effectiveUserEmails]
   );
 
   const isUserOrganizer = useMemo(
-    () => isOrganizer(event, currentUserEmails),
-    [event, currentUserEmails]
+    () => isOrganizer(event, effectiveUserEmails),
+    [event, effectiveUserEmails]
   );
 
   const formatTime = useCallback(
