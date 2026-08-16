@@ -12,7 +12,7 @@ export const EMAIL_SANITIZE_CONFIG = {
   // components/email/quoted-html.ts). Explicitly whitelisted despite
   // ALLOW_DATA_ATTR:false so the viewer can detect and collapse the quoted
   // original (lib/quote-collapse.ts); it's inert otherwise.
-  ADD_ATTR: ['target', 'rel', 'style', 'class', 'width', 'height', 'align', 'valign', 'bgcolor', 'color', 'data-quoted-html'],
+  ADD_ATTR: ['target', 'rel', 'style', 'class', 'width', 'height', 'align', 'valign', 'bgcolor', 'color', 'dir', 'data-quoted-html'],
   ALLOW_DATA_ATTR: false,
   FORCE_BODY: true,
   // Allow blob: URIs so authenticated inline images (CID) are not stripped.

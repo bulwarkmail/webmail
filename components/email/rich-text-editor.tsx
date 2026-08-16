@@ -8,7 +8,9 @@ import Heading from "@tiptap/extension-heading";
 import Underline from "@tiptap/extension-underline";
 import Link from "@tiptap/extension-link";
 import TextAlign from "@tiptap/extension-text-align";
-import { TextDirection } from "@/components/email/text-direction";
+// NOTE: @tiptap/core v3 ships a built-in TextDirection extension (auto-loaded
+// via enableCoreExtensions). We no longer ship a custom one; configure it via
+// the `textDirection` editor option below.
 import { TextStyle } from "@tiptap/extension-text-style";
 import Color from "@tiptap/extension-color";
 import { ResizableImage } from "@/components/email/resizable-image";
@@ -32,7 +34,8 @@ import {
   AlignLeft,
   AlignCenter,
   AlignRight,
-  ArrowLeftRight,
+  ArrowRightToLine as LtrIcon,
+  ArrowLeftToLine as RtlIcon,
   Link as LinkIcon,
   Undo,
   Redo,
@@ -255,8 +258,12 @@ export function RichTextEditor({
       // rich/branded signatures keep their inline styling in the editor and
       // in the sent mail (see signature-block.ts).
       SignatureBlock,
-      TextDirection,
     ],
+    // Enable @tiptap/core v3's built-in TextDirection extension with "auto"
+    // default. Each block auto-detects direction from its first strong
+    // character (RTL for Farsi/Arabic/Hebrew, LTR for Latin). The toolbar
+    // button can still pin an explicit ltr/rtl per block.
+    textDirection: "auto",
     content,
     editorProps: {
       attributes: {
@@ -530,16 +537,22 @@ export function RichTextEditor({
         {rtlEditingSupport && (
           <ToolbarButton
             active={
-              (editor.getAttributes("paragraph").dir || editor.getAttributes("heading").dir) === "rtl"
+              (editor.getAttributes("paragraph").dir || editor.getAttributes("heading").dir || "auto")
+              === "rtl"
             }
             onClick={() => {
               const cur =
-                editor.getAttributes("paragraph").dir || editor.getAttributes("heading").dir;
-              editor.chain().focus().setTextDirection(cur === "rtl" ? "ltr" : "rtl").run();
+                editor.getAttributes("paragraph").dir ||
+                editor.getAttributes("heading").dir ||
+                "auto";
+              const next = cur === "rtl" ? "ltr" : "rtl";
+              editor.chain().focus().setTextDirection(next).run();
             }}
             title={tToolbar("text_direction")}
           >
-            <ArrowLeftRight className="w-4 h-4" />
+            {(editor.getAttributes("paragraph").dir || editor.getAttributes("heading").dir) === "rtl"
+              ? <RtlIcon className="w-4 h-4" />
+              : <LtrIcon className="w-4 h-4" />}
           </ToolbarButton>
         )}
 

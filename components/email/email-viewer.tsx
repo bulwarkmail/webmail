@@ -2298,9 +2298,10 @@ export function EmailViewer({
      word's min-content width so columns are not collapsed to a single char. */
   td, th { overflow-wrap: break-word; }
   pre { white-space: pre-wrap; word-wrap: break-word; }
+    [dir="auto"] { unicode-bidi: plaintext; }
   ${wordHtmlCSS}
   ${darkModeCSS}
-</style></head><body>${effectiveEmailContent.html}<style>html,body{height:auto!important;min-height:0!important;max-height:none!important}</style></body></html>`;
+  </style></head><body${effectiveEmailContent.isHtml ? '' : ' dir="auto"'}>${effectiveEmailContent.html}<style>html,body{height:auto!important;min-height:0!important;max-height:none!important}</style></body></html>`;
   }, [effectiveEmailContent.html, effectiveEmailContent.isHtml, effectiveEmailContent.hasStyleTag, effectiveEmailContent.externalBlocked, isDark, emailHasNativeDarkMode, messageSpacing]);
 
   // Unblocking external content is handled by rebuilding the iframe srcDoc:
