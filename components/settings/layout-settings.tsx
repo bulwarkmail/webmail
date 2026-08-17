@@ -116,7 +116,12 @@ function MailLayoutPreview({
 }
 
 export function LayoutSettings() {
+  // Every item on this page is keyed under `settings.appearance` for historical
+  // reasons, so `t` stays on that namespace. Only the section header moves to
+  // `settings.layout` — otherwise this tab renders the exact same title and
+  // description as the Appearance tab and the two become indistinguishable.
   const t = useTranslations('settings.appearance');
+  const tLayout = useTranslations('settings.layout');
   const tEmail = useTranslations('settings.email_behavior');
   const { toolbarPosition, showToolbarLabels, hideAccountSwitcher, showRailAccountList, enableUnifiedMailbox, includeGroupInUnified, unifiedCrossAccount, allMailFolderIds, enableCrossUnreadView, enableCrossStarredView, enableCrossAllView, colorfulSidebarIcons, tintListRowsByTag, showFolderTotalCount, faviconUnreadBadge, mailLayout, proInterface, updateSetting } = useSettingsStore();
   const { isSettingLocked, isSettingHidden, isFeatureEnabled } = usePolicyStore();
@@ -167,7 +172,7 @@ export function LayoutSettings() {
     : null;
 
   return (
-    <SettingsSection title={t('title')} description={t('description')}>
+    <SettingsSection title={tLayout('title')} description={tLayout('description')}>
       {!isSettingHidden('mailLayout') && (
       <SettingItem label={tEmail('mail_layout.label')} description={tEmail('mail_layout.description')} locked={isSettingLocked('mailLayout')}>
         <div className="w-[22rem] max-w-full">
