@@ -1096,6 +1096,7 @@
       "cancel": "취소",
       "migrating": "기존 이메일의 태그 업데이트 중…",
       "migration_error": "기존 이메일의 태그 업데이트에 실패했습니다",
+      "filters_migration_error": "일부 필터 규칙이 여전히 이전 태그를 사용합니다. 수동으로 업데이트하세요",
       "nesting": {
         "label": "중첩 태그",
         "description": "태그를 다른 태그 아래에 중첩하고 사이드바에 트리로 표시합니다."

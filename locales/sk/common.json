@@ -1099,6 +1099,7 @@
       "cancel": "Zrušiť",
       "migrating": "Aktualizácia štítku v existujúcich e-mailoch…",
       "migration_error": "Nepodarilo sa aktualizovať štítok v existujúcich e-mailoch",
+      "filters_migration_error": "Niektoré pravidlá filtrov stále používajú starý štítok – upravte ich ručne",
       "nesting": {
         "label": "Vnorené štítky",
         "description": "Vnorujte štítky pod iné štítky a zobrazujte ich v bočnom paneli ako strom."

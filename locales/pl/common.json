@@ -1096,6 +1096,7 @@
       "cancel": "Anuluj",
       "migrating": "Aktualizowanie etykiety w istniejących e-mailach…",
       "migration_error": "Nie udało się zaktualizować etykiety w istniejących e-mailach",
+      "filters_migration_error": "Niektóre reguły filtrów nadal używają starego tagu — zaktualizuj je ręcznie",
       "nesting": {
         "label": "Zagnieżdżone etykiety",
         "description": "Zagnieżdżaj etykiety pod innymi etykietami i wyświetlaj je w panelu bocznym jako drzewo."

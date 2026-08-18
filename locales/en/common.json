@@ -1099,6 +1099,7 @@
       "cancel": "Cancel",
       "migrating": "Updating tag on existing emails…",
       "migration_error": "Failed to update tag on existing emails",
+      "filters_migration_error": "Some filter rules still use the old tag — update them manually",
       "nesting": {
         "label": "Nested Tags",
         "description": "Nest tags underneath other tags and show them as a tree in the sidebar."

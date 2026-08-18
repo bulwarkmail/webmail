@@ -1096,6 +1096,7 @@
       "cancel": "Cancelar",
       "migrating": "A atualizar etiqueta nos e-mails existentes…",
       "migration_error": "Falha ao atualizar etiqueta nos e-mails existentes",
+      "filters_migration_error": "Algumas regras de filtro ainda usam a etiqueta antiga — atualize-as manualmente",
       "nesting": {
         "label": "Etiquetas aninhadas",
         "description": "Aninhe etiquetas sob outras etiquetas e mostre-as como uma árvore na barra lateral."

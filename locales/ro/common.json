@@ -1099,6 +1099,7 @@
       "cancel": "Anulează",
       "migrating": "Actualizarea etichetei pentru e-mailurile existente…",
       "migration_error": "Nu s-a putut actualiza eticheta pentru e-mailurile existente",
+      "filters_migration_error": "Unele reguli de filtrare folosesc încă eticheta veche — actualizează-le manual",
       "nesting": {
         "label": "Etichete imbricate",
         "description": "Imbricați etichete sub alte etichete și afișați-le ca un arbore în bara laterală."

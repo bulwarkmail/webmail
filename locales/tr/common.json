@@ -1096,6 +1096,7 @@
       "cancel": "İptal",
       "migrating": "Mevcut e-postalardaki etiket güncelleniyor…",
       "migration_error": "Mevcut e-postalardaki etiket güncellenemedi",
+      "filters_migration_error": "Bazı filtre kuralları hâlâ eski etiketi kullanıyor — bunları elle güncelleyin",
       "nesting": {
         "label": "İç içe etiketler",
         "description": "Etiketleri başka etiketlerin altına yerleştirin ve kenar çubuğunda ağaç olarak gösterin."

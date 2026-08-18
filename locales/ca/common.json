@@ -1099,6 +1099,7 @@
       "cancel": "Cancel·la",
       "migrating": "Actualitzant l'etiqueta als correus existents…",
       "migration_error": "No s'ha pogut actualitzar l'etiqueta als correus existents",
+      "filters_migration_error": "Algunes regles de filtre encara fan servir l'etiqueta antiga: actualitza-les manualment",
       "nesting": {
         "label": "Etiquetes imbricades",
         "description": "Imbrica etiquetes sota altres etiquetes i mostra-les com un arbre a la barra lateral."

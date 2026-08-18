@@ -12,6 +12,7 @@ import {
 } from "@/stores/settings-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { useEmailStore } from "@/stores/email-store";
+import { useFilterStore } from "@/stores/filter-store";
 import { SettingsSection, SettingItem, ToggleSwitch, Select } from "./settings-section";
 import { Plus, Pencil, Trash2, GripVertical, Check, X, Loader2, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -522,6 +523,7 @@ export function KeywordSettings() {
     useSettingsStore();
   const { client } = useAuthStore();
   const { fetchTagCounts } = useEmailStore();
+  const renameKeywordInFilters = useFilterStore((state) => state.renameKeywordInFilters);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [isMigrating, setIsMigrating] = useState(false);
@@ -571,9 +573,9 @@ export function KeywordSettings() {
 
     if (idChanged && client) {
       setIsMigrating(true);
+      const oldJmapKeyword = `$label:${oldId}`;
+      const newJmapKeyword = `$label:${keyword.id}`;
       try {
-        const oldJmapKeyword = `$label:${oldId}`;
-        const newJmapKeyword = `$label:${keyword.id}`;
         const migration = await client.migrateKeyword(oldJmapKeyword, newJmapKeyword);
         renameKeyword(oldId, keyword);
         fetchTagCounts(client);
@@ -590,6 +592,41 @@ export function KeywordSettings() {
         setIsMigrating(false);
         return;
       }
+
+      // The messages now carry the new keyword, so the definition is right
+      // whatever happens next. Filter rules name the same id and would go on
+      // tagging new mail under the old one, so follow the rename into them -
+      // and say so when a rule is left behind, since only the user can fix a
+      // hand-edited script.
+      let rewroteFilters = false;
+      try {
+        const outcome = await renameKeywordInFilters(client, oldId, keyword.id);
+        rewroteFilters = outcome.changed > 0;
+        if (outcome.unhandled > 0) {
+          const toastModule = await import('sonner');
+          toastModule.toast.warning(t("filters_migration_error"));
+        }
+      } catch (error) {
+        console.error("Failed to migrate keyword in filters:", error);
+        const toastModule = await import('sonner');
+        toastModule.toast.warning(t("filters_migration_error"));
+      }
+
+      if (rewroteFilters) {
+        // Mail delivered between the migration above and the rewrite was still
+        // tagged by the old rule, and the migration has already passed it by.
+        // Sweep once more now that no rule can write the old keyword. A failure
+        // here is about the messages, not the filters, so it says so.
+        try {
+          await client.migrateKeyword(oldJmapKeyword, newJmapKeyword);
+          fetchTagCounts(client);
+        } catch (error) {
+          console.error("Failed to sweep up mail tagged during the rename:", error);
+          const toastModule = await import('sonner');
+          toastModule.toast.error(t("migration_error"));
+        }
+      }
+
       setIsMigrating(false);
     } else {
       updateKeyword(oldId, { label: keyword.label, color: keyword.color });

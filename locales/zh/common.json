@@ -1096,6 +1096,7 @@
       "cancel": "取消",
       "migrating": "正在更新现有邮件的标签…",
       "migration_error": "更新现有邮件的标签失败",
+      "filters_migration_error": "部分过滤规则仍在使用旧标签，请手动更新",
       "nesting": {
         "label": "嵌套标签",
         "description": "将标签嵌套在其他标签之下，并在侧边栏中以树形显示。"
