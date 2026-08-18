@@ -748,7 +748,10 @@
     "rate_limited_title": "Die Serverauthentifizierung ist vorubergehend begrenzt.",
     "rate_limited_detail": "Bulwark hat Hintergrundanfragen pausiert, um eine Sperre zu vermeiden. Neuer Versuch in {seconds}s.",
     "rate_limited_action_title": "Anfrage pausiert, um eine Sperre zu vermeiden.",
-    "rate_limited_action_detail": "Bulwark wartet, bis die Serverabklingzeit endet, bevor weitere authentifizierte Anfragen gesendet werden. Versuchen Sie es in {seconds}s erneut."
+    "rate_limited_action_detail": "Bulwark wartet, bis die Serverabklingzeit endet, bevor weitere authentifizierte Anfragen gesendet werden. Versuchen Sie es in {seconds}s erneut.",
+    "pull_to_refresh": "Zum Aktualisieren ziehen",
+    "release_to_refresh": "Zum Aktualisieren loslassen",
+    "refreshing": "Aktualisiere…"
   },
   "notifications": {
     "email_sent": "E-Mail erfolgreich gesendet",

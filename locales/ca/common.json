@@ -748,7 +748,10 @@
     "rate_limited_title": "L'autenticació al servidor està temporalment limitada.",
     "rate_limited_detail": "El Bulwark ha aturat les sol·licituds en segon pla per evitar el bloqueig. Es tornarà a provar d'aquí a {seconds} s.",
     "rate_limited_action_title": "Sol·licitud aturada per evitar el bloqueig.",
-    "rate_limited_action_detail": "El Bulwark espera que acabi el temps d'espera del servidor abans d'enviar més sol·licituds autenticades. Torneu-ho a provar d'aquí a {seconds} s."
+    "rate_limited_action_detail": "El Bulwark espera que acabi el temps d'espera del servidor abans d'enviar més sol·licituds autenticades. Torneu-ho a provar d'aquí a {seconds} s.",
+    "pull_to_refresh": "Estira per actualitzar",
+    "release_to_refresh": "Deixa anar per actualitzar",
+    "refreshing": "S'està actualitzant…"
   },
   "notifications": {
     "email_sent": "Correu enviat correctament",

@@ -748,7 +748,10 @@
     "rate_limited_title": "Serverauthenticatie is tijdelijk beperkt.",
     "rate_limited_detail": "Bulwark heeft achtergrondverzoeken gepauzeerd om een blokkade te voorkomen. Nieuwe poging over {seconds}s.",
     "rate_limited_action_title": "Verzoek gepauzeerd om blokkade te voorkomen.",
-    "rate_limited_action_detail": "Bulwark wacht tot de servercooldown voorbij is voordat er nieuwe geauthenticeerde verzoeken worden verzonden. Probeer het over {seconds}s opnieuw."
+    "rate_limited_action_detail": "Bulwark wacht tot de servercooldown voorbij is voordat er nieuwe geauthenticeerde verzoeken worden verzonden. Probeer het over {seconds}s opnieuw.",
+    "pull_to_refresh": "Trek om te vernieuwen",
+    "release_to_refresh": "Laat los om te vernieuwen",
+    "refreshing": "Vernieuwen…"
   },
   "notifications": {
     "email_sent": "E-mail succesvol verzonden",

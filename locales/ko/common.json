@@ -748,7 +748,10 @@
     "rate_limited_title": "서버 인증이 일시적으로 제한되었어요.",
     "rate_limited_detail": "Bulwark가 계정 잠금을 방지하기 위해 백그라운드 요청을 일시 중지했어요. {seconds}초 후에 다시 시도할게요.",
     "rate_limited_action_title": "계정 잠금 방지를 위해 요청이 일시 중지되었어요.",
-    "rate_limited_action_detail": "추가 인증 요청을 보내기 전에 서버의 쿨다운이 끝날 때까지 대기 중이에요. {seconds}초 후에 다시 시도해 주세요."
+    "rate_limited_action_detail": "추가 인증 요청을 보내기 전에 서버의 쿨다운이 끝날 때까지 대기 중이에요. {seconds}초 후에 다시 시도해 주세요.",
+    "pull_to_refresh": "당겨서 새로고침",
+    "release_to_refresh": "놓아서 새로고침",
+    "refreshing": "새로고침 중…"
   },
   "notifications": {
     "email_sent": "메일이 전송되었어요",

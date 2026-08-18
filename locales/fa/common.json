@@ -748,7 +748,10 @@
     "rate_limited_title": "احراز هویت سرور موقتاً محدود شده است.",
     "rate_limited_detail": "Bulwark درخواست‌های پس‌زمینه را متوقف کرده است. تلاش مجدد در {seconds} ثانیه.",
     "rate_limited_action_title": "درخواست برای جلوگیری از قفل متوقف شد.",
-    "rate_limited_action_detail": "Bulwark منتظر پایان زمان انتظار سرور است. در {seconds} ثانیه دوباره تلاش کنید."
+    "rate_limited_action_detail": "Bulwark منتظر پایان زمان انتظار سرور است. در {seconds} ثانیه دوباره تلاش کنید.",
+    "pull_to_refresh": "برای تازه‌سازی بکشید",
+    "release_to_refresh": "برای تازه‌سازی رها کنید",
+    "refreshing": "در حال تازه‌سازی…"
   },
   "notifications": {
     "email_sent": "ایمیل با موفقیت ارسال شد",

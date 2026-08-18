@@ -748,7 +748,10 @@
     "rate_limited_title": "L'autenticazione del server e temporaneamente limitata.",
     "rate_limited_detail": "Bulwark ha sospeso le richieste in background per evitare il blocco. Nuovo tentativo tra {seconds}s.",
     "rate_limited_action_title": "Richiesta sospesa per evitare il blocco.",
-    "rate_limited_action_detail": "Bulwark attende che termini il cooldown del server prima di inviare altre richieste autenticate. Riprova tra {seconds}s."
+    "rate_limited_action_detail": "Bulwark attende che termini il cooldown del server prima di inviare altre richieste autenticate. Riprova tra {seconds}s.",
+    "pull_to_refresh": "Trascina per aggiornare",
+    "release_to_refresh": "Rilascia per aggiornare",
+    "refreshing": "Aggiornamento…"
   },
   "notifications": {
     "email_sent": "Messaggio inviato con successo",

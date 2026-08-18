@@ -748,7 +748,10 @@
     "rate_limited_title": "A autenticação do servidor está temporariamente limitada.",
     "rate_limited_detail": "O Bulwark pausou as solicitações em segundo plano para evitar bloqueio. Nova tentativa em {seconds}s.",
     "rate_limited_action_title": "Solicitação pausada para evitar bloqueio.",
-    "rate_limited_action_detail": "O Bulwark está aguardando o fim do cooldown do servidor antes de enviar mais solicitações autenticadas. Tente novamente em {seconds}s."
+    "rate_limited_action_detail": "O Bulwark está aguardando o fim do cooldown do servidor antes de enviar mais solicitações autenticadas. Tente novamente em {seconds}s.",
+    "pull_to_refresh": "Puxe para atualizar",
+    "release_to_refresh": "Solte para atualizar",
+    "refreshing": "Atualizando…"
   },
   "notifications": {
     "email_sent": "E-mail enviado com sucesso",

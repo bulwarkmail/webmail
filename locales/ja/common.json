@@ -748,7 +748,10 @@
     "rate_limited_title": "サーバー認証は一時的に制限されています。",
     "rate_limited_detail": "ロックアウトを避けるため、Bulwark はバックグラウンド要求を一時停止しました。{seconds} 秒後に再試行します。",
     "rate_limited_action_title": "ロックアウトを避けるため要求を一時停止しました。",
-    "rate_limited_action_detail": "Bulwark はサーバーのクールダウンが終わるまで、追加の認証付きリクエストを送信しません。{seconds} 秒後に再試行してください。"
+    "rate_limited_action_detail": "Bulwark はサーバーのクールダウンが終わるまで、追加の認証付きリクエストを送信しません。{seconds} 秒後に再試行してください。",
+    "pull_to_refresh": "引っ張って更新",
+    "release_to_refresh": "離して更新",
+    "refreshing": "更新中…"
   },
   "notifications": {
     "email_sent": "メールを送信しました",

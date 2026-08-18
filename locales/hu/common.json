@@ -748,7 +748,10 @@
     "rate_limited_title": "A szerver hitelesítés átmenetileg korlátozva van.",
     "rate_limited_detail": "A Bulwark szüneteltette a háttérkéréseket a lezárás elkerülése érdekében. Újrapróbálkozás {seconds} másodperc múlva.",
     "rate_limited_action_title": "Kérés szüneteltetve a lezárás elkerülése érdekében.",
-    "rate_limited_action_detail": "A Bulwark várja a szerver lehűlését, mielőtt további hitelesített kéréseket küldene. Próbáld újra {seconds} másodperc múlva."
+    "rate_limited_action_detail": "A Bulwark várja a szerver lehűlését, mielőtt további hitelesített kéréseket küldene. Próbáld újra {seconds} másodperc múlva.",
+    "pull_to_refresh": "Húzza le a frissítéshez",
+    "release_to_refresh": "Engedje el a frissítéshez",
+    "refreshing": "Frissítés…"
   },
   "notifications": {
     "email_sent": "E-mail sikeresen elküldve",

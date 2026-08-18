@@ -713,7 +713,10 @@
     "rate_limited_title": "אימות השרת מוגבל באופן זמני בקצב.",
     "rate_limited_detail": "Bulwark השהתה בקשות ברקע כדי למנוע נעילה. מנסה שוב ב-{seconds}s.",
     "rate_limited_action_title": "הבקשה הושהתה כדי למנוע נעילה.",
-    "rate_limited_action_detail": "Bulwark ממתין עד שקירור השרת יסתיים לפני שליחת בקשות מאומתות יותר. נסה שוב ב-{seconds}s."
+    "rate_limited_action_detail": "Bulwark ממתין עד שקירור השרת יסתיים לפני שליחת בקשות מאומתות יותר. נסה שוב ב-{seconds}s.",
+    "pull_to_refresh": "משוך לרענון",
+    "release_to_refresh": "שחרר לרענון",
+    "refreshing": "מרענן…"
   },
   "notifications": {
     "email_sent": "האימייל נשלח בהצלחה",

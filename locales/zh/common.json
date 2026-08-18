@@ -748,7 +748,10 @@
     "rate_limited_title": "服务器身份验证暂时受到速率限制。",
     "rate_limited_detail": "Bulwark 已暂停后台请求以避免账户被锁定。将在 {seconds} 秒后重试。",
     "rate_limited_action_title": "请求已暂停以避免账户被锁定。",
-    "rate_limited_action_detail": "Bulwark 正在等待服务器冷却，然后再发送更多请求。请在 {seconds} 秒后重试。"
+    "rate_limited_action_detail": "Bulwark 正在等待服务器冷却，然后再发送更多请求。请在 {seconds} 秒后重试。",
+    "pull_to_refresh": "下拉刷新",
+    "release_to_refresh": "释放刷新",
+    "refreshing": "正在刷新…"
   },
   "notifications": {
     "email_sent": "邮件发送成功",

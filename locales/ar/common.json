@@ -748,7 +748,10 @@
     "rate_limited_title": "مصادقة الخادم مقيّدة مؤقتًا بحد المعدل.",
     "rate_limited_detail": "أوقف Bulwark الطلبات في الخلفية مؤقتًا لتجنب الحظر. ستتم إعادة المحاولة خلال {seconds} ثانية.",
     "rate_limited_action_title": "تم إيقاف الطلب مؤقتًا لتجنب الحظر.",
-    "rate_limited_action_detail": "ينتظر Bulwark انتهاء فترة تهدئة الخادم قبل إرسال المزيد من الطلبات الموثّقة. حاول مرة أخرى خلال {seconds} ثانية."
+    "rate_limited_action_detail": "ينتظر Bulwark انتهاء فترة تهدئة الخادم قبل إرسال المزيد من الطلبات الموثّقة. حاول مرة أخرى خلال {seconds} ثانية.",
+    "pull_to_refresh": "اسحب للتحديث",
+    "release_to_refresh": "أفلت للتحديث",
+    "refreshing": "جارٍ التحديث…"
   },
   "notifications": {
     "email_sent": "تم إرسال الرسالة بنجاح",

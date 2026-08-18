@@ -748,7 +748,10 @@
     "rate_limited_title": "Server-godkendelse er midlertidigt hastighedsbegrænset.",
     "rate_limited_detail": "Bulwark har sat baggrundsanmodninger på pause for at undgå udelukkelse. Prøver igen om {seconds}s.",
     "rate_limited_action_title": "Anmodning sat på pause for at undgå udelukkelse.",
-    "rate_limited_action_detail": "Bulwark venter på, at serverens nedkølingsperiode slutter, før der sendes flere godkendte anmodninger. Prøv igen om {seconds}s."
+    "rate_limited_action_detail": "Bulwark venter på, at serverens nedkølingsperiode slutter, før der sendes flere godkendte anmodninger. Prøv igen om {seconds}s.",
+    "pull_to_refresh": "Træk for at opdatere",
+    "release_to_refresh": "Slip for at opdatere",
+    "refreshing": "Opdaterer…"
   },
   "notifications": {
     "email_sent": "E-mail sendt succesfuldt",
