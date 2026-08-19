@@ -7,6 +7,22 @@ import { parseJmapServers } from '@/lib/admin/jmap-servers';
 import { parseDomainBranding } from '@/lib/admin/domain-branding';
 import { logger } from '@/lib/logger';
 
+const BRANDING_CONFIG_KEYS = new Set([
+  'faviconUrl',
+  'pwaIconUrl',
+  'appLogoLightUrl',
+  'appLogoDarkUrl',
+  'loginLogoLightUrl',
+  'loginLogoDarkUrl',
+  'pwaScreenshotMobileUrl',
+  'pwaScreenshotDesktopUrl',
+  'domainBranding',
+]);
+
+function canMutateBrandingConfig(payload: { authMethod: 'password' | 'stalwart' | 'legacy'; stalwartSystemAdmin?: boolean }): boolean {
+  return payload.authMethod === 'stalwart' && payload.stalwartSystemAdmin === true;
+}
+
 // Strings that count as "no real secret configured" - used so the dashboard
 // can warn about a placeholder session secret without us ever returning the
 // raw value to the client.
@@ -70,6 +86,20 @@ export async function PATCH(request: NextRequest) {
     const invalidKeys = Object.keys(updates).filter(k => !validKeys.includes(k));
     if (invalidKeys.length > 0) {
       return NextResponse.json({ error: `Unknown config keys: ${invalidKeys.join(', ')}` }, { status: 400 });
+    }
+
+    const brandingKeys = Object.keys(updates).filter(k => BRANDING_CONFIG_KEYS.has(k));
+    if (brandingKeys.length > 0 && !canMutateBrandingConfig(result.payload)) {
+      await auditLog('config.update_denied', {
+        reason: 'stalwart_system_admin_required_for_branding',
+        authMethod: result.payload.authMethod,
+        stalwartSystemAdmin: result.payload.stalwartSystemAdmin === true,
+        keys: brandingKeys,
+      }, ip);
+      return NextResponse.json(
+        { error: 'Branding config changes require Stalwart system admin access' },
+        { status: 403 },
+      );
     }
 
     // Normalize jmapServers: pass through the parser so invalid entries are
@@ -141,6 +171,19 @@ export async function DELETE(request: NextRequest) {
 
     if (!CONFIG_ENV_MAP[key]) {
       return NextResponse.json({ error: `Unknown config key: ${key}` }, { status: 400 });
+    }
+
+    if (BRANDING_CONFIG_KEYS.has(key) && !canMutateBrandingConfig(result.payload)) {
+      await auditLog('config.revert_denied', {
+        reason: 'stalwart_system_admin_required_for_branding',
+        authMethod: result.payload.authMethod,
+        stalwartSystemAdmin: result.payload.stalwartSystemAdmin === true,
+        key,
+      }, ip);
+      return NextResponse.json(
+        { error: 'Branding config reverts require Stalwart system admin access' },
+        { status: 403 },
+      );
     }
 
     const oldValue = configManager.get(key);
