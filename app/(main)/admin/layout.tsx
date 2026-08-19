@@ -122,7 +122,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     async function checkAuth() {
       try {
         const jmapHeaders = getActiveAccountSlotHeaders();
+        const hasActiveSlot = Boolean(jmapHeaders['X-JMAP-Cookie-Slot']);
         const checkSystemAdmin = async (): Promise<boolean> => {
+          if (!hasActiveSlot) return false;
           const systemRes = await apiFetch('/api/admin/system-admin', { headers: jmapHeaders }).catch(() => null);
           if (!systemRes?.ok) return false;
           const systemData = await systemRes.json().catch(() => ({ isSystemAdmin: false }));
@@ -143,7 +145,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         }
 
         if (data.authenticated) {
-          if (stalwartAdmin) {
+          // If this admin session is being used from a logged-in webmail account
+          // slot, enforce Stalwart system-admin status even when an admin cookie
+          // already exists (prevents cross-account cookie privilege leakage).
+          if (hasActiveSlot) {
             const systemAdmin = await checkSystemAdmin();
             if (cancelled) return;
             if (!systemAdmin) {
@@ -151,6 +156,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               router.replace('/');
               return;
             }
+            setIsStalwartAdmin(true);
             setIsSystemAdmin(true);
           }
           setAuthenticated(true);
