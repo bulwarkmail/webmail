@@ -204,7 +204,7 @@ export function NavigationRail({
   const calendarEnabled = usePolicyStore((s) => s.isFeatureEnabled('calendarEnabled'));
   const visibleSidebarApps = sidebarAppsEnabled ? sidebarApps : [];
   const inboxUnread = mailboxes.find(m => m.role === "inbox")?.unreadEmails || 0;
-  const [isStalwartAdmin, setIsStalwartAdmin] = useState(false);
+  const [isStalwartSystemAdmin, setIsStalwartSystemAdmin] = useState(false);
   const hasUpdate = useUpdateStore(selectHasUpdate);
   const updateSeverity = useUpdateStore((s) => s.status?.severity);
   const startUpdatePolling = useUpdateStore((s) => s.startPolling);
@@ -277,17 +277,25 @@ export function NavigationRail({
     if (!headers['X-JMAP-Cookie-Slot']) return;
     apiFetch('/api/admin/auth', { headers })
       .then(res => res.json())
-      .then(data => {
+      .then(async (data) => {
         if (cancelled || !data.stalwartAdmin) return;
-        setIsStalwartAdmin(true);
-        if (!data.authenticated) {
-          // Pre-create admin session so /admin works even after full page navigation
-          apiFetch('/api/admin/auth', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', ...headers },
-            body: JSON.stringify({ stalwartAuth: true }),
-          }).catch(() => {});
-        }
+
+        const ensureSession = data.authenticated
+          ? Promise.resolve()
+          : apiFetch('/api/admin/auth', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', ...headers },
+              body: JSON.stringify({ stalwartAuth: true }),
+            }).then(() => undefined);
+
+        await ensureSession.catch(() => undefined);
+        if (cancelled) return;
+
+        const systemRes = await apiFetch('/api/admin/system-admin', { headers }).catch(() => null);
+        if (!systemRes || !systemRes.ok) return;
+        const systemData = await systemRes.json().catch(() => ({ isSystemAdmin: false }));
+        if (cancelled) return;
+        setIsStalwartSystemAdmin(systemData?.isSystemAdmin === true);
       })
       .catch(() => {});
     return () => { cancelled = true; };
@@ -409,7 +417,7 @@ export function NavigationRail({
         })}
 
         {/* Admin (Stalwart admins) - hard nav because /admin lives outside the [locale] tree */}
-        {isStalwartAdmin && (
+        {isStalwartSystemAdmin && (
           <a
             href={`${getPathPrefix()}/admin`}
             className={cn(
@@ -596,7 +604,7 @@ export function NavigationRail({
 
       {/* Footer: Admin + Settings + Help + Storage Quota + Sign Out + Push Status */}
       <div className="mt-auto flex flex-col items-center gap-2 pb-3 px-1">
-        {isStalwartAdmin && (
+        {isStalwartSystemAdmin && (
           <a
             href={`${getPathPrefix()}/admin`}
             className="flex items-center justify-center w-10 h-10 rounded-md transition-colors text-muted-foreground hover:text-foreground hover:bg-muted relative"

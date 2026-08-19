@@ -86,6 +86,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [authenticated, setAuthenticated] = useState<boolean | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
   const [isStalwartAdmin, setIsStalwartAdmin] = useState(false);
+  const [isSystemAdmin, setIsSystemAdmin] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const { appLogoLightUrl, appLogoDarkUrl, loginLogoLightUrl, loginLogoDarkUrl } = useConfig();
   const filesEnabled = usePolicyStore((s) => s.isFeatureEnabled('filesEnabled'));
@@ -121,6 +122,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     async function checkAuth() {
       try {
         const jmapHeaders = getActiveAccountSlotHeaders();
+        const checkSystemAdmin = async (): Promise<boolean> => {
+          const systemRes = await apiFetch('/api/admin/system-admin', { headers: jmapHeaders }).catch(() => null);
+          if (!systemRes?.ok) return false;
+          const systemData = await systemRes.json().catch(() => ({ isSystemAdmin: false }));
+          return systemData?.isSystemAdmin === true;
+        };
+
         const res = await apiFetch('/api/admin/auth', { headers: jmapHeaders });
         const data = await res.json();
         if (cancelled) return;
@@ -135,6 +143,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         }
 
         if (data.authenticated) {
+          if (stalwartAdmin) {
+            const systemAdmin = await checkSystemAdmin();
+            if (cancelled) return;
+            if (!systemAdmin) {
+              setAuthenticated(false);
+              router.replace('/');
+              return;
+            }
+            setIsSystemAdmin(true);
+          }
           setAuthenticated(true);
           return;
         }
@@ -148,7 +166,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           });
           if (cancelled) return;
           if (loginRes.ok) {
+            const systemAdmin = await checkSystemAdmin();
+            if (cancelled) return;
+            if (!systemAdmin) {
+              setAuthenticated(false);
+              router.replace('/');
+              return;
+            }
             setAuthenticated(true);
+            setIsSystemAdmin(true);
             return;
           }
           const body = await loginRes.json().catch(() => ({}));
@@ -409,7 +435,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <div className="py-12 text-center text-sm text-muted-foreground animate-pulse">
               Loading admin panel…
             </div>
-          ) : authenticated ? (
+          ) : authenticated && (!isStalwartAdmin || isSystemAdmin) ? (
             children
           ) : null}
         </div>
