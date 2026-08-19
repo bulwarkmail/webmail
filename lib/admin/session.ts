@@ -5,6 +5,8 @@ import { getSessionSecret } from '@/lib/auth/session-secret';
 import { ADMIN_SESSION_COOKIE, DEFAULT_ADMIN_SESSION_TTL } from './types';
 import type { AdminSessionPayload } from './types';
 
+type AdminSessionAuthMethod = Exclude<AdminSessionPayload['authMethod'], 'legacy'>;
+
 const ALGORITHM = 'aes-256-gcm';
 const IV_LENGTH = 12;
 const TAG_LENGTH = 16;
@@ -31,7 +33,10 @@ function getSessionTTL(): number {
 /**
  * Create an encrypted admin session token.
  */
-export function createAdminSession(): string {
+export function createAdminSession(
+  authMethod: AdminSessionAuthMethod,
+  options: { stalwartSystemAdmin?: boolean } = {},
+): string {
   const key = getKey();
   const iv = randomBytes(IV_LENGTH);
   const cipher = createCipheriv(ALGORITHM, key, iv);
@@ -39,6 +44,8 @@ export function createAdminSession(): string {
   const now = Math.floor(Date.now() / 1000);
   const payload: AdminSessionPayload = {
     role: 'admin',
+    authMethod,
+    ...(authMethod === 'stalwart' ? { stalwartSystemAdmin: options.stalwartSystemAdmin === true } : {}),
     iat: now,
     exp: now + getSessionTTL(),
   };
@@ -67,9 +74,25 @@ export function verifyAdminSession(token: string): AdminSessionPayload | null {
     decipher.setAuthTag(tag);
 
     const decrypted = Buffer.concat([decipher.update(encrypted), decipher.final()]);
-    const payload = JSON.parse(decrypted.toString('utf8')) as AdminSessionPayload;
+    const parsed = JSON.parse(decrypted.toString('utf8')) as Partial<AdminSessionPayload>;
 
-    if (payload.role !== 'admin') return null;
+    if (parsed.role !== 'admin') return null;
+
+    const authMethod =
+      parsed.authMethod === 'password' || parsed.authMethod === 'stalwart'
+        ? parsed.authMethod
+        : 'legacy';
+    if (typeof parsed.iat !== 'number' || typeof parsed.exp !== 'number') return null;
+
+    const payload: AdminSessionPayload = {
+      role: 'admin',
+      authMethod,
+      ...(typeof parsed.stalwartSystemAdmin === 'boolean'
+        ? { stalwartSystemAdmin: parsed.stalwartSystemAdmin }
+        : {}),
+      iat: parsed.iat,
+      exp: parsed.exp,
+    };
 
     const now = Math.floor(Date.now() / 1000);
     if (payload.exp < now) return null;
@@ -146,8 +169,11 @@ export async function requireAdminAuth(request: Request): Promise<{ payload: Adm
 /**
  * Set the admin session cookie.
  */
-export async function setAdminSessionCookie(): Promise<void> {
-  const token = createAdminSession();
+export async function setAdminSessionCookie(
+  authMethod: AdminSessionAuthMethod,
+  options: { stalwartSystemAdmin?: boolean } = {},
+): Promise<void> {
+  const token = createAdminSession(authMethod, options);
   const cookieStore = await cookies();
   cookieStore.set(ADMIN_SESSION_COOKIE, token, {
     httpOnly: true,

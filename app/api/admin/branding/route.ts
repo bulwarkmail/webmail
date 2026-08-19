@@ -126,6 +126,20 @@ export async function POST(request: NextRequest) {
     if ('error' in result) return result.error;
 
     const ip = getClientIP(request);
+    const canManageBranding =
+      result.payload.authMethod === 'stalwart' && result.payload.stalwartSystemAdmin === true;
+    if (!canManageBranding) {
+      await auditLog('branding_upload_denied', {
+        reason: 'stalwart_system_admin_required',
+        authMethod: result.payload.authMethod,
+        stalwartSystemAdmin: result.payload.stalwartSystemAdmin === true,
+      }, ip);
+      return NextResponse.json(
+        { error: 'Branding changes require Stalwart system admin access' },
+        { status: 403 },
+      );
+    }
+
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
     const slot = formData.get('slot') as string | null;
@@ -226,6 +240,20 @@ export async function DELETE(request: NextRequest) {
     if ('error' in result) return result.error;
 
     const ip = getClientIP(request);
+    const canManageBranding =
+      result.payload.authMethod === 'stalwart' && result.payload.stalwartSystemAdmin === true;
+    if (!canManageBranding) {
+      await auditLog('branding_delete_denied', {
+        reason: 'stalwart_system_admin_required',
+        authMethod: result.payload.authMethod,
+        stalwartSystemAdmin: result.payload.stalwartSystemAdmin === true,
+      }, ip);
+      return NextResponse.json(
+        { error: 'Branding changes require Stalwart system admin access' },
+        { status: 403 },
+      );
+    }
+
     const body = await request.json().catch(() => ({})) as { slot?: string; host?: string };
     const slot = body.slot;
     const rawHost = body.host ?? '';

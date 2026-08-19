@@ -28,6 +28,8 @@ export interface AdminData extends AdminConfigData, AdminStateData {}
 
 export interface AdminSessionPayload {
   role: 'admin';
+  authMethod: 'password' | 'stalwart' | 'legacy';
+  stalwartSystemAdmin?: boolean;
   iat: number;
   exp: number;
 }
