@@ -2990,32 +2990,21 @@ export class JMAPClient implements IJMAPClient {
       return { [submissionId]: create };
     };
 
-    if (draftId) {
-      // Destroy the old draft and create a new email with the final body
-      methodCalls.push(["Email/set", {
-        accountId: this.accountId,
-        destroy: [draftId],
-      }, "0"]);
-      methodCalls.push(["Email/set", {
-        accountId: targetAccountId,
-        create: { [emailId]: emailCreate },
-      }, "1"]);
-      methodCalls.push(["EmailSubmission/set", {
-        accountId: this.getSubmissionAccountId(targetAccountId),
-        create: buildSubmissionCreate("1"),
-        onSuccessUpdateEmail,
-      }, "2"]);
-    } else {
-      methodCalls.push(["Email/set", {
-        accountId: targetAccountId,
-        create: { [emailId]: emailCreate },
-      }, "0"]);
-      methodCalls.push(["EmailSubmission/set", {
-        accountId: this.getSubmissionAccountId(targetAccountId),
-        create: buildSubmissionCreate("1"),
-        onSuccessUpdateEmail,
-      }, "1"]);
-    }
+    // When editing a draft, its destruction deliberately does NOT ride in
+    // this request: JMAP method calls and Email/set operations are
+    // independent, not transactional, so a destroy alongside a failing
+    // create/submission would still execute - losing the draft together
+    // with the failed send (total-loss report, 20.8.). The old draft is
+    // destroyed in a separate request below, only after the send succeeded.
+    methodCalls.push(["Email/set", {
+      accountId: targetAccountId,
+      create: { [emailId]: emailCreate },
+    }, "0"]);
+    methodCalls.push(["EmailSubmission/set", {
+      accountId: this.getSubmissionAccountId(targetAccountId),
+      create: buildSubmissionCreate("1"),
+      onSuccessUpdateEmail,
+    }, "1"]);
 
     const response = await this.request(methodCalls);
 
@@ -3081,6 +3070,27 @@ export class JMAPClient implements IJMAPClient {
           emailSubmissionId = result.created['1'].id;
           serverSendAt = result.created['1'].sendAt;
         }
+      }
+    }
+
+    // The send is confirmed (the loop above throws on any create/submission
+    // failure) - now clean up the edited draft. Best-effort: a failed cleanup
+    // leaves an orphan draft row surfaced via filingError, never a lost
+    // message.
+    if (draftId) {
+      try {
+        const destroyResponse = await this.request([["Email/set", {
+          accountId: this.accountId,
+          destroy: [draftId],
+        }, "0"]]);
+        const destroyResult = destroyResponse.methodResponses?.[0]?.[1];
+        if (destroyResult?.notDestroyed && Object.keys(destroyResult.notDestroyed).length) {
+          console.error('[sendEmail] old draft cleanup notDestroyed:', JSON.stringify(destroyResult.notDestroyed));
+          filingError = filingError ?? 'old draft cleanup failed';
+        }
+      } catch (error) {
+        console.error('[sendEmail] old draft cleanup failed:', error);
+        filingError = filingError ?? 'old draft cleanup failed';
       }
     }
 
