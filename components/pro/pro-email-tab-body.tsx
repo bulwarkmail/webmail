@@ -324,6 +324,9 @@ export function ProEmailTabBody({ tabId, data }: ProEmailTabBodyProps) {
         subAddressTag: '',
         mode: 'compose',
         draftId: email.id,
+        // The draft's already-uploaded parts - without them the next save
+        // replaces the stored draft without its files.
+        attachments: email.attachments,
       },
     });
     closeTab(tabId);

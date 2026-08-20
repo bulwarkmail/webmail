@@ -1757,6 +1757,9 @@ export function MailApp({ linkSegments }: MailAppProps = {}) {
       subAddressTag: '',
       mode: 'compose',
       draftId: draft.id,
+      // The draft's already-uploaded parts - without them the next save
+      // replaces the stored draft without its files.
+      attachments: draft.attachments,
     });
     setComposerMode('compose');
     setShowComposer(true);

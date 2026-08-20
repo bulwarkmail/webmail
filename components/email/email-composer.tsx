@@ -118,6 +118,13 @@ export interface ComposerDraftData {
   mode: 'compose' | 'reply' | 'replyAll' | 'forward';
   replyTo?: EmailComposerProps['replyTo'];
   draftId: string | null;
+  /**
+   * Already-uploaded parts the session carries - a re-opened draft's files or
+   * a restored stash. Referenced by blobId; the save/send path re-attaches
+   * them, so dropping this list would silently strip the files from the
+   * stored draft on the next save.
+   */
+  attachments?: Array<{ blobId?: string; name?: string; type?: string; size?: number; cid?: string; disposition?: string }>;
   /** When set, overrides the header From: - sent through the selected identity's envelope. */
   fromOverrideEmail?: string;
   fromOverrideName?: string;
@@ -522,23 +529,31 @@ export function EmailComposer({
   // so this is the only way to distinguish the two.
   const saveFailedRef = useRef(false);
   const [attachments, setAttachments] = useState<ComposerAttachment[]>(() => {
-    if (mode === 'forward' && replyTo?.attachments?.length) {
-      // cids the quoted body renders as <img>; those parts are re-attached
+    // Parts the session already owns: a re-opened draft (or a restored stash)
+    // carries them in initialData - an explicit empty list stays empty -
+    // while forwarding re-attaches the original message's parts. Dropping
+    // them here means the next save replaces the stored draft without its
+    // files.
+    const carried = initialData?.attachments
+      ?? (mode === 'forward' ? replyTo?.attachments : undefined);
+    if (carried?.length) {
+      // cids the quoted/draft body renders as <img>; those parts are re-attached
       // inline by the send path, so listing them here would duplicate them.
       // Covers parts the type/disposition test below misses - Foxmail embeds
       // inline images as octet-stream with no inline disposition (#543).
       const embeddedCids = collectInlineImageCids(body);
-      return replyTo.attachments
-        // Skip inline cid-referenced images - they're embedded in the forwarded HTML body
-        // (matches the viewer's hideInlineImageAttachments logic).
-        .filter(att => !(att.cid && (
+      return carried
+        // Skip inline cid-referenced images - they're embedded in the HTML body
+        // (matches the viewer's hideInlineImageAttachments logic). Parts
+        // without a blobId cannot be re-attached and would drop on save.
+        .filter(att => att.blobId && !(att.cid && (
           embeddedCids.has(att.cid) ||
           (att.disposition === 'inline' && (att.type || '').startsWith('image/'))
         )))
         .map(att => ({
           name: att.name || 'attachment',
           type: att.type || 'application/octet-stream',
-          size: att.size,
+          size: att.size ?? 0,
           blobId: att.blobId,
         }));
     }
@@ -954,8 +969,13 @@ export function EmailComposer({
   const bccStr = formatRecipientList(withInput(bcc, bccInput));
 
   // Keep a ref to current state for the unmount save
-  const stateRef = useRef({ to: toStr, cc: ccStr, bcc: bccStr, subject, body, showCc, showBcc, selectedIdentityId, subAddressTag, draftId, fromOverrideEnabled, fromOverrideEmail, fromOverrideName });
-  stateRef.current = { to: toStr, cc: ccStr, bcc: bccStr, subject, body, showCc, showBcc, selectedIdentityId, subAddressTag, draftId, fromOverrideEnabled, fromOverrideEmail, fromOverrideName };
+  // Only fully uploaded parts are stashed - a restored session can re-attach
+  // by blobId, while an in-flight upload has nothing restorable yet.
+  const stashableAttachments = useMemo(() => attachments
+    .filter(a => a.blobId && !a.uploading)
+    .map(a => ({ blobId: a.blobId, name: a.name, type: a.type, size: a.size })), [attachments]);
+  const stateRef = useRef({ to: toStr, cc: ccStr, bcc: bccStr, subject, body, showCc, showBcc, selectedIdentityId, subAddressTag, draftId, fromOverrideEnabled, fromOverrideEmail, fromOverrideName, attachments: stashableAttachments });
+  stateRef.current = { to: toStr, cc: ccStr, bcc: bccStr, subject, body, showCc, showBcc, selectedIdentityId, subAddressTag, draftId, fromOverrideEnabled, fromOverrideEmail, fromOverrideName, attachments: stashableAttachments };
 
   // Track initial values for dirty detection (captured once on first render)
   const initialValuesRef = useRef({ to: toStr, cc: ccStr, bcc: bccStr, subject, body, attachmentCount: attachments.length });
@@ -1579,7 +1599,12 @@ export function EmailComposer({
     // composed bodies (not the raw editor body) means a signature that changed
     // under an unchanged body - switching identity, toggling the separator -
     // still triggers a re-save.
-    const currentData = JSON.stringify({ to: toAddresses, cc: ccAddresses, bcc: bccAddresses, subject, body: draftHtmlBody ?? draftTextBody, attachments: uploadedAttachments, identityId: selectedIdentityId, subAddressTag });
+    // Attachments are hashed WITHOUT their blobIds: every save rotates the
+    // part blobIds (destroy+create) and the post-save remap writes the fresh
+    // ids back into state - hashing them would make each save dirty the next
+    // one, an endless save loop. Name/type/size still catch every real
+    // add/remove/replace.
+    const currentData = JSON.stringify({ to: toAddresses, cc: ccAddresses, bcc: bccAddresses, subject, body: draftHtmlBody ?? draftTextBody, attachments: uploadedAttachments.map(a => ({ name: a.name, type: a.type, size: a.size })), identityId: selectedIdentityId, subAddressTag });
 
     // Only save if data has changed
     if (currentData === lastSavedDataRef.current) {
@@ -1643,6 +1668,34 @@ export function EmailComposer({
       lastSavedDataRef.current = currentData;
       setSaveStatus('saved');
       saveFailedRef.current = false;
+
+      // A linked blob dies with the message it belongs to, and this save just
+      // destroyed the previous draft - the attachment state still points at
+      // the old message's parts. Re-point it at the freshly created draft's
+      // parts, or the NEXT save (and a later send) references dead blobs and
+      // fails with blobNotFound. Positional mapping: createDraft attaches in
+      // list order; abort on any mismatch rather than risk re-pointing a chip
+      // at the wrong part.
+      if (uploadedAttachments.length) {
+        try {
+          const savedDraft = await composerClient.getEmail(savedDraftId);
+          const freshParts = savedDraft?.attachments ?? [];
+          setAttachments(prev => {
+            const stable = prev.filter(a => a.blobId && !a.uploading);
+            if (stable.length !== freshParts.length) return prev;
+            if (stable.some((a, i) => freshParts[i].size !== a.size)) return prev;
+            let i = 0;
+            return prev.map(att =>
+              att.blobId && !att.uploading
+                ? { ...att, blobId: freshParts[i++].blobId }
+                : att
+            );
+          });
+        } catch (error) {
+          // The stale ids stay in place; the next save reports the failure.
+          debug.error('Failed to refresh draft attachment blobIds:', error);
+        }
+      }
 
       // Reset status after 2 seconds
       setTimeout(() => setSaveStatus('idle'), 2000);
@@ -2147,7 +2200,7 @@ export function EmailComposer({
       setScheduleValue('');
       setScheduleError('');
       // Clear ref so unmount effect doesn't re-save
-      stateRef.current = { to: '', cc: '', bcc: '', subject: '', body: '', showCc: false, showBcc: false, selectedIdentityId: null, subAddressTag: '', draftId: null, fromOverrideEnabled: false, fromOverrideEmail: '', fromOverrideName: '' };
+      stateRef.current = { to: '', cc: '', bcc: '', subject: '', body: '', showCc: false, showBcc: false, selectedIdentityId: null, subAddressTag: '', draftId: null, fromOverrideEnabled: false, fromOverrideEmail: '', fromOverrideName: '', attachments: [] };
     } catch (err) {
       debug.error('Failed to send email:', err);
       // A timeout is not a clean failure: the submission may have reached the
@@ -2206,7 +2259,7 @@ export function EmailComposer({
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
     }
-    stateRef.current = { to: '', cc: '', bcc: '', subject: '', body: '', showCc: false, showBcc: false, selectedIdentityId: null, subAddressTag: '', draftId: null, fromOverrideEnabled: false, fromOverrideEmail: '', fromOverrideName: '' };
+    stateRef.current = { to: '', cc: '', bcc: '', subject: '', body: '', showCc: false, showBcc: false, selectedIdentityId: null, subAddressTag: '', draftId: null, fromOverrideEnabled: false, fromOverrideEmail: '', fromOverrideName: '', attachments: [] };
     emitClose();
   };
 
@@ -2231,7 +2284,7 @@ export function EmailComposer({
         toast.error(t('save_failed'));
         explicitCloseRef.current = false;
       } else {
-        stateRef.current = { to: '', cc: '', bcc: '', subject: '', body: '', showCc: false, showBcc: false, selectedIdentityId: null, subAddressTag: '', draftId: null, fromOverrideEnabled: false, fromOverrideEmail: '', fromOverrideName: '' };
+        stateRef.current = { to: '', cc: '', bcc: '', subject: '', body: '', showCc: false, showBcc: false, selectedIdentityId: null, subAddressTag: '', draftId: null, fromOverrideEnabled: false, fromOverrideEmail: '', fromOverrideName: '', attachments: [] };
       }
     } finally {
       emitClose();
@@ -2248,7 +2301,7 @@ export function EmailComposer({
     if (draftId && onDiscardDraft) {
       onDiscardDraft(draftId);
     }
-    stateRef.current = { to: '', cc: '', bcc: '', subject: '', body: '', showCc: false, showBcc: false, selectedIdentityId: null, subAddressTag: '', draftId: null, fromOverrideEnabled: false, fromOverrideEmail: '', fromOverrideName: '' };
+    stateRef.current = { to: '', cc: '', bcc: '', subject: '', body: '', showCc: false, showBcc: false, selectedIdentityId: null, subAddressTag: '', draftId: null, fromOverrideEnabled: false, fromOverrideEmail: '', fromOverrideName: '', attachments: [] };
     emitClose();
   };
 
