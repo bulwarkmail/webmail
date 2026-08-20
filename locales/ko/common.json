@@ -1688,6 +1688,7 @@
       "create_subfolder": "하위 폴더 만들기",
       "reorder": "드래그하여 순서 변경",
       "reorder_error": "폴더 순서 변경에 실패했습니다",
+      "move_error": "폴더를 이동하지 못했습니다",
       "subfolder_of": "{name} 내부에 생성",
       "subfolder_name": "하위 폴더 이름",
       "new_folder_name": "폴더 이름",

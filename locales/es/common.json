@@ -1688,6 +1688,7 @@
       "create_subfolder": "Crear subcarpeta",
       "reorder": "Arrastra para reordenar",
       "reorder_error": "No se pudieron reordenar las carpetas",
+      "move_error": "No se pudo mover la carpeta",
       "subfolder_of": "Dentro de {name}",
       "subfolder_name": "Nombre de la subcarpeta",
       "new_folder_name": "Nombre de la carpeta",

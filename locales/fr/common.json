@@ -1688,6 +1688,7 @@
       "create_subfolder": "Créer un sous-dossier",
       "reorder": "Glissez pour réorganiser",
       "reorder_error": "Échec de la réorganisation des dossiers",
+      "move_error": "Impossible de déplacer le dossier",
       "subfolder_of": "Dans {name}",
       "subfolder_name": "Nom du sous-dossier",
       "new_folder_name": "Nom du dossier",

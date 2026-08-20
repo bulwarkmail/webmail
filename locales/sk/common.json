@@ -1695,6 +1695,7 @@
       "create_subfolder": "Vytvoriť podpriečinok",
       "reorder": "Potiahnutím zmeníte poradie",
       "reorder_error": "Nepodarilo sa zmeniť poradie priečinkov",
+      "move_error": "Presun priečinka zlyhal",
       "subfolder_of": "V priečinku {name}",
       "subfolder_name": "Názov podpriečinka",
       "new_folder_name": "Názov priečinka",

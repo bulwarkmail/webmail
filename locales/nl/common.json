@@ -1688,6 +1688,7 @@
       "create_subfolder": "Submap maken",
       "reorder": "Sleep om te herschikken",
       "reorder_error": "Herschikken van mappen is mislukt",
+      "move_error": "Map verplaatsen mislukt",
       "subfolder_of": "In {name}",
       "subfolder_name": "Naam van submap",
       "new_folder_name": "Mapnaam",

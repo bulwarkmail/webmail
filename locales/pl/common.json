@@ -1688,6 +1688,7 @@
       "create_subfolder": "Utwórz podfolder",
       "reorder": "Przeciągnij, aby zmienić kolejność",
       "reorder_error": "Nie udało się zmienić kolejności folderów",
+      "move_error": "Nie udało się przenieść folderu",
       "subfolder_of": "W folderze {name}",
       "subfolder_name": "Nazwa podfolderu",
       "new_folder_name": "Nazwa folderu",

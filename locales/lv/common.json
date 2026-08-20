@@ -1688,6 +1688,7 @@
       "create_subfolder": "Izveidot apakšmapi",
       "reorder": "Velciet, lai pārkārtotu",
       "reorder_error": "Neizdevās pārkārtot mapes",
+      "move_error": "Neizdevās pārvietot mapi",
       "subfolder_of": "Mapē {name}",
       "subfolder_name": "Apakšmapes nosaukums",
       "new_folder_name": "Mapes nosaukums",

@@ -1688,6 +1688,7 @@
       "create_subfolder": "サブフォルダーを作成",
       "reorder": "ドラッグして並べ替え",
       "reorder_error": "フォルダーの並べ替えに失敗しました",
+      "move_error": "フォルダーを移動できませんでした",
       "subfolder_of": "{name} の中",
       "subfolder_name": "サブフォルダー名",
       "new_folder_name": "フォルダー名",

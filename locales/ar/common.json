@@ -1695,6 +1695,7 @@
       "create_subfolder": "إنشاء مجلد فرعي",
       "reorder": "اسحب لإعادة الترتيب",
       "reorder_error": "فشل في إعادة ترتيب المجلدات",
+      "move_error": "فشل نقل المجلد",
       "subfolder_of": "داخل {name}",
       "subfolder_name": "اسم المجلد الفرعي",
       "new_folder_name": "اسم المجلد",

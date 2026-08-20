@@ -1695,6 +1695,7 @@
       "create_subfolder": "ایجاد زیرپوشه",
       "reorder": "برای تغییر ترتیب بکشید",
       "reorder_error": "تغییر ترتیب پوشه‌ها ناموفق بود",
+      "move_error": "انتقال پوشه ناموفق بود",
       "subfolder_of": "داخل {name}",
       "subfolder_name": "نام زیرپوشه",
       "new_folder_name": "نام پوشه",

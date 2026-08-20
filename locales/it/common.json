@@ -1688,6 +1688,7 @@
       "create_subfolder": "Crea sottocartella",
       "reorder": "Trascina per riordinare",
       "reorder_error": "Impossibile riordinare le cartelle",
+      "move_error": "Impossibile spostare la cartella",
       "subfolder_of": "Dentro {name}",
       "subfolder_name": "Nome della sottocartella",
       "new_folder_name": "Nome della cartella",

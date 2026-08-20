@@ -1695,6 +1695,7 @@
       "create_subfolder": "Creați un subfolder",
       "reorder": "Trageți pentru a reordona",
       "reorder_error": "Reordonarea dosarelor a eșuat",
+      "move_error": "Mutarea dosarului a eșuat",
       "subfolder_of": "În interiorul {name}",
       "subfolder_name": "Numele subfolderului",
       "new_folder_name": "Numele folderului",

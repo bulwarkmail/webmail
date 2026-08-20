@@ -1688,6 +1688,7 @@
       "create_subfolder": "Unterordner erstellen",
       "reorder": "Zum Neuanordnen ziehen",
       "reorder_error": "Ordner konnten nicht neu angeordnet werden",
+      "move_error": "Ordner konnte nicht verschoben werden",
       "subfolder_of": "In {name}",
       "subfolder_name": "Name des Unterordners",
       "new_folder_name": "Ordnername",

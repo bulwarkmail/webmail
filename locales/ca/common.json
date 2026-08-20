@@ -1695,6 +1695,7 @@
       "create_subfolder": "Crea una subcarpeta",
       "reorder": "Arrossegueu per reordenar",
       "reorder_error": "No s'han pogut reordenar les carpetes",
+      "move_error": "No s'ha pogut moure la carpeta",
       "subfolder_of": "Dins de {name}",
       "subfolder_name": "Nom de la subcarpeta",
       "new_folder_name": "Nom de la carpeta",

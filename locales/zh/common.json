@@ -1688,6 +1688,7 @@
       "create_subfolder": "新建子文件夹",
       "reorder": "拖动以重新排序",
       "reorder_error": "文件夹重新排序失败",
+      "move_error": "无法移动文件夹",
       "subfolder_of": "{name} 内",
       "subfolder_name": "子文件夹名称",
       "new_folder_name": "文件夹名称",

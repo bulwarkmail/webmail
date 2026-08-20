@@ -1691,6 +1691,7 @@
       "create_subfolder": "Opret undermappe",
       "reorder": "Træk for at ændre rækkefølgen",
       "reorder_error": "Kunne ikke ændre rækkefølgen af mapper",
+      "move_error": "Kunne ikke flytte mappen",
       "subfolder_of": "Inde i {name}",
       "subfolder_name": "Undermappenavn",
       "new_folder_name": "Mappenavn",

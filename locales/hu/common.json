@@ -1691,6 +1691,7 @@
       "create_subfolder": "Almappa létrehozása",
       "reorder": "Húzza az átrendezéshez",
       "reorder_error": "Nem sikerült átrendezni a mappákat",
+      "move_error": "A mappa áthelyezése nem sikerült",
       "subfolder_of": "Itt: {name}",
       "subfolder_name": "Almappa neve",
       "new_folder_name": "Mappa neve",

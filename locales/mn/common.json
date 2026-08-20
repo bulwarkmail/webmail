@@ -1695,6 +1695,7 @@
       "create_subfolder": "Дэд хавтас үүсгэх",
       "reorder": "Дахин эрэмбэлэхийн тулд чирнэ үү",
       "reorder_error": "Фолдеруудыг дахин эрэмбэлж чадсангүй",
+      "move_error": "Хавтас зөөж чадсангүй",
       "subfolder_of": "{name}",
       "subfolder_name": "Дэд хавтасны нэр",
       "new_folder_name": "Хавтасны нэр",
