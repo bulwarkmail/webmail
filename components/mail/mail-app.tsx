@@ -2514,13 +2514,19 @@ export function MailApp({ linkSegments }: MailAppProps = {}) {
     if (isTogglingOff) {
       // Disable the unread filter and show all emails
       clearSearchFilters();
+      setSearchMailboxId("");
       if (client) {
         await fetchEmails(client, mailboxId);
       }
     } else {
-      // Enable unread filter
+      // Enable the unread filter, scoped to THIS folder. advancedSearch runs
+      // across every mailbox when no folder scope is set, so a folder-local
+      // "unread" badge (e.g. Inbox: 29) would open a list that also pulls
+      // unread from Trash/Spam/etc. Scope to the clicked mailbox so the view
+      // matches the count.
       clearSearchFilters();
       setSearchFilters({ isUnread: true });
+      setSearchMailboxId(mailboxId);
       if (client) {
         await advancedSearch(client);
       }
