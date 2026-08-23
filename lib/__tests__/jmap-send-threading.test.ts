@@ -174,6 +174,61 @@ describe('JMAPClient.sendEmail threading headers', () => {
     expect(draft.bcc).toBeUndefined();
   });
 
+  it('builds multipart/related bodyStructure for inline CID images', async () => {
+    const client = createClient();
+    const captured = mockSendEmailFlow();
+
+    await client.sendEmail(
+      ['recipient@example.com'],
+      'Inline image',
+      'Plain fallback',
+      undefined, undefined, 'identity-1', 'user@example.com',
+      undefined, undefined,
+      '<p>Hi <img src="cid:img-1@webmail"></p>',
+      [
+        {
+          blobId: 'blob-inline',
+          name: 'logo.png',
+          type: 'image/png',
+          size: 512,
+          disposition: 'inline',
+          cid: 'img-1@webmail',
+        },
+      ],
+    );
+
+    const setCall = captured[2].methodCalls[0];
+    const create = setCall[1].create as Record<string, Record<string, unknown>>;
+    const draft = Object.values(create)[0];
+
+    expect(draft.attachments).toBeUndefined();
+    expect(draft.textBody).toBeUndefined();
+    expect(draft.bodyStructure).toEqual({
+      type: 'multipart/alternative',
+      subParts: [
+        { partId: 'text', type: 'text/plain' },
+        {
+          type: 'multipart/related',
+          subParts: [
+            { partId: 'html', type: 'text/html' },
+            {
+              blobId: 'blob-inline',
+              type: 'image/png',
+              name: 'logo.png',
+              disposition: 'inline',
+              cid: 'img-1@webmail',
+              size: 512,
+            },
+          ],
+        },
+      ],
+    });
+    expect(draft.bodyValues).toEqual({
+      text: { value: 'Plain fallback' },
+      html: { value: '<p>Hi <img src="cid:img-1@webmail"></p>' },
+    });
+  });
+
   it('drops empty / whitespace-only ids rather than sending blank entries', async () => {
     const client = createClient();
     const captured = mockSendEmailFlow();
