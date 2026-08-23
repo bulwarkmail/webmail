@@ -25,6 +25,30 @@ interface MockPushSubscription {
 
 const pushSubscriptions: MockPushSubscription[] = [];
 
+interface MockCalendarPublishLink {
+  id: string;
+  calendarId: string;
+  access: 'public' | 'private';
+  visibility: 'full' | 'busy';
+  label: string | null;
+  secret?: string;
+  createdAt: string;
+  lastUsedAt: string | null;
+  expiresAt: string | null;
+}
+
+const calendarPublishLinks: MockCalendarPublishLink[] = [];
+let calendarPublishLinkCounter = 0;
+
+function nextPublishLinkId(): string {
+  calendarPublishLinkCounter += 1;
+  return `publish-link-${calendarPublishLinkCounter}`;
+}
+
+function randomSecret(): string {
+  return `sec-${Math.random().toString(36).slice(2, 14)}`;
+}
+
 // ---------------------------------------------------------------------------
 // Mailboxes
 // ---------------------------------------------------------------------------
@@ -2072,6 +2096,72 @@ async function handlePushSubscriptionSet(args: MethodArgs, callId: string): Prom
   }, callId];
 }
 
+function handleCalendarPublishLinkGet(args: MethodArgs, callId: string): MethodResult {
+  const filter = args.filter as { calendarId?: string } | undefined;
+  let list = calendarPublishLinks;
+  if (filter?.calendarId) {
+    list = list.filter((link) => link.calendarId === filter.calendarId);
+  }
+  const sanitized = list.map(({ secret: _secret, ...rest }) => rest);
+  return ['CalendarPublishLink/get', {
+    accountId: ACCOUNT_ID,
+    state: nextState(),
+    list: sanitized,
+    notFound: [],
+  }, callId];
+}
+
+function handleCalendarPublishLinkSet(args: MethodArgs, callId: string): MethodResult {
+  const created: Record<string, unknown> = {};
+  const notCreated: Record<string, unknown> = {};
+  const destroyed: string[] = [];
+  const notDestroyed: Record<string, unknown> = {};
+
+  if (args.create) {
+    for (const [tempId, data] of Object.entries(args.create as Record<string, Record<string, unknown>>)) {
+      const access = data.access === 'public' ? 'public' : 'private';
+      const visibility = data.visibility === 'busy' ? 'busy' : 'full';
+      const id = nextPublishLinkId();
+      const secret = access === 'private' ? randomSecret() : undefined;
+      const link: MockCalendarPublishLink = {
+        id,
+        calendarId: String(data.calendarId || ''),
+        access,
+        visibility,
+        label: typeof data.label === 'string' ? data.label : null,
+        secret,
+        createdAt: new Date().toISOString(),
+        lastUsedAt: null,
+        expiresAt: typeof data.expiresAt === 'string' ? data.expiresAt : null,
+      };
+      calendarPublishLinks.push({ ...link, secret: access === 'private' ? secret : undefined });
+      created[tempId] = link;
+    }
+  }
+
+  if (Array.isArray(args.destroy)) {
+    for (const id of args.destroy as string[]) {
+      const index = calendarPublishLinks.findIndex((link) => link.id === id);
+      if (index === -1) {
+        notDestroyed[id] = { type: 'notFound' };
+        continue;
+      }
+      calendarPublishLinks.splice(index, 1);
+      destroyed.push(id);
+    }
+  }
+
+  return ['CalendarPublishLink/set', {
+    accountId: ACCOUNT_ID,
+    oldState: nextState(),
+    newState: nextState(),
+    created: Object.keys(created).length > 0 ? created : null,
+    notCreated: Object.keys(notCreated).length > 0 ? notCreated : null,
+    destroyed: destroyed.length > 0 ? destroyed : null,
+    notDestroyed: Object.keys(notDestroyed).length > 0 ? notDestroyed : null,
+  }, callId];
+}
+
 // Catch-all for unknown methods
 function handleUnknown(method: string, _args: MethodArgs, callId: string): MethodResult {
   return ['error', { type: 'unknownMethod', description: `Mock server does not implement ${method}` }, callId];
@@ -2142,6 +2232,8 @@ const METHOD_HANDLERS: Record<string, MethodHandler> = {
   'ContactCard/query': (_args, callId) => ['ContactCard/query', { accountId: ACCOUNT_ID, queryState: nextState(), ids: contacts.map(c => c.id), total: contacts.length, position: 0 }, callId],
   'AddressBook/get': handleAddressBookGet,
   'Calendar/get': handleCalendarGet,
+  'CalendarPublishLink/get': handleCalendarPublishLinkGet,
+  'CalendarPublishLink/set': handleCalendarPublishLinkSet,
   'CalendarEvent/get': handleCalendarEventGet,
   'CalendarEvent/query': handleCalendarEventQuery,
   'CalendarEvent/set': (_args, callId) => ['CalendarEvent/set', { accountId: ACCOUNT_ID, oldState: nextState(), newState: nextState(), created: null, updated: null, destroyed: null }, callId],

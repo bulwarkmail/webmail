@@ -1,5 +1,5 @@
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
-import type { Email, Mailbox, StateChange, AccountStates, Thread, Identity, EmailAddress, ContactCard, AddressBook, VacationResponse, Calendar, CalendarEvent, CalendarEventFilter, CalendarTask, FileNode, ScheduledEmail, SendEmailResult, SharedAccount } from '@/lib/jmap/types';
+import type { Email, Mailbox, StateChange, AccountStates, Thread, Identity, EmailAddress, ContactCard, AddressBook, VacationResponse, Calendar, CalendarEvent, CalendarEventFilter, CalendarTask, CalendarPublishLink, CalendarPublishLinkCreate, FileNode, ScheduledEmail, SendEmailResult, SharedAccount } from '@/lib/jmap/types';
 import type { SieveScript, SieveCapabilities } from '@/lib/jmap/sieve-types';
 import { getDemoData, type DemoData } from './demo-data';
 import { generateDemoId } from './demo-utils';
@@ -12,6 +12,7 @@ export class DemoJMAPClient implements IJMAPClient {
   private data: DemoData;
   private blobStore = new Map<string, Blob>();
   private scheduledSubmissions = new Map<string, { id: string; emailId: string; identityId: string; sendAt: string; undoStatus: 'pending' | 'final' | 'canceled'; isSmime: boolean }>();
+  private calendarPublishLinks: CalendarPublishLink[] = [];
   private connectionCallback: ((connected: boolean) => void) | null = null;
   private stateChangeCallback: ((change: StateChange) => void) | null = null;
   private lastStates: AccountStates = {};
@@ -85,6 +86,31 @@ export class DemoJMAPClient implements IJMAPClient {
   supportsPrincipals(): boolean { return false; }
   async getPrincipals(): Promise<never[]> { return []; }
   async setCalendarShare(): Promise<void> { /* demo: no-op */ }
+  async getCalendarPublishLinks(calendarId: string): Promise<CalendarPublishLink[]> {
+    return this.calendarPublishLinks
+      .filter((link) => link.calendarId === calendarId)
+      .map(({ secret: _secret, ...rest }) => rest);
+  }
+  async createCalendarPublishLink(link: CalendarPublishLinkCreate): Promise<CalendarPublishLink> {
+    const id = generateDemoId('publish');
+    const secret = link.access === 'private' ? generateDemoId('secret') : undefined;
+    const created: CalendarPublishLink = {
+      id,
+      calendarId: link.calendarId,
+      access: link.access,
+      visibility: link.visibility,
+      label: link.label ?? null,
+      secret,
+      createdAt: new Date().toISOString(),
+      lastUsedAt: null,
+      expiresAt: link.expiresAt ?? null,
+    };
+    this.calendarPublishLinks.push({ ...created, secret: undefined });
+    return created;
+  }
+  async destroyCalendarPublishLink(linkId: string): Promise<void> {
+    this.calendarPublishLinks = this.calendarPublishLinks.filter((link) => link.id !== linkId);
+  }
   async setAddressBookShare(): Promise<void> { /* demo: no-op */ }
 
   // ── Push / state ──────────────────────────────────────────────

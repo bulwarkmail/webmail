@@ -1,4 +1,4 @@
-import type { Email, Mailbox, StateChange, AccountStates, Thread, Identity, EmailAddress, ContactCard, AddressBook, AddressBookRights, VacationResponse, Calendar, CalendarRights, CalendarEvent, CalendarEventFilter, CalendarTask, FileNode, FileNodeFilter, FileNodeRights, Principal, PushSubscription, EmailSubmission, ScheduledEmail, SendEmailResult, SharedAccount } from "./types";
+import type { Email, Mailbox, StateChange, AccountStates, Thread, Identity, EmailAddress, ContactCard, AddressBook, AddressBookRights, VacationResponse, Calendar, CalendarRights, CalendarEvent, CalendarEventFilter, CalendarTask, CalendarPublishLink, CalendarPublishLinkCreate, FileNode, FileNodeFilter, FileNodeRights, Principal, PushSubscription, EmailSubmission, ScheduledEmail, SendEmailResult, SharedAccount } from "./types";
 import type { SieveScript, SieveCapabilities } from "./sieve-types";
 import type { IJMAPClient } from "./client-interface";
 import { toWildcardQuery } from "./search-utils";
@@ -7226,5 +7226,86 @@ export class JMAPClient implements IJMAPClient {
       [['PushSubscription/set', { destroy: [id] }, '0']],
       ['urn:ietf:params:jmap:core'],
     );
+  }
+
+  // ── CalendarPublishLink (Stalwart iCal publish) ─────────────────────
+
+  private static readonly CALENDAR_PUBLISH_LINK_PROPERTIES = [
+    'id',
+    'calendarId',
+    'access',
+    'visibility',
+    'label',
+    'secret',
+    'createdAt',
+    'lastUsedAt',
+    'expiresAt',
+  ] as const;
+
+  async getCalendarPublishLinks(
+    calendarId: string,
+    targetAccountId?: string,
+  ): Promise<CalendarPublishLink[]> {
+    const accountId = targetAccountId || this.getCalendarsAccountId();
+    const response = await this.request([
+      ['CalendarPublishLink/get', {
+        accountId,
+        filter: { calendarId },
+        properties: [...JMAPClient.CALENDAR_PUBLISH_LINK_PROPERTIES],
+      }, '0'],
+    ], this.calendarUsing());
+
+    const [, body] = response.methodResponses[0] ?? [];
+    return ((body as { list?: CalendarPublishLink[] } | undefined)?.list) ?? [];
+  }
+
+  async createCalendarPublishLink(
+    link: CalendarPublishLinkCreate,
+    targetAccountId?: string,
+  ): Promise<CalendarPublishLink> {
+    const accountId = targetAccountId || this.getCalendarsAccountId();
+    const created: Record<string, unknown> = {
+      calendarId: link.calendarId,
+      access: link.access,
+      visibility: link.visibility,
+    };
+    if (link.label != null && link.label !== '') created.label = link.label;
+    if (link.expiresAt) created.expiresAt = link.expiresAt;
+
+    const response = await this.request([
+      ['CalendarPublishLink/set', { accountId, create: { new: created } }, '0'],
+    ], this.calendarUsing());
+
+    const [, body] = response.methodResponses[0] ?? [];
+    const result = body as {
+      created?: { new?: CalendarPublishLink };
+      notCreated?: { new?: unknown };
+    } | undefined;
+    const createdLink = result?.created?.new;
+    if (!createdLink?.id) {
+      throw new Error(
+        `CalendarPublishLink/set create failed: ${JSON.stringify(result?.notCreated?.new ?? body)}`,
+      );
+    }
+    return createdLink;
+  }
+
+  async destroyCalendarPublishLink(
+    linkId: string,
+    targetAccountId?: string,
+  ): Promise<void> {
+    const accountId = targetAccountId || this.getCalendarsAccountId();
+    const response = await this.request([
+      ['CalendarPublishLink/set', { accountId, destroy: [linkId] }, '0'],
+    ], this.calendarUsing());
+
+    const [, body] = response.methodResponses[0] ?? [];
+    const notDestroyed = (body as { notDestroyed?: Record<string, unknown> } | undefined)
+      ?.notDestroyed?.[linkId];
+    if (notDestroyed) {
+      throw new Error(
+        `CalendarPublishLink revoke failed: ${JSON.stringify(notDestroyed)}`,
+      );
+    }
   }
 }

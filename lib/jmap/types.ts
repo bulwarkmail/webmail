@@ -804,6 +804,31 @@ export interface StateChange {
   };
 }
 
+// Stalwart CalendarPublishLink — iCal publish/subscribe URLs for a calendar.
+export type CalendarPublishLinkAccess = 'public' | 'private';
+export type CalendarPublishLinkVisibility = 'full' | 'busy';
+
+export interface CalendarPublishLink {
+  id: string;
+  calendarId: string;
+  access: CalendarPublishLinkAccess;
+  visibility: CalendarPublishLinkVisibility;
+  label: string | null;
+  /** Present on create only for private links; never returned on subsequent get. */
+  secret?: string;
+  createdAt: string;
+  lastUsedAt: string | null;
+  expiresAt: string | null;
+}
+
+export interface CalendarPublishLinkCreate {
+  calendarId: string;
+  access: CalendarPublishLinkAccess;
+  visibility: CalendarPublishLinkVisibility;
+  label?: string | null;
+  expiresAt?: string | null;
+}
+
 export interface PushSubscription {
   id: string;
   deviceClientId: string;

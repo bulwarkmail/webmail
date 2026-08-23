@@ -7,12 +7,14 @@ import { useAuthStore } from '@/stores/auth-store';
 import { getActiveAccountSlotHeaders } from '@/lib/auth/active-account-slot';
 import { toast } from '@/stores/toast-store';
 import { SettingsSection } from './settings-section';
-import { Plus, Pencil, Trash2, Calendar as CalendarIcon, Copy, Link, Upload, Globe, RefreshCw, Eraser, Users } from 'lucide-react';
+import { Plus, Pencil, Trash2, Calendar as CalendarIcon, Copy, Link, Upload, Globe, RefreshCw, Eraser, Users, Link2 } from 'lucide-react';
 import { ShareCollectionDialog } from './share-collection-dialog';
 import type { CalendarRights } from '@/lib/jmap/types';
 import { cn, formatDateTime, redactUrlCredentials } from '@/lib/utils';
 import { ICalImportModal } from '@/components/calendar/ical-import-modal';
 import { ICalSubscriptionModal } from '@/components/calendar/ical-subscription-modal';
+import { CalendarPublishLinksPanel } from '@/components/calendar/calendar-publish-links-panel';
+import { canManageCalendarPublishLinks } from '@/lib/calendar-publish-link';
 import { useSettingsStore } from '@/stores/settings-store';
 import { useManagedAccountStore } from '@/stores/managed-account-store';
 import { apiFetch } from '@/lib/browser-navigation';
@@ -158,6 +160,7 @@ export function CalendarManagementSettings() {
   const [isLoading, setIsLoading] = useState(false);
   const [colorPickerId, setColorPickerId] = useState<string | null>(null);
   const [sharingId, setSharingId] = useState<string | null>(null);
+  const [publishLinksCalendarId, setPublishLinksCalendarId] = useState<string | null>(null);
   const [showImportModal, setShowImportModal] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   const [editingSubscription, setEditingSubscription] = useState<typeof icalSubscriptions[0] | null>(null);
@@ -165,6 +168,7 @@ export function CalendarManagementSettings() {
   const [refreshingSubId, setRefreshingSubId] = useState<string | null>(null);
   const tImport = useTranslations('calendar.import');
   const tSub = useTranslations('calendar.subscription');
+  const tPublish = useTranslations('calendar.publishLinks');
   const timeFormat = useSettingsStore((s) => s.timeFormat);
   const sharedCalendarColors = useSettingsStore((s) => s.sharedCalendarColors);
   const setSharedCalendarColor = useSettingsStore((s) => s.setSharedCalendarColor);
@@ -456,9 +460,12 @@ export function CalendarManagementSettings() {
             );
           }
 
+          const showPublishLinks = canManageCalendarPublishLinks(cal, isSubscriptionCalendar(cal.id));
+          const publishLinksOpen = publishLinksCalendarId === cal.id;
+
           return (
+            <div key={cal.id} className="space-y-0">
             <div
-              key={cal.id}
               className="flex items-center gap-3 py-2.5 px-3 rounded-md border border-border bg-background group"
             >
               {/* Color swatch - clickable to change color */}
@@ -554,6 +561,19 @@ export function CalendarManagementSettings() {
                     <Users className="w-3.5 h-3.5" />
                   </button>
                 )}
+                {showPublishLinks && client && serverUrl && (
+                  <button
+                    type="button"
+                    onClick={() => setPublishLinksCalendarId(publishLinksOpen ? null : cal.id)}
+                    className={cn(
+                      "p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors",
+                      publishLinksOpen && "bg-muted text-foreground",
+                    )}
+                    title={tPublish('title')}
+                  >
+                    <Link2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => setClearingId(cal.id)}
@@ -573,6 +593,18 @@ export function CalendarManagementSettings() {
                   </button>
                 )}
               </div>
+            </div>
+            {publishLinksOpen && client && serverUrl && (
+              <div className="px-3 pb-2">
+                <CalendarPublishLinksPanel
+                  client={client}
+                  serverUrl={serverUrl}
+                  calendarId={cal.id}
+                  calendarName={cal.name}
+                  targetAccountId={cal.accountId}
+                />
+              </div>
+            )}
             </div>
           );
         })}
