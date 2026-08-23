@@ -10,7 +10,7 @@ import type {
   CalendarPublishLinkVisibility,
 } from "@/lib/jmap/types";
 import {
-  buildCalendarPublishLinkUrl,
+  resolveCalendarPublishLinkUrl,
   calendarPublishLinkAccessLabel,
 } from "@/lib/calendar-publish-link";
 import { formatDateTime } from "@/lib/utils";
@@ -111,7 +111,7 @@ export function CalendarPublishLinksPanel({
         },
         targetAccountId,
       );
-      const url = buildCalendarPublishLinkUrl(serverUrl, created);
+      const url = resolveCalendarPublishLinkUrl(serverUrl, created);
       setCreatedReveal({ url, label: created.label });
       resetCreateForm();
       await loadLinks();

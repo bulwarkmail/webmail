@@ -814,6 +814,8 @@ export interface CalendarPublishLink {
   access: CalendarPublishLinkAccess;
   visibility: CalendarPublishLinkVisibility;
   label: string | null;
+  /** Subscribe URL (includes link UUID + secret path). Returned on create; omitted on get. */
+  url?: string;
   /** Present on create only for private links; never returned on subsequent get. */
   secret?: string;
   createdAt: string;

@@ -7237,6 +7237,7 @@ export class JMAPClient implements IJMAPClient {
     'visibility',
     'label',
     'secret',
+    'url',
     'createdAt',
     'lastUsedAt',
     'expiresAt',

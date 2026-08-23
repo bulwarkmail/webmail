@@ -11,7 +11,18 @@ export function canManageCalendarPublishLinks(
   return !!(rights?.mayWriteAll || rights?.mayWriteOwn || rights?.mayShare);
 }
 
-/** Build the one-time subscribe URL shown after link creation. */
+/** Resolve the subscribe URL for a publish link (prefer server-provided url on create). */
+export function resolveCalendarPublishLinkUrl(
+  serverUrl: string,
+  link: Pick<CalendarPublishLink, 'id' | 'access' | 'secret' | 'url'>,
+): string {
+  if (link.url) {
+    return link.url;
+  }
+  return buildCalendarPublishLinkUrl(serverUrl, link);
+}
+
+/** Build subscribe URL from link id (fallback when server omits url). */
 export function buildCalendarPublishLinkUrl(
   serverUrl: string,
   link: Pick<CalendarPublishLink, 'id' | 'access' | 'secret'>,
