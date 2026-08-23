@@ -300,9 +300,7 @@
     "move": "移動",
     "print": "印刷",
     "view_source": "ソースを表示",
-
     "fullscreen": "全画面表示",
-
     "exit_fullscreen": "全画面表示を終了",
     "export_email": ".emlとしてエクスポート",
     "forward_as_attachment": "Forward as attachment",
@@ -725,7 +723,8 @@
       "delete_table": "表を削除",
       "pick_size": "サイズを選択"
     },
-    "send_filing_warning": "送信されましたが、送信後の整理に失敗しました。古い下書きが残る場合があります。"
+    "send_filing_warning": "送信されましたが、送信後の整理に失敗しました。古い下書きが残る場合があります。",
+    "signature_image_load_failed": "Could not load one image from this signature. The message can still be sent without that image."
   },
   "confirm_dialog": {
     "confirm": "確認",
@@ -2258,7 +2257,17 @@
       "save": "送信者情報を保存",
       "cancel": "キャンセル",
       "creating": "作成中...",
-      "updating": "更新中..."
+      "updating": "更新中...",
+      "insert_image": "Insert image",
+      "uploading_image": "Uploading…",
+      "image_help": "Images are stored by Bulwark and embedded in outgoing mail (not hosted publicly). Save the identity first, then insert images.",
+      "image_requires_saved_identity": "Save the identity first, then edit it to add images.",
+      "image_storage_unavailable": "Signature image storage is unavailable. Ensure SESSION_SECRET is configured.",
+      "image_type_rejected": "Unsupported image type. Use JPEG, PNG, GIF, or WebP.",
+      "image_too_large": "Image is too large (max {maxMb} MiB).",
+      "image_too_many": "A signature may include at most {max} images.",
+      "image_upload_failed": "Failed to upload signature image.",
+      "image_assets_note": "{count, plural, one {# embedded image (stored separately from the mail server signature limit)} other {# embedded images (stored separately from the mail server signature limit)}}"
     },
     "sub_address": {
       "button_tooltip": "サブアドレスを使用",

@@ -129,6 +129,14 @@ describe('email-sanitization', () => {
       expect(clean).not.toContain('<img');
     });
 
+    it('should allow Bulwark signature asset images without a remote src', () => {
+      const assetId = '550e8400-e29b-41d4-a716-446655440000';
+      const signature = `<p>Jane Doe</p><img data-signature-asset="${assetId}" alt="">`;
+      const clean = sanitizeSignatureHtml(signature);
+      expect(clean).toContain('<img');
+      expect(clean).toContain(`data-signature-asset="${assetId}"`);
+    });
+
     it('should strip img with javascript: src', () => {
       const signature = '<img src="javascript:alert(1)" alt="x">';
       const clean = sanitizeSignatureHtml(signature);

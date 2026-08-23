@@ -11,6 +11,8 @@ services:
     volumes:
       # Encrypted user settings (SETTINGS_DATA_DIR).
       - bulwark-settings:/app/data/settings
+      # Encrypted signature image assets (SIGNATURE_DATA_DIR).
+      - bulwark-signatures:/app/data/signatures
       # Admin configuration: config.json, policy.json, admin.json (passwordHash),
       # plugins, themes, branding uploads (ADMIN_CONFIG_DIR). Can be mounted
       # read-only after running the setup wizard - append `:ro` to lock it.
@@ -39,6 +41,7 @@ services:
 
 volumes:
   bulwark-settings:
+  bulwark-signatures:
   bulwark-admin:
   bulwark-admin-state:
   bulwark-telemetry:

@@ -300,9 +300,7 @@
     "move": "移动",
     "print": "打印",
     "view_source": "查看源码",
-
     "fullscreen": "全屏",
-
     "exit_fullscreen": "退出全屏",
     "export_email": "导出为 .eml",
     "forward_as_attachment": "Forward as attachment",
@@ -725,7 +723,8 @@
       "delete_table": "删除表格",
       "pick_size": "选择大小"
     },
-    "send_filing_warning": "已发送，但发送后的清理失败，可能会残留旧草稿。"
+    "send_filing_warning": "已发送，但发送后的清理失败，可能会残留旧草稿。",
+    "signature_image_load_failed": "Could not load one image from this signature. The message can still be sent without that image."
   },
   "confirm_dialog": {
     "confirm": "确认",
@@ -2258,7 +2257,17 @@
       "save": "保存身份",
       "cancel": "取消",
       "creating": "创建中...",
-      "updating": "更新中..."
+      "updating": "更新中...",
+      "insert_image": "Insert image",
+      "uploading_image": "Uploading…",
+      "image_help": "Images are stored by Bulwark and embedded in outgoing mail (not hosted publicly). Save the identity first, then insert images.",
+      "image_requires_saved_identity": "Save the identity first, then edit it to add images.",
+      "image_storage_unavailable": "Signature image storage is unavailable. Ensure SESSION_SECRET is configured.",
+      "image_type_rejected": "Unsupported image type. Use JPEG, PNG, GIF, or WebP.",
+      "image_too_large": "Image is too large (max {maxMb} MiB).",
+      "image_too_many": "A signature may include at most {max} images.",
+      "image_upload_failed": "Failed to upload signature image.",
+      "image_assets_note": "{count, plural, one {# embedded image (stored separately from the mail server signature limit)} other {# embedded images (stored separately from the mail server signature limit)}}"
     },
     "sub_address": {
       "button_tooltip": "使用子地址",

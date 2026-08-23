@@ -163,15 +163,32 @@ export const SIGNATURE_SANITIZE_CONFIG = {
     'href', 'style', 'class', 'src', 'alt', 'width', 'height', 'title',
     'cellpadding', 'cellspacing', 'border', 'valign', 'align', 'bgcolor',
     'colspan', 'rowspan',
+    // Bulwark-managed persistent signature images (binary stored separately).
+    'data-signature-asset',
+    // Compose-time cid marker when signature assets are resolved for send.
+    'data-cid',
   ],
   ALLOW_DATA_ATTR: false,
   FORBID_TAGS: ['script', 'iframe', 'object', 'embed', 'video', 'audio'],
   FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover'],
 };
 
-/** Drop images whose src isn't https: or a base64 raster data: URI. */
+const SIGNATURE_ASSET_ID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+/** Drop images whose src isn't https:, a base64 raster data: URI, or a Bulwark asset ref. */
 function restrictSignatureImages(node: Element): void {
   if (node.tagName !== 'IMG') return;
+  const assetId = node.getAttribute('data-signature-asset');
+  if (assetId && SIGNATURE_ASSET_ID_RE.test(assetId)) {
+    // Persistent signature assets may use a placeholder/empty src in storage;
+    // the composer resolves them to data URLs at compose time.
+    const src = node.getAttribute('src');
+    if (src && !/^(?:https:\/\/|data:image\/(?:png|jpe?g|gif|webp);base64,|cid:)/i.test(src)) {
+      node.removeAttribute('src');
+    }
+    return;
+  }
   const src = node.getAttribute('src');
   if (!src || !/^(?:https:\/\/|data:image\/(?:png|jpe?g|gif|webp);base64,)/i.test(src)) {
     node.remove();
@@ -181,9 +198,11 @@ function restrictSignatureImages(node: Element): void {
 /**
  * Sanitize an HTML signature for storage and for the outgoing message.
  * img src is restricted to https: or base64-embedded raster data: URIs
- * (png/jpeg/gif/webp). SVG is excluded because DOMPurify cannot inspect
- * bytes inside a data: URI. Images with a disallowed src are removed
- * entirely so they don't render as broken-image icons.
+ * (png/jpeg/gif/webp), or Bulwark `data-signature-asset` references whose
+ * binary lives outside Identity.htmlSignature. SVG is excluded because
+ * DOMPurify cannot inspect bytes inside a data: URI. Images with a disallowed
+ * src (and no valid asset id) are removed entirely so they don't render as
+ * broken-image icons.
  *
  * Deliberately does NOT force target="_blank": what we store, and what the
  * recipient receives, should stay as the user wrote it. Use

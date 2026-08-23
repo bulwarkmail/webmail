@@ -300,9 +300,7 @@
     "move": "Mou",
     "print": "Imprimeix",
     "view_source": "Mostra el codi font",
-
     "fullscreen": "Pantalla completa",
-
     "exit_fullscreen": "Surt de la pantalla completa",
     "export_email": "Exporta com a .eml",
     "forward_as_attachment": "Forward as attachment",
@@ -725,7 +723,8 @@
       "delete_table": "Elimina la taula",
       "pick_size": "Tria la mida"
     },
-    "send_filing_warning": "Enviat, però la neteja posterior a l'enviament ha fallat; és possible que quedi un esborrany obsolet."
+    "send_filing_warning": "Enviat, però la neteja posterior a l'enviament ha fallat; és possible que quedi un esborrany obsolet.",
+    "signature_image_load_failed": "Could not load one image from this signature. The message can still be sent without that image."
   },
   "confirm_dialog": {
     "confirm": "Confirma",
@@ -2258,7 +2257,17 @@
       "save": "Desa la identitat",
       "cancel": "Cancel·la",
       "creating": "Creant...",
-      "updating": "Actualitzant..."
+      "updating": "Actualitzant...",
+      "insert_image": "Insert image",
+      "uploading_image": "Uploading…",
+      "image_help": "Images are stored by Bulwark and embedded in outgoing mail (not hosted publicly). Save the identity first, then insert images.",
+      "image_requires_saved_identity": "Save the identity first, then edit it to add images.",
+      "image_storage_unavailable": "Signature image storage is unavailable. Ensure SESSION_SECRET is configured.",
+      "image_type_rejected": "Unsupported image type. Use JPEG, PNG, GIF, or WebP.",
+      "image_too_large": "Image is too large (max {maxMb} MiB).",
+      "image_too_many": "A signature may include at most {max} images.",
+      "image_upload_failed": "Failed to upload signature image.",
+      "image_assets_note": "{count, plural, one {# embedded image (stored separately from the mail server signature limit)} other {# embedded images (stored separately from the mail server signature limit)}}"
     },
     "sub_address": {
       "button_tooltip": "Utilitza subadreça",
