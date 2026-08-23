@@ -2255,6 +2255,7 @@
       "html_signature_label": "توقيع HTML",
       "signature_byte_counter": "{bytes} / {max} بايت",
       "signature_byte_limit_reached": "تم بلوغ حد الخادم",
+      "org_signature_locked": "Your administrator manages signatures for this account. Personal HTML and plain-text signatures cannot be edited here.",
       "save": "حفظ الهوية",
       "cancel": "إلغاء",
       "creating": "جارٍ الإنشاء...",

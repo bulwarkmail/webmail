@@ -5,8 +5,15 @@ import { useTranslations } from 'next-intl';
 import { useSettingsStore } from '@/stores/settings-store';
 import type { SendDelaySeconds } from '@/stores/settings-store';
 import { useAuthStore } from '@/stores/auth-store';
+import { usePolicyStore } from '@/stores/policy-store';
 import { SettingsSection, SettingItem, Select, ToggleSwitch } from './settings-section';
 import { X } from 'lucide-react';
+import {
+  getEffectiveSignaturePosition,
+  getEffectiveSignatureSeparator,
+  isReplySignaturePositionLocked,
+  isSignatureSeparatorLocked,
+} from '@/lib/org-signatures';
 import {
   SUPPORTED_SUB_ADDRESS_DELIMITERS,
   isSupportedSubAddressDelimiter,
@@ -36,6 +43,11 @@ export function ComposingSettings() {
     updateSetting,
   } = useSettingsStore();
   const { client } = useAuthStore();
+  const orgSignaturePolicy = usePolicyStore((state) => state.policy.orgSignature);
+  const replyPositionLocked = isReplySignaturePositionLocked(orgSignaturePolicy);
+  const separatorLocked = isSignatureSeparatorLocked(orgSignaturePolicy);
+  const effectiveSignaturePosition = getEffectiveSignaturePosition(signaturePosition, orgSignaturePolicy);
+  const effectiveSignatureSeparator = getEffectiveSignatureSeparator(signatureSeparatorEnabled, orgSignaturePolicy);
   const delayedSendSupported = client?.hasDelayedSend() ?? false;
 
   return (
@@ -79,21 +91,23 @@ export function ComposingSettings() {
         </div>
       </SettingItem>
 
-      <SettingItem label={t('signature_position.label')} description={t('signature_position.description')}>
+      <SettingItem label={t('signature_position.label')} description={t('signature_position.description')} locked={replyPositionLocked}>
         <Select
-          value={signaturePosition}
+          value={effectiveSignaturePosition}
           onChange={(value) => updateSetting('signaturePosition', value as 'above_quote' | 'below_quote')}
           options={[
             { value: 'above_quote', label: t('signature_position.above_quote') },
             { value: 'below_quote', label: t('signature_position.below_quote') },
           ]}
+          disabled={replyPositionLocked}
         />
       </SettingItem>
 
-      <SettingItem label={t('signature_separator.label')} description={t('signature_separator.description')}>
+      <SettingItem label={t('signature_separator.label')} description={t('signature_separator.description')} locked={separatorLocked}>
         <ToggleSwitch
-          checked={signatureSeparatorEnabled}
+          checked={effectiveSignatureSeparator}
           onChange={(checked) => updateSetting('signatureSeparatorEnabled', checked)}
+          disabled={separatorLocked}
         />
       </SettingItem>
 

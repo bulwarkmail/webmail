@@ -63,6 +63,11 @@ import type { Editor } from "@tiptap/react";
 import { htmlToPlainText as htmlToPlainTextShared } from "@/lib/html-to-text";
 import { fileStorage } from "@/lib/plugin-storage";
 import { usePolicyStore } from "@/stores/policy-store";
+import {
+  buildComposerSignatureIdentity,
+  getEffectiveSignaturePosition,
+  getEffectiveSignatureSeparator,
+} from "@/lib/org-signatures";
 
 /**
  * Derives the text/plain alternative from the composer's HTML body, preserving
@@ -305,6 +310,10 @@ export function EmailComposer({
   const sendDelaySeconds = useSettingsStore((state) => state.sendDelaySeconds);
   const signaturePosition = useSettingsStore((state) => state.signaturePosition);
   const signatureSeparatorEnabled = useSettingsStore((state) => state.signatureSeparatorEnabled);
+  const orgSignaturePolicy = usePolicyStore((state) => state.policy.orgSignature);
+  const domainBrandNames = usePolicyStore((state) => state.policy.domainBrandNames ?? {});
+  const effectiveSignaturePosition = getEffectiveSignaturePosition(signaturePosition, orgSignaturePolicy);
+  const effectiveSignatureSeparator = getEffectiveSignatureSeparator(signatureSeparatorEnabled, orgSignaturePolicy);
   const requestReadReceiptDefault = useSettingsStore((state) => state.requestReadReceiptDefault);
   const activeIdentities = useIdentityStore((s) => s.identities);
   // Pro shell: surface identities from every connected account, grouped
@@ -329,13 +338,16 @@ export function EmailComposer({
   const initialCurrentIdentityForSig = initialData?.selectedIdentityId
     ? identities.find((i) => i.id === initialData.selectedIdentityId) || primaryIdentity
     : primaryIdentity;
-  const initialSignatureIdentity = (initialCurrentIdentityForSig?.htmlSignature || initialCurrentIdentityForSig?.textSignature)
-    ? initialCurrentIdentityForSig
-    : primaryIdentity;
-  const hasInitialSignature = !!(initialSignatureIdentity?.htmlSignature || initialSignatureIdentity?.textSignature);
+  const initialSignatureIdentity = buildComposerSignatureIdentity(
+    initialCurrentIdentityForSig,
+    primaryIdentity,
+    orgSignaturePolicy,
+    domainBrandNames,
+  );
+  const hasInitialSignature = !!initialSignatureIdentity;
   const shouldEmbedSignatureAboveQuote =
     (mode === 'reply' || mode === 'replyAll' || mode === 'forward') &&
-    signaturePosition === 'above_quote' &&
+    effectiveSignaturePosition === 'above_quote' &&
     hasInitialSignature;
   // New-mail composes always embed the signature into the editor body so it's
   // editable/removable (the previous read-only preview below the editor was
@@ -379,7 +391,7 @@ export function EmailComposer({
       // editable. Fixes #329 (A,B).
       if (mode === 'compose') {
         if (!shouldEmbedSignatureInNewMail) return prefix;
-        const sep = signatureSeparatorEnabled ? '\n\n-- \n' : '\n\n';
+        const sep = effectiveSignatureSeparator ? '\n\n-- \n' : '\n\n';
         return `${prefix}${sep}${getPlainTextSignature(initialSignatureIdentity)}`;
       }
       if (!replyTo?.body && !replyTo?.htmlBody) return prefix;
@@ -401,7 +413,7 @@ export function EmailComposer({
       // drafting area and the quoted content so it reads naturally as a
       // closing for the reply body. Send-time append is skipped - see
       // shouldEmbedSignatureAboveQuote.
-      const plainSep = signatureSeparatorEnabled ? '\n\n-- \n' : '\n\n';
+      const plainSep = effectiveSignatureSeparator ? '\n\n-- \n' : '\n\n';
       const signatureBlock = shouldEmbedSignatureAboveQuote
         ? `${plainSep}${getPlainTextSignature(initialSignatureIdentity)}`
         : '';
@@ -429,7 +441,7 @@ export function EmailComposer({
       const composePrefix = prefix || '<p></p>';
       const embedded = buildEmbeddedSignatureHtml(initialSignatureIdentity, {
         embed: true,
-        separator: signatureSeparatorEnabled,
+        separator: effectiveSignatureSeparator,
       });
       return `${composePrefix}${embedded}`;
     }
@@ -446,7 +458,7 @@ export function EmailComposer({
 
     const signatureBlock = buildEmbeddedSignatureHtml(initialSignatureIdentity, {
       embed: shouldEmbedSignatureAboveQuote,
-      separator: signatureSeparatorEnabled,
+      separator: effectiveSignatureSeparator,
     });
 
     // Plugin override (resolved at composer open via onBuildQuoteHeader).
@@ -647,26 +659,24 @@ export function EmailComposer({
     ? (useAuthStore.getState().getClientForAccount(currentIdentityParts.localAccountId) ?? client)
     : client;
   const currentIdentityRawId = currentIdentityParts.rawId ?? currentIdentity?.id;
-  // Alias identities often lack a configured signature - fall back to the primary
-  // identity's signature so replies (which auto-select a matching alias) still
-  // populate the user's signature.
-  const signatureIdentity = (currentIdentity?.htmlSignature || currentIdentity?.textSignature)
-    ? currentIdentity
-    : primaryIdentity;
+  const signatureIdentity = useMemo(
+    () => buildComposerSignatureIdentity(currentIdentity, primaryIdentity, orgSignaturePolicy, domainBrandNames),
+    [currentIdentity, primaryIdentity, orgSignaturePolicy, domainBrandNames],
+  );
 
   // Hold the TipTap editor instance so we can swap the embedded signature
   // when the user switches identity in "above quote" mode without rebuilding
   // the whole body (which would lose user edits to the surrounding draft).
   const editorRef = useRef<Editor | null>(null);
   const prevSignatureIdentityIdRef = useRef<string | null | undefined>(signatureIdentity?.id);
-  const prevSignatureSeparatorRef = useRef<boolean>(signatureSeparatorEnabled);
+  const prevSignatureSeparatorRef = useRef<boolean>(effectiveSignatureSeparator);
 
   useEffect(() => {
     const editor = editorRef.current;
     const identityChanged = prevSignatureIdentityIdRef.current !== signatureIdentity?.id;
-    const separatorChanged = prevSignatureSeparatorRef.current !== signatureSeparatorEnabled;
+    const separatorChanged = prevSignatureSeparatorRef.current !== effectiveSignatureSeparator;
     prevSignatureIdentityIdRef.current = signatureIdentity?.id;
-    prevSignatureSeparatorRef.current = signatureSeparatorEnabled;
+    prevSignatureSeparatorRef.current = effectiveSignatureSeparator;
     if (!editor) return;
     if (!identityChanged && !separatorChanged) return;
     if (plainTextMode) return;
@@ -674,7 +684,7 @@ export function EmailComposer({
     // always embeds (see getInitialBody), so swap on identity change there too.
     const isReplyLike = mode === 'reply' || mode === 'replyAll' || mode === 'forward';
     if (!isReplyLike && mode !== 'compose') return;
-    if (isReplyLike && signaturePosition !== 'above_quote') return;
+    if (isReplyLike && effectiveSignaturePosition !== 'above_quote') return;
 
     // serializeEditorContent (not getHTML) so a QuotedHtml island's verbatim
     // body isn't lost during the signature splice + setContent round-trip.
@@ -688,7 +698,7 @@ export function EmailComposer({
 
     const newSignature = buildEmbeddedSignatureHtml(signatureIdentity, {
       embed: true,
-      separator: signatureSeparatorEnabled,
+      separator: effectiveSignatureSeparator,
     });
     if (!newSignature) return;
 
@@ -734,7 +744,7 @@ export function EmailComposer({
     // would re-run on unrelated identity-field changes and re-splice the
     // signature into the live editor.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [signatureIdentity?.id, signatureIdentity?.htmlSignature, signatureIdentity?.textSignature, signatureSeparatorEnabled, signaturePosition, mode, plainTextMode]);
+  }, [signatureIdentity?.id, signatureIdentity?.htmlSignature, signatureIdentity?.textSignature, effectiveSignatureSeparator, effectiveSignaturePosition, mode, plainTextMode]);
 
   useEffect(() => {
     const handleClickOutsideSendMenu = (event: MouseEvent) => {
@@ -965,7 +975,7 @@ export function EmailComposer({
   const signatureAlreadyInBody =
     shouldEmbedSignatureInNewMail ||
     ((mode === 'reply' || mode === 'replyAll' || mode === 'forward') &&
-      signaturePosition === 'above_quote') ||
+      effectiveSignaturePosition === 'above_quote') ||
     bodyCarriesSignature;
 
   const getAutocomplete = useContactStore((s) => s.getAutocomplete);
@@ -1277,7 +1287,7 @@ export function EmailComposer({
           });
         } else {
           setBody((prev) => plainTextBodyHasSignature(prev, signatureIdentity)
-            ? appendPlainTextSignature(bodyContent, signatureIdentity, { separator: signatureSeparatorEnabled })
+            ? appendPlainTextSignature(bodyContent, signatureIdentity, { separator: effectiveSignatureSeparator })
             : bodyContent);
         }
       } else {
@@ -1333,7 +1343,7 @@ export function EmailComposer({
     }
 
     setShowTemplatePicker(false);
-  }, [mode, plainTextMode, signatureIdentity, signatureSeparatorEnabled]);
+  }, [mode, plainTextMode, signatureIdentity, effectiveSignatureSeparator]);
 
   useEffect(() => {
     const handleTemplateKey = (e: KeyboardEvent) => {
@@ -1621,13 +1631,13 @@ export function EmailComposer({
       ? ''
       : buildEmbeddedSignatureHtml(signatureIdentity, {
           embed: true,
-          separator: signatureSeparatorEnabled,
+          separator: effectiveSignatureSeparator,
         });
     const draftHtmlBody = plainTextMode ? undefined : `${body}${draftSignatureHtml}`;
     const draftTextBody = plainTextMode
       ? (signatureAlreadyInBody
           ? body
-          : appendPlainTextSignature(body, signatureIdentity, { separator: signatureSeparatorEnabled }))
+          : appendPlainTextSignature(body, signatureIdentity, { separator: effectiveSignatureSeparator }))
       : htmlToPlainText(draftHtmlBody!);
 
     // Create a hash of current data to compare with last saved. Hashing the
@@ -2069,7 +2079,7 @@ export function EmailComposer({
     // Build HTML signature block (used only in rich text mode)
     const buildSignatureHtml = (): string => {
       if (signatureAlreadyInBody) return '';
-      const sep = signatureSeparatorEnabled ? `<br><br>-- <br>` : `<br><br>`;
+      const sep = effectiveSignatureSeparator ? `<br><br>-- <br>` : `<br><br>`;
       if (signatureIdentity?.htmlSignature) {
         return `${sep}${sanitizeSignatureHtml(signatureIdentity.htmlSignature)}`;
       }
@@ -2085,7 +2095,7 @@ export function EmailComposer({
       : null;
 
     // In plain text mode, send text/plain only (no HTML body)
-    const signatureOpts = { separator: signatureSeparatorEnabled };
+    const signatureOpts = { separator: effectiveSignatureSeparator };
     const finalBody = plainTextMode
       ? (signatureAlreadyInBody ? body : appendPlainTextSignature(body, signatureIdentity, signatureOpts))
       : (signatureAlreadyInBody ? htmlToPlainText(body) : appendPlainTextSignature(htmlToPlainText(body), signatureIdentity, signatureOpts));
@@ -2851,13 +2861,13 @@ export function EmailComposer({
           : plainTextMode ? (
           getPlainTextSignature(signatureIdentity) ? (
             <div className="px-4 pb-3 text-sm leading-6 text-muted-foreground break-words whitespace-pre-wrap font-mono">
-              {signatureSeparatorEnabled ? '-- \n' : ''}{getPlainTextSignature(signatureIdentity)}
+              {effectiveSignatureSeparator ? '-- \n' : ''}{getPlainTextSignature(signatureIdentity)}
             </div>
           ) : null
         ) : composerSignatureHtml ? (
           <div
             className="px-4 pb-3 text-sm leading-6 text-foreground break-words [&_a]:text-primary [&_a]:underline-offset-2 [&_a:hover]:underline"
-            dangerouslySetInnerHTML={{ __html: `${signatureSeparatorEnabled ? '<div>-- </div>' : ''}${composerSignatureHtml}` }}
+            dangerouslySetInnerHTML={{ __html: `${effectiveSignatureSeparator ? '<div>-- </div>' : ''}${composerSignatureHtml}` }}
           />
         ) : null}
       </div>

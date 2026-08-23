@@ -24,6 +24,7 @@ import {
   Store,
   Menu,
   X,
+  PenLine,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useConfig } from '@/hooks/use-config';
@@ -55,6 +56,7 @@ const NAV_GROUPS: ReadonlyArray<{
       { tab: 'branding', label: 'Branding', icon: Palette },
       { tab: 'auth', label: 'Authentication', icon: Shield },
       { tab: 'policy', label: 'Policy', icon: Scale },
+      { tab: 'signatures', label: 'Signatures', icon: PenLine },
     ],
   },
   {

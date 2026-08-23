@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input';
 import type { Identity, EmailAddress } from '@/lib/jmap/types';
 import { sanitizeSignatureHtml, sanitizeSignatureHtmlForDisplay } from '@/lib/email-sanitization';
 import { getEmailValidationError, validateEmailList } from '@/lib/validation';
+import { usePolicyStore } from '@/stores/policy-store';
+import { shouldLockIdentitySignatures } from '@/lib/org-signatures';
 
 // Stalwarts JMAP Identity/set caps signature fields at 2047 UTF-8 bytes
 const SIGNATURE_MAX_BYTES = 2047;
@@ -52,6 +54,8 @@ export function IdentityForm({ identity, onSave, onCancel }: IdentityFormProps) 
   const t = useTranslations('identities.form');
   const tValidation = useTranslations('identities.validation_errors');
   const tDisplay = useTranslations('identities.display');
+  const orgSignaturePolicy = usePolicyStore((state) => state.policy.orgSignature);
+  const signaturesLocked = shouldLockIdentitySignatures(orgSignaturePolicy);
   const isEditing = !!identity;
 
   const [formData, setFormData] = useState<IdentityFormData>({
@@ -267,6 +271,12 @@ export function IdentityForm({ identity, onSave, onCancel }: IdentityFormProps) 
       </div>
 
       {/* Text Signature */}
+      {signaturesLocked ? (
+        <div className="rounded-md border border-border bg-muted/40 px-3 py-3 text-sm text-muted-foreground">
+          {t('org_signature_locked')}
+        </div>
+      ) : (
+        <>
       <div>
         <label htmlFor="identity-text-sig" className="block text-sm font-medium mb-1">
           {t('text_signature_label')}
@@ -311,6 +321,8 @@ export function IdentityForm({ identity, onSave, onCancel }: IdentityFormProps) 
           </div>
         )}
       </div>
+        </>
+      )}
 
       {/* Actions */}
       <div className="flex justify-end gap-2 pt-4">

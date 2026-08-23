@@ -7,6 +7,7 @@ import { SettingsTab } from './_tabs/settings';
 import { BrandingTab } from './_tabs/branding';
 import { AuthTab } from './_tabs/auth';
 import { PolicyTab } from './_tabs/policy';
+import { SignaturesTab } from './_tabs/signatures';
 import { PluginsTab } from './_tabs/plugins';
 import { ThemesTab } from './_tabs/themes';
 import { MarketplaceTab } from './_tabs/marketplace';
@@ -39,6 +40,7 @@ export default function AdminPage() {
     case 'branding': return <BrandingTab />;
     case 'auth': return <AuthTab />;
     case 'policy': return <PolicyTab />;
+    case 'signatures': return <SignaturesTab />;
     case 'plugins': return <PluginsTab />;
     case 'themes': return <ThemesTab />;
     case 'marketplace': return <MarketplaceTab />;

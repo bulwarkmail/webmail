@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { SettingsPolicy, FeatureGates, SettingRestriction, ThemePolicy } from '@/lib/admin/types';
+import type { SettingsPolicy, FeatureGates, SettingRestriction, ThemePolicy, OrgSignaturePolicy } from '@/lib/admin/types';
 import { DEFAULT_POLICY, DEFAULT_THEME_POLICY } from '@/lib/admin/types';
 import { apiFetch } from '@/lib/browser-navigation';
 
@@ -18,6 +18,8 @@ interface PolicyState {
   isPluginForceEnabled: (pluginId: string) => boolean;
   isPluginApproved: (pluginId: string) => boolean;
   isThemeForceEnabled: (themeId: string) => boolean;
+  getOrgSignaturePolicy: () => OrgSignaturePolicy | undefined;
+  getDomainBrandNames: () => Record<string, string>;
 }
 
 export const usePolicyStore = create<PolicyState>()((set, get) => ({
@@ -92,5 +94,13 @@ export const usePolicyStore = create<PolicyState>()((set, get) => ({
 
   isThemeForceEnabled: (themeId) => {
     return (get().policy.forceEnabledThemes || []).includes(themeId);
+  },
+
+  getOrgSignaturePolicy: () => {
+    return get().policy.orgSignature;
+  },
+
+  getDomainBrandNames: () => {
+    return get().policy.domainBrandNames ?? {};
   },
 }));

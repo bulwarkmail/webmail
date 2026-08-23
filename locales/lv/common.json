@@ -2255,6 +2255,7 @@
       "html_signature_label": "HTML paraksts",
       "signature_byte_counter": "{bytes} / {max} baiti",
       "signature_byte_limit_reached": "Sasniegts servera ierobežojums",
+      "org_signature_locked": "Your administrator manages signatures for this account. Personal HTML and plain-text signatures cannot be edited here.",
       "save": "Saglabāt identitāti",
       "cancel": "Atcelt",
       "creating": "Izveido...",
