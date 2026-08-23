@@ -188,9 +188,13 @@ SESSION_SECRET_FILE=/session-secret  # path to a file containing the secret
 
 SETTINGS_SYNC_ENABLED=true
 SETTINGS_DATA_DIR=./data/settings    # mount as a volume in Docker
+
+# Persistent signature images (embedded as CID inline parts when sending).
+# Requires SESSION_SECRET. Mount as a volume in Docker.
+SIGNATURE_DATA_DIR=./data/signatures
 ```
 
-Credentials are encrypted with AES-256-GCM and stored in an httpOnly cookie (30-day expiry). Settings sync stores per-account preferences encrypted at rest and requires `SESSION_SECRET`.
+Credentials are encrypted with AES-256-GCM and stored in an httpOnly cookie (30-day expiry). Settings sync stores per-account preferences encrypted at rest and requires `SESSION_SECRET`. Signature images are stored separately from JMAP Identity signatures (which are size-limited on some servers) and are embedded into outgoing mail as inline MIME parts — they are not hosted as public URLs.
 
 </details>
 

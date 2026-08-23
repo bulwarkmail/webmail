@@ -10,6 +10,7 @@ import {
   DEFAULT_SUB_ADDRESS_DELIMITER,
   isValidSubAddressDelimiter,
 } from '@/lib/sub-addressing';
+import type { ExtendedSignaturesMap } from '@/lib/extended-signatures';
 
 // Use console directly to avoid circular dependency with lib/debug.ts
 // (debug.ts imports useSettingsStore for debugMode check)
@@ -428,6 +429,11 @@ interface SettingsState {
   // per account because JMAP identity ids are account-scoped and would collide.
   preferredIdentityIds: Record<string, string>;
 
+  // Per-account HTML signatures that reference Bulwark-managed image assets
+  // (accountId -> identityId -> { html, assets }). Binary image data lives in
+  // the signature asset store; this map only holds small HTML + asset ids.
+  extendedSignatures: ExtendedSignaturesMap;
+
   // Email Display
   disableThreading: boolean; // Show emails as individual messages instead of grouped by conversation
 
@@ -630,6 +636,7 @@ const DEFAULT_SETTINGS = {
 
   allMailFolderIds: {} as Record<string, string[]>,
   preferredIdentityIds: {} as Record<string, string>,
+  extendedSignatures: {} as ExtendedSignaturesMap,
 
   enableCrossUnreadView: false,
   enableCrossStarredView: false,
@@ -825,6 +832,7 @@ export const useSettingsStore = create<SettingsState>()(
           unifiedCrossAccount: state.unifiedCrossAccount,
           allMailFolderIds: state.allMailFolderIds,
           preferredIdentityIds: state.preferredIdentityIds,
+          extendedSignatures: state.extendedSignatures,
           enableCrossUnreadView: state.enableCrossUnreadView,
           enableCrossStarredView: state.enableCrossStarredView,
           enableCrossAllView: state.enableCrossAllView,
@@ -898,6 +906,9 @@ export const useSettingsStore = create<SettingsState>()(
               if (key === 'preferredIdentityIds' && !isPlainRecord(settings[key])) {
                 return;
               }
+              if (key === 'extendedSignatures' && !isPlainRecord(settings[key])) {
+                return;
+              }
               if (DEVICE_LOCAL_SETTING_KEYS.has(key)) {
                 return;
               }
@@ -909,7 +920,12 @@ export const useSettingsStore = create<SettingsState>()(
               // the map and the composer picks another account's default sender
               // (login-order dependent). File imports (no serverAccountId)
               // still replace wholesale.
-              if (opts?.serverAccountId && (key === 'preferredIdentityIds' || key === 'allMailFolderIds')) {
+              if (
+                opts?.serverAccountId &&
+                (key === 'preferredIdentityIds' ||
+                  key === 'allMailFolderIds' ||
+                  key === 'extendedSignatures')
+              ) {
                 const existing = (get() as unknown as Record<string, unknown>)[key];
                 const merged: Record<string, unknown> = isPlainRecord(existing) ? { ...existing } : {};
                 const incoming = settings[key] as Record<string, unknown>;
@@ -1136,7 +1152,7 @@ export const useSettingsStore = create<SettingsState>()(
     }),
     {
       name: 'settings-storage',
-      version: 7,
+      version: 8,
       migrate: migrateSettings,
       onRehydrateStorage: () => {
         return (state) => {
@@ -1149,6 +1165,9 @@ export const useSettingsStore = create<SettingsState>()(
             }
             if (!isPlainRecord(state.preferredIdentityIds)) {
               state.preferredIdentityIds = {};
+            }
+            if (!isPlainRecord(state.extendedSignatures)) {
+              state.extendedSignatures = {};
             }
             applyFontSize(state.fontSize);
             applyDensity(state.density);
@@ -1222,6 +1241,9 @@ export function migrateSettings(persisted: unknown, version: number): SettingsSt
         // already received it via main's v6 bump keep their populated map.
         if (version < 6 || !isPlainRecord(state.preferredIdentityIds)) {
           state.preferredIdentityIds = {};
+        }
+        if (version < 8 || !isPlainRecord(state.extendedSignatures)) {
+          state.extendedSignatures = {};
         }
         return state as unknown as SettingsState;
 }

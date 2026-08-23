@@ -8,6 +8,7 @@ import { debug } from "@/lib/debug";
 import { normalizeCalendarEventLike } from "@/lib/calendar-event-normalization";
 import { findTasksOnlyCalendarIds, isTaskLikeObject, type ScannedCalendarObject } from "@/lib/calendar-component-detection";
 import { sanitizeDisplayName, splitMailbox } from "@/lib/rfc5322-mailbox";
+import { applyEmailBodyToCreate, buildEmailBodyForSet } from '@/lib/jmap/build-email-body';
 
 /**
  * Parse a recipient string that may be "Name <email>" or bare "email" into
@@ -2847,8 +2848,9 @@ export class JMAPClient implements IJMAPClient {
       keywords: Record<string, boolean>;
       mailboxIds: Record<string, boolean>;
       bodyValues: Record<string, { value: string }>;
-      textBody: { partId: string; type?: string }[];
+      textBody?: { partId: string; type?: string }[];
       htmlBody?: { partId: string; type: string }[];
+      bodyStructure?: Record<string, unknown>;
       attachments?: { blobId: string; type: string; name: string; disposition: string; cid?: string }[];
     }
 
@@ -2864,24 +2866,14 @@ export class JMAPClient implements IJMAPClient {
       subject,
       keywords: { "$seen": true, "$draft": true },
       mailboxIds: { [draftsMailbox.id]: true },
-      bodyValues: htmlBody
-        ? { "text": { value: body }, "html": { value: htmlBody } }
-        : { "1": { value: body } },
-      textBody: htmlBody
-        ? [{ partId: "text", type: "text/plain" }]
-        : [{ partId: "1" }],
-      ...(htmlBody ? { htmlBody: [{ partId: "html", type: "text/html" }] } : {}),
+      bodyValues: {},
     };
 
-    if (attachments?.length) {
-      emailData.attachments = attachments.map(att => ({
-        blobId: att.blobId,
-        type: att.type,
-        name: att.name,
-        disposition: att.disposition ?? "attachment",
-        ...(att.cid ? { cid: att.cid } : {}),
-      }));
-    }
+    applyEmailBodyToCreate(emailData as unknown as Record<string, unknown>, buildEmailBodyForSet({
+      textBody: body,
+      htmlBody,
+      attachments,
+    }));
 
     // Destroy the previous draft version only AFTER the replacement was
     // created (#849). A combined `Email/set { create, destroy }` processes
@@ -3025,28 +3017,11 @@ export class JMAPClient implements IJMAPClient {
       emailCreate["header:Disposition-Notification-To:asText"] = fromEmail || this.username;
     }
 
-    if (htmlBody) {
-      // Send as multipart/alternative with both text and HTML
-      emailCreate.bodyValues = {
-        "text": { value: body },
-        "html": { value: htmlBody },
-      };
-      emailCreate.textBody = [{ partId: "text", type: "text/plain" }];
-      emailCreate.htmlBody = [{ partId: "html", type: "text/html" }];
-    } else {
-      emailCreate.bodyValues = { "1": { value: body } };
-      emailCreate.textBody = [{ partId: "1", type: "text/plain" }];
-    }
-
-    if (attachments?.length) {
-      emailCreate.attachments = attachments.map(att => ({
-        blobId: att.blobId,
-        type: att.type,
-        name: att.name,
-        disposition: att.disposition ?? "attachment",
-        ...(att.cid ? { cid: att.cid } : {}),
-      }));
-    }
+    applyEmailBodyToCreate(emailCreate, buildEmailBodyForSet({
+      textBody: body,
+      htmlBody,
+      attachments,
+    }));
 
     const methodCalls: JMAPMethodCall[] = [];
 

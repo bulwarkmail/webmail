@@ -300,9 +300,7 @@
     "move": "Déplacer",
     "print": "Imprimer",
     "view_source": "Voir la source",
-
     "fullscreen": "Plein écran",
-
     "exit_fullscreen": "Quitter le plein écran",
     "export_email": "Exporter en .eml",
     "forward_as_attachment": "Forward as attachment",
@@ -725,7 +723,8 @@
       "delete_table": "Supprimer le tableau",
       "pick_size": "Choisir la taille"
     },
-    "send_filing_warning": "Envoyé - mais le nettoyage après envoi a échoué, un ancien brouillon peut subsister."
+    "send_filing_warning": "Envoyé - mais le nettoyage après envoi a échoué, un ancien brouillon peut subsister.",
+    "signature_image_load_failed": "Could not load one image from this signature. The message can still be sent without that image."
   },
   "confirm_dialog": {
     "confirm": "Confirmer",
@@ -2258,7 +2257,17 @@
       "save": "Enregistrer l'identité",
       "cancel": "Annuler",
       "creating": "Création...",
-      "updating": "Mise à jour..."
+      "updating": "Mise à jour...",
+      "insert_image": "Insert image",
+      "uploading_image": "Uploading…",
+      "image_help": "Images are stored by Bulwark and embedded in outgoing mail (not hosted publicly). Save the identity first, then insert images.",
+      "image_requires_saved_identity": "Save the identity first, then edit it to add images.",
+      "image_storage_unavailable": "Signature image storage is unavailable. Ensure SESSION_SECRET is configured.",
+      "image_type_rejected": "Unsupported image type. Use JPEG, PNG, GIF, or WebP.",
+      "image_too_large": "Image is too large (max {maxMb} MiB).",
+      "image_too_many": "A signature may include at most {max} images.",
+      "image_upload_failed": "Failed to upload signature image.",
+      "image_assets_note": "{count, plural, one {# embedded image (stored separately from the mail server signature limit)} other {# embedded images (stored separately from the mail server signature limit)}}"
     },
     "sub_address": {
       "button_tooltip": "Utiliser le sous-adressage",

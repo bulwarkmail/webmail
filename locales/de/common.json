@@ -300,9 +300,7 @@
     "move": "Verschieben",
     "print": "Drucken",
     "view_source": "Quelltext anzeigen",
-
     "fullscreen": "Vollbild",
-
     "exit_fullscreen": "Vollbild beenden",
     "export_email": "Als .eml exportieren",
     "forward_as_attachment": "Forward as attachment",
@@ -725,7 +723,8 @@
       "delete_table": "Tabelle löschen",
       "pick_size": "Größe wählen"
     },
-    "send_filing_warning": "Gesendet - aber das Aufräumen danach schlug fehl, evtl. bleibt ein alter Entwurf sichtbar."
+    "send_filing_warning": "Gesendet - aber das Aufräumen danach schlug fehl, evtl. bleibt ein alter Entwurf sichtbar.",
+    "signature_image_load_failed": "Could not load one image from this signature. The message can still be sent without that image."
   },
   "confirm_dialog": {
     "confirm": "Bestätigen",
@@ -2258,7 +2257,17 @@
       "save": "Identität speichern",
       "cancel": "Abbrechen",
       "creating": "Wird erstellt...",
-      "updating": "Wird aktualisiert..."
+      "updating": "Wird aktualisiert...",
+      "insert_image": "Insert image",
+      "uploading_image": "Uploading…",
+      "image_help": "Images are stored by Bulwark and embedded in outgoing mail (not hosted publicly). Save the identity first, then insert images.",
+      "image_requires_saved_identity": "Save the identity first, then edit it to add images.",
+      "image_storage_unavailable": "Signature image storage is unavailable. Ensure SESSION_SECRET is configured.",
+      "image_type_rejected": "Unsupported image type. Use JPEG, PNG, GIF, or WebP.",
+      "image_too_large": "Image is too large (max {maxMb} MiB).",
+      "image_too_many": "A signature may include at most {max} images.",
+      "image_upload_failed": "Failed to upload signature image.",
+      "image_assets_note": "{count, plural, one {# embedded image (stored separately from the mail server signature limit)} other {# embedded images (stored separately from the mail server signature limit)}}"
     },
     "sub_address": {
       "button_tooltip": "Sub-Adresse verwenden",

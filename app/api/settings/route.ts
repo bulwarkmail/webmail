@@ -1,13 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import { logger } from '@/lib/logger';
-import { decryptSession } from '@/lib/auth/crypto';
-import { sessionCookieName } from '@/lib/auth/session-cookie';
-import { readStalwartAuthContextFromStore } from '@/lib/stalwart/auth-context';
 import { saveUserSettings, loadUserSettings, deleteUserSettings } from '@/lib/settings-sync';
 import { configManager } from '@/lib/admin/config-manager';
 import { hasSessionSecret } from '@/lib/auth/session-secret';
-import { MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
+import { verifyAccountIdentity } from '@/lib/auth/verify-account-identity';
 
 function classifyError(error: unknown): { message: string; status: number } {
   const code = (error as NodeJS.ErrnoException).code;
@@ -56,43 +52,6 @@ function isEnabled(): boolean {
   return flagOn && hasSessionSecret();
 }
 
-/** Strip trailing slashes so differently-formatted URLs still match. */
-function normalizeUrl(url: string): string {
-  return url.replace(/\/+$/, '');
-}
-
-/**
- * Verify identity against session cookies across all account slots.
- * With multi-account, the requesting account may be on any slot.
- * Checks both basic-auth session cookies and stalwart auth context cookies
- * (used by OAuth/SSO and TOTP-upgraded sessions).
- * Returns true only if a matching cookie is found.
- */
-async function verifyIdentity(username: string, serverUrl: string): Promise<boolean> {
-  const cookieStore = await cookies();
-  const normalizedServerUrl = normalizeUrl(serverUrl);
-
-  for (let slot = 0; slot < MAX_ACCOUNT_SLOTS; slot++) {
-    // Check basic-auth session cookie
-    const token = cookieStore.get(sessionCookieName(slot))?.value;
-    if (token) {
-      const session = decryptSession(token);
-      if (session && session.username === username && normalizeUrl(session.serverUrl) === normalizedServerUrl) {
-        return true;
-      }
-    }
-
-    // Check stalwart auth context cookie (set for all auth modes)
-    const ctx = readStalwartAuthContextFromStore(cookieStore, slot);
-    if (ctx && ctx.username === username && normalizeUrl(ctx.serverUrl) === normalizedServerUrl) {
-      return true;
-    }
-  }
-
-  // No matching session found (or no cookies at all) → reject
-  return false;
-}
-
 export async function GET(request: NextRequest) {
   if (!isEnabled()) {
     return NextResponse.json({ error: 'Settings sync is disabled' }, { status: 404 });
@@ -104,7 +63,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Missing identity headers' }, { status: 400 });
   }
 
-  if (!(await verifyIdentity(username, serverUrl))) {
+  if (!(await verifyAccountIdentity(username, serverUrl))) {
     return NextResponse.json({ error: 'Identity mismatch' }, { status: 403 });
   }
 
@@ -135,7 +94,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Settings must be an object' }, { status: 400 });
     }
 
-    if (!(await verifyIdentity(username, serverUrl))) {
+    if (!(await verifyAccountIdentity(username, serverUrl))) {
       return NextResponse.json({ error: 'Identity mismatch' }, { status: 403 });
     }
 
@@ -188,7 +147,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    if (!(await verifyIdentity(username, serverUrl))) {
+    if (!(await verifyAccountIdentity(username, serverUrl))) {
       return NextResponse.json({ error: 'Identity mismatch' }, { status: 403 });
     }
 
