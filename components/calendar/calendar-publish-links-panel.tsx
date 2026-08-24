@@ -27,6 +27,7 @@ interface CalendarPublishLinksPanelProps {
 }
 
 type CreatedLinkReveal = {
+  id: string;
   url: string;
   label: string | null;
 };
@@ -112,7 +113,7 @@ export function CalendarPublishLinksPanel({
         targetAccountId,
       );
       const url = resolveCalendarPublishLinkUrl(serverUrl, created);
-      setCreatedReveal({ url, label: created.label });
+      setCreatedReveal({ id: created.id, url, label: created.label });
       resetCreateForm();
       await loadLinks();
       toast.success(t("created"));
@@ -128,7 +129,7 @@ export function CalendarPublishLinksPanel({
     try {
       await client.destroyCalendarPublishLink(linkId, targetAccountId);
       setConfirmRevokeId(null);
-      if (createdReveal) setCreatedReveal(null);
+      if (createdReveal?.id === linkId) setCreatedReveal(null);
       await loadLinks();
       toast.success(t("revoked"));
     } catch {

@@ -7,8 +7,11 @@ export function canManageCalendarPublishLinks(
 ): boolean {
   if (isSubscriptionCalendar) return false;
   if (!calendar.isShared) return true;
-  const rights = calendar.myRights;
-  return !!(rights?.mayWriteAll || rights?.mayWriteOwn || rights?.mayShare);
+  // Publishing a link exposes the whole calendar externally, so it requires
+  // sharing rights specifically — write access to one's own or all items is
+  // not sufficient (a participant who can only add events shouldn't be able
+  // to make the entire calendar's contents public).
+  return !!calendar.myRights?.mayShare;
 }
 
 /** Resolve the subscribe URL for a publish link (prefer server-provided url on create). */
@@ -27,7 +30,10 @@ export function buildCalendarPublishLinkUrl(
   serverUrl: string,
   link: Pick<CalendarPublishLink, 'id' | 'access' | 'secret'>,
 ): string {
-  const origin = serverUrl.replace(/\/+$/, '');
+  // serverUrl isn't guaranteed to include a scheme (e.g. demo mode's
+  // 'demo.example.com') — default to https so the subscribe URL is usable.
+  const withScheme = /^[a-z][a-z0-9+.-]*:\/\//i.test(serverUrl) ? serverUrl : `https://${serverUrl}`;
+  const origin = withScheme.replace(/\/+$/, '');
   if (link.access === 'public') {
     return `${origin}/ics/public/${encodeURIComponent(link.id)}.ics`;
   }

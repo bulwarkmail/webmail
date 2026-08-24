@@ -43,28 +43,7 @@ describe('canManageCalendarPublishLinks', () => {
     expect(canManageCalendarPublishLinks(baseCalendar(), true)).toBe(false);
   });
 
-  it('allows writable shared calendars', () => {
-    expect(
-      canManageCalendarPublishLinks(
-        baseCalendar({
-          isShared: true,
-          myRights: {
-            mayReadFreeBusy: true,
-            mayReadItems: true,
-            mayWriteAll: false,
-            mayWriteOwn: true,
-            mayUpdatePrivate: false,
-            mayRSVP: false,
-            mayShare: false,
-            mayDelete: false,
-          },
-        }),
-        false,
-      ),
-    ).toBe(true);
-  });
-
-  it('blocks read-only shared calendars', () => {
+  it('allows shared calendars with sharing rights', () => {
     expect(
       canManageCalendarPublishLinks(
         baseCalendar({
@@ -74,6 +53,27 @@ describe('canManageCalendarPublishLinks', () => {
             mayReadItems: true,
             mayWriteAll: false,
             mayWriteOwn: false,
+            mayUpdatePrivate: false,
+            mayRSVP: false,
+            mayShare: true,
+            mayDelete: false,
+          },
+        }),
+        false,
+      ),
+    ).toBe(true);
+  });
+
+  it('blocks shared calendars without sharing rights, even with full write access', () => {
+    expect(
+      canManageCalendarPublishLinks(
+        baseCalendar({
+          isShared: true,
+          myRights: {
+            mayReadFreeBusy: true,
+            mayReadItems: true,
+            mayWriteAll: true,
+            mayWriteOwn: true,
             mayUpdatePrivate: false,
             mayRSVP: false,
             mayShare: false,
@@ -104,5 +104,14 @@ describe('buildCalendarPublishLinkUrl', () => {
         secret: 's3cret',
       }),
     ).toBe('https://mail.example.com/ics/abc/s3cret.ics');
+  });
+
+  it('defaults to https when serverUrl has no scheme (e.g. demo mode)', () => {
+    expect(
+      buildCalendarPublishLinkUrl('demo.example.com', {
+        id: 'abc',
+        access: 'public',
+      }),
+    ).toBe('https://demo.example.com/ics/public/abc.ics');
   });
 });

@@ -7251,13 +7251,15 @@ export class JMAPClient implements IJMAPClient {
     const response = await this.request([
       ['CalendarPublishLink/get', {
         accountId,
-        filter: { calendarId },
         properties: [...JMAPClient.CALENDAR_PUBLISH_LINK_PROPERTIES],
       }, '0'],
     ], this.calendarUsing());
 
     const [, body] = response.methodResponses[0] ?? [];
-    return ((body as { list?: CalendarPublishLink[] } | undefined)?.list) ?? [];
+    const list = ((body as { list?: CalendarPublishLink[] } | undefined)?.list) ?? [];
+    // JMAP/get has no server-side filter param — CalendarPublishLink/get always
+    // returns every link the caller can see across all calendars in the account.
+    return list.filter((link) => link.calendarId === calendarId);
   }
 
   async createCalendarPublishLink(
