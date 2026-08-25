@@ -218,10 +218,30 @@ async function handleNotificationClick(event) {
     // get annoyed when each notification opens a fresh window.
     if ("focus" in client) {
       try {
-        if ("navigate" in client && targetUrl) {
-          await client.navigate(targetUrl);
+        // FOCUS FIRST, NAVIGATE SECOND, and the order is the entire fix.
+        //
+        // A notification click grants the service worker a TRANSIENT USER ACTIVATION, and
+        // both focus() and openWindow() refuse to run without one. navigate() SPENDS that
+        // activation, and it also replaces the client's document, which invalidates the
+        // WindowClient handle we are about to use. Navigating first therefore breaks the
+        // click two ways over. Instrumented on Android in a real deployment:
+        //
+        //   client 1: navigate ok -> focus() threw NotFoundError      (handle stale after nav)
+        //   client 2: navigate ok -> focus() threw InvalidAccessError (activation spent)
+        //   openWindow()          -> threw InvalidAccessError         (same)
+        //
+        // Every rejection was swallowed by the catch below, so the toast closed and nothing
+        // came to the front. Focusing first uses the activation while it is still live;
+        // navigate() does not need one of its own once the client is focused.
+        const focused = await client.focus();
+        if (focused && "navigate" in focused && targetUrl) {
+          try {
+            await focused.navigate(targetUrl);
+          } catch (_) {
+            // Focused but not navigated still beats nothing opening at all.
+          }
         }
-        return client.focus();
+        return focused;
       } catch (_) {
         // navigate() can reject for cross-origin or detached clients - fall
         // through and open a new window below.
