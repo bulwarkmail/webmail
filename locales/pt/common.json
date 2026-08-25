@@ -318,6 +318,7 @@
     "important": "Importante",
     "download": "Baixar",
     "download_all": "Baixar tudo",
+    "save_to_files": "Guardar em Arquivos",
     "from": "De",
     "to": "Para",
     "cc": "CC",
@@ -3345,7 +3346,16 @@
     "open_folder_tree": "Abrir árvore de pastas",
     "other_accounts": "Outras contas",
     "migration_title": "Atualizando seus arquivos…",
-    "migration_description": "Organizando pastas e arquivos em sua estrutura adequada. Isso acontece apenas uma vez."
+    "migration_description": "Organizando pastas e arquivos em sua estrutura adequada. Isso acontece apenas uma vez.",
+    "save_attachment": {
+      "title": "Guardar em Arquivos",
+      "loading": "A carregar pastas...",
+      "load_error": "Falha ao carregar pastas",
+      "no_folders": "Sem subpastas",
+      "save_here": "Guardar em {folder}",
+      "success": "\"{name}\" guardado em Arquivos",
+      "save_error": "Falha ao guardar em Arquivos"
+    }
   },
   "smime": {
     "your_certificates": "Seus certificados",

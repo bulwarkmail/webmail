@@ -318,6 +318,7 @@
     "important": "Important",
     "download": "Télécharger",
     "download_all": "Tout télécharger",
+    "save_to_files": "Enregistrer dans Fichiers",
     "from": "De",
     "to": "À",
     "cc": "CC",
@@ -3345,7 +3346,16 @@
     "open_folder_tree": "Ouvrir l'arborescence des dossiers",
     "other_accounts": "Autres comptes",
     "migration_title": "Mise à jour de vos fichiers…",
-    "migration_description": "Organisation des dossiers et fichiers dans leur structure appropriée. Cela ne se produit qu'une seule fois."
+    "migration_description": "Organisation des dossiers et fichiers dans leur structure appropriée. Cela ne se produit qu'une seule fois.",
+    "save_attachment": {
+      "title": "Enregistrer dans Fichiers",
+      "loading": "Chargement des dossiers...",
+      "load_error": "Échec du chargement des dossiers",
+      "no_folders": "Aucun sous-dossier",
+      "save_here": "Enregistrer dans {folder}",
+      "success": "« {name} » enregistré dans Fichiers",
+      "save_error": "Échec de l'enregistrement dans Fichiers"
+    }
   },
   "smime": {
     "your_certificates": "Vos certificats",

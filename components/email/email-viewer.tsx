@@ -78,6 +78,7 @@ import {
   PlayCircle,
   PenSquare,
   CalendarClock,
+  Save,
   Link as LinkIcon,
   Maximize2,
   Minimize2,
@@ -98,6 +99,8 @@ import { useThemeStore } from "@/stores/theme-store";
 import { EmailIdentityBadge } from "./email-identity-badge";
 import { UnsubscribeBanner } from "./unsubscribe-banner";
 import { CalendarInvitationBanner } from "./calendar-invitation-banner";
+import { SaveAttachmentModal } from "@/components/files/save-attachment-modal";
+import { usePolicyStore } from "@/stores/policy-store";
 import { ReadReceiptBanner } from "./read-receipt-banner";
 import { stripCrossAccountIdentityPrefix } from "@/hooks/use-pro-multi-account-identities";
 import { useTour } from "@/components/tour/tour-provider";
@@ -750,6 +753,15 @@ export function EmailViewer({
     return (scid ? useAuthStore.getState().getClientForAccount(scid) : null) ?? client;
   }, [isUnifiedView, email?.sourceClientAccountId, client]);
   const blobAccountId = isUnifiedView ? email?.sourceAccountId : undefined;
+  // Admin-wide gate for the Files feature (mirrors navigation-rail.tsx /
+  // files-app.tsx). Deliberately not gated on the lazily-populated
+  // file-store `supportsFiles` probe too - that only runs once the Files
+  // app has been opened, and we don't want an extra JMAP round trip on
+  // every email view just to decide whether to show this button. If the
+  // server genuinely lacks FileNode support, the save action itself fails
+  // with a clear toast instead.
+  const filesFeatureEnabled = usePolicyStore((s) => s.isFeatureEnabled('filesEnabled'));
+  const [attachmentToSaveToFiles, setAttachmentToSaveToFiles] = useState<EffectiveAttachment | null>(null);
 
   // List-Unsubscribe mailto: send the message ourselves - this is a webmail
   // client, handing a mailto: URL to the OS mail handler goes nowhere for
@@ -2002,6 +2014,16 @@ export function EmailViewer({
     anchor.remove();
     setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
   }, [onDownloadAttachment, email?.id, resolveAttachmentName]);
+
+  // Opens the folder-picker modal for a real JMAP attachment (blobId-backed
+  // only - TNEF/decrypted attachments have no server-side blob for
+  // CalendarEvent/parse's sibling here, FileNode/set, to reference). The
+  // modal itself resolves the actual save (zero-copy same-account reuse vs.
+  // fetch + re-upload cross-account) - see SaveAttachmentModal. #901
+  const handleSaveAttachmentToFiles = useCallback((attachment: EffectiveAttachment) => {
+    if (!attachment.blobId) return;
+    setAttachmentToSaveToFiles(attachment);
+  }, []);
 
   // Bundle every attachment of this email into a single .zip and download it.
   // Fetches blob-backed attachments through the JMAP client and reuses already
@@ -4021,6 +4043,16 @@ export function EmailViewer({
                           >
                             <Download className="w-3.5 h-3.5 text-foreground" />
                           </button>
+                          {filesFeatureEnabled && attachment.blobId && (
+                            <button
+                              className="p-1 hover:bg-accent rounded transition-colors"
+                              title={t('save_to_files')}
+                              data-testid="attachment-save-to-files"
+                              onClick={(e) => { e.stopPropagation(); handleSaveAttachmentToFiles(attachment); }}
+                            >
+                              <Save className="w-3.5 h-3.5 text-foreground" />
+                            </button>
+                          )}
                           {opensPreview && (
                             <button
                               className="p-1 hover:bg-accent rounded transition-colors"
@@ -4081,6 +4113,16 @@ export function EmailViewer({
                                 >
                                   <Download className="w-3.5 h-3.5 text-foreground" />
                                 </button>
+                                {filesFeatureEnabled && attachment.blobId && (
+                                  <button
+                                    className="p-1 hover:bg-accent rounded transition-colors"
+                                    title={t('save_to_files')}
+                                    data-testid="attachment-save-to-files"
+                                    onClick={(e) => { e.stopPropagation(); handleSaveAttachmentToFiles(attachment); setShowAllBesideAttachments(false); }}
+                                  >
+                                    <Save className="w-3.5 h-3.5 text-foreground" />
+                                  </button>
+                                )}
                                 {opensPreview && (
                                   <button
                                     className="p-1 hover:bg-accent rounded transition-colors"
@@ -4812,6 +4854,16 @@ export function EmailViewer({
                     >
                       <Download className="w-4 h-4 text-foreground" />
                     </button>
+                    {filesFeatureEnabled && attachment.blobId && (
+                      <button
+                        className="p-1 hover:bg-accent rounded transition-colors"
+                        title={t('save_to_files')}
+                        data-testid="attachment-save-to-files"
+                        onClick={(e) => { e.stopPropagation(); handleSaveAttachmentToFiles(attachment); }}
+                      >
+                        <Save className="w-4 h-4 text-foreground" />
+                      </button>
+                    )}
                     {opensPreview && (
                       <button
                         className="p-1 hover:bg-accent rounded transition-colors"
@@ -4872,6 +4924,16 @@ export function EmailViewer({
                           >
                             <Download className="w-4 h-4 text-foreground" />
                           </button>
+                          {filesFeatureEnabled && attachment.blobId && (
+                            <button
+                              className="p-1 hover:bg-accent rounded transition-colors"
+                              title={t('save_to_files')}
+                              data-testid="attachment-save-to-files"
+                              onClick={(e) => { e.stopPropagation(); handleSaveAttachmentToFiles(attachment); setShowAllBelowHeaderAttachments(false); }}
+                            >
+                              <Save className="w-4 h-4 text-foreground" />
+                            </button>
+                          )}
                           {opensPreview && (
                             <button
                               className="p-1 hover:bg-accent rounded transition-colors"
@@ -4953,6 +5015,16 @@ export function EmailViewer({
                       >
                         <Download className="w-4 h-4 text-foreground" />
                       </button>
+                      {filesFeatureEnabled && attachment.blobId && (
+                        <button
+                          className="p-1 hover:bg-accent rounded transition-colors"
+                          title={t('save_to_files')}
+                          data-testid="attachment-save-to-files"
+                          onClick={(e) => { e.stopPropagation(); handleSaveAttachmentToFiles(attachment); }}
+                        >
+                          <Save className="w-4 h-4 text-foreground" />
+                        </button>
+                      )}
                       {opensPreview && (
                         <button
                           className="p-1 hover:bg-accent rounded transition-colors"
@@ -5012,6 +5084,16 @@ export function EmailViewer({
                             >
                               <Download className="w-3.5 h-3.5 text-foreground" />
                             </button>
+                            {filesFeatureEnabled && attachment.blobId && (
+                              <button
+                                className="p-1 hover:bg-accent rounded transition-colors"
+                                title={t('save_to_files')}
+                                data-testid="attachment-save-to-files"
+                                onClick={(e) => { e.stopPropagation(); handleSaveAttachmentToFiles(attachment); setShowAllMobileAttachments(false); }}
+                              >
+                                <Save className="w-3.5 h-3.5 text-foreground" />
+                              </button>
+                            )}
                             {opensPreview && (
                               <button
                                 className="p-1 hover:bg-accent rounded transition-colors"
@@ -5385,6 +5467,21 @@ export function EmailViewer({
             toast.success('Contact added');
           }
         }}
+      />
+    )}
+
+    {attachmentToSaveToFiles && client && blobClient && attachmentToSaveToFiles.blobId && (
+      <SaveAttachmentModal
+        client={client}
+        source={{
+          client: blobClient,
+          accountId: blobAccountId ?? blobClient.getAccountId(),
+          blobId: attachmentToSaveToFiles.blobId,
+          name: attachmentToSaveToFiles.name || 'attachment',
+          type: attachmentToSaveToFiles.type,
+          size: attachmentToSaveToFiles.size,
+        }}
+        onClose={() => setAttachmentToSaveToFiles(null)}
       />
     )}
 

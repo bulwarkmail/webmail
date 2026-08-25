@@ -318,6 +318,7 @@
     "important": "Importante",
     "download": "Scarica",
     "download_all": "Scarica tutto",
+    "save_to_files": "Salva in File",
     "from": "Da",
     "to": "A",
     "cc": "CC",
@@ -3345,7 +3346,16 @@
     "open_folder_tree": "Apri albero cartelle",
     "other_accounts": "Altri account",
     "migration_title": "Aggiornamento dei tuoi file…",
-    "migration_description": "Organizzazione di cartelle e file nella loro struttura corretta. Questo avviene solo una volta."
+    "migration_description": "Organizzazione di cartelle e file nella loro struttura corretta. Questo avviene solo una volta.",
+    "save_attachment": {
+      "title": "Salva in File",
+      "loading": "Caricamento cartelle...",
+      "load_error": "Impossibile caricare le cartelle",
+      "no_folders": "Nessuna sottocartella",
+      "save_here": "Salva in {folder}",
+      "success": "\"{name}\" salvato in File",
+      "save_error": "Impossibile salvare in File"
+    }
   },
   "smime": {
     "your_certificates": "I tuoi certificati",
