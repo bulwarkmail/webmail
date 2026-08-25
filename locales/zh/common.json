@@ -351,6 +351,7 @@
     "important": "重要",
     "download": "下载",
     "download_all": "全部下载",
+    "save_to_files": "保存到文件",
     "from": "发件人",
     "to": "收件人",
     "cc": "抄送",
@@ -3846,7 +3847,16 @@
     "zoom_out": "缩小",
     "zoom_reset": "适应屏幕",
     "rotate": "旋转",
-    "close_preview": "关闭"
+    "close_preview": "关闭",
+    "save_attachment": {
+      "title": "保存到文件",
+      "loading": "正在加载文件夹...",
+      "load_error": "加载文件夹失败",
+      "no_folders": "没有子文件夹",
+      "save_here": "保存到{folder}",
+      "success": "已将\"{name}\"保存到文件",
+      "save_error": "保存到文件失败"
+    }
   },
   "smime": {
     "your_certificates": "您的证书",

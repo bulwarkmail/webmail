@@ -351,6 +351,7 @@
     "important": "Oluline",
     "download": "Laadi alla",
     "download_all": "Laadi kõik alla",
+    "save_to_files": "Salvesta failidesse",
     "from": "Saatja",
     "to": "Saaja",
     "cc": "Koopia",
@@ -3888,7 +3889,16 @@
     "zoom_out": "Suumi välja",
     "zoom_reset": "Sobita ekraanile",
     "rotate": "Pööra",
-    "close_preview": "Sulge"
+    "close_preview": "Sulge",
+    "save_attachment": {
+      "title": "Salvesta failidesse",
+      "loading": "Kaustade laadimine...",
+      "load_error": "Kaustade laadimine ebaõnnestus",
+      "no_folders": "Alamkaustu pole",
+      "save_here": "Salvesta kausta {folder}",
+      "success": "\"{name}\" salvestati failidesse",
+      "save_error": "Failidesse salvestamine ebaõnnestus"
+    }
   },
   "smime": {
     "your_certificates": "Sinu sertifikaadid",

@@ -351,6 +351,7 @@
     "important": "Importante",
     "download": "Scarica",
     "download_all": "Scarica tutto",
+    "save_to_files": "Salva in File",
     "from": "Da",
     "to": "A",
     "cc": "CC",
@@ -3846,7 +3847,16 @@
     "zoom_out": "Riduci",
     "zoom_reset": "Adatta allo schermo",
     "rotate": "Ruota",
-    "close_preview": "Chiudi"
+    "close_preview": "Chiudi",
+    "save_attachment": {
+      "title": "Salva in File",
+      "loading": "Caricamento cartelle...",
+      "load_error": "Impossibile caricare le cartelle",
+      "no_folders": "Nessuna sottocartella",
+      "save_here": "Salva in {folder}",
+      "success": "\"{name}\" salvato in File",
+      "save_error": "Impossibile salvare in File"
+    }
   },
   "smime": {
     "your_certificates": "I tuoi certificati",

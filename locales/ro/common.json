@@ -351,6 +351,7 @@
     "important": "Important",
     "download": "Descărcați",
     "download_all": "Descărcați tot",
+    "save_to_files": "Salvează în Fișiere",
     "from": "De la",
     "to": "Către",
     "cc": "CC",
@@ -3888,7 +3889,16 @@
     "zoom_out": "Micșorează",
     "zoom_reset": "Potrivește pe ecran",
     "rotate": "Rotește",
-    "close_preview": "Închide"
+    "close_preview": "Închide",
+    "save_attachment": {
+      "title": "Salvează în Fișiere",
+      "loading": "Se încarcă dosarele...",
+      "load_error": "Încărcarea dosarelor a eșuat",
+      "no_folders": "Niciun subdosar",
+      "save_here": "Salvează în {folder}",
+      "success": "\"{name}\" salvat în Fișiere",
+      "save_error": "Salvarea în Fișiere a eșuat"
+    }
   },
   "smime": {
     "your_certificates": "Certificatele dvs.",

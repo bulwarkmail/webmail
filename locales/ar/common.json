@@ -351,6 +351,7 @@
     "important": "مهم",
     "download": "تنزيل",
     "download_all": "تنزيل الكل",
+    "save_to_files": "حفظ في الملفات",
     "from": "من",
     "to": "إلى",
     "cc": "نسخة",
@@ -3888,7 +3889,16 @@
     "zoom_out": "تصغير",
     "zoom_reset": "ملاءمة الشاشة",
     "rotate": "تدوير",
-    "close_preview": "إغلاق"
+    "close_preview": "إغلاق",
+    "save_attachment": {
+      "title": "حفظ في الملفات",
+      "loading": "جارٍ تحميل المجلدات...",
+      "load_error": "فشل تحميل المجلدات",
+      "no_folders": "لا توجد مجلدات فرعية",
+      "save_here": "حفظ في {folder}",
+      "success": "تم حفظ \"{name}\" في الملفات",
+      "save_error": "فشل الحفظ في الملفات"
+    }
   },
   "smime": {
     "your_certificates": "شهاداتك",

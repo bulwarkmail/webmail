@@ -351,6 +351,7 @@
     "important": "Svarīgi",
     "download": "Lejupielādēt",
     "download_all": "Lejupielādēt visu",
+    "save_to_files": "Saglabāt failos",
     "from": "No",
     "to": "Kam",
     "cc": "Kopija",
@@ -3846,7 +3847,16 @@
     "zoom_out": "Tālināt",
     "zoom_reset": "Ietilpināt ekrānā",
     "rotate": "Pagriezt",
-    "close_preview": "Aizvērt"
+    "close_preview": "Aizvērt",
+    "save_attachment": {
+      "title": "Saglabāt failos",
+      "loading": "Ielādē mapes...",
+      "load_error": "Neizdevās ielādēt mapes",
+      "no_folders": "Nav apakšmapju",
+      "save_here": "Saglabāt {folder}",
+      "success": "\"{name}\" saglabāts failos",
+      "save_error": "Neizdevās saglabāt failos"
+    }
   },
   "smime": {
     "your_certificates": "Jūsu sertifikāti",

@@ -351,6 +351,7 @@
     "important": "Importante",
     "download": "Baixar",
     "download_all": "Baixar tudo",
+    "save_to_files": "Guardar em Arquivos",
     "from": "De",
     "to": "Para",
     "cc": "CC",
@@ -3846,7 +3847,16 @@
     "zoom_out": "Diminuir zoom",
     "zoom_reset": "Ajustar ao ecrã",
     "rotate": "Rodar",
-    "close_preview": "Fechar"
+    "close_preview": "Fechar",
+    "save_attachment": {
+      "title": "Guardar em Arquivos",
+      "loading": "A carregar pastas...",
+      "load_error": "Falha ao carregar pastas",
+      "no_folders": "Sem subpastas",
+      "save_here": "Guardar em {folder}",
+      "success": "\"{name}\" guardado em Arquivos",
+      "save_error": "Falha ao guardar em Arquivos"
+    }
   },
   "smime": {
     "your_certificates": "Seus certificados",
