@@ -2960,6 +2960,9 @@
       "delete_error": "Nie udało się usunąć subskrypcji",
       "last_refreshed": "Ostatnia aktualizacja: {time}"
     },
+    "sidebar": {
+      "search_placeholder": "Szukaj wydarzeń"
+    },
     "tasks": {
       "label": "Zadania",
       "no_tasks": "Brak zadań",

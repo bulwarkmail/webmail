@@ -2987,6 +2987,9 @@
       "delete_error": "Failed to remove subscription",
       "last_refreshed": "Last updated: {time}"
     },
+    "sidebar": {
+      "search_placeholder": "Search events"
+    },
     "tasks": {
       "label": "Tasks",
       "no_tasks": "No tasks",
