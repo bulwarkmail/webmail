@@ -5,7 +5,23 @@ import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { X, Paperclip, Send, Save, Check, Loader2, AlertCircle, FileText, BookmarkPlus, CalendarClock, ChevronDown, MailCheck, Search, Users } from "lucide-react";
+import {
+  X,
+  Paperclip,
+  Send,
+  Save,
+  Check,
+  Loader2,
+  AlertCircle,
+  FileText,
+  BookmarkPlus,
+  CalendarClock,
+  ChevronDown,
+  MailCheck,
+  Search,
+  Users,
+  Eye
+} from "lucide-react";
 import { cn, formatFileSize, formatDateTime, generateUUID } from "@/lib/utils";
 import { debug } from "@/lib/debug";
 import { toast } from "@/stores/toast-store";
@@ -2423,7 +2439,6 @@ export function EmailComposer({
               </Button>
             </div>
           </div>
-
           {/* To field */}
           <div data-testid="composer-to" className={cn("flex items-center gap-2 px-4 py-2.5 border-b border-border/50 relative", shakeField === 'to' && "animate-shake")}>
             <span className="text-sm text-muted-foreground w-12 md:w-16 shrink-0">{t('to')}:</span>
@@ -2677,17 +2692,16 @@ export function EmailComposer({
                     ) : (
                       <Paperclip className="w-3 h-3 flex-shrink-0" />
                     )}
-                    {canPreview ? (
-                      <button
-                        type="button"
-                        onClick={() => setPreviewAttachment(att)}
-                        title={att.name}
-                        className="flex items-center gap-2 min-w-0 hover:underline"
-                      >
-                        {label}
-                      </button>
-                    ) : (
-                      <div className="flex items-center gap-2 min-w-0">{label}</div>
+                    <div className="flex items-center gap-2 min-w-0">{label}</div>
+                    {canPreview && (
+                        <button
+                            type="button"
+                            onClick={() => setPreviewAttachment(att)}
+                            title={att.name}
+                            className="p-1 hover:bg-accent rounded transition-colors"
+                        >
+                          <Eye className="w-3.5 h-3.5 text-foreground" />
+                        </button>
                     )}
                     <button
                       onClick={() => removeAttachment(index)}

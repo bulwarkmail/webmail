@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo, type TouchEvent as ReactTouchEvent } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
-import { Plus } from "lucide-react";
+import {Plus, Search, X} from "lucide-react";
 import {
   startOfMonth, endOfMonth, startOfWeek, endOfWeek,
   addMonths, subMonths, addWeeks, subWeeks, addDays, subDays,
@@ -69,6 +69,8 @@ import { appPath, buildCalendarPath, parseCalendarPath } from "@/lib/deep-links"
 import { consumePendingDeepLink } from "@/lib/deep-link-handoff";
 import { useDeepLinkUrl } from "@/hooks/use-deep-link-url";
 import { useProInterfaceActive } from "@/components/pro/pro-interface-redirect";
+import {Input} from "@/components/ui/input";
+import {isFilterEmpty} from "@/lib/jmap/search-utils";
 
 type PendingScopeAction =
   | { type: "edit"; event: CalendarEvent; updates: Partial<CalendarEvent>; sendScheduling?: boolean }
@@ -107,6 +109,8 @@ export function CalendarApp({ linkSegments }: CalendarAppProps = {}) {
     setSelectedDate, setViewMode, toggleCalendarVisibility, updateCalendar, shareCalendar,
     removeCalendar, clearCalendarEvents,
     refreshAllSubscriptions, icalSubscriptions,
+    searchQuery,
+    setSearchQuery,
   } = useCalendarStore();
   const calendarEnabled = usePolicyStore((s) => s.isFeatureEnabled('calendarEnabled'));
   const { firstDayOfWeek, timeFormat, showWeekNumbers, enableCalendarTasks, showTasksOnCalendar, calendarHoverPreview, showBirthdayCalendar, birthdayCalendarColor, updateSetting } = useSettingsStore();
@@ -204,6 +208,16 @@ export function CalendarApp({ linkSegments }: CalendarAppProps = {}) {
       toast.error(error);
     }
   }, [error]);
+
+
+  const handleSearch = async (query: string) => {
+    setSearchQuery(query);
+  };
+
+  const handleClearSearch = async () => {
+    setSearchQuery("");
+  };
+
 
   const getWebcalProtocolAccounts = useCallback(() => {
     const connectedClients = useAuthStore.getState().getAllConnectedClients();
@@ -366,7 +380,7 @@ export function CalendarApp({ linkSegments }: CalendarAppProps = {}) {
     if (client && calendars.length > 0 && dateRange) {
       fetchEvents(client, dateRange.start, dateRange.end);
     }
-  }, [client, calendars.length, dateRange, fetchEvents, isEmbedded]);
+  }, [client, calendars.length, dateRange, fetchEvents, isEmbedded, searchQuery]);
 
   // Pro shell only: aggregate calendars and events from every connected
   // account so the sidebar lists them all (and the views render their
@@ -1408,6 +1422,28 @@ export function CalendarApp({ linkSegments }: CalendarAppProps = {}) {
             )}
             style={isNarrow ? undefined : { width: `${calSidebarWidth}px` }}
           >
+            <form onSubmit={(e) => { e.preventDefault(); if (searchQuery.trim()) handleSearch(searchQuery); }} className="relative flex-1 mb-1">
+              <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                  type="text"
+                  placeholder={t("sidebar.search_placeholder_hint")}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className={cn("ps-9 h-9", searchQuery && "pe-8")}
+                  data-search-input
+                  data-tour="search-input"
+              />
+              {searchQuery && (
+                  <button
+                      type="button"
+                      onClick={handleClearSearch}
+                      className="absolute end-2 top-1/2 transform -translate-y-1/2 p-1 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                      aria-label={t("sidebar.clear_search")}
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+              )}
+            </form>
             <MiniCalendar
               selectedDate={selectedDate}
               displayMonth={miniMonth}

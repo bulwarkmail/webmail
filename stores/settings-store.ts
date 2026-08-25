@@ -511,7 +511,7 @@ const DEFAULT_SETTINGS = {
   showWeekNumbers: false,
   calendarHoverPreview: 'delay-500ms' as CalendarHoverPreview,
   defaultCalendarForNewEvents: undefined,
-  
+
   // Calendar Tasks
   enableCalendarTasks: false,
   showTasksOnCalendar: true,

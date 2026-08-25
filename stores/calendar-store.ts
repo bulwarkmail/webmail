@@ -12,6 +12,7 @@ import { generateUUID } from '@/lib/utils';
 import { apiFetch } from '@/lib/browser-navigation';
 import { BIRTHDAY_CALENDAR_ID } from '@/lib/birthday-calendar';
 import { getClientByLocalAccountId } from './client-registry';
+import {CalendarEventFilter} from "@/lib/jmap/types";
 
 /**
  * When the Pro shell aggregates calendars/events from every connected
@@ -251,6 +252,10 @@ interface CalendarStore {
   refreshICalSubscription: (client: IJMAPClient, subscriptionId: string) => Promise<void>;
   refreshAllSubscriptions: (client: IJMAPClient) => Promise<void>;
   isSubscriptionCalendar: (calendarId: string) => boolean;
+
+  //search
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
 }
 
 const initialState = {
@@ -265,6 +270,7 @@ const initialState = {
   error: null as string | null,
   dateRange: null as { start: string; end: string } | null,
   icalSubscriptions: [] as ICalSubscription[],
+  searchQuery: "",
 };
 
 function getSafeCalendarViewMode(value: unknown): CalendarViewMode {
@@ -299,11 +305,18 @@ export const useCalendarStore = create<CalendarStore>()(
 
       fetchEvents: async (client, start, end) => {
         set({ isLoadingEvents: true, error: null });
+        const {searchQuery} = get();
         try {
-          const rawEvents = await client.queryAllCalendarEvents({
+          const query:CalendarEventFilter = {
             after: start,
             before: end,
-          });
+          };
+
+          if(searchQuery.trim().length > 0) {
+            query.text = `${searchQuery.trim()}`;
+          }
+
+          const rawEvents = await client.queryAllCalendarEvents(query);
           // Filter out malformed events missing required 'start' field, or
           // whose start string fails to parse (would otherwise crash format()
           // calls in the rendering path - #316).
@@ -364,7 +377,7 @@ export const useCalendarStore = create<CalendarStore>()(
           set({ error: 'Failed to load calendars', isLoading: false });
         }
       },
-
+      setSearchQuery: (query) => set({ searchQuery: query }),
       fetchAllAccountsEvents: async (accounts, activeLocalAccountId, start, end) => {
         set({ isLoadingEvents: true, error: null });
         try {

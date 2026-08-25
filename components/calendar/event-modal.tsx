@@ -6,7 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { X, Trash2, Check, Users, CalendarDays, Copy, Pencil, Clock, MapPin, Video, Repeat, Bell, AlignLeft, Plus } from "lucide-react";
 import { format, parseISO, addHours, addDays, isSameDay } from "date-fns";
-import type { CalendarEvent, Calendar, CalendarParticipant, CalendarEventAlert, CalendarRecurrenceRule } from "@/lib/jmap/types";
+import type {
+  CalendarEvent,
+  Calendar,
+  CalendarParticipant,
+  CalendarEventAlert,
+  CalendarRecurrenceRule,
+  CalendarLink
+} from "@/lib/jmap/types";
 import { RecurrenceEditor, buildRecurrenceSummary, isSimpleRecurrenceRule } from "./recurrence-editor";
 import { parseDuration, getEventColor } from "./event-card";
 import { buildAllDayDuration, getEventDisplayEndDate, getEventEndDate, getEventStartDate, getPrimaryCalendarId } from "@/lib/calendar-utils";
@@ -469,14 +476,32 @@ export function EventModal({
       data.virtualLocations = {
         vl1: {
           "@type": "VirtualLocation",
-          name: null,
-          description: null,
+          name: "Spotkanie online",
+          description: "",
           uri: virtualLocation.trim(),
-          features: null,
+          "features": {
+            "audio": true,
+            "video": true
+          }
         },
+      };
+      data.description = `${data.description} \n\n Dołącz do spotkania: ${virtualLocation.trim()}`
+      const link: CalendarLink = {
+        "@type": "Link",
+        title: "Spotkanie online",
+        href: virtualLocation.trim(),
+        contentType: "text/html",
+        rel: "Spotkanie online",
+        cid: null,
+        display: null,
+        size: null,
+      };
+      data.links = {
+        l2: link,
       };
     } else if (event && event.virtualLocations && Object.keys(event.virtualLocations).length > 0) {
       data.virtualLocations = null;
+      data.links = null;
     }
 
     if (recurrence === "custom" && customRule) {
