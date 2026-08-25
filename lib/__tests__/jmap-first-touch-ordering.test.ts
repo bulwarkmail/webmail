@@ -8,7 +8,7 @@ import { JMAPClient } from '../jmap/client';
  * server, each node can create its own default - duplicating the "Personal"
  * calendar. The client must therefore not put a second calendar (or contacts)
  * request on the wire until the first one for that account has settled, while
- * leaving unrelated requests (Mailbox/get) unaffected.
+ * leaving unrelated mailbox requests unaffected.
  */
 
 function makeSession() {
@@ -84,7 +84,9 @@ describe('JMAPClient first-touch ordering (#907)', () => {
     return client;
   }
 
-  const emptyResponse = (method: string) => ({ methodResponses: [[method, { list: [], ids: [] }, '0']] });
+  const emptyResponse = (method: string) => method === 'Mailbox/query'
+    ? { methodResponses: [['Mailbox/query', { ids: [], queryState: 's', total: 0 }, 'query'], ['Mailbox/get', { list: [] }, 'get']] }
+    : { methodResponses: [[method, { list: [], ids: [] }, '0']] };
 
   it('holds CalendarEvent/query until the first Calendar/get for the account has settled', async () => {
     const client = await connectedClient();
@@ -112,7 +114,7 @@ describe('JMAPClient first-touch ordering (#907)', () => {
     const books = client.getAddressBooks();
     await flush();
 
-    expect(onWire.map((p) => p.methods[0]).sort()).toEqual(['AddressBook/get', 'Calendar/get', 'Mailbox/get']);
+    expect(onWire.map((p) => p.methods[0]).sort()).toEqual(['AddressBook/get', 'Calendar/get', 'Mailbox/query']);
 
     for (const p of onWire) p.resolve(emptyResponse(p.methods[0]));
     await Promise.all([calendars, mailboxes, books]);

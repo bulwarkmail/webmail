@@ -22,7 +22,7 @@ function createClient(): JMAPClient {
 interface JMAPMethodCall { 0: string; 1: Record<string, unknown>; 2: string }
 interface CapturedRequest { using?: string[]; methodCalls: JMAPMethodCall[] }
 
-/** Mailbox/get → Identity/get → Email/set (+ EmailSubmission/set). */
+/** Mailbox/get (or query+get) → Identity/get → Email/set (+ EmailSubmission/set). */
 function mockFlow() {
   const captured: CapturedRequest[] = [];
   vi.spyOn(globalThis, 'fetch').mockImplementation(async (_url, init) => {
@@ -38,6 +38,18 @@ function mockFlow() {
           { list: [{ id: 'mb-drafts', name: 'Drafts', role: 'drafts' }, { id: 'mb-sent', name: 'Sent', role: 'sent' }] },
           '0',
         ]],
+      };
+    } else if (method === 'Mailbox/query') {
+      const firstPage = body.methodCalls[0][1].position === 0;
+      payload = {
+        methodResponses: [
+          ['Mailbox/query', { position: body.methodCalls[0][1].position, ids: firstPage ? ['mb-drafts', 'mb-sent'] : [], queryState: 'state-1', total: 2 }, 'query'],
+          [
+            'Mailbox/get',
+            { list: firstPage ? [{ id: 'mb-drafts', name: 'Drafts', role: 'drafts' }, { id: 'mb-sent', name: 'Sent', role: 'sent' }] : [], notFound: [] },
+            'get',
+          ],
+        ],
       };
     } else if (method === 'Identity/get') {
       payload = {
