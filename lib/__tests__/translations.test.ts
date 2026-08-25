@@ -75,7 +75,6 @@ function extractUsedKeys(filePath: string): string[] {
     const callRegex = new RegExp(`\\b${varName}\\(\\s*["']([^"'{}]+)["']`, 'g');
     while ((m = callRegex.exec(content)) !== null) {
       const key = m[1];
-      if (key.startsWith('.')) continue;
       // Find the nearest preceding assignment for this variable
       const ns = varAssignments
         .filter((a) => a.index < m!.index)

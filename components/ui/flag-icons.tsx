@@ -305,6 +305,24 @@ const skHills =
   " 31.32-15.07 71.16-39.58 96.13-79.28-6.43-11.3-16.52-23.5-30.25-23.5" +
   "a30.52 30.52 0 0 0-27.69 16.34s-13.32-34.46-38.19-34.46Z";
 
+/** Mongolia – Red, Blue, Red vertical tricolor with Soyombo */
+export function FlagMN(props: FlagProps) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 600" width={W} height={H} className={flagClass} {...props}>
+      <path fill="#c4272f" d="M0 0h225v600H0Z" />
+      <path fill="#015197" d="M225 0h450v600H225Z" />
+      <path fill="#c4272f" d="M675 0h225v600H675Z" />
+      <g fill="#f9cf02" transform="translate(74 78)">
+        <circle cx="38" cy="34" r="18" />
+        <path d="M22 68h32v108H22ZM16 194h44v16H16ZM20 226h36v116H20ZM16 358h44v16H16Z" />
+        <path d="M24 390h28l-14 42ZM70 76h18v280H70Z" />
+        <path d="M104 128h64v18h-64ZM104 232h64v18h-64Z" />
+        <path d="M136 152c-22 0-40 18-40 40s18 40 40 40 40-18 40-40-18-40-40-40Zm0 18c12 0 22 10 22 22s-10 22-22 22-22-10-22-22 10-22 22-22Z" />
+      </g>
+    </svg>
+  );
+}
+
 /** Slovakia – White, Blue, Red horizontal with coat of arms */
 export function FlagSK(props: FlagProps) {
   return (
@@ -335,6 +353,7 @@ export const flagComponents: Record<string, (props: FlagProps) => ReactElement> 
   ja: FlagJP,
   ko: FlagKR,
   lv: FlagLV,
+  mn: FlagMN,
   nl: FlagNL,
   pl: FlagPL,
   pt: FlagBR,

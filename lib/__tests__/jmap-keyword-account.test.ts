@@ -38,6 +38,11 @@ function mockEmailSet() {
   return { captured, fetchSpy };
 }
 
+function patchFor(call: JMAPMethodCall, emailId: string): Record<string, unknown> {
+  const update = call[1].update as Record<string, Record<string, unknown>>;
+  return update[emailId];
+}
+
 describe('JMAP keyword writes route to the email account (#281)', () => {
   beforeEach(() => vi.restoreAllMocks());
   afterEach(() => vi.restoreAllMocks());
@@ -70,5 +75,62 @@ describe('JMAP keyword writes route to the email account (#281)', () => {
     const { captured } = mockEmailSet();
     await client.setKeyword('email-x', '$answered');
     expect(captured[0][1].accountId).toBe('primary-account');
+  });
+});
+
+describe('Email/set clears keywords with null, not false', () => {
+  beforeEach(() => vi.restoreAllMocks());
+  afterEach(() => vi.restoreAllMocks());
+
+  it('markAsRead(false) removes $seen with null', async () => {
+    const client = createClient();
+    const { captured } = mockEmailSet();
+    await client.markAsRead('email-x', false);
+    const patch = patchFor(captured[0], 'email-x');
+    expect(patch['keywords/$seen']).toBeNull();
+    expect(patch['keywords/$seen']).not.toBe(false);
+  });
+
+  it('markAsRead(true) sets $seen to true', async () => {
+    const client = createClient();
+    const { captured } = mockEmailSet();
+    await client.markAsRead('email-x', true);
+    expect(patchFor(captured[0], 'email-x')['keywords/$seen']).toBe(true);
+  });
+
+  it('batchMarkAsRead(false) removes $seen with null for every id', async () => {
+    const client = createClient();
+    const { captured } = mockEmailSet();
+    await client.batchMarkAsRead(['email-a', 'email-b'], false);
+    for (const id of ['email-a', 'email-b']) {
+      const patch = patchFor(captured[0], id);
+      expect(patch['keywords/$seen']).toBeNull();
+      expect(patch['keywords/$seen']).not.toBe(false);
+    }
+  });
+
+  it('batchMarkAsRead(true) sets $seen to true for every id', async () => {
+    const client = createClient();
+    const { captured } = mockEmailSet();
+    await client.batchMarkAsRead(['email-a', 'email-b'], true);
+    for (const id of ['email-a', 'email-b']) {
+      expect(patchFor(captured[0], id)['keywords/$seen']).toBe(true);
+    }
+  });
+
+  it('toggleStar(false) removes $flagged with null', async () => {
+    const client = createClient();
+    const { captured } = mockEmailSet();
+    await client.toggleStar('email-x', false);
+    const patch = patchFor(captured[0], 'email-x');
+    expect(patch['keywords/$flagged']).toBeNull();
+    expect(patch['keywords/$flagged']).not.toBe(false);
+  });
+
+  it('toggleStar(true) sets $flagged to true', async () => {
+    const client = createClient();
+    const { captured } = mockEmailSet();
+    await client.toggleStar('email-x', true);
+    expect(patchFor(captured[0], 'email-x')['keywords/$flagged']).toBe(true);
   });
 });

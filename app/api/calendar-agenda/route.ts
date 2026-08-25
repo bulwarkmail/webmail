@@ -22,7 +22,7 @@ import type { CalendarEvent } from '@/lib/jmap/types';
  */
 
 const CALENDAR_CAP = 'urn:ietf:params:jmap:calendars';
-const PRINCIPALS_CAP = 'urn:ietf:params:jmap:principals';
+const PRINCIPALS_OWNER_CAP = 'urn:ietf:params:jmap:principals:owner';
 
 // Mirror of lib/jmap/client.ts CALENDAR_EVENT_PROPERTIES, trimmed to what the
 // agenda actually needs (start/recurrence/display fields).
@@ -132,8 +132,8 @@ export async function POST(request: NextRequest) {
     }
 
     const using = ['urn:ietf:params:jmap:core', CALENDAR_CAP];
-    if (session.capabilities && PRINCIPALS_CAP in session.capabilities) {
-      using.push('urn:ietf:params:jmap:principals:owner');
+    if (session.capabilities && PRINCIPALS_OWNER_CAP in session.capabilities) {
+      using.push(PRINCIPALS_OWNER_CAP);
     }
 
     // Send method calls to the session's apiUrl rebased onto serverUrl's host

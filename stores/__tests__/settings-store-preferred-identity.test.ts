@@ -56,6 +56,54 @@ describe('settings-store per-account preferredIdentityIds (issue #507)', () => {
     });
   });
 
+  // Regression: multi-account logins used to clobber the per-account map. Each
+  // account's server load must merge only its OWN entry, preserving the others,
+  // so the composer's default sender no longer depends on login order.
+  describe('importSettings per-account merge (multi-account login order)', () => {
+    beforeEach(() => useSettingsStore.setState({ preferredIdentityIds: {}, allMailFolderIds: {} }));
+
+    it('a per-account server load updates only its own entry, preserving others', () => {
+      useSettingsStore.setState({ preferredIdentityIds: { 'a@h': 'idA', 'b@h': 'idB' } });
+      // Account B's server blob carries a STALE entry for A plus B's own value.
+      useSettingsStore.getState().importSettings(
+        JSON.stringify({ preferredIdentityIds: { 'a@h': 'STALE', 'b@h': 'idB2' } }),
+        { serverAccountId: 'b@h' },
+      );
+      const map = useSettingsStore.getState().preferredIdentityIds;
+      expect(map['a@h']).toBe('idA');  // preserved, not clobbered by B's stale copy
+      expect(map['b@h']).toBe('idB2'); // B is authoritative for itself
+    });
+
+    it('fills the loading account entry when the map had none, without importing others', () => {
+      useSettingsStore.setState({ preferredIdentityIds: { 'a@h': 'idA' } });
+      useSettingsStore.getState().importSettings(
+        JSON.stringify({ preferredIdentityIds: { 'a@h': 'x', 'b@h': 'idB' } }),
+        { serverAccountId: 'b@h' },
+      );
+      // Only b@h (the loading account) is trusted; a@h keeps its local value.
+      expect(useSettingsStore.getState().preferredIdentityIds).toEqual({ 'a@h': 'idA', 'b@h': 'idB' });
+    });
+
+    it('a file import (no serverAccountId) still replaces the whole map', () => {
+      useSettingsStore.setState({ preferredIdentityIds: { 'a@h': 'idA' } });
+      useSettingsStore.getState().importSettings(
+        JSON.stringify({ preferredIdentityIds: { 'b@h': 'idB' } }),
+      );
+      expect(useSettingsStore.getState().preferredIdentityIds).toEqual({ 'b@h': 'idB' });
+    });
+
+    it('applies the same per-account merge to allMailFolderIds', () => {
+      useSettingsStore.setState({ allMailFolderIds: { 'a@h': ['x'], 'b@h': ['y'] } });
+      useSettingsStore.getState().importSettings(
+        JSON.stringify({ allMailFolderIds: { 'a@h': ['STALE'], 'b@h': ['y2'] } }),
+        { serverAccountId: 'b@h' },
+      );
+      const map = useSettingsStore.getState().allMailFolderIds;
+      expect(map['a@h']).toEqual(['x']);
+      expect(map['b@h']).toEqual(['y2']);
+    });
+  });
+
   describe('migrateSettings identity map', () => {
     it('adds an empty preferredIdentityIds map for pre-v6 users', () => {
       const out = migrateSettings({ allMailFolderIds: {} }, 6) as unknown as Record<string, unknown>;

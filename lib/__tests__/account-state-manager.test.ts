@@ -12,6 +12,7 @@ import { useCalendarStore } from '@/stores/calendar-store';
 import { useFilterStore } from '@/stores/filter-store';
 import { useIdentityStore } from '@/stores/identity-store';
 import { useVacationStore } from '@/stores/vacation-store';
+import { useFileStore } from '@/stores/file-store';
 import { DEFAULT_SEARCH_FILTERS } from '@/lib/jmap/search-utils';
 import { makeEmail, makeMailbox } from './helpers/factories';
 
@@ -108,6 +109,33 @@ describe('clearAllStores', () => {
     expect(s.threadEmailsCache.size).toBe(0);
     expect(s.tagCounts).toEqual({});
     expect(s.searchFilters).toEqual(DEFAULT_SEARCH_FILTERS);
+  });
+
+  it('resets the account-scoped Files drive (no stale resources across a switch)', () => {
+    // Simulate account A having opened the drive: client attached, a folder
+    // navigated into, and its listing loaded.
+    const fakeClient = {} as never;
+    useFileStore.getState().initClient(fakeClient, 'A');
+    useFileStore.setState({
+      resources: [{ id: 'r1', name: 'A-secret.txt' } as never],
+      pathStack: [{ id: null, name: '' }, { id: 'folderA', name: 'Folder A' }],
+      currentPath: '/Folder A',
+      currentParentId: 'folderA',
+      supportsFiles: true,
+      selectedResources: new Set(['r1']),
+    });
+
+    clearAllStores();
+
+    const f = useFileStore.getState();
+    expect(f.client).toBeNull();
+    expect(f.currentAccountId).toBeNull();
+    expect(f.resources).toEqual([]);
+    expect(f.selectedResources.size).toBe(0);
+    expect(f.currentParentId).toBeNull();
+    expect(f.currentPath).toBe('/');
+    expect(f.pathStack).toEqual([{ id: null, name: '' }]);
+    expect(f.supportsFiles).toBeNull();
   });
 });
 

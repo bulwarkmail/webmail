@@ -116,7 +116,7 @@ const ALIASED_ROLES = new Set(['inbox', 'sent', 'drafts', 'trash', 'archive', 'j
 
 export type MailDeepLink =
   | { kind: 'folder'; ref: string; accountId?: string }
-  | { kind: 'message'; id: string; accountId?: string }
+  | { kind: 'message'; id: string; accountId?: string; fullscreen?: boolean }
   | { kind: 'thread'; id: string; accountId?: string };
 
 export interface MailLinkState {
@@ -193,12 +193,16 @@ export function parseMailPath(
   search?: URLSearchParams,
 ): MailDeepLink | null {
   const accountId = search?.get('account') ?? undefined;
+  // `?view=fullscreen` asks for the message alone, no sidebar or list - what
+  // a mail dragged out into a new browser tab opens as. The Pro shell always
+  // opens message links as fullscreen email tabs and ignores the flag.
+  const fullscreen = search?.get('view') === 'fullscreen' || undefined;
   const [kind, value] = segments;
 
   if (kind && value) {
     const id = decodeSegment(value);
     if (id) {
-      if (kind === 'message') return { kind: 'message', id, accountId };
+      if (kind === 'message') return { kind: 'message', id, accountId, fullscreen };
       if (kind === 'thread') return { kind: 'thread', id, accountId };
       if (kind === 'folder') return { kind: 'folder', ref: id, accountId };
     }

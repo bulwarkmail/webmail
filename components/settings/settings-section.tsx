@@ -67,14 +67,17 @@ interface ToggleSwitchProps {
   disabled?: boolean;
   /** Overrides the enclosing SettingItem label as the accessible name. */
   ariaLabel?: string;
+  /** Test hook (data-testid) for integration tests. */
+  testId?: string;
 }
 
-export function ToggleSwitch({ checked, onChange, disabled, ariaLabel }: ToggleSwitchProps) {
+export function ToggleSwitch({ checked, onChange, disabled, ariaLabel, testId }: ToggleSwitchProps) {
   const labelledBy = useContext(SettingLabelContext);
   return (
     <button
       type="button"
       role="switch"
+      data-testid={testId}
       aria-checked={checked}
       aria-label={ariaLabel}
       aria-labelledby={ariaLabel ? undefined : labelledBy}

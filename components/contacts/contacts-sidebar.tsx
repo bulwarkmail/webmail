@@ -846,6 +846,9 @@ function AddressBookItem({
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
+      data-testid="address-book-item"
+      data-book-name={book.name}
+      data-account={book.accountName ?? ''}
       className={cn(
         "w-full flex items-center gap-2 ps-5 pe-3 text-sm transition-colors",
         isActive

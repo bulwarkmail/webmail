@@ -42,6 +42,49 @@ export function appendPlainTextSignature(
 }
 
 /**
+ * Whether a plain-text body already ends with the identity's signature.
+ *
+ * The HTML path detects an embedded signature by its markers
+ * (`containsEmbeddedSignature`); plain text has none, so the body is matched
+ * against the signature itself. Both sides go through the same line-break
+ * normalization so a body that round-tripped through a draft (CRLF, trailing
+ * spaces) still matches.
+ */
+export function plainTextBodyHasSignature(
+  body: string,
+  signature?: SignatureSource | null,
+): boolean {
+  const plainTextSignature = getPlainTextSignature(signature);
+  if (!plainTextSignature) {
+    return false;
+  }
+  return normalizeSignatureLineBreaks(body).endsWith(plainTextSignature);
+}
+
+/**
+ * The plain-text body with a trailing signature - and the `-- ` separator
+ * line in front of it - removed. Returns the body unchanged when it does not
+ * end with the identity's signature. Used to tell an untouched compose body
+ * (signature only) from one the user has already written into (#540).
+ */
+export function plainTextBodyWithoutSignature(
+  body: string,
+  signature?: SignatureSource | null,
+): string {
+  const plainTextSignature = getPlainTextSignature(signature);
+  if (!plainTextSignature) {
+    return body;
+  }
+  const normalized = normalizeSignatureLineBreaks(body);
+  if (!normalized.endsWith(plainTextSignature)) {
+    return body;
+  }
+  return normalized
+    .slice(0, normalized.length - plainTextSignature.length)
+    .replace(/\n*(?:-- ?)?\n*$/, '');
+}
+
+/**
  * Append a signature to an HTML body, preserving rich formatting. Used by the
  * quick-reply path so an HTML signature keeps its markup instead of being
  * flattened to plain text. Mirrors the composer's send-time signature block

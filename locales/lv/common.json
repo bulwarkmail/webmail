@@ -300,6 +300,10 @@
     "move": "Pārvietot",
     "print": "Drukāt",
     "view_source": "Skatīt avota kodu",
+
+    "fullscreen": "Pilnekrāna režīms",
+
+    "exit_fullscreen": "Iziet no pilnekrāna režīma",
     "export_email": "Eksportēt kā .eml",
     "forward_as_attachment": "Forward as attachment",
     "import_email": "Importēt .eml vai .zip",
@@ -574,6 +578,7 @@
     "read_receipt_on": "Pieprasīts lasīšanas apstiprinājums (noklikšķiniet, lai atspējotu)",
     "read_receipt_off": "Pieprasīt lasīšanas apstiprinājumu",
     "new_message": "Jauns ziņojums",
+    "signature_edit_hint": "Veiciet dubultklikšķi, lai rediģētu parakstu",
     "reply": "Atbildēt",
     "reply_all": "Atbildēt visiem",
     "forward": "Pārsūtīt",
@@ -748,7 +753,10 @@
     "rate_limited_title": "Autentifikācija serverī ir īslaicīgi ierobežota.",
     "rate_limited_detail": "Bulwark ir apturējis fonā veiktos pieprasījumus, lai izvairītos no bloķēšanas. Mēģinās vēlreiz pēc {seconds} s.",
     "rate_limited_action_title": "Pieprasījums apturēts, lai izvairītos no bloķēšanas.",
-    "rate_limited_action_detail": "Bulwark gaida servera noildzes beigas pirms jaunu autentificētu pieprasījumu sūtīšanas. Mēģiniet vēlreiz pēc {seconds} s."
+    "rate_limited_action_detail": "Bulwark gaida servera noildzes beigas pirms jaunu autentificētu pieprasījumu sūtīšanas. Mēģiniet vēlreiz pēc {seconds} s.",
+    "pull_to_refresh": "Velciet, lai atsvaidzinātu",
+    "release_to_refresh": "Atlaidiet, lai atsvaidzinātu",
+    "refreshing": "Atsvaidzina…"
   },
   "notifications": {
     "email_sent": "Vēstule veiksmīgi nosūtīta",
@@ -855,7 +863,10 @@
     "zh": "简体中文",
     "fa": "فارسی",
     "farsi": "فارسی",
-    "switch_to_farsi": "Pārslēgt uz persiešu valodu"
+    "switch_to_farsi": "Pārslēgt uz persiešu valodu",
+    "mn": "Монгол",
+    "mongolian": "Монгол",
+    "switch_to_mongolian": "Pārslēgt uz mongoļu valodu"
   },
   "settings": {
     "title": "Iestatījumi",
@@ -1104,12 +1115,27 @@
         "relay_label": "Push relejs",
         "relay_locked": "Iestatījis administrators",
         "relay_locked_desc": "Push releja URL ir iestatījis administrators, un to nevar mainīt.",
-        "relay_placeholder": "https://notifications.relay.example.com",
         "status_active": "Aktīvs šajā ierīcē",
         "status_busy": "Notiek darbs…",
         "status_inactive": "Nav iespējots šajā ierīcē",
         "status_unsupported": "Šī pārlūkprogramma neatbalsta Web Push",
-        "title": "Fona paziņojumi"
+        "title": "Fona paziņojumi",
+        "devices_title": "Reģistrētās ierīces",
+        "devices_desc": "Visas ierīces, kas reģistrētas šī konta fona paziņojumu saņemšanai. Atsaucot ierīci, tā nekavējoties pārstāj tās saņemt.",
+        "devices_loading": "Notiek reģistrēto ierīču ielāde…",
+        "devices_empty": "Fona paziņojumiem nav reģistrēta neviena ierīce.",
+        "devices_error": "Neizdevās ielādēt reģistrētās ierīces.",
+        "devices_refresh": "Atsvaidzināt",
+        "device_this": "Šī ierīce",
+        "device_other": "Cita ierīce",
+        "device_status_active": "Piegādā paziņojumus",
+        "device_status_inactive": "Nekad nav piegādājusi paziņojumu",
+        "device_status_unknown": "Šim retranslatoram nezināma",
+        "device_expires": "Beidzas {date}",
+        "revoke": "Atsaukt",
+        "confirm_revoke_title": "Atsaukt šo ierīci?",
+        "confirm_revoke_message": "Tā nekavējoties pārstās saņemt fona paziņojumus. Atkārtoti ieslēdzot push šajā ierīcē, tā tiks reģistrēta no jauna.",
+        "confirm_revoke_message_this": "Šī ierīce nekavējoties pārstās saņemt fona paziņojumus."
       }
     },
     "language_region": {
@@ -1188,6 +1214,12 @@
         "auto": "Automātiski (ieteicams)",
         "always": "Vienmēr pievienot atstarpi",
         "edge": "No malas līdz malai"
+      },
+      "plain_text_font": {
+        "label": "Vienkārša teksta fonts",
+        "description": "Fonts vienkārša teksta e-pastiem",
+        "mono": "Vienplatuma",
+        "sans": "Parasts (tāpat kā lietotnē)"
       },
       "archive_mode": {
         "label": "Arhivēt mapē",
@@ -1661,6 +1693,7 @@
       "create_subfolder": "Izveidot apakšmapi",
       "reorder": "Velciet, lai pārkārtotu",
       "reorder_error": "Neizdevās pārkārtot mapes",
+      "move_error": "Neizdevās pārvietot mapi",
       "subfolder_of": "Mapē {name}",
       "subfolder_name": "Apakšmapes nosaukums",
       "new_folder_name": "Mapes nosaukums",

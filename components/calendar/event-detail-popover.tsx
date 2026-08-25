@@ -15,11 +15,11 @@ import { parseDuration, getEventColor } from "./event-card";
 import { getEventDisplayEndDate, getEventEndDate, getEventStartDate } from "@/lib/calendar-utils";
 import { buildRecurrenceSummary } from "./recurrence-editor";
 import {
-  isOrganizer,
   getUserParticipantId,
   getUserStatus,
   getParticipantList,
 } from "@/lib/calendar-participants";
+import { getEventEditability } from "@/lib/calendar-editability";
 import { useFormatEventDate } from "@/hooks/use-format-event-date";
 
 interface EventDetailPopoverProps {
@@ -35,6 +35,7 @@ interface EventDetailPopoverProps {
   onMouseEnter?: () => void;
   onMouseLeave?: () => void;
   currentUserEmails?: string[];
+  isSubscriptionCalendar?: (calendarId: string) => boolean;
   timeFormat?: "12h" | "24h";
   isMobile?: boolean;
 }
@@ -120,6 +121,7 @@ export function EventDetailPopover({
   onMouseEnter,
   onMouseLeave,
   currentUserEmails = [],
+  isSubscriptionCalendar,
   timeFormat = "24h",
   isMobile,
 }: EventDetailPopoverProps) {
@@ -156,15 +158,17 @@ export function EventDetailPopover({
   const recurrenceLabel = useMemo(() => getRecurrenceLabel(event, t, locale), [event, t, locale]);
   const alertLabel = useMemo(() => getAlertLabel(event, t), [event, t]);
 
-  const userIsOrganizer = useMemo(() => {
-    if (!event.participants) return true;
-    return isOrganizer(event, currentUserEmails);
-  }, [event, currentUserEmails]);
-
-  const isAttendeeMode = useMemo(() => {
-    if (!event.participants) return false;
-    return !event.isOrigin && !userIsOrganizer;
-  }, [event, userIsOrganizer]);
+  // Gate affordances on calendar rights, not identity (see calendar-editability).
+  const editability = useMemo(() => {
+    const calendarsById = new Map(calendar ? [[calendar.id, calendar]] : []);
+    return getEventEditability(event, {
+      calendarsById,
+      userCalendarAddresses: currentUserEmails,
+      isSubscriptionCalendar: isSubscriptionCalendar ?? (() => false),
+    });
+  }, [event, calendar, currentUserEmails, isSubscriptionCalendar]);
+  const canEditBody = editability === "editable";
+  const rsvpMode = editability === "rsvp-only";
 
   const userParticipantId = useMemo(
     () => getUserParticipantId(event, currentUserEmails),
@@ -195,14 +199,14 @@ export function EventDetailPopover({
       const tag = target?.tagName?.toLowerCase();
       if (tag === "input" || tag === "textarea" || tag === "select") return;
       if (target?.getAttribute("contenteditable") === "true") return;
-      if (e.key === "e" && !noteExpanded) {
+      if (e.key === "e" && !noteExpanded && canEditBody) {
         e.preventDefault();
         onEdit();
       }
     };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [onClose, onEdit, noteExpanded]);
+  }, [onClose, onEdit, noteExpanded, canEditBody]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -483,7 +487,7 @@ export function EventDetailPopover({
       </div>
 
       {/* Quick Note */}
-      {!isAttendeeMode && (
+      {canEditBody && (
         <div className="px-4 py-2 border-t border-border">
           {noteExpanded ? (
             <div className="space-y-2">
@@ -533,7 +537,7 @@ export function EventDetailPopover({
       )}
 
       {/* RSVP Bar (for attendees) */}
-      {isAttendeeMode && onRsvp && userParticipantId && (
+      {rsvpMode && onRsvp && userParticipantId && (
         <div className="px-4 py-3 border-t border-border">
           <p className="text-xs font-medium text-muted-foreground mb-2">
             {t("participants.rsvp_label")}
@@ -608,10 +612,12 @@ export function EventDetailPopover({
           </div>
         ) : (
           <>
-            <Button variant="default" size="sm" onClick={onEdit} className="h-7 text-xs">
-              <Pencil className="w-3.5 h-3.5 me-1" />
-              {t("events.edit")}
-            </Button>
+            {canEditBody && (
+              <Button variant="default" size="sm" onClick={onEdit} className="h-7 text-xs">
+                <Pencil className="w-3.5 h-3.5 me-1" />
+                {t("events.edit")}
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="sm"
@@ -623,15 +629,17 @@ export function EventDetailPopover({
               {t("events.duplicate")}
             </Button>
             <div className="flex-1" />
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowDeleteConfirm(true)}
-              className="h-7 text-xs text-red-600 dark:text-red-400"
-              title={t("events.delete")}
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-            </Button>
+            {canEditBody && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowDeleteConfirm(true)}
+                className="h-7 text-xs text-red-600 dark:text-red-400"
+                title={t("events.delete")}
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </Button>
+            )}
           </>
         )}
       </div>

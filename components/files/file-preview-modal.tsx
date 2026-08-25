@@ -155,6 +155,11 @@ export function FilePreviewModal({ name, onClose, onDownload, getFileContent }: 
   // (text/html, image/svg+xml, ...) in a new tab would execute it in-origin.
   const [canOpenInNewTab, setCanOpenInNewTab] = useState(false);
   const [emlContent, setEmlContent] = useState<ParsedEml | null>(null);
+  // The PDF blob itself, kept alongside its object URL: the pdf.js mobile
+  // viewer needs the bytes, because fetching the blob: URL is blocked by CSP
+  // connect-src (#871). The URL is still what the <iframe> and the
+  // open-in-new-tab fallback use.
+  const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
 
   // Decide whether to render the PDF in a plain <iframe> (desktop) or with the
   // pdf.js canvas viewer (mobile). navigator.pdfViewerEnabled is the standard
@@ -208,6 +213,7 @@ export function FilePreviewModal({ name, onClose, onDownload, getFileContent }: 
     setObjectUrl(null);
     setCanOpenInNewTab(false);
     setEmlContent(null);
+    setPdfBlob(null);
     setLoading(true);
     setError(false);
     setResolvedFileType(getFilePreviewKind(name));
@@ -253,6 +259,7 @@ export function FilePreviewModal({ name, onClose, onDownload, getFileContent }: 
           if (!cancelled) {
             setObjectUrl(revokeUrl);
             setCanOpenInNewTab(isMimeTypeSafeForInlinePreview(effectiveType));
+            if (previewType === "pdf") setPdfBlob(typedBlob);
           }
         }
       } catch {
@@ -374,7 +381,7 @@ export function FilePreviewModal({ name, onClose, onDownload, getFileContent }: 
           />
         )}
 
-        {!loading && !error && fileType === "pdf" && objectUrl && !pdfInlineSupported && (
+        {!loading && !error && fileType === "pdf" && objectUrl && pdfBlob && !pdfInlineSupported && (
           // Mobile browsers can't show a PDF inline in an <iframe> (Android: a
           // blank frame / silent download; iOS: only the first page), so render
           // it with pdf.js (canvas) instead. The header's open-in-new-tab /
@@ -383,7 +390,7 @@ export function FilePreviewModal({ name, onClose, onDownload, getFileContent }: 
             className="w-full max-w-3xl h-full overflow-auto rounded-lg bg-neutral-200 dark:bg-neutral-800 p-2"
             onClick={(e) => e.stopPropagation()}
           >
-            <PdfMobileViewer url={objectUrl} />
+            <PdfMobileViewer url={objectUrl} blob={pdfBlob} />
           </div>
         )}
 

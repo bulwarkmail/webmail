@@ -31,14 +31,15 @@ import { SidebarAppsModal } from "@/components/layout/sidebar-apps-modal";
 import { InlineAppView } from "@/components/layout/inline-app-view";
 import { useSidebarApps } from "@/hooks/use-sidebar-apps";
 import { useIsEmbedded } from "@/hooks/use-is-embedded";
+import { useIsFocusedProTab } from "@/hooks/use-pane-context";
 import { useProMultiAccountContacts } from "@/hooks/use-pro-multi-account-contacts";
 import { ResizeHandle } from "@/components/layout/resize-handle";
 import { useIsDesktop, useIsMobile } from "@/hooks/use-media-query";
 import { useRefreshGesture } from "@/hooks/use-refresh-gesture";
 import type { ContactCard, AddressBook, AddressBookRights } from "@/lib/jmap/types";
 import { ShareCollectionDialog } from "@/components/settings/share-collection-dialog";
-import { appPath, buildContactsPath, parseContactsPath } from "@/lib/deep-links";
-import { consumePendingDeepLink } from "@/lib/deep-link-handoff";
+import { appPath, buildContactsPath, parseContactsPath, type ContactDeepLink } from "@/lib/deep-links";
+import { consumePendingDeepLink, subscribePendingDeepLink } from "@/lib/deep-link-handoff";
 import { useDeepLinkUrl } from "@/hooks/use-deep-link-url";
 import { useProInterfaceActive } from "@/components/pro/pro-interface-redirect";
 
@@ -181,15 +182,9 @@ export function ContactsApp({ linkSegments }: ContactsAppProps = {}) {
   // plus the older one-shot query form the mobile recipient popover emits
   // (`?contactId=`, `?addEmail=`). `from=email` flips the mobile back button to
   // `router.back()`. After this the URL is an output of the view, not an input.
-  useEffect(() => {
-    if (intentAppliedRef.current) return;
-    const segments = linkSegments ?? consumePendingDeepLink('contacts') ?? [];
-    const link = parseContactsPath(
-      segments,
-      new URLSearchParams(searchParams.toString()),
-    );
-    intentAppliedRef.current = true;
-    if (!link) return;
+  // The applier is held in a ref so the live-delivery subscription below (Pro
+  // shell) always calls the copy closing over the current setters.
+  const applyContactsDeepLink = (link: ContactDeepLink) => {
     if (link.fromEmail) setReturnToEmail(true);
     if (link.kind === 'contact') {
       setSelectedContact(link.id);
@@ -199,23 +194,52 @@ export function ContactsApp({ linkSegments }: ContactsAppProps = {}) {
       setSelectedContact(null);
       setView('create');
     }
+  };
+  const applyContactsDeepLinkRef = useRef(applyContactsDeepLink);
+  applyContactsDeepLinkRef.current = applyContactsDeepLink;
+
+  useEffect(() => {
+    if (intentAppliedRef.current) return;
+    const segments = linkSegments ?? consumePendingDeepLink('contacts') ?? [];
+    const link = parseContactsPath(
+      segments,
+      new URLSearchParams(searchParams.toString()),
+    );
+    intentAppliedRef.current = true;
+    if (!link) return;
+    applyContactsDeepLinkRef.current(link);
   }, [searchParams, linkSegments, setSelectedContact]);
 
-  // The permalink for the contact on screen. Suppressed inside the Pro shell,
-  // where /pro owns the address bar.
+  // Pro shell only: this surface stays mounted for the whole session, so links
+  // arriving after mount are delivered live instead of being parked forever.
+  // Embedded-only: during a cold-load redirect the standard instance renders
+  // briefly and must not steal the link parked for the Pro one.
+  useEffect(() => {
+    if (!isEmbedded) return;
+    return subscribePendingDeepLink('contacts', (segments) => {
+      const link = parseContactsPath(segments, new URLSearchParams(window.location.search));
+      if (link) applyContactsDeepLinkRef.current(link);
+    });
+  }, [isEmbedded]);
+
+  // The permalink for the contact on screen. In the Pro shell only the
+  // focused tab writes the address bar; the standard instance that renders
+  // while Pro takes over a route stays silent.
   const proInterfaceActive = useProInterfaceActive();
+  const isFocusedProTab = useIsFocusedProTab();
+  const contactsLinkPath = appPath(buildContactsPath({
+    contactId: view === 'detail' || view === 'edit' ? selectedContactId : null,
+    editing: view === 'edit',
+  }));
   useDeepLinkUrl(
-    isEmbedded || proInterfaceActive
-      ? null
-      : appPath(buildContactsPath({
-          contactId: view === 'detail' || view === 'edit' ? selectedContactId : null,
-          editing: view === 'edit',
-        })),
+    isEmbedded
+      ? (isFocusedProTab ? contactsLinkPath : null)
+      : proInterfaceActive ? null : contactsLinkPath,
   );
 
   // Intercept browser refresh gestures (F5, Ctrl/Cmd+R, pull-to-refresh)
   // and refresh contacts via JMAP instead of reloading the page.
-  useRefreshGesture({
+  const { indicator: refreshIndicator } = useRefreshGesture({
     enabled: isAuthenticated && !!client && supportsSync,
     onRefresh: async () => {
       if (!client) return;
@@ -224,8 +248,8 @@ export function ContactsApp({ linkSegments }: ContactsAppProps = {}) {
         if (activeId) {
           const { fetchAllAccountsContacts, fetchAllAccountsAddressBooks } = useContactStore.getState();
           await Promise.all([
-            fetchAllAccountsAddressBooks(accountClients, activeId),
-            fetchAllAccountsContacts(accountClients, activeId),
+            fetchAllAccountsAddressBooks(accountClients),
+            fetchAllAccountsContacts(accountClients),
           ]);
           return;
         }
@@ -331,7 +355,7 @@ export function ContactsApp({ linkSegments }: ContactsAppProps = {}) {
       const activeId = useAuthStore.getState().activeAccountId;
       if (activeId) {
         const { fetchAllAccountsAddressBooks } = useContactStore.getState();
-        await fetchAllAccountsAddressBooks(accountClients, activeId);
+        await fetchAllAccountsAddressBooks(accountClients);
         return;
       }
     }
@@ -859,6 +883,7 @@ export function ContactsApp({ linkSegments }: ContactsAppProps = {}) {
   return (
     <div className={cn("flex flex-col bg-background overflow-hidden pt-[env(safe-area-inset-top)]", isEmbedded ? "h-full" : "h-dvh")}>
       <AppTopBannerSlot />
+      {refreshIndicator}
       <div className={cn("flex flex-1 min-h-0 overflow-hidden", isMobile && "flex-col")}>
       {/* Navigation Rail - desktop only (hidden when embedded in Pro shell) */}
       {!isMobile && !isEmbedded && (

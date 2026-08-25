@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo, useSyncExternalStore } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo, useSyncExternalStore } from 'react';
 import { useRouter } from '@/i18n/navigation';
 import { useTranslations, useMessages } from 'next-intl';
 import {
@@ -70,7 +70,7 @@ import { PluginIframeSlot } from '@/components/plugins/plugin-iframe-slot';
 import { offersForSlot as pluginOffersForSlot, subscribe as pluginRegistrySubscribe, get as getActivePlugin } from '@/lib/plugin-sandbox/registry';
 import { ProtocolHandlerSettings } from '@/components/settings/protocol-handler-settings';
 import { appPath, buildSettingsPath, parseSettingsPath } from '@/lib/deep-links';
-import { consumePendingDeepLink } from '@/lib/deep-link-handoff';
+import { consumePendingDeepLink, subscribePendingDeepLink } from '@/lib/deep-link-handoff';
 import { useDeepLinkUrl } from '@/hooks/use-deep-link-url';
 import { useProInterfaceActive } from '@/components/pro/pro-interface-redirect';
 import { useAuthStore, redirectToLogin, saveRedirectAfterLogin } from '@/stores/auth-store';
@@ -85,6 +85,7 @@ import { SidebarAppsModal } from '@/components/layout/sidebar-apps-modal';
 import { InlineAppView } from '@/components/layout/inline-app-view';
 import { useSidebarApps } from '@/hooks/use-sidebar-apps';
 import { useIsEmbedded } from '@/hooks/use-is-embedded';
+import { useIsFocusedProTab } from '@/hooks/use-pane-context';
 import { ResizeHandle } from '@/components/layout/resize-handle';
 import { useConfig } from '@/hooks/use-config';
 import { usePolicyStore } from '@/stores/policy-store';
@@ -207,6 +208,7 @@ const tabSearchPaths: Record<Tab, string[]> = {
     'settings.email_behavior.hide_inline_image_attachments',
     'settings.email_behavior.hover_actions',
     'settings.email_behavior.permanently_delete_junk',
+    'settings.email_behavior.plain_text_font',
     'settings.email_behavior.show_preview',
   ],
   composing: [
@@ -250,7 +252,7 @@ const tabKeywords: Record<Tab, string> = {
   notifications: 'sound alert push badge',
   appearance: 'theme dark light font size accent color animation density',
   layout: 'toolbar sidebar account switcher unified mailbox icons rail',
-  reading: 'mark read preview thread conversation archive delete attachment open',
+  reading: 'mark read preview thread conversation archive delete attachment open monospace mono font plain text',
   composing: 'editor signature plain text reply forward draft compose',
   downloads: 'download filename template eml attachment save export',
   identities: 'from address signature email',
@@ -381,6 +383,18 @@ function tabFromDeepLink(segments: string[] | null | undefined): SettingsTabId |
   return null;
 }
 
+// Toggling the Pro interface remounts the whole settings surface (enabling
+// replaces the route with /pro, which hosts its own SettingsApp; disabling
+// leaves /pro through a full page load back to /settings). The active tab
+// survives via localStorage, but the content pane's scroll offset would not -
+// and the toggle itself sits at the bottom of a long tab, so the user would
+// land back at the top of the page they were just on. Module scope covers the
+// client-side navigation; sessionStorage carries the offset across the full
+// page load, with a TTL so a stray unconsumed entry can't scroll a visit
+// minutes later.
+let parkedContentScroll: { tab: SettingsTabId; top: number; ts: number } | null = null;
+const SCROLL_RESTORE_KEY = 'settings-scroll-restore';
+
 export interface SettingsAppProps {
   /** Path segments after `/settings` - `['<tabId>']`. */
   linkSegments?: string[];
@@ -421,6 +435,16 @@ export function SettingsApp({ linkSegments }: SettingsAppProps = {}) {
     const tab = tabFromDeepLink(consumePendingDeepLink('settings'));
     if (tab) setActiveTab(tab);
   }, [linkSegments]);
+  // Pro shell only: this surface stays mounted for the whole session, so links
+  // arriving later (e.g. the sidebar's folder-settings gear) are delivered
+  // live instead of being parked for a mount that already happened.
+  useEffect(() => {
+    if (!isEmbedded) return;
+    return subscribePendingDeepLink('settings', (segments) => {
+      const tab = tabFromDeepLink(segments);
+      if (tab) setActiveTab(tab);
+    });
+  }, [isEmbedded]);
   const [mobileShowContent, setMobileShowContent] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [pendingHighlight, setPendingHighlight] = useState<{ tab: SettingsTabId; label: string; pluginId?: string } | null>(null);
@@ -639,11 +663,50 @@ export function SettingsApp({ linkSegments }: SettingsAppProps = {}) {
   // so the tab is only in the URL once the user is looking at its content.
   // Must sit above the early return below - it is a hook.
   const proInterfaceActive = useProInterfaceActive();
+  const isFocusedProTab = useIsFocusedProTab();
+  const settingsLinkPath = appPath(buildSettingsPath(!isDesktop && !mobileShowContent ? null : activeTab));
   useDeepLinkUrl(
-    !isAuthenticated || isEmbedded || proInterfaceActive
+    !isAuthenticated
       ? null
-      : appPath(buildSettingsPath(!isDesktop && !mobileShowContent ? null : activeTab)),
+      : isEmbedded
+        ? (isFocusedProTab ? settingsLinkPath : null)
+        : proInterfaceActive ? null : settingsLinkPath,
   );
+
+  // Park the content-pane scroll offset when the Pro toggle flips (the flip
+  // remounts this component - see parkedContentScroll above). The ref only
+  // exists in the desktop layout, which is also the only place the remount
+  // can happen - on mobile `el` stays null and nothing is parked.
+  const contentScrollRef = useRef<HTMLDivElement | null>(null);
+  const prevProInterface = useRef(proInterface);
+  useEffect(() => {
+    if (prevProInterface.current === proInterface) return;
+    prevProInterface.current = proInterface;
+    const el = contentScrollRef.current;
+    if (!el) return;
+    parkedContentScroll = { tab: activeTab, top: el.scrollTop, ts: Date.now() };
+    try { sessionStorage.setItem(SCROLL_RESTORE_KEY, JSON.stringify(parkedContentScroll)); } catch { /* ignore */ }
+  }, [proInterface, activeTab]);
+  // Restore when the container mounts. A callback ref rather than a mount
+  // effect: after the Pro-off reload this component first renders without the
+  // container (auth check pending), so a mount-time effect would consume the
+  // parked offset before there is anything to scroll.
+  const attachContentScroll = useCallback((el: HTMLDivElement | null) => {
+    contentScrollRef.current = el;
+    if (!el) return;
+    let parked = parkedContentScroll;
+    parkedContentScroll = null;
+    try {
+      const raw = sessionStorage.getItem(SCROLL_RESTORE_KEY);
+      if (raw) {
+        sessionStorage.removeItem(SCROLL_RESTORE_KEY);
+        parked = parked ?? (JSON.parse(raw) as NonNullable<typeof parkedContentScroll>);
+      }
+    } catch { /* ignore */ }
+    if (parked && parked.tab === activeTab && Date.now() - parked.ts < 60_000) {
+      el.scrollTop = parked.top;
+    }
+  }, [activeTab]);
 
   if (!isAuthenticated) {
     return null;
@@ -932,6 +995,7 @@ export function SettingsApp({ linkSegments }: SettingsAppProps = {}) {
                   return (
                     <div key={tab.id}>
                       <button
+                        data-testid={`settings-tab-${tab.id}`}
                         onClick={() => handleTabSelect(tab.id)}
                         className="w-full flex items-center justify-between px-5 py-3.5 text-sm text-foreground hover:bg-muted transition-colors duration-150"
                       >
@@ -1072,6 +1136,7 @@ export function SettingsApp({ linkSegments }: SettingsAppProps = {}) {
                   return (
                     <div key={tab.id}>
                       <button
+                        data-testid={`settings-tab-${tab.id}`}
                         onClick={() => handleTabSelect(tab.id)}
                         className={cn(
                           'w-full text-start px-3 py-2 rounded-md text-sm transition-colors duration-150 flex items-center gap-2.5',
@@ -1114,7 +1179,7 @@ export function SettingsApp({ linkSegments }: SettingsAppProps = {}) {
         onDoubleClick={() => { setSettingsSidebarWidth(256); localStorage.setItem('settings-sidebar-width', '256'); }}
       />
 
-      <div className="flex-1 overflow-y-auto">
+      <div ref={attachContentScroll} className="flex-1 overflow-y-auto">
         <div className="max-w-3xl mx-auto px-6 py-6">
           {renderTabContent()}
         </div>

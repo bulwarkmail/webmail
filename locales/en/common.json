@@ -300,6 +300,10 @@
     "move": "Move",
     "print": "Print",
     "view_source": "View source",
+
+    "fullscreen": "Fullscreen",
+
+    "exit_fullscreen": "Exit fullscreen",
     "export_email": "Export as .eml",
     "forward_as_attachment": "Forward as attachment",
     "import_email": "Import .eml or .zip",
@@ -574,6 +578,7 @@
     "read_receipt_on": "Read receipt requested (click to disable)",
     "read_receipt_off": "Request a read receipt",
     "new_message": "New Message",
+    "signature_edit_hint": "Double-click to edit the signature",
     "reply": "Reply",
     "reply_all": "Reply All",
     "forward": "Forward",
@@ -748,7 +753,10 @@
     "rate_limited_title": "Server authentication is temporarily rate limited.",
     "rate_limited_detail": "Bulwark has paused background requests to avoid lockout. Retrying in {seconds}s.",
     "rate_limited_action_title": "Request paused to avoid lockout.",
-    "rate_limited_action_detail": "Bulwark is waiting for the server cooldown to end before sending more authenticated requests. Try again in {seconds}s."
+    "rate_limited_action_detail": "Bulwark is waiting for the server cooldown to end before sending more authenticated requests. Try again in {seconds}s.",
+    "pull_to_refresh": "Pull to refresh",
+    "release_to_refresh": "Release to refresh",
+    "refreshing": "Refreshing…"
   },
   "notifications": {
     "email_sent": "Email sent successfully",
@@ -855,7 +863,10 @@
     "zh": "简体中文",
     "fa": "فارسی",
     "farsi": "فارسی",
-    "switch_to_farsi": "Switch to Farsi"
+    "switch_to_farsi": "Switch to Farsi",
+    "mn": "Монгол",
+    "mongolian": "Монгол",
+    "switch_to_mongolian": "Switch to Mongolian"
   },
   "settings": {
     "title": "Settings",
@@ -1074,10 +1085,9 @@
         "title": "Background Notifications",
         "description": "Receive system notifications for new mail when this site is closed. Delivered via the Bulwark push relay; the relay never sees mail content.",
         "relay_label": "Push relay",
-        "relay_desc": "Defaults to the hosted Bulwark relay. Change only if you self-host.",
+        "relay_desc": "The server that delivers your notifications. Choose from the relays your administrator offers.",
         "relay_locked": "Set by administrator",
-        "relay_locked_desc": "The push relay URL has been set by your administrator and cannot be changed.",
-        "relay_placeholder": "https://notifications.relay.example.com",
+        "relay_locked_desc": "The push relay has been set by your administrator and cannot be changed.",
         "status_active": "Active on this device",
         "status_inactive": "Not enabled on this device",
         "status_unsupported": "This browser does not support Web Push",
@@ -1088,7 +1098,23 @@
         "confirm_disable_title": "Disable background notifications?",
         "confirm_disable_message": "This device will stop receiving alerts when the site is closed.",
         "dismiss_aria": "Dismiss notification prompt",
-        "ios_hint": "On iOS, install the site to your home screen first - Safari only delivers Web Push to installed PWAs."
+        "ios_hint": "On iOS, install the site to your home screen first - Safari only delivers Web Push to installed PWAs.",
+        "devices_title": "Registered devices",
+        "devices_desc": "Every device registered to receive background notifications for this account. Revoking one stops it receiving immediately.",
+        "devices_loading": "Loading registered devices…",
+        "devices_empty": "No devices are registered for background notifications.",
+        "devices_error": "Could not load registered devices.",
+        "devices_refresh": "Refresh",
+        "device_this": "This device",
+        "device_other": "Other device",
+        "device_status_active": "Delivering notifications",
+        "device_status_inactive": "Never delivered a notification",
+        "device_status_unknown": "Not known to this relay",
+        "device_expires": "Expires {date}",
+        "revoke": "Revoke",
+        "confirm_revoke_title": "Revoke this device?",
+        "confirm_revoke_message": "It will stop receiving background notifications immediately. Enabling push again on that device registers it anew.",
+        "confirm_revoke_message_this": "This device will stop receiving background notifications immediately."
       },
       "sound_selection": {
         "title": "Notification Sound",
@@ -1191,6 +1217,12 @@
         "auto": "Auto (recommended)",
         "always": "Always add spacing",
         "edge": "Edge to edge"
+      },
+      "plain_text_font": {
+        "label": "Plain Text Font",
+        "description": "Font used for plain text emails",
+        "mono": "Monospace",
+        "sans": "Normal (same as the app)"
       },
       "archive_mode": {
         "label": "Archive in",
@@ -1361,6 +1393,22 @@
       "return_to_list_after_action": {
         "label": "Return to list after delete or mark unread",
         "description": "After deleting or marking the open message unread, go back to the message list instead of opening the next message."
+      },
+      "swipe_right_action": {
+        "label": "Swipe right action (mobile)",
+        "description": "On touch devices, the action performed when you swipe a message to the right in the list."
+      },
+      "swipe_left_action": {
+        "label": "Swipe left action (mobile)",
+        "description": "On touch devices, the action performed when you swipe a message to the left in the list."
+      },
+      "swipe_actions": {
+        "none": "None",
+        "archive": "Archive",
+        "delete": "Delete",
+        "mark_read": "Toggle read",
+        "star": "Toggle star",
+        "spam": "Mark as spam"
       },
       "rtl_editing": {
         "label": "Right-to-left editing support",
@@ -1666,8 +1714,9 @@
       "role_none": "None",
       "create_folder": "Create Folder",
       "create_subfolder": "Create Subfolder",
-      "reorder": "Drag to reorder",
+      "reorder": "Drag up or down to reorder, left or right to change the parent folder",
       "reorder_error": "Failed to reorder folders",
+      "move_error": "Failed to move folder",
       "subfolder_of": "Inside {name}",
       "subfolder_name": "Subfolder name",
       "new_folder_name": "Folder name",

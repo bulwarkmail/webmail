@@ -173,3 +173,31 @@ describe('verifyJmapAuth SSRF protection', () => {
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 });
+
+describe('normalizeJmapServerUrl', () => {
+  async function load() {
+    return import('@/lib/auth/verify-jmap-auth');
+  }
+
+  it('accepts an app-relative URL (dev mock JMAP server)', async () => {
+    const { normalizeJmapServerUrl } = await load();
+    expect(normalizeJmapServerUrl('/api/dev-jmap')).toBe('/api/dev-jmap');
+  });
+
+  it('strips query, hash, and trailing slashes from an app-relative URL', async () => {
+    const { normalizeJmapServerUrl } = await load();
+    expect(normalizeJmapServerUrl('/api/dev-jmap/?x=1#frag')).toBe('/api/dev-jmap');
+  });
+
+  it('rejects protocol-relative URLs', async () => {
+    const { normalizeJmapServerUrl } = await load();
+    expect(() => normalizeJmapServerUrl('//evil.example.com/api')).toThrow('Invalid server URL');
+  });
+
+  it('normalizes absolute URLs unchanged', async () => {
+    const { normalizeJmapServerUrl } = await load();
+    expect(normalizeJmapServerUrl('https://mail.example.com/jmap/?a=b')).toBe(
+      'https://mail.example.com/jmap',
+    );
+  });
+});

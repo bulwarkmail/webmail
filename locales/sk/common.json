@@ -300,6 +300,10 @@
     "move": "Presunúť",
     "print": "Tlačiť",
     "view_source": "Zobraziť zdrojový kód",
+
+    "fullscreen": "Celá obrazovka",
+
+    "exit_fullscreen": "Ukončiť režim celej obrazovky",
     "export_email": "Exportovať ako .eml",
     "forward_as_attachment": "Forward as attachment",
     "import_email": "Importovať .eml alebo .zip",
@@ -574,6 +578,7 @@
     "read_receipt_on": "Potvrdenie o prečítaní požiadané (kliknutím vypnete)",
     "read_receipt_off": "Požiadať o potvrdenie o prečítaní",
     "new_message": "Nová správa",
+    "signature_edit_hint": "Dvojklikom upravíte podpis",
     "reply": "Odpovedať",
     "reply_all": "Odpovedať všetkým",
     "forward": "Preposlať",
@@ -748,7 +753,10 @@
     "rate_limited_title": "Overenie servera je dočasne obmedzené.",
     "rate_limited_detail": "Bulwark pozastavil požiadavky na pozadí, aby zabránil zablokovaniu. Opätovný pokus za {seconds} s.",
     "rate_limited_action_title": "Požiadavka pozastavená, aby sa zabránilo zablokovaniu.",
-    "rate_limited_action_detail": "Bulwark čaká na ukončenie doby blokovania servera. Skúste to znova za {seconds} s."
+    "rate_limited_action_detail": "Bulwark čaká na ukončenie doby blokovania servera. Skúste to znova za {seconds} s.",
+    "pull_to_refresh": "Potiahnutím obnovíte",
+    "release_to_refresh": "Uvoľnením obnovíte",
+    "refreshing": "Obnovuje sa…"
   },
   "notifications": {
     "email_sent": "E-mail bol úspešne odoslaný",
@@ -855,7 +863,10 @@
     "zh": "简体中文",
     "fa": "فارسی",
     "farsi": "فارسی",
-    "switch_to_farsi": "Prepnúť na perštinu"
+    "switch_to_farsi": "Prepnúť na perštinu",
+    "mn": "Монгол",
+    "mongolian": "Монгол",
+    "switch_to_mongolian": "Prepnúť na mongolčinu"
   },
   "settings": {
     "title": "Nastavenia",
@@ -1101,7 +1112,6 @@
         "relay_desc": "Predvolený je hostovaný relay Bulwark. Zmeňte iba ak používate vlastný hosting.",
         "relay_locked": "Nastavené administrátorom",
         "relay_locked_desc": "URL push relay bola nastavená administrátorom a nedá sa zmeniť.",
-        "relay_placeholder": "https://notifications.relay.example.com",
         "status_active": "Aktívne na tomto zariadení",
         "status_inactive": "Nie je povolené na tomto zariadení",
         "status_unsupported": "Tento prehliadač nepodporuje Web Push",
@@ -1112,7 +1122,23 @@
         "confirm_disable_title": "Zakázať oznámenia na pozadí?",
         "confirm_disable_message": "Toto zariadenie prestane prijímať upozornenia, keď je stránka zatvorená.",
         "dismiss_aria": "Zavrieť výzvu na oznámenia",
-        "ios_hint": "Na iOS najprv nainštalujte stránku na domovskú obrazovku – Safari doručuje Web Push iba nainštalovaným PWA."
+        "ios_hint": "Na iOS najprv nainštalujte stránku na domovskú obrazovku – Safari doručuje Web Push iba nainštalovaným PWA.",
+        "devices_title": "Registrované zariadenia",
+        "devices_desc": "Všetky zariadenia registrované na príjem oznámení na pozadí pre tento účet. Odvolanie okamžite zastaví ich príjem.",
+        "devices_loading": "Načítavajú sa registrované zariadenia…",
+        "devices_empty": "Pre oznámenia na pozadí nie je registrované žiadne zariadenie.",
+        "devices_error": "Registrované zariadenia sa nepodarilo načítať.",
+        "devices_refresh": "Obnoviť",
+        "device_this": "Toto zariadenie",
+        "device_other": "Iné zariadenie",
+        "device_status_active": "Doručuje oznámenia",
+        "device_status_inactive": "Nikdy nedoručilo oznámenie",
+        "device_status_unknown": "Tomuto relay nie je známe",
+        "device_expires": "Vyprší {date}",
+        "revoke": "Odvolať",
+        "confirm_revoke_title": "Odvolať toto zariadenie?",
+        "confirm_revoke_message": "Okamžite prestane prijímať oznámenia na pozadí. Opätovné zapnutie push na tom zariadení ho zaregistruje nanovo.",
+        "confirm_revoke_message_this": "Toto zariadenie okamžite prestane prijímať oznámenia na pozadí."
       }
     },
     "language_region": {
@@ -1191,6 +1217,12 @@
         "auto": "Automaticky (odporúčané)",
         "always": "Vždy pridať odsadenie",
         "edge": "Od okraja po okraj"
+      },
+      "plain_text_font": {
+        "label": "Písmo obyčajného textu",
+        "description": "Písmo použité pre e-maily v obyčajnom texte",
+        "mono": "Neproporcionálne",
+        "sans": "Normálne (rovnaké ako aplikácia)"
       },
       "archive_mode": {
         "label": "Archivovať do",
@@ -1668,6 +1700,7 @@
       "create_subfolder": "Vytvoriť podpriečinok",
       "reorder": "Potiahnutím zmeníte poradie",
       "reorder_error": "Nepodarilo sa zmeniť poradie priečinkov",
+      "move_error": "Nepodarilo sa presunúť priečinok",
       "subfolder_of": "V priečinku {name}",
       "subfolder_name": "Názov podpriečinka",
       "new_folder_name": "Názov priečinka",

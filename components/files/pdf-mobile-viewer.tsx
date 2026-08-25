@@ -27,7 +27,11 @@ const MAX_ZOOM = 4; // pinch can go a bit beyond the double-tap steps
 const DOUBLE_TAP_MS = 300;
 const DOUBLE_TAP_SLOP = 30; // px
 
-export function PdfMobileViewer({ url }: { url: string }) {
+// `blob` is the document itself; `url` (a blob: URL for the same bytes) is only
+// used for the open-in-new-tab fallback. pdf.js must be fed the bytes, not the
+// URL: fetching a blob: URL is governed by CSP connect-src, which doesn't (and
+// shouldn't need to) allow blob:, so getDocument({ url }) is blocked (#871).
+export function PdfMobileViewer({ url, blob }: { url: string; blob: Blob }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const pagesRef = useRef<HTMLDivElement>(null);
   const zoom = useRef({ step: 0, scale: 1 });
@@ -51,7 +55,12 @@ export function PdfMobileViewer({ url }: { url: string }) {
           import.meta.url,
         ).toString();
 
-        loadingTask = pdfjs.getDocument({ url });
+        // The Uint8Array is created fresh from the blob, so pdf.js taking
+        // ownership of (and transferring) the buffer is fine.
+        const data = new Uint8Array(await blob.arrayBuffer());
+        if (cancelled) return;
+
+        loadingTask = pdfjs.getDocument({ data });
         const doc = await loadingTask.promise;
         if (cancelled) return;
 
@@ -92,7 +101,7 @@ export function PdfMobileViewer({ url }: { url: string }) {
       cancelled = true;
       void loadingTask?.destroy().catch(() => {});
     };
-  }, [url]);
+  }, [blob]);
 
   // Gesture zoom. 1-finger double-tap cycles the steps (fit -> 2x -> 3x ->
   // fit); 2-finger pinch zooms continuously up to MAX_ZOOM. Both drive a

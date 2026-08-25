@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import DOMPurify from "dompurify";
 import { Email, ThreadGroup } from "@/lib/jmap/types";
-import { EMAIL_SANITIZE_CONFIG, collapseBlockedImageContainers, plainTextToSafeHtml, sanitizePlainTextRenderedHtml } from "@/lib/email-sanitization";
+import { EMAIL_SANITIZE_CONFIG, collapseBlockedImageContainers, plainTextToSafeHtml, restrictDataUriResourcesOnNode, sanitizePlainTextRenderedHtml } from "@/lib/email-sanitization";
 import { hasMeaningfulHtmlBody } from "@/lib/signature-utils";
 import { collapsePlainTextQuotes, setupQuoteCollapse } from "@/lib/quote-collapse";
 import { transformInlineStyles, transformColorForDarkMode, transformBgColorForDarkMode } from "@/lib/color-transform";
@@ -240,6 +240,7 @@ function EmailCard({
   const mailAttachmentAction = useSettingsStore((state) => state.mailAttachmentAction);
   const hideInlineImageAttachments = useSettingsStore((state) => state.hideInlineImageAttachments);
   const emailAlwaysLightMode = useSettingsStore((state) => state.emailAlwaysLightMode);
+  const plainTextFont = useSettingsStore((state) => state.plainTextFont);
   const sender = email.from?.[0];
   const isUnread = !email.keywords?.$seen;
   const isStarred = email.keywords?.$flagged;
@@ -363,6 +364,9 @@ function EmailCard({
 
         DOMPurify.addHook('afterSanitizeAttributes', (node) => {
           const htmlNode = node as HTMLElement;
+
+          // Re-apply the data:-URI allowlist DOMPurify skips on media tags.
+          restrictDataUriResourcesOnNode(node);
 
           if (!allowExternal) {
             if (node.tagName === 'IMG') {
@@ -613,7 +617,7 @@ function EmailCard({
                   "[&_table]:border-collapse [&_td]:p-2 [&_th]:p-2",
                   "[&_img]:max-w-full [&_img]:h-auto"
                 )}
-                style={{ whiteSpace: 'pre-wrap', fontFamily: 'ui-monospace, "SF Mono", Consolas, monospace', fontSize: '13px' }}
+                style={{ whiteSpace: 'pre-wrap', ...(plainTextFont === 'mono' && { fontFamily: 'ui-monospace, "SF Mono", Consolas, monospace' }), fontSize: '13px' }}
                 dangerouslySetInnerHTML={{ __html: sanitizePlainTextRenderedHtml(emailContent.html) }}
               />
             )}

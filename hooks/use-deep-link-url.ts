@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 
 /**
  * Keeps the address bar in step with what a surface is showing (#733), so the
@@ -11,20 +11,19 @@ import { useEffect, useRef } from "react";
  * than not pushing at all - the URL would change while the view sat still. Mail
  * is the exception and drives its own history through `useBrowserNavigation`.
  *
- * Pass `null` to leave the URL alone (inside the Pro shell, where the route is
- * /pro and the tab strip owns the address bar).
+ * Pass `null` to leave the URL alone (an unfocused Pro tab, whose focused
+ * sibling owns the address bar). Dedupe is against the *actual* location, not
+ * a remembered last write: in the Pro shell several surfaces take turns
+ * writing the URL, so what this hook wrote last says nothing about what the
+ * bar currently shows.
  *
  * The existing history state is preserved so Next's router bookkeeping - which
  * lives in `window.history.state` - survives the rewrite.
  */
 export function useDeepLinkUrl(path: string | null): void {
-  const lastRef = useRef<string | null>(null);
-
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (!path) return;
-    if (lastRef.current === path) return;
-    lastRef.current = path;
     if (`${window.location.pathname}${window.location.search}` === path) return;
     window.history.replaceState(window.history.state, "", path);
   }, [path]);

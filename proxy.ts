@@ -2,6 +2,10 @@ import { type NextRequest, NextResponse } from "next/server";
 import createIntlMiddleware from "next-intl/middleware";
 import { routing } from "./i18n/routing";
 import { getEnabledPluginFrameOrigins } from "./lib/admin/csp-frame-origins";
+import {
+  APP_FRAME_ORIGINS_COOKIE,
+  parseAppFrameOrigins,
+} from "./lib/security/app-frame-origins";
 import { configManager } from "./lib/admin/config-manager";
 import { detectSetupState } from "./lib/setup/state";
 
@@ -102,9 +106,29 @@ export async function proxy(request: NextRequest) {
   // Plugins may declare iframe origins they need (e.g. for embedded video).
   // Each origin is validated at install time and re-validated here.
   const pluginFrameOrigins = await getEnabledPluginFrameOrigins();
+
+  // Sidebar Apps set to open "inline" are a per-user setting the proxy can't
+  // read, so the client mirrors their origins into a cookie (#787). Ignored
+  // when the admin has turned the feature off, so a stale cookie can't keep
+  // widening the CSP after the fact.
+  const sidebarAppsEnabled =
+    configManager.getPolicy().features?.sidebarAppsEnabled !== false;
+  const appFrameOrigins = sidebarAppsEnabled
+    ? parseAppFrameOrigins(request.cookies.get(APP_FRAME_ORIGINS_COOKIE)?.value)
+    : [];
+
+  const frameOrigins: string[] = [];
+  const seenFrameOrigins = new Set<string>();
+  for (const origin of [...pluginFrameOrigins, ...appFrameOrigins]) {
+    const key = origin.toLowerCase();
+    if (seenFrameOrigins.has(key)) continue;
+    seenFrameOrigins.add(key);
+    frameOrigins.push(origin);
+  }
+
   const frameSrc =
-    pluginFrameOrigins.length > 0
-      ? `frame-src 'self' blob: ${pluginFrameOrigins.join(" ")}`
+    frameOrigins.length > 0
+      ? `frame-src 'self' blob: ${frameOrigins.join(" ")}`
       : `frame-src 'self' blob:`;
 
   const csp = [

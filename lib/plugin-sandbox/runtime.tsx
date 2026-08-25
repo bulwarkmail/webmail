@@ -165,6 +165,22 @@ function decodeCallbacks(value: unknown, depth = 0): unknown {
 
 type PluginManifest = BackgroundInit['manifest'];
 
+type PluginKeywordVisibility = 'show' | 'hide' | 'unread';
+
+interface PluginKeywordDefinition {
+  id: string;
+  label: string;
+  color: string;
+  visibility?: PluginKeywordVisibility;
+}
+
+type PluginKeywordDefinitionInput = Omit<PluginKeywordDefinition, 'color'> & { color?: string };
+
+interface PluginKeywordCounts {
+  total: number;
+  unread: number;
+}
+
 function buildPluginApi(manifest: PluginManifest) {
   return {
     plugin: {
@@ -178,7 +194,9 @@ function buildPluginApi(manifest: PluginManifest) {
       removePublicKey: (keyId: string) => callApi('crypto.removePublicKey', [keyId]),
       setEncryptionAtRest: (config: EncryptionAtRestConfig) => callApi('crypto.setEncryptionAtRest', [config]),
       getEncryptionAtRest: () => callApi('crypto.getEncryptionAtRest', []),
-      getOrCreateWebAuthn: (masterCredentialIdBytes?: number[], name?: string, displayName?: string) => callApi('crypto.getOrCreateWebAuthn', [masterCredentialIdBytes, manifest.id, name, displayName], 0)
+      getWebAuthn: (masterCredentialIdBytes: number[]) => callApi('crypto.getWebAuthn', [masterCredentialIdBytes, manifest.id], 0),
+      createWebAuthn: (name: string, displayName: string) => callApi('crypto.createWebAuthn', [manifest.id, name, displayName], 0),
+      getPublicKeyFromWKD: (email: string) => callApi('crypto.getPublicKeyFromWKD', [email]),
     },
     storage: {
       get: (key: string) => callApi('storage.get', [key]),
@@ -199,13 +217,48 @@ function buildPluginApi(manifest: PluginManifest) {
         callApi('http.post', [path, body, options], NETWORK_API_TIMEOUT_MS),
       fetch: (url: string, init?: unknown) => callApi('http.fetch', [url, init], NETWORK_API_TIMEOUT_MS),
     },
-    // Privileged-tier only (same-origin plugins). Calls throw for untrusted
-    // plugins (the host refuses the method) — these power crypto plugins that
-    // need raw message bytes and raw submission.
+    // Safe keyword methods are available to untrusted plugins with the
+    // matching email permission. Raw blob/submission methods remain restricted
+    // to the privileged tier for crypto plugins.
     jmap: {
+      /**
+       * Enumerate keywords in the active account. JMAP servers supporting
+       * Keyword/get supply exact counts and provider-label metadata; other
+       * servers fall back to scanning message keywords.
+       */
+      getKeywords: (options?: { limit?: number }) =>
+        callApi('jmap.getKeywords', [options]) as Promise<{
+          keywords: Record<string, number>;
+          scanned: number;
+          total: number;
+          complete: boolean;
+          labels: Array<{
+            id: string;
+            name: string;
+            color: string | null;
+            total: number;
+            unread: number;
+            isProviderLabel: boolean;
+            source: 'provider' | 'message';
+          }>;
+        }>,
+      /**
+       * Replace an email's complete keyword map. Omitted keywords are removed;
+       * use api.email.setKeyword/removeKeyword for an incremental mutation.
+       */
+      setKeywords: (emailId: string, keywords: Record<string, true>, accountId?: string) =>
+        callApi('jmap.setKeywords', [emailId, keywords, accountId]) as Promise<void>,
+      /** Add one keyword without changing the message's other keywords. */
+      setKeyword: (emailId: string, keyword: string, accountId?: string) =>
+        callApi('jmap.setKeyword', [emailId, keyword, accountId]) as Promise<void>,
+      /** Remove one keyword without changing the message's other keywords. */
+      removeKeyword: (emailId: string, keyword: string, accountId?: string) =>
+        callApi('jmap.removeKeyword', [emailId, keyword, accountId]) as Promise<void>,
       /** Fetch a blob's raw bytes by id. Resolves to a Uint8Array. */
-      fetchBlob: (blobId: string, opts?: { name?: string; type?: string }) =>
+      fetchBlob: (blobId: string, opts?: { name?: string; type?: string, rangeHeader?: number }) =>
         callApi('jmap.fetchBlob', [blobId, opts]) as Promise<Uint8Array>,
+      uploadBlob: (content: Uint8Array, name: string, type: string) =>
+        callApi('jmap.uploadBlob', [content, name, type]) as Promise<{ blobId: string; size: number; type: string; }>,
       /** Submit a fully-formed raw RFC822 message (already signed/encrypted). */
       sendRaw: (
         rawBytes: ArrayBuffer | ArrayBufferView,
@@ -286,6 +339,31 @@ function buildPluginApi(manifest: PluginManifest) {
         callApi('email.setKeyword', [emailId, keyword, accountId]) as Promise<void>,
       removeKeyword: (emailId: string, keyword: string, accountId?: string) =>
         callApi('email.removeKeyword', [emailId, keyword, accountId]) as Promise<void>,
+    },
+    // Native sidebar tag definitions. Definition reads/writes use the existing
+    // settings permissions; server discovery and message counts use email:read.
+    // add() is intentionally append-only. reorder() requires a complete
+    // permutation of existing ids. Neither method overwrites or removes tags.
+    keywords: {
+      list: () => callApi('keywords.list', []) as Promise<PluginKeywordDefinition[]>,
+      add: (definitions: PluginKeywordDefinitionInput[]) =>
+        callApi('keywords.add', [definitions]) as Promise<{
+          added: PluginKeywordDefinition[];
+          skipped: string[];
+        }>,
+      reorder: (ids: string[], options?: { caseSensitive?: boolean }) =>
+        callApi('keywords.reorder', [ids, options]) as Promise<PluginKeywordDefinition[]>,
+      discover: (options?: { limit?: number }) =>
+        callApi('keywords.discover', [options]) as Promise<{
+          keywords: Record<string, number>;
+          scanned: number;
+          total: number;
+          complete: boolean;
+        }>,
+      getCounts: (ids?: string[]) =>
+        callApi('keywords.getCounts', [ids]) as Promise<Record<string, PluginKeywordCounts>>,
+      refreshCounts: () =>
+        callApi('keywords.refreshCounts', []) as Promise<Record<string, PluginKeywordCounts>>,
     },
     // Message-list category tabs (permission: ui:message-list-tabs; categorize
     // additionally needs email:write). The host renders the strip natively and

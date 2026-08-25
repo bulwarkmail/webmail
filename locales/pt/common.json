@@ -300,6 +300,10 @@
     "move": "Mover",
     "print": "Imprimir",
     "view_source": "Ver código-fonte",
+
+    "fullscreen": "Tela cheia",
+
+    "exit_fullscreen": "Sair da tela cheia",
     "export_email": "Exportar como .eml",
     "forward_as_attachment": "Forward as attachment",
     "import_email": "Importar .eml ou .zip",
@@ -574,6 +578,7 @@
     "read_receipt_on": "Confirmação de leitura solicitada (clique para desativar)",
     "read_receipt_off": "Solicitar confirmação de leitura",
     "new_message": "Nova Mensagem",
+    "signature_edit_hint": "Clique duas vezes para editar a assinatura",
     "reply": "Responder",
     "reply_all": "Responder a Todos",
     "forward": "Encaminhar",
@@ -748,7 +753,10 @@
     "rate_limited_title": "A autenticação do servidor está temporariamente limitada.",
     "rate_limited_detail": "O Bulwark pausou as solicitações em segundo plano para evitar bloqueio. Nova tentativa em {seconds}s.",
     "rate_limited_action_title": "Solicitação pausada para evitar bloqueio.",
-    "rate_limited_action_detail": "O Bulwark está aguardando o fim do cooldown do servidor antes de enviar mais solicitações autenticadas. Tente novamente em {seconds}s."
+    "rate_limited_action_detail": "O Bulwark está aguardando o fim do cooldown do servidor antes de enviar mais solicitações autenticadas. Tente novamente em {seconds}s.",
+    "pull_to_refresh": "Puxe para atualizar",
+    "release_to_refresh": "Solte para atualizar",
+    "refreshing": "Atualizando…"
   },
   "notifications": {
     "email_sent": "E-mail enviado com sucesso",
@@ -855,7 +863,10 @@
     "zh": "简体中文",
     "fa": "فارسی",
     "farsi": "فارسی",
-    "switch_to_farsi": "Mudar para persa"
+    "switch_to_farsi": "Mudar para persa",
+    "mn": "Монгол",
+    "mongolian": "Монгол",
+    "switch_to_mongolian": "Mudar para mongol"
   },
   "settings": {
     "title": "Configurações",
@@ -1104,12 +1115,27 @@
         "relay_label": "Relay push",
         "relay_locked": "Definido pelo administrador",
         "relay_locked_desc": "A URL do relay push foi definida pelo seu administrador e não pode ser alterada.",
-        "relay_placeholder": "https://notifications.relay.example.com",
         "status_active": "Ativo neste dispositivo",
         "status_busy": "Processando…",
         "status_inactive": "Não ativado neste dispositivo",
         "status_unsupported": "Este navegador não oferece suporte a Web Push",
-        "title": "Notificações em segundo plano"
+        "title": "Notificações em segundo plano",
+        "devices_title": "Dispositivos registrados",
+        "devices_desc": "Todos os dispositivos registrados para receber notificações em segundo plano desta conta. Revogar um deles interrompe o recebimento imediatamente.",
+        "devices_loading": "Carregando dispositivos registrados…",
+        "devices_empty": "Nenhum dispositivo está registrado para notificações em segundo plano.",
+        "devices_error": "Não foi possível carregar os dispositivos registrados.",
+        "devices_refresh": "Atualizar",
+        "device_this": "Este dispositivo",
+        "device_other": "Outro dispositivo",
+        "device_status_active": "Entregando notificações",
+        "device_status_inactive": "Nunca entregou uma notificação",
+        "device_status_unknown": "Desconhecido para este relay",
+        "device_expires": "Expira em {date}",
+        "revoke": "Revogar",
+        "confirm_revoke_title": "Revogar este dispositivo?",
+        "confirm_revoke_message": "Ele deixará de receber notificações em segundo plano imediatamente. Ativar o push novamente nesse dispositivo o registrará de novo.",
+        "confirm_revoke_message_this": "Este dispositivo deixará de receber notificações em segundo plano imediatamente."
       }
     },
     "language_region": {
@@ -1188,6 +1214,12 @@
         "auto": "Automático (recomendado)",
         "always": "Sempre adicionar espaçamento",
         "edge": "De borda a borda"
+      },
+      "plain_text_font": {
+        "label": "Fonte de texto simples",
+        "description": "Fonte usada para e-mails de texto simples",
+        "mono": "Monoespaçada",
+        "sans": "Normal (igual ao aplicativo)"
       },
       "archive_mode": {
         "label": "Arquivar em",
@@ -1661,6 +1693,7 @@
       "create_subfolder": "Criar subpasta",
       "reorder": "Arraste para reordenar",
       "reorder_error": "Falha ao reordenar as pastas",
+      "move_error": "Falha ao mover a pasta",
       "subfolder_of": "Dentro de {name}",
       "subfolder_name": "Nome da subpasta",
       "new_folder_name": "Nome da pasta",

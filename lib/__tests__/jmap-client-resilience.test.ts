@@ -287,6 +287,56 @@ describe('JMAPClient resilience', () => {
     });
   });
 
+  describe('session URL rewriting', () => {
+    async function connectWith(session: Record<string, unknown>, serverUrl = 'https://mail.example.com') {
+      fetchSpy.mockResolvedValueOnce(mockFetchResponse(200, makeSession(session)));
+      const client = new JMAPClient(serverUrl, 'user@test.com', 'pass123');
+      await client.connect();
+      fetchSpy.mockReset();
+      return client;
+    }
+
+    async function pingUrl(client: JMAPClient): Promise<string> {
+      fetchSpy.mockResolvedValueOnce(
+        mockFetchResponse(200, { methodResponses: [['Core/echo', { ping: 'pong' }, '0']] }),
+      );
+      await client.ping();
+      return String(fetchSpy.mock.calls[0][0]);
+    }
+
+    it.each([
+      ['absolute-path relative', '/jmap/api'],
+      ['bare relative', 'jmap/api'],
+      ['cross-origin absolute', 'https://other.example.com/jmap/api'],
+      ['network-path reference', '//other.example.com/jmap/api'],
+    ])('anchors a %s apiUrl at the server origin', async (_form, apiUrl) => {
+      const client = await connectWith({ apiUrl });
+      expect(await pingUrl(client)).toBe('https://mail.example.com/jmap/api');
+    });
+
+    it('anchors a relative apiUrl at the origin even when serverUrl has a path', async () => {
+      const client = await connectWith({ apiUrl: 'jmap/api' }, 'https://mail.example.com/proxy');
+      expect(await pingUrl(client)).toBe('https://mail.example.com/jmap/api');
+    });
+
+    it.each([
+      ['same-origin', 'https://mail.example.com'],
+      ['cross-origin', 'https://other.example.com'],
+    ])('keeps URI Template placeholders literal in a %s downloadUrl', async (_o, host) => {
+      const client = await connectWith({
+        downloadUrl: `${host}/download/{accountId}/{blobId}/{name}?accept={type}`,
+      });
+      expect(client.getBlobDownloadUrl('blob1', 'file.txt', 'text/plain', 'acct-1')).toBe(
+        'https://mail.example.com/download/acct-1/blob1/file.txt?accept=text%2Fplain',
+      );
+    });
+
+    it('leaves an empty downloadUrl falsy so the unavailable guard still fires', async () => {
+      const client = await connectWith({ downloadUrl: '' });
+      expect(() => client.getBlobDownloadUrl('blob1')).toThrow('Download URL not available');
+    });
+  });
+
   describe('refreshSession', () => {
     it('updates session fields from server response', async () => {
       const client = await createConnectedClient();
@@ -323,7 +373,10 @@ describe('JMAPClient resilience', () => {
       client.onConnectionChange(callback);
 
       const echoResponse = { methodResponses: [['Core/echo', { ping: 'pong' }, '0']] };
-      fetchSpy.mockResolvedValue(mockFetchResponse(200, echoResponse));
+      // A Response body is single-use, so one shared instance breaks as soon
+      // as anything fetches more than once in the window - serve a fresh one
+      // per call like the other tests in this file.
+      fetchSpy.mockImplementation(() => Promise.resolve(mockFetchResponse(200, echoResponse)));
 
       // Advance past keep-alive interval (30s)
       await vi.advanceTimersByTimeAsync(30_000);
@@ -493,6 +546,30 @@ describe('JMAPClient resilience', () => {
 
       client.closePushNotifications();
       expect(replacementSignal.aborted).toBe(true);
+    });
+
+    // #781: setupPushNotifications is re-run for every connected client on
+    // fairly frequent effect deps changes. Without an already-active guard a
+    // second connect stacks a new SSE stream while the previous one keeps its
+    // HTTP/1.1 socket open forever (readSSEStream only unwinds on abort/done),
+    // starving normal JMAP POSTs. Opening a new stream must abort the old one.
+    it('aborts the previous SSE stream when push is set up again (no orphan)', async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: false });
+      const client = await createConnectedClient();
+      const signals: AbortSignal[] = [];
+      fetchSpy.mockImplementation(inFlightFetch(signals));
+
+      client.setupPushNotifications();
+      await vi.advanceTimersByTimeAsync(0); // let connect #1 register its signal
+      client.setupPushNotifications();
+      await vi.advanceTimersByTimeAsync(0); // connect #2 registers + guard aborts #1
+
+      // The first stream's signal is aborted, and exactly one stream stays live
+      // - no accumulation of abandoned SSE connections.
+      expect(signals[0].aborted).toBe(true);
+      expect(signals.filter((s) => !s.aborted)).toHaveLength(1);
+
+      client.closePushNotifications();
     });
   });
 

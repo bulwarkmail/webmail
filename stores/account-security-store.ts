@@ -627,7 +627,7 @@ export const useAccountSecurityStore = create<AccountSecurityState>()((set, get)
     try {
       const accountId = getPrimaryAccountId();
       const queryResponses = await stalwartJmap([
-        ['x:PublicKey/query', { filter: { accountId } }, '0'],
+        ['x:PublicKey/query', { accountId }, '0'],
       ]);
 
       const queryResult = requireResult<{ ids: string[] }>(queryResponses, 'x:PublicKey/query');
@@ -740,6 +740,8 @@ export const useAccountSecurityStore = create<AccountSecurityState>()((set, get)
     otpEnabled: false,
     appPasswords: [],
     apiKeys: [],
+    publicKeys: [],
+    isLoadingPublicKeys: false,
     isLoadingAuth: false,
     encryptionConfig: {
       type: 'Disabled',

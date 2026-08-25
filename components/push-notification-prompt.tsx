@@ -8,11 +8,11 @@ import { useAuthStore } from "@/stores/auth-store";
 import { usePolicyStore } from "@/stores/policy-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import {
-  DEFAULT_RELAY_BASE_URL,
   enableWebPush,
   isWebPushEnabled,
   isWebPushSupported,
 } from "@/lib/web-push";
+import { resolveActiveRelayUrl } from "@/lib/push-relays";
 import {
   isPWAInstallPromptVisible,
   PWA_INSTALL_PROMPT_VISIBILITY_EVENT,
@@ -61,9 +61,8 @@ export function PushNotificationPrompt() {
     (state) => state.emailNotificationsEnabled,
   );
   const policyLoaded = usePolicyStore((state) => state.loaded);
-  const adminPushRelayUrl = usePolicyStore(
-    (state) => state.policy.pushRelayUrl,
-  );
+  const policy = usePolicyStore((state) => state.policy);
+  const userPushRelayUrl = useSettingsStore((state) => state.pushRelayUrl);
 
   const [showPrompt, setShowPrompt] = useState(false);
   const [isEnabling, setIsEnabling] = useState(false);
@@ -78,8 +77,7 @@ export function PushNotificationPrompt() {
   );
 
   const accountId = client?.getAccountId() ?? null;
-  const relayBaseUrl = (adminPushRelayUrl ?? "").trim()
-    || DEFAULT_RELAY_BASE_URL;
+  const relayBaseUrl = resolveActiveRelayUrl(policy, userPushRelayUrl);
 
   const dismissForSession = useCallback((id: string) => {
     setSessionDismissedAccountIds((previous) => {

@@ -15,6 +15,7 @@ import type { Email } from '@/lib/jmap/types';
 import type { MessageListTab, MessageListTabsConfig } from '@/lib/plugin-types';
 import { MAX_MESSAGE_LIST_TABS } from '@/lib/plugin-types';
 import { messageListTabHooks } from '@/lib/plugin-hooks';
+import { keywordPointer } from '@/lib/jmap/patch-pointer';
 import { useEmailStore } from './email-store';
 
 // ─── Validation ──────────────────────────────────────────────
@@ -296,8 +297,8 @@ export const useMessageListTabsStore = create<MessageListTabsStore>()((set, get)
     // One PatchObject per message: drop every other category keyword, add the
     // target's (removals of absent keywords are no-ops per RFC 8620 §5.3).
     const patch: Record<string, boolean | null> = {};
-    for (const k of keywordsRemoved) patch[`keywords/${k}`] = null;
-    if (keywordAdded) patch[`keywords/${keywordAdded}`] = true;
+    for (const k of keywordsRemoved) patch[keywordPointer(k)] = null;
+    if (keywordAdded) patch[keywordPointer(keywordAdded)] = true;
 
     // Group by owning account so shared-mailbox messages patch correctly.
     const byAccount = new Map<string | undefined, string[]>();

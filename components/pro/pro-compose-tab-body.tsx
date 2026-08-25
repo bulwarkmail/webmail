@@ -40,7 +40,7 @@ export function ProComposeTabBody({ tabId, data }: ProComposeTabBodyProps) {
 
   // Set by the composer to its dirty-aware close handler. Lets the Pro tab
   // bar's "X" route through the same "Save or discard draft?" guard.
-  const requestCloseRef = useRef<(() => void) | null>(null);
+  const requestCloseRef = useRef<((afterClose?: () => void) => void) | null>(null);
 
   const handleScheduledSendCreated = useCallback(async () => {
     if (client) {
@@ -96,13 +96,13 @@ export function ProComposeTabBody({ tabId, data }: ProComposeTabBodyProps) {
       // viewer and list reflect the action (same behaviour as inline compose).
       if (data.sourceEmailId && (data.mode === 'reply' || data.mode === 'replyAll')) {
         try {
-          await client.setKeyword(data.sourceEmailId, '$answered');
+          await useEmailStore.getState().markEmailKeyword(client, data.sourceEmailId, '$answered');
         } catch (e) {
           debug.error('Failed to set $answered keyword:', e);
         }
       } else if (data.sourceEmailId && data.mode === 'forward') {
         try {
-          await client.setKeyword(data.sourceEmailId, '$forwarded');
+          await useEmailStore.getState().markEmailKeyword(client, data.sourceEmailId, '$forwarded');
         } catch (e) {
           debug.error('Failed to set $forwarded keyword:', e);
         }

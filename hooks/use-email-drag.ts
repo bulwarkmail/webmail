@@ -8,6 +8,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import { useDragDropContext } from "@/contexts/drag-drop-context";
 import { useUIStore } from "@/stores/ui-store";
 import { isDragOutSupported } from "@/hooks/use-attachment-drag";
+import { appUrl, buildMailPath } from "@/lib/deep-links";
 import {
   bundleExportFilename,
   DEFAULT_BUNDLE_TEMPLATE,
@@ -222,6 +223,18 @@ export function useEmailDrag({ email, sourceMailboxId, threadEmails }: UseEmailD
     e.dataTransfer.setData(
       "text/plain",
       emailsToDrag.map(em => em.subject || "(no subject)").join(", ")
+    );
+    // Dropped on the browser's tab strip or address bar, text/uri-list wins
+    // over text/plain - the message permalink opens instead of a search for
+    // the subject text. One URL per message (RFC 2483 CRLF-separated);
+    // browsers open the first on a tab-strip drop. In-app drop targets key on
+    // application/x-email-ids and ignore this entry. `view=fullscreen` opens
+    // the message alone, without the folder sidebar and list.
+    e.dataTransfer.setData(
+      "text/uri-list",
+      emailsToDrag
+        .map(em => `${appUrl(buildMailPath({ mailboxId: null, emailId: em.id, threadId: null }))}?view=fullscreen`)
+        .join("\r\n")
     );
 
     // Drag-out to file explorer.

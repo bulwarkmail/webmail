@@ -300,6 +300,10 @@
     "move": "Mou",
     "print": "Imprimeix",
     "view_source": "Mostra el codi font",
+
+    "fullscreen": "Pantalla completa",
+
+    "exit_fullscreen": "Surt de la pantalla completa",
     "export_email": "Exporta com a .eml",
     "forward_as_attachment": "Forward as attachment",
     "import_email": "Importa .eml o .zip",
@@ -574,6 +578,7 @@
     "read_receipt_on": "Confirmació de lectura sol·licitada (feu clic per desactivar-la)",
     "read_receipt_off": "Sol·licita una confirmació de lectura",
     "new_message": "Missatge nou",
+    "signature_edit_hint": "Feu doble clic per editar la signatura",
     "reply": "Respon",
     "reply_all": "Respon a tots",
     "forward": "Reenvia",
@@ -748,7 +753,10 @@
     "rate_limited_title": "L'autenticació al servidor està temporalment limitada.",
     "rate_limited_detail": "El Bulwark ha aturat les sol·licituds en segon pla per evitar el bloqueig. Es tornarà a provar d'aquí a {seconds} s.",
     "rate_limited_action_title": "Sol·licitud aturada per evitar el bloqueig.",
-    "rate_limited_action_detail": "El Bulwark espera que acabi el temps d'espera del servidor abans d'enviar més sol·licituds autenticades. Torneu-ho a provar d'aquí a {seconds} s."
+    "rate_limited_action_detail": "El Bulwark espera que acabi el temps d'espera del servidor abans d'enviar més sol·licituds autenticades. Torneu-ho a provar d'aquí a {seconds} s.",
+    "pull_to_refresh": "Estira per actualitzar",
+    "release_to_refresh": "Deixa anar per actualitzar",
+    "refreshing": "S'està actualitzant…"
   },
   "notifications": {
     "email_sent": "Correu enviat correctament",
@@ -855,7 +863,10 @@
     "zh": "简体中文",
     "fa": "فارسی",
     "farsi": "فارسی",
-    "switch_to_farsi": "Canvia al persa"
+    "switch_to_farsi": "Canvia al persa",
+    "mn": "Монгол",
+    "mongolian": "Монгол",
+    "switch_to_mongolian": "Canvia al mongol"
   },
   "settings": {
     "title": "Configuració",
@@ -1077,7 +1088,6 @@
         "relay_desc": "Per defecte utilitza el repetidor allotjat del Bulwark. Canvieu-ho només si allotgeu el vostre propi servidor.",
         "relay_locked": "Establert per l'administrador",
         "relay_locked_desc": "L'URL del repetidor push l'ha establert l'administrador i no es pot canviar.",
-        "relay_placeholder": "https://notifications.relay.example.com",
         "status_active": "Actiu en aquest dispositiu",
         "status_inactive": "No activat en aquest dispositiu",
         "status_unsupported": "Aquest navegador no admet Web Push",
@@ -1088,7 +1098,23 @@
         "confirm_disable_title": "Voleu desactivar les notificacions en segon pla?",
         "confirm_disable_message": "Aquest dispositiu deixarà de rebre avisos quan el lloc estigui tancat.",
         "dismiss_aria": "Descarta l'avís de notificacions",
-        "ios_hint": "A l'iOS, primer instal·leu el lloc a la pantalla d'inici - el Safari només entrega Web Push a les PWA instal·lades."
+        "ios_hint": "A l'iOS, primer instal·leu el lloc a la pantalla d'inici - el Safari només entrega Web Push a les PWA instal·lades.",
+        "devices_title": "Dispositius registrats",
+        "devices_desc": "Tots els dispositius registrats per rebre notificacions en segon pla d’aquest compte. Si en revoques un, deixa de rebre-les immediatament.",
+        "devices_loading": "S’estan carregant els dispositius registrats…",
+        "devices_empty": "No hi ha cap dispositiu registrat per a les notificacions en segon pla.",
+        "devices_error": "No s’han pogut carregar els dispositius registrats.",
+        "devices_refresh": "Actualitza",
+        "device_this": "Aquest dispositiu",
+        "device_other": "Un altre dispositiu",
+        "device_status_active": "Lliura notificacions",
+        "device_status_inactive": "Mai no ha lliurat cap notificació",
+        "device_status_unknown": "Desconegut per a aquest relé",
+        "device_expires": "Caduca el {date}",
+        "revoke": "Revoca",
+        "confirm_revoke_title": "Voleu revocar aquest dispositiu?",
+        "confirm_revoke_message": "Deixarà de rebre notificacions en segon pla immediatament. Si hi tornes a activar les notificacions push, es registrarà de nou.",
+        "confirm_revoke_message_this": "Aquest dispositiu deixarà de rebre notificacions en segon pla immediatament."
       },
       "sound_selection": {
         "title": "So de notificació",
@@ -1191,6 +1217,12 @@
         "auto": "Automàtic (recomanat)",
         "always": "Afegeix sempre espaiat",
         "edge": "De vora a vora"
+      },
+      "plain_text_font": {
+        "label": "Tipus de lletra del text pla",
+        "description": "Tipus de lletra per als correus de text pla",
+        "mono": "Monoespaiada",
+        "sans": "Normal (igual que l'aplicació)"
       },
       "archive_mode": {
         "label": "Arxiva a",
@@ -1668,6 +1700,7 @@
       "create_subfolder": "Crea una subcarpeta",
       "reorder": "Arrossegueu per reordenar",
       "reorder_error": "No s'han pogut reordenar les carpetes",
+      "move_error": "No s'ha pogut moure la carpeta",
       "subfolder_of": "Dins de {name}",
       "subfolder_name": "Nom de la subcarpeta",
       "new_folder_name": "Nom de la carpeta",
@@ -1691,34 +1724,34 @@
       "error_role": "No s'ha pogut actualitzar el rol de la carpeta"
     },
     "advanced": {
-      "title": "Avan\u00e7at",
-      "description": "Opcions avan\u00e7ades i configuraci\u00f3 per a desenvolupadors",
+      "title": "Avançat",
+      "description": "Opcions avançades i configuració per a desenvolupadors",
       "debug_mode": {
-        "label": "Mode de depuraci\u00f3",
-        "description": "Activa el registre detallat per a la resoluci\u00f3 de problemes"
+        "label": "Mode de depuració",
+        "description": "Activa el registre detallat per a la resolució de problemes"
       },
       "debug_categories": {
         "description": "Seleccioneu quines categories registrar. Desactiveu les que no necessiteu per reduir el soroll a la consola.",
         "jmap": "Client JMAP",
-        "jmap_description": "Operacions de b\u00fastia, obtenci\u00f3 de correus i sol\u00b7licituds del protocol JMAP",
+        "jmap_description": "Operacions de bústia, obtenció de correus i sol·licituds del protocol JMAP",
         "calendar": "Calendari",
-        "calendar_description": "Esdeveniments del calendari, importacions i missatges de programaci\u00f3",
+        "calendar_description": "Esdeveniments del calendari, importacions i missatges de programació",
         "tasks": "Tasques",
-        "tasks_description": "Creaci\u00f3, obtenci\u00f3 i actualitzaci\u00f3 de tasques del calendari",
-        "auth": "Autenticaci\u00f3",
-        "auth_description": "Inici de sessi\u00f3, TOTP, intercanvi de testimonis i gesti\u00f3 de sessions",
+        "tasks_description": "Creació, obtenció i actualització de tasques del calendari",
+        "auth": "Autenticació",
+        "auth_description": "Inici de sessió, TOTP, intercanvi de testimonis i gestió de sessions",
         "filters": "Filtres",
-        "filters_description": "Regles de filtre Sieve i scripts de resposta autom\u00e0tica",
-        "email": "Visualitzaci\u00f3 de correu",
-        "email_description": "Renderitzaci\u00f3 de correu, processament TNEF i marcatge com a llegit",
+        "filters_description": "Regles de filtre Sieve i scripts de resposta automàtica",
+        "email": "Visualització de correu",
+        "email_description": "Renderització de correu, processament TNEF i marcatge com a llegit",
         "push": "Notificacions push",
-        "push_description": "Configuraci\u00f3 i entrega de notificacions push",
+        "push_description": "Configuració i entrega de notificacions push",
         "contacts": "Contactes i llibretes d'adreces",
-        "contacts_description": "Sincronitzaci\u00f3 de contactes, operacions de llibreta d'adreces i remitents de confian\u00e7a"
+        "contacts_description": "Sincronització de contactes, operacions de llibreta d'adreces i remitents de confiança"
       },
       "settings_sync": {
-        "label": "Sincronitzaci\u00f3 de la configuraci\u00f3",
-        "description": "Sincronitzeu la configuraci\u00f3 entre navegadors i dispositius"
+        "label": "Sincronització de la configuració",
+        "description": "Sincronitzeu la configuració entre navegadors i dispositius"
       },
       "sender_favicons": {
         "label": "Icones dels remitents",
@@ -1726,7 +1759,7 @@
       },
       "show_avatars_in_junk": {
         "label": "Mostra els avatars a la carpeta de brossa",
-        "description": "Mostra imatges de perfil i icones dels remitents a la carpeta de brossa. Desactivat per defecte per evitar donar aparen\u00e7a de legitimitat a intents de pesca electr\u00f2nica."
+        "description": "Mostra imatges de perfil i icones dels remitents a la carpeta de brossa. Desactivat per defecte per evitar donar aparença de legitimitat a intents de pesca electrònica."
       },
       "keyboard_shortcuts": {
         "label": "Dreceres de teclat",
@@ -1735,22 +1768,22 @@
       },
       "refresh_cache": {
         "label": "Actualitza les dades emmagatzemades",
-        "description": "Torna a carregar els contactes, els calendaris i les carpetes des del servidor. Mant\u00e9 els comptes i les sessions \u2014 soluciona una vista obsoleta o incorrecta sense tancar la sessi\u00f3.",
+        "description": "Torna a carregar els contactes, els calendaris i les carpetes des del servidor. Manté els comptes i les sessions — soluciona una vista obsoleta o incorrecta sense tancar la sessió.",
         "button": "Actualitza"
       },
       "reset_settings": {
-        "label": "Restableix la configuraci\u00f3",
-        "description": "Restaura tota la configuraci\u00f3 als valors per defecte",
+        "label": "Restableix la configuració",
+        "description": "Restaura tota la configuració als valors per defecte",
         "button": "Restableix als valors per defecte"
       },
       "export_settings": {
-        "label": "Exporta la configuraci\u00f3",
-        "description": "Baixeu la configuraci\u00f3 en format JSON",
+        "label": "Exporta la configuració",
+        "description": "Baixeu la configuració en format JSON",
         "button": "Exporta"
       },
       "import_settings": {
-        "label": "Importa la configuraci\u00f3",
-        "description": "Carregueu la configuraci\u00f3 des d'un fitxer JSON",
+        "label": "Importa la configuració",
+        "description": "Carregueu la configuració des d'un fitxer JSON",
         "button": "Importa"
       },
       "about": {

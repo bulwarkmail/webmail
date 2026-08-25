@@ -31,6 +31,7 @@ function firstScopedTab(caps: SharedAccount['capabilities']): string | null {
 
 export function AccountSettings() {
   const t = useTranslations('settings.account');
+  const tCommon = useTranslations('common');
   const router = useRouter();
   const { username, serverUrl, isDemoMode, primaryIdentity, authMode, client } = useAuthStore();
   const activeAccountId = useAuthStore((s) => s.activeAccountId);
@@ -117,12 +118,12 @@ export function AccountSettings() {
       <SettingsSection title={t('title')} description={t('description')}>
         {/* Display Name */}
         <SettingItem label={t('name_label')}>
-          <span className="text-sm text-foreground">{displayName || t('../../common.unknown')}</span>
+          <span className="text-sm text-foreground">{displayName || tCommon('unknown')}</span>
         </SettingItem>
 
         {/* Email Address */}
         <SettingItem label={t('email.label')}>
-          <span className="text-sm text-foreground">{email || t('../../common.unknown')}</span>
+          <span className="text-sm text-foreground">{email || tCommon('unknown')}</span>
         </SettingItem>
 
         {/* Username / Login (show when it differs from email) */}
@@ -142,7 +143,7 @@ export function AccountSettings() {
         {/* Server */}
         <SettingItem label={t('server.label')}>
           <span className="text-sm text-foreground truncate max-w-xs">
-            {serverUrl || t('../../common.unknown')}
+            {serverUrl || tCommon('unknown')}
           </span>
         </SettingItem>
 

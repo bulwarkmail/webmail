@@ -136,6 +136,20 @@ describe('mail paths', () => {
     expect(parseMailPath(['thread', 't1'])).toEqual({ kind: 'thread', id: 't1', accountId: undefined });
   });
 
+  it('reads the fullscreen marker on message links', () => {
+    expect(parseMailPath(['message', 'm1'], new URLSearchParams('view=fullscreen'))).toEqual({
+      kind: 'message',
+      id: 'm1',
+      accountId: undefined,
+      fullscreen: true,
+    });
+    expect(parseMailPath(['message', 'm1'], new URLSearchParams('view=other'))).toEqual({
+      kind: 'message',
+      id: 'm1',
+      accountId: undefined,
+    });
+  });
+
   it('falls back to the bare mail path with nothing selected', () => {
     expect(buildMailPath({ mailboxId: null, emailId: null, threadId: null })).toBe('/mail');
     expect(parseMailPath([])).toBeNull();

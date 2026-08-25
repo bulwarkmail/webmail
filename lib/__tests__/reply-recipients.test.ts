@@ -81,6 +81,29 @@ describe('buildReplyRecipients', () => {
       expect(emails(to)).toEqual(['bob@other.com']);
     });
 
+    it('honours an EXTERNAL Reply-To even on a self-sent message (#776)', () => {
+      // Contact-form / helpdesk pattern: the mail arrives From our own address
+      // (so it looks self-sent) but Reply-To carries the real correspondent.
+      // The reply must reach them, not loop back to our own To.
+      const { to } = buildReplyRecipients(
+        { ...sent, to: [{ email: 'me@example.com' }], replyToAddresses: [{ email: 'customer@external.com' }] },
+        'reply',
+        OWN,
+      );
+      expect(emails(to)).toEqual(['customer@external.com']);
+    });
+
+    it('reply-all with an external Reply-To routes To to the Reply-To (#776)', () => {
+      const { to } = buildReplyRecipients(
+        { ...sent, replyToAddresses: [{ email: 'customer@external.com' }] },
+        'replyAll',
+        OWN,
+      );
+      // Reply-To leads; the other original recipients (bob) are still included,
+      // our own address dropped.
+      expect(emails(to)).toEqual(['customer@external.com', 'bob@other.com']);
+    });
+
     it('keeps a self-addressed recipient we chose ourselves', () => {
       const { to } = buildReplyRecipients(
         { ...sent, to: [{ email: 'info@example.com' }] },

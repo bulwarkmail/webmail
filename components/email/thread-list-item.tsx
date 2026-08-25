@@ -5,7 +5,8 @@ import { formatDate, formatDateTime, stripInvisibleLeading } from "@/lib/utils";
 import { Email, ThreadGroup } from "@/lib/jmap/types";
 import { cn } from "@/lib/utils";
 import { SelectableAvatar } from "@/components/email/selectable-avatar";
-import { Paperclip, Star, Pin, Circle, ChevronRight, ChevronDown, Loader2, MessageSquare, CheckSquare, Square, Reply, Forward, CalendarClock, Folder } from "lucide-react";
+import { Paperclip, Star, Pin, Circle, ChevronRight, ChevronDown, Loader2, MessageSquare, CheckSquare, Square, Reply, Forward, CalendarClock, Folder, Archive, Trash2, MailOpen, ShieldAlert } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useUIStore } from "@/stores/ui-store";
 import { useEmailStore } from "@/stores/email-store";
@@ -16,6 +17,8 @@ import { useTagDisplay } from "@/hooks/use-tag-display";
 import { TagBadge, TAG_GROUP_CLASS, TAG_LOZENGE_CLASS } from "./tag-badge";
 import { useEmailDrag } from "@/hooks/use-email-drag";
 import { useLongPress } from "@/hooks/use-long-press";
+import { useSwipeActions } from "@/hooks/use-swipe-actions";
+import type { SwipeAction } from "@/stores/settings-store";
 import { ThreadEmailItem } from "./thread-email-item";
 import { EmailHoverActions } from "./email-hover-actions";
 import { useTranslations } from "next-intl";
@@ -97,6 +100,16 @@ interface SingleEmailItemProps {
   onUndoSpam?: () => void;
 }
 
+// Visual + behaviour metadata for each mobile swipe action. Keyed by the
+// SwipeAction values that map to a row callback ('none' is handled inline).
+const SWIPE_ACTION_META: Record<Exclude<SwipeAction, 'none'>, { icon: LucideIcon; bg: string }> = {
+  archive: { icon: Archive, bg: 'bg-emerald-600' },
+  delete: { icon: Trash2, bg: 'bg-red-600' },
+  markRead: { icon: MailOpen, bg: 'bg-sky-600' },
+  star: { icon: Star, bg: 'bg-amber-500' },
+  spam: { icon: ShieldAlert, bg: 'bg-orange-600' },
+};
+
 const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
   function SingleEmailItem({ email, selected, onClick, onDoubleClick, onContextMenu, showPreview, rowTint, onToggleStar, onMarkAsRead, onDelete, onArchive, onSetTag, onMarkAsSpam, onUndoSpam }, ref) {
     const t = useTranslations('email_viewer');
@@ -155,6 +168,50 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
     );
     const longPressHandlers = { onTouchStart, onTouchEnd, onTouchMove, onTouchCancel };
 
+    // Mobile swipe actions (Gmail-style): drag a row left/right to fire the
+    // configured action. Desktop keeps hover actions + context menu.
+    const swipeRightAction = useSettingsStore((state) => state.swipeRightAction);
+    const swipeLeftAction = useSettingsStore((state) => state.swipeLeftAction);
+    const runSwipeAction = useCallback((action: SwipeAction) => {
+      switch (action) {
+        case 'archive': onArchive?.(); break;
+        case 'delete': onDelete?.(); break;
+        case 'markRead': onMarkAsRead?.(isUnread); break; // unread -> read, read -> unread
+        case 'star': onToggleStar?.(); break;
+        case 'spam': onMarkAsSpam?.(); break;
+        default: break;
+      }
+    }, [onArchive, onDelete, onMarkAsRead, onToggleStar, onMarkAsSpam, isUnread]);
+    const isActionable = (action: SwipeAction): boolean => {
+      switch (action) {
+        case 'archive': return !!onArchive;
+        case 'delete': return !!onDelete;
+        case 'markRead': return !!onMarkAsRead;
+        case 'star': return !!onToggleStar;
+        case 'spam': return !!onMarkAsSpam;
+        default: return false;
+      }
+    };
+    const hasRight = isActionable(swipeRightAction);
+    const hasLeft = isActionable(swipeLeftAction);
+    const swipeEnabled = isMobile && (hasLeft || hasRight);
+    const { swipeHandlers, offsetX, side: swipeSide, willCommit, consumeTap } = useSwipeActions({
+      enabled: swipeEnabled,
+      hasLeft,
+      hasRight,
+      onCommit: (s) => runSwipeAction(s === 'right' ? swipeRightAction : swipeLeftAction),
+    });
+    const swipeActiveAction = swipeSide === 'right' ? swipeRightAction : swipeSide === 'left' ? swipeLeftAction : 'none';
+    const swipeMeta = swipeActiveAction !== 'none' ? SWIPE_ACTION_META[swipeActiveAction] : null;
+    const touchHandlers = swipeEnabled
+      ? {
+          onTouchStart: (e: React.TouchEvent) => { longPressHandlers.onTouchStart(e); swipeHandlers.onTouchStart(e); },
+          onTouchMove: (e: React.TouchEvent) => { longPressHandlers.onTouchMove(e); swipeHandlers.onTouchMove(e); },
+          onTouchEnd: (e: React.TouchEvent) => { longPressHandlers.onTouchEnd(e); swipeHandlers.onTouchEnd(); },
+          onTouchCancel: () => { longPressHandlers.onTouchCancel(); swipeHandlers.onTouchCancel(); },
+        }
+      : longPressHandlers;
+
     const handleCheckboxClick = (e: React.MouseEvent) => {
       e.stopPropagation();
       if (e.shiftKey) {
@@ -169,6 +226,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
     };
 
     const handleClick = (e: React.MouseEvent) => {
+      if (swipeEnabled && consumeTap()) { return; }
       if (e.ctrlKey || e.metaKey) {
         e.preventDefault();
         toggleEmailSelection(email.id);
@@ -185,11 +243,12 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
       <div
         ref={ref}
         {...dragHandlers}
-        {...longPressHandlers}
+        {...touchHandlers}
         data-testid="email-list-item"
         data-email-id={email.id}
         data-subject={email.subject || ''}
         data-unread={isUnread ? 'true' : 'false'}
+        data-starred={email.keywords?.$flagged ? 'true' : 'false'}
         className={cn(
           "relative group cursor-pointer select-none transition-shadow duration-200 border-b border-border overflow-hidden",
           resolvedRowTint ? resolvedRowTint : (
@@ -216,11 +275,24 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
           onDoubleClick();
         }}
         onContextMenu={handleContextMenu}
-        style={{ minHeight: isFocusedMailLayout ? undefined : 'var(--list-item-height)' }}
+        style={{ minHeight: isFocusedMailLayout ? undefined : 'var(--list-item-height)', touchAction: swipeEnabled ? 'pan-y' : undefined }}
       >
+        {swipeEnabled && swipeMeta && (
+          // Decorative reveal on the physically exposed edge. That edge
+          // follows the (physical) translate direction, not text direction,
+          // so force LTR to keep justify-start/-end as physical left/right
+          // (otherwise the icon flips to the wrong side under RTL).
+          <div
+            aria-hidden
+            dir="ltr"
+            className={cn('absolute inset-0 z-0 flex items-center px-5 text-white', swipeMeta.bg, swipeSide === 'right' ? 'justify-start' : 'justify-end')}
+          >
+            <swipeMeta.icon className={cn('h-5 w-5 transition-transform', willCommit ? 'scale-110' : 'scale-90 opacity-80')} />
+          </div>
+        )}
         <div
-          className={cn('px-3', isFocusedMailLayout ? 'flex items-center' : 'flex items-start')}
-          style={{ gap: 'var(--density-item-gap)', paddingBlock: 'var(--density-item-py)' }}
+          className={cn('px-3', isFocusedMailLayout ? 'flex items-center' : 'flex items-start', swipeEnabled && 'relative z-10 bg-inherit')}
+          style={{ gap: 'var(--density-item-gap)', paddingBlock: 'var(--density-item-py)', transform: swipeEnabled && offsetX ? `translateX(${offsetX}px)` : undefined, transition: swipeEnabled && offsetX === 0 ? 'transform 200ms ease-out' : undefined }}
         >
           {/* Checkbox - only visible when in selection mode */}
           {selectedEmailIds.size > 0 && (

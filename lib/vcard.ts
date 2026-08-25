@@ -110,17 +110,31 @@ function findValueColon(line: string): number {
 }
 
 // vCard properties may carry a group prefix: "item1.EMAIL:foo@bar".
-// Strip the prefix and return the bare property name + params component.
-function stripGroupPrefix(keyPart: string): string {
+// Split off the prefix and return it alongside the bare property name +
+// params component. Apple exporters use the group to attach a label via a
+// sibling "item1.X-ABLABEL:..." line, so the group has to survive parsing.
+function splitGroupPrefix(keyPart: string): { group: string; key: string } {
   const dot = keyPart.indexOf(".");
-  if (dot < 0) return keyPart;
+  if (dot < 0) return { group: "", key: keyPart };
   const before = keyPart.substring(0, dot);
   // Only treat as group if the segment before the dot has no ";" (which would
   // indicate it's actually a param boundary) and matches the RFC 6350 group
   // grammar (ALPHA / DIGIT / "-").
-  if (before.includes(";")) return keyPart;
-  if (!/^[A-Za-z0-9-]+$/.test(before)) return keyPart;
-  return keyPart.substring(dot + 1);
+  if (before.includes(";")) return { group: "", key: keyPart };
+  if (!/^[A-Za-z0-9-]+$/.test(before)) return { group: "", key: keyPart };
+  return { group: before.toLowerCase(), key: keyPart.substring(dot + 1) };
+}
+
+// Apple wraps its built-in label names in a sentinel: "_$!<Anniversary>!$_".
+function decodeAppleLabel(value: string): string {
+  const m = value.match(/^_\$!<(.*)>!\$_$/);
+  return m ? m[1] : value;
+}
+
+// Inverse of decodeParamValue - used when we synthesize an X-ABLABEL param
+// from a grouped sibling property so it survives the normal param plumbing.
+function encodeParamValue(s: string): string {
+  return s.replace(/\^/g, "^^").replace(/"/g, "^'").replace(/\n/g, "^n");
 }
 
 // Strip URI scheme prefix from a value (e.g. "tel:+1-555" → "+1-555").
@@ -230,6 +244,84 @@ function parseParams(paramStr: string): Record<string, string> {
   return params;
 }
 
+// Non-standard IM / social properties emitted by Outlook, Thunderbird,
+// Android, Apple and the various web exporters. All of them carry a handle or
+// a profile URI, which maps onto an RFC 9553 OnlineService.
+const X_ONLINE_SERVICES: Record<string, string> = {
+  "X-AIM": "AIM",
+  "X-ICQ": "ICQ",
+  "X-JABBER": "Jabber",
+  "X-MSN": "MSN",
+  "X-MS-IMADDRESS": "Skype",
+  "X-YAHOO": "Yahoo",
+  "X-SKYPE": "Skype",
+  "X-SKYPE-USERNAME": "Skype",
+  "X-GADUGADU": "Gadu-Gadu",
+  "X-GROUPWISE": "GroupWise",
+  "X-GOOGLE-TALK": "Google Talk",
+  "X-GOOGLETALK": "Google Talk",
+  "X-TWITTER": "Twitter",
+  "X-MASTODON": "Mastodon",
+  "X-MATRIX": "Matrix",
+  "X-TELEGRAM": "Telegram",
+  "X-SIGNAL": "Signal",
+  "X-DISCORD": "Discord",
+  "X-QQ": "QQ",
+  "X-WECHAT": "WeChat",
+  "X-FACEBOOK": "Facebook",
+  "X-INSTAGRAM": "Instagram",
+  "X-LINKEDIN": "LinkedIn",
+};
+
+// Free-form relation labels (Apple X-ABRELATEDNAMES, X-SPOUSE / X-MANAGER /
+// X-ASSISTANT, Android relation codes) mapped onto RFC 9553 relation types.
+const RELATION_LABELS: Record<string, string> = {
+  spouse: "spouse",
+  wife: "spouse",
+  husband: "spouse",
+  partner: "sweetheart",
+  "domestic partner": "sweetheart",
+  friend: "friend",
+  child: "child",
+  son: "child",
+  daughter: "child",
+  parent: "parent",
+  father: "parent",
+  mother: "parent",
+  brother: "sibling",
+  sister: "sibling",
+  sibling: "sibling",
+  relative: "kin",
+  assistant: "colleague",
+  manager: "colleague",
+  colleague: "colleague",
+  "referred by": "contact",
+};
+
+// ContactsContract.CommonDataKinds.Relation type codes.
+const ANDROID_RELATION_TYPES: Record<string, string> = {
+  "1": "assistant", "2": "brother", "3": "child", "4": "domestic partner",
+  "5": "father", "6": "friend", "7": "manager", "8": "mother", "9": "parent",
+  "10": "partner", "11": "referred by", "12": "relative", "13": "sister",
+  "14": "spouse",
+};
+
+// ContactsContract.CommonDataKinds.Event type codes (0 = custom).
+const ANDROID_EVENT_KINDS: Record<string, "birth" | "wedding" | "other"> = {
+  "1": "wedding", "2": "other", "3": "birth",
+};
+
+function relationFromLabel(label: string): string | undefined {
+  return RELATION_LABELS[label.trim().toLowerCase()];
+}
+
+function anniversaryKindFromLabel(label: string | undefined): "birth" | "wedding" | "other" {
+  const l = (label || "").toLowerCase();
+  if (l.includes("birth")) return "birth";
+  if (l.includes("anniversary") || l.includes("wedding")) return "wedding";
+  return "other";
+}
+
 const PHONE_FEATURE_TYPES = new Set(["CELL", "FAX", "VOICE", "PAGER", "VIDEO", "TEXT", "TEXTPHONE"]);
 
 function typeToPhoneFeatures(typeStr: string | undefined): Record<string, boolean> | undefined {
@@ -254,6 +346,53 @@ function typeToContext(typeStr: string | undefined): Record<string, boolean> | u
   return ctx;
 }
 
+// Parse a vCard DATE / DATE-AND-OR-TIME value (RFC 6350 §4.3) into an
+// RFC 9553 PartialDate.
+//
+// JSContact requires Anniversary.date to be a structured PartialDate (or
+// Timestamp) object; a bare vCard string is not a valid value, so Stalwart
+// drops the whole anniversary and imported BDAYs vanished (#224). Every
+// anniversary we import therefore has to go through here.
+//
+// Accepts the basic and extended forms of: YYYYMMDD, YYYY-MM-DD, YYYY-MM,
+// YYYY, --MMDD, --MM-DD, --MM and ---DD, with an optional trailing time
+// component (e.g. "19850412T232050Z") which is discarded.
+function parseVcardDate(value: string, params: Record<string, string>): PartialDate | undefined {
+  // VALUE=text carries free-form prose ("circa 1800") that has no structured
+  // equivalent - better to drop it than to emit an invalid date.
+  if (params.VALUE?.toLowerCase() === "text") return undefined;
+
+  const datePart = value.trim().split(/[T ]/)[0];
+  if (!datePart) return undefined;
+
+  const mk = (year?: number, month?: number, day?: number): PartialDate | undefined => {
+    if (month !== undefined && (month < 1 || month > 12)) return undefined;
+    if (day !== undefined && (day < 1 || day > 31)) return undefined;
+    const pd: PartialDate = {};
+    if (year !== undefined) pd.year = year;
+    if (month !== undefined) pd.month = month;
+    if (day !== undefined) pd.day = day;
+    return Object.keys(pd).length > 0 ? pd : undefined;
+  };
+  const n = (s: string | undefined) => (s === undefined ? undefined : parseInt(s, 10));
+
+  // Reduced-accuracy forms first: "---DD" before "--MM" so the day-only form
+  // isn't mis-read as a month.
+  let m = datePart.match(/^---(\d{2})$/);
+  if (m) return mk(undefined, undefined, n(m[1]));
+  m = datePart.match(/^--(\d{2})-?(\d{2})$/);
+  if (m) return mk(undefined, n(m[1]), n(m[2]));
+  m = datePart.match(/^--(\d{2})$/);
+  if (m) return mk(undefined, n(m[1]));
+  m = datePart.match(/^(\d{4})-?(\d{2})-?(\d{2})$/);
+  if (m) return mk(n(m[1]), n(m[2]), n(m[3]));
+  m = datePart.match(/^(\d{4})-(\d{2})$/);
+  if (m) return mk(n(m[1]), n(m[2]));
+  m = datePart.match(/^(\d{4})$/);
+  if (m) return mk(n(m[1]));
+  return undefined;
+}
+
 function contextToType(contexts: Record<string, boolean> | undefined): string {
   if (!contexts) return "";
   if (contexts.work) return "WORK";
@@ -261,24 +400,57 @@ function contextToType(contexts: Record<string, boolean> | undefined): string {
   return "";
 }
 
+interface RawProperty {
+  group: string;
+  key: string;
+  value: string;
+}
+
+// Fold the flat property list into the "key with params" → values map that
+// buildContact consumes, resolving Apple's grouped labels on the way:
+// "item1.TEL:+1..." + "item1.X-ABLABEL:Ski cabin" becomes a TEL carrying an
+// X-ABLABEL param, which every property handler already understands.
+function collapseProperties(entries: RawProperty[]): Record<string, string[]> {
+  const groupLabels = new Map<string, string>();
+  for (const entry of entries) {
+    if (!entry.group) continue;
+    const propName = (splitRespectingQuotes(entry.key, ";")[0] || "").toUpperCase();
+    if (propName === "X-ABLABEL") {
+      groupLabels.set(entry.group, decodeAppleLabel(decodeValue(entry.value)));
+    }
+  }
+
+  const raw: Record<string, string[]> = {};
+  for (const entry of entries) {
+    let key = entry.key;
+    const label = entry.group ? groupLabels.get(entry.group) : undefined;
+    if (label && !/(^|;)X-ABLABEL=/i.test(key)) {
+      key += `;X-ABLABEL="${encodeParamValue(label)}"`;
+    }
+    if (!raw[key]) raw[key] = [];
+    raw[key].push(entry.value);
+  }
+  return raw;
+}
+
 export function parseVCard(vcfString: string): ContactCard[] {
   const text = unfoldLines(vcfString);
   const lines = joinQpSoftBreaks(text.split("\n"));
   const contacts: ContactCard[] = [];
-  let current: Record<string, string[]> | null = null;
+  let current: RawProperty[] | null = null;
 
   for (const line of lines) {
     const trimmed = line.trim();
     if (!trimmed) continue;
 
     if (trimmed.toUpperCase() === "BEGIN:VCARD") {
-      current = {};
+      current = [];
       continue;
     }
 
     if (trimmed.toUpperCase() === "END:VCARD") {
       if (current) {
-        const card = buildContact(current);
+        const card = buildContact(collapseProperties(current));
         if (card) contacts.push(card);
       }
       current = null;
@@ -288,10 +460,8 @@ export function parseVCard(vcfString: string): ContactCard[] {
     if (current) {
       const colonIdx = findValueColon(trimmed);
       if (colonIdx < 1) continue;
-      const keyPart = stripGroupPrefix(trimmed.substring(0, colonIdx));
-      const value = trimmed.substring(colonIdx + 1);
-      if (!current[keyPart]) current[keyPart] = [];
-      current[keyPart].push(value);
+      const { group, key } = splitGroupPrefix(trimmed.substring(0, colonIdx));
+      current.push({ group, key, value: trimmed.substring(colonIdx + 1) });
     }
   }
 
@@ -305,6 +475,42 @@ function buildContact(raw: Record<string, string[]>): ContactCard | null {
   // because the BDAY/DEATHDATE entry may appear in any order.
   let birthPlace: string | undefined;
   let deathPlace: string | undefined;
+  // Deferred too: X-MAIDENNAME may precede the N property it belongs to.
+  let maidenName: string | undefined;
+
+  const addAnniversary = (
+    kind: "birth" | "death" | "wedding" | "other",
+    rawDate: string,
+    params: Record<string, string>
+  ) => {
+    const date = parseVcardDate(rawDate, params);
+    // A date we can't structure would be rejected by the server, so skip it
+    // rather than poison the whole card.
+    if (!date) return;
+    if (!card.anniversaries) card.anniversaries = {};
+    card.anniversaries[`a${Object.keys(card.anniversaries).length}`] = { kind, date };
+  };
+
+  const addRelation = (name: string, relation: string | undefined) => {
+    if (!name) return;
+    if (!card.relatedTo) card.relatedTo = {};
+    card.relatedTo[name] = { relation: relation ? { [relation]: true } : undefined };
+  };
+
+  const addOnlineService = (
+    uri: string,
+    service: string,
+    params: Record<string, string>,
+    pref: number | undefined
+  ) => {
+    if (!card.onlineServices) card.onlineServices = {};
+    const idx = Object.keys(card.onlineServices).length;
+    const svc: ContactOnlineService = { uri, service, pref, contexts: typeToContext(params.TYPE) };
+    // A bare handle is not a URI; RFC 9553 keeps those in `user`.
+    if (!/^[a-z][a-z0-9+.-]*:/i.test(uri)) svc.user = uri;
+    if (params["X-ABLABEL"]) svc.label = params["X-ABLABEL"];
+    card.onlineServices[`u${idx}`] = svc;
+  };
 
   for (const [fullKey, values] of Object.entries(raw)) {
     // splitRespectingQuotes so a quoted param value containing ";" survives.
@@ -425,7 +631,7 @@ function buildContact(raw: Record<string, string[]>): ContactCard | null {
 
         case "NICKNAME": {
           if (!card.nicknames) card.nicknames = {};
-          card.nicknames.n0 = { name: val };
+          card.nicknames[`n${Object.keys(card.nicknames).length}`] = { name: val };
           break;
         }
 
@@ -530,8 +736,7 @@ function buildContact(raw: Record<string, string[]>): ContactCard | null {
         }
 
         case "BDAY": {
-          if (!card.anniversaries) card.anniversaries = {};
-          card.anniversaries.a0 = { kind: "birth", date: val };
+          addAnniversary("birth", val, params);
           break;
         }
 
@@ -545,17 +750,13 @@ function buildContact(raw: Record<string, string[]>): ContactCard | null {
 
         case "ANNIVERSARY":
         case "X-ANNIVERSARY": {
-          if (!card.anniversaries) card.anniversaries = {};
-          const idx = Object.keys(card.anniversaries).length;
-          card.anniversaries[`a${idx}`] = { kind: "wedding", date: val };
+          addAnniversary("wedding", val, params);
           break;
         }
 
         case "DEATHDATE":
         case "X-DEATHDATE": {
-          if (!card.anniversaries) card.anniversaries = {};
-          const idx = Object.keys(card.anniversaries).length;
-          card.anniversaries[`a${idx}`] = { kind: "death", date: val };
+          addAnniversary("death", val, params);
           break;
         }
 
@@ -808,6 +1009,66 @@ function buildContact(raw: Record<string, string[]>): ContactCard | null {
           break;
         }
 
+        // ---- Common vendor extensions ----
+        case "X-ABDATE": {
+          // Apple custom date. The label ("Anniversary", "Birthday", or a
+          // user-defined string) arrives via the group's X-ABLABEL sibling.
+          addAnniversary(anniversaryKindFromLabel(params["X-ABLABEL"]), val, params);
+          break;
+        }
+
+        case "X-ABRELATEDNAMES": {
+          addRelation(val, relationFromLabel(params["X-ABLABEL"] || ""));
+          break;
+        }
+
+        case "X-SPOUSE":
+        case "X-MANAGER":
+        case "X-ASSISTANT": {
+          addRelation(val, relationFromLabel(propName.substring(2)));
+          break;
+        }
+
+        case "X-MAIDENNAME":
+        case "X-BIRTHNAME": {
+          maidenName = val;
+          break;
+        }
+
+        case "X-GENDER": {
+          // Outlook / Android write a word ("Male", "weiblich") where vCard
+          // 4.0's GENDER uses a single letter.
+          const g = val.trim().toLowerCase();
+          const mapped = g.startsWith("m") ? "masculine"
+            : g.startsWith("f") || g.startsWith("w") ? "feminine"
+            : g.startsWith("o") ? "other"
+            : undefined;
+          if (mapped) {
+            if (!card.speakToAs) card.speakToAs = {};
+            card.speakToAs.grammaticalGender = mapped;
+          }
+          break;
+        }
+
+        case "X-ANDROID-CUSTOM": {
+          // Android's catch-all for fields vCard has no property for:
+          //   vnd.android.cursor.item/<kind>;<value>;<type>;;;…
+          const parts = val.split(";");
+          const mime = (parts[0] || "").toLowerCase();
+          const kind = mime.substring(mime.lastIndexOf("/") + 1);
+          const value = parts[1] || "";
+          if (!value) break;
+          if (kind === "nickname") {
+            if (!card.nicknames) card.nicknames = {};
+            card.nicknames[`n${Object.keys(card.nicknames).length}`] = { name: value };
+          } else if (kind === "contact_event") {
+            addAnniversary(ANDROID_EVENT_KINDS[parts[2]] || "other", value, params);
+          } else if (kind === "relation") {
+            addRelation(value, relationFromLabel(ANDROID_RELATION_TYPES[parts[2]] || ""));
+          }
+          break;
+        }
+
         // Silently swallow purely structural / sync metadata properties so
         // they don't appear in any catch-all default.
         case "VERSION":
@@ -815,6 +1076,12 @@ function buildContact(raw: Record<string, string[]>): ContactCard | null {
         case "CLIENTPIDMAP":
         case "X-ABLABEL":
           break;
+
+        default: {
+          const service = X_ONLINE_SERVICES[propName];
+          if (service) addOnlineService(val, service, params, pref);
+          break;
+        }
       }
     }
   }
@@ -839,6 +1106,16 @@ function buildContact(raw: Record<string, string[]>): ContactCard | null {
         death = card.anniversaries[key];
       }
       death.place = { fullAddress: deathPlace };
+    }
+  }
+
+  // RFC 9553 has no dedicated "maiden name" kind; surname2 is the closest
+  // fit and is what the birth name occupies in a two-surname model.
+  if (maidenName) {
+    if (!card.name) card.name = { components: [], isOrdered: true };
+    if (!card.name.components) card.name.components = [];
+    if (!card.name.components.some(c => c.kind === "surname2")) {
+      card.name.components.push({ kind: "surname2", value: maidenName });
     }
   }
 
@@ -892,6 +1169,13 @@ function generateSingleVCard(contact: ContactCard): string {
   if (fn) {
     lines.push(`FN:${encodeValue(fn)}`);
     lines.push(`N:${encodeValue(surname)};${encodeValue(given)};${encodeValue(additional)};${encodeValue(prefix)};${encodeValue(suffix)}`);
+  }
+
+  // vCard has no second-surname slot; X-MAIDENNAME is the de-facto extension
+  // and is what we read back on import.
+  const surname2 = findKind("surname2");
+  if (surname2) {
+    lines.push(`X-MAIDENNAME:${encodeValue(surname2)}`);
   }
 
   if (contact.nicknames) {
@@ -999,6 +1283,10 @@ function generateSingleVCard(contact: ContactCard): string {
         if (ann.place?.fullAddress) {
           lines.push(`DEATHPLACE:${encodeValue(ann.place.fullAddress)}`);
         }
+      } else if (dateStr) {
+        // No standard property for an unclassified date; X-ABDATE is the one
+        // the common exporters (and our own importer) understand.
+        lines.push(`X-ABDATE:${dateStr}`);
       }
     }
   }

@@ -20,6 +20,9 @@ import {
   stripExternalCssUrls,
   stripExternalStyleSheetCss,
   blockExternalResourcesOnNode,
+  restrictDataUriResourcesOnNode,
+  sanitizeEmailHtmlForIframe,
+  sanitizeEmailBodyForIframe,
   TRANSPARENT_BLOCKED_PIXEL,
 } from '../email-sanitization';
 
@@ -784,6 +787,183 @@ describe('email-sanitization', () => {
     it('returns empty string for empty input', () => {
       expect(sanitizePluginBodyHtml('')).toBe('');
       expect(sanitizePluginBodyHtml('   ')).toBe('');
+    });
+  });
+
+  // ALLOWED_URI_REGEXP excludes image/svg+xml on purpose (DOMPurify cannot see
+  // inside a data: URI), but its media-tag carve-out short-circuits that check
+  // before the regexp runs - so every data: URI reached <img> and friends.
+  describe('restrictDataUriResourcesOnNode', () => {
+    const blocked = [
+      ['svg base64', 'data:image/svg+xml;base64,PHN2Zy8+'],
+      ['svg inline', 'data:image/svg+xml,<svg onload=alert(1)></svg>'],
+      ['text/html', 'data:text/html;base64,PHNjcmlwdD4='],
+      ['javascript', 'data:application/javascript,alert(1)'],
+      ['svg, leading space', ' data:image/svg+xml,x'],
+      ['svg, control chars in scheme', 'da\tta:image/svg+xml,x'],
+    ] as const;
+
+    for (const [label, uri] of blocked) {
+      it(`drops ${label} from an img src`, () => {
+        expect(sanitizeEmailHtmlForIframe(`<img src="${uri}">`)).not.toContain('data:');
+        expect(sanitizeEmailHtml(`<img src="${uri}">`)).not.toContain('data:');
+      });
+    }
+
+    it('covers the other media tags DOMPurify waves through', () => {
+      for (const tag of ['video', 'audio', 'source', 'track']) {
+        const html = `<${tag} src="data:image/svg+xml,x"></${tag}>`;
+        expect(sanitizeEmailHtmlForIframe(html)).not.toContain('data:');
+      }
+      // <image> is rewritten to <img> by the parser, href included.
+      expect(sanitizeEmailHtmlForIframe('<image href="data:image/svg+xml,x">')).not.toContain('data:');
+    });
+
+    it('keeps inline raster images and every other allowed scheme', () => {
+      expect(sanitizeEmailHtmlForIframe('<img src="data:image/png;base64,iVBORw0KGgo=">')).toContain('data:image/png');
+      expect(sanitizeEmailHtmlForIframe('<img src="data:image/gif;base64,R0lGODlh">')).toContain('data:image/gif');
+      expect(sanitizeEmailHtmlForIframe('<img src="data:image/jpeg;base64,/9j/4AAQ">')).toContain('data:image/jpeg');
+      expect(sanitizeEmailHtmlForIframe('<img src="cid:part1">')).toContain('cid:part1');
+      expect(sanitizeEmailHtmlForIframe('<img src="https://example.com/a.png">')).toContain('https://example.com/a.png');
+      expect(sanitizeEmailHtmlForIframe('<img src="blob:https://example.com/x">')).toContain('blob:');
+    });
+
+    it('leaves non-media elements to ALLOWED_URI_REGEXP', () => {
+      const node = parseHtmlSafely('<a href="data:image/svg+xml,x">x</a>').querySelector('a')!;
+      restrictDataUriResourcesOnNode(node);
+      expect(node.getAttribute('href')).toBe('data:image/svg+xml,x');
+    });
+
+    // The blocked-external placeholder shares this hook pass, so it must not be
+    // a data: URI the restriction would strip right back out.
+    it('preserves the blocked-image placeholder', () => {
+      const node = parseHtmlSafely('<img src="https://tracker.example/p.gif">').querySelector('img')!;
+      blockExternalResourcesOnNode(node);
+      restrictDataUriResourcesOnNode(node);
+      expect(node.getAttribute('src')).toBe(TRANSPARENT_BLOCKED_PIXEL);
+    });
+
+    // DOMPurify URI-tests srcset as one string, so an allowed first candidate
+    // would wave an SVG second candidate through (#717 review finding). The
+    // guard re-checks every data: occurrence and drops the whole attribute.
+    it('drops a srcset that smuggles an svg candidate behind a raster one', () => {
+      const html = '<img srcset="data:image/gif;base64,R0lGODlh 1x, data:image/svg+xml,<svg onload=alert(1)></svg> 2x">';
+      expect(sanitizeEmailHtmlForIframe(html)).not.toContain('svg');
+      expect(sanitizeEmailHtml(html)).not.toContain('svg');
+    });
+
+    it('drops a <picture><source srcset> with a disallowed data: candidate', () => {
+      const html = '<picture><source srcset="data:image/png;base64,AAAA 1x, data:image/svg+xml,<svg/> 2x"><img src="data:image/png;base64,AAAA"></picture>';
+      const clean = sanitizeEmailHtmlForIframe(html);
+      expect(clean).not.toContain('svg');
+      expect(clean).toContain('data:image/png;base64,AAAA');
+    });
+
+    it('keeps an all-raster srcset and non-data candidates', () => {
+      const raster = '<img srcset="data:image/png;base64,AAAA 1x, data:image/gif;base64,R0lGODlh 2x">';
+      expect(sanitizeEmailHtmlForIframe(raster)).toContain('srcset');
+      const node = parseHtmlSafely('<img srcset="https://example.com/a.png 1x, https://example.com/b.png 2x">').querySelector('img')!;
+      restrictDataUriResourcesOnNode(node);
+      expect(node.getAttribute('srcset')).toContain('example.com/a.png');
+    });
+
+    // The plain (non-base64) data: form ends its metadata with a comma; the
+    // srcset verdict must match the src verdict for the same URI.
+    it('keeps the comma-form raster data: URI a src would allow', () => {
+      const node = parseHtmlSafely('<img srcset="data:image/gif,R0lGODlh 1x">').querySelector('img')!;
+      restrictDataUriResourcesOnNode(node);
+      expect(node.getAttribute('srcset')).toContain('data:image/gif,R0lGODlh');
+    });
+
+    // The external blocker stashes the whole srcset before this guard runs in
+    // the shared hook pass - the stash must not keep the disallowed candidate.
+    it('scrubs the data-blocked-srcset stash the external blocker leaves', () => {
+      const node = parseHtmlSafely('<img srcset="https://tracker.example/a.png 1x, data:image/svg+xml,<svg/> 2x">').querySelector('img')!;
+      blockExternalResourcesOnNode(node);
+      expect(node.getAttribute('data-blocked-srcset')).toContain('svg');
+      restrictDataUriResourcesOnNode(node);
+      expect(node.hasAttribute('data-blocked-srcset')).toBe(false);
+      expect(node.hasAttribute('srcset')).toBe(false);
+    });
+  });
+
+  // The one sanitizer every rendered body goes through - including the HTML a
+  // decryption plugin hands back from onRenderEmailBody, which used to skip the
+  // external-content policy entirely (#797).
+  describe('sanitizeEmailBodyForIframe', () => {
+    it('blocks external images and reports it when blocking is on', () => {
+      const result = sanitizeEmailBodyForIframe(
+        '<p>hi</p><img src="https://tracker.example/pixel.gif">',
+        true,
+      );
+      expect(result.blockedExternalContent).toBe(true);
+      // The real URL survives only in the restore stash, behind the placeholder.
+      const img = parseHtmlSafely(result.html).querySelector('img')!;
+      expect(img.getAttribute('src')).toBe(TRANSPARENT_BLOCKED_PIXEL);
+      expect(img.getAttribute('data-blocked-src')).toBe('https://tracker.example/pixel.gif');
+    });
+
+    it('leaves external images alone when blocking is off', () => {
+      const result = sanitizeEmailBodyForIframe('<img src="https://cdn.example/a.png">', false);
+      expect(result.blockedExternalContent).toBe(false);
+      expect(result.html).toContain('src="https://cdn.example/a.png"');
+    });
+
+    it('covers the non-img vectors a decrypted newsletter can carry', () => {
+      const html = [
+        '<img srcset="https://t.example/a.png 1x">',
+        '<video poster="https://t.example/p.jpg"></video>',
+        '<table><tr><td background="https://t.example/bg.gif">x</td></tr></table>',
+        '<div style="background:url(https://t.example/bg.png)"></div>',
+        '<style>body{background:url(https://t.example/s.png)}</style>',
+      ].join('');
+      const result = sanitizeEmailBodyForIframe(html, true);
+      expect(result.blockedExternalContent).toBe(true);
+      // Live attributes gone; only the data-blocked-* restore stashes remain,
+      // so assert on the parsed DOM rather than on substrings of the markup.
+      const doc = parseHtmlSafely(result.html);
+      expect(doc.querySelector('img')!.hasAttribute('srcset')).toBe(false);
+      expect(doc.querySelector('video')!.hasAttribute('poster')).toBe(false);
+      expect(doc.querySelector('td')!.hasAttribute('background')).toBe(false);
+      expect(doc.querySelector('div')!.getAttribute('style')).not.toContain('t.example/bg.png');
+      expect(doc.querySelector('style')!.textContent).not.toContain('t.example/s.png');
+    });
+
+    it('drops <link> only in blocking mode (it is a remote-sheet vector)', () => {
+      const html = '<link rel="stylesheet" href="https://t.example/s.css"><p>x</p>';
+      expect(sanitizeEmailBodyForIframe(html, true).html).not.toContain('<link');
+      // Not blocking: <link> is still forbidden by the base iframe config.
+      expect(sanitizeEmailBodyForIframe(html, false).html).not.toContain('t.example/s.css');
+    });
+
+    it('keeps inline cid:/blob:/data: images while blocking', () => {
+      const result = sanitizeEmailBodyForIframe(
+        '<img src="blob:https://app.example/x"><img src="data:image/png;base64,iVBORw0KGgo=">',
+        true,
+      );
+      expect(result.blockedExternalContent).toBe(false);
+      expect(result.html).toContain('blob:https://app.example/x');
+      expect(result.html).toContain('data:image/png');
+    });
+
+    it('still strips scripts, keeps <style>, and opens http links in a new tab', () => {
+      const result = sanitizeEmailBodyForIframe(
+        '<script>alert(1)</script><style>p{color:red}</style>'
+          + '<a href="https://example.com">a</a><a href="mailto:x@y.z">b</a>',
+        true,
+      );
+      expect(result.html).not.toContain('<script');
+      expect(result.html).toContain('<style>');
+      expect(result.html).toContain('target="_blank"');
+      expect(result.html).toContain('rel="noopener noreferrer"');
+      expect(result.html).toContain('href="mailto:x@y.z"');
+    });
+
+    it('does not leave hooks behind for the next sanitizer call', () => {
+      sanitizeEmailBodyForIframe('<img src="https://t.example/p.gif">', true);
+      // A plain sanitize afterwards must not inherit the blocking hook.
+      expect(sanitizeEmailHtml('<img src="https://cdn.example/a.png">'))
+        .toContain('https://cdn.example/a.png');
     });
   });
 });

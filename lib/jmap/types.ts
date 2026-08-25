@@ -546,6 +546,10 @@ export interface Calendar {
   // shared calendar (see lib/shared-calendar-colors). When true, the override
   // wins over per-event colors so the whole shared calendar paints uniformly.
   colorIsLocalOverride?: boolean;
+  // True when the calendar holds only tasks (VTODO) and no events, so it is
+  // hidden from the event calendar UI while remaining available to the tasks
+  // view (#761). Undefined means "not determined" (treated as not tasks-only).
+  isTasksOnly?: boolean;
 }
 
 export interface CalendarRights {

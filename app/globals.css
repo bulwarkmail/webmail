@@ -559,6 +559,31 @@ body {
   overscroll-behavior: none;
 }
 
+/* iOS Safari zooms the viewport whenever a focused field computes below 16px,
+ * and leaves the page zoomed and panned once the keyboard closes (#838). Every
+ * field here is text-sm (0.875rem), so no --font-size-base setting escapes it:
+ * small 12.25px, medium 14px, large 15.75px. The viewport meta deliberately
+ * omits maximum-scale so pinch zoom keeps working, which leaves CSS as the
+ * only place to put the floor.
+ *
+ * max() raises the small fields to 16px while letting the "Large" setting go
+ * past it (18px) rather than pinning every field to the threshold, and
+ * pointer: coarse keeps desktop typography untouched. Checkbox and radio are
+ * excluded because their box is font-relative in Safari; the :not() chain also
+ * lifts specificity above .text-sm, so no !important is needed.
+ *
+ * Quoted replies are exempt by construction: they render inside a shadow root
+ * (components/email/quoted-html.ts) so they match the sent mail 1:1, and page
+ * CSS cannot reach in. */
+@media (pointer: coarse) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  textarea,
+  select,
+  [contenteditable="true"] {
+    font-size: max(16px, 1rem);
+  }
+}
+
 /* Shake animation (for rejected input) */
 @keyframes shake {
   0%,

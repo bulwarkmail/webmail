@@ -137,6 +137,42 @@ export async function forceSync(page: Page): Promise<void> {
   await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
 }
 
+// ─── Files (drive) ─────────────────────────────────────────────────────────
+
+/** The primary navigation rail (there are two - mobile + desktop chrome). */
+function navRail(page: Page): Locator {
+  return page.locator('nav[aria-label="Navigation"]').first();
+}
+
+/**
+ * Open the Files drive via the navigation rail. A deep `page.goto('/files')`
+ * bounces to login in this SPA, so navigate in-app through the rail link
+ * (rendered for every route once files support is detected). Waits until the
+ * file browser toolbar is present.
+ */
+export async function openFiles(page: Page): Promise<void> {
+  await navRail(page).getByRole('link', { name: 'Files', exact: true }).click();
+  await page.locator('[role="toolbar"]').first().waitFor({ state: 'visible', timeout: 30000 });
+}
+
+/**
+ * Return to the mail view via the navigation rail's Mail link and wait until it
+ * has settled. Settling matters before touching the account switcher: while the
+ * mailbox is still loading the sidebar reflows, which leaves the switcher's
+ * popover items shifting/detaching under a click. Waiting for the Inbox row
+ * (and the switcher) pins the layout first.
+ */
+export async function openMailView(page: Page): Promise<void> {
+  await navRail(page).getByRole('link', { name: 'Mail', exact: true }).click();
+  await accountSwitcher(page).waitFor({ state: 'visible', timeout: 30000 });
+  await folderRow(page, { role: 'inbox' }).first().waitFor({ state: 'visible', timeout: 30000 });
+}
+
+/** A drive entry (folder/file) row, selected by its name via `data-resource`. */
+export function driveEntry(page: Page, name: string): Locator {
+  return page.locator(`[data-resource="${name}"]`);
+}
+
 // ─── Composer / drafts ────────────────────────────────────────────────────
 
 /** Open the composer via the keyboard shortcut and wait for it to render. */
@@ -355,6 +391,11 @@ export async function expectEmailUnread(page: Page, subject: string, unread: boo
   await expect(emailItem(page, subject).first()).toHaveAttribute('data-unread', String(unread), { timeout });
 }
 
+/** Assert an email row's starred state (from its `data-starred` attribute). */
+export async function expectEmailStarred(page: Page, subject: string, starred: boolean, timeout = 20000): Promise<void> {
+  await expect(emailItem(page, subject).first()).toHaveAttribute('data-starred', String(starred), { timeout });
+}
+
 /**
  * Open an email's right-click context menu and click one of its actions.
  * `testId` is one of: `ctx-delete`, `ctx-spam`, `ctx-not-spam`,
@@ -372,4 +413,77 @@ export async function emailContextAction(page: Page, subject: string, testId: st
     await item.waitFor({ state: 'visible', timeout: 2000 });
   }).toPass({ timeout: 15000 });
   await item.click();
+}
+
+// --- Calendar (multi-account) ---------------------------------------------
+
+/**
+ * Navigate to the calendar via the in-app nav (client-side routing) and wait
+ * for the sidebar calendar list. A hard `page.goto('/calendar')` redirects to
+ * login because the deep-link SSR path runs before client auth hydrates.
+ */
+export async function openCalendar(page: Page): Promise<void> {
+  await page.locator('a[href$="/calendar"]').first().click();
+  await page
+    .locator('[data-testid="calendar-item"]')
+    .first()
+    .waitFor({ state: 'visible', timeout: 30000 });
+}
+
+/** A sidebar calendar row by its (exact) name. */
+export function calendarItem(page: Page, name: string): Locator {
+  return page.locator(`[data-testid="calendar-item"][data-calendar-name="${name}"]`).first();
+}
+
+/** All sidebar calendars as {name, account, visible}. */
+export async function calendarRows(
+  page: Page,
+): Promise<Array<{ name: string; account: string; visible: boolean }>> {
+  return page.locator('[data-testid="calendar-item"]').evaluateAll((els) =>
+    els.map((e) => ({
+      name: e.getAttribute('data-calendar-name') || '',
+      account: e.getAttribute('data-account') || '',
+      visible: e.getAttribute('data-visible') === 'true',
+    })),
+  );
+}
+
+/**
+ * Turn on the Pro (multi-account) interface via the settings UI, so the
+ * calendar/contacts aggregate across accounts. Done through the real toggle
+ * (not a reload/seed) because the app doesn't survive a hard reload in tests
+ * and seeding proInterface before login destabilises the add-account popover.
+ */
+export async function enableProInterface(page: Page): Promise<void> {
+  await page.locator('a[href$="/settings"]').first().click();
+  await page.locator('[data-testid="settings-tab-layout"]').first().click();
+  const toggle = page.locator('[data-testid="setting-pro-interface"]').first();
+  await toggle.waitFor({ state: 'visible', timeout: 30000 });
+  if ((await toggle.getAttribute('aria-checked')) !== 'true') {
+    await toggle.click();
+    await expect(toggle).toHaveAttribute('aria-checked', 'true');
+  }
+}
+
+// --- Contacts / address books (multi-account) ------------------------------
+
+/** Navigate to contacts via in-app nav and wait for the address-book list. */
+export async function openContacts(page: Page): Promise<void> {
+  await page.locator('a[href$="/contacts"]').first().click();
+  await page
+    .locator('[data-testid="address-book-item"]')
+    .first()
+    .waitFor({ state: 'visible', timeout: 30000 });
+}
+
+/** All sidebar address books as {name, account}. */
+export async function addressBookRows(
+  page: Page,
+): Promise<Array<{ name: string; account: string }>> {
+  return page.locator('[data-testid="address-book-item"]').evaluateAll((els) =>
+    els.map((e) => ({
+      name: e.getAttribute('data-book-name') || '',
+      account: e.getAttribute('data-account') || '',
+    })),
+  );
 }

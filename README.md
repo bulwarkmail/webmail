@@ -256,6 +256,61 @@ PLUGIN_DEV_DIR=../my-plugins          # load plugins from disk instead of ZIPs
 
 `EXTENSION_DIRECTORY_URL` enables the admin marketplace for browsing and installing plugins and themes. `PLUGIN_DEV_DIR` is for plugin authors: each immediate subfolder is one plugin with a `manifest.json`, and an entrypoint under `src/` is bundled on demand with esbuild, so editing sources needs only a browser refresh.
 
+Sandboxed plugins that integrate provider-side labels can use the native
+`api.keywords` facade exposed by `@plugin-host`:
+
+```js
+const api = require('@plugin-host');
+
+const known = await api.keywords.list();                 // settings:read
+const scan = await api.jmap.getKeywords();               // email:read
+const providerLabel = scan.labels
+  .find((label) => label.id.startsWith('$label:'));
+if (providerLabel) {
+  await api.keywords.add([{                              // settings:write
+    id: providerLabel.id.slice('$label:'.length),
+    label: providerLabel.name,
+    // color is optional; Bulwark picks a palette colour when omitted
+    visibility: 'show',
+  }]);
+}
+const current = await api.keywords.list();               // settings:read
+await api.keywords.reorder(current.map(({ id }) => id), { // settings:write
+  caseSensitive: false, // default
+});
+const counts = await api.keywords.refreshCounts();        // email:read
+
+// Complete replacement: keywords omitted here are removed from the message.
+await api.jmap.setKeywords('email-id', {                 // email:write
+  '$seen': true,
+  '$label:provider-label-id': true,
+});
+await api.jmap.setKeyword('email-id', '$label:work');     // email:write
+await api.jmap.removeKeyword('email-id', '$label:work');  // email:write
+```
+
+`jmap.getKeywords()` is a narrow read-only facade rather than an arbitrary JMAP
+request API. When the JMAP server advertises
+`https://bulwarkmail.com/ns/jmap/keywords`, it returns all cached keywords with
+exact total/unread counts and provider-label metadata, including empty provider
+labels. On servers without the capability it falls back to a bounded scan of
+message keywords. `keywords.discover()` retains its original message-scan
+response for compatibility.
+
+`jmap.setKeywords()` replaces one message's complete keyword map via
+`Email/set`. Omitted keywords are removed, so extensions should use the existing
+`jmap.setKeyword()` and `jmap.removeKeyword()` methods for incremental edits.
+The existing `email.setKeyword()` and `email.removeKeyword()` names remain as
+compatibility aliases.
+
+`keywords.add()` is append-only and case-insensitive by id: it returns added
+and skipped definitions without overwriting the user's existing label name,
+colour, visibility, or order. `keywords.reorder()` accepts a complete
+permutation of the existing label ids and changes only their order; missing,
+unknown, or duplicate ids are rejected without changing settings. Matching is
+case-insensitive by default; pass `{ caseSensitive: true }` to require exact id
+casing. Keyword discovery reports whether its bounded scan was complete.
+
 </details>
 
 <details>

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { JMAPClient } from '../jmap/client';
+import { KEYWORDS_CAPABILITY, JMAPClient } from '../jmap/client';
 
 // JMAP has no way to ask which keywords an account uses, so `discoverKeywords`
 // finds them by walking the message list: an Email/query for the next slice of
@@ -8,10 +8,19 @@ import { JMAPClient } from '../jmap/client';
 // admits when it stopped early rather than passing a partial scan off as the
 // whole account.
 
-function makeSession(core: Record<string, number> = {}) {
+function makeSession(core: Record<string, number> = {}, supportsKeywordGet = false) {
   return {
-    capabilities: { 'urn:ietf:params:jmap:core': core },
-    accounts: { 'acct-1': { name: 'test', isPersonal: true, accountCapabilities: {} } },
+    capabilities: {
+      'urn:ietf:params:jmap:core': core,
+      ...(supportsKeywordGet ? { [KEYWORDS_CAPABILITY]: { supportsCounts: true } } : {}),
+    },
+    accounts: {
+      'acct-1': {
+        name: 'test',
+        isPersonal: true,
+        accountCapabilities: supportsKeywordGet ? { [KEYWORDS_CAPABILITY]: {} } : {},
+      },
+    },
     primaryAccounts: { 'urn:ietf:params:jmap:mail': 'acct-1' },
     apiUrl: 'https://mail.example.com/jmap/api',
     downloadUrl: 'https://mail.example.com/jmap/download/{accountId}/{blobId}/{name}',
@@ -52,6 +61,14 @@ describe('JMAPClient.discoverKeywords', () => {
 
   async function connectedClient(core?: Record<string, number>): Promise<JMAPClient> {
     fetchSpy.mockResolvedValueOnce(jsonResponse(makeSession(core)));
+    const client = JMAPClient.withBearer('https://mail.example.com', 'token123', 'user@test.com');
+    await client.connect();
+    fetchSpy.mockReset();
+    return client;
+  }
+
+  async function connectedKeywordGetClient(core?: Record<string, number>): Promise<JMAPClient> {
+    fetchSpy.mockResolvedValueOnce(jsonResponse(makeSession(core, true)));
     const client = JMAPClient.withBearer('https://mail.example.com', 'token123', 'user@test.com');
     await client.connect();
     fetchSpy.mockReset();
@@ -205,5 +222,55 @@ describe('JMAPClient.discoverKeywords', () => {
     const result = await client.discoverKeywords();
 
     expect(result).toMatchObject({ keywords: {}, scanned: 0, total: 0, complete: true });
+  });
+
+  it('uses JMAP Keyword/get and preserves provider-label metadata', async () => {
+    const client = await connectedKeywordGetClient();
+    let requestBody: Record<string, unknown> | undefined;
+    fetchSpy.mockImplementationOnce((async (_url: string, init: RequestInit) => {
+      requestBody = JSON.parse(init.body as string);
+      return jsonResponse({
+        methodResponses: [['Keyword/get', {
+          accountId: 'acct-1',
+          totalEmails: 42,
+          list: [
+            { id: '$flagged', name: '$flagged', color: null, total: 8, unread: 3, isProviderLabel: false, source: 'message' },
+            { id: '$label:GoogleVoice', name: 'Google Voice', color: null, total: 0, unread: 0, isProviderLabel: true, source: 'provider' },
+          ],
+          notFound: [],
+        }, '0']],
+      });
+    }) as never);
+
+    const result = await client.getKeywords();
+
+    expect(requestBody).toMatchObject({
+      using: ['urn:ietf:params:jmap:core', KEYWORDS_CAPABILITY],
+      methodCalls: [['Keyword/get', { accountId: 'acct-1' }, '0']],
+    });
+    expect(result).toEqual({
+      keywords: { $flagged: 8, '$label:GoogleVoice': 0 },
+      labels: [
+        { id: '$flagged', name: '$flagged', color: null, total: 8, unread: 3, isProviderLabel: false, source: 'message' },
+        { id: '$label:GoogleVoice', name: 'Google Voice', color: null, total: 0, unread: 0, isProviderLabel: true, source: 'provider' },
+      ],
+      scanned: 42,
+      total: 42,
+      complete: true,
+    });
+  });
+
+  it('falls back to scanning on ordinary JMAP servers', async () => {
+    const client = await connectedClient();
+    recordRequests(() => page(['m1'], [{ '$label:work': true, $seen: true }], 1));
+
+    const result = await client.getKeywords();
+
+    expect(result.keywords).toEqual({ '$label:work': 1, $seen: 1 });
+    expect(result.labels).toEqual([
+      expect.objectContaining({ id: '$label:work', name: 'work', total: 1, source: 'message' }),
+      expect.objectContaining({ id: '$seen', name: '$seen', total: 1, source: 'message' }),
+    ]);
+    expect(result).toMatchObject({ scanned: 1, total: 1, complete: true });
   });
 });

@@ -300,6 +300,10 @@
     "move": "نقل",
     "print": "طباعة",
     "view_source": "عرض المصدر",
+
+    "fullscreen": "ملء الشاشة",
+
+    "exit_fullscreen": "الخروج من ملء الشاشة",
     "export_email": "تصدير كملف ‎.eml",
     "forward_as_attachment": "Forward as attachment",
     "import_email": "استيراد ملف ‎.eml أو ‎.zip",
@@ -574,6 +578,7 @@
     "read_receipt_on": "إيصال القراءة مطلوب (انقر للتعطيل)",
     "read_receipt_off": "طلب إيصال قراءة",
     "new_message": "رسالة جديدة",
+    "signature_edit_hint": "انقر نقرًا مزدوجًا لتحرير التوقيع",
     "reply": "رد",
     "reply_all": "الرد على الجميع",
     "forward": "إعادة توجيه",
@@ -748,7 +753,10 @@
     "rate_limited_title": "مصادقة الخادم مقيّدة مؤقتًا بحد المعدل.",
     "rate_limited_detail": "أوقف Bulwark الطلبات في الخلفية مؤقتًا لتجنب الحظر. ستتم إعادة المحاولة خلال {seconds} ثانية.",
     "rate_limited_action_title": "تم إيقاف الطلب مؤقتًا لتجنب الحظر.",
-    "rate_limited_action_detail": "ينتظر Bulwark انتهاء فترة تهدئة الخادم قبل إرسال المزيد من الطلبات الموثّقة. حاول مرة أخرى خلال {seconds} ثانية."
+    "rate_limited_action_detail": "ينتظر Bulwark انتهاء فترة تهدئة الخادم قبل إرسال المزيد من الطلبات الموثّقة. حاول مرة أخرى خلال {seconds} ثانية.",
+    "pull_to_refresh": "اسحب للتحديث",
+    "release_to_refresh": "أفلت للتحديث",
+    "refreshing": "جارٍ التحديث…"
   },
   "notifications": {
     "email_sent": "تم إرسال الرسالة بنجاح",
@@ -855,7 +863,10 @@
     "zh": "简体中文",
     "fa": "فارسی",
     "farsi": "فارسی",
-    "switch_to_farsi": "التبديل إلى الفارسية"
+    "switch_to_farsi": "التبديل إلى الفارسية",
+    "mn": "Монгол",
+    "mongolian": "Монгол",
+    "switch_to_mongolian": "التبديل إلى المنغولية"
   },
   "settings": {
     "title": "الإعدادات",
@@ -1077,7 +1088,6 @@
         "relay_desc": "يستخدم افتراضيًا خادم ترحيل Bulwark المستضاف. غيّره فقط إذا كنت تستضيف بنفسك.",
         "relay_locked": "تم تعيينه بواسطة المسؤول",
         "relay_locked_desc": "تم تعيين رابط خادم الترحيل بواسطة المسؤول ولا يمكن تغييره.",
-        "relay_placeholder": "https://notifications.relay.example.com",
         "status_active": "نشط على هذا الجهاز",
         "status_inactive": "غير مفعّل على هذا الجهاز",
         "status_unsupported": "هذا المتصفح لا يدعم Web Push",
@@ -1088,7 +1098,23 @@
         "confirm_disable_title": "تعطيل الإشعارات في الخلفية؟",
         "confirm_disable_message": "سيتوقف هذا الجهاز عن تلقي التنبيهات عند إغلاق الموقع.",
         "dismiss_aria": "تجاهل مطالبة الإشعارات",
-        "ios_hint": "على iOS، ثبّت الموقع على الشاشة الرئيسية أولًا - يقدّم Safari خدمة Web Push فقط لتطبيقات PWA المثبّتة."
+        "ios_hint": "على iOS، ثبّت الموقع على الشاشة الرئيسية أولًا - يقدّم Safari خدمة Web Push فقط لتطبيقات PWA المثبّتة.",
+        "devices_title": "الأجهزة المسجّلة",
+        "devices_desc": "كل الأجهزة المسجّلة لتلقّي الإشعارات في الخلفية لهذا الحساب. إلغاء أي جهاز يوقف تلقّيه فورًا.",
+        "devices_loading": "جارٍ تحميل الأجهزة المسجّلة…",
+        "devices_empty": "لا توجد أجهزة مسجّلة للإشعارات في الخلفية.",
+        "devices_error": "تعذّر تحميل الأجهزة المسجّلة.",
+        "devices_refresh": "تحديث",
+        "device_this": "هذا الجهاز",
+        "device_other": "جهاز آخر",
+        "device_status_active": "يسلّم الإشعارات",
+        "device_status_inactive": "لم يسلّم أي إشعار قط",
+        "device_status_unknown": "غير معروف لهذا المُرحّل",
+        "device_expires": "ينتهي في {date}",
+        "revoke": "إلغاء التسجيل",
+        "confirm_revoke_title": "إلغاء تسجيل هذا الجهاز؟",
+        "confirm_revoke_message": "سيتوقّف فورًا عن تلقّي الإشعارات في الخلفية. تفعيل الدفع مجددًا على ذلك الجهاز سيسجّله من جديد.",
+        "confirm_revoke_message_this": "سيتوقّف هذا الجهاز فورًا عن تلقّي الإشعارات في الخلفية."
       },
       "sound_selection": {
         "title": "صوت الإشعار",
@@ -1191,6 +1217,12 @@
         "auto": "تلقائي (مستحسن)",
         "always": "إضافة تباعد دائمًا",
         "edge": "من الحافة إلى الحافة"
+      },
+      "plain_text_font": {
+        "label": "خط النص العادي",
+        "description": "الخط المستخدم لرسائل النص العادي",
+        "mono": "أحادي المسافة",
+        "sans": "عادي (مثل التطبيق)"
       },
       "archive_mode": {
         "label": "الأرشفة في",
@@ -1668,6 +1700,7 @@
       "create_subfolder": "إنشاء مجلد فرعي",
       "reorder": "اسحب لإعادة الترتيب",
       "reorder_error": "فشل في إعادة ترتيب المجلدات",
+      "move_error": "فشل في نقل المجلد",
       "subfolder_of": "داخل {name}",
       "subfolder_name": "اسم المجلد الفرعي",
       "new_folder_name": "اسم المجلد",

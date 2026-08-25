@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { pointerTokenValue } from '@/lib/jmap/patch-pointer';
 
 /**
  * Mock JMAP server for local development.
@@ -976,7 +977,7 @@ const IDENTITIES: MockIdentity[] = [
 // Address Books & Contacts
 // ---------------------------------------------------------------------------
 
-const addressBooks = [
+const addressBooks: Array<Record<string, unknown> & { id: string; name: string }> = [
   { id: 'ab-1', name: 'Personal', isDefault: true },
   { id: 'ab-2', name: 'Work', isDefault: false },
 ];
@@ -1725,7 +1726,9 @@ function handleEmailSet(args: MethodArgs, callId: string): MethodResult {
       // Patch-style keyword updates: "keywords/$seen", "keywords/$flagged", etc.
       for (const [key, value] of Object.entries(changes)) {
         if (key.startsWith('keywords/')) {
-          const keyword = key.slice('keywords/'.length);
+          // The key is a JSON Pointer, so a nested tag arrives escaped
+          // (`$label:work~1clients`) and has to be read back to its real name.
+          const keyword = pointerTokenValue(key.slice('keywords/'.length));
           if (value) {
             email.keywords[keyword] = true;
           } else {
@@ -1923,6 +1926,64 @@ function handleContactCardGet(args: MethodArgs, callId: string): MethodResult {
 
 function handleAddressBookGet(_args: MethodArgs, callId: string): MethodResult {
   return ['AddressBook/get', { accountId: ACCOUNT_ID, state: nextState(), list: addressBooks, notFound: [] }, callId];
+}
+
+function handleAddressBookSet(args: MethodArgs, callId: string): MethodResult {
+  const created: Record<string, unknown> = {};
+  const updated: Record<string, unknown> = {};
+  const destroyed: string[] = [];
+  const notDestroyed: Record<string, unknown> = {};
+
+  if (args.create) {
+    for (const [tempId, data] of Object.entries(args.create as Record<string, Record<string, unknown>>)) {
+      const newId = `ab-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      const book = { isDefault: false, ...data, id: newId, name: String(data.name ?? 'Untitled') };
+      addressBooks.push(book);
+      created[tempId] = { id: newId, isDefault: book.isDefault };
+    }
+  }
+
+  if (args.update) {
+    for (const [id, patches] of Object.entries(args.update as Record<string, Record<string, unknown>>)) {
+      const idx = addressBooks.findIndex(b => b.id === id);
+      if (idx !== -1) {
+        addressBooks[idx] = { ...addressBooks[idx], ...patches };
+        updated[id] = null;
+      }
+    }
+  }
+
+  if (args.destroy) {
+    for (const id of args.destroy as string[]) {
+      const idx = addressBooks.findIndex(b => b.id === id);
+      if (idx === -1) continue;
+      if (addressBooks[idx].isDefault) {
+        notDestroyed[id] = { type: 'forbidden', description: 'Cannot destroy the default address book' };
+        continue;
+      }
+      addressBooks.splice(idx, 1);
+      // Drop the book from every card, and the card itself once it belongs to none.
+      for (let i = contacts.length - 1; i >= 0; i--) {
+        const bookIds = contacts[i].addressBookIds as unknown as Record<string, boolean> | undefined;
+        if (!bookIds?.[id]) continue;
+        const remaining = { ...bookIds };
+        delete remaining[id];
+        if (Object.keys(remaining).length === 0) contacts.splice(i, 1);
+        else contacts[i] = { ...contacts[i], addressBookIds: remaining } as unknown as typeof contacts[number];
+      }
+      destroyed.push(id);
+    }
+  }
+
+  return ['AddressBook/set', {
+    accountId: ACCOUNT_ID,
+    oldState: nextState(),
+    newState: nextState(),
+    created: Object.keys(created).length > 0 ? created : null,
+    updated: Object.keys(updated).length > 0 ? updated : null,
+    destroyed: destroyed.length > 0 ? destroyed : null,
+    notDestroyed: Object.keys(notDestroyed).length > 0 ? notDestroyed : null,
+  }, callId];
 }
 
 function handleCalendarGet(_args: MethodArgs, callId: string): MethodResult {
@@ -2141,6 +2202,7 @@ const METHOD_HANDLERS: Record<string, MethodHandler> = {
   },
   'ContactCard/query': (_args, callId) => ['ContactCard/query', { accountId: ACCOUNT_ID, queryState: nextState(), ids: contacts.map(c => c.id), total: contacts.length, position: 0 }, callId],
   'AddressBook/get': handleAddressBookGet,
+  'AddressBook/set': handleAddressBookSet,
   'Calendar/get': handleCalendarGet,
   'CalendarEvent/get': handleCalendarEventGet,
   'CalendarEvent/query': handleCalendarEventQuery,

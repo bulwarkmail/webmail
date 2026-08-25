@@ -300,6 +300,10 @@
     "move": "Flyt",
     "print": "Udskriv",
     "view_source": "Vis kilde",
+
+    "fullscreen": "Fuld skærm",
+
+    "exit_fullscreen": "Afslut fuld skærm",
     "export_email": "Eksportér som .eml",
     "forward_as_attachment": "Forward as attachment",
     "import_email": "Importér .eml eller .zip",
@@ -574,6 +578,7 @@
     "read_receipt_on": "Læsekvittering anmodet (klik for at deaktivere)",
     "read_receipt_off": "Anmod om læsekvittering",
     "new_message": "Ny besked",
+    "signature_edit_hint": "Dobbeltklik for at redigere signaturen",
     "reply": "Svar",
     "reply_all": "Svar alle",
     "forward": "Videresend",
@@ -748,7 +753,10 @@
     "rate_limited_title": "Server-godkendelse er midlertidigt hastighedsbegrænset.",
     "rate_limited_detail": "Bulwark har sat baggrundsanmodninger på pause for at undgå udelukkelse. Prøver igen om {seconds}s.",
     "rate_limited_action_title": "Anmodning sat på pause for at undgå udelukkelse.",
-    "rate_limited_action_detail": "Bulwark venter på, at serverens nedkølingsperiode slutter, før der sendes flere godkendte anmodninger. Prøv igen om {seconds}s."
+    "rate_limited_action_detail": "Bulwark venter på, at serverens nedkølingsperiode slutter, før der sendes flere godkendte anmodninger. Prøv igen om {seconds}s.",
+    "pull_to_refresh": "Træk for at opdatere",
+    "release_to_refresh": "Slip for at opdatere",
+    "refreshing": "Opdaterer…"
   },
   "notifications": {
     "email_sent": "E-mail sendt succesfuldt",
@@ -855,7 +863,10 @@
     "zh": "简体中文",
     "fa": "فارسی",
     "farsi": "فارسی",
-    "switch_to_farsi": "Skift til farsi"
+    "switch_to_farsi": "Skift til farsi",
+    "mn": "Монгол",
+    "mongolian": "Монгол",
+    "switch_to_mongolian": "Skift til mongolsk"
   },
   "settings": {
     "title": "Indstillinger",
@@ -1077,7 +1088,6 @@
         "relay_desc": "Som standard det hosted Bulwark-relæ. Ændr kun, hvis du selv-host'er.",
         "relay_locked": "Indstillet af administrator",
         "relay_locked_desc": "Push-relæ-URL'en er indstillet af din administrator og kan ikke ændres.",
-        "relay_placeholder": "https://notifikationer.relay.eksempel.dk",
         "status_active": "Aktiv på denne enhed",
         "status_inactive": "Ikke aktiveret på denne enhed",
         "status_unsupported": "Denne browser understøtter ikke Web Push",
@@ -1088,7 +1098,23 @@
         "confirm_disable_title": "Deaktivér baggrundsnotifikationer?",
         "confirm_disable_message": "Denne enhed stopper med at modtage alarmer, når sitet er lukket.",
         "dismiss_aria": "Afvis notifikationsprompt",
-        "ios_hint": "På iOS skal du installere sitet på din startskærm først - Safari leverer kun Web Push til installerede PWA'er."
+        "ios_hint": "På iOS skal du installere sitet på din startskærm først - Safari leverer kun Web Push til installerede PWA'er.",
+        "devices_title": "Registrerede enheder",
+        "devices_desc": "Alle enheder, der er registreret til at modtage baggrundsnotifikationer for denne konto. Tilbagekalder du en, stopper den med at modtage med det samme.",
+        "devices_loading": "Indlæser registrerede enheder…",
+        "devices_empty": "Ingen enheder er registreret til baggrundsnotifikationer.",
+        "devices_error": "Kunne ikke indlæse de registrerede enheder.",
+        "devices_refresh": "Opdater",
+        "device_this": "Denne enhed",
+        "device_other": "Anden enhed",
+        "device_status_active": "Leverer notifikationer",
+        "device_status_inactive": "Har aldrig leveret en notifikation",
+        "device_status_unknown": "Ukendt for dette relæ",
+        "device_expires": "Udløber {date}",
+        "revoke": "Tilbagekald",
+        "confirm_revoke_title": "Tilbagekald denne enhed?",
+        "confirm_revoke_message": "Den stopper med at modtage baggrundsnotifikationer med det samme. Slår du push til igen på enheden, registreres den på ny.",
+        "confirm_revoke_message_this": "Denne enhed stopper med at modtage baggrundsnotifikationer med det samme."
       },
       "sound_selection": {
         "title": "Notifikationslyd",
@@ -1191,6 +1217,12 @@
         "auto": "Automatisk (anbefalet)",
         "always": "Tilføj altid afstand",
         "edge": "Kant til kant"
+      },
+      "plain_text_font": {
+        "label": "Skrifttype til ren tekst",
+        "description": "Skrifttype til e-mails i ren tekst",
+        "mono": "Monospace",
+        "sans": "Normal (samme som appen)"
       },
       "archive_mode": {
         "label": "Arkivér i",
@@ -1664,6 +1696,7 @@
       "create_subfolder": "Opret undermappe",
       "reorder": "Træk for at ændre rækkefølgen",
       "reorder_error": "Kunne ikke ændre rækkefølgen af mapper",
+      "move_error": "Kunne ikke flytte mappen",
       "subfolder_of": "Inde i {name}",
       "subfolder_name": "Undermappenavn",
       "new_folder_name": "Mappenavn",

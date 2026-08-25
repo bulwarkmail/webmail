@@ -292,12 +292,12 @@ function deduplicateMailboxes(mailboxes: Mailbox[]): Mailbox[] {
     // Check if this root-level mailbox is a duplicate of a role-based mailbox in the SAME account
     const accountKey = mb.accountId || '';
     const accountRoles = rolesByAccount.get(accountKey) || [];
-    const lowerName = mb.name.toLowerCase();
-    const matchedRole = accountRoles.find(roleMb => {
-      const roleLowerName = roleMb.name.toLowerCase();
-      // Check for common duplicates: "Sent Mail" vs "Sent", etc.
-      return lowerName.includes(roleLowerName) || roleLowerName.includes(lowerName);
-    });
+    // Only an exact name collision counts as a duplicate. Substring matching
+    // silently hid legitimate user folders whose name merely contained a role
+    // folder's name - "Old Inbox", "2025 Archive", "Sent to Accounting".
+    // (GitHub #771)
+    const lowerName = mb.name.trim().toLowerCase();
+    const matchedRole = accountRoles.find(roleMb => roleMb.name.trim().toLowerCase() === lowerName);
     const isDuplicate = !!matchedRole;
 
     // Only keep if not a duplicate

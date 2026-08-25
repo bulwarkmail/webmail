@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import sharp from 'sharp';
-import path from 'node:path';
-import { readFile } from 'node:fs/promises';
 import { configManager } from '@/lib/admin/config-manager';
-import { getConfigDir } from '@/lib/admin/paths';
+import { fetchBrandingAsset } from '@/lib/admin/branding-asset';
 import {
   matchDomainBranding,
   parseDomainBranding,
@@ -24,26 +22,6 @@ type Variant = keyof typeof VARIANTS;
 
 // Cache resized images keyed by (variant, source URL).
 const cache = new Map<string, Blob>();
-
-async function fetchSourceImage(iconUrl: string): Promise<Buffer> {
-  if (iconUrl.startsWith('http://') || iconUrl.startsWith('https://')) {
-    const res = await fetch(iconUrl);
-    if (!res.ok) throw new Error(`Failed to fetch PWA screenshot: ${res.status}`);
-    return Buffer.from(await res.arrayBuffer());
-  }
-
-  // Admin-uploaded branding asset: served from /api/admin/branding/<file>
-  // but stored on disk under getConfigDir()/branding/.
-  const ADMIN_BRANDING_PREFIX = '/api/admin/branding/';
-  if (iconUrl.startsWith(ADMIN_BRANDING_PREFIX)) {
-    const filename = path.basename(iconUrl.slice(ADMIN_BRANDING_PREFIX.length));
-    return readFile(path.join(getConfigDir(), 'branding', filename));
-  }
-
-  // Path relative to public/ directory
-  const publicPath = path.join(process.cwd(), 'public', iconUrl.replace(/^\//, ''));
-  return readFile(publicPath);
-}
 
 export async function GET(
   req: NextRequest,
@@ -82,7 +60,7 @@ export async function GET(
       return new NextResponse(cache.get(cacheKey)!, { headers: pngHeaders });
     }
 
-    const sourceBuffer = await fetchSourceImage(screenshotUrl);
+    const sourceBuffer = await fetchBrandingAsset(screenshotUrl, 'PWA screenshot');
     // 'cover' fills the target box without letterboxing - screenshots benefit
     // more from cropping than from a transparent frame around them. Users get
     // a hint about the recommended aspect ratio in the admin UI.

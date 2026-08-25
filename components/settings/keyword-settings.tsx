@@ -574,9 +574,15 @@ export function KeywordSettings() {
       try {
         const oldJmapKeyword = `$label:${oldId}`;
         const newJmapKeyword = `$label:${keyword.id}`;
-        await client.migrateKeyword(oldJmapKeyword, newJmapKeyword);
+        const migration = await client.migrateKeyword(oldJmapKeyword, newJmapKeyword);
         renameKeyword(oldId, keyword);
         fetchTagCounts(client);
+        if (migration.refused > 0) {
+          // Some mail kept the old keyword. The definition still follows the
+          // messages that did move; the rest is what the warning is about.
+          const toastModule = await import('sonner');
+          toastModule.toast.warning(t("migration_error"));
+        }
       } catch (error) {
         console.error("Failed to migrate keyword:", error);
         const toastModule = await import('sonner');

@@ -11,6 +11,7 @@ import { useFilterStore } from '@/stores/filter-store';
 import { DEFAULT_SEARCH_FILTERS } from '@/lib/jmap/search-utils';
 import { useIdentityStore } from '@/stores/identity-store';
 import { useVacationStore } from '@/stores/vacation-store';
+import { useFileStore } from '@/stores/file-store';
 
 // Minimal snapshot shapes - we only capture what we need
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -132,6 +133,14 @@ export function clearAllStores(): void {
   useVacationStore.getState().clearState();
   useCalendarStore.getState().clearState();
   useFilterStore.getState().clearState();
+  // The Files drive is account-scoped like every store above, but unlike them
+  // it lives in a global store that outlives the FilesApp component. If we
+  // don't reset it here, the previous account's client + resources linger in
+  // memory and resurface (stale) whenever the drive is opened after a switch -
+  // even when FilesApp wasn't mounted at switch time (the common case: switch
+  // from the mail view, then navigate to Files). Clearing centrally makes the
+  // reset happen on every switch path, not just the one the component observes.
+  useFileStore.getState().clearClient();
 }
 
 /** Evict cached state for one account */

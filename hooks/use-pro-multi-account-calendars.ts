@@ -49,14 +49,14 @@ export function useProMultiAccountCalendars(start: string | null, end: string | 
   // bootstrapping).
   useEffect(() => {
     if (!enabled || !activeAccountId || accountClients.length === 0) return;
-    void fetchAllAccountsCalendars(accountClients, activeAccountId);
+    void fetchAllAccountsCalendars(accountClients);
   }, [enabled, activeAccountId, accountClients, fetchAllAccountsCalendars]);
 
   // Fetch events for the current visible date range across all accounts.
   useEffect(() => {
     if (!enabled || !activeAccountId || accountClients.length === 0) return;
     if (!start || !end) return;
-    void fetchAllAccountsEvents(accountClients, activeAccountId, start, end);
+    void fetchAllAccountsEvents(accountClients, start, end);
   }, [enabled, activeAccountId, accountClients, start, end, fetchAllAccountsEvents]);
 
   return { enabled, accountClients };

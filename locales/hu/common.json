@@ -300,6 +300,10 @@
     "move": "Áthelyezés",
     "print": "Nyomtatás",
     "view_source": "Forrás megtekintése",
+
+    "fullscreen": "Teljes képernyő",
+
+    "exit_fullscreen": "Kilépés a teljes képernyőből",
     "export_email": "Exportálás .eml-ként",
     "forward_as_attachment": "Forward as attachment",
     "import_email": "Importálás .eml vagy .zip fájlból",
@@ -574,6 +578,7 @@
     "read_receipt_on": "Olvasási visszaigazolás kérve (kattints a letiltáshoz)",
     "read_receipt_off": "Olvasási visszaigazolás kérése",
     "new_message": "Új üzenet",
+    "signature_edit_hint": "Kattintson duplán az aláírás szerkesztéséhez",
     "reply": "Válasz",
     "reply_all": "Válasz mindenkinek",
     "forward": "Továbbítás",
@@ -748,7 +753,10 @@
     "rate_limited_title": "A szerver hitelesítés átmenetileg korlátozva van.",
     "rate_limited_detail": "A Bulwark szüneteltette a háttérkéréseket a lezárás elkerülése érdekében. Újrapróbálkozás {seconds} másodperc múlva.",
     "rate_limited_action_title": "Kérés szüneteltetve a lezárás elkerülése érdekében.",
-    "rate_limited_action_detail": "A Bulwark várja a szerver lehűlését, mielőtt további hitelesített kéréseket küldene. Próbáld újra {seconds} másodperc múlva."
+    "rate_limited_action_detail": "A Bulwark várja a szerver lehűlését, mielőtt további hitelesített kéréseket küldene. Próbáld újra {seconds} másodperc múlva.",
+    "pull_to_refresh": "Húzza le a frissítéshez",
+    "release_to_refresh": "Engedje el a frissítéshez",
+    "refreshing": "Frissítés…"
   },
   "notifications": {
     "email_sent": "E-mail sikeresen elküldve",
@@ -855,7 +863,10 @@
     "zh": "简体中文",
     "fa": "فارسی",
     "farsi": "فارسی",
-    "switch_to_farsi": "Váltás perzsára"
+    "switch_to_farsi": "Váltás perzsára",
+    "mn": "Монгол",
+    "mongolian": "Монгол",
+    "switch_to_mongolian": "Váltás mongolra"
   },
   "settings": {
     "title": "Beállítások",
@@ -1077,7 +1088,6 @@
         "relay_desc": "Alapértelmezés szerint a tárolt Bulwark relay. Csak akkor módosítsd, ha sajátot üzemeltetsz.",
         "relay_locked": "Rendszergazda által beállítva",
         "relay_locked_desc": "A push relay URL-t a rendszergazda állította be, és nem módosítható.",
-        "relay_placeholder": "https://notifications.relay.example.com",
         "status_active": "Aktív ezen az eszközön",
         "status_inactive": "Nincs engedélyezve ezen az eszközön",
         "status_unsupported": "Ez a böngésző nem támogatja a Web Push-t",
@@ -1088,7 +1098,23 @@
         "confirm_disable_title": "Háttérértesítések letiltása?",
         "confirm_disable_message": "Ez az eszköz nem fog figyelmeztetéseket kapni, amikor az oldal be van zárva.",
         "dismiss_aria": "Értesítési ablak elutasítása",
-        "ios_hint": "iOS-en először telepítsd az oldalt a kezdőképernyőre - a Safari csak telepített PWA-knak kézbesít Web Push értesítéseket."
+        "ios_hint": "iOS-en először telepítsd az oldalt a kezdőképernyőre - a Safari csak telepített PWA-knak kézbesít Web Push értesítéseket.",
+        "devices_title": "Regisztrált eszközök",
+        "devices_desc": "Minden eszköz, amely háttérértesítéseket kap ehhez a fiókhoz. A visszavonás után az adott eszköz azonnal nem kap többet.",
+        "devices_loading": "Regisztrált eszközök betöltése…",
+        "devices_empty": "Nincs eszköz regisztrálva háttérértesítésekhez.",
+        "devices_error": "A regisztrált eszközöket nem sikerült betölteni.",
+        "devices_refresh": "Frissítés",
+        "device_this": "Ez az eszköz",
+        "device_other": "Másik eszköz",
+        "device_status_active": "Értesítéseket kézbesít",
+        "device_status_inactive": "Még soha nem kézbesített értesítést",
+        "device_status_unknown": "Ez az átjáró nem ismeri",
+        "device_expires": "Lejár: {date}",
+        "revoke": "Visszavonás",
+        "confirm_revoke_title": "Visszavonja ezt az eszközt?",
+        "confirm_revoke_message": "Azonnal nem kap több háttérértesítést. Ha az eszközön újra bekapcsolja a push értesítéseket, újra regisztrálódik.",
+        "confirm_revoke_message_this": "Ez az eszköz azonnal nem kap több háttérértesítést."
       },
       "sound_selection": {
         "title": "Értesítési hang",
@@ -1191,6 +1217,12 @@
         "auto": "Automatikus (ajánlott)",
         "always": "Mindig legyen térköz",
         "edge": "Széltől szélig"
+      },
+      "plain_text_font": {
+        "label": "Egyszerű szöveg betűtípusa",
+        "description": "Az egyszerű szöveges e-mailekhez használt betűtípus",
+        "mono": "Rögzített szélességű",
+        "sans": "Normál (mint az alkalmazás)"
       },
       "archive_mode": {
         "label": "Archiválás helye",
@@ -1664,6 +1696,7 @@
       "create_subfolder": "Almappa létrehozása",
       "reorder": "Húzza az átrendezéshez",
       "reorder_error": "Nem sikerült átrendezni a mappákat",
+      "move_error": "Nem sikerült áthelyezni a mappát",
       "subfolder_of": "Itt: {name}",
       "subfolder_name": "Almappa neve",
       "new_folder_name": "Mappa neve",

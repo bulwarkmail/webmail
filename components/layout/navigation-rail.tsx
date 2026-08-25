@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useLayoutEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { Mail, Calendar, BookUser, HardDrive, Settings, Keyboard, Plus, Shield, LogOut, Check } from "lucide-react";
 import { AccountSwitcher } from "./account-switcher";
@@ -87,9 +87,15 @@ function StorageQuotaCircle({ quota, usagePercent }: { quota: { used: number; to
     );
   }, []);
 
+  // Position before the first paint - the portalled popover would otherwise
+  // render one frame as an unpositioned block at the end of <body>, shifting
+  // the page layout for a split second.
+  useLayoutEffect(() => {
+    if (open) updatePosition();
+  }, [open, updatePosition]);
+
   useEffect(() => {
     if (!open) return;
-    updatePosition();
     const handleClick = (e: MouseEvent) => {
       if (
         buttonRef.current?.contains(e.target as Node) ||
@@ -99,7 +105,7 @@ function StorageQuotaCircle({ quota, usagePercent }: { quota: { used: number; to
     };
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
-  }, [open, updatePosition]);
+  }, [open]);
 
   // Usage can legitimately exceed the quota (e.g. limit lowered after the fact)
   const free = Math.max(0, quota.total - quota.used);
@@ -250,9 +256,13 @@ export function NavigationRail({
     );
   }, []);
 
+  // Position before the first paint (same reasoning as the quota popover above).
+  useLayoutEffect(() => {
+    if (logoutMenuOpen) updateLogoutPosition();
+  }, [logoutMenuOpen, updateLogoutPosition]);
+
   useEffect(() => {
     if (!logoutMenuOpen) return;
-    updateLogoutPosition();
     const handleClickOutside = (e: MouseEvent) => {
       if (
         logoutBtnRef.current?.contains(e.target as Node) ||
@@ -269,7 +279,7 @@ export function NavigationRail({
       document.removeEventListener("mousedown", handleClickOutside);
       document.removeEventListener("keydown", handleEscape);
     };
-  }, [logoutMenuOpen, updateLogoutPosition, logoutPopoverRef]);
+  }, [logoutMenuOpen, logoutPopoverRef]);
 
   useEffect(() => {
     let cancelled = false;

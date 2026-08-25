@@ -6,6 +6,23 @@ import { readFileEnv } from '@/lib/read-file-env';
 import { configManager } from '@/lib/admin/config-manager';
 import { parseJmapServers, findServerById } from '@/lib/admin/jmap-servers';
 
+// Fallback OAuth client id used when no client is configured. The password+TOTP
+// login route mints tokens against the mail server's built-in OAuth with this
+// id (Stalwart accepts any client id unless `require_client_registration` is
+// enabled), so refreshing/revoking those tokens must fall back to the same id
+// instead of failing on the missing OAUTH_CLIENT_ID (#873).
+export const DEFAULT_CLIENT_ID = 'bulwark-webmail';
+
+export interface ClientConfigOptions {
+  /**
+   * Client id to use when none is configured. Only pass this for operations on
+   * tokens that may have been minted by the TOTP login fallback; flows that
+   * initiate OAuth (authorize URL, code exchange, SSO) must keep failing loudly
+   * so a misconfiguration surfaces at login rather than as a broken session.
+   */
+  fallbackClientId?: string;
+}
+
 // SSRF guard for OAuth discovery. When `oauthAllowPrivateEndpoints` is set,
 // the admin opts in to discovery resolving to RFC-1918 / loopback hosts —
 // required for split-DNS deployments where the JMAP server's public hostname
@@ -34,14 +51,14 @@ function getServerEntry(serverId?: string | null) {
   return findServerById(servers, serverId);
 }
 
-export function getRequiredConfig(serverId?: string | null) {
+export function getRequiredConfig(serverId?: string | null, options?: ClientConfigOptions) {
   const entry = getServerEntry(serverId);
 
   const globalClientId = configManager.get<string>('oauthClientId', '') || process.env.OAUTH_CLIENT_ID;
   const globalServerUrl = configManager.get<string>('jmapServerUrl', '') || process.env.JMAP_SERVER_URL || process.env.NEXT_PUBLIC_JMAP_SERVER_URL;
   const globalIssuerUrl = configManager.get<string>('oauthIssuerUrl', '') || process.env.OAUTH_ISSUER_URL;
 
-  const clientId = entry?.oauth?.clientId || globalClientId;
+  const clientId = entry?.oauth?.clientId || globalClientId || options?.fallbackClientId;
   const serverUrl = entry?.url || globalServerUrl;
   const issuerUrl = entry?.oauth?.issuerUrl || globalIssuerUrl;
 
@@ -61,8 +78,8 @@ function getClientSecret(serverId?: string | null): string {
   return getGlobalClientSecret();
 }
 
-export async function getTokenEndpoint(serverId?: string | null): Promise<string> {
-  const { discoveryUrl } = getRequiredConfig(serverId);
+export async function getTokenEndpoint(serverId?: string | null, options?: ClientConfigOptions): Promise<string> {
+  const { discoveryUrl } = getRequiredConfig(serverId, options);
   const metadata = await discoverOAuth(discoveryUrl, { validateEndpoint: getDiscoveryValidator() });
   if (!metadata?.token_endpoint) {
     throw new Error('OAuth token endpoint not found');
@@ -70,13 +87,13 @@ export async function getTokenEndpoint(serverId?: string | null): Promise<string
   return metadata.token_endpoint;
 }
 
-export async function getMetadata(serverId?: string | null): Promise<OAuthMetadata | null> {
-  const { discoveryUrl } = getRequiredConfig(serverId);
+export async function getMetadata(serverId?: string | null, options?: ClientConfigOptions): Promise<OAuthMetadata | null> {
+  const { discoveryUrl } = getRequiredConfig(serverId, options);
   return discoverOAuth(discoveryUrl, { validateEndpoint: getDiscoveryValidator() });
 }
 
-export function buildOAuthParams(base: Record<string, string>, serverId?: string | null): URLSearchParams {
-  const { clientId } = getRequiredConfig(serverId);
+export function buildOAuthParams(base: Record<string, string>, serverId?: string | null, options?: ClientConfigOptions): URLSearchParams {
+  const { clientId } = getRequiredConfig(serverId, options);
   const params = new URLSearchParams({ ...base, client_id: clientId });
   const secret = getClientSecret(serverId);
   if (secret) {

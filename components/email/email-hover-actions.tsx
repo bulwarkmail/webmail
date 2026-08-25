@@ -169,11 +169,11 @@ export function EmailHoverActions({
           CORNER_CLASSES[hoverActionsCorner],
         )}
       >
-        <div className={cn(
-          "flex items-center gap-0.5 rounded-lg px-1.5 py-0.5 shadow-md border border-border",
-          hoverBackgroundClassName,
-        )}>
-          {actionButtons}
+        <div className="relative flex items-center rounded-lg shadow-md border border-border overflow-hidden bg-background">
+          <div className={cn("absolute inset-0", hoverBackgroundClassName)} />
+          <div className="relative flex items-center gap-0.5 px-1.5 py-0.5">
+            {actionButtons}
+          </div>
         </div>
       </div>
     );
@@ -185,14 +185,18 @@ export function EmailHoverActions({
     >
       <div
         className={cn(
-          "w-8 h-full",
+          "relative w-8 h-full bg-background",
           "[mask-image:linear-gradient(to_right,transparent,black)] [-webkit-mask-image:linear-gradient(to_right,transparent,black)]",
           "rtl:[mask-image:linear-gradient(to_left,transparent,black)] rtl:[-webkit-mask-image:linear-gradient(to_left,transparent,black)]",
-          hoverBackgroundClassName,
         )}
-      />
-      <div className={cn("flex items-center gap-0.5 h-full pe-3 ps-0.5", hoverBackgroundClassName)}>
-        {actionButtons}
+      >
+        <div className={cn("absolute inset-0", hoverBackgroundClassName)} />
+      </div>
+      <div className="relative flex items-center h-full bg-background">
+        <div className={cn("absolute inset-0", hoverBackgroundClassName)} />
+        <div className="relative flex items-center gap-0.5 h-full pe-3 ps-0.5">
+          {actionButtons}
+        </div>
       </div>
     </div>
   );

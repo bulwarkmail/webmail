@@ -3,19 +3,34 @@ import { formatBadgeCount, renderBadgedFavicon } from '@/lib/favicon-badge';
 
 const BASE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="1000pt" height="1000pt"><defs><clipPath id="_clip1"><rect width="1000" height="1000"/></clipPath></defs><g clip-path="url(#_clip1)"><rect width="1000" height="1000" fill="#123456"/></g></svg>`;
 
+// The renderer's published colours: the white keyline halo under a deep-rose
+// fill rect, with white digits on top.
+const RING = '#ffffff';
+const FILL = '#af1d3f';
+
 function decode(dataUrl: string): string {
   return decodeURIComponent(dataUrl.replace('data:image/svg+xml,', ''));
 }
 
-/** The badge band: the last <rect> the renderer appends, identified by its fill. */
-function band(svg: string): { x: number; y: number; w: number; h: number; rx: number } {
-  const match =
-    /<rect[^>]*\bx="(-?[\d.]+)"[^>]*\by="(-?[\d.]+)"[^>]*\bwidth="([\d.]+)"[^>]*\bheight="([\d.]+)"[^>]*\brx="([\d.]+)"[^>]*fill="#ffffff"/.exec(
-      svg,
-    );
+type Rect = { x: number; y: number; w: number; h: number; rx: number };
+
+function rectByFill(svg: string, fill: string): Rect {
+  const match = new RegExp(
+    `<rect[^>]*\\bx="(-?[\\d.]+)"[^>]*\\by="(-?[\\d.]+)"[^>]*\\bwidth="([\\d.]+)"[^>]*\\bheight="([\\d.]+)"[^>]*\\brx="([\\d.]+)"[^>]*fill="${fill}"`,
+  ).exec(svg);
   expect(match).not.toBeNull();
   const [, x, y, w, h, rx] = match!.map(Number);
   return { x, y, w, h, rx };
+}
+
+/** The badge fill rect: the deep-rose rounded rect the digits sit on. */
+function badge(svg: string): Rect {
+  return rectByFill(svg, FILL);
+}
+
+/** The keyline halo: the white rect drawn underneath, inflated by the ring width. */
+function halo(svg: string): Rect {
+  return rectByFill(svg, RING);
 }
 
 function fontSize(svg: string): number {
@@ -84,7 +99,7 @@ describe('renderBadgedFavicon', () => {
     expect(url!.startsWith('data:image/svg+xml,')).toBe(true);
   });
 
-  it('draws a badge band and the count text', () => {
+  it('draws a badge and the count text', () => {
     const svg = decode(renderBadgedFavicon(BASE_SVG, 3)!);
     expect(svg).toContain('<rect');
     expect(svg).toContain('>3<');
@@ -109,10 +124,38 @@ describe('renderBadgedFavicon', () => {
     expect(svg).not.toContain('1000pt');
   });
 
-  it('draws a white band with black digits, so the count stays legible over any base icon', () => {
+  it('draws a deep-rose badge with white digits inside a white keyline halo', () => {
+    // The keyline pair is the contrast guarantee: against dark or saturated
+    // artwork the white ring separates the badge; against pale artwork the ring
+    // vanishes but the deep fill is the edge. Digit contrast (white on the
+    // fill) is fixed and independent of the artwork. Neither half may be
+    // dropped: a bare coloured badge was invisible on Bulwark's own red icon,
+    // and the flat white band that replaced it read as a sticker over the logo.
     const svg = decode(renderBadgedFavicon(BASE_SVG, 3)!);
-    expect(svg).toMatch(/<rect[^>]*fill="#ffffff"/);
-    expect(svg).toMatch(/<text[^>]*fill="#000000"/);
+    expect(svg).toMatch(new RegExp(`<rect[^>]*fill="${RING}"`));
+    expect(svg).toMatch(new RegExp(`<rect[^>]*fill="${FILL}"`));
+    expect(svg).toMatch(/<text[^>]*fill="#ffffff"/);
+  });
+
+  it('draws the halo before the fill rect, so the ring sits underneath', () => {
+    const svg = decode(renderBadgedFavicon(BASE_SVG, 3)!);
+    expect(svg.indexOf(`fill="${RING}"`)).toBeLessThan(svg.indexOf(`fill="${FILL}"`));
+  });
+
+  it('inflates the halo by the ring width on every side of the fill rect', () => {
+    // The ring is a rect underneath, not a stroke: a stroke straddles the edge,
+    // halving the visible keyline and shrinking the fill.
+    const RING_W = 0.0625 * 1000;
+    for (const count of [7, 47, 250]) {
+      const svg = decode(renderBadgedFavicon(BASE_SVG, count)!);
+      const b = badge(svg);
+      const g = halo(svg);
+      expect(g.x).toBeCloseTo(b.x - RING_W, 5);
+      expect(g.y).toBeCloseTo(b.y - RING_W, 5);
+      expect(g.w).toBeCloseTo(b.w + 2 * RING_W, 5);
+      expect(g.h).toBeCloseTo(b.h + 2 * RING_W, 5);
+      expect(g.rx).toBeCloseTo(b.rx + RING_W, 5);
+    }
   });
 
   it('shrinks the font as the label grows so three glyphs still fit', () => {
@@ -127,44 +170,46 @@ describe('renderBadgedFavicon', () => {
     expect(renderBadgedFavicon(bad, 3)).toBeNull();
   });
 
-  it('sizes the band to the label, and only "99+" fills the full icon width', () => {
-    // The box is only as wide as its digits need — "5" must not squat on as much
-    // white as "99+". It is never wider than the icon, and three glyphs, whose
-    // font is budgeted against the full span, grow to exactly fill it.
-    const w = (count: number) => band(decode(renderBadgedFavicon(BASE_SVG, count)!)).w;
+  it('sizes the badge to the label, and only "99+" fills the full icon width', () => {
+    // The badge is only as wide as its digits need — "5" must not cover as much
+    // of the icon as "99+". The halo is never wider than the icon, and three
+    // glyphs, whose font is budgeted against the full span, grow to exactly
+    // fill it.
+    const w = (count: number) => halo(decode(renderBadgedFavicon(BASE_SVG, count)!)).w;
     expect(w(7)).toBeLessThan(w(47));
     expect(w(47)).toBeLessThan(w(250));
     expect(w(250)).toBeCloseTo(1000, 5);
   });
 
-  it('matches the geometry measured from Gmail\'s 16px favicon', () => {
-    // Ground truth, measured pixel-by-pixel off Gmail's tab icon and scaled to a
-    // 0 0 1000 1000 viewBox: band 10/16 of the icon (0.625), flush to the bottom
-    // edge, corners rounded by 0.1h, width fitted to the label, anchored right.
-    // Gmail's own single-digit badge sits hard right in a box about a third of
-    // the icon wide, so the box grows leftwards from the corner.
-    // w = label.length * 0.6 * font + 2 * 0.04 * 1000, x = 1000 - w.
-    const expected: Record<string, { x: number; w: number; font: number }> = {
-      '5': { x: 554, w: 446, font: 610 }, // textW = 1 * 0.6 * 610 = 366
-      '15': { x: 188, w: 812, font: 610 }, // textW = 2 * 0.6 * 610 = 732
-      '250': { x: 0, w: 1000, font: 920 / 1.8 }, // "99+": font = (1000 - 80) / (3 * 0.6)
+  it('renders the published geometry at 1, 2, and 3 glyphs', () => {
+    // Scaled to a 0 0 1000 1000 viewBox: ring 62.5, fill height 480, padding 45
+    // per side, font capped at 460 and budgeted against the full span:
+    // font = min(460, (1000 - 125 - 90) / (len * 0.6)),
+    // w = len * 0.6 * font + 90 (capped at 875), halo flush bottom-right.
+    const expected: Record<string, { haloX: number; haloW: number; font: number }> = {
+      '5': { haloX: 509, haloW: 491, font: 460 }, // textW = 1 * 0.6 * 460 = 276
+      '15': { haloX: 233, haloW: 767, font: 460 }, // textW = 2 * 0.6 * 460 = 552
+      '250': { haloX: 0, haloW: 1000, font: 785 / 1.8 }, // "99+" shrinks, halo fills the span
     };
     for (const [count, want] of Object.entries(expected)) {
       const svg = decode(renderBadgedFavicon(BASE_SVG, Number(count))!);
-      const { x, y, w, h, rx } = band(svg);
-      expect(x).toBeCloseTo(want.x, 5);
-      expect(w).toBeCloseTo(want.w, 5);
+      const g = halo(svg);
+      expect(g.x).toBeCloseTo(want.haloX, 5);
+      expect(g.w).toBeCloseTo(want.haloW, 5);
       expect(fontSize(svg)).toBeCloseTo(want.font, 5);
-      expect(y).toBeCloseTo(375, 5);
-      expect(h).toBeCloseTo(625, 5);
-      expect(rx).toBeCloseTo(62.5, 5);
+      expect(g.y).toBeCloseTo(1000 - 480 - 125, 5);
+      expect(g.h).toBeCloseTo(480 + 125, 5);
+      const b = badge(svg);
+      expect(b.h).toBeCloseTo(480, 5);
+      expect(b.rx).toBeCloseTo(0.3 * 480, 5);
     }
   });
 
-  it('anchors the band to the right edge, including on a negative-origin viewBox', () => {
-    // Corner-anchored, not centred: the box grows leftwards from the bottom-right
-    // corner, so its right edge sits on minX + span whatever the label. Centring
-    // was rejected — at a single digit it lands under the middle of the mark.
+  it('anchors the badge to the right edge, including on a negative-origin viewBox', () => {
+    // Corner-anchored, not centred: the badge grows leftwards from the
+    // bottom-right corner, so the halo's right edge sits on minX + span
+    // whatever the label. Centring was rejected — at a single digit it lands
+    // under the middle of the mark.
     const cases: [string, number, number][] = [
       // [base svg, minX, span]
       [BASE_SVG, 0, 1000],
@@ -172,7 +217,7 @@ describe('renderBadgedFavicon', () => {
     ];
     for (const [svgSource, minX, span] of cases) {
       for (const count of [7, 47, 250]) {
-        const { x, w } = band(decode(renderBadgedFavicon(svgSource, count)!));
+        const { x, w } = halo(decode(renderBadgedFavicon(svgSource, count)!));
         expect(x + w).toBeCloseTo(minX + span, 5);
         expect(x).toBeGreaterThanOrEqual(minX);
       }
@@ -181,9 +226,9 @@ describe('renderBadgedFavicon', () => {
 
   it('renders 1- and 2-digit labels at the max font size, and shrinks only for "99+"', () => {
     // The font is budgeted against the full icon span, not against the fitted
-    // box, so one or two glyphs always land at FONT_MAX; only three force a
-    // shrink — and their box then grows to fill the icon.
-    const FONT_MAX = 0.61 * 1000;
+    // badge, so one or two glyphs always land at FONT_MAX; only three force a
+    // shrink — and their badge then grows to fill the icon.
+    const FONT_MAX = 0.46 * 1000;
     const one = decode(renderBadgedFavicon(BASE_SVG, 7)!);
     const two = decode(renderBadgedFavicon(BASE_SVG, 47)!);
     const three = decode(renderBadgedFavicon(BASE_SVG, 250)!);
@@ -192,31 +237,33 @@ describe('renderBadgedFavicon', () => {
     expect(fontSize(three)).toBeLessThan(FONT_MAX);
   });
 
-  it('rounds the band corners slightly — neither an oval nor a hard square', () => {
-    // rx = h / 2 was the pill: at one digit it read as a circle, at two an oval,
-    // and "99+" was a smudge. rx = 0 is the other failure: Gmail's corners carry
-    // a visible ~1px round at 16px. Guard against a silent revert to either.
+  it('rounds the badge corners — neither an oval nor a hard square', () => {
+    // rx = h / 2 was the pill: at one digit it read as a circle, at two an
+    // oval, and "99+" was a smudge — round ends squander exactly the horizontal
+    // space three glyphs need. rx = 0 was the slab. Guard against a silent
+    // revert to either.
     for (const count of [7, 47, 250]) {
-      const { h, rx } = band(decode(renderBadgedFavicon(BASE_SVG, count)!));
-      expect(rx).toBeCloseTo(0.1 * h, 5);
+      const { h, rx } = badge(decode(renderBadgedFavicon(BASE_SVG, count)!));
+      expect(rx).toBeCloseTo(0.3 * h, 5);
       expect(rx).toBeGreaterThan(0);
       expect(rx).toBeLessThan(h / 2);
     }
   });
 
-  it('draws the digits at font-weight 500, in both the attribute and the style', () => {
-    // 700 read visibly heavier than Gmail's equivalent badge.
+  it('draws the digits at font-weight 600, in both the attribute and the style', () => {
+    // 600, not the 500 the black-on-white band used: light-on-dark digits lose
+    // stroke weight to anti-aliasing at 16px.
     const svg = decode(renderBadgedFavicon(BASE_SVG, 3)!);
-    expect(svg).toMatch(/<text[^>]*font-weight="500"/);
-    expect(svg).toMatch(/<text[^>]*style="[^"]*font-weight:\s*500/);
+    expect(svg).toMatch(/<text[^>]*font-weight="600"/);
+    expect(svg).toMatch(/<text[^>]*style="[^"]*font-weight:\s*600/);
   });
 
-  it('keeps the badge band entirely inside the viewBox for 1, 2, and 3-glyph labels', () => {
-    // The band is flush to the bottom and, at three glyphs, to the left and
-    // right edges too — but it must never overflow any of them.
+  it('keeps the badge entirely inside the viewBox for 1, 2, and 3-glyph labels', () => {
+    // The halo is flush to the bottom and right edges and, at three glyphs, to
+    // the left edge too — but it must never overflow any of them.
     for (const count of [7, 47, 250]) {
       const svg = decode(renderBadgedFavicon(BASE_SVG, count)!);
-      const { x, y, w, h } = band(svg);
+      const { x, y, w, h } = halo(svg);
       expect(x).toBeGreaterThanOrEqual(0);
       expect(y).toBeGreaterThanOrEqual(0);
       expect(x + w).toBeLessThanOrEqual(1000);
@@ -226,34 +273,34 @@ describe('renderBadgedFavicon', () => {
 
   // A previous version of this test used /\bx="([\d.]+)"/, which cannot match a
   // negative number: dropping `minX +` from the anchoring passed it. Anchor
-  // against a viewBox whose origin is negative, where the band's own x is
+  // against a viewBox whose origin is negative, where the halo's own x is
   // legitimately negative, so the offset is genuinely pinned.
-  it('anchors the band to the viewBox origin, including a negative origin', () => {
+  it('anchors the badge to the viewBox origin, including a negative origin', () => {
     const NEGATIVE_ORIGIN = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-40 -40 240 240"><rect x="-40" y="-40" width="240" height="240" fill="#123456"/></svg>`;
     for (const count of [7, 47, 250]) {
       const svg = decode(renderBadgedFavicon(NEGATIVE_ORIGIN, count)!);
-      const { x, y, w, h } = band(svg);
+      const { x, y, w, h } = halo(svg);
       expect(x).toBeGreaterThanOrEqual(-40);
       expect(y).toBeGreaterThanOrEqual(-40);
       expect(x + w).toBeLessThanOrEqual(200);
       expect(y + h).toBeLessThanOrEqual(200);
       // Anchored to the bottom-right: in a viewBox running from -40 to 200, the
-      // band's bottom edge and its right edge both sit well past the midpoint.
+      // halo's bottom edge and its right edge both sit well past the midpoint.
       expect(x + w).toBeGreaterThan(80);
       expect(y + h).toBeGreaterThan(80);
     }
   });
 
-  it('fits the label inside the band, with padding, for every label length', () => {
-    // The core band invariant: textW + 2 * pad <= w, where the glyph advance and
-    // padding are the renderer's own published constants. PAD_FACTOR is a
-    // fraction of the icon span, not of the fitted box, so the padding is the
+  it('fits the label inside the badge, with padding, for every label length', () => {
+    // The core badge invariant: textW + 2 * pad <= w, where the glyph advance
+    // and padding are the renderer's own published constants. PAD_FACTOR is a
+    // fraction of the icon span, not of the fitted badge, so the padding is the
     // same at every label length.
     const GLYPH_ADV = 0.6;
-    const PAD_FACTOR = 0.04;
+    const PAD_FACTOR = 0.045;
     for (const count of [7, 47, 250]) {
       const svg = decode(renderBadgedFavicon(BASE_SVG, count)!);
-      const { w } = band(svg);
+      const { w } = badge(svg);
       const label = count > 99 ? '99+' : String(count);
       const textW = label.length * GLYPH_ADV * fontSize(svg);
       const pad = PAD_FACTOR * 1000;
@@ -280,14 +327,16 @@ describe('renderBadgedFavicon', () => {
     expect(renderBadgedFavicon(noNs, 3)).toBeNull();
   });
 
-  it('beats a stylesheet in the base SVG, keeping the badge white-on-black', () => {
+  it('beats a stylesheet in the base SVG, keeping the badge colours fixed', () => {
     // Presentation attributes lose to any CSS rule in the document. A branded
-    // base carrying `rect { fill: #db2d54 }` would otherwise paint the band red
-    // and the digits red — exactly what the white band exists to prevent.
+    // base carrying `rect { fill: #db2d54 }` would otherwise repaint the halo,
+    // the fill and the digits in the artwork's own colour — exactly what the
+    // keyline exists to prevent.
     const STYLED = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><style>rect{fill:#db2d54}text{fill:#db2d54}</style><rect width="1000" height="1000"/></svg>`;
     const svg = decode(renderBadgedFavicon(STYLED, 3)!);
-    expect(svg).toMatch(/<rect[^>]*style="[^"]*fill:\s*#ffffff/);
-    expect(svg).toMatch(/<text[^>]*style="[^"]*fill:\s*#000000/);
+    expect(svg).toMatch(new RegExp(`<rect[^>]*style="[^"]*fill:\\s*${RING}`));
+    expect(svg).toMatch(new RegExp(`<rect[^>]*style="[^"]*fill:\\s*${FILL}`));
+    expect(svg).toMatch(/<text[^>]*style="[^"]*fill:\s*#ffffff/);
   });
 
   it('strips scripts, foreignObject and event handlers from the base SVG', () => {
@@ -321,18 +370,20 @@ describe('renderBadgedFavicon', () => {
     expect(vb.minX).toBe(0);
     expect(vb.minY).toBe(-40); // centred: (100 - 20) / 2 above and below
 
-    const { x, y, w, h } = band(svg);
-    // Sized against the square side (100), not the 20-unit short axis.
-    expect(h).toBeCloseTo(0.625 * 100, 5);
-    // Two glyphs at FONT_MAX (61) plus padding: 2 * 0.6 * 61 + 2 * 4 = 81.2,
-    // anchored to the right of the squared span.
-    expect(w).toBeCloseTo(81.2, 5);
-    expect(x + w).toBeCloseTo(100, 5);
+    const g = halo(svg);
+    // Sized against the square side (100), not the 20-unit short axis: fill
+    // height 0.48 * 100 plus a 6.25-unit ring each side.
+    expect(g.h).toBeCloseTo(48 + 12.5, 5);
+    // Two glyphs at FONT_MAX (46) plus padding and ring:
+    // 2 * 0.6 * 46 + 2 * 4.5 + 2 * 6.25 = 76.7, anchored to the right of the
+    // squared span.
+    expect(g.w).toBeCloseTo(76.7, 5);
+    expect(g.x + g.w).toBeCloseTo(100, 5);
     // Still in bounds of the normalised viewBox.
-    expect(x).toBeGreaterThanOrEqual(vb.minX);
-    expect(y).toBeGreaterThanOrEqual(vb.minY);
-    expect(x + w).toBeLessThanOrEqual(vb.minX + vb.width);
-    expect(y + h).toBeLessThanOrEqual(vb.minY + vb.height);
+    expect(g.x).toBeGreaterThanOrEqual(vb.minX);
+    expect(g.y).toBeGreaterThanOrEqual(vb.minY);
+    expect(g.x + g.w).toBeLessThanOrEqual(vb.minX + vb.width);
+    expect(g.y + g.h).toBeLessThanOrEqual(vb.minY + vb.height);
   });
 
   it('leaves a square viewBox untouched', () => {

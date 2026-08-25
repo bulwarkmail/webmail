@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import type { CalendarEvent, CalendarParticipant } from '@/lib/jmap/types';
 import {
   isOrganizer,
+  collectUserCalendarAddresses,
   getUserParticipantId,
   getUserStatus,
   getParticipantList,
@@ -178,6 +179,56 @@ describe('isOrganizer', () => {
     const event = makeEvent({ att1: attendeeParticipant });
     event.organizerCalendarAddress = 'mailto:someoneelse@example.com';
     expect(isOrganizer(event, ['alice@example.com'])).toBe(false);
+  });
+
+  // Regression: an event organized under one of the account's ALIAS addresses
+  // is still the user's own event and must be recognised as such (otherwise the
+  // calendar UI flips it to a read-only invite). The primary address alone does
+  // not match; the alias has to be part of the user's address list.
+  it('does NOT match an alias organizer when only the primary address is known', () => {
+    const event = makeEvent({ att1: attendeeParticipant });
+    event.organizerCalendarAddress = 'mailto:info@example.com'; // an account alias
+    expect(isOrganizer(event, ['alice@example.com'])).toBe(false);
+  });
+
+  it('matches an alias organizer once the alias is included in the address list', () => {
+    const event = makeEvent({ att1: attendeeParticipant });
+    event.organizerCalendarAddress = 'mailto:info@example.com';
+    const addresses = collectUserCalendarAddresses(['alice@example.com'], ['info@example.com']);
+    expect(isOrganizer(event, addresses)).toBe(true);
+  });
+
+  it('matches an alias owner participant once the alias is included', () => {
+    const event = makeEvent({
+      org: { ...orgParticipant, email: 'info@example.com', sendTo: { imip: 'mailto:info@example.com' } },
+    });
+    const addresses = collectUserCalendarAddresses(['alice@example.com'], ['INFO@example.com']);
+    expect(isOrganizer(event, addresses)).toBe(true);
+  });
+});
+
+describe('collectUserCalendarAddresses', () => {
+  it('merges identity and alias addresses', () => {
+    expect(collectUserCalendarAddresses(['alice@example.com'], ['info@example.com', 'sales@example.com']))
+      .toEqual(['alice@example.com', 'info@example.com', 'sales@example.com']);
+  });
+
+  it('de-duplicates case-insensitively, keeping the first-seen casing', () => {
+    expect(collectUserCalendarAddresses(['Alice@Example.com'], ['alice@example.com', 'INFO@example.com']))
+      .toEqual(['Alice@Example.com', 'INFO@example.com']);
+  });
+
+  it('drops empty, undefined and whitespace-only entries', () => {
+    expect(collectUserCalendarAddresses(['alice@example.com', '', '  ', undefined, null], []))
+      .toEqual(['alice@example.com']);
+  });
+
+  it('trims surrounding whitespace', () => {
+    expect(collectUserCalendarAddresses(['  alice@example.com  '], [])).toEqual(['alice@example.com']);
+  });
+
+  it('returns an empty array when given no addresses', () => {
+    expect(collectUserCalendarAddresses([], [])).toEqual([]);
   });
 });
 

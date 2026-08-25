@@ -256,6 +256,18 @@ export function useTimeGridInteractions({
   const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [quickCreate, setQuickCreate] = useState<QuickCreateState | null>(null);
 
+  // Pass an explicit end alongside the clicked slot: the event modal only
+  // honors a timed `defaultDate` when `defaultEndDate` is present — without it
+  // the modal falls back to "next hour from now" (meant for date-only month
+  // clicks) and discards the clicked time (#435).
+  const slotToRange = useCallback((day: Date, hour: number): [Date, Date] => {
+    const start = new Date(day);
+    start.setHours(hour, 0, 0, 0);
+    const end = new Date(day);
+    end.setHours(hour + 1, 0, 0, 0);
+    return [start, end];
+  }, []);
+
   const handleSlotClick = useCallback((day: Date, hour: number) => {
     if (wasDragging.current) return;
     if (clickTimerRef.current) {
@@ -265,11 +277,9 @@ export function useTimeGridInteractions({
     }
     clickTimerRef.current = setTimeout(() => {
       clickTimerRef.current = null;
-      const d = new Date(day);
-      d.setHours(hour, 0, 0, 0);
-      onCreateRange(d);
+      onCreateRange(...slotToRange(day, hour));
     }, 250);
-  }, [onCreateRange]);
+  }, [onCreateRange, slotToRange]);
 
   const handleSlotDoubleClick = useCallback((day: Date, hour: number) => {
     if (wasDragging.current) return;
@@ -277,10 +287,8 @@ export function useTimeGridInteractions({
       clearTimeout(clickTimerRef.current);
       clickTimerRef.current = null;
     }
-    const d = new Date(day);
-    d.setHours(hour, 0, 0, 0);
-    onCreateRange(d);
-  }, [onCreateRange]);
+    onCreateRange(...slotToRange(day, hour));
+  }, [onCreateRange, slotToRange]);
 
   const handleQuickCreateSubmit = useCallback(async (title: string) => {
     if (!quickCreate) return;

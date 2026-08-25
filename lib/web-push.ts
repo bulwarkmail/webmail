@@ -5,6 +5,7 @@
 // register endpoint we hit on the relay.
 
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
+import { DEFAULT_RELAY_BASE_URL } from '@/lib/push-relays';
 
 // Per-account keys: a single browser may be signed in to multiple accounts,
 // each with its own JMAP PushSubscription and its own relay record. Scoping
@@ -26,11 +27,9 @@ const BASE_PATH = (process.env.NEXT_PUBLIC_BASE_PATH ?? '').replace(/\/+$/, '');
 const SW_SCOPE = `${BASE_PATH}/`;
 const SW_URL = `${BASE_PATH}/sw.js`;
 
-// Hosted relay so self-hosters don't need their own VAPID + Firebase setup.
-// Override at build time via NEXT_PUBLIC_PUSH_RELAY_URL or at runtime by
-// calling enableWebPush({ relayBaseUrl }) from the settings UI.
-export const DEFAULT_RELAY_BASE_URL =
-  process.env.NEXT_PUBLIC_PUSH_RELAY_URL || 'https://notifications.relay.bulwarkmail.org';
+// Re-exported for callers that already import the relay default from here.
+// The relay list itself lives in lib/push-relays.ts.
+export { DEFAULT_RELAY_BASE_URL };
 
 // Match the mobile app's lifetime hint. The JMAP server may clamp this down.
 const SUBSCRIPTION_EXPIRES_DAYS = 90;
@@ -56,6 +55,12 @@ export interface EnableWebPushParams {
   relayBaseUrl?: string;
   // Free-form label the relay shows in /metrics; never returned in pushes.
   accountLabel?: string;
+  // Destroy the recorded server-side subscription and create a brand-new one
+  // instead of refreshing the existing record's expiry. Stalwart binds the set
+  // of accounts a subscription fans out to at creation time, so a subscription
+  // that outlives a permission change keeps pushing for mailboxes the user can
+  // no longer read - recreating is the only client-side remedy (#841).
+  forceRecreate?: boolean;
 }
 
 export interface EnableWebPushResult {
@@ -203,31 +208,47 @@ async function registerWithRelay(params: {
   }
 }
 
+/** The relay's view of a subscription - see relayStatusFor. */
+export type PushRelayStatus = 'active' | 'inactive' | 'unknown';
+
 /**
- * Ask the relay whether a leftover subscription is dead. Returns true ONLY when
- * the relay positively reports it inactive - a record it knows about that has
- * never forwarded a push and isn't freshly registered. Every other outcome (the
- * relay doesn't recognise the id, an older relay without this endpoint, a
- * network blip, or a live subscription) returns false, so we never reap
- * anything we can't confirm is dead. This lets enableWebPush clear its own
- * abandoned attempts - and dead siblings left by cleared site data that
- * regenerated the deviceClientId - without disturbing another live device or
- * the mobile app that shares the account.
+ * Ask the relay what it knows about a subscription. `inactive` means the relay
+ * recognises the record and it is provably dead - it has never forwarded a push
+ * and isn't freshly registered. `unknown` covers everything we cannot vouch for:
+ * the relay doesn't recognise the id, an older relay without this endpoint, or a
+ * network blip. Callers must treat `unknown` as "leave it alone", never as dead.
+ */
+async function relayStatusFor(
+  relayBaseUrl: string,
+  subscriptionId: string,
+): Promise<PushRelayStatus> {
+  if (!relayBaseUrl || !subscriptionId) return 'unknown';
+  try {
+    const res = await fetch(
+      buildRelayUrl(relayBaseUrl, `/api/push/active/${encodeURIComponent(subscriptionId)}`),
+    );
+    if (!res.ok) return 'unknown';
+    const body = (await res.json()) as { active?: unknown };
+    if (body.active === true) return 'active';
+    if (body.active === false) return 'inactive';
+    return 'unknown';
+  } catch {
+    return 'unknown';
+  }
+}
+
+/**
+ * Returns true ONLY when the relay positively reports a subscription inactive,
+ * so we never reap anything we can't confirm is dead. This lets enableWebPush
+ * clear its own abandoned attempts - and dead siblings left by cleared site data
+ * that regenerated the deviceClientId - without disturbing another live device
+ * or the mobile app that shares the account.
  */
 async function relayReportsDead(
   relayBaseUrl: string,
   subscriptionId: string,
 ): Promise<boolean> {
-  try {
-    const res = await fetch(
-      buildRelayUrl(relayBaseUrl, `/api/push/active/${encodeURIComponent(subscriptionId)}`),
-    );
-    if (!res.ok) return false;
-    const body = (await res.json()) as { active?: unknown };
-    return body.active === false;
-  } catch {
-    return false;
-  }
+  return (await relayStatusFor(relayBaseUrl, subscriptionId)) === 'inactive';
 }
 
 async function pollVerificationCode(
@@ -327,15 +348,21 @@ export async function enableWebPush(
   });
 
   // Reuse the JMAP-side PushSubscription if the server still has it, just
-  // refreshing the expiry so it doesn't time out between sessions.
+  // refreshing the expiry so it doesn't time out between sessions. With
+  // forceRecreate we skip the reuse and destroy it instead: the account set a
+  // Stalwart subscription fans out to is fixed at creation time, so refreshing
+  // `expires` carries stale permissions forward and only a new record picks up
+  // revoked shared-mailbox access (#841).
   const existingSubs = await params.client.listPushSubscriptions().catch(() => []);
   const subIdKey = subscriptionIdKey(accountId);
   const storedServerId = localStorage.getItem(subIdKey);
   if (storedServerId) {
     const match = existingSubs.find((s) => s.id === storedServerId);
     if (match) {
-      const refreshed = await refreshSubscriptionExpires(params.client, match);
-      if (refreshed) return { subscriptionId: storedServerId };
+      if (!params.forceRecreate) {
+        const refreshed = await refreshSubscriptionExpires(params.client, match);
+        if (refreshed) return { subscriptionId: storedServerId };
+      }
       await params.client.destroyPushSubscription(storedServerId).catch(() => undefined);
     }
     localStorage.removeItem(subIdKey);
@@ -397,12 +424,26 @@ export async function disableWebPush(params: DisableWebPushParams): Promise<void
   const devIdKey = deviceClientIdKey(accountId);
 
   const storedServerId = localStorage.getItem(subIdKey);
-  if (storedServerId) {
-    await params.client.destroyPushSubscription(storedServerId).catch(() => undefined);
-    localStorage.removeItem(subIdKey);
-  }
-
   const deviceClientId = localStorage.getItem(devIdKey);
+
+  // Destroy every subscription the server holds for this device, not just the
+  // id we happen to have recorded. A destroy that lost its round-trip, a failed
+  // enable, or site data cleared between sessions can leave a registration this
+  // client no longer tracks - and Stalwart keeps fanning StateChanges out to it
+  // until it expires, so "disable" has to mean gone (#841).
+  const idsToDestroy = new Set<string>();
+  if (storedServerId) idsToDestroy.add(storedServerId);
+  if (deviceClientId) {
+    const existingSubs = await params.client.listPushSubscriptions().catch(() => []);
+    for (const s of existingSubs) {
+      if (s.deviceClientId === deviceClientId) idsToDestroy.add(s.id);
+    }
+  }
+  for (const id of idsToDestroy) {
+    await params.client.destroyPushSubscription(id).catch(() => undefined);
+  }
+  localStorage.removeItem(subIdKey);
+
   if (deviceClientId && relayBaseUrl) {
     await fetch(
       buildRelayUrl(relayBaseUrl, `/api/push/register/${encodeURIComponent(deviceClientId)}`),
@@ -422,6 +463,82 @@ export async function disableWebPush(params: DisableWebPushParams): Promise<void
     const registration = await navigator.serviceWorker.getRegistration(SW_SCOPE);
     const sub = await registration?.pushManager.getSubscription();
     if (sub) await sub.unsubscribe().catch(() => undefined);
+  }
+}
+
+export interface PushDevice {
+  // The JMAP PushSubscription id - what you destroy to revoke it.
+  id: string;
+  // Client-chosen id the relay keys its endpoint mapping on.
+  deviceClientId: string;
+  expires: string | null;
+  types: string[] | null;
+  // True when this registration belongs to the browser you're looking at.
+  isThisDevice: boolean;
+  relayStatus: PushRelayStatus;
+}
+
+/**
+ * Every push registration the JMAP server holds for this account, annotated
+ * with whether it is this browser and what the relay makes of it.
+ *
+ * Stalwart hides a subscription's url and verified state from clients, so
+ * deviceClientId is the only handle we get. That's enough to spot our own
+ * registration and to ask the relay about the rest - but registrations made
+ * against a different relay, or by a non-Bulwark client, come back `unknown`
+ * rather than dead, and the UI must present them as revocable-but-unclassified.
+ */
+export async function listPushDevices(params: {
+  client: IJMAPClient;
+  relayBaseUrl?: string;
+}): Promise<PushDevice[]> {
+  const relayBaseUrl = (params.relayBaseUrl ?? DEFAULT_RELAY_BASE_URL).replace(/\/+$/, '');
+  const accountId = params.client.getAccountId();
+  const thisDeviceClientId = typeof localStorage === 'undefined'
+    ? null
+    : localStorage.getItem(deviceClientIdKey(accountId));
+
+  const subs = await params.client.listPushSubscriptions();
+  return Promise.all(
+    subs.map(async (s) => ({
+      id: s.id,
+      deviceClientId: s.deviceClientId,
+      expires: s.expires ?? null,
+      types: s.types ?? null,
+      isThisDevice: thisDeviceClientId !== null && s.deviceClientId === thisDeviceClientId,
+      relayStatus: await relayStatusFor(relayBaseUrl, s.deviceClientId),
+    })),
+  );
+}
+
+/**
+ * Revoke one registration. Destroying the JMAP subscription stops the server
+ * fanning StateChanges to it; dropping the relay mapping stops the relay
+ * forwarding anything already in flight and frees the deviceClientId. Revoking
+ * this device runs the full local teardown so the UI doesn't keep claiming push
+ * is on.
+ */
+export async function revokePushDevice(params: {
+  client: IJMAPClient;
+  device: Pick<PushDevice, 'id' | 'deviceClientId' | 'isThisDevice'>;
+  relayBaseUrl?: string;
+}): Promise<void> {
+  const relayBaseUrl = (params.relayBaseUrl ?? DEFAULT_RELAY_BASE_URL).replace(/\/+$/, '');
+
+  if (params.device.isThisDevice) {
+    await disableWebPush({ client: params.client, relayBaseUrl });
+    return;
+  }
+
+  await params.client.destroyPushSubscription(params.device.id);
+  if (relayBaseUrl && params.device.deviceClientId) {
+    await fetch(
+      buildRelayUrl(
+        relayBaseUrl,
+        `/api/push/register/${encodeURIComponent(params.device.deviceClientId)}`,
+      ),
+      { method: 'DELETE' },
+    ).catch(() => undefined);
   }
 }
 

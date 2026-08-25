@@ -17,16 +17,25 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { cn, buildMailboxTree, type MailboxNode } from '@/lib/utils';
+import {
+  flattenVisibleTree, removeSubtree, getProjection, getDropPlan,
+  type FlatFolder,
+} from '@/lib/folder-tree-dnd';
 import { ChevronRight, ChevronDown, GripVertical } from 'lucide-react';
 import {
   DndContext, closestCenter, PointerSensor, KeyboardSensor,
-  useSensor, useSensors, type DragEndEvent,
+  useSensor, useSensors, MeasuringStrategy,
+  type DragEndEvent, type DragMoveEvent, type DragOverEvent, type DragStartEvent,
 } from '@dnd-kit/core';
 import {
   SortableContext, verticalListSortingStrategy, useSortable,
-  arrayMove, sortableKeyboardCoordinates,
+  sortableKeyboardCoordinates,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+
+// Must match the per-level indentation used in the row styles below: dragging
+// a folder this many pixels right/left targets one nesting level deeper/higher.
+const INDENTATION_WIDTH = 16;
 
 const STANDARD_ROLES = ['inbox', 'drafts', 'sent', 'trash', 'junk', 'archive'] as const;
 
@@ -145,7 +154,7 @@ function SortableFolderRow({ id, title, children }: { id: string; title: string;
 export function FolderSettings() {
   const t = useTranslations('settings.folders');
   const { client } = useAuthStore();
-  const { mailboxes, fetchMailboxes, createMailbox, renameMailbox, deleteMailbox, setMailboxRole, reorderMailboxes } = useEmailStore();
+  const { mailboxes, fetchMailboxes, createMailbox, renameMailbox, deleteMailbox, setMailboxRole, reorderMailboxes, moveMailbox } = useEmailStore();
 
   const sensors = useSensors(
     // Small activation distance so clicking the row's buttons still works.
@@ -172,31 +181,85 @@ export function FolderSettings() {
   const [isLoading, setIsLoading] = useState(false);
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
 
+  // Drag state: the tree renders as one flat sortable list; vertical movement
+  // picks the insertion point, horizontal movement the nesting depth. A drag
+  // can therefore both reorder folders and move them under a different parent
+  // (GitHub #855).
+  const [activeDragId, setActiveDragId] = useState<string | null>(null);
+  const [overId, setOverId] = useState<string | null>(null);
+  const [offsetLeft, setOffsetLeft] = useState(0);
+
   const ownMailboxes = mailboxes.filter(mb => !mb.isShared);
   const folderTree = buildMailboxTree(ownMailboxes);
 
-  // Reorder folders within a sibling group (same parent). Drops onto a folder
-  // in a different group are ignored — this reorders, it doesn't reparent.
+  const visibleItems = flattenVisibleTree(folderTree, expandedFolders);
+  // While dragging, the folder's subtree travels with it: hide it from the
+  // list so it can't become its own drop target.
+  const dragItems = activeDragId ? removeSubtree(visibleItems, activeDragId) : visibleItems;
+  const projected = activeDragId && overId
+    ? getProjection(dragItems, activeDragId, overId, offsetLeft, INDENTATION_WIDTH)
+    : null;
+
+  const findNode = (nodes: MailboxNode[], id: string): MailboxNode | undefined => {
+    for (const n of nodes) {
+      if (n.id === id) return n;
+      const found = findNode(n.children, id);
+      if (found) return found;
+    }
+    return undefined;
+  };
+
+  const resetDragState = () => {
+    setActiveDragId(null);
+    setOverId(null);
+    setOffsetLeft(0);
+  };
+
+  const handleFolderDragStart = ({ active }: DragStartEvent) => {
+    setActiveDragId(String(active.id));
+    setOverId(String(active.id));
+  };
+
+  const handleFolderDragMove = ({ delta }: DragMoveEvent) => setOffsetLeft(delta.x);
+
+  const handleFolderDragOver = ({ over }: DragOverEvent) => setOverId(over ? String(over.id) : null);
+
   const handleFolderDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (!over || active.id === over.id || !client) return;
+    const { active, over, delta } = event;
+    resetDragState();
+    if (!over || !client) return;
 
-    const groups: MailboxNode[][] = [];
-    const collectGroups = (nodes: MailboxNode[]) => {
-      groups.push(nodes);
-      nodes.forEach(n => { if (n.children.length > 0) collectGroups(n.children); });
-    };
-    collectGroups(folderTree);
+    const activeId = String(active.id);
+    const items = removeSubtree(flattenVisibleTree(folderTree, expandedFolders), activeId);
+    const projection = getProjection(items, activeId, String(over.id), delta.x, INDENTATION_WIDTH);
+    if (!projection) return;
+    const plan = getDropPlan(items, activeId, String(over.id), projection);
+    if (!plan) return;
 
-    const group = groups.find(g => g.some(n => n.id === active.id));
-    if (!group) return;
-    const oldIndex = group.findIndex(n => n.id === active.id);
-    const newIndex = group.findIndex(n => n.id === over.id);
-    if (newIndex < 0) return; // dropped outside the active folder's sibling group
+    if (!plan.parentChanged) {
+      if (active.id === over.id) return; // dropped back where it started
+      reorderMailboxes(client, plan.orderedSiblingIds).catch(() => {
+        toast.error(t('reorder_error'));
+      });
+      return;
+    }
 
-    const orderedIds = arrayMove(group, oldIndex, newIndex).map(n => n.id);
-    reorderMailboxes(client, orderedIds).catch(() => {
-      toast.error(t('reorder_error'));
+    const newParent = plan.parentId ? findNode(folderTree, plan.parentId) : null;
+    if (plan.parentId && !newParent) return;
+    if (newParent?.myRights && !newParent.myRights.mayCreateChild) {
+      toast.error(t('move_error'));
+      return;
+    }
+    // If the new parent is collapsed we can't see its children's positions, so
+    // only reparent (no sibling reorder) and expand it to show the result.
+    const siblingsVisible = !newParent
+      || newParent.children.length === 0
+      || expandedFolders.has(newParent.id);
+    if (newParent) {
+      setExpandedFolders(prev => new Set(prev).add(newParent.id));
+    }
+    moveMailbox(client, activeId, plan.parentId, siblingsVisible ? plan.orderedSiblingIds : undefined).catch(() => {
+      toast.error(t('move_error'));
     });
   };
 
@@ -384,11 +447,13 @@ export function FolderSettings() {
     );
   };
 
-  const renderFolderNode = (node: MailboxNode): React.ReactNode => {
-    const mb = node;
-    const hasChildren = node.children.length > 0;
-    const isExpanded = expandedFolders.has(node.id);
-    const depth = node.depth;
+  const renderFolderNode = (item: FlatFolder): React.ReactNode => {
+    const mb = item.node;
+    const hasChildren = mb.children.length > 0;
+    const isExpanded = expandedFolders.has(item.id);
+    // The dragged row previews its projected nesting depth, so a horizontal
+    // drag shows which parent the folder will land under.
+    const depth = activeDragId === item.id && projected ? projected.depth : item.depth;
     const Icon = getIconForMailbox(mb);
 
     if (editingId === mb.id) {
@@ -555,16 +620,8 @@ export function FolderSettings() {
           </div>
         </div>
         </SortableFolderRow>
-        {/* Inline subfolder creation */}
+        {/* Inline subfolder creation (children follow as flattened rows) */}
         {renderCreateInline(mb.id, depth + 1)}
-        {/* Render children if expanded */}
-        {hasChildren && isExpanded && (
-          <div>
-            <SortableContext items={node.children.map(c => c.id)} strategy={verticalListSortingStrategy}>
-              {node.children.map(child => renderFolderNode(child))}
-            </SortableContext>
-          </div>
-        )}
       </div>
     );
   };
@@ -580,9 +637,18 @@ export function FolderSettings() {
               <p className="text-sm text-muted-foreground">{t('no_folders')}</p>
             </div>
           ) : (
-            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleFolderDragEnd}>
-              <SortableContext items={folderTree.map(n => n.id)} strategy={verticalListSortingStrategy}>
-                {folderTree.map(node => renderFolderNode(node))}
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              measuring={{ droppable: { strategy: MeasuringStrategy.Always } }}
+              onDragStart={handleFolderDragStart}
+              onDragMove={handleFolderDragMove}
+              onDragOver={handleFolderDragOver}
+              onDragEnd={handleFolderDragEnd}
+              onDragCancel={resetDragState}
+            >
+              <SortableContext items={dragItems.map(i => i.id)} strategy={verticalListSortingStrategy}>
+                {dragItems.map(item => renderFolderNode(item))}
               </SortableContext>
             </DndContext>
           )}

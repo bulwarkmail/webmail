@@ -18,6 +18,7 @@ import { SidebarAppsModal } from "@/components/layout/sidebar-apps-modal";
 import { InlineAppView } from "@/components/layout/inline-app-view";
 import { useSidebarApps } from "@/hooks/use-sidebar-apps";
 import { useIsEmbedded } from "@/hooks/use-is-embedded";
+import { useIsFocusedProTab } from "@/hooks/use-pane-context";
 import { useIsMobile } from "@/hooks/use-media-query";
 import { useRefreshGesture } from "@/hooks/use-refresh-gesture";
 import { usePolicyStore } from "@/stores/policy-store";
@@ -31,7 +32,7 @@ import { AppTopBannerSlot } from "@/components/plugins/app-top-banner-slot";
 import { AlertTriangle, Loader2 } from "lucide-react";
 import { isFilePreviewable } from "@/lib/file-preview";
 import { appPath, buildFilesPath, parseFilesPath, type FilesDeepLink } from "@/lib/deep-links";
-import { consumePendingDeepLink } from "@/lib/deep-link-handoff";
+import { consumePendingDeepLink, subscribePendingDeepLink } from "@/lib/deep-link-handoff";
 import { useDeepLinkUrl } from "@/hooks/use-deep-link-url";
 import { useProInterfaceActive } from "@/components/pro/pro-interface-redirect";
 
@@ -106,7 +107,11 @@ export function FilesApp({ linkSegments }: FilesAppProps = {}) {
   const isMobile = useIsMobile();
   const isEmbedded = useIsEmbedded();
   const [folderLayout, setFolderLayout] = useState<FolderLayout>(() => loadFilesSettings().folderLayout);
-  const hasFetched = useRef(false);
+  // The account the files client was last initialised for (`undefined` = never).
+  // Tracked so a Pro-shell account switch re-initialises instead of showing the
+  // previous account's files until a manual Home click.
+  const initedAccountRef = useRef<string | null | undefined>(undefined);
+  const filesBootstrapRef = useRef(false);
 
   // Sync folderLayout when settings change
   useEffect(() => {
@@ -153,18 +158,29 @@ export function FilesApp({ linkSegments }: FilesAppProps = {}) {
   // are surfaced as top-level folders at the root, so we *don't* auto-attach
   // to the active account - the user picks one explicitly.
   useEffect(() => {
-    if (!isAuthenticated || !client || hasFetched.current) return;
-    hasFetched.current = true;
+    if (!isAuthenticated || !client) return;
+    // Re-run when the ACTIVE account changes (Pro multi-account switch), not
+    // just once - otherwise the previous account's files linger until a manual
+    // Home click.
+    if (initedAccountRef.current === activeAccountId) return;
+    const switched = initedAccountRef.current !== undefined;
+    initedAccountRef.current = activeAccountId;
     if (isEmbedded) {
       useFileStore.getState().clearClient();
     } else {
+      if (switched) {
+        // Drop the previous account's attached view so its files don't linger,
+        // and let the bootstrap effect below re-list for the new account.
+        useFileStore.getState().clearClient();
+        filesBootstrapRef.current = false;
+      }
       initClient(client, activeAccountId);
     }
   }, [isAuthenticated, client, initClient, activeAccountId, isEmbedded]);
 
   // Intercept browser refresh gestures (F5, Ctrl/Cmd+R, pull-to-refresh)
   // and refresh files via JMAP instead of reloading the page.
-  useRefreshGesture({
+  const { indicator: refreshIndicator } = useRefreshGesture({
     enabled: isAuthenticated && !!client && supportsFiles === true,
     onRefresh: async () => {
       await refresh();
@@ -197,13 +213,30 @@ export function FilesApp({ linkSegments }: FilesAppProps = {}) {
     return link;
   }, []);
 
+  // Pro shell only: this surface stays mounted for the whole session, so links
+  // arriving after mount are delivered live instead of being parked forever.
+  // The bootstrap has already run by then - walk the drive directly and let
+  // the preview effect below claim `pendingPreviewRef` once the listing lands.
+  // Embedded-only: during a cold-load redirect the standard instance renders
+  // briefly and must not steal the link parked for the Pro one.
+  const navigateByPathRef = useRef(navigateByPath);
+  navigateByPathRef.current = navigateByPath;
+  useEffect(() => {
+    if (!isEmbedded) return;
+    return subscribePendingDeepLink('files', (segments) => {
+      const link = parseFilesPath(segments, new URLSearchParams(window.location.search));
+      if (!link) return;
+      if (link.preview) pendingPreviewRef.current = link.preview;
+      void navigateByPathRef.current(link.path);
+    });
+  }, [isEmbedded]);
+
   // Check support and load the first listing after the client is initialized.
   // One effect, run once: `checkSupport` publishes `supportsFiles` before it
   // resolves, so splitting the cold path from the warm one would have them
   // race - the warm one following the deep link while the cold one, a tick
   // later, listed the root on top of it.
   const storeClient = useFileStore(s => s.client);
-  const filesBootstrapRef = useRef(false);
   useEffect(() => {
     if (filesBootstrapRef.current) return;
     if (!storeClient) return;
@@ -466,13 +499,16 @@ export function FilesApp({ linkSegments }: FilesAppProps = {}) {
     setShowDetails(true);
   }, []);
 
-  // The permalink for the folder on screen. Suppressed inside the Pro shell,
-  // where /pro owns the address bar, and at the account picker (no path yet).
+  // The permalink for the folder on screen. In the Pro shell only the focused
+  // tab writes the address bar; the standard instance that renders while Pro
+  // takes over a route stays silent.
   const proInterfaceActive = useProInterfaceActive();
+  const isFocusedProTab = useIsFocusedProTab();
+  const filesLinkPath = appPath(buildFilesPath(currentPath, previewFile));
   useDeepLinkUrl(
-    isEmbedded || proInterfaceActive
-      ? null
-      : appPath(buildFilesPath(currentPath, previewFile)),
+    isEmbedded
+      ? (isFocusedProTab ? filesLinkPath : null)
+      : proInterfaceActive ? null : filesLinkPath,
   );
 
   const handleToggleDetails = useCallback(() => {
@@ -524,6 +560,7 @@ export function FilesApp({ linkSegments }: FilesAppProps = {}) {
   return (
     <div className={cn("flex flex-col bg-background overflow-hidden pt-[env(safe-area-inset-top)]", isEmbedded ? "h-full" : "h-dvh")}>
       <AppTopBannerSlot />
+      {refreshIndicator}
       <div className="flex flex-1 min-h-0 overflow-hidden">
       {!isMobile && !isEmbedded && (
         <div className="w-14 bg-secondary flex flex-col flex-shrink-0" style={{ borderRight: '1px solid rgba(128, 128, 128, 0.3)' }}>

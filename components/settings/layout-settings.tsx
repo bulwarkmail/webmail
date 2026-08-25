@@ -354,6 +354,7 @@ export function LayoutSettings() {
         <ToggleSwitch
           checked={proInterface}
           onChange={(v) => updateSetting('proInterface', v)}
+          testId="setting-pro-interface"
         />
       </SettingItem>
     </SettingsSection>

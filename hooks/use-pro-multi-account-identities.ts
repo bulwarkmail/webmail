@@ -16,10 +16,12 @@ interface AccountIdentityGroup {
 
 const CROSS_ACCOUNT_IDENTITY_DELIMITER = '::';
 
-/** Cross-account identity IDs are namespaced to avoid collisions between
- * JMAP servers that happen to issue the same opaque ID. The active
- * account's IDs are left untouched so existing single-account code paths
- * (reply-identity resolution, S/MIME bindings) keep working unchanged.
+/** Cross-account identity IDs are namespaced to avoid collisions between JMAP
+ * servers that happen to issue the same opaque ID. EVERY aggregated account is
+ * namespaced (including the active one) so an id doesn't change form when the
+ * active account changes; consumers resolve the raw id via
+ * stripCrossAccountIdentityPrefix. Single-account mode (hook disabled) uses the
+ * identity store's raw ids directly.
  */
 export function isCrossAccountIdentityId(id: string): boolean {
   return id.includes(CROSS_ACCOUNT_IDENTITY_DELIMITER);
@@ -94,35 +96,32 @@ export function useProMultiAccountIdentities(): {
 
   const groups = useMemo<AccountIdentityGroup[]>(() => {
     if (!enabled) return [];
+    // Namespace EVERY account's identity ids, including the active one, so an id
+    // stably identifies (account, identity) regardless of which account is
+    // active. Consumers resolve the raw id via stripCrossAccountIdentityPrefix.
+    // Mirrors the calendar/contact stores' consistent-namespacing invariant.
+    const group = (accountId: string, list: Identity[], label: string): AccountIdentityGroup => ({
+      localAccountId: accountId,
+      accountLabel: label,
+      identities: list.map((id) => ({
+        ...id,
+        id: `${accountId}${CROSS_ACCOUNT_IDENTITY_DELIMITER}${id.id}`,
+        localAccountId: accountId,
+        accountName: label,
+      })),
+    });
     const out: AccountIdentityGroup[] = [];
     if (activeAccountId) {
       const active = accounts.find((a) => a.id === activeAccountId);
       const label = active?.label || active?.email || active?.username || activeAccountId;
-      out.push({
-        localAccountId: activeAccountId,
-        accountLabel: label,
-        identities: activeIdentities.map((id) => ({
-          ...id,
-          localAccountId: activeAccountId,
-          accountName: label,
-        })),
-      });
+      out.push(group(activeAccountId, activeIdentities, label));
     }
     for (const account of accounts) {
       if (!account.isConnected || account.id === activeAccountId) continue;
       const list = remoteIdentities[account.id];
       if (!list || list.length === 0) continue;
       const label = account.label || account.email || account.username;
-      out.push({
-        localAccountId: account.id,
-        accountLabel: label,
-        identities: list.map((id) => ({
-          ...id,
-          id: `${account.id}${CROSS_ACCOUNT_IDENTITY_DELIMITER}${id.id}`,
-          localAccountId: account.id,
-          accountName: label,
-        })),
-      });
+      out.push(group(account.id, list, label));
     }
     return out;
   }, [enabled, accounts, activeAccountId, activeIdentities, remoteIdentities]);

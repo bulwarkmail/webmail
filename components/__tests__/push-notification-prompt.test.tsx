@@ -17,10 +17,14 @@ const mocks = vi.hoisted(() => ({
     isAuthenticated: true,
     isDemoMode: false,
   },
-  settingsState: { emailNotificationsEnabled: true },
+  settingsState: { emailNotificationsEnabled: true, pushRelayUrl: "" },
   policyState: {
     loaded: true,
-    policy: { pushRelayUrl: "https://notifications.relay.bulwarkmail.org" },
+    policy: {
+      pushRelayUrl: "https://notifications.relay.bulwarkmail.org",
+      pushRelays: [] as { label: string; url: string }[],
+      pushRelayUrlLocked: false,
+    },
   },
 }));
 
@@ -80,9 +84,12 @@ describe("PushNotificationPrompt", () => {
     mocks.authState.isAuthenticated = true;
     mocks.authState.isDemoMode = false;
     mocks.settingsState.emailNotificationsEnabled = true;
+    mocks.settingsState.pushRelayUrl = "";
     mocks.policyState.loaded = true;
     mocks.policyState.policy.pushRelayUrl =
       "https://notifications.relay.bulwarkmail.org";
+    mocks.policyState.policy.pushRelays = [];
+    mocks.policyState.policy.pushRelayUrlLocked = false;
     mocks.enableWebPush.mockReset().mockResolvedValue({ subscriptionId: "sub-1" });
     mocks.isWebPushEnabled.mockReset().mockImplementation(async () => mocks.enabled);
     setNotificationPermission("default");
@@ -116,6 +123,43 @@ describe("PushNotificationPrompt", () => {
       accountLabel: "alice@example.com",
     });
     expect(screen.queryByText("title")).not.toBeInTheDocument();
+  });
+
+  it("registers with the relay the user picked from the admin list", async () => {
+    mocks.policyState.policy.pushRelays = [
+      { label: "Company", url: "https://push.company.example" },
+    ];
+    mocks.settingsState.pushRelayUrl = "https://push.company.example";
+
+    render(<PushNotificationPrompt />);
+    await advancePromptDelay();
+
+    await act(async () => {
+      fireEvent.click(screen.getByText("enable"));
+      await Promise.resolve();
+    });
+
+    expect(mocks.enableWebPush).toHaveBeenCalledWith(
+      expect.objectContaining({ relayBaseUrl: "https://push.company.example" }),
+    );
+  });
+
+  it("falls back to the default relay when the user's pick is no longer offered", async () => {
+    mocks.settingsState.pushRelayUrl = "https://push.removed.example";
+
+    render(<PushNotificationPrompt />);
+    await advancePromptDelay();
+
+    await act(async () => {
+      fireEvent.click(screen.getByText("enable"));
+      await Promise.resolve();
+    });
+
+    expect(mocks.enableWebPush).toHaveBeenCalledWith(
+      expect.objectContaining({
+        relayBaseUrl: "https://notifications.relay.bulwarkmail.org",
+      }),
+    );
   });
 
   it("does not render when push is already enabled", async () => {

@@ -11,6 +11,7 @@ import {
   exportTemplates,
   importTemplates,
   spliceTemplateAboveSignature,
+  composeBodyHasUserContent,
 } from '../template-utils';
 import type { EmailTemplate } from '../template-types';
 
@@ -369,5 +370,41 @@ describe('spliceTemplateAboveSignature', () => {
     const result = spliceTemplateAboveSignature(prev, template);
     expect(result).not.toContain('half-written draft');
     expect(result).toContain('Sig');
+  });
+});
+
+describe('composeBodyHasUserContent', () => {
+  const signature = '<p data-signature-block="separator">-- </p><div>My signature</div><p data-signature-block="end"></p>';
+
+  it('is false for a fresh compose body (empty paragraph + signature)', () => {
+    expect(composeBodyHasUserContent(`<p></p>${signature}`)).toBe(false);
+  });
+
+  it('is false for an empty body', () => {
+    expect(composeBodyHasUserContent('')).toBe(false);
+    expect(composeBodyHasUserContent('<p></p>')).toBe(false);
+  });
+
+  it('is true once the user typed above the signature (#540)', () => {
+    expect(composeBodyHasUserContent(`<p>Hello Mr.</p>${signature}`)).toBe(true);
+  });
+
+  it('is true for a body without a signature block', () => {
+    expect(composeBodyHasUserContent('<p>Hello Mr.</p>')).toBe(true);
+  });
+
+  it('ignores signature text so a signature-only body stays untouched', () => {
+    expect(composeBodyHasUserContent(`<p></p>${signature}`)).toBe(false);
+    expect(composeBodyHasUserContent(`<p><br></p>${signature}`)).toBe(false);
+  });
+
+  it('counts text-free content such as a pasted image', () => {
+    expect(composeBodyHasUserContent(`<p><img src="cid:1"></p>${signature}`)).toBe(true);
+  });
+
+  it('handles a signature range without an end marker', () => {
+    const openEnded = '<p data-signature-block="start"></p><div>My signature</div>';
+    expect(composeBodyHasUserContent(`<p></p>${openEnded}`)).toBe(false);
+    expect(composeBodyHasUserContent(`<p>Hello Mr.</p>${openEnded}`)).toBe(true);
   });
 });

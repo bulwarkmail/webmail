@@ -300,6 +300,10 @@
     "move": "Mutare",
     "print": "Imprimare",
     "view_source": "Vizualizați sursa",
+
+    "fullscreen": "Ecran complet",
+
+    "exit_fullscreen": "Ieșire din ecran complet",
     "export_email": "Exportați ca fișier .eml",
     "forward_as_attachment": "Forward as attachment",
     "import_email": "Importați fișiere .eml sau .zip",
@@ -574,6 +578,7 @@
     "read_receipt_on": "Solicitare confirmare de citire (faceți clic pentru a dezactiva)",
     "read_receipt_off": "Solicitați o confirmare de citire",
     "new_message": "Mesaj nou",
+    "signature_edit_hint": "Dublu clic pentru a edita semnătura",
     "reply": "Răspunde",
     "reply_all": "Răspunde tuturor",
     "forward": "Redirecționează",
@@ -748,7 +753,10 @@
     "rate_limited_title": "Autentificarea pe server este temporar limitată ca frecvență.",
     "rate_limited_detail": "Bulwark A suspendat solicitările de fundal pentru a evita blocarea. Se va încerca din nou în câteva {seconds} s.",
     "rate_limited_action_title": "Solicitarea a fost pusă în așteptare pentru a evita blocarea contului.",
-    "rate_limited_action_detail": "Bulwark Așteaptă încheierea perioadei de așteptare a serverului înainte de a trimite alte cereri autentificate. Încercați din nou în câteva {seconds}."
+    "rate_limited_action_detail": "Bulwark Așteaptă încheierea perioadei de așteptare a serverului înainte de a trimite alte cereri autentificate. Încercați din nou în câteva {seconds}.",
+    "pull_to_refresh": "Trageți pentru a reîmprospăta",
+    "release_to_refresh": "Eliberați pentru a reîmprospăta",
+    "refreshing": "Se reîmprospătează…"
   },
   "notifications": {
     "email_sent": "E-mailul a fost trimis cu succes",
@@ -855,7 +863,10 @@
     "zh": "Chineză simplificată",
     "fa": "فارسی",
     "farsi": "فارسی",
-    "switch_to_farsi": "Comută la persană"
+    "switch_to_farsi": "Comută la persană",
+    "mn": "Монгол",
+    "mongolian": "Монгол",
+    "switch_to_mongolian": "Comută la mongolă"
   },
   "settings": {
     "title": "Setări",
@@ -1077,7 +1088,6 @@
         "relay_desc": "Implicit este setat serverul de retransmitere găzduit Bulwark. Modificați această setare numai dacă utilizați un server propriu.",
         "relay_locked": "Configurat de administrator",
         "relay_locked_desc": "Relay-ul push URL a fost configurat de administratorul dvs. și nu poate fi modificat.",
-        "relay_placeholder": "https://notifications.relay.example.com",
         "status_active": "Activ pe acest dispozitiv",
         "status_inactive": "Nu este activat pe acest dispozitiv",
         "status_unsupported": "Acest browser nu acceptă Web Push",
@@ -1088,7 +1098,23 @@
         "confirm_disable_title": "Dezactivați notificările din fundal?",
         "confirm_disable_message": "Acest dispozitiv nu va mai primi alerte atunci când site-ul este închis.",
         "dismiss_aria": "Ignorați solicitarea de notificări",
-        "ios_hint": "Pe iOS, instalați mai întâi site-ul pe ecranul de start – Safari trimite notificări Web Push numai către aplicațiile web progresive (PWA) instalate."
+        "ios_hint": "Pe iOS, instalați mai întâi site-ul pe ecranul de start – Safari trimite notificări Web Push numai către aplicațiile web progresive (PWA) instalate.",
+        "devices_title": "Dispozitive înregistrate",
+        "devices_desc": "Toate dispozitivele înregistrate să primească notificări în fundal pentru acest cont. Revocarea unuia îl oprește imediat din a le primi.",
+        "devices_loading": "Se încarcă dispozitivele înregistrate…",
+        "devices_empty": "Niciun dispozitiv nu este înregistrat pentru notificări în fundal.",
+        "devices_error": "Dispozitivele înregistrate nu au putut fi încărcate.",
+        "devices_refresh": "Reîmprospătează",
+        "device_this": "Acest dispozitiv",
+        "device_other": "Alt dispozitiv",
+        "device_status_active": "Livrează notificări",
+        "device_status_inactive": "Nu a livrat niciodată o notificare",
+        "device_status_unknown": "Necunoscut acestui releu",
+        "device_expires": "Expiră la {date}",
+        "revoke": "Revocă",
+        "confirm_revoke_title": "Revocați acest dispozitiv?",
+        "confirm_revoke_message": "Va înceta imediat să primească notificări în fundal. Reactivarea push pe acel dispozitiv îl va înregistra din nou.",
+        "confirm_revoke_message_this": "Acest dispozitiv va înceta imediat să primească notificări în fundal."
       },
       "sound_selection": {
         "title": "Sunet de notificare",
@@ -1191,6 +1217,12 @@
         "auto": "Automat (recomandat)",
         "always": "Adaugă întotdeauna spațiere",
         "edge": "Din margine în margine"
+      },
+      "plain_text_font": {
+        "label": "Font pentru text simplu",
+        "description": "Fontul folosit pentru e-mailurile în text simplu",
+        "mono": "Monospațiat",
+        "sans": "Normal (la fel ca aplicația)"
       },
       "archive_mode": {
         "label": "Arhivați în",
@@ -1668,6 +1700,7 @@
       "create_subfolder": "Creați un subfolder",
       "reorder": "Trageți pentru a reordona",
       "reorder_error": "Reordonarea dosarelor a eșuat",
+      "move_error": "Mutarea dosarului a eșuat",
       "subfolder_of": "În interiorul {name}",
       "subfolder_name": "Numele subfolderului",
       "new_folder_name": "Numele folderului",

@@ -39,6 +39,7 @@
     "node_modules",
     "repos",
     "examples",
-    "integration"
+    "integration",
+    ".next/dev/types"
   ]
 }

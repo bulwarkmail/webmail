@@ -300,6 +300,10 @@
     "move": "Přesunout",
     "print": "Tisk",
     "view_source": "Zobrazit zdrojový kód",
+
+    "fullscreen": "Celá obrazovka",
+
+    "exit_fullscreen": "Ukončit režim celé obrazovky",
     "export_email": "Exportovat jako .eml",
     "forward_as_attachment": "Forward as attachment",
     "import_email": "Importovat .eml nebo .zip",
@@ -574,6 +578,7 @@
     "read_receipt_on": "Vyžádáno potvrzení o přečtení (kliknutím vypnete)",
     "read_receipt_off": "Vyžádat potvrzení o přečtení",
     "new_message": "Nová zpráva",
+    "signature_edit_hint": "Dvojklikem upravíte podpis",
     "reply": "Odpovědět",
     "reply_all": "Odpovědět všem",
     "forward": "Přeposlat",
@@ -748,7 +753,10 @@
     "rate_limited_title": "Ověřování serveru je dočasně omezeno.",
     "rate_limited_detail": "Požadavky na pozadí byly pozastaveny, aby se zabránilo zablokování. Další pokus za {seconds} s.",
     "rate_limited_action_title": "Požadavek pozastaven, aby se zabránilo zablokování.",
-    "rate_limited_action_detail": "Aplikace čeká na ukončení doby blokování serveru před odesláním dalších ověřovaných požadavků. Zkuste to znovu za {seconds} s."
+    "rate_limited_action_detail": "Aplikace čeká na ukončení doby blokování serveru před odesláním dalších ověřovaných požadavků. Zkuste to znovu za {seconds} s.",
+    "pull_to_refresh": "Přetažením obnovíte",
+    "release_to_refresh": "Uvolněním obnovíte",
+    "refreshing": "Obnovování…"
   },
   "notifications": {
     "email_sent": "Zpráva byla úspěšně odeslána",
@@ -855,7 +863,10 @@
     "zh": "简体中文",
     "fa": "فارسی",
     "farsi": "فارسی",
-    "switch_to_farsi": "Přepnout na perštinu"
+    "switch_to_farsi": "Přepnout na perštinu",
+    "mn": "Монгол",
+    "mongolian": "Монгол",
+    "switch_to_mongolian": "Přepnout na mongolštinu"
   },
   "settings": {
     "title": "Nastavení",
@@ -1104,12 +1115,27 @@
         "relay_label": "Push relay",
         "relay_locked": "Nastaveno administrátorem",
         "relay_locked_desc": "URL push relay byla nastavena administrátorem a nelze ji změnit.",
-        "relay_placeholder": "https://notifications.relay.example.com",
         "status_active": "Aktivní na tomto zařízení",
         "status_busy": "Pracuji…",
         "status_inactive": "Není povoleno na tomto zařízení",
         "status_unsupported": "Tento prohlížeč nepodporuje Web Push",
-        "title": "Oznámení na pozadí"
+        "title": "Oznámení na pozadí",
+        "devices_title": "Registrovaná zařízení",
+        "devices_desc": "Všechna zařízení registrovaná pro příjem oznamení na pozadí u tohoto účtu. Odvolání okamžitě zastaví jejich příjem.",
+        "devices_loading": "Načítání registrovaných zařízení…",
+        "devices_empty": "Pro oznámení na pozadí není registrováno žádné zařízení.",
+        "devices_error": "Registrovaná zařízení se nepodařilo načíst.",
+        "devices_refresh": "Obnovit",
+        "device_this": "Toto zařízení",
+        "device_other": "Jiné zařízení",
+        "device_status_active": "Doručuje oznámení",
+        "device_status_inactive": "Nikdy nedoručilo oznámení",
+        "device_status_unknown": "Tomuto relay není známo",
+        "device_expires": "Vyprší {date}",
+        "revoke": "Odvolat",
+        "confirm_revoke_title": "Odvolat toto zařízení?",
+        "confirm_revoke_message": "Okamžitě přestane přijímat oznámení na pozadí. Opětovné zapnutí push na tom zařízení jej zaregistruje znovu.",
+        "confirm_revoke_message_this": "Toto zařízení okamžitě přestane přijímat oznámení na pozadí."
       }
     },
     "language_region": {
@@ -1188,6 +1214,12 @@
         "auto": "Automaticky (doporučeno)",
         "always": "Vždy přidat odsazení",
         "edge": "Od okraje k okraji"
+      },
+      "plain_text_font": {
+        "label": "Písmo prostého textu",
+        "description": "Písmo použité pro e-maily v prostém textu",
+        "mono": "Neproporcionální",
+        "sans": "Normální (stejné jako aplikace)"
       },
       "archive_mode": {
         "label": "Archivovat do",
@@ -1661,6 +1693,7 @@
       "create_subfolder": "Vytvořit podsložku",
       "reorder": "Přetažením změníte pořadí",
       "reorder_error": "Nepodařilo se změnit pořadí složek",
+      "move_error": "Nepodařilo se přesunout složku",
       "subfolder_of": "Ve složce {name}",
       "subfolder_name": "Název podsložky",
       "new_folder_name": "Název složky",

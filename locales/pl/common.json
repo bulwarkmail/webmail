@@ -300,6 +300,10 @@
     "move": "Przenieś",
     "print": "Drukuj",
     "view_source": "Pokaż źródło",
+
+    "fullscreen": "Pełny ekran",
+
+    "exit_fullscreen": "Zamknij pełny ekran",
     "export_email": "Eksportuj jako .eml",
     "forward_as_attachment": "Forward as attachment",
     "import_email": "Importuj .eml lub .zip",
@@ -574,6 +578,7 @@
     "read_receipt_on": "Zażądano potwierdzenia przeczytania (kliknij, aby wyłączyć)",
     "read_receipt_off": "Zażądaj potwierdzenia przeczytania",
     "new_message": "Nowa wiadomość",
+    "signature_edit_hint": "Kliknij dwukrotnie, aby edytować podpis",
     "reply": "Odpowiedz",
     "reply_all": "Odpowiedz wszystkim",
     "forward": "Przekaż dalej",
@@ -748,7 +753,10 @@
     "rate_limited_title": "Uwierzytelnianie serwera jest tymczasowo ograniczone.",
     "rate_limited_detail": "Bulwark wstrzymał żądania w tle, aby uniknąć blokady. Ponowna próba za {seconds}s.",
     "rate_limited_action_title": "Żądanie wstrzymane, aby uniknąć blokady.",
-    "rate_limited_action_detail": "Bulwark czeka na zakończenie okresu blokady serwera przed wysłaniem kolejnych uwierzytelnionych żądań. Spróbuj ponownie za {seconds}s."
+    "rate_limited_action_detail": "Bulwark czeka na zakończenie okresu blokady serwera przed wysłaniem kolejnych uwierzytelnionych żądań. Spróbuj ponownie za {seconds}s.",
+    "pull_to_refresh": "Pociągnij, aby odświeżyć",
+    "release_to_refresh": "Puść, aby odświeżyć",
+    "refreshing": "Odświeżanie…"
   },
   "notifications": {
     "email_sent": "Wiadomość wysłana pomyślnie",
@@ -855,7 +863,10 @@
     "zh": "简体中文",
     "fa": "فارسی",
     "farsi": "فارسی",
-    "switch_to_farsi": "Przełącz na perski"
+    "switch_to_farsi": "Przełącz na perski",
+    "mn": "Монгол",
+    "mongolian": "Монгол",
+    "switch_to_mongolian": "Przełącz na mongolski"
   },
   "settings": {
     "title": "Ustawienia",
@@ -1104,12 +1115,27 @@
         "relay_label": "Przekaźnik push",
         "relay_locked": "Ustawione przez administratora",
         "relay_locked_desc": "Adres URL przekaźnika push został ustawiony przez administratora i nie można go zmienić.",
-        "relay_placeholder": "https://notifications.relay.example.com",
         "status_active": "Aktywne na tym urządzeniu",
         "status_busy": "Przetwarzanie…",
         "status_inactive": "Niewłączone na tym urządzeniu",
         "status_unsupported": "Ta przeglądarka nie obsługuje Web Push",
-        "title": "Powiadomienia w tle"
+        "title": "Powiadomienia w tle",
+        "devices_title": "Zarejestrowane urządzenia",
+        "devices_desc": "Wszystkie urządzenia zarejestrowane do odbioru powiadomień w tle dla tego konta. Unieważnienie natychmiast wstrzymuje ich odbiór.",
+        "devices_loading": "Wczytywanie zarejestrowanych urządzeń…",
+        "devices_empty": "Żadne urządzenie nie jest zarejestrowane do powiadomień w tle.",
+        "devices_error": "Nie udało się wczytać zarejestrowanych urządzeń.",
+        "devices_refresh": "Odśwież",
+        "device_this": "To urządzenie",
+        "device_other": "Inne urządzenie",
+        "device_status_active": "Dostarcza powiadomienia",
+        "device_status_inactive": "Nigdy nie dostarczyło powiadomienia",
+        "device_status_unknown": "Nieznane temu przekaźnikowi",
+        "device_expires": "Wygasa {date}",
+        "revoke": "Unieważnij",
+        "confirm_revoke_title": "Unieważnić to urządzenie?",
+        "confirm_revoke_message": "Natychmiast przestanie odbierać powiadomienia w tle. Ponowne włączenie push na tym urządzeniu zarejestruje je od nowa.",
+        "confirm_revoke_message_this": "To urządzenie natychmiast przestanie odbierać powiadomienia w tle."
       }
     },
     "language_region": {
@@ -1188,6 +1214,12 @@
         "auto": "Automatycznie (zalecane)",
         "always": "Zawsze dodawaj odstępy",
         "edge": "Od krawędzi do krawędzi"
+      },
+      "plain_text_font": {
+        "label": "Czcionka zwykłego tekstu",
+        "description": "Czcionka używana dla wiadomości w zwykłym tekście",
+        "mono": "O stałej szerokości",
+        "sans": "Normalna (jak aplikacja)"
       },
       "archive_mode": {
         "label": "Archiwizuj w",
@@ -1661,6 +1693,7 @@
       "create_subfolder": "Utwórz podfolder",
       "reorder": "Przeciągnij, aby zmienić kolejność",
       "reorder_error": "Nie udało się zmienić kolejności folderów",
+      "move_error": "Nie udało się przenieść folderu",
       "subfolder_of": "W folderze {name}",
       "subfolder_name": "Nazwa podfolderu",
       "new_folder_name": "Nazwa folderu",

@@ -300,6 +300,10 @@
     "move": "Verplaatsen",
     "print": "Afdrukken",
     "view_source": "Bron bekijken",
+
+    "fullscreen": "Volledig scherm",
+
+    "exit_fullscreen": "Volledig scherm sluiten",
     "export_email": "Exporteren als .eml",
     "forward_as_attachment": "Forward as attachment",
     "import_email": ".eml of .zip importeren",
@@ -574,6 +578,7 @@
     "read_receipt_on": "Leesbevestiging aangevraagd (klik om uit te schakelen)",
     "read_receipt_off": "Leesbevestiging aanvragen",
     "new_message": "Nieuw bericht",
+    "signature_edit_hint": "Dubbelklik om de handtekening te bewerken",
     "reply": "Beantwoorden",
     "reply_all": "Allen beantwoorden",
     "forward": "Doorsturen",
@@ -748,7 +753,10 @@
     "rate_limited_title": "Serverauthenticatie is tijdelijk beperkt.",
     "rate_limited_detail": "Bulwark heeft achtergrondverzoeken gepauzeerd om een blokkade te voorkomen. Nieuwe poging over {seconds}s.",
     "rate_limited_action_title": "Verzoek gepauzeerd om blokkade te voorkomen.",
-    "rate_limited_action_detail": "Bulwark wacht tot de servercooldown voorbij is voordat er nieuwe geauthenticeerde verzoeken worden verzonden. Probeer het over {seconds}s opnieuw."
+    "rate_limited_action_detail": "Bulwark wacht tot de servercooldown voorbij is voordat er nieuwe geauthenticeerde verzoeken worden verzonden. Probeer het over {seconds}s opnieuw.",
+    "pull_to_refresh": "Trek om te vernieuwen",
+    "release_to_refresh": "Laat los om te vernieuwen",
+    "refreshing": "Vernieuwen…"
   },
   "notifications": {
     "email_sent": "E-mail succesvol verzonden",
@@ -855,7 +863,10 @@
     "zh": "简体中文",
     "fa": "فارسی",
     "farsi": "فارسی",
-    "switch_to_farsi": "Overschakelen naar Farsi"
+    "switch_to_farsi": "Overschakelen naar Farsi",
+    "mn": "Монгол",
+    "mongolian": "Монгол",
+    "switch_to_mongolian": "Overschakelen naar Mongools"
   },
   "settings": {
     "title": "Instellingen",
@@ -1104,12 +1115,27 @@
         "relay_label": "Push-relay",
         "relay_locked": "Ingesteld door beheerder",
         "relay_locked_desc": "De push-relay-URL is ingesteld door je beheerder en kan niet worden gewijzigd.",
-        "relay_placeholder": "https://notifications.relay.example.com",
         "status_active": "Actief op dit apparaat",
         "status_busy": "Bezig…",
         "status_inactive": "Niet ingeschakeld op dit apparaat",
         "status_unsupported": "Deze browser ondersteunt geen Web Push",
-        "title": "Achtergrondmeldingen"
+        "title": "Achtergrondmeldingen",
+        "devices_title": "Geregistreerde apparaten",
+        "devices_desc": "Alle apparaten die achtergrondmeldingen voor dit account ontvangen. Trek je er een in, dan stopt de ontvangst meteen.",
+        "devices_loading": "Geregistreerde apparaten laden…",
+        "devices_empty": "Er zijn geen apparaten geregistreerd voor achtergrondmeldingen.",
+        "devices_error": "Kan de geregistreerde apparaten niet laden.",
+        "devices_refresh": "Vernieuwen",
+        "device_this": "Dit apparaat",
+        "device_other": "Ander apparaat",
+        "device_status_active": "Levert meldingen af",
+        "device_status_inactive": "Heeft nooit een melding afgeleverd",
+        "device_status_unknown": "Niet bekend bij deze relay",
+        "device_expires": "Verloopt op {date}",
+        "revoke": "Intrekken",
+        "confirm_revoke_title": "Dit apparaat intrekken?",
+        "confirm_revoke_message": "Het ontvangt meteen geen achtergrondmeldingen meer. Push opnieuw inschakelen op dat apparaat registreert het opnieuw.",
+        "confirm_revoke_message_this": "Dit apparaat ontvangt meteen geen achtergrondmeldingen meer."
       }
     },
     "language_region": {
@@ -1188,6 +1214,12 @@
         "auto": "Automatisch (aanbevolen)",
         "always": "Altijd ruimte toevoegen",
         "edge": "Rand tot rand"
+      },
+      "plain_text_font": {
+        "label": "Lettertype voor platte tekst",
+        "description": "Lettertype voor e-mails in platte tekst",
+        "mono": "Monospace",
+        "sans": "Normaal (zoals de app)"
       },
       "archive_mode": {
         "label": "Archiveren in",
@@ -1661,6 +1693,7 @@
       "create_subfolder": "Submap maken",
       "reorder": "Sleep om te herschikken",
       "reorder_error": "Herschikken van mappen is mislukt",
+      "move_error": "Verplaatsen van map is mislukt",
       "subfolder_of": "In {name}",
       "subfolder_name": "Naam van submap",
       "new_folder_name": "Mapnaam",

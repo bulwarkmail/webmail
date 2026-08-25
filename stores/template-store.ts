@@ -5,14 +5,24 @@ import {
   exportTemplates as exportUtil,
   importTemplates as importUtil,
   filterTemplates,
+  mergeSyncedTemplates,
+  parseSyncedTemplates,
+  parseTemplateTombstones,
 } from '@/lib/template-utils';
 import { generateUUID } from '@/lib/utils';
+import { registerTemplateSyncBridge } from './settings-store';
 
 const MAX_RECENT = 5;
 
 interface TemplateStore {
   templates: EmailTemplate[];
   recentTemplateIds: string[];
+  /**
+   * Template id -> ISO time it was deleted. Synced alongside `templates` in
+   * the settings blob so deletions propagate across devices instead of being
+   * resurrected by the next merge (see applySyncedState).
+   */
+  deletedTemplateIds: Record<string, string>;
 
   addTemplate: (template: Omit<EmailTemplate, 'id' | 'createdAt' | 'updatedAt'>) => EmailTemplate;
   updateTemplate: (id: string, updates: Partial<Omit<EmailTemplate, 'id' | 'createdAt'>>) => void;
@@ -28,6 +38,19 @@ interface TemplateStore {
 
   exportAllTemplates: () => string;
   importTemplates: (json: string) => { count: number; errors: string[] };
+
+  /**
+   * Applies a `templates` / `deletedTemplateIds` pair from a synced settings
+   * blob or settings-file import. `merge: true` (per-account server loads)
+   * merges by id with the newer `updatedAt` winning; `merge: false` (file
+   * imports) replaces wholesale. A blob from a build that predates template
+   * sync (no `templates` array) leaves the local store untouched.
+   */
+  applySyncedState: (
+    templates: unknown,
+    deletedTemplateIds: unknown,
+    opts: { merge: boolean }
+  ) => void;
 }
 
 export const useTemplateStore = create<TemplateStore>()(
@@ -35,6 +58,7 @@ export const useTemplateStore = create<TemplateStore>()(
     (set, get) => ({
       templates: [],
       recentTemplateIds: [],
+      deletedTemplateIds: {},
 
       addTemplate: (data) => {
         const now = new Date().toISOString();
@@ -64,6 +88,10 @@ export const useTemplateStore = create<TemplateStore>()(
         set((state) => ({
           templates: state.templates.filter((t) => t.id !== id),
           recentTemplateIds: state.recentTemplateIds.filter((rid) => rid !== id),
+          deletedTemplateIds: {
+            ...state.deletedTemplateIds,
+            [id]: new Date().toISOString(),
+          },
         }));
       },
 
@@ -144,10 +172,47 @@ export const useTemplateStore = create<TemplateStore>()(
         }
         return { count: result.templates.length, errors: result.errors };
       },
+
+      applySyncedState: (templatesValue, tombstonesValue, opts) => {
+        const incoming = parseSyncedTemplates(templatesValue);
+        if (!incoming) return;
+        const incomingTombstones = parseTemplateTombstones(tombstonesValue);
+
+        set((state) => {
+          const next = opts.merge
+            ? mergeSyncedTemplates(
+                { templates: state.templates, deletedTemplateIds: state.deletedTemplateIds },
+                { templates: incoming, deletedTemplateIds: incomingTombstones }
+              )
+            : { templates: incoming, deletedTemplateIds: incomingTombstones };
+          const ids = new Set(next.templates.map((t) => t.id));
+          return {
+            ...next,
+            recentTemplateIds: state.recentTemplateIds.filter((id) => ids.has(id)),
+          };
+        });
+      },
     }),
     {
       name: 'template-storage',
       version: 1,
     }
   )
+);
+
+// Registers templates with the cross-device settings sync (#825): they are
+// included in the synced blob / settings export, applied back on server loads
+// and file imports, and template changes schedule a sync push. Registration
+// (rather than settings-store importing this module) avoids an import cycle -
+// see registerTemplateSyncBridge.
+registerTemplateSyncBridge(
+  {
+    getSyncedState: () => {
+      const { templates, deletedTemplateIds } = useTemplateStore.getState();
+      return { templates, deletedTemplateIds };
+    },
+    applySyncedState: (templates, deletedTemplateIds, opts) =>
+      useTemplateStore.getState().applySyncedState(templates, deletedTemplateIds, opts),
+  },
+  (listener) => useTemplateStore.subscribe(listener)
 );

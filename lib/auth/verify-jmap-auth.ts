@@ -18,6 +18,15 @@ function isSupportedProtocol(protocol: string): boolean {
 }
 
 export function normalizeJmapServerUrl(serverUrl: string): string {
+  // App-relative URLs (the dev mock JMAP server, e.g. /api/dev-jmap) have no
+  // host or protocol to validate; they can only ever target this app itself.
+  // Protocol-relative URLs (//host/...) are NOT app-relative and fall through
+  // to the absolute-URL parse below, which rejects them.
+  if (serverUrl.startsWith('/') && !serverUrl.startsWith('//')) {
+    const url = new URL(serverUrl, 'http://relative.invalid');
+    return url.pathname.replace(/\/+$/, '');
+  }
+
   let url: URL;
   try {
     url = new URL(serverUrl);

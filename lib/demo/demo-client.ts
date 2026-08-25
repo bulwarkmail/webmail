@@ -1,4 +1,4 @@
-import type { IJMAPClient } from '@/lib/jmap/client-interface';
+import type { IJMAPClient, KeywordDiscoveryResult, KeywordMigration } from '@/lib/jmap/client-interface';
 import type { Email, Mailbox, StateChange, AccountStates, Thread, Identity, EmailAddress, ContactCard, AddressBook, VacationResponse, Calendar, CalendarEvent, CalendarEventFilter, CalendarTask, FileNode, ScheduledEmail, SendEmailResult, SharedAccount } from '@/lib/jmap/types';
 import type { SieveScript, SieveCapabilities } from '@/lib/jmap/sieve-types';
 import { getDemoData, type DemoData } from './demo-data';
@@ -139,12 +139,12 @@ export class DemoJMAPClient implements IJMAPClient {
     return mb;
   }
 
-  async updateMailbox(mailboxId: string, changes: { name?: string; parentId?: string | null; role?: string | null; sortOrder?: number }): Promise<void> {
+  async updateMailbox(mailboxId: string, changes: { name?: string; parentId?: string | null; role?: string | null; sortOrder?: number }, _accountId?: string): Promise<void> {
     const mb = this.data.mailboxes.find(m => m.id === mailboxId);
     if (mb) Object.assign(mb, changes);
   }
 
-  async deleteMailbox(mailboxId: string): Promise<void> {
+  async deleteMailbox(mailboxId: string, _accountId?: string): Promise<void> {
     this.data.mailboxes = this.data.mailboxes.filter(m => m.id !== mailboxId);
     // Also remove emails in this mailbox
     this.data.emails = this.data.emails.filter(e => !e.mailboxIds[mailboxId]);
@@ -247,6 +247,26 @@ export class DemoJMAPClient implements IJMAPClient {
     }
     options?.onProgress?.(scanned, total);
     return { keywords, scanned, total, complete: scanned >= total };
+  }
+
+  async getKeywords(options?: {
+    limit?: number;
+    onProgress?: (scanned: number, total: number) => void;
+    signal?: AbortSignal;
+  }): Promise<KeywordDiscoveryResult> {
+    const scan = await this.discoverKeywords(options);
+    return {
+      ...scan,
+      labels: Object.entries(scan.keywords).map(([id, total]) => ({
+        id,
+        name: id.startsWith('$label:') ? id.slice('$label:'.length) : id,
+        color: null,
+        total,
+        unread: 0,
+        isProviderLabel: false,
+        source: 'message' as const,
+      })),
+    };
   }
 
   async getCategoryUnreadCounts(mailboxId: string, tabs: Array<{ id: string; filter: Record<string, unknown> | null }>, _accountId?: string): Promise<Record<string, number>> {
@@ -362,16 +382,16 @@ export class DemoJMAPClient implements IJMAPClient {
     }
   }
 
-  async migrateKeyword(oldKeyword: string, newKeyword: string): Promise<number> {
-    let count = 0;
+  async migrateKeyword(oldKeyword: string, newKeyword: string): Promise<KeywordMigration> {
+    let migrated = 0;
     for (const email of this.data.emails) {
       if (email.keywords[oldKeyword]) {
         delete email.keywords[oldKeyword];
         email.keywords[newKeyword] = true;
-        count++;
+        migrated++;
       }
     }
-    return count;
+    return { migrated, refused: 0 };
   }
 
   async deleteEmail(emailId: string): Promise<void> {

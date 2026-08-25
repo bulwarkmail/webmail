@@ -14,6 +14,7 @@ const CORE = 'urn:ietf:params:jmap:core';
 const MAIL = 'urn:ietf:params:jmap:mail';
 const PRINCIPALS = 'urn:ietf:params:jmap:principals';
 const SUBMISSION = 'urn:ietf:params:jmap:submission';
+const FILENODE = 'urn:ietf:params:jmap:filenode';
 
 /** Rights granted on a shared mailbox (JMAP ACL). */
 export const FULL_MAILBOX_RIGHTS = {
@@ -43,6 +44,10 @@ export class JmapClient {
   private authHeader: string;
   private apiUrl: string;
   accountId = '';
+  /** Account that holds this user's Files drive (FileNode). On Stalwart's
+   *  personal mailboxes this equals the mail account, but read it from the
+   *  session so the helper stays correct if that ever diverges. */
+  filesAccountId = '';
   /** Every account visible in this user's session (own + shared/group),
    *  keyed by accountId -> account name (its email address). */
   accounts: Record<string, string> = {};
@@ -64,6 +69,7 @@ export class JmapClient {
     const primary = session.primaryAccounts?.[MAIL];
     if (!primary) throw new Error(`No mail account for ${email} in JMAP session`);
     c.accountId = primary;
+    c.filesAccountId = session.primaryAccounts?.[FILENODE] ?? primary;
     c.accounts = Object.fromEntries(
       Object.entries(session.accounts ?? {}).map(([id, a]) => [id, (a as { name: string }).name]),
     );
@@ -76,6 +82,13 @@ export class JmapClient {
     return Object.entries(this.accounts)
       .filter(([id]) => id !== this.accountId)
       .map(([, name]) => name);
+  }
+
+  /** Resolve an account visible in this session by its JMAP display name. */
+  accountIdByName(name: string): string {
+    const entry = Object.entries(this.accounts).find(([, accountName]) => accountName === name);
+    if (!entry) throw new Error(`No account named ${name} in JMAP session`);
+    return entry[0];
   }
 
   async request(methodCalls: MethodCall[], using: string[] = [CORE, MAIL, SUBMISSION]): Promise<any> {
@@ -163,25 +176,25 @@ export class JmapClient {
     return mb.id;
   }
 
-  async mailboxes(): Promise<JmapMailbox[]> {
-    const r = await this.request([['Mailbox/get', { accountId: this.accountId }, '0']]);
+  async mailboxes(accountId: string = this.accountId): Promise<JmapMailbox[]> {
+    const r = await this.request([['Mailbox/get', { accountId }, '0']]);
     return r.methodResponses[0][1].list as JmapMailbox[];
   }
 
-  async mailboxByRole(role: string): Promise<JmapMailbox | undefined> {
-    return (await this.mailboxes()).find((m) => m.role === role);
+  async mailboxByRole(role: string, accountId: string = this.accountId): Promise<JmapMailbox | undefined> {
+    return (await this.mailboxes(accountId)).find((m) => m.role === role);
   }
 
-  async mailboxByName(name: string): Promise<JmapMailbox | undefined> {
-    return (await this.mailboxes()).find((m) => m.name === name);
+  async mailboxByName(name: string, accountId: string = this.accountId): Promise<JmapMailbox | undefined> {
+    return (await this.mailboxes(accountId)).find((m) => m.name === name);
   }
 
   /** Create a folder (top-level) and return its id. Idempotent by name. */
-  async createMailbox(name: string, parentId: string | null = null): Promise<string> {
-    const existing = await this.mailboxByName(name);
+  async createMailbox(name: string, parentId: string | null = null, accountId: string = this.accountId): Promise<string> {
+    const existing = await this.mailboxByName(name, accountId);
     if (existing) return existing.id;
     const r = await this.request([
-      ['Mailbox/set', { accountId: this.accountId, create: { new: { name, parentId } } }, '0'],
+      ['Mailbox/set', { accountId, create: { new: { name, parentId } } }, '0'],
     ]);
     const created = r.methodResponses[0][1].created?.new;
     if (!created) throw new Error(`Mailbox/set create failed: ${JSON.stringify(r.methodResponses[0][1])}`);
@@ -196,8 +209,8 @@ export class JmapClient {
     ]);
   }
 
-  private async allEmailIds(): Promise<string[]> {
-    const r = await this.request([['Email/query', { accountId: this.accountId, limit: 5000 }, '0']]);
+  private async allEmailIds(accountId: string = this.accountId): Promise<string[]> {
+    const r = await this.request([['Email/query', { accountId, limit: 5000 }, '0']]);
     return r.methodResponses[0][1].ids as string[];
   }
 
@@ -205,16 +218,30 @@ export class JmapClient {
    * Reset a mailbox to a clean slate: destroy every message and delete any
    * non-system (custom) folder. System folders (Inbox/Sent/Trash/…) are kept.
    */
-  async reset(): Promise<void> {
-    const ids = await this.allEmailIds();
+  async reset(accountId: string = this.accountId): Promise<void> {
+    const ids = await this.allEmailIds(accountId);
     if (ids.length) {
-      await this.request([['Email/set', { accountId: this.accountId, destroy: ids }, '0']]);
+      await this.request([['Email/set', { accountId, destroy: ids }, '0']]);
     }
-    const custom = (await this.mailboxes()).filter((m) => !m.role);
-    if (custom.length) {
-      await this.request([
-        ['Mailbox/set', { accountId: this.accountId, onDestroyRemoveEmails: true, destroy: custom.map((m) => m.id) }, '0'],
+    const custom = (await this.mailboxes(accountId)).filter((m) => !m.role);
+    const byId = new Map(custom.map((mailbox) => [mailbox.id, mailbox]));
+    const depth = (mailbox: JmapMailbox): number => {
+      let result = 0;
+      let parentId = mailbox.parentId;
+      while (parentId && byId.has(parentId)) {
+        result++;
+        parentId = byId.get(parentId)!.parentId;
+      }
+      return result;
+    };
+    // Stalwart refuses to destroy a mailbox that still has children. Remove
+    // custom trees leaf-first so tests that create nested folders cleanly reset.
+    for (const mailbox of custom.sort((a, b) => depth(b) - depth(a))) {
+      const r = await this.request([
+        ['Mailbox/set', { accountId, onDestroyRemoveEmails: true, destroy: [mailbox.id] }, '0'],
       ]);
+      const failure = r.methodResponses[0][1].notDestroyed?.[mailbox.id];
+      if (failure) throw new Error(`Mailbox reset failed for ${mailbox.name}: ${JSON.stringify(failure)}`);
     }
   }
 
@@ -264,6 +291,12 @@ export class JmapClient {
     ]);
   }
 
+  async setFlagged(emailId: string, flagged: boolean): Promise<void> {
+    await this.request([
+      ['Email/set', { accountId: this.accountId, update: { [emailId]: { [`keywords/$flagged`]: flagged ? true : null } } }, '0'],
+    ]);
+  }
+
   /** Look up an email id by subject within an optional mailbox. */
   async findEmailBySubject(subject: string, mailboxId?: string): Promise<any | undefined> {
     const filter: Record<string, unknown> = { subject };
@@ -288,5 +321,43 @@ export class JmapClient {
       if (Date.now() > deadline) throw new Error(`Timed out waiting for email "${subject}" (${this.email})`);
       await new Promise((r) => setTimeout(r, 500));
     }
+  }
+
+  // ─── Files (JMAP FileNode) ────────────────────────────────────────────────
+
+  /** Ids of every FileNode in this account's drive. */
+  private async allFileNodeIds(): Promise<string[]> {
+    const r = await this.request(
+      [['FileNode/query', { accountId: this.filesAccountId, filter: {}, limit: 5000 }, '0']],
+      [CORE, FILENODE],
+    );
+    return r.methodResponses[0][1].ids as string[];
+  }
+
+  /** Wipe the account's drive so a test starts from a known-empty root. */
+  async resetFiles(): Promise<void> {
+    const ids = await this.allFileNodeIds();
+    if (!ids.length) return;
+    await this.request(
+      [['FileNode/set', { accountId: this.filesAccountId, destroy: ids }, '0']],
+      [CORE, FILENODE],
+    );
+  }
+
+  /**
+   * Create a top-level directory FileNode and return its id. A directory is a
+   * FileNode with no blob/type/size (server stores it with `file == null`),
+   * mirroring how the app's createFileDirectory seeds one.
+   */
+  async createFileDirectory(name: string, parentId: string | null = null): Promise<string> {
+    const props: Record<string, unknown> = { name };
+    if (parentId !== null) props.parentId = parentId;
+    const r = await this.request(
+      [['FileNode/set', { accountId: this.filesAccountId, create: { dir0: props } }, '0']],
+      [CORE, FILENODE],
+    );
+    const created = r.methodResponses[0][1].created?.dir0;
+    if (!created) throw new Error(`createFileDirectory failed: ${JSON.stringify(r.methodResponses[0][1])}`);
+    return created.id as string;
   }
 }

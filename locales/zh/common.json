@@ -300,6 +300,10 @@
     "move": "移动",
     "print": "打印",
     "view_source": "查看源码",
+
+    "fullscreen": "全屏",
+
+    "exit_fullscreen": "退出全屏",
     "export_email": "导出为 .eml",
     "forward_as_attachment": "Forward as attachment",
     "import_email": "导入 .eml 或 .zip",
@@ -574,6 +578,7 @@
     "read_receipt_on": "已请求已读回执（点击以关闭）",
     "read_receipt_off": "请求已读回执",
     "new_message": "新邮件",
+    "signature_edit_hint": "双击以编辑签名",
     "reply": "回复",
     "reply_all": "全部回复",
     "forward": "转发",
@@ -748,7 +753,10 @@
     "rate_limited_title": "服务器身份验证暂时受到速率限制。",
     "rate_limited_detail": "Bulwark 已暂停后台请求以避免账户被锁定。将在 {seconds} 秒后重试。",
     "rate_limited_action_title": "请求已暂停以避免账户被锁定。",
-    "rate_limited_action_detail": "Bulwark 正在等待服务器冷却，然后再发送更多请求。请在 {seconds} 秒后重试。"
+    "rate_limited_action_detail": "Bulwark 正在等待服务器冷却，然后再发送更多请求。请在 {seconds} 秒后重试。",
+    "pull_to_refresh": "下拉刷新",
+    "release_to_refresh": "松开刷新",
+    "refreshing": "正在刷新…"
   },
   "notifications": {
     "email_sent": "邮件发送成功",
@@ -855,7 +863,10 @@
     "zh": "简体中文",
     "fa": "فارسی",
     "farsi": "فارسی",
-    "switch_to_farsi": "切换到波斯语"
+    "switch_to_farsi": "切换到波斯语",
+    "mn": "Монгол",
+    "mongolian": "Монгол",
+    "switch_to_mongolian": "切换到蒙古语"
   },
   "settings": {
     "title": "设置",
@@ -1104,12 +1115,27 @@
         "relay_label": "推送中继",
         "relay_locked": "由管理员设置",
         "relay_locked_desc": "推送中继 URL 已由您的管理员设置，无法更改。",
-        "relay_placeholder": "https://notifications.relay.example.com",
         "status_active": "在此设备上活动",
         "status_busy": "工作中…",
         "status_inactive": "在此设备上未启用",
         "status_unsupported": "此浏览器不支持 Web Push",
-        "title": "后台通知"
+        "title": "后台通知",
+        "devices_title": "已注册的设备",
+        "devices_desc": "已注册接收此账户后台通知的所有设备。撤销后，该设备会立即停止接收。",
+        "devices_loading": "正在加载已注册的设备…",
+        "devices_empty": "没有设备注册接收后台通知。",
+        "devices_error": "无法加载已注册的设备。",
+        "devices_refresh": "刷新",
+        "device_this": "此设备",
+        "device_other": "其他设备",
+        "device_status_active": "正在投递通知",
+        "device_status_inactive": "从未投递过通知",
+        "device_status_unknown": "此中继不识别",
+        "device_expires": "{date} 过期",
+        "revoke": "撤销",
+        "confirm_revoke_title": "要撤销此设备吗？",
+        "confirm_revoke_message": "它将立即停止接收后台通知。在该设备上重新启用推送会重新注册。",
+        "confirm_revoke_message_this": "此设备将立即停止接收后台通知。"
       }
     },
     "language_region": {
@@ -1188,6 +1214,12 @@
         "auto": "自动（推荐）",
         "always": "始终添加边距",
         "edge": "无边距"
+      },
+      "plain_text_font": {
+        "label": "纯文本字体",
+        "description": "用于纯文本邮件的字体",
+        "mono": "等宽",
+        "sans": "普通（与应用相同）"
       },
       "archive_mode": {
         "label": "归档方式",
@@ -1661,6 +1693,7 @@
       "create_subfolder": "新建子文件夹",
       "reorder": "拖动以重新排序",
       "reorder_error": "文件夹重新排序失败",
+      "move_error": "移动文件夹失败",
       "subfolder_of": "{name} 内",
       "subfolder_name": "子文件夹名称",
       "new_folder_name": "文件夹名称",

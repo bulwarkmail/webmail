@@ -55,10 +55,9 @@ export interface ContactAccountClient {
 }
 
 /**
- * Prefix used to namespace contact/address-book IDs that belong to a
- * non-active JMAP account when the Pro shell aggregates across accounts.
- * The active account's IDs are left untouched so existing single-account
- * code paths keep working unchanged.
+ * Prefix used to namespace contact/address-book IDs when the Pro shell
+ * aggregates across accounts. EVERY aggregated account is namespaced (including
+ * the active one); single-account paths carry no localAccountId and stay raw.
  */
 const CROSS_ACCOUNT_ID_DELIMITER = '::';
 
@@ -66,18 +65,21 @@ function buildCrossAccountIdPrefix(localAccountId: string): string {
   return `${localAccountId}${CROSS_ACCOUNT_ID_DELIMITER}`;
 }
 
+// EVERY aggregated account is namespaced, including the active one, so an id
+// stably identifies (account, entity) regardless of which account is active -
+// otherwise switching accounts flipped the id form and broke mutation routing /
+// selection. Invariant: namespaced iff `localAccountId` is set; `originalId`
+// holds the raw id. Mutations already resolve raw via `originalId ||
+// stripLocalAccountPrefix`, so they keep working. Mirrors the calendar store.
 function prefixAddressBooksWithLocalAccount(
   books: AddressBook[],
   localAccountId: string,
-  isActiveAccount: boolean,
 ): AddressBook[] {
-  if (isActiveAccount) {
-    return books.map((b) => ({ ...b, localAccountId }));
-  }
   const prefix = buildCrossAccountIdPrefix(localAccountId);
   return books.map((b) => ({
     ...b,
     id: `${prefix}${b.id}`,
+    originalId: b.originalId ?? b.id,
     localAccountId,
   }));
 }
@@ -85,15 +87,12 @@ function prefixAddressBooksWithLocalAccount(
 function prefixContactsWithLocalAccount(
   contacts: ContactCard[],
   localAccountId: string,
-  isActiveAccount: boolean,
 ): ContactCard[] {
-  if (isActiveAccount) {
-    return contacts.map((c) => ({ ...c, localAccountId }));
-  }
   const prefix = buildCrossAccountIdPrefix(localAccountId);
   return contacts.map((c) => ({
     ...c,
     id: `${prefix}${c.id}`,
+    originalId: c.originalId ?? c.id,
     localAccountId,
     addressBookIds: c.addressBookIds
       ? Object.fromEntries(
@@ -277,8 +276,8 @@ interface ContactStore {
   fetchContacts: (client: IJMAPClient) => Promise<void>;
   fetchDirectory: (client: IJMAPClient) => Promise<void>;
   fetchAddressBooks: (client: IJMAPClient) => Promise<void>;
-  fetchAllAccountsContacts: (accounts: ContactAccountClient[], activeLocalAccountId: string) => Promise<void>;
-  fetchAllAccountsAddressBooks: (accounts: ContactAccountClient[], activeLocalAccountId: string) => Promise<void>;
+  fetchAllAccountsContacts: (accounts: ContactAccountClient[]) => Promise<void>;
+  fetchAllAccountsAddressBooks: (accounts: ContactAccountClient[]) => Promise<void>;
   createContact: (client: IJMAPClient, contact: Partial<ContactCard>) => Promise<void>;
   updateContact: (client: IJMAPClient, id: string, updates: Partial<ContactCard>) => Promise<void>;
   deleteContact: (client: IJMAPClient, id: string) => Promise<void>;
@@ -429,18 +428,14 @@ export const useContactStore = create<ContactStore>()(
         }
       },
 
-      fetchAllAccountsContacts: async (accounts, activeLocalAccountId) => {
+      fetchAllAccountsContacts: async (accounts) => {
         set({ isLoading: true, error: null });
         try {
           const results = await Promise.all(
             accounts.map(async ({ client, localAccountId }) => {
               try {
                 const list = await client.getAllContacts();
-                return prefixContactsWithLocalAccount(
-                  list,
-                  localAccountId,
-                  localAccountId === activeLocalAccountId,
-                );
+                return prefixContactsWithLocalAccount(list, localAccountId);
               } catch (error) {
                 debug.error(`Failed to fetch contacts for account ${localAccountId}:`, error);
                 return [] as ContactCard[];
@@ -454,17 +449,13 @@ export const useContactStore = create<ContactStore>()(
         }
       },
 
-      fetchAllAccountsAddressBooks: async (accounts, activeLocalAccountId) => {
+      fetchAllAccountsAddressBooks: async (accounts) => {
         try {
           const results = await Promise.all(
             accounts.map(async ({ client, localAccountId }) => {
               try {
                 const list = await client.getAllAddressBooks();
-                return prefixAddressBooksWithLocalAccount(
-                  list,
-                  localAccountId,
-                  localAccountId === activeLocalAccountId,
-                );
+                return prefixAddressBooksWithLocalAccount(list, localAccountId);
               } catch (error) {
                 debug.error(`Failed to fetch address books for account ${localAccountId}:`, error);
                 return [] as AddressBook[];

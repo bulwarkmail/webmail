@@ -247,6 +247,10 @@
     "mark_read": "סמן כנקרא",
     "print": "הדפס",
     "view_source": "צפה במקור",
+
+    "fullscreen": "מסך מלא",
+
+    "exit_fullscreen": "יציאה ממסך מלא",
     "export_email": "ייצא כ-.eml",
     "forward_as_attachment": "Forward as attachment",
     "import_email": "ייבוא .eml",
@@ -537,6 +541,7 @@
   },
   "email_composer": {
     "new_message": "הודעה חדשה",
+    "signature_edit_hint": "לחץ לחיצה כפולה לעריכת החתימה",
     "reply": "השב",
     "reply_all": "השב לכולם",
     "forward": "קדימה",
@@ -713,7 +718,10 @@
     "rate_limited_title": "אימות השרת מוגבל באופן זמני בקצב.",
     "rate_limited_detail": "Bulwark השהתה בקשות ברקע כדי למנוע נעילה. מנסה שוב ב-{seconds}s.",
     "rate_limited_action_title": "הבקשה הושהתה כדי למנוע נעילה.",
-    "rate_limited_action_detail": "Bulwark ממתין עד שקירור השרת יסתיים לפני שליחת בקשות מאומתות יותר. נסה שוב ב-{seconds}s."
+    "rate_limited_action_detail": "Bulwark ממתין עד שקירור השרת יסתיים לפני שליחת בקשות מאומתות יותר. נסה שוב ב-{seconds}s.",
+    "pull_to_refresh": "משוך לרענון",
+    "release_to_refresh": "שחרר לרענון",
+    "refreshing": "מרענן…"
   },
   "notifications": {
     "email_sent": "האימייל נשלח בהצלחה",
@@ -820,7 +828,10 @@
     "zh": "简体中文",
     "fa": "فارسی",
     "farsi": "فارسی",
-    "switch_to_farsi": "עבור לפרסית"
+    "switch_to_farsi": "עבור לפרסית",
+    "mn": "Монгол",
+    "mongolian": "Монгол",
+    "switch_to_mongolian": "עבור למונגולית"
   },
   "settings": {
     "title": "הגדרות",
@@ -1063,7 +1074,6 @@
         "relay_desc": "ברירת מחדל של ממסר Bulwark המתורח. שנה רק אם אתה מארח בעצמך.",
         "relay_locked": "הוגדר על ידי מנהל",
         "relay_locked_desc": "כתובת ממסר הדחיפה הוגדרה על ידי מנהל שלך ולא ניתן לשנות אותה.",
-        "relay_placeholder": "https://notifications.relay.example.com",
         "status_active": "פעיל בהתקן זה",
         "status_inactive": "לא מופעל בהתקן זה",
         "status_unsupported": "דפדפן זה אינו תומך בדחיפה ברשת",
@@ -1074,7 +1084,23 @@
         "confirm_disable_title": "השבת התראות בדפדפן?",
         "confirm_disable_message": "התקן זה יפסיק לקבל התראות כאשר האתר סגור.",
         "dismiss_aria": "בטל הודעת התראות",
-        "ios_hint": "ב־iOS, התקן קודם כל את האתר בהיתוך שלך - Safari מספק Web Push רק לPWA מותקנות."
+        "ios_hint": "ב־iOS, התקן קודם כל את האתר בהיתוך שלך - Safari מספק Web Push רק לPWA מותקנות.",
+        "devices_title": "מכשירים רשומים",
+        "devices_desc": "כל המכשירים הרשומים לקבלת התראות ברקע עבור חשבון זה. ביטול מכשיר מפסיק את הקבלה מיד.",
+        "devices_loading": "טוען מכשירים רשומים…",
+        "devices_empty": "אין מכשירים רשומים להתראות ברקע.",
+        "devices_error": "לא ניתן לטעון את המכשירים הרשומים.",
+        "devices_refresh": "רענון",
+        "device_this": "מכשיר זה",
+        "device_other": "מכשיר אחר",
+        "device_status_active": "מספק התראות",
+        "device_status_inactive": "מעולם לא סיפק התראה",
+        "device_status_unknown": "לא מוכר לממסר הזה",
+        "device_expires": "פג בתאריך {date}",
+        "revoke": "ביטול",
+        "confirm_revoke_title": "לבטל את המכשיר הזה?",
+        "confirm_revoke_message": "הוא יפסיק לקבל התראות ברקע מיד. הפעלה מחדש של פוש באותו מכשיר תרשום אותו מחדש.",
+        "confirm_revoke_message_this": "מכשיר זה יפסיק לקבל התראות ברקע מיד."
       }
     },
     "language_region": {
@@ -1142,6 +1168,12 @@
         "auto": "אוטומטי (מומלץ)",
         "always": "תמיד להוסיף מרווח",
         "edge": "מקצה לקצה"
+      },
+      "plain_text_font": {
+        "label": "גופן טקסט פשוט",
+        "description": "הגופן המשמש להודעות בטקסט פשוט",
+        "mono": "ברוחב קבוע",
+        "sans": "רגיל (כמו היישום)"
       },
       "archive_mode": {
         "label": "ארכיון ב",
@@ -1625,6 +1657,7 @@
       "create_subfolder": "צור תיקיית משנה",
       "reorder": "גרור לשינוי הסדר",
       "reorder_error": "שינוי סדר התיקיות נכשל",
+      "move_error": "העברת התיקייה נכשלה",
       "subfolder_of": "בתוך{name}",
       "subfolder_name": "שם תיקיית משנה",
       "new_folder_name": "שם התיקיה",

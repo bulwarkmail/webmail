@@ -349,7 +349,7 @@ describe('GitHub #118: duplicate subfolder names cause depth-4 orphaning', () =>
     const mailboxes = [
       makeMailbox({ id: 'inbox', name: 'Inbox', role: 'inbox' }),
       makeMailbox({ id: 'sent-role', name: 'Sent', role: 'sent' }),
-      makeMailbox({ id: 'sent-dup', name: 'Sent Mail' }), // root-level duplicate - OK to remove
+      makeMailbox({ id: 'sent-dup', name: 'Sent Mail' }), // root-level, name only *contains* "Sent" - must keep (#771)
       makeMailbox({ id: 'proj', name: 'Projects', parentId: 'inbox' }),
       makeMailbox({ id: 'sent-nested', name: 'Sent', parentId: 'proj' }), // nested - must keep
       makeMailbox({ id: 'report', name: 'Report', parentId: 'sent-nested' }),
@@ -358,8 +358,10 @@ describe('GitHub #118: duplicate subfolder names cause depth-4 orphaning', () =>
     const tree = buildMailboxTree(mailboxes);
     const flat = flattenMailboxTree(tree);
 
-    // "Sent Mail" at root (no parentId) can be deduped - that's fine
-    // But "Sent" nested under Projects must be kept
+    // "Sent Mail" at root is a distinct folder, not a duplicate of role "Sent"
+    expect(flat.find(n => n.id === 'sent-dup')).toBeDefined();
+
+    // "Sent" nested under Projects must be kept
     const sentNested = flat.find(n => n.id === 'sent-nested');
     expect(sentNested).toBeDefined();
     expect(sentNested!.depth).toBe(2);
@@ -367,6 +369,69 @@ describe('GitHub #118: duplicate subfolder names cause depth-4 orphaning', () =>
     const report = flat.find(n => n.id === 'report');
     expect(report).toBeDefined();
     expect(report!.depth).toBe(3);
+  });
+});
+
+describe('GitHub #771: folders whose name contains a role folder name disappear', () => {
+  it('keeps root-level folders that merely contain a role folder name', () => {
+    const mailboxes = [
+      makeMailbox({ id: 'inbox', name: 'Inbox', role: 'inbox' }),
+      makeMailbox({ id: 'archive-role', name: 'Archive', role: 'archive' }),
+      makeMailbox({ id: 'sent-role', name: 'Sent', role: 'sent' }),
+      makeMailbox({ id: 'trash-role', name: 'Trash', role: 'trash' }),
+      makeMailbox({ id: 'old-inbox', name: 'old inbox' }),
+      makeMailbox({ id: 'archive-2025', name: '2025 Archive' }),
+      makeMailbox({ id: 'sent-acct', name: 'Sent to Accounting' }),
+      makeMailbox({ id: 'trashy', name: 'Trashy Podcasts' }),
+    ];
+
+    const rootIds = buildMailboxTree(mailboxes).map(n => n.id);
+
+    expect(rootIds).toContain('old-inbox');
+    expect(rootIds).toContain('archive-2025');
+    expect(rootIds).toContain('sent-acct');
+    expect(rootIds).toContain('trashy');
+  });
+
+  it('keeps short root-level folders that are a substring of a role folder name', () => {
+    // The old bidirectional match also ate folders *shorter* than the role name.
+    const mailboxes = [
+      makeMailbox({ id: 'inbox', name: 'Inbox', role: 'inbox' }),
+      makeMailbox({ id: 'drafts-role', name: 'Drafts', role: 'drafts' }),
+      makeMailbox({ id: 'in', name: 'In' }),
+      makeMailbox({ id: 'draft', name: 'Draft' }),
+    ];
+
+    const rootIds = buildMailboxTree(mailboxes).map(n => n.id);
+
+    expect(rootIds).toContain('in');
+    expect(rootIds).toContain('draft');
+  });
+
+  it('still drops a root-level folder whose name exactly matches a role folder', () => {
+    const mailboxes = [
+      makeMailbox({ id: 'inbox', name: 'Inbox', role: 'inbox' }),
+      makeMailbox({ id: 'archive-role', name: 'Archive', role: 'archive' }),
+      makeMailbox({ id: 'archive-dup', name: 'archive' }),
+    ];
+
+    const rootIds = buildMailboxTree(mailboxes).map(n => n.id);
+
+    expect(rootIds).toContain('archive-role');
+    expect(rootIds).not.toContain('archive-dup');
+  });
+
+  it('scopes exact-name deduplication to the same account', () => {
+    const mailboxes = [
+      makeMailbox({ id: 'inbox-a', name: 'Inbox', role: 'inbox', accountId: 'a' }),
+      makeMailbox({ id: 'archive-a', name: 'Archive', role: 'archive', accountId: 'a' }),
+      // Same name, different account - not a duplicate
+      makeMailbox({ id: 'archive-b', name: 'Archive', accountId: 'b' }),
+    ];
+
+    const rootIds = buildMailboxTree(mailboxes).map(n => n.id);
+
+    expect(rootIds).toContain('archive-b');
   });
 });
 

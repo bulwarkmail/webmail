@@ -80,7 +80,10 @@ export function buildReplyRecipients(
 
   const withEmail = (list: ReplyAddress[] | undefined) => (list ?? []).filter((r) => Boolean(r.email));
 
-  if (isSelfSent(source, ownEmails)) {
+  const replyToList = withEmail(source.replyToAddresses);
+  const externalReplyTo = replyToList.filter((r) => !isOwnAddress(r.email, ownEmails));
+
+  if (!externalReplyTo.length && isSelfSent(source, ownEmails)) {
     const originalTo = withEmail(source.to);
     if (originalTo.length > 0) {
       return {
@@ -90,8 +93,8 @@ export function buildReplyRecipients(
     }
   }
 
-  const replyTarget = withEmail(source.replyToAddresses).length
-    ? withEmail(source.replyToAddresses)
+  const replyTarget = replyToList.length
+    ? replyToList
     : (source.from?.[0]?.email ? [source.from[0]] : []);
 
   if (mode === 'reply') {

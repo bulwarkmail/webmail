@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { logger } from '@/lib/logger';
-import { refreshTokenCookieName, refreshTokenServerCookieName } from '@/lib/oauth/tokens';
-import { exchangeCodeForTokens, buildOAuthParams, getMetadata, getTokenEndpoint } from '@/lib/oauth/token-exchange';
+import {
+  refreshTokenCookieName,
+  refreshTokenServerCookieName,
+  accessTokenCookieName,
+  encodeCachedAccessToken,
+  decodeCachedAccessToken,
+} from '@/lib/oauth/tokens';
+import { exchangeCodeForTokens, buildOAuthParams, getMetadata, getTokenEndpoint, DEFAULT_CLIENT_ID } from '@/lib/oauth/token-exchange';
 import { getCookieOptions } from '@/lib/oauth/cookie-config';
 import { MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
 
@@ -12,6 +18,30 @@ function getSlot(request: NextRequest): number {
   const slot = parseInt(raw, 10);
   if (isNaN(slot) || slot < 0 || slot >= MAX_ACCOUNT_SLOTS) return 0;
   return slot;
+}
+
+type CookieStore = Awaited<ReturnType<typeof cookies>>;
+
+/**
+ * Cache the access token for the slot so a page reload can resume with it.
+ *
+ * Scoped to the token's own lifetime - once it expires the cookie is worthless
+ * and should not linger. A token too large to store is simply not cached.
+ */
+function cacheAccessToken(
+  cookieStore: CookieStore,
+  slot: number,
+  accessToken: string,
+  expiresIn: number,
+): void {
+  const name = accessTokenCookieName(slot);
+  const value = encodeCachedAccessToken(accessToken, expiresIn);
+  if (!value) {
+    // Oversized token: drop any stale entry rather than leaving a mismatch.
+    cookieStore.delete(name);
+    return;
+  }
+  cookieStore.set(name, value, { ...getCookieOptions(), maxAge: expiresIn });
 }
 
 export async function POST(request: NextRequest) {
@@ -37,6 +67,7 @@ export async function POST(request: NextRequest) {
       const cookieName = refreshTokenCookieName(slot);
       cookieStore.set(cookieName, tokens.refresh_token, getCookieOptions());
     }
+    cacheAccessToken(cookieStore, slot, tokens.access_token, tokens.expires_in || 3600);
     // Persist which server entry minted this refresh token so the PUT/DELETE
     // handlers can route the refresh/revocation calls to the right token
     // endpoint without the client having to track it across page loads.
@@ -63,15 +94,38 @@ export async function PUT(request: NextRequest) {
     const serverId = cookieStore.get(refreshTokenServerCookieName(slot))?.value || null;
 
     if (!refreshToken) {
+      cookieStore.delete(accessTokenCookieName(slot));
       return NextResponse.json({ error: 'No refresh token' }, { status: 401 });
     }
 
-    const tokenEndpoint = await getTokenEndpoint(serverId);
+    // A session restore calls this to get its token back, not because the
+    // current one expired. Serving the cached token avoids spending a refresh
+    // the IdP may legitimately reject: Rauthy stamps refresh tokens with
+    // nbf = iat + access_token_lifetime - 60, so refreshing early fails with
+    // "Token is not valid yet" for most of the access token's life (#552).
+    //
+    // `force=true` means the caller was told the current token is no good (a
+    // 401 from JMAP, or a scheduled renewal), so the cache must be skipped.
+    const force = request.nextUrl.searchParams.get('force') === 'true';
+    if (!force) {
+      const cached = decodeCachedAccessToken(cookieStore.get(accessTokenCookieName(slot))?.value);
+      if (cached) {
+        return NextResponse.json({
+          access_token: cached.accessToken,
+          expires_in: cached.expiresIn,
+        });
+      }
+    }
+
+    // The refresh token may have been minted by the password+TOTP login route,
+    // which works without a configured OAuth client by falling back to the
+    // default client id - refreshing must fall back the same way (#873).
+    const tokenEndpoint = await getTokenEndpoint(serverId, { fallbackClientId: DEFAULT_CLIENT_ID });
 
     const params = buildOAuthParams({
       grant_type: 'refresh_token',
       refresh_token: refreshToken,
-    }, serverId);
+    }, serverId, { fallbackClientId: DEFAULT_CLIENT_ID });
 
     const tokenResponse = await fetch(tokenEndpoint, {
       method: 'POST',
@@ -89,6 +143,7 @@ export async function PUT(request: NextRequest) {
       if (status === 400 || status === 401 || status === 403) {
         cookieStore.delete(cookieName);
         cookieStore.delete(refreshTokenServerCookieName(slot));
+        cookieStore.delete(accessTokenCookieName(slot));
         return NextResponse.json({ error: 'Refresh failed' }, { status: 401 });
       }
       return NextResponse.json({ error: 'Token endpoint unavailable' }, { status: 503 });
@@ -105,9 +160,12 @@ export async function PUT(request: NextRequest) {
       cookieStore.set(cookieName, tokens.refresh_token, getCookieOptions());
     }
 
+    const expiresIn = tokens.expires_in || 3600;
+    cacheAccessToken(cookieStore, slot, tokens.access_token, expiresIn);
+
     return NextResponse.json({
       access_token: tokens.access_token,
-      expires_in: tokens.expires_in || 3600,
+      expires_in: expiresIn,
     });
   } catch (error) {
     logger.error('Token refresh error', { error: error instanceof Error ? error.message : 'Unknown error' });
@@ -130,9 +188,9 @@ export async function DELETE(request: NextRequest) {
         if (token) {
           // Best-effort revocation
           try {
-            const metadata = await getMetadata(slotServerId).catch(() => null);
+            const metadata = await getMetadata(slotServerId, { fallbackClientId: DEFAULT_CLIENT_ID }).catch(() => null);
             if (metadata?.revocation_endpoint) {
-              const params = buildOAuthParams({ token, token_type_hint: 'refresh_token' }, slotServerId);
+              const params = buildOAuthParams({ token, token_type_hint: 'refresh_token' }, slotServerId, { fallbackClientId: DEFAULT_CLIENT_ID });
               await fetch(metadata.revocation_endpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -143,6 +201,7 @@ export async function DELETE(request: NextRequest) {
           cookieStore.delete(name);
         }
         cookieStore.delete(serverCookieName);
+        cookieStore.delete(accessTokenCookieName(i));
       }
       return NextResponse.json({ ok: true });
     }
@@ -152,7 +211,7 @@ export async function DELETE(request: NextRequest) {
     const cookieStore = await cookies();
     const refreshToken = cookieStore.get(cookieName)?.value;
     const slotServerId = cookieStore.get(refreshTokenServerCookieName(slot))?.value || null;
-    const metadata = await getMetadata(slotServerId).catch((err) => {
+    const metadata = await getMetadata(slotServerId, { fallbackClientId: DEFAULT_CLIENT_ID }).catch((err) => {
       logger.warn('Failed to discover OAuth metadata during logout', {
         error: err instanceof Error ? err.message : 'Unknown error',
       });
@@ -164,7 +223,7 @@ export async function DELETE(request: NextRequest) {
         const params = buildOAuthParams({
           token: refreshToken,
           token_type_hint: 'refresh_token',
-        }, slotServerId);
+        }, slotServerId, { fallbackClientId: DEFAULT_CLIENT_ID });
 
         try {
           const revocationResponse = await fetch(metadata.revocation_endpoint, {
@@ -183,6 +242,7 @@ export async function DELETE(request: NextRequest) {
       cookieStore.delete(cookieName);
     }
     cookieStore.delete(refreshTokenServerCookieName(slot));
+    cookieStore.delete(accessTokenCookieName(slot));
 
     let end_session_url: string | undefined;
     if (metadata?.end_session_endpoint) {

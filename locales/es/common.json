@@ -300,6 +300,10 @@
     "move": "Mover",
     "print": "Imprimir",
     "view_source": "Ver código fuente",
+
+    "fullscreen": "Pantalla completa",
+
+    "exit_fullscreen": "Salir de pantalla completa",
     "export_email": "Exportar como .eml",
     "forward_as_attachment": "Forward as attachment",
     "import_email": "Importar .eml o .zip",
@@ -574,6 +578,7 @@
     "read_receipt_on": "Confirmación de lectura solicitada (haz clic para desactivar)",
     "read_receipt_off": "Solicitar confirmación de lectura",
     "new_message": "Nuevo Mensaje",
+    "signature_edit_hint": "Haz doble clic para editar la firma",
     "reply": "Responder",
     "reply_all": "Responder a Todos",
     "forward": "Reenviar",
@@ -748,7 +753,10 @@
     "rate_limited_title": "La autenticación del servidor está limitada temporalmente.",
     "rate_limited_detail": "Bulwark ha pausado las solicitudes en segundo plano para evitar un bloqueo. Reintentando en {seconds}s.",
     "rate_limited_action_title": "Solicitud pausada para evitar el bloqueo.",
-    "rate_limited_action_detail": "Bulwark está esperando a que termine el enfriamiento del servidor antes de enviar más solicitudes autenticadas. Inténtalo de nuevo en {seconds}s."
+    "rate_limited_action_detail": "Bulwark está esperando a que termine el enfriamiento del servidor antes de enviar más solicitudes autenticadas. Inténtalo de nuevo en {seconds}s.",
+    "pull_to_refresh": "Desliza para actualizar",
+    "release_to_refresh": "Suelta para actualizar",
+    "refreshing": "Actualizando…"
   },
   "notifications": {
     "email_sent": "Correo enviado exitosamente",
@@ -855,7 +863,10 @@
     "zh": "简体中文",
     "fa": "فارسی",
     "farsi": "فارسی",
-    "switch_to_farsi": "Cambiar a farsi"
+    "switch_to_farsi": "Cambiar a farsi",
+    "mn": "Монгол",
+    "mongolian": "Монгол",
+    "switch_to_mongolian": "Cambiar a mongol"
   },
   "settings": {
     "title": "Configuración",
@@ -1104,12 +1115,27 @@
         "relay_label": "Relay push",
         "relay_locked": "Establecido por el administrador",
         "relay_locked_desc": "La URL del relay push ha sido establecida por tu administrador y no se puede cambiar.",
-        "relay_placeholder": "https://notifications.relay.example.com",
         "status_active": "Activo en este dispositivo",
         "status_busy": "Trabajando…",
         "status_inactive": "No habilitado en este dispositivo",
         "status_unsupported": "Este navegador no admite Web Push",
-        "title": "Notificaciones en segundo plano"
+        "title": "Notificaciones en segundo plano",
+        "devices_title": "Dispositivos registrados",
+        "devices_desc": "Todos los dispositivos registrados para recibir notificaciones en segundo plano de esta cuenta. Al revocar uno, deja de recibirlas de inmediato.",
+        "devices_loading": "Cargando dispositivos registrados…",
+        "devices_empty": "No hay dispositivos registrados para notificaciones en segundo plano.",
+        "devices_error": "No se pudieron cargar los dispositivos registrados.",
+        "devices_refresh": "Actualizar",
+        "device_this": "Este dispositivo",
+        "device_other": "Otro dispositivo",
+        "device_status_active": "Entregando notificaciones",
+        "device_status_inactive": "Nunca ha entregado una notificación",
+        "device_status_unknown": "Desconocido para este relé",
+        "device_expires": "Caduca el {date}",
+        "revoke": "Revocar",
+        "confirm_revoke_title": "¿Revocar este dispositivo?",
+        "confirm_revoke_message": "Dejará de recibir notificaciones en segundo plano de inmediato. Si vuelves a activar las notificaciones push en ese dispositivo, se registrará de nuevo.",
+        "confirm_revoke_message_this": "Este dispositivo dejará de recibir notificaciones en segundo plano de inmediato."
       }
     },
     "language_region": {
@@ -1188,6 +1214,12 @@
         "auto": "Automático (recomendado)",
         "always": "Añadir espaciado siempre",
         "edge": "De borde a borde"
+      },
+      "plain_text_font": {
+        "label": "Fuente de texto sin formato",
+        "description": "Fuente utilizada para los correos de texto sin formato",
+        "mono": "Monoespaciada",
+        "sans": "Normal (igual que la aplicación)"
       },
       "archive_mode": {
         "label": "Archivar en",
@@ -1661,6 +1693,7 @@
       "create_subfolder": "Crear subcarpeta",
       "reorder": "Arrastra para reordenar",
       "reorder_error": "No se pudieron reordenar las carpetas",
+      "move_error": "No se pudo mover la carpeta",
       "subfolder_of": "Dentro de {name}",
       "subfolder_name": "Nombre de la subcarpeta",
       "new_folder_name": "Nombre de la carpeta",

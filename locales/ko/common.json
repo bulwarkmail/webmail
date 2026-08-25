@@ -300,6 +300,10 @@
     "move": "이동",
     "print": "인쇄",
     "view_source": "원본 보기",
+
+    "fullscreen": "전체 화면",
+
+    "exit_fullscreen": "전체 화면 종료",
     "export_email": ".eml 파일로 내보내기",
     "forward_as_attachment": "Forward as attachment",
     "import_email": ".eml 또는 .zip 가져오기",
@@ -574,6 +578,7 @@
     "read_receipt_on": "읽음 확인 요청됨 (클릭하여 해제)",
     "read_receipt_off": "읽음 확인 요청",
     "new_message": "새 메시지",
+    "signature_edit_hint": "서명을 편집하려면 두 번 클릭하세요",
     "reply": "답장",
     "reply_all": "전체 답장",
     "forward": "전달",
@@ -748,7 +753,10 @@
     "rate_limited_title": "서버 인증이 일시적으로 제한되었어요.",
     "rate_limited_detail": "Bulwark가 계정 잠금을 방지하기 위해 백그라운드 요청을 일시 중지했어요. {seconds}초 후에 다시 시도할게요.",
     "rate_limited_action_title": "계정 잠금 방지를 위해 요청이 일시 중지되었어요.",
-    "rate_limited_action_detail": "추가 인증 요청을 보내기 전에 서버의 쿨다운이 끝날 때까지 대기 중이에요. {seconds}초 후에 다시 시도해 주세요."
+    "rate_limited_action_detail": "추가 인증 요청을 보내기 전에 서버의 쿨다운이 끝날 때까지 대기 중이에요. {seconds}초 후에 다시 시도해 주세요.",
+    "pull_to_refresh": "당겨서 새로고침",
+    "release_to_refresh": "놓으면 새로고침",
+    "refreshing": "새로고침 중…"
   },
   "notifications": {
     "email_sent": "메일이 전송되었어요",
@@ -855,7 +863,10 @@
     "zh": "简体中文",
     "fa": "فارسی",
     "farsi": "فارسی",
-    "switch_to_farsi": "페르시아어로 전환"
+    "switch_to_farsi": "페르시아어로 전환",
+    "mn": "Монгол",
+    "mongolian": "Монгол",
+    "switch_to_mongolian": "몽골어로 전환"
   },
   "settings": {
     "title": "설정",
@@ -1104,12 +1115,27 @@
         "relay_label": "푸시 릴레이",
         "relay_locked": "관리자에 의해 설정됨",
         "relay_locked_desc": "푸시 릴레이 URL은 관리자가 설정했으며 변경할 수 없어요.",
-        "relay_placeholder": "https://notifications.relay.example.com",
         "status_active": "이 기기에서 활성",
         "status_busy": "처리 중…",
         "status_inactive": "이 기기에서 활성화되지 않음",
         "status_unsupported": "이 브라우저는 Web Push를 지원하지 않습니다",
-        "title": "백그라운드 알림"
+        "title": "백그라운드 알림",
+        "devices_title": "등록된 기기",
+        "devices_desc": "이 계정의 백그라운드 알림을 받도록 등록된 모든 기기입니다. 해지하면 해당 기기는 즉시 수신을 멈추니다.",
+        "devices_loading": "등록된 기기를 불러오는 중…",
+        "devices_empty": "백그라운드 알림에 등록된 기기가 없습니다.",
+        "devices_error": "등록된 기기를 불러오지 못했습니다.",
+        "devices_refresh": "새로 고침",
+        "device_this": "이 기기",
+        "device_other": "다른 기기",
+        "device_status_active": "알림 전달 중",
+        "device_status_inactive": "알림을 전달한 적 없음",
+        "device_status_unknown": "이 릴레이에서 알 수 없음",
+        "device_expires": "{date} 만료",
+        "revoke": "해지",
+        "confirm_revoke_title": "이 기기를 해지할까요?",
+        "confirm_revoke_message": "즉시 백그라운드 알림 수신을 멈추게 됩니다. 해당 기기에서 푸시를 다시 켜면 새로 등록됩니다.",
+        "confirm_revoke_message_this": "이 기기는 즉시 백그라운드 알림 수신을 멈추게 됩니다."
       }
     },
     "language_region": {
@@ -1188,6 +1214,12 @@
         "auto": "자동 (권장)",
         "always": "항상 여백 추가",
         "edge": "가장자리까지 채우기"
+      },
+      "plain_text_font": {
+        "label": "일반 텍스트 글꼴",
+        "description": "일반 텍스트 이메일에 사용되는 글꼴",
+        "mono": "고정폭",
+        "sans": "기본(앱과 동일)"
       },
       "archive_mode": {
         "label": "보관 방식",
@@ -1661,6 +1693,7 @@
       "create_subfolder": "하위 폴더 만들기",
       "reorder": "드래그하여 순서 변경",
       "reorder_error": "폴더 순서 변경에 실패했습니다",
+      "move_error": "폴더 이동에 실패했습니다",
       "subfolder_of": "{name} 내부에 생성",
       "subfolder_name": "하위 폴더 이름",
       "new_folder_name": "폴더 이름",

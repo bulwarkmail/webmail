@@ -19,6 +19,7 @@ import { TableHeader } from "@tiptap/extension-table-header";
 import { TableCell } from "@tiptap/extension-table-cell";
 import { QuotedHtml, serializeEditorContent } from "@/components/email/quoted-html";
 import { SignatureBlock } from "@/components/email/signature-block";
+import { styledBlockAttributes } from "@/components/email/styled-block-attributes";
 import { cn } from "@/lib/utils";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useTranslations } from "next-intl";
@@ -52,33 +53,6 @@ export interface InlineImageUpload {
   src: string;
   cid?: string;
 }
-
-// Pasted email content (signatures, replies, quoted text) commonly carries
-// inline styles on block elements. StarterKit's default Paragraph/Heading
-// drop unknown attributes; extend them to round-trip `style` and `class` so
-// signature formatting survives the editor.
-const styledBlockAttributes = {
-  style: {
-    default: null as string | null,
-    parseHTML: (el: HTMLElement) => el.getAttribute("style"),
-    renderHTML: (attrs: Record<string, string | null>) =>
-      attrs.style ? { style: attrs.style } : {},
-  },
-  class: {
-    default: null as string | null,
-    parseHTML: (el: HTMLElement) => el.getAttribute("class"),
-    renderHTML: (attrs: Record<string, string | null>) =>
-      attrs.class ? { class: attrs.class } : {},
-  },
-  "data-signature-block": {
-    default: null as string | null,
-    parseHTML: (el: HTMLElement) => el.getAttribute("data-signature-block"),
-    renderHTML: (attrs: Record<string, string | null>) =>
-      attrs["data-signature-block"]
-        ? { "data-signature-block": attrs["data-signature-block"] }
-        : {},
-  },
-};
 
 const StyledParagraph = Paragraph.extend({
   addAttributes() {
@@ -198,6 +172,7 @@ export function RichTextEditor({
   onEditorReady,
 }: RichTextEditorProps) {
   const rtlEditingSupport = useSettingsStore((st) => st.rtlEditingSupport);
+  const tComposer = useTranslations("email_composer");
   const onImageUploadRef = React.useRef(onImageUpload);
   onImageUploadRef.current = onImageUpload;
   const onEditorReadyRef = React.useRef(onEditorReady);
@@ -253,8 +228,9 @@ export function RichTextEditor({
       QuotedHtml,
       // Identity signature - held verbatim as a non-editable atomic node so
       // rich/branded signatures keep their inline styling in the editor and
-      // in the sent mail (see signature-block.ts).
-      SignatureBlock,
+      // in the sent mail (see signature-block.ts). Double-click unlocks it
+      // into editable content (#822).
+      SignatureBlock.configure({ editHint: tComposer('signature_edit_hint') }),
       TextDirection,
     ],
     content,

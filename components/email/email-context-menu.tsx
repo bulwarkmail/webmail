@@ -31,7 +31,6 @@ import {
   ShieldCheck,
   EditIcon,
   CalendarClock,
-  XCircle,
   Paperclip,
   Link as LinkIcon,
   MessagesSquare,
@@ -74,7 +73,6 @@ interface EmailContextMenuProps {
   onMarkAsSpam?: () => void;
   onUndoSpam?: () => void;
   onEditDraft?: () => void;
-  onCancelScheduled?: () => void;
   onCancelScheduledForEdit?: () => void;
   onRescheduleScheduled?: () => void;
   // Batch actions
@@ -135,7 +133,6 @@ export function EmailContextMenu({
   onBatchMarkAsSpam,
   onBatchUndoSpam,
   onEditDraft,
-  onCancelScheduled,
   onCancelScheduledForEdit,
   onRescheduleScheduled,
 }: EmailContextMenuProps) {
@@ -209,12 +206,6 @@ export function EmailContextMenu({
             label={t("reschedule_send")}
             onClick={() => handleAction(onRescheduleScheduled!)}
             disabled={!onRescheduleScheduled}
-          />
-          <ContextMenuItem
-            icon={XCircle}
-            label={t("cancel_scheduled_send")}
-            onClick={() => handleAction(onCancelScheduled!)}
-            disabled={!onCancelScheduled}
           />
           <ContextMenuItem
             icon={EditIcon}
@@ -372,6 +363,7 @@ export function EmailContextMenu({
           label={isStarred ? t("unstar") : t("star")}
           onClick={() => handleAction(onToggleStar!)}
           disabled={!onToggleStar}
+          testId={isStarred ? "ctx-unstar" : "ctx-star"}
         />
       )}
 

@@ -10,6 +10,7 @@ import { recordLogin } from '@/lib/telemetry/login-tracker';
 import { parseJmapServers, findServerByUrl, findServerById } from '@/lib/admin/jmap-servers';
 import { MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
 import { generateCodeVerifier, generateCodeChallenge } from '@/lib/oauth/pkce';
+import { DEFAULT_CLIENT_ID } from '@/lib/oauth/token-exchange';
 
 /**
  * Exchange a password + (optional) TOTP code for OAuth tokens.
@@ -30,12 +31,6 @@ import { generateCodeVerifier, generateCodeChallenge } from '@/lib/oauth/pkce';
  * Token-based auth also survives TOTP rotation, unlike basic auth which embeds
  * the (≈30s) code in every request.
  */
-
-// Fallback OAuth client id used when no client is configured. Stalwart accepts
-// any client id unless `require_client_registration` is enabled (default off);
-// when it is enabled the admin must configure `oauthClientId` with this
-// redirect URI registered.
-const DEFAULT_CLIENT_ID = 'bulwark-webmail';
 
 interface LoginResult {
   type?: string;

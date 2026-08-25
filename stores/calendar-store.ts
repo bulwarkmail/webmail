@@ -42,6 +42,42 @@ function stripLocalAccountPrefix(id: string, localAccountId?: string): string {
   return id.startsWith(prefix) ? id.slice(prefix.length) : id;
 }
 
+/** The raw identity of a store id, independent of any `<localAccountId>::` prefix. */
+function rawIdentityOf(id: string): string {
+  const idx = id.indexOf(CROSS_ACCOUNT_ID_DELIMITER);
+  return idx >= 0 ? id.slice(idx + CROSS_ACCOUNT_ID_DELIMITER.length) : id;
+}
+
+/**
+ * Reconcile persisted selectedCalendarIds against a freshly fetched calendars
+ * list. A selected id can be stale in id-*form* (not existence): the raw->
+ * namespaced transition (aggregation switched on, an account switch, or a
+ * just-created calendar added with its raw id) changes the id string while the
+ * calendar is the same. Remap by raw identity so the selection survives instead
+ * of silently resetting to "all". Keeps BIRTHDAY_CALENDAR_ID; drops ids that
+ * resolve to no calendar.
+ */
+export function reconcileSelectedIds(selectedCalendarIds: string[], calendars: Calendar[]): string[] {
+  const byStoreId = new Set(calendars.map((c) => c.id));
+  const rawToStoreId = new Map<string, string>();
+  for (const c of calendars) {
+    const raw = c.originalId ?? stripLocalAccountPrefix(c.id, c.localAccountId);
+    if (!rawToStoreId.has(raw)) rawToStoreId.set(raw, c.id);
+  }
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const id of selectedCalendarIds) {
+    let mapped: string | undefined;
+    if (id === BIRTHDAY_CALENDAR_ID || byStoreId.has(id)) mapped = id;
+    else mapped = rawToStoreId.get(rawIdentityOf(id));
+    if (mapped && !seen.has(mapped)) {
+      out.push(mapped);
+      seen.add(mapped);
+    }
+  }
+  return out;
+}
+
 // In-flight refresh dedup. Concurrent callers (auto-interval +
 // manual refresh, two account-switch reloads, etc.) share the same
 // promise instead of double-fetching and racing the diff/import phase.
@@ -56,10 +92,11 @@ export function isCalendarViewMode(value: unknown): value is CalendarViewMode {
 }
 
 /**
- * Prefix used to namespace calendar/event IDs that belong to a non-active
- * JMAP account when the Pro shell aggregates across accounts. The active
- * account's IDs are left untouched so existing single-account code paths
- * (links, deep-links, JMAP mutations) keep working unchanged.
+ * Prefix used to namespace calendar/event IDs when the Pro shell aggregates
+ * across accounts. EVERY aggregated account is namespaced (including the active
+ * one) so an id stably identifies (account, entity) regardless of which account
+ * is active - otherwise switching accounts flipped the id form. Single-account
+ * (non-aggregated) code paths carry no localAccountId and keep raw ids.
  */
 const CROSS_ACCOUNT_ID_DELIMITER = '::';
 
@@ -67,14 +104,18 @@ function buildCrossAccountIdPrefix(localAccountId: string): string {
   return `${localAccountId}${CROSS_ACCOUNT_ID_DELIMITER}`;
 }
 
+// EVERY aggregated account is namespaced, including the active one. Leaving the
+// active account's IDs raw made an entity's ID depend on *which* account is
+// active, so switching accounts flipped the ID form and invalidated persisted
+// references (selectedCalendarIds, colors, subscriptions) - the account-switch
+// bug. The invariant is now: an entity is namespaced iff it carries a
+// `localAccountId`; `originalId` always holds the raw JMAP ID. Mutation/consumer
+// code already resolves the raw ID via `originalId || stripLocalAccountPrefix`,
+// so it keeps working unchanged.
 function prefixCalendarsWithLocalAccount(
   calendars: Calendar[],
   localAccountId: string,
-  isActiveAccount: boolean,
 ): Calendar[] {
-  if (isActiveAccount) {
-    return calendars.map((cal) => ({ ...cal, localAccountId }));
-  }
   const prefix = buildCrossAccountIdPrefix(localAccountId);
   // Preserve each calendar's original `isShared` flag - it distinguishes
   // the user's own calendars on the other account from calendars shared
@@ -83,6 +124,7 @@ function prefixCalendarsWithLocalAccount(
   return calendars.map((cal) => ({
     ...cal,
     id: `${prefix}${cal.id}`,
+    originalId: cal.originalId ?? cal.id,
     localAccountId,
   }));
 }
@@ -90,15 +132,12 @@ function prefixCalendarsWithLocalAccount(
 function prefixEventsWithLocalAccount(
   events: CalendarEvent[],
   localAccountId: string,
-  isActiveAccount: boolean,
 ): CalendarEvent[] {
-  if (isActiveAccount) {
-    return events.map((event) => ({ ...event, localAccountId }));
-  }
   const prefix = buildCrossAccountIdPrefix(localAccountId);
   return events.map((event) => ({
     ...event,
     id: `${prefix}${event.id}`,
+    originalId: event.originalId ?? event.id,
     localAccountId,
     calendarIds: event.calendarIds
       ? Object.fromEntries(
@@ -143,15 +182,21 @@ function mapServerEventToStoreEvent(
     .find((calendar): calendar is Calendar => Boolean(calendar));
   const resolvedAccountId = matchedCalendar?.accountId || targetAccountId;
   const isShared = matchedCalendar?.isShared || false;
+  // Namespace the event id with the owning account when the store is aggregated
+  // (the matched calendar carries a localAccountId). `calendarIds` are already
+  // mapped to store ids above; `originalId` keeps the raw id for mutations.
+  const localAccountId = matchedCalendar?.localAccountId;
+  const baseId = isShared && resolvedAccountId ? `${resolvedAccountId}:${event.id}` : event.id;
 
   return {
     ...event,
-    id: isShared && resolvedAccountId ? `${resolvedAccountId}:${event.id}` : event.id,
+    id: localAccountId ? `${localAccountId}${CROSS_ACCOUNT_ID_DELIMITER}${baseId}` : baseId,
     originalId: event.id,
     originalCalendarIds: event.calendarIds,
     calendarIds: mappedCalendarIds,
     accountId: resolvedAccountId,
     accountName: matchedCalendar?.accountName,
+    localAccountId,
     isShared,
   };
 }
@@ -224,8 +269,8 @@ interface CalendarStore {
   setSupported: (supported: boolean) => void;
   fetchCalendars: (client: IJMAPClient) => Promise<void>;
   fetchEvents: (client: IJMAPClient, start: string, end: string) => Promise<void>;
-  fetchAllAccountsCalendars: (accounts: CalendarAccountClient[], activeLocalAccountId: string) => Promise<void>;
-  fetchAllAccountsEvents: (accounts: CalendarAccountClient[], activeLocalAccountId: string, start: string, end: string) => Promise<void>;
+  fetchAllAccountsCalendars: (accounts: CalendarAccountClient[]) => Promise<void>;
+  fetchAllAccountsEvents: (accounts: CalendarAccountClient[], start: string, end: string) => Promise<void>;
   createEvent: (client: IJMAPClient, event: Partial<CalendarEvent>, sendSchedulingMessages?: boolean) => Promise<CalendarEvent | null>;
   updateEvent: (client: IJMAPClient, id: string, updates: Partial<CalendarEvent>, sendSchedulingMessages?: boolean) => Promise<void>;
   deleteEvent: (client: IJMAPClient, id: string, sendSchedulingMessages?: boolean) => Promise<void>;
@@ -284,12 +329,14 @@ export const useCalendarStore = create<CalendarStore>()(
         try {
           const calendars = await client.getAllCalendars();
           const { selectedCalendarIds } = get();
-          const validIds = calendars.map(c => c.id);
-          const stillValid = selectedCalendarIds.filter(id => validIds.includes(id) || id === BIRTHDAY_CALENDAR_ID);
+          const stillValid = reconcileSelectedIds(selectedCalendarIds, calendars);
+          // Default the visible selection to event calendars only - tasks-only
+          // calendars stay out of the event grid.
+          const defaultSelected = calendars.filter(c => !c.isTasksOnly).map(c => c.id);
           set({
             calendars,
             isLoading: false,
-            selectedCalendarIds: stillValid.length > 0 ? stillValid : validIds,
+            selectedCalendarIds: stillValid.length > 0 ? stillValid : defaultSelected,
           });
         } catch (error) {
           debug.error('Failed to fetch calendars:', error);
@@ -332,18 +379,14 @@ export const useCalendarStore = create<CalendarStore>()(
         }
       },
 
-      fetchAllAccountsCalendars: async (accounts, activeLocalAccountId) => {
+      fetchAllAccountsCalendars: async (accounts) => {
         set({ isLoading: true, error: null });
         try {
           const results = await Promise.all(
             accounts.map(async ({ client, localAccountId }) => {
               try {
                 const list = await client.getAllCalendars();
-                return prefixCalendarsWithLocalAccount(
-                  list,
-                  localAccountId,
-                  localAccountId === activeLocalAccountId,
-                );
+                return prefixCalendarsWithLocalAccount(list, localAccountId);
               } catch (error) {
                 debug.error(`Failed to fetch calendars for account ${localAccountId}:`, error);
                 return [] as Calendar[];
@@ -352,12 +395,11 @@ export const useCalendarStore = create<CalendarStore>()(
           );
           const calendars = results.flat();
           const { selectedCalendarIds } = get();
-          const validIds = calendars.map(c => c.id);
-          const stillValid = selectedCalendarIds.filter(id => validIds.includes(id) || id === BIRTHDAY_CALENDAR_ID);
+          const stillValid = reconcileSelectedIds(selectedCalendarIds, calendars);
           set({
             calendars,
             isLoading: false,
-            selectedCalendarIds: stillValid.length > 0 ? stillValid : validIds,
+            selectedCalendarIds: stillValid.length > 0 ? stillValid : calendars.map(c => c.id),
           });
         } catch (error) {
           debug.error('Failed to fetch all-account calendars:', error);
@@ -365,7 +407,7 @@ export const useCalendarStore = create<CalendarStore>()(
         }
       },
 
-      fetchAllAccountsEvents: async (accounts, activeLocalAccountId, start, end) => {
+      fetchAllAccountsEvents: async (accounts, start, end) => {
         set({ isLoadingEvents: true, error: null });
         try {
           const results = await Promise.all(
@@ -376,11 +418,7 @@ export const useCalendarStore = create<CalendarStore>()(
                   typeof e.start === 'string' && e.start && !isNaN(parseISO(e.start).getTime())
                 );
                 const expanded = expandRecurringEvents(valid, start, end);
-                return prefixEventsWithLocalAccount(
-                  expanded,
-                  localAccountId,
-                  localAccountId === activeLocalAccountId,
-                );
+                return prefixEventsWithLocalAccount(expanded, localAccountId);
               } catch (error) {
                 debug.error(`Failed to fetch events for account ${localAccountId}:`, error);
                 return [] as CalendarEvent[];
@@ -884,6 +922,8 @@ export const useCalendarStore = create<CalendarStore>()(
         set({ error: null });
         try {
           const created = await client.createCalendar(calendar);
+          // Added with its raw id; the next aggregated refetch namespaces it and
+          // reconcileSelectedIds() remaps the selection so it stays visible.
           set((state) => ({
             calendars: [...state.calendars, created],
             selectedCalendarIds: [...state.selectedCalendarIds, created.id],
@@ -997,7 +1037,20 @@ export const useCalendarStore = create<CalendarStore>()(
 
       // iCal subscriptions
       isSubscriptionCalendar: (calendarId) => {
-        return get().icalSubscriptions.some(s => s.calendarId === calendarId);
+        const subs = get().icalSubscriptions;
+        // Fast path: exact match (single-account, or a sub stored with the same
+        // id form as the query).
+        if (subs.some((s) => s.calendarId === calendarId)) return true;
+        // Aggregated: the query is a namespaced store id while subs store the raw
+        // JMAP calendar id. Resolve the calendar and match by raw id, scoped to
+        // the owning JMAP account so raw ids that collide across accounts (e.g.
+        // Stalwart's "b"/"c") don't cause false positives.
+        const cal = get().calendars.find((c) => c.id === calendarId);
+        if (!cal) return false;
+        const rawId = cal.originalId ?? stripLocalAccountPrefix(cal.id, cal.localAccountId);
+        return subs.some(
+          (s) => s.calendarId === rawId && (!s.accountId || !cal.accountId || s.accountId === cal.accountId),
+        );
       },
 
       addICalSubscription: async (client, url, name, color, refreshInterval = 60) => {

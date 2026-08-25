@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { ACCOUNTS } from './helpers/config';
+import { ACCOUNTS, GROUP } from './helpers/config';
 import { sendMail } from './helpers/smtp';
 import { JmapClient } from './helpers/jmap';
 import {
@@ -31,13 +31,17 @@ const subj = (l: string) => `IT ${l} ${Date.now()}-${seq++}`;
 
 test.describe('Shared folder actions', () => {
   let ja: JmapClient; // owner (alice)
+  let jc: JmapClient; // grantee + member of the team group account
   let sharedId: string;
+  let teamAccountId: string;
 
   test.beforeEach(async () => {
     ja = await JmapClient.connect(alice.email, alice.password);
-    const jc = await JmapClient.connect(carol.email, carol.password);
+    jc = await JmapClient.connect(carol.email, carol.password);
+    teamAccountId = jc.accountIdByName(GROUP.team.email);
     await ja.reset();
     await jc.reset();
+    await jc.reset(teamAccountId);
     // Delegate a custom folder + Trash + Junk to carol.
     sharedId = await ja.createSharedFolder(SHARED, carol.email);
     await ja.shareMailboxByRole('trash', carol.email);
@@ -63,6 +67,74 @@ test.describe('Shared folder actions', () => {
     await openFolder(page, { name: SHARED, shared: true });
     await forceSync(page);
     await expectEmailVisible(page, s);
+  });
+
+  test('group folder create, rename, and delete stay in the group account', async ({ page }) => {
+    const rootName = `GroupRoot-${Date.now()}`;
+    const childName = `${rootName}-child`;
+    const renamed = `${childName}-renamed`;
+
+    await login(page, carol);
+    await expandSharedFolders(page, GROUP.team.email);
+
+    const groupHeader = page.locator(
+      `[data-testid="section-shared-account"][data-section-name="${GROUP.team.email}"]`,
+    );
+    await groupHeader.click({ button: 'right' });
+    await page.getByTestId('mailbox-new-folder').click();
+    await page.getByRole('dialog').getByRole('textbox').fill(rootName);
+    await page.getByRole('dialog').getByRole('textbox').press('Enter');
+
+    const rootRow = folderRow(page, { name: rootName, shared: true }).first();
+    await expect(rootRow).toBeVisible();
+    await expect.poll(
+      async () => await jc.mailboxByName(rootName, teamAccountId),
+      { timeout: 30000 },
+    ).toMatchObject({ parentId: null });
+    const rootId = (await jc.mailboxByName(rootName, teamAccountId))!.id;
+
+    await rootRow.click({ button: 'right' });
+    await page.getByTestId('mailbox-new-subfolder').click();
+    const dialog = page.getByRole('dialog');
+    await dialog.getByRole('textbox').fill(childName);
+    await dialog.getByRole('textbox').press('Enter');
+
+    await expect(rootRow.getByTestId('folder-expand-toggle')).toBeVisible();
+    const childRow = folderRow(page, { name: childName, shared: true }).first();
+    // The prompt closes before its async submit handler finishes. The mailbox
+    // refetch can therefore replace the row just as the first expand click
+    // lands; retry the user gesture until the freshly fetched child is visible.
+    await expect(async () => {
+      if (!(await childRow.isVisible())) {
+        await rootRow.getByTestId('folder-expand-toggle').click();
+      }
+      await expect(childRow).toBeVisible({ timeout: 2000 });
+    }).toPass({ timeout: 20000 });
+    await expect.poll(async () => await jc.mailboxByName(childName, teamAccountId), { timeout: 30000 })
+      .toMatchObject({ parentId: rootId });
+
+    await childRow.click({ button: 'right' });
+    await page.getByTestId('mailbox-rename').click();
+    await page.getByRole('dialog').getByRole('textbox').fill(renamed);
+    await page.getByRole('dialog').getByRole('textbox').press('Enter');
+    const renamedRow = folderRow(page, { name: renamed, shared: true }).first();
+    await expect(renamedRow).toBeVisible();
+    await expect.poll(async () => await jc.mailboxByName(renamed, teamAccountId), { timeout: 30000 })
+      .toMatchObject({ parentId: rootId });
+
+    await renamedRow.click({ button: 'right' });
+    await page.getByTestId('mailbox-delete').click();
+    await page.getByRole('alertdialog').getByRole('button').last().click();
+    await expect(renamedRow).toHaveCount(0);
+    await expect.poll(async () => await jc.mailboxByName(renamed, teamAccountId), { timeout: 30000 })
+      .toBeUndefined();
+
+    await rootRow.click({ button: 'right' });
+    await page.getByTestId('mailbox-delete').click();
+    await page.getByRole('alertdialog').getByRole('button').last().click();
+    await expect(rootRow).toHaveCount(0);
+    await expect.poll(async () => await jc.mailboxByName(rootName, teamAccountId), { timeout: 30000 })
+      .toBeUndefined();
   });
 
   test('mark read/unread in a shared folder updates its counter', async ({ page }) => {

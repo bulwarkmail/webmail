@@ -775,6 +775,155 @@ describe("vCard 4.0 parsing (issue #289)", () => {
   });
 });
 
+describe("anniversary dates (issue #224)", () => {
+  const parseOne = (...props: string[]) =>
+    parseVCard(["BEGIN:VCARD", "VERSION:4.0", "FN:Test Person", ...props, "END:VCARD"].join("\r\n"))[0];
+
+  it("parses BDAY into a structured PartialDate, not a raw string", () => {
+    // JSContact rejects a string date, which is why imported birthdays used
+    // to disappear once they reached the server.
+    const card = parseOne("BDAY:19850412");
+    const birth = Object.values(card.anniversaries || {}).find(a => a.kind === "birth");
+    expect(birth?.date).toEqual({ year: 1985, month: 4, day: 12 });
+  });
+
+  it.each([
+    ["BDAY:1985-04-12", { year: 1985, month: 4, day: 12 }],
+    ["BDAY:19850412T232050Z", { year: 1985, month: 4, day: 12 }],
+    ["BDAY:1985-04-12T00:00:00Z", { year: 1985, month: 4, day: 12 }],
+    ["BDAY:--0412", { month: 4, day: 12 }],
+    ["BDAY:--04-12", { month: 4, day: 12 }],
+    ["BDAY:--04", { month: 4 }],
+    ["BDAY:---12", { day: 12 }],
+    ["BDAY:1985-04", { year: 1985, month: 4 }],
+    ["BDAY:1985", { year: 1985 }],
+  ])("parses %s", (prop, expected) => {
+    const card = parseOne(prop);
+    expect(Object.values(card.anniversaries || {})[0]?.date).toEqual(expected);
+  });
+
+  it.each([
+    "BDAY;VALUE=text:circa 1800",
+    "BDAY:not-a-date",
+    "BDAY:1985-13-01",
+    "BDAY:",
+  ])("drops the unrepresentable date in %s", (prop) => {
+    expect(parseOne(prop).anniversaries).toBeUndefined();
+  });
+
+  it("keeps BDAY and ANNIVERSARY side by side instead of overwriting", () => {
+    const card = parseOne("ANNIVERSARY:20100601", "BDAY:19850412");
+    const kinds = Object.values(card.anniversaries || {}).map(a => a.kind);
+    expect(kinds).toEqual(expect.arrayContaining(["wedding", "birth"]));
+    expect(Object.keys(card.anniversaries || {})).toHaveLength(2);
+  });
+
+  it("round-trips a birthday through generateVCard", () => {
+    const exported = generateVCard([parseOne("BDAY:19850412")]);
+    expect(exported).toContain("BDAY:1985-04-12");
+    const reparsed = parseVCard(exported)[0];
+    expect(Object.values(reparsed.anniversaries || {})[0]?.date).toEqual({
+      year: 1985, month: 4, day: 12,
+    });
+  });
+
+  it("round-trips a day/month-only birthday", () => {
+    const exported = generateVCard([parseOne("BDAY:--0412")]);
+    expect(exported).toContain("BDAY:--04-12");
+    expect(Object.values(parseVCard(exported)[0].anniversaries || {})[0]?.date)
+      .toEqual({ month: 4, day: 12 });
+  });
+});
+
+describe("vendor extensions (issue #224)", () => {
+  const parseOne = (...props: string[]) =>
+    parseVCard(["BEGIN:VCARD", "VERSION:3.0", "FN:Test Person", ...props, "END:VCARD"].join("\r\n"))[0];
+
+  it("imports X-ANDROID-CUSTOM nicknames", () => {
+    const card = parseOne("X-ANDROID-CUSTOM:vnd.android.cursor.item/nickname;Bobby;1;;;;;;;;;;;;;");
+    expect(Object.values(card.nicknames || {})).toEqual([{ name: "Bobby" }]);
+  });
+
+  it("imports X-ANDROID-CUSTOM contact events as anniversaries", () => {
+    const card = parseOne(
+      "X-ANDROID-CUSTOM:vnd.android.cursor.item/contact_event;1985-04-12;3;;;;;;;;;;;;;",
+      "X-ANDROID-CUSTOM:vnd.android.cursor.item/contact_event;2010-06-01;1;;;;;;;;;;;;;",
+    );
+    expect(Object.values(card.anniversaries || {})).toEqual([
+      { kind: "birth", date: { year: 1985, month: 4, day: 12 } },
+      { kind: "wedding", date: { year: 2010, month: 6, day: 1 } },
+    ]);
+  });
+
+  it("imports X-ANDROID-CUSTOM relations", () => {
+    const card = parseOne("X-ANDROID-CUSTOM:vnd.android.cursor.item/relation;Jane Doe;14;;;;;;;;;;;;;");
+    expect(card.relatedTo?.["Jane Doe"]).toEqual({ relation: { spouse: true } });
+  });
+
+  it("imports Apple grouped X-ABDATE with its X-ABLABEL", () => {
+    const card = parseOne(
+      "item1.X-ABDATE:2010-06-01",
+      "item1.X-ABLABEL:_$!<Anniversary>!$_",
+      "item2.X-ABDATE:2015-09-20",
+      "item2.X-ABLABEL:First day at work",
+    );
+    expect(Object.values(card.anniversaries || {})).toEqual([
+      { kind: "wedding", date: { year: 2010, month: 6, day: 1 } },
+      { kind: "other", date: { year: 2015, month: 9, day: 20 } },
+    ]);
+  });
+
+  it("applies a grouped X-ABLABEL to the property it labels", () => {
+    const card = parseOne(
+      "item1.TEL;TYPE=VOICE:+1-555-0100",
+      "item1.X-ABLABEL:Ski cabin",
+      "item2.EMAIL:side@example.com",
+      "item2.X-ABLABEL:_$!<Other>!$_",
+    );
+    expect(card.phones?.p0?.label).toBe("Ski cabin");
+    expect(card.emails?.e0?.label).toBe("Other");
+  });
+
+  it("imports X-ABRELATEDNAMES and X-SPOUSE as relations", () => {
+    const card = parseOne(
+      "item1.X-ABRELATEDNAMES:Sam Smith",
+      "item1.X-ABLABEL:_$!<Brother>!$_",
+      "X-SPOUSE:Alex Smith",
+    );
+    expect(card.relatedTo?.["Sam Smith"]).toEqual({ relation: { sibling: true } });
+    expect(card.relatedTo?.["Alex Smith"]).toEqual({ relation: { spouse: true } });
+  });
+
+  it("imports X- instant-messaging handles as online services", () => {
+    const card = parseOne("X-SKYPE-USERNAME:jdoe", "X-TWITTER:https://twitter.com/jdoe");
+    const services = Object.values(card.onlineServices || {});
+    expect(services).toEqual(expect.arrayContaining([
+      expect.objectContaining({ service: "Skype", uri: "jdoe", user: "jdoe" }),
+      expect.objectContaining({ service: "Twitter", uri: "https://twitter.com/jdoe" }),
+    ]));
+    expect(services.find(s => s.service === "Twitter")?.user).toBeUndefined();
+  });
+
+  it("imports X-GENDER and round-trips X-MAIDENNAME", () => {
+    const card = parseOne("N:Smith;Jane;;;", "X-GENDER:Female", "X-MAIDENNAME:Brown");
+    expect(card.speakToAs?.grammaticalGender).toBe("feminine");
+    expect(card.name?.components).toEqual(
+      expect.arrayContaining([{ kind: "surname2", value: "Brown" }])
+    );
+
+    const reparsed = parseVCard(generateVCard([card]))[0];
+    expect(reparsed.name?.components).toEqual(
+      expect.arrayContaining([{ kind: "surname2", value: "Brown" }])
+    );
+  });
+
+  it("leaves unknown X- properties alone", () => {
+    const card = parseOne("X-SOMETHING-ELSE:whatever");
+    expect(card.onlineServices).toBeUndefined();
+    expect(card.notes).toBeUndefined();
+  });
+});
+
 describe("detectDuplicates", () => {
   it("detects duplicates by matching email (case-insensitive)", () => {
     const existing: ContactCard[] = [

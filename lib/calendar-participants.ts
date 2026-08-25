@@ -62,6 +62,30 @@ export function getEventOrganizerEmails(event: CalendarEvent): string[] {
   return emails.filter(Boolean);
 }
 
+/**
+ * Merge the user's calendar addresses (identities + account aliases) so
+ * isOrganizer() recognises alias-organized events as the user's own. Identities
+ * alone carry only one address each, so an alias organizer looked foreign.
+ * De-duplicated case-insensitively (first casing kept); blanks dropped.
+ */
+export function collectUserCalendarAddresses(
+  ...groups: Array<ReadonlyArray<string | null | undefined>>
+): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const group of groups) {
+    for (const raw of group) {
+      const trimmed = raw?.trim();
+      if (!trimmed) continue;
+      const key = trimmed.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(trimmed);
+    }
+  }
+  return out;
+}
+
 export function isOrganizer(event: CalendarEvent, userEmails: string[]): boolean {
   if (userEmails.length === 0) return false;
   const lower = userEmails.map(e => e.toLowerCase());

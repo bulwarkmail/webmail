@@ -2,21 +2,36 @@
 
 import { useRef, useState, type DragEvent } from "react";
 import { useTranslations } from "next-intl";
-import { Mail, Calendar, BookUser, HardDrive, Settings, PenSquare, MailOpen, X, type LucideIcon } from "lucide-react";
+import { Mail, Calendar, BookUser, HardDrive, Settings, PenSquare, MailOpen, Folder, X, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useProTabStore, type ProTab, type ProTabKind } from "@/stores/pro-tab-store";
+import { useProTabStore, type ProTab, type ProTabKind, type ProPaneId } from "@/stores/pro-tab-store";
+import {
+  PRO_TAB_DRAG_MIME,
+  EMAIL_IDS_DRAG_MIME,
+  MAILBOX_DRAG_MIME,
+  dragKindFromTypes,
+  parseEmailIdsPayload,
+  parseMailboxDragPayload,
+  type MailboxDragPayload,
+} from "@/components/pro/pro-shell-drop";
 
-/** Custom MIME type used to carry the dragged Pro tab id between handlers. */
-export const PRO_TAB_DRAG_MIME = "application/x-pro-tab-id";
+export { PRO_TAB_DRAG_MIME };
 
 interface ProTabBarProps {
-  /** All tabs (both panes). Order in the array is the order in the bar. */
+  /** The pane this strip belongs to - it renders only that pane's tabs. */
+  paneId: ProPaneId;
   tabs: ProTab[];
-  activeMainTabId: string | null;
-  activeSplitTabId: string | null;
+  activeTabId: string | null;
+  /** Whether this strip's pane holds keyboard/interaction focus. */
+  isFocused: boolean;
   onActivate: (id: string) => void;
   onClose: (id: string) => void;
-  onDragStateChange?: (dragging: boolean) => void;
+  /** Fires on tab drag start/end so the shell can show body drop zones. */
+  onDragStateChange?: (dragging: boolean, tabId: string | null) => void;
+  /** Emails dragged from a message list and dropped on this strip. */
+  onEmailDrop?: (emailIds: string[]) => void;
+  /** A sidebar folder dragged onto this strip - opens it as a folder tab. */
+  onFolderDrop?: (payload: MailboxDragPayload) => void;
   className?: string;
 }
 
@@ -28,43 +43,55 @@ const TAB_ICONS: Record<ProTabKind, LucideIcon> = {
   settings: Settings,
   compose: PenSquare,
   email: MailOpen,
+  folder: Folder,
 };
 
 type DropIndicator = { targetId: string; edge: "before" | "after" } | null;
 
 export function ProTabBar({
+  paneId,
   tabs,
-  activeMainTabId,
-  activeSplitTabId,
+  activeTabId,
+  isFocused,
   onActivate,
   onClose,
   onDragStateChange,
+  onEmailDrop,
+  onFolderDrop,
   className,
 }: ProTabBarProps) {
   const tSidebar = useTranslations("sidebar");
   const reorderTab = useProTabStore((s) => s.reorderTab);
-  const focusedPaneId = useProTabStore((s) => s.focusedPaneId);
 
   const [dropIndicator, setDropIndicator] = useState<DropIndicator>(null);
+  // True while an email or folder payload hovers the strip (both drop "anywhere").
+  const [isPayloadDragOver, setIsPayloadDragOver] = useState(false);
   const dragLeaveTimer = useRef<number | null>(null);
 
-  const isProTabDrag = (e: DragEvent) =>
-    e.dataTransfer.types.includes(PRO_TAB_DRAG_MIME);
+  const dragKind = (e: DragEvent) => dragKindFromTypes(e.dataTransfer.types);
 
   const handleDragStart = (e: DragEvent<HTMLDivElement>, tab: ProTab) => {
     e.dataTransfer.setData(PRO_TAB_DRAG_MIME, tab.id);
     e.dataTransfer.effectAllowed = "move";
-    onDragStateChange?.(true);
+    onDragStateChange?.(true, tab.id);
   };
 
   const handleDragEnd = () => {
     setDropIndicator(null);
-    onDragStateChange?.(false);
+    setIsPayloadDragOver(false);
+    onDragStateChange?.(false, null);
   };
 
   const handleTabDragOver = (e: DragEvent<HTMLDivElement>, tab: ProTab) => {
-    if (!isProTabDrag(e)) return;
+    const kind = dragKind(e);
+    if (!kind) return;
     e.preventDefault();
+    if (kind === "email" || kind === "folder") {
+      // Emails/folders can land anywhere on the strip - no per-tab insertion caret.
+      e.dataTransfer.dropEffect = "copy";
+      setIsPayloadDragOver(true);
+      return;
+    }
     e.dataTransfer.dropEffect = "move";
     const rect = e.currentTarget.getBoundingClientRect();
     const edge: "before" | "after" =
@@ -86,13 +113,33 @@ export function ProTabBar({
     if (dragLeaveTimer.current !== null) window.clearTimeout(dragLeaveTimer.current);
     dragLeaveTimer.current = window.setTimeout(() => {
       setDropIndicator(null);
+      setIsPayloadDragOver(false);
       dragLeaveTimer.current = null;
     }, 40);
   };
 
+  /** Dropped email/folder payloads - anything that isn't a tab reorder. */
+  const handlePayloadDrop = (e: DragEvent<HTMLDivElement>): boolean => {
+    if (e.dataTransfer.types.includes(MAILBOX_DRAG_MIME)) {
+      const payload = parseMailboxDragPayload(e.dataTransfer.getData(MAILBOX_DRAG_MIME));
+      if (payload) onFolderDrop?.(payload);
+      return true;
+    }
+    if (!e.dataTransfer.types.includes(EMAIL_IDS_DRAG_MIME)) return false;
+    const ids = parseEmailIdsPayload(e.dataTransfer.getData(EMAIL_IDS_DRAG_MIME));
+    if (ids.length > 0) onEmailDrop?.(ids);
+    return true;
+  };
+
   const handleTabDrop = (e: DragEvent<HTMLDivElement>, tab: ProTab) => {
-    if (!isProTabDrag(e)) return;
+    const kind = dragKind(e);
+    if (!kind) return;
     e.preventDefault();
+    if (kind === "email" || kind === "folder") {
+      handlePayloadDrop(e);
+      handleDragEnd();
+      return;
+    }
     const draggedId = e.dataTransfer.getData(PRO_TAB_DRAG_MIME);
     if (!draggedId || draggedId === tab.id) {
       handleDragEnd();
@@ -104,8 +151,14 @@ export function ProTabBar({
   };
 
   const handleStripEndDrop = (e: DragEvent<HTMLDivElement>) => {
-    if (!isProTabDrag(e)) return;
+    const kind = dragKind(e);
+    if (!kind) return;
     e.preventDefault();
+    if (kind === "email" || kind === "folder") {
+      handlePayloadDrop(e);
+      handleDragEnd();
+      return;
+    }
     const draggedId = e.dataTransfer.getData(PRO_TAB_DRAG_MIME);
     if (!draggedId) {
       handleDragEnd();
@@ -119,8 +172,14 @@ export function ProTabBar({
   };
 
   const handleStripEndDragOver = (e: DragEvent<HTMLDivElement>) => {
-    if (!isProTabDrag(e)) return;
+    const kind = dragKind(e);
+    if (!kind) return;
     e.preventDefault();
+    if (kind === "email" || kind === "folder") {
+      e.dataTransfer.dropEffect = "copy";
+      setIsPayloadDragOver(true);
+      return;
+    }
     e.dataTransfer.dropEffect = "move";
     const last = tabs[tabs.length - 1];
     if (last) {
@@ -131,21 +190,19 @@ export function ProTabBar({
   return (
     <div
       className={cn(
-        "flex items-stretch h-9 bg-secondary px-1 overflow-x-auto scroll-hidden flex-shrink-0",
+        "relative flex items-stretch h-9 bg-secondary px-1 overflow-x-auto scroll-hidden flex-shrink-0",
+        isPayloadDragOver && "bg-primary/10",
         className,
       )}
       style={{ borderBottom: '1px solid rgba(128, 128, 128, 0.3)' }}
       role="tablist"
+      data-pane-strip={paneId}
       onDragLeave={handleStripDragLeave}
     >
       {tabs.map((tab) => {
         const Icon = TAB_ICONS[tab.kind];
-        const isActiveMain = tab.id === activeMainTabId && tab.paneId === 'main';
-        const isActiveSplit = tab.id === activeSplitTabId && tab.paneId === 'split';
-        const isActive = isActiveMain || isActiveSplit;
-        const isFocusedActive =
-          (isActiveMain && focusedPaneId === 'main')
-          || (isActiveSplit && focusedPaneId === 'split');
+        const isActive = tab.id === activeTabId;
+        const isFocusedActive = isActive && isFocused;
         const label = tab.title ?? tSidebar(tab.labelKey);
         const showBefore = dropIndicator?.targetId === tab.id && dropIndicator.edge === "before";
         const showAfter = dropIndicator?.targetId === tab.id && dropIndicator.edge === "after";
@@ -207,6 +264,15 @@ export function ProTabBar({
             {isActive && (
               <span
                 className="absolute left-0 right-0 -bottom-px h-px bg-background"
+                aria-hidden="true"
+              />
+            )}
+            {/* Focused pane affordance: the active tab of the focused pane
+                carries an accent top edge, so it's always visible which side
+                of a split the next click/open will affect. */}
+            {isFocusedActive && (
+              <span
+                className="absolute left-0 right-0 top-0 h-0.5 bg-primary"
                 aria-hidden="true"
               />
             )}

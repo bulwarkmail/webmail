@@ -3,6 +3,7 @@ import { logger } from '@/lib/logger';
 import { readFileEnv } from '@/lib/read-file-env';
 import { CONFIG_ENV_MAP, DEFAULT_FEATURE_GATES, DEFAULT_POLICY, DEFAULT_THEME_POLICY, type SettingsPolicy } from './types';
 import { ensureConfigDir, getConfigPath, assertWritable } from './paths';
+import { isValidRelayUrl, normalizeRelayUrl } from '@/lib/push-relays';
 
 function parseEnvValue(value: string, type: string): unknown {
   switch (type) {
@@ -185,6 +186,16 @@ class ConfigManager {
     if (policy.features.allMailViewEnabled) {
       policy.features.crossAllViewEnabled = true;
     }
+    // Users pick a relay from this list, so half-filled or malformed entries
+    // must never reach them as a selectable option.
+    policy.pushRelays = (Array.isArray(policy.pushRelays) ? policy.pushRelays : [])
+      .map(relay => ({
+        label: typeof relay?.label === 'string' ? relay.label.trim() : '',
+        url: normalizeRelayUrl(typeof relay?.url === 'string' ? relay.url : ''),
+      }))
+      .filter(relay => isValidRelayUrl(relay.url));
+    const defaultRelay = normalizeRelayUrl(policy.pushRelayUrl);
+    policy.pushRelayUrl = isValidRelayUrl(defaultRelay) ? defaultRelay : '';
     return policy;
   }
 

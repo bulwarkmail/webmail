@@ -300,6 +300,10 @@
     "move": "Taşı",
     "print": "Yazdır",
     "view_source": "Kaynağı görüntüle",
+
+    "fullscreen": "Tam ekran",
+
+    "exit_fullscreen": "Tam ekrandan çık",
     "export_email": ".eml olarak dışa aktar",
     "forward_as_attachment": "Forward as attachment",
     "import_email": ".eml veya .zip içe aktar",
@@ -574,6 +578,7 @@
     "read_receipt_on": "Okundu bilgisi istendi (devre dışı bırakmak için tıklayın)",
     "read_receipt_off": "Okundu bilgisi iste",
     "new_message": "Yeni İleti",
+    "signature_edit_hint": "İmzayı düzenlemek için çift tıklayın",
     "reply": "Yanıtla",
     "reply_all": "Tümünü Yanıtla",
     "forward": "İlet",
@@ -748,7 +753,10 @@
     "rate_limited_title": "Sunucu kimlik doğrulaması geçici olarak hız sınırlamasına tabi.",
     "rate_limited_detail": "Hesap kilitlenmesini önlemek için Bulwark arka plan isteklerini duraklattı. {seconds} saniye içinde yeniden deneniyor.",
     "rate_limited_action_title": "Kilitlenmeyi önlemek için istek duraklatıldı.",
-    "rate_limited_action_detail": "Bulwark, daha fazla kimlik doğrulama isteği göndermeden önce sunucunun soğuma süresinin bitmesini bekliyor. {seconds} saniye içinde tekrar deneyin."
+    "rate_limited_action_detail": "Bulwark, daha fazla kimlik doğrulama isteği göndermeden önce sunucunun soğuma süresinin bitmesini bekliyor. {seconds} saniye içinde tekrar deneyin.",
+    "pull_to_refresh": "Yenilemek için çekin",
+    "release_to_refresh": "Yenilemek için bırakın",
+    "refreshing": "Yenileniyor…"
   },
   "notifications": {
     "email_sent": "E-posta başarıyla gönderildi",
@@ -855,7 +863,10 @@
     "zh": "简体中文",
     "fa": "فارسی",
     "farsi": "فارسی",
-    "switch_to_farsi": "Farsçaya geç"
+    "switch_to_farsi": "Farsçaya geç",
+    "mn": "Монгол",
+    "mongolian": "Монгол",
+    "switch_to_mongolian": "Moğolcaya geç"
   },
   "settings": {
     "title": "Ayarlar",
@@ -1104,12 +1115,27 @@
         "relay_label": "Push röle",
         "relay_locked": "Yönetici tarafından ayarlandı",
         "relay_locked_desc": "Push röle URL'si yöneticiniz tarafından ayarlandı ve değiştirilemez.",
-        "relay_placeholder": "https://notifications.relay.example.com",
         "status_active": "Bu cihazda etkin",
         "status_busy": "Çalışıyor…",
         "status_inactive": "Bu cihazda etkinleştirilmedi",
         "status_unsupported": "Bu tarayıcı Web Push'u desteklemiyor",
-        "title": "Arka plan bildirimleri"
+        "title": "Arka plan bildirimleri",
+        "devices_title": "Kayıtlı cihazlar",
+        "devices_desc": "Bu hesap için arka plan bildirimleri almak üzere kayıtlı tüm cihazlar. Birini iptal ettiğinizde o cihaz bildirimleri hemen almayı bırakır.",
+        "devices_loading": "Kayıtlı cihazlar yükleniyor…",
+        "devices_empty": "Arka plan bildirimleri için kayıtlı cihaz yok.",
+        "devices_error": "Kayıtlı cihazlar yüklenemedi.",
+        "devices_refresh": "Yenile",
+        "device_this": "Bu cihaz",
+        "device_other": "Diğer cihaz",
+        "device_status_active": "Bildirim iletiyor",
+        "device_status_inactive": "Hiç bildirim iletmedi",
+        "device_status_unknown": "Bu aktarıcı tanımıyor",
+        "device_expires": "Bitiş: {date}",
+        "revoke": "İptal et",
+        "confirm_revoke_title": "Bu cihaz iptal edilsin mi?",
+        "confirm_revoke_message": "Arka plan bildirimlerini almayı hemen bırakacak. O cihazda push’u yeniden açarsanız yeniden kaydedilir.",
+        "confirm_revoke_message_this": "Bu cihaz arka plan bildirimlerini almayı hemen bırakacak."
       }
     },
     "language_region": {
@@ -1188,6 +1214,12 @@
         "auto": "Otomatik (önerilen)",
         "always": "Her zaman boşluk ekle",
         "edge": "Kenardan kenara"
+      },
+      "plain_text_font": {
+        "label": "Düz metin yazı tipi",
+        "description": "Düz metin e-postalar için kullanılan yazı tipi",
+        "mono": "Eş aralıklı",
+        "sans": "Normal (uygulamayla aynı)"
       },
       "archive_mode": {
         "label": "Arşivle",
@@ -1661,6 +1693,7 @@
       "create_subfolder": "Alt Klasör Oluştur",
       "reorder": "Yeniden sıralamak için sürükleyin",
       "reorder_error": "Klasörler yeniden sıralanamadı",
+      "move_error": "Klasör taşınamadı",
       "subfolder_of": "{name} içinde",
       "subfolder_name": "Alt klasör adı",
       "new_folder_name": "Klasör adı",

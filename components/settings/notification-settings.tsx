@@ -1,25 +1,31 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useSettingsStore } from '@/stores/settings-store';
 import { SettingsSection, SettingItem, ToggleSwitch, Select } from './settings-section';
 import { playNotificationSound, NOTIFICATION_SOUNDS } from '@/lib/notification-sound';
 import type { NotificationSoundChoice } from '@/lib/notification-sound';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, Lock, Volume2, XCircle } from 'lucide-react';
+import { Loader2, RefreshCw, Volume2, XCircle } from 'lucide-react';
 import { usePolicyStore } from '@/stores/policy-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useConfirmDialog } from '@/hooks/use-confirm-dialog';
 import {
-  DEFAULT_RELAY_BASE_URL,
   WebPushUnsupportedError,
   disableWebPush,
   enableWebPush,
   isWebPushEnabled,
   isWebPushSupported,
+  listPushDevices,
+  revokePushDevice,
 } from '@/lib/web-push';
+import type { PushDevice } from '@/lib/web-push';
+import {
+  resolveActiveRelayUrl,
+  resolvePushRelayOptions,
+} from '@/lib/push-relays';
 
 type PushStatus =
   | { kind: 'idle' }
@@ -27,6 +33,12 @@ type PushStatus =
   | { kind: 'enabled' }
   | { kind: 'unsupported' }
   | { kind: 'error'; message: string };
+
+type DevicesState =
+  | { kind: 'idle' }
+  | { kind: 'loading' }
+  | { kind: 'loaded'; devices: PushDevice[] }
+  | { kind: 'error' };
 
 export function NotificationSettings() {
   const t = useTranslations('settings.notifications');
@@ -37,32 +49,30 @@ export function NotificationSettings() {
     calendarNotificationsEnabled,
     calendarNotificationSound,
     calendarInvitationParsingEnabled,
+    pushRelayUrl,
     updateSetting,
   } = useSettingsStore();
   const { isSettingLocked, isSettingHidden } = usePolicyStore();
-  const adminPushRelayUrl = usePolicyStore((s) => s.policy.pushRelayUrl);
-  const pushRelayLocked = usePolicyStore((s) => s.policy.pushRelayUrlLocked) === true;
+  const policy = usePolicyStore((s) => s.policy);
+  const pushRelayLocked = policy.pushRelayUrlLocked === true;
   const client = useAuthStore((s) => s.client);
   const username = useAuthStore((s) => s.username);
   const { dialogProps: confirmDialogProps, confirm: confirmDialog } = useConfirmDialog();
 
   const supported = typeof window !== 'undefined' && isWebPushSupported();
-  const adminUrl = (adminPushRelayUrl ?? '').trim();
-  const [relayUrl, setRelayUrl] = useState(adminUrl || DEFAULT_RELAY_BASE_URL);
   const [pushStatus, setPushStatus] = useState<PushStatus>(
     supported ? { kind: 'idle' } : { kind: 'unsupported' },
   );
+  const [devices, setDevices] = useState<DevicesState>({ kind: 'idle' });
+  const [revokingId, setRevokingId] = useState<string | null>(null);
 
-  // Pull the admin-configured URL into local state when policy loads/changes.
-  // When locked, the admin value always wins; when only set (not locked), use
-  // it as the initial default but let the user override.
-  useEffect(() => {
-    if (pushRelayLocked && adminUrl) {
-      setRelayUrl(adminUrl);
-    } else if (adminUrl) {
-      setRelayUrl((current) => (current === DEFAULT_RELAY_BASE_URL ? adminUrl : current));
-    }
-  }, [adminUrl, pushRelayLocked]);
+  // Relay URLs come from admin policy only - users pick one of the offered
+  // relays, they never type a URL.
+  const relayOptions = resolvePushRelayOptions(policy);
+  const activeRelayUrl = resolveActiveRelayUrl(policy, pushRelayUrl);
+  const relayChoiceFixed = pushRelayLocked || relayOptions.length < 2;
+  const activeRelayLabel =
+    relayOptions.find((option) => option.url === activeRelayUrl)?.label ?? activeRelayUrl;
 
   useEffect(() => {
     if (!supported) return;
@@ -75,25 +85,48 @@ export function NotificationSettings() {
     })();
   }, [supported, client]);
 
-  const trimmedRelay = relayUrl.trim().replace(/\/+$/, '');
-  const isValidRelay = /^https?:\/\/.+/i.test(trimmedRelay);
-  const busy = pushStatus.kind === 'busy';
+  // The device list is worth loading even when push is off on this browser -
+  // revoking a stale registration left on another device is exactly what you
+  // come here for.
+  const refreshDevices = useCallback(async () => {
+    if (!client) return;
+    setDevices({ kind: 'loading' });
+    try {
+      setDevices({ kind: 'loaded', devices: await listPushDevices({ client, relayBaseUrl: activeRelayUrl }) });
+    } catch {
+      setDevices({ kind: 'error' });
+    }
+  }, [client, activeRelayUrl]);
 
-  const handleEnablePush = async () => {
+  useEffect(() => {
+    void refreshDevices();
+  }, [refreshDevices]);
+
+  const busy = pushStatus.kind === 'busy';
+  const pushEnabled = pushStatus.kind === 'enabled';
+  const statusDescription = pushStatus.kind === 'unsupported'
+    ? `${t('push.status_unsupported')} ${t('push.ios_hint')}`
+    : busy
+      ? t('push.status_busy')
+      : pushEnabled
+        ? t('push.status_active')
+        : t('push.status_inactive');
+
+  // `forceRecreate` is what the Re-register button is for: without it the enable
+  // path just refreshes the existing subscription's expiry, so a registration
+  // holding stale shared-mailbox access survives the round trip (#841).
+  const handleEnablePush = async (forceRecreate = false) => {
     if (!client) {
       setPushStatus({ kind: 'error', message: 'Sign in first' });
-      return;
-    }
-    if (!isValidRelay) {
-      setPushStatus({ kind: 'error', message: 'Enter a valid https:// URL' });
       return;
     }
     setPushStatus({ kind: 'busy' });
     try {
       await enableWebPush({
         client,
-        relayBaseUrl: trimmedRelay,
+        relayBaseUrl: activeRelayUrl,
         accountLabel: username ?? undefined,
+        forceRecreate,
       });
       setPushStatus({ kind: 'enabled' });
     } catch (err) {
@@ -105,6 +138,8 @@ export function NotificationSettings() {
         kind: 'error',
         message: err instanceof Error ? err.message : 'Failed to enable push',
       });
+    } finally {
+      await refreshDevices();
     }
   };
 
@@ -119,14 +154,50 @@ export function NotificationSettings() {
     if (!confirmed) return;
     setPushStatus({ kind: 'busy' });
     try {
-      await disableWebPush({ client, relayBaseUrl: trimmedRelay });
+      await disableWebPush({ client, relayBaseUrl: activeRelayUrl });
       setPushStatus({ kind: 'idle' });
     } catch (err) {
       setPushStatus({
         kind: 'error',
         message: err instanceof Error ? err.message : 'Failed to disable push',
       });
+    } finally {
+      await refreshDevices();
     }
+  };
+
+  const handleRevokeDevice = async (device: PushDevice) => {
+    if (!client) return;
+    const confirmed = await confirmDialog({
+      title: t('push.confirm_revoke_title'),
+      message: device.isThisDevice
+        ? t('push.confirm_revoke_message_this')
+        : t('push.confirm_revoke_message'),
+      confirmText: t('push.revoke'),
+      variant: 'destructive',
+    });
+    if (!confirmed) return;
+    setRevokingId(device.id);
+    try {
+      await revokePushDevice({ client, device, relayBaseUrl: activeRelayUrl });
+      if (device.isThisDevice) setPushStatus({ kind: 'idle' });
+    } catch (err) {
+      setPushStatus({
+        kind: 'error',
+        message: err instanceof Error ? err.message : 'Failed to revoke device',
+      });
+    } finally {
+      setRevokingId(null);
+      await refreshDevices();
+    }
+  };
+
+  // Spelled out rather than interpolated so the translation-coverage test can
+  // see every key that reaches next-intl.
+  const relayStatusLabel = (status: PushDevice['relayStatus']) => {
+    if (status === 'active') return t('push.device_status_active');
+    if (status === 'inactive') return t('push.device_status_inactive');
+    return t('push.device_status_unknown');
   };
 
   const soundOptions = NOTIFICATION_SOUNDS.map((s) => ({
@@ -137,50 +208,99 @@ export function NotificationSettings() {
   return (
     <div className="space-y-8">
       <SettingsSection title={t('push.title')} description={t('push.description')}>
-        <div className="rounded-md border p-4 space-y-3">
-          <div className="flex items-center justify-between gap-3">
-            <label className="text-sm font-medium inline-flex items-center gap-1.5" htmlFor="push-relay-url">
-              {t('push.relay_label')}
-              {pushRelayLocked && (
-                <Lock className="w-3 h-3 text-muted-foreground" aria-label={t('push.relay_locked')} />
-              )}
-            </label>
-            <PushStatusBadge status={pushStatus} t={t} />
-          </div>
-          <p className="text-xs text-muted-foreground">
-            {pushRelayLocked ? t('push.relay_locked_desc') : t('push.relay_desc')}
-          </p>
-          <input
-            id="push-relay-url"
-            type="url"
-            inputMode="url"
-            autoComplete="off"
-            spellCheck={false}
-            value={relayUrl}
-            onChange={(e) => setRelayUrl(e.target.value)}
-            placeholder={t('push.relay_placeholder')}
-            disabled={busy || pushStatus.kind === 'unsupported' || pushRelayLocked}
-            readOnly={pushRelayLocked}
-            className="w-full rounded border bg-background px-3 py-2 text-sm disabled:opacity-50"
-          />
-          <div className="flex flex-wrap gap-2">
-            <Button
-              onClick={handleEnablePush}
-              disabled={busy || pushStatus.kind === 'unsupported' || !isValidRelay || !client}
-            >
-              {pushStatus.kind === 'enabled' ? t('push.reenable') : t('push.enable')}
-            </Button>
-            {pushStatus.kind === 'enabled' && (
-              <Button variant="outline" onClick={handleDisablePush} disabled={busy}>
-                {t('push.disable')}
+        <SettingItem label={t('push.enable')} description={statusDescription}>
+          <div className="flex items-center gap-2">
+            {pushEnabled && (
+              <Button variant="ghost" size="sm" onClick={() => void handleEnablePush(true)} disabled={busy}>
+                {t('push.reenable')}
               </Button>
             )}
+            <ToggleSwitch
+              checked={pushEnabled}
+              onChange={(checked) => void (checked ? handleEnablePush() : handleDisablePush())}
+              disabled={busy || pushStatus.kind === 'unsupported' || !client}
+            />
           </div>
-          {pushStatus.kind === 'unsupported' && (
-            <p className="text-xs text-muted-foreground">{t('push.ios_hint')}</p>
+        </SettingItem>
+
+        <SettingItem
+          label={t('push.relay_label')}
+          description={pushRelayLocked ? t('push.relay_locked_desc') : t('push.relay_desc')}
+          locked={pushRelayLocked}
+        >
+          {relayChoiceFixed ? (
+            <span className="text-sm text-muted-foreground">{activeRelayLabel}</span>
+          ) : (
+            <Select
+              value={activeRelayUrl}
+              onChange={(value) => updateSetting('pushRelayUrl', value)}
+              options={relayOptions.map((option) => ({ value: option.url, label: option.label }))}
+              disabled={busy || pushStatus.kind === 'unsupported'}
+            />
           )}
-        </div>
+        </SettingItem>
+
+        {pushStatus.kind === 'error' && (
+          <p role="alert" className="flex items-start gap-1.5 text-xs text-destructive">
+            <XCircle className="w-3.5 h-3.5 mt-px shrink-0" />
+            {pushStatus.message}
+          </p>
+        )}
       </SettingsSection>
+
+      {client && (
+        <SettingsSection title={t('push.devices_title')} description={t('push.devices_desc')}>
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs text-muted-foreground">
+              {devices.kind === 'loading' && t('push.devices_loading')}
+              {devices.kind === 'error' && t('push.devices_error')}
+              {devices.kind === 'loaded' && devices.devices.length === 0 && t('push.devices_empty')}
+            </p>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => void refreshDevices()}
+              disabled={devices.kind === 'loading'}
+            >
+              <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${devices.kind === 'loading' ? 'animate-spin' : ''}`} />
+              {t('push.devices_refresh')}
+            </Button>
+          </div>
+
+          {devices.kind === 'loaded' && devices.devices.length > 0 && (
+            <ul className="divide-y divide-border rounded-md border border-border">
+              {devices.devices.map((device) => (
+                <li key={device.id} className="flex items-center justify-between gap-3 px-3 py-2.5">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">
+                      {device.isThisDevice ? t('push.device_this') : t('push.device_other')}
+                      <span className="ml-1.5 font-mono text-xs font-normal text-muted-foreground">
+                        {device.deviceClientId.slice(0, 8)}
+                      </span>
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {relayStatusLabel(device.relayStatus)}
+                      {device.expires
+                        ? ` · ${t('push.device_expires', { date: new Date(device.expires).toLocaleDateString() })}`
+                        : ''}
+                    </p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="shrink-0 text-destructive hover:text-destructive"
+                    onClick={() => void handleRevokeDevice(device)}
+                    disabled={revokingId !== null}
+                  >
+                    {revokingId === device.id && <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />}
+                    {t('push.revoke')}
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </SettingsSection>
+      )}
 
       <SettingsSection title={t('sound_selection.title')} description={t('sound_selection.description')}>
         <SettingItem
@@ -275,41 +395,4 @@ export function NotificationSettings() {
       <ConfirmDialog {...confirmDialogProps} />
     </div>
   );
-}
-
-function PushStatusBadge({
-  status,
-  t,
-}: {
-  status: PushStatus;
-  t: ReturnType<typeof useTranslations>;
-}) {
-  if (status.kind === 'enabled') {
-    return (
-      <span className="inline-flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400">
-        <CheckCircle2 className="w-3.5 h-3.5" />
-        {t('push.status_active')}
-      </span>
-    );
-  }
-  if (status.kind === 'busy') {
-    return <span className="text-xs text-muted-foreground">{t('push.status_busy')}</span>;
-  }
-  if (status.kind === 'unsupported') {
-    return (
-      <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-        <XCircle className="w-3.5 h-3.5" />
-        {t('push.status_unsupported')}
-      </span>
-    );
-  }
-  if (status.kind === 'error') {
-    return (
-      <span className="inline-flex items-center gap-1 text-xs text-destructive" title={status.message}>
-        <XCircle className="w-3.5 h-3.5" />
-        {status.message}
-      </span>
-    );
-  }
-  return <span className="text-xs text-muted-foreground">{t('push.status_inactive')}</span>;
 }

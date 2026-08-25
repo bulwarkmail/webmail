@@ -30,7 +30,7 @@ interface Position {
 
 export type MailboxContextTarget =
   | { kind: "mailbox"; mailbox: Mailbox; hasChildren: boolean }
-  | { kind: "folders-section" };
+  | { kind: "folders-section"; accountId?: string };
 
 const PATH_SEPARATOR = " › ";
 const MAX_PATH_LENGTH = 40;
@@ -82,7 +82,7 @@ interface MailboxContextMenuProps {
   onMarkAllFoldersRead?: () => void;
   onEmptyFolder?: (mailboxId: string) => void;
   onCreateSubfolder?: (parentId: string) => void;
-  onCreateFolder?: () => void;
+  onCreateFolder?: (accountId?: string) => void;
   onRenameFolder?: (mailboxId: string) => void;
   onDeleteFolder?: (mailboxId: string) => void;
   onImportEmail?: (mailboxId: string) => void;
@@ -119,18 +119,23 @@ export function MailboxContextMenu({
   if (target.kind === "folders-section") {
     return (
       <ContextMenu ref={menuRef} isOpen={isOpen} position={position} onClose={onClose}>
-        <ContextMenuItem
-          icon={CheckCheck}
-          label={t("mark_all_folders_read")}
-          onClick={() => handleAction(onMarkAllFoldersRead!)}
-          disabled={!onMarkAllFoldersRead}
-        />
-        <ContextMenuSeparator />
+        {!target.accountId && (
+          <>
+            <ContextMenuItem
+              icon={CheckCheck}
+              label={t("mark_all_folders_read")}
+              onClick={() => handleAction(onMarkAllFoldersRead!)}
+              disabled={!onMarkAllFoldersRead}
+            />
+            <ContextMenuSeparator />
+          </>
+        )}
         <ContextMenuItem
           icon={FolderPlus}
           label={t("new_folder")}
-          onClick={() => handleAction(onCreateFolder!)}
+          onClick={() => handleAction(() => onCreateFolder?.(target.accountId))}
           disabled={!onCreateFolder}
+          testId="mailbox-new-folder"
         />
         <ContextMenuItem
           icon={RefreshCw}
@@ -184,12 +189,14 @@ export function MailboxContextMenu({
         label={t("new_subfolder")}
         onClick={() => handleAction(() => onCreateSubfolder?.(mailbox.id))}
         disabled={!onCreateSubfolder || !canCreateChild}
+        testId="mailbox-new-subfolder"
       />
       <ContextMenuItem
         icon={Pencil}
         label={t("rename")}
         onClick={() => handleAction(() => onRenameFolder?.(mailbox.id))}
         disabled={!onRenameFolder || !canRename}
+        testId="mailbox-rename"
       />
 
       <ContextMenuSeparator />
@@ -216,6 +223,7 @@ export function MailboxContextMenu({
         onClick={() => handleAction(() => onDeleteFolder?.(mailbox.id))}
         disabled={!onDeleteFolder || !canDelete}
         destructive
+        testId="mailbox-delete"
       />
 
       <ContextMenuSeparator />

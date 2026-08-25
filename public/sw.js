@@ -145,22 +145,31 @@ async function handlePush(event) {
     return;
   }
 
+  // Group per account under one shared tag so a burst of new mail collapses
+  // into a single, self-updating notification instead of one toast per message
+  // (Android renders one notification per unique tag, which is why 50 arrivals
+  // used to stack 50 toasts). The newest message is the headline and a
+  // Gmail-style "+N more" line carries the rest, counted from the account's
+  // unread total.
+  const groupTag = "bulwark-mail:" + (accountId || "default");
   let title;
   let body;
-  let tag = "bulwark-mail";
-  let data = { kind: "mail-list" };
+  let data = { kind: "mail-list", accountId };
 
   if (email) {
     const sender = email.from && email.from[0];
     const senderName = (sender && sender.name) || (sender && sender.email) || "New mail";
     title = senderName + (accountLabel ? ` (${accountLabel})` : "");
     body = email.subject || email.preview || "(no subject)";
-    tag = "bulwark-mail:" + email.id;
-    data = {
-      kind: "email",
-      emailId: email.id,
-      threadId: email.threadId,
-    };
+    const more = unreadTotal > 1 ? unreadTotal - 1 : 0;
+    if (more > 0) {
+      // Several unread: this is a group. Keep the newest as the headline, add
+      // the "+N more" count, and open the inbox (not one message) on click.
+      body += "\n" + (more === 1 ? "+1 more message" : `+${more} more messages`);
+    } else {
+      // Exactly one unread: deep-link straight to that message on click.
+      data = { kind: "email", emailId: email.id, threadId: email.threadId };
+    }
   } else {
     title = accountLabel ? `New mail (${accountLabel})` : "New mail";
     body = unreadTotal > 1 ? `${unreadTotal} unread messages` : "You have new mail";
@@ -168,7 +177,9 @@ async function handlePush(event) {
 
   await self.registration.showNotification(title, {
     body,
-    tag,
+    // Shared per-account tag: each new push replaces the account's single
+    // notification rather than adding another.
+    tag: groupTag,
     // Branded app icon via the PWA-icon endpoint (admin-configured, else the
     // built-in default). The static /icon-192x192.png ignored admin branding.
     icon: `${BASE_PATH}/api/pwa-icon/192`,

@@ -1,4 +1,4 @@
-import { mkdtempSync, unlink, writeFileSync } from "fs";
+import { mkdtempSync, rmSync, writeFileSync } from "fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
@@ -6,8 +6,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 // The route consults admin-dashboard overrides (ADMIN_CONFIG_DIR, default
 // data/admin) before env vars. Point it at an empty temp dir so local admin
 // state on the developer's machine can't leak into these env-driven
-// assertions. Must happen before the first GET, because the config manager
-// singleton loads the directory once and caches it.
+// assertions. Set directly (not via vi.stubEnv) so unstubAllEnvs() between
+// tests can't clear it - the config-manager singleton caches it on first load.
 process.env.ADMIN_CONFIG_DIR = mkdtempSync(path.join(tmpdir(), 'bw-config-route-'));
 
 // Mock NextResponse before importing the route
@@ -21,35 +21,37 @@ vi.mock('@/lib/logger', () => ({
   logger: { debug: vi.fn() },
 }));
 
+// Env vars these tests drive. Stubbed to undefined before each test so the
+// developer's / CI's real environment (and any other test file sharing this
+// worker's process.env) can't leak in.
+const MANAGED_ENV = [
+  'APP_NAME', 'NEXT_PUBLIC_APP_NAME', 'JMAP_SERVER_URL', 'NEXT_PUBLIC_JMAP_SERVER_URL',
+  'OAUTH_ENABLED', 'OAUTH_CLIENT_ID', 'OAUTH_ISSUER_URL', 'SESSION_SECRET',
+  'SESSION_SECRET_FILE', 'SETTINGS_SYNC_ENABLED', 'STALWART_FEATURES', 'DEV_MOCK_JMAP',
+  'FAVICON_URL', 'APP_LOGO_LIGHT_URL', 'APP_LOGO_DARK_URL', 'LOGIN_COMPANY_NAME',
+  'LOGIN_IMPRINT_URL', 'LOGIN_PRIVACY_POLICY_URL', 'LOGIN_WEBSITE_URL', 'DOMAIN_BRANDING',
+] as const;
+
 describe('config API route', () => {
-  const originalEnv = { ...process.env };
+  // Unique per-test dirs so the SESSION_SECRET_FILE tests never share a path;
+  // removed synchronously in afterEach (the old fire-and-forget async unlink of
+  // a shared ./session-secret raced across tests under the full suite).
+  const tempDirs: string[] = [];
+  function secretFile(contents = 'test-secret'): string {
+    const dir = mkdtempSync(path.join(tmpdir(), 'bw-secret-'));
+    tempDirs.push(dir);
+    const file = path.join(dir, 'session-secret');
+    writeFileSync(file, contents);
+    return file;
+  }
 
   beforeEach(() => {
-    // Clear all relevant env vars before each test
-    delete process.env.APP_NAME;
-    delete process.env.NEXT_PUBLIC_APP_NAME;
-    delete process.env.JMAP_SERVER_URL;
-    delete process.env.NEXT_PUBLIC_JMAP_SERVER_URL;
-    delete process.env.OAUTH_ENABLED;
-    delete process.env.OAUTH_CLIENT_ID;
-    delete process.env.OAUTH_ISSUER_URL;
-    delete process.env.SESSION_SECRET;
-    delete process.env.SESSION_SECRET_FILE;
-    delete process.env.SETTINGS_SYNC_ENABLED;
-    delete process.env.STALWART_FEATURES;
-    delete process.env.DEV_MOCK_JMAP;
-    delete process.env.FAVICON_URL;
-    delete process.env.APP_LOGO_LIGHT_URL;
-    delete process.env.APP_LOGO_DARK_URL;
-    delete process.env.LOGIN_COMPANY_NAME;
-    delete process.env.LOGIN_IMPRINT_URL;
-    delete process.env.LOGIN_PRIVACY_POLICY_URL;
-    delete process.env.LOGIN_WEBSITE_URL;
-    delete process.env.DOMAIN_BRANDING;
+    for (const key of MANAGED_ENV) vi.stubEnv(key, undefined);
   });
 
   afterEach(() => {
-    process.env = { ...originalEnv };
+    vi.unstubAllEnvs();
+    for (const dir of tempDirs.splice(0)) rmSync(dir, { recursive: true, force: true });
   });
 
   function mockRequest(headers: Record<string, string> = {}): unknown {
@@ -93,8 +95,8 @@ describe('config API route', () => {
   });
 
   it('should use runtime env vars over defaults', async () => {
-    process.env.APP_NAME = 'My Mail';
-    process.env.JMAP_SERVER_URL = 'https://mail.example.com';
+    vi.stubEnv('APP_NAME', 'My Mail');
+    vi.stubEnv('JMAP_SERVER_URL', 'https://mail.example.com');
 
     const config = await getConfig();
 
@@ -103,8 +105,8 @@ describe('config API route', () => {
   });
 
   it('should fall back to NEXT_PUBLIC_ vars when runtime vars are unset', async () => {
-    process.env.NEXT_PUBLIC_APP_NAME = 'Legacy Mail';
-    process.env.NEXT_PUBLIC_JMAP_SERVER_URL = 'https://legacy.example.com';
+    vi.stubEnv('NEXT_PUBLIC_APP_NAME', 'Legacy Mail');
+    vi.stubEnv('NEXT_PUBLIC_JMAP_SERVER_URL', 'https://legacy.example.com');
 
     const config = await getConfig();
 
@@ -113,8 +115,8 @@ describe('config API route', () => {
   });
 
   it('should prefer runtime vars over NEXT_PUBLIC_ vars', async () => {
-    process.env.APP_NAME = 'Runtime';
-    process.env.NEXT_PUBLIC_APP_NAME = 'BuildTime';
+    vi.stubEnv('APP_NAME', 'Runtime');
+    vi.stubEnv('NEXT_PUBLIC_APP_NAME', 'BuildTime');
 
     const config = await getConfig();
 
@@ -122,10 +124,10 @@ describe('config API route', () => {
   });
 
   it('should return login page customization values', async () => {
-    process.env.LOGIN_COMPANY_NAME = 'Acme Corp';
-    process.env.LOGIN_IMPRINT_URL = 'https://acme.com/imprint';
-    process.env.LOGIN_PRIVACY_POLICY_URL = 'https://acme.com/privacy';
-    process.env.LOGIN_WEBSITE_URL = 'https://acme.com';
+    vi.stubEnv('LOGIN_COMPANY_NAME', 'Acme Corp');
+    vi.stubEnv('LOGIN_IMPRINT_URL', 'https://acme.com/imprint');
+    vi.stubEnv('LOGIN_PRIVACY_POLICY_URL', 'https://acme.com/privacy');
+    vi.stubEnv('LOGIN_WEBSITE_URL', 'https://acme.com');
 
     const config = await getConfig();
 
@@ -136,7 +138,7 @@ describe('config API route', () => {
   });
 
   it('should handle partial login customization', async () => {
-    process.env.LOGIN_COMPANY_NAME = 'Partial Corp';
+    vi.stubEnv('LOGIN_COMPANY_NAME', 'Partial Corp');
     // Leave URLs unset
 
     const config = await getConfig();
@@ -148,55 +150,43 @@ describe('config API route', () => {
   });
 
   it('should enable rememberMe when SESSION_SECRET is set', async () => {
-    process.env.SESSION_SECRET = 'test-secret';
+    vi.stubEnv('SESSION_SECRET', 'test-secret');
 
     const config = await getConfig();
 
     expect(config.rememberMeEnabled).toBe(true);
-	});
+  });
 
   it('should enable rememberMe when SESSION_SECRET_FILE is set', async () => {
-    writeFileSync('./session-secret', 'test-secret');
-    process.env.SESSION_SECRET_FILE = './session-secret';
+    vi.stubEnv('SESSION_SECRET_FILE', secretFile());
 
     const config = await getConfig();
-
-    unlink('./session-secret', (err) => {
-      if (err) throw err;
-    });
 
     expect(config.rememberMeEnabled).toBe(true);
   });
 
   it('should enable settingsSync only when both SESSION_SECRET and SETTINGS_SYNC_ENABLED are set', async () => {
-    process.env.SETTINGS_SYNC_ENABLED = 'true';
+    vi.stubEnv('SETTINGS_SYNC_ENABLED', 'true');
     const config1 = await getConfig();
     expect(config1.settingsSyncEnabled).toBe(false);
 
-    process.env.SESSION_SECRET = 'test-secret';
+    vi.stubEnv('SESSION_SECRET', 'test-secret');
     const config2 = await getConfig();
     expect(config2.settingsSyncEnabled).toBe(true);
-	});
+  });
 
   it('should enable settingsSync only when both SESSION_SECRET_FILE and SETTINGS_SYNC_ENABLED are set', async () => {
-    process.env.SETTINGS_SYNC_ENABLED = 'true';
+    vi.stubEnv('SETTINGS_SYNC_ENABLED', 'true');
     const config1 = await getConfig();
     expect(config1.settingsSyncEnabled).toBe(false);
 
-    writeFileSync('./session-secret', 'test-secret');
-    process.env.SESSION_SECRET_FILE = './session-secret';
-
+    vi.stubEnv('SESSION_SECRET_FILE', secretFile());
     const config2 = await getConfig();
-
-    unlink('./session-secret', (err) => {
-      if (err) throw err;
-    });
-
     expect(config2.settingsSyncEnabled).toBe(true);
   });
 
   it('should disable stalwart features when explicitly set to false', async () => {
-    process.env.STALWART_FEATURES = 'false';
+    vi.stubEnv('STALWART_FEATURES', 'false');
 
     const config = await getConfig();
 
@@ -204,9 +194,9 @@ describe('config API route', () => {
   });
 
   it('should return custom favicon and app logo URLs', async () => {
-    process.env.FAVICON_URL = '/branding/custom-favicon.svg';
-    process.env.APP_LOGO_LIGHT_URL = '/branding/my-logo.svg';
-    process.env.APP_LOGO_DARK_URL = '/branding/my-logo-white.svg';
+    vi.stubEnv('FAVICON_URL', '/branding/custom-favicon.svg');
+    vi.stubEnv('APP_LOGO_LIGHT_URL', '/branding/my-logo.svg');
+    vi.stubEnv('APP_LOGO_DARK_URL', '/branding/my-logo-white.svg');
 
     const config = await getConfig();
 
@@ -217,15 +207,15 @@ describe('config API route', () => {
 
   describe('per-domain branding overrides', () => {
     it('applies overrides for the matching host', async () => {
-      process.env.LOGIN_COMPANY_NAME = 'Default Co';
-      process.env.LOGIN_WEBSITE_URL = 'https://default.example';
-      process.env.DOMAIN_BRANDING = JSON.stringify([
+      vi.stubEnv('LOGIN_COMPANY_NAME', 'Default Co');
+      vi.stubEnv('LOGIN_WEBSITE_URL', 'https://default.example');
+      vi.stubEnv('DOMAIN_BRANDING', JSON.stringify([
         {
           host: 'mail1.example.com',
           loginCompanyName: 'Brand One',
           loginWebsiteUrl: 'https://one.example',
         },
-      ]);
+      ]));
 
       const config = await getConfig({ host: 'mail1.example.com' });
 
@@ -234,10 +224,10 @@ describe('config API route', () => {
     });
 
     it('falls through to the global value when the host has no entry', async () => {
-      process.env.LOGIN_COMPANY_NAME = 'Default Co';
-      process.env.DOMAIN_BRANDING = JSON.stringify([
+      vi.stubEnv('LOGIN_COMPANY_NAME', 'Default Co');
+      vi.stubEnv('DOMAIN_BRANDING', JSON.stringify([
         { host: 'mail1.example.com', loginCompanyName: 'Brand One' },
-      ]);
+      ]));
 
       const config = await getConfig({ host: 'unmapped.example.com' });
 
@@ -245,11 +235,11 @@ describe('config API route', () => {
     });
 
     it('falls through field-by-field when the matching entry omits a field', async () => {
-      process.env.LOGIN_COMPANY_NAME = 'Default Co';
-      process.env.LOGIN_WEBSITE_URL = 'https://default.example';
-      process.env.DOMAIN_BRANDING = JSON.stringify([
+      vi.stubEnv('LOGIN_COMPANY_NAME', 'Default Co');
+      vi.stubEnv('LOGIN_WEBSITE_URL', 'https://default.example');
+      vi.stubEnv('DOMAIN_BRANDING', JSON.stringify([
         { host: 'mail1.example.com', loginCompanyName: 'Brand One' },
-      ]);
+      ]));
 
       const config = await getConfig({ host: 'mail1.example.com' });
 
@@ -258,9 +248,9 @@ describe('config API route', () => {
     });
 
     it('prefers X-Forwarded-Host over Host', async () => {
-      process.env.DOMAIN_BRANDING = JSON.stringify([
+      vi.stubEnv('DOMAIN_BRANDING', JSON.stringify([
         { host: 'public.example.com', loginCompanyName: 'Public' },
-      ]);
+      ]));
 
       const config = await getConfig({
         host: 'internal.example.com',
@@ -271,9 +261,9 @@ describe('config API route', () => {
     });
 
     it('strips the port from the host header before matching', async () => {
-      process.env.DOMAIN_BRANDING = JSON.stringify([
+      vi.stubEnv('DOMAIN_BRANDING', JSON.stringify([
         { host: 'mail1.example.com', loginCompanyName: 'Brand One' },
-      ]);
+      ]));
 
       const config = await getConfig({ host: 'mail1.example.com:8443' });
 

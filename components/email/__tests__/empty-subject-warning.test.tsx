@@ -5,8 +5,15 @@ import { EmailComposer } from '../email-composer';
 
 // ─── Heavy component mocks (mirrors reply-addressing.test.tsx) ────────────────
 
+const editorKeyDown = vi.hoisted(() => vi.fn());
+
 vi.mock('@/components/email/rich-text-editor', () => ({
-  RichTextEditor: () => React.createElement('div', { 'data-testid': 'rich-text-editor' }),
+  RichTextEditor: () => React.createElement('div', {
+    'data-testid': 'rich-text-editor',
+    onKeyDown: (event: React.KeyboardEvent) => {
+      if (!event.defaultPrevented) editorKeyDown();
+    },
+  }),
 }));
 
 vi.mock('@/components/plugins/plugin-slot', () => ({ PluginSlot: () => null }));
@@ -192,6 +199,7 @@ const sendButton = () => screen.getAllByTestId('composer-send')[0] as HTMLButton
 describe('composer empty subject warning', () => {
   beforeEach(() => {
     updateSetting.mockClear();
+    editorKeyDown.mockClear();
   });
 
   it('keeps Send enabled when the subject is empty', () => {
@@ -206,6 +214,17 @@ describe('composer empty subject warning', () => {
     fireEvent.click(sendButton());
 
     expect(await screen.findByText('empty_subject.title')).toBeInTheDocument();
+    expect(onSend).not.toHaveBeenCalled();
+  });
+
+  it('intercepts Ctrl+Enter before the editor inserts a newline', async () => {
+    const onSend = vi.fn();
+    render(<EmailComposer initialData={DRAFT_WITHOUT_SUBJECT} onSend={onSend} />);
+
+    fireEvent.keyDown(screen.getByTestId('rich-text-editor'), { key: 'Enter', ctrlKey: true });
+
+    expect(await screen.findByText('empty_subject.title')).toBeInTheDocument();
+    expect(editorKeyDown).not.toHaveBeenCalled();
     expect(onSend).not.toHaveBeenCalled();
   });
 

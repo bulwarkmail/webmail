@@ -16,6 +16,7 @@ import { useEmailStore } from "@/stores/email-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useIdentityStore } from "@/stores/identity-store";
 import { useAccountStore } from "@/stores/account-store";
+import { useAccountSecurityStore } from "@/stores/account-security-store";
 import { usePolicyStore } from "@/stores/policy-store";
 import { toast } from "@/stores/toast-store";
 import { useIsDesktop, useIsMobile } from "@/hooks/use-media-query";
@@ -47,9 +48,11 @@ import { SidebarAppsModal } from "@/components/layout/sidebar-apps-modal";
 import { InlineAppView } from "@/components/layout/inline-app-view";
 import { useSidebarApps } from "@/hooks/use-sidebar-apps";
 import { useIsEmbedded } from "@/hooks/use-is-embedded";
+import { useIsFocusedProTab } from "@/hooks/use-pane-context";
 import { useProMultiAccountCalendars } from "@/hooks/use-pro-multi-account-calendars";
 import { ResizeHandle } from "@/components/layout/resize-handle";
 import { sanitizeOutgoingCalendarEventData } from "@/lib/calendar-event-normalization";
+import { buildRecurrenceOverridePatch } from "@/lib/recurrence-overrides";
 import { getEventStartDate } from "@/lib/calendar-utils";
 import { useTaskStore } from "@/stores/task-store";
 import { useContactStore } from "@/stores/contact-store";
@@ -59,14 +62,14 @@ import { ShareCollectionDialog } from "@/components/settings/share-collection-di
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { CreateCalendarModal } from "@/components/calendar/create-calendar-modal";
-import { getUserParticipantId } from "@/lib/calendar-participants";
+import { getUserParticipantId, collectUserCalendarAddresses } from "@/lib/calendar-participants";
 import { generateBirthdayEvents, createBirthdayCalendar, BIRTHDAY_CALENDAR_ID } from "@/lib/birthday-calendar";
 import { sharedCalendarColorKey, pickUnusedCalendarColor } from "@/lib/shared-calendar-colors";
 import { debug } from "@/lib/debug";
 import { consumePendingWebcal, hasPendingWebcal, subscribeToPendingWebcal } from "@/lib/protocol-handlers/session";
 import type { ParsedWebcal } from "@/lib/protocol-handlers/webcal";
-import { appPath, buildCalendarPath, parseCalendarPath } from "@/lib/deep-links";
-import { consumePendingDeepLink } from "@/lib/deep-link-handoff";
+import { appPath, buildCalendarPath, parseCalendarPath, type CalendarDeepLink } from "@/lib/deep-links";
+import { consumePendingDeepLink, subscribePendingDeepLink } from "@/lib/deep-link-handoff";
 import { useDeepLinkUrl } from "@/hooks/use-deep-link-url";
 import { useProInterfaceActive } from "@/components/pro/pro-interface-redirect";
 
@@ -106,7 +109,7 @@ export function CalendarApp({ linkSegments }: CalendarAppProps = {}) {
     fetchCalendars, fetchEvents, createEvent, updateEvent, deleteEvent, rsvpEvent,
     setSelectedDate, setViewMode, toggleCalendarVisibility, updateCalendar, shareCalendar,
     removeCalendar, clearCalendarEvents,
-    refreshAllSubscriptions, icalSubscriptions,
+    refreshAllSubscriptions, icalSubscriptions, isSubscriptionCalendar,
   } = useCalendarStore();
   const calendarEnabled = usePolicyStore((s) => s.isFeatureEnabled('calendarEnabled'));
   const { firstDayOfWeek, timeFormat, showWeekNumbers, enableCalendarTasks, showTasksOnCalendar, calendarHoverPreview, showBirthdayCalendar, birthdayCalendarColor, updateSetting } = useSettingsStore();
@@ -120,9 +123,21 @@ export function CalendarApp({ linkSegments }: CalendarAppProps = {}) {
   const contacts = useContactStore((s) => s.contacts);
   const normalizedViewMode = isCalendarViewMode(viewMode) ? viewMode : "month";
 
-  const currentUserEmails = useMemo(() =>
-    identities.map(id => id.email).filter(Boolean),
-    [identities]
+  // Aliases live on the principal, not on identities; fetch them so an
+  // alias-organized event is recognised as the user's own (see isOrganizer).
+  const accountEmails = useAccountSecurityStore((s) => s.emails);
+  const fetchPrincipal = useAccountSecurityStore((s) => s.fetchPrincipal);
+  const principalFetchedRef = useRef(false);
+  useEffect(() => {
+    if (principalFetchedRef.current) return;
+    principalFetchedRef.current = true;
+    if (accountEmails.length > 0) return; // already loaded elsewhere
+    void fetchPrincipal();
+  }, [accountEmails, fetchPrincipal]);
+
+  const currentUserEmails = useMemo(
+    () => collectUserCalendarAddresses(identities.map(id => id.email), accountEmails),
+    [identities, accountEmails]
   );
 
   const [showEventModal, setShowEventModal] = useState(false);
@@ -577,22 +592,16 @@ export function CalendarApp({ linkSegments }: CalendarAppProps = {}) {
   // `/calendar/<view>/<date>` moves the grid; `/calendar/event/<id>` opens the
   // event's sidebar and parks the grid on the day it starts. Applied once the
   // JMAP session is up, then the URL becomes an output of the view (below).
-  const deepLinkHandledRef = useRef(false);
-  useEffect(() => {
-    if (deepLinkHandledRef.current) return;
-    if (!isAuthenticated || !client) return;
-
-    const segments = linkSegments ?? consumePendingDeepLink('calendar') ?? [];
-    const link = parseCalendarPath(segments, new URLSearchParams(window.location.search));
-    deepLinkHandledRef.current = true;
-    if (!link) return;
-
+  // Held in a ref so the live-delivery subscription (Pro shell) always calls
+  // the copy that closes over the current client and handlers.
+  const applyCalendarDeepLink = (link: CalendarDeepLink) => {
     if (link.kind === 'view') {
       setViewMode(link.view);
       if (link.date) setSelectedDate(link.date);
       return;
     }
 
+    if (!client) return;
     void (async () => {
       try {
         const event = await client.getCalendarEvent(link.id, link.accountId);
@@ -608,21 +617,50 @@ export function CalendarApp({ linkSegments }: CalendarAppProps = {}) {
         toast.error(tDeepLink('event_not_found'));
       }
     })();
-  }, [isAuthenticated, client, linkSegments, setViewMode, setSelectedDate, openEditModal, tDeepLink]);
+  };
+  const applyCalendarDeepLinkRef = useRef(applyCalendarDeepLink);
+  applyCalendarDeepLinkRef.current = applyCalendarDeepLink;
 
-  // The permalink for what the calendar is currently showing. Suppressed in
-  // the Pro shell, where /pro owns the address bar.
+  const deepLinkHandledRef = useRef(false);
+  useEffect(() => {
+    if (deepLinkHandledRef.current) return;
+    if (!isAuthenticated || !client) return;
+
+    const segments = linkSegments ?? consumePendingDeepLink('calendar') ?? [];
+    const link = parseCalendarPath(segments, new URLSearchParams(window.location.search));
+    deepLinkHandledRef.current = true;
+    if (!link) return;
+    applyCalendarDeepLinkRef.current(link);
+  }, [isAuthenticated, client, linkSegments]);
+
+  // Pro shell only: this surface stays mounted for the whole session, so links
+  // arriving after mount are delivered live instead of being parked forever.
+  // Embedded-only: during a cold-load redirect the standard instance renders
+  // briefly and must not steal the link parked for the Pro one.
+  useEffect(() => {
+    if (!isEmbedded) return;
+    return subscribePendingDeepLink('calendar', (segments) => {
+      const link = parseCalendarPath(segments, new URLSearchParams(window.location.search));
+      if (link) applyCalendarDeepLinkRef.current(link);
+    });
+  }, [isEmbedded]);
+
+  // The permalink for what the calendar is currently showing. In the Pro
+  // shell only the focused tab writes the address bar; the standard instance
+  // that renders while Pro takes over a route stays silent.
   const proInterfaceActive = useProInterfaceActive();
+  const isFocusedProTab = useIsFocusedProTab();
   const eventLinkId = showEventModal && editEvent ? editEvent.id : null;
+  const calendarLinkPath = appPath(buildCalendarPath({
+    view: normalizedViewMode,
+    date: selectedDate,
+    eventId: eventLinkId,
+    accountId: eventLinkId ? editEvent?.accountId : null,
+  }));
   useDeepLinkUrl(
-    isEmbedded || proInterfaceActive
-      ? null
-      : appPath(buildCalendarPath({
-          view: normalizedViewMode,
-          date: selectedDate,
-          eventId: eventLinkId,
-          accountId: eventLinkId ? editEvent?.accountId : null,
-        })),
+    isEmbedded
+      ? (isFocusedProTab ? calendarLinkPath : null)
+      : proInterfaceActive ? null : calendarLinkPath,
   );
 
   const handleEditFromDetail = useCallback(() => {
@@ -656,7 +694,7 @@ export function CalendarApp({ linkSegments }: CalendarAppProps = {}) {
     const { dateRange: currentRange } = useCalendarStore.getState();
     if (!currentRange) return;
     if (multiAccountEnabled && accountClients.length > 0) {
-      await fetchAllAccountsEventsFn(accountClients, activeAccountId, currentRange.start, currentRange.end);
+      await fetchAllAccountsEventsFn(accountClients, currentRange.start, currentRange.end);
       return;
     }
     await fetchEvents(client, currentRange.start, currentRange.end);
@@ -664,12 +702,12 @@ export function CalendarApp({ linkSegments }: CalendarAppProps = {}) {
 
   // Intercept browser refresh gestures (F5, Ctrl/Cmd+R, pull-to-refresh)
   // and refresh calendar data via JMAP instead of reloading the page.
-  useRefreshGesture({
+  const { indicator: refreshIndicator } = useRefreshGesture({
     enabled: isAuthenticated && !!client,
     onRefresh: async () => {
       if (!client) return;
       const calendarRefresh = multiAccountEnabled && accountClients.length > 0 && activeAccountId
-        ? fetchAllAccountsCalendarsFn(accountClients, activeAccountId)
+        ? fetchAllAccountsCalendarsFn(accountClients)
         : fetchCalendars(client);
       await Promise.all([
         calendarRefresh,
@@ -813,12 +851,8 @@ export function CalendarApp({ linkSegments }: CalendarAppProps = {}) {
             // Patch the master event's recurrenceOverrides instead.
             const master = await findMasterEvent(event);
             if (master && event.recurrenceId) {
-              const patchUpdates: Record<string, unknown> = {};
-              for (const [key, value] of Object.entries(updates)) {
-                if (['id', 'uid', '@type', 'calendarIds', 'recurrenceRules', 'recurrenceOverrides', 'excludedRecurrenceRules'].includes(key)) continue;
-                patchUpdates[`recurrenceOverrides/${event.recurrenceId}/${key}`] = value;
-              }
-              await updateEvent(client, master.id, patchUpdates as Partial<CalendarEvent>, sendScheduling);
+              const patchUpdates = buildRecurrenceOverridePatch(updates, event.recurrenceId);
+              await updateEvent(client, master.id, patchUpdates, sendScheduling);
             } else {
               await updateEvent(client, event.id, updates, sendScheduling);
             }
@@ -1361,6 +1395,7 @@ export function CalendarApp({ linkSegments }: CalendarAppProps = {}) {
   return (
     <div className={cn("flex flex-col bg-background overflow-hidden pt-[env(safe-area-inset-top)]", isEmbedded ? "h-full" : "h-dvh")}>
       <AppTopBannerSlot />
+      {refreshIndicator}
       <div className={cn("relative flex flex-1 min-h-0 overflow-hidden", isMobile && "flex-col")}>
       {/* Left Navigation Rail (hidden when embedded in Pro shell) */}
       {!isMobile && !isEmbedded && (
@@ -1552,6 +1587,7 @@ export function CalendarApp({ linkSegments }: CalendarAppProps = {}) {
                 onClose={() => { setShowEventModal(false); setEditEvent(null); setPendingPreview(null); setDefaultModalAllDay(false); }}
                 onPreviewChange={setPendingPreview}
                 currentUserEmails={currentUserEmails}
+                isSubscriptionCalendar={isSubscriptionCalendar}
                 isMobile={false}
               />
             </div>
@@ -1627,11 +1663,16 @@ export function CalendarApp({ linkSegments }: CalendarAppProps = {}) {
               const d = new Date(date);
               if (typeof hour === "number") {
                 d.setHours(hour, 0, 0, 0);
+                // Explicit end so the modal keeps the clicked hour instead of
+                // applying its next-hour fallback for date-only defaults (#435).
+                const end = new Date(date);
+                end.setHours(hour + 1, 0, 0, 0);
+                openCreateModal(d, end);
               } else {
                 const now = new Date();
                 d.setHours(now.getHours() + 1, 0, 0, 0);
+                openCreateModal(d);
               }
-              openCreateModal(d);
             }}
             onNewAllDayEvent={() => {
               const d = new Date(date);
@@ -1661,6 +1702,7 @@ export function CalendarApp({ linkSegments }: CalendarAppProps = {}) {
           onMouseEnter={() => { if (hoverTimerRef.current) { clearTimeout(hoverTimerRef.current); hoverTimerRef.current = null; } }}
           onMouseLeave={handleHoverLeave}
           currentUserEmails={currentUserEmails}
+          isSubscriptionCalendar={isSubscriptionCalendar}
           timeFormat={timeFormat}
           isMobile={isMobile}
         />
@@ -1681,6 +1723,7 @@ export function CalendarApp({ linkSegments }: CalendarAppProps = {}) {
           onRsvp={handleRsvp}
           onClose={() => { setShowEventModal(false); setEditEvent(null); setDefaultModalAllDay(false); }}
           currentUserEmails={currentUserEmails}
+          isSubscriptionCalendar={isSubscriptionCalendar}
           isMobile={true}
         />
       )}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback, useMemo, useId } from "react";
+import { useState, useRef, useEffect, useLayoutEffect, useCallback, useMemo, useId } from "react";
 import { createPortal } from "react-dom";
 import { Check, Plus, LogOut, Star, ChevronDown, AlertCircle, GripVertical, X } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -97,9 +97,15 @@ export function AccountSwitcher({ variant = "rail", className }: AccountSwitcher
     }
   }, [variant]);
 
+  // Position before the first paint - the portalled popover would otherwise
+  // render one frame as an unpositioned block at the end of <body>, shifting
+  // the page layout for a split second.
+  useLayoutEffect(() => {
+    if (open) updatePosition();
+  }, [open, updatePosition]);
+
   useEffect(() => {
     if (!open) return;
-    updatePosition();
     const handleClickOutside = (e: MouseEvent) => {
       if (
         buttonRef.current?.contains(e.target as Node) ||
@@ -116,7 +122,7 @@ export function AccountSwitcher({ variant = "rail", className }: AccountSwitcher
       document.removeEventListener("mousedown", handleClickOutside);
       document.removeEventListener("keydown", handleEscape);
     };
-  }, [open, updatePosition, popoverRef]);
+  }, [open, popoverRef]);
 
   const handleSwitch = async (accountId: string) => {
     if (accountId === activeAccountId) return;

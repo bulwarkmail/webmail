@@ -46,13 +46,33 @@ describe('JMAPClient.setFileNodeShare', () => {
 
     const body = lastRequestBody(spy);
     expect(body.using).toContain('urn:ietf:params:jmap:filenode');
-    expect(body.using).toContain('urn:ietf:params:jmap:principals:owner');
+    // The fixture advertises only base principals, so the owner
+    // sub-capability must not be declared (RFC 8620 section 3.3).
+    expect(body.using).not.toContain('urn:ietf:params:jmap:principals:owner');
     const [method, args] = body.methodCalls[0] as [string, Record<string, unknown>];
     expect(method).toBe('FileNode/set');
     expect(args.accountId).toBe('account-1');
     expect(args.update).toEqual({
       'node-1': { 'shareWith/principal-9': READ },
     });
+  });
+
+  it('declares principals:owner only when the server advertises it', async () => {
+    const spy = mockFetch({
+      methodResponses: [['FileNode/set', { updated: { 'node-1': null } }, '0']],
+    });
+    const client = createClient();
+    Object.assign(client, {
+      capabilities: {
+        'urn:ietf:params:jmap:filenode': {},
+        'urn:ietf:params:jmap:principals': {},
+        'urn:ietf:params:jmap:principals:owner': {},
+      },
+    });
+
+    await client.setFileNodeShare('node-1', 'principal-9', READ);
+
+    expect(lastRequestBody(spy).using).toContain('urn:ietf:params:jmap:principals:owner');
   });
 
   it('sends null to revoke a principal\'s access', async () => {

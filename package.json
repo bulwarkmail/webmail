@@ -30,7 +30,7 @@
     "test:translations": "vitest run --no-isolate lib/__tests__/translations.test.ts",
     "test:integration": "bash integration/run-tests.sh",
     "prepare": "husky",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "next typegen && tsc --noEmit"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

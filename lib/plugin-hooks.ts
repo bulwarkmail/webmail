@@ -337,6 +337,11 @@ export const emailHooks = {
   // They can add, remove, or modify chips (e.g. rewrite addresses, add colors/icons).
   // Take Recipient[] as argument.
   onRecipientChipsChange: new HookBus(),
+  // Transform hooks - lets plugins modify the email before host use it to populate fields. 
+  onBeforeComposeOpenToForwardAsAttachment: new HookBus(),
+  onBeforeComposeOpenToReply: new HookBus(),
+  onBeforeComposeOpenToReplyAll: new HookBus(),
+  onBeforeComposeOpenToForward: new HookBus(),
 };
 
 // §7.2 Calendar Hooks
@@ -633,6 +638,14 @@ export const renderHooks = {
   // HTML through its sanitizer — plugin output is not trusted blindly. This is
   // the render-takeover hook used by the S/MIME plugin to replace the former
   // native detect/decrypt/verify path in the viewer.
+  //
+  // The host also enforces the user's external-content preference on the
+  // returned HTML: images, media, backgrounds and CSS url() pointing at remote
+  // hosts are neutralised (and the "external content blocked" banner shown)
+  // whenever the setting says block/ask, exactly as for a non-encrypted body.
+  // A handler cannot opt out of this — a decrypted newsletter must not leak a
+  // read receipt the user asked to suppress (#797) — so plugins do NOT need to
+  // reimplement the check themselves.
   onRenderEmailBody: new HookBus(),
 };
 

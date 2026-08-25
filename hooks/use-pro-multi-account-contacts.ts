@@ -40,8 +40,8 @@ export function useProMultiAccountContacts(): {
 
   useEffect(() => {
     if (!enabled || !activeAccountId || accountClients.length === 0) return;
-    void fetchAllAccountsAddressBooks(accountClients, activeAccountId);
-    void fetchAllAccountsContacts(accountClients, activeAccountId);
+    void fetchAllAccountsAddressBooks(accountClients);
+    void fetchAllAccountsContacts(accountClients);
   }, [enabled, activeAccountId, accountClients, fetchAllAccountsAddressBooks, fetchAllAccountsContacts]);
 
   return { enabled, accountClients };
