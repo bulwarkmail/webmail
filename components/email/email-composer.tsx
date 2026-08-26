@@ -37,7 +37,7 @@ import { TemplatePicker } from "@/components/templates/template-picker";
 import { TemplateForm } from "@/components/templates/template-form";
 import type { EmailTemplate } from "@/lib/template-types";
 import { appendPlainTextSignature, getPlainTextSignature, plainTextBodyHasSignature, plainTextBodyWithoutSignature } from "@/lib/signature-utils";
-import { findComposeIdentityId, findDraftIdentityId, resolveReplyFrom } from "@/lib/reply-identity";
+import { findComposeIdentityId, findDraftIdentityId, findReplyIdentityId, resolveReplyFrom } from "@/lib/reply-identity";
 import { buildReplyRecipients, isSelfSent } from "@/lib/reply-recipients";
 import { computeReplyThreadingHeaders } from "@/lib/email-threading";
 import { RequestTimeoutError } from "@/lib/jmap/client";
@@ -791,8 +791,26 @@ export function EmailComposer({
     setShowSendMenu(false);
   }, []);
 
+  // Two DIFFERENT behaviours used to sit behind `autoSelectReplyIdentity`:
+  //
+  //   1. pick among the user's OWN configured identities (exact address, then
+  //      `+tag`-stripped). Never rewrites `From:` - it only chooses which of
+  //      your own addresses sends.
+  //   2. the domain catch-all: rewrite `From:` to an address you have NOT
+  //      configured, sending through a same-domain identity.
+  //
+  // (1) is what makes a shared or aliased mailbox reply from its own address,
+  // and it is what users expect; shipping it off meant that on a shared mailbox
+  // every reply, reply-all and new message silently went out as the account
+  // owner. It carries no impersonation risk, so it is now unconditional.
+  //
+  // (2) stays behind the setting. `ownedDomains` in `resolveReplyFrom` treats
+  // ANY address on a domain you hold an identity on as a catch-all candidate -
+  // including a colleague's, and including one that only appeared in `Bcc:` -
+  // so on a multi-user domain it can put someone else's address in your From.
+  // That is a deliberate opt-in for genuine catch-all deployments, which is
+  // exactly what the setting's description promises, and it must stay one.
   useEffect(() => {
-    if (!autoSelectReplyIdentity) return;
     if (selectedIdentityId || initialData?.selectedIdentityId) return;
 
     // New message started from a specific mailbox/account: default the From to
@@ -807,7 +825,12 @@ export function EmailComposer({
       return;
     }
 
-    if (mode !== 'reply' && mode !== 'replyAll') return;
+    // `forward` resolves like a reply: the address the original was delivered
+    // to is the one to send from. It was excluded, so forwarding a message that
+    // arrived at a shared mailbox went out as the account owner - even though
+    // the comment above already promised "Reply/forward fall through", and the
+    // neighbouring inline-image effect groups all three modes together.
+    if (mode !== 'reply' && mode !== 'replyAll' && mode !== 'forward') return;
 
     // Replying to our own message in a thread (#703): keep sending as the
     // identity that sent it. Resolving from the recipients here would pick the
@@ -821,20 +844,35 @@ export function EmailComposer({
       }
     }
 
-    const resolved = resolveReplyFrom(identities, {
+    const recipients = {
       to: replyTo?.to,
       cc: replyTo?.cc,
       bcc: replyTo?.bcc,
-    });
+    };
 
-    if (resolved) {
-      setSelectedIdentityId(resolved.identityId);
-      if (resolved.overrideEmail && !fromOverrideEnabled) {
-        setFromOverrideEnabled(true);
-        setFromOverrideEmail(resolved.overrideEmail);
-        if (resolved.overrideName) setFromOverrideName(resolved.overrideName);
-      }
+    // (1) Own-identity match - unconditional.
+    const ownIdentityId = findReplyIdentityId(identities, recipients);
+    if (ownIdentityId) {
+      setSelectedIdentityId(ownIdentityId);
       return;
+    }
+
+    // (2) Catch-all From rewrite - opt-in, and never on a forward. A reply
+    // continues a thread whose participants already know the addressing; a
+    // forward introduces the rewritten From to a recipient the user just typed,
+    // who has no way to tell it is not really from that person. Forwards
+    // therefore keep the own-identity match above and stop there.
+    if (autoSelectReplyIdentity && mode !== 'forward') {
+      const resolved = resolveReplyFrom(identities, recipients);
+      if (resolved) {
+        setSelectedIdentityId(resolved.identityId);
+        if (resolved.overrideEmail && !fromOverrideEnabled) {
+          setFromOverrideEnabled(true);
+          setFromOverrideEmail(resolved.overrideEmail);
+          if (resolved.overrideName) setFromOverrideName(resolved.overrideName);
+        }
+        return;
+      }
     }
 
     // Fallback: match identity by the account's email when replying from unified view
