@@ -77,6 +77,7 @@ interface EmailContextMenuProps {
   onRescheduleScheduled?: () => void;
   // Batch actions
   onBatchMarkAsRead?: (read: boolean) => void;
+  onBatchForwardAsAttachment?: () => void;
   onBatchDelete?: () => void;
   onBatchArchive?: () => void;
   onBatchMoveToMailbox?: (mailboxId: string) => void;
@@ -127,6 +128,7 @@ export function EmailContextMenu({
   onMarkAsSpam,
   onUndoSpam,
   onBatchMarkAsRead,
+  onBatchForwardAsAttachment,
   onBatchDelete,
   onBatchArchive,
   onBatchMoveToMailbox,
@@ -284,6 +286,20 @@ export function EmailContextMenu({
               })}
             />
           )}
+          <ContextMenuSeparator />
+        </>
+      )}
+
+      {/* Forward as attachment - batch variant attaches every selected
+          message as its own message/rfc822 file in one composer. */}
+      {showBatchActions && onBatchForwardAsAttachment && (
+        <>
+          <ContextMenuItem
+            icon={Paperclip}
+            label={tEmailViewer("forward_as_attachment")}
+            testId="ctx-batch-forward-as-attachment"
+            onClick={() => handleAction(onBatchForwardAsAttachment)}
+          />
           <ContextMenuSeparator />
         </>
       )}

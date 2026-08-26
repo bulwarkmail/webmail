@@ -4,7 +4,7 @@ import { Email, ThreadGroup } from "@/lib/jmap/types";
 import { ThreadListItem } from "./thread-list-item";
 import { EmailContextMenu } from "./email-context-menu";
 import { cn } from "@/lib/utils";
-import { Trash2, Mail, MailX, MailOpen, Loader2, SearchX, AlertTriangle, CalendarClock, ShieldCheck } from "lucide-react";
+import { Trash2, Mail, MailX, MailOpen, Loader2, SearchX, AlertTriangle, CalendarClock, ShieldCheck, Paperclip } from "lucide-react";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -35,6 +35,7 @@ interface EmailListProps {
   onReplyAll?: (email: Email) => void;
   onForward?: (email: Email) => void;
   onForwardAsAttachment?: (email: Email) => void;
+  onBatchForwardAsAttachment?: () => void;
   onMarkAsRead?: (email: Email, read: boolean) => void;
   onToggleStar?: (email: Email) => void;
   onTogglePinned?: (email: Email) => void;
@@ -65,6 +66,7 @@ export function EmailList({
   onReplyAll,
   onForward,
   onForwardAsAttachment,
+  onBatchForwardAsAttachment,
   onMarkAsRead,
   onToggleStar,
   onTogglePinned,
@@ -83,6 +85,7 @@ export function EmailList({
   const t = useTranslations('email_list');
   const tContextMenu = useTranslations('context_menu');
   const tSpam = useTranslations('email_viewer.spam');
+  const tEmailViewer = useTranslations('email_viewer');
   const { client } = useAuthStore();
   const {
     selectedEmailIds,
@@ -420,6 +423,22 @@ export function EmailList({
                 <Mail className="w-4 h-4" />
               )}
             </Button>
+            {onBatchForwardAsAttachment && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onBatchForwardAsAttachment}
+                title={tEmailViewer('forward_as_attachment')}
+                disabled={isProcessing}
+                className="hover:bg-accent transition-colors disabled:opacity-50"
+              >
+                {isProcessing ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Paperclip className="w-4 h-4" />
+                )}
+              </Button>
+            )}
             {effectiveMailboxRole === 'junk' && (
               <Button
                 variant="ghost"
@@ -644,6 +663,7 @@ export function EmailList({
           onCancelScheduledForEdit={onCancelScheduledForEdit ? () => onCancelScheduledForEdit(contextMenuEmail!) : undefined}
           onRescheduleScheduled={onRescheduleScheduled ? () => onRescheduleScheduled(contextMenuEmail!) : undefined}
           onBatchMarkAsRead={(read) => client && batchMarkAsRead(client, read)}
+          onBatchForwardAsAttachment={() => onBatchForwardAsAttachment?.()}
           onBatchDelete={() => client && batchDelete(client)}
           onBatchArchive={async () => {
             if (!client) return;

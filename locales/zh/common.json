@@ -234,7 +234,7 @@
     "batch_actions": {
       "select": "选择邮件",
       "select_all": "全选",
-      "selected_messages": "已選取 {count, plural, one {1} other {#}} 封電子郵件",
+      "selected_messages": "已选取 {count, plural, one {1} other {#}} 封电子邮件",
       "mark_read": "标记为已读",
       "mark_unread": "标记为未读",
       "delete": "删除",
@@ -306,7 +306,7 @@
     "fullscreen": "全屏",
     "exit_fullscreen": "退出全屏",
     "export_email": "导出为 .eml",
-    "forward_as_attachment": "Forward as attachment",
+    "forward_as_attachment": "以附件转发",
     "import_email": "导入 .eml 或 .zip",
     "keyboard_shortcuts": "键盘快捷键（？）",
     "email_source": "邮件源码",

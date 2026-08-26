@@ -101,7 +101,7 @@ import { plainTextToComposerBody, getQuoteBodies } from "@/lib/email-composer-ut
 import { appLifecycleHooks, uiHooks, routerHooks, toastHooks, emailHooks } from "@/lib/plugin-hooks";
 import { emailToReadView } from "@/lib/plugin-projection";
 import { buildQuoteHeader } from "@/lib/quote-header";
-import { buildComposeTabTitle, buildReplySubject } from "@/lib/subject-prefix";
+import { buildComposeTabTitle, buildReplySubject, buildForwardSubject } from "@/lib/subject-prefix";
 import { buildForwardAsAttachmentPayload } from "@/lib/forward-as-attachment";
 import { getEffectiveLocale } from '@/i18n/detect-locale';
 import {
@@ -2107,6 +2107,91 @@ export function MailApp({ linkSegments }: MailAppProps = {}) {
     if (isMobile) setActiveView('viewer');
   };
 
+  // Batch variant of handleForwardAsAttachment for multi-selected messages
+  // (list toolbar button + batch context-menu entry): opens ONE composer
+  // carrying every selected message as its own message/rfc822 attachment.
+  // The subject follows the first selected message, like single-message
+  // Forward. A plugin vetoing any single message (onBeforeForward.intercept)
+  // aborts the whole batch - forwarding 2 of 3 selected messages because a
+  // compliance plugin blocked the third would look like silent data loss.
+  const handleBatchForwardAsAttachment = async () => {
+    const { emails, selectedEmailIds: selection, threadEmailsCache } = useEmailStore.getState();
+    if (selection.size === 0) return;
+
+    // Selection can include messages that live only inside an expanded
+    // thread (threadEmailsCache), not as top-level rows of `emails` - the
+    // thread-header checkbox selects every message in the thread. Collect
+    // in list order so the attachments and subject match what's on screen.
+    const seen = new Set<string>();
+    const selected: Email[] = [];
+    const collect = (list: Email[]) => {
+      for (const email of list) {
+        if (selection.has(email.id) && !seen.has(email.id)) {
+          seen.add(email.id);
+          selected.push(email);
+        }
+      }
+    };
+    collect(emails);
+    for (const list of threadEmailsCache.values()) collect(list);
+    if (selected.length === 0) return;
+
+    const {
+      emailDownloadTemplate,
+      filenameSpaceReplacement,
+      filenameLowercase,
+      filenameStripDiacritics,
+      filenameCollapseSeparators,
+    } = useSettingsStore.getState();
+    const filenameOptions = {
+      template: emailDownloadTemplate,
+      spaceReplacement: filenameSpaceReplacement,
+      lowercase: filenameLowercase,
+      stripDiacritics: filenameStripDiacritics,
+      collapseSeparators: filenameCollapseSeparators,
+    };
+    const forwardPrefix = t('email_composer.prefix.forward');
+
+    const attachments: Array<{ blobId: string; name: string; type: string; size: number }> = [];
+    for (const email of selected) {
+      const transformed = await emailHooks.onBeforeComposeOpenToForwardAsAttachment.transform(email);
+      // Same per-message skip as the single flow: no blobId, nothing to attach.
+      const payload = buildForwardAsAttachmentPayload(transformed, forwardPrefix, filenameOptions);
+      if (!payload) continue;
+      const ok = await emailHooks.onBeforeForward.intercept({
+        originalEmailId: transformed.id,
+        originalEmail: emailToReadView(transformed),
+        mode: 'forward' as const,
+      });
+      if (!ok) return;
+      attachments.push(payload.attachment);
+    }
+    if (attachments.length === 0) return;
+
+    const first = selected[0];
+    startFreshComposerSession();
+    setPendingDraft({
+      to: "",
+      cc: "",
+      bcc: "",
+      subject: first.subject ? buildForwardSubject(first.subject, forwardPrefix) : "",
+      body: "",
+      showCc: false,
+      showBcc: false,
+      selectedIdentityId: null,
+      subAddressTag: "",
+      mode: "forward",
+      draftId: null,
+      replyTo: {
+        subject: first.subject,
+        attachments,
+      },
+    });
+    setComposerMode('forward');
+    setShowComposer(true);
+    if (isMobile) setActiveView('viewer');
+  };
+
   const handleDelete = async (emailToDelete: Email | null = selectedEmail) => {
     if (!client || !emailToDelete) return;
 
@@ -3932,6 +4017,7 @@ export function MailApp({ linkSegments }: MailAppProps = {}) {
                   selectEmail(email);
                   handleForwardAsAttachment(email);
                 }}
+                onBatchForwardAsAttachment={handleBatchForwardAsAttachment}
                 onMarkAsRead={async (email, read) => {
                   if (client) {
                     await markAsRead(client, email.id, read);
