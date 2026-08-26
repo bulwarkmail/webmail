@@ -3256,8 +3256,36 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       const accountChanges = change.changed[accountId];
       const anyMailboxChanged = Object.values(change.changed).some((c) => c?.Mailbox);
 
-      // Handle Email state changes - refresh current mailbox
-      if (accountChanges?.Email) {
+      // Handle Email state changes - refresh current mailbox.
+      //
+      // The OPEN folder may be a delegated/shared one whose owner is not the
+      // primary account. Stalwart's SSE never pushes StateChange for those, so
+      // they arrive only via the client's secondary poll - reported under the
+      // OWNER's accountId, never the primary's. Keying this refresh off the
+      // primary alone therefore left the visible rows stale until a manual
+      // reload whenever a background change touched a shared folder: the folder
+      // counters moved (they already react to any account, below) while the
+      // list did not. A server-side keyword patch - an operator job stamping a
+      // colour label, or another member of the shared mailbox acting on it -
+      // was invisible until a hard refresh.
+      //
+      // `resolveViewAccountId()` is the existing helper for "which owner
+      // account am I looking at", and resolves through `resolveActionMailboxes`
+      // so it stays correct in the multi-account shell too. It returns
+      // undefined for a normal own-account view, leaving behaviour unchanged.
+      //
+      // The aggregate views contribute shared accounts as well, so they take
+      // any contributing account's Email change. `refreshCurrentMailbox`
+      // already coalesces (see `coalesceRefresh`), which bounds the extra
+      // refetches a busy shared mailbox can trigger.
+      const viewedOwnerAccountId = resolveViewAccountId();
+      const viewedEmailChanged = Boolean(
+        accountChanges?.Email
+        || (viewedOwnerAccountId && change.changed[viewedOwnerAccountId]?.Email)
+        || (get().isUnifiedView && Object.values(change.changed).some((c) => c?.Email)),
+      );
+
+      if (viewedEmailChanged) {
         await get().refreshCurrentMailbox(client);
         get().fetchTagCounts(client);
       }
