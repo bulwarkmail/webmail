@@ -2763,7 +2763,7 @@ export function EmailComposer({
                   setShowCc(true);
                 }}
               >
-                Cc
+                {t("cc")}
               </Button>
               <Button
                 variant="ghost"
@@ -2787,7 +2787,7 @@ export function EmailComposer({
                   setShowBcc(true);
                 }}
               >
-                Bcc
+                {t("bcc")}
               </Button>
             </div>
           </div>

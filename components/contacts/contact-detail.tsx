@@ -234,7 +234,11 @@ export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onDupli
           <Section title={t("detail.section_contact")}>
             <div className="space-y-3">
               {emails.map((e, i) => (
-                <FieldRow key={`em${i}`} icon={Mail} label={e.label || formatContexts(e.contexts) || t("detail.email_default_label")}>
+                <FieldRow 
+                  key={`em${i}`}
+                  icon={Mail} 
+                  label={e.label || (formatContexts(e.contexts) ? t("detail." + formatContexts(e.contexts)) : t("detail.email_default_label"))}
+                >
                   <div className="flex items-center gap-2 group">
                     <MailtoLink to={e.address} className="text-sm text-primary hover:underline break-all">
                       {e.address}
@@ -256,7 +260,7 @@ export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onDupli
 
               {phones.map((p, i) => {
                 const features = formatPhoneFeatures(p.features);
-                const labelParts = [p.label, formatContexts(p.contexts), features].filter(Boolean) as string[];
+                const labelParts = [p.label, formatContexts(p.contexts) ? t("detail." + formatContexts(p.contexts)) : "", t("detail." + features)].filter(Boolean) as string[];
                 return (
                   <FieldRow key={`ph${i}`} icon={Phone} label={labelParts.length ? labelParts.join(" · ") : t("detail.phone_default_label")}>
                     <div className="flex items-center gap-2 group">
@@ -285,7 +289,7 @@ export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onDupli
                   lines.push(...parts);
                 }
                 return (
-                  <FieldRow key={`ad${i}`} icon={MapPin} label={formatContexts(a.contexts) || t("detail.address_default_label")}>
+                  <FieldRow key={`ad${i}`} icon={MapPin} label={formatContexts(a.contexts) ? t("detail." + formatContexts(a.contexts)) : t("detail.address_default_label")}>
                     <div className="text-sm space-y-0.5">
                       {lines.map((line, idx) => (
                         <div key={idx}>{line}</div>
