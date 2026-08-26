@@ -6,6 +6,8 @@ import { EmailComposer, type ComposerDraftData } from "@/components/email/email-
 import { ErrorBoundary, ComposerErrorFallback } from "@/components/error";
 import { useAuthStore } from "@/stores/auth-store";
 import { useEmailStore } from "@/stores/email-store";
+import { useAccountStore } from "@/stores/account-store";
+import { resolveComposeAccountEmail } from "@/lib/reply-identity";
 import { toast } from "@/stores/toast-store";
 import { useProTabStore, registerProTabCloseInterceptor, type ProComposeTabData } from "@/stores/pro-tab-store";
 import { debug } from "@/lib/debug";
@@ -25,6 +27,10 @@ export function ProComposeTabBody({ tabId, data }: ProComposeTabBodyProps) {
   const t = useTranslations();
   const client = useAuthStore((s) => s.client);
   const sendEmail = useEmailStore((s) => s.sendEmail);
+  const mailboxes = useEmailStore((s) => s.mailboxes);
+  const selectedMailbox = useEmailStore((s) => s.selectedMailbox);
+  const viewingAccountId = useEmailStore((s) => s.viewingAccountId);
+  const activeAccountId = useAuthStore((s) => s.activeAccountId);
   const refreshCurrentMailbox = useEmailStore((s) => s.refreshCurrentMailbox);
   const fetchScheduledEmails = useEmailStore((s) => s.fetchScheduledEmails);
   const refreshScheduledMetadata = useEmailStore((s) => s.refreshScheduledMetadata);
@@ -183,6 +189,20 @@ export function ProComposeTabBody({ tabId, data }: ProComposeTabBodyProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Mirrors the standard shell (see the same prop in `components/mail/mail-app.tsx`).
+  // Without it `mode === 'compose'` resolves `findComposeIdentityId(identities,
+  // undefined)` -> null and every new message in the Pro shell defaults to the
+  // account owner, even with a shared folder open. The Pro shell hoists every
+  // "show composer" intent - including `mailto:` links - into a tab, so this
+  // omission covered the whole compose surface there.
+  const composeFromAccountEmail = resolveComposeAccountEmail(
+    mailboxes,
+    selectedMailbox,
+    useAccountStore
+      .getState()
+      .getAccountById(viewingAccountId ?? activeAccountId ?? '')?.email,
+  );
+
   return (
     <div className="flex h-full w-full flex-col bg-background">
       <ErrorBoundary fallback={ComposerErrorFallback}>
@@ -192,6 +212,7 @@ export function ProComposeTabBody({ tabId, data }: ProComposeTabBodyProps) {
           replyTo={data.replyTo}
           initialDraftText={data.initialDraftText}
           initialData={data.initialData}
+          composeFromAccountEmail={composeFromAccountEmail}
           onSend={handleSend}
           onScheduledSendCreated={handleScheduledSendCreated}
           onClose={handleClose}
