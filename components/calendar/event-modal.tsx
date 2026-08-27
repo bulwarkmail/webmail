@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useTranslations, useLocale } from "next-intl";
+import { toast } from "@/stores/toast-store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { X, Trash2, Check, Users, CalendarDays, Copy, Pencil, Clock, MapPin, Video, Repeat, Bell, AlignLeft, Plus } from "lucide-react";
@@ -462,7 +463,13 @@ export function EventModal({
   const handleSave = useCallback(async () => {
     const trimmedTitle = title.trim();
     if (!trimmedTitle || isSaving) return;
-    if (trimmedTitle.length > 500 || description.trim().length > 10000 || location.trim().length > 500) return;
+    if (trimmedTitle.length > 500 || description.trim().length > 10000 || location.trim().length > 500) {
+      // This guard returned silently, so a rejected save was indistinguishable from a dead
+      // button. The fields also enforce their limits via maxLength, so this is a backstop —
+      // but if it ever fires, say so.
+      toast.error(t("notifications.event_error"));
+      return;
+    }
 
     const pendingAttendee = participantInputRef.current?.flush() ?? null;
     const effectiveAttendees = pendingAttendee ? [...attendees, pendingAttendee] : attendees;
@@ -1415,7 +1422,9 @@ export function EventModal({
             disabled={!title.trim() || isSaving}
             className="w-full"
           >
-            {t("form.save")}
+            {/* While a save is in flight the button was disabled with no visible change, so a
+                slow request (mobile, VPN) looked like a dead button for the whole timeout. */}
+            {isSaving ? t("form.saving") : t("form.save")}
           </Button>
         </div>
         )}
