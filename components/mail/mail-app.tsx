@@ -81,7 +81,7 @@ import { isFilePreviewable } from "@/lib/file-preview";
 import { appendHtmlSignature, appendPlainTextSignature } from "@/lib/signature-utils";
 import { computeReplyThreadingHeaders } from "@/lib/email-threading";
 import { EML_IMPORT_ACCEPT, expandImportableEmails } from "@/lib/eml-import";
-import { findDraftIdentityId, resolveComposeAccountEmail, resolveReplyFrom, type ReplyFromResolution } from "@/lib/reply-identity";
+import { findDraftIdentityId, findReplyIdentityId, resolveComposeAccountEmail, type ReplyFromResolution } from "@/lib/reply-identity";
 import { buildReplyRecipients, isSelfSent } from "@/lib/reply-recipients";
 import { useProMultiAccountIdentities } from "@/hooks/use-pro-multi-account-identities";
 import { Filter, ChevronDown, X, Paperclip, Star, Mail, MailOpen, RotateCcw, PenSquare, PenLine, CheckSquare, Square, AlertTriangle } from "lucide-react";
@@ -2949,25 +2949,31 @@ export function MailApp({ linkSegments }: MailAppProps = {}) {
     }
 
     const primaryIdentity = identities[0];
-    const autoSelectReplyIdentity = useSettingsStore.getState().autoSelectReplyIdentity;
 
-    // Decide the sending identity and (for domain-catch-all) an optional
-    // header From override that matches the address the message was sent to.
-    // Our own message keeps the identity it was sent from - the recipients are
-    // the other party, so resolving from them would send as their address.
-    // When the setting is off, fall through to primary-identity behavior.
+    // Send from the address the message was delivered to, so a reply out of a
+    // shared or aliased mailbox does not go out as the account owner. Our own
+    // message keeps the identity it was sent from - the recipients are the
+    // other party, so resolving from them would send as their address.
+    //
+    // Quick reply resolves the user's OWN identities only. It deliberately does
+    // NOT take the domain catch-all `From:` rewrite that the full composer
+    // offers: this surface is a bare text box with no From row, so a rewritten
+    // From would be applied with nothing on screen to show it - or to correct
+    // it. A catch-all delivery quick-replies as the matching own identity, and
+    // the user can open the full composer when they need the rewrite.
     const selfSentIdentityId = isSelfSent(replySource, ownIdentityEmails)
       ? findDraftIdentityId(identities, selectedEmail.from?.[0])
       : null;
-    const resolved: ReplyFromResolution | null = !autoSelectReplyIdentity
-      ? null
-      : selfSentIdentityId
-        ? { identityId: selfSentIdentityId }
-        : resolveReplyFrom(identities, {
+    const resolved: ReplyFromResolution | null = selfSentIdentityId
+      ? { identityId: selfSentIdentityId }
+      : (() => {
+          const ownIdentityId = findReplyIdentityId(identities, {
             to: selectedEmail.to,
             cc: selectedEmail.cc,
             bcc: selectedEmail.bcc,
           });
+          return ownIdentityId ? { identityId: ownIdentityId } : null;
+        })();
     const sendingIdentity = resolved
       ? (identities.find((i) => i.id === resolved.identityId) || primaryIdentity)
       : primaryIdentity;
