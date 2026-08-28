@@ -1077,6 +1077,10 @@
         "description": "Show an All mail entry in the Unified Mailbox listing all mail across the selected folders."
       }
     },
+    "layout": {
+      "title": "Layout",
+      "description": "Arrange the reading pane, toolbar, sidebar and unified mailbox"
+    },
     "keywords": {
       "title": "Email Tags",
       "description": "Define tags to organize your emails. These are stored as JMAP keywords on the server.",
