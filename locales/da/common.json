@@ -2327,6 +2327,7 @@
       "html_signature_label": "HTML-signatur",
       "signature_byte_counter": "{bytes} / {max} bytes",
       "signature_byte_limit_reached": "Servergrænse nået",
+      "org_signature_locked": "Your administrator manages signatures for this account. Personal HTML and plain-text signatures cannot be edited here.",
       "save": "Gem identitet",
       "cancel": "Annuller",
       "creating": "Opretter...",

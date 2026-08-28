@@ -2258,7 +2258,8 @@
       "creating": "יוצר...",
       "updating": "מעדכן...",
       "signature_byte_counter": "{bytes} / {max} בתים",
-      "signature_byte_limit_reached": "הגבול של השרת הושג"
+      "signature_byte_limit_reached": "הגבול של השרת הושג",
+      "org_signature_locked": "Your administrator manages signatures for this account. Personal HTML and plain-text signatures cannot be edited here."
     },
     "sub_address": {
       "button_tooltip": "השתמש בכתובת משנה",

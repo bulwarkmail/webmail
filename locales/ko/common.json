@@ -2327,6 +2327,7 @@
       "html_signature_label": "HTML 서명",
       "signature_byte_counter": "{bytes} / {max} 바이트",
       "signature_byte_limit_reached": "서버 한도 도달",
+      "org_signature_locked": "Your administrator manages signatures for this account. Personal HTML and plain-text signatures cannot be edited here.",
       "save": "저장",
       "cancel": "취소",
       "creating": "만드는 중...",

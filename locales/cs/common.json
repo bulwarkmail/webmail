@@ -2327,6 +2327,7 @@
       "html_signature_label": "HTML podpis",
       "signature_byte_counter": "{bytes} / {max} bajtů",
       "signature_byte_limit_reached": "Dosažen limit serveru",
+      "org_signature_locked": "Your administrator manages signatures for this account. Personal HTML and plain-text signatures cannot be edited here.",
       "save": "Uložit identitu",
       "cancel": "Zrušit",
       "creating": "Vytváření...",

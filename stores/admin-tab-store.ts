@@ -7,6 +7,7 @@ export const ADMIN_TABS = [
   'branding',
   'auth',
   'policy',
+  'signatures',
   'plugins',
   'themes',
   'marketplace',

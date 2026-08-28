@@ -109,6 +109,41 @@ export const DEFAULT_THEME_POLICY: ThemePolicy = {
   defaultThemeId: null,
 };
 
+export type OrgSignatureScope = 'instance' | 'per_domain';
+
+export type OrgSignatureMergeMode = 'replace' | 'append' | 'fallback';
+
+export interface OrgSignatureTemplate {
+  htmlTemplate: string;
+  textTemplate: string;
+}
+
+export interface OrgSignaturePolicy {
+  enabled: boolean;
+  scope: OrgSignatureScope;
+  /** replace = org only; append = user then org; fallback = org when user has none */
+  mergeMode: OrgSignatureMergeMode;
+  instance?: OrgSignatureTemplate;
+  /** Sender email domain (e.g. example.com) -> template */
+  perDomain?: Record<string, OrgSignatureTemplate>;
+  replySignaturePosition?: 'above_quote' | 'below_quote';
+  lockReplySignaturePosition?: boolean;
+  signatureSeparatorEnabled?: boolean;
+  lockSignatureSeparator?: boolean;
+}
+
+export const DEFAULT_ORG_SIGNATURE_POLICY: OrgSignaturePolicy = {
+  enabled: false,
+  scope: 'instance',
+  mergeMode: 'replace',
+  instance: { htmlTemplate: '', textTemplate: '' },
+  perDomain: {},
+  replySignaturePosition: 'above_quote',
+  lockReplySignaturePosition: false,
+  signatureSeparatorEnabled: true,
+  lockSignatureSeparator: false,
+};
+
 /** One entry of the Web Push relay list users can pick from. */
 export interface PushRelayOption {
   /** Name shown in the relay picker. Empty falls back to the URL host. */
@@ -137,6 +172,10 @@ export interface SettingsPolicy {
   pushRelayUrl?: string;
   /** When true, users are pinned to pushRelayUrl and cannot pick another relay. */
   pushRelayUrlLocked?: boolean;
+  /** Org-wide or per-domain enforced signature templates */
+  orgSignature?: OrgSignaturePolicy;
+  /** Sender email domain -> brand display name for {{brand.name}} in org signatures */
+  domainBrandNames?: Record<string, string>;
 }
 
 export const DEFAULT_POLICY: SettingsPolicy = {
@@ -150,6 +189,8 @@ export const DEFAULT_POLICY: SettingsPolicy = {
   pushRelays: [],
   pushRelayUrl: '',
   pushRelayUrlLocked: false,
+  orgSignature: { ...DEFAULT_ORG_SIGNATURE_POLICY },
+  domainBrandNames: {},
 };
 
 export interface AuditEntry {

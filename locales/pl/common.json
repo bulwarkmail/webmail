@@ -2327,6 +2327,7 @@
       "html_signature_label": "Podpis HTML",
       "signature_byte_counter": "{bytes} / {max} bajtów",
       "signature_byte_limit_reached": "Osiągnięto limit serwera",
+      "org_signature_locked": "Your administrator manages signatures for this account. Personal HTML and plain-text signatures cannot be edited here.",
       "save": "Zapisz tożsamość",
       "cancel": "Anuluj",
       "creating": "Tworzenie...",

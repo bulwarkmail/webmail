@@ -1,9 +1,13 @@
 import { readFile, writeFile, rename } from 'node:fs/promises';
 import { logger } from '@/lib/logger';
 import { readFileEnv } from '@/lib/read-file-env';
-import { CONFIG_ENV_MAP, DEFAULT_FEATURE_GATES, DEFAULT_POLICY, DEFAULT_THEME_POLICY, type SettingsPolicy } from './types';
+import { CONFIG_ENV_MAP, DEFAULT_FEATURE_GATES, DEFAULT_ORG_SIGNATURE_POLICY, DEFAULT_POLICY, DEFAULT_THEME_POLICY, type SettingsPolicy } from './types';
 import { ensureConfigDir, getConfigPath, assertWritable } from './paths';
 import { isValidRelayUrl, normalizeRelayUrl } from '@/lib/push-relays';
+import {
+  normalizeDomainBrandNames,
+  normalizeOrgSignaturePolicy,
+} from '@/lib/org-signatures';
 
 function parseEnvValue(value: string, type: string): unknown {
   switch (type) {
@@ -196,6 +200,8 @@ class ConfigManager {
       .filter(relay => isValidRelayUrl(relay.url));
     const defaultRelay = normalizeRelayUrl(policy.pushRelayUrl);
     policy.pushRelayUrl = isValidRelayUrl(defaultRelay) ? defaultRelay : '';
+    policy.orgSignature = normalizeOrgSignaturePolicy(policy.orgSignature) ?? { ...DEFAULT_ORG_SIGNATURE_POLICY };
+    policy.domainBrandNames = normalizeDomainBrandNames(policy.domainBrandNames);
     return policy;
   }
 

@@ -2327,6 +2327,7 @@
       "html_signature_label": "HTML 签名",
       "signature_byte_counter": "{bytes} / {max} 字节",
       "signature_byte_limit_reached": "已达服务器限制",
+      "org_signature_locked": "Your administrator manages signatures for this account. Personal HTML and plain-text signatures cannot be edited here.",
       "save": "保存身份",
       "cancel": "取消",
       "creating": "创建中...",
