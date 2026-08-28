@@ -2503,7 +2503,15 @@
       "related_default_label": "Related",
       "more_actions": "More actions",
       "age_years": "{count, plural, one {1 year old} other {# years old}}",
-      "years_since": "{count, plural, one {1 year} other {# years}}"
+      "years_since": "{count, plural, one {1 year} other {# years}}",
+      "private": "Private",
+      "work": "Work",
+      "cell": "Mobile",
+      "voice": "Voice",
+      "fax": "Fax",
+      "pager": "Pager",
+      "video": "Video",
+      "text": "text"
     },
     "activity": {
       "recent_emails": "Recent Emails",
