@@ -28,6 +28,7 @@ import { useSettingsStore } from "@/stores/settings-store";
 import { generateUUID } from "@/lib/utils";
 import { useFormatEventDate } from "@/hooks/use-format-event-date";
 import { useIsPaneScoped } from "@/hooks/use-pane-context";
+import { useContactNameResolver } from "@/hooks/use-contact-name-resolver";
 import { calendarHooks } from "@/lib/plugin-hooks";
 import type { ConflictWarning } from "@/lib/plugin-types";
 
@@ -234,6 +235,10 @@ export function EventModal({
   const canEditBody = editability === "editable";
   const rsvpMode = editability === "rsvp-only";
 
+  // Bare addresses (the organizer above all — Stalwart drops its display name)
+  // render with the contact card's name instead of the raw email.
+  const resolveContactName = useContactNameResolver();
+
   const userParticipantId = useMemo(() => {
     if (!event) return null;
     return getUserParticipantId(event, currentUserEmails);
@@ -246,8 +251,8 @@ export function EventModal({
 
   const existingParticipants = useMemo(() => {
     if (!event) return [];
-    return getParticipantList(event);
-  }, [event]);
+    return getParticipantList(event, { resolveName: resolveContactName });
+  }, [event, resolveContactName]);
 
   const organizerInfo = useMemo(() => {
     if (!event?.participants) return null;
@@ -588,7 +593,10 @@ export function EventModal({
 
     if (effectiveAttendees.length > 0 && currentUserEmails.length > 0) {
       const organizerEmail = currentUserEmails[0];
-      const organizerName = existingParticipants.find(p => p.isOrganizer)?.name || "";
+      // On create there are no existing participants, so a fresh event would
+      // store an empty organizer name — fall back to the contact card.
+      const organizerName =
+        existingParticipants.find(p => p.isOrganizer)?.name || resolveContactName(organizerEmail) || "";
       data.participants = buildParticipantMap(
         { name: organizerName, email: organizerEmail },
         effectiveAttendees
@@ -612,7 +620,7 @@ export function EventModal({
     } finally {
       setIsSaving(false);
     }
-  }, [title, description, location, virtualLocation, startDate, startTime, endDate, endTime, allDay, calendarId, recurrence, customRule, alertRows, attendees, sendInvitations, currentUserEmails, existingParticipants, event, onSave, isSaving]);
+  }, [title, description, location, virtualLocation, startDate, startTime, endDate, endTime, allDay, calendarId, recurrence, customRule, alertRows, attendees, sendInvitations, currentUserEmails, existingParticipants, resolveContactName, event, onSave, isSaving]);
 
   const handleRsvp = useCallback((status: CalendarParticipant['participationStatus']) => {
     if (!event || !userParticipantId || !onRsvp) return;
@@ -696,7 +704,7 @@ export function EventModal({
     const startD = getEventStartDate(event);
     const endD = getEventEndDate(event);
     const locationName = event.locations ? Object.values(event.locations)[0]?.name : null;
-    const participants = getParticipantList(event);
+    const participants = getParticipantList(event, { resolveName: resolveContactName });
 
     return (
       <div ref={modalRef} role="dialog" aria-modal={isMobile || undefined} aria-label={event.title || t("events.no_title")} className={isMobile ? mobileRootClass : "flex flex-col h-full bg-background"}>
@@ -775,8 +783,13 @@ export function EventModal({
                 <div className="space-y-1 ps-5">
                   {participants.map(p => (
                     <div key={p.id} className="flex items-center justify-between text-sm">
-                      <span className="truncate">{p.name || p.email}</span>
-                      <StatusBadge status={p.status} isOrganizer={p.isOrganizer} t={t} />
+                      <span className="truncate">
+                        {p.name || p.email}
+                        {p.isOrganizer && (
+                          <span className="text-muted-foreground ms-1">({t("participants.organizer").toLowerCase()})</span>
+                        )}
+                      </span>
+                      <StatusBadge status={p.status} t={t} />
                     </div>
                   ))}
                 </div>
@@ -836,7 +849,7 @@ export function EventModal({
     const endD = getEventEndDate(event);
     const locationName = event.locations ? Object.values(event.locations)[0]?.name || null : null;
     const virtualLoc = event.virtualLocations ? Object.values(event.virtualLocations)[0]?.uri || null : null;
-    const viewParticipants = getParticipantList(event);
+    const viewParticipants = getParticipantList(event, { resolveName: resolveContactName });
     const recurrenceLabel = getRecurrenceLabel(event, t, locale);
     const alertLabel = getAlertLabel(event, t);
     const eventCalendar = calendars.find(c => event.calendarIds[c.id]);
@@ -963,7 +976,7 @@ export function EventModal({
                             <span className="text-muted-foreground ms-1">({t("participants.organizer").toLowerCase()})</span>
                           )}
                         </span>
-                        <StatusBadge status={p.status} isOrganizer={p.isOrganizer} t={t} />
+                        <StatusBadge status={p.status} t={t} />
                       </div>
                     ))}
                   </div>
@@ -1443,14 +1456,13 @@ export function EventModal({
   );
 }
 
-function StatusBadge({ status, isOrganizer, t }: {
+function StatusBadge({ status, t }: {
   status: CalendarParticipant['participationStatus'];
-  isOrganizer: boolean;
   t: ReturnType<typeof useTranslations>;
 }) {
-  if (isOrganizer) {
-    return <span className="text-xs text-primary">{t("participants.organizer")}</span>;
-  }
+  // The organizer is marked by the "(组织者)" suffix on the name; the badge
+  // shows their participation status (organizers default to accepted) rather
+  // than repeating the organizer label.
   const colors: Record<string, string> = {
     accepted: "text-success",
     declined: "text-destructive",

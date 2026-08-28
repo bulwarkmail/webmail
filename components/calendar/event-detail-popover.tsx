@@ -21,6 +21,7 @@ import {
 } from "@/lib/calendar-participants";
 import { getEventEditability } from "@/lib/calendar-editability";
 import { useFormatEventDate } from "@/hooks/use-format-event-date";
+import { useContactNameResolver } from "@/hooks/use-contact-name-resolver";
 
 interface EventDetailPopoverProps {
   event: CalendarEvent;
@@ -136,6 +137,10 @@ export function EventDetailPopover({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isSavingNote, setIsSavingNote] = useState(false);
 
+  // Bare addresses (the organizer above all — Stalwart drops its display name)
+  // render with the contact card's name instead of the raw email.
+  const resolveContactName = useContactNameResolver();
+
   const color = getEventColor(event, calendar);
   const startDate = getEventStartDate(event);
   const durationMinutes = parseDuration(event.duration);
@@ -154,7 +159,10 @@ export function EventDetailPopover({
     return first?.uri || null;
   }, [event.virtualLocations]);
 
-  const participants = useMemo(() => getParticipantList(event), [event]);
+  const participants = useMemo(
+    () => getParticipantList(event, { resolveName: resolveContactName }),
+    [event, resolveContactName]
+  );
   const recurrenceLabel = useMemo(() => getRecurrenceLabel(event, t, locale), [event, t, locale]);
   const alertLabel = useMemo(() => getAlertLabel(event, t), [event, t]);
 
