@@ -90,3 +90,153 @@ describe('buildContactNameResolver', () => {
     expect(resolver('alice@example.com')).toBe('Alice');
   });
 });
+
+describe('buildContactNameResolver — related-domain fallback', () => {
+  // #738: the event stores the organizer as zhang@node-example.com (the
+  // account's node domain) while the contact card with the 备注 name carries
+  // zhang@example.com — same person, different domain.
+  it('resolves an address whose local part matches a card on a related domain', () => {
+    const resolver = buildContactNameResolver([
+      makeContact(['zhang@example.com'], '张三'),
+    ]);
+    expect(resolver('zhang@node-example.com')).toBe('张三');
+  });
+
+  it('resolves subdomain-related domains (mail.example.com vs example.com)', () => {
+    const resolver = buildContactNameResolver([
+      makeContact(['bob@example.com'], 'Bob'),
+    ]);
+    expect(resolver('bob@mail.example.com')).toBe('Bob');
+  });
+
+  it('works in the other direction too (card on the longer domain)', () => {
+    const resolver = buildContactNameResolver([
+      makeContact(['carol@node-example.com'], 'Carol'),
+    ]);
+    expect(resolver('carol@example.com')).toBe('Carol');
+  });
+
+  it('does NOT fall back across unrelated domains', () => {
+    const resolver = buildContactNameResolver([
+      makeContact(['john@company.com'], 'John'),
+    ]);
+    expect(resolver('john@gmail.com')).toBeUndefined();
+  });
+
+  it('does NOT treat a plain string-suffix domain as related', () => {
+    // "xexample.com" ends with "example.com" but the split char is "x", not a
+    // "." or "-" label boundary — different registrable domain.
+    const resolver = buildContactNameResolver([
+      makeContact(['dave@example.com'], 'Dave'),
+    ]);
+    expect(resolver('dave@xexample.com')).toBeUndefined();
+  });
+
+  it('returns nothing when two related-domain cards disagree on the name', () => {
+    // x.mail.example.com is related to both example.com and mail.example.com,
+    // and the two cards disagree — guessing would be worse than showing the
+    // bare address.
+    const resolver = buildContactNameResolver([
+      makeContact(['eve@example.com'], 'Eve One'),
+      makeContact(['eve@mail.example.com'], 'Eve Two'),
+    ]);
+    expect(resolver('eve@x.mail.example.com')).toBeUndefined();
+  });
+
+  it('resolves when two related-domain cards agree on the name', () => {
+    const resolver = buildContactNameResolver([
+      makeContact(['eve@example.com'], 'Eve'),
+      makeContact(['eve@mail.example.com'], 'Eve'),
+    ]);
+    expect(resolver('eve@x.mail.example.com')).toBe('Eve');
+  });
+});
+
+describe('buildContactNameResolver — account and identity layers', () => {
+  // The organizer of a self-created event is the user; Stalwart strips the
+  // participant name, so the user's own name has to come from the account
+  // (live principal name) or the identity (From-name snapshot).
+  it('resolves the account display name for the account address', () => {
+    const resolver = buildContactNameResolver(
+      [],
+      [],
+      [{ name: '张三', email: 'zhang@node-example.com', username: 'zhang' }]
+    );
+    expect(resolver('zhang@node-example.com')).toBe('张三');
+  });
+
+  it('matches the account username when it is a full address', () => {
+    const resolver = buildContactNameResolver(
+      [],
+      [],
+      [{ name: '张三', email: undefined, username: 'zhang@node-example.com' }]
+    );
+    expect(resolver('zhang@node-example.com')).toBe('张三');
+  });
+
+  it('ignores short login usernames that are not addresses', () => {
+    const resolver = buildContactNameResolver(
+      [],
+      [],
+      [{ name: '张三', email: undefined, username: 'zhang' }]
+    );
+    expect(resolver('zhang@node-example.com')).toBeUndefined();
+  });
+
+  it('skips account names that are just the address itself', () => {
+    const resolver = buildContactNameResolver(
+      [],
+      [],
+      [{ name: 'zhang@node-example.com', email: 'zhang@node-example.com' }]
+    );
+    expect(resolver('zhang@node-example.com')).toBeUndefined();
+  });
+
+  it('resolves the identity From-name when the account has nothing', () => {
+    const resolver = buildContactNameResolver(
+      [],
+      [{ name: '张三', email: 'zhang@node-example.com' }],
+      []
+    );
+    expect(resolver('zhang@node-example.com')).toBe('张三');
+  });
+
+  it('prefers the account name over the identity snapshot', () => {
+    // On Stalwart the identity name is a one-time snapshot; the account name
+    // is refreshed from the principal, so it is the more current source.
+    const resolver = buildContactNameResolver(
+      [],
+      [{ name: 'Old Name', email: 'zhang@node-example.com' }],
+      [{ name: 'New Name', email: 'zhang@node-example.com' }]
+    );
+    expect(resolver('zhang@node-example.com')).toBe('New Name');
+  });
+
+  it('ranks a related-domain contact card above the account name', () => {
+    // The 备注 the user curated on the card beats a server-side default.
+    const resolver = buildContactNameResolver(
+      [makeContact(['zhang@example.com'], '卡片备注名')],
+      [],
+      [{ name: '账号名', email: 'zhang@node-example.com' }]
+    );
+    expect(resolver('zhang@node-example.com')).toBe('卡片备注名');
+  });
+
+  it('ranks an exact contact card above everything else', () => {
+    const resolver = buildContactNameResolver(
+      [makeContact(['zhang@node-example.com'], '精确卡片名')],
+      [{ name: 'Identity Name', email: 'zhang@node-example.com' }],
+      [{ name: 'Account Name', email: 'zhang@node-example.com' }]
+    );
+    expect(resolver('zhang@node-example.com')).toBe('精确卡片名');
+  });
+
+  it('resolves the exact card even when it also matches account data', () => {
+    const resolver = buildContactNameResolver(
+      [makeContact(['alice@example.com'], '爱丽丝')],
+      [{ name: 'Alice Identity', email: 'alice@example.com' }],
+      []
+    );
+    expect(resolver('alice@example.com')).toBe('爱丽丝');
+  });
+});
