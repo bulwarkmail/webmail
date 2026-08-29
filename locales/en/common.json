@@ -1796,7 +1796,9 @@
       "error_delete": "Failed to delete folder",
       "error_delete_has_children": "Cannot delete folder: it still contains subfolders. Delete or move them first.",
       "error_delete_has_email": "Cannot delete folder: it still contains emails. Move or delete them first.",
-      "error_role": "Failed to update folder role"
+      "error_role": "Failed to update folder role",
+      "subscribe_mailbox": "Subscribe to folder",
+      "unsubscribe_mailbox": "Unsubscribe from folder"
     },
     "advanced": {
       "title": "Advanced",

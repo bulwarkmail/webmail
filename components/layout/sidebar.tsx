@@ -37,7 +37,7 @@ import {
   MailOpen,
   MoreHorizontal,
 } from "lucide-react";
-import { cn, buildMailboxTree, MailboxNode } from "@/lib/utils";
+import { cn, buildMailboxTree, hasSubscribedChildren, MailboxNode } from "@/lib/utils";
 import { localizeMailboxName } from "@/lib/mailbox-label";
 import {
   buildKeywordTree,
@@ -502,7 +502,7 @@ function MailboxTreeItem({
 }) {
   const tNotifications = useTranslations('notifications');
   const tSidebar = useTranslations('sidebar');
-  const hasChildren = node.children.length > 0;
+  const hasChildren = node.isSubscribed && hasSubscribedChildren(node);
   const isExpanded = expandedFolders.has(node.id);
   const Icon = getIconForMailbox(node.role, node.name, hasChildren, isExpanded, node.isShared, node.id);
   const isVirtualNode = node.id.startsWith('shared-');
@@ -551,7 +551,7 @@ function MailboxTreeItem({
 
   return (
     <>
-      <SidebarRow
+      {node.isSubscribed && (<SidebarRow
         icon={<Icon className={getIconClass(isSelected, isVirtualNode, colorful, roleKey)} />}
         label={label}
         testRole={node.role}
@@ -580,7 +580,7 @@ function MailboxTreeItem({
         isValidDropTarget={isValidDropTarget}
         isInvalidDropTarget={isInvalidDropTarget}
         onContextMenu={onContextMenu && !isVirtualNode ? (e) => onContextMenu(e, node) : undefined}
-      />
+      />)}
 
       {hasChildren && isExpanded && !isCollapsed && node.children.map((child) => (
         <MailboxTreeItem

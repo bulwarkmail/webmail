@@ -2522,7 +2522,7 @@ export class JMAPClient implements IJMAPClient {
     };
   }
 
-  async updateMailbox(mailboxId: string, changes: { name?: string; parentId?: string | null; role?: string | null; sortOrder?: number }, accountId?: string): Promise<void> {
+  async updateMailbox(mailboxId: string, changes: { name?: string; parentId?: string | null; role?: string | null; sortOrder?: number; isSubscribed?: boolean }, accountId?: string): Promise<void> {
     const targetAccountId = accountId || this.accountId;
     const response = await this.request([
       ["Mailbox/set", {

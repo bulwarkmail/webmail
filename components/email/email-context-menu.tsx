@@ -172,7 +172,7 @@ export function EmailContextMenu({
   const filterTree = (nodes: MailboxNode[]): MailboxNode[] => {
     return nodes.reduce<MailboxNode[]>((acc, node) => {
       const filteredChildren = filterTree(node.children);
-      if (moveTargetIds.has(node.id) || filteredChildren.length > 0) {
+      if (node.isSubscribed && (moveTargetIds.has(node.id) || filteredChildren.length > 0)) {
         acc.push({ ...node, children: filteredChildren });
       }
       return acc;

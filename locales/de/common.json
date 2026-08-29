@@ -1789,7 +1789,9 @@
       "error_delete": "Ordner konnte nicht gelöscht werden",
       "error_delete_has_children": "Ordner kann nicht gelöscht werden: Er enthält noch Unterordner. Löschen oder verschieben Sie diese zuerst.",
       "error_delete_has_email": "Ordner kann nicht gelöscht werden: Er enthält noch E-Mails. Verschieben oder löschen Sie diese zuerst.",
-      "error_role": "Ordnerrolle konnte nicht aktualisiert werden"
+      "error_role": "Ordnerrolle konnte nicht aktualisiert werden",
+      "subscribe_mailbox": "Ordner abonnieren",
+      "unsubscribe_mailbox": "Ordner abbestellen"
     },
     "advanced": {
       "title": "Erweitert",
