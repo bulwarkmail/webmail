@@ -2796,6 +2796,7 @@
       "all_day_event": "All-day event",
       "calendar_select": "Calendar",
       "save": "Save",
+      "saving": "Saving…",
       "cancel": "Cancel",
       "delete_confirm": "Are you sure you want to delete this event?",
       "color": "Color"
