@@ -25,6 +25,10 @@ interface MobileHeaderProps {
   onOpenSearch?: () => void;
   /** Placeholder shown inside the search field. */
   searchPlaceholder?: string;
+  /** Clears the active query without opening the search panel. */
+  onClearSearch?: () => void;
+  /** Whether a query is currently applied, which reveals the clear button. */
+  searchActive?: boolean;
 }
 
 export function MobileHeader({
@@ -37,6 +41,8 @@ export function MobileHeader({
   sidebarId,
   onOpenSearch,
   searchPlaceholder,
+  onClearSearch,
+  searchActive = false,
 }: MobileHeaderProps) {
   const t = useTranslations('sidebar');
   const { toggleSidebar, goBack, sidebarOpen } = useUIStore();
@@ -93,15 +99,29 @@ export function MobileHeader({
       </div>
 
       {onOpenSearch && (
-        <button
-          type="button"
-          onClick={onOpenSearch}
-          className="flex-1 min-w-0 h-10 mx-1 flex items-center gap-2 rounded-full bg-muted px-4 text-start text-muted-foreground"
-          aria-label={searchPlaceholder || title}
-        >
-          <Search className="h-4 w-4 flex-shrink-0" />
-          <span className="truncate text-sm">{searchPlaceholder || title}</span>
-        </button>
+        /* Not a single button: the clear control is a button of its own, and
+           nesting one inside another is invalid markup. */
+        <div className="flex-1 min-w-0 h-10 mx-1 flex items-center rounded-full bg-muted ps-3 pe-1">
+          <button
+            type="button"
+            onClick={onOpenSearch}
+            className="flex-1 min-w-0 h-full flex items-center gap-2 text-start text-muted-foreground"
+            aria-label={searchPlaceholder || title}
+          >
+            <Search className="h-4 w-4 flex-shrink-0" />
+            <span className="truncate text-sm">{searchPlaceholder || title}</span>
+          </button>
+          {searchActive && onClearSearch && (
+            <button
+              type="button"
+              onClick={onClearSearch}
+              className="h-8 w-8 flex-shrink-0 grid place-items-center rounded-full text-muted-foreground hover:bg-background/60"
+              aria-label={t('clear_search')}
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
       )}
 
       {/* Right actions */}
