@@ -25,6 +25,27 @@ import { SearchSnippetText } from "./search-snippet-text";
 import { useTranslations } from "next-intl";
 
 /**
+ * Unread bullet in the row gutter.
+ *
+ * It is absolutely positioned so it never widens the row, which means it has
+ * to be told where the row's *first* line sits: centring it on the row (the
+ * old `top-1/2`) drifts down as soon as the row grows a second and third line,
+ * leaving it visibly out of line with the checkbox and the avatar it reads as
+ * a column with. Anchor = top padding + half an avatar.
+ */
+function UnreadDot({ density, compactAvatar }: { density: string; compactAvatar: boolean }) {
+  const halfFirstLine = density === 'extra-compact' ? '0.625rem' : compactAvatar ? '1rem' : '1.25rem';
+  return (
+    <div
+      className="absolute start-0.5 -translate-y-1/2"
+      style={{ top: `calc(var(--density-item-py) + ${halfFirstLine})` }}
+    >
+      <Circle className="w-2 h-2 fill-unread text-unread" />
+    </div>
+  );
+}
+
+/**
  * Small chip showing the originating folder of a message, rendered in the
  * aggregate "All …" views (All Mail / unified / cross-account) where rows come
  * from different folders. `email.sourceFolder` is stamped at fetch time.
@@ -321,9 +342,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
           )}
 
           {isUnread && (
-            <div className="absolute start-0.5 top-1/2 -translate-y-1/2">
-              <Circle className="w-2 h-2 fill-unread text-unread" />
-            </div>
+            <UnreadDot density={density} compactAvatar={isFocusedMailLayout} />
           )}
 
           {density !== 'extra-compact' && (
@@ -767,9 +786,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
             )}
 
             {hasUnread && (
-              <div className="absolute start-0.5 top-1/2 -translate-y-1/2">
-                <Circle className="w-2 h-2 fill-unread text-unread" />
-              </div>
+              <UnreadDot density={density} compactAvatar={isFocusedMailLayout} />
             )}
 
             {density !== 'extra-compact' && (
