@@ -15,7 +15,7 @@ import { useMenuNavigation } from "@/hooks/use-menu-navigation";
 
 interface AccountSwitcherProps {
   /** "rail" = small avatar only (NavigationRail), "expanded" = avatar + name + email (Sidebar) */
-  variant?: "rail" | "expanded";
+  variant?: "rail" | "expanded" | "header";
   className?: string;
 }
 
@@ -66,7 +66,20 @@ export function AccountSwitcher({ variant = "rail", className }: AccountSwitcher
     if (!buttonRef.current) return;
     const rect = buttonRef.current.getBoundingClientRect();
     const rtl = isDocumentRTL();
-    if (variant === "rail") {
+    if (variant === "header") {
+      // Anchored at the inline-end edge of the top bar, so the menu drops
+      // down and is pinned by its own trailing edge — anchoring by the
+      // leading edge (as "expanded" does) runs it off-screen, which is
+      // exactly what happened in RTL where that edge is the left one.
+      setPopoverStyle({
+        position: "fixed",
+        top: rect.bottom + 4,
+        maxWidth: "calc(100vw - 16px)",
+        ...(rtl
+          ? { left: Math.max(8, rect.left) }
+          : { right: Math.max(8, window.innerWidth - rect.right) }),
+      });
+    } else if (variant === "rail") {
       setPopoverStyle(
         rtl
           ? {
@@ -197,12 +210,12 @@ export function AccountSwitcher({ variant = "rail", className }: AccountSwitcher
         data-active-account-id={activeAccountId ?? undefined}
         className={cn(
           "flex items-center gap-2 rounded-md transition-colors",
-          variant === "rail"
+          variant !== "expanded"
             ? "justify-center w-10 h-10 hover:bg-muted"
             : "w-full px-2 py-1.5 hover:bg-muted text-start min-w-0",
           className
         )}
-        title={variant === "rail" ? (displayName || displayEmail) : undefined}
+        title={variant !== "expanded" ? (displayName || displayEmail) : undefined}
         aria-label={t("switch_account")}
         aria-expanded={open}
         aria-haspopup="menu"
@@ -210,7 +223,7 @@ export function AccountSwitcher({ variant = "rail", className }: AccountSwitcher
       >
         {activeAccount ? (
           <>
-            <AccountAvatar account={activeAccount} size={variant === "rail" ? "sm" : "md"} />
+            <AccountAvatar account={activeAccount} size={variant === "expanded" ? "md" : "sm"} />
             {variant === "expanded" && (
               <>
                 <div className="min-w-0 flex-1">
@@ -224,7 +237,7 @@ export function AccountSwitcher({ variant = "rail", className }: AccountSwitcher
         ) : (
           <div className={cn(
             "rounded-full bg-muted flex items-center justify-center text-muted-foreground",
-            variant === "rail" ? "w-8 h-8 text-xs" : "w-9 h-9 text-sm"
+            variant === "expanded" ? "w-9 h-9 text-sm" : "w-8 h-8 text-xs"
           )}>
             ?
           </div>
