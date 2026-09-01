@@ -365,6 +365,10 @@ export async function POST(request: NextRequest) {
         ...(declaredApiPostPaths.length > 0
           ? { apiPostPaths: declaredApiPostPaths }
           : {}),
+        ...(manifest.locales && typeof manifest.locales === 'object'
+          ? { locales: manifest.locales as ServerPlugin['locales'] }
+          : {}),
+
       };
 
       await savePlugin(plugin, code);
