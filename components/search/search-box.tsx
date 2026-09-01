@@ -22,6 +22,8 @@ interface SearchBoxProps {
   onSelectContact: (contact: ContactSuggestion, field: ContactSearchField) => void;
   disabled?: boolean;
   title?: string;
+  /** Focus on mount — the mobile search panel opens straight to the keyboard. */
+  autoFocus?: boolean;
 }
 
 /**
@@ -31,7 +33,7 @@ interface SearchBoxProps {
  * reuses the composer's contact autocomplete lookup so directory principals,
  * address-book contacts and recent recipients all surface here too.
  */
-export function SearchBox({ value, onChange, onSubmit, onClear, onSelectContact, disabled = false, title }: SearchBoxProps) {
+export function SearchBox({ value, onChange, onSubmit, onClear, onSelectContact, disabled = false, title, autoFocus }: SearchBoxProps) {
   const t = useTranslations("sidebar");
   const listId = `search-suggestions-${useId().replace(/:/g, "")}`;
 
@@ -118,6 +120,7 @@ export function SearchBox({ value, onChange, onSubmit, onClear, onSelectContact,
         <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input
           type="text"
+          autoFocus={autoFocus}
           placeholder={t("search_placeholder_hint")}
           value={value}
           onChange={(e) => {

@@ -3548,7 +3548,7 @@ export function MailApp({ linkSegments }: MailAppProps = {}) {
               title={currentMailboxName}
               sidebarId={sidebarId}
               onOpenSearch={isMobile ? () => setMobileSearchOpen(true) : undefined}
-              searchPlaceholder={t('sidebar.search_placeholder_hint')}
+              searchPlaceholder={searchQuery || t('sidebar.search_placeholder_hint')}
             />
 
             {/* Search Bar + Inline Advanced Filters. On phones this is not a
@@ -3613,9 +3613,13 @@ export function MailApp({ linkSegments }: MailAppProps = {}) {
                   <SearchBox
                     value={searchQuery}
                     onChange={setSearchQuery}
-                    onSubmit={handleSearch}
-                    onClear={handleClearSearch}
-                    onSelectContact={handleSelectContactSuggestion}
+                    autoFocus={isMobile && mobileSearchOpen}
+                    onSubmit={(query) => { handleSearch(query); setMobileSearchOpen(false); }}
+                    onClear={() => { handleClearSearch(); setMobileSearchOpen(false); }}
+                    onSelectContact={(contact, field) => {
+                      handleSelectContactSuggestion(contact, field);
+                      setMobileSearchOpen(false);
+                    }}
                     disabled={isScheduledView}
                     title={isScheduledView ? t('email_viewer.scheduled_actions_only') : undefined}
                   />
