@@ -3431,16 +3431,20 @@ export function MailApp({ linkSegments }: MailAppProps = {}) {
             isEmbedded
               ? (isMobile || isTablet
                   ? cn(
-                      "absolute inset-y-0 left-0 w-72 pt-[env(safe-area-inset-top)]",
+                      "absolute inset-y-0 start-0 w-72 pt-[env(safe-area-inset-top)]",
                       "transform transition-transform duration-300 ease-in-out",
-                      !sidebarOpen && "-translate-x-full"
+                      // translate-x is physical, so RTL needs the opposite
+                      // sign or the drawer slides off the wrong edge.
+                      !sidebarOpen && "-translate-x-full rtl:translate-x-full"
                     )
                   : "relative translate-x-0")
               : cn(
                   // Mobile/Tablet: fixed overlay
-                  "max-lg:fixed max-lg:inset-y-0 max-lg:left-0 max-lg:w-72 max-lg:pt-[env(safe-area-inset-top)]",
+                  // start-0 rather than left-0: in RTL the drawer belongs on
+                  // the right, matching the hamburger that opens it.
+                  "max-lg:fixed max-lg:inset-y-0 max-lg:start-0 max-lg:w-72 max-lg:pt-[env(safe-area-inset-top)]",
                   "max-lg:transform max-lg:transition-transform max-lg:duration-300 max-lg:ease-in-out",
-                  !sidebarOpen && "max-lg:-translate-x-full",
+                  !sidebarOpen && "max-lg:-translate-x-full max-lg:rtl:translate-x-full",
                   // Desktop: normal flow
                   "lg:relative lg:translate-x-0"
                 ),
