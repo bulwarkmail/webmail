@@ -62,7 +62,7 @@ describe('auth-store logout redirects', () => {
       const url = String(input);
       const method = init?.method ?? 'GET';
 
-      if (url === '/api/auth/token?slot=0' && method === 'PUT') {
+      if (url === '/api/auth/token?slot=0&force=true' && method === 'PUT') {
         return { ok: false, status: 401, json: async () => ({}) };
       }
 
@@ -102,7 +102,7 @@ describe('auth-store logout redirects', () => {
       const url = String(input);
       const method = init?.method ?? 'GET';
 
-      if (url === '/api/auth/token?slot=0' && method === 'PUT') {
+      if (url === '/api/auth/token?slot=0&force=true' && method === 'PUT') {
         return { ok: false, status: 503, json: async () => ({}) };
       }
 
@@ -126,7 +126,7 @@ describe('auth-store logout redirects', () => {
     expect(replaceSpy).not.toHaveBeenCalled();
 
     const countPuts = () => fetchMock.mock.calls.filter(
-      ([input, init]) => String(input) === '/api/auth/token?slot=0' && init?.method === 'PUT',
+      ([input, init]) => String(input) === '/api/auth/token?slot=0&force=true' && init?.method === 'PUT',
     ).length;
 
     // A retry is armed: advancing past the ~30 s window fires a second PUT.
@@ -149,7 +149,7 @@ describe('auth-store logout redirects', () => {
       const url = String(input);
       const method = init?.method ?? 'GET';
 
-      if (url === '/api/auth/token?slot=0' && method === 'PUT') {
+      if (url === '/api/auth/token?slot=0&force=true' && method === 'PUT') {
         return new Promise((resolve) => { resolveInFlight = resolve; });
       }
       if (method === 'DELETE') {
@@ -175,7 +175,7 @@ describe('auth-store logout redirects', () => {
 
     // The failure lands after the sign-out - no retry may be re-armed.
     const countPuts = () => fetchMock.mock.calls.filter(
-      ([input, init]) => String(input) === '/api/auth/token?slot=0' && init?.method === 'PUT',
+      ([input, init]) => String(input) === '/api/auth/token?slot=0&force=true' && init?.method === 'PUT',
     ).length;
     expect(countPuts()).toBe(1);
     await vi.advanceTimersByTimeAsync(600_000);
@@ -189,7 +189,7 @@ describe('auth-store logout redirects', () => {
       const url = String(input);
       const method = init?.method ?? 'GET';
 
-      if (url === '/api/auth/token?slot=0' && method === 'PUT') {
+      if (url === '/api/auth/token?slot=0&force=true' && method === 'PUT') {
         throw new TypeError('Failed to fetch');
       }
 
