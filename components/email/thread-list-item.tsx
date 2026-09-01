@@ -331,7 +331,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
               name={sender?.name}
               email={sender?.email}
               size={isFocusedMailLayout ? "sm" : "md"}
-              className="flex-shrink-0 shadow-sm"
+              className="flex-shrink-0 self-center shadow-sm"
               disableImages={hideJunkAvatarImages}
               checked={isChecked}
               onToggle={handleCheckboxClick}
@@ -773,7 +773,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
             )}
 
             {density !== 'extra-compact' && (
-              <div className="relative flex-shrink-0">
+              <div className="relative flex-shrink-0 self-center">
                 <SelectableAvatar
                   name={avatarPerson?.name}
                   email={avatarPerson?.email}
