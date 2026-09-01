@@ -192,6 +192,9 @@ const EMAIL_LIST_PROPERTIES = [
   "subject",
   "preview",
   "hasAttachment",
+  // Attachment metadata (name / type / blobId) so list rows can offer the
+  // files directly. hasAttachment alone only supports a paperclip icon.
+  "attachments",
   // Needed so list rows can serve drag-out to the file system as .eml.
   "blobId",
 ] as const;
