@@ -2294,7 +2294,7 @@ export function EmailViewer({
   pre { white-space: pre-wrap; word-wrap: break-word; }
   ${wordHtmlCSS}
   ${darkModeCSS}
-</style></head><body>${effectiveEmailContent.html}<style>html,body{height:auto!important;min-height:0!important;max-height:none!important}</style></body></html>`;
+</style></head><body dir="auto">${effectiveEmailContent.html}<style>html,body{height:auto!important;min-height:0!important;max-height:none!important}</style></body></html>`;
   }, [effectiveEmailContent.html, effectiveEmailContent.isHtml, effectiveEmailContent.hasStyleTag, effectiveEmailContent.externalBlocked, isDark, emailHasNativeDarkMode, messageSpacing]);
 
   // Unblocking external content is handled by rebuilding the iframe srcDoc:
@@ -2669,7 +2669,7 @@ export function EmailViewer({
   .body { font-size: 14px; line-height: 1.6; }
   .body img { max-width: 100% !important; height: auto !important; }
   @media print { body { margin: 20px; } }
-</style></head><body>
+</style></head><body dir="auto">
 <div class="header">
   <div class="subject">${escapeHtml(subjectText)}</div>
   <div class="meta">
@@ -5067,6 +5067,7 @@ export function EmailViewer({
             ) : (
               <div
                 className="email-content-text text-foreground"
+                dir="auto"
                 dangerouslySetInnerHTML={{ __html: sanitizePlainTextRenderedHtml(effectiveEmailContent.html) }}
                 style={{
                   ...(plainTextFont === 'mono' && { fontFamily: 'ui-monospace, "SF Mono", Consolas, monospace' }),
