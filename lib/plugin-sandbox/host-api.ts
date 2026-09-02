@@ -144,6 +144,10 @@ const PERM_PER_METHOD: Record<string, Permission | null> = {
   'keywords.discover': 'email:read',
   'keywords.getCounts': 'email:read',
   'keywords.refreshCounts': 'email:read',
+  // Show an explicit set of message ids in the list. Read-only and session-scoped: the host fetches
+  // with the user's own JMAP client, so a plugin cannot surface a message the user could not
+  // already open. Strictly weaker than tabs.categorize below, which writes keywords.
+  'search.showMessages': 'ui:message-list',
   // message-list category tabs
   'tabs.set': 'ui:message-list-tabs',
   'tabs.clear': 'ui:message-list-tabs',
@@ -997,6 +1001,9 @@ function requireClient() {
 
 // ─── Native keyword definitions ──────────────────────────────
 
+// A plugin's result set is a list a human reads, not a bulk export. The cap keeps one call from
+// pulling a whole mailbox through Email/get, which the client would chunk but nobody would scroll.
+const MAX_SHOW_MESSAGES = 200;
 const MAX_PLUGIN_KEYWORD_DEFINITIONS = 500;
 const MAX_PLUGIN_KEYWORD_LABEL_LENGTH = 255;
 const VALID_VISIBILITIES = new Set<KeywordVisibility>(['show', 'hide', 'unread']);
@@ -1512,6 +1519,25 @@ export async function dispatchApiCall(
     case 'keywords.getCounts': return doKeywordsGetCounts(args[0]);
     case 'keywords.refreshCounts': return doKeywordsRefreshCounts();
 
+    case 'search.showMessages': {
+      // For plugins that do their own retrieval -- semantic search, an external index, a memory
+      // system -- and want the result in the list the user already knows rather than in a panel of
+      // their own.
+      const ids = args[0];
+      if (!Array.isArray(ids) || ids.length === 0 || ids.some((id) => typeof id !== 'string' || !id)) {
+        throw new Error('search.showMessages: ids must be a non-empty array of strings');
+      }
+      if (ids.length > MAX_SHOW_MESSAGES) {
+        throw new Error(`search.showMessages: at most ${MAX_SHOW_MESSAGES} ids`);
+      }
+      const showLabel = typeof args[1] === 'string' && args[1].trim()
+        ? String(args[1]).slice(0, 120)
+        : plugin.name;
+      const { client: showClient } = useAuthStore.getState();
+      if (!showClient) throw new Error('search.showMessages: no active session');
+      await useEmailStore.getState().showMessages(showClient, ids as string[], showLabel);
+      return undefined;
+    }
     case 'tabs.set': {
       // validateTabsConfig (inside registerTabs) throws a developer-readable
       // error that surfaces as the api.tabs.set rejection in the sandbox.

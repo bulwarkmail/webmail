@@ -65,6 +65,10 @@ interface EmailStore {
   isLoadingMore: boolean; // Track when loading more emails (pagination)
   error: string | null;
   searchQuery: string;
+  // True while the list holds a plugin's result set rather than a user's search.
+  // `searchQuery` carries the plugin's label so the existing Clear control works, but a
+  // label is not a search term: leaving it set makes the next folder load search for it.
+  isPluginList: boolean;
   quota: { used: number; total: number } | null;
   processingReadStatus: Set<string>; // Track emails being marked as read/unread
   selectedEmailIds: Set<string>; // Track selected emails for batch operations
@@ -232,6 +236,18 @@ interface EmailStore {
     sourceJmapAccountId?: string,
   ) => Promise<void>;
   searchEmails: (client: IJMAPClient, query: string) => Promise<void>;
+  /**
+   * Display an explicit set of message ids in the list, as a search result would be.
+   *
+   * For plugins that do their own retrieval -- semantic search, an external index, a memory
+   * system: the plugin decides which messages are relevant and hands back ids. The host fetches
+   * them with the user's own session, so a plugin can only surface mail that user could already
+   * open.
+   *
+   * `label` is shown in the search box, which is what gives the user a way out: the existing
+   * Clear control returns to the folder listing, so no new affordance is introduced.
+   */
+  showMessages: (client: IJMAPClient, ids: string[], label: string) => Promise<void>;
   advancedSearch: (client: IJMAPClient) => Promise<void>;
   setSearchFilters: (filters: Partial<SearchFilters>) => void;
   setSearchMailboxId: (mailboxId: string) => void;
@@ -1075,6 +1091,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   isLoadingMore: false,
   error: null,
   searchQuery: "",
+  isPluginList: false,
   quota: null,
   processingReadStatus: new Set(),
   selectedEmailIds: new Set(),
@@ -1203,7 +1220,10 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       console.error('Failed to fetch tag counts:', error);
     }
   }),
-  selectMailbox: (mailboxId) => set({
+  selectMailbox: (mailboxId) => set((state) => ({
+    // A plugin's label is cleared here; a user's search is not, because upstream keeps a
+    // search alive across folders on purpose and `searchMailboxId` pins its scope.
+    ...(state.isPluginList ? { searchQuery: "", isPluginList: false } : {}),
     selectedMailbox: mailboxId,
     selectedEmail: null,
     selectedEmailIds: new Set(),
@@ -1212,11 +1232,12 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     threadEmailsCache: new Map(),
     threadEmailCounts: new Map(),
     isLoadingThread: null,
-  }),
+  })),
   setLoading: (loading) => set({ isLoading: loading }),
   setLoadingEmail: (loading) => set({ isLoadingEmail: loading }),
   setError: (error) => set({ error }),
-  setSearchQuery: (query) => set({ searchQuery: query }),
+  // Typing a search replaces a plugin's list, so the flag stops applying.
+  setSearchQuery: (query) => set({ searchQuery: query, isPluginList: false }),
   setQuota: (quota) => set({ quota }),
 
   toggleEmailSelection: (emailId) => {
@@ -2407,6 +2428,44 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     } catch (error) {
       set({
         error: error instanceof Error ? error.message : "Failed to search emails",
+        isLoading: false,
+        emails: [],
+        externalSearchResults: [],
+        hasMoreEmails: false,
+        totalEmails: 0
+      });
+    }
+  },
+
+  showMessages: async (client, ids, label) => {
+    if (!ids || ids.length === 0) {
+      return;
+    }
+    set({ isLoading: true, error: null, searchQuery: label, isPluginList: true, emails: [], hasMoreEmails: false, totalEmails: 0 });
+    try {
+      // Deliberately not folder-scoped: a plugin's result set may span folders, and the ids are
+      // already the answer, so there is nothing left to narrow.
+      const emails = await resolveActionClient(client).getSomeEmails(ids);
+      // The same transform the folder and search paths run, so plugins that decorate a list still
+      // see these messages.
+      const decorated = await emailHooks.onEmailsFetched.transform(emails);
+      set({
+        emails: annotateScheduledEmails(decorated, get().scheduledSubmissionByEmailId),
+        externalSearchResults: [],
+        hasMoreEmails: false,
+        totalEmails: decorated.length,
+        isLoading: false
+      });
+      // A single result is an unambiguous destination, so open it: asking for one message and then
+      // clicking the only row is a step with no decision in it. Several results stay closed,
+      // because choosing between them is the reader's job. Routed through selectEmail so
+      // onEmailOpen fires and plugins observing the open message behave normally.
+      if (decorated.length === 1) {
+        get().selectEmail(decorated[0]);
+      }
+    } catch (error) {
+      set({
+        error: error instanceof Error ? error.message : "Failed to show messages",
         isLoading: false,
         emails: [],
         externalSearchResults: [],
