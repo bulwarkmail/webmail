@@ -2498,7 +2498,22 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   },
 
   searchEmails: async (client, query) => {
-    set({ isLoading: true, error: null, searchQuery: query, emails: [], hasMoreEmails: false, totalEmails: 0 }); // Clear emails for loading state
+    const { searchAbortController } = get();
+
+    if (searchAbortController) {
+      searchAbortController.abort();
+    }
+
+    const controller = new AbortController();
+    set({
+      isLoading: true,
+      error: null,
+      searchQuery: query,
+      emails: [],
+      hasMoreEmails: false,
+      totalEmails: 0,
+      searchAbortController: controller,
+    }); // Clear emails for loading state
     try {
       const { isUnifiedView, unifiedRole, crossView, searchMailboxId, searchFilters } = get();
       const emailsPerPage = useSettingsStore.getState().emailsPerPage;
@@ -2547,10 +2562,14 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         result.total += newEmails.length;
       }
 
+      if (controller.signal.aborted) return;
+
       const externals = await emailHooks.onProvideSearchResults.transform([] as ExternalSearchResult[], {
-        query, 
-        filters: searchFilters 
+        query,
+        filters: searchFilters
       });
+
+      if (controller.signal.aborted) return;
       result.emails = await emailHooks.onEmailsFetched.transform(result.emails);
       set({
         emails: annotateScheduledEmails(result.emails, get().scheduledSubmissionByEmailId),
@@ -2558,16 +2577,19 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         hasMoreEmails: result.hasMore,
         totalEmails: result.total,
         isLoading: false,
-        ...(unifiedErrors ? { unifiedErrors } : {}) 
+        searchAbortController: null,
+        ...(unifiedErrors ? { unifiedErrors } : {})
       });
     } catch (error) {
+      if (controller.signal.aborted) return;
       set({
         error: error instanceof Error ? error.message : "Failed to search emails",
         isLoading: false,
         emails: [],
         externalSearchResults: [],
         hasMoreEmails: false,
-        totalEmails: 0
+        totalEmails: 0,
+        searchAbortController: null,
       });
     }
   },
