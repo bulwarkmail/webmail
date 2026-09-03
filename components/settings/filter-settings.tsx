@@ -315,9 +315,8 @@ export function FilterSettings() {
     async (content: string) => {
       setRawScript(content);
       // Re-parse the pasted/edited script instead of blindly forcing opaque
-      // mode - a script that still round-trips into structured rules (e.g.
-      // one hand-edited to stay compatible, or reformatted externally)
-      // should drop right back into the visual builder.
+      // mode. A script that still validates should return straight into the
+      // visual builder.
       const result = parseScript(content);
       useFilterStore.setState({
         isOpaque: result.isOpaque,
