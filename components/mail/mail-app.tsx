@@ -69,6 +69,7 @@ import { DragDropProvider } from "@/contexts/drag-drop-context";
 import { isFilterEmpty, activeFilterCount } from "@/lib/jmap/search-utils";
 import { SearchBox, type ContactSearchField } from "@/components/search/search-box";
 import type { ContactSuggestion } from "@/lib/search-suggestions";
+import type { Attachment } from "@/lib/jmap/types";
 import { useSearchHistoryStore } from "@/stores/search-history-store";
 import { WelcomeBanner } from "@/components/ui/welcome-banner";
 import { NavigationRail } from "@/components/layout/navigation-rail";
@@ -2964,6 +2965,26 @@ export function MailApp({ linkSegments }: MailAppProps = {}) {
     return { blobClient, accountId, clientAccountId };
   }, [isUnifiedView, client]);
 
+  // Opening an attachment straight from a list row. Deliberately resolves
+  // the blob source from that row's own email rather than the selected one:
+  // in the unified inbox each row can belong to a different account, and
+  // the selected message may be from another one entirely — or none.
+  const handleOpenListAttachment = useCallback(async (email: Email, attachment: Attachment) => {
+    const { blobClient, accountId, clientAccountId } = resolveBlobSource(email);
+    const name = attachment.name;
+    if (!blobClient || !name) return;
+    try {
+      const { mailAttachmentAction } = useSettingsStore.getState();
+      if (mailAttachmentAction === 'preview' && isFilePreviewable(name, attachment.type)) {
+        setPreviewAttachment({ blobId: attachment.blobId, name, type: attachment.type, accountId, clientAccountId });
+        return;
+      }
+      await blobClient.downloadBlob(attachment.blobId, name, attachment.type, accountId);
+    } catch (error) {
+      console.error("Failed to open attachment from the list:", error);
+    }
+  }, [resolveBlobSource]);
+
   const handleDownloadAttachment = async (blobId: string, name: string, type?: string, forceDownload?: boolean) => {
     const { blobClient, accountId, clientAccountId } = resolveBlobSource(selectedEmail);
     if (!blobClient) return;
@@ -3965,6 +3986,7 @@ export function MailApp({ linkSegments }: MailAppProps = {}) {
                 onUndoSpam={async (email) => {
                   await handleUndoSpam(email);
                 }}
+                onOpenAttachment={handleOpenListAttachment}
                 onEditDraft={(email) => {
                   handleEditDraft(email);
                 }}

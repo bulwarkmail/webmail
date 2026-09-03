@@ -2,6 +2,7 @@
 
 import { Email, ThreadGroup } from "@/lib/jmap/types";
 import { ThreadListItem } from "./thread-list-item";
+import type { Attachment } from "@/lib/jmap/types";
 import { EmailContextMenu } from "./email-context-menu";
 import { cn } from "@/lib/utils";
 import { Trash2, Mail, MailX, MailOpen, Loader2, SearchX, AlertTriangle, CalendarClock, ShieldCheck } from "lucide-react";
@@ -44,6 +45,7 @@ interface EmailListProps {
   onMoveToMailbox?: (emailId: string, mailboxId: string) => void;
   onMarkAsSpam?: (email: Email) => void;
   onUndoSpam?: (email: Email) => void;
+  onOpenAttachment?: (email: Email, attachment: Attachment) => void;
   onEditDraft?: (email: Email) => void;
   isScheduledView?: boolean;
   onLoadMoreScheduled?: () => void;
@@ -73,6 +75,7 @@ export function EmailList({
   onSetTag,
   onMarkAsSpam,
   onUndoSpam,
+  onOpenAttachment,
   onMoveToMailbox,
   onEditDraft,
   isScheduledView = false,
@@ -591,6 +594,7 @@ export function EmailList({
                       onSetTag={onSetTag}
                       onMarkAsSpam={onMarkAsSpam ? (email) => onMarkAsSpam(email) : undefined}
                       onUndoSpam={onUndoSpam ? (email) => onUndoSpam(email) : undefined}
+                      onOpenAttachment={onOpenAttachment}
                     />
                   </div>
                 );
