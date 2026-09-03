@@ -15,6 +15,7 @@ import type { FilterRule } from "@/lib/jmap/sieve-types";
 import type { Mailbox } from "@/lib/jmap/types";
 import { useVacationStore } from "@/stores/vacation-store";
 import { useManagedAccountStore } from "@/stores/managed-account-store";
+import { parseScript } from "@/lib/sieve/parser";
 import {
   Plus,
   GripVertical,
@@ -313,7 +314,17 @@ export function FilterSettings() {
   const handleSaveSieve = useCallback(
     async (content: string) => {
       setRawScript(content);
-      useFilterStore.setState({ isOpaque: true, rules: [] });
+      // Re-parse the pasted/edited script instead of blindly forcing opaque
+      // mode - a script that still round-trips into structured rules (e.g.
+      // one hand-edited to stay compatible, or reformatted externally)
+      // should drop right back into the visual builder.
+      const result = parseScript(content);
+      useFilterStore.setState({
+        isOpaque: result.isOpaque,
+        rules: result.isOpaque ? [] : result.rules,
+        vacationSettings: result.vacation || null,
+        externalRequires: result.externalRequires,
+      });
       if (client) {
         try {
           await saveFilters(client);
