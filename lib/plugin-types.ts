@@ -1044,6 +1044,7 @@ export const ALL_PERMISSIONS = [
   'ui:download-file',
   // Register native message-list category tabs (Gmail-style inbox tabs).
   'ui:message-list-tabs',
+  'ui:message-list',
   'ui:composer-toolbar', 'ui:composer-sidebar',
   'ui:sidebar-widget', 'ui:settings-section',
   'ui:context-menu', 'ui:navigation-rail', 'ui:keyboard',

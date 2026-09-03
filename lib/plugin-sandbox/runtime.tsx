@@ -376,6 +376,20 @@ function buildPluginApi(manifest: PluginManifest) {
     // ANDs the active tab's JMAP search filter (`query`) or keyword into the
     // mailbox Email/query - see MessageListTabsConfig in plugin-types. Tabs
     // are cleared automatically when the plugin unloads.
+    search: {
+      /**
+       * Show these message ids in the list, as a search result would appear.
+       *
+       * For plugins that do their own retrieval and want the answer in the list the user already
+       * knows rather than in a panel of their own. The host fetches with the user's own session,
+       * so this can only surface mail that user could already open.
+       *
+       * `label` appears in the search box; the existing Clear control is the way back, so no new
+       * affordance is introduced. Defaults to the plugin's name.
+       */
+      showMessages: (ids: string[], label?: string) =>
+        callApi('search.showMessages', [ids, label]) as Promise<void>,
+    },
     tabs: {
       /** Register (or replace) this plugin's tab set. */
       set: (config: unknown) => callApi('tabs.set', [config]) as Promise<void>,
