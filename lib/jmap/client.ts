@@ -17,6 +17,12 @@ import { decodeFileNodeName } from "./filenode-name";
 import { getEffectiveTimeZone } from "@/lib/timezone";
 import { buildEmailSort, compareEmails, hasKeywordLevels, type KeywordSortPolarity, type SortLevel } from "@/lib/message-list-order";
 
+// Cap for the follow-up Email/get issued when a displayed body part comes
+// back truncated at the normal 256000-byte limit (see refetchTruncatedBodyValues
+// / #884). Bounded well above the default so it stays rare in practice while
+// still guarding against unbounded memory use on a malicious/oversized body.
+const TRUNCATED_BODY_REFETCH_MAX_BYTES = 8_000_000;
+
 // Names of nodes created over WebDAV come back percent-encoded from
 // FileNode/get (see decodeFileNodeName / #869). Normalize at the boundary so
 // every consumer (browser, sidebar, breadcrumbs, path resolution) sees the
@@ -1961,6 +1967,8 @@ export class JMAPClient implements IJMAPClient {
         namespaceMailboxIds([email], accountId);
       }
 
+      await this.refetchTruncatedBodyValues([email], targetAccountId);
+
       if (email.headers) {
         await this.parseEmailHeaders(email);
       }
@@ -1969,6 +1977,56 @@ export class JMAPClient implements IJMAPClient {
     } catch (error) {
       console.error('Failed to get email:', error);
       return null;
+    }
+  }
+
+  // The 256000-byte body cap keeps list/thread fetches fast for the common
+  // case, but truncation lands mid-tag on large HTML bodies (e.g. a data:image
+  // src cut in half), which drops the whole element and can render blank. Only
+  // the parts actually shown to the user are checked — fetchAllBodyValues also
+  // returns truncated text from attachment parts, which must not trigger a
+  // refetch. See #884.
+  private hasTruncatedDisplayedBody(email: Email): boolean {
+    const bodyValues = email.bodyValues;
+    if (!bodyValues) return false;
+    const htmlPartId = email.htmlBody?.[0]?.partId;
+    const textPartId = email.textBody?.[0]?.partId;
+    return Boolean(
+      (htmlPartId && bodyValues[htmlPartId]?.isTruncated) ||
+      (textPartId && bodyValues[textPartId]?.isTruncated)
+    );
+  }
+
+  private async refetchTruncatedBodyValues(emails: Email[], accountId: string): Promise<void> {
+    const truncated = emails.filter((email) => this.hasTruncatedDisplayedBody(email));
+    if (truncated.length === 0) return;
+
+    try {
+      const refetchedById = new Map<string, Email['bodyValues']>();
+      for (const batchIds of batched(truncated.map((email) => email.id), this.getMaxObjectsInGet())) {
+        const response = await this.request([
+          ["Email/get", {
+            accountId,
+            ids: batchIds,
+            properties: ["id", "bodyValues"],
+            fetchTextBodyValues: true,
+            fetchHTMLBodyValues: true,
+            fetchAllBodyValues: true,
+            maxBodyValueBytes: TRUNCATED_BODY_REFETCH_MAX_BYTES,
+          }, "0"],
+        ]);
+        for (const refetched of (response.methodResponses?.[0]?.[1]?.list || []) as Email[]) {
+          refetchedById.set(refetched.id, refetched.bodyValues);
+        }
+      }
+
+      for (const email of truncated) {
+        const bodyValues = refetchedById.get(email.id);
+        if (bodyValues) email.bodyValues = bodyValues;
+      }
+    } catch (error) {
+      // Degrade to the already-truncated values - no new error path for callers.
+      console.error('Failed to refetch truncated body values:', error);
     }
   }
 
@@ -2988,6 +3046,11 @@ export class JMAPClient implements IJMAPClient {
       }
 
       if (emails.length > 0) {
+        // One batched refetch for the whole thread rather than per-message,
+        // to avoid an N+1 request pattern on threads with several oversized
+        // messages (#884).
+        await this.refetchTruncatedBodyValues(emails, targetAccountId);
+
         if (accountId && accountId !== this.accountId) {
           namespaceMailboxIds(emails, accountId);
         }
@@ -8376,7 +8439,9 @@ export class JMAPClient implements IJMAPClient {
           maxBodyValueBytes: 256000,
         }, '0'],
       ]);
-      for (const email of ((emailResponse.methodResponses?.[0]?.[1]?.list ?? []) as Email[])) {
+      const fetchedEmails = (emailResponse.methodResponses?.[0]?.[1]?.list ?? []) as Email[];
+      await this.refetchTruncatedBodyValues(fetchedEmails, accountId);
+      for (const email of fetchedEmails) {
         emailById.set(email.id, email);
       }
     }
