@@ -1,4 +1,4 @@
-{"@type":"create","object":"Account","value":{"alice":{"@type":"User","name":"alice","domainId":"${DOMAIN_ID}","description":"Integration test mailbox alice","credentials":{"0":{"@type":"Password","secret":"${TEST_ACCOUNT_PASSWORD}"}}}}}
+{"@type":"create","object":"Account","value":{"alice":{"@type":"User","name":"alice","domainId":"${DOMAIN_ID}","description":"Integration test mailbox alice","quotas":{"maxMailboxes":2000},"credentials":{"0":{"@type":"Password","secret":"${TEST_ACCOUNT_PASSWORD}"}}}}}
 {"@type":"create","object":"Account","value":{"bob":{"@type":"User","name":"bob","domainId":"${DOMAIN_ID}","description":"Integration test mailbox bob","credentials":{"0":{"@type":"Password","secret":"${TEST_ACCOUNT_PASSWORD}"}}}}}
 {"@type":"create","object":"Account","value":{"carol":{"@type":"User","name":"carol","domainId":"${DOMAIN_ID}","description":"Integration test mailbox carol","credentials":{"0":{"@type":"Password","secret":"${TEST_ACCOUNT_PASSWORD}"}}}}}
 {"@type":"create","object":"Account","value":{"team":{"@type":"Group","name":"team","domainId":"${DOMAIN_ID}","description":"Team shared mailbox"}}}

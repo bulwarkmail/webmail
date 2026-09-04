@@ -1229,36 +1229,82 @@ export class JMAPClient implements IJMAPClient {
     }
   }
 
+  /**
+   * Mailbox/get without ids can silently stop at maxObjectsInGet, leaving
+   * children without their parents. Querying all ids keeps the tree complete.
+   */
+  private async fetchMailboxTree(accountId: string): Promise<JMAPResponse> {
+    const mailboxes: JMAPMailbox[] = [];
+    const seenIds = new Set<string>();
+    let position = 0;
+    let total: number | undefined;
+    let queryState: string | undefined;
+
+    let hasMorePages = true;
+    while (hasMorePages) {
+      const response = await this.request([
+        ["Mailbox/query", {
+          accountId,
+          position,
+          limit: this.getMaxObjectsInGet(),
+          calculateTotal: position === 0,
+          sortAsTree: true,
+        }, "query"],
+        ["Mailbox/get", {
+          accountId,
+          "#ids": { resultOf: "query", name: "Mailbox/query", path: "/ids" },
+        }, "get"],
+      ]);
+
+      const queryResponse = response.methodResponses?.[0];
+      const getResponse = response.methodResponses?.[1];
+      const ids = queryResponse?.[1]?.ids;
+      const pageQueryState = queryResponse?.[1]?.queryState;
+      const page = getResponse?.[1]?.list;
+
+      if (
+        queryResponse?.[0] !== "Mailbox/query" ||
+        !Array.isArray(ids) ||
+        !ids.every((id: unknown) => typeof id === "string") ||
+        typeof pageQueryState !== "string" ||
+        getResponse?.[0] !== "Mailbox/get" ||
+        !Array.isArray(page) ||
+        getResponse[1].notFound?.length ||
+        page.length !== ids.length
+      ) {
+        throw new Error("Failed to load the complete mailbox list");
+      }
+
+      if (queryState !== undefined && pageQueryState !== queryState) {
+        throw new Error("Mailbox list changed while it was being loaded");
+      }
+      queryState = pageQueryState;
+      for (const id of ids) {
+        if (seenIds.has(id)) throw new Error("Mailbox/query returned duplicate ids");
+        seenIds.add(id);
+      }
+      mailboxes.push(...page);
+      if (typeof queryResponse[1].total === "number") total = queryResponse[1].total;
+      position += ids.length;
+      hasMorePages = ids.length > 0 && (total === undefined || position < total);
+    }
+
+    if (total !== undefined && seenIds.size !== total) {
+      throw new Error(`Mailbox/query returned ${seenIds.size} of ${total} mailboxes`);
+    }
+
+    return { methodResponses: [["Mailbox/get", { list: mailboxes }, "0"]] };
+  }
+
   async getMailboxes(accountId?: string): Promise<Mailbox[]> {
     const acctId = accountId || this.accountId;
     try {
-      const response = await this.request([
-        ["Mailbox/get", { accountId: acctId }, "0"]
-      ]);
+      const response = await this.fetchMailboxTree(acctId);
 
       if (response.methodResponses?.[0]?.[0] === "Mailbox/get") {
         const rawMailboxes = (response.methodResponses[0][1].list || []) as JMAPMailbox[];
 
         debug.log('jmap', `[JMAP Mailbox] getMailboxes returned ${rawMailboxes.length} mailboxes for account ${acctId}`);
-
-        // Warn if response might be truncated
-        const maxObjects = this.getMaxObjectsInGet();
-        if (rawMailboxes.length >= maxObjects) {
-          debug.warn('jmap', 
-            `[JMAP Mailbox] Response contains ${rawMailboxes.length} mailboxes which equals maxObjectsInGet (${maxObjects}). ` +
-            `Some mailboxes may be missing - nested folders could appear orphaned at root level.`
-          );
-        }
-
-        // Log parentId references to detect potential orphans
-        const returnedIds = new Set(rawMailboxes.map(mb => mb.id));
-        const missingParents = rawMailboxes.filter(mb => mb.parentId && !returnedIds.has(mb.parentId));
-        if (missingParents.length > 0) {
-          debug.warn('jmap', 
-            `[JMAP Mailbox] ${missingParents.length} mailbox(es) reference parentId not in response (will be orphaned):`,
-            missingParents.map(mb => ({ id: mb.id, name: mb.name, parentId: mb.parentId }))
-          );
-        }
 
         return rawMailboxes.map((mb) => ({
           id: mb.id,
@@ -1319,11 +1365,7 @@ export class JMAPClient implements IJMAPClient {
         const isPrimary = accountId === this.accountId;
 
         try {
-          const response = await this.request([
-            ["Mailbox/get", {
-              accountId: accountId,
-            }, "0"]
-          ]);
+          const response = await this.fetchMailboxTree(accountId);
 
           if (response.methodResponses?.[0]?.[0] === "Mailbox/get") {
             const rawMailboxes = (response.methodResponses[0][1].list || []) as JMAPMailbox[];
@@ -1333,15 +1375,6 @@ export class JMAPClient implements IJMAPClient {
             }
 
             debug.log('jmap', `[JMAP Mailbox] getAllMailboxes: account ${accountId} returned ${rawMailboxes.length} mailboxes (isPrimary: ${isPrimary})`);
-
-            // Warn if response might be truncated
-            const maxObjects = this.getMaxObjectsInGet();
-            if (rawMailboxes.length >= maxObjects) {
-              debug.warn('jmap', 
-                `[JMAP Mailbox] Account ${accountId}: response contains ${rawMailboxes.length} mailboxes which equals maxObjectsInGet (${maxObjects}). ` +
-                `Some mailboxes may be missing.`
-              );
-            }
 
             const mailboxes = rawMailboxes.map((mb) => ({
               id: isPrimary ? mb.id : `${accountId}:${mb.id}`,
