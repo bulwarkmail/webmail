@@ -318,6 +318,7 @@
     "important": "Önemli",
     "download": "İndir",
     "download_all": "Tümünü indir",
+    "save_to_files": "Dosyalara Kaydet",
     "from": "Kimden",
     "to": "Kime",
     "cc": "CC",
@@ -3387,7 +3388,16 @@
     "open_folder_tree": "Klasör ağacını aç",
     "other_accounts": "Diğer hesaplar",
     "migration_title": "Dosyalarınız güncelleniyor…",
-    "migration_description": "Klasörler ve dosyalar doğru yapıya göre düzenleniyor. Bu yalnızca bir kez gerçekleşir."
+    "migration_description": "Klasörler ve dosyalar doğru yapıya göre düzenleniyor. Bu yalnızca bir kez gerçekleşir.",
+    "save_attachment": {
+      "title": "Dosyalara Kaydet",
+      "loading": "Klasörler yükleniyor...",
+      "load_error": "Klasörler yüklenemedi",
+      "no_folders": "Alt klasör yok",
+      "save_here": "{folder} içine kaydet",
+      "success": "\"{name}\" Dosyalara kaydedildi",
+      "save_error": "Dosyalara kaydetme başarısız oldu"
+    }
   },
   "smime": {
     "your_certificates": "Sertifikalarınız",

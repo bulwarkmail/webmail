@@ -318,6 +318,7 @@
     "important": "Důležité",
     "download": "Stáhnout",
     "download_all": "Stáhnout vše",
+    "save_to_files": "Uložit do Souborů",
     "from": "Od",
     "to": "Komu",
     "cc": "Kopie",
@@ -3345,7 +3346,16 @@
     "open_folder_tree": "Otevřít strom složek",
     "other_accounts": "Ostatní účty",
     "migration_title": "Aktualizace vašich souborů…",
-    "migration_description": "Uspořádání složek a souborů do správné struktury. Toto proběhne pouze jednou."
+    "migration_description": "Uspořádání složek a souborů do správné struktury. Toto proběhne pouze jednou.",
+    "save_attachment": {
+      "title": "Uložit do Souborů",
+      "loading": "Načítání složek...",
+      "load_error": "Nepodařilo se načíst složky",
+      "no_folders": "Žádné podsložky",
+      "save_here": "Uložit do {folder}",
+      "success": "\"{name}\" uloženo do Souborů",
+      "save_error": "Nepodařilo se uložit do Souborů"
+    }
   },
   "smime": {
     "your_certificates": "Vaše certifikáty",

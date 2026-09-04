@@ -318,6 +318,7 @@
     "important": "Dôležité",
     "download": "Stiahnuť",
     "download_all": "Stiahnuť všetko",
+    "save_to_files": "Uložiť do Súborov",
     "from": "Od",
     "to": "Komu",
     "cc": "Kópia",
@@ -3387,7 +3388,16 @@
     "disabled_description": "Nahrávanie veľkých súborov cez WebDAV môže spôsobiť nestabilitu Stalwart/RocksDB. Táto funkcia sa neodporúča v produkčnom prostredí.",
     "stability_warning": "Nahrávanie veľkých súborov môže spôsobiť nestabilitu servera. Používajte s opatrnosťou.",
     "migration_title": "Aktualizácia vašich súborov…",
-    "migration_description": "Usporiadanie priečinkov a súborov do správnej štruktúry. Toto prebehne iba raz."
+    "migration_description": "Usporiadanie priečinkov a súborov do správnej štruktúry. Toto prebehne iba raz.",
+    "save_attachment": {
+      "title": "Uložiť do Súborov",
+      "loading": "Načítavanie priečinkov...",
+      "load_error": "Nepodarilo sa načítať priečinky",
+      "no_folders": "Žiadne podpriečinky",
+      "save_here": "Uložiť do {folder}",
+      "success": "\"{name}\" uložené do Súborov",
+      "save_error": "Nepodarilo sa uložiť do Súborov"
+    }
   },
   "smime": {
     "your_certificates": "Vaše certifikáty",

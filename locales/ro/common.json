@@ -318,6 +318,7 @@
     "important": "Important",
     "download": "Descărcați",
     "download_all": "Descărcați tot",
+    "save_to_files": "Salvează în Fișiere",
     "from": "De la",
     "to": "Către",
     "cc": "CC",
@@ -3387,7 +3388,16 @@
     "disabled_description": "Încărcarea fișierelor de dimensiuni mari prin intermediul WebDAV poate provoca instabilitate în Stalwart /RocksDB, inclusiv blocări din cauza epuizării memoriei și utilizare irecuperabilă a spațiului pe disc. Este posibil ca fișierele șterse să nu fie eliminate imediat din spațiul de stocare blob. Această funcție nu este recomandată pentru mediile de producție.",
     "stability_warning": "Încărcarea fișierelor de dimensiuni mari poate provoca instabilitatea serverului. Este posibil ca fișierele șterse să nu fie eliminate imediat din spațiul de stocare. Utilizați cu precauție.",
     "migration_title": "Se actualizează fișierele...",
-    "migration_description": "Organizarea dosarelor și a fișierelor în structura corespunzătoare. Această operațiune se efectuează o singură dată."
+    "migration_description": "Organizarea dosarelor și a fișierelor în structura corespunzătoare. Această operațiune se efectuează o singură dată.",
+    "save_attachment": {
+      "title": "Salvează în Fișiere",
+      "loading": "Se încarcă dosarele...",
+      "load_error": "Încărcarea dosarelor a eșuat",
+      "no_folders": "Niciun subdosar",
+      "save_here": "Salvează în {folder}",
+      "success": "\"{name}\" salvat în Fișiere",
+      "save_error": "Salvarea în Fișiere a eșuat"
+    }
   },
   "smime": {
     "your_certificates": "Certificatele dvs.",
