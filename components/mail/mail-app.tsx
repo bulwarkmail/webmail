@@ -88,7 +88,7 @@ import { EML_IMPORT_ACCEPT, expandImportableEmails } from "@/lib/eml-import";
 import { findDraftIdentityId, resolveComposeAccountEmail, resolveReplyFrom, type ReplyFromResolution } from "@/lib/reply-identity";
 import { buildReplyRecipients, isSelfSent } from "@/lib/reply-recipients";
 import { useProMultiAccountIdentities } from "@/hooks/use-pro-multi-account-identities";
-import { Filter, ChevronDown, X, Paperclip, Star, Mail, MailOpen, RotateCcw, PenSquare, PenLine, CheckSquare, Square, AlertTriangle } from "lucide-react";
+import { Filter, ChevronDown, X, Paperclip, Star, Mail, MailOpen, RotateCcw, PenSquare, PenLine, CheckSquare, Square, AlertTriangle, ArrowLeft } from "lucide-react";
 import { ResizeHandle } from "@/components/layout/resize-handle";
 import { Button } from "@/components/ui/button";
 import { useConfig } from "@/hooks/use-config";
@@ -131,6 +131,9 @@ export function MailApp({ linkSegments }: MailAppProps = {}) {
   const tQuote = useTranslations('quote_header');
   const { appName } = useConfig();
   const mailLayout = useSettingsStore((state) => state.mailLayout);
+  // Phones present search full-screen from the header field rather than
+  // giving it a permanent second bar under the header.
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [showComposer, setShowComposer] = useState(false);
   const [composerMode, setComposerMode] = useState<'compose' | 'reply' | 'replyAll' | 'forward'>('compose');
   const [composerDraftText, setComposerDraftText] = useState("");
@@ -3594,10 +3597,36 @@ export function MailApp({ linkSegments }: MailAppProps = {}) {
             <MobileHeader
               title={currentMailboxName}
               sidebarId={sidebarId}
+              onOpenSearch={isMobile ? () => setMobileSearchOpen(true) : undefined}
+              searchPlaceholder={searchQuery || t('sidebar.search_placeholder_hint')}
+              searchActive={!!searchQuery}
+              onClearSearch={handleClearSearch}
             />
 
-            {/* Search Bar + Inline Advanced Filters */}
-            <div className="border-b border-border bg-background">
+            {/* Search Bar + Inline Advanced Filters. On phones this is not a
+                permanent second bar: the header carries a search field, and
+                tapping it presents this panel full-screen. Select-all and
+                refresh stay reachable there too, and long-press / pull-to-
+                refresh already cover them on the list itself. */}
+            {(!isMobile || mobileSearchOpen) && (
+            <div className={cn(
+              "border-b border-border bg-background",
+              isMobile && mobileSearchOpen && "fixed inset-0 z-50 overflow-y-auto"
+            )}>
+              {isMobile && mobileSearchOpen && (
+                <div className="h-14 px-2 flex items-center border-b border-border">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-11 w-11"
+                    onClick={() => setMobileSearchOpen(false)}
+                    aria-label={t('sidebar.mobile.go_back')}
+                  >
+                    <ArrowLeft className="h-5 w-5 rtl:-scale-x-100" />
+                  </Button>
+                  <span className="font-medium truncate">{t('sidebar.search_placeholder_hint')}</span>
+                </div>
+              )}
               <div className="px-3 h-14 flex items-center">
                 <div className="flex items-center gap-1.5 w-full">
                   {/* Select / Select All toggle */}
@@ -3636,9 +3665,13 @@ export function MailApp({ linkSegments }: MailAppProps = {}) {
                   <SearchBox
                     value={searchQuery}
                     onChange={setSearchQuery}
-                    onSubmit={handleSearch}
-                    onClear={handleClearSearch}
-                    onSelectContact={handleSelectContactSuggestion}
+                    autoFocus={isMobile && mobileSearchOpen}
+                    onSubmit={(query) => { handleSearch(query); setMobileSearchOpen(false); }}
+                    onClear={() => { handleClearSearch(); setMobileSearchOpen(false); }}
+                    onSelectContact={(contact, field) => {
+                      handleSelectContactSuggestion(contact, field);
+                      setMobileSearchOpen(false);
+                    }}
                     disabled={isScheduledView}
                     title={isScheduledView ? t('email_viewer.scheduled_actions_only') : undefined}
                   />
@@ -3847,6 +3880,7 @@ export function MailApp({ linkSegments }: MailAppProps = {}) {
                 </div>
               )}
             </div>
+            )}
 
             {(searchQuery || !isFilterEmpty(searchFilters)) && !activeIsLoading && !isScheduledView && (
               <div className="px-4 py-1.5 text-xs text-muted-foreground border-b border-border bg-muted/20">
