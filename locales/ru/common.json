@@ -1057,8 +1057,8 @@
         "description": "Показывает общее количество сообщений рядом с папками и метками, наряду с количеством непрочитанных. Отключите, чтобы показывать только непрочитанные."
       },
       "favicon_unread_badge": {
-        "label": "Unread Count on Tab Icon",
-        "description": "Show the inbox unread count as a badge on the browser tab icon, so new mail is visible when the tab is not focused. Disable to keep the icon unbadged."
+        "label": "Счётчик непрочитанных на иконке вкладки и приложения",
+        "description": "Показывает количество непрочитанных писем значком на иконке вкладки браузера и, если поддерживается, на иконке установленного приложения — чтобы новая почта была видна без переключения на вкладку. Отключите, чтобы обе иконки оставались без значка."
       },
       "pro_interface": {
         "label": "Pro-интерфейс (экспериментальный)",
