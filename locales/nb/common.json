@@ -1099,6 +1099,7 @@
       "cancel": "Avbryt",
       "migrating": "Oppdaterer etiketten på eksisterende e-poster...",
       "migration_error": "Kunne ikke oppdatere etiketten på eksisterende e-poster",
+      "filters_migration_error": "Noen filterregler bruker fortsatt den gamle etiketten – oppdater dem manuelt",
       "nesting": {
         "label": "Nestede etiketter",
         "description": "Plasser etiketter under hverandre og vis dem som et hierarki i sidefeltet."

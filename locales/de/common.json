@@ -1096,6 +1096,7 @@
       "cancel": "Abbrechen",
       "migrating": "Label auf vorhandenen E-Mails aktualisieren…",
       "migration_error": "Label auf vorhandenen E-Mails konnte nicht aktualisiert werden",
+      "filters_migration_error": "Einige Filterregeln verwenden noch das alte Tag – aktualisieren Sie sie manuell",
       "nesting": {
         "label": "Verschachtelte Labels",
         "description": "Labels unter anderen Labels verschachteln und als Baum in der Seitenleiste anzeigen."

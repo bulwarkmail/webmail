@@ -1096,6 +1096,7 @@
       "cancel": "Annulla",
       "migrating": "Aggiornamento dell'etichetta nelle e-mail esistenti…",
       "migration_error": "Impossibile aggiornare l'etichetta nelle e-mail esistenti",
+      "filters_migration_error": "Alcune regole dei filtri usano ancora il vecchio tag: aggiornale manualmente",
       "nesting": {
         "label": "Etichette nidificate",
         "description": "Nidifica le etichette sotto altre etichette e mostrale come un albero nella barra laterale."

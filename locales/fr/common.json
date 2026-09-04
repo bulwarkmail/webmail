@@ -1096,6 +1096,7 @@
       "cancel": "Annuler",
       "migrating": "Mise à jour de l'étiquette sur les e-mails existants…",
       "migration_error": "Impossible de mettre à jour l'étiquette sur les e-mails existants",
+      "filters_migration_error": "Certaines règles de filtrage utilisent encore l'ancienne étiquette — mettez-les à jour manuellement",
       "nesting": {
         "label": "Étiquettes imbriquées",
         "description": "Imbriquez des étiquettes sous d'autres étiquettes et affichez-les sous forme d'arborescence dans la barre latérale."

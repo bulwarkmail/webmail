@@ -1099,6 +1099,7 @@
       "cancel": "Mégse",
       "migrating": "Címke frissítése a meglévő e-maileken...",
       "migration_error": "Nem sikerült frissíteni a címkét a meglévő e-maileken",
+      "filters_migration_error": "Néhány szűrőszabály még a régi címkét használja – frissítse őket kézzel",
       "nesting": {
         "label": "Beágyazott címkék",
         "description": "Ágyazzon címkéket más címkék alá, és jelenítse meg őket fastruktúraként az oldalsávon."

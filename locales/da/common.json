@@ -1099,6 +1099,7 @@
       "cancel": "Annuller",
       "migrating": "Opdaterer tag på eksisterende e-mails…",
       "migration_error": "Kunne ikke opdatere tag på eksisterende e-mails",
+      "filters_migration_error": "Nogle filterregler bruger stadig det gamle tag – opdatér dem manuelt",
       "nesting": {
         "label": "Indlejrede tags",
         "description": "Indlejr tags under andre tags og vis dem som et træ i sidepanelet."

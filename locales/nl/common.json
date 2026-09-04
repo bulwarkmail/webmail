@@ -1096,6 +1096,7 @@
       "cancel": "Annuleren",
       "migrating": "Label bijwerken op bestaande e-mails…",
       "migration_error": "Label bijwerken op bestaande e-mails mislukt",
+      "filters_migration_error": "Sommige filterregels gebruiken nog het oude label — werk ze handmatig bij",
       "nesting": {
         "label": "Geneste labels",
         "description": "Nest labels onder andere labels en toon ze als een boomstructuur in de zijbalk."

@@ -1096,6 +1096,7 @@
       "cancel": "Atcelt",
       "migrating": "Taga atjaunināšana esošajos e-pastos…",
       "migration_error": "Neizdevās atjaunināt tagu esošajos e-pastos",
+      "filters_migration_error": "Dažas filtru kārtulas joprojām izmanto veco tagu — atjauniniet tās manuāli",
       "nesting": {
         "label": "Ligzdoti tagi",
         "description": "Ligzdojiet tagus zem citiem tagiem un rādiet tos sānjoslā kā koku."

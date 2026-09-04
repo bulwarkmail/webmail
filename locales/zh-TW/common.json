@@ -1096,6 +1096,7 @@
       "cancel": "取消",
       "migrating": "正在更新現有郵件的標籤…",
       "migration_error": "更新現有郵件的標籤失敗",
+      "filters_migration_error": "部分篩選規則仍在使用舊標籤，請手動更新",
       "nesting": {
         "label": "巢狀標籤",
         "description": "將標籤巢狀放在其他標籤下，並在側邊欄以樹狀結構顯示。"
