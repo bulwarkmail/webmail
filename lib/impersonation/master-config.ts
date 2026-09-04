@@ -1,4 +1,5 @@
 import { configManager } from '@/lib/admin/config-manager';
+import { readFileEnv } from "@/lib/read-file-env";
 
 export interface ImpersonationConfig {
   jwtSecret: string;
@@ -16,13 +17,27 @@ export interface ImpersonationConfig {
  *   BULWARK_STALWART_MASTER_USER   master account address (e.g. master@example.com)
  *   BULWARK_STALWART_MASTER_PASSWORD
  *
+ * Alternatively the file-based env:
+ *   BULWARK_JWT_AUTH_SECRET_FILE
+ *   BULWARK_STALWART_MASTER_USER_FILE
+ *   BULWARK_STALWART_MASTER_PASSWORD_FILE
+ *
  * Optional env:
  *   BULWARK_JWT_AUTH_ISSUER        (default: "platform-api/webmail")
  */
 export function readImpersonationConfig(): ImpersonationConfig | null {
-  const jwtSecret = process.env.BULWARK_JWT_AUTH_SECRET ?? '';
-  const masterUser = process.env.BULWARK_STALWART_MASTER_USER ?? '';
-  const masterPassword = process.env.BULWARK_STALWART_MASTER_PASSWORD ?? '';
+  const jwtSecret =
+    process.env.BULWARK_JWT_AUTH_SECRET ??
+    readFileEnv(process.env.BULWARK_JWT_AUTH_SECRET_FILE) ??
+    "";
+  const masterUser =
+    process.env.BULWARK_STALWART_MASTER_USER ??
+    readFileEnv(process.env.BULWARK_STALWART_MASTER_USER_FILE) ??
+    "";
+  const masterPassword =
+    process.env.BULWARK_STALWART_MASTER_PASSWORD ??
+    readFileEnv(process.env.BULWARK_STALWART_MASTER_PASSWORD_FILE) ??
+    "";
   if (!jwtSecret || !masterUser || !masterPassword) return null;
   return {
     jwtSecret,

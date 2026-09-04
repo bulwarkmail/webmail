@@ -58,12 +58,17 @@ class ConfigManager {
    */
   get<T>(key: string, defaultValue?: T): T {
     // Admin override (highest priority)
+    const mapping = CONFIG_ENV_MAP[key];
     if (key in this.adminConfig) {
       return this.adminConfig[key] as T;
+    } else if (mapping.fileKey && mapping.fileKey in this.adminConfig) {
+      const fileVal = readFileEnv(<string | undefined>this.adminConfig[mapping.fileKey]);
+      if (fileVal !== null) {
+        return parseEnvValue(fileVal, mapping.type) as T;
+      }
     }
 
     // Environment variable
-    const mapping = CONFIG_ENV_MAP[key];
     if (mapping) {
       const envVal = process.env[mapping.envVar];
       if (envVal !== undefined) {
@@ -101,6 +106,14 @@ class ConfigManager {
     for (const [key, mapping] of Object.entries(CONFIG_ENV_MAP)) {
       if (key in this.adminConfig) {
         result[key] = { value: this.adminConfig[key], source: 'admin' };
+      } else if (mapping.fileKey && mapping.fileKey in this.adminConfig) {
+        const fileVal = readFileEnv(<string | undefined>this.adminConfig[mapping.fileKey]);
+        if (fileVal !== null) {
+          result[key] = { value: parseEnvValue(fileVal, mapping.type), source: 'admin' };
+          continue;
+        }
+
+        result[key] = { value: mapping.defaultValue, source: 'default' };
       } else {
         const envVal = process.env[mapping.envVar];
         if (envVal !== undefined) {
