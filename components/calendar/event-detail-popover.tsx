@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useMemo, useCallback, useLayoutEffect } fr
 import { useTranslations, useLocale } from "next-intl";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
+import { LinkifiedText } from "@/components/ui/linkified-text";
 import {
   X, Clock, MapPin, Video, Users, Repeat, Bell, AlignLeft,
   Pencil, Trash2, Copy, Send, Check,
@@ -479,8 +480,8 @@ export function EventDetailPopover({
         {event.description && (
           <div className="flex items-start gap-2.5">
             <AlignLeft className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-            <p className="text-sm text-muted-foreground whitespace-pre-line line-clamp-3">
-              {event.description}
+            <p className="text-sm text-muted-foreground whitespace-pre-line line-clamp-3 break-words">
+              <LinkifiedText text={event.description} />
             </p>
           </div>
         )}

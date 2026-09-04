@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { LinkifiedText } from "@/components/ui/linkified-text";
 import { X, Trash2, Check, Users, CalendarDays, Copy, Pencil, Clock, MapPin, Video, Repeat, Bell, AlignLeft, Plus } from "lucide-react";
 import { format, parseISO, addHours, addDays, isSameDay } from "date-fns";
 import type { CalendarEvent, Calendar, CalendarParticipant, CalendarEventAlert, CalendarRecurrenceRule } from "@/lib/jmap/types";
@@ -759,7 +760,9 @@ export function EventModal({
             })()}
 
             {event.description && (
-              <p className="text-sm text-muted-foreground">{event.description}</p>
+              <p className="text-sm text-muted-foreground whitespace-pre-line break-words">
+                <LinkifiedText text={event.description} />
+              </p>
             )}
 
             {locationName && (
@@ -991,7 +994,9 @@ export function EventModal({
             {event.description && (
               <div className="flex items-start gap-2.5">
                 <AlignLeft className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                <p className="text-sm text-muted-foreground whitespace-pre-line">{event.description}</p>
+                <p className="text-sm text-muted-foreground whitespace-pre-line break-words">
+                  <LinkifiedText text={event.description} />
+                </p>
               </div>
             )}
           </div>
