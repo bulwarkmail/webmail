@@ -22,7 +22,7 @@ import {
   getStatusCounts,
   buildParticipantMap,
 } from "@/lib/calendar-participants";
-import { getEventEditability, canCreateEventsIn } from "@/lib/calendar-editability";
+import { canUserRsvp, getEventEditability, canCreateEventsIn } from "@/lib/calendar-editability";
 import { PluginSlot } from "@/components/plugins/plugin-slot";
 import { useSettingsStore } from "@/stores/settings-store";
 import { generateUUID } from "@/lib/utils";
@@ -233,6 +233,17 @@ export function EventModal({
   }, [event, calendars, currentUserEmails, isSubscriptionCalendar]);
   const canEditBody = editability === "editable";
   const rsvpMode = editability === "rsvp-only";
+
+  // A received invite lands in the user's own calendar, resolves to 'editable',
+  // and so never reaches the rsvp-only view below.
+  const canRsvp = useMemo(() => {
+    if (!event) return false;
+    return canUserRsvp(event, {
+      calendarsById: new Map(calendars.map((c) => [c.id, c])),
+      userCalendarAddresses: currentUserEmails,
+      isSubscriptionCalendar: isSubscriptionCalendar ?? (() => false),
+    });
+  }, [event, calendars, currentUserEmails, isSubscriptionCalendar]);
 
   const userParticipantId = useMemo(() => {
     if (!event) return null;
@@ -786,44 +797,7 @@ export function EventModal({
         </div>
 
         <div className="px-6 py-4 border-t border-border flex-shrink-0">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">{t("participants.rsvp_label")}</span>
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                variant={userCurrentStatus === "accepted" ? "default" : "outline"}
-                onClick={() => handleRsvp("accepted")}
-                className={userCurrentStatus === "accepted"
-                  ? "bg-success hover:bg-success/80 text-success-foreground"
-                  : "text-success border-success/30 hover:bg-success/10"}
-              >
-                {userCurrentStatus === "accepted" && <Check className="w-4 h-4 me-1" />}
-                {t("participants.accepted")}
-              </Button>
-              <Button
-                size="sm"
-                variant={userCurrentStatus === "tentative" ? "default" : "outline"}
-                onClick={() => handleRsvp("tentative")}
-                className={userCurrentStatus === "tentative"
-                  ? "bg-warning hover:bg-warning/80 text-warning-foreground"
-                  : "border border-warning/30 text-warning hover:bg-warning/10"}
-              >
-                {userCurrentStatus === "tentative" && <Check className="w-4 h-4 me-1" />}
-                {t("participants.tentative")}
-              </Button>
-              <Button
-                size="sm"
-                variant={userCurrentStatus === "declined" ? "default" : "ghost"}
-                onClick={() => handleRsvp("declined")}
-                className={userCurrentStatus === "declined"
-                  ? "bg-destructive hover:bg-destructive/80 text-destructive-foreground"
-                  : "text-destructive hover:bg-destructive/10"}
-              >
-                {userCurrentStatus === "declined" && <Check className="w-4 h-4 me-1" />}
-                {t("participants.declined")}
-              </Button>
-            </div>
-          </div>
+          <RsvpBar status={userCurrentStatus} onRespond={handleRsvp} t={t} />
         </div>
       </div>
     );
@@ -996,6 +970,16 @@ export function EventModal({
             )}
           </div>
         </div>
+
+        {/* RSVP:
+          The viewer owes a reply but may also edit their own copy,
+          so the rsvp-only branch above does not apply to this event.
+        */}
+        {canRsvp && onRsvp && userParticipantId && (
+          <div className="px-6 py-3 border-t border-border flex-shrink-0">
+          <RsvpBar status={userCurrentStatus} onRespond={handleRsvp} t={t} />
+          </div>
+        )}
 
         {/* Action Bar */}
         <div className="px-6 py-3 border-t border-border flex-shrink-0 flex items-center justify-between">
@@ -1438,6 +1422,58 @@ export function EventModal({
           </Button>
         </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The accept / tentative / decline row. Shared by the rsvp-only view and by the
+ * read-only view that an *editable* received invite lands in - the latter is the
+ * case that had no way to answer an invite at all (#937).
+ */
+function RsvpBar({ status, onRespond, t }: {
+  status: CalendarParticipant['participationStatus'] | null;
+  onRespond: (status: CalendarParticipant['participationStatus']) => void;
+  t: ReturnType<typeof useTranslations>;
+}) {
+  return (
+    <div className="flex items-center justify-between">
+      <span className="text-sm font-medium">{t("participants.rsvp_label")}</span>
+      <div className="flex gap-2">
+        <Button
+          size="sm"
+          variant={status === "accepted" ? "default" : "outline"}
+          onClick={() => onRespond("accepted")}
+          className={status === "accepted"
+            ? "bg-success hover:bg-success/80 text-success-foreground"
+            : "text-success border-success/30 hover:bg-success/10"}
+        >
+          {status === "accepted" && <Check className="w-4 h-4 me-1" />}
+          {t("participants.accepted")}
+        </Button>
+        <Button
+          size="sm"
+          variant={status === "tentative" ? "default" : "outline"}
+          onClick={() => onRespond("tentative")}
+          className={status === "tentative"
+            ? "bg-warning hover:bg-warning/80 text-warning-foreground"
+            : "border border-warning/30 text-warning hover:bg-warning/10"}
+        >
+          {status === "tentative" && <Check className="w-4 h-4 me-1" />}
+          {t("participants.tentative")}
+        </Button>
+        <Button
+          size="sm"
+          variant={status === "declined" ? "default" : "ghost"}
+          onClick={() => onRespond("declined")}
+          className={status === "declined"
+            ? "bg-destructive hover:bg-destructive/80 text-destructive-foreground"
+            : "text-destructive hover:bg-destructive/10"}
+        >
+          {status === "declined" && <Check className="w-4 h-4 me-1" />}
+          {t("participants.declined")}
+        </Button>
       </div>
     </div>
   );

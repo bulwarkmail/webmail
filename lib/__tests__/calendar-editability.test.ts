@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import type { CalendarEvent, CalendarParticipant, CalendarRights } from '@/lib/jmap/types';
 import {
   getEventEditability,
+  canUserRsvp,
   canCreateEventsIn,
   eventHasNoOwner,
   type EventEditability,
@@ -258,5 +259,89 @@ describe('getEventEditability - matrix sanity', () => {
       : makeEvent({ isOrigin: false, organizerCalendarAddress: `mailto:${OTHER}`,
           participants: { a: owner(OTHER), b: attendee(SELF) } as never });
     expect(getEventEditability(ev, ctx(rights))).toBe(expected);
+  });
+});
+
+/**
+ * Stalwart shape: participants carry only `calendarAddress` (no email/sendTo)
+ * and the organizer is additionally named by `organizerCalendarAddress`.
+ */
+function receivedInvite(attendeeAddress = SELF): CalendarEvent {
+  return makeEvent({
+    isOrigin: false,
+    organizerCalendarAddress: `mailto:${OTHER}`,
+    participants: {
+      att: {
+        '@type': 'Participant', calendarAddress: `mailto:${attendeeAddress}`,
+        participationStatus: 'needs-action', expectReply: true,
+        roles: { attendee: true, required: true },
+      },
+      org: {
+        '@type': 'Participant', calendarAddress: `mailto:${OTHER}`,
+        participationStatus: 'accepted',
+        roles: { owner: true, required: true },
+      },
+    } as never,
+  });
+}
+
+describe('canUserRsvp (issue #937)', () => {
+  it('is true for an externally organized invite in the user\'s own calendar', () => {
+    expect(canUserRsvp(receivedInvite(), ctx(ALL_RIGHTS))).toBe(true);
+  });
+
+  it('leaves the 1.9 rights-first editability of that invite untouched', () => {
+    // Must not regress 1.9 functionality
+    expect(getEventEditability(receivedInvite(), ctx(ALL_RIGHTS))).toBe('editable');
+  });
+
+  it('is true when the invited address is an account alias', () => {
+    expect(canUserRsvp(receivedInvite(ALIAS), ctx(ALL_RIGHTS, [SELF, ALIAS]))).toBe(true);
+  });
+
+  it('agrees with the rsvp-only editability state', () => {
+    const ev = receivedInvite();
+    expect(getEventEditability(ev, ctx(RSVP_ONLY))).toBe('rsvp-only');
+    expect(canUserRsvp(ev, ctx(RSVP_ONLY))).toBe(true);
+  });
+
+  it('is false for the organizer of their own event', () => {
+    const ev = makeEvent({ organizerCalendarAddress: `mailto:${SELF}`,
+      participants: { a: owner(SELF), b: attendee(OTHER) } as never });
+    expect(canUserRsvp(ev, ctx(ALL_RIGHTS))).toBe(false);
+  });
+
+  it('is false when the user is not a participant at all', () => {
+    expect(canUserRsvp(receivedInvite(OTHER), ctx(ALL_RIGHTS, ['dave@example.com']))).toBe(false);
+  });
+
+  it('is false for a plain event with no organizer or participants', () => {
+    expect(canUserRsvp(makeEvent(), ctx(ALL_RIGHTS))).toBe(false);
+  });
+
+  it('is false without mayRSVP on the calendar', () => {
+    expect(canUserRsvp(receivedInvite(), ctx(READ_ONLY))).toBe(false);
+  });
+
+  it('is false in an iCal subscription', () => {
+    expect(canUserRsvp(receivedInvite(), ctx(ALL_RIGHTS, [SELF], ['cal1']))).toBe(false);
+  });
+
+  it('is false while the calendar rights are still unloaded', () => {
+    expect(canUserRsvp(receivedInvite(), ctx(null))).toBe(false);
+  });
+
+  it('requires mayRSVP on every calendar the event belongs to', () => {
+    const ev = receivedInvite();
+    ev.calendarIds = { cal1: true, cal2: true };
+    const context: EditabilityContext = {
+      calendarsById: new Map([
+        ['cal1', { myRights: ALL_RIGHTS }],
+        ['cal2', { myRights: READ_ONLY }],
+      ]),
+      userCalendarAddresses: [SELF],
+      isSubscriptionCalendar: () => false,
+    };
+    expect(canUserRsvp(ev, context)).toBe(false);
   });
 });
