@@ -74,3 +74,33 @@ export function getEventEditability(
 
   return 'read-only';
 }
+
+/**
+ * Whether the viewer may RSVP to an event.
+ *
+ * Required because a received invite is delivered into the user's own calendar,
+ * which generally has mayWriteAll as `true` ([#937]).
+ */
+export function canUserRsvp(
+  event: CalendarEvent,
+  ctx: EditabilityContext,
+): boolean {
+  const calIds = Object.keys(event.calendarIds ?? {});
+
+  // Subscriptions are a one-way copy; there is no scheduling path to reply on.
+  if (calIds.some((id) => ctx.isSubscriptionCalendar(id))) return false;
+
+  const rights = calIds
+    .map((id) => ctx.calendarsById.get(id)?.myRights)
+    .filter((r): r is CalendarRights => Boolean(r));
+
+  // Rights not loaded: stay quiet rather than offer a reply that may be refused.
+  if (rights.length === 0) return false;
+  if (!rights.every((r) => r.mayRSVP)) return false;
+
+  // The organizer does not reply to their own invite, and an ownerless event carries no scheduling request at all.
+  if (isOrganizer(event, ctx.userCalendarAddresses)) return false;
+  if (eventHasNoOwner(event)) return false;
+
+  return getUserParticipantId(event, ctx.userCalendarAddresses) != null;
+}

@@ -19,7 +19,7 @@ import {
   getUserStatus,
   getParticipantList,
 } from "@/lib/calendar-participants";
-import { getEventEditability } from "@/lib/calendar-editability";
+import { canUserRsvp, getEventEditability, type EditabilityContext } from "@/lib/calendar-editability";
 import { useFormatEventDate } from "@/hooks/use-format-event-date";
 
 interface EventDetailPopoverProps {
@@ -159,16 +159,27 @@ export function EventDetailPopover({
   const alertLabel = useMemo(() => getAlertLabel(event, t), [event, t]);
 
   // Gate affordances on calendar rights, not identity (see calendar-editability).
-  const editability = useMemo(() => {
+  const editabilityCtx = useMemo<EditabilityContext>(() => {
     const calendarsById = new Map(calendar ? [[calendar.id, calendar]] : []);
-    return getEventEditability(event, {
+    return {
       calendarsById,
       userCalendarAddresses: currentUserEmails,
       isSubscriptionCalendar: isSubscriptionCalendar ?? (() => false),
-    });
-  }, [event, calendar, currentUserEmails, isSubscriptionCalendar]);
+    };
+  }, [calendar, currentUserEmails, isSubscriptionCalendar]);
+
+  const editability = useMemo(
+    () => getEventEditability(event, editabilityCtx),
+    [event, editabilityCtx]
+  );
   const canEditBody = editability === "editable";
-  const rsvpMode = editability === "rsvp-only";
+
+  // Asked separately from editability: a received invite lands in the user's own
+  // calendar and resolves to 'editable', which renders no RSVP bar (#937).
+  const canRsvp = useMemo(
+    () => canUserRsvp(event, editabilityCtx),
+    [event, editabilityCtx]
+  );
 
   const userParticipantId = useMemo(
     () => getUserParticipantId(event, currentUserEmails),
@@ -537,7 +548,7 @@ export function EventDetailPopover({
       )}
 
       {/* RSVP Bar (for attendees) */}
-      {rsvpMode && onRsvp && userParticipantId && (
+      {canRsvp && onRsvp && userParticipantId && (
         <div className="px-4 py-3 border-t border-border">
           <p className="text-xs font-medium text-muted-foreground mb-2">
             {t("participants.rsvp_label")}
