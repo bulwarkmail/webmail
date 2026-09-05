@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useSettingsStore } from '@/stores/settings-store';
-import type { SendDelaySeconds } from '@/stores/settings-store';
+import type { SendDelaySeconds, ComposeFontFamily, ComposeFontSize } from '@/stores/settings-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { SettingsSection, SettingItem, Select, ToggleSwitch } from './settings-section';
 import { X } from 'lucide-react';
@@ -23,6 +23,9 @@ export function ComposingSettings() {
   const {
     autoSelectReplyIdentity,
     plainTextMode,
+    composeFontFamily,
+    composeFontSize,
+    composeTextColor,
     rtlEditingSupport,
     attachmentReminderEnabled,
     attachmentReminderKeywords,
@@ -52,6 +55,70 @@ export function ComposingSettings() {
           checked={plainTextMode}
           onChange={(checked) => updateSetting('plainTextMode', checked)}
         />
+      </SettingItem>
+
+      <SettingItem label={t('compose_font.label')} description={t('compose_font.description')}>
+        <Select
+          value={composeFontFamily}
+          onChange={(value) => updateSetting('composeFontFamily', value as ComposeFontFamily)}
+          options={[
+            { value: 'default', label: t('compose_font.default') },
+            { value: 'sans', label: t('compose_font.sans') },
+            { value: 'serif-georgia', label: t('compose_font.serif_georgia') },
+            { value: 'serif-times', label: t('compose_font.serif_times') },
+            { value: 'verdana', label: t('compose_font.verdana') },
+            { value: 'trebuchet', label: t('compose_font.trebuchet') },
+            { value: 'monospace', label: t('compose_font.monospace') },
+          ]}
+        />
+      </SettingItem>
+
+      <SettingItem label={t('compose_font_size.label')} description={t('compose_font_size.description')}>
+        <Select
+          value={composeFontSize}
+          onChange={(value) => updateSetting('composeFontSize', value as ComposeFontSize)}
+          options={[
+            { value: 'default', label: t('compose_font_size.default') },
+            { value: 'small', label: t('compose_font_size.small') },
+            { value: 'normal', label: t('compose_font_size.normal') },
+            { value: 'medium', label: t('compose_font_size.medium') },
+            { value: 'large', label: t('compose_font_size.large') },
+            { value: 'x-large', label: t('compose_font_size.x_large') },
+          ]}
+        />
+      </SettingItem>
+
+      <SettingItem label={t('compose_color.label')} description={t('compose_color.description')}>
+        <div className="flex items-center gap-2">
+          <input
+            type="color"
+            aria-label={t('compose_color.label')}
+            value={composeTextColor || '#000000'}
+            onChange={(e) => updateSetting('composeTextColor', e.target.value)}
+            className="h-8 w-10 shrink-0 cursor-pointer rounded border border-border bg-transparent p-0.5"
+          />
+          <input
+            type="text"
+            inputMode="text"
+            aria-label={t('compose_color.hex')}
+            value={composeTextColor}
+            placeholder={t('compose_color.placeholder')}
+            onChange={(e) => {
+              const v = e.target.value.trim();
+              if (v === '' || /^#[0-9a-fA-F]{0,6}$/.test(v)) updateSetting('composeTextColor', v);
+            }}
+            className="h-8 w-28 rounded border border-border bg-background px-2 text-sm"
+          />
+          {composeTextColor && (
+            <button
+              type="button"
+              onClick={() => updateSetting('composeTextColor', '')}
+              className="text-xs text-muted-foreground hover:text-foreground"
+            >
+              {t('compose_color.reset')}
+            </button>
+          )}
+        </div>
       </SettingItem>
 
       <SettingItem label={t('rtl_editing.label')} description={t('rtl_editing.description')}>

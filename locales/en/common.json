@@ -1326,6 +1326,34 @@
         "label": "Plain Text Only",
         "description": "Disable the rich text editor and send all emails as plain text only, including replies and forwards"
       },
+      "compose_font": {
+        "label": "Compose Font",
+        "description": "Default font for new messages. When you reply to a message that already has its own font, your edits match it automatically so they stay invisible.",
+        "default": "Default",
+        "sans": "Sans-serif (Arial)",
+        "serif_georgia": "Serif (Georgia)",
+        "serif_times": "Serif (Times New Roman)",
+        "verdana": "Verdana",
+        "trebuchet": "Trebuchet MS",
+        "monospace": "Monospace (Courier New)"
+      },
+      "compose_font_size": {
+        "label": "Compose Text Size",
+        "description": "Default text size for new messages. Replies match the size of the message you are editing.",
+        "default": "Default",
+        "small": "Small (13px)",
+        "normal": "Normal (14px)",
+        "medium": "Medium (15px)",
+        "large": "Large (16px)",
+        "x_large": "Extra large (18px)"
+      },
+      "compose_color": {
+        "label": "Compose Text Color",
+        "description": "Default text color for new messages, as a hex value. Replies match the color of the message you are editing, so your edits stay invisible. Leave blank to use the theme default.",
+        "hex": "Hex color value",
+        "placeholder": "#000000",
+        "reset": "Default"
+      },
       "auto_select_reply_identity": {
         "label": "Reply From Received Address",
         "description": "When replying, send from the address the message was originally sent to. Matches identities first; for domain catch-all deliveries, rewrites the From header to the alias while sending through your primary identity."
