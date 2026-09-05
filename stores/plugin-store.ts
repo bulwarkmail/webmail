@@ -8,6 +8,7 @@ import { pluginStorage } from '@/lib/plugin-storage';
 import { extractPlugin } from '@/lib/plugin-validator';
 import { loadPlugin, deactivatePlugin, setPluginStoreAccessor, setupAutoDisable, setSandboxLocale } from '@/lib/plugin-loader';
 import { useLocaleStore } from '@/stores/locale-store';
+import { getEffectiveLocale } from '@/i18n/detect-locale';
 import { removeAllPluginHooks } from '@/lib/plugin-hooks';
 import { requestConsent } from '@/lib/plugin-sandbox/consent';
 import { sha256Hex } from '@/lib/plugin-sandbox/bundle-integrity';
@@ -268,10 +269,20 @@ export const usePluginStore = create<PluginStoreState>()(
           // in the dead activateAllPlugins() path, so the sandbox locale stayed
           // 'en' forever and plugin i18n never localized). Subscribe once for
           // later language switches; those affect plugins/slots loaded after.
-          setSandboxLocale(useLocaleStore.getState().locale);
+          //
+          // Use getEffectiveLocale(), NOT the raw store value: the stored
+          // choice is '' by default and stays '' under "Automatic" (see
+          // language-switcher.tsx / settings/language-settings.tsx) - the
+          // app's own UI resolves that via document.documentElement.lang /
+          // detectBrowserLocale (see i18n/detect-locale.ts), so a plugin
+          // reading the raw store value would see an empty string (falling
+          // back to English) even when the app itself is fully localized to
+          // the visitor's browser language. Found via a plugin dev report:
+          // native UI in Hungarian, plugin's own i18n stuck on English.
+          setSandboxLocale(getEffectiveLocale());
           if (!localeSubscribed) {
             localeSubscribed = true;
-            useLocaleStore.subscribe((s) => setSandboxLocale(s.locale));
+            useLocaleStore.subscribe(() => setSandboxLocale(getEffectiveLocale()));
           }
 
           // Sync server-managed plugins before loading
