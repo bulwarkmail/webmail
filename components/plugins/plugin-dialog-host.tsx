@@ -8,6 +8,8 @@
 
 import React, { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { head, resolveHead, subscribe } from '@/lib/plugin-sandbox/host-dialog';
+import { PluginIframeSlot } from './plugin-iframe-slot';
+import type { SlotName } from '@/lib/plugin-types';
 
 // Lightweight **bold** support in plugin dialog messages. Everything else is
 // rendered literally (newlines come from the parent's white-space: pre-wrap).
@@ -39,7 +41,7 @@ export function PluginDialogHost(): React.JSX.Element | null {
 
   const canSubmit = fields.every((f) => !f.required || (values[f.name] ?? '').length > 0);
 
-  const cancel = () => resolveHead(current?.kind === 'prompt' ? null : false);
+  const cancel = () => resolveHead(current?.kind === 'prompt' || current?.kind === 'custom' ? null : false);
   const submitPrompt = () => { if (canSubmit) resolveHead(values); };
 
   useEffect(() => {
@@ -48,9 +50,11 @@ export function PluginDialogHost(): React.JSX.Element | null {
       if (e.key === 'Escape') {
         e.preventDefault();
         cancel();
-      } else if (e.key === 'Enter' && !isPrompt) {
+      } else if (e.key === 'Enter' && (current?.kind === 'confirm' || current?.kind === 'alert')) {
         // For prompts, Enter is handled by the form (so it respects required
-        // validation and works from within an input); non-prompt dialogs accept.
+        // validation and works from within an input); confirm/alert accept.
+        // Custom dialogs resolve only via their own onResult callback or the
+        // host's X/Escape - an Enter press has no defined meaning for them.
         e.preventDefault();
         resolveHead(true);
       }
@@ -58,7 +62,7 @@ export function PluginDialogHost(): React.JSX.Element | null {
     document.addEventListener('keydown', onKey, true);
     return () => document.removeEventListener('keydown', onKey, true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [current, isPrompt, canSubmit, values]);
+  }, [current, canSubmit, values]);
 
   if (!current) return null;
 
@@ -94,20 +98,40 @@ export function PluginDialogHost(): React.JSX.Element | null {
           border: '1px solid var(--color-border, #e2e8f0)',
           borderRadius: 12,
           padding: 20,
-          maxWidth: 480,
+          maxWidth: current.kind === 'custom' ? (current.width ?? 560) : 480,
+          maxHeight: current.kind === 'custom' ? '85vh' : undefined,
+          overflowY: current.kind === 'custom' ? 'auto' : undefined,
           width: '92%',
           boxShadow: '0 16px 48px rgba(0,0,0,0.35)',
         }}
       >
-        <h2 id="plugin-dialog-title" style={{ fontSize: 16, fontWeight: 600, margin: '0 0 10px 0' }}>
-          {current.title}
-        </h2>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+          <h2 id="plugin-dialog-title" style={{ fontSize: 16, fontWeight: 600, margin: '0 0 10px 0' }}>
+            {current.title}
+          </h2>
+          {current.kind === 'custom' && (
+            <button
+              type="button"
+              onClick={cancel}
+              aria-label="Close"
+              style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 18, lineHeight: 1, padding: 0, color: 'inherit' }}
+            >
+              ✕
+            </button>
+          )}
+        </div>
         {current.message && (
           <p style={{ fontSize: 13, lineHeight: 1.5, margin: '0 0 16px 0', color: 'var(--color-muted-foreground, #64748b)', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
             {renderMessage(current.message)}
           </p>
         )}
-        {isPrompt ? (
+        {current.kind === 'custom' ? (
+          <PluginIframeSlot
+            pluginId={current.pluginId}
+            slot={(current.slot ?? 'plugin-dialog') as SlotName}
+            extraProps={{ ...(current.extraProps ?? {}), onResult: (value: unknown) => resolveHead(value) }}
+          />
+        ) : isPrompt ? (
           <form onSubmit={(e) => { e.preventDefault(); submitPrompt(); }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 16 }}>
               {fields.map((f, i) => (

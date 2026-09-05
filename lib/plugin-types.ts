@@ -290,7 +290,13 @@ export type SlotName =
   | 'admin-plugin-page'
   | 'contact-cryptokeys'
   | 'attachment-actions'
-  | 'composer-attachment-source';
+  | 'composer-attachment-source'
+  // Rendered inside a plugin-requested host dialog (see `ui.openDialog` /
+  // PluginDialogHost), NOT in-page like every other slot above - this is
+  // the only slot that renders inside the app-root fixed overlay instead of
+  // wherever the slot is placed in the page, so it's the one to use for a
+  // large, genuinely clickable custom UI a small toolbar/row slot can't fit.
+  | 'plugin-dialog';
 
 export interface SlotRegistration {
   pluginId: string;
