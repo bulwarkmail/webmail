@@ -327,6 +327,17 @@ function buildPluginApi(manifest: PluginManifest) {
         cancelLabel?: string;
         fields?: Array<{ name: string; label: string; type?: 'text' | 'password'; placeholder?: string; required?: boolean }>;
       }) => callApi('ui.prompt', [opts], 0) as Promise<Record<string, string> | null>,
+      /** Opens one of this plugin's OWN slots (see the 'plugin-dialog'
+       *  SlotName) inside a real, app-root, full-size dialog - unlike every
+       *  other slot, which renders wherever it's placed in the page and is
+       *  constrained by that spot's own layout. Use this for anything that
+       *  needs to be a large, genuinely clickable custom UI (a file browser,
+       *  a multi-step form, etc.) rather than a toolbar/row-sized control.
+       *  Resolves to whatever value the slot component passes to its
+       *  `onResult` prop, or null if the user closes the dialog without
+       *  calling it. No timeout - it waits for the user. */
+      openDialog: (opts: { title?: string; slot: string; extraProps?: Record<string, unknown>; width?: number }) =>
+        callApi('ui.openDialog', [opts], 0) as Promise<unknown>,
       /** Re-runs the onRenderEmailBody hook for the open message (e.g. after a
        *  crypto plugin unlocks a key) so its body re-renders without a reload. */
       rerenderEmail: () => callApi('ui.rerenderEmail', []) as Promise<void>,

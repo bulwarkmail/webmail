@@ -24,7 +24,7 @@ import { DEFAULT_KEYWORD_SCAN_LIMIT } from '../jmap/client';
 import { suggestKeywordColor } from '../keyword-discovery';
 import { MAX_KEYWORD_LENGTH } from '../keyword-nesting';
 import { KEYWORD_PREFIX } from '../thread-utils';
-import { awaitDialog, awaitPrompt, type PromptField } from './host-dialog';
+import { awaitDialog, awaitPrompt, awaitCustomDialog, type PromptField } from './host-dialog';
 import { fileStorage } from '../plugin-storage';
 import { generateUUID } from '../utils';
 import { AddressBook, ContactCard, Identity } from '../jmap/types';
@@ -131,6 +131,7 @@ const PERM_PER_METHOD: Record<string, Permission | null> = {
   'ui.confirm': null,
   'ui.alert': null,
   'ui.prompt': null,
+  'ui.openDialog': null,
   'ui.rerenderEmail': null,
   'ui.rerenderFetchedEmails': null,
   'ui.openExternalUrl': null,
@@ -1504,6 +1505,24 @@ export async function dispatchApiCall(
         confirmLabel: typeof opts.confirmLabel === 'string' ? opts.confirmLabel : undefined,
         cancelLabel: typeof opts.cancelLabel === 'string' ? opts.cancelLabel : undefined,
         fields,
+      });
+    }
+    case 'ui.openDialog': {
+      // Renders one of THIS plugin's own slots inside PluginDialogHost's
+      // real app-root overlay, instead of a fixed confirm/prompt form - see
+      // the 'plugin-dialog' SlotName / host-dialog.ts comments for why this
+      // exists (a small toolbar/row slot can't show a large custom UI).
+      const opts = (args[0] ?? {}) as { title?: string; slot?: string; extraProps?: Record<string, unknown>; width?: number };
+      if (!opts.slot || typeof opts.slot !== 'string') {
+        throw new Error('ui.openDialog requires a "slot" name');
+      }
+      return awaitCustomDialog({
+        pluginId: plugin.id,
+        title: String(opts.title ?? plugin.name ?? ''),
+        message: '',
+        slot: opts.slot,
+        extraProps: (opts.extraProps && typeof opts.extraProps === 'object') ? opts.extraProps : {},
+        width: typeof opts.width === 'number' ? opts.width : undefined,
       });
     }
     case 'ui.rerenderEmail': {

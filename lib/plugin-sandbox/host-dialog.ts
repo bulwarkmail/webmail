@@ -5,7 +5,7 @@
 // at a time. Prompts collect one or more (optionally masked) text fields so a
 // plugin never has to fall back to the sandbox-blocked `window.prompt`.
 
-export type DialogKind = 'confirm' | 'alert' | 'prompt';
+export type DialogKind = 'confirm' | 'alert' | 'prompt' | 'custom';
 
 export interface PromptField {
   /** Key the field's value is returned under. */
@@ -36,8 +36,22 @@ export interface DialogRequest {
   danger?: boolean;
   /** Fields to collect, for `kind === 'prompt'`. */
   fields?: PromptField[];
+  /**
+   * For `kind === 'custom'`: the plugin's own slot name to render in place of
+   * the confirm/prompt body, and the props to pass it. Unlike every other
+   * slot mount, this one renders inside `PluginDialogHost`'s real
+   * `position: fixed; inset: 0` container at the app root - not a small,
+   * CSS-constrained row - so it's the only way a plugin can show a large,
+   * fully custom, genuinely clickable UI (see PR discussion / the
+   * webdav-storage plugin's folder browser for why this exists at all: a
+   * prompt-loop UI works but nobody wants to type folder numbers).
+   */
+  slot?: string;
+  extraProps?: Record<string, unknown>;
+  /** Optional width override in px for the dialog box (custom kind only). */
+  width?: number;
   /** Called when the dialog closes with its typed result (see DialogResult). */
-  resolve: (result: DialogResult) => void;
+  resolve: (result: unknown) => void;
 }
 
 const queue: DialogRequest[] = [];
@@ -64,16 +78,16 @@ export function head(): DialogRequest | null {
   return queue[0] ?? null;
 }
 
-export function resolveHead(result: DialogResult): void {
+export function resolveHead(result: unknown): void {
   const entry = queue.shift();
   if (!entry) return;
   try { entry.resolve(result); } catch { /* ignore */ }
   notify();
 }
 
-/** The "cancelled" result for a given dialog kind (null for prompt, else false). */
-function cancelledResult(kind: DialogKind): DialogResult {
-  return kind === 'prompt' ? null : false;
+/** The "cancelled" result for a given dialog kind (null for prompt/custom, else false). */
+function cancelledResult(kind: DialogKind): unknown {
+  return kind === 'prompt' || kind === 'custom' ? null : false;
 }
 
 /** Cancel every pending dialog for a plugin (called on unload). */
@@ -111,6 +125,20 @@ export function awaitDialog(req: Omit<DialogRequest, 'id' | 'resolve'>): Promise
  */
 export function awaitPrompt(req: Omit<DialogRequest, 'id' | 'resolve'>): Promise<Record<string, string> | null> {
   return new Promise((resolve) => {
-    enqueueDialog({ ...req, resolve: (r) => resolve(r && typeof r === 'object' ? r : null) });
+    enqueueDialog({ ...req, resolve: (r) => resolve(r && typeof r === 'object' ? (r as Record<string, string>) : null) });
+  });
+}
+
+/**
+ * Custom variant: renders the given plugin slot inside PluginDialogHost's
+ * real full-screen container instead of a confirm/prompt form. Resolves to
+ * whatever value the slot component passes to its `onResult` prop (an
+ * ordinary callback, marshalled across the iframe boundary the same way
+ * `composer-attachment-source`'s `onAttach` is), or `null` if the user
+ * closes the dialog (X button / Escape) without calling it.
+ */
+export function awaitCustomDialog(req: Omit<DialogRequest, 'id' | 'resolve' | 'kind'>): Promise<unknown> {
+  return new Promise((resolve) => {
+    enqueueDialog({ ...req, kind: 'custom', resolve });
   });
 }

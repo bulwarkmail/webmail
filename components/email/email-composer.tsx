@@ -19,7 +19,7 @@ import { buildQuotedHtmlBlock, serializeEditorContent } from "@/components/email
 import { buildSignatureBlock, containsEmbeddedSignature, SIGNATURE_RANGE_MARKER } from "@/components/email/signature-block";
 import { emailHooks, contactHooks, isExternalAttachmentResult } from "@/lib/plugin-hooks";
 import { onUploadProgress } from "@/lib/upload-progress";
-import type { AlmostSavedDraft, OutgoingEmail, RecipientSuggestion } from "@/lib/plugin-types";
+import type { AlmostSavedDraft, OutgoingEmail, PluginAttachmentUpload, RecipientSuggestion } from "@/lib/plugin-types";
 import { useAuthStore } from "@/stores/auth-store";
 import { useIdentityStore } from "@/stores/identity-store";
 import { useProMultiAccountIdentities, stripCrossAccountIdentityPrefix } from "@/hooks/use-pro-multi-account-identities";
@@ -1616,6 +1616,24 @@ export function EmailComposer({
     setAttachments(prev => prev.filter((_, i) => i !== index));
   };
 
+  // Lets a plugin attach a file it has already uploaded to the JMAP server
+  // (via api.jmap.uploadBlob) without going through the local file-picker /
+  // drag-drop path - e.g. a plugin that browses an external WebDAV store and
+  // offers "attach from there". No `file` is set, matching the existing
+  // draft-part hydration path above (a blobId-only attachment is already a
+  // supported shape, just never previously reachable from a plugin).
+  const handlePluginAttachmentAdd = useCallback((upload: PluginAttachmentUpload) => {
+    setAttachments(prev => [
+      ...prev,
+      {
+        name: upload.name,
+        type: upload.type,
+        size: upload.size,
+        blobId: upload.blobId,
+      },
+    ]);
+  }, []);
+
   // Inline preview for composer attachments, reusing the message viewer's
   // FilePreviewModal (so previewability and the open-in-new-tab safety gate are
   // handled there). Prefer the local File - no network - and fall back to the
@@ -3107,6 +3125,15 @@ export function EmailComposer({
               </Button>
             )}
             <PluginSlot name="composer-toolbar" />
+            {/* Lets a plugin offer an alternative attachment source (an
+                external file browser, cloud storage picker, etc). The plugin
+                calls `onAttach` once it has uploaded the chosen file to JMAP
+                itself (api.jmap.uploadBlob) and just wants it added to this
+                draft. */}
+            <PluginSlot
+              name="composer-attachment-source"
+              extraProps={{ onAttach: handlePluginAttachmentAdd }}
+            />
           </div>
 
           {/* Right side - Discard + Send (desktop) */}
