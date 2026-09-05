@@ -134,6 +134,39 @@ export type MessageSpacing = 'auto' | 'always' | 'edge';
 
 /** Font used to render text/plain email bodies. */
 export type PlainTextFont = 'mono' | 'sans';
+
+/**
+ * Default font family for the rich-text composer. Web-safe stacks only (no
+ * web-font loading); 'default' leaves the family unset. Mapped to CSS in
+ * components/email/compose-typography.ts. When replying to a styled draft the
+ * draft's own family wins (so edits stay invisible); this setting supplies the
+ * family for a fresh message.
+ */
+export type ComposeFontFamily =
+  | 'default'
+  | 'sans'
+  | 'serif-georgia'
+  | 'serif-times'
+  | 'verdana'
+  | 'trebuchet'
+  | 'monospace';
+
+/**
+ * Default text size for the rich-text composer, as a tier mapped to px in
+ * compose-typography.ts. 'default' leaves the size unset. Like ComposeFontFamily
+ * it yields to a styled draft's own size when replying.
+ */
+export type ComposeFontSize = 'default' | 'small' | 'normal' | 'medium' | 'large' | 'x-large';
+
+const COMPOSE_FONT_FAMILIES: ComposeFontFamily[] = [
+  'default', 'sans', 'serif-georgia', 'serif-times', 'verdana', 'trebuchet', 'monospace',
+];
+const COMPOSE_FONT_SIZES: ComposeFontSize[] = ['default', 'small', 'normal', 'medium', 'large', 'x-large'];
+
+/** A validated hex colour (`#rgb`/`#rrggbb`), or '' for unset. Non-hex input is coerced to ''. */
+export function normalizeComposeColor(v: unknown): string {
+  return typeof v === 'string' && /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(v.trim()) ? v.trim() : '';
+}
 export type CalendarHoverPreview = 'off' | 'instant' | 'delay-500ms' | 'delay-1s' | 'delay-2s';
 export type SendDelaySeconds = 0 | 10 | 30 | 60;
 export type ProtocolOpenMode = 'active-session' | 'new-tab';
@@ -344,6 +377,9 @@ interface SettingsState {
   defaultReplyMode: ReplyMode;
   autoSelectReplyIdentity: boolean;
   plainTextMode: boolean; // Send plain text only (no rich text editor)
+  composeFontFamily: ComposeFontFamily; // Default composer font family (yields to a styled reply draft)
+  composeFontSize: ComposeFontSize; // Default composer text size (yields to a styled reply draft)
+  composeTextColor: string; // Default composer text colour as hex ('' = unset; yields to a styled reply draft)
   rtlEditingSupport: boolean; // Show a per-paragraph LTR/RTL direction control in the composer (Gmail-style)
   subAddressDelimiter: string; // Character separating user from tag (e.g. "user+tag@")
   sendDelaySeconds: SendDelaySeconds;
@@ -581,6 +617,9 @@ const DEFAULT_SETTINGS = {
   defaultReplyMode: 'reply' as ReplyMode,
   autoSelectReplyIdentity: false,
   plainTextMode: false,
+  composeFontFamily: 'default' as ComposeFontFamily,
+  composeFontSize: 'default' as ComposeFontSize,
+  composeTextColor: '',
   rtlEditingSupport: false,
   subAddressDelimiter: DEFAULT_SUB_ADDRESS_DELIMITER,
   sendDelaySeconds: 0 as SendDelaySeconds,
@@ -806,6 +845,9 @@ export const useSettingsStore = create<SettingsState>()(
           defaultReplyMode: state.defaultReplyMode,
           autoSelectReplyIdentity: state.autoSelectReplyIdentity,
           plainTextMode: state.plainTextMode,
+          composeFontFamily: state.composeFontFamily,
+          composeFontSize: state.composeFontSize,
+          composeTextColor: state.composeTextColor,
           rtlEditingSupport: state.rtlEditingSupport,
           subAddressDelimiter: state.subAddressDelimiter,
           sendDelaySeconds: state.sendDelaySeconds,
@@ -903,6 +945,14 @@ export const useSettingsStore = create<SettingsState>()(
               }
               if (key === 'sendDelaySeconds' && ![0, 10, 30, 60].includes(settings[key])) {
                 set({ sendDelaySeconds: 0 });
+                return;
+              }
+              // Reject an unknown enum value from a newer/older client rather
+              // than letting the composer map it to `undefined` CSS.
+              if (key === 'composeFontFamily' && !COMPOSE_FONT_FAMILIES.includes(settings[key])) {
+                return;
+              }
+              if (key === 'composeFontSize' && !COMPOSE_FONT_SIZES.includes(settings[key])) {
                 return;
               }
               // Validity of the zone id itself is checked at use time
