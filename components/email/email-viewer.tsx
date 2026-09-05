@@ -4030,6 +4030,19 @@ export function EmailViewer({
                               <Eye className="w-3.5 h-3.5 text-foreground" />
                             </button>
                           )}
+                          <PluginSlot
+                            name="attachment-actions"
+                            className="contents"
+                            extraProps={{
+                              attachment: {
+                                name: attachment.name || '',
+                                type: attachment.type,
+                                size: attachment.size,
+                                blobId: attachment.blobId,
+                                emailId: email?.id,
+                              } satisfies AttachmentInfo,
+                            }}
+                          />
                         </div>
                       </div>
                         )}
@@ -4090,6 +4103,19 @@ export function EmailViewer({
                                     <Eye className="w-3.5 h-3.5 text-foreground" />
                                   </button>
                                 )}
+                                <PluginSlot
+                                  name="attachment-actions"
+                                  className="contents"
+                                  extraProps={{
+                                    attachment: {
+                                      name: attachment.name || '',
+                                      type: attachment.type,
+                                      size: attachment.size,
+                                      blobId: attachment.blobId,
+                                      emailId: email?.id,
+                                    } satisfies AttachmentInfo,
+                                  }}
+                                />
                               </div>
                             </div>
                               )}
@@ -4821,6 +4847,19 @@ export function EmailViewer({
                         <Eye className="w-4 h-4 text-foreground" />
                       </button>
                     )}
+                    <PluginSlot
+                      name="attachment-actions"
+                      className="contents"
+                      extraProps={{
+                        attachment: {
+                          name: attachment.name || '',
+                          type: attachment.type,
+                          size: attachment.size,
+                          blobId: attachment.blobId,
+                          emailId: email?.id,
+                        } satisfies AttachmentInfo,
+                      }}
+                    />
                   </div>
                 </div>
                   )}
@@ -4881,6 +4920,19 @@ export function EmailViewer({
                               <Eye className="w-4 h-4 text-foreground" />
                             </button>
                           )}
+                          <PluginSlot
+                            name="attachment-actions"
+                            className="contents"
+                            extraProps={{
+                              attachment: {
+                                name: attachment.name || '',
+                                type: attachment.type,
+                                size: attachment.size,
+                                blobId: attachment.blobId,
+                                emailId: email?.id,
+                              } satisfies AttachmentInfo,
+                            }}
+                          />
                         </div>
                       </div>
                         )}
@@ -4962,6 +5014,19 @@ export function EmailViewer({
                           <Eye className="w-4 h-4 text-foreground" />
                         </button>
                       )}
+                      <PluginSlot
+                        name="attachment-actions"
+                        className="contents"
+                        extraProps={{
+                          attachment: {
+                            name: attachment.name || '',
+                            type: attachment.type,
+                            size: attachment.size,
+                            blobId: attachment.blobId,
+                            emailId: email?.id,
+                          } satisfies AttachmentInfo,
+                        }}
+                      />
                     </div>
                   </div>
                     )}
@@ -5021,6 +5086,19 @@ export function EmailViewer({
                                 <Eye className="w-3.5 h-3.5 text-foreground" />
                               </button>
                             )}
+                            <PluginSlot
+                              name="attachment-actions"
+                              className="contents"
+                              extraProps={{
+                                attachment: {
+                                  name: attachment.name || '',
+                                  type: attachment.type,
+                                  size: attachment.size,
+                                  blobId: attachment.blobId,
+                                  emailId: email?.id,
+                                } satisfies AttachmentInfo,
+                              }}
+                            />
                           </div>
                         </div>
                           )}
