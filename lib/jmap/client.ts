@@ -344,7 +344,6 @@ const CALENDAR_TASK_PROPERTIES = [
   'utcStart',
   'utcEnd',
   'progress',
-  'progressUpdated',
   'priority',
   'privacy',
   'color',
@@ -6516,7 +6515,7 @@ export class JMAPClient implements IJMAPClient {
     const accountId = targetAccountId || this.getCalendarsAccountId();
 
     // Strip client-only and server-immutable fields before sending to JMAP
-    const { id: _id, uid: _uid, '@type': _typ, created: _cr, updated: _up, sequence: _sq, isOrigin: _io, isDraft: _idr, originalId: _oi, baseEventId: _be, originalCalendarIds: _oc, accountId: _ai, accountName: _an, isShared: _is, ...cleanUpdates } = updates as CalendarEvent;
+    const { id: _id, uid: _uid, '@type': _typ, created: _cr, updated: _up, sequence: _sq, isOrigin: _io, isDraft: _idr, originalId: _oi, baseEventId: _be, originalCalendarIds: _oc, accountId: _ai, accountName: _an, isShared: _is, progressUpdated: _pu, ...cleanUpdates } = updates as CalendarEvent & { progressUpdated?: string | null };
     cleanRecurrenceRules(cleanUpdates as unknown as Record<string, unknown>);
 
     const setArgs: Record<string, unknown> = {
@@ -6770,7 +6769,7 @@ export class JMAPClient implements IJMAPClient {
 
   async createCalendarTask(task: Partial<CalendarTask>, targetAccountId?: string): Promise<CalendarTask> {
     const accountId = targetAccountId || this.getCalendarsAccountId();
-    const { '@type': _type, ...taskData } = task;
+    const { '@type': _type, progressUpdated: _pu, ...taskData } = task as Partial<CalendarTask> & { progressUpdated?: string | null };
     const cleanTask = { ...taskData, '@type': 'Task' };
 
     debug.group('CalendarTask/create', 'tasks');

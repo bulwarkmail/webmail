@@ -83,7 +83,6 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     const newProgress = task.progress === 'completed' ? 'needs-action' : 'completed';
     const updates: Partial<CalendarTask> = {
       progress: newProgress,
-      progressUpdated: new Date().toISOString(),
     };
     await client.updateCalendarTask(task.id, updates);
     set({
