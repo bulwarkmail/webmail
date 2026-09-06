@@ -620,6 +620,9 @@ export default function LoginPage() {
     authUrl.searchParams.set("state", state);
     authUrl.searchParams.set("code_challenge", challenge);
     authUrl.searchParams.set("code_challenge_method", "S256");
+    if (isAddAccountMode) {
+      authUrl.searchParams.set("prompt", "select_account");
+    }
 
     window.location.href = authUrl.toString();
   };
