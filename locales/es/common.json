@@ -1145,7 +1145,9 @@
         "enabled": "Notificaciones de correo",
         "enabled_desc": "Mostrar notificaciones cuando lleguen nuevos correos",
         "sound": "Sonido de notificación",
-        "sound_desc": "Reproducir un sonido cuando lleguen nuevos correos"
+        "sound_desc": "Reproducir un sonido cuando lleguen nuevos correos",
+        "inbox_only": "Inbox only",
+        "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
       },
       "calendar": {
         "title": "Notificaciones de calendario",

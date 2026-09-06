@@ -1145,7 +1145,9 @@
         "enabled": "E-Mail-Benachrichtigungen",
         "enabled_desc": "Benachrichtigungen anzeigen, wenn neue E-Mails eintreffen",
         "sound": "Benachrichtigungston",
-        "sound_desc": "Einen Ton abspielen, wenn neue E-Mails eintreffen"
+        "sound_desc": "Einen Ton abspielen, wenn neue E-Mails eintreffen",
+        "inbox_only": "Inbox only",
+        "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
       },
       "calendar": {
         "title": "Kalender-Benachrichtigungen",

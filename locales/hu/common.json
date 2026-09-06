@@ -1183,7 +1183,9 @@
         "enabled": "E-mail értesítések",
         "enabled_desc": "Értesítések megjelenítése új e-mailek érkezésekor",
         "sound": "Értesítési hang",
-        "sound_desc": "Hangjelzés lejátszása új e-mailek érkezésekor"
+        "sound_desc": "Hangjelzés lejátszása új e-mailek érkezésekor",
+        "inbox_only": "Inbox only",
+        "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
       },
       "calendar": {
         "title": "Naptár értesítések",

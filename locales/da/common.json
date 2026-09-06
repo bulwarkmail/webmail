@@ -1183,7 +1183,9 @@
         "enabled": "E-mail-notifikationer",
         "enabled_desc": "Vis notifikationer, når nye e-mails ankommer",
         "sound": "Notifikationslyd",
-        "sound_desc": "Afspil en lydadvarsel, når nye e-mails ankommer"
+        "sound_desc": "Afspil en lydadvarsel, når nye e-mails ankommer",
+        "inbox_only": "Inbox only",
+        "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
       },
       "calendar": {
         "title": "Kalendernotifikationer",

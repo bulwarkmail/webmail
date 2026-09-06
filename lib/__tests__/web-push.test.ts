@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
 import type { EmailPushConfig, PushSubscription as JmapPushSubscription } from '@/lib/jmap/types';
 import {
+  buildEmailPushConfig,
   disableWebPush,
   enableWebPush,
   listPushDevices,
@@ -171,7 +172,7 @@ describe('enableWebPush', () => {
     const client = makeClient([sub('push-old', THIS_DEVICE)]);
     installFetch({});
 
-    const result = await enableWebPush({ client, relayBaseUrl: RELAY });
+    const result = await enableWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false });
 
     expect(result.subscriptionId).toBe('push-old');
     expect(client.createPushSubscription).not.toHaveBeenCalled();
@@ -184,7 +185,7 @@ describe('enableWebPush', () => {
     const client = makeClient([sub('push-old', THIS_DEVICE)]);
     installFetch({});
 
-    const result = await enableWebPush({ client, relayBaseUrl: RELAY, forceRecreate: true });
+    const result = await enableWebPush({ client, relayBaseUrl: RELAY, forceRecreate: true, inboxOnly: false });
 
     expect(client.destroyed).toContain('push-old');
     expect(client.createPushSubscription).toHaveBeenCalledTimes(1);
@@ -198,7 +199,7 @@ describe('enableWebPush', () => {
     const client = makeClient([sub('push-other', OTHER_DEVICE)]);
     installFetch({ [OTHER_DEVICE]: 'unknown' });
 
-    await enableWebPush({ client, relayBaseUrl: RELAY, forceRecreate: true });
+    await enableWebPush({ client, relayBaseUrl: RELAY, forceRecreate: true, inboxOnly: false });
 
     expect(client.destroyed).not.toContain('push-other');
   });
@@ -214,7 +215,7 @@ describe('resyncWebPush', () => {
     const client = makeClient([sub('push-old', THIS_DEVICE)], { emailPushCapability: true });
     installFetch({});
 
-    expect(await resyncWebPush({ client, relayBaseUrl: RELAY })).toBe(true);
+    expect(await resyncWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false })).toBe(true);
 
     expect(client.createPushSubscription).not.toHaveBeenCalled();
     expect(client.updatePushSubscription).toHaveBeenCalledWith(
@@ -228,7 +229,7 @@ describe('resyncWebPush', () => {
     const client = makeClient([], { emailPushCapability: true });
     installFetch({});
 
-    expect(await resyncWebPush({ client, relayBaseUrl: RELAY })).toBe(false);
+    expect(await resyncWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false })).toBe(false);
 
     expect(client.listPushSubscriptions).not.toHaveBeenCalled();
     expect(client.createPushSubscription).not.toHaveBeenCalled();
@@ -240,8 +241,8 @@ describe('resyncWebPush', () => {
     const client = makeClient([sub('push-old', THIS_DEVICE)], { emailPushCapability: true });
     installFetch({});
 
-    expect(await resyncWebPush({ client, relayBaseUrl: RELAY })).toBe(true);
-    expect(await resyncWebPush({ client, relayBaseUrl: RELAY })).toBe(false);
+    expect(await resyncWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false })).toBe(true);
+    expect(await resyncWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false })).toBe(false);
 
     expect(client.listPushSubscriptions).toHaveBeenCalledTimes(1);
   });
@@ -257,7 +258,7 @@ describe('resyncWebPush', () => {
       throw new Error('relay down');
     }));
 
-    await expect(resyncWebPush({ client, relayBaseUrl: RELAY })).resolves.toBe(false);
+    await expect(resyncWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false })).resolves.toBe(false);
   });
 });
 
@@ -271,7 +272,7 @@ describe('enableWebPush delivery filter (emailPush)', () => {
     const client = makeClient([], { emailPushCapability: true });
     installFetch({});
 
-    await enableWebPush({ client, relayBaseUrl: RELAY });
+    await enableWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false });
 
     expect(client.createPushSubscription).toHaveBeenCalledTimes(1);
     const params = (client.createPushSubscription as ReturnType<typeof vi.fn>).mock.calls[0][0];
@@ -284,7 +285,7 @@ describe('enableWebPush delivery filter (emailPush)', () => {
     const client = makeClient([]);
     installFetch({});
 
-    await enableWebPush({ client, relayBaseUrl: RELAY });
+    await enableWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false });
 
     const params = (client.createPushSubscription as ReturnType<typeof vi.fn>).mock.calls[0][0];
     expect(params).not.toHaveProperty('emailPush');
@@ -297,7 +298,7 @@ describe('enableWebPush delivery filter (emailPush)', () => {
     const client = makeClient([sub('push-old', THIS_DEVICE)], { emailPushCapability: true });
     installFetch({});
 
-    const result = await enableWebPush({ client, relayBaseUrl: RELAY });
+    const result = await enableWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false });
 
     expect(result.subscriptionId).toBe('push-old');
     expect(client.createPushSubscription).not.toHaveBeenCalled();
@@ -326,7 +327,7 @@ describe('enableWebPush delivery filter (emailPush)', () => {
     );
     installFetch({});
 
-    await enableWebPush({ client, relayBaseUrl: RELAY });
+    await enableWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false });
 
     expect(client.updatePushSubscription).toHaveBeenCalledWith(
       'push-old',
@@ -350,9 +351,43 @@ describe('enableWebPush delivery filter (emailPush)', () => {
     );
     installFetch({});
 
-    await enableWebPush({ client, relayBaseUrl: RELAY });
+    await enableWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false });
 
     expect(client.updatePushSubscription).not.toHaveBeenCalled();
+  });
+});
+
+// Inbox-only mode swaps the "not in Junk" mailbox condition for a positive
+// "in Inbox" one, so mail a Sieve rule files into any other folder never
+// reaches the push subscription.
+describe('buildEmailPushConfig inbox-only mode', () => {
+  it('keeps current behaviour when inboxOnly is false', async () => {
+    const client = makeClient([], { emailPushCapability: true });
+    expect(await buildEmailPushConfig(client, false)).toEqual(EXPECTED_EMAIL_PUSH);
+  });
+
+  it('requires the message to be in each account Inbox when inboxOnly is true', async () => {
+    const client = makeClient([], { emailPushCapability: true });
+
+    const config = await buildEmailPushConfig(client, true);
+
+    expect(config[ACCOUNT_ID].filter).toEqual({
+      operator: 'AND',
+      conditions: [{ notKeyword: '$junk' }, { inMailbox: 'mb-inbox' }],
+    });
+    expect(config[SHARED_ACCOUNT_ID].filter).toEqual({
+      operator: 'AND',
+      conditions: [{ notKeyword: '$junk' }, { inMailbox: 'mb-shared-inbox' }],
+    });
+  });
+
+  it('throws when an account has no discoverable Inbox mailbox', async () => {
+    const client = makeClient([], { emailPushCapability: true });
+    client.getAllMailboxes = vi.fn(async () => [
+      { id: JUNK_ID, originalId: JUNK_ID, name: 'junk', role: 'junk', accountId: ACCOUNT_ID },
+    ]) as unknown as IJMAPClient['getAllMailboxes'];
+
+    await expect(buildEmailPushConfig(client, true)).rejects.toThrow(/No Inbox mailbox/);
   });
 });
 

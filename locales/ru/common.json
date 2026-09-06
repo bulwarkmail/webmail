@@ -1145,7 +1145,9 @@
         "enabled": "Уведомления о почте",
         "enabled_desc": "Показывать уведомления при получении новых писем",
         "sound": "Звук уведомления",
-        "sound_desc": "Воспроизводить звуковой сигнал при получении новых писем"
+        "sound_desc": "Воспроизводить звуковой сигнал при получении новых писем",
+        "inbox_only": "Inbox only",
+        "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
       },
       "calendar": {
         "title": "Уведомления календаря",

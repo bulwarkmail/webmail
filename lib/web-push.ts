@@ -71,31 +71,53 @@ export function serverSupportsEmailPush(client: IJMAPClient): boolean {
 }
 
 /**
- * The delivery filter we want on every account the subscription fans out to:
- * skip anything the spam filter tagged `$junk` and anything that lives only in
- * a Junk-role mailbox (Sieve `fileinto` doesn't set the keyword). The two are
- * ANDed so a stale mailbox id - the user deleted and recreated Junk - degrades
- * to keyword-only filtering rather than letting everything through.
+ * The delivery filter we want on every account the subscription fans out to.
+ *
+ * Default mode: skip anything the spam filter tagged `$junk` and anything
+ * that lives only in a Junk-role mailbox (Sieve `fileinto` doesn't set the
+ * keyword). The two are ANDed so a stale mailbox id - the user deleted and
+ * recreated Junk - degrades to keyword-only filtering rather than letting
+ * everything through.
+ *
+ * Inbox-only mode: same `$junk` keyword guard, but the mailbox condition
+ * requires the message to be IN the account's Inbox rather than merely NOT
+ * in Junk - mail a Sieve rule files into any other folder stays silent.
  */
 export async function buildEmailPushConfig(
   client: IJMAPClient,
+  inboxOnly: boolean,
 ): Promise<Record<string, EmailPushConfig>> {
   const primary = client.getAccountId();
   const junkByAccount = new Map<string, string[]>([[primary, []]]);
+  const inboxByAccount = new Map<string, string>();
   const mailboxes = await client.getAllMailboxes().catch(() => [] as Mailbox[]);
   for (const m of mailboxes) {
     const accountId = m.accountId || primary;
-    const junk = junkByAccount.get(accountId) ?? [];
     // Shared-account mailboxes carry a client-side "<account>:<id>" id;
     // the server only knows the original.
-    if (m.role === 'junk') junk.push(m.originalId ?? m.id);
-    junkByAccount.set(accountId, junk);
+    if (m.role === 'junk') {
+      const junk = junkByAccount.get(accountId) ?? [];
+      junk.push(m.originalId ?? m.id);
+      junkByAccount.set(accountId, junk);
+    }
+    if (m.role === 'inbox') inboxByAccount.set(accountId, m.originalId ?? m.id);
   }
+  if (!junkByAccount.has(primary)) junkByAccount.set(primary, []);
 
   const config: Record<string, EmailPushConfig> = {};
   for (const [accountId, junkIds] of junkByAccount) {
     const conditions: Record<string, unknown>[] = [{ notKeyword: '$junk' }];
-    if (junkIds.length > 0) conditions.push({ inMailboxOtherThan: [...junkIds].sort() });
+    if (inboxOnly) {
+      const inboxId = inboxByAccount.get(accountId);
+      if (!inboxId) {
+        throw new Error(
+          `No Inbox mailbox found for account ${accountId}; cannot build an inbox-only push filter`,
+        );
+      }
+      conditions.push({ inMailbox: inboxId });
+    } else if (junkIds.length > 0) {
+      conditions.push({ inMailboxOtherThan: [...junkIds].sort() });
+    }
     config[accountId] = {
       // Always the operator form: that's how the server echoes it back, so a
       // stored config compares equal to a freshly built one.
@@ -141,6 +163,10 @@ export interface EnableWebPushParams {
   // that outlives a permission change keeps pushing for mailboxes the user can
   // no longer read - recreating is the only client-side remedy (#841).
   forceRecreate?: boolean;
+  // Scope OS push notifications to Inbox-only mail. Mirrors settings-store's
+  // pushNotifyInboxOnly. Required, not optional: it changes the server-side
+  // delivery filter, so every caller must decide explicitly.
+  inboxOnly: boolean;
 }
 
 export interface EnableWebPushResult {
@@ -447,7 +473,7 @@ export async function enableWebPush(
   // revoked shared-mailbox access (#841).
   const existingSubs = await params.client.listPushSubscriptions().catch(() => []);
   const emailPush = serverSupportsEmailPush(params.client)
-    ? await buildEmailPushConfig(params.client)
+    ? await buildEmailPushConfig(params.client, params.inboxOnly)
     : null;
   const subIdKey = subscriptionIdKey(accountId);
   const storedServerId = localStorage.getItem(subIdKey);
@@ -656,6 +682,8 @@ export interface ResyncWebPushParams {
   client: IJMAPClient;
   relayBaseUrl?: string;
   accountLabel?: string;
+  // Mirrors settings-store's pushNotifyInboxOnly - see EnableWebPushParams.
+  inboxOnly: boolean;
 }
 
 /**
@@ -680,6 +708,7 @@ export async function resyncWebPush(params: ResyncWebPushParams): Promise<boolea
       client: params.client,
       relayBaseUrl: params.relayBaseUrl,
       accountLabel: params.accountLabel,
+      inboxOnly: params.inboxOnly,
     });
     return true;
   } catch {

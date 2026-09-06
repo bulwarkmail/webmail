@@ -1183,7 +1183,9 @@
         "enabled": "إشعارات البريد",
         "enabled_desc": "إظهار الإشعارات عند وصول رسائل جديدة",
         "sound": "صوت الإشعار",
-        "sound_desc": "تشغيل تنبيه صوتي عند وصول رسائل جديدة"
+        "sound_desc": "تشغيل تنبيه صوتي عند وصول رسائل جديدة",
+        "inbox_only": "Inbox only",
+        "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
       },
       "calendar": {
         "title": "إشعارات التقويم",

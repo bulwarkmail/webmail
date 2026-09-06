@@ -1183,7 +1183,9 @@
         "enabled": "И-мэйл мэдэгдэл",
         "enabled_desc": "Шинэ имэйл ирэх үед мэдэгдлийг харуулах",
         "sound": "Мэдэгдэлийн дуу",
-        "sound_desc": "Шинэ имэйл ирэх үед аудио дохиог тоглуулах"
+        "sound_desc": "Шинэ имэйл ирэх үед аудио дохиог тоглуулах",
+        "inbox_only": "Inbox only",
+        "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
       },
       "calendar": {
         "title": "Календарийн мэдэгдэл",

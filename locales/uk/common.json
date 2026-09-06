@@ -1145,7 +1145,9 @@
         "enabled": "Сповіщення електронною поштою",
         "enabled_desc": "Показувати сповіщення про надходження нових електронних листів",
         "sound": "Звук сповіщення",
-        "sound_desc": "Відтворення звукового сповіщення про надходження нових електронних листів"
+        "sound_desc": "Відтворення звукового сповіщення про надходження нових електронних листів",
+        "inbox_only": "Inbox only",
+        "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
       },
       "calendar": {
         "title": "Сповіщення календаря",

@@ -1145,7 +1145,9 @@
         "enabled": "邮件通知",
         "enabled_desc": "新邮件到达时显示通知",
         "sound": "通知声音",
-        "sound_desc": "新邮件到达时播放音频提醒"
+        "sound_desc": "新邮件到达时播放音频提醒",
+        "inbox_only": "Inbox only",
+        "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
       },
       "calendar": {
         "title": "日历通知",

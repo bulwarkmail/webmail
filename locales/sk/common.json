@@ -1148,7 +1148,9 @@
         "enabled": "E-mailové oznámenia",
         "enabled_desc": "Zobrazovať oznámenia pri príchode nových e-mailov",
         "sound": "Zvuk oznámenia",
-        "sound_desc": "Prehrať zvukové upozornenie pri príchode nových e-mailov"
+        "sound_desc": "Prehrať zvukové upozornenie pri príchode nových e-mailov",
+        "inbox_only": "Inbox only",
+        "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
       },
       "calendar": {
         "title": "Oznámenia kalendára",

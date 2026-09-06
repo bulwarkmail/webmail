@@ -1183,7 +1183,9 @@
         "enabled": "E-postvarsler",
         "enabled_desc": "Vis varsler når nye e-poster kommer",
         "sound": "Varslingslyd",
-        "sound_desc": "Spill av et lydvarsel når nye e-poster kommer"
+        "sound_desc": "Spill av et lydvarsel når nye e-poster kommer",
+        "inbox_only": "Inbox only",
+        "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
       },
       "calendar": {
         "title": "Kalendervarsler",

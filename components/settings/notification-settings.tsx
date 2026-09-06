@@ -46,6 +46,7 @@ export function NotificationSettings() {
     emailNotificationsEnabled,
     emailNotificationSound,
     notificationSoundChoice,
+    pushNotifyInboxOnly,
     calendarNotificationsEnabled,
     calendarNotificationSound,
     calendarInvitationParsingEnabled,
@@ -127,6 +128,7 @@ export function NotificationSettings() {
         relayBaseUrl: activeRelayUrl,
         accountLabel: username ?? undefined,
         forceRecreate,
+        inboxOnly: pushNotifyInboxOnly,
       });
       setPushStatus({ kind: 'enabled' });
     } catch (err) {
@@ -354,6 +356,20 @@ export function NotificationSettings() {
             disabled={!emailNotificationsEnabled}
           />
         </SettingItem>
+
+        {!isSettingHidden('pushNotifyInboxOnly') && (
+        <SettingItem
+          label={t('email.inbox_only')}
+          description={t('email.inbox_only_desc')}
+          locked={isSettingLocked('pushNotifyInboxOnly')}
+        >
+          <ToggleSwitch
+            checked={pushNotifyInboxOnly}
+            onChange={(checked) => updateSetting('pushNotifyInboxOnly', checked)}
+            disabled={!emailNotificationsEnabled}
+          />
+        </SettingItem>
+        )}
       </SettingsSection>
 
       <SettingsSection title={t('calendar.title')} description={t('calendar.description')}>
