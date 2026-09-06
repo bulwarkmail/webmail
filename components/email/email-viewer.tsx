@@ -2651,6 +2651,15 @@ export function EmailViewer({
     // The body was sanitized with EMAIL_IFRAME_SANITIZE_CONFIG which permits
     // <style>. The print window has no iframe isolation, so re-sanitize with
     // the stricter config that forbids <style> before injecting into the DOM.
+    const attachments = email.attachments || null;
+    let attachmentsList = '';
+    if (attachments) {
+      attachments.forEach( attachment => {
+        let fileName = getAttachmentDisplayName(attachment.name, attachment.type);
+        let fileSize = formatFileSize(attachment.size);
+        attachmentsList += `<div>${fileName} ${fileSize}</div>`
+      } );
+    }
     const printableBody = effectiveEmailContent.isHtml
       ? sanitizeEmailHtml(effectiveEmailContent.html)
       : effectiveEmailContent.html;
@@ -2677,6 +2686,7 @@ export function EmailViewer({
     ${toList ? `<div><strong>${escapeHtml(t('to'))}:</strong> ${toList}</div>` : ''}
     ${ccList ? `<div><strong>CC:</strong> ${ccList}</div>` : ''}
     ${date ? `<div><strong>${escapeHtml(t('date'))}:</strong> ${escapeHtml(date)}</div>` : ''}
+    ${attachments ? `<div><strong>${escapeHtml(t('attachments'))}:</strong></div>${attachmentsList}` : ''}
   </div>
 </div>
 <div class="body">${printableBody}</div>
