@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useSettingsStore } from '@/stores/settings-store';
 import { SettingsSection, SettingItem, ToggleSwitch, Select } from './settings-section';
@@ -144,6 +144,43 @@ export function NotificationSettings() {
       await refreshDevices();
     }
   };
+
+  // Flipping "Inbox only" only writes the setting; the server-side JMAP push
+  // filter stays stale until the next app launch runs resyncWebPush. When push
+  // is already on for this device, re-run the enable flow now so the toggle
+  // takes effect immediately instead of "on next restart". The ref seeds to the
+  // mounted value so this never fires on mount or on an unrelated re-render.
+  const lastSyncedInboxOnly = useRef(pushNotifyInboxOnly);
+  useEffect(() => {
+    if (lastSyncedInboxOnly.current === pushNotifyInboxOnly) return;
+    lastSyncedInboxOnly.current = pushNotifyInboxOnly;
+    // Push off on this device: enabling it later builds the filter from the
+    // current setting, so there's nothing to re-sync now.
+    if (!client || pushStatus.kind !== 'enabled') return;
+
+    let cancelled = false;
+    setPushStatus({ kind: 'busy' });
+    void enableWebPush({
+      client,
+      relayBaseUrl: activeRelayUrl,
+      accountLabel: username ?? undefined,
+      inboxOnly: pushNotifyInboxOnly,
+    })
+      .then(() => { if (!cancelled) setPushStatus({ kind: 'enabled' }); })
+      .catch((err) => {
+        if (cancelled) return;
+        if (err instanceof WebPushUnsupportedError) {
+          setPushStatus({ kind: 'unsupported' });
+          return;
+        }
+        setPushStatus({
+          kind: 'error',
+          message: err instanceof Error ? err.message : 'Failed to update push filter',
+        });
+      })
+      .finally(() => { if (!cancelled) void refreshDevices(); });
+    return () => { cancelled = true; };
+  }, [pushNotifyInboxOnly, client, pushStatus.kind, activeRelayUrl, username, refreshDevices]);
 
   const handleDisablePush = async () => {
     if (!client) return;
