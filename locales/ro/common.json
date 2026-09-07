@@ -1183,7 +1183,9 @@
         "enabled": "Notificări prin e-mail",
         "enabled_desc": "Afișați notificări la primirea de e-mailuri noi",
         "sound": "Sunet de notificare",
-        "sound_desc": "Redă o alertă audio la sosirea unor e-mailuri noi"
+        "sound_desc": "Redă o alertă audio la sosirea unor e-mailuri noi",
+        "inbox_only": "Inbox only",
+        "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
       },
       "calendar": {
         "title": "Notificări din calendar",

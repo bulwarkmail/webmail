@@ -1145,7 +1145,9 @@
         "enabled": "이메일 알림",
         "enabled_desc": "새 이메일이 도착하면 알림을 보여줘요",
         "sound": "알림음",
-        "sound_desc": "새 이메일이 도착하면 소리로 알려줘요"
+        "sound_desc": "새 이메일이 도착하면 소리로 알려줘요",
+        "inbox_only": "Inbox only",
+        "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
       },
       "calendar": {
         "title": "캘린더 알림",

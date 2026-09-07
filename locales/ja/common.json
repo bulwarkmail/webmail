@@ -1145,7 +1145,9 @@
         "enabled": "メール通知",
         "enabled_desc": "新しいメールが届いたときに通知を表示",
         "sound": "通知音",
-        "sound_desc": "新しいメールが届いたときに音を鳴らす"
+        "sound_desc": "新しいメールが届いたときに音を鳴らす",
+        "inbox_only": "Inbox only",
+        "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
       },
       "calendar": {
         "title": "カレンダー通知",

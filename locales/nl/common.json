@@ -1145,7 +1145,9 @@
         "enabled": "E-mailmeldingen",
         "enabled_desc": "Meldingen tonen wanneer nieuwe e-mails binnenkomen",
         "sound": "Meldingsgeluid",
-        "sound_desc": "Een geluid afspelen wanneer nieuwe e-mails binnenkomen"
+        "sound_desc": "Een geluid afspelen wanneer nieuwe e-mails binnenkomen",
+        "inbox_only": "Inbox only",
+        "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
       },
       "calendar": {
         "title": "Agendameldingen",

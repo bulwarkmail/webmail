@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useSettingsStore } from '@/stores/settings-store';
 import { SettingsSection, SettingItem, ToggleSwitch, Select } from './settings-section';
@@ -46,6 +46,7 @@ export function NotificationSettings() {
     emailNotificationsEnabled,
     emailNotificationSound,
     notificationSoundChoice,
+    pushNotifyInboxOnly,
     calendarNotificationsEnabled,
     calendarNotificationSound,
     calendarInvitationParsingEnabled,
@@ -127,6 +128,7 @@ export function NotificationSettings() {
         relayBaseUrl: activeRelayUrl,
         accountLabel: username ?? undefined,
         forceRecreate,
+        inboxOnly: pushNotifyInboxOnly,
       });
       setPushStatus({ kind: 'enabled' });
     } catch (err) {
@@ -142,6 +144,48 @@ export function NotificationSettings() {
       await refreshDevices();
     }
   };
+
+  // Flipping "Inbox only" only writes the setting; the server-side JMAP push
+  // filter stays stale until the next app launch runs resyncWebPush. When push
+  // is already on for this device, re-run the enable flow now so the toggle
+  // takes effect immediately instead of "on next restart". The ref seeds to the
+  // mounted value so this never fires on mount or on an unrelated re-render.
+  const lastSyncedInboxOnly = useRef(pushNotifyInboxOnly);
+  useEffect(() => {
+    if (lastSyncedInboxOnly.current === pushNotifyInboxOnly) return;
+    lastSyncedInboxOnly.current = pushNotifyInboxOnly;
+    // Push off on this device: enabling it later builds the filter from the
+    // current setting, so there's nothing to re-sync now.
+    if (!client || pushStatus.kind !== 'enabled') return;
+
+    let cancelled = false;
+    setPushStatus({ kind: 'busy' });
+    void enableWebPush({
+      client,
+      relayBaseUrl: activeRelayUrl,
+      accountLabel: username ?? undefined,
+      inboxOnly: pushNotifyInboxOnly,
+    })
+      .then(() => { if (!cancelled) setPushStatus({ kind: 'enabled' }); })
+      .catch((err) => {
+        if (cancelled) return;
+        if (err instanceof WebPushUnsupportedError) {
+          setPushStatus({ kind: 'unsupported' });
+          return;
+        }
+        setPushStatus({
+          kind: 'error',
+          message: err instanceof Error ? err.message : 'Failed to update push filter',
+        });
+      })
+      .finally(() => { if (!cancelled) void refreshDevices(); });
+    return () => { cancelled = true; };
+    // Only the setting flip should trigger a re-sync. client / relay / username
+    // are read live from the recreated closure; depending on pushStatus.kind
+    // here would re-fire the effect on the busy->enabled transition it causes
+    // and cancel its own in-flight call (leaving the row stuck on "Working").
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pushNotifyInboxOnly]);
 
   const handleDisablePush = async () => {
     if (!client) return;
@@ -354,6 +398,20 @@ export function NotificationSettings() {
             disabled={!emailNotificationsEnabled}
           />
         </SettingItem>
+
+        {!isSettingHidden('pushNotifyInboxOnly') && (
+        <SettingItem
+          label={t('email.inbox_only')}
+          description={t('email.inbox_only_desc')}
+          locked={isSettingLocked('pushNotifyInboxOnly')}
+        >
+          <ToggleSwitch
+            checked={pushNotifyInboxOnly}
+            onChange={(checked) => updateSetting('pushNotifyInboxOnly', checked)}
+            disabled={!emailNotificationsEnabled}
+          />
+        </SettingItem>
+        )}
       </SettingsSection>
 
       <SettingsSection title={t('calendar.title')} description={t('calendar.description')}>

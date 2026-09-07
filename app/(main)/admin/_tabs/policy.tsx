@@ -56,6 +56,7 @@ const RESTRICTABLE_SETTINGS = [
   { key: 'sessionTimeout', label: 'Session Timeout', category: 'Privacy', type: 'number' },
   { key: 'emailNotificationsEnabled', label: 'Email Notifications', category: 'Notifications', type: 'boolean' },
   { key: 'calendarNotificationsEnabled', label: 'Calendar Notifications', category: 'Notifications', type: 'boolean' },
+  { key: 'pushNotifyInboxOnly', label: 'Inbox-only Push Notifications', category: 'Notifications', type: 'boolean' },
   { key: 'debugMode', label: 'Debug Mode', category: 'Advanced', type: 'boolean' },
 ];
 

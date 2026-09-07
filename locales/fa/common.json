@@ -1183,7 +1183,9 @@
         "enabled": "اعلان‌های ایمیل",
         "enabled_desc": "نمایش اعلان هنگام ایمیل جدید",
         "sound": "صدای اعلان",
-        "sound_desc": "پخش هشدار صوتی"
+        "sound_desc": "پخش هشدار صوتی",
+        "inbox_only": "Inbox only",
+        "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
       },
       "calendar": {
         "title": "اعلان‌های تقویم",

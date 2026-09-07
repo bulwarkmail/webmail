@@ -1110,7 +1110,9 @@
         "enabled": "התראות באימייל",
         "enabled_desc": "הצג התראות כשמגיעות אימיילים חדשים",
         "sound": "צליל התראה",
-        "sound_desc": "הפעל התראת שמע כשמגיעות הודעות דוא\"ל חדשות"
+        "sound_desc": "הפעל התראת שמע כשמגיעות הודעות דוא\"ל חדשות",
+        "inbox_only": "Inbox only",
+        "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
       },
       "calendar": {
         "title": "הודעות לוח שנה",

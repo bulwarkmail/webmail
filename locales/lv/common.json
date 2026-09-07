@@ -1145,7 +1145,9 @@
         "enabled": "E-pasta paziņojumi",
         "enabled_desc": "Rādīt paziņojumus, saņemot jaunas vēstules",
         "sound": "Paziņojuma skaņa",
-        "sound_desc": "Atskaņot skaņas signālu, saņemot jaunas vēstules"
+        "sound_desc": "Atskaņot skaņas signālu, saņemot jaunas vēstules",
+        "inbox_only": "Inbox only",
+        "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
       },
       "calendar": {
         "title": "Kalendāra paziņojumi",

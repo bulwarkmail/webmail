@@ -1183,7 +1183,9 @@
         "enabled": "Notificacions de correu",
         "enabled_desc": "Mostra notificacions quan arribin correus nous",
         "sound": "So de notificació",
-        "sound_desc": "Reprodueix un avís sonor quan arribin correus nous"
+        "sound_desc": "Reprodueix un avís sonor quan arribin correus nous",
+        "inbox_only": "Inbox only",
+        "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
       },
       "calendar": {
         "title": "Notificacions de calendari",

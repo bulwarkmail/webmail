@@ -389,6 +389,8 @@ interface SettingsState {
   emailNotificationsEnabled: boolean;
   emailNotificationSound: boolean;
   notificationSoundChoice: NotificationSoundChoice;
+  /** Web Push only fires for mail that lands in the Inbox; Sieve-filed mail stays silent. */
+  pushNotifyInboxOnly: boolean;
   /** Chosen Web Push relay URL. Empty = the admin-configured default. */
   pushRelayUrl: string;
 
@@ -619,6 +621,7 @@ const DEFAULT_SETTINGS = {
   emailNotificationsEnabled: true,
   emailNotificationSound: true,
   notificationSoundChoice: 'default' as NotificationSoundChoice,
+  pushNotifyInboxOnly: false,
   pushRelayUrl: '',
 
   // Protocol Handlers
@@ -817,6 +820,7 @@ export const useSettingsStore = create<SettingsState>()(
           emailNotificationsEnabled: state.emailNotificationsEnabled,
           emailNotificationSound: state.emailNotificationSound,
           notificationSoundChoice: state.notificationSoundChoice,
+          pushNotifyInboxOnly: state.pushNotifyInboxOnly,
           pushRelayUrl: state.pushRelayUrl,
           protocolOpenMode: state.protocolOpenMode,
           calendarNotificationsEnabled: state.calendarNotificationsEnabled,

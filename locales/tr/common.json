@@ -1145,7 +1145,9 @@
         "enabled": "E-posta bildirimleri",
         "enabled_desc": "Yeni e-postalar geldiğinde bildirim göster",
         "sound": "Bildirim sesi",
-        "sound_desc": "Yeni e-postalar geldiğinde sesli uyarı çal"
+        "sound_desc": "Yeni e-postalar geldiğinde sesli uyarı çal",
+        "inbox_only": "Inbox only",
+        "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
       },
       "calendar": {
         "title": "Takvim Bildirimleri",

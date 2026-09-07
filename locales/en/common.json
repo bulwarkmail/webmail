@@ -1183,7 +1183,9 @@
         "enabled": "Email notifications",
         "enabled_desc": "Show notifications when new emails arrive",
         "sound": "Notification sound",
-        "sound_desc": "Play an audio alert when new emails arrive"
+        "sound_desc": "Play an audio alert when new emails arrive",
+        "inbox_only": "Inbox only",
+        "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
       },
       "calendar": {
         "title": "Calendar Notifications",
