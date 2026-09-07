@@ -2178,7 +2178,22 @@ export function EmailViewer({
     // stack another invert either - each filter toggles the inversion, so an
     // odd number of stacked filters (body + outer + inner) lands back on
     // light-on-light; the descendant rule disables filter on a color container
-    // nested inside another.
+    // nested inside another. Two things that rule has to get right:
+    //
+    // `body` is excluded from being an ancestor, because a mail whose own
+    // <body> carries a background (very common: `body style="background:#fff"`)
+    // would otherwise make every container in the message count as nested, and
+    // the whole email would stay inverted — white bodies rendering black.
+    // body is already inverted by the rule above, so it must not re-invert
+    // itself either.
+    //
+    // Colour containers are also re-inverted when they wrap media, rather than
+    // being skipped. Skipping them left the container's own colour inverted —
+    // a navy header band reading as pale blue. Re-inverting it and cancelling
+    // the per-image rule inside gives the same net result for the image while
+    // restoring the band, which is what the background-image branch below
+    // already does. That cancel rule needs a real attribute selector rather
+    // than :where() so it outweighs the bare `img` rule.
     //
     // Background-IMAGE containers are different: a real photo and whatever is
     // composited over it (headline text, logos) was designed by the sender to
@@ -2192,12 +2207,16 @@ export function EmailViewer({
       img, video, svg, canvas, object, embed, input[type="image"] {
         filter: invert(1) hue-rotate(180deg);
       }
-      [style*="background:"]:not(:has(img, video, svg, canvas, object, embed)),
-      [bgcolor]:not(:has(img, video, svg, canvas, object, embed)) {
+      [style*="background:"]:not(body),
+      [bgcolor]:not(body) {
         filter: invert(1) hue-rotate(180deg);
       }
-      :where([style*="background:"], [bgcolor])
-        :where([style*="background:"], [bgcolor]):not(:has(img, video, svg, canvas, object, embed)) {
+      [style*="background:"]:not(body) :where(img, video, svg, canvas, object, embed, input[type="image"]),
+      [bgcolor]:not(body) :where(img, video, svg, canvas, object, embed, input[type="image"]) {
+        filter: none;
+      }
+      :where([style*="background:"]:not(body), [bgcolor]:not(body))
+        :where([style*="background:"], [bgcolor]) {
         filter: none !important;
       }
       [style*="background-image"],
