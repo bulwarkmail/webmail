@@ -24,7 +24,7 @@ interface JMAPMethodCall { 0: string; 1: Record<string, unknown>; 2: string }
 interface CapturedRequest { methodCalls: JMAPMethodCall[] }
 
 /**
- * Capture every request; answer Mailbox/get, Identity/get, Email/set
+ * Capture every request; answer Mailbox/query+get, Identity/get, Email/set
  * (create and/or destroy) and EmailSubmission/set. `failCreate` makes the
  * Email/set create come back as notCreated; `failSubmission` does the same
  * for EmailSubmission/set.
@@ -37,12 +37,20 @@ function mockFlow({ failCreate = false, failSubmission = false } = {}) {
 
     const methodResponses: unknown[] = [];
     for (const [method, args, callId] of body.methodCalls as unknown as Array<[string, Record<string, unknown>, string]>) {
-      if (method === 'Mailbox/get') {
+      if (method === 'Mailbox/query') {
+        const ids = args.position === 0 ? ['mb-drafts', 'mb-sent'] : [];
+        methodResponses.push(['Mailbox/query', {
+          position: args.position,
+          ids,
+          queryState: 'state-1',
+          total: 2,
+        }, callId]);
+      } else if (method === 'Mailbox/get') {
         methodResponses.push(['Mailbox/get', {
-          list: [
+          list: body.methodCalls[0][0] !== 'Mailbox/query' || body.methodCalls[0][1].position === 0 ? [
             { id: 'mb-drafts', name: 'Drafts', role: 'drafts' },
             { id: 'mb-sent', name: 'Sent', role: 'sent' },
-          ],
+          ] : [],
         }, callId]);
       } else if (method === 'Identity/get') {
         methodResponses.push(['Identity/get', { list: [{ id: 'identity-1', email: 'user@example.com' }] }, callId]);
