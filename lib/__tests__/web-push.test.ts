@@ -389,6 +389,31 @@ describe('buildEmailPushConfig inbox-only mode', () => {
 
     await expect(buildEmailPushConfig(client, true)).rejects.toThrow(/No Inbox mailbox/);
   });
+
+  it('rethrows a mailbox-fetch failure in inbox-only mode instead of reporting no Inbox', async () => {
+    const client = makeClient([], { emailPushCapability: true });
+    client.getAllMailboxes = vi.fn(async () => {
+      throw new Error('JMAP down');
+    }) as unknown as IJMAPClient['getAllMailboxes'];
+
+    await expect(buildEmailPushConfig(client, true)).rejects.toThrow(/JMAP down/);
+  });
+
+  it('still emits a filter for an account that has an Inbox but no Junk mailbox', async () => {
+    const client = makeClient([], { emailPushCapability: true });
+    client.getAllMailboxes = vi.fn(async () => [
+      { id: 'mb-inbox', originalId: 'mb-inbox', name: 'inbox', role: 'inbox', accountId: ACCOUNT_ID },
+      { id: `${SHARED_ACCOUNT_ID}:mb-si`, originalId: 'mb-si', name: 'inbox', role: 'inbox', accountId: SHARED_ACCOUNT_ID },
+    ]) as unknown as IJMAPClient['getAllMailboxes'];
+
+    const config = await buildEmailPushConfig(client, false);
+
+    expect(Object.keys(config).sort()).toEqual([ACCOUNT_ID, SHARED_ACCOUNT_ID].sort());
+    expect(config[SHARED_ACCOUNT_ID].filter).toEqual({
+      operator: 'AND',
+      conditions: [{ notKeyword: '$junk' }],
+    });
+  });
 });
 
 describe('disableWebPush', () => {

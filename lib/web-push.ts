@@ -88,11 +88,21 @@ export async function buildEmailPushConfig(
   inboxOnly: boolean,
 ): Promise<Record<string, EmailPushConfig>> {
   const primary = client.getAccountId();
-  const junkByAccount = new Map<string, string[]>([[primary, []]]);
+  // Every account that has any mailbox gets a filter entry - a secondary/shared
+  // account without a Junk-role mailbox still needs one so its subscription
+  // isn't left unfiltered.
+  const accountIds = new Set<string>([primary]);
+  const junkByAccount = new Map<string, string[]>();
   const inboxByAccount = new Map<string, string>();
-  const mailboxes = await client.getAllMailboxes().catch(() => [] as Mailbox[]);
+  // In inbox-only mode a swallowed fetch failure would masquerade as "no Inbox
+  // mailbox" below, so let the real error surface; the default mode can still
+  // degrade to keyword-only filtering on a transient miss.
+  const mailboxes = inboxOnly
+    ? await client.getAllMailboxes()
+    : await client.getAllMailboxes().catch(() => [] as Mailbox[]);
   for (const m of mailboxes) {
     const accountId = m.accountId || primary;
+    accountIds.add(accountId);
     // Shared-account mailboxes carry a client-side "<account>:<id>" id;
     // the server only knows the original.
     if (m.role === 'junk') {
@@ -102,10 +112,10 @@ export async function buildEmailPushConfig(
     }
     if (m.role === 'inbox') inboxByAccount.set(accountId, m.originalId ?? m.id);
   }
-  if (!junkByAccount.has(primary)) junkByAccount.set(primary, []);
 
   const config: Record<string, EmailPushConfig> = {};
-  for (const [accountId, junkIds] of junkByAccount) {
+  for (const accountId of accountIds) {
+    const junkIds = junkByAccount.get(accountId) ?? [];
     const conditions: Record<string, unknown>[] = [{ notKeyword: '$junk' }];
     if (inboxOnly) {
       const inboxId = inboxByAccount.get(accountId);
