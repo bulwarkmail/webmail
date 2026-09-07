@@ -2926,7 +2926,7 @@ export function EmailComposer({
           ) : null
         ) : composerSignatureHtml ? (
           <div
-            className="px-4 pb-3 text-sm leading-6 text-foreground break-words [&_a]:text-primary [&_a]:underline-offset-2 [&_a:hover]:underline"
+            className="email-surface mx-4 mb-3 px-4 py-3 text-sm leading-6 break-words [&_a]:underline-offset-2 [&_a:hover]:underline"
             dangerouslySetInnerHTML={{ __html: `${signatureSeparatorEnabled ? '<div>-- </div>' : ''}${composerSignatureHtml}` }}
           />
         ) : null}

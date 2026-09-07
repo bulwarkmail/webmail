@@ -702,6 +702,55 @@ body {
   outline: none;
 }
 
+/* ── Email surface: render a message body WYSIWYG with the reading pane ───────
+   A message body is a light-background document — its inks target the
+   recipient's white background. The reading pane already renders it that way
+   (light in light mode; in dark mode a smart CSS-filter invert that keeps
+   images and colour backgrounds looking right — see email-viewer.tsx). But the
+   editable composer, the composer's signature preview and the identity
+   signature preview all painted the raw HTML on the app's DARK background, so
+   authored dark ink was dark-on-dark and unreadable, and none of them matched
+   the reader. `.email-surface` gives any of those the SAME light surface and the
+   SAME dark-mode invert, so composing/previewing looks exactly like reading
+   (and like the recipient's white view). Applied to `.tiptap` (composer) and
+   both signature previews. */
+.email-surface {
+  background-color: #ffffff;
+  color: #1b1b1f;
+  caret-color: #1b1b1f;
+  border-radius: 0.375rem;
+}
+.tiptap blockquote {
+  color: #5b5b63;
+}
+.tiptap p.is-editor-empty:first-child::before {
+  color: #9a9aa1;
+}
+
+/* Dark app mode: the reader's smart-invert, applied to the email surface.
+   invert(1) hue-rotate(180deg) turns the light document dark while keeping hues
+   approximately true; leaf media and colour/image containers are re-inverted so
+   photos, logos and coloured fills stay correct (mirrors email-viewer.tsx). */
+.dark .email-surface {
+  background-color: #ededed;
+  filter: invert(1) hue-rotate(180deg);
+}
+.dark .email-surface :where(img, video, svg, canvas, object, embed, input[type="image"]) {
+  filter: invert(1) hue-rotate(180deg);
+}
+.dark .email-surface :where([style*="background:"], [bgcolor]):not(:has(img, video, svg, canvas, object, embed)) {
+  filter: invert(1) hue-rotate(180deg);
+}
+.dark .email-surface :where([style*="background:"], [bgcolor]) :where([style*="background:"], [bgcolor]):not(:has(img, video, svg, canvas, object, embed)) {
+  filter: none !important;
+}
+.dark .email-surface :where([style*="background-image"], [background]) {
+  filter: invert(1) hue-rotate(180deg);
+}
+.dark .email-surface :where([style*="background-image"], [background]) :where(img, video, svg, canvas, object, embed, input[type="image"]) {
+  filter: none;
+}
+
 .tiptap p {
   margin: 0.25rem 0;
 }

@@ -10,7 +10,16 @@ import Link from "@tiptap/extension-link";
 import TextAlign from "@tiptap/extension-text-align";
 import { TextDirection } from "@/components/email/text-direction";
 import { TextStyle } from "@tiptap/extension-text-style";
+import { FontFamily } from "@tiptap/extension-text-style/font-family";
+import { FontSize } from "@tiptap/extension-text-style/font-size";
 import Color from "@tiptap/extension-color";
+import {
+  ComposeTypography,
+  COMPOSE_FONT_FAMILY_CSS,
+  COMPOSE_FONT_SIZE_CSS,
+  resolveComposeDefaults,
+  sampleTypography,
+} from "@/components/email/compose-typography";
 import { ResizableImage } from "@/components/email/resizable-image";
 import Placeholder from "@tiptap/extension-placeholder";
 import { Table } from "@tiptap/extension-table";
@@ -21,7 +30,7 @@ import { QuotedHtml, serializeEditorContent } from "@/components/email/quoted-ht
 import { SignatureBlock } from "@/components/email/signature-block";
 import { styledBlockAttributes } from "@/components/email/styled-block-attributes";
 import { cn } from "@/lib/utils";
-import { useSettingsStore } from "@/stores/settings-store";
+import { useSettingsStore, normalizeComposeColor } from "@/stores/settings-store";
 import { useTranslations } from "next-intl";
 import {
   Bold,
@@ -172,6 +181,9 @@ export function RichTextEditor({
   onEditorReady,
 }: RichTextEditorProps) {
   const rtlEditingSupport = useSettingsStore((st) => st.rtlEditingSupport);
+  const composeFontFamily = useSettingsStore((st) => st.composeFontFamily);
+  const composeFontSize = useSettingsStore((st) => st.composeFontSize);
+  const composeTextColor = useSettingsStore((st) => st.composeTextColor);
   const tComposer = useTranslations("email_composer");
   const onImageUploadRef = React.useRef(onImageUpload);
   onImageUploadRef.current = onImageUpload;
@@ -197,7 +209,10 @@ export function RichTextEditor({
         types: ["heading", "paragraph"],
       }),
       TextStyle,
+      FontFamily,
+      FontSize,
       Color,
+      ComposeTypography,
       ResizableImage,
       Placeholder.configure({
         placeholder,
@@ -236,7 +251,7 @@ export function RichTextEditor({
     content,
     editorProps: {
       attributes: {
-        class: "tiptap min-h-[100px] px-4 py-3 text-sm text-foreground",
+        class: "tiptap email-surface min-h-[100px] px-4 py-3 text-sm",
       },
       handleDrop: (view, event) => {
         const upload = onImageUploadRef.current;
@@ -303,6 +318,25 @@ export function RichTextEditor({
   useEffect(() => {
     if (editor) onEditorReadyRef.current?.(editor);
   }, [editor]);
+
+  // Compose typography: resolve the default family/size/colour and hand them to
+  // the ComposeTypography extension so every newly typed run (fresh paragraphs,
+  // inline-reply lines) inherits them inline and thus SENDS matching the drafted
+  // body. Runs after the content-sync effect above, so the sample is taken from
+  // the freshly loaded draft; re-runs when the draft or the user settings change.
+  useEffect(() => {
+    if (!editor) return;
+    const userFamily = COMPOSE_FONT_FAMILY_CSS[composeFontFamily] ?? null;
+    const userSize = COMPOSE_FONT_SIZE_CSS[composeFontSize] ?? null;
+    const userColor = normalizeComposeColor(composeTextColor) || null;
+    const sample = sampleTypography(editor.state.doc);
+    const resolved = resolveComposeDefaults({ userFamily, userSize, userColor, sample });
+    editor.commands.setComposeDefaults(resolved);
+    // Bring any unstyled editable body text up to the same defaults on load, so
+    // pre-existing draft content matches too. No-op for an already-styled draft
+    // (nothing is missing) and for the verbatim quote/signature atom nodes.
+    editor.commands.applyComposeDefaultsToBody();
+  }, [editor, content, composeFontFamily, composeFontSize, composeTextColor]);
 
   const addLink = useCallback(() => {
     if (!editor) return;

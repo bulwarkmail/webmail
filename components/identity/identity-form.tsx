@@ -304,6 +304,7 @@ export function IdentityForm({ identity, onSave, onCancel }: IdentityFormProps) 
           <div className="mt-2 p-2 border rounded bg-muted">
             <div className="text-xs text-muted-foreground mb-1">{tDisplay('preview')}</div>
             <div
+              className="email-surface p-3"
               dangerouslySetInnerHTML={{
                 __html: sanitizeSignatureHtmlForDisplay(formData.htmlSignature)
               }}
