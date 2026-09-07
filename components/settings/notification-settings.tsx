@@ -180,7 +180,12 @@ export function NotificationSettings() {
       })
       .finally(() => { if (!cancelled) void refreshDevices(); });
     return () => { cancelled = true; };
-  }, [pushNotifyInboxOnly, client, pushStatus.kind, activeRelayUrl, username, refreshDevices]);
+    // Only the setting flip should trigger a re-sync. client / relay / username
+    // are read live from the recreated closure; depending on pushStatus.kind
+    // here would re-fire the effect on the busy->enabled transition it causes
+    // and cancel its own in-flight call (leaving the row stuck on "Working").
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pushNotifyInboxOnly]);
 
   const handleDisablePush = async () => {
     if (!client) return;

@@ -53,8 +53,8 @@ describe('NotificationSettings - pushNotifyInboxOnly', () => {
   });
 
   it('re-runs enableWebPush with the new flag when the toggle flips while push is on', async () => {
-    render(<NotificationSettings />);
-    await waitFor(() => expect(webPush.isWebPushEnabled).toHaveBeenCalled());
+    const { findByText } = render(<NotificationSettings />);
+    await findByText('push.status_active');
 
     act(() => {
       useSettingsStore.getState().updateSetting('pushNotifyInboxOnly', true);
@@ -68,6 +68,25 @@ describe('NotificationSettings - pushNotifyInboxOnly', () => {
     expect(
       (webPush.enableWebPush as ReturnType<typeof vi.fn>).mock.calls[0][0],
     ).not.toHaveProperty('forceRecreate', true);
+  });
+
+  it('does not get stuck on "busy" after the re-sync resolves', async () => {
+    const { findByText, queryByText } = render(<NotificationSettings />);
+    await findByText('push.status_active');
+    const devicesLoadsBefore = (webPush.listPushDevices as ReturnType<typeof vi.fn>).mock.calls.length;
+
+    act(() => {
+      useSettingsStore.getState().updateSetting('pushNotifyInboxOnly', true);
+    });
+
+    // enableWebPush resolves -> status returns to active, device list refreshes.
+    await findByText('push.status_active');
+    expect(queryByText('push.status_busy')).toBeNull();
+    await waitFor(() =>
+      expect(
+        (webPush.listPushDevices as ReturnType<typeof vi.fn>).mock.calls.length,
+      ).toBeGreaterThan(devicesLoadsBefore),
+    );
   });
 
   it('does not re-sync when push is disabled on this device', async () => {
