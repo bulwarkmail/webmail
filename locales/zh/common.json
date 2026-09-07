@@ -318,6 +318,7 @@
     "important": "重要",
     "download": "下载",
     "download_all": "全部下载",
+    "save_to_files": "保存到文件",
     "from": "发件人",
     "to": "收件人",
     "cc": "抄送",
@@ -3345,7 +3346,16 @@
     "open_folder_tree": "打开文件夹树",
     "other_accounts": "其他账户",
     "migration_title": "正在更新您的文件…",
-    "migration_description": "正在将文件夹和文件整理为正确的结构。此操作仅执行一次。"
+    "migration_description": "正在将文件夹和文件整理为正确的结构。此操作仅执行一次。",
+    "save_attachment": {
+      "title": "保存到文件",
+      "loading": "正在加载文件夹...",
+      "load_error": "加载文件夹失败",
+      "no_folders": "没有子文件夹",
+      "save_here": "保存到{folder}",
+      "success": "已将\"{name}\"保存到文件",
+      "save_error": "保存到文件失败"
+    }
   },
   "smime": {
     "your_certificates": "您的证书",

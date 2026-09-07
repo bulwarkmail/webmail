@@ -318,6 +318,7 @@
     "important": "Ważne",
     "download": "Pobierz",
     "download_all": "Pobierz wszystkie",
+    "save_to_files": "Zapisz w Plikach",
     "from": "Od",
     "to": "Do",
     "cc": "DW",
@@ -3345,7 +3346,16 @@
     "open_folder_tree": "Otwórz drzewo folderów",
     "other_accounts": "Inne konta",
     "migration_title": "Aktualizowanie plików…",
-    "migration_description": "Porządkowanie folderów i plików w odpowiedniej strukturze. Dzieje się to tylko raz."
+    "migration_description": "Porządkowanie folderów i plików w odpowiedniej strukturze. Dzieje się to tylko raz.",
+    "save_attachment": {
+      "title": "Zapisz w Plikach",
+      "loading": "Wczytywanie folderów...",
+      "load_error": "Nie udało się wczytać folderów",
+      "no_folders": "Brak podfolderów",
+      "save_here": "Zapisz w {folder}",
+      "success": "\"{name}\" zapisano w Plikach",
+      "save_error": "Nie udało się zapisać w Plikach"
+    }
   },
   "smime": {
     "your_certificates": "Twoje certyfikaty",

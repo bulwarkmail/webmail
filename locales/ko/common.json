@@ -318,6 +318,7 @@
     "important": "중요",
     "download": "다운로드",
     "download_all": "모두 다운로드",
+    "save_to_files": "파일에 저장",
     "from": "보낸 사람",
     "to": "받는 사람",
     "cc": "참조",
@@ -3345,7 +3346,16 @@
     "open_folder_tree": "폴더 트리 열기",
     "other_accounts": "다른 계정",
     "migration_title": "파일 업데이트 중…",
-    "migration_description": "폴더와 파일을 올바른 구조로 정리하고 있습니다. 이 작업은 한 번만 수행됩니다."
+    "migration_description": "폴더와 파일을 올바른 구조로 정리하고 있습니다. 이 작업은 한 번만 수행됩니다.",
+    "save_attachment": {
+      "title": "파일에 저장",
+      "loading": "폴더 불러오는 중...",
+      "load_error": "폴더를 불러오지 못했습니다",
+      "no_folders": "하위 폴더 없음",
+      "save_here": "{folder}에 저장",
+      "success": "\"{name}\"이(가) 파일에 저장되었습니다",
+      "save_error": "파일에 저장하지 못했습니다"
+    }
   },
   "smime": {
     "your_certificates": "내 인증서",

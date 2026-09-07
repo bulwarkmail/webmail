@@ -318,6 +318,7 @@
     "important": "Vigtig",
     "download": "Download",
     "download_all": "Download alle",
+    "save_to_files": "Gem i Filer",
     "from": "Fra",
     "to": "Til",
     "cc": "CC",
@@ -3387,7 +3388,16 @@
     "open_folder_tree": "Åbn mappetræ",
     "other_accounts": "Andre konti",
     "migration_title": "Opdaterer dine filer…",
-    "migration_description": "Organiserer mapper og filer i deres rette struktur. Dette sker kun én gang."
+    "migration_description": "Organiserer mapper og filer i deres rette struktur. Dette sker kun én gang.",
+    "save_attachment": {
+      "title": "Gem i Filer",
+      "loading": "Indlæser mapper...",
+      "load_error": "Kunne ikke indlæse mapper",
+      "no_folders": "Ingen undermapper",
+      "save_here": "Gem i {folder}",
+      "success": "\"{name}\" gemt i Filer",
+      "save_error": "Kunne ikke gemme i Filer"
+    }
   },
   "smime": {
     "your_certificates": "Dine certifikater",

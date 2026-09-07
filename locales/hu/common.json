@@ -318,6 +318,7 @@
     "important": "Fontos",
     "download": "Letöltés",
     "download_all": "Összes letöltése",
+    "save_to_files": "Mentés a Fájlokba",
     "from": "Feladó",
     "to": "Címzett",
     "cc": "Másolat",
@@ -3387,7 +3388,16 @@
     "disabled_description": "Nagyméretű fájlok WebDAV-on keresztüli feltöltése Stalwart/RocksDB instabilitást okozhat, beleértve a memóriahiányos összeomlásokat és a helyreállíthatatlan lemezhasználatot. A törölt fájlok nem feltétlenül kerülnek azonnal eltávolításra a blob tárolóból. Ez a funkció nem ajánlott éles környezetben.",
     "stability_warning": "Nagyméretű fájlok feltöltése szerver instabilitást okozhat. A törölt fájlok nem feltétlenül kerülnek azonnal eltávolításra a tárolóból. Használat óvatosan.",
     "migration_title": "Fájlok frissítése…",
-    "migration_description": "A mappák és fájlok a megfelelő struktúrába rendeződnek. Ez csak egyszer történik meg."
+    "migration_description": "A mappák és fájlok a megfelelő struktúrába rendeződnek. Ez csak egyszer történik meg.",
+    "save_attachment": {
+      "title": "Mentés a Fájlokba",
+      "loading": "Mappák betöltése...",
+      "load_error": "Nem sikerült betölteni a mappákat",
+      "no_folders": "Nincsenek almappák",
+      "save_here": "Mentés ide: {folder}",
+      "success": "\"{name}\" elmentve a Fájlokba",
+      "save_error": "Nem sikerült menteni a Fájlokba"
+    }
   },
   "smime": {
     "your_certificates": "Tanúsítványaid",

@@ -318,6 +318,7 @@
     "important": "Svarīgi",
     "download": "Lejupielādēt",
     "download_all": "Lejupielādēt visu",
+    "save_to_files": "Saglabāt failos",
     "from": "No",
     "to": "Kam",
     "cc": "Kopija",
@@ -3345,7 +3346,16 @@
     "open_folder_tree": "Atvērt mapju koku",
     "other_accounts": "Citi konti",
     "migration_title": "Notiek jūsu failu atjaunināšana…",
-    "migration_description": "Mapes un faili tiek sakārtoti pareizajā struktūrā. Tas notiek tikai vienu reizi."
+    "migration_description": "Mapes un faili tiek sakārtoti pareizajā struktūrā. Tas notiek tikai vienu reizi.",
+    "save_attachment": {
+      "title": "Saglabāt failos",
+      "loading": "Ielādē mapes...",
+      "load_error": "Neizdevās ielādēt mapes",
+      "no_folders": "Nav apakšmapju",
+      "save_here": "Saglabāt {folder}",
+      "success": "\"{name}\" saglabāts failos",
+      "save_error": "Neizdevās saglabāt failos"
+    }
   },
   "smime": {
     "your_certificates": "Jūsu sertifikāti",

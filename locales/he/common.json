@@ -265,6 +265,7 @@
     "important": "חָשׁוּב",
     "download": "הורד",
     "download_all": "הורד הכל",
+    "save_to_files": "שמור בקבצים",
     "from": "מאת",
     "to": "אל",
     "cc": "עותק",
@@ -3269,7 +3270,16 @@
     "shared_by": "משותף על ידי {name}",
     "open_folder_tree": "פתח עץ תיקייה",
     "migration_title": "עדכון הקבצים שלך…",
-    "migration_description": "ארגון תיקיות וקבצים לתוך המבנה הנכון שלהם. זה קורה רק פעם אחת."
+    "migration_description": "ארגון תיקיות וקבצים לתוך המבנה הנכון שלהם. זה קורה רק פעם אחת.",
+    "save_attachment": {
+      "title": "שמור בקבצים",
+      "loading": "טוען תיקיות...",
+      "load_error": "טעינת התיקיות נכשלה",
+      "no_folders": "אין תיקיות משנה",
+      "save_here": "שמור ב-{folder}",
+      "success": "\"{name}\" נשמר בקבצים",
+      "save_error": "השמירה בקבצים נכשלה"
+    }
   },
   "smime": {
     "your_certificates": "התעודות שלך",

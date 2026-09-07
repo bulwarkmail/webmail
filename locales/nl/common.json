@@ -318,6 +318,7 @@
     "important": "Belangrijk",
     "download": "Downloaden",
     "download_all": "Alles downloaden",
+    "save_to_files": "Opslaan in Bestanden",
     "from": "Van",
     "to": "Aan",
     "cc": "CC",
@@ -3345,7 +3346,16 @@
     "open_folder_tree": "Mappenstructuur openen",
     "other_accounts": "Andere accounts",
     "migration_title": "Je bestanden worden bijgewerkt…",
-    "migration_description": "Mappen en bestanden worden in de juiste structuur georganiseerd. Dit gebeurt slechts één keer."
+    "migration_description": "Mappen en bestanden worden in de juiste structuur georganiseerd. Dit gebeurt slechts één keer.",
+    "save_attachment": {
+      "title": "Opslaan in Bestanden",
+      "loading": "Mappen laden...",
+      "load_error": "Kan mappen niet laden",
+      "no_folders": "Geen submappen",
+      "save_here": "Opslaan in {folder}",
+      "success": "\"{name}\" opgeslagen in Bestanden",
+      "save_error": "Opslaan in Bestanden mislukt"
+    }
   },
   "smime": {
     "your_certificates": "Uw certificaten",

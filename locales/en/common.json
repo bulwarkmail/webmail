@@ -318,6 +318,7 @@
     "important": "Important",
     "download": "Download",
     "download_all": "Download all",
+    "save_to_files": "Save to Files",
     "from": "From",
     "to": "To",
     "cc": "CC",
@@ -3387,7 +3388,16 @@
     "disabled_description": "Large file uploads via WebDAV can cause Stalwart/RocksDB instability, including out-of-memory crashes and unrecoverable disk usage. Deleted files may not be immediately purged from blob storage. This feature is not recommended for production environments.",
     "stability_warning": "Large file uploads can cause server instability. Deleted files may not be immediately purged from storage. Use with caution.",
     "migration_title": "Updating your files…",
-    "migration_description": "Organising folders and files into their proper structure. This happens only once."
+    "migration_description": "Organising folders and files into their proper structure. This happens only once.",
+    "save_attachment": {
+      "title": "Save to Files",
+      "loading": "Loading folders...",
+      "load_error": "Failed to load folders",
+      "no_folders": "No subfolders",
+      "save_here": "Save to {folder}",
+      "success": "\"{name}\" saved to Files",
+      "save_error": "Failed to save to Files"
+    }
   },
   "smime": {
     "your_certificates": "Your Certificates",

@@ -318,6 +318,7 @@
     "important": "Viktig",
     "download": "Last ned",
     "download_all": "Last ned alle",
+    "save_to_files": "Lagre i Filer",
     "from": "Fra",
     "to": "Til",
     "cc": "CC",
@@ -3387,7 +3388,16 @@
     "disabled_description": "Store filopplastinger via WebDAV kan føre til ustabilitet i Stalwart/RocksDB, blant annet krasj på grunn av for lite minne og diskplass som ikke blir frigjort. Slettede filer kan ikke fjernes umiddelbart fra blob-lagringen. Denne funksjonen anbefales ikke for produksjonsmiljøer.",
     "stability_warning": "Store filopplastinger kan gjøre serveren ustabil. Slettede filer kan ikke fjernes umiddelbart fra lagringen. Bruk med forsiktighet.",
     "migration_title": "Oppdaterer filene dine...",
-    "migration_description": "Mapper og filer organiseres i riktig struktur. Dette skjer bare én gang."
+    "migration_description": "Mapper og filer organiseres i riktig struktur. Dette skjer bare én gang.",
+    "save_attachment": {
+      "title": "Lagre i Filer",
+      "loading": "Laster mapper...",
+      "load_error": "Kunne ikke laste mapper",
+      "no_folders": "Ingen undermapper",
+      "save_here": "Lagre i {folder}",
+      "success": "«{name}» lagret i Filer",
+      "save_error": "Kunne ikke lagre i Filer"
+    }
   },
   "smime": {
     "your_certificates": "Dine sertifikater",

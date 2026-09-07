@@ -149,7 +149,7 @@ function isDirectoryType(type: string | undefined): boolean {
 // signal in the JMAP FileNode spec and in Stalwart (a node is a container when
 // its `file`/`blobId` is null); a `type` of "d" is not — older builds created
 // "folders" as blob-backed files, which can't hold children (#379).
-function isFolder(node: Pick<FileNode, 'blobId'>): boolean {
+export function isFolder(node: Pick<FileNode, 'blobId'>): boolean {
   return node.blobId == null;
 }
 

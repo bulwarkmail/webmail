@@ -315,6 +315,7 @@
     "important": "重要",
     "download": "下載",
     "download_all": "全部下載",
+    "save_to_files": "儲存至檔案",
     "from": "寄件者",
     "to": "收件者",
     "cc": "副本",
@@ -3382,7 +3383,16 @@
     "disabled_description": "透過 WebDAV 上傳大檔案可能導致 Stalwart/RocksDB 不穩定，包括記憶體不足當機及無法回收的磁碟空間。刪除檔案後，blob 儲存空間可能不會立即清除。本功能不建議用於正式環境。",
     "stability_warning": "上傳大檔案可能導致伺服器不穩定。刪除檔案後，儲存空間可能不會立即清除。請謹慎使用。",
     "migration_title": "正在更新您的檔案…",
-    "migration_description": "正在將資料夾與檔案整理成正確結構。這只會執行一次。"
+    "migration_description": "正在將資料夾與檔案整理成正確結構。這只會執行一次。",
+    "save_attachment": {
+      "title": "儲存至檔案",
+      "loading": "正在載入資料夾...",
+      "load_error": "載入資料夾失敗",
+      "no_folders": "沒有子資料夾",
+      "save_here": "儲存至 {folder}",
+      "success": "已將「{name}」儲存至檔案",
+      "save_error": "儲存至檔案失敗"
+    }
   },
   "smime": {
     "your_certificates": "您的憑證",

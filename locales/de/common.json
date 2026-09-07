@@ -318,6 +318,7 @@
     "important": "Wichtig",
     "download": "Herunterladen",
     "download_all": "Alle herunterladen",
+    "save_to_files": "In Dateien speichern",
     "from": "Von",
     "to": "An",
     "cc": "CC",
@@ -3345,7 +3346,16 @@
     "open_folder_tree": "Ordnerbaum öffnen",
     "other_accounts": "Andere Konten",
     "migration_title": "Ihre Dateien werden aktualisiert…",
-    "migration_description": "Ordner und Dateien werden in die richtige Struktur gebracht. Dies geschieht nur einmal."
+    "migration_description": "Ordner und Dateien werden in die richtige Struktur gebracht. Dies geschieht nur einmal.",
+    "save_attachment": {
+      "title": "In Dateien speichern",
+      "loading": "Ordner werden geladen...",
+      "load_error": "Ordner konnten nicht geladen werden",
+      "no_folders": "Keine Unterordner",
+      "save_here": "In {folder} speichern",
+      "success": "\"{name}\" in Dateien gespeichert",
+      "save_error": "Speichern in Dateien fehlgeschlagen"
+    }
   },
   "smime": {
     "your_certificates": "Ihre Zertifikate",
