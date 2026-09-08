@@ -46,6 +46,16 @@ const nextConfig: NextConfig = {
   // it from node_modules at runtime instead of trying to bundle it. Used by
   // PLUGIN_DEV_DIR's on-the-fly bundler.
   serverExternalPackages: ["esbuild"],
+  async headers() {
+    return [
+      {
+        // Untrusted plugin iframes have opaque origins and load these public,
+        // immutable chunks in CORS mode. Next prefixes this source with basePath.
+        source: "/_next/static/:path*",
+        headers: [{ key: "Access-Control-Allow-Origin", value: "*" }],
+      },
+    ];
+  },
   // Sibling repos checked out under ./repos/ are unrelated source trees that
   // Turbopack's NFT can otherwise rope into the trace when dynamic fs calls
   // confuse it. Keeps the build from ballooning memory tracing dead code.
