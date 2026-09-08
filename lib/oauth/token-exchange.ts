@@ -51,6 +51,32 @@ function getServerEntry(serverId?: string | null) {
   return findServerById(servers, serverId);
 }
 
+/**
+ * Strip a trailing JMAP session path so OAuth discovery hits the right base.
+ *
+ * `discoverOAuth` appends `/.well-known/...` to this base, so JMAP_SERVER_URL set to
+ * the session URL (`.../jmap/session` or `.../.well-known/jmap`, common so the client
+ * can skip the 307 redirect a preflighted CORS request cannot follow) makes discovery
+ * fetch `<session-url>/.well-known/oauth-authorization-server`, get a 404, and refresh
+ * fail with "OAuth token endpoint not found".
+ *
+ * Only the session suffix (and any query or fragment) is removed, not the whole path:
+ * discovery also runs against OAUTH_ISSUER_URL, and a path-based issuer (for example a
+ * Keycloak realm at `/realms/<name>`) must keep its path. So this is deliberately not
+ * `new URL(url).origin`. (#971)
+ */
+function discoveryBase(url: string): string {
+  try {
+    const u = new URL(url);
+    u.pathname = u.pathname.replace(/\/(?:jmap\/session|\.well-known\/jmap)\/*$/, '');
+    u.search = '';
+    u.hash = '';
+    return u.toString().replace(/\/+$/, '');
+  } catch {
+    return url;
+  }
+}
+
 export function getRequiredConfig(serverId?: string | null, options?: ClientConfigOptions) {
   const entry = getServerEntry(serverId);
 
@@ -69,7 +95,7 @@ export function getRequiredConfig(serverId?: string | null, options?: ClientConf
   if (!clientId || !serverUrl) {
     throw new Error(`OAuth misconfigured: ${[!clientId && 'OAUTH_CLIENT_ID', !serverUrl && 'JMAP_SERVER_URL'].filter(Boolean).join(', ')} not set`);
   }
-  const discoveryUrl = issuerUrl?.trim() || serverUrl;
+  const discoveryUrl = discoveryBase(issuerUrl?.trim() || serverUrl);
   if (issuerUrl !== undefined && issuerUrl !== '' && !issuerUrl.trim()) {
     logger.warn('OAUTH_ISSUER_URL is set but empty, falling back to JMAP_SERVER_URL for discovery');
   }
