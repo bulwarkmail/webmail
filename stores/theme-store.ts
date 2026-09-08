@@ -38,6 +38,11 @@ interface ThemeState {
   // Custom theme system
   installedThemes: InstalledTheme[];
   activeThemeId: string | null; // null = built-in default
+  // Whether the user has ever explicitly picked a theme (including "Default")
+  // via activateTheme(). Distinguishes "chose Default on purpose" from "never
+  // decided yet" - both look like activeThemeId === null - so the admin's
+  // policy default can be applied to the latter without stomping the former.
+  themeChoiceMade: boolean;
 
   setTheme: (theme: Theme) => void;
   toggleTheme: () => void;
@@ -87,6 +92,7 @@ export const useThemeStore = create<ThemeState>()(
       hydrated: false,
       installedThemes: [...BUILTIN_THEMES],
       activeThemeId: null,
+      themeChoiceMade: false,
 
       setTheme: (theme) => {
         const resolvedTheme = theme === 'system' ? getSystemTheme() : theme;
@@ -109,7 +115,7 @@ export const useThemeStore = create<ThemeState>()(
       },
 
       initializeTheme: () => {
-        const { theme, activeThemeId, installedThemes } = get();
+        const { theme, activeThemeId, installedThemes, themeChoiceMade } = get();
         const resolvedTheme = theme === 'system' ? getSystemTheme() : theme;
         applyTheme(resolvedTheme);
         set({ resolvedTheme, hydrated: true });
@@ -117,7 +123,7 @@ export const useThemeStore = create<ThemeState>()(
         // Determine effective theme: forced theme > user choice > policy default > none
         const forcedThemeId = getForcedThemeId(installedThemes);
         let effectiveThemeId = forcedThemeId ?? activeThemeId;
-        if (!effectiveThemeId) {
+        if (!effectiveThemeId && !themeChoiceMade) {
           const policyState = usePolicyStore.getState();
           const tp = policyState.policy.themePolicy;
           if (tp?.defaultThemeId) {
@@ -150,6 +156,49 @@ export const useThemeStore = create<ThemeState>()(
               });
             }
           }
+        }
+
+        // The admin's policy default (themePolicy.defaultThemeId) almost
+        // always loses the race above: /api/admin/policy is only fetched
+        // after /api/config resolves (see hooks/use-config.ts), so a
+        // brand-new user (activeThemeId still null, themeChoiceMade still
+        // false) boots into the built-in look every time, and that "no
+        // theme" state then gets persisted, making it permanent instead of
+        // self-correcting on the next load. Re-check once policy actually
+        // arrives, but only if the user still hasn't made their own choice
+        // in the meantime.
+        const applyPolicyDefaultIfPending = () => {
+          if (get().themeChoiceMade) return;
+          const current = get().installedThemes;
+          if (getForcedThemeId(current)) return;
+          const defaultId = usePolicyStore.getState().policy.themePolicy?.defaultThemeId;
+          if (!defaultId || get().activeThemeId === defaultId) return;
+          const t = current.find(it => it.id === defaultId);
+          if (!t) return;
+          if (t.css) {
+            applyCustomThemeCSS(t, get().resolvedTheme);
+            set({ activeThemeId: defaultId });
+          } else {
+            pluginStorage.getThemeCSS(defaultId).then(css => {
+              if (!css || get().themeChoiceMade) return;
+              const hydrated = { ...t, css };
+              applyCustomThemeCSS(hydrated, get().resolvedTheme);
+              set(state => ({
+                activeThemeId: defaultId,
+                installedThemes: state.installedThemes.map(it => it.id === defaultId ? hydrated : it),
+              }));
+            });
+          }
+        };
+
+        if (usePolicyStore.getState().loaded) {
+          applyPolicyDefaultIfPending();
+        } else {
+          const unsubscribe = usePolicyStore.subscribe((state) => {
+            if (!state.loaded) return;
+            unsubscribe();
+            applyPolicyDefaultIfPending();
+          });
         }
 
         // Clean up previous listener if any
@@ -301,7 +350,7 @@ export const useThemeStore = create<ThemeState>()(
         if (id === null) {
           removeThemeCSS();
           removeThemeSkinCSS();
-          set({ activeThemeId: null });
+          set({ activeThemeId: null, themeChoiceMade: true });
           return;
         }
 
@@ -321,12 +370,12 @@ export const useThemeStore = create<ThemeState>()(
               ),
             }));
           });
-          set({ activeThemeId: id });
+          set({ activeThemeId: id, themeChoiceMade: true });
           return;
         }
 
         applyCustomThemeCSS(theme, resolvedTheme);
-        set({ activeThemeId: id });
+        set({ activeThemeId: id, themeChoiceMade: true });
       },
 
       syncServerThemes: async () => {
@@ -444,6 +493,7 @@ export const useThemeStore = create<ThemeState>()(
       partialize: (state) => ({
         theme: state.theme,
         activeThemeId: state.activeThemeId,
+        themeChoiceMade: state.themeChoiceMade,
         // Store theme metadata but NOT full CSS / skin (those go in IndexedDB)
         installedThemes: state.installedThemes.map(t => ({
           ...t,
