@@ -7,7 +7,7 @@ import { Plus } from "lucide-react";
 import {
   startOfMonth, endOfMonth, startOfWeek, endOfWeek,
   addMonths, subMonths, addWeeks, subWeeks, addDays, subDays,
-  startOfDay, format, parseISO,
+  format, parseISO,
 } from "date-fns";
 import { useCalendarStore } from "@/stores/calendar-store";
 import { isCalendarViewMode } from "@/stores/calendar-store";
@@ -75,6 +75,11 @@ import { appPath, buildCalendarPath, parseCalendarPath, type CalendarDeepLink } 
 import { consumePendingDeepLinkEntry, subscribePendingDeepLink } from "@/lib/deep-link-handoff";
 import { useDeepLinkUrl } from "@/hooks/use-deep-link-url";
 import { useProInterfaceActive } from "@/components/pro/pro-interface-redirect";
+
+/** Days the agenda loads ahead of the selected day at first. */
+const AGENDA_INITIAL_DAYS = 30;
+/** Furthest the agenda window grows in either direction. */
+const AGENDA_MAX_DAYS = 365;
 
 type PendingScopeAction =
   | { type: "edit"; event: CalendarEvent; updates: Partial<CalendarEvent>; sendScheduling?: boolean }
@@ -344,6 +349,37 @@ export function CalendarApp({ linkSegments }: CalendarAppProps = {}) {
     }
   }, [showBirthdayCalendar]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Agenda: one window around the selected day that only ever grows. Reaching
+  // an edge of the list doubles that side (capped at a year) and the whole
+  // range is refetched; picking another day starts a fresh window there.
+  const agendaAnchorKey = format(selectedDate, "yyyy-MM-dd");
+  const [agendaExtent, setAgendaExtent] = useState<{ anchor: string; before: number; after: number }>(
+    { anchor: agendaAnchorKey, before: 0, after: AGENDA_INITIAL_DAYS },
+  );
+  const agendaWindow = useMemo(() => {
+    const anchor = parseISO(agendaAnchorKey);
+    const extent = agendaExtent.anchor === agendaAnchorKey
+      ? agendaExtent
+      : { before: 0, after: AGENDA_INITIAL_DAYS };
+    return {
+      start: subDays(anchor, extent.before),
+      end: addDays(anchor, extent.after),
+      canExtendPast: extent.before < AGENDA_MAX_DAYS,
+      canExtendFuture: extent.after < AGENDA_MAX_DAYS,
+    };
+  }, [agendaAnchorKey, agendaExtent]);
+  const extendAgenda = useCallback((side: "before" | "after") => {
+    setAgendaExtent((prev) => {
+      const current = prev.anchor === agendaAnchorKey
+        ? prev
+        : { anchor: agendaAnchorKey, before: 0, after: AGENDA_INITIAL_DAYS };
+      const grown = Math.min(AGENDA_MAX_DAYS, Math.max(AGENDA_INITIAL_DAYS, current[side] * 2));
+      return grown === current[side] ? prev : { ...current, [side]: grown };
+    });
+  }, [agendaAnchorKey]);
+  const extendAgendaPast = useCallback(() => extendAgenda("before"), [extendAgenda]);
+  const extendAgendaFuture = useCallback(() => extendAgenda("after"), [extendAgenda]);
+
   const dateRange = useMemo(() => {
     const d = selectedDate;
     switch (normalizedViewMode) {
@@ -367,19 +403,15 @@ export function CalendarApp({ linkSegments }: CalendarAppProps = {}) {
           start: format(d, "yyyy-MM-dd'T'00:00:00"),
           end: format(d, "yyyy-MM-dd'T'23:59:59"),
         };
-      case "agenda": {
-        // Agenda always starts from today at the earliest
-        const today = startOfDay(displayNow());
-        const agendaStart = d >= today ? d : today;
+      case "agenda":
         return {
-          start: format(agendaStart, "yyyy-MM-dd'T'00:00:00"),
-          end: format(addDays(agendaStart, 30), "yyyy-MM-dd'T'23:59:59"),
+          start: format(agendaWindow.start, "yyyy-MM-dd'T'00:00:00"),
+          end: format(agendaWindow.end, "yyyy-MM-dd'T'23:59:59"),
         };
-      }
       case "tasks":
         return null;
     }
-  }, [selectedDate, normalizedViewMode, firstDayOfWeek]);
+  }, [selectedDate, normalizedViewMode, firstDayOfWeek, agendaWindow]);
 
   // Fetch tasks when tasks view is active or when tasks are shown on calendar grid
   useEffect(() => {
@@ -1390,6 +1422,11 @@ export function CalendarApp({ linkSegments }: CalendarAppProps = {}) {
               selectedDate={selectedDate}
               events={visibleEvents}
               calendars={allCalendars}
+              rangeStart={agendaWindow.start}
+              rangeEnd={agendaWindow.end}
+              onExtendPast={agendaWindow.canExtendPast ? extendAgendaPast : undefined}
+              onExtendFuture={agendaWindow.canExtendFuture ? extendAgendaFuture : undefined}
+              isLoading={isLoadingEvents}
               onSelectEvent={handleSelectEvent}
               onHoverEvent={handleHoverEvent}
               onHoverLeave={handleHoverLeave}
