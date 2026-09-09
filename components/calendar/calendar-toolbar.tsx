@@ -12,6 +12,8 @@ import { useCalendarLocale } from "@/hooks/use-calendar-locale";
 
 interface CalendarToolbarProps {
   selectedDate: Date;
+  /** Day at the top / start of the scrolled view, when it differs from the selection. */
+  visibleDate?: Date | null;
   viewMode: CalendarViewMode;
   onPrev: () => void;
   onNext: () => void;
@@ -33,6 +35,7 @@ interface CalendarToolbarProps {
 
 export function CalendarToolbar({
   selectedDate,
+  visibleDate,
   viewMode,
   onPrev,
   onNext,
@@ -76,26 +79,31 @@ export function CalendarToolbar({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showCalendarDropdown]);
 
+  // The views scroll freely (#759): while the user has scrolled away from
+  // the selected day, the title describes what is on screen instead.
+  const titleDate = visibleDate ?? selectedDate;
   const getDateLabel = (): string => {
     switch (viewMode) {
       case "month":
         return isMobile
-          ? formatMonthYearShort(selectedDate)
-          : formatMonthYear(selectedDate);
+          ? formatMonthYearShort(titleDate)
+          : formatMonthYear(titleDate);
       case "week": {
-        const ws = startOfWeek(selectedDate, { weekStartsOn });
+        // A reported visible date is the first column in view; the selected
+        // day is shown from the start of its week.
+        const ws = visibleDate ?? startOfWeek(selectedDate, { weekStartsOn });
         return isMobile
           ? formatWeekRangeShort(ws)
           : formatWeekRange(ws);
       }
       case "day":
         return isMobile
-          ? formatFullDate(selectedDate)
-          : formatFullDate(selectedDate);
+          ? formatFullDate(titleDate)
+          : formatFullDate(titleDate);
       case "agenda":
         return isMobile
-          ? formatMonthYearShort(selectedDate)
-          : formatMonthYear(selectedDate);
+          ? formatMonthYearShort(titleDate)
+          : formatMonthYear(titleDate);
       case "tasks":
         return t("views.tasks");
     }

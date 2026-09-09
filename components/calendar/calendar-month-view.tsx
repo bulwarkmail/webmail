@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState, useCallback, type DragEvent } from "react";
+import { useMemo, useState, useCallback, useRef, useLayoutEffect, type DragEvent } from "react";
 import { useTranslations } from "next-intl";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, eachDayOfInterval, addDays } from "date-fns";
 import { cn } from "@/lib/utils";
 import { EventCard } from "./event-card";
 import { buildWeekSegments, getEventDayBounds, getPrimaryCalendarId } from "@/lib/calendar-utils";
@@ -13,8 +13,10 @@ import { useSettingsStore } from "@/stores/settings-store";
 import type { PendingEventPreview } from "./event-modal";
 import { toast } from "@/stores/toast-store";
 import { useCalendarLocale } from "@/hooks/use-calendar-locale";
+import { useScrollWindow } from "@/hooks/use-scroll-window";
+import { dayKey, parseDayKey, type ScrollWindowViewProps } from "@/lib/calendar-scroll-window";
 
-interface CalendarMonthViewProps {
+interface CalendarMonthViewProps extends ScrollWindowViewProps {
   selectedDate: Date;
   events: CalendarEvent[];
   calendars: Calendar[];
@@ -30,10 +32,21 @@ interface CalendarMonthViewProps {
   pendingPreview?: PendingEventPreview | null;
 }
 
+/** Fraction of the viewport height at which the "current month" is sampled. */
+const VISIBLE_MONTH_SAMPLE = 0.4;
+
 export function CalendarMonthView({
   selectedDate,
+  focus,
   events,
   calendars,
+  rangeStart,
+  rangeEnd,
+  windowKey,
+  onExtendStart,
+  onExtendEnd,
+  isLoading = false,
+  onVisibleDateChange,
   onSelectDate,
   onSelectEvent,
   onHoverEvent,
@@ -41,7 +54,6 @@ export function CalendarMonthView({
   onContextMenuEvent,
   onContextMenuEmpty,
   onCreateAtTime,
-  firstDayOfWeek = 1,
   isMobile,
   pendingPreview,
 }: CalendarMonthViewProps) {
@@ -53,8 +65,8 @@ export function CalendarMonthView({
   const overlayTop = isMobile ? 34 : 30;
   const rowHeight = isMobile ? 18 : 22;
   const chipHeight = rowHeight - 2;
+  const baseRowMinHeight = isMobile ? 52 : 100;
   const {
-    weekStartsOn,
     dayHeaderKeys,
     getMonthGridDays,
     checkIsToday,
@@ -62,12 +74,21 @@ export function CalendarMonthView({
     checkIsSameDay,
     formatDayNumber,
     formatFullDate,
+    getMonth,
+    getYear,
+    monthLabelKeys,
   } = useCalendarLocale();
 
-  const days = useMemo(
-    () => getMonthGridDays(selectedDate),
-    [selectedDate, getMonthGridDays],
-  );
+  // The loaded window is a run of whole weeks (#759): scrolling moves through
+  // them continuously and the edges widen the window.
+  const weeks = useMemo(() => {
+    const days = eachDayOfInterval({ start: rangeStart, end: rangeEnd });
+    const result: Date[][] = [];
+    for (let i = 0; i + 7 <= days.length; i += 7) {
+      result.push(days.slice(i, i + 7));
+    }
+    return result;
+  }, [rangeStart, rangeEnd]);
 
   const calendarMap = useMemo(() => {
     const map = new Map<string, Calendar>();
@@ -94,14 +115,6 @@ export function CalendarMonthView({
     return map;
   }, [events]);
 
-  const weeks = useMemo(() => {
-    const result: Date[][] = [];
-    for (let i = 0; i < days.length; i += 7) {
-      result.push(days.slice(i, i + 7));
-    }
-    return result;
-  }, [days]);
-
   const weekSegments = useMemo(() => {
     return weeks.map((week) => {
       const segments = buildWeekSegments(events, week);
@@ -109,6 +122,85 @@ export function CalendarMonthView({
       return { week, segments, rowCount };
     });
   }, [events, weeks]);
+
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const topSentinelRef = useRef<HTMLDivElement>(null);
+  const bottomSentinelRef = useRef<HTMLDivElement>(null);
+
+  // Six rows fill the viewport, as a single month used to; taller rows grow
+  // with their chips.
+  const [viewportHeight, setViewportHeight] = useState(0);
+  useLayoutEffect(() => {
+    const el = scrollRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(() => setViewportHeight(el.clientHeight));
+    observer.observe(el);
+    setViewportHeight(el.clientHeight);
+    return () => observer.disconnect();
+  }, []);
+  const rowMinHeight = Math.max(baseRowMinHeight, Math.floor(viewportHeight / 6));
+
+  // The month the user is looking at: sampled a little above the middle of
+  // the viewport. It dims the other months' days and drives the title.
+  const [visibleMonthDate, setVisibleMonthDate] = useState<Date>(() => focus.date);
+  const visibleMonthRef = useRef(visibleMonthDate);
+  const scrollFrameRef = useRef<number | null>(null);
+
+  const sampleVisibleMonth = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const sampleY = el.getBoundingClientRect().top + el.clientHeight * VISIBLE_MONTH_SAMPLE;
+    const rows = el.querySelectorAll<HTMLElement>("[data-week]");
+    let hit: HTMLElement | null = null;
+    for (const row of rows) {
+      if (row.getBoundingClientRect().bottom >= sampleY) { hit = row; break; }
+    }
+    const weekKey = hit?.dataset.week;
+    if (!weekKey) return;
+    const midWeek = addDays(parseDayKey(weekKey), 3);
+    const current = visibleMonthRef.current;
+    if (getMonth(midWeek) === getMonth(current) && getYear(midWeek) === getYear(current)) return;
+    visibleMonthRef.current = midWeek;
+    setVisibleMonthDate(midWeek);
+    onVisibleDateChange?.(midWeek);
+  }, [getMonth, getYear, onVisibleDateChange]);
+
+  const handleScroll = useCallback(() => {
+    if (scrollFrameRef.current !== null) return;
+    scrollFrameRef.current = requestAnimationFrame(() => {
+      scrollFrameRef.current = null;
+      sampleVisibleMonth();
+    });
+  }, [sampleVisibleMonth]);
+
+  // Navigation puts the first week of the focused month at the top.
+  const scrollToFocus = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const grid = getMonthGridDays(focus.date);
+    const targetKey = dayKey(grid[0] ?? focus.date);
+    const row = el.querySelector<HTMLElement>(`[data-week="${targetKey}"]`);
+    if (row) {
+      el.scrollTop += row.getBoundingClientRect().top - el.getBoundingClientRect().top;
+    }
+    visibleMonthRef.current = focus.date;
+    setVisibleMonthDate(focus.date);
+  }, [focus.date, getMonthGridDays]);
+
+  useScrollWindow({
+    scrollRef,
+    axis: "vertical",
+    isLoading,
+    windowKey,
+    focusNonce: focus.nonce,
+    scrollToFocus,
+    onExtendStart,
+    onExtendEnd,
+    startSentinelRef: topSentinelRef,
+    endSentinelRef: bottomSentinelRef,
+    contentKey: weekSegments,
+    anchorSelector: "[data-week]",
+  });
 
   const [dropDayKey, setDropDayKey] = useState<string | null>(null);
 
@@ -160,20 +252,28 @@ export function CalendarMonthView({
         ))}
       </div>
 
-      <div className="flex-1 flex flex-col overflow-y-auto">
-        {weekSegments.map(({ week, segments, rowCount }, wi) => (
-          <div key={wi} className={cn(
-            "relative flex-1 border-b border-border last:border-b-0",
-            isMobile ? "min-h-[52px]" : "min-h-[100px]"
-          )} role="row" style={showChips ? { minHeight: Math.max(isMobile ? 52 : 100, overlayTop + 4 + rowCount * rowHeight + 8) } : undefined}>
+      <div
+        ref={scrollRef}
+        className="flex-1 flex flex-col overflow-y-auto [overflow-anchor:none]"
+        onScroll={handleScroll}
+      >
+        <div ref={topSentinelRef} data-testid="month-top-sentinel" className="h-px flex-shrink-0" />
+        {weekSegments.map(({ week, segments, rowCount }) => (
+          <div key={dayKey(week[0])} data-week={dayKey(week[0])} className="relative flex-shrink-0 border-b border-border" role="row" style={{
+            minHeight: showChips
+              ? Math.max(rowMinHeight, overlayTop + 4 + rowCount * rowHeight + 8)
+              : rowMinHeight,
+          }}>
             <div className="grid grid-cols-7 h-full">
-            {week.map((day) => {
-              const inMonth = checkIsSameMonth(day, selectedDate);
+            {week.map((day, dayIndex) => {
+              const inMonth = checkIsSameMonth(day, visibleMonthDate);
               const selected = checkIsSameDay(day, selectedDate);
               const today = checkIsToday(day);
               const key = format(day, "yyyy-MM-dd");
               const dayEvents = eventsByDate.get(key) || [];
               const fullDateLabel = formatFullDate(day);
+              const previous = dayIndex > 0 ? week[dayIndex - 1] : addDays(day, -1);
+              const firstOfMonth = !checkIsSameMonth(day, previous);
 
               return (
                 <div
@@ -195,7 +295,12 @@ export function CalendarMonthView({
                     dropDayKey === key && "ring-2 ring-inset ring-primary bg-primary/10"
                   )}
                 >
-                  <div className="flex items-center justify-center mb-0.5">
+                  <div className="flex items-center justify-center gap-1 mb-0.5">
+                    {firstOfMonth && (
+                      <span className={cn("text-[10px] font-medium", inMonth ? "text-muted-foreground" : "text-muted-foreground/60")}>
+                        {t(`months.${monthLabelKeys[getMonth(day)]}`)}
+                      </span>
+                    )}
                     <span
                       className={cn(
                         "inline-flex items-center justify-center rounded-full",
@@ -305,6 +410,7 @@ export function CalendarMonthView({
             )}
           </div>
         ))}
+        <div ref={bottomSentinelRef} data-testid="month-bottom-sentinel" className="h-px flex-shrink-0" />
       </div>
     </div>
   );

@@ -175,46 +175,42 @@ export function buildWeekSegments(events: CalendarEvent[], weekDays: Date[]): Ca
   return packWeekSegments(buildWeekSegmentsRaw(events, weekDays));
 }
 
+/**
+ * Segments for timed events that cover whole days (midnight to midnight)
+ * within `weekDays`, which must be consecutive days. The days an event
+ * covers in full always form one run, so each event is resolved from its
+ * own bounds instead of being tested against every day - the freely
+ * scrolling views hand in months of days at a time (#759).
+ */
 export function buildTimedFullDayWeekSegments(events: CalendarEvent[], weekDays: Date[]): CalendarWeekSegment[] {
   if (weekDays.length === 0) return [];
 
+  const firstDay = startOfDay(weekDays[0]);
+  const lastDay = startOfDay(weekDays[weekDays.length - 1]);
+
   const rawSegments = events.flatMap((event) => {
-    const fullDayIndices = weekDays
-      .map((day, index) => (isTimedEventFullDayOnDate(event, day) ? index : -1))
-      .filter((index) => index >= 0);
+    if (event.showWithoutTime) return [];
+    const eventStart = getEventStartDate(event);
+    const eventEnd = getEventEndDate(event);
+    const startDay = startOfDay(eventStart);
+    // First day whose midnight is not before the event, last day whose next
+    // midnight is not after it.
+    const firstFull = eventStart.getTime() === startDay.getTime() ? startDay : addDays(startDay, 1);
+    const lastFull = addDays(startOfDay(eventEnd), -1);
+    if (lastFull < firstFull) return [];
 
-    if (fullDayIndices.length === 0) {
-      return [];
-    }
+    const segmentStart = firstFull < firstDay ? firstDay : firstFull;
+    const segmentEnd = lastFull > lastDay ? lastDay : lastFull;
+    if (segmentStart > segmentEnd) return [];
 
-    const segments: CalendarWeekSegment[] = [];
-    let rangeStart = fullDayIndices[0];
-    let previousIndex = fullDayIndices[0];
-
-    const pushSegment = (startIndex: number, endIndex: number) => {
-      const startDay = weekDays[startIndex];
-      const endDay = weekDays[endIndex];
-      segments.push({
-        event,
-        startIndex,
-        span: endIndex - startIndex + 1,
-        row: -1,
-        continuesBefore: isTimedEventFullDayOnDate(event, addDays(startDay, -1)),
-        continuesAfter: isTimedEventFullDayOnDate(event, addDays(endDay, 1)),
-      });
-    };
-
-    for (let index = 1; index < fullDayIndices.length; index++) {
-      const currentIndex = fullDayIndices[index];
-      if (currentIndex !== previousIndex + 1) {
-        pushSegment(rangeStart, previousIndex);
-        rangeStart = currentIndex;
-      }
-      previousIndex = currentIndex;
-    }
-
-    pushSegment(rangeStart, previousIndex);
-    return segments;
+    return [{
+      event,
+      startIndex: differenceInCalendarDays(segmentStart, firstDay),
+      span: differenceInCalendarDays(segmentEnd, segmentStart) + 1,
+      row: -1,
+      continuesBefore: firstFull < segmentStart,
+      continuesAfter: lastFull > segmentEnd,
+    } satisfies CalendarWeekSegment];
   });
 
   return packWeekSegments(rawSegments);

@@ -1,10 +1,10 @@
 "use client";
 
-import { useMemo, useEffect, useRef, useState } from "react";
+import { useMemo, useEffect, useLayoutEffect, useRef, useState, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { useDisplayDateFormatter } from "@/hooks/use-display-date-formatter";
 import {
-  startOfWeek, addDays, format, isSameDay, parseISO,
+  startOfWeek, format, isSameDay, parseISO, eachDayOfInterval, differenceInCalendarDays,
 } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Check } from "lucide-react";
@@ -14,9 +14,11 @@ import { buildTimedFullDayWeekSegments, buildWeekSegmentsRaw, formatSnapTime, ge
 import { displayNow, isDisplayToday } from "@/lib/timezone";
 import type { CalendarEvent, Calendar, CalendarTask } from "@/lib/jmap/types";
 import { useTimeGridInteractions } from "@/hooks/use-time-grid-interactions";
+import { useScrollWindow, getScrollStart, setScrollStart, scrollToStart } from "@/hooks/use-scroll-window";
+import { dayKey, type ScrollWindowViewProps } from "@/lib/calendar-scroll-window";
 import type { PendingEventPreview } from "./event-modal";
 
-interface CalendarWeekViewProps {
+interface CalendarWeekViewProps extends ScrollWindowViewProps {
   selectedDate: Date;
   events: CalendarEvent[];
   calendars: Calendar[];
@@ -37,11 +39,21 @@ interface CalendarWeekViewProps {
 
 const HOUR_HEIGHT = 60;
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
+const MOBILE_COL_WIDTH = 120;
+const MIN_COL_WIDTH = 80;
 
 export function CalendarWeekView({
   selectedDate,
+  focus,
   events,
   calendars,
+  rangeStart,
+  rangeEnd,
+  windowKey,
+  onExtendStart,
+  onExtendEnd,
+  isLoading = false,
+  onVisibleDateChange,
   onSelectDate,
   onSelectEvent,
   onHoverEvent,
@@ -60,14 +72,52 @@ export function CalendarWeekView({
   // Grid days / event dates are display dates (local fields = wall-clock in
   // the user's zone); the app-wide formatter would shift them again (#755).
   const intlFormatter = useDisplayDateFormatter();
-  const scrollRef = useRef<HTMLDivElement>(null);
+  // One scroll container for both axes (#759): the strip scrolls sideways,
+  // the hours scroll down, and the sticky header rows and hour gutter stay
+  // put. (A nested vertical scroller would capture the gutter's stickiness.)
   const rootRef = useRef<HTMLDivElement>(null);
+  const startSentinelRef = useRef<HTMLDivElement>(null);
+  const endSentinelRef = useRef<HTMLDivElement>(null);
   const weekStart = (firstDayOfWeek === 0 ? 0 : firstDayOfWeek === 6 ? 6 : 1) as 0 | 1 | 6;
+  const gutterWidth = isMobile ? 40 : 56;
 
-  const weekDays = useMemo(() => {
-    const start = startOfWeek(selectedDate, { weekStartsOn: weekStart });
-    return Array.from({ length: 7 }, (_, i) => addDays(start, i));
-  }, [selectedDate, weekStart]);
+  // One column per loaded day (#759). Seven columns fill the viewport on
+  // desktop; the strip scrolls sideways and widens at either end.
+  const days = useMemo(
+    () => eachDayOfInterval({ start: rangeStart, end: rangeEnd }),
+    [rangeStart, rangeEnd],
+  );
+  const colCount = days.length;
+
+  const measureColWidth = useCallback((root: HTMLElement | null) => {
+    if (isMobile || !root) return MOBILE_COL_WIDTH;
+    return Math.max(MIN_COL_WIDTH, Math.floor((root.clientWidth - gutterWidth) / 7));
+  }, [isMobile, gutterWidth]);
+  const [colWidth, setColWidth] = useState(MOBILE_COL_WIDTH);
+  useLayoutEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    setColWidth(measureColWidth(root));
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(() => setColWidth(measureColWidth(root)));
+    observer.observe(root);
+    return () => observer.disconnect();
+  }, [measureColWidth]);
+
+  // Every scroll offset is computed with the column width that is rendered.
+  // When that width changes (first measurement, resize) keep the same day at
+  // the start.
+  const renderedColWidthRef = useRef<number | null>(null);
+  useLayoutEffect(() => {
+    const root = rootRef.current;
+    const prev = renderedColWidthRef.current;
+    renderedColWidthRef.current = colWidth;
+    if (!root || prev === null || prev === colWidth) return;
+    setScrollStart(root, "horizontal", Math.round(getScrollStart(root, "horizontal") / prev) * colWidth);
+  }, [colWidth]);
+
+  const stripWidth = gutterWidth + colCount * colWidth;
+  const columnsStyle = { gridTemplateColumns: `repeat(${colCount}, ${colWidth}px)` };
 
   const calendarMap = useMemo(() => {
     const map = new Map<string, Calendar>();
@@ -97,24 +147,35 @@ export function CalendarWeekView({
     return timed;
   }, [events]);
 
+  // Column layouts are the costly part of a render; with months of columns
+  // they must not be redone on every scroll-driven re-render.
+  const layoutByDay = useMemo(() => {
+    const map = new Map<string, ReturnType<typeof layoutOverlappingEvents>>();
+    for (const day of days) {
+      const key = format(day, "yyyy-MM-dd");
+      map.set(key, layoutOverlappingEvents(timedEvents.get(key) || [], day));
+    }
+    return map;
+  }, [days, timedEvents]);
+
   const allDaySegments = useMemo(() => {
     const explicitAllDay = buildWeekSegmentsRaw(
       events.filter((event) => event.showWithoutTime),
-      weekDays,
+      days,
     );
     const timedFullDay = buildTimedFullDayWeekSegments(
       events.filter((event) => !event.showWithoutTime),
-      weekDays,
+      days,
     );
 
     return packWeekSegments([...explicitAllDay, ...timedFullDay]);
-  }, [events, weekDays]);
+  }, [events, days]);
 
   const allDayRowCount = useMemo(() => {
     return allDaySegments.reduce((maxRows, segment) => Math.max(maxRows, segment.row + 1), 0);
   }, [allDaySegments]);
 
-  // Tasks grouped by day for the week
+  // Tasks grouped by day
   const tasksByDay = useMemo(() => {
     if (!tasks?.length) return new Map<string, CalendarTask[]>();
     const map = new Map<string, CalendarTask[]>();
@@ -130,37 +191,87 @@ export function CalendarWeekView({
     return map;
   }, [tasks]);
 
-  // Max tasks on any single day in this week
+  // Max tasks on any single loaded day
   const taskRowCount = useMemo(() => {
     let max = 0;
-    for (const day of weekDays) {
+    for (const day of days) {
       const key = format(day, "yyyy-MM-dd");
       const count = tasksByDay.get(key)?.length ?? 0;
       if (count > max) max = count;
     }
     return max;
-  }, [tasksByDay, weekDays]);
+  }, [tasksByDay, days]);
 
   const hasAllDay = useMemo(() => {
     return allDaySegments.length > 0 || taskRowCount > 0;
   }, [allDaySegments, taskRowCount]);
 
   useEffect(() => {
-    if (scrollRef.current) {
+    if (rootRef.current) {
       const now = displayNow();
-      scrollRef.current.scrollTop = Math.max(0, (now.getHours() - 1) * HOUR_HEIGHT);
+      rootRef.current.scrollTop = Math.max(0, (now.getHours() - 1) * HOUR_HEIGHT);
     }
-    // On mobile, scroll horizontally to center today's column
-    if (isMobile && rootRef.current) {
-      const todayIdx = weekDays.findIndex(d => isDisplayToday(d));
-      if (todayIdx >= 0) {
-        const gutter = 40;
-        const colWidth = (rootRef.current.scrollWidth - gutter) / 7;
-        const target = gutter + todayIdx * colWidth - rootRef.current.clientWidth / 2 + colWidth / 2;
-        rootRef.current.scrollLeft = Math.max(0, target);
-      }
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Navigation aligns the focused week (the focused day itself on mobile,
+  // where fewer columns fit) with the start of the viewport.
+  const scrollToFocus = useCallback(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    const target = isMobile ? focus.date : startOfWeek(focus.date, { weekStartsOn: weekStart });
+    const index = Math.max(0, Math.min(colCount - 1, differenceInCalendarDays(target, rangeStart)));
+    setScrollStart(root, "horizontal", index * colWidth);
+  }, [focus.date, isMobile, weekStart, colCount, rangeStart, colWidth]);
+
+  useScrollWindow({
+    scrollRef: rootRef,
+    axis: "horizontal",
+    isLoading,
+    windowKey,
+    focusNonce: focus.nonce,
+    scrollToFocus,
+    onExtendStart,
+    onExtendEnd,
+    startSentinelRef,
+    endSentinelRef,
+    contentKey: days,
+    anchorSelector: "[data-day]",
+  });
+
+  // Report the first column in view so the title and mini calendar follow,
+  // and settle on a column boundary once the scrolling has stopped. (CSS
+  // scroll snapping is not used: browsers re-snap on their own when columns
+  // are prepended, which would double the scroll correction.)
+  const visibleKeyRef = useRef<string | null>(null);
+  const scrollFrameRef = useRef<number | null>(null);
+  const snapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const handleStripScroll = useCallback(() => {
+    if (snapTimerRef.current !== null) clearTimeout(snapTimerRef.current);
+    snapTimerRef.current = setTimeout(() => {
+      snapTimerRef.current = null;
+      const root = rootRef.current;
+      if (!root || colWidth <= 0) return;
+      const start = getScrollStart(root, "horizontal");
+      const snapped = Math.round(start / colWidth) * colWidth;
+      if (Math.abs(snapped - start) > 1) scrollToStart(root, "horizontal", snapped);
+    }, 150);
+    if (scrollFrameRef.current !== null) return;
+    scrollFrameRef.current = requestAnimationFrame(() => {
+      scrollFrameRef.current = null;
+      const root = rootRef.current;
+      if (!root || colWidth <= 0) return;
+      const index = Math.max(0, Math.min(colCount - 1, Math.round(getScrollStart(root, "horizontal") / colWidth)));
+      const day = days[index];
+      if (!day) return;
+      const key = dayKey(day);
+      if (key === visibleKeyRef.current) return;
+      visibleKeyRef.current = key;
+      onVisibleDateChange?.(day);
+    });
+  }, [colWidth, colCount, days, onVisibleDateChange]);
+  useEffect(() => () => {
+    if (snapTimerRef.current !== null) clearTimeout(snapTimerRef.current);
+    if (scrollFrameRef.current !== null) cancelAnimationFrame(scrollFrameRef.current);
   }, []);
 
   const [nowMinutes, setNowMinutes] = useState(() => {
@@ -201,34 +312,38 @@ export function CalendarWeekView({
     return format(new Date(2000, 0, 1, h), "HH:mm");
   };
 
-  const colCount = 7;
+  // Above every in-column overlay (events z-10, handles z-20, drag z-30) so
+  // columns scrolled past the start do not show through the gutter.
+  const gutterClass = cn("flex-shrink-0 sticky start-0 z-40 bg-background", isMobile ? "w-10" : "w-14");
 
   return (
     <div
       ref={rootRef}
-      className={cn(
-        "flex min-h-0 min-w-0 flex-col flex-1",
-        isMobile ? "overflow-x-auto overflow-y-hidden" : "overflow-hidden"
-      )}
+      className="flex min-h-0 min-w-0 flex-col flex-1 overflow-auto [overflow-anchor:none]"
+      onScroll={handleStripScroll}
       role="grid"
       aria-label={t("views.week")}
     >
-      <div className={cn("flex min-h-0 flex-col flex-1", isMobile && "min-w-[880px]")}>      {hasAllDay && (
+      <div className="relative flex flex-col" style={{ width: stripWidth, minWidth: stripWidth }}>
+      <div ref={startSentinelRef} data-testid="week-start-sentinel" className="absolute inset-y-0 start-0 w-px pointer-events-none" />
+      <div ref={endSentinelRef} data-testid="week-end-sentinel" className="absolute inset-y-0 end-0 w-px pointer-events-none" />
+      <div className="sticky top-0 z-50 bg-background">
+      {hasAllDay && (
         <div className="flex border-b border-border">
           <div
-            className={cn("flex-shrink-0 text-[10px] text-muted-foreground p-1 text-end", isMobile ? "w-10 sticky left-0 z-10 bg-background" : "w-14")}
+            className={cn(gutterClass, "text-[10px] text-muted-foreground p-1 text-end")}
             style={{ minHeight: Math.max(28, (allDayRowCount + taskRowCount) * 24 + 4) }}
           >
             {t("events.all_day")}
           </div>
           <div
-            className="flex-1 relative grid gap-px bg-border grid-cols-7"
-            style={{ minHeight: Math.max(28, (allDayRowCount + taskRowCount) * 24 + 4) }}
+            className="relative grid border-s border-border"
+            style={{ ...columnsStyle, minHeight: Math.max(28, (allDayRowCount + taskRowCount) * 24 + 4) }}
           >
-            {weekDays.map((day) => (
+            {days.map((day) => (
               <div
                 key={format(day, "yyyy-MM-dd")}
-                className="bg-background min-h-[28px]"
+                className="bg-background min-h-[28px] border-e border-border last:border-e-0"
                 onContextMenu={onContextMenuEmpty ? (e) => onContextMenuEmpty(e, day, undefined, true) : undefined}
               />
             ))}
@@ -266,7 +381,7 @@ export function CalendarWeekView({
             {/* Task chips in all-day area */}
             {taskRowCount > 0 && (
               <div className="absolute inset-x-0 pointer-events-none" style={{ top: allDayRowCount * 24 + 2 }}>
-                {weekDays.map((day, dayIndex) => {
+                {days.map((day, dayIndex) => {
                   const key = format(day, "yyyy-MM-dd");
                   const dayTasks = tasksByDay.get(key) || [];
                   return dayTasks.map((task, taskIndex) => {
@@ -310,9 +425,9 @@ export function CalendarWeekView({
       )}
 
       <div className="flex border-b border-border" role="row">
-        <div className={cn("flex-shrink-0", isMobile ? "w-10 sticky left-0 z-10 bg-background" : "w-14")} />
-        <div className="flex-1 border-s border-border grid grid-cols-7">
-          {weekDays.map((day) => {
+        <div className={gutterClass} />
+        <div className="border-s border-border grid" style={columnsStyle}>
+          {days.map((day) => {
             const todayCol = isDisplayToday(day);
             const selected = isSameDay(day, selectedDate);
             const fullLabel = intlFormatter.dateTime(day, { weekday: "long", month: "long", day: "numeric", year: "numeric" });
@@ -322,6 +437,7 @@ export function CalendarWeekView({
                 onClick={() => onSelectDate(day)}
                 role="columnheader"
                 aria-label={fullLabel}
+                data-day={dayKey(day)}
                 className={cn(
                   "text-center py-2 text-sm border-e border-border last:border-e-0 transition-colors touch-manipulation",
                   "hover:bg-muted/50",
@@ -344,9 +460,11 @@ export function CalendarWeekView({
         </div>
       </div>
 
-      <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto">
+      </div>
+
+      <div>
         <div className="flex relative" style={{ height: 24 * HOUR_HEIGHT }}>
-          <div className={cn("flex-shrink-0", isMobile ? "w-10 sticky left-0 z-10 bg-background" : "w-14")}>
+          <div className={gutterClass}>
             {HOURS.map((h) => (
               <div
                 key={h}
@@ -362,12 +480,11 @@ export function CalendarWeekView({
             ))}
           </div>
 
-          <div className="flex-1 border-s border-border relative grid grid-cols-7">
-            {weekDays.map((day) => {
+          <div className="border-s border-border relative grid" style={columnsStyle}>
+            {days.map((day) => {
               const key = format(day, "yyyy-MM-dd");
-              const dayEvents = timedEvents.get(key) || [];
               const todayCol = isDisplayToday(day);
-              const layouted = layoutOverlappingEvents(dayEvents, day);
+              const layouted = layoutByDay.get(key) ?? [];
 
               return (
                 <div
@@ -530,7 +647,7 @@ export function CalendarWeekView({
           </div>
         </div>
       </div>
-    </div>
+      </div>
     </div>
   );
 }

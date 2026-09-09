@@ -29,12 +29,20 @@ import { useSettingsStore } from "@/stores/settings-store";
 export const AUTO_TIME_ZONE = "auto";
 
 /** The zone the browser reports; `UTC` when detection fails (SSR, old engines). */
+// Resolving the zone builds an Intl formatter, which costs tens of
+// microseconds; the calendar grids convert every event for every day they
+// show, so the answer is kept. The browser zone does not change within a
+// page's lifetime in practice.
+let browserTimeZone: string | null = null;
+
 export function getBrowserTimeZone(): string {
+  if (browserTimeZone) return browserTimeZone;
   try {
-    return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+    browserTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
   } catch {
-    return "UTC";
+    browserTimeZone = "UTC";
   }
+  return browserTimeZone;
 }
 
 const validityCache = new Map<string, boolean>();
