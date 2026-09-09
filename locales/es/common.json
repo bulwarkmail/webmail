@@ -2935,6 +2935,8 @@
       "show_time_in_month_view_desc": "Mostrar las horas de los eventos en la vista mensual del calendario",
       "show_week_numbers": "Mostrar números de semana",
       "show_week_numbers_desc": "Mostrar los números de semana en el minicalendario",
+      "calendar_free_scroll": "Desplazamiento libre",
+      "calendar_free_scroll_desc": "Desplazarse de forma continua por meses, semanas y días en lugar de un periodo cada vez",
       "enable_tasks": "Activar tareas",
       "enable_tasks_desc": "Mostrar una vista de tareas en el calendario para gestionar tareas pendientes",
       "show_tasks_on_calendar": "Mostrar tareas en el calendario",

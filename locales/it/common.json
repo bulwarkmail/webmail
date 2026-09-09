@@ -2935,6 +2935,8 @@
       "show_time_in_month_view_desc": "Visualizza gli orari degli eventi nella vista mensile del calendario",
       "show_week_numbers": "Mostra numeri di settimana",
       "show_week_numbers_desc": "Mostra i numeri di settimana nel mini-calendario",
+      "calendar_free_scroll": "Scorrimento libero",
+      "calendar_free_scroll_desc": "Scorri in modo continuo tra mesi, settimane e giorni invece di un periodo alla volta",
       "enable_tasks": "Abilita attività",
       "enable_tasks_desc": "Mostra una vista attività nel calendario per gestire le cose da fare",
       "show_tasks_on_calendar": "Mostra attività nel calendario",

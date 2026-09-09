@@ -2935,6 +2935,8 @@
       "show_time_in_month_view_desc": "Mostra l'hora dels esdeveniments a la vista mensual del calendari. En pantalles petites, això mostra entrades completes d'esdeveniment en lloc de punts.",
       "show_week_numbers": "Mostra els números de setmana",
       "show_week_numbers_desc": "Mostra els números de setmana al minicalendari",
+      "calendar_free_scroll": "Desplaçament lliure",
+      "calendar_free_scroll_desc": "Desplaça't de manera contínua per mesos, setmanes i dies en lloc d'un període cada vegada",
       "enable_tasks": "Activa les tasques",
       "enable_tasks_desc": "Mostra una vista de tasques al calendari per gestionar pendents",
       "show_tasks_on_calendar": "Mostra les tasques al calendari",

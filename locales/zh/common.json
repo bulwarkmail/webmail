@@ -2935,6 +2935,8 @@
       "show_time_in_month_view_desc": "在月历视图中显示事件时间",
       "show_week_numbers": "显示周数",
       "show_week_numbers_desc": "在迷你日历中显示周数",
+      "calendar_free_scroll": "自由滚动",
+      "calendar_free_scroll_desc": "连续滚动浏览月、周和日，而不是一次只显示一个时段",
       "enable_tasks": "启用任务",
       "enable_tasks_desc": "在日历中显示任务视图以管理待办事项",
       "show_tasks_on_calendar": "在日历上显示任务",

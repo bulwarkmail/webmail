@@ -2935,6 +2935,8 @@
       "show_time_in_month_view_desc": "Zobrazovať časy udalostí v mesačnom zobrazení kalendára",
       "show_week_numbers": "Zobraziť čísla týždňov",
       "show_week_numbers_desc": "Zobrazovať čísla týždňov v minikalendári",
+      "calendar_free_scroll": "Voľné posúvanie",
+      "calendar_free_scroll_desc": "Plynulo prechádzať mesiace, týždne a dni namiesto jedného obdobia naraz",
       "enable_tasks": "Povoliť úlohy",
       "enable_tasks_desc": "Zobrazovať zobrazenie úloh v kalendári",
       "show_tasks_on_calendar": "Zobraziť úlohy v kalendári",

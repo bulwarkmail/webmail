@@ -28,6 +28,7 @@ export function CalendarSettings() {
   const {
     showTimeInMonthView,
     showWeekNumbers,
+    calendarFreeScroll,
     enableCalendarTasks,
     showTasksOnCalendar,
     showBirthdayCalendar,
@@ -88,6 +89,16 @@ export function CalendarSettings() {
         <ToggleSwitch
           checked={showWeekNumbers}
           onChange={(checked) => updateSetting('showWeekNumbers', checked)}
+        />
+      </SettingItem>
+
+      <SettingItem
+        label={t('calendar_free_scroll')}
+        description={t('calendar_free_scroll_desc')}
+      >
+        <ToggleSwitch
+          checked={calendarFreeScroll}
+          onChange={(checked) => updateSetting('calendarFreeScroll', checked)}
         />
       </SettingItem>
 

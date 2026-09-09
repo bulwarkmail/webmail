@@ -86,6 +86,15 @@ export function freshScrollWindowState(mode: ScrollViewMode, anchor: Date): Scro
   return { mode, anchorKey: dayKey(anchor), before: 0, after: INITIAL_AFTER[mode] };
 }
 
+/**
+ * The window with free scrolling turned off: exactly the base range (one
+ * month/week/day, the agenda's 30 days). Never grows; navigation always
+ * starts over here.
+ */
+export function fixedScrollWindowState(mode: ScrollViewMode, anchor: Date): ScrollWindowState {
+  return { mode, anchorKey: dayKey(anchor), before: 0, after: 0 };
+}
+
 /** The range a view shows for a date when nothing has been scrolled yet. */
 export function baseRange(mode: ScrollViewMode, date: Date, opts: ScrollWindowOptions): DayRange {
   const day = startOfDay(date);

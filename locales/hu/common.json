@@ -2935,6 +2935,8 @@
       "show_time_in_month_view_desc": "Események időpontjának mutatása a havi naptár nézetben",
       "show_week_numbers": "Hétszámok mutatása",
       "show_week_numbers_desc": "Hétszámok mutatása a mini naptárban",
+      "calendar_free_scroll": "Szabad görgetés",
+      "calendar_free_scroll_desc": "Folyamatos görgetés hónapok, hetek és napok között egyetlen időszak helyett",
       "enable_tasks": "Feladatok engedélyezése",
       "enable_tasks_desc": "Feladatnézet mutatása a naptárban a teendők kezeléséhez",
       "show_tasks_on_calendar": "Feladatok mutatása a naptárban",

@@ -2935,6 +2935,8 @@
       "show_time_in_month_view_desc": "Aylık takvim görünümünde etkinlik saatlerini görüntüle",
       "show_week_numbers": "Hafta numaralarını göster",
       "show_week_numbers_desc": "Mini takvimde hafta numaralarını görüntüle",
+      "calendar_free_scroll": "Serbest kaydırma",
+      "calendar_free_scroll_desc": "Tek seferde bir dönem yerine aylar, haftalar ve günler arasında kesintisiz kaydırın",
       "enable_tasks": "Görevleri etkinleştir",
       "enable_tasks_desc": "Yapılacaklar listesini yönetmek için takvimde görev görünümü göster",
       "show_tasks_on_calendar": "Görevleri takvimde göster",

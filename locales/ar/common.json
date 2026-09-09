@@ -2935,6 +2935,8 @@
       "show_time_in_month_view_desc": "عرض أوقات الأحداث في عرض التقويم الشهري",
       "show_week_numbers": "إظهار أرقام الأسابيع",
       "show_week_numbers_desc": "عرض أرقام الأسابيع في التقويم المصغّر",
+      "calendar_free_scroll": "تمرير حر",
+      "calendar_free_scroll_desc": "التمرير باستمرار عبر الأشهر والأسابيع والأيام بدلاً من فترة واحدة في كل مرة",
       "enable_tasks": "تفعيل المهام",
       "enable_tasks_desc": "إظهار عرض للمهام في التقويم لإدارة قوائم المهام",
       "show_tasks_on_calendar": "إظهار المهام في التقويم",

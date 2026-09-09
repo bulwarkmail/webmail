@@ -2935,6 +2935,8 @@
       "show_time_in_month_view_desc": "月カレンダー表示でイベントの時刻を表示する",
       "show_week_numbers": "週番号を表示",
       "show_week_numbers_desc": "ミニカレンダーに週番号を表示する",
+      "calendar_free_scroll": "自由スクロール",
+      "calendar_free_scroll_desc": "1つの期間ずつではなく、月・週・日を連続してスクロールします",
       "enable_tasks": "タスクを有効化",
       "enable_tasks_desc": "カレンダーにタスク表示を追加して、ToDoを管理します",
       "show_tasks_on_calendar": "カレンダーにタスクを表示",

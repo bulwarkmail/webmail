@@ -2935,6 +2935,8 @@
       "show_time_in_month_view_desc": "Ereigniszeiten in der Monatskalenderansicht anzeigen",
       "show_week_numbers": "Kalenderwochen anzeigen",
       "show_week_numbers_desc": "Kalenderwochen im Minikalender anzeigen",
+      "calendar_free_scroll": "Freies Scrollen",
+      "calendar_free_scroll_desc": "Fortlaufend durch Monate, Wochen und Tage scrollen statt nur einen Zeitraum auf einmal anzuzeigen",
       "enable_tasks": "Aufgaben aktivieren",
       "enable_tasks_desc": "Eine Aufgabenansicht im Kalender zum Verwalten von To-dos anzeigen",
       "show_tasks_on_calendar": "Aufgaben im Kalender anzeigen",

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  baseRange, computeScrollWindow, freshScrollWindowState, growScrollWindow,
+  baseRange, computeScrollWindow, fixedScrollWindowState, freshScrollWindowState, growScrollWindow,
   normalizeScrollWindowState, scrollWindowContains, SCROLL_WINDOW_MAX, SCROLL_WINDOW_STEP,
   type ScrollWindowOptions,
 } from '../calendar-scroll-window';
@@ -42,6 +42,18 @@ describe('computeScrollWindow', () => {
     expect(local(win.end)).toBe('2026-11-08');
     expect(win.canExtendStart).toBe(true);
     expect(win.canExtendEnd).toBe(true);
+  });
+
+  it('is exactly one period when free scrolling is off (agenda keeps its 30 days)', () => {
+    const month = computeScrollWindow(fixedScrollWindowState('month', new Date(2026, 8, 9)), opts);
+    expect(local(month.start)).toBe('2026-08-31');
+    expect(local(month.end)).toBe('2026-10-04');
+    const week = computeScrollWindow(fixedScrollWindowState('week', new Date(2026, 8, 9)), opts);
+    expect([local(week.start), local(week.end)]).toEqual(['2026-09-07', '2026-09-13']);
+    const day = computeScrollWindow(fixedScrollWindowState('day', new Date(2026, 8, 9)), opts);
+    expect([local(day.start), local(day.end)]).toEqual(['2026-09-09', '2026-09-09']);
+    const agenda = computeScrollWindow(fixedScrollWindowState('agenda', new Date(2026, 8, 9)), opts);
+    expect([local(agenda.start), local(agenda.end)]).toEqual(['2026-09-09', '2026-10-09']);
   });
 
   it('does not snap the day view to weeks', () => {

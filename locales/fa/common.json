@@ -2935,6 +2935,8 @@
       "show_time_in_month_view_desc": "نمایش زمان رویدادها در نمای ماه تقویم",
       "show_week_numbers": "نمایش شماره هفته",
       "show_week_numbers_desc": "نمایش شماره هفته در تقویم کوچک",
+      "calendar_free_scroll": "پیمایش آزاد",
+      "calendar_free_scroll_desc": "پیمایش پیوسته در ماه‌ها، هفته‌ها و روزها به جای یک بازه در هر بار",
       "enable_tasks": "فعال کردن وظایف",
       "enable_tasks_desc": "نمایش نمای وظایف در تقویم برای مدیریت کارها",
       "show_tasks_on_calendar": "نمایش وظایف روی تقویم",

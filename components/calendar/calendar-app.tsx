@@ -76,7 +76,7 @@ import { useDeepLinkUrl } from "@/hooks/use-deep-link-url";
 import { useProInterfaceActive } from "@/components/pro/pro-interface-redirect";
 import { useCalendarLocale } from "@/hooks/use-calendar-locale";
 import {
-  computeScrollWindow, freshScrollWindowState, growScrollWindow, normalizeScrollWindowState,
+  computeScrollWindow, fixedScrollWindowState, freshScrollWindowState, growScrollWindow, normalizeScrollWindowState,
   scrollWindowContains, type CalendarFocus, type ScrollViewMode, type ScrollWindowOptions,
   type ScrollWindowState, type ScrollWindowViewProps,
 } from "@/lib/calendar-scroll-window";
@@ -369,7 +369,19 @@ export function CalendarApp({ linkSegments }: CalendarAppProps = {}) {
   const [scrollWindowState, setScrollWindowState] = useState<ScrollWindowState>(
     () => freshScrollWindowState(scrollMode ?? "month", selectedDate),
   );
-  const windowState = scrollMode ? normalizeScrollWindowState(scrollWindowState, scrollMode, focus.date) : null;
+  // With free scrolling off, every view shows exactly one period around the
+  // focus and the edges never widen it.
+  const calendarFreeScroll = useSettingsStore((s) => s.calendarFreeScroll);
+  const focusKey = format(focus.date, "yyyy-MM-dd");
+  const fixedWindowState = useMemo(
+    () => (scrollMode ? fixedScrollWindowState(scrollMode, parseISO(focusKey)) : null),
+    [scrollMode, focusKey],
+  );
+  const windowState = !scrollMode
+    ? null
+    : calendarFreeScroll
+      ? normalizeScrollWindowState(scrollWindowState, scrollMode, focus.date)
+      : fixedWindowState;
   useEffect(() => {
     if (windowState && windowState !== scrollWindowState) setScrollWindowState(windowState);
   }, [windowState, scrollWindowState]);
@@ -416,8 +428,8 @@ export function CalendarApp({ linkSegments }: CalendarAppProps = {}) {
     rangeStart: scrollWindow?.start ?? focus.date,
     rangeEnd: scrollWindow?.end ?? focus.date,
     windowKey,
-    onExtendStart: scrollWindow?.canExtendStart ? extendWindowStart : undefined,
-    onExtendEnd: scrollWindow?.canExtendEnd ? extendWindowEnd : undefined,
+    onExtendStart: calendarFreeScroll && scrollWindow?.canExtendStart ? extendWindowStart : undefined,
+    onExtendEnd: calendarFreeScroll && scrollWindow?.canExtendEnd ? extendWindowEnd : undefined,
     isLoading: isLoadingEvents,
     onVisibleDateChange: handleVisibleDateChange,
   };

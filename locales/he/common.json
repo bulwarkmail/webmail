@@ -2859,6 +2859,8 @@
       "show_time_in_month_view_desc": "הצג זמני אירועים בתצוגת לוח השנה של החודש",
       "show_week_numbers": "הצג מספרי שבוע",
       "show_week_numbers_desc": "הצג מספרי שבוע במיני-לוח שנה",
+      "calendar_free_scroll": "גלילה חופשית",
+      "calendar_free_scroll_desc": "גלילה רציפה בין חודשים, שבועות וימים במקום תקופה אחת בכל פעם",
       "enable_tasks": "אפשר משימות",
       "enable_tasks_desc": "הצג תצוגת משימות בלוח השנה לניהול מטלות",
       "show_tasks_on_calendar": "הצג משימות בלוח השנה",

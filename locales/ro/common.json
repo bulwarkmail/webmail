@@ -2935,6 +2935,8 @@
       "show_time_in_month_view_desc": "Afișați orele evenimentelor în vizualizarea calendarului lunar",
       "show_week_numbers": "Afișați numerele săptămânilor",
       "show_week_numbers_desc": "Afișați numerele săptămânilor în mini-calendar",
+      "calendar_free_scroll": "Derulare liberă",
+      "calendar_free_scroll_desc": "Derulează continuu prin luni, săptămâni și zile în loc de o singură perioadă odată",
       "enable_tasks": "Activați sarcinile",
       "enable_tasks_desc": "Afișați o vizualizare a sarcinilor în calendar pentru gestionarea sarcinilor de îndeplinit",
       "show_tasks_on_calendar": "Afișați sarcinile în calendar",

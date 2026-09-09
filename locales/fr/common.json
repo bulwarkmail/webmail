@@ -2935,6 +2935,8 @@
       "show_time_in_month_view_desc": "Afficher les heures des événements dans la vue mensuelle du calendrier",
       "show_week_numbers": "Afficher les numéros de semaine",
       "show_week_numbers_desc": "Afficher les numéros de semaine dans le mini-calendrier",
+      "calendar_free_scroll": "Défilement libre",
+      "calendar_free_scroll_desc": "Faire défiler les mois, semaines et jours en continu au lieu d'une période à la fois",
       "enable_tasks": "Activer les tâches",
       "enable_tasks_desc": "Afficher une vue des tâches dans le calendrier pour gérer les choses à faire",
       "show_tasks_on_calendar": "Afficher les tâches dans le calendrier",

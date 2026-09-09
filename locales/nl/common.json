@@ -2935,6 +2935,8 @@
       "show_time_in_month_view_desc": "Evenementtijden weergeven in de maandkalenderweergave",
       "show_week_numbers": "Weeknummers weergeven",
       "show_week_numbers_desc": "Weeknummers weergeven in de minikalender",
+      "calendar_free_scroll": "Vrij scrollen",
+      "calendar_free_scroll_desc": "Doorlopend door maanden, weken en dagen scrollen in plaats van één periode tegelijk",
       "enable_tasks": "Taken inschakelen",
       "enable_tasks_desc": "Een takenweergave in de agenda tonen om to-do's te beheren",
       "show_tasks_on_calendar": "Taken in agenda tonen",

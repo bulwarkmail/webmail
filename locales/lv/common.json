@@ -2934,6 +2934,8 @@
       "show_time_in_month_view_desc": "Rādīt pasākuma laiku mēneša kalendārā",
       "show_week_numbers": "Rādīt nedēļu numurus",
       "show_week_numbers_desc": "Rādīt nedēļu numurus mini kalendārā",
+      "calendar_free_scroll": "Brīva ritināšana",
+      "calendar_free_scroll_desc": "Nepārtraukti ritināt cauri mēnešiem, nedēļām un dienām, nevis pa vienam periodam",
       "enable_tasks": "Iespējot uzdevumus",
       "enable_tasks_desc": "Rādīt uzdevumu sadaļu kalendārā",
       "show_tasks_on_calendar": "Rādīt uzdevumus kalendārā",

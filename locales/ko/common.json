@@ -2935,6 +2935,8 @@
       "show_time_in_month_view_desc": "월간 캘린더에서도 일정 시간을 표시해요",
       "show_week_numbers": "주 차 번호 표시",
       "show_week_numbers_desc": "미니 캘린더에 1년 중 몇 주 차인지 표시해요",
+      "calendar_free_scroll": "자유 스크롤",
+      "calendar_free_scroll_desc": "한 번에 한 기간씩 보는 대신 월, 주, 일을 연속으로 스크롤합니다",
       "enable_tasks": "할 일 사용",
       "enable_tasks_desc": "캘린더에 할 일을 관리할 수 있는 메뉴를 추가해요",
       "show_tasks_on_calendar": "캘린더에 할 일 표시",

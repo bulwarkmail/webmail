@@ -2935,6 +2935,8 @@
       "show_time_in_month_view_desc": "Vis klokkeslettet for hendelser i månedsvisningen. På små skjermer vises hele hendelsesoppføringen i stedet for en prikk.",
       "show_week_numbers": "Vis ukenummer",
       "show_week_numbers_desc": "Vis ukenummer i minikalenderen",
+      "calendar_free_scroll": "Fri rulling",
+      "calendar_free_scroll_desc": "Rull fortløpende gjennom måneder, uker og dager i stedet for én periode om gangen",
       "enable_tasks": "Aktiver oppgaver",
       "enable_tasks_desc": "Vis en oppgavevisning i kalenderen for å administrere gjøremål",
       "show_tasks_on_calendar": "Vis oppgaver i kalenderen",

@@ -2935,6 +2935,8 @@
       "show_time_in_month_view_desc": "在月檢視中顯示活動時間。小螢幕會顯示完整活動項目，而不只是圓點。",
       "show_week_numbers": "顯示週數",
       "show_week_numbers_desc": "在迷你行事曆中顯示週數",
+      "calendar_free_scroll": "自由捲動",
+      "calendar_free_scroll_desc": "連續捲動瀏覽月、週和日，而不是一次只顯示一個時段",
       "enable_tasks": "啟用任務",
       "enable_tasks_desc": "在行事曆中顯示任務檢視以管理待辦事項",
       "show_tasks_on_calendar": "在行事曆上顯示任務",

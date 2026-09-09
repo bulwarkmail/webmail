@@ -2935,6 +2935,8 @@
       "show_time_in_month_view_desc": "Vis begivenhedstider i månedskalendervisningen",
       "show_week_numbers": "Vis ugenumre",
       "show_week_numbers_desc": "Vis ugenumre i minikalenderen",
+      "calendar_free_scroll": "Fri rulning",
+      "calendar_free_scroll_desc": "Rul fortløbende gennem måneder, uger og dage i stedet for én periode ad gangen",
       "enable_tasks": "Aktivér opgaver",
       "enable_tasks_desc": "Vis en opgavevisning i kalenderen til styring af gøremål",
       "show_tasks_on_calendar": "Vis opgaver på kalender",

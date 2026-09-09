@@ -2935,6 +2935,8 @@
       "show_time_in_month_view_desc": "Wyświetlaj godziny wydarzeń w miesięcznym widoku kalendarza",
       "show_week_numbers": "Pokaż numery tygodni",
       "show_week_numbers_desc": "Wyświetlaj numery tygodni w mini-kalendarzu",
+      "calendar_free_scroll": "Swobodne przewijanie",
+      "calendar_free_scroll_desc": "Przewijaj płynnie miesiące, tygodnie i dni zamiast jednego okresu naraz",
       "enable_tasks": "Włącz zadania",
       "enable_tasks_desc": "Pokaż widok zadań w kalendarzu do zarządzania zadaniami",
       "show_tasks_on_calendar": "Pokaż zadania w kalendarzu",

@@ -2935,6 +2935,8 @@
       "show_time_in_month_view_desc": "Display event times in the month calendar view. On small screens this shows full event entries instead of dots.",
       "show_week_numbers": "Show week numbers",
       "show_week_numbers_desc": "Display week numbers in the mini-calendar",
+      "calendar_free_scroll": "Free scrolling",
+      "calendar_free_scroll_desc": "Scroll continuously through months, weeks and days instead of one period at a time",
       "enable_tasks": "Enable tasks",
       "enable_tasks_desc": "Show a tasks view in the calendar for managing to-dos",
       "show_tasks_on_calendar": "Show tasks on calendar",

@@ -367,6 +367,8 @@ interface SettingsState {
   // Calendar
   showTimeInMonthView: boolean;
   showWeekNumbers: boolean;
+  /** Scroll continuously through months/weeks/days (#759) instead of one period at a time. */
+  calendarFreeScroll: boolean;
   calendarHoverPreview: CalendarHoverPreview;
 
   // Calendar Tasks
@@ -600,6 +602,7 @@ const DEFAULT_SETTINGS = {
   // Calendar
   showTimeInMonthView: false,
   showWeekNumbers: false,
+  calendarFreeScroll: true,
   calendarHoverPreview: 'delay-500ms' as CalendarHoverPreview,
 
   // Calendar Tasks
@@ -831,6 +834,7 @@ export const useSettingsStore = create<SettingsState>()(
           expandedFilterView: state.expandedFilterView,
           showTimeInMonthView: state.showTimeInMonthView,
           showWeekNumbers: state.showWeekNumbers,
+          calendarFreeScroll: state.calendarFreeScroll,
           calendarHoverPreview: state.calendarHoverPreview,
           toolbarPosition: state.toolbarPosition,
           hideAccountSwitcher: state.hideAccountSwitcher,
