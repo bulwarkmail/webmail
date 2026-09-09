@@ -10,11 +10,19 @@ const MAX_REDIRECTS = 3;
 
 export class JmapAuthVerificationError extends Error {
   status: number;
+  /**
+   * HTTP status the JMAP server itself answered with, when the failure came
+   * from an upstream response rather than URL validation, a timeout or a
+   * network error. Lets callers tell a definitive credential rejection (401)
+   * apart from everything else that happens to map to the same `status`.
+   */
+  upstreamStatus?: number;
 
-  constructor(message: string, status: number) {
+  constructor(message: string, status: number, upstreamStatus?: number) {
     super(message);
     this.name = 'JmapAuthVerificationError';
     this.status = status;
+    this.upstreamStatus = upstreamStatus;
   }
 }
 
@@ -140,6 +148,7 @@ export async function verifyJmapAuth(
           ? 'Authentication failed'
           : 'Failed to verify JMAP session',
         response.status === 401 || response.status === 403 ? 401 : 502,
+        response.status,
       );
     }
 

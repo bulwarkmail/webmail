@@ -90,6 +90,34 @@ function isRateLimitError(error: unknown): error is RateLimitError {
   return error instanceof RateLimitError;
 }
 
+/**
+ * Ask our own backend to try the Basic credentials before the browser does
+ * (#969). A wrong password answered straight from the JMAP server arrives as
+ * 401 + `WWW-Authenticate: Basic`, which makes the browser open its native
+ * login dialog on top of our form when the JMAP server shares our origin
+ * (reverse-proxied under the same host). Rejecting wrong credentials via a
+ * JSON reply from our origin sidesteps that. Only a definitive
+ * `unauthorized` short-circuits; anything else (route missing, backend can't
+ * reach the JMAP server, TOTP challenge, ...) falls through to the regular
+ * browser-side connect so no deployment loses the ability to log in.
+ */
+async function precheckBasicCredentials(serverUrl: string, username: string, password: string): Promise<boolean> {
+  // App-relative servers (the dev mock) never send a Basic challenge.
+  if (serverUrl.startsWith('/')) return false;
+  try {
+    const res = await apiFetch('/api/auth/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ serverUrl, username, password }),
+    });
+    if (!res.ok) return false;
+    const body = await res.json().catch(() => null);
+    return body?.result === 'unauthorized';
+  } catch {
+    return false;
+  }
+}
+
 // An auth/session endpoint answered with a server-side error (5xx) - an
 // outage, not a rejection of our credentials.
 class TransientAuthError extends Error {
@@ -725,6 +753,9 @@ export const useAuthStore = create<AuthState>()(
             } else {
               // Legacy fallback for pre-0.16 Stalwart, which accepts the TOTP
               // appended to the password over basic auth.
+              if (await precheckBasicCredentials(serverUrl, username, `${password}$${totp}`)) {
+                throw new Error('Invalid username or password');
+              }
               client = new JMAPClient(serverUrl, username, `${password}$${totp}`);
               await client.connect();
               const { useTotpReauthStore } = await import('@/stores/totp-reauth-store');
@@ -732,6 +763,9 @@ export const useAuthStore = create<AuthState>()(
               debug.log('auth', 'TOTP re-auth enabled (legacy basic-auth path)');
             }
           } else {
+            if (await precheckBasicCredentials(serverUrl, username, password)) {
+              throw new Error('Invalid username or password');
+            }
             client = new JMAPClient(serverUrl, username, password);
             await client.connect();
           }
