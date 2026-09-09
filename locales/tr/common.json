@@ -1332,6 +1332,12 @@
         "label": "Yanıt Adresini Otomatik Seç",
         "description": "Yanıtlarken, Kimden adresini iletiyi başlangıçta alan kimliğe otomatik olarak değiştir"
       },
+      "reply_identity_match": {
+        "label": "Alıcı adresi eşleştirme",
+        "description": "Hangi alıcı adreslerinin sizin sayılacağı. „Yalnızca tam adres“ sadece yapılandırılmış kimliklerinizden birini seçer; „aynı alan adı“ ayrıca kimlik alan adlarınızdaki diğer tüm adresleri catch-all takma adı olarak değerlendirir ve Kimden başlığını buna göre yeniden yazar. Bu adresler dağıtım listesiyse tam adresi seçin.",
+        "exact": "Yalnızca tam adres",
+        "domain": "Alan adlarımdaki herhangi bir adres"
+      },
       "signature_position": {
         "label": "İmza konumu",
         "description": "Yanıtlarda ve iletmelerde imzanızın nereye ekleneceği. Alıntılanan metnin üzerinde, yanıt için doğal bir kapanış olarak okunur; altında ise orijinal mesajı bir bütün hâlinde tutar.",

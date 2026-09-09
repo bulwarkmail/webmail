@@ -1332,6 +1332,12 @@
         "label": "Automatycznie wybieraj adres odpowiedzi",
         "description": "Podczas odpowiadania automatycznie przełączaj adres nadawcy na tożsamość, która pierwotnie otrzymała wiadomość"
       },
+      "reply_identity_match": {
+        "label": "Dopasowanie adresu odbioru",
+        "description": "Które adresy odbioru są uznawane za Twoje. „Tylko dokładny adres” wybiera wyłącznie jedną ze skonfigurowanych tożsamości; „ta sama domena” traktuje dodatkowo każdy inny adres w domenach Twoich tożsamości jako alias catch-all i przepisuje na niego nagłówek Od. Wybierz dokładny adres, jeśli te adresy to listy dystrybucyjne.",
+        "exact": "Tylko dokładny adres",
+        "domain": "Dowolny adres w moich domenach"
+      },
       "signature_position": {
         "label": "Pozycja podpisu",
         "description": "Gdzie wstawić podpis w odpowiedziach i wiadomościach przekazanych dalej. Nad cytowanym tekstem brzmi naturalnie jako zakończenie odpowiedzi; pod nim zachowuje oryginalną wiadomość w całości.",

@@ -312,6 +312,7 @@ export function EmailComposer({
   const plainTextMode = useSettingsStore((state) => state.plainTextMode);
   const subAddressDelimiter = useSettingsStore((state) => state.subAddressDelimiter);
   const autoSelectReplyIdentity = useSettingsStore((state) => state.autoSelectReplyIdentity);
+  const replyIdentityMatch = useSettingsStore((state) => state.replyIdentityMatch);
   const attachmentReminderEnabled = useSettingsStore((state) => state.attachmentReminderEnabled);
   const attachmentReminderKeywords = useSettingsStore((state) => state.attachmentReminderKeywords);
   const emptySubjectWarningEnabled = useSettingsStore((state) => state.emptySubjectWarningEnabled);
@@ -878,9 +879,11 @@ export function EmailComposer({
     // Catch-all From rewrite: opt-in, and never on a forward. A reply continues
     // a thread whose participants already know the addressing; a forward
     // introduces the rewritten From to a recipient the user just typed, who has
-    // no way to tell it is not really from that person.
+    // no way to tell it is not really from that person. `replyIdentityMatch`
+    // lets a user keep the setting on but limit it to configured identities,
+    // for domains where the other addresses are distribution lists (#1000).
     if (autoSelectReplyIdentity && mode !== 'forward') {
-      const resolved = resolveReplyFrom(identities, recipients);
+      const resolved = resolveReplyFrom(identities, recipients, replyIdentityMatch);
       if (resolved) {
         setSelectedIdentityId(resolved.identityId);
         if (resolved.overrideEmail && !fromOverrideEnabled) {
@@ -907,6 +910,7 @@ export function EmailComposer({
     }
   }, [
     autoSelectReplyIdentity,
+    replyIdentityMatch,
     composeFromAccountEmail,
     fromOverrideEnabled,
     identities,

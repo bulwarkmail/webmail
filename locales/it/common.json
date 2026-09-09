@@ -1327,6 +1327,12 @@
         "label": "Seleziona automaticamente l'indirizzo di risposta",
         "description": "Quando rispondi, passa automaticamente l'indirizzo mittente all'identità che ha ricevuto il messaggio originale"
       },
+      "reply_identity_match": {
+        "label": "Corrispondenza dell'indirizzo di ricezione",
+        "description": "Quali indirizzi di ricezione contano come tuoi. «Solo indirizzo esatto» sceglie soltanto una delle tue identità configurate; «stesso dominio» tratta anche qualsiasi altro indirizzo dei tuoi domini di identità come alias catch-all e riscrive con esso l'intestazione Da. Scegli l'indirizzo esatto se quegli indirizzi sono liste di distribuzione.",
+        "exact": "Solo indirizzo esatto",
+        "domain": "Qualsiasi indirizzo dei miei domini"
+      },
       "signature_position": {
         "label": "Posizione della firma",
         "description": "Dove inserire la tua firma nelle risposte e negli inoltri. Sopra il testo citato si legge in modo naturale come chiusura della risposta; sotto mantiene il messaggio originale contiguo.",

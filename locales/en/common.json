@@ -1333,7 +1333,13 @@
       },
       "auto_select_reply_identity": {
         "label": "Reply From Received Address",
-        "description": "When replying, send from the address the message was originally sent to. Matches identities first; for domain catch-all deliveries, rewrites the From header to the alias while sending through your primary identity."
+        "description": "When replying, send from the address the message was originally sent to. Your configured identities always match; whether other addresses on your domains count too (catch-all) is set by “Received Address Matching” below."
+      },
+      "reply_identity_match": {
+        "label": "Received Address Matching",
+        "description": "Which received addresses count as yours. Exact address only picks one of your configured identities. Same domain also treats any other address on one of your identity domains as a catch-all alias and rewrites the From header to it. Choose exact address if those addresses are distribution lists rather than aliases.",
+        "exact": "Exact address only",
+        "domain": "Any address on my domains"
       },
       "signature_position": {
         "label": "Signature Position",

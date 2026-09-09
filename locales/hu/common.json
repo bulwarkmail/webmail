@@ -1335,6 +1335,12 @@
         "label": "Válasz a fogadott címről",
         "description": "Válaszküldéskor arról a címről küldjön, amelyre az üzenet eredetileg érkezett. Először identitásokat keres; tartományi catch-all kézbesítések esetén átírja a Feladó fejlécet az aliasra, miközben az elsődleges identitáson keresztül küld."
       },
+      "reply_identity_match": {
+        "label": "Fogadó cím egyeztetése",
+        "description": "Mely fogadó címek számítanak a sajátjának. A „Csak pontos cím” kizárólag a beállított identitásai közül választ; az „azonos domain” az identitás-domainjein lévő bármely más címet is catch-all aliasként kezeli, és arra írja át a Feladó fejlécet. Válassza a pontos címet, ha ezek a címek terjesztési listák.",
+        "exact": "Csak pontos cím",
+        "domain": "Bármely cím a domainjeimen"
+      },
       "signature_position": {
         "label": "Aláírás pozíciója",
         "description": "Hova kerüljön az aláírás a válaszokban és továbbításokban. Az idézett szöveg felett természetes lezárásként olvasható; alatta az eredeti üzenet marad egybefüggő.",

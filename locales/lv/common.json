@@ -1327,6 +1327,12 @@
         "label": "Automātiski izvēlēties atbildes adresi",
         "description": "Atbildot automātiski izmantot to kontu, uz kuru vēstule tika saņemta"
       },
+      "reply_identity_match": {
+        "label": "Saņemšanas adreses atbilstība",
+        "description": "Kuras saņemšanas adreses tiek uzskatītas par jūsu. „Tikai precīza adrese“ izvēlas vienīgi kādu no jūsu konfigurētajām identitātēm; „tas pats domēns“ arī jebkuru citu adresi jūsu identitāšu domēnos uzskata par catch-all aizstājvārdu un pārraksta ar to galveni „No“. Izvēlieties precīzu adresi, ja šīs adreses ir izplatīšanas saraksti.",
+        "exact": "Tikai precīza adrese",
+        "domain": "Jebkura adrese manos domēnos"
+      },
       "signature_position": {
         "label": "Paraksta novietojums",
         "description": "Kur ievietot jūsu parakstu atbildēs un pārsūtīšanā. Virs citētā teksta tas dabiski lasās kā atbildes noslēgums; zem tā saglabā oriģinālo ziņojumu vienkopus.",

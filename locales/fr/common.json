@@ -1327,6 +1327,12 @@
         "label": "Sélection automatique de l'adresse de réponse",
         "description": "Lors d'une réponse, bascule automatiquement l'adresse d'expédition vers l'identité qui a reçu le message d'origine"
       },
+      "reply_identity_match": {
+        "label": "Correspondance de l'adresse de réception",
+        "description": "Quelles adresses de réception comptent comme les vôtres. « Adresse exacte uniquement » ne choisit qu'une de vos identités configurées ; « même domaine » traite aussi toute autre adresse de vos domaines d'identité comme un alias catch-all et y réécrit l'en-tête De. Choisissez l'adresse exacte si ces adresses sont des listes de diffusion.",
+        "exact": "Adresse exacte uniquement",
+        "domain": "Toute adresse de mes domaines"
+      },
       "signature_position": {
         "label": "Position de la signature",
         "description": "Où insérer votre signature dans les réponses et les transferts. Au-dessus du texte cité, elle se lit naturellement comme la conclusion de la réponse ; en dessous, elle garde le message d'origine contigu.",

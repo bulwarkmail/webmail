@@ -1327,6 +1327,12 @@
         "label": "Selecionar automaticamente o endereço de resposta",
         "description": "Ao responder, muda automaticamente o endereço do remetente para a identidade que recebeu a mensagem original"
       },
+      "reply_identity_match": {
+        "label": "Correspondência do endereço de receção",
+        "description": "Quais endereços de receção contam como seus. «Apenas endereço exato» escolhe somente uma das suas identidades configuradas; «mesmo domínio» trata também qualquer outro endereço dos seus domínios de identidade como alias catch-all e reescreve o cabeçalho De com ele. Escolha o endereço exato se esses endereços forem listas de distribuição.",
+        "exact": "Apenas endereço exato",
+        "domain": "Qualquer endereço dos meus domínios"
+      },
       "signature_position": {
         "label": "Posição da assinatura",
         "description": "Onde inserir a sua assinatura em respostas e encaminhamentos. Acima do texto citado lê-se naturalmente como fecho da resposta; abaixo mantém a mensagem original contígua.",

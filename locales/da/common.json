@@ -1335,6 +1335,12 @@
         "label": "Svar fra modtaget adresse",
         "description": "Når du svarer, send fra den adresse som beskeden oprindeligt blev sendt til. Matcher først identiteter; for domæne catch-all-leveringer omskriver Fra-headeren til aliaset, mens der sendes gennem din primære identitet."
       },
+      "reply_identity_match": {
+        "label": "Matchning af modtageradresse",
+        "description": "Hvilke modtageradresser der tæller som dine. „Kun præcis adresse“ vælger udelukkende en af dine opsatte identiteter; „samme domæne“ behandler desuden enhver anden adresse på dine identitetsdomæner som et catch-all-alias og omskriver Fra-headeren til den. Vælg præcis adresse, hvis disse adresser er distributionslister.",
+        "exact": "Kun præcis adresse",
+        "domain": "Enhver adresse på mine domæner"
+      },
       "signature_position": {
         "label": "Signaturplacering",
         "description": "Hvor din signatur indsættes i svar og videresendelser. Før citeret tekst læses naturligt som en afslutning på svaret; under bevarer den oprindelige besked sammenhængende.",

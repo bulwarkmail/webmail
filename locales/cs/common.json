@@ -1332,6 +1332,12 @@
         "label": "Automaticky vybírat adresu pro odpověď",
         "description": "Při odpovídání automaticky přepnout adresu odesílatele na identitu, která původně obdržela zprávu"
       },
+      "reply_identity_match": {
+        "label": "Porovnávání přijímací adresy",
+        "description": "Které přijímací adresy se počítají jako vaše. „Pouze přesná adresa“ vybere jen jednu z vašich nastavených identit; „stejná doména“ navíc považuje jakoukoli jinou adresu na doménách vašich identit za catch-all alias a přepíše na ni hlavičku Od. Pokud jsou tyto adresy distribuční seznamy, zvolte přesnou adresu.",
+        "exact": "Pouze přesná adresa",
+        "domain": "Jakákoli adresa na mých doménách"
+      },
       "signature_position": {
         "label": "Pozice podpisu",
         "description": "Kam vložit podpis v odpovědích a přeposláních. Nad citovaným textem působí přirozeně jako zakončení odpovědi; pod ním zachovává původní zprávu vcelku.",

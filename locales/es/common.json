@@ -1327,6 +1327,12 @@
         "label": "Seleccionar dirección de respuesta automáticamente",
         "description": "Al responder, cambia automáticamente la dirección del remitente a la identidad que recibió el mensaje original"
       },
+      "reply_identity_match": {
+        "label": "Coincidencia de la dirección de recepción",
+        "description": "Qué direcciones de recepción cuentan como tuyas. «Solo la dirección exacta» elige únicamente una de tus identidades configuradas; «mismo dominio» también trata cualquier otra dirección de tus dominios de identidad como un alias catch-all y reescribe la cabecera De con ella. Elige la dirección exacta si esas direcciones son listas de distribución.",
+        "exact": "Solo la dirección exacta",
+        "domain": "Cualquier dirección de mis dominios"
+      },
       "signature_position": {
         "label": "Posición de la firma",
         "description": "Dónde insertar tu firma en respuestas y reenvíos. Encima del texto citado se lee de forma natural como cierre de la respuesta; debajo mantiene el mensaje original contiguo.",

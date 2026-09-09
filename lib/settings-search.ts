@@ -97,6 +97,7 @@ export const tabSearchPaths: Record<Tab, string[]> = {
   composing: [
     'settings.email_behavior.attachment_reminder',
     'settings.email_behavior.auto_select_reply_identity',
+    'settings.email_behavior.reply_identity_match',
     'settings.email_behavior.plain_text_mode',
     'settings.email_behavior.rtl_editing',
     'settings.email_behavior.default_mail_program',

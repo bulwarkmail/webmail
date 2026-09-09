@@ -102,6 +102,7 @@ export type ListDensity = Density;
 export type DeleteAction = 'trash' | 'trash-and-read' | 'permanent';
 export type ReplyMode = 'reply' | 'replyAll';
 export type SignaturePosition = 'above_quote' | 'below_quote';
+export type ReplyIdentityMatch = 'exact' | 'domain';
 /** How to handle an incoming Disposition-Notification-To (read-receipt) request. */
 export type ReadReceiptResponse = 'ask' | 'always' | 'never';
 export type DateFormat = 'smart' | 'relative' | 'full';
@@ -343,6 +344,7 @@ interface SettingsState {
   sendConfirmation: boolean;
   defaultReplyMode: ReplyMode;
   autoSelectReplyIdentity: boolean;
+  replyIdentityMatch: ReplyIdentityMatch; // With autoSelectReplyIdentity on: 'exact' = configured identities only, 'domain' = also same-domain catch-all addresses (rewrites From) #1000
   plainTextMode: boolean; // Send plain text only (no rich text editor)
   rtlEditingSupport: boolean; // Show a per-paragraph LTR/RTL direction control in the composer (Gmail-style)
   subAddressDelimiter: string; // Character separating user from tag (e.g. "user+tag@")
@@ -582,6 +584,7 @@ const DEFAULT_SETTINGS = {
   sendConfirmation: false,
   defaultReplyMode: 'reply' as ReplyMode,
   autoSelectReplyIdentity: false,
+  replyIdentityMatch: 'domain' as ReplyIdentityMatch,
   plainTextMode: false,
   rtlEditingSupport: false,
   subAddressDelimiter: DEFAULT_SUB_ADDRESS_DELIMITER,
@@ -808,6 +811,7 @@ export const useSettingsStore = create<SettingsState>()(
           sendConfirmation: state.sendConfirmation,
           defaultReplyMode: state.defaultReplyMode,
           autoSelectReplyIdentity: state.autoSelectReplyIdentity,
+          replyIdentityMatch: state.replyIdentityMatch,
           plainTextMode: state.plainTextMode,
           rtlEditingSupport: state.rtlEditingSupport,
           subAddressDelimiter: state.subAddressDelimiter,

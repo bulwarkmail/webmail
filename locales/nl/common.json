@@ -1327,6 +1327,12 @@
         "label": "Antwoordadres automatisch selecteren",
         "description": "Schakel bij het beantwoorden automatisch het Van-adres om naar de identiteit die het oorspronkelijke bericht ontving"
       },
+      "reply_identity_match": {
+        "label": "Overeenkomst van ontvangstadres",
+        "description": "Welke ontvangstadressen als de uwe gelden. „Alleen exact adres“ kiest uitsluitend een van uw ingestelde identiteiten; „zelfde domein“ behandelt ook elk ander adres op uw identiteitsdomeinen als catch-all-alias en herschrijft de Van-header ernaar. Kies exact adres als die adressen distributielijsten zijn.",
+        "exact": "Alleen exact adres",
+        "domain": "Elk adres op mijn domeinen"
+      },
       "signature_position": {
         "label": "Positie van handtekening",
         "description": "Waar je handtekening in antwoorden en doorgestuurde berichten moet worden ingevoegd. Boven de geciteerde tekst leest natuurlijk als afsluiting van het antwoord; eronder houdt het originele bericht aaneengesloten.",

@@ -102,6 +102,7 @@ vi.mock('@/stores/settings-store', () => {
     plainTextMode: false,
     subAddressDelimiter: '+',
     autoSelectReplyIdentity: false,
+    replyIdentityMatch: 'domain',
     attachmentReminderEnabled: false,
     attachmentReminderKeywords: [],
     sendDelaySeconds: 0,
@@ -320,6 +321,21 @@ describe('composer reply addressing', () => {
       expect(screen.getByDisplayValue('colleague@example.com')).toBeTruthy();
     } finally {
       setAutoSelect(false);
+    }
+  });
+
+  // #1000: on a domain whose other addresses are distribution lists rather
+  // than catch-all aliases, the setting can stay on but limited to configured
+  // identities, so a reply to list@ gets no From override.
+  it('does not rewrite From when matching is limited to exact addresses', () => {
+    const settings = useSettingsStore as unknown as { setState: (p: Record<string, unknown>) => void };
+    settings.setState({ autoSelectReplyIdentity: true, replyIdentityMatch: 'exact' });
+    try {
+      render(<EmailComposer mode="reply" replyTo={RECEIVED_CATCH_ALL} />);
+      expect(screen.queryByDisplayValue('colleague@example.com')).toBeNull();
+      expect(identitySelect().value).toBe('id-me');
+    } finally {
+      settings.setState({ autoSelectReplyIdentity: false, replyIdentityMatch: 'domain' });
     }
   });
 

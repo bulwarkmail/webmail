@@ -189,6 +189,21 @@ describe('resolveReplyFrom', () => {
     expect(result).toEqual({ identityId: 'primary' });
   });
 
+  // #1000: a domain whose extra addresses are distribution lists, not
+  // catch-all aliases. Exact mode keeps the identity matching but never
+  // surfaces a From override.
+  it('returns null instead of a catch-all override in exact mode', () => {
+    expect(resolveReplyFrom(identities, { to: [{ email: 'stripe@primary.com', name: 'Stripe' }] }, 'exact'))
+      .toBeNull();
+  });
+
+  it('still matches configured identities (exact and +tag) in exact mode', () => {
+    expect(resolveReplyFrom(identities, { to: [{ email: 'harry@secondary.com' }] }, 'exact'))
+      .toEqual({ identityId: 'secondary' });
+    expect(resolveReplyFrom(identities, { to: [{ email: 'harry+news@primary.com' }] }, 'exact'))
+      .toEqual({ identityId: 'primary' });
+  });
+
   it('returns null when recipients are on foreign domains', () => {
     expect(resolveReplyFrom(identities, { to: [{ email: 'nobody@elsewhere.com' }] }))
       .toBeNull();

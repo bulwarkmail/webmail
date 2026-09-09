@@ -1335,6 +1335,12 @@
         "label": "Odpovedať z prijatej adresy",
         "description": "Pri odpovedaní automaticky prepnúť adresu odosielateľa na identitu, ktorá pôvodne prijala správu"
       },
+      "reply_identity_match": {
+        "label": "Porovnávanie prijímacej adresy",
+        "description": "Ktoré prijímacie adresy sa považujú za vaše. „Iba presná adresa“ vyberie len jednu z vašich nastavených identít; „rovnaká doména“ navyše považuje akúkoľvek inú adresu na doménach vašich identít za catch-all alias a prepíše na ňu hlavičku Od. Ak sú tieto adresy distribučné zoznamy, zvoľte presnú adresu.",
+        "exact": "Iba presná adresa",
+        "domain": "Akákoľvek adresa na mojich doménach"
+      },
       "signature_position": {
         "label": "Pozícia podpisu",
         "description": "Kam vložiť podpis v odpovediach a preposlaniach.",

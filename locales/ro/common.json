@@ -1335,6 +1335,12 @@
         "label": "Răspunde de la adresa de la care a fost primit mesajul",
         "description": "Când răspundeți, trimiteți mesajul de la adresa la care a fost trimis inițial. Se potrivesc mai întâi identitățile; pentru livrările de tip „catch-all” ale domeniului, antetul „De la” este rescris cu aliasul, în timp ce trimiterea se face prin identitatea dvs. principală."
       },
+      "reply_identity_match": {
+        "label": "Potrivirea adresei de primire",
+        "description": "Care adrese de primire sunt considerate ale tale. „Doar adresa exactă” alege numai una dintre identitățile configurate; „același domeniu” tratează și orice altă adresă de pe domeniile identităților tale ca alias catch-all și rescrie antetul De la cu ea. Alege adresa exactă dacă aceste adrese sunt liste de distribuție.",
+        "exact": "Doar adresa exactă",
+        "domain": "Orice adresă de pe domeniile mele"
+      },
       "signature_position": {
         "label": "Poziția semnăturii",
         "description": "Unde să inserați semnătura în răspunsuri și redirecționări. Deasupra textului citat, semnătura se citește în mod natural ca o încheiere a răspunsului; sub text, mesajul original rămâne contiguu.",

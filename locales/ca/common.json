@@ -1335,6 +1335,12 @@
         "label": "Respon des de l'adreça de recepció",
         "description": "En respondre, envia des de l'adreça a la qual es va enviar originalment el missatge. Primer intenta coincidir amb les identitats; per als lliuraments de captura general de domini, reescriu la capçalera «De» amb l'àlies mentre envia a través de la identitat principal."
       },
+      "reply_identity_match": {
+        "label": "Coincidència de l'adreça de recepció",
+        "description": "Quines adreces de recepció compten com a teves. «Només l'adreça exacta» tria únicament una de les teves identitats configurades; «mateix domini» també tracta qualsevol altra adreça dels teus dominis d'identitat com un àlies catch-all i hi reescriu la capçalera De. Tria l'adreça exacta si aquestes adreces són llistes de distribució.",
+        "exact": "Només l'adreça exacta",
+        "domain": "Qualsevol adreça dels meus dominis"
+      },
       "signature_position": {
         "label": "Posició de la signatura",
         "description": "On inserir la signatura a les respostes i reenviaments. Abans del text citat es llegeix de manera natural com a tancament de la resposta; després manté el missatge original contigu.",

@@ -1335,6 +1335,12 @@
         "label": "Svar fra mottatt adresse",
         "description": "Når du svarer, bruker Bulwark adressen meldingen opprinnelig ble sendt til. Programmet ser først etter en samsvarende identitet. For meldinger til et oppsamlingsdomene brukes aliaset i Fra-feltet, mens sendingen går gjennom hovedidentiteten din."
       },
+      "reply_identity_match": {
+        "label": "Samsvar for mottaksadresse",
+        "description": "Hvilke mottaksadresser som regnes som dine. «Kun nøyaktig adresse» velger bare en av dine oppsatte identiteter; «samme domene» behandler i tillegg enhver annen adresse på identitetsdomenene dine som et catch-all-alias og skriver om Fra-headeren til den. Velg nøyaktig adresse hvis disse adressene er distribusjonslister.",
+        "exact": "Kun nøyaktig adresse",
+        "domain": "Enhver adresse på mine domener"
+      },
       "signature_position": {
         "label": "Signaturposisjon",
         "description": "Velg hvor signaturen skal settes inn i svar og videresendinger. Over den siterte teksten fungerer den som en naturlig avslutning på svaret. Under den siterte teksten holdes den opprinnelige meldingen samlet.",

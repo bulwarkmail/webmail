@@ -1332,6 +1332,12 @@
         "label": "Antwortadresse automatisch wählen",
         "description": "Beim Antworten die Absenderadresse automatisch auf die Identität umstellen, die die ursprüngliche Nachricht erhalten hat"
       },
+      "reply_identity_match": {
+        "label": "Abgleich der Empfangsadresse",
+        "description": "Welche Empfangsadressen als eigene gelten. „Nur exakte Adresse“ wählt ausschließlich eine Ihrer eingerichteten Identitäten. „Gleiche Domain“ behandelt zusätzlich jede andere Adresse auf einer Ihrer Identitäts-Domains als Catch-all-Alias und ersetzt den Absender-Header damit. Wählen Sie die exakte Adresse, wenn solche Adressen Verteilerlisten und keine Aliasse sind.",
+        "exact": "Nur exakte Adresse",
+        "domain": "Jede Adresse auf meinen Domains"
+      },
       "signature_position": {
         "label": "Signaturposition",
         "description": "Wo Ihre Signatur in Antworten und Weiterleitungen eingefügt wird. Über dem zitierten Text liest sie sich natürlich als Abschluss der Antwort; darunter bleibt die ursprüngliche Nachricht zusammenhängend.",
