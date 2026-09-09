@@ -46,18 +46,40 @@ function mockFetchResponseWithHeaders(status: number, headers: Record<string, st
   });
 }
 
+/**
+ * A call no test queued a response for. It must never fall through to the
+ * real `fetch`: a request to mail.example.com fails on the network's own
+ * schedule, and the client's 1s retry timer then lands on whichever fake clock
+ * is installed by the time the failure comes back - i.e. inside a later test,
+ * where the replayed request shows up as an extra `fetch` call.
+ */
+function unmockedFetch(url: RequestInfo | URL): Promise<Response> {
+  return Promise.reject(new Error(`Unmocked fetch: ${String(url)}`));
+}
+
 describe('JMAPClient resilience', () => {
   let fetchSpy: ReturnType<typeof vi.spyOn>;
+  // Every client a test connected. Their keep-alive intervals and rate-limit
+  // timers are stopped in afterEach so nothing from one test can fire inside
+  // the next one's fake clock.
+  const liveClients: JMAPClient[] = [];
 
   beforeEach(() => {
-    fetchSpy = vi.spyOn(globalThis, 'fetch');
+    fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(unmockedFetch);
     vi.useFakeTimers({ shouldAdvanceTime: true });
   });
 
   afterEach(() => {
+    for (const client of liveClients.splice(0)) client.disconnect();
     fetchSpy.mockRestore();
     vi.useRealTimers();
   });
+
+  /** Drop queued one-shot responses and call history; keep the unmocked-fetch guard. */
+  function resetFetch() {
+    fetchSpy.mockReset();
+    fetchSpy.mockImplementation(unmockedFetch);
+  }
 
   /**
    * Helper: create a connected basic-auth client by mocking the connect() flow
@@ -70,7 +92,8 @@ describe('JMAPClient resilience', () => {
       fetchSpy.mockResolvedValueOnce(mockFetchResponse(200, session));
       const client = new JMAPClient('https://mail.example.com', 'user@test.com', 'pass123');
       await client.connect();
-      fetchSpy.mockReset();
+      liveClients.push(client);
+      resetFetch();
       return client;
     }
 
@@ -78,7 +101,8 @@ describe('JMAPClient resilience', () => {
     fetchSpy.mockResolvedValueOnce(mockFetchResponse(200, session));
     const client = JMAPClient.withBearer('https://mail.example.com', 'token123', 'user@test.com');
     await client.connect();
-    fetchSpy.mockReset();
+    liveClients.push(client);
+    resetFetch();
     return client;
   }
 
@@ -236,7 +260,8 @@ describe('JMAPClient resilience', () => {
       fetchSpy.mockResolvedValueOnce(mockFetchResponse(200, session));
       const client = JMAPClient.withBearer('https://mail.example.com', 'old-token', 'user@test.com', tokenRefresh);
       await client.connect();
-      fetchSpy.mockReset();
+      liveClients.push(client);
+      resetFetch();
 
       const echoResponse = { methodResponses: [['Core/echo', { ping: 'pong' }, '0']] };
 
@@ -276,11 +301,13 @@ describe('JMAPClient resilience', () => {
       await expect(client.ping()).rejects.toThrow('Rate limited by server');
       expect(fetchSpy).not.toHaveBeenCalled();
 
+      // The keep-alive ping goes out again the instant the window closes, which
+      // is inside this advance - serve it as well, or it would be an unmocked
+      // call (see unmockedFetch).
+      const echoResponse = { methodResponses: [['Core/echo', { ping: 'pong' }, '0']] };
+      fetchSpy.mockImplementation(() => Promise.resolve(mockFetchResponse(200, echoResponse)));
       await vi.advanceTimersByTimeAsync(120_000);
       fetchSpy.mockClear();
-
-      const echoResponse = { methodResponses: [['Core/echo', { ping: 'pong' }, '0']] };
-      fetchSpy.mockResolvedValueOnce(mockFetchResponse(200, echoResponse));
 
       await expect(client.ping()).resolves.toBeUndefined();
       expect(fetchSpy).toHaveBeenCalledTimes(1);
@@ -292,7 +319,8 @@ describe('JMAPClient resilience', () => {
       fetchSpy.mockResolvedValueOnce(mockFetchResponse(200, makeSession(session)));
       const client = new JMAPClient(serverUrl, 'user@test.com', 'pass123');
       await client.connect();
-      fetchSpy.mockReset();
+      liveClients.push(client);
+      resetFetch();
       return client;
     }
 
@@ -357,7 +385,7 @@ describe('JMAPClient resilience', () => {
       await client.ping();
 
       // After refresh, subsequent requests should go to the new apiUrl
-      fetchSpy.mockReset();
+      resetFetch();
       fetchSpy.mockResolvedValueOnce(mockFetchResponse(200, echoResponse));
       await client.ping();
 
@@ -727,7 +755,8 @@ describe('JMAPClient resilience', () => {
         (async () => {
           // Connect first with valid session, then clear downloadUrl via re-connect with empty
           await client.connect();
-          fetchSpy.mockReset();
+          liveClients.push(client);
+          resetFetch();
           // Now reconnect with empty downloadUrl to simulate the issue
           fetchSpy.mockResolvedValueOnce(mockFetchResponse(200, makeSession({ downloadUrl: '' })));
           // Force session refresh to pick up empty downloadUrl

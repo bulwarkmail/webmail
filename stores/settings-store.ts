@@ -1390,8 +1390,10 @@ if (typeof window !== 'undefined') {
   };
   // Ensure template-store is loaded (and the bridge registered) even before
   // any UI component imports it, so the first sync push already carries the
-  // templates.
-  void import('./template-store');
+  // templates. Best effort: the UI imports the store itself when it needs it,
+  // and under vitest a short test file can finish (and tear its environment
+  // down) before this chain has loaded, which rejects the import.
+  import('./template-store').catch(() => {});
 }
 
 /**
