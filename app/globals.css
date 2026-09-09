@@ -187,6 +187,22 @@ body {
     "calt" 1;
 }
 
+/* Native <select> option lists are painted by the browser, not by the
+   Tailwind classes on the control, so they only honour color-scheme and an
+   explicit option colour. Themes whose --color-muted is translucent (Aurora
+   Glass dark: rgba(255,255,255,0.05)) composited to a light popup with
+   near-white text (#999). Pin options to the popover tokens, which every
+   theme defines as an opaque surface, and let dark themes ask the browser
+   for a dark popup where option colours are ignored (Safari). */
+option {
+  background-color: var(--color-popover);
+  color: var(--color-popover-foreground);
+}
+
+.dark select {
+  color-scheme: dark;
+}
+
 /* Minimalist scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
