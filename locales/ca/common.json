@@ -1898,6 +1898,8 @@
       "title": "Contactes",
       "description": "Importeu i exporteu els contactes",
       "group_by_letter_label": "Agrupa per lletra inicial",
+      "sort_by_last_name_label": "Ordena per cognom",
+      "sort_by_last_name_description": "Ordena la llista de contactes per cognom perquè els membres d'una família apareguin junts",
       "group_by_letter_description": "Mostra capçaleres de secció alfabètiques a la llista de contactes",
       "import_label": "Importa contactes",
       "import_description": "Importeu contactes des d'un fitxer vCard (.vcf)",
@@ -2746,7 +2748,10 @@
       "any_month": "Qualsevol mes",
       "has_email": "Té correu electrònic",
       "has_phone": "Té telèfon",
-      "has_photo": "Té foto"
+      "has_photo": "Té foto",
+      "sort_by": "Ordena per",
+      "sort_first_name": "Nom",
+      "sort_last_name": "Cognom"
     }
   },
   "calendar": {

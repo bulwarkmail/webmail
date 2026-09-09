@@ -1891,6 +1891,8 @@
       "title": "Kontakty",
       "description": "Import a export kontaktů",
       "group_by_letter_label": "Seskupit podle prvního písmena",
+      "sort_by_last_name_label": "Řadit podle příjmení",
+      "sort_by_last_name_description": "Seřadit seznam kontaktů podle příjmení, aby členové rodiny byli pohromadě",
       "group_by_letter_description": "Zobrazit záhlaví sekcí podle abecedy v seznamu kontaktů",
       "import_label": "Importovat kontakty",
       "import_description": "Importovat kontakty ze souboru vCard (.vcf)",
@@ -2745,7 +2747,10 @@
       "any_month": "Kterýkoli měsíc",
       "has_email": "Má e-mail",
       "has_phone": "Má telefon",
-      "has_photo": "Má fotku"
+      "has_photo": "Má fotku",
+      "sort_by": "Řadit podle",
+      "sort_first_name": "Jméno",
+      "sort_last_name": "Příjmení"
     },
     "open_categories": "Otevřít kategorie"
   },

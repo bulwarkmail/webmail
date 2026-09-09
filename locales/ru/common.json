@@ -1901,7 +1901,9 @@
       "categories_description": "Переименование категорий контактов",
       "no_categories": "Категории не найдены",
       "group_by_letter_description": "Показывать алфавитные заголовки разделов в списке контактов",
-      "group_by_letter_label": "Группировать по первой букве"
+      "group_by_letter_label": "Группировать по первой букве",
+      "sort_by_last_name_label": "Сортировать по фамилии",
+      "sort_by_last_name_description": "Упорядочить список контактов по фамилии, чтобы члены семьи шли подряд"
     },
     "downloads": {
       "title": "Загрузки",
@@ -2745,7 +2747,10 @@
       "any_month": "Любой месяц",
       "has_email": "С эл. почтой",
       "has_phone": "С телефоном",
-      "has_photo": "С фото"
+      "has_photo": "С фото",
+      "sort_by": "Сортировать по",
+      "sort_first_name": "Имя",
+      "sort_last_name": "Фамилия"
     },
     "open_categories": "Открыть категории"
   },

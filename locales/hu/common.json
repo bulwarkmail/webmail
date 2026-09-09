@@ -1894,6 +1894,8 @@
       "title": "Névjegyek",
       "description": "Névjegyek importálása és exportálása",
       "group_by_letter_label": "Csoportosítás kezdőbetű szerint",
+      "sort_by_last_name_label": "Rendezés vezetéknév szerint",
+      "sort_by_last_name_description": "A névjegylista vezetéknév szerinti rendezése, hogy a családtagok egymás mellett legyenek",
       "group_by_letter_description": "ABC sorrendű fejléc mutatása a névjegy listában",
       "import_label": "Névjegyek importálása",
       "import_description": "Névjegyek importálása vCard (.vcf) fájlból",
@@ -2746,7 +2748,10 @@
       "any_month": "Bármely hónap",
       "has_email": "Van e-mail",
       "has_phone": "Van telefon",
-      "has_photo": "Van fotó"
+      "has_photo": "Van fotó",
+      "sort_by": "Rendezés",
+      "sort_first_name": "Keresztnév",
+      "sort_last_name": "Vezetéknév"
     }
   },
   "calendar": {

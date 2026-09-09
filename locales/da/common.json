@@ -1894,6 +1894,8 @@
       "title": "Kontakter",
       "description": "Importér og eksportér dine kontakter",
       "group_by_letter_label": "Gruppér efter første bogstav",
+      "sort_by_last_name_label": "Sortér efter efternavn",
+      "sort_by_last_name_description": "Sortér kontaktlisten efter efternavn, så familiemedlemmer står samlet",
       "group_by_letter_description": "Vis alfabetiske sektionsoverskrifter i kontaktlisten",
       "import_label": "Importér kontakter",
       "import_description": "Importér kontakter fra en vCard-fil (.vcf)",
@@ -2745,7 +2747,10 @@
       "any_month": "Enhver måned",
       "has_email": "Har e-mail",
       "has_phone": "Har telefon",
-      "has_photo": "Har billede"
+      "has_photo": "Har billede",
+      "sort_by": "Sortér efter",
+      "sort_first_name": "Fornavn",
+      "sort_last_name": "Efternavn"
     },
     "open_categories": "Åbn kategorier"
   },

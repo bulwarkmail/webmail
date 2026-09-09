@@ -1891,6 +1891,8 @@
       "title": "Kişiler",
       "description": "Kişilerinizi içe ve dışa aktarın",
       "group_by_letter_label": "İlk harfe göre grupla",
+      "sort_by_last_name_label": "Soyada göre sırala",
+      "sort_by_last_name_description": "Aile üyeleri bir arada görünsün diye kişi listesini soyada göre sıralar",
       "group_by_letter_description": "Kişi listesinde alfabetik bölüm başlıkları göster",
       "import_label": "Kişileri İçe Aktar",
       "import_description": "Kişileri bir vCard (.vcf) dosyasından içe aktarın",
@@ -2745,7 +2747,10 @@
       "any_month": "Herhangi bir ay",
       "has_email": "E-postası var",
       "has_phone": "Telefonu var",
-      "has_photo": "Fotoğrafı var"
+      "has_photo": "Fotoğrafı var",
+      "sort_by": "Sıralama",
+      "sort_first_name": "Ad",
+      "sort_last_name": "Soyad"
     },
     "open_categories": "Kategorileri aç"
   },

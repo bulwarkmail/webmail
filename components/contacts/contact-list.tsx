@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { Search, BookUser, Trash2, Users, Download, X, UserPlus, CheckSquare, Square, Filter, Mail, Phone, Image as ImageIcon, RotateCcw, Menu } from "lucide-react";
+import { Search, BookUser, Trash2, Users, Download, X, UserPlus, CheckSquare, Square, Filter, Mail, Phone, Image as ImageIcon, RotateCcw, Menu, ArrowDownAZ } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ContactListItem } from "./contact-list-item";
@@ -10,7 +10,7 @@ import { ContactContextMenu } from "./contact-context-menu";
 import { useContextMenu } from "@/hooks/use-context-menu";
 import { cn } from "@/lib/utils";
 import type { AnniversaryDate, ContactCard } from "@/lib/jmap/types";
-import { getContactDisplayName, getContactPhotoUri } from "@/stores/contact-store";
+import { getContactDisplayName, getContactPhotoUri, getContactSortName } from "@/stores/contact-store";
 import { useSettingsStore } from "@/stores/settings-store";
 
 type TriState = boolean | null;
@@ -141,6 +141,8 @@ export function ContactList({
   const locale = useLocale();
   const density = useSettingsStore((state) => state.density);
   const groupByLetter = useSettingsStore((state) => state.groupContactsByLetter);
+  const sortByLastName = useSettingsStore((state) => state.sortContactsByLastName);
+  const updateSetting = useSettingsStore((state) => state.updateSetting);
   const { contextMenu, openContextMenu, closeContextMenu, menuRef } = useContextMenu<ContactCard>();
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [filters, setFilters] = useState<ListFilters>(EMPTY_FILTERS);
@@ -229,21 +231,22 @@ export function ContactList({
 
   const sorted = useMemo(() => {
     return [...filtered].sort((a, b) => {
-      const nameA = getContactDisplayName(a).toLowerCase();
-      const nameB = getContactDisplayName(b).toLowerCase();
+      const nameA = getContactSortName(a, sortByLastName).toLowerCase();
+      const nameB = getContactSortName(b, sortByLastName).toLowerCase();
       return nameA.localeCompare(nameB);
     });
-  }, [filtered]);
+  }, [filtered, sortByLastName]);
 
   const sortedIds = useMemo(() => sorted.map(c => c.id), [sorted]);
 
-  // Group sorted contacts by first letter of display name. Non-letter
-  // starters (digits, symbols, empty) collect under "#" which sorts last.
+  // Group sorted contacts by first letter of the sort name (display name, or
+  // surname when sorting by last name). Non-letter starters (digits, symbols,
+  // empty) collect under "#" which sorts last.
   const groupedSections = useMemo(() => {
     const collator = new Intl.Collator(locale, { sensitivity: "base" });
     const groups = new Map<string, ContactCard[]>();
     for (const contact of sorted) {
-      const name = getContactDisplayName(contact).trim();
+      const name = getContactSortName(contact, sortByLastName).trim();
       const first = name.charAt(0);
       const letter = first && first.toLocaleUpperCase(locale).match(/\p{L}/u)
         ? first.toLocaleUpperCase(locale)
@@ -259,7 +262,7 @@ export function ContactList({
         return collator.compare(a, b);
       })
       .map(([letter, items]) => ({ letter, items }));
-  }, [sorted, locale]);
+  }, [sorted, locale, sortByLastName]);
 
   const hasSelection = selectedContactIds.size > 0;
   const allSelected = sorted.length > 0 && sorted.every(c => selectedContactIds.has(c.id));
@@ -449,6 +452,26 @@ export function ContactList({
                 label={t("filters.has_photo")}
                 value={filters.hasPhoto}
                 onClick={() => setFilters((f) => ({ ...f, hasPhoto: cycleTri(f.hasPhoto) }))}
+              />
+            </div>
+
+            {/* Sort order (persisted setting, also on /settings/contacts) */}
+            <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-border/50">
+              <span className="text-xs text-muted-foreground inline-flex items-center gap-1">
+                <ArrowDownAZ className="w-3.5 h-3.5" />
+                {t("filters.sort_by")}
+              </span>
+              <ToggleChip
+                icon={null}
+                label={t("filters.sort_first_name")}
+                value={sortByLastName ? null : true}
+                onClick={() => updateSetting("sortContactsByLastName", false)}
+              />
+              <ToggleChip
+                icon={null}
+                label={t("filters.sort_last_name")}
+                value={sortByLastName ? true : null}
+                onClick={() => updateSetting("sortContactsByLastName", true)}
               />
             </div>
           </div>

@@ -1901,7 +1901,9 @@
       "categories_description": "Zmień nazwy kategorii kontaktów",
       "no_categories": "Nie znaleziono kategorii",
       "group_by_letter_description": "Pokaż alfabetyczne nagłówki sekcji na liście kontaktów",
-      "group_by_letter_label": "Grupuj według pierwszej litery"
+      "group_by_letter_label": "Grupuj według pierwszej litery",
+      "sort_by_last_name_label": "Sortuj według nazwiska",
+      "sort_by_last_name_description": "Uporządkuj listę kontaktów według nazwiska, aby członkowie rodziny byli obok siebie"
     },
     "downloads": {
       "title": "Pobrane",
@@ -2745,7 +2747,10 @@
       "any_month": "Dowolny miesiąc",
       "has_email": "Z e-mailem",
       "has_phone": "Z telefonem",
-      "has_photo": "Ze zdjęciem"
+      "has_photo": "Ze zdjęciem",
+      "sort_by": "Sortuj według",
+      "sort_first_name": "Imię",
+      "sort_last_name": "Nazwisko"
     },
     "open_categories": "Otwórz kategorie"
   },

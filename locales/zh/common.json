@@ -1901,7 +1901,9 @@
       "categories_description": "重命名联系人类别",
       "no_categories": "未找到类别",
       "group_by_letter_description": "在联系人列表中显示按字母顺序排列的分节标题",
-      "group_by_letter_label": "按首字母分组"
+      "group_by_letter_label": "按首字母分组",
+      "sort_by_last_name_label": "按姓氏排序",
+      "sort_by_last_name_description": "按姓氏排列联系人列表，使家庭成员显示在一起"
     },
     "downloads": {
       "title": "下载",
@@ -2745,7 +2747,10 @@
       "any_month": "任意月份",
       "has_email": "有邮箱",
       "has_phone": "有电话",
-      "has_photo": "有照片"
+      "has_photo": "有照片",
+      "sort_by": "排序方式",
+      "sort_first_name": "名",
+      "sort_last_name": "姓"
     },
     "open_categories": "打开分类"
   },

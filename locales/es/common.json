@@ -1901,7 +1901,9 @@
       "categories_description": "Renombrar categorías de contactos",
       "no_categories": "No se encontraron categorías",
       "group_by_letter_description": "Mostrar encabezados alfabéticos en la lista de contactos",
-      "group_by_letter_label": "Agrupar por primera letra"
+      "group_by_letter_label": "Agrupar por primera letra",
+      "sort_by_last_name_label": "Ordenar por apellido",
+      "sort_by_last_name_description": "Ordenar la lista de contactos por apellido para que los miembros de una familia aparezcan juntos"
     },
     "downloads": {
       "title": "Descargas",
@@ -2745,7 +2747,10 @@
       "any_month": "Cualquier mes",
       "has_email": "Con correo",
       "has_phone": "Con teléfono",
-      "has_photo": "Con foto"
+      "has_photo": "Con foto",
+      "sort_by": "Ordenar por",
+      "sort_first_name": "Nombre",
+      "sort_last_name": "Apellido"
     },
     "open_categories": "Abrir categorías"
   },

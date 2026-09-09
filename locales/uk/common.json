@@ -1901,7 +1901,9 @@
       "categories_description": "Перейменувати категорії контактів",
       "no_categories": "Категорії не знайдено",
       "group_by_letter_description": "Показувати алфавітні заголовки розділів у списку контактів",
-      "group_by_letter_label": "Групувати за першою літерою"
+      "group_by_letter_label": "Групувати за першою літерою",
+      "sort_by_last_name_label": "Сортувати за прізвищем",
+      "sort_by_last_name_description": "Упорядкувати список контактів за прізвищем, щоб члени родини були поруч"
     },
     "downloads": {
       "title": "Завантаження",
@@ -2745,7 +2747,10 @@
       "any_month": "Будь-який місяць",
       "has_email": "З ел. поштою",
       "has_phone": "З телефоном",
-      "has_photo": "З фото"
+      "has_photo": "З фото",
+      "sort_by": "Сортувати за",
+      "sort_first_name": "Ім'я",
+      "sort_last_name": "Прізвище"
     },
     "open_categories": "Відкрити категорії"
   },

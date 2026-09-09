@@ -1898,6 +1898,8 @@
       "title": "Kontakty",
       "description": "Import a export kontaktov",
       "group_by_letter_label": "Zoskupiť podľa prvého písmena",
+      "sort_by_last_name_label": "Zoradiť podľa priezviska",
+      "sort_by_last_name_description": "Zoradiť zoznam kontaktov podľa priezviska, aby členovia rodiny boli pri sebe",
       "group_by_letter_description": "Zobraziť abecedné záhlavia sekcií v zozname kontaktov",
       "import_label": "Importovať kontakty",
       "import_description": "Importovať kontakty zo súboru vCard (.vcf)",
@@ -2746,7 +2748,10 @@
       "any_month": "Ktorýkoľvek mesiac",
       "has_email": "Má e-mail",
       "has_phone": "Má telefón",
-      "has_photo": "Má fotku"
+      "has_photo": "Má fotku",
+      "sort_by": "Zoradiť podľa",
+      "sort_first_name": "Meno",
+      "sort_last_name": "Priezvisko"
     }
   },
   "calendar": {

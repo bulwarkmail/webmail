@@ -1898,6 +1898,8 @@
       "title": "Contacte",
       "description": "Importați și exportați contactele",
       "group_by_letter_label": "Grupați după prima literă",
+      "sort_by_last_name_label": "Sortare după nume de familie",
+      "sort_by_last_name_description": "Ordonați lista de contacte după numele de familie, astfel încât membrii familiei să apară împreună",
       "group_by_letter_description": "Afișați titlurile secțiunilor în ordine alfabetică în lista de contacte",
       "import_label": "Importați contactele",
       "import_description": "Importați contactele dintr-un fișier „vCard” (.vcf)",
@@ -2746,7 +2748,10 @@
       "any_month": "Orice lună",
       "has_email": "Are e-mail",
       "has_phone": "Are telefon",
-      "has_photo": "Are fotografie"
+      "has_photo": "Are fotografie",
+      "sort_by": "Sortare după",
+      "sort_first_name": "Prenume",
+      "sort_last_name": "Nume de familie"
     }
   },
   "calendar": {

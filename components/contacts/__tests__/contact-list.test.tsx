@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { ContactList } from '../contact-list';
+import { useSettingsStore } from '@/stores/settings-store';
 import type { ContactCard } from '@/lib/jmap/types';
 
 function makeContact(overrides: Partial<ContactCard> & { id: string }): ContactCard {
@@ -76,6 +77,44 @@ describe('ContactList', () => {
     render(<ContactList {...defaultProps} selectedContactIds={new Set(['1'])} />);
     expect(screen.getByText('bulk.delete')).toBeInTheDocument();
     expect(screen.getByText('bulk.export')).toBeInTheDocument();
+  });
+
+  describe('sort order (#963)', () => {
+    const carol = makeContact({
+      id: '4',
+      name: { components: [{ kind: 'given', value: 'Carol' }, { kind: 'surname', value: 'Smith' }], isOrdered: true },
+    });
+    const family = [alice, bob, carol];
+    const NAME = /^(Alice Smith|Bob Jones|Carol Smith)$/;
+    const renderedNames = () => screen.getAllByText(NAME).map((el) => el.textContent);
+
+    afterEach(() => {
+      useSettingsStore.setState({ sortContactsByLastName: false, groupContactsByLetter: true });
+    });
+
+    it('sorts by display name by default', () => {
+      render(<ContactList {...defaultProps} contacts={family} />);
+      expect(renderedNames()).toEqual(['Alice Smith', 'Bob Jones', 'Carol Smith']);
+      expect(screen.getByText('A')).toBeInTheDocument();
+      expect(screen.getByText('B')).toBeInTheDocument();
+      expect(screen.getByText('C')).toBeInTheDocument();
+    });
+
+    it('groups family members together when sorting by last name', () => {
+      useSettingsStore.setState({ sortContactsByLastName: true });
+      render(<ContactList {...defaultProps} contacts={family} />);
+      expect(renderedNames()).toEqual(['Bob Jones', 'Alice Smith', 'Carol Smith']);
+      // Letter headers follow the surname, not the given name.
+      expect(screen.getByText('J')).toBeInTheDocument();
+      expect(screen.getByText('S')).toBeInTheDocument();
+      expect(screen.queryByText('A')).not.toBeInTheDocument();
+    });
+
+    it('still matches the search query against the display name', () => {
+      useSettingsStore.setState({ sortContactsByLastName: true });
+      render(<ContactList {...defaultProps} contacts={family} searchQuery="alice" />);
+      expect(renderedNames()).toEqual(['Alice Smith']);
+    });
   });
 
 });

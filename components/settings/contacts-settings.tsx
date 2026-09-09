@@ -22,6 +22,7 @@ export function ContactsSettings() {
     importContacts,
   } = useContactStore();
   const groupContactsByLetter = useSettingsStore((s) => s.groupContactsByLetter);
+  const sortContactsByLastName = useSettingsStore((s) => s.sortContactsByLastName);
   const updateSetting = useSettingsStore((s) => s.updateSetting);
   const [showImport, setShowImport] = useState(false);
 
@@ -65,6 +66,16 @@ export function ContactsSettings() {
         <ToggleSwitch
           checked={groupContactsByLetter}
           onChange={(checked) => updateSetting("groupContactsByLetter", checked)}
+        />
+      </SettingItem>
+
+      <SettingItem
+        label={tSettings("sort_by_last_name_label")}
+        description={tSettings("sort_by_last_name_description")}
+      >
+        <ToggleSwitch
+          checked={sortContactsByLastName}
+          onChange={(checked) => updateSetting("sortContactsByLastName", checked)}
         />
       </SettingItem>
 

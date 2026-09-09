@@ -1898,6 +1898,8 @@
       "title": "مخاطبین",
       "description": "وارد کردن و خروجی مخاطبین",
       "group_by_letter_label": "گروه‌بندی بر اساس حرف اول",
+      "sort_by_last_name_label": "مرتب‌سازی بر اساس نام خانوادگی",
+      "sort_by_last_name_description": "لیست مخاطبین را بر اساس نام خانوادگی مرتب کنید تا اعضای خانواده کنار هم نمایش داده شوند",
       "group_by_letter_description": "نمایش هدرهای الفبایی در لیست مخاطبین",
       "import_label": "وارد کردن مخاطبین",
       "import_description": "وارد کردن مخاطبین از فایل vCard (.vcf)",
@@ -2746,7 +2748,10 @@
       "any_month": "هر ماه",
       "has_email": "دارای ایمیل",
       "has_phone": "دارای تلفن",
-      "has_photo": "دارای عکس"
+      "has_photo": "دارای عکس",
+      "sort_by": "مرتب‌سازی بر اساس",
+      "sort_first_name": "نام",
+      "sort_last_name": "نام خانوادگی"
     }
   },
   "calendar": {

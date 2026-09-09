@@ -1901,7 +1901,9 @@
       "categories_description": "連絡先カテゴリの名前を変更",
       "no_categories": "カテゴリが見つかりません",
       "group_by_letter_description": "連絡先リストにアルファベット順のセクション見出しを表示",
-      "group_by_letter_label": "頭文字でグループ化"
+      "group_by_letter_label": "頭文字でグループ化",
+      "sort_by_last_name_label": "姓で並べ替え",
+      "sort_by_last_name_description": "家族が並んで表示されるように、連絡先一覧を姓の順に並べ替えます"
     },
     "downloads": {
       "title": "ダウンロード",
@@ -2745,7 +2747,10 @@
       "any_month": "すべての月",
       "has_email": "メールあり",
       "has_phone": "電話あり",
-      "has_photo": "写真あり"
+      "has_photo": "写真あり",
+      "sort_by": "並べ替え",
+      "sort_first_name": "名",
+      "sort_last_name": "姓"
     },
     "open_categories": "カテゴリを開く"
   },

@@ -1867,6 +1867,8 @@
       "categories_description": "שנה שם של קטגוריות אנשי קשר",
       "no_categories": "לא נמצאו קטגוריות",
       "group_by_letter_label": "קבוצה לפי אות ראשונה",
+      "sort_by_last_name_label": "מיון לפי שם משפחה",
+      "sort_by_last_name_description": "סידור רשימת אנשי הקשר לפי שם משפחה כך שבני אותה משפחה יופיעו יחד",
       "group_by_letter_description": "הצג כותרות חלקים אלפביתיים ברשימת אנשי הקשר"
     },
     "filters": {
@@ -2670,7 +2672,10 @@
       "any_month": "כל חודש",
       "has_email": "יש דוא״ל",
       "has_phone": "יש טלפון",
-      "has_photo": "יש תמונה"
+      "has_photo": "יש תמונה",
+      "sort_by": "מיון לפי",
+      "sort_first_name": "שם פרטי",
+      "sort_last_name": "שם משפחה"
     }
   },
   "calendar": {

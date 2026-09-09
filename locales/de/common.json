@@ -1901,7 +1901,9 @@
       "categories_description": "Kontaktkategorien umbenennen",
       "no_categories": "Keine Kategorien gefunden",
       "group_by_letter_description": "Alphabetische Abschnittsüberschriften in der Kontaktliste anzeigen",
-      "group_by_letter_label": "Nach Anfangsbuchstaben gruppieren"
+      "group_by_letter_label": "Nach Anfangsbuchstaben gruppieren",
+      "sort_by_last_name_label": "Nach Nachname sortieren",
+      "sort_by_last_name_description": "Kontaktliste nach Nachnamen ordnen, damit Familienmitglieder zusammenstehen"
     },
     "downloads": {
       "title": "Downloads",
@@ -2745,7 +2747,10 @@
       "any_month": "Beliebiger Monat",
       "has_email": "Mit E-Mail",
       "has_phone": "Mit Telefon",
-      "has_photo": "Mit Foto"
+      "has_photo": "Mit Foto",
+      "sort_by": "Sortieren nach",
+      "sort_first_name": "Vorname",
+      "sort_last_name": "Nachname"
     },
     "open_categories": "Kategorien öffnen"
   },

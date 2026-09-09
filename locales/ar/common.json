@@ -1898,6 +1898,8 @@
       "title": "جهات الاتصال",
       "description": "استيراد وتصدير جهات اتصالك",
       "group_by_letter_label": "التجميع حسب الحرف الأول",
+      "sort_by_last_name_label": "الترتيب حسب اسم العائلة",
+      "sort_by_last_name_description": "ترتيب قائمة جهات الاتصال حسب اسم العائلة بحيث يظهر أفراد العائلة معًا",
       "group_by_letter_description": "إظهار عناوين أقسام أبجدية في قائمة جهات الاتصال",
       "import_label": "استيراد جهات الاتصال",
       "import_description": "استيراد جهات الاتصال من ملف vCard (‎.vcf)",
@@ -2746,7 +2748,10 @@
       "any_month": "أي شهر",
       "has_email": "لديه بريد إلكتروني",
       "has_phone": "لديه هاتف",
-      "has_photo": "لديه صورة"
+      "has_photo": "لديه صورة",
+      "sort_by": "الترتيب حسب",
+      "sort_first_name": "الاسم الأول",
+      "sort_last_name": "اسم العائلة"
     }
   },
   "calendar": {

@@ -1898,6 +1898,8 @@
       "title": "聯絡人",
       "description": "匯入與匯出聯絡人",
       "group_by_letter_label": "依首字分組",
+      "sort_by_last_name_label": "依姓氏排序",
+      "sort_by_last_name_description": "依姓氏排列聯絡人清單，讓家庭成員顯示在一起",
       "group_by_letter_description": "在聯絡人清單中顯示依字母排列的分節標題",
       "import_label": "匯入聯絡人",
       "import_description": "從 vCard（.vcf）檔案匯入聯絡人",
@@ -2746,7 +2748,10 @@
       "any_month": "任何月份",
       "has_email": "有電子郵件地址",
       "has_phone": "有電話",
-      "has_photo": "有照片"
+      "has_photo": "有照片",
+      "sort_by": "排序方式",
+      "sort_first_name": "名",
+      "sort_last_name": "姓"
     }
   },
   "calendar": {

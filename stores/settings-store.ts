@@ -388,6 +388,9 @@ interface SettingsState {
 
   // Contacts Display
   groupContactsByLetter: boolean;
+  // Sort (and group) the contact list by surname instead of given name so
+  // family members sit together (#963).
+  sortContactsByLastName: boolean;
 
   // Email Notifications
   emailNotificationsEnabled: boolean;
@@ -620,6 +623,7 @@ const DEFAULT_SETTINGS = {
 
   // Contacts Display
   groupContactsByLetter: true,
+  sortContactsByLastName: false,
 
   // Email Notifications
   emailNotificationsEnabled: true,
@@ -835,6 +839,7 @@ export const useSettingsStore = create<SettingsState>()(
           birthdayCalendarColor: state.birthdayCalendarColor,
           sharedCalendarColors: state.sharedCalendarColors,
           groupContactsByLetter: state.groupContactsByLetter,
+          sortContactsByLastName: state.sortContactsByLastName,
           expandedFilterView: state.expandedFilterView,
           showTimeInMonthView: state.showTimeInMonthView,
           showWeekNumbers: state.showWeekNumbers,

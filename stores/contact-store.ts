@@ -149,6 +149,34 @@ export function getContactDisplayName(contact: ContactCard): string {
   return '';
 }
 
+// Name used to order (and letter-group) the contact list. With `byLastName`
+// the surname leads ("Smith, Alice") so family members sit together (#963).
+// Contacts without a structured surname fall back to the last word of
+// `name.full`; everything else (nickname, org, email) keeps the display name.
+export function getContactSortName(contact: ContactCard, byLastName: boolean): string {
+  const display = getContactDisplayName(contact);
+  if (!byLastName) return display;
+  const components = contact.name?.components;
+  if (components && components.length > 0) {
+    const pick = (...kinds: string[]) =>
+      components.filter(c => kinds.includes(c.kind) && c.value).map(c => c.value).join(' ');
+    const surname = pick('surname', 'surname2');
+    if (surname) {
+      const rest = pick('given', 'given2', 'middle', 'additional');
+      return rest ? `${surname}, ${rest}` : surname;
+    }
+  }
+  const full = contact.name?.full;
+  if (full && display === full) {
+    const words = full.trim().split(/\s+/);
+    if (words.length > 1) {
+      const last = words[words.length - 1];
+      return `${last}, ${words.slice(0, -1).join(' ')}`;
+    }
+  }
+  return display;
+}
+
 export function getContactPrimaryEmail(contact: ContactCard): string {
   if (!contact.emails) return '';
   return Object.values(contact.emails)[0]?.address || '';

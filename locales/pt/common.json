@@ -1901,7 +1901,9 @@
       "categories_description": "Renomear categorias de contatos",
       "no_categories": "Nenhuma categoria encontrada",
       "group_by_letter_description": "Mostrar cabeçalhos de seção alfabéticos na lista de contatos",
-      "group_by_letter_label": "Agrupar pela primeira letra"
+      "group_by_letter_label": "Agrupar pela primeira letra",
+      "sort_by_last_name_label": "Ordenar por sobrenome",
+      "sort_by_last_name_description": "Ordenar a lista de contatos por sobrenome para que os membros da família apareçam juntos"
     },
     "downloads": {
       "title": "Downloads",
@@ -2745,7 +2747,10 @@
       "any_month": "Qualquer mês",
       "has_email": "Com e-mail",
       "has_phone": "Com telefone",
-      "has_photo": "Com foto"
+      "has_photo": "Com foto",
+      "sort_by": "Ordenar por",
+      "sort_first_name": "Nome",
+      "sort_last_name": "Sobrenome"
     },
     "open_categories": "Abrir categorias"
   },

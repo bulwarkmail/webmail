@@ -1899,6 +1899,8 @@
       "description": "Import and export your contacts",
       "group_by_letter_label": "Group by first letter",
       "group_by_letter_description": "Show alphabetical section headers in the contact list",
+      "sort_by_last_name_label": "Sort by last name",
+      "sort_by_last_name_description": "Order the contact list by surname so family members appear together",
       "import_label": "Import Contacts",
       "import_description": "Import contacts from a vCard (.vcf) file",
       "export_label": "Export Contacts",
@@ -2746,7 +2748,10 @@
       "any_month": "Any month",
       "has_email": "Has email",
       "has_phone": "Has phone",
-      "has_photo": "Has photo"
+      "has_photo": "Has photo",
+      "sort_by": "Sort by",
+      "sort_first_name": "First name",
+      "sort_last_name": "Last name"
     }
   },
   "calendar": {

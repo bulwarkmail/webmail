@@ -1901,7 +1901,9 @@
       "categories_description": "Rinomina le categorie dei contatti",
       "no_categories": "Nessuna categoria trovata",
       "group_by_letter_description": "Mostra intestazioni alfabetiche nell'elenco dei contatti",
-      "group_by_letter_label": "Raggruppa per prima lettera"
+      "group_by_letter_label": "Raggruppa per prima lettera",
+      "sort_by_last_name_label": "Ordina per cognome",
+      "sort_by_last_name_description": "Ordina l'elenco dei contatti per cognome così i familiari compaiono insieme"
     },
     "downloads": {
       "title": "Download",
@@ -2745,7 +2747,10 @@
       "any_month": "Qualsiasi mese",
       "has_email": "Con email",
       "has_phone": "Con telefono",
-      "has_photo": "Con foto"
+      "has_photo": "Con foto",
+      "sort_by": "Ordina per",
+      "sort_first_name": "Nome",
+      "sort_last_name": "Cognome"
     },
     "open_categories": "Apri categorie"
   },

@@ -1901,7 +1901,9 @@
       "categories_description": "Pārdēvēt kontaktu kategorijas",
       "no_categories": "Kategorijas nav atrastas",
       "group_by_letter_description": "Rādīt alfabētiskos sadaļu virsrakstus kontaktu sarakstā",
-      "group_by_letter_label": "Grupēt pēc pirmā burta"
+      "group_by_letter_label": "Grupēt pēc pirmā burta",
+      "sort_by_last_name_label": "Kārtot pēc uzvārda",
+      "sort_by_last_name_description": "Kārtot kontaktu sarakstu pēc uzvārda, lai ģimenes locekļi būtu kopā"
     },
     "downloads": {
       "title": "Lejupielādes",
@@ -2745,7 +2747,10 @@
       "any_month": "Jebkurš mēnesis",
       "has_email": "Ar e-pastu",
       "has_phone": "Ar tālruni",
-      "has_photo": "Ar foto"
+      "has_photo": "Ar foto",
+      "sort_by": "Kārtot pēc",
+      "sort_first_name": "Vārds",
+      "sort_last_name": "Uzvārds"
     },
     "open_categories": "Atvērt kategorijas"
   },
