@@ -13,6 +13,7 @@ import { PluginConsentDialog } from "@/components/plugins/plugin-consent-dialog"
 import { PluginOAuthCallbackListener } from "@/components/providers/plugin-oauth-callback-listener";
 import { PWAInstallPrompt } from "@/components/pwa-install-prompt";
 import { PushNotificationPrompt } from "@/components/push-notification-prompt";
+import { AccountVaultImportPrompt } from "@/components/account-vault";
 import { locales } from "@/i18n/routing";
 
 export default async function LocaleLayout({
@@ -44,6 +45,7 @@ export default async function LocaleLayout({
                   <ProInterfaceRedirect />
                   <ImpersonationReconciler />
                   {children}
+                  <AccountVaultImportPrompt />
                   <PluginDialogHost />
                   <PluginConsentDialog />
                   <PluginOAuthCallbackListener />
