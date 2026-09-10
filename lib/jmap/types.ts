@@ -792,7 +792,7 @@ export interface CalendarTask {
   timeZone: string | null;
   showWithoutTime: boolean;
   progress: 'needs-action' | 'in-process' | 'completed' | 'cancelled';
-  progressUpdated: string | null;
+  progressUpdated?: string | null;
   priority: number;
   privacy: 'public' | 'private' | 'secret';
   keywords: Record<string, boolean> | null;
