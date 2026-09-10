@@ -6,6 +6,7 @@ import { emailExportFilename, attachmentDownloadFilename, attachmentsBundleFilen
 import { EML_IMPORT_ACCEPT, expandImportableEmails } from "@/lib/eml-import";
 import { applyNewTabToAnchor, escapeHtml, plainTextToSafeHtml, sanitizeEmailBodyForIframe, sanitizeEmailHtml, sanitizePlainTextRenderedHtml } from "@/lib/email-sanitization";
 import { getRenderableHtmlBody } from "@/lib/email-body-selection";
+import { collectReferencedCids, isEmbeddedInBody } from "@/lib/attachment-visibility";
 import { collapsePlainTextQuotes, setupQuoteCollapse } from "@/lib/quote-collapse";
 import { fitEmailBodyWidth } from "@/lib/email-fit-width";
 import { withBasePath } from "@/lib/browser-navigation";
@@ -1583,8 +1584,14 @@ export function EmailViewer({
 
   const effectiveAttachments = useMemo<EffectiveAttachment[]>(() => {
     if (pluginRenderedAttachments.length > 0) {
+      const pluginCids = collectReferencedCids(hideInlineImageAttachments ? pluginRenderedHtml : null);
       return pluginRenderedAttachments
-        .filter(att => !(hideInlineImageAttachments && att.contentId && (att.mimeType || '').startsWith('image/')))
+        // Any cid image counts as embedded here (as before), plus whatever the
+        // decrypted body references by cid (see lib/attachment-visibility.ts).
+        .filter(att => !(hideInlineImageAttachments && (
+          (att.contentId && (att.mimeType || '').startsWith('image/'))
+          || isEmbeddedInBody({ cid: att.contentId, type: att.mimeType, disposition: att.disposition }, pluginCids)
+        )))
         .map((attachment, index) => ({
           id: `smime-${index}-${attachment.filename || attachment.mimeType}`,
           name: attachment.filename,
@@ -1596,6 +1603,12 @@ export function EmailViewer({
     }
 
     const hasCalInvitation = calendarInvitationParsingEnabled && !!email && !!findCalendarAttachment(email);
+    // Parts the rendered body embeds via cid: must not double as chips. The
+    // scan reads the same HTML the body renders from (null when the message
+    // renders as plain text: nothing embedded, nothing hidden), so a part only
+    // recognisable by its reference - octet-stream, no disposition, no name -
+    // is caught as well (see lib/attachment-visibility.ts).
+    const bodyCids = collectReferencedCids(hideInlineImageAttachments && email ? getRenderableHtmlBody(email) : null);
     const jmapAttachments = (email?.attachments ?? [])
       // Hide winmail.dat when we have successfully extracted TNEF content or attachments
       .filter(att => !(tnefHtml || tnefText || tnefAttachments.length > 0) || !isTnefAttachment(att.name, att.type))
@@ -1605,9 +1618,9 @@ export function EmailViewer({
       // Hide calendar MIME parts (text/calendar, application/ics) when the invitation
       // banner is shown - prevents raw ICS files appearing as spurious attachments.
       .filter(att => !hasCalInvitation || !isCalendarMimeType(att.type))
-      // Hide inline cid-referenced images when the user has opted to keep them
-      // out of the attachment list (default on): these are embedded in the body.
-      .filter(att => !(hideInlineImageAttachments && att.cid && att.disposition === 'inline' && (att.type || '').startsWith('image/')))
+      // Hide body-embedded parts when the user has opted to keep them out of
+      // the attachment list (default on).
+      .filter(att => !(hideInlineImageAttachments && isEmbeddedInBody(att, bodyCids)))
       // Hide machine-readable report parts (MDN read-receipts, DSN bounce
       // reports). These are required MIME parts, not real user attachments.
       .filter(att => att.type !== 'message/disposition-notification' && att.type !== 'message/delivery-status')
@@ -1642,11 +1655,11 @@ export function EmailViewer({
 
     return [...jmapAttachments, ...tnefExtracted, ...embeddedExtracted];
     // The memo derives only from `email.attachments` (findCalendarAttachment
-    // scans that array); depending on the whole `email` object would rebuild the
-    // attachment list — and its downstream layout measurement — on every email
-    // field change.
+    // scans that array) and the body parts the cid scan reads; depending on
+    // the whole `email` object would rebuild the attachment list — and its
+    // downstream layout measurement — on every email field change.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [email?.attachments, pluginRenderedAttachments, tnefHtml, tnefText, tnefAttachments, embeddedEmailAttachments, calendarInvitationParsingEnabled, hideInlineImageAttachments]);
+  }, [email?.attachments, email?.htmlBody, email?.textBody, email?.bodyValues, pluginRenderedAttachments, pluginRenderedHtml, tnefHtml, tnefText, tnefAttachments, embeddedEmailAttachments, calendarInvitationParsingEnabled, hideInlineImageAttachments]);
 
   // Measure attachment chips in the below-header row to determine how many fit
   // on a single line; the rest collapse into a "+N attachments" overflow pill.

@@ -5,6 +5,7 @@ import DOMPurify from "dompurify";
 import { Email, ThreadGroup } from "@/lib/jmap/types";
 import { EMAIL_SANITIZE_CONFIG, collapseBlockedImageContainers, plainTextToSafeHtml, restrictDataUriResourcesOnNode, sanitizePlainTextRenderedHtml } from "@/lib/email-sanitization";
 import { getRenderableHtmlBody } from "@/lib/email-body-selection";
+import { collectReferencedCids, isEmbeddedInBody } from "@/lib/attachment-visibility";
 import { collapsePlainTextQuotes, setupQuoteCollapse } from "@/lib/quote-collapse";
 import { fitEmailBodyWidth } from "@/lib/email-fit-width";
 import { transformInlineStyles, transformColorForDarkMode, transformBgColorForDarkMode } from "@/lib/color-transform";
@@ -436,6 +437,16 @@ function EmailCard({
     return { html: "", isHtml: false };
   }, [email, allowExternal, resolvedTheme, emailAlwaysLightMode, cidBlobUrls, t]);
 
+  // Parts the body embeds via cid: stay out of the attachment row while the
+  // user hides inline images - the desktop viewer's rule, shared through
+  // lib/attachment-visibility.ts so the two views cannot drift apart.
+  const visibleAttachments = useMemo(() => {
+    const attachments = email.attachments ?? [];
+    if (!hideInlineImageAttachments) return attachments;
+    const bodyCids = collectReferencedCids(getRenderableHtmlBody(email));
+    return attachments.filter(att => !isEmbeddedInBody(att, bodyCids));
+  }, [email, hideInlineImageAttachments]);
+
   // Render the sanitized HTML body inside a sandboxed iframe so a malicious
   // (or accidentally-bypassed) email cannot inject styles/scripts/forms into
   // the host page. CSP <meta> is defense-in-depth in case the sanitizer ever
@@ -621,11 +632,7 @@ function EmailCard({
           </div>
 
           {/* Attachments */}
-          {(() => {
-            const visibleAttachments = (email.attachments ?? []).filter(
-              att => !(hideInlineImageAttachments && att.cid && att.disposition === 'inline' && (att.type || '').startsWith('image/'))
-            );
-            return visibleAttachments.length > 0 && (
+          {visibleAttachments.length > 0 && (
             <div className="px-4 pb-4">
               <div className="flex flex-wrap gap-2">
                 {visibleAttachments.map((attachment, idx) => {
@@ -657,8 +664,7 @@ function EmailCard({
                 })}
               </div>
             </div>
-            );
-          })()}
+          )}
 
           {/* Action Buttons */}
           <div className="px-4 pb-4 flex gap-2">
