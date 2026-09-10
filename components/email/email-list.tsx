@@ -12,7 +12,7 @@ import { useEmailStore } from "@/stores/email-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useUIStore } from "@/stores/ui-store";
-import { groupEmailsByThread, sortThreadGroups } from "@/lib/thread-utils";
+import { groupEmailsByThread, sortThreadGroups, threadKeyFor } from "@/lib/thread-utils";
 import { useContextMenu } from "@/hooks/use-context-menu";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { useTranslations } from "next-intl";
@@ -201,7 +201,7 @@ export function EmailList({
     getScrollElement: () => parentRef.current,
     estimateSize,
     overscan: 5,
-    getItemKey: (index) => threadGroups[index]?.threadId ?? String(index),
+    getItemKey: (index) => threadGroups[index]?.threadKey ?? String(index),
   });
 
   const LoadingSkeleton = () => (
@@ -320,16 +320,16 @@ export function EmailList({
     }
   }, [client, hasMoreEmails, isLoadingMore, isLoading, isScheduledView, loadMoreEmails, onLoadMoreScheduled]);
 
-  const handleToggleThreadExpansion = useCallback(async (threadId: string) => {
-    const isExpanded = expandedThreadIds.has(threadId);
+  const handleToggleThreadExpansion = useCallback(async (threadKey: string) => {
+    const isExpanded = expandedThreadIds.has(threadKey);
 
     if (!isExpanded && client) {
-      toggleThreadExpansion(threadId);
-      await fetchThreadEmails(client, threadId);
+      toggleThreadExpansion(threadKey);
+      await fetchThreadEmails(client, threadKey);
       // Mark all unread emails in this thread as read
-      void markThreadAsRead(client, threadId);
+      void markThreadAsRead(client, threadKey);
     } else {
-      toggleThreadExpansion(threadId);
+      toggleThreadExpansion(threadKey);
     }
   }, [client, expandedThreadIds, toggleThreadExpansion, fetchThreadEmails, markThreadAsRead]);
 
@@ -564,18 +564,18 @@ export function EmailList({
                   >
                     <ThreadListItem
                       thread={thread}
-                      isExpanded={expandedThreadIds.has(thread.threadId)}
+                      isExpanded={expandedThreadIds.has(thread.threadKey)}
                       selectedEmailId={selectedEmailId}
-                      isLoading={isLoadingThread === thread.threadId}
-                      expandedEmails={threadEmailsCache.get(thread.threadId)}
-                      onToggleExpand={() => handleToggleThreadExpansion(thread.threadId)}
+                      isLoading={isLoadingThread === thread.threadKey}
+                      expandedEmails={threadEmailsCache.get(thread.threadKey)}
+                      onToggleExpand={() => handleToggleThreadExpansion(thread.threadKey)}
                       onCollapseAllThreads={collapseAllThreads}
                       onEmailSelect={(email) => {
                         // Collapse expanded threads when selecting an email outside the expanded thread
                         const currentExpanded = useEmailStore.getState().expandedThreadIds;
                         if (currentExpanded.size > 0) {
                           // Check if the selected email belongs to any expanded thread via its threadId
-                          if (!email.threadId || !currentExpanded.has(email.threadId)) {
+                          if (!email.threadId || !currentExpanded.has(threadKeyFor(email))) {
                             collapseAllThreads();
                           }
                         }

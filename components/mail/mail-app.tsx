@@ -53,7 +53,7 @@ import { debug } from "@/lib/debug";
 import { playNotificationSound } from "@/lib/notification-sound";
 import { cn } from "@/lib/utils";
 import { localizeMailboxName } from "@/lib/mailbox-label";
-import { KEYWORD_PREFIX, KEYWORD_PREFIX_LEGACY, groupEmailsByThread } from "@/lib/thread-utils";
+import { KEYWORD_PREFIX, KEYWORD_PREFIX_LEGACY, groupEmailsByThread, threadKeyFor } from "@/lib/thread-utils";
 import { resolveThreadRoute } from "@/lib/thread-routing";
 import {
   ErrorBoundary,
@@ -826,14 +826,14 @@ export function MailApp({ linkSegments }: MailAppProps = {}) {
     // thread's messages and marks them read, collapsing only toggles. (#683)
     onToggleThreadExpansion: () => {
       if (isScheduledView || !client) return;
-      const threadId = selectedEmail?.threadId;
-      if (!threadId) return;
+      if (!selectedEmail?.threadId) return;
+      const threadKey = threadKeyFor(selectedEmail);
       const store = useEmailStore.getState();
-      const wasExpanded = store.expandedThreadIds.has(threadId);
-      store.toggleThreadExpansion(threadId);
+      const wasExpanded = store.expandedThreadIds.has(threadKey);
+      store.toggleThreadExpansion(threadKey);
       if (!wasExpanded) {
-        void store.fetchThreadEmails(client, threadId).then(() => {
-          void useEmailStore.getState().markThreadAsRead(client, threadId);
+        void store.fetchThreadEmails(client, threadKey).then(() => {
+          void useEmailStore.getState().markThreadAsRead(client, threadKey);
         });
       }
     },
@@ -1741,7 +1741,7 @@ export function MailApp({ linkSegments }: MailAppProps = {}) {
         if (originalEmailId) {
           const emailState = useEmailStore.getState();
           const repliedEmail = emailState.emails.find(e => e.id === originalEmailId);
-          if (repliedEmail?.threadId && emailState.expandedThreadIds.has(repliedEmail.threadId)) {
+          if (repliedEmail?.threadId && emailState.expandedThreadIds.has(threadKeyFor(repliedEmail))) {
             // Route to the email's own account so shared/group threads refresh
             // from the right server, not the active one. (#281, #814)
             const route = resolveThreadRoute({
@@ -1760,7 +1760,7 @@ export function MailApp({ linkSegments }: MailAppProps = {}) {
             if (fullEmails.length > 0) {
               useEmailStore.setState((state) => {
                 const c = new Map(state.threadEmailsCache);
-                c.set(repliedEmail.threadId!, fullEmails);
+                c.set(threadKeyFor(repliedEmail), fullEmails);
                 return { threadEmailsCache: c };
               });
             }
@@ -2271,7 +2271,7 @@ export function MailApp({ linkSegments }: MailAppProps = {}) {
         }
       }
 
-      if (conversationThread?.threadId === emailToArchive.threadId) {
+      if (conversationThread && conversationThread.threadKey === threadKeyFor(emailToArchive)) {
         setConversationThread(null);
         setConversationEmails([]);
       }
@@ -3172,7 +3172,7 @@ export function MailApp({ linkSegments }: MailAppProps = {}) {
     // view shows the newly sent reply without collapsing.
     const emailState = useEmailStore.getState();
     const repliedEmail = emailState.emails.find(e => e.id === originalEmailId);
-    if (repliedEmail?.threadId && emailState.expandedThreadIds.has(repliedEmail.threadId)) {
+    if (repliedEmail?.threadId && emailState.expandedThreadIds.has(threadKeyFor(repliedEmail))) {
       // Route to the email's own account so shared/group threads refresh from
       // the right server, not the active one. (#281, #814)
       const route = resolveThreadRoute({
@@ -3191,7 +3191,7 @@ export function MailApp({ linkSegments }: MailAppProps = {}) {
       if (fullEmails.length > 0) {
         useEmailStore.setState((state) => {
           const c = new Map(state.threadEmailsCache);
-          c.set(repliedEmail.threadId!, fullEmails);
+          c.set(threadKeyFor(repliedEmail), fullEmails);
           return { threadEmailsCache: c };
         });
       }
