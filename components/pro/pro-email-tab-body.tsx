@@ -61,6 +61,7 @@ function buildReplyContext(email: Email): ProReplyContext {
     ...getQuoteBodies(email),
     receivedAt: email.receivedAt,
     accountId: email.accountId,
+    sourceClientAccountId: email.sourceClientAccountId,
     attachments: email.attachments,
     messageId: email.messageId,
     inReplyTo: email.inReplyTo,
@@ -199,6 +200,7 @@ export function ProEmailView({ emailId, client: clientOverride, accountId, onLoa
       mode: 'forward',
       replyTo: {
         subject: email.subject,
+        sourceClientAccountId: email.sourceClientAccountId,
         attachments: [payload.attachment],
       },
       sourceEmailId: email.id,
