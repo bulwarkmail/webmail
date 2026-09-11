@@ -17,6 +17,8 @@ export interface AccountEntry {
   cookieSlot: number;
   /** Whether "Remember Me" was checked (basic auth only) */
   rememberMe: boolean;
+  /** Restorable from a user-encrypted server archive; keep metadata on expiry. */
+  vaultManaged?: boolean;
   /**
    * Server-confirmed account identifiers captured at login: the account-id form
    * ({@link generateAccountId}) of the JMAP Session.username and the primary
