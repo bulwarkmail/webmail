@@ -36,6 +36,6 @@ describe('TagBadge', () => {
   it('leaves the dot alone, having nowhere to put the control', () => {
     render(<TagBadge tagId="work" variant="dot" onRemove={() => {}} />);
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
-    expect(screen.getByLabelText('Work')).toBeInTheDocument();
+    expect(screen.getByText('Work')).toHaveClass('sr-only');
   });
 });

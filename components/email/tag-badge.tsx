@@ -63,8 +63,9 @@ export function TagBadge({
       <span
         className={cn("h-2.5 w-2.5 shrink-0 rounded-full", color.dot, className)}
         title={name}
-        aria-label={name}
-      />
+      >
+        <span className="sr-only">{name}</span>
+      </span>
     );
   }
 
