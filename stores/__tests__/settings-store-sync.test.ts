@@ -35,6 +35,21 @@ describe('settings sync debounce', () => {
     });
   });
 
+  it('defaults pushNotifyInboxOnly to false and round-trips it through the sync payload', async () => {
+    const settings = useSettingsStore.getState();
+    expect(settings.pushNotifyInboxOnly).toBe(false);
+
+    settings.enableSync('a@example.com', 'https://mail-a.example.com');
+    settings.updateSetting('pushNotifyInboxOnly', true);
+
+    await useSettingsStore.getState().flushSync();
+
+    const request = apiFetch.mock.calls[0][1] as RequestInit;
+    expect(JSON.parse(request.body as string)).toMatchObject({
+      settings: { pushNotifyInboxOnly: true },
+    });
+  });
+
   it('does not rewrite a pending account snapshot after another account becomes active', async () => {
     const settings = useSettingsStore.getState();
     settings.enableSync('a@example.com', 'https://mail-a.example.com');
