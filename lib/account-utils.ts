@@ -87,7 +87,13 @@ export const MAX_ACCOUNTS_HTTP1 = 5;
  */
 export function isHttp2Available(): boolean {
   if (typeof performance === 'undefined') return false;
-  const entries = performance.getEntriesByType('resource') as PerformanceResourceTiming[];
+  // The document connection is already known before any subresources finish
+  // loading. Include it so a fresh login/restore doesn't incorrectly cap an
+  // HTTP/2 page at five accounts. Do not assume h2 when timing is unavailable.
+  const entries = [
+    ...performance.getEntriesByType('navigation'),
+    ...performance.getEntriesByType('resource'),
+  ] as PerformanceResourceTiming[];
   for (let i = entries.length - 1; i >= 0; i--) {
     const proto = entries[i].nextHopProtocol;
     if (proto === 'h2' || proto === 'h3') return true;
