@@ -40,11 +40,14 @@ interface CalendarWeekViewProps extends ScrollWindowViewProps {
 }
 
 const HOUR_HEIGHT = 60;
-// "Compact night hours" setting: 22:00-06:00 gets this much shorter
-// per-hour height instead of HOUR_HEIGHT, so a full day fits without
-// scrolling while staying tall enough for an event's title/time to stay
-// legible and clickable (paired with the existing per-event min-height
-// clamp in the renderer below).
+// "Compact night hours" setting: shrinks BOTH bands relative to the normal
+// HOUR_HEIGHT, not just the night - the day band alone (16h * HOUR_HEIGHT)
+// is already taller than most viewports, so getting a full day to actually
+// fit without scrolling needs the waking hours compacted too, just less
+// aggressively than the night. Heights are still tall enough for an
+// event's title/time to stay legible and clickable (paired with the
+// existing per-event min-height clamp in the renderer below).
+const COMPACT_DAY_HOUR_HEIGHT = 32;
 const NIGHT_HOUR_HEIGHT = 20;
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 const MOBILE_COL_WIDTH = 120;
@@ -217,7 +220,7 @@ export function CalendarWeekView({
   const compactNightHours = useSettingsStore((s) => s.compactNightHours);
   const scale = useMemo(
     () => compactNightHours
-      ? createCompactNightTimeScale({ dayHourHeight: HOUR_HEIGHT, nightHourHeight: NIGHT_HOUR_HEIGHT })
+      ? createCompactNightTimeScale({ dayHourHeight: COMPACT_DAY_HOUR_HEIGHT, nightHourHeight: NIGHT_HOUR_HEIGHT })
       : createLinearTimeScale(HOUR_HEIGHT),
     [compactNightHours],
   );

@@ -36,7 +36,8 @@ interface CalendarDayViewProps extends ScrollWindowViewProps {
 }
 
 const HOUR_HEIGHT = 64;
-// See the matching constant in calendar-week-view.tsx for the rationale.
+// See the matching constants in calendar-week-view.tsx for the rationale.
+const COMPACT_DAY_HOUR_HEIGHT = 34;
 const NIGHT_HOUR_HEIGHT = 22;
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 const FALLBACK_COL_WIDTH = 600;
@@ -183,7 +184,7 @@ export function CalendarDayView({
   const compactNightHours = useSettingsStore((s) => s.compactNightHours);
   const scale = useMemo(
     () => compactNightHours
-      ? createCompactNightTimeScale({ dayHourHeight: HOUR_HEIGHT, nightHourHeight: NIGHT_HOUR_HEIGHT })
+      ? createCompactNightTimeScale({ dayHourHeight: COMPACT_DAY_HOUR_HEIGHT, nightHourHeight: NIGHT_HOUR_HEIGHT })
       : createLinearTimeScale(HOUR_HEIGHT),
     [compactNightHours],
   );
