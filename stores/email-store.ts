@@ -8,6 +8,7 @@ import type { SortLevel } from "@/lib/message-list-order";
 import { SearchFilters, DEFAULT_SEARCH_FILTERS, buildJMAPFilter, isFilterEmpty } from "@/lib/jmap/search-utils";
 import { emailHooks } from "@/lib/plugin-hooks";
 import { resolveThreadRoute } from "@/lib/thread-routing";
+import { threadKeyFor, threadIdFromKey } from "@/lib/thread-utils";
 import type { ExternalSearchResult } from "@/lib/plugin-types";
 import { fetchUnifiedEmails, fetchUnifiedMailboxCounts, searchUnifiedEmails, advancedSearchUnifiedEmails, fetchCrossViewEmails, searchCrossViewEmails, advancedSearchCrossViewEmails, getCrossUnreadTotal, type UnifiedAccountClient, type UnifiedMailboxCounts } from "@/lib/unified-mailbox";
 import { useAuthStore } from "@/stores/auth-store";
@@ -91,6 +92,9 @@ interface EmailStore {
   newEmailNotification: Email | null; // New email notification for toast
 
   // Thread expansion state
+  // Thread state is keyed by the account-scoped thread key (threadKeyFor), not
+  // the bare JMAP id: in aggregate views the same id names unrelated threads
+  // in different accounts. Same for threadEmailCounts below.
   expandedThreadIds: Set<string>;
   threadEmailsCache: Map<string, Email[]>;
   isLoadingThread: string | null;
@@ -289,12 +293,12 @@ interface EmailStore {
   clearNewEmailNotification: () => void;
 
   // Thread expansion actions
-  toggleThreadExpansion: (threadId: string) => void;
-  fetchThreadEmails: (client: IJMAPClient, threadId: string) => Promise<Email[]>;
+  toggleThreadExpansion: (threadKey: string) => void;
+  fetchThreadEmails: (client: IJMAPClient, threadKey: string) => Promise<Email[]>;
   collapseAllThreads: () => void;
   updateThreadCache: (threadId: string, emails: Email[]) => void;
   fetchThreadEmailCounts: (client: IJMAPClient) => Promise<void>;
-  markThreadAsRead: (client: IJMAPClient, threadId: string) => Promise<void>;
+  markThreadAsRead: (client: IJMAPClient, threadKey: string) => Promise<void>;
 
   // Mailbox management
   createMailbox: (client: IJMAPClient, name: string, parentId?: string, accountId?: string) => Promise<void>;
@@ -540,9 +544,9 @@ async function applyEmailDeltaNow(client: IJMAPClient, newState: string, get: St
     .map((e) => replacementById.get(e.id) ?? e);
   const changedThreadIds = new Set<string>();
   for (const e of current) {
-    if (removed.has(e.id) || replacementById.has(e.id)) changedThreadIds.add(e.threadId);
+    if (removed.has(e.id) || replacementById.has(e.id)) changedThreadIds.add(threadKeyFor(e));
   }
-  for (const e of replacementById.values()) changedThreadIds.add(e.threadId);
+  for (const e of replacementById.values()) changedThreadIds.add(threadKeyFor(e));
 
   set((state) => {
     const threadEmailsCache = new Map(state.threadEmailsCache);
@@ -2533,9 +2537,9 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
           Array.from(currentState.selectedEmailIds).filter(id => !removedEmailIds.has(id))
         );
         const nextExpandedThreadIds = new Set(currentState.expandedThreadIds);
-        nextExpandedThreadIds.delete(email.threadId);
+        nextExpandedThreadIds.delete(threadKeyFor(email));
         const nextThreadEmailsCache = new Map(currentState.threadEmailsCache);
-        nextThreadEmailsCache.delete(email.threadId);
+        nextThreadEmailsCache.delete(threadKeyFor(email));
 
         return {
           emails: currentState.emails.filter(currentEmail => !removedEmailIds.has(currentEmail.id)),
@@ -3810,8 +3814,8 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
 
         // Invalidate thread email caches for threads whose composition changed
         // so expanded threads pick up new/removed emails.
-        const prevThreadIds = new Set(currentEmails.map(e => e.threadId));
-        const nextThreadIds = new Set(merged.map(e => e.threadId));
+        const prevThreadIds = new Set(currentEmails.map(e => threadKeyFor(e)));
+        const nextThreadIds = new Set(merged.map(e => threadKeyFor(e)));
         const changedThreadIds = new Set<string>();
         for (const tid of prevThreadIds) {
           if (!nextThreadIds.has(tid)) changedThreadIds.add(tid);
@@ -3822,13 +3826,15 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         // Also check threads where the set of email IDs changed
         const prevEmailsByThread = new Map<string, Set<string>>();
         for (const e of currentEmails) {
-          if (!prevEmailsByThread.has(e.threadId)) prevEmailsByThread.set(e.threadId, new Set());
-          prevEmailsByThread.get(e.threadId)!.add(e.id);
+          const key = threadKeyFor(e);
+          if (!prevEmailsByThread.has(key)) prevEmailsByThread.set(key, new Set());
+          prevEmailsByThread.get(key)!.add(e.id);
         }
         const nextEmailsByThread = new Map<string, Set<string>>();
         for (const e of merged) {
-          if (!nextEmailsByThread.has(e.threadId)) nextEmailsByThread.set(e.threadId, new Set());
-          nextEmailsByThread.get(e.threadId)!.add(e.id);
+          const key = threadKeyFor(e);
+          if (!nextEmailsByThread.has(key)) nextEmailsByThread.set(key, new Set());
+          nextEmailsByThread.get(key)!.add(e.id);
         }
         for (const [tid, nextIds] of nextEmailsByThread) {
           const prevIds = prevEmailsByThread.get(tid);
@@ -3894,38 +3900,40 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   },
 
   // Thread expansion actions
-  toggleThreadExpansion: (threadId) => {
+  toggleThreadExpansion: (threadKey) => {
     const { expandedThreadIds } = get();
     const newExpandedThreadIds = new Set(expandedThreadIds);
 
-    if (newExpandedThreadIds.has(threadId)) {
-      newExpandedThreadIds.delete(threadId);
+    if (newExpandedThreadIds.has(threadKey)) {
+      newExpandedThreadIds.delete(threadKey);
     } else {
-      newExpandedThreadIds.add(threadId);
+      newExpandedThreadIds.add(threadKey);
     }
 
     set({ expandedThreadIds: newExpandedThreadIds });
   },
 
-  fetchThreadEmails: async (client, threadId) => {
+  fetchThreadEmails: async (client, threadKey) => {
     const { threadEmailsCache, selectedMailbox } = get();
     const mailboxes = resolveActionMailboxes();
 
     // Check if we already have this thread cached
-    const cachedEmails = threadEmailsCache.get(threadId);
+    const cachedEmails = threadEmailsCache.get(threadKey);
     if (cachedEmails && cachedEmails.length > 0) {
       return cachedEmails;
     }
 
     // Set loading state
-    set({ isLoadingThread: threadId });
+    set({ isLoadingThread: threadKey });
 
     try {
       // Route to the thread's own account. In aggregate views `selectedMailbox`
       // is virtual, so derive the client + accountId from a list email of this
       // thread (handles shared/group accounts); otherwise fall back to the
-      // selected-mailbox shared-folder logic. (#281)
-      const threadEmail = get().emails.find(e => e.threadId === threadId);
+      // selected-mailbox shared-folder logic. (#281) The key is account-scoped,
+      // so this can't pick up another account's thread with the same id.
+      const threadEmail = get().emails.find(e => threadKeyFor(e) === threadKey);
+      const threadId = threadEmail?.threadId ?? threadIdFromKey(threadKey);
       const route = resolveThreadRoute({
         isUnifiedView: get().isUnifiedView,
         ref: threadEmail,
@@ -3953,7 +3961,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
 
       // Update cache
       const newCache = new Map(get().threadEmailsCache);
-      newCache.set(threadId, emails);
+      newCache.set(threadKey, emails);
 
       set({
         threadEmailsCache: newCache,
@@ -3968,10 +3976,10 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     }
   },
 
-  markThreadAsRead: async (client, threadId) => {
+  markThreadAsRead: async (client, threadKey) => {
     const state = get();
-    const threadEmails = state.threadEmailsCache.get(threadId) ?? [];
-    const mainEmails = state.emails.filter(e => e.threadId === threadId);
+    const threadEmails = state.threadEmailsCache.get(threadKey) ?? [];
+    const mainEmails = state.emails.filter(e => threadKeyFor(e) === threadKey);
 
     // Combine unique emails from both sources
     const allEmailMap = new Map<string, Email>();
@@ -4019,9 +4027,9 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
 
       // Update threadEmailsCache
       const newCache = new Map(state.threadEmailsCache);
-      const cached = newCache.get(threadId);
+      const cached = newCache.get(threadKey);
       if (cached) {
-        newCache.set(threadId, cached.map(e =>
+        newCache.set(threadKey, cached.map(e =>
           unreadSet.has(e.id) ? { ...e, keywords: { ...e.keywords, $seen: true } } : e
         ));
       }
@@ -4068,16 +4076,33 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     const { emails } = get();
     if (emails.length === 0) return;
 
-    const uniqueThreadIds = [...new Set(emails.map(e => e.threadId).filter(Boolean))];
-    if (uniqueThreadIds.length === 0) return;
+    // Thread ids are per-account, so ask each source account for its own
+    // threads and file the counts under the account-scoped key. One client
+    // answering for every id would return the ACTIVE account's unrelated
+    // thread "b" for every other account's thread "b" in an aggregate view.
+    const bySource = new Map<string, { ref: Email; threadIds: Set<string> }>();
+    for (const e of emails) {
+      if (!e.threadId) continue;
+      const source = `${e.sourceClientAccountId ?? ''}/${e.sourceAccountId ?? ''}`;
+      const entry = bySource.get(source) ?? { ref: e, threadIds: new Set<string>() };
+      entry.threadIds.add(e.threadId);
+      bySource.set(source, entry);
+    }
+    if (bySource.size === 0) return;
 
     try {
-      const effectiveClient = resolveActionClient(client);
-      const threads = await effectiveClient.getThreads(uniqueThreadIds);
-
       const newCounts = new Map(get().threadEmailCounts);
-      for (const thread of threads) {
-        newCounts.set(thread.id, thread.emailIds?.length ?? 0);
+      for (const { ref, threadIds } of bySource.values()) {
+        const { client: sourceClient, accountId } = resolveEmailActionContext(ref, client);
+        const threads = await sourceClient.getThreads([...threadIds], accountId);
+        for (const thread of threads) {
+          const key = threadKeyFor({
+            threadId: thread.id,
+            sourceClientAccountId: ref.sourceClientAccountId,
+            sourceAccountId: ref.sourceAccountId,
+          });
+          newCounts.set(key, thread.emailIds?.length ?? 0);
+        }
       }
       set({ threadEmailCounts: newCounts });
     } catch {

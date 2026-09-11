@@ -118,7 +118,7 @@ function MailLayoutPreview({
 export function LayoutSettings() {
   const t = useTranslations('settings.appearance');
   const tEmail = useTranslations('settings.email_behavior');
-  const { toolbarPosition, showToolbarLabels, hideAccountSwitcher, showRailAccountList, enableUnifiedMailbox, includeGroupInUnified, unifiedCrossAccount, allMailFolderIds, enableCrossUnreadView, enableCrossStarredView, enableCrossAllView, colorfulSidebarIcons, tintListRowsByTag, showFolderTotalCount, faviconUnreadBadge, mailLayout, proInterface, updateSetting } = useSettingsStore();
+  const { toolbarPosition, showToolbarLabels, hideAccountSwitcher, showRailAccountList, enableUnifiedMailbox, includeGroupInUnified, unifiedCrossAccount, allMailFolderIds, enableCrossUnreadView, enableCrossStarredView, enableCrossAllView, colorfulSidebarIcons, tintListRowsByTag, tintListRowsByAccount, showFolderTotalCount, faviconUnreadBadge, mailLayout, proInterface, updateSetting } = useSettingsStore();
   const { isSettingLocked, isSettingHidden, isFeatureEnabled } = usePolicyStore();
   const accounts = useAccountStore(s => s.accounts);
   const activeAccountId = useAccountStore(s => s.activeAccountId);
@@ -228,6 +228,13 @@ export function LayoutSettings() {
         <ToggleSwitch
           checked={tintListRowsByTag}
           onChange={(checked) => updateSetting('tintListRowsByTag', checked)}
+        />
+      </SettingItem>
+
+      <SettingItem label={t('tint_list_rows_by_account.label')} description={t('tint_list_rows_by_account.description')}>
+        <ToggleSwitch
+          checked={tintListRowsByAccount}
+          onChange={(checked) => updateSetting('tintListRowsByAccount', checked)}
         />
       </SettingItem>
 
