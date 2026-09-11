@@ -311,7 +311,7 @@
     "fullscreen": "全螢幕",
     "exit_fullscreen": "離開全螢幕",
     "export_email": "匯出為 .eml",
-    "forward_as_attachment": "以附件轉寄",
+    "forward_as_attachment": "以附件形式轉寄",
     "import_email": "匯入 .eml 或 .zip",
     "keyboard_shortcuts": "鍵盤快速鍵 (?)",
     "email_source": "郵件原始碼",
