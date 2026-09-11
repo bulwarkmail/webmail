@@ -15,6 +15,8 @@ import { useTimeGridInteractions } from "@/hooks/use-time-grid-interactions";
 import { useScrollWindow, getScrollStart, setScrollStart, scrollToStart } from "@/hooks/use-scroll-window";
 import { dayKey, type ScrollWindowViewProps } from "@/lib/calendar-scroll-window";
 import type { PendingEventPreview } from "./event-modal";
+import { useSettingsStore } from "@/stores/settings-store";
+import { createCompactNightTimeScale, createLinearTimeScale, hourRowHeight } from "@/lib/calendar-time-scale";
 
 interface CalendarDayViewProps extends ScrollWindowViewProps {
   selectedDate: Date;
@@ -34,6 +36,8 @@ interface CalendarDayViewProps extends ScrollWindowViewProps {
 }
 
 const HOUR_HEIGHT = 64;
+// See the matching constant in calendar-week-view.tsx for the rationale.
+const NIGHT_HOUR_HEIGHT = 22;
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 const FALLBACK_COL_WIDTH = 600;
 
@@ -176,12 +180,20 @@ export function CalendarDayView({
     [days, eventsByDay, tasksByDay],
   );
 
+  const compactNightHours = useSettingsStore((s) => s.compactNightHours);
+  const scale = useMemo(
+    () => compactNightHours
+      ? createCompactNightTimeScale({ dayHourHeight: HOUR_HEIGHT, nightHourHeight: NIGHT_HOUR_HEIGHT })
+      : createLinearTimeScale(HOUR_HEIGHT),
+    [compactNightHours],
+  );
+
   useEffect(() => {
     if (rootRef.current) {
       const now = displayNow();
-      rootRef.current.scrollTop = Math.max(0, (now.getHours() - 1) * HOUR_HEIGHT);
+      rootRef.current.scrollTop = Math.max(0, scale.minutesToY((now.getHours() - 1) * 60));
     }
-  }, []);
+  }, [scale]);
 
   const scrollToFocus = useCallback(() => {
     const root = rootRef.current;
@@ -259,7 +271,7 @@ export function CalendarDayView({
     quickCreate, handleSlotClick, handleSlotDoubleClick, handleQuickCreateSubmit, handleQuickCreateCancel,
     dropTarget, handleColumnDragOver, handleColumnDragLeave, handleColumnDrop,
   } = useTimeGridInteractions({
-    hourHeight: HOUR_HEIGHT,
+    timeScale: scale,
     calendars,
     onCreateRange: onCreateAtTime,
     errorMessages: {
@@ -387,13 +399,13 @@ export function CalendarDayView({
         </div>
 
         <div>
-          <div className="flex relative" style={{ height: 24 * HOUR_HEIGHT }}>
+          <div className="flex relative" style={{ height: scale.totalHeight }}>
             <div className={gutterClass}>
               {HOURS.map((h) => (
                 <div
                   key={h}
                   className="relative text-muted-foreground text-end pe-2"
-                  style={{ height: HOUR_HEIGHT }}
+                  style={{ height: hourRowHeight(scale, h) }}
                 >
                   {h > 0 && (
                     <span className={cn("absolute top-0 right-2 -translate-y-1/2 leading-none", isMobile ? "text-[10px]" : "text-xs")}>
@@ -432,14 +444,14 @@ export function CalendarDayView({
                         onDoubleClick={() => handleSlotDoubleClick(day, h)}
                         onContextMenu={onContextMenuEmpty ? (e) => onContextMenuEmpty(e, day, h, false) : undefined}
                         className="border-b border-border/50 hover:bg-muted/30 cursor-pointer transition-colors"
-                        style={{ height: HOUR_HEIGHT }}
+                        style={{ height: hourRowHeight(scale, h) }}
                       />
                     ))}
 
                     {layouted.map(({ event: ev, column, totalColumns, startMinutes, endMinutes }) => {
                       const durMin = Math.max(15, endMinutes - startMinutes);
-                      const baseTop = (startMinutes / 60) * HOUR_HEIGHT;
-                      const baseHeight = Math.max(24, (durMin / 60) * HOUR_HEIGHT);
+                      const baseTop = scale.minutesToY(startMinutes);
+                      const baseHeight = Math.max(24, scale.minutesToY(startMinutes + durMin) - baseTop);
                       const isResizing = resizeVisual?.eventId === ev.id;
                       const top = isResizing ? resizeVisual!.topPx : baseTop;
                       const height = isResizing ? resizeVisual!.heightPx : baseHeight;
@@ -491,7 +503,7 @@ export function CalendarDayView({
                     {today && (
                       <div
                         className="absolute left-0 right-0 z-20 pointer-events-none"
-                        style={{ top: (nowMinutes / 60) * HOUR_HEIGHT }}
+                        style={{ top: scale.minutesToY(nowMinutes) }}
                       >
                         <div className="flex items-center">
                           <div className="w-2.5 h-2.5 rounded-full bg-destructive -ms-1" />
@@ -512,8 +524,8 @@ export function CalendarDayView({
                       <div
                         className="absolute left-1 right-1 z-30 rounded-md pointer-events-none bg-primary/15 border-2 border-primary/30 border-dashed"
                         style={{
-                          top: (dragCreate.startMinutes / 60) * HOUR_HEIGHT,
-                          height: ((dragCreate.endMinutes - dragCreate.startMinutes) / 60) * HOUR_HEIGHT,
+                          top: scale.minutesToY(dragCreate.startMinutes),
+                          height: scale.minutesToY(dragCreate.endMinutes) - scale.minutesToY(dragCreate.startMinutes),
                         }}
                       >
                         <div className="text-[10px] font-medium text-primary px-1.5 py-0.5">
@@ -525,7 +537,7 @@ export function CalendarDayView({
                     {dropTarget?.dayKey === key && (
                       <div
                         className="absolute left-0 right-0 z-30 pointer-events-none"
-                        style={{ top: (dropTarget.minutes / 60) * HOUR_HEIGHT }}
+                        style={{ top: scale.minutesToY(dropTarget.minutes) }}
                       >
                         <div className="flex items-center">
                           <div className="w-2.5 h-2.5 rounded-full bg-primary -ms-1" />
@@ -548,8 +560,8 @@ export function CalendarDayView({
                           <div
                             className="absolute left-2 right-2 z-10 rounded-md pointer-events-none border-2 border-dashed overflow-hidden"
                             style={{
-                              top: (startMin / 60) * HOUR_HEIGHT,
-                              height: Math.max(24, (durationMin / 60) * HOUR_HEIGHT),
+                              top: scale.minutesToY(startMin),
+                              height: Math.max(24, scale.minutesToY(startMin + durationMin) - scale.minutesToY(startMin)),
                               borderColor: color,
                               backgroundColor: `${color}10`,
                             }}

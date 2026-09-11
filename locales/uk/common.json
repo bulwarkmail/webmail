@@ -2952,6 +2952,8 @@
       "show_week_numbers_desc": "Відображення номерів тижнів у міні-календарі",
       "calendar_free_scroll": "Вільне прокручування",
       "calendar_free_scroll_desc": "Безперервно прокручувати місяці, тижні та дні замість одного періоду за раз",
+      "compact_night_hours": "Compact night hours",
+      "compact_night_hours_desc": "Shrink the 22:00-06:00 band in the day and week views so the whole day fits with less scrolling",
       "enable_tasks": "Увімкнути завдання",
       "enable_tasks_desc": "Показати перегляд завдань у календарі для керування справами",
       "show_tasks_on_calendar": "Показати завдання в календарі",

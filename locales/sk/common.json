@@ -2952,6 +2952,8 @@
       "show_week_numbers_desc": "Zobrazovať čísla týždňov v minikalendári",
       "calendar_free_scroll": "Voľné posúvanie",
       "calendar_free_scroll_desc": "Plynulo prechádzať mesiace, týždne a dni namiesto jedného obdobia naraz",
+      "compact_night_hours": "Compact night hours",
+      "compact_night_hours_desc": "Shrink the 22:00-06:00 band in the day and week views so the whole day fits with less scrolling",
       "enable_tasks": "Povoliť úlohy",
       "enable_tasks_desc": "Zobrazovať zobrazenie úloh v kalendári",
       "show_tasks_on_calendar": "Zobraziť úlohy v kalendári",

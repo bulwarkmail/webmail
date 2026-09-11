@@ -371,6 +371,8 @@ interface SettingsState {
   showWeekNumbers: boolean;
   /** Scroll continuously through months/weeks/days (#759) instead of one period at a time. */
   calendarFreeScroll: boolean;
+  /** Shrink the 22:00-06:00 band in the day/week time-grid views so a full day fits with less scrolling. */
+  compactNightHours: boolean;
   calendarHoverPreview: CalendarHoverPreview;
 
   // Calendar Tasks
@@ -609,6 +611,7 @@ const DEFAULT_SETTINGS = {
   showTimeInMonthView: false,
   showWeekNumbers: false,
   calendarFreeScroll: true,
+  compactNightHours: false,
   calendarHoverPreview: 'delay-500ms' as CalendarHoverPreview,
 
   // Calendar Tasks
@@ -844,6 +847,7 @@ export const useSettingsStore = create<SettingsState>()(
           showTimeInMonthView: state.showTimeInMonthView,
           showWeekNumbers: state.showWeekNumbers,
           calendarFreeScroll: state.calendarFreeScroll,
+          compactNightHours: state.compactNightHours,
           calendarHoverPreview: state.calendarHoverPreview,
           toolbarPosition: state.toolbarPosition,
           hideAccountSwitcher: state.hideAccountSwitcher,

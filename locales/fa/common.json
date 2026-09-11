@@ -2952,6 +2952,8 @@
       "show_week_numbers_desc": "نمایش شماره هفته در تقویم کوچک",
       "calendar_free_scroll": "پیمایش آزاد",
       "calendar_free_scroll_desc": "پیمایش پیوسته در ماه‌ها، هفته‌ها و روزها به جای یک بازه در هر بار",
+      "compact_night_hours": "Compact night hours",
+      "compact_night_hours_desc": "Shrink the 22:00-06:00 band in the day and week views so the whole day fits with less scrolling",
       "enable_tasks": "فعال کردن وظایف",
       "enable_tasks_desc": "نمایش نمای وظایف در تقویم برای مدیریت کارها",
       "show_tasks_on_calendar": "نمایش وظایف روی تقویم",

@@ -1,12 +1,14 @@
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useTimeGridInteractions } from "@/hooks/use-time-grid-interactions";
+import { createLinearTimeScale } from "@/lib/calendar-time-scale";
 
 const errorMessages = { resize: "resize", move: "move", created: "created", error: "error" };
+const linearScale = createLinearTimeScale(60);
 
 function renderInteractions(onCreateRange = vi.fn()) {
   const { result } = renderHook(() =>
-    useTimeGridInteractions({ hourHeight: 60, calendars: [], onCreateRange, errorMessages }),
+    useTimeGridInteractions({ timeScale: linearScale, calendars: [], onCreateRange, errorMessages }),
   );
   return { result, onCreateRange };
 }

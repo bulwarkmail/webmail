@@ -2951,6 +2951,8 @@
       "show_week_numbers_desc": "Rādīt nedēļu numurus mini kalendārā",
       "calendar_free_scroll": "Brīva ritināšana",
       "calendar_free_scroll_desc": "Nepārtraukti ritināt cauri mēnešiem, nedēļām un dienām, nevis pa vienam periodam",
+      "compact_night_hours": "Compact night hours",
+      "compact_night_hours_desc": "Shrink the 22:00-06:00 band in the day and week views so the whole day fits with less scrolling",
       "enable_tasks": "Iespējot uzdevumus",
       "enable_tasks_desc": "Rādīt uzdevumu sadaļu kalendārā",
       "show_tasks_on_calendar": "Rādīt uzdevumus kalendārā",
