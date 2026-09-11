@@ -4,8 +4,8 @@
 
 - Read, compose, reply, reply-all, and forward in a Tiptap rich-text editor that handles inline images, drag-and-drop embedding, and tables
 - Gmail-style threading, expanded inline, with a conversation toggle you can switch off
-- The Unified Mailbox combines Inbox, Sent, Drafts, Junk, Archive, and Trash. By default it stays inside the active account and its shared/group folders; an admin can unlock a cross-account mode that spans every connected account.
-- All mail, Unread, and Starred obey that same account boundary and can be narrowed to a per-account folder selection. Every row names the folder its message came from.
+- The Unified Mailbox combines Inbox, Sent, Drafts, Junk, Archive, and Trash. By default it stays inside the active account and its shared/group folders; an admin can unlock a cross-account mode that spans every connected account. The combined folder rows only appear once 2+ accounts are connected (or "Include group inboxes" is on and a group inbox exists) — with just one account and no group inbox, turning the setting on adds the section header but nothing under it.
+- All mail, Unread, and Starred obey that same account boundary and can be narrowed to a per-account folder selection. Every row names the folder its message came from. Each of these three is a separate admin policy gate (see [Admin & extensibility](#admin--extensibility)) — if none are enabled for your instance, the toggles for them do not even appear in Settings → Appearance, and the Unified Mailbox section can look empty even with the feature turned on and multiple accounts connected. Ask your admin to enable the ones you need.
 - Search runs across all unified views; the per-role mailboxes add the full filter panel on top
 - Three mail layouts: split three-pane, focused list, or reading pane at the bottom
 - Drafts auto-save, keeping the chosen identity, the HTML body, and correct `In-Reply-To` / `References` headers on replies
