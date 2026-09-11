@@ -311,7 +311,7 @@
     "fullscreen": "전체 화면",
     "exit_fullscreen": "전체 화면 종료",
     "export_email": ".eml 파일로 내보내기",
-    "forward_as_attachment": "Forward as attachment",
+    "forward_as_attachment": "첨부 파일로 전달",
     "import_email": ".eml 또는 .zip 가져오기",
     "keyboard_shortcuts": "단축키 (?)",
     "email_source": "메일 원본",

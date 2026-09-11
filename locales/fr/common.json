@@ -311,7 +311,7 @@
     "fullscreen": "Plein écran",
     "exit_fullscreen": "Quitter le plein écran",
     "export_email": "Exporter en .eml",
-    "forward_as_attachment": "Forward as attachment",
+    "forward_as_attachment": "Transférer en pièce jointe",
     "import_email": "Importer .eml ou .zip",
     "keyboard_shortcuts": "Raccourcis clavier (?)",
     "email_source": "Source de l'email",

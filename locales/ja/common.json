@@ -311,7 +311,7 @@
     "fullscreen": "全画面表示",
     "exit_fullscreen": "全画面表示を終了",
     "export_email": ".emlとしてエクスポート",
-    "forward_as_attachment": "Forward as attachment",
+    "forward_as_attachment": "添付ファイルとして転送",
     "import_email": ".eml または .zip をインポート",
     "keyboard_shortcuts": "キーボードショートカット (?)",
     "email_source": "メールソース",

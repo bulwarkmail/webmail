@@ -311,7 +311,7 @@
     "fullscreen": "Teljes képernyő",
     "exit_fullscreen": "Kilépés a teljes képernyőből",
     "export_email": "Exportálás .eml-ként",
-    "forward_as_attachment": "Forward as attachment",
+    "forward_as_attachment": "Továbbítás mellékletként",
     "import_email": "Importálás .eml vagy .zip fájlból",
     "keyboard_shortcuts": "Billentyűparancsok (?)",
     "email_source": "E-mail forrás",

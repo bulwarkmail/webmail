@@ -311,7 +311,7 @@
     "fullscreen": "Fuld skærm",
     "exit_fullscreen": "Afslut fuld skærm",
     "export_email": "Eksportér som .eml",
-    "forward_as_attachment": "Forward as attachment",
+    "forward_as_attachment": "Videresend som vedhæftet fil",
     "import_email": "Importér .eml eller .zip",
     "keyboard_shortcuts": "Tastaturgenveje (?)",
     "email_source": "E-mail-kilde",
