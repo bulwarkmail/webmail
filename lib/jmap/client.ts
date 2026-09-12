@@ -3280,6 +3280,14 @@ export class JMAPClient implements IJMAPClient {
     throw new Error("Failed to update vacation response");
   }
 
+  private checkAttachmentSize(attachments: Array<{ size: number }> | undefined, accountId: string): void {
+    const mail = this.session?.accounts?.[accountId]?.accountCapabilities?.['urn:ietf:params:jmap:mail'] as { maxSizeAttachmentsPerEmail?: number } | undefined;
+    const limit = mail?.maxSizeAttachmentsPerEmail;
+    if (limit && (attachments ?? []).reduce((total, attachment) => total + attachment.size, 0) > limit) {
+      throw new Error(`Attachments exceed this account's ${(limit / 1_000_000).toFixed(1)} MB total limit. Remove or reduce attachments. Your draft has been kept.`);
+    }
+  }
+
   async createDraft(
     to: string[],
     subject: string,
@@ -3293,6 +3301,7 @@ export class JMAPClient implements IJMAPClient {
     fromName?: string,
     htmlBody?: string
   ): Promise<string> {
+    this.checkAttachmentSize(attachments, this.accountId);
     const mailboxes = await this.getMailboxes();
     const draftsMailbox = mailboxes.find(mb => mb.role === 'drafts');
     if (!draftsMailbox) {
@@ -3362,7 +3371,7 @@ export class JMAPClient implements IJMAPClient {
     if (response.methodResponses?.[0]?.[0] === "Email/set") {
       const result = response.methodResponses[0][1];
 
-      if (result.notCreated) {
+      if (result.notCreated && Object.keys(result.notCreated).length) {
         const errors = result.notCreated;
         const firstError = Object.values(errors)[0] as { description?: string; type?: string };
         console.error('Draft save error:', firstError);
@@ -3417,6 +3426,7 @@ export class JMAPClient implements IJMAPClient {
     const targetAccountId = (fromEmail && Object.keys(this.accounts).find(id =>
       this.accounts[id]?.name?.toLowerCase() === fromEmail.toLowerCase()
     )) || this.accountId;
+    this.checkAttachmentSize(attachments, targetAccountId);
     const mboxResp = await this.getMailboxResponse(targetAccountId);
     const mailboxes = (mboxResp.methodResponses?.[0]?.[1]?.list || []) as Mailbox[];
     const sentMailbox = mailboxes.find(mb => mb.role === 'sent');
@@ -3569,12 +3579,12 @@ export class JMAPClient implements IJMAPClient {
 
     if (response.methodResponses) {
       for (const [methodName, result] of response.methodResponses) {
-        if (methodName.endsWith('/error')) {
-          console.error('[sendEmail] JMAP method error:', methodName, result);
-          throw new Error(result.description || `Failed to send email: ${result.type}`);
+        if (methodName === 'error' || methodName.endsWith('/error')) {
+          if (emailSubmissionId) { filingError = filingError ?? result.description ?? result.type ?? 'post-send filing failed'; continue; }
+          throw new Error(result.description || `Email was not confirmed sent (${result.type || 'server error'}). Your draft has been kept.`);
         }
 
-        if (result.notCreated) {
+        if (result.notCreated && Object.keys(result.notCreated).length) {
           // Include method name + full error object so it's clear whether the
           // failure came from Email/set (draft create) or EmailSubmission/set
           // (actual send) and which JMAP error type/properties were returned.
@@ -3625,6 +3635,10 @@ export class JMAPClient implements IJMAPClient {
           serverSendAt = result.created['1'].sendAt;
         }
       }
+    }
+
+    if (!emailSubmissionId) {
+      throw new Error('Send confirmation was not received. Check Sent before sending again. Your draft has been kept.');
     }
 
     // The message is out (or scheduled) - now it is safe to drop the old
@@ -4204,6 +4218,7 @@ export class JMAPClient implements IJMAPClient {
       xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
       xhr.setRequestHeader('Authorization', this.authHeader);
       xhr.responseType = 'text';
+      xhr.timeout = JMAPClient.TRANSFER_TIMEOUT_MS;
 
       const onAbort = () => xhr.abort();
       if (signal) signal.addEventListener('abort', onAbort, { once: true });
@@ -4226,10 +4241,11 @@ export class JMAPClient implements IJMAPClient {
         if (xhr.status >= 200 && xhr.status < 300) {
           resolve(xhr.responseText);
         } else {
-          reject(new Error(`Failed to upload file: ${xhr.status} - ${xhr.responseText}`));
+          reject(new Error(xhr.status === 413 ? 'Upload exceeds the server size or storage limit. Reduce the file size or try later; your message has been kept.' : `File upload failed (${xhr.status}). Your message has been kept; retry the attachment.`));
         }
       };
-      xhr.onerror = () => { cleanup(); reject(new Error('Upload network error')); };
+      xhr.onerror = () => { cleanup(); reject(new Error('Connection lost while uploading. Your message has been kept; retry the attachment.')); };
+      xhr.ontimeout = () => { cleanup(); reject(new Error('Attachment upload timed out. Your message has been kept; retry the attachment.')); };
       xhr.onabort = () => { cleanup(); reject(new DOMException('Upload aborted', 'AbortError')); };
 
       xhr.send(file);
@@ -4257,6 +4273,8 @@ export class JMAPClient implements IJMAPClient {
       throw new Error('Not connected. Call connect() first.');
     }
 
+    const uploadLimit = this.getMaxSizeUpload();
+    if (uploadLimit && file.size > uploadLimit) throw new Error(`File exceeds the ${(uploadLimit / 1_000_000).toFixed(1)} MB upload limit. Choose a smaller file; your message has been kept.`);
     const uploadUrl = this.session.uploadUrl;
     if (!uploadUrl) {
       throw new Error('Upload URL not available');
@@ -4284,8 +4302,7 @@ export class JMAPClient implements IJMAPClient {
         body: file,
       }, { timeoutMs: JMAPClient.TRANSFER_TIMEOUT_MS });
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to upload file: ${response.status} - ${errorText}`);
+        throw new Error(response.status === 413 ? 'Upload exceeds the server size or storage limit. Reduce the file size or try later; your message has been kept.' : `File upload failed (${response.status}). Your message has been kept; retry the attachment.`);
       }
       responseText = await response.text();
     }
