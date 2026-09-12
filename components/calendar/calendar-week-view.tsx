@@ -47,7 +47,7 @@ const HOUR_HEIGHT = 60;
 // aggressively than the night. Heights are still tall enough for an
 // event's title/time to stay legible and clickable (paired with the
 // existing per-event min-height clamp in the renderer below).
-const COMPACT_DAY_HOUR_HEIGHT = 32;
+const COMPACT_DAY_HOUR_HEIGHT = 36;
 const NIGHT_HOUR_HEIGHT = 20;
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 const MOBILE_COL_WIDTH = 120;
