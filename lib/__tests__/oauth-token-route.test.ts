@@ -76,6 +76,8 @@ const fetchMock = vi.fn();
 describe('oauth token route - access token cache (#552)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // The route remembers redeemed refresh tokens per process.
+    vi.resetModules();
     cookieStore = new FakeCookies();
     getTokenEndpoint.mockResolvedValue('https://auth.example.com/token');
     buildOAuthParams.mockReturnValue(new URLSearchParams({ grant_type: 'refresh_token' }));
