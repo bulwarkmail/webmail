@@ -1,3 +1,4 @@
+import { getMailboxResponse } from './mailbox-pagination';
 import { generateUUID } from '@/lib/utils';
 import type { Email, Mailbox, MailboxRights, StateChange, AccountStates, CollectionChanges, ShareNotification, BusyPeriod, CalendarParticipantIdentity, CalendarEventNotification, Thread, Identity, EmailAddress, ContactCard, AddressBook, AddressBookRights, VacationResponse, Calendar, CalendarComponentType, CalendarRights, CalendarEvent, CalendarEventFilter, CalendarTask, CreateCalendarOptions, FileNode, FileNodeFilter, FileNodeRights, Principal, PushSubscription, EmailPushConfig, EmailSubmission, ScheduledEmail, SendEmailResult, SharedAccount } from "./types";
 import type { SieveScript, SieveCapabilities } from "./sieve-types";
@@ -1250,26 +1251,19 @@ export class JMAPClient implements IJMAPClient {
     }
   }
 
+  private getMailboxResponse(accountId: string): Promise<JMAPResponse> {
+    return getMailboxResponse(calls => this.request(calls), accountId, this.getMaxObjectsInGet());
+  }
+
   async getMailboxes(accountId?: string): Promise<Mailbox[]> {
     const acctId = accountId || this.accountId;
     try {
-      const response = await this.request([
-        ["Mailbox/get", { accountId: acctId }, "0"]
-      ]);
+      const response = await this.getMailboxResponse(acctId);
 
       if (response.methodResponses?.[0]?.[0] === "Mailbox/get") {
         const rawMailboxes = (response.methodResponses[0][1].list || []) as JMAPMailbox[];
 
         debug.log('jmap', `[JMAP Mailbox] getMailboxes returned ${rawMailboxes.length} mailboxes for account ${acctId}`);
-
-        // Warn if response might be truncated
-        const maxObjects = this.getMaxObjectsInGet();
-        if (rawMailboxes.length >= maxObjects) {
-          debug.warn('jmap', 
-            `[JMAP Mailbox] Response contains ${rawMailboxes.length} mailboxes which equals maxObjectsInGet (${maxObjects}). ` +
-            `Some mailboxes may be missing - nested folders could appear orphaned at root level.`
-          );
-        }
 
         // Log parentId references to detect potential orphans
         const returnedIds = new Set(rawMailboxes.map(mb => mb.id));
@@ -1340,11 +1334,7 @@ export class JMAPClient implements IJMAPClient {
         const isPrimary = accountId === this.accountId;
 
         try {
-          const response = await this.request([
-            ["Mailbox/get", {
-              accountId: accountId,
-            }, "0"]
-          ]);
+          const response = await this.getMailboxResponse(accountId);
 
           if (response.methodResponses?.[0]?.[0] === "Mailbox/get") {
             const rawMailboxes = (response.methodResponses[0][1].list || []) as JMAPMailbox[];
@@ -1354,15 +1344,6 @@ export class JMAPClient implements IJMAPClient {
             }
 
             debug.log('jmap', `[JMAP Mailbox] getAllMailboxes: account ${accountId} returned ${rawMailboxes.length} mailboxes (isPrimary: ${isPrimary})`);
-
-            // Warn if response might be truncated
-            const maxObjects = this.getMaxObjectsInGet();
-            if (rawMailboxes.length >= maxObjects) {
-              debug.warn('jmap', 
-                `[JMAP Mailbox] Account ${accountId}: response contains ${rawMailboxes.length} mailboxes which equals maxObjectsInGet (${maxObjects}). ` +
-                `Some mailboxes may be missing.`
-              );
-            }
 
             const mailboxes = rawMailboxes.map((mb) => ({
               id: isPrimary ? mb.id : `${accountId}:${mb.id}`,
@@ -3436,9 +3417,7 @@ export class JMAPClient implements IJMAPClient {
     const targetAccountId = (fromEmail && Object.keys(this.accounts).find(id =>
       this.accounts[id]?.name?.toLowerCase() === fromEmail.toLowerCase()
     )) || this.accountId;
-    const mboxResp = await this.request([
-      ["Mailbox/get", { accountId: targetAccountId }, "0"]
-    ]);
+    const mboxResp = await this.getMailboxResponse(targetAccountId);
     const mailboxes = (mboxResp.methodResponses?.[0]?.[1]?.list || []) as Mailbox[];
     const sentMailbox = mailboxes.find(mb => mb.role === 'sent');
     if (!sentMailbox) {
@@ -7773,7 +7752,7 @@ export class JMAPClient implements IJMAPClient {
     const methodCalls: JMAPMethodCall[] = [];
     for (const acctId of this.pollAccountIds()) {
       methodCalls.push(
-        ['Mailbox/get', { accountId: acctId, ids: null, properties: ['id'] }, `mbx:${acctId}`],
+        ['Mailbox/get', { accountId: acctId, ids: [], properties: ['id'] }, `mbx:${acctId}`],
         ['Email/get', { accountId: acctId, ids: [], properties: ['id'] }, `eml:${acctId}`],
       );
     }
