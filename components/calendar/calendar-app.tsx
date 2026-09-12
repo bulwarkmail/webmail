@@ -782,24 +782,40 @@ export function CalendarApp({ linkSegments }: CalendarAppProps = {}) {
     if (master) return master;
     if (!client) return null;
     try {
-      // The occurrence may belong to a different account than the currently
-      // active one (a shared calendar owned by another user). Two things
-      // must both be right for the caller's subsequent update/delete to
-      // land on the correct event: (a) search that account too, not just
-      // the active one - queryCalendarEvents alone defaults to the active
-      // account and comes back empty even though the master genuinely
-      // exists (#<issue>); (b) return it with a store-compatible id - a
-      // bare, unprefixed JMAP id looks like it belongs to the active
-      // account to resolveMutationTarget, which then silently resolves the
-      // mutation against the WRONG account instead of erroring, so the
-      // save/delete appears to succeed but touches nothing.
-      // queryAllCalendarEvents searches every account this session has
-      // calendar access to and already returns non-primary-account results
-      // prefixed the same way (`${accountId}:${id}`) as the store's own
-      // multi-account event list, so both problems are solved by using it
-      // here instead of the single-account queryCalendarEvents.
+      // Reaching here means client-side recurrence expansion is active
+      // (lib/recurrence-expansion.ts - a pre-0.16.20 Stalwart, or any server
+      // without synthetic-id support): the bare master is never itself kept
+      // in `events`, only its dated occurrences (each `id`'d
+      // `${master.id}:${recurrenceId}`), so the plain lookup above can never
+      // find it and we must query the server for it directly.
+      //
+      // Two things both need to be right for the caller's subsequent
+      // update/delete (routed through resolveMutationTarget in
+      // calendar-store.ts, which resolves purely from a known store id - it
+      // never sees this returned object) to land on the correct event:
+      //
+      // (a) search every account the session has calendar access to, not
+      //     just the currently active one - a plain queryCalendarEvents
+      //     defaults to the active account and comes back empty for an
+      //     event living on someone else's shared calendar, even though
+      //     the master genuinely exists there (#<issue>).
+      // (b) return it under a store-resident id. `occurrence` (the clicked
+      //     event) is always exactly such an id - resolveMutationTarget
+      //     resolves ANY of a series' occurrence ids to the same true
+      //     master via its `originalId`/`accountId` fields, which
+      //     `expandRecurringEvents` already copied onto every occurrence
+      //     from the real master when the range was first fetched. Handing
+      //     back the *queried* master's own (bare, non-store) id instead -
+      //     as an earlier version of this fix did - looks like it belongs
+      //     to the active account to resolveMutationTarget, which then
+      //     silently resolves the mutation against the WRONG account
+      //     instead of erroring: the save/delete appears to succeed (no
+      //     thrown error) but actually touches nothing. Mirrors the
+      //     analogous store-id substitution the server-instance branch
+      //     above already does, for the same reason.
       const results = await client.queryAllCalendarEvents({ uid: occurrence.uid });
-      return results.find(e => !e.recurrenceId && (e.recurrenceRules?.length ?? 0) > 0) || null;
+      const found = results.find(e => !e.recurrenceId && (e.recurrenceRules?.length ?? 0) > 0);
+      return found ? { ...found, id: occurrence.id, originalId: found.originalId ?? found.id } : null;
     } catch (error) {
       debug.error("Failed to query master event for UID:", occurrence.uid, error);
       throw error;
