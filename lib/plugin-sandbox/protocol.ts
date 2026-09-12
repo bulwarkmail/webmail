@@ -255,6 +255,8 @@ export const API_METHODS = [
   'email.setKeyword', 'email.removeKeyword',
   // Native tag definitions, discovery, and sidebar counts.
   'keywords.list', 'keywords.add', 'keywords.reorder', 'keywords.discover', 'keywords.getCounts', 'keywords.refreshCounts',
+  // Show a plugin's own result set in the message list.
+  'search.showMessages',
   // Message-list category tabs (Gmail-style inbox tabs).
   'tabs.set', 'tabs.clear', 'tabs.getState', 'tabs.categorize', 'tabs.refreshCounts',
   // Sieve integration for delivery-time classification plugins.
