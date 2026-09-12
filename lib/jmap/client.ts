@@ -374,6 +374,26 @@ const CALENDAR_TASK_PROPERTIES = [
   'percentComplete',  // Task-only per RFC 8984 §5.2.4 - used in detection heuristic
 ] as const;
 
+const TASK_PROGRESS_NORMALIZATION = new Map<string, CalendarTask['progress']>([
+  ['needs-action', 'needs-action'],
+  ['needs_action', 'needs-action'],
+  ['in-process', 'in-process'],
+  ['in_process', 'in-process'],
+  ['completed', 'completed'],
+  ['cancelled', 'cancelled'],
+  ['canceled', 'cancelled'],
+]);
+
+function normalizeCalendarTask(task: CalendarTask): CalendarTask {
+  const progress = task.progress as unknown;
+  if (typeof progress !== 'string') return task;
+
+  const normalizedProgress = TASK_PROGRESS_NORMALIZATION.get(progress.toLowerCase());
+  return normalizedProgress === undefined
+    ? task
+    : { ...task, progress: normalizedProgress };
+}
+
 /**
  * IANA time zone of the user - their `timeZone` setting when set (#755),
  * otherwise the browser's - sent as the `timeZone` argument on
@@ -6904,7 +6924,7 @@ export class JMAPClient implements IJMAPClient {
 
         if (!isExplicitTask && !isCalDavTask) continue;
 
-        tasks.push({ ...obj, '@type': 'Task' as const } as CalendarTask);
+        tasks.push(normalizeCalendarTask({ ...obj, '@type': 'Task' as const } as CalendarTask));
       }
 
       debug.log('tasks', 'CalendarTask/fetch complete,', tasks.length, 'tasks of', allObjects.length, 'objects');
@@ -6971,7 +6991,7 @@ export class JMAPClient implements IJMAPClient {
       const notFound = getResponse.methodResponses[0][1].notFound || [];
       debug.log('calendar', 'CalendarTask/create get response', { found: list.length, notFound });
       if (list[0]) {
-        const created = { ...list[0], '@type': 'Task' as const } as CalendarTask;
+        const created = normalizeCalendarTask({ ...list[0], '@type': 'Task' as const } as CalendarTask);
         debug.log('tasks', 'CalendarTask/create final task object', {
           id: created.id,
           uid: created.uid,
