@@ -780,9 +780,15 @@ export function CalendarApp({ linkSegments }: CalendarAppProps = {}) {
       e.uid === occurrence.uid && !e.recurrenceId && (e.recurrenceRules?.length ?? 0) > 0
     );
     if (master) return master;
-    if (!client) return null;
+    // The occurrence may belong to a different account than the currently
+    // active one (a shared calendar owned by another user) - query that
+    // account specifically, not whatever queryCalendarEvents defaults to
+    // (the active account), or the lookup silently comes back empty even
+    // though the master genuinely exists (#<issue>).
+    const accountClient = (occurrence.localAccountId && getClientByLocalAccountId(occurrence.localAccountId)) || client;
+    if (!accountClient) return null;
     try {
-      const results = await client.queryCalendarEvents({ uid: occurrence.uid });
+      const results = await accountClient.queryCalendarEvents({ uid: occurrence.uid }, undefined, undefined, occurrence.accountId);
       return results.find(e => !e.recurrenceId && (e.recurrenceRules?.length ?? 0) > 0) || null;
     } catch (error) {
       debug.error("Failed to query master event for UID:", occurrence.uid, error);
