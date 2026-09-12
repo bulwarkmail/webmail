@@ -1061,6 +1061,10 @@
         "label": "Tint List Rows by Tag Color",
         "description": "Shade each message row with its first tag color. Disable to keep rows plain; tag dots and chips still show the color."
       },
+      "tint_list_rows_by_account": {
+        "label": "Colora le righe in base all'account",
+        "description": "Nella vista unificata, colora ogni riga con il colore del suo account invece di mostrare il pallino. Ha la precedenza sulla tinta del tag; i tag mantengono il loro colore sulle etichette."
+      },
       "show_folder_total_count": {
         "label": "Mostra il numero totale di messaggi",
         "description": "Mostra il numero totale di messaggi accanto a cartelle ed etichette, insieme al conteggio dei non letti. Disattiva per mostrare solo i non letti."
@@ -3616,5 +3620,49 @@
     "preview_empty": "Seleziona un risultato per l'anteprima",
     "open_full": "Apri",
     "view_label": "Vista"
+  },
+  "account_vault": {
+    "title": "Account salvati",
+    "manage": "Gestisci account salvati",
+    "unlock": "Sblocca account salvati",
+    "owner": "Proprietario dell'archivio: {username}",
+    "choose_owner": "Account proprietario dell'archivio",
+    "loading": "Ricerca di un archivio salvato…",
+    "not_found": "Nessun archivio trovato per questo account. Creane uno in Impostazioni → Account dal dispositivo originale.",
+    "unlock_description": "Inserisci la password dell'archivio per riconnettere tutti gli account salvati.",
+    "create_description": "Scegli una password dedicata all'archivio di almeno 10 caratteri. Se la dimentichi, l'archivio non è recuperabile.",
+    "save_description": "Salva tutti i {count} account attuali. Scegli se includerne le password. Questo sostituisce l'archivio; risalva dopo ogni modifica. Gli account OAuth sono esclusi.",
+    "password": "Password dell'archivio",
+    "confirm_password": "Conferma la password dell'archivio",
+    "password_mismatch": "Le password non coincidono.",
+    "remember": "Mantieni gli account collegati su questo dispositivo",
+    "save": "Salva gli account attuali",
+    "working": "Operazione in corso…",
+    "close": "Chiudi",
+    "saved": "Archivio cifrato salvato sul server.",
+    "restored": "{connected} account riconnessi.",
+    "partial": "{connected} account riconnessi; {failed} richiedono un nuovo accesso.",
+    "errors": {
+      "invalid_archive": "L'archivio o l'indirizzo del server non è valido. Usa un server di posta HTTPS.",
+      "https_required": "Apri la webmail in HTTPS per sbloccare o salvare gli account.",
+      "password_length": "Usa una password dell'archivio tra 10 e 1024 caratteri.",
+      "unlock_failed": "Password dell'archivio errata o archivio danneggiato.",
+      "disabled": "Gli archivi degli account sono disattivati su questo server.",
+      "storage_failed": "Non è stato possibile leggere o salvare l'archivio. Riprova.",
+      "owner_signin_required": "Accedi alla casella del proprietario dell'archivio prima di salvare.",
+      "conflict": "Questo archivio è cambiato oppure non è stato ripristinato su questo dispositivo. Chiudi questa finestra, riaprila e sblocca l'archivio più recente prima di salvare.",
+      "accounts_disconnected": "Alcuni account non si sono collegati. Accedi di nuovo prima di salvare.",
+      "account_limit": "Limite di account raggiunto. Apri la webmail dal suo indirizzo HTTPS con HTTP/2 attivo.",
+      "account_conflict": "Un account locale usa un server o un metodo di accesso diverso. Risolvi prima di ripristinare questo archivio."
+    },
+    "detected_title": "Trovato un archivio di account salvati",
+    "detected_description": "Abbiamo trovato un archivio per {username}. Vuoi importare gli account salvati in questo browser? La password dell'archivio verrà richiesta subito dopo.",
+    "import": "Importa account",
+    "not_now": "Non ora",
+    "rescan": "Cerca di nuovo l'archivio",
+    "save_passwords": "Includi le password delle caselle nel salvataggio",
+    "import_passwords": "Importa anche le password delle caselle",
+    "passwords_hint": "Senza le password delle caselle viene importato solo l'elenco degli account. Accedi a quelli non ancora collegati. La password dell'archivio resta necessaria.",
+    "imported_without_passwords": "{count} account importati; {pending} richiedono l'accesso."
   }
 }

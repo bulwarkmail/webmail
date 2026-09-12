@@ -1,3 +1,4 @@
+import { getMailboxResponse } from './mailbox-pagination';
 import { generateUUID } from '@/lib/utils';
 import type { Email, Mailbox, MailboxRights, StateChange, AccountStates, CollectionChanges, ShareNotification, BusyPeriod, CalendarParticipantIdentity, CalendarEventNotification, Thread, Identity, EmailAddress, ContactCard, AddressBook, AddressBookRights, VacationResponse, Calendar, CalendarComponentType, CalendarRights, CalendarEvent, CalendarEventFilter, CalendarTask, CreateCalendarOptions, FileNode, FileNodeFilter, FileNodeRights, Principal, PushSubscription, EmailPushConfig, EmailSubmission, ScheduledEmail, SendEmailResult, SharedAccount } from "./types";
 import type { SieveScript, SieveCapabilities } from "./sieve-types";
@@ -1253,26 +1254,19 @@ export class JMAPClient implements IJMAPClient {
     }
   }
 
+  private getMailboxResponse(accountId: string): Promise<JMAPResponse> {
+    return getMailboxResponse(calls => this.request(calls), accountId, this.getMaxObjectsInGet());
+  }
+
   async getMailboxes(accountId?: string): Promise<Mailbox[]> {
     const acctId = accountId || this.accountId;
     try {
-      const response = await this.request([
-        ["Mailbox/get", { accountId: acctId }, "0"]
-      ]);
+      const response = await this.getMailboxResponse(acctId);
 
       if (response.methodResponses?.[0]?.[0] === "Mailbox/get") {
         const rawMailboxes = (response.methodResponses[0][1].list || []) as JMAPMailbox[];
 
         debug.log('jmap', `[JMAP Mailbox] getMailboxes returned ${rawMailboxes.length} mailboxes for account ${acctId}`);
-
-        // Warn if response might be truncated
-        const maxObjects = this.getMaxObjectsInGet();
-        if (rawMailboxes.length >= maxObjects) {
-          debug.warn('jmap', 
-            `[JMAP Mailbox] Response contains ${rawMailboxes.length} mailboxes which equals maxObjectsInGet (${maxObjects}). ` +
-            `Some mailboxes may be missing - nested folders could appear orphaned at root level.`
-          );
-        }
 
         // Log parentId references to detect potential orphans
         const returnedIds = new Set(rawMailboxes.map(mb => mb.id));
@@ -1343,11 +1337,7 @@ export class JMAPClient implements IJMAPClient {
         const isPrimary = accountId === this.accountId;
 
         try {
-          const response = await this.request([
-            ["Mailbox/get", {
-              accountId: accountId,
-            }, "0"]
-          ]);
+          const response = await this.getMailboxResponse(accountId);
 
           if (response.methodResponses?.[0]?.[0] === "Mailbox/get") {
             const rawMailboxes = (response.methodResponses[0][1].list || []) as JMAPMailbox[];
@@ -1357,15 +1347,6 @@ export class JMAPClient implements IJMAPClient {
             }
 
             debug.log('jmap', `[JMAP Mailbox] getAllMailboxes: account ${accountId} returned ${rawMailboxes.length} mailboxes (isPrimary: ${isPrimary})`);
-
-            // Warn if response might be truncated
-            const maxObjects = this.getMaxObjectsInGet();
-            if (rawMailboxes.length >= maxObjects) {
-              debug.warn('jmap', 
-                `[JMAP Mailbox] Account ${accountId}: response contains ${rawMailboxes.length} mailboxes which equals maxObjectsInGet (${maxObjects}). ` +
-                `Some mailboxes may be missing.`
-              );
-            }
 
             const mailboxes = rawMailboxes.map((mb) => ({
               id: isPrimary ? mb.id : `${accountId}:${mb.id}`,
@@ -3302,6 +3283,14 @@ export class JMAPClient implements IJMAPClient {
     throw new Error("Failed to update vacation response");
   }
 
+  private checkAttachmentSize(attachments: Array<{ size: number }> | undefined, accountId: string): void {
+    const mail = this.session?.accounts?.[accountId]?.accountCapabilities?.['urn:ietf:params:jmap:mail'] as { maxSizeAttachmentsPerEmail?: number } | undefined;
+    const limit = mail?.maxSizeAttachmentsPerEmail;
+    if (limit && (attachments ?? []).reduce((total, attachment) => total + attachment.size, 0) > limit) {
+      throw new Error(`Attachments exceed this account's ${(limit / 1_000_000).toFixed(1)} MB total limit. Remove or reduce attachments. Your draft has been kept.`);
+    }
+  }
+
   async createDraft(
     to: string[],
     subject: string,
@@ -3315,6 +3304,7 @@ export class JMAPClient implements IJMAPClient {
     fromName?: string,
     htmlBody?: string
   ): Promise<string> {
+    this.checkAttachmentSize(attachments, this.accountId);
     const mailboxes = await this.getMailboxes();
     const draftsMailbox = mailboxes.find(mb => mb.role === 'drafts');
     if (!draftsMailbox) {
@@ -3384,7 +3374,7 @@ export class JMAPClient implements IJMAPClient {
     if (response.methodResponses?.[0]?.[0] === "Email/set") {
       const result = response.methodResponses[0][1];
 
-      if (result.notCreated) {
+      if (result.notCreated && Object.keys(result.notCreated).length) {
         const errors = result.notCreated;
         const firstError = Object.values(errors)[0] as { description?: string; type?: string };
         console.error('Draft save error:', firstError);
@@ -3439,9 +3429,8 @@ export class JMAPClient implements IJMAPClient {
     const targetAccountId = (fromEmail && Object.keys(this.accounts).find(id =>
       this.accounts[id]?.name?.toLowerCase() === fromEmail.toLowerCase()
     )) || this.accountId;
-    const mboxResp = await this.request([
-      ["Mailbox/get", { accountId: targetAccountId }, "0"]
-    ]);
+    this.checkAttachmentSize(attachments, targetAccountId);
+    const mboxResp = await this.getMailboxResponse(targetAccountId);
     const mailboxes = (mboxResp.methodResponses?.[0]?.[1]?.list || []) as Mailbox[];
     const sentMailbox = mailboxes.find(mb => mb.role === 'sent');
     if (!sentMailbox) {
@@ -3593,12 +3582,12 @@ export class JMAPClient implements IJMAPClient {
 
     if (response.methodResponses) {
       for (const [methodName, result] of response.methodResponses) {
-        if (methodName.endsWith('/error')) {
-          console.error('[sendEmail] JMAP method error:', methodName, result);
-          throw new Error(result.description || `Failed to send email: ${result.type}`);
+        if (methodName === 'error' || methodName.endsWith('/error')) {
+          if (emailSubmissionId) { filingError = filingError ?? result.description ?? result.type ?? 'post-send filing failed'; continue; }
+          throw new Error(result.description || `Email was not confirmed sent (${result.type || 'server error'}). Your draft has been kept.`);
         }
 
-        if (result.notCreated) {
+        if (result.notCreated && Object.keys(result.notCreated).length) {
           // Include method name + full error object so it's clear whether the
           // failure came from Email/set (draft create) or EmailSubmission/set
           // (actual send) and which JMAP error type/properties were returned.
@@ -3649,6 +3638,10 @@ export class JMAPClient implements IJMAPClient {
           serverSendAt = result.created['1'].sendAt;
         }
       }
+    }
+
+    if (!emailSubmissionId) {
+      throw new Error('Send confirmation was not received. Check Sent before sending again. Your draft has been kept.');
     }
 
     // The message is out (or scheduled) - now it is safe to drop the old
@@ -4228,6 +4221,7 @@ export class JMAPClient implements IJMAPClient {
       xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
       xhr.setRequestHeader('Authorization', this.authHeader);
       xhr.responseType = 'text';
+      xhr.timeout = JMAPClient.TRANSFER_TIMEOUT_MS;
 
       const onAbort = () => xhr.abort();
       if (signal) signal.addEventListener('abort', onAbort, { once: true });
@@ -4250,10 +4244,11 @@ export class JMAPClient implements IJMAPClient {
         if (xhr.status >= 200 && xhr.status < 300) {
           resolve(xhr.responseText);
         } else {
-          reject(new Error(`Failed to upload file: ${xhr.status} - ${xhr.responseText}`));
+          reject(new Error(xhr.status === 413 ? 'Upload exceeds the server size or storage limit. Reduce the file size or try later; your message has been kept.' : `File upload failed (${xhr.status}). Your message has been kept; retry the attachment.`));
         }
       };
-      xhr.onerror = () => { cleanup(); reject(new Error('Upload network error')); };
+      xhr.onerror = () => { cleanup(); reject(new Error('Connection lost while uploading. Your message has been kept; retry the attachment.')); };
+      xhr.ontimeout = () => { cleanup(); reject(new Error('Attachment upload timed out. Your message has been kept; retry the attachment.')); };
       xhr.onabort = () => { cleanup(); reject(new DOMException('Upload aborted', 'AbortError')); };
 
       xhr.send(file);
@@ -4281,6 +4276,8 @@ export class JMAPClient implements IJMAPClient {
       throw new Error('Not connected. Call connect() first.');
     }
 
+    const uploadLimit = this.getMaxSizeUpload();
+    if (uploadLimit && file.size > uploadLimit) throw new Error(`File exceeds the ${(uploadLimit / 1_000_000).toFixed(1)} MB upload limit. Choose a smaller file; your message has been kept.`);
     const uploadUrl = this.session.uploadUrl;
     if (!uploadUrl) {
       throw new Error('Upload URL not available');
@@ -4308,8 +4305,7 @@ export class JMAPClient implements IJMAPClient {
         body: file,
       }, { timeoutMs: JMAPClient.TRANSFER_TIMEOUT_MS });
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to upload file: ${response.status} - ${errorText}`);
+        throw new Error(response.status === 413 ? 'Upload exceeds the server size or storage limit. Reduce the file size or try later; your message has been kept.' : `File upload failed (${response.status}). Your message has been kept; retry the attachment.`);
       }
       responseText = await response.text();
     }
@@ -7776,7 +7772,7 @@ export class JMAPClient implements IJMAPClient {
     const methodCalls: JMAPMethodCall[] = [];
     for (const acctId of this.pollAccountIds()) {
       methodCalls.push(
-        ['Mailbox/get', { accountId: acctId, ids: null, properties: ['id'] }, `mbx:${acctId}`],
+        ['Mailbox/get', { accountId: acctId, ids: [], properties: ['id'] }, `mbx:${acctId}`],
         ['Email/get', { accountId: acctId, ids: [], properties: ['id'] }, `eml:${acctId}`],
       );
     }

@@ -38,6 +38,7 @@ export interface ProReplyContext {
   htmlBody?: string;
   receivedAt?: string;
   accountId?: string;
+  sourceClientAccountId?: string;
   attachments?: Array<{
     blobId: string; name?: string; type: string; size: number;
     cid?: string; disposition?: string;
