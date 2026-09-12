@@ -780,15 +780,25 @@ export function CalendarApp({ linkSegments }: CalendarAppProps = {}) {
       e.uid === occurrence.uid && !e.recurrenceId && (e.recurrenceRules?.length ?? 0) > 0
     );
     if (master) return master;
-    // The occurrence may belong to a different account than the currently
-    // active one (a shared calendar owned by another user) - query that
-    // account specifically, not whatever queryCalendarEvents defaults to
-    // (the active account), or the lookup silently comes back empty even
-    // though the master genuinely exists (#<issue>).
-    const accountClient = (occurrence.localAccountId && getClientByLocalAccountId(occurrence.localAccountId)) || client;
-    if (!accountClient) return null;
+    if (!client) return null;
     try {
-      const results = await accountClient.queryCalendarEvents({ uid: occurrence.uid }, undefined, undefined, occurrence.accountId);
+      // The occurrence may belong to a different account than the currently
+      // active one (a shared calendar owned by another user). Two things
+      // must both be right for the caller's subsequent update/delete to
+      // land on the correct event: (a) search that account too, not just
+      // the active one - queryCalendarEvents alone defaults to the active
+      // account and comes back empty even though the master genuinely
+      // exists (#<issue>); (b) return it with a store-compatible id - a
+      // bare, unprefixed JMAP id looks like it belongs to the active
+      // account to resolveMutationTarget, which then silently resolves the
+      // mutation against the WRONG account instead of erroring, so the
+      // save/delete appears to succeed but touches nothing.
+      // queryAllCalendarEvents searches every account this session has
+      // calendar access to and already returns non-primary-account results
+      // prefixed the same way (`${accountId}:${id}`) as the store's own
+      // multi-account event list, so both problems are solved by using it
+      // here instead of the single-account queryCalendarEvents.
+      const results = await client.queryAllCalendarEvents({ uid: occurrence.uid });
       return results.find(e => !e.recurrenceId && (e.recurrenceRules?.length ?? 0) > 0) || null;
     } catch (error) {
       debug.error("Failed to query master event for UID:", occurrence.uid, error);
