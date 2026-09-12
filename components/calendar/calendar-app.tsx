@@ -124,6 +124,18 @@ export function CalendarApp({ linkSegments }: CalendarAppProps = {}) {
   const sharedCalendarColors = useSettingsStore((s) => s.sharedCalendarColors);
   const setSharedCalendarColor = useSettingsStore((s) => s.setSharedCalendarColor);
   const removeSharedCalendarColor = useSettingsStore((s) => s.removeSharedCalendarColor);
+  // Settings persist asynchronously (localStorage rehydration happens after
+  // the initial render, not before it). Without this guard the shared-color
+  // auto-assign effect below can run while `sharedCalendarColors` is still
+  // its pre-hydration empty default, see every shared calendar as "missing"
+  // a color, and immediately pick fresh random ones - clobbering whatever
+  // the user had actually saved as soon as rehydration finishes a moment
+  // later (#<issue>: "color changes on every restart").
+  const [settingsHydrated, setSettingsHydrated] = useState(() => useSettingsStore.persist.hasHydrated());
+  useEffect(() => {
+    if (settingsHydrated) return;
+    return useSettingsStore.persist.onFinishHydration(() => setSettingsHydrated(true));
+  }, [settingsHydrated]);
   const taskStore = useTaskStore();
   const fetchTasksFn = useTaskStore(state => state.fetchTasks);
   const { identities } = useIdentityStore();
@@ -1295,6 +1307,7 @@ export function CalendarApp({ linkSegments }: CalendarAppProps = {}) {
   // once per calendar (guarded by the presence of an existing key), and the
   // user can still overwrite it from the sidebar.
   useEffect(() => {
+    if (!settingsHydrated) return;
     const shared = calendars.filter((c) => c.isShared);
     const missing = shared.filter((c) => !sharedCalendarColors[sharedCalendarColorKey(c)]);
     if (missing.length === 0) return;
@@ -1312,7 +1325,7 @@ export function CalendarApp({ linkSegments }: CalendarAppProps = {}) {
       used.add(color.toLowerCase());
       setSharedCalendarColor(sharedCalendarColorKey(cal), color);
     }
-  }, [calendars, sharedCalendarColors, setSharedCalendarColor]);
+  }, [calendars, sharedCalendarColors, setSharedCalendarColor, settingsHydrated]);
 
   const allCalendars = useMemo(() => {
     if (!showBirthdayCalendar) return displayCalendars;
