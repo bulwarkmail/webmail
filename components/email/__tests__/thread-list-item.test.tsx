@@ -14,6 +14,18 @@ vi.mock('@/stores/auth-store', () => ({
   useAuthStore: () => ({ identities: [] }),
 }));
 
+const ACCOUNT_TEAL = { id: 'acct-teal', avatarColor: '#0d9488', label: 'Teal account' };
+const accountState = {
+  getAccountById: (id: string) => (id === ACCOUNT_TEAL.id ? ACCOUNT_TEAL : undefined),
+};
+vi.mock('@/stores/account-store', () => ({
+  useAccountStore: Object.assign(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (selector: any) => (selector ? selector(accountState) : accountState),
+    { getState: () => accountState },
+  ),
+}));
+
 const makeEmail = (overrides: Partial<Email> = {}): Email => ({
   id: 'email-1',
   threadId: 'thread-1',
@@ -286,5 +298,85 @@ describe('ThreadListItem row tint', () => {
 
     expect(classes).not.toContain('bg-red-50');
     expect(classes).toContain('bg-accent/40');
+  });
+});
+
+
+describe('ThreadListItem account row tint', () => {
+  beforeEach(() => {
+    useSettingsStore.setState({
+      emailKeywords: [...DEFAULT_KEYWORDS],
+      showPreview: false,
+      mailLayout: 'split',
+      tintListRowsByTag: true,
+      tintListRowsByAccount: false,
+    });
+    useEmailStore.setState({
+      selectedEmailIds: new Set<string>(),
+      selectedMailbox: 'inbox',
+      isUnifiedView: false,
+    });
+  });
+
+  const row = (c: HTMLElement) => c.querySelector('[data-subject="Test Subject"]');
+  const accountEmail = () => makeEmail({ accountId: ACCOUNT_TEAL.id, accountLabel: ACCOUNT_TEAL.label });
+
+  it('tints the row with the account colour in the unified view', () => {
+    useSettingsStore.setState({ tintListRowsByAccount: true });
+    useEmailStore.setState({ isUnifiedView: true });
+
+    const { container } = renderRow(accountEmail());
+    expect(row(container)!.className).toContain('bg-teal-100');
+  });
+
+  it('leaves rows untinted outside the unified view', () => {
+    useSettingsStore.setState({ tintListRowsByAccount: true });
+    useEmailStore.setState({ isUnifiedView: false });
+
+    const { container } = renderRow(accountEmail());
+    expect(row(container)!.className).not.toContain('bg-teal-100');
+  });
+
+  it('does not tint by account while the setting is off', () => {
+    useEmailStore.setState({ isUnifiedView: true });
+
+    const { container } = renderRow(accountEmail());
+    expect(row(container)!.className).not.toContain('bg-teal-100');
+  });
+
+  it('still tints when accountId matches no local account', () => {
+    // Shared/group entries carry the JMAP owner id, which no AccountEntry
+    // matches - the row must fall back to a colour from the label, not stay blank.
+    useSettingsStore.setState({ tintListRowsByAccount: true });
+    useEmailStore.setState({ isUnifiedView: true });
+    const orphan = makeEmail({ accountId: 'jmap-owner-id-with-no-entry', accountLabel: 'luca@lucazanon.it' });
+
+    const { container } = renderRow(orphan);
+    expect(row(container)!.className).toMatch(/bg-[a-z]+-\d+/);
+  });
+
+  it('gives different accounts different tints', () => {
+    useSettingsStore.setState({ tintListRowsByAccount: true });
+    useEmailStore.setState({ isUnifiedView: true });
+
+    const a = renderRow(makeEmail({ accountId: 'x', accountLabel: 'luca@insulaab.it' }));
+    const clsA = row(a.container)!.className.match(/bg-[a-z]+-\d+/)![0];
+    a.unmount();
+    const b = renderRow(makeEmail({ accountId: 'y', accountLabel: 'luca@lucazanon.it' }));
+    const clsB = row(b.container)!.className.match(/bg-[a-z]+-\d+/)![0];
+
+    expect(clsA).not.toBe(clsB);
+  });
+
+  it('outranks the tag tint', () => {
+    useSettingsStore.setState({ tintListRowsByAccount: true });
+    useEmailStore.setState({ isUnifiedView: true });
+    const tagged = makeEmail({
+      accountId: ACCOUNT_TEAL.id,
+      keywords: { $seen: true, [`$label:${DEFAULT_KEYWORDS[0].id}`]: true },
+    });
+
+    const { container } = renderRow(tagged);
+    expect(row(container)!.className).toContain('bg-teal-100');
   });
 });

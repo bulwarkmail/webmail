@@ -9,7 +9,8 @@ import type { Attachment } from "@/lib/jmap/types";
 import { SelectableAvatar } from "@/components/email/selectable-avatar";
 import { Paperclip, Star, Pin, Circle, ChevronRight, ChevronDown, Loader2, MessageSquare, CheckSquare, Square, Reply, Forward, CalendarClock, Folder, Archive, Trash2, MailOpen, ShieldAlert } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { useSettingsStore } from "@/stores/settings-store";
+import { useSettingsStore, KEYWORD_PALETTE } from "@/stores/settings-store";
+import { accountTintKey, generateAvatarColor } from "@/lib/account-utils";
 import { useUIStore } from "@/stores/ui-store";
 import { useEmailStore } from "@/stores/email-store";
 import { useAccountStore, type AccountEntry } from "@/stores/account-store";
@@ -176,6 +177,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
     const { sortTagIds, tagColor } = useKeywordFormat();
     const { variant: tagVariant, placement: tagPlacement } = useTagDisplay();
     const tintListRowsByTag = useSettingsStore((state) => state.tintListRowsByTag);
+    const tintListRowsByAccount = useSettingsStore((state) => state.tintListRowsByAccount);
     const density = useSettingsStore((state) => state.density);
     const mailLayout = useSettingsStore((state) => state.mailLayout);
     const timeFormat = useSettingsStore((state) => state.timeFormat);
@@ -202,7 +204,22 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
       : null;
 
     const tagIds = sortTagIds(getEmailTagIds(email.keywords));
-    const resolvedRowTint = !tintListRowsByTag ? null : (rowTint ?? (tagIds[0] ? tagColor(tagIds[0]).rowTint : null));
+    // The account tint stands in for the per-account dot, so it outranks the
+    // tag tint - the tag still shows its own colour on its chip.
+    //
+    // `accountId` only resolves to a local account for personal entries; shared
+    // ones carry the JMAP owner id, which no AccountEntry matches. Falling back
+    // to the reaching client and then to a colour derived from the label means
+    // every row that knows which account it came from gets tinted, instead of
+    // silently staying blank.
+    const accountTintSource = accountColor
+      ?? (email.sourceClientAccountId ? getAccountById(email.sourceClientAccountId)?.avatarColor : undefined)
+      ?? (email.accountLabel ? generateAvatarColor(email.accountLabel) : undefined);
+    const accountRowTint = (tintListRowsByAccount && isUnifiedView && accountTintSource)
+      ? (KEYWORD_PALETTE[accountTintKey(accountTintSource)]?.rowTint ?? null)
+      : null;
+    const resolvedRowTint = accountRowTint
+      ?? (!tintListRowsByTag ? null : (rowTint ?? (tagIds[0] ? tagColor(tagIds[0]).rowTint : null)));
 
     const { dragHandlers, isDragging } = useEmailDrag({
       email,
@@ -392,7 +409,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
             {isFocusedMailLayout ? (
               <div className="flex items-center justify-between gap-3">
                 <div className="flex min-w-0 flex-1 items-center gap-3">
-                  {isUnifiedView && email.accountId && accountColor && (
+                  {isUnifiedView && email.accountId && accountColor && !tintListRowsByAccount && (
                     <span
                       className="w-2 h-2 rounded-full flex-shrink-0"
                       style={{ backgroundColor: accountColor }}
@@ -463,7 +480,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
               <>
                 <div className="flex items-center justify-between gap-2 mb-1">
                   <div className="flex items-center gap-2 min-w-0 flex-1">
-                    {isUnifiedView && email.accountId && accountColor && (
+                    {isUnifiedView && email.accountId && accountColor && !tintListRowsByAccount && (
                       <span
                         className="w-2 h-2 rounded-full flex-shrink-0"
                         style={{ backgroundColor: accountColor }}
@@ -681,9 +698,17 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
     const { sortTagIds, tagColor } = useKeywordFormat();
     const { variant: tagVariant, placement: tagPlacement } = useTagDisplay();
     const tintListRowsByTag = useSettingsStore((state) => state.tintListRowsByTag);
+    const tintListRowsByAccount = useSettingsStore((state) => state.tintListRowsByAccount);
     // A collapsed row speaks for every message under it, so it carries their tags too.
     const tagIds = sortTagIds(getThreadTagIds(thread.emails));
-    const rowTint = (tintListRowsByTag && tagIds[0]) ? tagColor(tagIds[0]).rowTint : null;
+    const threadTintSource = threadAccountColor
+      ?? (latestEmail.sourceClientAccountId ? getAccountById(latestEmail.sourceClientAccountId)?.avatarColor : undefined)
+      ?? (latestEmail.accountLabel ? generateAvatarColor(latestEmail.accountLabel) : undefined);
+    const accountRowTint = (tintListRowsByAccount && isUnifiedView && threadTintSource)
+      ? (KEYWORD_PALETTE[accountTintKey(threadTintSource)]?.rowTint ?? null)
+      : null;
+    const rowTint = accountRowTint
+      ?? ((tintListRowsByTag && tagIds[0]) ? tagColor(tagIds[0]).rowTint : null);
 
     const isSelected = selectedEmailId === latestEmail.id ||
       thread.emails.some(e => e.id === selectedEmailId);
@@ -885,7 +910,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
               {isFocusedMailLayout ? (
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex min-w-0 flex-1 items-center gap-3">
-                    {isUnifiedView && latestEmail.accountId && threadAccountColor && (
+                    {isUnifiedView && latestEmail.accountId && threadAccountColor && !tintListRowsByAccount && (
                       <span
                         className="w-2 h-2 rounded-full flex-shrink-0"
                         style={{ backgroundColor: threadAccountColor }}
@@ -962,7 +987,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                 <>
                   <div className="flex items-center justify-between gap-2 mb-1">
                     <div className="flex items-center gap-2 min-w-0 flex-1">
-                      {isUnifiedView && latestEmail.accountId && threadAccountColor && (
+                      {isUnifiedView && latestEmail.accountId && threadAccountColor && !tintListRowsByAccount && (
                         <span
                           className="w-2 h-2 rounded-full flex-shrink-0"
                           style={{ backgroundColor: threadAccountColor }}

@@ -172,6 +172,12 @@ SETTINGS_DATA_DIR=./data/settings    # mount as a volume in Docker
 
 Credentials are encrypted with AES-256-GCM and stored in an httpOnly cookie (30-day expiry). Settings sync stores per-account preferences encrypted at rest and requires `SESSION_SECRET`.
 
+With settings sync enabled, **Settings → Account → Saved accounts** can also save
+a browser-encrypted archive of basic-auth accounts. On another device, enter the
+archive owner's username on the login page and choose **Unlock saved accounts**
+to reconnect them with one archive password. Saving is explicit; see
+[account archive setup and security boundaries](ACCOUNT_VAULT.md).
+
 </details>
 
 <details>
