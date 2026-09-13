@@ -316,6 +316,21 @@ ADMIN_CONFIG_READONLY=true           # enforce read-only mode at the app layer
 
 The split lets you mount the config volume read-only after the setup wizard completes. Legacy installs that pre-date the split keep working through `ADMIN_DATA_DIR`.
 
+Managed plugin bundles use an Ed25519 signing key. By default, Bulwark loads or lazily creates `ADMIN_CONFIG_DIR/plugin-signing.key`. Immutable deployments can keep the private key in a read-only secret mount instead:
+
+```env
+PLUGIN_SIGNING_KEY_FILE=/run/credentials/bulwark.service/plugin-signing-key
+```
+
+Generate a compatible PEM PKCS#8 key outside the config tree, then expose it read-only through a systemd credential, Docker secret, or Kubernetes Secret:
+
+```bash
+openssl genpkey -algorithm Ed25519 -out plugin-signing-key
+chmod 600 plugin-signing-key
+```
+
+Bulwark only reads the exact external path; it never generates, rewrites, or changes permissions on that file. Keep the key out of images, source control, and world-readable locations. After replacing the key, restart Bulwark to clear the server-side cache and reload or reopen active clients to clear their public-key cache. Already-open pages may reject signatures until they reload.
+
 </details>
 
 <details>

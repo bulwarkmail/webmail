@@ -5,10 +5,10 @@
 // attacker swaps the bundle bytes in transit or at rest, the client refuses
 // to load anything that doesn't verify against the host's public key.
 //
-// The keypair lives at `data/admin/plugin-signing.key` (PEM-encoded
-// PKCS#8 private, mode 0600) and is generated lazily on first use. Operators
-// who want to pin the key out-of-band can drop a pre-generated PEM at that
-// path before first boot - the loader just reads what's there.
+// By default, the keypair lives at `data/admin/plugin-signing.key`
+// (PEM-encoded PKCS#8 private, mode 0600) and is generated lazily on first
+// use. Operators can instead point PLUGIN_SIGNING_KEY_FILE at a read-only
+// secret outside the admin config directory.
 
 import { generateKeyPairSync, createPrivateKey, createPublicKey, sign as nodeSign, KeyObject } from 'node:crypto';
 import { readFile, writeFile, chmod } from 'node:fs/promises';
@@ -21,18 +21,41 @@ const KEY_FILENAME = 'plugin-signing.key';
 let cached: { privateKey: KeyObject; publicKey: KeyObject } | null = null;
 let initPromise: Promise<void> | null = null;
 
+function parseKey(pem: string, source: string): { privateKey: KeyObject; publicKey: KeyObject } {
+  let privateKey: KeyObject;
+  try {
+    if (!pem.includes('-----BEGIN PRIVATE KEY-----')) throw new Error('not PKCS#8 PEM');
+    privateKey = createPrivateKey({ key: pem, format: 'pem', type: 'pkcs8' });
+  } catch {
+    throw new Error(`${source} is not a valid PEM PKCS#8 private key`);
+  }
+  if (privateKey.asymmetricKeyType !== 'ed25519') {
+    throw new Error(`${source} has wrong key type (${privateKey.asymmetricKeyType}); expected ed25519`);
+  }
+  return { privateKey, publicKey: createPublicKey(privateKey) };
+}
+
+async function loadExternal(path: string): Promise<{ privateKey: KeyObject; publicKey: KeyObject }> {
+  let pem: string;
+  try {
+    pem = await readFile(path, 'utf-8');
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    throw new Error(`Cannot read plugin signing key from PLUGIN_SIGNING_KEY_FILE: ${detail}`);
+  }
+  return parseKey(pem, 'PLUGIN_SIGNING_KEY_FILE');
+}
+
 async function loadOrCreate(): Promise<{ privateKey: KeyObject; publicKey: KeyObject }> {
+  const externalPath = process.env.PLUGIN_SIGNING_KEY_FILE;
+  if (externalPath !== undefined) return loadExternal(externalPath);
+
   await ensureConfigDir();
   const path = getConfigPath(KEY_FILENAME);
 
   if (existsSync(path)) {
     const pem = await readFile(path, 'utf-8');
-    const privateKey = createPrivateKey({ key: pem, format: 'pem' });
-    if (privateKey.asymmetricKeyType !== 'ed25519') {
-      throw new Error(`plugin-signing.key has wrong key type (${privateKey.asymmetricKeyType}); expected ed25519`);
-    }
-    const publicKey = createPublicKey(privateKey);
-    return { privateKey, publicKey };
+    return parseKey(pem, KEY_FILENAME);
   }
 
   // First boot: generate and persist. Use sync APIs so a half-written file
