@@ -22,6 +22,106 @@ function getSlot(request: NextRequest): number {
 
 type CookieStore = Awaited<ReturnType<typeof cookies>>;
 
+// Refresh tokens are single-use at most IdPs (PocketID, Rauthy, Keycloak with
+// rotation): redeeming one rotates it, and a second redemption of the same
+// value is refused with invalid_grant. Two contexts can still present the
+// same token at once - a PWA and a Safari tab, or a request sent before the
+// previous refresh's Set-Cookie landed - and the loser of that race must not
+// be treated as revoked, or its account silently disappears.
+//
+// Both maps are per-process, which holds for the single-container deployment;
+// running several instances would need sticky sessions for this route.
+
+interface RefreshTokens {
+  access_token: string;
+  refresh_token?: string;
+  expires_in?: number;
+}
+
+type RefreshOutcome =
+  | { ok: true; tokens: RefreshTokens }
+  | { ok: false; status: number; error: string };
+
+// Long enough to cover a backgrounded tab resuming with a stale cookie, short
+// enough that a truly revoked token is not honoured for long.
+const REFRESH_GRACE_MS = 5 * 60 * 1000;
+const REFRESH_GRACE_MAX_ENTRIES = 1000;
+const inFlightRefreshes = new Map<string, Promise<RefreshOutcome>>();
+const recentRotations = new Map<string, { outcome: RefreshOutcome; at: number }>();
+
+function pruneRecentRotations(now: number): void {
+  for (const [token, entry] of recentRotations) {
+    if (now - entry.at > REFRESH_GRACE_MS) recentRotations.delete(token);
+  }
+  while (recentRotations.size > REFRESH_GRACE_MAX_ENTRIES) {
+    const oldest = recentRotations.keys().next().value;
+    if (oldest === undefined) break;
+    recentRotations.delete(oldest);
+  }
+}
+
+async function redeemAtIdp(refreshToken: string, serverId: string | null): Promise<RefreshOutcome> {
+  // The refresh token may have been minted by the password+TOTP login route,
+  // which works without a configured OAuth client by falling back to the
+  // default client id - refreshing must fall back the same way (#873).
+  const tokenEndpoint = await getTokenEndpoint(serverId, { fallbackClientId: DEFAULT_CLIENT_ID });
+
+  const params = buildOAuthParams({
+    grant_type: 'refresh_token',
+    refresh_token: refreshToken,
+  }, serverId, { fallbackClientId: DEFAULT_CLIENT_ID });
+
+  const tokenResponse = await fetch(tokenEndpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: params.toString(),
+  });
+
+  if (!tokenResponse.ok) {
+    return { ok: false, status: tokenResponse.status, error: await tokenResponse.text() };
+  }
+
+  const tokens = (await tokenResponse.json()) as RefreshTokens;
+  if (!tokens.access_token) {
+    logger.error('Refresh response missing access_token', { response: JSON.stringify(tokens).substring(0, 500) });
+    return { ok: false, status: 502, error: 'Invalid token response' };
+  }
+  return { ok: true, tokens };
+}
+
+async function redeemRefreshToken(refreshToken: string, serverId: string | null): Promise<RefreshOutcome> {
+  const now = Date.now();
+  pruneRecentRotations(now);
+
+  const inFlight = inFlightRefreshes.get(refreshToken);
+  if (inFlight) return inFlight;
+
+  // The IdP is asked first, deliberately. Answering a stale token from the
+  // rotation record before asking would keep a lost-response straggler
+  // signed in, but it would also hide a replayed (stolen) refresh token from
+  // an IdP whose reuse detection exists to catch exactly that. Keeping the
+  // detection signal is worth an occasional sign-out; the record below only
+  // softens the loser of a race this process itself can vouch for.
+  const pending = redeemAtIdp(refreshToken, serverId)
+    .then((outcome) => {
+      if (outcome.ok) {
+        recentRotations.set(refreshToken, { outcome, at: Date.now() });
+        return outcome;
+      }
+      // A refusal of a token this process rotated moments ago comes from a
+      // straggler still holding the old value; answering with the rotation
+      // result converges it on the new cookie. A refused token that was never
+      // rotated here is genuinely revoked.
+      const rejected = outcome.status === 400 || outcome.status === 401 || outcome.status === 403;
+      const recent = recentRotations.get(refreshToken);
+      if (rejected && recent && Date.now() - recent.at <= REFRESH_GRACE_MS) return recent.outcome;
+      return outcome;
+    })
+    .finally(() => { inFlightRefreshes.delete(refreshToken); });
+  inFlightRefreshes.set(refreshToken, pending);
+  return pending;
+}
+
 /**
  * Cache the access token for the slot so a page reload can resume with it.
  *
@@ -117,29 +217,17 @@ export async function PUT(request: NextRequest) {
       }
     }
 
-    // The refresh token may have been minted by the password+TOTP login route,
-    // which works without a configured OAuth client by falling back to the
-    // default client id - refreshing must fall back the same way (#873).
-    const tokenEndpoint = await getTokenEndpoint(serverId, { fallbackClientId: DEFAULT_CLIENT_ID });
+    const outcome = await redeemRefreshToken(refreshToken, serverId);
 
-    const params = buildOAuthParams({
-      grant_type: 'refresh_token',
-      refresh_token: refreshToken,
-    }, serverId, { fallbackClientId: DEFAULT_CLIENT_ID });
-
-    const tokenResponse = await fetch(tokenEndpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: params.toString(),
-    });
-
-    if (!tokenResponse.ok) {
-      const errorText = await tokenResponse.text();
-      logger.error('Token refresh failed', { status: tokenResponse.status, error: errorText });
+    if (!outcome.ok) {
+      logger.error('Token refresh failed', { status: outcome.status, error: outcome.error });
+      if (outcome.status === 502) {
+        return NextResponse.json({ error: 'Invalid token response' }, { status: 502 });
+      }
       // Drop the refresh token only when the server definitively rejected it
       // (invalid/expired/revoked grant). A 5xx or 429 is an outage - keeping
       // the cookie lets the session resume once the server is back.
-      const status = tokenResponse.status;
+      const status = outcome.status;
       if (status === 400 || status === 401 || status === 403) {
         cookieStore.delete(cookieName);
         cookieStore.delete(refreshTokenServerCookieName(slot));
@@ -149,12 +237,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Token endpoint unavailable' }, { status: 503 });
     }
 
-    const tokens = await tokenResponse.json();
-
-    if (!tokens.access_token) {
-      logger.error('Refresh response missing access_token', { response: JSON.stringify(tokens).substring(0, 500) });
-      return NextResponse.json({ error: 'Invalid token response' }, { status: 502 });
-    }
+    const { tokens } = outcome;
 
     if (tokens.refresh_token) {
       cookieStore.set(cookieName, tokens.refresh_token, getCookieOptions());
