@@ -60,7 +60,8 @@
       "back_to_login": "חזרה לכניסה"
     },
     "jmap_server_label": "שרת",
-    "jmap_server_auto_picked": "שרת שנבחר מדומיין הדוא״ל שלך."
+    "jmap_server_auto_picked": "שרת שנבחר מדומיין הדוא״ל שלך.",
+    "jmap_server_connect_link": "No account on {server} yet? Connect one"
   },
   "sidebar": {
     "unified_mailbox": "תיבת דואר מאוחדת",

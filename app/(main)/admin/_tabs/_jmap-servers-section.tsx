@@ -16,6 +16,7 @@ interface RowDraft {
   label: string;
   url: string;
   domains: string;
+  connectUrl: string;
   oauthClientId: string;
   oauthIssuerUrl: string;
   oauthClientSecret: string;
@@ -28,6 +29,7 @@ function entryToDraft(e: JmapServerEntry): RowDraft {
     label: e.label,
     url: e.url,
     domains: (e.domains ?? []).join(', '),
+    connectUrl: e.connectUrl ?? '',
     oauthClientId: e.oauth?.clientId ?? '',
     oauthIssuerUrl: e.oauth?.issuerUrl ?? '',
     oauthClientSecret: e.oauth?.clientSecret ?? '',
@@ -43,6 +45,7 @@ function draftToEntry(d: RowDraft): JmapServerEntry | null {
     .split(/[,\s]+/)
     .map((s) => s.trim().toLowerCase())
     .filter(Boolean);
+  const connectUrl = d.connectUrl.trim();
   const clientId = d.oauthClientId.trim();
   const issuerUrl = d.oauthIssuerUrl.trim().replace(/\/+$/, '');
   const clientSecret = d.oauthClientSecret;
@@ -58,6 +61,7 @@ function draftToEntry(d: RowDraft): JmapServerEntry | null {
     label: d.label.trim() || id,
     url,
     ...(domains.length > 0 ? { domains } : {}),
+    ...(connectUrl ? { connectUrl } : {}),
     ...(oauth ? { oauth } : {}),
   };
 }
@@ -68,6 +72,7 @@ function emptyDraft(): RowDraft {
     label: '',
     url: '',
     domains: '',
+    connectUrl: '',
     oauthClientId: '',
     oauthIssuerUrl: '',
     oauthClientSecret: '',
@@ -208,6 +213,18 @@ export function JmapServersSection({ value, source, onChange, onRevert }: Props)
                 value={d.domains}
                 onChange={(e) => update(i, { domains: e.target.value })}
                 placeholder="example.com, example.org"
+                className="h-8 w-full rounded-md border border-input bg-background px-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              />
+            </div>
+            <div>
+              <label className="block text-[11px] font-medium text-muted-foreground mb-1">
+                Account sign-up / connect page (optional, linked from the login form when this server is selected)
+              </label>
+              <input
+                type="url"
+                value={d.connectUrl}
+                onChange={(e) => update(i, { connectUrl: e.target.value })}
+                placeholder="https://bridge.example.com/auth/google/start"
                 className="h-8 w-full rounded-md border border-input bg-background px-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               />
             </div>

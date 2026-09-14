@@ -13,6 +13,8 @@ export interface JmapServerEntry {
   label: string;
   url: string;
   domains?: string[];
+  /** Optional page where a user can create or connect an account on this server (shown as a link on the login form). */
+  connectUrl?: string;
   oauth?: JmapServerOAuthConfig;
 }
 
@@ -21,6 +23,7 @@ export interface PublicJmapServerEntry {
   label: string;
   url: string;
   domains: string[];
+  connectUrl?: string;
   oauth?: {
     clientId?: string;
     issuerUrl?: string;
@@ -66,6 +69,7 @@ export function parseJmapServers(raw: unknown): JmapServerEntry[] {
     if (!id || !ID_RE.test(id) || seen.has(id)) continue;
     if (!url || !isHttpUrl(url)) continue;
     seen.add(id);
+    const connectUrl = typeof e.connectUrl === 'string' && isHttpUrl(e.connectUrl.trim()) ? e.connectUrl.trim() : '';
     const domains = Array.isArray(e.domains)
       ? e.domains
           .filter((d): d is string => typeof d === 'string')
@@ -90,6 +94,7 @@ export function parseJmapServers(raw: unknown): JmapServerEntry[] {
       label: label || id,
       url,
       ...(domains.length > 0 ? { domains } : {}),
+      ...(connectUrl ? { connectUrl } : {}),
       ...(oauth ? { oauth } : {}),
     });
   }
@@ -103,6 +108,7 @@ export function redactJmapServers(servers: JmapServerEntry[]): PublicJmapServerE
     label: s.label,
     url: s.url,
     domains: s.domains ?? [],
+    ...(s.connectUrl ? { connectUrl: s.connectUrl } : {}),
     ...(s.oauth && (s.oauth.clientId || s.oauth.issuerUrl)
       ? {
           oauth: {

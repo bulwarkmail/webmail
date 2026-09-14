@@ -757,6 +757,22 @@ function LoginPageContent() {
     </div>
   ) : null;
 
+  // Servers that onboard accounts elsewhere (e.g. a Gmail bridge issuing its own
+  // credentials after Google consent) advertise a connect page; link it so a
+  // user without credentials yet knows where to get them.
+  const connectLink = selectedServer?.connectUrl ? (
+    <p className="text-xs text-muted-foreground leading-snug">
+      <a
+        href={selectedServer.connectUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-primary hover:underline"
+      >
+        {t("jmap_server_connect_link", { server: selectedServer.label })}
+      </a>
+    </p>
+  ) : null;
+
   // Demo-only mode: show only a large demo login button
   if (demoMode && !isAddAccountMode) {
     return (
@@ -1069,6 +1085,7 @@ function LoginPageContent() {
               /* OAuth-only mode: server picker (if any) plus the SSO button */
               <div className="space-y-4">
                 {serverPicker}
+                {connectLink}
                 {oauthMetadata ? (
                   <Button
                     type="button"
@@ -1110,6 +1127,7 @@ function LoginPageContent() {
               <form onSubmit={handleSubmit} className="space-y-5">
                 <fieldset disabled={isLoading} className="space-y-4">
                   {serverPicker}
+                  {connectLink}
                   {/* JMAP Endpoint field (only when no server list and custom endpoints are allowed) */}
                   {!hasServerList && allowCustomJmapEndpoint && (
                     <div className="space-y-1.5">
