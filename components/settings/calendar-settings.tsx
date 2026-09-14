@@ -29,6 +29,7 @@ export function CalendarSettings() {
     showTimeInMonthView,
     showWeekNumbers,
     calendarFreeScroll,
+    compactNightHours,
     enableCalendarTasks,
     showTasksOnCalendar,
     showBirthdayCalendar,
@@ -99,6 +100,16 @@ export function CalendarSettings() {
         <ToggleSwitch
           checked={calendarFreeScroll}
           onChange={(checked) => updateSetting('calendarFreeScroll', checked)}
+        />
+      </SettingItem>
+
+      <SettingItem
+        label={t('compact_night_hours')}
+        description={t('compact_night_hours_desc')}
+      >
+        <ToggleSwitch
+          checked={compactNightHours}
+          onChange={(checked) => updateSetting('compactNightHours', checked)}
         />
       </SettingItem>
 

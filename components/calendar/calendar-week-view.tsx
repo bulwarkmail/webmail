@@ -17,6 +17,8 @@ import { useTimeGridInteractions } from "@/hooks/use-time-grid-interactions";
 import { useScrollWindow, getScrollStart, setScrollStart, scrollToStart } from "@/hooks/use-scroll-window";
 import { dayKey, type ScrollWindowViewProps } from "@/lib/calendar-scroll-window";
 import type { PendingEventPreview } from "./event-modal";
+import { useSettingsStore } from "@/stores/settings-store";
+import { createCompactNightTimeScale, createLinearTimeScale, hourRowHeight } from "@/lib/calendar-time-scale";
 
 interface CalendarWeekViewProps extends ScrollWindowViewProps {
   selectedDate: Date;
@@ -38,6 +40,15 @@ interface CalendarWeekViewProps extends ScrollWindowViewProps {
 }
 
 const HOUR_HEIGHT = 60;
+// "Compact night hours" setting: shrinks BOTH bands relative to the normal
+// HOUR_HEIGHT, not just the night - the day band alone (16h * HOUR_HEIGHT)
+// is already taller than most viewports, so getting a full day to actually
+// fit without scrolling needs the waking hours compacted too, just less
+// aggressively than the night. Heights are still tall enough for an
+// event's title/time to stay legible and clickable (paired with the
+// existing per-event min-height clamp in the renderer below).
+const COMPACT_DAY_HOUR_HEIGHT = 36;
+const NIGHT_HOUR_HEIGHT = 20;
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 const MOBILE_COL_WIDTH = 120;
 const MIN_COL_WIDTH = 80;
@@ -206,12 +217,20 @@ export function CalendarWeekView({
     return allDaySegments.length > 0 || taskRowCount > 0;
   }, [allDaySegments, taskRowCount]);
 
+  const compactNightHours = useSettingsStore((s) => s.compactNightHours);
+  const scale = useMemo(
+    () => compactNightHours
+      ? createCompactNightTimeScale({ dayHourHeight: COMPACT_DAY_HOUR_HEIGHT, nightHourHeight: NIGHT_HOUR_HEIGHT })
+      : createLinearTimeScale(HOUR_HEIGHT),
+    [compactNightHours],
+  );
+
   useEffect(() => {
     if (rootRef.current) {
       const now = displayNow();
-      rootRef.current.scrollTop = Math.max(0, (now.getHours() - 1) * HOUR_HEIGHT);
+      rootRef.current.scrollTop = Math.max(0, scale.minutesToY((now.getHours() - 1) * 60));
     }
-  }, []);
+  }, [scale]);
 
   // Navigation aligns the focused week (the focused day itself on mobile,
   // where fewer columns fit) with the start of the viewport.
@@ -292,7 +311,7 @@ export function CalendarWeekView({
     quickCreate, handleSlotClick, handleSlotDoubleClick, handleQuickCreateSubmit, handleQuickCreateCancel,
     dropTarget, handleColumnDragOver, handleColumnDragLeave, handleColumnDrop,
   } = useTimeGridInteractions({
-    hourHeight: HOUR_HEIGHT,
+    timeScale: scale,
     calendars,
     onCreateRange: onCreateAtTime,
     errorMessages: {
@@ -463,13 +482,13 @@ export function CalendarWeekView({
       </div>
 
       <div>
-        <div className="flex relative" style={{ height: 24 * HOUR_HEIGHT }}>
+        <div className="flex relative" style={{ height: scale.totalHeight }}>
           <div className={gutterClass}>
             {HOURS.map((h) => (
               <div
                 key={h}
                 className="relative text-muted-foreground text-end pe-2"
-                style={{ height: HOUR_HEIGHT }}
+                style={{ height: hourRowHeight(scale, h) }}
               >
                 {h > 0 && (
                   <span className={cn("absolute top-0 right-2 -translate-y-1/2 leading-none", isMobile ? "text-[9px]" : "text-[10px]")}>
@@ -508,14 +527,14 @@ export function CalendarWeekView({
                       onDoubleClick={() => handleSlotDoubleClick(day, h)}
                       onContextMenu={onContextMenuEmpty ? (e) => onContextMenuEmpty(e, day, h, false) : undefined}
                       className="border-b border-border/50 hover:bg-muted/30 cursor-pointer transition-colors"
-                      style={{ height: HOUR_HEIGHT }}
+                      style={{ height: hourRowHeight(scale, h) }}
                     />
                   ))}
 
                   {layouted.map(({ event: ev, column, totalColumns, startMinutes, endMinutes }) => {
                     const durMin = Math.max(15, endMinutes - startMinutes);
-                    const baseTop = (startMinutes / 60) * HOUR_HEIGHT;
-                    const baseHeight = Math.max(20, (durMin / 60) * HOUR_HEIGHT);
+                    const baseTop = scale.minutesToY(startMinutes);
+                    const baseHeight = Math.max(20, scale.minutesToY(startMinutes + durMin) - baseTop);
                     const isResizing = resizeVisual?.eventId === ev.id;
                     const top = isResizing ? resizeVisual!.topPx : baseTop;
                     const height = isResizing ? resizeVisual!.heightPx : baseHeight;
@@ -567,7 +586,7 @@ export function CalendarWeekView({
                   {todayCol && (
                     <div
                       className="absolute left-0 right-0 z-20 pointer-events-none"
-                      style={{ top: (nowMinutes / 60) * HOUR_HEIGHT }}
+                      style={{ top: scale.minutesToY(nowMinutes) }}
                     >
                       <div className="flex items-center">
                         <div className="w-2 h-2 rounded-full bg-destructive -ms-1" />
@@ -588,8 +607,8 @@ export function CalendarWeekView({
                     <div
                       className="absolute left-1 right-1 z-30 rounded-md pointer-events-none bg-primary/15 border-2 border-primary/30 border-dashed"
                       style={{
-                        top: (dragCreate.startMinutes / 60) * HOUR_HEIGHT,
-                        height: ((dragCreate.endMinutes - dragCreate.startMinutes) / 60) * HOUR_HEIGHT,
+                        top: scale.minutesToY(dragCreate.startMinutes),
+                        height: scale.minutesToY(dragCreate.endMinutes) - scale.minutesToY(dragCreate.startMinutes),
                       }}
                     >
                       <div className="text-[10px] font-medium text-primary px-1.5 py-0.5">
@@ -601,7 +620,7 @@ export function CalendarWeekView({
                   {dropTarget?.dayKey === key && (
                     <div
                       className="absolute left-0 right-0 z-30 pointer-events-none"
-                      style={{ top: (dropTarget.minutes / 60) * HOUR_HEIGHT }}
+                      style={{ top: scale.minutesToY(dropTarget.minutes) }}
                     >
                       <div className="flex items-center">
                         <div className="w-2 h-2 rounded-full bg-primary -ms-1" />
@@ -625,8 +644,8 @@ export function CalendarWeekView({
                         <div
                           className="absolute left-1 right-1 z-10 rounded-md pointer-events-none border-2 border-dashed overflow-hidden"
                           style={{
-                            top: (startMin / 60) * HOUR_HEIGHT,
-                            height: Math.max(20, (durationMin / 60) * HOUR_HEIGHT),
+                            top: scale.minutesToY(startMin),
+                            height: Math.max(20, scale.minutesToY(startMin + durationMin) - scale.minutesToY(startMin)),
                             borderColor: color,
                             backgroundColor: `${color}10`,
                           }}

@@ -2952,6 +2952,8 @@
       "show_week_numbers_desc": "Weeknummers weergeven in de minikalender",
       "calendar_free_scroll": "Vrij scrollen",
       "calendar_free_scroll_desc": "Doorlopend door maanden, weken en dagen scrollen in plaats van één periode tegelijk",
+      "compact_night_hours": "Compact night hours",
+      "compact_night_hours_desc": "Shrink the 22:00-06:00 band in the day and week views so the whole day fits with less scrolling",
       "enable_tasks": "Taken inschakelen",
       "enable_tasks_desc": "Een takenweergave in de agenda tonen om to-do's te beheren",
       "show_tasks_on_calendar": "Taken in agenda tonen",
