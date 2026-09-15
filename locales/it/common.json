@@ -3645,6 +3645,7 @@
       "https_required": "Apri la webmail in HTTPS per sbloccare o salvare gli account.",
       "password_length": "Usa una password dell’archivio tra 10 e 1024 caratteri.",
       "unlock_failed": "Password dell’archivio errata oppure archivio danneggiato.",
+      "unlock_failed_owner": "Password errata per l'archivio di {username} su {server}, oppure archivio danneggiato. Gli archivi appartengono al login che li ha creati: un archivio creato con un altro account si apre solo da quell'account, con la password scelta allora.",
       "disabled": "Gli archivi degli account sono disabilitati su questo server.",
       "storage_failed": "Impossibile leggere o salvare l’archivio. Riprova.",
       "owner_signin_required": "Accedi alla casella proprietaria dell’archivio prima di salvare.",

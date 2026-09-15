@@ -115,6 +115,12 @@ function VaultDialog({ owner, manage, close, initialRecord }: { owner: VaultOwne
     const code = err instanceof Error ? err.message : '';
     const known = ['invalid_archive', 'https_required', 'password_length', 'unlock_failed', 'disabled',
       'storage_failed', 'owner_signin_required', 'conflict', 'accounts_disconnected', 'account_limit', 'account_conflict'];
+    if (code === 'unlock_failed') {
+      // The archive is bound to the signed-in login: say whose archive was tried, so a
+      // password chosen for another account's archive is not mistaken for corruption.
+      setError(t('errors.unlock_failed_owner', { username: owner.username, server: new URL(owner.serverUrl).hostname }));
+      return;
+    }
     setError(t(`errors.${known.includes(code) ? code : 'storage_failed'}`));
   };
 
