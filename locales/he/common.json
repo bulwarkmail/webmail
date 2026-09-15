@@ -3647,6 +3647,7 @@
       "https_required": "Open webmail over HTTPS to unlock or save accounts.",
       "password_length": "Use an archive password between 10 and 1024 characters.",
       "unlock_failed": "Incorrect archive password or damaged archive.",
+      "unlock_failed_owner": "Incorrect password for the archive of {username} on {server}, or damaged archive. Archives belong to the login that created them: one created while signed in as another account opens only from that account, with the password chosen then.",
       "disabled": "Account archives are disabled on this server.",
       "storage_failed": "The archive could not be read or saved. Try again.",
       "owner_signin_required": "Sign in to the archive owner’s mail account before saving.",
