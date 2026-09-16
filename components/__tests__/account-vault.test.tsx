@@ -57,9 +57,36 @@ describe('account archive dialog', () => {
     expect(screen.queryByLabelText('remember')).not.toBeInTheDocument();
     fireEvent.change(screen.getByLabelText('password'), { target: { value: password } });
     fireEvent.submit(screen.getByLabelText('password').closest('form')!);
+    fireEvent.click(await screen.findByRole('button', { name: 'import_chosen' }));
     await waitFor(() => expect(mocks.restore).toHaveBeenCalledWith(contents, true, false));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('imports only the ticked accounts and always keeps the archive owner', async () => {
+    const other = { username: 'second@example.com', serverUrl: 'https://mail.example.com', password: 'p2', label: 'Second', avatarColor: '#445566' };
+    const third = { username: 'third@example.com', serverUrl: 'https://mail.example.com', password: 'p3', label: 'Third', avatarColor: '#778899' };
+    const many: VaultContents = { owner, accounts: [contents.accounts[0]!, other, third], defaultAccountId: 'third@example.com|https://mail.example.com' };
+    mocks.fetch.mockResolvedValue({ revision: 'a'.repeat(64), envelope: await encryptVault(many, password) });
+    render(<AccountVault owner={owner} />);
+    fireEvent.click(screen.getByRole('button', { name: 'unlock' }));
+    await screen.findByLabelText('password');
+    fireEvent.change(screen.getByLabelText('password'), { target: { value: password } });
+    fireEvent.submit(screen.getByLabelText('password').closest('form')!);
+    // Wait for the selection step: key derivation takes a moment, and the
+    // password step has checkboxes of its own.
+    await screen.findByRole('button', { name: 'import_chosen' });
+    const boxes = screen.getAllByRole('checkbox');
+    expect(boxes).toHaveLength(3);
+    expect(boxes.every(b => (b as HTMLInputElement).checked)).toBe(true);
+    // The owner's own account cannot be dropped: the archive would not parse.
+    expect((boxes[0] as HTMLInputElement).disabled).toBe(true);
+    fireEvent.click(boxes[2]!);
+    fireEvent.click(screen.getByRole('button', { name: 'import_chosen' }));
+    await waitFor(() => expect(mocks.restore).toHaveBeenCalledTimes(1));
+    const [restored] = mocks.restore.mock.calls[0]!;
+    expect(restored.accounts.map((a: { username: string }) => a.username)).toEqual([owner.username, other.username]);
+    expect(restored.defaultAccountId).toBeNull();
   });
 
   it('saves an encrypted archive with no mailbox passwords when the option is unchecked', async () => {
@@ -92,6 +119,7 @@ describe('account archive dialog', () => {
     fireEvent.click(screen.getByRole('button', { name: 'import' }));
     fireEvent.change(await screen.findByLabelText('password'), { target: { value: password } });
     fireEvent.click(screen.getByRole('button', { name: 'unlock' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'import_chosen' }));
     await waitFor(() => expect(mocks.restore).toHaveBeenCalledWith(contents, true, true));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     view.unmount();
@@ -146,6 +174,7 @@ describe('account archive dialog', () => {
     await screen.findByLabelText('password');
     fireEvent.change(screen.getByLabelText('password'), { target: { value: password } });
     fireEvent.submit(screen.getByLabelText('password').closest('form')!);
+    fireEvent.click(await screen.findByRole('button', { name: 'import_chosen' }));
     await waitFor(() => expect(mocks.restore).toHaveBeenCalledWith(contents, true, true));
     expect(loginSubmit).not.toHaveBeenCalled();
   });
@@ -182,6 +211,7 @@ describe('account archive dialog', () => {
     expect(mocks.restore).not.toHaveBeenCalled();
     fireEvent.change(screen.getByLabelText('password'), { target: { value: password } });
     fireEvent.submit(screen.getByLabelText('password').closest('form')!);
+    fireEvent.click(await screen.findByRole('button', { name: 'import_chosen' }));
     await waitFor(() => expect(mocks.restore).toHaveBeenCalledWith(contents, true, true));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
