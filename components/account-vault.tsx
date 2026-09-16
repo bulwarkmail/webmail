@@ -11,7 +11,8 @@ import { useAccountStore } from '@/stores/account-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { toast } from '@/stores/toast-store';
 import { collectVault, fetchVault, putVault } from '@/lib/account-vault-client';
-import { decryptVault, encryptVault, vaultIdentity, type VaultOwner, type VaultRecord } from '@/lib/account-vault';
+import { decryptVault, encryptVault, vaultIdentity, type VaultContents, type VaultOwner, type VaultRecord } from '@/lib/account-vault';
+import { generateAccountId as generateVaultAccountId } from '@/lib/account-utils';
 
 function revisionKey(owner: VaultOwner): string { return `account-vault-revision:${vaultIdentity(owner)}`; }
 function rememberRevision(owner: VaultOwner, revision: string): void {
@@ -93,6 +94,10 @@ function VaultDialog({ owner, manage, close, initialRecord }: { owner: VaultOwne
   const [importPasswords, setImportPasswords] = useState(true);
   const [savePasswords, setSavePasswords] = useState(true);
   const [record, setRecord] = useState<VaultRecord | null | undefined>(initialRecord);
+  // Decrypted archive awaiting the user's pick. The owner's own account is always
+  // imported: parseVaultContents refuses an archive that does not contain it.
+  const [unlocked, setUnlocked] = useState<VaultContents | null>(null);
+  const [chosen, setChosen] = useState<ReadonlySet<string>>(new Set());
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
@@ -129,9 +134,26 @@ function VaultDialog({ owner, manage, close, initialRecord }: { owner: VaultOwne
     setBusy(true); setError(''); setNotice('');
     try {
       const contents = await decryptVault(record.envelope, password, owner);
+      setUnlocked(contents);
+      setChosen(new Set(contents.accounts.map(vaultIdentity)));
+    } catch (err) { showError(err); }
+    finally { setBusy(false); }
+  };
+
+  const importChosen = async () => {
+    if (!record || !unlocked) return;
+    setBusy(true); setError(''); setNotice('');
+    try {
+      const accounts = unlocked.accounts.filter(a => chosen.has(vaultIdentity(a)) || vaultIdentity(a) === vaultIdentity(owner));
+      const contents = accounts.length === unlocked.accounts.length ? unlocked : {
+        ...unlocked, accounts,
+        // Dropping the archive's default account would leave a dangling id.
+        defaultAccountId: accounts.some(a => generateVaultAccountId(a.username, a.serverUrl) === unlocked.defaultAccountId) ? unlocked.defaultAccountId : null,
+      };
       const result = await useAuthStore.getState().restoreVault(contents, rememberMe, importPasswords);
       rememberRevision(owner, record.revision);
       setPassword('');
+      setUnlocked(null);
       if (result.pending && !result.failed) {
         const message = t('imported_without_passwords', { count: contents.accounts.length, pending: result.pending });
         setNotice(message); toast.success(message); if (!manage) close();
@@ -179,13 +201,36 @@ function VaultDialog({ owner, manage, close, initialRecord }: { owner: VaultOwne
       {record !== undefined && (record || manage) && <form className="space-y-4" onSubmit={e => {
         // Portal events still bubble through React's parent login form.
         e.preventDefault(); e.stopPropagation();
-        if (!busy) void (record ? unlock() : save());
+        if (!busy) void (unlocked ? importChosen() : record ? unlock() : save());
       }}>
-        <p className="text-sm text-muted-foreground">{t(record ? 'unlock_description' : 'create_description')}</p>
+        <p className="text-sm text-muted-foreground">{t(unlocked ? 'choose_accounts_description' : record ? 'unlock_description' : 'create_description')}</p>
+        {unlocked && <fieldset className="space-y-2 rounded-md border border-border p-3">
+          <legend className="px-1 text-sm font-medium">{t('choose_accounts')}</legend>
+          {unlocked.accounts.map(account => {
+            const key = vaultIdentity(account);
+            const isOwner = key === vaultIdentity(owner);
+            return <label key={key} className="flex items-start gap-2 text-sm">
+              <input type="checkbox" className="mt-1" disabled={busy || isOwner} checked={isOwner || chosen.has(key)}
+                onChange={e => setChosen(prev => {
+                  const next = new Set(prev);
+                  if (e.target.checked) next.add(key); else next.delete(key);
+                  return next;
+                })} />
+              <span>
+                <span className="block">{account.label || account.username}</span>
+                <span className="block text-xs text-muted-foreground">
+                  {account.username} · {new URL(account.serverUrl).hostname}{isOwner ? ` · ${t('owner_always')}` : ''}
+                </span>
+              </span>
+            </label>;
+          })}
+        </fieldset>}
         {manage && <p className="text-sm text-muted-foreground">{t('save_description', { count: accounts.filter(a => a.authMode === 'basic').length })}</p>}
-        <label className="block text-sm" htmlFor={`${id}-password`}>{t('password')}</label>
-        <Input id={`${id}-password`} type="password" autoComplete={record ? 'current-password' : 'new-password'}
-          value={password} onChange={e => setPassword(e.target.value)} disabled={busy} required maxLength={1024} />
+        {!unlocked && <>
+          <label className="block text-sm" htmlFor={`${id}-password`}>{t('password')}</label>
+          <Input id={`${id}-password`} type="password" autoComplete={record ? 'current-password' : 'new-password'}
+            value={password} onChange={e => setPassword(e.target.value)} disabled={busy} required maxLength={1024} />
+        </>}
         {!record && <>
           <label className="block text-sm" htmlFor={`${id}-confirmation`}>{t('confirm_password')}</label>
           <Input id={`${id}-confirmation`} type="password" autoComplete="new-password"
@@ -194,18 +239,19 @@ function VaultDialog({ owner, manage, close, initialRecord }: { owner: VaultOwne
         {manage && <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" checked={savePasswords} onChange={e => setSavePasswords(e.target.checked)} disabled={busy} />{t('save_passwords')}
         </label>}
-        {record && <>
+        {record && !unlocked && <>
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" checked={importPasswords} onChange={e => setImportPasswords(e.target.checked)} disabled={busy} />{t('import_passwords')}
           </label>
           <p className="text-sm text-muted-foreground">{t('passwords_hint')}</p>
         </>}
-        {record && importPasswords && <label className="flex items-center gap-2 text-sm">
+        {record && !unlocked && importPasswords && <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" checked={rememberMe} onChange={e => setRememberMe(e.target.checked)} disabled={busy} />{t('remember')}
         </label>}
         <div className="flex flex-wrap gap-2">
-          {record && <Button type="submit" disabled={busy || !password}>{t('unlock')}</Button>}
-          {manage && <Button type={record ? 'button' : 'submit'} onClick={record ? () => void save() : undefined}
+          {record && unlocked && <Button type="submit" disabled={busy}>{t('import_chosen', { count: unlocked.accounts.filter(a => chosen.has(vaultIdentity(a)) || vaultIdentity(a) === vaultIdentity(owner)).length })}</Button>}
+          {record && !unlocked && <Button type="submit" disabled={busy || !password}>{t('unlock')}</Button>}
+          {manage && !unlocked && <Button type={record ? 'button' : 'submit'} onClick={record ? () => void save() : undefined}
             disabled={busy || !password} variant={record ? 'outline' : 'default'}>{t('save')}</Button>}
         </div>
       </form>}
