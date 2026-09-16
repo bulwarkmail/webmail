@@ -3,8 +3,8 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { mkdtemp, readdir, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { decryptVault, encryptVault, parseVaultContents, parseVaultEnvelope, type VaultContents } from '../account-vault';
-import { loadVault, saveVault, VaultConflict } from '../account-vault-storage';
+import { decryptVault, encryptVault, parseVaultContents, parseVaultEnvelope, parseVaultName, type VaultContents } from '../account-vault';
+import { deleteVault, LEGACY_VAULT_NAME, listVaults, loadVault, saveVault, VaultConflict, VaultLimit } from '../account-vault-storage';
 
 const owner = { username: 'owner@example.com', serverUrl: 'https://mail.example.com' };
 const contents: VaultContents = { owner, accounts: [{ ...owner, password: 'mail-secret', label: 'Personal', avatarColor: '#112233' }], defaultAccountId: null };
@@ -17,6 +17,15 @@ afterEach(async () => {
   if (originalDir === undefined) delete process.env.SETTINGS_DATA_DIR;
   else process.env.SETTINGS_DATA_DIR = originalDir;
 });
+async function useTemporaryDirectory(): Promise<string> {
+  directory = await mkdtemp(path.join(tmpdir(), 'bulwark-vault-'));
+  process.env.SETTINGS_DATA_DIR = directory;
+  return directory;
+}
+async function ownerFiles(root: string): Promise<string[]> {
+  const [ownerDir] = await readdir(path.join(root, 'account-vaults'));
+  return readdir(path.join(root, 'account-vaults', ownerDir));
+}
 
 describe('account vault encryption and storage', () => {
   it('round-trips an encrypted account list without mailbox passwords', async () => {
@@ -50,23 +59,72 @@ describe('account vault encryption and storage', () => {
     await expect(encryptVault(contents, 'short')).rejects.toThrow('password_length');
   });
 
-  it('stores ciphertext only and rejects stale or concurrent replacements without corrupting the archive', async () => {
-    directory = await mkdtemp(path.join(tmpdir(), 'bulwark-vault-'));
-    process.env.SETTINGS_DATA_DIR = directory;
+  it('accepts short printable archive names only', () => {
+    expect(parseVaultName('  Laptop  ')).toBe('Laptop');
+    for (const invalid of ['', '   ', 'x'.repeat(81), 'two\nlines', 42, null]) expect(() => parseVaultName(invalid)).toThrow('invalid_name');
+  });
+
+  it('stores named ciphertext only and rejects stale or concurrent replacements without corrupting the archive', async () => {
+    const root = await useTemporaryDirectory();
     const envelope = await encryptVault(contents, password);
-    expect(await loadVault(owner)).toBeNull();
-    const first = await saveVault(owner, { ...envelope, password: 'MUST-NOT-PERSIST' } as typeof envelope, null);
-    const [file] = await readdir(path.join(directory, 'account-vaults'));
-    const raw = await readFile(path.join(directory, 'account-vaults', file), 'utf8');
+    expect(await listVaults(owner)).toEqual([]);
+    const first = await saveVault(owner, null, 'Laptop', { ...envelope, password: 'MUST-NOT-PERSIST' } as typeof envelope, null);
+    expect(first).toMatchObject({ name: 'Laptop', envelope });
+    const [file] = await ownerFiles(root);
+    const raw = await readFile(path.join(root, 'account-vaults', (await readdir(path.join(root, 'account-vaults')))[0], file), 'utf8');
     for (const secret of ['MUST-NOT-PERSIST', password, 'mail-secret', owner.username]) expect(raw).not.toContain(secret);
-    expect(await loadVault({ ...owner, serverUrl: owner.serverUrl + '/' })).toEqual(first);
-    await expect(saveVault(owner, envelope, null)).rejects.toBeInstanceOf(VaultConflict);
+    expect(await listVaults({ ...owner, serverUrl: owner.serverUrl + '/' })).toEqual([first]);
+
+    await expect(saveVault(owner, first.id, 'Laptop', envelope, null)).rejects.toBeInstanceOf(VaultConflict);
+    await expect(saveVault(owner, first.id, 'Laptop', envelope, 'f'.repeat(64))).rejects.toBeInstanceOf(VaultConflict);
     const updated = await encryptVault({ ...contents, accounts: [{ ...contents.accounts[0], label: 'Changed' }] }, password);
-    const writes = await Promise.allSettled([saveVault(owner, updated, first.revision), saveVault(owner, updated, first.revision)]);
+    const writes = await Promise.allSettled([
+      saveVault(owner, first.id, 'Laptop', updated, first.revision), saveVault(owner, first.id, 'Laptop', updated, first.revision),
+    ]);
     expect(writes.filter(r => r.status === 'fulfilled')).toHaveLength(1);
     expect(writes.filter(r => r.status === 'rejected')).toHaveLength(1);
-    const current = await loadVault(owner);
+    const current = await loadVault(owner, first.id);
     expect((await decryptVault(current!.envelope, password, owner)).accounts[0].label).toBe('Changed');
-    expect(await readdir(path.join(directory, 'account-vaults'))).toHaveLength(1);
+    expect(await ownerFiles(root)).toEqual([file]);
+  });
+
+  it('keeps several named archives per owner apart and deletes only the current revision', async () => {
+    const root = await useTemporaryDirectory();
+    const envelope = await encryptVault(contents, password);
+    const phone = await saveVault(owner, null, 'Phone', envelope, null);
+    const laptop = await saveVault(owner, null, 'Laptop', envelope, null);
+    expect(phone.id).not.toBe(laptop.id);
+    expect((await listVaults(owner)).map(v => v.name)).toEqual(['Laptop', 'Phone']);
+    const renamed = await saveVault(owner, phone.id, 'Old phone', envelope, phone.revision);
+    expect((await listVaults(owner)).map(v => v.name)).toEqual(['Laptop', 'Old phone']);
+
+    await expect(deleteVault(owner, phone.id, phone.revision)).rejects.toBeInstanceOf(VaultConflict);
+    await deleteVault(owner, renamed.id, renamed.revision);
+    expect(await listVaults(owner)).toEqual([laptop]);
+    await expect(deleteVault(owner, renamed.id, renamed.revision)).rejects.toBeInstanceOf(VaultConflict);
+    expect(await ownerFiles(root)).toEqual([laptop.id + '.json']);
+  });
+
+  it('migrates a single-archive-format file into a named archive, once', async () => {
+    const root = await useTemporaryDirectory();
+    const envelope = await encryptVault(contents, password);
+    const { createHash } = await import('node:crypto');
+    const { mkdir, writeFile } = await import('node:fs/promises');
+    const hash = createHash('sha256').update(JSON.stringify([owner.username, owner.serverUrl])).digest('hex');
+    await mkdir(path.join(root, 'account-vaults'), { recursive: true });
+    await writeFile(path.join(root, 'account-vaults', hash + '.json'), JSON.stringify(envelope));
+    const [migrated] = await listVaults(owner);
+    expect(migrated?.name).toBe(LEGACY_VAULT_NAME);
+    expect(await decryptVault(migrated!.envelope, password, owner)).toEqual(contents);
+    expect(await readdir(path.join(root, 'account-vaults'))).toEqual([hash]);
+    expect(await listVaults(owner)).toEqual([migrated]);
+  });
+
+  it('caps the number of archives per owner', async () => {
+    await useTemporaryDirectory();
+    const envelope = await encryptVault(contents, password);
+    for (let i = 0; i < 10; i++) await saveVault(owner, null, `Archive ${i}`, envelope, null);
+    await expect(saveVault(owner, null, 'One too many', envelope, null)).rejects.toBeInstanceOf(VaultLimit);
+    expect(await listVaults({ ...owner, username: 'other@example.com' })).toEqual([]);
   });
 });

@@ -17,8 +17,24 @@ export interface VaultEnvelope {
   iv: string;
   ciphertext: string;
 }
-export interface VaultRecord { revision: string; envelope: VaultEnvelope }
+/** One owner may keep several archives; the name is plaintext so it can be picked before unlocking. */
+export interface VaultRecord { id: string; name: string; revision: string; envelope: VaultEnvelope }
 export const VAULT_MAX_BYTES = 256 * 1024;
+export const VAULT_MAX_PER_OWNER = 10;
+export const VAULT_NAME_MAX = 80;
+
+export function parseVaultName(value: unknown): string {
+  const name = typeof value === 'string' ? value.trim() : '';
+  if (!name || name.length > VAULT_NAME_MAX || [...name].some(c => c.charCodeAt(0) < 32 || c.charCodeAt(0) === 127)) {
+    throw new Error('invalid_name');
+  }
+  return name;
+}
+
+export function parseVaultId(value: unknown): string {
+  if (typeof value !== 'string' || !/^[a-f0-9]{32}$/.test(value)) throw new Error('invalid_archive');
+  return value;
+}
 
 export function normalizeVaultOwner(value: VaultOwner): VaultOwner {
   if (typeof value?.username !== 'string' || !value.username.trim() || value.username.length > 320
