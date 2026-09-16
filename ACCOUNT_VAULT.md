@@ -5,6 +5,11 @@ password after signing in to the archive owner's mailbox, including on a browser
 with empty local storage. It is an explicit
 save/restore snapshot; it does not synchronize mail or automatically merge edits.
 
+Each archive has an **owner** (the mailbox that was signed in when it was created)
+and a **name**. One owner can keep up to 10 archives, and each browser account can
+own its own archives: they are listed together, can be told apart by name and can
+be deleted.
+
 ## Enable and use
 
 Set `SETTINGS_SYNC_ENABLED=true`, configure `SESSION_SECRET`, and persist
@@ -15,21 +20,24 @@ over HTTPS.
 
 1. Add the basic-auth accounts on the original browser. To include their passwords,
    connect every account first; a metadata-only archive can include disconnected accounts.
-2. In **Settings → Account → Saved accounts**, select the archive owner. Use the
-   same owner on other devices; changing the default mailbox does not move an archive.
-3. Choose **Manage saved accounts**, enter and confirm a separate strong archive
+2. In **Settings → Account → Saved accounts**, the **Archive** list shows the archives
+   of every basic-auth account in this browser, as “name — owner”. Choose
+   **New archive…**, pick the **Account that owns the archive**, then **Create archive**.
+   Changing the default mailbox does not move an archive.
+3. Give the archive a name, enter and confirm a separate strong archive
    passphrase (at least 10 characters), choose whether to **Include mailbox passwords
    when saving**, then **Save current accounts**. The archive is encrypted even
-   when mailbox passwords are excluded.
+   when mailbox passwords are excluded; its name is not (see below).
 4. On a new browser, sign in normally to the owner's mailbox on the same mail
-   server. If its archive exists, a popup offers to import it into this browser.
+   server. If it owns archives, a popup offers to import one into this browser,
+   with a choice when there are several.
    Choose **Import accounts**, then enter the archive password. Choose whether to
    **Import mailbox passwords too**. With that option off, only the account list
    is imported; missing passwords in an archive have the same behavior.
    The offer does not appear for accounts without an archive. It is not shown
-   again in this browser after importing or choosing **Not now**; manual import
-   remains available in **Settings → Account → Saved accounts → Rescan for account
-   archive**. Each rescan fetches the current archive for the selected owner,
+   again in this browser after importing, saving or choosing **Not now**; manual import
+   remains available in **Settings → Account → Saved accounts**: select the archive
+   and choose **Import accounts**. **Rescan for archives** fetches the current list,
    regardless of a previous dismissal/import.
 5. Accounts with imported passwords are connected in a single import. Accounts
    imported without passwords remain visible for manual sign-in; existing live
@@ -38,14 +46,20 @@ over HTTPS.
    “Keep accounts signed in” checkbox creates the existing per-browser session
    cookies. Without it, unlock again after a reload.
 
-Save again after adding/removing accounts or changing mailbox passwords. Saving
-replaces the archived list with the browser's current basic-auth accounts. All
-must be connected when including mailbox passwords. OAuth/SSO tokens are excluded. Logout does not write or
-delete the server archive. Multiple independent archives may have different owners.
+To save again after adding/removing accounts or changing mailbox passwords, select
+the archive and choose **Update archive**; the name can be changed there too. Saving
+replaces that archive's list with the browser's current basic-auth accounts. All
+must be connected when including mailbox passwords. OAuth/SSO tokens are excluded.
+Logout does not write or delete server archives.
+
+**Delete archive** removes the selected archive from the server after a confirmation.
+It requires being signed in to the owner's mailbox, not the archive password, so an
+archive whose password was forgotten can still be removed and recreated. Accounts
+already in the browser are not affected.
 
 A browser must have restored or saved the current archive revision before it can
-replace it. Concurrent writes are rejected. When a conflict is reported, reopen
-the dialog, restore the current archive and review the local account list before
+replace it. Concurrent writes are rejected. When a conflict is reported, rescan,
+restore the current archive and review the local account list before
 saving. Restoring adds/reconnects archived accounts and preserves other local
 accounts; there is no implicit cross-device deletion or background synchronization.
 
@@ -55,31 +69,34 @@ The browser uses Web Crypto PBKDF2-HMAC-SHA-256 (600,000 iterations, random 16-b
 salt) and AES-256-GCM (random 12-byte IV). Archive version and owner identity are
 authenticated alongside the encrypted contents. The password/key is never sent
 to the archive endpoint or stored in local/session storage. Only account metadata,
-the import prompt choice and the last known archive revision enter local storage.
+the import prompt choice and the last known revision of each archive enter local storage.
 
-The server stores one size-bounded encrypted envelope per owner under
-`SETTINGS_DATA_DIR/account-vaults/<owner-hash>.json`. It has no archive decryption
-key. **Ciphertext downloads intentionally work before mail authentication** so
-restoration needs only the archive password. Knowing a username/server pair can
-therefore reveal that an archive exists and permit downloading its ciphertext.
+The server stores each archive as a size-bounded file under
+`SETTINGS_DATA_DIR/account-vaults/<owner-hash>/<archive-id>.json`, holding the
+encrypted envelope and the archive name. It has no archive decryption
+key. **Archive lists and ciphertext downloads intentionally work before mail
+authentication** so restoration needs only the archive password. Knowing a
+username/server pair can therefore reveal that archives exist, their **names**, and
+permit downloading their ciphertext. Names are plaintext: do not put secrets in them.
 Use a strong, unique passphrase: copied ciphertext permits offline password guesses.
 An installation's existing access controls (for example an access proxy) still apply.
 
-Archive writes require a matching owner session and a fresh JMAP credential check;
-the endpoint never relies solely on the existence of a session cookie. Body size
-is checked while streaming, and storage accepts only the encrypted envelope fields.
-An atomic file replacement and file lock protect the revision comparison.
+Archive writes and deletions require a matching owner session and a fresh JMAP
+credential check; the endpoint never relies solely on the existence of a session
+cookie. Body size is checked while streaming, and storage accepts only the name and
+the encrypted envelope fields. Atomic file replacement and a per-owner file lock
+protect the revision comparison and the per-owner archive limit.
 
 After unlocking, mail credentials go through the existing JMAP login/session
 mechanisms; the application backend can process them when issuing session cookies.
 Browser-side encryption protects the stored archive, not a compromised running
-webmail application or browser. Forgotten archive passwords cannot be recovered.
-To reset, an administrator can remove that owner's archive and the user can recreate
-it after signing in to the mailboxes individually. Back up the encrypted files.
+webmail application or browser. Forgotten archive passwords cannot be recovered;
+delete the archive and create a new one. Back up the encrypted files.
 
-File permissions are `0600` and the archive directory is created as `0700`.
-After a process crash during a write, an orphan `.lock` file may require removal
-by an administrator **with all writers stopped**. Do not remove live lock files.
+File permissions are `0600` and the archive directories are created as `0700`.
+After a process crash during a write, an orphan `account-vaults/<owner-hash>/.lock`
+file may require removal by an administrator **with all writers stopped**. Do not
+remove live lock files.
 
 Cryptographic references: [Web Crypto key derivation](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/deriveKey),
 [OWASP PBKDF2 work factor](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html).

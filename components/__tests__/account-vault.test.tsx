@@ -1,18 +1,15 @@
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { webcrypto } from 'node:crypto';
-import { AccountVault, AccountVaultImportPrompt, AccountVaultSettings } from '../account-vault';
-import { decryptVault, encryptVault, type VaultContents, type VaultEnvelope } from '@/lib/account-vault';
+import { AccountVaultImportPrompt, AccountVaultSettings } from '../account-vault';
+import { encryptVault, type VaultContents, type VaultRecord } from '@/lib/account-vault';
 
-const mocks = vi.hoisted(() => ({ fetch: vi.fn(), put: vi.fn(), collect: vi.fn(), restore: vi.fn(),
+const mocks = vi.hoisted(() => ({ fetch: vi.fn(), put: vi.fn(), del: vi.fn(), collect: vi.fn(), restore: vi.fn(),
   registry: { accounts: [] as { id: string; username: string; serverUrl: string; authMode: string }[], defaultAccountId: null as string | null, updateAccount: vi.fn() },
   auth: { isAuthenticated: false, authMode: 'basic', isDemoMode: false, username: 'owner@example.com', serverUrl: 'https://mail.example.com' } }));
-vi.mock('next-intl', () => {
-  const translate = (key: string) => key;
-  return { useTranslations: () => translate };
-});
+vi.mock('next-intl', () => ({ useTranslations: () => (key: string, values?: Record<string, unknown>) => values ? `${key}:${Object.values(values).join(',')}` : key }));
 vi.mock('@/hooks/use-config', () => ({ useConfig: () => ({ settingsSyncEnabled: true, oauthOnly: false }) }));
-vi.mock('@/lib/account-vault-client', () => ({ fetchVault: mocks.fetch, putVault: mocks.put, collectVault: mocks.collect }));
+vi.mock('@/lib/account-vault-client', () => ({ fetchVaults: mocks.fetch, putVault: mocks.put, deleteVault: mocks.del, collectVault: mocks.collect }));
 vi.mock('@/stores/auth-store', () => ({ useAuthStore: Object.assign(
   (selector: (s: typeof mocks.auth) => unknown) => selector(mocks.auth),
   { getState: () => ({ restoreVault: mocks.restore }) },
@@ -21,209 +18,144 @@ vi.mock('@/stores/account-store', () => {
   const state = mocks.registry;
   return { useAccountStore: Object.assign((selector: (s: typeof state) => unknown) => selector(state), { getState: () => state }) };
 });
+vi.mock('@/stores/toast-store', () => ({ toast: { success: vi.fn(), warning: vi.fn() } }));
+
 const owner = { username: 'owner@example.com', serverUrl: 'https://mail.example.com' };
-const contents: VaultContents = { owner, accounts: [{ ...owner, password: 'mail-password', label: 'Owner', avatarColor: '#112233' }], defaultAccountId: null };
+const other = { username: 'second@example.com', serverUrl: 'https://mail.example.com' };
+const contents: VaultContents = { owner, accounts: [
+  { ...owner, password: 'mail-password', label: 'Owner', avatarColor: '#112233' },
+  { ...other, password: 'p2', label: 'Second', avatarColor: '#445566' },
+], defaultAccountId: null };
 const password = 'one archive passphrase';
+const revision = (c: string) => c.repeat(64);
+async function record(name: string, id = 'a'.repeat(32), rev = 'a'): Promise<VaultRecord> {
+  return { id, name, revision: revision(rev), envelope: await encryptVault(contents, password) };
+}
+const ownerAccount = { ...owner, id: 'owner', authMode: 'basic' };
+const secondAccount = { ...other, id: 'second', authMode: 'basic' };
+
 beforeEach(() => {
   vi.clearAllMocks(); vi.stubGlobal('crypto', webcrypto); localStorage.clear();
   Object.assign(mocks.auth, { isAuthenticated: false, authMode: 'basic', isDemoMode: false, ...owner });
-  mocks.registry.accounts = []; mocks.registry.defaultAccountId = null;
-  mocks.collect.mockReturnValue(contents); mocks.restore.mockResolvedValue({ connected: 1, failed: 0, pending: 0 });
+  mocks.registry.accounts = [ownerAccount]; mocks.registry.defaultAccountId = null;
+  mocks.collect.mockReturnValue(contents); mocks.restore.mockResolvedValue({ connected: 2, failed: 0, pending: 0 });
+  mocks.fetch.mockResolvedValue([]);
 });
 afterEach(() => vi.unstubAllGlobals());
 
-describe('account archive dialog', () => {
-  it('rescans from settings even after dismissal and fetches fresh data each time', async () => {
-    mocks.registry.accounts = [{ ...owner, id: 'owner', authMode: 'basic' }];
-    localStorage.setItem(`account-vault-prompt:${JSON.stringify([owner.username, owner.serverUrl])}`, 'dismissed');
-    mocks.fetch.mockResolvedValueOnce(null).mockResolvedValueOnce({ revision: 'a'.repeat(64), envelope: await encryptVault(contents, password) });
-    render(<AccountVaultSettings />);
-    fireEvent.click(screen.getByRole('button', { name: 'rescan' }));
-    await screen.findByText('not_found');
-    fireEvent.click(screen.getByRole('button', { name: 'close' }));
-    fireEvent.click(screen.getByRole('button', { name: 'rescan' }));
-    await screen.findByLabelText('password');
-    expect(mocks.fetch).toHaveBeenCalledTimes(2);
-    expect(mocks.fetch).toHaveBeenLastCalledWith(owner);
-  });
+async function unlockWith(pw: string) {
+  fireEvent.change(await screen.findByLabelText('password'), { target: { value: pw } });
+  fireEvent.submit(screen.getByLabelText('password').closest('form')!);
+}
 
-  it('imports only metadata when mailbox password import is unchecked', async () => {
-    mocks.fetch.mockResolvedValue({ revision: 'a'.repeat(64), envelope: await encryptVault(contents, password) });
-    mocks.restore.mockResolvedValue({ connected: 0, failed: 0, pending: 1 });
-    render(<AccountVault owner={owner} />);
-    fireEvent.click(screen.getByRole('button', { name: 'unlock' }));
-    await screen.findByLabelText('password');
-    fireEvent.click(screen.getByLabelText('import_passwords'));
-    expect(screen.queryByLabelText('remember')).not.toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText('password'), { target: { value: password } });
-    fireEvent.submit(screen.getByLabelText('password').closest('form')!);
-    fireEvent.click(await screen.findByRole('button', { name: 'import_chosen' }));
-    await waitFor(() => expect(mocks.restore).toHaveBeenCalledWith(contents, true, false));
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-  });
-
-  it('imports only the ticked accounts and always keeps the archive owner', async () => {
-    const other = { username: 'second@example.com', serverUrl: 'https://mail.example.com', password: 'p2', label: 'Second', avatarColor: '#445566' };
-    const third = { username: 'third@example.com', serverUrl: 'https://mail.example.com', password: 'p3', label: 'Third', avatarColor: '#778899' };
-    const many: VaultContents = { owner, accounts: [contents.accounts[0]!, other, third], defaultAccountId: 'third@example.com|https://mail.example.com' };
-    mocks.fetch.mockResolvedValue({ revision: 'a'.repeat(64), envelope: await encryptVault(many, password) });
-    render(<AccountVault owner={owner} />);
-    fireEvent.click(screen.getByRole('button', { name: 'unlock' }));
-    await screen.findByLabelText('password');
-    fireEvent.change(screen.getByLabelText('password'), { target: { value: password } });
-    fireEvent.submit(screen.getByLabelText('password').closest('form')!);
-    // Wait for the selection step: key derivation takes a moment, and the
-    // password step has checkboxes of its own.
-    await screen.findByRole('button', { name: 'import_chosen' });
-    const boxes = screen.getAllByRole('checkbox');
-    expect(boxes).toHaveLength(3);
-    expect(boxes.every(b => (b as HTMLInputElement).checked)).toBe(true);
-    // The owner's own account cannot be dropped: the archive would not parse.
-    expect((boxes[0] as HTMLInputElement).disabled).toBe(true);
-    fireEvent.click(boxes[2]!);
-    fireEvent.click(screen.getByRole('button', { name: 'import_chosen' }));
-    await waitFor(() => expect(mocks.restore).toHaveBeenCalledTimes(1));
-    const [restored] = mocks.restore.mock.calls[0]!;
-    expect(restored.accounts.map((a: { username: string }) => a.username)).toEqual([owner.username, other.username]);
-    expect(restored.defaultAccountId).toBeNull();
-  });
-
-  it('saves an encrypted archive with no mailbox passwords when the option is unchecked', async () => {
-    const metadata = { ...contents, accounts: contents.accounts.map(({ password: _password, ...account }) => account) };
-    mocks.fetch.mockResolvedValue(null);
-    mocks.collect.mockImplementation((_owner: unknown, includePasswords: boolean) => includePasswords ? contents : metadata);
-    mocks.put.mockImplementation(async (_owner: unknown, envelope: VaultEnvelope) => ({ revision: 'a'.repeat(64), envelope }));
-    render(<AccountVault owner={owner} manage />);
-    fireEvent.click(screen.getByRole('button', { name: 'manage' }));
-    await screen.findByLabelText('password');
-    fireEvent.click(screen.getByLabelText('save_passwords'));
-    fireEvent.change(screen.getByLabelText('password'), { target: { value: password } });
-    fireEvent.change(screen.getByLabelText('confirm_password'), { target: { value: password } });
-    fireEvent.click(screen.getByRole('button', { name: 'save' }));
-    await waitFor(() => expect(mocks.put).toHaveBeenCalledOnce());
-    expect(mocks.collect).toHaveBeenCalledWith(owner, false);
-    expect(await decryptVault(mocks.put.mock.calls[0][1], password, owner)).toEqual(metadata);
-  });
-
-  it('offers an existing archive only after login and asks for the password only after consent', async () => {
-    mocks.fetch.mockResolvedValue({ revision: 'a'.repeat(64), envelope: await encryptVault(contents, password) });
-    const view = render(<AccountVaultImportPrompt />);
-    expect(mocks.fetch).not.toHaveBeenCalled();
+describe('import prompt', () => {
+  it('offers a single archive after login, lets the user untick accounts and restores the rest', async () => {
+    const laptop = await record('Laptop');
+    mocks.fetch.mockResolvedValue([laptop]);
     mocks.auth.isAuthenticated = true;
-    view.rerender(<AccountVaultImportPrompt />);
+    render(<AccountVaultImportPrompt />);
     await screen.findByRole('dialog');
-    expect(mocks.fetch).toHaveBeenCalledWith(owner);
-    expect(screen.queryByLabelText('password')).not.toBeInTheDocument();
-    expect(mocks.restore).not.toHaveBeenCalled();
+    expect(screen.queryByRole('combobox')).not.toBeInTheDocument(); // one archive: nothing to choose
     fireEvent.click(screen.getByRole('button', { name: 'import' }));
-    fireEvent.change(await screen.findByLabelText('password'), { target: { value: password } });
-    fireEvent.click(screen.getByRole('button', { name: 'unlock' }));
-    fireEvent.click(await screen.findByRole('button', { name: 'import_chosen' }));
-    await waitFor(() => expect(mocks.restore).toHaveBeenCalledWith(contents, true, true));
+    await unlockWith(password);
+    await screen.findByRole('button', { name: /import_chosen/ });
+    const boxes = screen.getAllByRole('checkbox');
+    expect(boxes).toHaveLength(2);
+    expect((boxes[0] as HTMLInputElement).disabled).toBe(true);
+    fireEvent.click(boxes[1]!);
+    fireEvent.click(screen.getByRole('button', { name: /import_chosen/ }));
+    await waitFor(() => expect(mocks.restore).toHaveBeenCalledTimes(1));
+    expect(mocks.restore.mock.calls[0]![0].accounts.map((a: { username: string }) => a.username)).toEqual([owner.username]);
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-    view.unmount();
-    render(<AccountVaultImportPrompt />);
-    expect(mocks.fetch).toHaveBeenCalledOnce();
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(localStorage.getItem(`account-vault-revision:${JSON.stringify([owner.username, owner.serverUrl])}:${laptop.id}`)).toBe(laptop.revision);
   });
 
-  it('remembers a declined import in this browser without touching account sessions', async () => {
+  it('lets the user pick among several archives and names the archive in a wrong-password error', async () => {
+    const laptop = await record('Laptop', 'a'.repeat(32));
+    const phone = await record('Phone', 'b'.repeat(32), 'b');
+    mocks.fetch.mockResolvedValue([laptop, phone]);
     mocks.auth.isAuthenticated = true;
-    mocks.fetch.mockResolvedValue({ revision: 'a'.repeat(64), envelope: await encryptVault(contents, password) });
+    render(<AccountVaultImportPrompt />);
+    await screen.findByRole('dialog');
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: phone.id } });
+    fireEvent.click(screen.getByRole('button', { name: 'import' }));
+    expect(screen.getByRole('heading', { name: 'Phone' })).toBeInTheDocument();
+    await unlockWith('wrong');
+    expect(await screen.findByRole('alert')).toHaveTextContent('errors.unlock_failed_owner:Phone,owner@example.com,mail.example.com');
+    expect(mocks.restore).not.toHaveBeenCalled();
+  });
+
+  it('skips archives this browser already restored and remembers a dismissal', async () => {
+    const laptop = await record('Laptop');
+    localStorage.setItem(`account-vault-revision:${JSON.stringify([owner.username, owner.serverUrl])}:${laptop.id}`, laptop.revision);
+    mocks.fetch.mockResolvedValue([laptop]);
+    mocks.auth.isAuthenticated = true;
     const view = render(<AccountVaultImportPrompt />);
+    await waitFor(() => expect(mocks.fetch).toHaveBeenCalled());
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    view.unmount(); localStorage.clear();
+    render(<AccountVaultImportPrompt />);
     fireEvent.click(await screen.findByRole('button', { name: 'not_now' }));
-    view.unmount();
-    render(<AccountVaultImportPrompt />);
-    expect(mocks.fetch).toHaveBeenCalledOnce();
-    expect(mocks.restore).not.toHaveBeenCalled();
+    expect(localStorage.getItem(`account-vault-prompt:${JSON.stringify([owner.username, owner.serverUrl])}`)).toBe('dismissed');
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
+});
 
-  it('does not interrupt login when no archive exists or the lookup fails', async () => {
-    mocks.auth.isAuthenticated = true;
-    mocks.fetch.mockResolvedValue(null);
-    const view = render(<AccountVaultImportPrompt />);
-    await waitFor(() => expect(mocks.fetch).toHaveBeenCalledOnce());
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    view.unmount();
-    mocks.fetch.mockRejectedValue(new Error('offline'));
-    render(<AccountVaultImportPrompt />);
-    await waitFor(() => expect(mocks.fetch).toHaveBeenCalledTimes(2));
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-  });
-
-  it('ignores a lookup that finishes after switching accounts', async () => {
-    mocks.auth.isAuthenticated = true;
-    const record = { revision: 'a'.repeat(64), envelope: await encryptVault(contents, password) };
-    let resolve!: (value: typeof record) => void;
-    mocks.fetch.mockImplementationOnce(() => new Promise(r => { resolve = r; })).mockResolvedValue(null);
-    const view = render(<AccountVaultImportPrompt />);
-    mocks.auth.username = 'other@example.com';
-    view.rerender(<AccountVaultImportPrompt />);
-    resolve(record);
-    await waitFor(() => expect(mocks.fetch).toHaveBeenCalledTimes(2));
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-  });
-
-  it('does not submit the surrounding login form through portal event bubbling', async () => {
-    mocks.fetch.mockResolvedValue({ revision: 'a'.repeat(64), envelope: await encryptVault(contents, password) });
-    const loginSubmit = vi.fn((event: React.FormEvent) => event.preventDefault());
-    render(<form onSubmit={loginSubmit}><AccountVault owner={owner} /></form>);
-    fireEvent.click(screen.getByRole('button', { name: 'unlock' }));
-    await screen.findByLabelText('password');
+describe('settings', () => {
+  it('lists the archives of every account in the browser and creates a named one', async () => {
+    mocks.registry.accounts = [ownerAccount, secondAccount];
+    const laptop = await record('Laptop');
+    mocks.fetch.mockImplementation(async (o: { username: string }) => o.username === owner.username ? [laptop] : []);
+    mocks.put.mockImplementation(async (_o: unknown, archive: { id: string | null; name: string }, envelope: unknown) => ({ id: 'c'.repeat(32), name: archive.name, revision: revision('c'), envelope }));
+    render(<AccountVaultSettings />);
+    const list = await screen.findByRole('combobox');
+    expect(mocks.fetch).toHaveBeenCalledTimes(2);
+    expect(Array.from(list.querySelectorAll('option')).map(o => o.textContent)).toEqual(['option:Laptop,owner@example.com', 'new_archive']);
+    fireEvent.change(list, { target: { value: '__new__' } });
+    fireEvent.click(screen.getByRole('button', { name: 'create' }));
+    fireEvent.change(await screen.findByLabelText('name'), { target: { value: 'Work laptop' } });
     fireEvent.change(screen.getByLabelText('password'), { target: { value: password } });
-    fireEvent.submit(screen.getByLabelText('password').closest('form')!);
-    fireEvent.click(await screen.findByRole('button', { name: 'import_chosen' }));
-    await waitFor(() => expect(mocks.restore).toHaveBeenCalledWith(contents, true, true));
-    expect(loginSubmit).not.toHaveBeenCalled();
-  });
-
-  it('creates a server archive with ciphertext only after confirming the password', async () => {
-    mocks.fetch.mockResolvedValue(null);
-    mocks.put.mockImplementation(async (_owner: unknown, envelope: VaultEnvelope) => ({ revision: 'a'.repeat(64), envelope }));
-    render(<AccountVault owner={owner} manage />);
-    fireEvent.click(screen.getByRole('button', { name: 'manage' }));
-    await screen.findByLabelText('password');
-    fireEvent.change(screen.getByLabelText('password'), { target: { value: password } });
-    fireEvent.change(screen.getByLabelText('confirm_password'), { target: { value: 'mismatch' } });
-    fireEvent.click(screen.getByRole('button', { name: 'save' }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('password_mismatch');
-    expect(mocks.put).not.toHaveBeenCalled();
     fireEvent.change(screen.getByLabelText('confirm_password'), { target: { value: password } });
-    fireEvent.click(screen.getByRole('button', { name: 'save' }));
-    await waitFor(() => expect(mocks.put).toHaveBeenCalledOnce());
-    const envelope = mocks.put.mock.calls[0][1] as VaultEnvelope;
-    expect(JSON.stringify(envelope)).not.toContain('mail-password');
-    expect(await decryptVault(envelope, password, owner)).toEqual(contents);
-    await waitFor(() => expect(screen.getByLabelText('password')).toHaveValue(''));
+    fireEvent.click(screen.getByLabelText('save_passwords')); // metadata only
+    fireEvent.submit(screen.getByLabelText('password').closest('form')!);
+    await waitFor(() => expect(mocks.put).toHaveBeenCalledTimes(1));
+    expect(mocks.put.mock.calls[0]![1]).toEqual({ id: null, name: 'Work laptop', revision: null });
+    expect(mocks.collect).toHaveBeenCalledWith(owner, false);
+    expect(mocks.put.mock.calls[0]![2]).not.toHaveProperty('password');
   });
 
-  it('does not touch sessions for a wrong password, then restores with a single correct password', async () => {
-    const envelope = await encryptVault(contents, password);
-    mocks.fetch.mockResolvedValue({ revision: 'a'.repeat(64), envelope });
-    render(<AccountVault owner={owner} />);
-    fireEvent.click(screen.getByRole('button', { name: 'unlock' }));
-    await screen.findByLabelText('password');
-    fireEvent.change(screen.getByLabelText('password'), { target: { value: 'wrong' } });
-    fireEvent.submit(screen.getByLabelText('password').closest('form')!);
-    expect(await screen.findByRole('alert')).toHaveTextContent('errors.unlock_failed');
-    expect(mocks.restore).not.toHaveBeenCalled();
-    fireEvent.change(screen.getByLabelText('password'), { target: { value: password } });
-    fireEvent.submit(screen.getByLabelText('password').closest('form')!);
-    fireEvent.click(await screen.findByRole('button', { name: 'import_chosen' }));
-    await waitFor(() => expect(mocks.restore).toHaveBeenCalledWith(contents, true, true));
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-  });
-
-  it('blocks overwriting an archive this browser has not restored', async () => {
-    mocks.fetch.mockResolvedValue({ revision: 'a'.repeat(64), envelope: await encryptVault(contents, password) });
-    render(<AccountVault owner={owner} manage />);
+  it('renames an archive it has restored, refuses to overwrite one it has not, and deletes after confirmation', async () => {
+    const laptop = await record('Laptop');
+    mocks.fetch.mockResolvedValue([laptop]);
+    mocks.put.mockImplementation(async (_o: unknown, archive: { id: string; name: string; revision: string }, envelope: unknown) => ({ ...archive, revision: revision('d'), envelope }));
+    mocks.del.mockResolvedValue(undefined);
+    render(<AccountVaultSettings />);
+    await screen.findByRole('combobox');
+    // Update without a known revision: conflict, nothing written.
     fireEvent.click(screen.getByRole('button', { name: 'manage' }));
-    await screen.findByLabelText('password');
-    fireEvent.change(screen.getByLabelText('password'), { target: { value: password } });
-    fireEvent.click(screen.getByRole('button', { name: 'save' }));
+    fireEvent.change(await screen.findByLabelText('name'), { target: { value: 'Old laptop' } });
+    await unlockWith(password);
     expect(await screen.findByRole('alert')).toHaveTextContent('errors.conflict');
     expect(mocks.put).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'close' }));
+    // Once this browser restored it, the rename goes through with the current revision.
+    localStorage.setItem(`account-vault-revision:${JSON.stringify([owner.username, owner.serverUrl])}:${laptop.id}`, laptop.revision);
+    fireEvent.click(await screen.findByRole('button', { name: 'manage' }));
+    fireEvent.change(await screen.findByLabelText('name'), { target: { value: 'Old laptop' } });
+    await unlockWith(password);
+    await waitFor(() => expect(mocks.put).toHaveBeenCalledWith(owner, { id: laptop.id, name: 'Old laptop', revision: laptop.revision }, expect.anything()));
+    // Delete asks for confirmation and needs no archive password.
+    fireEvent.click(await screen.findByRole('button', { name: 'delete' }));
+    expect(mocks.del).not.toHaveBeenCalled();
+    expect(screen.getByText('delete_confirm:Laptop,owner@example.com')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'delete_confirm_button' }));
+    await waitFor(() => expect(mocks.del).toHaveBeenCalledWith(owner, { id: laptop.id, revision: laptop.revision }));
+  });
+
+  it('shows the empty state and the creation form when no archive exists', async () => {
+    render(<AccountVaultSettings />);
+    await screen.findByText('none');
+    expect(screen.getByRole('button', { name: 'create' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'delete' })).not.toBeInTheDocument();
   });
 });
