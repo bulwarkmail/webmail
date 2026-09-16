@@ -3559,6 +3559,10 @@
     "date_label": "תאריך",
     "subject_label": "נושא"
   },
+  "build_refresh": {
+    "title": "A new version of the webmail was published.",
+    "reload": "Reload"
+  },
   "pwa_install": {
     "title": "התקן {appName}",
     "description": "התקן את היישום שלנו לגישה מהירה ותמיכה בלא־אינטרנט.",

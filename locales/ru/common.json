@@ -3558,6 +3558,10 @@
     "date_label": "Дата",
     "subject_label": "Тема"
   },
+  "build_refresh": {
+    "title": "A new version of the webmail was published.",
+    "reload": "Reload"
+  },
   "pwa_install": {
     "title": "Установить {appName}",
     "description": "Установите наше приложение для быстрого доступа и работы офлайн.",

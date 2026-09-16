@@ -3558,6 +3558,10 @@
     "date_label": "날짜",
     "subject_label": "제목"
   },
+  "build_refresh": {
+    "title": "A new version of the webmail was published.",
+    "reload": "Reload"
+  },
   "pwa_install": {
     "title": "{appName} 설치",
     "description": "빠른 액세스와 오프라인 지원을 위해 앱을 설치하세요.",
