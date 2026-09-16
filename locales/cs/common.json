@@ -3558,6 +3558,10 @@
     "date_label": "Datum",
     "subject_label": "Předmět"
   },
+  "build_refresh": {
+    "title": "A new version of the webmail was published.",
+    "reload": "Reload"
+  },
   "pwa_install": {
     "title": "Nainstalovat {appName}",
     "description": "Nainstalujte si naši aplikaci pro rychlý přístup a offline podporu.",

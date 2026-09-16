@@ -20,6 +20,10 @@ if (/^[0-9a-f]{40}$/i.test(gitCommitHash)) {
   gitCommitHash = gitCommitHash.slice(0, 7);
 }
 
+// Unique per build (even for the same commit): lets an open tab notice that a
+// newer build has been deployed and refresh itself. See components/build-refresh.tsx.
+const buildStamp = `${gitCommitHash}-${Date.now().toString(36)}`;
+
 let appVersion = "0.0.0";
 try {
   appVersion = readFileSync(join(import.meta.dirname, "VERSION"), "utf-8").trim();
@@ -84,6 +88,7 @@ const nextConfig: NextConfig = {
   },
   env: {
     NEXT_PUBLIC_GIT_COMMIT: gitCommitHash,
+    NEXT_PUBLIC_BUILD_STAMP: buildStamp,
     NEXT_PUBLIC_APP_VERSION: appVersion,
     NEXT_PUBLIC_BASE_PATH: basePath,
     NEXT_PUBLIC_DEV_MOCK_JMAP: process.env.DEV_MOCK_JMAP ?? "",
