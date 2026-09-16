@@ -9,21 +9,27 @@ function headers(owner: VaultOwner): Record<string, string> {
   return { 'x-vault-username': normalized.username, 'x-vault-server': normalized.serverUrl };
 }
 
-export async function fetchVault(owner: VaultOwner): Promise<VaultRecord | null> {
-  const res = await apiFetch('/api/account-vault', { headers: headers(owner), cache: 'no-store' });
-  const body = await res.json();
-  if (!res.ok) throw new Error(body.error || 'storage_failed');
-  return body.vault;
-}
-
-export async function putVault(owner: VaultOwner, envelope: VaultEnvelope, revision: string | null): Promise<VaultRecord> {
-  const res = await apiFetch('/api/account-vault', { method: 'PUT',
-    headers: { ...headers(owner), 'Content-Type': 'application/json' },
-    body: JSON.stringify({ envelope, revision }),
+async function request(owner: VaultOwner, init: RequestInit = {}) {
+  const res = await apiFetch('/api/account-vault', { cache: 'no-store', ...init,
+    headers: { ...headers(owner), ...(init.body ? { 'Content-Type': 'application/json' } : {}) },
   });
   const body = await res.json();
   if (!res.ok) throw new Error(body.error || 'storage_failed');
-  return body.vault;
+  return body;
+}
+
+/** All archives saved by this owner, sorted by name. */
+export async function fetchVaults(owner: VaultOwner): Promise<VaultRecord[]> {
+  return (await request(owner)).vaults;
+}
+
+/** `archive.id === null` creates a new archive. */
+export async function putVault(owner: VaultOwner, archive: { id: string | null; name: string; revision: string | null }, envelope: VaultEnvelope): Promise<VaultRecord> {
+  return (await request(owner, { method: 'PUT', body: JSON.stringify({ ...archive, envelope }) })).vault;
+}
+
+export async function deleteVault(owner: VaultOwner, archive: { id: string; revision: string }): Promise<void> {
+  await request(owner, { method: 'DELETE', body: JSON.stringify({ id: archive.id, revision: archive.revision }) });
 }
 
 /** Snapshot basic accounts, optionally including live credentials. */

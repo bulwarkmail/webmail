@@ -6,8 +6,10 @@ import { readStalwartAuthContextFromStore } from '@/lib/stalwart/auth-context';
 import { assertBasicAuthMatchesUsername, verifyJmapAuth } from '@/lib/auth/verify-jmap-auth';
 import { parseJmapServers, resolveTrustedJmapUrl } from '@/lib/admin/jmap-servers';
 import { MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
-import { normalizeVaultOwner, parseVaultEnvelope, vaultIdentity, VAULT_MAX_BYTES, type VaultOwner } from '@/lib/account-vault';
-import { loadVault, saveVault, VaultConflict } from '@/lib/account-vault-storage';
+import {
+  normalizeVaultOwner, parseVaultEnvelope, parseVaultId, parseVaultName, vaultIdentity, VAULT_MAX_BYTES, type VaultOwner,
+} from '@/lib/account-vault';
+import { deleteVault, listVaults, saveVault, VaultConflict, VaultLimit } from '@/lib/account-vault-storage';
 
 export const runtime = 'nodejs';
 const reply = (data: unknown, status = 200) => NextResponse.json(data, {
@@ -21,15 +23,16 @@ async function enabled(): Promise<boolean> {
 function ownerFrom(request: NextRequest): VaultOwner {
   return normalizeVaultOwner({ username: request.headers.get('x-vault-username') || '', serverUrl: request.headers.get('x-vault-server') || '' });
 }
+const isRevision = (value: unknown): value is string => typeof value === 'string' && /^[a-f0-9]{64}$/.test(value);
 
 /** Deliberately readable before mail login: the archive password is the read key.
- * No plaintext metadata or credentials are returned, and no permissive CORS is set.
+ * Only archive names and ciphertext are returned, and no permissive CORS is set.
  */
 export async function GET(request: NextRequest) {
   if (!await enabled()) return reply({ error: 'disabled' }, 404);
   let owner;
   try { owner = ownerFrom(request); } catch { return reply({ error: 'invalid_archive' }, 400); }
-  try { return reply({ vault: await loadVault(owner) }); }
+  try { return reply({ vaults: await listVaults(owner) }); }
   catch { return reply({ error: 'storage_failed' }, 500); }
 }
 
@@ -53,7 +56,8 @@ async function verifyOwner(owner: VaultOwner): Promise<boolean> {
   return false;
 }
 
-export async function PUT(request: NextRequest) {
+/** Writes and deletes: verified owner session plus a size-bounded JSON body. */
+async function authorizedBody(request: NextRequest): Promise<{ owner: VaultOwner; body: Record<string, unknown> } | NextResponse> {
   if (!await enabled()) return reply({ error: 'disabled' }, 404);
   if (!request.headers.get('content-type')?.startsWith('application/json')
     || request.headers.get('sec-fetch-site') === 'cross-site') return reply({ error: 'forbidden' }, 403);
@@ -76,12 +80,44 @@ export async function PUT(request: NextRequest) {
       chunks.push(value);
     }
     const body = JSON.parse(Buffer.concat(chunks).toString('utf8'));
-    const envelope = parseVaultEnvelope(body.envelope);
-    if (body.revision !== null && (typeof body.revision !== 'string' || !/^[a-f0-9]{64}$/.test(body.revision))) {
-      return reply({ error: 'invalid_archive' }, 400);
-    }
-    try { return reply({ vault: await saveVault(owner, envelope, body.revision) }); }
-    catch (err) { return reply({ error: err instanceof VaultConflict ? 'conflict' : 'storage_failed' }, err instanceof VaultConflict ? 409 : 500); }
+    if (!body || typeof body !== 'object' || Array.isArray(body)) return reply({ error: 'invalid_archive' }, 400);
+    return { owner, body };
   } catch { return reply({ error: 'invalid_archive' }, 400); }
   finally { reader.releaseLock(); }
+}
+
+function storageError(err: unknown) {
+  if (err instanceof VaultConflict) return reply({ error: 'conflict' }, 409);
+  if (err instanceof VaultLimit) return reply({ error: 'archive_limit' }, 409);
+  return reply({ error: 'storage_failed' }, 500);
+}
+
+/** `id: null` creates a new archive; an existing id replaces that archive if `revision` still matches. */
+export async function PUT(request: NextRequest) {
+  const auth = await authorizedBody(request);
+  if (auth instanceof NextResponse) return auth;
+  const { owner, body } = auth;
+  let envelope, id, name;
+  try {
+    envelope = parseVaultEnvelope(body.envelope);
+    id = body.id === null ? null : parseVaultId(body.id);
+    if (body.revision !== null && !isRevision(body.revision)) throw new Error('invalid_archive');
+  } catch { return reply({ error: 'invalid_archive' }, 400); }
+  try { name = parseVaultName(body.name); } catch { return reply({ error: 'invalid_name' }, 400); }
+  try { return reply({ vault: await saveVault(owner, id, name, envelope, body.revision) }); }
+  catch (err) { return storageError(err); }
+}
+
+/** Needs the owner session, not the archive password, so a forgotten password can be recovered from. */
+export async function DELETE(request: NextRequest) {
+  const auth = await authorizedBody(request);
+  if (auth instanceof NextResponse) return auth;
+  const { owner, body } = auth;
+  let id;
+  try {
+    id = parseVaultId(body.id);
+    if (!isRevision(body.revision)) throw new Error('invalid_archive');
+  } catch { return reply({ error: 'invalid_archive' }, 400); }
+  try { await deleteVault(owner, id, body.revision); return reply({ deleted: true }); }
+  catch (err) { return storageError(err); }
 }
