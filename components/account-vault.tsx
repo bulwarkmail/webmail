@@ -159,9 +159,8 @@ function VaultDialog({ owner, mode: requested, record, close }: { owner: VaultOw
     setBusy(true); setError(''); setNotice('');
     try {
       if (record) {
-        // Require a snapshot this browser has actually restored/saved, rather
-        // than fetching today's revision and overwriting it with stale state.
-        if (knownRevision(owner, record.id) !== record.revision) throw new Error('conflict');
+        // Proving the archive password is enough to replace it: the record was
+        // listed moments ago and the server rejects a stale revision anyway.
         await decryptVault(record.envelope, password, owner);
       } else if (password !== confirmation) {
         setError(t('password_mismatch')); return;

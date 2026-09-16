@@ -124,24 +124,20 @@ describe('settings', () => {
     expect(mocks.put.mock.calls[0]![2]).not.toHaveProperty('password');
   });
 
-  it('renames an archive it has restored, refuses to overwrite one it has not, and deletes after confirmation', async () => {
+  it('renames an archive with its password, even one this browser never restored, and deletes after confirmation', async () => {
     const laptop = await record('Laptop');
     mocks.fetch.mockResolvedValue([laptop]);
     mocks.put.mockImplementation(async (_o: unknown, archive: { id: string; name: string; revision: string }, envelope: unknown) => ({ ...archive, revision: revision('d'), envelope }));
     mocks.del.mockResolvedValue(undefined);
     render(<AccountVaultSettings />);
     await screen.findByRole('combobox');
-    // Update without a known revision: conflict, nothing written.
+    // A wrong password writes nothing.
     fireEvent.click(screen.getByRole('button', { name: 'manage' }));
     fireEvent.change(await screen.findByLabelText('name'), { target: { value: 'Old laptop' } });
-    await unlockWith(password);
-    expect(await screen.findByRole('alert')).toHaveTextContent('errors.conflict');
+    await unlockWith('wrong');
+    expect(await screen.findByRole('alert')).toHaveTextContent('errors.unlock_failed_owner');
     expect(mocks.put).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole('button', { name: 'close' }));
-    // Once this browser restored it, the rename goes through with the current revision.
-    localStorage.setItem(`account-vault-revision:${JSON.stringify([owner.username, owner.serverUrl])}:${laptop.id}`, laptop.revision);
-    fireEvent.click(await screen.findByRole('button', { name: 'manage' }));
-    fireEvent.change(await screen.findByLabelText('name'), { target: { value: 'Old laptop' } });
+    // The right one renames with the revision just listed; no prior restore is needed (migrated archives have none).
     await unlockWith(password);
     await waitFor(() => expect(mocks.put).toHaveBeenCalledWith(owner, { id: laptop.id, name: 'Old laptop', revision: laptop.revision }, expect.anything()));
     // Delete asks for confirmation and needs no archive password.
