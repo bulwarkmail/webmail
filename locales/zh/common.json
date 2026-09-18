@@ -626,6 +626,7 @@
       "forward": "Fwd:",
       "reply": "Re:"
     },
+    "forward_batch_count": "{count} 封邮件",
     "no_subject": "（无主题）",
     "unknown_sender": "未知",
     "quote": {
@@ -2222,6 +2223,7 @@
     "not_spam": "不是垃圾邮件",
     "tag": "标签",
     "items_selected": "已选择 {count} 封邮件",
+    "forward_as_attachments": "作为附件转发",
     "edit_draft": "编辑草稿",
     "cancel_scheduled_send": "取消发送",
     "reschedule_send": "重新计划",

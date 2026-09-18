@@ -629,6 +629,7 @@
       "forward": "إعادة توجيه:",
       "reply": "رد:"
     },
+    "forward_batch_count": "{count, plural, one {رسالة واحدة} other {# رسائل}}",
     "no_subject": "(بلا موضوع)",
     "unknown_sender": "غير معروف",
     "quote": {
@@ -2222,6 +2223,7 @@
     "not_spam": "ليس مزعجًا",
     "tag": "وسم",
     "items_selected": "{count} رسالة محددة",
+    "forward_as_attachments": "إعادة التوجيه كمرفقات",
     "edit_draft": "تعديل المسودة",
     "cancel_scheduled_send": "إلغاء الإرسال",
     "reschedule_send": "إعادة الجدولة",

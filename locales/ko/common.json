@@ -626,6 +626,7 @@
       "forward": "Fwd:",
       "reply": "Re:"
     },
+    "forward_batch_count": "{count}개의 메일",
     "no_subject": "(제목 없음)",
     "unknown_sender": "알 수 없음",
     "quote": {
@@ -2222,6 +2223,7 @@
     "not_spam": "정상 메일",
     "tag": "태그",
     "items_selected": "{count}개의 메일 선택됨",
+    "forward_as_attachments": "첨부 파일로 전달",
     "edit_draft": "임시보관 메일 수정",
     "cancel_scheduled_send": "보내기 취소",
     "reschedule_send": "다시 예약",

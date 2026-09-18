@@ -626,6 +626,7 @@
       "forward": "Fwd:",
       "reply": "Re:"
     },
+    "forward_batch_count": "{count}件のメール",
     "no_subject": "（件名なし）",
     "unknown_sender": "不明",
     "quote": {
@@ -2222,6 +2223,7 @@
     "not_spam": "迷惑メールでない",
     "tag": "ラベル",
     "items_selected": "{count}件のメールを選択",
+    "forward_as_attachments": "添付ファイルとして転送",
     "edit_draft": "下書きを編集",
     "cancel_scheduled_send": "送信をキャンセル",
     "reschedule_send": "再予約",

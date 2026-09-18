@@ -626,6 +626,7 @@
       "forward": "Fwd:",
       "reply": "Re:"
     },
+    "forward_batch_count": "{count, plural, one {1 vēstule} other {# vēstules}}",
     "no_subject": "(nav temata)",
     "unknown_sender": "Nezināms",
     "quote": {
@@ -2222,6 +2223,7 @@
     "not_spam": "Nav mēstule",
     "tag": "Tags",
     "items_selected": "{count} vēstules atlasītas",
+    "forward_as_attachments": "Pārsūtīt kā pielikumiem",
     "edit_draft": "Rediģēt melnrakstu",
     "cancel_scheduled_send": "Atcelt sūtīšanu",
     "reschedule_send": "Pārplānot",

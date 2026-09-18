@@ -626,6 +626,7 @@
       "forward": "Пересл:",
       "reply": "Ответ:"
     },
+    "forward_batch_count": "{count, plural, one {1 письмо} few {# письма} many {# писем} other {# писем}}",
     "no_subject": "(Без темы)",
     "unknown_sender": "Неизвестный",
     "quote": {
@@ -2222,6 +2223,7 @@
     "not_spam": "Не спам",
     "tag": "Тег",
     "items_selected": "{count} писем выбрано",
+    "forward_as_attachments": "Переслать как вложения",
     "edit_draft": "Редактировать черновик",
     "cancel_scheduled_send": "Отменить отправку",
     "reschedule_send": "Перенести",

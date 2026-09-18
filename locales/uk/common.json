@@ -626,6 +626,7 @@
       "forward": "Fwd:",
       "reply": "Re:"
     },
+    "forward_batch_count": "{count, plural, one {1 лист} few {# листи} many {# листів} other {# листів}}",
     "no_subject": "(без теми)",
     "unknown_sender": "Невідомий",
     "quote": {
@@ -2222,6 +2223,7 @@
     "not_spam": "Не спам",
     "tag": "Мітка",
     "items_selected": "Вибрано електронних листів: {count}",
+    "forward_as_attachments": "Переслати як вкладення",
     "edit_draft": "Редагувати чернетку",
     "cancel_scheduled_send": "Скасувати надсилання",
     "reschedule_send": "Перенести",

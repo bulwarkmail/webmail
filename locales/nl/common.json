@@ -626,6 +626,7 @@
       "forward": "Fwd:",
       "reply": "Re:"
     },
+    "forward_batch_count": "{count, plural, one {1 e-mail} other {# e-mails}}",
     "no_subject": "(Geen onderwerp)",
     "unknown_sender": "Onbekend",
     "quote": {
@@ -2222,6 +2223,7 @@
     "not_spam": "Geen spam",
     "tag": "Label",
     "items_selected": "{count} e-mails geselecteerd",
+    "forward_as_attachments": "Doorsturen als bijlagen",
     "edit_draft": "Concept bewerken",
     "cancel_scheduled_send": "Verzenden annuleren",
     "reschedule_send": "Opnieuw plannen",

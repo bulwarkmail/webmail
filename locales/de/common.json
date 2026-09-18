@@ -626,6 +626,7 @@
       "forward": "WG:",
       "reply": "AW:"
     },
+    "forward_batch_count": "{count, plural, one {1 E-Mail} other {# E-Mails}}",
     "no_subject": "(Kein Betreff)",
     "unknown_sender": "Unbekannt",
     "quote": {
@@ -2222,6 +2223,7 @@
     "not_spam": "Kein Spam",
     "tag": "Label",
     "items_selected": "{count} E-Mails ausgewählt",
+    "forward_as_attachments": "Als Anhänge weiterleiten",
     "edit_draft": "Entwurf bearbeiten",
     "cancel_scheduled_send": "Senden abbrechen",
     "reschedule_send": "Neu planen",
