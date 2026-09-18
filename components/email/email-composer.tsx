@@ -1479,6 +1479,12 @@ export function EmailComposer({
         };
         const stopProgress = onUploadProgress(fileId, reportProgress);
 
+        // The copy left in IndexedDB once the transfer is over. It stays in
+        // place while the upload runs: Firefox stops serving a Blob read from
+        // IndexedDB as soon as its record is deleted, and a request built on
+        // one goes out with an empty body.
+        let stagedFileId: string | null = fileId;
+
         try {
           const transformed = await emailHooks.onBeforeBlobUpload.transform<unknown>(fileId);
 
@@ -1489,6 +1495,7 @@ export function EmailComposer({
             // `transformed.fileId` when the handler re-saved the staged file
             // under a new id; otherwise the id we handed it.
             await fileStorage.deleteFile(transformed.fileId ?? fileId);
+            stagedFileId = null;
             // The user may have removed the attachment while the handler was
             // offloading it - don't drop a link for a file they cancelled.
             if (controller?.signal.aborted) continue;
@@ -1512,10 +1519,16 @@ export function EmailComposer({
             continue;
           }
 
-          const newFileId = typeof transformed === 'string' ? transformed : fileId;
-
-          const newFile = await fileStorage.getFile(newFileId) || file;
-          await fileStorage.deleteFile(newFileId);
+          // A handler that rewrites the file stages its version under a fresh
+          // id (saveFile in host-api). Getting back the id we handed out means
+          // the file was left alone, and the File from the picker goes up as is.
+          const replacedFileId =
+            typeof transformed === 'string' && transformed !== fileId ? transformed : null;
+          let newFile = file;
+          if (replacedFileId) {
+            stagedFileId = replacedFileId;
+            newFile = (await fileStorage.getFile(replacedFileId)) ?? file;
+          }
 
           // Passing the signal also makes cancel abort the transfer itself,
           // instead of only being checked once the upload has finished.
@@ -1540,6 +1553,9 @@ export function EmailComposer({
           });
         } finally {
           stopProgress();
+          if (stagedFileId) {
+            await fileStorage.deleteFile(stagedFileId).catch(() => undefined);
+          }
         }
       } catch (error) {
         if (controller?.signal.aborted) continue;
