@@ -16,6 +16,8 @@ interface RowDraft {
   label: string;
   url: string;
   domains: string;
+  connectUrl: string;
+  enabled: boolean;
   oauthClientId: string;
   oauthIssuerUrl: string;
   oauthClientSecret: string;
@@ -28,6 +30,8 @@ function entryToDraft(e: JmapServerEntry): RowDraft {
     label: e.label,
     url: e.url,
     domains: (e.domains ?? []).join(', '),
+    connectUrl: e.connectUrl ?? '',
+    enabled: e.enabled !== false,
     oauthClientId: e.oauth?.clientId ?? '',
     oauthIssuerUrl: e.oauth?.issuerUrl ?? '',
     oauthClientSecret: e.oauth?.clientSecret ?? '',
@@ -43,6 +47,7 @@ function draftToEntry(d: RowDraft): JmapServerEntry | null {
     .split(/[,\s]+/)
     .map((s) => s.trim().toLowerCase())
     .filter(Boolean);
+  const connectUrl = d.connectUrl.trim();
   const clientId = d.oauthClientId.trim();
   const issuerUrl = d.oauthIssuerUrl.trim().replace(/\/+$/, '');
   const clientSecret = d.oauthClientSecret;
@@ -58,6 +63,8 @@ function draftToEntry(d: RowDraft): JmapServerEntry | null {
     label: d.label.trim() || id,
     url,
     ...(domains.length > 0 ? { domains } : {}),
+    ...(connectUrl ? { connectUrl } : {}),
+    ...(d.enabled ? {} : { enabled: false }),
     ...(oauth ? { oauth } : {}),
   };
 }
@@ -68,6 +75,8 @@ function emptyDraft(): RowDraft {
     label: '',
     url: '',
     domains: '',
+    connectUrl: '',
+    enabled: true,
     oauthClientId: '',
     oauthIssuerUrl: '',
     oauthClientSecret: '',
@@ -156,7 +165,17 @@ export function JmapServersSection({ value, source, onChange, onRevert }: Props)
       {drafts.map((d, i) => {
         const isDuplicate = duplicateIdx.has(i);
         return (
-          <div key={i} className="rounded-md border border-border bg-muted/20 p-3 space-y-2">
+          <div key={i} className={`rounded-md border border-border p-3 space-y-2 ${d.enabled ? 'bg-muted/20' : 'bg-muted/40 opacity-75'}`}>
+            <label className="inline-flex items-center gap-2 text-xs text-foreground">
+              <input
+                type="checkbox"
+                checked={d.enabled}
+                onChange={(e) => update(i, { enabled: e.target.checked })}
+                className="h-3.5 w-3.5"
+              />
+              Enabled
+              <span className="text-muted-foreground">(unchecked: hidden from the login form, logins through this server refused)</span>
+            </label>
             <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-start">
               <div className="sm:col-span-3">
                 <label className="block text-[11px] font-medium text-muted-foreground mb-1">ID</label>
@@ -208,6 +227,18 @@ export function JmapServersSection({ value, source, onChange, onRevert }: Props)
                 value={d.domains}
                 onChange={(e) => update(i, { domains: e.target.value })}
                 placeholder="example.com, example.org"
+                className="h-8 w-full rounded-md border border-input bg-background px-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              />
+            </div>
+            <div>
+              <label className="block text-[11px] font-medium text-muted-foreground mb-1">
+                Account sign-up / connect page (optional, linked from the login form when this server is selected)
+              </label>
+              <input
+                type="url"
+                value={d.connectUrl}
+                onChange={(e) => update(i, { connectUrl: e.target.value })}
+                placeholder="https://bridge.example.com/auth/google/start"
                 className="h-8 w-full rounded-md border border-input bg-background px-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               />
             </div>
