@@ -1066,6 +1066,10 @@
         "label": "تلوين صفوف القائمة بلون الوسم",
         "description": "تظليل كل صف رسالة بلون أول وسم فيها. عطّل هذا لإبقاء الصفوف عادية؛ ستظل نقاط الوسوم وشاراتها تظهر اللون."
       },
+      "tint_list_rows_by_account": {
+        "label": "Tint List Rows by Account Color",
+        "description": "In the unified view, shade each row with its account color instead of showing the account dot. Takes precedence over the tag tint; tags keep their color on their chips."
+      },
       "show_folder_total_count": {
         "label": "إظهار إجمالي عدد الرسائل",
         "description": "إظهار إجمالي عدد الرسائل بجانب المجلدات والوسوم، إلى جانب عدد غير المقروء. عطّل هذا لإظهار عدد غير المقروء فقط."
