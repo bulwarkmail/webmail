@@ -31,6 +31,8 @@ export function parseSyncedSubscriptions(value: unknown): ICalSubscription[] | n
     const s = item as Record<string, unknown>;
     if (typeof s.id !== 'string' || !s.id || seen.has(s.id)) continue;
     if (typeof s.url !== 'string' || !s.url.trim()) continue;
+    const normalizedUrl = s.url.trim().replace(/^webcals?:\/\//i, 'https://');
+    if (!/^https?:\/\//i.test(normalizedUrl)) continue;
     if (typeof s.calendarId !== 'string' || !s.calendarId.trim()) continue;
     if (typeof s.name !== 'string' || !s.name.trim()) continue;
     seen.add(s.id);
@@ -41,7 +43,7 @@ export function parseSyncedSubscriptions(value: unknown): ICalSubscription[] | n
 
     subscriptions.push({
       id: s.id,
-      url: s.url.trim().replace(/^webcals?:\/\//i, 'https://'),
+      url: normalizedUrl,
       calendarId: s.calendarId.trim(),
       name: s.name.trim(),
       color: typeof s.color === 'string' && s.color ? s.color : '#3b82f6',

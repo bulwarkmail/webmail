@@ -45,11 +45,22 @@ describe('parseSyncedSubscriptions', () => {
       makeSubscription({ id: 'a', name: 'Duplicate' }),
       { ...makeSubscription(), id: undefined },
       { ...makeSubscription(), url: '' },
+      { ...makeSubscription(), url: 'ftp://example.com/unsupported.ics' },
       { ...makeSubscription(), calendarId: '' },
       { ...makeSubscription(), name: '   ' },
       'invalid string entry',
     ]);
     expect(result!.map((s) => s.id)).toEqual(['a']);
+  });
+
+  it('normalizes non-finite or negative refresh intervals to default (60m)', () => {
+    const result = parseSyncedSubscriptions([
+      makeSubscription({ id: 's1', refreshInterval: -10 }),
+      makeSubscription({ id: 's2', refreshInterval: NaN as unknown as number }),
+      makeSubscription({ id: 's3', refreshInterval: Infinity as unknown as number }),
+      makeSubscription({ id: 's4', refreshInterval: 0 }),
+    ]);
+    expect(result?.every((s) => s.refreshInterval === 60)).toBe(true);
   });
 });
 
@@ -74,6 +85,16 @@ describe('mergeSyncedSubscriptions', () => {
       NOW
     );
     expect(merged.icalSubscriptions.map((s) => s.id).sort()).toEqual(['local', 'remote']);
+  });
+
+  it('preserves subscriptions from multiple distinct accounts during merge', () => {
+    const merged = mergeSyncedSubscriptions(
+      { icalSubscriptions: [makeSubscription({ id: 'sub-1', accountId: 'acc-1' })], deletedSubscriptionIds: {} },
+      { icalSubscriptions: [makeSubscription({ id: 'sub-2', accountId: 'acc-2' })], deletedSubscriptionIds: {} },
+      NOW
+    );
+    expect(merged.icalSubscriptions).toHaveLength(2);
+    expect(merged.icalSubscriptions.map((s) => s.accountId)).toEqual(['acc-1', 'acc-2']);
   });
 
   it('keeps newer copy per id, preferring local on tie', () => {
@@ -108,6 +129,17 @@ describe('mergeSyncedSubscriptions', () => {
     expect(merged.deletedSubscriptionIds).toEqual({ a: '2026-02-01T00:00:00Z' });
   });
 
+  it('tombstone wins over subscription on exact timestamp tie (defensive deletion)', () => {
+    const timestamp = '2026-02-01T00:00:00.000Z';
+    const merged = mergeSyncedSubscriptions(
+      { icalSubscriptions: [makeSubscription({ id: 'a', updatedAt: timestamp })], deletedSubscriptionIds: {} },
+      { icalSubscriptions: [], deletedSubscriptionIds: { a: timestamp } },
+      NOW
+    );
+    expect(merged.icalSubscriptions).toEqual([]);
+    expect(merged.deletedSubscriptionIds).toEqual({ a: timestamp });
+  });
+
   it('resurrects subscription edited after its deletion and clears tombstone', () => {
     const merged = mergeSyncedSubscriptions(
       {
@@ -117,7 +149,7 @@ describe('mergeSyncedSubscriptions', () => {
       { icalSubscriptions: [], deletedSubscriptionIds: { a: '2026-02-01T00:00:00Z' } },
       NOW
     );
-    expect(merged.icalSubscriptions.map((s) => s.id)).toEqual(['a']);
+    expect(merged.icalSubscriptions).toEqual(['a']);
     expect(merged.deletedSubscriptionIds).toEqual({});
   });
 
