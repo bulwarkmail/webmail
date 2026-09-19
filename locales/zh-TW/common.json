@@ -1066,6 +1066,10 @@
         "label": "依標籤顏色為清單列上色",
         "description": "以第一個標籤的顏色為每封郵件列加上底色。停用後郵件列保持無底色，但標籤圓點與標籤仍會顯示該顏色。"
       },
+      "tint_list_rows_by_account": {
+        "label": "Tint List Rows by Account Color",
+        "description": "In the unified view, shade each row with its account color instead of showing the account dot. Takes precedence over the tag tint; tags keep their color on their chips."
+      },
       "show_folder_total_count": {
         "label": "顯示郵件總數",
         "description": "在信件匣與標籤旁顯示郵件總數及未讀數量。停用後只顯示未讀數量。"

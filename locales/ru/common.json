@@ -1063,6 +1063,10 @@
         "label": "Tint List Rows by Tag Color",
         "description": "Shade each message row with its first tag color. Disable to keep rows plain; tag dots and chips still show the color."
       },
+      "tint_list_rows_by_account": {
+        "label": "Tint List Rows by Account Color",
+        "description": "In the unified view, shade each row with its account color instead of showing the account dot. Takes precedence over the tag tint; tags keep their color on their chips."
+      },
       "show_folder_total_count": {
         "label": "Показывать общее количество сообщений",
         "description": "Показывает общее количество сообщений рядом с папками и метками, наряду с количеством непрочитанных. Отключите, чтобы показывать только непрочитанные."

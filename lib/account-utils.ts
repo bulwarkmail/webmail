@@ -42,6 +42,41 @@ export function generateAvatarColor(email: string): string {
   return colors[Math.abs(hash) % colors.length];
 }
 
+/**
+ * The `KEYWORD_PALETTE` key whose tint matches an account's avatar colour.
+ *
+ * Row tints are Tailwind class pairs (light + dark) rather than raw colours, so
+ * an account's hex cannot be used directly as a background. Mapping onto the
+ * shared tag palette keeps account tints in the same visual language as tag
+ * tints and gets dark mode for free.
+ *
+ * These pick the palette's `-dark` variants. A tag tint can afford to be faint
+ * because the tag also shows a coloured chip, but an account tint replaces the
+ * account dot and has to carry that information on its own - the fainter
+ * variants are close to invisible against the row background.
+ *
+ * The palette has no violet, so the two purple-ish avatar hues would collide.
+ * Purple keeps `purple-dark` and violet falls back to the plain `purple`, whose
+ * lighter wash still tells the two apart.
+ */
+export function accountTintKey(avatarColor: string | undefined): string {
+  switch ((avatarColor ?? '').toLowerCase()) {
+    case '#2563eb': return 'blue-dark';
+    case '#7c3aed': return 'purple';
+    case '#db2777': return 'pink-dark';
+    case '#dc2626': return 'red-dark';
+    case '#ea580c': return 'orange-dark';
+    case '#d97706': return 'amber-dark';
+    case '#65a30d': return 'lime-dark';
+    case '#16a34a': return 'green-dark';
+    case '#0d9488': return 'teal-dark';
+    case '#0891b2': return 'cyan-dark';
+    case '#6366f1': return 'indigo-dark';
+    case '#9333ea': return 'purple-dark';
+    default: return 'gray-dark';
+  }
+}
+
 /** Get initials for an avatar from a display name or email */
 export function getInitials(name: string, email?: string): string {
   if (name) {

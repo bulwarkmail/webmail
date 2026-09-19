@@ -1066,6 +1066,10 @@
         "label": "Fargelegg meldingsrader etter etikett",
         "description": "Gi hver meldingsrad en svak bakgrunnsfarge basert på den første etiketten. Deaktiver dette for nøytrale rader; etikettmarkørene viser fortsatt fargen."
       },
+      "tint_list_rows_by_account": {
+        "label": "Tint List Rows by Account Color",
+        "description": "In the unified view, shade each row with its account color instead of showing the account dot. Takes precedence over the tag tint; tags keep their color on their chips."
+      },
       "show_folder_total_count": {
         "label": "Vis totalt antall meldinger",
         "description": "Vis totalt antall meldinger ved siden av mapper og etiketter, sammen med antall uleste. Deaktiver for å vise bare antall uleste."
