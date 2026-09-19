@@ -13,6 +13,7 @@ import { toast } from '@/stores/toast-store';
 import { collectVault, deleteVault, fetchVaults, putVault } from '@/lib/account-vault-client';
 import { decryptVault, encryptVault, vaultIdentity, VAULT_NAME_MAX, type VaultContents, type VaultOwner, type VaultRecord } from '@/lib/account-vault';
 import { generateAccountId as generateVaultAccountId } from '@/lib/account-utils';
+import { enableWebPushForAccounts } from '@/lib/web-push';
 
 /** Revision this browser last restored or saved, per archive: guards against overwriting a newer copy. */
 function revisionKey(owner: VaultOwner, id: string): string { return `account-vault-revision:${vaultIdentity(owner)}:${id}`; }
@@ -69,7 +70,7 @@ function ImportOffer({ owner, records, accept, close }: { owner: VaultOwner; rec
   const ref = useFocusTrap({ isActive: true, onEscape: close, restoreFocus: true });
   return <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 p-4">
     <div ref={ref} role="dialog" aria-modal="true" aria-labelledby={`${id}-title`} aria-describedby={`${id}-description`}
-      className="w-full max-w-lg space-y-4 rounded-lg border border-border bg-background p-6 shadow-xl">
+      className="max-h-[90dvh] w-full max-w-lg space-y-4 overflow-y-auto rounded-lg border border-border bg-background p-6 shadow-xl">
       <h2 id={`${id}-title`} className="text-lg font-semibold">{t('detected_title')}</h2>
       <p id={`${id}-description`}>{t('detected_description', { username: owner.username })}</p>
       {records.length > 1 && <label className="block text-sm">{t('archive')}
@@ -98,6 +99,12 @@ function VaultDialog({ owner, mode: requested, record, close }: { owner: VaultOw
   // Decrypted archive awaiting the user's pick. The owner's own account is always
   // imported: parseVaultContents refuses an archive that does not contain it.
   const [unlocked, setUnlocked] = useState<VaultContents | null>(null);
+  // Notifications are never restored implicitly: a new device should not start
+  // buzzing for every archived account. Empty unless the user opts in here.
+  const [notify, setNotify] = useState<Set<string>>(new Set());
+  // Eight accounts plus their notification checkboxes overflow the viewport in
+  // one go, so the unlocked import walks two steps.
+  const [step, setStep] = useState<'accounts' | 'notifications'>('accounts');
   const [chosen, setChosen] = useState<ReadonlySet<string>>(new Set());
   const [confirmDelete, setConfirmDelete] = useState(requested === 'delete');
   const [busy, setBusy] = useState(false);
@@ -126,9 +133,26 @@ function VaultDialog({ owner, mode: requested, record, close }: { owner: VaultOw
     try {
       const contents = await decryptVault(record.envelope, password, owner);
       setUnlocked(contents);
+      setStep('accounts');
       setChosen(new Set(contents.accounts.map(vaultIdentity)));
     } catch (err) { showError(err); }
     finally { setBusy(false); }
+  };
+
+  /** Only accounts that actually connected can register a subscription. */
+  const subscribeChosen = async (picked: VaultContents['accounts'], connectedIds: string[]) => {
+    const wanted = picked.filter(a => notify.has(vaultIdentity(a)));
+    if (!wanted.length) return;
+    const auth = useAuthStore.getState();
+    const targets = wanted
+      .map(a => ({ account: a, accountId: generateVaultAccountId(a.username, a.serverUrl) }))
+      .filter(t => connectedIds.includes(t.accountId))
+      .map(t => ({ accountId: t.accountId, client: auth.getClientForAccount(t.accountId)!, accountLabel: t.account.username }))
+      .filter(t => !!t.client);
+    if (!targets.length) return;
+    const outcome = await enableWebPushForAccounts(targets);
+    if (outcome.enabled.length) toast.success(t('notifications_enabled', { count: outcome.enabled.length }));
+    if (outcome.failed.length) toast.warning(t('notifications_failed', { count: outcome.failed.length }));
   };
 
   const importChosen = async () => {
@@ -143,14 +167,16 @@ function VaultDialog({ owner, mode: requested, record, close }: { owner: VaultOw
       };
       const result = await useAuthStore.getState().restoreVault(contents, rememberMe, importPasswords);
       rememberRevision(owner, record);
-      setPassword(''); setUnlocked(null);
+      await subscribeChosen(picked, result.connectedIds);
+      setPassword(''); setUnlocked(null); setNotify(new Set()); setStep('accounts');
+      const counts = { connected: result.connected, failed: result.failed, pending: result.pending };
       if (result.pending && !result.failed) {
         const message = t('imported_without_passwords', { count: contents.accounts.length, pending: result.pending });
         setNotice(message); toast.success(message); close();
       }
       else if (!result.connected) setError(t('errors.accounts_disconnected'));
-      else if (result.failed) { setNotice(t('partial', result)); toast.warning(t('partial', result)); }
-      else { setNotice(t('restored', result)); close(); }
+      else if (result.failed) { setNotice(t('partial', counts)); toast.warning(t('partial', counts)); }
+      else { setNotice(t('restored', counts)); close(); }
     } catch (err) { showError(err); }
     finally { setBusy(false); }
   };
@@ -191,14 +217,24 @@ function VaultDialog({ owner, mode: requested, record, close }: { owner: VaultOw
   };
 
   const basicCount = accounts.filter(a => a.authMode === 'basic').length;
-  const importCount = unlocked ? unlocked.accounts.filter(a => chosen.has(vaultIdentity(a)) || vaultIdentity(a) === vaultIdentity(owner)).length : 0;
-  const submit = () => { if (busy) return; if (mode === 'import') void (unlocked ? importChosen() : unlock()); else void save(); };
+  const notifiable = unlocked ? unlocked.accounts.filter(a => chosen.has(vaultIdentity(a)) || vaultIdentity(a) === vaultIdentity(owner)) : [];
+  const importCount = notifiable.length;
+  const submit = () => {
+    if (busy) return;
+    if (mode !== 'import') { void save(); return; }
+    if (!unlocked) { void unlock(); return; }
+    if (step === 'accounts') { setStep('notifications'); return; }
+    void importChosen();
+  };
 
   return <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 p-4">
     <div ref={ref} role="dialog" aria-modal="true" aria-labelledby={`${id}-title`}
       className="w-full max-w-lg space-y-4 rounded-lg border border-border bg-background p-6 shadow-xl">
       <h2 id={`${id}-title`} className="text-lg font-semibold">{record ? record.name : t('new_archive')}</h2>
       <p className="text-sm text-muted-foreground">{t('owner', { username: owner.username })}</p>
+      {mode === 'import' && unlocked && <p className="text-xs text-muted-foreground">
+        {t('step', { current: step === 'accounts' ? 1 : 2, total: 2 })}
+      </p>}
       {confirmDelete && record ? <div className="space-y-4">
         <p className="text-sm">{t('delete_confirm', { name: record.name, username: owner.username })}</p>
         <div className="flex flex-wrap gap-2">
@@ -213,7 +249,7 @@ function VaultDialog({ owner, mode: requested, record, close }: { owner: VaultOw
           {t(mode === 'import' ? (unlocked ? 'choose_accounts_description' : 'unlock_description') : mode === 'create' ? 'create_description' : 'save_description', { count: basicCount })}
         </p>
         {mode === 'update' && <p className="text-sm text-muted-foreground">{t('owner_hint')}</p>}
-        {unlocked && <fieldset className="space-y-2 rounded-md border border-border p-3">
+        {unlocked && step === 'accounts' && <fieldset className="space-y-2 rounded-md border border-border p-3">
           <legend className="px-1 text-sm font-medium">{t('choose_accounts')}</legend>
           {unlocked.accounts.map(account => {
             const key = vaultIdentity(account);
@@ -227,6 +263,24 @@ function VaultDialog({ owner, mode: requested, record, close }: { owner: VaultOw
                   {account.username} · {new URL(account.serverUrl).hostname}{isOwner ? ` · ${t('owner_always')}` : ''}
                 </span>
               </span>
+            </label>;
+          })}
+        </fieldset>}
+        {unlocked && step === 'notifications' && <fieldset className="space-y-2 rounded-md border border-border p-3">
+          <legend className="px-1 text-sm font-medium">{t('notifications')}</legend>
+          <p className="text-xs text-muted-foreground">{t('notifications_description')}</p>
+          <label className="flex items-center gap-2 text-sm font-medium">
+            <input type="checkbox" disabled={busy}
+              checked={notifiable.length > 0 && notifiable.every(a => notify.has(vaultIdentity(a)))}
+              onChange={e => setNotify(e.target.checked ? new Set(notifiable.map(vaultIdentity)) : new Set())} />
+            {t('notifications_all')}
+          </label>
+          {notifiable.map(account => {
+            const key = vaultIdentity(account);
+            return <label key={key} className="flex items-start gap-2 pl-6 text-sm">
+              <input type="checkbox" className="mt-1" disabled={busy} checked={notify.has(key)}
+                onChange={e => setNotify(prev => { const next = new Set(prev); if (e.target.checked) next.add(key); else next.delete(key); return next; })} />
+              <span>{account.label || account.username}</span>
             </label>;
           })}
         </fieldset>}
@@ -258,7 +312,11 @@ function VaultDialog({ owner, mode: requested, record, close }: { owner: VaultOw
           </label>}
         </>}
         <div className="flex flex-wrap gap-2">
-          {mode === 'import' && unlocked && <Button type="submit" disabled={busy}>{t('import_chosen', { count: importCount })}</Button>}
+          {mode === 'import' && unlocked && step === 'accounts' && <Button type="submit" disabled={busy}>{t('next')}</Button>}
+          {mode === 'import' && unlocked && step === 'notifications' && <>
+            <Button type="button" variant="outline" disabled={busy} onClick={() => setStep('accounts')}>{t('back')}</Button>
+            <Button type="submit" disabled={busy}>{t('import_chosen', { count: importCount })}</Button>
+          </>}
           {mode === 'import' && !unlocked && <Button type="submit" disabled={busy || !password}>{t('unlock')}</Button>}
           {mode === 'create' && <Button type="submit" disabled={busy || !password || !name.trim()}>{t('create')}</Button>}
           {mode === 'update' && <>

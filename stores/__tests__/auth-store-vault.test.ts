@@ -73,7 +73,8 @@ const withoutAppearance = (accounts: VaultAccount[]) =>
 describe('one-password account restore', () => {
   it('imports metadata from a password archive without logging in, writing cookies or keeping passwords', async () => {
     const result = await useAuthStore.getState().restoreVault(contents, true, false);
-    expect(result).toEqual({ connected: 0, failed: 0, pending: 6 });
+    expect(result).toMatchObject({ connected: 0, failed: 0, pending: 6 });
+    expect(result.connectedIds).toHaveLength(0);
     expect(connected).toHaveLength(0);
     expect(requests).toHaveLength(0);
     expect(useAuthStore.getState().getAllConnectedClients().size).toBe(0);
@@ -97,7 +98,8 @@ describe('one-password account restore', () => {
     requests.length = 0; connected.length = 0;
     const metadata = { ...contents, accounts: contents.accounts.map(({ password: _password, ...account }) => account) };
     const result = await useAuthStore.getState().restoreVault(metadata, true);
-    expect(result).toEqual({ connected: 1, failed: 0, pending: 5 });
+    expect(result).toMatchObject({ connected: 1, failed: 0, pending: 5 });
+    expect(result.connectedIds).toHaveLength(1);
     expect(requests).toHaveLength(0);
     expect(connected).toHaveLength(0);
     expect(useAuthStore.getState().client).toBe(existing);
@@ -152,7 +154,8 @@ describe('one-password account restore', () => {
   it('restores all six accounts into a clean browser with distinct slots and no local plaintext secrets', async () => {
     const envelope = await encryptVault(contents, 'a single archive password');
     const result = await useAuthStore.getState().restoreVault(await decryptVault(envelope, 'a single archive password', owner), true);
-    expect(result).toEqual({ connected: 6, failed: 0, pending: 0 });
+    expect(result).toMatchObject({ connected: 6, failed: 0, pending: 0 });
+    expect(result.connectedIds).toHaveLength(6);
     expect(connected).toHaveLength(6);
     expect(useAuthStore.getState().isAuthenticated).toBe(true);
     expect(useAuthStore.getState().activeAccountId).toBe(contents.defaultAccountId);
@@ -173,7 +176,8 @@ describe('one-password account restore', () => {
   it('keeps a failed account visible while connecting the others, without writing remembered sessions when disabled', async () => {
     rejected.add('box0@example.com');
     const result = await useAuthStore.getState().restoreVault(contents, false);
-    expect(result).toEqual({ connected: 5, failed: 1, pending: 0 });
+    expect(result).toMatchObject({ connected: 5, failed: 1, pending: 0 });
+    expect(result.connectedIds).toHaveLength(5);
     expect(useAuthStore.getState().isAuthenticated).toBe(true);
     const failed = useAccountStore.getState().accounts.find(a => a.username === 'box0@example.com');
     expect(failed).toMatchObject({ isConnected: false, hasError: true, vaultManaged: true });

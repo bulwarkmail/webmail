@@ -1,10 +1,10 @@
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { webcrypto } from 'node:crypto';
 import { AccountVaultImportPrompt, AccountVaultSettings } from '../account-vault';
 import { encryptVault, type VaultContents, type VaultRecord } from '@/lib/account-vault';
 
-const mocks = vi.hoisted(() => ({ fetch: vi.fn(), put: vi.fn(), del: vi.fn(), collect: vi.fn(), restore: vi.fn(),
+const mocks = vi.hoisted(() => ({ fetch: vi.fn(), put: vi.fn(), del: vi.fn(), collect: vi.fn(), restore: vi.fn(), enablePush: vi.fn(),
   registry: { accounts: [] as { id: string; username: string; serverUrl: string; authMode: string }[], defaultAccountId: null as string | null, updateAccount: vi.fn() },
   auth: { isAuthenticated: false, authMode: 'basic', isDemoMode: false, username: 'owner@example.com', serverUrl: 'https://mail.example.com' } }));
 vi.mock('next-intl', () => ({ useTranslations: () => (key: string, values?: Record<string, unknown>) => values ? `${key}:${Object.values(values).join(',')}` : key }));
@@ -12,8 +12,9 @@ vi.mock('@/hooks/use-config', () => ({ useConfig: () => ({ settingsSyncEnabled: 
 vi.mock('@/lib/account-vault-client', () => ({ fetchVaults: mocks.fetch, putVault: mocks.put, deleteVault: mocks.del, collectVault: mocks.collect }));
 vi.mock('@/stores/auth-store', () => ({ useAuthStore: Object.assign(
   (selector: (s: typeof mocks.auth) => unknown) => selector(mocks.auth),
-  { getState: () => ({ restoreVault: mocks.restore }) },
+  { getState: () => ({ restoreVault: mocks.restore, getClientForAccount: (id: string) => ({ id }) }) },
 ) }));
+vi.mock('@/lib/web-push', () => ({ enableWebPushForAccounts: mocks.enablePush }));
 vi.mock('@/stores/account-store', () => {
   const state = mocks.registry;
   return { useAccountStore: Object.assign((selector: (s: typeof state) => unknown) => selector(state), { getState: () => state }) };
@@ -38,7 +39,8 @@ beforeEach(() => {
   vi.clearAllMocks(); vi.stubGlobal('crypto', webcrypto); localStorage.clear();
   Object.assign(mocks.auth, { isAuthenticated: false, authMode: 'basic', isDemoMode: false, ...owner });
   mocks.registry.accounts = [ownerAccount]; mocks.registry.defaultAccountId = null;
-  mocks.collect.mockReturnValue(contents); mocks.restore.mockResolvedValue({ connected: 2, failed: 0, pending: 0 });
+  mocks.collect.mockReturnValue(contents); mocks.restore.mockResolvedValue({ connected: 2, failed: 0, pending: 0, connectedIds: [`${owner.username}@mail.example.com`, `${other.username}@mail.example.com`] });
+  mocks.enablePush.mockResolvedValue({ enabled: ['owner'], failed: [] });
   mocks.fetch.mockResolvedValue([]);
 });
 afterEach(() => vi.unstubAllGlobals());
@@ -58,16 +60,80 @@ describe('import prompt', () => {
     expect(screen.queryByRole('combobox')).not.toBeInTheDocument(); // one archive: nothing to choose
     fireEvent.click(screen.getByRole('button', { name: 'import' }));
     await unlockWith(password);
-    await screen.findByRole('button', { name: /import_chosen/ });
-    const boxes = screen.getAllByRole('checkbox');
+    await screen.findByRole('button', { name: 'next' });
+    const chooser = screen.getByRole('group', { name: 'choose_accounts' });
+    const boxes = within(chooser).getAllByRole('checkbox');
     expect(boxes).toHaveLength(2);
     expect((boxes[0] as HTMLInputElement).disabled).toBe(true);
+    // Notifications live on the second step: eight accounts and their
+    // checkboxes together overflowed the dialog.
+    expect(screen.queryByRole('group', { name: 'notifications' })).not.toBeInTheDocument();
     fireEvent.click(boxes[1]!);
+    fireEvent.click(screen.getByRole('button', { name: 'next' }));
     fireEvent.click(screen.getByRole('button', { name: /import_chosen/ }));
     await waitFor(() => expect(mocks.restore).toHaveBeenCalledTimes(1));
     expect(mocks.restore.mock.calls[0]![0].accounts.map((a: { username: string }) => a.username)).toEqual([owner.username]);
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     expect(localStorage.getItem(`account-vault-revision:${JSON.stringify([owner.username, owner.serverUrl])}:${laptop.id}`)).toBe(laptop.revision);
+  });
+
+  it('restores without notifications unless they are asked for', async () => {
+    const laptop = await record('Laptop');
+    mocks.fetch.mockResolvedValue([laptop]);
+    mocks.auth.isAuthenticated = true;
+    render(<AccountVaultImportPrompt />);
+    await screen.findByRole('dialog');
+    fireEvent.click(screen.getByRole('button', { name: 'import' }));
+    await unlockWith(password);
+    await screen.findByRole('button', { name: 'next' });
+    fireEvent.click(screen.getByRole('button', { name: 'next' }));
+
+    // A new device must not start buzzing on its own.
+    const notifications = screen.getByRole('group', { name: 'notifications' });
+    expect(within(notifications).getAllByRole('checkbox').every(b => !(b as HTMLInputElement).checked)).toBe(true);
+
+    fireEvent.click(within(notifications).getByRole('checkbox', { name: 'notifications_all' }));
+    fireEvent.click(screen.getByRole('button', { name: /import_chosen/ }));
+
+    await waitFor(() => expect(mocks.enablePush).toHaveBeenCalledTimes(1));
+    expect(mocks.enablePush.mock.calls[0]![0].map((t: { accountId: string }) => t.accountId))
+      .toEqual([`${owner.username}@mail.example.com`, `${other.username}@mail.example.com`]);
+  });
+
+  it('leaves notifications alone when the user does not ask for them', async () => {
+    const laptop = await record('Laptop');
+    mocks.fetch.mockResolvedValue([laptop]);
+    mocks.auth.isAuthenticated = true;
+    render(<AccountVaultImportPrompt />);
+    await screen.findByRole('dialog');
+    fireEvent.click(screen.getByRole('button', { name: 'import' }));
+    await unlockWith(password);
+    await screen.findByRole('button', { name: 'next' });
+    fireEvent.click(screen.getByRole('button', { name: 'next' }));
+    fireEvent.click(screen.getByRole('button', { name: /import_chosen/ }));
+
+    await waitFor(() => expect(mocks.restore).toHaveBeenCalledTimes(1));
+    expect(mocks.enablePush).not.toHaveBeenCalled();
+  });
+
+  it('walks back to the account list without losing what was unticked', async () => {
+    mocks.fetch.mockResolvedValue([await record('Laptop')]);
+    mocks.auth.isAuthenticated = true;
+    render(<AccountVaultImportPrompt />);
+    await screen.findByRole('dialog');
+    fireEvent.click(screen.getByRole('button', { name: 'import' }));
+    await unlockWith(password);
+    await screen.findByRole('button', { name: 'next' });
+
+    const boxes = within(screen.getByRole('group', { name: 'choose_accounts' })).getAllByRole('checkbox');
+    fireEvent.click(boxes[1]!);
+    fireEvent.click(screen.getByRole('button', { name: 'next' }));
+    expect(screen.queryByRole('group', { name: 'choose_accounts' })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'back' }));
+    const again = within(screen.getByRole('group', { name: 'choose_accounts' })).getAllByRole('checkbox');
+    expect((again[1] as HTMLInputElement).checked).toBe(false);
+    expect(screen.queryByRole('group', { name: 'notifications' })).not.toBeInTheDocument();
   });
 
   it('lets the user pick among several archives and names the archive in a wrong-password error', async () => {
