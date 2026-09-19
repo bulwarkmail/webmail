@@ -117,7 +117,7 @@ export function clearAllStores(): void {
     isPushConnected: false,
     lastPushUpdate: null,
     newEmailNotification: null,
-    selectedEmailIds: new Set<string>(),
+    selectedEmailKeys: new Set<string>(),
     hasMoreEmails: false,
     totalEmails: 0,
     expandedThreadIds: new Set<string>(),

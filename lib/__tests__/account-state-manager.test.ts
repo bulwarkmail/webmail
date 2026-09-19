@@ -94,7 +94,7 @@ describe('clearAllStores', () => {
   it('resets the email store to fresh empty collections', () => {
     useEmailStore.setState({
       emails: [makeEmail({ id: 'x' })],
-      selectedEmailIds: new Set(['x']),
+      selectedEmailKeys: new Set(['x']),
       searchQuery: 'q',
       tagCounts: { a: { total: 1, unread: 0 } },
       threadEmailsCache: new Map([['t', []]]),
@@ -105,7 +105,7 @@ describe('clearAllStores', () => {
     const s = useEmailStore.getState();
     expect(s.emails).toEqual([]);
     expect(s.searchQuery).toBe('');
-    expect(s.selectedEmailIds.size).toBe(0);
+    expect(s.selectedEmailKeys.size).toBe(0);
     expect(s.threadEmailsCache.size).toBe(0);
     expect(s.tagCounts).toEqual({});
     expect(s.searchFilters).toEqual(DEFAULT_SEARCH_FILTERS);

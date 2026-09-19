@@ -338,7 +338,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     newEmailNotification,
     selectEmail,
     selectMailbox,
-    selectedEmailIds,
+    selectedEmailKeys,
     selectAllEmails,
     clearSelection,
     toggleEmailSelection,
@@ -703,7 +703,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     },
     onArchive: async () => {
       if (isScheduledView) return;
-      if (selectedEmailIds.size > 0 && client) {
+      if (selectedEmailKeys.size > 0 && client) {
         try {
           await batchArchive(client);
         } catch (error) {
@@ -719,7 +719,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     },
     onDelete: async () => {
       if (isScheduledView) return;
-      if (selectedEmailIds.size > 0 && client) {
+      if (selectedEmailKeys.size > 0 && client) {
         const currentMailbox = mailboxes.find(m => m.id === selectedMailbox);
         const isInTrash = currentMailbox?.role === 'trash';
         const isInJunk = currentMailbox?.role === 'junk';
@@ -730,8 +730,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             ? t('email_list.permanent_delete_confirm_title')
             : t('email_list.batch_actions.delete_confirm_title'),
           message: permanent
-            ? t('email_list.permanent_delete_confirm_batch_message', { count: selectedEmailIds.size })
-            : t('email_list.batch_actions.delete_confirm_message', { count: selectedEmailIds.size }),
+            ? t('email_list.permanent_delete_confirm_batch_message', { count: selectedEmailKeys.size })
+            : t('email_list.batch_actions.delete_confirm_message', { count: selectedEmailKeys.size }),
           confirmText: permanent
             ? t('email_list.permanent_delete')
             : t('email_list.batch_actions.delete'),
@@ -750,7 +750,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     onMarkAsUnread: async () => {
       if (isScheduledView) return;
       if (!client) return;
-      if (selectedEmailIds.size > 0) {
+      if (selectedEmailKeys.size > 0) {
         await batchMarkAsRead(client, false);
       } else if (selectedEmail) {
         await markAsRead(client, selectedEmail.id, false);
@@ -759,7 +759,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     onMarkAsRead: async () => {
       if (isScheduledView) return;
       if (!client) return;
-      if (selectedEmailIds.size > 0) {
+      if (selectedEmailKeys.size > 0) {
         await batchMarkAsRead(client, true);
       } else if (selectedEmail) {
         await markAsRead(client, selectedEmail.id, true);
@@ -773,8 +773,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       // is a no-op there too.
       if (['sent', 'drafts', 'scheduled'].includes(currentMailbox?.role || '')) return;
       const isInJunk = currentMailbox?.role === 'junk';
-      if (selectedEmailIds.size > 0 && client) {
-        const ids = Array.from(selectedEmailIds);
+      if (selectedEmailKeys.size > 0 && client) {
+        const ids = Array.from(selectedEmailKeys);
         try {
           if (isInJunk) {
             await batchUndoSpam(client, ids);
@@ -842,14 +842,14 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       }
     },
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [activeEmails, selectedEmail, client, selectedMailbox, isMobile, isTablet, selectedEmailIds, mailboxes, isScheduledView]);
+  }), [activeEmails, selectedEmail, client, selectedMailbox, isMobile, isTablet, selectedEmailKeys, mailboxes, isScheduledView]);
 
   // Initialize keyboard shortcuts
   useKeyboardShortcuts({
     enabled: isAuthenticated && !showComposer,
     emails: activeEmails,
     selectedEmailId: selectedEmail?.id,
-    selectionCount: selectedEmailIds.size,
+    selectionCount: selectedEmailKeys.size,
     handlers: keyboardHandlers,
   });
 
@@ -3706,30 +3706,32 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                   <button
                     type="button"
                     onClick={() => {
-                      if (selectedEmailIds.size > 0) {
-                        if (selectedEmailIds.size === activeEmails.length) {
+                      if (selectedEmailKeys.size > 0) {
+                        if (selectedEmailKeys.size === activeEmails.length) {
                           clearSelection();
                         } else {
                           selectAllEmails();
                         }
                       } else if (activeEmails.length > 0) {
-                        const currentId = selectedEmail?.id;
-                        const target = currentId && activeEmails.some((e) => e.id === currentId)
-                          ? currentId
-                          : activeEmails[0].id;
+                        // The open message when it is in this list, else the
+                        // first row - as an email, so the selection is keyed by
+                        // its owning account and not by a colliding id.
+                        const target = (selectedEmail && activeEmails.some((e) => e.id === selectedEmail.id)
+                          ? activeEmails.find((e) => e.id === selectedEmail.id)
+                          : activeEmails[0])!;
                         toggleEmailSelection(target);
                       }
                     }}
                     disabled={isScheduledView}
                     className={cn(
                       "flex-shrink-0 p-2 rounded-md transition-colors",
-                      selectedEmailIds.size > 0
+                      selectedEmailKeys.size > 0
                         ? "bg-primary/10 text-primary"
                         : "text-muted-foreground hover:text-foreground hover:bg-muted"
                     )}
-                    title={isScheduledView ? t('email_viewer.scheduled_actions_only') : selectedEmailIds.size > 0 ? (selectedEmailIds.size === activeEmails.length ? t('email_list.batch_actions.clear_selection') : t('email_list.batch_actions.select_all')) : t('email_list.batch_actions.select')}
+                    title={isScheduledView ? t('email_viewer.scheduled_actions_only') : selectedEmailKeys.size > 0 ? (selectedEmailKeys.size === activeEmails.length ? t('email_list.batch_actions.clear_selection') : t('email_list.batch_actions.select_all')) : t('email_list.batch_actions.select')}
                   >
-                    {selectedEmailIds.size > 0 ? (
+                    {selectedEmailKeys.size > 0 ? (
                       <CheckSquare className="w-4 h-4" />
                     ) : (
                       <Square className="w-4 h-4" />

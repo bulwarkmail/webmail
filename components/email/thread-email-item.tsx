@@ -45,9 +45,9 @@ export function ThreadEmailItem({
   // header pools them, so without this they disappear on the way in.
   const tagIds = sortTagIds(getEmailTagIds(email.keywords));
   const sender = email.from?.[0];
-  const { selectedMailbox, selectedEmailIds, toggleEmailSelection, selectRangeEmails, clearSelection } = useEmailStore();
+  const { selectedMailbox, selectedEmailKeys, toggleEmailSelection, selectRangeEmails, clearSelection } = useEmailStore();
   const density = useSettingsStore((state) => state.density);
-  const isChecked = selectedEmailIds.has(email.id);
+  const isChecked = selectedEmailKeys.has(email.id);
 
   const { dragHandlers, isDragging } = useEmailDrag({
     email,
@@ -73,18 +73,18 @@ export function ThreadEmailItem({
 
   const handleCheckboxClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    toggleEmailSelection(email.id);
+    toggleEmailSelection(email);
   };
 
   const handleClick = (e: React.MouseEvent) => {
     if (e.ctrlKey || e.metaKey) {
       e.preventDefault();
-      toggleEmailSelection(email.id);
+      toggleEmailSelection(email);
     } else if (e.shiftKey) {
       e.preventDefault();
-      selectRangeEmails(email.id);
+      selectRangeEmails(email);
     } else {
-      if (selectedEmailIds.size > 0) clearSelection();
+      if (selectedEmailKeys.size > 0) clearSelection();
       onClick?.();
     }
   };
@@ -118,7 +118,7 @@ export function ThreadEmailItem({
     >
       <div className="flex items-start gap-3">
         {/* Checkbox - only visible when in selection mode */}
-        {selectedEmailIds.size > 0 && (
+        {selectedEmailKeys.size > 0 && (
           <button
             onClick={handleCheckboxClick}
             className={cn(

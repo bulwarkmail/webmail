@@ -165,7 +165,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
     const isPinned = email.keywords?.['$pinned'] === true;
     const isAnswered = email.keywords?.$answered;
     const isForwarded = email.keywords?.$forwarded;
-    const { selectedMailbox, mailboxes, selectedEmailIds, toggleEmailSelection, selectRangeEmails, clearSelection, isUnifiedView, unifiedRole } = useEmailStore();
+    const { selectedMailbox, mailboxes, selectedEmailKeys, toggleEmailSelection, selectRangeEmails, clearSelection, isUnifiedView, unifiedRole } = useEmailStore();
     // In Sent/Drafts folders, show recipient instead of sender (which is always
     // "me"). In aggregate role-views the selected mailbox is virtual → fall back
     // to the unified role so junk-contextual UI and avatar hiding work.
@@ -187,7 +187,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
     const account = email.accountId ? getAccountById(email.accountId) : undefined;
     const accountColor = account?.avatarColor;
     const accountDescription = describeAccount(email.accountLabel, account);
-    const isChecked = selectedEmailIds.has(email.id);
+    const isChecked = selectedEmailKeys.has(email.id);
     const isMobile = useUIStore((state) => state.isMobile);
     // The horizontal one-line "focus" layout doesn't fit on narrow screens; fall back to multi-line on mobile.
     const isFocusedMailLayout = mailLayout === 'focus' && !isMobile;
@@ -267,9 +267,9 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
     const handleCheckboxClick = (e: React.MouseEvent) => {
       e.stopPropagation();
       if (e.shiftKey) {
-        selectRangeEmails(email.id);
+        selectRangeEmails(email);
       } else {
-        toggleEmailSelection(email.id);
+        toggleEmailSelection(email);
       }
     };
 
@@ -281,12 +281,12 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
       if (swipeEnabled && consumeTap()) { return; }
       if (e.ctrlKey || e.metaKey) {
         e.preventDefault();
-        toggleEmailSelection(email.id);
+        toggleEmailSelection(email);
       } else if (e.shiftKey) {
         e.preventDefault();
-        selectRangeEmails(email.id);
+        selectRangeEmails(email);
       } else {
-        if (selectedEmailIds.size > 0) clearSelection();
+        if (selectedEmailKeys.size > 0) clearSelection();
         onClick();
       }
     };
@@ -348,7 +348,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
           style={{ gap: 'var(--density-item-gap)', paddingBlock: 'var(--density-item-py)', transform: swipeEnabled && offsetX ? `translateX(${offsetX}px)` : undefined, transition: swipeEnabled && offsetX === 0 ? 'transform 200ms ease-out' : undefined }}
         >
           {/* Checkbox - only for extra-compact density (no avatar) while in selection mode */}
-          {density === 'extra-compact' && selectedEmailIds.size > 0 && (
+          {density === 'extra-compact' && selectedEmailKeys.size > 0 && (
             <button
               onClick={handleCheckboxClick}
               role="checkbox"
@@ -641,7 +641,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
       ? formatDateTime(latestEmail.scheduledSendAt, timeFormat)
       : null;
 
-    const { selectedMailbox, mailboxes, selectedEmailIds, toggleEmailSelection, selectRangeEmails, clearSelection, isUnifiedView, unifiedRole } = useEmailStore();
+    const { selectedMailbox, mailboxes, selectedEmailKeys, toggleEmailSelection, selectRangeEmails, clearSelection, isUnifiedView, unifiedRole } = useEmailStore();
     const showSourceFolder = isUnifiedView && !!latestEmail.sourceFolder;
     const getAccountById = useAccountStore((state) => state.getAccountById);
     const threadAccount = latestEmail.accountId ? getAccountById(latestEmail.accountId) : undefined;
@@ -688,7 +688,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
     const isSelected = selectedEmailId === latestEmail.id ||
       thread.emails.some(e => e.id === selectedEmailId);
 
-    const isChecked = thread.emails.some(e => selectedEmailIds.has(e.id));
+    const isChecked = thread.emails.some(e => selectedEmailKeys.has(e.id));
 
     if (emailCount === 1) {
       return (
@@ -717,8 +717,8 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
 
     // Toggle selection for all emails in this thread.
     const toggleThreadSelection = () => {
-      const allSelected = thread.emails.every(em => selectedEmailIds.has(em.id));
-      const newSelection = new Set(selectedEmailIds);
+      const allSelected = thread.emails.every(em => selectedEmailKeys.has(em.id));
+      const newSelection = new Set(selectedEmailKeys);
       thread.emails.forEach(em => {
         if (allSelected) {
           newSelection.delete(em.id);
@@ -726,13 +726,13 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
           newSelection.add(em.id);
         }
       });
-      useEmailStore.setState({ selectedEmailIds: newSelection, lastSelectedEmailId: latestEmail.id });
+      useEmailStore.setState({ selectedEmailKeys: newSelection, lastSelectedEmailKey: latestEmail.id });
     };
 
     const handleThreadCheckboxClick = (e: React.MouseEvent) => {
       e.stopPropagation();
       if (e.shiftKey) {
-        selectRangeEmails(latestEmail.id);
+        selectRangeEmails(latestEmail);
         return;
       }
       toggleThreadSelection();
@@ -742,12 +742,12 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
       if (e.ctrlKey || e.metaKey) {
         e.preventDefault();
         // Ctrl+Click: toggle selection for all thread emails
-        thread.emails.forEach(em => toggleEmailSelection(em.id));
+        thread.emails.forEach(em => toggleEmailSelection(em));
         return;
       }
       if (e.shiftKey) {
         e.preventDefault();
-        selectRangeEmails(latestEmail.id);
+        selectRangeEmails(latestEmail);
         return;
       }
 
@@ -760,7 +760,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
       if (target.closest('[data-expand-toggle]')) {
         onToggleExpand();
       } else {
-        if (selectedEmailIds.size > 0) clearSelection();
+        if (selectedEmailKeys.size > 0) clearSelection();
         if (!isExpanded) {
           onCollapseAllThreads?.();
           onToggleExpand();
@@ -812,7 +812,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
             style={{ gap: 'var(--density-item-gap)', paddingBlock: 'var(--density-item-py)' }}
           >
             {/* Checkbox for thread selection - only for extra-compact density (no avatar) while in selection mode */}
-            {density === 'extra-compact' && selectedEmailIds.size > 0 && (
+            {density === 'extra-compact' && selectedEmailKeys.size > 0 && (
               <button
                 onClick={handleThreadCheckboxClick}
                 role="checkbox"
