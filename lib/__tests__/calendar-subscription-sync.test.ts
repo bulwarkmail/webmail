@@ -149,7 +149,7 @@ describe('mergeSyncedSubscriptions', () => {
       { icalSubscriptions: [], deletedSubscriptionIds: { a: '2026-02-01T00:00:00Z' } },
       NOW
     );
-    expect(merged.icalSubscriptions).toEqual(['a']);
+    expect(merged.icalSubscriptions.map((s) => s.id)).toEqual(['a']);
     expect(merged.deletedSubscriptionIds).toEqual({});
   });
 
