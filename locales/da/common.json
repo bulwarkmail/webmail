@@ -1187,6 +1187,18 @@
         "confirm_revoke_message": "Den stopper med at modtage baggrundsnotifikationer med det samme. Slår du push til igen på enheden, registreres den på ny.",
         "confirm_revoke_message_this": "Denne enhed stopper med at modtage baggrundsnotifikationer med det samme."
       },
+      "push_all": {
+          "title": "All accounts",
+          "description": "Turn push on or off for several accounts at once. One browser subscription serves them all.",
+          "select_all": "Select every connected account",
+          "state_on": "notifications on",
+          "state_off": "notifications off",
+          "enable_selected": "Enable for selected",
+          "disable_selected": "Disable for selected",
+          "result_enabled": "Notifications enabled for {count} accounts.",
+          "result_partial": "Enabled for {enabled} accounts; {failed} could not be enabled.",
+          "result_disabled": "Notifications disabled for {count} accounts."
+        },
       "sound_selection": {
         "title": "Notifikationslyd",
         "description": "Vælg hvilken lyd der skal afspilles for notifikationer",

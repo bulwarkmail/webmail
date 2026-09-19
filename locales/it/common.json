@@ -1148,6 +1148,18 @@
         "swift": "Gesto veloce",
         "relax": "Rilassante"
       },
+      "push_all": {
+          "title": "Tutti gli account",
+          "description": "Attiva o disattiva le notifiche per più account in una volta sola. Una sola iscrizione del browser li serve tutti.",
+          "select_all": "Seleziona tutti gli account collegati",
+          "state_on": "notifiche attive",
+          "state_off": "notifiche non attive",
+          "enable_selected": "Attiva per i selezionati",
+          "disable_selected": "Disattiva per i selezionati",
+          "result_enabled": "Notifiche attivate per {count} account.",
+          "result_partial": "Attivate per {enabled} account; {failed} non è stato possibile attivarle.",
+          "result_disabled": "Notifiche disattivate per {count} account."
+        },
       "sound_selection": {
         "title": "Suono di notifica",
         "description": "Scegli quale suono riprodurre per le notifiche",

@@ -11,6 +11,7 @@ import { Loader2, RefreshCw, Volume2, XCircle } from 'lucide-react';
 import { usePolicyStore } from '@/stores/policy-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { MultiAccountPushSettings } from './multi-account-push';
 import { useConfirmDialog } from '@/hooks/use-confirm-dialog';
 import {
   WebPushUnsupportedError,
@@ -250,6 +251,8 @@ export function NotificationSettings() {
           </p>
         )}
       </SettingsSection>
+
+      <MultiAccountPushSettings relayBaseUrl={activeRelayUrl} />
 
       {client && (
         <SettingsSection title={t('push.devices_title')} description={t('push.devices_desc')}>
