@@ -28,6 +28,7 @@ function AccountAvatar({ account, size = "sm" }: { account: AccountEntry; size?:
       className={cn("flex-shrink-0", size === "md" && "w-9 h-9 text-sm")}
       disableFavicon
       fallbackColor={account.avatarColor}
+      contactPhotoUri={account.avatarImage}
     />
   );
 }
@@ -278,6 +279,7 @@ export function AccountSwitcher({ variant = "rail", className }: AccountSwitcher
                   data-testid="account-option"
                   data-account-id={account.id}
                   data-account-email={account.email || account.username}
+                  style={{ borderInlineStart: `4px solid ${account.avatarColor}` }}
                   className={cn(
                     "w-full flex items-start gap-3 px-3 py-2.5 text-start transition-colors",
                     isActive ? "bg-accent/50" : "hover:bg-muted",

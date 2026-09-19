@@ -487,7 +487,7 @@ export function NavigationRail({
   return (
     <div
       className={cn(
-        "flex flex-col h-full",
+        "flex flex-col h-full account-sidebar",
         collapsed ? "items-center" : "",
         className
       )}
@@ -735,6 +735,7 @@ export function NavigationRail({
                     size="sm"
                     disableFavicon
                     fallbackColor={account.avatarColor}
+                    contactPhotoUri={account.avatarImage}
                   />
                   {isActive && (
                     <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-primary flex items-center justify-center">

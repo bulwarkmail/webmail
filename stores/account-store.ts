@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { generateAccountId, generateAvatarColor, getMaxAccounts } from '@/lib/account-utils';
+import { pickAccountAvatar, renderAccountAvatar } from '@/lib/account-avatars';
 
 export interface AccountEntry {
   /** Unique key: `${username}@${serverHostname}` */
@@ -30,6 +31,8 @@ export interface AccountEntry {
   displayName: string;
   email: string;
   avatarColor: string;
+  /** Browser-local, resized account photo. */
+  avatarImage?: string;
   /** Timestamp of last successful login */
   lastLoginAt: number;
   /** Whether this account is currently connected */
@@ -96,7 +99,14 @@ export const useAccountStore = create<AccountState>()(
         }
 
         const cookieSlot = state.getNextCookieSlot();
-        const avatarColor = generateAvatarColor(entry.email || entry.username);
+        // A ready-made avatar, picked away from the colours already in use: a
+        // colour hashed from the address collides often enough that two of a
+        // handful of accounts look alike wherever rows are tinted by account.
+        // A restore overwrites both fields straight after with what the archive
+        // kept, so this only dresses genuinely new accounts.
+        const design = pickAccountAvatar(state.accounts.map(a => a.avatarColor));
+        const avatarImage = renderAccountAvatar(design);
+        const avatarColor = design.color || generateAvatarColor(entry.email || entry.username);
         const isDefault = state.accounts.length === 0; // first account is default
 
         const account: AccountEntry = {
@@ -104,6 +114,7 @@ export const useAccountStore = create<AccountState>()(
           id,
           cookieSlot,
           avatarColor,
+          ...(avatarImage === undefined ? {} : { avatarImage }),
           isDefault,
         };
 
