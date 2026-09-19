@@ -61,6 +61,9 @@ export function PushNotificationPrompt() {
   const emailNotificationsEnabled = useSettingsStore(
     (state) => state.emailNotificationsEnabled,
   );
+  const pushNotifyInboxOnly = useSettingsStore(
+    (state) => state.pushNotifyInboxOnly,
+  );
   const policyLoaded = usePolicyStore((state) => state.loaded);
   const policy = usePolicyStore((state) => state.policy);
   const userPushRelayUrl = useSettingsStore((state) => state.pushRelayUrl);
@@ -122,8 +125,9 @@ export function PushNotificationPrompt() {
       client,
       relayBaseUrl,
       accountLabel: username ?? undefined,
+      inboxOnly: pushNotifyInboxOnly,
     });
-  }, [accountId, client, isAuthenticated, isDemoMode, policyLoaded, relayBaseUrl, username]);
+  }, [accountId, client, isAuthenticated, isDemoMode, policyLoaded, pushNotifyInboxOnly, relayBaseUrl, username]);
 
   useEffect(() => {
     let cancelled = false;
@@ -185,6 +189,7 @@ export function PushNotificationPrompt() {
         client,
         relayBaseUrl,
         accountLabel: username ?? undefined,
+        inboxOnly: pushNotifyInboxOnly,
       });
       setShowPrompt(false);
     } catch (err) {
