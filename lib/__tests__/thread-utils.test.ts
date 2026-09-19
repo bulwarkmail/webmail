@@ -8,6 +8,8 @@ import {
   getEmailTagIds,
   getThreadTagId,
   getThreadTagIds,
+  threadKeyFor,
+  threadIdFromKey,
 } from '../thread-utils';
 import type { Email, ThreadGroup } from '../jmap/types';
 
@@ -120,6 +122,7 @@ describe('groupEmailsByThread', () => {
 describe('sortThreadGroups', () => {
   const makeGroup = (threadId: string, receivedAt: string, hasPinned = false): ThreadGroup => ({
     threadId,
+    threadKey: threadId,
     emails: [makeEmail({ receivedAt })],
     latestEmail: makeEmail({ receivedAt }),
     participantNames: ['A'],
@@ -222,6 +225,7 @@ describe('mergeThreadEmails', () => {
   it('merges new emails without duplicating existing ones', () => {
     const existing: ThreadGroup = {
       threadId: 'thread-1',
+      threadKey: 'thread-1',
       emails: [
         makeEmail({ id: 'e1', receivedAt: '2024-01-10T00:00:00Z' }),
         makeEmail({ id: 'e2', receivedAt: '2024-01-09T00:00:00Z' }),
@@ -248,6 +252,7 @@ describe('mergeThreadEmails', () => {
   it('updates thread metadata after merge', () => {
     const existing: ThreadGroup = {
       threadId: 'thread-1',
+      threadKey: 'thread-1',
       emails: [makeEmail({ id: 'e1', keywords: { $seen: true }, hasAttachment: false })],
       latestEmail: makeEmail({ id: 'e1' }),
       participantNames: ['Alice'],
@@ -401,5 +406,59 @@ describe('getThreadTagIds', () => {
   it('is empty for an untagged or empty thread', () => {
     expect(getThreadTagIds([makeEmail({ id: 'e1', keywords: { $seen: true } })])).toEqual([]);
     expect(getThreadTagIds([])).toEqual([]);
+  });
+});
+
+describe('cross-account thread identity (#1012)', () => {
+  // JMAP thread ids are per-account: Stalwart hands out counters like "b", so
+  // two accounts routinely have a thread "b" that has nothing in common.
+  const inAccount = (login: string, overrides: Partial<Email> = {}): Email =>
+    makeEmail({ sourceClientAccountId: `login-${login}`, sourceAccountId: `acct-${login}`, ...overrides });
+
+  it('keeps the bare thread id as key for unstamped emails', () => {
+    expect(threadKeyFor(makeEmail({ threadId: 'b' }))).toBe('b');
+  });
+
+  it('scopes the key by the source stamps', () => {
+    expect(threadKeyFor(inAccount('a', { threadId: 'b' }))).toBe('login-a/acct-a:b');
+  });
+
+  it('recovers the JMAP id from a key', () => {
+    expect(threadIdFromKey('login-a/acct-a:b')).toBe('b');
+    expect(threadIdFromKey('b')).toBe('b');
+  });
+
+  it('does not merge same-id threads that belong to different accounts', () => {
+    const groups = groupEmailsByThread([
+      inAccount('a', { id: 'a1', threadId: 'b' }),
+      inAccount('b', { id: 'b1', threadId: 'b' }),
+    ]);
+    expect(groups).toHaveLength(2);
+    // The raw id is preserved for Thread/get on each account …
+    expect(groups.map((g) => g.threadId)).toEqual(['b', 'b']);
+    // … while the client-side identity tells them apart.
+    expect(new Set(groups.map((g) => g.threadKey)).size).toBe(2);
+    expect(groups.map((g) => g.emails.map((e) => e.id))).toEqual([['a1'], ['b1']]);
+  });
+
+  it('still merges the same thread within one account', () => {
+    const groups = groupEmailsByThread([
+      inAccount('a', { id: 'a1', threadId: 'b' }),
+      inAccount('a', { id: 'a2', threadId: 'b' }),
+    ]);
+    expect(groups).toHaveLength(1);
+    expect(groups[0].emailCount).toBe(2);
+  });
+
+  it('looks thread counts up by key', () => {
+    const counts = new Map([['login-a/acct-a:b', 7]]);
+    const [group] = groupEmailsByThread([inAccount('a', { threadId: 'b' })], false, counts);
+    expect(group.emailCount).toBe(7);
+  });
+
+  it('uses the message id as both id and key when threading is disabled', () => {
+    const [group] = groupEmailsByThread([inAccount('a', { id: 'm1', threadId: 'b' })], true);
+    expect(group.threadKey).toBe('m1');
+    expect(group.threadId).toBe('m1');
   });
 });
