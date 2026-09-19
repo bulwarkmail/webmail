@@ -298,6 +298,7 @@ export interface IJMAPClient {
     mailboxIds: Record<string, boolean>,
     keywords?: Record<string, boolean>,
     accountId?: string,
+    receivedAt?: string,
   ): Promise<string | null>;
 
   sendReadReceipt(params: {
