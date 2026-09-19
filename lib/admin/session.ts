@@ -1,4 +1,5 @@
 import { cookies } from 'next/headers';
+import { isHttpsRequest } from '@/lib/security/request-protocol';
 import { NextResponse } from 'next/server';
 import { createCipheriv, createDecipheriv, randomBytes, createHash } from 'node:crypto';
 import { getSessionSecret } from '@/lib/auth/session-secret';
@@ -115,13 +116,19 @@ export async function requireAdminAuth(request: Request): Promise<{ payload: Adm
 
 /**
  * Set the admin session cookie.
+ *
+ * `Secure` follows the request the way the setup wizard's cookie does: the
+ * browser drops Secure cookies on plain HTTP, so setting it unconditionally in
+ * production made admin sign-in fail silently on an HTTP deployment while the
+ * wizard right next to it worked. Without a request (older callers) the
+ * previous production default stands.
  */
-export async function setAdminSessionCookie(): Promise<void> {
+export async function setAdminSessionCookie(request?: Request): Promise<void> {
   const token = createAdminSession();
   const cookieStore = await cookies();
   cookieStore.set(ADMIN_SESSION_COOKIE, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: request ? isHttpsRequest(request) : process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     path: '/',
     maxAge: getSessionTTL(),
