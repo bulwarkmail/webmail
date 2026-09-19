@@ -1,7 +1,10 @@
 import { apiFetch } from '@/lib/browser-navigation';
 import { generateAccountId } from '@/lib/account-utils';
+import { pickDisplaySettings } from '@/lib/display-preferences';
 import { useAccountStore } from '@/stores/account-store';
 import { useAuthStore } from '@/stores/auth-store';
+import { useSettingsStore } from '@/stores/settings-store';
+import { useThemeStore } from '@/stores/theme-store';
 import { normalizeVaultOwner, vaultIdentity, type VaultContents, type VaultEnvelope, type VaultOwner, type VaultRecord } from './account-vault';
 
 function headers(owner: VaultOwner): Record<string, string> {
@@ -32,12 +35,27 @@ export async function deleteVault(owner: VaultOwner, archive: { id: string; revi
   await request(owner, { method: 'DELETE', body: JSON.stringify({ id: archive.id, revision: archive.revision }) });
 }
 
-/** Snapshot basic accounts, optionally including live credentials. */
+/**
+ * Snapshot basic accounts, optionally including live credentials.
+ *
+ * Appearance travels with the accounts so a fresh device is not a blank slate.
+ * The account currently on screen owns the live settings - its profile is only
+ * written back on a switch - so read that one from the stores, not the map.
+ */
 export function collectVault(owner: VaultOwner, includePasswords = true): VaultContents {
   const { accounts, defaultAccountId } = useAccountStore.getState();
+  const settings = useSettingsStore.getState();
+  const liveId = settings.sharedDisplaySourceId ?? settings.displayAccountId;
   const basic = accounts.filter(a => a.authMode === 'basic');
   const entries = basic.map(account => {
-    const metadata = { ...normalizeVaultOwner(account), label: account.label, avatarColor: account.avatarColor };
+    const display = account.id === liveId ? pickDisplaySettings(settings) : settings.displayProfiles[account.id];
+    const theme = account.id === settings.displayAccountId
+      ? { theme: useThemeStore.getState().theme, activeThemeId: useThemeStore.getState().activeThemeId }
+      : settings.accountThemes[account.id];
+    const metadata = { ...normalizeVaultOwner(account), label: account.label, avatarColor: account.avatarColor,
+      ...(account.avatarImage === undefined ? {} : { avatarImage: account.avatarImage }),
+      ...(display === undefined ? {} : { display }),
+      ...(theme === undefined ? {} : { theme }) };
     if (!includePasswords) return metadata;
     const client = useAuthStore.getState().getClientForAccount(account.id);
     const auth = client?.getAuthHeader();
@@ -48,6 +66,8 @@ export function collectVault(owner: VaultOwner, includePasswords = true): VaultC
     return { ...metadata, password: decoded.slice(colon + 1) };
   });
   if (!entries.some(a => vaultIdentity(a) === vaultIdentity(owner))) throw new Error('owner_signin_required');
+  const shared = settings.sharedDisplaySourceId;
   return { owner: normalizeVaultOwner(owner), accounts: entries,
-    defaultAccountId: entries.some(a => generateAccountId(a.username, a.serverUrl) === defaultAccountId) ? defaultAccountId : null };
+    defaultAccountId: entries.some(a => generateAccountId(a.username, a.serverUrl) === defaultAccountId) ? defaultAccountId : null,
+    sharedDisplaySourceId: entries.some(a => generateAccountId(a.username, a.serverUrl) === shared) ? shared : null };
 }

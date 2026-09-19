@@ -73,7 +73,7 @@ describe('account archive API', () => {
     expect((await PUT(request('PUT', create, { 'sec-fetch-site': 'cross-site' }))).status).toBe(403);
     expect((await PUT(request('PUT', { ...create, revision: 'invalid' }))).status).toBe(400);
     expect((await PUT(request('PUT', { ...create, id: '../escape' }))).status).toBe(400);
-    expect((await PUT(request('PUT', { ...create, padding: 'x'.repeat(270000) }))).status).toBe(413);
+    expect((await PUT(request('PUT', { ...create, padding: 'x'.repeat(1024 * 1024 + 4096) }))).status).toBe(413);
   });
   it('replaces an archive by id and reports invalid names, conflicts and the per-owner limit', async () => {
     signIn();

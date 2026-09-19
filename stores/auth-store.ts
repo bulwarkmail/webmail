@@ -1081,7 +1081,18 @@ export const useAuthStore = create<AuthState>()(
               rememberMe: includePasswords && !!entry.password && rememberMe, vaultManaged: true, lastLoginAt: 0, isConnected: false,
               hasError: false, isDefault: false,
             });
-            registry.updateAccount(id, { vaultManaged: true, label: entry.label, avatarColor: entry.avatarColor });
+            registry.updateAccount(id, { vaultManaged: true, label: entry.label, avatarColor: entry.avatarColor,
+              ...(entry.avatarImage === undefined ? {} : { avatarImage: entry.avatarImage }) });
+            // Appearance lands before the closing switchAccount, which reads the
+            // profile map to dress the account it activates.
+            if (entry.display || entry.theme) {
+              const settings = useSettingsStore.getState();
+              useSettingsStore.setState({
+                ...(entry.display ? { displayProfiles: { ...settings.displayProfiles,
+                  [id]: { ...settings.displayProfiles[id], ...entry.display } as typeof settings.displayProfiles[string] } } : {}),
+                ...(entry.theme ? { accountThemes: { ...settings.accountThemes, [id]: entry.theme } } : {}),
+              });
+            }
             const slot = useAccountStore.getState().getAccountById(id)!.cookieSlot;
             const existing = clients.get(id);
             if (!includePasswords || !entry.password) {
@@ -1118,6 +1129,9 @@ export const useAuthStore = create<AuthState>()(
               registry.updateAccount(id, { isConnected: !!existing, hasError: true, errorMessage: 'Sign in again' });
               failed++;
             }
+          }
+          if (contents.sharedDisplaySourceId !== undefined) {
+            useSettingsStore.setState({ sharedDisplaySourceId: contents.sharedDisplaySourceId });
           }
           if (connectedIds.length && contents.defaultAccountId) registry.setDefaultAccount(contents.defaultAccountId);
           const target = connectedIds.includes(contents.defaultAccountId || '') ? contents.defaultAccountId! : connectedIds[0];

@@ -1,14 +1,23 @@
+import { parseAccountTheme, parseDisplaySettings, type AccountTheme, type DisplaySettings } from './display-preferences';
+
 /** Portable archive format. Only encrypted envelopes may cross the storage API. */
 export interface VaultOwner { username: string; serverUrl: string }
 export interface VaultAccount extends VaultOwner {
   password?: string;
   label: string;
   avatarColor: string;
+  /** Data URI as produced by the avatar upload (128x128 WebP). */
+  avatarImage?: string;
+  /** This account's display profile, so a new device looks like the old one. */
+  display?: Partial<DisplaySettings>;
+  theme?: AccountTheme;
 }
 export interface VaultContents {
   owner: VaultOwner;
   accounts: VaultAccount[];
   defaultAccountId: string | null;
+  /** Account whose display profile the others follow, when sharing is on. */
+  sharedDisplaySourceId?: string | null;
 }
 export interface VaultEnvelope {
   version: 1;
@@ -19,7 +28,11 @@ export interface VaultEnvelope {
 }
 /** One owner may keep several archives; the name is plaintext so it can be picked before unlocking. */
 export interface VaultRecord { id: string; name: string; revision: string; envelope: VaultEnvelope }
-export const VAULT_MAX_BYTES = 256 * 1024;
+// Archives carry avatars and display profiles, not just credentials. A 128x128
+// WebP avatar is a few KB, but base64 inside JSON inside the envelope adds up.
+export const VAULT_MAX_BYTES = 1024 * 1024;
+/** One avatar may not crowd out the rest of the archive. */
+export const VAULT_AVATAR_MAX_CHARS = 64 * 1024;
 export const VAULT_MAX_PER_OWNER = 10;
 export const VAULT_NAME_MAX = 80;
 
@@ -64,6 +77,14 @@ export function parseVaultEnvelope(value: unknown): VaultEnvelope {
   return { version: 1, iterations: 600000, salt: v.salt, iv: v.iv, ciphertext: v.ciphertext };
 }
 
+/** Only the data URIs the avatar upload itself produces are accepted back. */
+function parseVaultAvatar(value: unknown): string | undefined {
+  if (value === undefined) return undefined;
+  if (typeof value !== 'string' || value.length > VAULT_AVATAR_MAX_CHARS
+    || !/^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/]+={0,2}$/.test(value)) throw new Error('invalid_archive');
+  return value;
+}
+
 export function parseVaultContents(value: unknown, owner: VaultOwner): VaultContents {
   const v = value as VaultContents | null;
   if (!v || vaultIdentity(v.owner) !== vaultIdentity(owner) || !Array.isArray(v.accounts)
@@ -77,10 +98,23 @@ export function parseVaultContents(value: unknown, owner: VaultOwner): VaultCont
       || typeof a.label !== 'string' || a.label.length > 320
       || typeof a.avatarColor !== 'string' || !/^#[0-9a-f]{6}$/i.test(a.avatarColor)) throw new Error('invalid_archive');
     seen.add(id);
-    return { ...identity, ...(a.password === undefined ? {} : { password: a.password }), label: a.label, avatarColor: a.avatarColor };
+    const avatarImage = parseVaultAvatar(a.avatarImage);
+    const display = parseDisplaySettings(a.display);
+    const theme = parseAccountTheme(a.theme);
+    // Presentation is best-effort: a profile that fails validation is dropped,
+    // never a reason to refuse an archive that can still restore the account.
+    return { ...identity, ...(a.password === undefined ? {} : { password: a.password }), label: a.label, avatarColor: a.avatarColor,
+      ...(avatarImage === undefined ? {} : { avatarImage }),
+      ...(display === undefined ? {} : { display }),
+      ...(theme === undefined ? {} : { theme }) };
   });
   if (!accounts.some(a => vaultIdentity(a) === vaultIdentity(owner))) throw new Error('invalid_archive');
-  return { owner: normalizeVaultOwner(owner), accounts, defaultAccountId: v.defaultAccountId };
+  // Absent stays absent: an archive written before appearance travelled with
+  // accounts must round-trip unchanged.
+  const shared = v.sharedDisplaySourceId === undefined ? undefined
+    : typeof v.sharedDisplaySourceId === 'string' && v.sharedDisplaySourceId.length <= 320 ? v.sharedDisplaySourceId : null;
+  return { owner: normalizeVaultOwner(owner), accounts, defaultAccountId: v.defaultAccountId,
+    ...(shared === undefined ? {} : { sharedDisplaySourceId: shared }) };
 }
 
 function encode(bytes: Uint8Array): string {
