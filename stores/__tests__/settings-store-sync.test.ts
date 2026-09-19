@@ -6,6 +6,7 @@ vi.mock('@/lib/browser-navigation', () => ({ apiFetch }));
 
 import { useSettingsStore } from '../settings-store';
 import { useTemplateStore } from '../template-store';
+import { useCalendarStore } from '../calendar-store';
 
 describe('settings sync debounce', () => {
   beforeEach(() => {
@@ -17,6 +18,7 @@ describe('settings sync debounce', () => {
     useSettingsStore.getState().disableSync();
     useSettingsStore.setState({ sendDelaySeconds: 0, settingsSyncDisabled: false });
     useTemplateStore.setState({ templates: [], recentTemplateIds: [], deletedTemplateIds: {} });
+    useCalendarStore.setState({ icalSubscriptions: [], deletedSubscriptionIds: {} });
   });
 
   it('flushes a pending snapshot for the account that scheduled it', async () => {
@@ -170,3 +172,92 @@ describe('template sync (#825)', () => {
     expect(exported.deletedTemplateIds).toEqual({});
   });
 });
+
+describe('calendar subscription sync', () => {
+  beforeEach(() => {
+    apiFetch.mockReset();
+    apiFetch.mockResolvedValue(new Response(JSON.stringify({ ok: true }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    }));
+    useSettingsStore.getState().disableSync();
+    useSettingsStore.setState({ settingsSyncDisabled: false });
+    useCalendarStore.setState({ icalSubscriptions: [], deletedSubscriptionIds: {} });
+  });
+
+  it('merges server-loaded subscriptions instead of replacing local ones', () => {
+    useCalendarStore.setState({
+      icalSubscriptions: [{
+        id: 'local-1',
+        url: 'https://example.com/local.ics',
+        calendarId: 'cal-local',
+        name: 'Local',
+        color: '#3b82f6',
+        refreshInterval: 60,
+        lastRefreshed: null,
+      }],
+    });
+
+    const ok = useSettingsStore.getState().importSettings(
+      JSON.stringify({
+        icalSubscriptions: [{
+          id: 'remote-1',
+          url: 'https://example.com/remote.ics',
+          calendarId: 'cal-remote',
+          name: 'Remote',
+          color: '#ef4444',
+          refreshInterval: 60,
+          lastRefreshed: null,
+        }],
+        deletedSubscriptionIds: {},
+      }),
+      { serverAccountId: 'acct-1' }
+    );
+
+    expect(ok).toBe(true);
+    const ids = useCalendarStore.getState().icalSubscriptions.map((s) => s.id).sort();
+    expect(ids).toEqual(['local-1', 'remote-1']);
+  });
+
+  it('leaves local subscriptions untouched when importing a pre-subscription settings blob', () => {
+    useCalendarStore.setState({
+      icalSubscriptions: [{
+        id: 'keep-1',
+        url: 'https://example.com/keep.ics',
+        calendarId: 'cal-keep',
+        name: 'Keep',
+        color: '#3b82f6',
+        refreshInterval: 60,
+        lastRefreshed: null,
+      }],
+    });
+
+    const ok = useSettingsStore.getState().importSettings(
+      JSON.stringify({ sendDelaySeconds: 10 }),
+      { serverAccountId: 'acct-1' }
+    );
+
+    expect(ok).toBe(true);
+    expect(useCalendarStore.getState().icalSubscriptions).toHaveLength(1);
+  });
+
+  it('round-trips subscriptions through exportSettings', () => {
+    useCalendarStore.setState({
+      icalSubscriptions: [{
+        id: 'export-1',
+        url: 'https://example.com/export.ics',
+        calendarId: 'cal-export',
+        name: 'Exported Sub',
+        color: '#3b82f6',
+        refreshInterval: 60,
+        lastRefreshed: null,
+      }],
+    });
+
+    const exported = JSON.parse(useSettingsStore.getState().exportSettings());
+    expect(exported.icalSubscriptions).toHaveLength(1);
+    expect(exported.icalSubscriptions[0].name).toBe('Exported Sub');
+    expect(exported.deletedSubscriptionIds).toEqual({});
+  });
+});
+
