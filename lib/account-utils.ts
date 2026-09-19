@@ -73,7 +73,27 @@ export function accountTintKey(avatarColor: string | undefined): string {
     case '#0891b2': return 'cyan-dark';
     case '#6366f1': return 'indigo-dark';
     case '#9333ea': return 'purple-dark';
-    default: return 'gray-dark';
+    default: {
+      // Custom account colors still need a visible tint in aggregate lists.
+      if (!/^#[\da-f]{6}$/i.test(avatarColor ?? '')) return 'gray-dark';
+      const hex = avatarColor!;
+      const r = parseInt(hex.slice(1, 3), 16) / 255;
+      const g = parseInt(hex.slice(3, 5), 16) / 255;
+      const b = parseInt(hex.slice(5, 7), 16) / 255;
+      const max = Math.max(r, g, b), min = Math.min(r, g, b), delta = max - min;
+      if (delta < 0.1) return 'gray-dark';
+      let hue = max === r ? (g - b) / delta : max === g ? (b - r) / delta + 2 : (r - g) / delta + 4;
+      hue = (hue * 60 + 360) % 360;
+      const hues = ['red', 'orange', 'amber', 'yellow', 'lime', 'green', 'teal', 'cyan', 'blue', 'indigo', 'purple', 'pink'];
+      const stops = [0, 25, 40, 55, 85, 130, 165, 190, 215, 245, 280, 325];
+      let best = 0, distance = 360;
+      stops.forEach((stop, i) => {
+        const difference = Math.abs(stop - hue);
+        const circular = Math.min(difference, 360 - difference);
+        if (circular < distance) { distance = circular; best = i; }
+      });
+      return `${hues[best]}-dark`;
+    }
   }
 }
 

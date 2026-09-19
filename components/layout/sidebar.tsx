@@ -66,6 +66,7 @@ import { useSettingsStore, getKeywordVisibility } from "@/stores/settings-store"
 import { useEmailStore } from "@/stores/email-store";
 import { toast } from "@/stores/toast-store";
 import { debug } from "@/lib/debug";
+import { Avatar } from "@/components/ui/avatar";
 import { AccountSwitcher } from "./account-switcher";
 import { useIsEmbedded } from "@/hooks/use-is-embedded";
 import { buildSettingsPath, SCHEDULED_MAILBOX_ID, scopedScheduledMailboxId } from "@/lib/deep-links";
@@ -1199,7 +1200,7 @@ export function Sidebar({
   return (
     <div
       className={cn(
-        "relative flex flex-col h-full border-e transition-all duration-300 overflow-hidden",
+        "relative flex flex-col h-full border-e transition-all duration-300 overflow-hidden account-sidebar",
         "bg-secondary border-border",
         "max-lg:w-full",
         isCollapsed ? "lg:w-12" : "lg:w-full",
@@ -1318,7 +1319,8 @@ export function Sidebar({
                   settingsTitle={isActive ? t('settings') : undefined}
                   isCollapsed={isCollapsed}
                   first={!showUnified && account.id === connectedAccounts[0]?.id}
-                  icon={<User className="w-3.5 h-3.5 text-muted-foreground" />}
+                  icon={<Avatar name={account.displayName || account.label} email={account.email} contactPhotoUri={account.avatarImage}
+                    fallbackColor={account.avatarColor} disableFavicon size="sm" className="!h-5 !w-5 !text-[9px]" />}
                 />
                 {((expanded && !isCollapsed) || isCollapsed) && (
                   <>

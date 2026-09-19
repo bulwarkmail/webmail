@@ -30,6 +30,8 @@ export interface AccountEntry {
   displayName: string;
   email: string;
   avatarColor: string;
+  /** Browser-local, resized account photo. */
+  avatarImage?: string;
   /** Timestamp of last successful login */
   lastLoginAt: number;
   /** Whether this account is currently connected */
