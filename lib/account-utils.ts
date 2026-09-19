@@ -42,6 +42,61 @@ export function generateAvatarColor(email: string): string {
   return colors[Math.abs(hash) % colors.length];
 }
 
+/**
+ * The `KEYWORD_PALETTE` key whose tint matches an account's avatar colour.
+ *
+ * Row tints are Tailwind class pairs (light + dark) rather than raw colours, so
+ * an account's hex cannot be used directly as a background. Mapping onto the
+ * shared tag palette keeps account tints in the same visual language as tag
+ * tints and gets dark mode for free.
+ *
+ * These pick the palette's `-dark` variants. A tag tint can afford to be faint
+ * because the tag also shows a coloured chip, but an account tint replaces the
+ * account dot and has to carry that information on its own - the fainter
+ * variants are close to invisible against the row background.
+ *
+ * The palette has no violet, so the two purple-ish avatar hues would collide.
+ * Purple keeps `purple-dark` and violet falls back to the plain `purple`, whose
+ * lighter wash still tells the two apart.
+ */
+export function accountTintKey(avatarColor: string | undefined): string {
+  switch ((avatarColor ?? '').toLowerCase()) {
+    case '#2563eb': return 'blue-dark';
+    case '#7c3aed': return 'purple';
+    case '#db2777': return 'pink-dark';
+    case '#dc2626': return 'red-dark';
+    case '#ea580c': return 'orange-dark';
+    case '#d97706': return 'amber-dark';
+    case '#65a30d': return 'lime-dark';
+    case '#16a34a': return 'green-dark';
+    case '#0d9488': return 'teal-dark';
+    case '#0891b2': return 'cyan-dark';
+    case '#6366f1': return 'indigo-dark';
+    case '#9333ea': return 'purple-dark';
+    default: {
+      // Custom account colors still need a visible tint in aggregate lists.
+      if (!/^#[\da-f]{6}$/i.test(avatarColor ?? '')) return 'gray-dark';
+      const hex = avatarColor!;
+      const r = parseInt(hex.slice(1, 3), 16) / 255;
+      const g = parseInt(hex.slice(3, 5), 16) / 255;
+      const b = parseInt(hex.slice(5, 7), 16) / 255;
+      const max = Math.max(r, g, b), min = Math.min(r, g, b), delta = max - min;
+      if (delta < 0.1) return 'gray-dark';
+      let hue = max === r ? (g - b) / delta : max === g ? (b - r) / delta + 2 : (r - g) / delta + 4;
+      hue = (hue * 60 + 360) % 360;
+      const hues = ['red', 'orange', 'amber', 'yellow', 'lime', 'green', 'teal', 'cyan', 'blue', 'indigo', 'purple', 'pink'];
+      const stops = [0, 25, 40, 55, 85, 130, 165, 190, 215, 245, 280, 325];
+      let best = 0, distance = 360;
+      stops.forEach((stop, i) => {
+        const difference = Math.abs(stop - hue);
+        const circular = Math.min(difference, 360 - difference);
+        if (circular < distance) { distance = circular; best = i; }
+      });
+      return `${hues[best]}-dark`;
+    }
+  }
+}
+
 /** Get initials for an avatar from a display name or email */
 export function getInitials(name: string, email?: string): string {
   if (name) {

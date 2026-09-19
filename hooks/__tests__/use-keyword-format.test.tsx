@@ -2,6 +2,7 @@ import { renderHook } from '@testing-library/react';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useKeywordFormat } from '../use-keyword-format';
 import { useSettingsStore, KEYWORD_PALETTE, type KeywordDefinition } from '@/stores/settings-store';
+import { suggestKeywordColor } from '@/lib/keyword-discovery';
 
 const TAGS: KeywordDefinition[] = [
   { id: 'work', label: 'Work', color: 'blue' },
@@ -22,18 +23,45 @@ describe('useKeywordFormat', () => {
       expect(result.current.tagColor('archive')).toBe(KEYWORD_PALETTE['red-dark']);
     });
 
-    it('falls back to grey for a keyword this client has no definition for', () => {
-      // Set on the message by another client, or its tag was deleted here.
+    it('gives a keyword it has no definition for a hue of its own', () => {
+      // Set on the message by another client, applied by a server-side filter,
+      // or its tag was deleted here. One shared grey made every such tag look
+      // alike, which is when telling them apart matters most.
       const { result } = renderHook(() => useKeywordFormat());
 
-      expect(result.current.tagColor('never-heard-of-it')).toBe(KEYWORD_PALETTE.gray);
+      expect(result.current.tagColor('never-heard-of-it'))
+        .toBe(KEYWORD_PALETTE[suggestKeywordColor('never-heard-of-it')]);
     });
 
-    it('falls back to grey for a colour that is not in the palette', () => {
+    it('matches the colour the settings screen would propose for that tag', () => {
+      // Adopting a discovered tag must not make its colour jump.
+      const { result } = renderHook(() => useKeywordFormat());
+
+      for (const id of ['netflix', 'humb', 'ebay']) {
+        expect(result.current.tagColor(id)).toBe(KEYWORD_PALETTE[suggestKeywordColor(id)]);
+      }
+    });
+
+    it('keeps an undefined tag on the same hue across renders', () => {
+      const a = renderHook(() => useKeywordFormat());
+      const b = renderHook(() => useKeywordFormat());
+
+      expect(a.result.current.tagColor('humb')).toBe(b.result.current.tagColor('humb'));
+    });
+
+    it('spreads undefined tags over several hues', () => {
+      const { result } = renderHook(() => useKeywordFormat());
+      const ids = ['humb', 'alie', 'ebay', 'zoop', 'fire', 'nexu', 'ubis', 'tlsreports'];
+
+      const dots = new Set(ids.map((id) => result.current.tagColor(id).dot));
+      expect(dots.size).toBeGreaterThan(1);
+    });
+
+    it('derives a hue for a definition whose colour is not in the palette', () => {
       useSettingsStore.setState({ emailKeywords: [{ id: 'odd', label: 'Odd', color: 'chartreuse' }] });
       const { result } = renderHook(() => useKeywordFormat());
 
-      expect(result.current.tagColor('odd')).toBe(KEYWORD_PALETTE.gray);
+      expect(result.current.tagColor('odd')).toBe(KEYWORD_PALETTE[suggestKeywordColor('odd')]);
     });
   });
 
