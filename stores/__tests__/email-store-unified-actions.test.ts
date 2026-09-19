@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useEmailStore } from '../email-store';
+import { emailKeyFor } from '@/lib/thread-utils';
 import { useAuthStore } from '../auth-store';
 import type { Email, Mailbox } from '@/lib/jmap/types';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
@@ -98,7 +99,7 @@ describe('unified-view single-email action routing (#281)', () => {
       },
       processingReadStatus: new Set(),
       selectedEmail: null,
-      selectedEmailIds: new Set(),
+      selectedEmailKeys: new Set(),
       unifiedScope: [],
       unifiedCounts: [],
       crossUnreadCount: 0,
@@ -164,7 +165,10 @@ describe('unified-view single-email action routing (#281)', () => {
         makeEmail({ id: 'a1', sourceClientAccountId: 'account-a', sourceAccountId: 'account-a', keywords: {}, mailboxIds: { inbox: true } }),
         makeEmail({ id: 'b1', sourceClientAccountId: 'account-b', sourceAccountId: 'account-b', keywords: {}, mailboxIds: { inbox: true } }),
       ],
-      selectedEmailIds: new Set(['a1', 'b1']),
+      selectedEmailKeys: new Set([
+        emailKeyFor({ id: 'a1', sourceClientAccountId: 'account-a', sourceAccountId: 'account-a' }),
+        emailKeyFor({ id: 'b1', sourceClientAccountId: 'account-b', sourceAccountId: 'account-b' }),
+      ]),
     });
 
     await useEmailStore.getState().batchMarkAsRead(activeClient, true);
@@ -209,7 +213,9 @@ describe('unified-view single-email action routing (#281)', () => {
           mailboxIds: { 'x-inbox': true }, // BARE owner id (not namespaced)
         }),
       ],
-      selectedEmailIds: new Set(['email-shared']),
+      selectedEmailKeys: new Set([
+        emailKeyFor({ id: 'email-shared', sourceClientAccountId: 'account-a', sourceAccountId: 'owner-x' }),
+      ]),
     });
 
     await useEmailStore.getState().batchDelete(activeClient, true);
@@ -255,7 +261,9 @@ describe('unified-view single-email action routing (#281)', () => {
           mailboxIds: { 'x-inbox': true }, // BARE owner id (not namespaced)
         }),
       ],
-      selectedEmailIds: new Set(['email-shared']),
+      selectedEmailKeys: new Set([
+        emailKeyFor({ id: 'email-shared', sourceClientAccountId: 'account-a', sourceAccountId: 'owner-x' }),
+      ]),
     });
 
     // Seed the badges from the scope (also stores unifiedScope).

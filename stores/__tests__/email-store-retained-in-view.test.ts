@@ -78,7 +78,7 @@ function seedView(id: typeof CROSS_UNREAD | typeof CROSS_STARRED, view: 'unread'
     mailboxes: [makeMailbox()],
     accountMailboxes: { 'account-a': [makeMailbox()] },
     processingReadStatus: new Set(),
-    selectedEmailIds: new Set(),
+    selectedEmailKeys: new Set(),
     retainedInViewIds: new Set(),
     emails,
     totalEmails: emails.length,
@@ -194,7 +194,7 @@ describe('retained-in-view: scope', () => {
       isUnifiedView: true, unifiedRole: null, crossView: 'all', selectedMailbox: '__cross_all__',
       selectedKeyword: null, searchQuery: '', mailboxes: [makeMailbox()],
       accountMailboxes: { 'account-a': [makeMailbox()] },
-      processingReadStatus: new Set(), selectedEmailIds: new Set(), retainedInViewIds: new Set(),
+      processingReadStatus: new Set(), selectedEmailKeys: new Set(), retainedInViewIds: new Set(),
       emails: [a], totalEmails: 1,
     });
 

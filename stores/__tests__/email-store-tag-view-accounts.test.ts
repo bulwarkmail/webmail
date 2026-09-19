@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useEmailStore } from '../email-store';
+import { emailKeyFor } from '@/lib/thread-utils';
 import { useSettingsStore } from '../settings-store';
 import { useAuthStore } from '../auth-store';
 import { useMessageListTabsStore } from '../message-list-tabs-store';
@@ -137,7 +138,10 @@ describe('tag view across the own and group accounts (#1038)', () => {
     useEmailStore.setState({ selectedMailbox: groupInbox.id });
     useEmailStore.getState().selectKeyword(label);
     await useEmailStore.getState().fetchEmails(client);
-    useEmailStore.setState({ selectedEmailIds: new Set(['own-1', 'grp-1']) });
+    // Keyed by owning account: in this very view 'own-1' and 'grp-1' could be
+    // the same bare id in two accounts.
+    const picked = useEmailStore.getState().emails.filter(e => ['own-1', 'grp-1'].includes(e.id));
+    useEmailStore.setState({ selectedEmailKeys: new Set(picked.map(emailKeyFor)) });
 
     await useEmailStore.getState().batchMarkAsRead(client, true);
 
