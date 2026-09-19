@@ -2371,3 +2371,14 @@ export const useAuthStore = create<AuthState>()(
 // Expose getClientForAccount to the calendar/contact stores via a small
 // shared registry - see [[stores/client-registry]] for rationale.
 setClientLookup((accountId) => useAuthStore.getState().getClientForAccount(accountId));
+
+// Apply local presentation immediately on every login/switch path, including
+// when server settings sync is disabled. Auth owns the actual active session.
+useAuthStore.subscribe((state, previous) => {
+  if (state.activeAccountId !== previous.activeAccountId) {
+    useSettingsStore.getState().activateDisplayAccount(state.activeAccountId);
+  }
+});
+if (typeof window !== 'undefined') {
+  useSettingsStore.getState().activateDisplayAccount(useAuthStore.getState().activeAccountId);
+}

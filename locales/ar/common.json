@@ -3624,7 +3624,16 @@
     "open_full": "فتح",
     "view_label": "العرض"
   },
-  "account_qol": {
+  "account_qol": {
+    "shared_title": "Shared display settings",
+    "shared_description": "Use your default account’s layout, density and reading appearance for every account on this browser. Original preferences are kept; photos, colors and themes stay individual.",
+    "shared_label": "Use the display settings of {account} for all accounts",
+    "shared_active": "Sharing from {account}. Display changes made from any account update the shared profile. Turn this off to restore each account’s own preferences.",
+    "shared_off": "Each account uses its own display preferences.",
+    "open_main": "Open the default account to load its preferences",
+    "theme": "Account theme",
+    "theme_description": "Choose a separate theme for this account.",
+    "default_theme": "Default theme",
       "identity_title": "Account appearance",
       "identity_description": "Customize all your accounts here. Photos and colors are saved on this browser; the theme changes with the active account.",
       "account": "Account",

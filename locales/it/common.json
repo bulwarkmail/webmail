@@ -3624,7 +3624,16 @@
     "open_full": "Apri",
     "view_label": "Vista"
   },
-  "account_qol": {
+  "account_qol": {
+    "shared_title": "Visualizzazione condivisa",
+    "shared_description": "Usa layout, densità e aspetto dei messaggi dell’account preferito per tutti gli account su questo browser. Le preferenze originali vengono conservate; foto, colori e temi restano individuali.",
+    "shared_label": "Usa la visualizzazione di {account} per tutti gli account",
+    "shared_active": "Condivisione da {account}. Le modifiche alla visualizzazione fatte da qualsiasi account aggiornano il profilo condiviso. Disattivala per ripristinare le preferenze di ciascun account.",
+    "shared_off": "Ogni account usa le proprie preferenze di visualizzazione.",
+    "open_main": "Apri l’account preferito per caricare le sue preferenze",
+    "theme": "Tema dell’account",
+    "theme_description": "Scegli un tema distinto per questo account.",
+    "default_theme": "Tema predefinito",
       "identity_title": "Aspetto degli account",
       "identity_description": "Personalizza tutti gli account da qui. Foto e colori vengono salvati su questo browser; il tema cambia con l’account attivo.",
       "account": "Account",
