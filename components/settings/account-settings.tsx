@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { useRouter } from '@/i18n/navigation';
 import { getMaxAccounts } from '@/lib/account-utils';
 import { formatFileSize, cn } from '@/lib/utils';
+import { AccountVaultSettings } from '@/components/account-vault';
 
 function hostnameOf(serverUrl: string): string {
   try { return new URL(serverUrl).hostname; } catch { return serverUrl; }
@@ -120,6 +121,7 @@ export function AccountSettings() {
   return (
     <div className="space-y-8">
       <AccountDisplaySettings />
+      {!isDemoMode && <AccountVaultSettings />}
       <SettingsSection title={t('title')} description={t('description')}>
         {/* Display Name */}
         <SettingItem label={t('name_label')}>
