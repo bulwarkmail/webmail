@@ -14,6 +14,7 @@ import { PluginOAuthCallbackListener } from "@/components/providers/plugin-oauth
 import { PWAInstallPrompt } from "@/components/pwa-install-prompt";
 import { PushNotificationPrompt } from "@/components/push-notification-prompt";
 import { setRequestLocale } from "next-intl/server";
+import { AccountVaultImportPrompt } from "@/components/account-vault";
 import { locales } from "@/i18n/routing";
 import { generateLiteLocaleParams } from "@/lib/lite-static-params";
 
@@ -54,6 +55,7 @@ export default async function LocaleLayout({
                   <ProInterfaceRedirect />
                   <ImpersonationReconciler />
                   {children}
+                  <AccountVaultImportPrompt />
                   <PluginDialogHost />
                   <PluginConsentDialog />
                   <PluginOAuthCallbackListener />
