@@ -3559,6 +3559,10 @@
     "date_label": "日期",
     "subject_label": "主題"
   },
+  "build_refresh": {
+    "title": "A new version of the webmail was published.",
+    "reload": "Reload"
+  },
   "pwa_install": {
     "title": "安裝 {appName}",
     "description": "安裝我們的應用程式，以便快速存取並支援離線使用。",

@@ -3559,6 +3559,10 @@
     "date_label": "تاریخ",
     "subject_label": "موضوع"
   },
+  "build_refresh": {
+    "title": "A new version of the webmail was published.",
+    "reload": "Reload"
+  },
   "pwa_install": {
     "title": "نصب {appName}",
     "description": "برای دسترسی سریع برنامه را نصب کنید.",

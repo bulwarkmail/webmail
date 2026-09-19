@@ -3559,6 +3559,10 @@
     "date_label": "日付",
     "subject_label": "件名"
   },
+  "build_refresh": {
+    "title": "A new version of the webmail was published.",
+    "reload": "Reload"
+  },
   "pwa_install": {
     "title": "{appName} をインストール",
     "description": "素早いアクセスとオフライン対応のため、アプリをインストールしましょう。",

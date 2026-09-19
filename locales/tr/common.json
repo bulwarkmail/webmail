@@ -3559,6 +3559,10 @@
     "date_label": "Tarih",
     "subject_label": "Konu"
   },
+  "build_refresh": {
+    "title": "A new version of the webmail was published.",
+    "reload": "Reload"
+  },
   "pwa_install": {
     "title": "{appName} uygulamasını yükle",
     "description": "Hızlı erişim ve çevrimdışı destek için uygulamamızı yükleyin.",

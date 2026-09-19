@@ -3559,6 +3559,10 @@
     "date_label": "Dato",
     "subject_label": "Emne"
   },
+  "build_refresh": {
+    "title": "A new version of the webmail was published.",
+    "reload": "Reload"
+  },
   "pwa_install": {
     "title": "Installer {appName}",
     "description": "Installer vores app for hurtig adgang og offline-understøttelse.",
