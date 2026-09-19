@@ -38,15 +38,43 @@ export function isTaskLikeObject(obj: ScannedCalendarObject): boolean {
   return false;
 }
 
+export interface CalendarDescriptor {
+  id: string;
+  name?: string | null;
+}
+
 /**
- * Given every object in an account and the calendar ids under consideration,
- * return the ids of calendars that hold at least one object and whose objects
- * are ALL tasks (no event). Empty calendars are deliberately NOT included -
- * a brand-new event calendar with nothing in it must stay visible.
+ * Checks if a calendar name strongly indicates a dedicated task list in
+ * English or German (e.g. "Aufgaben", "Tasks", "To-Do", "Reminders").
+ */
+export function isTasksOnlyCalendarName(name?: string | null): boolean {
+  if (!name || typeof name !== 'string') return false;
+  const normalized = name.trim().toLowerCase();
+  if (!normalized) return false;
+  const taskNames = new Set([
+    'aufgaben',
+    'tasks',
+    'task',
+    'to-do',
+    'to-dos',
+    'todos',
+    'todo',
+    'to do',
+    'erinnerungen',
+    'reminders',
+    'reminder',
+  ]);
+  return taskNames.has(normalized);
+}
+
+/**
+ * Given every object in an account and the calendars under consideration,
+ * return the ids of calendars that hold only tasks (no event), or that are
+ * explicitly dedicated task lists by name/collection component type.
  */
 export function findTasksOnlyCalendarIds(
   objects: ScannedCalendarObject[],
-  calendarIds: string[],
+  calendars: (string | CalendarDescriptor)[],
 ): Set<string> {
   const withAny = new Set<string>();
   const withEvent = new Set<string>();
@@ -58,9 +86,17 @@ export function findTasksOnlyCalendarIds(
       if (!task) withEvent.add(id);
     }
   }
+
   const tasksOnly = new Set<string>();
-  for (const id of calendarIds) {
-    if (withAny.has(id) && !withEvent.has(id)) tasksOnly.add(id);
+  for (const cal of calendars) {
+    const id = typeof cal === 'string' ? cal : cal.id;
+    const name = typeof cal === 'string' ? undefined : cal.name;
+
+    if (isTasksOnlyCalendarName(name)) {
+      tasksOnly.add(id);
+    } else if (withAny.has(id) && !withEvent.has(id)) {
+      tasksOnly.add(id);
+    }
   }
   return tasksOnly;
 }
