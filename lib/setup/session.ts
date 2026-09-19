@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers';
 import type { NextRequest } from 'next/server';
 import { verifySetupToken } from './token';
+import { isHttpsRequest } from '@/lib/security/request-protocol';
 
 export const SETUP_COOKIE = 'bulwark_setup_token';
 const COOKIE_MAX_AGE = 60 * 60; // 1 hour, matches token TTL
@@ -36,12 +37,4 @@ export function buildSessionCookieAttributes(request?: NextRequest) {
     path: '/',
     maxAge: COOKIE_MAX_AGE,
   };
-}
-
-function isHttpsRequest(request: NextRequest): boolean {
-  const forwarded = request.headers.get('x-forwarded-proto');
-  if (forwarded) {
-    return forwarded.split(',')[0]!.trim().toLowerCase() === 'https';
-  }
-  return request.nextUrl.protocol === 'https:';
 }
