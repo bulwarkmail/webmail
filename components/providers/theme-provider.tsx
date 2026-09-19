@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from 'react';
+import { AccountAccent } from './account-accent';
 import { useThemeStore } from '@/stores/theme-store';
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
@@ -25,5 +26,5 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  return <>{children}</>;
+  return <><AccountAccent />{children}</>;
 }
