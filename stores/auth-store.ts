@@ -13,7 +13,8 @@ import { useAccountStore, type AccountEntry } from './account-store';
 import { fetchPrincipalDisplayName } from '@/lib/stalwart/principal';
 import { fetchConfig } from '@/hooks/use-config';
 import { debug } from '@/lib/debug';
-import { generateAccountId } from '@/lib/account-utils';
+import { generateAccountId, getMaxAccounts } from '@/lib/account-utils';
+import { parseVaultContents, type VaultContents } from '@/lib/account-vault';
 import { replaceWindowLocation, getPathPrefix, getLocaleFromPath, apiFetch } from '@/lib/browser-navigation';
 import { notifyParent } from '@/lib/iframe-bridge';
 import { snapshotAccount, restoreAccount, clearAllStores, evictAccount, evictAll } from '@/lib/account-state-manager';
@@ -62,6 +63,7 @@ interface AuthState {
   loginWithOAuth: (serverUrl: string, code: string, codeVerifier: string, redirectUri: string, serverId?: string) => Promise<boolean>;
   loginWithServerSso: (code: string, state: string) => Promise<boolean>;
   loginDemo: () => Promise<boolean>;
+  restoreVault: (contents: VaultContents, rememberMe: boolean, includePasswords?: boolean) => Promise<{ connected: number; failed: number; pending: number; connectedIds: string[] }>;
   /**
    * Obtain a usable access token for the active account.
    *
@@ -1052,6 +1054,106 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
+      // Connect the whole archive before publishing authenticated state: login
+      // pages redirect as soon as isAuthenticated becomes true.
+      restoreVault: async (rawContents, rememberMe, includePasswords = true) => {
+        const contents = parseVaultContents(rawContents, rawContents.owner);
+        const registry = useAccountStore.getState();
+        for (const entry of contents.accounts) {
+          const local = registry.getAccountById(generateAccountId(entry.username, entry.serverUrl));
+          if (local && (local.authMode !== 'basic' || local.serverUrl.replace(/\/+$/, '') !== entry.serverUrl)) {
+            throw new Error('account_conflict');
+          }
+        }
+        const additional = contents.accounts.filter(a => !registry.hasAccount(a.username, a.serverUrl)).length;
+        if (registry.accounts.length + additional > getMaxAccounts()) throw new Error('account_limit');
+        set({ isLoading: true, error: null });
+        const connectedIds: string[] = [];
+        let failed = 0;
+        let pending = 0;
+        let keptConnected = 0;
+        // Accounts whose live client survived the import. They never enter
+        // `connectedIds` - that one steers the closing switch, which must land
+        // on an account this restore actually brought up - but callers asking
+        // "which accounts can act now?" need them too.
+        const keptIds: string[] = [];
+        try {
+          for (const entry of contents.accounts) {
+            const local = useAccountStore.getState().getAccountById(generateAccountId(entry.username, entry.serverUrl));
+            const id = local?.id ?? registry.addAccount({
+              username: entry.username, serverUrl: entry.serverUrl, authMode: 'basic',
+              label: entry.label, displayName: entry.label, email: entry.username,
+              rememberMe: includePasswords && !!entry.password && rememberMe, vaultManaged: true, lastLoginAt: 0, isConnected: false,
+              hasError: false, isDefault: false,
+            });
+            registry.updateAccount(id, { vaultManaged: true, label: entry.label, avatarColor: entry.avatarColor,
+              ...(entry.avatarImage === undefined ? {} : { avatarImage: entry.avatarImage }) });
+            // Appearance lands before the closing switchAccount, which reads the
+            // profile map to dress the account it activates.
+            if (entry.display || entry.theme) {
+              const settings = useSettingsStore.getState();
+              useSettingsStore.setState({
+                ...(entry.display ? { displayProfiles: { ...settings.displayProfiles,
+                  [id]: { ...settings.displayProfiles[id], ...entry.display } as typeof settings.displayProfiles[string] } } : {}),
+                ...(entry.theme ? { accountThemes: { ...settings.accountThemes, [id]: entry.theme } } : {}),
+              });
+            }
+            const slot = useAccountStore.getState().getAccountById(id)!.cookieSlot;
+            const existing = clients.get(id);
+            if (!includePasswords || !entry.password) {
+              // Metadata-only imports never create/replace clients or cookies.
+              // In particular, preserve the mailbox used to sign in and rescan.
+              if (existing) { keptConnected++; keptIds.push(id); }
+              else {
+                pending++;
+                registry.updateAccount(id, { isConnected: false, hasError: true, errorMessage: 'Sign in again' });
+              }
+              continue;
+            }
+            const client = new JMAPClient(entry.serverUrl, entry.username, entry.password);
+            try {
+              await client.connect();
+              if (rememberMe) {
+                const res = await apiFetch(`/api/auth/session?slot=${slot}`, {
+                  method: 'POST', headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ serverUrl: entry.serverUrl, username: entry.username, password: entry.password, slot }),
+                });
+                if (!res.ok) throw new Error('session_write_failed');
+              } else if (local?.rememberMe) {
+                const res = await apiFetch(`/api/auth/session?slot=${slot}`, { method: 'DELETE' });
+                if (!res.ok) throw new Error('session_write_failed');
+              }
+              await syncStalwartAuthContext(entry.serverUrl, entry.username, client.getAuthHeader(), slot);
+              existing?.disconnect();
+              clients.set(id, client);
+              bindClientStatusHandlers(client, set, get, id);
+              registry.updateAccount(id, { isConnected: true, hasError: false, rememberMe, errorMessage: undefined, lastLoginAt: Date.now() });
+              connectedIds.push(id);
+            } catch {
+              client.disconnect();
+              registry.updateAccount(id, { isConnected: !!existing, hasError: true, errorMessage: 'Sign in again' });
+              failed++;
+            }
+          }
+          if (contents.sharedDisplaySourceId !== undefined) {
+            useSettingsStore.setState({ sharedDisplaySourceId: contents.sharedDisplaySourceId });
+          }
+          if (connectedIds.length && contents.defaultAccountId) registry.setDefaultAccount(contents.defaultAccountId);
+          const target = connectedIds.includes(contents.defaultAccountId || '') ? contents.defaultAccountId! : connectedIds[0];
+          if (target) {
+            // A previous persisted active id may refer to a client that was
+            // absent before this restore; don't let switchAccount short-circuit.
+            if (!get().isAuthenticated || (get().activeAccountId === target && get().client !== clients.get(target))) {
+              set({ activeAccountId: null });
+            }
+            await get().switchAccount(target);
+            set(s => ({ connectedAccountsRevision: s.connectedAccountsRevision + 1 }));
+          }
+          return { connected: connectedIds.length + keptConnected, failed, pending,
+            connectedIds: [...connectedIds, ...keptIds] };
+        } finally { set({ isLoading: false }); }
+      },
+
       loginDemo: async () => {
         set({ isLoading: true, error: null, isRateLimited: false, rateLimitUntil: null });
         try {
@@ -1950,6 +2052,10 @@ export const useAuthStore = create<AuthState>()(
             // (Lite keeps a tab-scoped Basic session either way; a missing one
             // surfaces as a 401 from fetchSlotSession below and evicts too.)
             if (account.authMode === 'basic' && !account.rememberMe && !IS_LITE) {
+              if (account.vaultManaged) {
+                accountStore.updateAccount(account.id, { isConnected: false, hasError: true, errorMessage: 'Sign in again' });
+                return;
+              }
               evictAccount(account.id);
               accountStore.removeAccount(account.id);
               return;
@@ -2020,6 +2126,10 @@ export const useAuthStore = create<AuthState>()(
               }
               // Remove unrestorable accounts so the user is prompted to log in
               // again rather than seeing a stale error entry forever.
+              if (account.vaultManaged) {
+                accountStore.updateAccount(account.id, { isConnected: false, hasError: true, errorMessage: 'Sign in again' });
+                return;
+              }
               evictAccount(account.id);
               accountStore.removeAccount(account.id);
               discardSlotCredentials(account.cookieSlot, false);
@@ -2371,3 +2481,14 @@ export const useAuthStore = create<AuthState>()(
 // Expose getClientForAccount to the calendar/contact stores via a small
 // shared registry - see [[stores/client-registry]] for rationale.
 setClientLookup((accountId) => useAuthStore.getState().getClientForAccount(accountId));
+
+// Apply local presentation immediately on every login/switch path, including
+// when server settings sync is disabled. Auth owns the actual active session.
+useAuthStore.subscribe((state, previous) => {
+  if (state.activeAccountId !== previous.activeAccountId) {
+    useSettingsStore.getState().activateDisplayAccount(state.activeAccountId);
+  }
+});
+if (typeof window !== 'undefined') {
+  useSettingsStore.getState().activateDisplayAccount(useAuthStore.getState().activeAccountId);
+}

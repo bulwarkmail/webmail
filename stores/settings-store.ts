@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { pickDisplaySettings, isDisplaySetting, type DisplaySettings, type AccountTheme } from '@/lib/display-preferences';
 import { persist } from 'zustand/middleware';
 import { useThemeStore } from './theme-store';
 import { useLocaleStore } from './locale-store';
@@ -300,7 +301,15 @@ export const DEV_KEYWORDS: KeywordDefinition[] = [
 
 const USING_MOCK_SERVER = process.env.NEXT_PUBLIC_DEV_MOCK_JMAP === 'true';
 
-interface SettingsState {
+export interface SettingsState {
+  // Browser-local profiles retain each account's choices while sharing is enabled.
+  displayAccountId: string | null;
+  displayProfiles: Record<string, DisplaySettings>;
+  sharedDisplaySourceId: string | null;
+  accountThemes: Record<string, AccountTheme>;
+  activateDisplayAccount: (accountId: string | null) => void;
+  shareDisplayFrom: (accountId: string | null) => void;
+
   // Appearance
   fontSize: FontSize;
   density: Density;
@@ -454,6 +463,7 @@ interface SettingsState {
   // Sidebar
   colorfulSidebarIcons: boolean; // Tint folder icons by role (inbox blue, junk red, etc.)
   tintListRowsByTag: boolean; // Tint mail-list rows by the first tag color
+  tintListRowsByAccount: boolean; // In the unified view, tint rows by account colour instead of showing the account dot
   showFolderTotalCount: boolean; // Show total message count next to folders/tags (alongside unread)
 
   // Folders
@@ -668,6 +678,7 @@ const DEFAULT_SETTINGS = {
   // Sidebar
   colorfulSidebarIcons: true,
   tintListRowsByTag: true,
+  tintListRowsByAccount: false,
   showFolderTotalCount: true,
 
   // Folders
@@ -750,9 +761,62 @@ export const useSettingsStore = create<SettingsState>()(
   persist(
     (set, get) => ({
       ...DEFAULT_SETTINGS,
+      displayAccountId: null,
+      displayProfiles: {},
+      sharedDisplaySourceId: null,
+      accountThemes: {},
+
+      activateDisplayAccount: (accountId) => {
+        const state = get();
+        if (state.displayAccountId === accountId) return;
+        const profiles = { ...state.displayProfiles };
+        const themes = { ...state.accountThemes };
+        if (state.displayAccountId) {
+          if (!state.sharedDisplaySourceId || state.sharedDisplaySourceId === state.displayAccountId) {
+            profiles[state.displayAccountId] = pickDisplaySettings(state);
+          }
+          const { theme, activeThemeId } = useThemeStore.getState();
+          themes[state.displayAccountId] = { theme, activeThemeId };
+        }
+        if (accountId && !profiles[accountId]) {
+          profiles[accountId] = pickDisplaySettings(state.displayAccountId ? DEFAULT_SETTINGS : state);
+        }
+        const display = profiles[state.sharedDisplaySourceId ?? accountId ?? ''];
+        set({ displayAccountId: accountId, displayProfiles: profiles, accountThemes: themes, ...display });
+        applyFontSize(get().fontSize);
+        applyDensity(get().density);
+        applyAnimations(get().animationsEnabled);
+        if (accountId) {
+          const accountTheme = themes[accountId] ?? (state.displayAccountId
+            ? { theme: 'system' as const, activeThemeId: null }
+            : { theme: useThemeStore.getState().theme, activeThemeId: useThemeStore.getState().activeThemeId });
+          useThemeStore.getState().setTheme(accountTheme.theme);
+          useThemeStore.getState().activateTheme(accountTheme.activeThemeId);
+        }
+      },
+
+      shareDisplayFrom: (accountId) => {
+        const state = get();
+        const profiles = { ...state.displayProfiles };
+        if (state.displayAccountId && !state.sharedDisplaySourceId) {
+          profiles[state.displayAccountId] = pickDisplaySettings(state);
+        }
+        if (accountId && !profiles[accountId]) return;
+        set({ sharedDisplaySourceId: accountId, displayProfiles: profiles,
+          ...profiles[accountId ?? state.displayAccountId ?? ''] });
+        applyFontSize(get().fontSize);
+        applyDensity(get().density);
+        applyAnimations(get().animationsEnabled);
+      },
 
       updateSetting: (key, value) => {
-        set({ [key]: value });
+        const state = get();
+        const owner = state.sharedDisplaySourceId ?? state.displayAccountId;
+        set({ [key]: value, ...(owner && isDisplaySetting(key) ? {
+          displayProfiles: { ...state.displayProfiles, [owner]: {
+            ...pickDisplaySettings(state), [key]: value,
+          } },
+        } : {}) });
 
         // Apply font size to document root
         if (key === 'fontSize') {
@@ -771,7 +835,11 @@ export const useSettingsStore = create<SettingsState>()(
       },
 
       resetToDefaults: () => {
-        set(DEFAULT_SETTINGS);
+        const state = get();
+        const owner = state.sharedDisplaySourceId ?? state.displayAccountId;
+        set({ ...DEFAULT_SETTINGS, ...(owner ? { displayProfiles: {
+          ...state.displayProfiles, [owner]: pickDisplaySettings(DEFAULT_SETTINGS),
+        } } : {}) });
         applyFontSize(DEFAULT_SETTINGS.fontSize);
         applyDensity(DEFAULT_SETTINGS.density);
         applyAnimations(DEFAULT_SETTINGS.animationsEnabled);
@@ -863,6 +931,7 @@ export const useSettingsStore = create<SettingsState>()(
           faviconUnreadBadge: state.faviconUnreadBadge,
           colorfulSidebarIcons: state.colorfulSidebarIcons,
           tintListRowsByTag: state.tintListRowsByTag,
+          tintListRowsByAccount: state.tintListRowsByAccount,
           showFolderTotalCount: state.showFolderTotalCount,
           folderIcons: state.folderIcons,
           emailKeywords: state.emailKeywords,
@@ -892,12 +961,17 @@ export const useSettingsStore = create<SettingsState>()(
               }
             : {}),
         };
-        return JSON.stringify(settings, null, 2);
+        // Sync each account's original preferences, never the inherited overlay.
+        const own = state.displayAccountId ? state.displayProfiles[state.displayAccountId] : undefined;
+        return JSON.stringify({ ...settings, ...own }, null, 2);
       },
 
       importSettings: (json: string, opts?: { serverAccountId?: string }) => {
         try {
           const settings = JSON.parse(json);
+          const before = get();
+          // Ignore a response belonging to an account we have since left.
+          if (opts?.serverAccountId && before.displayAccountId && opts.serverAccountId !== before.displayAccountId) return false;
 
           // Validate settings
           if (typeof settings !== 'object' || settings === null) {
@@ -968,6 +1042,19 @@ export const useSettingsStore = create<SettingsState>()(
               set({ [key]: settings[key] });
             }
           });
+
+          const owner = opts?.serverAccountId ?? before.sharedDisplaySourceId ?? before.displayAccountId;
+          if (owner) {
+            const imported = pickDisplaySettings(get());
+            const own = { ...before.displayProfiles[owner], ...Object.fromEntries(
+              Object.entries(imported).filter(([key]) => key in settings)
+            ) } as DisplaySettings;
+            // The shared profile is authoritative on this browser; edits made
+            // from another account must survive the source's next server load.
+            const preserveShared = opts?.serverAccountId && owner === before.sharedDisplaySourceId && before.displayProfiles[owner];
+            const profiles = { ...get().displayProfiles, [owner]: preserveShared || { ...imported, ...own } };
+            set({ displayProfiles: profiles, ...profiles[before.sharedDisplaySourceId ?? owner] });
+          }
 
           // Apply visual settings
           applyFontSize(get().fontSize);
@@ -1386,7 +1473,15 @@ if (typeof window !== 'undefined') {
   });
 
   // Also sync when theme or locale changes
-  useThemeStore.subscribe(triggerSync);
+  useThemeStore.subscribe((theme, previous) => {
+    const state = useSettingsStore.getState();
+    if (state.displayAccountId && (theme.theme !== previous.theme || theme.activeThemeId !== previous.activeThemeId)) {
+      useSettingsStore.setState({ accountThemes: { ...state.accountThemes,
+        [state.displayAccountId]: { theme: theme.theme, activeThemeId: theme.activeThemeId },
+      } });
+    }
+    triggerSync();
+  });
   useLocaleStore.subscribe(triggerSync);
 
   // And when templates change (they ride along in the synced blob, #825).
