@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { PlayCircle } from 'lucide-react';
 import { usePolicyStore } from '@/stores/policy-store';
 import { IS_LITE } from '@/lib/lite';
+import { SharedDisplaySettings } from './account-display-settings';
 import { MessageListOrderSettings } from './message-list-order-settings';
 
 const DENSITY_PREVIEW: Record<Density, { py: string; gap: string; showAvatar: boolean; showPreview: boolean }> = {
@@ -74,6 +75,8 @@ export function AppearanceSettings() {
   const { isSettingLocked, isSettingHidden } = usePolicyStore();
 
   return (
+    <>
+    <SharedDisplaySettings />
     <SettingsSection title={t('title')} description={t('description')}>
       <SettingItem label={t('theme.label')} description={t('theme.description')}>
         <RadioGroup
@@ -160,5 +163,6 @@ export function AppearanceSettings() {
         />
       </SettingItem>
     </SettingsSection>
+    </>
   );
 }

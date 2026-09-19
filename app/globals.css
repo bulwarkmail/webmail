@@ -901,3 +901,22 @@ option {
 [dir="rtl"] .lucide-panel-right {
   transform: scaleX(-1);
 }
+
+/* A persistent account marker remains visible in compact and mobile layouts. */
+:root[data-account-accent]::after {
+  content: '';
+  position: fixed;
+  inset: 0 0 auto;
+  height: 4px;
+  background: var(--account-accent);
+  pointer-events: none;
+  z-index: 55;
+}
+
+:root[data-account-accent] .account-sidebar {
+  background-color: var(--color-sidebar);
+}
+:root[data-account-accent] .account-sidebar [data-selected="true"] {
+  background-color: var(--color-sidebar-accent);
+  box-shadow: inset 3px 0 var(--account-accent);
+}

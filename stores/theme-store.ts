@@ -311,7 +311,8 @@ export const useThemeStore = create<ThemeState>()(
 
         if (!theme.css) {
           pluginStorage.getThemeCSS(id).then((css) => {
-            if (!css) return;
+            // Account switching can select a different theme during the load.
+            if (!css || get().activeThemeId !== id) return;
 
             const hydratedTheme = { ...theme, css };
             applyCustomThemeCSS(hydratedTheme, get().resolvedTheme);
