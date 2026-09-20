@@ -2942,6 +2942,25 @@ export function EmailComposer({
               setBody(e.target.value);
               if (validationErrors.body) setValidationErrors(prev => ({ ...prev, body: false }));
             }}
+            // Plain text has no HTML collapsing to worry about, so Tab
+            // inserts a real \t (rendered by every client's pre-wrap),
+            // mirroring the rich editor's Tab indent. Without this the
+            // browser default moves focus to the next field mid-sentence.
+            onKeyDown={(e) => {
+              if (e.key !== 'Tab' || e.shiftKey) return;
+              e.preventDefault();
+              const el = e.currentTarget;
+              const start = el.selectionStart ?? el.value.length;
+              const end = el.selectionEnd ?? start;
+              const next = `${body.slice(0, start)}\t${body.slice(end)}`;
+              setBody(next);
+              // Re-focus first: React re-renders the new value, and the
+              // caret restore in the layout effect below picks it up after.
+              requestAnimationFrame(() => {
+                el.focus();
+                el.setSelectionRange(start + 1, start + 1);
+              });
+            }}
             placeholder={t('body_placeholder')}
             className={cn(
               "w-full min-h-[300px] px-4 py-3 text-sm text-foreground bg-transparent resize-y focus:outline-none font-mono",
