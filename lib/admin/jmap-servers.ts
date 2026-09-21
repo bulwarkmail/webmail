@@ -13,6 +13,10 @@ export interface JmapServerEntry {
   label: string;
   url: string;
   domains?: string[];
+  /** Optional page where a user can create or connect an account on this server (shown as a link on the login form). */
+  connectUrl?: string;
+  /** false hides the server from the login form and refuses logins through it; absent means enabled. */
+  enabled?: boolean;
   oauth?: JmapServerOAuthConfig;
 }
 
@@ -21,6 +25,7 @@ export interface PublicJmapServerEntry {
   label: string;
   url: string;
   domains: string[];
+  connectUrl?: string;
   oauth?: {
     clientId?: string;
     issuerUrl?: string;
@@ -66,6 +71,8 @@ export function parseJmapServers(raw: unknown): JmapServerEntry[] {
     if (!id || !ID_RE.test(id) || seen.has(id)) continue;
     if (!url || !isHttpUrl(url)) continue;
     seen.add(id);
+    const connectUrl = typeof e.connectUrl === 'string' && isHttpUrl(e.connectUrl.trim()) ? e.connectUrl.trim() : '';
+    const disabled = e.enabled === false;
     const domains = Array.isArray(e.domains)
       ? e.domains
           .filter((d): d is string => typeof d === 'string')
@@ -90,19 +97,24 @@ export function parseJmapServers(raw: unknown): JmapServerEntry[] {
       label: label || id,
       url,
       ...(domains.length > 0 ? { domains } : {}),
+      ...(connectUrl ? { connectUrl } : {}),
+      ...(disabled ? { enabled: false } : {}),
       ...(oauth ? { oauth } : {}),
     });
   }
   return out;
 }
 
-/** Strip secrets for client-side exposure. */
+export const isEnabledServer = (s: JmapServerEntry): boolean => s.enabled !== false;
+
+/** Strip secrets for client-side exposure. Disabled servers are not exposed at all. */
 export function redactJmapServers(servers: JmapServerEntry[]): PublicJmapServerEntry[] {
-  return servers.map((s) => ({
+  return servers.filter(isEnabledServer).map((s) => ({
     id: s.id,
     label: s.label,
     url: s.url,
     domains: s.domains ?? [],
+    ...(s.connectUrl ? { connectUrl: s.connectUrl } : {}),
     ...(s.oauth && (s.oauth.clientId || s.oauth.issuerUrl)
       ? {
           oauth: {
@@ -116,7 +128,7 @@ export function redactJmapServers(servers: JmapServerEntry[]): PublicJmapServerE
 
 export function findServerById(servers: JmapServerEntry[], id: string | null | undefined): JmapServerEntry | undefined {
   if (!id) return undefined;
-  return servers.find((s) => s.id === id);
+  return servers.find((s) => s.id === id && isEnabledServer(s));
 }
 
 function normalizeUrl(url: string): string {
@@ -131,7 +143,7 @@ function normalizeUrl(url: string): string {
 export function findServerByUrl(servers: JmapServerEntry[], url: string | null | undefined): JmapServerEntry | undefined {
   if (!url) return undefined;
   const target = normalizeUrl(url);
-  return servers.find((s) => normalizeUrl(s.url) === target);
+  return servers.find((s) => normalizeUrl(s.url) === target && isEnabledServer(s));
 }
 
 /** Find the server whose `domains` array matches the given email's domain (case-insensitive). */
