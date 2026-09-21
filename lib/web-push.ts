@@ -665,7 +665,7 @@ export interface ResyncWebPushParams {
 /**
  * Bring an already-enabled push registration up to date without any user
  * action: refresh its expiry and install/repair the delivery filter. Nothing
- * here can prompt - it only runs when push is already on for the account -
+ * here can prompt - it requires a saved opt-in and granted permission -
  * and every failure is swallowed because the app must not care whether the
  * background touch-up worked. Returns true when a re-sync actually ran.
  */
@@ -678,7 +678,11 @@ export async function resyncWebPush(params: ResyncWebPushParams): Promise<boolea
   }
   if (!accountId || resyncedAccountIds.has(accountId)) return false;
   try {
-    if (!(await isWebPushEnabled(accountId))) return false;
+    // The browser may have lost its endpoint while our saved opt-in and
+    // server registration survived. Recreate it through the normal enable
+    // flow instead of permanently skipping the account in that state.
+    if (!isWebPushSupported() || Notification.permission !== 'granted'
+      || !localStorage.getItem(subscriptionIdKey(accountId))) return false;
     resyncedAccountIds.add(accountId);
     await enableWebPush({
       client: params.client,
@@ -687,6 +691,7 @@ export async function resyncWebPush(params: ResyncWebPushParams): Promise<boolea
     });
     return true;
   } catch {
+    resyncedAccountIds.delete(accountId);
     return false;
   }
 }

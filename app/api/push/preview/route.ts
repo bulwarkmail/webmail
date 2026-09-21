@@ -154,10 +154,16 @@ export async function GET(request: NextRequest) {
     };
 
     const inboxBody = inboxData.methodResponses.find(
-      ([method]) => method === 'Mailbox/query',
+      ([method, , callId]) => method === 'Mailbox/query' && callId === 'mb',
     )?.[1] as { ids?: string[] } | undefined;
 
-    const inboxId = inboxBody?.ids?.[0];
+    // A method-level JMAP error still has HTTP 200. Do not turn it into
+    // an empty Inbox: the service worker would silently discard the push.
+    if (!Array.isArray(inboxBody?.ids)) {
+      return NextResponse.json({ error: 'JMAP mailbox query failed' }, { status: 502 });
+    }
+
+    const inboxId = inboxBody.ids[0];
     const emailProperties = ['id', 'threadId', 'from', 'subject', 'preview', 'receivedAt'];
 
     if (!inboxId && !requestedEmailId) {
@@ -231,6 +237,19 @@ export async function GET(request: NextRequest) {
     const data = (await jmapRes.json()) as {
       methodResponses: [string, Record<string, unknown>, string][];
     };
+
+    // Missing/failed method responses are preview failures, not proof that
+    // there is no unread mail. A non-2xx response lets the SW show its fallback.
+    for (const call of methodCalls as [string, unknown, string][]) {
+      const response = data.methodResponses.find(([method, , callId]) =>
+        method === call[0] && callId === call[2]);
+      const result = response?.[1];
+      if (!result || (call[0] === 'Email/query'
+        ? !Array.isArray(result.ids) || typeof result.total !== 'number'
+        : !Array.isArray(result.list))) {
+        return NextResponse.json({ error: 'JMAP email query failed' }, { status: 502 });
+      }
+    }
 
     type EmailLite = {
       id: string;
