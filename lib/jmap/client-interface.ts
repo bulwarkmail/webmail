@@ -81,6 +81,8 @@ export interface IJMAPClient {
   getEventSourceUrl(): string | null;
   supportsEmailSubmission(): boolean;
   supportsQuota(): boolean;
+  /** Whether `getKeywords` can answer from the server instead of walking the mailbox. */
+  supportsKeywordEnumeration(): boolean;
   supportsVacationResponse(): boolean;
   supportsContacts(): boolean;
   supportsCalendars(): boolean;

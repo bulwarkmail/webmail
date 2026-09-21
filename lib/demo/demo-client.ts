@@ -95,6 +95,7 @@ export class DemoJMAPClient implements IJMAPClient {
   getEventSourceUrl(): string | null { return null; }
   supportsEmailSubmission(): boolean { return true; }
   supportsQuota(): boolean { return true; }
+  supportsKeywordEnumeration(): boolean { return false; }
   supportsVacationResponse(): boolean { return true; }
   supportsContacts(): boolean { return true; }
   supportsCalendars(): boolean { return true; }
