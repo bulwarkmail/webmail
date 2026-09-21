@@ -18,7 +18,12 @@ export interface VaultEnvelope {
   ciphertext: string;
 }
 /** One owner may keep several archives; the name is plaintext so it can be picked before unlocking. */
-export interface VaultRecord { id: string; name: string; revision: string; envelope: VaultEnvelope }
+export interface VaultRecord {
+  id: string; name: string; revision: string; envelope: VaultEnvelope;
+  /** Identity sealed into this archive, when an older scheme wrote one that the
+   * owner's current identity no longer reproduces. Cleared on the next save. */
+  sealedAs?: string;
+}
 export const VAULT_MAX_BYTES = 256 * 1024;
 export const VAULT_MAX_PER_OWNER = 10;
 export const VAULT_NAME_MAX = 80;
@@ -44,7 +49,23 @@ export function normalizeVaultOwner(value: VaultOwner): VaultOwner {
   return { username: value.username.trim(), serverUrl: url.toString().replace(/\/+$/, '') };
 }
 
+/**
+ * Identity folds the username's case: `Lu@ma.gl` and `lu@ma.gl` are one owner,
+ * so an archive saved under either casing is found under the other. The
+ * as-typed username stays in the record and is what authenticates, because not
+ * every mail server folds case at login.
+ */
 export function vaultIdentity(owner: VaultOwner): string {
+  const normalized = normalizeVaultOwner(owner);
+  return JSON.stringify([normalized.username.toLowerCase(), normalized.serverUrl]);
+}
+
+/**
+ * Identity as written before the username's case was folded. Archives saved
+ * then are stored under its hash and sealed with it as additional data, so read
+ * paths fall back to it; nothing is ever written under it again.
+ */
+export function legacyVaultIdentity(owner: VaultOwner): string {
   const normalized = normalizeVaultOwner(owner);
   return JSON.stringify([normalized.username, normalized.serverUrl]);
 }
@@ -91,6 +112,9 @@ function encode(bytes: Uint8Array): string {
 function decode(value: string): Uint8Array<ArrayBuffer> {
   return Uint8Array.from(atob(value), c => c.charCodeAt(0));
 }
+function additionalData(identity: string): Uint8Array<ArrayBuffer> {
+  return new TextEncoder().encode(`bulwark-account-vault:1:${identity}`);
+}
 async function deriveKey(password: string, salt: Uint8Array<ArrayBuffer>): Promise<CryptoKey> {
   if (!globalThis.crypto?.subtle) throw new Error('https_required');
   const material = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveKey']);
@@ -107,24 +131,31 @@ export async function encryptVault(contents: VaultContents, password: string): P
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const key = await deriveKey(password, salt);
   const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv,
-    additionalData: new TextEncoder().encode(`bulwark-account-vault:1:${vaultIdentity(clean.owner)}`),
+    additionalData: additionalData(vaultIdentity(clean.owner)),
   }, key, new TextEncoder().encode(JSON.stringify(clean)));
   return parseVaultEnvelope({ version: 1, iterations: 600000, salt: encode(salt), iv: encode(iv), ciphertext: encode(new Uint8Array(encrypted)) });
 }
 
-export async function decryptVault(envelope: VaultEnvelope, password: string, owner: VaultOwner): Promise<VaultContents> {
+export async function decryptVault(envelope: VaultEnvelope, password: string, owner: VaultOwner, sealedAs?: string): Promise<VaultContents> {
   const clean = parseVaultEnvelope(envelope);
   if (password.length > 1024) throw new Error('password_length');
   const salt = decode(clean.salt);
   const iv = decode(clean.iv);
   if (salt.length !== 16 || iv.length !== 12) throw new Error('invalid_archive');
   const key = await deriveKey(password, salt);
-  let plaintext: ArrayBuffer;
-  try {
-    plaintext = await crypto.subtle.decrypt({ name: 'AES-GCM', iv,
-      additionalData: new TextEncoder().encode(`bulwark-account-vault:1:${vaultIdentity(owner)}`),
-    }, key, decode(clean.ciphertext));
-  } catch { throw new Error('unlock_failed'); }
+  const ciphertext = decode(clean.ciphertext);
+  // An archive sealed before the username's case was folded carries the
+  // as-typed identity as additional data: either this session's own username,
+  // or the one the storage layer recorded when it rehomed the archive.
+  let plaintext: ArrayBuffer | null = null;
+  const candidates = [vaultIdentity(owner), legacyVaultIdentity(owner), ...(sealedAs === undefined ? [] : [sealedAs])];
+  for (const identity of [...new Set(candidates)]) {
+    try {
+      plaintext = await crypto.subtle.decrypt({ name: 'AES-GCM', iv, additionalData: additionalData(identity) }, key, ciphertext);
+      break;
+    } catch { /* an identity that does not seal this archive: try the next */ }
+  }
+  if (!plaintext) throw new Error('unlock_failed');
   try { return parseVaultContents(JSON.parse(new TextDecoder().decode(plaintext)), owner); }
   finally { new Uint8Array(plaintext).fill(0); }
 }

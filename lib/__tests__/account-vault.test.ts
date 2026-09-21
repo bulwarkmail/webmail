@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { mkdtemp, readdir, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { decryptVault, encryptVault, parseVaultContents, parseVaultEnvelope, parseVaultName, type VaultContents } from '../account-vault';
+import { decryptVault, encryptVault, parseVaultContents, parseVaultEnvelope, parseVaultName, type VaultContents, type VaultEnvelope } from '../account-vault';
 import { deleteVault, LEGACY_VAULT_NAME, listVaults, loadVault, saveVault, VaultConflict, VaultLimit } from '../account-vault-storage';
 
 const owner = { username: 'owner@example.com', serverUrl: 'https://mail.example.com' };
@@ -22,6 +22,20 @@ async function useTemporaryDirectory(): Promise<string> {
   process.env.SETTINGS_DATA_DIR = directory;
   return directory;
 }
+/** An archive as it was sealed when the username's case still told owners apart. */
+async function sealWithIdentity(value: VaultContents, pass: string, identity: string): Promise<VaultEnvelope> {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const material = await crypto.subtle.importKey('raw', new TextEncoder().encode(pass), 'PBKDF2', false, ['deriveKey']);
+  const key = await crypto.subtle.deriveKey({ name: 'PBKDF2', hash: 'SHA-256', salt, iterations: 600000 },
+    material, { name: 'AES-GCM', length: 256 }, false, ['encrypt']);
+  const ciphertext = await crypto.subtle.encrypt({ name: 'AES-GCM', iv,
+    additionalData: new TextEncoder().encode(`bulwark-account-vault:1:${identity}`) },
+    key, new TextEncoder().encode(JSON.stringify(value)));
+  const b64 = (bytes: ArrayBuffer | Uint8Array) => Buffer.from(bytes as ArrayBuffer).toString('base64');
+  return { version: 1, iterations: 600000, salt: b64(salt), iv: b64(iv), ciphertext: b64(ciphertext) };
+}
+
 async function ownerFiles(root: string): Promise<string[]> {
   const [ownerDir] = await readdir(path.join(root, 'account-vaults'));
   return readdir(path.join(root, 'account-vaults', ownerDir));
@@ -118,6 +132,38 @@ describe('account vault encryption and storage', () => {
     expect(await decryptVault(migrated!.envelope, password, owner)).toEqual(contents);
     expect(await readdir(path.join(root, 'account-vaults'))).toEqual([hash]);
     expect(await listVaults(owner)).toEqual([migrated]);
+  });
+
+  it('hands an archive saved under a differently-cased username to the same owner', async () => {
+    const root = await useTemporaryDirectory();
+    const { createHash } = await import('node:crypto');
+    const { mkdir, writeFile } = await import('node:fs/promises');
+    const typed = { username: 'Owner@Example.com', serverUrl: owner.serverUrl };
+    const archived: VaultContents = { ...contents, owner: typed,
+      accounts: [{ ...typed, password: 'mail-secret', label: 'Personal', avatarColor: '#112233' }] };
+    const sealedAs = JSON.stringify([typed.username, typed.serverUrl]);
+    const legacyDir = path.join(root, 'account-vaults', createHash('sha256').update(sealedAs).digest('hex'));
+    await mkdir(legacyDir, { recursive: true });
+    await writeFile(path.join(legacyDir, 'b'.repeat(32) + '.json'),
+      JSON.stringify({ name: 'Laptop', envelope: await sealWithIdentity(archived, password, sealedAs) }));
+
+    // The session that saved it still finds it, now under the folded identity.
+    const [found] = await listVaults(typed);
+    expect(found?.name).toBe('Laptop');
+    expect(await decryptVault(found!.envelope, password, typed, found!.sealedAs)).toEqual(archived);
+    expect(await readdir(path.join(root, 'account-vaults')))
+      .toEqual([createHash('sha256').update(JSON.stringify([owner.username, owner.serverUrl])).digest('hex')]);
+
+    // And so does a session that types the username in another case.
+    const [shared] = await listVaults(owner);
+    expect(shared).toEqual(found);
+    expect(await decryptVault(shared!.envelope, password, owner, shared!.sealedAs)).toEqual({ ...archived, owner });
+    await expect(decryptVault(shared!.envelope, password, owner)).rejects.toThrow('unlock_failed');
+
+    // Saving over it re-seals it under the folded identity, hint and all.
+    const resaved = await saveVault(owner, shared!.id, 'Laptop', await encryptVault({ ...archived, owner }, password), shared!.revision);
+    expect(resaved.sealedAs).toBeUndefined();
+    expect(await decryptVault(resaved.envelope, password, typed)).toEqual({ ...archived, owner: typed });
   });
 
   it('caps the number of archives per owner', async () => {
