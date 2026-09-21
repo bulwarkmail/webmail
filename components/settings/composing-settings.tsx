@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useSettingsStore } from '@/stores/settings-store';
 import type { ReplyIdentityMatch, SendDelaySeconds } from '@/stores/settings-store';
 import { useAuthStore } from '@/stores/auth-store';
+import { usePolicyStore } from '@/stores/policy-store';
 import { SettingsSection, SettingItem, Select, ToggleSwitch } from './settings-section';
 import { X } from '@/components/icons';
 import {
@@ -37,6 +38,7 @@ export function ComposingSettings() {
     updateSetting,
   } = useSettingsStore();
   const { client } = useAuthStore();
+  const { isSettingLocked, isSettingHidden } = usePolicyStore();
   const delayedSendSupported = client?.hasDelayedSend() ?? false;
 
   return (
@@ -93,7 +95,8 @@ export function ComposingSettings() {
         </div>
       </SettingItem>
 
-      <SettingItem label={t('signature_position.label')} description={t('signature_position.description')}>
+      {!isSettingHidden('signaturePosition') && (
+      <SettingItem label={t('signature_position.label')} description={t('signature_position.description')} locked={isSettingLocked('signaturePosition')}>
         <Select
           value={signaturePosition}
           onChange={(value) => updateSetting('signaturePosition', value as 'above_quote' | 'below_quote')}
@@ -103,13 +106,16 @@ export function ComposingSettings() {
           ]}
         />
       </SettingItem>
+      )}
 
-      <SettingItem label={t('signature_separator.label')} description={t('signature_separator.description')}>
+      {!isSettingHidden('signatureSeparatorEnabled') && (
+      <SettingItem label={t('signature_separator.label')} description={t('signature_separator.description')} locked={isSettingLocked('signatureSeparatorEnabled')}>
         <ToggleSwitch
           checked={signatureSeparatorEnabled}
           onChange={(checked) => updateSetting('signatureSeparatorEnabled', checked)}
         />
       </SettingItem>
+      )}
 
       <SettingItem label={t('request_read_receipt.label')} description={t('request_read_receipt.description')}>
         <ToggleSwitch

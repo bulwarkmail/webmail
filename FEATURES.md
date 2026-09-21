@@ -138,6 +138,7 @@
 - A setup wizard runs on first launch and walks through JMAP servers, OAuth/OIDC, the session secret, logging, branding (uploads included), and the admin password. It writes to the admin config dir, so `.env.local` stays untouched.
 - The Stalwart admin dashboard, its policy sections collapsed into one tabbed page
 - Admin policy gates for the Unified Mailbox: turn All mail / Unread / Starred on or off org-wide, and gate cross-account capability separately (off by default, auto-enabled on upgrade for instances already using it). A gated view still respects the user's own toggle.
+- Admin policy defaults: the Policy tab (or `policy.json` → `defaults`) sets the value users start with for governable settings such as signature position, delete action or list density. Users can still change it unless the setting is locked; a choice a user made themselves is never overridden.
 - Admin storage splits in two. `ADMIN_CONFIG_DIR` is operator-authored and can be mounted read-only once setup finishes; `ADMIN_STATE_DIR` holds the runtime audit log and login timestamps.
 - JSON config can read secrets from files (`passwordHashFile`, `sessionSecretFile`, `oauthClientSecretFile`) for Docker and Kubernetes secret mounts
 - An admin toggle controls search-engine indexing (`robots.txt` / `noindex`)

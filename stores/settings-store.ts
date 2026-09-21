@@ -5,6 +5,7 @@ import { useLocaleStore } from './locale-store';
 import type { EmailTemplate } from '@/lib/template-types';
 import type { NotificationSoundChoice } from '@/lib/notification-sound';
 import { apiFetch } from '@/lib/browser-navigation';
+import { usePolicyStore } from './policy-store';
 import { generateAccountId } from '@/lib/account-utils';
 import { orderForMailbox, sanitizeSortLevels, type MessageListOrderScope, type SortLevel } from '@/lib/message-list-order';
 import {
@@ -501,12 +502,24 @@ interface SettingsState {
   debugMode: boolean;
   debugCategories: Record<DebugCategory, boolean>;
   settingsSyncDisabled: boolean;
+  /**
+   * Keys the user has set themselves through the settings UI. An admin
+   * policy default (policy.defaults) only fills in settings NOT listed here,
+   * so a deliberate choice survives the operator changing the default later.
+   */
+  explicitSettings: string[];
 
   // Actions
   updateSetting: <K extends keyof SettingsState>(
     key: K,
     value: SettingsState[K]
   ) => void;
+  /**
+   * Apply the operator's policy defaults to every setting the user has not
+   * chosen explicitly. Idempotent; called on policy load and after a settings
+   * import so a synced blob that predates the default still picks it up.
+   */
+  applyPolicyDefaults: (defaults: Record<string, unknown>) => void;
   resetToDefaults: () => void;
   exportSettings: () => string;
   importSettings: (json: string, opts?: { serverAccountId?: string }) => boolean;
@@ -744,6 +757,7 @@ const DEFAULT_SETTINGS = {
     push: true,
   } as Record<DebugCategory, boolean>,
   settingsSyncDisabled: false,
+  explicitSettings: [] as string[],
 };
 
 export const useSettingsStore = create<SettingsState>()(
@@ -752,7 +766,18 @@ export const useSettingsStore = create<SettingsState>()(
       ...DEFAULT_SETTINGS,
 
       updateSetting: (key, value) => {
-        set({ [key]: value });
+        // Only data keys are settings; refuse to overwrite an action (the
+        // type admits every key of the state) or to record one as explicit.
+        if (!(key in DEFAULT_SETTINGS)) {
+          console.warn(`updateSetting: "${String(key)}" is not a setting`);
+          return;
+        }
+        const { explicitSettings } = get();
+        const trackAsExplicit = key !== 'explicitSettings' && !explicitSettings.includes(key);
+        set({
+          [key]: value,
+          ...(trackAsExplicit ? { explicitSettings: [...explicitSettings, key] } : {}),
+        });
 
         // Apply font size to document root
         if (key === 'fontSize') {
@@ -770,11 +795,28 @@ export const useSettingsStore = create<SettingsState>()(
         }
       },
 
+      applyPolicyDefaults: (defaults) => {
+        const state = get();
+        const explicit = new Set(state.explicitSettings);
+        const patch: Record<string, unknown> = {};
+        for (const [key, value] of Object.entries(defaults)) {
+          if (!(key in DEFAULT_SETTINGS) || key === 'explicitSettings' || explicit.has(key)) continue;
+          if ((state as unknown as Record<string, unknown>)[key] !== value) patch[key] = value;
+        }
+        if (Object.keys(patch).length === 0) return;
+        set(patch);
+        if ('fontSize' in patch) applyFontSize(get().fontSize);
+        if ('density' in patch) applyDensity(get().density);
+        if ('animationsEnabled' in patch) applyAnimations(get().animationsEnabled);
+      },
+
       resetToDefaults: () => {
         set(DEFAULT_SETTINGS);
         applyFontSize(DEFAULT_SETTINGS.fontSize);
         applyDensity(DEFAULT_SETTINGS.density);
         applyAnimations(DEFAULT_SETTINGS.animationsEnabled);
+        // "Defaults" for this instance are the operator's, not the build's.
+        get().applyPolicyDefaults(usePolicyStore.getState().policy.defaults ?? {});
       },
 
       exportSettings: () => {
@@ -880,6 +922,7 @@ export const useSettingsStore = create<SettingsState>()(
           debugMode: state.debugMode,
           debugCategories: state.debugCategories,
           settingsSyncDisabled: state.settingsSyncDisabled,
+          explicitSettings: state.explicitSettings,
           // Cross-store settings
           theme: useThemeStore.getState().theme,
           locale: useLocaleStore.getState().locale,
@@ -929,6 +972,11 @@ export const useSettingsStore = create<SettingsState>()(
               if (key === 'allMailFolderIds' && !isPlainRecord(settings[key])) {
                 return;
               }
+              if (key === 'explicitSettings') {
+                if (!Array.isArray(settings[key])) return;
+                set({ explicitSettings: settings[key].filter((k: unknown) => typeof k === 'string') });
+                return;
+              }
               // Per-account map (accountId -> identityId); ignore any legacy
               // global/non-record value rather than corrupting the map.
               if (key === 'preferredIdentityIds' && !isPlainRecord(settings[key])) {
@@ -968,6 +1016,11 @@ export const useSettingsStore = create<SettingsState>()(
               set({ [key]: settings[key] });
             }
           });
+
+          // A blob written before the operator set a policy default (or by a
+          // client that never saw it) still carries the build default, so the
+          // policy is re-applied over whatever was imported.
+          get().applyPolicyDefaults(usePolicyStore.getState().policy.defaults ?? {});
 
           // Apply visual settings
           applyFontSize(get().fontSize);
@@ -1196,6 +1249,9 @@ export const useSettingsStore = create<SettingsState>()(
             if (!isPlainRecord(state.preferredIdentityIds)) {
               state.preferredIdentityIds = {};
             }
+            if (!Array.isArray(state.explicitSettings)) {
+              state.explicitSettings = [];
+            }
             state.messageListOrder = sanitizeSortLevels(state.messageListOrder);
             if (state.messageListOrderScope !== 'inbox' && state.messageListOrderScope !== 'all') {
               state.messageListOrderScope = 'inbox';
@@ -1352,6 +1408,13 @@ if (typeof window !== 'undefined') {
   applyFontSize(store.fontSize);
   applyDensity(store.density);
   applyAnimations(store.animationsEnabled);
+
+  // Operator defaults arrive with the policy fetch, after this store has
+  // rehydrated, so apply them whenever the policy (re)loads.
+  usePolicyStore.subscribe((policyState, prev) => {
+    if (policyState.policy === prev.policy) return;
+    useSettingsStore.getState().applyPolicyDefaults(policyState.policy.defaults ?? {});
+  });
 
   const triggerSync = () => {
     if (!syncEnabled || !syncUsername || !syncServerUrl || isLoadingFromServer) return;
