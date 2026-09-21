@@ -5,6 +5,7 @@ import { Save, Loader2, Lock, Plus, Trash2, ArrowUp, ArrowDown } from '@/compone
 import { iconForName } from '@/components/icons';
 import type { SettingsPolicy, FeatureGates, PushRelayOption, AdminSidebarApp } from '@/lib/admin/types';
 import { DEFAULT_FEATURE_GATES, DEFAULT_POLICY } from '@/lib/admin/types';
+import { POLICY_SETTINGS, isValidPolicySettingValue, type PolicySettingDef } from '@/lib/admin/policy-settings';
 import { apiFetch } from '@/lib/browser-navigation';
 import { DEFAULT_SIDEBAR_APP_ID_PREFIX, MAX_DEFAULT_SIDEBAR_APPS } from '@/lib/sidebar-apps';
 import { generateUUID } from '@/lib/utils';
@@ -39,26 +40,6 @@ const FEATURE_GATE_LABELS: Partial<Record<keyof FeatureGates, { label: string; d
   unifiedCrossAccountEnabled: { label: 'Unified Mailbox: Cross-account', description: 'Allow users to expand the Unified Mailbox beyond the active account boundary so its lists merge across every logged-in account. When off, the Unified Mailbox stays within the active account and its shared folders.' },
 };
 
-const RESTRICTABLE_SETTINGS = [
-  { key: 'fontSize', label: 'Font Size', category: 'Appearance', type: 'enum', allowedValues: ['small', 'medium', 'large'] },
-  { key: 'density', label: 'Density', category: 'Appearance', type: 'enum', allowedValues: ['compact', 'regular', 'spacious'] },
-  { key: 'animationsEnabled', label: 'Animations', category: 'Appearance', type: 'boolean' },
-  { key: 'markAsReadDelay', label: 'Mark as Read Delay', category: 'Email', type: 'number' },
-  { key: 'deleteAction', label: 'Delete Action', category: 'Email', type: 'enum', allowedValues: ['trash', 'trash-and-read', 'permanent'] },
-  { key: 'showPreview', label: 'Show Preview', category: 'Email', type: 'boolean' },
-  { key: 'mailLayout', label: 'Mail Layout', category: 'Email', type: 'enum', allowedValues: ['split', 'focus', 'horizontal'] },
-  { key: 'emailsPerPage', label: 'Emails Per Page', category: 'Email', type: 'number' },
-  { key: 'externalContentPolicy', label: 'External Content Policy', category: 'Email', type: 'enum', allowedValues: ['allow', 'block', 'ask'] },
-  { key: 'sendConfirmation', label: 'Send Confirmation', category: 'Composer', type: 'boolean' },
-  { key: 'defaultReplyMode', label: 'Default Reply Mode', category: 'Composer', type: 'enum', allowedValues: ['reply', 'reply-all'] },
-  { key: 'autoSelectReplyIdentity', label: 'Auto-select Reply Identity', category: 'Composer', type: 'boolean' },
-  { key: 'replyIdentityMatch', label: 'Reply Identity Matching', category: 'Composer', type: 'enum', allowedValues: ['exact', 'domain'] },
-  { key: 'plainTextMode', label: 'Plain Text Only', category: 'Composer', type: 'boolean' },
-  { key: 'sessionTimeout', label: 'Session Timeout', category: 'Privacy', type: 'number' },
-  { key: 'emailNotificationsEnabled', label: 'Email Notifications', category: 'Notifications', type: 'boolean' },
-  { key: 'calendarNotificationsEnabled', label: 'Calendar Notifications', category: 'Notifications', type: 'boolean' },
-  { key: 'debugMode', label: 'Debug Mode', category: 'Advanced', type: 'boolean' },
-];
 
 /** Mirrors the sanitizer's URL rule so the admin sees the drop before saving. */
 function isValidDefaultAppUrl(raw: string): boolean {
@@ -224,6 +205,24 @@ export function PolicyTab() {
     setMessage(null);
   }
 
+  /** Empty/invalid clears the operator default so the build default applies again. */
+  function setSettingDefault(def: PolicySettingDef, raw: string) {
+    setPolicy(prev => {
+      const defaults = { ...prev.defaults };
+      let value: unknown = raw;
+      if (def.type === 'boolean') value = raw === 'true' ? true : raw === 'false' ? false : undefined;
+      if (def.type === 'number') value = raw.trim() === '' ? undefined : Number(raw);
+      if (value === undefined || value === '' || !isValidPolicySettingValue(def, value)) {
+        delete defaults[def.key];
+      } else {
+        defaults[def.key] = value;
+      }
+      return { ...prev, defaults };
+    });
+    setDirty(true);
+    setMessage(null);
+  }
+
   async function handleSave() {
     setSaving(true);
     setMessage(null);
@@ -248,7 +247,7 @@ export function PolicyTab() {
     return <div className="flex items-center justify-center py-12 text-muted-foreground text-sm">Loading...</div>;
   }
 
-  const categories = [...new Set(RESTRICTABLE_SETTINGS.map(s => s.category))];
+  const categories = [...new Set(POLICY_SETTINGS.map(s => s.category))];
   const defaultRelayUrl = resolveDefaultRelayUrl(policy);
   const defaultSidebarApps = policy.defaultSidebarApps ?? [];
 
@@ -581,18 +580,51 @@ export function PolicyTab() {
         </div>
       </div>
 
+      <div>
+        <h2 className="text-sm font-medium text-foreground">Settings</h2>
+        <p className="text-xs text-muted-foreground mt-0.5">
+          Default is what users get until they change the setting themselves (Built-in = the app&apos;s own default).
+          Lock keeps users from changing it; Hide removes it from Settings.
+        </p>
+      </div>
+
       {categories.map(category => (
         <div key={category} className="border border-border rounded-lg">
           <div className="px-4 py-3 border-b border-border bg-muted/30">
             <h2 className="text-sm font-medium text-foreground">{category}</h2>
           </div>
           <div className="divide-y divide-border">
-            {RESTRICTABLE_SETTINGS.filter(s => s.category === category).map(setting => {
+            {POLICY_SETTINGS.filter(s => s.category === category).map(setting => {
               const restriction = policy.restrictions[setting.key] || {};
+              const current = policy.defaults?.[setting.key];
+              const defaultValue = isValidPolicySettingValue(setting, current) ? String(current) : '';
               return (
                 <div key={setting.key} className="px-4 py-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                   <span className="text-sm text-foreground">{setting.label}</span>
                   <div className="flex items-center gap-3 shrink-0">
+                    <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      Default
+                      {setting.type === 'number' ? (
+                        <input
+                          type="number"
+                          value={defaultValue}
+                          placeholder="Built-in"
+                          onChange={(e) => setSettingDefault(setting, e.target.value)}
+                          className="h-8 w-24 rounded-md border border-input bg-background px-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        />
+                      ) : (
+                        <select
+                          value={defaultValue}
+                          onChange={(e) => setSettingDefault(setting, e.target.value)}
+                          className="h-8 rounded-md border border-input bg-background px-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        >
+                          <option value="">Built-in</option>
+                          {setting.type === 'boolean'
+                            ? [<option key="true" value="true">On</option>, <option key="false" value="false">Off</option>]
+                            : (setting.allowedValues ?? []).map(v => <option key={v} value={v}>{v}</option>)}
+                        </select>
+                      )}
+                    </label>
                     <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer">
                       <input type="checkbox" checked={!!restriction.locked} onChange={() => toggleLocked(setting.key)}
                         className="rounded border-input" />

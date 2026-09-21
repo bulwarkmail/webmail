@@ -43,6 +43,9 @@ export async function PUT(request: NextRequest) {
     if (policy.features && typeof policy.features !== 'object') {
       return NextResponse.json({ error: 'features must be an object' }, { status: 400 });
     }
+    if (policy.defaults !== undefined && (typeof policy.defaults !== 'object' || policy.defaults === null || Array.isArray(policy.defaults))) {
+      return NextResponse.json({ error: 'defaults must be an object' }, { status: 400 });
+    }
     if (policy.themePolicy && typeof policy.themePolicy !== 'object') {
       return NextResponse.json({ error: 'themePolicy must be an object' }, { status: 400 });
     }
