@@ -8,7 +8,9 @@ import { routing, type Locale } from '@/i18n/routing';
  * been loaded (every request path calls ensureLoaded() first).
  */
 export function resolveDefaultLocale(): Locale {
-  const configured = configManager.get<string>('defaultLocale', '').trim();
+  // config.json is hand-editable, so the stored value may not be a string.
+  const raw = configManager.get<unknown>('defaultLocale', '');
+  const configured = typeof raw === 'string' ? raw.trim() : '';
   return (routing.locales as readonly string[]).includes(configured)
     ? (configured as Locale)
     : routing.defaultLocale;

@@ -1,4 +1,5 @@
 import { locales } from '@/i18n/routing';
+import { getDefaultLocale } from '@/i18n/runtime-default-locale';
 import { getLiteMount } from '@/lib/lite';
 
 export function replaceWindowLocation(url: string): void {
@@ -123,14 +124,16 @@ export function toRouterPath(path: string): string {
 
 /**
  * Extracts the locale from the current URL, skipping any mount prefix.
- * Falls back to 'en' when no known locale segment is found.
+ * Without a locale segment the URL is in the deployment's default locale
+ * (that is what 'as-needed' prefixing means), so fall back to that rather
+ * than a hard-coded 'en'.
  */
 export function getLocaleFromPath(): string {
-  if (typeof window === 'undefined') return 'en';
+  if (typeof window === 'undefined') return getDefaultLocale();
 
   const segments = window.location.pathname.split('/').filter(Boolean);
   const locale = segments.find(s =>
     (locales as readonly string[]).includes(s)
   );
-  return locale || 'en';
+  return locale || getDefaultLocale();
 }

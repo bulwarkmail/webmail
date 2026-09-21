@@ -20,6 +20,13 @@ describe('resolveDefaultLocale', () => {
     expect(resolveDefaultLocale()).toBe(routing.defaultLocale);
   });
 
+  it('survives a malformed config.json value instead of throwing per request', () => {
+    get.mockReturnValue(null);
+    expect(resolveDefaultLocale()).toBe(routing.defaultLocale);
+    get.mockReturnValue(42);
+    expect(resolveDefaultLocale()).toBe(routing.defaultLocale);
+  });
+
   it('ignores a locale we do not ship (regional tags are not catalogues)', () => {
     get.mockReturnValue('pt-BR');
     expect(resolveDefaultLocale()).toBe(routing.defaultLocale);
