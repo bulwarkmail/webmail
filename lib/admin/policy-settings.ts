@@ -11,19 +11,28 @@ export interface PolicySettingDef {
   label: string;
   category: string;
   type: PolicySettingType;
-  /** Values an enum setting may take; other values are dropped. */
-  allowedValues?: string[];
+  /**
+   * Values an enum setting may take; other values are dropped. Numeric
+   * pickers (emails per page, mark-as-read delay) are enums too, since the
+   * user UI only ever produces these exact values.
+   */
+  allowedValues?: readonly (string | number)[];
+  /** Lower bound for a free number setting (inclusive). */
+  min?: number;
+  /** Upper bound for a free number setting (inclusive). */
+  max?: number;
 }
 
 export const POLICY_SETTINGS: PolicySettingDef[] = [
   { key: 'fontSize', label: 'Font Size', category: 'Appearance', type: 'enum', allowedValues: ['small', 'medium', 'large'] },
   { key: 'density', label: 'Density', category: 'Appearance', type: 'enum', allowedValues: ['compact', 'regular', 'spacious'] },
   { key: 'animationsEnabled', label: 'Animations', category: 'Appearance', type: 'boolean' },
-  { key: 'markAsReadDelay', label: 'Mark as Read Delay', category: 'Email', type: 'number' },
+  // -1 = never, 0 = instantly, otherwise milliseconds (reading-settings.tsx).
+  { key: 'markAsReadDelay', label: 'Mark as Read Delay', category: 'Email', type: 'enum', allowedValues: [0, 3000, 5000, -1] },
   { key: 'deleteAction', label: 'Delete Action', category: 'Email', type: 'enum', allowedValues: ['trash', 'trash-and-read', 'permanent'] },
   { key: 'showPreview', label: 'Show Preview', category: 'Email', type: 'boolean' },
   { key: 'mailLayout', label: 'Mail Layout', category: 'Email', type: 'enum', allowedValues: ['split', 'focus', 'horizontal'] },
-  { key: 'emailsPerPage', label: 'Emails Per Page', category: 'Email', type: 'number' },
+  { key: 'emailsPerPage', label: 'Emails Per Page', category: 'Email', type: 'enum', allowedValues: [10, 25, 50, 100] },
   { key: 'externalContentPolicy', label: 'External Content Policy', category: 'Email', type: 'enum', allowedValues: ['allow', 'block', 'ask'] },
   { key: 'sendConfirmation', label: 'Send Confirmation', category: 'Composer', type: 'boolean' },
   { key: 'defaultReplyMode', label: 'Default Reply Mode', category: 'Composer', type: 'enum', allowedValues: ['reply', 'reply-all'] },
@@ -32,7 +41,8 @@ export const POLICY_SETTINGS: PolicySettingDef[] = [
   { key: 'plainTextMode', label: 'Plain Text Only', category: 'Composer', type: 'boolean' },
   { key: 'signaturePosition', label: 'Signature Position', category: 'Composer', type: 'enum', allowedValues: ['above_quote', 'below_quote'] },
   { key: 'signatureSeparatorEnabled', label: 'Signature Separator', category: 'Composer', type: 'boolean' },
-  { key: 'sessionTimeout', label: 'Session Timeout', category: 'Privacy', type: 'number' },
+  // Minutes; 0 = never.
+  { key: 'sessionTimeout', label: 'Session Timeout', category: 'Privacy', type: 'number', min: 0 },
   { key: 'emailNotificationsEnabled', label: 'Email Notifications', category: 'Notifications', type: 'boolean' },
   { key: 'calendarNotificationsEnabled', label: 'Calendar Notifications', category: 'Notifications', type: 'boolean' },
   { key: 'debugMode', label: 'Debug Mode', category: 'Advanced', type: 'boolean' },
@@ -46,9 +56,16 @@ export function isValidPolicySettingValue(def: PolicySettingDef, value: unknown)
     case 'boolean':
       return typeof value === 'boolean';
     case 'number':
-      return typeof value === 'number' && Number.isFinite(value);
+      return (
+        Number.isInteger(value) &&
+        (def.min === undefined || (value as number) >= def.min) &&
+        (def.max === undefined || (value as number) <= def.max)
+      );
     case 'enum':
-      return typeof value === 'string' && (def.allowedValues ?? []).includes(value);
+      return (
+        (typeof value === 'string' || typeof value === 'number') &&
+        (def.allowedValues ?? []).includes(value)
+      );
   }
 }
 

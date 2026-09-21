@@ -766,6 +766,12 @@ export const useSettingsStore = create<SettingsState>()(
       ...DEFAULT_SETTINGS,
 
       updateSetting: (key, value) => {
+        // Only data keys are settings; refuse to overwrite an action (the
+        // type admits every key of the state) or to record one as explicit.
+        if (!(key in DEFAULT_SETTINGS)) {
+          console.warn(`updateSetting: "${String(key)}" is not a setting`);
+          return;
+        }
         const { explicitSettings } = get();
         const trackAsExplicit = key !== 'explicitSettings' && !explicitSettings.includes(key);
         set({

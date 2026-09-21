@@ -212,6 +212,8 @@ export function PolicyTab() {
       let value: unknown = raw;
       if (def.type === 'boolean') value = raw === 'true' ? true : raw === 'false' ? false : undefined;
       if (def.type === 'number') value = raw.trim() === '' ? undefined : Number(raw);
+      // Numeric enums come back from the <select> as strings; map to the real value.
+      if (def.type === 'enum') value = (def.allowedValues ?? []).find((v) => String(v) === raw);
       if (value === undefined || value === '' || !isValidPolicySettingValue(def, value)) {
         delete defaults[def.key];
       } else {
@@ -608,6 +610,9 @@ export function PolicyTab() {
                         <input
                           type="number"
                           value={defaultValue}
+                          min={setting.min}
+                          max={setting.max}
+                          step={1}
                           placeholder="Built-in"
                           onChange={(e) => setSettingDefault(setting, e.target.value)}
                           className="h-8 w-24 rounded-md border border-input bg-background px-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -621,7 +626,7 @@ export function PolicyTab() {
                           <option value="">Built-in</option>
                           {setting.type === 'boolean'
                             ? [<option key="true" value="true">On</option>, <option key="false" value="false">Off</option>]
-                            : (setting.allowedValues ?? []).map(v => <option key={v} value={v}>{v}</option>)}
+                            : (setting.allowedValues ?? []).map(v => <option key={String(v)} value={String(v)}>{String(v)}</option>)}
                         </select>
                       )}
                     </label>

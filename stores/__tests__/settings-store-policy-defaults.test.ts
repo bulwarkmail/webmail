@@ -63,6 +63,15 @@ describe('admin policy defaults', () => {
     expect(useSettingsStore.getState().explicitSettings).toEqual([]);
   });
 
+  it('refuses to overwrite a store action through updateSetting', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const before = useSettingsStore.getState().resetToDefaults;
+    (useSettingsStore.getState().updateSetting as (k: string, v: unknown) => void)('resetToDefaults', 'boom');
+    expect(useSettingsStore.getState().resetToDefaults).toBe(before);
+    expect(useSettingsStore.getState().explicitSettings).toEqual([]);
+    warn.mockRestore();
+  });
+
   it('exports the explicit-settings list so it syncs with the rest', () => {
     useSettingsStore.getState().updateSetting('sendConfirmation', true);
     const exported = JSON.parse(useSettingsStore.getState().exportSettings());
