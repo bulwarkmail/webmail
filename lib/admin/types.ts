@@ -1,4 +1,5 @@
 // Admin dashboard types
+import { locales } from '@/i18n/routing';
 
 /**
  * Operator-authored admin record. Lives in admin.json under the config dir
@@ -263,6 +264,10 @@ export const CONFIG_ENV_MAP: Record<string, { envVar: string; fileEnvVar?: strin
   settingsSyncEnabled: { envVar: 'SETTINGS_SYNC_ENABLED', type: 'boolean', defaultValue: false },
   logFormat: { envVar: 'LOG_FORMAT', type: 'enum', defaultValue: 'text', enumValues: ['text', 'json'] },
   logLevel: { envVar: 'LOG_LEVEL', type: 'enum', defaultValue: 'info', enumValues: ['error', 'warn', 'info', 'debug'] },
+  // UI language for visitors whose Accept-Language matches nothing we ship
+  // and who have not picked one yet. Runtime counterpart of the build-time
+  // NEXT_PUBLIC_DEFAULT_LOCALE; '' defers to that (then 'en').
+  defaultLocale: { envVar: 'DEFAULT_LOCALE', type: 'enum', defaultValue: '', enumValues: ['', ...locales] },
   sessionSecret: { envVar: 'SESSION_SECRET', fileEnvVar: 'SESSION_SECRET_FILE', type: 'string', defaultValue: '' },
   extensionDirectoryUrl: { envVar: 'EXTENSION_DIRECTORY_URL', type: 'url', defaultValue: 'https://extensions.bulwarkmail.org' },
   // Connector links (connector.bulwarkmail.org): docs and the extension

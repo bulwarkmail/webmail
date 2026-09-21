@@ -119,7 +119,7 @@
 
 - Arabic, Hebrew, and Persian render right-to-left; document direction and logical layout flip automatically
 - The browser's `Accept-Language` picks the first language, and the choice persists per user
-- `NEXT_PUBLIC_DEFAULT_LOCALE` sets the fallback, `NEXT_PUBLIC_LOCALE_PREFIX` the URL prefix
+- `DEFAULT_LOCALE` (runtime env or admin dashboard) sets the fallback, `NEXT_PUBLIC_DEFAULT_LOCALE` the build-time one, `NEXT_PUBLIC_LOCALE_PREFIX` the URL prefix
 
 ## Identity & multi-account
 

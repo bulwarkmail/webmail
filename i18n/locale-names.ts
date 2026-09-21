@@ -1,0 +1,32 @@
+import type { Locale } from './routing';
+
+/** Each shipped locale's name in its own language (autonym). */
+export const LOCALE_NAMES: Record<Locale, string> = {
+  ar: 'العربية',
+  ca: 'Català',
+  cs: 'Česky',
+  sk: 'Slovenčina',
+  da: 'Dansk',
+  de: 'Deutsch',
+  en: 'English',
+  fa: 'فارسی',
+  es: 'Español',
+  fr: 'Français',
+  he: 'עברית',
+  it: 'Italiano',
+  hu: 'Magyar',
+  lv: 'Latviešu',
+  nl: 'Nederlands',
+  nb: 'Norsk bokmål',
+  pl: 'Polski',
+  pt: 'Português',
+  ro: 'Română',
+  tr: 'Türkçe',
+  ru: 'Русский',
+  uk: 'Українська',
+  ko: '한국어',
+  ja: '日本語',
+  mn: 'Монгол',
+  zh: '简体中文',
+  'zh-TW': '繁體中文（台灣）',
+};

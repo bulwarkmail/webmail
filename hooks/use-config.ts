@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { usePolicyStore } from '@/stores/policy-store';
+import { setRuntimeDefaultLocale } from '@/i18n/runtime-default-locale';
 import { apiFetch } from '@/lib/browser-navigation';
 import type { PublicJmapServerEntry } from '@/lib/admin/jmap-servers';
 import { IS_LITE, IS_LITE_STALWART, LITE_CONFIG_PATH, withLiteBuildId } from '@/lib/lite';
@@ -42,6 +43,8 @@ export interface ConfigData {
   jmapServerAutoPickByDomain: boolean;
   embeddedMode: boolean;
   parentOrigin: string;
+  /** Fallback UI locale resolved on the server; absent on the Lite build. */
+  defaultLocale?: string;
 }
 
 interface AppConfig extends ConfigData {
@@ -101,6 +104,7 @@ export async function fetchConfig(): Promise<ConfigData> {
   configPromise = (IS_LITE ? fetchLiteConfig() : fetchServerConfig())
     .then((data) => {
       configCache = data;
+      setRuntimeDefaultLocale(data.defaultLocale);
       // Fetch admin policy alongside config (non-blocking)
       usePolicyStore.getState().fetchPolicy();
       return data;

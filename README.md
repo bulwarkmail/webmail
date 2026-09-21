@@ -351,6 +351,7 @@ STALWART_FEATURES=true               # password change, Sieve filters, etc.
 
 LOG_FORMAT=text                      # "text" or "json"
 LOG_LEVEL=info                       # error | warn | info | debug
+DEFAULT_LOCALE=pt                    # fallback UI language (see "Default UI locale")
 ```
 
 </details>
@@ -371,15 +372,15 @@ The split lets you mount the config volume read-only after the setup wizard comp
 <details>
 <summary>Default UI locale</summary>
 
-The UI language follows each visitor's `Accept-Language` header and their stored preference. `NEXT_PUBLIC_DEFAULT_LOCALE` sets the fallback used when neither matches a supported locale (default `en`):
+The UI language follows each visitor's `Accept-Language` header and their stored preference. The fallback used when neither matches a supported locale is set at runtime with `DEFAULT_LOCALE` (or in the admin dashboard, Settings → Default Language), so the published Docker image works as is:
 
 ```env
-NEXT_PUBLIC_DEFAULT_LOCALE=de
+DEFAULT_LOCALE=pt
 ```
 
-Supported: `ar`, `ca`, `cs`, `da`, `de`, `en`, `es`, `fa`, `fr`, `he`, `hu`, `it`, `ja`, `ko`, `lv`, `nl`, `pl`, `pt`, `ro`, `ru`, `sk`, `tr`, `uk`, `zh`. An unsupported value falls back to `en`.
+Supported: `ar`, `ca`, `cs`, `da`, `de`, `en`, `es`, `fa`, `fr`, `he`, `hu`, `it`, `ja`, `ko`, `lv`, `mn`, `nb`, `nl`, `pl`, `pt`, `ro`, `ru`, `sk`, `tr`, `uk`, `zh`, `zh-TW`. Regional tags map onto these catalogues (`pt-BR` → `pt`, which is Brazilian Portuguese). An unsupported value is ignored.
 
-Like `NEXT_PUBLIC_BASE_PATH`, this is read at **build time**. To use it with the published Docker image, build your own:
+Without it, the build-time `NEXT_PUBLIC_DEFAULT_LOCALE` applies (default `en`). Like `NEXT_PUBLIC_BASE_PATH`, that one is baked in at build time, which is also what the static Lite build uses:
 
 ```bash
 docker build --build-arg NEXT_PUBLIC_DEFAULT_LOCALE=de -t bulwark-webmail .

@@ -3,6 +3,7 @@ import { logger } from '@/lib/logger';
 import { configManager } from '@/lib/admin/config-manager';
 import { parseJmapServers, redactJmapServers } from '@/lib/admin/jmap-servers';
 import { hasSessionSecret } from '@/lib/auth/session-secret';
+import { resolveDefaultLocale } from '@/lib/admin/default-locale';
 import { getOauthScopes } from '@/lib/oauth/tokens';
 import {
   matchDomainBranding,
@@ -90,6 +91,7 @@ export async function GET(request: NextRequest) {
       autoSsoEnabled: configManager.get<boolean>('autoSsoEnabled', false),
       embeddedMode: !!allowedFrameAncestors && allowedFrameAncestors !== "'none'",
       parentOrigin: configManager.get<string>('parentOrigin', ''),
+      defaultLocale: resolveDefaultLocale(),
     },
     {
       // Branding varies by host, so any cache between us and the browser

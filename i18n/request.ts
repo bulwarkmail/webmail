@@ -4,6 +4,8 @@ import { mergeMessages } from './merge-messages';
 import { localeFromAcceptLanguage } from './locale-matcher';
 import { routing, type Locale } from './routing';
 import { IS_LITE } from '@/lib/lite';
+import { configManager } from '@/lib/admin/config-manager';
+import { resolveDefaultLocale } from '@/lib/admin/default-locale';
 
 export default getRequestConfig(async ({ requestLocale }) => {
   let locale = await requestLocale;
@@ -14,8 +16,9 @@ export default getRequestConfig(async ({ requestLocale }) => {
       // its locale via setRequestLocale, so this only covers the root layout.
       locale = routing.defaultLocale;
     } else {
+      await configManager.ensureLoaded();
       const accept = (await headers()).get('accept-language');
-      locale = localeFromAcceptLanguage(accept, routing.locales) ?? routing.defaultLocale;
+      locale = localeFromAcceptLanguage(accept, routing.locales) ?? resolveDefaultLocale();
     }
   }
 
