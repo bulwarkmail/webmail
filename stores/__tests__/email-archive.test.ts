@@ -61,7 +61,7 @@ describe('email-store archive thread behavior', () => {
       mailboxes: [inbox, archive],
       selectedMailbox: 'shared-inbox',
       selectedEmail: threadEmailA,
-      selectedEmailIds: new Set(['email-1', 'email-2']),
+      selectedEmailKeys: new Set(['email-1', 'email-2']),
       expandedThreadIds: new Set(['thread-1']),
       threadEmailsCache: new Map([['thread-1', [threadEmailA, threadEmailB]]]),
       error: null,
@@ -82,7 +82,7 @@ describe('email-store archive thread behavior', () => {
     const state = useEmailStore.getState();
     expect(state.emails.map(email => email.id)).toEqual(['email-3']);
     expect(state.selectedEmail?.id).toBe('email-3');
-    expect(Array.from(state.selectedEmailIds)).toEqual([]);
+    expect(Array.from(state.selectedEmailKeys)).toEqual([]);
     expect(state.expandedThreadIds.has('thread-1')).toBe(false);
     expect(state.threadEmailsCache.has('thread-1')).toBe(false);
   });

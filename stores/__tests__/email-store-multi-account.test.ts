@@ -36,7 +36,7 @@ describe('useEmailStore multi-account state', () => {
       viewingAccountId: null,
       selectedMailbox: '',
       selectedEmail: null,
-      selectedEmailIds: new Set(),
+      selectedEmailKeys: new Set(),
       selectedKeyword: null,
       expandedThreadIds: new Set(),
       threadEmailsCache: new Map(),
@@ -89,7 +89,7 @@ describe('useEmailStore multi-account state', () => {
   it('selectAccountMailbox sets viewing and selected together, and clears email selection state', () => {
     useEmailStore.setState({
       selectedEmail: { id: 'e1' } as unknown as ReturnType<typeof useEmailStore.getState>['selectedEmail'],
-      selectedEmailIds: new Set(['e1', 'e2']),
+      selectedEmailKeys: new Set(['e1', 'e2']),
       selectedKeyword: 'work',
       expandedThreadIds: new Set(['thread-1']),
     });
@@ -100,7 +100,7 @@ describe('useEmailStore multi-account state', () => {
     expect(state.viewingAccountId).toBe('account-b');
     expect(state.selectedMailbox).toBe('b-inbox');
     expect(state.selectedEmail).toBeNull();
-    expect(state.selectedEmailIds.size).toBe(0);
+    expect(state.selectedEmailKeys.size).toBe(0);
     expect(state.selectedKeyword).toBeNull();
     expect(state.expandedThreadIds.size).toBe(0);
   });

@@ -118,7 +118,7 @@ describe('non-unified shared-folder batch action routing', () => {
         makeEmail({ id: 'e1', keywords: {}, mailboxIds: { 'owner-x:x-inbox': true } }),
         makeEmail({ id: 'e2', keywords: {}, mailboxIds: { 'owner-x:x-inbox': true } }),
       ],
-      selectedEmailIds: new Set(['e1', 'e2']),
+      selectedEmailKeys: new Set(['e1', 'e2']),
     });
   });
 
@@ -185,7 +185,7 @@ describe('non-unified shared-folder batch action routing', () => {
         makeEmail({ id: 'o1', keywords: {}, mailboxIds: { 'a-inbox': true } }),
         makeEmail({ id: 'o2', keywords: {}, mailboxIds: { 'a-inbox': true } }),
       ],
-      selectedEmailIds: new Set(['o1', 'o2']),
+      selectedEmailKeys: new Set(['o1', 'o2']),
     });
 
     await useEmailStore.getState().batchDelete(activeClient, false);

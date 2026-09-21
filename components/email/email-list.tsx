@@ -13,7 +13,7 @@ import { useEmailStore } from "@/stores/email-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useUIStore } from "@/stores/ui-store";
-import { groupEmailsByThread, sortThreadGroups } from "@/lib/thread-utils";
+import { groupEmailsByThread, sortThreadGroups, threadKeyFor } from "@/lib/thread-utils";
 import { useContextMenu } from "@/hooks/use-context-menu";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { useTranslations } from "next-intl";
@@ -88,7 +88,7 @@ export function EmailList({
   const tSpam = useTranslations('email_viewer.spam');
   const { client } = useAuthStore();
   const {
-    selectedEmailIds,
+    selectedEmailKeys,
     selectAllEmails: _selectAllEmails,
     clearSelection,
     batchMarkAsRead,
@@ -204,7 +204,7 @@ export function EmailList({
     getScrollElement: () => parentRef.current,
     estimateSize,
     overscan: 5,
-    getItemKey: (index) => threadGroups[index]?.threadId ?? String(index),
+    getItemKey: (index) => threadGroups[index]?.threadKey ?? String(index),
   });
 
   const LoadingSkeleton = () => (
@@ -227,7 +227,7 @@ export function EmailList({
     </div>
   );
 
-  const hasSelection = selectedEmailIds.size > 0;
+  const hasSelection = selectedEmailKeys.size > 0;
 
   const handleBatchMarkAsRead = async (read: boolean) => {
     if (!client || isProcessing) return;
@@ -243,7 +243,7 @@ export function EmailList({
     if (!client || isProcessing) return;
     setIsProcessing(true);
     try {
-      const emailIds = Array.from(selectedEmailIds);
+      const emailIds = Array.from(selectedEmailKeys);
       await batchUndoSpam(client, emailIds);
       const { toast } = await import('sonner');
       toast.success(tSpam('toast_not_spam_batch', { count: emailIds.length }));
@@ -266,8 +266,8 @@ export function EmailList({
         ? t('permanent_delete_confirm_title')
         : t('batch_actions.delete_confirm_title'),
       message: isInTrash
-        ? t('permanent_delete_confirm_batch_message', { count: selectedEmailIds.size })
-        : t('batch_actions.delete_confirm_message', { count: selectedEmailIds.size }),
+        ? t('permanent_delete_confirm_batch_message', { count: selectedEmailKeys.size })
+        : t('batch_actions.delete_confirm_message', { count: selectedEmailKeys.size }),
       confirmText: isInTrash
         ? t('permanent_delete')
         : t('batch_actions.delete'),
@@ -323,16 +323,16 @@ export function EmailList({
     }
   }, [client, hasMoreEmails, isLoadingMore, isLoading, isScheduledView, loadMoreEmails, onLoadMoreScheduled]);
 
-  const handleToggleThreadExpansion = useCallback(async (threadId: string) => {
-    const isExpanded = expandedThreadIds.has(threadId);
+  const handleToggleThreadExpansion = useCallback(async (threadKey: string) => {
+    const isExpanded = expandedThreadIds.has(threadKey);
 
     if (!isExpanded && client) {
-      toggleThreadExpansion(threadId);
-      await fetchThreadEmails(client, threadId);
+      toggleThreadExpansion(threadKey);
+      await fetchThreadEmails(client, threadKey);
       // Mark all unread emails in this thread as read
-      void markThreadAsRead(client, threadId);
+      void markThreadAsRead(client, threadKey);
     } else {
-      toggleThreadExpansion(threadId);
+      toggleThreadExpansion(threadKey);
     }
   }, [client, expandedThreadIds, toggleThreadExpansion, fetchThreadEmails, markThreadAsRead]);
 
@@ -391,7 +391,7 @@ export function EmailList({
         <div className="px-4 py-2 border-b bg-accent/30 border-border flex items-center justify-between">
           <div className="flex items-center gap-2 animate-in fade-in slide-in-from-left-3 duration-300">
             <span className="text-sm font-medium text-foreground">
-              {t('batch_actions.selected_messages', { count: selectedEmailIds.size })}
+              {t('batch_actions.selected_messages', { count: selectedEmailKeys.size })}
             </span>
           </div>
           <div className="flex items-center gap-1 animate-in fade-in slide-in-from-right-3 duration-300">
@@ -567,18 +567,18 @@ export function EmailList({
                   >
                     <ThreadListItem
                       thread={thread}
-                      isExpanded={expandedThreadIds.has(thread.threadId)}
+                      isExpanded={expandedThreadIds.has(thread.threadKey)}
                       selectedEmailId={selectedEmailId}
-                      isLoading={isLoadingThread === thread.threadId}
-                      expandedEmails={threadEmailsCache.get(thread.threadId)}
-                      onToggleExpand={() => handleToggleThreadExpansion(thread.threadId)}
+                      isLoading={isLoadingThread === thread.threadKey}
+                      expandedEmails={threadEmailsCache.get(thread.threadKey)}
+                      onToggleExpand={() => handleToggleThreadExpansion(thread.threadKey)}
                       onCollapseAllThreads={collapseAllThreads}
                       onEmailSelect={(email) => {
                         // Collapse expanded threads when selecting an email outside the expanded thread
                         const currentExpanded = useEmailStore.getState().expandedThreadIds;
                         if (currentExpanded.size > 0) {
                           // Check if the selected email belongs to any expanded thread via its threadId
-                          if (!email.threadId || !currentExpanded.has(email.threadId)) {
+                          if (!email.threadId || !currentExpanded.has(threadKeyFor(email))) {
                             collapseAllThreads();
                           }
                         }
@@ -629,8 +629,8 @@ export function EmailList({
           mailboxes={mailboxes}
           selectedMailbox={selectedMailbox}
           currentMailboxRole={effectiveMailboxRole}
-          isMultiSelect={selectedEmailIds.has(contextMenuEmail.id)}
-          selectedCount={selectedEmailIds.size}
+          isMultiSelect={selectedEmailKeys.has(contextMenuEmail.id)}
+          selectedCount={selectedEmailKeys.size}
           onReply={() => onReply?.(contextMenuEmail!)}
           onReplyAll={() => onReplyAll?.(contextMenuEmail!)}
           onForward={() => onForward?.(contextMenuEmail!)}
@@ -660,7 +660,7 @@ export function EmailList({
           onBatchMoveToMailbox={(mailboxId) => client && batchMoveToMailbox(client, mailboxId)}
           onBatchMarkAsSpam={async () => {
             if (client) {
-              const emailIds = Array.from(selectedEmailIds);
+              const emailIds = Array.from(selectedEmailKeys);
               try {
                 await batchMarkAsSpam(client, emailIds);
                 const { toast } = await import('sonner');
@@ -675,7 +675,7 @@ export function EmailList({
           }}
           onBatchUndoSpam={async () => {
             if (client) {
-              const emailIds = Array.from(selectedEmailIds);
+              const emailIds = Array.from(selectedEmailKeys);
               try {
                 await batchUndoSpam(client, emailIds);
                 const { toast } = await import('sonner');

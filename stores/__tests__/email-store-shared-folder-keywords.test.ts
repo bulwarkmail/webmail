@@ -101,7 +101,7 @@ describe('non-unified shared-folder keyword routing', () => {
       accountMailboxes: {},
       selectedEmail: null,
       emails: [makeEmail({ id: 'e1', keywords: {}, mailboxIds: { 'owner-x:x-inbox': true } })],
-      selectedEmailIds: new Set<string>(),
+      selectedEmailKeys: new Set<string>(),
     } as never);
   });
 

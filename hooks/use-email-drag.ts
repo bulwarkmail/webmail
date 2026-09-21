@@ -141,7 +141,7 @@ function getReadyBundle(emails: Email[]): { url: string; name: string } | null {
 }
 
 export function useEmailDrag({ email, sourceMailboxId, threadEmails }: UseEmailDragOptions): UseEmailDragReturn {
-  const { selectedEmailIds, emails } = useEmailStore();
+  const { selectedEmailKeys, emails } = useEmailStore();
   const { startDrag, endDrag, isDragging, draggedEmails } = useDragDropContext();
   const isMobile = useUIStore((state) => state.isMobile);
   const client = useAuthStore((state) => state.client);
@@ -195,10 +195,10 @@ export function useEmailDrag({ email, sourceMailboxId, threadEmails }: UseEmailD
 
   const handlePointerEnter = useCallback(() => {
     if (!dragOutEnabled || !client) return;
-    const isSelected = selectedEmailIds.has(email.id);
-    const isMulti = isSelected && selectedEmailIds.size > 1;
+    const isSelected = selectedEmailKeys.has(email.id);
+    const isMulti = isSelected && selectedEmailKeys.size > 1;
     if (isMulti) {
-      const selected = emails.filter((em) => selectedEmailIds.has(em.id));
+      const selected = emails.filter((em) => selectedEmailKeys.has(em.id));
       // Only worth bundling when at least one selected email has a blobId.
       if (selected.some((em) => em.blobId)) {
         prefetchEmailBundle(client, selected, filenameOptions, bundleOptions);
@@ -206,16 +206,16 @@ export function useEmailDrag({ email, sourceMailboxId, threadEmails }: UseEmailD
     } else {
       prefetchSingle();
     }
-  }, [dragOutEnabled, client, selectedEmailIds, email.id, emails, prefetchSingle, filenameOptions, bundleOptions]);
+  }, [dragOutEnabled, client, selectedEmailKeys, email.id, emails, prefetchSingle, filenameOptions, bundleOptions]);
 
   const handleDragStart = useCallback((e: DragEvent<HTMLDivElement>) => {
     // Determine which emails to drag:
     // - If current email is selected, drag all selected
     // - If threadEmails provided (thread header), drag all thread emails
     // - Otherwise, drag only this email
-    const isSelected = selectedEmailIds.has(email.id);
+    const isSelected = selectedEmailKeys.has(email.id);
     const emailsToDrag = isSelected
-      ? emails.filter(em => selectedEmailIds.has(em.id))
+      ? emails.filter(em => selectedEmailKeys.has(em.id))
       : threadEmails || [email];
 
     e.dataTransfer.effectAllowed = "copyMove";
@@ -284,7 +284,7 @@ export function useEmailDrag({ email, sourceMailboxId, threadEmails }: UseEmailD
     });
 
     startDrag(emailsToDrag, sourceMailboxId);
-  }, [email, selectedEmailIds, emails, sourceMailboxId, startDrag, threadEmails, dragOutEnabled, client, prefetchSingle, filenameOptions, bundleOptions]);
+  }, [email, selectedEmailKeys, emails, sourceMailboxId, startDrag, threadEmails, dragOutEnabled, client, prefetchSingle, filenameOptions, bundleOptions]);
 
   const handleDragEnd = useCallback(() => {
     endDrag();
