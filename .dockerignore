@@ -10,6 +10,12 @@ scripts/
 TODO.md
 *.md
 !README.md
+# Test files are never part of the image, and `next build` type-checks
+# whatever reaches the context: lib/__tests__/lite-scripts.test.ts imports
+# scripts/lite/*.mjs, which .dockerignore excludes, so the build fails.
+**/__tests__/
+**/*.test.ts
+**/*.test.tsx
 # Sibling projects / test harness - not part of the webmail image
 examples/
 integration/
