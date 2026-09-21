@@ -26,7 +26,8 @@ function ownerFrom(request: NextRequest): VaultOwner {
 const isRevision = (value: unknown): value is string => typeof value === 'string' && /^[a-f0-9]{64}$/.test(value);
 
 /** Deliberately readable before mail login: the archive password is the read key.
- * Only archive names and ciphertext are returned, and no permissive CORS is set.
+ * Only archive names, ciphertext and the caller's own identity are returned, and
+ * no permissive CORS is set.
  */
 export async function GET(request: NextRequest) {
   if (!await enabled()) return reply({ error: 'disabled' }, 404);
@@ -45,7 +46,9 @@ async function verifyOwner(owner: VaultOwner): Promise<boolean> {
     catch { continue; }
     // Existing session cookies can be minted without upstream verification for
     // trusted servers. Verify live credentials here before authorizing a write.
-    assertBasicAuthMatchesUsername(ctx.authHeader, owner.username);
+    // The cookie's own username is the one to check: the header's may differ
+    // from it only in case, which no longer makes it a different owner.
+    assertBasicAuthMatchesUsername(ctx.authHeader, ctx.username);
     if (!ctx.authHeader.startsWith('Basic ')) return false;
     const trusted = resolveTrustedJmapUrl(owner.serverUrl,
       configManager.get<string>('jmapServerUrl', ''),
