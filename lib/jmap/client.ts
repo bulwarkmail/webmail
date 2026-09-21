@@ -4372,7 +4372,8 @@ export class JMAPClient implements IJMAPClient {
     blobId: string,
     mailboxIds: Record<string, boolean>,
     keywords?: Record<string, boolean>,
-    accountId?: string
+    accountId?: string,
+    receivedAt?: string
   ): Promise<string | null> {
     const targetAccountId = accountId || this.accountId;
     const creationId = `imp-${Date.now()}`;
@@ -4380,7 +4381,7 @@ export class JMAPClient implements IJMAPClient {
       ["Email/import", {
         accountId: targetAccountId,
         emails: {
-          [creationId]: { blobId, mailboxIds, keywords: keywords || { "$seen": true } },
+          [creationId]: { blobId, mailboxIds, keywords: keywords || { "$seen": true }, ...(receivedAt ? { receivedAt } : {}) },
         },
       }, "0"],
     ]);
