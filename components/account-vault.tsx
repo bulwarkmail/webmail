@@ -11,20 +11,27 @@ import { useAccountStore } from '@/stores/account-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { toast } from '@/stores/toast-store';
 import { collectVault, deleteVault, fetchVaults, putVault } from '@/lib/account-vault-client';
-import { decryptVault, encryptVault, vaultIdentity, VAULT_NAME_MAX, type VaultContents, type VaultOwner, type VaultRecord } from '@/lib/account-vault';
+import { decryptVault, encryptVault, legacyVaultIdentity, vaultIdentity, VAULT_NAME_MAX, type VaultContents, type VaultOwner, type VaultRecord } from '@/lib/account-vault';
 import { generateAccountId as generateVaultAccountId } from '@/lib/account-utils';
 import { enableWebPushForAccounts } from '@/lib/web-push';
 
 /** Revision this browser last restored or saved, per archive: guards against overwriting a newer copy. */
 function revisionKey(owner: VaultOwner, id: string): string { return `account-vault-revision:${vaultIdentity(owner)}:${id}`; }
+/** The same key before the username's case was folded, so earlier answers still count. */
+function legacyRevisionKey(owner: VaultOwner, id: string): string { return `account-vault-revision:${legacyVaultIdentity(owner)}:${id}`; }
 function rememberRevision(owner: VaultOwner, record: VaultRecord): void {
   try { localStorage.setItem(revisionKey(owner, record.id), record.revision); } catch { /* storage unavailable */ }
 }
 function knownRevision(owner: VaultOwner, id: string): string | null {
-  try { return localStorage.getItem(revisionKey(owner, id)); } catch { return null; }
+  try { return localStorage.getItem(revisionKey(owner, id)) ?? localStorage.getItem(legacyRevisionKey(owner, id)); }
+  catch { return null; }
 }
 
 function promptKey(owner: VaultOwner): string { return `account-vault-prompt:${vaultIdentity(owner)}`; }
+function dismissedPrompt(owner: VaultOwner): boolean {
+  return !!(localStorage.getItem(promptKey(owner))
+    || localStorage.getItem(`account-vault-prompt:${legacyVaultIdentity(owner)}`));
+}
 
 /** `delete` is `update` opened straight on the confirmation step. */
 export type VaultDialogMode = 'import' | 'update' | 'create' | 'delete';
@@ -42,7 +49,7 @@ export function AccountVaultImportPrompt() {
     setFound(null); setAccepted(null);
     if (!settingsSyncEnabled || oauthOnly || !authenticated || !username || !serverUrl) return;
     const owner = { username, serverUrl };
-    try { if (localStorage.getItem(promptKey(owner))) return; } catch { /* storage unavailable: still allow importing */ }
+    try { if (dismissedPrompt(owner)) return; } catch { /* storage unavailable: still allow importing */ }
     let cancelled = false;
     fetchVaults(owner).then(records => {
       // Archives this browser already restored or saved need no offer.
@@ -131,7 +138,7 @@ function VaultDialog({ owner, mode: requested, record, close }: { owner: VaultOw
     if (!record) return;
     setBusy(true); setError(''); setNotice('');
     try {
-      const contents = await decryptVault(record.envelope, password, owner);
+      const contents = await decryptVault(record.envelope, password, owner, record.sealedAs);
       setUnlocked(contents);
       setStep('accounts');
       setChosen(new Set(contents.accounts.map(vaultIdentity)));
@@ -187,7 +194,7 @@ function VaultDialog({ owner, mode: requested, record, close }: { owner: VaultOw
       if (record) {
         // Proving the archive password is enough to replace it: the record was
         // listed moments ago and the server rejects a stale revision anyway.
-        await decryptVault(record.envelope, password, owner);
+        await decryptVault(record.envelope, password, owner, record.sealedAs);
       } else if (password !== confirmation) {
         setError(t('password_mismatch')); return;
       }
