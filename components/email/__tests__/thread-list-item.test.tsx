@@ -1,9 +1,11 @@
-import { render, screen, act } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, renderHook, screen, act } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ThreadListItem } from '../thread-list-item';
 import { useSettingsStore, DEFAULT_KEYWORDS } from '@/stores/settings-store';
 import { useEmailStore } from '@/stores/email-store';
 import { groupEmailsByThread } from '@/lib/thread-utils';
+import { formatDate } from '@/lib/utils';
+import { TagDisplayContext, useMeasuredTagDisplay } from '@/hooks/use-tag-display';
 import type { Email } from '@/lib/jmap/types';
 
 vi.mock('@/hooks/use-email-drag', () => ({
@@ -176,6 +178,162 @@ describe('ThreadListItem multi-message thread', () => {
 
     // Once on the header and once on the message that carries it.
     expect(screen.getAllByText('Red').length).toBeGreaterThan(1);
+  });
+});
+
+describe('ThreadListItem sender-line tags', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  it('keeps the existing subject-line transition at 560px', () => {
+    let onResize: ResizeObserverCallback = () => {};
+    vi.stubGlobal('ResizeObserver', class {
+      constructor(callback: ResizeObserverCallback) { onResize = callback; }
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    });
+    const element = document.createElement('div');
+    const { result } = renderHook(() => useMeasuredTagDisplay({ current: element }));
+    act(() => onResize([{ contentRect: { width: 559 } } as ResizeObserverEntry], {} as ResizeObserver));
+    expect(result.current).toEqual({ variant: 'badge', placement: 'sender' });
+    act(() => onResize([{ contentRect: { width: 560 } } as ResizeObserverEntry], {} as ResizeObserver));
+    expect(result.current).toEqual({ variant: 'badge', placement: 'subject' });
+  });
+
+  it.each([1, 2])('progressively compacts and restores tags in a %i-message row', (messageCount) => {
+    useSettingsStore.setState({ emailKeywords: [...DEFAULT_KEYWORDS], showPreview: false, mailLayout: 'split' });
+    useEmailStore.setState({ selectedEmailIds: new Set<string>(), selectedMailbox: 'inbox' });
+
+    // Sender (40), attachment (14), two 8px gaps, optional count (34 + 4px
+    // gap), and the 1px rounding allowance are outside the tag budget.
+    const reservedWidth = 70 + (messageCount > 1 ? 38 : 0) + 1;
+    let availableWidth = reservedWidth + 202;
+    const resizeCallbacks = new Set<ResizeObserverCallback>();
+    vi.stubGlobal('ResizeObserver', class {
+      constructor(private callback: ResizeObserverCallback) {}
+      observe(element: Element) {
+        if (element.getAttribute('data-tag-fit') === 'left') resizeCallbacks.add(this.callback);
+      }
+      unobserve() {}
+      disconnect() { resizeCallbacks.delete(this.callback); }
+    });
+    const originalStyle = getComputedStyle;
+    vi.spyOn(window, 'getComputedStyle').mockImplementation((element) => {
+      const style = originalStyle(element);
+      const kind = element.getAttribute('data-tag-fit');
+      if (kind === 'left' || kind === 'named') {
+        Object.defineProperty(style, 'columnGap', { value: kind === 'left' ? '8px' : '4px', configurable: true });
+      }
+      return style;
+    });
+    const originalRect = HTMLElement.prototype.getBoundingClientRect;
+    const rect = (width: number, height = 22) => ({ width, height } as DOMRect);
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+      switch (this.getAttribute('data-tag-fit')) {
+        case 'left': return rect(availableWidth);
+        case 'sender': return rect(40);
+        case 'dot': return rect(10, 10);
+      }
+      if (this.parentElement?.getAttribute('data-tag-fit') === 'named') {
+        return this.querySelector('svg') ? rect(34, 18) : rect(Math.min(192, this.title.length * 7 + 16));
+      }
+      if (this.classList.contains('gap-1.5') && this.querySelector('svg')) return rect(14);
+      return originalRect.call(this);
+    });
+
+    const tagIds = ['red', 'orange', 'green', 'blue'];
+    const row = (ids: string[]) => {
+      const keywords = Object.fromEntries([['$seen', true], ...ids.map((tag) => [`$label:${tag}`, true])]);
+      const emails = Array.from({ length: messageCount }, (_, index) =>
+        makeEmail({ id: `email-${index}`, keywords, hasAttachment: true }),
+      );
+      return (
+        <TagDisplayContext.Provider value={{ variant: 'badge', placement: 'sender' }}>
+          <ThreadListItem
+            thread={groupEmailsByThread(emails)[0]}
+            isExpanded={false}
+            selectedEmailId={messageCount === 1 ? emails[0].id : undefined}
+            onToggleExpand={() => {}}
+            onEmailSelect={() => {}}
+          />
+        </TagDisplayContext.Provider>
+      );
+    };
+    const { container, rerender } = render(row(tagIds));
+    const firstTag = Array.from(container.querySelectorAll<HTMLElement>('[title="Red"]'))
+      .find((element) => !element.closest('[data-tag-fit="named"]'))!;
+    const tagGroup = firstTag.parentElement!;
+    const tags = () => Array.from(tagGroup.children) as HTMLElement[];
+    const expectLayout = (expected: string[]) => {
+      expect(tags().map((tag) => tag.classList.contains('hidden') ? 'hidden'
+        : tag.classList.contains('border') ? 'badge' : 'dot')).toEqual(expected);
+      expect(tagGroup).toHaveStyle({ height: '22px' });
+      expect(tagGroup).not.toHaveClass('flex-wrap');
+    };
+    const resize = (tagSpace: number) => {
+      availableWidth = reservedWidth + tagSpace;
+      act(() => Array.from(resizeCallbacks).forEach((callback) => callback([], {} as ResizeObserver)));
+    };
+
+    // Measured widths 37, 58, 51, 44 plus three 4px gaps total 202px.
+    expectLayout(['badge', 'badge', 'badge', 'badge']);
+    expect(tags().map((tag) => tag.title)).toEqual(['Red', 'Orange', 'Green', 'Blue']);
+    resize(201);
+    expectLayout(['badge', 'badge', 'badge', 'dot']);
+    resize(168); // Exact fit with one dot; repeated observation must be stable.
+    expectLayout(['badge', 'badge', 'badge', 'dot']);
+    resize(168);
+    expectLayout(['badge', 'badge', 'badge', 'dot']);
+    resize(167);
+    expectLayout(['badge', 'badge', 'dot', 'dot']);
+    resize(126);
+    expectLayout(['badge', 'dot', 'dot', 'dot']);
+    resize(78);
+    expectLayout(['dot', 'dot', 'dot', 'dot']);
+    tags().forEach((tag, index) => expect(tag).toHaveClass(`bg-${tagIds[index]}-500`));
+
+    resize(79);
+    expectLayout(['badge', 'dot', 'dot', 'dot']);
+    resize(127);
+    expectLayout(['badge', 'badge', 'dot', 'dot']);
+    resize(168);
+    expectLayout(['badge', 'badge', 'badge', 'dot']);
+    resize(202);
+    expectLayout(['badge', 'badge', 'badge', 'badge']);
+
+    resize(168);
+    act(() => useSettingsStore.getState().updateKeyword('orange', { label: 'An exceptionally long project label' }));
+    expectLayout(['badge', 'dot', 'dot', 'dot']);
+    act(() => useSettingsStore.getState().updateKeyword('orange', { label: 'Orange' }));
+    expectLayout(['badge', 'badge', 'badge', 'dot']);
+    rerender(row(tagIds.slice(0, 3)));
+    expectLayout(['badge', 'badge', 'badge']);
+    rerender(row(tagIds));
+    expectLayout(['badge', 'badge', 'badge', 'dot']);
+
+    resize(52);
+    expectLayout(['dot', 'dot', 'dot', 'dot']);
+    resize(51); // The fourth dot must disappear whole.
+    expectLayout(['dot', 'dot', 'dot', 'hidden']);
+    resize(10);
+    expectLayout(['dot', 'hidden', 'hidden', 'hidden']);
+    resize(9); // Even a partially visible first dot is forbidden.
+    expectLayout(['hidden', 'hidden', 'hidden', 'hidden']);
+    resize(0);
+    expectLayout(['hidden', 'hidden', 'hidden', 'hidden']);
+    resize(202);
+    expectLayout(['badge', 'badge', 'badge', 'badge']);
+
+    if (messageCount === 1) {
+      expect(screen.getByTestId('email-list-item')).toHaveAttribute('aria-current', 'true');
+    } else {
+      expect(tagGroup.previousElementSibling).toHaveClass('rounded-full');
+      expect(tagGroup.previousElementSibling).not.toHaveClass('hidden', 'overflow-hidden');
+    }
+    expect(screen.getByText(formatDate(makeEmail().receivedAt)).parentElement).toHaveClass('flex-shrink-0');
   });
 });
 

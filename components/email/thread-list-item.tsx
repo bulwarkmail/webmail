@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback } from "react";
+import React, { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { formatDate, formatDateTime, stripInvisibleLeading } from "@/lib/utils";
 import { Email, ThreadGroup } from "@/lib/jmap/types";
 import { cn } from "@/lib/utils";
@@ -105,6 +105,73 @@ function ThreadCountPill({ count, hasUnread, title }: { count: number; hasUnread
   );
 }
 
+/** Measure a named prefix independently of the currently visible tags. */
+function useSenderTagFit(enabled: boolean, tagCount: number) {
+  const leftRef = useRef<HTMLDivElement>(null);
+  const senderRef = useRef<HTMLSpanElement>(null);
+  const visibleTagsRef = useRef<HTMLSpanElement>(null);
+  const namedTagsRef = useRef<HTMLSpanElement>(null);
+  const dotRef = useRef<HTMLSpanElement>(null);
+  const [fit, setFit] = useState({ namedCount: tagCount, visibleCount: tagCount, height: 0 });
+
+  useLayoutEffect(() => {
+    const left = leftRef.current;
+    const sender = senderRef.current;
+    const visibleTags = visibleTagsRef.current;
+    const namedTags = namedTagsRef.current;
+    const dot = dotRef.current;
+    if (!enabled || !left || !sender || !visibleTags || !namedTags || !dot) return;
+    const children = Array.from(left.children) as HTMLElement[];
+    const measured = Array.from(namedTags.children).filter((child) => child !== dot);
+    const badges = measured.slice(-tagCount);
+    const fixedPills = measured.slice(0, -tagCount);
+
+    const measure = () => {
+      // The left flex item already excludes the nonshrinking date. All sizes
+      // used here are independent of the visible badge/dot combination.
+      const gap = parseFloat(getComputedStyle(left).columnGap) || 0;
+      const tagGap = parseFloat(getComputedStyle(namedTags).columnGap) || 0;
+      const reserved = children.reduce((width, child) => {
+        if (child === visibleTags) return width;
+        if (child === sender) return width + Math.max(sender.scrollWidth, sender.getBoundingClientRect().width);
+        return width + child.getBoundingClientRect().width;
+      }, gap * Math.max(0, children.length - 1));
+      const fixedWidth = fixedPills.reduce((width, pill) => width + pill.getBoundingClientRect().width + tagGap, 0);
+      const available = Math.max(0, left.getBoundingClientRect().width - reserved - fixedWidth - 1);
+      const dotWidth = dot.getBoundingClientRect().width;
+      if (dotWidth <= 0) return;
+      const widths = badges.map((badge) => badge.getBoundingClientRect().width);
+      let needed = widths.reduce((sum, width) => sum + width, 0) + tagGap * Math.max(0, tagCount - 1);
+      let namedCount = tagCount;
+      while (namedCount > 0 && needed > available) {
+        namedCount -= 1;
+        needed -= widths[namedCount] - dotWidth;
+      }
+      // Hide complete suffix dots, including the first dot if even it cannot
+      // fit. Cropping a flex group can otherwise leave a semicircle at its edge.
+      const visibleCount = needed <= available ? tagCount
+        : Math.min(tagCount, Math.floor((available + tagGap) / (dotWidth + tagGap)));
+      const height = Math.max(dot.getBoundingClientRect().height, ...measured.map((pill) => pill.getBoundingClientRect().height));
+      setFit((previous) => previous.namedCount === namedCount && previous.visibleCount === visibleCount && previous.height === height
+        ? previous : { namedCount, visibleCount, height });
+    };
+
+    measure();
+    if (typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(measure);
+    observer.observe(left);
+    observer.observe(namedTags);
+    observer.observe(dot);
+    measured.forEach((pill) => observer.observe(pill));
+    children.forEach((child) => {
+      if (child !== visibleTags) observer.observe(child);
+    });
+    return () => observer.disconnect();
+  });
+
+  return { ...fit, leftRef, senderRef, visibleTagsRef, namedTagsRef, dotRef };
+}
+
 interface ThreadListItemProps {
   thread: ThreadGroup;
   isExpanded: boolean;
@@ -202,6 +269,8 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
       : null;
 
     const tagIds = sortTagIds(getEmailTagIds(email.keywords));
+    const measureSenderTags = !isFocusedMailLayout && tagPlacement === 'sender' && tagIds.length > 0;
+    const senderTagFit = useSenderTagFit(measureSenderTags, tagIds.length);
     const resolvedRowTint = !tintListRowsByTag ? null : (rowTint ?? (tagIds[0] ? tagColor(tagIds[0]).rowTint : null));
 
     const { dragHandlers, isDragging } = useEmailDrag({
@@ -462,7 +531,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
             ) : (
               <>
                 <div className="flex items-center justify-between gap-2 mb-1">
-                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <div ref={senderTagFit.leftRef} data-tag-fit="left" className="flex items-center gap-2 min-w-0 flex-1">
                     {isUnifiedView && email.accountId && accountColor && (
                       <span
                         className="w-2 h-2 rounded-full flex-shrink-0"
@@ -472,7 +541,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                         <span className="sr-only">{accountDescription}</span>
                       </span>
                     )}
-                    <span className={cn(
+                    <span ref={senderTagFit.senderRef} data-tag-fit="sender" className={cn(
                       "truncate text-sm",
                       isUnread
                         ? "font-bold text-foreground"
@@ -481,9 +550,11 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                       {sender?.name || sender?.email || "Unknown"}
                     </span>
                     {tagPlacement === 'sender' && tagIds.length > 0 && (
-                      <span className={TAG_GROUP_CLASS}>
-                        {tagIds.map((id) => (
-                          <TagBadge key={id} tagId={id} variant={tagVariant} />
+                      <span ref={senderTagFit.visibleTagsRef} data-tag-fit="visible" className={cn(TAG_GROUP_CLASS, "min-w-0 shrink overflow-hidden")}
+                        style={{ height: senderTagFit.height || undefined }}>
+                        {tagIds.map((id, index) => (
+                          <TagBadge key={id} tagId={id} variant={index < senderTagFit.namedCount ? 'badge' : 'dot'}
+                            className={index >= senderTagFit.visibleCount ? 'hidden' : undefined} />
                         ))}
                       </span>
                   )}
@@ -533,6 +604,15 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                     )}
                   </div>
                 </div>
+
+                {measureSenderTags && (
+                  <span ref={senderTagFit.namedTagsRef} data-tag-fit="named" className={cn(TAG_GROUP_CLASS, "absolute invisible w-max pointer-events-none")} aria-hidden="true">
+                    {tagIds.map((id) => <TagBadge key={id} tagId={id} variant="badge" />)}
+                    <span ref={senderTagFit.dotRef} data-tag-fit="dot" className="absolute flex">
+                      <TagBadge tagId={tagIds[0]} variant="dot" />
+                    </span>
+                  </span>
+                )}
 
                 <div className="mb-1 flex min-w-0 items-center gap-1.5">
                   {tagPlacement === 'subject' && tagIds.length > 0 && (
@@ -683,6 +763,8 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
     const tintListRowsByTag = useSettingsStore((state) => state.tintListRowsByTag);
     // A collapsed row speaks for every message under it, so it carries their tags too.
     const tagIds = sortTagIds(getThreadTagIds(thread.emails));
+    const measureSenderTags = emailCount > 1 && !isFocusedMailLayout && tagPlacement === 'sender' && tagIds.length > 0;
+    const senderTagFit = useSenderTagFit(measureSenderTags, tagIds.length);
     const rowTint = (tintListRowsByTag && tagIds[0]) ? tagColor(tagIds[0]).rowTint : null;
 
     const isSelected = selectedEmailId === latestEmail.id ||
@@ -961,7 +1043,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
               ) : (
                 <>
                   <div className="flex items-center justify-between gap-2 mb-1">
-                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <div ref={senderTagFit.leftRef} data-tag-fit="left" className="flex items-center gap-2 min-w-0 flex-1">
                       {isUnifiedView && latestEmail.accountId && threadAccountColor && (
                         <span
                           className="w-2 h-2 rounded-full flex-shrink-0"
@@ -971,7 +1053,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                           <span className="sr-only">{threadAccountDescription}</span>
                         </span>
                       )}
-                      <span className={cn(
+                      <span ref={senderTagFit.senderRef} data-tag-fit="sender" className={cn(
                         "truncate text-sm",
                         hasUnread
                           ? "font-bold text-foreground"
@@ -979,15 +1061,21 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                       )}>
                         {displayNames.join(", ")}
                       </span>
-                      <span className={TAG_GROUP_CLASS}>
+                      <span ref={senderTagFit.visibleTagsRef} data-tag-fit="visible" className={cn(TAG_GROUP_CLASS, "min-w-0 shrink")}>
                         <ThreadCountPill
                           count={emailCount}
                           hasUnread={hasUnread}
                           title={t('messages_tooltip', { count: emailCount })}
                         />
-                        {tagPlacement === 'sender' && tagIds.map((id) => (
-                          <TagBadge key={id} tagId={id} variant={tagVariant} />
-                        ))}
+                        {tagPlacement === 'sender' && tagIds.length > 0 && (
+                          <span className={cn(TAG_GROUP_CLASS, "min-w-0 shrink overflow-hidden")}
+                            style={{ height: senderTagFit.height || undefined }}>
+                            {tagIds.map((id, index) => (
+                              <TagBadge key={id} tagId={id} variant={index < senderTagFit.namedCount ? 'badge' : 'dot'}
+                                className={index >= senderTagFit.visibleCount ? 'hidden' : undefined} />
+                            ))}
+                          </span>
+                        )}
                       </span>
                       <div className="flex items-center gap-1.5">
                         {hasPinned && (
@@ -1035,6 +1123,16 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                       )}
                     </div>
                   </div>
+
+                  {measureSenderTags && (
+                    <span ref={senderTagFit.namedTagsRef} data-tag-fit="named" className={cn(TAG_GROUP_CLASS, "absolute invisible w-max pointer-events-none")} aria-hidden="true">
+                      <ThreadCountPill count={emailCount} hasUnread={hasUnread} title={t('messages_tooltip', { count: emailCount })} />
+                      {tagIds.map((id) => <TagBadge key={id} tagId={id} variant="badge" />)}
+                      <span ref={senderTagFit.dotRef} data-tag-fit="dot" className="absolute flex">
+                        <TagBadge tagId={tagIds[0]} variant="dot" />
+                      </span>
+                    </span>
+                  )}
 
                   <div className="mb-1 flex min-w-0 items-center gap-1.5">
                     {tagPlacement === 'subject' && tagIds.length > 0 && (
