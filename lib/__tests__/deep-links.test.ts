@@ -75,6 +75,22 @@ describe('appPath — locale prefix and mount prefix', () => {
     expect(appPath('/calendar', 'fr')).toBe('/fr/calendar');
   });
 
+  it('follows the runtime default locale in "as-needed" mode', async () => {
+    const { appPath } = await loadLinks({ localePrefix: 'as-needed' });
+    const { setRuntimeDefaultLocale } = await import('@/i18n/runtime-default-locale');
+    setRuntimeDefaultLocale('pt');
+    try {
+      // Explicit locales: the deployment default is the unprefixed one now.
+      expect(appPath('/calendar', 'pt')).toBe('/calendar');
+      expect(appPath('/calendar', 'en')).toBe('/en/calendar');
+      // No segment in the current URL means "default locale", not "en".
+      window.history.replaceState(null, '', '/mail');
+      expect(appPath('/calendar')).toBe('/calendar');
+    } finally {
+      setRuntimeDefaultLocale(undefined);
+    }
+  });
+
   it('applies the mount prefix on subpath deployments', async () => {
     const { appPath } = await loadLinks({ localePrefix: 'always', basePath: '/webmail' });
     expect(appPath('/mail/thread/t1', 'de')).toBe('/webmail/de/mail/thread/t1');

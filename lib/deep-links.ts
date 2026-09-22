@@ -19,6 +19,7 @@
  */
 
 import { routing } from '@/i18n/routing';
+import { getDefaultLocale } from '@/i18n/runtime-default-locale';
 import { getLocaleFromPath, getPathPrefix, withBasePath } from '@/lib/browser-navigation';
 import {
   UNIFIED_MAILBOX_IDS,
@@ -71,7 +72,7 @@ export function appPath(path: string, locale?: string): string {
 
   if (routing.localePrefix === 'always') {
     withLocale = `/${resolved}${normalized === '/' ? '' : normalized}`;
-  } else if (routing.localePrefix === 'as-needed' && resolved !== routing.defaultLocale) {
+  } else if (routing.localePrefix === 'as-needed' && resolved !== getDefaultLocale()) {
     withLocale = `/${resolved}${normalized === '/' ? '' : normalized}`;
   }
 

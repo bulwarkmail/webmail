@@ -10,9 +10,23 @@ import {
   parseAppFrameOrigins,
 } from "./lib/security/app-frame-origins";
 import { configManager } from "./lib/admin/config-manager";
+import { resolveDefaultLocale } from "./lib/admin/default-locale";
 import { detectSetupState } from "./lib/setup/state";
 
-const intlMiddleware = createIntlMiddleware(routing);
+// The fallback locale is admin/env configurable at runtime, and next-intl
+// bakes it into the middleware, so one middleware is built per value seen
+// (the admin can change it without a restart).
+type IntlMiddleware = ReturnType<typeof createIntlMiddleware>;
+const intlMiddlewares = new Map<string, IntlMiddleware>();
+function getIntlMiddleware(): IntlMiddleware {
+  const defaultLocale = resolveDefaultLocale();
+  let middleware = intlMiddlewares.get(defaultLocale);
+  if (!middleware) {
+    middleware = createIntlMiddleware({ ...routing, defaultLocale });
+    intlMiddlewares.set(defaultLocale, middleware);
+  }
+  return middleware;
+}
 
 /**
  * next-intl uses best-fit locale matching, which can rank `zh` ahead of
@@ -308,7 +322,7 @@ export async function proxy(request: NextRequest) {
     (l) => pathname === `/${l}` || pathname.startsWith(`/${l}/`)
   );
 
-  let intlResponse: ReturnType<typeof intlMiddleware> | null = null;
+  let intlResponse: ReturnType<IntlMiddleware> | null = null;
   if (
     !isAdminRoute &&
     !isProtocolRoute &&
@@ -318,7 +332,7 @@ export async function proxy(request: NextRequest) {
     !hasLocalePrefix
   ) {
     try {
-      intlResponse = intlMiddleware(withMatchedChineseAcceptLanguage(request));
+      intlResponse = getIntlMiddleware()(withMatchedChineseAcceptLanguage(request));
     } catch (error) {
       console.error('Locale middleware error:', error);
     }

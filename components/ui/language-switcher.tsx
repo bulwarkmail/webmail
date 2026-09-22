@@ -6,36 +6,13 @@ import { ChevronDown } from '@/components/icons';
 import { cn } from '@/lib/utils';
 import { useMenuNavigation } from '@/hooks/use-menu-navigation';
 import { flagComponents } from './flag-icons';
+import { LOCALE_NAMES } from '@/i18n/locale-names';
 
+// Picker order (roughly by script, then name); names come from the shared map.
+const LANGUAGE_ORDER = ['ar', 'ca', 'cs', 'sk', 'da', 'de', 'en', 'fa', 'es', 'fr', 'he', 'it', 'hu', 'lv', 'nl', 'nb', 'pl', 'pt', 'ro', 'tr', 'ru', 'uk', 'ko', 'ja', 'mn', 'zh', 'zh-TW'] as const;
 const languages = [
   { value: 'auto', label: 'Auto' },
-  { value: 'ar', label: 'العربية' },
-  { value: 'ca', label: 'Català' },
-  { value: 'cs', label: 'Česky' },
-  { value: 'sk', label: 'Slovenčina' },
-  { value: 'da', label: 'Dansk' },
-  { value: 'de', label: 'Deutsch' },
-  { value: 'en', label: 'English' },
-  { value: 'fa', label: 'فارسی' },
-  { value: 'es', label: 'Español' },
-  { value: 'fr', label: 'Français' },
-  { value: 'he', label: 'עברית' },
-  { value: 'it', label: 'Italiano' },
-  { value: 'hu', label: 'Magyar' },
-  { value: 'lv', label: 'Latviešu' },
-  { value: 'nl', label: 'Nederlands' },
-  { value: 'nb', label: 'Norsk bokmål' },
-  { value: 'pl', label: 'Polski' },
-  { value: 'pt', label: 'Português' },
-  { value: 'ro', label: 'Română' },
-  { value: 'tr', label: 'Türkçe' },
-  { value: 'ru', label: 'Русский' },
-  { value: 'uk', label: 'Українська' },
-  { value: 'ko', label: '한국어' },
-  { value: 'ja', label: '日本語' },
-  { value: 'mn', label: 'Монгол' },
-  { value: 'zh', label: '简体中文' },
-  { value: 'zh-TW', label: '繁體中文（台灣）' },
+  ...LANGUAGE_ORDER.map((value) => ({ value, label: LOCALE_NAMES[value] })),
 ];
 
 function FlagIcon({ locale }: { locale: string }) {

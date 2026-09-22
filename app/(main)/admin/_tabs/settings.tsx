@@ -5,6 +5,8 @@ import { Save, RotateCcw, Loader2 } from '@/components/icons';
 import { apiFetch } from '@/lib/browser-navigation';
 import { JmapServersSection } from './_jmap-servers-section';
 import type { JmapServerEntry } from '@/lib/admin/jmap-servers';
+import { locales, defaultLocale } from '@/i18n/routing';
+import { LOCALE_NAMES } from '@/i18n/locale-names';
 
 interface ConfigEntry {
   value?: unknown;
@@ -125,6 +127,17 @@ export function SettingsTab() {
         )}
         <ToggleSetting label="Stalwart Features" description="Enable Stalwart Mail Server-specific features" configKey="stalwartFeaturesEnabled" value={currentValue('stalwartFeaturesEnabled') as boolean} source={config.stalwartFeaturesEnabled?.source} onChange={handleChange} onRevert={handleRevert} />
         <ToggleSetting label="Demo Mode" description="Enable demo mode with sample data" configKey="demoMode" value={currentValue('demoMode') as boolean} source={config.demoMode?.source} onChange={handleChange} onRevert={handleRevert} />
+        <SelectSetting
+          label="Default Language"
+          description="UI language for visitors whose browser language is not one Bulwark ships and who have not picked one yet. Browser language and the user's own choice always win."
+          configKey="defaultLocale"
+          value={(currentValue('defaultLocale') as string) ?? ''}
+          source={config.defaultLocale?.source}
+          options={['', ...locales]}
+          optionLabels={{ '': `Build default (${defaultLocale})`, ...LOCALE_NAMES }}
+          onChange={handleChange}
+          onRevert={handleRevert}
+        />
         <ToggleSetting label="Search Engine Indexing" description="Allow search engines to index this webmail. Off (the default) sends noindex/nofollow in the page head, recommended for private deployments." configKey="searchEngineIndexing" value={currentValue('searchEngineIndexing') as boolean} source={config.searchEngineIndexing?.source} onChange={handleChange} onRevert={handleRevert} />
       </SettingsSection>
 
@@ -259,15 +272,19 @@ function ToggleSetting({ label, description, configKey, value, source, onChange,
   );
 }
 
-function SelectSetting({ label, configKey, value, source, options, onChange, onRevert }: {
-  label: string; configKey: string; value: string; source?: string; options: string[];
+function SelectSetting({ label, description, configKey, value, source, options, optionLabels, onChange, onRevert }: {
+  label: string; description?: string; configKey: string; value: string; source?: string; options: string[];
+  optionLabels?: Record<string, string>;
   onChange: (key: string, value: unknown) => void; onRevert: (key: string) => void;
 }) {
   return (
     <div className="px-4 py-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-      <div className="flex items-center gap-2 min-w-0">
-        <span className="text-sm text-foreground">{label}</span>
-        <SourceBadge source={source} />
+      <div className="min-w-0">
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-foreground">{label}</span>
+          <SourceBadge source={source} />
+        </div>
+        {description && <p className="text-xs text-muted-foreground mt-0.5">{description}</p>}
       </div>
       <div className="flex items-center gap-2 shrink-0">
         <select
@@ -275,7 +292,7 @@ function SelectSetting({ label, configKey, value, source, options, onChange, onR
           onChange={(e) => onChange(configKey, e.target.value)}
           className="h-8 rounded-md border border-input bg-background px-2.5 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          {options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+          {options.map(opt => <option key={opt} value={opt}>{optionLabels?.[opt] ?? opt}</option>)}
         </select>
         {source === 'admin' && (
           <button onClick={() => onRevert(configKey)} className="text-muted-foreground hover:text-foreground" title="Revert to default">
