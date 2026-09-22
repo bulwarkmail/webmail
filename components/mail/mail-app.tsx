@@ -3346,14 +3346,12 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         ?? (viewingAccountId ? useAuthStore.getState().getClientForAccount(viewingAccountId) : undefined)
         ?? client;
 
-      // During an unscoped search the hit is the primary account's, not the
-      // selected shared folder's owner - see resolveUnstampedEmailAccountId. (#923)
+      // A search now runs against the account whose folder is open, so its
+      // hits belong to that account and the selected folder decides. (#923)
       const accountId = listEmail?.sourceAccountId
         ?? resolveUnstampedEmailAccountId({
             mailboxes: viewMailboxes,
             selectedMailbox,
-            searchActive: !!searchQuery || !isFilterEmpty(searchFilters),
-            searchMailboxId,
           });
 
       const fullEmail = await fetchClient.getEmail(email.id, accountId);
@@ -3483,9 +3481,11 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     if (isMobile) setActiveView('viewer');
   };
 
-  const ToggleChip = ({ icon, label, value, onClick }: { icon: React.ReactNode; label: string; value: boolean | null; onClick: () => void }) => (
+  const ToggleChip = ({ icon, label, value, onClick, testId }: { icon: React.ReactNode; label: string; value: boolean | null; onClick: () => void; testId?: string }) => (
     <button
       type="button"
+      data-testid={testId}
+      data-state={value === null ? 'unset' : String(value)}
       onClick={onClick}
       className={cn(
         "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs transition-colors border",
@@ -3774,6 +3774,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                   />
                   <button
                     type="button"
+                    data-testid="advanced-search-toggle"
                     onClick={toggleAdvancedSearch}
                     disabled={isScheduledView}
                     className={cn(
@@ -3816,6 +3817,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 flex-wrap">
                       <ToggleChip
+                        testId="advanced-search-has-attachment"
                         icon={<Paperclip className="w-3.5 h-3.5" />}
                         label={t("advanced_search.has_attachment")}
                         value={searchFilters.hasAttachment}
@@ -3899,8 +3901,11 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                       {/* Folder selector. Scopes the search only - it does not
                           navigate the mail list, so it defaults to "All folders"
                           regardless of which folder is open and keeps whatever
-                          the user picked. The unified views already search
-                          across every account's folders, so it is hidden there. */}
+                          the user picked. "All folders" spans the folders of the
+                          account being viewed (the owner of an open shared
+                          folder), not always the primary one. The unified views
+                          already search across every account's folders, so it is
+                          hidden there. */}
                       {!isUnifiedView && (
                         <div>
                           <label className="text-xs text-muted-foreground mb-1 block">{t("advanced_search.folder")}</label>
@@ -3915,7 +3920,11 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                             className="w-full h-8 text-sm rounded-md border border-input bg-background px-3 text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
                           >
                             <option value="">{t("advanced_search.all_folders")}</option>
-                            {mailboxes.map((mb) => (
+                            {/* Same list the store resolves the picked id
+                                against (resolveActionMailboxes), so a folder
+                                offered here is never silently dropped for
+                                belonging to a different account. */}
+                            {viewMailboxes.map((mb) => (
                               <option key={mb.id} value={mb.id}>
                                 {mb.name}
                               </option>

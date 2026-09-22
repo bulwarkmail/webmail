@@ -487,3 +487,44 @@ export async function addressBookRows(
     })),
   );
 }
+
+/** Type a free-text query into the mail search box and submit it. */
+export async function searchMail(page: Page, query: string): Promise<void> {
+  const box = page.getByPlaceholder(/Search mail/i).first();
+  await box.click();
+  await box.fill(query);
+  await box.press('Enter');
+}
+
+/** Clear an active mail search via the search box's clear button. */
+export async function clearMailSearch(page: Page): Promise<void> {
+  const clear = page.getByRole('button', { name: /clear search/i }).first();
+  if (await clear.isVisible().catch(() => false)) await clear.click();
+}
+
+/** Open the advanced-search filter panel (no-op when already open). */
+async function openSearchFilters(page: Page): Promise<void> {
+  const chip = page.locator('[data-testid="advanced-search-has-attachment"]');
+  if (await chip.isVisible().catch(() => false)) return;
+  await page.locator('[data-testid="advanced-search-toggle"]').first().click();
+  await expect(chip).toBeVisible({ timeout: 15000 });
+}
+
+/**
+ * Toggle the "Attachments" filter chip and wait for it to latch, so the
+ * assertion that follows cannot race the re-query the click fires.
+ */
+export async function toggleAttachmentFilter(page: Page, state: 'true' | 'false' | 'unset' = 'true'): Promise<void> {
+  await openSearchFilters(page);
+  const chip = page.locator('[data-testid="advanced-search-has-attachment"]').first();
+  await chip.click();
+  await expect(chip).toHaveAttribute('data-state', state, { timeout: 15000 });
+}
+
+/** The subjects currently rendered in the message list. */
+export async function listedSubjects(page: Page): Promise<string[]> {
+  const rows = page.locator('[data-testid="email-list-item"]');
+  return (await rows.evaluateAll(els =>
+    els.map(e => (e as HTMLElement).getAttribute('data-subject') ?? ''),
+  )).filter(Boolean);
+}

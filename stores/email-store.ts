@@ -606,22 +606,66 @@ export function findArchiveMailbox(
 }
 
 /**
+ * Folder + account scope for a mail search.
+ *
+ * The search panel's folder selector is independent of the open folder and
+ * defaults to "" ("All folders"). Resolving the account from that selector
+ * alone sent every unscoped search to the primary account, so searching from
+ * a shared/group folder silently queried the user's OWN mail instead: no
+ * error, just foreign hits, and field filters (from/subject/attachment) that
+ * looked broken because they matched the wrong mailbox. (#923)
+ *
+ * A picked folder always decides — including a shared one. With none picked,
+ * "all folders" means all folders OF THE ACCOUNT BEING VIEWED: the shared
+ * owner while a shared folder is open, the user's own account otherwise.
+ */
+export function resolveSearchScope(opts: {
+  mailboxes: Mailbox[];
+  selectedMailbox: string | null | undefined;
+  searchMailboxId: string;
+  /**
+   * A tag/label view spans every account, and selecting a tag does NOT clear
+   * `selectedMailbox` — so the folder left open behind it must not scope the
+   * search to its owner. The caller passes the active keyword, if any.
+   */
+  selectedKeyword?: string | null;
+}): { jmapMailboxId: string; accountId: string | undefined } {
+  const picked = opts.searchMailboxId
+    ? opts.mailboxes.find(mb => mb.id === opts.searchMailboxId)
+    : undefined;
+  if (picked) {
+    return {
+      jmapMailboxId: picked.originalId || picked.id,
+      accountId: picked.isShared ? picked.accountId : undefined,
+    };
+  }
+  // A picked folder that is no longer in the list (the account it belonged to
+  // was switched away from, or it was deleted) must not pin the search to a
+  // foreign account: fall back to the open folder rather than keep a dangling
+  // id, which `clearSearchOnFolderChange` being off makes reachable.
+  // In a tag view the open folder is whatever the user was browsing before
+  // picking the tag; it says nothing about where the tagged mail lives.
+  const open = opts.selectedKeyword
+    ? undefined
+    : opts.mailboxes.find(mb => mb.id === opts.selectedMailbox);
+  return {
+    jmapMailboxId: "",
+    accountId: open?.isShared ? open.accountId : undefined,
+  };
+}
+
+/**
  * JMAP accountId for opening an email that carries no source stamps.
  *
- * Normally the selected folder decides: a shared/group folder's owner, else
- * the account's own (undefined). During an unscoped ("All folders") search
- * the hits come from the primary account even while a shared folder is
- * selected, so deriving the owner from that folder asks the wrong account and
- * `getEmail` returns nothing. In that case the caller's own account is used
- * (searching the shared owners too is a separate issue). (#923)
+ * The selected folder decides: a shared/group folder's owner, else the user's
+ * own account (undefined). An unscoped search now runs against the viewed
+ * account too (see `resolveSearchScope`), so its hits belong to that same
+ * account and no longer need to be excepted here. (#923)
  */
 export function resolveUnstampedEmailAccountId(opts: {
   mailboxes: Mailbox[];
   selectedMailbox: string | null | undefined;
-  searchActive: boolean;
-  searchMailboxId: string;
 }): string | undefined {
-  if (opts.searchActive && opts.searchMailboxId === '') return undefined;
   const mailbox = opts.mailboxes.find(mb => mb.id === opts.selectedMailbox);
   return mailbox?.isShared ? mailbox.accountId : undefined;
 }
@@ -1420,6 +1464,11 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   selectAccountMailbox: (accountId, mailboxId) => set({
     viewingAccountId: accountId,
     selectedMailbox: mailboxId,
+    // The search panel's folder scope names a folder of the account we are
+    // leaving; it cannot be resolved against the new one, and keeping it would
+    // silently widen the next search to every folder while the dropdown (which
+    // renders no matching option) still reads "All folders".
+    searchMailboxId: "",
     isLoadingMore: false,
     selectedEmail: null,
     selectedEmailIds: new Set(),
@@ -1929,9 +1978,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         // folder that happens to be open in the list.
         const { searchMailboxId } = get();
         const mailboxes = resolveActionMailboxes();
-        const mailbox = mailboxes.find(mb => mb.id === searchMailboxId);
-        const jmapMailboxId = mailbox?.originalId || searchMailboxId;
-        const accountId = mailbox?.isShared ? mailbox.accountId : undefined;
+        const { jmapMailboxId, accountId } = resolveSearchScope({ mailboxes, selectedMailbox, searchMailboxId, selectedKeyword });
 
         if (hasFilters) {
           const filter = buildJMAPFilter(searchQuery, searchFilters, jmapMailboxId);
@@ -2715,7 +2762,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       searchAbortController: controller,
     }); // Clear emails for loading state
     try {
-      const { isUnifiedView, unifiedRole, crossView, searchMailboxId, searchFilters } = get();
+      const { isUnifiedView, unifiedRole, crossView, searchMailboxId, searchFilters, selectedMailbox, selectedKeyword } = get();
       const emailsPerPage = useSettingsStore.getState().emailsPerPage;
 
       let result;
@@ -2736,13 +2783,12 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
 
       } else {
         // Scope the search to the folder picked in the search panel; "" (the
-        // default) searches across all folders.
+        // default) searches every folder of the account being viewed, which is
+        // the shared owner while a shared folder is open. (#923)
         const mailboxes = resolveActionMailboxes();
-        const mailbox = mailboxes.find(mb => mb.id === searchMailboxId);
-        // Use originalId for shared mailboxes
-        const jmapMailboxId = mailbox?.originalId || searchMailboxId;
-        // Only pass accountId for shared mailboxes, not for primary account
-        accountId = mailbox?.isShared ? mailbox.accountId : undefined;
+        const scope = resolveSearchScope({ mailboxes, selectedMailbox, searchMailboxId, selectedKeyword });
+        const jmapMailboxId = scope.jmapMailboxId;
+        accountId = scope.accountId;
 
         result = await resolveActionClient(client).searchEmails(query, jmapMailboxId, accountId, emailsPerPage, 0);
       }
@@ -2795,7 +2841,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   },
 
   advancedSearch: async (client) => {
-    const { searchQuery, searchFilters, searchMailboxId, searchAbortController, isUnifiedView, unifiedRole, crossView } = get();
+    const { searchQuery, searchFilters, searchMailboxId, searchAbortController, isUnifiedView, unifiedRole, crossView, selectedMailbox, selectedKeyword } = get();
     const mailboxes = resolveActionMailboxes();
 
     if (searchAbortController) {
@@ -2841,11 +2887,13 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         unifiedErrors = result.errors;
 
       } else {
-        const mailbox = mailboxes.find(mb => mb.id === searchMailboxId);
-        const jmapMailboxId = mailbox?.originalId || searchMailboxId;
-        accountId = mailbox?.isShared ? mailbox.accountId : undefined;
+        // Field filters (from/subject/attachment/...) must reach the same
+        // account the list is showing, or they silently match the user's own
+        // mail while a shared folder is open. (#923)
+        const scope = resolveSearchScope({ mailboxes, selectedMailbox, searchMailboxId, selectedKeyword });
+        accountId = scope.accountId;
 
-        const filter = buildJMAPFilter(searchQuery, searchFilters, jmapMailboxId);
+        const filter = buildJMAPFilter(searchQuery, searchFilters, scope.jmapMailboxId);
         result = await resolveActionClient(client).advancedSearchEmails(filter, accountId, emailsPerPage, 0);
       }
 
@@ -3862,9 +3910,9 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
           // A refresh while a search is active must re-run it under the
           // search's own folder scope, which is independent of selectedMailbox.
           const { searchMailboxId } = get();
-          const scopeMailbox = mailboxes.find(mb => mb.id === searchMailboxId);
-          const filter = buildJMAPFilter(searchQuery, searchFilters, scopeMailbox?.originalId || searchMailboxId);
-          const scopeAccountId = scopeMailbox?.isShared ? scopeMailbox.accountId : undefined;
+          const scope = resolveSearchScope({ mailboxes, selectedMailbox, searchMailboxId, selectedKeyword });
+          const filter = buildJMAPFilter(searchQuery, searchFilters, scope.jmapMailboxId);
+          const scopeAccountId = scope.accountId;
           result = await effectiveClient.advancedSearchEmails(filter, scopeAccountId, emailsPerPage, 0);
         } else {
           result = await effectiveClient.getEmails(jmapMailboxId, accountId, emailsPerPage, 0, undefined, true, undefined, getMessageListOrderFor(mailbox?.role));

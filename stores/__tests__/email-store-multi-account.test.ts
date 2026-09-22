@@ -105,6 +105,17 @@ describe('useEmailStore multi-account state', () => {
     expect(state.expandedThreadIds.size).toBe(0);
   });
 
+  it('selectAccountMailbox drops a search scope belonging to the account being left', () => {
+    // The scope names a folder of the previous account, so it cannot be
+    // resolved against the new one. Keeping it would silently widen the next
+    // search to every folder while the dropdown still reads "All folders".
+    useEmailStore.setState({ searchMailboxId: 'a-archive' });
+
+    useEmailStore.getState().selectAccountMailbox('account-b', 'b-inbox');
+
+    expect(useEmailStore.getState().searchMailboxId).toBe('');
+  });
+
   it('selectAccountMailbox with null accountId switches back to the active account', () => {
     useEmailStore.getState().selectAccountMailbox('account-b', 'b-inbox');
     expect(useEmailStore.getState().viewingAccountId).toBe('account-b');
