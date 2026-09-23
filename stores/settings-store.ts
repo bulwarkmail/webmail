@@ -69,6 +69,32 @@ export function registerTemplateSyncBridge(
   subscribe(() => onTemplateStoreChange?.());
 }
 
+// --- Calendar subscription sync bridge ---------------------------------------
+// iCal subscriptions ride along in the synced settings blob to avoid turning
+// into writable/lost calendars on browser cache clear or new devices.
+interface CalendarSubscriptionSyncBridge {
+  getSyncedState: () => {
+    icalSubscriptions: unknown[];
+    deletedSubscriptionIds: Record<string, string>;
+  };
+  applySyncedState: (
+    subscriptions: unknown,
+    deletedSubscriptionIds: unknown,
+    opts: { merge: boolean }
+  ) => void;
+}
+
+let calendarSubscriptionSyncBridge: CalendarSubscriptionSyncBridge | null = null;
+let onCalendarSubscriptionStoreChange: (() => void) | null = null;
+
+export function registerCalendarSubscriptionSyncBridge(
+  bridge: CalendarSubscriptionSyncBridge,
+  subscribe: (listener: () => void) => void
+): void {
+  calendarSubscriptionSyncBridge = bridge;
+  subscribe(() => onCalendarSubscriptionStoreChange?.());
+}
+
 async function syncSettingsJob(job: SettingsSyncJob, retries = 1): Promise<void> {
   syncLog('Syncing settings to server for', job.username);
   const res = await apiFetch('/api/settings', {
@@ -783,6 +809,7 @@ export const useSettingsStore = create<SettingsState>()(
       exportSettings: () => {
         const state = get();
         const templateSync = templateSyncBridge?.getSyncedState();
+        const subscriptionSync = calendarSubscriptionSyncBridge?.getSyncedState();
         const settings = {
           fontSize: state.fontSize,
           density: state.density,
@@ -895,6 +922,14 @@ export const useSettingsStore = create<SettingsState>()(
                 deletedTemplateIds: templateSync.deletedTemplateIds,
               }
             : {}),
+          // Omitted entirely if the bridge has not registered, so an importing
+          // device leaves its calendar subscriptions alone.
+          ...(subscriptionSync
+            ? {
+                icalSubscriptions: subscriptionSync.icalSubscriptions,
+                deletedSubscriptionIds: subscriptionSync.deletedSubscriptionIds,
+              }
+            : {}),
         };
         return JSON.stringify(settings, null, 2);
       },
@@ -994,6 +1029,11 @@ export const useSettingsStore = create<SettingsState>()(
           templateSyncBridge?.applySyncedState(
             settings.templates,
             settings.deletedTemplateIds,
+            { merge: Boolean(opts?.serverAccountId) }
+          );
+          calendarSubscriptionSyncBridge?.applySyncedState(
+            settings.icalSubscriptions,
+            settings.deletedSubscriptionIds,
             { merge: Boolean(opts?.serverAccountId) }
           );
 
@@ -1401,12 +1441,17 @@ if (typeof window !== 'undefined') {
     if (useSettingsStore.getState().settingsSyncDisabled) return;
     triggerSync();
   };
-  // Ensure template-store is loaded (and the bridge registered) even before
-  // any UI component imports it, so the first sync push already carries the
-  // templates. Best effort: the UI imports the store itself when it needs it,
-  // and under vitest a short test file can finish (and tear its environment
-  // down) before this chain has loaded, which rejects the import.
+
+  // And when iCal subscriptions change (they ride along in the synced blob).
+  onCalendarSubscriptionStoreChange = () => {
+    if (useSettingsStore.getState().settingsSyncDisabled) return;
+    triggerSync();
+  };
+
+  // Ensure template-store and calendar-store are loaded (and bridges registered) even before
+  // any UI component imports them, so the first sync push already carries them.
   import('./template-store').catch(() => {});
+  import('./calendar-store').catch(() => {});
 }
 
 /**
