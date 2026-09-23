@@ -3577,6 +3577,10 @@
     "date_label": "Datums",
     "subject_label": "Tēma"
   },
+  "build_refresh": {
+    "title": "A new version of the webmail was published.",
+    "reload": "Reload"
+  },
   "pwa_install": {
     "title": "Instalēt {appName}",
     "description": "Instalējiet mūsu lietotni ātrai piekļuvei un bezsaistes atbalstam.",

@@ -3577,6 +3577,10 @@
     "date_label": "التاريخ",
     "subject_label": "الموضوع"
   },
+  "build_refresh": {
+    "title": "A new version of the webmail was published.",
+    "reload": "Reload"
+  },
   "pwa_install": {
     "title": "تثبيت {appName}",
     "description": "ثبّت تطبيقنا للوصول السريع والدعم دون اتصال.",

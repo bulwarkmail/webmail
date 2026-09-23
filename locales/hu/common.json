@@ -3577,6 +3577,10 @@
     "date_label": "Dátum",
     "subject_label": "Tárgy"
   },
+  "build_refresh": {
+    "title": "A new version of the webmail was published.",
+    "reload": "Reload"
+  },
   "pwa_install": {
     "title": "{appName} telepítése",
     "description": "Telepítsd az alkalmazásunkat a gyors eléréshez és offline támogatáshoz.",

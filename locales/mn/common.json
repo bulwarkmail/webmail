@@ -3577,6 +3577,10 @@
     "date_label": "Огноо",
     "subject_label": "Сэдэв"
   },
+  "build_refresh": {
+    "title": "A new version of the webmail was published.",
+    "reload": "Reload"
+  },
   "pwa_install": {
     "title": "{appName} суулгах",
     "description": "Хурдан нэвтрэх болон оффлайн дэмжлэг авахын тулд аппыг суулгана уу.",

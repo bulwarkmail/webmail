@@ -3577,6 +3577,10 @@
     "date_label": "Datum",
     "subject_label": "Betreff"
   },
+  "build_refresh": {
+    "title": "A new version of the webmail was published.",
+    "reload": "Reload"
+  },
   "pwa_install": {
     "title": "{appName} installieren",
     "description": "Installiere unsere App für schnellen Zugriff und Offline-Unterstützung.",
