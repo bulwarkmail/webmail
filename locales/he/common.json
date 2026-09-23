@@ -581,6 +581,7 @@
       "forward": "Fwd:",
       "reply": "Re:"
     },
+    "forward_batch_count": "{count, plural, one {הודעת דוא״ל אחת} other {# הודעות דוא״ל}}",
     "no_subject": "(ללא נושא)",
     "unknown_sender": "לא ידוע",
     "quote": {
@@ -2201,6 +2202,7 @@
     "not_spam": "לא ספאם",
     "tag": "תווית",
     "items_selected": "נבחרו הודעות דוא\"ל מסוג{count}",
+    "forward_as_attachments": "העבר כקבצים מצורפים",
     "edit_draft": "ערוך טיוטה",
     "cancel_scheduled_send": "ביטול שליחה",
     "reschedule_send": "תזמן מחדש",

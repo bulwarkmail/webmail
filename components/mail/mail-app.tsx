@@ -105,7 +105,7 @@ import { appLifecycleHooks, uiHooks, routerHooks, toastHooks, emailHooks } from 
 import { emailToReadView } from "@/lib/plugin-projection";
 import { buildQuoteHeader } from "@/lib/quote-header";
 import { buildComposeTabTitle, buildReplySubject } from "@/lib/subject-prefix";
-import { buildForwardAsAttachmentPayload } from "@/lib/forward-as-attachment";
+import { buildForwardAsAttachmentPayload, buildBatchForwardAsAttachmentPayload } from "@/lib/forward-as-attachment";
 import { getEffectiveLocale } from '@/i18n/detect-locale';
 import {
   SCHEDULED_MAILBOX_ID,
@@ -2153,6 +2153,85 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     if (isMobile) setActiveView('viewer');
   };
 
+  // Batch sibling of handleForwardAsAttachment above: opens ONE composer with
+  // every selected message attached as message/rfc822. Resolution goes through
+  // useEmailStore.getState() - always fresh, immune to the closure-staleness
+  // noted above - and filters the current list so attachment order follows the
+  // list, not checkbox-click order. Stale selection ids (folder switched under
+  // the selection) simply drop out of the filter rather than forwarding
+  // something the user can no longer see.
+  const handleBatchForwardAsAttachment = async () => {
+    const state = useEmailStore.getState();
+    const ids = state.selectedEmailIds;
+    if (ids.size < 2) return; // menu only offers this for >1; guards future wiring
+    // Unreachable from the menu in the scheduled view (the whole actions block
+    // is isScheduled-gated); resolve the right pool anyway so a future shortcut
+    // can't silently read the wrong list.
+    const pool = state.isScheduledView ? state.scheduledEmails : state.emails;
+    const selected = pool.filter((e) => ids.has(e.id));
+    if (selected.length === 0) return;
+
+    const {
+      emailDownloadTemplate,
+      filenameSpaceReplacement,
+      filenameLowercase,
+      filenameStripDiacritics,
+      filenameCollapseSeparators,
+    } = useSettingsStore.getState();
+
+    const transformed: Email[] = [];
+    for (const e of selected) {
+      transformed.push(await emailHooks.onBeforeComposeOpenToForwardAsAttachment.transform(e));
+    }
+    const payload = buildBatchForwardAsAttachmentPayload(
+      transformed,
+      t('email_composer.prefix.forward'),
+      (count) => t('email_composer.forward_batch_count', { count }),
+      {
+        template: emailDownloadTemplate,
+        spaceReplacement: filenameSpaceReplacement,
+        lowercase: filenameLowercase,
+        stripDiacritics: filenameStripDiacritics,
+        collapseSeparators: filenameCollapseSeparators,
+      },
+    );
+    if (!payload) return; // nothing attachable - same silent no-op as the single flow
+
+    // A veto on any one original cancels the whole batch compose: opening a
+    // composer missing a message a plugin refused would forward a partial set
+    // the user never chose. (ReplyContext is single-email; no batch variant.)
+    for (const e of transformed) {
+      const ok = await emailHooks.onBeforeForward.intercept({
+        originalEmailId: e.id,
+        originalEmail: emailToReadView(e),
+        mode: 'forward' as const,
+      });
+      if (!ok) return;
+    }
+
+    startFreshComposerSession();
+    setPendingDraft({
+      to: "",
+      cc: "",
+      bcc: "",
+      subject: payload.subject,
+      body: "",
+      showCc: false,
+      showBcc: false,
+      selectedIdentityId: null,
+      subAddressTag: "",
+      mode: "forward",
+      draftId: null,
+      // No single original subject to quote - the count-based subject above
+      // is the whole story, and the composer seeds attachments from this array.
+      replyTo: { attachments: payload.attachments },
+    });
+    setComposerMode('forward');
+    setShowComposer(true);
+    if (isMobile) setActiveView('viewer');
+    clearSelection(); // only on success - a vetoed/no-op attempt keeps the selection
+  };
+
   const handleDelete = async (emailToDelete: Email | null = selectedEmail) => {
     if (!client || !emailToDelete) return;
 
@@ -4080,6 +4159,9 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                 onForwardAsAttachment={(email) => {
                   selectEmail(email);
                   handleForwardAsAttachment(email);
+                }}
+                onBatchForwardAsAttachment={() => {
+                  void handleBatchForwardAsAttachment();
                 }}
                 onMarkAsRead={async (email, read) => {
                   if (client) {

@@ -626,6 +626,7 @@
       "forward": "Fwd:",
       "reply": "Re:"
     },
+    "forward_batch_count": "{count, plural, one {1 e-mail} few {# e-maile} many {# e-maili} other {# e-maili}}",
     "no_subject": "(Bez tematu)",
     "unknown_sender": "Nieznany",
     "quote": {
@@ -2235,6 +2236,7 @@
     "not_spam": "To nie spam",
     "tag": "Etykieta",
     "items_selected": "{count} zaznaczonych wiadomości",
+    "forward_as_attachments": "Prześlij dalej jako załączniki",
     "edit_draft": "Edytuj szkic",
     "cancel_scheduled_send": "Anuluj wysyłkę",
     "reschedule_send": "Przełóż",

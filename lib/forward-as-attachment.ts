@@ -14,6 +14,11 @@ export interface ForwardAsAttachmentPayload {
   attachment: ForwardAsAttachmentEntry;
 }
 
+export interface BatchForwardAsAttachmentPayload {
+  subject: string;
+  attachments: ForwardAsAttachmentEntry[];
+}
+
 /**
  * Build the subject and synthetic attachment entry for forwarding a
  * message as a message/rfc822 attachment instead of inline-quoted text
@@ -54,5 +59,40 @@ export function buildForwardAsAttachmentPayload(
       type: "message/rfc822",
       size: email.size,
     },
+  };
+}
+
+/**
+ * Batch sibling of buildForwardAsAttachmentPayload: one composer carrying
+ * every selected message as its own message/rfc822 attachment. The subject is
+ * count-based (there is no single original subject): `countLabel(n)` returns
+ * the localized phrase for n messages (e.g. "3 emails") and is called with
+ * the number actually attached, so the subject never claims more attachments
+ * than the composer carries. Emails without a blobId are skipped; returns
+ * null when none of them has one (same silent no-op as the single flow).
+ *
+ * Attachments keep the input list order so the composer shows them in the
+ * same order the list did. Per-message "{date}-{subject}" filenames would
+ * collide only when two messages share subject AND receivedAt-to-the-second
+ * - rare enough to tolerate (JMAP accepts duplicate part names), so no
+ * dedupe suffix.
+ */
+export function buildBatchForwardAsAttachmentPayload(
+  emails: Email[],
+  forwardPrefix: string,
+  countLabel: (count: number) => string,
+  filenameOptions?: EmailFilenameOptions,
+): BatchForwardAsAttachmentPayload | null {
+  const attachable = emails.filter((email) => email.blobId);
+  if (attachable.length === 0) return null;
+
+  return {
+    subject: buildForwardSubject(countLabel(attachable.length), forwardPrefix),
+    attachments: attachable.map((email) => ({
+      blobId: email.blobId!,
+      name: emailExportFilename(email, { ...filenameOptions, template: "{date}-{subject}" }),
+      type: "message/rfc822" as const,
+      size: email.size,
+    })),
   };
 }

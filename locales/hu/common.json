@@ -629,6 +629,7 @@
       "forward": "Továbbítás:",
       "reply": "Válasz:"
     },
+    "forward_batch_count": "{count, plural, one {1 e-mail} other {# e-mail}}",
     "no_subject": "(Nincs tárgy)",
     "unknown_sender": "Ismeretlen",
     "quote": {
@@ -2235,6 +2236,7 @@
     "not_spam": "Nem spam",
     "tag": "Címke",
     "items_selected": "{count} e-mail kijelölve",
+    "forward_as_attachments": "Továbbítás mellékletként",
     "edit_draft": "Piszkozat szerkesztése",
     "cancel_scheduled_send": "Küldés megszakítása",
     "reschedule_send": "Átütemezés",

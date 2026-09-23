@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { buildForwardAsAttachmentPayload } from '@/lib/forward-as-attachment';
+import { buildForwardAsAttachmentPayload, buildBatchForwardAsAttachmentPayload } from '@/lib/forward-as-attachment';
 import type { Email } from '@/lib/jmap/types';
 
 // Pin TZ so the local-time date rendering in the filename test is deterministic,
@@ -91,5 +91,83 @@ describe('buildForwardAsAttachmentPayload', () => {
     const payload = buildForwardAsAttachmentPayload(email, 'Fwd:');
     expect(payload?.attachment.name).not.toContain('Alice');
     expect(payload?.attachment.name).not.toContain('Bobby');
+  });
+});
+
+describe('buildBatchForwardAsAttachmentPayload', () => {
+  const countLabel = (n: number) => `${n} email${n === 1 ? '' : 's'}`;
+
+  it('returns null when no email has a blobId', () => {
+    const emails = [makeEmail({ id: 'e1', blobId: undefined }), makeEmail({ id: 'e2', blobId: undefined })];
+    expect(buildBatchForwardAsAttachmentPayload(emails, 'Fwd:', countLabel)).toBeNull();
+  });
+
+  it('skips emails without a blobId and attaches the rest', () => {
+    const emails = [
+      makeEmail({ id: 'e1', blobId: 'blob-1' }),
+      makeEmail({ id: 'e2', blobId: undefined }),
+      makeEmail({ id: 'e3', blobId: 'blob-3' }),
+    ];
+    const payload = buildBatchForwardAsAttachmentPayload(emails, 'Fwd:', countLabel);
+    expect(payload?.attachments.map((a) => a.blobId)).toEqual(['blob-1', 'blob-3']);
+  });
+
+  it('builds the subject from the attachable count, not the input length', () => {
+    const emails = [
+      makeEmail({ id: 'e1', blobId: 'blob-1' }),
+      makeEmail({ id: 'e2', blobId: 'blob-2' }),
+      makeEmail({ id: 'e3', blobId: undefined }),
+    ];
+    const payload = buildBatchForwardAsAttachmentPayload(emails, 'Fwd:', countLabel);
+    expect(payload?.subject).toBe('Fwd: 2 emails');
+  });
+
+  it('prefixes the count phrase using the given forward prefix', () => {
+    const emails = [makeEmail({ id: 'e1', blobId: 'b1' }), makeEmail({ id: 'e2', blobId: 'b2' })];
+    const payload = buildBatchForwardAsAttachmentPayload(emails, 'WG:', countLabel);
+    expect(payload?.subject).toBe('WG: 2 emails');
+  });
+
+  it('preserves the input list order of the attachments', () => {
+    const emails = [
+      makeEmail({ id: 'e1', blobId: 'b1', subject: 'First' }),
+      makeEmail({ id: 'e2', blobId: 'b2', subject: 'Second' }),
+      makeEmail({ id: 'e3', blobId: 'b3', subject: 'Third' }),
+    ];
+    const payload = buildBatchForwardAsAttachmentPayload(emails, 'Fwd:', countLabel);
+    expect(payload?.attachments.map((a) => a.name)).toEqual([
+      expect.stringMatching(/first/i),
+      expect.stringMatching(/second/i),
+      expect.stringMatching(/third/i),
+    ]);
+  });
+
+  it('references each email\'s own blobId and size as message/rfc822 .eml entries', () => {
+    const emails = [
+      makeEmail({ id: 'e1', blobId: 'b1', size: 100 }),
+      makeEmail({ id: 'e2', blobId: 'b2', size: 200 }),
+    ];
+    const payload = buildBatchForwardAsAttachmentPayload(emails, 'Fwd:', countLabel);
+    expect(payload?.attachments).toEqual([
+      { blobId: 'b1', name: expect.stringMatching(/\.eml$/), type: 'message/rfc822', size: 100 },
+      { blobId: 'b2', name: expect.stringMatching(/\.eml$/), type: 'message/rfc822', size: 200 },
+    ]);
+  });
+
+  it('applies user space/case transforms but ignores a custom filename template, unlike "Export as .eml"', () => {
+    const emails = [makeEmail({ id: 'e1', blobId: 'b1', subject: 'Missed spam example' })];
+    const payload = buildBatchForwardAsAttachmentPayload(emails, 'Fwd:', countLabel, {
+      template: 'custom-{subject}',
+      lowercase: true,
+      spaceReplacement: 'dash',
+    });
+    expect(payload?.attachments[0].name).toBe('2026-07-26-22.25.22-missed-spam-example.eml');
+  });
+
+  it('supports a single email, producing a "one" count label', () => {
+    const emails = [makeEmail({ id: 'e1', blobId: 'b1' })];
+    const payload = buildBatchForwardAsAttachmentPayload(emails, 'Fwd:', countLabel);
+    expect(payload?.subject).toBe('Fwd: 1 email');
+    expect(payload?.attachments).toHaveLength(1);
   });
 });

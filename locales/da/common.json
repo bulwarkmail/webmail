@@ -628,6 +628,7 @@
       "forward": "Vs:",
       "reply": "Sv:"
     },
+    "forward_batch_count": "{count, plural, one {1 e-mail} other {# e-mails}}",
     "no_subject": "(Intet emne)",
     "unknown_sender": "Ukendt",
     "quote": {
@@ -2235,6 +2236,7 @@
     "not_spam": "Ikke spam",
     "tag": "Tag",
     "items_selected": "{count} e-mails valgt",
+    "forward_as_attachments": "Videresend som vedhæftede filer",
     "edit_draft": "Redigér kladde",
     "cancel_scheduled_send": "Annuller afsendelse",
     "reschedule_send": "Planlæg om",

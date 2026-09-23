@@ -629,6 +629,7 @@
       "forward": "İlt:",
       "reply": "Yn:"
     },
+    "forward_batch_count": "{count, plural, one {1 e-posta} other {# e-posta}}",
     "no_subject": "(Konu Yok)",
     "unknown_sender": "Bilinmeyen",
     "quote": {
@@ -2235,6 +2236,7 @@
     "not_spam": "Spam değil",
     "tag": "Etiket",
     "items_selected": "{count} e-posta seçildi",
+    "forward_as_attachments": "Ek olarak ilet",
     "edit_draft": "Taslağı Düzenle",
     "cancel_scheduled_send": "Göndermeyi iptal et",
     "reschedule_send": "Yeniden zamanla",

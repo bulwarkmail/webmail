@@ -629,6 +629,7 @@
       "forward": "Дахин:",
       "reply": "Дахин:"
     },
+    "forward_batch_count": "{count, plural, one {1 имэйл} other {# имэйл}}",
     "no_subject": "(Сэдэв байхгүй)",
     "unknown_sender": "Үл мэдэгдэх",
     "quote": {
@@ -2235,6 +2236,7 @@
     "not_spam": "Спам биш",
     "tag": "Таг",
     "items_selected": "{count} имэйл сонгосон",
+    "forward_as_attachments": "Хавсралт болгон дамжуулах",
     "edit_draft": "Ноорог засах",
     "cancel_scheduled_send": "Илгээхийг цуцлах",
     "reschedule_send": "Хуваарь солих",

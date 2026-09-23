@@ -629,6 +629,7 @@
       "forward": "Redirecționare:",
       "reply": "Re:"
     },
+    "forward_batch_count": "{count, plural, one {1 e-mail} few {# e-mailuri} other {# de e-mailuri}}",
     "no_subject": "(Fără subiect)",
     "unknown_sender": "Necunoscut",
     "quote": {
@@ -2235,6 +2236,7 @@
     "not_spam": "Nu este spam",
     "tag": "Etichetă",
     "items_selected": "{count} e-mailuri selectate",
+    "forward_as_attachments": "Redirecționează ca atașamente",
     "edit_draft": "Editează schița",
     "cancel_scheduled_send": "Anulează trimiterea",
     "reschedule_send": "Reprogramare",

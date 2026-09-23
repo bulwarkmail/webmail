@@ -629,6 +629,7 @@
       "forward": "Fwd:",
       "reply": "Re:"
     },
+    "forward_batch_count": "{count, plural, one {1 e-mail} few {# e-maily} other {# e-mailov}}",
     "no_subject": "(Bez predmetu)",
     "unknown_sender": "Neznámy",
     "quote": {
@@ -2235,6 +2236,7 @@
     "not_spam": "Nie je spam",
     "tag": "Štítok",
     "items_selected": "{count} vybraných e-mailov",
+    "forward_as_attachments": "Preposlať ako prílohy",
     "edit_draft": "Upraviť koncept",
     "cancel_scheduled_send": "Zrušiť odoslanie",
     "reschedule_send": "Prenaplánovať",

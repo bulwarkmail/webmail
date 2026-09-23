@@ -626,6 +626,7 @@
       "forward": "Tr:",
       "reply": "Re:"
     },
+    "forward_batch_count": "{count, plural, one {1 e-mail} other {# e-mails}}",
     "no_subject": "(Sans objet)",
     "unknown_sender": "Inconnu",
     "quote": {
@@ -2235,6 +2236,7 @@
     "not_spam": "Pas un spam",
     "tag": "Étiquette",
     "items_selected": "{count} emails sélectionnés",
+    "forward_as_attachments": "Transférer en pièces jointes",
     "edit_draft": "Modifier le brouillon",
     "cancel_scheduled_send": "Annuler l’envoi",
     "reschedule_send": "Replanifier",

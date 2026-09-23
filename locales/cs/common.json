@@ -626,6 +626,7 @@
       "forward": "Fwd:",
       "reply": "Re:"
     },
+    "forward_batch_count": "{count, plural, one {1 zpráva} few {# zprávy} other {# zpráv}}",
     "no_subject": "(Bez předmětu)",
     "unknown_sender": "Neznámý",
     "quote": {
@@ -2235,6 +2236,7 @@
     "not_spam": "Není spam",
     "tag": "Štítek",
     "items_selected": "{count} vybraných zpráv",
+    "forward_as_attachments": "Přeposlat jako přílohy",
     "edit_draft": "Upravit koncept",
     "cancel_scheduled_send": "Zrušit odeslání",
     "reschedule_send": "Přeplánovat",

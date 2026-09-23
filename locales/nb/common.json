@@ -629,6 +629,7 @@
       "forward": "Fwd:",
       "reply": "Re:"
     },
+    "forward_batch_count": "{count, plural, one {1 e-post} other {# e-poster}}",
     "no_subject": "(Uten emne)",
     "unknown_sender": "Ukjent",
     "quote": {
@@ -2235,6 +2236,7 @@
     "not_spam": "Ikke søppelpost",
     "tag": "Etikett",
     "items_selected": "Valgt: {count}",
+    "forward_as_attachments": "Videresend som vedlegg",
     "edit_draft": "Rediger utkast",
     "cancel_scheduled_send": "Avbryt sending",
     "reschedule_send": "Planlegg på nytt",

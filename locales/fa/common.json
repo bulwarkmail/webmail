@@ -629,6 +629,7 @@
       "forward": "Fwd:",
       "reply": "Re:"
     },
+    "forward_batch_count": "{count} ایمیل",
     "no_subject": "(بدون موضوع)",
     "unknown_sender": "ناشناس",
     "quote": {
@@ -2235,6 +2236,7 @@
     "not_spam": "هرزنامه نیست",
     "tag": "برچسب",
     "items_selected": "{count} ایمیل انتخاب شده",
+    "forward_as_attachments": "ارسال به‌عنوان پیوست‌ها",
     "edit_draft": "ویرایش پیش‌نویس",
     "cancel_scheduled_send": "لغو ارسال",
     "reschedule_send": "باززمان‌بندی",

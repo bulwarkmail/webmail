@@ -626,6 +626,7 @@
       "forward": "Rvf:",
       "reply": "Re:"
     },
+    "forward_batch_count": "{count, plural, one {1 correo} other {# correos}}",
     "no_subject": "(Sin Asunto)",
     "unknown_sender": "Desconocido",
     "quote": {
@@ -2235,6 +2236,7 @@
     "not_spam": "No es spam",
     "tag": "Etiqueta",
     "items_selected": "{count} correos seleccionados",
+    "forward_as_attachments": "Reenviar como archivos adjuntos",
     "edit_draft": "Editar borrador",
     "cancel_scheduled_send": "Cancelar envío",
     "reschedule_send": "Reprogramar",
