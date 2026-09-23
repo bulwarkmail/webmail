@@ -213,3 +213,45 @@ describe('draft replace lifecycle (#849)', () => {
     ]);
   });
 });
+
+/**
+ * A reply saved as a draft must keep its place in the thread. createDraft had
+ * no way to write In-Reply-To/References, so every stored reply draft - and
+ * everything later sent from it - started a new conversation.
+ */
+describe('reply draft threading', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  function createdDraft(captured: CapturedRequest[]): Record<string, unknown> {
+    return Object.values(emailSetCalls(captured)[0].create as Record<string, Record<string, unknown>>)[0];
+  }
+
+  it('createDraft writes In-Reply-To and References as bare msg-ids', async () => {
+    const client = createClient();
+    const captured = mockFlow();
+
+    await client.createDraft(
+      ['bob@example.com'], 'Re: Subject', 'body',
+      undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+      ['<parent@example.com>'],
+      ['<root@example.com>', 'parent@example.com'],
+    );
+
+    const create = createdDraft(captured);
+    expect(create.inReplyTo).toEqual(['parent@example.com']);
+    expect(create.references).toEqual(['root@example.com', 'parent@example.com']);
+  });
+
+  it('createDraft writes no threading headers on a draft that answers nothing', async () => {
+    const client = createClient();
+    const captured = mockFlow();
+
+    await client.createDraft(['bob@example.com'], 'Subject', 'body');
+
+    const create = createdDraft(captured);
+    expect(create).not.toHaveProperty('inReplyTo');
+    expect(create).not.toHaveProperty('references');
+  });
+});

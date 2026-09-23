@@ -814,7 +814,10 @@ export interface AlmostSavedDraft{
     draftId?: string,
     attachments?: Array<{ blobId: string; name: string; type: string; size: number; disposition?: 'attachment' | 'inline'; cid?: string }>,
     fromName?: string,
-    htmlBody?: string
+    htmlBody?: string,
+    /** Threading of a reply draft: RFC 5322 In-Reply-To and References. */
+    inReplyTo?: string[],
+    references?: string[]
 }
 
 /**

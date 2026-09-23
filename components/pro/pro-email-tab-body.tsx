@@ -355,6 +355,9 @@ export function ProEmailView({ emailId, client: clientOverride, accountId, onLoa
         subAddressTag: '',
         mode: 'compose',
         draftId: email.id,
+        // The message a reply draft answers - see the classic path.
+        inReplyTo: email.inReplyTo ?? undefined,
+        references: email.references ?? undefined,
         // The draft's already-uploaded parts - the classic path carries them
         // since #849; without this the Pro draft tab still opened the
         // composer without its files and the next save stripped them.

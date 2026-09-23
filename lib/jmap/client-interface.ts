@@ -287,6 +287,8 @@ export interface IJMAPClient {
     attachments?: Array<{ blobId: string; name: string; type: string; size: number; disposition?: 'attachment' | 'inline'; cid?: string }>,
     fromName?: string,
     htmlBody?: string,
+    inReplyTo?: string[],
+    references?: string[],
   ): Promise<string>;
 
   sendEmail(
