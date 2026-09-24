@@ -251,6 +251,12 @@ export const CONFIG_ENV_MAP: Record<string, { envVar: string; fileEnvVar?: strin
   // is sent and the provider shows its own signed-out page.
   oauthPostLogoutRedirectUri: { envVar: 'OAUTH_POST_LOGOUT_REDIRECT_URI', type: 'url', defaultValue: '' },
   allowCustomJmapEndpoint: { envVar: 'ALLOW_CUSTOM_JMAP_ENDPOINT', type: 'boolean', defaultValue: false },
+  // Send the end user's IP (X-Forwarded-For, derived like TRUSTED_PROXY_DEPTH)
+  // on server-side requests to the admin-configured JMAP server, so a server
+  // that bans failed logins per IP counts them per user, not against Bulwark.
+  // Needs Bulwark reachable only via appending proxies (TRUSTED_PROXY_DEPTH)
+  // and a JMAP server that honours X-Forwarded-For from Bulwark alone.
+  jmapForwardClientIp: { envVar: 'JMAP_FORWARD_CLIENT_IP', type: 'boolean', defaultValue: false },
   // What being a Stalwart admin grants inside the Bulwark admin dashboard (#870).
   //   auto     - Stalwart admins see the shield and are signed into /admin
   //              without the Bulwark admin password (legacy behaviour).
