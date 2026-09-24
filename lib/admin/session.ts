@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { createCipheriv, createDecipheriv, randomBytes, createHash } from 'node:crypto';
 import { getSessionSecret } from '@/lib/auth/session-secret';
 import { isSameOriginRequest } from '@/lib/security/same-origin';
+import { pickForwardedFor } from '@/lib/security/client-ip';
 import { ADMIN_SESSION_COOKIE, DEFAULT_ADMIN_SESSION_TTL } from './types';
 import type { AdminSessionPayload } from './types';
 
@@ -151,11 +152,7 @@ export async function clearAdminSessionCookie(): Promise<void> {
 export function getClientIP(request: Request): string {
   const forwarded = request.headers.get('x-forwarded-for');
   if (forwarded) {
-    const parts = forwarded.split(',').map(s => s.trim()).filter(Boolean);
-    const depth = Math.max(1, parseInt(process.env.TRUSTED_PROXY_DEPTH || '1', 10));
-    // Take the entry at position (length - depth), clamped to 0
-    const index = Math.max(0, parts.length - depth);
-    return parts[index] || '0.0.0.0';
+    return pickForwardedFor(forwarded) || '0.0.0.0';
   }
   return request.headers.get('x-real-ip') || '0.0.0.0';
 }

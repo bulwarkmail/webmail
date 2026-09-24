@@ -18,6 +18,7 @@
 import { configManager } from '@/lib/admin/config-manager';
 import { parseJmapServers, resolveTrustedJmapUrl } from '@/lib/admin/jmap-servers';
 import { fetchPublicUrl, type PublicFetchResponse } from '@/lib/security/url-guard';
+import { forwardedClientIpHeaders } from '@/lib/security/forward-client-ip';
 
 const MAX_REDIRECTS = 5;
 
@@ -53,6 +54,10 @@ function headersToRecord(init: HeadersInit | undefined): Record<string, string> 
  * re-validated: `Authorization` is dropped when the origin changes, and a
  * 303 (or 301/302 on a POST) downgrades to GET like `fetch` would. Pass
  * `redirect: 'manual'` to get the 3xx response back instead.
+ *
+ * Trusted (admin-configured) servers also get the end user's address when
+ * JMAP_FORWARD_CLIENT_IP is on (see forwardedClientIpHeaders); it overrides
+ * any X-Forwarded-For the caller set. Custom endpoints never get it.
  */
 export async function fetchJmapServer(
   url: string,
@@ -60,7 +65,11 @@ export async function fetchJmapServer(
   trusted: boolean | undefined,
 ): Promise<Response> {
   if (trusted !== false) {
-    return fetch(url, init);
+    const clientIp = await forwardedClientIpHeaders();
+    if (!clientIp['X-Forwarded-For']) return fetch(url, init);
+    const headers = new Headers(init.headers);
+    headers.set('X-Forwarded-For', clientIp['X-Forwarded-For']);
+    return fetch(url, { ...init, headers });
   }
 
   const { redirect, headers: initHeaders, ...rest } = init;
