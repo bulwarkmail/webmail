@@ -2825,6 +2825,7 @@
       "save_note": "저장",
       "note_saved": "메모가 추가되었어요",
       "open_link": "링크 열기",
+      "copy_location": "위치 복사",
       "meeting_link": "화상 회의 링크",
       "tentative": "미정",
       "cancelled": "취소됨",
