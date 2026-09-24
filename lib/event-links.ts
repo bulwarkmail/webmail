@@ -29,7 +29,7 @@ export interface MeetingLink {
 // "learn more" and dial-in links on the same host out of the result.
 const PROVIDERS: Array<{ name: string; host: RegExp; path?: RegExp }> = [
   { name: 'Teams', host: /^teams\.(microsoft|live)\.com$/, path: /^\/(l\/meetup-join|meet)\//i },
-  { name: 'Zoom', host: /(^|\.)zoom\.us$/, path: /^\/(j|w|my|s)\//i },
+  { name: 'Zoom', host: /(^|\.)zoom\.us$/, path: /^\/(j|w|wc|my|s)\//i },
   { name: 'Google Meet', host: /^meet\.google\.com$/, path: /^\/[a-z]{3}-[a-z]{4}-[a-z]{3}/i },
   { name: 'Webex', host: /(^|\.)webex\.com$/, path: /^\/(meet|join|[^/]+\/j\.php)/i },
   { name: 'Jitsi', host: /^meet\.jit\.si$/, path: /^\/./ },
@@ -37,6 +37,8 @@ const PROVIDERS: Array<{ name: string; host: RegExp; path?: RegExp }> = [
   { name: 'GoTo', host: /^(meet\.goto\.com|global\.gotomeeting\.com|app\.gotomeeting\.com)$/, path: /^\/./ },
   { name: 'Visio', host: /^(visio|webconf)\.numerique\.gouv\.fr$/, path: /^\/./ },
 ];
+
+const UNSAFE_SCHEMES = new Set(['javascript', 'data', 'vbscript', 'file', 'blob', 'about']);
 
 const URL_RE = /https?:\/\/[^\s<>"']+/g;
 
@@ -101,7 +103,16 @@ export function findMeetingLink(event: EventPlaces): MeetingLink | null {
     const found = firstMeetingUrl(loc?.name) ?? firstMeetingUrl(loc?.description);
     if (found) return found;
   }
-  return firstMeetingUrl(event.description);
+  const inDescription = firstMeetingUrl(event.description);
+  if (inDescription) return inDescription;
+  // Last resort: a virtual location in an app scheme (msteams:, zoommtg:,
+  // sip:…) still beats no link at all. Never a scheme that runs code.
+  for (const vl of Object.values(event.virtualLocations ?? {})) {
+    const uri = vl?.uri?.trim();
+    const scheme = uri ? /^([a-z][a-z0-9+.-]*):/i.exec(uri)?.[1].toLowerCase() : undefined;
+    if (uri && scheme && !UNSAFE_SCHEMES.has(scheme)) return { uri, derived: false };
+  }
+  return null;
 }
 
 /** The first location's display name, if any. */
@@ -112,11 +123,23 @@ export function primaryLocationName(event: Pick<EventPlaces, 'locations'>): stri
 
 // "Microsoft Teams Meeting", "Réunion Microsoft Teams", "Zoom", "Google Meet"…
 // A location like this names the service, not a place: tapping it should join
-// the meeting, never search the maps for it.
-const MEETING_LABEL_RE = /\b(microsoft teams|teams|zoom|google meet|webex|jitsi|whereby|gotomeeting|visio(conf[ée]rence)?|online|en ligne)\b/i;
+// the meeting, never search the maps for it. The whole label must be a service
+// name, so "Salle Teams" or "Studio Zoom" stay places.
+const MEETING_LABELS = new Set([
+  'microsoft teams', 'teams', 'zoom', 'google meet', 'meet', 'webex', 'jitsi', 'whereby',
+  'gotomeeting', 'goto', 'visio', 'visioconference', 'online', 'en ligne',
+]);
 
 export function isMeetingLabel(location: string): boolean {
-  return MEETING_LABEL_RE.test(location) && !/\d/.test(location);
+  const label = location
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z ]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/^(reunion|meeting|online meeting|appel|call) /, '')
+    .replace(/ (meeting|reunion|call)$/, '');
+  return MEETING_LABELS.has(label);
 }
 
 export type LocationAction =

@@ -165,12 +165,17 @@ export function EventDetailPopover({
     return action.kind === "url" ? action.uri : mapsUrl(action.query);
   }, [locationName, meeting]);
   const [locationCopied, setLocationCopied] = useState(false);
+  const copiedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => {
+    if (copiedTimer.current) clearTimeout(copiedTimer.current);
+  }, []);
   const copyLocation = useCallback(async () => {
     if (!locationName) return;
     try {
       await navigator.clipboard.writeText(locationName);
       setLocationCopied(true);
-      setTimeout(() => setLocationCopied(false), 1500);
+      if (copiedTimer.current) clearTimeout(copiedTimer.current);
+      copiedTimer.current = setTimeout(() => setLocationCopied(false), 1500);
     } catch {
       // clipboard refused (insecure context or permission) - nothing to do
     }

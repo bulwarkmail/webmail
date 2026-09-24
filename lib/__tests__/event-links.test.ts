@@ -63,6 +63,17 @@ describe('findMeetingLink', () => {
     expect(findMeetingLink({})).toBeNull();
   });
 
+  it('falls back to an app-scheme virtual location, never a script one', () => {
+    expect(findMeetingLink({ virtualLocations: { v: { uri: 'msteams:/l/meetup-join/19%3a1' } } }))
+      .toEqual({ uri: 'msteams:/l/meetup-join/19%3a1', derived: false });
+    expect(findMeetingLink({ virtualLocations: { v: { uri: 'javascript:alert(1)' } } })).toBeNull();
+    expect(findMeetingLink({ virtualLocations: { v: { uri: 'data:text/html,x' } } })).toBeNull();
+  });
+
+  it('recognises the Zoom web-client join path', () => {
+    expect(findMeetingLink({ description: 'https://acme.zoom.us/wc/join/8812345?pwd=x' })?.provider).toBe('Zoom');
+  });
+
   it('skips a virtual location that is not a web URL', () => {
     expect(findMeetingLink({
       virtualLocations: { v: { uri: 'tel:+33123456789' } },
@@ -98,9 +109,13 @@ describe('locationAction', () => {
     expect(locationAction(' https://example.com/room ', null)).toEqual({ kind: 'url', uri: 'https://example.com/room' });
   });
 
-  it('keeps a numbered room as a place', () => {
-    expect(isMeetingLabel('Salle Teams 3')).toBe(false);
-    expect(isMeetingLabel('Zoom')).toBe(true);
+  it('only treats a bare service name as a meeting', () => {
+    for (const label of ['Zoom', 'Réunion Microsoft Teams', 'Microsoft Teams Meeting', 'Google Meet', 'En ligne', 'Visioconférence']) {
+      expect(isMeetingLabel(label)).toBe(true);
+    }
+    for (const label of ['Salle Teams 3', 'Salle Teams', 'Studio Zoom', 'Salle Visio', 'Café en ligne droite, Paris']) {
+      expect(isMeetingLabel(label)).toBe(false);
+    }
   });
 });
 
