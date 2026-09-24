@@ -89,6 +89,7 @@ import {
   type ScrollWindowState, type ScrollWindowViewProps,
 } from "@/lib/calendar-scroll-window";
 import { useLiteLinkSegments } from "@/hooks/use-lite-link-segments";
+import { findMeetingLink } from "@/lib/event-links";
 
 type PendingScopeAction =
   | { type: "edit"; event: CalendarEvent; updates: Partial<CalendarEvent>; sendScheduling?: boolean }
@@ -1242,9 +1243,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
   }, [t]);
 
   const handleCopyMeetingLink = useCallback(async (event: CalendarEvent) => {
-    const uri = event.virtualLocations
-      ? Object.values(event.virtualLocations).find((v) => v.uri)?.uri
-      : undefined;
+    const uri = findMeetingLink(event)?.uri;
     if (!uri) return;
     try {
       await navigator.clipboard.writeText(uri);
