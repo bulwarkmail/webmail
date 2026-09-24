@@ -12,6 +12,7 @@ import { MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
 import { generateCodeVerifier, generateCodeChallenge } from '@/lib/oauth/pkce';
 import { DEFAULT_CLIENT_ID } from '@/lib/oauth/token-exchange';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
+import { forwardedClientIpHeaders } from '@/lib/security/forward-client-ip';
 
 /**
  * Exchange a password + (optional) TOTP code for OAuth tokens.
@@ -58,8 +59,14 @@ async function attemptLogin(
   // A user-supplied endpoint (allowCustomJmapEndpoint) must connect through
   // the rebinding-safe fetch; admin-configured servers may live on private
   // addresses and use the plain one.
+  // Only an admin-configured server learns the end user's address.
+  const clientIp = upstreamTrusted ? await forwardedClientIpHeaders() : {};
   const upstreamFetch: typeof fetch = upstreamTrusted
-    ? fetch
+    ? ((input, init) => {
+      const merged = new Headers(init?.headers);
+      for (const [name, value] of Object.entries(clientIp)) merged.set(name, value);
+      return fetch(input, { ...init, headers: merged });
+    })
     : ((input, init) => fetchPublicUrl(String(input), init as Parameters<typeof fetchPublicUrl>[1]) as unknown as Promise<Response>);
 
   // Per-server OAuth credentials override the global ones when the requested

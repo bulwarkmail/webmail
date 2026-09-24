@@ -4,6 +4,7 @@ import {
   isPublicHttpUrl,
   type PublicFetchResponse,
 } from '@/lib/security/url-guard';
+import { forwardedClientIpHeaders } from '@/lib/security/forward-client-ip';
 
 const VERIFY_TIMEOUT_MS = 10000;
 const MAX_REDIRECTS = 3;
@@ -279,9 +280,11 @@ async function fetchIdentityEmails(
     if (!options.trusted && !(await isPublicHttpUrl(apiUrl))) {
       throw new JmapAuthVerificationError('Server URL is not allowed', 400);
     }
+    // Only an admin-configured server learns the end user's address.
+    const clientIp = options.trusted ? await forwardedClientIpHeaders() : {};
     const requestInit = {
       method: 'POST',
-      headers: { Authorization: authHeader, 'Content-Type': 'application/json' },
+      headers: { ...clientIp, Authorization: authHeader, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         using: ['urn:ietf:params:jmap:core', 'urn:ietf:params:jmap:mail'],
         methodCalls: [['Identity/get', { accountId, ids: null }, '0']],
@@ -344,6 +347,8 @@ async function fetchVerifiedSession(
     throw new JmapAuthVerificationError('Server URL is not allowed', 400);
   }
 
+  // Only an admin-configured server learns the end user's address.
+  const clientIp = options.trusted ? await forwardedClientIpHeaders() : {};
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), VERIFY_TIMEOUT_MS);
 
@@ -358,7 +363,7 @@ async function fetchVerifiedSession(
 
       const requestInit = {
         method: 'GET',
-        headers: { Authorization: authHeader },
+        headers: { ...clientIp, Authorization: authHeader },
         signal: controller.signal,
       };
       // Untrusted (user-supplied) endpoints connect through the rebinding-safe
