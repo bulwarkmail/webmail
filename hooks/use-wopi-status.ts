@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { IS_LITE } from "@/lib/lite";
+import { apiFetch } from "@/lib/browser-navigation";
 
 /**
  * Whether a WOPI document editor is configured for this deployment and which
@@ -22,7 +23,7 @@ function fetchWopiStatus(): Promise<WopiStatus> {
   // The WOPI bridge is a server feature; the static build never has an editor.
   if (IS_LITE) return Promise.resolve(DISABLED);
   if (!statusPromise) {
-    statusPromise = fetch("/api/wopi/status")
+    statusPromise = apiFetch("/api/wopi/status")
       .then((res) => (res.ok ? res.json() : DISABLED))
       .then((data) => ({
         enabled: !!data?.enabled,
