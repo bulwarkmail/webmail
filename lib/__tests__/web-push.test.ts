@@ -5,6 +5,7 @@ import {
   buildEmailPushConfig,
   disableWebPush,
   enableWebPush,
+  enableWebPushForAccounts,
   listPushDevices,
   resetWebPushResyncState,
   resyncWebPush,
@@ -539,5 +540,42 @@ describe('revokePushDevice', () => {
 
     expect(client.destroyed).toEqual(['push-mine']);
     expect(localStorage.getItem(SUB_KEY)).toBeNull();
+  });
+});
+
+describe('enableWebPushForAccounts', () => {
+  it('registers every account against the one browser subscription', async () => {
+    const first = makeClient([]);
+    const second = makeClient([]);
+    installFetch({});
+
+    const result = await enableWebPushForAccounts([
+      { accountId: 'a', client: first, accountLabel: 'one' },
+      { accountId: 'b', client: second, accountLabel: 'two' },
+    ], { relayBaseUrl: RELAY });
+
+    expect(result.enabled).toEqual(['a', 'b']);
+    expect(result.failed).toEqual([]);
+    expect(first.createPushSubscription).toHaveBeenCalledTimes(1);
+    expect(second.createPushSubscription).toHaveBeenCalledTimes(1);
+  });
+
+  it('stops at a browser-level refusal instead of prompting once per account', async () => {
+    const first = makeClient([]);
+    const second = makeClient([]);
+    installFetch({});
+    // Blocked notifications are a property of the browser, not of an account:
+    // walking on would fail identically for every one of them.
+    (globalThis as unknown as { Notification: unknown }).Notification = { permission: 'denied' };
+    (window as unknown as { Notification: unknown }).Notification = { permission: 'denied' };
+
+    const result = await enableWebPushForAccounts([
+      { accountId: 'a', client: first },
+      { accountId: 'b', client: second },
+    ], { relayBaseUrl: RELAY });
+
+    expect(result.enabled).toEqual([]);
+    expect(result.failed.map(f => f.accountId)).toEqual(['a', 'b']);
+    expect(second.createPushSubscription).not.toHaveBeenCalled();
   });
 });
