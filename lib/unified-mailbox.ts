@@ -659,3 +659,42 @@ export function connectedAccountsGrew(previous: string | null, current: string):
   const before = new Set(previous ? previous.split(',').filter(Boolean) : []);
   return current.split(',').some((id) => id !== '' && !before.has(id));
 }
+
+/**
+ * Drops mailboxes that are reachable through more than one logged-in account,
+ * so each folder contributes to the aggregate views exactly once.
+ *
+ * A folder shared with a second login (owner + grantee both logged in), or
+ * shared with two logins at once, otherwise yields one entry per reaching
+ * login: its messages list twice and its unread count is summed twice.
+ *
+ * A mailbox is identified by its owning JMAP account + server-side id (a shared
+ * entry's `originalId`). Personal entries always win and are never trimmed, so
+ * an owner's folder is read through the owner's own login and honors their
+ * folder selection. Shared entries keep only mailboxes not already covered and
+ * are dropped when none remain. Order is preserved.
+ */
+export function dedupeUnifiedAccounts(accounts: UnifiedAccountClient[]): UnifiedAccountClient[] {
+  const seen = new Set<string>();
+  const key = (jmapAccountId: string, mailboxId: string) => `${jmapAccountId}\u0000${mailboxId}`;
+  for (const account of accounts) {
+    if (account.isShared) continue;
+    for (const m of account.mailboxes) seen.add(key(account.jmapAccountId, m.id));
+  }
+  const out: UnifiedAccountClient[] = [];
+  for (const account of accounts) {
+    if (!account.isShared) {
+      out.push(account);
+      continue;
+    }
+    const mailboxes = account.mailboxes.filter((m) => {
+      const k = key(account.jmapAccountId, m.originalId ?? m.id);
+      if (seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    });
+    if (mailboxes.length === 0) continue;
+    out.push(mailboxes.length === account.mailboxes.length ? account : { ...account, mailboxes });
+  }
+  return out;
+}

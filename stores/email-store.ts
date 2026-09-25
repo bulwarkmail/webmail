@@ -10,7 +10,7 @@ import { emailHooks } from "@/lib/plugin-hooks";
 import { resolveThreadRoute } from "@/lib/thread-routing";
 import { threadKeyFor, threadIdFromKey } from "@/lib/thread-utils";
 import type { ExternalSearchResult } from "@/lib/plugin-types";
-import { fetchUnifiedEmails, fetchUnifiedMailboxCounts, searchUnifiedEmails, advancedSearchUnifiedEmails, fetchCrossViewEmails, searchCrossViewEmails, advancedSearchCrossViewEmails, fetchTagEmails, searchAcrossAccounts, advancedSearchAcrossAccounts, getCrossUnreadTotal, type UnifiedAccountClient, type UnifiedMailboxCounts } from "@/lib/unified-mailbox";
+import { fetchUnifiedEmails, fetchUnifiedMailboxCounts, searchUnifiedEmails, advancedSearchUnifiedEmails, fetchCrossViewEmails, searchCrossViewEmails, advancedSearchCrossViewEmails, fetchTagEmails, searchAcrossAccounts, advancedSearchAcrossAccounts, getCrossUnreadTotal, dedupeUnifiedAccounts, type UnifiedAccountClient, type UnifiedMailboxCounts } from "@/lib/unified-mailbox";
 import { useAuthStore } from "@/stores/auth-store";
 import { useAccountStore } from "@/stores/account-store";
 import { useMessageListTabsStore } from "@/stores/message-list-tabs-store";
@@ -915,6 +915,9 @@ function resolveDestLocalAccountId(mailbox: Mailbox): string | null {
  * `allMailFolderIds` folder selection, restricting the All mail / Unread /
  * Starred cross views to the chosen own folders (shared entries are left
  * unrestricted so all their folders are included).
+ *
+ * A folder reachable through several logins (owner + grantee, or two grantees)
+ * is kept only once - see `dedupeUnifiedAccounts`.
  */
 export async function buildUnifiedAccountClients(
   opts: { includeGroup?: boolean; scopeToClientAccountId?: string } = {},
@@ -929,6 +932,11 @@ export async function buildUnifiedAccountClients(
   // after the fan-out so single-email actions can resolve role-based
   // destinations (trash/archive) in the email's own account (issue #281).
   const fetchedMailboxes: Record<string, Mailbox[]> = {};
+  const ownLoginJmapIds = new Set<string>();
+  for (const a of authAccounts) {
+    const c = allClients.get(a.id);
+    if (c) ownLoginJmapIds.add(c.getAccountId());
+  }
   for (const a of authAccounts) {
     const c = allClients.get(a.id);
     if (!c) continue;
@@ -970,7 +978,9 @@ export async function buildUnifiedAccountClients(
           // Cache the owner's mailbox list keyed by its JMAP id so single-email
           // and batch actions can resolve role-based destinations (trash/archive)
           // in the owner account instead of falling back to the active account.
-          fetchedMailboxes[ownerId] = ownerMailboxes;
+          // When the owner is logged in too, its own (un-namespaced) list wins:
+          // dedupeUnifiedAccounts routes that folder through the owner's login.
+          if (!ownLoginJmapIds.has(ownerId)) fetchedMailboxes[ownerId] = ownerMailboxes;
         }
       }
     } catch {
@@ -982,7 +992,7 @@ export async function buildUnifiedAccountClients(
       accountMailboxes: { ...state.accountMailboxes, ...fetchedMailboxes },
     }));
   }
-  return built;
+  return dedupeUnifiedAccounts(built);
 }
 
 /**
