@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
-import { X, Loader2, Folder, ChevronRight, Check } from "lucide-react";
+import { X, Loader2, Folder, ChevronRight, Check } from "@/components/icons";
 import type { FileNode } from "@/lib/jmap/types";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
 import { toast } from "@/stores/toast-store";
