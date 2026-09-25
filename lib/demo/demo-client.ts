@@ -564,6 +564,10 @@ export class DemoJMAPClient implements IJMAPClient {
 
   // ── Compose / Send ────────────────────────────────────────────
 
+  async resolveSendAccountId(_fromEmail?: string): Promise<string> {
+    return this.getAccountId();
+  }
+
   async createDraft(
     to: string[],
     subject: string,

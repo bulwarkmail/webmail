@@ -86,7 +86,7 @@ export function ProComposeTabBody({ tabId, data }: ProComposeTabBodyProps) {
         sendData.references,
         sendData.delayedUntil,
         sendData.envelopeMailFrom,
-        { localAccountId: sendData.localAccountId },
+        { localAccountId: sendData.localAccountId, draftAccountId: sendData.draftAccountId },
       );
       submitted = true;
 
@@ -158,10 +158,13 @@ export function ProComposeTabBody({ tabId, data }: ProComposeTabBodyProps) {
     });
   }, [closeTab]);
 
-  const handleDiscardDraft = useCallback(async (draftId: string) => {
+  const handleDiscardDraft = useCallback(async (draftId: string, draftAccountId?: string, localAccountId?: string) => {
     if (!client) return;
+    const draftClient = localAccountId
+      ? (useAuthStore.getState().getClientForAccount(localAccountId) ?? client)
+      : client;
     try {
-      await client.deleteEmail(draftId);
+      await draftClient.deleteEmail(draftId, draftAccountId);
     } catch (error) {
       console.error('Failed to discard draft:', error);
     }
