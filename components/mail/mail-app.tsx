@@ -1959,6 +1959,10 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       subAddressTag: '',
       mode: 'compose',
       draftId: draft.id,
+      // A reply draft keeps the message it answers, or the next save and the
+      // send drop In-Reply-To/References and the reply leaves its thread.
+      inReplyTo: draft.inReplyTo ?? undefined,
+      references: draft.references ?? undefined,
       // Existing server-side attachments must ride along, or the composer
       // starts empty and the next save/send silently rebuilds the draft
       // without them (#849).

@@ -142,6 +142,14 @@ export interface ComposerDraftData {
    * format it was written in (#1022).
    */
   plainTextMode?: boolean;
+  /**
+   * RFC 5322 threading of a re-opened reply draft. A draft is re-opened in
+   * `compose` mode with no `replyTo`, so these are the only record of the
+   * message it answers: without them the next save stores the draft outside
+   * its thread, and sending it starts a new conversation.
+   */
+  inReplyTo?: string[];
+  references?: string[];
 }
 
 interface EmailComposerProps {
@@ -1115,6 +1123,9 @@ export function EmailComposer({
           ...s,
           mode,
           replyTo,
+          // A stashed re-opened reply draft must come back still threaded.
+          inReplyTo: initialData?.inReplyTo,
+          references: initialData?.references,
         });
       }
     };
@@ -1763,6 +1774,21 @@ export function EmailComposer({
     }
   }, [previewAttachment, composerClient]);
 
+  // RFC 5322 §3.6.4 threading - a reply continues the chain, a forward does
+  // not. A reply computes it from the message it answers. A re-opened reply
+  // draft comes back in `compose` mode with no `replyTo`, so it carries over
+  // the headers it was saved with - on every save and on send.
+  const resolveThreadingHeaders = (): { inReplyTo: string[]; references: string[] } | null => {
+    if (mode === 'forward') return null;
+    if (mode === 'reply' || mode === 'replyAll') {
+      const computed = computeReplyThreadingHeaders(replyTo);
+      if (computed) return computed;
+    }
+    const inReplyTo = initialData?.inReplyTo?.filter(Boolean) ?? [];
+    if (!inReplyTo.length) return null;
+    return { inReplyTo, references: initialData?.references?.filter(Boolean) ?? [] };
+  };
+
   // Auto-save draft functionality
   const saveDraftOnce = async (): Promise<string | null> => {
     if (!client || !composerClient) return null;
@@ -1840,6 +1866,8 @@ export function EmailComposer({
       ? (fromOverrideName.trim() || undefined)
       : (currentIdentity?.name || undefined);
 
+    const threading = resolveThreadingHeaders();
+
     try {
       const previousDraftId = draftIdRef.current;
       let savedDraft : AlmostSavedDraft = {
@@ -1853,7 +1881,9 @@ export function EmailComposer({
         draftId: previousDraftId || undefined,
         attachments: uploadedAttachments,
         fromName,
-        htmlBody: draftHtmlBody
+        htmlBody: draftHtmlBody,
+        inReplyTo: threading?.inReplyTo,
+        references: threading?.references,
       }
       savedDraft = await emailHooks.onBeforeDraftAutoSave.transform(savedDraft);
 
@@ -1871,7 +1901,9 @@ export function EmailComposer({
         savedDraft.draftId,
         savedDraft.attachments,
         savedDraft.fromName,
-        savedDraft.htmlBody
+        savedDraft.htmlBody,
+        savedDraft.inReplyTo,
+        savedDraft.references
       );
 
       // Update the ref synchronously so a queued save sees the new id and
@@ -2261,10 +2293,7 @@ export function EmailComposer({
       return '';
     };
 
-    // RFC 5322 §3.6.4 threading - only continues the chain on a reply, not a forward.
-    const threadingHeaders = (mode === 'reply' || mode === 'replyAll')
-      ? computeReplyThreadingHeaders(replyTo)
-      : null;
+    const threadingHeaders = resolveThreadingHeaders();
 
     // In plain text mode, send text/plain only (no HTML body)
     const signatureOpts = { separator: signatureSeparatorEnabled };

@@ -3513,7 +3513,9 @@ export class JMAPClient implements IJMAPClient {
     draftId?: string,
     attachments?: Array<{ blobId: string; name: string; type: string; size: number; disposition?: 'attachment' | 'inline'; cid?: string }>,
     fromName?: string,
-    htmlBody?: string
+    htmlBody?: string,
+    inReplyTo?: string[],
+    references?: string[]
   ): Promise<string> {
     const mailboxes = await this.getMailboxes();
     const draftsMailbox = mailboxes.find(mb => mb.role === 'drafts');
@@ -3529,6 +3531,8 @@ export class JMAPClient implements IJMAPClient {
       cc?: { name?: string; email: string }[];
       bcc?: { name?: string; email: string }[];
       subject: string;
+      inReplyTo?: string[];
+      references?: string[];
       keywords: Record<string, boolean>;
       mailboxIds: Record<string, boolean>;
       bodyValues: Record<string, { value: string }>;
@@ -3536,6 +3540,12 @@ export class JMAPClient implements IJMAPClient {
       htmlBody?: { partId: string; type: string }[];
       attachments?: { blobId: string; type: string; name: string; disposition: string; cid?: string }[];
     }
+
+    // A reply saved as a draft keeps its place in the thread: without these the
+    // stored draft - and whatever is later sent from it - starts a new
+    // conversation. Normalized as in sendEmail (RFC 8621 §4.1.2.3).
+    const normalizedInReplyTo = inReplyTo?.map(stripMessageIdBrackets).filter(Boolean);
+    const normalizedReferences = references?.map(stripMessageIdBrackets).filter(Boolean);
 
     const sanitizedFromName = sanitizeIdentityDisplayName(fromName);
     const emailData: EmailDraft = {
@@ -3547,6 +3557,8 @@ export class JMAPClient implements IJMAPClient {
       cc: cc?.length ? cc.map(parseRecipientString) : undefined,
       bcc: bcc?.length ? bcc.map(parseRecipientString) : undefined,
       subject,
+      ...(normalizedInReplyTo?.length ? { inReplyTo: normalizedInReplyTo } : {}),
+      ...(normalizedReferences?.length ? { references: normalizedReferences } : {}),
       keywords: { "$seen": true, "$draft": true },
       mailboxIds: { [draftsMailbox.id]: true },
       bodyValues: htmlBody
