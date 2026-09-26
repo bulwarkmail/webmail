@@ -781,6 +781,8 @@ export interface SubmissionSendOptions {
   requestReadReceipt?: boolean;
   requestDsn?: boolean;
   requireTls?: boolean;
+  /** The account the replaced draft (`draftId`) lives in; default the primary. */
+  draftAccountId?: string;
 }
 
 /** The MAIL FROM / RCPT TO parameters the options translate to. */
@@ -819,6 +821,25 @@ type SubmissionCapability = {
   maxDelayedSend?: number;
   submissionExtensions?: unknown;
 };
+
+/** An identity address that is exactly `from` (both lower-cased by the caller or here). */
+function identityEmailMatchesExactly(identityEmail: string | undefined, from: string): boolean {
+  return !!identityEmail && identityEmail.toLowerCase() === from;
+}
+
+/**
+ * An identity address that covers `from` without being it: a sub-address of
+ * it (team+tag@ for team@, with the common "+" / "-" delimiters) or a
+ * wildcard identity for its domain (RFC 8621 §6, "*@example.com").
+ */
+function identityEmailCovers(identityEmail: string | undefined, from: string): boolean {
+  if (!identityEmail) return false;
+  const [idLocal, idDomain] = identityEmail.toLowerCase().split('@');
+  const [fromLocal, fromDomain] = from.split('@');
+  if (!idDomain || !fromDomain || idDomain !== fromDomain) return false;
+  if (idLocal === '*') return true;
+  return fromLocal.startsWith(`${idLocal}+`) || fromLocal.startsWith(`${idLocal}-`);
+}
 
 export class JMAPClient implements IJMAPClient {
   private static readonly RATE_LIMIT_TOAST_THROTTLE_MS = 10_000;
@@ -861,6 +882,8 @@ export class JMAPClient implements IJMAPClient {
   private pingFailureCount = 0;
   private pingSkipRemaining = 0;
   private accounts: Record<string, JMAPAccount> = {};
+  /** Identities per candidate account for resolveSendAccountId, briefly cached. */
+  private sendIdentitiesCache: { key: string; identitiesByAccount: Array<[string, Identity[]]>; expires: number } | null = null;
   private eventSource: EventSource | null = null;
   private stateChangeCallback: ((change: StateChange) => void) | null = null;
   private lastStates: AccountStates = {};
@@ -3513,9 +3536,14 @@ export class JMAPClient implements IJMAPClient {
     draftId?: string,
     attachments?: Array<{ blobId: string; name: string; type: string; size: number; disposition?: 'attachment' | 'inline'; cid?: string }>,
     fromName?: string,
-    htmlBody?: string
+    htmlBody?: string,
+    options?: { accountId?: string; previousDraftAccountId?: string },
   ): Promise<string> {
-    const mailboxes = await this.getMailboxes();
+    // A draft for a group identity belongs in the group's Drafts, like its
+    // Sent copy (#1090).
+    const draftAccountId = options?.accountId ?? await this.resolveSendAccountId(fromEmail);
+    const mailboxResponse = await this.request([["Mailbox/get", { accountId: draftAccountId }, "0"]]);
+    const mailboxes = (mailboxResponse.methodResponses?.[0]?.[1]?.list || []) as Mailbox[];
     const draftsMailbox = mailboxes.find(mb => mb.role === 'drafts');
     if (!draftsMailbox) {
       throw new Error('No drafts mailbox found');
@@ -3576,7 +3604,7 @@ export class JMAPClient implements IJMAPClient {
     // copy of the draft. Worst case now is an orphaned old version.
     const response = await this.request([
       ["Email/set", {
-        accountId: this.accountId,
+        accountId: draftAccountId,
         create: { [emailId]: emailData },
       }, "0"],
     ]);
@@ -3597,7 +3625,7 @@ export class JMAPClient implements IJMAPClient {
         if (draftId) {
           try {
             const destroyResponse = await this.request([
-              ["Email/set", { accountId: this.accountId, destroy: [draftId] }, "0"],
+              ["Email/set", { accountId: options?.previousDraftAccountId ?? this.accountId, destroy: [draftId] }, "0"],
             ]);
             const destroyResult = destroyResponse.methodResponses?.[0]?.[1];
             if (destroyResult?.notDestroyed) {
@@ -3636,9 +3664,7 @@ export class JMAPClient implements IJMAPClient {
   ): Promise<SendEmailResult> {
     const holdForSeconds = delayedUntil ? this.validateDelayedUntil(delayedUntil) : undefined;
     const emailId = `send-${Date.now()}`;
-    const targetAccountId = (fromEmail && Object.keys(this.accounts).find(id =>
-      this.accounts[id]?.name?.toLowerCase() === fromEmail.toLowerCase()
-    )) || this.accountId;
+    const targetAccountId = await this.resolveSendAccountId(fromEmail);
     const mboxResp = await this.request([
       ["Mailbox/get", { accountId: targetAccountId }, "0"]
     ]);
@@ -3906,7 +3932,7 @@ export class JMAPClient implements IJMAPClient {
     if (draftId && createdEmailId) {
       try {
         const destroyResponse = await this.request([
-          ["Email/set", { accountId: this.accountId, destroy: [draftId] }, "0"],
+          ["Email/set", { accountId: options?.draftAccountId ?? this.accountId, destroy: [draftId] }, "0"],
         ]);
         const destroyResult = destroyResponse.methodResponses?.[0]?.[1];
         if (destroyResult?.notDestroyed && Object.keys(destroyResult.notDestroyed).length) {
@@ -4849,6 +4875,68 @@ export class JMAPClient implements IJMAPClient {
     ]);
     const submission = response.methodResponses?.[0]?.[1]?.list?.[0] as { envelope?: { rcptTo?: Array<{ email: string }> } } | undefined;
     return submission?.envelope;
+  }
+
+  /**
+   * The account a message sent From `fromEmail` belongs to: where it is
+   * created, submitted and filed in Sent (#1090).
+   *
+   * Matching the session account *name* against the address alone misses a
+   * group mailbox whose account name is not that address (a bare principal
+   * name such as "team", a display name), an alias identity of the group, and
+   * a sub-addressed From (team+tag@). Stalwart also lists a group's send-as
+   * identity among the member's own identities, so the send then silently went
+   * through the member's account and its Sent copy landed there.
+   *
+   * Order: an account named exactly `fromEmail`; then an account that owns an
+   * identity for the address - exact before sub-address/wildcard, and a
+   * delegated (group/shared) account before the primary one, since the
+   * primary may merely mirror the group's identity; else the primary account.
+   */
+  async resolveSendAccountId(fromEmail?: string): Promise<string> {
+    if (!fromEmail) return this.accountId;
+    const from = parseRecipientString(fromEmail).email.toLowerCase();
+    const named = Object.keys(this.accounts).find(id => this.accounts[id]?.name?.toLowerCase() === from);
+    if (named) return named;
+
+    const delegated = Object.keys(this.accounts).filter(id =>
+      id !== this.accountId
+      && !!this.session?.accounts?.[id]?.accountCapabilities?.['urn:ietf:params:jmap:submission'],
+    );
+    if (delegated.length === 0) return this.accountId;
+
+    const candidates = [...delegated, this.accountId];
+    let identitiesByAccount: Array<[string, Identity[]]>;
+    const cached = this.sendIdentitiesCache;
+    if (cached && cached.expires > Date.now() && cached.key === candidates.join('\u0000')) {
+      identitiesByAccount = cached.identitiesByAccount;
+    } else {
+      try {
+        const response = await this.request(
+          candidates.map((id, i) => ["Identity/get", { accountId: id }, String(i)] as JMAPMethodCall),
+          ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:submission"],
+        );
+        identitiesByAccount = candidates.map((id, i) => {
+          const [name, result] = response.methodResponses?.[i] ?? [];
+          return [id, name === "Identity/get" ? ((result?.list ?? []) as Identity[]) : []];
+        });
+        // Draft autosave resolves on every save; identities rarely change.
+        this.sendIdentitiesCache = {
+          key: candidates.join('\u0000'),
+          identitiesByAccount,
+          expires: Date.now() + 60_000,
+        };
+      } catch (err) {
+        debug.warn('email', '[sendEmail] could not load identities to pick the sending account', err);
+        return this.accountId;
+      }
+    }
+
+    for (const matches of [identityEmailMatchesExactly, identityEmailCovers]) {
+      const hit = identitiesByAccount.find(([, list]) => list.some(identity => matches(identity.email, from)));
+      if (hit) return hit[0];
+    }
+    return this.accountId;
   }
 
   private getSubmissionAccountId(accountId?: string): string {

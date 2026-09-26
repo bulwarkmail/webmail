@@ -287,7 +287,22 @@ export interface IJMAPClient {
     attachments?: Array<{ blobId: string; name: string; type: string; size: number; disposition?: 'attachment' | 'inline'; cid?: string }>,
     fromName?: string,
     htmlBody?: string,
+    /**
+     * `accountId`: the account to save the draft in (default: the account that
+     * owns the From identity, see resolveSendAccountId). `previousDraftAccountId`:
+     * where `draftId` lives, so the replaced version is destroyed there (default:
+     * the primary account). Draft ids are only unique within one account.
+     */
+    options?: { accountId?: string; previousDraftAccountId?: string },
   ): Promise<string>;
+
+  /**
+   * The account a message From `fromEmail` is created, submitted and filed in:
+   * a group/shared account that owns an identity for the address, else the
+   * primary account (#1090). Optional: without it drafts stay in the primary
+   * account.
+   */
+  resolveSendAccountId?(fromEmail?: string): Promise<string>;
 
   sendEmail(
     to: string[],
@@ -311,7 +326,9 @@ export interface IJMAPClient {
     // requestDsn / requireTls map to RFC 3461 / RFC 8689 envelope parameters
     // and need the matching `submissionExtensions` entry (see
     // supportsSubmissionExtension).
-    options?: { requestReadReceipt?: boolean; requestDsn?: boolean; requireTls?: boolean },
+    // `draftAccountId`: the account `draftId` lives in, so the sent draft is
+    // destroyed there (default: the primary account).
+    options?: { requestReadReceipt?: boolean; requestDsn?: boolean; requireTls?: boolean; draftAccountId?: string },
   ): Promise<SendEmailResult>;
   /** Whether the submission account advertises an SMTP extension ("DSN", "REQUIRETLS", …). */
   supportsSubmissionExtension?(extension: string, accountId?: string): boolean;

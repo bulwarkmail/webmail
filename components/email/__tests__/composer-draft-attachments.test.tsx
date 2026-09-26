@@ -255,7 +255,9 @@ describe('re-opened draft attachments (#849)', () => {
       expect.objectContaining({ blobId: 'part-blob-v1', name: 'report.pdf', size: 1234 }),
     ]);
     // ... after which the blobId is re-resolved against the new version.
-    expect(getEmail).toHaveBeenCalledWith('draft-v2');
+    // Re-resolved in the account the draft was saved in (primary here: the mock
+    // client has no resolveSendAccountId).
+    expect(getEmail).toHaveBeenCalledWith('draft-v2', undefined);
 
     // The re-resolution itself must not count as a change: no phantom
     // save loop from the blobId swap.
