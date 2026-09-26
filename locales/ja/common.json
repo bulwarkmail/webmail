@@ -2987,6 +2987,8 @@
       "show_week_numbers_desc": "ミニカレンダーに週番号を表示する",
       "calendar_free_scroll": "自由スクロール",
       "calendar_free_scroll_desc": "1つの期間ずつではなく、月・週・日を連続してスクロールします",
+      "compact_night_hours": "Compact night hours",
+      "compact_night_hours_desc": "Shrink the 22:00-06:00 band in the day and week views so the whole day fits with less scrolling",
       "enable_tasks": "タスクを有効化",
       "enable_tasks_desc": "カレンダーにタスク表示を追加して、ToDoを管理します",
       "show_tasks_on_calendar": "カレンダーにタスクを表示",

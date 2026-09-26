@@ -2987,6 +2987,8 @@
       "show_week_numbers_desc": "Отображать номера недель в мини-календаре",
       "calendar_free_scroll": "Свободная прокрутка",
       "calendar_free_scroll_desc": "Непрерывно прокручивать месяцы, недели и дни вместо одного периода за раз",
+      "compact_night_hours": "Compact night hours",
+      "compact_night_hours_desc": "Shrink the 22:00-06:00 band in the day and week views so the whole day fits with less scrolling",
       "enable_tasks": "Включить задачи",
       "enable_tasks_desc": "Показывать представление задач в календаре для управления делами",
       "show_tasks_on_calendar": "Показывать задачи в календаре",

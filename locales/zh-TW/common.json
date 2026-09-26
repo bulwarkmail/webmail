@@ -2987,6 +2987,8 @@
       "show_week_numbers_desc": "在迷你行事曆中顯示週數",
       "calendar_free_scroll": "自由捲動",
       "calendar_free_scroll_desc": "連續捲動瀏覽月、週和日，而不是一次只顯示一個時段",
+      "compact_night_hours": "Compact night hours",
+      "compact_night_hours_desc": "Shrink the 22:00-06:00 band in the day and week views so the whole day fits with less scrolling",
       "enable_tasks": "啟用任務",
       "enable_tasks_desc": "在行事曆中顯示任務檢視以管理待辦事項",
       "show_tasks_on_calendar": "在行事曆上顯示任務",

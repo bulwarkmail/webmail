@@ -2987,6 +2987,8 @@
       "show_week_numbers_desc": "Ми-календарт долоо хоногийн тоог харуулах",
       "calendar_free_scroll": "Чөлөөт гүйлгэлт",
       "calendar_free_scroll_desc": "Нэг үеийг харуулахын оронд сар, долоо хоног, өдрүүдийг тасралтгүй гүйлгэх",
+      "compact_night_hours": "Compact night hours",
+      "compact_night_hours_desc": "Shrink the 22:00-06:00 band in the day and week views so the whole day fits with less scrolling",
       "enable_tasks": "Даалгавруудыг идэвхжүүлэх",
       "enable_tasks_desc": "Хийх ажлуудыг удирдахын тулд календарьт ажлын харагдах байдлыг харуулах",
       "show_tasks_on_calendar": "Хуанли дээр даалгавруудыг харуулах",
