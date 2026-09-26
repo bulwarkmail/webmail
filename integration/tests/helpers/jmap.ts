@@ -189,8 +189,20 @@ export class JmapClient {
   }
 
   async mailboxes(accountId: string = this.accountId): Promise<JmapMailbox[]> {
-    const r = await this.request([['Mailbox/get', { accountId }, '0']]);
-    return r.methodResponses[0][1].list as JmapMailbox[];
+    const mailboxes: JmapMailbox[] = [];
+    for (let position = 0;;) {
+      const r = await this.request([
+        ['Mailbox/query', { accountId, position, limit: 500 }, 'q'],
+        ['Mailbox/get', {
+          accountId,
+          '#ids': { resultOf: 'q', name: 'Mailbox/query', path: '/ids' },
+        }, 'g'],
+      ]);
+      const ids = r.methodResponses[0][1].ids as string[];
+      mailboxes.push(...r.methodResponses[1][1].list as JmapMailbox[]);
+      if (ids.length === 0 || position + ids.length >= r.methodResponses[0][1].total) return mailboxes;
+      position += ids.length;
+    }
   }
 
   async mailboxByRole(role: string, accountId: string = this.accountId): Promise<JmapMailbox | undefined> {
