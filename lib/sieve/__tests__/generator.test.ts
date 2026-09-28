@@ -260,6 +260,106 @@ describe('generateScript', () => {
     });
   });
 
+  describe('action order and targets', () => {
+    it('sets flags before the move so the moved message keeps them', () => {
+      const script = generateScript([makeRule({
+        actions: [{ type: 'move', value: 'Archive' }, { type: 'star' }, { type: 'mark_read' }],
+      })]);
+      const flagged = script.indexOf('addflag "\\\\Flagged";');
+      const seen = script.indexOf('addflag "\\\\Seen";');
+      const move = script.indexOf('fileinto "Archive";');
+      expect(flagged).toBeGreaterThan(-1);
+      expect(flagged).toBeLessThan(move);
+      expect(seen).toBeLessThan(move);
+    });
+
+    it('targets the folder id when the server supports mailboxid', () => {
+      const rules = [makeRule({ actions: [{ type: 'move', value: 'Work/Old', mailboxId: 'm42' }] })];
+      const script = generateScript(rules, undefined, { extensions: ['fileinto', 'mailbox', 'mailboxid'] });
+      expect(script).toContain('fileinto :mailboxid "m42" "Work/Old";');
+      expect(script).toContain('require ["fileinto", "mailbox", "mailboxid"];');
+    });
+
+    it('falls back to the path without mailboxid support', () => {
+      const rules = [makeRule({ actions: [{ type: 'copy', value: 'Work', mailboxId: 'm42' }] })];
+      const script = generateScript(rules, undefined, { extensions: ['fileinto', 'copy'] });
+      expect(script).toContain('fileinto :copy "Work";');
+      expect(script).not.toContain('mailboxid');
+    });
+
+    it('keeps a copy of forwarded mail when asked', () => {
+      const script = generateScript([makeRule({ actions: [{ type: 'forward', value: 'a@b.c', keepCopy: true }] })]);
+      expect(script).toContain('redirect :copy "a@b.c";');
+      expect(script).toContain('require ["copy"];');
+    });
+
+    it('parses the new action forms from external scripts', () => {
+      const parsed = parseScript(
+        'require ["fileinto", "copy", "mailbox", "mailboxid"];\n' +
+        'if header :contains "From" "x" { fileinto :copy :mailboxid "m1" "A"; redirect :copy "a@b.c"; }',
+      );
+      expect(parsed.rules[0].actions).toEqual([
+        { type: 'copy', value: 'A', mailboxId: 'm1' },
+        { type: 'forward', value: 'a@b.c', keepCopy: true },
+      ]);
+    });
+  });
+
+  describe('spam guard', () => {
+    const exts = ['fileinto', 'relational', 'spamtest', 'spamtestplus'];
+    const guard = 'not spamtest :percent :value "ge" :comparator "i;ascii-numeric" "50"';
+
+    it('keeps spam out of folder moves', () => {
+      const script = generateScript([makeRule()], undefined, { extensions: exts });
+      expect(script).toContain(`if allof(header :contains "From" "test@example.com", ${guard}) {`);
+      expect(script).toContain('require ["comparator-i;ascii-numeric", "fileinto", "relational", "spamtestplus"];');
+    });
+
+    it('extends an allof and wraps an anyof', () => {
+      const conditions = [
+        { field: 'from' as const, comparator: 'contains' as const, value: 'a' },
+        { field: 'subject' as const, comparator: 'contains' as const, value: 'b' },
+      ];
+      const all = generateScript([makeRule({ conditions })], undefined, { extensions: exts });
+      expect(all).toContain(`if allof(header :contains "From" "a", header :contains "Subject" "b", ${guard}) {`);
+      const any = generateScript([makeRule({ conditions, matchType: 'any' })], undefined, { extensions: exts });
+      expect(any).toContain(`if allof(anyof(header :contains "From" "a", header :contains "Subject" "b"), ${guard}) {`);
+    });
+
+    it('leaves keep rules, opted-in rules and servers without spamtestplus alone', () => {
+      const keep = makeRule({ actions: [{ type: 'keep' }] });
+      const optIn = makeRule({ id: 'r2', name: 'Opt in', includeSpam: true });
+      expect(generateScript([keep, optIn], undefined, { extensions: exts })).not.toContain('spamtest');
+      expect(generateScript([makeRule()], undefined, { extensions: ['fileinto'] })).not.toContain('spamtest');
+    });
+
+    it('round-trips the opt-in', () => {
+      const parsed = parseScript(generateScript([makeRule({ includeSpam: true })], undefined, { extensions: exts }));
+      expect(parsed.rules[0].includeSpam).toBe(true);
+    });
+  });
+
+  describe('vacation include', () => {
+    it('includes the server vacation script before the rules', () => {
+      const script = generateScript([makeRule()], undefined, { includeVacation: true });
+      expect(script).toContain('require ["fileinto", "include"];');
+      const include = script.indexOf('include :personal :optional "vacation";');
+      expect(include).toBeGreaterThan(-1);
+      expect(include).toBeLessThan(script.indexOf('# Rule: Test Rule'));
+    });
+
+    it('round-trips the flag and drops "include" once it is turned off', () => {
+      const parsed = parseScript(generateScript([makeRule()], undefined, { includeVacation: true }));
+      expect(parsed.includeVacation).toBe(true);
+      expect(parsed.rules).toHaveLength(1);
+      expect(parsed.externalRequires).not.toContain('include');
+
+      const off = generateScript(parsed.rules, parsed.vacation, { externalRequires: parsed.externalRequires });
+      expect(off).not.toContain('include');
+      expect(parseScript(off).includeVacation).toBeUndefined();
+    });
+  });
+
   describe('disabled rules', () => {
     it('excludes disabled rules from Sieve code', () => {
       const script = generateScript([makeRule({ enabled: false, name: 'Hidden' })]);

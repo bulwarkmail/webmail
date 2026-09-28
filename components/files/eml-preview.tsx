@@ -2,8 +2,9 @@
 
 import { useTranslations } from "next-intl";
 import { Paperclip, Download } from "@/components/icons";
-import { sanitizeEmailHtmlForIframe } from "@/lib/email-sanitization";
+import { emailIframeCsp, sanitizeEmailBodyForIframe } from "@/lib/email-sanitization";
 import { getEffectiveTimeZone } from "@/lib/timezone";
+import { useSettingsStore } from "@/stores/settings-store";
 
 // A parsed message/rfc822 (.eml), as produced by postal-mime. Only the fields
 // this preview renders are typed.
@@ -36,20 +37,24 @@ function escapeHtml(s: string): string {
 // body, plus the message's own attachments. The body is sanitized with
 // DOMPurify AND rendered in a fully-locked sandbox iframe (sandbox="" - no
 // scripts, no same-origin), so a script-bearing .eml can never execute in our
-// origin. Parsing happens in the caller (FilePreviewModal); this is pure
-// presentation.
+// origin. Remote content is blocked unless the user allows it everywhere:
+// there is no per-message "load" here. Parsing happens in the caller
+// (FilePreviewModal); this is pure presentation.
 export function EmlPreview({ message }: { message: ParsedEml }) {
   const t = useTranslations("email_viewer");
+  const blockRemote = useSettingsStore((state) => state.externalContentPolicy) !== "allow";
 
-  // srcDoc gets a fragment, not a document, so the iframe's implicit <body>
-  // is the browser's - left-to-right regardless of what the mail is written
-  // in. dir="auto" on a wrapper we do control lets the first strong character
-  // pick the direction, matching the main viewer.
-  const bodyDoc = message.html
-    ? `<div dir="auto">${sanitizeEmailHtmlForIframe(message.html)}</div>`
+  // dir="auto" on a wrapper we control lets the first strong character pick
+  // the direction, matching the main viewer.
+  const body = message.html
+    ? `<div dir="auto">${sanitizeEmailBodyForIframe(message.html, blockRemote).html}</div>`
     : message.text
       ? `<pre dir="auto" style="white-space:pre-wrap;word-break:break-word;font-family:ui-monospace,monospace;margin:0;padding:8px">${escapeHtml(message.text)}</pre>`
       : "";
+  // The strict CSP is the network backstop for whatever the DOM walk misses.
+  const bodyDoc = body
+    ? `<!DOCTYPE html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="${emailIframeCsp(blockRemote)}"><meta name="referrer" content="no-referrer"></head><body>${body}</body></html>`
+    : "";
 
   const downloadAttachment = (att: NonNullable<ParsedEml["attachments"]>[number]) => {
     if (!att.content) return;

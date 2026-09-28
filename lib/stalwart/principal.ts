@@ -20,7 +20,7 @@ export async function isStalwartJmapPassthroughEnabled(): Promise<boolean> {
   }
 }
 
-interface PrincipalGetResponse {
+interface AccountSettingsGetResponse {
   list?: Array<{ description?: string | null }>;
 }
 
@@ -30,9 +30,10 @@ interface PrincipalGetResponse {
  * Stalwart seeds the default JMAP Identity's `name` from the principal
  * description only once, when the identity is first created. An admin
  * renaming the user afterwards never propagates to `Identity/get`, so the
- * identity name is a stale snapshot. The current value is only exposed by
- * the management method `x:Account/get`, which goes through the server-side
- * passthrough (the browser never holds the credentials).
+ * identity name is a stale snapshot. The current value is the `description`
+ * of `x:AccountSettings`, the account's own settings object, read through the
+ * server-side passthrough (the browser never holds the credentials).
+ * (`x:Account/get` holds it too, but is forbidden for everyone but admins.)
  *
  * `slot` addresses the account's cookie slot explicitly so the lookup works
  * for accounts that are being restored in the background, not just the
@@ -52,10 +53,10 @@ export async function fetchPrincipalDisplayName(
   try {
     const accountId = client.getAccountId();
     const responses = await stalwartJmap(
-      [['x:Account/get', { accountId, ids: [accountId] }, '0']],
+      [['x:AccountSettings/get', { accountId, ids: ['singleton'] }, '0']],
       { slot },
     );
-    const result = requireResult<PrincipalGetResponse>(responses, 'x:Account/get');
+    const result = requireResult<AccountSettingsGetResponse>(responses, 'x:AccountSettings/get');
     const description = result.list?.[0]?.description;
     const name = typeof description === 'string' ? description.trim() : '';
     return name || null;

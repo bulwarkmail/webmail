@@ -173,6 +173,8 @@ export function FilterSettings() {
     isOpaque,
     rawScript,
     vacationSettings,
+    includeVacation,
+    sieveCapabilities,
     selectAccount,
     saveFilters,
     addRule,
@@ -235,7 +237,7 @@ export function FilterSettings() {
   // Vacation uses a separate per-(primary)-account mechanism (RFC 9661), so the
   // "vacation active" banner only applies when editing the personal account.
   const vacationEnabled =
-    isPrimaryAccount && (vacationStoreEnabled || vacationSettings?.isEnabled);
+    isPrimaryAccount && (vacationStoreEnabled || vacationSettings?.isEnabled || includeVacation);
 
   const [editingRule, setEditingRule] = useState<FilterRule | undefined>();
   const [showRuleModal, setShowRuleModal] = useState(false);
@@ -698,6 +700,10 @@ export function FilterSettings() {
         <FilterRuleModal
           rule={editingRule}
           mailboxes={mailboxes}
+          maxRedirects={sieveCapabilities?.maxNumberRedirects}
+          otherForwards={rules
+            .filter((r) => r.enabled && r.id !== editingRule?.id)
+            .reduce((n, r) => n + r.actions.filter((a) => a.type === "forward").length, 0)}
           onSave={handleSaveRule}
           onClose={() => {
             setShowRuleModal(false);

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { useThemeStore } from '@/stores/theme-store';
 import { SettingsSection } from './settings-section';
 import { cn } from '@/lib/utils';
@@ -9,6 +10,7 @@ import { toast } from '@/stores/toast-store';
 import { usePolicyStore } from '@/stores/policy-store';
 
 export function ThemesSettings() {
+  const t = useTranslations('settings.themes');
   const { installedThemes, activeThemeId, activateTheme } = useThemeStore();
   const { isThemeDisabled, getThemePolicy, getForcedThemeId, isThemeForceEnabled } = usePolicyStore();
   const themePolicy = getThemePolicy();
@@ -53,20 +55,20 @@ export function ThemesSettings() {
 
     if (forcedThemeId && id !== forcedThemeId) {
       const forcedTheme = installedThemes.find((theme) => theme.id === forcedThemeId);
-      toast.info(`Theme "${forcedTheme?.name ?? 'Admin theme'}" is forced by admin and cannot be changed`);
+      toast.info(t('forced', { name: forcedTheme?.name ?? t('admin_theme') }));
       return;
     }
 
     activateTheme(id);
-    toast.success(id ? 'Theme activated' : 'Default theme restored');
+    toast.success(id ? t('activated') : t('default_restored'));
   };
 
   return (
-    <SettingsSection title="Themes" description="Choose from themes deployed by your administrator and built-in presets.">
+    <SettingsSection title={t('title')} description={t('description')}>
 
       {forcedThemeId && (
         <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-300">
-          Theme selection is locked by an administrator.
+          {t('locked')}
         </div>
       )}
 
@@ -74,7 +76,7 @@ export function ThemesSettings() {
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {/* Default theme card */}
         <ThemeCard
-          name="Default"
+          name={t('default_name')}
           author="Bulwark"
           isDefaultTheme
           variants={['light', 'dark']}
@@ -131,6 +133,8 @@ interface ThemeCardProps {
 }
 
 function ThemeCard({ name, author, preview, css, isDark, isDefaultTheme, isActive, isDefault, isForceEnabled, disabled, variants, onActivate }: ThemeCardProps) {
+  const t = useTranslations('settings.themes');
+  const tVariant = useTranslations('settings.appearance.theme');
   const colors = resolveThemeColors({ css, variants, isDark: !!isDark, isDefaultTheme: !!isDefaultTheme });
   return (
     <div data-search-label={name} className="relative">
@@ -162,12 +166,12 @@ function ThemeCard({ name, author, preview, css, isDark, isDefaultTheme, isActiv
             <span className="text-sm font-medium text-foreground truncate">{name}</span>
             <div className="flex items-center gap-1 flex-shrink-0">
               {isForceEnabled && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 font-medium flex items-center gap-0.5" title="Admin enforced">
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 font-medium flex items-center gap-0.5" title={t('admin_enforced')}>
                   <Lock className="w-2.5 h-2.5" />
                 </span>
               )}
               {isDefault && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary font-medium">Default</span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary font-medium">{t('default_badge')}</span>
               )}
               {isActive && <Check className="w-4 h-4 text-primary" />}
             </div>
@@ -177,7 +181,7 @@ function ThemeCard({ name, author, preview, css, isDark, isDefaultTheme, isActiv
             <div className="flex gap-1 mt-1">
               {variants.map(v => (
                 <span key={v} className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
-                  {v}
+                  {tVariant(v)}
                 </span>
               ))}
             </div>

@@ -3,15 +3,34 @@ import { configManager } from '@/lib/admin/config-manager';
 import { requireAdminAuth, getClientIP } from '@/lib/admin/session';
 import { auditLog } from '@/lib/admin/audit';
 import { logger } from '@/lib/logger';
-import type { SettingsPolicy } from '@/lib/admin/types';
+import { POLICY_SCOPE_HEADER, type SettingsPolicy } from '@/lib/admin/types';
+import { canSeeInstanceDetails } from '@/lib/auth/instance-details';
 
 /**
- * GET /api/admin/policy - Get settings policy (NOT admin-protected - users read this)
+ * GET /api/admin/policy - Get settings policy (NOT admin-protected - users read this;
+ * visitors who are not signed in get the subset the login page needs)
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     await configManager.ensureLoaded();
     const policy = configManager.getPolicy();
+    if (!(await canSeeInstanceDetails(request))) {
+      // The login page needs the theme policy and gates; the plugin lists,
+      // push relays and sidebar app URLs map the deployment and are only
+      // used after signing in, when the client fetches the policy again.
+      return NextResponse.json(
+        {
+          ...policy,
+          forceEnabledPlugins: [],
+          approvedPlugins: [],
+          pushRelays: [],
+          pushRelayUrl: '',
+          pushRelayUrlLocked: false,
+          defaultSidebarApps: [],
+        },
+        { headers: { 'Cache-Control': 'no-store', [POLICY_SCOPE_HEADER]: 'public' } },
+      );
+    }
     return NextResponse.json(policy, {
       headers: { 'Cache-Control': 'no-store' },
     });

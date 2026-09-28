@@ -310,6 +310,8 @@
     "view_source": "Zobraziť zdrojový kód",
     "fullscreen": "Celá obrazovka",
     "exit_fullscreen": "Ukončiť režim celej obrazovky",
+    "view_in_dark_mode": "Zobraziť v tmavom režime",
+    "view_in_light_mode": "Zobraziť v svetlom režime",
     "export_email": "Exportovať ako .eml",
     "forward_as_attachment": "Preposlať ako prílohu",
     "import_email": "Importovať .eml alebo .zip",
@@ -578,7 +580,12 @@
       "copied": "Skopírované!",
       "copy_failed": "Kopírovanie zlyhalo"
     },
-    "send_now": "Odoslať teraz"
+    "send_now": "Odoslať teraz",
+    "verification_code": {
+      "copy": "Kopírovať kód {code}",
+      "copied": "Kód skopírovaný",
+      "copy_failed": "Kód sa nepodarilo skopírovať"
+    }
   },
   "email_composer": {
     "read_receipt_on": "Potvrdenie o prečítaní požiadané (kliknutím vypnete)",
@@ -647,7 +654,8 @@
       "name_label": "Meno odosielateľa",
       "name_placeholder": "Meno",
       "email_label": "E-mailová adresa odosielateľa",
-      "email_placeholder": "alias@example.com"
+      "email_placeholder": "alias@example.com",
+      "envelope_notice": "Ak váš server túto adresu neprijme ako odosielateľa obálky, použije sa namiesto nej {identity} a príjemcovia ju uvidia v hlavičke Return-Path."
     },
     "use_template": "Šablóna",
     "save_as_template": "Uložiť ako šablónu",
@@ -660,6 +668,8 @@
     "upload_progress": "Nahrávanie {uploaded} / {total}",
     "upload_cancel": "Zrušiť nahrávanie",
     "upload_failed": "Súbor {filename} sa nepodarilo nahrať",
+    "attachment_too_large": "„{name}“ je väčší, než server povoľuje ({max} na súbor)",
+    "attachments_total_too_large": "Prílohy by prekročili limit servera {max} na správu",
     "drop_files": "Presuňte súbory sem na priloženie",
     "show_less": "Zobraziť menej",
     "send_failed": "Odoslanie e-mailu zlyhalo",
@@ -778,6 +788,10 @@
     "email_sent": "E-mail bol úspešne odoslaný",
     "email_deleted": "E-mail bol odstránený",
     "email_archived": "E-mail bol archivovaný",
+    "emails_deleted": "{count, plural, one {# e-mail odstránený} few {# e-maily odstránené} other {# e-mailov odstránených}}",
+    "emails_archived": "{count, plural, one {# e-mail archivovaný} few {# e-maily archivované} other {# e-mailov archivovaných}}",
+    "error_archiving": "E-mail sa nepodarilo archivovať",
+    "error_updating": "E-mail sa nepodarilo aktualizovať",
     "email_starred": "E-mail bol označený hviezdičkou",
     "email_unstarred": "Hviezdička bola odstránená",
     "email_marked_read": "E-mail bol označený ako prečítaný",
@@ -921,12 +935,25 @@
       "sidebar_apps": "Aplikácie postranného panela",
       "notifications": "Oznámenia",
       "layout": "Rozloženie",
+      "themes": "Motívy",
       "reading": "Čítanie",
       "composing": "Pisanie",
       "downloads": "Stiahnuté",
       "content_senders": "Obsah a odosielatelia",
       "about_data": "Info a dáta",
       "debug": "Ladenie"
+    },
+    "themes": {
+      "title": "Motívy",
+      "description": "Vyberte si z motívov nasadených vaším správcom a zo vstavaných predvolieb.",
+      "locked": "Výber motívu je uzamknutý správcom.",
+      "forced": "Motív „{name}“ je vynútený správcom a nemožno ho zmeniť",
+      "admin_theme": "Motív správcu",
+      "activated": "Motív aktivovaný",
+      "default_restored": "Predvolený motív bol obnovený",
+      "default_name": "Predvolený",
+      "default_badge": "Predvolený",
+      "admin_enforced": "Vynútené správcom"
     },
     "tab_groups": {
       "general": "Všeobecné",
@@ -1159,7 +1186,9 @@
         "enabled": "E-mailové oznámenia",
         "enabled_desc": "Zobrazovať oznámenia pri príchode nových e-mailov",
         "sound": "Zvuk oznámenia",
-        "sound_desc": "Prehrať zvukové upozornenie pri príchode nových e-mailov"
+        "sound_desc": "Prehrať zvukové upozornenie pri príchode nových e-mailov",
+        "inbox_only": "Inbox only",
+        "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
       },
       "calendar": {
         "title": "Oznámenia kalendára",
@@ -1329,6 +1358,10 @@
         "label": "Zobraziť náhľadový text",
         "description": "Zobrazovať náhľady e-mailov v zozname",
         "focus_description": "Zobrazovať vložený náhľadový text v jednoriadkovom sústredenom zozname"
+      },
+      "show_verification_codes": {
+        "label": "Zobrazovať overovacie kódy",
+        "description": "Ponúkať kód z prihlasovacích a potvrdzovacích e-mailov na skopírovanie jedným kliknutím, v zozname počas jedného dňa a v správe"
       },
       "disable_threading": {
         "label": "Zakázať zoskupovanie konverzácií",
@@ -1700,14 +1733,36 @@
       },
       "link_device": {
         "title": "Prepojiť mobilnú aplikáciu",
-        "description": "Prihláste sa do mobilnej aplikácie Bulwark Mail bez písania. Vygenerujte tu QR kód a naskenujte ho z prihlasovacej obrazovky aplikácie.",
+        "description": "Prihláste sa do aplikácie Bulwark Mail v telefóne bez toho, aby ste tam zadávali heslo. Telefón dostane vlastné prihlásenie, takže odhlásenie tu ho neodhlási.",
         "generate": "Zobraziť QR kód",
         "regenerate": "Zobraziť nový kód",
-        "instructions": "Otvorte aplikáciu Bulwark Mail, klepnite na \"Skenovať QR kód\" na prihlasovacej obrazovke a namieste fotoaparát sem.",
+        "instructions": "Otvorte aplikáciu Bulwark Mail a na prihlasovacej obrazovke klepnite na \"Scan a sign-in code\" (alebo na \"Add account\" → \"Scan a sign-in code\", ak ste už prihlásení) a potom namierte fotoaparát sem.",
         "expires_in": "Tento kód vyprší za {seconds} sekúnd. Dá sa použiť iba raz.",
         "expired": "Platnosť tohto kódu vypršala.",
-        "generating": "Generovanie…",
-        "error": "Nepodarilo sa vytvoriť párovací kód. Skúste to znova."
+        "error": "Nepodarilo sa vytvoriť párovací kód. Skúste to znova.",
+        "password_prompt": "Zadajte heslo a potvrďte, že ste to vy. Telefón dostane vlastné prihlásenie; vaše heslo sa do telefónu neposiela.",
+        "show_password": "Zobraziť heslo",
+        "hide_password": "Skryť heslo",
+        "continue": "Pokračovať",
+        "error_wrong_password": "Nesprávne heslo. Skúste to znova.",
+        "totp_prompt": "Zadajte kód z overovacej aplikácie.",
+        "error_password_or_code": "Heslo alebo kód je nesprávny.",
+        "error_not_signed_in": "Vaša relácia vypršala. Ak chcete prepojiť zariadenie, znova sa prihláste.",
+        "error_impersonation": "Zariadenia nie je možné prepojiť, kým si prezeráte schránku iného používateľa.",
+        "error_too_many_attempts": "Príliš veľa pokusov. Chvíľu počkajte a skúste to znova.",
+        "error_session_secret": "Prepájanie zariadení nie je na tomto serveri nastavené (chýba SESSION_SECRET). Obráťte sa na správcu.",
+        "error_server_unreachable": "Nepodarilo sa spojiť s vaším poštovým serverom. Skúste to znova.",
+        "error_pairing_unavailable": "Váš poštový server neumožňuje prepojiť zariadenie týmto spôsobom. Obráťte sa na správcu.",
+        "qr_alt": "QR kód na prihlásenie",
+        "link_label": "Prihlasovací odkaz",
+        "copy_link": "Kopírovať prihlasovací odkaz",
+        "copied": "Skopírované",
+        "copy_hint": "Nemáte fotoaparát? Skopírujte odkaz a vložte ho do aplikácie pomocou \"Paste sign-in link\".",
+        "success_title": "Prihlásené v telefóne",
+        "success_body": "Túto stránku môžete zavrieť. Ak chcete prepojiť ďalšie zariadenie, zobrazte nový kód.",
+        "link_another": "Prepojiť ďalšie zariadenie",
+        "use_sso": "Použiť namiesto toho jednotné prihlásenie",
+        "error_insecure_server": "Mobilná aplikácia sa k poštovým serverom pripája len cez https a tento server používa http."
       },
       "public_keys": {
         "name_label": "Názov verejného kľúča",
@@ -1777,7 +1832,9 @@
       "warnings": {
         "end_before_start": "Dátum ukončenia musí byť po dátume začiatku",
         "start_in_past": "Dátum začiatku je v minulosti",
-        "empty_body": "Telo správy je prázdne – príjemcovia dostanú prázdnu odpoveď"
+        "empty_body": "Telo správy je prázdne – príjemcovia dostanú prázdnu odpoveď",
+        "subject_too_long": "Predmet je pre server príliš dlhý (najviac {max} bajtov).",
+        "body_too_long": "Správa je pre server príliš dlhá (najviac {max} bajtov vrátane formátovania)."
       }
     },
     "folders": {
@@ -1998,6 +2055,7 @@
       "actions": "Akcie",
       "add_action": "Pridať akciu",
       "stop_processing": "Zastaviť spracovanie ďalších pravidiel",
+      "include_spam": "Presúvať aj správy označené ako spam",
       "attachment_type_placeholder": "napr. pdf, doc, jpg",
       "value_placeholder_multi": "Hodnota (viac oddelených čiarkami)",
       "condition_fields": {
@@ -2039,6 +2097,8 @@
       "copy_to_folder": "Vybrať priečinok",
       "forward_to": "Preposlať na e-mailovú adresu",
       "forward_placeholder": "email@example.com",
+      "forward_keep_copy": "Ponechať kópiu",
+      "forward_limit": "Limit preposlaní na správu na tomto serveri: {count}. Ďalšie preposlania sa preskočia.",
       "reject_message": "Správa o odmietnutí",
       "reject_placeholder": "Váš e-mail bol odmietnutý",
       "label_name": "Názov štítku",
@@ -2915,7 +2975,10 @@
       "all_events": "Všetky udalosti",
       "cancel": "Zrušiť",
       "save": "Uložiť",
-      "delete": "Odstrániť"
+      "delete": "Odstrániť",
+      "rsvp_title": "Odpovedať na opakujúcu sa udalosť",
+      "rsvp_description": "Toto je opakujúca sa udalosť. Na ktoré udalosti sa vzťahuje vaša odpoveď?",
+      "respond": "Odpovedať"
     },
     "alerts": {
       "title": "Pripomenutia",
@@ -2958,7 +3021,7 @@
       "enable_tasks": "Povoliť úlohy",
       "enable_tasks_desc": "Zobrazovať zobrazenie úloh v kalendári",
       "show_tasks_on_calendar": "Zobraziť úlohy v kalendári",
-      "show_tasks_on_calendar_desc": "Zobrazovať značky úloh v dennom a týždennom zobrazení kalendára",
+      "show_tasks_on_calendar_desc": "Zobrazovať úlohy v mesačnom, týždennom a dennom zobrazení kalendára",
       "hover_preview": "Náhľad udalosti po prejdení",
       "hover_preview_desc": "Zobrazovať vyskakovacie okno s podrobnosťami pri najetí myšou na udalosti v kalendári",
       "hover_preview_instant": "Okamžite",
@@ -3026,6 +3089,9 @@
       "alert_now": "Začína teraz",
       "alert_in_minutes": "Za {count} min",
       "invitation_sent": "Pozvánky boli odoslané",
+      "invitations_denied_title": "Pozvánky nie je možné odoslať",
+      "invitations_denied": "Server odmietol odoslať pozvánky: {reason}. Uložiť udalosť bez ich odoslania?",
+      "save_without_invitations": "Uložiť bez pozvánok",
       "rsvp_updated": "Odpoveď bola aktualizovaná",
       "rsvp_error": "Aktualizácia odpovede zlyhala",
       "event_duplicated": "Udalosť bola duplikovaná",
@@ -3055,7 +3121,7 @@
       "supported_formats": "Podporuje súbory iCalendar (.ics)",
       "url_description": "Zadajte URL adresu externého zdroja iCalendar (.ics) na import udalostí.",
       "url_placeholder": "https://example.com/calendar.ics",
-      "url_hint": "Podporuje URL adresy CalDAV a iCalendar (.ics)",
+      "url_hint": "Podporuje URL adresy iCalendar (.ics)",
       "fetch": "Načítať",
       "invalid_url": "Zadajte platnú URL adresu",
       "url_fetch_failed": "Načítanie kalendára z URL adresy zlyhalo",
@@ -3318,6 +3384,8 @@
     "rename": "Premenovať",
     "rename_title": "Premenovať",
     "new_name": "Nový názov",
+    "name_forbidden_chars": "Server nepovoľuje v názvoch tieto znaky: {chars}",
+    "name_reserved": "Tento názov je na serveri vyhradený.",
     "delete": "Odstrániť",
     "delete_confirm_title": "Odstrániť položku",
     "delete_confirm_message": "Naozaj chcete odstrániť \"{name}\"? Túto akciu nie je možné vrátiť.",

@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { cn, formatFileSize } from "@/lib/utils";
 import { NewFolderDialog } from "@/components/files/new-folder-dialog";
 import { RenameDialog } from "@/components/files/rename-dialog";
+import { fileNameProblem } from "@/lib/file-name-rules";
 import { FileUploadArea } from "@/components/files/file-upload-area";
 import { loadFilesSettings } from "@/components/files/files-settings-dialog";
 import type { FolderLayout } from "@/components/files/files-settings-dialog";
@@ -400,6 +401,12 @@ export function FileBrowser({
   onShare,
 }: FileBrowserProps) {
   const t = useTranslations("files");
+  const fileNameRules = useMemo(() => client?.getFileNameRules?.() ?? null, [client]);
+  const validateFileName = useCallback((name: string) => {
+    const problem = fileNameProblem(name, fileNameRules);
+    if (!problem) return null;
+    return problem.kind === "chars" ? t("name_forbidden_chars", { chars: problem.chars }) : t("name_reserved");
+  }, [fileNameRules, t]);
   const [showNewFolder, setShowNewFolder] = useState(false);
   const [renameTarget, setRenameTarget] = useState<string | null>(null);
   const [shareTargetId, setShareTargetId] = useState<string | null>(null);
@@ -2003,6 +2010,7 @@ export function FileBrowser({
             setShowNewFolder(false);
           }}
           onCancel={() => setShowNewFolder(false)}
+          validate={validateFileName}
         />
       )}
 
@@ -2017,6 +2025,7 @@ export function FileBrowser({
             setShowNewTextFile(false);
           }}
           onCancel={() => setShowNewTextFile(false)}
+          validate={validateFileName}
         />
       )}
 
@@ -2029,6 +2038,7 @@ export function FileBrowser({
             setRenameTarget(null);
           }}
           onCancel={() => setRenameTarget(null)}
+          validate={validateFileName}
         />
       )}
 

@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Loader2, CheckCircle, AlertCircle } from '@/components/icons';
 import { useTranslations } from 'next-intl';
-import { isValidUnsubscribeUrl, parseMailtoUrl } from '@/lib/validation';
+import { isValidUnsubscribeUrl, parseUnsubscribeMailto } from '@/lib/validation';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useIsDesktop } from '@/hooks/use-media-query';
 
@@ -39,6 +39,16 @@ export function UnsubscribeBanner({
   const unsubUrl = unsubMethod === 'http'
     ? listUnsubscribe.http
     : listUnsubscribe.mailto;
+  // The sender wrote this URL: the confirmation shows exactly what will be
+  // sent, and where, before the user's account sends it.
+  const mailtoFields = unsubMethod === 'mailto' && unsubUrl ? parseUnsubscribeMailto(unsubUrl) : null;
+  const mailtoDetails = mailtoFields ? (
+    <div className="mt-2 space-y-0.5 text-xs text-muted-foreground break-all">
+      <div className="font-medium text-foreground">{mailtoFields.to[0]}</div>
+      {mailtoFields.subject && <div>{mailtoFields.subject}</div>}
+      {mailtoFields.body && <div className="whitespace-pre-line line-clamp-4">{mailtoFields.body}</div>}
+    </div>
+  ) : null;
 
   useEffect(() => {
     if (!showConfirm) return;
@@ -57,7 +67,7 @@ export function UnsubscribeBanner({
     };
   }, [showConfirm]);
 
-  if (!unsubUrl || !unsubMethod) {
+  if (!unsubUrl || !unsubMethod || (unsubMethod === 'mailto' && !mailtoFields)) {
     return null;
   }
 
@@ -83,14 +93,13 @@ export function UnsubscribeBanner({
         // once the server accepted it. The previous hidden-link click handed
         // the mailto: to the OS mail handler and claimed success even though
         // nothing was ever sent.
-        const fields = parseMailtoUrl(unsubUrl);
-        if (!fields) {
+        if (!mailtoFields) {
           setError(true);
           setProcessing(false);
           setShowConfirm(false);
           return;
         }
-        await onSendMailtoUnsubscribe(fields);
+        await onSendMailtoUnsubscribe(mailtoFields);
 
         setSuccess(true);
         setProcessing(false);
@@ -152,6 +161,7 @@ export function UnsubscribeBanner({
             <p className="text-sm text-foreground mb-2">
               {t('email_viewer.unsubscribe_banner.confirm_title')}
             </p>
+            {mailtoDetails && <div className="mb-2 max-w-[320px]">{mailtoDetails}</div>}
             <div className="flex items-center gap-2">
               <button
                 onClick={handleUnsubscribe}
@@ -185,6 +195,7 @@ export function UnsubscribeBanner({
             ? 'email_viewer.unsubscribe_banner.confirm_message_http'
             : 'email_viewer.unsubscribe_banner.confirm_message_mailto'
           )}
+          details={mailtoDetails}
           confirmText={t('email_viewer.unsubscribe_banner.confirm_button')}
           cancelText={t('email_viewer.unsubscribe_banner.cancel')}
           variant="destructive"

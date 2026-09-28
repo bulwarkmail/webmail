@@ -23,6 +23,10 @@ import { useKeywordFormat } from "@/hooks/use-keyword-format";
 interface FilterRuleModalProps {
   rule?: FilterRule;
   mailboxes: Mailbox[];
+  /** Server cap on redirects per message (Sieve `maxNumberRedirects`). */
+  maxRedirects?: number | null;
+  /** Forward actions in the other enabled rules, which share that cap. */
+  otherForwards?: number;
   onSave: (rule: FilterRule) => void;
   onClose: () => void;
 }
@@ -84,6 +88,8 @@ function makeEmptyAction(): FilterAction {
 export function FilterRuleModal({
   rule,
   mailboxes,
+  maxRedirects,
+  otherForwards = 0,
   onSave,
   onClose,
 }: FilterRuleModalProps) {
@@ -101,6 +107,7 @@ export function FilterRuleModal({
     rule?.actions.length ? [...rule.actions] : [makeEmptyAction()]
   );
   const [stopProcessing, setStopProcessing] = useState(rule?.stopProcessing ?? false);
+  const [includeSpam, setIncludeSpam] = useState(rule?.includeSpam ?? false);
 
   const modalRef = useFocusTrap({ isActive: true, onEscape: onClose });
 
@@ -120,6 +127,20 @@ export function FilterRuleModal({
     buildPaths(tree);
     return { hierarchicalMailboxes: flattenMailboxTree(tree), mailboxPathMap: pathMap };
   }, [mailboxes]);
+
+  // Rules saved before folder ids were stored only carry the path; resolve it
+  // so the select shows the folder and the next save adds the id.
+  const mailboxIdFor = useCallback((action: FilterAction): string => {
+    if (action.mailboxId) return action.mailboxId;
+    for (const [id, path] of mailboxPathMap) {
+      if (path === action.value) return id;
+    }
+    return "";
+  }, [mailboxPathMap]);
+
+  const forwardCount = actions.filter((a) => a.type === "forward").length;
+  const forwardLimit = typeof maxRedirects === "number" && maxRedirects > 0 ? maxRedirects : null;
+  const forwardOverLimit = forwardLimit !== null && forwardCount + otherForwards > forwardLimit;
 
   const handleSave = useCallback(() => {
     const trimmedName = name.trim();
@@ -150,9 +171,16 @@ export function FilterRuleModal({
       return;
     }
 
-    const validActions = actions.filter(
-      (a) => !ACTIONS_WITH_VALUE.has(a.type) || a.value?.trim()
-    );
+    const validActions = actions
+      .map((a) => {
+        if (!ACTIONS_WITH_MAILBOX.has(a.type)) return a;
+        // Store the folder id next to the path and refresh the path from it,
+        // so a renamed folder keeps receiving the rule's mail.
+        const mailboxId = mailboxIdFor(a);
+        const path = mailboxId ? mailboxPathMap.get(mailboxId) : undefined;
+        return mailboxId ? { ...a, mailboxId, value: path ?? a.value } : a;
+      })
+      .filter((a) => !ACTIONS_WITH_VALUE.has(a.type) || a.value?.trim());
     if (validActions.length === 0) {
       toast.error(t("validation_empty_actions"));
       return;
@@ -166,8 +194,9 @@ export function FilterRuleModal({
       conditions: validConditions,
       actions: validActions,
       stopProcessing,
+      ...(includeSpam && validActions.some((a) => ACTIONS_WITH_MAILBOX.has(a.type)) ? { includeSpam: true } : {}),
     });
-  }, [name, matchType, conditions, actions, stopProcessing, rule, onSave, t]);
+  }, [name, matchType, conditions, actions, stopProcessing, includeSpam, rule, onSave, t, mailboxIdFor, mailboxPathMap]);
 
   const updateCondition = (index: number, updates: Partial<FilterCondition>) => {
     setConditions((prev) =>
@@ -213,9 +242,16 @@ export function FilterRuleModal({
         if (updates.type && !ACTIONS_WITH_VALUE.has(updates.type)) {
           delete updated.value;
         }
+        if (updates.type && !ACTIONS_WITH_MAILBOX.has(updates.type)) {
+          delete updated.mailboxId;
+        }
+        if (updates.type && updates.type !== "forward") {
+          delete updated.keepCopy;
+        }
         if (updates.type && ACTIONS_WITH_MAILBOX.has(updates.type) && !updated.value) {
           const firstMb = hierarchicalMailboxes[0];
           updated.value = firstMb ? (mailboxPathMap.get(firstMb.id) || firstMb.name) : "";
+          if (firstMb) updated.mailboxId = firstMb.id;
         }
         return updated;
       })
@@ -429,36 +465,65 @@ export function FilterRuleModal({
                     aria-label={t("actions")}
                   >
                     {ALL_ACTION_TYPES.map((a) => (
-                      <option key={a} value={a}>
+                      <option
+                        key={a}
+                        value={a}
+                        disabled={
+                          a === "forward" && action.type !== "forward" && forwardLimit !== null &&
+                          forwardCount + otherForwards >= forwardLimit
+                        }
+                      >
                         {t(`action_types.${a}`)}
                       </option>
                     ))}
                   </select>
 
-                  {ACTIONS_WITH_MAILBOX.has(action.type) && (
-                    <select
-                      value={action.value || ""}
-                      onChange={(e) => updateAction(index, { value: e.target.value })}
-                      className={`${selectClass} flex-1 min-w-[140px]`}
-                      aria-label={t("move_to_folder")}
-                    >
-                      <option value="">{t("move_to_folder")}</option>
-                      {hierarchicalMailboxes.map((mb) => (
-                        <option key={mb.id} value={mailboxPathMap.get(mb.id) || mb.name}>
-                          {"\u00A0".repeat(mb.depth * 3)}{mb.name}
-                        </option>
-                      ))}
-                    </select>
-                  )}
+                  {ACTIONS_WITH_MAILBOX.has(action.type) && (() => {
+                    const selectedId = mailboxIdFor(action);
+                    const missing = !!selectedId && !mailboxPathMap.has(selectedId);
+                    return (
+                      <select
+                        value={selectedId}
+                        onChange={(e) => {
+                          const id = e.target.value;
+                          updateAction(index, {
+                            mailboxId: id || undefined,
+                            value: id ? (mailboxPathMap.get(id) ?? "") : "",
+                          });
+                        }}
+                        className={`${selectClass} flex-1 min-w-[140px]`}
+                        aria-label={t("move_to_folder")}
+                      >
+                        <option value="">{t("move_to_folder")}</option>
+                        {missing && <option value={selectedId}>{action.value}</option>}
+                        {hierarchicalMailboxes.map((mb) => (
+                          <option key={mb.id} value={mb.id}>
+                            {"\u00A0".repeat(mb.depth * 3)}{mb.name}
+                          </option>
+                        ))}
+                      </select>
+                    );
+                  })()}
 
                   {action.type === "forward" && (
-                    <Input
-                      value={action.value || ""}
-                      onChange={(e) => updateAction(index, { value: e.target.value })}
-                      placeholder={t("forward_placeholder")}
-                      type="email"
-                      className="flex-1 min-w-[180px]"
-                    />
+                    <>
+                      <Input
+                        value={action.value || ""}
+                        onChange={(e) => updateAction(index, { value: e.target.value })}
+                        placeholder={t("forward_placeholder")}
+                        type="email"
+                        className="flex-1 min-w-[180px]"
+                      />
+                      <label className="flex items-center gap-1.5 text-sm text-foreground">
+                        <input
+                          type="checkbox"
+                          checked={!!action.keepCopy}
+                          onChange={(e) => updateAction(index, { keepCopy: e.target.checked || undefined })}
+                          className="rounded border-input"
+                        />
+                        {t("forward_keep_copy")}
+                      </label>
+                    </>
                   )}
 
                   {action.type === "reject" && (
@@ -496,6 +561,11 @@ export function FilterRuleModal({
                 </div>
               ))}
             </div>
+            {forwardOverLimit && (
+              <p className="mt-2 text-xs text-amber-600 dark:text-amber-400">
+                {t("forward_limit", { count: forwardLimit })}
+              </p>
+            )}
             <button
               type="button"
               onClick={() => setActions((prev) => [...prev, makeEmptyAction()])}
@@ -518,6 +588,21 @@ export function FilterRuleModal({
               {t("stop_processing")}
             </label>
           </div>
+
+          {actions.some((a) => ACTIONS_WITH_MAILBOX.has(a.type)) && (
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="includeSpam"
+                checked={includeSpam}
+                onChange={(e) => setIncludeSpam(e.target.checked)}
+                className="rounded border-input"
+              />
+              <label htmlFor="includeSpam" className="text-sm text-foreground">
+                {t("include_spam")}
+              </label>
+            </div>
+          )}
         </div>
 
         <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-border">

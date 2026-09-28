@@ -243,7 +243,8 @@ export interface Thread {
 
 // Thread grouping for UI display
 export interface ThreadGroup {
-  threadId: string;
+  threadId: string;          // JMAP thread id - unique only within its account; use for Thread/get
+  threadKey: string;         // Client-side identity, unique across accounts (see threadKeyFor)
   emails: Email[];           // Emails in this thread (sorted by receivedAt desc)
   latestEmail: Email;        // Most recent email
   participantNames: string[];// Unique participant names
@@ -311,6 +312,11 @@ export interface ContactCard {
     grammaticalGender?: string;
     pronouns?: Record<string, { pronouns: string; pref?: number; contexts?: Record<string, boolean> }>;
   };
+  calendars?: Record<string, { uri: string; kind?: 'calendar' | 'freeBusy'; mediaType?: string; contexts?: Record<string, boolean> }>;
+  schedulingAddresses?: Record<string, { uri: string; contexts?: Record<string, boolean>; pref?: number }>;
+  // Client-side flat views of `calendars`, `schedulingAddresses` and the
+  // `directories` entry (vCard CALURI / FBURL / CALADRURI / SOURCE). They are
+  // not RFC 9553 properties; lib/jmap/contact-wire.ts maps them.
   calendarUri?: string;
   schedulingUri?: string;
   freeBusyUri?: string;

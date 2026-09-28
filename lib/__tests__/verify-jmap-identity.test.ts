@@ -179,3 +179,37 @@ describe('verifyJmapIdentity', () => {
     ).rejects.toMatchObject({ status: 502 });
   });
 });
+
+describe('resolveJmapIdentity account name', () => {
+  let fetchSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    vi.resetModules();
+    fetchSpy = vi.spyOn(globalThis, 'fetch');
+  });
+
+  afterEach(() => {
+    fetchSpy.mockRestore();
+  });
+
+  it('keys a bare Bearer claim on the canonical login, so john@b cannot become john', async () => {
+    fetchSpy.mockResolvedValueOnce(json({ apiUrl: 'https://mail.internal/jmap/', username: 'john@b.example', accounts: {} }));
+    const { resolveJmapIdentity } = await load();
+    await expect(resolveJmapIdentity('https://mail.internal', 'Bearer tok', 'john', { trusted: true }))
+      .resolves.toEqual({ serverUrl: 'https://mail.internal', accountName: 'john@b.example' });
+  });
+
+  it('keeps a fully-qualified Bearer claim as it is', async () => {
+    fetchSpy.mockResolvedValueOnce(json({ apiUrl: 'https://mail.internal/jmap/', username: 'john@b.example', accounts: {} }));
+    const { resolveJmapIdentity } = await load();
+    await expect(resolveJmapIdentity('https://mail.internal', 'Bearer tok', 'John@B.example', { trusted: true }))
+      .resolves.toEqual({ serverUrl: 'https://mail.internal', accountName: 'John@B.example' });
+  });
+
+  it('keeps a Basic claim as it is: the server accepted exactly that login', async () => {
+    fetchSpy.mockResolvedValueOnce(json({ apiUrl: 'https://mail.internal/jmap/', username: 'john@a.example', accounts: {} }));
+    const { resolveJmapIdentity } = await load();
+    await expect(resolveJmapIdentity('https://mail.internal', basic('john', 'pw'), 'john', { trusted: true }))
+      .resolves.toEqual({ serverUrl: 'https://mail.internal', accountName: 'john' });
+  });
+});

@@ -3,6 +3,8 @@ import { describe, it, expect, beforeAll, vi } from 'vitest';
 // Mock the environment variable
 beforeAll(() => {
   vi.stubEnv('DEV_MOCK_JMAP', 'true');
+  // Inlined from DEV_MOCK_JMAP at build time in a real build.
+  vi.stubEnv('NEXT_PUBLIC_DEV_MOCK_JMAP', 'true');
 });
 
 // We test via dynamic import to get a fresh module with env set
@@ -367,5 +369,23 @@ describe('dev-jmap mock server', () => {
       expect(data.blobId).toBeDefined();
       expect(data.type).toBe('image/png');
     });
+  });
+});
+
+// The mock accepts any password; a build made without DEV_MOCK_JMAP (every
+// release image) must not be able to switch it on at runtime.
+describe('dev-jmap mock in a build made without it', () => {
+  it('stays off even when DEV_MOCK_JMAP is set at runtime', async () => {
+    vi.stubEnv('NEXT_PUBLIC_DEV_MOCK_JMAP', '');
+    try {
+      const { GET } = await loadRoute();
+      const req = makeRequest('http://localhost:3000/api/dev-jmap/.well-known/jmap', {
+        headers: { host: 'localhost:3000' },
+      });
+      const res = await GET(req as never, { params: Promise.resolve({ path: ['.well-known', 'jmap'] }) });
+      expect(res.status).toBe(404);
+    } finally {
+      vi.stubEnv('NEXT_PUBLIC_DEV_MOCK_JMAP', 'true');
+    }
   });
 });

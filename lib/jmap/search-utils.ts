@@ -34,20 +34,6 @@ export function sizeFilterBytes(value: string | undefined): number | null {
   return Math.round(kb * 1024);
 }
 
-/**
- * Appends wildcard `*` to each word in a query to enable prefix matching
- * in Stalwart's full-text search engine. For example, "prim" becomes "prim*"
- * which matches "prime", "primary", etc.
- */
-export function toWildcardQuery(query: string): string {
-  return query
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((word) => (word.endsWith('*') || word.endsWith('"') ? word : word + '*'))
-    .join(' ');
-}
-
 export function buildJMAPFilter(
   textQuery: string,
   filters: SearchFilters,
@@ -55,8 +41,11 @@ export function buildJMAPFilter(
 ): Record<string, unknown> {
   const conditions: Record<string, unknown>[] = [];
 
-  if (textQuery) {
-    conditions.push({ text: toWildcardQuery(textQuery) });
+  // Sent as typed. JMAP's text filter has no wildcard syntax: Stalwart's
+  // tokenizer drops a trailing "*" (so "runn*" finds nothing) and matches
+  // whole, stemmed words only.
+  if (textQuery.trim()) {
+    conditions.push({ text: textQuery.trim() });
   }
 
   if (filters.from) {

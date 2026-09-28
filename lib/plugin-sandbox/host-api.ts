@@ -3,10 +3,11 @@
 // structured-cloneable data back to the iframe.
 
 import type { InstalledPlugin, Permission } from '../plugin-types';
-import { IMPLICIT_PERMISSIONS } from '../plugin-types';
+import { pluginHasPermission } from './permissions';
 import { toast as appToast } from '@/stores/toast-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { useAccountStore } from '@/stores/account-store';
+import { claimLegacyPluginStorage, pluginStoragePrefix } from './storage-scope';
 import { useIdentityStore } from '@/stores/identity-store';
 import { useEmailStore } from '@/stores/email-store';
 import { useFilterStore } from '@/stores/filter-store';
@@ -165,16 +166,6 @@ const PERM_PER_METHOD: Record<string, Permission | null> = {
   'sieve.regenerate': 'filters:write',
 };
 
-function hasPermission(plugin: InstalledPlugin, perm: Permission): boolean {
-  if ((IMPLICIT_PERMISSIONS as readonly string[]).includes(perm)) return true;
-  if (!plugin.permissions.includes(perm)) return false;
-  // Defense-in-depth: even if the manifest declares a permission, the host
-  // refuses the API call unless an admin has marked the plugin as managed,
-  // or the user has explicitly granted it via the consent dialog.
-  if (plugin.managed) return true;
-  return (plugin.grantedPermissions ?? []).includes(perm);
-}
-
 // ─── Cross-origin allow-list (mirrors lib/plugin-api.ts) ──────
 
 function originMatchesAllowlist(url: URL, allowlist: string[]): boolean {
@@ -202,25 +193,31 @@ function originMatchesAllowlist(url: URL, allowlist: string[]): boolean {
 
 // ─── Per-plugin storage namespace ─────────────────────────────
 
-const STORAGE_PREFIX = (pluginId: string) => `plugin:${pluginId}:`;
+/** The signed-in account's namespace; see storage-scope.ts. */
+function storagePrefix(pluginId: string): string {
+  const accountId = useAccountStore.getState().activeAccountId;
+  if (!accountId) return pluginStoragePrefix(pluginId, 'signed-out');
+  claimLegacyPluginStorage(pluginId, accountId);
+  return pluginStoragePrefix(pluginId, accountId);
+}
 
 function storageGet(pluginId: string, key: string): unknown {
   if (typeof window === 'undefined') return null;
-  const raw = window.localStorage.getItem(STORAGE_PREFIX(pluginId) + key);
+  const raw = window.localStorage.getItem(storagePrefix(pluginId) + key);
   if (raw === null) return null;
   try { return JSON.parse(raw); } catch { return null; }
 }
 function storageSet(pluginId: string, key: string, value: unknown): void {
   if (typeof window === 'undefined') return;
-  window.localStorage.setItem(STORAGE_PREFIX(pluginId) + key, JSON.stringify(value));
+  window.localStorage.setItem(storagePrefix(pluginId) + key, JSON.stringify(value));
 }
 function storageRemove(pluginId: string, key: string): void {
   if (typeof window === 'undefined') return;
-  window.localStorage.removeItem(STORAGE_PREFIX(pluginId) + key);
+  window.localStorage.removeItem(storagePrefix(pluginId) + key);
 }
 function storageKeys(pluginId: string): string[] {
   if (typeof window === 'undefined') return [];
-  const prefix = STORAGE_PREFIX(pluginId);
+  const prefix = storagePrefix(pluginId);
   const out: string[] = [];
   for (let i = 0; i < window.localStorage.length; i++) {
     const k = window.localStorage.key(i);
@@ -291,6 +288,48 @@ function isApiPostPathAllowed(path: string, allowlist: readonly string[]): boole
   return false;
 }
 
+/**
+ * Same-origin routes no plugin may POST to, whatever its `apiPostPaths`
+ * lists: they act with the user's full credentials (the JMAP passthrough,
+ * WebDAV, CalDAV), change sign-in, admin or plugin state, or belong to the
+ * setup wizard. A plugin talks to its own sidecar routes instead.
+ *
+ * Listed by their segment under `/api/`, not as `/api/...` strings: the Lite
+ * build reads every such string in a client chunk as an endpoint the browser
+ * calls and refuses the ones it has no stand-in for (scripts/lite/verify.mjs).
+ */
+const PLUGIN_POST_DENIED_ROUTES = new Set([
+  'account',
+  'admin',
+  'auth',
+  'caldav',
+  'dev-jmap',
+  'plugin-approval-status',
+  'plugins',
+  'push',
+  'settings',
+  'setup',
+  'system',
+  'webdav',
+  'wopi',
+]);
+
+/**
+ * Checked on the path the router will see: decoded once and with repeated
+ * slashes collapsed, so `/api/%61dmin/...` cannot pass for something else.
+ */
+function isPluginPostDenied(pathname: string): boolean {
+  let routePath: string;
+  try {
+    routePath = decodeURIComponent(pathname);
+  } catch {
+    return true;
+  }
+  routePath = routePath.replace(/\/{2,}/g, '/');
+  if (!routePath.startsWith('/api/')) return false;
+  return PLUGIN_POST_DENIED_ROUTES.has(routePath.slice('/api/'.length).split('/')[0]);
+}
+
 interface PluginHttpPostOptions {
   headers?: Record<string, string>;
   /**
@@ -347,6 +386,9 @@ async function doHttpPost(
   }
   if (!isApiPostPathAllowed(url.pathname, allow)) {
     throw new Error(`Path ${url.pathname} not in plugin apiPostPaths allowlist`);
+  }
+  if (isPluginPostDenied(url.pathname)) {
+    throw new Error(`Path ${url.pathname} is not available to plugins`);
   }
   const { client } = useAuthStore.getState();
   const headers: Record<string, string> = {};
@@ -1371,7 +1413,7 @@ export async function dispatchApiCall(
   // Permission gate
   const requiredPerm = PERM_PER_METHOD[method];
   if (requiredPerm !== undefined && requiredPerm !== null) {
-    if (!hasPermission(plugin, requiredPerm)) {
+    if (!pluginHasPermission(plugin, requiredPerm)) {
       throw new Error(`Plugin "${plugin.id}" lacks permission "${requiredPerm}"`);
     }
   } else if (!(method in PERM_PER_METHOD)) {

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { IJMAPClient } from '@/lib/jmap/client-interface';
+import type { CalendarEventUpdateOptions, IJMAPClient } from '@/lib/jmap/client-interface';
 import type { Calendar, CalendarEvent, CalendarParticipant, CalendarParticipantIdentity, CalendarRights, CreateCalendarOptions } from '@/lib/jmap/types';
 import { debug } from '@/lib/debug';
 import { normalizeAllDayDuration } from '@/lib/calendar-utils';
@@ -8,17 +8,22 @@ import { displayNow } from '@/lib/timezone';
 import { parseDuration } from '@/components/calendar/event-card';
 import { sanitizeOutgoingCalendarEventData } from '@/lib/calendar-event-normalization';
 import { expandRecurringEvents } from '@/lib/recurrence-expansion';
+import { SchedulingDeniedError } from '@/lib/jmap/scheduling-error';
 import {
   baseEventStoreId,
   buildFallbackExcludePatch,
   buildFallbackOverridePatch,
   buildOccurrencePatch,
+  buildOccurrenceRsvpPatch,
+  isBrowserExpandedOccurrence,
+  withNewOverrideDetails,
   isServerRecurrenceInstance,
   isSyntheticIdMutationUnsupported,
 } from '@/lib/recurrence-instances';
 import { parseISO } from 'date-fns';
 import { generateUUID } from '@/lib/utils';
 import { apiFetch } from '@/lib/browser-navigation';
+import { explainServerAuthError } from '@/lib/server-auth-status';
 import { BIRTHDAY_CALENDAR_ID } from '@/lib/birthday-calendar';
 import { getClientByLocalAccountId } from './client-registry';
 
@@ -65,10 +70,12 @@ function rawIdentityOf(id: string): string {
  * 'occurrence' they are written through that id - the server turns the patch
  * into a recurrence override - unless they are the single instance of a
  * non-recurring event, where the base event is the same thing and works on
- * every server version. Scope 'series' (an RSVP, a calendar move) always
- * targets the base event. A base event that is not in the store itself but
- * has an expanded occurrence in view (`baseEventStoreId`) borrows that
- * occurrence's account routing.
+ * every server version. Occurrences the browser expanded itself resolve to
+ * their base event and, with scope 'occurrence', are written as a recurrence
+ * override on it. Scope 'series' (an RSVP, a calendar move) always targets
+ * the base event. A base event that is not in the store itself but has an
+ * expanded occurrence in view (`baseEventStoreId`) borrows that occurrence's
+ * account routing.
  */
 interface MutationTarget {
   storeEvent?: CalendarEvent;
@@ -77,6 +84,8 @@ interface MutationTarget {
   localAccountId?: string;
   /** True when `realId` is the synthetic id of one occurrence of a series. */
   isOccurrence: boolean;
+  /** True when `storeEvent` is one occurrence the browser expanded and `realId` its base event. */
+  isBrowserOccurrence?: boolean;
 }
 
 export function resolveMutationTarget(
@@ -97,6 +106,9 @@ export function resolveMutationTarget(
         return { ...context, realId: storeEvent.baseEventId, isOccurrence: false };
       }
       return { ...context, realId: rawId, isOccurrence: true };
+    }
+    if (scope === 'occurrence' && isBrowserExpandedOccurrence(storeEvent)) {
+      return { ...context, realId: rawId, isOccurrence: false, isBrowserOccurrence: true };
     }
     return { ...context, realId: rawId, isOccurrence: false };
   }
@@ -130,7 +142,9 @@ const syntheticIdRejected = new WeakSet<object>();
  * Patch one expanded occurrence through its synthetic id. A server that
  * predates synthetic-id writes rejects it; the same change is then written
  * as a recurrence override on the base event instead (the way Bulwark did it
- * before), and that client is remembered as needing the fallback.
+ * before), and that client is remembered as needing the fallback. A change
+ * that creates the override carries the occurrence's details along
+ * (`withNewOverrideDetails`).
  */
 async function updateOccurrence(
   client: IJMAPClient,
@@ -140,10 +154,11 @@ async function updateOccurrence(
   sendSchedulingMessages: boolean | undefined,
   targetAccountId: string | undefined,
 ): Promise<void> {
-  const patch = buildOccurrencePatch(updates);
+  const patch = withNewOverrideDetails(instance, buildOccurrencePatch(updates));
+  const options: CalendarEventUpdateOptions | undefined = patch.sequence != null ? { keepSequence: true } : undefined;
   if (!syntheticIdRejected.has(client)) {
     try {
-      await client.updateCalendarEvent(syntheticId, patch, sendSchedulingMessages, targetAccountId);
+      await client.updateCalendarEvent(syntheticId, patch, sendSchedulingMessages, targetAccountId, options);
       return;
     } catch (error) {
       if (!isSyntheticIdMutationUnsupported(error)) throw error;
@@ -181,6 +196,55 @@ async function destroyOccurrence(
     throw new Error('Cannot resolve the occurrence to exclude');
   }
   await client.updateCalendarEvent(instance.baseEventId, fallback, sendSchedulingMessages, targetAccountId);
+}
+
+/**
+ * Answer one occurrence of a series as `participantId`. The server stores it
+ * as a recurrence override and sends the organizer an iTIP REPLY carrying
+ * that occurrence's RECURRENCE-ID.
+ */
+async function rsvpOccurrence(
+  client: IJMAPClient,
+  target: MutationTarget,
+  occurrence: CalendarEvent,
+  participantId: string,
+  status: CalendarParticipant['participationStatus'],
+): Promise<void> {
+  const patch = buildOccurrenceRsvpPatch(occurrence, participantId, status);
+  if (!patch) throw new Error('Participant not found on this occurrence');
+  if (target.isOccurrence) {
+    await updateOccurrence(client, occurrence, target.realId, patch, true, target.targetAccountId);
+    return;
+  }
+  await updateBrowserOccurrence(client, target, patch, true);
+}
+
+/**
+ * Write a change to one occurrence the browser expanded as a recurrence
+ * override on its base event (`target.realId`) - never as a change to the
+ * base event itself, which would move or edit the whole series.
+ */
+async function updateBrowserOccurrence(
+  client: IJMAPClient,
+  target: MutationTarget,
+  updates: Partial<CalendarEvent>,
+  sendSchedulingMessages: boolean | undefined,
+): Promise<void> {
+  const occurrence = target.storeEvent!;
+  const patch = buildFallbackOverridePatch(occurrence, withNewOverrideDetails(occurrence, updates));
+  if (!patch) throw new Error('Cannot resolve the occurrence to override');
+  await client.updateCalendarEvent(target.realId, patch, sendSchedulingMessages, target.targetAccountId);
+}
+
+/** Delete one occurrence the browser expanded by excluding it on its base event. */
+async function destroyBrowserOccurrence(
+  client: IJMAPClient,
+  target: MutationTarget,
+  sendSchedulingMessages: boolean | undefined,
+): Promise<void> {
+  const patch = buildFallbackExcludePatch(target.storeEvent!);
+  if (!patch) throw new Error('Cannot resolve the occurrence to exclude');
+  await client.updateCalendarEvent(target.realId, patch, sendSchedulingMessages, target.targetAccountId);
 }
 
 // Re-runs the most recent range fetch. Synthetic occurrence ids are
@@ -384,6 +448,39 @@ function getStoreEventDebugSnapshot(event: Partial<CalendarEvent> | null | undef
   };
 }
 
+/** Identifies the login a subscription belongs to: server plus login name. */
+export function subscriptionOwner(client: Pick<IJMAPClient, 'getServerUrl' | 'getUsername'>): string {
+  return `${client.getServerUrl().replace(/\/+$/, '').toLowerCase()}|${client.getUsername().toLowerCase()}`;
+}
+
+type CalendarStoreSet = (partial: Partial<CalendarStore> | ((state: CalendarStore) => Partial<CalendarStore>)) => void;
+
+/**
+ * Whether `client` may act on `sub`: refresh it (a destructive diff of the
+ * calendar's events), rename or delete its calendar. A subscription owned
+ * by this login may. One with another owner may not. One without an owner
+ * (created before owners were recorded) is adopted only when its calendar
+ * id and name both exist in this account - a bare id match would name an
+ * unrelated calendar in another account or on another server.
+ */
+async function claimSubscription(client: IJMAPClient, sub: ICalSubscription, set: CalendarStoreSet): Promise<boolean> {
+  const owner = subscriptionOwner(client);
+  if (sub.owner) return sub.owner === owner;
+  if (sub.accountId && sub.accountId !== client.getAccountId()) return false;
+  let calendars: Calendar[];
+  try {
+    calendars = await client.getCalendars();
+  } catch {
+    return false;
+  }
+  const found = calendars.some((c) => (c.originalId ?? c.id) === sub.calendarId && c.name === sub.name);
+  if (!found) return false;
+  set((state) => ({
+    icalSubscriptions: state.icalSubscriptions.map((s) => (s.id === sub.id ? { ...s, owner } : s)),
+  }));
+  return true;
+}
+
 export interface ICalSubscription {
   id: string;
   url: string;
@@ -393,6 +490,14 @@ export interface ICalSubscription {
   // legacy entries with no accountId are shown only in whichever account
   // the user has active (treated as floating). New subs always set it.
   accountId?: string;
+  /**
+   * The login that owns the subscription (subscriptionOwner()). A JMAP
+   * account id alone is not unique - two servers hand out the same small
+   * ids - so a subscription is only refreshed or removed through the login
+   * it was created with. Missing on subscriptions created before this was
+   * recorded; those are adopted once their calendar is found in the account.
+   */
+  owner?: string;
   name: string;
   color: string;
   refreshInterval: number; // minutes
@@ -441,7 +546,7 @@ interface CalendarStore {
   createEvent: (client: IJMAPClient, event: Partial<CalendarEvent>, sendSchedulingMessages?: boolean) => Promise<CalendarEvent | null>;
   updateEvent: (client: IJMAPClient, id: string, updates: Partial<CalendarEvent>, sendSchedulingMessages?: boolean) => Promise<void>;
   deleteEvent: (client: IJMAPClient, id: string, sendSchedulingMessages?: boolean) => Promise<void>;
-  rsvpEvent: (client: IJMAPClient, eventId: string, participantId: string, status: string, replyTo?: Record<string, string> | null) => Promise<void>;
+  rsvpEvent: (client: IJMAPClient, eventId: string, participantId: string, status: string, replyTo?: Record<string, string> | null, scope?: 'occurrence' | 'series') => Promise<void>;
   importEvents: (client: IJMAPClient, events: Partial<CalendarEvent>[], calendarId: string) => Promise<number>;
   updateCalendar: (client: IJMAPClient, calendarId: string, updates: Partial<Calendar>) => Promise<void>;
   setDefaultCalendar: (client: IJMAPClient, calendarId: string) => Promise<void>;
@@ -461,6 +566,10 @@ interface CalendarStore {
   updateICalSubscription: (client: IJMAPClient, subscriptionId: string, updates: { url?: string; name?: string; color?: string; refreshInterval?: number }) => Promise<void>;
   removeICalSubscription: (client: IJMAPClient, subscriptionId: string) => Promise<void>;
   refreshICalSubscription: (client: IJMAPClient, subscriptionId: string) => Promise<void>;
+  /** Drop every subscription of a signed-out login (its feed URLs are secrets). */
+  forgetICalSubscriptions: (owner: string) => void;
+  /** Drop all subscriptions, e.g. once nobody is signed in any more. */
+  clearICalSubscriptions: () => void;
   refreshAllSubscriptions: (client: IJMAPClient) => Promise<void>;
   isSubscriptionCalendar: (calendarId: string) => boolean;
 }
@@ -711,6 +820,8 @@ export const useCalendarStore = create<CalendarStore>()(
         } catch (error) {
           debug.error('Failed to create event:', error);
           set({ error: 'Failed to create event' });
+          // The caller can offer to save it without the invitations.
+          if (error instanceof SchedulingDeniedError) throw error;
           return null;
         }
       },
@@ -743,6 +854,8 @@ export const useCalendarStore = create<CalendarStore>()(
           }
           if (target.isOccurrence && storeEvent) {
             await updateOccurrence(client, storeEvent, realId, cleanUpdates, sendSchedulingMessages, targetAccountId);
+          } else if (target.isBrowserOccurrence) {
+            await updateBrowserOccurrence(client, target, cleanUpdates, sendSchedulingMessages);
           } else {
             await client.updateCalendarEvent(realId, cleanUpdates, sendSchedulingMessages, targetAccountId);
           }
@@ -774,7 +887,7 @@ export const useCalendarStore = create<CalendarStore>()(
               return merged;
             }),
           }));
-          if (target.isOccurrence || hasExpandedOccurrencesOf(get().events, realId, target)) {
+          if (target.isOccurrence || target.isBrowserOccurrence || hasExpandedOccurrencesOf(get().events, realId, target)) {
             await refetchAfterOccurrenceMutation();
           }
           // Update emails (iTIP REQUEST/REPLY) are sent by the server via the
@@ -787,7 +900,7 @@ export const useCalendarStore = create<CalendarStore>()(
         }
       },
 
-      rsvpEvent: async (client, eventId, participantId, status, replyTo) => {
+      rsvpEvent: async (client, eventId, participantId, status, replyTo, scope = 'series') => {
         set({ error: null });
         // JMAP participant IDs are opaque strings - they can contain @, ., :,
         // / etc. The id is RFC 6901-escaped below before being embedded in the
@@ -797,30 +910,39 @@ export const useCalendarStore = create<CalendarStore>()(
           throw new Error('Invalid participant ID');
         }
         try {
-          // Resolve shared event IDs and client-side expanded occurrence IDs
-          // An RSVP answers for the whole series, so an expanded occurrence
-          // is resolved to its base event here.
-          const { storeEvent, realId, targetAccountId, localAccountId } =
-            resolveMutationTarget(get().events, eventId, 'series');
+          // Resolve shared event IDs and client-side expanded occurrence IDs.
+          // Scope 'series' answers for the whole series, so an expanded
+          // occurrence is resolved to its base event here; scope 'occurrence'
+          // answers for that one occurrence only.
+          const target = resolveMutationTarget(get().events, eventId, scope);
+          const { storeEvent, realId, targetAccountId, localAccountId } = target;
           client = resolveAccountClient(client, localAccountId);
-          // Escape per RFC 6901 (JSON Pointer): ~ → ~0, / → ~1
-          const escapedId = participantId.replace(/~/g, '~0').replace(/\//g, '~1');
-          const patchKey = `participants/${escapedId}/participationStatus`;
-          const patch: Record<string, unknown> = { [patchKey]: status };
-          // Stalwart routes the iTIP REPLY to the stored ORGANIZER
-          // (organizerCalendarAddress); the RFC 8984 replyTo property is retired
-          // in jscalendarbis and ignored. Repair events that are missing the
-          // organizer (e.g. imported ones), but never touch an existing one -
-          // attendees may not modify the ORGANIZER.
-          if (replyTo?.imip && storeEvent && !storeEvent.organizerCalendarAddress) {
-            patch.organizerCalendarAddress = replyTo.imip;
+          const occurrence = target.isOccurrence || target.isBrowserOccurrence ? storeEvent ?? null : null;
+          if (occurrence) {
+            await rsvpOccurrence(
+              client, target, occurrence, participantId,
+              status as CalendarParticipant['participationStatus'],
+            );
+          } else {
+            // Escape per RFC 6901 (JSON Pointer): ~ → ~0, / → ~1
+            const escapedId = participantId.replace(/~/g, '~0').replace(/\//g, '~1');
+            const patchKey = `participants/${escapedId}/participationStatus`;
+            const patch: Record<string, unknown> = { [patchKey]: status };
+            // Stalwart routes the iTIP REPLY to the stored ORGANIZER
+            // (organizerCalendarAddress); the RFC 8984 replyTo property is retired
+            // in jscalendarbis and ignored. Repair events that are missing the
+            // organizer (e.g. imported ones), but never touch an existing one -
+            // attendees may not modify the ORGANIZER.
+            if (replyTo?.imip && storeEvent && !storeEvent.organizerCalendarAddress) {
+              patch.organizerCalendarAddress = replyTo.imip;
+            }
+            await client.updateCalendarEvent(
+              realId,
+              patch as unknown as Partial<CalendarEvent>,
+              true,
+              targetAccountId
+            );
           }
-          await client.updateCalendarEvent(
-            realId,
-            patch as unknown as Partial<CalendarEvent>,
-            true,
-            targetAccountId
-          );
           set((state) => ({
             events: state.events.map(e => {
               if (e.id !== eventId || !e.participants?.[participantId]) return e;
@@ -833,6 +955,12 @@ export const useCalendarStore = create<CalendarStore>()(
               };
             }),
           }));
+          // Only the answered event was updated above: after a series answer
+          // the other occurrences in view still show the old status, after an
+          // occurrence answer the synthetic ids / overrides are stale.
+          if (occurrence || storeEvent?.recurrenceId || hasExpandedOccurrencesOf(get().events, realId, target)) {
+            await refetchAfterOccurrenceMutation();
+          }
         } catch (error) {
           debug.error('Failed to RSVP:', error);
           set({ error: 'Failed to update RSVP' });
@@ -1047,6 +1175,9 @@ export const useCalendarStore = create<CalendarStore>()(
           });
           if (target.isOccurrence && storeEvent) {
             await destroyOccurrence(client, storeEvent, realId, sendSchedulingMessages, targetAccountId);
+          } else if (target.isBrowserOccurrence) {
+            // `realId` is the base event: destroying it would delete the series.
+            await destroyBrowserOccurrence(client, target, sendSchedulingMessages);
           } else {
             await client.deleteCalendarEvent(realId, sendSchedulingMessages, targetAccountId);
           }
@@ -1055,7 +1186,7 @@ export const useCalendarStore = create<CalendarStore>()(
             events: state.events.filter(e => e.id !== id),
             selectedEventId: state.selectedEventId === id ? null : state.selectedEventId,
           }));
-          if (target.isOccurrence || hadOccurrences) {
+          if (target.isOccurrence || target.isBrowserOccurrence || hadOccurrences) {
             await refetchAfterOccurrenceMutation();
           }
         } catch (error) {
@@ -1309,6 +1440,7 @@ export const useCalendarStore = create<CalendarStore>()(
             url: normalizedUrl,
             calendarId: calendar.id,
             accountId: client.getAccountId(),
+            owner: subscriptionOwner(client),
             name,
             color,
             refreshInterval,
@@ -1351,6 +1483,10 @@ export const useCalendarStore = create<CalendarStore>()(
       updateICalSubscription: async (client, subscriptionId, updates) => {
         const sub = get().icalSubscriptions.find(s => s.id === subscriptionId);
         if (!sub) return;
+        if (!(await claimSubscription(client, sub, set))) {
+          debug.warn('calendar', 'Not updating a subscription of another account', { sub: sub.name });
+          return;
+        }
 
         // Normalize webcal(s):// in the new URL so refreshes don't break.
         const normalizedUpdates: typeof updates = updates.url
@@ -1389,11 +1525,15 @@ export const useCalendarStore = create<CalendarStore>()(
         const sub = get().icalSubscriptions.find(s => s.id === subscriptionId);
         if (!sub) return;
 
-        try {
-          await client.deleteCalendar(sub.calendarId);
-        } catch (error) {
-          debug.error('Failed to delete subscription calendar:', error);
-          // Continue removing subscription record even if calendar delete fails
+        // Only destroy the calendar in the account the subscription belongs
+        // to: through another login its id names an unrelated calendar.
+        if (await claimSubscription(client, sub, set)) {
+          try {
+            await client.deleteCalendar(sub.calendarId);
+          } catch (error) {
+            debug.error('Failed to delete subscription calendar:', error);
+            // Continue removing subscription record even if calendar delete fails
+          }
         }
 
         set((state) => ({
@@ -1411,10 +1551,10 @@ export const useCalendarStore = create<CalendarStore>()(
         const sub = get().icalSubscriptions.find(s => s.id === subscriptionId);
         if (!sub) return;
 
-        // Skip if the subscription is scoped to a different JMAP account
-        // than the one this client is talking to - otherwise we'd create
-        // events in the wrong account / against a missing calendar.
-        if (sub.accountId && sub.accountId !== client.getAccountId()) {
+        // Skip unless the subscription belongs to this login - otherwise the
+        // diff below would delete the events of whatever calendar in this
+        // account happens to have the same id.
+        if (!(await claimSubscription(client, sub, set))) {
           debug.warn('calendar', 'Skipping subscription refresh: account mismatch', { sub: sub.name });
           return;
         }
@@ -1428,7 +1568,7 @@ export const useCalendarStore = create<CalendarStore>()(
 
           if (!response.ok) {
             const data = await response.json().catch(() => ({}));
-            throw new Error(data.error || 'Failed to fetch calendar');
+            throw new Error(explainServerAuthError(response.status, data.error, 'Failed to fetch calendar'));
           }
 
           const blob = await response.blob();
@@ -1520,13 +1660,13 @@ export const useCalendarStore = create<CalendarStore>()(
       refreshAllSubscriptions: async (client) => {
         const { icalSubscriptions } = get();
         const currentAccountId = client.getAccountId();
+        const owner = subscriptionOwner(client);
         const now = Date.now();
 
         for (const sub of icalSubscriptions) {
-          // Only refresh subs for the current account (or legacy untagged
-          // subs, which are treated as belonging to whichever account the
-          // user has active).
-          if (sub.accountId && sub.accountId !== currentAccountId) continue;
+          // Only refresh subs of this login. Older ones without an owner
+          // are checked (and adopted) by refreshICalSubscription.
+          if (sub.owner ? sub.owner !== owner : (sub.accountId && sub.accountId !== currentAccountId)) continue;
 
           const lastRefreshed = sub.lastRefreshed ? new Date(sub.lastRefreshed).getTime() : 0;
           const intervalMs = sub.refreshInterval * 60 * 1000;
@@ -1539,6 +1679,14 @@ export const useCalendarStore = create<CalendarStore>()(
             }
           }
         }
+      },
+
+      forgetICalSubscriptions: (owner) => {
+        set((state) => ({ icalSubscriptions: state.icalSubscriptions.filter(s => s.owner !== owner) }));
+      },
+
+      clearICalSubscriptions: () => {
+        set({ icalSubscriptions: [] });
       },
 
       clearState: () => {

@@ -109,14 +109,13 @@ describe('JMAPClient.emptyMailbox', () => {
     expect(server.requests).toEqual([500, 500, 0]);
   });
 
-  it('stops instead of looping forever when the server refuses to destroy', async () => {
+  it('stops and reports it when the server refuses to destroy', async () => {
+    // Neither loop forever on the same ids nor report the folder as emptied.
     const client = await connectedClient();
     const server = makeMailboxServer({ count: 1200, destroyFails: true });
     fetchSpy.mockImplementation(server.handler as never);
 
-    const destroyed = await client.emptyMailbox('mailbox-1');
-
-    expect(destroyed).toBe(0);
+    await expect(client.emptyMailbox('mailbox-1')).rejects.toThrow();
     expect(server.requests).toEqual([500]);
   });
 

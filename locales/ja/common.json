@@ -310,6 +310,8 @@
     "view_source": "ソースを表示",
     "fullscreen": "全画面表示",
     "exit_fullscreen": "全画面表示を終了",
+    "view_in_dark_mode": "ダークモードで表示",
+    "view_in_light_mode": "ライトモードで表示",
     "export_email": ".emlとしてエクスポート",
     "forward_as_attachment": "添付ファイルとして転送",
     "import_email": ".eml または .zip をインポート",
@@ -578,7 +580,12 @@
       "copied": "コピーしました！",
       "copy_failed": "コピーに失敗しました"
     },
-    "send_now": "今すぐ送信"
+    "send_now": "今すぐ送信",
+    "verification_code": {
+      "copy": "コード {code} をコピー",
+      "copied": "コードをコピーしました",
+      "copy_failed": "コードをコピーできませんでした"
+    }
   },
   "email_composer": {
     "read_receipt_on": "開封確認を要求中（クリックで無効化）",
@@ -640,11 +647,12 @@
     "from_override": {
       "toggle_off": "上書き",
       "toggle_on": "上書きを取り消す",
-      "toggle_tooltip": "差出人名とアドレスを自由に編集できます。メールは引き続きあなたのアイデンティティ経由で送信されます - 表示される差出人ヘッダーのみが変更されます。",
+      "toggle_tooltip": "差出人名とアドレスを自由に編集できます。メールは引き続きあなたのアイデンティティ経由で送信されます。",
       "name_label": "差出人名",
       "name_placeholder": "名前",
       "email_label": "差出人メールアドレス",
-      "email_placeholder": "alias@example.com"
+      "email_placeholder": "alias@example.com",
+      "envelope_notice": "サーバーがこのアドレスをエンベロープ送信者として受け付けない場合は、代わりに {identity} が使われ、受信者は Return-Path ヘッダーでそのアドレスを確認できます。"
     },
     "use_template": "テンプレート",
     "save_as_template": "テンプレートとして保存",
@@ -657,6 +665,8 @@
     "upload_progress": "アップロード中 {uploaded} / {total}",
     "upload_cancel": "アップロードをキャンセル",
     "upload_failed": "{filename} のアップロードに失敗しました",
+    "attachment_too_large": "「{name}」はサーバーの上限を超えています（1 ファイルあたり {max}）",
+    "attachments_total_too_large": "添付ファイルがサーバーの上限（1 通あたり {max}）を超えます",
     "send_failed": "メールの送信に失敗しました",
     "smime_sign_on": "S/MIME 署名を有効化しました",
     "smime_sign_off": "S/MIME 署名を無効化しました",
@@ -778,6 +788,10 @@
     "email_sent": "メールを送信しました",
     "email_deleted": "メールを削除しました",
     "email_archived": "メールをアーカイブしました",
+    "emails_deleted": "{count, plural, other {#件のメールを削除しました}}",
+    "emails_archived": "{count, plural, other {#件のメールをアーカイブしました}}",
+    "error_archiving": "メールをアーカイブできませんでした",
+    "error_updating": "メールを更新できませんでした",
     "email_starred": "スターを付けました",
     "email_unstarred": "スターを外しました",
     "email_marked_read": "既読にしました",
@@ -918,12 +932,25 @@
       "sidebar_apps": "サイドバーアプリ",
       "notifications": "通知",
       "layout": "レイアウト",
+      "themes": "テーマ",
       "reading": "閲覧",
       "composing": "作成",
       "downloads": "ダウンロード",
       "content_senders": "コンテンツと送信者",
       "about_data": "情報とデータ",
       "debug": "デバッグ"
+    },
+    "themes": {
+      "title": "テーマ",
+      "description": "管理者が配布したテーマと組み込みのプリセットから選択",
+      "locked": "テーマの選択は管理者によってロックされています。",
+      "forced": "テーマ「{name}」は管理者によって固定されているため、変更できません",
+      "admin_theme": "管理者テーマ",
+      "activated": "テーマを適用しました",
+      "default_restored": "デフォルトのテーマに戻しました",
+      "default_name": "デフォルト",
+      "default_badge": "デフォルト",
+      "admin_enforced": "管理者により固定"
     },
     "tab_groups": {
       "general": "一般",
@@ -1156,7 +1183,9 @@
         "enabled": "メール通知",
         "enabled_desc": "新しいメールが届いたときに通知を表示",
         "sound": "通知音",
-        "sound_desc": "新しいメールが届いたときに音を鳴らす"
+        "sound_desc": "新しいメールが届いたときに音を鳴らす",
+        "inbox_only": "Inbox only",
+        "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
       },
       "calendar": {
         "title": "カレンダー通知",
@@ -1361,6 +1390,10 @@
         "label": "プレビューテキストを表示",
         "description": "リストにメールのプレビューを表示",
         "focus_description": "集中型1行メッセージリスト内にインラインプレビューテキストを表示"
+      },
+      "show_verification_codes": {
+        "label": "確認コードを表示",
+        "description": "サインインや確認のメールに含まれるコードをワンクリックでコピーできるようにします（一覧では1日間、メッセージ内では常に）"
       },
       "attachment_click_action": {
         "label": "添付ファイルクリック時の動作",
@@ -1693,14 +1726,36 @@
       },
       "link_device": {
         "title": "モバイルアプリを連携",
-        "description": "入力なしで Bulwark Mail モバイルアプリにサインインできます。ここで QR コードを生成し、アプリのログイン画面からスキャンしてください。",
+        "description": "スマートフォンの Bulwark Mail アプリに、そこでパスワードを入力せずにサインインできます。スマートフォンには独自のサインインが発行されるため、ここでサインアウトしてもスマートフォンはサインアウトされません。",
         "generate": "QRコードを表示",
         "regenerate": "新しいコードを表示",
-        "instructions": "Bulwark Mail アプリを開き、ログイン画面で「QRコードをスキャン」をタップして、カメラをここに向けてください。",
+        "instructions": "Bulwark Mail アプリを開き、サインイン画面で「Scan a sign-in code」をタップして（すでにサインインしている場合は「Add account」→「Scan a sign-in code」）、カメラをここに向けてください。",
         "expires_in": "このコードは{seconds}秒で期限切れになります。一度しか使用できません。",
         "expired": "このコードは期限切れです。",
-        "generating": "生成中…",
-        "error": "ペアリングコードを作成できませんでした。もう一度お試しください。"
+        "error": "ペアリングコードを作成できませんでした。もう一度お試しください。",
+        "password_prompt": "本人確認のためパスワードを入力してください。スマートフォンには独自のサインインが発行され、パスワードがスマートフォンに送信されることはありません。",
+        "show_password": "パスワードを表示",
+        "hide_password": "パスワードを隠す",
+        "continue": "続行",
+        "error_wrong_password": "パスワードが正しくありません。もう一度お試しください。",
+        "totp_prompt": "認証アプリに表示されているコードを入力してください。",
+        "error_password_or_code": "パスワードまたはコードが正しくありません。",
+        "error_not_signed_in": "セッションの有効期限が切れました。デバイスを連携するには、もう一度サインインしてください。",
+        "error_impersonation": "他のユーザーのメールボックスを表示している間は、デバイスを連携できません。",
+        "error_too_many_attempts": "試行回数が多すぎます。しばらく待ってからもう一度お試しください。",
+        "error_session_secret": "このサーバーではデバイス連携が設定されていません（SESSION_SECRET がありません）。管理者にお問い合わせください。",
+        "error_server_unreachable": "メールサーバーに接続できませんでした。もう一度お試しください。",
+        "error_pairing_unavailable": "お使いのメールサーバーでは、この方法でデバイスを連携できません。管理者にお問い合わせください。",
+        "qr_alt": "サインイン用 QR コード",
+        "link_label": "サインインリンク",
+        "copy_link": "サインインリンクをコピー",
+        "copied": "コピーしました",
+        "copy_hint": "カメラがない場合は、リンクをコピーしてアプリの「Paste sign-in link」から貼り付けてください。",
+        "success_title": "スマートフォンでサインインしました",
+        "success_body": "このページは閉じてかまいません。別のデバイスを連携するには、新しいコードを表示してください。",
+        "link_another": "別のデバイスを連携",
+        "use_sso": "代わりにシングルサインオンを使う",
+        "error_insecure_server": "モバイルアプリは https のメールサーバーにしか接続できませんが、このサーバーは http を使っています。"
       },
       "public_keys": {
         "name_label": "公開鍵の名前",
@@ -1770,7 +1825,9 @@
       "warnings": {
         "end_before_start": "終了日は開始日より後に設定してください",
         "start_in_past": "開始日が過去の日付です",
-        "empty_body": "メッセージ本文が空です - 受信者には空の返信が届きます"
+        "empty_body": "メッセージ本文が空です - 受信者には空の返信が届きます",
+        "subject_too_long": "件名がサーバーの上限を超えています（最大 {max} バイト）。",
+        "body_too_long": "メッセージがサーバーの上限を超えています（書式を含めて最大 {max} バイト）。"
       }
     },
     "folders": {
@@ -1991,6 +2048,7 @@
       "actions": "アクション",
       "add_action": "アクションを追加",
       "stop_processing": "以降のルールの処理を停止",
+      "include_spam": "迷惑メールと判定されたメッセージも移動する",
       "attachment_type_placeholder": "例: pdf, doc, jpg",
       "value_placeholder_multi": "値（カンマで複数指定可）",
       "condition_fields": {
@@ -2032,6 +2090,8 @@
       "copy_to_folder": "フォルダーを選択",
       "forward_to": "転送先メールアドレス",
       "forward_placeholder": "email@example.com",
+      "forward_keep_copy": "コピーを残す",
+      "forward_limit": "このサーバーでの1通あたりの転送上限: {count}。それを超える転送はスキップされます。",
       "reject_message": "拒否メッセージ",
       "reject_placeholder": "あなたのメールは拒否されました",
       "label_name": "ラベル名",
@@ -2915,7 +2975,10 @@
       "all_events": "すべてのイベント",
       "cancel": "キャンセル",
       "save": "保存",
-      "delete": "削除"
+      "delete": "削除",
+      "rsvp_title": "繰り返しイベントに返信",
+      "rsvp_description": "これは繰り返しイベントです。どのイベントに返信しますか？",
+      "respond": "返信"
     },
     "alerts": {
       "title": "リマインダー",
@@ -2958,7 +3021,7 @@
       "enable_tasks": "タスクを有効化",
       "enable_tasks_desc": "カレンダーにタスク表示を追加して、ToDoを管理します",
       "show_tasks_on_calendar": "カレンダーにタスクを表示",
-      "show_tasks_on_calendar_desc": "日表示と週表示にタスクチップを表示します",
+      "show_tasks_on_calendar_desc": "月表示・週表示・日表示にタスクを表示します",
       "hover_preview": "イベントホバープレビュー",
       "hover_preview_desc": "カレンダーイベントにマウスを合わせたときに詳細ポップオーバーを表示",
       "hover_preview_instant": "即時",
@@ -3000,6 +3063,9 @@
       "alert_now": "まもなく開始",
       "alert_in_minutes": "{count}分後",
       "invitation_sent": "招待を送信しました",
+      "invitations_denied_title": "招待状を送信できません",
+      "invitations_denied": "サーバーが招待状の送信を拒否しました: {reason}。招待状を送らずに予定を保存しますか？",
+      "save_without_invitations": "招待状なしで保存",
       "rsvp_updated": "回答を更新しました",
       "rsvp_error": "回答の更新に失敗しました",
       "event_duplicated": "予定を複製しました",
@@ -3028,7 +3094,7 @@
       "supported_formats": "iCalendar (.ics) ファイルに対応",
       "url_description": "外部のiCalendar (.ics) フィードのURLを入力してイベントをインポートします。",
       "url_placeholder": "https://example.com/calendar.ics",
-      "url_hint": "CalDAVおよびiCalendar (.ics) URLに対応",
+      "url_hint": "iCalendar (.ics) URLに対応",
       "fetch": "取得",
       "invalid_url": "有効なURLを入力してください",
       "url_fetch_failed": "URLからカレンダーを取得できませんでした",
@@ -3276,6 +3342,8 @@
     "rename": "名前を変更",
     "rename_title": "名前を変更",
     "new_name": "新しい名前",
+    "name_forbidden_chars": "サーバーでは名前に次の文字を使用できません: {chars}",
+    "name_reserved": "この名前はサーバーで予約されています。",
     "delete": "削除",
     "delete_confirm_title": "リソースを削除",
     "delete_confirm_message": "\"{name}\"を削除してもよろしいですか？この操作は元に戻せません。",

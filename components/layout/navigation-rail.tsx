@@ -27,6 +27,7 @@ import { KeyboardShortcutsModal } from "@/components/keyboard-shortcuts-modal";
 import { apiFetch, getPathPrefix, withBasePath } from "@/lib/browser-navigation";
 import { Avatar } from "@/components/ui/avatar";
 import { IS_LITE } from "@/lib/lite";
+import { toUnicodeEmail } from "@/lib/idn";
 
 interface NavItem {
   id: string;
@@ -727,7 +728,7 @@ export function NavigationRail({
                       ? "ring-2 ring-primary ring-offset-2 ring-offset-background"
                       : "opacity-70 hover:opacity-100"
                   )}
-                  title={`${account.displayName || account.label} (${account.email || account.username})`}
+                  title={`${toUnicodeEmail(account.displayName || account.label)} (${toUnicodeEmail(account.email || account.username)})`}
                 >
                   <Avatar
                     name={account.displayName || account.label}

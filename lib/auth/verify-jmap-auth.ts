@@ -17,13 +17,73 @@ export class JmapAuthVerificationError extends Error {
    * apart from everything else that happens to map to the same `status`.
    */
   upstreamStatus?: number;
+  /**
+   * Node network/TLS error code when the server could not be reached at all
+   * (`DEPTH_ZERO_SELF_SIGNED_CERT`, `ENOTFOUND`, ...). The browser may reach
+   * the mail server fine while this process cannot, so this is the only
+   * trace of why the identity cookie was not minted (#1073).
+   */
+  code?: string;
 
-  constructor(message: string, status: number, upstreamStatus?: number) {
+  constructor(message: string, status: number, upstreamStatus?: number, code?: string) {
     super(message);
     this.name = 'JmapAuthVerificationError';
     this.status = status;
     this.upstreamStatus = upstreamStatus;
+    this.code = code;
   }
+}
+
+/** Error code behind a failed fetch; undici wraps the socket error in `cause`. */
+export function networkErrorCode(error: unknown): string | undefined {
+  let current: unknown = error;
+  for (let depth = 0; depth < 4 && current && typeof current === 'object'; depth++) {
+    const code = (current as { code?: unknown }).code;
+    if (typeof code === 'string' && code) return code;
+    current = (current as { cause?: unknown }).cause;
+  }
+  return undefined;
+}
+
+const UNTRUSTED_CERT_CODES = new Set([
+  'DEPTH_ZERO_SELF_SIGNED_CERT',
+  'SELF_SIGNED_CERT_IN_CHAIN',
+  'UNABLE_TO_VERIFY_LEAF_SIGNATURE',
+  'UNABLE_TO_GET_ISSUER_CERT',
+  'UNABLE_TO_GET_ISSUER_CERT_LOCALLY',
+  'CERT_UNTRUSTED',
+]);
+const DNS_CODES = new Set(['ENOTFOUND', 'EAI_AGAIN']);
+const CONNECT_CODES = new Set([
+  'ECONNREFUSED',
+  'ECONNRESET',
+  'ETIMEDOUT',
+  'EHOSTUNREACH',
+  'ENETUNREACH',
+  'UND_ERR_CONNECT_TIMEOUT',
+]);
+
+/** Operator-facing explanation for a {@link networkErrorCode}, if it is a known one. */
+export function upstreamFailureHint(code: string | undefined): string | undefined {
+  if (!code) return undefined;
+  if (UNTRUSTED_CERT_CODES.has(code)) {
+    return 'The webmail server does not trust the mail server\'s TLS certificate (self-signed or private CA). '
+      + 'Set NODE_EXTRA_CA_CERTS in the webmail container to a file holding that certificate or its CA.';
+  }
+  if (code === 'ERR_TLS_CERT_ALTNAME_INVALID') {
+    return 'The mail server\'s TLS certificate does not cover the host name in the configured JMAP server URL.';
+  }
+  if (code === 'CERT_HAS_EXPIRED') {
+    return 'The mail server\'s TLS certificate has expired.';
+  }
+  if (DNS_CODES.has(code)) {
+    return 'The webmail server cannot resolve the mail server\'s host name. The configured JMAP server URL '
+      + 'must resolve from the webmail server (e.g. inside its container), not only from the browser.';
+  }
+  if (CONNECT_CODES.has(code)) {
+    return 'The webmail server cannot connect to the mail server at the configured JMAP server URL.';
+  }
+  return undefined;
 }
 
 function isSupportedProtocol(protocol: string): boolean {
@@ -160,6 +220,29 @@ export async function verifyJmapIdentity(
   claimedUsername: string,
   options: VerifyJmapAuthOptions = {},
 ): Promise<string> {
+  return (await resolveJmapIdentity(serverUrl, authHeader, claimedUsername, options)).serverUrl;
+}
+
+export interface ResolvedJmapIdentity {
+  /** Normalized server URL. */
+  serverUrl: string;
+  /**
+   * The account the credential belongs to. Equal to the claim, except for a
+   * Bearer credential claimed with a bare local part: that claim names no
+   * domain, so two users (`john@a.example`, `john@b.example`) would share it,
+   * and the server's canonical `Session.username` is used instead. Anything
+   * keyed per user (synced settings) must key on this, not on the claim.
+   */
+  accountName: string;
+}
+
+/** {@link verifyJmapIdentity}, also returning the account name to key per-user data on. */
+export async function resolveJmapIdentity(
+  serverUrl: string,
+  authHeader: string,
+  claimedUsername: string,
+  options: VerifyJmapAuthOptions = {},
+): Promise<ResolvedJmapIdentity> {
   if (!claimedUsername) {
     throw new JmapAuthVerificationError('Missing username', 400);
   }
@@ -171,16 +254,19 @@ export async function verifyJmapIdentity(
 
   const { serverUrl: normalizedServerUrl, session } = await fetchVerifiedSession(serverUrl, authHeader, options);
   if (isBasic) {
-    return normalizedServerUrl;
+    // The server just accepted exactly this user:password, and a bare name
+    // resolves to one account on it.
+    return { serverUrl: normalizedServerUrl, accountName: claimedUsername };
   }
 
   if (usernameMatchesSession(claimedUsername, session.username)) {
-    return normalizedServerUrl;
+    const bareClaim = !claimedUsername.includes('@') && session.username!.includes('@');
+    return { serverUrl: normalizedServerUrl, accountName: bareClaim ? session.username! : claimedUsername };
   }
 
   const identityEmails = await fetchIdentityEmails(normalizedServerUrl, authHeader, session, options);
   if (identityEmails.some((email) => usernamesEqual(email, claimedUsername))) {
-    return normalizedServerUrl;
+    return { serverUrl: normalizedServerUrl, accountName: claimedUsername };
   }
 
   throw new JmapAuthVerificationError('Username does not match credentials', 403);
@@ -266,7 +352,7 @@ async function fetchIdentityEmails(
     if (error instanceof Error && error.name === 'AbortError') {
       throw new JmapAuthVerificationError('JMAP identity verification timed out', 504);
     }
-    throw new JmapAuthVerificationError('Failed to verify JMAP identity', 502);
+    throw new JmapAuthVerificationError('Failed to verify JMAP identity', 502, undefined, networkErrorCode(error));
   } finally {
     clearTimeout(timeout);
   }
@@ -365,7 +451,7 @@ async function fetchVerifiedSession(
     if (error instanceof Error && error.name === 'AbortError') {
       throw new JmapAuthVerificationError('JMAP session verification timed out', 504);
     }
-    throw new JmapAuthVerificationError('Failed to verify JMAP session', 502);
+    throw new JmapAuthVerificationError('Failed to verify JMAP session', 502, undefined, networkErrorCode(error));
   } finally {
     clearTimeout(timeout);
   }

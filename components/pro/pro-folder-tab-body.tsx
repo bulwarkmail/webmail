@@ -85,17 +85,24 @@ export function ProFolderTabBody({ tabId, data }: ProFolderTabBodyProps) {
     if (!client) return;
     const seq = ++fetchSeqRef.current;
     if (position === 0) setIsLoading(true); else setIsLoadingMore(true);
-    // getEmails never throws - it reports failures as an empty page.
-    const result = await client.getEmails(jmapMailboxId, jmapAccountId, emailsPerPage, position, undefined, true, undefined, getMessageListOrderFor(mailboxRole));
-    if (seq !== fetchSeqRef.current) return;
-    setEmails((prev) => {
-      if (position === 0) return result.emails;
-      const known = new Set(prev.map((e) => e.id));
-      return [...prev, ...result.emails.filter((e) => !known.has(e.id))];
-    });
-    setTotal(result.total);
-    setHasMore(result.hasMore);
-    if (position === 0) setIsLoading(false); else setIsLoadingMore(false);
+    try {
+      const result = await client.getEmails(jmapMailboxId, jmapAccountId, emailsPerPage, position, undefined, true, undefined, getMessageListOrderFor(mailboxRole));
+      if (seq !== fetchSeqRef.current) return;
+      setEmails((prev) => {
+        if (position === 0) return result.emails;
+        const known = new Set(prev.map((e) => e.id));
+        return [...prev, ...result.emails.filter((e) => !known.has(e.id))];
+      });
+      setTotal(result.total);
+      setHasMore(result.hasMore);
+    } catch (error) {
+      // Keep what is on screen: a failed page is not an empty folder.
+      console.error('Failed to load folder tab:', error);
+    } finally {
+      if (seq === fetchSeqRef.current) {
+        if (position === 0) setIsLoading(false); else setIsLoadingMore(false);
+      }
+    }
   }, [client, jmapMailboxId, jmapAccountId, emailsPerPage, mailboxRole]);
 
   useEffect(() => {

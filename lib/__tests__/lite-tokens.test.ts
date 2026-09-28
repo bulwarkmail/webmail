@@ -233,6 +233,13 @@ describe('liteRefreshTokens', () => {
     expect(readLiteRefreshToken(0)?.refreshToken).toBe('RT');
   });
 
+  it.each([429, 408])('keeps the token on a %i, which is an outage and not a sign-out', async (status) => {
+    saveLiteRefreshToken(0, { serverUrl: SERVER, username: 'a', refreshToken: 'RT' }, true);
+    fetchMock.mockResolvedValue(new Response('', { status }));
+    await expect(liteRefreshTokens(0)).rejects.toMatchObject({ code: 'token_exchange_failed', status });
+    expect(readLiteRefreshToken(0)?.refreshToken).toBe('RT');
+  });
+
   it('propagates network errors and keeps the token', async () => {
     saveLiteRefreshToken(0, { serverUrl: SERVER, username: 'a', refreshToken: 'RT' }, true);
     fetchMock.mockRejectedValue(new TypeError('offline'));

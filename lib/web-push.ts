@@ -72,31 +72,66 @@ export function serverSupportsEmailPush(client: IJMAPClient): boolean {
 }
 
 /**
- * The delivery filter we want on every account the subscription fans out to:
- * skip anything the spam filter tagged `$junk` and anything that lives only in
- * a Junk-role mailbox (Sieve `fileinto` doesn't set the keyword). The two are
- * ANDed so a stale mailbox id - the user deleted and recreated Junk - degrades
- * to keyword-only filtering rather than letting everything through.
+ * The delivery filter we want on every account the subscription fans out to.
+ *
+ * Default mode: skip anything the spam filter tagged `$junk` and anything
+ * that lives only in a Junk-role mailbox (Sieve `fileinto` doesn't set the
+ * keyword). The two are ANDed so a stale mailbox id - the user deleted and
+ * recreated Junk - degrades to keyword-only filtering rather than letting
+ * everything through.
+ *
+ * Inbox-only mode: same `$junk` keyword guard, but the mailbox condition
+ * requires the message to be IN the account's Inbox rather than merely NOT
+ * in Junk - mail a Sieve rule files into any other folder stays silent. An
+ * account with no Inbox we can see (someone shared a single folder with us)
+ * gets a filter that never matches: leaving it out of the map would make the
+ * server fall back to unfiltered pushes for that account.
  */
 export async function buildEmailPushConfig(
   client: IJMAPClient,
+  inboxOnly: boolean,
 ): Promise<Record<string, EmailPushConfig>> {
   const primary = client.getAccountId();
-  const junkByAccount = new Map<string, string[]>([[primary, []]]);
-  const mailboxes = await client.getAllMailboxes().catch(() => [] as Mailbox[]);
+  // Every account that has any mailbox gets a filter entry - a secondary/shared
+  // account without a Junk-role mailbox still needs one so its subscription
+  // isn't left unfiltered.
+  const accountIds = new Set<string>([primary]);
+  const junkByAccount = new Map<string, string[]>();
+  const inboxByAccount = new Map<string, string>();
+  // In inbox-only mode a swallowed fetch failure would masquerade as "no Inbox
+  // mailbox" below, so let the real error surface; the default mode can still
+  // degrade to keyword-only filtering on a transient miss.
+  const mailboxes = inboxOnly
+    ? await client.getAllMailboxes()
+    : await client.getAllMailboxes().catch(() => [] as Mailbox[]);
   for (const m of mailboxes) {
     const accountId = m.accountId || primary;
-    const junk = junkByAccount.get(accountId) ?? [];
+    accountIds.add(accountId);
     // Shared-account mailboxes carry a client-side "<account>:<id>" id;
     // the server only knows the original.
-    if (m.role === 'junk') junk.push(m.originalId ?? m.id);
-    junkByAccount.set(accountId, junk);
+    if (m.role === 'junk') {
+      const junk = junkByAccount.get(accountId) ?? [];
+      junk.push(m.originalId ?? m.id);
+      junkByAccount.set(accountId, junk);
+    }
+    if (m.role === 'inbox') inboxByAccount.set(accountId, m.originalId ?? m.id);
   }
 
   const config: Record<string, EmailPushConfig> = {};
-  for (const [accountId, junkIds] of junkByAccount) {
+  for (const accountId of accountIds) {
+    const junkIds = junkByAccount.get(accountId) ?? [];
     const conditions: Record<string, unknown>[] = [{ notKeyword: '$junk' }];
-    if (junkIds.length > 0) conditions.push({ inMailboxOtherThan: [...junkIds].sort() });
+    if (inboxOnly) {
+      const inboxId = inboxByAccount.get(accountId);
+      // The primary account always has an Inbox; missing it means its
+      // Mailbox/get failed, and muting it would be worse than failing loudly.
+      if (!inboxId && accountId === primary) {
+        throw new Error(`No Inbox mailbox found for account ${accountId}; cannot build an inbox-only push filter`);
+      }
+      conditions.push(inboxId ? { inMailbox: inboxId } : { hasKeyword: '$junk' });
+    } else if (junkIds.length > 0) {
+      conditions.push({ inMailboxOtherThan: [...junkIds].sort() });
+    }
     config[accountId] = {
       // Always the operator form: that's how the server echoes it back, so a
       // stored config compares equal to a freshly built one.
@@ -142,6 +177,10 @@ export interface EnableWebPushParams {
   // that outlives a permission change keeps pushing for mailboxes the user can
   // no longer read - recreating is the only client-side remedy (#841).
   forceRecreate?: boolean;
+  // Scope OS push notifications to Inbox-only mail. Mirrors settings-store's
+  // pushNotifyInboxOnly. Required, not optional: it changes the server-side
+  // delivery filter, so every caller must decide explicitly.
+  inboxOnly: boolean;
 }
 
 export interface EnableWebPushResult {
@@ -451,7 +490,7 @@ export async function enableWebPush(
   // revoked shared-mailbox access (#841).
   const existingSubs = await params.client.listPushSubscriptions().catch(() => []);
   const emailPush = serverSupportsEmailPush(params.client)
-    ? await buildEmailPushConfig(params.client)
+    ? await buildEmailPushConfig(params.client, params.inboxOnly)
     : null;
   const subIdKey = subscriptionIdKey(accountId);
   const storedServerId = localStorage.getItem(subIdKey);
@@ -651,15 +690,20 @@ export async function isWebPushEnabled(accountId: string): Promise<boolean> {
   return sub !== null && localStorage.getItem(subscriptionIdKey(accountId)) !== null;
 }
 
-// Accounts already re-synced during this page load. One pass per account is
-// plenty: the subscription only drifts between sessions (expiry, a client
-// update that changed what we subscribe to, a recreated Junk mailbox).
-const resyncedAccountIds = new Set<string>();
+// When each account was last re-synced during this page load. Once a day is
+// enough for the drift between sessions (a client update that changed what
+// we subscribe to, a recreated Junk mailbox), but not only once: Stalwart
+// clamps `expires` to 7 days, so a tab or installed app left open for a
+// week would otherwise let the subscription lapse and push stop silently.
+const RESYNC_INTERVAL_MS = 24 * 60 * 60 * 1000;
+const lastResyncAt = new Map<string, number>();
 
 export interface ResyncWebPushParams {
   client: IJMAPClient;
   relayBaseUrl?: string;
   accountLabel?: string;
+  // Mirrors settings-store's pushNotifyInboxOnly - see EnableWebPushParams.
+  inboxOnly: boolean;
 }
 
 /**
@@ -676,14 +720,17 @@ export async function resyncWebPush(params: ResyncWebPushParams): Promise<boolea
   } catch {
     return false;
   }
-  if (!accountId || resyncedAccountIds.has(accountId)) return false;
+  if (!accountId) return false;
+  const last = lastResyncAt.get(accountId);
+  if (last !== undefined && Date.now() - last < RESYNC_INTERVAL_MS) return false;
   try {
     if (!(await isWebPushEnabled(accountId))) return false;
-    resyncedAccountIds.add(accountId);
+    lastResyncAt.set(accountId, Date.now());
     await enableWebPush({
       client: params.client,
       relayBaseUrl: params.relayBaseUrl,
       accountLabel: params.accountLabel,
+      inboxOnly: params.inboxOnly,
     });
     return true;
   } catch {
@@ -693,5 +740,5 @@ export async function resyncWebPush(params: ResyncWebPushParams): Promise<boolea
 
 // Test hook: forget which accounts were re-synced during this page load.
 export function resetWebPushResyncState(): void {
-  resyncedAccountIds.clear();
+  lastResyncAt.clear();
 }

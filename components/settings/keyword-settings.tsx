@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import { toast } from "@/stores/toast-store";
 import {
   useSettingsStore,
   KEYWORD_PALETTE,
@@ -580,13 +581,11 @@ export function KeywordSettings() {
         if (migration.refused > 0) {
           // Some mail kept the old keyword. The definition still follows the
           // messages that did move; the rest is what the warning is about.
-          const toastModule = await import('sonner');
-          toastModule.toast.warning(t("migration_error"));
+          toast.warning(t("migration_error"));
         }
       } catch (error) {
         console.error("Failed to migrate keyword:", error);
-        const toastModule = await import('sonner');
-        toastModule.toast.error(t("migration_error"));
+        toast.error(t("migration_error"));
         setIsMigrating(false);
         return;
       }

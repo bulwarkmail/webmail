@@ -123,6 +123,15 @@ export function getUserStatus(
   return null;
 }
 
+/**
+ * True when the user declined this event. An occurrence carries its override's
+ * participants, so one declined instance of an accepted series counts (#1110).
+ */
+export function isDeclinedByUser(event: CalendarEvent, userEmails: string[] | undefined): boolean {
+  if (!userEmails || userEmails.length === 0) return false;
+  return getUserStatus(event, userEmails) === 'declined';
+}
+
 /** When the same address appears in two participant entries, a real RSVP on
  *  either one beats a missing/"needs-action" one — the duplicate is always the
  *  entry that never replied (the needs-action side). Between two real replies

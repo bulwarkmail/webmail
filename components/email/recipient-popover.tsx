@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { MailtoLink } from "@/components/ui/mailto-link";
 import { useContactStore, getContactDisplayName } from "@/stores/contact-store";
 import { toast } from "@/stores/toast-store";
+import { useOwnDomainAddress } from "@/hooks/use-own-domain-address";
 import type { ContactCard } from "@/lib/jmap/types";
 
 interface RecipientPopoverProps {
@@ -26,6 +27,7 @@ export function RecipientPopover({ name, email, displayLabel, onViewContact, cla
   const triggerRef = useRef<HTMLButtonElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
   const contacts = useContactStore((s) => s.contacts);
+  const shownEmail = useOwnDomainAddress()(email);
 
   // Find matching contact by email
   const contact = contacts.find((c) => {
@@ -136,7 +138,7 @@ export function RecipientPopover({ name, email, displayLabel, onViewContact, cla
           className
         )}
       >
-        <bdi>{displayLabel || name || email}</bdi>
+        <bdi>{displayLabel || name || shownEmail}</bdi>
       </button>
 
       {isOpen &&
@@ -150,17 +152,17 @@ export function RecipientPopover({ name, email, displayLabel, onViewContact, cla
             {/* Header with avatar and name */}
             <div className="px-4 pt-4 pb-3 flex items-center gap-3">
               <Avatar
-                name={contactName || email}
+                name={contactName || shownEmail}
                 email={email}
                 size="md"
               />
               <div className="min-w-0 flex-1">
                 <div className="font-semibold text-sm truncate">
-                  {contactName || email}
+                  {contactName || shownEmail}
                 </div>
                 {contactName && contactName !== email && (
                   <div className="text-xs text-muted-foreground truncate">
-                    {email}
+                    {shownEmail}
                   </div>
                 )}
                 {orgs.length > 0 && orgs[0].name && (

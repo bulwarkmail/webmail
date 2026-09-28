@@ -27,6 +27,7 @@ export function ReadingSettings() {
     swipeLeftAction,
     clearSearchOnFolderChange,
     showPreview,
+    showVerificationCodes,
     mailLayout,
     disableThreading,
     emailsPerPage,
@@ -262,6 +263,13 @@ export function ReadingSettings() {
         <ToggleSwitch checked={showPreview} onChange={(checked) => updateSetting('showPreview', checked)} />
       </SettingItem>
       )}
+
+      <SettingItem label={t('show_verification_codes.label')} description={t('show_verification_codes.description')}>
+        <ToggleSwitch
+          checked={showVerificationCodes}
+          onChange={(checked) => updateSetting('showVerificationCodes', checked)}
+        />
+      </SettingItem>
 
       <SettingItem label={t('disable_threading.label')} description={t('disable_threading.description')}>
         <ToggleSwitch

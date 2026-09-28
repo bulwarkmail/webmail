@@ -36,7 +36,7 @@ function makeSession(capabilities: Record<string, unknown>) {
 }
 
 function makeReq(): Parameters<typeof POST>[0] {
-  return { json: async () => ({}) } as unknown as Parameters<typeof POST>[0];
+  return { method: 'POST', headers: new Headers(), json: async () => ({}) } as unknown as Parameters<typeof POST>[0];
 }
 
 async function agendaUsing(capabilities: Record<string, unknown>): Promise<string[]> {
