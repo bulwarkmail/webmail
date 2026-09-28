@@ -234,6 +234,47 @@ describe('JMAPClient.sendEmail threading headers', () => {
     expect(result).toMatchObject({ scheduled: true, emailSubmissionId: 'sub-1', sendAt: '2026-05-08T18:00:00Z' });
   });
 
+  it('stamps a scheduled message with its release time, not the time it was scheduled', async () => {
+    const client = createClient();
+    enableDelayedSend(client);
+    const captured = mockSendEmailFlow();
+    const delayedUntil = new Date(Date.now() + 30 * 60_000).toISOString();
+
+    await client.sendEmail(
+      ['recipient@example.com'],
+      'Scheduled test',
+      'body',
+      undefined, undefined, 'identity-1', 'user@example.com',
+      undefined, undefined, undefined, undefined,
+      undefined,
+      undefined,
+      delayedUntil,
+    );
+
+    const setCall = captured[2].methodCalls[0];
+    const draft = Object.values(setCall[1].create as Record<string, Record<string, unknown>>)[0];
+    const expected = delayedUntil.replace(/\.\d{3}Z$/, 'Z');
+    expect(draft.sentAt).toBe(expected);
+    expect(draft.receivedAt).toBe(expected);
+  });
+
+  it('leaves sentAt and receivedAt to the server for an immediate send', async () => {
+    const client = createClient();
+    const captured = mockSendEmailFlow();
+
+    await client.sendEmail(
+      ['recipient@example.com'],
+      'Now',
+      'body',
+      undefined, undefined, 'identity-1', 'user@example.com',
+    );
+
+    const setCall = captured[2].methodCalls[0];
+    const draft = Object.values(setCall[1].create as Record<string, Record<string, unknown>>)[0];
+    expect(draft).not.toHaveProperty('sentAt');
+    expect(draft).not.toHaveProperty('receivedAt');
+  });
+
   it('cleans up replacement submission if canceling the original fails during reschedule', async () => {
     const client = createClient();
     enableDelayedSend(client);
