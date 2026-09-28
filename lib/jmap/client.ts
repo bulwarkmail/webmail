@@ -9,7 +9,7 @@ import { FirstTouchGate } from "./first-touch-gate";
 import { debug } from "@/lib/debug";
 import { normalizeCalendarEventLike } from "@/lib/calendar-event-normalization";
 import { SYNTHETIC_ID_PROBE, RECURRENCE_BASE_PROPERTIES, hydrateRecurrenceInstances, isServerRecurrenceInstance } from "@/lib/recurrence-instances";
-import { isTaskLikeObject, isTasksOnlyCalendarName, type ScannedCalendarObject } from "@/lib/calendar-component-detection";
+import { isTaskLikeObject, type ScannedCalendarObject } from "@/lib/calendar-component-detection";
 import { DEFAULT_CALENDAR_COMPONENTS, mkCalendarCollection, newCalendarCollectionName } from "@/lib/webdav/calendar-collection";
 import { sanitizeDisplayName, splitMailbox } from "@/lib/rfc5322-mailbox";
 import { decodeFileNodeName } from "./filenode-name";
@@ -6179,7 +6179,7 @@ export class JMAPClient implements IJMAPClient {
 
       if (response.methodResponses?.[0]?.[0] === "Calendar/get") {
         const calendars = (response.methodResponses[0][1].list || []) as Calendar[];
-        const tasksOnly = await this.getTasksOnlyCalendarIds(accountId, calendars);
+        const tasksOnly = await this.getTasksOnlyCalendarIds(accountId, calendars.map((c) => c.id));
         return calendars.map((cal) => ({ ...cal, isTasksOnly: tasksOnly.has(cal.id) }));
       }
       return [];
@@ -6195,35 +6195,18 @@ export class JMAPClient implements IJMAPClient {
    * supported-component set, so this is derived by inspecting objects per calendar.
    *
    * Queries each calendar specifically via `inCalendar` condition and checks
-   * whether it contains any non-task (event) objects. Calendars matching
-   * known task calendar names (e.g. "Aufgaben", "Tasks") are automatically flagged.
+   * whether it contains any non-task (event) objects. Empty calendars stay visible.
    */
-  private async getTasksOnlyCalendarIds(accountId: string, calendars: Calendar[] | string[]): Promise<Set<string>> {
-    if (calendars.length === 0) return new Set();
-
-    const normalizedCalendars: { id: string; name?: string | null }[] = calendars.map((c) =>
-      typeof c === 'string' ? { id: c } : { id: c.id, name: c.name }
-    );
-
-    const tasksOnly = new Set<string>();
-    const calendarsToScan: string[] = [];
-
-    for (const cal of normalizedCalendars) {
-      if (isTasksOnlyCalendarName(cal.name)) {
-        tasksOnly.add(cal.id);
-      } else {
-        calendarsToScan.push(cal.id);
-      }
-    }
-
-    if (calendarsToScan.length === 0) return tasksOnly;
+  private async getTasksOnlyCalendarIds(accountId: string, rawCalendarIds: string[]): Promise<Set<string>> {
+    if (rawCalendarIds.length === 0) return new Set();
 
     const QUERY_LIMIT = 200;
     const PROPERTIES = ['id', '@type', 'due', 'progress', 'percentComplete', 'calendarIds'];
     const timeZone = getUserTimeZone();
+    const tasksOnly = new Set<string>();
 
     try {
-      const queryCalls: JMAPMethodCall[] = calendarsToScan.map((calId, idx) => [
+      const queryCalls: JMAPMethodCall[] = rawCalendarIds.map((calId, idx) => [
         "CalendarEvent/query",
         {
           accountId,
@@ -6235,27 +6218,27 @@ export class JMAPClient implements IJMAPClient {
       ]);
 
       const qResp = await this.request(queryCalls, this.calendarUsing());
-      if (!qResp.methodResponses || qResp.methodResponses.length === 0) return tasksOnly;
+      if (!qResp.methodResponses || qResp.methodResponses.length === 0) return new Set();
 
       const calQueriesToFetch: { calId: string; pageIds: string[] }[] = [];
-      for (let i = 0; i < calendarsToScan.length; i++) {
+      for (let i = 0; i < rawCalendarIds.length; i++) {
         const tag = `q_${i}`;
         const match = qResp.methodResponses.find((r) => r[2] === tag && r[0] === "CalendarEvent/query");
         if (!match) continue;
         const pageIds: string[] = match[1]?.ids || [];
         if (pageIds.length > 0) {
-          calQueriesToFetch.push({ calId: calendarsToScan[i], pageIds });
+          calQueriesToFetch.push({ calId: rawCalendarIds[i], pageIds });
         }
       }
 
-      if (calQueriesToFetch.length === 0) return tasksOnly;
+      if (calQueriesToFetch.length === 0) return new Set();
 
       const allIdsToFetch = Array.from(new Set(calQueriesToFetch.flatMap((c) => c.pageIds)));
       const getResp = await this.request([
         ["CalendarEvent/get", { accountId, ids: allIdsToFetch, properties: PROPERTIES, ...(timeZone ? { timeZone } : {}) }, "0"]
       ], this.calendarUsing());
 
-      if (getResp.methodResponses?.[0]?.[0] !== "CalendarEvent/get") return tasksOnly;
+      if (getResp.methodResponses?.[0]?.[0] !== "CalendarEvent/get") return new Set();
       const list = (getResp.methodResponses[0][1]?.list || []) as ScannedCalendarObject[];
       const objectMap = new Map<string, ScannedCalendarObject>();
       for (const obj of list) {
@@ -6273,7 +6256,7 @@ export class JMAPClient implements IJMAPClient {
 
       return tasksOnly;
     } catch {
-      return tasksOnly; // preserve name-detected task calendars
+      return new Set(); // fail open
     }
   }
 
@@ -6293,7 +6276,7 @@ export class JMAPClient implements IJMAPClient {
 
           if (response.methodResponses?.[0]?.[0] === "Calendar/get") {
             const rawCalendars = (response.methodResponses[0][1].list || []) as Calendar[];
-            const tasksOnly = await this.getTasksOnlyCalendarIds(accountId, rawCalendars);
+            const tasksOnly = await this.getTasksOnlyCalendarIds(accountId, rawCalendars.map((c) => c.id));
             const calendars = rawCalendars.map((cal) => ({
               ...cal,
               id: isPrimary ? cal.id : `${accountId}:${cal.id}`,
@@ -7337,7 +7320,6 @@ export class JMAPClient implements IJMAPClient {
       }
 
       const tasks: CalendarTask[] = [];
-      const hasCalendarFilter = Boolean(calendarIds && calendarIds.length > 0);
       for (const obj of allObjects) {
         const type = obj['@type'];
         const isExplicitTask = typeof type === 'string' && type.toLowerCase() === 'task';
@@ -7353,7 +7335,7 @@ export class JMAPClient implements IJMAPClient {
           || ('percentComplete' in obj);
         const isCalDavTask = type !== 'Event' && hasTaskFields;
 
-        if (!isExplicitTask && !isCalDavTask && !hasCalendarFilter) continue;
+        if (!isExplicitTask && !isCalDavTask) continue;
 
         tasks.push(normalizeCalendarTask({ ...obj, '@type': 'Task' as const } as CalendarTask));
       }
