@@ -29,6 +29,7 @@
     "hide_password": "Amaga la contrasenya",
     "totp_toggle": "Tinc un codi 2FA",
     "remember_me": "Recorda'm",
+    "remember_me_hint": "Si no la marqueu, en recarregar la pàgina es tancarà la sessió.",
     "config_error": {
       "title": "Error de configuració",
       "fetch_failed": "No s'ha pogut carregar la configuració de l'aplicació. Torneu-ho a provar més tard.",

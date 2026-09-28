@@ -29,6 +29,7 @@
     "hide_password": "Ukryj hasło",
     "totp_toggle": "Mam kod 2FA",
     "remember_me": "Zapamiętaj mnie",
+    "remember_me_hint": "Jeśli nie zostanie zaznaczone, odświeżenie strony wyloguje Cię.",
     "config_error": {
       "title": "Błąd konfiguracji",
       "fetch_failed": "Nie można załadować konfiguracji aplikacji. Spróbuj ponownie później.",

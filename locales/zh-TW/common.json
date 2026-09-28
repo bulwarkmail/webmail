@@ -29,6 +29,7 @@
     "hide_password": "隱藏密碼",
     "totp_toggle": "我有 2FA 驗證碼",
     "remember_me": "記住我",
+    "remember_me_hint": "若未勾選，重新載入頁面將登出。",
     "config_error": {
       "title": "設定錯誤",
       "fetch_failed": "無法載入應用程式設定。請稍後再試。",

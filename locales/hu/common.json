@@ -29,6 +29,7 @@
     "hide_password": "Jelszó elrejtése",
     "totp_toggle": "Van egy 2FA kódom",
     "remember_me": "Emlékezz rám",
+    "remember_me_hint": "Ha nem jelöli be, az oldal újratöltése kijelentkezteti.",
     "config_error": {
       "title": "Konfigurációs hiba",
       "fetch_failed": "Nem sikerült betölteni az alkalmazás konfigurációját. Kérjük, próbáld újra később.",

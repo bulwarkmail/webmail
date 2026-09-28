@@ -1410,6 +1410,11 @@ function LoginPageContent() {
                       </span>
                     </label>
                   )}
+                  {showRememberMe && !rememberMe && (
+                    <p className="text-[11px] text-muted-foreground leading-snug">
+                      {t("remember_me_hint")}
+                    </p>
+                  )}
                 </fieldset>
 
                 <Button

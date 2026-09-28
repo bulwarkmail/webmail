@@ -29,6 +29,7 @@
     "hide_password": "Skrýt heslo",
     "totp_toggle": "Mám 2FA kód",
     "remember_me": "Zapamatovat si mě",
+    "remember_me_hint": "Pokud ji nezaškrtnete, po obnovení stránky budete odhlášeni.",
     "config_error": {
       "title": "Chyba konfigurace",
       "fetch_failed": "Konfiguraci aplikace nelze načíst. Zkuste to prosím později.",

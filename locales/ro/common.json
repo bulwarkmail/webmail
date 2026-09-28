@@ -29,6 +29,7 @@
     "hide_password": "Ascunde parola",
     "totp_toggle": "Am un cod 2FA",
     "remember_me": "Reține-mă",
+    "remember_me_hint": "Dacă nu este bifată, reîncărcarea paginii vă deconectează.",
     "config_error": {
       "title": "Eroare de configurare",
       "fetch_failed": "Nu se poate încărca configurația aplicației. Vă rugăm să încercați din nou mai târziu.",

@@ -29,6 +29,8 @@
     "hide_password": "Masquer le mot de passe",
     "totp_toggle": "J'ai un code 2FA",
     "remember_me": "Se souvenir de moi",
+    "remember_me_hint": "Si elle est décochée, recharger la page vous déconnecte.",
+    "remember_me_hint": "Si elle est décochée, recharger la page vous déconnecte.",
     "config_error": {
       "title": "Erreur de configuration",
       "fetch_failed": "Impossible de charger la configuration de l'application. Veuillez réessayer plus tard.",

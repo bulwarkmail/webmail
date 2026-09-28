@@ -29,6 +29,7 @@
     "hide_password": "Skjul adgangskode",
     "totp_toggle": "Jeg har en 2FA-kode",
     "remember_me": "Husk mig",
+    "remember_me_hint": "Hvis den ikke er markeret, bliver du logget ud, når du genindlæser siden.",
     "config_error": {
       "title": "Konfigurationsfejl",
       "fetch_failed": "Kan ikke indlæse applikationskonfiguration. Prøv igen senere.",
