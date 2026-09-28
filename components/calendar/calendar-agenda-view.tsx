@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import { getEventColor } from "./event-card";
 import { getEventDayBounds, getEventEndDate, getEventStartDate, getPrimaryCalendarId } from "@/lib/calendar-utils";
 import { displayNow, isDisplayToday } from "@/lib/timezone";
-import { getParticipantCount } from "@/lib/calendar-participants";
+import { getParticipantCount, isDeclinedByUser } from "@/lib/calendar-participants";
 import { useScrollWindow } from "@/hooks/use-scroll-window";
 import type { ScrollWindowViewProps } from "@/lib/calendar-scroll-window";
 import type { CalendarEvent, Calendar } from "@/lib/jmap/types";
@@ -22,6 +22,8 @@ interface CalendarAgendaViewProps extends ScrollWindowViewProps {
   onHoverLeave?: () => void;
   onContextMenuEvent?: (e: React.MouseEvent, event: CalendarEvent) => void;
   timeFormat?: "12h" | "24h";
+  /** The user's calendar addresses, to mark events they declined (#1110). */
+  currentUserEmails?: string[];
 }
 
 interface DayGroup {
@@ -45,6 +47,7 @@ export function CalendarAgendaView({
   onHoverLeave,
   onContextMenuEvent,
   timeFormat = "24h",
+  currentUserEmails,
 }: CalendarAgendaViewProps) {
   const t = useTranslations("calendar");
   // Grid days / event dates are display dates (local fields = wall-clock in
@@ -207,8 +210,9 @@ export function CalendarAgendaView({
               const start = getEventStartDate(ev);
               const end = getEventEndDate(ev);
               // iTIP CANCEL marks the attendee's copy with status "cancelled"
-              // instead of deleting it (#572).
-              const isCancelled = ev.status === "cancelled";
+              // instead of deleting it (#572); a declined invitation stays
+              // listed too (#1110).
+              const isInactive = ev.status === "cancelled" || isDeclinedByUser(ev, currentUserEmails);
               const locationName = ev.locations
                 ? Object.values(ev.locations)[0]?.name
                 : null;
@@ -220,10 +224,7 @@ export function CalendarAgendaView({
                   onMouseEnter={(e) => onHoverEvent?.(ev, e.currentTarget.getBoundingClientRect())}
                   onMouseLeave={() => onHoverLeave?.()}
                   onContextMenu={onContextMenuEvent ? (e) => onContextMenuEvent(e, ev) : undefined}
-                  className={cn(
-                    "w-full flex items-start px-4 hover:bg-muted/50 transition-colors text-start",
-                    isCancelled && "opacity-60"
-                  )}
+                  className="w-full flex items-start px-4 hover:bg-muted/50 transition-colors text-start"
                   style={{ gap: 'var(--density-item-gap)', paddingBlock: 'var(--density-item-py)' }}
                 >
                   <div className="flex flex-col items-center pt-0.5 min-w-[60px]">
@@ -239,13 +240,16 @@ export function CalendarAgendaView({
                     )}
                   </div>
 
-                  <div
-                    className="w-1 self-stretch rounded-full flex-shrink-0"
-                    style={{ backgroundColor: color }}
+                  {/* Calendar colour as a dot on the title line; hollow when
+                      declined or cancelled (repos/branding/APP.md). */}
+                  <span
+                    className="w-[9px] h-[9px] mt-[5.5px] rounded-full flex-shrink-0"
+                    style={isInactive ? { boxShadow: `inset 0 0 0 1.5px ${color}` } : { backgroundColor: color }}
+                    aria-hidden="true"
                   />
 
                   <div className="flex-1 min-w-0">
-                    <div className={cn("text-sm font-medium truncate", isCancelled && "line-through")}>
+                    <div className={cn("text-sm font-medium truncate", isInactive && "line-through text-muted-foreground")}>
                       {ev.title || t("events.no_title")}
                     </div>
                     {locationName && (

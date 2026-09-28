@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { SettingsSection, SettingItem, ToggleSwitch } from './settings-section';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,12 @@ import { sanitizeEmailHtml } from '@/lib/email-sanitization';
 import { htmlToPlainText } from '@/lib/html-to-text';
 import { Loader2, AlertTriangle, Eye, EyeOff } from '@/components/icons';
 import { toast } from '@/stores/toast-store';
+
+const STALWART_VACATION_LIMITS = { subject: 511, body: 2047 };
+
+function byteLength(value: string): number {
+  return new TextEncoder().encode(value).length;
+}
 
 function utcToLocalDatetime(utcIso: string): string {
   const d = new Date(utcIso);
@@ -65,6 +71,32 @@ export function VacationSettings() {
     setLocalHtmlBody(htmlBody || '');
   }, [isEnabled, fromDate, toDate, subject, textBody, htmlBody]);
 
+  // What a save sends: the sanitized HTML and a plain-text part, derived
+  // from the HTML when the user left it blank (for clients without HTML).
+  const payload = useMemo(() => {
+    const sanitizedHtml =
+      htmlEnabled && htmlToPlainText(localHtmlBody).trim()
+        ? sanitizeEmailHtml(localHtmlBody)
+        : null;
+    const text =
+      localTextBody.trim() || !sanitizedHtml
+        ? localTextBody
+        : htmlToPlainText(sanitizedHtml, { paragraphSpacing: true });
+    return { sanitizedHtml, textBody: text };
+  }, [htmlEnabled, localHtmlBody, localTextBody]);
+
+  // Stalwart refuses a subject of 512 bytes or more and a text or HTML body
+  // of 2048 bytes or more, answering only "Field could not be set."
+  const sizeLimits = client?.hasAccountCapability('urn:stalwart:jmap') ? STALWART_VACATION_LIMITS : null;
+  const oversize = useMemo(() => {
+    if (!sizeLimits) return { subject: false, body: false };
+    return {
+      subject: byteLength(localSubject) > sizeLimits.subject,
+      body: byteLength(payload.textBody) > sizeLimits.body ||
+        (payload.sanitizedHtml !== null && byteLength(payload.sanitizedHtml) > sizeLimits.body),
+    };
+  }, [sizeLimits, localSubject, payload]);
+
   const validate = useCallback(() => {
     const warnings: string[] = [];
 
@@ -83,9 +115,16 @@ export function VacationSettings() {
       warnings.push(t('warnings.empty_body'));
     }
 
+    if (oversize.subject && sizeLimits) {
+      warnings.push(t('warnings.subject_too_long', { max: sizeLimits.subject }));
+    }
+    if (oversize.body && sizeLimits) {
+      warnings.push(t('warnings.body_too_long', { max: sizeLimits.body }));
+    }
+
     setValidationWarnings(warnings);
     return warnings;
-  }, [localFromDate, localToDate, localEnabled, localTextBody, htmlEnabled, localHtmlBody, t]);
+  }, [localFromDate, localToDate, localEnabled, localTextBody, htmlEnabled, localHtmlBody, oversize, sizeLimits, t]);
 
   useEffect(() => {
     validate();
@@ -99,23 +138,16 @@ export function VacationSettings() {
     localTextBody !== textBody ||
     (htmlEnabled ? localHtmlBody : '') !== (htmlBody || '');
 
-  const hasBlockingError = !!(localFromDate && localToDate && new Date(localToDate) <= new Date(localFromDate));
+  const hasBlockingError =
+    !!(localFromDate && localToDate && new Date(localToDate) <= new Date(localFromDate)) ||
+    oversize.subject || oversize.body;
 
   const handleSave = async () => {
     if (!client) return;
     validate();
     if (hasBlockingError) return;
 
-    const sanitizedHtml =
-      htmlEnabled && htmlToPlainText(localHtmlBody).trim()
-        ? sanitizeEmailHtml(localHtmlBody)
-        : null;
-    // Keep a plain-text part as the fallback for clients that don't render
-    // HTML. If the user left it blank, derive it from the HTML body.
-    const textBody =
-      localTextBody.trim() || !sanitizedHtml
-        ? localTextBody
-        : htmlToPlainText(sanitizedHtml, { paragraphSpacing: true });
+    const { sanitizedHtml, textBody } = payload;
 
     try {
       await updateVacationResponse(client, {

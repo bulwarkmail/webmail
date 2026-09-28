@@ -121,6 +121,7 @@ export async function downloadFileBlob(
   blobId: string,
   name: string,
   type: string,
+  signal?: AbortSignal,
 ): Promise<Response> {
   const { downloadUrl } = await getBlobUrls(ctx);
   const url = expandTemplate(downloadUrl, {
@@ -132,7 +133,30 @@ export async function downloadFileBlob(
   return fetchJmapServer(url, {
     method: 'GET',
     headers: { Authorization: ctx.authHeader },
+    signal,
   }, ctx.trusted);
+}
+
+/**
+ * Check that a mail attachment blob is readable with these credentials and
+ * learn its size (#1047). Only the response headers are read; the request
+ * is aborted before the body. Returns null when the blob cannot be downloaded.
+ */
+export async function probeBlob(
+  ctx: WopiJmapContext,
+  accountId: string,
+  blobId: string,
+  name: string,
+  type: string,
+): Promise<{ size: number | null } | null> {
+  // Abort instead of awaiting body.cancel(): that await never settled
+  // against the Next dev server, hanging the launch until the browser gave up.
+  const controller = new AbortController();
+  const response = await downloadFileBlob(ctx, accountId, blobId, name, type, controller.signal);
+  controller.abort();
+  if (!response.ok) return null;
+  const length = Number(response.headers.get('Content-Length'));
+  return { size: Number.isFinite(length) && length >= 0 && response.headers.has('Content-Length') ? length : null };
 }
 
 /** Upload new content as a blob (first half of WOPI PutFile). */

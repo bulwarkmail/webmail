@@ -4,12 +4,13 @@ import { useMemo, useEffect, useLayoutEffect, useRef, useState, useCallback } fr
 import { useTranslations } from "next-intl";
 import { useDisplayDateFormatter } from "@/hooks/use-display-date-formatter";
 import {
-  startOfWeek, format, isSameDay, parseISO, eachDayOfInterval, differenceInCalendarDays,
+  startOfWeek, format, isSameDay, eachDayOfInterval, differenceInCalendarDays,
 } from "date-fns";
 import { cn } from "@/lib/utils";
-import { Check } from "@/components/icons";
 import { EventCard } from "./event-card";
 import { QuickEventInput } from "./quick-event-input";
+import { CalendarTaskChip } from "./task-chip";
+import { groupTasksByDueDay } from "@/lib/calendar-tasks";
 import { buildTimedFullDayWeekSegments, buildWeekSegmentsRaw, formatSnapTime, getEventDayBounds, getPrimaryCalendarId, isTimedEventFullDayOnDate, layoutOverlappingEvents, packWeekSegments } from "@/lib/calendar-utils";
 import { displayNow, isDisplayToday } from "@/lib/timezone";
 import type { CalendarEvent, Calendar, CalendarTask } from "@/lib/jmap/types";
@@ -35,6 +36,9 @@ interface CalendarWeekViewProps extends ScrollWindowViewProps {
   pendingPreview?: PendingEventPreview | null;
   tasks?: CalendarTask[];
   onToggleTaskComplete?: (task: CalendarTask) => void;
+  onSelectTask?: (task: CalendarTask) => void;
+  /** The user's calendar addresses, to mark events they declined (#1110). */
+  currentUserEmails?: string[];
 }
 
 const HOUR_HEIGHT = 60;
@@ -67,6 +71,8 @@ export function CalendarWeekView({
   pendingPreview,
   tasks,
   onToggleTaskComplete,
+  onSelectTask,
+  currentUserEmails,
 }: CalendarWeekViewProps) {
   const t = useTranslations("calendar");
   // Grid days / event dates are display dates (local fields = wall-clock in
@@ -175,21 +181,7 @@ export function CalendarWeekView({
     return allDaySegments.reduce((maxRows, segment) => Math.max(maxRows, segment.row + 1), 0);
   }, [allDaySegments]);
 
-  // Tasks grouped by day
-  const tasksByDay = useMemo(() => {
-    if (!tasks?.length) return new Map<string, CalendarTask[]>();
-    const map = new Map<string, CalendarTask[]>();
-    for (const task of tasks) {
-      if (!task.due) continue;
-      try {
-        const key = format(parseISO(task.due), "yyyy-MM-dd");
-        const existing = map.get(key) || [];
-        existing.push(task);
-        map.set(key, existing);
-      } catch { /* skip */ }
-    }
-    return map;
-  }, [tasks]);
+  const tasksByDay = useMemo(() => groupTasksByDueDay(tasks), [tasks]);
 
   // Max tasks on any single loaded day
   const taskRowCount = useMemo(() => {
@@ -372,6 +364,7 @@ export function CalendarWeekView({
                       onMouseEnter={(rect) => onHoverEvent?.(segment.event, rect)}
                       onMouseLeave={onHoverLeave}
                       onContextMenu={onContextMenuEvent}
+                      currentUserEmails={currentUserEmails}
                     />
                   </div>
                 );
@@ -384,39 +377,25 @@ export function CalendarWeekView({
                 {days.map((day, dayIndex) => {
                   const key = format(day, "yyyy-MM-dd");
                   const dayTasks = tasksByDay.get(key) || [];
-                  return dayTasks.map((task, taskIndex) => {
-                    const isCompleted = task.progress === "completed";
-                    const cal = calendars.find(c => task.calendarIds[c.id]);
-                    const color = cal?.color || "#3b82f6";
-                    return (
-                      <div
-                        key={`task-${task.id}`}
-                        className="absolute px-0.5 pointer-events-auto"
-                        style={{
-                          left: `calc(${(dayIndex / colCount) * 100}% + 1px)`,
-                          width: `calc(${(1 / colCount) * 100}% - 2px)`,
-                          top: taskIndex * 24,
-                          height: 20,
-                        }}
-                      >
-                        <div
-                          className="h-full rounded text-[10px] leading-[20px] font-medium px-1.5 truncate flex items-center gap-1 cursor-pointer hover:opacity-80"
-                          style={{ backgroundColor: `${color}20`, borderLeft: `3px solid ${color}` }}
-                          onClick={() => onToggleTaskComplete?.(task)}
-                        >
-                          <span className={cn(
-                            "w-2.5 h-2.5 rounded-full border flex-shrink-0 flex items-center justify-center",
-                            isCompleted ? "bg-success border-success" : "border-current"
-                          )}>
-                            {isCompleted && <Check className="h-2 w-2 text-white" />}
-                          </span>
-                          <span className={cn("truncate", isCompleted && "line-through text-muted-foreground")}>
-                            {task.title}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  });
+                  return dayTasks.map((task, taskIndex) => (
+                    <div
+                      key={`task-${task.id}`}
+                      className="absolute px-0.5 pointer-events-auto"
+                      style={{
+                        left: `calc(${(dayIndex / colCount) * 100}% + 1px)`,
+                        width: `calc(${(1 / colCount) * 100}% - 2px)`,
+                        top: taskIndex * 24,
+                        height: 20,
+                      }}
+                    >
+                      <CalendarTaskChip
+                        task={task}
+                        calendar={calendars.find(c => task.calendarIds[c.id])}
+                        onToggleComplete={onToggleTaskComplete}
+                        onSelect={onSelectTask}
+                      />
+                    </div>
+                  ));
                 })}
               </div>
             )}
@@ -538,6 +517,7 @@ export function CalendarWeekView({
                           onMouseEnter={(rect) => onHoverEvent?.(ev, rect)}
                           onMouseLeave={onHoverLeave}
                           onContextMenu={onContextMenuEvent}
+                          currentUserEmails={currentUserEmails}
                           draggable
                         />
                         <div

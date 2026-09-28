@@ -5,44 +5,26 @@ import { refreshTokenCookieName, refreshTokenServerCookieName } from '@/lib/oaut
 import { getCookieOptions } from '@/lib/oauth/cookie-config';
 import { readFileEnv } from '@/lib/read-file-env';
 import { configManager } from '@/lib/admin/config-manager';
-import { DisallowedUrlError, fetchPublicUrl, isPublicHttpUrl } from '@/lib/security/url-guard';
+import { isPublicHttpUrl } from '@/lib/security/url-guard';
 import { recordLogin } from '@/lib/telemetry/login-tracker';
 import { parseJmapServers, findServerByUrl, findServerById } from '@/lib/admin/jmap-servers';
 import { MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
-import { generateCodeVerifier, generateCodeChallenge } from '@/lib/oauth/pkce';
 import { DEFAULT_CLIENT_ID } from '@/lib/oauth/token-exchange';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
+import { stalwartPasswordLogin } from '@/lib/auth/stalwart-password-login';
 
 /**
  * Exchange a password + (optional) TOTP code for OAuth tokens.
  *
- * Stalwart 0.16+ no longer accepts the legacy `password$totp` convention over
- * HTTP Basic auth: its Basic decoder hardcodes `mfa_token: None` and never
- * splits the secret on `$`, so any TOTP appended to the password is verified
- * verbatim against the password hash and fails. The MFA token must instead be
- * supplied as a distinct field through the structured login endpoint.
- *
- * This route drives that flow server-side (avoiding browser CORS against the
- * mail server, same as OAuth discovery):
- *   1. POST {serverUrl}/api/auth  -> authenticate with a separate `mfaToken`,
- *      receiving a short-lived authorization `clientCode`.
- *   2. POST {serverUrl}/auth/token (grant_type=authorization_code) -> exchange
- *      the code (with PKCE) for access/refresh tokens.
+ * Stalwart 0.16+ rejects TOTP over HTTP Basic, so a TOTP login goes through
+ * its structured login endpoint instead (see stalwartPasswordLogin). This
+ * route drives that flow server-side (avoiding browser CORS against the mail
+ * server, same as OAuth discovery) and keeps the refresh token in the slot's
+ * httpOnly cookie.
  *
  * Token-based auth also survives TOTP rotation, unlike basic auth which embeds
  * the (≈30s) code in every request.
  */
-
-interface LoginResult {
-  type?: string;
-  // The response keeps snake_case: only the LoginResponse variant *tags* are
-  // camelCased server-side, not the struct fields (the request fields are).
-  client_code?: string;
-}
-
-function trimUrl(url: string): string {
-  return url.replace(/\/+$/, '');
-}
 
 async function attemptLogin(
   upstreamUrl: string,
@@ -54,13 +36,7 @@ async function attemptLogin(
   serverId: string | null,
   upstreamTrusted: boolean,
 ): Promise<NextResponse> {
-  const base = trimUrl(upstreamUrl);
-  // A user-supplied endpoint (allowCustomJmapEndpoint) must connect through
-  // the rebinding-safe fetch; admin-configured servers may live on private
-  // addresses and use the plain one.
-  const upstreamFetch: typeof fetch = upstreamTrusted
-    ? fetch
-    : ((input, init) => fetchPublicUrl(String(input), init as Parameters<typeof fetchPublicUrl>[1]) as unknown as Promise<Response>);
+  const base = upstreamUrl.replace(/\/+$/, '');
 
   // Per-server OAuth credentials override the global ones when the requested
   // server entry has its own oauth block configured.
@@ -76,111 +52,50 @@ async function attemptLogin(
     || readFileEnv(process.env.OAUTH_CLIENT_SECRET_FILE)
     || '';
 
-  // PKCE proves the token exchange originates from the same client that
-  // initiated the login, so no client secret is required for public clients.
-  const verifier = generateCodeVerifier();
-  const challenge = await generateCodeChallenge(verifier);
+  const result = await stalwartPasswordLogin({
+    serverUrl: base,
+    username,
+    password,
+    totp,
+    clientId,
+    clientSecret,
+    redirectUri,
+    trusted: upstreamTrusted,
+  });
 
-  // Step 1: structured login with a separate MFA token.
-  let login: LoginResult;
-  try {
-    const loginResponse = await upstreamFetch(`${base}/api/auth`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        type: 'authCode',
-        accountName: username,
-        accountSecret: password,
-        ...(totp ? { mfaToken: totp } : {}),
-        clientId,
-        redirectUri,
-        codeChallenge: challenge,
-        codeChallengeMethod: 'S256',
-      }),
-    });
-
-    if (!loginResponse.ok) {
-      const detail = (await loginResponse.text()).substring(0, 500);
-      logger.warn('TOTP login: /api/auth rejected request', { status: loginResponse.status });
+  if (!result.ok) {
+    switch (result.error) {
       // A 404 means the server predates the structured login endpoint; let the
       // caller fall back to the legacy basic-auth path.
-      return NextResponse.json(
-        { error: loginResponse.status === 404 ? 'login_endpoint_missing' : 'login_failed', detail },
-        { status: loginResponse.status === 404 ? 404 : 502 },
-      );
+      case 'login_endpoint_missing':
+        return NextResponse.json({ error: 'login_endpoint_missing', detail: result.detail }, { status: 404 });
+      case 'login_rejected':
+        return NextResponse.json({ error: 'login_failed', detail: result.detail }, { status: 502 });
+      case 'invalid_server_url':
+        return NextResponse.json({ error: 'invalid_server_url' }, { status: 400 });
+      case 'login_unreachable':
+        return NextResponse.json({ error: 'login_unreachable' }, { status: 502 });
+      case 'totp_required':
+        return NextResponse.json({ error: 'totp_required' }, { status: 401 });
+      case 'invalid_credentials':
+        return NextResponse.json({ error: 'invalid_credentials' }, { status: 401 });
+      case 'login_failed':
+        return NextResponse.json({ error: 'login_failed' }, { status: 502 });
+      case 'token_exchange_failed':
+        return NextResponse.json(
+          result.detail !== undefined ? { error: 'token_exchange_failed', detail: result.detail } : { error: 'token_exchange_failed' },
+          { status: 502 },
+        );
     }
-
-    login = await loginResponse.json();
-  } catch (err) {
-    if (err instanceof DisallowedUrlError) {
-      logger.warn('TOTP login: rejected non-public server URL at connect time');
-      return NextResponse.json({ error: 'invalid_server_url' }, { status: 400 });
-    }
-    logger.warn('TOTP login: /api/auth request failed', { error: err instanceof Error ? err.message : String(err) });
-    return NextResponse.json({ error: 'login_unreachable' }, { status: 502 });
-  }
-
-  switch (login.type) {
-    case 'authenticated':
-      break;
-    case 'mfaRequired':
-      return NextResponse.json({ error: 'totp_required' }, { status: 401 });
-    case 'failure':
-    default:
-      return NextResponse.json({ error: 'invalid_credentials' }, { status: 401 });
-  }
-
-  if (!login.client_code) {
-    logger.warn('TOTP login: authenticated response missing client_code');
-    return NextResponse.json({ error: 'login_failed' }, { status: 502 });
-  }
-
-  // Step 2: exchange the authorization code for tokens.
-  const tokenParams = new URLSearchParams({
-    grant_type: 'authorization_code',
-    code: login.client_code,
-    client_id: clientId,
-    redirect_uri: redirectUri,
-    code_verifier: verifier,
-  });
-  // Confidential clients still send their secret; harmless for public clients.
-  if (clientSecret) tokenParams.set('client_secret', clientSecret);
-
-  let tokens: { access_token?: string; expires_in?: number; refresh_token?: string };
-  try {
-    const tokenResponse = await upstreamFetch(`${base}/auth/token`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: tokenParams.toString(),
-    });
-
-    if (!tokenResponse.ok) {
-      const detail = (await tokenResponse.text()).substring(0, 500);
-      logger.warn('TOTP login: token exchange failed', { status: tokenResponse.status, detail });
-      return NextResponse.json({ error: 'token_exchange_failed', detail }, { status: 502 });
-    }
-
-    tokens = await tokenResponse.json();
-  } catch (err) {
-    if (err instanceof DisallowedUrlError) {
-      logger.warn('TOTP login: rejected non-public server URL at connect time');
-      return NextResponse.json({ error: 'invalid_server_url' }, { status: 400 });
-    }
-    logger.warn('TOTP login: token endpoint failed', { error: err instanceof Error ? err.message : String(err) });
-    return NextResponse.json({ error: 'token_exchange_failed' }, { status: 502 });
-  }
-
-  if (!tokens.access_token) {
-    return NextResponse.json({ error: 'token_exchange_failed', detail: 'Response missing access_token' }, { status: 502 });
   }
 
   logger.info('TOTP login succeeded');
   void recordLogin(username, base);
-  return await storeAndRespond(
-    { access_token: tokens.access_token, expires_in: tokens.expires_in, refresh_token: tokens.refresh_token },
-    slot,
-    serverId,
-  );
+  return await storeAndRespond(result.tokens, slot, serverId);
+}
+
+function trimUrl(url: string): string {
+  return url.replace(/\/+$/, '');
 }
 
 export async function POST(request: NextRequest) {

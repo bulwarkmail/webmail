@@ -24,6 +24,7 @@ import type { Identity, EmailAddress } from '@/lib/jmap/types';
 import { toast } from '@/stores/toast-store';
 import { useFocusTrap } from '@/hooks/use-focus-trap';
 import { useConfirmDialog } from '@/hooks/use-confirm-dialog';
+import { toUnicodeEmail } from '@/lib/idn';
 
 function emailMatchesUsername(email: string, username: string): boolean {
   if (email === username) return true;
@@ -315,19 +316,19 @@ export function IdentityManagerModal({ isOpen, onClose }: IdentityManagerModalPr
                           )}
                         </div>
                         <p className="text-sm text-muted-foreground truncate">
-                          {identity.email}
+                          {toUnicodeEmail(identity.email)}
                         </p>
 
                         {/* Additional Info */}
                         <div className="mt-2 space-y-1 text-xs text-muted-foreground">
                           {identity.replyTo && identity.replyTo.length > 0 && (
                             <p>
-                              {t('display.reply_to')} {identity.replyTo.map((a) => a.email).join(', ')}
+                              {t('display.reply_to')} {identity.replyTo.map((a) => toUnicodeEmail(a.email)).join(', ')}
                             </p>
                           )}
                           {identity.bcc && identity.bcc.length > 0 && (
                             <p>
-                              {t('display.bcc')} {identity.bcc.map((a) => a.email).join(', ')}
+                              {t('display.bcc')} {identity.bcc.map((a) => toUnicodeEmail(a.email)).join(', ')}
                             </p>
                           )}
                           {identity.textSignature && (

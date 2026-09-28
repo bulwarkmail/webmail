@@ -3,8 +3,10 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import DOMPurify from "dompurify";
 import { Email, ThreadGroup } from "@/lib/jmap/types";
-import { EMAIL_SANITIZE_CONFIG, collapseBlockedImageContainers, plainTextToSafeHtml, restrictDataUriResourcesOnNode, sanitizePlainTextRenderedHtml } from "@/lib/email-sanitization";
+import { EMAIL_SANITIZE_CONFIG, blockExternalResourcesOnNode, collapseBlockedImageContainers, emailIframeCsp, plainTextToSafeHtml, restrictDataUriResourcesOnNode, sanitizePlainTextRenderedHtml } from "@/lib/email-sanitization";
 import { getRenderableHtmlBody } from "@/lib/email-body-selection";
+import { findVerificationCode, verificationCodeBodyText } from "@/lib/verification-code";
+import { VerificationCodeChip } from "./verification-code-chip";
 import { collectReferencedCids, isEmbeddedInBody } from "@/lib/attachment-visibility";
 import { collapsePlainTextQuotes, setupQuoteCollapse } from "@/lib/quote-collapse";
 import { fitEmailBodyWidth } from "@/lib/email-fit-width";
@@ -37,6 +39,8 @@ import { useSettingsStore } from "@/stores/settings-store";
 import { useContactStore } from "@/stores/contact-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { isFilePreviewable, toInertBlob } from "@/lib/file-preview";
+import { useWopiStatus, canWopiOpen } from "@/hooks/use-wopi-status";
+import { useOwnDomainAddress } from "@/hooks/use-own-domain-address";
 
 interface ThreadConversationViewProps {
   thread: ThreadGroup;
@@ -240,10 +244,19 @@ function EmailCard({
   const resolvedTheme = useThemeStore((state) => state.resolvedTheme);
   const density = useSettingsStore((state) => state.density);
   const mailAttachmentAction = useSettingsStore((state) => state.mailAttachmentAction);
+  const wopiStatus = useWopiStatus(true);
   const hideInlineImageAttachments = useSettingsStore((state) => state.hideInlineImageAttachments);
   const emailAlwaysLightMode = useSettingsStore((state) => state.emailAlwaysLightMode);
   const plainTextFont = useSettingsStore((state) => state.plainTextFont);
+  const showVerificationCodes = useSettingsStore((state) => state.showVerificationCodes);
+  const verificationCode = useMemo(
+    () => (showVerificationCodes && isExpanded ? findVerificationCode(email.subject, verificationCodeBodyText(email)) : null),
+    // A keyword change replaces the email object; only another body needs another look.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [showVerificationCodes, isExpanded, email.id, email.subject, email.bodyValues],
+  );
   const sender = email.from?.[0];
+  const formatAddress = useOwnDomainAddress();
   const isUnread = !email.keywords?.$seen;
   const isStarred = email.keywords?.$flagged;
   const [hasBlockedContent, setHasBlockedContent] = useState(false);
@@ -355,27 +368,13 @@ function EmailCard({
           // Re-apply the data:-URI allowlist DOMPurify skips on media tags.
           restrictDataUriResourcesOnNode(node);
 
-          if (!allowExternal) {
-            if (node.tagName === 'IMG') {
-              const src = node.getAttribute('src');
-              if (src && (src.startsWith('http://') || src.startsWith('https://') || src.startsWith('//'))) {
-                node.setAttribute('data-blocked-src', src);
-                node.removeAttribute('src');
-                node.setAttribute('alt', '[Image blocked]');
-                blockedExternalContent = true;
-              }
-            }
-            if (node.hasAttribute('style')) {
-              const style = node.getAttribute('style');
-              if (style && /url\s*\(/i.test(style)) {
-                const cleanStyle = style.replace(/url\s*\([^)]*\)/gi, 'none');
-                node.setAttribute('style', cleanStyle);
-                blockedExternalContent = true;
-              }
-            }
+          // The desktop viewer's blocker: srcset, <source>, poster,
+          // background attributes and escaped url()s as well as img src.
+          if (!allowExternal && blockExternalResourcesOnNode(node)) {
+            blockedExternalContent = true;
           }
 
-          if (node.tagName === 'A') {
+          if (node.tagName === 'A' || node.tagName === 'AREA') {
             node.setAttribute('target', '_blank');
             node.setAttribute('rel', 'noopener noreferrer');
           }
@@ -406,7 +405,7 @@ function EmailCard({
 
         let finalHtml = sanitized;
         if (blockedExternalContent) {
-          setHasBlockedContent(true);
+          if (!hasBlockedContent) setHasBlockedContent(true);
           finalHtml = collapseBlockedImageContainers(sanitized);
         }
 
@@ -437,6 +436,9 @@ function EmailCard({
     }
 
     return { html: "", isHtml: false };
+  // `hasBlockedContent` is only read to skip a redundant setState; as a
+  // dependency it would re-run the sanitizer once the banner shows.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [email, allowExternal, resolvedTheme, emailAlwaysLightMode, cidBlobUrls, t]);
 
   // Parts the body embeds via cid: stay out of the attachment row while the
@@ -456,11 +458,14 @@ function EmailCard({
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const emailIframeSrcDoc = useMemo(() => {
     if (!emailContent.isHtml || !emailContent.html) return '';
-    const csp = "default-src 'none'; img-src data: blob: http: https:; style-src 'unsafe-inline'; font-src data: http: https:; media-src data: blob: http: https:; base-uri 'none'; form-action 'none'; frame-src 'none'";
+    // Strict while external content is blocked: the network-level backstop
+    // for whatever the DOM walk above cannot see.
+    const csp = emailIframeCsp(!allowExternal);
     return `<!DOCTYPE html><html><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="${csp}">
+<meta name="referrer" content="no-referrer">
 <style>
   /* overflow-y hidden keeps the scrollHeight measurement below honest. overflow-x
      is auto so intrinsically wide content can pan instead of being clipped outright;
@@ -487,7 +492,7 @@ function EmailCard({
   td, th { word-break: break-word; padding: 0.5rem; }
   pre { white-space: pre-wrap; word-wrap: break-word; }
 </style></head><body dir="auto">${emailContent.html}</body></html>`;
-  }, [emailContent.isHtml, emailContent.html]);
+  }, [emailContent.isHtml, emailContent.html, allowExternal]);
 
   const handleIframeLoad = useCallback(() => {
     const iframe = iframeRef.current;
@@ -511,7 +516,7 @@ function EmailCard({
       resize();
       const ro = new ResizeObserver(resize);
       ro.observe(doc.body);
-      doc.querySelectorAll('a').forEach((a) => {
+      doc.querySelectorAll('a, area').forEach((a) => {
         a.setAttribute('target', '_blank');
         a.setAttribute('rel', 'noopener noreferrer');
       });
@@ -549,7 +554,7 @@ function EmailCard({
               "font-medium truncate",
               isUnread ? "text-foreground" : "text-muted-foreground"
             )}>
-              {sender?.name || sender?.email || "Unknown"}
+              {sender?.name || (sender?.email && formatAddress(sender.email)) || "Unknown"}
             </span>
             {isStarred && (
               <Star className="w-4 h-4 fill-amber-400 text-amber-400 flex-shrink-0" />
@@ -612,6 +617,12 @@ function EmailCard({
             </div>
           )}
 
+          {verificationCode && (
+            <div className="flex" style={{ paddingInline: 'var(--density-card-p)', paddingTop: 'var(--density-card-p)' }}>
+              <VerificationCodeChip code={verificationCode} className="py-1 text-sm" />
+            </div>
+          )}
+
           {/* Email Body */}
           <div style={{ padding: 'var(--density-card-p)' }}>
             {emailContent.isHtml ? (
@@ -647,7 +658,8 @@ function EmailCard({
               <div className="flex flex-wrap gap-2">
                 {visibleAttachments.map((attachment, idx) => {
                   const Icon = getFileIcon(attachment.name, attachment.type);
-                  const isPreviewable = isFilePreviewable(attachment.name, attachment.type);
+                  const isPreviewable = isFilePreviewable(attachment.name, attachment.type)
+                    || (!!attachment.blobId && canWopiOpen(wopiStatus, attachment.name));
                   const opensPreview = isPreviewable && mailAttachmentAction === 'preview';
                   return (
                     <button

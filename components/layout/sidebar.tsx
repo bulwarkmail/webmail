@@ -70,6 +70,7 @@ import { AccountSwitcher } from "./account-switcher";
 import { useIsEmbedded } from "@/hooks/use-is-embedded";
 import { buildSettingsPath, SCHEDULED_MAILBOX_ID, scopedScheduledMailboxId } from "@/lib/deep-links";
 import { useTour } from "@/components/tour/tour-provider";
+import { toUnicodeEmail } from "@/lib/idn";
 
 interface SidebarProps {
   mailboxes: Mailbox[];
@@ -1311,7 +1312,7 @@ export function Sidebar({
             return (
               <div key={account.id} onContextMenu={isActive ? handleFoldersHeaderContextMenu : undefined}>
                 <SidebarSectionHeader
-                  label={account.label || account.email || account.username}
+                  label={toUnicodeEmail(account.label || account.email || account.username)}
                   expanded={expanded}
                   onToggle={() => toggleAccountGroup(account.id)}
                   onSettings={isActive ? openFolderSettings : undefined}

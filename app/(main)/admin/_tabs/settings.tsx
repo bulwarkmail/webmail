@@ -128,6 +128,13 @@ export function SettingsTab() {
         <ToggleSetting label="Search Engine Indexing" description="Allow search engines to index this webmail. Off (the default) sends noindex/nofollow in the page head, recommended for private deployments." configKey="searchEngineIndexing" value={currentValue('searchEngineIndexing') as boolean} source={config.searchEngineIndexing?.source} onChange={handleChange} onRevert={handleRevert} />
       </SettingsSection>
 
+      <SettingsSection title="Login Page">
+        <ToggleSetting label="Show Version" description="Show the webmail version in the login page footer. Turn off to keep the exact version hidden from visitors who are not signed in." configKey="loginShowVersion" value={currentValue('loginShowVersion') as boolean} source={config.loginShowVersion?.source} onChange={handleChange} onRevert={handleRevert} />
+        <ToggleSetting label="Show 2FA Code Option" description="Show the &quot;I have a 2FA code&quot; toggle on the login form. Turn off when two-factor authentication is handled by an external identity provider. Accounts that require a code still get the field." configKey="loginShowTotp" value={currentValue('loginShowTotp') as boolean} source={config.loginShowTotp?.source} onChange={handleChange} onRevert={handleRevert} />
+        <ToggleSetting label="Show Heading" description="Show the application name below the login logo" configKey="loginShowHeading" value={currentValue('loginShowHeading') as boolean} source={config.loginShowHeading?.source} onChange={handleChange} onRevert={handleRevert} />
+        <ToggleSetting label="Show Subtitle" description="Show the subtitle below the login heading" configKey="loginShowSubtitle" value={currentValue('loginShowSubtitle') as boolean} source={config.loginShowSubtitle?.source} onChange={handleChange} onRevert={handleRevert} />
+      </SettingsSection>
+
       <SettingsSection title="JMAP Servers (multi-server)">
         <ToggleSetting
           label="Auto-pick server by email domain"

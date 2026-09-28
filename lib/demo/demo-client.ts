@@ -4,10 +4,27 @@ import type { SieveScript, SieveCapabilities } from '@/lib/jmap/sieve-types';
 import { getDemoData, type DemoData } from './demo-data';
 import { generateDemoId } from './demo-utils';
 import { compareEmails, type SortLevel } from '@/lib/message-list-order';
+import { withBasePath } from '@/lib/browser-navigation';
+import { toInertBlob } from '@/lib/file-preview';
+
+// Fixture blobs with real bytes behind them, served from public/demo/. The
+// photos are CC0 / public domain from Wikimedia Commons: "Wedding couple
+// (1294004)", "Wedding couple (1293575)", "Men drinking", "Lake Mountain
+// Landscape" and "Team members of startup". prototype-v3.png is drawn for the
+// demo. Every other fixture blob falls back to a text placeholder.
+const DEMO_BLOB_ASSETS: Record<string, string> = {
+  'demo-blob-att-2': '/demo/prototype-v3.png',
+  'demo-blob-att-3': '/demo/wedding-001.jpg',
+  'demo-blob-att-4': '/demo/wedding-014-mom-dad.jpg',
+  'demo-blob-att-5': '/demo/wedding-038-the-toast.jpg',
+  'demo-blob-file-4': '/demo/vacation.jpg',
+  'demo-blob-file-5': '/demo/team-photo.jpg',
+};
 
 /**
  * In-memory JMAP client for demo mode.
- * All data lives in memory - no network calls, no cookies.
+ * All data lives in memory - no server calls, no cookies. Only the demo
+ * images under public/demo are fetched, from the app's own origin.
  */
 export class DemoJMAPClient implements IJMAPClient {
   private data: DemoData;
@@ -695,12 +712,27 @@ export class DemoJMAPClient implements IJMAPClient {
   }
 
   async fetchBlob(blobId: string): Promise<Blob> {
-    return this.blobStore.get(blobId) ?? new Blob(['[Demo placeholder content]'], { type: 'text/plain' });
+    const stored = this.blobStore.get(blobId);
+    if (stored) return stored;
+    const asset = DEMO_BLOB_ASSETS[blobId];
+    if (asset) {
+      try {
+        const res = await fetch(withBasePath(asset));
+        if (res.ok) {
+          const blob = await res.blob();
+          this.blobStore.set(blobId, blob);
+          return blob;
+        }
+      } catch {
+        // Fall through to the placeholder.
+      }
+    }
+    return new Blob(['[Demo placeholder content]'], { type: 'text/plain' });
   }
 
   async fetchBlobAsObjectUrl(blobId: string): Promise<string> {
     const blob = await this.fetchBlob(blobId);
-    return URL.createObjectURL(blob);
+    return URL.createObjectURL(toInertBlob(blob));
   }
 
   async fetchBlobArrayBuffer(blobId: string): Promise<ArrayBuffer> {

@@ -130,6 +130,11 @@ export function levelKeyword(level: SortLevel): string | null {
   }
 }
 
+/** Every keyword the order sorts on: changing one of them can move a message. */
+export function orderKeywords(levels: SortLevel[]): string[] {
+  return levels.map(levelKeyword).filter((keyword): keyword is string => keyword !== null);
+}
+
 /**
  * Whether messages that HAVE the level's keyword should come first. "Unread
  * first" is the absence of $seen first, so it inverts relative to the others.

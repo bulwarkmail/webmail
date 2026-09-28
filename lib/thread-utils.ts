@@ -2,12 +2,40 @@ import type { Email, ThreadGroup } from "./jmap/types";
 import { compareEmails, type SortLevel } from "./message-list-order";
 
 /**
+ * Client-side identity of a thread.
+ *
+ * JMAP thread ids are only unique within their account (Stalwart hands out
+ * per-account counters such as "b", "c", …), so in views that merge several
+ * accounts two unrelated conversations can share a `threadId`. Emails fetched
+ * through the aggregate paths carry their source stamps; scoping the key by
+ * them keeps those threads apart. Unstamped emails (single-account views) keep
+ * the bare id, so nothing changes there. `ThreadGroup.threadId` stays the raw
+ * id for JMAP calls - `threadIdFromKey` is the reverse mapping.
+ */
+export function threadKeyFor(
+  email: Pick<Email, "threadId" | "sourceClientAccountId" | "sourceAccountId">,
+): string {
+  const scope = [email.sourceClientAccountId, email.sourceAccountId].filter(Boolean).join("/");
+  return scope ? `${scope}:${email.threadId}` : email.threadId;
+}
+
+/**
+ * The JMAP thread id behind a `threadKeyFor` key. JMAP ids never contain ":"
+ * (RFC 8620 §1.2 limits them to the URL-safe base64 alphabet), so the last
+ * separator always splits the scope from the id.
+ */
+export function threadIdFromKey(threadKey: string): string {
+  const at = threadKey.lastIndexOf(":");
+  return at === -1 ? threadKey : threadKey.slice(at + 1);
+}
+
+/**
  * Groups emails by their threadId and creates ThreadGroup objects for UI display.
  * Single-email threads are still returned as ThreadGroups with emailCount=1.
  * When disableThreading is true, each email is placed into its own group using
  * its message ID as the key, so the list shows individual messages.
  *
- * @param threadEmailCounts - Optional map of threadId → total email count across
+ * @param threadEmailCounts - Optional map of threadKey → total email count across
  *   all folders (from Thread/get). When provided, emailCount reflects the full
  *   thread size rather than just the emails in the current folder.
  */
@@ -20,21 +48,22 @@ export function groupEmailsByThread(
     return [];
   }
 
-  // Group emails by threadId (or by message ID when threading is disabled)
+  // Group by the account-scoped thread key (or by message id when threading
+  // is disabled): bare thread ids collide across accounts in aggregate views.
   const threadMap = new Map<string, Email[]>();
 
   for (const email of emails) {
-    const threadId = disableThreading ? email.id : email.threadId;
-    if (!threadMap.has(threadId)) {
-      threadMap.set(threadId, []);
+    const key = disableThreading ? email.id : threadKeyFor(email);
+    if (!threadMap.has(key)) {
+      threadMap.set(key, []);
     }
-    threadMap.get(threadId)!.push(email);
+    threadMap.get(key)!.push(email);
   }
 
   // Convert to ThreadGroup array
   const threadGroups: ThreadGroup[] = [];
 
-  for (const [threadId, threadEmails] of threadMap) {
+  for (const [threadKey, threadEmails] of threadMap) {
     // Sort emails by receivedAt descending (newest first)
     const sortedEmails = [...threadEmails].sort(
       (a, b) => new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime()
@@ -54,7 +83,9 @@ export function groupEmailsByThread(
     const hasForwarded = sortedEmails.some(e => e.keywords?.$forwarded);
 
     threadGroups.push({
-      threadId,
+      // With threading off the "thread" is the single message, keyed by its id.
+      threadId: disableThreading ? latestEmail.id : latestEmail.threadId,
+      threadKey,
       emails: sortedEmails,
       latestEmail,
       participantNames,
@@ -64,7 +95,7 @@ export function groupEmailsByThread(
       hasAttachment,
       hasAnswered,
       hasForwarded,
-      emailCount: threadEmailCounts?.get(threadId) ?? sortedEmails.length,
+      emailCount: threadEmailCounts?.get(threadKey) ?? sortedEmails.length,
     });
   }
 
@@ -161,6 +192,7 @@ export function mergeThreadEmails(
 
   return {
     threadId: existingGroup.threadId,
+    threadKey: existingGroup.threadKey,
     emails: mergedEmails,
     latestEmail,
     participantNames,

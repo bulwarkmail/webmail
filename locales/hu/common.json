@@ -310,6 +310,8 @@
     "view_source": "Forrás megtekintése",
     "fullscreen": "Teljes képernyő",
     "exit_fullscreen": "Kilépés a teljes képernyőből",
+    "view_in_dark_mode": "Megjelenítés sötét módban",
+    "view_in_light_mode": "Megjelenítés világos módban",
     "export_email": "Exportálás .eml-ként",
     "forward_as_attachment": "Továbbítás mellékletként",
     "import_email": "Importálás .eml vagy .zip fájlból",
@@ -578,7 +580,12 @@
       "copied": "Másolva!",
       "copy_failed": "A másolás nem sikerült"
     },
-    "send_now": "Küldés most"
+    "send_now": "Küldés most",
+    "verification_code": {
+      "copy": "{code} kód másolása",
+      "copied": "Kód másolva",
+      "copy_failed": "Nem sikerült másolni a kódot"
+    }
   },
   "email_composer": {
     "read_receipt_on": "Olvasási visszaigazolás kérve (kattints a letiltáshoz)",
@@ -643,11 +650,12 @@
     "from_override": {
       "toggle_off": "Felülbírálás",
       "toggle_on": "Felülbírálás megszüntetése",
-      "toggle_tooltip": "A Feladó név és cím szabad szerkesztése. A levél továbbra is az identitásodon keresztül kerül elküldésre - csak a látható Feladó fejléc változik.",
+      "toggle_tooltip": "A Feladó név és cím szabad szerkesztése. A levél továbbra is az identitásodon keresztül kerül elküldésre.",
       "name_label": "Feladó neve",
       "name_placeholder": "Név",
       "email_label": "Feladó e-mail címe",
-      "email_placeholder": "alias@example.com"
+      "email_placeholder": "alias@example.com",
+      "envelope_notice": "Ha a szervered nem fogadja el ezt a címet borítékfeladóként, helyette a(z) {identity} cím kerül oda, és a címzettek láthatják a Return-Path fejlécben."
     },
     "use_template": "Sablon",
     "save_as_template": "Mentés sablonként",
@@ -660,6 +668,8 @@
     "upload_progress": "Feltöltés {uploaded} / {total}",
     "upload_cancel": "Feltöltés megszakítása",
     "upload_failed": "Nem sikerült feltölteni: {filename}",
+    "attachment_too_large": "A(z) „{name}” nagyobb, mint amit a kiszolgáló enged (fájlonként {max})",
+    "attachments_total_too_large": "A mellékletek túllépnék a kiszolgáló üzenetenkénti {max} korlátját",
     "drop_files": "Fájlok ejtése a csatoláshoz",
     "show_less": "Kevesebb mutatása",
     "send_failed": "Nem sikerült elküldeni az e-mailt",
@@ -778,6 +788,10 @@
     "email_sent": "E-mail sikeresen elküldve",
     "email_deleted": "E-mail törölve",
     "email_archived": "E-mail archiválva",
+    "emails_deleted": "{count, plural, other {# e-mail törölve}}",
+    "emails_archived": "{count, plural, other {# e-mail archiválva}}",
+    "error_archiving": "Nem sikerült archiválni az e-mailt",
+    "error_updating": "Nem sikerült frissíteni az e-mailt",
     "email_starred": "E-mail csillagozva",
     "email_unstarred": "E-mail csillagozás megszüntetve",
     "email_marked_read": "E-mail olvasottnak jelölve",
@@ -921,12 +935,25 @@
       "sidebar_apps": "Oldalsáv alkalmazások",
       "notifications": "Értesítések",
       "layout": "Elrendezés",
+      "themes": "Témák",
       "reading": "Olvasás",
       "composing": "Írás",
       "downloads": "Letöltések",
       "content_senders": "Tartalom és feladók",
       "about_data": "Névjegy és adatok",
       "debug": "Hibakeresés"
+    },
+    "themes": {
+      "title": "Témák",
+      "description": "Válassz a rendszergazda által telepített témák és a beépített előbeállítások közül.",
+      "locked": "A témaválasztást egy rendszergazda zárolta.",
+      "forced": "A(z) „{name}” témát a rendszergazda írja elő, ezért nem módosítható",
+      "admin_theme": "Rendszergazdai téma",
+      "activated": "Téma aktiválva",
+      "default_restored": "Alapértelmezett téma visszaállítva",
+      "default_name": "Alapértelmezett",
+      "default_badge": "Alapértelmezett",
+      "admin_enforced": "Rendszergazda által előírva"
     },
     "tab_groups": {
       "general": "Általános",
@@ -1195,7 +1222,9 @@
         "enabled": "E-mail értesítések",
         "enabled_desc": "Értesítések megjelenítése új e-mailek érkezésekor",
         "sound": "Értesítési hang",
-        "sound_desc": "Hangjelzés lejátszása új e-mailek érkezésekor"
+        "sound_desc": "Hangjelzés lejátszása új e-mailek érkezésekor",
+        "inbox_only": "Inbox only",
+        "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
       },
       "calendar": {
         "title": "Naptár értesítések",
@@ -1329,6 +1358,10 @@
         "label": "Előnézeti szöveg mutatása",
         "description": "E-mail előnézet megjelenítése a listában",
         "focus_description": "Beágyazott előnézeti szöveg megjelenítése a fókuszált egysoros üzenetlistában"
+      },
+      "show_verification_codes": {
+        "label": "Ellenőrző kódok megjelenítése",
+        "description": "A bejelentkezési és megerősítő e-mailek kódjának felajánlása egy kattintásos másolásra, a listában egy napig és az üzenetben"
       },
       "disable_threading": {
         "label": "Beszélgetéscsoportosítás letiltása",
@@ -1696,14 +1729,36 @@
       },
       "link_device": {
         "title": "Mobilalkalmazás összekapcsolása",
-        "description": "Jelentkezz be a Bulwark Mail mobilalkalmazásba gépelés nélkül. Generálj itt egy QR-kódot, és olvasd be az alkalmazás bejelentkezési képernyőjén.",
+        "description": "Jelentkezz be a telefonodon a Bulwark Mail alkalmazásba anélkül, hogy ott beírnád a jelszavad. A telefonod saját bejelentkezést kap, így ha itt kijelentkezel, a telefon bejelentkezve marad.",
         "generate": "QR-kód megjelenítése",
         "regenerate": "Új kód megjelenítése",
-        "instructions": "Nyisd meg a Bulwark Mail alkalmazást, koppints a \"QR-kód beolvasása\" lehetőségre a bejelentkezési képernyőn, és irányítsd ide a kamerát.",
+        "instructions": "Nyisd meg a Bulwark Mail alkalmazást, és a bejelentkezési képernyőn koppints a \"Scan a sign-in code\" lehetőségre (vagy az \"Add account\" → \"Scan a sign-in code\" lehetőségre, ha már be vagy jelentkezve), majd irányítsd ide a kamerát.",
         "expires_in": "Ez a kód {seconds} másodperc múlva lejár. Csak egyszer használható.",
         "expired": "Ez a kód lejárt.",
-        "generating": "Generálás…",
-        "error": "Nem sikerült párosítási kódot létrehozni. Próbáld újra."
+        "error": "Nem sikerült párosítási kódot létrehozni. Próbáld újra.",
+        "password_prompt": "Add meg a jelszavad, hogy megerősítsd, te vagy az. A telefonod saját bejelentkezést kap; a jelszavad nem kerül át a telefonra.",
+        "show_password": "Jelszó megjelenítése",
+        "hide_password": "Jelszó elrejtése",
+        "continue": "Tovább",
+        "error_wrong_password": "Hibás jelszó. Próbáld újra.",
+        "totp_prompt": "Add meg a hitelesítő alkalmazásodban látható kódot.",
+        "error_password_or_code": "A jelszó vagy a kód hibás.",
+        "error_not_signed_in": "A munkameneted lejárt. Jelentkezz be újra az eszköz összekapcsolásához.",
+        "error_impersonation": "Nem kapcsolhatsz össze eszközt, amíg egy másik felhasználó postafiókját nézed.",
+        "error_too_many_attempts": "Túl sok próbálkozás. Várj egy kicsit, és próbáld újra.",
+        "error_session_secret": "Az eszközök összekapcsolása nincs beállítva ezen a szerveren (hiányzik a SESSION_SECRET). Fordulj a rendszergazdához.",
+        "error_server_unreachable": "Nem sikerült elérni a levelezőszerveredet. Próbáld újra.",
+        "error_pairing_unavailable": "A levelezőszervered nem teszi lehetővé az eszközök ilyen módon történő összekapcsolását. Fordulj a rendszergazdához.",
+        "qr_alt": "Bejelentkezési QR-kód",
+        "link_label": "Bejelentkezési hivatkozás",
+        "copy_link": "Bejelentkezési hivatkozás másolása",
+        "copied": "Másolva",
+        "copy_hint": "Nincs kamerád? Másold ki a hivatkozást, és illeszd be az alkalmazásban a \"Paste sign-in link\" lehetőséggel.",
+        "success_title": "Bejelentkezve a telefonodon",
+        "success_body": "Bezárhatod ezt az oldalt. Másik eszköz összekapcsolásához jeleníts meg egy új kódot.",
+        "link_another": "Másik eszköz összekapcsolása",
+        "use_sso": "Egyszeri bejelentkezés használata helyette",
+        "error_insecure_server": "A mobilalkalmazás csak https-en keresztül csatlakozik levelezőszerverekhez, ez pedig http-t használ."
       },
       "public_keys": {
         "name_label": "Nyilvános kulcs neve",
@@ -1773,7 +1828,9 @@
       "warnings": {
         "end_before_start": "A befejező dátumnak a kezdő dátum után kell lennie",
         "start_in_past": "A kezdő dátum a múltban van",
-        "empty_body": "Az üzenet szövege üres - a címzettek üres választ kapnak"
+        "empty_body": "Az üzenet szövege üres - a címzettek üres választ kapnak",
+        "subject_too_long": "A tárgy túl hosszú a kiszolgálónak (legfeljebb {max} bájt).",
+        "body_too_long": "Az üzenet túl hosszú a kiszolgálónak (legfeljebb {max} bájt a formázással együtt)."
       }
     },
     "folders": {
@@ -1994,6 +2051,7 @@
       "actions": "Műveletek",
       "add_action": "Művelet hozzáadása",
       "stop_processing": "További szabályok feldolgozásának leállítása",
+      "include_spam": "A levélszemétnek jelölt üzenetek áthelyezése is",
       "attachment_type_placeholder": "pl. pdf, doc, jpg",
       "value_placeholder_multi": "Érték (több érték vesszővel elválasztva)",
       "condition_fields": {
@@ -2035,6 +2093,8 @@
       "copy_to_folder": "Mappa kiválasztása",
       "forward_to": "Továbbítás e-mail címre",
       "forward_placeholder": "email@example.com",
+      "forward_keep_copy": "Másolat megtartása",
+      "forward_limit": "Továbbítási korlát üzenetenként ezen a kiszolgálón: {count}. A további továbbítások kimaradnak.",
       "reject_message": "Elutasító üzenet",
       "reject_placeholder": "Az e-mailed elutasításra került",
       "label_name": "Címke neve",
@@ -2915,7 +2975,10 @@
       "all_events": "Minden esemény",
       "cancel": "Mégse",
       "save": "Mentés",
-      "delete": "Törlés"
+      "delete": "Törlés",
+      "rsvp_title": "Válasz ismétlődő eseményre",
+      "rsvp_description": "Ez egy ismétlődő esemény. Mely eseményekre vonatkozzon a válaszod?",
+      "respond": "Válasz"
     },
     "alerts": {
       "title": "Emlékeztetők",
@@ -2958,7 +3021,7 @@
       "enable_tasks": "Feladatok engedélyezése",
       "enable_tasks_desc": "Feladatnézet mutatása a naptárban a teendők kezeléséhez",
       "show_tasks_on_calendar": "Feladatok mutatása a naptárban",
-      "show_tasks_on_calendar_desc": "Feladat chip-ek mutatása a nap és hét naptár nézetekben",
+      "show_tasks_on_calendar_desc": "Feladatok mutatása a havi, heti és napi naptárnézetben",
       "hover_preview": "Esemény előnézet egérrel",
       "hover_preview_desc": "Részletes felugró ablak mutatása az események fölé húzva",
       "hover_preview_instant": "Azonnali",
@@ -3026,6 +3089,9 @@
       "alert_now": "Most kezdődik",
       "alert_in_minutes": "{count} perc múlva",
       "invitation_sent": "Meghívók elküldve",
+      "invitations_denied_title": "A meghívók nem küldhetők el",
+      "invitations_denied": "A kiszolgáló nem küldte el a meghívókat: {reason}. Mentsük az eseményt a meghívók nélkül?",
+      "save_without_invitations": "Mentés meghívók nélkül",
       "rsvp_updated": "Válasz frissítve",
       "rsvp_error": "Nem sikerült frissíteni a választ",
       "event_duplicated": "Esemény duplikálva",
@@ -3055,7 +3121,7 @@
       "supported_formats": "iCalendar (.ics) fájlok támogatottak",
       "url_description": "Add meg egy külső iCalendar (.ics) feed URL-jét az események importálásához.",
       "url_placeholder": "https://example.com/calendar.ics",
-      "url_hint": "CalDAV és iCalendar (.ics) URL-ek támogatottak",
+      "url_hint": "iCalendar (.ics) URL-ek támogatottak",
       "fetch": "Lekérés",
       "invalid_url": "Kérjük, adj meg egy érvényes URL-t",
       "url_fetch_failed": "Nem sikerült lekérni a naptárt az URL-ről",
@@ -3318,6 +3384,8 @@
     "rename": "Átnevezés",
     "rename_title": "Átnevezés",
     "new_name": "Új név",
+    "name_forbidden_chars": "A kiszolgáló nem engedi ezeket a karaktereket a nevekben: {chars}",
+    "name_reserved": "Ez a név a kiszolgálón foglalt.",
     "delete": "Törlés",
     "delete_confirm_title": "Erőforrás törlése",
     "delete_confirm_message": "Biztosan törölni szeretnéd a \"{name}\" elemet? Ez nem vonható vissza.",

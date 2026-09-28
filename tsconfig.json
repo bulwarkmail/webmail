@@ -38,6 +38,7 @@
   "exclude": [
     "node_modules",
     "repos",
+    "local-data",
     "examples",
     "integration",
     ".next/dev/types"

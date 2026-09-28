@@ -96,6 +96,10 @@ function resolveDateLocale<T extends string | undefined>(
  */
 export function formatDate(date: Date | string): string {
   const d = typeof date === "string" ? new Date(date) : date;
+  // An unparsable receivedAt (e.g. a 5-digit year) makes Intl throw
+  // "RangeError: Invalid time value" and takes the whole list down with it.
+  // Leave the row's date slot blank; the viewer header shows the raw value. (#1099)
+  if (!d || Number.isNaN(d.getTime())) return "";
   const now = new Date();
 
   const locale = getEffectiveLocale();

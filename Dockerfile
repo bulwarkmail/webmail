@@ -21,7 +21,9 @@ ENV NEXT_PUBLIC_DEFAULT_LOCALE=$NEXT_PUBLIC_DEFAULT_LOCALE
 # `git rev-parse` inside the build can't find it - CI must pass it in.
 ARG GIT_COMMIT=unknown
 ENV GIT_COMMIT=$GIT_COMMIT
-RUN npx next build --webpack
+# The mock JMAP server (DEV_MOCK_JMAP) accepts any password and is for
+# `npm run dev` only; images ship without it.
+RUN rm -rf "app/api/dev-jmap" && npx next build --webpack
 
 FROM node:24-alpine AS runner
 

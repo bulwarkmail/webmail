@@ -8,6 +8,12 @@ export interface StalwartAuthContext {
   serverUrl: string;
   username: string;
   authHeader: string;
+  /**
+   * The account the credential belongs to, when it differs from the login
+   * name the client claimed (see ResolvedJmapIdentity.accountName). Per-user
+   * data such as synced settings is keyed on this.
+   */
+  accountName?: string;
 }
 
 type CookieStore = Awaited<ReturnType<typeof cookies>>;
@@ -32,7 +38,8 @@ function isValidContext(payload: unknown): payload is StalwartAuthContext {
   }
   return typeof candidate.serverUrl === 'string'
     && typeof candidate.username === 'string'
-    && typeof candidate.authHeader === 'string';
+    && typeof candidate.authHeader === 'string'
+    && (candidate.accountName === undefined || typeof candidate.accountName === 'string');
 }
 
 function getSessionCookieOptions() {
@@ -52,8 +59,8 @@ export function readStalwartAuthContextFromStore(
 
   // Hand back exactly the declared shape: the envelope's own bookkeeping
   // stays in the envelope rather than riding along into the credentials.
-  const { serverUrl, username, authHeader } = payload;
-  return { serverUrl, username, authHeader };
+  const { serverUrl, username, authHeader, accountName } = payload;
+  return accountName ? { serverUrl, username, authHeader, accountName } : { serverUrl, username, authHeader };
 }
 
 export async function readStalwartAuthContext(slot: number): Promise<StalwartAuthContext | null> {

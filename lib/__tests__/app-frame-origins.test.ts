@@ -5,6 +5,7 @@ import {
   inlineAppFrameOrigins,
   isValidAppFrameOrigin,
   parseAppFrameOrigins,
+  pickAppFrameOriginsCookie,
   serializeAppFrameOrigins,
 } from '@/lib/security/app-frame-origins';
 
@@ -128,5 +129,23 @@ describe('cookie round-trip', () => {
   it('caps how many origins a cookie can contribute', () => {
     const many = Array.from({ length: MAX_APP_FRAME_ORIGINS + 5 }, (_, i) => `https://app${i}.example.com`);
     expect(parseAppFrameOrigins(many.join(' '))).toHaveLength(MAX_APP_FRAME_ORIGINS);
+  });
+});
+
+describe('pickAppFrameOriginsCookie', () => {
+  const jar = (cookies: Record<string, string>) => (name: string) => cookies[name];
+
+  it('trusts only the __Host- cookie over HTTPS: a sibling subdomain can set the plain one', () => {
+    const cookies = jar({ bulwark_app_frame_origins: 'https://evil.example' });
+    expect(pickAppFrameOriginsCookie(cookies, true)).toBeUndefined();
+    expect(pickAppFrameOriginsCookie(jar({
+      bulwark_app_frame_origins: 'https://evil.example',
+      '__Host-bulwark_app_frame_origins': 'https://board.example',
+    }), true)).toBe('https://board.example');
+  });
+
+  it('falls back to the plain cookie over plain HTTP', () => {
+    expect(pickAppFrameOriginsCookie(jar({ bulwark_app_frame_origins: 'https://board.example' }), false))
+      .toBe('https://board.example');
   });
 });

@@ -8,6 +8,7 @@ import {
   keywordFirst,
   levelKeyword,
   orderForMailbox,
+  orderKeywords,
   presetLevels,
   sanitizeSortLevels,
   MAX_SORT_LEVELS,
@@ -76,6 +77,15 @@ describe('keyword semantics', () => {
     expect(levelKeyword({ criterion: 'starred', direction: 'desc' })).toBe('$flagged');
     expect(levelKeyword({ criterion: 'tag', direction: 'desc', tagId: 'red' })).toBe('$label:red');
     expect(levelKeyword({ criterion: 'receivedAt', direction: 'desc' })).toBeNull();
+  });
+
+  it('lists the keywords an order sorts on', () => {
+    expect(orderKeywords([
+      { criterion: 'unread', direction: 'desc' },
+      { criterion: 'from', direction: 'asc' },
+      { criterion: 'tag', direction: 'desc', tagId: 'red' },
+    ])).toEqual(['$seen', '$label:red']);
+    expect(orderKeywords([])).toEqual([]);
   });
 
   it('"unread first" means messages WITHOUT $seen first', () => {

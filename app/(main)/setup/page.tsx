@@ -1,9 +1,10 @@
 'use client';
 
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { CheckCircle2, AlertTriangle, AlertCircle, Server, ShieldCheck, KeyRound, FileText, Palette, Lock, ShieldAlert } from '@/components/icons';
 import { apiFetch, getPathPrefix, withBasePath } from '@/lib/browser-navigation';
+import { takeSetupTokenFromUrl } from '@/lib/setup/url-token';
 
 type State = 'bootstrap' | 'configured' | 'env-managed';
 
@@ -93,7 +94,7 @@ const STEPS = [
 
 export default function SetupWizardPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const [tokenFromUrl, setTokenFromUrl] = useState('');
 
   const [bootstrapping, setBootstrapping] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -110,6 +111,7 @@ export default function SetupWizardPage() {
   const [insecureAcknowledged, setInsecureAcknowledged] = useState(false);
   useEffect(() => {
     setInsecureContext(detectInsecureContext());
+    setTokenFromUrl(takeSetupTokenFromUrl(window.location, window.history));
   }, []);
 
   // ─── Initial status load ────────────────────────────────────────────────
@@ -222,7 +224,7 @@ export default function SetupWizardPage() {
 
           {!authenticated ? (
             <WelcomeStep
-              tokenFromUrl={searchParams.get('token') ?? ''}
+              tokenFromUrl={tokenFromUrl}
               onSubmit={async (t) => {
                 try {
                   await submitToken(t);
@@ -500,6 +502,7 @@ function WelcomeStep({ tokenFromUrl, onSubmit }: { tokenFromUrl: string; onSubmi
   // Auto-submit if token came in via URL.
   useEffect(() => {
     if (tokenFromUrl && !submitting) {
+      setToken(tokenFromUrl);
       setSubmitting(true);
       onSubmit(tokenFromUrl).finally(() => setSubmitting(false));
     }

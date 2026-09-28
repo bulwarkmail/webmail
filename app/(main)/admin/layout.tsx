@@ -159,7 +159,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           return;
         }
 
-        router.replace('/admin/login');
+        // Carry the page that was asked for through the login, so a connector
+        // link to a panel (/connector/admin_extension?slug=x) does not dump
+        // the admin on the dashboard after signing in.
+        const next = encodeURIComponent(`${pathname}${window.location.search}`);
+        router.replace(`/admin/login?next=${next}`);
       } catch (err) {
         if (cancelled) return;
         setAuthError(err instanceof Error ? err.message : 'Network error during admin check');

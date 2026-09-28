@@ -53,6 +53,7 @@ const nextConfig: NextConfig = {
   // the shipped SPA-fallback rules expect; next/image has no optimizer here.
   ...(isLite ? { trailingSlash: true, images: { unoptimized: true } } : {}),
   allowedDevOrigins: ["192.168.1.51"],
+  agentRules: false,
   basePath: basePath || undefined,
   // esbuild ships native binaries + a README the bundler can't parse; load
   // it from node_modules at runtime instead of trying to bundle it. Used by
@@ -76,8 +77,18 @@ const nextConfig: NextConfig = {
   // Sibling repos checked out under ./repos/ are unrelated source trees that
   // Turbopack's NFT can otherwise rope into the trace when dynamic fs calls
   // confuse it. Keeps the build from ballooning memory tracing dead code.
+  // The trace follows fs reads, and the runtime reads its state directories,
+  // so a build from a checkout that has been run would copy the admin
+  // password hash, the plugin signing key, the audit log and .env secrets
+  // into .next/standalone - and from there into the image.
+  // Only "./repos" goes under "*": that key also feeds the next-server trace,
+  // where Next matches each glob anywhere in the path, so "./data/**/*" would
+  // drop node_modules/next/dist/lib/metadata/* and the server would not start.
+  // "!(next-server)" matches every route but not that trace, and per route
+  // Next anchors the globs to the project root.
   outputFileTracingExcludes: {
     "*": ["./repos/**/*"],
+    "!(next-server)": ["./data/**/*", "./local-data/**/*", "./.env*"],
   },
   turbopack: {
     root: import.meta.dirname,

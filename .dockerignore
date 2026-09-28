@@ -1,5 +1,7 @@
 node_modules
 .next
+out
+lite-image
 .git
 .gitignore
 .env*
@@ -12,6 +14,15 @@ TODO.md
 !README.md
 # Sibling projects / test harness - not part of the webmail image
 examples/
+# Unit tests: `next build` type-checks every .ts file, and some tests import
+# routes the Dockerfile deletes (app/api/dev-jmap)
+**/__tests__
+**/*.test.ts
+**/*.test.tsx
 integration/
-e2e/
+repos/
+# Runtime state of a checkout that has been run (admin password hash,
+# plugin signing key, audit log, synced settings) - never part of an image
+data/
+local-data/
 **/node_modules

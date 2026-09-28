@@ -10,7 +10,7 @@ export type RecurrenceEditScope = "this" | "this_and_future" | "all";
 
 interface RecurrenceScopeDialogProps {
   isOpen: boolean;
-  actionType: "edit" | "delete";
+  actionType: "edit" | "delete" | "rsvp";
   onSelect: (scope: RecurrenceEditScope) => void;
   onClose: () => void;
 }
@@ -34,12 +34,17 @@ export function RecurrenceScopeDialog({
   if (!isOpen) return null;
 
   const isDelete = actionType === "delete";
+  const isRsvp = actionType === "rsvp";
 
+  // An attendee cannot split the organizer's series, so an answer covers
+  // one occurrence or all of them.
   const options: { value: RecurrenceEditScope; label: string }[] = [
     { value: "this", label: t("this_event") },
-    { value: "this_and_future", label: t("this_and_future") },
+    ...(isRsvp ? [] : [{ value: "this_and_future" as const, label: t("this_and_future") }]),
     { value: "all", label: t("all_events") },
   ];
+  // The choice outlives the dialog closing; fall back when it is not offered.
+  const choice = options.some((option) => option.value === selected) ? selected : "this";
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-[2px] flex items-center justify-center z-[60] p-4 animate-in fade-in duration-150">
@@ -64,10 +69,10 @@ export function RecurrenceScopeDialog({
             </div>
             <div>
               <h2 id={`${id}-title`} className="text-lg font-semibold">
-                {isDelete ? t("delete_title") : t("edit_title")}
+                {isDelete ? t("delete_title") : isRsvp ? t("rsvp_title") : t("edit_title")}
               </h2>
               <p id={`${id}-desc`} className="text-sm text-muted-foreground mt-1">
-                {t("description")}
+                {isRsvp ? t("rsvp_description") : t("description")}
               </p>
             </div>
           </div>
@@ -77,7 +82,7 @@ export function RecurrenceScopeDialog({
               <label
                 key={option.value}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-md cursor-pointer transition-colors ${
-                  selected === option.value
+                  choice === option.value
                     ? "bg-primary/10 border border-primary/30"
                     : "hover:bg-muted border border-transparent"
                 }`}
@@ -86,7 +91,7 @@ export function RecurrenceScopeDialog({
                   type="radio"
                   name={`${id}-scope`}
                   value={option.value}
-                  checked={selected === option.value}
+                  checked={choice === option.value}
                   onChange={() => setSelected(option.value)}
                   className="accent-primary"
                 />
@@ -102,9 +107,9 @@ export function RecurrenceScopeDialog({
           </Button>
           <Button
             variant={isDelete ? "destructive" : "default"}
-            onClick={() => onSelect(selected)}
+            onClick={() => onSelect(choice)}
           >
-            {isDelete ? t("delete") : t("save")}
+            {isDelete ? t("delete") : isRsvp ? t("respond") : t("save")}
           </Button>
         </div>
       </div>

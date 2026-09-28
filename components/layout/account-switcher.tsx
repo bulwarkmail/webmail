@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { useRouter } from "@/i18n/navigation";
 import { Avatar } from "@/components/ui/avatar";
 import { useMenuNavigation } from "@/hooks/use-menu-navigation";
+import { toUnicodeDomain, toUnicodeEmail } from "@/lib/idn";
 
 interface AccountSwitcherProps {
   /** "rail" = small avatar only (NavigationRail), "expanded" = avatar + name + email (Sidebar) */
@@ -150,7 +151,7 @@ export function AccountSwitcher({ variant = "rail", className }: AccountSwitcher
 
   const handleRemove = (e: React.MouseEvent, account: AccountEntry) => {
     e.stopPropagation();
-    const label = account.email || account.username;
+    const label = toUnicodeEmail(account.email || account.username);
     if (!window.confirm(t("remove_account_confirm", { account: label }))) return;
     removeAccount(account.id);
   };
@@ -198,8 +199,9 @@ export function AccountSwitcher({ variant = "rail", className }: AccountSwitcher
   // Show the account's own identity, not the preferred sending identity -
   // primaryIdentity can be an alias (e.g. info@korazo.net) that differs from
   // the actually logged-in account (info@linusrath.de).
-  const displayName = activeAccount?.displayName || activeAccount?.label || "";
-  const displayEmail = activeAccount?.email || activeAccount?.username || "";
+  // IDN domains arrive in their ASCII (xn--) form; show them as written (#1100).
+  const displayName = toUnicodeEmail(activeAccount?.displayName || activeAccount?.label || "");
+  const displayEmail = toUnicodeEmail(activeAccount?.email || activeAccount?.username || "");
 
   return (
     <>
@@ -297,14 +299,14 @@ export function AccountSwitcher({ variant = "rail", className }: AccountSwitcher
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1">
                       <span className="text-sm font-medium truncate">
-                        {account.displayName || account.label}
+                        {toUnicodeEmail(account.displayName || account.label)}
                       </span>
                       {account.isDefault && (
                         <Star className="w-3 h-3 text-amber-500 flex-shrink-0 fill-amber-500" />
                       )}
                     </div>
                     <p className="text-xs text-muted-foreground truncate">
-                      {account.email || account.username}
+                      {toUnicodeEmail(account.email || account.username)}
                     </p>
                     <div className="flex items-center gap-1 mt-0.5">
                       {account.hasError ? (
@@ -316,7 +318,7 @@ export function AccountSwitcher({ variant = "rail", className }: AccountSwitcher
                         )} />
                       )}
                       <span className="text-[10px] text-muted-foreground truncate">
-                        {(() => { try { return new URL(account.serverUrl).hostname; } catch { return account.serverUrl; } })()}
+                        {(() => { try { return toUnicodeDomain(new URL(account.serverUrl).hostname); } catch { return account.serverUrl; } })()}
                       </span>
                     </div>
                   </div>

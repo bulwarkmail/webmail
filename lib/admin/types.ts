@@ -163,6 +163,9 @@ export interface SettingsPolicy {
   defaultSidebarApps?: AdminSidebarApp[];
 }
 
+/** Set to `public` on a policy answered with the pre-login subset. */
+export const POLICY_SCOPE_HEADER = 'X-Bulwark-Policy-Scope';
+
 export const DEFAULT_POLICY: SettingsPolicy = {
   restrictions: {},
   features: { ...DEFAULT_FEATURE_GATES },
@@ -242,6 +245,14 @@ export const CONFIG_ENV_MAP: Record<string, { envVar: string; fileEnvVar?: strin
   oauthScopes: { envVar: 'OAUTH_SCOPES', type: 'string', defaultValue: '' },
   oauthExtraScopes: { envVar: 'OAUTH_EXTRA_SCOPES', type: 'string', defaultValue: '' },
   oauthAllowPrivateEndpoints: { envVar: 'OAUTH_ALLOW_PRIVATE_ENDPOINTS', type: 'boolean', defaultValue: false },
+  // Signing out of an SSO account also ends the identity provider's session
+  // through its end_session_endpoint (#905). Off keeps the provider signed in,
+  // for providers shared with other apps that should stay signed in.
+  oauthEndSession: { envVar: 'OAUTH_END_SESSION', type: 'boolean', defaultValue: true },
+  // Where the provider sends the browser after ending its session. Must be
+  // registered with the provider as a post-logout redirect URI. Empty = none
+  // is sent and the provider shows its own signed-out page.
+  oauthPostLogoutRedirectUri: { envVar: 'OAUTH_POST_LOGOUT_REDIRECT_URI', type: 'url', defaultValue: '' },
   allowCustomJmapEndpoint: { envVar: 'ALLOW_CUSTOM_JMAP_ENDPOINT', type: 'boolean', defaultValue: false },
   // What being a Stalwart admin grants inside the Bulwark admin dashboard (#870).
   //   auto     - Stalwart admins see the shield and are signed into /admin
@@ -265,6 +276,15 @@ export const CONFIG_ENV_MAP: Record<string, { envVar: string; fileEnvVar?: strin
   logLevel: { envVar: 'LOG_LEVEL', type: 'enum', defaultValue: 'info', enumValues: ['error', 'warn', 'info', 'debug'] },
   sessionSecret: { envVar: 'SESSION_SECRET', fileEnvVar: 'SESSION_SECRET_FILE', type: 'string', defaultValue: '' },
   extensionDirectoryUrl: { envVar: 'EXTENSION_DIRECTORY_URL', type: 'url', defaultValue: 'https://extensions.bulwarkmail.org' },
+  // Connector links (connector.bulwarkmail.org): docs and the extension
+  // directory link to a destination, and the reader's own browser resolves it
+  // to their instance. `connectorEnabled` covers both halves - the
+  // /api/connector/capabilities endpoint a connector probes, and the "add this
+  // instance" links the app offers - so a deployment that wants no third-party
+  // hostname anywhere can switch the whole thing off. `connectorUrl` points a
+  // white-label or self-hosted deployment at its own connector.
+  connectorEnabled: { envVar: 'CONNECTOR_ENABLED', type: 'boolean', defaultValue: true },
+  connectorUrl: { envVar: 'CONNECTOR_URL', type: 'url', defaultValue: 'https://connector.bulwarkmail.org' },
   // WOPI document editing (#425). `wopiClientUrl` is the editor's base URL
   // (Collabora Online / OnlyOffice / EuroOffice, ...); discovery is fetched
   // from `<url>/hosting/discovery` unless the URL already carries a path.
