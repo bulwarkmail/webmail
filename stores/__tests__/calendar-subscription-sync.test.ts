@@ -19,7 +19,11 @@ function makeSubscription(overrides: Partial<ICalSubscription> = {}): ICalSubscr
 const mockClient: IJMAPClient = {
   deleteCalendar: async () => {},
   getAccountId: () => 'acc-1',
+  getServerUrl: () => 'https://mail.example.com',
+  getUsername: () => 'alice@example.com',
 } as unknown as IJMAPClient;
+
+const OWNER = 'https://mail.example.com|alice@example.com';
 
 beforeEach(() => {
   useCalendarStore.setState({
@@ -33,7 +37,7 @@ beforeEach(() => {
 describe('removeICalSubscription', () => {
   it('records a tombstone so the deletion can propagate through sync', async () => {
     useCalendarStore.setState({
-      icalSubscriptions: [makeSubscription({ id: 'sub-a' })],
+      icalSubscriptions: [makeSubscription({ id: 'sub-a', owner: OWNER })],
     });
 
     await useCalendarStore.getState().removeICalSubscription(mockClient, 'sub-a');

@@ -39,6 +39,14 @@ describe('parseSyncedSubscriptions', () => {
     expect(result![0].updatedAt).toBe('2026-01-01T00:00:00Z');
   });
 
+  it('keeps the owning login so another device only acts through it', () => {
+    const owner = 'https://mail.example.com|alice@example.com';
+    const [parsed] = parseSyncedSubscriptions([makeSubscription({ owner })])!;
+    expect(parsed.owner).toBe(owner);
+    const [unowned] = parseSyncedSubscriptions([{ ...makeSubscription(), owner: 42 }])!;
+    expect(unowned.owner).toBeUndefined();
+  });
+
   it('drops entries without required fields or duplicate ids', () => {
     const result = parseSyncedSubscriptions([
       makeSubscription({ id: 'a' }),

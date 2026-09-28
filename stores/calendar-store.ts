@@ -30,6 +30,7 @@ import {
   parseSyncedSubscriptions,
   parseSubscriptionTombstones,
   mergeSyncedSubscriptions,
+  subscriptionOwnerFor,
 } from '@/lib/calendar-subscription-sync';
 import { registerCalendarSubscriptionSyncBridge } from './settings-store';
 
@@ -456,7 +457,7 @@ function getStoreEventDebugSnapshot(event: Partial<CalendarEvent> | null | undef
 
 /** Identifies the login a subscription belongs to: server plus login name. */
 export function subscriptionOwner(client: Pick<IJMAPClient, 'getServerUrl' | 'getUsername'>): string {
-  return `${client.getServerUrl().replace(/\/+$/, '').toLowerCase()}|${client.getUsername().toLowerCase()}`;
+  return subscriptionOwnerFor(client.getServerUrl(), client.getUsername());
 }
 
 type CalendarStoreSet = (partial: Partial<CalendarStore> | ((state: CalendarStore) => Partial<CalendarStore>)) => void;
@@ -584,7 +585,7 @@ interface CalendarStore {
   applySyncedState: (
     subscriptions: unknown,
     deletedSubscriptionIds: unknown,
-    opts: { merge: boolean }
+    opts: { merge: boolean; owner?: string }
   ) => void;
 }
 
@@ -1572,8 +1573,14 @@ export const useCalendarStore = create<CalendarStore>()(
       },
 
       applySyncedState: (subscriptions, deletedSubscriptionIds, opts) => {
-        const parsedSubs = parseSyncedSubscriptions(subscriptions);
-        if (parsedSubs === null) return;
+        const parsed = parseSyncedSubscriptions(subscriptions);
+        if (parsed === null) return;
+        // A server blob speaks only for its own login. Older blobs may still
+        // carry other logins' subscriptions; unowned ones stay and are
+        // adopted by claimSubscription() only if their calendar is found.
+        const parsedSubs = opts.owner
+          ? parsed.filter((s) => !s.owner || s.owner === opts.owner)
+          : parsed;
         const parsedTombstones = parseSubscriptionTombstones(deletedSubscriptionIds);
 
         if (opts.merge) {

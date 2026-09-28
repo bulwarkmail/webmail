@@ -274,5 +274,50 @@ describe('calendar subscription sync', () => {
     expect(exported.icalSubscriptions[0].name).toBe('Exported Sub');
     expect(exported.deletedSubscriptionIds).toEqual({});
   });
-});
 
+  it('pushes only the active login\'s subscriptions into its server blob', async () => {
+    const sub = (id: string, owner?: string) => ({
+      id, url: `https://example.com/${id}.ics`, calendarId: `cal-${id}`, name: id,
+      color: '#3b82f6', refreshInterval: 60, lastRefreshed: null, owner,
+    });
+    useSettingsStore.getState().enableSync('Alice@Example.com', 'https://mail.example.com/');
+    // Secret feed URLs of another login must not land in this login's blob,
+    // and unowned (pre-owner) entries are claimed locally before they sync.
+    useCalendarStore.setState({
+      icalSubscriptions: [
+        sub('mine', 'https://mail.example.com|alice@example.com'),
+        sub('bobs', 'https://other.example.org|bob@example.org'),
+        sub('unowned'),
+      ],
+    });
+
+    await useSettingsStore.getState().flushSync();
+
+    const body = JSON.parse((apiFetch.mock.calls[0][1] as RequestInit).body as string);
+    expect(body.settings.icalSubscriptions.map((s: { id: string }) => s.id)).toEqual(['mine']);
+  });
+
+  it('ignores other logins\' subscriptions in a server blob written before owners were synced', async () => {
+    const sub = (id: string, owner?: string) => ({
+      id, url: `https://example.com/${id}.ics`, calendarId: `cal-${id}`, name: id,
+      color: '#3b82f6', refreshInterval: 60, lastRefreshed: null, owner,
+    });
+    apiFetch.mockResolvedValueOnce(new Response(JSON.stringify({
+      settings: {
+        icalSubscriptions: [
+          sub('mine', 'https://mail.example.com|alice@example.com'),
+          sub('bobs', 'https://other.example.org|bob@example.org'),
+          sub('unowned'),
+        ],
+        deletedSubscriptionIds: {},
+      },
+    }), { status: 200, headers: { 'Content-Type': 'application/json' } }));
+
+    await useSettingsStore.getState().loadFromServer('alice@example.com', 'https://mail.example.com');
+
+    // Unowned entries stay: calendar-store only adopts them once their
+    // calendar id and name are found in this login's account.
+    const ids = useCalendarStore.getState().icalSubscriptions.map((s) => s.id).sort();
+    expect(ids).toEqual(['mine', 'unowned']);
+  });
+});

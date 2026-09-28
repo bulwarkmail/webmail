@@ -7,6 +7,14 @@ import type { ICalSubscription } from '@/stores/calendar-store';
  */
 export const SUBSCRIPTION_TOMBSTONE_TTL_MS = 90 * 24 * 60 * 60 * 1000;
 
+/**
+ * Identifies the login a subscription belongs to: server plus login name,
+ * the same key calendar-store records as `ICalSubscription.owner`.
+ */
+export function subscriptionOwnerFor(serverUrl: string, username: string): string {
+  return `${serverUrl.replace(/\/+$/, '').toLowerCase()}|${username.toLowerCase()}`;
+}
+
 export interface SyncedSubscriptionState {
   icalSubscriptions: ICalSubscription[];
   /** Subscription id -> ISO time it was deleted. */
@@ -50,6 +58,7 @@ export function parseSyncedSubscriptions(value: unknown): ICalSubscription[] | n
       refreshInterval,
       lastRefreshed: typeof s.lastRefreshed === 'string' ? s.lastRefreshed : null,
       accountId: typeof s.accountId === 'string' && s.accountId ? s.accountId : undefined,
+      owner: typeof s.owner === 'string' && s.owner ? s.owner : undefined,
       updatedAt: typeof s.updatedAt === 'string' && s.updatedAt ? s.updatedAt : (typeof s.lastRefreshed === 'string' && s.lastRefreshed ? s.lastRefreshed : now),
     });
   }

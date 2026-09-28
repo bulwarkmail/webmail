@@ -6,6 +6,7 @@ import type { EmailTemplate } from '@/lib/template-types';
 import type { NotificationSoundChoice } from '@/lib/notification-sound';
 import { apiFetch } from '@/lib/browser-navigation';
 import { generateAccountId } from '@/lib/account-utils';
+import { subscriptionOwnerFor } from '@/lib/calendar-subscription-sync';
 import { orderForMailbox, sanitizeSortLevels, type MessageListOrderScope, type SortLevel } from '@/lib/message-list-order';
 import {
   DEFAULT_SUB_ADDRESS_DELIMITER,
@@ -74,13 +75,13 @@ export function registerTemplateSyncBridge(
 // into writable/lost calendars on browser cache clear or new devices.
 interface CalendarSubscriptionSyncBridge {
   getSyncedState: () => {
-    icalSubscriptions: unknown[];
+    icalSubscriptions: Array<{ owner?: string }>;
     deletedSubscriptionIds: Record<string, string>;
   };
   applySyncedState: (
     subscriptions: unknown,
     deletedSubscriptionIds: unknown,
-    opts: { merge: boolean }
+    opts: { merge: boolean; owner?: string }
   ) => void;
 }
 
@@ -537,8 +538,8 @@ interface SettingsState {
     value: SettingsState[K]
   ) => void;
   resetToDefaults: () => void;
-  exportSettings: () => string;
-  importSettings: (json: string, opts?: { serverAccountId?: string }) => boolean;
+  exportSettings: (opts?: { subscriptionOwner?: string }) => string;
+  importSettings: (json: string, opts?: { serverAccountId?: string; subscriptionOwner?: string }) => boolean;
 
   // Folder icons
   setFolderIcon: (mailboxId: string, icon: string) => void;
@@ -808,7 +809,7 @@ export const useSettingsStore = create<SettingsState>()(
         applyAnimations(DEFAULT_SETTINGS.animationsEnabled);
       },
 
-      exportSettings: () => {
+      exportSettings: (opts) => {
         const state = get();
         const templateSync = templateSyncBridge?.getSyncedState();
         const subscriptionSync = calendarSubscriptionSyncBridge?.getSyncedState();
@@ -929,7 +930,14 @@ export const useSettingsStore = create<SettingsState>()(
           // device leaves its calendar subscriptions alone.
           ...(subscriptionSync
             ? {
-                icalSubscriptions: subscriptionSync.icalSubscriptions,
+                // A server blob carries only its own login's subscriptions:
+                // feed URLs are secrets, and another login's (or an unowned
+                // one's) would reappear there after that login signs out.
+                icalSubscriptions: opts?.subscriptionOwner
+                  ? subscriptionSync.icalSubscriptions.filter(
+                      (sub) => sub.owner === opts.subscriptionOwner,
+                    )
+                  : subscriptionSync.icalSubscriptions,
                 deletedSubscriptionIds: subscriptionSync.deletedSubscriptionIds,
               }
             : {}),
@@ -937,7 +945,7 @@ export const useSettingsStore = create<SettingsState>()(
         return JSON.stringify(settings, null, 2);
       },
 
-      importSettings: (json: string, opts?: { serverAccountId?: string }) => {
+      importSettings: (json: string, opts?: { serverAccountId?: string; subscriptionOwner?: string }) => {
         try {
           const settings = JSON.parse(json);
 
@@ -1037,7 +1045,7 @@ export const useSettingsStore = create<SettingsState>()(
           calendarSubscriptionSyncBridge?.applySyncedState(
             settings.icalSubscriptions,
             settings.deletedSubscriptionIds,
-            { merge: Boolean(opts?.serverAccountId) }
+            { merge: Boolean(opts?.serverAccountId), owner: opts?.subscriptionOwner }
           );
 
           return true;
@@ -1210,6 +1218,7 @@ export const useSettingsStore = create<SettingsState>()(
             // so multi-account logins don't clobber each other by login order.
             get().importSettings(JSON.stringify(settings), {
               serverAccountId: generateAccountId(username, serverUrl),
+              subscriptionOwner: subscriptionOwnerFor(serverUrl, username),
             });
             isLoadingFromServer = false;
             syncLog('Settings loaded from server successfully');
@@ -1405,7 +1414,9 @@ if (typeof window !== 'undefined') {
     pendingSync = {
       username: syncUsername,
       serverUrl: syncServerUrl,
-      settings: JSON.parse(useSettingsStore.getState().exportSettings()),
+      settings: JSON.parse(useSettingsStore.getState().exportSettings({
+        subscriptionOwner: subscriptionOwnerFor(syncServerUrl, syncUsername),
+      })),
     };
     if (syncTimeout) clearTimeout(syncTimeout);
     syncTimeout = setTimeout(async () => {
