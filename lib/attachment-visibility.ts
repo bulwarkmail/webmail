@@ -22,6 +22,16 @@ const CID_REFERENCE = /\bcid:([^"'\s)]+)/gi;
 const EMPTY: ReadonlySet<string> = new Set();
 
 /**
+ * Strips the RFC angle brackets a Content-ID header may still carry (e.g.
+ * `<logo123@sender>`). Body `cid:` references never have them, so every
+ * comparison between an attachment's `cid`/`contentId` and a body reference
+ * must normalize through this first.
+ */
+export function normalizeCid(cid: string): string {
+  return cid.replace(/^<|>$/g, '');
+}
+
+/**
  * Content-IDs a raw HTML body references via `cid:` URLs (img src, table
  * background, style url(...) - anything), exactly as written. `null` (the
  * message renders as plain text) yields an empty set: nothing is embedded, so
@@ -65,6 +75,5 @@ export function isEmbeddedInBody(
   if (att.disposition === 'attachment') return false;
   const genericType = !type || type === 'application/octet-stream';
   if (!isImage && !genericType) return false;
-  // The Content-ID may still carry its angle brackets; body references never do.
-  return referencedCids.has(att.cid.replace(/^<|>$/g, ''));
+  return referencedCids.has(normalizeCid(att.cid));
 }
