@@ -610,9 +610,10 @@ export function EmailComposer({
       const embeddedCids = collectInlineImageCids(body);
       return replyTo.attachments
         // Skip inline cid-referenced images - they're embedded in the forwarded HTML body
-        // (matches the viewer's hideInlineImageAttachments logic).
+        // (matches the viewer's hideInlineImageAttachments logic). att.cid may still
+        // carry angle brackets while embeddedCids (parsed from the body) never does.
         .filter(att => !(att.cid && (
-          embeddedCids.has(att.cid) ||
+          embeddedCids.has(normalizeCid(att.cid)) ||
           (att.disposition === 'inline' && (att.type || '').startsWith('image/'))
         )))
         .map(att => ({

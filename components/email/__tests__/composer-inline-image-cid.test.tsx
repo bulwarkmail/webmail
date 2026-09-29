@@ -1,4 +1,4 @@
-import { render, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import React from 'react';
 import { EmailComposer } from '../email-composer';
@@ -174,10 +174,10 @@ describe('reply/forward inline image cid normalization', () => {
     vi.clearAllMocks();
   });
 
-  it('hydrates an inline image whose attachment cid still carries angle brackets', async () => {
-    const fetchBlobArrayBuffer = vi.fn().mockResolvedValue(
-      new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]).buffer, // PNG magic
-    );
+  const PNG_MAGIC = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]).buffer;
+
+  function mockClient() {
+    const fetchBlobArrayBuffer = vi.fn().mockResolvedValue(PNG_MAGIC);
     useAuthStore.setState({
       client: {
         fetchBlobArrayBuffer,
@@ -185,10 +185,17 @@ describe('reply/forward inline image cid normalization', () => {
         getMaxDelayedSend: () => 0,
       } as never,
     });
+    return { fetchBlobArrayBuffer };
+  }
+
+  it('sends a reply with the image inlined by cid, not duplicated as a regular attachment', async () => {
+    const { fetchBlobArrayBuffer } = mockClient();
+    const onSend = vi.fn();
 
     render(
       <EmailComposer
         mode="reply"
+        onSend={onSend}
         replyTo={{
           from: [{ email: 'sender@example.com', name: 'Sender' }],
           subject: 'Hello',
@@ -202,7 +209,69 @@ describe('reply/forward inline image cid normalization', () => {
       />
     );
 
-    await waitFor(() => expect(fetchBlobArrayBuffer).toHaveBeenCalledTimes(1));
-    expect(fetchBlobArrayBuffer).toHaveBeenCalledWith('blob-1', 'logo.png', 'image/png');
+    // Hydration: the placeholder gets swapped for the fetched blob's data URL.
+    await waitFor(() => expect(fetchBlobArrayBuffer).toHaveBeenCalledWith('blob-1', 'logo.png', 'image/png'));
+
+    // Reply auto-fills "to" from replyTo.from, so Send is reachable immediately.
+    fireEvent.click(screen.getAllByTestId('composer-send')[0]);
+    await waitFor(() => expect(onSend).toHaveBeenCalledTimes(1));
+
+    const sent = onSend.mock.calls[0][0] as { htmlBody?: string; attachments?: Array<{ cid?: string; blobId: string; disposition?: string }> };
+    // The data URL must have been rewritten back to a cid: reference for sending.
+    expect(sent.htmlBody).toContain('cid:logo123@sender');
+    expect(sent.htmlBody).not.toContain('data:image');
+    // Exactly one attachment for the one image - a bracket-mismatch used to
+    // mean it was never matched at all; matching on both regular AND inline
+    // paths would instead send the same blob twice (see forward test below).
+    expect(sent.attachments).toEqual([
+      expect.objectContaining({ blobId: 'blob-1', cid: 'logo123@sender', disposition: 'inline' }),
+    ]);
+  });
+
+  it('does not duplicate a forwarded inline image (declared octet-stream, no disposition) as a regular attachment', async () => {
+    const { fetchBlobArrayBuffer } = mockClient();
+    const onSend = vi.fn();
+
+    render(
+      <EmailComposer
+        mode="forward"
+        onSend={onSend}
+        replyTo={{
+          from: [{ email: 'sender@example.com', name: 'Sender' }],
+          subject: 'Hello',
+          htmlBody: '<p>Hi</p><img src="cid:logo123@sender">',
+          quoteHeaderHtml: 'Forwarded message',
+          // Foxmail-style part (#543): no inline disposition, generic type -
+          // only the cid: body reference marks it as embedded.
+          attachments: [
+            { blobId: 'blob-1', name: 'logo.png', type: 'application/octet-stream', size: 100, cid: '<logo123@sender>' },
+          ],
+        }}
+        onClose={vi.fn()}
+      />
+    );
+
+    await waitFor(() => expect(fetchBlobArrayBuffer).toHaveBeenCalledWith('blob-1', 'logo.png', 'application/octet-stream'));
+
+    // The forward attachment-list filter must have recognized blob-1 as
+    // embedded and kept it out of the regular attachment chips.
+    expect(screen.queryByText('logo.png')).not.toBeInTheDocument();
+
+    // Forward doesn't auto-fill "to" - add a recipient so Send is reachable.
+    // A trailing delimiter is needed: a bare single-address paste is left as
+    // uncommitted input text rather than immediately chipped.
+    fireEvent.paste(screen.getByPlaceholderText('to_placeholder'), {
+      clipboardData: { getData: () => 'bob@example.com;' },
+    });
+
+    fireEvent.click(screen.getAllByTestId('composer-send')[0]);
+    await waitFor(() => expect(onSend).toHaveBeenCalledTimes(1));
+
+    const sent = onSend.mock.calls[0][0] as { attachments?: Array<{ cid?: string; blobId: string }> };
+    // Same blobId must appear exactly once, as the re-typed inline part -
+    // never also as a plain attachment (that would send it twice).
+    expect(sent.attachments).toEqual([
+      expect.objectContaining({ blobId: 'blob-1', cid: 'logo123@sender' }),
+    ]);
   });
 });
