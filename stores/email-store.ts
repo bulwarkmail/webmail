@@ -25,7 +25,7 @@ import { emailInMailbox } from "@/lib/move-targets";
 import { resolveThreadRoute } from "@/lib/thread-routing";
 import { emailKeyFor, threadKeyFor, threadIdFromKey, KEYWORD_PREFIX, KEYWORD_PREFIX_LEGACY } from "@/lib/thread-utils";
 import { provideSearchResults, type ProvidedSearchResult } from "@/lib/plugin-search-results";
-import { positionsByAccount, fetchUnifiedEmails, fetchUnifiedMailboxCounts, searchUnifiedEmails, advancedSearchUnifiedEmails, fetchCrossViewEmails, searchCrossViewEmails, advancedSearchCrossViewEmails, fetchTagEmails, trashAndJunkIds, searchAcrossAccounts, advancedSearchAcrossAccounts, getCrossUnreadTotal, dedupeUnifiedAccounts, unifiedServerKey, type AcrossAccountsSearchOptions, type UnifiedAccountClient, type UnifiedMailboxCounts } from "@/lib/unified-mailbox";
+import { positionsByAccount, fetchUnifiedEmails, fetchUnifiedMailboxCounts, searchUnifiedEmails, advancedSearchUnifiedEmails, fetchCrossViewEmails, searchCrossViewEmails, advancedSearchCrossViewEmails, fetchTagEmails, trashAndJunkIds, findMailboxByRole, resolveJmapTarget, searchAcrossAccounts, advancedSearchAcrossAccounts, getCrossUnreadTotal, dedupeUnifiedAccounts, unifiedServerKey, type AcrossAccountsSearchOptions, type UnifiedAccountClient, type UnifiedMailboxCounts } from "@/lib/unified-mailbox";
 import { defaultSearchScopeFor, isAllFoldersSearchScope, SEARCH_SCOPE_ALL_FOLDERS } from "@/lib/search-scope-folders";
 import { useAuthStore } from "@/stores/auth-store";
 import { pathNamesMailFolder } from "@/lib/deep-links";
@@ -692,6 +692,13 @@ interface EmailStore {
   fetchUnifiedEmails: (accounts: UnifiedAccountClient[], role: UnifiedMailboxRole) => Promise<void>;
   loadMoreUnifiedEmails: (accounts: UnifiedAccountClient[]) => Promise<void>;
   refreshUnifiedCounts: (accounts: UnifiedAccountClient[]) => Promise<void>;
+  // Empties the given role's mailbox (e.g. trash/junk) in every account that
+  // has one - the "All Trash" sidebar row's empty-folder action. Per-account
+  // failures are collected rather than aborting the whole batch.
+  emptyUnifiedMailbox: (
+    accounts: UnifiedAccountClient[],
+    role: UnifiedMailboxRole,
+  ) => Promise<{ total: number; errors: Map<string, string> }>;
   exitUnifiedView: () => void;
   // Cross-account view operations (unread / starred / all)
   fetchCrossView: (accounts: UnifiedAccountClient[], view: CrossView) => Promise<void>;
@@ -8130,6 +8137,53 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     } catch (error) {
       console.error('Failed to refresh unified counts:', error);
     }
+  },
+
+  emptyUnifiedMailbox: async (accounts, role) => {
+    const errors = new Map<string, string>();
+    const activeId = useAuthStore.getState().activeAccountId;
+
+    // Each account's count is collected into `counts` rather than accumulated
+    // into a shared `total` inline: `total += await x` reads `total` BEFORE
+    // awaiting, so concurrent iterations racing on the same closure variable
+    // clobber each other's contribution instead of adding to it.
+    const counts = await Promise.all(accounts.map(async (account): Promise<number> => {
+      const mailbox = findMailboxByRole(account.mailboxes, role);
+      if (!mailbox) return 0;
+      try {
+        const { jmapMailboxId, jmapAccountId } = resolveJmapTarget(account, mailbox);
+        const count = await account.client.emptyMailbox(jmapMailboxId, jmapAccountId);
+        // Same live-list routing as liveListForAccount/applyMailboxCounterUpdate:
+        // the active client's folders live in `mailboxes`, every other logged-in
+        // account's in `accountMailboxes[clientAccountId]`.
+        set((state) => {
+          const zeroed = (mb: Mailbox) =>
+            mb.id === mailbox.id
+              ? { ...mb, totalEmails: 0, unreadEmails: 0, totalThreads: 0, unreadThreads: 0 }
+              : mb;
+          if (account.clientAccountId === activeId) {
+            return { mailboxes: state.mailboxes.map(zeroed) };
+          }
+          return {
+            accountMailboxes: {
+              ...state.accountMailboxes,
+              [account.clientAccountId]: (state.accountMailboxes[account.clientAccountId] ?? []).map(zeroed),
+            },
+          };
+        });
+        return count;
+      } catch (err) {
+        errors.set(account.accountId, err instanceof Error ? err.message : String(err));
+        return 0;
+      }
+    }));
+
+    const { isUnifiedView, unifiedRole } = get();
+    if (isUnifiedView && unifiedRole === role) {
+      set({ emails: [], selectedEmail: null, totalEmails: 0, hasMoreEmails: false });
+    }
+
+    return { total: counts.reduce((sum, n) => sum + n, 0), errors };
   },
 
   fetchCrossView: async (accounts, view) => {

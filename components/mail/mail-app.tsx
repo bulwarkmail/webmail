@@ -126,7 +126,7 @@ import { SearchBox, type ContactSearchField } from "@/components/search/search-b
 import { FilterPanelHost } from "@/components/search/filter-panel-host";
 import { SearchFilterPanel, SELECT_CLASS } from "@/components/search/search-filter-panel";
 import type { ContactSuggestion } from "@/lib/search-suggestions";
-import type { Attachment, SendEmailResult } from "@/lib/jmap/types";
+import type { Attachment, SendEmailResult, UnifiedMailboxRole } from "@/lib/jmap/types";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
 import { peekListAttachments, requestListAttachments, type ListAttachmentSource, type LoadListAttachments } from "@/lib/list-attachments";
 import { useSearchHistoryStore } from "@/stores/search-history-store";
@@ -634,6 +634,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     crossUnreadCount,
     exitUnifiedView,
     emptyMailbox,
+    emptyUnifiedMailbox,
     markMailboxAsRead,
     createMailbox,
     renameMailbox,
@@ -722,6 +723,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     crossUnreadCount: state.crossUnreadCount,
     exitUnifiedView: state.exitUnifiedView,
     emptyMailbox: state.emptyMailbox,
+    emptyUnifiedMailbox: state.emptyUnifiedMailbox,
     markMailboxAsRead: state.markMailboxAsRead,
     createMailbox: state.createMailbox,
     renameMailbox: state.renameMailbox,
@@ -4364,6 +4366,28 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     }
   };
 
+  const handleEmptyUnifiedMailboxFromContextMenu = async (role: UnifiedMailboxRole) => {
+    const confirmed = await confirmDialog({
+      title: tCtxMenu('mailbox_context_menu.empty_all_confirm_title'),
+      message: tCtxMenu('mailbox_context_menu.empty_all_confirm_message'),
+      confirmText: tCtxMenu('mailbox_context_menu.empty_folder_all_accounts'),
+      variant: "destructive",
+    });
+    if (!confirmed) return;
+
+    try {
+      const accounts = await buildPopulatedUnifiedAccounts();
+      const { errors } = await emptyUnifiedMailbox(accounts, role);
+      if (errors.size > 0) {
+        toast.error(tCtxMenu('mailbox_context_menu.toast_error_empty_all_partial'));
+      } else {
+        toast.success(tCtxMenu('mailbox_context_menu.toast_emptied_all'));
+      }
+    } catch {
+      toast.error(tCtxMenu('mailbox_context_menu.toast_error_empty_all'));
+    }
+  };
+
   const handleCreateSubfolderFromContextMenu = async (parentId: string) => {
     if (!client) return;
     const name = await promptDialog({
@@ -5202,6 +5226,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     onMarkFolderTreeRead: handleMarkFolderTreeRead,
     onMarkAllFoldersRead: handleMarkAllFoldersRead,
     onEmptyFolder: handleEmptyFolderFromContextMenu,
+    onEmptyUnifiedMailbox: handleEmptyUnifiedMailboxFromContextMenu,
     onCreateSubfolder: handleCreateSubfolderFromContextMenu,
     onCreateFolder: handleCreateFolderFromContextMenu,
     onRenameFolder: handleRenameFolderFromContextMenu,

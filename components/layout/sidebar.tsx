@@ -69,6 +69,7 @@ import { useAccountStore } from '@/stores/account-store';
 import { useShallow } from "zustand/react/shallow";
 import { UNIFIED_MAILBOX_IDS, CROSS_VIEW_IDS } from '@/lib/jmap/types';
 import type { UnifiedMailboxRole } from '@/lib/jmap/types';
+import type { UnifiedMailboxCounts } from '@/lib/unified-mailbox';
 import { useDragDropContext } from "@/contexts/drag-drop-context";
 import { useMailboxDrop } from "@/hooks/use-mailbox-drop";
 import { MAILBOX_DRAG_MIME } from "@/components/pro/pro-shell-drop";
@@ -122,6 +123,8 @@ interface SidebarProps {
   onMarkFolderTreeRead?: (mailboxId: string) => void;
   onMarkAllFoldersRead?: () => void;
   onEmptyFolder?: (mailboxId: string) => void;
+  /** Empties a unified role's mailbox (e.g. trash/junk) across every account. */
+  onEmptyUnifiedMailbox?: (role: UnifiedMailboxRole) => void;
   onCreateSubfolder?: (parentId: string) => void;
   onCreateFolder?: (accountId?: string) => void;
   onRenameFolder?: (mailboxId: string) => void;
@@ -1277,6 +1280,7 @@ function SidebarImpl({
   onMarkFolderTreeRead,
   onMarkAllFoldersRead,
   onEmptyFolder,
+  onEmptyUnifiedMailbox,
   onCreateSubfolder,
   onCreateFolder,
   onRenameFolder,
@@ -2165,6 +2169,15 @@ function SidebarImpl({
     openMailboxContextMenu(e, { kind: "folders-section" });
   };
 
+  const handleUnifiedMailboxContextMenu = (e: React.MouseEvent, count: UnifiedMailboxCounts) => {
+    openMailboxContextMenu(e, {
+      kind: "unified-mailbox",
+      role: count.role,
+      label: t(`unified_${count.role}`),
+      totalEmails: count.totalEmails,
+    });
+  };
+
   // `buildMailboxTree()` groups shared mailboxes that carry no accountId under
   // the placeholder id "unknown" (lib/utils.ts). Such a node cannot be a valid
   // JMAP mutation target, so it gets no folder-creation menu at all rather than
@@ -2427,6 +2440,7 @@ function SidebarImpl({
                       unread={count.unreadEmails}
                       total={count.totalEmails}
                       onClick={() => onMailboxSelect?.(unifiedId)}
+                      onContextMenu={(e) => handleUnifiedMailboxContextMenu(e, count)}
                       isCollapsed={isCollapsed}
                     />
                   );
@@ -2692,6 +2706,7 @@ function SidebarImpl({
         onMarkFolderTreeRead={onMarkFolderTreeRead}
         onMarkAllFoldersRead={onMarkAllFoldersRead}
         onEmptyFolder={onEmptyFolder}
+        onEmptyUnifiedMailbox={onEmptyUnifiedMailbox}
         onCreateSubfolder={onCreateSubfolder}
         onCreateFolder={onCreateFolder}
         onRenameFolder={onRenameFolder}
