@@ -12,6 +12,7 @@ import { TextDirection } from "@/components/email/text-direction";
 import { TextStyle, BackgroundColor } from "@tiptap/extension-text-style";
 import Color from "@tiptap/extension-color";
 import { FontSize, FONT_SIZES } from "@/components/email/font-size";
+import { tabIndentKeyDown } from "@/components/email/tab-indent";
 import { ResizableImage } from "@/components/email/resizable-image";
 import Placeholder from "@tiptap/extension-placeholder";
 import { Table } from "@tiptap/extension-table";
@@ -242,6 +243,9 @@ export function RichTextEditor({
       attributes: {
         class: "tiptap min-h-[100px] px-4 py-3 text-sm text-foreground",
       },
+      // Tab indents instead of leaving the editor (see tab-indent.ts for
+      // why it inserts non-breaking spaces and defers inside lists/tables).
+      handleKeyDown: tabIndentKeyDown,
       handleDrop: (view, event) => {
         const upload = onImageUploadRef.current;
         if (!upload || !event.dataTransfer?.files?.length) return false;
