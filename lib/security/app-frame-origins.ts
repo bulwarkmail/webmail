@@ -14,6 +14,26 @@
 
 /** Cookie the client writes and the proxy reads. Not HttpOnly - the client owns it. */
 export const APP_FRAME_ORIGINS_COOKIE = 'bulwark_app_frame_origins';
+/**
+ * The name used over HTTPS. A `__Host-` cookie can only be set by this exact
+ * host, Secure and on Path=/ - a same-site sibling (`evil.example.com` next to
+ * `mail.example.com`) cannot plant one to widen this app's frame-src. Plain
+ * HTTP (local development) keeps the unprefixed name, which browsers require.
+ */
+export const APP_FRAME_ORIGINS_SECURE_COOKIE = '__Host-bulwark_app_frame_origins';
+
+/**
+ * The cookie value the proxy may trust for this request: the `__Host-` one,
+ * or the plain one only when the request did not come in over HTTPS.
+ */
+export function pickAppFrameOriginsCookie(
+  read: (name: string) => string | undefined,
+  requestIsHttps: boolean,
+): string | undefined {
+  const secure = read(APP_FRAME_ORIGINS_SECURE_COOKIE);
+  if (secure !== undefined) return secure;
+  return requestIsHttps ? undefined : read(APP_FRAME_ORIGINS_COOKIE);
+}
 
 /** Hard cap so a large app list can never blow up the cookie or the header. */
 export const MAX_APP_FRAME_ORIGINS = 20;

@@ -2,7 +2,7 @@
 
 import { useRef, useState, type DragEvent } from "react";
 import { useTranslations } from "next-intl";
-import { Mail, Calendar, BookUser, HardDrive, Settings, PenSquare, MailOpen, Folder, Search, X, type LucideIcon } from "lucide-react";
+import { Mail, Calendar, BookUser, HardDrive, Settings, PenSquare, MailOpen, Folder, Search, X, type AppIcon } from "@/components/icons";
 import { cn } from "@/lib/utils";
 import { useProTabStore, type ProTab, type ProTabKind, type ProPaneId } from "@/stores/pro-tab-store";
 import {
@@ -35,7 +35,7 @@ interface ProTabBarProps {
   className?: string;
 }
 
-const TAB_ICONS: Record<ProTabKind, LucideIcon> = {
+const TAB_ICONS: Record<ProTabKind, AppIcon> = {
   mail: Mail,
   calendar: Calendar,
   contacts: BookUser,

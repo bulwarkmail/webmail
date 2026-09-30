@@ -4,7 +4,7 @@ import { Suspense, useState, useEffect, useCallback, useRef, useMemo } from "rea
 import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
-import { ArrowLeft, Users, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Users, AlertTriangle } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";

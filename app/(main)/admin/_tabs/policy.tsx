@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Save, Loader2, Lock, Plus, Trash2, ArrowUp, ArrowDown } from 'lucide-react';
-import { icons as lucideIcons, type LucideIcon } from 'lucide-react';
+import { Save, Loader2, Lock, Plus, Trash2, ArrowUp, ArrowDown } from '@/components/icons';
+import { iconForName } from '@/components/icons';
 import type { SettingsPolicy, FeatureGates, PushRelayOption, AdminSidebarApp } from '@/lib/admin/types';
 import { DEFAULT_FEATURE_GATES, DEFAULT_POLICY } from '@/lib/admin/types';
 import { apiFetch } from '@/lib/browser-navigation';
@@ -57,6 +57,7 @@ const RESTRICTABLE_SETTINGS = [
   { key: 'sessionTimeout', label: 'Session Timeout', category: 'Privacy', type: 'number' },
   { key: 'emailNotificationsEnabled', label: 'Email Notifications', category: 'Notifications', type: 'boolean' },
   { key: 'calendarNotificationsEnabled', label: 'Calendar Notifications', category: 'Notifications', type: 'boolean' },
+  { key: 'pushNotifyInboxOnly', label: 'Inbox-only Push Notifications', category: 'Notifications', type: 'boolean' },
   { key: 'debugMode', label: 'Debug Mode', category: 'Advanced', type: 'boolean' },
 ];
 
@@ -455,7 +456,7 @@ export function PolicyTab() {
           )}
 
           {defaultSidebarApps.map((app, index) => {
-            const AppIcon = lucideIcons[app.icon as keyof typeof lucideIcons] as LucideIcon | undefined;
+            const AppIcon = iconForName(app.icon);
             const urlInvalid = app.url.trim().length > 0 && !isValidDefaultAppUrl(app.url);
             return (
               <div key={app.id} className="rounded-md border border-border bg-muted/20 p-3 space-y-2">
@@ -493,7 +494,7 @@ export function PolicyTab() {
                   <div className="sm:col-span-3">
                     <label className="block text-[11px] font-medium text-muted-foreground mb-1">
                       Icon (
-                      <a href="https://lucide.dev/icons" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">Lucide</a>
+                      <a href="https://tabler.io/icons" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">Tabler</a>
                       )
                     </label>
                     <div className="flex items-center gap-2">
@@ -504,7 +505,7 @@ export function PolicyTab() {
                         maxLength={64}
                         value={app.icon}
                         onChange={(e) => updateDefaultApp(index, { icon: e.target.value })}
-                        placeholder="Globe"
+                        placeholder="world"
                         className="h-8 w-full rounded-md border border-input bg-background px-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                       />
                       <span

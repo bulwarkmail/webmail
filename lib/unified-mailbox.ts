@@ -1,6 +1,7 @@
 import type { Email, Mailbox, UnifiedMailboxRole, CrossView } from '@/lib/jmap/types';
 import { CROSS_EXCLUDED_ROLES } from '@/lib/jmap/types';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
+import { andFilters } from '@/lib/jmap/search-utils';
 import { compareEmails, type SortLevel } from '@/lib/message-list-order';
 
 export interface UnifiedAccountClient {
@@ -82,6 +83,45 @@ export function findMailboxByRole(
   return mailboxes.find((m) => m.role === role);
 }
 
+/** The id a JMAP request names this entry's mailbox by (the owner's raw id for shared entries). */
+export function jmapMailboxIdOf(account: UnifiedAccountClient, mailbox: Mailbox): string {
+  return account.isShared ? (mailbox.originalId ?? mailbox.id) : mailbox.id;
+}
+
+/**
+ * The condition that leaves an account's Trash and Junk out of a folder-less
+ * search, or null when the account has neither folder.
+ */
+export function trashAndJunkExclusion(account: UnifiedAccountClient): Record<string, unknown> | null {
+  const ids = (['trash', 'junk'] as const)
+    .map((role) => findMailboxByRole(account.mailboxes, role))
+    .filter((mailbox): mailbox is Mailbox => Boolean(mailbox))
+    .map((mailbox) => jmapMailboxIdOf(account, mailbox));
+  return ids.length > 0 ? { inMailboxOtherThan: ids } : null;
+}
+
+/**
+ * Where each account's next page starts. The merged list interleaves the
+ * accounts, so its length is no single account's position: passing it made
+ * every account skip the rows between its own count and the merged length.
+ * A map gives each account the number of its rows already shown (see
+ * positionsByAccount); a plain number still means the same for all.
+ */
+export type FanOutPosition = number | Readonly<Record<string, number>>;
+
+function positionFor(position: FanOutPosition, account: UnifiedAccountClient): number {
+  return typeof position === 'number' ? position : (position[account.accountId] ?? 0);
+}
+
+/** Per-account positions for the next page of a merged list. */
+export function positionsByAccount(emails: readonly Email[]): Record<string, number> {
+  const positions: Record<string, number> = {};
+  for (const email of emails) {
+    if (email.accountId) positions[email.accountId] = (positions[email.accountId] ?? 0) + 1;
+  }
+  return positions;
+}
+
 /**
  * Fetches emails from all accounts for a given unified role, merges and sorts
  * them by receivedAt descending. Per-account failures are collected in the
@@ -91,7 +131,7 @@ export async function fetchUnifiedEmails(
   accounts: UnifiedAccountClient[],
   role: UnifiedMailboxRole,
   limit: number,
-  position: number,
+  position: FanOutPosition,
   order: SortLevel[] = [],
 ): Promise<UnifiedFetchResult> {
   const errors = new Map<string, string>();
@@ -113,8 +153,8 @@ export async function fetchUnifiedEmails(
         // The configured list order (#718) rides along only when set, so the
         // default call shape stays the four-argument one.
         const result = order.length > 0
-          ? await account.client.getEmails(jmapMailboxId, jmapAccountId, limit, position, undefined, undefined, undefined, order)
-          : await account.client.getEmails(jmapMailboxId, jmapAccountId, limit, position);
+          ? await account.client.getEmails(jmapMailboxId, jmapAccountId, limit, positionFor(position, account), undefined, undefined, undefined, order)
+          : await account.client.getEmails(jmapMailboxId, jmapAccountId, limit, positionFor(position, account));
         return { account, result };
       } catch (err) {
         errors.set(
@@ -179,11 +219,11 @@ export async function searchUnifiedEmails(
   role: UnifiedMailboxRole,
   query: string,
   limit: number,
-  position: number,
+  position: FanOutPosition,
 ): Promise<UnifiedFetchResult> {
   return fanOutUnifiedQuery(accounts, role, async (account, mailbox) => {
     const { jmapMailboxId, jmapAccountId } = resolveJmapTarget(account, mailbox);
-    return account.client.searchEmails(query, jmapMailboxId, jmapAccountId, limit, position);
+    return account.client.searchEmails(query, jmapMailboxId, jmapAccountId, limit, positionFor(position, account));
   });
 }
 
@@ -198,11 +238,11 @@ export async function advancedSearchUnifiedEmails(
   role: UnifiedMailboxRole,
   filterFor: (mailboxId: string) => Record<string, unknown>,
   limit: number,
-  position: number,
+  position: FanOutPosition,
 ): Promise<UnifiedFetchResult> {
   return fanOutUnifiedQuery(accounts, role, async (account, mailbox) => {
     const { jmapMailboxId, jmapAccountId } = resolveJmapTarget(account, mailbox);
-    return account.client.advancedSearchEmails(filterFor(jmapMailboxId), jmapAccountId, limit, position);
+    return account.client.advancedSearchEmails(filterFor(jmapMailboxId), jmapAccountId, limit, positionFor(position, account));
   });
 }
 
@@ -442,10 +482,10 @@ export async function fetchCrossViewEmails(
   accounts: UnifiedAccountClient[],
   view: CrossView,
   limit: number,
-  position: number,
+  position: FanOutPosition,
 ): Promise<UnifiedFetchResult> {
   return fanOutCrossQuery(accounts, (account, jmapAccountId, ids) =>
-    account.client.advancedSearchEmails(buildCrossFilter(view, ids), jmapAccountId, limit, position));
+    account.client.advancedSearchEmails(buildCrossFilter(view, ids), jmapAccountId, limit, positionFor(position, account)));
 }
 
 /**
@@ -457,14 +497,14 @@ export async function searchCrossViewEmails(
   view: CrossView,
   query: string,
   limit: number,
-  position: number,
+  position: FanOutPosition,
 ): Promise<UnifiedFetchResult> {
   return fanOutCrossQuery(accounts, (account, jmapAccountId, ids) =>
     account.client.advancedSearchEmails(
       { operator: 'AND', conditions: [buildCrossFilter(view, ids), { text: query }] },
       jmapAccountId,
       limit,
-      position,
+      positionFor(position, account),
     ));
 }
 
@@ -479,7 +519,7 @@ export async function advancedSearchCrossViewEmails(
   view: CrossView,
   extraFilter: Record<string, unknown>,
   limit: number,
-  position: number,
+  position: FanOutPosition,
 ): Promise<UnifiedFetchResult> {
   const hasExtra = Object.keys(extraFilter).length > 0;
   return fanOutCrossQuery(accounts, (account, jmapAccountId, ids) => {
@@ -487,7 +527,7 @@ export async function advancedSearchCrossViewEmails(
     const filter = hasExtra
       ? { operator: 'AND', conditions: [membership, extraFilter] }
       : membership;
-    return account.client.advancedSearchEmails(filter, jmapAccountId, limit, position);
+    return account.client.advancedSearchEmails(filter, jmapAccountId, limit, positionFor(position, account));
   });
 }
 
@@ -510,8 +550,99 @@ export async function fetchTagEmails(
   accounts: UnifiedAccountClient[],
   keyword: string,
   limit: number,
-  position: number,
+  position: FanOutPosition,
   order: SortLevel[] = [],
+  extraFilter?: Record<string, unknown>,
+): Promise<UnifiedFetchResult> {
+  return fanOutAccountQuery(
+    accounts,
+    (account, jmapAccountId) => account.client.getEmails(
+      undefined, jmapAccountId, limit, positionFor(position, account), keyword, true, extraFilter, order,
+    ),
+    compareEmails(order, { pinnedFirst: true }),
+  );
+}
+
+export interface AcrossAccountsSearchOptions {
+  /**
+   * Leave every account's Trash and Junk out: the search panel's default
+   * scope, "All folders except Spam and Trash". Its "All folders" scope
+   * searches them too.
+   */
+  excludeTrashAndJunk?: boolean;
+}
+
+/**
+ * Text search over every folder of every given account: the folder-less
+ * scopes of the standard search panel. One query per account with no
+ * `inMailbox` constraint, merged newest first.
+ *
+ * The unscoped search used to ask only the login's own account, so mail in
+ * the group/shared accounts the same login reaches (whose folders sit right
+ * there in the sidebar) was silently missing from every "All folders"
+ * search - an ordinary "No results found" with no hint (#1082).
+ */
+export async function searchAcrossAccounts(
+  accounts: UnifiedAccountClient[],
+  query: string,
+  limit: number,
+  position: FanOutPosition,
+  options: AcrossAccountsSearchOptions = {},
+): Promise<UnifiedFetchResult> {
+  return fanOutAccountQuery(
+    accounts,
+    (account, jmapAccountId) => {
+      const exclusion = options.excludeTrashAndJunk ? trashAndJunkExclusion(account) : null;
+      return exclusion
+        ? account.client.advancedSearchEmails(
+            andFilters({ text: query.trim() }, exclusion), jmapAccountId, limit, positionFor(position, account),
+          )
+        : account.client.searchEmails(query, undefined, jmapAccountId, limit, positionFor(position, account));
+    },
+    newestFirst,
+  );
+}
+
+/**
+ * Like `searchAcrossAccounts`, with a JMAP advanced filter that was built
+ * WITHOUT an `inMailbox` clause (`buildJMAPFilter(query, filters, undefined)`).
+ */
+export async function advancedSearchAcrossAccounts(
+  accounts: UnifiedAccountClient[],
+  filter: Record<string, unknown>,
+  limit: number,
+  position: FanOutPosition,
+  options: AcrossAccountsSearchOptions = {},
+): Promise<UnifiedFetchResult> {
+  return fanOutAccountQuery(
+    accounts,
+    (account, jmapAccountId) => account.client.advancedSearchEmails(
+      options.excludeTrashAndJunk ? andFilters(filter, trashAndJunkExclusion(account)) : filter,
+      jmapAccountId,
+      limit,
+      positionFor(position, account),
+    ),
+    newestFirst,
+  );
+}
+
+function newestFirst(a: Email, b: Email): number {
+  return new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime();
+}
+
+/**
+ * Runs one folder-less request per account (own entries against the client's
+ * primary account, shared entries against the owner's JMAP accountId), stamps
+ * every returned email with its source account and merges the pages under
+ * `sort`. A failing account lands in `errors` and does not hide the others.
+ */
+async function fanOutAccountQuery(
+  accounts: UnifiedAccountClient[],
+  run: (
+    account: UnifiedAccountClient,
+    jmapAccountId: string | undefined,
+  ) => Promise<{ emails: Email[]; total: number; hasMore: boolean }>,
+  sort: (a: Email, b: Email) => number,
 ): Promise<UnifiedFetchResult> {
   const errors = new Map<string, string>();
 
@@ -523,9 +654,7 @@ export async function fetchTagEmails(
   const promises = accounts.map(async (account): Promise<AccountResult> => {
     const jmapAccountId = account.isShared ? account.accountId : undefined;
     try {
-      const result = await account.client.getEmails(
-        undefined, jmapAccountId, limit, position, keyword, true, undefined, order,
-      );
+      const result = await run(account, jmapAccountId);
       return { account, result };
     } catch (err) {
       errors.set(account.accountId, err instanceof Error ? err.message : String(err));
@@ -558,7 +687,7 @@ export async function fetchTagEmails(
     if (result.hasMore) anyHasMore = true;
   }
 
-  mergedEmails.sort(compareEmails(order, { pinnedFirst: true }));
+  mergedEmails.sort(sort);
 
   return { emails: mergedEmails, total: totalSum, hasMore: anyHasMore, errors };
 }

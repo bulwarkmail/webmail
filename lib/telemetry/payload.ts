@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { configManager } from '@/lib/admin/config-manager';
 import { logger } from '@/lib/logger';
-import { resolveEndpointAllowed } from './endpoint-guard';
+import { fetchTelemetryTarget, resolveEndpointAllowed } from './endpoint-guard';
 import { getInstanceId } from './state';
 import { getLoginCounts } from './login-tracker';
 import type {
@@ -103,11 +103,9 @@ async function detectStalwartVersion(): Promise<string | null> {
     return null;
   }
   try {
-    const res = await fetch(wellKnown, {
+    const res = await fetchTelemetryTarget(wellKnown, {
       method: 'GET',
       signal: AbortSignal.timeout(3000),
-      // See sender.ts: the guard vetted this URL, not wherever it redirects.
-      redirect: 'manual',
     });
     const server = res.headers.get('server') ?? '';
     const m = server.match(/(\d+\.\d+\.\d+(?:-[\w.]+)?)/);

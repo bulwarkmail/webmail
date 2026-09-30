@@ -1,0 +1,191 @@
+name: Publish Lite Docker Image
+
+# Bulwark Lite as a container (Dockerfile.lite): the static export behind an
+# unprivileged nginx. Every run first builds a demo image and drives it with
+# the Lite smoke suite, so the nginx routing and headers are tested, not only
+# the files. Then:
+#   - release:       ghcr.io/<repo>-lite       (semver tags, latest unless prerelease)
+#   - push to main:  ghcr.io/<repo>-lite-beta  (latest + sha)
+#   - pull request:  smoke test only
+# Published images get a signed build provenance attestation, pushed to GHCR
+# next to them: `gh attestation verify oci://<image>:<tag> --owner bulwarkmail`.
+
+on:
+  release:
+    types: [published]
+  push:
+    branches: [main]
+    paths: &paths
+      - "Dockerfile.lite"
+      - ".dockerignore"
+      - "scripts/lite/**"
+      - "app/**"
+      - "components/**"
+      - "contexts/**"
+      - "hooks/**"
+      - "lib/**"
+      - "stores/**"
+      - "locales/**"
+      - "public/**"
+      - "next.config.ts"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/docker-publish-lite.yml"
+  pull_request:
+    paths: *paths
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build demo image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.lite
+          load: true
+          tags: bulwark-lite:smoke
+          build-args: |
+            GIT_COMMIT=${{ github.sha }}
+            LITE_DEMO_MODE=true
+            LITE_LOCALES=en,de
+          cache-from: type=gha,scope=lite-smoke
+          cache-to: type=gha,mode=max,scope=lite-smoke
+
+      # Read-only root, like a hardened Kubernetes pod: nginx only needs /tmp
+      # and the directory the entrypoint renders its config into.
+      - name: Start container
+        run: |
+          docker run -d --name lite -p 4173:8080 \
+            --read-only --tmpfs /tmp --tmpfs /etc/nginx/conf.d:uid=101,gid=101 \
+            -e LITE_CSP_CONNECT_SRC=https://mail.example.com \
+            bulwark-lite:smoke
+          for i in $(seq 1 30); do
+            curl -fsS http://localhost:4173/lite-build.json && exit 0
+            sleep 1
+          done
+          docker logs lite
+          exit 1
+
+      - name: A mounted config.json replaces the baked one
+        run: |
+          echo '{"appName":"Mounted","demoMode":true}' > "$RUNNER_TEMP/config.json"
+          docker run -d --name lite-mounted -p 4174:8080 \
+            -v "$RUNNER_TEMP/config.json:/usr/share/nginx/html/config.json:ro" \
+            bulwark-lite:smoke
+          for i in $(seq 1 30); do
+            curl -fsS http://localhost:4174/config.json | grep -q '"Mounted"' && break
+            [ "$i" = 30 ] && { docker logs lite-mounted; exit 1; }
+            sleep 1
+          done
+          docker rm -f lite-mounted
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Run smoke test against the container
+        env:
+          LITE_SMOKE_BASE_URL: http://localhost:4173
+          LITE_SMOKE_EXPECT_CONNECT_SRC: https://mail.example.com
+        run: npm run test:lite-smoke
+
+      - name: Container logs
+        if: failure()
+        run: docker logs lite
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lite-container-smoke-report
+          path: playwright-report
+          retention-days: 7
+
+  publish:
+    needs: smoke
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      attestations: write
+    env:
+      IMAGE_NAME: ghcr.io/${{ github.repository }}-lite${{ github.event_name != 'release' && '-beta' || '' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest,enable=${{ github.event_name != 'release' || !github.event.release.prerelease }}
+            type=sha,enable=${{ github.event_name != 'release' }}
+            type=semver,pattern=v{{version}}
+            type=semver,pattern={{version}}
+            type=semver,pattern=v{{major}}.{{minor}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern=v{{major}}
+            type=semver,pattern={{major}}
+
+      # The export is built once on this runner (Dockerfile.lite pins the
+      # builder to $BUILDPLATFORM) and the final stage only COPYs, so both
+      # platforms come out of one job without QEMU.
+      - name: Build and push
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.lite
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            GIT_COMMIT=${{ github.sha }}
+          cache-from: type=gha,scope=lite
+          cache-to: type=gha,mode=max,scope=lite
+
+      - name: Inspect image
+        run: docker buildx imagetools inspect ${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
+
+      - name: Attest build provenance
+        uses: actions/attest@v4
+        with:
+          subject-name: ${{ env.IMAGE_NAME }}
+          subject-digest: ${{ steps.build.outputs.digest }}
+          push-to-registry: true
+          create-storage-record: false

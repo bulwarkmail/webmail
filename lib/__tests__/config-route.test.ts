@@ -30,6 +30,7 @@ const MANAGED_ENV = [
   'SESSION_SECRET_FILE', 'SETTINGS_SYNC_ENABLED', 'STALWART_FEATURES', 'DEV_MOCK_JMAP',
   'FAVICON_URL', 'APP_LOGO_LIGHT_URL', 'APP_LOGO_DARK_URL', 'LOGIN_COMPANY_NAME',
   'LOGIN_IMPRINT_URL', 'LOGIN_PRIVACY_POLICY_URL', 'LOGIN_WEBSITE_URL', 'DOMAIN_BRANDING',
+  'JMAP_SERVERS', 'JMAP_SERVER_AUTO_PICK_BY_DOMAIN',
 ] as const;
 
 describe('config API route', () => {
@@ -92,6 +93,15 @@ describe('config API route', () => {
     expect(config.faviconUrl).toBe('/branding/Bulwark_Favicon.svg');
     expect(config.appLogoLightUrl).toBe('');
     expect(config.appLogoDarkUrl).toBe('');
+  });
+
+  // The domain lists name every organisation served by this instance.
+  it('lists the domains of each server only when the login page picks servers by domain', async () => {
+    vi.stubEnv('JMAP_SERVERS', JSON.stringify([{ id: 'a', label: 'A', url: 'https://a.example', domains: ['acme.example'] }]));
+    expect((await getConfig()).jmapServers[0].domains).toEqual([]);
+
+    vi.stubEnv('JMAP_SERVER_AUTO_PICK_BY_DOMAIN', 'true');
+    expect((await getConfig()).jmapServers[0].domains).toEqual(['acme.example']);
   });
 
   it('should use runtime env vars over defaults', async () => {

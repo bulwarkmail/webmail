@@ -177,6 +177,20 @@ describe('sortThreadGroups', () => {
     expect(sorted.map(g => g.threadId)).toEqual(['mixed', 'read-newer']);
   });
 
+  it('keeps a thread read since it was opened where it was', () => {
+    const opened = makeGroup('opened', '2024-02-01T00:00:00Z');
+    opened.emails = [makeEmail({ id: 'o', receivedAt: '2024-02-01T00:00:00Z', keywords: { $seen: true } })];
+    const unread = makeGroup('unread', '2024-01-01T00:00:00Z');
+    unread.emails = [makeEmail({ id: 'u', receivedAt: '2024-01-01T00:00:00Z', keywords: {} })];
+    const readNewer = makeGroup('read-newer', '2024-06-01T00:00:00Z');
+    const order = [{ criterion: 'unread' as const, direction: 'desc' as const }];
+
+    expect(sortThreadGroups([readNewer, unread, opened], order).map(g => g.threadId))
+      .toEqual(['unread', 'read-newer', 'opened']);
+    expect(sortThreadGroups([readNewer, unread, opened], order, new Map([['o', {}]])).map(g => g.threadId))
+      .toEqual(['opened', 'unread', 'read-newer']);
+  });
+
   it('keeps pinned threads on top of a configured order', () => {
     const pinnedRead = makeGroup('pinned-read', '2024-01-01T00:00:00Z', true);
     const unread = makeGroup('unread', '2024-06-01T00:00:00Z');

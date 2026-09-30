@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect, forwardRef, useImperativeHandle } from "react";
 import { useTranslations } from "next-intl";
-import { X } from "lucide-react";
+import { X } from "@/components/icons";
 import { Input } from "@/components/ui/input";
 import { Avatar } from "@/components/ui/avatar";
 import { useContactStore } from "@/stores/contact-store";

@@ -1,6 +1,6 @@
 import { lookup } from 'node:dns/promises';
 import type { LookupAddress, LookupOptions } from 'node:dns';
-import { BlockList, isIP, type LookupFunction } from 'node:net';
+import { isIP, type LookupFunction } from 'node:net';
 import {
   Agent,
   fetch as undiciFetch,
@@ -8,18 +8,7 @@ import {
   type RequestInit as UndiciRequestInit,
   type Response as UndiciResponse,
 } from 'undici';
-
-const blockedAddressRanges = new BlockList();
-blockedAddressRanges.addAddress('0.0.0.0');
-blockedAddressRanges.addAddress('127.0.0.1');
-blockedAddressRanges.addSubnet('10.0.0.0', 8);
-blockedAddressRanges.addSubnet('172.16.0.0', 12);
-blockedAddressRanges.addSubnet('192.168.0.0', 16);
-blockedAddressRanges.addSubnet('169.254.0.0', 16);
-blockedAddressRanges.addAddress('::', 'ipv6');
-blockedAddressRanges.addAddress('::1', 'ipv6');
-blockedAddressRanges.addSubnet('fc00::', 7, 'ipv6');
-blockedAddressRanges.addSubnet('fe80::', 10, 'ipv6');
+import { isPrivateAddress } from './ip-ranges';
 
 const BLOCKED_HOSTNAMES = new Set(['localhost']);
 const BLOCKED_HOSTNAME_SUFFIXES = ['.localhost', '.local', '.internal', '.arpa', '.localdomain'];
@@ -29,11 +18,7 @@ function normalizeHostname(hostname: string): string {
 }
 
 function isBlockedIpAddress(hostname: string): boolean {
-  const normalized = normalizeHostname(hostname);
-  const family = isIP(normalized);
-  if (family === 4) return blockedAddressRanges.check(normalized, 'ipv4');
-  if (family === 6) return blockedAddressRanges.check(normalized, 'ipv6');
-  return false;
+  return isPrivateAddress(normalizeHostname(hostname));
 }
 
 function isBlockedHostname(hostname: string): boolean {
@@ -67,7 +52,8 @@ function parseAllowedUrl(urlString: string): URL | null {
 
 /**
  * Returns true only when the URL targets a public host reachable over http(s).
- * Rejects loopback / RFC-1918 / link-local / ULA addresses, special hostname
+ * Rejects every non-public range in {@link isPrivateAddress} (loopback,
+ * RFC 1918, link-local, CGNAT, multicast, IPv6 transition forms), special hostname
  * suffixes (.local, .internal, .arpa, ...), URLs with embedded credentials,
  * and any hostname whose DNS resolves to a blocked address.
  *

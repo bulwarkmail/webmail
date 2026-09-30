@@ -254,6 +254,7 @@
       "button": "Tøm mappe",
       "confirm_title": "Tøm mappe",
       "confirm_message": "Alle e-postene i denne mappen slettes permanent. Denne handlingen kan ikke angres.",
+      "confirm_message_trash": "Alle e-poster i denne mappen flyttes til papirkurven.",
       "confirm_button": "Tøm mappe",
       "junk_hint": "Du kan tømme søppelpostmappen for å fjerne alle meldinger permanent.",
       "trash_hint": "Du kan tømme papirkurven for å fjerne alle meldinger permanent."
@@ -310,6 +311,8 @@
     "view_source": "Vis meldingskilde",
     "fullscreen": "Fullskjerm",
     "exit_fullscreen": "Avslutt fullskjerm",
+    "view_in_dark_mode": "Vis i mørk modus",
+    "view_in_light_mode": "Vis i lys modus",
     "export_email": "Eksporter som .eml",
     "forward_as_attachment": "Videresend som vedlegg",
     "import_email": "Importer .eml eller .zip",
@@ -578,7 +581,12 @@
       "copied": "Kopiert!",
       "copy_failed": "Kunne ikke kopiere"
     },
-    "send_now": "Send nå"
+    "send_now": "Send nå",
+    "verification_code": {
+      "copy": "Kopier kode {code}",
+      "copied": "Kode kopiert",
+      "copy_failed": "Kunne ikke kopiere koden"
+    }
   },
   "email_composer": {
     "read_receipt_on": "Ber om lesebekreftelse (klikk for å slå av)",
@@ -643,11 +651,12 @@
     "from_override": {
       "toggle_off": "Endre avsender",
       "toggle_on": "Avbryt endringen",
-      "toggle_tooltip": "Rediger Fra-navnet og -adressen fritt. E-posten sendes fortsatt gjennom identiteten din – bare den synlige Fra-overskriften endres.",
+      "toggle_tooltip": "Rediger Fra-navnet og -adressen fritt. E-posten sendes fortsatt gjennom identiteten din.",
       "name_label": "Navn i Fra-feltet",
       "name_placeholder": "Navn",
       "email_label": "E-postadresse i Fra-feltet",
-      "email_placeholder": "alias@example.com"
+      "email_placeholder": "alias@example.com",
+      "envelope_notice": "Hvis serveren din ikke godtar denne adressen som konvoluttavsender, brukes {identity} i stedet, og mottakerne kan se den i Return-Path-overskriften."
     },
     "use_template": "Mal",
     "save_as_template": "Lagre som mal",
@@ -660,10 +669,14 @@
     "upload_progress": "Laster opp {uploaded} / {total}",
     "upload_cancel": "Avbryt opplasting",
     "upload_failed": "Kunne ikke laste opp {filename}",
+    "attachment_too_large": "«{name}» er større enn serveren tillater ({max} per fil)",
+    "attachments_total_too_large": "Vedleggene ville overskride serverens grense på {max} per melding",
     "drop_files": "Slipp filer for å legge ved",
     "show_less": "Vis færre",
     "send_failed": "Kunne ikke sende e-post",
     "send_timeout": "Serveren sluttet å svare. Sjekk Sendt-mappen før du sender på nytt – meldingen kan ha blitt sendt.",
+    "send_recipients_rejected": "Ikke sendt – serveren avviste alle mottakerne.",
+    "send_some_recipients_rejected": "Sendt, men ikke til disse mottakerne – serveren avviste dem.",
     "continue_draft": "Fortsett å skrive",
     "close_draft_title": "Lagre eller forkast utkast?",
     "close_draft_message": "Du har ulagrede endringer. Vil du lagre dette som et utkast eller forkaste det?",
@@ -778,6 +791,10 @@
     "email_sent": "E-posten er sendt",
     "email_deleted": "E-posten er slettet",
     "email_archived": "E-posten er arkivert",
+    "emails_deleted": "{count, plural, one {# e-post slettet} other {# e-poster slettet}}",
+    "emails_archived": "{count, plural, one {# e-post arkivert} other {# e-poster arkivert}}",
+    "error_archiving": "Kunne ikke arkivere e-posten",
+    "error_updating": "Kunne ikke oppdatere e-posten",
     "email_starred": "E-posten er stjernemerket",
     "email_unstarred": "E-posten er ikke lenger stjernemerket",
     "email_marked_read": "E-posten er merket som lest",
@@ -921,12 +938,25 @@
       "sidebar_apps": "Apper i sidefeltet",
       "notifications": "Varsler",
       "layout": "Oppsett",
+      "themes": "Temaer",
       "reading": "Lesing",
       "composing": "Skriving",
       "downloads": "Nedlastinger",
       "content_senders": "Innhold og avsendere",
       "about_data": "Om programmet og data",
       "debug": "Feilsøking"
+    },
+    "themes": {
+      "title": "Temaer",
+      "description": "Velg blant temaer som administratoren din har gjort tilgjengelige, og innebygde forhåndsinnstillinger.",
+      "locked": "Temavalget er låst av en administrator.",
+      "forced": "Temaet «{name}» er påtvunget av administratoren og kan ikke endres",
+      "admin_theme": "Administratortema",
+      "activated": "Tema aktivert",
+      "default_restored": "Standardtema gjenopprettet",
+      "default_name": "Standard",
+      "default_badge": "Standard",
+      "admin_enforced": "Påtvunget av administrator"
     },
     "tab_groups": {
       "general": "Generelt",
@@ -1066,6 +1096,10 @@
         "label": "Fargelegg meldingsrader etter etikett",
         "description": "Gi hver meldingsrad en svak bakgrunnsfarge basert på den første etiketten. Deaktiver dette for nøytrale rader; etikettmarkørene viser fortsatt fargen."
       },
+      "tint_list_rows_by_account": {
+        "label": "Tint List Rows by Account Color",
+        "description": "In the unified view, shade each row with its account color instead of showing the account dot. Takes precedence over the tag tint; tags keep their color on their chips."
+      },
       "show_folder_total_count": {
         "label": "Vis totalt antall meldinger",
         "description": "Vis totalt antall meldinger ved siden av mapper og etiketter, sammen med antall uleste. Deaktiver for å vise bare antall uleste."
@@ -1157,6 +1191,7 @@
         "status_active": "Aktiv på denne enheten",
         "status_inactive": "Ikke aktivert på denne enheten",
         "status_unsupported": "Denne nettleseren støtter ikke Web Push",
+        "status_lite": "Web Push is not available in Bulwark Lite; it needs the Bulwark server.",
         "status_busy": "Behandler...",
         "enable": "Aktiver",
         "reenable": "Registrer på nytt",
@@ -1194,7 +1229,9 @@
         "enabled": "E-postvarsler",
         "enabled_desc": "Vis varsler når nye e-poster kommer",
         "sound": "Varslingslyd",
-        "sound_desc": "Spill av et lydvarsel når nye e-poster kommer"
+        "sound_desc": "Spill av et lydvarsel når nye e-poster kommer",
+        "inbox_only": "Inbox only",
+        "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
       },
       "calendar": {
         "title": "Kalendervarsler",
@@ -1328,6 +1365,10 @@
         "label": "Vis forhåndsvisningstekst",
         "description": "Vis forhåndsvisning av e-post i listen",
         "focus_description": "Vis innebygd forhåndsvisningstekst i den fokuserte meldingslisten på én linje"
+      },
+      "show_verification_codes": {
+        "label": "Vis bekreftelseskoder",
+        "description": "Tilby koden fra innloggings- og bekreftelses-e-poster for kopiering med ett klikk, i listen i ett døgn og i meldingen"
       },
       "disable_threading": {
         "label": "Deaktiver samtalegruppering",
@@ -1706,14 +1747,36 @@
       },
       "link_device": {
         "title": "Koble til mobilappen",
-        "description": "Logg på Bulwark Mail-mobilappen uten å skrive inn påloggingsopplysninger. Lag en QR-kode her, og skann den fra påloggingsskjermen i appen.",
+        "description": "Logg på Bulwark Mail-appen på telefonen uten å skrive inn passordet der. Telefonen får sin egen pålogging, så den forblir pålogget når du logger av her.",
         "generate": "Vis QR-kode",
         "regenerate": "Vis en ny kode",
-        "instructions": "Åpne Bulwark Mail-appen, trykk på «Skann QR-kode» på påloggingsskjermen, og rett kameraet mot denne koden.",
+        "instructions": "Åpne Bulwark Mail-appen og trykk på «Scan a sign-in code» på påloggingsskjermen (eller «Add account» → «Scan a sign-in code» hvis du allerede er pålogget), og rett deretter kameraet hit.",
         "expires_in": "Denne koden utløper om {seconds} sekunder. Den kan bare brukes én gang.",
         "expired": "Denne koden er utløpt.",
-        "generating": "Genererer...",
-        "error": "Kunne ikke opprette en sammenkoblingskode. Prøv igjen."
+        "error": "Kunne ikke opprette en sammenkoblingskode. Prøv igjen.",
+        "password_prompt": "Skriv inn passordet ditt for å bekrefte at det er deg. Telefonen får sin egen pålogging; passordet ditt sendes ikke til telefonen.",
+        "show_password": "Vis passord",
+        "hide_password": "Skjul passord",
+        "continue": "Fortsett",
+        "error_wrong_password": "Feil passord. Prøv igjen.",
+        "totp_prompt": "Skriv inn koden fra autentiseringsappen din.",
+        "error_password_or_code": "Passordet eller koden er feil.",
+        "error_not_signed_in": "Økten din er utløpt. Logg på igjen for å koble til en enhet.",
+        "error_impersonation": "Enheter kan ikke kobles til mens du ser på en annen brukers postkasse.",
+        "error_too_many_attempts": "For mange forsøk. Vent litt og prøv igjen.",
+        "error_session_secret": "Tilkobling av enheter er ikke satt opp på denne serveren (SESSION_SECRET mangler). Kontakt administratoren din.",
+        "error_server_unreachable": "Fikk ikke kontakt med e-postserveren din. Prøv igjen.",
+        "error_pairing_unavailable": "E-postserveren din tillater ikke å koble til enheter på denne måten. Kontakt administratoren din.",
+        "qr_alt": "QR-kode for pålogging",
+        "link_label": "Påloggingslenke",
+        "copy_link": "Kopier påloggingslenke",
+        "copied": "Kopiert",
+        "copy_hint": "Ingen kamera? Kopier lenken og lim den inn i appen med «Paste sign-in link».",
+        "success_title": "Pålogget på telefonen",
+        "success_body": "Du kan lukke denne siden. Vis en ny kode for å koble til en annen enhet.",
+        "link_another": "Koble til en annen enhet",
+        "use_sso": "Bruk enkel pålogging i stedet",
+        "error_insecure_server": "Mobilappen kobler bare til e-postservere over https, og denne bruker http."
       }
     },
     "identities": {
@@ -1776,7 +1839,9 @@
       "warnings": {
         "end_before_start": "Sluttdatoen må være etter startdatoen",
         "start_in_past": "Startdatoen er i fortiden",
-        "empty_body": "Meldingsteksten er tom – mottakerne får et tomt svar"
+        "empty_body": "Meldingsteksten er tom – mottakerne får et tomt svar",
+        "subject_too_long": "Emnet er for langt for serveren (maks. {max} byte).",
+        "body_too_long": "Meldingen er for lang for serveren (maks. {max} byte inkludert formatering)."
       }
     },
     "folders": {
@@ -1997,6 +2062,7 @@
       "actions": "Handlinger",
       "add_action": "Legg til handling",
       "stop_processing": "Ikke behandle flere regler",
+      "include_spam": "Flytt også meldinger som er merket som søppelpost",
       "attachment_type_placeholder": "f.eks. pdf, doc, jpg",
       "value_placeholder_multi": "Verdi (skill flere verdier med komma)",
       "condition_fields": {
@@ -2038,6 +2104,8 @@
       "copy_to_folder": "Velg mappe",
       "forward_to": "Videresend til e-postadresse",
       "forward_placeholder": "email@example.com",
+      "forward_keep_copy": "Behold en kopi",
+      "forward_limit": "Grense for videresendinger per melding på denne serveren: {count}. Flere videresendinger hoppes over.",
       "reject_message": "Avvisningsmelding",
       "reject_placeholder": "Meldingen din er avvist",
       "label_name": "Etikettnavn",
@@ -2788,6 +2856,8 @@
       "no_events": "Ingen hendelser",
       "all_day": "Hele dagen",
       "more": "+{count} til",
+      "show_more": "Vis flere",
+      "show_less": "Vis færre",
       "no_title": "(Ingen tittel)",
       "resize": "Endre størrelsen på hendelsen",
       "duplicate": "Dupliser",
@@ -2914,7 +2984,10 @@
       "all_events": "Alle hendelser",
       "cancel": "Avbryt",
       "save": "Lagre",
-      "delete": "Slett"
+      "delete": "Slett",
+      "rsvp_title": "Svar på gjentakende hendelse",
+      "rsvp_description": "Dette er en gjentakende hendelse. Hvilke hendelser gjelder svaret ditt for?",
+      "respond": "Svar"
     },
     "alerts": {
       "title": "Påminnelser",
@@ -2957,7 +3030,7 @@
       "enable_tasks": "Aktiver oppgaver",
       "enable_tasks_desc": "Vis en oppgavevisning i kalenderen for å administrere gjøremål",
       "show_tasks_on_calendar": "Vis oppgaver i kalenderen",
-      "show_tasks_on_calendar_desc": "Vis oppgavemarkører i dags- og ukesvisningen",
+      "show_tasks_on_calendar_desc": "Vis oppgaver i måneds-, uke- og dagsvisningen",
       "hover_preview": "Forhåndsvis hendelser når du peker",
       "hover_preview_desc": "Vis et detaljvindu når du holder markøren over kalenderhendelser",
       "hover_preview_instant": "Øyeblikkelig",
@@ -3025,6 +3098,9 @@
       "alert_now": "Starter nå",
       "alert_in_minutes": "Om {count} min",
       "invitation_sent": "Invitasjonene er sendt",
+      "invitations_denied_title": "Invitasjonene kan ikke sendes",
+      "invitations_denied": "Serveren nektet å sende invitasjonene: {reason}. Lagre hendelsen uten å sende dem?",
+      "save_without_invitations": "Lagre uten invitasjoner",
       "rsvp_updated": "Svaret er oppdatert",
       "rsvp_error": "Kunne ikke oppdatere svaret",
       "event_duplicated": "Hendelsen er duplisert",
@@ -3054,7 +3130,7 @@
       "supported_formats": "Støtter iCalendar (.ics)-filer",
       "url_description": "Skriv inn URL-en til en ekstern iCalendar-strøm (.ics) for å importere hendelser.",
       "url_placeholder": "https://example.com/calendar.ics",
-      "url_hint": "Støtter CalDAV- og iCalendar-URL-er (.ics)",
+      "url_hint": "Støtter iCalendar-URL-er (.ics)",
       "fetch": "Hent",
       "invalid_url": "Skriv inn en gyldig URL",
       "url_fetch_failed": "Kunne ikke hente kalenderen fra nettadressen",
@@ -3255,6 +3331,7 @@
     "body_placeholder": "Meldingsteksten inneholder...",
     "folder": "Mappe",
     "all_folders": "Alle mapper",
+    "all_folders_except_spam_trash": "Alle mapper unntatt søppelpost og papirkurv",
     "has_attachment": "Vedlegg",
     "date_after": "Etter",
     "date_before": "Før",
@@ -3317,6 +3394,8 @@
     "rename": "Gi nytt navn",
     "rename_title": "Gi nytt navn",
     "new_name": "Nytt navn",
+    "name_forbidden_chars": "Serveren tillater ikke disse tegnene i navn: {chars}",
+    "name_reserved": "Dette navnet er reservert på serveren.",
     "delete": "Slett",
     "delete_confirm_title": "Slett fil eller mappe",
     "delete_confirm_message": "Er du sikker på at du vil slette «{name}»? Dette kan ikke angres.",

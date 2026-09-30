@@ -1,0 +1,89 @@
+name: Deploy demo
+
+# Keeps https://demo.bulwarkmail.org on the published release image. It used to
+# follow ghcr.io/bulwarkmail/webmail:latest through Watchtower; now the deploy
+# is a step of its own, so it shows up under Deployments, can be triggered by
+# hand and can be rolled back.
+#
+# Runs after "Publish Docker Image on Release" succeeds (the image has to exist
+# before the server can pull it), or on demand:
+#
+#   gh workflow run deploy-demo.yml -f action=deploy -f tag=1.10.0
+#   gh workflow run deploy-demo.yml -f action=rollback
+#
+# Nothing is built here. The server script /usr/local/bin/bulwark-demo-deploy
+# (deploy/demo-deploy.sh) pulls the tag, recreates the container, health-checks
+# it and rolls back on failure. A pre-release publishes no :latest, so the
+# deploy that follows it finds the same image and does nothing.
+
+on:
+  workflow_run:
+    workflows: ["Publish Docker Image on Release"]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "What to do"
+        type: choice
+        options: [deploy, rollback]
+        default: deploy
+      tag:
+        description: "Image tag to deploy"
+        type: string
+        default: latest
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-demo
+  cancel-in-progress: false
+
+env:
+  DEPLOY_HOST: 62.176.249.204
+  DEPLOY_USER: ubuntu
+  # ED25519 host key of mail.rath.li (SHA256:KJU3AEoj23/nBmHDF5w8o+wfRQcQTLdg3HHBrmlMdSQ).
+  DEPLOY_HOST_KEY: "62.176.249.204 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINOvbgUpI8cbxGf9nLOZlaG+0xd/bkJosDpBTyMxuurC"
+
+jobs:
+  deploy:
+    name: ${{ inputs.action == 'rollback' && 'Roll back' || 'Deploy' }}
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      # A workflow_run has no inputs; it always deploys the release tag.
+      ACTION: ${{ inputs.action || 'deploy' }}
+      TAG: ${{ inputs.tag || 'latest' }}
+    environment:
+      name: demo
+      url: https://demo.bulwarkmail.org
+    steps:
+      - name: Set up SSH
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$DEPLOY_HOST_KEY" > ~/.ssh/known_hosts
+
+      - name: Deploy
+        if: env.ACTION == 'deploy'
+        run: ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes "$DEPLOY_USER@$DEPLOY_HOST" "deploy $TAG"
+
+      - name: Roll back
+        if: env.ACTION == 'rollback'
+        run: ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes "$DEPLOY_USER@$DEPLOY_HOST" rollback
+
+      - name: Check the live demo
+        run: |
+          for i in $(seq 1 10); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' https://demo.bulwarkmail.org/api/health)
+            [ "$code" = 200 ] && { echo "live: $code"; exit 0; }
+            sleep 3
+          done
+          echo "the demo answered $code"; exit 1
+
+      - name: Show what is running
+        if: always()
+        run: ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes "$DEPLOY_USER@$DEPLOY_HOST" status

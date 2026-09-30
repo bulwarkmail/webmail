@@ -7,9 +7,11 @@ import {
   liteRefreshTokens,
   liteTokenLogin,
   probeLiteTokenLogin,
+  readLiteAccessToken,
   readLiteBasicSession,
   readLiteRefreshToken,
   resetLiteProbeCache,
+  saveLiteAccessToken,
   saveLiteBasicSession,
   saveLiteRefreshToken,
 } from '@/lib/auth/lite-tokens';
@@ -70,8 +72,55 @@ describe('lite token storage', () => {
   it('ignores corrupt storage entries', () => {
     localStorage.setItem('bulwark-lite:refresh:0', '{not json');
     sessionStorage.setItem('bulwark-lite:basic:0', JSON.stringify({ username: 'x' }));
+    localStorage.setItem('bulwark-lite:access:0', JSON.stringify({ accessToken: 'AT' }));
     expect(readLiteRefreshToken(0)).toBeNull();
     expect(readLiteBasicSession(0)).toBeNull();
+    expect(readLiteAccessToken(0)).toBeNull();
+  });
+});
+
+describe('lite access token cache (#552)', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    sessionStorage.clear();
+    vi.useFakeTimers({ now: new Date('2026-09-29T12:00:00Z'), toFake: ['Date'] });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('keeps the access token where the session lives and reports its remaining life', () => {
+    saveLiteAccessToken(0, 'AT0', 1800, true);
+    saveLiteAccessToken(1, 'AT1', 600, false);
+
+    expect(localStorage.getItem('bulwark-lite:access:1')).toBeNull();
+    expect(JSON.parse(sessionStorage.getItem('bulwark-lite:access:1')!).accessToken).toBe('AT1');
+    vi.advanceTimersByTime(300_000);
+    expect(readLiteAccessToken(0)).toEqual({ accessToken: 'AT0', expiresIn: 1500 });
+    expect(readLiteAccessToken(1)).toEqual({ accessToken: 'AT1', expiresIn: 300 });
+    expect(readLiteAccessToken(2)).toBeNull();
+  });
+
+  it('stops serving a token in its last minute, when renewal is due anyway', () => {
+    saveLiteAccessToken(0, 'AT', 1800, true);
+    vi.advanceTimersByTime(1740_000);
+    expect(readLiteAccessToken(0)?.expiresIn).toBe(60);
+    vi.advanceTimersByTime(1_000);
+    expect(readLiteAccessToken(0)).toBeNull();
+  });
+
+  it('goes with the refresh token when the slot is cleared', () => {
+    saveLiteRefreshToken(0, { serverUrl: SERVER, username: 'a', refreshToken: 'r0' }, true);
+    saveLiteAccessToken(0, 'AT0', 1800, true);
+    saveLiteAccessToken(1, 'AT1', 1800, false);
+
+    clearLiteRefreshToken(0);
+    expect(readLiteAccessToken(0)).toBeNull();
+    expect(readLiteAccessToken(1)?.accessToken).toBe('AT1');
+
+    clearAllLiteSessions();
+    expect(readLiteAccessToken(1)).toBeNull();
   });
 });
 
@@ -204,6 +253,8 @@ describe('liteRefreshTokens', () => {
     expect(tokens).toEqual({ accessToken: 'AT2', expiresIn: 900, refreshToken: 'RT2' });
     expect(JSON.parse(localStorage.getItem('bulwark-lite:refresh:2')!).refreshToken).toBe('RT2');
     expect(sessionStorage.getItem('bulwark-lite:refresh:2')).toBeNull();
+    // The new access token is cached beside it for the next reload.
+    expect(JSON.parse(localStorage.getItem('bulwark-lite:access:2')!).accessToken).toBe('AT2');
   });
 
   it('keeps a tab-only token in sessionStorage after rotation', async () => {
@@ -212,6 +263,8 @@ describe('liteRefreshTokens', () => {
     await liteRefreshTokens(0);
     expect(localStorage.getItem('bulwark-lite:refresh:0')).toBeNull();
     expect(readLiteRefreshToken(0)?.refreshToken).toBe('RT2');
+    expect(localStorage.getItem('bulwark-lite:access:0')).toBeNull();
+    expect(readLiteAccessToken(0)?.accessToken).toBe('AT');
   });
 
   it('rejects immediately without a stored token', async () => {
@@ -221,15 +274,24 @@ describe('liteRefreshTokens', () => {
 
   it('clears the slot when the server rejects the refresh token', async () => {
     saveLiteRefreshToken(0, { serverUrl: SERVER, username: 'a', refreshToken: 'RT' }, true);
+    saveLiteAccessToken(0, 'AT', 1800, true);
     fetchMock.mockResolvedValue(jsonResponse({ error: 'invalid_grant' }, 400));
     await expect(liteRefreshTokens(0)).rejects.toMatchObject({ code: 'refresh_rejected', status: 400 });
     expect(readLiteRefreshToken(0)).toBeNull();
+    expect(readLiteAccessToken(0)).toBeNull();
   });
 
   it('keeps the token on a 5xx so the session can resume after the outage', async () => {
     saveLiteRefreshToken(0, { serverUrl: SERVER, username: 'a', refreshToken: 'RT' }, true);
     fetchMock.mockResolvedValue(new Response('', { status: 503 }));
     await expect(liteRefreshTokens(0)).rejects.toMatchObject({ code: 'token_exchange_failed', status: 503 });
+    expect(readLiteRefreshToken(0)?.refreshToken).toBe('RT');
+  });
+
+  it.each([429, 408])('keeps the token on a %i, which is an outage and not a sign-out', async (status) => {
+    saveLiteRefreshToken(0, { serverUrl: SERVER, username: 'a', refreshToken: 'RT' }, true);
+    fetchMock.mockResolvedValue(new Response('', { status }));
+    await expect(liteRefreshTokens(0)).rejects.toMatchObject({ code: 'token_exchange_failed', status });
     expect(readLiteRefreshToken(0)?.refreshToken).toBe('RT');
   });
 

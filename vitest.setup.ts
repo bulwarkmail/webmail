@@ -18,6 +18,33 @@ if (typeof window !== 'undefined' && typeof window.matchMedia !== 'function') {
   }) as unknown as MediaQueryList;
 }
 
+// Node 25+ ships its own localStorage global, which shadows jsdom's under
+// vitest; without --localstorage-file it is an empty object with no Storage
+// methods. The zustand persist middleware writes through it on every
+// setState and several stores read from it directly, so provide a minimal
+// in-memory Storage when the real one is missing or unusable.
+if (typeof window !== 'undefined' && typeof window.localStorage?.getItem !== 'function') {
+  const backing = new Map<string, string>();
+  const localStorage: Storage = {
+    get length() {
+      return backing.size;
+    },
+    clear: () => backing.clear(),
+    getItem: (key: string) => backing.get(key) ?? null,
+    key: (index: number) => [...backing.keys()][index] ?? null,
+    removeItem: (key: string) => {
+      backing.delete(key);
+    },
+    setItem: (key: string, value: string) => {
+      backing.set(key, String(value));
+    },
+  };
+  Object.defineProperty(window, 'localStorage', {
+    value: localStorage,
+    configurable: true,
+  });
+}
+
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
   useLocale: () => 'en',

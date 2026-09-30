@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react';
 import { usePolicyStore } from '@/stores/policy-store';
 import { apiFetch } from '@/lib/browser-navigation';
 import type { PublicJmapServerEntry } from '@/lib/admin/jmap-servers';
-import { IS_LITE, LITE_CONFIG_PATH } from '@/lib/lite';
-import { applyLiteConfig } from '@/lib/lite-config';
+import { IS_LITE, IS_LITE_STALWART, LITE_CONFIG_PATH, withLiteBuildId } from '@/lib/lite';
+import { applyLiteConfig, liteStalwartDefaults } from '@/lib/lite-config';
 
 export interface ConfigData {
   appName: string;
@@ -58,13 +58,17 @@ let configPromise: Promise<ConfigData> | null = null;
  * (custom endpoint allowed) so an unedited download still lets people sign in.
  */
 async function fetchLiteConfig(): Promise<ConfigData> {
+  // On Stalwart the bundle is read-only and served from the JMAP origin:
+  // config.json ships inside the zip (build-id URL, immutable cache) and an
+  // empty server URL means "this origin".
+  const defaults = IS_LITE_STALWART ? liteStalwartDefaults() : undefined;
   try {
-    const res = await apiFetch(LITE_CONFIG_PATH, { cache: 'no-store' });
+    const res = await apiFetch(withLiteBuildId(LITE_CONFIG_PATH), IS_LITE_STALWART ? undefined : { cache: 'no-store' });
     if (!res.ok) throw new Error(`config.json answered ${res.status}`);
-    return applyLiteConfig(await res.json());
+    return applyLiteConfig(await res.json(), defaults);
   } catch (err) {
     console.warn('[lite] config.json missing or invalid, using defaults:', err);
-    return applyLiteConfig({});
+    return applyLiteConfig({}, defaults);
   }
 }
 

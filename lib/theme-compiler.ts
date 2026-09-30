@@ -104,7 +104,10 @@ function isSafeTokenKey(key: string): boolean {
 function isSafeTokenValue(value: string): boolean {
   if (/[{}<>]/.test(value)) return false;
   if (value.includes(';')) return false;
-  if (/url\s*\(\s*['"]?(https?|data|javascript):/i.test(value)) return false;
+  // A token is a colour, length or font stack: it never needs an escape,
+  // and escapes are how `\75rl(` slips past a pattern check.
+  if (value.includes('\\')) return false;
+  if (/url\s*\(|image-set\s*\(/i.test(value)) return false;
   if (/expression\s*\(/i.test(value)) return false;
   if (/-moz-binding/i.test(value)) return false;
   if (/javascript\s*:/i.test(value)) return false;

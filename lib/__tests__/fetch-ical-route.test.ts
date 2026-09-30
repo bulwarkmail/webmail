@@ -38,7 +38,7 @@ const mockCreds = getStalwartCredentials as unknown as Mock;
 type RouteResponse = { status: number; headers: Headers; body: unknown; json?: () => Promise<unknown> };
 
 function makeReq(body: unknown): Parameters<typeof POST>[0] {
-  return { json: async () => body } as unknown as Parameters<typeof POST>[0];
+  return { method: 'POST', headers: new Headers(), json: async () => body } as unknown as Parameters<typeof POST>[0];
 }
 
 function ics(status = 200, headers: Record<string, string> = {}) {

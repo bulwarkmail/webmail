@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { parseWopiDiscovery, buildWopiActionUrl } from '@/lib/wopi/discovery';
-import { mintWopiToken, verifyWopiToken } from '@/lib/wopi/token';
+import { mintWopiToken, verifyWopiToken, wopiDocumentId } from '@/lib/wopi/token';
 
 // token.ts encrypts via lib/auth/crypto, whose key comes solely from
 // getSessionSecret() - mock that seam like auth-crypto.test.ts does.
@@ -82,25 +82,64 @@ describe('mintWopiToken / verifyWopiToken', () => {
     origin: 'https://webmail.example.com',
   };
 
-  it('round-trips and binds to the fileId', () => {
+  const docId = wopiDocumentId(payload);
+
+  it('round-trips and binds to the document id', () => {
     const { token, expiresAt } = mintWopiToken(payload);
     expect(expiresAt).toBeGreaterThan(Date.now());
-    const verified = verifyWopiToken(token, 'f42');
+    const verified = verifyWopiToken(token, docId);
     expect(verified).toMatchObject(payload);
     // A token for one file must not authorize another.
-    expect(verifyWopiToken(token, 'other-file')).toBeNull();
+    expect(verifyWopiToken(token, wopiDocumentId({ ...payload, fileId: 'other-file' }))).toBeNull();
+    // Nor is the raw FileNode id accepted in the URL any more.
+    expect(verifyWopiToken(token, 'f42')).toBeNull();
   });
 
   it('rejects garbage, empty and expired tokens', () => {
-    expect(verifyWopiToken(null, 'f42')).toBeNull();
-    expect(verifyWopiToken('not-a-token', 'f42')).toBeNull();
+    expect(verifyWopiToken(null, docId)).toBeNull();
+    expect(verifyWopiToken('not-a-token', docId)).toBeNull();
     const { token } = mintWopiToken(payload);
     const realNow = Date.now;
     vi.spyOn(Date, 'now').mockReturnValue(realNow() + 7 * 60 * 60 * 1000);
     try {
-      expect(verifyWopiToken(token, 'f42')).toBeNull();
+      expect(verifyWopiToken(token, docId)).toBeNull();
     } finally {
       vi.restoreAllMocks();
     }
+  });
+
+  it('carries read-only attachment metadata (#1047)', () => {
+    const attachment = {
+      ...payload,
+      kind: 'attachment' as const,
+      fileId: 'Gblob123',
+      name: 'Quote.docx',
+      type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      size: 12345,
+      canWrite: false,
+    };
+    const { token } = mintWopiToken(attachment);
+    expect(verifyWopiToken(token, wopiDocumentId(attachment))).toMatchObject(attachment);
+    // A blob id that happens to equal a FileNode id is a different document.
+    expect(wopiDocumentId(attachment)).not.toBe(wopiDocumentId({ ...payload, fileId: 'Gblob123' }));
+  });
+});
+
+describe('wopiDocumentId', () => {
+  const base = { serverUrl: 'https://mail.example.com', accountId: 'c', fileId: 'b' };
+
+  // WOPI clients key open sessions by WOPISrc: two accounts' node "b" must
+  // not share one, or the second user is served the first user's document.
+  it('differs per account and per server for the same node id', () => {
+    const id = wopiDocumentId(base);
+    expect(wopiDocumentId({ ...base, accountId: 'd' })).not.toBe(id);
+    expect(wopiDocumentId({ ...base, serverUrl: 'https://other.example.com' })).not.toBe(id);
+  });
+
+  it('is stable, URL-safe and treats a missing kind as a file', () => {
+    const id = wopiDocumentId(base);
+    expect(wopiDocumentId({ ...base })).toBe(id);
+    expect(wopiDocumentId({ ...base, kind: 'file' })).toBe(id);
+    expect(id).toMatch(/^[A-Za-z0-9_-]{32}$/);
   });
 });

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 
-import { computeFitScale, fitEmailBodyWidth, FIT_MIN_SCALE } from '@/lib/email-fit-width';
+import { computeFitScale, fitEmailBodyWidth, FIT_MIN_SCALE, releaseFixedWidthTables } from '@/lib/email-fit-width';
 
 /** jsdom does no layout, so the widths the fit reads are stubbed by hand. */
 function stubWidths(opts: { viewport: number; content: number | (() => number) }) {
@@ -44,8 +44,96 @@ describe('computeFitScale', () => {
   });
 });
 
+describe('releaseFixedWidthTables', () => {
+  /** A table whose laid-out width is `offsetWidth` (jsdom lays nothing out). */
+  function addTable(attrs: string, offsetWidth: number, parent: HTMLElement = document.body) {
+    parent.insertAdjacentHTML('beforeend', `<table ${attrs}><tr><td>text</td></tr></table>`);
+    const table = parent.lastElementChild as HTMLTableElement;
+    Object.defineProperty(table, 'offsetWidth', { configurable: true, get: () => offsetWidth });
+    return table;
+  }
+
+  beforeEach(() => {
+    document.body.innerHTML = '';
+    document.body.removeAttribute('style');
+    Object.defineProperty(document.body, 'clientWidth', { configurable: true, get: () => 390 });
+  });
+
+  it('lets a table pinned by its width attribute shrink to the body (#1020)', () => {
+    // WebKit treats the attribute width as the table's minimum, so the
+    // stylesheet's max-width: 100% never takes effect on iOS.
+    const table = addTable('width="800"', 800);
+
+    expect(releaseFixedWidthTables(document)).toBe(1);
+    expect(table.style.getPropertyValue('width')).toBe('100%');
+    expect(table.style.getPropertyPriority('width')).toBe('important');
+    // The old width becomes the cap, so a wider pane restores it.
+    expect(table.style.maxWidth).toBe('800px');
+  });
+
+  it('releases an inline pixel width, keeping its unit as the cap', () => {
+    const table = addTable('style="width: 45em"', 720);
+
+    releaseFixedWidthTables(document);
+
+    expect(table.style.width).toBe('100%');
+    expect(table.style.maxWidth).toBe('45em');
+  });
+
+  it('measures against the body content box, not its border box', () => {
+    document.body.style.padding = '0 12px';
+    // 380 fits the 390px body but not its 366px content box.
+    const table = addTable('width="380"', 380);
+
+    releaseFixedWidthTables(document);
+
+    expect(table.style.width).toBe('100%');
+  });
+
+  it('leaves tables that fit, or have no fixed width, alone', () => {
+    const fits = addTable('width="300"', 300);
+    // Wide only because its content is (a long URL, many columns): width:100%
+    // could not make it any narrower.
+    const auto = addTable('', 650);
+    const percent = addTable('width="100%"', 650);
+    // Inline style overrides the attribute in the cascade.
+    const inlinePercent = addTable('width="800" style="width:100%"', 650);
+
+    expect(releaseFixedWidthTables(document)).toBe(0);
+    for (const table of [fits, auto, percent, inlinePercent]) {
+      expect(table.style.maxWidth).toBe('');
+    }
+  });
+
+  it('releases nested fixed-width tables in one pass', () => {
+    const outer = addTable('width="640"', 640);
+    const inner = addTable('width="600"', 600, outer.querySelector('td')!);
+
+    expect(releaseFixedWidthTables(document)).toBe(2);
+    expect(outer.style.maxWidth).toBe('640px');
+    expect(inner.style.maxWidth).toBe('600px');
+  });
+
+  it('touches each table once across repeated fits', () => {
+    // The fit re-runs as images load; the width attribute is still there.
+    addTable('width="800"', 800);
+    releaseFixedWidthTables(document);
+
+    expect(releaseFixedWidthTables(document)).toBe(0);
+  });
+
+  it('runs even when the scale-to-fit is disabled', () => {
+    Object.defineProperty(document.documentElement, 'clientWidth', { configurable: true, get: () => 390 });
+    const table = addTable('width="800"', 800);
+
+    expect(fitEmailBodyWidth(document, { enabled: false })).toBe(1);
+    expect(table.style.width).toBe('100%');
+  });
+});
+
 describe('fitEmailBodyWidth', () => {
   beforeEach(() => {
+    document.body.innerHTML = '';
     document.body.removeAttribute('style');
     document.body.removeAttribute('dir');
   });

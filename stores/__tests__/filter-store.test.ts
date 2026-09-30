@@ -209,6 +209,23 @@ describe('filter-store', () => {
       expect(useFilterStore.getState().activeScriptId).toBeNull();
     });
 
+    it('keeps an active server vacation script by including it', async () => {
+      const { generateScript } = await import('@/lib/sieve/generator');
+      const script = generateScript([makeRule()]);
+      const mockClient = {
+        ...sieveAccountMock,
+        getSieveCapabilities: () => ({ sieveExtensions: ['fileinto', 'include'] }),
+        getSieveScripts: async () => [
+          { id: 's1', name: 'filters', blobId: 'b1', isActive: false },
+          { id: 'v1', name: 'vacation', blobId: 'bv', isActive: true },
+        ],
+        getSieveScriptContent: async () => script,
+      };
+      await useFilterStore.getState().fetchFilters(mockClient as unknown as IJMAPClient);
+      expect(useFilterStore.getState().activeScriptId).toBe('s1');
+      expect(useFilterStore.getState().includeVacation).toBe(true);
+    });
+
     it('should set error on failure', async () => {
       const mockClient = {
         ...sieveAccountMock,
@@ -467,6 +484,56 @@ describe('filter-store', () => {
       const validate = calls.find(c => c.method === 'validateSieveScript');
       expect(update?.args[3]).toBe('group');
       expect(validate?.args[1]).toBe('group');
+    });
+  });
+
+  describe('syncVacationWithFilters', () => {
+    const makeClient = async (vacationActive: boolean, filtersActive: boolean, includeVacation = false) => {
+      const { generateScript } = await import('@/lib/sieve/generator');
+      const updates: unknown[][] = [];
+      const client = {
+        ...sieveAccountMock,
+        getSieveCapabilities: () => ({ sieveExtensions: ['fileinto', 'include'] }),
+        getSieveScripts: async () => [
+          { id: 's1', name: 'filters', blobId: 'b1', isActive: filtersActive },
+          { id: 'v1', name: 'vacation', blobId: 'bv', isActive: vacationActive },
+        ],
+        getSieveScriptContent: async () => generateScript([makeRule()], undefined, { includeVacation }),
+        updateSieveScript: async (...args: unknown[]) => { updates.push(args); },
+      };
+      return { client: client as unknown as IJMAPClient, updates };
+    };
+
+    it('re-activates the filters with an include when the vacation script took over', async () => {
+      const { syncVacationWithFilters } = await import('../filter-store');
+      const { client, updates } = await makeClient(true, false);
+      await syncVacationWithFilters(client, true);
+      expect(updates).toHaveLength(1);
+      expect(updates[0][0]).toBe('s1');
+      expect(updates[0][1]).toContain('include :personal :optional "vacation";');
+      expect(updates[0][2]).toBe(true);
+    });
+
+    it('drops the include when the auto-reply is turned off', async () => {
+      const { syncVacationWithFilters } = await import('../filter-store');
+      const { client, updates } = await makeClient(false, true, true);
+      await syncVacationWithFilters(client, false);
+      expect(updates).toHaveLength(1);
+      expect(updates[0][1]).not.toContain('include');
+    });
+
+    it('leaves the scripts alone when the filters are still active', async () => {
+      const { syncVacationWithFilters } = await import('../filter-store');
+      const { client, updates } = await makeClient(false, true);
+      await syncVacationWithFilters(client, true);
+      await syncVacationWithFilters(client, false);
+      expect(updates).toHaveLength(0);
+    });
+
+    it('reports the auto-reply as on while the filters include it', async () => {
+      const { isVacationIncludedInFilters } = await import('../filter-store');
+      expect(await isVacationIncludedInFilters((await makeClient(false, true, true)).client)).toBe(true);
+      expect(await isVacationIncludedInFilters((await makeClient(false, true)).client)).toBe(false);
     });
   });
 });

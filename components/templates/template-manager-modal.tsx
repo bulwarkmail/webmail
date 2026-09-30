@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { X, FileText, Pencil, Trash2, Star, Copy, Search } from 'lucide-react';
+import { X, FileText, Pencil, Trash2, Star, Copy, Search } from '@/components/icons';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
