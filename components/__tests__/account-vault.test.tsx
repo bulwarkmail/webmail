@@ -98,6 +98,7 @@ describe('import prompt', () => {
     await waitFor(() => expect(mocks.enablePush).toHaveBeenCalledTimes(1));
     expect(mocks.enablePush.mock.calls[0]![0].map((t: { accountId: string }) => t.accountId))
       .toEqual([`${owner.username}@mail.example.com`, `${other.username}@mail.example.com`]);
+    expect(mocks.enablePush.mock.calls[0]![1]).toEqual({ inboxOnly: false });
   });
 
   it('leaves notifications alone when the user does not ask for them', async () => {

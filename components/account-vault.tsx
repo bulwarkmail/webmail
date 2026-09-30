@@ -14,6 +14,7 @@ import { collectVault, deleteVault, fetchVaults, putVault } from '@/lib/account-
 import { decryptVault, encryptVault, legacyVaultIdentity, vaultIdentity, VAULT_NAME_MAX, type VaultContents, type VaultOwner, type VaultRecord } from '@/lib/account-vault';
 import { generateAccountId as generateVaultAccountId } from '@/lib/account-utils';
 import { enableWebPushForAccounts } from '@/lib/web-push';
+import { useSettingsStore } from '@/stores/settings-store';
 
 /** Revision this browser last restored or saved, per archive: guards against overwriting a newer copy. */
 function revisionKey(owner: VaultOwner, id: string): string { return `account-vault-revision:${vaultIdentity(owner)}:${id}`; }
@@ -157,7 +158,7 @@ function VaultDialog({ owner, mode: requested, record, close }: { owner: VaultOw
       .map(t => ({ accountId: t.accountId, client: auth.getClientForAccount(t.accountId)!, accountLabel: t.account.username }))
       .filter(t => !!t.client);
     if (!targets.length) return;
-    const outcome = await enableWebPushForAccounts(targets);
+    const outcome = await enableWebPushForAccounts(targets, { inboxOnly: useSettingsStore.getState().pushNotifyInboxOnly });
     if (outcome.enabled.length) toast.success(t('notifications_enabled', { count: outcome.enabled.length }));
     if (outcome.failed.length) toast.warning(t('notifications_failed', { count: outcome.failed.length }));
   };
