@@ -56,7 +56,7 @@ import { debug } from "@/lib/debug";
 import { playNotificationSound } from "@/lib/notification-sound";
 import { cn, getMailboxPath } from "@/lib/utils";
 import { localizeMailboxName } from "@/lib/mailbox-label";
-import { KEYWORD_PREFIX, KEYWORD_PREFIX_LEGACY, groupEmailsByThread, threadKeyFor } from "@/lib/thread-utils";
+import { KEYWORD_PREFIX, KEYWORD_PREFIX_LEGACY, emailKeyFor, groupEmailsByThread, threadKeyFor } from "@/lib/thread-utils";
 import { resolveThreadRoute } from "@/lib/thread-routing";
 import {
   ErrorBoundary,
@@ -788,7 +788,9 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       if (['sent', 'drafts', 'scheduled'].includes(currentMailbox?.role || '')) return;
       const isInJunk = currentMailbox?.role === 'junk';
       if (selectedEmailKeys.size > 0 && client) {
-        const ids = Array.from(selectedEmailKeys);
+        // The spam actions take bare ids of the viewed account: resolve the
+        // selection keys through the loaded rows.
+        const ids = useEmailStore.getState().emails.filter(e => selectedEmailKeys.has(emailKeyFor(e))).map(e => e.id);
         try {
           if (isInJunk) {
             await batchUndoSpam(client, ids);

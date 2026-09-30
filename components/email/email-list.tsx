@@ -16,7 +16,7 @@ import { useEmailStore, ArchiveMailboxNotFoundError } from "@/stores/email-store
 import { useAuthStore } from "@/stores/auth-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useUIStore } from "@/stores/ui-store";
-import { groupEmailsByThread, sortThreadGroups, threadKeyFor } from "@/lib/thread-utils";
+import { emailKeyFor, groupEmailsByThread, sortThreadGroups, threadKeyFor } from "@/lib/thread-utils";
 import { useContextMenu } from "@/hooks/use-context-menu";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { useTranslations } from "next-intl";
@@ -281,7 +281,7 @@ export function EmailList({
     if (!client || isProcessing) return;
     setIsProcessing(true);
     try {
-      const emailIds = Array.from(selectedEmailKeys);
+      const emailIds = emails.filter(e => selectedEmailKeys.has(emailKeyFor(e))).map(e => e.id);
       await batchUndoSpam(client, emailIds);
       toast.success(tSpam('toast_not_spam_batch', { count: emailIds.length }));
     } catch {
@@ -711,7 +711,7 @@ export function EmailList({
           }}
           onBatchMarkAsSpam={async () => {
             if (client) {
-              const emailIds = Array.from(selectedEmailKeys);
+              const emailIds = emails.filter(e => selectedEmailKeys.has(emailKeyFor(e))).map(e => e.id);
               try {
                 await batchMarkAsSpam(client, emailIds);
                 toast.success(
@@ -724,7 +724,7 @@ export function EmailList({
           }}
           onBatchUndoSpam={async () => {
             if (client) {
-              const emailIds = Array.from(selectedEmailKeys);
+              const emailIds = emails.filter(e => selectedEmailKeys.has(emailKeyFor(e))).map(e => e.id);
               try {
                 await batchUndoSpam(client, emailIds);
                 toast.success(
