@@ -791,7 +791,8 @@ export interface BulkWebPushResult {
  */
 export async function enableWebPushForAccounts(
   targets: BulkWebPushTarget[],
-  options: { relayBaseUrl?: string; forceRecreate?: boolean } = {},
+  // inboxOnly mirrors settings-store's pushNotifyInboxOnly, as for a single account.
+  options: { relayBaseUrl?: string; forceRecreate?: boolean; inboxOnly: boolean },
 ): Promise<BulkWebPushResult> {
   const result: BulkWebPushResult = { enabled: [], failed: [] };
   let browserRefusal: unknown;
@@ -806,6 +807,7 @@ export async function enableWebPushForAccounts(
         relayBaseUrl: options.relayBaseUrl,
         accountLabel: target.accountLabel,
         forceRecreate: options.forceRecreate,
+        inboxOnly: options.inboxOnly,
       });
       result.enabled.push(target.accountId);
     } catch (error) {
