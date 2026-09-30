@@ -2,7 +2,7 @@
 
 import { useCallback, useId, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Search, X } from "lucide-react";
+import { Search, X } from "@/components/icons";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { useContactStore } from "@/stores/contact-store";

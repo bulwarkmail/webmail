@@ -9,8 +9,8 @@ import { useConfig } from "@/hooks/use-config";
 import { withBasePath } from "@/lib/browser-navigation";
 import { cn } from "@/lib/utils";
 import { useThemeStore } from "@/stores/theme-store";
-import type { LucideIcon } from "lucide-react";
-import { Loader2 } from "lucide-react";
+import type { AppIcon } from "@/components/icons";
+import { Loader2 } from "@/components/icons";
 
 export interface OAuthStatusAction {
   label: string;
@@ -19,7 +19,7 @@ export interface OAuthStatusAction {
 
 export interface OAuthStatusCardProps {
   /** Icon badge shown below the logo (defaults to a spinner) */
-  icon?: LucideIcon;
+  icon?: AppIcon;
   /** Tailwind color classes for the icon badge, e.g. "bg-green-500/10 text-green-600" */
   iconClassName?: string;
   title: string;

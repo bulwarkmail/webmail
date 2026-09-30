@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
+import { isVacationIncludedInFilters, syncVacationWithFilters } from '@/stores/filter-store';
+import { debug } from '@/lib/debug';
 
 interface VacationStore {
   isEnabled: boolean;
@@ -42,8 +44,14 @@ export const useVacationStore = create<VacationStore>()((set) => ({
     set({ isLoading: true, error: null });
     try {
       const vacation = await client.getVacationResponse(accountId);
+      let isEnabled = vacation.isEnabled;
+      if (!isEnabled && client.supportsSieve()) {
+        // Running from the filters script leaves the vacation script itself
+        // inactive, so VacationResponse reports it as off.
+        isEnabled = await isVacationIncludedInFilters(client, accountId).catch(() => false);
+      }
       set({
-        isEnabled: vacation.isEnabled,
+        isEnabled,
         fromDate: vacation.fromDate,
         toDate: vacation.toDate,
         subject: vacation.subject || '',
@@ -63,6 +71,13 @@ export const useVacationStore = create<VacationStore>()((set) => ({
     set({ isSaving: true, error: null });
     try {
       await client.setVacationResponse(updates, accountId);
+      if (updates.isEnabled !== undefined && client.supportsSieve()) {
+        try {
+          await syncVacationWithFilters(client, updates.isEnabled, accountId);
+        } catch (error) {
+          debug.error('Failed to keep filters active next to the vacation response:', error);
+        }
+      }
       set((state) => ({
         ...state,
         ...updates,

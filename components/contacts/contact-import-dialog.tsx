@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback } from "react";
 import { useTranslations } from "next-intl";
-import { Upload, FileText, AlertTriangle, X, Check } from "lucide-react";
+import { Upload, FileText, AlertTriangle, X, Check } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { parseVCard, detectDuplicates } from "@/lib/vcard";

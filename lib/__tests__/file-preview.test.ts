@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
-import { getFilePreviewKind, inertBlobType, isFilePreviewable, toInertBlob } from '../file-preview';
+import { getFilePreviewKind, imageBlobUrl, inertBlobType, isFilePreviewable, toInertBlob } from '../file-preview';
 
 describe('file preview detection', () => {
   it('detects browser-renderable image attachments', () => {
@@ -56,5 +56,31 @@ describe('inert blob typing for cid: parts (GHSA-xvjh-v9c6-qcvc)', () => {
 
     const png = new Blob([new Uint8Array([137, 80, 78, 71])], { type: 'image/png' });
     expect(toInertBlob(png)).toBe(png);
+  });
+});
+
+describe('image thumbnails that can be opened on their own', () => {
+  const svg = '<svg xmlns="http://www.w3.org/2000/svg"><script>alert(document.domain)</script></svg>';
+
+  it('hands an SVG over as a data: URL, never a same-origin object URL', async () => {
+    const url = await imageBlobUrl(new Blob([svg], { type: 'image/svg+xml' }));
+    expect(url.startsWith('data:image/svg+xml;base64,')).toBe(true);
+  });
+
+  it('goes by the declared type when the bytes carry none', async () => {
+    const url = await imageBlobUrl(new Blob([svg]), 'image/svg+xml');
+    expect(url.startsWith('data:image/svg+xml')).toBe(true);
+  });
+
+  it('keeps raster images as object URLs', async () => {
+    const created: Blob[] = [];
+    const spy = vi.spyOn(URL, 'createObjectURL').mockImplementation((blob) => {
+      created.push(blob as Blob);
+      return 'blob:test';
+    });
+    expect(await imageBlobUrl(new Blob([new Uint8Array([137, 80, 78, 71])]), 'image/png')).toBe('blob:test');
+    expect(await imageBlobUrl(new Blob(['<p>x</p>']), 'text/html')).toBe('blob:test');
+    expect(created.map((b) => b.type)).toEqual(['image/png', 'application/octet-stream']);
+    spy.mockRestore();
   });
 });

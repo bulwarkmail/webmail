@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Loader2, ExternalLink } from "lucide-react";
+import { Loader2, ExternalLink } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { liteMountedAssetUrl } from "@/lib/lite";
 

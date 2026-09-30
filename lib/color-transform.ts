@@ -114,6 +114,17 @@ export function getLuminance(r: number, g: number, b: number): number {
   return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
 }
 
+/**
+ * Text colour for a label on a solid fill: white while white keeps 3:1
+ * contrast with the fill, near-black on lighter fills.
+ */
+export function readableTextOn(colorString: string): string {
+  const rgb = parseColor(colorString);
+  if (!rgb) return '#ffffff';
+  const contrastWithWhite = 1.05 / (getLuminance(rgb.r, rgb.g, rgb.b) + 0.05);
+  return contrastWithWhite >= 3 ? '#ffffff' : '#111827';
+}
+
 export function isDarkColor(colorString: string): boolean {
   const rgb = parseColor(colorString);
   if (!rgb) return false;

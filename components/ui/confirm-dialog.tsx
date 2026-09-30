@@ -4,7 +4,7 @@ import { useEffect, useId } from "react";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle } from "@/components/icons";
 import { cn } from "@/lib/utils";
 
 interface ConfirmDialogProps {
@@ -13,6 +13,8 @@ interface ConfirmDialogProps {
   onConfirm: () => void;
   title: string;
   message: string;
+  /** Shown under the message, e.g. exactly what confirming will send. */
+  details?: React.ReactNode;
   confirmText?: string;
   cancelText?: string;
   variant?: "default" | "destructive";
@@ -24,6 +26,7 @@ export function ConfirmDialog({
   onConfirm,
   title,
   message,
+  details,
   confirmText,
   cancelText,
   variant = "default",
@@ -85,6 +88,7 @@ export function ConfirmDialog({
               >
                 {message}
               </p>
+              {details}
             </div>
           </div>
         </div>

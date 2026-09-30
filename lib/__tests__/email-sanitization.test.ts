@@ -482,6 +482,49 @@ describe('email-sanitization', () => {
       expect(styleHasExternalUrl(style)).toBe(false);
       expect(stripExternalCssUrls(style)).toBe(style);
     });
+
+    const BS = String.fromCharCode(92);
+
+    it('detects an escaped url keyword', () => {
+      const style = `background:${BS}75 rl(https://tracker.example/p.png)`;
+      expect(styleHasExternalUrl(style)).toBe(true);
+      expect(stripExternalCssUrls(style)).not.toContain('tracker.example');
+    });
+
+    it('detects image-set() with plain strings', () => {
+      const style = "background-image:image-set('https://tracker.example/p.png' 1x)";
+      expect(styleHasExternalUrl(style)).toBe(true);
+      expect(stripExternalCssUrls(style)).toBe('background-image:none');
+    });
+
+    it('detects an unclosed url() at the end of the declarations', () => {
+      const style = 'width:9px;background:url(https://tracker.example/p.png';
+      expect(styleHasExternalUrl(style)).toBe(true);
+      expect(stripExternalCssUrls(style)).not.toContain('tracker.example');
+    });
+
+    it('detects backslash-spelled hosts inside url()', () => {
+      // CSS reads an escaped backslash as one "\", which the URL parser
+      // then treats as "/": "/\host" is "//host".
+      expect(styleHasExternalUrl(`background:url(/${BS}${BS}tracker.example/p.png)`)).toBe(true);
+    });
+  });
+
+  describe('isExternalResourceUrl: backslashes and slashless schemes', () => {
+    const BS = String.fromCharCode(92);
+    it.each([
+      `https:/${BS}tracker.example/p.gif`,
+      `https:${BS}${BS}tracker.example/p.gif`,
+      `/${BS}tracker.example/p.gif`,
+      `${BS}${BS}tracker.example/p.gif`,
+      'https:tracker.example/p.gif',
+    ])('treats %s as external', (url) => {
+      expect(isExternalResourceUrl(url)).toBe(true);
+    });
+
+    it('still leaves a plain relative path alone', () => {
+      expect(isExternalResourceUrl('/relative/path.png')).toBe(false);
+    });
   });
 
   describe('stripExternalStyleSheetCss (<style> block defence-in-depth, #457)', () => {

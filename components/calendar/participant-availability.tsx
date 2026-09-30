@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Loader2 } from "lucide-react";
+import { Loader2 } from "@/components/icons";
 import { useAuthStore } from "@/stores/auth-store";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
 import type { BusyPeriod, Principal } from "@/lib/jmap/types";

@@ -6,6 +6,7 @@ import {
   isValidUnsubscribeUrl,
   parseUnsubscribeUrls,
   parseMailtoUrl,
+  parseUnsubscribeMailto,
 } from '../validation';
 
 describe('validation', () => {
@@ -388,5 +389,33 @@ describe('parseMailtoUrl', () => {
     const r = parseMailtoUrl('mailto:list@example.com?subject=%E0%A4%A');
     expect(r?.to).toEqual(['list@example.com']);
     expect(r?.subject).toBe('%E0%A4%A');
+  });
+});
+
+describe('parseUnsubscribeMailto', () => {
+  it('keeps the one recipient, subject and body a list needs', () => {
+    expect(parseUnsubscribeMailto('mailto:list-request@example.com?subject=unsubscribe%20123')).toEqual({
+      to: ['list-request@example.com'], subject: 'unsubscribe 123', body: undefined,
+    });
+  });
+
+  it('ignores extra recipients smuggled in through to=', () => {
+    const r = parseUnsubscribeMailto('mailto:boss@corp.example?to=hr@corp.example&to=press@news.example&subject=I%20resign');
+    expect(r?.to).toEqual(['boss@corp.example']);
+  });
+
+  it('refuses a list of addresses', () => {
+    expect(parseUnsubscribeMailto('mailto:a@example.com,b@example.com')).toBeNull();
+  });
+
+  it('refuses an address part that is not an address, even with a valid to=', () => {
+    expect(parseUnsubscribeMailto('mailto:nobody?to=victim@example.com')).toBeNull();
+    expect(parseUnsubscribeMailto('mailto:?to=victim@example.com')).toBeNull();
+  });
+
+  it('keeps the subject on one line and caps subject and body', () => {
+    const r = parseUnsubscribeMailto(`mailto:l@example.com?subject=a%0D%0Ab&body=${'x'.repeat(2000)}`);
+    expect(r?.subject).toBe('a b');
+    expect(r?.body).toHaveLength(500);
   });
 });

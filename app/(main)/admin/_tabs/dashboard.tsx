@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle } from '@/components/icons';
 import { SettingsSection, SettingItem, ToggleSwitch } from '@/components/settings/settings-section';
 import type { AuditEntry } from '@/lib/admin/types';
 import { apiFetch } from '@/lib/browser-navigation';

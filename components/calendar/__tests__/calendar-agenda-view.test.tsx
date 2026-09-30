@@ -169,4 +169,20 @@ describe('CalendarAgendaView infinite scroll', () => {
     const titles = screen.getAllByText(/^Event /).map((el) => el.textContent);
     expect(titles).toEqual(['Event sooner', 'Event later']);
   });
+
+  it('strikes through events the user declined (#1110)', () => {
+    const invite = (id: string, status: string) => ({
+      ...makeEvent(id, '2026-09-12T09:00:00'),
+      participants: {
+        me: { '@type': 'Participant', calendarAddress: 'mailto:me@example.com', participationStatus: status },
+      },
+    }) as unknown as CalendarEvent;
+    renderView({
+      events: [invite('declined', 'declined'), invite('accepted', 'accepted')],
+      currentUserEmails: ['me@example.com'],
+    });
+    expect(screen.getByText('Event declined')).toHaveClass('line-through');
+    expect(screen.getByText('Event declined')).toHaveClass('text-muted-foreground');
+    expect(screen.getByText('Event accepted')).not.toHaveClass('line-through');
+  });
 });

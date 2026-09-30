@@ -7,20 +7,25 @@ import { AccountTransferButton } from './account-transfer-button';
 import { AccountTransferDialog, resolveTransferSelection } from './account-transfer-dialog';
 import type { TransferMessage } from '@/lib/email-transfer';
 import { useAccountStore } from '@/stores/account-store';
+import type { LoadListAttachments } from "@/lib/list-attachments";
+import { listRowShowsChips } from "./attachment-chips";
+import { listVerificationCode } from "@/lib/verification-code";
 import { EmailContextMenu } from "./email-context-menu";
 import { cn } from "@/lib/utils";
-import { Trash2, Mail, MailX, MailOpen, Loader2, SearchX, AlertTriangle, CalendarClock, ShieldCheck } from "lucide-react";
+import { Trash2, Mail, MailX, MailOpen, Loader2, SearchX, AlertTriangle, CalendarClock, ShieldCheck } from "@/components/icons";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { useEmailStore } from "@/stores/email-store";
+import { useEmailStore, ArchiveMailboxNotFoundError } from "@/stores/email-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useUIStore } from "@/stores/ui-store";
-import { groupEmailsByThread, sortThreadGroups } from "@/lib/thread-utils";
+import { groupEmailsByThread, sortThreadGroups, threadKeyFor } from "@/lib/thread-utils";
 import { useContextMenu } from "@/hooks/use-context-menu";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { useTranslations } from "next-intl";
+import { toast } from "@/stores/toast-store";
+import { runBatchEmailAction } from "@/lib/email-action-toast";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { TagDisplayContext, useMeasuredTagDisplay } from "@/hooks/use-tag-display";
 import { SearchChips } from "@/components/search/search-chips";
@@ -50,6 +55,7 @@ interface EmailListProps {
   onMarkAsSpam?: (email: Email) => void;
   onUndoSpam?: (email: Email) => void;
   onOpenAttachment?: (email: Email, attachment: Attachment) => void;
+  loadAttachments?: LoadListAttachments;
   onEditDraft?: (email: Email) => void;
   isScheduledView?: boolean;
   onLoadMoreScheduled?: () => void;
@@ -80,6 +86,7 @@ export function EmailList({
   onMarkAsSpam,
   onUndoSpam,
   onOpenAttachment,
+  loadAttachments,
   onMoveToMailbox,
   onEditDraft,
   isScheduledView = false,
@@ -90,6 +97,8 @@ export function EmailList({
   const t = useTranslations('email_list');
   const tContextMenu = useTranslations('context_menu');
   const tSpam = useTranslations('email_viewer.spam');
+  const tNotifications = useTranslations('notifications');
+  const tViewer = useTranslations('email_viewer');
   const { client } = useAuthStore();
   const {
     selectedEmailIds,
@@ -138,12 +147,15 @@ export function EmailList({
   // Search results and cross-account views are always chronological.
   const fetchedListOrder = useEmailStore((state) => state.listOrder);
   const crossView = useEmailStore((state) => state.crossView);
+  // The row opened last stays where it was clicked while that order would
+  // move it (e.g. read in "unread first").
+  const listHold = useEmailStore((state) => state.listHold);
 
   const threadGroups = useMemo(() => {
     const listOrder = searchQuery || crossView || !isFilterEmpty(searchFilters) ? [] : fetchedListOrder;
     const groups = groupEmailsByThread(emails, disableThreading || isScheduledView, threadEmailCounts);
-    return sortThreadGroups(groups, listOrder);
-  }, [emails, disableThreading, isScheduledView, threadEmailCounts, fetchedListOrder, searchQuery, crossView, searchFilters]);
+    return sortThreadGroups(groups, listOrder, listHold?.keywords);
+  }, [emails, disableThreading, isScheduledView, threadEmailCounts, fetchedListOrder, searchQuery, crossView, searchFilters, listHold]);
 
   const { contextMenu, openContextMenu, closeContextMenu, menuRef } = useContextMenu<Email>();
   /**
@@ -188,6 +200,7 @@ export function EmailList({
   const tagDisplay = useMeasuredTagDisplay(parentRef);
   const density = useSettingsStore((state) => state.density);
   const showPreview = useSettingsStore((state) => state.showPreview);
+  const showVerificationCodes = useSettingsStore((state) => state.showVerificationCodes);
   const mailLayout = useSettingsStore((state) => state.mailLayout);
   const footerHasMore = hasMore ?? hasMoreEmails;
   const footerIsLoadingMore = isLoadingMoreItems ?? isLoadingMore;
@@ -195,20 +208,45 @@ export function EmailList({
   // Match the list items: focus layout collapses to multi-line on mobile, so virtualizer estimates must match.
   const isFocusedMailLayout = mailLayout === 'focus' && !isMobile;
 
-  const estimateSize = useCallback(() => {
+  const estimateSize = useCallback((index: number) => {
     if (isFocusedMailLayout) {
       return { 'extra-compact': 28, compact: 40, regular: 56, comfortable: 64 }[density];
     }
-    const base = { 'extra-compact': 32, compact: 60, regular: 84, comfortable: 104 }[density];
-    return (showPreview && density !== 'extra-compact') ? base + 36 : base;
-  }, [density, isFocusedMailLayout, showPreview]);
+    // Rows the list has not measured yet are placed by this guess, and each
+    // one it gets wrong shifts the list when it is measured on the way back
+    // up after a jump down (scrollbar drag, End). So guess per row.
+    const latest = threadGroups[index]?.latestEmail;
+    let size = { 'extra-compact': 32, compact: 60, regular: 84, comfortable: 104 }[density];
+    if (showPreview && density !== 'extra-compact') {
+      // A mail without a preview draws a one-line "No preview available",
+      // a line (23px) shorter than a real one.
+      const emptyPreview = !!latest && !latest.preview?.trim() && !latest.searchSnippet?.preview;
+      size += emptyPreview ? 36 - 23 : 36;
+    }
+    // The chip row (attachments, verification code): a 22px chip plus 6px margin.
+    const hasCode = !!latest && showVerificationCodes && !!listVerificationCode(latest);
+    if (latest && (hasCode || (onOpenAttachment && listRowShowsChips(latest, loadAttachments)))) size += 28;
+    return size;
+  }, [density, isFocusedMailLayout, showPreview, showVerificationCodes, threadGroups, onOpenAttachment, loadAttachments]);
+
+  // Stable per list, so the virtualizer does not rebuild every row's
+  // measurement on each scroll render.
+  const getItemKey = useCallback(
+    (index: number) => threadGroups[index]?.threadKey ?? String(index),
+    [threadGroups],
+  );
 
   const virtualizer = useVirtualizer({
     count: threadGroups.length,
     getScrollElement: () => parentRef.current,
     estimateSize,
     overscan: 5,
-    getItemKey: (index) => threadGroups[index]?.threadId ?? String(index),
+    getItemKey,
+    // Keep sub-pixel row heights. The default measurer rounds them, so a
+    // row could start up to half a pixel inside the one above it and paint
+    // over that row's divider (at 125% or 150% display scaling).
+    measureElement: (element, entry) =>
+      entry?.borderBoxSize?.[0]?.blockSize ?? element.getBoundingClientRect().height,
   });
 
   const LoadingSkeleton = () => (
@@ -262,10 +300,8 @@ export function EmailList({
     try {
       const emailIds = Array.from(selectedEmailIds);
       await batchUndoSpam(client, emailIds);
-      const { toast } = await import('sonner');
       toast.success(tSpam('toast_not_spam_batch', { count: emailIds.length }));
     } catch {
-      const { toast } = await import('sonner');
       toast.error(tSpam('error_not_spam'));
     } finally {
       setTimeout(() => setIsProcessing(false), 500);
@@ -293,16 +329,12 @@ export function EmailList({
     if (!confirmed) return;
 
     setIsProcessing(true);
+    const count = selectedEmailIds.size;
     try {
-      await batchDelete(client, isInTrash);
-      const storeError = useEmailStore.getState().error;
-      if (storeError) {
-        const { toast } = await import('sonner');
-        toast.error(storeError);
-      }
-    } catch (err) {
-      const { toast } = await import('sonner');
-      toast.error(err instanceof Error ? err.message : 'Failed to delete emails');
+      await runBatchEmailAction(() => batchDelete(client, isInTrash), {
+        success: tNotifications('emails_deleted', { count }),
+        error: tNotifications('error_deleting'),
+      });
     } finally {
       setTimeout(() => setIsProcessing(false), 500);
     }
@@ -340,16 +372,16 @@ export function EmailList({
     }
   }, [client, hasMoreEmails, isLoadingMore, isLoading, isScheduledView, loadMoreEmails, onLoadMoreScheduled]);
 
-  const handleToggleThreadExpansion = useCallback(async (threadId: string) => {
-    const isExpanded = expandedThreadIds.has(threadId);
+  const handleToggleThreadExpansion = useCallback(async (threadKey: string) => {
+    const isExpanded = expandedThreadIds.has(threadKey);
 
     if (!isExpanded && client) {
-      toggleThreadExpansion(threadId);
-      await fetchThreadEmails(client, threadId);
+      toggleThreadExpansion(threadKey);
+      await fetchThreadEmails(client, threadKey);
       // Mark all unread emails in this thread as read
-      void markThreadAsRead(client, threadId);
+      void markThreadAsRead(client, threadKey);
     } else {
-      toggleThreadExpansion(threadId);
+      toggleThreadExpansion(threadKey);
     }
   }, [client, expandedThreadIds, toggleThreadExpansion, fetchThreadEmails, markThreadAsRead]);
 
@@ -578,26 +610,27 @@ export function EmailList({
                     ref={virtualizer.measureElement}
                     style={{
                       position: 'absolute',
-                      top: 0,
+                      // `top`, not translateY: layout snaps it to device
+                      // pixels, so the fractional offsets stay crisp.
+                      top: virtualItem.start,
                       left: 0,
                       width: '100%',
-                      transform: `translateY(${virtualItem.start}px)`,
                     }}
                   >
                     <ThreadListItem
                       thread={thread}
-                      isExpanded={expandedThreadIds.has(thread.threadId)}
+                      isExpanded={expandedThreadIds.has(thread.threadKey)}
                       selectedEmailId={selectedEmailId}
-                      isLoading={isLoadingThread === thread.threadId}
-                      expandedEmails={threadEmailsCache.get(thread.threadId)}
-                      onToggleExpand={() => handleToggleThreadExpansion(thread.threadId)}
+                      isLoading={isLoadingThread === thread.threadKey}
+                      expandedEmails={threadEmailsCache.get(thread.threadKey)}
+                      onToggleExpand={() => handleToggleThreadExpansion(thread.threadKey)}
                       onCollapseAllThreads={collapseAllThreads}
                       onEmailSelect={(email) => {
                         // Collapse expanded threads when selecting an email outside the expanded thread
                         const currentExpanded = useEmailStore.getState().expandedThreadIds;
                         if (currentExpanded.size > 0) {
                           // Check if the selected email belongs to any expanded thread via its threadId
-                          if (!email.threadId || !currentExpanded.has(email.threadId)) {
+                          if (!email.threadId || !currentExpanded.has(threadKeyFor(email))) {
                             collapseAllThreads();
                           }
                         }
@@ -614,6 +647,7 @@ export function EmailList({
                       onMarkAsSpam={onMarkAsSpam ? (email) => onMarkAsSpam(email) : undefined}
                       onUndoSpam={onUndoSpam ? (email) => onUndoSpam(email) : undefined}
                       onOpenAttachment={onOpenAttachment}
+                      loadAttachments={loadAttachments}
                     />
                   </div>
                 );
@@ -664,10 +698,10 @@ export function EmailList({
             const chosen = selectedEmailIds.has(contextMenuEmail!.id) && selectedEmailIds.size > 1
               ? selectedTransferEmails : [contextMenuEmail!];
             if (chosen === selectedTransferEmails && new Set(chosen.map(email => email.id)).size !== selectedEmailIds.size) {
-              const { toast } = await import('sonner'); toast.error(tTransfer('selection_changed')); return;
+              toast.error(tTransfer('selection_changed')); return;
             }
             try { setTransferSelection(resolveTransferSelection(chosen)); }
-            catch { const { toast } = await import('sonner'); toast.error(tTransfer('disconnected')); }
+            catch { toast.error(tTransfer('disconnected')); }
           } : undefined}
           onMoveToMailbox={(mailboxId) => onMoveToMailbox?.(contextMenuEmail!.id, mailboxId)}
           onMarkAsSpam={() => onMarkAsSpam?.(contextMenuEmail!)}
@@ -676,27 +710,42 @@ export function EmailList({
           onCancelScheduledForEdit={onCancelScheduledForEdit ? () => onCancelScheduledForEdit(contextMenuEmail!) : undefined}
           onRescheduleScheduled={onRescheduleScheduled ? () => onRescheduleScheduled(contextMenuEmail!) : undefined}
           onBatchMarkAsRead={(read) => client && batchMarkAsRead(client, read)}
-          onBatchDelete={() => client && batchDelete(client)}
+          onBatchDelete={async () => {
+            if (!client) return;
+            const count = selectedEmailIds.size;
+            await runBatchEmailAction(() => batchDelete(client), {
+              success: tNotifications('emails_deleted', { count }),
+              error: tNotifications('error_deleting'),
+            });
+          }}
           onBatchArchive={async () => {
             if (!client) return;
-            try {
-              await batchArchive(client);
-            } catch (error) {
-              console.error('Failed to batch archive:', error);
-            }
+            const count = selectedEmailIds.size;
+            await runBatchEmailAction(() => batchArchive(client), {
+              success: tNotifications('emails_archived', { count }),
+              error: tNotifications('error_archiving'),
+              describeError: (error) => error instanceof ArchiveMailboxNotFoundError
+                ? tViewer('archive_mailbox_not_found')
+                : undefined,
+            });
           }}
-          onBatchMoveToMailbox={(mailboxId) => client && batchMoveToMailbox(client, mailboxId)}
+          onBatchMoveToMailbox={async (mailboxId) => {
+            if (!client) return;
+            const count = selectedEmailIds.size;
+            await runBatchEmailAction(() => batchMoveToMailbox(client, mailboxId), {
+              success: tNotifications('emails_moved', { count }),
+              error: tNotifications('move_failed'),
+            });
+          }}
           onBatchMarkAsSpam={async () => {
             if (client) {
               const emailIds = Array.from(selectedEmailIds);
               try {
                 await batchMarkAsSpam(client, emailIds);
-                const { toast } = await import('sonner');
                 toast.success(
                   tSpam('toast_batch', { count: emailIds.length })
                 );
               } catch {
-                const { toast } = await import('sonner');
                 toast.error(tSpam('error'));
               }
             }
@@ -706,12 +755,10 @@ export function EmailList({
               const emailIds = Array.from(selectedEmailIds);
               try {
                 await batchUndoSpam(client, emailIds);
-                const { toast } = await import('sonner');
                 toast.success(
                   tSpam('toast_not_spam_batch', { count: emailIds.length })
                 );
               } catch {
-                const { toast } = await import('sonner');
                 toast.error(tSpam('error_not_spam'));
               }
             }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, Search } from "lucide-react";
+import { Loader2, Search } from "@/components/icons";
 import { useTranslations } from "next-intl";
 import { useGlobalSearch } from "@/hooks/use-global-search";
 import { openHit } from "@/lib/global-search/open-hit";

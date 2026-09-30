@@ -1,8 +1,8 @@
 'use client';
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { ArrowRightLeft } from 'lucide-react';
-import { toast } from 'sonner';
+import { ArrowLeftRight } from '@/components/icons';
+import { toast } from '@/stores/toast-store';
 import { Button } from '@/components/ui/button';
 import { useAccountStore } from '@/stores/account-store';
 import type { Email } from '@/lib/jmap/types';
@@ -21,7 +21,7 @@ export function AccountTransferButton({ emails, expectedCount }: { emails: Email
       }
       try { setSelection(resolveTransferSelection(emails)); }
       catch { toast.error(t('disconnected')); }
-    }}><ArrowRightLeft className="h-4 w-4" /></Button>
+    }}><ArrowLeftRight className="h-4 w-4" /></Button>
     {selection && <AccountTransferDialog selection={selection} onClose={() => setSelection(null)} />}
   </>;
 }

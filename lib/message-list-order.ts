@@ -130,6 +130,11 @@ export function levelKeyword(level: SortLevel): string | null {
   }
 }
 
+/** Every keyword the order sorts on: changing one of them can move a message. */
+export function orderKeywords(levels: SortLevel[]): string[] {
+  return levels.map(levelKeyword).filter((keyword): keyword is string => keyword !== null);
+}
+
 /**
  * Whether messages that HAVE the level's keyword should come first. "Unread
  * first" is the absence of $seen first, so it inverts relative to the others.
@@ -215,11 +220,11 @@ function time(value: string | undefined): number {
   return Number.isNaN(t) ? 0 : t;
 }
 
-function levelValue(level: SortLevel, email: Email): number | string {
+function levelValue(level: SortLevel, email: Email, keywords: Email['keywords'] | undefined): number | string {
   switch (level.criterion) {
-    case 'unread': return email.keywords?.$seen ? 0 : 1;
-    case 'starred': return email.keywords?.$flagged ? 1 : 0;
-    case 'tag': return level.tagId && email.keywords?.[`$label:${level.tagId}`] ? 1 : 0;
+    case 'unread': return keywords?.$seen ? 0 : 1;
+    case 'starred': return keywords?.$flagged ? 1 : 0;
+    case 'tag': return level.tagId && keywords?.[`$label:${level.tagId}`] ? 1 : 0;
     case 'receivedAt': return time(email.receivedAt);
     case 'sentAt': return time(email.sentAt || email.receivedAt);
     case 'size': return email.size ?? 0;
@@ -236,24 +241,36 @@ function compareValues(a: number | string, b: number | string): number {
 }
 
 /**
+ * Keywords by email id that a list sorts some rows by instead of their current
+ * ones: the conversation opened last keeps the place it had when it was opened,
+ * so reading it in an "unread first" list does not move it (see
+ * EmailStore.listHold).
+ */
+export type HeldKeywords = ReadonlyMap<string, Email['keywords']>;
+
+/**
  * Client-side mirror of `buildEmailSort` for the same level list. Used as the
  * within-page safety net (some servers ignore the sort on unfiltered queries),
  * for merging per-account pages in the unified view, for the demo client, and
- * to keep thread grouping from undoing the server order.
+ * to keep thread grouping from undoing the server order. `held` rows sort by
+ * their held keywords.
  */
 export function compareEmails(
   levels: SortLevel[],
-  opts: { pinnedFirst?: boolean } = {},
+  opts: { pinnedFirst?: boolean; held?: HeldKeywords } = {},
 ): (a: Email, b: Email) => number {
   const hasDateLevel = levels.some(l => l.criterion === 'receivedAt');
+  const held = opts.held;
   return (a, b) => {
     if (opts.pinnedFirst) {
       const pa = a.keywords?.['$pinned'] ? 1 : 0;
       const pb = b.keywords?.['$pinned'] ? 1 : 0;
       if (pa !== pb) return pb - pa;
     }
+    const ka = held?.get(a.id) ?? a.keywords;
+    const kb = held?.get(b.id) ?? b.keywords;
     for (const level of levels) {
-      const diff = compareValues(levelValue(level, a), levelValue(level, b));
+      const diff = compareValues(levelValue(level, a, ka), levelValue(level, b, kb));
       if (diff !== 0) return level.direction === 'asc' ? diff : -diff;
     }
     if (!hasDateLevel) {
@@ -262,6 +279,24 @@ export function compareEmails(
     }
     return 0;
   };
+}
+
+/**
+ * Moves the held rows of a list in `levels` order to where they sort by their
+ * held keywords; every other row keeps its place. The list shows them there,
+ * and next/previous and the pick after a delete walk this array.
+ */
+export function placeHeldRows(emails: Email[], levels: SortLevel[], held: HeldKeywords | undefined): Email[] {
+  if (!held || held.size === 0 || orderKeywords(levels).length === 0) return emails;
+  if (!emails.some((e) => held.has(e.id))) return emails;
+  const compare = compareEmails(levels, { pinnedFirst: true, held });
+  const out = emails.filter((e) => !held.has(e.id));
+  for (const row of emails) {
+    if (!held.has(row.id)) continue;
+    const at = out.findIndex((e) => compare(row, e) < 0);
+    out.splice(at === -1 ? out.length : at, 0, row);
+  }
+  return out;
 }
 
 /**

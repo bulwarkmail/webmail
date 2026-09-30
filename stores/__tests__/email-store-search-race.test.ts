@@ -55,6 +55,7 @@ describe('quick search staleness', () => {
       ),
       advancedSearchEmails: vi.fn().mockResolvedValue({ emails: [], hasMore: false, total: 0 }),
       getSomeEmails: vi.fn().mockResolvedValue([]),
+      getAccountId: () => 'me',
     } as unknown as IJMAPClient;
 
     useAuthStore.setState({

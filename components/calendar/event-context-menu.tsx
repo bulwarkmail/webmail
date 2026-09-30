@@ -14,7 +14,7 @@ import {
   Link as LinkIcon,
   CalendarArrowUp as CalendarLinkIcon,
   Trash2,
-} from "lucide-react";
+} from "@/components/icons";
 import type { CalendarEvent } from "@/lib/jmap/types";
 import { buildCalendarPath } from "@/lib/deep-links";
 import { useCopyLink } from "@/hooks/use-copy-link";

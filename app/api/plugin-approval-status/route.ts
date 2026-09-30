@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
 import { cookies } from 'next/headers';
 import { decryptSession } from '@/lib/auth/crypto';
 import { sessionCookieName } from '@/lib/auth/session-cookie';
@@ -58,6 +59,10 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  // CSRF gate (GHSA-9mvj-98f5-9q6g): this handler acts with the caller's
+  // session cookie, which SameSite=Lax still sends from a same-site page.
+  const crossOrigin = rejectCrossOriginRequest(request);
+  if (crossOrigin) return crossOrigin;
   try {
     const username = await resolveUsername();
     if (!username) return NextResponse.json({ error: 'unauthenticated' }, { status: 401 });

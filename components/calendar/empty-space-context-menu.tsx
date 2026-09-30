@@ -6,7 +6,7 @@ import {
   ContextMenuItem,
   ContextMenuSeparator,
 } from "@/components/ui/context-menu";
-import { Plus, CalendarDays, CheckSquare, Clock } from "lucide-react";
+import { Plus, CalendarDays, CheckSquare, Clock } from "@/components/icons";
 
 interface Position {
   x: number;

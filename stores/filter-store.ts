@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
 import type { FilterRule, SieveCapabilities, VacationSieveConfig } from '@/lib/jmap/sieve-types';
 import { parseScript } from '@/lib/sieve/parser';
-import { generateScript } from '@/lib/sieve/generator';
+import { generateScript, VACATION_SCRIPT_NAME } from '@/lib/sieve/generator';
 import { filterHooks } from '@/lib/plugin-hooks';
 import { debug } from '@/lib/debug';
 
@@ -24,6 +24,7 @@ interface FilterStore {
   rawScript: string;
   vacationSettings: VacationSieveConfig | null;
   externalRequires: string[];
+  includeVacation: boolean;
   availableAccounts: SieveAccount[];
   selectedAccountId: string | null;
 
@@ -42,6 +43,14 @@ interface FilterStore {
   clearState: () => void;
 }
 
+/**
+ * Bumped by every fetch, account selection and reset. A fetch that is no
+ * longer the latest when its answer arrives drops it: an account switch
+ * during the fetch would otherwise leave one account's rules and script id
+ * in place for the next account, and the next save would upload them there.
+ */
+let fetchGeneration = 0;
+
 export const useFilterStore = create<FilterStore>()((set, get) => ({
   rules: [],
   isLoading: false,
@@ -54,12 +63,15 @@ export const useFilterStore = create<FilterStore>()((set, get) => ({
   rawScript: '',
   vacationSettings: null,
   externalRequires: [],
+  includeVacation: false,
   availableAccounts: [],
   selectedAccountId: null,
 
   setSupported: (supported) => set({ isSupported: supported }),
 
   fetchFilters: async (client, accountId) => {
+    const generation = ++fetchGeneration;
+    const stale = () => generation !== fetchGeneration;
     set({ isLoading: true, error: null });
     try {
       const accounts = client.getSieveAccounts();
@@ -71,21 +83,36 @@ export const useFilterStore = create<FilterStore>()((set, get) => ({
       set({ sieveCapabilities: capabilities });
 
       const allScripts = await client.getSieveScripts(resolvedId);
+      if (stale()) return;
       debug.log('filters', 'Sieve scripts fetched:', allScripts.length);
 
       // Skip the server-managed 'vacation' script (RFC 9661 §4) - it can only
       // be modified via VacationResponse/set, not SieveScript/set.
-      const scripts = allScripts.filter(s => s.name !== 'vacation');
+      const scripts = allScripts.filter(s => s.name !== VACATION_SCRIPT_NAME);
+
+      // Saving activates the filters script, which switches off an active
+      // server vacation script. Include it instead so both keep working.
+      const vacationActive =
+        allScripts.some(s => s.name === VACATION_SCRIPT_NAME && s.isActive) &&
+        supportsInclude(capabilities);
 
       const activeScript = scripts.find(s => s.isActive) || scripts[0];
       if (!activeScript) {
-        set({ isLoading: false, rules: [], activeScriptId: null, rawScript: '', isOpaque: false });
+        set({
+          isLoading: false,
+          rules: [],
+          activeScriptId: null,
+          rawScript: '',
+          isOpaque: false,
+          includeVacation: vacationActive,
+        });
         return;
       }
 
       set({ activeScriptId: activeScript.id });
 
       const content = await client.getSieveScriptContent(activeScript.blobId, resolvedId);
+      if (stale()) return;
       set({ rawScript: content });
 
       const result = parseScript(content);
@@ -98,6 +125,7 @@ export const useFilterStore = create<FilterStore>()((set, get) => ({
           rules: [],
           vacationSettings: result.vacation || null,
           externalRequires: result.externalRequires,
+          includeVacation: false,
         });
       } else {
         debug.log('filters', 'Parsed', result.rules.length, 'filter rules');
@@ -107,9 +135,11 @@ export const useFilterStore = create<FilterStore>()((set, get) => ({
           rules: result.rules,
           vacationSettings: result.vacation || null,
           externalRequires: result.externalRequires,
+          includeVacation: !!result.includeVacation || vacationActive,
         });
       }
     } catch (error) {
+      if (stale()) return;
       debug.error('Failed to fetch filters:', error);
       set({
         isLoading: false,
@@ -129,6 +159,7 @@ export const useFilterStore = create<FilterStore>()((set, get) => ({
       isOpaque: false,
       vacationSettings: null,
       externalRequires: [],
+      includeVacation: false,
     });
     await get().fetchFilters(client, accountId);
   },
@@ -136,24 +167,22 @@ export const useFilterStore = create<FilterStore>()((set, get) => ({
   saveFilters: async (client) => {
     set({ isSaving: true, error: null });
     try {
-      const { isOpaque, rawScript, rules, activeScriptId, vacationSettings, externalRequires, selectedAccountId } = get();
+      const {
+        isOpaque, rawScript, rules, activeScriptId, vacationSettings, externalRequires, includeVacation,
+        selectedAccountId, sieveCapabilities,
+      } = get();
 
       let content: string;
       if (isOpaque) {
         content = rawScript;
       } else {
-        content = generateScript(rules, vacationSettings || undefined, { externalRequires });
+        content = generateScript(rules, vacationSettings || undefined, {
+          externalRequires,
+          includeVacation,
+          extensions: sieveCapabilities?.sieveExtensions,
+        });
       }
-
-      // Let plugins graft their managed sections (e.g. an inbox-category
-      // classifier) into the script before it becomes the active one. A
-      // handler returning a non-string is ignored to keep the upload valid.
-      const transformed = await filterHooks.onSieveScriptGenerate.transform(content, {
-        accountId: selectedAccountId || null,
-      });
-      if (typeof transformed === 'string' && transformed.trim().length > 0) {
-        content = transformed;
-      }
+      content = await applyScriptTransforms(content, selectedAccountId || null);
 
       if (activeScriptId) {
         await client.updateSieveScript(activeScriptId, content, true, selectedAccountId || undefined);
@@ -236,19 +265,103 @@ export const useFilterStore = create<FilterStore>()((set, get) => ({
 
   resetToVisualBuilder: () => set({ isOpaque: false, rawScript: '', rules: [], externalRequires: [] }),
 
-  clearState: () => set({
-    rules: [],
-    isLoading: false,
-    isSaving: false,
-    error: null,
-    isSupported: false,
-    sieveCapabilities: null,
-    activeScriptId: null,
-    isOpaque: false,
-    rawScript: '',
-    vacationSettings: null,
-    externalRequires: [],
-    availableAccounts: [],
-    selectedAccountId: null,
-  }),
+  clearState: () => {
+    fetchGeneration++;
+    set({
+      rules: [],
+      isLoading: false,
+      isSaving: false,
+      error: null,
+      isSupported: false,
+      sieveCapabilities: null,
+      activeScriptId: null,
+      isOpaque: false,
+      rawScript: '',
+      vacationSettings: null,
+      externalRequires: [],
+      includeVacation: false,
+      availableAccounts: [],
+      selectedAccountId: null,
+    });
+  },
 }));
+
+function supportsInclude(capabilities: SieveCapabilities | null): boolean {
+  return capabilities?.sieveExtensions?.includes('include') ?? false;
+}
+
+// Let plugins graft their managed sections (e.g. an inbox-category
+// classifier) into the script before it becomes the active one. A handler
+// returning a non-string is ignored to keep the upload valid.
+async function applyScriptTransforms(content: string, accountId: string | null): Promise<string> {
+  const transformed = await filterHooks.onSieveScriptGenerate.transform(content, { accountId });
+  return typeof transformed === 'string' && transformed.trim().length > 0 ? transformed : content;
+}
+
+async function loadManagedScript(client: IJMAPClient, accountId: string) {
+  const scripts = await client.getSieveScripts(accountId);
+  const vacationScript = scripts.find(s => s.name === VACATION_SCRIPT_NAME);
+  const filters = scripts.filter(s => s.name !== VACATION_SCRIPT_NAME);
+  const target = filters.find(s => s.isActive) || filters[0];
+  if (!target) return { vacationScript, target: undefined, parsed: undefined };
+  const parsed = parseScript(await client.getSieveScriptContent(target.blobId, accountId));
+  return { vacationScript, target, parsed: parsed.isOpaque ? undefined : parsed };
+}
+
+/**
+ * Whether the account's filters script runs the server's vacation script.
+ * VacationResponse.isEnabled reads false in that case, because the vacation
+ * script itself is not the active one.
+ */
+export async function isVacationIncludedInFilters(
+  client: IJMAPClient,
+  accountId?: string,
+): Promise<boolean> {
+  const sieveAccountId = accountId || client.getSieveAccountId();
+  const { vacationScript, target, parsed } = await loadManagedScript(client, sieveAccountId);
+  return !!(vacationScript && target?.isActive && parsed?.includeVacation);
+}
+
+/**
+ * Keep the filters and the auto-reply both running after VacationResponse/set.
+ *
+ * Stalwart allows one active Sieve script and turns the auto-reply on by
+ * activating its own "vacation" script, which switches every filter off.
+ * When that happened, re-activate the filters script with an `include` of
+ * the vacation script. When the auto-reply is turned off, drop the include.
+ */
+export async function syncVacationWithFilters(
+  client: IJMAPClient,
+  enabled: boolean,
+  accountId?: string,
+): Promise<void> {
+  const sieveAccountId = accountId || client.getSieveAccountId();
+  const capabilities = client.getSieveCapabilities(sieveAccountId);
+  if (enabled && !supportsInclude(capabilities)) return;
+
+  const { vacationScript, target, parsed } = await loadManagedScript(client, sieveAccountId);
+  if (!target || !parsed) return;
+
+  if (enabled) {
+    // Only act when the vacation script took over from existing filters.
+    if (!vacationScript?.isActive || target.isActive || parsed.rules.length === 0) return;
+  } else if (!parsed.includeVacation) {
+    return;
+  }
+
+  const content = await applyScriptTransforms(
+    generateScript(parsed.rules, parsed.vacation, {
+      externalRequires: parsed.externalRequires,
+      includeVacation: enabled,
+      extensions: capabilities?.sieveExtensions,
+    }),
+    sieveAccountId,
+  );
+  await client.updateSieveScript(target.id, content, enabled || target.isActive, sieveAccountId);
+  debug.log('filters', enabled ? 'Filters now include the vacation script' : 'Removed the vacation include');
+
+  const store = useFilterStore.getState();
+  if (store.selectedAccountId === sieveAccountId) {
+    await store.fetchFilters(client, sieveAccountId);
+  }
+}

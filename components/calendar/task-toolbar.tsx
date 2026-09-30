@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { Plus } from "lucide-react";
+import { Plus } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { TaskViewFilter } from "@/stores/task-store";
