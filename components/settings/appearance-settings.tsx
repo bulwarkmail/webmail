@@ -7,7 +7,7 @@ import { SettingsSection, SettingItem, RadioGroup, ToggleSwitch } from './settin
 import { cn } from '@/lib/utils';
 import { useTour } from '@/components/tour/tour-provider';
 import { Button } from '@/components/ui/button';
-import { PlayCircle } from 'lucide-react';
+import { PlayCircle } from '@/components/icons';
 import { usePolicyStore } from '@/stores/policy-store';
 import { IS_LITE } from '@/lib/lite';
 import { MessageListOrderSettings } from './message-list-order-settings';

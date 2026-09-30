@@ -31,7 +31,8 @@ migrateLegacyAdminLayout()
         console.info("==============================================================");
         console.info("  SETUP REQUIRED");
         console.info(`  Token: ${token}`);
-        console.info(`  Open:  http://<host>:${port}/setup?token=${token}`);
+        // In the fragment, so the token stays out of access logs and Referer.
+        console.info(`  Open:  http://<host>:${port}/setup#token=${token}`);
         console.info("  Token expires in 1 hour. Restart the container to reissue.");
         console.info("==============================================================");
         console.info("");

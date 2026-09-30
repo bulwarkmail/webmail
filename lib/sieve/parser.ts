@@ -14,6 +14,8 @@ export interface ParseResult {
   isOpaque: boolean;
   vacation?: VacationSieveConfig;
   externalRequires: string[];
+  /** The script runs the server's "vacation" script via `include`. */
+  includeVacation?: boolean;
 }
 
 const OPAQUE: ParseResult = { rules: [], isOpaque: true, externalRequires: [] };
@@ -523,8 +525,21 @@ function parseAction(raw: string): FilterAction | null {
   m = /^fileinto\s+"((?:[^"\\]|\\.)*)"$/.exec(s);
   if (m) return { type: 'move', value: unescapeSieveString(m[1]) };
 
-  m = /^redirect\s+"((?:[^"\\]|\\.)*)"$/.exec(s);
-  if (m) return { type: 'forward', value: unescapeSieveString(m[1]) };
+  m = /^fileinto\s+(:copy\s+)?:mailboxid\s+"((?:[^"\\]|\\.)*)"\s+"((?:[^"\\]|\\.)*)"$/.exec(s);
+  if (m) {
+    return {
+      type: m[1] ? 'copy' : 'move',
+      value: unescapeSieveString(m[3]),
+      mailboxId: unescapeSieveString(m[2]),
+    };
+  }
+
+  m = /^redirect\s+(:copy\s+)?"((?:[^"\\]|\\.)*)"$/.exec(s);
+  if (m) {
+    const action: FilterAction = { type: 'forward', value: unescapeSieveString(m[2]) };
+    if (m[1]) action.keepCopy = true;
+    return action;
+  }
 
   m = /^addflag\s+"((?:[^"\\]|\\.)*)"$/.exec(s);
   if (m) {
@@ -803,7 +818,7 @@ export function parseScript(content: string): ParseResult {
     // is treated as 'bulwark' everywhere downstream.
     const bulwarkRules: FilterRule[] = metadata.rules;
 
-    const externalRequires = [
+    let externalRequires = [
       ...external.externalRequires,
       ...nextcloud.requires.filter(r => !external.externalRequires.includes(r)),
     ];
@@ -825,11 +840,20 @@ export function parseScript(content: string): ParseResult {
       return true;
     });
 
+    // "include" belongs to the vacation include, which the generator adds
+    // back on its own; keep it only if an external rule uses it too, so that
+    // turning the auto-reply off drops it from the script.
+    const otherRules = [...nextcloud.rules, ...filteredExternal];
+    if (!otherRules.some(r => /\binclude\b/.test(r.rawBlock || ''))) {
+      externalRequires = externalRequires.filter(r => r !== 'include');
+    }
+
     return {
-      rules: [...bulwarkRules, ...nextcloud.rules, ...filteredExternal],
+      rules: [...bulwarkRules, ...otherRules],
       isOpaque: false,
       vacation: metadata.vacation,
       externalRequires,
+      ...(metadata.includeVacation === true ? { includeVacation: true } : {}),
     };
   }
 

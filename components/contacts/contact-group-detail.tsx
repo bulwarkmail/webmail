@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { Users, Pencil, Trash2, UserMinus, Mail } from "lucide-react";
+import { Users, Pencil, Trash2, UserMinus, Mail } from "@/components/icons";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";

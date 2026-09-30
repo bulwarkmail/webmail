@@ -254,6 +254,7 @@
       "button": "Opróżnij folder",
       "confirm_title": "Opróżnij folder",
       "confirm_message": "Wszystkie wiadomości w tym folderze zostaną trwale usunięte. Tej operacji nie można cofnąć.",
+      "confirm_message_trash": "Wszystkie wiadomości z tego folderu zostaną przeniesione do kosza.",
       "confirm_button": "Opróżnij folder",
       "junk_hint": "Możesz opróżnić folder Spam, aby trwale usunąć wszystkie wiadomości.",
       "trash_hint": "Możesz opróżnić Kosz, aby trwale usunąć wszystkie wiadomości."
@@ -310,6 +311,8 @@
     "view_source": "Pokaż źródło",
     "fullscreen": "Pełny ekran",
     "exit_fullscreen": "Zamknij pełny ekran",
+    "view_in_dark_mode": "Wyświetl w ciemnym trybie",
+    "view_in_light_mode": "Wyświetl w jasnym trybie",
     "export_email": "Eksportuj jako .eml",
     "forward_as_attachment": "Prześlij dalej jako załącznik",
     "import_email": "Importuj .eml lub .zip",
@@ -578,7 +581,12 @@
       "copied": "Skopiowano!",
       "copy_failed": "Nie udało się skopiować"
     },
-    "send_now": "Wyślij teraz"
+    "send_now": "Wyślij teraz",
+    "verification_code": {
+      "copy": "Kopiuj kod {code}",
+      "copied": "Skopiowano kod",
+      "copy_failed": "Nie udało się skopiować kodu"
+    }
   },
   "email_composer": {
     "read_receipt_on": "Zażądano potwierdzenia przeczytania (kliknij, aby wyłączyć)",
@@ -640,11 +648,12 @@
     "from_override": {
       "toggle_off": "Zastąp",
       "toggle_on": "Anuluj zastąpienie",
-      "toggle_tooltip": "Swobodnie edytuj nazwę i adres nadawcy. Poczta jest nadal wysyłana przez twoją tożsamość - zmienia się tylko widoczny nagłówek Od.",
+      "toggle_tooltip": "Swobodnie edytuj nazwę i adres nadawcy. Poczta jest nadal wysyłana przez twoją tożsamość.",
       "name_label": "Nazwa nadawcy",
       "name_placeholder": "Nazwa",
       "email_label": "Adres e-mail nadawcy",
-      "email_placeholder": "alias@example.com"
+      "email_placeholder": "alias@example.com",
+      "envelope_notice": "Jeśli twój serwer nie akceptuje tego adresu jako nadawcy koperty, zostanie użyty {identity}, a odbiorcy zobaczą go w nagłówku Return-Path."
     },
     "use_template": "Szablon",
     "save_as_template": "Zapisz jako szablon",
@@ -657,10 +666,14 @@
     "upload_progress": "Przesyłanie {uploaded} / {total}",
     "upload_cancel": "Anuluj przesyłanie",
     "upload_failed": "Nie udało się przesłać {filename}",
+    "attachment_too_large": "„{name}” jest większy, niż pozwala serwer ({max} na plik)",
+    "attachments_total_too_large": "Załączniki przekroczyłyby limit serwera {max} na wiadomość",
     "drop_files": "Upuść pliki, aby załączyć",
     "show_less": "Pokaż mniej",
     "send_failed": "Nie udało się wysłać wiadomości",
     "send_timeout": "Serwer przestał odpowiadać. Przed ponownym wysłaniem sprawdź folder Wysłane — wiadomość mogła już zostać wysłana.",
+    "send_recipients_rejected": "Nie wysłano – serwer odrzucił wszystkich odbiorców.",
+    "send_some_recipients_rejected": "Wysłano, ale nie do tych odbiorców – serwer ich odrzucił.",
     "continue_draft": "Kontynuuj szkic",
     "close_draft_title": "Zapisać czy odrzucić szkic?",
     "close_draft_message": "Masz niezapisane zmiany. Czy chcesz zapisać jako szkic czy odrzucić?",
@@ -778,6 +791,10 @@
     "email_sent": "Wiadomość wysłana pomyślnie",
     "email_deleted": "Wiadomość usunięta",
     "email_archived": "Wiadomość zarchiwizowana",
+    "emails_deleted": "{count, plural, one {# wiadomość usunięta} few {# wiadomości usunięte} many {# wiadomości usuniętych} other {# wiadomości usuniętych}}",
+    "emails_archived": "{count, plural, one {# wiadomość zarchiwizowana} few {# wiadomości zarchiwizowane} many {# wiadomości zarchiwizowanych} other {# wiadomości zarchiwizowanych}}",
+    "error_archiving": "Nie udało się zarchiwizować wiadomości",
+    "error_updating": "Nie udało się zaktualizować wiadomości",
     "email_starred": "Wiadomość oznaczona gwiazdką",
     "email_unstarred": "Gwiazdka usunięta",
     "email_marked_read": "Wiadomość oznaczona jako przeczytana",
@@ -918,12 +935,25 @@
       "sidebar_apps": "Aplikacje paska bocznego",
       "notifications": "Powiadomienia",
       "layout": "Układ",
+      "themes": "Motywy",
       "reading": "Czytanie",
       "composing": "Tworzenie",
       "downloads": "Pobrane",
       "content_senders": "Treść i nadawcy",
       "about_data": "O programie i dane",
       "debug": "Debugowanie"
+    },
+    "themes": {
+      "title": "Motywy",
+      "description": "Wybierz jeden z motywów udostępnionych przez administratora lub jeden z wbudowanych.",
+      "locked": "Wybór motywu został zablokowany przez administratora.",
+      "forced": "Motyw „{name}” jest wymuszony przez administratora i nie można go zmienić",
+      "admin_theme": "Motyw administratora",
+      "activated": "Motyw aktywowany",
+      "default_restored": "Przywrócono domyślny motyw",
+      "default_name": "Domyślny",
+      "default_badge": "Domyślny",
+      "admin_enforced": "Wymuszony przez administratora"
     },
     "tab_groups": {
       "general": "Ogólne",
@@ -1063,6 +1093,10 @@
         "label": "Tint List Rows by Tag Color",
         "description": "Shade each message row with its first tag color. Disable to keep rows plain; tag dots and chips still show the color."
       },
+      "tint_list_rows_by_account": {
+        "label": "Tint List Rows by Account Color",
+        "description": "In the unified view, shade each row with its account color instead of showing the account dot. Takes precedence over the tag tint; tags keep their color on their chips."
+      },
       "show_folder_total_count": {
         "label": "Pokaż łączną liczbę wiadomości",
         "description": "Pokazuje łączną liczbę wiadomości obok folderów i etykiet, obok liczby nieprzeczytanych. Wyłącz, aby pokazywać tylko nieprzeczytane."
@@ -1168,7 +1202,9 @@
         "enabled": "Powiadomienia e-mail",
         "enabled_desc": "Pokazuj powiadomienia po nadejściu nowych wiadomości e-mail",
         "sound": "Dźwięk powiadomienia",
-        "sound_desc": "Odtwarzaj sygnał dźwiękowy po nadejściu nowych wiadomości e-mail"
+        "sound_desc": "Odtwarzaj sygnał dźwiękowy po nadejściu nowych wiadomości e-mail",
+        "inbox_only": "Inbox only",
+        "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
       },
       "calendar": {
         "title": "Powiadomienia kalendarza",
@@ -1338,6 +1374,10 @@
         "label": "Pokaż tekst podglądu",
         "description": "Wyświetlaj podgląd wiadomości e-mail na liście",
         "focus_description": "Wyświetlaj wbudowany tekst podglądu w jednoliniowej skupionej liście wiadomości"
+      },
+      "show_verification_codes": {
+        "label": "Pokazuj kody weryfikacyjne",
+        "description": "Oferuj kod z e-maili logowania i potwierdzenia do skopiowania jednym kliknięciem, na liście przez jeden dzień i w wiadomości"
       },
       "disable_threading": {
         "label": "Wyłącz grupowanie konwersacji",
@@ -1705,14 +1745,36 @@
       },
       "link_device": {
         "title": "Połącz aplikację mobilną",
-        "description": "Zaloguj się do aplikacji mobilnej Bulwark Mail bez wpisywania czegokolwiek. Wygeneruj tutaj kod QR i zeskanuj go na ekranie logowania aplikacji.",
+        "description": "Zaloguj się do aplikacji Bulwark Mail na telefonie bez wpisywania w niej hasła. Telefon otrzymuje własne logowanie, więc wylogowanie się tutaj go nie wyloguje.",
         "generate": "Pokaż kod QR",
         "regenerate": "Pokaż nowy kod",
-        "instructions": "Otwórz aplikację Bulwark Mail, na ekranie logowania stuknij \"Skanuj kod QR\" i skieruj aparat tutaj.",
+        "instructions": "Otwórz aplikację Bulwark Mail i na ekranie logowania stuknij \"Scan a sign-in code\" (lub \"Add account\" → \"Scan a sign-in code\", jeśli już jesteś zalogowany), a następnie skieruj aparat tutaj.",
         "expires_in": "Ten kod wygaśnie za {seconds} sekund. Można go użyć tylko raz.",
         "expired": "Ten kod wygasł.",
-        "generating": "Generowanie…",
-        "error": "Nie udało się utworzyć kodu parowania. Spróbuj ponownie."
+        "error": "Nie udało się utworzyć kodu parowania. Spróbuj ponownie.",
+        "password_prompt": "Wpisz hasło, aby potwierdzić swoją tożsamość. Telefon otrzymuje własne logowanie; hasło nie jest wysyłane na telefon.",
+        "show_password": "Pokaż hasło",
+        "hide_password": "Ukryj hasło",
+        "continue": "Dalej",
+        "error_wrong_password": "Nieprawidłowe hasło. Spróbuj ponownie.",
+        "totp_prompt": "Wpisz kod z aplikacji uwierzytelniającej.",
+        "error_password_or_code": "Hasło lub kod jest nieprawidłowy.",
+        "error_not_signed_in": "Twoja sesja wygasła. Zaloguj się ponownie, aby połączyć urządzenie.",
+        "error_impersonation": "Nie można łączyć urządzeń podczas przeglądania skrzynki pocztowej innego użytkownika.",
+        "error_too_many_attempts": "Zbyt wiele prób. Odczekaj chwilę i spróbuj ponownie.",
+        "error_session_secret": "Łączenie urządzeń nie jest skonfigurowane na tym serwerze (brak SESSION_SECRET). Skontaktuj się z administratorem.",
+        "error_server_unreachable": "Nie udało się połączyć z serwerem poczty. Spróbuj ponownie.",
+        "error_pairing_unavailable": "Twój serwer poczty nie pozwala na łączenie urządzeń w ten sposób. Skontaktuj się z administratorem.",
+        "qr_alt": "Kod QR do logowania",
+        "link_label": "Link logowania",
+        "copy_link": "Kopiuj link logowania",
+        "copied": "Skopiowano",
+        "copy_hint": "Brak aparatu? Skopiuj link i wklej go w aplikacji za pomocą \"Paste sign-in link\".",
+        "success_title": "Zalogowano na telefonie",
+        "success_body": "Możesz zamknąć tę stronę. Aby połączyć kolejne urządzenie, pokaż nowy kod.",
+        "link_another": "Połącz kolejne urządzenie",
+        "use_sso": "Zamiast tego użyj logowania jednokrotnego",
+        "error_insecure_server": "Aplikacja mobilna łączy się z serwerami poczty tylko przez https, a ten używa http."
       },
       "public_keys": {
         "name_label": "Nazwa klucza publicznego",
@@ -1782,7 +1844,9 @@
       "warnings": {
         "end_before_start": "Data zakończenia musi być późniejsza niż data rozpoczęcia",
         "start_in_past": "Data rozpoczęcia jest w przeszłości",
-        "empty_body": "Treść wiadomości jest pusta - odbiorcy otrzymają pustą odpowiedź"
+        "empty_body": "Treść wiadomości jest pusta - odbiorcy otrzymają pustą odpowiedź",
+        "subject_too_long": "Temat jest za długi dla serwera (maksymalnie {max} bajtów).",
+        "body_too_long": "Wiadomość jest za długa dla serwera (maksymalnie {max} bajtów wraz z formatowaniem)."
       }
     },
     "folders": {
@@ -2003,6 +2067,7 @@
       "actions": "Akcje",
       "add_action": "Dodaj akcję",
       "stop_processing": "Zatrzymaj przetwarzanie kolejnych reguł",
+      "include_spam": "Przenoś również wiadomości oznaczone jako spam",
       "attachment_type_placeholder": "np. pdf, doc, jpg",
       "value_placeholder_multi": "Wartość (kilka oddzielonych przecinkami)",
       "condition_fields": {
@@ -2044,6 +2109,8 @@
       "copy_to_folder": "Wybierz folder",
       "forward_to": "Prześlij dalej na adres e-mail",
       "forward_placeholder": "email@example.com",
+      "forward_keep_copy": "Zachowaj kopię",
+      "forward_limit": "Limit przekazań na wiadomość na tym serwerze: {count}. Dodatkowe przekazania są pomijane.",
       "reject_message": "Wiadomość odrzucenia",
       "reject_placeholder": "Twoja wiadomość e-mail została odrzucona",
       "label_name": "Nazwa etykiety",
@@ -2801,6 +2868,8 @@
       "no_events": "Brak wydarzeń",
       "all_day": "Cały dzień",
       "more": "+{count} więcej",
+      "show_more": "Pokaż więcej",
+      "show_less": "Pokaż mniej",
       "no_title": "(Bez tytułu)",
       "resize": "Zmień rozmiar wydarzenia",
       "duplicate": "Duplikuj",
@@ -2927,7 +2996,10 @@
       "all_events": "Wszystkie wydarzenia",
       "cancel": "Anuluj",
       "save": "Zapisz",
-      "delete": "Usuń"
+      "delete": "Usuń",
+      "rsvp_title": "Odpowiedz na wydarzenie cykliczne",
+      "rsvp_description": "To jest wydarzenie cykliczne. Których wydarzeń dotyczy Twoja odpowiedź?",
+      "respond": "Odpowiedz"
     },
     "alerts": {
       "title": "Przypomnienie",
@@ -2970,7 +3042,7 @@
       "enable_tasks": "Włącz zadania",
       "enable_tasks_desc": "Pokaż widok zadań w kalendarzu do zarządzania zadaniami",
       "show_tasks_on_calendar": "Pokaż zadania w kalendarzu",
-      "show_tasks_on_calendar_desc": "Wyświetlaj oznaczenia zadań w dziennym i tygodniowym widoku kalendarza",
+      "show_tasks_on_calendar_desc": "Wyświetlaj zadania w miesięcznym, tygodniowym i dziennym widoku kalendarza",
       "hover_preview": "Podgląd wydarzenia po najechaniu",
       "hover_preview_desc": "Pokaż wyskakujące okno szczegółów po najechaniu na wydarzenia w kalendarzu",
       "hover_preview_instant": "Natychmiast",
@@ -3012,6 +3084,9 @@
       "alert_now": "Zaczyna się teraz",
       "alert_in_minutes": "Za {count} min",
       "invitation_sent": "Zaproszenia wysłano",
+      "invitations_denied_title": "Nie można wysłać zaproszeń",
+      "invitations_denied": "Serwer odmówił wysłania zaproszeń: {reason}. Zapisać wydarzenie bez ich wysyłania?",
+      "save_without_invitations": "Zapisz bez zaproszeń",
       "rsvp_updated": "Odpowiedź zaktualizowano",
       "rsvp_error": "Nie udało się zaktualizować odpowiedzi",
       "event_duplicated": "Wydarzenie zduplikowano",
@@ -3040,7 +3115,7 @@
       "supported_formats": "Obsługuje pliki iCalendar (.ics)",
       "url_description": "Wprowadź adres URL zewnętrznego kanału iCalendar (.ics), aby zaimportować wydarzenia.",
       "url_placeholder": "https://example.com/calendar.ics",
-      "url_hint": "Obsługuje adresy URL CalDAV i iCalendar (.ics)",
+      "url_hint": "Obsługuje adresy URL iCalendar (.ics)",
       "fetch": "Pobierz",
       "invalid_url": "Wprowadź prawidłowy adres URL",
       "url_fetch_failed": "Nie udało się pobrać kalendarza z adresu URL",
@@ -3226,6 +3301,7 @@
     "body_placeholder": "Treść zawiera...",
     "folder": "Folder",
     "all_folders": "Wszystkie foldery",
+    "all_folders_except_spam_trash": "Wszystkie foldery oprócz Spamu i Kosza",
     "has_attachment": "Załączniki",
     "date_after": "Po",
     "date_before": "Przed",
@@ -3288,6 +3364,8 @@
     "rename": "Zmień nazwę",
     "rename_title": "Zmień nazwę",
     "new_name": "Nowa nazwa",
+    "name_forbidden_chars": "Serwer nie zezwala na te znaki w nazwach: {chars}",
+    "name_reserved": "Ta nazwa jest zarezerwowana na serwerze.",
     "delete": "Usuń",
     "delete_confirm_title": "Usuń zasób",
     "delete_confirm_message": "Czy na pewno chcesz usunąć \"{name}\"? Tej operacji nie można cofnąć.",

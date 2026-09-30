@@ -2,8 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { BUILTIN_THEMES } from '../builtin-themes';
 
 describe('BUILTIN_THEMES', () => {
-  it('contains exactly 6 themes', () => {
-    expect(BUILTIN_THEMES).toHaveLength(6);
+  it('contains exactly 7 themes', () => {
+    expect(BUILTIN_THEMES).toHaveLength(7);
   });
 
   it('all themes have required fields', () => {
@@ -40,6 +40,7 @@ describe('BUILTIN_THEMES', () => {
 
   it('themes have correct names', () => {
     const names = BUILTIN_THEMES.map(t => t.name);
+    expect(names).toContain('Flat fields');
     expect(names).toContain('Nord');
     expect(names).toContain('Catppuccin');
     expect(names).toContain('Solarized');

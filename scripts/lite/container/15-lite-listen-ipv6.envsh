@@ -1,0 +1,9 @@
+#!/bin/sh
+# Sourced by the nginx image's entrypoint before it renders
+# /etc/nginx/templates: listen on IPv6 as well, unless the host has none
+# (nginx refuses to start on a `listen [::]` it cannot bind).
+if [ -f /proc/net/if_inet6 ]; then
+    export LITE_LISTEN_IPV6="listen [::]:8080;"
+else
+    export LITE_LISTEN_IPV6=""
+fi

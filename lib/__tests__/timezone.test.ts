@@ -172,4 +172,12 @@ describe('mail timestamp formatting honours the override', () => {
     expect(formatDate(received)).toContain('23:00');
     expect(formatDateTime(received, '24h', { year: 'numeric', month: 'short', day: 'numeric' })).toContain('23:00');
   });
+
+  it.each(['smart', 'relative', 'full'] as const)('formatDate returns "" for an invalid date in %s mode (#1099)', (dateFormat) => {
+    useSettingsStore.setState({ timeZone: 'Asia/Tokyo', dateFormat });
+    expect(formatDate('not-a-valid-date')).toBe('');
+    expect(formatDate('10000-01-01T00:00:00Z')).toBe('');
+    expect(formatDate(new Date('nope'))).toBe('');
+    expect(formatDate(undefined as unknown as string)).toBe('');
+  });
 });

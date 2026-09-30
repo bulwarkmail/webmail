@@ -58,11 +58,13 @@ describe('sanitizeDefaultSidebarApps', () => {
     expect(result[0].id).toBe('admin-app-b');
   });
 
-  it('falls back to a known icon for anything Lucide cannot resolve', () => {
+  it('falls back to a known icon for anything that cannot resolve', () => {
     expect(sanitizeDefaultSidebarApps([app({ icon: 'Globe/../../etc' })])[0].icon).toBe('Globe');
     expect(sanitizeDefaultSidebarApps([app({ icon: '' })])[0].icon).toBe('Globe');
     expect(sanitizeDefaultSidebarApps([app({ icon: 12 })])[0].icon).toBe('Globe');
     expect(sanitizeDefaultSidebarApps([app({ icon: 'Rss' })])[0].icon).toBe('Rss');
+    expect(sanitizeDefaultSidebarApps([app({ icon: 'tabler:brand-github' })])[0].icon).toBe('tabler:brand-github');
+    expect(sanitizeDefaultSidebarApps([app({ icon: 'tabler:../x' })])[0].icon).toBe('Globe');
   });
 
   it('coerces openMode and showOnMobile', () => {

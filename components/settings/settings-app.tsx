@@ -35,8 +35,8 @@ import {
   SwatchBook,
   Download,
   X,
-  type LucideIcon,
-} from 'lucide-react';
+  type AppIcon,
+} from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { AppearanceSettings } from '@/components/settings/appearance-settings';
@@ -116,11 +116,11 @@ type SettingsTabId = Tab | PluginTabId;
 interface TabDef {
   id: SettingsTabId;
   label: string;
-  icon: LucideIcon;
+  icon: AppIcon;
   group: TabGroup;
 }
 
-const tabIcons: Record<Tab, LucideIcon> = {
+const tabIcons: Record<Tab, AppIcon> = {
   account: User,
   language: Languages,
   notifications: Bell,
@@ -542,7 +542,7 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
     // Appearance
     { id: 'appearance', label: t('tabs.appearance'), icon: tabIcons.appearance, group: 'appearance' },
     { id: 'layout', label: t('tabs.layout'), icon: tabIcons.layout, group: 'appearance' },
-    ...(isFeatureEnabled('themesEnabled') ? [{ id: 'themes' as Tab, label: 'Themes', icon: tabIcons.themes, group: 'appearance' as TabGroup }] : []),
+    ...(isFeatureEnabled('themesEnabled') ? [{ id: 'themes' as Tab, label: t('tabs.themes'), icon: tabIcons.themes, group: 'appearance' as TabGroup }] : []),
 
     // Mail
     { id: 'reading', label: t('tabs.reading'), icon: tabIcons.reading, group: 'mail' },
@@ -838,7 +838,7 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
 
           <div className="border-t border-border px-5 py-3">
             <button
-              onClick={logout}
+              onClick={() => logout()}
               className="w-full flex items-center gap-3 py-2.5 text-sm text-destructive hover:bg-muted rounded-md px-2 transition-colors duration-150"
             >
               <LogOut className="w-4 h-4" />

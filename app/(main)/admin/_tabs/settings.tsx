@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Save, RotateCcw, Loader2 } from 'lucide-react';
+import { Save, RotateCcw, Loader2 } from '@/components/icons';
 import { apiFetch } from '@/lib/browser-navigation';
 import { JmapServersSection } from './_jmap-servers-section';
 import type { JmapServerEntry } from '@/lib/admin/jmap-servers';
@@ -126,6 +126,13 @@ export function SettingsTab() {
         <ToggleSetting label="Stalwart Features" description="Enable Stalwart Mail Server-specific features" configKey="stalwartFeaturesEnabled" value={currentValue('stalwartFeaturesEnabled') as boolean} source={config.stalwartFeaturesEnabled?.source} onChange={handleChange} onRevert={handleRevert} />
         <ToggleSetting label="Demo Mode" description="Enable demo mode with sample data" configKey="demoMode" value={currentValue('demoMode') as boolean} source={config.demoMode?.source} onChange={handleChange} onRevert={handleRevert} />
         <ToggleSetting label="Search Engine Indexing" description="Allow search engines to index this webmail. Off (the default) sends noindex/nofollow in the page head, recommended for private deployments." configKey="searchEngineIndexing" value={currentValue('searchEngineIndexing') as boolean} source={config.searchEngineIndexing?.source} onChange={handleChange} onRevert={handleRevert} />
+      </SettingsSection>
+
+      <SettingsSection title="Login Page">
+        <ToggleSetting label="Show Version" description="Show the webmail version in the login page footer. Turn off to keep the exact version hidden from visitors who are not signed in." configKey="loginShowVersion" value={currentValue('loginShowVersion') as boolean} source={config.loginShowVersion?.source} onChange={handleChange} onRevert={handleRevert} />
+        <ToggleSetting label="Show 2FA Code Option" description="Show the &quot;I have a 2FA code&quot; toggle on the login form. Turn off when two-factor authentication is handled by an external identity provider. Accounts that require a code still get the field." configKey="loginShowTotp" value={currentValue('loginShowTotp') as boolean} source={config.loginShowTotp?.source} onChange={handleChange} onRevert={handleRevert} />
+        <ToggleSetting label="Show Heading" description="Show the application name below the login logo" configKey="loginShowHeading" value={currentValue('loginShowHeading') as boolean} source={config.loginShowHeading?.source} onChange={handleChange} onRevert={handleRevert} />
+        <ToggleSetting label="Show Subtitle" description="Show the subtitle below the login heading" configKey="loginShowSubtitle" value={currentValue('loginShowSubtitle') as boolean} source={config.loginShowSubtitle?.source} onChange={handleChange} onRevert={handleRevert} />
       </SettingsSection>
 
       <SettingsSection title="JMAP Servers (multi-server)">

@@ -8,17 +8,20 @@ import { Input } from "@/components/ui/input";
 interface NewFolderDialogProps {
   onConfirm: (name: string) => Promise<void>;
   onCancel: () => void;
+  /** Returns an error message for a name the server would refuse. */
+  validate?: (name: string) => string | null;
 }
 
-export function NewFolderDialog({ onConfirm, onCancel }: NewFolderDialogProps) {
+export function NewFolderDialog({ onConfirm, onCancel, validate }: NewFolderDialogProps) {
   const t = useTranslations("files");
   const [name, setName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const nameError = name.trim() ? validate?.(name.trim()) ?? null : null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = name.trim();
-    if (!trimmed) return;
+    if (!trimmed || validate?.(trimmed)) return;
 
     setIsSubmitting(true);
     try {
@@ -41,13 +44,15 @@ export function NewFolderDialog({ onConfirm, onCancel }: NewFolderDialogProps) {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder={t("new_folder_name")}
-            className="mb-4"
+            className={nameError ? "mb-1" : "mb-4"}
+            aria-invalid={!!nameError}
           />
+          {nameError && <p className="text-xs text-destructive mb-3">{nameError}</p>}
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
               {t("cancel")}
             </Button>
-            <Button type="submit" disabled={!name.trim() || isSubmitting}>
+            <Button type="submit" disabled={!name.trim() || !!nameError || isSubmitting}>
               {t("create")}
             </Button>
           </div>

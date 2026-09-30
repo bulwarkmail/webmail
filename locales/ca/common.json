@@ -254,6 +254,7 @@
       "button": "Buida la carpeta",
       "confirm_title": "Buida la carpeta",
       "confirm_message": "Tots els correus d'aquesta carpeta se suprimiran definitivament. Aquesta acció no es pot desfer.",
+      "confirm_message_trash": "Tots els correus d'aquesta carpeta es mouran a la paperera.",
       "confirm_button": "Buida la carpeta",
       "junk_hint": "Podeu buidar la carpeta de correu brossa per eliminar definitivament tots els missatges.",
       "trash_hint": "Podeu buidar la paperera per eliminar definitivament tots els missatges."
@@ -310,6 +311,8 @@
     "view_source": "Mostra el codi font",
     "fullscreen": "Pantalla completa",
     "exit_fullscreen": "Surt de la pantalla completa",
+    "view_in_dark_mode": "Veure en mode fosc",
+    "view_in_light_mode": "Veure en mode clar",
     "export_email": "Exporta com a .eml",
     "forward_as_attachment": "Reenvia com a fitxer adjunt",
     "import_email": "Importa .eml o .zip",
@@ -578,7 +581,12 @@
       "copied": "Copiat!",
       "copy_failed": "No s'ha pogut copiar"
     },
-    "send_now": "Envia ara"
+    "send_now": "Envia ara",
+    "verification_code": {
+      "copy": "Copia el codi {code}",
+      "copied": "Codi copiat",
+      "copy_failed": "No s'ha pogut copiar el codi"
+    }
   },
   "email_composer": {
     "read_receipt_on": "Confirmació de lectura sol·licitada (feu clic per desactivar-la)",
@@ -643,11 +651,12 @@
     "from_override": {
       "toggle_off": "Sobreescriu",
       "toggle_on": "Cancel·la la sobreescriptura",
-      "toggle_tooltip": "Editeu lliurement el nom i l'adreça del remitent. El correu es continua enviant a través de la vostra identitat: només canvia la capçalera «De» visible.",
+      "toggle_tooltip": "Editeu lliurement el nom i l'adreça del remitent. El correu es continua enviant a través de la vostra identitat.",
       "name_label": "Nom del remitent",
       "name_placeholder": "Nom",
       "email_label": "Adreça electrònica del remitent",
-      "email_placeholder": "alias@exemple.com"
+      "email_placeholder": "alias@exemple.com",
+      "envelope_notice": "Si el vostre servidor no accepta aquesta adreça com a remitent del sobre, s'hi fa servir {identity}, i els destinataris la poden veure a la capçalera Return-Path."
     },
     "use_template": "Plantilla",
     "save_as_template": "Desa com a plantilla",
@@ -660,10 +669,14 @@
     "upload_progress": "Pujant {uploaded} / {total}",
     "upload_cancel": "Cancel·la la pujada",
     "upload_failed": "No s'ha pogut pujar {filename}",
+    "attachment_too_large": "«{name}» supera la mida que permet el servidor ({max} per fitxer)",
+    "attachments_total_too_large": "Els adjunts superarien el límit del servidor de {max} per missatge",
     "drop_files": "Deixeu anar els fitxers per adjuntar-los",
     "show_less": "Mostra'n menys",
     "send_failed": "No s'ha pogut enviar el correu",
     "send_timeout": "El servidor ha deixat de respondre. Comproveu la carpeta Enviats abans de tornar a enviar: el missatge pot haver sortit.",
+    "send_recipients_rejected": "No s'ha enviat: el servidor ha rebutjat tots els destinataris.",
+    "send_some_recipients_rejected": "S'ha enviat, però no a aquests destinataris: el servidor els ha rebutjat.",
     "continue_draft": "Continua l'esborrany",
     "close_draft_title": "Voleu desar o descartar l'esborrany?",
     "close_draft_message": "Teniu canvis sense desar. Voleu desar-los com a esborrany o descartar-los?",
@@ -778,6 +791,10 @@
     "email_sent": "Correu enviat correctament",
     "email_deleted": "Correu suprimit",
     "email_archived": "Correu arxivat",
+    "emails_deleted": "{count, plural, one {# correu suprimit} other {# correus suprimits}}",
+    "emails_archived": "{count, plural, one {# correu arxivat} other {# correus arxivats}}",
+    "error_archiving": "No s'ha pogut arxivar el correu",
+    "error_updating": "No s'ha pogut actualitzar el correu",
     "email_starred": "Correu destacat",
     "email_unstarred": "S'ha tret l'estrella del correu",
     "email_marked_read": "Correu marcat com a llegit",
@@ -921,12 +938,25 @@
       "sidebar_apps": "Aplicacions de la barra lateral",
       "notifications": "Notificacions",
       "layout": "Disposició",
+      "themes": "Temes",
       "reading": "Lectura",
       "composing": "Redacció",
       "downloads": "Baixades",
       "content_senders": "Contingut i remitents",
       "about_data": "Quant a i dades",
       "debug": "Depuració"
+    },
+    "themes": {
+      "title": "Temes",
+      "description": "Trieu entre els temes desplegats pel vostre administrador i els predefinits integrats.",
+      "locked": "La selecció de tema està bloquejada per un administrador.",
+      "forced": "El tema «{name}» l'imposa l'administrador i no es pot canviar",
+      "admin_theme": "Tema de l'administrador",
+      "activated": "Tema activat",
+      "default_restored": "S'ha restaurat el tema predeterminat",
+      "default_name": "Predeterminat",
+      "default_badge": "Predeterminat",
+      "admin_enforced": "Imposat per l'administrador"
     },
     "tab_groups": {
       "general": "General",
@@ -1065,6 +1095,10 @@
       "tint_list_rows": {
         "label": "Acoloreix les files de la llista segons l'etiqueta",
         "description": "Ombreja cada fila de missatge amb el color de la primera etiqueta. Desactiveu-ho per mantenir les files planes; els punts i les etiquetes encara mostraran el color."
+      },
+      "tint_list_rows_by_account": {
+        "label": "Tint List Rows by Account Color",
+        "description": "In the unified view, shade each row with its account color instead of showing the account dot. Takes precedence over the tag tint; tags keep their color on their chips."
       },
       "show_folder_total_count": {
         "label": "Mostra el nombre total de missatges",
@@ -1207,7 +1241,9 @@
         "enabled": "Notificacions de correu",
         "enabled_desc": "Mostra notificacions quan arribin correus nous",
         "sound": "So de notificació",
-        "sound_desc": "Reprodueix un avís sonor quan arribin correus nous"
+        "sound_desc": "Reprodueix un avís sonor quan arribin correus nous",
+        "inbox_only": "Inbox only",
+        "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
       },
       "calendar": {
         "title": "Notificacions de calendari",
@@ -1341,6 +1377,10 @@
         "label": "Mostra el text de previsualització",
         "description": "Mostra la previsualització del correu a la llista",
         "focus_description": "Mostra el text de previsualització incrustat dins la llista de missatges d'una línia centrada"
+      },
+      "show_verification_codes": {
+        "label": "Mostra els codis de verificació",
+        "description": "Ofereix el codi dels correus d'inici de sessió i de confirmació per copiar-lo amb un clic, a la llista durant un dia i al missatge"
       },
       "disable_threading": {
         "label": "Desactiva l'agrupació en converses",
@@ -1712,14 +1752,36 @@
       },
       "link_device": {
         "title": "Enllaça l'aplicació mòbil",
-        "description": "Inicieu la sessió a l'aplicació mòbil Bulwark Mail sense escriure res. Genereu un codi QR aquí i escanegeu-lo des de la pantalla d'inici de sessió de l'aplicació.",
+        "description": "Inicieu la sessió a l'aplicació Bulwark Mail del telèfon sense escriure-hi la contrasenya. El telèfon obté el seu propi inici de sessió, de manera que tancar la sessió aquí no la tanca al telèfon.",
         "generate": "Mostra el codi QR",
         "regenerate": "Mostra un codi nou",
-        "instructions": "Obriu l'aplicació Bulwark Mail, toqueu «Escaneja el codi QR» a la pantalla d'inici de sessió i apunteu la càmera aquí.",
+        "instructions": "Obriu l'aplicació Bulwark Mail i toqueu «Scan a sign-in code» a la pantalla d'inici de sessió (o «Add account» → «Scan a sign-in code» si ja heu iniciat la sessió) i, després, apunteu la càmera aquí.",
         "expires_in": "Aquest codi caduca d'aquí a {seconds} segons. Només es pot utilitzar una vegada.",
         "expired": "Aquest codi ha caducat.",
-        "generating": "Generant…",
-        "error": "No s'ha pogut crear el codi d'aparellament. Torneu-ho a provar."
+        "error": "No s'ha pogut crear el codi d'aparellament. Torneu-ho a provar.",
+        "password_prompt": "Introduïu la contrasenya per confirmar que sou vós. El telèfon obté el seu propi inici de sessió; la contrasenya no s'envia al telèfon.",
+        "show_password": "Mostra la contrasenya",
+        "hide_password": "Amaga la contrasenya",
+        "continue": "Continua",
+        "error_wrong_password": "Contrasenya incorrecta. Torneu-ho a provar.",
+        "totp_prompt": "Introduïu el codi de l'aplicació d'autenticació.",
+        "error_password_or_code": "La contrasenya o el codi són incorrectes.",
+        "error_not_signed_in": "La sessió ha caducat. Torneu a iniciar la sessió per enllaçar un dispositiu.",
+        "error_impersonation": "No es poden enllaçar dispositius mentre consulteu la bústia d'un altre usuari.",
+        "error_too_many_attempts": "Massa intents. Espereu un moment i torneu-ho a provar.",
+        "error_session_secret": "L'enllaç de dispositius no està configurat en aquest servidor (falta SESSION_SECRET). Poseu-vos en contacte amb l'administrador.",
+        "error_server_unreachable": "No s'ha pogut connectar amb el servidor de correu. Torneu-ho a provar.",
+        "error_pairing_unavailable": "El vostre servidor de correu no permet enllaçar dispositius d'aquesta manera. Poseu-vos en contacte amb l'administrador.",
+        "qr_alt": "Codi QR d'inici de sessió",
+        "link_label": "Enllaç d'inici de sessió",
+        "copy_link": "Copia l'enllaç d'inici de sessió",
+        "copied": "Copiat",
+        "copy_hint": "No teniu càmera? Copieu l'enllaç i enganxeu-lo a l'aplicació amb «Paste sign-in link».",
+        "success_title": "Sessió iniciada al telèfon",
+        "success_body": "Podeu tancar aquesta pàgina. Per enllaçar un altre dispositiu, mostreu un codi nou.",
+        "link_another": "Enllaça un altre dispositiu",
+        "use_sso": "Utilitza l'inici de sessió únic",
+        "error_insecure_server": "L'aplicació mòbil només es connecta a servidors de correu per https, i aquest fa servir http."
       },
       "public_keys": {
         "name_label": "Nom de la clau pública",
@@ -1789,7 +1851,9 @@
       "warnings": {
         "end_before_start": "La data de finalització ha de ser posterior a la data d'inici",
         "start_in_past": "La data d'inici és al passat",
-        "empty_body": "El cos del missatge està buit - els destinataris rebran una resposta en blanc"
+        "empty_body": "El cos del missatge està buit - els destinataris rebran una resposta en blanc",
+        "subject_too_long": "L'assumpte és massa llarg per al servidor (com a màxim {max} bytes).",
+        "body_too_long": "El missatge és massa llarg per al servidor (com a màxim {max} bytes, amb el format inclòs)."
       }
     },
     "folders": {
@@ -2010,6 +2074,7 @@
       "actions": "Accions",
       "add_action": "Afegeix una acció",
       "stop_processing": "Atura el processament de les regles següents",
+      "include_spam": "Mou també els missatges marcats com a correu brossa",
       "attachment_type_placeholder": "p. ex. pdf, doc, jpg",
       "value_placeholder_multi": "Valor (múltiples separats per comes)",
       "condition_fields": {
@@ -2051,6 +2116,8 @@
       "copy_to_folder": "Selecciona una carpeta",
       "forward_to": "Reenvia a l'adreça electrònica",
       "forward_placeholder": "correu@exemple.com",
+      "forward_keep_copy": "Conserva'n una còpia",
+      "forward_limit": "Límit de reenviaments per missatge en aquest servidor: {count}. Els reenviaments addicionals s'ometen.",
       "reject_message": "Missatge de rebuig",
       "reject_placeholder": "El vostre correu ha estat rebutjat",
       "label_name": "Nom de l'etiqueta",
@@ -2801,6 +2868,8 @@
       "no_events": "Cap esdeveniment",
       "all_day": "Tot el dia",
       "more": "+{count} més",
+      "show_more": "Mostra'n més",
+      "show_less": "Mostra'n menys",
       "no_title": "(Sense títol)",
       "resize": "Redimensiona l'esdeveniment",
       "duplicate": "Duplica",
@@ -2927,7 +2996,10 @@
       "all_events": "Tots els esdeveniments",
       "cancel": "Cancel·la",
       "save": "Desa",
-      "delete": "Suprimeix"
+      "delete": "Suprimeix",
+      "rsvp_title": "Respon a l'esdeveniment periòdic",
+      "rsvp_description": "Aquest és un esdeveniment periòdic. A quins esdeveniments s'aplica la vostra resposta?",
+      "respond": "Respon"
     },
     "alerts": {
       "title": "Recordatoris",
@@ -2970,7 +3042,7 @@
       "enable_tasks": "Activa les tasques",
       "enable_tasks_desc": "Mostra una vista de tasques al calendari per gestionar pendents",
       "show_tasks_on_calendar": "Mostra les tasques al calendari",
-      "show_tasks_on_calendar_desc": "Mostra etiquetes de tasca a les vistes de dia i setmana del calendari",
+      "show_tasks_on_calendar_desc": "Mostra les tasques a les vistes de mes, setmana i dia del calendari",
       "hover_preview": "Previsualització en passar el cursor",
       "hover_preview_desc": "Mostra una finestra emergent de detalls en passar el cursor per sobre dels esdeveniments",
       "hover_preview_instant": "Instantània",
@@ -3038,6 +3110,9 @@
       "alert_now": "Comença ara",
       "alert_in_minutes": "D'aquí a {count} min",
       "invitation_sent": "Invitacions enviades",
+      "invitations_denied_title": "No es poden enviar les invitacions",
+      "invitations_denied": "El servidor ha refusat enviar les invitacions: {reason}. Voleu desar l'esdeveniment sense enviar-les?",
+      "save_without_invitations": "Desa sense invitacions",
       "rsvp_updated": "Resposta actualitzada",
       "rsvp_error": "No s'ha pogut actualitzar la resposta",
       "event_duplicated": "Esdeveniment duplicat",
@@ -3067,7 +3142,7 @@
       "supported_formats": "Admet fitxers iCalendar (.ics)",
       "url_description": "Introduïu l'URL d'un canal iCalendar (.ics) extern per importar-ne els esdeveniments.",
       "url_placeholder": "https://example.com/calendar.ics",
-      "url_hint": "Admet URL de CalDAV i iCalendar (.ics)",
+      "url_hint": "Admet URL d’iCalendar (.ics)",
       "fetch": "Obtén",
       "invalid_url": "Introduïu un URL vàlid",
       "url_fetch_failed": "No s'ha pogut obtenir el calendari des de l'URL",
@@ -3268,6 +3343,7 @@
     "body_placeholder": "El cos conté...",
     "folder": "Carpeta",
     "all_folders": "Totes les carpetes",
+    "all_folders_except_spam_trash": "Totes les carpetes excepte Correu brossa i Paperera",
     "has_attachment": "Fitxers adjunts",
     "date_after": "Després de",
     "date_before": "Abans de",
@@ -3330,6 +3406,8 @@
     "rename": "Canvia el nom",
     "rename_title": "Canvia el nom",
     "new_name": "Nom nou",
+    "name_forbidden_chars": "El servidor no permet aquests caràcters als noms: {chars}",
+    "name_reserved": "Aquest nom està reservat al servidor.",
     "delete": "Suprimeix",
     "delete_confirm_title": "Suprimeix el recurs",
     "delete_confirm_message": "Segur que voleu suprimir «{name}»? Això no es pot desfer.",

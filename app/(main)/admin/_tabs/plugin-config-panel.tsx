@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Puzzle, ArrowLeft, Loader2, Eye, EyeOff } from 'lucide-react';
+import { Puzzle, ArrowLeft, Loader2, Eye, EyeOff } from '@/components/icons';
 import { apiFetch } from '@/lib/browser-navigation';
 import { usePluginSlotOffers } from '@/hooks/use-plugin-slot-offers';
 import { PluginIframeSlot } from '@/components/plugins/plugin-iframe-slot';

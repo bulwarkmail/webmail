@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Star, Plus, Square, CheckSquare } from 'lucide-react';
+import { Star, Plus, Square, CheckSquare } from '@/components/icons';
 import { cn } from '@/lib/utils';
 import { validateTemplateName } from '@/lib/template-utils';
 import { BUILT_IN_PLACEHOLDERS } from '@/lib/template-types';

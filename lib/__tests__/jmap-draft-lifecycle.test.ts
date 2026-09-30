@@ -103,6 +103,23 @@ describe('draft replace lifecycle (#849)', () => {
     expect(sets[0].destroy).toBeUndefined();
   });
 
+  it('createDraft keeps a reply draft in its thread', async () => {
+    // A reply draft re-opened (or restored by Undo) has nothing else to
+    // rebuild In-Reply-To / References from, so the draft must carry them.
+    const client = createClient();
+    const captured = mockFlow();
+
+    await client.createDraft(
+      ['bob@example.com'], 'Re: Subject', 'body',
+      undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+      ['<parent@example.com>'], ['root@example.com', 'parent@example.com'],
+    );
+
+    const created = Object.values(emailSetCalls(captured)[0].create as Record<string, Record<string, unknown>>)[0];
+    expect(created.inReplyTo).toEqual(['parent@example.com']);
+    expect(created.references).toEqual(['root@example.com', 'parent@example.com']);
+  });
+
   it('createDraft destroys the previous version only after the create succeeded', async () => {
     const client = createClient();
     const captured = mockFlow();

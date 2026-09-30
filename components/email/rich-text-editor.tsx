@@ -49,7 +49,7 @@ import {
   Trash2,
   Rows3,
   Columns3,
-} from "lucide-react";
+} from "@/components/icons";
 
 export interface InlineImageUpload {
   src: string;
