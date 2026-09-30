@@ -7,6 +7,7 @@ import { debug } from "@/lib/debug";
 import { formatIsoInTimeZone } from "@/lib/calendar-utils";
 import { fromDisplayDate, getEffectiveTimeZone } from "@/lib/timezone";
 import type { Calendar } from "@/lib/jmap/types";
+import type { TimeScale } from "@/lib/calendar-time-scale";
 
 interface DragCreateState {
   dayKey: string;
@@ -37,7 +38,9 @@ interface DropTargetState {
 }
 
 interface UseTimeGridInteractionsOptions {
-  hourHeight: number;
+  /** Pixel-Y <-> minutes-since-midnight mapping for the active grid (linear,
+   * or the "compact night hours" piecewise scale - see calendar-time-scale.ts). */
+  timeScale: TimeScale;
   calendars: Calendar[];
   onCreateRange: (startDate: Date, endDate?: Date) => void;
   errorMessages: {
@@ -50,16 +53,16 @@ interface UseTimeGridInteractionsOptions {
 }
 
 export function useTimeGridInteractions({
-  hourHeight,
+  timeScale,
   calendars,
   onCreateRange,
   errorMessages,
   isMobile,
 }: UseTimeGridInteractionsOptions) {
   const snapToMinutes = useCallback((clientY: number, containerTop: number): number => {
-    const raw = ((clientY - containerTop) / hourHeight) * 60;
+    const raw = timeScale.yToMinutes(clientY - containerTop);
     return Math.max(0, Math.min(1440, Math.round(raw / 15) * 15));
-  }, [hourHeight]);
+  }, [timeScale]);
 
   const wasDragging = useRef(false);
 
@@ -153,19 +156,25 @@ export function useTimeGridInteractions({
     ref: NonNullable<typeof resizeRef.current>,
     clientY: number,
   ): { startMinutes: number; durationMinutes: number } => {
+    // Deltas are converted through absolute Y positions (not a flat
+    // deltaY/hourHeight ratio) so this stays correct under a non-linear
+    // (compact-night) scale too - the same pixel delta means a different
+    // number of minutes depending on where on the grid it happens.
     const deltaY = clientY - ref.startY;
-    const deltaMinutes = Math.round((deltaY / hourHeight) * 60 / 15) * 15;
     const originalEnd = ref.originalStartMinutes + ref.originalDurationMinutes;
 
     if (ref.edge === "bottom") {
-      const newDuration = Math.max(15, ref.originalDurationMinutes + deltaMinutes);
+      const rawEndMinutes = timeScale.yToMinutes(timeScale.minutesToY(originalEnd) + deltaY);
+      const snappedEnd = Math.round(rawEndMinutes / 15) * 15;
+      const newDuration = Math.max(15, snappedEnd - ref.originalStartMinutes);
       return { startMinutes: ref.originalStartMinutes, durationMinutes: newDuration };
     }
     // Top edge: move start, keep end fixed. Clamp so duration stays >= 15 and start >= 0.
-    let newStart = ref.originalStartMinutes + deltaMinutes;
+    const rawStartMinutes = timeScale.yToMinutes(timeScale.minutesToY(ref.originalStartMinutes) + deltaY);
+    let newStart = Math.round(rawStartMinutes / 15) * 15;
     newStart = Math.max(0, Math.min(originalEnd - 15, newStart));
     return { startMinutes: newStart, durationMinutes: originalEnd - newStart };
-  }, [hourHeight]);
+  }, [timeScale]);
 
   const handleResizePointerDown = useCallback((
     eventId: string,
@@ -191,14 +200,15 @@ export function useTimeGridInteractions({
   const handleResizePointerMove = useCallback((e: PointerEvent) => {
     if (!resizeRef.current) return;
     const { startMinutes, durationMinutes } = computeResize(resizeRef.current, e.clientY);
+    const topPx = timeScale.minutesToY(startMinutes);
     setResizeVisual({
       eventId: resizeRef.current.eventId,
-      topPx: (startMinutes / 60) * hourHeight,
-      heightPx: (durationMinutes / 60) * hourHeight,
+      topPx,
+      heightPx: timeScale.minutesToY(startMinutes + durationMinutes) - topPx,
       startMinutes,
       durationMinutes,
     });
-  }, [hourHeight, computeResize]);
+  }, [timeScale, computeResize]);
 
   const handleResizePointerUp = useCallback(async (e: PointerEvent) => {
     const resize = resizeRef.current;
@@ -335,9 +345,9 @@ export function useTimeGridInteractions({
   const snapDragMinutes = useCallback((e: DragEvent<HTMLDivElement>): number => {
     const rect = e.currentTarget.getBoundingClientRect();
     const y = e.clientY - rect.top;
-    const raw = (y / hourHeight) * 60;
+    const raw = timeScale.yToMinutes(y);
     return Math.max(0, Math.min(1425, Math.round(raw / 15) * 15));
-  }, [hourHeight]);
+  }, [timeScale]);
 
   const handleColumnDragOver = useCallback((e: DragEvent<HTMLDivElement>, dayKey: string) => {
     if (!e.dataTransfer.types.includes("application/x-calendar-event")) return;
