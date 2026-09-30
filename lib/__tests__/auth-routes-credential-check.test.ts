@@ -19,8 +19,9 @@ vi.mock('next/server', () => ({
   },
 }));
 
+const loggerWarn = vi.hoisted(() => vi.fn());
 vi.mock('@/lib/logger', () => ({
-  logger: { warn: vi.fn(), error: vi.fn(), debug: vi.fn(), info: vi.fn() },
+  logger: { warn: loggerWarn, error: vi.fn(), debug: vi.fn(), info: vi.fn() },
 }));
 
 const cookieSet = vi.fn();
@@ -145,7 +146,10 @@ function mockRequest(body: unknown) {
   };
 }
 
-type RouteResponse = { status: number; json: () => Promise<{ error?: string; ok?: boolean }> };
+type RouteResponse = {
+  status: number;
+  json: () => Promise<{ error?: string; ok?: boolean; code?: string; hint?: string; warning?: string }>;
+};
 
 async function postSession(body: unknown) {
   const { POST } = await import('@/app/api/auth/session/route');
@@ -171,6 +175,7 @@ beforeEach(() => {
   setStalwartAuthContext.mockClear();
   setStalwartAuthContextInStore.mockClear();
   recordLogin.mockClear();
+  loggerWarn.mockClear();
   vi.resetModules();
   installFakeServer();
 });
@@ -304,5 +309,50 @@ describe('POST /api/auth/stalwart-context (GHSA-wxcm-j4jc-9fxq)', () => {
     });
     expect(status).toBe(200);
     expect(setStalwartAuthContext).toHaveBeenCalledWith(2, expect.objectContaining({ username: 'alice@example.org', serverUrl: SERVER }));
+  });
+});
+
+/** What undici throws when the TLS handshake rejects a self-signed certificate. */
+function selfSignedFetchError(): TypeError {
+  const cause = Object.assign(new Error('self-signed certificate'), { code: 'DEPTH_ZERO_SELF_SIGNED_CERT' });
+  return Object.assign(new TypeError('fetch failed'), { cause });
+}
+
+describe('unreachable or untrusted mail server (#1073)', () => {
+  it('stalwart-context logs the TLS cause and tells the browser how to fix it', async () => {
+    fetchSpy.mockRejectedValue(selfSignedFetchError());
+    const { status, body } = await postContext({
+      serverUrl: SERVER, username: 'alice@example.org', authHeader: basic('alice@example.org', 'alice-secret'), slot: 0,
+    });
+    expect(status).toBe(502);
+    expect(body.code).toBe('DEPTH_ZERO_SELF_SIGNED_CERT');
+    expect(body.hint).toMatch(/NODE_EXTRA_CA_CERTS/);
+    expect(setStalwartAuthContext).not.toHaveBeenCalled();
+    expect(loggerWarn).toHaveBeenCalledWith(
+      expect.stringContaining('could not verify the sign-in'),
+      expect.objectContaining({ serverUrl: SERVER, code: 'DEPTH_ZERO_SELF_SIGNED_CERT' }),
+    );
+  });
+
+  it('session reports a DNS failure with its cause', async () => {
+    const cause = Object.assign(new Error('getaddrinfo ENOTFOUND mail.example.org'), { code: 'ENOTFOUND' });
+    fetchSpy.mockRejectedValue(Object.assign(new TypeError('fetch failed'), { cause }));
+    const { status, body } = await postSession({
+      serverUrl: SERVER, username: 'alice@example.org', password: 'alice-secret', slot: 0,
+    });
+    expect(status).toBe(502);
+    expect(body.code).toBe('ENOTFOUND');
+    expect(body.hint).toMatch(/resolve/);
+    expect(cookieSet).not.toHaveBeenCalled();
+    expect(loggerWarn).toHaveBeenCalled();
+  });
+
+  it('does not log a wrong password as a server problem', async () => {
+    const { status, body } = await postContext({
+      serverUrl: SERVER, username: 'alice@example.org', authHeader: basic('alice@example.org', 'nope'), slot: 0,
+    });
+    expect(status).toBe(401);
+    expect(body.code).toBeUndefined();
+    expect(loggerWarn).not.toHaveBeenCalled();
   });
 });

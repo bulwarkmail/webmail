@@ -12,7 +12,7 @@ import {
   FileText,
   Download,
   Upload,
-} from 'lucide-react';
+} from '@/components/icons';
 
 const MAX_IMPORT_FILE_SIZE = 1 * 1024 * 1024;
 

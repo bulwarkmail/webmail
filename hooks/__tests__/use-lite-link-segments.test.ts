@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { renderHook } from '@testing-library/react';
+import { render, renderHook, screen, waitFor } from '@testing-library/react';
+import { Suspense, createElement } from 'react';
 
 const liteState = vi.hoisted(() => ({ IS_LITE: false }));
 
@@ -50,6 +51,38 @@ describe('useLiteLinkSegments', () => {
 
     expect(result.current).toEqual(['week', '2026-09-17']);
     expect(`${window.location.pathname}${window.location.search}`).toBe('/en/calendar/week/2026-09-17?view=1');
+    expect(sessionStorage.getItem(LITE_PENDING_PATH_KEY)).toBeNull();
+  });
+
+  it('survives a discarded first render (a sibling suspending on useSearchParams)', async () => {
+    liteState.IS_LITE = true;
+    window.history.replaceState({}, '', '/en/contacts/');
+    sessionStorage.setItem(LITE_PENDING_PATH_KEY, '/en/contacts/c1/edit');
+
+    // React throws the first render attempt away when something below the
+    // Suspense boundary suspends, then renders again from scratch. The hook's
+    // state initializer runs twice; the parked link must still be there.
+    let suspended = false;
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => { release = resolve; });
+    const seen: Array<string[] | undefined> = [];
+    function Surface() {
+      const segments = useLiteLinkSegments('contacts', []);
+      seen.push(segments);
+      if (!suspended) {
+        suspended = true;
+        throw gate;
+      }
+      return createElement('span', { 'data-testid': 'segments' }, JSON.stringify(segments));
+    }
+    render(createElement(Suspense, { fallback: null }, createElement(Surface)));
+    release();
+    await waitFor(() => expect(screen.getByTestId('segments').textContent).toBe('["c1","edit"]'));
+    // The initializer ran again for the retry and still found the parked link
+    // (consuming it in the first attempt would have left the retry with []).
+    expect(seen.length).toBeGreaterThanOrEqual(2);
+    expect(seen.every((s) => JSON.stringify(s) === '["c1","edit"]')).toBe(true);
+    expect(`${window.location.pathname}`).toBe('/en/contacts/c1/edit');
     expect(sessionStorage.getItem(LITE_PENDING_PATH_KEY)).toBeNull();
   });
 

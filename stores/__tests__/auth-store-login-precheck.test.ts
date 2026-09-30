@@ -75,6 +75,16 @@ describe('auth-store login Basic-auth pre-check (#969)', () => {
     expect(JSON.parse(String(init?.body))).toEqual({ serverUrl: SERVER, username: 'alice', password: 'wrong' });
   });
 
+  it('checks an address on an IDN domain in its ASCII form (#1100)', async () => {
+    const fetchMock = stubVerify(async () => ({ ok: true, json: async () => ({ result: 'inconclusive' }) }));
+
+    await useAuthStore.getState().login(SERVER, 'alice@bücher.de', 'pw');
+
+    const [, init] = fetchMock.mock.calls[0];
+    expect(JSON.parse(String(init?.body)).username).toBe('alice@xn--bcher-kva.de');
+    expect(connectSpy).toHaveBeenCalledTimes(1);
+  });
+
   it('falls through to the browser-side connect when the pre-check is inconclusive', async () => {
     stubVerify(async () => ({ ok: true, json: async () => ({ result: 'inconclusive' }) }));
 

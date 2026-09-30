@@ -2,11 +2,65 @@ Bulwark Webmail
 Copyright (C) 2025-2026 Bulwark Project Authors
 
 This project is licensed under the GNU Affero General Public License,
-version 3 only.
+version 3 only, with the additional permission for app store
+distribution below. That permission is provisional; see the
+reservation at its end.
 
 This repository includes material derived from earlier MIT-licensed work.
 The original attribution notice preserved for the fork lineage is available
 in the NOTICE file.
+
+Additional permission under GNU AGPL version 3 section 7
+
+The copyright holders of this Program give you additional permission to
+convey a covered work (this Program, a modified version of it, or a work
+that contains parts of it) through an app store, even though the app
+store's terms of service, usage rules or technical measures place
+restrictions on recipients that section 10 of this License would otherwise
+not allow, such as a limit on the number of devices a copy may be installed
+on, or digital rights management applied to the copy.
+
+This permission applies only if you:
+
+  a) make the Corresponding Source of each version you convey through the
+     app store available, at no charge and under the terms of this
+     License, from a network server that anyone can access;
+
+  b) state, in the app store listing or inside the application, where
+     that Corresponding Source can be obtained; and
+
+  c) do not impose any further restrictions of your own on the exercise
+     of the rights granted under this License.
+
+"App store" means a digital distribution service for applications that is
+operated by a third party, such as the Apple App Store and TestFlight,
+Google Play, the Microsoft Store, the Samsung Galaxy Store or the Huawei
+AppGallery.
+
+This permission covers only the parts of a covered work that its copyright
+holders license under this License; it does not extend to parts licensed
+under other terms. As section 7 of this License allows, you may remove this
+permission from copies you convey and from your modified versions.
+
+Reservation
+
+This additional permission has not been finalized. The contributors of
+earlier parts of this Program have been asked whether they agree to it:
+https://github.com/orgs/bulwarkmail/discussions/1113
+
+Until that request is settled, the permission is granted subject to this
+reservation:
+
+  - It applies to all contributions made on or after 30 September 2026.
+    These contributions are accepted under this License together with
+    this permission.
+
+  - It applies to parts of this Program written before that date only
+    where their copyright holders have agreed to it. Parts whose
+    copyright holders do not agree will be rewritten or removed.
+
+This reservation will be removed once every earlier contributor has
+agreed or their parts have been replaced.
 
     									GNU AFFERO GENERAL PUBLIC LICENSE
     										 Version 3, 19 November 2007

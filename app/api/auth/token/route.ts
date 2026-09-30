@@ -8,17 +8,82 @@ import {
   encodeCachedAccessToken,
   decodeCachedAccessToken,
 } from '@/lib/oauth/tokens';
-import { exchangeCodeForTokens, buildOAuthParams, getMetadata, getTokenEndpoint, DEFAULT_CLIENT_ID } from '@/lib/oauth/token-exchange';
+import {
+  exchangeCodeForTokens,
+  buildOAuthParams,
+  getMetadata,
+  getRequiredConfig,
+  getTokenEndpoint,
+  DEFAULT_CLIENT_ID,
+} from '@/lib/oauth/token-exchange';
+import type { OAuthMetadata } from '@/lib/oauth/discovery';
 import { getCookieOptions } from '@/lib/oauth/cookie-config';
+import {
+  buildEndSessionUrl,
+  clearIdToken,
+  getPostLogoutRedirectUri,
+  idTokenCookieName,
+  isEndSessionEnabled,
+  storeIdToken,
+} from '@/lib/oauth/end-session';
 import { MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
 
-function getSlot(request: NextRequest): number {
-  const raw = request.nextUrl.searchParams.get('slot');
-  if (raw === null) return 0;
+function parseSlot(raw: string | null): number | null {
+  if (raw === null) return null;
   const slot = parseInt(raw, 10);
-  if (isNaN(slot) || slot < 0 || slot >= MAX_ACCOUNT_SLOTS) return 0;
+  if (isNaN(slot) || slot < 0 || slot >= MAX_ACCOUNT_SLOTS) return null;
   return slot;
+}
+
+function getSlot(request: NextRequest): number {
+  return parseSlot(request.nextUrl.searchParams.get('slot')) ?? 0;
+}
+
+// Sign-out waits for this route, so an unresponsive revocation endpoint must
+// not hold it up for long.
+const REVOCATION_TIMEOUT_MS = 3000;
+
+async function revokeRefreshToken(token: string, serverId: string | null, metadata: OAuthMetadata | null): Promise<void> {
+  if (!metadata?.revocation_endpoint) return;
+  const params = buildOAuthParams({
+    token,
+    token_type_hint: 'refresh_token',
+  }, serverId, { fallbackClientId: DEFAULT_CLIENT_ID });
+
+  try {
+    // Never follow a redirect with the refresh token and client secret in
+    // the body: the endpoint was validated, its redirect target was not.
+    const revocationResponse = await fetch(metadata.revocation_endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: params.toString(),
+      signal: AbortSignal.timeout(REVOCATION_TIMEOUT_MS),
+      redirect: 'error',
+    });
+    if (!revocationResponse.ok) {
+      logger.warn('Token revocation returned error', { status: revocationResponse.status });
+    }
+  } catch (err) {
+    logger.error('Token revocation network error', { error: err instanceof Error ? err.message : 'Unknown error' });
+  }
+}
+
+/** The provider logout URL for a slot being signed out, or null when there is none to visit. */
+function endSessionUrlFor(metadata: OAuthMetadata | null, serverId: string | null, idToken: string | undefined): string | null {
+  if (!metadata?.end_session_endpoint || !isEndSessionEnabled()) return null;
+  let clientId: string;
+  try {
+    ({ clientId } = getRequiredConfig(serverId));
+  } catch {
+    return null;
+  }
+  return buildEndSessionUrl({
+    endpoint: metadata.end_session_endpoint,
+    clientId,
+    idToken,
+    postLogoutRedirectUri: getPostLogoutRedirectUri(),
+  });
 }
 
 type CookieStore = Awaited<ReturnType<typeof cookies>>;
@@ -28,21 +93,23 @@ type CookieStore = Awaited<ReturnType<typeof cookies>>;
  *
  * Scoped to the token's own lifetime - once it expires the cookie is worthless
  * and should not linger. A token too large to store is simply not cached.
+ * Returns the cookie value written, or null.
  */
 function cacheAccessToken(
   cookieStore: CookieStore,
   slot: number,
   accessToken: string,
   expiresIn: number,
-): void {
+): string | null {
   const name = accessTokenCookieName(slot);
   const value = encodeCachedAccessToken(accessToken, expiresIn);
   if (!value) {
     // Oversized token: drop any stale entry rather than leaving a mismatch.
     cookieStore.delete(name);
-    return;
+    return null;
   }
   cookieStore.set(name, value, { ...getCookieOptions(), maxAge: expiresIn });
+  return value;
 }
 
 export async function POST(request: NextRequest) {
@@ -72,7 +139,8 @@ export async function POST(request: NextRequest) {
       const cookieName = refreshTokenCookieName(slot);
       cookieStore.set(cookieName, tokens.refresh_token, getCookieOptions());
     }
-    cacheAccessToken(cookieStore, slot, tokens.access_token, tokens.expires_in || 3600);
+    const cachedAccessToken = cacheAccessToken(cookieStore, slot, tokens.access_token, tokens.expires_in || 3600);
+    storeIdToken(cookieStore, slot, tokens.id_token, request.nextUrl.basePath, [tokens.refresh_token, cachedAccessToken, serverId]);
     // Persist which server entry minted this refresh token so the PUT/DELETE
     // handlers can route the refresh/revocation calls to the right token
     // endpoint without the client having to track it across page loads.
@@ -140,6 +208,8 @@ export async function PUT(request: NextRequest) {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: params.toString(),
+      // See revokeRefreshToken: the body holds the refresh token.
+      redirect: 'error',
     });
 
     if (!tokenResponse.ok) {
@@ -153,6 +223,7 @@ export async function PUT(request: NextRequest) {
         cookieStore.delete(cookieName);
         cookieStore.delete(refreshTokenServerCookieName(slot));
         cookieStore.delete(accessTokenCookieName(slot));
+        clearIdToken(cookieStore, slot, request.nextUrl.basePath);
         return NextResponse.json({ error: 'Refresh failed' }, { status: 401 });
       }
       return NextResponse.json({ error: 'Token endpoint unavailable' }, { status: 503 });
@@ -170,7 +241,12 @@ export async function PUT(request: NextRequest) {
     }
 
     const expiresIn = tokens.expires_in || 3600;
-    cacheAccessToken(cookieStore, slot, tokens.access_token, expiresIn);
+    const cachedAccessToken = cacheAccessToken(cookieStore, slot, tokens.access_token, expiresIn);
+    // Providers may reissue the id token on refresh. Only a slot signed in
+    // through the provider keeps one; a password login's slot gains none here.
+    if (typeof tokens.id_token === 'string' && cookieStore.get(idTokenCookieName(slot))) {
+      storeIdToken(cookieStore, slot, tokens.id_token, request.nextUrl.basePath, [tokens.refresh_token, cachedAccessToken]);
+    }
 
     return NextResponse.json({
       access_token: tokens.access_token,
@@ -182,96 +258,69 @@ export async function PUT(request: NextRequest) {
   }
 }
 
+/**
+ * Revoke a slot's refresh token and clear its token cookies. With
+ * `endSession`, also returns the URL that ends the provider's session, or null
+ * when the provider has no usable end_session_endpoint.
+ */
+async function signOutSlot(
+  cookieStore: CookieStore,
+  slot: number,
+  basePath: string | undefined,
+  endSession: boolean,
+): Promise<string | null> {
+  const cookieName = refreshTokenCookieName(slot);
+  const refreshToken = cookieStore.get(cookieName)?.value;
+  const serverId = cookieStore.get(refreshTokenServerCookieName(slot))?.value || null;
+  const idToken = cookieStore.get(idTokenCookieName(slot))?.value;
+
+  let endSessionUrl: string | null = null;
+  if (refreshToken || endSession) {
+    const metadata = await getMetadata(serverId, { fallbackClientId: DEFAULT_CLIENT_ID }).catch((err) => {
+      logger.warn('Failed to discover OAuth metadata during logout', {
+        error: err instanceof Error ? err.message : 'Unknown error',
+      });
+      return null;
+    });
+    if (refreshToken) await revokeRefreshToken(refreshToken, serverId, metadata);
+    if (endSession) endSessionUrl = endSessionUrlFor(metadata, serverId, idToken);
+  }
+
+  // Cleared whether or not revocation worked: the browser must not be able
+  // to resume a session the user ended. Only cookies the browser sent are
+  // cleared - signing out of every slot would otherwise answer with a
+  // Set-Cookie header per slot and cookie, too large for some proxies.
+  for (const name of [cookieName, refreshTokenServerCookieName(slot), accessTokenCookieName(slot)]) {
+    if (cookieStore.get(name)) cookieStore.delete(name);
+  }
+  if (idToken !== undefined) clearIdToken(cookieStore, slot, basePath);
+  return endSessionUrl;
+}
+
 export async function DELETE(request: NextRequest) {
   // CSRF gate (GHSA-qvr9-m8cq-7wvg): cookies written here are SameSite=Lax,
   // so a cross-site top-level POST would otherwise reach this handler.
   const crossOrigin = rejectCrossOriginRequest(request);
   if (crossOrigin) return crossOrigin;
   try {
-    const all = request.nextUrl.searchParams.get('all') === 'true';
-
-    if (all) {
-      // Revoke and delete all refresh token cookies across every slot.
-      const cookieStore = await cookies();
-      for (let i = 0; i < MAX_ACCOUNT_SLOTS; i++) {
-        const name = refreshTokenCookieName(i);
-        const serverCookieName = refreshTokenServerCookieName(i);
-        const token = cookieStore.get(name)?.value;
-        const slotServerId = cookieStore.get(serverCookieName)?.value || null;
-        if (token) {
-          // Best-effort revocation
-          try {
-            const metadata = await getMetadata(slotServerId, { fallbackClientId: DEFAULT_CLIENT_ID }).catch(() => null);
-            if (metadata?.revocation_endpoint) {
-              const params = buildOAuthParams({ token, token_type_hint: 'refresh_token' }, slotServerId, { fallbackClientId: DEFAULT_CLIENT_ID });
-              await fetch(metadata.revocation_endpoint, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: params.toString(),
-              }).catch(() => {});
-            }
-          } catch { /* best effort */ }
-          cookieStore.delete(name);
-        }
-        cookieStore.delete(serverCookieName);
-        cookieStore.delete(accessTokenCookieName(i));
-      }
-      return NextResponse.json({ ok: true });
-    }
-
-    const slot = getSlot(request);
-    const cookieName = refreshTokenCookieName(slot);
+    const params = request.nextUrl.searchParams;
+    const basePath = request.nextUrl.basePath;
     const cookieStore = await cookies();
-    const refreshToken = cookieStore.get(cookieName)?.value;
-    const slotServerId = cookieStore.get(refreshTokenServerCookieName(slot))?.value || null;
-    const metadata = await getMetadata(slotServerId, { fallbackClientId: DEFAULT_CLIENT_ID }).catch((err) => {
-      logger.warn('Failed to discover OAuth metadata during logout', {
-        error: err instanceof Error ? err.message : 'Unknown error',
-      });
-      return null;
-    });
 
-    if (refreshToken) {
-      if (metadata?.revocation_endpoint) {
-        const params = buildOAuthParams({
-          token: refreshToken,
-          token_type_hint: 'refresh_token',
-        }, slotServerId, { fallbackClientId: DEFAULT_CLIENT_ID });
-
-        try {
-          const revocationResponse = await fetch(metadata.revocation_endpoint, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: params.toString(),
-          });
-          if (!revocationResponse.ok) {
-            logger.warn('Token revocation returned error', { status: revocationResponse.status });
-          }
-        } catch (err) {
-          logger.error('Token revocation network error', { error: err instanceof Error ? err.message : 'Unknown error' });
-        }
-      }
-
-      cookieStore.delete(cookieName);
-    }
-    cookieStore.delete(refreshTokenServerCookieName(slot));
-    cookieStore.delete(accessTokenCookieName(slot));
-
-    let end_session_url: string | undefined;
-    if (metadata?.end_session_endpoint) {
-      try {
-        const parsed = new URL(metadata.end_session_endpoint);
-        if (parsed.protocol === 'https:') {
-          end_session_url = metadata.end_session_endpoint;
-        } else {
-          logger.warn('Ignoring non-HTTPS end_session_endpoint', { url: metadata.end_session_endpoint });
-        }
-      } catch {
-        logger.warn('Invalid end_session_endpoint URL', { url: metadata.end_session_endpoint });
-      }
+    if (params.get('all') === 'true') {
+      // One top-level navigation can end only one provider session, so the
+      // caller names the slot whose provider should be signed out, if any.
+      const endSessionSlot = parseSlot(params.get('end_session_slot'));
+      const slots = Array.from({ length: MAX_ACCOUNT_SLOTS }, (_, i) => i);
+      const urls = await Promise.all(
+        slots.map((i) => signOutSlot(cookieStore, i, basePath, i === endSessionSlot)),
+      );
+      const endSessionUrl = endSessionSlot === null ? null : urls[endSessionSlot];
+      return NextResponse.json({ ok: true, ...(endSessionUrl && { end_session_url: endSessionUrl }) });
     }
 
-    return NextResponse.json({ ok: true, ...(end_session_url && { end_session_url }) });
+    const endSessionUrl = await signOutSlot(cookieStore, getSlot(request), basePath, params.get('end_session') === 'true');
+    return NextResponse.json({ ok: true, ...(endSessionUrl && { end_session_url: endSessionUrl }) });
   } catch (error) {
     logger.error('Token revocation error', { error: error instanceof Error ? error.message : 'Unknown error' });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

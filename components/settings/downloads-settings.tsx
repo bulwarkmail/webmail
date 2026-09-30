@@ -4,7 +4,7 @@ import { useMemo, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { useSettingsStore } from "@/stores/settings-store";
 import { SettingsSection, SettingItem, Select, ToggleSwitch } from "./settings-section";
-import { RotateCcw } from "lucide-react";
+import { RotateCcw } from "@/components/icons";
 import { cn } from "@/lib/utils";
 import {
   DEFAULT_ATTACHMENT_TEMPLATE,

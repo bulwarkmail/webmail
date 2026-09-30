@@ -11,7 +11,7 @@ import {
   MAX_THEME_SKIN_BYTES,
   ALLOWED_PLUGIN_FILES,
 } from './plugin-types';
-import { sanitizeThemeCSS, sanitizeSkinCSS, validateThemeCSSSafety } from './theme-loader';
+import { sanitizeThemeCSS, sanitizeSkinCSS } from './theme-loader';
 import { compileAdvancedTheme, isAdvancedManifest } from './theme-compiler';
 
 export interface ValidationResult {
@@ -234,13 +234,11 @@ export async function extractTheme(file: File): Promise<ThemeExtractionResult> {
   let userCSS = '';
   if (cssFile) {
     userCSS = await cssFile.async('string');
-    const safety = validateThemeCSSSafety(userCSS);
-    if (!safety.valid) {
-      // Sanitize instead of rejecting
-      const sanitized = sanitizeThemeCSS(userCSS);
-      userCSS = sanitized.css;
-      warnings.push(...sanitized.warnings);
-    }
+    // Sanitize instead of rejecting, and always: the sanitizer is also what
+    // drops rules outside :root and .dark.
+    const sanitized = sanitizeThemeCSS(userCSS);
+    userCSS = sanitized.css;
+    warnings.push(...sanitized.warnings);
   } else if (!isAdvanced) {
     errors.push('Missing theme.css');
     return { valid: false, errors, warnings, manifest, css: '', skin: null, preview: null };

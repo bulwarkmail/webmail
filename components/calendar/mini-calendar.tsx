@@ -2,7 +2,7 @@
 
 import { useState, useMemo, Fragment } from "react";
 import { useTranslations } from "next-intl";
-import { ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronDown } from "@/components/icons";
 import {
   addMonths, subMonths, addYears, subYears, setMonth, setYear,
   getISOWeek, getWeek, format,

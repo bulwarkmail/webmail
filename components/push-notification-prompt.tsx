@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Bell, Loader2, X } from "lucide-react";
+import { Bell, Loader2, X } from "@/components/icons";
 import { useAuthStore } from "@/stores/auth-store";
 import { usePolicyStore } from "@/stores/policy-store";
 import { useSettingsStore } from "@/stores/settings-store";
@@ -60,6 +60,9 @@ export function PushNotificationPrompt() {
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
   const emailNotificationsEnabled = useSettingsStore(
     (state) => state.emailNotificationsEnabled,
+  );
+  const pushNotifyInboxOnly = useSettingsStore(
+    (state) => state.pushNotifyInboxOnly,
   );
   const policyLoaded = usePolicyStore((state) => state.loaded);
   const policy = usePolicyStore((state) => state.policy);
@@ -118,12 +121,21 @@ export function PushNotificationPrompt() {
   // live registration stale.
   useEffect(() => {
     if (!policyLoaded || !isAuthenticated || !client || !accountId || isDemoMode) return;
-    void resyncWebPush({
-      client,
-      relayBaseUrl,
-      accountLabel: username ?? undefined,
-    });
-  }, [accountId, client, isAuthenticated, isDemoMode, policyLoaded, relayBaseUrl, username]);
+    const resync = () => {
+      void resyncWebPush({
+        client,
+        relayBaseUrl,
+        accountLabel: username ?? undefined,
+        inboxOnly: pushNotifyInboxOnly,
+      });
+    };
+    resync();
+    // A long-open tab comes back to the foreground: renew the subscription
+    // before the server's 7-day expiry (resyncWebPush runs at most daily).
+    const onVisible = () => { if (document.visibilityState === 'visible') resync(); };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [accountId, client, isAuthenticated, isDemoMode, policyLoaded, pushNotifyInboxOnly, relayBaseUrl, username]);
 
   useEffect(() => {
     let cancelled = false;
@@ -185,6 +197,7 @@ export function PushNotificationPrompt() {
         client,
         relayBaseUrl,
         accountLabel: username ?? undefined,
+        inboxOnly: pushNotifyInboxOnly,
       });
       setShowPrompt(false);
     } catch (err) {

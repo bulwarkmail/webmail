@@ -887,17 +887,17 @@ option {
 
 /* RTL: mirror directional icons (chevrons/arrows) so prev/next, back/forward,
    and panel-collapse affordances point the correct way in right-to-left layouts.
-   lucide-react emits a `lucide-<name>` class per icon, so we target the
+   Tabler emits a `tabler-icon-<name>` class per icon, so we target the
    directional ones only — vertical chevrons (up/down) are intentionally left. */
-[dir="rtl"] .lucide-chevron-left,
-[dir="rtl"] .lucide-chevron-right,
-[dir="rtl"] .lucide-chevrons-left,
-[dir="rtl"] .lucide-chevrons-right,
-[dir="rtl"] .lucide-arrow-left,
-[dir="rtl"] .lucide-arrow-right,
-[dir="rtl"] .lucide-arrow-big-left,
-[dir="rtl"] .lucide-arrow-big-right,
-[dir="rtl"] .lucide-panel-left,
-[dir="rtl"] .lucide-panel-right {
+[dir="rtl"] .tabler-icon-chevron-left,
+[dir="rtl"] .tabler-icon-chevron-right,
+[dir="rtl"] .tabler-icon-chevrons-left,
+[dir="rtl"] .tabler-icon-chevrons-right,
+[dir="rtl"] .tabler-icon-arrow-left,
+[dir="rtl"] .tabler-icon-arrow-right,
+[dir="rtl"] .tabler-icon-arrow-big-left,
+[dir="rtl"] .tabler-icon-arrow-big-right,
+[dir="rtl"] .tabler-icon-layout-sidebar-left,
+[dir="rtl"] .tabler-icon-layout-sidebar-right {
   transform: scaleX(-1);
 }

@@ -11,6 +11,8 @@ export interface SieveCapabilities {
   sieveExtensions: string[];
   notificationMethods: string[];
   externalLists: string[];
+  /** RFC 9661: redirects run per message; extra ones are skipped silently. */
+  maxNumberRedirects?: number | null;
 }
 
 export type FilterConditionField =
@@ -27,7 +29,16 @@ export type FilterComparator =
   //   has_any  → message has any attachment (Content-Disposition: attachment)
   //   has_type → message has an attachment whose Content-Type matches `value`
   //              (substring match, e.g. "application/pdf" or "image/")
-  | 'has_any' | 'has_type';
+  | 'has_any' | 'has_type'
+  // For field === 'from' | 'to' | 'cc', compared against the parsed address
+  // with the Sieve `address` test rather than the raw header text:
+  //   address_is → the whole address equals `value` (anna@acme.com, but not
+  //                joanna@acme.com)
+  //   domain_is  → the domain part equals `value` (acme.com, but neither
+  //                sub.acme.com nor acme.com.evil)
+  // Older Bulwark versions read these as `header :contains`, so a script
+  // they save keeps working, only less strictly.
+  | 'address_is' | 'domain_is';
 
 export type FilterActionType =
   | 'move' | 'copy' | 'forward'
@@ -53,6 +64,13 @@ export interface FilterCondition {
 export interface FilterAction {
   type: FilterActionType;
   value?: string;
+  /**
+   * move/copy: JMAP id of the target folder. `value` keeps the path as the
+   * fallback; the id keeps the rule working after the folder is renamed.
+   */
+  mailboxId?: string;
+  /** forward: also keep the message (`redirect :copy`). */
+  keepCopy?: boolean;
 }
 
 export type FilterOrigin = 'bulwark' | 'external' | 'opaque';
@@ -65,6 +83,11 @@ export interface FilterRule {
   conditions: FilterCondition[];
   actions: FilterAction[];
   stopProcessing: boolean;
+  /**
+   * Also move/copy messages the server marked as spam. Off by default, so a
+   * folder rule does not pull spam out of Junk.
+   */
+  includeSpam?: boolean;
   origin?: FilterOrigin;
   originLabel?: string;
   rawBlock?: string;
@@ -80,4 +103,10 @@ export interface FilterMetadata {
   version: 1;
   rules: FilterRule[];
   vacation?: VacationSieveConfig;
+  /**
+   * The script runs the server-managed "vacation" script via `include`.
+   * Servers like Stalwart keep one active script, so a VacationResponse
+   * that activates its own script would otherwise switch the filters off.
+   */
+  includeVacation?: boolean;
 }

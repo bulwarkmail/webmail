@@ -8,6 +8,9 @@ const HEADER_MAP: Record<string, string> = {
   subject: 'Subject',
 };
 
+/** Fields whose header holds addresses, so the `address` test applies. */
+const ADDRESS_FIELDS = new Set<FilterCondition['field']>(['from', 'to', 'cc']);
+
 function escapeString(value: string): string {
   return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
 }
@@ -34,8 +37,11 @@ function generateCondition(condition: FilterCondition): string {
   const { field, comparator, value } = condition;
 
   if (field === 'size') {
-    // Size is numeric, single value only.
-    const sizeValue = Array.isArray(value) ? value[0] : value;
+    // Size is numeric, single value only. It is written unquoted, so
+    // anything but a number (with an optional K/M/G quantifier) would be
+    // Sieve source; fall back to 0.
+    const raw = String((Array.isArray(value) ? value[0] : value) ?? '').trim();
+    const sizeValue = /^\d+[KMG]?$/i.test(raw) ? raw : '0';
     const op = comparator === 'greater_than' ? ':over' : ':under';
     return `size ${op} ${sizeValue}`;
   }
@@ -67,9 +73,18 @@ function generateCondition(condition: FilterCondition): string {
     return `header :mime :anychild :matches ["Content-Disposition", "Content-Type"] ${formatStringArg(normalised, (ext) => `*.${ext}*`)}`;
   }
 
-  const headerName = field === 'header'
+  const headerName = escapeString(field === 'header'
     ? (condition.headerName || 'X-Unknown')
-    : HEADER_MAP[field];
+    : HEADER_MAP[field]);
+
+  // RFC 5228 §5.1: `address` compares the parsed address, so the display
+  // name and the angle brackets play no part. `header :contains` would let
+  // "anna@acme.com" match joanna@acme.com, and `header :matches "*@acme.com"`
+  // never matches "Anna <anna@acme.com>" because of the closing ">".
+  if ((comparator === 'address_is' || comparator === 'domain_is') && ADDRESS_FIELDS.has(field)) {
+    const part = comparator === 'domain_is' ? ':domain ' : '';
+    return `address ${part}:is "${headerName}" ${formatStringArg(values)}`;
+  }
 
   switch (comparator) {
     case 'contains':
@@ -91,15 +106,31 @@ function generateCondition(condition: FilterCondition): string {
   }
 }
 
-function generateActions(actions: FilterAction[]): string[] {
-  return actions.map(action => {
+const FLAG_ACTIONS = new Set<FilterAction['type']>(['mark_read', 'star', 'add_label']);
+
+function fileintoTarget(action: FilterAction, useMailboxId: boolean): string {
+  const path = `"${escapeString(action.value || '')}"`;
+  // RFC 9042: the path is the fallback when the id no longer exists.
+  return useMailboxId && action.mailboxId
+    ? `:mailboxid "${escapeString(action.mailboxId)}" ${path}`
+    : path;
+}
+
+function generateActions(actions: FilterAction[], useMailboxId: boolean): string[] {
+  // fileinto (and the implicit keep) store the flags set at that moment, so a
+  // flag action placed after a move in the UI would be lost. Set flags first.
+  const ordered = [
+    ...actions.filter(a => FLAG_ACTIONS.has(a.type)),
+    ...actions.filter(a => !FLAG_ACTIONS.has(a.type)),
+  ];
+  return ordered.map(action => {
     switch (action.type) {
       case 'move':
-        return `fileinto "${escapeString(action.value || '')}";`;
+        return `fileinto ${fileintoTarget(action, useMailboxId)};`;
       case 'copy':
-        return `fileinto :copy "${escapeString(action.value || '')}";`;
+        return `fileinto :copy ${fileintoTarget(action, useMailboxId)};`;
       case 'forward':
-        return `redirect "${escapeString(action.value || '')}";`;
+        return `redirect ${action.keepCopy ? ':copy ' : ''}"${escapeString(action.value || '')}";`;
       case 'mark_read':
         return 'addflag "\\\\Seen";';
       case 'star':
@@ -114,7 +145,8 @@ function generateActions(actions: FilterAction[]): string[] {
         // A bare `keep;` delivers to the "default place", which on Stalwart is
         // Junk for a message its spam filter has already classified, so an
         // allow-list rule made with "Keep" would change nothing. An explicit
-        // `fileinto "INBOX"` is honored over the spam verdict (#1027).
+        // `fileinto "INBOX"` is honored over the spam verdict (#1027), but
+        // only from Stalwart 0.16.22; older versions still move it to Junk.
         return 'fileinto "INBOX";';
       case 'stop':
         return 'stop;';
@@ -122,7 +154,32 @@ function generateActions(actions: FilterAction[]): string[] {
   });
 }
 
-function computeRequires(rules: FilterRule[], vacation?: VacationSieveConfig): string[] {
+// Stalwart maps its spam verdict to 100 % (0.16.0) or to a graded value where
+// 50 % is the spam threshold (0.16.19+), so ">= 50" matches "is spam" on both.
+const SPAM_GUARD = 'not spamtest :percent :value "ge" :comparator "i;ascii-numeric" "50"';
+const SPAM_GUARD_REQUIRES = ['spamtestplus', 'relational', 'comparator-i;ascii-numeric'];
+
+function supportsSpamGuard(extensions: string[] | undefined): boolean {
+  return ['spamtestplus', 'relational'].every(e => extensions?.includes(e));
+}
+
+/**
+ * A folder move takes a message out of the Junk folder the server would have
+ * put it in, so move/copy rules skip spam unless the rule opts in. "Keep"
+ * rules are allow-lists and stay unguarded.
+ */
+function needsSpamGuard(rule: FilterRule, extensions: string[] | undefined): boolean {
+  return !rule.includeSpam &&
+    rule.actions.some(a => a.type === 'move' || a.type === 'copy') &&
+    supportsSpamGuard(extensions);
+}
+
+function computeRequires(
+  rules: FilterRule[],
+  vacation: VacationSieveConfig | undefined,
+  useMailboxId: boolean,
+  serverExtensions: string[] | undefined,
+): string[] {
   const extensions = new Set<string>();
   const enabledRules = rules.filter(r => r.enabled);
 
@@ -131,6 +188,9 @@ function computeRequires(rules: FilterRule[], vacation?: VacationSieveConfig): s
   }
 
   for (const rule of enabledRules) {
+    if (needsSpamGuard(rule, serverExtensions)) {
+      for (const e of SPAM_GUARD_REQUIRES) extensions.add(e);
+    }
     for (const condition of rule.conditions) {
       if (condition.field === 'body') extensions.add('body');
       if (condition.field === 'attachment') extensions.add('mime');
@@ -138,12 +198,20 @@ function computeRequires(rules: FilterRule[], vacation?: VacationSieveConfig): s
     for (const action of rule.actions) {
       switch (action.type) {
         case 'move':
+        case 'copy':
+          extensions.add('fileinto');
+          if (action.type === 'copy') extensions.add('copy');
+          if (useMailboxId && action.mailboxId) {
+            // Stalwart rejects :mailboxid unless "mailbox" is declared too.
+            extensions.add('mailbox');
+            extensions.add('mailboxid');
+          }
+          break;
         case 'keep':
           extensions.add('fileinto');
           break;
-        case 'copy':
-          extensions.add('fileinto');
-          extensions.add('copy');
+        case 'forward':
+          if (action.keepCopy) extensions.add('copy');
           break;
         case 'mark_read':
         case 'star':
@@ -169,6 +237,7 @@ function stripRuleForMetadata(r: FilterRule): Omit<FilterRule, 'origin' | 'origi
     conditions: r.conditions,
     actions: r.actions,
     stopProcessing: r.stopProcessing,
+    ...(r.includeSpam ? { includeSpam: true } : {}),
   };
 }
 
@@ -179,7 +248,21 @@ export interface GenerateOptions {
    * own requires are deduplicated.
    */
   externalRequires?: string[];
+  /**
+   * Run the server-managed "vacation" script (VacationResponse) from this
+   * one. Only one script can be active, so this keeps the auto-reply working
+   * while the filters stay active.
+   */
+  includeVacation?: boolean;
+  /**
+   * The server's `sieveExtensions`. Folder moves use `:mailboxid` when it
+   * lists "mailboxid"; without it they target the folder path only.
+   */
+  extensions?: string[];
 }
+
+/** Name of the script a server builds for VacationResponse (RFC 9661). */
+export const VACATION_SCRIPT_NAME = 'vacation';
 
 export function generateScript(
   rules: FilterRule[],
@@ -201,7 +284,13 @@ export function generateScript(
   if (vacation?.isEnabled) {
     metadata.vacation = vacation;
   }
-  const metadataJson = JSON.stringify(metadata);
+  if (options.includeVacation) {
+    metadata.includeVacation = true;
+  }
+  // The JSON sits inside a /* ... */ comment: a "*/" in any string (a rule
+  // name, a condition value) would end the comment and turn the rest into
+  // live Sieve. JSON reads "\/" back as "/", so the metadata is unchanged.
+  const metadataJson = JSON.stringify(metadata).replace(/\*\//g, '*\\/');
   const lines: string[] = [];
 
   lines.push('/* @metadata:begin');
@@ -209,12 +298,22 @@ export function generateScript(
   lines.push('@metadata:end */');
   lines.push('');
 
-  const bulwarkRequires = computeRequires(bulwarkRules, vacation);
+  const useMailboxId = options.extensions?.includes('mailboxid') ?? false;
+  const bulwarkRequires = computeRequires(bulwarkRules, vacation, useMailboxId, options.extensions);
+  if (options.includeVacation) bulwarkRequires.push('include');
   const externalRequires = options.externalRequires ?? [];
   const allRequires = [...new Set([...bulwarkRequires, ...externalRequires])].sort();
 
   if (allRequires.length > 0) {
     lines.push(`require [${allRequires.map(r => `"${r}"`).join(', ')}];`);
+  }
+
+  if (options.includeVacation) {
+    // The "# Vacation auto-reply" comment marks the block as Bulwark's, so
+    // the parser does not re-import it as an external rule.
+    lines.push('');
+    lines.push('# Vacation auto-reply');
+    lines.push(`include :personal :optional "${VACATION_SCRIPT_NAME}";`);
   }
 
   if (vacation?.isEnabled) {
@@ -237,7 +336,8 @@ export function generateScript(
     }
 
     lines.push('');
-    lines.push(`# Rule: ${rule.name}`);
+    // A line break in the name would end the comment and start a command.
+    lines.push(`# Rule: ${rule.name.replace(/\s+/g, ' ')}`);
 
     const conditions = rule.conditions.map(generateCondition);
     let conditionStr: string;
@@ -251,7 +351,13 @@ export function generateScript(
       conditionStr = `${wrapper}(${conditions.join(', ')})`;
     }
 
-    const actionLines = generateActions(rule.actions);
+    if (needsSpamGuard(rule, options.extensions)) {
+      conditionStr = conditions.length > 1 && rule.matchType === 'all'
+        ? `allof(${conditions.join(', ')}, ${SPAM_GUARD})`
+        : `allof(${conditionStr}, ${SPAM_GUARD})`;
+    }
+
+    const actionLines = generateActions(rule.actions, useMailboxId);
 
     if (rule.stopProcessing) {
       const lastAction = rule.actions[rule.actions.length - 1];

@@ -71,6 +71,71 @@ export function isFilePreviewable(name?: string, type?: string): boolean {
   return getFilePreviewKind(name, type) !== 'unsupported';
 }
 
+// Canonical types for the extensions the preview renders from a blob: PDF and
+// every image, audio and video extension above except SVG. No script-capable
+// type (SVG, HTML) may appear here: the preview trusts these over whatever
+// the sender declared.
+const EXT_TO_MIME: Record<string, string> = {
+  pdf: 'application/pdf',
+  png: 'image/png',
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  gif: 'image/gif',
+  webp: 'image/webp',
+  avif: 'image/avif',
+  bmp: 'image/bmp',
+  ico: 'image/x-icon',
+  mp3: 'audio/mpeg',
+  wav: 'audio/wav',
+  ogg: 'audio/ogg',
+  m4a: 'audio/mp4',
+  flac: 'audio/flac',
+  aac: 'audio/aac',
+  // Ogg Opus (RFC 7845); audio/opus names the bare RTP payload.
+  opus: 'audio/ogg',
+  mp4: 'video/mp4',
+  webm: 'video/webm',
+  ogv: 'video/ogg',
+  mov: 'video/quicktime',
+  m4v: 'video/mp4',
+  avi: 'video/x-msvideo',
+  mkv: 'video/x-matroska',
+};
+
+const GENERIC_MIME_TYPES = new Set(['', 'application/octet-stream', 'binary/octet-stream']);
+
+// Blob types the browser actually shows in each blob-backed preview.
+const RENDERABLE_FOR_KIND: Partial<Record<FilePreviewKind, (mimeType: string) => boolean>> = {
+  pdf: (t) => t === 'application/pdf',
+  image: (t) => t.startsWith('image/'),
+  audio: (t) => t.startsWith('audio/'),
+  video: (t) => t.startsWith('video/'),
+};
+
+/**
+ * MIME type to give a preview's blob. Browsers pick the viewer from the
+ * blob's type, not the file name, and download anything they cannot show -
+ * under the blob's UUID. Neither the sender's declaration (octet-stream, or a
+ * catch-all such as the application/x-as400attachment IBM i systems put on
+ * every attachment) nor Stalwart's download response is reliably a type the
+ * viewer accepts, so a PDF, image, audio or video preview takes the first
+ * type its viewer can show: declared, then served, then the one the file
+ * name implies. Every other preview keeps the declared type unless it is
+ * generic.
+ */
+export function previewBlobType(name: string | undefined, declaredType?: string, blobType?: string): string {
+  const declared = normalizeMimeType(declaredType);
+  const served = normalizeMimeType(blobType);
+  const fromName = EXT_TO_MIME[getExtension(name)];
+  const renderable = RENDERABLE_FOR_KIND[getFilePreviewKind(name, declared || served)];
+  if (renderable) {
+    const match = [declared, served, fromName].find((t): t is string => !!t && renderable(t));
+    if (match) return match;
+  }
+  if (declaredType && !GENERIC_MIME_TYPES.has(declared)) return declaredType;
+  return fromName ?? blobType ?? '';
+}
+
 const INLINE_PREVIEW_SAFE_MIME_PREFIXES = ['image/', 'audio/', 'video/'];
 const INLINE_PREVIEW_SAFE_MIME_TYPES = new Set(['application/pdf', 'text/plain']);
 const INLINE_PREVIEW_UNSAFE_MIME_TYPES = new Set([
@@ -108,4 +173,25 @@ export function inertBlobType(type?: string): string {
 /** Re-type a fetched Blob per inertBlobType() without copying its bytes. */
 export function toInertBlob(blob: Blob): Blob {
   return isMimeTypeSafeForInlinePreview(blob.type) ? blob : blob.slice(0, blob.size, INERT_BLOB_TYPE);
+}
+
+/**
+ * A URL an <img> can show whose target is inert when opened on its own
+ * ("Open image in new tab", dragging it to the tab strip). An object URL
+ * shares the webmail origin, so an image/svg+xml one would run the
+ * sender's script there. SVG is handed over as a data: URL instead - its
+ * document gets an opaque origin - and every other type as an object URL
+ * re-typed per inertBlobType(). Revoking the result is safe either way.
+ */
+export async function imageBlobUrl(blob: Blob, type?: string): Promise<string> {
+  const mimeType = (type || blob.type).split(';')[0].trim().toLowerCase();
+  if (INLINE_PREVIEW_UNSAFE_MIME_TYPES.has(mimeType)) {
+    return new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(blob.slice(0, blob.size, 'image/svg+xml'));
+    });
+  }
+  return URL.createObjectURL(toInertBlob(type ? blob.slice(0, blob.size, type) : blob));
 }

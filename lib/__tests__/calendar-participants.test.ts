@@ -5,6 +5,7 @@ import {
   collectUserCalendarAddresses,
   getUserParticipantId,
   getUserStatus,
+  isDeclinedByUser,
   getParticipantList,
   getStatusCounts,
   getParticipantCount,
@@ -281,6 +282,29 @@ describe('getUserStatus', () => {
   it('returns null when no participants', () => {
     const event = makeEvent(null);
     expect(getUserStatus(event, ['alice@example.com'])).toBeNull();
+  });
+});
+
+describe('isDeclinedByUser', () => {
+  it("is true only for the user's own declined entry", () => {
+    const event = makeEvent({ att1: attendeeParticipant, dave: declinedAttendee });
+    expect(isDeclinedByUser(event, ['Dave@Example.com'])).toBe(true);
+    expect(isDeclinedByUser(event, ['bob@example.com'])).toBe(false);
+  });
+
+  it('matches the calendar address an occurrence override carries', () => {
+    // A reply to one occurrence comes back from Stalwart as an override
+    // participant with only a calendarAddress (#1110).
+    const event = makeEvent({
+      att: { '@type': 'Participant', calendarAddress: 'mailto:bob@example.com', participationStatus: 'declined' },
+    });
+    expect(isDeclinedByUser(event, ['alias@example.com', 'bob@example.com'])).toBe(true);
+  });
+
+  it('is false without user addresses or participants', () => {
+    expect(isDeclinedByUser(makeEvent({ dave: declinedAttendee }), [])).toBe(false);
+    expect(isDeclinedByUser(makeEvent({ dave: declinedAttendee }), undefined)).toBe(false);
+    expect(isDeclinedByUser(makeEvent(null), ['dave@example.com'])).toBe(false);
   });
 });
 
@@ -579,6 +603,23 @@ describe('buildParticipantMap', () => {
     Object.values(map).forEach(p => {
       expect(p['@type']).toBe('Participant');
     });
+  });
+
+  it('omits blank names rather than sending an empty one', () => {
+    const map = buildParticipantMap(
+      { name: '', email: 'alice@example.com' },
+      [
+        { name: '   ', email: 'bob@example.com' },
+        { name: '  Carol  ', email: 'carol@example.com' },
+      ]
+    );
+    const entries = Object.values(map);
+
+    // An empty name becomes a bare `CN=` downstream, which renders as a dangling
+    // "- Organizer" and as guests listed with nothing before their address.
+    expect(entries.find(p => p.email === 'alice@example.com')).not.toHaveProperty('name');
+    expect(entries.find(p => p.email === 'bob@example.com')).not.toHaveProperty('name');
+    expect(entries.find(p => p.email === 'carol@example.com')!.name).toBe('Carol');
   });
 
   it('sets kind to individual for all entries', () => {

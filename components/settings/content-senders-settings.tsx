@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useSettingsStore } from '@/stores/settings-store';
 import { SettingsSection, SettingItem, Select, ToggleSwitch } from './settings-section';
 import { TrustedSendersModal } from '@/components/trusted-senders-modal';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight } from '@/components/icons';
 import { usePolicyStore } from '@/stores/policy-store';
 import { useContactStore } from '@/stores/contact-store';
 import { useAuthStore } from '@/stores/auth-store';

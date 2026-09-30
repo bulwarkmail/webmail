@@ -1,12 +1,13 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useAuthStore } from "@/stores/auth-store";
 import { apiFetch, getPathPrefix, toRouterPath } from "@/lib/browser-navigation";
 import { buildSettingsPath } from "@/lib/deep-links";
-import { Loader2, AlertCircle } from "lucide-react";
+import { LITE_OAUTH_AVAILABLE, getLiteOAuthRedirectUri } from "@/lib/auth/lite-oauth";
+import { Loader2, AlertCircle } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { useParams } from "next/navigation";
 
@@ -17,8 +18,14 @@ function OAuthCallbackInner() {
   const t = useTranslations("login");
   const { loginWithOAuth, loginWithServerSso } = useAuthStore();
   const [error, setError] = useState<string | null>(null);
+  // The authorization code is single-use. React's development double effect
+  // ran this twice: the second pass no longer saw the pairing re-auth flag
+  // (the first had removed it) and spent the code on the login flow instead.
+  const handledRef = useRef(false);
 
   useEffect(() => {
+    if (handledRef.current) return;
+    handledRef.current = true;
     const code = searchParams.get("code");
     const state = searchParams.get("state");
     const errorParam = searchParams.get("error");
@@ -37,9 +44,13 @@ function OAuthCallbackInner() {
     // via prompt=login. Don't create a login session — just confirm the fresh
     // auth (sets the short-lived pairing proof cookie) and bounce back to the
     // Security settings, where the QR generation auto-resumes.
+    // The flag holds the state the step-up started with; one left behind by an
+    // abandoned round trip is dropped here instead of capturing this login.
     let pairReauthResume = false;
     try {
-      pairReauthResume = sessionStorage.getItem("pair_reauth_resume") === "1";
+      const resumeState = sessionStorage.getItem("pair_reauth_resume");
+      pairReauthResume = !!state && resumeState === state;
+      if (resumeState !== null && !pairReauthResume) sessionStorage.removeItem("pair_reauth_resume");
     } catch { /* sessionStorage unavailable */ }
     if (pairReauthResume && state) {
       try { sessionStorage.removeItem("pair_reauth_resume"); } catch { /* ignore */ }
@@ -90,7 +101,11 @@ function OAuthCallbackInner() {
       }
 
       const prefix = getPathPrefix(params.locale as string);
-      const redirectUri = `${window.location.origin}${prefix}/${params.locale}/auth/callback`;
+      // Lite on Stalwart registers one locale-free URI (lib/auth/lite-oauth.ts);
+      // the entry document brought us here from it.
+      const redirectUri = LITE_OAUTH_AVAILABLE
+        ? getLiteOAuthRedirectUri()
+        : `${window.location.origin}${prefix}/${params.locale}/auth/callback`;
 
       loginWithOAuth(serverUrl, code, codeVerifier, redirectUri, serverId)
         .then((success) => {

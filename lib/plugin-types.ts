@@ -688,7 +688,11 @@ export interface MessageListTab {
    * `hasKeyword`. Use for durable, Sieve-assigned categories.
    */
   keyword?: string | null;
-  /** Lucide icon name rendered before the label (optional). */
+  /**
+   * Icon rendered before the label (optional): a Tabler Icons name such as
+   * `"inbox"` or `"tabler:inbox"`. Lucide names (`"Inbox"`) from older plugins
+   * are still accepted and translated.
+   */
   icon?: string;
   /** CSS color for the active-tab indicator / badge accent (optional). */
   color?: string;
@@ -1099,8 +1103,12 @@ export const ALLOWED_PLUGIN_FILES = new Set([
 
 export const DISALLOWED_CSS_PATTERNS = [
   /@import\b/i,
-  /url\s*\(\s*['"]?https?:/i,
-  /url\s*\(\s*['"]?data:/i,
+  // Every url() except a same-document fragment loads something: a remote
+  // host (also written protocol-relative, `url(//host)`), a data: document,
+  // a same-origin path. Themes ship no assets, so none is needed.
+  /url\s*\(\s*(?!['"]?\s*#)/i,
+  // Takes plain strings, so it loads remote images without any url().
+  /image-set\s*\(/i,
   /expression\s*\(/i,
   /javascript\s*:/i,
   /-moz-binding/i,
