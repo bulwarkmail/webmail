@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useTranslations } from "next-intl";
-import { Upload, Download } from "lucide-react";
+import { Upload, Download } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { SettingsSection, SettingItem, ToggleSwitch } from "./settings-section";
 import { ContactImportDialog } from "@/components/contacts/contact-import-dialog";

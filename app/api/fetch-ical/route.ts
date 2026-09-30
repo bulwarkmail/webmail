@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
 import { getStalwartCredentials } from '@/lib/stalwart/credentials';
 import { DisallowedUrlError, fetchPublicUrl, type PublicFetchResponse } from '@/lib/security/url-guard';
 
@@ -57,6 +58,10 @@ function extractBasicAuth(rawUrl: string): { cleanUrl: string; authHeader: strin
  * (GHSA-24w9-8r42-8jwm).
  */
 export async function POST(request: NextRequest) {
+  // CSRF gate (GHSA-9mvj-98f5-9q6g): this handler acts with the caller's
+  // session cookie, which SameSite=Lax still sends from a same-site page.
+  const crossOrigin = rejectCrossOriginRequest(request);
+  if (crossOrigin) return crossOrigin;
   const creds = await getStalwartCredentials(request);
   if (!creds) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });

@@ -10,8 +10,12 @@ vi.mock('next/server', () => ({
 }));
 
 const cookieSet = vi.fn();
+const cookieValues = new Map<string, string>();
 vi.mock('next/headers', () => ({
-  cookies: async () => ({ set: cookieSet }),
+  cookies: async () => ({
+    set: cookieSet,
+    get: (name: string) => (cookieValues.has(name) ? { value: cookieValues.get(name) } : undefined),
+  }),
 }));
 
 vi.mock('@/lib/logger', () => ({
@@ -28,8 +32,12 @@ vi.mock('@/lib/oauth/pkce-server', () => ({
   generateStateServer: () => 'state-123',
 }));
 
+const getRequiredConfig = vi.fn((_serverId?: string | null) => ({
+  clientId: 'client',
+  discoveryUrl: 'https://idp.example.com',
+}));
 vi.mock('@/lib/oauth/token-exchange', () => ({
-  getRequiredConfig: () => ({ clientId: 'client', discoveryUrl: 'https://idp.example.com' }),
+  getRequiredConfig: (serverId?: string | null) => getRequiredConfig(serverId),
   getDiscoveryValidator: () => undefined,
 }));
 
@@ -43,6 +51,7 @@ vi.mock('@/lib/oauth/discovery', () => ({
 
 vi.mock('@/lib/oauth/tokens', () => ({
   getOauthScopes: () => 'openid email',
+  refreshTokenServerCookieName: (slot: number) => `jmap_rt_server_${slot}`,
 }));
 
 vi.mock('@/lib/oauth/cookie-config', () => ({
@@ -80,6 +89,26 @@ async function callRoute(body: Record<string, unknown>) {
 describe('sso start route', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    cookieValues.clear();
+  });
+
+  it('re-authenticates against the paired slot\'s server', async () => {
+    cookieValues.set('jmap_rt_server_2', 'server-b');
+    const { status } = await callRoute({
+      redirect_uri: 'https://mail.example.com/auth/callback',
+      purpose: 'reauth',
+      slot: 2,
+    });
+
+    expect(status).toBe(200);
+    expect(getRequiredConfig).toHaveBeenCalledWith('server-b');
+  });
+
+  it('ignores the slot cookie for a regular login', async () => {
+    cookieValues.set('jmap_rt_server_0', 'server-b');
+    await callRoute({ redirect_uri: 'https://mail.example.com/auth/callback' });
+
+    expect(getRequiredConfig).toHaveBeenCalledWith(null);
   });
 
   it('forces prompt=login without max_age for re-authentication', async () => {

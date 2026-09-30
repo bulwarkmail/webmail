@@ -10,7 +10,7 @@ import { existsSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import {
   LITE_PENDING_PATH_KEY, STALWART_EXCLUDED_FILES, STALWART_MAX_BUNDLE_BYTES, STALWART_SAFE_BUNDLE_BYTES, STALWART_ZIP_NAME,
-  collectApiStrings, collectZipEntries, discoverBuiltLocales, flightTextRowsWithNeedles, isMainModule, listZipEntries, parseLiteTarget, resolveRepoRoot, stalwartEntryProblems, stalwartZipEntryProblems, unexpectedApiStrings,
+  collectApiStrings, collectZipEntries, discoverBuiltLocales, flightTextRowsWithNeedles, inlineScriptHashes, isMainModule, listZipEntries, parseLiteTarget, resolveRepoRoot, stalwartEntryProblems, stalwartZipEntryProblems, unexpectedApiStrings,
 } from "./lib.mjs";
 
 const repoRoot = resolveRepoRoot(import.meta.url);
@@ -45,7 +45,10 @@ export function verifyExport({ root = repoRoot, target, safeBundleBytes = STALWA
 
   const required = resolvedTarget === "stalwart"
     ? ["index.html", "config.json", "policy.json", "manifest.json", "LITE-README.md", "lite-build.json"]
-    : ["index.html", "404.html", "config.json", "policy.json", "manifest.webmanifest", "_redirects", "_headers", "LITE-README.md", "lite-build.json"];
+    // connector.json is the static target only: the Stalwart bundle is served
+    // without custom headers, so a connector's cross-origin probe could not
+    // read it anyway (it falls back to adding the instance unverified).
+    : ["index.html", "404.html", "config.json", "policy.json", "connector.json", "manifest.webmanifest", "_redirects", "_headers", "LITE-README.md", "lite-build.json"];
   for (const file of required) {
     if (!existsSync(join(outDir, file))) problems.push(`missing out/${file}`);
   }
@@ -59,6 +62,20 @@ export function verifyExport({ root = repoRoot, target, safeBundleBytes = STALWA
     const notFound = join(outDir, "404.html");
     if (existsSync(notFound) && !readFileSync(notFound, "utf8").includes(LITE_PENDING_PATH_KEY)) {
       problems.push("out/404.html is not the Lite shim (deep links on hosts without rewrites would dead-end); run postbuild");
+    }
+    // Every page pins its inline scripts (postbuild applyScriptHashCsp); a
+    // page changed afterwards would load with its hydration scripts blocked.
+    for (const locale of locales) {
+      for (const surface of ["mail", "calendar", "contacts", "files", "settings", "login"]) {
+        const page = join(outDir, locale, surface, "index.html");
+        if (!existsSync(page)) continue;
+        const html = readFileSync(page, "utf8");
+        const policy = /<meta http-equiv="Content-Security-Policy" content="([^"]*)"/.exec(html)?.[1];
+        if (!policy) problems.push(`out/${locale}/${surface}/index.html carries no script policy; run postbuild`);
+        else if (inlineScriptHashes(html).some((hash) => !policy.includes(hash))) {
+          problems.push(`out/${locale}/${surface}/index.html has an inline script its policy does not allow`);
+        }
+      }
     }
   }
 

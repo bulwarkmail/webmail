@@ -27,7 +27,7 @@ function renderIframeHtml(html: string): Document {
   }
   const doc = parseHtmlSafely(clean);
   // Post-render walk, exactly as handleIframeLoad does on the live iframe doc.
-  doc.querySelectorAll('a').forEach(applyNewTabToAnchor);
+  doc.querySelectorAll('a, area').forEach(applyNewTabToAnchor);
   return doc;
 }
 
@@ -92,5 +92,22 @@ describe('email link new-tab behaviour (integration)', () => {
       expect(findLink(doc, 'docs.example.com')!.getAttribute('target')).toBe('_blank');
       expect(findLink(doc, 'mailto:')!.getAttribute('target')).toBeNull();
     });
+  });
+});
+
+describe('image-map links (<area>)', () => {
+  const map = (attrs: string) =>
+    `<map name="m"><area shape="rect" coords="0,0,10,10" ${attrs}></map><img usemap="#m" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">`;
+
+  it('gets noopener noreferrer, overriding a sender rel=opener', () => {
+    const doc = renderIframeHtml(map('href="https://attacker.example/x" target="_blank" rel="opener"'));
+    const area = doc.querySelector('area')!;
+    expect(area.getAttribute('target')).toBe('_blank');
+    expect(area.getAttribute('rel')).toBe('noopener noreferrer');
+  });
+
+  it('keeps no target on a non-http area', () => {
+    const doc = renderIframeHtml(map('href="mailto:x@example.com" target="_top"'));
+    expect(doc.querySelector('area')!.getAttribute('target')).toBeNull();
   });
 });

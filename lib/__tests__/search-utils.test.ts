@@ -1,66 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import {
-  toWildcardQuery,
   buildJMAPFilter,
   isFilterEmpty,
   activeFilterCount,
   DEFAULT_SEARCH_FILTERS,
 } from '../jmap/search-utils';
 import type { SearchFilters } from '../jmap/search-utils';
-
-// ---------------------------------------------------------------------------
-// toWildcardQuery
-// ---------------------------------------------------------------------------
-describe('toWildcardQuery', () => {
-  it('appends * to a single word', () => {
-    expect(toWildcardQuery('pri')).toBe('pri*');
-  });
-
-  it('appends * to every word in a multi-word query', () => {
-    expect(toWildcardQuery('hello world')).toBe('hello* world*');
-  });
-
-  it('handles single-character queries', () => {
-    expect(toWildcardQuery('a')).toBe('a*');
-  });
-
-  it('handles two-character queries', () => {
-    expect(toWildcardQuery('pr')).toBe('pr*');
-  });
-
-  it('handles long words', () => {
-    expect(toWildcardQuery('internationalization')).toBe('internationalization*');
-  });
-
-  it('does not double-append * if already present', () => {
-    expect(toWildcardQuery('hello*')).toBe('hello*');
-    expect(toWildcardQuery('hello* world')).toBe('hello* world*');
-  });
-
-  it('preserves quoted phrases ending with "', () => {
-    expect(toWildcardQuery('"hello world"')).toBe('"hello* world"');
-  });
-
-  it('trims leading/trailing whitespace', () => {
-    expect(toWildcardQuery('  hello  ')).toBe('hello*');
-  });
-
-  it('collapses multiple spaces between words', () => {
-    expect(toWildcardQuery('hello    world')).toBe('hello* world*');
-  });
-
-  it('returns empty string for empty input', () => {
-    expect(toWildcardQuery('')).toBe('');
-  });
-
-  it('returns empty string for whitespace-only input', () => {
-    expect(toWildcardQuery('   ')).toBe('');
-  });
-
-  it('handles mixed words with and without wildcards', () => {
-    expect(toWildcardQuery('foo* bar baz*')).toBe('foo* bar* baz*');
-  });
-});
 
 // ---------------------------------------------------------------------------
 // buildJMAPFilter
@@ -70,14 +15,14 @@ describe('buildJMAPFilter', () => {
 
   // -- text query ----------------------------------------------------------
   describe('text query', () => {
-    it('builds a text filter with wildcard from textQuery alone', () => {
+    it('builds a text filter from textQuery alone, as typed', () => {
       const result = buildJMAPFilter('pri', emptyFilters);
-      expect(result).toEqual({ text: 'pri*' });
+      expect(result).toEqual({ text: 'pri' });
     });
 
-    it('wildcards each word in multi-word text query', () => {
+    it('keeps a multi-word query as one text condition', () => {
       const result = buildJMAPFilter('hello world', emptyFilters);
-      expect(result).toEqual({ text: 'hello* world*' });
+      expect(result).toEqual({ text: 'hello world' });
     });
 
     it('returns empty object when no query and no filters', () => {
@@ -195,7 +140,7 @@ describe('buildJMAPFilter', () => {
       expect(result).toEqual({
         operator: 'AND',
         conditions: [
-          { text: 'pri*' },
+          { text: 'pri' },
           { inMailbox: 'inbox-1' },
         ],
       });
@@ -210,7 +155,7 @@ describe('buildJMAPFilter', () => {
       expect(result).toEqual({
         operator: 'AND',
         conditions: [
-          { text: 'urgent*' },
+          { text: 'urgent' },
           { from: 'alice' },
         ],
       });
@@ -227,7 +172,7 @@ describe('buildJMAPFilter', () => {
       expect(result).toEqual({
         operator: 'AND',
         conditions: [
-          { text: 'report*' },
+          { text: 'report' },
           { from: 'ceo@corp.com' },
           { subject: 'quarterly' },
           { hasAttachment: true },
@@ -255,7 +200,7 @@ describe('buildJMAPFilter', () => {
         conditions: Record<string, unknown>[];
       };
       expect(result.operator).toBe('AND');
-      expect(result.conditions).toContainEqual({ text: 'money*' });
+      expect(result.conditions).toContainEqual({ text: 'money' });
       expect(result.conditions).toContainEqual({ from: 'alice' });
       expect(result.conditions).toContainEqual({ to: 'bob' });
       expect(result.conditions).toContainEqual({ subject: 'invoice' });

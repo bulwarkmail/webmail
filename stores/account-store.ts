@@ -20,6 +20,13 @@ export interface AccountEntry {
   /** Restorable from a user-encrypted server archive; keep metadata on expiry. */
   vaultManaged?: boolean;
   /**
+   * Signed in through the identity provider's own login (OAuth code or SSO
+   * flow), so the provider may hold a login session that signing out should
+   * end too (#905). A password login, even one upgraded to OAuth tokens, has
+   * none. `undefined` = signed in before this was recorded.
+   */
+  providerSession?: boolean;
+  /**
    * Server-confirmed account identifiers captured at login: the account-id form
    * ({@link generateAccountId}) of the JMAP Session.username and the primary
    * sending-identity email. The account-switch guard matches a reconnected

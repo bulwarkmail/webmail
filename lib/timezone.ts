@@ -134,6 +134,24 @@ export function getWallClock(date: Date, timeZone: string): WallClock {
   };
 }
 
+/**
+ * A JMAP LocalDateTime ("YYYY-MM-DDTHH:mm:ss") for a date-time string, as the
+ * wall clock in `timeZone` (UTC when unset). Strings that already carry no
+ * zone are returned as they are; one with `Z` or an offset is converted.
+ *
+ * CalendarEvent/query reads `after`/`before` as LocalDateTime in the request's
+ * timeZone, and Stalwart silently drops a `Z` or offset instead of honouring
+ * it, which shifted every UTC range by the user's offset.
+ */
+export function toLocalDateTime(value: string, timeZone?: string): string {
+  if (!/(?:Z|[+-]\d{2}:?\d{2})$/i.test(value)) return value;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  const w = getWallClock(date, timeZone || "UTC");
+  const pad = (n: number, len = 2) => String(n).padStart(len, "0");
+  return `${pad(w.year, 4)}-${pad(w.month)}-${pad(w.day)}T${pad(w.hour)}:${pad(w.minute)}:${pad(w.second)}`;
+}
+
 /** UTC offset of `timeZone` at the given instant, in milliseconds (east = positive). */
 export function getTimeZoneOffsetMs(date: Date, timeZone: string): number {
   const w = getWallClock(date, timeZone);

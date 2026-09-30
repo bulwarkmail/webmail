@@ -1,9 +1,9 @@
 import { matchesTerms, type ParsedQuery } from '@/lib/global-search/query-parser';
 import { getActiveLocalAccountId, indexAccounts } from '@/lib/global-search/accounts';
 import type { MailHit, SearchAccount, SearchProvider } from '@/lib/global-search/types';
-import { buildJMAPFilter } from '@/lib/jmap/search-utils';
+import { andFilters, buildJMAPFilter } from '@/lib/jmap/search-utils';
 import type { Email, Mailbox } from '@/lib/jmap/types';
-import { findMailboxByRole, resolveSourceFolderName, type UnifiedAccountClient } from '@/lib/unified-mailbox';
+import { findMailboxByRole, jmapMailboxIdOf, resolveSourceFolderName, trashAndJunkExclusion, type UnifiedAccountClient } from '@/lib/unified-mailbox';
 import { buildUnifiedAccountClients, useEmailStore } from '@/stores/email-store';
 import { useSettingsStore } from '@/stores/settings-store';
 
@@ -64,20 +64,6 @@ function toHit(email: Email, account: SearchAccount, jmapAccountId: string, fold
 
 type JmapFilter = Record<string, unknown>;
 
-/** `AND` two JMAP filters, flattening into an existing top-level `AND`. */
-export function andFilters(base: JmapFilter, extra: JmapFilter | null): JmapFilter {
-  if (!extra || Object.keys(extra).length === 0) return base;
-  if (Object.keys(base).length === 0) return extra;
-  if (base.operator === 'AND' && Array.isArray(base.conditions)) {
-    return { operator: 'AND', conditions: [...(base.conditions as JmapFilter[]), extra] };
-  }
-  return { operator: 'AND', conditions: [base, extra] };
-}
-
-function jmapMailboxId(entry: UnifiedAccountClient, mailbox: Mailbox): string {
-  return entry.isShared ? (mailbox.originalId ?? mailbox.id) : mailbox.id;
-}
-
 /**
  * The default scope is "everything but Trash and Junk" (#641's "Most");
  * `in:trash` / `in:junk` search that folder alone and `is:anything` lifts the
@@ -87,14 +73,10 @@ export function mailFilterFor(parsed: ParsedQuery, entry: UnifiedAccountClient):
   const base = buildJMAPFilter(parsed.text, parsed.mail);
   if (parsed.mailboxRole) {
     const mailbox = findMailboxByRole(entry.mailboxes, parsed.mailboxRole);
-    return mailbox ? andFilters(base, { inMailbox: jmapMailboxId(entry, mailbox) }) : base;
+    return mailbox ? andFilters(base, { inMailbox: jmapMailboxIdOf(entry, mailbox) }) : base;
   }
   if (parsed.includeTrashAndJunk) return base;
-  const excluded = (['trash', 'junk'] as const)
-    .map((role) => findMailboxByRole(entry.mailboxes, role))
-    .filter((mailbox): mailbox is Mailbox => Boolean(mailbox))
-    .map((mailbox) => jmapMailboxId(entry, mailbox));
-  return excluded.length > 0 ? andFilters(base, { inMailboxOtherThan: excluded }) : base;
+  return andFilters(base, trashAndJunkExclusion(entry));
 }
 
 export const mailProvider: SearchProvider = {

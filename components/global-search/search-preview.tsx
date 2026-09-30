@@ -1,6 +1,6 @@
 "use client";
 
-import { AlignLeft, Building2, CalendarDays, Clock, ExternalLink, FileText, Folder, HardDrive, Mail, MapPin, Phone, Repeat, Users } from "lucide-react";
+import { AlignLeft, Building2, CalendarDays, Clock, ExternalLink, FileText, Folder, HardDrive, Mail, MapPin, Phone, Repeat, Users } from "@/components/icons";
 import { useTranslations } from "next-intl";
 import { Avatar } from "@/components/ui/avatar";
 import { ProEmailView } from "@/components/pro/pro-email-tab-body";

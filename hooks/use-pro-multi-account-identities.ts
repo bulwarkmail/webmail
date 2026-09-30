@@ -4,8 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useAccountStore } from "@/stores/account-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { useIdentityStore } from "@/stores/identity-store";
-import { useSettingsStore } from "@/stores/settings-store";
-import { useIsEmbedded } from "@/hooks/use-is-embedded";
 import type { Identity } from "@/lib/jmap/types";
 
 interface AccountIdentityGroup {
@@ -15,6 +13,13 @@ interface AccountIdentityGroup {
 }
 
 const CROSS_ACCOUNT_IDENTITY_DELIMITER = '::';
+
+// Identities last fetched per non-active account, shared by every mounted
+// instance. mail-app keeps one mounted, so a composer opened later starts with
+// the other accounts' identities instead of a round-trip behind: reply-all
+// leaves our own addresses out based on its first render (#1104). Each mount
+// still refetches.
+const remoteIdentityCache = new Map<string, Identity[]>();
 
 /** Cross-account identity IDs are namespaced to avoid collisions between JMAP
  * servers that happen to issue the same opaque ID. EVERY aggregated account is
@@ -37,12 +42,17 @@ export function stripCrossAccountIdentityPrefix(id: string): { localAccountId: s
 }
 
 /**
- * Pro shell only: load identities from every connected account and group
- * them by local account so the composer's From dropdown can render an
- * <optgroup> per account - mirrors [[useProMultiAccountCalendars]] and
+ * Load identities from every connected account and group them by local
+ * account so the composer's From dropdown can render an <optgroup> per
+ * account - mirrors [[useProMultiAccountCalendars]] and
  * [[useProMultiAccountContacts]].
  *
- * Outside Pro / embedded mode the hook returns `enabled: false` and the
+ * Not limited to the Pro shell: the standard shell opens other accounts'
+ * messages too (Unified Inbox, a non-active account's folders), and a reply
+ * can only default to the receiving account's identity if that identity is in
+ * the list (#1104).
+ *
+ * With a single connected account the hook returns `enabled: false` and the
  * caller falls back to the active account's identities from
  * [[useIdentityStore]].
  */
@@ -52,15 +62,15 @@ export function useProMultiAccountIdentities(): {
   /** Flat list across all accounts, useful for lookup-by-id. */
   allIdentities: Identity[];
 } {
-  const isEmbedded = useIsEmbedded();
-  const proInterface = useSettingsStore((s) => s.proInterface);
   const accounts = useAccountStore((s) => s.accounts);
   const activeAccountId = useAuthStore((s) => s.activeAccountId);
   const activeIdentities = useIdentityStore((s) => s.identities);
 
-  const enabled = (proInterface || isEmbedded) && accounts.filter(a => a.isConnected).length > 1;
+  const enabled = accounts.filter(a => a.isConnected).length > 1;
 
-  const [remoteIdentities, setRemoteIdentities] = useState<Record<string, Identity[]>>({});
+  const [remoteIdentities, setRemoteIdentities] = useState<Record<string, Identity[]>>(
+    () => Object.fromEntries(remoteIdentityCache),
+  );
 
   // Cache identities fetched per non-active account. Active account's
   // identities come live from useIdentityStore so signature/alias edits
@@ -69,6 +79,9 @@ export function useProMultiAccountIdentities(): {
     if (!enabled) {
       setRemoteIdentities({});
       return;
+    }
+    for (const id of remoteIdentityCache.keys()) {
+      if (!accounts.some((a) => a.id === id)) remoteIdentityCache.delete(id);
     }
     let cancelled = false;
     const getClientForAccount = useAuthStore.getState().getClientForAccount;
@@ -82,10 +95,12 @@ export function useProMultiAccountIdentities(): {
             if (!client) return;
             try {
               const list = await client.getIdentities();
+              remoteIdentityCache.set(account.id, list);
               if (!cancelled) next[account.id] = list;
             } catch {
               // Skip accounts that fail to load identities - one bad
               // account shouldn't blank the whole dropdown.
+              remoteIdentityCache.delete(account.id);
             }
           }),
       );

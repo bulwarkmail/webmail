@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { getLocaleDirection } from "@/i18n/direction";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Hanken_Grotesk } from "next/font/google";
 import { headers } from "next/headers";
 import { getLocale, getTranslations } from "next-intl/server";
 import { ServiceWorkerRegistration } from "@/components/service-worker-registration";
@@ -38,6 +38,17 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+// The "Flat fields" theme's family. Not preloaded and no metric-adjusted
+// fallback: the file is only fetched once that theme renders text in it, and
+// scripts Hanken does not cover fall through to the theme's system stack.
+const hankenGrotesk = Hanken_Grotesk({
+  variable: "--font-hanken",
+  subsets: ["latin", "latin-ext"],
+  display: "swap",
+  preload: false,
+  adjustFontFallback: false,
 });
 
 // Resolve a branding value for the requesting host: per-domain override first,
@@ -305,7 +316,7 @@ export default async function RootLayout({
         />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${hankenGrotesk.variable} antialiased`}
       >
         <ServiceWorkerRegistration />
         {!themeColorConfigured && <ThemeColorSync />}

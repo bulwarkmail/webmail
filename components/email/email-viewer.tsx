@@ -4,7 +4,7 @@ import { useState, useEffect, useLayoutEffect, useMemo, useRef, useCallback, use
 import { Email, ContactCard, Mailbox } from "@/lib/jmap/types";
 import { emailExportFilename, attachmentDownloadFilename, attachmentsBundleFilename, DEFAULT_EMAIL_TEMPLATE, DEFAULT_ATTACHMENT_TEMPLATE } from "@/lib/download-filename";
 import { EML_IMPORT_ACCEPT, expandImportableEmails } from "@/lib/eml-import";
-import { applyNewTabToAnchor, escapeHtml, isOpenableLinkHref, plainTextToSafeHtml, sanitizeEmailBodyForIframe, sanitizeEmailHtml, sanitizePlainTextRenderedHtml } from "@/lib/email-sanitization";
+import { applyNewTabToAnchor, emailIframeCsp, escapeHtml, isOpenableLinkHref, plainTextToSafeHtml, sanitizeEmailBodyForIframe, sanitizeEmailHtml, sanitizePlainTextRenderedHtml } from "@/lib/email-sanitization";
 import { getRenderableHtmlBody } from "@/lib/email-body-selection";
 import { collectReferencedCids, isEmbeddedInBody } from "@/lib/attachment-visibility";
 import { collapsePlainTextQuotes, setupQuoteCollapse } from "@/lib/quote-collapse";
@@ -82,7 +82,7 @@ import {
   Link as LinkIcon,
   Maximize2,
   Minimize2,
-} from "lucide-react";
+} from "@/components/icons";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import type { Attachment as PostalMimeAttachment } from 'postal-mime';
@@ -106,9 +106,12 @@ import { useMenuNavigation } from "@/hooks/use-menu-navigation";
 import { findCalendarAttachment, isCalendarMimeType } from "@/lib/calendar-invitation";
 import { RecipientPopover } from "./recipient-popover";
 import { MailtoLink } from "@/components/ui/mailto-link";
-import { inertBlobType, isFilePreviewable, isMimeTypeSafeForInlinePreview, toInertBlob } from "@/lib/file-preview";
+import { imageBlobUrl, inertBlobType, isFilePreviewable, isMimeTypeSafeForInlinePreview, toInertBlob } from "@/lib/file-preview";
+import { useWopiStatus, canWopiOpen } from "@/hooks/use-wopi-status";
 import { parseTnef, isTnefAttachment } from "@/lib/tnef";
 import { debug } from "@/lib/debug";
+import { findVerificationCode, verificationCodeBodyText } from "@/lib/verification-code";
+import { VerificationCodeChip } from "./verification-code-chip";
 import type { TnefAttachment } from "@/lib/tnef";
 import { PluginSlot } from "@/components/plugins/plugin-slot";
 import { usePluginSlotOffers } from "@/hooks/use-plugin-slot-offers";
@@ -603,13 +606,13 @@ function DraggableAttachmentChip({ attachment, client, accountId, enabled, downl
       if (attachment.tnefData) {
         const bytes = attachment.tnefData;
         const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
-        return URL.createObjectURL(new Blob([buffer], { type: attachment.type || 'application/octet-stream' }));
+        return URL.createObjectURL(new Blob([buffer], { type: inertBlobType(attachment.type) }));
       }
       if (attachment.decryptedAttachment) {
         const bytes = getAttachmentContentBytes(attachment.decryptedAttachment);
         if (!bytes || bytes.byteLength === 0) return null;
         const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
-        return URL.createObjectURL(new Blob([buffer], { type: attachment.type || 'application/octet-stream' }));
+        return URL.createObjectURL(new Blob([buffer], { type: inertBlobType(attachment.type) }));
       }
       return null;
     },
@@ -677,6 +680,16 @@ export function EmailViewer({
   const messageSpacing = useSettingsStore((state) => state.messageSpacing);
   const plainTextFont = useSettingsStore((state) => state.plainTextFont);
   const mailAttachmentAction = useSettingsStore((state) => state.mailAttachmentAction);
+  // Office documents the built-in preview can't render still open in the
+  // configured WOPI editor (#1047) - only blob-backed ones, the editor
+  // fetches the content server-side.
+  const wopiStatus = useWopiStatus(true);
+  const isAttachmentPreviewable = useCallback(
+    (attachment: EffectiveAttachment) =>
+      isFilePreviewable(attachment.name || undefined, attachment.type)
+      || (!!attachment.blobId && canWopiOpen(wopiStatus, attachment.name)),
+    [wopiStatus],
+  );
   const mailAttachmentActionRef = useRef(mailAttachmentAction);
   mailAttachmentActionRef.current = mailAttachmentAction;
   const attachmentPosition = useSettingsStore((state) => state.attachmentPosition);
@@ -694,6 +707,15 @@ export function EmailViewer({
   const readReceiptResponse = useSettingsStore((state) => state.readReceiptResponse);
   const hideInlineImageAttachments = useSettingsStore((state) => state.hideInlineImageAttachments);
   const attachmentImagePreviewsEnabled = useSettingsStore((state) => state.attachmentImagePreviewsEnabled);
+  const showVerificationCodes = useSettingsStore((state) => state.showVerificationCodes);
+  // The one-time code of a sign-in mail, read from the body as shown here, so
+  // it is found even where the list's preview stops short of it.
+  const verificationCode = useMemo(
+    () => (showVerificationCodes && email ? findVerificationCode(email.subject, verificationCodeBodyText(email)) : null),
+    // A keyword change replaces the email object; only another body needs another look.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [showVerificationCodes, email?.id, email?.subject, email?.bodyValues],
+  );
   const dragOutActive = useMemo(() => isDragOutSupported(), []);
   const emailDownloadTemplate = useSettingsStore((state) => state.emailDownloadTemplate) || DEFAULT_EMAIL_TEMPLATE;
   const attachmentDownloadTemplate = useSettingsStore((state) => state.attachmentDownloadTemplate) || DEFAULT_ATTACHMENT_TEMPLATE;
@@ -2119,8 +2141,10 @@ export function EmailViewer({
     </button>
   ) : null;
 
-  // Pre-fetch object URLs for image attachments so their actual contents can be
+  // Pre-fetch URLs for image attachments so their actual contents can be
   // rendered as thumbnails inside the chip. Skips images larger than 10 MB.
+  // The thumbnail can be opened on its own (context menu, drag to the tab
+  // strip), so imageBlobUrl keeps a sender's SVG out of the webmail origin.
   useEffect(() => {
     let cancelled = false;
     const createdUrls: string[] = [];
@@ -2145,18 +2169,18 @@ export function EmailViewer({
         let url: string | undefined;
         try {
           if (att.blobId && blobClient) {
-            url = await blobClient.fetchBlobAsObjectUrl(att.blobId, att.name || 'thumb', att.type, blobAccountId);
+            url = await imageBlobUrl(await blobClient.fetchBlob(att.blobId, att.name || 'thumb', att.type, blobAccountId), att.type);
           } else if (att.decryptedAttachment) {
             const bytes = getAttachmentContentBytes(att.decryptedAttachment);
             if (!bytes || bytes.byteLength === 0) return;
             const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
-            url = URL.createObjectURL(new Blob([buffer], { type: att.type || 'application/octet-stream' }));
+            url = await imageBlobUrl(new Blob([buffer]), att.type);
           } else if (att.tnefData) {
             const buffer = att.tnefData.buffer.slice(
               att.tnefData.byteOffset,
               att.tnefData.byteOffset + att.tnefData.byteLength,
             ) as ArrayBuffer;
-            url = URL.createObjectURL(new Blob([buffer], { type: att.type || 'application/octet-stream' }));
+            url = await imageBlobUrl(new Blob([buffer]), att.type);
           }
         } catch {
           return;
@@ -2277,19 +2301,10 @@ export function EmailViewer({
       p.MsoNormal, li.MsoNormal, div.MsoNormal { margin: 0 0 6px; }
     ` : '';
 
-    // Defense-in-depth CSP inside srcDoc. default-src 'none' forbids script
-    // execution even if the sanitizer ever lets a <script> through.
-    //
-    // When external content is blocked, img/media/font are restricted to
-    // data:/blob: only — this is the network-level backstop for every tracking
-    // vector, including ones the DOM-walk blocker can't see (CSS escapes,
-    // <style>-tag url(), @font-face). When the user loads/trusts the sender the
-    // srcDoc is rebuilt (see emailContent) with the permissive variant so real
-    // images, web fonts and media load. cid:/inline images are pre-rewritten to
-    // blob: URLs, so they survive the strict variant.
-    const iframeCsp = effectiveEmailContent.externalBlocked
-      ? "default-src 'none'; img-src data: blob:; style-src 'unsafe-inline'; font-src data:; media-src data: blob:; base-uri 'none'; form-action 'none'; frame-src 'none'"
-      : "default-src 'none'; img-src data: blob: http: https:; style-src 'unsafe-inline'; font-src data: http: https:; media-src data: blob: http: https:; base-uri 'none'; form-action 'none'; frame-src 'none'";
+    // Defense-in-depth CSP inside srcDoc (see emailIframeCsp). When the user
+    // loads/trusts the sender the srcDoc is rebuilt (see emailContent) with
+    // the permissive variant so real images, web fonts and media load.
+    const iframeCsp = emailIframeCsp(effectiveEmailContent.externalBlocked);
 
     return `<!DOCTYPE html>
 <html style="color-scheme: ${colorScheme};"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
@@ -2499,13 +2514,13 @@ export function EmailViewer({
 
         // Second pass over the rendered iframe DOM (the hook above only sees
         // DOMPurify's output); http(s) → new tab, other schemes left in place.
-        doc.querySelectorAll('a').forEach(applyNewTabToAnchor);
+        doc.querySelectorAll('a, area').forEach(applyNewTabToAnchor);
 
         // Plugin intercept: let plugins cancel or rewrite external links inside
         // the email body before navigation happens. Bound on the iframe doc so
         // it survives DOM mutations from dark-mode pass below.
         const onLinkClick = async (ev: Event) => {
-          const targetEl = (ev.target as Element | null)?.closest?.('a[href]') as HTMLAnchorElement | null;
+          const targetEl = (ev.target as Element | null)?.closest?.('a[href], area[href]') as HTMLAnchorElement | HTMLAreaElement | null;
           if (!targetEl) return;
           const href = targetEl.getAttribute('href') || '';
           if (!href || href.startsWith('#') || href.startsWith('mailto:')) return;
@@ -2740,8 +2755,15 @@ export function EmailViewer({
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
 
+    // The popup is an about:blank document of the app, so it carries the
+    // app's CSP (img-src https:), not the message iframe's strict one. Add
+    // the iframe's policy while remote content is blocked; it narrows the
+    // inherited one.
     printWindow.document.write(`<!DOCTYPE html>
-<html><head><meta charset="utf-8"><title>${escapeHtml(subjectText)}</title>
+<html><head><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="${emailIframeCsp(effectiveEmailContent.externalBlocked)}">
+<meta name="referrer" content="no-referrer">
+<title>${escapeHtml(subjectText)}</title>
 <style>
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 40px; color: #000; }
   .header { border-bottom: 1px solid #ccc; padding-bottom: 16px; margin-bottom: 16px; }
@@ -3314,7 +3336,7 @@ export function EmailViewer({
           data-overflow-item
           data-overflow-priority="11"
           className="hidden sm:inline-flex h-8 gap-1.5"
-          title={isDark ? 'View in light mode' : 'View in dark mode'}
+          title={isDark ? t('view_in_light_mode') : t('view_in_dark_mode')}
           disabled={!effectiveEmailContent.isHtml}
           aria-disabled={!effectiveEmailContent.isHtml}
         >
@@ -3551,7 +3573,7 @@ export function EmailViewer({
                   className={cn("w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(11) ? "" : "sm:hidden")}
                 >
                   {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-                  {isDark ? 'View in light mode' : 'View in dark mode'}
+                  {isDark ? t('view_in_light_mode') : t('view_in_dark_mode')}
                 </button>
               )}
               <div className="h-px bg-border my-1" />
@@ -3765,7 +3787,7 @@ export function EmailViewer({
                   className="w-full px-4 py-3 min-h-[44px] text-sm text-start hover:bg-muted text-foreground flex items-center gap-3"
                 >
                   {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-                  {isDark ? 'View in light mode' : 'View in dark mode'}
+                  {isDark ? t('view_in_light_mode') : t('view_in_dark_mode')}
                 </button>
               )}
               <div className="h-px bg-border my-1" />
@@ -3909,6 +3931,11 @@ export function EmailViewer({
                   </span>
                 )}
               </div>
+              {verificationCode && (
+                <div className="mt-1.5 flex">
+                  <VerificationCodeChip code={verificationCode} className="py-1 text-sm" />
+                </div>
+              )}
               {sortedTagIds.length > 0 && (
                 <div ref={headerTagsRef} className="mt-1.5 flex flex-wrap items-center gap-1">
                   {sortedTagIds.map((tagId) => (
@@ -4067,7 +4094,7 @@ export function EmailViewer({
                 <div className="relative flex flex-col items-end justify-start gap-1 flex-shrink-0 max-w-[50%]">
                   {effectiveAttachments.slice(0, 2).map((attachment) => {
                     const FileIcon = getFileIcon(attachment.name || undefined, attachment.type);
-                    const isPreviewable = isFilePreviewable(attachment.name || undefined, attachment.type);
+                    const isPreviewable = isAttachmentPreviewable(attachment);
                     const opensPreview = isPreviewable && mailAttachmentAction === 'preview';
                     const thumbUrl = imageThumbUrls[attachment.id];
                     return (
@@ -4164,7 +4191,7 @@ export function EmailViewer({
                       <div className="absolute top-full end-0 mt-1 z-50 bg-background border border-border rounded-lg shadow-lg p-2 flex flex-col gap-1 min-w-[220px]">
                         {effectiveAttachments.slice(2).map((attachment) => {
                           const FileIcon = getFileIcon(attachment.name || undefined, attachment.type);
-                          const isPreviewable = isFilePreviewable(attachment.name || undefined, attachment.type);
+                          const isPreviewable = isAttachmentPreviewable(attachment);
                           const opensPreview = isPreviewable && mailAttachmentAction === 'preview';
                           return (
                             <DraggableAttachmentChip key={attachment.id} attachment={attachment} client={blobClient} accountId={blobAccountId} enabled={dragOutActive} downloadName={resolveAttachmentName(attachment)}>
@@ -4879,7 +4906,7 @@ export function EmailViewer({
               .slice(0, visibleBelowHeaderCount ?? effectiveAttachments.length)
               .map((attachment) => {
               const FileIcon = getFileIcon(attachment.name || undefined, attachment.type);
-              const isPreviewable = isFilePreviewable(attachment.name || undefined, attachment.type);
+              const isPreviewable = isAttachmentPreviewable(attachment);
               const opensPreview = isPreviewable && mailAttachmentAction === 'preview';
               const thumbUrl = imageThumbUrls[attachment.id];
               return (
@@ -4981,7 +5008,7 @@ export function EmailViewer({
                 <div className="absolute top-full end-0 mt-1 z-50 bg-background border border-border rounded-lg shadow-lg p-2 flex flex-col gap-1 min-w-[260px] max-h-[60vh] overflow-y-auto">
                   {effectiveAttachments.slice(visibleBelowHeaderCount).map((attachment) => {
                     const FileIcon = getFileIcon(attachment.name || undefined, attachment.type);
-                    const isPreviewable = isFilePreviewable(attachment.name || undefined, attachment.type);
+                    const isPreviewable = isAttachmentPreviewable(attachment);
                     const opensPreview = isPreviewable && mailAttachmentAction === 'preview';
                     return (
                       <DraggableAttachmentChip key={attachment.id} attachment={attachment} client={blobClient} accountId={blobAccountId} enabled={dragOutActive} downloadName={resolveAttachmentName(attachment)}>
@@ -5051,7 +5078,7 @@ export function EmailViewer({
             <div className="relative flex items-center gap-1.5 flex-wrap">
               {effectiveAttachments.slice(0, 2).map((attachment) => {
                 const FileIcon = getFileIcon(attachment.name || undefined, attachment.type);
-                const isPreviewable = isFilePreviewable(attachment.name || undefined, attachment.type);
+                const isPreviewable = isAttachmentPreviewable(attachment);
                 const opensPreview = isPreviewable && mailAttachmentAction === 'preview';
                 const thumbUrl = imageThumbUrls[attachment.id];
                 return (
@@ -5147,7 +5174,7 @@ export function EmailViewer({
                   <div className="absolute top-full start-0 mt-1 z-50 bg-background border border-border rounded-lg shadow-lg p-2 flex flex-col gap-1 min-w-[220px]">
                     {effectiveAttachments.slice(2).map((attachment) => {
                       const FileIcon = getFileIcon(attachment.name || undefined, attachment.type);
-                      const isPreviewable = isFilePreviewable(attachment.name || undefined, attachment.type);
+                      const isPreviewable = isAttachmentPreviewable(attachment);
                       const opensPreview = isPreviewable && mailAttachmentAction === 'preview';
                       return (
                         <DraggableAttachmentChip key={attachment.id} attachment={attachment} client={blobClient} accountId={blobAccountId} enabled={dragOutActive} downloadName={resolveAttachmentName(attachment)}>

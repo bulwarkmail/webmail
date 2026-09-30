@@ -1,8 +1,8 @@
 {
   "name": "bulwark-webmail",
-  "version": "1.10.0",
+  "version": "1.11.2",
   "description": "Bulwark Webmail - a modern webmail client built for Stalwart Mail Server",
-  "author": "Bulwark Webmail <bulwark@rbm.systems>",
+  "author": "Bulwark Mail <dev@bulwarkmail.org>",
   "license": "AGPL-3.0-only",
   "repository": {
     "type": "git",
@@ -42,10 +42,12 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@noble/curves": "^2.4.0",
     "@noble/hashes": "^2.4.0",
+    "@tabler/icons-react": "^3.47.0",
     "@tanstack/react-virtual": "^3.13.24",
     "@tiptap/extension-color": "^3.31.3",
-    "@tiptap/extension-image": "^3.31.3",
+    "@tiptap/extension-heading": "^3.31.3",
     "@tiptap/extension-link": "^3.31.3",
+    "@tiptap/extension-paragraph": "^3.31.3",
     "@tiptap/extension-placeholder": "^3.31.3",
     "@tiptap/extension-table": "^3.31.3",
     "@tiptap/extension-table-cell": "^3.31.3",
@@ -57,26 +59,22 @@
     "@tiptap/pm": "^3.31.3",
     "@tiptap/react": "^3.31.3",
     "@tiptap/starter-kit": "^3.31.3",
-    "asn1js": "^3.0.10",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "dompurify": "^3.4.12",
     "jalaali-js": "^2.0.0",
     "jszip": "^3.10.1",
-    "lucide-react": "^1.8.0",
     "next": "^16.2.6",
     "next-intl": "^4.13.3",
     "otpauth": "^9.5.0",
     "pdfjs-dist": "^6.0.227",
-    "pkijs": "^3.4.0",
     "postal-mime": "^2.7.4",
-    "pvtsutils": "^1.3.6",
     "qrcode": "^1.5.4",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
-    "sonner": "^2.0.7",
+    "sharp": "^0.35.4",
     "tailwind-merge": "^3.4.0",
-    "webcrypto-liner": "^1.4.3",
+    "undici": "^7.29.1",
     "zustand": "^5.0.12"
   },
   "devDependencies": {
@@ -108,12 +106,8 @@
     "vitest": "^4.1.11"
   },
   "overrides": {
-    "elliptic": {
-      ".": "^6.6.1",
-      "webcrypto-liner": "$elliptic"
-    },
     "flatted": "^3.4.2",
     "picomatch": "^4.0.4",
-    "undici": "^7.24.0"
+    "undici": "$undici"
   }
 }

@@ -11,6 +11,8 @@ export interface SieveCapabilities {
   sieveExtensions: string[];
   notificationMethods: string[];
   externalLists: string[];
+  /** RFC 9661: redirects run per message; extra ones are skipped silently. */
+  maxNumberRedirects?: number | null;
 }
 
 export type FilterConditionField =
@@ -53,6 +55,13 @@ export interface FilterCondition {
 export interface FilterAction {
   type: FilterActionType;
   value?: string;
+  /**
+   * move/copy: JMAP id of the target folder. `value` keeps the path as the
+   * fallback; the id keeps the rule working after the folder is renamed.
+   */
+  mailboxId?: string;
+  /** forward: also keep the message (`redirect :copy`). */
+  keepCopy?: boolean;
 }
 
 export type FilterOrigin = 'bulwark' | 'external' | 'opaque';
@@ -65,6 +74,11 @@ export interface FilterRule {
   conditions: FilterCondition[];
   actions: FilterAction[];
   stopProcessing: boolean;
+  /**
+   * Also move/copy messages the server marked as spam. Off by default, so a
+   * folder rule does not pull spam out of Junk.
+   */
+  includeSpam?: boolean;
   origin?: FilterOrigin;
   originLabel?: string;
   rawBlock?: string;
@@ -80,4 +94,10 @@ export interface FilterMetadata {
   version: 1;
   rules: FilterRule[];
   vacation?: VacationSieveConfig;
+  /**
+   * The script runs the server-managed "vacation" script via `include`.
+   * Servers like Stalwart keep one active script, so a VacationResponse
+   * that activates its own script would otherwise switch the filters off.
+   */
+  includeVacation?: boolean;
 }

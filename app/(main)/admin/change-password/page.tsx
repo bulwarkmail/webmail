@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Lock } from 'lucide-react';
+import { Lock } from '@/components/icons';
 import { apiFetch } from '@/lib/browser-navigation';
 
 export default function ChangePasswordPage() {

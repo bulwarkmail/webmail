@@ -4,10 +4,27 @@ import type { SieveScript, SieveCapabilities } from '@/lib/jmap/sieve-types';
 import { getDemoData, type DemoData } from './demo-data';
 import { generateDemoId } from './demo-utils';
 import { compareEmails, type SortLevel } from '@/lib/message-list-order';
+import { withBasePath } from '@/lib/browser-navigation';
+import { toInertBlob } from '@/lib/file-preview';
+
+// Fixture blobs with real bytes behind them, served from public/demo/. The
+// photos are CC0 / public domain from Wikimedia Commons: "Wedding couple
+// (1294004)", "Wedding couple (1293575)", "Men drinking", "Lake Mountain
+// Landscape" and "Team members of startup". prototype-v3.png is drawn for the
+// demo. Every other fixture blob falls back to a text placeholder.
+const DEMO_BLOB_ASSETS: Record<string, string> = {
+  'demo-blob-att-2': '/demo/prototype-v3.png',
+  'demo-blob-att-3': '/demo/wedding-001.jpg',
+  'demo-blob-att-4': '/demo/wedding-014-mom-dad.jpg',
+  'demo-blob-att-5': '/demo/wedding-038-the-toast.jpg',
+  'demo-blob-file-4': '/demo/vacation.jpg',
+  'demo-blob-file-5': '/demo/team-photo.jpg',
+};
 
 /**
  * In-memory JMAP client for demo mode.
- * All data lives in memory - no network calls, no cookies.
+ * All data lives in memory - no server calls, no cookies. Only the demo
+ * images under public/demo are fetched, from the app's own origin.
  */
 export class DemoJMAPClient implements IJMAPClient {
   private data: DemoData;
@@ -155,8 +172,9 @@ export class DemoJMAPClient implements IJMAPClient {
 
   /**
    * Minimal JMAP filter evaluator for demo mode: supports the conditions the
-   * message-list category tabs use (hasKeyword / notKeyword / from and
-   * AND / OR / NOT operators). Unknown conditions match nothing.
+   * message-list category tabs and the folder-less search scopes use
+   * (hasKeyword / notKeyword / from / text / inMailbox / inMailboxOtherThan
+   * and AND / OR / NOT operators). Unknown conditions are ignored.
    */
   private matchesFilter(e: Email, filter: Record<string, unknown>): boolean {
     if (typeof filter.operator === 'string') {
@@ -175,6 +193,16 @@ export class DemoJMAPClient implements IJMAPClient {
       const match = (e.from || []).some(f =>
         (f.email || '').toLowerCase().includes(q) || (f.name || '').toLowerCase().includes(q));
       if (!match) return false;
+    }
+    if (typeof filter.text === 'string') {
+      const q = filter.text.toLowerCase();
+      const text = [e.subject, e.preview, e.from?.[0]?.name, e.from?.[0]?.email].filter(Boolean).join(' ').toLowerCase();
+      if (!text.includes(q)) return false;
+    }
+    if (typeof filter.inMailbox === 'string' && !e.mailboxIds[filter.inMailbox]) return false;
+    if (Array.isArray(filter.inMailboxOtherThan)) {
+      const excluded = new Set(filter.inMailboxOtherThan as string[]);
+      if (!Object.keys(e.mailboxIds).some(id => e.mailboxIds[id] && !excluded.has(id))) return false;
     }
     return true;
   }
@@ -298,13 +326,7 @@ export class DemoJMAPClient implements IJMAPClient {
   }
 
   async advancedSearchEmails(filter: Record<string, unknown>, _accountId?: string, limit: number = 50, position: number = 0): Promise<{ emails: Email[]; hasMore: boolean; total: number }> {
-    // Simplified: just return all emails for any advanced filter
-    let filtered = [...this.data.emails];
-    if (filter.inMailbox) filtered = filtered.filter(e => e.mailboxIds[filter.inMailbox as string]);
-    if (filter.text) {
-      const q = (filter.text as string).toLowerCase();
-      filtered = filtered.filter(e => [e.subject, e.preview].filter(Boolean).join(' ').toLowerCase().includes(q));
-    }
+    const filtered = this.data.emails.filter(e => this.matchesFilter(e, filter));
     filtered.sort((a, b) => new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime());
     const total = filtered.length;
     const emails = filtered.slice(position, position + limit);
@@ -471,6 +493,18 @@ export class DemoJMAPClient implements IJMAPClient {
     const removed = before - this.data.emails.length;
     this.recalcMailboxCounts();
     return removed;
+  }
+
+  async moveMailboxContents(fromMailboxId: string, toMailboxId: string, _accountId?: string, markAsRead?: boolean): Promise<number> {
+    let moved = 0;
+    for (const email of this.data.emails) {
+      if (!email.mailboxIds[fromMailboxId]) continue;
+      email.mailboxIds = { [toMailboxId]: true };
+      if (markAsRead) email.keywords.$seen = true;
+      moved++;
+    }
+    this.recalcMailboxCounts();
+    return moved;
   }
 
   async markMailboxAsRead(mailboxId: string): Promise<number> {
@@ -695,12 +729,27 @@ export class DemoJMAPClient implements IJMAPClient {
   }
 
   async fetchBlob(blobId: string): Promise<Blob> {
-    return this.blobStore.get(blobId) ?? new Blob(['[Demo placeholder content]'], { type: 'text/plain' });
+    const stored = this.blobStore.get(blobId);
+    if (stored) return stored;
+    const asset = DEMO_BLOB_ASSETS[blobId];
+    if (asset) {
+      try {
+        const res = await fetch(withBasePath(asset));
+        if (res.ok) {
+          const blob = await res.blob();
+          this.blobStore.set(blobId, blob);
+          return blob;
+        }
+      } catch {
+        // Fall through to the placeholder.
+      }
+    }
+    return new Blob(['[Demo placeholder content]'], { type: 'text/plain' });
   }
 
   async fetchBlobAsObjectUrl(blobId: string): Promise<string> {
     const blob = await this.fetchBlob(blobId);
-    return URL.createObjectURL(blob);
+    return URL.createObjectURL(toInertBlob(blob));
   }
 
   async fetchBlobArrayBuffer(blobId: string): Promise<ArrayBuffer> {
@@ -835,6 +884,9 @@ export class DemoJMAPClient implements IJMAPClient {
 
   async getCalendars(): Promise<Calendar[]> { return [...this.data.calendars]; }
   async getAllCalendars(): Promise<Calendar[]> { return [...this.data.calendars]; }
+  async getAllCalendarsWithFailures(): Promise<{ calendars: Calendar[]; failedAccountIds: string[] }> {
+    return { calendars: [...this.data.calendars], failedAccountIds: [] };
+  }
 
   async createCalendar(calendar: Partial<Calendar>): Promise<Calendar> {
     const full: Calendar = {

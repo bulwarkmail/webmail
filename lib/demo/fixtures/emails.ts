@@ -217,7 +217,7 @@ export function createDemoEmails(): Email[] {
       ),
       attachments: [
         { partId: 'att-1', blobId: 'demo-blob-att-1', size: 145000, name: 'Invoice-2024-089.pdf', type: 'application/pdf' },
-        { partId: 'att-2', blobId: 'demo-blob-att-2', size: 89000, name: 'prototype-v3.png', type: 'image/png' },
+        { partId: 'att-2', blobId: 'demo-blob-att-2', size: 21864, name: 'prototype-v3.png', type: 'image/png' },
       ],
       messageId: '<invoice-089@example.com>',
     },
@@ -281,9 +281,9 @@ export function createDemoEmails(): Email[] {
         "ok finally got around to going through these. there are like 600 more on the drive but here's the highlights - the ones I'd actually want to print.\n\nmom looked SO happy. dad cried during the speech btw, did you see?\n\nlet me know which ones you want full-res of\n\na",
       ),
       attachments: [
-        { partId: 'att-3', blobId: 'demo-blob-att-3', size: 1800000, name: 'wedding-001.jpg', type: 'image/jpeg' },
-        { partId: 'att-4', blobId: 'demo-blob-att-4', size: 1600000, name: 'wedding-014-mom-dad.jpg', type: 'image/jpeg' },
-        { partId: 'att-5', blobId: 'demo-blob-att-5', size: 1400000, name: 'wedding-038-the-toast.jpg', type: 'image/jpeg' },
+        { partId: 'att-3', blobId: 'demo-blob-att-3', size: 170392, name: 'wedding-001.jpg', type: 'image/jpeg' },
+        { partId: 'att-4', blobId: 'demo-blob-att-4', size: 154740, name: 'wedding-014-mom-dad.jpg', type: 'image/jpeg' },
+        { partId: 'att-5', blobId: 'demo-blob-att-5', size: 133897, name: 'wedding-038-the-toast.jpg', type: 'image/jpeg' },
       ],
       messageId: '<wedding-photos@example.com>',
     },

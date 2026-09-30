@@ -104,6 +104,13 @@ describe('push preview route account resolution', () => {
     expect(mailboxQuery?.methodCalls[0][1].accountId).toBe('g');
   });
 
+  it('names the login (cookie slot) the account belongs to', async () => {
+    // The worker only knows the JMAP account id, which can repeat across
+    // servers; the click must open the message in this login.
+    const { body } = await callRoute('a');
+    expect(body.slot).toBe(0);
+  });
+
   it('rejects an account the session does not know', async () => {
     const { status } = await callRoute('stranger');
     expect(status).toBe(401);

@@ -53,6 +53,7 @@ export async function GET(request: NextRequest) {
   const stalwartJmapPassthroughEnabled =
     stalwartFeaturesEnabled && configManager.get<boolean>('stalwartJmapPassthroughEnabled', true);
   const allowedFrameAncestors = configManager.get<string>('allowedFrameAncestors', '');
+  const autoPickByDomain = configManager.get<boolean>('jmapServerAutoPickByDomain', false);
 
   return NextResponse.json(
     {
@@ -85,8 +86,11 @@ export async function GET(request: NextRequest) {
       loginShowVersion: configManager.get<boolean>('loginShowVersion', true),
       demoMode: configManager.get<boolean>('demoMode', false),
       allowCustomJmapEndpoint: configManager.get<boolean>('allowCustomJmapEndpoint', false),
-      jmapServers: redactJmapServers(parseJmapServers(configManager.get<unknown>('jmapServers', []))),
-      jmapServerAutoPickByDomain: configManager.get<boolean>('jmapServerAutoPickByDomain', false),
+      // The domain lists name every organisation served here; the login page
+      // only needs them to pick the server by the typed address.
+      jmapServers: redactJmapServers(parseJmapServers(configManager.get<unknown>('jmapServers', [])))
+        .map((server) => (autoPickByDomain ? server : { ...server, domains: [] })),
+      jmapServerAutoPickByDomain: autoPickByDomain,
       autoSsoEnabled: configManager.get<boolean>('autoSsoEnabled', false),
       embeddedMode: !!allowedFrameAncestors && allowedFrameAncestors !== "'none'",
       parentOrigin: configManager.get<string>('parentOrigin', ''),
