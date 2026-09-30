@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
-import { X, Loader2, UserPlus, Trash2, Users, ChevronDown } from "lucide-react";
+import { X, Loader2, UserPlus, Trash2, Users, ChevronDown } from "@/components/icons";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
 import type { Principal, CalendarRights, AddressBookRights, FileNodeRights, MailboxRights } from "@/lib/jmap/types";
 import { toast } from "@/stores/toast-store";

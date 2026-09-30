@@ -14,7 +14,7 @@ export default defineConfig({
     // must be globbed at any depth or the nested repos/*/node_modules trees
     // get collected too.
     // scripts/lite/smoke/** is the Playwright smoke for the static Lite export.
-    exclude: ['e2e/**', 'integration/**', 'examples/**', 'repos/**', '**/node_modules/**', '.next/**', 'out/**', 'scripts/lite/smoke/**'],
+    exclude: ['integration/**', 'examples/**', 'repos/**', '**/node_modules/**', '.next/**', 'out/**', 'scripts/lite/smoke/**'],
   },
   resolve: {
     alias: {

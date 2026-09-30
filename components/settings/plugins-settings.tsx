@@ -5,7 +5,7 @@ import { usePluginStore } from '@/stores/plugin-store';
 import { usePolicyStore } from '@/stores/policy-store';
 import { SettingsSection, ToggleSwitch } from './settings-section';
 import { cn } from '@/lib/utils';
-import { AlertTriangle, Puzzle, Lock, Server } from 'lucide-react';
+import { AlertTriangle, Puzzle, Lock, Server } from '@/components/icons';
 import { toast } from '@/stores/toast-store';
 import type { InstalledPlugin, PluginStatus, SettingFieldSchema } from '@/lib/plugin-types';
 

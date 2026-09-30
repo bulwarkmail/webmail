@@ -3,14 +3,14 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { useAuthStore, redirectToLogin, saveRedirectAfterLogin } from '@/stores/auth-store';
 import { useAccountStore } from "@/stores/account-store";
 import { useEmailStore } from "@/stores/email-store";
-import { useFileStore } from "@/stores/file-store";
+import { useFileStore, resourceServerRef } from "@/stores/file-store";
 import { toast } from "@/stores/toast-store";
 import { cn, formatFileSize } from "@/lib/utils";
 import { NavigationRail } from "@/components/layout/navigation-rail";
@@ -27,11 +27,11 @@ import type { FileNodeRights } from "@/lib/jmap/types";
 import { ImagePreviewModal } from "@/components/files/image-preview-modal";
 import { FilePreviewModal } from "@/components/files/file-preview-modal";
 import { WopiEditor } from "@/components/files/wopi-editor";
-import { useWopiStatus, fileExtension } from "@/hooks/use-wopi-status";
+import { useWopiStatus, canWopiOpen } from "@/hooks/use-wopi-status";
 import { loadFilesSettings } from "@/components/files/files-settings-dialog";
 import type { FolderLayout } from "@/components/files/files-settings-dialog";
 import { AppTopBannerSlot } from "@/components/plugins/app-top-banner-slot";
-import { AlertTriangle, Loader2 } from "lucide-react";
+import { AlertTriangle, Loader2 } from "@/components/icons";
 import { isFilePreviewable } from "@/lib/file-preview";
 import { appPath, buildFilesPath, parseFilesPath, type FilesDeepLink } from "@/lib/deep-links";
 import { consumePendingDeepLinkEntry, subscribePendingDeepLink } from "@/lib/deep-link-handoff";
@@ -135,11 +135,7 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
   // WOPI document editing (#425): name of the file open in the editor overlay.
   const [editFile, setEditFile] = useState<string | null>(null);
   const wopiStatus = useWopiStatus(filesEnabled);
-  const isOfficeEditable = useCallback((name: string) => {
-    if (!wopiStatus?.enabled) return false;
-    const ext = fileExtension(name);
-    return wopiStatus.editExtensions.includes(ext) || wopiStatus.viewExtensions.includes(ext);
-  }, [wopiStatus]);
+  const isOfficeEditable = useCallback((name: string) => canWopiOpen(wopiStatus, name), [wopiStatus]);
   const [showDetails, setShowDetails] = useState(false);
   const [detailName, setDetailName] = useState<string | null>(null);
 
@@ -725,17 +721,20 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
       {/* WOPI document editor overlay (#425) */}
       {editFile && (() => {
         const editResource = resources.find(r => r.name === editFile);
-        return editResource ? (
+        if (!editResource) return null;
+        // A file shared with the user lives in the owner's account (#1094).
+        const node = resourceServerRef(editResource);
+        return (
           <WopiEditor
-            resource={editResource}
-            accountId={filesAccountId}
+            target={{ kind: "file", id: node.id, name: editResource.name }}
+            accountId={node.accountId ?? filesAccountId}
             onClose={() => {
               setEditFile(null);
               // The editor may have saved new content - pick up size/mtime.
               refresh();
             }}
           />
-        ) : null;
+        );
       })()}
 
       {/* Legacy file migration progress (issue #379) */}

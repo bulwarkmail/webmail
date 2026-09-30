@@ -545,7 +545,8 @@ function applyCustomThemeCSS(theme: InstalledTheme, resolvedTheme: 'light' | 'da
       // Bail out if the user switched themes while we were awaiting handlers.
       if (useThemeStore.getState().activeThemeId !== themeId) return;
       if (transformed && transformed !== theme.css) {
-        injectThemeCSS(transformed);
+        // A plugin's output gets no more reach than a theme's own CSS.
+        injectThemeCSS(sanitizeThemeCSS(transformed).css);
       }
     })
     .catch(() => {

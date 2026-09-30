@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { getLocaleDirection } from "@/i18n/direction";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Hanken_Grotesk } from "next/font/google";
 import { headers } from "next/headers";
 import { getLocale, getTranslations } from "next-intl/server";
 import { ServiceWorkerRegistration } from "@/components/service-worker-registration";
@@ -15,7 +15,7 @@ import {
 } from "@/lib/admin/domain-branding";
 import { withBasePath } from "@/lib/browser-navigation";
 import { locales, defaultLocale } from "@/i18n/routing";
-import { IS_LITE } from "@/lib/lite";
+import { IS_LITE, LITE_MOUNT_GLOBAL } from "@/lib/lite";
 import "../globals.css";
 
 // This layout renders <html> and sits ABOVE the [locale] segment, so
@@ -38,6 +38,17 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+// The "Flat fields" theme's family. Not preloaded and no metric-adjusted
+// fallback: the file is only fetched once that theme renders text in it, and
+// scripts Hanken does not cover fall through to the theme's system stack.
+const hankenGrotesk = Hanken_Grotesk({
+  variable: "--font-hanken",
+  subsets: ["latin", "latin-ext"],
+  display: "swap",
+  preload: false,
+  adjustFontFallback: false,
 });
 
 // Resolve a branding value for the requesting host: per-domain override first,
@@ -239,7 +250,7 @@ function liteLocaleBootstrap(): string {
                 try {
                   var locales = ${JSON.stringify([...locales])};
                   var rtl = ${JSON.stringify(rtl)};
-                  var base = ${JSON.stringify(basePath)};
+                  var base = ${JSON.stringify(basePath)} || (typeof window.${LITE_MOUNT_GLOBAL} === 'string' ? window.${LITE_MOUNT_GLOBAL} : '');
                   var path = location.pathname;
                   if (base && path.indexOf(base) === 0) path = path.slice(base.length);
                   var seg = path.split('/').filter(Boolean)[0];
@@ -305,7 +316,7 @@ export default async function RootLayout({
         />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${hankenGrotesk.variable} antialiased`}
       >
         <ServiceWorkerRegistration />
         {!themeColorConfigured && <ThemeColorSync />}

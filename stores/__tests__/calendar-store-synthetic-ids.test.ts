@@ -99,8 +99,11 @@ describe('updateEvent on an expanded occurrence', () => {
     });
 
     expect(client.updateCalendarEvent).toHaveBeenCalledTimes(1);
+    // The occurrence has no override yet: its details (here the participants) go along.
+    // The start was read in the occurrence's zone, so that zone goes along too.
     expect(client.updateCalendarEvent).toHaveBeenCalledWith(
-      'maaaaab', { title: 'Renamed', start: '2026-09-08T11:00:00' }, undefined, undefined,
+      'maaaaab', { title: 'Renamed', start: '2026-09-08T11:00:00', timeZone: 'Europe/Berlin', participants: occurrence().participants },
+      undefined, undefined, undefined,
     );
     const stored = useCalendarStore.getState().events[0];
     expect(stored.title).toBe('Renamed');
@@ -115,9 +118,13 @@ describe('updateEvent on an expanded occurrence', () => {
     await useCalendarStore.getState().updateEvent(client, 'maaaaab', { title: 'Renamed' }, true);
 
     expect(client.updateCalendarEvent).toHaveBeenCalledTimes(2);
-    expect(client.updateCalendarEvent).toHaveBeenNthCalledWith(1, 'maaaaab', { title: 'Renamed' }, true, undefined);
+    expect(client.updateCalendarEvent).toHaveBeenNthCalledWith(
+      1, 'maaaaab', { title: 'Renamed', participants: occurrence().participants }, true, undefined, undefined,
+    );
     expect(client.updateCalendarEvent).toHaveBeenNthCalledWith(2, 'b', {
-      'recurrenceOverrides/2026-09-08T10:00:00': { start: '2026-09-08T10:00:00', duration: 'PT1H', title: 'Renamed' },
+      'recurrenceOverrides/2026-09-08T10:00:00': {
+        start: '2026-09-08T10:00:00', duration: 'PT1H', title: 'Renamed', participants: occurrence().participants,
+      },
     }, true, undefined);
     expect(useCalendarStore.getState().events[0].title).toBe('Renamed');
 
@@ -196,6 +203,61 @@ describe('updateEvent on an expanded occurrence', () => {
   });
 });
 
+describe('a new start for an expanded instance (#1119)', () => {
+  // Stalwart expands an event whose own start is UTC (every one-off event
+  // in a Google Calendar export) in the request's zone, so the instance
+  // reads 17:30 Europe/Berlin while the base event is 15:30 Etc/UTC.
+  const imported = (overrides: Partial<CalendarEvent> = {}) => occurrence({
+    id: 'eaaaaad', originalId: 'eaaaaad', baseEventId: 'd', recurrenceId: null, recurrenceIdTimeZone: null,
+    recurrenceRules: null, recurrenceOverrides: null, participants: undefined,
+    start: '2026-10-02T17:30:00', timeZone: 'Europe/Berlin', utcStart: '2026-10-02T15:30:00Z', utcEnd: '2026-10-02T16:30:00Z',
+    ...overrides,
+  });
+
+  it('writes it to the base event with the zone it was read in', async () => {
+    const client = fakeClient();
+    useCalendarStore.setState({ events: [imported()] });
+
+    await useCalendarStore.getState().updateEvent(client, 'eaaaaad', { start: '2026-10-01T17:30:00' });
+
+    expect(client.updateCalendarEvent).toHaveBeenCalledWith(
+      'd', { start: '2026-10-01T17:30:00', timeZone: 'Europe/Berlin' }, undefined, undefined,
+    );
+    expect(useCalendarStore.getState().events[0].utcStart).toBe('2026-10-01T15:30:00.000Z');
+  });
+
+  it('keeps a zone the caller chose', async () => {
+    const client = fakeClient();
+    useCalendarStore.setState({ events: [imported()] });
+
+    await useCalendarStore.getState().updateEvent(client, 'eaaaaad', { start: '2026-10-01T15:30:00', timeZone: 'Etc/UTC' });
+
+    expect(client.updateCalendarEvent).toHaveBeenCalledWith(
+      'd', { start: '2026-10-01T15:30:00', timeZone: 'Etc/UTC' }, undefined, undefined,
+    );
+  });
+
+  it('leaves an all-day start floating and changes without a start alone', async () => {
+    const client = fakeClient();
+    useCalendarStore.setState({ events: [imported({ start: '2026-10-02T00:00:00', duration: 'P1D', showWithoutTime: true })] });
+
+    await useCalendarStore.getState().updateEvent(client, 'eaaaaad', { start: '2026-10-01T00:00:00' });
+    await useCalendarStore.getState().updateEvent(client, 'eaaaaad', { title: 'Renamed' });
+
+    expect(client.updateCalendarEvent).toHaveBeenNthCalledWith(1, 'd', { start: '2026-10-01T00:00:00' }, undefined, undefined);
+    expect(client.updateCalendarEvent).toHaveBeenNthCalledWith(2, 'd', { title: 'Renamed' }, undefined, undefined);
+  });
+
+  it('leaves events without synthetic ids alone', async () => {
+    const client = fakeClient();
+    useCalendarStore.setState({ events: [imported({ id: 'd', originalId: 'd', baseEventId: undefined, timeZone: 'Etc/UTC' })] });
+
+    await useCalendarStore.getState().updateEvent(client, 'd', { start: '2026-10-01T15:30:00' });
+
+    expect(client.updateCalendarEvent).toHaveBeenCalledWith('d', { start: '2026-10-01T15:30:00' }, undefined, undefined);
+  });
+});
+
 describe('deleteEvent on an expanded occurrence', () => {
   it('destroys the occurrence through its synthetic id and drops it from the store', async () => {
     const client = fakeClient();
@@ -232,6 +294,57 @@ describe('deleteEvent on an expanded occurrence', () => {
   });
 });
 
+describe('an occurrence expanded in the browser (older servers)', () => {
+  // Client-side expansion: `<master id>:<recurrenceId>`, no baseEventId,
+  // the master's rules and overrides copied onto the occurrence.
+  const browserOccurrence = (overrides: Partial<CalendarEvent> = {}) => occurrence({
+    id: 'b:2026-09-08T10:00:00', originalId: 'b', baseEventId: undefined, recurrenceOverrides: null, ...overrides,
+  });
+
+  it('writes a drag as an override on the base event, not as a new start for the series', async () => {
+    const client = fakeClient();
+    const occ = browserOccurrence();
+    useCalendarStore.setState({ events: [occ] });
+
+    await useCalendarStore.getState().updateEvent(client, occ.id, { start: '2026-09-08T12:00:00' });
+
+    expect(client.updateCalendarEvent).toHaveBeenCalledTimes(1);
+    expect(client.updateCalendarEvent).toHaveBeenCalledWith('b', {
+      recurrenceOverrides: {
+        '2026-09-08T10:00:00': {
+          start: '2026-09-08T12:00:00',
+          duration: 'PT1H',
+          title: 'Daily standup',
+          participants: occ.participants,
+        },
+      },
+    }, undefined, undefined);
+  });
+
+  it('patches the override entry when the series already has overrides', async () => {
+    const client = fakeClient();
+    const occ = browserOccurrence({ recurrenceOverrides: { '2026-09-09T10:00:00': { title: 'Moved' } } });
+    useCalendarStore.setState({ events: [occ] });
+
+    await useCalendarStore.getState().updateEvent(client, occ.id, { description: 'Bring slides' });
+
+    expect(Object.keys(client.updateCalendarEvent.mock.calls[0][1])).toEqual(['recurrenceOverrides/2026-09-08T10:00:00']);
+  });
+
+  it('deletes one occurrence by excluding it, never the whole series', async () => {
+    const client = fakeClient();
+    const occ = browserOccurrence();
+    useCalendarStore.setState({ events: [occ] });
+
+    await useCalendarStore.getState().deleteEvent(client, occ.id, true);
+
+    expect(client.deleteCalendarEvent).not.toHaveBeenCalled();
+    expect(client.updateCalendarEvent).toHaveBeenCalledWith('b', {
+      recurrenceOverrides: { '2026-09-08T10:00:00': { excluded: true } },
+    }, true, undefined);
+  });
+});
+
 describe('rsvpEvent on an expanded occurrence', () => {
   it('answers for the whole series on the base event', async () => {
     const client = fakeClient();
@@ -243,5 +356,72 @@ describe('rsvpEvent on an expanded occurrence', () => {
       'b', { 'participants/p1/participationStatus': 'accepted' }, true, undefined,
     );
     expect(useCalendarStore.getState().events[0].participants?.p1.participationStatus).toBe('accepted');
+  });
+
+  it('answers one occurrence through its synthetic id with the whole participants map', async () => {
+    const client = fakeClient();
+    const occ = occurrence({ sequence: 2 });
+    useCalendarStore.setState({ events: [occ] });
+
+    await useCalendarStore.getState().rsvpEvent(client, 'maaaaab', 'p1', 'declined', undefined, 'occurrence');
+
+    expect(client.updateCalendarEvent).toHaveBeenCalledTimes(1);
+    // The occurrence has no override yet, so its details are copied into it,
+    // and the series sequence is sent along.
+    expect(client.updateCalendarEvent).toHaveBeenCalledWith('maaaaab', {
+      title: 'Daily standup',
+      sequence: 2,
+      participants: { p1: { ...occ.participants!.p1, participationStatus: 'declined' } },
+    }, true, undefined, { keepSequence: true });
+    expect(useCalendarStore.getState().events[0].participants?.p1.participationStatus).toBe('declined');
+  });
+
+  it('answers one occurrence as a recurrence override when the server rejects synthetic ids', async () => {
+    const client = fakeClient();
+    client.updateCalendarEvent.mockRejectedValueOnce(new Error(UNSUPPORTED));
+    const occ = occurrence();
+    useCalendarStore.setState({ events: [occ] });
+
+    await useCalendarStore.getState().rsvpEvent(client, 'maaaaab', 'p1', 'tentative', undefined, 'occurrence');
+
+    expect(client.updateCalendarEvent).toHaveBeenNthCalledWith(2, 'b', {
+      'recurrenceOverrides/2026-09-08T10:00:00': {
+        start: '2026-09-08T10:00:00',
+        duration: 'PT1H',
+        title: 'Daily standup',
+        participants: { p1: { ...occ.participants!.p1, participationStatus: 'tentative' } },
+      },
+    }, true, undefined);
+  });
+
+  it('answers one occurrence expanded in the browser on its base event', async () => {
+    const client = fakeClient();
+    // Client-side expansion: `<master id>:<recurrenceId>`, no baseEventId,
+    // the master's overrides copied onto the occurrence.
+    const occ = occurrence({ id: 'b:2026-09-08T10:00:00', originalId: 'b', baseEventId: undefined, recurrenceOverrides: null });
+    useCalendarStore.setState({ events: [occ] });
+
+    await useCalendarStore.getState().rsvpEvent(client, occ.id, 'p1', 'declined', undefined, 'occurrence');
+
+    expect(client.updateCalendarEvent).toHaveBeenCalledWith('b', {
+      recurrenceOverrides: {
+        '2026-09-08T10:00:00': {
+          start: '2026-09-08T10:00:00',
+          duration: 'PT1H',
+          title: 'Daily standup',
+          participants: { p1: { ...occ.participants!.p1, participationStatus: 'declined' } },
+        },
+      },
+    }, true, undefined);
+  });
+
+  it('refuses to answer an occurrence the participant is not on', async () => {
+    const client = fakeClient();
+    useCalendarStore.setState({ events: [occurrence()] });
+
+    await expect(
+      useCalendarStore.getState().rsvpEvent(client, 'maaaaab', 'p2', 'declined', undefined, 'occurrence'),
+    ).rejects.toThrow();
+    expect(client.updateCalendarEvent).not.toHaveBeenCalled();
   });
 });

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Save, Loader2, RotateCcw, ImageIcon, Upload, Trash2, Globe, Plus, X } from 'lucide-react';
+import { Save, Loader2, RotateCcw, ImageIcon, Upload, Trash2, Globe, Plus, X } from '@/components/icons';
 import { apiFetch, withBasePath } from '@/lib/browser-navigation';
 import {
   BRANDING_OVERRIDE_KEYS,

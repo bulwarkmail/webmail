@@ -23,17 +23,17 @@ vi.mock('@/lib/admin/config-manager', () => ({
 
 const TRUSTED = 'https://mail.example.com';
 
-function mockRequest(body: unknown): unknown {
+function mockRequest(body: unknown, clientIp?: string): unknown {
   return {
     json: async () => body,
-    headers: { get: () => null },
+    headers: { get: (name: string) => (name === 'x-forwarded-for' && clientIp ? clientIp : null) },
     nextUrl: { searchParams: new URLSearchParams() },
   };
 }
 
-async function callRoute(body: unknown) {
+async function callRoute(body: unknown, clientIp?: string) {
   const { POST } = await import('@/app/api/auth/verify/route');
-  const res = (await POST(mockRequest(body) as Parameters<typeof POST>[0])) as unknown as {
+  const res = (await POST(mockRequest(body, clientIp) as Parameters<typeof POST>[0])) as unknown as {
     json: () => Promise<{ result?: string; error?: string }>;
     status: number;
   };
@@ -114,6 +114,38 @@ describe('POST /api/auth/verify (#969 login pre-check)', () => {
 
     expect(body).toEqual({ result: 'inconclusive' });
     expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it('stops probing upstream after five wrong passwords from one client', async () => {
+    fetchSpy.mockResolvedValue(upstream(401) as unknown as Response);
+    const wrong = { serverUrl: TRUSTED, username: 'alice', password: 'wrong' };
+
+    for (let i = 0; i < 5; i++) {
+      expect((await callRoute(wrong, '198.51.100.7')).body).toEqual({ result: 'unauthorized' });
+    }
+    expect((await callRoute(wrong, '198.51.100.7')).body).toEqual({ result: 'inconclusive' });
+    expect(fetchSpy).toHaveBeenCalledTimes(5);
+
+    // Another client still gets the pre-check.
+    expect((await callRoute(wrong, '198.51.100.8')).body).toEqual({ result: 'unauthorized' });
+  });
+
+  it('caps wrong passwords across all clients, whatever X-Forwarded-For claims', async () => {
+    fetchSpy.mockResolvedValue(upstream(401) as unknown as Response);
+    const wrong = { serverUrl: TRUSTED, username: 'alice', password: 'wrong' };
+
+    for (let i = 0; i < 30; i++) await callRoute(wrong, `203.0.113.${i}`);
+    expect((await callRoute(wrong, '203.0.113.200')).body).toEqual({ result: 'inconclusive' });
+    expect(fetchSpy).toHaveBeenCalledTimes(30);
+  });
+
+  it('does not count right passwords against the budget', async () => {
+    fetchSpy.mockResolvedValue(upstream(200, { apiUrl: `${TRUSTED}/jmap`, accounts: { a: {} } }) as unknown as Response);
+
+    for (let i = 0; i < 8; i++) {
+      const { body } = await callRoute({ serverUrl: TRUSTED, username: 'alice', password: 'right' }, '198.51.100.9');
+      expect(body).toEqual({ result: 'ok' });
+    }
   });
 
   it('rejects requests with missing fields', async () => {

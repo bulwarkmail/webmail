@@ -254,6 +254,7 @@
       "button": "Empty folder",
       "confirm_title": "Empty folder",
       "confirm_message": "All emails in this folder will be permanently deleted. This action cannot be undone.",
+      "confirm_message_trash": "All emails in this folder will be moved to the Trash.",
       "confirm_button": "Empty folder",
       "junk_hint": "You can empty the Junk folder to permanently remove all messages.",
       "trash_hint": "You can empty the Trash folder to permanently remove all messages."
@@ -310,6 +311,8 @@
     "view_source": "View source",
     "fullscreen": "Fullscreen",
     "exit_fullscreen": "Exit fullscreen",
+    "view_in_dark_mode": "View in dark mode",
+    "view_in_light_mode": "View in light mode",
     "export_email": "Export as .eml",
     "forward_as_attachment": "Forward as attachment",
     "import_email": "Import .eml or .zip",
@@ -578,7 +581,12 @@
       "copied": "Copied!",
       "copy_failed": "Failed to copy"
     },
-    "send_now": "Send now"
+    "send_now": "Send now",
+    "verification_code": {
+      "copy": "Copy code {code}",
+      "copied": "Code copied",
+      "copy_failed": "Could not copy the code"
+    }
   },
   "email_composer": {
     "read_receipt_on": "Read receipt requested (click to disable)",
@@ -643,11 +651,12 @@
     "from_override": {
       "toggle_off": "Override",
       "toggle_on": "Cancel override",
-      "toggle_tooltip": "Edit the From name and address freely. Mail is still sent through your identity - only the visible From header changes.",
+      "toggle_tooltip": "Edit the From name and address freely. Mail is still sent through your identity.",
       "name_label": "From name",
       "name_placeholder": "Name",
       "email_label": "From email address",
-      "email_placeholder": "alias@example.com"
+      "email_placeholder": "alias@example.com",
+      "envelope_notice": "If your server doesn't accept this address as the envelope sender, {identity} is used there instead, and recipients can see it in the Return-Path header."
     },
     "use_template": "Template",
     "save_as_template": "Save as Template",
@@ -660,10 +669,14 @@
     "upload_progress": "Uploading {uploaded} / {total}",
     "upload_cancel": "Cancel upload",
     "upload_failed": "Failed to upload {filename}",
+    "attachment_too_large": "\"{name}\" is larger than the server allows ({max} per file)",
+    "attachments_total_too_large": "The attachments would exceed the server's limit of {max} per message",
     "drop_files": "Drop files to attach",
     "show_less": "Show less",
     "send_failed": "Failed to send email",
     "send_timeout": "The server stopped responding. Check your Sent folder before sending again — the message may have gone out.",
+    "send_recipients_rejected": "Not sent - the server rejected every recipient.",
+    "send_some_recipients_rejected": "Sent, but not to these recipients - the server rejected them.",
     "continue_draft": "Continue draft",
     "close_draft_title": "Save or discard draft?",
     "close_draft_message": "You have unsaved changes. Would you like to save this as a draft or discard it?",
@@ -778,6 +791,10 @@
     "email_sent": "Email sent successfully",
     "email_deleted": "Email deleted",
     "email_archived": "Email archived",
+    "emails_deleted": "{count, plural, one {# email deleted} other {# emails deleted}}",
+    "emails_archived": "{count, plural, one {# email archived} other {# emails archived}}",
+    "error_archiving": "Failed to archive email",
+    "error_updating": "Failed to update email",
     "email_starred": "Email starred",
     "email_unstarred": "Email unstarred",
     "email_marked_read": "Email marked as read",
@@ -921,12 +938,25 @@
       "sidebar_apps": "Sidebar Apps",
       "notifications": "Notifications",
       "layout": "Layout",
+      "themes": "Themes",
       "reading": "Reading",
       "composing": "Composing",
       "downloads": "Downloads",
       "content_senders": "Content & Senders",
       "about_data": "About & Data",
       "debug": "Debug"
+    },
+    "themes": {
+      "title": "Themes",
+      "description": "Choose from themes deployed by your administrator and built-in presets.",
+      "locked": "Theme selection is locked by an administrator.",
+      "forced": "Theme \"{name}\" is forced by admin and cannot be changed",
+      "admin_theme": "Admin theme",
+      "activated": "Theme activated",
+      "default_restored": "Default theme restored",
+      "default_name": "Default",
+      "default_badge": "Default",
+      "admin_enforced": "Admin enforced"
     },
     "tab_groups": {
       "general": "General",
@@ -1066,6 +1096,10 @@
         "label": "Tint List Rows by Tag Color",
         "description": "Shade each message row with its first tag color. Disable to keep rows plain; tag dots and chips still show the color."
       },
+      "tint_list_rows_by_account": {
+        "label": "Tint List Rows by Account Color",
+        "description": "In the unified view, shade each row with its account color instead of showing the account dot. Takes precedence over the tag tint; tags keep their color on their chips."
+      },
       "show_folder_total_count": {
         "label": "Show Total Message Count",
         "description": "Show the total message count next to folders and tags, alongside the unread count. Disable to show only unread counts."
@@ -1157,6 +1191,7 @@
         "status_active": "Active on this device",
         "status_inactive": "Not enabled on this device",
         "status_unsupported": "This browser does not support Web Push",
+        "status_lite": "Web Push is not available in Bulwark Lite; it needs the Bulwark server.",
         "status_busy": "Working…",
         "enable": "Enable",
         "reenable": "Re-register",
@@ -1194,7 +1229,9 @@
         "enabled": "Email notifications",
         "enabled_desc": "Show notifications when new emails arrive",
         "sound": "Notification sound",
-        "sound_desc": "Play an audio alert when new emails arrive"
+        "sound_desc": "Play an audio alert when new emails arrive",
+        "inbox_only": "Inbox only",
+        "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
       },
       "calendar": {
         "title": "Calendar Notifications",
@@ -1328,6 +1365,10 @@
         "label": "Show Preview Text",
         "description": "Display email preview in the list",
         "focus_description": "Display inline preview text inside the focused one-line message list"
+      },
+      "show_verification_codes": {
+        "label": "Show Verification Codes",
+        "description": "Offer the code from sign-in and confirmation emails for one-click copying, in the list for a day and in the message"
       },
       "disable_threading": {
         "label": "Disable Conversation Grouping",
@@ -1706,14 +1747,36 @@
       },
       "link_device": {
         "title": "Link Mobile App",
-        "description": "Sign in to the Bulwark Mail mobile app without typing anything. Generate a QR code here and scan it from the app's login screen.",
+        "description": "Sign in to the Bulwark Mail app on your phone without typing your password there. Your phone gets its own sign-in, so signing out here doesn't sign it out.",
         "generate": "Show QR code",
         "regenerate": "Show a new code",
-        "instructions": "Open the Bulwark Mail app, tap \"Scan QR code\" on the login screen, and point your camera here.",
+        "instructions": "Open the Bulwark Mail app and tap \"Scan a sign-in code\" on the sign-in screen (or \"Add account\" → \"Scan a sign-in code\" if you're already signed in), then point the camera here.",
         "expires_in": "This code expires in {seconds} seconds. It can only be used once.",
         "expired": "This code has expired.",
-        "generating": "Generating…",
-        "error": "Couldn't create a pairing code. Please try again."
+        "error": "Couldn't create a pairing code. Please try again.",
+        "password_prompt": "Enter your password to confirm it's you. Your phone gets its own sign-in; your password is not sent to the phone.",
+        "show_password": "Show password",
+        "hide_password": "Hide password",
+        "continue": "Continue",
+        "error_wrong_password": "Wrong password. Try again.",
+        "totp_prompt": "Enter the code from your authenticator app.",
+        "error_password_or_code": "The password or code is incorrect.",
+        "error_not_signed_in": "Your session has expired. Sign in again to link a device.",
+        "error_impersonation": "Devices can't be linked while you're viewing another user's mailbox.",
+        "error_too_many_attempts": "Too many attempts. Wait a moment and try again.",
+        "error_session_secret": "Linking a device isn't set up on this server (SESSION_SECRET is missing). Ask your administrator.",
+        "error_server_unreachable": "Couldn't reach your mail server. Try again.",
+        "error_pairing_unavailable": "Your mail server doesn't allow linking a device this way. Ask your administrator.",
+        "qr_alt": "Sign-in QR code",
+        "link_label": "Sign-in link",
+        "copy_link": "Copy sign-in link",
+        "copied": "Copied",
+        "copy_hint": "No camera? Copy the link and paste it in the app with \"Paste sign-in link\".",
+        "success_title": "Signed in on your phone",
+        "success_body": "You can close this page. To link another device, show a new code.",
+        "link_another": "Link another device",
+        "use_sso": "Use single sign-on instead",
+        "error_insecure_server": "The mobile app only connects to mail servers over https, and this one uses http."
       }
     },
     "identities": {
@@ -1776,7 +1839,9 @@
       "warnings": {
         "end_before_start": "End date must be after start date",
         "start_in_past": "Start date is in the past",
-        "empty_body": "Message body is empty - recipients will receive a blank reply"
+        "empty_body": "Message body is empty - recipients will receive a blank reply",
+        "subject_too_long": "The subject is too long for the server (at most {max} bytes).",
+        "body_too_long": "The message is too long for the server (at most {max} bytes, formatting included)."
       }
     },
     "folders": {
@@ -1997,6 +2062,7 @@
       "actions": "Actions",
       "add_action": "Add Action",
       "stop_processing": "Stop processing subsequent rules",
+      "include_spam": "Also move messages marked as spam",
       "attachment_type_placeholder": "e.g. pdf, doc, jpg",
       "value_placeholder_multi": "Value (multiple separated by commas)",
       "condition_fields": {
@@ -2038,6 +2104,8 @@
       "copy_to_folder": "Select folder",
       "forward_to": "Forward to email address",
       "forward_placeholder": "email@example.com",
+      "forward_keep_copy": "Keep a copy",
+      "forward_limit": "Forward limit per message on this server: {count}. Extra forwards are skipped.",
       "reject_message": "Rejection message",
       "reject_placeholder": "Your email has been rejected",
       "label_name": "Tag name",
@@ -2788,6 +2856,8 @@
       "no_events": "No events",
       "all_day": "All day",
       "more": "+{count} more",
+      "show_more": "Show more",
+      "show_less": "Show less",
       "no_title": "(No title)",
       "resize": "Resize event",
       "duplicate": "Duplicate",
@@ -2914,7 +2984,10 @@
       "all_events": "All events",
       "cancel": "Cancel",
       "save": "Save",
-      "delete": "Delete"
+      "delete": "Delete",
+      "rsvp_title": "Respond to recurring event",
+      "rsvp_description": "This is a recurring event. Which events does your response apply to?",
+      "respond": "Respond"
     },
     "alerts": {
       "title": "Reminders",
@@ -2957,7 +3030,7 @@
       "enable_tasks": "Enable tasks",
       "enable_tasks_desc": "Show a tasks view in the calendar for managing to-dos",
       "show_tasks_on_calendar": "Show tasks on calendar",
-      "show_tasks_on_calendar_desc": "Display task chips on the day and week calendar views",
+      "show_tasks_on_calendar_desc": "Display tasks on the month, week and day calendar views",
       "hover_preview": "Event hover preview",
       "hover_preview_desc": "Show a detail popover when hovering over calendar events",
       "hover_preview_instant": "Instant",
@@ -3025,6 +3098,9 @@
       "alert_now": "Starting now",
       "alert_in_minutes": "In {count} min",
       "invitation_sent": "Invitations sent",
+      "invitations_denied_title": "Invitations can't be sent",
+      "invitations_denied": "The server refused to send the invitations: {reason}. Save the event without sending them?",
+      "save_without_invitations": "Save without invitations",
       "rsvp_updated": "Response updated",
       "rsvp_error": "Failed to update response",
       "event_duplicated": "Event duplicated",
@@ -3054,7 +3130,7 @@
       "supported_formats": "Supports iCalendar (.ics) files",
       "url_description": "Enter the URL of an external iCalendar (.ics) feed to import events.",
       "url_placeholder": "https://example.com/calendar.ics",
-      "url_hint": "Supports CalDAV and iCalendar (.ics) URLs",
+      "url_hint": "Supports iCalendar (.ics) URLs",
       "fetch": "Fetch",
       "invalid_url": "Please enter a valid URL",
       "url_fetch_failed": "Failed to fetch calendar from URL",
@@ -3255,6 +3331,7 @@
     "body_placeholder": "Body contains...",
     "folder": "Folder",
     "all_folders": "All folders",
+    "all_folders_except_spam_trash": "All folders except Spam and Trash",
     "has_attachment": "Attachments",
     "date_after": "After",
     "date_before": "Before",
@@ -3317,6 +3394,8 @@
     "rename": "Rename",
     "rename_title": "Rename",
     "new_name": "New name",
+    "name_forbidden_chars": "The server does not allow these characters in names: {chars}",
+    "name_reserved": "This name is reserved on the server.",
     "delete": "Delete",
     "delete_confirm_title": "Delete resource",
     "delete_confirm_message": "Are you sure you want to delete \"{name}\"? This cannot be undone.",

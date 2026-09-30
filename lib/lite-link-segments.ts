@@ -81,18 +81,39 @@ export function stashPendingLitePath(pathWithSearch: string): boolean {
 }
 
 /**
- * Consumes a parked deep link if it belongs to `surface`. Anything parked for
- * another surface is left alone so its own shell can pick it up.
+ * Reads a parked deep link if it belongs to `surface`, leaving it in place.
+ * Anything parked for another surface is ignored so its own shell can pick it
+ * up. Safe to call from a render (or a `useState` initializer): React may
+ * discard that render attempt when a sibling suspends (contacts reads
+ * `useSearchParams` under a Suspense boundary) and run it again, so the entry
+ * must survive until `clearPendingLitePath` runs from a committed effect.
  */
-export function takePendingLitePath(surface: AppSurface, prefix = ''): string | null {
+export function peekPendingLitePath(surface: AppSurface, prefix = ''): string | null {
   try {
     const pending = sessionStorage.getItem(LITE_PENDING_PATH_KEY);
     if (!pending) return null;
     const parsed = parseLitePath(pending, prefix);
-    if (parsed.surface !== surface) return null;
-    sessionStorage.removeItem(LITE_PENDING_PATH_KEY);
-    return pending;
+    return parsed.surface === surface ? pending : null;
   } catch {
     return null;
   }
+}
+
+/** Removes the parked deep link once the surface has committed to it. */
+export function clearPendingLitePath(): void {
+  try {
+    sessionStorage.removeItem(LITE_PENDING_PATH_KEY);
+  } catch {
+    // ignore
+  }
+}
+
+/**
+ * Consumes a parked deep link if it belongs to `surface` (peek + clear in one
+ * step, for callers that run outside a React render).
+ */
+export function takePendingLitePath(surface: AppSurface, prefix = ''): string | null {
+  const pending = peekPendingLitePath(surface, prefix);
+  if (pending) clearPendingLitePath();
+  return pending;
 }

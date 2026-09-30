@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { Calendar as CalendarIcon, CheckSquare, Layers } from "lucide-react";
+import { Calendar as CalendarIcon, CheckSquare, Layers } from "@/components/icons";
 import { cn } from "@/lib/utils";
 import type { CalendarComponentType } from "@/lib/jmap/types";
 

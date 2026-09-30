@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { ArrowDown, ArrowUp, GripVertical, Plus, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, GripVertical, Plus, X } from '@/components/icons';
 import { useSettingsStore } from '@/stores/settings-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { useEmailStore } from '@/stores/email-store';

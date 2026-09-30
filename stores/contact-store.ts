@@ -1098,7 +1098,8 @@ export const useContactStore = create<ContactStore>()(
           const originalId = addressBook.originalId || stripLocalAccountPrefix(addressBook.id, addressBook.localAccountId);
           const accountId = addressBook.isShared ? addressBook.accountId : undefined;
           client = resolveAccountClient(client, addressBook.localAccountId);
-          await client.deleteAddressBook(originalId, accountId);
+          // The confirm dialog tells the user the contacts go with the book.
+          await client.deleteAddressBook(originalId, accountId, { removeContents: true });
           set((state) => ({
             addressBooks: state.addressBooks.filter(b => b.id !== addressBook.id),
             contacts: state.contacts.filter(c => !c.addressBookIds?.[addressBook.id]),

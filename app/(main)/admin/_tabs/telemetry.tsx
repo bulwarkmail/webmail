@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Loader2, Send, Save, CheckCircle2, XCircle, ExternalLink } from 'lucide-react';
+import { Loader2, Send, Save, CheckCircle2, XCircle, ExternalLink } from '@/components/icons';
 import { apiFetch } from '@/lib/browser-navigation';
 
 interface TelemetryStatus {

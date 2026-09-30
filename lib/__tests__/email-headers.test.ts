@@ -333,3 +333,63 @@ describe('extractListHeaders', () => {
     expect(result.listPost).toBe('<mailto:post@example.com>');
   });
 });
+
+describe('parseAuthenticationResults - sender-controlled text', () => {
+  // Stalwart writes dkim (when signed), spf helo, spf mailfrom with the MAIL
+  // FROM address echoed in a comment and in smtp.mailfrom, iprev, then dmarc.
+  const stalwart = (mailFrom: string, dmarc: string) =>
+    `mx.victim.example;\r\n\tspf=pass (mx.victim.example: domain of ${mailFrom} designates 203.0.113.9 as permitted sender) smtp.mailfrom=${mailFrom};\r\n\tiprev=pass policy.iprev=203.0.113.9;\r\n\tdmarc=${dmarc} header.from=corp.example policy.dmarc=none`;
+
+  it('reads the honest header', () => {
+    const result = parseAuthenticationResults([stalwart('bounce@evil.example', 'fail')]);
+    expect(result.dmarc?.result).toBe('fail');
+    expect(result.spf?.domain).toBe('bounce@evil.example');
+    expect(result.iprev).toEqual({ result: 'pass', ip: '203.0.113.9' });
+    expect(isAuthenticationSpoofed(result)).toBe(true);
+  });
+
+  it('ignores a method=result token inside the envelope local part', () => {
+    const result = parseAuthenticationResults([stalwart('dmarc=pass@evil.example', 'fail')]);
+    expect(result.dmarc?.result).toBe('fail');
+    expect(result.spf?.domain).toBe('dmarc=pass@evil.example');
+    expect(isAuthenticationSpoofed(result)).toBe(true);
+  });
+
+  it('does not split on a ; inside a quoted local part or a comment', () => {
+    const header =
+      'mx.victim.example; spf=fail (domain of "x; dkim=pass"@evil.example; dmarc=pass) smtp.mailfrom="x; dmarc=pass header.from=corp.example"@evil.example; dmarc=fail header.from=corp.example';
+    const result = parseAuthenticationResults(header);
+    expect(result.dkim).toBeUndefined();
+    expect(result.dmarc?.result).toBe('fail');
+    expect(result.spf?.result).toBe('fail');
+  });
+
+  it('takes DKIM and DMARC only from the topmost (receiving server) header', () => {
+    const result = parseAuthenticationResults([
+      stalwart('bounce@evil.example', 'none'),
+      'forged.example; dkim=pass header.d=corp.example header.s=s1; dmarc=pass header.from=corp.example',
+    ]);
+    expect(result.dkim).toBeUndefined();
+    expect(result.dmarc?.result).toBe('none');
+  });
+
+  it('lets a lower header escalate SPF to a failure but never to a pass', () => {
+    const escalated = parseAuthenticationResults([
+      'mx.victim.example; spf=pass smtp.mailfrom=corp.example',
+      'relay.example; spf=fail smtp.mailfrom=corp.example',
+    ]);
+    expect(escalated.spf?.result).toBe('fail');
+
+    const notUpgraded = parseAuthenticationResults([
+      'mx.victim.example; spf=softfail smtp.mailfrom=corp.example',
+      'forged.example; spf=pass smtp.mailfrom=corp.example',
+    ]);
+    expect(notUpgraded.spf?.result).toBe('softfail');
+    expect(notUpgraded.spf?.all).toBeUndefined();
+  });
+
+  it('keeps the most severe DMARC verdict within one header', () => {
+    const result = parseAuthenticationResults('mx.example; dmarc=pass header.from=a.example; dmarc=fail header.from=a.example');
+    expect(result.dmarc?.result).toBe('fail');
+  });
+});

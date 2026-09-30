@@ -8,6 +8,8 @@ import {
   keywordFirst,
   levelKeyword,
   orderForMailbox,
+  orderKeywords,
+  placeHeldRows,
   presetLevels,
   sanitizeSortLevels,
   MAX_SORT_LEVELS,
@@ -76,6 +78,15 @@ describe('keyword semantics', () => {
     expect(levelKeyword({ criterion: 'starred', direction: 'desc' })).toBe('$flagged');
     expect(levelKeyword({ criterion: 'tag', direction: 'desc', tagId: 'red' })).toBe('$label:red');
     expect(levelKeyword({ criterion: 'receivedAt', direction: 'desc' })).toBeNull();
+  });
+
+  it('lists the keywords an order sorts on', () => {
+    expect(orderKeywords([
+      { criterion: 'unread', direction: 'desc' },
+      { criterion: 'from', direction: 'asc' },
+      { criterion: 'tag', direction: 'desc', tagId: 'red' },
+    ])).toEqual(['$seen', '$label:red']);
+    expect(orderKeywords([])).toEqual([]);
   });
 
   it('"unread first" means messages WITHOUT $seen first', () => {
@@ -196,6 +207,43 @@ describe('compareEmails', () => {
       { criterion: 'starred', direction: 'desc' },
     ]));
     expect(sorted.map(e => e.id)).toEqual(['unread-new', 'starred-old', 'read-newest']);
+  });
+
+  it('sorts a held mail by its held keywords', () => {
+    const justRead = makeEmail({ id: 'just-read', receivedAt: '2026-01-04T00:00:00Z', keywords: { $seen: true } });
+    const held = new Map([['just-read', {}]]);
+    const sorted = [unreadOld, readNewest, justRead, unreadNew].sort(compareEmails(UNREAD_FIRST, { held }));
+    expect(sorted.map(e => e.id)).toEqual(['just-read', 'unread-new', 'unread-old', 'read-newest']);
+  });
+});
+
+describe('placeHeldRows', () => {
+  const mail = (id: string, day: number, read: boolean, extra: Record<string, boolean> = {}) =>
+    makeEmail({ id, receivedAt: `2026-01-0${day}T00:00:00Z`, keywords: read ? { $seen: true, ...extra } : { ...extra } });
+
+  it('moves a held mail back to where it sorted when it was opened', () => {
+    // Server order after reading u2: the unread, then the read by date.
+    const list = [mail('u3', 3, false), mail('u1', 1, false), mail('r4', 4, true), mail('u2', 2, true)];
+    const placed = placeHeldRows(list, UNREAD_FIRST, new Map([['u2', {}]]));
+    expect(placed.map(e => e.id)).toEqual(['u3', 'u2', 'u1', 'r4']);
+  });
+
+  it('leaves the other rows in their order', () => {
+    const list = [mail('u3', 3, false), mail('u1', 1, false), mail('r4', 4, true), mail('r2', 2, true)];
+    const placed = placeHeldRows(list, UNREAD_FIRST, new Map([['r4', { $seen: true }]]));
+    expect(placed.map(e => e.id)).toEqual(['u3', 'u1', 'r4', 'r2']);
+  });
+
+  it('keeps pinned mail above a held one', () => {
+    const list = [mail('p', 1, true, { $pinned: true }), mail('u1', 1, false), mail('r9', 9, true)];
+    const placed = placeHeldRows(list, UNREAD_FIRST, new Map([['r9', {}]]));
+    expect(placed.map(e => e.id)).toEqual(['p', 'r9', 'u1']);
+  });
+
+  it('does nothing for an order without keyword levels', () => {
+    const list = [mail('a', 3, true), mail('b', 2, false)];
+    expect(placeHeldRows(list, [], new Map([['a', {}]]))).toBe(list);
+    expect(placeHeldRows(list, UNREAD_FIRST, undefined)).toBe(list);
   });
 });
 

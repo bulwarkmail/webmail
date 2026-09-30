@@ -122,3 +122,20 @@ describe('refreshCurrentMailbox merge', () => {
     expect(useEmailStore.getState().emails.map((e) => e.id)).toEqual(['a']);
   });
 });
+
+describe('refreshCurrentMailbox when the server fails', () => {
+  it('keeps the list on screen instead of emptying it', async () => {
+    useSettingsStore.setState({ emailsPerPage: 3 });
+    const a = makeEmail('a');
+    useEmailStore.setState({
+      selectedMailbox: 'd', mailboxes: [draftsMailbox], accountMailboxes: {}, emails: [a], totalEmails: 1,
+    });
+    const client = { getEmails: vi.fn(async () => { throw new Error('backend down'); }) } as unknown as IJMAPClient;
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    await useEmailStore.getState().refreshCurrentMailbox(client);
+
+    expect(useEmailStore.getState().emails).toEqual([a]);
+    expect(useEmailStore.getState().totalEmails).toBe(1);
+  });
+});

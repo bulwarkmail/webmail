@@ -1,9 +1,10 @@
 import { render, screen } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import React from 'react';
 import { EmailComposer } from '../email-composer';
 import { useSettingsStore } from '@/stores/settings-store';
 import { useAuthStore } from '@/stores/auth-store';
+import { useAccountStore } from '@/stores/account-store';
 
 // ─── Heavy component mocks (mirrors recipient-paste.test.tsx) ─────────────────
 
@@ -76,7 +77,10 @@ vi.mock('@/stores/identity-store', () => {
 });
 
 vi.mock('@/stores/account-store', () => {
-  const state = { accounts: [], getAccountById: () => undefined };
+  const state = {
+    accounts: [] as { id: string; email: string; isConnected: boolean }[],
+    getAccountById: (id: string) => state.accounts.find((a) => a.id === id),
+  };
   const hook = (sel?: (s: typeof state) => unknown) =>
     typeof sel === 'function' ? sel(state) : state;
   hook.getState = () => state;
@@ -378,5 +382,78 @@ describe('composer reply addressing', () => {
       proIdentities.enabled = false;
       proIdentities.allIdentities = [];
     }
+  });
+
+  // #1104: a message opened from the Unified Inbox, or from a non-active
+  // account's folders, arrived on another connected account. Its blobIds and
+  // thread live there, so that account's identities are the ones to use.
+  describe('message held by another connected account', () => {
+    const accountStore = useAccountStore as unknown as { setState: (p: Record<string, unknown>) => void };
+    const ALL = [
+      { id: 'local-1::id-me', email: 'me@example.com', name: 'Me' },
+      { id: 'local-1::id-info', email: 'info@example.com', name: 'Info' },
+      { id: 'local-2::id-login', email: 'login@elsewhere.net', name: 'Login' },
+      { id: 'local-2::id-alias', email: 'alias@elsewhere.net', name: 'Alias' },
+    ];
+    const TO_ALIAS = {
+      from: [{ email: 'bob@other.com', name: 'Bob' }],
+      to: [{ email: 'alias@elsewhere.net' }],
+      subject: 'Hi',
+    };
+    const TO_LIST = {
+      from: [{ email: 'bob@other.com', name: 'Bob' }],
+      to: [{ email: 'list@lists.example.org' }],
+      subject: 'Newsletter',
+    };
+
+    beforeEach(() => {
+      proIdentities.enabled = true;
+      proIdentities.allIdentities = ALL;
+      (useAuthStore as unknown as { setState: (p: Record<string, unknown>) => void })
+        .setState({ activeAccountId: 'local-1' });
+      // The active login's address is not its default identity (#507).
+      accountStore.setState({
+        accounts: [
+          { id: 'local-1', email: 'info@example.com', isConnected: true },
+          { id: 'local-2', email: 'login@elsewhere.net', isConnected: true },
+        ],
+      });
+    });
+
+    afterEach(() => {
+      proIdentities.enabled = false;
+      proIdentities.allIdentities = [];
+      accountStore.setState({ accounts: [] });
+    });
+
+    it('replies from the address on that account that received it', () => {
+      render(<EmailComposer mode="reply" replyTo={{ ...TO_ALIAS, accountId: 'local-2' }} />);
+      expect(identitySelect().value).toBe('local-2::id-alias');
+    });
+
+    it('forwards from that account when none of its addresses received it', () => {
+      render(<EmailComposer mode="forward" replyTo={{ ...TO_LIST, accountId: 'local-2' }} />);
+      expect(identitySelect().value).toBe('local-2::id-login');
+    });
+
+    it('waits for that account\'s identities instead of keeping the default', () => {
+      proIdentities.allIdentities = ALL.filter((i) => i.id.startsWith('local-1::'));
+      const replyTo = { ...TO_ALIAS, accountId: 'local-2' };
+      const { rerender } = render(<EmailComposer mode="reply" replyTo={replyTo} />);
+      proIdentities.allIdentities = ALL;
+      rerender(<EmailComposer mode="reply" replyTo={replyTo} />);
+      expect(identitySelect().value).toBe('local-2::id-alias');
+    });
+
+    it('keeps the default identity for a message on the active account', () => {
+      render(<EmailComposer mode="reply" replyTo={{ ...TO_LIST, accountId: 'local-1' }} />);
+      expect(identitySelect().value).toBe('local-1::id-me');
+    });
+
+    // A shared folder's messages carry the owner's JMAP id, not a login.
+    it('resolves on the active account when the id is not a connected login', () => {
+      render(<EmailComposer mode="reply" replyTo={{ ...TO_ALIAS, to: [{ email: 'info@example.com' }], accountId: 'owner-jmap-id' }} />);
+      expect(identitySelect().value).toBe('local-1::id-info');
+    });
   });
 });

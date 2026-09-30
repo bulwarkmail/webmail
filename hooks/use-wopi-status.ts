@@ -59,3 +59,10 @@ export function fileExtension(name: string): string {
   const parts = name.toLowerCase().split(".");
   return parts.length > 1 ? parts.pop() || "" : "";
 }
+
+/** Whether the configured editor can open (edit or view) a file of this name. */
+export function canWopiOpen(status: WopiStatus | null, name?: string | null): boolean {
+  if (!status?.enabled || !name) return false;
+  const ext = fileExtension(name);
+  return !!ext && (status.editExtensions.includes(ext) || status.viewExtensions.includes(ext));
+}

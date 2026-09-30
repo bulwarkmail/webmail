@@ -218,6 +218,7 @@ const MUTATING_HANDLERS: Array<[string, string]> = [
   ['@/app/api/auth/token/route', 'DELETE'],
   ['@/app/api/auth/pair/create/route', 'POST'],
   ['@/app/api/auth/pair/redeem/route', 'POST'],
+  ['@/app/api/auth/pair/token/route', 'POST'],
   ['@/app/api/auth/sso/start/route', 'POST'],
   ['@/app/api/auth/sso/complete/route', 'POST'],
   ['@/app/api/auth/reauth/sso/complete/route', 'POST'],
