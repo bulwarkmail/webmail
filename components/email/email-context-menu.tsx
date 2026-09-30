@@ -82,6 +82,7 @@ interface EmailContextMenuProps {
   onBatchMoveToMailbox?: (mailboxId: string) => void;
   onBatchMarkAsSpam?: () => void;
   onBatchUndoSpam?: () => void;
+  onBatchForwardAsAttachment?: () => void;
 }
 
 // Get mailbox icon based on role
@@ -132,6 +133,7 @@ export function EmailContextMenu({
   onBatchMoveToMailbox,
   onBatchMarkAsSpam,
   onBatchUndoSpam,
+  onBatchForwardAsAttachment,
   onEditDraft,
   onCancelScheduledForEdit,
   onRescheduleScheduled,
@@ -220,6 +222,22 @@ export function EmailContextMenu({
 
       {!isScheduled && (
         <>
+
+      {/* Batch forward - multi-select sibling of the single-message item below.
+          First action in batch mode so compose-style actions stay above the
+          archive/delete group, mirroring the single menu's ordering. */}
+      {showBatchActions && (
+        <>
+          <ContextMenuItem
+            icon={Paperclip}
+            label={t("forward_as_attachments")}
+            testId="ctx-batch-forward-as-attachment"
+            onClick={() => handleAction(onBatchForwardAsAttachment!)}
+            disabled={!onBatchForwardAsAttachment}
+          />
+          <ContextMenuSeparator />
+        </>
+      )}
 
       {/* Edit Draft - only for single draft emails */}
       {!isScheduled && !showBatchActions && isDraft && onEditDraft && (

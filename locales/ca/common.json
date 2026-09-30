@@ -637,6 +637,7 @@
       "forward": "Reenv.:",
       "reply": "Re:"
     },
+    "forward_batch_count": "{count, plural, one {1 correu} other {# correus}}",
     "no_subject": "(Sense assumpte)",
     "unknown_sender": "Desconegut",
     "quote": {
@@ -2289,6 +2290,7 @@
     "not_spam": "No és brossa",
     "tag": "Etiqueta",
     "items_selected": "{count} correus seleccionats",
+    "forward_as_attachments": "Reenvia com a fitxers adjunts",
     "edit_draft": "Edita l'esborrany",
     "cancel_scheduled_send": "Cancel·la l'enviament",
     "reschedule_send": "Reprograma",

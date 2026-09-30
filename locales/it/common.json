@@ -634,6 +634,7 @@
       "forward": "Inol:",
       "reply": "Re:"
     },
+    "forward_batch_count": "{count, plural, one {1 email} other {# email}}",
     "no_subject": "(Nessun oggetto)",
     "unknown_sender": "Sconosciuto",
     "quote": {
@@ -2289,6 +2290,7 @@
     "not_spam": "Non spam",
     "tag": "Etichetta",
     "items_selected": "{count} messaggi selezionati",
+    "forward_as_attachments": "Inoltra come allegati",
     "edit_draft": "Modifica bozza",
     "cancel_scheduled_send": "Annulla invio",
     "reschedule_send": "Riprogramma",
