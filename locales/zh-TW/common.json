@@ -835,7 +835,19 @@
     "templates_import_empty": "檔案中找不到範本",
     "export_email_error": "無法匯出郵件",
     "import_email_success": "郵件已成功匯入",
-    "import_email_error": "無法匯入郵件"
+    "import_email_error": "無法匯入郵件",
+    "rule_created": "已建立規則",
+    "rule_merged": "已加入規則「{name}」",
+    "rule_already_covered": "規則「{name}」已涵蓋此項",
+    "rule_apply_existing": "{count, plural, other {套用到 # 封既有郵件}}",
+    "rule_applied": "{count, plural, =0 {沒有需要變更的郵件} other {已將規則套用到 # 封郵件}}",
+    "rule_apply_failed": "無法將規則套用到既有郵件",
+    "rule_edit": "編輯規則",
+    "rule_undo": "復原",
+    "rule_undone": "已復原規則變更",
+    "rule_undo_failed": "無法復原規則變更",
+    "rule_undo_conflict": "篩選規則在那之後已變更。請在篩選規則設定中復原該變更。",
+    "rule_folder_failed": "無法建立資料夾"
   },
   "date": {
     "today": "今天",
@@ -2086,7 +2098,9 @@
         "ends_with": "以…結尾",
         "matches": "符合模式",
         "greater_than": "大於",
-        "less_than": "小於"
+        "less_than": "小於",
+        "address_is": "地址為",
+        "domain_is": "網域為"
       },
       "action_types": {
         "move": "移至信件匣",
@@ -2161,7 +2175,26 @@
         "actions_count": "{count, plural, one {# 個動作} other {# 個動作}}"
       },
       "origin_external": "外部",
-      "managed_by_tooltip": "由 {source} 管理。請在該應用程式中編輯，或使用原始 Sieve 編輯器。"
+      "managed_by_tooltip": "由 {source} 管理。請在該應用程式中編輯，或使用原始 Sieve 編輯器。",
+      "quick_rule_names": {
+        "move_sender": "將 {sender} 的郵件移至 {folder}",
+        "move_domain": "將 @{domain} 的郵件移至 {folder}",
+        "move_list": "將清單 {list} 移至 {folder}",
+        "mark_read": "將 {sender} 的郵件標示為已讀",
+        "tag": "為 {sender} 的郵件加上標籤 {tag}",
+        "block": "封鎖 {sender}",
+        "custom": "來自 {sender} 的郵件",
+        "custom_plain": "新規則",
+        "senders": "{count, plural, other {# 位寄件者}}"
+      },
+      "suggestions": "建議",
+      "suggest_subject": "主旨「{subject}」",
+      "suggest_to": "收件者 {address}",
+      "suggest_cc": "副本 {address}",
+      "suggest_list": "List-Id",
+      "suggest_domain": "@{domain}",
+      "apply_existing": "也套用到此資料夾中既有的郵件",
+      "apply_existing_unsupported": "只有檢查寄件者、收件者、主旨或標頭，並執行移動、複製、標示為已讀、加上星號或標籤的規則，才能套用到既有郵件。"
     },
     "templates": {
       "title": "郵件範本",
@@ -2293,7 +2326,22 @@
     "cancel_scheduled_send": "取消傳送",
     "reschedule_send": "重新排程",
     "cancel_and_edit": "取消並編輯",
-    "cancel_and_compose_again": "取消並重新撰寫"
+    "cancel_and_compose_again": "取消並重新撰寫",
+    "rules": {
+      "title": "規則",
+      "move_from": "一律移動來自 {sender} 的郵件",
+      "move_from_domain": "一律移動來自 @{domain} 的郵件",
+      "move_from_list": "一律移動此郵件清單的郵件",
+      "mark_read_from": "一律將來自 {sender} 的郵件標示為已讀",
+      "tag_with": "一律加上標籤",
+      "block": "{count, plural, =1 {封鎖寄件者} other {封鎖 # 位寄件者}}",
+      "no_junk": "此帳號沒有垃圾郵件資料夾",
+      "create": "建立規則…",
+      "manage": "管理規則",
+      "senders_count": "{count, plural, other {# 位寄件者}}",
+      "cross_account": "請選取同一個帳號中的郵件",
+      "opaque_hint": "你的篩選規則曾被手動編輯。請開啟篩選規則設定"
+    }
   },
   "mailbox_context_menu": {
     "mark_folder_read": "將信件匣標示為已讀",

@@ -8,6 +8,9 @@ const HEADER_MAP: Record<string, string> = {
   subject: 'Subject',
 };
 
+/** Fields whose header holds addresses, so the `address` test applies. */
+const ADDRESS_FIELDS = new Set<FilterCondition['field']>(['from', 'to', 'cc']);
+
 function escapeString(value: string): string {
   return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
 }
@@ -73,6 +76,15 @@ function generateCondition(condition: FilterCondition): string {
   const headerName = escapeString(field === 'header'
     ? (condition.headerName || 'X-Unknown')
     : HEADER_MAP[field]);
+
+  // RFC 5228 §5.1: `address` compares the parsed address, so the display
+  // name and the angle brackets play no part. `header :contains` would let
+  // "anna@acme.com" match joanna@acme.com, and `header :matches "*@acme.com"`
+  // never matches "Anna <anna@acme.com>" because of the closing ">".
+  if ((comparator === 'address_is' || comparator === 'domain_is') && ADDRESS_FIELDS.has(field)) {
+    const part = comparator === 'domain_is' ? ':domain ' : '';
+    return `address ${part}:is "${headerName}" ${formatStringArg(values)}`;
+  }
 
   switch (comparator) {
     case 'contains':

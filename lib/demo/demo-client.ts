@@ -333,6 +333,34 @@ export class DemoJMAPClient implements IJMAPClient {
     return { emails, hasMore: position + limit < total, total };
   }
 
+  private pickEmailFields(email: Email, properties: string[]): Record<string, unknown> {
+    const record: Record<string, unknown> = { id: email.id };
+    for (const property of properties) {
+      const header = /^header:([^:]+)(?::asText)?(:all)?$/.exec(property);
+      if (header) {
+        const wanted = header[1].toLowerCase();
+        const values = Object.entries(email.headers ?? {})
+          .filter(([name]) => name.toLowerCase() === wanted)
+          .flatMap(([, value]) => (Array.isArray(value) ? value : [value]));
+        record[property] = header[2] ? values : (values[0] ?? null);
+      } else {
+        record[property] = (email as unknown as Record<string, unknown>)[property];
+      }
+    }
+    return record;
+  }
+
+  async getEmailFields(emailIds: string[], properties: string[]): Promise<Array<Record<string, unknown>>> {
+    const wanted = new Set(emailIds);
+    return this.data.emails.filter(e => wanted.has(e.id)).map(e => this.pickEmailFields(e, properties));
+  }
+
+  async queryEmailFields(filter: Record<string, unknown>, properties: string[], _accountId?: string, limit: number = 10000): Promise<Array<Record<string, unknown>>> {
+    const filtered = this.data.emails.filter(e => this.matchesFilter(e, filter));
+    filtered.sort((a, b) => new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime());
+    return filtered.slice(0, limit).map(e => this.pickEmailFields(e, properties));
+  }
+
   async searchSentRecipients(query: string, _sentMailboxId: string, _accountId?: string, _limit: number = 60): Promise<Array<{ name: string; email: string }>> {
     const q = query.trim().toLowerCase();
     if (!q) return [];
@@ -1122,6 +1150,14 @@ export class DemoJMAPClient implements IJMAPClient {
 
   async deleteSieveScript(scriptId: string, _accountId?: string): Promise<void> {
     this.data.sieveScripts = this.data.sieveScripts.filter(s => s.id !== scriptId);
+  }
+
+  async activateSieveScript(scriptId: string, _accountId?: string): Promise<void> {
+    for (const s of this.data.sieveScripts) s.isActive = s.id === scriptId;
+  }
+
+  async deactivateSieveScript(_accountId?: string): Promise<void> {
+    for (const s of this.data.sieveScripts) s.isActive = false;
   }
 
   async validateSieveScript(_content?: string, _accountId?: string): Promise<{ isValid: boolean; errors?: string[] }> {

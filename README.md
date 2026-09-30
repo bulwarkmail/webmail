@@ -155,7 +155,7 @@ Contributors can use AI tools too, as long as they use capable, current models a
 
 ## License
 
-[GNU AGPL v3](LICENSE). This repository preserves the original MIT attribution for the fork lineage in [NOTICE](NOTICE).
+[GNU AGPL v3 only](LICENSE), with an additional permission to distribute apps built from this code through app stores such as the Apple App Store and Google Play. The permission is provisional until every earlier contributor has agreed to it ([consent request](https://github.com/orgs/bulwarkmail/discussions/1113)); contributions made since 30 September 2026 are already covered. This repository preserves the original MIT attribution for the fork lineage in [NOTICE](NOTICE).
 
 ## Acknowledgments
 

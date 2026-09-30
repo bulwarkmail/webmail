@@ -835,7 +835,19 @@
     "templates_import_empty": "Nessun modello trovato nel file",
     "export_email_error": "Impossibile esportare l'e-mail",
     "import_email_success": "E-mail importata con successo",
-    "import_email_error": "Impossibile importare l'e-mail"
+    "import_email_error": "Impossibile importare l'e-mail",
+    "rule_created": "Regola creata",
+    "rule_merged": "Aggiunto alla regola «{name}»",
+    "rule_already_covered": "Già coperto dalla regola «{name}»",
+    "rule_apply_existing": "{count, plural, one {Applica a # messaggio esistente} other {Applica a # messaggi esistenti}}",
+    "rule_applied": "{count, plural, =0 {Nessun messaggio da modificare} one {Regola applicata a # messaggio} other {Regola applicata a # messaggi}}",
+    "rule_apply_failed": "Impossibile applicare la regola ai messaggi esistenti",
+    "rule_edit": "Modifica regola",
+    "rule_undo": "Annulla",
+    "rule_undone": "Modifica della regola annullata",
+    "rule_undo_failed": "Impossibile annullare la modifica della regola",
+    "rule_undo_conflict": "I tuoi filtri sono cambiati nel frattempo. Annulla la modifica nelle impostazioni dei filtri.",
+    "rule_folder_failed": "Impossibile creare la cartella"
   },
   "date": {
     "today": "Oggi",
@@ -2079,7 +2091,9 @@
         "ends_with": "termina con",
         "matches": "corrisponde al modello",
         "greater_than": "è maggiore di",
-        "less_than": "è minore di"
+        "less_than": "è minore di",
+        "address_is": "è l'indirizzo",
+        "domain_is": "ha il dominio"
       },
       "action_types": {
         "move": "Sposta nella cartella",
@@ -2154,7 +2168,26 @@
         "actions_count": "{count, plural, one {# azione} other {# azioni}}"
       },
       "origin_external": "Esterno",
-      "managed_by_tooltip": "Gestito da {source}. Modificalo in quell'app o usa l'editor Sieve grezzo."
+      "managed_by_tooltip": "Gestito da {source}. Modificalo in quell'app o usa l'editor Sieve grezzo.",
+      "quick_rule_names": {
+        "move_sender": "Sposta da {sender} a {folder}",
+        "move_domain": "Sposta da @{domain} a {folder}",
+        "move_list": "Sposta la lista {list} in {folder}",
+        "mark_read": "Segna come letti i messaggi di {sender}",
+        "tag": "Etichetta {tag} i messaggi di {sender}",
+        "block": "Blocca {sender}",
+        "custom": "Messaggi di {sender}",
+        "custom_plain": "Nuova regola",
+        "senders": "{count, plural, one {# mittente} other {# mittenti}}"
+      },
+      "suggestions": "Suggerimenti",
+      "suggest_subject": "Oggetto «{subject}»",
+      "suggest_to": "A {address}",
+      "suggest_cc": "Cc {address}",
+      "suggest_list": "List-Id",
+      "suggest_domain": "@{domain}",
+      "apply_existing": "Applica anche ai messaggi già presenti in questa cartella",
+      "apply_existing_unsupported": "Solo le regole che controllano mittente, destinatari, oggetto o intestazioni, e che spostano, copiano, segnano come letto, contrassegnano con stella o etichettano, si possono applicare ai messaggi esistenti."
     },
     "templates": {
       "title": "Modelli email",
@@ -2293,7 +2326,22 @@
     "cancel_scheduled_send": "Annulla invio",
     "reschedule_send": "Riprogramma",
     "cancel_and_edit": "Annulla e modifica",
-    "cancel_and_compose_again": "Annulla e componi di nuovo"
+    "cancel_and_compose_again": "Annulla e componi di nuovo",
+    "rules": {
+      "title": "Regole",
+      "move_from": "Sposta sempre i messaggi di {sender}",
+      "move_from_domain": "Sposta sempre i messaggi di @{domain}",
+      "move_from_list": "Sposta sempre i messaggi di questa lista",
+      "mark_read_from": "Segna sempre come letti i messaggi di {sender}",
+      "tag_with": "Etichetta sempre con",
+      "block": "{count, plural, one {Blocca mittente} other {Blocca # mittenti}}",
+      "no_junk": "Questo account non ha una cartella Posta indesiderata",
+      "create": "Crea regola…",
+      "manage": "Gestisci regole",
+      "senders_count": "{count, plural, one {# mittente} other {# mittenti}}",
+      "cross_account": "Seleziona messaggi di un solo account",
+      "opaque_hint": "I tuoi filtri sono stati modificati a mano. Apri le impostazioni dei filtri"
+    }
   },
   "mailbox_context_menu": {
     "mark_folder_read": "Segna cartella come letta",

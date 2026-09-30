@@ -835,7 +835,19 @@
     "templates_import_empty": "Fant ingen maler i filen",
     "export_email_error": "Kunne ikke eksportere e-post",
     "import_email_success": "E-posten er importert",
-    "import_email_error": "Kunne ikke importere e-post"
+    "import_email_error": "Kunne ikke importere e-post",
+    "rule_created": "Regel opprettet",
+    "rule_merged": "Lagt til i regelen «{name}»",
+    "rule_already_covered": "Dekkes allerede av regelen «{name}»",
+    "rule_apply_existing": "{count, plural, one {Bruk på # eksisterende melding} other {Bruk på # eksisterende meldinger}}",
+    "rule_applied": "{count, plural, =0 {Ingen meldinger måtte endres} one {Regelen brukt på # melding} other {Regelen brukt på # meldinger}}",
+    "rule_apply_failed": "Kunne ikke bruke regelen på eksisterende meldinger",
+    "rule_edit": "Rediger regel",
+    "rule_undo": "Angre",
+    "rule_undone": "Regelendringen er angret",
+    "rule_undo_failed": "Kunne ikke angre regelendringen",
+    "rule_undo_conflict": "Filtrene dine er endret siden. Angre endringen i filterinnstillingene.",
+    "rule_folder_failed": "Kunne ikke opprette mappen"
   },
   "date": {
     "today": "I dag",
@@ -2086,7 +2098,9 @@
         "ends_with": "slutter med",
         "matches": "samsvarer med mønsteret",
         "greater_than": "er større enn",
-        "less_than": "er mindre enn"
+        "less_than": "er mindre enn",
+        "address_is": "er adressen",
+        "domain_is": "har domenet"
       },
       "action_types": {
         "move": "Flytt til mappe",
@@ -2161,7 +2175,26 @@
         "actions_count": "{count, plural, one {# handling} other {# handlinger}}"
       },
       "origin_external": "Ekstern",
-      "managed_by_tooltip": "Denne regelen administreres av {source}. Rediger den der, eller bruk redigereren for rå Sieve-kode."
+      "managed_by_tooltip": "Denne regelen administreres av {source}. Rediger den der, eller bruk redigereren for rå Sieve-kode.",
+      "quick_rule_names": {
+        "move_sender": "Flytt fra {sender} til {folder}",
+        "move_domain": "Flytt fra @{domain} til {folder}",
+        "move_list": "Flytt listen {list} til {folder}",
+        "mark_read": "Merk fra {sender} som lest",
+        "tag": "Merk fra {sender} med {tag}",
+        "block": "Blokker {sender}",
+        "custom": "Meldinger fra {sender}",
+        "custom_plain": "Ny regel",
+        "senders": "{count, plural, one {# avsender} other {# avsendere}}"
+      },
+      "suggestions": "Forslag",
+      "suggest_subject": "Emne «{subject}»",
+      "suggest_to": "Til {address}",
+      "suggest_cc": "Kopi {address}",
+      "suggest_list": "List-Id",
+      "suggest_domain": "@{domain}",
+      "apply_existing": "Bruk også på meldinger som allerede ligger i denne mappen",
+      "apply_existing_unsupported": "Bare regler som sjekker avsender, mottakere, emne eller hoder, og som flytter, kopierer, merker som lest, stjernemerker eller setter etikett, kan brukes på eksisterende meldinger."
     },
     "templates": {
       "title": "E-postmaler",
@@ -2293,7 +2326,22 @@
     "cancel_scheduled_send": "Avbryt sending",
     "reschedule_send": "Planlegg på nytt",
     "cancel_and_edit": "Avbryt og rediger",
-    "cancel_and_compose_again": "Avbryt og skriv meldingen på nytt"
+    "cancel_and_compose_again": "Avbryt og skriv meldingen på nytt",
+    "rules": {
+      "title": "Regler",
+      "move_from": "Flytt alltid meldinger fra {sender}",
+      "move_from_domain": "Flytt alltid meldinger fra @{domain}",
+      "move_from_list": "Flytt alltid meldinger fra denne listen",
+      "mark_read_from": "Merk alltid meldinger fra {sender} som lest",
+      "tag_with": "Merk alltid med etiketten",
+      "block": "{count, plural, one {Blokker avsender} other {Blokker # avsendere}}",
+      "no_junk": "Denne kontoen har ingen søppelpostmappe",
+      "create": "Lag regel…",
+      "manage": "Administrer regler",
+      "senders_count": "{count, plural, one {# avsender} other {# avsendere}}",
+      "cross_account": "Velg meldinger fra én konto",
+      "opaque_hint": "Filtrene dine er redigert for hånd. Åpne filterinnstillingene"
+    }
   },
   "mailbox_context_menu": {
     "mark_folder_read": "Merk mappen som lest",

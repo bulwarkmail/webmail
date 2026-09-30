@@ -44,6 +44,19 @@ type PendingUndoSend = {
   submissionAccountId?: string;
 };
 
+/**
+ * Explicit messages for a batch action, instead of the list selection. A
+ * filter rule applied to a folder reaches messages the list never loaded, so
+ * they cannot be routed by the list's source stamps.
+ */
+export interface BatchActionTarget {
+  emailIds: string[];
+  /** The login client that reaches the messages. */
+  client: IJMAPClient;
+  /** JMAP account the messages belong to. */
+  accountId?: string;
+}
+
 interface EmailStore {
   emails: Email[];
   mailboxes: Mailbox[];
@@ -281,9 +294,14 @@ interface EmailStore {
   setEmailKeywordsLocal: (emailId: string, keywords: Record<string, boolean>) => void;
 
   // Batch operations
-  batchMarkAsRead: (client: IJMAPClient, read: boolean) => Promise<void>;
+  /** Acts on the selection, or on `target`'s messages when given. */
+  batchMarkAsRead: (client: IJMAPClient, read: boolean, target?: BatchActionTarget) => Promise<void>;
   batchDelete: (client: IJMAPClient, permanent?: boolean) => Promise<void>;
-  batchMoveToMailbox: (client: IJMAPClient, mailboxId: string) => Promise<void>;
+  /**
+   * Acts on the selection, or on `target`'s messages when given; with a
+   * target, `mailboxId` is the destination's JMAP id in that account.
+   */
+  batchMoveToMailbox: (client: IJMAPClient, mailboxId: string, target?: BatchActionTarget) => Promise<void>;
   batchArchive: (client: IJMAPClient) => Promise<void>;
 
   // Spam operations
@@ -893,7 +911,7 @@ function resolveCrossIncludedMailboxIds(accountId: string, ownMailboxes: Mailbox
  * existing behavior exactly: the active/viewing client, its mailbox list, and
  * the shared-mailbox accountId derived from the currently selected mailbox.
  */
-function resolveEmailActionContext(
+export function resolveEmailActionContext(
   email: { sourceClientAccountId?: string; sourceAccountId?: string },
   passedClient: IJMAPClient,
 ): { client: IJMAPClient; mailboxes: Mailbox[]; accountId: string | undefined } {
@@ -3309,15 +3327,20 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   },
 
   // Batch operations
-  batchMarkAsRead: async (client, read) => {
+  batchMarkAsRead: async (client, read, target) => {
     const { selectedEmailIds, emails } = get();
-    if (selectedEmailIds.size === 0) return;
+    const targetIds = target ? new Set(target.emailIds) : selectedEmailIds;
+    if (targetIds.size === 0) return;
 
     set({ isLoading: true, error: null });
     try {
-      const emailIdsArray = Array.from(selectedEmailIds);
+      const emailIdsArray = Array.from(targetIds);
 
-      if (isAggregateListView()) {
+      if (target) {
+        // Messages named by the caller need not be loaded, so the list's
+        // source stamps cannot route them; the caller names the account.
+        await target.client.batchMarkAsRead(emailIdsArray, read, target.accountId);
+      } else if (isAggregateListView()) {
         // Group by owning JMAP account; dispatch through the reaching login client.
         const bySource = new Map<string, { clientAccountId?: string; ids: string[] }>();
         for (const emailId of emailIdsArray) {
@@ -3344,13 +3367,13 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
 
       // Update local state
       const updatedEmails = emails.map(email =>
-        selectedEmailIds.has(email.id)
+        targetIds.has(email.id)
           ? { ...email, keywords: { ...email.keywords, $seen: read } }
           : email
       );
 
       // Update mailbox counters per the email's own account list (#281).
-      const affectedEmails = emails.filter(e => selectedEmailIds.has(e.id));
+      const affectedEmails = emails.filter(e => targetIds.has(e.id));
       const mailboxPatch = applyBatchMailboxCounterUpdate(get(), affectedEmails, (mailbox, group) => {
         let deltaUnread = 0;
         for (const email of group as Email[]) {
@@ -3389,7 +3412,8 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         ...mailboxPatch,
         tagCounts,
         retainedInViewIds,
-        selectedEmailIds: new Set(),
+        // The user's own selection is not what a targeted call acted on.
+        selectedEmailIds: target ? get().selectedEmailIds : new Set(),
         isLoading: false
       });
       refillAfterKeywordChange(get, client, ['$seen']);
@@ -3523,15 +3547,21 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     }
   },
 
-  batchMoveToMailbox: async (client, toMailboxId) => {
+  batchMoveToMailbox: async (client, toMailboxId, target) => {
     const { selectedEmailIds, emails } = get();
-    if (selectedEmailIds.size === 0) return;
+    const targetIds = target ? new Set(target.emailIds) : selectedEmailIds;
+    if (targetIds.size === 0) return;
 
     set({ isLoading: true, error: null });
     try {
-      const emailIdsArray = Array.from(selectedEmailIds);
+      const emailIdsArray = Array.from(targetIds);
 
-      if (isAggregateListView()) {
+      if (target) {
+        // Messages named by the caller need not be loaded, so the list's
+        // source stamps cannot route them; the caller names the account and
+        // the destination's JMAP id.
+        await target.client.batchMoveEmails(emailIdsArray, toMailboxId, target.accountId);
+      } else if (isAggregateListView()) {
         // Group by owning JMAP account; dispatch through the reaching login client.
         const destMailbox = resolveActionMailboxes().find(mb => mb.id === toMailboxId);
         const jmapDestId = destMailbox?.originalId || toMailboxId;
@@ -3563,11 +3593,14 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       }
 
       // Update local state - remove from current view since they moved
-      const remainingEmails = emails.filter(e => !selectedEmailIds.has(e.id));
+      const remainingEmails = emails.filter(e => !targetIds.has(e.id));
 
       set({
         emails: remainingEmails,
-        selectedEmailIds: new Set(),
+        // A targeted call only drops the moved messages from the selection.
+        selectedEmailIds: target
+          ? new Set([...get().selectedEmailIds].filter(id => !targetIds.has(id)))
+          : new Set(),
         isLoading: false
       });
 

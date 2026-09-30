@@ -3354,6 +3354,72 @@ export class JMAPClient implements IJMAPClient {
     }
   }
 
+  async getEmailFields(
+    emailIds: string[],
+    properties: string[],
+    accountId?: string,
+  ): Promise<Array<Record<string, unknown>>> {
+    if (emailIds.length === 0) return [];
+    const targetAccountId = accountId || this.accountId;
+    const list: Array<Record<string, unknown>> = [];
+    for (const batchIds of batched(emailIds, this.getMaxObjectsInGet())) {
+      const response = await this.request([
+        ["Email/get", { accountId: targetAccountId, ids: batchIds, properties: ["id", ...properties] }, "0"],
+      ]);
+      const [name, result] = response.methodResponses?.[0] ?? [];
+      if (name !== "Email/get" || !result) {
+        throw new Error(methodErrorMessage(response, 'Failed to get emails'));
+      }
+      list.push(...((result.list || []) as Array<Record<string, unknown>>));
+    }
+    return list;
+  }
+
+  async queryEmailFields(
+    filter: Record<string, unknown>,
+    properties: string[],
+    accountId?: string,
+    limit: number = 10000,
+  ): Promise<Array<Record<string, unknown>>> {
+    const targetAccountId = accountId || this.accountId;
+    const pageSize = Math.min(500, this.getMaxObjectsInGet());
+    const seen = new Set<string>();
+    const list: Array<Record<string, unknown>> = [];
+    let position = 0;
+    while (list.length < limit) {
+      const requested = Math.min(pageSize, limit - list.length);
+      const response = await this.request([
+        ["Email/query", {
+          accountId: targetAccountId,
+          filter,
+          sort: [{ property: "receivedAt", isAscending: false }],
+          position,
+          limit: requested,
+        }, "0"],
+        ["Email/get", {
+          accountId: targetAccountId,
+          "#ids": { resultOf: "0", name: "Email/query", path: "/ids" },
+          properties: ["id", ...properties],
+        }, "1"],
+      ]);
+      assertQuerySucceeded(response, 'Email query');
+      const [getName, getResult] = response.methodResponses?.[1] ?? [];
+      if (getName !== "Email/get" || !getResult) {
+        throw new Error(methodErrorMessage(response, 'Failed to get emails'));
+      }
+      const ids = (response.methodResponses?.[0]?.[1]?.ids ?? []) as string[];
+      for (const email of (getResult.list || []) as Array<Record<string, unknown>>) {
+        const id = email.id as string;
+        if (seen.has(id)) continue;
+        seen.add(id);
+        list.push(email);
+      }
+      if (ids.length < requested) break;
+      position += ids.length;
+    }
+    return list;
+  }
+
   async searchSentRecipients(query: string, sentMailboxId: string, accountId?: string, limit: number = 60): Promise<Array<{ name: string; email: string }>> {
     const q = query.trim();
     if (!q || !sentMailboxId) return [];

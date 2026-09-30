@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { AlertCircle, Loader2, X, Info, Eye, EyeOff, LogIn, Sun, Moon, Monitor, Check, Shield, Play, Copy } from "@/components/icons";
 import { type OAuthMetadata } from "@/lib/oauth/discovery";
 import { generateCodeVerifier, generateCodeChallenge, generateState } from "@/lib/oauth/pkce";
+import { DEFAULT_OAUTH_SCOPES } from "@/lib/oauth/scopes";
 import { useUpdateStore, selectBanner } from "@/stores/update-store";
 import type { PublicJmapServerEntry } from "@/lib/admin/jmap-servers";
 import { IS_LITE, getLiteInjectedClientId } from "@/lib/lite";
@@ -758,7 +759,7 @@ function LoginPageContent() {
     authUrl.searchParams.set("response_type", "code");
     authUrl.searchParams.set("client_id", effectiveOauthClientId);
     authUrl.searchParams.set("redirect_uri", redirectUri);
-    authUrl.searchParams.set("scope", oauthScopes || "openid email profile");
+    authUrl.searchParams.set("scope", oauthScopes || DEFAULT_OAUTH_SCOPES);
     authUrl.searchParams.set("state", state);
     authUrl.searchParams.set("code_challenge", challenge);
     authUrl.searchParams.set("code_challenge_method", "S256");

@@ -835,7 +835,19 @@
     "templates_import_empty": "文件中未找到模板",
     "export_email_error": "导出邮件失败",
     "import_email_success": "邮件导入成功",
-    "import_email_error": "导入邮件失败"
+    "import_email_error": "导入邮件失败",
+    "rule_created": "规则已创建",
+    "rule_merged": "已添加到规则“{name}”",
+    "rule_already_covered": "规则“{name}”已涵盖此项",
+    "rule_apply_existing": "{count, plural, other {应用于 # 封已有邮件}}",
+    "rule_applied": "{count, plural, =0 {没有需要更改的邮件} other {规则已应用于 # 封邮件}}",
+    "rule_apply_failed": "无法将规则应用于已有邮件",
+    "rule_edit": "编辑规则",
+    "rule_undo": "撤销",
+    "rule_undone": "已撤销规则更改",
+    "rule_undo_failed": "无法撤销规则更改",
+    "rule_undo_conflict": "过滤器在此之后已更改。请在过滤器设置中撤销该更改。",
+    "rule_folder_failed": "无法创建文件夹"
   },
   "date": {
     "today": "今天",
@@ -2079,7 +2091,9 @@
         "ends_with": "以…结尾",
         "matches": "匹配模式",
         "greater_than": "大于",
-        "less_than": "小于"
+        "less_than": "小于",
+        "address_is": "地址为",
+        "domain_is": "域名为"
       },
       "action_types": {
         "move": "移至文件夹",
@@ -2154,7 +2168,26 @@
         "actions_count": "{count, plural, one {# 个操作} other {# 个操作}}"
       },
       "origin_external": "外部",
-      "managed_by_tooltip": "由 {source} 管理。请在该应用中编辑，或使用原始 Sieve 编辑器。"
+      "managed_by_tooltip": "由 {source} 管理。请在该应用中编辑，或使用原始 Sieve 编辑器。",
+      "quick_rule_names": {
+        "move_sender": "将 {sender} 的邮件移至 {folder}",
+        "move_domain": "将 @{domain} 的邮件移至 {folder}",
+        "move_list": "将列表 {list} 移至 {folder}",
+        "mark_read": "将 {sender} 的邮件标记为已读",
+        "tag": "为 {sender} 的邮件添加标签 {tag}",
+        "block": "屏蔽 {sender}",
+        "custom": "来自 {sender} 的邮件",
+        "custom_plain": "新规则",
+        "senders": "{count, plural, other {# 个发件人}}"
+      },
+      "suggestions": "建议",
+      "suggest_subject": "主题“{subject}”",
+      "suggest_to": "收件人 {address}",
+      "suggest_cc": "抄送 {address}",
+      "suggest_list": "List-Id",
+      "suggest_domain": "@{domain}",
+      "apply_existing": "同时应用于此文件夹中已有的邮件",
+      "apply_existing_unsupported": "只有检查发件人、收件人、主题或邮件头，并执行移动、复制、标记为已读、加星标或添加标签的规则，才能应用于已有邮件。"
     },
     "templates": {
       "title": "邮件模板",
@@ -2293,7 +2326,22 @@
     "cancel_scheduled_send": "取消发送",
     "reschedule_send": "重新计划",
     "cancel_and_edit": "取消并编辑",
-    "cancel_and_compose_again": "取消并重新撰写"
+    "cancel_and_compose_again": "取消并重新撰写",
+    "rules": {
+      "title": "规则",
+      "move_from": "始终移动来自 {sender} 的邮件",
+      "move_from_domain": "始终移动来自 @{domain} 的邮件",
+      "move_from_list": "始终移动此邮件列表的邮件",
+      "mark_read_from": "始终将来自 {sender} 的邮件标记为已读",
+      "tag_with": "始终添加标签",
+      "block": "{count, plural, =1 {屏蔽发件人} other {屏蔽 # 个发件人}}",
+      "no_junk": "此账户没有垃圾邮件文件夹",
+      "create": "创建规则…",
+      "manage": "管理规则",
+      "senders_count": "{count, plural, other {# 个发件人}}",
+      "cross_account": "请选择同一账户中的邮件",
+      "opaque_hint": "你的过滤器已被手动编辑。请打开过滤器设置"
+    }
   },
   "mailbox_context_menu": {
     "mark_folder_read": "将文件夹标记为已读",

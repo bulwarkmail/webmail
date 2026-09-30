@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Save, Loader2, RotateCcw, Sparkles } from '@/components/icons';
 import { apiFetch } from '@/lib/browser-navigation';
+import { DEFAULT_OAUTH_SCOPES } from '@/lib/oauth/scopes';
 
 interface ConfigEntry {
   // Sensitive keys (sessionSecret, oauthClientSecret) come back with
@@ -274,8 +275,8 @@ export function AuthTab() {
         <Text label="OAuth Client Secret" configKey="oauthClientSecret" value={currentValue('oauthClientSecret') as string} source={config.oauthClientSecret?.source} onChange={handleChange} onRevert={handleRevert} type="password" placeholder={config.oauthClientSecret?.hasValue ? '••••••••  (saved - type to replace)' : undefined} />
         <Text label="OAuth Issuer URL" configKey="oauthIssuerUrl" value={currentValue('oauthIssuerUrl') as string} source={config.oauthIssuerUrl?.source} onChange={handleChange} onRevert={handleRevert} placeholder="https://auth.example.com" />
         <Toggle label="Allow private OAuth endpoints" description="Permit discovered endpoints on other hosts to resolve to RFC-1918 / loopback addresses. Endpoints on the issuer's own host are always allowed, so split-DNS setups rarely need this." configKey="oauthAllowPrivateEndpoints" value={currentValue('oauthAllowPrivateEndpoints') as boolean} source={config.oauthAllowPrivateEndpoints?.source} onChange={handleChange} onRevert={handleRevert} />
-        <Text label="OAuth Scopes" description="Space-separated scopes that replace the defaults. Leave blank to use the built-in scope list." configKey="oauthScopes" value={currentValue('oauthScopes') as string} source={config.oauthScopes?.source} onChange={handleChange} onRevert={handleRevert} placeholder="openid email offline_access" />
-        <Text label="OAuth Extra Scopes" description="Additional space-separated scopes appended to the defaults." configKey="oauthExtraScopes" value={currentValue('oauthExtraScopes') as string} source={config.oauthExtraScopes?.source} onChange={handleChange} onRevert={handleRevert} placeholder="urn:ietf:params:oauth:..." />
+        <Text label="OAuth Scopes" description={`Space-separated scopes that replace the defaults (${DEFAULT_OAUTH_SCOPES}). Leave blank to use them. offline_access is not requested by default; add it here or under Extra Scopes if your provider only issues refresh tokens for it, or sessions end when the access token expires.`} configKey="oauthScopes" value={currentValue('oauthScopes') as string} source={config.oauthScopes?.source} onChange={handleChange} onRevert={handleRevert} placeholder={DEFAULT_OAUTH_SCOPES} />
+        <Text label="OAuth Extra Scopes" description={`Additional space-separated scopes appended to the defaults (${DEFAULT_OAUTH_SCOPES}). Ignored when OAuth Scopes is set.`} configKey="oauthExtraScopes" value={currentValue('oauthExtraScopes') as string} source={config.oauthExtraScopes?.source} onChange={handleChange} onRevert={handleRevert} placeholder="urn:ietf:params:oauth:..." />
       </Section>
 
       <Section title="Single Sign-On">
