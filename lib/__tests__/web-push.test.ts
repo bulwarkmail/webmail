@@ -617,7 +617,7 @@ describe('enableWebPushForAccounts', () => {
     const result = await enableWebPushForAccounts([
       { accountId: 'a', client: first, accountLabel: 'one' },
       { accountId: 'b', client: second, accountLabel: 'two' },
-    ], { relayBaseUrl: RELAY });
+    ], { relayBaseUrl: RELAY, inboxOnly: false });
 
     expect(result.enabled).toEqual(['a', 'b']);
     expect(result.failed).toEqual([]);
@@ -637,7 +637,7 @@ describe('enableWebPushForAccounts', () => {
     const result = await enableWebPushForAccounts([
       { accountId: 'a', client: first },
       { accountId: 'b', client: second },
-    ], { relayBaseUrl: RELAY });
+    ], { relayBaseUrl: RELAY, inboxOnly: false });
 
     expect(result.enabled).toEqual([]);
     expect(result.failed.map(f => f.accountId)).toEqual(['a', 'b']);

@@ -2,11 +2,12 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Loader2 } from 'lucide-react';
+import { Loader2 } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { SettingsSection } from './settings-section';
 import { useAccountStore } from '@/stores/account-store';
 import { useAuthStore } from '@/stores/auth-store';
+import { useSettingsStore } from '@/stores/settings-store';
 import { disableWebPush, enableWebPushForAccounts, isWebPushEnabled, isWebPushSupported } from '@/lib/web-push';
 
 /**
@@ -55,7 +56,7 @@ export function MultiAccountPushSettings({ relayBaseUrl }: { relayBaseUrl?: stri
       if (action === 'enable') {
         const outcome = await enableWebPushForAccounts(
           targets.map(a => ({ accountId: a.id, client: auth.getClientForAccount(a.id)!, accountLabel: a.username })),
-          { relayBaseUrl },
+          { relayBaseUrl, inboxOnly: useSettingsStore.getState().pushNotifyInboxOnly },
         );
         setNotice(outcome.failed.length
           ? t('result_partial', { enabled: outcome.enabled.length, failed: outcome.failed.length })
