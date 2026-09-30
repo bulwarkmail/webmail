@@ -21,7 +21,7 @@
  *   change, so the visible range has to be refetched after mutating one.
  */
 
-import type { CalendarEvent } from '@/lib/jmap/types';
+import type { CalendarEvent, CalendarParticipant } from '@/lib/jmap/types';
 import { parseDurationSeconds } from '@/lib/calendar-event-normalization';
 import { RECURRENCE_OVERRIDE_IMMUTABLE_KEYS } from '@/lib/recurrence-overrides';
 
@@ -146,6 +146,98 @@ export function resolveOverrideKey(
   return instance.recurrenceId;
 }
 
+function stableJson(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(stableJson).join(',')}]`;
+  if (value && typeof value === 'object') {
+    const entries = Object.entries(value as Record<string, unknown>)
+      .filter(([, v]) => v !== undefined)
+      .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+    return `{${entries.map(([k, v]) => `${JSON.stringify(k)}:${stableJson(v)}`).join(',')}}`;
+  }
+  return JSON.stringify(value ?? null);
+}
+
+/**
+ * An override's participants, each completed from the series participant
+ * with the same id or calendar address. The override decides who takes part;
+ * the series fills what it leaves out. Stalwart records an attendee's reply to
+ * one occurrence as an override naming the organizer under a new id and
+ * without a participation status, which would otherwise show the organizer as
+ * not having answered their own meeting.
+ */
+export function mergeOverrideParticipants(
+  series: CalendarEvent['participants'],
+  override: CalendarEvent['participants'],
+): CalendarEvent['participants'] {
+  if (!override) return override;
+  const address = (p: CalendarParticipant) => (p.calendarAddress ?? '').toLowerCase();
+  const from = series ?? {};
+  const merged: Record<string, CalendarParticipant> = {};
+  for (const [id, participant] of Object.entries(override)) {
+    const match = id in from
+      ? id
+      : Object.keys(from).find((key) => address(from[key]) && address(from[key]) === address(participant));
+    const defined = Object.fromEntries(Object.entries(participant).filter(([, v]) => v != null));
+    merged[match ?? id] = { ...(match ? from[match] : {}), ...defined } as CalendarParticipant;
+  }
+  return merged;
+}
+
+/**
+ * Stalwart lists an occurrence twice under one id - once as the series
+ * generates it, once from its override - when the override ranks below the
+ * series (no or a lower SEQUENCE). It writes such overrides itself: an
+ * attendee's reply to one occurrence becomes, on the organizer's side, an
+ * override holding little more than that attendee. Collapse each pair into
+ * one occurrence: the fields the override defines (per the base event's
+ * overrides map) from the override, the rest from the series.
+ */
+function collapseDuplicateInstances(
+  instances: CalendarEvent[],
+  bases: ReadonlyMap<string, Partial<CalendarEvent>>,
+): CalendarEvent[] {
+  const groups = new Map<string, CalendarEvent[]>();
+  for (const instance of instances) {
+    const group = groups.get(instance.id);
+    if (group) group.push(instance);
+    else groups.set(instance.id, [instance]);
+  }
+  if (groups.size === instances.length) return instances;
+
+  const collapse = (group: CalendarEvent[]): CalendarEvent => {
+    const first = group[0];
+    const base = first.baseEventId ? bases.get(first.baseEventId) : undefined;
+    const key = base ? resolveOverrideKey(first, base.recurrenceOverrides) : null;
+    const entry = key ? base?.recurrenceOverrides?.[key] as Record<string, unknown> | undefined : undefined;
+    if (!entry) {
+      return group.reduce((a, b) => (Object.keys(b).length > Object.keys(a).length ? b : a));
+    }
+    const overrideKeys = Object.keys(entry).filter((k) => k !== 'updated' && !k.includes('/'));
+    const score = (instance: CalendarEvent) => overrideKeys
+      .filter((k) => stableJson((instance as unknown as Record<string, unknown>)[k]) === stableJson(entry[k]))
+      .length;
+    const override = group.reduce((a, b) => (score(b) > score(a) ? b : a));
+    const series = group.find((instance) => instance !== override) ?? first;
+    const merged: Record<string, unknown> = { ...series };
+    for (const k of overrideKeys) {
+      merged[k] = k === 'participants'
+        ? mergeOverrideParticipants(series.participants, override.participants)
+        : (override as unknown as Record<string, unknown>)[k];
+    }
+    return merged as unknown as CalendarEvent;
+  };
+
+  const seen = new Set<string>();
+  const result: CalendarEvent[] = [];
+  for (const instance of instances) {
+    if (seen.has(instance.id)) continue;
+    seen.add(instance.id);
+    const group = groups.get(instance.id)!;
+    result.push(group.length > 1 ? collapse(group) : instance);
+  }
+  return result;
+}
+
 function shiftIso(from: string | null | undefined, seconds: number): string | null {
   if (!from) return null;
   const ms = Date.parse(from);
@@ -167,7 +259,7 @@ export function hydrateRecurrenceInstances(
   instances: CalendarEvent[],
   bases: ReadonlyMap<string, Partial<CalendarEvent>>,
 ): CalendarEvent[] {
-  return instances.map((instance) => {
+  return collapseDuplicateInstances(instances, bases).map((instance) => {
     if (!isServerRecurrenceInstance(instance) || !instance.recurrenceId) return instance;
     const base = instance.baseEventId ? bases.get(instance.baseEventId) : undefined;
     if (!base) return instance;
@@ -198,35 +290,176 @@ export function hydrateRecurrenceInstances(
 }
 
 /**
- * The fallback for servers that reject synthetic ids: the same change
- * expressed as a whole-object `recurrenceOverrides/<recurrenceId>` patch on
- * the base event. The existing override (if any) is kept underneath so a
- * partial patch (a drag that only sets `start`) does not wipe fields the
- * occurrence already overrides, and `start`/`duration` are pinned the way
- * the server does it for synthetic-id updates.
+ * An occurrence of a series that the browser expanded itself
+ * (lib/recurrence-expansion.ts), as opposed to one the server handed out.
+ * Changes to it are written as a recurrence override on its base event.
+ */
+export function isBrowserExpandedOccurrence(
+  event: Pick<CalendarEvent, 'id' | 'recurrenceId' | 'recurrenceRules'> & Partial<Pick<CalendarEvent, 'originalId' | 'baseEventId'>>,
+): boolean {
+  return !!event.recurrenceId && (event.recurrenceRules?.length ?? 0) > 0 && !isServerRecurrenceInstance(event);
+}
+
+type OccurrenceOverrideContext = Pick<CalendarEvent, 'id' | 'start' | 'recurrenceId' | 'recurrenceOverrides'>
+  & Partial<Pick<CalendarEvent, 'originalId' | 'baseEventId'>>;
+
+/**
+ * `occurrence` as seen from `master`, the base event it belongs to, for
+ * building an override patch on the master: the master's overrides map is
+ * the one that counts.
+ */
+export function overrideContextOf(
+  occurrence: CalendarEvent,
+  master: Pick<CalendarEvent, 'recurrenceOverrides'>,
+): CalendarEvent {
+  return { ...occurrence, baseEventId: undefined, recurrenceOverrides: master.recurrenceOverrides ?? null };
+}
+
+/**
+ * The base event's overrides map as far as `occurrence` knows it, or
+ * `undefined` when it does not. The browser's expansion copies the base
+ * event's map (absent means none); a server occurrence only has it once
+ * hydrated from its base event (`null` then means none).
+ */
+function knownOverrides(occurrence: Partial<CalendarEvent>): OverrideMap | null | undefined {
+  if (isServerRecurrenceInstance({ ...occurrence, id: occurrence.id ?? '' })) return occurrence.recurrenceOverrides;
+  return occurrence.recurrenceOverrides ?? null;
+}
+
+/** True when a change to `occurrence` creates its override, false when one exists or it is unknown. */
+function createsOverride(occurrence: Partial<CalendarEvent>): boolean {
+  const overrides = knownOverrides(occurrence);
+  if (overrides === undefined || !occurrence.recurrenceId) return false;
+  const key = resolveOverrideKey({ start: occurrence.start ?? '', recurrenceId: occurrence.recurrenceId }, overrides);
+  return !!key && !(overrides && key in overrides);
+}
+
+/**
+ * `override` as the entry `key` of the base event's overrides. A
+ * `recurrenceOverrides/<key>` pointer fails ("Patch operation failed") while
+ * the base event has no overrides at all, so the first one is sent as the
+ * whole map - but only when the map is known to be empty.
+ */
+function overrideEntryPatch(
+  instance: OccurrenceOverrideContext,
+  key: string,
+  override: Record<string, unknown>,
+): Partial<CalendarEvent> {
+  const overrides = knownOverrides(instance);
+  if (overrides !== undefined && Object.keys(overrides ?? {}).length === 0) {
+    return { recurrenceOverrides: { [key]: override } } as Partial<CalendarEvent>;
+  }
+  return { [`recurrenceOverrides/${key}`]: override } as Partial<CalendarEvent>;
+}
+
+/**
+ * A change to one occurrence expressed as a recurrence override on its base
+ * event: used for occurrences the browser expanded, and as the fallback for
+ * servers that reject synthetic ids. The existing override (if any) is kept
+ * underneath so a partial patch (a drag that only sets `start`) does not wipe
+ * fields the occurrence already overrides, and `start`/`duration` are pinned
+ * the way the server does it for synthetic-id updates.
  */
 export function buildFallbackOverridePatch(
-  instance: Pick<CalendarEvent, 'start' | 'duration' | 'recurrenceId' | 'recurrenceOverrides'>,
+  instance: OccurrenceOverrideContext & Pick<CalendarEvent, 'duration'>,
   patch: Partial<CalendarEvent>,
 ): Partial<CalendarEvent> | null {
   const key = resolveOverrideKey(instance, instance.recurrenceOverrides);
   if (!key) return null;
   const existing = (instance.recurrenceOverrides?.[key] ?? {}) as Record<string, unknown>;
   const { updated: _updated, ...kept } = existing;
-  const override: Record<string, unknown> = {
+  return overrideEntryPatch(instance, key, {
     ...kept,
     start: instance.start,
     duration: instance.duration,
     ...buildOccurrencePatch(patch),
-  };
-  return { [`recurrenceOverrides/${key}`]: override } as Partial<CalendarEvent>;
+  });
 }
 
-/** The fallback for destroying one occurrence: exclude it on the base event. */
+/** Destroying one occurrence as an override on its base event: exclude it. */
 export function buildFallbackExcludePatch(
-  instance: Pick<CalendarEvent, 'start' | 'recurrenceId' | 'recurrenceOverrides'>,
+  instance: OccurrenceOverrideContext,
 ): Partial<CalendarEvent> | null {
   const key = resolveOverrideKey(instance, instance.recurrenceOverrides);
   if (!key) return null;
-  return { [`recurrenceOverrides/${key}`]: { excluded: true } } as Partial<CalendarEvent>;
+  return overrideEntryPatch(instance, key, { excluded: true });
+}
+
+/**
+ * What a new override copies from its occurrence, unless the change sets it
+ * itself. Stalwart stores an override as a VEVENT holding only the override's
+ * own properties, so without these the occurrence loses its title, place,
+ * attendees and reminders - for other CalDAV clients as well as when Stalwart
+ * expands it. `sequence` keeps the override from ranking below the series:
+ * an override with a lower SEQUENCE does not replace its occurrence and
+ * Stalwart then lists that occurrence twice (the organizer's server raises
+ * the sequence of a changed override from this value).
+ */
+const NEW_OVERRIDE_COPIED_KEYS = [
+  'title',
+  'description',
+  'descriptionContentType',
+  'locations',
+  'virtualLocations',
+  'links',
+  'keywords',
+  'categories',
+  'color',
+  'locale',
+  'status',
+  'freeBusyStatus',
+  'privacy',
+  'alerts',
+  'organizerCalendarAddress',
+  'participants',
+  'sequence',
+] as const;
+
+/**
+ * `patch` plus the occurrence details a new override needs
+ * (NEW_OVERRIDE_COPIED_KEYS). Nothing is added when the occurrence already
+ * has an override - an attendee may not add most of these to the organizer's
+ * - or when that is unknown.
+ */
+export function withNewOverrideDetails(
+  occurrence: Partial<CalendarEvent>,
+  patch: Partial<CalendarEvent>,
+): Partial<CalendarEvent> {
+  if (!createsOverride(occurrence)) return patch;
+  const details: Record<string, unknown> = {};
+  for (const name of NEW_OVERRIDE_COPIED_KEYS) {
+    if (!(name in patch) && occurrence[name] != null) details[name] = occurrence[name];
+  }
+  return { ...details, ...patch };
+}
+
+/**
+ * The patch that answers one occurrence as `participantId`.
+ *
+ * - The whole participants map, with only that participant's status changed.
+ *   Stalwart rejects a `participants/<id>/participationStatus` pointer on a
+ *   single occurrence ("Multiple organizers found in iCalendar object",
+ *   0.16.23), and a pointer inside an override keeps just the patched
+ *   participant, dropping the organizer and everyone else from it.
+ * - The organizer: 0.16.19 rejects the override the same way without it.
+ * - The sequence (see NEW_OVERRIDE_COPIED_KEYS).
+ * - For a new override, the occurrence's details (`withNewOverrideDetails`).
+ */
+export function buildOccurrenceRsvpPatch(
+  occurrence: Partial<CalendarEvent>,
+  participantId: string,
+  status: CalendarParticipant['participationStatus'],
+): Partial<CalendarEvent> | null {
+  const participant = occurrence.participants?.[participantId];
+  if (!participant) return null;
+  const patch: Record<string, unknown> = {};
+  if (occurrence.sequence != null) patch.sequence = occurrence.sequence;
+  if (occurrence.organizerCalendarAddress) {
+    patch.organizerCalendarAddress = occurrence.organizerCalendarAddress;
+  }
+  patch.participants = {
+    ...occurrence.participants,
+    [participantId]: { ...participant, participationStatus: status },
+  };
+  return withNewOverrideDetails(occurrence, patch as Partial<CalendarEvent>);
 }

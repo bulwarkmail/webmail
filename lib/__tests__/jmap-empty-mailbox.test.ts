@@ -109,14 +109,13 @@ describe('JMAPClient.emptyMailbox', () => {
     expect(server.requests).toEqual([500, 500, 0]);
   });
 
-  it('stops instead of looping forever when the server refuses to destroy', async () => {
+  it('stops and reports it when the server refuses to destroy', async () => {
+    // Neither loop forever on the same ids nor report the folder as emptied.
     const client = await connectedClient();
     const server = makeMailboxServer({ count: 1200, destroyFails: true });
     fetchSpy.mockImplementation(server.handler as never);
 
-    const destroyed = await client.emptyMailbox('mailbox-1');
-
-    expect(destroyed).toBe(0);
+    await expect(client.emptyMailbox('mailbox-1')).rejects.toThrow();
     expect(server.requests).toEqual([500]);
   });
 
@@ -129,5 +128,103 @@ describe('JMAPClient.emptyMailbox', () => {
 
     expect(destroyed).toBe(0);
     expect(server.requests).toEqual([0]);
+  });
+});
+
+/**
+ * Stand-in for a Stalwart mailbox that is emptied into another folder:
+ * Email/query returns one page of the ids still in the source, Email/set moves
+ * the ids in its `update` (or refuses them all with `updateFails`).
+ */
+function makeMoveServer(opts: { count: number; updateFails?: boolean }) {
+  let remaining = Array.from({ length: opts.count }, (_, i) => `email-${i}`);
+  const queries: number[] = [];
+  const updates: Array<Record<string, unknown>> = [];
+
+  const handler = async (_url: string, init: RequestInit): Promise<Response> => {
+    const body = JSON.parse(init.body as string);
+    const [method, args] = body.methodCalls[0];
+
+    if (method === 'Email/query') {
+      const page = remaining.slice(0, args.limit);
+      queries.push(page.length);
+      return jsonResponse({ methodResponses: [['Email/query', { ids: page }, '0']] });
+    }
+
+    updates.push(args.update);
+    const ids = Object.keys(args.update);
+    if (opts.updateFails) {
+      const notUpdated = Object.fromEntries(ids.map(id => [id, { type: 'forbidden' }]));
+      return jsonResponse({ methodResponses: [['Email/set', { notUpdated }, '0']] });
+    }
+    remaining = remaining.filter(id => !ids.includes(id));
+    const updated = Object.fromEntries(ids.map(id => [id, null]));
+    return jsonResponse({ methodResponses: [['Email/set', { updated }, '0']] });
+  };
+
+  return { handler, queries, updates, remainingCount: () => remaining.length };
+}
+
+describe('JMAPClient.moveMailboxContents', () => {
+  let fetchSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    fetchSpy = vi.spyOn(globalThis, 'fetch');
+  });
+
+  afterEach(() => {
+    fetchSpy.mockRestore();
+  });
+
+  async function connectedClient(): Promise<JMAPClient> {
+    fetchSpy.mockResolvedValueOnce(jsonResponse(makeSession()));
+    const client = JMAPClient.withBearer('https://mail.example.com', 'token123', 'user@test.com');
+    await client.connect();
+    fetchSpy.mockReset();
+    return client;
+  }
+
+  it('moves every email of a mailbox larger than one batch into the target', async () => {
+    const client = await connectedClient();
+    const server = makeMoveServer({ count: 1200 });
+    fetchSpy.mockImplementation(server.handler as never);
+
+    const moved = await client.moveMailboxContents('mailbox-1', 'trash-1');
+
+    expect(moved).toBe(1200);
+    expect(server.remainingCount()).toBe(0);
+    expect(server.queries).toEqual([500, 500, 200]);
+    expect(server.updates[0]['email-0']).toEqual({ mailboxIds: { 'trash-1': true } });
+  });
+
+  it('marks the moved emails read when asked', async () => {
+    const client = await connectedClient();
+    const server = makeMoveServer({ count: 3 });
+    fetchSpy.mockImplementation(server.handler as never);
+
+    await client.moveMailboxContents('mailbox-1', 'trash-1', undefined, true);
+
+    expect(server.updates[0]['email-0']).toEqual({ mailboxIds: { 'trash-1': true }, 'keywords/$seen': true });
+  });
+
+  it('stops and reports it when the server refuses the move', async () => {
+    const client = await connectedClient();
+    const server = makeMoveServer({ count: 1200, updateFails: true });
+    fetchSpy.mockImplementation(server.handler as never);
+
+    await expect(client.moveMailboxContents('mailbox-1', 'trash-1')).rejects.toThrow();
+    expect(server.queries).toEqual([500]);
+  });
+
+  it('returns zero after one query for an already empty mailbox', async () => {
+    const client = await connectedClient();
+    const server = makeMoveServer({ count: 0 });
+    fetchSpy.mockImplementation(server.handler as never);
+
+    const moved = await client.moveMailboxContents('mailbox-1', 'trash-1');
+
+    expect(moved).toBe(0);
+    expect(server.queries).toEqual([0]);
+    expect(server.updates).toEqual([]);
   });
 });

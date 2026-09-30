@@ -46,16 +46,16 @@ describe('fetchPrincipalDisplayName (#900)', () => {
     expect(mockedJmap).not.toHaveBeenCalled();
   });
 
-  it('reads the live principal description via x:Account/get on the given slot', async () => {
+  it('reads the live principal description via x:AccountSettings/get on the given slot', async () => {
     mockedJmap.mockResolvedValueOnce([
-      ['x:Account/get', { list: [{ id: 'acc-1', description: '  Renamed User  ' }] }, '0'],
+      ['x:AccountSettings/get', { list: [{ id: 'singleton', description: '  Renamed User  ' }] }, '0'],
     ]);
 
     const name = await fetchPrincipalDisplayName(fakeClient(), 2);
 
     expect(name).toBe('Renamed User');
     expect(mockedJmap).toHaveBeenCalledWith(
-      [['x:Account/get', { accountId: 'acc-1', ids: ['acc-1'] }, '0']],
+      [['x:AccountSettings/get', { accountId: 'acc-1', ids: ['singleton'] }, '0']],
       { slot: 2 },
     );
   });
@@ -69,7 +69,7 @@ describe('fetchPrincipalDisplayName (#900)', () => {
 
   it('returns null for an empty description so callers keep their fallback', async () => {
     mockedJmap.mockResolvedValueOnce([
-      ['x:Account/get', { list: [{ id: 'acc-1', description: '' }] }, '0'],
+      ['x:AccountSettings/get', { list: [{ id: 'singleton', description: '' }] }, '0'],
     ]);
 
     expect(await fetchPrincipalDisplayName(fakeClient())).toBeNull();

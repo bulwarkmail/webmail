@@ -7,8 +7,9 @@ import { SettingsSection, SettingItem, RadioGroup, ToggleSwitch } from './settin
 import { cn } from '@/lib/utils';
 import { useTour } from '@/components/tour/tour-provider';
 import { Button } from '@/components/ui/button';
-import { PlayCircle } from 'lucide-react';
+import { PlayCircle } from '@/components/icons';
 import { usePolicyStore } from '@/stores/policy-store';
+import { IS_LITE } from '@/lib/lite';
 import { MessageListOrderSettings } from './message-list-order-settings';
 
 const DENSITY_PREVIEW: Record<Density, { py: string; gap: string; showAvatar: boolean; showPreview: boolean }> = {
@@ -129,9 +130,12 @@ export function AppearanceSettings() {
       </SettingItem>
       )}
 
-      <SettingItem label={tAdvanced('sender_favicons.label')} description={tAdvanced('sender_favicons.description')}>
-        <ToggleSwitch checked={senderFavicons} onChange={(checked) => updateSetting('senderFavicons', checked)} />
-      </SettingItem>
+      {/* Sender favicons come from the /api/favicon proxy, absent in the static Lite build (components/ui/avatar.tsx). */}
+      {!IS_LITE && (
+        <SettingItem label={tAdvanced('sender_favicons.label')} description={tAdvanced('sender_favicons.description')}>
+          <ToggleSwitch checked={senderFavicons} onChange={(checked) => updateSetting('senderFavicons', checked)} />
+        </SettingItem>
+      )}
 
       <SettingItem label={tAdvanced('show_avatars_in_junk.label')} description={tAdvanced('show_avatars_in_junk.description')}>
         <ToggleSwitch checked={showAvatarsInJunk} onChange={(checked) => updateSetting('showAvatarsInJunk', checked)} />

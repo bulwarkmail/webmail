@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef } from "react";
-import { AlertTriangle, Clock3, CornerDownLeft, Loader2, Search } from "lucide-react";
+import { AlertTriangle, Clock3, CornerDownLeft, Loader2, Search } from "@/components/icons";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { useGlobalSearch } from "@/hooks/use-global-search";

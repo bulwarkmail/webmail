@@ -255,6 +255,7 @@
       "button": "清空信件匣",
       "confirm_title": "清空信件匣",
       "confirm_message": "此信件匣中的所有郵件都將永久刪除。此動作無法復原。",
+      "confirm_message_trash": "此信件匣中的所有郵件都將移至垃圾桶。",
       "confirm_button": "清空信件匣",
       "junk_hint": "您可以清空垃圾郵件信件匣，永久刪除其中的所有郵件。",
       "trash_hint": "您可以清空垃圾桶，永久刪除其中的所有郵件。"
@@ -311,6 +312,8 @@
     "view_source": "檢視原始碼",
     "fullscreen": "全螢幕",
     "exit_fullscreen": "離開全螢幕",
+    "view_in_dark_mode": "深色模式檢視",
+    "view_in_light_mode": "淺色模式檢視",
     "export_email": "匯出為 .eml",
     "forward_as_attachment": "以附件形式轉寄",
     "import_email": "匯入 .eml 或 .zip",
@@ -579,7 +582,12 @@
       "copied": "已複製！",
       "copy_failed": "複製失敗"
     },
-    "send_now": "立即傳送"
+    "send_now": "立即傳送",
+    "verification_code": {
+      "copy": "複製驗證碼 {code}",
+      "copied": "驗證碼已複製",
+      "copy_failed": "無法複製驗證碼"
+    }
   },
   "email_composer": {
     "read_receipt_on": "已要求傳送已讀回執（點擊以停用）",
@@ -644,11 +652,12 @@
     "from_override": {
       "toggle_off": "覆寫",
       "toggle_on": "取消覆寫",
-      "toggle_tooltip": "自由編輯寄件者名稱與電子郵件地址。郵件仍會透過您的寄件身分傳送，只有顯示的 From 標頭會變更。",
+      "toggle_tooltip": "自由編輯寄件者名稱與電子郵件地址。郵件仍會透過您的寄件身分傳送。",
       "name_label": "寄件者姓名",
       "name_placeholder": "姓名",
       "email_label": "寄件者電子郵件地址",
-      "email_placeholder": "alias@example.com"
+      "email_placeholder": "alias@example.com",
+      "envelope_notice": "如果您的伺服器不接受此地址作為信封寄件者，將改用 {identity}，收件者可以在 Return-Path 標頭中看到它。"
     },
     "use_template": "範本",
     "save_as_template": "儲存為範本",
@@ -661,10 +670,14 @@
     "upload_progress": "正在上傳 {uploaded} / {total}",
     "upload_cancel": "取消上傳",
     "upload_failed": "無法上傳 {filename}",
+    "attachment_too_large": "「{name}」超過伺服器允許的大小（每個檔案 {max}）",
+    "attachments_total_too_large": "附件將超過伺服器每封郵件 {max} 的上限",
     "drop_files": "拖放要附加的檔案",
     "show_less": "顯示較少",
     "send_failed": "傳送郵件失敗",
     "send_timeout": "伺服器停止回應。再次傳送前，請先檢查「寄件備份」信件匣，因為郵件可能已經寄出。",
+    "send_recipients_rejected": "未傳送：伺服器拒絕了所有收件者。",
+    "send_some_recipients_rejected": "已傳送，但未傳送給以下收件者：伺服器拒絕了他們。",
     "continue_draft": "繼續編輯草稿",
     "close_draft_title": "要儲存還是捨棄草稿？",
     "close_draft_message": "您有尚未儲存的變更。要將這封郵件儲存為草稿，還是捨棄？",
@@ -779,6 +792,10 @@
     "email_sent": "郵件傳送成功",
     "email_deleted": "郵件已刪除",
     "email_archived": "郵件已封存",
+    "emails_deleted": "{count, plural, other {已刪除 # 封郵件}}",
+    "emails_archived": "{count, plural, other {已封存 # 封郵件}}",
+    "error_archiving": "封存郵件失敗",
+    "error_updating": "更新郵件失敗",
     "email_starred": "郵件已加上星號",
     "email_unstarred": "郵件已移除星號",
     "email_marked_read": "郵件已標示為已讀",
@@ -819,7 +836,19 @@
     "templates_import_empty": "檔案中找不到範本",
     "export_email_error": "無法匯出郵件",
     "import_email_success": "郵件已成功匯入",
-    "import_email_error": "無法匯入郵件"
+    "import_email_error": "無法匯入郵件",
+    "rule_created": "已建立規則",
+    "rule_merged": "已加入規則「{name}」",
+    "rule_already_covered": "規則「{name}」已涵蓋此項",
+    "rule_apply_existing": "{count, plural, other {套用到 # 封既有郵件}}",
+    "rule_applied": "{count, plural, =0 {沒有需要變更的郵件} other {已將規則套用到 # 封郵件}}",
+    "rule_apply_failed": "無法將規則套用到既有郵件",
+    "rule_edit": "編輯規則",
+    "rule_undo": "復原",
+    "rule_undone": "已復原規則變更",
+    "rule_undo_failed": "無法復原規則變更",
+    "rule_undo_conflict": "篩選規則在那之後已變更。請在篩選規則設定中復原該變更。",
+    "rule_folder_failed": "無法建立資料夾"
   },
   "date": {
     "today": "今天",
@@ -922,12 +951,25 @@
       "sidebar_apps": "側邊欄應用程式",
       "notifications": "通知",
       "layout": "版面配置",
+      "themes": "主題",
       "reading": "閱讀",
       "composing": "撰寫",
       "downloads": "下載",
       "content_senders": "內容與寄件者",
       "about_data": "關於與資料",
       "debug": "除錯"
+    },
+    "themes": {
+      "title": "主題",
+      "description": "從管理員部署的主題和內建預設集中選擇。",
+      "locked": "主題選擇已被管理員鎖定。",
+      "forced": "主題「{name}」由管理員強制指定，無法變更",
+      "admin_theme": "管理員主題",
+      "activated": "主題已啟用",
+      "default_restored": "已還原預設主題",
+      "default_name": "預設",
+      "default_badge": "預設",
+      "admin_enforced": "管理員強制"
     },
     "tab_groups": {
       "general": "一般",
@@ -1067,6 +1109,10 @@
         "label": "依標籤顏色為清單列上色",
         "description": "以第一個標籤的顏色為每封郵件列加上底色。停用後郵件列保持無底色，但標籤圓點與標籤仍會顯示該顏色。"
       },
+      "tint_list_rows_by_account": {
+        "label": "Tint List Rows by Account Color",
+        "description": "In the unified view, shade each row with its account color instead of showing the account dot. Takes precedence over the tag tint; tags keep their color on their chips."
+      },
       "show_folder_total_count": {
         "label": "顯示郵件總數",
         "description": "在信件匣與標籤旁顯示郵件總數及未讀數量。停用後只顯示未讀數量。"
@@ -1158,6 +1204,7 @@
         "status_active": "已在此裝置上啟用",
         "status_inactive": "在此裝置上未啟用",
         "status_unsupported": "此瀏覽器不支援 Web Push",
+        "status_lite": "Web Push is not available in Bulwark Lite; it needs the Bulwark server.",
         "status_busy": "工作中…",
         "enable": "啟用",
         "reenable": "重新註冊",
@@ -1195,7 +1242,9 @@
         "enabled": "郵件通知",
         "enabled_desc": "新郵件到達時顯示通知",
         "sound": "通知聲音",
-        "sound_desc": "新郵件到達時播放音訊提醒"
+        "sound_desc": "新郵件到達時播放音訊提醒",
+        "inbox_only": "Inbox only",
+        "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
       },
       "calendar": {
         "title": "行事曆通知",
@@ -1329,6 +1378,10 @@
         "label": "顯示預覽文字",
         "description": "在清單中顯示郵件預覽",
         "focus_description": "在專注模式的單列郵件清單中顯示行內預覽文字"
+      },
+      "show_verification_codes": {
+        "label": "顯示驗證碼",
+        "description": "提供登入與確認郵件中的驗證碼，一鍵複製（在清單中顯示一天，在郵件中始終顯示）"
       },
       "disable_threading": {
         "label": "停用對話串群組",
@@ -1707,14 +1760,36 @@
       },
       "link_device": {
         "title": "連結行動應用程式",
-        "description": "不需輸入即可登入 Bulwark Mail 行動應用程式。在這裡產生 QR Code，再從應用程式的登入畫面掃描。",
+        "description": "不需在手機上輸入密碼，即可登入手機上的 Bulwark Mail 應用程式。手機會取得獨立的登入狀態，因此在這裡登出不會讓手機登出。",
         "generate": "顯示 QR Code",
         "regenerate": "顯示新的 QR Code",
-        "instructions": "開啟 Bulwark Mail 應用程式，在登入畫面點選「掃描 QR Code」，再將相機對準這裡。",
+        "instructions": "開啟 Bulwark Mail 應用程式，在登入畫面點選「Scan a sign-in code」（如果已經登入，請點選「Add account」→「Scan a sign-in code」），再將相機對準這裡。",
         "expires_in": "此 QR Code 將在 {seconds} 秒後到期，且只能使用一次。",
         "expired": "此 QR Code 已到期。",
-        "generating": "正在產生…",
-        "error": "無法建立配對碼。請再試一次。"
+        "error": "無法建立配對碼。請再試一次。",
+        "password_prompt": "請輸入密碼以確認是你本人。手機會取得獨立的登入狀態；你的密碼不會傳送到手機。",
+        "show_password": "顯示密碼",
+        "hide_password": "隱藏密碼",
+        "continue": "繼續",
+        "error_wrong_password": "密碼錯誤，請再試一次。",
+        "totp_prompt": "請輸入驗證器應用程式中的驗證碼。",
+        "error_password_or_code": "密碼或驗證碼不正確。",
+        "error_not_signed_in": "你的工作階段已過期。請重新登入後再連結裝置。",
+        "error_impersonation": "檢視其他使用者的信箱時無法連結裝置。",
+        "error_too_many_attempts": "嘗試次數過多，請稍候再試。",
+        "error_session_secret": "此伺服器尚未設定裝置連結（缺少 SESSION_SECRET）。請洽詢管理員。",
+        "error_server_unreachable": "無法連線到你的郵件伺服器，請再試一次。",
+        "error_pairing_unavailable": "你的郵件伺服器不允許以這種方式連結裝置。請洽詢管理員。",
+        "qr_alt": "登入 QR Code",
+        "link_label": "登入連結",
+        "copy_link": "複製登入連結",
+        "copied": "已複製",
+        "copy_hint": "沒有相機？複製連結，然後在應用程式中透過「Paste sign-in link」貼上。",
+        "success_title": "已在手機上登入",
+        "success_body": "你可以關閉此頁面。若要連結其他裝置，請顯示新的 QR Code。",
+        "link_another": "連結其他裝置",
+        "use_sso": "改用單一登入",
+        "error_insecure_server": "行動應用程式只透過 https 連線到郵件伺服器，而此伺服器使用的是 http。"
       }
     },
     "identities": {
@@ -1777,7 +1852,9 @@
       "warnings": {
         "end_before_start": "結束日期必須晚於開始日期",
         "start_in_past": "開始日期已在過去",
-        "empty_body": "郵件內文為空 — 收件者將收到空白回覆"
+        "empty_body": "郵件內文為空 — 收件者將收到空白回覆",
+        "subject_too_long": "主旨對伺服器來說太長（最多 {max} 位元組）。",
+        "body_too_long": "訊息對伺服器來說太長（含格式最多 {max} 位元組）。"
       }
     },
     "folders": {
@@ -1998,6 +2075,7 @@
       "actions": "動作",
       "add_action": "新增動作",
       "stop_processing": "停止處理後續規則",
+      "include_spam": "同時移動被標記為垃圾郵件的郵件",
       "attachment_type_placeholder": "例如：pdf、doc、jpg",
       "value_placeholder_multi": "值（多個用逗號分隔）",
       "condition_fields": {
@@ -2021,7 +2099,9 @@
         "ends_with": "以…結尾",
         "matches": "符合模式",
         "greater_than": "大於",
-        "less_than": "小於"
+        "less_than": "小於",
+        "address_is": "地址為",
+        "domain_is": "網域為"
       },
       "action_types": {
         "move": "移至信件匣",
@@ -2039,6 +2119,8 @@
       "copy_to_folder": "選取信件匣",
       "forward_to": "轉寄至電子郵件地址",
       "forward_placeholder": "email@example.com",
+      "forward_keep_copy": "保留副本",
+      "forward_limit": "此伺服器每封郵件的轉寄上限：{count}。多餘的轉寄將被略過。",
       "reject_message": "拒絕留言",
       "reject_placeholder": "您的郵件已被拒絕",
       "label_name": "標籤名稱",
@@ -2094,7 +2176,26 @@
         "actions_count": "{count, plural, one {# 個動作} other {# 個動作}}"
       },
       "origin_external": "外部",
-      "managed_by_tooltip": "由 {source} 管理。請在該應用程式中編輯，或使用原始 Sieve 編輯器。"
+      "managed_by_tooltip": "由 {source} 管理。請在該應用程式中編輯，或使用原始 Sieve 編輯器。",
+      "quick_rule_names": {
+        "move_sender": "將 {sender} 的郵件移至 {folder}",
+        "move_domain": "將 @{domain} 的郵件移至 {folder}",
+        "move_list": "將清單 {list} 移至 {folder}",
+        "mark_read": "將 {sender} 的郵件標示為已讀",
+        "tag": "為 {sender} 的郵件加上標籤 {tag}",
+        "block": "封鎖 {sender}",
+        "custom": "來自 {sender} 的郵件",
+        "custom_plain": "新規則",
+        "senders": "{count, plural, other {# 位寄件者}}"
+      },
+      "suggestions": "建議",
+      "suggest_subject": "主旨「{subject}」",
+      "suggest_to": "收件者 {address}",
+      "suggest_cc": "副本 {address}",
+      "suggest_list": "List-Id",
+      "suggest_domain": "@{domain}",
+      "apply_existing": "也套用到此資料夾中既有的郵件",
+      "apply_existing_unsupported": "只有檢查寄件者、收件者、主旨或標頭，並執行移動、複製、標示為已讀、加上星號或標籤的規則，才能套用到既有郵件。"
     },
     "templates": {
       "title": "郵件範本",
@@ -2226,7 +2327,22 @@
     "cancel_scheduled_send": "取消傳送",
     "reschedule_send": "重新排程",
     "cancel_and_edit": "取消並編輯",
-    "cancel_and_compose_again": "取消並重新撰寫"
+    "cancel_and_compose_again": "取消並重新撰寫",
+    "rules": {
+      "title": "規則",
+      "move_from": "一律移動來自 {sender} 的郵件",
+      "move_from_domain": "一律移動來自 @{domain} 的郵件",
+      "move_from_list": "一律移動此郵件清單的郵件",
+      "mark_read_from": "一律將來自 {sender} 的郵件標示為已讀",
+      "tag_with": "一律加上標籤",
+      "block": "{count, plural, =1 {封鎖寄件者} other {封鎖 # 位寄件者}}",
+      "no_junk": "此帳號沒有垃圾郵件資料夾",
+      "create": "建立規則…",
+      "manage": "管理規則",
+      "senders_count": "{count, plural, other {# 位寄件者}}",
+      "cross_account": "請選取同一個帳號中的郵件",
+      "opaque_hint": "你的篩選規則曾被手動編輯。請開啟篩選規則設定"
+    }
   },
   "mailbox_context_menu": {
     "mark_folder_read": "將信件匣標示為已讀",
@@ -2789,6 +2905,8 @@
       "no_events": "沒有活動",
       "all_day": "全天",
       "more": "另有 {count} 個",
+      "show_more": "顯示更多",
+      "show_less": "顯示較少",
       "no_title": "（無標題）",
       "resize": "調整活動大小",
       "duplicate": "建立副本",
@@ -2915,7 +3033,10 @@
       "all_events": "所有活動",
       "cancel": "取消",
       "save": "儲存",
-      "delete": "刪除"
+      "delete": "刪除",
+      "rsvp_title": "回覆重複活動",
+      "rsvp_description": "這是重複活動。您的回覆適用於哪些活動？",
+      "respond": "回覆"
     },
     "alerts": {
       "title": "提醒",
@@ -2958,7 +3079,7 @@
       "enable_tasks": "啟用任務",
       "enable_tasks_desc": "在行事曆中顯示任務檢視以管理待辦事項",
       "show_tasks_on_calendar": "在行事曆上顯示任務",
-      "show_tasks_on_calendar_desc": "在行事曆的日／週檢視中顯示任務標籤",
+      "show_tasks_on_calendar_desc": "在行事曆的月／週／日檢視中顯示任務",
       "hover_preview": "活動游標暫留預覽",
       "hover_preview_desc": "游標移至行事曆活動上方時顯示詳細資料浮動視窗",
       "hover_preview_instant": "立即",
@@ -3026,6 +3147,9 @@
       "alert_now": "現在開始",
       "alert_in_minutes": "{count} 分鐘後",
       "invitation_sent": "已傳送邀請",
+      "invitations_denied_title": "無法傳送邀請",
+      "invitations_denied": "伺服器拒絕傳送邀請：{reason}。是否不傳送邀請直接儲存活動？",
+      "save_without_invitations": "不傳送邀請並儲存",
       "rsvp_updated": "回覆已更新",
       "rsvp_error": "無法更新回覆",
       "event_duplicated": "已建立活動副本",
@@ -3055,7 +3179,7 @@
       "supported_formats": "支援 iCalendar (.ics) 檔案",
       "url_description": "輸入外部 iCalendar（.ics）資料來源的 URL，以匯入活動。",
       "url_placeholder": "https://example.com/calendar.ics",
-      "url_hint": "支援 CalDAV 與 iCalendar（.ics）URL",
+      "url_hint": "支援 iCalendar（.ics）URL",
       "fetch": "取得",
       "invalid_url": "請輸入有效的 URL",
       "url_fetch_failed": "無法從 URL 取得行事曆",
@@ -3256,6 +3380,7 @@
     "body_placeholder": "內文包含…",
     "folder": "信件匣",
     "all_folders": "所有信件匣",
+    "all_folders_except_spam_trash": "除垃圾郵件和垃圾桶外的所有信件匣",
     "has_attachment": "附件",
     "date_after": "後",
     "date_before": "前",
@@ -3318,6 +3443,8 @@
     "rename": "重新命名",
     "rename_title": "重新命名",
     "new_name": "新名稱",
+    "name_forbidden_chars": "伺服器不允許名稱中包含這些字元：{chars}",
+    "name_reserved": "此名稱已被伺服器保留。",
     "delete": "刪除",
     "delete_confirm_title": "刪除項目",
     "delete_confirm_message": "您確定要刪除「{name}」嗎？此動作無法復原。",

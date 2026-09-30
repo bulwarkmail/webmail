@@ -4,7 +4,7 @@ import { useState, useCallback, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { X, Plus, Trash2 } from "lucide-react";
+import { X, Plus, Trash2 } from "@/components/icons";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { toast } from "@/stores/toast-store";
 import type {
@@ -16,14 +16,29 @@ import type {
   FilterActionType,
 } from "@/lib/jmap/sieve-types";
 import type { Mailbox } from "@/lib/jmap/types";
-import { buildMailboxTree, flattenMailboxTree, type MailboxNode, generateUUID } from "@/lib/utils";
+import { buildMailboxTree, flattenMailboxTree, type MailboxNode, generateUUID, cn } from "@/lib/utils";
+import type { RuleSuggestion } from "@/lib/filters/quick-rules";
+import { retroactiveSupport } from "@/lib/filters/retroactive";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useKeywordFormat } from "@/hooks/use-keyword-format";
 
 interface FilterRuleModalProps {
   rule?: FilterRule;
+  /**
+   * Values a new rule starts from ("Create rule…" on a message). Unlike
+   * `rule`, saving creates a rule rather than editing one.
+   */
+  initialRule?: FilterRule;
+  /** Conditions offered as one-click chips above the conditions. */
+  suggestions?: RuleSuggestion[];
+  /** Offer "Also apply to existing messages in this folder". */
+  offerApplyToExisting?: boolean;
   mailboxes: Mailbox[];
-  onSave: (rule: FilterRule) => void;
+  /** Server cap on redirects per message (Sieve `maxNumberRedirects`). */
+  maxRedirects?: number | null;
+  /** Forward actions in the other enabled rules, which share that cap. */
+  otherForwards?: number;
+  onSave: (rule: FilterRule, options?: { applyToExisting: boolean }) => void;
   onClose: () => void;
 }
 
@@ -35,6 +50,9 @@ const TEXT_COMPARATORS: FilterComparator[] = [
   "contains", "not_contains", "is", "not_is", "starts_with", "ends_with", "matches",
 ];
 
+// Address headers can also be compared on the parsed address.
+const ADDRESS_COMPARATORS: FilterComparator[] = [...TEXT_COMPARATORS, "address_is", "domain_is"];
+
 const SIZE_COMPARATORS: FilterComparator[] = ["greater_than", "less_than"];
 
 const ATTACHMENT_COMPARATORS: FilterComparator[] = ["has_any", "has_type"];
@@ -42,6 +60,7 @@ const ATTACHMENT_COMPARATORS: FilterComparator[] = ["has_any", "has_type"];
 function comparatorsFor(field: FilterConditionField): FilterComparator[] {
   if (field === "size") return SIZE_COMPARATORS;
   if (field === "attachment") return ATTACHMENT_COMPARATORS;
+  if (field === "from" || field === "to" || field === "cc") return ADDRESS_COMPARATORS;
   return TEXT_COMPARATORS;
 }
 
@@ -83,7 +102,12 @@ function makeEmptyAction(): FilterAction {
 
 export function FilterRuleModal({
   rule,
+  initialRule,
+  suggestions = [],
+  offerApplyToExisting = false,
   mailboxes,
+  maxRedirects,
+  otherForwards = 0,
   onSave,
   onClose,
 }: FilterRuleModalProps) {
@@ -92,15 +116,19 @@ export function FilterRuleModal({
   const emailKeywords = useSettingsStore((state) => state.emailKeywords);
   const { tagName } = useKeywordFormat();
 
-  const [name, setName] = useState(rule?.name || "");
-  const [matchType, setMatchType] = useState<"all" | "any">(rule?.matchType || "all");
+  const start = rule ?? initialRule;
+  const [name, setName] = useState(start?.name || "");
+  const [matchType, setMatchType] = useState<"all" | "any">(start?.matchType || "all");
   const [conditions, setConditions] = useState<FilterCondition[]>(
-    rule?.conditions.length ? [...rule.conditions] : [makeEmptyCondition()]
+    start?.conditions.length ? [...start.conditions] : [makeEmptyCondition()]
   );
   const [actions, setActions] = useState<FilterAction[]>(
-    rule?.actions.length ? [...rule.actions] : [makeEmptyAction()]
+    start?.actions.length ? [...start.actions] : [makeEmptyAction()]
   );
-  const [stopProcessing, setStopProcessing] = useState(rule?.stopProcessing ?? false);
+  const [stopProcessing, setStopProcessing] = useState(start?.stopProcessing ?? false);
+  const [includeSpam, setIncludeSpam] = useState(start?.includeSpam ?? false);
+  const [usedSuggestions, setUsedSuggestions] = useState<ReadonlySet<string>>(new Set());
+  const [applyToExisting, setApplyToExisting] = useState(false);
 
   const modalRef = useFocusTrap({ isActive: true, onEscape: onClose });
 
@@ -121,6 +149,58 @@ export function FilterRuleModal({
     return { hierarchicalMailboxes: flattenMailboxTree(tree), mailboxPathMap: pathMap };
   }, [mailboxes]);
 
+  // Rules saved before folder ids were stored only carry the path; resolve it
+  // so the select shows the folder and the next save adds the id.
+  const mailboxIdFor = useCallback((action: FilterAction): string => {
+    if (action.mailboxId) return action.mailboxId;
+    for (const [id, path] of mailboxPathMap) {
+      if (path === action.value) return id;
+    }
+    return "";
+  }, [mailboxPathMap]);
+
+  const forwardCount = actions.filter((a) => a.type === "forward").length;
+  const forwardLimit = typeof maxRedirects === "number" && maxRedirects > 0 ? maxRedirects : null;
+  const forwardOverLimit = forwardLimit !== null && forwardCount + otherForwards > forwardLimit;
+
+  // While editing, condition.value is always the raw string typed into the
+  // input (commas not yet split). Convert to array form here on save so a
+  // user typing "a, b, c" actually persists as ["a","b","c"]. This is the
+  // moment we know editing is finished - splitting earlier would eat any
+  // comma the user just typed mid-edit.
+  const validConditions = useMemo(() => conditions
+    .filter((c) => {
+      if (c.field === "attachment" && c.comparator === "has_any") return true;
+      return !isConditionValueEmpty(c.value);
+    })
+    .map((c) => {
+      if (c.field === "attachment" && c.comparator === "has_any") return c;
+      if (c.field === "size") return c; // numeric, single-value only
+      if (typeof c.value !== "string") return c; // already structured
+      const parsed = inputStringToValue(c.value);
+      return { ...c, value: parsed };
+    }), [conditions]);
+
+  const validActions = useMemo(() => actions
+    .map((a) => {
+      if (!ACTIONS_WITH_MAILBOX.has(a.type)) return a;
+      // Store the folder id next to the path and refresh the path from it,
+      // so a renamed folder keeps receiving the rule's mail.
+      const mailboxId = mailboxIdFor(a);
+      const path = mailboxId ? mailboxPathMap.get(mailboxId) : undefined;
+      return mailboxId ? { ...a, mailboxId, value: path ?? a.value } : a;
+    })
+    .filter((a) => !ACTIONS_WITH_VALUE.has(a.type) || a.value?.trim()), [actions, mailboxIdFor, mailboxPathMap]);
+
+  // Old mail can only be sorted by what the client can check the way Sieve
+  // does. Until an action is complete (a Move still without its folder), only
+  // the conditions decide.
+  const canApplyToExisting = useMemo(() => {
+    if (!offerApplyToExisting) return false;
+    const checkActions: FilterAction[] = validActions.length > 0 ? validActions : [{ type: "mark_read" }];
+    return retroactiveSupport({ conditions: validConditions, actions: checkActions }).ok;
+  }, [offerApplyToExisting, validConditions, validActions]);
+
   const handleSave = useCallback(() => {
     const trimmedName = name.trim();
     if (!trimmedName) {
@@ -128,46 +208,40 @@ export function FilterRuleModal({
       return;
     }
 
-    // While editing, condition.value is always the raw string typed into the
-    // input (commas not yet split). Convert to array form here on save so a
-    // user typing "a, b, c" actually persists as ["a","b","c"]. This is the
-    // moment we know editing is finished - splitting earlier would eat any
-    // comma the user just typed mid-edit.
-    const validConditions = conditions
-      .filter((c) => {
-        if (c.field === "attachment" && c.comparator === "has_any") return true;
-        return !isConditionValueEmpty(c.value);
-      })
-      .map((c) => {
-        if (c.field === "attachment" && c.comparator === "has_any") return c;
-        if (c.field === "size") return c; // numeric, single-value only
-        if (typeof c.value !== "string") return c; // already structured
-        const parsed = inputStringToValue(c.value);
-        return { ...c, value: parsed };
-      });
     if (validConditions.length === 0) {
       toast.error(t("validation_empty_conditions"));
       return;
     }
 
-    const validActions = actions.filter(
-      (a) => !ACTIONS_WITH_VALUE.has(a.type) || a.value?.trim()
-    );
     if (validActions.length === 0) {
       toast.error(t("validation_empty_actions"));
       return;
     }
 
     onSave({
-      id: rule?.id || generateUUID(),
+      id: start?.id || generateUUID(),
       name: trimmedName,
-      enabled: rule?.enabled ?? true,
+      enabled: start?.enabled ?? true,
       matchType,
       conditions: validConditions,
       actions: validActions,
       stopProcessing,
+      ...(includeSpam && validActions.some((a) => ACTIONS_WITH_MAILBOX.has(a.type)) ? { includeSpam: true } : {}),
+    }, { applyToExisting: applyToExisting && canApplyToExisting });
+  }, [name, matchType, validConditions, validActions, stopProcessing, includeSpam, start, onSave, t, applyToExisting, canApplyToExisting]);
+
+  const visibleSuggestions = suggestions.filter((s) => !usedSuggestions.has(s.id));
+
+  const applySuggestion = (suggestion: RuleSuggestion) => {
+    setConditions((prev) => {
+      // The blank row a rule starts with makes way for the suggestion.
+      const kept = prev.filter((c) => !(c.field !== "attachment" && isConditionValueEmpty(c.value)));
+      const replaceAt = suggestion.replaces ? kept.findIndex(suggestion.replaces) : -1;
+      if (replaceAt === -1) return [...kept, suggestion.condition];
+      return kept.map((c, i) => (i === replaceAt ? suggestion.condition : c));
     });
-  }, [name, matchType, conditions, actions, stopProcessing, rule, onSave, t]);
+    setUsedSuggestions((prev) => new Set(prev).add(suggestion.id));
+  };
 
   const updateCondition = (index: number, updates: Partial<FilterCondition>) => {
     setConditions((prev) =>
@@ -213,9 +287,16 @@ export function FilterRuleModal({
         if (updates.type && !ACTIONS_WITH_VALUE.has(updates.type)) {
           delete updated.value;
         }
+        if (updates.type && !ACTIONS_WITH_MAILBOX.has(updates.type)) {
+          delete updated.mailboxId;
+        }
+        if (updates.type && updates.type !== "forward") {
+          delete updated.keepCopy;
+        }
         if (updates.type && ACTIONS_WITH_MAILBOX.has(updates.type) && !updated.value) {
           const firstMb = hierarchicalMailboxes[0];
           updated.value = firstMb ? (mailboxPathMap.get(firstMb.id) || firstMb.name) : "";
+          if (firstMb) updated.mailboxId = firstMb.id;
         }
         return updated;
       })
@@ -301,6 +382,21 @@ export function FilterRuleModal({
             <label className="text-sm font-medium mb-2 block text-foreground">
               {t("conditions")}
             </label>
+            {visibleSuggestions.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mb-2" role="group" aria-label={t("suggestions")}>
+                {visibleSuggestions.map((suggestion) => (
+                  <button
+                    key={suggestion.id}
+                    type="button"
+                    onClick={() => applySuggestion(suggestion)}
+                    className="inline-flex items-center gap-1 max-w-full px-2 py-1 text-xs rounded-full border border-border bg-muted hover:bg-accent text-foreground transition-colors duration-150"
+                  >
+                    <Plus className="w-3 h-3 flex-shrink-0" />
+                    <span className="truncate">{suggestion.label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
             <div className="space-y-2">
               {conditions.map((condition, index) => (
                 <div key={index} className="flex items-center gap-2 flex-wrap">
@@ -429,36 +525,65 @@ export function FilterRuleModal({
                     aria-label={t("actions")}
                   >
                     {ALL_ACTION_TYPES.map((a) => (
-                      <option key={a} value={a}>
+                      <option
+                        key={a}
+                        value={a}
+                        disabled={
+                          a === "forward" && action.type !== "forward" && forwardLimit !== null &&
+                          forwardCount + otherForwards >= forwardLimit
+                        }
+                      >
                         {t(`action_types.${a}`)}
                       </option>
                     ))}
                   </select>
 
-                  {ACTIONS_WITH_MAILBOX.has(action.type) && (
-                    <select
-                      value={action.value || ""}
-                      onChange={(e) => updateAction(index, { value: e.target.value })}
-                      className={`${selectClass} flex-1 min-w-[140px]`}
-                      aria-label={t("move_to_folder")}
-                    >
-                      <option value="">{t("move_to_folder")}</option>
-                      {hierarchicalMailboxes.map((mb) => (
-                        <option key={mb.id} value={mailboxPathMap.get(mb.id) || mb.name}>
-                          {"\u00A0".repeat(mb.depth * 3)}{mb.name}
-                        </option>
-                      ))}
-                    </select>
-                  )}
+                  {ACTIONS_WITH_MAILBOX.has(action.type) && (() => {
+                    const selectedId = mailboxIdFor(action);
+                    const missing = !!selectedId && !mailboxPathMap.has(selectedId);
+                    return (
+                      <select
+                        value={selectedId}
+                        onChange={(e) => {
+                          const id = e.target.value;
+                          updateAction(index, {
+                            mailboxId: id || undefined,
+                            value: id ? (mailboxPathMap.get(id) ?? "") : "",
+                          });
+                        }}
+                        className={`${selectClass} flex-1 min-w-[140px]`}
+                        aria-label={t("move_to_folder")}
+                      >
+                        <option value="">{t("move_to_folder")}</option>
+                        {missing && <option value={selectedId}>{action.value}</option>}
+                        {hierarchicalMailboxes.map((mb) => (
+                          <option key={mb.id} value={mb.id}>
+                            {"\u00A0".repeat(mb.depth * 3)}{mb.name}
+                          </option>
+                        ))}
+                      </select>
+                    );
+                  })()}
 
                   {action.type === "forward" && (
-                    <Input
-                      value={action.value || ""}
-                      onChange={(e) => updateAction(index, { value: e.target.value })}
-                      placeholder={t("forward_placeholder")}
-                      type="email"
-                      className="flex-1 min-w-[180px]"
-                    />
+                    <>
+                      <Input
+                        value={action.value || ""}
+                        onChange={(e) => updateAction(index, { value: e.target.value })}
+                        placeholder={t("forward_placeholder")}
+                        type="email"
+                        className="flex-1 min-w-[180px]"
+                      />
+                      <label className="flex items-center gap-1.5 text-sm text-foreground">
+                        <input
+                          type="checkbox"
+                          checked={!!action.keepCopy}
+                          onChange={(e) => updateAction(index, { keepCopy: e.target.checked || undefined })}
+                          className="rounded border-input"
+                        />
+                        {t("forward_keep_copy")}
+                      </label>
+                    </>
                   )}
 
                   {action.type === "reject" && (
@@ -496,6 +621,11 @@ export function FilterRuleModal({
                 </div>
               ))}
             </div>
+            {forwardOverLimit && (
+              <p className="mt-2 text-xs text-amber-600 dark:text-amber-400">
+                {t("forward_limit", { count: forwardLimit })}
+              </p>
+            )}
             <button
               type="button"
               onClick={() => setActions((prev) => [...prev, makeEmptyAction()])}
@@ -518,6 +648,48 @@ export function FilterRuleModal({
               {t("stop_processing")}
             </label>
           </div>
+
+          {actions.some((a) => ACTIONS_WITH_MAILBOX.has(a.type)) && (
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="includeSpam"
+                checked={includeSpam}
+                onChange={(e) => setIncludeSpam(e.target.checked)}
+                className="rounded border-input"
+              />
+              <label htmlFor="includeSpam" className="text-sm text-foreground">
+                {t("include_spam")}
+              </label>
+            </div>
+          )}
+
+          {offerApplyToExisting && (
+            <div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="applyToExisting"
+                  checked={applyToExisting && canApplyToExisting}
+                  disabled={!canApplyToExisting}
+                  onChange={(e) => setApplyToExisting(e.target.checked)}
+                  className="rounded border-input disabled:opacity-50"
+                  aria-describedby={canApplyToExisting ? undefined : "applyToExistingHint"}
+                />
+                <label
+                  htmlFor="applyToExisting"
+                  className={cn("text-sm", canApplyToExisting ? "text-foreground" : "text-muted-foreground")}
+                >
+                  {t("apply_existing")}
+                </label>
+              </div>
+              {!canApplyToExisting && (
+                <p id="applyToExistingHint" className="mt-1 ms-6 text-xs text-muted-foreground">
+                  {t("apply_existing_unsupported")}
+                </p>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-border">

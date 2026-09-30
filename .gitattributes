@@ -1,0 +1,2 @@
+# Sourced by /bin/sh inside the Lite container image: CRLF would break it.
+*.envsh text eol=lf

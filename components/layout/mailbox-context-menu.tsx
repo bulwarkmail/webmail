@@ -22,7 +22,7 @@ import {
   RefreshCw,
   Upload,
   Users,
-} from "lucide-react";
+} from "@/components/icons";
 
 interface Position {
   x: number;

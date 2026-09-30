@@ -18,7 +18,7 @@ import {
   Trash2,
   Copy,
   Printer,
-} from "lucide-react";
+} from "@/components/icons";
 import type { ContactCard } from "@/lib/jmap/types";
 import { getContactPrimaryEmail } from "@/stores/contact-store";
 import { exportContact } from "./contact-export";

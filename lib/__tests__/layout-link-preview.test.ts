@@ -6,6 +6,7 @@ vi.mock('@/app/globals.css', () => ({}));
 vi.mock('next/font/google', () => ({
   Geist: () => ({ variable: '--font-geist-sans' }),
   Geist_Mono: () => ({ variable: '--font-geist-mono' }),
+  Hanken_Grotesk: () => ({ variable: '--font-hanken' }),
 }));
 vi.mock('@/components/service-worker-registration', () => ({ ServiceWorkerRegistration: () => null }));
 vi.mock('@/components/favicon-badge', () => ({ FaviconBadge: () => null }));

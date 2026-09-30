@@ -375,6 +375,19 @@ describe("parseRecipientList / formatRecipientList", () => {
   it("parses an empty string to an empty array", () => {
     expect(parseRecipientList("")).toEqual([]);
   });
+
+  it("keeps a display name with quotes as one recipient (no injected To)", () => {
+    // A sender named `Support", ceo@corp.example, "x` used to come back from
+    // the draft stash as three recipients, one of them the injected ceo.
+    const list = [{ name: 'Support", ceo@corp.example, "x', email: "help@vendor.example" }];
+    const serialized = formatRecipientList(list);
+    expect(parseRecipientList(serialized)).toEqual(list);
+  });
+
+  it("round-trips backslashes in a quoted name", () => {
+    const list = [{ name: 'a\\b, "c"', email: "x@example.com" }, { email: "y@example.com" }];
+    expect(parseRecipientList(formatRecipientList(list))).toEqual(list);
+  });
 });
 
 describe("splitPastedRecipients", () => {

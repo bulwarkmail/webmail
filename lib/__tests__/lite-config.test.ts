@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyLiteConfig, applyLitePolicy, LITE_FORCED_FLAGS } from '@/lib/lite-config';
+import { applyLiteConfig, applyLitePolicy, liteStalwartDefaults, LITE_FORCED_FLAGS } from '@/lib/lite-config';
 import { DEFAULT_POLICY } from '@/lib/admin/types';
 
 describe('applyLiteConfig (config.json for the static build)', () => {
@@ -112,5 +112,24 @@ describe('applyLitePolicy (policy.json for the static build)', () => {
   it('tolerates junk input', () => {
     expect(applyLitePolicy(null).features.themesEnabled).toBe(true);
     expect(applyLitePolicy('nope').features.pluginsEnabled).toBe(false);
+  });
+});
+
+describe('applyLiteConfig for the Stalwart bundle (same-origin defaults)', () => {
+  it('uses the page origin when config.json names no server, and hides the server field', () => {
+    const defaults = liteStalwartDefaults();
+    expect(defaults.jmapServerUrl).toBe(window.location.origin);
+    const config = applyLiteConfig({}, defaults);
+    expect(config.jmapServerUrl).toBe(window.location.origin);
+    expect(config.allowCustomJmapEndpoint).toBe(false);
+    expect(config.rememberMeEnabled).toBe(true);
+    expect(config.demoMode).toBe(false);
+    expect(applyLiteConfig({ jmapServerUrl: '' }, { jmapServerUrl: 'https://mail.example.com/' }).jmapServerUrl).toBe('https://mail.example.com');
+  });
+
+  it('still lets a custom build point elsewhere or show the field explicitly', () => {
+    const defaults = { jmapServerUrl: 'https://mail.example.com' };
+    expect(applyLiteConfig({ jmapServerUrl: 'https://other.example.com' }, defaults).jmapServerUrl).toBe('https://other.example.com');
+    expect(applyLiteConfig({ allowCustomJmapEndpoint: true }, defaults).allowCustomJmapEndpoint).toBe(true);
   });
 });

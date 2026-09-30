@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
 import { logger } from '@/lib/logger';
 import { configManager } from '@/lib/admin/config-manager';
 import { getStalwartCredentials } from '@/lib/stalwart/credentials';
@@ -18,6 +19,10 @@ import { DisallowedUrlError } from '@/lib/security/url-guard';
  * methods under the `x:` namespace on the same endpoint.
  */
 export async function POST(request: NextRequest) {
+  // CSRF gate (GHSA-9mvj-98f5-9q6g): this handler acts with the caller's
+  // session cookie, which SameSite=Lax still sends from a same-site page.
+  const crossOrigin = rejectCrossOriginRequest(request);
+  if (crossOrigin) return crossOrigin;
   // Registered unconditionally by Next, so the switch lives here: when the
   // passthrough (or Stalwart features as a whole) is disabled the route
   // does not exist as far as callers are concerned. Checked before the

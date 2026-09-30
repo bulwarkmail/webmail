@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { Mail, Tag } from 'lucide-react';
+import { Mail, Tag } from '@/components/icons';
 import { cn } from '@/lib/utils';
 import type { Email, Identity } from '@/lib/jmap/types';
 import { parseSubAddress } from '@/lib/sub-addressing';

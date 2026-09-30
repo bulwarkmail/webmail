@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
-import { Search, Download, Check, Loader2, Store, Puzzle, SwatchBook, Star, Eye, AlertTriangle, ArrowUpCircle } from 'lucide-react';
+import { Search, Download, Check, Loader2, Store, Puzzle, SwatchBook, Star, Eye, AlertTriangle, ArrowUpCircle } from '@/components/icons';
 import { apiFetch } from '@/lib/browser-navigation';
 import { compareVersions, isVersionSatisfied } from '@/lib/version-compare';
 

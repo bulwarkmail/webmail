@@ -1,13 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useSettingsStore } from '@/stores/settings-store';
 import { SettingsSection, SettingItem, ToggleSwitch, Select } from './settings-section';
 import { playNotificationSound, NOTIFICATION_SOUNDS } from '@/lib/notification-sound';
 import type { NotificationSoundChoice } from '@/lib/notification-sound';
 import { Button } from '@/components/ui/button';
-import { Loader2, RefreshCw, Volume2, XCircle } from 'lucide-react';
+import { Loader2, RefreshCw, Volume2, XCircle } from '@/components/icons';
 import { usePolicyStore } from '@/stores/policy-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
@@ -20,8 +20,10 @@ import {
   isWebPushSupported,
   listPushDevices,
   revokePushDevice,
+  serverSupportsEmailPush,
 } from '@/lib/web-push';
 import type { PushDevice } from '@/lib/web-push';
+import { IS_LITE } from '@/lib/lite';
 import {
   resolveActiveRelayUrl,
   resolvePushRelayOptions,
@@ -46,6 +48,7 @@ export function NotificationSettings() {
     emailNotificationsEnabled,
     emailNotificationSound,
     notificationSoundChoice,
+    pushNotifyInboxOnly,
     calendarNotificationsEnabled,
     calendarNotificationSound,
     calendarInvitationParsingEnabled,
@@ -60,6 +63,9 @@ export function NotificationSettings() {
   const { dialogProps: confirmDialogProps, confirm: confirmDialog } = useConfirmDialog();
 
   const supported = typeof window !== 'undefined' && isWebPushSupported();
+  // "Inbox only" is enforced by the server's emailPush filter; without that
+  // capability (Stalwart < 0.16.16) the toggle would do nothing.
+  const inboxOnlyAvailable = supported && !!client && serverSupportsEmailPush(client);
   const [pushStatus, setPushStatus] = useState<PushStatus>(
     supported ? { kind: 'idle' } : { kind: 'unsupported' },
   );
@@ -104,8 +110,10 @@ export function NotificationSettings() {
 
   const busy = pushStatus.kind === 'busy';
   const pushEnabled = pushStatus.kind === 'enabled';
+  // In the static Lite build push is off by design (no service worker, see
+  // components/service-worker-registration.tsx), not a browser limitation.
   const statusDescription = pushStatus.kind === 'unsupported'
-    ? `${t('push.status_unsupported')} ${t('push.ios_hint')}`
+    ? (IS_LITE ? t('push.status_lite') : `${t('push.status_unsupported')} ${t('push.ios_hint')}`)
     : busy
       ? t('push.status_busy')
       : pushEnabled
@@ -127,6 +135,7 @@ export function NotificationSettings() {
         relayBaseUrl: activeRelayUrl,
         accountLabel: username ?? undefined,
         forceRecreate,
+        inboxOnly: pushNotifyInboxOnly,
       });
       setPushStatus({ kind: 'enabled' });
     } catch (err) {
@@ -142,6 +151,48 @@ export function NotificationSettings() {
       await refreshDevices();
     }
   };
+
+  // Flipping "Inbox only" only writes the setting; the server-side JMAP push
+  // filter stays stale until the next app launch runs resyncWebPush. When push
+  // is already on for this device, re-run the enable flow now so the toggle
+  // takes effect immediately instead of "on next restart". The ref seeds to the
+  // mounted value so this never fires on mount or on an unrelated re-render.
+  const lastSyncedInboxOnly = useRef(pushNotifyInboxOnly);
+  useEffect(() => {
+    if (lastSyncedInboxOnly.current === pushNotifyInboxOnly) return;
+    lastSyncedInboxOnly.current = pushNotifyInboxOnly;
+    // Push off on this device: enabling it later builds the filter from the
+    // current setting, so there's nothing to re-sync now.
+    if (!client || pushStatus.kind !== 'enabled') return;
+
+    let cancelled = false;
+    setPushStatus({ kind: 'busy' });
+    void enableWebPush({
+      client,
+      relayBaseUrl: activeRelayUrl,
+      accountLabel: username ?? undefined,
+      inboxOnly: pushNotifyInboxOnly,
+    })
+      .then(() => { if (!cancelled) setPushStatus({ kind: 'enabled' }); })
+      .catch((err) => {
+        if (cancelled) return;
+        if (err instanceof WebPushUnsupportedError) {
+          setPushStatus({ kind: 'unsupported' });
+          return;
+        }
+        setPushStatus({
+          kind: 'error',
+          message: err instanceof Error ? err.message : 'Failed to update push filter',
+        });
+      })
+      .finally(() => { if (!cancelled) void refreshDevices(); });
+    return () => { cancelled = true; };
+    // Only the setting flip should trigger a re-sync. client / relay / username
+    // are read live from the recreated closure; depending on pushStatus.kind
+    // here would re-fire the effect on the busy->enabled transition it causes
+    // and cancel its own in-flight call (leaving the row stuck on "Working").
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pushNotifyInboxOnly]);
 
   const handleDisablePush = async () => {
     if (!client) return;
@@ -354,6 +405,20 @@ export function NotificationSettings() {
             disabled={!emailNotificationsEnabled}
           />
         </SettingItem>
+
+        {inboxOnlyAvailable && !isSettingHidden('pushNotifyInboxOnly') && (
+        <SettingItem
+          label={t('email.inbox_only')}
+          description={t('email.inbox_only_desc')}
+          locked={isSettingLocked('pushNotifyInboxOnly')}
+        >
+          <ToggleSwitch
+            checked={pushNotifyInboxOnly}
+            onChange={(checked) => updateSetting('pushNotifyInboxOnly', checked)}
+            disabled={!emailNotificationsEnabled}
+          />
+        </SettingItem>
+        )}
       </SettingsSection>
 
       <SettingsSection title={t('calendar.title')} description={t('calendar.description')}>

@@ -6,7 +6,7 @@ import { useSettingsStore } from '@/stores/settings-store';
 import type { ReplyIdentityMatch, SendDelaySeconds } from '@/stores/settings-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { SettingsSection, SettingItem, Select, ToggleSwitch } from './settings-section';
-import { X } from 'lucide-react';
+import { X } from '@/components/icons';
 import {
   SUPPORTED_SUB_ADDRESS_DELIMITERS,
   isSupportedSubAddressDelimiter,

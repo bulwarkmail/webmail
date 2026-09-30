@@ -59,25 +59,35 @@ vi.mock('@/lib/admin/audit', () => ({
   auditLog: (...args: unknown[]) => auditLog(...args),
 }));
 
+const creds = { trusted: true };
 vi.mock('@/lib/stalwart/credentials', () => ({
   getStalwartCredentials: async () => ({
     serverUrl: 'https://mail.example.com',
     authHeader: 'Bearer token',
     username: 'admin@example.com',
+    trusted: creds.trusted,
   }),
 }));
 
-// A Stalwart that says "yes, this account is an admin".
-const fetchMock = vi.fn(async (url: string) => {
+// A Stalwart where this account is the server-wide superuser: it may list
+// tenants. A tenant admin may list accounts but not tenants.
+const role = { current: 'superuser' as 'superuser' | 'tenant-admin' };
+const fetchMock = vi.fn(async (url: string, init?: { body?: string }) => {
   if (url.endsWith('/.well-known/jmap')) {
     return {
       ok: true,
       json: async () => ({ primaryAccounts: { 'urn:stalwart:jmap': 'a' } }),
     };
   }
+  const [method] = JSON.parse(init?.body ?? '{}').methodCalls[0];
+  const allowed = method === 'x:Account/query' || role.current === 'superuser';
   return {
     ok: true,
-    json: async () => ({ methodResponses: [['x:Account/query', { ids: [] }, '0']] }),
+    json: async () => ({
+      methodResponses: [allowed
+        ? [method, { ids: [] }, '0']
+        : ['error', { type: 'forbidden', description: 'You are not authorized to perform this action' }, '0']],
+    }),
   };
 });
 
@@ -109,6 +119,8 @@ describe('admin auth route - stalwartAdminAccess modes (#870)', () => {
     state.config = {};
     state.adminPasswordConfigured = false;
     state.hasAdminSession = false;
+    role.current = 'superuser';
+    creds.trusted = true;
     vi.stubGlobal('fetch', fetchMock);
   });
 
@@ -126,6 +138,34 @@ describe('admin auth route - stalwartAdminAccess modes (#870)', () => {
       expect(setAdminSessionCookie).toHaveBeenCalledTimes(1);
       expect(auditLog).toHaveBeenCalledWith('admin.login', { method: 'stalwart' }, '127.0.0.1');
     });
+  });
+
+  describe('tenant admin (GHSA-v6hr)', () => {
+    beforeEach(() => {
+      role.current = 'tenant-admin';
+    });
+
+    it('is not a Stalwart admin for the dashboard, even in auto mode', async () => {
+      const { body } = await callGet();
+      expect(body).toMatchObject({ stalwartAdmin: false, stalwartAutoLogin: false });
+
+      const login = await callPost({ stalwartAuth: true });
+      expect(login.status).toBe(403);
+      expect(setAdminSessionCookie).not.toHaveBeenCalled();
+    });
+  });
+
+  it('never asks a server the admin did not configure', async () => {
+    // A context cookie minted while allowCustomJmapEndpoint was on still
+    // names the user-chosen server after the switch is turned off.
+    creds.trusted = false;
+    const { body } = await callGet();
+    expect(body).toMatchObject({ stalwartAdmin: false, stalwartAutoLogin: false });
+
+    const login = await callPost({ stalwartAuth: true });
+    expect(login.status).toBe(403);
+    expect(setAdminSessionCookie).not.toHaveBeenCalled();
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   describe('password', () => {

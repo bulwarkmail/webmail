@@ -1,427 +1,161 @@
-<div align="center">
+<p>
+  <a href="https://bulwarkmail.org"><img src="https://raw.githubusercontent.com/bulwarkmail/.github/main/profile/banner.png" alt="Bulwark: webmail for Stalwart Mail Server. Mail, calendar, contacts and files in one browser client." width="100%" /></a>
+</p>
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="public/branding/Bulwark_Logo_with_Lettering_White_and_Color.svg" />
-  <source media="(prefers-color-scheme: light)" srcset="public/branding/Bulwark_Logo_with_Lettering_Dark_Color.svg" />
-  <img src="public/branding/Bulwark_Logo_with_Lettering_Dark_Color.svg" alt="Bulwark Webmail" width="280" />
-</picture>
+<p align="center">
+  <a href="https://github.com/bulwarkmail/webmail/releases/latest"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/bulwarkmail/.github/main/badges/release-dark.svg" /><img src="https://raw.githubusercontent.com/bulwarkmail/.github/main/badges/release.svg" alt="latest release" height="24" /></picture></a>&nbsp;
+  <a href="https://github.com/bulwarkmail/webmail/pkgs/container/webmail"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/bulwarkmail/.github/main/badges/docker-dark.svg" /><img src="https://raw.githubusercontent.com/bulwarkmail/.github/main/badges/docker.svg" alt="docker: ghcr.io/bulwarkmail/webmail" height="24" /></picture></a>&nbsp;
+  <a href="LICENSE"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/bulwarkmail/.github/main/badges/license-dark.svg" /><img src="https://raw.githubusercontent.com/bulwarkmail/.github/main/badges/license.svg" alt="license: AGPL v3" height="24" /></picture></a>&nbsp;
+  <a href="https://discord.gg/tYCujymGrT"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/bulwarkmail/.github/main/badges/discord-dark.svg" /><img src="https://raw.githubusercontent.com/bulwarkmail/.github/main/badges/discord.svg" alt="Discord members" height="24" /></picture></a>
+</p>
 
-# Bulwark Webmail
+<p align="center">
+  <a href="https://bulwarkmail.org">Website</a> ·
+  <a href="https://bulwarkmail.org/docs">Documentation</a> ·
+  <a href="https://demo.bulwarkmail.org">Live demo</a> ·
+  <a href="https://github.com/bulwarkmail/webmail/releases">Releases</a> ·
+  <a href="https://discord.gg/tYCujymGrT">Discord</a>
+</p>
 
-A self-hosted webmail client for [Stalwart Mail Server](https://stalw.art/), built with Next.js and the JMAP protocol.
+Bulwark Webmail is a self-hosted webmail client for [Stalwart Mail Server](https://stalw.art/). It talks to Stalwart over JMAP and puts mail, calendar, contacts and files behind one login, with one set of settings and one admin dashboard.
 
-[![License: AGPL v3](https://img.shields.io/badge/license-AGPL%20v3-blue.svg?logo=gnu&logoColor=white)](LICENSE)
-[![Discord](https://img.shields.io/discord/1482128142939455674?color=7289da&label=discord&logo=discord&logoColor=white)](https://discord.gg/tYCujymGrT)
-[![Version](https://img.shields.io/badge/version-1.10.0-green.svg?logo=git&logoColor=white)](CHANGELOG.md)
-[![Docker](https://img.shields.io/badge/docker-ghcr.io%2Fbulwarkmail%2Fwebmail-blue?logo=docker&logoColor=white)](https://ghcr.io/bulwarkmail/webmail)
-</div>
+<p align="center">
+  <a href="https://bulwarkmail.org/docs/features/overview"><picture><source media="(prefers-color-scheme: dark)" srcset="screenshots/dark-laptop-phone.webp" /><img src="screenshots/light-laptop-phone.webp" alt="Bulwark inbox on a laptop, with the same message open on a phone" width="100%" /></picture></a>
+</p>
+
+## Contents
+
+- [Screenshots](#screenshots)
+- [Features](#features)
+- [Quick start](#quick-start)
+- [Other ways to install](#other-ways-to-install)
+- [Configuration](#configuration)
+- [Documentation](#documentation)
+- [Development](#development)
+- [Use of AI](#use-of-ai)
+- [Community and support](#community-and-support)
+- [License](#license)
 
 ## Screenshots
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="screenshots/mail-dark.png" />
-  <img src="screenshots/mail-white.png" alt="Mail view" width="100%" />
-</picture>
+<p align="center">
+  <a href="https://bulwarkmail.org/docs/features/calendar"><picture><source media="(prefers-color-scheme: dark)" srcset="screenshots/dark-calendar-week.webp" /><img src="screenshots/light-calendar-week.webp" alt="Calendar week view with events from several calendars" width="49%" /></picture></a>
+  <a href="https://bulwarkmail.org/docs/features/contacts"><picture><source media="(prefers-color-scheme: dark)" srcset="screenshots/dark-contact.webp" /><img src="screenshots/light-contact.webp" alt="Contact details with recent mail and upcoming events" width="49%" /></picture></a>
+  <br />
+  <sub>Calendar week view&nbsp;&nbsp;·&nbsp;&nbsp;Contact details with recent mail and upcoming events</sub>
+</p>
 
-<table>
-<tr>
-<td width="50%"><img src="screenshots/calendar.png" alt="Calendar" /></td>
-<td width="50%"><img src="screenshots/contacts.png" alt="Contacts" /></td>
-</tr>
-<tr>
-<td><sub><b>Calendar</b> – month, week, day, and agenda views with drag-to-reschedule, iMIP invitations, and CalDAV subscriptions.</sub></td>
-<td><sub><b>Contacts</b> – multiple address books, groups, vCard import/export, and autocomplete in the composer.</sub></td>
-</tr>
-<tr>
-<td><img src="screenshots/theme.png" alt="Themes" /></td>
-<td><img src="screenshots/plugins.png" alt="Plugins" /></td>
-</tr>
-<tr>
-<td><sub><b>Themes</b> – bundled color themes or upload your own as ZIP bundles; admins can enforce presets.</sub></td>
-<td><sub><b>Plugins</b> – extend the client with bundled or third-party plugins installed from a .zip file.</sub></td>
-</tr>
-<tr>
-<td><img src="screenshots/mail-white.png" alt="Light mode" /></td>
-<td><img src="screenshots/settings.png" alt="Settings" /></td>
-</tr>
-<tr>
-<td><sub><b>Light mode</b> – full theme support, remapping HTML email colors by luminance so dark-on-dark text stays readable.</sub></td>
-<td><sub><b>Settings</b> – appearance, identities, filters, templates, security, and more.</sub></td>
-</tr>
-</table>
+<p align="center">
+  <a href="https://bulwarkmail.org/docs/features/email/composing"><picture><source media="(prefers-color-scheme: dark)" srcset="screenshots/dark-composer.webp" /><img src="screenshots/light-composer.webp" alt="Rich-text composer next to the message list" width="49%" /></picture></a>
+  <a href="https://bulwarkmail.org/docs/guides/customization"><img src="screenshots/split-inbox.webp" alt="The inbox split diagonally between the light and dark theme" width="49%" /></a>
+  <br />
+  <sub>Composer with identities and formatting&nbsp;&nbsp;·&nbsp;&nbsp;Light and dark themes</sub>
+</p>
 
-## What Bulwark includes
+## Features
 
-Bulwark is a full webmail suite. It bundles the four apps most self-hosters end up wanting:
+- [Mail](https://bulwarkmail.org/docs/features/email): threading, unified inbox, cross-account views, [full-text search](https://bulwarkmail.org/docs/features/email/search), Sieve filters, [S/MIME](https://bulwarkmail.org/docs/guides/smime), templates, scheduled send
+- [Calendar](https://bulwarkmail.org/docs/features/calendar): month, week, day and agenda views, recurring events, iMIP invitations, CalDAV subscriptions
+- [Contacts](https://bulwarkmail.org/docs/features/contacts): several address books, groups, vCard import and export
+- [Files](https://bulwarkmail.org/docs/features/files): Stalwart's JMAP file storage, with previews, sharing and folder upload
 
-- **Mail** – threading, unified inbox, cross-account "All accounts" views, full-text search, Sieve filters, S/MIME, templates
-- **Calendar** – month/week/day/agenda, recurring events, iMIP invitations, CalDAV subscriptions
-- **Contacts** – multiple address books, groups, vCard import/export
-- **Files** – Stalwart's JMAP FileNode storage with previews and folder upload
+All four share [single sign-on](https://bulwarkmail.org/docs/getting-started/configuration/authentication) and [2FA](https://bulwarkmail.org/docs/guides/account-security), [multiple accounts](https://bulwarkmail.org/docs/guides/multi-account), 27 languages, [PWA install and web push](https://bulwarkmail.org/docs/features/pwa), [themes](https://bulwarkmail.org/docs/guides/customization), [plugins](https://bulwarkmail.org/docs/guides/plugins) and [keyboard shortcuts](https://bulwarkmail.org/docs/guides/keyboard-shortcuts). The full list is on the [All features](https://bulwarkmail.org/docs/features/overview) page.
 
-They share one login, one settings store, and one admin dashboard. SSO, 2FA, multi-account, 27 languages, PWA install, themes, and plugins apply across all four.
-
-Full feature list: **[FEATURES.md](FEATURES.md)**.
-
----
+There are two [editions](https://bulwarkmail.org/docs/getting-started/editions). The full edition runs as a Node.js server and adds the admin dashboard, OAuth, plugins and settings sync. [Bulwark Lite](https://bulwarkmail.org/docs/getting-started/lite) is the same client as static files, served by any web host or by Stalwart itself.
 
 ## Quick start
-
-### Docker
 
 ```bash
 docker run -d -p 3000:3000 ghcr.io/bulwarkmail/webmail:latest
 ```
 
-Or with Docker Compose:
+Then open `http://localhost:3000`. A setup wizard asks for your Stalwart server and an admin password. The [installation guide](https://bulwarkmail.org/docs/getting-started/installation) has the details, and [Stalwart setup](https://bulwarkmail.org/docs/getting-started/configuration/stalwart-setup) covers the mail server side.
 
-```bash
-docker compose up -d
+## Other ways to install
+
+| Method | Guide |
+| --- | --- |
+| Docker Compose | [Compose](https://bulwarkmail.org/docs/deployment/docker/compose) |
+| Behind a reverse proxy or on a sub-path | [Reverse proxy](https://bulwarkmail.org/docs/deployment/docker/reverse-proxy) |
+| From source, without Docker | [Manual install](https://bulwarkmail.org/docs/deployment/manual) |
+| Lite on any static host | [Static hosting](https://bulwarkmail.org/docs/deployment/static) |
+| Lite as a container | [Container image](https://bulwarkmail.org/docs/deployment/static#container-image) |
+| Lite served by Stalwart | [Install on Stalwart](https://bulwarkmail.org/docs/deployment/stalwart-app) |
+
+[Updating](https://bulwarkmail.org/docs/deployment/updating) explains how to move to a new version.
+
+Container images and release files published after 1.11.2 come with a signed build provenance attestation. To check that one was built by this repository's workflows, run `gh attestation verify oci://ghcr.io/bulwarkmail/webmail:<version> --owner bulwarkmail` for an image, or `gh attestation verify <file> --repo bulwarkmail/webmail` for a downloaded file. Release files also have a `.sha256` next to them.
+
+## Configuration
+
+Most installs are set up in the wizard on first launch and changed later in the [admin dashboard](https://bulwarkmail.org/docs/guides/admin). You can also use environment variables, which fit read-only or immutable deployments better. When both set the same key, the value saved in the admin config wins, so an environment variable only fills in what the admin config leaves unset.
+
+```env
+JMAP_SERVER_URL=https://mail.example.com
+APP_NAME=My Webmail
 ```
 
-On first launch, open `http://localhost:3000` and the setup wizard takes over. Installs that already define `JMAP_SERVER_URL` skip it and keep the env-managed flow under [Configuration](#configuration).
+| Topic | Guide |
+| --- | --- |
+| Overview, config files and precedence | [Configuration](https://bulwarkmail.org/docs/getting-started/configuration) |
+| Every variable | [Environment reference](https://bulwarkmail.org/docs/getting-started/configuration/environment-reference) |
+| OAuth2 / OIDC and single sign-on | [Authentication](https://bulwarkmail.org/docs/getting-started/configuration/authentication), [Embedded SSO](https://bulwarkmail.org/docs/guides/embedded-sso) |
+| Several JMAP servers, custom endpoints | [Multi-server deployments](https://bulwarkmail.org/docs/getting-started/configuration/stalwart-setup#multi-server-deployments), [Custom endpoints](https://bulwarkmail.org/docs/getting-started/configuration#custom-jmap-server-endpoints) |
+| Branding, logos, per-domain branding | [Customization](https://bulwarkmail.org/docs/guides/customization) |
+| Anonymous telemetry (off by default) | [Anonymous usage stats](https://bulwarkmail.org/docs/features/telemetry) |
 
-### From source
+## Documentation
+
+All documentation is at [bulwarkmail.org/docs](https://bulwarkmail.org/docs):
+
+- Getting started: [Introduction](https://bulwarkmail.org/docs/getting-started/introduction), [Installation](https://bulwarkmail.org/docs/getting-started/installation), [Editions](https://bulwarkmail.org/docs/getting-started/editions), [Bulwark Lite](https://bulwarkmail.org/docs/getting-started/lite), [Demo mode](https://bulwarkmail.org/docs/getting-started/demo-mode)
+- Deployment: [Docker](https://bulwarkmail.org/docs/deployment/docker), [Manual install](https://bulwarkmail.org/docs/deployment/manual), [Static hosting](https://bulwarkmail.org/docs/deployment/static), [Install on Stalwart](https://bulwarkmail.org/docs/deployment/stalwart-app), [Updating](https://bulwarkmail.org/docs/deployment/updating)
+- Guides: [Admin dashboard](https://bulwarkmail.org/docs/guides/admin), [Account security](https://bulwarkmail.org/docs/guides/account-security), [Impersonation](https://bulwarkmail.org/docs/guides/impersonation), [Plugins](https://bulwarkmail.org/docs/guides/plugins), [Marketplace](https://bulwarkmail.org/docs/guides/marketplace), [Troubleshooting](https://bulwarkmail.org/docs/guides/troubleshooting)
+- Extensions: [Introduction](https://bulwarkmail.org/docs/extensions/introduction), [manifest.json](https://bulwarkmail.org/docs/extensions/manifest), [Publishing](https://bulwarkmail.org/docs/extensions/publishing)
+- Development: [Architecture](https://bulwarkmail.org/docs/development/architecture), [Contributing](https://bulwarkmail.org/docs/development/contributing)
+- Legal: [Privacy](https://bulwarkmail.org/docs/legal/privacy)
+
+The pages are Markdown files in the [website repository](https://github.com/bulwarkmail/website/tree/main/docs). Send corrections there.
+
+## Development
 
 ```bash
 git clone https://github.com/bulwarkmail/webmail.git
 cd webmail
 npm install
-npm run build && npm start
-# Then open http://localhost:3000 to run the setup wizard
+cp .env.dev.example .env.local   # built-in mock JMAP server, no mail server needed
+npm run dev
 ```
 
-### Static Lite build
-
-Bulwark Lite is the same client exported as static files: no Node.js process, upload the folder to any static host (nginx, Caddy, Netlify, Cloudflare Pages, GitHub Pages, an S3 bucket). Mail, calendar, contacts and files talk to the JMAP server straight from the browser, so the only server-side requirement is CORS on the mail server (`http.permissive-cors = true` in Stalwart).
-
-Every release ships `bulwark-lite-<version>.zip`, and the **Build Static Lite** workflow can be dispatched with a fixed server URL, app name, sub-path mount, locale subset or the demo flag. To build locally:
-
 ```bash
-git worktree add ../bulwark-lite HEAD   # disposable checkout: the build deletes server-only trees
-cd ../bulwark-lite && npm ci
-LITE_JMAP_SERVER_URL=https://mail.example.com npm run build:lite -- --in-place
-npm run lite:serve                       # http://localhost:4173/
-```
-
-`out/` then holds one shell per locale and surface plus the deployer files: `config.json` (server URL, app name, login branding; editable without a rebuild), `policy.json`, `manifest.webmanifest`, `_redirects` and `_headers` (Netlify/Cloudflare), `nginx.conf.example`, `Caddyfile.example`, a `404.html` that replays deep links on hosts without rewrite rules, and `LITE-README.md` with the three-step setup. Build inputs: `LITE_JMAP_SERVER_URL`, `LITE_APP_NAME`, `LITE_ALLOW_CUSTOM_ENDPOINT`, `LITE_REMEMBER_ME`, `LITE_DEMO_MODE`, `LITE_LOCALES` (e.g. `en,de`), `NEXT_PUBLIC_BASE_PATH`.
-
-Lite keeps everything that runs in the browser (multi-account, password and TOTP login, "remember me" via Stalwart refresh tokens, themes, deep links, demo mode). Server-backed features are off: the admin console and setup wizard, plugins and sidebar apps, settings sync, OAuth/SSO, the account security tab, ICS URL subscriptions and CalDAV discovery, sender favicons, office editing, web push, the update banner. `scripts/lite/verify.mjs` fails the build if a client chunk references a server endpoint that is not documented in `scripts/lite/lib.mjs`, and `npm run test:lite-smoke` drives a demo export with Playwright.
-
-### Development
-
-```bash
-cp .env.dev.example .env.local   # Built-in mock JMAP server, no mail server needed
-
-npm run dev                # Dev server
 npm run typecheck
 npm run lint
-npx vitest run             # Unit tests
-npm run test:integration   # Dockerized Stalwart + Playwright suite (see integration/README.md)
+npx vitest run             # unit tests
+npm run test:integration   # Stalwart in Docker + Playwright
 ```
 
-## Configuration
+The [contributing guide](https://bulwarkmail.org/docs/development/contributing) covers tests, translations, code style and pull requests. [Architecture](https://bulwarkmail.org/docs/development/architecture) explains how the code is organized.
 
-Most deployments are configured through the setup wizard on first launch, then the admin dashboard; those values live in the admin config directory rather than `.env.local`. Environment variables still work, and they suit read-only or immutable infrastructure better. An environment variable always wins over the admin-managed value, so setting `JMAP_SERVER_URL` hides that field from the wizard and locks it in the admin UI.
+The stack: [Next.js 16](https://nextjs.org/) and React 19, TypeScript, [Tailwind CSS v4](https://tailwindcss.com/), [Zustand](https://zustand-demo.pmnd.rs/), [Tiptap](https://tiptap.dev/), [next-intl](https://next-intl-docs.vercel.app/), [Tabler Icons](https://tabler.io/icons), and our own JMAP client (RFC 8620). Tests run on [Vitest](https://vitest.dev/) and [Playwright](https://playwright.dev/).
 
-Nearly all variables are evaluated at runtime, so Docker deployments can be reconfigured without rebuilding. The exceptions are the `NEXT_PUBLIC_*` ones noted below, which Next.js bakes in at build time. Edit `.env.local`:
+## Use of AI
 
-```env
-# Optional – overrides whatever the wizard writes
-JMAP_SERVER_URL=https://mail.example.com
-APP_NAME=My Webmail
-```
+AI tools are part of how Bulwark is developed. A change is held to the same standard whether a person or a tool wrote it: it has to be understood, reviewed and pass the checks and tests before it is merged.
 
-<details>
-<summary>Server listen address</summary>
+Bulwark itself has no AI features and doesn't send your mail, contacts, calendar or files to an AI service. If your Stalwart server classifies spam with an LLM, Bulwark shows the verdict, but the classification happens on your server.
 
-```env
-HOSTNAME=0.0.0.0    # Default; use "::" for IPv6
-PORT=3000
-```
+Contributors can use AI tools too, as long as they use capable, current models and not small or outdated ones. The [contributing guide](https://bulwarkmail.org/docs/development/contributing#ai-assisted-contributions) explains what we expect.
 
-</details>
+## Community and support
 
-<details>
-<summary>OAuth2 / OIDC</summary>
-
-```env
-OAUTH_ENABLED=true
-OAUTH_ONLY=true                   # hide the username/password form entirely
-OAUTH_CLIENT_ID=webmail
-OAUTH_CLIENT_SECRET=              # optional, for confidential clients
-OAUTH_CLIENT_SECRET_FILE=         # path to a file containing the secret
-OAUTH_ISSUER_URL=                 # optional, for external IdPs
-OAUTH_AUTHORIZE_URL=              # override only the user-facing authorize endpoint
-OAUTH_ALLOW_PRIVATE_ENDPOINTS=    # allow discovery to resolve to RFC-1918 addresses
-
-OAUTH_SCOPES=                     # replace the requested scopes (space-separated)
-OAUTH_EXTRA_SCOPES=               # append to the defaults instead of replacing them
-AUTO_SSO_ENABLED=true             # skip the login form, go straight to the IdP
-```
-
-Endpoints are auto-discovered via `.well-known/oauth-authorization-server` or `.well-known/openid-configuration`. `OAUTH_ALLOW_PRIVATE_ENDPOINTS` is off by default as an SSRF guard. Enable it only for split-DNS deployments where the issuer's public hostname resolves to an internal IP.
-
-</details>
-
-<details>
-<summary>Anonymous telemetry</summary>
-
-```env
-BULWARK_TELEMETRY=on                 # opt-in; off by default
-TELEMETRY_DATA_DIR=./data/telemetry  # instance id and consent; mount a volume
-```
-
-Off unless you turn it on, in the admin UI, the installer, or here. Heartbeats carry version, platform, bucketed account counts, and feature toggles. No email addresses, hostnames, or IPs. Setting the variable (to either value) locks the choice and disables the admin toggle.
-
-</details>
-
-<details>
-<summary>Session & settings sync</summary>
-
-```env
-SESSION_SECRET=                      # openssl rand -base64 32
-SESSION_SECRET_FILE=/session-secret  # path to a file containing the secret
-
-SETTINGS_SYNC_ENABLED=true
-SETTINGS_DATA_DIR=./data/settings    # mount as a volume in Docker
-```
-
-Credentials are encrypted with AES-256-GCM and stored in an httpOnly cookie (30-day expiry). Settings sync stores per-account preferences encrypted at rest and requires `SESSION_SECRET`.
-
-</details>
-
-<details>
-<summary>Multiple JMAP servers & custom endpoints</summary>
-
-```env
-ALLOW_CUSTOM_JMAP_ENDPOINT=true
-
-JMAP_SERVERS=[{"id":"eu","label":"Europe","url":"https://eu.example.com","domains":["example.com"]},{"id":"us","label":"US","url":"https://us.example.com"}]
-JMAP_SERVER_AUTO_PICK_BY_DOMAIN=true
-```
-
-`ALLOW_CUSTOM_JMAP_ENDPOINT` shows a "JMAP Server" field on the login form. External servers must CORS-allow the webmail origin.
-
-`JMAP_SERVERS` offers a fixed list instead; each entry needs `id`, `label`, and `url`, and may carry `domains` and its own `oauth` block. With `JMAP_SERVER_AUTO_PICK_BY_DOMAIN`, the domain of the address the user types selects the server. The admin dashboard manages the same list — the env form is for stateless deployments.
-
-</details>
-
-<details>
-<summary>Branding & PWA</summary>
-
-```env
-APP_NAME=My Webmail
-APP_SHORT_NAME=Webmail
-APP_DESCRIPTION=Your personal mail
-
-FAVICON_URL=/branding/favicon.svg
-PWA_ICON_URL=/branding/icon.svg      # falls back to FAVICON_URL
-PWA_THEME_COLOR=#3b82f6
-PWA_BACKGROUND_COLOR=#ffffff
-
-APP_LOGO_LIGHT_URL=/branding/logo-light.svg
-APP_LOGO_DARK_URL=/branding/logo-dark.svg
-LOGIN_LOGO_LIGHT_URL=/branding/login-light.svg
-LOGIN_LOGO_DARK_URL=/branding/login-dark.svg
-
-LOGIN_COMPANY_NAME=My Company
-LOGIN_WEBSITE_URL=https://example.com
-LOGIN_IMPRINT_URL=https://example.com/imprint
-LOGIN_PRIVACY_POLICY_URL=https://example.com/privacy
-
-# Web push goes through a hosted relay, so no VAPID keys or Firebase project
-# of your own. Point this at your own relay to opt out. Build-time variable.
-NEXT_PUBLIC_PUSH_RELAY_URL=https://notifications.relay.bulwarkmail.org
-
-# Per-domain overrides (optional). When the webmail is served on multiple
-# hostnames, each host can override any subset of the branding fields above.
-# Match is on the request Host (or X-Forwarded-Host). Use "*.example.com" to
-# match any subdomain. Unset fields fall back to the global values.
-DOMAIN_BRANDING=[{"host":"maildomain1.com","loginCompanyName":"Company One","loginLogoLightUrl":"/branding/one.svg"},{"host":"maildomain2.com","loginCompanyName":"Company Two"}]
-```
-
-</details>
-
-<details>
-<summary>Extension directory</summary>
-
-```env
-EXTENSION_DIRECTORY_URL=https://extensions.bulwarkmail.org
-PLUGIN_DEV_DIR=../my-plugins          # load plugins from disk instead of ZIPs
-```
-
-`EXTENSION_DIRECTORY_URL` enables the admin marketplace for browsing and installing plugins and themes. `PLUGIN_DEV_DIR` is for plugin authors: each immediate subfolder is one plugin with a `manifest.json`, and an entrypoint under `src/` is bundled on demand with esbuild, so editing sources needs only a browser refresh.
-
-Sandboxed plugins that integrate provider-side labels can use the native
-`api.keywords` facade exposed by `@plugin-host`:
-
-```js
-const api = require('@plugin-host');
-
-const known = await api.keywords.list();                 // settings:read
-const scan = await api.jmap.getKeywords();               // email:read
-const providerLabel = scan.labels
-  .find((label) => label.id.startsWith('$label:'));
-if (providerLabel) {
-  await api.keywords.add([{                              // settings:write
-    id: providerLabel.id.slice('$label:'.length),
-    label: providerLabel.name,
-    // color is optional; Bulwark picks a palette colour when omitted
-    visibility: 'show',
-  }]);
-}
-const current = await api.keywords.list();               // settings:read
-await api.keywords.reorder(current.map(({ id }) => id), { // settings:write
-  caseSensitive: false, // default
-});
-const counts = await api.keywords.refreshCounts();        // email:read
-
-// Complete replacement: keywords omitted here are removed from the message.
-await api.jmap.setKeywords('email-id', {                 // email:write
-  '$seen': true,
-  '$label:provider-label-id': true,
-});
-await api.jmap.setKeyword('email-id', '$label:work');     // email:write
-await api.jmap.removeKeyword('email-id', '$label:work');  // email:write
-```
-
-`jmap.getKeywords()` is a narrow read-only facade rather than an arbitrary JMAP
-request API. When the JMAP server advertises
-`https://bulwarkmail.com/ns/jmap/keywords`, it returns all cached keywords with
-exact total/unread counts and provider-label metadata, including empty provider
-labels. On servers without the capability it falls back to a bounded scan of
-message keywords. `keywords.discover()` retains its original message-scan
-response for compatibility.
-
-`jmap.setKeywords()` replaces one message's complete keyword map via
-`Email/set`. Omitted keywords are removed, so extensions should use the existing
-`jmap.setKeyword()` and `jmap.removeKeyword()` methods for incremental edits.
-The existing `email.setKeyword()` and `email.removeKeyword()` names remain as
-compatibility aliases.
-
-`keywords.add()` is append-only and case-insensitive by id: it returns added
-and skipped definitions without overwriting the user's existing label name,
-colour, visibility, or order. `keywords.reorder()` accepts a complete
-permutation of the existing label ids and changes only their order; missing,
-unknown, or duplicate ids are rejected without changing settings. Matching is
-case-insensitive by default; pass `{ caseSensitive: true }` to require exact id
-casing. Keyword discovery reports whether its bounded scan was complete.
-
-</details>
-
-<details>
-<summary>Stalwart integration & logging</summary>
-
-```env
-STALWART_FEATURES=true               # password change, Sieve filters, etc.
-
-LOG_FORMAT=text                      # "text" or "json"
-LOG_LEVEL=info                       # error | warn | info | debug
-```
-
-</details>
-
-<details>
-<summary>Admin data directories</summary>
-
-```env
-ADMIN_CONFIG_DIR=./data/admin        # operator-authored: config.json, policy.json, plugins/, themes/
-ADMIN_STATE_DIR=./data/admin-state   # runtime: audit log, login timestamps, setup token
-ADMIN_CONFIG_READONLY=true           # enforce read-only mode at the app layer
-```
-
-The split lets you mount the config volume read-only after the setup wizard completes. Legacy installs that pre-date the split keep working through `ADMIN_DATA_DIR`.
-
-</details>
-
-<details>
-<summary>Default UI locale</summary>
-
-The UI language follows each visitor's `Accept-Language` header and their stored preference. `NEXT_PUBLIC_DEFAULT_LOCALE` sets the fallback used when neither matches a supported locale (default `en`):
-
-```env
-NEXT_PUBLIC_DEFAULT_LOCALE=de
-```
-
-Supported: `ar`, `ca`, `cs`, `da`, `de`, `en`, `es`, `fa`, `fr`, `he`, `hu`, `it`, `ja`, `ko`, `lv`, `nl`, `pl`, `pt`, `ro`, `ru`, `sk`, `tr`, `uk`, `zh`. An unsupported value falls back to `en`.
-
-Like `NEXT_PUBLIC_BASE_PATH`, this is read at **build time**. To use it with the published Docker image, build your own:
-
-```bash
-docker build --build-arg NEXT_PUBLIC_DEFAULT_LOCALE=de -t bulwark-webmail .
-```
-
-</details>
-
-<details>
-<summary>Subpath / reverse proxy mount</summary>
-
-To serve the webmail at a subpath (e.g. `https://example.com/webmail`):
-
-```env
-NEXT_PUBLIC_BASE_PATH=/webmail
-NEXT_PUBLIC_LOCALE_PREFIX=always     # avoids next-intl rewrite loops
-```
-
-Unlike most other variables, `NEXT_PUBLIC_BASE_PATH` is read at **build time** because Next.js bakes it into emitted asset URLs. To use it with the published Docker image, build your own image with the variable set:
-
-```bash
-docker build --build-arg NEXT_PUBLIC_BASE_PATH=/webmail -t bulwark-webmail .
-```
-
-Then point your reverse proxy at the container without stripping the prefix. The app expects requests under `/webmail/...` and serves every route (`/webmail/api/...`, `/webmail/_next/static/...`, `/webmail/sw.js`, and so on) accordingly.
-
-</details>
-
-## Keyboard shortcuts
-
-| Key                  | Action                  |
-| -------------------- | ----------------------- |
-| `j` `↓` / `k` `↑`    | Navigate between emails |
-| `Enter` / `o`        | Open email              |
-| `Esc`                | Close / deselect        |
-| `x`                  | Expand / collapse thread |
-| `c`                  | Compose                 |
-| `r` / `R` `a`        | Reply / Reply all       |
-| `f`                  | Forward                 |
-| `s`                  | Star                    |
-| `e`                  | Archive                 |
-| `#` / `Del`          | Delete                  |
-| `u` / `Shift`+`I`    | Mark unread / read      |
-| `!`                  | Toggle spam             |
-| `Ctrl`+`A`           | Select all              |
-| `Shift`+`G`          | Refresh                 |
-| `/`                  | Search                  |
-| `?`                  | Show all shortcuts      |
-
-In the composer: `Ctrl/Cmd`+`Enter` sends, `Ctrl/Cmd`+`Shift`+`Enter` opens scheduled send, and `t` opens the template picker.
-
-## Tech stack
-
-|               |                                                   |
-| ------------- | ------------------------------------------------- |
-| **Framework** | [Next.js 16](https://nextjs.org/) with App Router, React 19 |
-| **Language**  | TypeScript                                        |
-| **Styling**   | [Tailwind CSS v4](https://tailwindcss.com/)       |
-| **State**     | [Zustand](https://zustand-demo.pmnd.rs/)          |
-| **Protocol**  | Custom JMAP client (RFC 8620)                     |
-| **Editor**    | [Tiptap](https://tiptap.dev/)                     |
-| **i18n**      | [next-intl](https://next-intl-docs.vercel.app/)   |
-| **Icons**     | [Lucide React](https://lucide.dev/)               |
-| **Testing**   | [Vitest](https://vitest.dev/) + [Playwright](https://playwright.dev/) |
-
-## Why Stalwart?
-
-[Stalwart](https://github.com/stalwartlabs/mail-server) is a Rust mail server with native JMAP support – not IMAP/SMTP with JMAP bolted on. It handles JMAP, IMAP, SMTP, and ManageSieve in a single self-hosted binary with no third-party dependencies.
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md).
+- Questions: check [Troubleshooting](https://bulwarkmail.org/docs/guides/troubleshooting), then ask on [Discord](https://discord.gg/tYCujymGrT).
+- Bugs and feature requests: open a [GitHub issue](https://github.com/bulwarkmail/webmail/issues).
+- Security vulnerabilities: report them privately to [dev@bulwarkmail.org](mailto:dev@bulwarkmail.org) or through a [security advisory](https://github.com/bulwarkmail/webmail/security/advisories/new), never in a public issue.
+- Release notes: [CHANGELOG.md](CHANGELOG.md) and the [GitHub releases](https://github.com/bulwarkmail/webmail/releases).
 
 ## License
 
-[GNU AGPL v3](LICENSE). This repository preserves the original MIT attribution for the fork lineage in [NOTICE](NOTICE).
+[GNU AGPL v3 only](LICENSE), with an additional permission to distribute apps built from this code through app stores such as the Apple App Store and Google Play. The permission is provisional until every earlier contributor has agreed to it ([consent request](https://github.com/orgs/bulwarkmail/discussions/1113)); contributions made since 30 September 2026 are already covered. This repository preserves the original MIT attribution for the fork lineage in [NOTICE](NOTICE).
 
 ## Acknowledgments
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Plus, Trash2, RotateCcw, ChevronDown, ChevronRight } from 'lucide-react';
+import { Plus, Trash2, RotateCcw, ChevronDown, ChevronRight } from '@/components/icons';
 import type { JmapServerEntry } from '@/lib/admin/jmap-servers';
 
 interface Props {

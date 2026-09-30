@@ -20,7 +20,7 @@ import {
 } from '@/lib/admin/csp-frame-origins';
 import JSZip from 'jszip';
 import { MAX_PLUGIN_SIZE, MAX_THEME_SIZE, ALL_PERMISSIONS } from '@/lib/plugin-types';
-import { sanitizeThemeCSS, validateThemeCSSSafety } from '@/lib/theme-loader';
+import { sanitizeThemeCSS } from '@/lib/theme-loader';
 import { configManager } from '@/lib/admin/config-manager';
 
 async function getDirectoryUrl(): Promise<string> {
@@ -202,14 +202,12 @@ export async function POST(request: NextRequest) {
 
       let css = await cssFile.async('string');
 
-      // Validate and sanitize CSS
+      // Sanitize unconditionally: the safety check is advisory, and the
+      // sanitizer is also what drops rules outside :root and .dark.
       const warnings: string[] = [];
-      const safety = validateThemeCSSSafety(css);
-      if (!safety.valid) {
-        const sanitized = sanitizeThemeCSS(css);
-        css = sanitized.css;
-        warnings.push(...sanitized.warnings);
-      }
+      const sanitized = sanitizeThemeCSS(css);
+      css = sanitized.css;
+      warnings.push(...sanitized.warnings);
 
       const existingTheme = await getTheme(resolvedId);
       const isUpdate = existingTheme !== null;

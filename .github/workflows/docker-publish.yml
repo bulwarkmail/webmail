@@ -29,11 +29,14 @@ jobs:
     steps:
       - name: Set image name
         id: set
+        env:
+          REF_NAME: ${{ github.ref_name }}
+          REPOSITORY: ${{ github.repository }}
         run: |
-          if [ "${{ github.ref_name }}" = "main" ]; then
-            echo "image_name=ghcr.io/${{ github.repository }}-beta" >> $GITHUB_OUTPUT
+          if [ "$REF_NAME" = "main" ]; then
+            echo "image_name=ghcr.io/${REPOSITORY}-beta" >> "$GITHUB_OUTPUT"
           else
-            echo "image_name=ghcr.io/${{ github.repository }}-${{ github.ref_name }}" >> $GITHUB_OUTPUT
+            echo "image_name=ghcr.io/${REPOSITORY}-${REF_NAME}" >> "$GITHUB_OUTPUT"
           fi
 
   build:
@@ -104,6 +107,8 @@ jobs:
     permissions:
       contents: read
       packages: write
+      id-token: write
+      attestations: write
 
     steps:
       - name: Download digests
@@ -139,5 +144,18 @@ jobs:
             $(printf '${{ needs.prepare.outputs.image_name }}@sha256:%s ' *)
 
       - name: Inspect image
+        id: inspect
         run: |
           docker buildx imagetools inspect ${{ needs.prepare.outputs.image_name }}:${{ steps.meta.outputs.version }}
+          digest=$(docker buildx imagetools inspect ${{ needs.prepare.outputs.image_name }}:${{ steps.meta.outputs.version }} --format '{{json .Manifest}}' | jq -r .digest)
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
+
+      # Signed build provenance, pushed to GHCR next to the image:
+      # `gh attestation verify oci://<image>:<tag> --owner bulwarkmail`.
+      - name: Attest build provenance
+        uses: actions/attest@v4
+        with:
+          subject-name: ${{ needs.prepare.outputs.image_name }}
+          subject-digest: ${{ steps.inspect.outputs.digest }}
+          push-to-registry: true
+          create-storage-record: false
