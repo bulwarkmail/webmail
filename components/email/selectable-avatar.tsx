@@ -1,7 +1,7 @@
 "use client";
 
 import type { ComponentProps, MouseEvent } from "react";
-import { Check } from "lucide-react";
+import { Check } from "@/components/icons";
 import { Avatar } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 

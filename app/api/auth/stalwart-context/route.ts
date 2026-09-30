@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
-import { JmapAuthVerificationError, verifyJmapIdentity } from '@/lib/auth/verify-jmap-auth';
+import { JmapAuthVerificationError, resolveJmapIdentity } from '@/lib/auth/verify-jmap-auth';
 import { setStalwartAuthContext } from '@/lib/stalwart/auth-context';
 import { configManager } from '@/lib/admin/config-manager';
 import { isPublicHttpUrl } from '@/lib/security/url-guard';
@@ -8,6 +8,7 @@ import { recordLogin } from '@/lib/telemetry/login-tracker';
 import { parseJmapServers, resolveTrustedJmapUrl } from '@/lib/admin/jmap-servers';
 import { MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
+import { insecureCookieHint, verificationFailureBody } from '@/lib/auth/verification-failure';
 
 function getSlot(request: NextRequest, bodySlot: unknown): number {
   if (typeof bodySlot === 'number' && bodySlot >= 0 && bodySlot < MAX_ACCOUNT_SLOTS) {
@@ -26,6 +27,8 @@ export async function POST(request: NextRequest) {
   // so a cross-site top-level POST would otherwise reach this handler.
   const crossOrigin = rejectCrossOriginRequest(request);
   if (crossOrigin) return crossOrigin;
+  let upstreamUrl = '';
+  let upstreamTrusted = false;
   try {
     const { serverUrl, username, authHeader, slot: bodySlot } = await request.json();
 
@@ -46,8 +49,6 @@ export async function POST(request: NextRequest) {
     const serverList = parseJmapServers(configManager.get<unknown>('jmapServers', []));
     const trustedUrl = resolveTrustedJmapUrl(serverUrl, configuredServerUrl, serverList);
 
-    let upstreamUrl: string;
-    let upstreamTrusted: boolean;
     if (trustedUrl) {
       upstreamUrl = trustedUrl;
       upstreamTrusted = true;
@@ -70,7 +71,7 @@ export async function POST(request: NextRequest) {
     // any user's synced settings. Admin-configured servers are `trusted`,
     // which only relaxes the public-address requirement (they may live on a
     // private network) - never the credential check.
-    const normalizedServerUrl = await verifyJmapIdentity(upstreamUrl, authHeader, username, {
+    const { serverUrl: normalizedServerUrl, accountName } = await resolveJmapIdentity(upstreamUrl, authHeader, username, {
       trusted: upstreamTrusted,
     });
 
@@ -78,14 +79,20 @@ export async function POST(request: NextRequest) {
       serverUrl: normalizedServerUrl,
       username,
       authHeader,
+      ...(accountName !== username ? { accountName } : {}),
     });
 
     void recordLogin(username, normalizedServerUrl);
 
-    return NextResponse.json({ ok: true });
+    const warning = insecureCookieHint(request);
+    if (warning) logger.warn(`stalwart-context: ${warning}`);
+    return NextResponse.json(warning ? { ok: true, warning } : { ok: true });
   } catch (error) {
     if (error instanceof JmapAuthVerificationError) {
-      return NextResponse.json({ error: error.message }, { status: error.status });
+      return NextResponse.json(
+        verificationFailureBody('stalwart-context', error, upstreamUrl, upstreamTrusted),
+        { status: error.status },
+      );
     }
 
     logger.error('Failed to store Stalwart auth context', {

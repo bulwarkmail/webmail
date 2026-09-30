@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
 import { cookies } from 'next/headers';
 import { logger } from '@/lib/logger';
 import { decryptSession } from '@/lib/auth/crypto';
@@ -66,9 +67,12 @@ function normalizeUrl(url: string): string {
  * With multi-account, the requesting account may be on any slot.
  * Checks both basic-auth session cookies and stalwart auth context cookies
  * (used by OAuth/SSO and TOTP-upgraded sessions).
- * Returns true only if a matching cookie is found.
+ * Returns the account name to key the settings on, or null when no cookie
+ * matches. That is the cookie's `accountName` when it has one: a Bearer
+ * login claimed with a bare local part must not share `john`'s settings
+ * with every other `john` on a multi-domain server.
  */
-async function verifyIdentity(username: string, serverUrl: string): Promise<boolean> {
+async function verifyIdentity(username: string, serverUrl: string): Promise<string | null> {
   const cookieStore = await cookies();
   const normalizedServerUrl = normalizeUrl(serverUrl);
 
@@ -78,19 +82,19 @@ async function verifyIdentity(username: string, serverUrl: string): Promise<bool
     if (token) {
       const session = decryptSession(token);
       if (session && session.username === username && normalizeUrl(session.serverUrl) === normalizedServerUrl) {
-        return true;
+        return username;
       }
     }
 
     // Check stalwart auth context cookie (set for all auth modes)
     const ctx = readStalwartAuthContextFromStore(cookieStore, slot);
     if (ctx && ctx.username === username && normalizeUrl(ctx.serverUrl) === normalizedServerUrl) {
-      return true;
+      return ctx.accountName ?? username;
     }
   }
 
   // No matching session found (or no cookies at all) → reject
-  return false;
+  return null;
 }
 
 export async function GET(request: NextRequest) {
@@ -104,12 +108,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Missing identity headers' }, { status: 400 });
   }
 
-  if (!(await verifyIdentity(username, serverUrl))) {
+  const accountName = await verifyIdentity(username, serverUrl);
+  if (!accountName) {
     return NextResponse.json({ error: 'Identity mismatch' }, { status: 403 });
   }
 
   try {
-    const settings = await loadUserSettings(username, serverUrl);
+    const settings = await loadUserSettings(accountName, serverUrl);
     return NextResponse.json({ settings: settings || null });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
@@ -121,6 +126,10 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  // CSRF gate (GHSA-9mvj-98f5-9q6g): this handler acts with the caller's
+  // session cookie, which SameSite=Lax still sends from a same-site page.
+  const crossOrigin = rejectCrossOriginRequest(request);
+  if (crossOrigin) return crossOrigin;
   if (!isEnabled()) {
     return NextResponse.json({ error: 'Settings sync is disabled' }, { status: 404 });
   }
@@ -135,7 +144,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Settings must be an object' }, { status: 400 });
     }
 
-    if (!(await verifyIdentity(username, serverUrl))) {
+    const accountName = await verifyIdentity(username, serverUrl);
+    if (!accountName) {
       return NextResponse.json({ error: 'Identity mismatch' }, { status: 403 });
     }
 
@@ -166,7 +176,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    await saveUserSettings(username, serverUrl, filteredSettings);
+    await saveUserSettings(accountName, serverUrl, filteredSettings);
     return NextResponse.json({ ok: true });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
@@ -178,6 +188,10 @@ export async function POST(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  // CSRF gate (GHSA-9mvj-98f5-9q6g): this handler acts with the caller's
+  // session cookie, which SameSite=Lax still sends from a same-site page.
+  const crossOrigin = rejectCrossOriginRequest(request);
+  if (crossOrigin) return crossOrigin;
   if (!isEnabled()) {
     return NextResponse.json({ error: 'Settings sync is disabled' }, { status: 404 });
   }
@@ -188,11 +202,12 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    if (!(await verifyIdentity(username, serverUrl))) {
+    const accountName = await verifyIdentity(username, serverUrl);
+    if (!accountName) {
       return NextResponse.json({ error: 'Identity mismatch' }, { status: 403 });
     }
 
-    await deleteUserSettings(username, serverUrl);
+    await deleteUserSettings(accountName, serverUrl);
     return NextResponse.json({ ok: true });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';

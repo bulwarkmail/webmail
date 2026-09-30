@@ -3,7 +3,7 @@
 import { forwardRef, useState, useRef, useEffect, useLayoutEffect } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight } from "@/components/icons";
 
 interface Position {
   x: number;

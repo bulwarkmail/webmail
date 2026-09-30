@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Shield, Mail, X, AlertTriangle, MailCheck, RotateCcw } from "lucide-react";
+import { Shield, Mail, X, AlertTriangle, MailCheck, RotateCcw } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 

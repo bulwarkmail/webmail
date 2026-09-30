@@ -5,7 +5,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import type { ContactCard } from "@/lib/jmap/types";
 import { getContactDisplayName, getContactPrimaryEmail } from "@/stores/contact-store";
-import { CheckSquare, Square } from "lucide-react";
+import { CheckSquare, Square } from "@/components/icons";
 import type { Density } from "@/stores/settings-store";
 
 interface ContactListItemProps {

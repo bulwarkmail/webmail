@@ -7,15 +7,14 @@ import { getCookieOptions } from '@/lib/oauth/cookie-config';
 import { normalizeJmapServerUrl } from '@/lib/auth/verify-jmap-auth';
 import { setStalwartAuthContextInStore } from '@/lib/stalwart/auth-context';
 import { recordLogin } from '@/lib/telemetry/login-tracker';
-import {
-  ImpersonationJwtError,
-  impersonationReplayCache,
-  verifyImpersonationJwt,
-} from '@/lib/impersonation/jwt';
+import { ImpersonationJwtError, verifyImpersonationJwt } from '@/lib/impersonation/jwt';
+import { consumeImpersonationJti } from '@/lib/impersonation/replay-store';
 import {
   readImpersonationConfig,
   resolveImpersonationServerUrl,
 } from '@/lib/impersonation/master-config';
+import { mintImpersonationCredential } from '@/lib/impersonation/app-password';
+import { IMPERSONATION_GRANT_COOKIE, sealImpersonationGrant } from '@/lib/impersonation/grant-cookie';
 
 export const runtime = 'nodejs';
 
@@ -40,8 +39,13 @@ function impersonationCookieOptions() {
  * mailbox; Bulwark verifies the signature, resolves the configured Stalwart
  * master credentials from env, then mints the same session cookies the
  * password-login path produces. The browser is redirected to "/?impersonated=1" (see
- * ImpersonationReconciler, GH #646) and the
- * SPA hydrates as if the user had just logged in with master@target%master.
+ * ImpersonationReconciler, GH #646) and the SPA hydrates as if the user had
+ * just logged in to the target mailbox.
+ *
+ * The master credential is used here, server-side, only to create an
+ * expiring app password on the target mailbox. The session cookies carry
+ * that app password: the browser reads its session back through
+ * PUT /api/auth/session, and the master password would open every mailbox.
  *
  * Returns 404 when the feature is not configured so an unconfigured
  * deployment does not advertise the endpoint.
@@ -74,7 +78,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 
-  if (!impersonationReplayCache.consume(claims.jti, claims.exp)) {
+  if (!(await consumeImpersonationJti(claims.jti, claims.exp))) {
     logger.warn('Impersonation JWT replay rejected', { jti: claims.jti });
     return NextResponse.json({ error: 'Token already used' }, { status: 401 });
   }
@@ -92,26 +96,44 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid JMAP server URL' }, { status: 500 });
   }
 
-  // Stalwart master-user impersonation: username = "<target>%<master>",
-  // password = <master_password>. Per Stalwart docs:
+  // Stalwart master-user login ("<target>%<master>", master password) opens
+  // the target mailbox; use it once to mint the target's own app password.
   //   https://stalw.art/docs/auth/authorization/administrator/
-  const impersonatedUsername = `${claims.mailbox}%${config.masterUser}`;
-  const authHeader = `Basic ${Buffer.from(
-    `${impersonatedUsername}:${config.masterPassword}`,
-  ).toString('base64')}`;
+  let credential;
+  try {
+    credential = await mintImpersonationCredential({
+      serverUrl: normalizedServerUrl,
+      mailbox: claims.mailbox,
+      masterUser: config.masterUser,
+      masterPassword: config.masterPassword,
+      description: `Support session ${claims.jti}`.slice(0, 100),
+    });
+  } catch (err) {
+    logger.error('Impersonation credential could not be created', {
+      jti: claims.jti,
+      mailbox: claims.mailbox,
+      error: err instanceof Error ? err.message : 'Unknown',
+    });
+    return NextResponse.json({ error: 'Could not open the mailbox' }, { status: 502 });
+  }
 
   const cookieStore = await cookies();
-  const sessionToken = encryptSession(
-    normalizedServerUrl,
-    impersonatedUsername,
-    config.masterPassword,
-  );
+  const sessionToken = encryptSession(normalizedServerUrl, claims.mailbox, credential.secret);
   cookieStore.set(sessionCookieName(IMPERSONATION_SLOT), sessionToken, impersonationCookieOptions());
   setStalwartAuthContextInStore(cookieStore, IMPERSONATION_SLOT, {
     serverUrl: normalizedServerUrl,
-    username: impersonatedUsername,
-    authHeader,
+    username: claims.mailbox,
+    authHeader: `Basic ${Buffer.from(`${claims.mailbox}:${credential.secret}`).toString('base64')}`,
   });
+  cookieStore.set(
+    IMPERSONATION_GRANT_COOKIE,
+    sealImpersonationGrant({
+      serverUrl: normalizedServerUrl,
+      mailbox: claims.mailbox,
+      credentialId: credential.id,
+    }),
+    impersonationCookieOptions(),
+  );
 
   // Structured audit log - operators rely on this for security review.
   logger.info('Impersonation session granted', {
@@ -121,6 +143,7 @@ export async function GET(request: NextRequest) {
     tenant_id: claims.tenant_id,
     actor_user_id: claims.actor_user_id,
     iss: claims.iss,
+    expires_at: credential.expiresAt,
     ip:
       request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
       request.headers.get('x-real-ip') ||
@@ -129,7 +152,7 @@ export async function GET(request: NextRequest) {
     user_agent: request.headers.get('user-agent'),
   });
 
-  void recordLogin(impersonatedUsername, normalizedServerUrl);
+  void recordLogin(claims.mailbox, normalizedServerUrl);
 
   // Use a relative Location header so the browser resolves it against the
   // public request URL. NextResponse.redirect(new URL('/', request.url))

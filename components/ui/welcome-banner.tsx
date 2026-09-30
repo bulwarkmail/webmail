@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
-import { X, Lightbulb, Settings, PlayCircle } from "lucide-react";
+import { X, Lightbulb, Settings, PlayCircle } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "@/i18n/navigation";
 import { useTour } from "@/components/tour/tour-provider";

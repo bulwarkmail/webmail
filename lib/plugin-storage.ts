@@ -96,6 +96,22 @@ async function deleteItem(storeName: string, key: string): Promise<void> {
   });
 }
 
+async function clearItems(storeName: string): Promise<void> {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(storeName, 'readwrite');
+    tx.objectStore(storeName).clear();
+    tx.oncomplete = () => {
+      db.close();
+      resolve();
+    };
+    tx.onerror = () => {
+      db.close();
+      reject(tx.error);
+    };
+  });
+}
+
 // ─── Public API ──────────────────────────────────────────────
 
 export const pluginStorage = {
@@ -158,5 +174,9 @@ export const fileStorage = {
   },
   async deleteFile(fileId: string): Promise<void> {
     await deleteItem(STORE_FILE_ACCESS_PLUGIN, fileId);
+  },
+  /** Drop every staged file, e.g. on sign-out. */
+  async clearFiles(): Promise<void> {
+    await clearItems(STORE_FILE_ACCESS_PLUGIN);
   },
 }

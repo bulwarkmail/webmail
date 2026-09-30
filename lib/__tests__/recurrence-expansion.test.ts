@@ -308,6 +308,32 @@ describe('expandRecurringEvents', () => {
       expect(modified?.title).toBe('Modified');
     });
 
+    it("completes an override's participants from the series by address", () => {
+      // Stalwart records an attendee's reply to one occurrence as an override
+      // naming the organizer under a new id and without a status.
+      const event = makeEvent({
+        recurrenceRules: [rule({ '@type': 'RecurrenceRule', frequency: 'daily' })],
+        participants: {
+          org: { '@type': 'Participant', calendarAddress: 'mailto:a@example.org', participationStatus: 'accepted' },
+          att: { '@type': 'Participant', calendarAddress: 'mailto:b@example.org', participationStatus: 'needs-action' },
+        } as unknown as CalendarEvent['participants'],
+        recurrenceOverrides: {
+          '2025-01-07T09:00:00': {
+            participants: {
+              att: { '@type': 'Participant', calendarAddress: 'mailto:b@example.org', participationStatus: 'declined' },
+              x1: { '@type': 'Participant', calendarAddress: 'mailto:a@example.org' },
+            } as unknown as CalendarEvent['participants'],
+          },
+        },
+      });
+      const result = expand(event, '2025-01-06T00:00:00', '2025-01-09T00:00:00');
+      const answered = result.find(e => e.recurrenceId === '2025-01-07T09:00:00')!;
+      expect(answered.participants).toEqual({
+        org: { '@type': 'Participant', calendarAddress: 'mailto:a@example.org', participationStatus: 'accepted' },
+        att: { '@type': 'Participant', calendarAddress: 'mailto:b@example.org', participationStatus: 'declined' },
+      });
+    });
+
     it('excludes occurrences marked as excluded', () => {
       const event = makeEvent({
         recurrenceRules: [rule({ '@type': 'RecurrenceRule', frequency: 'daily' })],

@@ -2,8 +2,8 @@
 
 import { useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { X, Plus, Pencil, Trash2, ExternalLink, PanelRight, Lock } from 'lucide-react';
-import { icons as lucideIcons, type LucideIcon } from 'lucide-react';
+import { X, Plus, Pencil, Trash2, ExternalLink, PanelRight, Lock } from '@/components/icons';
+import { iconForName } from '@/components/icons';
 import { cn, generateUUID } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -74,7 +74,7 @@ function SidebarAppForm({
   };
 
   const SelectedIcon = formData.icon
-    ? (lucideIcons[formData.icon as keyof typeof lucideIcons] as LucideIcon | undefined)
+    ? iconForName(formData.icon)
     : null;
 
   return (
@@ -198,7 +198,7 @@ function ManagedAppsList() {
       <p className="text-xs text-muted-foreground mb-3">{t('managed_description')}</p>
       <div className="space-y-3">
         {managedApps.map((app) => {
-          const AppIcon = lucideIcons[app.icon as keyof typeof lucideIcons] as LucideIcon | undefined;
+          const AppIcon = iconForName(app.icon);
           return (
             <div key={app.id} className="flex items-center gap-3 p-3 border border-border rounded-lg bg-muted/30">
               <div className="flex items-center justify-center w-9 h-9 rounded-md bg-muted">
@@ -332,7 +332,7 @@ export function SidebarAppsModal({ isOpen, onClose }: SidebarAppsModalProps) {
           {/* Apps list */}
           <div className="space-y-3">
             {sidebarApps.map((app) => {
-              const AppIcon = lucideIcons[app.icon as keyof typeof lucideIcons] as LucideIcon | undefined;
+              const AppIcon = iconForName(app.icon);
 
               if (editingId === app.id) {
                 return (

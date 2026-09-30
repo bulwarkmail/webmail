@@ -8,7 +8,7 @@ import { SettingsSection, SettingItem, ToggleSwitch } from './settings-section';
 import { Button } from '@/components/ui/button';
 import { usePolicyStore } from '@/stores/policy-store';
 import { useUpdateStore } from '@/stores/update-store';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink } from '@/components/icons';
 import { cn } from '@/lib/utils';
 import { getPathPrefix } from '@/lib/browser-navigation';
 import { clearCachedData } from '@/lib/clear-cached-data';

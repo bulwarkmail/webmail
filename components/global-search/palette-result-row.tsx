@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarDays, FileText, Folder, Repeat } from "lucide-react";
+import { CalendarDays, FileText, Folder, Repeat } from "@/components/icons";
 import { useTranslations } from "next-intl";
 import { Avatar } from "@/components/ui/avatar";
 import { parseSearchSnippet, type SnippetSegment } from "@/lib/search-snippet";

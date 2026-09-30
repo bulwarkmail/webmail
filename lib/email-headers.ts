@@ -37,11 +37,107 @@ export function isAuthenticationSpoofed(auth?: AuthenticationResults): boolean {
   return false;
 }
 
+interface ResInfo {
+  method: string;
+  result: string;
+  props: Record<string, string>;
+}
+
 /**
- * Parse Authentication-Results header to extract SPF, DKIM, DMARC results
+ * Split one Authentication-Results header into its `;`-separated parts
+ * (RFC 8601), dropping comments. A `;` inside a quoted string or a comment
+ * does not split: both can carry sender-chosen text such as the envelope
+ * address.
  */
-export function parseAuthenticationResults(header: string): AuthenticationResults {
+function splitResinfo(header: string): string[] {
+  const parts: string[] = [];
+  let current = '';
+  let depth = 0;
+  let quoted = false;
+  for (let i = 0; i < header.length; i++) {
+    const c = header[i];
+    if (c === '\\' && (quoted || depth > 0)) {
+      if (depth === 0) current += c + (header[i + 1] ?? '');
+      i++;
+      continue;
+    }
+    if (quoted) {
+      current += c;
+      if (c === '"') quoted = false;
+      continue;
+    }
+    if (c === '(') {
+      depth++;
+      continue;
+    }
+    if (depth > 0) {
+      if (c === ')' && --depth === 0) current += ' ';
+      continue;
+    }
+    if (c === '"') quoted = true;
+    if (c === ';') {
+      parts.push(current);
+      current = '';
+      continue;
+    }
+    current += c;
+  }
+  parts.push(current);
+  return parts.map((part) => part.trim()).filter(Boolean);
+}
+
+const METHOD_RE = /^([a-z0-9][a-z0-9_-]*)(?:\/\d+)?\s*=\s*([a-z]+)(?=\s|$)/i;
+const PROP_RE = /\s*([^\s=]+)\s*=\s*("(?:[^"\\]|\\.)*"|\S*)/y;
+
+/**
+ * Read one resinfo: the method must open the part, so a `dmarc=pass` that
+ * appears inside a property value (say an envelope local part in
+ * `smtp.mailfrom=`) is never taken for a result.
+ */
+function parseResinfo(part: string): ResInfo | null {
+  const match = METHOD_RE.exec(part);
+  if (!match) return null;
+  const props: Record<string, string> = {};
+  const rest = part.slice(match[0].length);
+  PROP_RE.lastIndex = 0;
+  let prop: RegExpExecArray | null;
+  while ((prop = PROP_RE.exec(rest)) !== null && prop[0].length > 0) {
+    const key = prop[1].toLowerCase();
+    let value = prop[2];
+    if (value.startsWith('"')) value = value.slice(1, -1).replace(/\\(.)/g, '$1');
+    if (!(key in props)) props[key] = value;
+  }
+  return { method: match[1].toLowerCase(), result: match[2].toLowerCase(), props };
+}
+
+function parseResinfos(header: string): ResInfo[] {
+  return splitResinfo(header)
+    .map(parseResinfo)
+    .filter((info): info is ResInfo => info !== null);
+}
+
+const DMARC_SEVERITY: Record<string, number> = {
+  fail: 3,
+  permerror: 2,
+  temperror: 2,
+  none: 1,
+  pass: 0,
+};
+
+/**
+ * Parse Authentication-Results headers into SPF, DKIM, DMARC results.
+ *
+ * Pass the headers in message order. The topmost one is the receiving
+ * server's own; anything below it may have been written by the sender, so
+ * DKIM, DMARC and iprev come from the topmost header only, and the others
+ * can only escalate SPF to a failure, never supply a pass.
+ */
+export function parseAuthenticationResults(headers: string | readonly string[]): AuthenticationResults {
   const results: AuthenticationResults = {};
+  const list = typeof headers === 'string' ? [headers] : headers;
+  const perHeader = list.map(parseResinfos);
+  const own = perHeader[0] ?? [];
+  const foreign = perHeader.slice(1).flat();
 
   type DkimResult = 'pass' | 'fail' | 'policy' | 'neutral' | 'temperror' | 'permerror';
   type DmarcResult = 'pass' | 'fail' | 'none';
@@ -51,23 +147,27 @@ export function parseAuthenticationResults(header: string): AuthenticationResult
   // SPF result when the server evaluates multiple identities (HELO and MAIL
   // FROM). Collect them all so a hard fail on any identity isn't softened to
   // an ambiguous state recorded for another one.
-  const spfRegex = /spf=(\w+)(?:\s+\([^)]*\))?(?:\s+smtp\.(mailfrom|helo)=([^\s;]+))?/g;
-  const spfResults: SpfEntry[] = [];
-  let spfM: RegExpExecArray | null;
-  while ((spfM = spfRegex.exec(header)) !== null) {
-    spfResults.push({
-      result: spfM[1] as SpfResult,
-      identity: spfM[2] as SpfEntry['identity'],
-      domain: spfM[3],
-    });
-  }
+  const severity = (r: string) => SPF_SEVERITY[r as SpfResult] ?? -1;
+  const isFailure = (r: string) => severity(r) >= SPF_SEVERITY.temperror;
+  const toSpfEntry = (info: ResInfo): SpfEntry => {
+    const identity = info.props['smtp.mailfrom'] !== undefined
+      ? 'mailfrom'
+      : info.props['smtp.helo'] !== undefined ? 'helo' : undefined;
+    return {
+      result: info.result as SpfResult,
+      identity: identity as SpfEntry['identity'],
+      domain: identity ? info.props[`smtp.${identity}`] || undefined : undefined,
+    };
+  };
+  const spfResults: SpfEntry[] = [
+    ...own.filter((info) => info.method === 'spf').map(toSpfEntry),
+    ...foreign.filter((info) => info.method === 'spf').map(toSpfEntry).filter((e) => isFailure(e.result)),
+  ];
   if (spfResults.length > 0) {
-    const severity = (r: string) => SPF_SEVERITY[r as SpfResult] ?? -1;
     // MAIL FROM is the primary SPF identity. Another identity (HELO) may only
     // escalate the headline to a genuine failure state — a HELO `none` or
     // `neutral` must not downgrade a MAIL FROM `pass`, since most senders
     // publish no SPF record for their EHLO hostname.
-    const isFailure = (r: string) => severity(r) >= SPF_SEVERITY.temperror;
     let primary =
       spfResults.find((e) => e.identity === 'mailfrom') ?? spfResults[0];
     for (const cur of spfResults) {
@@ -82,32 +182,36 @@ export function parseAuthenticationResults(header: string): AuthenticationResult
     };
   }
 
-  // Parse DKIM
-  const dkimMatch = header.match(/dkim=(\w+)(?:\s+header\.d=([^\s]+))?(?:\s+header\.s=([^\s]+))?/);
-  if (dkimMatch) {
+  const dkim = own.find((info) => info.method === 'dkim');
+  if (dkim) {
     results.dkim = {
-      result: dkimMatch[1] as DkimResult,
-      domain: dkimMatch[2],
-      selector: dkimMatch[3]
+      result: dkim.result as DkimResult,
+      domain: dkim.props['header.d'],
+      selector: dkim.props['header.s'],
     };
   }
 
-  // Parse DMARC
-  const dmarcMatch = header.match(/dmarc=(\w+)(?:\s+header\.from=([^\s]+))?(?:\s+policy\.dmarc=(\w+))?/);
-  if (dmarcMatch) {
+  // One DMARC verdict per message; should a header carry several, the most
+  // severe stands.
+  const dmarc = own
+    .filter((info) => info.method === 'dmarc')
+    .reduce<ResInfo | undefined>(
+      (worst, info) => (!worst || (DMARC_SEVERITY[info.result] ?? -1) > (DMARC_SEVERITY[worst.result] ?? -1) ? info : worst),
+      undefined,
+    );
+  if (dmarc) {
     results.dmarc = {
-      result: dmarcMatch[1] as DmarcResult,
-      domain: dmarcMatch[2],
-      policy: dmarcMatch[3] as DmarcPolicy | undefined
+      result: dmarc.result as DmarcResult,
+      domain: dmarc.props['header.from'],
+      policy: dmarc.props['policy.dmarc'] as DmarcPolicy | undefined,
     };
   }
 
-  // Parse IP reverse lookup
-  const iprevMatch = header.match(/iprev=(\w+)(?:\s+policy\.iprev=([\d.]+))?/);
-  if (iprevMatch) {
+  const iprev = own.find((info) => info.method === 'iprev');
+  if (iprev) {
     results.iprev = {
-      result: iprevMatch[1] as 'pass' | 'fail',
-      ip: iprevMatch[2]
+      result: iprev.result as 'pass' | 'fail',
+      ip: iprev.props['policy.iprev'],
     };
   }
 

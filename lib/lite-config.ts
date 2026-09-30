@@ -43,7 +43,9 @@ export const LITE_CONFIG_KEYS = [
 
 /**
  * Flags that need the Next.js server (cookies, filesystem, OAuth relay). They
- * are pinned regardless of what config.json contains.
+ * are pinned regardless of what config.json contains. `oauthEnabled` is the
+ * server-relayed flow; Lite on Stalwart signs in through an OpenID provider
+ * on its own, decided per account at runtime (lib/auth/lite-oauth.ts).
  */
 export const LITE_FORCED_FLAGS = {
   oauthEnabled: false,

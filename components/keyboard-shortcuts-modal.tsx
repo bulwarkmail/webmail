@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { X, Keyboard } from "lucide-react";
+import { X, Keyboard } from "@/components/icons";
 import { KEYBOARD_SHORTCUTS } from "@/hooks/use-keyboard-shortcuts";
 import { cn } from "@/lib/utils";
 import { useFocusTrap } from "@/hooks/use-focus-trap";

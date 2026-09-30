@@ -18,13 +18,33 @@ export async function GET(
   { params }: { params: Promise<{ fileId: string }> },
 ) {
   try {
-    const { fileId } = await params;
-    const auth = await wopiContext(request, fileId);
+    const { fileId: documentId } = await params;
+    const auth = await wopiContext(request, documentId);
     if (!auth) {
       return NextResponse.json({ error: 'Invalid access token' }, { status: 401 });
     }
 
-    const node = await getWopiFileNode(auth.ctx, auth.payload.accountId, fileId);
+    const { payload } = auth;
+    if (payload.kind === 'attachment') {
+      // Mail attachments open read-only (#1047): the blob is immutable, so
+      // its id doubles as the version and there is nothing to save back to.
+      return NextResponse.json({
+        BaseFileName: payload.name || 'attachment',
+        Size: payload.size ?? 0,
+        OwnerId: payload.username,
+        UserId: payload.username,
+        UserFriendlyName: payload.username,
+        UserCanWrite: false,
+        ReadOnly: true,
+        UserCanNotWriteRelative: true,
+        SupportsUpdate: false,
+        SupportsLocks: false,
+        Version: payload.fileId,
+        PostMessageOrigin: payload.origin,
+      });
+    }
+
+    const node = await getWopiFileNode(auth.ctx, payload.accountId, payload.fileId);
     if (!node || !node.blobId) {
       return NextResponse.json({ error: 'File not found' }, { status: 404 });
     }
@@ -62,8 +82,8 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ fileId: string }> },
 ) {
-  const { fileId } = await params;
-  const auth = await wopiContext(request, fileId);
+  const { fileId: documentId } = await params;
+  const auth = await wopiContext(request, documentId);
   if (!auth) {
     return NextResponse.json({ error: 'Invalid access token' }, { status: 401 });
   }

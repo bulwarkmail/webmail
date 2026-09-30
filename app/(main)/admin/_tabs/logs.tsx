@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw } from '@/components/icons';
 import type { AuditEntry } from '@/lib/admin/types';
 import { apiFetch } from '@/lib/browser-navigation';
 

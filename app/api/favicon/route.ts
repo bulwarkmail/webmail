@@ -455,10 +455,7 @@ export async function GET(request: NextRequest) {
   const cached = cache.get(normalizedDomain);
   if (cached && Date.now() - cached.fetchedAt < CACHE_TTL_MS) {
     return new NextResponse(cached.data, {
-      headers: {
-        'Content-Type': cached.contentType,
-        'Cache-Control': 'public, max-age=1209600', // 2 weeks
-      },
+      headers: faviconHeaders(cached.contentType),
     });
   }
 
@@ -474,7 +471,15 @@ export async function GET(request: NextRequest) {
       return new NextResponse(TRANSPARENT_PNG, { headers: MISSING_FAVICON_HEADERS });
     }
 
-    const contentType = upstream.headers.get('content-type') || 'image/x-icon';
+    // Served inline on the webmail origin, so only raster image types pass:
+    // an image/svg+xml or text/html favicon opened on its own would run
+    // script as the webmail.
+    const contentType = rasterFaviconType(upstream.headers.get('content-type'));
+    if (!contentType) {
+      evictNegativeOldest();
+      negativeCache.set(normalizedDomain, { fetchedAt: Date.now() });
+      return new NextResponse(TRANSPARENT_PNG, { headers: MISSING_FAVICON_HEADERS });
+    }
     const data = await upstream.arrayBuffer();
 
     // Don't cache empty/tiny responses (likely no real favicon)
@@ -489,10 +494,7 @@ export async function GET(request: NextRequest) {
     cache.set(normalizedDomain, { data, contentType, fetchedAt: Date.now() });
 
     return new NextResponse(data, {
-      headers: {
-        'Content-Type': contentType,
-        'Cache-Control': 'public, max-age=1209600',
-      },
+      headers: faviconHeaders(contentType),
     });
   } catch {
     return new NextResponse(null, {
@@ -500,6 +502,31 @@ export async function GET(request: NextRequest) {
       headers: { 'Cache-Control': 'public, max-age=300' }, // 5 min
     });
   }
+}
+
+const RASTER_FAVICON_TYPES = new Set([
+  'image/x-icon',
+  'image/vnd.microsoft.icon',
+  'image/png',
+  'image/gif',
+  'image/jpeg',
+  'image/webp',
+  'image/bmp',
+]);
+
+/** The upstream type when it is a raster image, else null. */
+function rasterFaviconType(header: string | null): string | null {
+  const type = (header ?? 'image/x-icon').split(';')[0].trim().toLowerCase();
+  return RASTER_FAVICON_TYPES.has(type) ? type : null;
+}
+
+function faviconHeaders(contentType: string): Record<string, string> {
+  return {
+    'Content-Type': contentType,
+    'Cache-Control': 'public, max-age=1209600', // 2 weeks
+    'X-Content-Type-Options': 'nosniff',
+    'Content-Security-Policy': "default-src 'none'; sandbox",
+  };
 }
 
 function evictNegativeOldest() {

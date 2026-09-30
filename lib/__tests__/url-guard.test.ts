@@ -97,6 +97,45 @@ describe('isPublicHttpUrl', () => {
     expect(lookup).not.toHaveBeenCalled();
   });
 
+  it.each([
+    'http://127.0.0.2/',
+    'http://127.255.255.254/',
+    'http://100.64.0.1/',
+    'http://100.100.100.200/',
+    'http://198.18.0.1/',
+    'http://240.0.0.1/',
+    'http://224.0.0.1/',
+    'http://255.255.255.255/',
+    'http://0.1.2.3/',
+    'http://[::ffff:127.0.0.2]/',
+    'http://[64:ff9b::7f00:1]/',
+    'http://[64:ff9b::a9fe:a9fe]/',
+    'http://[64:ff9b:1::1]/',
+    'http://[2002:7f00:1::]/',
+    'http://[2002:a9fe:a9fe::]/',
+    'http://[2001:0:4136:e378:8000:63bf:80ff:fffe]/',
+    'http://[ff02::1]/',
+  ])('rejects the special-purpose literal %s', async (url) => {
+    const isPublicHttpUrl = await load();
+    expect(await isPublicHttpUrl(url)).toBe(false);
+    expect(lookup).not.toHaveBeenCalled();
+  });
+
+  it.each(['127.0.0.2', '100.64.0.1', '198.18.0.1', '64:ff9b::7f00:1', '2002:7f00:1::'])(
+    'rejects a hostname resolving to %s',
+    async (address) => {
+      lookup.mockResolvedValue([{ address, family: address.includes(':') ? 6 : 4 }]);
+      const isPublicHttpUrl = await load();
+      expect(await isPublicHttpUrl('https://rebind.example.com/')).toBe(false);
+    },
+  );
+
+  it('accepts public addresses embedded in NAT64 / 6to4 forms', async () => {
+    const isPublicHttpUrl = await load();
+    expect(await isPublicHttpUrl('http://[64:ff9b::5db8:d822]/')).toBe(true);
+    expect(await isPublicHttpUrl('http://[2002:5db8:d822::1]/')).toBe(true);
+  });
+
   it('rejects when DNS resolves to a private address (rebinding)', async () => {
     lookup.mockResolvedValue([{ address: '127.0.0.1', family: 4 }]);
     const isPublicHttpUrl = await load();
@@ -185,6 +224,15 @@ describe('guardedLookup', () => {
     const result = await run('mixed.example.com', { all: true });
     expect(result.err).toMatchObject({ code: 'EBLOCKED', address: '169.254.169.254' });
   });
+
+  it.each(['127.0.0.2', '100.64.0.1', '64:ff9b::7f00:1'])(
+    'refuses a public name that resolves to %s',
+    async (address) => {
+      lookup.mockResolvedValue([{ address, family: address.includes(':') ? 6 : 4 }]);
+      const result = await run('rebind.attacker.example', { all: true });
+      expect(result.err).toMatchObject({ code: 'EBLOCKED', address });
+    },
+  );
 
   it('rebinding: a name that was public on the first answer is refused on the second', async () => {
     lookup

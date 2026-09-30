@@ -37,7 +37,8 @@ vi.mock('@/stores/auth-store', () => ({ useAuthStore: storeHook(authState) }));
 vi.mock('@/stores/account-store', () => ({ useAccountStore: storeHook({ accounts: [] }) }));
 vi.mock('@/stores/settings-store', () => ({ useSettingsStore: storeHook({ includeGroupInUnified: true }) }));
 
-const { mailProvider, andFilters, emailMatchesFilters, mailFilterFor } = await import('../providers/mail');
+const { mailProvider, emailMatchesFilters, mailFilterFor } = await import('../providers/mail');
+const { andFilters } = await import('@/lib/jmap/search-utils');
 const { contactsProvider } = await import('../providers/contacts');
 const { calendarProvider, calendarFilterFor } = await import('../providers/calendar');
 const { filesProvider, invalidateFileSearchCache, pathOfNode, rawFileNodeId } = await import('../providers/files');
@@ -87,16 +88,16 @@ describe('mail provider', () => {
   it('excludes Trash and Junk by default and lifts the exclusion for is:anything', () => {
     const boxes = [mailbox('in', 'inbox'), mailbox('tr', 'trash'), mailbox('ju', 'junk')];
     const filter = mailFilterFor(parseSearchQuery('report'), entry(boxes) as never);
-    expect(filter).toEqual({ operator: 'AND', conditions: [{ text: 'report*' }, { inMailboxOtherThan: ['tr', 'ju'] }] });
+    expect(filter).toEqual({ operator: 'AND', conditions: [{ text: 'report' }, { inMailboxOtherThan: ['tr', 'ju'] }] });
     const anything = mailFilterFor(parseSearchQuery('report is:anything'), entry(boxes) as never);
-    expect(anything).toEqual({ text: 'report*' });
+    expect(anything).toEqual({ text: 'report' });
   });
 
   it('searches only the role folder for in:trash, using originalId on shared entries', () => {
     const boxes = [mailbox('ns:tr', 'trash', { originalId: 'tr' })];
     const shared = entry(boxes, { isShared: true });
     const filter = mailFilterFor(parseSearchQuery('in:trash x'), shared as never);
-    expect(filter).toEqual({ operator: 'AND', conditions: [{ text: 'x*' }, { inMailbox: 'tr' }] });
+    expect(filter).toEqual({ operator: 'AND', conditions: [{ text: 'x' }, { inMailbox: 'tr' }] });
   });
 
   it('flattens extra conditions into an existing AND', () => {
@@ -138,7 +139,7 @@ describe('mail provider', () => {
     const result = await mailProvider.remote(parseSearchQuery('zebra'), account('login-a'), { limit: 25, signal });
     expect(buildUnifiedAccountClients).toHaveBeenCalledWith({ includeGroup: true, scopeToClientAccountId: 'login-a' });
     // The stub login has no trash/junk role folders, so no exclusion is added.
-    expect(advancedSearchEmails).toHaveBeenCalledWith({ text: 'zebra*' }, undefined, 25, 0);
+    expect(advancedSearchEmails).toHaveBeenCalledWith({ text: 'zebra' }, undefined, 25, 0);
     expect(result.hasMore).toBe(true);
     expect(result.hits[0]).toMatchObject({
       id: 'm9', localAccountId: 'login-a', jmapAccountId: 'jmap-a', source: 'remote', subtitle: 'Inbox',

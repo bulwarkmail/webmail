@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useLocaleStore } from '@/stores/locale-store';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown } from '@/components/icons';
 import { cn } from '@/lib/utils';
 import { useMenuNavigation } from '@/hooks/use-menu-navigation';
 import { flagComponents } from './flag-icons';

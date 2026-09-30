@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
-import { X, Loader2, Globe } from "lucide-react";
+import { X, Loader2, Globe } from "@/components/icons";
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
 import { useCalendarStore, type ICalSubscription } from "@/stores/calendar-store";
 import { CalendarColorPicker } from "@/components/settings/calendar-management-settings";

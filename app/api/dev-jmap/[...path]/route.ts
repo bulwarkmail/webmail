@@ -2212,14 +2212,18 @@ async function buildMinimalOdf(type: string): Promise<Buffer | null> {
 
 function handleFileNodeGet(args: MethodArgs, callId: string): MethodResult {
   const ids = args.ids as string[] | null | undefined;
-  const list = ids == null ? [...fileNodes] : fileNodes.filter((n) => ids.includes(n.id));
+  // Like Stalwart, ids:null stops at maxObjectsInGet without saying so (#1069).
+  const list = ids == null ? fileNodes.slice(0, MAX_OBJECTS_IN_GET) : fileNodes.filter((n) => ids.includes(n.id));
   const notFound = ids == null ? [] : ids.filter((id) => !fileNodes.some((n) => n.id === id));
   return ['FileNode/get', { accountId: ACCOUNT_ID, state: nextState(), list, notFound }, callId];
 }
 
-function handleFileNodeQuery(_args: MethodArgs, callId: string): MethodResult {
-  const ids = fileNodes.filter((n) => n.blobId !== null).map((n) => n.id);
-  return ['FileNode/query', { accountId: ACCOUNT_ID, queryState: nextState(), ids, total: ids.length, position: 0 }, callId];
+function handleFileNodeQuery(args: MethodArgs, callId: string): MethodResult {
+  const matching = fileNodes.filter((n) => n.blobId !== null).map((n) => n.id);
+  const position = typeof args.position === 'number' ? args.position : 0;
+  const limit = typeof args.limit === 'number' ? args.limit : matching.length;
+  const ids = matching.slice(position, position + limit);
+  return ['FileNode/query', { accountId: ACCOUNT_ID, queryState: nextState(), ids, total: matching.length, position }, callId];
 }
 
 function handleFileNodeSet(args: MethodArgs, callId: string): MethodResult {
@@ -2467,7 +2471,11 @@ function tooLargeFor(method: string, args: MethodArgs, callId: string): MethodRe
 // ---------------------------------------------------------------------------
 
 function isDevMockEnabled(): boolean {
-  return process.env.DEV_MOCK_JMAP === 'true';
+  // NEXT_PUBLIC_DEV_MOCK_JMAP is inlined at build time from DEV_MOCK_JMAP
+  // (next.config.ts `env`), so a build made without the mock - every
+  // release image and tarball - cannot switch it on through the runtime
+  // environment: the mock accepts any password.
+  return process.env.NEXT_PUBLIC_DEV_MOCK_JMAP === 'true' && process.env.DEV_MOCK_JMAP === 'true';
 }
 
 function getBaseUrl(request: NextRequest): string {

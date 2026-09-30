@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
 import { getStalwartCredentials } from '@/lib/stalwart/credentials';
 
 // Host-side proxy backing the "Translate" plugin (manifest apiPostPaths:
@@ -257,6 +258,10 @@ async function translateLibre(
 // ─── Route ────────────────────────────────────────────────────
 
 export async function POST(request: NextRequest) {
+  // CSRF gate (GHSA-9mvj-98f5-9q6g): this handler acts with the caller's
+  // session cookie, which SameSite=Lax still sends from a same-site page.
+  const crossOrigin = rejectCrossOriginRequest(request);
+  if (crossOrigin) return crossOrigin;
   // Same session gate as the other authenticated API routes: the plugin's
   // api.http.post carries the session cookies, but nothing else should be
   // able to relay requests through this deployment to the backends. (#903)

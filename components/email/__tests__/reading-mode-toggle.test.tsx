@@ -61,7 +61,7 @@ function makeEmail(overrides: Partial<Email> = {}): Email {
 
 function findToggle(): HTMLElement | null {
   return (
-    screen.queryByTitle('View in dark mode') ?? screen.queryByTitle('View in light mode')
+    screen.queryByTitle('view_in_dark_mode') ?? screen.queryByTitle('view_in_light_mode')
   );
 }
 

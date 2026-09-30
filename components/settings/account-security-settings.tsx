@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useId, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import QRCode from 'qrcode';
 import * as OTPAuth from 'otpauth';
-import { Shield, Key, Smartphone, Lock, Trash2, Plus, Eye, EyeOff, Copy, Check, Loader2, Monitor, Terminal, QrCode, Unlock } from 'lucide-react';
+import { Shield, Key, Smartphone, Lock, Trash2, Plus, Eye, EyeOff, Copy, Check, CheckCircle, Loader2, Monitor, Terminal, QrCode, Unlock, RefreshCw } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SettingsSection, SettingItem, ToggleSwitch } from './settings-section';
@@ -16,11 +16,14 @@ import { apiFetch, getPathPrefix } from '@/lib/browser-navigation';
 import { toast } from '@/stores/toast-store';
 import { cn } from '@/lib/utils';
 import { sanitizeI18nHtml } from '@/lib/email-sanitization';
+import { IS_LITE } from '@/lib/lite';
+import { useConfig } from '@/hooks/use-config';
 
 function PasswordChangeSection() {
   const t = useTranslations('settings.security');
-  const { changePassword, isSaving } = useAccountSecurityStore();
+  const { changePassword, isSaving, otpEnabled } = useAccountSecurityStore();
   const [currentPassword, setCurrentPassword] = useState('');
+  const [otpCode, setOtpCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showCurrent, setShowCurrent] = useState(false);
@@ -41,8 +44,9 @@ function PasswordChangeSection() {
     }
 
     try {
-      await changePassword(currentPassword, newPassword);
+      await changePassword(currentPassword, newPassword, otpEnabled ? otpCode : undefined);
       setCurrentPassword('');
+      setOtpCode('');
       setNewPassword('');
       setConfirmPassword('');
       toast.success(t('password.success'));
@@ -80,6 +84,19 @@ function PasswordChangeSection() {
             </button>
           </div>
         </div>
+        {otpEnabled && (
+          <div>
+            <label className="text-xs text-muted-foreground mb-1 block">{t('totp.verification_code')}</label>
+            <Input
+              value={otpCode}
+              onChange={(e) => setOtpCode(e.target.value)}
+              required
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              maxLength={6}
+            />
+          </div>
+        )}
         <div>
           <label className="text-xs text-muted-foreground mb-1 block">{t('password.new')}</label>
           <div className="relative">
@@ -118,7 +135,7 @@ function PasswordChangeSection() {
         <Button
           type="submit"
           size="sm"
-          disabled={isSaving || !currentPassword || !newPassword || !confirmPassword}
+          disabled={isSaving || !currentPassword || !newPassword || !confirmPassword || (otpEnabled && !otpCode.trim())}
         >
           {isSaving ? <Loader2 className="w-4 h-4 me-2 animate-spin" /> : null}
           {t('password.submit')}
@@ -249,10 +266,12 @@ function TotpSection() {
 
   const handleDisable = async () => {
     if (!password) { setSetupError(t('totp.password_required')); return; }
+    if (!otpCode.trim()) { setSetupError(t('totp.code_required')); return; }
     try {
-      await disableTotp(password);
+      await disableTotp(password, otpCode);
       setDisableOpen(false);
       setPassword('');
+      setOtpCode('');
       setSetupError(null);
       toast.success(t('totp.disabled'));
     } catch (err) {
@@ -267,6 +286,7 @@ function TotpSection() {
     } else {
       setDisableOpen(true);
       setPassword('');
+      setOtpCode('');
     }
   };
 
@@ -333,9 +353,17 @@ function TotpSection() {
             placeholder={t('password.current')}
             autoComplete="current-password"
           />
+          <Input
+            value={otpCode}
+            onChange={(e) => setOtpCode(e.target.value)}
+            placeholder={t('totp.verification_code')}
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            maxLength={6}
+          />
           {setupError && <p className="text-xs text-destructive">{setupError}</p>}
           <div className="flex gap-2">
-            <Button size="sm" variant="destructive" onClick={handleDisable} disabled={isSaving || !password}>
+            <Button size="sm" variant="destructive" onClick={handleDisable} disabled={isSaving || !password || !otpCode.trim()}>
               {isSaving ? <Loader2 className="w-4 h-4 me-1 animate-spin" /> : null}
               {t('totp.disable')}
             </Button>
@@ -887,139 +915,518 @@ function EmailClientSection() {
   );
 }
 
-// Cross-device QR login. A signed-in (OAuth/SSO) session mints a short-lived
-// pairing code via /api/auth/pair/create; we render it as a QR that the mobile
-// app scans to sign in without re-typing credentials. The QR payload carries
-// only the server URL and the one-time code — never tokens.
-function LinkDeviceSection() {
+type LinkDevicePhase = 'idle' | 'password' | 'code' | 'redeemed' | 'expired';
+
+interface LinkDeviceMessage {
+  text: string;
+  tone: 'error' | 'info';
+}
+
+interface PairCreateOptions {
+  /** Step-up proof from the password form; omitted on the first try. */
+  password?: string;
+  totp?: string;
+  /** Just back from the IdP re-auth: never bounce to the IdP again. */
+  fromResume?: boolean;
+}
+
+const PAIR_STATUS_POLL_MS = 2000;
+const PAIR_DEFAULT_EXPIRES_IN = 120;
+
+// Cross-device sign-in for the mobile app. /api/auth/pair/create mints a
+// short-lived, single-use code for the active account; we show it as a QR
+// (plus a copyable bulwarkmail:// link) that the app redeems against this
+// webmail for a sign-in of its own. The payload carries only the webmail base
+// URL and the code, never tokens or the password.
+//
+// Minting needs a fresh proof of identity, so the server answers
+// `reauth_required` until the user has just re-authenticated: accounts that
+// signed in through the identity provider go back there (prompt=login),
+// password accounts confirm their password (and TOTP code) right here.
+export function LinkDeviceSection() {
   const t = useTranslations('settings.security');
   const params = useParams();
   const locale = params.locale as string;
-  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
-  const [remaining, setRemaining] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [hasGenerated, setHasGenerated] = useState(false);
+  const otpEnabled = useAccountSecurityStore((s) => s.otpEnabled);
+  const { oauthEnabled } = useConfig();
 
-  // Tick the countdown down to zero, then drop the (now useless) QR so the
-  // user is nudged to generate a fresh one.
+  const [phase, setPhase] = useState<LinkDevicePhase>('idle');
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState<LinkDeviceMessage | null>(null);
+  const [password, setPassword] = useState('');
+  const [totp, setTotp] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [totpRequested, setTotpRequested] = useState(false);
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const [signInLink, setSignInLink] = useState('');
+  const [statusId, setStatusId] = useState<string | null>(null);
+  const [expiresAt, setExpiresAt] = useState(0);
+  const [remaining, setRemaining] = useState(0);
+  const [copied, setCopied] = useState(false);
+
+  const fieldId = useId();
+  const passwordInputRef = useRef<HTMLInputElement>(null);
+  const totpInputRef = useRef<HTMLInputElement>(null);
+  const linkInputRef = useRef<HTMLInputElement>(null);
+  // False once unmounted, so late responses and timers leave state alone.
+  const aliveRef = useRef(true);
+  // Bumped by every create request and by cancel: a response that is no
+  // longer the latest request is dropped.
+  const requestRef = useRef(0);
+  const copiedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const showTotp = otpEnabled || totpRequested;
+
   useEffect(() => {
-    if (remaining <= 0) {
-      setQrDataUrl(null);
-      return;
-    }
-    const timer = setInterval(() => setRemaining((r) => Math.max(0, r - 1)), 1000);
+    aliveRef.current = true;
+    return () => {
+      aliveRef.current = false;
+      if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current);
+    };
+  }, []);
+
+  // Count down from the server's expiry; at zero the code is useless, so the
+  // QR gives way to the "expired" panel.
+  useEffect(() => {
+    if (phase !== 'code') return;
+    const timer = setInterval(() => {
+      const left = Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000));
+      setRemaining(left);
+      if (left <= 0) setPhase('expired');
+    }, 1000);
     return () => clearInterval(timer);
-  }, [remaining]);
+  }, [phase, expiresAt]);
+
+  // Watch the shown code: once the phone redeems it, swap the QR for a
+  // confirmation; if the server forgot or expired it, offer a new one. A new
+  // code (new statusId) or leaving the "code" phase restarts or stops this.
+  useEffect(() => {
+    if (phase !== 'code' || !statusId) return;
+    let cancelled = false;
+    let inFlight = false;
+    const poll = async () => {
+      if (inFlight) return;
+      inFlight = true;
+      try {
+        const res = await apiFetch(`/api/auth/pair/status?id=${encodeURIComponent(statusId)}`, {
+          credentials: 'include',
+        });
+        if (!res.ok) return;
+        const data = await res.json().catch(() => null);
+        if (cancelled) return;
+        const status = data && typeof data === 'object' ? (data as { status?: unknown }).status : undefined;
+        if (status === 'redeemed') setPhase('redeemed');
+        else if (status === 'expired' || status === 'unknown') setPhase('expired');
+      } catch {
+        /* transient network error: try again on the next tick */
+      } finally {
+        inFlight = false;
+      }
+    };
+    const timer = setInterval(() => { void poll(); }, PAIR_STATUS_POLL_MS);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, [phase, statusId]);
+
+  const clearCredentials = useCallback(() => {
+    setPassword('');
+    setTotp('');
+    setShowPassword(false);
+    setTotpRequested(false);
+  }, []);
 
   // Send the user to the IdP for a fresh login (prompt=login). On return the
   // callback page sets the pairing re-auth proof and bounces back here, where
-  // the resume effect below re-runs generate().
+  // the resume effect below calls create() again.
   const startReauth = useCallback(async () => {
-    try {
-      sessionStorage.setItem('pair_reauth_resume', '1');
-    } catch { /* sessionStorage unavailable */ }
     const prefix = getPathPrefix(locale);
     const redirectUri = `${window.location.origin}${prefix}/${locale}/auth/callback`;
-    const res = await apiFetch('/api/auth/sso/start', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ redirect_uri: redirectUri, locale, purpose: 'reauth' }),
-    });
-    if (!res.ok) {
-      setError(t('link_device.error'));
-      return;
+    // The slot lets the server re-authenticate against this account's own
+    // server entry (its IdP), read from the slot's server cookie.
+    const slot = useAccountStore.getState().getActiveAccount()?.cookieSlot ?? 0;
+    try {
+      const res = await apiFetch('/api/auth/sso/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ redirect_uri: redirectUri, locale, purpose: 'reauth', slot }),
+      });
+      if (!res.ok) throw new Error(`sso/start answered ${res.status}`);
+      const { authorize_url, state } = await res.json();
+      if (typeof authorize_url !== 'string' || typeof state !== 'string') throw new Error('sso/start answered no URL');
+      // The callback takes the re-auth route only for this state: a flag left
+      // behind by an abandoned round trip must not capture a later login.
+      try {
+        sessionStorage.setItem('pair_reauth_resume', state);
+      } catch { /* sessionStorage unavailable */ }
+      window.location.href = authorize_url;
+    } catch {
+      if (aliveRef.current) setMessage({ text: t('link_device.error'), tone: 'error' });
     }
-    const { authorize_url } = await res.json();
-    window.location.href = authorize_url;
   }, [locale, t]);
 
-  // `fromResume` guards against a redirect loop: if we just completed re-auth
-  // and pair/create still demands it, surface an error instead of bouncing to
-  // the IdP again.
-  const generate = useCallback(async (fromResume = false) => {
+  const create = useCallback(async ({ password: pw, totp: code, fromResume = false }: PairCreateOptions = {}) => {
+    const request = ++requestRef.current;
+    const isCurrent = () => aliveRef.current && request === requestRef.current;
+    const fail = (text: string, tone: LinkDeviceMessage['tone'] = 'error') => setMessage({ text, tone });
+    const backToIdle = (text: string) => {
+      clearCredentials();
+      setPhase('idle');
+      fail(text);
+    };
+
     setLoading(true);
-    setError(null);
+    setMessage(null);
     try {
-      // Pair the account whose session cookie we'll actually refresh — the
-      // active account's slot.
-      const slot = useAccountStore.getState().getActiveAccount()?.cookieSlot ?? 0;
+      // Pair the account whose session cookie the server reads: the active
+      // account's slot.
+      const account = useAccountStore.getState().getActiveAccount();
+      const slot = account?.cookieSlot ?? 0;
+      // The phone redeems the code against THIS webmail (where the pairing
+      // record lives), so the link carries the webmail base (origin plus any
+      // mount prefix), not the JMAP server URL. The JMAP server_url comes
+      // back in the redeem response.
+      const webmailBase = `${window.location.origin}${getPathPrefix()}`;
+      // This webmail's own OAuth callback, built like startReauth's. The
+      // server only uses it for servers that insist on a registered redirect
+      // during the password step-up.
+      const redirectUri = `${window.location.origin}${getPathPrefix(locale)}/${locale}/auth/callback`;
+      const body: {
+        slot: number;
+        webmail_base: string;
+        redirect_uri: string;
+        password?: string;
+        totp?: string;
+      } = {
+        slot,
+        webmail_base: webmailBase,
+        redirect_uri: redirectUri,
+      };
+      if (pw !== undefined) {
+        body.password = pw;
+        if (code) body.totp = code;
+      }
       const res = await apiFetch('/api/auth/pair/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ slot }),
+        body: JSON.stringify(body),
       });
+      if (!isCurrent()) return;
+
       if (!res.ok) {
         const errBody = await res.json().catch(() => null);
-        if (res.status === 401 && errBody?.error === 'reauth_required' && !fromResume) {
-          await startReauth();
-          return;
+        if (!isCurrent()) return;
+        const reason = errBody && typeof errBody.error === 'string' ? errBody.error : '';
+        switch (reason) {
+          case 'reauth_required':
+            if (account?.providerSession === true) {
+              // `fromResume` guards against a redirect loop: if we just came
+              // back from the IdP and the server still wants a re-auth, say so
+              // instead of bouncing to the IdP again.
+              if (fromResume) fail(t('link_device.error'));
+              else await startReauth();
+              return;
+            }
+            setPhase('password');
+            // A password we just sent was not enough: say so rather than
+            // silently asking again.
+            if (pw !== undefined) fail(t('link_device.error'));
+            return;
+          case 'invalid_credentials':
+            setPhase('password');
+            setPassword('');
+            setTotp('');
+            fail(t('link_device.error_wrong_password'));
+            passwordInputRef.current?.focus();
+            return;
+          case 'totp_required':
+            setPhase('password');
+            setTotpRequested(true);
+            setTotp('');
+            // With a code already sent this is a failed attempt, and Stalwart
+            // answers a wrong code exactly like a wrong password, so name both.
+            if (code) fail(t('link_device.error_password_or_code'));
+            else fail(t('link_device.totp_prompt'), 'info');
+            // Not mounted yet on the first request; its autoFocus covers that.
+            totpInputRef.current?.focus();
+            return;
+          case 'not_signed_in':
+            backToIdle(t('link_device.error_not_signed_in'));
+            return;
+          case 'impersonation':
+            backToIdle(t('link_device.error_impersonation'));
+            return;
+          case 'session_secret_required':
+            backToIdle(t('link_device.error_session_secret'));
+            return;
+          case 'pairing_unavailable':
+            backToIdle(t('link_device.error_pairing_unavailable'));
+            return;
+          case 'insecure_server':
+            backToIdle(t('link_device.error_insecure_server'));
+            return;
+          case 'too_many_attempts':
+            setTotp('');
+            fail(t('link_device.error_too_many_attempts'));
+            return;
+          case 'server_unreachable':
+            setTotp('');
+            fail(t('link_device.error_server_unreachable'));
+            return;
+          default:
+            // Includes `invalid_request`.
+            fail(t('link_device.error'));
+            return;
         }
-        setError(t('link_device.error'));
-        return;
       }
-      const data = await res.json();
-      const code = data.pairing_code as string;
-      const expiresIn = typeof data.expires_in === 'number' ? data.expires_in : 120;
-      // The phone redeems the code against THIS webmail (where the pairing
-      // record lives), so the QR carries the webmail base — origin plus any
-      // mount prefix — not the JMAP server URL. The JMAP server_url comes back
-      // in the redeem response.
-      const webmailBase = `${window.location.origin}${getPathPrefix()}`;
-      const payload = `bulwarkmail://pair?server=${encodeURIComponent(webmailBase)}&code=${encodeURIComponent(code)}`;
-      const dataUrl = await QRCode.toDataURL(payload, { width: 240, margin: 1 });
-      setQrDataUrl(dataUrl);
-      setRemaining(expiresIn);
-      setHasGenerated(true);
-    } catch {
-      setError(t('link_device.error'));
-    } finally {
-      setLoading(false);
-    }
-  }, [t, startReauth]);
 
-  // Auto-resume after returning from the step-up re-auth round-trip.
+      const data = await res.json();
+      const pairingCode = typeof data?.pairing_code === 'string' ? data.pairing_code : '';
+      if (!pairingCode) throw new Error('pair/create returned no pairing_code');
+      const expiresIn = typeof data.expires_in === 'number' && data.expires_in > 0
+        ? data.expires_in
+        : PAIR_DEFAULT_EXPIRES_IN;
+      const link = `bulwarkmail://pair?server=${encodeURIComponent(webmailBase)}&code=${encodeURIComponent(pairingCode)}`;
+      const dataUrl = await QRCode.toDataURL(link, { width: 240, margin: 1 });
+      if (!isCurrent()) return;
+
+      clearCredentials();
+      setQrDataUrl(dataUrl);
+      setSignInLink(link);
+      setStatusId(typeof data.status_id === 'string' && data.status_id ? data.status_id : null);
+      setExpiresAt(Date.now() + expiresIn * 1000);
+      setRemaining(expiresIn);
+      setCopied(false);
+      setPhase('code');
+    } catch {
+      if (isCurrent()) fail(t('link_device.error'));
+    } finally {
+      if (isCurrent()) {
+        setLoading(false);
+        // The resume is done only once a mounted section has shown its result.
+        if (fromResume) {
+          try { sessionStorage.removeItem('pair_reauth_done'); } catch { /* unavailable */ }
+        }
+      }
+    }
+  }, [t, locale, startReauth, clearCredentials]);
+
+  // Auto-resume after returning from the IdP re-auth round-trip. Runs once on
+  // mount; the ref keeps it off `create`'s identity. The flag stays until the
+  // result is shown: the Security tab remounts this section while it probes
+  // the server, and a response that lands on the unmounted one is dropped.
+  const createRef = useRef(create);
+  useEffect(() => {
+    createRef.current = create;
+  }, [create]);
   useEffect(() => {
     let resume = false;
     try {
       resume = sessionStorage.getItem('pair_reauth_done') === '1';
-      if (resume) sessionStorage.removeItem('pair_reauth_done');
     } catch { /* sessionStorage unavailable */ }
-    if (resume) void generate(true);
-  }, [generate]);
+    if (resume) void createRef.current({ fromResume: true });
+  }, []);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (loading || !password || (showTotp && !totp.trim())) return;
+    void create({ password, totp: showTotp ? totp.trim() : undefined });
+  };
+
+  const handleCancel = () => {
+    requestRef.current += 1; // drop an in-flight request
+    clearCredentials();
+    setLoading(false);
+    setMessage(null);
+    setPhase('idle');
+  };
+
+  const handleCopyLink = () => {
+    if (!signInLink) return;
+    const clipboard = typeof navigator !== 'undefined' ? navigator.clipboard : undefined;
+    if (!clipboard) {
+      // No clipboard API (e.g. plain http): select it for a manual copy.
+      linkInputRef.current?.select();
+      return;
+    }
+    clipboard.writeText(signInLink).then(() => {
+      if (!aliveRef.current) return;
+      setCopied(true);
+      if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current);
+      copiedTimerRef.current = setTimeout(() => {
+        if (aliveRef.current) setCopied(false);
+      }, 2000);
+    }).catch(() => {
+      linkInputRef.current?.select();
+    });
+  };
+
+  const messageNode = message && (
+    message.tone === 'error' ? (
+      <p role="alert" className="text-xs text-destructive">{message.text}</p>
+    ) : (
+      <p role="status" className="text-xs text-muted-foreground">{message.text}</p>
+    )
+  );
+
+  const announcement =
+    phase === 'redeemed' ? t('link_device.success_title')
+      : phase === 'expired' ? t('link_device.expired')
+        : '';
 
   return (
     <div className="space-y-3">
+      <p className="sr-only" aria-live="polite">{announcement}</p>
       <div className="flex items-center gap-2">
         <QrCode className="w-4 h-4 text-muted-foreground" />
         <h4 className="text-sm font-medium text-foreground">{t('link_device.title')}</h4>
       </div>
       <p className="text-xs text-muted-foreground">{t('link_device.description')}</p>
 
-      {qrDataUrl && remaining > 0 && (
-        <div className="p-3 bg-muted/70 dark:bg-muted/40 rounded-md space-y-2">
+      {phase === 'password' && (
+        <form onSubmit={handleSubmit} className="p-3 bg-muted/70 dark:bg-muted/40 rounded-md space-y-3">
+          <p className="text-xs text-muted-foreground">{t('link_device.password_prompt')}</p>
+          <div>
+            <label htmlFor={`${fieldId}-password`} className="text-xs text-muted-foreground mb-1 block">
+              {t('password.current')}
+            </label>
+            <div className="relative">
+              <Input
+                id={`${fieldId}-password`}
+                ref={passwordInputRef}
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                autoFocus
+                autoComplete="current-password"
+                className="pe-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                aria-label={showPassword ? t('link_device.hide_password') : t('link_device.show_password')}
+                className="absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+          </div>
+          {showTotp && (
+            <div>
+              <label htmlFor={`${fieldId}-totp`} className="text-xs text-muted-foreground mb-1 block">
+                {t('totp.verification_code')}
+              </label>
+              <Input
+                id={`${fieldId}-totp`}
+                ref={totpInputRef}
+                value={totp}
+                onChange={(e) => setTotp(e.target.value)}
+                required
+                autoFocus={totpRequested}
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                maxLength={6}
+              />
+            </div>
+          )}
+          {messageNode}
+          <div className="flex gap-2">
+            <Button type="submit" size="sm" disabled={loading || !password || (showTotp && !totp.trim())}>
+              {loading ? <Loader2 className="w-4 h-4 me-1 animate-spin" /> : null}
+              {t('link_device.continue')}
+            </Button>
+            <Button type="button" size="sm" variant="ghost" onClick={handleCancel}>
+              {t('app_passwords.cancel')}
+            </Button>
+          </div>
+          {/* Sessions from before `providerSession` was recorded land here even
+              when they came through the identity provider, and an SSO-only
+              account has no password to type. */}
+          {oauthEnabled && (
+            <button
+              type="button"
+              onClick={() => void startReauth()}
+              className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
+            >
+              {t('link_device.use_sso')}
+            </button>
+          )}
+        </form>
+      )}
+
+      {phase === 'code' && qrDataUrl && (
+        <div className="p-3 bg-muted/70 dark:bg-muted/40 rounded-md space-y-3">
           <div className="flex justify-center">
-            <img src={qrDataUrl} alt="Pairing QR code" className="rounded bg-white p-2" />
+            <img src={qrDataUrl} alt={t('link_device.qr_alt')} className="rounded bg-white p-2" />
           </div>
           <p className="text-xs text-muted-foreground text-center">{t('link_device.instructions')}</p>
+          <div className="space-y-1.5">
+            <label htmlFor={`${fieldId}-link`} className="text-xs text-muted-foreground block">
+              {t('link_device.link_label')}
+            </label>
+            <input
+              id={`${fieldId}-link`}
+              ref={linkInputRef}
+              type="text"
+              readOnly
+              dir="ltr"
+              value={signInLink}
+              onFocus={(e) => e.currentTarget.select()}
+              className="py-2 px-3 block w-full bg-background border border-border rounded-md text-xs font-mono text-foreground focus:border-ring focus:ring-ring"
+            />
+            <Button type="button" variant="outline" size="sm" onClick={handleCopyLink}>
+              {copied ? <Check className="w-3 h-3 me-1" /> : <Copy className="w-3 h-3 me-1" />}
+              <span aria-live="polite">{copied ? t('link_device.copied') : t('link_device.copy_link')}</span>
+            </Button>
+            <p className="text-[11px] text-muted-foreground">{t('link_device.copy_hint')}</p>
+          </div>
           <p className="text-[11px] text-muted-foreground text-center">
             {t('link_device.expires_in', { seconds: remaining })}
           </p>
         </div>
       )}
 
-      {error && <p className="text-xs text-destructive">{error}</p>}
+      {phase === 'redeemed' && (
+        <div className="p-3 bg-muted/70 dark:bg-muted/40 rounded-md flex flex-col items-center text-center gap-2">
+          <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" aria-hidden="true" />
+          <p className="text-sm font-medium text-foreground">{t('link_device.success_title')}</p>
+          <p className="text-xs text-muted-foreground">{t('link_device.success_body')}</p>
+          <Button variant="outline" size="sm" onClick={() => void create()} disabled={loading}>
+            {loading ? <Loader2 className="w-3 h-3 me-1 animate-spin" /> : <Plus className="w-3 h-3 me-1" />}
+            {t('link_device.link_another')}
+          </Button>
+        </div>
+      )}
 
-      <Button variant="outline" size="sm" onClick={() => void generate()} disabled={loading}>
-        {loading ? (
-          <Loader2 className="w-3 h-3 me-1 animate-spin" />
-        ) : (
-          <QrCode className="w-3 h-3 me-1" />
-        )}
-        {hasGenerated ? t('link_device.regenerate') : t('link_device.generate')}
-      </Button>
+      {phase === 'expired' && (
+        <div className="p-3 bg-muted/70 dark:bg-muted/40 rounded-md flex flex-col items-center text-center gap-2">
+          <p className="text-sm text-foreground">{t('link_device.expired')}</p>
+          <Button variant="outline" size="sm" onClick={() => void create()} disabled={loading}>
+            {loading ? <Loader2 className="w-3 h-3 me-1 animate-spin" /> : <RefreshCw className="w-3 h-3 me-1" />}
+            {t('link_device.regenerate')}
+          </Button>
+        </div>
+      )}
+
+      {phase !== 'password' && messageNode}
+
+      {phase === 'idle' && (
+        <Button variant="outline" size="sm" onClick={() => void create()} disabled={loading}>
+          {loading ? <Loader2 className="w-3 h-3 me-1 animate-spin" /> : <QrCode className="w-3 h-3 me-1" />}
+          {t('link_device.generate')}
+        </Button>
+      )}
+
+      {phase === 'code' && (
+        <Button variant="ghost" size="sm" onClick={() => void create()} disabled={loading}>
+          {loading ? <Loader2 className="w-3 h-3 me-1 animate-spin" /> : <RefreshCw className="w-3 h-3 me-1" />}
+          {t('link_device.regenerate')}
+        </Button>
+      )}
     </div>
   );
 }
@@ -1051,7 +1458,10 @@ export function AccountSecuritySettings() {
     }
   }, [isAuthenticated, client, isStalwart, probe, fetchAll, fetchAuthInfo, isOAuth, fetchPublicKeys, fetchCryptoInfo]);
 
-  if (isProbing) {
+  // Until the probe has a verdict, show the spinner instead of guessing a
+  // layout: switching layouts remounts every section below, which threw away
+  // a pairing QR that was already on screen.
+  if (isProbing || (isStalwart === null && isAuthenticated)) {
     return (
       <SettingsSection title={t('title')} description={t('description')}>
         <div className="flex items-center gap-2 py-4">
@@ -1064,16 +1474,17 @@ export function AccountSecuritySettings() {
 
   if (isStalwart === false) {
     // Even when Stalwart account-management isn't exposed (common for OAuth
-    // sessions, whose tokens may lack the management capability), the
-    // cross-device mobile pairing still works — it only needs the OAuth
-    // refresh-token cookie, not `urn:stalwart:jmap`. So surface the QR linker
-    // for OAuth sessions and show the "not available" note for the rest.
+    // sessions, whose tokens may lack the management capability), linking
+    // the mobile app still works for every sign-in method: it runs through
+    // this webmail's own /api/auth/pair routes, not `urn:stalwart:jmap`. So
+    // show the linker above the "not available" note (except in Lite, which
+    // has no server routes).
     // Use t.raw (not t) because the message is hand-injected HTML; passing it
     // through t() makes next-intl try to parse the <a> tag and throw
     // INVALID_TAG.
     return (
       <SettingsSection title={t('title')} description={t('description')}>
-        {isOAuth ? (
+        {!IS_LITE ? (
           <div className="space-y-6">
             <LinkDeviceSection />
             <div className="border-t border-border" />
@@ -1111,12 +1522,17 @@ export function AccountSecuritySettings() {
         <div className="border-t border-border" />
         <ApiKeysSection />
 
+        {!IS_LITE && (
+          <>
+            <div className="border-t border-border" />
+            <LinkDeviceSection />
+          </>
+        )}
+
         {isOAuth && (
           <>
             <div className="border-t border-border" />
             <EmailClientSection />
-            <div className="border-t border-border" />
-            <LinkDeviceSection />
           </>
         )}
             <div className="border-t border-border" />

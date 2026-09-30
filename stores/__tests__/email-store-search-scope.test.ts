@@ -32,6 +32,7 @@ function makeClient() {
     searchEmails: vi.fn().mockResolvedValue({ emails: [], hasMore: false, total: 0 }),
     advancedSearchEmails: vi.fn().mockResolvedValue({ emails: [], hasMore: false, total: 0 }),
     getSomeEmails: vi.fn().mockResolvedValue([]),
+    getAccountId: () => 'me',
   } as unknown as IJMAPClient;
 }
 
@@ -73,11 +74,14 @@ describe('search folder scope (#788)', () => {
     expect(useEmailStore.getState().searchMailboxId).toBe('');
   });
 
-  it('quick search from within a folder queries every folder', async () => {
+  it('quick search from within a folder queries every folder of every account', async () => {
     await useEmailStore.getState().searchEmails(client, 'invoice');
 
-    // No mailbox id -> the JMAP client omits the inMailbox constraint.
-    expect(client.searchEmails).toHaveBeenCalledWith('invoice', '', undefined, 50, 0);
+    // No mailbox id -> the JMAP client omits the inMailbox constraint; the
+    // shared folder's owner is asked as well (#1082).
+    expect(client.searchEmails).toHaveBeenCalledTimes(2);
+    expect(client.searchEmails).toHaveBeenCalledWith('invoice', undefined, undefined, 50, 0);
+    expect(client.searchEmails).toHaveBeenCalledWith('invoice', undefined, 'owner-x', 50, 0);
   });
 
   it('advanced search from within a folder does not add an inMailbox condition', async () => {
@@ -85,9 +89,13 @@ describe('search folder scope (#788)', () => {
 
     await useEmailStore.getState().advancedSearch(client);
 
-    const [filter] = (client.advancedSearchEmails as ReturnType<typeof vi.fn>).mock.calls[0];
-    expect(filter).toEqual({ from: 'bob@example.com' });
-    expect(JSON.stringify(filter)).not.toContain('inMailbox');
+    const calls = (client.advancedSearchEmails as ReturnType<typeof vi.fn>).mock.calls;
+    expect(calls).toHaveLength(2);
+    for (const [filter] of calls) {
+      expect(filter).toEqual({ from: 'bob@example.com' });
+      expect(JSON.stringify(filter)).not.toContain('inMailbox');
+    }
+    expect(calls.map(([, accountId]) => accountId)).toEqual([undefined, 'owner-x']);
   });
 
   it('honours an explicitly chosen folder that differs from the open one', async () => {
