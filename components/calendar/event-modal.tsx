@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useTranslations, useLocale } from "next-intl";
+import { toast } from "@/stores/toast-store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LinkifiedText } from "@/components/ui/linkified-text";
@@ -493,7 +494,13 @@ export function EventModal({
   const handleSave = useCallback(async () => {
     const trimmedTitle = title.trim();
     if (!trimmedTitle || isSaving) return;
-    if (trimmedTitle.length > 500 || description.trim().length > 10000 || location.trim().length > 500) return;
+    if (trimmedTitle.length > 500 || description.trim().length > 10000 || location.trim().length > 500) {
+      // This guard returned silently, so a rejected save was indistinguishable from a dead
+      // button. The fields also enforce their limits via maxLength, so this is a backstop —
+      // but if it ever fires, say so.
+      toast.error(t("notifications.event_error"));
+      return;
+    }
 
     const pendingAttendee = participantInputRef.current?.flush() ?? null;
     const effectiveAttendees = pendingAttendee ? [...attendees, pendingAttendee] : attendees;
@@ -524,9 +531,10 @@ export function EventModal({
     // grid and prefill are display dates), so label them with that zone.
     const timeZone = getEffectiveTimeZone();
 
+    const trimmedDescription = description.trim();
+
     const data: Partial<CalendarEvent> = {
       title: trimmedTitle,
-      description: description.trim(),
       start: startStr,
       duration,
       timeZone: allDay ? null : timeZone,
@@ -536,6 +544,13 @@ export function EventModal({
       freeBusyStatus: "busy",
       privacy: "public",
     };
+
+    // On an existing event the empty string is how a description gets cleared, but
+    // sending it on creation writes a `DESCRIPTION:` with nothing after it — which
+    // invitation e-mails then render as a "Description" heading over blank space.
+    if (trimmedDescription || event) {
+      data.description = trimmedDescription;
+    }
 
     if (!event) {
       data.uid = generateUUID();
@@ -632,7 +647,7 @@ export function EventModal({
     } finally {
       setIsSaving(false);
     }
-  }, [title, description, location, virtualLocation, startDate, startTime, endDate, endTime, allDay, calendarId, recurrence, customRule, alertRows, attendees, sendInvitations, currentUserEmails, existingParticipants, resolveContactName, event, onSave, isSaving]);
+  }, [title, description, location, virtualLocation, startDate, startTime, endDate, endTime, allDay, calendarId, recurrence, customRule, alertRows, attendees, sendInvitations, currentUserEmails, existingParticipants, resolveContactName, event, onSave, isSaving, t]);
 
   const handleRsvp = useCallback((status: CalendarParticipant['participationStatus']) => {
     if (!event || !userParticipantId || !onRsvp) return;
@@ -1436,7 +1451,9 @@ export function EventModal({
             disabled={!title.trim() || isSaving}
             className="w-full"
           >
-            {t("form.save")}
+            {/* While a save is in flight the button was disabled with no visible change, so a
+                slow request (mobile, VPN) looked like a dead button for the whole timeout. */}
+            {isSaving ? t("subscription.saving") : t("form.save")}
           </Button>
         </div>
         )}

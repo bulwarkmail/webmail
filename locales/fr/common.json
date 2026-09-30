@@ -835,7 +835,19 @@
     "templates_import_empty": "Aucun modèle trouvé dans le fichier",
     "export_email_error": "Échec de l'exportation de l'e-mail",
     "import_email_success": "E-mail importé avec succès",
-    "import_email_error": "Échec de l'importation de l'e-mail"
+    "import_email_error": "Échec de l'importation de l'e-mail",
+    "rule_created": "Règle créée",
+    "rule_merged": "Ajouté à la règle « {name} »",
+    "rule_already_covered": "Déjà couvert par la règle « {name} »",
+    "rule_apply_existing": "{count, plural, one {Appliquer à # message existant} other {Appliquer à # messages existants}}",
+    "rule_applied": "{count, plural, =0 {Aucun message à modifier} one {Règle appliquée à # message} other {Règle appliquée à # messages}}",
+    "rule_apply_failed": "Impossible d'appliquer la règle aux messages existants",
+    "rule_edit": "Modifier la règle",
+    "rule_undo": "Annuler",
+    "rule_undone": "Modification de la règle annulée",
+    "rule_undo_failed": "Impossible d'annuler la modification de la règle",
+    "rule_undo_conflict": "Vos filtres ont changé entre-temps. Annulez la modification dans les réglages des filtres.",
+    "rule_folder_failed": "Impossible de créer le dossier"
   },
   "date": {
     "today": "Aujourd'hui",
@@ -2079,7 +2091,9 @@
         "ends_with": "se termine par",
         "matches": "correspond au motif",
         "greater_than": "est supérieur à",
-        "less_than": "est inférieur à"
+        "less_than": "est inférieur à",
+        "address_is": "est l'adresse",
+        "domain_is": "a pour domaine"
       },
       "action_types": {
         "move": "Déplacer vers le dossier",
@@ -2154,7 +2168,26 @@
         "actions_count": "{count, plural, one {# action} other {# actions}}"
       },
       "origin_external": "Externe",
-      "managed_by_tooltip": "Géré par {source}. Modifiez-le dans cette application, ou utilisez l'éditeur Sieve brut."
+      "managed_by_tooltip": "Géré par {source}. Modifiez-le dans cette application, ou utilisez l'éditeur Sieve brut.",
+      "quick_rule_names": {
+        "move_sender": "Déplacer de {sender} vers {folder}",
+        "move_domain": "Déplacer de @{domain} vers {folder}",
+        "move_list": "Déplacer la liste {list} vers {folder}",
+        "mark_read": "Marquer comme lus les messages de {sender}",
+        "tag": "Étiqueter {tag} les messages de {sender}",
+        "block": "Bloquer {sender}",
+        "custom": "Messages de {sender}",
+        "custom_plain": "Nouvelle règle",
+        "senders": "{count, plural, one {# expéditeur} other {# expéditeurs}}"
+      },
+      "suggestions": "Suggestions",
+      "suggest_subject": "Objet « {subject} »",
+      "suggest_to": "À {address}",
+      "suggest_cc": "Cc {address}",
+      "suggest_list": "List-Id",
+      "suggest_domain": "@{domain}",
+      "apply_existing": "Appliquer aussi aux messages déjà présents dans ce dossier",
+      "apply_existing_unsupported": "Seules les règles qui vérifient l'expéditeur, les destinataires, l'objet ou les en-têtes, et qui déplacent, copient, marquent comme lu, suivent ou étiquettent, peuvent s'appliquer aux messages existants."
     },
     "templates": {
       "title": "Modèles d'e-mails",
@@ -2293,7 +2326,22 @@
     "cancel_scheduled_send": "Annuler l’envoi",
     "reschedule_send": "Replanifier",
     "cancel_and_edit": "Annuler et modifier",
-    "cancel_and_compose_again": "Annuler et rédiger à nouveau"
+    "cancel_and_compose_again": "Annuler et rédiger à nouveau",
+    "rules": {
+      "title": "Règles",
+      "move_from": "Toujours déplacer les messages de {sender}",
+      "move_from_domain": "Toujours déplacer les messages de @{domain}",
+      "move_from_list": "Toujours déplacer les messages de cette liste",
+      "mark_read_from": "Toujours marquer comme lus les messages de {sender}",
+      "tag_with": "Toujours étiqueter avec",
+      "block": "{count, plural, one {Bloquer l'expéditeur} other {Bloquer # expéditeurs}}",
+      "no_junk": "Ce compte n'a pas de dossier Indésirables",
+      "create": "Créer une règle…",
+      "manage": "Gérer les règles",
+      "senders_count": "{count, plural, one {# expéditeur} other {# expéditeurs}}",
+      "cross_account": "Sélectionnez des messages d'un seul compte",
+      "opaque_hint": "Vos filtres ont été modifiés à la main. Ouvrez les réglages des filtres"
+    }
   },
   "mailbox_context_menu": {
     "mark_folder_read": "Marquer le dossier comme lu",

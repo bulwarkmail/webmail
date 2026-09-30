@@ -110,6 +110,10 @@ interface ContextMenuItemProps {
   shortcut?: string;
   /** Stable hook for integration tests (not user-visible). */
   testId?: string;
+  /** Tooltip, e.g. the address behind a display name. */
+  title?: string;
+  /** A second line under the label, e.g. why the item is disabled. */
+  hint?: string;
 }
 
 export function ContextMenuItem({
@@ -120,12 +124,15 @@ export function ContextMenuItem({
   destructive = false,
   shortcut,
   testId,
+  title,
+  hint,
 }: ContextMenuItemProps) {
   return (
     <button
       role="menuitem"
       data-testid={testId}
       disabled={disabled}
+      title={title}
       className={cn(
         "w-full px-3 py-1.5 text-sm text-start flex items-center gap-2",
         "transition-colors duration-150",
@@ -141,7 +148,14 @@ export function ContextMenuItem({
       }}
     >
       {Icon && <Icon className="w-4 h-4 flex-shrink-0" />}
-      <span className="flex-1">{label}</span>
+      {hint ? (
+        <span className="flex-1 min-w-0">
+          <span className="block">{label}</span>
+          <span className="block text-xs text-muted-foreground">{hint}</span>
+        </span>
+      ) : (
+        <span className="flex-1">{label}</span>
+      )}
       {shortcut && (
         <span className="text-xs text-muted-foreground ms-auto">{shortcut}</span>
       )}
@@ -159,6 +173,12 @@ interface ContextMenuSubMenuProps {
   children: React.ReactNode;
   /** Stable hook for integration tests (not user-visible). */
   testId?: string;
+  /** Shown but not openable. */
+  disabled?: boolean;
+  /** Tooltip on the entry. */
+  title?: string;
+  /** A second line under the label, e.g. why the entry is disabled. */
+  hint?: string;
 }
 
 export function ContextMenuSubMenu({
@@ -166,6 +186,9 @@ export function ContextMenuSubMenu({
   label,
   children,
   testId,
+  disabled = false,
+  title,
+  hint,
 }: ContextMenuSubMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [subMenuPos, setSubMenuPos] = useState<Position | null>(null);
@@ -210,6 +233,7 @@ export function ContextMenuSubMenu({
   }, []);
 
   const handleMouseEnter = () => {
+    if (disabled) return;
     if (closeTimerRef.current) {
       clearTimeout(closeTimerRef.current);
       closeTimerRef.current = null;
@@ -233,20 +257,29 @@ export function ContextMenuSubMenu({
       <div
         className={cn(
           "w-full px-3 py-1.5 text-sm flex items-center gap-2",
-          "transition-colors duration-150 cursor-pointer",
-          "hover:bg-muted"
+          "transition-colors duration-150",
+          disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:bg-muted"
         )}
         role="menuitem"
         aria-haspopup="true"
         aria-expanded={isOpen}
+        aria-disabled={disabled || undefined}
         data-testid={testId}
+        title={title}
       >
         {Icon && <Icon className="w-4 h-4 flex-shrink-0" />}
-        <span className="flex-1">{label}</span>
+        {hint ? (
+          <span className="flex-1 min-w-0">
+            <span className="block">{label}</span>
+            <span className="block text-xs text-muted-foreground">{hint}</span>
+          </span>
+        ) : (
+          <span className="flex-1">{label}</span>
+        )}
         <ChevronRight className="w-4 h-4 text-muted-foreground" />
       </div>
 
-      {isOpen && (
+      {isOpen && !disabled && (
         <div
           ref={subMenuRef}
           className="fixed z-50 min-w-[180px] bg-background rounded-md shadow-lg border border-border"

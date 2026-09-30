@@ -29,7 +29,16 @@ export type FilterComparator =
   //   has_any  → message has any attachment (Content-Disposition: attachment)
   //   has_type → message has an attachment whose Content-Type matches `value`
   //              (substring match, e.g. "application/pdf" or "image/")
-  | 'has_any' | 'has_type';
+  | 'has_any' | 'has_type'
+  // For field === 'from' | 'to' | 'cc', compared against the parsed address
+  // with the Sieve `address` test rather than the raw header text:
+  //   address_is → the whole address equals `value` (anna@acme.com, but not
+  //                joanna@acme.com)
+  //   domain_is  → the domain part equals `value` (acme.com, but neither
+  //                sub.acme.com nor acme.com.evil)
+  // Older Bulwark versions read these as `header :contains`, so a script
+  // they save keeps working, only less strictly.
+  | 'address_is' | 'domain_is';
 
 export type FilterActionType =
   | 'move' | 'copy' | 'forward'
