@@ -254,6 +254,7 @@
       "button": "Map legen",
       "confirm_title": "Map legen",
       "confirm_message": "Alle e-mails in deze map worden permanent verwijderd. Deze actie kan niet ongedaan worden gemaakt.",
+      "confirm_message_trash": "Alle e-mails in deze map worden naar de prullenbak verplaatst.",
       "confirm_button": "Map legen",
       "junk_hint": "U kunt de map Spam legen om alle berichten permanent te verwijderen.",
       "trash_hint": "U kunt de prullenbak legen om alle berichten permanent te verwijderen."
@@ -310,6 +311,8 @@
     "view_source": "Bron bekijken",
     "fullscreen": "Volledig scherm",
     "exit_fullscreen": "Volledig scherm sluiten",
+    "view_in_dark_mode": "Weergeven in donkere modus",
+    "view_in_light_mode": "Weergeven in lichte modus",
     "export_email": "Exporteren als .eml",
     "forward_as_attachment": "Doorsturen als bijlage",
     "import_email": ".eml of .zip importeren",
@@ -578,7 +581,12 @@
       "copied": "Gekopieerd!",
       "copy_failed": "Kopiëren mislukt"
     },
-    "send_now": "Nu verzenden"
+    "send_now": "Nu verzenden",
+    "verification_code": {
+      "copy": "Code {code} kopiëren",
+      "copied": "Code gekopieerd",
+      "copy_failed": "Kan de code niet kopiëren"
+    }
   },
   "email_composer": {
     "read_receipt_on": "Leesbevestiging aangevraagd (klik om uit te schakelen)",
@@ -640,11 +648,12 @@
     "from_override": {
       "toggle_off": "Overschrijven",
       "toggle_on": "Overschrijven annuleren",
-      "toggle_tooltip": "Bewerk de naam en het adres van de afzender vrij. E-mail wordt nog steeds via je identiteit verzonden - alleen de zichtbare Van-koptekst verandert.",
+      "toggle_tooltip": "Bewerk de naam en het adres van de afzender vrij. E-mail wordt nog steeds via je identiteit verzonden.",
       "name_label": "Afzendernaam",
       "name_placeholder": "Naam",
       "email_label": "E-mailadres afzender",
-      "email_placeholder": "alias@example.com"
+      "email_placeholder": "alias@example.com",
+      "envelope_notice": "Als je server dit adres niet accepteert als envelopafzender, wordt daar {identity} gebruikt, en ontvangers kunnen dat zien in de Return-Path-header."
     },
     "use_template": "Sjabloon",
     "save_as_template": "Opslaan als sjabloon",
@@ -657,6 +666,8 @@
     "upload_progress": "Uploaden {uploaded} / {total}",
     "upload_cancel": "Upload annuleren",
     "upload_failed": "Uploaden van {filename} mislukt",
+    "attachment_too_large": "\"{name}\" is groter dan de server toestaat ({max} per bestand)",
+    "attachments_total_too_large": "De bijlagen zouden de serverlimiet van {max} per bericht overschrijden",
     "send_failed": "E-mail verzenden mislukt",
     "smime_sign_on": "S/MIME-ondertekening ingeschakeld",
     "smime_sign_off": "S/MIME-ondertekening uitgeschakeld",
@@ -668,6 +679,8 @@
     "smime_unlock_button": "Ontgrendelen",
     "smime_passphrase_placeholder": "S/MIME-wachtwoordzin",
     "send_timeout": "De server reageert niet meer. Controleer de map Verzonden voordat u opnieuw verstuurt — het bericht is mogelijk al verzonden.",
+    "send_recipients_rejected": "Niet verzonden - de server heeft alle ontvangers geweigerd.",
+    "send_some_recipients_rejected": "Verzonden, maar niet naar deze ontvangers - de server heeft ze geweigerd.",
     "continue_draft": "Concept voortzetten",
     "close_draft_title": "Concept opslaan of verwijderen?",
     "close_draft_message": "U heeft niet-opgeslagen wijzigingen. Wilt u dit als concept opslaan of verwijderen?",
@@ -778,6 +791,10 @@
     "email_sent": "E-mail succesvol verzonden",
     "email_deleted": "E-mail verwijderd",
     "email_archived": "E-mail gearchiveerd",
+    "emails_deleted": "{count, plural, one {# e-mail verwijderd} other {# e-mails verwijderd}}",
+    "emails_archived": "{count, plural, one {# e-mail gearchiveerd} other {# e-mails gearchiveerd}}",
+    "error_archiving": "E-mail kon niet worden gearchiveerd",
+    "error_updating": "E-mail kon niet worden bijgewerkt",
     "email_starred": "Ster toegevoegd aan e-mail",
     "email_unstarred": "Ster verwijderd van e-mail",
     "email_marked_read": "E-mail gemarkeerd als gelezen",
@@ -918,12 +935,25 @@
       "sidebar_apps": "Zijbalk-apps",
       "notifications": "Meldingen",
       "layout": "Indeling",
+      "themes": "Thema's",
       "reading": "Lezen",
       "composing": "Opstellen",
       "downloads": "Downloads",
       "content_senders": "Inhoud en afzenders",
       "about_data": "Over en gegevens",
       "debug": "Debuggen"
+    },
+    "themes": {
+      "title": "Thema's",
+      "description": "Kies uit thema's die je beheerder heeft uitgerold en ingebouwde voorinstellingen.",
+      "locked": "Themakeuze is vergrendeld door een beheerder.",
+      "forced": "Thema “{name}” is afgedwongen door de beheerder en kan niet worden gewijzigd",
+      "admin_theme": "Beheerdersthema",
+      "activated": "Thema geactiveerd",
+      "default_restored": "Standaardthema hersteld",
+      "default_name": "Standaard",
+      "default_badge": "Standaard",
+      "admin_enforced": "Afgedwongen door beheerder"
     },
     "tab_groups": {
       "general": "Algemeen",
@@ -1160,7 +1190,9 @@
         "enabled": "E-mailmeldingen",
         "enabled_desc": "Meldingen tonen wanneer nieuwe e-mails binnenkomen",
         "sound": "Meldingsgeluid",
-        "sound_desc": "Een geluid afspelen wanneer nieuwe e-mails binnenkomen"
+        "sound_desc": "Een geluid afspelen wanneer nieuwe e-mails binnenkomen",
+        "inbox_only": "Inbox only",
+        "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
       },
       "calendar": {
         "title": "Agendameldingen",
@@ -1365,6 +1397,10 @@
         "label": "Voorbeeldtekst tonen",
         "description": "E-mailvoorbeeld weergeven in de lijst",
         "focus_description": "Inline voorbeeldtekst weergeven in de gefocuste berichtenlijst met één regel"
+      },
+      "show_verification_codes": {
+        "label": "Verificatiecodes tonen",
+        "description": "De code uit aanmeld- en bevestigingsmails aanbieden om met één klik te kopiëren, een dag lang in de lijst en in het bericht"
       },
       "attachment_click_action": {
         "label": "Actie bij klikken op bijlagen",
@@ -1697,14 +1733,36 @@
       },
       "link_device": {
         "title": "Mobiele app koppelen",
-        "description": "Log in bij de Bulwark Mail mobiele app zonder iets te typen. Genereer hier een QR-code en scan deze vanaf het inlogscherm van de app.",
+        "description": "Log in bij de Bulwark Mail-app op uw telefoon zonder daar uw wachtwoord te typen. Uw telefoon krijgt een eigen aanmelding, dus als u hier uitlogt, blijft de telefoon ingelogd.",
         "generate": "QR-code tonen",
         "regenerate": "Nieuwe code tonen",
-        "instructions": "Open de Bulwark Mail app, tik op \"QR-code scannen\" op het inlogscherm en richt uw camera hierop.",
+        "instructions": "Open de Bulwark Mail-app en tik op het inlogscherm op \"Scan a sign-in code\" (of op \"Add account\" → \"Scan a sign-in code\" als u al bent ingelogd) en richt de camera hierop.",
         "expires_in": "Deze code verloopt over {seconds} seconden. Hij kan maar één keer worden gebruikt.",
         "expired": "Deze code is verlopen.",
-        "generating": "Genereren…",
-        "error": "Kon geen koppelingscode aanmaken. Probeer het opnieuw."
+        "error": "Kon geen koppelingscode aanmaken. Probeer het opnieuw.",
+        "password_prompt": "Voer uw wachtwoord in om te bevestigen dat u het bent. Uw telefoon krijgt een eigen aanmelding; uw wachtwoord wordt niet naar de telefoon gestuurd.",
+        "show_password": "Wachtwoord tonen",
+        "hide_password": "Wachtwoord verbergen",
+        "continue": "Doorgaan",
+        "error_wrong_password": "Onjuist wachtwoord. Probeer het opnieuw.",
+        "totp_prompt": "Voer de code uit uw authenticator-app in.",
+        "error_password_or_code": "Het wachtwoord of de code is onjuist.",
+        "error_not_signed_in": "Uw sessie is verlopen. Log opnieuw in om een apparaat te koppelen.",
+        "error_impersonation": "U kunt geen apparaten koppelen terwijl u de mailbox van een andere gebruiker bekijkt.",
+        "error_too_many_attempts": "Te veel pogingen. Wacht even en probeer het opnieuw.",
+        "error_session_secret": "Apparaten koppelen is niet ingesteld op deze server (SESSION_SECRET ontbreekt). Neem contact op met uw beheerder.",
+        "error_server_unreachable": "Uw mailserver is niet bereikbaar. Probeer het opnieuw.",
+        "error_pairing_unavailable": "Uw mailserver staat het koppelen van apparaten op deze manier niet toe. Neem contact op met uw beheerder.",
+        "qr_alt": "QR-code om in te loggen",
+        "link_label": "Inloglink",
+        "copy_link": "Inloglink kopiëren",
+        "copied": "Gekopieerd",
+        "copy_hint": "Geen camera? Kopieer de link en plak hem in de app via \"Paste sign-in link\".",
+        "success_title": "Ingelogd op uw telefoon",
+        "success_body": "U kunt deze pagina sluiten. Toon een nieuwe code om nog een apparaat te koppelen.",
+        "link_another": "Nog een apparaat koppelen",
+        "use_sso": "In plaats daarvan eenmalige aanmelding gebruiken",
+        "error_insecure_server": "De mobiele app maakt alleen via https verbinding met mailservers, en deze gebruikt http."
       },
       "public_keys": {
         "name_label": "Naam van openbare sleutel",
@@ -1774,7 +1832,9 @@
       "warnings": {
         "end_before_start": "De einddatum moet na de startdatum liggen",
         "start_in_past": "De startdatum ligt in het verleden",
-        "empty_body": "De berichttekst is leeg - ontvangers krijgen een leeg antwoord"
+        "empty_body": "De berichttekst is leeg - ontvangers krijgen een leeg antwoord",
+        "subject_too_long": "Het onderwerp is te lang voor de server (maximaal {max} bytes).",
+        "body_too_long": "Het bericht is te lang voor de server (maximaal {max} bytes, inclusief opmaak)."
       }
     },
     "folders": {
@@ -1995,6 +2055,7 @@
       "actions": "Acties",
       "add_action": "Actie toevoegen",
       "stop_processing": "Verwerking van volgende regels stoppen",
+      "include_spam": "Ook berichten verplaatsen die als spam zijn gemarkeerd",
       "attachment_type_placeholder": "bijv. pdf, doc, jpg",
       "value_placeholder_multi": "Waarde (meerdere met komma's gescheiden)",
       "condition_fields": {
@@ -2036,6 +2097,8 @@
       "copy_to_folder": "Map selecteren",
       "forward_to": "Doorsturen naar e-mailadres",
       "forward_placeholder": "email@voorbeeld.nl",
+      "forward_keep_copy": "Kopie bewaren",
+      "forward_limit": "Maximaal aantal doorsturingen per bericht op deze server: {count}. Extra doorsturingen worden overgeslagen.",
       "reject_message": "Afwijzingsbericht",
       "reject_placeholder": "Uw e-mail is afgewezen",
       "label_name": "Labelnaam",
@@ -2793,6 +2856,8 @@
       "no_events": "Geen evenementen",
       "all_day": "Hele dag",
       "more": "+{count} meer",
+      "show_more": "Meer tonen",
+      "show_less": "Minder tonen",
       "no_title": "(Geen titel)",
       "resize": "Evenement formaat wijzigen",
       "duplicate": "Dupliceren",
@@ -2919,7 +2984,10 @@
       "all_events": "Alle evenementen",
       "cancel": "Annuleren",
       "save": "Opslaan",
-      "delete": "Verwijderen"
+      "delete": "Verwijderen",
+      "rsvp_title": "Reageren op terugkerend evenement",
+      "rsvp_description": "Dit is een terugkerend evenement. Voor welke evenementen geldt uw reactie?",
+      "respond": "Reageren"
     },
     "alerts": {
       "title": "Herinnering",
@@ -2962,7 +3030,7 @@
       "enable_tasks": "Taken inschakelen",
       "enable_tasks_desc": "Een takenweergave in de agenda tonen om to-do's te beheren",
       "show_tasks_on_calendar": "Taken in agenda tonen",
-      "show_tasks_on_calendar_desc": "Taaklabels tonen in dag- en weekweergave van de agenda",
+      "show_tasks_on_calendar_desc": "Taken tonen in de maand-, week- en dagweergave van de agenda",
       "hover_preview": "Voorvertoning bij hover",
       "hover_preview_desc": "Toon een detailpopover bij het hoveren over agenda-evenementen",
       "hover_preview_instant": "Direct",
@@ -3004,6 +3072,9 @@
       "alert_now": "Begint nu",
       "alert_in_minutes": "Over {count} min",
       "invitation_sent": "Uitnodigingen verzonden",
+      "invitations_denied_title": "Uitnodigingen kunnen niet worden verzonden",
+      "invitations_denied": "De server weigerde de uitnodigingen te verzenden: {reason}. Het evenement opslaan zonder ze te verzenden?",
+      "save_without_invitations": "Opslaan zonder uitnodigingen",
       "rsvp_updated": "Reactie bijgewerkt",
       "rsvp_error": "Reactie kon niet worden bijgewerkt",
       "event_duplicated": "Evenement gedupliceerd",
@@ -3032,7 +3103,7 @@
       "supported_formats": "iCalendar (.ics) bestanden worden ondersteund",
       "url_description": "Voer de URL in van een externe iCalendar (.ics) feed om evenementen te importeren.",
       "url_placeholder": "https://example.com/calendar.ics",
-      "url_hint": "Ondersteunt CalDAV en iCalendar (.ics) URLs",
+      "url_hint": "Ondersteunt iCalendar (.ics) URLs",
       "fetch": "Ophalen",
       "invalid_url": "Voer een geldige URL in",
       "url_fetch_failed": "Kan agenda niet ophalen van URL",
@@ -3218,6 +3289,7 @@
     "body_placeholder": "Inhoud bevat...",
     "folder": "Map",
     "all_folders": "Alle mappen",
+    "all_folders_except_spam_trash": "Alle mappen behalve Spam en Prullenbak",
     "has_attachment": "Bijlagen",
     "date_after": "Na",
     "date_before": "Voor",
@@ -3280,6 +3352,8 @@
     "rename": "Hernoemen",
     "rename_title": "Hernoemen",
     "new_name": "Nieuwe naam",
+    "name_forbidden_chars": "De server staat deze tekens niet toe in namen: {chars}",
+    "name_reserved": "Deze naam is gereserveerd op de server.",
     "delete": "Verwijderen",
     "delete_confirm_title": "Bron verwijderen",
     "delete_confirm_message": "Weet u zeker dat u \"{name}\" wilt verwijderen? Dit kan niet ongedaan worden gemaakt.",

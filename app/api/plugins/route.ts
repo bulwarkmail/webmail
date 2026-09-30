@@ -1,4 +1,5 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { canSeeInstanceDetails } from '@/lib/auth/instance-details';
 import { getPluginRegistry, getThemeRegistry } from '@/lib/admin/plugin-registry';
 import { listDevPlugins } from '@/lib/admin/plugin-dev';
 import { configManager } from '@/lib/admin/config-manager';
@@ -8,9 +9,14 @@ import { logger } from '@/lib/logger';
  * GET /api/plugins - Public endpoint for clients to discover server-managed plugins & themes
  *
  * Returns all enabled plugins and themes so the client can sync them to IndexedDB.
- * No admin auth required - this is how regular users receive plugins/themes.
+ * No admin auth required - this is how regular users receive plugins/themes -
+ * but a session is: the list names the plugins and the hosts they may reach,
+ * and the client only syncs after signing in.
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
+  if (!(await canSeeInstanceDetails(request))) {
+    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+  }
   try {
     await configManager.ensureLoaded();
     const policy = configManager.getPolicy();

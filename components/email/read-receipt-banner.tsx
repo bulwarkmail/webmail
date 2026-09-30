@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { MailCheck, Loader2, CheckCircle, X } from 'lucide-react';
+import { MailCheck, Loader2, CheckCircle, X } from '@/components/icons';
 import { useTranslations } from 'next-intl';
 
 interface ReadReceiptBannerProps {

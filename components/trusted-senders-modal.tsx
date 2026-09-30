@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useTranslations } from "next-intl";
-import { X, ShieldCheck, Search, Trash2, Plus, Loader2 } from "lucide-react";
+import { X, ShieldCheck, Search, Trash2, Plus, Loader2 } from "@/components/icons";
 import { Avatar } from "@/components/ui/avatar";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useContactStore } from "@/stores/contact-store";

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Book, BookPlus, Pencil, Share2, Star, Tag, Users } from "lucide-react";
+import { Book, BookPlus, Pencil, Share2, Star, Tag, Users } from "@/components/icons";
 import { useContactStore } from "@/stores/contact-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { useManagedAccountStore } from "@/stores/managed-account-store";

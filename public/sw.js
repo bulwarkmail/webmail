@@ -155,6 +155,9 @@ async function handlePush(event) {
   const unreadTotal = preview && typeof preview.unreadTotal === "number"
     ? preview.unreadTotal
     : 0;
+  // The login (cookie slot) that owns this account, so the click opens the
+  // message there and not in whichever account happens to be active.
+  const slot = preview && Number.isInteger(preview.slot) ? preview.slot : undefined;
 
   // Push subscription is scoped to EmailDelivery, but stragglers from the
   // older broader-types subscription, marking-as-read races and verification
@@ -182,7 +185,7 @@ async function handlePush(event) {
   const groupTag = "bulwark-mail:" + (accountId || "default");
   let title;
   let body;
-  let data = { kind: "mail-list", accountId };
+  let data = { kind: "mail-list", accountId, slot };
 
   if (email) {
     const sender = email.from && email.from[0];
@@ -196,7 +199,7 @@ async function handlePush(event) {
       body += "\n" + (more === 1 ? "+1 more message" : `+${more} more messages`);
     } else {
       // Exactly one unread: deep-link straight to that message on click.
-      data = { kind: "email", emailId: email.id, threadId: email.threadId };
+      data = { kind: "email", emailId: email.id, threadId: email.threadId, slot };
     }
   } else {
     title = accountLabel ? `New mail (${accountLabel})` : "New mail";
@@ -458,10 +461,16 @@ function getReusableClientScore(state) {
 
 function buildClickUrl(data) {
   if (!data) return `${BASE_PATH}/`;
+  // `?slot=` names the login the message belongs to (see the preview API).
+  const slotQuery = Number.isInteger(data.slot) ? `?slot=${data.slot}` : "";
   if (data.kind === "email" && data.emailId) {
     // Permalink (#733). Under NEXT_PUBLIC_LOCALE_PREFIX=always the proxy
     // redirects this to the localised path; the worker has no locale to add.
-    return `${BASE_PATH}/mail/message/${encodeURIComponent(data.emailId)}`;
+    return `${BASE_PATH}/mail/message/${encodeURIComponent(data.emailId)}${slotQuery}`;
+  }
+  // A group of new mail in a known login: that login's Inbox.
+  if (data.kind === "mail-list" && slotQuery) {
+    return `${BASE_PATH}/mail/folder/inbox${slotQuery}`;
   }
   // Generic "New mail" toast (preview API failed or returned no email): land
   // the user on the latest unread message in their Inbox rather than just the

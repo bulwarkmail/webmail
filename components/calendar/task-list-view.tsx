@@ -4,7 +4,7 @@ import { useMemo, useCallback, useState } from "react";
 import { useTranslations } from "next-intl";
 import { format, parseISO, isBefore, isTomorrow } from "date-fns";
 import { displayNow, isDisplayToday } from "@/lib/timezone";
-import { Check, Flag, CalendarDays, ListTodo, Plus } from "lucide-react";
+import { Check, Flag, CalendarDays, ListTodo, Plus } from "@/components/icons";
 import { cn } from "@/lib/utils";
 import type { CalendarTask, Calendar } from "@/lib/jmap/types";
 import type { TaskViewFilter } from "@/stores/task-store";

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { resolveUnstampedEmailAccountId } from '../email-store';
 import type { Mailbox } from '@/lib/jmap/types';
+import { SEARCH_SCOPE_ALL_FOLDERS } from '@/lib/search-scope-folders';
 
 // #923: with an unscoped ("All folders") search active while a shared folder
 // is selected, the hit belongs to the primary account. Deriving the owner
@@ -12,13 +13,13 @@ const mailboxes = [
 ] as unknown as Mailbox[];
 
 describe('resolveUnstampedEmailAccountId (#923)', () => {
-  it('uses the primary account for an unscoped search even with a shared folder selected', () => {
+  it.each(['', SEARCH_SCOPE_ALL_FOLDERS])('uses the primary account for an unscoped search (%j) even with a shared folder selected', (scope) => {
     expect(
       resolveUnstampedEmailAccountId({
         mailboxes,
         selectedMailbox: 'owner-x:x-inbox',
         searchActive: true,
-        searchMailboxId: '',
+        searchMailboxId: scope,
       }),
     ).toBeUndefined();
   });

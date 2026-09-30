@@ -333,6 +333,7 @@ export interface SettingsState {
   returnToListAfterAction: boolean; // After delete / mark-unread in an open message, return to the list instead of opening the next message
   clearSearchOnFolderChange: boolean; // Reset the search query + advanced filters when switching folders, instead of re-running the search in the newly selected folder (#553 keeps it applied when this is off)
   showPreview: boolean;
+  showVerificationCodes: boolean; // Offer the one-time code of a sign-in mail as a copy chip in the list and the reader
   mailLayout: MailLayout;
   emailsPerPage: number;
   externalContentPolicy: ExternalContentPolicy;
@@ -405,6 +406,8 @@ export interface SettingsState {
   emailNotificationsEnabled: boolean;
   emailNotificationSound: boolean;
   notificationSoundChoice: NotificationSoundChoice;
+  /** Web Push only fires for mail that lands in the Inbox; Sieve-filed mail stays silent. */
+  pushNotifyInboxOnly: boolean;
   /** Chosen Web Push relay URL. Empty = the admin-configured default. */
   pushRelayUrl: string;
 
@@ -577,6 +580,7 @@ const DEFAULT_SETTINGS = {
   returnToListAfterAction: true,
   clearSearchOnFolderChange: false,
   showPreview: true,
+  showVerificationCodes: true,
   mailLayout: 'split' as MailLayout,
   emailsPerPage: 50,
   externalContentPolicy: 'ask' as ExternalContentPolicy,
@@ -639,6 +643,7 @@ const DEFAULT_SETTINGS = {
   emailNotificationsEnabled: true,
   emailNotificationSound: true,
   notificationSoundChoice: 'default' as NotificationSoundChoice,
+  pushNotifyInboxOnly: false,
   pushRelayUrl: '',
 
   // Protocol Handlers
@@ -864,6 +869,7 @@ export const useSettingsStore = create<SettingsState>()(
           returnToListAfterAction: state.returnToListAfterAction,
           clearSearchOnFolderChange: state.clearSearchOnFolderChange,
           showPreview: state.showPreview,
+          showVerificationCodes: state.showVerificationCodes,
           mailLayout: state.mailLayout,
           emailsPerPage: state.emailsPerPage,
           externalContentPolicy: state.externalContentPolicy,
@@ -896,6 +902,7 @@ export const useSettingsStore = create<SettingsState>()(
           emailNotificationsEnabled: state.emailNotificationsEnabled,
           emailNotificationSound: state.emailNotificationSound,
           notificationSoundChoice: state.notificationSoundChoice,
+          pushNotifyInboxOnly: state.pushNotifyInboxOnly,
           pushRelayUrl: state.pushRelayUrl,
           protocolOpenMode: state.protocolOpenMode,
           calendarNotificationsEnabled: state.calendarNotificationsEnabled,

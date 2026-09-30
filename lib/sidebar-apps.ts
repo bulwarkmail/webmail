@@ -23,8 +23,12 @@ export const DEFAULT_SIDEBAR_APP_ID_PREFIX = 'admin-app-';
 const MAX_APP_NAME_LENGTH = 50;
 const MAX_APP_URL_LENGTH = 2048;
 
-/** Lucide exports icons as PascalCase identifiers; anything else can't resolve. */
-const ICON_NAME_RE = /^[A-Za-z][A-Za-z0-9]{0,63}$/;
+/**
+ * Icon names: `tabler:<name>` or a bare Tabler name, or a Lucide PascalCase
+ * name saved before the switch to Tabler (translated when rendered). Anything
+ * else can't resolve.
+ */
+const ICON_NAME_RE = /^(?:(?:tabler:)?[a-z0-9]+(?:-[a-z0-9]+){0,7}|[A-Za-z][A-Za-z0-9]{0,63})$/;
 
 const ID_SUFFIX_RE = /[^a-zA-Z0-9_-]/g;
 

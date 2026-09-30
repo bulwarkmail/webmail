@@ -1,12 +1,17 @@
 name: Publish Standalone Tarball on Release
 
+# The tarballs build without a write token. The release job, which runs no
+# checked-out code, publishes each one with a `.sha256` next to it and a
+# signed build provenance attestation:
+# `gh attestation verify <tarball> --repo bulwarkmail/webmail`.
+
 on:
   release:
     types: [published]
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   build:
@@ -52,17 +57,43 @@ jobs:
           tar -czf "$TARBALL" bulwark-standalone/
           echo "TARBALL=$TARBALL" >> "$GITHUB_ENV"
 
-      - name: Upload release asset
-        if: github.event_name == 'release'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG_NAME: ${{ github.event.release.tag_name }}
-        run: gh release upload "$TAG_NAME" "$TARBALL" --clobber
-
-      - name: Upload artifact (workflow_dispatch)
-        if: github.event_name == 'workflow_dispatch'
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: standalone-${{ matrix.arch }}
           path: ${{ env.TARBALL }}
+          if-no-files-found: error
           retention-days: 7
+
+  release:
+    needs: build
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    steps:
+      - name: Download tarballs
+        uses: actions/download-artifact@v4
+        with:
+          pattern: standalone-*
+          path: tarballs
+          merge-multiple: true
+
+      - name: Checksum tarballs
+        working-directory: tarballs
+        run: for tarball in *.tar.gz; do sha256sum "$tarball" > "$tarball.sha256"; done
+
+      - name: Attest build provenance
+        uses: actions/attest@v4
+        with:
+          subject-path: tarballs/*.tar.gz
+
+      - name: Upload release assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          TAG_NAME: ${{ github.event.release.tag_name }}
+        run: gh release upload "$TAG_NAME" tarballs/*.tar.gz tarballs/*.tar.gz.sha256 --clobber

@@ -2,7 +2,7 @@
 
 import { useRef, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { X } from "lucide-react";
+import { X } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { SettingsSection, SettingItem, ToggleSwitch, RadioGroup } from "@/components/settings/settings-section";
 

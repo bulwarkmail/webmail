@@ -34,7 +34,7 @@ import {
   Paperclip,
   Link as LinkIcon,
   MessagesSquare,
-} from "lucide-react";
+} from "@/components/icons";
 import { buildMailPath } from "@/lib/deep-links";
 import { useCopyLink } from "@/hooks/use-copy-link";
 import { buildMailboxTree, MailboxNode } from "@/lib/utils";

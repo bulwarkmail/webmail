@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { Upload, Trash2, Power, PowerOff, AlertTriangle, Loader2, Package, Save, Shield, Lock, LockOpen, Settings } from 'lucide-react';
+import { Upload, Trash2, Power, PowerOff, AlertTriangle, Loader2, Package, Save, Shield, Lock, LockOpen, Settings } from '@/components/icons';
 import type { SettingsPolicy } from '@/lib/admin/types';
 import { DEFAULT_POLICY } from '@/lib/admin/types';
 import { apiFetch } from '@/lib/browser-navigation';

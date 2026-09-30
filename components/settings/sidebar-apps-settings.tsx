@@ -2,8 +2,8 @@
 
 import { useState, useCallback, useRef } from "react";
 import { useTranslations } from "next-intl";
-import { Plus, Pencil, Trash2, ExternalLink, PanelRight, GripVertical, Lock } from "lucide-react";
-import { icons as lucideIcons, type LucideIcon } from "lucide-react";
+import { Plus, Pencil, Trash2, ExternalLink, PanelRight, GripVertical, Lock } from "@/components/icons";
+import { iconForName } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SettingsSection, SettingItem, ToggleSwitch } from "./settings-section";
@@ -74,7 +74,7 @@ function AppForm({
   };
 
   const SelectedIcon = formData.icon
-    ? (lucideIcons[formData.icon as keyof typeof lucideIcons] as LucideIcon | undefined)
+    ? iconForName(formData.icon)
     : null;
 
   return (
@@ -197,7 +197,7 @@ function ManagedAppsSection() {
     <SettingsSection title={t("managed_title")} description={t("managed_description")}>
       <div className="space-y-3">
         {managedApps.map((app) => {
-          const AppIcon = lucideIcons[app.icon as keyof typeof lucideIcons] as LucideIcon | undefined;
+          const AppIcon = iconForName(app.icon);
           return (
             <div key={app.id} className="flex items-center gap-3 p-3 border border-border rounded-lg bg-muted/30">
               <div className="w-8 h-8 rounded-md bg-muted flex items-center justify-center flex-shrink-0">
@@ -318,7 +318,7 @@ export function SidebarAppsSettings() {
               );
             }
 
-            const AppIcon = lucideIcons[app.icon as keyof typeof lucideIcons] as LucideIcon | undefined;
+            const AppIcon = iconForName(app.icon);
             return (
               <div
                 key={app.id}

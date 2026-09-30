@@ -3,13 +3,14 @@
 import { useMemo, useEffect, useLayoutEffect, useRef, useState, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { useDisplayDateFormatter } from "@/hooks/use-display-date-formatter";
-import { format, isSameDay, parseISO, eachDayOfInterval, differenceInCalendarDays } from "date-fns";
+import { format, isSameDay, eachDayOfInterval, differenceInCalendarDays } from "date-fns";
 import { cn } from "@/lib/utils";
-import { Check } from "lucide-react";
+import { Check } from "@/components/icons";
 import { EventCard } from "./event-card";
 import { QuickEventInput } from "./quick-event-input";
 import { formatSnapTime, getEventDayBounds, getPrimaryCalendarId, isTimedEventFullDayOnDate, layoutOverlappingEvents } from "@/lib/calendar-utils";
 import { displayNow, isDisplayToday } from "@/lib/timezone";
+import { groupTasksByDueDay } from "@/lib/calendar-tasks";
 import type { CalendarEvent, Calendar, CalendarTask } from "@/lib/jmap/types";
 import { useTimeGridInteractions } from "@/hooks/use-time-grid-interactions";
 import { useScrollWindow, getScrollStart, setScrollStart, scrollToStart } from "@/hooks/use-scroll-window";
@@ -31,6 +32,9 @@ interface CalendarDayViewProps extends ScrollWindowViewProps {
   pendingPreview?: PendingEventPreview | null;
   tasks?: CalendarTask[];
   onToggleTaskComplete?: (task: CalendarTask) => void;
+  onSelectTask?: (task: CalendarTask) => void;
+  /** The user's calendar addresses, to mark events they declined (#1110). */
+  currentUserEmails?: string[];
 }
 
 const HOUR_HEIGHT = 64;
@@ -60,6 +64,8 @@ export function CalendarDayView({
   pendingPreview,
   tasks,
   onToggleTaskComplete,
+  onSelectTask,
+  currentUserEmails,
 }: CalendarDayViewProps) {
   const t = useTranslations("calendar");
   // Grid days / event dates are display dates (local fields = wall-clock in
@@ -142,20 +148,7 @@ export function CalendarDayView({
     return map;
   }, [events]);
 
-  const tasksByDay = useMemo(() => {
-    const map = new Map<string, CalendarTask[]>();
-    if (!tasks?.length) return map;
-    for (const task of tasks) {
-      if (!task.due) continue;
-      try {
-        const key = format(parseISO(task.due), "yyyy-MM-dd");
-        const existing = map.get(key) || [];
-        existing.push(task);
-        map.set(key, existing);
-      } catch { /* skip */ }
-    }
-    return map;
-  }, [tasks]);
+  const tasksByDay = useMemo(() => groupTasksByDueDay(tasks), [tasks]);
 
   // Column layouts are the costly part of a render; with months of columns
   // they must not be redone on every scroll-driven re-render.
@@ -338,6 +331,7 @@ export function CalendarDayView({
                                   onMouseEnter={(rect) => onHoverEvent?.(ev, rect)}
                                   onMouseLeave={onHoverLeave}
                                   onContextMenu={onContextMenuEvent}
+                                  currentUserEmails={currentUserEmails}
                                 />
                               );
                             })}
@@ -355,10 +349,13 @@ export function CalendarDayView({
                               return (
                                 <div
                                   key={task.id}
+                                  data-calendar-task={task.id}
+                                  onClick={() => onSelectTask?.(task)}
                                   className="flex items-center gap-1.5 px-1.5 py-0.5 rounded text-xs cursor-pointer hover:bg-muted/50 transition-colors"
-                                  style={{ borderLeft: `3px solid ${color}` }}
+                                  style={{ borderInlineStart: `3px solid ${color}` }}
                                 >
                                   <button
+                                    type="button"
                                     onClick={(e) => { e.stopPropagation(); onToggleTaskComplete?.(task); }}
                                     className={cn(
                                       "flex-shrink-0 w-3.5 h-3.5 rounded-full border flex items-center justify-center",
@@ -366,6 +363,7 @@ export function CalendarDayView({
                                         ? "bg-success border-success text-success-foreground"
                                         : "border-muted-foreground/40 hover:border-primary"
                                     )}
+                                    aria-label={isCompleted ? t("tasks.mark_incomplete") : t("tasks.mark_complete")}
                                   >
                                     {isCompleted && <Check className="h-2.5 w-2.5" />}
                                   </button>
@@ -462,6 +460,7 @@ export function CalendarDayView({
                             onMouseEnter={(rect) => onHoverEvent?.(ev, rect)}
                             onMouseLeave={onHoverLeave}
                             onContextMenu={onContextMenuEvent}
+                            currentUserEmails={currentUserEmails}
                             draggable
                           />
                           <div

@@ -155,8 +155,9 @@ describe('tag view across the own and group accounts (#1038)', () => {
 
     await useEmailStore.getState().loadMoreEmails(client);
 
-    expect(client.getEmails).toHaveBeenCalledWith(undefined, undefined, 2, 3, keyword, true, undefined, []);
-    expect(client.getEmails).toHaveBeenCalledWith(undefined, 'group', 2, 3, keyword, true, undefined, []);
+    // Each account continues after its own rows, not at the merged length.
+    expect(client.getEmails).toHaveBeenCalledWith(undefined, undefined, 2, 2, keyword, true, undefined, []);
+    expect(client.getEmails).toHaveBeenCalledWith(undefined, 'group', 2, 1, keyword, true, undefined, []);
     expect(useEmailStore.getState().hasMoreEmails).toBe(false);
   });
 

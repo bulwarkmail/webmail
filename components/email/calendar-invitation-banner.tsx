@@ -17,7 +17,7 @@ import {
   AlertCircle,
   ChevronDown,
   ChevronUp,
-} from 'lucide-react';
+} from '@/components/icons';
 import { useTranslations, useFormatter } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
 import { isDocumentRTL } from '@/i18n/direction';

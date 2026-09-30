@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { useFileStore } from '../file-store';
+import { useFileStore, resourceServerRef } from '../file-store';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
 import type { FileNode } from '@/lib/jmap/types';
 
@@ -409,5 +409,18 @@ describe('file-store modification date (issue #700)', () => {
 
     await useFileStore.getState().navigate(null);
     expect(useFileStore.getState().resources[0].lastModified).toBe('2025-01-01T00:00:00Z');
+  });
+});
+
+describe('resourceServerRef (issue #1094)', () => {
+  it('splits a node of a shared account into its owner account and bare id', () => {
+    // The WOPI editor used to send "d:b" with the user's own account, and
+    // FileNode/get answered notFound.
+    expect(resourceServerRef({ id: 'd:b', ownerAccountId: 'd' })).toEqual({ accountId: 'd', id: 'b' });
+  });
+
+  it('keeps own nodes as they are', () => {
+    expect(resourceServerRef({ id: 'b', ownerAccountId: 'c' })).toEqual({ accountId: 'c', id: 'b' });
+    expect(resourceServerRef({ id: 'b' })).toEqual({ accountId: undefined, id: 'b' });
   });
 });

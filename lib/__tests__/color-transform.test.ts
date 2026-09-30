@@ -3,6 +3,7 @@ import {
   parseColor,
   getLuminance,
   isDarkColor,
+  readableTextOn,
   transformColorForDarkMode,
   transformBgColorForDarkMode,
   transformInlineStyles,
@@ -401,5 +402,23 @@ describe('transformInlineStyles', () => {
       const contrast = (Math.max(textLum, bgLum) + 0.05) / (Math.min(textLum, bgLum) + 0.05);
       expect(contrast).toBeGreaterThan(4.5);
     }
+  });
+});
+
+describe('readableTextOn', () => {
+  it('keeps white text while white holds 3:1 on the fill', () => {
+    expect(readableTextOn('#3b82f6')).toBe('#ffffff');
+    expect(readableTextOn('#8b5cf6')).toBe('#ffffff');
+    expect(readableTextOn('rgb(236, 72, 153)')).toBe('#ffffff');
+  });
+
+  it('switches to dark text on light fills', () => {
+    expect(readableTextOn('#22c55e')).toBe('#111827');
+    expect(readableTextOn('#f59e0b')).toBe('#111827');
+    expect(readableTextOn('#fff')).toBe('#111827');
+  });
+
+  it('falls back to white for colours it cannot parse', () => {
+    expect(readableTextOn('not-a-colour')).toBe('#ffffff');
   });
 });
