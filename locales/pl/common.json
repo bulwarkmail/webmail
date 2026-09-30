@@ -835,7 +835,19 @@
     "templates_import_empty": "Nie znaleziono szablonów w pliku",
     "export_email_error": "Nie udało się wyeksportować wiadomości",
     "import_email_success": "Wiadomość zaimportowana pomyślnie",
-    "import_email_error": "Nie udało się zaimportować wiadomości"
+    "import_email_error": "Nie udało się zaimportować wiadomości",
+    "rule_created": "Utworzono regułę",
+    "rule_merged": "Dodano do reguły „{name}”",
+    "rule_already_covered": "Już obejmuje to reguła „{name}”",
+    "rule_apply_existing": "{count, plural, one {Zastosuj do # istniejącej wiadomości} few {Zastosuj do # istniejących wiadomości} many {Zastosuj do # istniejących wiadomości} other {Zastosuj do # istniejącej wiadomości}}",
+    "rule_applied": "{count, plural, =0 {Żadna wiadomość nie wymagała zmian} one {Zastosowano regułę do # wiadomości} few {Zastosowano regułę do # wiadomości} many {Zastosowano regułę do # wiadomości} other {Zastosowano regułę do # wiadomości}}",
+    "rule_apply_failed": "Nie udało się zastosować reguły do istniejących wiadomości",
+    "rule_edit": "Edytuj regułę",
+    "rule_undo": "Cofnij",
+    "rule_undone": "Cofnięto zmianę reguły",
+    "rule_undo_failed": "Nie udało się cofnąć zmiany reguły",
+    "rule_undo_conflict": "Twoje filtry zmieniły się w międzyczasie. Cofnij zmianę w ustawieniach filtrów.",
+    "rule_folder_failed": "Nie udało się utworzyć folderu"
   },
   "date": {
     "today": "Dzisiaj",
@@ -2091,7 +2103,9 @@
         "ends_with": "kończy się na",
         "matches": "pasuje do wzorca",
         "greater_than": "jest większe niż",
-        "less_than": "jest mniejsze niż"
+        "less_than": "jest mniejsze niż",
+        "address_is": "to adres",
+        "domain_is": "ma domenę"
       },
       "action_types": {
         "move": "Przenieś do folderu",
@@ -2166,7 +2180,26 @@
         "actions_count": "{count, plural, one {# akcja} other {# akcji}}"
       },
       "origin_external": "Zewnętrzny",
-      "managed_by_tooltip": "Zarządzane przez {source}. Edytuj w tej aplikacji lub użyj surowego edytora Sieve."
+      "managed_by_tooltip": "Zarządzane przez {source}. Edytuj w tej aplikacji lub użyj surowego edytora Sieve.",
+      "quick_rule_names": {
+        "move_sender": "Przenoś od {sender} do {folder}",
+        "move_domain": "Przenoś od @{domain} do {folder}",
+        "move_list": "Przenoś listę {list} do {folder}",
+        "mark_read": "Oznaczaj od {sender} jako przeczytane",
+        "tag": "Oznaczaj od {sender} etykietą {tag}",
+        "block": "Blokuj {sender}",
+        "custom": "Wiadomości od {sender}",
+        "custom_plain": "Nowa reguła",
+        "senders": "{count, plural, one {# nadawcy} few {# nadawców} many {# nadawców} other {# nadawcy}}"
+      },
+      "suggestions": "Sugestie",
+      "suggest_subject": "Temat „{subject}”",
+      "suggest_to": "Do {address}",
+      "suggest_cc": "DW {address}",
+      "suggest_list": "List-Id",
+      "suggest_domain": "@{domain}",
+      "apply_existing": "Zastosuj też do wiadomości, które już są w tym folderze",
+      "apply_existing_unsupported": "Do istniejących wiadomości można zastosować tylko reguły, które sprawdzają nadawcę, odbiorców, temat lub nagłówki i które przenoszą, kopiują, oznaczają jako przeczytane, oznaczają gwiazdką lub etykietą."
     },
     "templates": {
       "title": "Szablony wiadomości e-mail",
@@ -2305,7 +2338,22 @@
     "cancel_scheduled_send": "Anuluj wysyłkę",
     "reschedule_send": "Przełóż",
     "cancel_and_edit": "Anuluj i edytuj",
-    "cancel_and_compose_again": "Anuluj i napisz ponownie"
+    "cancel_and_compose_again": "Anuluj i napisz ponownie",
+    "rules": {
+      "title": "Reguły",
+      "move_from": "Zawsze przenoś wiadomości od {sender}",
+      "move_from_domain": "Zawsze przenoś wiadomości od @{domain}",
+      "move_from_list": "Zawsze przenoś wiadomości z tej listy",
+      "mark_read_from": "Zawsze oznaczaj wiadomości od {sender} jako przeczytane",
+      "tag_with": "Zawsze oznaczaj etykietą",
+      "block": "{count, plural, =1 {Zablokuj nadawcę} one {Zablokuj # nadawcę} few {Zablokuj # nadawców} many {Zablokuj # nadawców} other {Zablokuj # nadawcy}}",
+      "no_junk": "To konto nie ma folderu spamu",
+      "create": "Utwórz regułę…",
+      "manage": "Zarządzaj regułami",
+      "senders_count": "{count, plural, one {# nadawcy} few {# nadawców} many {# nadawców} other {# nadawcy}}",
+      "cross_account": "Wybierz wiadomości z jednego konta",
+      "opaque_hint": "Twoje filtry zostały edytowane ręcznie. Otwórz ustawienia filtrów"
+    }
   },
   "mailbox_context_menu": {
     "mark_folder_read": "Oznacz folder jako przeczytany",

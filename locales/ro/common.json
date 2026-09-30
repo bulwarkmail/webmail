@@ -835,7 +835,19 @@
     "templates_import_empty": "Nu s-au găsit șabloane în fișier",
     "export_email_error": "Nu s-a putut exporta e-mailul",
     "import_email_success": "E-mailul a fost importat cu succes",
-    "import_email_error": "Importul e-mailului a eșuat"
+    "import_email_error": "Importul e-mailului a eșuat",
+    "rule_created": "Regula a fost creată",
+    "rule_merged": "Adăugat la regula „{name}”",
+    "rule_already_covered": "Deja acoperit de regula „{name}”",
+    "rule_apply_existing": "{count, plural, one {Aplicați la # mesaj existent} few {Aplicați la # mesaje existente} other {Aplicați la # de mesaje existente}}",
+    "rule_applied": "{count, plural, =0 {Niciun mesaj nu a trebuit modificat} one {Regula a fost aplicată la # mesaj} few {Regula a fost aplicată la # mesaje} other {Regula a fost aplicată la # de mesaje}}",
+    "rule_apply_failed": "Regula nu a putut fi aplicată mesajelor existente",
+    "rule_edit": "Editați regula",
+    "rule_undo": "Anulează",
+    "rule_undone": "Modificarea regulii a fost anulată",
+    "rule_undo_failed": "Modificarea regulii nu a putut fi anulată",
+    "rule_undo_conflict": "Filtrele dvs. s-au schimbat între timp. Anulați modificarea din setările filtrelor.",
+    "rule_folder_failed": "Dosarul nu a putut fi creat"
   },
   "date": {
     "today": "Astăzi",
@@ -2098,7 +2110,9 @@
         "ends_with": "se termină cu",
         "matches": "se potrivește cu modelul",
         "greater_than": "este mai mare decât",
-        "less_than": "este mai mic decât"
+        "less_than": "este mai mic decât",
+        "address_is": "este adresa",
+        "domain_is": "are domeniul"
       },
       "action_types": {
         "move": "Mută în folder",
@@ -2173,7 +2187,26 @@
         "actions_count": "{count, plural, one {# acțiune} few {# acțiuni} other {# de acțiuni}}"
       },
       "origin_external": "Extern",
-      "managed_by_tooltip": "Gestionat de {source}. Editați-l în acea aplicație sau utilizați editorul brut Sieve."
+      "managed_by_tooltip": "Gestionat de {source}. Editați-l în acea aplicație sau utilizați editorul brut Sieve.",
+      "quick_rule_names": {
+        "move_sender": "Mută de la {sender} în {folder}",
+        "move_domain": "Mută de la @{domain} în {folder}",
+        "move_list": "Mută lista {list} în {folder}",
+        "mark_read": "Marchează ca citite de la {sender}",
+        "tag": "Etichetează {tag} de la {sender}",
+        "block": "Blochează {sender}",
+        "custom": "Mesaje de la {sender}",
+        "custom_plain": "Regulă nouă",
+        "senders": "{count, plural, one {# expeditor} few {# expeditori} other {# de expeditori}}"
+      },
+      "suggestions": "Sugestii",
+      "suggest_subject": "Subiect „{subject}”",
+      "suggest_to": "Către {address}",
+      "suggest_cc": "Cc {address}",
+      "suggest_list": "List-Id",
+      "suggest_domain": "@{domain}",
+      "apply_existing": "Aplicați și mesajelor care sunt deja în acest dosar",
+      "apply_existing_unsupported": "Doar regulile care verifică expeditorul, destinatarii, subiectul sau antetele și care mută, copiază, marchează ca citit, marchează cu stea sau etichetează pot fi aplicate mesajelor existente."
     },
     "templates": {
       "title": "Șabloane de e-mail",
@@ -2305,7 +2338,22 @@
     "cancel_scheduled_send": "Anulează trimiterea",
     "reschedule_send": "Reprogramare",
     "cancel_and_edit": "Anulează și editează",
-    "cancel_and_compose_again": "Anulează și redactează din nou"
+    "cancel_and_compose_again": "Anulează și redactează din nou",
+    "rules": {
+      "title": "Reguli",
+      "move_from": "Mută întotdeauna mesajele de la {sender}",
+      "move_from_domain": "Mută întotdeauna mesajele de la @{domain}",
+      "move_from_list": "Mută întotdeauna mesajele din această listă",
+      "mark_read_from": "Marchează întotdeauna ca citite mesajele de la {sender}",
+      "tag_with": "Etichetează întotdeauna cu",
+      "block": "{count, plural, one {Blochează expeditorul} few {Blochează # expeditori} other {Blochează # de expeditori}}",
+      "no_junk": "Acest cont nu are un dosar de spam",
+      "create": "Creați o regulă…",
+      "manage": "Gestionați regulile",
+      "senders_count": "{count, plural, one {# expeditor} few {# expeditori} other {# de expeditori}}",
+      "cross_account": "Selectați mesaje dintr-un singur cont",
+      "opaque_hint": "Filtrele dvs. au fost editate manual. Deschideți setările filtrelor"
+    }
   },
   "mailbox_context_menu": {
     "mark_folder_read": "Marcați folderul ca citit",

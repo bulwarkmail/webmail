@@ -835,7 +835,19 @@
     "templates_import_empty": "Keine Vorlagen in der Datei gefunden",
     "export_email_error": "Fehler beim Exportieren der E-Mail",
     "import_email_success": "E-Mail erfolgreich importiert",
-    "import_email_error": "Fehler beim Importieren der E-Mail"
+    "import_email_error": "Fehler beim Importieren der E-Mail",
+    "rule_created": "Regel erstellt",
+    "rule_merged": "Zur Regel „{name}“ hinzugefügt",
+    "rule_already_covered": "Bereits durch die Regel „{name}“ abgedeckt",
+    "rule_apply_existing": "{count, plural, one {Auf # vorhandene Nachricht anwenden} other {Auf # vorhandene Nachrichten anwenden}}",
+    "rule_applied": "{count, plural, =0 {Keine Nachricht musste geändert werden} one {Regel auf # Nachricht angewendet} other {Regel auf # Nachrichten angewendet}}",
+    "rule_apply_failed": "Die Regel konnte nicht auf vorhandene Nachrichten angewendet werden",
+    "rule_edit": "Regel bearbeiten",
+    "rule_undo": "Rückgängig",
+    "rule_undone": "Regeländerung rückgängig gemacht",
+    "rule_undo_failed": "Die Regeländerung konnte nicht rückgängig gemacht werden",
+    "rule_undo_conflict": "Ihre Filter wurden inzwischen geändert. Machen Sie die Änderung in den Filter-Einstellungen rückgängig.",
+    "rule_folder_failed": "Der Ordner konnte nicht erstellt werden"
   },
   "date": {
     "today": "Heute",
@@ -2091,7 +2103,9 @@
         "ends_with": "endet mit",
         "matches": "entspricht dem Muster",
         "greater_than": "ist größer als",
-        "less_than": "ist kleiner als"
+        "less_than": "ist kleiner als",
+        "address_is": "ist die Adresse",
+        "domain_is": "hat die Domain"
       },
       "action_types": {
         "move": "In Ordner verschieben",
@@ -2166,7 +2180,26 @@
         "actions_count": "{count, plural, one {# Aktion} other {# Aktionen}}"
       },
       "origin_external": "Extern",
-      "managed_by_tooltip": "Verwaltet von {source}. Bearbeiten Sie sie in dieser App oder verwenden Sie den rohen Sieve-Editor."
+      "managed_by_tooltip": "Verwaltet von {source}. Bearbeiten Sie sie in dieser App oder verwenden Sie den rohen Sieve-Editor.",
+      "quick_rule_names": {
+        "move_sender": "Von {sender} nach {folder} verschieben",
+        "move_domain": "Von @{domain} nach {folder} verschieben",
+        "move_list": "Liste {list} nach {folder} verschieben",
+        "mark_read": "Von {sender} als gelesen markieren",
+        "tag": "Von {sender} mit Label {tag} versehen",
+        "block": "{sender} blockieren",
+        "custom": "Nachrichten von {sender}",
+        "custom_plain": "Neue Regel",
+        "senders": "{count, plural, one {# Absender} other {# Absendern}}"
+      },
+      "suggestions": "Vorschläge",
+      "suggest_subject": "Betreff „{subject}“",
+      "suggest_to": "An {address}",
+      "suggest_cc": "Cc {address}",
+      "suggest_list": "List-Id",
+      "suggest_domain": "@{domain}",
+      "apply_existing": "Auch auf vorhandene Nachrichten in diesem Ordner anwenden",
+      "apply_existing_unsupported": "Nur Regeln, die Absender, Empfänger, Betreff oder Kopfzeilen prüfen und verschieben, kopieren, als gelesen markieren, mit Stern markieren oder mit Label versehen, lassen sich auf vorhandene Nachrichten anwenden."
     },
     "templates": {
       "title": "E-Mail-Vorlagen",
@@ -2305,7 +2338,22 @@
     "cancel_scheduled_send": "Senden abbrechen",
     "reschedule_send": "Neu planen",
     "cancel_and_edit": "Abbrechen und bearbeiten",
-    "cancel_and_compose_again": "Abbrechen und neu verfassen"
+    "cancel_and_compose_again": "Abbrechen und neu verfassen",
+    "rules": {
+      "title": "Regeln",
+      "move_from": "Nachrichten von {sender} immer verschieben",
+      "move_from_domain": "Nachrichten von @{domain} immer verschieben",
+      "move_from_list": "Nachrichten dieser Liste immer verschieben",
+      "mark_read_from": "Nachrichten von {sender} immer als gelesen markieren",
+      "tag_with": "Immer mit Label versehen",
+      "block": "{count, plural, one {Absender blockieren} other {# Absender blockieren}}",
+      "no_junk": "Dieses Konto hat keinen Spam-Ordner",
+      "create": "Regel erstellen…",
+      "manage": "Regeln verwalten",
+      "senders_count": "{count, plural, one {# Absender} other {# Absendern}}",
+      "cross_account": "Nachrichten aus nur einem Konto auswählen",
+      "opaque_hint": "Ihre Filter wurden von Hand bearbeitet. Öffnen Sie die Filter-Einstellungen"
+    }
   },
   "mailbox_context_menu": {
     "mark_folder_read": "Ordner als gelesen markieren",

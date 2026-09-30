@@ -835,7 +835,19 @@
     "templates_import_empty": "No templates found in the file",
     "export_email_error": "Failed to export email",
     "import_email_success": "Email imported successfully",
-    "import_email_error": "Failed to import email"
+    "import_email_error": "Failed to import email",
+    "rule_created": "Rule created",
+    "rule_merged": "Added to rule “{name}”",
+    "rule_already_covered": "Already covered by rule “{name}”",
+    "rule_apply_existing": "{count, plural, one {Apply to # existing message} other {Apply to # existing messages}}",
+    "rule_applied": "{count, plural, =0 {No messages needed changes} one {Rule applied to # message} other {Rule applied to # messages}}",
+    "rule_apply_failed": "Could not apply the rule to existing messages",
+    "rule_edit": "Edit rule",
+    "rule_undo": "Undo",
+    "rule_undone": "Rule change undone",
+    "rule_undo_failed": "Could not undo the rule change",
+    "rule_undo_conflict": "Your filters have changed since. Undo the change in Filters settings.",
+    "rule_folder_failed": "Could not create the folder"
   },
   "date": {
     "today": "Today",
@@ -2098,7 +2110,9 @@
         "ends_with": "ends with",
         "matches": "matches pattern",
         "greater_than": "is greater than",
-        "less_than": "is less than"
+        "less_than": "is less than",
+        "address_is": "is the address",
+        "domain_is": "has the domain"
       },
       "action_types": {
         "move": "Move to folder",
@@ -2173,7 +2187,26 @@
         "actions_count": "{count, plural, one {# action} other {# actions}}"
       },
       "origin_external": "External",
-      "managed_by_tooltip": "Managed by {source}. Edit it in that app, or use the raw Sieve editor."
+      "managed_by_tooltip": "Managed by {source}. Edit it in that app, or use the raw Sieve editor.",
+      "quick_rule_names": {
+        "move_sender": "Move from {sender} to {folder}",
+        "move_domain": "Move from @{domain} to {folder}",
+        "move_list": "Move list {list} to {folder}",
+        "mark_read": "Mark as read from {sender}",
+        "tag": "Tag as {tag} from {sender}",
+        "block": "Block {sender}",
+        "custom": "Mail from {sender}",
+        "custom_plain": "New rule",
+        "senders": "{count, plural, one {# sender} other {# senders}}"
+      },
+      "suggestions": "Suggestions",
+      "suggest_subject": "Subject “{subject}”",
+      "suggest_to": "To {address}",
+      "suggest_cc": "Cc {address}",
+      "suggest_list": "List-Id",
+      "suggest_domain": "@{domain}",
+      "apply_existing": "Also apply to existing messages in this folder",
+      "apply_existing_unsupported": "Only rules that check the sender, recipients, subject or headers, and that move, copy, mark as read, star or tag, can run on existing messages."
     },
     "templates": {
       "title": "Email Templates",
@@ -2305,7 +2338,22 @@
     "cancel_scheduled_send": "Cancel send",
     "reschedule_send": "Reschedule",
     "cancel_and_edit": "Cancel and edit",
-    "cancel_and_compose_again": "Cancel and compose again"
+    "cancel_and_compose_again": "Cancel and compose again",
+    "rules": {
+      "title": "Rules",
+      "move_from": "Always move messages from {sender}",
+      "move_from_domain": "Always move messages from @{domain}",
+      "move_from_list": "Always move messages from this list",
+      "mark_read_from": "Always mark as read from {sender}",
+      "tag_with": "Always tag with",
+      "block": "{count, plural, one {Block sender} other {Block # senders}}",
+      "no_junk": "This account has no Junk folder",
+      "create": "Create rule…",
+      "manage": "Manage rules",
+      "senders_count": "{count, plural, one {# sender} other {# senders}}",
+      "cross_account": "Select messages from one account",
+      "opaque_hint": "Your filters were edited by hand. Open Filters settings"
+    }
   },
   "mailbox_context_menu": {
     "mark_folder_read": "Mark folder as read",

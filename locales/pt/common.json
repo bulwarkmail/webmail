@@ -835,7 +835,19 @@
     "templates_import_empty": "Nenhum modelo encontrado no arquivo",
     "export_email_error": "Falha ao exportar o e-mail",
     "import_email_success": "E-mail importado com sucesso",
-    "import_email_error": "Falha ao importar o e-mail"
+    "import_email_error": "Falha ao importar o e-mail",
+    "rule_created": "Regra criada",
+    "rule_merged": "Adicionado à regra “{name}”",
+    "rule_already_covered": "Já coberto pela regra “{name}”",
+    "rule_apply_existing": "{count, plural, one {Aplicar a # mensagem existente} other {Aplicar a # mensagens existentes}}",
+    "rule_applied": "{count, plural, =0 {Nenhuma mensagem precisou de alterações} one {Regra aplicada a # mensagem} other {Regra aplicada a # mensagens}}",
+    "rule_apply_failed": "Não foi possível aplicar a regra às mensagens existentes",
+    "rule_edit": "Editar regra",
+    "rule_undo": "Desfazer",
+    "rule_undone": "Alteração da regra desfeita",
+    "rule_undo_failed": "Não foi possível desfazer a alteração da regra",
+    "rule_undo_conflict": "Seus filtros mudaram desde então. Desfaça a alteração nas configurações de filtros.",
+    "rule_folder_failed": "Não foi possível criar a pasta"
   },
   "date": {
     "today": "Hoje",
@@ -2091,7 +2103,9 @@
         "ends_with": "termina com",
         "matches": "corresponde ao padrão",
         "greater_than": "é maior que",
-        "less_than": "é menor que"
+        "less_than": "é menor que",
+        "address_is": "é o endereço",
+        "domain_is": "tem o domínio"
       },
       "action_types": {
         "move": "Mover para pasta",
@@ -2166,7 +2180,26 @@
         "actions_count": "{count, plural, one {# ação} other {# ações}}"
       },
       "origin_external": "Externo",
-      "managed_by_tooltip": "Gerenciado por {source}. Edite nesse aplicativo ou use o editor Sieve bruto."
+      "managed_by_tooltip": "Gerenciado por {source}. Edite nesse aplicativo ou use o editor Sieve bruto.",
+      "quick_rule_names": {
+        "move_sender": "Mover de {sender} para {folder}",
+        "move_domain": "Mover de @{domain} para {folder}",
+        "move_list": "Mover a lista {list} para {folder}",
+        "mark_read": "Marcar como lidas as de {sender}",
+        "tag": "Etiquetar como {tag} as de {sender}",
+        "block": "Bloquear {sender}",
+        "custom": "Mensagens de {sender}",
+        "custom_plain": "Nova regra",
+        "senders": "{count, plural, one {# remetente} other {# remetentes}}"
+      },
+      "suggestions": "Sugestões",
+      "suggest_subject": "Assunto “{subject}”",
+      "suggest_to": "Para {address}",
+      "suggest_cc": "Cc {address}",
+      "suggest_list": "List-Id",
+      "suggest_domain": "@{domain}",
+      "apply_existing": "Aplicar também às mensagens que já estão nesta pasta",
+      "apply_existing_unsupported": "Só regras que verificam o remetente, os destinatários, o assunto ou os cabeçalhos, e que movem, copiam, marcam como lida, marcam com estrela ou etiquetam, podem ser aplicadas a mensagens existentes."
     },
     "templates": {
       "title": "Modelos de e-mail",
@@ -2305,7 +2338,22 @@
     "cancel_scheduled_send": "Cancelar envio",
     "reschedule_send": "Reagendar",
     "cancel_and_edit": "Cancelar e editar",
-    "cancel_and_compose_again": "Cancelar e escrever novamente"
+    "cancel_and_compose_again": "Cancelar e escrever novamente",
+    "rules": {
+      "title": "Regras",
+      "move_from": "Sempre mover mensagens de {sender}",
+      "move_from_domain": "Sempre mover mensagens de @{domain}",
+      "move_from_list": "Sempre mover mensagens desta lista",
+      "mark_read_from": "Sempre marcar como lidas as mensagens de {sender}",
+      "tag_with": "Sempre etiquetar com",
+      "block": "{count, plural, one {Bloquear remetente} other {Bloquear # remetentes}}",
+      "no_junk": "Esta conta não tem pasta de spam",
+      "create": "Criar regra…",
+      "manage": "Gerenciar regras",
+      "senders_count": "{count, plural, one {# remetente} other {# remetentes}}",
+      "cross_account": "Selecione mensagens de uma única conta",
+      "opaque_hint": "Seus filtros foram editados manualmente. Abra as configurações de filtros"
+    }
   },
   "mailbox_context_menu": {
     "mark_folder_read": "Marcar pasta como lida",

@@ -835,7 +835,19 @@
     "templates_import_empty": "Failā netika atrastas veidnes",
     "export_email_error": "Neizdevās eksportēt vēstuli",
     "import_email_success": "Vēstule veiksmīgi importēta",
-    "import_email_error": "Neizdevās importēt vēstuli"
+    "import_email_error": "Neizdevās importēt vēstuli",
+    "rule_created": "Noteikums izveidots",
+    "rule_merged": "Pievienots noteikumam “{name}”",
+    "rule_already_covered": "To jau aptver noteikums “{name}”",
+    "rule_apply_existing": "{count, plural, zero {Piemērot # esošajām vēstulēm} one {Piemērot # esošajai vēstulei} other {Piemērot # esošajām vēstulēm}}",
+    "rule_applied": "{count, plural, =0 {Nevienu vēstuli nevajadzēja mainīt} one {Noteikums piemērots # vēstulei} other {Noteikums piemērots # vēstulēm}}",
+    "rule_apply_failed": "Neizdevās piemērot noteikumu esošajām vēstulēm",
+    "rule_edit": "Rediģēt noteikumu",
+    "rule_undo": "Atsaukt",
+    "rule_undone": "Noteikuma izmaiņa atsaukta",
+    "rule_undo_failed": "Neizdevās atsaukt noteikuma izmaiņu",
+    "rule_undo_conflict": "Jūsu filtri kopš tā laika ir mainījušies. Atsauciet izmaiņu filtru iestatījumos.",
+    "rule_folder_failed": "Neizdevās izveidot mapi"
   },
   "date": {
     "today": "Šodien",
@@ -2091,7 +2103,9 @@
         "ends_with": "beidzas ar",
         "matches": "atbilst paraugam",
         "greater_than": "lielāks nekā",
-        "less_than": "mazāks nekā"
+        "less_than": "mazāks nekā",
+        "address_is": "ir adrese",
+        "domain_is": "ir domēns"
       },
       "action_types": {
         "move": "Pārvietot uz mapi",
@@ -2166,7 +2180,26 @@
         "actions_count": "{count, plural, one {# darbība} other {# darbības}}"
       },
       "origin_external": "Ārējs",
-      "managed_by_tooltip": "Pārvalda {source}. Rediģējiet to šajā lietotnē vai izmantojiet neapstrādāto Sieve redaktoru."
+      "managed_by_tooltip": "Pārvalda {source}. Rediģējiet to šajā lietotnē vai izmantojiet neapstrādāto Sieve redaktoru.",
+      "quick_rule_names": {
+        "move_sender": "Pārvietot no {sender} uz {folder}",
+        "move_domain": "Pārvietot no @{domain} uz {folder}",
+        "move_list": "Pārvietot sarakstu {list} uz {folder}",
+        "mark_read": "Atzīmēt no {sender} kā izlasītas",
+        "tag": "Pievienot tagu {tag} vēstulēm no {sender}",
+        "block": "Bloķēt {sender}",
+        "custom": "Vēstules no {sender}",
+        "custom_plain": "Jauns noteikums",
+        "senders": "{count, plural, zero {# sūtītājiem} one {# sūtītāja} other {# sūtītājiem}}"
+      },
+      "suggestions": "Ieteikumi",
+      "suggest_subject": "Temats “{subject}”",
+      "suggest_to": "Kam {address}",
+      "suggest_cc": "Kopija {address}",
+      "suggest_list": "List-Id",
+      "suggest_domain": "@{domain}",
+      "apply_existing": "Piemērot arī vēstulēm, kas jau ir šajā mapē",
+      "apply_existing_unsupported": "Esošajām vēstulēm var piemērot tikai noteikumus, kas pārbauda sūtītāju, adresātus, tematu vai galvenes un kas pārvieto, kopē, atzīmē kā izlasītu, ar zvaigznīti vai tagu."
     },
     "templates": {
       "title": "Vēstuļu veidnes",
@@ -2305,7 +2338,22 @@
     "cancel_scheduled_send": "Atcelt sūtīšanu",
     "reschedule_send": "Pārplānot",
     "cancel_and_edit": "Atcelt un rediģēt",
-    "cancel_and_compose_again": "Atcelt un rakstīt no jauna"
+    "cancel_and_compose_again": "Atcelt un rakstīt no jauna",
+    "rules": {
+      "title": "Noteikumi",
+      "move_from": "Vienmēr pārvietot vēstules no {sender}",
+      "move_from_domain": "Vienmēr pārvietot vēstules no @{domain}",
+      "move_from_list": "Vienmēr pārvietot vēstules no šī saraksta",
+      "mark_read_from": "Vienmēr atzīmēt vēstules no {sender} kā izlasītas",
+      "tag_with": "Vienmēr pievienot tagu",
+      "block": "{count, plural, zero {Bloķēt # sūtītājus} one {Bloķēt sūtītāju} other {Bloķēt # sūtītājus}}",
+      "no_junk": "Šim kontam nav mēstuļu mapes",
+      "create": "Izveidot noteikumu…",
+      "manage": "Pārvaldīt noteikumus",
+      "senders_count": "{count, plural, zero {# sūtītājiem} one {# sūtītāja} other {# sūtītājiem}}",
+      "cross_account": "Izvēlieties vēstules no viena konta",
+      "opaque_hint": "Jūsu filtri ir rediģēti manuāli. Atveriet filtru iestatījumus"
+    }
   },
   "mailbox_context_menu": {
     "mark_folder_read": "Atzīmēt mapi kā lasītu",

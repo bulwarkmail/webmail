@@ -835,7 +835,19 @@
     "templates_import_empty": "Dosyada şablon bulunamadı",
     "export_email_error": "E-posta dışa aktarılamadı",
     "import_email_success": "E-posta başarıyla içe aktarıldı",
-    "import_email_error": "E-posta içe aktarılamadı"
+    "import_email_error": "E-posta içe aktarılamadı",
+    "rule_created": "Kural oluşturuldu",
+    "rule_merged": "“{name}” kuralına eklendi",
+    "rule_already_covered": "Zaten “{name}” kuralı kapsıyor",
+    "rule_apply_existing": "{count, plural, one {# mevcut iletiye uygula} other {# mevcut iletiye uygula}}",
+    "rule_applied": "{count, plural, =0 {Hiçbir iletinin değişmesi gerekmedi} one {Kural # iletiye uygulandı} other {Kural # iletiye uygulandı}}",
+    "rule_apply_failed": "Kural mevcut iletilere uygulanamadı",
+    "rule_edit": "Kuralı düzenle",
+    "rule_undo": "Geri Al",
+    "rule_undone": "Kural değişikliği geri alındı",
+    "rule_undo_failed": "Kural değişikliği geri alınamadı",
+    "rule_undo_conflict": "Filtreleriniz o zamandan beri değişti. Değişikliği filtre ayarlarından geri alın.",
+    "rule_folder_failed": "Klasör oluşturulamadı"
   },
   "date": {
     "today": "Bugün",
@@ -2091,7 +2103,9 @@
         "ends_with": "ile biter",
         "matches": "desenle eşleşir",
         "greater_than": "büyüktür",
-        "less_than": "küçüktür"
+        "less_than": "küçüktür",
+        "address_is": "adresi şudur",
+        "domain_is": "alan adı şudur"
       },
       "action_types": {
         "move": "Klasöre taşı",
@@ -2166,7 +2180,26 @@
         "actions_count": "{count, plural, one {# işlem} other {# işlem}}"
       },
       "origin_external": "Harici",
-      "managed_by_tooltip": "{source} tarafından yönetilir. Bu uygulamada düzenleyin veya ham Sieve düzenleyicisini kullanın."
+      "managed_by_tooltip": "{source} tarafından yönetilir. Bu uygulamada düzenleyin veya ham Sieve düzenleyicisini kullanın.",
+      "quick_rule_names": {
+        "move_sender": "{sender} iletilerini {folder} klasörüne taşı",
+        "move_domain": "@{domain} iletilerini {folder} klasörüne taşı",
+        "move_list": "{list} listesini {folder} klasörüne taşı",
+        "mark_read": "{sender} iletilerini okundu işaretle",
+        "tag": "{sender} iletilerine {tag} etiketi ekle",
+        "block": "{sender} engelle",
+        "custom": "{sender} iletileri",
+        "custom_plain": "Yeni kural",
+        "senders": "{count, plural, one {# gönderen} other {# gönderen}}"
+      },
+      "suggestions": "Öneriler",
+      "suggest_subject": "Konu “{subject}”",
+      "suggest_to": "Alıcı {address}",
+      "suggest_cc": "Bilgi {address}",
+      "suggest_list": "List-Id",
+      "suggest_domain": "@{domain}",
+      "apply_existing": "Bu klasörde zaten bulunan iletilere de uygula",
+      "apply_existing_unsupported": "Mevcut iletilere yalnızca göndereni, alıcıları, konuyu veya üstbilgileri denetleyen ve taşıyan, kopyalayan, okundu işaretleyen, yıldızlayan veya etiketleyen kurallar uygulanabilir."
     },
     "templates": {
       "title": "E-posta Şablonları",
@@ -2305,7 +2338,22 @@
     "cancel_scheduled_send": "Göndermeyi iptal et",
     "reschedule_send": "Yeniden zamanla",
     "cancel_and_edit": "İptal et ve düzenle",
-    "cancel_and_compose_again": "İptal et ve yeniden yaz"
+    "cancel_and_compose_again": "İptal et ve yeniden yaz",
+    "rules": {
+      "title": "Kurallar",
+      "move_from": "{sender} iletilerini her zaman taşı",
+      "move_from_domain": "@{domain} iletilerini her zaman taşı",
+      "move_from_list": "Bu listenin iletilerini her zaman taşı",
+      "mark_read_from": "{sender} iletilerini her zaman okundu olarak işaretle",
+      "tag_with": "Her zaman şu etiketi ekle",
+      "block": "{count, plural, one {Göndereni engelle} other {# göndereni engelle}}",
+      "no_junk": "Bu hesapta istenmeyen posta klasörü yok",
+      "create": "Kural oluştur…",
+      "manage": "Kuralları yönet",
+      "senders_count": "{count, plural, one {# gönderen} other {# gönderen}}",
+      "cross_account": "Tek bir hesaptan iletiler seçin",
+      "opaque_hint": "Filtreleriniz elle düzenlenmiş. Filtre ayarlarını açın"
+    }
   },
   "mailbox_context_menu": {
     "mark_folder_read": "Klasörü okundu olarak işaretle",

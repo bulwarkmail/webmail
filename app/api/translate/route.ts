@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
+import { readFileEnv } from "@/lib/read-file-env";
 import { getStalwartCredentials } from '@/lib/stalwart/credentials';
 
 // Host-side proxy backing the "Translate" plugin (manifest apiPostPaths:
@@ -12,7 +13,7 @@ import { getStalwartCredentials } from '@/lib/stalwart/credentials';
 //                       langpair needs an explicit source language, so when the
 //                       plugin asks for "auto" we detect it locally first.
 //   - "libretranslate" — only available when the host sets LIBRETRANSLATE_URL
-//                       (and optionally LIBRETRANSLATE_API_KEY). Supports native
+//                       (and optionally LIBRETRANSLATE_API_KEY or LIBRETRANSLATE_API_KEY_FILE). Supports native
 //                       source auto-detection.
 
 export const runtime = 'nodejs';
@@ -226,7 +227,9 @@ async function translateLibre(
   if (!endpoint) {
     throw new Error('LibreTranslate is not configured on this server');
   }
-  const apiKey = process.env.LIBRETRANSLATE_API_KEY;
+  const apiKey =
+    process.env.LIBRETRANSLATE_API_KEY ||
+    readFileEnv(process.env.LIBRETRANSLATE_API_KEY_FILE);
   const url = endpoint.replace(/\/+$/, '') + '/translate';
   const res = await fetch(url, {
     method: 'POST',

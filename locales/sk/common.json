@@ -835,7 +835,19 @@
     "templates_import_empty": "V súbore neboli nájdené žiadne šablóny",
     "export_email_error": "Export e-mailu zlyhal",
     "import_email_success": "E-mail bol úspešne importovaný",
-    "import_email_error": "Import e-mailu zlyhal"
+    "import_email_error": "Import e-mailu zlyhal",
+    "rule_created": "Pravidlo bolo vytvorené",
+    "rule_merged": "Pridané do pravidla „{name}“",
+    "rule_already_covered": "Už to pokrýva pravidlo „{name}“",
+    "rule_apply_existing": "{count, plural, one {Použiť na # existujúcu správu} few {Použiť na # existujúce správy} many {Použiť na # existujúcej správy} other {Použiť na # existujúcich správ}}",
+    "rule_applied": "{count, plural, =0 {Žiadnu správu nebolo treba meniť} one {Pravidlo použité na # správu} few {Pravidlo použité na # správy} many {Pravidlo použité na # správy} other {Pravidlo použité na # správ}}",
+    "rule_apply_failed": "Pravidlo sa nepodarilo použiť na existujúce správy",
+    "rule_edit": "Upraviť pravidlo",
+    "rule_undo": "Späť",
+    "rule_undone": "Zmena pravidla bola vrátená",
+    "rule_undo_failed": "Zmenu pravidla sa nepodarilo vrátiť",
+    "rule_undo_conflict": "Vaše filtre sa medzitým zmenili. Vráťte zmenu v nastaveniach filtrov.",
+    "rule_folder_failed": "Priečinok sa nepodarilo vytvoriť"
   },
   "date": {
     "today": "Dnes",
@@ -2098,7 +2110,9 @@
         "ends_with": "končí na",
         "matches": "zodpovedá vzoru",
         "greater_than": "je väčšia ako",
-        "less_than": "je menšia ako"
+        "less_than": "je menšia ako",
+        "address_is": "je adresa",
+        "domain_is": "má doménu"
       },
       "action_types": {
         "move": "Presunúť do priečinka",
@@ -2173,7 +2187,26 @@
         "actions_count": "{count, plural, one {# akcia} other {# akcií}}"
       },
       "origin_external": "Externé",
-      "managed_by_tooltip": "Spravované aplikáciou {source}. Upravte to v danej aplikácii alebo použite editor zdrojového kódu Sieve."
+      "managed_by_tooltip": "Spravované aplikáciou {source}. Upravte to v danej aplikácii alebo použite editor zdrojového kódu Sieve.",
+      "quick_rule_names": {
+        "move_sender": "Presunúť od {sender} do {folder}",
+        "move_domain": "Presunúť od @{domain} do {folder}",
+        "move_list": "Presunúť zoznam {list} do {folder}",
+        "mark_read": "Označiť od {sender} ako prečítané",
+        "tag": "Označiť od {sender} štítkom {tag}",
+        "block": "Blokovať {sender}",
+        "custom": "Správy od {sender}",
+        "custom_plain": "Nové pravidlo",
+        "senders": "{count, plural, one {# odosielateľa} few {# odosielateľov} many {# odosielateľa} other {# odosielateľov}}"
+      },
+      "suggestions": "Návrhy",
+      "suggest_subject": "Predmet „{subject}“",
+      "suggest_to": "Komu {address}",
+      "suggest_cc": "Kópia {address}",
+      "suggest_list": "List-Id",
+      "suggest_domain": "@{domain}",
+      "apply_existing": "Použiť aj na správy, ktoré už sú v tomto priečinku",
+      "apply_existing_unsupported": "Na existujúce správy možno použiť len pravidlá, ktoré kontrolujú odosielateľa, príjemcov, predmet alebo hlavičky a ktoré presúvajú, kopírujú, označujú ako prečítané, hviezdičkou alebo štítkom."
     },
     "templates": {
       "title": "E-mailové šablóny",
@@ -2305,7 +2338,22 @@
     "cancel_scheduled_send": "Zrušiť odoslanie",
     "reschedule_send": "Prenaplánovať",
     "cancel_and_edit": "Zrušiť a upraviť",
-    "cancel_and_compose_again": "Zrušiť a napísať znova"
+    "cancel_and_compose_again": "Zrušiť a napísať znova",
+    "rules": {
+      "title": "Pravidlá",
+      "move_from": "Vždy presúvať správy od {sender}",
+      "move_from_domain": "Vždy presúvať správy od @{domain}",
+      "move_from_list": "Vždy presúvať správy z tohto zoznamu",
+      "mark_read_from": "Vždy označiť správy od {sender} ako prečítané",
+      "tag_with": "Vždy označiť štítkom",
+      "block": "{count, plural, one {Blokovať odosielateľa} few {Blokovať # odosielateľov} many {Blokovať # odosielateľa} other {Blokovať # odosielateľov}}",
+      "no_junk": "Tento účet nemá priečinok nevyžiadanej pošty",
+      "create": "Vytvoriť pravidlo…",
+      "manage": "Spravovať pravidlá",
+      "senders_count": "{count, plural, one {# odosielateľa} few {# odosielateľov} many {# odosielateľa} other {# odosielateľov}}",
+      "cross_account": "Vyberte správy z jedného účtu",
+      "opaque_hint": "Vaše filtre boli upravené ručne. Otvorte nastavenia filtrov"
+    }
   },
   "mailbox_context_menu": {
     "mark_folder_read": "Označiť priečinok ako prečítaný",

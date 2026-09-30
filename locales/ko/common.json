@@ -835,7 +835,19 @@
     "templates_import_empty": "파일에서 템플릿을 찾을 수 없어요",
     "export_email_error": "메일 내보내기에 실패했어요",
     "import_email_success": "메일을 성공적으로 가져왔어요",
-    "import_email_error": "메일 가져오기에 실패했어요"
+    "import_email_error": "메일 가져오기에 실패했어요",
+    "rule_created": "규칙을 만들었어요",
+    "rule_merged": "“{name}” 규칙에 추가했어요",
+    "rule_already_covered": "이미 “{name}” 규칙에 포함되어 있어요",
+    "rule_apply_existing": "{count, plural, other {기존 메일 #개에 적용}}",
+    "rule_applied": "{count, plural, =0 {바꿀 메일이 없었어요} other {메일 #개에 규칙을 적용했어요}}",
+    "rule_apply_failed": "기존 메일에 규칙을 적용하지 못했어요",
+    "rule_edit": "규칙 편집",
+    "rule_undo": "실행 취소",
+    "rule_undone": "규칙 변경을 취소했어요",
+    "rule_undo_failed": "규칙 변경을 취소하지 못했어요",
+    "rule_undo_conflict": "그 사이에 필터가 바뀌었어요. 필터 설정에서 변경을 취소하세요.",
+    "rule_folder_failed": "폴더를 만들지 못했어요"
   },
   "date": {
     "today": "오늘",
@@ -2091,7 +2103,9 @@
         "ends_with": "다음으로 끝남",
         "matches": "패턴 일치",
         "greater_than": "다음보다 큼",
-        "less_than": "다음보다 작음"
+        "less_than": "다음보다 작음",
+        "address_is": "주소가 다음과 같음",
+        "domain_is": "도메인이 다음과 같음"
       },
       "action_types": {
         "move": "폴더로 이동",
@@ -2166,7 +2180,26 @@
         "actions_count": "동작 {count}개"
       },
       "origin_external": "외부",
-      "managed_by_tooltip": "{source}에서 관리됩니다. 해당 앱에서 편집하거나 원시 Sieve 편집기를 사용하세요."
+      "managed_by_tooltip": "{source}에서 관리됩니다. 해당 앱에서 편집하거나 원시 Sieve 편집기를 사용하세요.",
+      "quick_rule_names": {
+        "move_sender": "{sender}에서 {folder}(으)로 이동",
+        "move_domain": "@{domain}에서 {folder}(으)로 이동",
+        "move_list": "리스트 {list}를 {folder}(으)로 이동",
+        "mark_read": "{sender}의 메일을 읽음으로 표시",
+        "tag": "{sender}의 메일에 {tag} 태그",
+        "block": "{sender} 차단",
+        "custom": "{sender}의 메일",
+        "custom_plain": "새 규칙",
+        "senders": "{count, plural, other {보낸 사람 #명}}"
+      },
+      "suggestions": "제안",
+      "suggest_subject": "제목 “{subject}”",
+      "suggest_to": "받는 사람 {address}",
+      "suggest_cc": "참조 {address}",
+      "suggest_list": "List-Id",
+      "suggest_domain": "@{domain}",
+      "apply_existing": "이 폴더에 이미 있는 메일에도 적용",
+      "apply_existing_unsupported": "보낸 사람, 받는 사람, 제목 또는 헤더를 확인하고 이동, 복사, 읽음 표시, 별표 또는 태그를 하는 규칙만 기존 메일에 적용할 수 있어요."
     },
     "templates": {
       "title": "이메일 템플릿",
@@ -2305,7 +2338,22 @@
     "cancel_scheduled_send": "보내기 취소",
     "reschedule_send": "다시 예약",
     "cancel_and_edit": "취소하고 편집",
-    "cancel_and_compose_again": "취소하고 다시 작성"
+    "cancel_and_compose_again": "취소하고 다시 작성",
+    "rules": {
+      "title": "규칙",
+      "move_from": "{sender}의 메일을 항상 이동",
+      "move_from_domain": "@{domain}의 메일을 항상 이동",
+      "move_from_list": "이 메일링 리스트의 메일을 항상 이동",
+      "mark_read_from": "{sender}의 메일을 항상 읽음으로 표시",
+      "tag_with": "항상 태그 추가",
+      "block": "{count, plural, =1 {보낸 사람 차단} other {보낸 사람 #명 차단}}",
+      "no_junk": "이 계정에는 스팸 폴더가 없어요",
+      "create": "규칙 만들기…",
+      "manage": "규칙 관리",
+      "senders_count": "{count, plural, other {보낸 사람 #명}}",
+      "cross_account": "한 계정의 메일만 선택하세요",
+      "opaque_hint": "필터가 직접 편집되었어요. 필터 설정을 여세요"
+    }
   },
   "mailbox_context_menu": {
     "mark_folder_read": "폴더를 읽음으로 표시",

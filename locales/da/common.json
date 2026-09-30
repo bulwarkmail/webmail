@@ -835,7 +835,19 @@
     "templates_import_empty": "Ingen skabeloner fundet i filen",
     "export_email_error": "Kunne ikke eksportere e-mail",
     "import_email_success": "E-mail importeret succesfuldt",
-    "import_email_error": "Kunne ikke importere e-mail"
+    "import_email_error": "Kunne ikke importere e-mail",
+    "rule_created": "Regel oprettet",
+    "rule_merged": "Føjet til reglen “{name}”",
+    "rule_already_covered": "Er allerede dækket af reglen “{name}”",
+    "rule_apply_existing": "{count, plural, one {Anvend på # eksisterende besked} other {Anvend på # eksisterende beskeder}}",
+    "rule_applied": "{count, plural, =0 {Ingen beskeder skulle ændres} one {Regel anvendt på # besked} other {Regel anvendt på # beskeder}}",
+    "rule_apply_failed": "Reglen kunne ikke anvendes på eksisterende beskeder",
+    "rule_edit": "Rediger regel",
+    "rule_undo": "Fortryd",
+    "rule_undone": "Regelændring fortrudt",
+    "rule_undo_failed": "Regelændringen kunne ikke fortrydes",
+    "rule_undo_conflict": "Dine filtre er ændret siden. Fortryd ændringen i filterindstillingerne.",
+    "rule_folder_failed": "Mappen kunne ikke oprettes"
   },
   "date": {
     "today": "I dag",
@@ -2094,7 +2106,9 @@
         "ends_with": "slutter med",
         "matches": "matcher mønster",
         "greater_than": "er større end",
-        "less_than": "er mindre end"
+        "less_than": "er mindre end",
+        "address_is": "er adressen",
+        "domain_is": "har domænet"
       },
       "action_types": {
         "move": "Flyt til mappe",
@@ -2169,7 +2183,26 @@
         "actions_count": "{count, plural, one {# handling} other {# handlinger}}"
       },
       "origin_external": "Ekstern",
-      "managed_by_tooltip": "Administreres af {source}. Redigér det i den pågældende app, eller brug raw Sieve-editoren."
+      "managed_by_tooltip": "Administreres af {source}. Redigér det i den pågældende app, eller brug raw Sieve-editoren.",
+      "quick_rule_names": {
+        "move_sender": "Flyt fra {sender} til {folder}",
+        "move_domain": "Flyt fra @{domain} til {folder}",
+        "move_list": "Flyt listen {list} til {folder}",
+        "mark_read": "Markér fra {sender} som læst",
+        "tag": "Tag fra {sender} som {tag}",
+        "block": "Bloker {sender}",
+        "custom": "Beskeder fra {sender}",
+        "custom_plain": "Ny regel",
+        "senders": "{count, plural, one {# afsender} other {# afsendere}}"
+      },
+      "suggestions": "Forslag",
+      "suggest_subject": "Emne “{subject}”",
+      "suggest_to": "Til {address}",
+      "suggest_cc": "Cc {address}",
+      "suggest_list": "List-Id",
+      "suggest_domain": "@{domain}",
+      "apply_existing": "Anvend også på beskeder, der allerede ligger i denne mappe",
+      "apply_existing_unsupported": "Kun regler, der tjekker afsender, modtagere, emne eller headere, og som flytter, kopierer, markerer som læst, stjernemarkerer eller tagger, kan anvendes på eksisterende beskeder."
     },
     "templates": {
       "title": "E-mail-skabeloner",
@@ -2305,7 +2338,22 @@
     "cancel_scheduled_send": "Annuller afsendelse",
     "reschedule_send": "Planlæg om",
     "cancel_and_edit": "Annuller og redigér",
-    "cancel_and_compose_again": "Annuller og skriv igen"
+    "cancel_and_compose_again": "Annuller og skriv igen",
+    "rules": {
+      "title": "Regler",
+      "move_from": "Flyt altid beskeder fra {sender}",
+      "move_from_domain": "Flyt altid beskeder fra @{domain}",
+      "move_from_list": "Flyt altid beskeder fra denne liste",
+      "mark_read_from": "Markér altid beskeder fra {sender} som læst",
+      "tag_with": "Tilføj altid tagget",
+      "block": "{count, plural, one {Bloker afsender} other {Bloker # afsendere}}",
+      "no_junk": "Denne konto har ingen mappe til uønsket mail",
+      "create": "Opret regel…",
+      "manage": "Administrer regler",
+      "senders_count": "{count, plural, one {# afsender} other {# afsendere}}",
+      "cross_account": "Vælg beskeder fra én konto",
+      "opaque_hint": "Dine filtre er redigeret manuelt. Åbn filterindstillingerne"
+    }
   },
   "mailbox_context_menu": {
     "mark_folder_read": "Markér mappe som læst",

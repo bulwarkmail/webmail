@@ -835,7 +835,19 @@
     "templates_import_empty": "V souboru nebyly nalezeny žádné šablony",
     "export_email_error": "Export zprávy selhal",
     "import_email_success": "Zpráva byla úspěšně importována",
-    "import_email_error": "Import zprávy selhal"
+    "import_email_error": "Import zprávy selhal",
+    "rule_created": "Pravidlo vytvořeno",
+    "rule_merged": "Přidáno do pravidla „{name}“",
+    "rule_already_covered": "Už to pokrývá pravidlo „{name}“",
+    "rule_apply_existing": "{count, plural, one {Použít na # existující zprávu} few {Použít na # existující zprávy} many {Použít na # existující zprávy} other {Použít na # existujících zpráv}}",
+    "rule_applied": "{count, plural, =0 {Žádnou zprávu nebylo třeba měnit} one {Pravidlo použito na # zprávu} few {Pravidlo použito na # zprávy} many {Pravidlo použito na # zprávy} other {Pravidlo použito na # zpráv}}",
+    "rule_apply_failed": "Pravidlo se nepodařilo použít na existující zprávy",
+    "rule_edit": "Upravit pravidlo",
+    "rule_undo": "Zpět",
+    "rule_undone": "Změna pravidla vrácena",
+    "rule_undo_failed": "Změnu pravidla se nepodařilo vrátit",
+    "rule_undo_conflict": "Vaše filtry se mezitím změnily. Vraťte změnu v nastavení filtrů.",
+    "rule_folder_failed": "Složku se nepodařilo vytvořit"
   },
   "date": {
     "today": "Dnes",
@@ -2091,7 +2103,9 @@
         "ends_with": "končí na",
         "matches": "odpovídá vzoru",
         "greater_than": "je větší než",
-        "less_than": "je menší než"
+        "less_than": "je menší než",
+        "address_is": "je adresa",
+        "domain_is": "má doménu"
       },
       "action_types": {
         "move": "Přesunout do složky",
@@ -2166,7 +2180,26 @@
         "actions_count": "{count, plural, one {1 akce} few {# akce} other {# akcí}}"
       },
       "origin_external": "Externí",
-      "managed_by_tooltip": "Spravováno aplikací {source}. Úpravy provádějte v příslušné aplikaci nebo použijte editor zdrojového kódu Sieve."
+      "managed_by_tooltip": "Spravováno aplikací {source}. Úpravy provádějte v příslušné aplikaci nebo použijte editor zdrojového kódu Sieve.",
+      "quick_rule_names": {
+        "move_sender": "Přesunout od {sender} do {folder}",
+        "move_domain": "Přesunout od @{domain} do {folder}",
+        "move_list": "Přesunout seznam {list} do {folder}",
+        "mark_read": "Označit od {sender} jako přečtené",
+        "tag": "Označit od {sender} štítkem {tag}",
+        "block": "Blokovat {sender}",
+        "custom": "Zprávy od {sender}",
+        "custom_plain": "Nové pravidlo",
+        "senders": "{count, plural, one {# odesílatele} few {# odesílatelů} many {# odesílatele} other {# odesílatelů}}"
+      },
+      "suggestions": "Návrhy",
+      "suggest_subject": "Předmět „{subject}“",
+      "suggest_to": "Komu {address}",
+      "suggest_cc": "Kopie {address}",
+      "suggest_list": "List-Id",
+      "suggest_domain": "@{domain}",
+      "apply_existing": "Použít i na zprávy, které už v této složce jsou",
+      "apply_existing_unsupported": "Na existující zprávy lze použít jen pravidla, která kontrolují odesílatele, příjemce, předmět nebo hlavičky a která přesouvají, kopírují, označují jako přečtené, hvězdičkou nebo štítkem."
     },
     "templates": {
       "title": "E-mailové šablony",
@@ -2305,7 +2338,22 @@
     "cancel_scheduled_send": "Zrušit odeslání",
     "reschedule_send": "Přeplánovat",
     "cancel_and_edit": "Zrušit a upravit",
-    "cancel_and_compose_again": "Zrušit a napsat znovu"
+    "cancel_and_compose_again": "Zrušit a napsat znovu",
+    "rules": {
+      "title": "Pravidla",
+      "move_from": "Vždy přesouvat zprávy od {sender}",
+      "move_from_domain": "Vždy přesouvat zprávy od @{domain}",
+      "move_from_list": "Vždy přesouvat zprávy z tohoto seznamu",
+      "mark_read_from": "Vždy označit zprávy od {sender} jako přečtené",
+      "tag_with": "Vždy označit štítkem",
+      "block": "{count, plural, one {Blokovat odesílatele} few {Blokovat # odesílatele} many {Blokovat # odesílatele} other {Blokovat # odesílatelů}}",
+      "no_junk": "Tento účet nemá složku nevyžádané pošty",
+      "create": "Vytvořit pravidlo…",
+      "manage": "Spravovat pravidla",
+      "senders_count": "{count, plural, one {# odesílatele} few {# odesílatelů} many {# odesílatele} other {# odesílatelů}}",
+      "cross_account": "Vyberte zprávy z jednoho účtu",
+      "opaque_hint": "Vaše filtry byly upraveny ručně. Otevřete nastavení filtrů"
+    }
   },
   "mailbox_context_menu": {
     "mark_folder_read": "Označit složku jako přečtenou",

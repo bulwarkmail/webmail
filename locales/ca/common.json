@@ -835,7 +835,19 @@
     "templates_import_empty": "No s'ha trobat cap plantilla al fitxer",
     "export_email_error": "No s'ha pogut exportar el correu",
     "import_email_success": "Correu importat correctament",
-    "import_email_error": "No s'ha pogut importar el correu"
+    "import_email_error": "No s'ha pogut importar el correu",
+    "rule_created": "S'ha creat la regla",
+    "rule_merged": "S'ha afegit a la regla «{name}»",
+    "rule_already_covered": "Ja ho cobreix la regla «{name}»",
+    "rule_apply_existing": "{count, plural, one {Aplica a # missatge existent} other {Aplica a # missatges existents}}",
+    "rule_applied": "{count, plural, =0 {Cap missatge necessitava canvis} one {S'ha aplicat la regla a # missatge} other {S'ha aplicat la regla a # missatges}}",
+    "rule_apply_failed": "No s'ha pogut aplicar la regla als missatges existents",
+    "rule_edit": "Edita la regla",
+    "rule_undo": "Desfés",
+    "rule_undone": "S'ha desfet el canvi de la regla",
+    "rule_undo_failed": "No s'ha pogut desfer el canvi de la regla",
+    "rule_undo_conflict": "Els teus filtres han canviat des d'aleshores. Desfés el canvi a la configuració dels filtres.",
+    "rule_folder_failed": "No s'ha pogut crear la carpeta"
   },
   "date": {
     "today": "Avui",
@@ -2098,7 +2110,9 @@
         "ends_with": "acaba amb",
         "matches": "coincideix amb el patró",
         "greater_than": "és més gran que",
-        "less_than": "és menys que"
+        "less_than": "és menys que",
+        "address_is": "és l'adreça",
+        "domain_is": "té el domini"
       },
       "action_types": {
         "move": "Mou a una carpeta",
@@ -2173,7 +2187,26 @@
         "actions_count": "{count, plural, one {# acció} other {# accions}}"
       },
       "origin_external": "Extern",
-      "managed_by_tooltip": "Gestionat per {source}. Editeu-ho en aquesta aplicació, o utilitzeu l'editor Sieve en brut."
+      "managed_by_tooltip": "Gestionat per {source}. Editeu-ho en aquesta aplicació, o utilitzeu l'editor Sieve en brut.",
+      "quick_rule_names": {
+        "move_sender": "Mou de {sender} a {folder}",
+        "move_domain": "Mou de @{domain} a {folder}",
+        "move_list": "Mou la llista {list} a {folder}",
+        "mark_read": "Marca com a llegits els de {sender}",
+        "tag": "Etiqueta com a {tag} els de {sender}",
+        "block": "Bloca {sender}",
+        "custom": "Missatges de {sender}",
+        "custom_plain": "Regla nova",
+        "senders": "{count, plural, one {# remitent} other {# remitents}}"
+      },
+      "suggestions": "Suggeriments",
+      "suggest_subject": "Assumpte «{subject}»",
+      "suggest_to": "Per a {address}",
+      "suggest_cc": "A/c {address}",
+      "suggest_list": "List-Id",
+      "suggest_domain": "@{domain}",
+      "apply_existing": "Aplica-ho també als missatges que ja hi ha en aquesta carpeta",
+      "apply_existing_unsupported": "Només les regles que comproven el remitent, els destinataris, l'assumpte o les capçaleres, i que mouen, copien, marquen com a llegit, destaquen o etiqueten, es poden aplicar a missatges existents."
     },
     "templates": {
       "title": "Plantilles de correu",
@@ -2305,7 +2338,22 @@
     "cancel_scheduled_send": "Cancel·la l'enviament",
     "reschedule_send": "Reprograma",
     "cancel_and_edit": "Cancel·la i edita",
-    "cancel_and_compose_again": "Cancel·la i torna a redactar"
+    "cancel_and_compose_again": "Cancel·la i torna a redactar",
+    "rules": {
+      "title": "Regles",
+      "move_from": "Mou sempre els missatges de {sender}",
+      "move_from_domain": "Mou sempre els missatges de @{domain}",
+      "move_from_list": "Mou sempre els missatges d'aquesta llista",
+      "mark_read_from": "Marca sempre com a llegits els missatges de {sender}",
+      "tag_with": "Etiqueta sempre amb",
+      "block": "{count, plural, one {Bloca el remitent} other {Bloca # remitents}}",
+      "no_junk": "Aquest compte no té carpeta de correu brossa",
+      "create": "Crea una regla…",
+      "manage": "Gestiona les regles",
+      "senders_count": "{count, plural, one {# remitent} other {# remitents}}",
+      "cross_account": "Selecciona missatges d'un sol compte",
+      "opaque_hint": "Els teus filtres s'han editat a mà. Obre la configuració dels filtres"
+    }
   },
   "mailbox_context_menu": {
     "mark_folder_read": "Marca la carpeta com a llegida",
