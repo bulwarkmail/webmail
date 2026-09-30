@@ -44,6 +44,7 @@ interface ToastOptions {
   message?: string;
   action?: ToastAction;
   secondaryAction?: ToastAction;
+  tertiaryAction?: ToastAction;
   duration?: number;
 }
 
@@ -55,6 +56,7 @@ function showToast(type: Toast["type"], title: string, options?: string | ToastO
     message: opts?.message,
     action: opts?.action,
     secondaryAction: opts?.secondaryAction,
+    tertiaryAction: opts?.tertiaryAction,
     duration: opts?.duration ?? defaultDuration,
   });
 }

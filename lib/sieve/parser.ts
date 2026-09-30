@@ -453,6 +453,22 @@ function parseAtom(raw: string): FilterCondition | null {
     return null;
   }
 
+  // `address [:all|:domain] :is` on From/To/Cc, as the generator writes the
+  // address_is / domain_is comparators. Sieve takes tagged arguments in any
+  // order, so the address part may also follow `:is`. Anything else about an
+  // address test (another part, another match type, a negation) has no
+  // builder equivalent and is left for the opaque fallback.
+  m = /^address\s+(?:(:all|:domain)\s+)?:is\s+(?:(:all|:domain)\s+)?"((?:[^"\\]|\\.)*)"\s+([\s\S]+)$/.exec(s);
+  if (m) {
+    const [, partBefore, partAfter, headerName, rawTail] = m;
+    if (negated || (partBefore && partAfter)) return null;
+    const field = FIELD_FROM_HEADER[unescapeSieveString(headerName).toLowerCase()];
+    const value = parseValueTail(rawTail);
+    if (!field || field === 'subject' || value === null) return null;
+    const part = partBefore ?? partAfter;
+    return { field, comparator: part === ':domain' ? 'domain_is' : 'address_is', value };
+  }
+
   m = /^header\s+:(contains|is|matches)\s+"((?:[^"\\]|\\.)*)"\s+([\s\S]+)$/.exec(s);
   if (m) {
     const [, tag, headerName, rawTail] = m;

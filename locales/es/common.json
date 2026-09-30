@@ -835,7 +835,19 @@
     "templates_import_empty": "No se encontraron plantillas en el archivo",
     "export_email_error": "Error al exportar el correo electrónico",
     "import_email_success": "Correo electrónico importado correctamente",
-    "import_email_error": "Error al importar el correo electrónico"
+    "import_email_error": "Error al importar el correo electrónico",
+    "rule_created": "Regla creada",
+    "rule_merged": "Añadido a la regla «{name}»",
+    "rule_already_covered": "Ya lo cubre la regla «{name}»",
+    "rule_apply_existing": "{count, plural, one {Aplicar a # mensaje existente} other {Aplicar a # mensajes existentes}}",
+    "rule_applied": "{count, plural, =0 {Ningún mensaje necesitaba cambios} one {Regla aplicada a # mensaje} other {Regla aplicada a # mensajes}}",
+    "rule_apply_failed": "No se pudo aplicar la regla a los mensajes existentes",
+    "rule_edit": "Editar regla",
+    "rule_undo": "Deshacer",
+    "rule_undone": "Cambio de regla deshecho",
+    "rule_undo_failed": "No se pudo deshacer el cambio de la regla",
+    "rule_undo_conflict": "Tus filtros han cambiado desde entonces. Deshaz el cambio en la configuración de filtros.",
+    "rule_folder_failed": "No se pudo crear la carpeta"
   },
   "date": {
     "today": "Hoy",
@@ -2079,7 +2091,9 @@
         "ends_with": "termina con",
         "matches": "coincide con el patrón",
         "greater_than": "es mayor que",
-        "less_than": "es menor que"
+        "less_than": "es menor que",
+        "address_is": "es la dirección",
+        "domain_is": "tiene el dominio"
       },
       "action_types": {
         "move": "Mover a carpeta",
@@ -2154,7 +2168,26 @@
         "actions_count": "{count, plural, one {# acción} other {# acciones}}"
       },
       "origin_external": "Externo",
-      "managed_by_tooltip": "Gestionado por {source}. Edítalo en esa aplicación o usa el editor Sieve sin procesar."
+      "managed_by_tooltip": "Gestionado por {source}. Edítalo en esa aplicación o usa el editor Sieve sin procesar.",
+      "quick_rule_names": {
+        "move_sender": "Mover de {sender} a {folder}",
+        "move_domain": "Mover de @{domain} a {folder}",
+        "move_list": "Mover la lista {list} a {folder}",
+        "mark_read": "Marcar como leídos los de {sender}",
+        "tag": "Etiquetar como {tag} los de {sender}",
+        "block": "Bloquear {sender}",
+        "custom": "Mensajes de {sender}",
+        "custom_plain": "Nueva regla",
+        "senders": "{count, plural, one {# remitente} other {# remitentes}}"
+      },
+      "suggestions": "Sugerencias",
+      "suggest_subject": "Asunto «{subject}»",
+      "suggest_to": "Para {address}",
+      "suggest_cc": "CC {address}",
+      "suggest_list": "List-Id",
+      "suggest_domain": "@{domain}",
+      "apply_existing": "Aplicar también a los mensajes que ya hay en esta carpeta",
+      "apply_existing_unsupported": "Solo las reglas que comprueban el remitente, los destinatarios, el asunto o los encabezados, y que mueven, copian, marcan como leído, destacan o etiquetan, se pueden aplicar a mensajes existentes."
     },
     "templates": {
       "title": "Plantillas de correo",
@@ -2293,7 +2326,22 @@
     "cancel_scheduled_send": "Cancelar envío",
     "reschedule_send": "Reprogramar",
     "cancel_and_edit": "Cancelar y editar",
-    "cancel_and_compose_again": "Cancelar y redactar de nuevo"
+    "cancel_and_compose_again": "Cancelar y redactar de nuevo",
+    "rules": {
+      "title": "Reglas",
+      "move_from": "Mover siempre los mensajes de {sender}",
+      "move_from_domain": "Mover siempre los mensajes de @{domain}",
+      "move_from_list": "Mover siempre los mensajes de esta lista",
+      "mark_read_from": "Marcar siempre como leídos los mensajes de {sender}",
+      "tag_with": "Etiquetar siempre con",
+      "block": "{count, plural, one {Bloquear remitente} other {Bloquear # remitentes}}",
+      "no_junk": "Esta cuenta no tiene carpeta de correo no deseado",
+      "create": "Crear regla…",
+      "manage": "Administrar reglas",
+      "senders_count": "{count, plural, one {# remitente} other {# remitentes}}",
+      "cross_account": "Selecciona mensajes de una sola cuenta",
+      "opaque_hint": "Tus filtros se editaron a mano. Abre la configuración de filtros"
+    }
   },
   "mailbox_context_menu": {
     "mark_folder_read": "Marcar carpeta como leída",

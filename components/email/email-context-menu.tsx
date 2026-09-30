@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { Email, Mailbox } from "@/lib/jmap/types";
 import {
@@ -41,6 +42,7 @@ import { buildMailboxTree, MailboxNode } from "@/lib/utils";
 import { localizeMailboxName } from "@/lib/mailbox-label";
 import { getEmailTagIds } from "@/lib/thread-utils";
 import { TagPicker } from "./tag-picker";
+import { RulesContextSubMenu } from "./rules-menu";
 
 interface Position {
   x: number;
@@ -58,6 +60,12 @@ interface EmailContextMenuProps {
   currentMailboxRole?: string;
   isMultiSelect?: boolean;
   selectedCount?: number;
+  /**
+   * The messages whose senders the Rules entry makes rules for: the whole
+   * selection, or for a single row the message to take the sender from.
+   * Without it, the menu's own message.
+   */
+  ruleEmails?: Email[];
   // Single email actions
   onReply?: () => void;
   onReplyAll?: () => void;
@@ -113,6 +121,7 @@ export function EmailContextMenu({
   currentMailboxRole,
   isMultiSelect = false,
   selectedCount = 1,
+  ruleEmails,
   onReply,
   onReplyAll,
   onForward,
@@ -184,6 +193,9 @@ export function EmailContextMenu({
     action();
     onClose();
   };
+
+  // Stable, so the Rules entry does not re-resolve its account every render.
+  const ruleSenderEmails = useMemo(() => ruleEmails ?? [email], [ruleEmails, email]);
 
   return (
     <ContextMenu
@@ -355,6 +367,9 @@ export function EmailContextMenu({
           })()}
         </ContextMenuSubMenu>
       )}
+
+      {/* Rules: filter rules made from the sender(s), saved as Sieve */}
+      <RulesContextSubMenu anchor={email} senderEmails={ruleSenderEmails} onClose={onClose} />
 
       {/* Star/Unstar - only for single email */}
       {!showBatchActions && (

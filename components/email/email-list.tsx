@@ -26,6 +26,8 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { TagDisplayContext, useMeasuredTagDisplay } from "@/hooks/use-tag-display";
 import { SearchChips } from "@/components/search/search-chips";
 import { isFilterEmpty, DEFAULT_SEARCH_FILTERS } from "@/lib/jmap/search-utils";
+import { getOwnAddresses } from "@/lib/filters/quick-rule-target";
+import { normalizeAddress } from "@/lib/filters/quick-rules";
 
 interface EmailListProps {
   emails: Email[];
@@ -162,6 +164,28 @@ export function EmailList({
   const contextMenuEmail = contextMenu.data
     ? emails.find((email) => email.id === contextMenu.data!.id) ?? contextMenu.data
     : null;
+  /**
+   * Whose sender the menu's Rules entry uses: every selected message, or the
+   * row's own message. A thread row whose newest message is the user's own
+   * reply takes the newest one someone else sent, when the thread has it
+   * loaded; otherwise the entry offers no sender rules.
+   */
+  const ruleEmails = useMemo(() => {
+    if (!contextMenuEmail) return undefined;
+    if (selectedEmailKeys.has(emailKeyFor(contextMenuEmail)) && selectedEmailKeys.size > 1) {
+      return emails.filter((email) => selectedEmailKeys.has(emailKeyFor(email)));
+    }
+    const own = getOwnAddresses();
+    const isOwn = (email: Email) =>
+      (email.from ?? []).length > 0 && (email.from ?? []).every((f) => own.has(normalizeAddress(f.email)));
+    if (!isOwn(contextMenuEmail)) return undefined;
+    const thread = threadGroups.find((group) => group.latestEmail.id === contextMenuEmail.id);
+    if (!thread) return undefined;
+    const newestOther = [...(threadEmailsCache.get(thread.threadKey) ?? []), ...thread.emails]
+      .filter((email) => !isOwn(email))
+      .sort((a, b) => Date.parse(b.receivedAt) - Date.parse(a.receivedAt))[0];
+    return newestOther ? [newestOther] : undefined;
+  }, [contextMenuEmail, selectedEmailKeys, emails, threadGroups, threadEmailsCache]);
   const { dialogProps: confirmDialogProps, confirm: confirmDialog } = useConfirmDialog();
 
   const [isProcessing, setIsProcessing] = useState(false);
@@ -663,8 +687,9 @@ export function EmailList({
           mailboxes={mailboxes}
           selectedMailbox={selectedMailbox}
           currentMailboxRole={effectiveMailboxRole}
-          isMultiSelect={selectedEmailKeys.has(contextMenuEmail.id)}
+          isMultiSelect={selectedEmailKeys.has(emailKeyFor(contextMenuEmail))}
           selectedCount={selectedEmailKeys.size}
+          ruleEmails={ruleEmails}
           onReply={() => onReply?.(contextMenuEmail!)}
           onReplyAll={() => onReplyAll?.(contextMenuEmail!)}
           onForward={() => onForward?.(contextMenuEmail!)}
