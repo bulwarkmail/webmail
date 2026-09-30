@@ -4,11 +4,13 @@ import React, { useCallback } from "react";
 import { formatDate, formatDateTime, stripInvisibleLeading } from "@/lib/utils";
 import { Email, ThreadGroup } from "@/lib/jmap/types";
 import { cn } from "@/lib/utils";
-import { AttachmentChips } from "./attachment-chips";
+import { ListAttachmentChips } from "./attachment-chips";
+import { VerificationCodeChip, useListVerificationCode } from "./verification-code-chip";
 import type { Attachment } from "@/lib/jmap/types";
+import type { LoadListAttachments } from "@/lib/list-attachments";
 import { SelectableAvatar } from "@/components/email/selectable-avatar";
-import { Paperclip, Star, Pin, Circle, ChevronRight, ChevronDown, Loader2, MessageSquare, CheckSquare, Square, Reply, Forward, CalendarClock, Folder, Archive, Trash2, MailOpen, ShieldAlert } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import { Paperclip, Star, Pin, Circle, ChevronRight, ChevronDown, Loader2, MessageSquare, CheckSquare, Square, Reply, Forward, CalendarClock, Folder, Archive, Trash2, MailOpen, ShieldAlert } from "@/components/icons";
+import type { AppIcon } from "@/components/icons";
 import { useSettingsStore, KEYWORD_PALETTE } from "@/stores/settings-store";
 import { accountTintKey, generateAvatarColor } from "@/lib/account-utils";
 import { useUIStore } from "@/stores/ui-store";
@@ -25,24 +27,24 @@ import type { SwipeAction } from "@/stores/settings-store";
 import { ThreadEmailItem } from "./thread-email-item";
 import { EmailHoverActions } from "./email-hover-actions";
 import { SearchSnippetText } from "./search-snippet-text";
+import { useOwnDomainAddress } from "@/hooks/use-own-domain-address";
 import { useTranslations } from "next-intl";
 
 /**
  * Unread bullet in the row gutter.
  *
- * It is absolutely positioned so it never widens the row, which means it has
- * to be told where the row's *first* line sits: centring it on the row (the
- * old `top-1/2`) drifts down as soon as the row grows a second and third line,
- * leaving it visibly out of line with the checkbox and the avatar it reads as
- * a column with. Anchor = top padding + half an avatar.
+ * It is absolutely positioned so it never widens the row. With an avatar it
+ * sits in the avatar's wrapper and centres on the avatar: the avatar centres
+ * itself against the row, so a dot anchored on the first line floats above
+ * it once the row grows a chip line. Extra-compact rows have no avatar and
+ * anchor it on their single line instead (top padding + half a line).
  */
-function UnreadDot({ density, compactAvatar }: { density: string; compactAvatar: boolean }) {
+function UnreadDot({ besideAvatar }: { besideAvatar: boolean }) {
   const t = useTranslations('email_viewer');
-  const halfFirstLine = density === 'extra-compact' ? '0.625rem' : compactAvatar ? '1rem' : '1.25rem';
   return (
     <div
-      className="absolute start-0.5 -translate-y-1/2"
-      style={{ top: `calc(var(--density-item-py) + ${halfFirstLine})` }}
+      className={cn('absolute -translate-y-1/2', besideAvatar ? '-start-2.5 top-1/2' : 'start-0.5')}
+      style={besideAvatar ? undefined : { top: 'calc(var(--density-item-py) + 0.625rem)' }}
     >
       <Circle className="w-2 h-2 fill-unread text-unread" />
       <span className="sr-only">{t('unread')}</span>
@@ -50,7 +52,21 @@ function UnreadDot({ density, compactAvatar }: { density: string; compactAvatar:
   );
 }
 
-function StatusIcon({ icon: Icon, label, className }: { icon: LucideIcon; label: string; className: string }) {
+/** The chip row under a row's preview: the verification code, then the attachments. */
+function RowChips({ email, loadAttachments, onOpenAttachment }: {
+  email: Email;
+  loadAttachments?: LoadListAttachments;
+  onOpenAttachment?: (attachment: Attachment) => void;
+}) {
+  const code = useListVerificationCode(email);
+  const leading = code ? <VerificationCodeChip code={code} /> : undefined;
+  if (onOpenAttachment) {
+    return <ListAttachmentChips email={email} load={loadAttachments} onOpen={onOpenAttachment} leading={leading} className="mt-1.5" />;
+  }
+  return leading ? <div className="mt-1.5 flex">{leading}</div> : null;
+}
+
+function StatusIcon({ icon: Icon, label, className }: { icon: AppIcon; label: string; className: string }) {
   return (
     <>
       <Icon className={className} />
@@ -126,6 +142,7 @@ interface ThreadListItemProps {
   onMarkAsSpam?: (email: Email) => void;
   onUndoSpam?: (email: Email) => void;
   onOpenAttachment?: (email: Email, attachment: Attachment) => void;
+  loadAttachments?: LoadListAttachments;
 }
 
 interface SingleEmailItemProps {
@@ -144,11 +161,12 @@ interface SingleEmailItemProps {
   onMarkAsSpam?: () => void;
   onUndoSpam?: () => void;
   onOpenAttachment?: (attachment: Attachment) => void;
+  loadAttachments?: LoadListAttachments;
 }
 
 // Visual + behaviour metadata for each mobile swipe action. Keyed by the
 // SwipeAction values that map to a row callback ('none' is handled inline).
-const SWIPE_ACTION_META: Record<Exclude<SwipeAction, 'none'>, { icon: LucideIcon; bg: string }> = {
+const SWIPE_ACTION_META: Record<Exclude<SwipeAction, 'none'>, { icon: AppIcon; bg: string }> = {
   archive: { icon: Archive, bg: 'bg-emerald-600' },
   delete: { icon: Trash2, bg: 'bg-red-600' },
   markRead: { icon: MailOpen, bg: 'bg-sky-600' },
@@ -157,7 +175,7 @@ const SWIPE_ACTION_META: Record<Exclude<SwipeAction, 'none'>, { icon: LucideIcon
 };
 
 const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
-  function SingleEmailItem({ email, selected, onClick, onDoubleClick, onContextMenu, showPreview, rowTint, onToggleStar, onMarkAsRead, onDelete, onArchive, onSetTag, onMarkAsSpam, onUndoSpam, onOpenAttachment }, ref) {
+  function SingleEmailItem({ email, selected, onClick, onDoubleClick, onContextMenu, showPreview, rowTint, onToggleStar, onMarkAsRead, onDelete, onArchive, onSetTag, onMarkAsSpam, onUndoSpam, onOpenAttachment, loadAttachments }, ref) {
     const t = useTranslations('email_viewer');
     const tBatch = useTranslations('email_list.batch_actions');
     const tStatus = useTranslations('email_list');
@@ -174,6 +192,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
       ?? (isUnifiedView ? (unifiedRole ?? undefined) : undefined);
     const showRecipient = currentMailboxRole === 'sent' || currentMailboxRole === 'drafts';
     const sender = showRecipient ? (email.to?.[0] ?? email.from?.[0]) : email.from?.[0];
+    const formatAddress = useOwnDomainAddress();
     const { sortTagIds, tagColor } = useKeywordFormat();
     const { variant: tagVariant, placement: tagPlacement } = useTagDisplay();
     const tintListRowsByTag = useSettingsStore((state) => state.tintListRowsByTag);
@@ -389,20 +408,23 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
           )}
 
           {density !== 'extra-compact' && (
-            <SelectableAvatar
-              name={sender?.name}
-              email={sender?.email}
-              size={isFocusedMailLayout ? "sm" : "md"}
-              className="flex-shrink-0 self-center shadow-sm"
-              disableImages={hideJunkAvatarImages}
-              checked={isChecked}
-              onToggle={handleCheckboxClick}
-              selectLabel={tBatch('select')}
-            />
+            <div className="relative flex flex-shrink-0 self-center">
+              <SelectableAvatar
+                name={sender?.name}
+                email={sender?.email}
+                size={isFocusedMailLayout ? "sm" : "md"}
+                className="shadow-sm"
+                disableImages={hideJunkAvatarImages}
+                checked={isChecked}
+                onToggle={handleCheckboxClick}
+                selectLabel={tBatch('select')}
+              />
+              {isUnread && <UnreadDot besideAvatar />}
+            </div>
           )}
 
-          {isUnread && (
-            <UnreadDot density={density} compactAvatar={isFocusedMailLayout} />
+          {isUnread && density === 'extra-compact' && (
+            <UnreadDot besideAvatar={false} />
           )}
 
           <div className="flex-1 min-w-0">
@@ -422,7 +444,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                     'w-32 shrink-0 truncate text-sm lg:w-40',
                     isUnread ? 'font-semibold text-foreground' : 'font-medium text-foreground/80'
                   )}>
-                    {sender?.name || sender?.email || 'Unknown'}
+                    {sender?.name || (sender?.email && formatAddress(sender.email)) || 'Unknown'}
                   </span>
                   <div className="flex min-w-0 flex-1 items-center gap-2 text-sm">
                     {tagIds.length > 0 && (
@@ -495,7 +517,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                         ? "font-bold text-foreground"
                         : "font-medium text-muted-foreground"
                     )}>
-                      {sender?.name || sender?.email || "Unknown"}
+                      {sender?.name || (sender?.email && formatAddress(sender.email)) || "Unknown"}
                     </span>
                     {tagPlacement === 'sender' && tagIds.length > 0 && (
                       <span className={TAG_GROUP_CLASS}>
@@ -579,13 +601,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                     {previewSnippet ? <SearchSnippetText snippet={previewSnippet} /> : (trimmedPreview || t('no_preview_available'))}
                   </p>
                 )}
-                {onOpenAttachment && (
-                  <AttachmentChips
-                    attachments={email.attachments}
-                    onOpen={onOpenAttachment}
-                    className="mt-1.5"
-                  />
-                )}
+                <RowChips email={email} loadAttachments={loadAttachments} onOpenAttachment={onOpenAttachment} />
               </>
             )}
           </div>
@@ -615,6 +631,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
 export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemProps>(
   function ThreadListItem({
     onOpenAttachment,
+    loadAttachments,
     thread,
     isExpanded,
     selectedEmailId,
@@ -734,6 +751,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
           onMarkAsSpam={onMarkAsSpam ? () => onMarkAsSpam(latestEmail) : undefined}
           onUndoSpam={onUndoSpam ? () => onUndoSpam(latestEmail) : undefined}
           onOpenAttachment={onOpenAttachment ? (a) => onOpenAttachment(latestEmail, a) : undefined}
+          loadAttachments={loadAttachments}
         />
       );
     }
@@ -872,6 +890,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                   onToggle={handleThreadCheckboxClick}
                   selectLabel={tBatch('select')}
                 />
+                {hasUnread && <UnreadDot besideAvatar />}
                 {!isMobile && (
                   <button
                     data-expand-toggle
@@ -902,8 +921,8 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
               </div>
             )}
 
-            {hasUnread && (
-              <UnreadDot density={density} compactAvatar={isFocusedMailLayout} />
+            {hasUnread && density === 'extra-compact' && (
+              <UnreadDot besideAvatar={false} />
             )}
 
             <div className="flex-1 min-w-0">
@@ -1089,13 +1108,11 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                       {previewSnippet ? <SearchSnippetText snippet={previewSnippet} /> : (trimmedPreview || tEmailViewer('no_preview_available'))}
                     </p>
                   )}
-                  {onOpenAttachment && (
-                    <AttachmentChips
-                      attachments={latestEmail.attachments}
-                      onOpen={(a) => onOpenAttachment(latestEmail, a)}
-                      className="mt-1.5"
-                    />
-                  )}
+                  <RowChips
+                    email={latestEmail}
+                    loadAttachments={loadAttachments}
+                    onOpenAttachment={onOpenAttachment ? (a) => onOpenAttachment(latestEmail, a) : undefined}
+                  />
                 </>
               )}
             </div>

@@ -74,16 +74,16 @@ the import prompt choice and the last known revision of each archive enter local
 The server stores each archive as a size-bounded file under
 `SETTINGS_DATA_DIR/account-vaults/<owner-hash>/<archive-id>.json`, holding the
 encrypted envelope and the archive name. It has no archive decryption
-key. **Archive lists and ciphertext downloads intentionally work before mail
-authentication** so restoration needs only the archive password. Knowing a
-username/server pair can therefore reveal that archives exist, their **names**, and
-permit downloading their ciphertext. Names are plaintext: do not put secrets in them.
-Use a strong, unique passphrase: copied ciphertext permits offline password guesses.
+key. The archive password is not the only lock: **every call — listing,
+download, write and delete — requires a matching owner session** and a fresh JMAP
+credential check, so a username/server pair alone reveals nothing, not even
+whether archives exist. Names are plaintext to the server: do not put secrets in
+them. A strong, unique passphrase still matters, since a server-side copy of the
+ciphertext would permit offline password guesses.
 An installation's existing access controls (for example an access proxy) still apply.
 
-Archive writes and deletions require a matching owner session and a fresh JMAP
-credential check; the endpoint never relies solely on the existence of a session
-cookie. Body size is checked while streaming, and storage accepts only the name and
+The endpoint never relies solely on the existence of a session cookie: those can
+be minted for trusted servers without upstream verification. Body size is checked while streaming, and storage accepts only the name and
 the encrypted envelope fields. Atomic file replacement and a per-owner file lock
 protect the revision comparison and the per-owner archive limit.
 

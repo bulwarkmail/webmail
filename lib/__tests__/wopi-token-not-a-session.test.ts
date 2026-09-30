@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { mintWopiToken, verifyWopiToken } from '@/lib/wopi/token';
+import { mintWopiToken, verifyWopiToken, wopiDocumentId } from '@/lib/wopi/token';
 import { encryptPayload } from '@/lib/auth/crypto';
 import {
   readStalwartAuthContextFromStore,
@@ -41,13 +41,14 @@ function cookieStore(initial: Record<string, string> = {}): CookieStore {
 }
 
 describe('editor token presented as a session cookie', () => {
-  const { token } = mintWopiToken({
+  const scope = {
     ...CREDENTIALS,
     accountId: 'c',
     fileId: 'd',
     canWrite: true,
     origin: 'https://mail.example.com',
-  });
+  };
+  const { token } = mintWopiToken(scope);
 
   it('is rejected by the session context reader', () => {
     const store = cookieStore({ [stalwartAuthContextCookieName(0)]: token });
@@ -63,8 +64,8 @@ describe('editor token presented as a session cookie', () => {
   });
 
   it('still works for the file it was scoped to', () => {
-    expect(verifyWopiToken(token, 'd')).toMatchObject({ fileId: 'd', username: CREDENTIALS.username });
-    expect(verifyWopiToken(token, 'other')).toBeNull();
+    expect(verifyWopiToken(token, wopiDocumentId(scope))).toMatchObject({ fileId: 'd', username: CREDENTIALS.username });
+    expect(verifyWopiToken(token, wopiDocumentId({ ...scope, fileId: 'other' }))).toBeNull();
   });
 });
 

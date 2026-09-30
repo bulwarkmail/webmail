@@ -1,6 +1,6 @@
 "use client";
 
-import { Menu, ArrowLeft, Plus, Search, X } from "lucide-react";
+import { Menu, ArrowLeft, Plus, Search, X } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { useUIStore } from "@/stores/ui-store";
 import { useIsDesktop } from "@/hooks/use-media-query";

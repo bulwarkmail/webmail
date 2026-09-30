@@ -25,14 +25,16 @@ function ownerFrom(request: NextRequest): VaultOwner {
 }
 const isRevision = (value: unknown): value is string => typeof value === 'string' && /^[a-f0-9]{64}$/.test(value);
 
-/** Deliberately readable before mail login: the archive password is the read key.
- * Only archive names, ciphertext and the caller's own identity are returned, and
- * no permissive CORS is set.
+/** Listing needs the same verified owner session as writing: the ciphertext
+ * must not be downloadable, and brute-forceable offline, by anyone who knows
+ * a username. The client only lists archives for accounts it is signed in to.
  */
 export async function GET(request: NextRequest) {
   if (!await enabled()) return reply({ error: 'disabled' }, 404);
   let owner;
   try { owner = ownerFrom(request); } catch { return reply({ error: 'invalid_archive' }, 400); }
+  try { if (!await verifyOwner(owner)) return reply({ error: 'owner_signin_required' }, 403); }
+  catch { return reply({ error: 'owner_signin_required' }, 403); }
   try { return reply({ vaults: await listVaults(owner) }); }
   catch { return reply({ error: 'storage_failed' }, 500); }
 }

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Check, Search } from "lucide-react";
+import { Check, Search } from "@/components/icons";
 import { cn } from "@/lib/utils";
 import { useSettingsStore } from "@/stores/settings-store";
 import { buildKeywordTree, type KeywordNode } from "@/lib/keyword-nesting";

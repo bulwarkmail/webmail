@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import { ChevronDown, ChevronRight, Globe, ListTodo, Pencil, RefreshCw, Share2, Star, Trash2, Cake, User, Users, Plus, Eraser, Palette, Shuffle } from "lucide-react";
+import { ChevronDown, ChevronRight, Globe, ListTodo, Pencil, RefreshCw, Share2, Star, Trash2, Cake, User, Users, Plus, Eraser, Palette, Shuffle } from "@/components/icons";
 import { cn, formatDateTime } from "@/lib/utils";
 import type { Calendar } from "@/lib/jmap/types";
 import { CalendarColorPicker } from "@/components/settings/calendar-management-settings";

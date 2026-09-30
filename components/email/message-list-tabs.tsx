@@ -7,7 +7,7 @@
 // DEFINITIONS (stores/message-list-tabs-store.ts) - no plugin iframe here.
 
 import { useEffect, useRef } from 'react';
-import { icons as lucideIcons, type LucideIcon } from 'lucide-react';
+import { iconForName } from '@/components/icons';
 import { useMessageListTabsStore } from '@/stores/message-list-tabs-store';
 import { useEmailStore } from '@/stores/email-store';
 import { useAuthStore } from '@/stores/auth-store';
@@ -75,7 +75,7 @@ export function MessageListTabs() {
     >
       {tabs.map((tab) => {
         const Icon = tab.icon
-          ? (lucideIcons[tab.icon as keyof typeof lucideIcons] as LucideIcon | undefined)
+          ? iconForName(tab.icon)
           : undefined;
         const unread = tabCounts[tab.id] ?? 0;
         const isActive = tab.id === activeTabId;

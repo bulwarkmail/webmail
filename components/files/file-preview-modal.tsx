@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
-import { X, Download, Loader2, ExternalLink } from "lucide-react";
+import { X, Download, Loader2, ExternalLink } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { getFilePreviewKind, isMimeTypeSafeForInlinePreview } from "@/lib/file-preview";
 import dynamic from "next/dynamic";

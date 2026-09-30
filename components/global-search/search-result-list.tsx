@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, Loader2 } from "lucide-react";
+import { AlertTriangle, Loader2 } from "@/components/icons";
 import { useTranslations } from "next-intl";
 import { compareByRecency } from "@/lib/global-search/rank";
 import { hitKey, SEARCH_KINDS, type GlobalSearchHit, type SearchKind, type SearchOutcome } from "@/lib/global-search/types";

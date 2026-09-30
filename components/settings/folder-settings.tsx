@@ -14,14 +14,14 @@ import {
   Star, Heart, Bookmark, Tag, Flag, Briefcase, Users,
   Bell, Zap, Globe, Lock, Eye, MessageSquare, Mail,
   AlertTriangle, NotebookPen, CalendarClock, BellOff,
-  type LucideIcon,
-} from 'lucide-react';
+  type AppIcon,
+} from '@/components/icons';
 import { cn, buildMailboxTree, flattenMailboxTree, type MailboxNode } from '@/lib/utils';
 import {
   flattenVisibleTree, removeSubtree, getProjection, getDropPlan,
   type FlatFolder,
 } from '@/lib/folder-tree-dnd';
-import { ChevronRight, ChevronDown, GripVertical } from 'lucide-react';
+import { ChevronRight, ChevronDown, GripVertical } from '@/components/icons';
 import {
   DndContext, closestCenter, PointerSensor, KeyboardSensor,
   useSensor, useSensors, MeasuringStrategy,
@@ -39,7 +39,7 @@ const INDENTATION_WIDTH = 16;
 
 const STANDARD_ROLES = ['inbox', 'drafts', 'sent', 'trash', 'junk', 'archive'] as const;
 
-const ROLE_ICONS: Record<string, LucideIcon> = {
+const ROLE_ICONS: Record<string, AppIcon> = {
   inbox: Inbox,
   drafts: FileText,
   sent: Send,
@@ -53,7 +53,7 @@ const ROLE_ICONS: Record<string, LucideIcon> = {
   snoozed: BellOff,
 };
 
-const ICON_CHOICES: { name: string; icon: LucideIcon }[] = [
+const ICON_CHOICES: { name: string; icon: AppIcon }[] = [
   { name: 'Folder', icon: Folder },
   { name: 'Star', icon: Star },
   { name: 'Heart', icon: Heart },
@@ -268,7 +268,7 @@ export function FolderSettings() {
     return mb?.id ?? '';
   };
 
-  const getIconForMailbox = (mb: { id: string; role?: string }): LucideIcon => {
+  const getIconForMailbox = (mb: { id: string; role?: string }): AppIcon => {
     // Custom icon takes priority for non-role folders
     const customIconName = folderIcons[mb.id];
     if (customIconName) {

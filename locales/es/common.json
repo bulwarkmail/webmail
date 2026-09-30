@@ -254,6 +254,7 @@
       "button": "Vaciar carpeta",
       "confirm_title": "Vaciar carpeta",
       "confirm_message": "Todos los correos de esta carpeta se eliminarán permanentemente. Esta acción no se puede deshacer.",
+      "confirm_message_trash": "Todos los correos de esta carpeta se moverán a la papelera.",
       "confirm_button": "Vaciar carpeta",
       "junk_hint": "Puede vaciar la carpeta de Spam para eliminar permanentemente todos los mensajes.",
       "trash_hint": "Puede vaciar la Papelera para eliminar permanentemente todos los mensajes."
@@ -310,6 +311,8 @@
     "view_source": "Ver código fuente",
     "fullscreen": "Pantalla completa",
     "exit_fullscreen": "Salir de pantalla completa",
+    "view_in_dark_mode": "Ver en modo oscuro",
+    "view_in_light_mode": "Ver en modo claro",
     "export_email": "Exportar como .eml",
     "forward_as_attachment": "Reenviar como archivo adjunto",
     "import_email": "Importar .eml o .zip",
@@ -578,7 +581,12 @@
       "copied": "¡Copiado!",
       "copy_failed": "Error al copiar"
     },
-    "send_now": "Enviar ahora"
+    "send_now": "Enviar ahora",
+    "verification_code": {
+      "copy": "Copiar código {code}",
+      "copied": "Código copiado",
+      "copy_failed": "No se pudo copiar el código"
+    }
   },
   "email_composer": {
     "read_receipt_on": "Confirmación de lectura solicitada (haz clic para desactivar)",
@@ -640,11 +648,12 @@
     "from_override": {
       "toggle_off": "Anular",
       "toggle_on": "Cancelar anulación",
-      "toggle_tooltip": "Edita libremente el nombre y la dirección del remitente. El correo aún se envía a través de tu identidad - solo cambia el encabezado De visible.",
+      "toggle_tooltip": "Edita libremente el nombre y la dirección del remitente. El correo aún se envía a través de tu identidad.",
       "name_label": "Nombre del remitente",
       "name_placeholder": "Nombre",
       "email_label": "Dirección de correo del remitente",
-      "email_placeholder": "alias@example.com"
+      "email_placeholder": "alias@example.com",
+      "envelope_notice": "Si tu servidor no acepta esta dirección como remitente del sobre, se usa {identity} en su lugar, y los destinatarios pueden verla en el encabezado Return-Path."
     },
     "use_template": "Plantilla",
     "save_as_template": "Guardar como plantilla",
@@ -657,6 +666,8 @@
     "upload_progress": "Subiendo {uploaded} / {total}",
     "upload_cancel": "Cancelar subida",
     "upload_failed": "Error al subir {filename}",
+    "attachment_too_large": "\"{name}\" supera el tamaño que permite el servidor ({max} por archivo)",
+    "attachments_total_too_large": "Los adjuntos superarían el límite del servidor de {max} por mensaje",
     "send_failed": "Error al enviar el correo",
     "smime_sign_on": "Firma S/MIME activada",
     "smime_sign_off": "Firma S/MIME desactivada",
@@ -668,6 +679,8 @@
     "smime_unlock_button": "Desbloquear",
     "smime_passphrase_placeholder": "Contraseña S/MIME",
     "send_timeout": "El servidor dejó de responder. Compruebe la carpeta Enviados antes de volver a enviar: el mensaje puede haber salido.",
+    "send_recipients_rejected": "No enviado: el servidor rechazó a todos los destinatarios.",
+    "send_some_recipients_rejected": "Enviado, pero no a estos destinatarios: el servidor los rechazó.",
     "continue_draft": "Continuar borrador",
     "close_draft_title": "¿Guardar o descartar borrador?",
     "close_draft_message": "Tiene cambios sin guardar. ¿Desea guardar esto como borrador o descartarlo?",
@@ -778,6 +791,10 @@
     "email_sent": "Correo enviado exitosamente",
     "email_deleted": "Correo eliminado",
     "email_archived": "Correo archivado",
+    "emails_deleted": "{count, plural, one {# correo eliminado} other {# correos eliminados}}",
+    "emails_archived": "{count, plural, one {# correo archivado} other {# correos archivados}}",
+    "error_archiving": "No se pudo archivar el correo",
+    "error_updating": "No se pudo actualizar el correo",
     "email_starred": "Correo destacado",
     "email_unstarred": "Correo sin destacar",
     "email_marked_read": "Correo marcado como leído",
@@ -918,12 +935,25 @@
       "sidebar_apps": "Apps de barra lateral",
       "notifications": "Notificaciones",
       "layout": "Diseño",
+      "themes": "Temas",
       "reading": "Lectura",
       "composing": "Redacción",
       "downloads": "Descargas",
       "content_senders": "Contenido y remitentes",
       "about_data": "Acerca de y datos",
       "debug": "Depuración"
+    },
+    "themes": {
+      "title": "Temas",
+      "description": "Elija entre los temas implementados por su administrador y los ajustes preestablecidos integrados.",
+      "locked": "La selección de tema está bloqueada por un administrador.",
+      "forced": "El tema «{name}» lo impone el administrador y no se puede cambiar",
+      "admin_theme": "Tema del administrador",
+      "activated": "Tema activado",
+      "default_restored": "Tema predeterminado restaurado",
+      "default_name": "Predeterminado",
+      "default_badge": "Predeterminado",
+      "admin_enforced": "Impuesto por el administrador"
     },
     "tab_groups": {
       "general": "General",
@@ -1172,7 +1202,9 @@
         "enabled": "Notificaciones de correo",
         "enabled_desc": "Mostrar notificaciones cuando lleguen nuevos correos",
         "sound": "Sonido de notificación",
-        "sound_desc": "Reproducir un sonido cuando lleguen nuevos correos"
+        "sound_desc": "Reproducir un sonido cuando lleguen nuevos correos",
+        "inbox_only": "Inbox only",
+        "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
       },
       "calendar": {
         "title": "Notificaciones de calendario",
@@ -1377,6 +1409,10 @@
         "label": "Mostrar Vista Previa",
         "description": "Mostrar vista previa del correo en la lista",
         "focus_description": "Mostrar texto de vista previa en línea dentro de la lista de mensajes enfocada de una línea"
+      },
+      "show_verification_codes": {
+        "label": "Mostrar códigos de verificación",
+        "description": "Ofrecer el código de los correos de inicio de sesión y confirmación para copiarlo con un clic, en la lista durante un día y en el mensaje"
       },
       "attachment_click_action": {
         "label": "Acción al hacer clic en adjuntos",
@@ -1709,14 +1745,36 @@
       },
       "link_device": {
         "title": "Vincular aplicación móvil",
-        "description": "Inicie sesión en la aplicación móvil de Bulwark Mail sin escribir nada. Genere un código QR aquí y escanéelo desde la pantalla de inicio de sesión de la aplicación.",
+        "description": "Inicie sesión en la aplicación Bulwark Mail de su teléfono sin escribir allí su contraseña. Su teléfono obtiene su propio inicio de sesión, así que cerrar sesión aquí no la cierra en él.",
         "generate": "Mostrar código QR",
         "regenerate": "Mostrar un código nuevo",
-        "instructions": "Abra la aplicación Bulwark Mail, toque \"Escanear código QR\" en la pantalla de inicio de sesión y apunte su cámara aquí.",
+        "instructions": "Abra la aplicación Bulwark Mail y toque \"Scan a sign-in code\" en la pantalla de inicio de sesión (o \"Add account\" → \"Scan a sign-in code\" si ya ha iniciado sesión) y, a continuación, apunte la cámara aquí.",
         "expires_in": "Este código caduca en {seconds} segundos. Solo se puede usar una vez.",
         "expired": "Este código ha caducado.",
-        "generating": "Generando…",
-        "error": "No se pudo crear un código de vinculación. Inténtelo de nuevo."
+        "error": "No se pudo crear un código de vinculación. Inténtelo de nuevo.",
+        "password_prompt": "Introduzca su contraseña para confirmar que es usted. Su teléfono obtiene su propio inicio de sesión; su contraseña no se envía al teléfono.",
+        "show_password": "Mostrar contraseña",
+        "hide_password": "Ocultar contraseña",
+        "continue": "Continuar",
+        "error_wrong_password": "Contraseña incorrecta. Inténtelo de nuevo.",
+        "totp_prompt": "Introduzca el código de su aplicación de autenticación.",
+        "error_password_or_code": "La contraseña o el código son incorrectos.",
+        "error_not_signed_in": "Su sesión ha caducado. Vuelva a iniciar sesión para vincular un dispositivo.",
+        "error_impersonation": "No se pueden vincular dispositivos mientras consulta el buzón de otro usuario.",
+        "error_too_many_attempts": "Demasiados intentos. Espere un momento e inténtelo de nuevo.",
+        "error_session_secret": "La vinculación de dispositivos no está configurada en este servidor (falta SESSION_SECRET). Consulte a su administrador.",
+        "error_server_unreachable": "No se pudo conectar con su servidor de correo. Inténtelo de nuevo.",
+        "error_pairing_unavailable": "Su servidor de correo no permite vincular dispositivos de esta forma. Consulte a su administrador.",
+        "qr_alt": "Código QR de inicio de sesión",
+        "link_label": "Enlace de inicio de sesión",
+        "copy_link": "Copiar enlace de inicio de sesión",
+        "copied": "Copiado",
+        "copy_hint": "¿No tiene cámara? Copie el enlace y péguelo en la aplicación con \"Paste sign-in link\".",
+        "success_title": "Sesión iniciada en su teléfono",
+        "success_body": "Puede cerrar esta página. Para vincular otro dispositivo, muestre un código nuevo.",
+        "link_another": "Vincular otro dispositivo",
+        "use_sso": "Usar el inicio de sesión único",
+        "error_insecure_server": "La aplicación móvil solo se conecta a servidores de correo por https, y este usa http."
       },
       "public_keys": {
         "name_label": "Nombre de la clave pública",
@@ -1786,7 +1844,9 @@
       "warnings": {
         "end_before_start": "La fecha de fin debe ser posterior a la fecha de inicio",
         "start_in_past": "La fecha de inicio está en el pasado",
-        "empty_body": "El cuerpo del mensaje está vacío - los destinatarios recibirán una respuesta en blanco"
+        "empty_body": "El cuerpo del mensaje está vacío - los destinatarios recibirán una respuesta en blanco",
+        "subject_too_long": "El asunto es demasiado largo para el servidor (máximo {max} bytes).",
+        "body_too_long": "El mensaje es demasiado largo para el servidor (máximo {max} bytes, formato incluido)."
       }
     },
     "folders": {
@@ -2007,6 +2067,7 @@
       "actions": "Acciones",
       "add_action": "Agregar acción",
       "stop_processing": "Detener el procesamiento de reglas posteriores",
+      "include_spam": "Mover también los mensajes marcados como spam",
       "attachment_type_placeholder": "p. ej. pdf, doc, jpg",
       "value_placeholder_multi": "Valor (varios separados por comas)",
       "condition_fields": {
@@ -2048,6 +2109,8 @@
       "copy_to_folder": "Seleccionar carpeta",
       "forward_to": "Reenviar a dirección de correo",
       "forward_placeholder": "correo@ejemplo.com",
+      "forward_keep_copy": "Conservar una copia",
+      "forward_limit": "Límite de reenvíos por mensaje en este servidor: {count}. Los reenvíos adicionales se omiten.",
       "reject_message": "Mensaje de rechazo",
       "reject_placeholder": "Su correo ha sido rechazado",
       "label_name": "Nombre de la etiqueta",
@@ -2805,6 +2868,8 @@
       "no_events": "Sin eventos",
       "all_day": "Todo el día",
       "more": "+{count} más",
+      "show_more": "Mostrar más",
+      "show_less": "Mostrar menos",
       "no_title": "(Sin título)",
       "resize": "Redimensionar evento",
       "duplicate": "Duplicar",
@@ -2931,7 +2996,10 @@
       "all_events": "Todos los eventos",
       "cancel": "Cancelar",
       "save": "Guardar",
-      "delete": "Eliminar"
+      "delete": "Eliminar",
+      "rsvp_title": "Responder a evento recurrente",
+      "rsvp_description": "Este es un evento recurrente. ¿A qué eventos se aplica su respuesta?",
+      "respond": "Responder"
     },
     "alerts": {
       "title": "Recordatorio",
@@ -2974,7 +3042,7 @@
       "enable_tasks": "Activar tareas",
       "enable_tasks_desc": "Mostrar una vista de tareas en el calendario para gestionar tareas pendientes",
       "show_tasks_on_calendar": "Mostrar tareas en el calendario",
-      "show_tasks_on_calendar_desc": "Mostrar etiquetas de tareas en las vistas diarias y semanales del calendario",
+      "show_tasks_on_calendar_desc": "Mostrar las tareas en las vistas mensual, semanal y diaria del calendario",
       "hover_preview": "Vista previa al pasar el ratón",
       "hover_preview_desc": "Mostrar un popover de detalles al pasar el ratón sobre eventos del calendario",
       "hover_preview_instant": "Instantáneo",
@@ -3016,6 +3084,9 @@
       "alert_now": "Comienza ahora",
       "alert_in_minutes": "En {count} min",
       "invitation_sent": "Invitaciones enviadas",
+      "invitations_denied_title": "No se pueden enviar las invitaciones",
+      "invitations_denied": "El servidor rechazó enviar las invitaciones: {reason}. ¿Guardar el evento sin enviarlas?",
+      "save_without_invitations": "Guardar sin invitaciones",
       "rsvp_updated": "Respuesta actualizada",
       "rsvp_error": "Error al actualizar la respuesta",
       "event_duplicated": "Evento duplicado",
@@ -3044,7 +3115,7 @@
       "supported_formats": "Archivos iCalendar (.ics) compatibles",
       "url_description": "Introduce la URL de un feed iCalendar (.ics) externo para importar eventos.",
       "url_placeholder": "https://example.com/calendar.ics",
-      "url_hint": "Compatible con URLs CalDAV e iCalendar (.ics)",
+      "url_hint": "Compatible con URLs iCalendar (.ics)",
       "fetch": "Obtener",
       "invalid_url": "Introduce una URL válida",
       "url_fetch_failed": "No se pudo obtener el calendario desde la URL",
@@ -3230,6 +3301,7 @@
     "body_placeholder": "El cuerpo contiene...",
     "folder": "Carpeta",
     "all_folders": "Todas las carpetas",
+    "all_folders_except_spam_trash": "Todas las carpetas excepto Spam y Papelera",
     "has_attachment": "Adjuntos",
     "date_after": "Después de",
     "date_before": "Antes de",
@@ -3292,6 +3364,8 @@
     "rename": "Renombrar",
     "rename_title": "Renombrar",
     "new_name": "Nuevo nombre",
+    "name_forbidden_chars": "El servidor no permite estos caracteres en los nombres: {chars}",
+    "name_reserved": "Este nombre está reservado en el servidor.",
     "delete": "Eliminar",
     "delete_confirm_title": "Eliminar recurso",
     "delete_confirm_message": "¿Está seguro de que desea eliminar \"{name}\"? Esta acción no se puede deshacer.",

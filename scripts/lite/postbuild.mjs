@@ -7,12 +7,13 @@
 // entry document Stalwart serves for every route, config/policy/manifest that
 // follow the runtime mount, no host snippets, no 404.html - and packs out/
 // into bulwark-lite-stalwart.zip.
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   STALWART_EXCLUDED_DIRS, STALWART_EXCLUDED_FILES, STALWART_ZIP_NAME,
-  buildCaddyExample, buildHeaders, buildLiteConfig, buildLitePolicy, buildManifest, buildNginxExample, buildNotFoundShim, buildReadme, buildRedirects, buildRootRedirect,
+  buildCaddyExample, buildConnectorCapabilities, buildHeaders, buildLiteConfig, buildLitePolicy, buildManifest, buildNginxExample, buildNotFoundShim, buildReadme, buildRedirects, buildRootRedirect,
   buildStalwartEntry, buildStalwartManifest, buildStalwartReadme, buildZip, collectZipEntries, discoverBuiltLocales, discoverShellDirs, findSegmentPrefetchDirs, isMainModule, makeBuildId, normalizeBasePath, parseLiteTarget, resolveRepoRoot,
+  withScriptHashCsp,
 } from "./lib.mjs";
 
 const repoRoot = resolveRepoRoot(import.meta.url);
@@ -47,6 +48,12 @@ export function runPostbuild({ root = repoRoot, env = process.env, log = console
   for (const [name, content] of Object.entries(files)) {
     writeFileSync(join(outDir, name), content);
   }
+  // The Stalwart target rewrites its shells at runtime, so their scripts
+  // cannot be hashed at build time (see buildStalwartEntryCsp).
+  if (target === "static") {
+    const pages = applyScriptHashCsp(outDir);
+    log(`[lite] pinned the inline scripts of ${pages} pages with a <meta> CSP`);
+  }
   log(`[lite] wrote ${Object.keys(files).length} files into out/ (${target} target, ${locales.length} locales, base path ${target === "stalwart" ? "runtime" : basePath || "/"})`);
 
   let zipPath = null;
@@ -64,6 +71,9 @@ function staticFiles({ config, basePath, locales, defaultLocale, version, commit
   return {
     "config.json": JSON.stringify(config, null, 2) + "\n",
     "policy.json": JSON.stringify(buildLitePolicy(), null, 2) + "\n",
+    // The file form of /api/connector/capabilities - a static export has no
+    // route handlers, and a connector probing this instance needs an answer.
+    "connector.json": buildConnectorCapabilities({ appName: config.appName, version, basePath }),
     "manifest.webmanifest": JSON.stringify(buildManifest({ appName: config.appName, basePath }), null, 2) + "\n",
     "index.html": buildRootRedirect({ basePath, locales, defaultLocale }),
     // Replaces Next's default not-found page: only this shim replays deep links
@@ -71,8 +81,8 @@ function staticFiles({ config, basePath, locales, defaultLocale, version, commit
     "404.html": buildNotFoundShim({ basePath, locales }),
     "_redirects": buildRedirects({ basePath, locales }),
     "_headers": buildHeaders({ basePath, connectSrc }),
-    "nginx.conf.example": buildNginxExample({ basePath }),
-    "Caddyfile.example": buildCaddyExample({ basePath }),
+    "nginx.conf.example": buildNginxExample({ basePath, connectSrc }),
+    "Caddyfile.example": buildCaddyExample({ basePath, connectSrc }),
     "LITE-README.md": buildReadme({ version, commit, basePath, locales, jmapServerUrl: config.jmapServerUrl, demoMode: config.demoMode }),
   };
 }
@@ -97,6 +107,24 @@ function stalwartFiles({ outDir, config, locales, defaultLocale, version, commit
     "manifest.json": JSON.stringify(buildStalwartManifest({ appName: config.appName }), null, 2) + "\n",
     "LITE-README.md": buildStalwartReadme({ version, commit, locales, buildId, demoMode: config.demoMode }),
   };
+}
+
+/** Add each HTML file's script-hash policy (withScriptHashCsp); returns how many. */
+export function applyScriptHashCsp(outDir) {
+  let pages = 0;
+  const walk = (dir) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const path = join(dir, entry.name);
+      if (entry.isDirectory()) {
+        if (entry.name !== "_next") walk(path);
+      } else if (entry.name.endsWith(".html")) {
+        writeFileSync(path, withScriptHashCsp(readFileSync(path, "utf8")));
+        pages++;
+      }
+    }
+  };
+  walk(outDir);
+  return pages;
 }
 
 if (isMainModule(import.meta.url)) {

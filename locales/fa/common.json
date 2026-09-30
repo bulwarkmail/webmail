@@ -254,6 +254,7 @@
       "button": "خالی کردن پوشه",
       "confirm_title": "خالی کردن پوشه",
       "confirm_message": "همه ایمیل‌های این پوشه برای همیشه حذف خواهند شد.",
+      "confirm_message_trash": "همه ایمیل‌های این پوشه به زباله‌دان منتقل می‌شوند.",
       "confirm_button": "خالی کردن پوشه",
       "junk_hint": "می‌توانید پوشه هرزنامه را خالی کنید.",
       "trash_hint": "می‌توانید پوشه زباله‌دان را خالی کنید."
@@ -310,6 +311,8 @@
     "view_source": "مشاهده منبع",
     "fullscreen": "تمام‌صفحه",
     "exit_fullscreen": "خروج از تمام‌صفحه",
+    "view_in_dark_mode": "نمایش در حالت تیره",
+    "view_in_light_mode": "نمایش در حالت روشن",
     "export_email": "خروجی .eml",
     "forward_as_attachment": "ارسال به‌عنوان پیوست",
     "import_email": "وارد کردن .eml یا .zip",
@@ -578,7 +581,12 @@
       "copied": "کپی شد!",
       "copy_failed": "کپی ناموفق بود"
     },
-    "send_now": "ارسال فوری"
+    "send_now": "ارسال فوری",
+    "verification_code": {
+      "copy": "کپی کد {code}",
+      "copied": "کد کپی شد",
+      "copy_failed": "کپی کد ممکن نشد"
+    }
   },
   "email_composer": {
     "read_receipt_on": "درخواست تأیید خواندن فعال (کلیک برای غیرفعال کردن)",
@@ -647,7 +655,8 @@
       "name_label": "نام فرستنده",
       "name_placeholder": "نام",
       "email_label": "آدرس ایمیل فرستنده",
-      "email_placeholder": "alias@example.com"
+      "email_placeholder": "alias@example.com",
+      "envelope_notice": "اگر سرور شما این آدرس را به‌عنوان فرستندهٔ پاکت نپذیرد، به‌جای آن {identity} استفاده می‌شود و گیرندگان می‌توانند آن را در سرآیند Return-Path ببینند."
     },
     "use_template": "قالب",
     "save_as_template": "ذخیره به عنوان قالب",
@@ -660,10 +669,14 @@
     "upload_progress": "در حال بارگذاری {uploaded} / {total}",
     "upload_cancel": "لغو بارگذاری",
     "upload_failed": "بارگذاری {filename} ناموفق بود",
+    "attachment_too_large": "«{name}» بزرگ‌تر از حدی است که سرور اجازه می‌دهد ({max} برای هر فایل)",
+    "attachments_total_too_large": "پیوست‌ها از سقف {max} سرور برای هر پیام بیشتر می‌شوند",
     "drop_files": "فایل‌ها را اینجا رها کنید",
     "show_less": "نمایش کمتر",
     "send_failed": "ارسال ایمیل ناموفق بود",
     "send_timeout": "سرور دیگر پاسخ نمی‌دهد. پیش از ارسال دوباره، پوشهٔ ارسال‌شده‌ها را بررسی کنید — ممکن است پیام ارسال شده باشد.",
+    "send_recipients_rejected": "ارسال نشد - سرور همه گیرندگان را رد کرد.",
+    "send_some_recipients_rejected": "ارسال شد، اما نه برای این گیرندگان - سرور آنها را رد کرد.",
     "continue_draft": "ادامه پیش‌نویس",
     "close_draft_title": "ذخیره یا دور انداختن پیش‌نویس؟",
     "close_draft_message": "تغییرات ذخیره نشده دارید. ذخیره یا دور انداختن؟",
@@ -778,6 +791,10 @@
     "email_sent": "ایمیل با موفقیت ارسال شد",
     "email_deleted": "ایمیل حذف شد",
     "email_archived": "ایمیل بایگانی شد",
+    "emails_deleted": "{count, plural, other {# ایمیل حذف شد}}",
+    "emails_archived": "{count, plural, other {# ایمیل بایگانی شد}}",
+    "error_archiving": "بایگانی ایمیل ناموفق بود",
+    "error_updating": "به‌روزرسانی ایمیل ناموفق بود",
     "email_starred": "ایمیل ستاره‌دار شد",
     "email_unstarred": "ستاره ایمیل برداشته شد",
     "email_marked_read": "ایمیل خوانده شده علامت‌گذاری شد",
@@ -921,12 +938,25 @@
       "sidebar_apps": "برنامه‌های نوار کناری",
       "notifications": "اعلان‌ها",
       "layout": "چیدمان",
+      "themes": "پوسته‌ها",
       "reading": "خواندن",
       "composing": "نوشتن",
       "downloads": "دانلودها",
       "content_senders": "محتوا و فرستندگان",
       "about_data": "درباره و داده‌ها",
       "debug": "اشکال‌زدایی"
+    },
+    "themes": {
+      "title": "پوسته‌ها",
+      "description": "از میان پوسته‌هایی که مدیر شما منتشر کرده و پیش‌تنظیم‌های داخلی انتخاب کنید.",
+      "locked": "انتخاب پوسته توسط مدیر قفل شده است.",
+      "forced": "پوسته «{name}» توسط مدیر اجباری شده و قابل تغییر نیست",
+      "admin_theme": "پوسته مدیر",
+      "activated": "پوسته فعال شد",
+      "default_restored": "پوسته پیش‌فرض بازیابی شد",
+      "default_name": "پیش‌فرض",
+      "default_badge": "پیش‌فرض",
+      "admin_enforced": "اجباری از سوی مدیر"
     },
     "tab_groups": {
       "general": "عمومی",
@@ -1211,7 +1241,9 @@
         "enabled": "اعلان‌های ایمیل",
         "enabled_desc": "نمایش اعلان هنگام ایمیل جدید",
         "sound": "صدای اعلان",
-        "sound_desc": "پخش هشدار صوتی"
+        "sound_desc": "پخش هشدار صوتی",
+        "inbox_only": "Inbox only",
+        "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
       },
       "calendar": {
         "title": "اعلان‌های تقویم",
@@ -1345,6 +1377,10 @@
         "label": "نمایش پیش‌نمایش",
         "description": "پیش‌نمایش در لیست",
         "focus_description": "پیش‌نمایش در نمای متمرکز"
+      },
+      "show_verification_codes": {
+        "label": "نمایش کدهای تأیید",
+        "description": "پیشنهاد کد ایمیل‌های ورود و تأیید برای کپی با یک کلیک، در فهرست به مدت یک روز و در پیام"
       },
       "disable_threading": {
         "label": "غیرفعال کردن گروه‌بندی",
@@ -1716,14 +1752,36 @@
       },
       "link_device": {
         "title": "اتصال موبایل",
-        "description": "ورود با QR code",
+        "description": "بدون وارد کردن رمز عبور در گوشی، به برنامه Bulwark Mail وارد شوید. گوشی شما ورود جداگانه‌ای دریافت می‌کند، بنابراین خروج از اینجا باعث خروج آن نمی‌شود.",
         "generate": "نمایش QR",
         "regenerate": "کد جدید",
-        "instructions": "با برنامه اسکن کنید",
+        "instructions": "برنامه Bulwark Mail را باز کنید و در صفحه ورود روی \"Scan a sign-in code\" بزنید (یا اگر از قبل وارد شده‌اید، \"Add account\" → \"Scan a sign-in code\")، سپس دوربین را به این سمت بگیرید.",
         "expires_in": "منقضی در {seconds} ثانیه",
         "expired": "منقضی شده",
-        "generating": "در حال تولید…",
-        "error": "خطا"
+        "error": "خطا",
+        "password_prompt": "برای تأیید هویت، رمز عبور خود را وارد کنید. گوشی شما ورود جداگانه‌ای دریافت می‌کند؛ رمز عبور شما به گوشی ارسال نمی‌شود.",
+        "show_password": "نمایش رمز عبور",
+        "hide_password": "پنهان کردن رمز عبور",
+        "continue": "ادامه",
+        "error_wrong_password": "رمز عبور نادرست است. دوباره تلاش کنید.",
+        "totp_prompt": "کد برنامه احراز هویت خود را وارد کنید.",
+        "error_password_or_code": "رمز عبور یا کد نادرست است.",
+        "error_not_signed_in": "نشست شما منقضی شده است. برای اتصال دستگاه دوباره وارد شوید.",
+        "error_impersonation": "هنگام مشاهده صندوق پستی کاربر دیگر نمی‌توان دستگاه متصل کرد.",
+        "error_too_many_attempts": "تلاش‌های بیش از حد. کمی صبر کنید و دوباره تلاش کنید.",
+        "error_session_secret": "اتصال دستگاه روی این سرور راه‌اندازی نشده است (SESSION_SECRET وجود ندارد). با مدیر سیستم تماس بگیرید.",
+        "error_server_unreachable": "دسترسی به سرور ایمیل شما ممکن نشد. دوباره تلاش کنید.",
+        "error_pairing_unavailable": "سرور ایمیل شما اجازه اتصال دستگاه به این روش را نمی‌دهد. با مدیر سیستم تماس بگیرید.",
+        "qr_alt": "کد QR ورود",
+        "link_label": "پیوند ورود",
+        "copy_link": "کپی پیوند ورود",
+        "copied": "کپی شد",
+        "copy_hint": "دوربین ندارید؟ پیوند را کپی کنید و در برنامه با \"Paste sign-in link\" جای‌گذاری کنید.",
+        "success_title": "ورود در گوشی شما انجام شد",
+        "success_body": "می‌توانید این صفحه را ببندید. برای اتصال دستگاه دیگر، کد جدیدی نمایش دهید.",
+        "link_another": "اتصال دستگاه دیگر",
+        "use_sso": "به‌جای آن از ورود یکپارچه استفاده کنید",
+        "error_insecure_server": "برنامه موبایل فقط از طریق https به سرورهای ایمیل وصل می‌شود و این سرور از http استفاده می‌کند."
       },
       "public_keys": {
         "name_label": "نام کلید عمومی",
@@ -1793,7 +1851,9 @@
       "warnings": {
         "end_before_start": "تاریخ پایان باید بعد از تاریخ شروع باشد",
         "start_in_past": "تاریخ شروع در گذشته است",
-        "empty_body": "بدنه پیام خالی است - گیرندگان پاسخ خالی دریافت می‌کنند"
+        "empty_body": "بدنه پیام خالی است - گیرندگان پاسخ خالی دریافت می‌کنند",
+        "subject_too_long": "موضوع برای سرور بیش از حد طولانی است (حداکثر {max} بایت).",
+        "body_too_long": "پیام برای سرور بیش از حد طولانی است (حداکثر {max} بایت، همراه با قالب‌بندی)."
       }
     },
     "folders": {
@@ -2014,6 +2074,7 @@
       "actions": "عملیات‌ها",
       "add_action": "افزودن عملیات",
       "stop_processing": "توقف پردازش قوانین بعدی",
+      "include_spam": "پیام‌های علامت‌خورده به‌عنوان هرزنامه هم منتقل شوند",
       "attachment_type_placeholder": "مثال: pdf, doc, jpg",
       "value_placeholder_multi": "مقدار (چندتا با کاما جدا شوند)",
       "condition_fields": {
@@ -2055,6 +2116,8 @@
       "copy_to_folder": "انتخاب پوشه",
       "forward_to": "ارسال به آدرس ایمیل",
       "forward_placeholder": "email@example.com",
+      "forward_keep_copy": "نگه‌داشتن یک نسخه",
+      "forward_limit": "سقف بازارسال برای هر پیام در این سرور: {count}. بازارسال‌های اضافه نادیده گرفته می‌شوند.",
       "reject_message": "پیام رد",
       "reject_placeholder": "ایمیل شما رد شد",
       "label_name": "نام برچسب",
@@ -2805,6 +2868,8 @@
       "no_events": "رویدادی نیست",
       "all_day": "تمام روز",
       "more": "+{count} بیشتر",
+      "show_more": "نمایش بیشتر",
+      "show_less": "نمایش کمتر",
       "no_title": "(بدون عنوان)",
       "resize": "تغییر اندازه رویداد",
       "duplicate": "کپی",
@@ -2931,7 +2996,10 @@
       "all_events": "همه رویدادها",
       "cancel": "انصراف",
       "save": "ذخیره",
-      "delete": "حذف"
+      "delete": "حذف",
+      "rsvp_title": "پاسخ به رویداد تکراری",
+      "rsvp_description": "این یک رویداد تکراری است. پاسخ شما برای کدام رویدادها اعمال شود؟",
+      "respond": "پاسخ"
     },
     "alerts": {
       "title": "یادآورها",
@@ -2974,7 +3042,7 @@
       "enable_tasks": "فعال کردن وظایف",
       "enable_tasks_desc": "نمایش نمای وظایف در تقویم برای مدیریت کارها",
       "show_tasks_on_calendar": "نمایش وظایف روی تقویم",
-      "show_tasks_on_calendar_desc": "نمایش برچسب وظایف در نماهای روز و هفته",
+      "show_tasks_on_calendar_desc": "نمایش وظایف در نماهای ماه، هفته و روز",
       "hover_preview": "پیش‌نمایش هاور رویداد",
       "hover_preview_desc": "نمایش popover جزئیات هنگام هاور روی رویدادهای تقویم",
       "hover_preview_instant": "بلافاصله",
@@ -3042,6 +3110,9 @@
       "alert_now": "همین الان شروع می‌شود",
       "alert_in_minutes": "{count} دقیقه دیگر",
       "invitation_sent": "دعوت‌نامه‌ها ارسال شد",
+      "invitations_denied_title": "ارسال دعوت‌نامه‌ها ممکن نیست",
+      "invitations_denied": "سرور از ارسال دعوت‌نامه‌ها خودداری کرد: {reason}. رویداد بدون ارسال آن‌ها ذخیره شود؟",
+      "save_without_invitations": "ذخیره بدون دعوت‌نامه",
       "rsvp_updated": "پاسخ به‌روزرسانی شد",
       "rsvp_error": "به‌روزرسانی پاسخ ناموفق بود",
       "event_duplicated": "رویداد کپی شد",
@@ -3071,7 +3142,7 @@
       "supported_formats": "پشتیبانی از فایل‌های iCalendar (.ics)",
       "url_description": "آدرس فید خارجی iCalendar (.ics) را برای وارد کردن رویدادها وارد کنید.",
       "url_placeholder": "https://example.com/calendar.ics",
-      "url_hint": "پشتیبانی از آدرس‌های CalDAV و iCalendar (.ics)",
+      "url_hint": "پشتیبانی از آدرس‌های iCalendar (.ics)",
       "fetch": "دریافت",
       "invalid_url": "لطفاً یک آدرس معتبر وارد کنید",
       "url_fetch_failed": "دریافت تقویم از آدرس ناموفق بود",
@@ -3272,6 +3343,7 @@
     "body_placeholder": "بدنه شامل...",
     "folder": "پوشه",
     "all_folders": "همه پوشه‌ها",
+    "all_folders_except_spam_trash": "همه پوشه‌ها به‌جز هرزنامه و زباله‌دان",
     "has_attachment": "پیوست",
     "date_after": "بعد از",
     "date_before": "قبل از",
@@ -3334,6 +3406,8 @@
     "rename": "تغییر نام",
     "rename_title": "تغییر نام",
     "new_name": "نام جدید",
+    "name_forbidden_chars": "سرور این نویسه‌ها را در نام‌ها مجاز نمی‌داند: {chars}",
+    "name_reserved": "این نام در سرور رزرو شده است.",
     "delete": "حذف",
     "delete_confirm_title": "حذف منبع",
     "delete_confirm_message": "آیا از حذف \"{name}\" اطمینان دارید؟ این عملیات قابل بازگشت نیست.",

@@ -212,4 +212,14 @@ describe('server-side recurrence expansion with synthetic ids', () => {
     const update = calls.find((c) => c.method === 'CalendarEvent/set')!;
     expect(update.args.update).toEqual({ maaaaab: { title: 'Renamed' } });
   });
+
+  it('strips sequence unless the caller asks to keep it', async () => {
+    await client.updateCalendarEvent('maaaaab', { title: 'Renamed', sequence: 2 });
+    await client.updateCalendarEvent('maaaaab', { title: 'Renamed', sequence: 2 }, true, undefined, { keepSequence: true });
+    const updates = calls.filter((c) => c.method === 'CalendarEvent/set').map((c) => c.args.update);
+    expect(updates).toEqual([
+      { maaaaab: { title: 'Renamed' } },
+      { maaaaab: { title: 'Renamed', sequence: 2 } },
+    ]);
+  });
 });

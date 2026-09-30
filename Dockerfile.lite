@@ -1,0 +1,57 @@
+# Bulwark Lite as a container: the static export behind an unprivileged nginx,
+# no Node.js at runtime. Mount your own config.json (and policy.json) over the
+# ones in /usr/share/nginx/html to configure it - see README.md, "Static Lite
+# build".
+#
+#   docker build -f Dockerfile.lite -t bulwark-lite .
+
+# The export is plain files, so it is built once on the build host's
+# architecture, whatever the target platform is.
+FROM --platform=$BUILDPLATFORM node:24-alpine AS builder
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY . .
+ENV NEXT_TELEMETRY_DISABLED=1
+# scripts/lite/prepare.mjs deletes the server-only trees in place; this layer
+# is disposable, which is what CI=true asserts.
+ENV CI=true
+# Defaults baked into config.json; every one of them can still be changed by
+# mounting a config.json. No NEXT_PUBLIC_BASE_PATH: the image serves from /.
+ARG LITE_JMAP_SERVER_URL=
+ARG LITE_APP_NAME=
+ARG LITE_ALLOW_CUSTOM_ENDPOINT=
+ARG LITE_REMEMBER_ME=
+ARG LITE_DEMO_MODE=
+# Comma-separated locale subset, e.g. en,de (default: all).
+ARG LITE_LOCALES=
+ARG NEXT_PUBLIC_DEFAULT_LOCALE=
+# Commit SHA shown in the About screen. .dockerignore excludes .git, so CI
+# must pass it in.
+ARG GIT_COMMIT=unknown
+RUN LITE_TARGET=static NEXT_PUBLIC_BASE_PATH= npm run build:lite && \
+    node scripts/lite/container.mjs /image
+
+FROM nginxinc/nginx-unprivileged:1.30-alpine-slim
+
+LABEL org.opencontainers.image.title="Bulwark Webmail Lite"
+LABEL org.opencontainers.image.description="Bulwark Webmail as static files behind nginx; talks to the JMAP server straight from the browser"
+LABEL org.opencontainers.image.source="https://github.com/bulwarkmail/webmail"
+LABEL org.opencontainers.image.url="https://github.com/bulwarkmail/webmail"
+LABEL org.opencontainers.image.licenses="AGPL-3.0-only"
+LABEL org.opencontainers.image.vendor="rbm.systems"
+
+# connect-src of the Content-Security-Policy. Set it to your JMAP server's
+# origin (e.g. https://mail.example.com) once config.json pins the server.
+ENV LITE_CSP_CONNECT_SRC="*"
+# Only LITE_* is substituted into the nginx template, never nginx's own $uri etc.
+ENV NGINX_ENVSUBST_FILTER="^LITE_"
+
+# COPY only: no command runs in this stage, so other platforms build without emulation.
+COPY --from=builder --chmod=0755 /app/scripts/lite/container/15-lite-listen-ipv6.envsh /docker-entrypoint.d/
+COPY --from=builder /image/default.conf.template /etc/nginx/templates/default.conf.template
+COPY --from=builder /image/html/ /usr/share/nginx/html/
+
+EXPOSE 8080
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://127.0.0.1:8080/lite-build.json || exit 1

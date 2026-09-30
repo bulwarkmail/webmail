@@ -35,13 +35,20 @@ beforeEach(() => {
   mocks.verify.mockResolvedValue(owner.serverUrl); mocks.save.mockResolvedValue({ ...record, revision: 'b'.repeat(64) });
 });
 describe('account archive API', () => {
-  it('allows listing named ciphertext before mail login, with no caching', async () => {
+  it('lists archives only for the verified owner session, with no caching', async () => {
+    expect((await GET(request('GET'))).status).toBe(403);
+    mocks.context = { ...owner, authHeader: 'Basic ' + Buffer.from('someone-else:secret').toString('base64') };
+    expect((await GET(request('GET'))).status).toBe(403);
+    signIn();
+    mocks.verify.mockRejectedValueOnce(new Error('401'));
+    expect((await GET(request('GET'))).status).toBe(403);
+    expect(mocks.list).not.toHaveBeenCalled();
     const response = await GET(request('GET'));
     expect(response.status).toBe(200);
     expect(response.headers.get('Cache-Control')).toBe('no-store');
     expect((await response.json()).vaults).toEqual([record]);
     expect(mocks.list).toHaveBeenCalledWith(owner);
-    expect(mocks.verify).not.toHaveBeenCalled();
+    expect(mocks.verify).toHaveBeenCalled();
   });
   it('honors the feature gate and OAuth-only policy', async () => {
     mocks.enabled = false;

@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { Clock, X } from "lucide-react";
+import { Clock, X } from "@/components/icons";
 import { cn } from "@/lib/utils";
 import { Avatar } from "@/components/ui/avatar";
 import { splitHighlight, type ContactSuggestion, type SearchSuggestion } from "@/lib/search-suggestions";

@@ -21,6 +21,7 @@ import { resolvePluginTier } from './tier';
 import { register as registerActive, deregister as deregisterActive, all as allActiveEntries } from './registry';
 import { cancelPluginDialogs } from './host-api';
 import { registerShortcuts } from './shortcuts';
+import { mayOfferSlot, mayRegisterHook } from './permissions';
 
 // ─── Hook-bus lookup (one flat map for name → bus) ────────────
 
@@ -165,12 +166,18 @@ export async function loadSandboxedPlugin(plugin: InstalledPlugin): Promise<void
     // Wire hook proxies: every hookName the plugin registered gets a HookBus
     // entry whose handler dispatches into the sandbox. `shortcut:<id>` hooks
     // are dispatched by the keyboard module separately and don't have a bus.
+    // A hook hands the plugin data or a say in what the host sends, so it
+    // needs the same manifest permission as the matching API call.
     const hookDisposables: Disposable[] = [];
     for (const hookName of info.hooks) {
       if (hookName.startsWith('shortcut:')) continue;
       const bus = HOOK_BUSES[hookName];
       if (!bus) {
         console.warn(`[plugin-sandbox] Plugin "${plugin.id}" registered unknown hook "${hookName}"`);
+        continue;
+      }
+      if (!mayRegisterHook(plugin, hookName)) {
+        console.warn(`[plugin-sandbox] Plugin "${plugin.id}" lacks the permission for hook "${hookName}"; not registered`);
         continue;
       }
       const proxy = async (...args: unknown[]) => {
@@ -188,12 +195,18 @@ export async function loadSandboxedPlugin(plugin: InstalledPlugin): Promise<void
     const shortcutDispose = registerShortcuts(bg, info.shortcuts ?? []);
     hookDisposables.push({ dispose: shortcutDispose });
 
+    const slotOffers = info.slots.filter((offer) => {
+      if (mayOfferSlot(plugin, offer.name)) return true;
+      console.warn(`[plugin-sandbox] Plugin "${plugin.id}" lacks the permission for slot "${offer.name}"; not rendered`);
+      return false;
+    });
+
     registerActive({
       plugin,
       code,
       tier,
       background: bg,
-      slotOffers: info.slots,
+      slotOffers,
       hookDisposables,
     });
 

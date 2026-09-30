@@ -142,8 +142,8 @@
     "unified_all_unread": "Tudo não lido",
     "unified_all_starred": "Tudo com estrela",
     "unified_all_mail": "Todo o correio",
-    "remove_account": "Remove account",
-    "remove_account_confirm": "Remove {account} from this device? You can add it back later."
+    "remove_account": "Remover conta",
+    "remove_account_confirm": "Remover {account} desse dispositivo? Você pode adicioná-la de volta depois."
   },
   "protocol_handlers": {
     "title": "Aplicativos padrão",
@@ -254,6 +254,7 @@
       "button": "Esvaziar pasta",
       "confirm_title": "Esvaziar pasta",
       "confirm_message": "Todos os e-mails nesta pasta serão permanentemente excluídos. Esta ação não pode ser desfeita.",
+      "confirm_message_trash": "Todos os e-mails desta pasta serão movidos para a lixeira.",
       "confirm_button": "Esvaziar pasta",
       "junk_hint": "Você pode esvaziar a pasta de Spam para remover permanentemente todas as mensagens.",
       "trash_hint": "Você pode esvaziar a Lixeira para remover permanentemente todas as mensagens."
@@ -296,7 +297,7 @@
     "forward": "Encaminhar",
     "delete": "Excluir",
     "archive": "Arquivar",
-    "archive_mailbox_not_found": "Archive mailbox not found - cannot archive email",
+    "archive_mailbox_not_found": "Caixa de arquivos não encontrada - não é possível arquivar e-mail",
     "star": "Adicionar Estrela",
     "unstar": "Remover Estrela",
     "mark_unread": "Marcar como não lido",
@@ -310,6 +311,8 @@
     "view_source": "Ver código-fonte",
     "fullscreen": "Tela cheia",
     "exit_fullscreen": "Sair da tela cheia",
+    "view_in_dark_mode": "Ver em modo escuro",
+    "view_in_light_mode": "Ver em modo claro",
     "export_email": "Exportar como .eml",
     "forward_as_attachment": "Encaminhar como anexo",
     "import_email": "Importar .eml ou .zip",
@@ -578,7 +581,12 @@
       "copied": "Copiado!",
       "copy_failed": "Falha ao copiar"
     },
-    "send_now": "Enviar agora"
+    "send_now": "Enviar agora",
+    "verification_code": {
+      "copy": "Copiar código {code}",
+      "copied": "Código copiado",
+      "copy_failed": "Não foi possível copiar o código"
+    }
   },
   "email_composer": {
     "read_receipt_on": "Confirmação de leitura solicitada (clique para desativar)",
@@ -606,8 +614,8 @@
     "send": "Enviar",
     "cancel": "Cancelar",
     "attach": "Anexar",
-    "attach_photos": "Photos & Videos",
-    "attach_files": "Files",
+    "attach_photos": "Fotos & Vídeos",
+    "attach_files": "Arquivos",
     "discard": "Descartar",
     "discard_draft_title": "Descartar rascunho?",
     "discard_draft_confirm": "Você tem alterações não salvas. Deseja descartar este rascunho?",
@@ -618,8 +626,8 @@
     "cc_placeholder": "Destinatários CC",
     "bcc_placeholder": "Destinatários CCO",
     "subject_placeholder": "Assunto",
-    "cc_label": "CC:",
-    "bcc_label": "CCO:",
+    "cc_label": "Cc:",
+    "bcc_label": "Cco:",
     "subject_label": "Assunto:",
     "file_size_kb": "KB",
     "prefix": {
@@ -640,11 +648,12 @@
     "from_override": {
       "toggle_off": "Substituir",
       "toggle_on": "Cancelar substituição",
-      "toggle_tooltip": "Edite livremente o nome e o endereço do remetente. O email ainda é enviado através da sua identidade - apenas o cabeçalho De visível muda.",
+      "toggle_tooltip": "Edite livremente o nome e o endereço do remetente. O email ainda é enviado através da sua identidade.",
       "name_label": "Nome do remetente",
       "name_placeholder": "Nome",
       "email_label": "Endereço de email do remetente",
-      "email_placeholder": "alias@example.com"
+      "email_placeholder": "alias@example.com",
+      "envelope_notice": "Se o seu servidor não aceitar este endereço como remetente do envelope, {identity} é usado em seu lugar, e os destinatários podem vê-lo no cabeçalho Return-Path."
     },
     "use_template": "Modelo",
     "save_as_template": "Salvar como modelo",
@@ -657,6 +666,8 @@
     "upload_progress": "Enviando {uploaded} / {total}",
     "upload_cancel": "Cancelar envio",
     "upload_failed": "Falha ao enviar {filename}",
+    "attachment_too_large": "\"{name}\" é maior do que o servidor permite ({max} por ficheiro)",
+    "attachments_total_too_large": "Os anexos excederiam o limite do servidor de {max} por mensagem",
     "send_failed": "Falha ao enviar o e-mail",
     "smime_sign_on": "Assinatura S/MIME ativada",
     "smime_sign_off": "Assinatura S/MIME desativada",
@@ -668,6 +679,8 @@
     "smime_unlock_button": "Desbloquear",
     "smime_passphrase_placeholder": "Frase secreta S/MIME",
     "send_timeout": "O servidor deixou de responder. Verifique a pasta Enviados antes de enviar novamente — a mensagem pode já ter saído.",
+    "send_recipients_rejected": "Não enviado: o servidor rejeitou todos os destinatários.",
+    "send_some_recipients_rejected": "Enviado, mas não para estes destinatários, que foram rejeitados pelo servidor.",
     "continue_draft": "Continuar rascunho",
     "close_draft_title": "Salvar ou descartar rascunho?",
     "close_draft_message": "Você tem alterações não salvas. Deseja salvar como rascunho ou descartar?",
@@ -778,6 +791,10 @@
     "email_sent": "E-mail enviado com sucesso",
     "email_deleted": "E-mail excluído",
     "email_archived": "E-mail arquivado",
+    "emails_deleted": "{count, plural, one {# e-mail excluído} other {# e-mails excluídos}}",
+    "emails_archived": "{count, plural, one {# e-mail arquivado} other {# e-mails arquivados}}",
+    "error_archiving": "Falha ao arquivar o e-mail",
+    "error_updating": "Falha ao atualizar o e-mail",
     "email_starred": "E-mail marcado com estrela",
     "email_unstarred": "Estrela removida do e-mail",
     "email_marked_read": "E-mail marcado como lido",
@@ -918,12 +935,25 @@
       "sidebar_apps": "Apps da barra lateral",
       "notifications": "Notificações",
       "layout": "Layout",
+      "themes": "Temas",
       "reading": "Leitura",
       "composing": "Composição",
       "downloads": "Downloads",
       "content_senders": "Conteúdo e remetentes",
       "about_data": "Sobre e dados",
       "debug": "Depuração"
+    },
+    "themes": {
+      "title": "Temas",
+      "description": "Escolha entre os temas disponibilizados pelo seu administrador e as predefinições integradas.",
+      "locked": "A seleção de tema está bloqueada por um administrador.",
+      "forced": "O tema “{name}” é imposto pelo administrador e não pode ser alterado",
+      "admin_theme": "Tema do administrador",
+      "activated": "Tema ativado",
+      "default_restored": "Tema padrão restaurado",
+      "default_name": "Padrão",
+      "default_badge": "Padrão",
+      "admin_enforced": "Imposto pelo administrador"
     },
     "tab_groups": {
       "general": "Geral",
@@ -1041,8 +1071,8 @@
         "label": "Caixa de correio unificada",
         "description": "Mostrar pastas combinadas (Entrada, Enviados, etc.) de todas as contas conectadas",
         "cross_account": {
-          "label": "Across all accounts",
-          "description": "Merge the unified mailbox across every connected account instead of staying within the active account."
+          "label": "Todas as contas",
+          "description": "Unifique a caixa de correio em todas as contas conectadas, em vez de permanecer apenas na conta ativa."
         },
         "include_group": {
           "label": "Incluir caixas de grupo",
@@ -1050,18 +1080,18 @@
         }
       },
       "all_mail": {
-        "folders_label": "Folders in All Mail",
-        "folders_description": "Choose which folders are merged into the All Mail view.",
-        "account_hint": "Applies to {account}.",
-        "no_folders": "No folders available."
+        "folders_label": "Pastas em Todos os E-mails",
+        "folders_description": "Escolha quais pastas serão mescladas na visualização de Todos os E-mails.",
+        "account_hint": "Aplica-se a {account}.",
+        "no_folders": "Nenhuma pasta disponível."
       },
       "colorful_sidebar_icons": {
         "label": "Ícones coloridos na barra lateral",
         "description": "Colorir ícones de pastas e etiquetas por tipo (Caixa de entrada azul, Spam vermelho, Enviados verde, etc.). Desative para uma barra lateral monocromática."
       },
       "tint_list_rows": {
-        "label": "Tint List Rows by Tag Color",
-        "description": "Shade each message row with its first tag color. Disable to keep rows plain; tag dots and chips still show the color."
+        "label": "Colorir as linhas da lista de acordo com a cor da etiqueta",
+        "description": "Aplicar sombreado a cada linha de mensagem com a cor da primeira etiqueta. Desative essa opção para manter as linhas sem sombreado; os pontos e os ícones das etiquetas continuarão exibindo a cor."
       },
       "tint_list_rows_by_account": {
         "label": "Tint List Rows by Account Color",
@@ -1072,8 +1102,8 @@
         "description": "Mostra a contagem total de mensagens ao lado de pastas e etiquetas, além da contagem de não lidas. Desative para mostrar apenas as não lidas."
       },
       "favicon_unread_badge": {
-        "label": "Unread Count on Tab Icon",
-        "description": "Show the inbox unread count as a badge on the browser tab icon, so new mail is visible when the tab is not focused. Disable to keep the icon unbadged."
+        "label": "Contagem de não lidos no Ícone da Aba",
+        "description": "Mostra a contagem de e-mails não lidos na aba do navegador, para que novos e-mails sejam visíveis mesmo quando a aba não estiver em foco. Desative para manter o ícone sem marca."
       },
       "pro_interface": {
         "label": "Interface Pro (experimental)",
@@ -1172,7 +1202,9 @@
         "enabled": "Notificações de e-mail",
         "enabled_desc": "Mostrar notificações quando novos e-mails chegarem",
         "sound": "Som de notificação",
-        "sound_desc": "Reproduzir um som quando novos e-mails chegarem"
+        "sound_desc": "Reproduzir um som quando novos e-mails chegarem",
+        "inbox_only": "Apenas Caixa de Entrada",
+        "inbox_only_desc": "Notificar apenas pelos e-mails que chegarem à Caixa de Entrada; pular e-mails que forem filtrados para outra pasta"
       },
       "calendar": {
         "title": "Notificações de calendário",
@@ -1201,7 +1233,7 @@
         "status_busy": "Processando…",
         "status_inactive": "Não ativado neste dispositivo",
         "status_unsupported": "Este navegador não oferece suporte a Web Push",
-        "status_lite": "Web Push is not available in Bulwark Lite; it needs the Bulwark server.",
+        "status_lite": "O Web Push não está disponível no Bulwark Lite; ele requer o servidor do Bulwark.",
         "title": "Notificações em segundo plano",
         "devices_title": "Dispositivos registrados",
         "devices_desc": "Todos os dispositivos registrados para receber notificações em segundo plano desta conta. Revogar um deles interrompe o recebimento imediatamente.",
@@ -1241,12 +1273,12 @@
         "preview_older": "Mais antigo:"
       },
       "date_locale": {
-        "label": "Date format region",
-        "description": "How numeric dates are ordered (day, month, year)",
-        "auto": "Automatic (match language)",
-        "iso": "ISO 8601 (YYYY-MM-DD)",
-        "dmy": "Day/Month/Year",
-        "mdy": "Month/Day/Year"
+        "label": "Formato de data da região",
+        "description": "Como as datas numéricas são ordenadas (dia, mês, ano)",
+        "auto": "Automático (corresponder ao idioma)",
+        "iso": "ISO 8601 (AAAA-MM-DD)",
+        "dmy": "Dia/Mês/Ano",
+        "mdy": "Mês/Dia/Ano"
       },
       "time_format": {
         "label": "Formato de Hora",
@@ -1261,10 +1293,10 @@
         "monday": "Segunda-feira"
       },
       "time_zone": {
-        "label": "Time zone",
-        "description": "Show email and calendar times in this time zone instead of the one reported by your browser",
-        "auto": "Automatic ({zone})",
-        "preview_now": "Now:"
+        "label": "Fuso horário",
+        "description": "Mostrar os horários dos e-mails e da agenda neste fuso horário, em vez daquele informado pelo seu navegador",
+        "auto": "Automático ({zone})",
+        "preview_now": "Agora:"
       }
     },
     "email_behavior": {
@@ -1378,6 +1410,10 @@
         "description": "Exibir visualização do e-mail na lista",
         "focus_description": "Exibir texto de pré-visualização em linha dentro da lista de mensagens focada de uma linha"
       },
+      "show_verification_codes": {
+        "label": "Mostrar códigos de verificação",
+        "description": "Oferecer o código dos e-mails de início de sessão e confirmação para copiar com um clique, na lista durante um dia e na mensagem"
+      },
       "attachment_click_action": {
         "label": "Ação ao clicar em anexos",
         "description": "Escolha se clicar em um anexo abre uma pré-visualização ou inicia o download imediatamente",
@@ -1464,7 +1500,7 @@
         "keywords_label": "Palavras-chave de ativação",
         "keywords_description": "Palavras ou frases que ativam o lembrete quando encontradas na sua mensagem",
         "add_placeholder": "Adicionar palavra-chave...",
-        "add": "Add",
+        "add": "Adicionar",
         "remove": "Remover"
       },
       "empty_subject_warning": {
@@ -1709,14 +1745,36 @@
       },
       "link_device": {
         "title": "Vincular aplicativo móvel",
-        "description": "Entre no aplicativo móvel Bulwark Mail sem digitar nada. Gere um código QR aqui e escaneie-o na tela de login do aplicativo.",
+        "description": "Entre no aplicativo Bulwark Mail no seu celular sem digitar sua senha nele. Seu celular recebe um acesso próprio, então sair aqui não o desconecta.",
         "generate": "Mostrar código QR",
         "regenerate": "Mostrar um novo código",
-        "instructions": "Abra o aplicativo Bulwark Mail, toque em \"Escanear código QR\" na tela de login e aponte sua câmera para cá.",
+        "instructions": "Abra o aplicativo Bulwark Mail e toque em \"Scan a sign-in code\" na tela de login (ou em \"Add account\" → \"Scan a sign-in code\" se você já estiver conectado) e aponte a câmera para cá.",
         "expires_in": "Este código expira em {seconds} segundos. Ele só pode ser usado uma vez.",
         "expired": "Este código expirou.",
-        "generating": "Gerando…",
-        "error": "Não foi possível criar um código de pareamento. Tente novamente."
+        "error": "Não foi possível criar um código de pareamento. Tente novamente.",
+        "password_prompt": "Digite sua senha para confirmar que é você. Seu celular recebe um acesso próprio; sua senha não é enviada ao celular.",
+        "show_password": "Mostrar senha",
+        "hide_password": "Ocultar senha",
+        "continue": "Continuar",
+        "error_wrong_password": "Senha incorreta. Tente novamente.",
+        "totp_prompt": "Digite o código do seu aplicativo autenticador.",
+        "error_password_or_code": "A senha ou o código está incorreto.",
+        "error_not_signed_in": "Sua sessão expirou. Entre novamente para vincular um dispositivo.",
+        "error_impersonation": "Não é possível vincular dispositivos enquanto você visualiza a caixa de correio de outro usuário.",
+        "error_too_many_attempts": "Muitas tentativas. Aguarde um momento e tente novamente.",
+        "error_session_secret": "A vinculação de dispositivos não está configurada neste servidor (SESSION_SECRET ausente). Fale com o seu administrador.",
+        "error_server_unreachable": "Não foi possível acessar seu servidor de e-mail. Tente novamente.",
+        "error_pairing_unavailable": "Seu servidor de e-mail não permite vincular um dispositivo dessa forma. Fale com o seu administrador.",
+        "qr_alt": "Código QR de login",
+        "link_label": "Link de login",
+        "copy_link": "Copiar link de login",
+        "copied": "Copiado",
+        "copy_hint": "Sem câmera? Copie o link e cole-o no aplicativo com \"Paste sign-in link\".",
+        "success_title": "Conectado no seu celular",
+        "success_body": "Você pode fechar esta página. Para vincular outro dispositivo, mostre um novo código.",
+        "link_another": "Vincular outro dispositivo",
+        "use_sso": "Usar o início de sessão único",
+        "error_insecure_server": "A aplicação móvel só se liga a servidores de correio por https, e este usa http."
       },
       "public_keys": {
         "name_label": "Nome da chave pública",
@@ -1786,7 +1844,9 @@
       "warnings": {
         "end_before_start": "A data de fim deve ser posterior à data de início",
         "start_in_past": "A data de início está no passado",
-        "empty_body": "O corpo da mensagem está vazio - os destinatários receberão uma resposta em branco"
+        "empty_body": "O corpo da mensagem está vazio - os destinatários receberão uma resposta em branco",
+        "subject_too_long": "O assunto é demasiado longo para o servidor (no máximo {max} bytes).",
+        "body_too_long": "A mensagem é demasiado longa para o servidor (no máximo {max} bytes, incluindo a formatação)."
       }
     },
     "folders": {
@@ -1803,8 +1863,8 @@
       "role_trash": "Lixeira",
       "role_junk": "Spam / Lixo eletrônico",
       "role_archive": "Arquivo",
-      "role_scheduled": "Scheduled",
-      "role_snoozed": "Snoozed",
+      "role_scheduled": "Programado",
+      "role_snoozed": "Adiado",
       "role_none": "Nenhum",
       "create_folder": "Criar pasta",
       "create_subfolder": "Criar subpasta",
@@ -1877,9 +1937,9 @@
         "button": "Ver Atalhos"
       },
       "refresh_cache": {
-        "label": "Refresh cached data",
-        "description": "Reload contacts, calendars, and folders from the server. Keeps your accounts and sessions — fixes a stale or wrong view without signing out.",
-        "button": "Refresh"
+        "label": "Atualizar dados armazenados em cache",
+        "description": "Atualize os contatos, calendários e pastas do servidor. Mantém suas contas e sessões — corrige uma visualização desatualizada ou incorreta sem precisar sair da conta.",
+        "button": "Recarregar"
       },
       "reset_settings": {
         "label": "Redefinir Configurações",
@@ -2007,6 +2067,7 @@
       "actions": "Ações",
       "add_action": "Adicionar ação",
       "stop_processing": "Parar o processamento das regras seguintes",
+      "include_spam": "Mover também as mensagens marcadas como spam",
       "attachment_type_placeholder": "ex.: pdf, doc, jpg",
       "value_placeholder_multi": "Valor (vários separados por vírgulas)",
       "condition_fields": {
@@ -2048,6 +2109,8 @@
       "copy_to_folder": "Selecionar pasta",
       "forward_to": "Encaminhar para endereço de e-mail",
       "forward_placeholder": "email@exemplo.com",
+      "forward_keep_copy": "Manter uma cópia",
+      "forward_limit": "Limite de reencaminhamentos por mensagem neste servidor: {count}. Os restantes são ignorados.",
       "reject_message": "Mensagem de rejeição",
       "reject_placeholder": "Seu e-mail foi rejeitado",
       "label_name": "Nome da etiqueta",
@@ -2546,31 +2609,31 @@
       "cert_imported": "Certificado importado",
       "cert_import_failed": "Falha ao importar o certificado",
       "section_contact": "Detalhes do contato",
-      "section_work": "Work",
-      "section_personal": "Personal",
-      "email_default_label": "Email",
-      "phone_default_label": "Phone",
-      "address_default_label": "Address",
+      "section_work": "Trabalho",
+      "section_personal": "Pessoal",
+      "email_default_label": "E-mail",
+      "phone_default_label": "Telefone",
+      "address_default_label": "Endereço",
       "online_service_default_label": "Online",
-      "organization_label": "Organization",
-      "title_label": "Title",
-      "role_label": "Role",
-      "language_label": "Language",
-      "related_default_label": "Related",
+      "organization_label": "Organização",
+      "title_label": "Título",
+      "role_label": "Função",
+      "language_label": "Idioma",
+      "related_default_label": "Relacionado",
       "more_actions": "Mais ações",
       "age_years": "{count, plural, one {1 ano} other {# anos}}",
       "years_since": "{count, plural, one {há 1 ano} other {há # anos}}"
     },
     "activity": {
-      "recent_emails": "Recent Emails",
-      "upcoming_events": "Upcoming Events",
-      "no_emails": "No recent emails",
-      "no_events": "No upcoming events",
-      "no_subject": "(No subject)",
-      "no_title": "(No title)",
-      "load_failed": "Failed to load",
-      "unknown_sender": "Unknown sender",
-      "all_day": "All day"
+      "recent_emails": "E-mails recentes",
+      "upcoming_events": "Eventos futuros",
+      "no_emails": "Nenhum e-mail recente",
+      "no_events": "Nenhum evento futuro",
+      "no_subject": "(Sem assunto)",
+      "no_title": "(Sem título)",
+      "load_failed": "Falha ao carregar",
+      "unknown_sender": "Remetente desconhecido",
+      "all_day": "Dia todo"
     },
     "form": {
       "create_title": "Novo contato",
@@ -2691,11 +2754,11 @@
       "search_members": "Pesquisar contatos para adicionar...",
       "no_members": "Nenhum membro neste grupo",
       "member_count": "{count, plural, =0 {Nenhum membro} one {1 membro} other {# membros}}",
-      "send_email": "Send email to group",
-      "send_email_to": "To",
+      "send_email": "Enviar e-mail para o grupo",
+      "send_email_to": "Para",
       "send_email_cc": "Cc",
-      "send_email_bcc": "Bcc",
-      "no_member_emails": "This group has no members with an email address."
+      "send_email_bcc": "Cco",
+      "no_member_emails": "Este grupo não tem membros com endereço de e-mail."
     },
     "import": {
       "title": "Importar contatos",
@@ -2805,6 +2868,8 @@
       "no_events": "Nenhum evento",
       "all_day": "Dia inteiro",
       "more": "+{count} mais",
+      "show_more": "Mostrar mais",
+      "show_less": "Mostrar menos",
       "no_title": "(Sem título)",
       "resize": "Redimensionar evento",
       "duplicate": "Duplicar",
@@ -2931,7 +2996,10 @@
       "all_events": "Todos os eventos",
       "cancel": "Cancelar",
       "save": "Salvar",
-      "delete": "Excluir"
+      "delete": "Excluir",
+      "rsvp_title": "Responder a evento recorrente",
+      "rsvp_description": "Este é um evento recorrente. A quais eventos sua resposta se aplica?",
+      "respond": "Responder"
     },
     "alerts": {
       "title": "Lembrete",
@@ -2974,7 +3042,7 @@
       "enable_tasks": "Ativar tarefas",
       "enable_tasks_desc": "Mostrar uma visualização de tarefas no calendário para gerenciar pendências",
       "show_tasks_on_calendar": "Mostrar tarefas no calendário",
-      "show_tasks_on_calendar_desc": "Exibir marcadores de tarefas nas visualizações diária e semanal do calendário",
+      "show_tasks_on_calendar_desc": "Exibir tarefas nas visualizações mensal, semanal e diária do calendário",
       "hover_preview": "Pré-visualização ao passar o rato",
       "hover_preview_desc": "Mostrar um popover de detalhes ao passar o rato sobre eventos do calendário",
       "hover_preview_instant": "Instantâneo",
@@ -3042,6 +3110,9 @@
       "alert_now": "Começa agora",
       "alert_in_minutes": "Em {count} min",
       "invitation_sent": "Convites enviados",
+      "invitations_denied_title": "Não é possível enviar os convites",
+      "invitations_denied": "O servidor recusou enviar os convites: {reason}. Guardar o evento sem os enviar?",
+      "save_without_invitations": "Guardar sem convites",
       "rsvp_updated": "Resposta atualizada",
       "rsvp_error": "Falha ao atualizar resposta",
       "event_duplicated": "Evento duplicado",
@@ -3070,7 +3141,7 @@
       "supported_formats": "Arquivos iCalendar (.ics) suportados",
       "url_description": "Insira a URL de um feed iCalendar (.ics) externo para importar eventos.",
       "url_placeholder": "https://example.com/calendar.ics",
-      "url_hint": "Suporta URLs CalDAV e iCalendar (.ics)",
+      "url_hint": "Suporta URLs iCalendar (.ics)",
       "fetch": "Buscar",
       "invalid_url": "Insira uma URL válida",
       "url_fetch_failed": "Não foi possível buscar o calendário da URL",
@@ -3230,6 +3301,7 @@
     "body_placeholder": "O corpo contém...",
     "folder": "Pasta",
     "all_folders": "Todas as pastas",
+    "all_folders_except_spam_trash": "Todas as pastas exceto Spam e Lixeira",
     "has_attachment": "Anexos",
     "date_after": "Após",
     "date_before": "Antes de",
@@ -3292,6 +3364,8 @@
     "rename": "Renomear",
     "rename_title": "Renomear",
     "new_name": "Novo nome",
+    "name_forbidden_chars": "O servidor não permite estes caracteres nos nomes: {chars}",
+    "name_reserved": "Este nome está reservado no servidor.",
     "delete": "Eliminar",
     "delete_confirm_title": "Eliminar recurso",
     "delete_confirm_message": "Tem a certeza de que deseja eliminar \"{name}\"? Esta ação não pode ser desfeita.",
@@ -3343,10 +3417,10 @@
     "duplicate": "Duplicar",
     "duplicate_success": "Duplicado com sucesso",
     "duplicate_error": "Falha ao duplicar",
-    "share": "Share",
-    "shared": "Shared",
-    "shared_with_me": "Shared with me",
-    "shared_by": "Shared by {name}",
+    "share": "Compartilhar",
+    "shared": "Compartilhado",
+    "shared_with_me": "Compartilhado comigo",
+    "shared_by": "Compartilhado por {name}",
     "create_file_success": "Arquivo criado",
     "create_file_error": "Falha ao criar arquivo",
     "favorites": "Favoritos",

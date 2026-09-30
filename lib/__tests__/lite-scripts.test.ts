@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { createHash } from 'node:crypto';
 import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -18,12 +19,15 @@ import {
   buildLiteConfig,
   buildLitePolicy,
   buildManifest,
+  buildNginxContainerTemplate,
   buildNginxExample,
   buildNotFoundShim,
   buildReadme,
   buildRedirects,
   buildRootRedirect,
+  buildScriptHashCsp,
   buildStalwartEntry,
+  buildStalwartEntryCsp,
   buildStalwartManifest,
   buildStalwartReadme,
   buildZip,
@@ -35,6 +39,7 @@ import {
   findSegmentPrefetchDirs,
   flightTextRowsWithNeedles,
   inlineJson,
+  inlineScriptHashes,
   installStalwartFetchShim,
   isReservedStalwartSegment,
   listZipEntries,
@@ -53,11 +58,14 @@ import {
   stalwartRewriteIndex,
   stalwartZipEntryProblems,
   unexpectedApiStrings,
+  withScriptHashCsp,
 } from '../../scripts/lite/lib.mjs';
 import { collectTestPaths, planRemovals, runPrepare } from '../../scripts/lite/prepare.mjs';
 import { runPostbuild } from '../../scripts/lite/postbuild.mjs';
 import { verifyExport } from '../../scripts/lite/verify.mjs';
+import { stageContainer } from '../../scripts/lite/container.mjs';
 import { LITE_PENDING_PATH_KEY as APP_LITE_PENDING_PATH_KEY } from '../lite';
+import { applyLiteConfig } from '../lite-config';
 
 /** The scripts take `process.env`-shaped input; tests pass plain objects. */
 function env(values: Record<string, string> = {}): NodeJS.ProcessEnv {
@@ -100,18 +108,28 @@ describe('lite build helpers', () => {
   it('derives config.json from the LITE_* inputs with safe defaults', () => {
     const empty = buildLiteConfig({});
     expect(empty.jmapServerUrl).toBe('');
-    expect(empty.allowCustomJmapEndpoint).toBe(true);
+    expect(empty).not.toHaveProperty('allowCustomJmapEndpoint');
+    expect(applyLiteConfig(empty).allowCustomJmapEndpoint).toBe(true);
     expect(empty.rememberMeEnabled).toBe(true);
     expect(empty.demoMode).toBe(false);
     expect(empty.appName).toBe('Bulwark Webmail');
 
     const fixed = buildLiteConfig({ LITE_JMAP_SERVER_URL: 'https://mail.example.com/', LITE_APP_NAME: 'Acme', LITE_DEMO_MODE: 'true', LITE_REMEMBER_ME: 'false' });
     expect(fixed.jmapServerUrl).toBe('https://mail.example.com');
-    expect(fixed.allowCustomJmapEndpoint).toBe(false);
+    expect(fixed).not.toHaveProperty('allowCustomJmapEndpoint');
+    expect(applyLiteConfig(fixed).allowCustomJmapEndpoint).toBe(false);
     expect(fixed.appName).toBe('Acme');
     expect(fixed.demoMode).toBe(true);
     expect(fixed.rememberMeEnabled).toBe(false);
     expect(buildLitePolicy().features).toEqual({ pluginsEnabled: false, sidebarAppsEnabled: false });
+    expect(buildLiteConfig({ LITE_ALLOW_CUSTOM_ENDPOINT: 'true' }).allowCustomJmapEndpoint).toBe(true);
+    expect(buildLiteConfig({ LITE_ALLOW_CUSTOM_ENDPOINT: 'false' }).allowCustomJmapEndpoint).toBe(false);
+  });
+
+  it('hides the server field once a deployer fills in jmapServerUrl of the shipped config.json (#1087)', () => {
+    const shipped = buildLiteConfig({});
+    const edited = { ...shipped, jmapServerUrl: 'https://mail.example.com' };
+    expect(applyLiteConfig(edited).allowCustomJmapEndpoint).toBe(false);
   });
 
   it('prefixes manifest and redirect paths with the base path', () => {
@@ -147,6 +165,35 @@ describe('lite build helpers', () => {
     expect(buildHeaders({ basePath: '/w', connectSrc: '*' })).toMatch(/^\/w\/\*/);
   });
 
+  // The header policy has to allow inline scripts (the export ships hydration
+  // scripts and one header cannot list every page's hashes); each page pins
+  // its own inline scripts with a <meta> policy enforced alongside it.
+  it('pins each page to its own inline scripts', () => {
+    const sha = (text: string) => `'sha256-${createHash('sha256').update(text).digest('base64')}'`;
+    const html = [
+      '<!DOCTYPE html><html><head><meta charSet="utf-8"/><title>x</title>',
+      '<script src="/_next/static/chunks/a.js" async=""></script>',
+      '<script>self.__next_f.push([1,"a"])</script>',
+      '<script type="application/json">{"not":"code"}</script>',
+      '<script type="module">import("./m.js")</script>',
+      '</head><body><script>\r\nwindow.x = 1;\r\n</script></body></html>',
+    ].join('');
+
+    expect(inlineScriptHashes(html)).toEqual([
+      sha('self.__next_f.push([1,"a"])'),
+      sha('import("./m.js")'),
+      sha('\nwindow.x = 1;\n'),
+    ]);
+
+    const pinned = withScriptHashCsp(html);
+    const meta = `<meta http-equiv="Content-Security-Policy" content="${buildScriptHashCsp(inlineScriptHashes(html))}"/>`;
+    expect(pinned.indexOf(meta)).toBe(pinned.indexOf('<meta charSet="utf-8"/>') + '<meta charSet="utf-8"/>'.length);
+    expect(pinned.indexOf(meta)).toBeLessThan(pinned.indexOf('<script'));
+    expect(buildScriptHashCsp([])).toBe("script-src 'self'; object-src 'none'; base-uri 'self'");
+    expect(withScriptHashCsp('<html><head><script>1</script></head></html>')).toMatch(/^<html><head><meta http-equiv/);
+    expect(withScriptHashCsp('<html><script>1</script></html>')).toMatch(/^<html><meta http-equiv="Content-Security-Policy"[^>]*><script>/);
+  });
+
   it('writes a 404 shim that parks deep links for known locale/surface pairs only', () => {
     const html = buildNotFoundShim({ basePath: '/webmail', locales: ['de', 'en'] });
     expect(html).toContain('var base = "/webmail"');
@@ -173,12 +220,35 @@ describe('lite build helpers', () => {
     expect(nginxSub).toContain('default_type application/manifest+json');
     expect(buildCaddyExample({ basePath: '' })).toContain('try_files {path} {path}/ {path}/index.html /{re.surface.1}/{re.surface.2}/index.html');
     expect(buildCaddyExample({ basePath: '/w' })).toContain('rewrite @notfound /w/404.html');
+    // The examples send the same policy as _headers, for the configured server.
+    const nginxCsp = buildNginxExample({ basePath: '', connectSrc: 'https://m.example' });
+    expect(nginxCsp.match(/add_header Content-Security-Policy "[^"]*connect-src 'self' https:\/\/m\.example[^"]*" always;/g)).toHaveLength(2);
+    expect(buildCaddyExample({ basePath: '', connectSrc: 'https://m.example' })).toMatch(/Content-Security-Policy "[^"]*connect-src 'self' https:\/\/m\.example/);
     expect(buildReadme({ version: '1.10.0', commit: 'abc1234', basePath: '/w', locales: ['en'] })).toContain('unzip into `<web root>/w`');
     const readme = buildReadme({ version: '1.10.0', commit: 'abc1234', basePath: '/w', locales: ['en'], jmapServerUrl: 'https://m.example', demoMode: true });
     expect(readme).toContain('# Bulwark Lite 1.10.0 (abc1234)');
     expect(readme).toContain('Demo mode is ON');
     expect(readme).toContain('permissive-cors = true');
     expect(readme).toContain('currently `https://m.example`');
+  });
+
+  it('renders the container nginx template with every header in every header-bearing location', () => {
+    const conf = buildNginxContainerTemplate();
+    expect(conf).toContain('listen 8080;');
+    // Filled in by the image: the IPv6 listen line and the CSP's connect-src.
+    expect(conf).toContain('\n    ${LITE_LISTEN_IPV6}\n');
+    expect(conf).toContain("connect-src 'self' ${LITE_CSP_CONNECT_SRC}; frame-src");
+    // Every other $ belongs to nginx; the image limits envsubst to LITE_*.
+    expect([...conf.matchAll(/\$\{(\w+)\}/g)].map((m) => m[1]).filter((name) => !name.startsWith('LITE_'))).toEqual([]);
+    expect(conf).toContain('try_files $uri $uri/ $uri/index.html /$locale/$surface/index.html;');
+    expect(conf).toContain('(?<surface>mail|calendar|contacts|files|settings)');
+    expect(conf).toContain('error_page 404 /404.html;');
+    expect(conf).toContain('absolute_redirect off;');
+    // add_header in a location drops the inherited set: server, /_next/static/ and /connector.json each carry it.
+    expect(conf.match(/add_header Content-Security-Policy /g)).toHaveLength(3);
+    expect(conf.match(/add_header X-Content-Type-Options nosniff always;/g)).toHaveLength(3);
+    // The CSP is one double-quoted nginx string.
+    expect(conf).not.toMatch(/Content-Security-Policy "[^"\n]*"[^;\n]*"/);
   });
 
   it('flags server endpoints outside the documented allowlist', () => {
@@ -285,6 +355,39 @@ describe('prepare / postbuild / verify against a fake checkout', () => {
     }
   });
 
+  it('stages the container image content from a root-mounted static export only', () => {
+    const root = makeRepo();
+    try {
+      const out = join(root, 'out');
+      for (const surface of ['mail', 'calendar', 'contacts', 'files', 'settings', 'login']) {
+        mkdirSync(join(out, 'en', surface), { recursive: true });
+        writeFileSync(join(out, 'en', surface, 'index.html'), '<html></html>');
+      }
+      expect(() => stageContainer({ root, log: () => {} })).toThrow(/run `npm run build:lite` first/);
+
+      runPostbuild({ root, env: env({ NEXT_PUBLIC_BASE_PATH: '/w' }), log: () => {} });
+      expect(() => stageContainer({ root, log: () => {} })).toThrow(/serves from \/, out\/ was built with NEXT_PUBLIC_BASE_PATH=\/w/);
+
+      runPostbuild({ root, env: env({}), log: () => {} });
+      const dest = join(root, 'image');
+      // A stale file from an earlier staging must not survive.
+      mkdirSync(join(dest, 'html'), { recursive: true });
+      writeFileSync(join(dest, 'html', 'stale.txt'), '');
+      stageContainer({ root, dest, log: () => {} });
+      expect(readFileSync(join(dest, 'default.conf.template'), 'utf8')).toBe(buildNginxContainerTemplate());
+      for (const file of ['config.json', 'policy.json', 'connector.json', '404.html', 'lite-build.json', 'en/mail/index.html']) {
+        expect(existsSync(join(dest, 'html', ...file.split('/'))), file).toBe(true);
+      }
+      for (const file of ['_redirects', '_headers', 'nginx.conf.example', 'Caddyfile.example', 'LITE-README.md', 'stale.txt']) {
+        expect(existsSync(join(dest, 'html', file)), file).toBe(false);
+      }
+      // out/ itself is left alone: the zip is packed from it.
+      expect(existsSync(join(out, '_headers'))).toBe(true);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   it('verify lists what is missing from an incomplete export', () => {
     const root = makeRepo();
     try {
@@ -369,6 +472,16 @@ describe('Stalwart target: entry document logic (runs in the browser)', () => {
     expect(resolveStalwartBoot('/webmail/en/nope', '/webmail', locales, shells, 'de')).toEqual({ locale: 'en', shell: 'en/index.html', canonical: '/webmail/en/' });
     // `auth` alone is not the auth/callback shell.
     expect(resolveStalwartBoot('/webmail/en/auth', '/webmail', locales, shells, 'de')?.canonical).toBe('/webmail/en/');
+  });
+
+  it('boots the callback for the locale-free OAuth redirect URI', () => {
+    expect(resolveStalwartBoot('/webmail/oauth/callback', '/webmail', locales, shells, 'de')).toEqual({ locale: 'de', shell: 'de/auth/callback/index.html', canonical: '/webmail/de/auth/callback/' });
+    expect(resolveStalwartBoot('/webmail/oauth/callback/', '/webmail', locales, shells, 'en')?.shell).toBe('en/auth/callback/index.html');
+    expect(resolveStalwartBoot('/oauth/callback', '', locales, shells, 'en')?.canonical).toBe('/en/auth/callback/');
+    // Nothing else below `oauth`, and not in a bundle without the callback shell.
+    expect(resolveStalwartBoot('/webmail/oauth', '/webmail', locales, shells, 'en')?.shell).toBe('en/index.html');
+    expect(resolveStalwartBoot('/webmail/oauth/callback/x', '/webmail', locales, shells, 'en')?.shell).toBe('en/index.html');
+    expect(resolveStalwartBoot('/webmail/oauth/callback', '/webmail', locales, shells.filter((s: string) => s !== 'auth/callback'), 'en')?.shell).toBe('en/index.html');
   });
 
   it('works at the site root and refuses paths outside the mount', () => {
@@ -470,6 +583,21 @@ describe('Stalwart target: the entry document', () => {
     expect(script).toContain('var BUILD_ID = "1.10.0-abc-x"');
   });
 
+  // Stalwart sends no security headers for an Application: the entry carries
+  // its own policy and refuses to run in another origin's frame.
+  it('carries a CSP ahead of its script and refuses foreign frames', () => {
+    const csp = buildStalwartEntryCsp();
+    expect(csp).toContain("script-src 'self' 'unsafe-inline'");
+    expect(csp).toContain("object-src 'none'");
+    expect(csp).toContain("base-uri 'self'");
+    expect(csp).not.toContain('frame-ancestors'); // ignored in a <meta>
+    const meta = `<meta http-equiv="Content-Security-Policy" content="${csp}" />`;
+    expect(html.indexOf(meta)).toBeGreaterThan(-1);
+    expect(html.indexOf(meta)).toBeLessThan(html.indexOf('<script>'));
+    expect(html).toContain('window.top.location.origin !== location.origin');
+    expect(html).toMatch(/if \(foreignFrame\) return fail\(/);
+  });
+
   it('survives both Stalwart rewrites, including the pre-0.16.19 replace-all', () => {
     const current = stalwartRewriteIndex(html, 'webmail', 'my"client');
     expect(current).toContain('<base href="/webmail/" />');
@@ -497,7 +625,10 @@ describe('Stalwart target: the entry document', () => {
 
   it('documents the install, reserved prefixes, updates and the redirect URI', () => {
     const readme = buildStalwartReadme({ version: '1.10.0', commit: 'abc1234', locales: ['en'], buildId: 'b' });
-    expect(readme).toContain(`releases/latest/download/${STALWART_ZIP_NAME}`);
+    // A tagged release by default: Stalwart verifies nothing it downloads.
+    expect(readme).toContain(`resourceUrl='https://github.com/bulwarkmail/webmail/releases/download/v`);
+    expect(readme).not.toContain(`resourceUrl='https://github.com/bulwarkmail/webmail/releases/latest`);
+    expect(readme).toContain(`sha256sum -c ${STALWART_ZIP_NAME}.sha256`);
     expect(readme).toContain('stalwart-cli create Application');
     // The CLI wants JSON (verified against stalwart-cli 1.0.12), and nothing is mounted before UpdateApps.
     expect(readme).toContain(`--field 'urlPrefix={"/webmail":true}'`);

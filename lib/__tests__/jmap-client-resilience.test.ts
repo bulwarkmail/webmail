@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { JMAPClient, RequestTimeoutError } from '../jmap/client';
+import { JMAPClient, RequestTimeoutError, isReplaySafeRequest } from '../jmap/client';
 
 /**
  * A connection that accepts the request and then goes silent: the promise never
@@ -130,6 +130,87 @@ describe('JMAPClient resilience', () => {
 
       await expect(client.ping()).rejects.toThrow('Failed to fetch');
       expect(fetchSpy).toHaveBeenCalledTimes(2);
+    });
+
+    it('does not replay a request that changes something', async () => {
+      // The connection may have failed after the server acted on the batch:
+      // replaying an Email/set or an EmailSubmission/set does it twice.
+      const client = await createConnectedClient();
+      fetchSpy.mockRejectedValueOnce(new TypeError('Failed to fetch'));
+
+      await expect(client.deleteEmail('email-1')).rejects.toThrow('Failed to fetch');
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('reading lists when the server fails', () => {
+    // An empty answer read as an empty folder: a failed refresh emptied the
+    // list, and a failed delta read treated every updated row as gone.
+    it('getEmails rejects instead of returning an empty page', async () => {
+      const client = await createConnectedClient();
+      fetchSpy.mockResolvedValueOnce(mockFetchResponse(200, {
+        methodResponses: [['error', { type: 'serverFail', description: 'backend down' }, '0']],
+      }));
+      await expect(client.getEmails('inbox')).rejects.toThrow('backend down');
+    });
+
+    it('getSomeEmails rejects instead of returning nothing', async () => {
+      const client = await createConnectedClient();
+      fetchSpy.mockResolvedValueOnce(mockFetchResponse(200, {
+        methodResponses: [['error', { type: 'serverFail' }, '0']],
+      }));
+      await expect(client.getSomeEmails(['e1'])).rejects.toThrow('serverFail');
+    });
+  });
+
+  describe('writes the server refuses', () => {
+    // HTTP 200 says nothing about the objects: a refused /set used to be
+    // shown as done.
+    it('markAsRead rejects on notUpdated', async () => {
+      const client = await createConnectedClient();
+      fetchSpy.mockResolvedValueOnce(mockFetchResponse(200, {
+        methodResponses: [['Email/set', { notUpdated: { e1: { type: 'forbidden', description: 'read-only folder' } } }, '0']],
+      }));
+      await expect(client.markAsRead('e1', true)).rejects.toThrow('read-only folder');
+    });
+
+    it('toggleStar rejects on a method-level error', async () => {
+      const client = await createConnectedClient();
+      fetchSpy.mockResolvedValueOnce(mockFetchResponse(200, {
+        methodResponses: [['error', { type: 'accountReadOnly' }, '0']],
+      }));
+      await expect(client.toggleStar('e1', true)).rejects.toThrow('accountReadOnly');
+    });
+
+    it('cancelEmailSubmission rejects on a method-level error, so the send is not shown as cancelled', async () => {
+      const client = await createConnectedClient();
+      fetchSpy.mockResolvedValueOnce(mockFetchResponse(200, {
+        methodResponses: [['error', { type: 'invalidArguments' }, '0']],
+      }));
+      await expect(client.cancelEmailSubmission('s1', 'acc')).rejects.toThrow('invalidArguments');
+    });
+  });
+
+  describe('isReplaySafeRequest', () => {
+    const batch = (...methods: string[]) => ({
+      method: 'POST',
+      body: JSON.stringify({ using: [], methodCalls: methods.map((m, i) => [m, {}, String(i)]) }),
+    });
+
+    it('allows GETs, uploads and read-only batches', () => {
+      expect(isReplaySafeRequest(undefined)).toBe(true);
+      expect(isReplaySafeRequest({ method: 'GET' })).toBe(true);
+      expect(isReplaySafeRequest({ method: 'POST', body: new Blob(['x']) })).toBe(true);
+      expect(isReplaySafeRequest(batch('Email/query', 'Email/get', 'Mailbox/changes', 'Core/echo'))).toBe(true);
+    });
+
+    it('refuses anything that writes, and bodies it cannot read', () => {
+      expect(isReplaySafeRequest(batch('Email/get', 'Email/set'))).toBe(false);
+      expect(isReplaySafeRequest(batch('Email/set', 'EmailSubmission/set'))).toBe(false);
+      expect(isReplaySafeRequest(batch('Email/copy'))).toBe(false);
+      expect(isReplaySafeRequest(batch('Email/import'))).toBe(false);
+      expect(isReplaySafeRequest({ method: 'POST', body: 'not json' })).toBe(false);
+      expect(isReplaySafeRequest({ method: 'POST', body: JSON.stringify({ methodCalls: [] }) })).toBe(false);
     });
   });
 
@@ -744,6 +825,24 @@ describe('JMAPClient resilience', () => {
       expect(callHeaders['Authorization']).toContain('Basic');
 
       URL.revokeObjectURL(objectUrl);
+    });
+
+    it('never hands back an object URL typed as a script-bearing document', async () => {
+      const client = await createConnectedClient();
+      fetchSpy.mockResolvedValueOnce(new Response('<svg xmlns="http://www.w3.org/2000/svg"><script>1</script></svg>', {
+        status: 200,
+        headers: { 'Content-Type': 'image/svg+xml' },
+      }));
+      const created: Blob[] = [];
+      const spy = vi.spyOn(URL, 'createObjectURL').mockImplementation((blob) => {
+        created.push(blob as Blob);
+        return 'blob:test';
+      });
+
+      await client.fetchBlobAsObjectUrl('blob-svg', 'logo.svg', 'image/svg+xml');
+
+      expect(created[0].type).toBe('application/octet-stream');
+      spy.mockRestore();
     });
 
     it('throws when download URL is not available', async () => {

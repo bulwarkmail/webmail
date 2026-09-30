@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
 import { logger } from '@/lib/logger';
 import { getStalwartCredentials } from '@/lib/stalwart/credentials';
 import { fetchJmapSession, postJmap, rebaseApiUrl } from '@/lib/stalwart/jmap-api';
@@ -100,6 +101,10 @@ function firstCalendarId(event: Partial<CalendarEvent>): string | null {
 }
 
 export async function POST(request: NextRequest) {
+  // CSRF gate (GHSA-9mvj-98f5-9q6g): this handler acts with the caller's
+  // session cookie, which SameSite=Lax still sends from a same-site page.
+  const crossOrigin = rejectCrossOriginRequest(request);
+  if (crossOrigin) return crossOrigin;
   try {
     const creds = await getStalwartCredentials(request);
     if (!creds) {

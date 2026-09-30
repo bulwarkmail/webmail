@@ -10,9 +10,12 @@ vi.mock('@/hooks/use-email-drag', () => ({
   useEmailDrag: () => ({ dragHandlers: {}, isDragging: false }),
 }));
 
-vi.mock('@/stores/auth-store', () => ({
-  useAuthStore: () => ({ identities: [] }),
-}));
+vi.mock('@/stores/auth-store', () => {
+  const state = { identities: [], username: null };
+  return {
+    useAuthStore: (selector?: (s: typeof state) => unknown) => (selector ? selector(state) : state),
+  };
+});
 
 const ACCOUNT_TEAL = { id: 'acct-teal', avatarColor: '#0d9488', label: 'Teal account' };
 const accountState = {

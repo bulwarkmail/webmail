@@ -109,3 +109,24 @@ export function inertBlobType(type?: string): string {
 export function toInertBlob(blob: Blob): Blob {
   return isMimeTypeSafeForInlinePreview(blob.type) ? blob : blob.slice(0, blob.size, INERT_BLOB_TYPE);
 }
+
+/**
+ * A URL an <img> can show whose target is inert when opened on its own
+ * ("Open image in new tab", dragging it to the tab strip). An object URL
+ * shares the webmail origin, so an image/svg+xml one would run the
+ * sender's script there. SVG is handed over as a data: URL instead - its
+ * document gets an opaque origin - and every other type as an object URL
+ * re-typed per inertBlobType(). Revoking the result is safe either way.
+ */
+export async function imageBlobUrl(blob: Blob, type?: string): Promise<string> {
+  const mimeType = (type || blob.type).split(';')[0].trim().toLowerCase();
+  if (INLINE_PREVIEW_UNSAFE_MIME_TYPES.has(mimeType)) {
+    return new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(blob.slice(0, blob.size, 'image/svg+xml'));
+    });
+  }
+  return URL.createObjectURL(toInertBlob(type ? blob.slice(0, blob.size, type) : blob));
+}

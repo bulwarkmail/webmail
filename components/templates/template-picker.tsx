@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { X, Search, Star, FileText } from 'lucide-react';
+import { X, Search, Star, FileText } from '@/components/icons';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { useTemplateStore } from '@/stores/template-store';

@@ -16,6 +16,10 @@
  * Only narrow viewports are scaled. On a desktop reading pane a wide table
  * still scrolls horizontally inside the body, which is the better trade-off
  * there: the content is legible at 1:1 and there is a mouse to scroll with.
+ *
+ * Before any of that, tables whose own fixed width is wider than the body are
+ * let go to reflow (see releaseFixedWidthTables) - scaling is for content that
+ * can't reflow, not for text the sender merely boxed in at 800px.
  */
 
 /** Widest iframe that still counts as "a phone" for scale-to-fit purposes. */
@@ -31,7 +35,9 @@ export const FIT_MIN_SCALE = 0.4;
 export interface FitOptions {
   /**
    * Set false on a desktop layout: a wide mail there is legible at 1:1 and the
-   * reading pane can scroll. Any fit already applied is undone.
+   * reading pane can scroll. Any fit already applied is undone. Fixed-width
+   * tables are released either way - that is the viewer stylesheet's table cap
+   * doing its job, not a phone behaviour.
    */
   enabled?: boolean;
   /** Iframes at least this wide are left at 1:1. */
@@ -71,6 +77,64 @@ function measureContentWidth(doc: Document): number {
   return Math.max(doc.body.scrollWidth, doc.documentElement.scrollWidth);
 }
 
+const RELEASED_ATTR = 'data-bulwark-fit-released';
+
+/**
+ * The width a table pins itself to - a `width="800"` attribute or an inline
+ * `width: 700px` - or null for auto/percentage widths, which already give way.
+ * Inline style wins over the attribute, as it does in the cascade.
+ */
+function fixedTableWidth(table: HTMLTableElement): string | null {
+  const inline = table.style.width.trim();
+  if (inline) return /^\d*\.?\d+[a-z]+$/i.test(inline) ? inline : null;
+  const attr = /^\s*(\d*\.?\d+)(?:px)?\s*$/i.exec(table.getAttribute('width') ?? '');
+  return attr ? `${attr[1]}px` : null;
+}
+
+/**
+ * Let fixed-width tables that are wider than the body shrink to it, returning
+ * how many were released.
+ *
+ * The viewer stylesheet caps tables at `max-width: 100%`, but WebKit ignores
+ * that cap for a table with a fixed width: it treats the fixed width as the
+ * table's minimum. So on iOS every mail wrapped in `<table width="800">` laid
+ * its text out 800px wide - one sideways swipe per line (#1020) - where Chrome
+ * reflows it. A fixed-width table nested in another table stays wide in every
+ * engine, since the percentage cap has nothing definite to resolve against.
+ *
+ * Swapping the width for `width: 100%` sidesteps both; the old width moves to
+ * `max-width` so a pane that later grows puts the table back at its size.
+ * Only tables that are too wide are touched, so a mail that fits looks exactly
+ * as it did. The table still can't go narrower than its content (a long word,
+ * a 20-column data table), so what can't reflow is left to the scale-to-fit.
+ */
+export function releaseFixedWidthTables(doc: Document): number {
+  const body = doc.body;
+  const style = doc.defaultView?.getComputedStyle(body);
+  const available = body.clientWidth
+    - (parseFloat(style?.paddingLeft ?? '') || 0)
+    - (parseFloat(style?.paddingRight ?? '') || 0);
+  if (!(available > 0)) return 0;
+
+  // Measure every candidate before writing any, so the loop costs one layout
+  // rather than one per table.
+  const overwide: Array<[HTMLTableElement, string]> = [];
+  doc.querySelectorAll('table').forEach((table) => {
+    if (table.hasAttribute(RELEASED_ATTR)) return;
+    const width = fixedTableWidth(table);
+    if (width && table.offsetWidth > available + 1) overwide.push([table, width]);
+  });
+
+  for (const [table, width] of overwide) {
+    table.setAttribute(RELEASED_ATTR, '');
+    // !important so it also beats a `width: 800px !important` in the mail's
+    // own <style>.
+    table.style.setProperty('width', '100%', 'important');
+    table.style.setProperty('max-width', width);
+  }
+  return overwide.length;
+}
+
 /**
  * Fit the document body into its iframe, returning the scale that was applied
  * (1 = untouched). Idempotent: every call re-measures from the unscaled layout,
@@ -85,6 +149,7 @@ export function fitEmailBodyWidth(doc: Document, options: FitOptions = {}): numb
 
   // Measure the intrinsic layout, not the one a previous call left behind.
   clearFit(body);
+  releaseFixedWidthTables(doc);
   if (options.enabled === false) return 1;
 
   const viewport = doc.documentElement.clientWidth;

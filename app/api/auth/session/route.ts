@@ -15,12 +15,52 @@ import { recordLogin } from '@/lib/telemetry/login-tracker';
 import { parseJmapServers, resolveTrustedJmapUrl } from '@/lib/admin/jmap-servers';
 import { MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
+import { insecureCookieHint, verificationFailureBody } from '@/lib/auth/verification-failure';
+import { readImpersonationConfig } from '@/lib/impersonation/master-config';
+import { revokeImpersonationCredential } from '@/lib/impersonation/app-password';
+import { IMPERSONATION_GRANT_COOKIE, openImpersonationGrant } from '@/lib/impersonation/grant-cookie';
+import { revokeWopiTokens } from '@/lib/wopi/revocation';
+import { clearPairReauthInStore } from '@/lib/auth/pair-reauth';
 
 function sessionCookieOptions() {
   return {
     ...getCookieOptions(),
     maxAge: SESSION_COOKIE_MAX_AGE,
   };
+}
+
+/**
+ * A session sealed around the impersonation master password. Handoffs made
+ * before impersonation switched to per-mailbox app passwords stored it in
+ * the session cookie; it opens every mailbox, so it is never handed back to
+ * a browser, whichever path stored it.
+ */
+function holdsMasterPassword(credentials: { password: string }): boolean {
+  const config = readImpersonationConfig();
+  return !!config && credentials.password === config.masterPassword;
+}
+
+async function revokeImpersonationGrant(
+  cookieStore: Awaited<ReturnType<typeof cookies>>,
+): Promise<void> {
+  const grant = openImpersonationGrant(cookieStore.get(IMPERSONATION_GRANT_COOKIE)?.value);
+  cookieStore.delete(IMPERSONATION_GRANT_COOKIE);
+  const config = readImpersonationConfig();
+  if (!grant || !config) return;
+  try {
+    await revokeImpersonationCredential({
+      serverUrl: grant.serverUrl,
+      mailbox: grant.mailbox,
+      masterUser: config.masterUser,
+      masterPassword: config.masterPassword,
+      id: grant.credentialId,
+    });
+  } catch (error) {
+    // The app password still expires on its own; sign-out must not fail.
+    logger.warn('Impersonation credential revocation failed', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
 }
 
 function getSlot(request: NextRequest): number {
@@ -36,6 +76,8 @@ export async function POST(request: NextRequest) {
   // so a cross-site top-level POST would otherwise reach this handler.
   const crossOrigin = rejectCrossOriginRequest(request);
   if (crossOrigin) return crossOrigin;
+  let upstreamUrl = '';
+  let upstreamTrusted = false;
   try {
     const oauthEnabled = configManager.get<boolean>('oauthEnabled', false);
     const oauthOnly = configManager.get<boolean>('oauthOnly', false);
@@ -63,8 +105,6 @@ export async function POST(request: NextRequest) {
     const serverList = parseJmapServers(configManager.get<unknown>('jmapServers', []));
     const trustedUrl = resolveTrustedJmapUrl(serverUrl, configuredServerUrl, serverList);
 
-    let upstreamUrl: string;
-    let upstreamTrusted: boolean;
     if (trustedUrl) {
       upstreamUrl = trustedUrl;
       upstreamTrusted = true;
@@ -102,10 +142,15 @@ export async function POST(request: NextRequest) {
 
     void recordLogin(username, normalizedServerUrl);
 
-    return NextResponse.json({ ok: true });
+    const warning = insecureCookieHint(request);
+    if (warning) logger.warn(`session: ${warning}`);
+    return NextResponse.json(warning ? { ok: true, warning } : { ok: true });
   } catch (error) {
     if (error instanceof JmapAuthVerificationError) {
-      return NextResponse.json({ error: error.message }, { status: error.status });
+      return NextResponse.json(
+        verificationFailureBody('session', error, upstreamUrl, upstreamTrusted),
+        { status: error.status },
+      );
     }
 
     logger.error('Session store error', { error: error instanceof Error ? error.message : 'Unknown error' });
@@ -175,7 +220,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const credentials = decryptSession(token);
-    if (!credentials) {
+    if (!credentials || holdsMasterPassword(credentials)) {
       cookieStore.delete(cookieName);
       clearStalwartAuthContextInStore(cookieStore, slot);
       return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
@@ -204,6 +249,8 @@ export async function DELETE(request: NextRequest) {
   try {
     const cookieStore = await cookies();
     const all = request.nextUrl.searchParams.get('all') === 'true';
+    // Office editors opened from here stop working with the session.
+    await revokeWopiTokens(cookieStore, all ? 'all' : getSlot(request));
 
     if (all) {
       // Delete all session cookies across every slot.
@@ -211,10 +258,16 @@ export async function DELETE(request: NextRequest) {
         cookieStore.delete(sessionCookieName(i));
         clearStalwartAuthContextInStore(cookieStore, i);
       }
+      await revokeImpersonationGrant(cookieStore);
+      // A phone that already paired keeps its own sign-in; a QR still on
+      // screen stops working.
+      clearPairReauthInStore(cookieStore);
     } else {
       const slot = getSlot(request);
       cookieStore.delete(sessionCookieName(slot));
       clearStalwartAuthContextInStore(cookieStore, slot);
+      if (slot === 0) await revokeImpersonationGrant(cookieStore);
+      clearPairReauthInStore(cookieStore, slot);
     }
 
     return NextResponse.json({ ok: true });

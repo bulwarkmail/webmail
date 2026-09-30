@@ -168,8 +168,11 @@ describe('auth-store logout redirects', () => {
     });
 
     // Refresh goes in flight, then the user signs out before it settles.
+    // Sign-out gives the renewal a few seconds, then cancels it (#905).
     const pending = useAuthStore.getState().refreshAccessToken();
-    await useAuthStore.getState().logout();
+    const signedOut = useAuthStore.getState().logout();
+    await vi.advanceTimersByTimeAsync(3_000);
+    await signedOut;
     resolveInFlight!({ ok: false, status: 503, json: async () => ({}) });
     await pending;
 

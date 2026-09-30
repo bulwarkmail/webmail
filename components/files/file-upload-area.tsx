@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Upload, FolderPlus, FilePlus } from "lucide-react";
+import { Upload, FolderPlus, FilePlus } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { getDroppedFilesAndFolders } from "@/lib/webdav/drop-utils";
 

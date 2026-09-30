@@ -6,7 +6,7 @@ import { formatDate } from "@/lib/utils";
 import { Email } from "@/lib/jmap/types";
 import { cn } from "@/lib/utils";
 import { Avatar } from "@/components/ui/avatar";
-import { Paperclip, Star, Circle, CheckSquare, Square, Reply, Forward } from "lucide-react";
+import { Paperclip, Star, Circle, CheckSquare, Square, Reply, Forward } from "@/components/icons";
 import { useEmailDrag } from "@/hooks/use-email-drag";
 import { useLongPress } from "@/hooks/use-long-press";
 import { useEmailStore } from "@/stores/email-store";

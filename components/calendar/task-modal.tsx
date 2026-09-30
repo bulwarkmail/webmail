@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { X, Trash2, CalendarDays, Bell, Flag } from "lucide-react";
+import { X, Trash2, CalendarDays, Bell, Flag } from "@/components/icons";
 import { format, parseISO } from "date-fns";
 
 import type { CalendarTask, Calendar, CalendarEventAlert } from "@/lib/jmap/types";

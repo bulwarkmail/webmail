@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
-import { X, Upload, Check, Loader2, RefreshCw, Globe } from "lucide-react";
+import { X, Upload, Check, Loader2, RefreshCw, Globe } from "@/components/icons";
 import { format } from "date-fns";
 import type { CalendarEvent, Calendar } from "@/lib/jmap/types";
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
@@ -12,6 +12,7 @@ import { useCalendarStore } from "@/stores/calendar-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { toast } from "@/stores/toast-store";
 import { apiFetch } from "@/lib/browser-navigation";
+import { explainServerAuthError } from "@/lib/server-auth-status";
 import { IS_LITE } from "@/lib/lite";
 
 interface ICalImportModalProps {
@@ -137,7 +138,7 @@ export function ICalImportModal({ calendars, client, onClose, initialUrl }: ICal
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
-        throw new Error(data.error || t("url_fetch_failed"));
+        throw new Error(explainServerAuthError(response.status, data.error, t("url_fetch_failed")));
       }
 
       const blob = await response.blob();
