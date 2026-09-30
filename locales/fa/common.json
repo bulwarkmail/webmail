@@ -835,7 +835,19 @@
     "templates_import_empty": "قالبی در فایل یافت نشد",
     "export_email_error": "خروجی ایمیل ناموفق بود",
     "import_email_success": "ایمیل با موفقیت وارد شد",
-    "import_email_error": "وارد کردن ایمیل ناموفق بود"
+    "import_email_error": "وارد کردن ایمیل ناموفق بود",
+    "rule_created": "قانون ایجاد شد",
+    "rule_merged": "به قانون «{name}» افزوده شد",
+    "rule_already_covered": "قانون «{name}» از قبل این را پوشش می‌دهد",
+    "rule_apply_existing": "{count, plural, one {اعمال روی # پیام موجود} other {اعمال روی # پیام موجود}}",
+    "rule_applied": "{count, plural, =0 {هیچ پیامی نیاز به تغییر نداشت} one {قانون روی # پیام اعمال شد} other {قانون روی # پیام اعمال شد}}",
+    "rule_apply_failed": "اعمال قانون روی پیام‌های موجود ممکن نشد",
+    "rule_edit": "ویرایش قانون",
+    "rule_undo": "بازگردانی",
+    "rule_undone": "تغییر قانون بازگردانده شد",
+    "rule_undo_failed": "بازگردانی تغییر قانون ممکن نشد",
+    "rule_undo_conflict": "فیلترهای شما از آن زمان تغییر کرده‌اند. تغییر را در تنظیمات فیلترها بازگردانید.",
+    "rule_folder_failed": "ایجاد پوشه ممکن نشد"
   },
   "date": {
     "today": "امروز",
@@ -2086,7 +2098,9 @@
         "ends_with": "پایان می‌یابد با",
         "matches": "مطابقت با الگو",
         "greater_than": "بزرگتر از",
-        "less_than": "کوچکتر از"
+        "less_than": "کوچکتر از",
+        "address_is": "نشانی‌اش این است",
+        "domain_is": "دامنه‌اش این است"
       },
       "action_types": {
         "move": "انتقال به پوشه",
@@ -2161,7 +2175,26 @@
         "actions_count": "{count, plural, one {# عملیات} other {# عملیات}}"
       },
       "origin_external": "خارجی",
-      "managed_by_tooltip": "مدیریت شده توسط {source}. در آن برنامه ویرایش کنید یا از ویرایشگر خام Sieve استفاده کنید."
+      "managed_by_tooltip": "مدیریت شده توسط {source}. در آن برنامه ویرایش کنید یا از ویرایشگر خام Sieve استفاده کنید.",
+      "quick_rule_names": {
+        "move_sender": "انتقال از {sender} به {folder}",
+        "move_domain": "انتقال از @{domain} به {folder}",
+        "move_list": "انتقال فهرست {list} به {folder}",
+        "mark_read": "علامت خوانده‌شده برای {sender}",
+        "tag": "برچسب {tag} برای {sender}",
+        "block": "مسدود کردن {sender}",
+        "custom": "پیام‌های {sender}",
+        "custom_plain": "قانون جدید",
+        "senders": "{count, plural, one {# فرستنده} other {# فرستنده}}"
+      },
+      "suggestions": "پیشنهادها",
+      "suggest_subject": "موضوع «{subject}»",
+      "suggest_to": "به {address}",
+      "suggest_cc": "رونوشت {address}",
+      "suggest_list": "List-Id",
+      "suggest_domain": "@{domain}",
+      "apply_existing": "روی پیام‌هایی که از قبل در این پوشه هستند هم اعمال شود",
+      "apply_existing_unsupported": "فقط قانون‌هایی که فرستنده، گیرندگان، موضوع یا سرایندها را بررسی می‌کنند و پیام را منتقل، کپی، خوانده‌شده، ستاره‌دار یا برچسب‌دار می‌کنند، روی پیام‌های موجود اعمال می‌شوند."
     },
     "templates": {
       "title": "قالب‌های ایمیل",
@@ -2293,7 +2326,22 @@
     "cancel_scheduled_send": "لغو ارسال",
     "reschedule_send": "باززمان‌بندی",
     "cancel_and_edit": "لغو و ویرایش",
-    "cancel_and_compose_again": "لغو و نوشتن مجدد"
+    "cancel_and_compose_again": "لغو و نوشتن مجدد",
+    "rules": {
+      "title": "قانون‌ها",
+      "move_from": "همیشه پیام‌های {sender} را منتقل کن",
+      "move_from_domain": "همیشه پیام‌های @{domain} را منتقل کن",
+      "move_from_list": "همیشه پیام‌های این فهرست را منتقل کن",
+      "mark_read_from": "همیشه پیام‌های {sender} را خوانده‌شده علامت بزن",
+      "tag_with": "همیشه این برچسب را بزن",
+      "block": "{count, plural, one {مسدود کردن فرستنده} other {مسدود کردن # فرستنده}}",
+      "no_junk": "این حساب پوشهٔ هرزنامه ندارد",
+      "create": "ایجاد قانون…",
+      "manage": "مدیریت قانون‌ها",
+      "senders_count": "{count, plural, one {# فرستنده} other {# فرستنده}}",
+      "cross_account": "پیام‌هایی از یک حساب انتخاب کنید",
+      "opaque_hint": "فیلترهای شما دستی ویرایش شده‌اند. تنظیمات فیلترها را باز کنید"
+    }
   },
   "mailbox_context_menu": {
     "mark_folder_read": "علامت‌گذاری پوشه خوانده شده",

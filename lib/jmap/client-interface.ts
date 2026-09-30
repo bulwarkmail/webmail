@@ -234,6 +234,23 @@ export interface IJMAPClient {
    * bodies or attachments), deduped.
    */
   searchSentRecipients(query: string, sentMailboxId: string, accountId?: string, limit?: number): Promise<Array<{ name: string; email: string }>>;
+  /**
+   * Only the named properties (e.g. `header:List-Id:asText`) of the given
+   * messages, plus their `id`. Nothing is namespaced: ids stay as the server
+   * has them.
+   */
+  getEmailFields(emailIds: string[], properties: string[], accountId?: string): Promise<Array<Record<string, unknown>>>;
+  /**
+   * Every message matching `filter`, newest first, with only the named
+   * properties plus `id`. Pages through the whole result up to `limit`
+   * (default 10000).
+   */
+  queryEmailFields(
+    filter: Record<string, unknown>,
+    properties: string[],
+    accountId?: string,
+    limit?: number,
+  ): Promise<Array<Record<string, unknown>>>;
 
   // ── Email mutations ───────────────────────────────────────────
   markAsRead(emailId: string, read?: boolean, accountId?: string): Promise<void>;
@@ -477,6 +494,9 @@ export interface IJMAPClient {
   createSieveScript(name: string, content: string, activate?: boolean, accountId?: string): Promise<SieveScript>;
   updateSieveScript(scriptId: string, content: string, activate?: boolean, accountId?: string): Promise<void>;
   deleteSieveScript(scriptId: string, accountId?: string): Promise<void>;
+  activateSieveScript(scriptId: string, accountId?: string): Promise<void>;
+  /** Leave the account with no active script. */
+  deactivateSieveScript(accountId?: string): Promise<void>;
   validateSieveScript(content: string, accountId?: string): Promise<{ isValid: boolean; errors?: string[] }>;
 
   // ── Files (WebDAV / FileNode) ─────────────────────────────────

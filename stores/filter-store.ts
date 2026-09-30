@@ -3,7 +3,7 @@ import type { IJMAPClient } from '@/lib/jmap/client-interface';
 import type { FilterRule, SieveCapabilities, VacationSieveConfig } from '@/lib/jmap/sieve-types';
 import { parseScript } from '@/lib/sieve/parser';
 import { generateScript, VACATION_SCRIPT_NAME } from '@/lib/sieve/generator';
-import { filterHooks } from '@/lib/plugin-hooks';
+import { applyScriptTransforms, supportsInclude, writeFiltersScript } from '@/lib/filters/account-filters';
 import { debug } from '@/lib/debug';
 
 interface SieveAccount {
@@ -182,19 +182,11 @@ export const useFilterStore = create<FilterStore>()((set, get) => ({
           extensions: sieveCapabilities?.sieveExtensions,
         });
       }
-      content = await applyScriptTransforms(content, selectedAccountId || null);
+      const written = await writeFiltersScript(client, selectedAccountId || null, content, activeScriptId);
+      if (!activeScriptId) set({ activeScriptId: written.scriptId });
 
-      if (activeScriptId) {
-        await client.updateSieveScript(activeScriptId, content, true, selectedAccountId || undefined);
-      } else {
-        const script = await client.createSieveScript('filters', content, true, selectedAccountId || undefined);
-        set({ activeScriptId: script.id });
-      }
-
-      set({ isSaving: false, rawScript: content });
+      set({ isSaving: false, rawScript: written.content });
       debug.log('filters', 'Filters saved successfully');
-      void filterHooks.onFiltersSave.emit({ accountId: selectedAccountId || null });
-      void filterHooks.onSieveScriptChange.emit({ accountId: selectedAccountId || null, script: content });
     } catch (error) {
       debug.error('Failed to save filters:', error);
       set({
@@ -285,18 +277,6 @@ export const useFilterStore = create<FilterStore>()((set, get) => ({
     });
   },
 }));
-
-function supportsInclude(capabilities: SieveCapabilities | null): boolean {
-  return capabilities?.sieveExtensions?.includes('include') ?? false;
-}
-
-// Let plugins graft their managed sections (e.g. an inbox-category
-// classifier) into the script before it becomes the active one. A handler
-// returning a non-string is ignored to keep the upload valid.
-async function applyScriptTransforms(content: string, accountId: string | null): Promise<string> {
-  const transformed = await filterHooks.onSieveScriptGenerate.transform(content, { accountId });
-  return typeof transformed === 'string' && transformed.trim().length > 0 ? transformed : content;
-}
 
 async function loadManagedScript(client: IJMAPClient, accountId: string) {
   const scripts = await client.getSieveScripts(accountId);

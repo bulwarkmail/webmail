@@ -800,7 +800,19 @@
     "templates_import_empty": "לא נמצאו תבניות בקובץ",
     "export_email_error": "ייצוא האימייל נכשל",
     "import_email_success": "אימייל יובא בהצלחה",
-    "import_email_error": "ייבוא האימייל נכשל"
+    "import_email_error": "ייבוא האימייל נכשל",
+    "rule_created": "הכלל נוצר",
+    "rule_merged": "נוסף לכלל „{name}”",
+    "rule_already_covered": "כבר מכוסה על ידי הכלל „{name}”",
+    "rule_apply_existing": "{count, plural, one {החל על הודעה קיימת אחת} other {החל על # הודעות קיימות}}",
+    "rule_applied": "{count, plural, =0 {אף הודעה לא דרשה שינוי} one {הכלל הוחל על הודעה אחת} other {הכלל הוחל על # הודעות}}",
+    "rule_apply_failed": "לא ניתן היה להחיל את הכלל על הודעות קיימות",
+    "rule_edit": "ערוך כלל",
+    "rule_undo": "בטל",
+    "rule_undone": "שינוי הכלל בוטל",
+    "rule_undo_failed": "לא ניתן היה לבטל את שינוי הכלל",
+    "rule_undo_conflict": "המסננים שלך השתנו מאז. בטל את השינוי בהגדרות המסננים.",
+    "rule_folder_failed": "לא ניתן היה ליצור את התיקייה"
   },
   "date": {
     "today": "היום",
@@ -1999,7 +2011,9 @@
         "greater_than": "גדול מ",
         "less_than": "הוא פחות מ",
         "has_any": "קיים",
-        "has_type": "מסוג"
+        "has_type": "מסוג",
+        "address_is": "הוא הכתובת",
+        "domain_is": "שייך לדומיין"
       },
       "action_types": {
         "move": "העבר לתיקיה",
@@ -2076,7 +2090,26 @@
       "attachment_type_placeholder": "למשל pdf, doc, jpg",
       "value_placeholder_multi": "ערך (מרובים מופרדים בפסיקים)",
       "origin_external": "חיצוני",
-      "managed_by_tooltip": "מנוהל על ידי {source}. ערוך אותו ביישום זה, או השתמש בעורך Sieve הגולמי."
+      "managed_by_tooltip": "מנוהל על ידי {source}. ערוך אותו ביישום זה, או השתמש בעורך Sieve הגולמי.",
+      "quick_rule_names": {
+        "move_sender": "העבר מ-{sender} אל {folder}",
+        "move_domain": "העבר מ-@{domain} אל {folder}",
+        "move_list": "העבר את הרשימה {list} אל {folder}",
+        "mark_read": "סמן כנקראו מ-{sender}",
+        "tag": "הוסף תווית {tag} להודעות מ-{sender}",
+        "block": "חסום את {sender}",
+        "custom": "הודעות מ-{sender}",
+        "custom_plain": "כלל חדש",
+        "senders": "{count, plural, one {שולח אחד} other {# שולחים}}"
+      },
+      "suggestions": "הצעות",
+      "suggest_subject": "נושא „{subject}”",
+      "suggest_to": "אל {address}",
+      "suggest_cc": "עותק {address}",
+      "suggest_list": "List-Id",
+      "suggest_domain": "@{domain}",
+      "apply_existing": "החל גם על הודעות שכבר נמצאות בתיקייה זו",
+      "apply_existing_unsupported": "אפשר להחיל על הודעות קיימות רק כללים שבודקים שולח, נמענים, נושא או כותרות, ושמעבירים, מעתיקים, מסמנים כנקרא, בכוכב או בתווית."
     },
     "templates": {
       "title": "תבניות דואר אלקטרוני",
@@ -2259,7 +2292,22 @@
     "cancel_scheduled_send": "ביטול שליחה",
     "reschedule_send": "תזמן מחדש",
     "cancel_and_edit": "בטל וערוך",
-    "cancel_and_compose_again": "בטל והרכיב שוב"
+    "cancel_and_compose_again": "בטל והרכיב שוב",
+    "rules": {
+      "title": "כללים",
+      "move_from": "תמיד להעביר הודעות מ-{sender}",
+      "move_from_domain": "תמיד להעביר הודעות מ-@{domain}",
+      "move_from_list": "תמיד להעביר הודעות מרשימה זו",
+      "mark_read_from": "תמיד לסמן הודעות מ-{sender} כנקראו",
+      "tag_with": "תמיד להוסיף תווית",
+      "block": "{count, plural, one {חסום שולח} other {חסום # שולחים}}",
+      "no_junk": "לחשבון זה אין תיקיית דואר זבל",
+      "create": "צור כלל…",
+      "manage": "ניהול כללים",
+      "senders_count": "{count, plural, one {שולח אחד} other {# שולחים}}",
+      "cross_account": "בחר הודעות מחשבון אחד",
+      "opaque_hint": "המסננים שלך נערכו ידנית. פתח את הגדרות המסננים"
+    }
   },
   "shortcuts": {
     "title": "קיצורי מקלדת",

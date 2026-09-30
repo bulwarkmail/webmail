@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { getFilePreviewKind, imageBlobUrl, inertBlobType, isFilePreviewable, toInertBlob } from '../file-preview';
+import { getFilePreviewKind, imageBlobUrl, inertBlobType, isFilePreviewable, previewBlobType, toInertBlob } from '../file-preview';
 
 describe('file preview detection', () => {
   it('detects browser-renderable image attachments', () => {
@@ -82,5 +82,60 @@ describe('image thumbnails that can be opened on their own', () => {
     expect(await imageBlobUrl(new Blob(['<p>x</p>']), 'text/html')).toBe('blob:test');
     expect(created.map((b) => b.type)).toEqual(['image/png', 'application/octet-stream']);
     spy.mockRestore();
+  });
+});
+
+describe('previewBlobType', () => {
+  // Browsers pick the viewer from the blob's type; anything they cannot show
+  // is downloaded under the blob's UUID instead of previewed.
+
+  it('shows a PDF that an IBM i system declared with its catch-all type', () => {
+    expect(previewBlobType('Avis_30_281900.pdf', 'application/x-as400attachment', 'application/x-as400attachment'))
+      .toBe('application/pdf');
+  });
+
+  it('keeps the octet-stream correction and ignores casing and parameters', () => {
+    expect(previewBlobType('doc.pdf', 'application/octet-stream', 'application/octet-stream')).toBe('application/pdf');
+    expect(previewBlobType('doc.pdf', 'Application/Octet-Stream', '')).toBe('application/pdf');
+    expect(previewBlobType('scan.pdf', 'application/pdf; name="scan.pdf"', 'application/octet-stream')).toBe('application/pdf');
+  });
+
+  it('prefers a declared or served type the viewer can show over the name', () => {
+    expect(previewBlobType('photo.jpg', 'image/png', '')).toBe('image/png');
+    expect(previewBlobType('clip.mp4', 'application/octet-stream', 'video/mp4')).toBe('video/mp4');
+    expect(previewBlobType('photo.jpg', 'application/x-as400attachment', '')).toBe('image/jpeg');
+  });
+
+  it('derives a viewable type from every image, audio and video extension but SVG', () => {
+    const kinds: Record<string, string[]> = {
+      image: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif', 'bmp', 'ico'],
+      audio: ['mp3', 'wav', 'ogg', 'm4a', 'flac', 'aac', 'opus'],
+      video: ['mp4', 'webm', 'ogv', 'mov', 'm4v', 'avi', 'mkv'],
+    };
+    for (const [kind, extensions] of Object.entries(kinds)) {
+      for (const ext of extensions) {
+        const name = `file.${ext}`;
+        expect(getFilePreviewKind(name)).toBe(kind);
+        expect(previewBlobType(name, 'application/x-as400attachment', '')).toMatch(new RegExp(`^${kind}/`));
+      }
+    }
+  });
+
+  it('hands the unsandboxed PDF viewer nothing but application/pdf', () => {
+    // The PDF preview iframe cannot be sandboxed (the browser's PDF viewer
+    // refuses to run there), so XML or XHTML declared on a .pdf must not
+    // reach it as a parseable document.
+    expect(previewBlobType('invoice.pdf', 'text/xml', 'text/xml')).toBe('application/pdf');
+    expect(previewBlobType('invoice.pdf', 'application/xml', '')).toBe('application/pdf');
+  });
+
+  it('never derives a script-capable type from the file name', () => {
+    expect(previewBlobType('drawing.svg', 'application/x-as400attachment', '')).toBe('application/x-as400attachment');
+  });
+
+  it('leaves previews that do not render a blob by type as before', () => {
+    expect(previewBlobType('page.html', 'text/html; charset=utf-8', '')).toBe('text/html; charset=utf-8');
+    expect(previewBlobType('archive.zip', 'application/zip', '')).toBe('application/zip');
+    expect(previewBlobType('archive.zip', 'application/octet-stream', 'application/octet-stream')).toBe('application/octet-stream');
   });
 });

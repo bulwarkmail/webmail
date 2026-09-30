@@ -82,6 +82,7 @@ import {
   Link as LinkIcon,
   Maximize2,
   Minimize2,
+  Filter,
 } from "@/components/icons";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
@@ -114,6 +115,7 @@ import { findVerificationCode, verificationCodeBodyText } from "@/lib/verificati
 import { VerificationCodeChip } from "./verification-code-chip";
 import type { TnefAttachment } from "@/lib/tnef";
 import { PluginSlot } from "@/components/plugins/plugin-slot";
+import { RulesPanel, useRulesAvailability } from "./rules-menu";
 import { usePluginSlotOffers } from "@/hooks/use-plugin-slot-offers";
 import { ResizeHandle } from "@/components/layout/resize-handle";
 import { emailHooks, uiHooks, renderHooks } from "@/lib/plugin-hooks";
@@ -122,7 +124,7 @@ import { useAttachmentDrag, isDragOutSupported, type AttachmentDragSource } from
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
 
 /** The More menu's two drill-downs: a folder list and a tag list. */
-type MoreMenuSub = 'move' | 'tag';
+type MoreMenuSub = 'move' | 'tag' | 'rules';
 
 /** Whatever a sub-view offers to act on, in the order it is read out. */
 const SUB_MENU_ITEM_SELECTOR = '[role="menuitem"],[role="menuitemcheckbox"],[role="menuitemradio"]';
@@ -674,6 +676,7 @@ export function EmailViewer({
   const tFiles = useTranslations('files');
   const tDemoWelcome = useTranslations('demo_welcome');
   const tDeepLink = useTranslations('deep_link');
+  const tContextMenu = useTranslations('context_menu');
   const copyLink = useCopyLink();
   const tWelcome = useTranslations('welcome');
   const externalContentPolicy = useSettingsStore((state) => state.externalContentPolicy);
@@ -874,7 +877,11 @@ export function EmailViewer({
   // The rows that open a sub-view, and the pieces of the mobile panel a
   // sub-view replaces. Desktop and mobile never render their More menu at the
   // same time, so one map serves both.
-  const moreEntryRefs = useRef<Record<MoreMenuSub, HTMLButtonElement | null>>({ move: null, tag: null });
+  const moreEntryRefs = useRef<Record<MoreMenuSub, HTMLButtonElement | null>>({ move: null, tag: null, rules: null });
+  // Filter rules made from the open message; none for a shared account or
+  // one without Sieve.
+  const rulesEmails = useMemo(() => (email ? [email] : []), [email]);
+  const { availability: rulesAvailability, target: rulesTarget } = useRulesAvailability(rulesEmails);
   const mobileSubBackRef = useRef<HTMLButtonElement>(null);
   const mobileSubListRef = useRef<HTMLDivElement>(null);
   // Pro can mount two reading panes side by side, so the menu id has to be
@@ -3523,6 +3530,36 @@ export function EmailViewer({
                   )}
                 </div>
               )}
+              {/* Rules - sub-view of one-click filter rules */}
+              {rulesAvailability === 'available' && rulesTarget && email && (
+                <div className="relative"
+                  onMouseEnter={() => setMoreMenuSub('rules')}
+                  onMouseLeave={() => setMoreMenuSub(null)}
+                >
+                  <button
+                    ref={(el) => { moreEntryRefs.current.rules = el; }}
+                    role="menuitem"
+                    aria-haspopup="menu"
+                    aria-expanded={moreMenuSub === 'rules'}
+                    data-testid="viewer-rules"
+                    onClick={() => { if (moreMenuSub === 'rules') leaveMoreMenuSub(); else setMoreMenuSub('rules'); }}
+                    className="w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2"
+                  >
+                    <Filter className="w-4 h-4" />
+                    <span className="flex-1">{tContextMenu('rules.title')}</span>
+                    <ChevronRight className="w-3 h-3 text-muted-foreground" />
+                  </button>
+                  {moreMenuSub === 'rules' && (
+                    <div
+                      role="menu"
+                      aria-label={tContextMenu('rules.title')}
+                      className="absolute end-full top-0 me-1 py-1 w-72 max-h-80 overflow-y-auto bg-background rounded-md shadow-lg border border-border z-10"
+                    >
+                      <RulesPanel email={email} target={rulesTarget} variant="desktop" onDone={closeMoreMenu} />
+                    </div>
+                  )}
+                </div>
+              )}
               {/* Overflow: spam */}
               {spamApplicable && (onMarkAsSpam || onUndoSpam) && (
                 <button
@@ -3667,7 +3704,7 @@ export function EmailViewer({
         role="menu"
         /* A sub-view replaces the panel wholesale, so the panel takes its name
            rather than pretending the top level is still on screen. */
-        aria-label={moreMenuSub === 'move' ? t('move_to') : moreMenuSub === 'tag' ? t('tag') : t('more_actions')}
+        aria-label={moreMenuSub === 'move' ? t('move_to') : moreMenuSub === 'tag' ? t('tag') : moreMenuSub === 'rules' ? tContextMenu('rules.title') : t('more_actions')}
         /* The panel is only slid off-screen, so without `inert` every action in
            it stays permanently exposed to screen readers - and lands near the
            top of the reading order, far from the toolbar it belongs to (#720). */
@@ -3695,7 +3732,7 @@ export function EmailViewer({
               className="flex items-center gap-1 -ms-2 px-2 py-1 rounded hover:bg-muted text-sm font-semibold text-foreground"
             >
               <ChevronLeft className="w-5 h-5" />
-              {moreMenuSub === 'move' ? t('move_to') : t('tag')}
+              {moreMenuSub === 'move' ? t('move_to') : moreMenuSub === 'rules' ? tContextMenu('rules.title') : t('tag')}
             </button>
           ) : (
             <span className="text-sm font-semibold text-foreground">{t('more_actions')}</span>
@@ -3761,6 +3798,21 @@ export function EmailViewer({
                       ))}
                     </div>
                   )}
+                  <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                </button>
+              )}
+              {/* Rules (opens sub-view) */}
+              {rulesAvailability === 'available' && rulesTarget && email && (
+                <button
+                  ref={(el) => { moreEntryRefs.current.rules = el; }}
+                  role="menuitem"
+                  aria-haspopup="menu"
+                  data-testid="viewer-rules"
+                  onClick={() => setMoreMenuSub('rules')}
+                  className="w-full px-4 py-3 min-h-[44px] text-sm text-start hover:bg-muted text-foreground flex items-center gap-3"
+                >
+                  <Filter className="w-5 h-5" />
+                  <span className="flex-1">{tContextMenu('rules.title')}</span>
                   <ChevronRight className="w-4 h-4 text-muted-foreground" />
                 </button>
               )}
@@ -3868,6 +3920,9 @@ export function EmailViewer({
               selectedIds={currentTagIds}
               onToggle={(tagId) => { if (email) onSetTag?.(email.id, tagId); }}
             />
+          )}
+          {moreMenuSub === 'rules' && rulesAvailability === 'available' && rulesTarget && email && (
+            <RulesPanel email={email} target={rulesTarget} variant="mobile" onDone={closeMoreMenu} />
           )}
         </div>
       </div>

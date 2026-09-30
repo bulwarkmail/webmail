@@ -22,6 +22,11 @@ export interface Toast {
   icon?: React.ReactNode;
   action?: ToastAction;
   secondaryAction?: ToastAction;
+  /**
+   * A third action. Three buttons do not fit beside the text, so a toast
+   * that has one lays its actions out on a row of their own.
+   */
+  tertiaryAction?: ToastAction;
 }
 
 interface ToastProps {
@@ -133,9 +138,16 @@ export function ToastItem({ toast, onClose }: ToastProps) {
         {toast.message && (
           <p className="text-[12.5px] mt-0.5 text-muted-foreground leading-snug">{toast.message}</p>
         )}
+        {toast.tertiaryAction && (
+          <div className="flex flex-wrap items-center gap-1 mt-1.5 -ms-1.5">
+            {actionButton(toast.tertiaryAction)}
+            {toast.secondaryAction && actionButton(toast.secondaryAction)}
+            {toast.action && actionButton(toast.action)}
+          </div>
+        )}
       </div>
 
-      {(toast.action || toast.secondaryAction) && (
+      {!toast.tertiaryAction && (toast.action || toast.secondaryAction) && (
         <div className="flex items-center gap-1 flex-shrink-0">
           {toast.secondaryAction && actionButton(toast.secondaryAction)}
           {toast.action && actionButton(toast.action)}
