@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw } from "@/components/icons";
 import { apiFetch } from "@/lib/browser-navigation";
 
 const POLL_MS = 5 * 60_000;
