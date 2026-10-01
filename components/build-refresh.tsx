@@ -4,12 +4,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { RefreshCw } from "@/components/icons";
 import { apiFetch } from "@/lib/browser-navigation";
+import { IS_LITE } from "@/lib/lite";
 
 const POLL_MS = 5 * 60_000;
 const MIN_GAP_MS = 60_000;
 
 /** Fetches the stamp of the build the server is running; null when unknown. */
 export async function fetchServerBuildStamp(): Promise<string | null> {
+  if (IS_LITE) return null;
   try {
     const res = await apiFetch("/api/system/build", { cache: "no-store" });
     if (!res.ok) return null;
