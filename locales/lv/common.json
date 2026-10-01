@@ -17,6 +17,7 @@
     "reconnecting": "Savienojums pārtraukts. Mēģina izveidot savienojumu...",
     "error": {
       "invalid_credentials": "Nepareiza e-pasta adrese vai parole. Pārbaudiet datus un mēģiniet vēlreiz.",
+      "invalid_token": "Serveris nepieņēma šo piekļuves marķieri. Pārbaudiet, vai tas ir pilnīgs un nav beidzies vai atsaukts.",
       "connection_failed": "Neizdevās izveidot savienojumu ar serveri. Pārbaudiet interneta pieslēgumu.",
       "cors_blocked": "Serveris ir pieejams, bet bloķē pieprasījumus no citiem avotiem. Pārbaudiet JMAP servera CORS iestatījumus.",
       "server_error": "Serveris īslaicīgi nav pieejams. Mēģiniet vēlāk.",
@@ -28,6 +29,11 @@
     "show_password": "Rādīt paroli",
     "hide_password": "Slēpt paroli",
     "totp_toggle": "Man ir 2FA kods",
+    "token_toggle": "Pierakstīties ar piekļuves marķieri",
+    "password_toggle": "Pierakstīties ar paroli",
+    "token_label": "Piekļuves marķieris",
+    "token_placeholder": "Ielīmējiet savu API marķieri",
+    "token_hint": "Izveidojiet API marķieri sava e-pasta pakalpojumu sniedzēja iestatījumos un ielīmējiet to šeit.",
     "remember_me": "Atcerēties mani",
     "config_error": {
       "title": "Konfigurācijas kļūda",
@@ -114,6 +120,7 @@
     "unified_archive": "Visi arhīvi",
     "unified_junk": "Viss mēstules",
     "all_accounts": "Visi konti",
+    "all_accounts_loading": "Ielādē kontus: {loaded} no {total}",
     "unified_mailbox": "Apvienotā pastkaste",
     "expand": "Izvērst",
     "collapse": "Sairt",
@@ -718,6 +725,7 @@
     "recipient_name_placeholder": "Parādāmais vārds",
     "autocomplete_search_server": "Meklēt serverī",
     "autocomplete_searching": "Meklē...",
+    "mention_recipients": "Adresāti",
     "toolbar": {
       "bold": "Treknraksts",
       "italic": "Kursīvs",
@@ -1507,6 +1515,10 @@
         "label": "Brīdinājums par tukšu tematu",
         "description": "Pieprasīt apstiprinājumu pirms ziņas sūtīšanas bez temata."
       },
+      "recipient_mentions": {
+        "label": "Pieminēt saņēmējus ar @",
+        "description": "Ierakstot @ ziņojumā, tiek piedāvāti tā saņēmēji un ievietots izvēlētā vārds. Enter vai Tab izvēlas iezīmēto vārdu."
+      },
       "hide_inline_image_attachments": {
         "label": "Slēpt iegultos attēlus no pielikumu saraksta",
         "description": "Ziņojuma pamattekstā iegultie attēli netiek rādīti kā atsevišķi pielikumi"
@@ -1601,6 +1613,7 @@
       "auth_method_label": "Autentifikācija",
       "auth_method_oauth": "Vienotā pierakstīšanās (OAuth/OIDC)",
       "auth_method_basic": "Parole",
+      "auth_method_token": "Piekļuves marķieris",
       "demo_account": "Demo konts",
       "email": {
         "label": "E-pasta adrese",
@@ -1958,6 +1971,32 @@
       },
       "about": {
         "title": "Bulwark Webmail"
+      },
+      "spam_siege": {
+        "title": "Spam Siege",
+        "intro": "Noklikšķiniet uz mēstulēm un pikšķerēšanas vēstulēm, pirms tās sasniedz iesūtni. Īstās vēstules laidiet cauri. Zaudējot visus trīs vairogus, iesūtne krīt.",
+        "kinds": {
+          "spam": "Mēstule",
+          "phishing": "Pikšķerēšana",
+          "legit": "Īsta vēstule"
+        },
+        "click_to_block": "Noklikšķiniet, lai bloķētu",
+        "let_through": "Laidiet cauri",
+        "start": "Sākt",
+        "play_again": "Spēlēt vēlreiz",
+        "score": "Punkti",
+        "combo": "Sērijas bonuss",
+        "shields_left": "Atlikuši {count} no {total} vairogiem",
+        "seconds": "{seconds} s",
+        "best": "Rekords: {score}",
+        "new_best": "Jauns rekords",
+        "held": "Iesūtne nosargāta",
+        "overrun": "Iesūtne krita",
+        "stats": {
+          "caught": "Bloķētas",
+          "delivered": "Piegādātas",
+          "mistakes": "Kļūdas"
+        }
       }
     },
     "sidebar_apps": {
@@ -2927,6 +2966,7 @@
       "save_note": "Saglabāt",
       "note_saved": "Piezīme pievienota",
       "open_link": "Atvērt saiti",
+      "copy_location": "Kopēt vietu",
       "meeting_link": "Sapulces saite",
       "tentative": "Pagaidām",
       "cancelled": "Atcelts",

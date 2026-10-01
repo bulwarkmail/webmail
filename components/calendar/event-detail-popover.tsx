@@ -23,6 +23,7 @@ import {
 import { canUserRsvp, getEventEditability, type EditabilityContext } from "@/lib/calendar-editability";
 import { useFormatEventDate } from "@/hooks/use-format-event-date";
 import { useContactNameResolver } from "@/hooks/use-contact-name-resolver";
+import { findMeetingLink, locationAction, mapsUrl, primaryLocationName } from "@/lib/event-links";
 
 interface EventDetailPopoverProps {
   event: CalendarEvent;
@@ -149,16 +150,36 @@ export function EventDetailPopover({
   const displayEndDate = getEventDisplayEndDate(event);
   const isMultiDay = !isSameDay(startDate, displayEndDate);
 
-  const locationName = useMemo(() => {
-    if (!event.locations) return null;
-    return Object.values(event.locations)[0]?.name || null;
-  }, [event.locations]);
+  const locationName = useMemo(() => primaryLocationName(event) ?? null, [event]);
 
-  const virtualLocation = useMemo(() => {
-    if (!event.virtualLocations) return null;
-    const first = Object.values(event.virtualLocations)[0];
-    return first?.uri || null;
-  }, [event.virtualLocations]);
+  // Invitations (Teams above all) leave virtualLocations empty and bury the
+  // join URL in the description; surface it as the meeting link anyway.
+  const meeting = useMemo(() => findMeetingLink(event), [event]);
+  const virtualLocation = meeting?.uri ?? null;
+
+  // A URL opens as a link, a location that only names the service joins the
+  // meeting, a postal address opens in the maps.
+  const locationHref = useMemo(() => {
+    if (!locationName) return null;
+    const action = locationAction(locationName, meeting);
+    return action.kind === "url" ? action.uri : mapsUrl(action.query);
+  }, [locationName, meeting]);
+  const [locationCopied, setLocationCopied] = useState(false);
+  const copiedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => {
+    if (copiedTimer.current) clearTimeout(copiedTimer.current);
+  }, []);
+  const copyLocation = useCallback(async () => {
+    if (!locationName) return;
+    try {
+      await navigator.clipboard.writeText(locationName);
+      setLocationCopied(true);
+      if (copiedTimer.current) clearTimeout(copiedTimer.current);
+      copiedTimer.current = setTimeout(() => setLocationCopied(false), 1500);
+    } catch {
+      // clipboard refused (insecure context or permission) - nothing to do
+    }
+  }, [locationName]);
 
   const participants = useMemo(
     () => getParticipantList(event, { resolveName: resolveContactName }),
@@ -407,21 +428,28 @@ export function EventDetailPopover({
         {locationName && (
           <div className="flex items-start gap-2.5">
             <MapPin className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-            {/^https?:\/\//i.test(locationName) ? (
-              <a
-                href={locationName}
-                target="_blank"
-                rel="noreferrer"
-                className="text-sm text-primary hover:underline truncate"
-                title={locationName}
-              >
-                {(() => {
+            <a
+              href={locationHref ?? undefined}
+              target="_blank"
+              rel="noreferrer"
+              className="text-sm text-primary hover:underline min-w-0 break-words"
+              title={locationName}
+            >
+              {/^https?:\/\//i.test(locationName)
+                ? (() => {
                   try { return new URL(locationName).hostname; } catch { return locationName; }
-                })()}
-              </a>
-            ) : (
-              <span className="text-sm text-foreground">{locationName}</span>
-            )}
+                })()
+                : locationName}
+            </a>
+            <button
+              type="button"
+              onClick={copyLocation}
+              className="ms-auto p-0.5 text-muted-foreground hover:text-foreground flex-shrink-0"
+              title={t("detail.copy_location")}
+              aria-label={t("detail.copy_location")}
+            >
+              {locationCopied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+            </button>
           </div>
         )}
 

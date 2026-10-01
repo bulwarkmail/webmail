@@ -474,6 +474,9 @@ interface SettingsState {
   // Ask for confirmation when sending a message with an empty subject
   emptySubjectWarningEnabled: boolean;
 
+  // "@" in the message body offers the recipients and inserts a first name
+  recipientMentionsEnabled: boolean;
+
   // Hide inline images (images referenced by cid in the HTML body) from the
   // attachment list shown above the message body.
   hideInlineImageAttachments: boolean;
@@ -716,6 +719,7 @@ const DEFAULT_SETTINGS = {
   ] as string[],
 
   emptySubjectWarningEnabled: true,
+  recipientMentionsEnabled: true,
 
   hideInlineImageAttachments: true,
   attachmentImagePreviewsEnabled: true,
@@ -880,6 +884,7 @@ export const useSettingsStore = create<SettingsState>()(
           attachmentReminderEnabled: state.attachmentReminderEnabled,
           attachmentReminderKeywords: state.attachmentReminderKeywords,
           emptySubjectWarningEnabled: state.emptySubjectWarningEnabled,
+          recipientMentionsEnabled: state.recipientMentionsEnabled,
           hideInlineImageAttachments: state.hideInlineImageAttachments,
           attachmentImagePreviewsEnabled: state.attachmentImagePreviewsEnabled,
           sidebarApps: state.sidebarApps,

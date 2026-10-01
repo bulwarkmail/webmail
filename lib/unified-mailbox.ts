@@ -722,3 +722,22 @@ export function connectedAccountsGrew(previous: string | null, current: string):
   const before = new Set(previous ? previous.split(',').filter(Boolean) : []);
   return current.split(',').some((id) => id !== '' && !before.has(id));
 }
+
+/**
+ * How far the unified scope has got while logins are still reconnecting:
+ * `{ loaded, total }` while some logins expected in it are not there yet,
+ * `null` once it is complete, when it spans only one login, or when no
+ * restore is running (a login that did not make it must not keep the note up).
+ */
+export function unifiedLoadProgress(input: {
+  crossAccountActive: boolean;
+  restoring: boolean;
+  scope: Pick<UnifiedAccountClient, 'clientAccountId' | 'isShared'>[];
+  accounts: { hasError?: boolean }[];
+}): { loaded: number; total: number } | null {
+  if (!input.crossAccountActive || !input.restoring) return null;
+  const total = input.accounts.filter((a) => !a.hasError).length;
+  if (total < 2) return null;
+  const loaded = new Set(input.scope.filter((e) => !e.isShared).map((e) => e.clientAccountId)).size;
+  return loaded < total ? { loaded, total } : null;
+}

@@ -17,6 +17,7 @@
     "reconnecting": "接続が切れました。再接続を試みています…",
     "error": {
       "invalid_credentials": "メールアドレスまたはパスワードが無効です",
+      "invalid_token": "サーバーがこのアクセストークンを受け付けませんでした。トークンが完全であること、期限切れや取り消しになっていないことを確認してください。",
       "connection_failed": "サーバーへの接続に失敗しました",
       "cors_blocked": "サーバーには到達できますが、クロスオリジンリクエストがブロックされています。JMAPサーバーのCORS設定を確認し、このドメインを許可してください。",
       "server_error": "サーバーが一時的に利用できません。後でもう一度お試しください。",
@@ -28,6 +29,11 @@
     "show_password": "パスワードを表示",
     "hide_password": "パスワードを隠す",
     "totp_toggle": "2FAコードを入力",
+    "token_toggle": "アクセストークンでログイン",
+    "password_toggle": "パスワードでログイン",
+    "token_label": "アクセストークン",
+    "token_placeholder": "APIトークンを貼り付け",
+    "token_hint": "メールプロバイダーの設定でAPIトークンを作成し、ここに貼り付けてください。",
     "remember_me": "ログイン状態を保持",
     "config_error": {
       "title": "設定エラー",
@@ -114,6 +120,7 @@
     "unified_archive": "すべてのアーカイブ",
     "unified_junk": "すべての迷惑メール",
     "all_accounts": "すべてのアカウント",
+    "all_accounts_loading": "アカウントを読み込み中: {total} 件中 {loaded} 件",
     "unified_mailbox": "統合メールボックス",
     "expand": "展開",
     "collapse": "折りたたむ",
@@ -718,6 +725,7 @@
     "recipient_name_placeholder": "表示名",
     "autocomplete_search_server": "サーバーを検索",
     "autocomplete_searching": "検索中...",
+    "mention_recipients": "宛先",
     "toolbar": {
       "bold": "太字",
       "italic": "斜体",
@@ -1507,6 +1515,10 @@
         "label": "件名なしの警告",
         "description": "件名のないメッセージを送信する前に確認します。"
       },
+      "recipient_mentions": {
+        "label": "@で宛先をメンション",
+        "description": "本文で@を入力すると宛先の候補が表示され、選んだ相手の名前が挿入されます。EnterまたはTabで強調表示された名前を選びます。"
+      },
       "hide_inline_image_attachments": {
         "label": "添付ファイル一覧からインライン画像を隠す",
         "description": "本文に埋め込まれた画像を個別の添付ファイルとして表示しません"
@@ -1601,6 +1613,7 @@
       "auth_method_label": "認証方法",
       "auth_method_oauth": "シングルサインオン (OAuth/OIDC)",
       "auth_method_basic": "パスワード",
+      "auth_method_token": "アクセストークン",
       "demo_account": "デモアカウント",
       "email": {
         "label": "メールアドレス",
@@ -1958,6 +1971,32 @@
       },
       "about": {
         "title": "Bulwark Webmail"
+      },
+      "spam_siege": {
+        "title": "Spam Siege",
+        "intro": "スパムやフィッシングが受信トレイに届く前にクリックしてブロックしましょう。本物のメールはそのまま通してください。盾を3つすべて失うと受信トレイは陥落します。",
+        "kinds": {
+          "spam": "迷惑メール",
+          "phishing": "フィッシング",
+          "legit": "本物のメール"
+        },
+        "click_to_block": "クリックでブロック",
+        "let_through": "そのまま通す",
+        "start": "スタート",
+        "play_again": "もう一度",
+        "score": "スコア",
+        "combo": "連続ボーナス",
+        "shields_left": "盾 残り{count}/{total}",
+        "seconds": "{seconds}秒",
+        "best": "ベスト: {score}",
+        "new_best": "ベスト更新",
+        "held": "受信トレイを守り抜いた",
+        "overrun": "受信トレイが陥落",
+        "stats": {
+          "caught": "ブロック",
+          "delivered": "配信",
+          "mistakes": "ミス"
+        }
       }
     },
     "sidebar_apps": {
@@ -2928,6 +2967,7 @@
       "save_note": "保存",
       "note_saved": "メモを追加しました",
       "open_link": "リンクを開く",
+      "copy_location": "場所をコピー",
       "meeting_link": "会議リンク",
       "tentative": "仮",
       "cancelled": "キャンセル済み",

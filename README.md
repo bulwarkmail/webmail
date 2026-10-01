@@ -84,7 +84,7 @@ Then open `http://localhost:3000`. A setup wizard asks for your Stalwart server 
 
 [Updating](https://bulwarkmail.org/docs/deployment/updating) explains how to move to a new version.
 
-Container images and release files published after 1.11.2 come with a signed build provenance attestation. To check that one was built by this repository's workflows, run `gh attestation verify oci://ghcr.io/bulwarkmail/webmail:<version> --owner bulwarkmail` for an image, or `gh attestation verify <file> --repo bulwarkmail/webmail` for a downloaded file. Release files also have a `.sha256` next to them.
+Container images and release files from 1.12.0 on come with a signed build provenance attestation. To check that one was built by this repository's workflows, run `gh attestation verify oci://ghcr.io/bulwarkmail/webmail:<version> --owner bulwarkmail` for an image, or `gh attestation verify <file> --repo bulwarkmail/webmail` for a downloaded file. Release files also have a `.sha256` next to them.
 
 ## Configuration
 

@@ -142,7 +142,9 @@ export function AccountSettings() {
         {/* Authentication Method */}
         <SettingItem label={t('auth_method_label')}>
           <span className="text-sm text-foreground">
-            {authMode === 'oauth' ? t('auth_method_oauth') : t('auth_method_basic')}
+            {authMode === 'oauth'
+              ? t('auth_method_oauth')
+              : authMode === 'token' ? t('auth_method_token') : t('auth_method_basic')}
           </span>
         </SettingItem>
 

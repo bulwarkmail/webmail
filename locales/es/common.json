@@ -17,6 +17,7 @@
     "reconnecting": "Conexión perdida. Intentando reconectar…",
     "error": {
       "invalid_credentials": "Correo electrónico o contraseña inválidos",
+      "invalid_token": "El servidor no aceptó este token de acceso. Comprueba que esté completo y que no haya caducado ni se haya revocado.",
       "connection_failed": "No se pudo conectar con el servidor",
       "cors_blocked": "El servidor es accesible pero está bloqueando las solicitudes de origen cruzado. Verifique la configuración CORS de su servidor JMAP y permita este dominio.",
       "server_error": "El servidor no está disponible temporalmente. Inténtalo más tarde.",
@@ -28,6 +29,11 @@
     "show_password": "Mostrar contraseña",
     "hide_password": "Ocultar contraseña",
     "totp_toggle": "Tengo un código 2FA",
+    "token_toggle": "Iniciar sesión con un token de acceso",
+    "password_toggle": "Iniciar sesión con una contraseña",
+    "token_label": "Token de acceso",
+    "token_placeholder": "Pega tu token de API",
+    "token_hint": "Crea un token de API en la configuración de tu proveedor de correo y pégalo aquí.",
     "remember_me": "Recordarme",
     "config_error": {
       "title": "Error de Configuración",
@@ -114,6 +120,7 @@
     "unified_archive": "Todos los archivos",
     "unified_junk": "Todo el spam",
     "all_accounts": "Todas las cuentas",
+    "all_accounts_loading": "Cargando cuentas: {loaded} de {total}",
     "unified_mailbox": "Buzón unificado",
     "expand": "Expandir",
     "collapse": "Contraer",
@@ -718,6 +725,7 @@
     "recipient_name_placeholder": "Nombre para mostrar",
     "autocomplete_search_server": "Buscar en el servidor",
     "autocomplete_searching": "Buscando...",
+    "mention_recipients": "Destinatarios",
     "toolbar": {
       "bold": "Negrita",
       "italic": "Cursiva",
@@ -1507,6 +1515,10 @@
         "label": "Aviso de asunto vacío",
         "description": "Pedir confirmación antes de enviar un mensaje sin asunto."
       },
+      "recipient_mentions": {
+        "label": "Mencionar destinatarios con @",
+        "description": "Al escribir @ en el mensaje se ofrecen sus destinatarios y se inserta el nombre de pila del elegido. Intro o Tab elige el nombre resaltado."
+      },
       "hide_inline_image_attachments": {
         "label": "Ocultar imágenes incrustadas de los adjuntos",
         "description": "Las imágenes incrustadas en el cuerpo del mensaje no se listan como adjuntos separados"
@@ -1601,6 +1613,7 @@
       "auth_method_label": "Autenticación",
       "auth_method_oauth": "Inicio de sesión único (OAuth/OIDC)",
       "auth_method_basic": "Contraseña",
+      "auth_method_token": "Token de acceso",
       "demo_account": "Cuenta de demostración",
       "email": {
         "label": "Dirección de Correo",
@@ -1958,6 +1971,32 @@
       },
       "about": {
         "title": "Bulwark Webmail"
+      },
+      "spam_siege": {
+        "title": "Spam Siege",
+        "intro": "Haz clic en el spam y el phishing antes de que lleguen a tu bandeja de entrada. Deja pasar el correo real. Si pierdes los tres escudos, la bandeja cae.",
+        "kinds": {
+          "spam": "Spam",
+          "phishing": "Phishing",
+          "legit": "Correo real"
+        },
+        "click_to_block": "Haz clic para bloquear",
+        "let_through": "Déjalo pasar",
+        "start": "Empezar",
+        "play_again": "Jugar de nuevo",
+        "score": "Puntos",
+        "combo": "Bonus de racha",
+        "shields_left": "Quedan {count} de {total} escudos",
+        "seconds": "{seconds} s",
+        "best": "Récord: {score}",
+        "new_best": "Nuevo récord",
+        "held": "Bandeja defendida",
+        "overrun": "Bandeja invadida",
+        "stats": {
+          "caught": "Bloqueados",
+          "delivered": "Entregados",
+          "mistakes": "Errores"
+        }
       }
     },
     "sidebar_apps": {
@@ -2928,6 +2967,7 @@
       "save_note": "Guardar",
       "note_saved": "Nota añadida",
       "open_link": "Abrir enlace",
+      "copy_location": "Copiar ubicación",
       "meeting_link": "Enlace de reunión",
       "tentative": "Provisional",
       "cancelled": "Cancelado",
