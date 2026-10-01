@@ -2,6 +2,7 @@ import { mkdtempSync, rmSync, writeFileSync } from "fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { isConfigData } from '@/lib/config-validation';
 
 // The route consults admin-dashboard overrides (ADMIN_CONFIG_DIR, default
 // data/admin) before env vars. Point it at an empty temp dir so local admin
@@ -13,7 +14,10 @@ process.env.ADMIN_CONFIG_DIR = mkdtempSync(path.join(tmpdir(), 'bw-config-route-
 // Mock NextResponse before importing the route
 vi.mock('next/server', () => ({
   NextResponse: {
-    json: (data: unknown) => ({ json: async () => data }),
+    json: (data: unknown, init?: { headers?: HeadersInit }) => ({
+      json: async () => data,
+      headers: new Headers(init?.headers),
+    }),
   },
 }));
 
@@ -71,8 +75,18 @@ describe('config API route', () => {
     // Re-import to pick up env changes
     const { GET } = await import('@/app/api/config/route');
     const response = await GET(mockRequest(headers) as Parameters<typeof GET>[0]);
-    return response.json();
+    const config = await response.json();
+    expect(isConfigData(config)).toBe(true);
+    return config;
   }
+
+  it('prevents caching host-specific runtime configuration', async () => {
+    const { GET } = await import('@/app/api/config/route');
+    const response = await GET(mockRequest() as Parameters<typeof GET>[0]);
+    expect(response.headers.get('Cache-Control')).toContain('no-store');
+    expect(response.headers.get('CDN-Cache-Control')).toBe('no-store');
+    expect(response.headers.get('Vary')).toBe('Host, X-Forwarded-Host');
+  });
 
   it('should return defaults when no env vars are set', async () => {
     const config = await getConfig();

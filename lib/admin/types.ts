@@ -229,6 +229,10 @@ export const CONFIG_ENV_MAP: Record<string, { envVar: string; fileEnvVar?: strin
   // the IdP have no server-side TOTP, so the toggle only leads to a failed
   // login. Server-required TOTP (totp_required) still shows regardless.
   loginShowTotp: { envVar: 'LOGIN_SHOW_TOTP', type: 'boolean', defaultValue: true },
+  // Offer signing in with an access token (Bearer auth) instead of a
+  // password. For JMAP servers that hand out API tokens, such as Fastmail,
+  // whose API accepts no passwords at all.
+  loginShowTokenLogin: { envVar: 'LOGIN_SHOW_TOKEN_LOGIN', type: 'boolean', defaultValue: false },
   // Show the build version in the login footer. Off keeps the exact version
   // from being disclosed to unauthenticated visitors.
   loginShowVersion: { envVar: 'LOGIN_SHOW_VERSION', type: 'boolean', defaultValue: true },

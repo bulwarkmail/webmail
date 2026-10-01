@@ -17,6 +17,7 @@
     "reconnecting": "انقطع الاتصال. جارٍ محاولة إعادة الاتصال…",
     "error": {
       "invalid_credentials": "البريد الإلكتروني أو كلمة المرور غير صحيحة. يرجى التحقق من بياناتك والمحاولة مرة أخرى.",
+      "invalid_token": "لم يقبل الخادم رمز الوصول هذا. تحقق من أنه كامل وأن صلاحيته لم تنتهِ ولم يُلغَ.",
       "connection_failed": "تعذّر الوصول إلى الخادم. تحقق من اتصالك بالإنترنت وحاول مرة أخرى.",
       "cors_blocked": "الخادم متاح لكنه يحظر الطلبات من مصادر مختلفة (CORS). تحقق من إعدادات CORS في خادم JMAP واسمح بهذا النطاق.",
       "server_error": "الخادم غير متاح مؤقتًا. يرجى المحاولة مرة أخرى لاحقًا.",
@@ -28,6 +29,11 @@
     "show_password": "إظهار كلمة المرور",
     "hide_password": "إخفاء كلمة المرور",
     "totp_toggle": "لديّ رمز مصادقة ثنائية",
+    "token_toggle": "تسجيل الدخول باستخدام رمز وصول",
+    "password_toggle": "تسجيل الدخول باستخدام كلمة مرور",
+    "token_label": "رمز الوصول",
+    "token_placeholder": "الصق رمز API الخاص بك",
+    "token_hint": "أنشئ رمز API في إعدادات مزوّد البريد الخاص بك والصقه هنا.",
     "remember_me": "تذكرني",
     "config_error": {
       "title": "خطأ في الإعداد",
@@ -114,6 +120,7 @@
     "unified_archive": "كل الأرشيف",
     "unified_junk": "كل البريد المزعج",
     "all_accounts": "كل الحسابات",
+    "all_accounts_loading": "جارٍ تحميل الحسابات: {loaded} من {total}",
     "unified_mailbox": "صندوق البريد الموحّد",
     "expand": "توسيع",
     "collapse": "طي",
@@ -718,6 +725,7 @@
     "recipient_name_placeholder": "الاسم المعروض",
     "autocomplete_search_server": "البحث في الخادم",
     "autocomplete_searching": "جارٍ البحث...",
+    "mention_recipients": "المستلمون",
     "toolbar": {
       "bold": "غامق",
       "italic": "مائل",
@@ -1510,6 +1518,10 @@
         "label": "تحذير الموضوع الفارغ",
         "description": "طلب تأكيد قبل إرسال رسالة بدون موضوع."
       },
+      "recipient_mentions": {
+        "label": "الإشارة إلى المستلمين باستخدام @",
+        "description": "تؤدي كتابة @ في الرسالة إلى اقتراح المستلمين وإدراج الاسم الأول للمستلم المختار. يختار Enter أو Tab الاسم المميز."
+      },
       "hide_inline_image_attachments": {
         "label": "إخفاء الصور المضمّنة من المرفقات",
         "description": "الصور المضمّنة في نص الرسالة لا تُدرج كمرفقات منفصلة"
@@ -1604,6 +1616,7 @@
       "auth_method_label": "المصادقة",
       "auth_method_oauth": "تسجيل الدخول الموحّد (OAuth/OIDC)",
       "auth_method_basic": "كلمة المرور",
+      "auth_method_token": "رمز الوصول",
       "demo_account": "حساب تجريبي",
       "email": {
         "label": "عنوان البريد الإلكتروني",
@@ -1965,6 +1978,32 @@
       },
       "about": {
         "title": "بريد Bulwark الإلكتروني"
+      },
+      "spam_siege": {
+        "title": "Spam Siege",
+        "intro": "انقر على البريد المزعج ورسائل التصيّد قبل أن تصل إلى صندوق الوارد. دع البريد الحقيقي يمر. إذا خسرت الدروع الثلاثة يسقط صندوق الوارد.",
+        "kinds": {
+          "spam": "مزعج",
+          "phishing": "تصيّد",
+          "legit": "بريد حقيقي"
+        },
+        "click_to_block": "انقر للحظر",
+        "let_through": "دعه يمر",
+        "start": "ابدأ",
+        "play_again": "العب مجددًا",
+        "score": "النقاط",
+        "combo": "مكافأة السلسلة",
+        "shields_left": "تبقى {count} من {total} دروع",
+        "seconds": "{seconds} ث",
+        "best": "الأفضل: {score}",
+        "new_best": "رقم قياسي جديد",
+        "held": "صمد صندوق الوارد",
+        "overrun": "سقط صندوق الوارد",
+        "stats": {
+          "caught": "محظورة",
+          "delivered": "مُسلَّمة",
+          "mistakes": "أخطاء"
+        }
       }
     },
     "sidebar_apps": {
@@ -2928,6 +2967,7 @@
       "save_note": "حفظ",
       "note_saved": "تمت إضافة الملاحظة",
       "open_link": "فتح الرابط",
+      "copy_location": "نسخ الموقع",
       "meeting_link": "رابط الاجتماع",
       "tentative": "مبدئي",
       "cancelled": "ملغى",

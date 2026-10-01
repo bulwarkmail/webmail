@@ -11,11 +11,14 @@ export interface AccountEntry {
   serverUrl: string;
   /** Username / email used to authenticate */
   username: string;
-  /** Authentication mode */
-  authMode: 'basic' | 'oauth';
+  /**
+   * Authentication mode: a password (Basic), OAuth/SSO tokens that renew, or
+   * an access token the user pasted (Bearer, no renewal).
+   */
+  authMode: 'basic' | 'oauth' | 'token';
   /** Cookie slot index for session/token cookies (0 ≤ slot < MAX_ACCOUNT_SLOTS) */
   cookieSlot: number;
-  /** Whether "Remember Me" was checked (basic auth only) */
+  /** Whether "Remember Me" was checked (password and access-token logins) */
   rememberMe: boolean;
   /**
    * Signed in through the identity provider's own login (OAuth code or SSO
@@ -251,3 +254,38 @@ export const useAccountStore = create<AccountState>()(
     }
   )
 );
+
+/**
+ * Resolves once the login `accountId` is connected, or with `false` when it
+ * never will be: not one of this browser's logins, its restore failed, or
+ * `timeoutMs` went by.
+ *
+ * A link can arrive while the browser is still reconnecting its logins - a
+ * notification tapped with the app closed does exactly that - and they come
+ * back one at a time, so the mailbox a link names is often not connected yet
+ * when the link is read. Treating "not yet" as "unavailable" sent the user to
+ * the wrong mailbox with an error; this waits for the login instead.
+ */
+export function waitForConnectedAccount(accountId: string, timeoutMs = 20_000): Promise<boolean> {
+  const settled = (account: AccountEntry | undefined): boolean | null => {
+    if (!account) return false;
+    if (account.isConnected) return true;
+    if (account.hasError) return false;
+    return null;
+  };
+  const now = settled(useAccountStore.getState().accounts.find((a) => a.id === accountId));
+  if (now !== null) return Promise.resolve(now);
+
+  return new Promise((resolve) => {
+    const finish = (value: boolean) => {
+      clearTimeout(timer);
+      unsubscribe();
+      resolve(value);
+    };
+    const timer = setTimeout(() => finish(false), timeoutMs);
+    const unsubscribe = useAccountStore.subscribe((state) => {
+      const result = settled(state.accounts.find((a) => a.id === accountId));
+      if (result !== null) finish(result);
+    });
+  });
+}

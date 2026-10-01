@@ -17,6 +17,7 @@
     "reconnecting": "Tilkoblingen ble brutt. Forsøker å koble til på nytt...",
     "error": {
       "invalid_credentials": "Ugyldig e-postadresse eller passord. Sjekk påloggingsopplysningene dine og prøv igjen.",
+      "invalid_token": "Serveren godtok ikke dette tilgangstokenet. Sjekk at det er fullstendig, og at det ikke har utløpt eller blitt tilbakekalt.",
       "connection_failed": "Kan ikke nå serveren. Sjekk internettforbindelsen og prøv igjen.",
       "cors_blocked": "Serveren er tilgjengelig, men blokkerer forespørsler fra andre opprinnelser. Sjekk JMAP-serverens CORS-innstillinger og tillat dette domenet.",
       "server_error": "Serveren er midlertidig utilgjengelig. Prøv igjen senere.",
@@ -28,6 +29,11 @@
     "show_password": "Vis passord",
     "hide_password": "Skjul passord",
     "totp_toggle": "Jeg har en kode for tofaktorautentisering",
+    "token_toggle": "Logg på med et tilgangstoken",
+    "password_toggle": "Logg på med passord",
+    "token_label": "Tilgangstoken",
+    "token_placeholder": "Lim inn API-tokenet ditt",
+    "token_hint": "Opprett et API-token i innstillingene hos e-postleverandøren din, og lim det inn her.",
     "remember_me": "Husk meg",
     "config_error": {
       "title": "Konfigurasjonsfeil",
@@ -114,6 +120,7 @@
     "unified_archive": "Alle arkiver",
     "unified_junk": "All søppelpost",
     "all_accounts": "Alle kontoer",
+    "all_accounts_loading": "Laster inn kontoer: {loaded} av {total}",
     "unified_mailbox": "Samlet postkasse",
     "expand": "Utvid",
     "collapse": "Fold sammen",
@@ -718,6 +725,7 @@
     "recipient_name_placeholder": "Visningsnavn",
     "autocomplete_search_server": "Søk på serveren",
     "autocomplete_searching": "Søker...",
+    "mention_recipients": "Mottakere",
     "toolbar": {
       "bold": "Fet skrift",
       "italic": "Kursiv",
@@ -1510,6 +1518,10 @@
         "label": "Advarsel om tomt emne",
         "description": "Be om bekreftelse før du sender en melding uten emne."
       },
+      "recipient_mentions": {
+        "label": "Nevn mottakere med @",
+        "description": "Når du skriver @ i meldingen, foreslås mottakerne, og fornavnet til den valgte settes inn. Enter eller Tab velger det uthevede navnet."
+      },
       "hide_inline_image_attachments": {
         "label": "Skjul innebygde bilder i vedleggslisten",
         "description": "Bilder som er innebygd i meldingsteksten, er ikke oppført som separate vedlegg"
@@ -1604,6 +1616,7 @@
       "auth_method_label": "Autentisering",
       "auth_method_oauth": "Enkel pålogging (OAuth/OIDC)",
       "auth_method_basic": "Passord",
+      "auth_method_token": "Tilgangstoken",
       "demo_account": "Demokonto",
       "email": {
         "label": "E-postadresse",
@@ -1965,6 +1978,32 @@
       },
       "about": {
         "title": "Bulwark nettpost"
+      },
+      "spam_siege": {
+        "title": "Spam Siege",
+        "intro": "Klikk på søppelpost og phishing før de når innboksen din. Slipp ekte e-post gjennom. Mister du alle tre skjoldene, faller innboksen.",
+        "kinds": {
+          "spam": "Søppelpost",
+          "phishing": "Phishing",
+          "legit": "Ekte e-post"
+        },
+        "click_to_block": "Klikk for å blokkere",
+        "let_through": "Slipp gjennom",
+        "start": "Start",
+        "play_again": "Spill igjen",
+        "score": "Poeng",
+        "combo": "Rekkebonus",
+        "shields_left": "{count} av {total} skjold igjen",
+        "seconds": "{seconds} s",
+        "best": "Rekord: {score}",
+        "new_best": "Ny rekord",
+        "held": "Innboksen holdt stand",
+        "overrun": "Innboksen ble overkjørt",
+        "stats": {
+          "caught": "Blokkert",
+          "delivered": "Levert",
+          "mistakes": "Feil"
+        }
       }
     },
     "sidebar_apps": {
@@ -2928,6 +2967,7 @@
       "save_note": "Lagre",
       "note_saved": "Notatet er lagret",
       "open_link": "Åpne lenken",
+      "copy_location": "Kopier sted",
       "meeting_link": "Møtelenke",
       "tentative": "Foreløpig",
       "cancelled": "Avlyst",

@@ -436,7 +436,38 @@ describe('JMAPClient resilience', () => {
         downloadUrl: `${host}/download/{accountId}/{blobId}/{name}?accept={type}`,
       });
       expect(client.getBlobDownloadUrl('blob1', 'file.txt', 'text/plain', 'acct-1')).toBe(
-        'https://mail.example.com/download/acct-1/blob1/file.txt?accept=text%2Fplain',
+        `${host}/download/acct-1/blob1/file.txt?accept=text%2Fplain`,
+      );
+    });
+
+    it('moves URLs on the origin the server names for itself onto the server origin', async () => {
+      // Behind a reverse proxy the server reports its internal base URL.
+      const client = await connectWith({
+        apiUrl: 'http://stalwart.internal:8080/jmap/api',
+        downloadUrl: 'http://stalwart.internal:8080/download/{accountId}/{blobId}/{name}',
+        eventSourceUrl: 'http://stalwart.internal:8080/jmap/eventsource',
+      });
+      expect(client.getBlobDownloadUrl('blob1', 'file.txt', undefined, 'acct-1')).toBe(
+        'https://mail.example.com/download/acct-1/blob1/file.txt',
+      );
+      expect(client.getEventSourceUrl()).toBe('https://mail.example.com/jmap/eventsource');
+    });
+
+    it('keeps a download host the server runs elsewhere, but only over HTTPS', async () => {
+      // Fastmail serves downloads from its own domain, apart from the API.
+      const kept = await connectWith({
+        apiUrl: 'https://api.fastmail.com/jmap/api/',
+        downloadUrl: 'https://www.fastmailusercontent.com/jmap/download/{accountId}/{blobId}/{name}',
+      }, 'https://api.fastmail.com');
+      expect(kept.getBlobDownloadUrl('blob1', 'a.txt', undefined, 'acct-1')).toBe(
+        'https://www.fastmailusercontent.com/jmap/download/acct-1/blob1/a.txt',
+      );
+
+      const plain = await connectWith({
+        downloadUrl: 'http://other.example.com/download/{accountId}/{blobId}/{name}',
+      });
+      expect(plain.getBlobDownloadUrl('blob1', 'a.txt', undefined, 'acct-1')).toBe(
+        'https://mail.example.com/download/acct-1/blob1/a.txt',
       );
     });
 

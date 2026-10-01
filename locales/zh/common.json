@@ -17,6 +17,7 @@
     "reconnecting": "连接已断开，正在尝试重连…",
     "error": {
       "invalid_credentials": "邮箱地址或密码无效。请检查后重试。",
+      "invalid_token": "服务器未接受此访问令牌。请检查令牌是否完整，以及是否已过期或被撤销。",
       "connection_failed": "无法访问服务器。检查您的网络连接，然后重试。",
       "cors_blocked": "服务器可访问，但正在阻止跨源请求。请检查 JMAP 服务器的 CORS 设置，并允许此域名。",
       "server_error": "服务器暂时不可用，请稍后重试。",
@@ -28,6 +29,11 @@
     "show_password": "显示密码",
     "hide_password": "隐藏密码",
     "totp_toggle": "我有双重验证代码",
+    "token_toggle": "使用访问令牌登录",
+    "password_toggle": "使用密码登录",
+    "token_label": "访问令牌",
+    "token_placeholder": "粘贴 API 令牌",
+    "token_hint": "请在邮件服务商的设置中创建 API 令牌，然后粘贴到这里。",
     "remember_me": "记住我",
     "config_error": {
       "title": "配置错误",
@@ -114,6 +120,7 @@
     "unified_archive": "所有归档",
     "unified_junk": "所有垃圾邮件",
     "all_accounts": "所有账户",
+    "all_accounts_loading": "正在加载账户：{loaded}/{total}",
     "unified_mailbox": "统一邮箱",
     "expand": "展开",
     "collapse": "收起",
@@ -718,6 +725,7 @@
     "recipient_name_placeholder": "显示名称",
     "autocomplete_search_server": "在服务器上搜索",
     "autocomplete_searching": "搜索中...",
+    "mention_recipients": "收件人",
     "toolbar": {
       "bold": "加粗",
       "italic": "斜体",
@@ -1507,6 +1515,10 @@
         "label": "空主题提醒",
         "description": "发送没有主题的邮件前请求确认。"
       },
+      "recipient_mentions": {
+        "label": "使用 @ 提及收件人",
+        "description": "在正文中输入 @ 会列出收件人，并插入所选收件人的名字。按 Enter 或 Tab 选择高亮的名字。"
+      },
       "hide_inline_image_attachments": {
         "label": "在附件列表中隐藏内嵌图片",
         "description": "嵌入到邮件正文中的图片不会作为单独的附件显示"
@@ -1601,6 +1613,7 @@
       "auth_method_label": "认证方式",
       "auth_method_oauth": "单点登录 (OAuth/OIDC)",
       "auth_method_basic": "密码",
+      "auth_method_token": "访问令牌",
       "demo_account": "演示账户",
       "email": {
         "label": "邮件",
@@ -1958,6 +1971,32 @@
       },
       "about": {
         "title": "Bulwark 网页邮箱"
+      },
+      "spam_siege": {
+        "title": "Spam Siege",
+        "intro": "在垃圾邮件和钓鱼邮件进入收件箱之前点击拦截。放行真实邮件。三面盾牌全部失去，收件箱就会失守。",
+        "kinds": {
+          "spam": "垃圾邮件",
+          "phishing": "钓鱼邮件",
+          "legit": "真实邮件"
+        },
+        "click_to_block": "点击拦截",
+        "let_through": "放行",
+        "start": "开始",
+        "play_again": "再玩一次",
+        "score": "得分",
+        "combo": "连击奖励",
+        "shields_left": "剩余盾牌 {count}/{total}",
+        "seconds": "{seconds} 秒",
+        "best": "最高分：{score}",
+        "new_best": "新纪录",
+        "held": "收件箱守住了",
+        "overrun": "收件箱失守",
+        "stats": {
+          "caught": "已拦截",
+          "delivered": "已送达",
+          "mistakes": "失误"
+        }
       }
     },
     "sidebar_apps": {
@@ -2928,6 +2967,7 @@
       "save_note": "保存",
       "note_saved": "注释已添加",
       "open_link": "打开链接",
+      "copy_location": "复制地点",
       "meeting_link": "会议链接",
       "tentative": "暂定",
       "cancelled": "已取消",

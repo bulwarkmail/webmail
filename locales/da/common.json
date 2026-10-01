@@ -17,6 +17,7 @@
     "reconnecting": "Forbindelse mistet. Forsøger at genoprette forbindelse…",
     "error": {
       "invalid_credentials": "Ugyldig e-mail eller adgangskode. Kontroller dine oplysninger og prøv igen.",
+      "invalid_token": "Serveren accepterede ikke dette adgangstoken. Kontroller, at det er komplet og ikke er udløbet eller tilbagekaldt.",
       "connection_failed": "Kan ikke nå serveren. Kontrollér din internetforbindelse og prøv igen.",
       "cors_blocked": "Serveren kan nås, men blokerer cross-origin-anmodninger. Kontrollér JMAP-serverens CORS-indstillinger og tillad dette domæne.",
       "server_error": "Serveren er midlertidigt utilgængelig. Prøv igen senere.",
@@ -28,6 +29,11 @@
     "show_password": "Vis adgangskode",
     "hide_password": "Skjul adgangskode",
     "totp_toggle": "Jeg har en 2FA-kode",
+    "token_toggle": "Log ind med et adgangstoken",
+    "password_toggle": "Log ind med adgangskode",
+    "token_label": "Adgangstoken",
+    "token_placeholder": "Indsæt dit API-token",
+    "token_hint": "Opret et API-token i indstillingerne hos din mailudbyder, og indsæt det her.",
     "remember_me": "Husk mig",
     "config_error": {
       "title": "Konfigurationsfejl",
@@ -114,6 +120,7 @@
     "unified_archive": "Alle arkiver",
     "unified_junk": "Alt spam",
     "all_accounts": "Alle konti",
+    "all_accounts_loading": "Indlæser konti: {loaded} af {total}",
     "unified_mailbox": "Samlet postkasse",
     "expand": "Udvid",
     "collapse": "Skjul",
@@ -718,6 +725,7 @@
     "recipient_name_placeholder": "Visningsnavn",
     "autocomplete_search_server": "Søg på serveren",
     "autocomplete_searching": "Søger...",
+    "mention_recipients": "Modtagere",
     "toolbar": {
       "bold": "Fed",
       "italic": "Kursiv",
@@ -1510,6 +1518,10 @@
         "label": "Advarsel om tomt emne",
         "description": "Bed om bekræftelse, før en besked uden emne sendes."
       },
+      "recipient_mentions": {
+        "label": "Nævn modtagere med @",
+        "description": "Når du skriver @ i beskeden, foreslås modtagerne, og den valgtes fornavn indsættes. Enter eller Tab vælger det fremhævede navn."
+      },
       "hide_inline_image_attachments": {
         "label": "Skjul indlejrede billeder fra vedhæftninger",
         "description": "Billeder indlejret i beskedteksten vises ikke som separate vedhæftninger"
@@ -1604,6 +1616,7 @@
       "auth_method_label": "Godkendelse",
       "auth_method_oauth": "Single Sign-On (OAuth/OIDC)",
       "auth_method_basic": "Adgangskode",
+      "auth_method_token": "Adgangstoken",
       "demo_account": "Demo-konto",
       "email": {
         "label": "E-mailadresse",
@@ -1961,6 +1974,32 @@
       },
       "about": {
         "title": "Bulwark Webmail"
+      },
+      "spam_siege": {
+        "title": "Spam Siege",
+        "intro": "Klik på spam og phishing, før de når din indbakke. Lad ægte mails komme igennem. Mister du alle tre skjolde, falder indbakken.",
+        "kinds": {
+          "spam": "Spam",
+          "phishing": "Phishing",
+          "legit": "Ægte mail"
+        },
+        "click_to_block": "Klik for at blokere",
+        "let_through": "Lad den komme igennem",
+        "start": "Start",
+        "play_again": "Spil igen",
+        "score": "Point",
+        "combo": "Stribebonus",
+        "shields_left": "{count} af {total} skjolde tilbage",
+        "seconds": "{seconds} s",
+        "best": "Rekord: {score}",
+        "new_best": "Ny rekord",
+        "held": "Indbakken holdt",
+        "overrun": "Indbakken blev overrendt",
+        "stats": {
+          "caught": "Blokeret",
+          "delivered": "Leveret",
+          "mistakes": "Fejl"
+        }
       }
     },
     "sidebar_apps": {
@@ -2928,6 +2967,7 @@
       "save_note": "Gem",
       "note_saved": "Note tilføjet",
       "open_link": "Åbn link",
+      "copy_location": "Kopiér sted",
       "meeting_link": "Mødelink",
       "tentative": "Foreløbig",
       "cancelled": "Aflyst",

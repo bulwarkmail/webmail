@@ -200,6 +200,7 @@ export {
   IconShield as Shield,
   IconShieldExclamation as ShieldAlert,
   IconShieldCheck as ShieldCheck,
+  IconShieldFilled as ShieldFilled,
   IconArrowsShuffle as Shuffle,
   IconDeviceMobile as Smartphone,
   IconSparkles as Sparkles,

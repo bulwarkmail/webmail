@@ -17,6 +17,7 @@
     "reconnecting": "연결이 끊어졌어요. 다시 연결을 시도할게요...",
     "error": {
       "invalid_credentials": "이메일이나 비밀번호가 맞지 않아요. 다시 확인해 주세요.",
+      "invalid_token": "서버가 이 액세스 토큰을 받아들이지 않았어요. 토큰이 완전한지, 만료되거나 취소되지 않았는지 확인해 주세요.",
       "connection_failed": "서버에 연결할 수 없어요. 인터넷 연결을 확인하고 다시 시도해 주세요.",
       "cors_blocked": "서버에는 연결되었지만 교차 출처 요청(CORS)이 차단되었어요. JMAP 서버 설정을 확인해 주세요.",
       "server_error": "일시적으로 서버를 사용할 수 없어요. 나중에 다시 시도해 주세요.",
@@ -28,6 +29,11 @@
     "show_password": "비밀번호 표시",
     "hide_password": "비밀번호 숨기기",
     "totp_toggle": "2단계 인증 코드가 있어요",
+    "token_toggle": "액세스 토큰으로 로그인",
+    "password_toggle": "비밀번호로 로그인",
+    "token_label": "액세스 토큰",
+    "token_placeholder": "API 토큰을 붙여 넣으세요",
+    "token_hint": "메일 서비스 설정에서 API 토큰을 만든 후 여기에 붙여 넣으세요.",
     "remember_me": "로그인 유지",
     "config_error": {
       "title": "설정 오류",
@@ -114,6 +120,7 @@
     "unified_archive": "모든 보관함",
     "unified_junk": "모든 스팸함",
     "all_accounts": "모든 계정",
+    "all_accounts_loading": "계정 불러오는 중: {total}개 중 {loaded}개",
     "unified_mailbox": "통합 메일함",
     "expand": "펼치기",
     "collapse": "접기",
@@ -718,6 +725,7 @@
     "recipient_name_placeholder": "표시 이름",
     "autocomplete_search_server": "서버에서 검색",
     "autocomplete_searching": "검색 중...",
+    "mention_recipients": "수신자",
     "toolbar": {
       "bold": "굵게",
       "italic": "기울임꼴",
@@ -1507,6 +1515,10 @@
         "label": "빈 제목 경고",
         "description": "제목 없는 메시지를 보내기 전에 확인을 요청합니다."
       },
+      "recipient_mentions": {
+        "label": "@로 받는 사람 언급",
+        "description": "본문에 @를 입력하면 받는 사람이 제안되고 선택한 사람의 이름이 삽입됩니다. Enter 또는 Tab으로 강조된 이름을 선택합니다."
+      },
       "hide_inline_image_attachments": {
         "label": "첨부 파일 목록에서 인라인 이미지 숨기기",
         "description": "메시지 본문에 포함된 이미지는 별도의 첨부 파일로 표시되지 않습니다"
@@ -1601,6 +1613,7 @@
       "auth_method_label": "인증 방법",
       "auth_method_oauth": "SSO (OAuth/OIDC)",
       "auth_method_basic": "비밀번호",
+      "auth_method_token": "액세스 토큰",
       "demo_account": "데모 계정",
       "email": {
         "label": "이메일 주소",
@@ -1958,6 +1971,32 @@
       },
       "about": {
         "title": "Bulwark Webmail 정보"
+      },
+      "spam_siege": {
+        "title": "Spam Siege",
+        "intro": "스팸과 피싱이 받은편지함에 닿기 전에 클릭해서 막아 주세요. 진짜 메일은 통과시켜 주세요. 방패 세 개를 모두 잃으면 받은편지함이 함락돼요.",
+        "kinds": {
+          "spam": "스팸",
+          "phishing": "피싱",
+          "legit": "진짜 메일"
+        },
+        "click_to_block": "클릭해서 차단",
+        "let_through": "통과시키기",
+        "start": "시작",
+        "play_again": "다시 하기",
+        "score": "점수",
+        "combo": "연속 보너스",
+        "shields_left": "방패 {total}개 중 {count}개 남음",
+        "seconds": "{seconds}초",
+        "best": "최고: {score}",
+        "new_best": "최고 기록 경신",
+        "held": "받은편지함을 지켰어요",
+        "overrun": "받은편지함이 함락됐어요",
+        "stats": {
+          "caught": "차단",
+          "delivered": "배달",
+          "mistakes": "실수"
+        }
       }
     },
     "sidebar_apps": {
@@ -2928,6 +2967,7 @@
       "save_note": "저장",
       "note_saved": "메모가 추가되었어요",
       "open_link": "링크 열기",
+      "copy_location": "위치 복사",
       "meeting_link": "화상 회의 링크",
       "tentative": "미정",
       "cancelled": "취소됨",

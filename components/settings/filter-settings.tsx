@@ -86,7 +86,7 @@ function RuleSummary({ rule }: { rule: FilterRule }) {
   );
 }
 
-function VisualRuleSummary({ rule }: { rule: FilterRule }) {
+export function VisualRuleSummary({ rule }: { rule: FilterRule }) {
   const t = useTranslations("settings.filters");
 
   const joiner = rule.matchType === "all" ? t("and") : t("or");
@@ -106,23 +106,24 @@ function VisualRuleSummary({ rule }: { rule: FilterRule }) {
               {i > 0 && (
                 <span className="text-[10px] text-muted-foreground/70 italic">{joiner}</span>
               )}
-              <span className="inline-flex items-baseline gap-1 px-1.5 py-px rounded-sm bg-muted/60 text-foreground">
-                <span className="font-medium text-blue-600 dark:text-blue-400">{field}</span>
-                <span className="text-muted-foreground">{comparator}</span>
+              <span className="inline-flex min-w-0 max-w-full items-baseline gap-1 px-1.5 py-px rounded-sm bg-muted/60 text-foreground">
+                <span className="shrink-0 font-medium text-blue-600 dark:text-blue-400">{field}</span>
+                <span className="shrink-0 text-muted-foreground">{comparator}</span>
                 {!(c.field === "attachment" && c.comparator === "has_any") && (
-                  <span className="text-foreground">
-                    {Array.isArray(c.value)
-                      ? c.value.map((v, k) => (
-                          <span key={k}>
-                            {k > 0 && (
-                              <span className="text-muted-foreground/70 italic mx-0.5">
-                                {t("or")}
-                              </span>
-                            )}
-                            “{v}”
-                          </span>
-                        ))
-                      : <>“{c.value}”</>}
+                  // The values of one condition stay in its chip, where "or"
+                  // cannot be mistaken for the joiner between conditions. They
+                  // wrap between each other under the first value, the "or"
+                  // leading the next line; a single value too long for any
+                  // line breaks inside itself instead of leaving the card.
+                  <span className="flex min-w-0 flex-wrap items-baseline gap-x-1 text-foreground">
+                    {(Array.isArray(c.value) ? c.value : [c.value]).map((v, k) => (
+                      <span key={k} className="min-w-0 wrap-anywhere">
+                        {k > 0 && (
+                          <span className="text-muted-foreground/70 italic">{t("or")} </span>
+                        )}
+                        “{v}”
+                      </span>
+                    ))}
                   </span>
                 )}
               </span>
@@ -143,9 +144,9 @@ function VisualRuleSummary({ rule }: { rule: FilterRule }) {
               {i > 0 && (
                 <span className="text-muted-foreground/50">›</span>
               )}
-              <span className="inline-flex items-baseline gap-1 px-1.5 py-px rounded-sm bg-muted/60 text-foreground">
-                <span className="font-medium text-emerald-600 dark:text-emerald-400">{action}</span>
-                {a.value && <span className="text-muted-foreground">“{a.value}”</span>}
+              <span className="inline-flex min-w-0 max-w-full items-baseline gap-1 px-1.5 py-px rounded-sm bg-muted/60 text-foreground">
+                <span className="shrink-0 font-medium text-emerald-600 dark:text-emerald-400">{action}</span>
+                {a.value && <span className="min-w-0 wrap-anywhere text-muted-foreground">“{a.value}”</span>}
               </span>
             </span>
           );

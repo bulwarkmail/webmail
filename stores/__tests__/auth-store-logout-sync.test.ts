@@ -1,4 +1,5 @@
 import { beforeAll, expect, it, vi } from 'vitest';
+import { createConfig } from '@/lib/__tests__/fixtures/config';
 
 // Signing out of one of two accounts switched to the remaining one but never
 // turned settings sync back on, so later settings edits were not pushed and
@@ -51,7 +52,7 @@ beforeAll(() => {
       const a = [A, B][Number(m[1])];
       return new Response(JSON.stringify({ serverUrl: a.serverUrl, username: a.username, password: 'pw' }), { status: 200 });
     }
-    if (url.includes('/api/config')) return new Response(JSON.stringify({ settingsSyncEnabled: true }), { status: 200 });
+    if (url.includes('/api/config')) return new Response(JSON.stringify(createConfig({ settingsSyncEnabled: true })), { status: 200 });
     if (url.includes('/api/settings') && init?.method === 'POST') {
       posts.push(JSON.parse(String(init.body)).username);
       return new Response('{}', { status: 200 });

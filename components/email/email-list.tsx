@@ -7,15 +7,16 @@ import type { LoadListAttachments } from "@/lib/list-attachments";
 import { listRowShowsChips } from "./attachment-chips";
 import { listVerificationCode } from "@/lib/verification-code";
 import { EmailContextMenu } from "./email-context-menu";
-import { cn } from "@/lib/utils";
+import { cn, cleanPreview } from "@/lib/utils";
 import { Trash2, Mail, MailX, MailOpen, Loader2, SearchX, AlertTriangle, CalendarClock, ShieldCheck } from "@/components/icons";
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useEmailStore, ArchiveMailboxNotFoundError } from "@/stores/email-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useUIStore } from "@/stores/ui-store";
+import { useMessageListTabsStore } from "@/stores/message-list-tabs-store";
 import { emailKeyFor, groupEmailsByThread, sortThreadGroups, threadKeyFor } from "@/lib/thread-utils";
 import { useContextMenu } from "@/hooks/use-context-menu";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
@@ -148,6 +149,11 @@ export function EmailList({
   // The row opened last stays where it was clicked while that order would
   // move it (e.g. read in "unread first").
   const listHold = useEmailStore((state) => state.listHold);
+  const viewingAccountId = useEmailStore((state) => state.viewingAccountId);
+  const selectedKeyword = useEmailStore((state) => state.selectedKeyword);
+  const searchMailboxId = useEmailStore((state) => state.searchMailboxId);
+  const activeAccountId = useAuthStore((state) => state.activeAccountId);
+  const activeTabId = useMessageListTabsStore((state) => state.activeTabId);
 
   const threadGroups = useMemo(() => {
     const listOrder = searchQuery || crossView || !isFilterEmpty(searchFilters) ? [] : fetchedListOrder;
@@ -240,7 +246,7 @@ export function EmailList({
     if (showPreview && density !== 'extra-compact') {
       // A mail without a preview draws a one-line "No preview available",
       // a line (23px) shorter than a real one.
-      const emptyPreview = !!latest && !latest.preview?.trim() && !latest.searchSnippet?.preview;
+      const emptyPreview = !!latest && !cleanPreview(latest.preview) && !latest.searchSnippet?.preview;
       size += emptyPreview ? 36 - 23 : 36;
     }
     // The chip row (attachments, verification code): a 22px chip plus 6px margin.
@@ -268,6 +274,30 @@ export function EmailList({
     measureElement: (element, entry) =>
       entry?.borderBoxSize?.[0]?.blockSize ?? element.getBoundingClientRect().height,
   });
+
+  // Another folder, tag, account, unified view or plugin tab - or another
+  // search - opens at the top. The scroll container outlives the switch, so
+  // the new list would otherwise open wherever the last one was scrolled to.
+  // Refreshes, new mail and loading more keep the view and so the position.
+  const searching = !!searchQuery.trim() || !isFilterEmpty(searchFilters);
+  const viewKey = JSON.stringify([
+    activeAccountId,
+    viewingAccountId,
+    selectedMailbox,
+    selectedKeyword,
+    isUnifiedView && (crossView ?? unifiedRole),
+    isScheduledView,
+    activeTabId,
+    // The scope only matters while a search runs; the dropdown alone does not
+    // change the list.
+    searching && [searchQuery, searchFilters, searchMailboxId],
+  ]);
+  const shownViewKey = useRef(viewKey);
+  useLayoutEffect(() => {
+    if (shownViewKey.current === viewKey) return;
+    shownViewKey.current = viewKey;
+    virtualizer.scrollToOffset(0);
+  }, [viewKey, virtualizer]);
 
   const LoadingSkeleton = () => (
     <div className="animate-in fade-in duration-200">

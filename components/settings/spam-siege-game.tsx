@@ -1,316 +1,743 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
-import { Shield, Mail, X, AlertTriangle, MailCheck, RotateCcw } from "@/components/icons";
+import { useCallback, useEffect, useId, useRef, useState, type PointerEvent } from "react";
+import { useTranslations } from "next-intl";
+import {
+  AlertTriangle,
+  Ban,
+  Inbox,
+  Play,
+  RotateCcw,
+  Shield,
+  ShieldAlert,
+  ShieldCheck,
+  ShieldFilled,
+  X,
+} from "@/components/icons";
 import { Button } from "@/components/ui/button";
+import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { cn } from "@/lib/utils";
 
-const GAME_WIDTH = 400;
-const GAME_HEIGHT = 520;
-const INBOX_Y = GAME_HEIGHT - 40;
-const SPAWN_INTERVAL_START = 900;
-const SPAWN_INTERVAL_MIN = 340;
-const GAME_DURATION = 30;
-const ENEMY_SPEED_START = 1.2;
-const ENEMY_SPEED_INCREASE = 0.04;
-const MAX_MISSES = 3;
+const ROUND_MS = 30_000;
+const LIVES = 3;
+const CARD_MAX_WIDTH = 160;
+const CARD_HEIGHT = 44;
+const EDGE = 8;
+const SPAWN_START_MS = 900;
+const SPAWN_MIN_MS = 380;
+const SPAWN_RAMP_PER_S = 20;
+// Fall speed is a share of the field height per second, so a short phone
+// screen leaves as much time to react as a tall desktop one.
+const FALL_START = 0.15;
+const FALL_RAMP_PER_S = 0.006;
+// Animation frames stop while the tab is in the background. Clamping the step
+// keeps the first frame back from dropping every card into the inbox at once.
+const MAX_STEP_MS = 50;
+const EXIT_MS = 400;
+const POP_MS = 700;
+const FLASH_MS = 280;
+const COMBO_STEP = 5;
+const COMBO_MAX = 3;
+const BLOCKED_PENALTY = 15;
+const BEST_KEY = "spam-siege-best";
 
-interface Enemy {
+type Kind = "spam" | "phishing" | "legit";
+type Phase = "idle" | "playing" | "over";
+
+interface Sender {
+  name: string;
+  address: string;
+}
+
+// Senders use reserved .example domains, like the demo fixtures, so no card
+// imitates a real brand.
+const SENDERS: Record<Kind, readonly Sender[]> = {
+  spam: [
+    { name: "Prize Center", address: "winner@totallylegit.example" },
+    { name: "Promo Store", address: "deals@promostore.example" },
+    { name: "Crypto Gains", address: "moon@crypto-gains.example" },
+    { name: "Mega Lotto", address: "claim@mega-lotto.example" },
+    { name: "SEO Wizard", address: "rank1@seo-wizard.example" },
+    { name: "Miracle Diet", address: "slim@miracle-diet.example" },
+  ],
+  phishing: [
+    { name: "Secure Banking", address: "security-alert@secur1ty-bank.example" },
+    { name: "IT Helpdesk", address: "reset@c0mpany-it.example" },
+    { name: "Payroll Update", address: "hr@payro11-portal.example" },
+    { name: "Mailbox Quota", address: "admin@mail-quota.example" },
+    { name: "Parcel Service", address: "redeliver@parce1-track.example" },
+    { name: "Bulwark Support", address: "verify@bulvvark-mail.example" },
+  ],
+  legit: [
+    { name: "Alice Johnson", address: "alice.johnson@example.com" },
+    { name: "Bob Chen", address: "bob.chen@example.com" },
+    { name: "Sofia Russo", address: "sofia.russo@example.com" },
+    { name: "Sarah Kim", address: "sarah.kim@example.com" },
+    { name: "Maria Lopez", address: "maria.lopez@company.example" },
+    { name: "Michael Torres", address: "michael.torres@company.example" },
+  ],
+};
+
+// Cool tones only, so a real sender's avatar never reads as a warning colour.
+const LEGIT_TONES = ["#3b82f6", "#10b981", "#8b5cf6", "#0ea5e9", "#6366f1", "#14b8a6"];
+
+const POINTS: Record<Kind, number> = { spam: 10, phishing: 15, legit: 5 };
+
+interface Mail {
+  id: number;
+  kind: Kind;
+  sender: Sender;
+  tone: string;
+  x: number;
+  y: number;
+  /** Field heights per millisecond. */
+  speed: number;
+  fate: "caught" | "blocked" | null;
+  fateAt: number;
+}
+
+interface Pop {
   id: number;
   x: number;
   y: number;
-  speed: number;
-  type: "spam" | "phishing" | "legit";
+  text: string;
+  good: boolean;
 }
 
-type GameState = "idle" | "playing" | "over";
+interface Result {
+  held: boolean;
+  score: number;
+  caught: number;
+  delivered: number;
+  mistakes: number;
+  newBest: boolean;
+}
+
+function comboFor(streak: number): number {
+  return Math.min(COMBO_MAX, 1 + Math.floor(streak / COMBO_STEP));
+}
+
+function initials(name: string): string {
+  return name
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part.charAt(0))
+    .join("")
+    .toUpperCase();
+}
+
+function readBest(): number {
+  try {
+    const value = Number(localStorage.getItem(BEST_KEY));
+    return Number.isFinite(value) && value > 0 ? value : 0;
+  } catch {
+    return 0;
+  }
+}
+
+function writeBest(score: number) {
+  try {
+    localStorage.setItem(BEST_KEY, String(score));
+  } catch {
+    /* private mode: the best score just isn't kept */
+  }
+}
+
+function freshGame() {
+  return {
+    mails: [] as Mail[],
+    nextId: 0,
+    nextPopId: 0,
+    flashToken: 0,
+    elapsed: 0,
+    spawnIn: 250,
+    last: 0,
+    second: ROUND_MS / 1000,
+    score: 0,
+    lives: LIVES,
+    streak: 0,
+    caught: 0,
+    delivered: 0,
+    mistakes: 0,
+    running: false,
+  };
+}
 
 export function SpamSiegeGame({ onClose }: { onClose: () => void }) {
-  const [gameState, setGameState] = useState<GameState>("idle");
-  const [enemies, setEnemies] = useState<Enemy[]>([]);
+  const t = useTranslations("settings.advanced.spam_siege");
+  const tCommon = useTranslations("common");
+  const tMailboxes = useTranslations("sidebar.mailboxes");
+  const titleId = useId();
+
+  const [phase, setPhase] = useState<Phase>("idle");
+  const [mails, setMails] = useState<Mail[]>([]);
+  const [pops, setPops] = useState<Pop[]>([]);
   const [score, setScore] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(GAME_DURATION);
-  const [misses, setMisses] = useState(0);
-  const [survived, setSurvived] = useState(false);
-  const nextId = useRef(0);
-  const animFrameRef = useRef<number>(0);
-  const lastTimeRef = useRef<number>(0);
-  const spawnTimerRef = useRef<number>(0);
-  const gameStateRef = useRef<GameState>("idle");
-  const elapsedRef = useRef(0);
-  const clickedRef = useRef(new Set<number>());
-  const enemiesRef = useRef<Enemy[]>([]);
-  const missesRef = useRef(0);
-  const scoreRef = useRef(0);
+  const [lives, setLives] = useState(LIVES);
+  const [combo, setCombo] = useState(1);
+  const [secondsLeft, setSecondsLeft] = useState(ROUND_MS / 1000);
+  const [delivered, setDelivered] = useState(0);
+  const [flash, setFlash] = useState<"good" | "bad" | null>(null);
+  const [result, setResult] = useState<Result | null>(null);
+  const [best, setBest] = useState(readBest);
+  const [cardWidth, setCardWidth] = useState(CARD_MAX_WIDTH);
+
+  const game = useRef(freshGame());
+  const size = useRef({ w: 400, h: 400 });
+  const nodes = useRef(new Map<number, HTMLDivElement>());
+  const rafRef = useRef(0);
+  const timers = useRef(new Set<number>());
+  const fieldRef = useRef<HTMLDivElement>(null);
+  const progressRef = useRef<HTMLDivElement>(null);
+  const startRef = useRef<HTMLButtonElement>(null);
+  const againRef = useRef<HTMLButtonElement>(null);
+
+  // The parent passes a new closure on every render; the focus trap re-runs
+  // (and steals focus back to the first button) whenever onEscape changes.
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+  const close = useCallback(() => onCloseRef.current(), []);
+
+  const dialogRef = useFocusTrap({ isActive: true, onEscape: close, restoreFocus: true });
 
   useEffect(() => {
-    gameStateRef.current = gameState;
-  }, [gameState]);
+    if (phase === "idle") startRef.current?.focus();
+    else if (phase === "over") againRef.current?.focus();
+    else dialogRef.current?.focus();
+  }, [phase, dialogRef]);
 
-  const endGame = useCallback((didSurvive: boolean) => {
-    setSurvived(didSurvive);
-    setGameState("over");
+  useEffect(() => {
+    const pending = timers.current;
+    return () => {
+      cancelAnimationFrame(rafRef.current);
+      for (const id of pending) window.clearTimeout(id);
+    };
   }, []);
 
-  const startGame = useCallback(() => {
-    setGameState("playing");
-    setEnemies([]);
-    setScore(0);
-    setTimeLeft(GAME_DURATION);
-    setMisses(0);
-    setSurvived(false);
-    nextId.current = 0;
-    spawnTimerRef.current = 0;
-    elapsedRef.current = 0;
-    clickedRef.current = new Set();
-    enemiesRef.current = [];
-    missesRef.current = 0;
-    scoreRef.current = 0;
-    lastTimeRef.current = performance.now();
+  useEffect(() => {
+    const el = fieldRef.current;
+    if (!el) return;
+    const measure = () => {
+      size.current = { w: el.clientWidth, h: el.clientHeight };
+      setCardWidth(Math.min(CARD_MAX_WIDTH, el.clientWidth - EDGE * 2));
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
   }, []);
 
-  const spawnEnemy = useCallback(() => {
-    const id = nextId.current++;
-    const rand = Math.random();
-    const type = rand > 0.75 ? "legit" : rand > 0.45 ? "phishing" : "spam";
-    const x = 20 + Math.random() * (GAME_WIDTH - 60);
-    const speed = ENEMY_SPEED_START + (elapsedRef.current / 1000) * ENEMY_SPEED_INCREASE;
-    enemiesRef.current = [...enemiesRef.current, { id, x, y: -32, speed, type }];
-    setEnemies(enemiesRef.current);
+  const later = useCallback((fn: () => void, ms: number) => {
+    const id = window.setTimeout(() => {
+      timers.current.delete(id);
+      fn();
+    }, ms);
+    timers.current.add(id);
   }, []);
 
-  const handleClick = useCallback(
-    (ev: React.MouseEvent, enemy: Enemy) => {
-      ev.stopPropagation();
-      if (clickedRef.current.has(enemy.id)) return;
-      clickedRef.current.add(enemy.id);
-
-      enemiesRef.current = enemiesRef.current.filter((e) => e.id !== enemy.id);
-      setEnemies(enemiesRef.current);
-
-      if (enemy.type === "legit") {
-        missesRef.current += 1;
-        setMisses(missesRef.current);
-        scoreRef.current = Math.max(0, scoreRef.current - 15);
-        setScore(scoreRef.current);
-        if (missesRef.current >= MAX_MISSES) endGame(false);
-      } else {
-        scoreRef.current += enemy.type === "phishing" ? 15 : 10;
-        setScore(scoreRef.current);
-      }
+  const pop = useCallback(
+    (x: number, y: number, text: string, good: boolean) => {
+      const id = game.current.nextPopId++;
+      setPops((list) => [...list, { id, x, y, text, good }]);
+      later(() => setPops((list) => list.filter((p) => p.id !== id)), POP_MS);
     },
-    [endGame]
+    [later]
   );
 
+  const flashInbox = useCallback(
+    (kind: "good" | "bad") => {
+      const token = ++game.current.flashToken;
+      setFlash(kind);
+      later(() => {
+        if (game.current.flashToken === token) setFlash(null);
+      }, FLASH_MS);
+    },
+    [later]
+  );
+
+  const finish = useCallback((held: boolean) => {
+    const g = game.current;
+    g.running = false;
+    g.mails = [];
+    cancelAnimationFrame(rafRef.current);
+    const previous = readBest();
+    const newBest = g.score > previous;
+    if (newBest) writeBest(g.score);
+    setBest(Math.max(previous, g.score));
+    setMails([]);
+    setResult({
+      held,
+      score: g.score,
+      caught: g.caught,
+      delivered: g.delivered,
+      mistakes: g.mistakes,
+      newBest,
+    });
+    setPhase("over");
+  }, []);
+
+  const loseLife = useCallback(() => {
+    const g = game.current;
+    g.lives -= 1;
+    g.streak = 0;
+    g.mistakes += 1;
+    setLives(g.lives);
+    setCombo(1);
+    flashInbox("bad");
+    if (g.lives <= 0) finish(false);
+  }, [finish, flashInbox]);
+
+  const cardWidthNow = () => Math.min(CARD_MAX_WIDTH, size.current.w - EDGE * 2);
+
+  const spawn = useCallback((): boolean => {
+    const g = game.current;
+    const cardW = cardWidthNow();
+    const span = Math.max(0, size.current.w - cardW - EDGE * 2);
+    // Don't drop a card on top of one that has only just come in.
+    let x = -1;
+    for (let attempt = 0; attempt < 8 && x < 0; attempt++) {
+      const candidate = EDGE + Math.random() * span;
+      const clear = g.mails.every(
+        (m) => m.fate !== null || m.y > CARD_HEIGHT * 1.5 || Math.abs(m.x - candidate) > cardW + 6
+      );
+      if (clear) x = candidate;
+    }
+    if (x < 0) return false;
+
+    const roll = Math.random();
+    const kind: Kind = roll < 0.25 ? "legit" : roll < 0.55 ? "phishing" : "spam";
+    const index = Math.floor(Math.random() * SENDERS[kind].length);
+    const base = FALL_START + (g.elapsed / 1000) * FALL_RAMP_PER_S;
+    g.mails.push({
+      id: g.nextId++,
+      kind,
+      sender: SENDERS[kind][index],
+      tone: LEGIT_TONES[index % LEGIT_TONES.length],
+      x,
+      y: -CARD_HEIGHT,
+      speed: (base * (0.9 + Math.random() * 0.2)) / 1000,
+      fate: null,
+      fateAt: 0,
+    });
+    return true;
+  }, []);
+
+  const arrive = useCallback(
+    (mail: Mail) => {
+      const g = game.current;
+      if (mail.kind === "legit") {
+        const gain = POINTS.legit * comboFor(g.streak);
+        g.streak += 1;
+        g.score += gain;
+        g.delivered += 1;
+        setScore(g.score);
+        setDelivered(g.delivered);
+        setCombo(comboFor(g.streak));
+        pop(mail.x + cardWidthNow() / 2, size.current.h - CARD_HEIGHT, `+${gain}`, true);
+        flashInbox("good");
+      } else {
+        loseLife();
+      }
+    },
+    [flashInbox, loseLife, pop]
+  );
+
+  const hit = useCallback(
+    (id: number) => {
+      const g = game.current;
+      if (!g.running) return;
+      const mail = g.mails.find((m) => m.id === id);
+      if (!mail || mail.fate) return;
+      mail.fateAt = performance.now();
+      const x = mail.x + cardWidthNow() / 2;
+      if (mail.kind === "legit") {
+        mail.fate = "blocked";
+        g.score = Math.max(0, g.score - BLOCKED_PENALTY);
+        setScore(g.score);
+        pop(x, mail.y, `−${BLOCKED_PENALTY}`, false);
+        setMails([...g.mails]);
+        loseLife();
+      } else {
+        mail.fate = "caught";
+        const gain = POINTS[mail.kind] * comboFor(g.streak);
+        g.streak += 1;
+        g.score += gain;
+        g.caught += 1;
+        setScore(g.score);
+        setCombo(comboFor(g.streak));
+        pop(x, mail.y, `+${gain}`, true);
+        setMails([...g.mails]);
+      }
+    },
+    [loseLife, pop]
+  );
+
+  const start = useCallback(() => {
+    cancelAnimationFrame(rafRef.current);
+    const g = freshGame();
+    g.nextPopId = game.current.nextPopId;
+    g.running = true;
+    game.current = g;
+    setMails([]);
+    setPops([]);
+    setScore(0);
+    setLives(LIVES);
+    setCombo(1);
+    setSecondsLeft(ROUND_MS / 1000);
+    setDelivered(0);
+    setFlash(null);
+    setResult(null);
+    if (progressRef.current) progressRef.current.style.transform = "scaleX(1)";
+    setPhase("playing");
+  }, []);
+
   useEffect(() => {
-    if (gameState !== "playing") return;
+    if (phase !== "playing") return;
+    const g = game.current;
+    g.last = performance.now();
 
-    const tick = (now: number) => {
-      if (gameStateRef.current !== "playing") return;
+    const frame = (now: number) => {
+      if (!g.running) return;
+      const step = Math.min(MAX_STEP_MS, Math.max(0, now - g.last));
+      g.last = now;
+      g.elapsed += step;
 
-      const dt = now - lastTimeRef.current;
-      lastTimeRef.current = now;
-      elapsedRef.current += dt;
-
-      const newTimeLeft = GAME_DURATION - Math.floor(elapsedRef.current / 1000);
-      setTimeLeft(Math.max(0, newTimeLeft));
-      if (newTimeLeft <= 0) {
-        endGame(true);
+      if (progressRef.current) {
+        progressRef.current.style.transform = `scaleX(${Math.max(0, 1 - g.elapsed / ROUND_MS)})`;
+      }
+      const second = Math.max(0, Math.ceil((ROUND_MS - g.elapsed) / 1000));
+      if (second !== g.second) {
+        g.second = second;
+        setSecondsLeft(second);
+      }
+      if (g.elapsed >= ROUND_MS) {
+        finish(true);
         return;
       }
 
-      spawnTimerRef.current += dt;
-      const spawnInterval = Math.max(
-        SPAWN_INTERVAL_MIN,
-        SPAWN_INTERVAL_START - (elapsedRef.current / 1000) * 35
-      );
-      if (spawnTimerRef.current >= spawnInterval) {
-        spawnTimerRef.current = 0;
-        spawnEnemy();
-      }
-
-      const nextEnemies: Enemy[] = [];
-      let missed = 0;
-      let scoreDelta = 0;
-      for (const e of enemiesRef.current) {
-        const ny = e.y + e.speed * (dt / 16);
-        if (ny >= INBOX_Y) {
-          if (e.type === "legit") scoreDelta += 5;
-          else missed++;
+      let changed = false;
+      g.spawnIn -= step;
+      if (g.spawnIn <= 0) {
+        if (spawn()) {
+          changed = true;
+          g.spawnIn = Math.max(SPAWN_MIN_MS, SPAWN_START_MS - (g.elapsed / 1000) * SPAWN_RAMP_PER_S);
         } else {
-          nextEnemies.push({ ...e, y: ny });
-        }
-      }
-      enemiesRef.current = nextEnemies;
-      setEnemies(nextEnemies);
-
-      if (scoreDelta > 0) {
-        scoreRef.current += scoreDelta;
-        setScore(scoreRef.current);
-      }
-      if (missed > 0) {
-        missesRef.current += missed;
-        setMisses(missesRef.current);
-        if (missesRef.current >= MAX_MISSES) {
-          endGame(false);
-          return;
+          g.spawnIn = 120;
         }
       }
 
-      animFrameRef.current = requestAnimationFrame(tick);
+      const { w, h } = size.current;
+      const maxX = Math.max(EDGE, w - cardWidthNow() - EDGE);
+      const kept: Mail[] = [];
+      for (const mail of g.mails) {
+        if (mail.fate) {
+          if (now - mail.fateAt < EXIT_MS) kept.push(mail);
+          else changed = true;
+          continue;
+        }
+        mail.y += mail.speed * step * h;
+        if (mail.x > maxX) mail.x = maxX;
+        if (mail.y >= h - CARD_HEIGHT) {
+          changed = true;
+          arrive(mail);
+          if (!g.running) return;
+          continue;
+        }
+        kept.push(mail);
+        const node = nodes.current.get(mail.id);
+        if (node) node.style.transform = `translate3d(${mail.x}px, ${mail.y}px, 0)`;
+      }
+      g.mails = kept;
+      if (changed) setMails([...kept]);
+      rafRef.current = requestAnimationFrame(frame);
     };
 
-    animFrameRef.current = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(animFrameRef.current);
-  }, [gameState, spawnEnemy, endGame]);
+    rafRef.current = requestAnimationFrame(frame);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [phase, spawn, arrive, finish]);
+
+  // Close only when the press both started and ended on the backdrop, so a
+  // drag that begins on a card and slips off the panel doesn't end the round.
+  const pressedBackdrop = useRef(false);
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
-      onClick={onClose}
+      className="fixed inset-0 bg-black/50 backdrop-blur-[1px] flex items-center justify-center z-50 p-4 animate-in fade-in duration-150"
+      onPointerDown={(e) => {
+        pressedBackdrop.current = e.target === e.currentTarget;
+      }}
+      onClick={(e) => {
+        if (pressedBackdrop.current && e.target === e.currentTarget) close();
+      }}
     >
       <div
-        className="relative rounded-lg border border-border bg-card shadow-xl overflow-hidden select-none"
-        style={{ width: GAME_WIDTH, maxWidth: "95vw" }}
-        onClick={(e) => e.stopPropagation()}
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+        className={cn(
+          "bg-background border border-border rounded-lg shadow-xl outline-none",
+          "w-full max-w-md max-h-full flex flex-col overflow-hidden select-none",
+          "animate-in zoom-in-95 duration-200"
+        )}
       >
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-          <div className="flex items-center gap-2">
-            <Shield className="w-4 h-4 text-primary" />
-            <span className="text-sm font-medium text-foreground">Spam Siege</span>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+          <div className="flex items-center gap-3">
+            <Shield className="w-5 h-5 text-muted-foreground" />
+            <h2 id={titleId} className="text-lg font-semibold text-foreground">
+              {t("title")}
+            </h2>
           </div>
           <button
-            onClick={onClose}
-            className="p-1 rounded hover:bg-muted transition-colors"
-            aria-label="Close"
+            type="button"
+            onClick={close}
+            className="p-1.5 rounded-md hover:bg-muted transition-colors duration-150 text-muted-foreground hover:text-foreground"
+            aria-label={tCommon("close")}
           >
-            <X className="w-4 h-4 text-muted-foreground" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="flex items-center justify-between px-4 py-2 bg-muted/40 border-b border-border text-xs text-muted-foreground">
-          <div className="flex items-center gap-4">
-            <span>
-              Score <span className="font-medium text-foreground tabular-nums">{score}</span>
-            </span>
-            <span>
-              Time <span className="font-medium text-foreground tabular-nums">{timeLeft}s</span>
-            </span>
-          </div>
-          <span>
-            Misses{" "}
-            <span
-              className={cn(
-                "font-medium tabular-nums",
-                misses >= MAX_MISSES - 1 ? "text-destructive" : "text-foreground"
-              )}
-            >
-              {misses}/{MAX_MISSES}
-            </span>
+        <div className="flex items-center gap-3 px-6 py-2.5 text-sm">
+          <span className="text-muted-foreground">
+            {t("score")}{" "}
+            <span className="font-semibold text-foreground tabular-nums">{score}</span>
           </span>
+          {combo > 1 && (
+            <span
+              dir="ltr"
+              className="rounded-full bg-primary/10 px-1.5 py-0.5 text-xs font-medium text-primary tabular-nums"
+              title={t("combo")}
+            >
+              ×{combo}
+            </span>
+          )}
+          <span
+            className="ms-auto flex items-center gap-0.5"
+            role="img"
+            aria-label={t("shields_left", { count: lives, total: LIVES })}
+          >
+            {Array.from({ length: LIVES }, (_, i) =>
+              i < lives ? (
+                <ShieldFilled key={i} className="w-4 h-4 text-primary" />
+              ) : (
+                <Shield key={i} className="w-4 h-4 text-muted-foreground/40" />
+              )
+            )}
+          </span>
+          <span className="w-9 text-end font-medium text-foreground tabular-nums">
+            {t("seconds", { seconds: secondsLeft })}
+          </span>
+        </div>
+        <div className="h-0.5 bg-muted">
+          <div
+            ref={progressRef}
+            className="h-full bg-primary origin-left rtl:origin-right"
+            style={{ transform: "scaleX(1)" }}
+          />
         </div>
 
         <div
-          className="relative bg-background overflow-hidden"
-          style={{ height: GAME_HEIGHT }}
+          ref={fieldRef}
+          className={cn("relative overflow-hidden bg-muted/30", phase === "playing" && "touch-none")}
+          style={{ height: "min(440px, calc(100dvh - 15rem))", minHeight: 220 }}
         >
-          <div
-            className="absolute left-0 right-0 flex items-center gap-2 px-4"
-            style={{ top: INBOX_Y }}
-          >
-            <div className="h-px flex-1 bg-border" />
-            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
-              Inbox
-            </span>
-            <div className="h-px flex-1 bg-border" />
-          </div>
-
-          {enemies.map((e) => {
-            const variant =
-              e.type === "phishing"
-                ? "text-warning border-warning/40 bg-warning/10 hover:bg-warning/20"
-                : e.type === "legit"
-                  ? "text-success border-success/40 bg-success/10 hover:bg-success/20"
-                  : "text-destructive border-destructive/40 bg-destructive/10 hover:bg-destructive/20";
-            const Icon =
-              e.type === "phishing" ? AlertTriangle : e.type === "legit" ? MailCheck : Mail;
-            return (
-              <button
-                key={e.id}
-                type="button"
+          {mails.map((mail) => (
+            <div
+              key={mail.id}
+              ref={(el) => {
+                if (el) nodes.current.set(mail.id, el);
+                else nodes.current.delete(mail.id);
+              }}
+              data-kind={mail.kind}
+              className="absolute left-0 top-0 will-change-transform"
+              style={{ transform: `translate3d(${mail.x}px, ${mail.y}px, 0)` }}
+            >
+              <MailCard
+                kind={mail.kind}
+                sender={mail.sender}
+                tone={mail.tone}
+                width={cardWidth}
+                onPointerDown={(e) => {
+                  e.preventDefault();
+                  hit(mail.id);
+                }}
                 className={cn(
-                  "absolute flex items-center justify-center w-8 h-8 rounded-md border cursor-pointer",
-                  "active:scale-95 transition-transform",
-                  variant
+                  "cursor-pointer hover:bg-muted transition-colors",
+                  mail.fate === "caught" &&
+                    "pointer-events-none animate-out fade-out zoom-out-75 duration-300 fill-mode-forwards",
+                  mail.fate === "blocked" && "pointer-events-none animate-shake border-destructive"
                 )}
-                style={{ left: e.x, top: e.y }}
-                onMouseEnter={(ev) => handleClick(ev, e)}
-                onClick={(ev) => handleClick(ev, e)}
-              >
-                <Icon className="w-4 h-4" />
-              </button>
-            );
-          })}
+              />
+            </div>
+          ))}
 
-          {gameState === "idle" && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-background/95 px-8 text-center">
-              <Shield className="w-10 h-10 text-primary" />
-              <div className="space-y-1.5">
-                <p className="text-base font-medium text-foreground">Spam Siege</p>
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  Click spam and phishing before they hit your inbox. Don&apos;t block legitimate
-                  mail. Three misses and it&apos;s over.
-                </p>
+          {pops.map((p) => (
+            <span
+              key={p.id}
+              dir="ltr"
+              className={cn(
+                "pointer-events-none absolute -translate-x-1/2 text-sm font-semibold tabular-nums",
+                "animate-out fade-out slide-out-to-top-6 duration-700 fill-mode-forwards",
+                p.good ? "text-success" : "text-destructive"
+              )}
+              style={{ left: p.x, top: p.y }}
+            >
+              {p.text}
+            </span>
+          ))}
+
+          {phase === "idle" && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-5 overflow-y-auto bg-background/95 px-6 py-6 text-center">
+              <p className="max-w-xs text-sm text-muted-foreground">{t("intro")}</p>
+              <div className="flex flex-col gap-2">
+                {(["spam", "phishing", "legit"] as const).map((kind) => (
+                  <div key={kind} className="flex items-center gap-3 text-start">
+                    <MailCard
+                      kind={kind}
+                      sender={SENDERS[kind][0]}
+                      tone={LEGIT_TONES[0]}
+                      width={Math.min(cardWidth, 150)}
+                    />
+                    <span className="text-xs text-muted-foreground">
+                      <span className="block font-medium text-foreground">{t(`kinds.${kind}`)}</span>
+                      {kind === "legit" ? t("let_through") : t("click_to_block")}
+                    </span>
+                  </div>
+                ))}
               </div>
-              <div className="flex items-center gap-4 text-[11px] text-muted-foreground">
-                <span className="inline-flex items-center gap-1.5">
-                  <Mail className="w-3 h-3 text-destructive" />
-                  Spam
-                </span>
-                <span className="inline-flex items-center gap-1.5">
-                  <AlertTriangle className="w-3 h-3 text-warning" />
-                  Phishing
-                </span>
-                <span className="inline-flex items-center gap-1.5">
-                  <MailCheck className="w-3 h-3 text-success" />
-                  Legit
-                </span>
+              <div className="flex flex-col items-center gap-2">
+                <Button ref={startRef} size="sm" onClick={start}>
+                  <Play className="w-4 h-4 me-1.5" />
+                  {t("start")}
+                </Button>
+                {best > 0 && (
+                  <span className="text-xs text-muted-foreground tabular-nums">
+                    {t("best", { score: best })}
+                  </span>
+                )}
               </div>
-              <Button size="sm" onClick={startGame}>
-                Start
-              </Button>
             </div>
           )}
 
-          {gameState === "over" && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-background/95 px-8 text-center">
-              <Shield
-                className={cn(
-                  "w-10 h-10",
-                  survived ? "text-success" : "text-muted-foreground/40"
-                )}
-              />
-              <div className="space-y-1">
-                <p className="text-base font-medium text-foreground">
-                  {survived ? "Inbox held" : "Inbox overrun"}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Final score{" "}
-                  <span className="font-medium text-foreground tabular-nums">{score}</span>
-                </p>
+          {phase === "over" && result && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-5 overflow-y-auto bg-background/95 px-6 py-6 text-center">
+              <div className="flex flex-col items-center gap-3">
+                <div
+                  className={cn(
+                    "flex h-10 w-10 items-center justify-center rounded-full",
+                    result.held ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"
+                  )}
+                >
+                  {result.held ? <ShieldCheck className="w-5 h-5" /> : <ShieldAlert className="w-5 h-5" />}
+                </div>
+                <h3 className="text-lg font-semibold text-foreground">
+                  {result.held ? t("held") : t("overrun")}
+                </h3>
               </div>
+              <div className="flex flex-col items-center gap-1">
+                <span className="text-4xl font-semibold text-foreground tabular-nums">{result.score}</span>
+                {result.newBest ? (
+                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                    {t("new_best")}
+                  </span>
+                ) : best > 0 ? (
+                  <span className="text-xs text-muted-foreground tabular-nums">{t("best", { score: best })}</span>
+                ) : null}
+              </div>
+              <dl className="grid w-full max-w-xs grid-cols-3 divide-x divide-border rtl:divide-x-reverse rounded-md border border-border">
+                {(
+                  [
+                    ["caught", result.caught],
+                    ["delivered", result.delivered],
+                    ["mistakes", result.mistakes],
+                  ] as const
+                ).map(([key, value]) => (
+                  <div key={key} className="flex flex-col-reverse gap-0.5 px-2 py-2">
+                    <dt className="text-xs text-muted-foreground">{t(`stats.${key}`)}</dt>
+                    <dd className="text-base font-semibold text-foreground tabular-nums">{value}</dd>
+                  </div>
+                ))}
+              </dl>
               <div className="flex gap-2">
-                <Button size="sm" variant="outline" onClick={onClose}>
-                  Close
+                <Button size="sm" variant="outline" onClick={close}>
+                  {tCommon("close")}
                 </Button>
-                <Button size="sm" onClick={startGame}>
-                  <RotateCcw className="w-3.5 h-3.5 me-1.5" />
-                  Again
+                <Button ref={againRef} size="sm" onClick={start}>
+                  <RotateCcw className="w-4 h-4 me-1.5" />
+                  {t("play_again")}
                 </Button>
               </div>
             </div>
           )}
         </div>
+
+        <div
+          className={cn(
+            "flex items-center gap-2 px-6 h-11 border-t border-border text-sm transition-colors duration-200",
+            flash === "bad" ? "bg-destructive/10" : flash === "good" ? "bg-primary/10" : "bg-background"
+          )}
+        >
+          <Inbox className={cn("w-4 h-4", flash === "bad" ? "text-destructive" : "text-primary")} />
+          <span className="font-medium text-foreground">{tMailboxes("inbox")}</span>
+          <span className="ms-auto text-xs text-muted-foreground tabular-nums">{delivered}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MailCard({
+  kind,
+  sender,
+  tone,
+  width,
+  className,
+  onPointerDown,
+}: {
+  kind: Kind;
+  sender: Sender;
+  tone: string;
+  width: number;
+  className?: string;
+  onPointerDown?: (e: PointerEvent<HTMLDivElement>) => void;
+}) {
+  // Sender names and addresses are Latin text, so the card reads left to
+  // right even in an RTL locale; otherwise addresses truncate from the front.
+  return (
+    <div
+      dir="ltr"
+      className={cn(
+        "flex items-center gap-2 rounded-md border bg-background px-2",
+        kind === "spam" ? "border-destructive/30" : kind === "phishing" ? "border-warning/40" : "border-border",
+        className
+      )}
+      style={{ width, height: CARD_HEIGHT }}
+      onPointerDown={onPointerDown}
+    >
+      {kind === "legit" ? (
+        <span
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold text-white"
+          style={{ backgroundColor: tone }}
+        >
+          {initials(sender.name)}
+        </span>
+      ) : (
+        <span
+          className={cn(
+            "flex h-7 w-7 shrink-0 items-center justify-center rounded-full",
+            kind === "spam" ? "bg-destructive/10 text-destructive" : "bg-warning/15 text-warning"
+          )}
+        >
+          {kind === "spam" ? <Ban className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />}
+        </span>
+      )}
+      <div className="min-w-0 flex-1 leading-tight">
+        <p className="truncate text-xs font-semibold text-foreground">{sender.name}</p>
+        <p className="truncate text-[11px] text-muted-foreground">{sender.address}</p>
       </div>
     </div>
   );

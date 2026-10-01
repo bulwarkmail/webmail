@@ -14,7 +14,7 @@ import { transformInlineStyles, transformColorForDarkMode, transformBgColorForDa
 import { useThemeStore } from "@/stores/theme-store";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { formatDate, formatFileSize, cn } from "@/lib/utils";
+import { formatDate, formatFileSize, cn, cleanPreview } from "@/lib/utils";
 import {
   ArrowLeft,
   ChevronDown,
@@ -568,7 +568,7 @@ function EmailCard({
           </div>
           {!isExpanded && density !== 'extra-compact' && (
             <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-              {email.preview || t('email_viewer.no_preview_available')}
+              {cleanPreview(email.preview) || t('email_viewer.no_preview_available')}
             </p>
           )}
         </div>

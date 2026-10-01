@@ -17,6 +17,7 @@
     "reconnecting": "Bağlantı kesildi. Yeniden bağlanılmaya çalışılıyor…",
     "error": {
       "invalid_credentials": "Geçersiz e-posta veya şifre. Lütfen bilgilerinizi kontrol edip tekrar deneyin.",
+      "invalid_token": "Sunucu bu erişim belirtecini kabul etmedi. Belirtecin eksiksiz olduğunu, süresinin dolmadığını ve iptal edilmediğini kontrol edin.",
       "connection_failed": "Sunucuya ulaşılamıyor. İnternet bağlantınızı kontrol edip tekrar deneyin.",
       "cors_blocked": "Sunucuya ulaşılıyor ancak çapraz kaynak istekleri engelleniyor. JMAP sunucunuzun CORS ayarlarını kontrol edip bu etki alanına izin verin.",
       "server_error": "Sunucu geçici olarak kullanılamıyor. Lütfen daha sonra tekrar deneyin.",
@@ -28,6 +29,11 @@
     "show_password": "Şifreyi göster",
     "hide_password": "Şifreyi gizle",
     "totp_toggle": "2FA kodum var",
+    "token_toggle": "Erişim belirteciyle giriş yap",
+    "password_toggle": "Şifreyle giriş yap",
+    "token_label": "Erişim belirteci",
+    "token_placeholder": "API belirtecinizi yapıştırın",
+    "token_hint": "E-posta sağlayıcınızın ayarlarında bir API belirteci oluşturun ve buraya yapıştırın.",
     "remember_me": "Beni hatırla",
     "config_error": {
       "title": "Yapılandırma Hatası",
@@ -114,6 +120,7 @@
     "unified_archive": "Tüm Arşiv",
     "unified_junk": "Tüm Önemsiz",
     "all_accounts": "Tüm Hesaplar",
+    "all_accounts_loading": "Hesaplar yükleniyor: {loaded}/{total}",
     "unified_mailbox": "Birleşik Posta Kutusu",
     "expand": "Genişlet",
     "collapse": "Daralt",
@@ -718,6 +725,7 @@
     "recipient_name_placeholder": "Görünen ad",
     "autocomplete_search_server": "Sunucuda ara",
     "autocomplete_searching": "Aranıyor...",
+    "mention_recipients": "Alıcılar",
     "toolbar": {
       "bold": "Kalın",
       "italic": "İtalik",
@@ -1507,6 +1515,10 @@
         "label": "Boş konu uyarısı",
         "description": "Konusu olmayan bir ileti gönderilmeden önce onay iste."
       },
+      "recipient_mentions": {
+        "label": "Alıcılardan @ ile bahset",
+        "description": "Mesajda @ yazınca alıcılar önerilir ve seçilenin adı eklenir. Enter veya Tab vurgulanan adı seçer."
+      },
       "hide_inline_image_attachments": {
         "label": "Satır içi görüntüleri eklerden gizle",
         "description": "İleti gövdesine gömülü görseller ayrı ek olarak listelenmez"
@@ -1601,6 +1613,7 @@
       "auth_method_label": "Kimlik Doğrulama",
       "auth_method_oauth": "Tekil Oturum Açma (OAuth/OIDC)",
       "auth_method_basic": "Parola",
+      "auth_method_token": "Erişim belirteci",
       "demo_account": "Demo Hesabı",
       "email": {
         "label": "E-posta Adresi",
@@ -1958,6 +1971,32 @@
       },
       "about": {
         "title": "Bulwark Webmail"
+      },
+      "spam_siege": {
+        "title": "Spam Siege",
+        "intro": "Spam ve oltalama e-postaları gelen kutunuza ulaşmadan önce üzerlerine tıklayın. Gerçek e-postaların geçmesine izin verin. Üç kalkanın hepsini kaybederseniz gelen kutusu düşer.",
+        "kinds": {
+          "spam": "Spam",
+          "phishing": "Oltalama",
+          "legit": "Gerçek e-posta"
+        },
+        "click_to_block": "Engellemek için tıklayın",
+        "let_through": "Geçmesine izin verin",
+        "start": "Başla",
+        "play_again": "Tekrar oyna",
+        "score": "Puan",
+        "combo": "Seri bonusu",
+        "shields_left": "{total} kalkandan {count} kaldı",
+        "seconds": "{seconds} sn",
+        "best": "En iyi: {score}",
+        "new_best": "Yeni rekor",
+        "held": "Gelen kutusu korundu",
+        "overrun": "Gelen kutusu düştü",
+        "stats": {
+          "caught": "Engellenen",
+          "delivered": "Teslim edilen",
+          "mistakes": "Hatalar"
+        }
       }
     },
     "sidebar_apps": {
@@ -2928,6 +2967,7 @@
       "save_note": "Kaydet",
       "note_saved": "Not eklendi",
       "open_link": "Bağlantıyı aç",
+      "copy_location": "Konumu kopyala",
       "meeting_link": "Toplantı bağlantısı",
       "tentative": "Geçici",
       "cancelled": "İptal edildi",

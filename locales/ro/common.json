@@ -17,6 +17,7 @@
     "reconnecting": "Conexiune pierdută. Se încearcă reconectarea…",
     "error": {
       "invalid_credentials": "Adresă de e-mail sau parolă invalidă. Vă rugăm să verificați datele de autentificare și să încercați din nou.",
+      "invalid_token": "Serverul nu a acceptat acest token de acces. Verificați dacă este complet și dacă nu a expirat sau nu a fost revocat.",
       "connection_failed": "Nu se poate stabili conexiunea cu serverul. Verificați conexiunea la internet și încercați din nou.",
       "cors_blocked": "Serverul este accesibil, dar blochează cererile de tip „cross-origin”. Verificați setările CORS ale serverului JMAP și permiteți acest domeniu.",
       "server_error": "Serverul este temporar indisponibil. Vă rugăm să încercați din nou mai târziu.",
@@ -28,6 +29,11 @@
     "show_password": "Afișează parola",
     "hide_password": "Ascunde parola",
     "totp_toggle": "Am un cod 2FA",
+    "token_toggle": "Autentificare cu un token de acces",
+    "password_toggle": "Autentificare cu o parolă",
+    "token_label": "Token de acces",
+    "token_placeholder": "Lipiți tokenul API",
+    "token_hint": "Creați un token API în setările furnizorului dvs. de e-mail și lipiți-l aici.",
     "remember_me": "Reține-mă",
     "config_error": {
       "title": "Eroare de configurare",
@@ -114,6 +120,7 @@
     "unified_archive": "Arhivă completă",
     "unified_junk": "Toate mesajele nedorite",
     "all_accounts": "Toate conturile",
+    "all_accounts_loading": "Se încarcă conturile: {loaded} din {total}",
     "unified_mailbox": "Căsuță poștală unificată",
     "expand": "Extindeți",
     "collapse": "Reduceți",
@@ -718,6 +725,7 @@
     "recipient_name_placeholder": "Numele afișat",
     "autocomplete_search_server": "Caută pe server",
     "autocomplete_searching": "Se caută...",
+    "mention_recipients": "Destinatari",
     "toolbar": {
       "bold": "Aldin",
       "italic": "Cursiv",
@@ -1510,6 +1518,10 @@
         "label": "Avertisment pentru subiect gol",
         "description": "Cere confirmare înainte de a trimite un mesaj fără subiect."
       },
+      "recipient_mentions": {
+        "label": "Menționează destinatarii cu @",
+        "description": "Tastarea @ în mesaj propune destinatarii și inserează prenumele celui ales. Enter sau Tab alege numele evidențiat."
+      },
       "hide_inline_image_attachments": {
         "label": "Ascundeți imaginile încorporate din atașamente",
         "description": "Imaginile încorporate în corpul mesajului nu sunt listate ca atașamente separate"
@@ -1604,6 +1616,7 @@
       "auth_method_label": "Autentificare",
       "auth_method_oauth": "Autentificare unică (OAuth /OIDC)",
       "auth_method_basic": "Parolă",
+      "auth_method_token": "Token de acces",
       "demo_account": "Cont demo",
       "email": {
         "label": "Adresă de e-mail",
@@ -1965,6 +1978,32 @@
       },
       "about": {
         "title": "Bulwark Webmail"
+      },
+      "spam_siege": {
+        "title": "Spam Siege",
+        "intro": "Faceți clic pe spam și phishing înainte să ajungă în Inbox. Lăsați să treacă e-mailurile reale. Dacă pierdeți toate cele trei scuturi, căsuța cade.",
+        "kinds": {
+          "spam": "Spam",
+          "phishing": "Phishing",
+          "legit": "E-mail real"
+        },
+        "click_to_block": "Faceți clic pentru blocare",
+        "let_through": "Lăsați să treacă",
+        "start": "Începeți",
+        "play_again": "Jucați din nou",
+        "score": "Scor",
+        "combo": "Bonus de serie",
+        "shields_left": "Au rămas {count} din {total} scuturi",
+        "seconds": "{seconds} s",
+        "best": "Record: {score}",
+        "new_best": "Record nou",
+        "held": "Inbox apărat",
+        "overrun": "Inbox copleșit",
+        "stats": {
+          "caught": "Blocate",
+          "delivered": "Livrate",
+          "mistakes": "Greșeli"
+        }
       }
     },
     "sidebar_apps": {
@@ -2928,6 +2967,7 @@
       "save_note": "Salvare",
       "note_saved": "Notă adăugată",
       "open_link": "Deschideți linkul",
+      "copy_location": "Copiază locația",
       "meeting_link": "Link către întâlnire",
       "tentative": "Provizoriu",
       "cancelled": "Anulat",
