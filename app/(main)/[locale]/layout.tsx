@@ -18,6 +18,7 @@ import { setRequestLocale } from "next-intl/server";
 import { AccountVaultImportPrompt } from "@/components/account-vault";
 import { locales } from "@/i18n/routing";
 import { generateLiteLocaleParams } from "@/lib/lite-static-params";
+import { IS_LITE } from "@/lib/lite";
 
 // The static Lite export enumerates every locale here. In the server build the
 // export is `undefined`, which Next treats as absent, so the routes stay
@@ -56,7 +57,7 @@ export default async function LocaleLayout({
                   <ProInterfaceRedirect />
                   <ImpersonationReconciler />
                   {children}
-                  <AccountVaultImportPrompt />
+                  {!IS_LITE && <AccountVaultImportPrompt />}
                   <PluginDialogHost />
                   <QuickRuleHost />
                   <PluginConsentDialog />

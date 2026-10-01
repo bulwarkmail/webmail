@@ -1,4 +1,5 @@
 import { apiFetch } from '@/lib/browser-navigation';
+import { IS_LITE } from '@/lib/lite';
 import { generateAccountId } from '@/lib/account-utils';
 import { useAccountStore } from '@/stores/account-store';
 import { useAuthStore } from '@/stores/auth-store';
@@ -10,6 +11,8 @@ function headers(owner: VaultOwner): Record<string, string> {
 }
 
 async function request(owner: VaultOwner, init: RequestInit = {}) {
+  // Archives are stored by the webmail server; the static Lite build has none.
+  if (IS_LITE) throw new Error('storage_unavailable');
   const res = await apiFetch('/api/account-vault', { cache: 'no-store', ...init,
     headers: { ...headers(owner), ...(init.body ? { 'Content-Type': 'application/json' } : {}) },
   });

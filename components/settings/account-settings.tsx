@@ -16,6 +16,7 @@ import { getMaxAccounts } from '@/lib/account-utils';
 import { formatFileSize, cn } from '@/lib/utils';
 import { AccountVaultSettings } from '@/components/account-vault';
 import { toUnicodeDomain, toUnicodeEmail } from '@/lib/idn';
+import { IS_LITE } from "@/lib/lite";
 
 function hostnameOf(serverUrl: string): string {
   try { return toUnicodeDomain(new URL(serverUrl).hostname); } catch { return serverUrl; }
@@ -120,7 +121,7 @@ export function AccountSettings() {
 
   return (
     <div className="space-y-8">
-      {!isDemoMode && <AccountVaultSettings />}
+      {!isDemoMode && !IS_LITE && <AccountVaultSettings />}
       <SettingsSection title={t('title')} description={t('description')}>
         {/* Display Name */}
         <SettingItem label={t('name_label')}>
