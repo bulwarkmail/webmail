@@ -48,11 +48,11 @@ function pending(extra: Record<string, unknown> = {}) {
   }, 'sso-pending'));
 }
 
-async function complete() {
+async function complete(extra: Record<string, unknown> = {}) {
   const res = await POST(new NextRequest('https://webmail.example/api/auth/sso/complete', {
     method: 'POST',
     headers: { 'content-type': 'application/json', 'sec-fetch-site': 'same-origin' },
-    body: JSON.stringify({ code: 'code-1', state: 'state-1' }),
+    body: JSON.stringify({ code: 'code-1', state: 'state-1', ...extra }),
   }));
   return { status: res.status, body: await res.json() };
 }
@@ -80,6 +80,22 @@ describe('/api/auth/sso/complete', () => {
     expect(res.status).toBe(200);
     expect(exchangeCodeForTokens).toHaveBeenCalledOnce();
     expect(jar.get('jmap_rt')).toBe('rt');
+  });
+
+  it('writes a sixth account to its own slot, not over the first account', async () => {
+    jar.set('jmap_rt', 'first-account-rt');
+    pending();
+    const res = await complete({ slot: 5 });
+    expect(res.status).toBe(200);
+    expect(jar.get('jmap_rt_5')).toBe('rt');
+    expect(jar.get('jmap_rt')).toBe('first-account-rt');
+  });
+
+  it('falls back to slot 0 for a slot outside the account range', async () => {
+    pending();
+    await complete({ slot: 50 });
+    expect(jar.get('jmap_rt')).toBe('rt');
+    expect(jar.has('jmap_rt_50')).toBe(false);
   });
 });
 

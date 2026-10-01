@@ -88,11 +88,10 @@ interface StoredAccessToken {
   expiresAt: number;
 }
 
-interface StoredBasicSession {
-  serverUrl: string;
-  username: string;
-  password: string;
-}
+/** A password (Basic auth) or the access token of a token login (Bearer auth). */
+type StoredBasicSession =
+  | { serverUrl: string; username: string; password: string; token?: undefined }
+  | { serverUrl: string; username: string; token: string; password?: undefined };
 
 const REFRESH_KEY_PREFIX = 'bulwark-lite:refresh:';
 const ACCESS_KEY_PREFIX = 'bulwark-lite:access:';
@@ -217,8 +216,9 @@ export function readLiteAccessToken(slot: number): { accessToken: string; expire
 }
 
 /**
- * Basic-auth fallback for servers without token login: the credentials stay
- * with this tab (sessionStorage) so a reload does not end the session.
+ * Basic-auth fallback for servers without token login, and access-token
+ * logins: the credentials stay with this tab (sessionStorage) so a reload
+ * does not end the session.
  */
 export function saveLiteBasicSession(slot: number, entry: StoredBasicSession): void {
   writeJson(storage('session'), `${BASIC_KEY_PREFIX}${slot}`, { ...entry, serverUrl: trimUrl(entry.serverUrl) });
@@ -226,7 +226,7 @@ export function saveLiteBasicSession(slot: number, entry: StoredBasicSession): v
 
 export function readLiteBasicSession(slot: number): StoredBasicSession | null {
   const entry = readJson<StoredBasicSession>(storage('session'), `${BASIC_KEY_PREFIX}${slot}`);
-  return entry && typeof entry.password === 'string' ? entry : null;
+  return entry && (typeof entry.password === 'string' || typeof entry.token === 'string') ? entry : null;
 }
 
 export function clearLiteBasicSession(slot: number): void {

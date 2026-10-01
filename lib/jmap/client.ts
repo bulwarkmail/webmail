@@ -90,6 +90,16 @@ function basicAuthHeader(username: string, password: string): string {
   return `Basic ${btoa(binary)}`;
 }
 
+/** Origin of an absolute URL; null for a relative one or garbage. */
+function absoluteOrigin(url: string | undefined): string | null {
+  if (!url || !/^https?:\/\//i.test(url)) return null;
+  try {
+    return new URL(url).origin;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Parse a recipient string that may be "Name <email>" or bare "email" into
  * { name?, email }. The display name is unquoted and stripped of any address
@@ -1478,14 +1488,27 @@ export class JMAPClient implements IJMAPClient {
     }
   }
 
+  /**
+   * The server names its URLs under the base URL it believes it has, which
+   * behind a reverse proxy may not be one the browser can reach, so they are
+   * moved onto `serverUrl`'s origin. A URL on another HTTPS origin than the
+   * server's own `apiUrl` is one it deliberately hosts elsewhere (Fastmail
+   * serves downloads from a separate domain) and is kept.
+   */
   private rewriteSessionUrls(session: JMAPSession): void {
+    const reportedOrigin = absoluteOrigin(session.apiUrl);
+    const rewrite = (url: string): string => {
+      const origin = absoluteOrigin(url);
+      const hostedElsewhere = !!origin && !!reportedOrigin && origin !== reportedOrigin && origin.startsWith('https:');
+      return hostedElsewhere ? url : this.rewriteSessionUrl(url);
+    };
     session.apiUrl = this.rewriteSessionUrl(session.apiUrl);
-    session.downloadUrl = this.rewriteSessionUrl(session.downloadUrl);
+    session.downloadUrl = rewrite(session.downloadUrl);
     if (session.uploadUrl) {
-      session.uploadUrl = this.rewriteSessionUrl(session.uploadUrl);
+      session.uploadUrl = rewrite(session.uploadUrl);
     }
     if (session.eventSourceUrl) {
-      session.eventSourceUrl = this.rewriteSessionUrl(session.eventSourceUrl);
+      session.eventSourceUrl = rewrite(session.eventSourceUrl);
     }
   }
 

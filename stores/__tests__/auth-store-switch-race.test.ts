@@ -1,4 +1,5 @@
 import { beforeAll, expect, it, vi } from 'vitest';
+import { createConfig } from '@/lib/__tests__/fixtures/config';
 
 // Two overlapping switchAccount() calls (click account B, then C before the
 // first switch lands) used to snapshot B's live stores under account A's
@@ -61,7 +62,7 @@ beforeAll(() => {
       const a = [A, B, C][Number(m[1])];
       return new Response(JSON.stringify({ serverUrl: a.serverUrl, username: a.username, password: 'pw' }), { status: 200 });
     }
-    if (url.includes('/api/config')) return new Response(JSON.stringify({ settingsSyncEnabled: false }), { status: 200 });
+    if (url.includes('/api/config')) return new Response(JSON.stringify(createConfig()), { status: 200 });
     return new Response('{}', { status: 200 });
   }));
 });

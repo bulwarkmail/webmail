@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useAccountStore } from "@/stores/account-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { useIdentityStore } from "@/stores/identity-store";
@@ -80,39 +80,66 @@ export function useProMultiAccountIdentities(): {
   // Cache identities fetched per non-active account. Active account's
   // identities come live from useIdentityStore so signature/alias edits
   // there are reflected immediately without an extra round-trip.
+  //
+  // Each mount fetches each account once. Keyed on the set of connected
+  // logins, not on `accounts`: while a browser restores its logins they
+  // connect one after another, and refetching every account on each
+  // connection cost 1 + 2 + … + N identity reads - 45 with ten logins.
+  const connectedSignature = useAccountStore((s) =>
+    s.accounts.filter((a) => a.isConnected).map((a) => a.id).sort().join("\n"),
+  );
+  const fetchedThisMount = useRef(new Map<string, unknown>());
+  // Read at run time: the effect is keyed on the connected set, not on every
+  // rewrite of `accounts`.
+  const accountsRef = useRef(accounts);
+  accountsRef.current = accounts;
+  // A read outlives the run that started it - the effect re-runs on every
+  // connection - so its result is dropped only once the hook is gone.
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => { mounted.current = false; };
+  }, []);
   useEffect(() => {
     if (!enabled) {
       setRemoteIdentities({});
       return;
     }
+    const current = accountsRef.current;
     for (const id of remoteIdentityCache.keys()) {
-      if (!accounts.some((a) => a.id === id)) remoteIdentityCache.delete(id);
+      if (!current.some((a) => a.id === id)) remoteIdentityCache.delete(id);
     }
-    let cancelled = false;
+    const wanted = current.filter((a) => a.isConnected && a.id !== activeAccountId);
+    const wantedIds = new Set(wanted.map((a) => a.id));
+    const keepWanted = (record: Record<string, Identity[]>) =>
+      Object.fromEntries(Object.entries(record).filter(([id]) => wantedIds.has(id)));
+    // What is already known shows at once; only the logins not yet read by
+    // this mount - or whose client was replaced - are fetched.
+    setRemoteIdentities((prev) => ({
+      ...keepWanted(prev),
+      ...Object.fromEntries(wanted.flatMap((a) => {
+        const cached = remoteIdentityCache.get(a.id);
+        return cached ? [[a.id, cached]] : [];
+      })),
+    }));
     const getClientForAccount = useAuthStore.getState().getClientForAccount;
-    (async () => {
-      const next: Record<string, Identity[]> = {};
-      await Promise.all(
-        accounts
-          .filter((a) => a.isConnected && a.id !== activeAccountId)
-          .map(async (account) => {
-            const client = getClientForAccount(account.id);
-            if (!client) return;
-            try {
-              const list = await client.getIdentities();
-              remoteIdentityCache.set(account.id, list);
-              if (!cancelled) next[account.id] = list;
-            } catch {
-              // Skip accounts that fail to load identities - one bad
-              // account shouldn't blank the whole dropdown.
-              remoteIdentityCache.delete(account.id);
-            }
-          }),
-      );
-      if (!cancelled) setRemoteIdentities(next);
-    })();
-    return () => { cancelled = true; };
-  }, [enabled, accounts, activeAccountId]);
+    for (const account of wanted) {
+      const client = getClientForAccount(account.id);
+      if (!client || fetchedThisMount.current.get(account.id) === client) continue;
+      fetchedThisMount.current.set(account.id, client);
+      client.getIdentities()
+        .then((list) => {
+          remoteIdentityCache.set(account.id, list);
+          if (mounted.current) setRemoteIdentities((prev) => ({ ...prev, [account.id]: list }));
+        })
+        .catch(() => {
+          // Skip accounts that fail to load identities - one bad account
+          // shouldn't blank the whole dropdown. Try again on the next run.
+          remoteIdentityCache.delete(account.id);
+          fetchedThisMount.current.delete(account.id);
+        });
+    }
+  }, [enabled, connectedSignature, activeAccountId]);
 
   const groups = useMemo<AccountIdentityGroup[]>(() => {
     if (!enabled) return [];

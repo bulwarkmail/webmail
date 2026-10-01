@@ -1,5 +1,97 @@
 # Changelog
 
+## 1.12.0 (2026-09-30)
+
+1.12.0 lets you create filter rules straight from a message, offers the code from sign-in mail for one-click copying, and gives a phone linked with "Link Mobile App" a sign-in of its own, for every kind of account. Search now leaves Spam and Trash out by default, and emptying an ordinary folder moves its mail to the Trash. Browsers with many logins start up much faster. It also contains three security fixes, so please update.
+
+Thank you for your donations:
+
+- _You? [Become a sponsor!](https://github.com/sponsors/bulwarkmail)_
+
+**One-time**
+
+- Anonymous
+
+**Monthly**
+
+- [@yerTools](https://github.com/yerTools)
+- [@jsaathof](https://github.com/jsaathof)
+- [@berkersal](https://github.com/berkersal)
+- [@NABarnes](https://github.com/NABarnes)
+- [@felixzieger](https://github.com/felixzieger)
+- [@pr0ton11](https://github.com/pr0ton11)
+- [@fpauser](https://github.com/fpauser)
+- [@proxforge](https://github.com/proxforge)
+- [@spss20](https://github.com/spss20)
+- [@elgringoYan](https://github.com/elgringoYan)
+- [@pauladams8](https://github.com/pauladams8)
+- [@djpriest](https://github.com/djpriest)
+- [@umakers](https://github.com/umakers)
+- [@zplizzi](https://github.com/zplizzi)
+- [@jeremiah](https://github.com/jeremiah)
+- [@Theoretisch1337](https://github.com/Theoretisch1337)
+- [@svandive](https://github.com/svandive)
+- [@HiltMundell](https://github.com/HiltMundell)
+
+### Security
+
+- **Auth**: The password+TOTP login no longer sends the webmail's OAuth client secret to a mail server the user chose when custom JMAP endpoints are allowed. Only admin-configured servers get it
+- **Auth**: The identity provider round trip for "Link Mobile App" can no longer sign the browser in as whichever account answered it, and a re-authentication the provider answered from an existing session instead of a fresh login is refused
+- **Mail**: Opening a previewed SVG attachment in a new tab no longer runs the sender's script in the webmail origin
+
+### Features
+
+- **Mail**: A "Rules" entry in the message right-click menu creates filter rules from the message: always move mail from its sender, domain or mailing list, mark it read, tag it, or block the sender. A new rule can also run on the messages already in the folder, and it can be undone from the toast
+- **Filters**: The rule editor suggests conditions from the message it was opened from (subject, recipients, List-Id, sender domain), and the new "is the address" and "has the domain" conditions match an address exactly
+- **Mail**: Codes from sign-in and confirmation mail show as a copy chip in the message, and in the list for a day. "Show Verification Codes" in settings turns it off
+- **Mail**: In the unified view, rows can be tinted with their account's color instead of showing the account dot, and tags this browser has no definition for, such as ones set by a server-side filter, get a color of their own instead of grey (#1052, thanks @lucamzanon)
+- **Search**: The folder dropdown shows subfolders indented under their parents
+- **Composer**: Pasted plain-text lines that start with "- ", "* ", "• ", "1. " or "1) " become real lists
+- **Calendar**: The event popover finds the join link of Teams, Zoom, Meet, Webex, Jitsi, Whereby and GoTo meetings in the location or description, and the location opens in maps, with a copy button next to it (#1095, thanks @lucletoffe)
+- **Server**: `LIBRETRANSLATE_API_KEY_FILE`, `BULWARK_JWT_AUTH_SECRET_FILE`, `BULWARK_STALWART_MASTER_USER_FILE` and `BULWARK_STALWART_MASTER_PASSWORD_FILE` read these secrets from files, and the admin config accepts `oauthClientSecretFile` and `sessionSecretFile` (#897, thanks @Cameo007)
+- **Plugins**: `PLUGIN_SIGNING_KEY_FILE` points at an existing Ed25519 key for signing managed plugin bundles, for read-only secret mounts (#996, thanks @mulatta)
+- **Releases**: Container images and release files come with a signed build provenance attestation, and the standalone tarballs get a `.sha256`. The README explains how to check them with `gh attestation verify`
+
+### Changes
+
+- **Search**: Search leaves out Spam and Trash unless "All folders" is picked in the folder dropdown. A search started in Spam or Trash searches that folder
+- **Mail**: Emptying a folder other than Trash or Junk moves its mail to the Trash, unless deleted mail is set to be removed permanently
+- **Mobile app**: "Link Mobile App" is offered for every account. Password and password+TOTP accounts confirm their password (and code) in the dialog. The phone gets a sign-in of its own, so signing out in the browser no longer signs it out, and a sign-in link to copy sits next to the QR code. Failed password attempts are limited per account
+- **Calendar**: Events are drawn as solid blocks of their calendar's color; declined and cancelled events are outlined
+- **UI**: Success and info toasts are plain cards; only errors and warnings are colored
+- **Performance**: With many logins, the browser restores them four at a time and no longer reloads every login's folders, identities and push connections each time one of them connects (#1132, thanks @lucamzanon)
+- **License**: An additional permission under section 7 of the AGPL allows distributing apps built from this code through app stores. It is provisional until every earlier contributor has agreed ([consent request](https://github.com/orgs/bulwarkmail/discussions/1113)) and applies in full to contributions made since 30 September 2026
+- **Docs**: Guidelines for AI-assisted contributions in the README and CONTRIBUTING.md
+
+### Fixes
+
+- **Mail**: Clicking a folder's unread count lists only that folder's unread mail, not unread mail from every folder of every account
+- **Mail**: In "unread first" lists, a message you open stays in place until you open another
+- **Mail**: The message list no longer flashes a reload right after the page opens
+- **Mail**: On tablets, the message list comes back when the reading pane empties, for example after the open message is deleted or moved
+- **Mail**: Dividers between rows no longer disappear at 125% or 150% display scaling
+- **Mail**: The unread dot is centred on the sender avatar
+- **Mail**: Attachments declared with a type the browser cannot show, such as `application/x-as400attachment` from IBM i systems, `application/x-pdf` or a catch-all type, preview according to their file name (#1127, thanks @dealerweb)
+- **Send**: Recipients the server refuses at send are reported. When it refuses all of them, the message stays open as not sent; otherwise a warning names the refused ones (#1123)
+- **Composer**: The message body stays reachable in short reading panes, such as the bottom reading pane on a laptop (#1114)
+- **Composer**: Pasted plain text keeps its blank lines
+- **Push**: A notification link waits for a login that is still reconnecting instead of reporting the account as signed out, opens the folder of the right account, and no longer pulls you away from something you opened in the meantime (#1131, thanks @lucamzanon)
+- **Push**: A browser subscribed with another VAPID key resubscribes on its own, and Firefox can turn push on again when it cannot read its old subscription (#1121, thanks @shukiv)
+- **Calendar**: Dragged events no longer disappear: all-day events moved in the month view keep their start, and occurrences of recurring events with a UTC start, as in Google Calendar exports, no longer shift by the time-zone offset (#1119)
+- **Calendar**: A failed calendar fetch no longer hides every calendar or leaves only the birthday calendar selected
+- **Calendar**: The all-day area of the week view is sized from the visible week, stacks each day's tasks under its all-day events, and collapses to three rows with a toggle (#1122, thanks @sanitz)
+- **Calendar**: The Save button shows while an event is saving, and a save refused for its length says so (#921, thanks @texchi2)
+- **Calendar**: Invitations no longer carry blank participant names or an empty description (#748, thanks @lucletoffe)
+- **Files**: Files shared with you open and save in the office editor (#1094)
+- **Files**: Office editing works behind a reverse proxy at a sub-path (`NEXT_PUBLIC_BASE_PATH`) (#1101, thanks @dealerweb)
+- **Accounts**: Adding a sixth account through server-side SSO no longer overwrites the first account's sign-in
+- **Mobile app**: The app's "Sign in via webmail" keeps working past the first token expiry when the webmail uses a confidential OAuth client or an identity provider on another host
+- **Admin**: Admin sign-in works over plain HTTP. The admin cookie's Secure flag follows the request, or `COOKIE_SECURE` when it is set (#1063, thanks @lucamzanon)
+- **Admin**: The OAuth scope fields show the actual default scopes, which do not include `offline_access` (#1126)
+- **Lite**: SSO sessions survive a page reload with identity providers such as Rauthy that refuse an early token refresh (#552)
+- **UI**: The app retries loading its configuration after a timeout or a failed request instead of staying broken (#1112, thanks @theLucius7)
+- **Docker**: The image builds from a remote Git context (#1118)
+
 ## 1.11.2 (2026-09-26)
 
 1.11.2 fixes the Docker image and the standalone tarballs of 1.11.1, which did not start. It contains all the security fixes from 1.11.1, so please update.

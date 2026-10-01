@@ -1,4 +1,5 @@
 import { beforeAll, expect, it, vi } from 'vitest';
+import { createConfig } from '@/lib/__tests__/fixtures/config';
 
 // Signing out of the active account when the next registered account has no
 // live client (its restore failed at boot) takes the full-logout path. That
@@ -62,7 +63,7 @@ beforeAll(() => {
       }
     }
     if (url.includes('/api/auth/token') && method === 'DELETE') { deletes.push(url); return new Response('{}', { status: 200 }); }
-    if (url.includes('/api/config')) return new Response(JSON.stringify({ settingsSyncEnabled: false }), { status: 200 });
+    if (url.includes('/api/config')) return new Response(JSON.stringify(createConfig()), { status: 200 });
     return new Response('{}', { status: 200 });
   }));
   vi.spyOn(nav, 'replaceWindowLocation').mockImplementation(() => {});

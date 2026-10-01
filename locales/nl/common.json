@@ -17,6 +17,7 @@
     "reconnecting": "Verbinding verloren. Opnieuw verbinden…",
     "error": {
       "invalid_credentials": "Ongeldig e-mailadres of wachtwoord",
+      "invalid_token": "De server heeft dit toegangstoken niet geaccepteerd. Controleer of het volledig is en niet is verlopen of ingetrokken.",
       "connection_failed": "Kan geen verbinding maken met de server",
       "cors_blocked": "De server is bereikbaar maar blokkeert cross-origin verzoeken. Controleer de CORS-instellingen van uw JMAP-server en sta dit domein toe.",
       "server_error": "De server is tijdelijk niet beschikbaar. Probeer het later opnieuw.",
@@ -28,6 +29,11 @@
     "show_password": "Wachtwoord tonen",
     "hide_password": "Wachtwoord verbergen",
     "totp_toggle": "Ik heb een 2FA-code",
+    "token_toggle": "Aanmelden met een toegangstoken",
+    "password_toggle": "Aanmelden met een wachtwoord",
+    "token_label": "Toegangstoken",
+    "token_placeholder": "Plak uw API-token",
+    "token_hint": "Maak een API-token aan in de instellingen van uw e-mailprovider en plak het hier.",
     "remember_me": "Onthoud mij",
     "config_error": {
       "title": "Configuratiefout",
@@ -114,6 +120,7 @@
     "unified_archive": "Alle archieven",
     "unified_junk": "Alle spam",
     "all_accounts": "Alle accounts",
+    "all_accounts_loading": "Accounts laden: {loaded} van {total}",
     "unified_mailbox": "Gecombineerd postvak",
     "expand": "Uitklappen",
     "collapse": "Inklappen",
@@ -718,6 +725,7 @@
     "recipient_name_placeholder": "Weergavenaam",
     "autocomplete_search_server": "Op de server zoeken",
     "autocomplete_searching": "Bezig met zoeken...",
+    "mention_recipients": "Ontvangers",
     "toolbar": {
       "bold": "Vet",
       "italic": "Cursief",
@@ -1507,6 +1515,10 @@
         "label": "Waarschuwing bij leeg onderwerp",
         "description": "Vraag om bevestiging voordat een bericht zonder onderwerp wordt verzonden."
       },
+      "recipient_mentions": {
+        "label": "Ontvangers noemen met @",
+        "description": "Als je @ typt in het bericht, worden de ontvangers voorgesteld en wordt de voornaam van de gekozen ontvanger ingevoegd. Enter of Tab kiest de gemarkeerde naam."
+      },
       "hide_inline_image_attachments": {
         "label": "Inline-afbeeldingen verbergen uit bijlagenlijst",
         "description": "Afbeeldingen die in de berichttekst zijn ingesloten worden niet als aparte bijlagen weergegeven"
@@ -1601,6 +1613,7 @@
       "auth_method_label": "Authenticatie",
       "auth_method_oauth": "Single Sign-On (OAuth/OIDC)",
       "auth_method_basic": "Wachtwoord",
+      "auth_method_token": "Toegangstoken",
       "demo_account": "Demoaccount",
       "email": {
         "label": "E-mailadres",
@@ -1958,6 +1971,32 @@
       },
       "about": {
         "title": "Bulwark Webmail"
+      },
+      "spam_siege": {
+        "title": "Spam Siege",
+        "intro": "Klik op spam en phishing voordat ze uw inbox bereiken. Laat echte e-mail door. Verliest u alle drie de schilden, dan valt de inbox.",
+        "kinds": {
+          "spam": "Spam",
+          "phishing": "Phishing",
+          "legit": "Echte e-mail"
+        },
+        "click_to_block": "Klik om te blokkeren",
+        "let_through": "Doorlaten",
+        "start": "Starten",
+        "play_again": "Opnieuw spelen",
+        "score": "Score",
+        "combo": "Reeksbonus",
+        "shields_left": "{count} van {total} schilden over",
+        "seconds": "{seconds} s",
+        "best": "Record: {score}",
+        "new_best": "Nieuw record",
+        "held": "Inbox verdedigd",
+        "overrun": "Inbox overlopen",
+        "stats": {
+          "caught": "Geblokkeerd",
+          "delivered": "Bezorgd",
+          "mistakes": "Fouten"
+        }
       }
     },
     "sidebar_apps": {
@@ -2928,6 +2967,7 @@
       "save_note": "Opslaan",
       "note_saved": "Notitie toegevoegd",
       "open_link": "Link openen",
+      "copy_location": "Locatie kopiëren",
       "meeting_link": "Vergaderlink",
       "tentative": "Voorlopig",
       "cancelled": "Geannuleerd",

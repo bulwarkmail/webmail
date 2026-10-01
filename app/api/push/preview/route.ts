@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
+import { cleanPreview } from '@/lib/utils';
 import { MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
 import { readStalwartAuthContextFromStore } from '@/lib/stalwart/auth-context';
 import {
@@ -270,6 +271,10 @@ export async function GET(request: NextRequest) {
       }
       email = delivered;
     }
+
+    // Some servers build the preview from HTML without skipping <style>; a
+    // notification that opens on a style sheet says nothing.
+    if (email?.preview) email = { ...email, preview: cleanPreview(email.preview) };
 
     return NextResponse.json({
       email,

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { logger } from '@/lib/logger';
-import { encryptSession, decryptSession } from '@/lib/auth/crypto';
+import { encryptSession, decryptSession, sessionAuthHeader, type SessionCredentials } from '@/lib/auth/crypto';
 import { SESSION_COOKIE_MAX_AGE, sessionCookieName } from '@/lib/auth/session-cookie';
 import { getCookieOptions } from '@/lib/oauth/cookie-config';
 import { JmapAuthVerificationError, verifyJmapIdentity } from '@/lib/auth/verify-jmap-auth';
@@ -35,7 +35,7 @@ function sessionCookieOptions() {
  * the session cookie; it opens every mailbox, so it is never handed back to
  * a browser, whichever path stored it.
  */
-function holdsMasterPassword(credentials: { password: string }): boolean {
+function holdsMasterPassword(credentials: SessionCredentials): boolean {
   const config = readImpersonationConfig();
   return !!config && credentials.password === config.masterPassword;
 }
@@ -85,8 +85,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Basic authentication is disabled' }, { status: 403 });
     }
 
-    const { serverUrl, username, password, slot: bodySlot } = await request.json();
-    if (!serverUrl || !username || !password) {
+    // A password signs in with Basic auth, an access token (token login) with
+    // Bearer: exactly one of them.
+    const { serverUrl, username, password, token: accessToken, slot: bodySlot } = await request.json();
+    if (!serverUrl || !username || typeof (password || accessToken) !== 'string' || !!password === !!accessToken) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
@@ -120,7 +122,9 @@ export async function POST(request: NextRequest) {
 
     const slot = typeof bodySlot === 'number' && bodySlot >= 0 && bodySlot < MAX_ACCOUNT_SLOTS ? bodySlot : getSlot(request);
     const cookieName = sessionCookieName(slot);
-    const authHeader = `Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`;
+    const authHeader = accessToken
+      ? `Bearer ${accessToken}`
+      : `Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`;
     // Always verify the credential upstream (GHSA-wxcm-j4jc-9fxq). The cookies
     // written here are not only replayed as credentials (where a bogus
     // password would just 401 downstream): the encrypted auth context is also
@@ -131,7 +135,7 @@ export async function POST(request: NextRequest) {
     const normalizedServerUrl = await verifyJmapIdentity(upstreamUrl, authHeader, username, {
       trusted: upstreamTrusted,
     });
-    const token = encryptSession(normalizedServerUrl, username, password);
+    const token = encryptSession(normalizedServerUrl, username, accessToken ? { token: accessToken } : password);
     const cookieStore = await cookies();
     cookieStore.set(cookieName, token, sessionCookieOptions());
     setStalwartAuthContextInStore(cookieStore, slot, {
@@ -179,7 +183,7 @@ export async function GET(request: NextRequest) {
     setStalwartAuthContextInStore(cookieStore, slot, {
       serverUrl: credentials.serverUrl,
       username: credentials.username,
-      authHeader: `Basic ${Buffer.from(`${credentials.username}:${credentials.password}`).toString('base64')}`,
+      authHeader: sessionAuthHeader(credentials),
     });
 
     // Only return non-sensitive fields. Use PUT to retrieve full credentials.
@@ -195,7 +199,7 @@ export async function GET(request: NextRequest) {
 }
 
 /**
- * PUT - retrieve full credentials (including password) for session restoration.
+ * PUT - retrieve full credentials (password or access token) for session restoration.
  * Protected by multiple Sec-Fetch-* headers to ensure only same-origin
  * browser fetch() requests succeed. Non-browser clients cannot forge these.
  */
@@ -229,7 +233,7 @@ export async function PUT(request: NextRequest) {
     setStalwartAuthContextInStore(cookieStore, slot, {
       serverUrl: credentials.serverUrl,
       username: credentials.username,
-      authHeader: `Basic ${Buffer.from(`${credentials.username}:${credentials.password}`).toString('base64')}`,
+      authHeader: sessionAuthHeader(credentials),
     });
 
     return NextResponse.json(credentials, {

@@ -45,6 +45,9 @@ import {
 } from '@/lib/auth/lite-tokens';
 import { clearLiteOAuthFlow, readLiteOAuthFlow } from '@/lib/auth/lite-oauth';
 
+/** Logins restored at once after the one on screen: enough to overlap round trips, few enough not to crowd the server. */
+const RESTORE_CONCURRENCY = 4;
+
 interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
@@ -56,7 +59,7 @@ interface AuthState {
   client: IJMAPClient | null;
   identities: Identity[];
   primaryIdentity: Identity | null;
-  authMode: 'basic' | 'oauth';
+  authMode: 'basic' | 'oauth' | 'token';
   rememberMe: boolean;
   accessToken: string | null;
   tokenExpiresAt: number | null;
@@ -69,8 +72,21 @@ interface AuthState {
    * (push notifications) re-run over the now-complete client set.
    */
   connectedAccountsRevision: number;
+  /**
+   * True while the logins other than the one on screen are still being
+   * restored after a load, so views that span every login (the unified
+   * mailbox) can say they are not complete yet.
+   */
+  restoringAccounts: boolean;
 
   login: (serverUrl: string, username: string, password: string, totp?: string, rememberMe?: boolean) => Promise<boolean>;
+  /**
+   * Sign in with an access token instead of a password (Bearer auth), for
+   * servers that hand out API tokens, such as Fastmail. The token names no
+   * account: the JMAP session says whose it is. It is never renewed; once
+   * the server stops accepting it, the user signs in again.
+   */
+  loginWithToken: (serverUrl: string, token: string, rememberMe?: boolean) => Promise<boolean>;
   loginWithOAuth: (serverUrl: string, code: string, codeVerifier: string, redirectUri: string, serverId?: string) => Promise<boolean>;
   loginWithServerSso: (code: string, state: string) => Promise<boolean>;
   loginDemo: () => Promise<boolean>;
@@ -141,8 +157,9 @@ function isRateLimitError(error: unknown): error is RateLimitError {
 }
 
 /**
- * Ask our own backend to try the Basic credentials before the browser does
- * (#969). A wrong password answered straight from the JMAP server arrives as
+ * Ask our own backend to try the credentials before the browser does (#969):
+ * a password, or the access token of a token login. A wrong password answered
+ * straight from the JMAP server arrives as
  * 401 + `WWW-Authenticate: Basic`, which makes the browser open its native
  * login dialog on top of our form when the JMAP server shares our origin
  * (reverse-proxied under the same host). Rejecting wrong credentials via a
@@ -151,7 +168,10 @@ function isRateLimitError(error: unknown): error is RateLimitError {
  * reach the JMAP server, TOTP challenge, ...) falls through to the regular
  * browser-side connect so no deployment loses the ability to log in.
  */
-async function precheckBasicCredentials(serverUrl: string, username: string, password: string): Promise<boolean> {
+async function precheckCredentials(
+  serverUrl: string,
+  credentials: { username: string; password: string } | { token: string },
+): Promise<boolean> {
   // App-relative servers (the dev mock) never send a Basic challenge, and the
   // static Lite build has no backend to ask.
   if (IS_LITE || serverUrl.startsWith('/')) return false;
@@ -159,7 +179,7 @@ async function precheckBasicCredentials(serverUrl: string, username: string, pas
     const res = await apiFetch('/api/auth/verify', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ serverUrl, username, password }),
+      body: JSON.stringify({ serverUrl, ...credentials }),
     });
     if (!res.ok) return false;
     const body = await res.json().catch(() => null);
@@ -462,19 +482,34 @@ async function exchangeOAuthCode(params: {
   }
 }
 
-/** POST /api/auth/session?slot=N - remember Basic credentials for `slot`. */
-async function persistBasicSession(slot: number, serverUrl: string, username: string, password: string): Promise<void> {
+/**
+ * Credentials a remembered session signs back in with: the password (Basic
+ * auth), or the access token of a token login (Bearer auth).
+ */
+type RememberedSession =
+  | { serverUrl: string; username: string; password: string; token?: undefined }
+  | { serverUrl: string; username: string; token: string; password?: undefined };
+
+/** A client for remembered credentials. */
+function clientForSession(session: RememberedSession): JMAPClient {
+  return session.token !== undefined
+    ? JMAPClient.withBearer(session.serverUrl, session.token, session.username)
+    : new JMAPClient(session.serverUrl, session.username, session.password);
+}
+
+/** POST /api/auth/session?slot=N - remember a password or access token for `slot`. */
+async function persistSession(slot: number, session: RememberedSession): Promise<void> {
   if (IS_LITE) {
-    // Only reached when the server has no token login: keep the credentials
-    // with this tab so a reload does not sign the user out.
-    saveLiteBasicSession(slot, { serverUrl, username, password });
+    // Only reached for a password when the server has no token login: keep
+    // the credentials with this tab so a reload does not sign the user out.
+    saveLiteBasicSession(slot, session);
     return;
   }
   try {
     const res = await apiFetch(`/api/auth/session?slot=${slot}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ serverUrl, username, password, slot }),
+      body: JSON.stringify({ ...session, slot }),
     });
     if (!res.ok) debug.error('Failed to store session: server returned', res.status);
   } catch (err) {
@@ -506,7 +541,7 @@ async function fetchSlotAccessToken(slot: number, opts: { force?: boolean } = {}
   });
 }
 
-/** PUT /api/auth/session[?slot=N] - the slot's remembered Basic credentials. */
+/** PUT /api/auth/session[?slot=N] - the slot's remembered password or access token. */
 async function fetchSlotSession(slot?: number): Promise<Response> {
   if (!IS_LITE) {
     return apiFetch(slot === undefined ? '/api/auth/session' : `/api/auth/session?slot=${slot}`, { method: 'PUT' });
@@ -1219,6 +1254,7 @@ export const useAuthStore = create<AuthState>()(
       activeAccountId: null,
       isDemoMode: false,
       connectedAccountsRevision: 0,
+      restoringAccounts: false,
 
       login: async (serverUrl, typedUsername, password, totp, rememberMe) => {
         set({ isLoading: true, error: null, isRateLimited: false, rateLimitUntil: null });
@@ -1302,7 +1338,7 @@ export const useAuthStore = create<AuthState>()(
             } else if (totp) {
               // Legacy fallback for pre-0.16 Stalwart, which accepts the TOTP
               // appended to the password over basic auth.
-              if (await precheckBasicCredentials(serverUrl, username, `${password}$${totp}`)) {
+              if (await precheckCredentials(serverUrl, { username, password: `${password}$${totp}` })) {
                 throw new Error('Invalid username or password');
               }
               client = new JMAPClient(serverUrl, username, `${password}$${totp}`);
@@ -1313,12 +1349,12 @@ export const useAuthStore = create<AuthState>()(
             } else {
               // Lite on a server without token login (or one that blocks the
               // browser's /api/auth call): plain Basic auth; the session is
-              // then kept with the tab only, see persistBasicSession.
+              // then kept with the tab only, see persistSession.
               client = new JMAPClient(serverUrl, username, password);
               await client.connect();
             }
           } else {
-            if (await precheckBasicCredentials(serverUrl, username, password)) {
+            if (await precheckCredentials(serverUrl, { username, password })) {
               throw new Error('Invalid username or password');
             }
             client = new JMAPClient(serverUrl, username, password);
@@ -1347,7 +1383,7 @@ export const useAuthStore = create<AuthState>()(
           // out; the regular build only writes the cookie when the user asked
           // to be remembered.
           const sessionWrite: Promise<unknown> = ((IS_LITE ? tokenLoginUnavailable : rememberMe) && !upgradedToOAuth)
-            ? persistBasicSession(cookieSlot, serverUrl, username, password)
+            ? persistSession(cookieSlot, { serverUrl, username, password })
             : Promise.resolve();
 
           const [rawIdentities] = await Promise.all([
@@ -1454,6 +1490,120 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
+      loginWithToken: async (serverUrl, typedToken, rememberMe) => {
+        set({ isLoading: true, error: null, isRateLimited: false, rateLimitUntil: null });
+
+        // Pasted tokens often come with the scheme or surrounding whitespace.
+        const token = typedToken.trim().replace(/^Bearer\s+/i, '');
+
+        try {
+          if (!token || /\s/.test(token) || await precheckCredentials(serverUrl, { token })) {
+            throw new Error('INVALID_TOKEN');
+          }
+
+          // No refresh callback: a pasted token cannot be renewed.
+          const client = JMAPClient.withBearer(serverUrl, token, '');
+          try {
+            await client.connect();
+          } catch (err) {
+            if (err instanceof Error && /^Authentication failed|: 40[13]$/.test(err.message)) {
+              throw new Error('INVALID_TOKEN');
+            }
+            throw err;
+          }
+
+          const username = client.getSessionUsername() || client.getUsername();
+          if (!username) throw new Error('The server did not name the account');
+
+          const accountStore = useAccountStore.getState();
+          const accountId = generateAccountId(username, serverUrl);
+          const cookieSlot = accountStore.getAccountById(accountId)?.cookieSlot ?? accountStore.getNextCookieSlot();
+
+          const prevAccountId = get().activeAccountId;
+          if (prevAccountId && prevAccountId !== accountId) {
+            snapshotAccount(prevAccountId);
+            clearAllStores();
+          }
+
+          // Lite keeps the token with the tab either way, like its Basic
+          // sessions; the regular build only when asked to remember it.
+          const [rawIdentities] = await Promise.all([
+            client.getIdentities(),
+            IS_LITE || rememberMe ? persistSession(cookieSlot, { serverUrl, username, token }) : null,
+            syncStalwartAuthContext(serverUrl, username, client.getAuthHeader(), cookieSlot),
+          ]);
+
+          const { identities, primaryIdentity } = loadIdentities(rawIdentities, username);
+          initializeFeatureStores(client);
+
+          clients.set(accountId, client);
+          bindClientStatusHandlers(client, set, get, accountId);
+
+          accountStore.addAccount({
+            label: primaryIdentity?.name || username,
+            serverUrl,
+            username,
+            authMode: 'token',
+            rememberMe: !!rememberMe,
+            displayName: primaryIdentity?.name || username,
+            email: primaryIdentity?.email || username,
+            lastLoginAt: Date.now(),
+            isConnected: true,
+            hasError: false,
+            isDefault: accountStore.accounts.length === 0,
+          });
+          // The session was remembered at `cookieSlot`; see loginWithOAuth.
+          const serverIdentifiers = buildServerIdentifiers(client.getSessionUsername(), primaryIdentity?.email, serverUrl);
+          accountStore.updateAccount(accountId, {
+            cookieSlot,
+            authMode: 'token',
+            rememberMe: !!rememberMe,
+            providerSession: false,
+            ...(serverIdentifiers.length > 0 ? { serverIdentifiers } : {}),
+          });
+          accountStore.setActiveAccount(accountId);
+          void syncAccountDisplayName(accountId, client, primaryIdentity?.name);
+
+          set({
+            isAuthenticated: true,
+            isLoading: false,
+            serverUrl,
+            username,
+            client,
+            ...getClientRateLimitState(client),
+            identities,
+            primaryIdentity,
+            authMode: 'token',
+            rememberMe: !!rememberMe,
+            accessToken: null,
+            tokenExpiresAt: null,
+            connectionLost: false,
+            error: null,
+            activeAccountId: accountId,
+          });
+
+          import('@/stores/email-store').then(({ useEmailStore }) => {
+            useEmailStore.getState().prefetchInitialData(client).catch((err) => {
+              debug.error('Initial data prefetch failed:', err);
+            });
+          }).catch(() => {});
+
+          resumeSettingsSync({ id: accountId, username, serverUrl });
+          return true;
+        } catch (error) {
+          debug.error('Token login error:', error);
+          set({
+            isLoading: false,
+            error: error instanceof Error && error.message === 'INVALID_TOKEN' ? 'invalid_token' : classifyLoginError(error),
+            isAuthenticated: false,
+            isRateLimited: false,
+            rateLimitUntil: null,
+            client: null,
+          });
+          return false;
+        }
+      },
+
       loginDemo: async () => {
         set({ isLoading: true, error: null, isRateLimited: false, rateLimitUntil: null });
         try {
@@ -1539,7 +1689,7 @@ export const useAuthStore = create<AuthState>()(
             ? sessionStorage.getItem('oauth_cookie_slot')
             : null;
           const pendingSlot = rawSlot !== null ? parseInt(rawSlot, 10) : NaN;
-          const slot = !isNaN(pendingSlot) && pendingSlot >= 0 && pendingSlot <= 4
+          const slot = !isNaN(pendingSlot) && pendingSlot >= 0 && pendingSlot < MAX_ACCOUNT_SLOTS
             ? pendingSlot
             : accountStore.getNextCookieSlot();
 
@@ -2154,15 +2304,15 @@ export const useAuthStore = create<AuthState>()(
                   targetAccount.cookieSlot,
                 );
               }
-            } else if (targetAccount.authMode === 'basic' && targetAccount.rememberMe) {
+            } else if (targetAccount.rememberMe) {
               const res = await fetchSlotSession(targetAccount.cookieSlot);
               if (res.ok) {
-                const { serverUrl, username, password } = await res.json();
-                targetClient = new JMAPClient(serverUrl, username, password);
+                const session: RememberedSession = await res.json();
+                targetClient = clientForSession(session);
                 bindClientStatusHandlers(targetClient, set, get, accountId);
                 await targetClient.connect();
                 clients.set(accountId, targetClient);
-                await syncStalwartAuthContext(serverUrl, username, targetClient.getAuthHeader(), targetAccount.cookieSlot);
+                await syncStalwartAuthContext(session.serverUrl, session.username, targetClient.getAuthHeader(), targetAccount.cookieSlot);
               }
             }
           } catch (err) {
@@ -2348,7 +2498,7 @@ export const useAuthStore = create<AuthState>()(
             const restore = await apiFetch('/api/auth/session', { method: 'PUT' });
             if (restore.ok) {
               const data = await restore.json();
-              if (data?.serverUrl && data?.username && data?.password) {
+              if (data?.serverUrl && data?.username && (data?.password || data?.token)) {
                 // Stalwart master-user impersonation uses "target%master" as
                 // the auth username. The full string must be preserved for
                 // JMAP auth, but the user-facing display (avatar, switcher,
@@ -2361,7 +2511,7 @@ export const useAuthStore = create<AuthState>()(
                   label: displayMailbox,
                   serverUrl: data.serverUrl,
                   username: fullUsername,
-                  authMode: 'basic',
+                  authMode: data.token ? 'token' : 'basic',
                   rememberMe: true,
                   displayName: displayMailbox,
                   email: displayMailbox,
@@ -2396,12 +2546,13 @@ export const useAuthStore = create<AuthState>()(
           const restoreAccount = async (account: (typeof accounts)[number]) => {
             if (clients.has(account.id)) return; // Already connected
 
-            // Basic auth without rememberMe leaves nothing to restore - the
-            // user logged in without persisting credentials. Evict silently
-            // so the login screen is shown without flagging a fake error.
-            // (Lite keeps a tab-scoped Basic session either way; a missing one
-            // surfaces as a 401 from fetchSlotSession below and evicts too.)
-            if (account.authMode === 'basic' && !account.rememberMe && !IS_LITE) {
+            // A password or access token login without rememberMe leaves
+            // nothing to restore - the user logged in without persisting
+            // credentials. Evict silently so the login screen is shown without
+            // flagging a fake error. (Lite keeps a tab-scoped session either
+            // way; a missing one surfaces as a 401 from fetchSlotSession below
+            // and evicts too.)
+            if (account.authMode !== 'oauth' && !account.rememberMe && !IS_LITE) {
               evictAccount(account.id);
               accountStore.removeAccount(account.id);
               return;
@@ -2433,10 +2584,10 @@ export const useAuthStore = create<AuthState>()(
               } else {
                 const res = await fetchSlotSession(account.cookieSlot);
                 if (res.ok) {
-                  const { serverUrl, username, password } = await res.json();
-                  const client = new JMAPClient(serverUrl, username, password);
+                  const session: RememberedSession = await res.json();
+                  const client = clientForSession(session);
                   bindClientStatusHandlers(client, set, get, account.id);
-                  const contextSync = syncStalwartAuthContext(serverUrl, username, client.getAuthHeader(), account.cookieSlot);
+                  const contextSync = syncStalwartAuthContext(session.serverUrl, session.username, client.getAuthHeader(), account.cookieSlot);
                   await client.connect();
                   clients.set(account.id, client);
                   await contextSync;
@@ -2486,16 +2637,28 @@ export const useAuthStore = create<AuthState>()(
           const otherAccounts = accounts.filter((account) => account.id !== targetId);
           if (targetEntry) await restoreAccount(targetEntry);
 
+          // A few at a time rather than one after the other: with many logins
+          // the serial walk left the last of them - and with it a complete
+          // unified inbox - waiting on every other login's round trips. Each
+          // restore handles its own failures, so one slow or broken login
+          // holds up only its own slot.
           const restoreRemaining = async () => {
-            for (const account of otherAccounts) {
-              await restoreAccount(account);
-            }
+            const queue = [...otherAccounts];
+            const worker = async () => {
+              for (let next = queue.shift(); next; next = queue.shift()) {
+                await restoreAccount(next);
+              }
+            };
+            await Promise.allSettled(
+              Array.from({ length: Math.min(RESTORE_CONCURRENCY, queue.length) }, worker),
+            );
           };
 
           if (clients.has(targetId)) {
             if (otherAccounts.length > 0) {
+              set({ restoringAccounts: true });
               void restoreRemaining().then(() => {
-                set((state) => ({ connectedAccountsRevision: state.connectedAccountsRevision + 1 }));
+                set((state) => ({ connectedAccountsRevision: state.connectedAccountsRevision + 1, restoringAccounts: false }));
               });
             }
           } else {
@@ -2775,7 +2938,7 @@ export const useAuthStore = create<AuthState>()(
         client.updateBasicAuth(newPassword);
         await syncStalwartAuthContext(account.serverUrl, account.username, client.getAuthHeader(), account.cookieSlot);
         if (account.rememberMe || IS_LITE) {
-          await persistBasicSession(account.cookieSlot, account.serverUrl, account.username, newPassword);
+          await persistSession(account.cookieSlot, { serverUrl: account.serverUrl, username: account.username, password: newPassword });
         }
       },
 

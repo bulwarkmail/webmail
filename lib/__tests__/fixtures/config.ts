@@ -1,0 +1,43 @@
+import type { ConfigData } from '@/hooks/use-config';
+
+/** A complete server response; callers override only the behavior under test. */
+export function createConfig(overrides: Partial<ConfigData> = {}): ConfigData {
+  return {
+    appName: 'Example Mail',
+    jmapServerUrl: 'https://mail.example.com',
+    oauthEnabled: false,
+    oauthOnly: false,
+    oauthClientId: '',
+    oauthIssuerUrl: '',
+    oauthScopes: '',
+    rememberMeEnabled: false,
+    settingsSyncEnabled: false,
+    stalwartFeaturesEnabled: true,
+    stalwartJmapPassthroughEnabled: true,
+    devMode: false,
+    faviconUrl: '/branding/Bulwark_Favicon.svg',
+    appLogoLightUrl: '',
+    appLogoDarkUrl: '',
+    loginLogoLightUrl: '/branding/Bulwark_Logo_Color.svg',
+    loginLogoDarkUrl: '/branding/Bulwark_Logo_White.svg',
+    loginCompanyName: '',
+    loginImprintUrl: '',
+    loginPrivacyPolicyUrl: '',
+    loginWebsiteUrl: '',
+    loginLogoMaxHeight: '',
+    loginLogoMaxWidth: '',
+    loginShowHeading: true,
+    loginShowSubtitle: true,
+    loginShowTotp: true,
+    loginShowTokenLogin: false,
+    loginShowVersion: true,
+    demoMode: false,
+    autoSsoEnabled: false,
+    allowCustomJmapEndpoint: false,
+    jmapServers: [],
+    jmapServerAutoPickByDomain: false,
+    embeddedMode: false,
+    parentOrigin: '',
+    ...overrides,
+  };
+}

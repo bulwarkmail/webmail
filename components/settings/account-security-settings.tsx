@@ -1435,7 +1435,9 @@ export function AccountSecuritySettings() {
   const t = useTranslations('settings.security');
   const { isStalwart, isProbing, probe, fetchAll, fetchAuthInfo, fetchPublicKeys, fetchCryptoInfo } = useAccountSecurityStore();
   const { isAuthenticated, authMode, client } = useAuthStore();
-  const isOAuth = authMode === 'oauth';
+  // OAuth and access-token sign-ins hold no password to change, and mail
+  // apps need an app password instead.
+  const withoutPassword = authMode === 'oauth' || authMode === 'token';
 
   // Wait for `client` before probing. On reload the persisted `isAuthenticated`
   // flips true before the async OAuth reconnect sets `client`; probing in that
@@ -1446,7 +1448,7 @@ export function AccountSecuritySettings() {
     if (isAuthenticated && client && isStalwart === null) {
       probe().then((detected) => {
         if (detected) {
-          if (isOAuth) {
+          if (withoutPassword) {
             fetchAuthInfo();
             fetchPublicKeys();
             fetchCryptoInfo();
@@ -1456,7 +1458,7 @@ export function AccountSecuritySettings() {
         }
       });
     }
-  }, [isAuthenticated, client, isStalwart, probe, fetchAll, fetchAuthInfo, isOAuth, fetchPublicKeys, fetchCryptoInfo]);
+  }, [isAuthenticated, client, isStalwart, probe, fetchAll, fetchAuthInfo, withoutPassword, fetchPublicKeys, fetchCryptoInfo]);
 
   // Until the probe has a verdict, show the spinner instead of guessing a
   // layout: switching layouts remounts every section below, which threw away
@@ -1500,7 +1502,7 @@ export function AccountSecuritySettings() {
   return (
     <SettingsSection title={t('title')} description={t('description')}>
       <div className="space-y-6">
-        {!isOAuth && (
+        {!withoutPassword && (
           <>
             <PasswordChangeSection />
             <div className="border-t border-border" />
@@ -1529,7 +1531,7 @@ export function AccountSecuritySettings() {
           </>
         )}
 
-        {isOAuth && (
+        {withoutPassword && (
           <>
             <div className="border-t border-border" />
             <EmailClientSection />

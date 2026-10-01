@@ -17,6 +17,7 @@
     "reconnecting": "Verbindung verloren. Verbindung wird wiederhergestellt…",
     "error": {
       "invalid_credentials": "Ungültige E-Mail-Adresse oder Passwort",
+      "invalid_token": "Der Server hat dieses Zugriffstoken nicht akzeptiert. Prüfen Sie, ob es vollständig ist und nicht abgelaufen oder widerrufen wurde.",
       "connection_failed": "Verbindung zum Server fehlgeschlagen",
       "cors_blocked": "Der Server ist erreichbar, blockiert aber Cross-Origin-Anfragen. Überprüfen Sie die CORS-Einstellungen Ihres JMAP-Servers und erlauben Sie diese Domain.",
       "server_error": "Der Server ist vorübergehend nicht erreichbar. Bitte versuchen Sie es später erneut.",
@@ -28,6 +29,11 @@
     "show_password": "Passwort anzeigen",
     "hide_password": "Passwort verbergen",
     "totp_toggle": "Ich habe einen 2FA-Code",
+    "token_toggle": "Mit Zugriffstoken anmelden",
+    "password_toggle": "Mit Passwort anmelden",
+    "token_label": "Zugriffstoken",
+    "token_placeholder": "API-Token einfügen",
+    "token_hint": "Erstellen Sie in den Einstellungen Ihres E-Mail-Anbieters ein API-Token und fügen Sie es hier ein.",
     "remember_me": "Angemeldet bleiben",
     "config_error": {
       "title": "Konfigurationsfehler",
@@ -114,6 +120,7 @@
     "unified_archive": "Alle Archive",
     "unified_junk": "Alle Spam",
     "all_accounts": "Alle Konten",
+    "all_accounts_loading": "Konten werden geladen: {loaded} von {total}",
     "unified_mailbox": "Gemeinsames Postfach",
     "expand": "Erweitern",
     "collapse": "Einklappen",
@@ -718,6 +725,7 @@
     "recipient_name_placeholder": "Anzeigename",
     "autocomplete_search_server": "Auf dem Server suchen",
     "autocomplete_searching": "Suche läuft...",
+    "mention_recipients": "Empfänger",
     "toolbar": {
       "bold": "Fett",
       "italic": "Kursiv",
@@ -1507,6 +1515,10 @@
         "label": "Warnung bei leerem Betreff",
         "description": "Vor dem Senden einer Nachricht ohne Betreff nachfragen."
       },
+      "recipient_mentions": {
+        "label": "Empfänger mit @ erwähnen",
+        "description": "@ in der Nachricht bietet ihre Empfänger an und fügt den Vornamen des gewählten ein. Enter oder Tab übernimmt den markierten Namen."
+      },
       "hide_inline_image_attachments": {
         "label": "Eingebettete Bilder in Anhangsliste ausblenden",
         "description": "Im Nachrichtentext eingebettete Bilder werden nicht als separate Anhänge aufgeführt"
@@ -1601,6 +1613,7 @@
       "auth_method_label": "Authentifizierung",
       "auth_method_oauth": "Single Sign-On (OAuth/OIDC)",
       "auth_method_basic": "Passwort",
+      "auth_method_token": "Zugriffstoken",
       "demo_account": "Demokonto",
       "email": {
         "label": "E-Mail-Adresse",
@@ -1958,6 +1971,32 @@
       },
       "about": {
         "title": "Bulwark Webmail"
+      },
+      "spam_siege": {
+        "title": "Spam Siege",
+        "intro": "Klicken Sie Spam und Phishing an, bevor sie Ihren Posteingang erreichen. Echte E-Mails lassen Sie durch. Sind alle drei Schilde verloren, fällt der Posteingang.",
+        "kinds": {
+          "spam": "Spam",
+          "phishing": "Phishing",
+          "legit": "Echte E-Mail"
+        },
+        "click_to_block": "Klicken zum Blockieren",
+        "let_through": "Durchlassen",
+        "start": "Starten",
+        "play_again": "Nochmal spielen",
+        "score": "Punkte",
+        "combo": "Serienbonus",
+        "shields_left": "{count} von {total} Schilden übrig",
+        "seconds": "{seconds} s",
+        "best": "Bestwert: {score}",
+        "new_best": "Neuer Bestwert",
+        "held": "Posteingang gehalten",
+        "overrun": "Posteingang überrannt",
+        "stats": {
+          "caught": "Blockiert",
+          "delivered": "Zugestellt",
+          "mistakes": "Fehler"
+        }
       }
     },
     "sidebar_apps": {
@@ -2928,6 +2967,7 @@
       "save_note": "Speichern",
       "note_saved": "Notiz hinzugefügt",
       "open_link": "Link öffnen",
+      "copy_location": "Ort kopieren",
       "meeting_link": "Besprechungslink",
       "tentative": "Vorläufig",
       "cancelled": "Abgesagt",
