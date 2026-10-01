@@ -18,6 +18,7 @@
     "reconnecting": "Spojenie prerušené. Pokus o opätovné pripojenie…",
     "error": {
       "invalid_credentials": "Neplatný e-mail alebo heslo. Skontrolujte prihlasovacie údaje a skúste znova.",
+      "invalid_token": "Server tento prístupový token neprijal. Skontrolujte, či je úplný a či nevypršal alebo nebol odvolaný.",
       "connection_failed": "Nedá sa pripojiť k serveru. Skontrolujte internetové pripojenie a skúste znova.",
       "cors_blocked": "Server je dostupný, ale blokuje požiadavky medzi doménami. Skontrolujte nastavenia CORS servera JMAP a povoľte túto doménu.",
       "server_error": "Server je dočasne nedostupný. Skúste to neskôr.",
@@ -29,6 +30,11 @@
     "show_password": "Zobraziť heslo",
     "hide_password": "Skryť heslo",
     "totp_toggle": "Mám kód 2FA",
+    "token_toggle": "Prihlásiť sa prístupovým tokenom",
+    "password_toggle": "Prihlásiť sa heslom",
+    "token_label": "Prístupový token",
+    "token_placeholder": "Vložte svoj API token",
+    "token_hint": "Vytvorte API token v nastaveniach svojho poskytovateľa e-mailu a vložte ho sem.",
     "remember_me": "Zapamätať si ma",
     "config_error": {
       "title": "Chyba konfigurácie",
@@ -116,6 +122,7 @@
     "unified_archive": "Všetky archívy",
     "unified_junk": "Všetok spam",
     "all_accounts": "Všetky účty",
+    "all_accounts_loading": "Načítavajú sa účty: {loaded} z {total}",
     "expand": "Rozbaliť",
     "collapse": "Zbaliť",
     "expand_tooltip": "Rozbaliť",
@@ -719,6 +726,7 @@
     "recipient_name_placeholder": "Zobrazené meno",
     "autocomplete_search_server": "Hľadať na serveri",
     "autocomplete_searching": "Hľadanie...",
+    "mention_recipients": "Príjemcovia",
     "toolbar": {
       "bold": "Tučné",
       "italic": "Kurzíva",
@@ -1511,6 +1519,10 @@
         "label": "Upozornenie na prázdny predmet",
         "description": "Pred odoslaním správy bez predmetu požiadať o potvrdenie."
       },
+      "recipient_mentions": {
+        "label": "Spomínať príjemcov pomocou @",
+        "description": "Napísaním @ v správe sa ponúknu jej príjemcovia a vloží sa krstné meno vybraného. Enter alebo Tab vyberie zvýraznené meno."
+      },
       "hide_inline_image_attachments": {
         "label": "Skryť vložené obrázky zo zoznamu príloh",
         "description": "Obrázky vložené priamo do textu správy sa nezobrazia ako samostatné prílohy"
@@ -1605,6 +1617,7 @@
       "auth_method_label": "Overenie",
       "auth_method_oauth": "Single Sign-On (OAuth/OIDC)",
       "auth_method_basic": "Heslo",
+      "auth_method_token": "Prístupový token",
       "demo_account": "Demo účet",
       "email": {
         "label": "E-mailová adresa",
@@ -1966,6 +1979,32 @@
       },
       "about": {
         "title": "Bulwark Webmail"
+      },
+      "spam_siege": {
+        "title": "Spam Siege",
+        "intro": "Kliknite na spam a phishing skôr, než dorazia do vašej doručenej pošty. Skutočnú poštu nechajte prejsť. Keď stratíte všetky tri štíty, schránka padne.",
+        "kinds": {
+          "spam": "Spam",
+          "phishing": "Phishing",
+          "legit": "Skutočná pošta"
+        },
+        "click_to_block": "Kliknite na zablokovanie",
+        "let_through": "Nechajte prejsť",
+        "start": "Začať",
+        "play_again": "Hrať znova",
+        "score": "Skóre",
+        "combo": "Bonus za sériu",
+        "shields_left": "Zostáva {count} z {total} štítov",
+        "seconds": "{seconds} s",
+        "best": "Rekord: {score}",
+        "new_best": "Nový rekord",
+        "held": "Schránka ubránená",
+        "overrun": "Schránka padla",
+        "stats": {
+          "caught": "Zablokované",
+          "delivered": "Doručené",
+          "mistakes": "Chyby"
+        }
       }
     },
     "sidebar_apps": {
@@ -2929,6 +2968,7 @@
       "save_note": "Uložiť",
       "note_saved": "Poznámka pridaná",
       "open_link": "Otvoriť odkaz",
+      "copy_location": "Kopírovať miesto",
       "meeting_link": "Odkaz na stretnutie",
       "tentative": "Nezáväzne",
       "cancelled": "Zrušené",

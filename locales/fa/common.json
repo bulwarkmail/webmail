@@ -18,6 +18,7 @@
     "reconnecting": "ارتباط قطع شد. در حال تلاش برای اتصال مجدد…",
     "error": {
       "invalid_credentials": "ایمیل یا رمز عبور نامعتبر است. اطلاعات خود را بررسی و دوباره تلاش کنید.",
+      "invalid_token": "سرور این توکن دسترسی را نپذیرفت. بررسی کنید که کامل باشد و منقضی یا لغو نشده باشد.",
       "connection_failed": "امکان اتصال به سرور وجود ندارد. اتصال اینترنت خود را بررسی کنید.",
       "cors_blocked": "سرور در دسترس است اما درخواست‌های cross-origin را مسدود می‌کند.",
       "server_error": "سرور موقتاً در دسترس نیست. لطفاً بعداً تلاش کنید.",
@@ -29,6 +30,11 @@
     "show_password": "نمایش رمز عبور",
     "hide_password": "مخفی کردن رمز عبور",
     "totp_toggle": "کد احراز هویت دو مرحله‌ای دارم",
+    "token_toggle": "ورود با توکن دسترسی",
+    "password_toggle": "ورود با رمز عبور",
+    "token_label": "توکن دسترسی",
+    "token_placeholder": "توکن API خود را وارد کنید",
+    "token_hint": "در تنظیمات سرویس ایمیل خود یک توکن API بسازید و آن را اینجا وارد کنید.",
     "remember_me": "مرا به خاطر بسپار",
     "config_error": {
       "title": "خطای پیکربندی",
@@ -115,6 +121,7 @@
     "unified_archive": "همه بایگانی‌ها",
     "unified_junk": "همه هرزنامه‌ها",
     "all_accounts": "همه حساب‌ها",
+    "all_accounts_loading": "در حال بارگیری حساب‌ها: {loaded} از {total}",
     "unified_mailbox": "صندوق پستی یکپارچه",
     "expand": "باز کردن",
     "collapse": "جمع کردن",
@@ -719,6 +726,7 @@
     "recipient_name_placeholder": "نام نمایشی",
     "autocomplete_search_server": "جستجو در سرور",
     "autocomplete_searching": "در حال جستجو...",
+    "mention_recipients": "گیرندگان",
     "toolbar": {
       "bold": "پررنگ",
       "italic": "کج",
@@ -1511,6 +1519,10 @@
         "label": "هشدار موضوع خالی",
         "description": "پیش از ارسال پیام بدون موضوع تأیید بگیرید."
       },
+      "recipient_mentions": {
+        "label": "اشاره به گیرندگان با @",
+        "description": "تایپ @ در متن پیام، گیرندگان را پیشنهاد می‌دهد و نام کوچک فرد انتخاب‌شده را درج می‌کند. Enter یا Tab نام برجسته‌شده را انتخاب می‌کند."
+      },
       "hide_inline_image_attachments": {
         "label": "مخفی کردن تصاویر داخلی",
         "description": "عدم نمایش به عنوان پیوست"
@@ -1605,6 +1617,7 @@
       "auth_method_label": "احراز هویت",
       "auth_method_oauth": "SSO",
       "auth_method_basic": "رمز عبور",
+      "auth_method_token": "توکن دسترسی",
       "demo_account": "حساب آزمایشی",
       "email": {
         "label": "آدرس ایمیل",
@@ -1966,6 +1979,32 @@
       },
       "about": {
         "title": "Bulwark Webmail"
+      },
+      "spam_siege": {
+        "title": "Spam Siege",
+        "intro": "پیش از آنکه هرزنامه و فیشینگ به صندوق ورودی برسند، روی آن‌ها کلیک کنید. ایمیل‌های واقعی را عبور دهید. اگر هر سه سپر را از دست بدهید، صندوق ورودی سقوط می‌کند.",
+        "kinds": {
+          "spam": "هرزنامه",
+          "phishing": "فیشینگ",
+          "legit": "ایمیل واقعی"
+        },
+        "click_to_block": "برای مسدود کردن کلیک کنید",
+        "let_through": "بگذارید عبور کند",
+        "start": "شروع",
+        "play_again": "بازی دوباره",
+        "score": "امتیاز",
+        "combo": "پاداش زنجیره",
+        "shields_left": "{count} از {total} سپر باقی مانده",
+        "seconds": "{seconds} ث",
+        "best": "بهترین: {score}",
+        "new_best": "رکورد جدید",
+        "held": "صندوق ورودی مقاومت کرد",
+        "overrun": "صندوق ورودی سقوط کرد",
+        "stats": {
+          "caught": "مسدودشده",
+          "delivered": "تحویل‌شده",
+          "mistakes": "اشتباه‌ها"
+        }
       }
     },
     "sidebar_apps": {
@@ -2929,6 +2968,7 @@
       "save_note": "ذخیره",
       "note_saved": "یادداشت اضافه شد",
       "open_link": "باز کردن لینک",
+      "copy_location": "کپی مکان",
       "meeting_link": "لینک جلسه",
       "tentative": "احتمالی",
       "cancelled": "لغو شده",

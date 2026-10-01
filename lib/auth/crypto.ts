@@ -20,19 +20,34 @@ function getKey(): Buffer {
   return createHash('sha256').update(secret).digest();
 }
 
-export function encryptSession(serverUrl: string, username: string, password: string): string {
+/**
+ * A remembered sign-in: the account's password (Basic auth), or the access
+ * token the user signed in with (Bearer auth, e.g. a Fastmail API token).
+ */
+export type SessionCredentials =
+  | { serverUrl: string; username: string; password: string; token?: undefined }
+  | { serverUrl: string; username: string; token: string; password?: undefined };
+
+/** The Authorization header remembered credentials sign in with. */
+export function sessionAuthHeader(credentials: SessionCredentials): string {
+  if (credentials.token !== undefined) return `Bearer ${credentials.token}`;
+  return `Basic ${Buffer.from(`${credentials.username}:${credentials.password}`).toString('base64')}`;
+}
+
+export function encryptSession(serverUrl: string, username: string, secret: string | { token: string }): string {
   const key = getKey();
   const iv = randomBytes(IV_LENGTH);
   const cipher = createCipheriv(ALGORITHM, key, iv);
 
-  const payload = JSON.stringify({ v: 1, serverUrl, username, password });
+  const credential = typeof secret === 'string' ? { password: secret } : { token: secret.token };
+  const payload = JSON.stringify({ v: 1, serverUrl, username, ...credential });
   const encrypted = Buffer.concat([cipher.update(payload, 'utf8'), cipher.final()]);
   const tag = cipher.getAuthTag();
 
   return Buffer.concat([iv, tag, encrypted]).toString('base64');
 }
 
-export function decryptSession(token: string): { serverUrl: string; username: string; password: string } | null {
+export function decryptSession(token: string): SessionCredentials | null {
   try {
     const key = getKey();
     const data = Buffer.from(token, 'base64');
@@ -48,8 +63,14 @@ export function decryptSession(token: string): { serverUrl: string; username: st
     const decrypted = Buffer.concat([decipher.update(encrypted), decipher.final()]);
     const parsed = JSON.parse(decrypted.toString('utf8'));
 
-    if (parsed.v !== 1 || !parsed.serverUrl || !parsed.username || !parsed.password) return null;
-    return { serverUrl: parsed.serverUrl, username: parsed.username, password: parsed.password };
+    if (parsed.v !== 1 || !parsed.serverUrl || !parsed.username) return null;
+    if (typeof parsed.password === 'string' && parsed.password) {
+      return { serverUrl: parsed.serverUrl, username: parsed.username, password: parsed.password };
+    }
+    if (typeof parsed.token === 'string' && parsed.token) {
+      return { serverUrl: parsed.serverUrl, username: parsed.username, token: parsed.token };
+    }
+    return null;
   } catch (error) {
     logger.warn('Session decryption failed', {
       error: error instanceof Error ? error.message : 'Unknown error',

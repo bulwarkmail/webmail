@@ -14,12 +14,12 @@ import { useConfig } from "@/hooks/use-config";
 import { useMenuNavigation } from "@/hooks/use-menu-navigation";
 import { apiFetch, getPathPrefix, toRouterPath, withBasePath } from "@/lib/browser-navigation";
 import { cn } from "@/lib/utils";
-import { AlertCircle, Loader2, X, Info, Eye, EyeOff, LogIn, Sun, Moon, Monitor, Check, Shield, Play, Copy } from "@/components/icons";
+import { AlertCircle, Loader2, X, Info, Eye, EyeOff, LogIn, Sun, Moon, Monitor, Check, Shield, Play, Copy, KeyRound } from "@/components/icons";
 import { type OAuthMetadata } from "@/lib/oauth/discovery";
 import { generateCodeVerifier, generateCodeChallenge, generateState } from "@/lib/oauth/pkce";
 import { DEFAULT_OAUTH_SCOPES } from "@/lib/oauth/scopes";
 import { useUpdateStore, selectBanner } from "@/stores/update-store";
-import type { PublicJmapServerEntry } from "@/lib/admin/jmap-servers";
+import { offersOwnOAuth, type PublicJmapServerEntry } from "@/lib/admin/jmap-servers";
 import { IS_LITE, getLiteInjectedClientId } from "@/lib/lite";
 import { getLiteClientId, probeLiteTokenLogin } from "@/lib/auth/lite-tokens";
 import {
@@ -155,9 +155,9 @@ function LoginPageContent() {
     : "";
   const mobileState = mobileRedirectUri ? rawMobileState : "";
   const isMobileHandoff = Boolean(mobileRedirectUri);
-  const { login, loginDemo, isLoading, error, clearError, isAuthenticated } = useAuthStore();
+  const { login, loginWithToken, loginDemo, isLoading, error, clearError, isAuthenticated } = useAuthStore();
   const { theme, setTheme, initializeTheme } = useThemeStore(useShallow((s) => ({ theme: s.theme, setTheme: s.setTheme, initializeTheme: s.initializeTheme })));
-  const { appName, jmapServerUrl: configuredServerUrl, oauthEnabled, oauthOnly, oauthClientId: globalOauthClientId, oauthIssuerUrl: globalOauthIssuerUrl, oauthScopes, rememberMeEnabled, devMode, demoMode, loginLogoLightUrl, loginLogoDarkUrl, loginCompanyName, loginImprintUrl, loginPrivacyPolicyUrl, loginWebsiteUrl, loginLogoMaxHeight, loginLogoMaxWidth, loginShowHeading, loginShowSubtitle, loginShowTotp, loginShowVersion, isLoading: configLoading, error: configError, autoSsoEnabled, embeddedMode: _embeddedMode, allowCustomJmapEndpoint, jmapServers, jmapServerAutoPickByDomain } = useConfig();
+  const { appName, jmapServerUrl: configuredServerUrl, oauthEnabled, oauthOnly, oauthClientId: globalOauthClientId, oauthIssuerUrl: globalOauthIssuerUrl, oauthScopes, rememberMeEnabled, devMode, demoMode, loginLogoLightUrl, loginLogoDarkUrl, loginCompanyName, loginImprintUrl, loginPrivacyPolicyUrl, loginWebsiteUrl, loginLogoMaxHeight, loginLogoMaxWidth, loginShowHeading, loginShowSubtitle, loginShowTotp, loginShowTokenLogin, loginShowVersion, isLoading: configLoading, error: configError, autoSsoEnabled, embeddedMode: _embeddedMode, allowCustomJmapEndpoint, jmapServers, jmapServerAutoPickByDomain } = useConfig();
   const resolvedTheme = useThemeStore((s) => s.resolvedTheme);
 
   // Login logo sizing: when a max height/width is configured, drop the fixed
@@ -188,8 +188,17 @@ function LoginPageContent() {
   const effectiveOauthIssuerUrl = selectedServer
     ? selectedServer.oauth?.issuerUrl || selectedServer.url
     : globalOauthIssuerUrl;
+  // A server entry that names its own OAuth client and button label signs in
+  // with OAuth even while OAuth is off globally: a Gmail bridge next to a
+  // password server.
+  const serverOauthEnabled = oauthEnabled || offersOwnOAuth(selectedServer);
   const [totpCode, setTotpCode] = useState("");
   const [showTotpField, setShowTotpField] = useState(false);
+  // Access-token sign-in (Bearer auth) in place of username and password.
+  // The mobile hand-off passes a password on to the app, so it has none.
+  const [tokenMode, setTokenMode] = useState(false);
+  const [accessToken, setAccessToken] = useState("");
+  const signInWithToken = tokenMode && loginShowTokenLogin && !isMobileHandoff;
   const [rememberMe, setRememberMe] = useState(false);
   // Lite (no server session): "remember me" needs Stalwart's token login on the
   // target server. Probe it once per URL and hide the box when it is missing;
@@ -213,6 +222,7 @@ function LoginPageContent() {
   const inputRef = useRef<HTMLInputElement>(null);
   const justSelectedSuggestion = useRef(false);
   const totpInputRef = useRef<HTMLInputElement>(null);
+  const tokenInputRef = useRef<HTMLInputElement>(null);
   const prevError = useRef<string | null>(null);
   const themeMenuRef = useRef<HTMLDivElement>(null);
   const themeButtonRef = useRef<HTMLButtonElement>(null);
@@ -257,7 +267,7 @@ function LoginPageContent() {
   // (the endpoint is rate limited).
   const [liteOAuthByDomain, setLiteOAuthByDomain] = useState<{ domain: string; discovery: LiteOAuthDiscovery | null } | null>(null);
   const [liteOAuthFailed, setLiteOAuthFailed] = useState(false);
-  const liteDomain = LITE_OAUTH_AVAILABLE ? completeAddressDomain(formData.username) : "";
+  const liteDomain = LITE_OAUTH_AVAILABLE && !signInWithToken ? completeAddressDomain(formData.username) : "";
   const liteAccount = liteDomain ? formData.username.trim() : "";
   useEffect(() => {
     if (!liteAccount || !probeTarget) return;
@@ -418,7 +428,7 @@ function LoginPageContent() {
   }, [serverUrl]);
 
   useEffect(() => {
-    if (!oauthEnabled || !serverUrl) return;
+    if (!serverOauthEnabled || !serverUrl) return;
     setOauthDiscoveryDone(false);
     setOauthMetadata(null);
     const controller = new AbortController();
@@ -441,7 +451,7 @@ function LoginPageContent() {
         setOauthDiscoveryDone(true);
       });
     return () => controller.abort();
-  }, [oauthEnabled, serverUrl, effectiveOauthIssuerUrl, selectedServer?.id]);
+  }, [serverOauthEnabled, serverUrl, effectiveOauthIssuerUrl, selectedServer?.id]);
 
   // Auto-SSO: when enabled with OAUTH_ONLY, skip the login page entirely
   const ssoError = searchParams.get("sso_error");
@@ -705,12 +715,36 @@ function LoginPageContent() {
     window.location.href = authUrl.toString();
   };
 
-  const handleOAuthLogin = async () => {
-    if (LITE_OAUTH_AVAILABLE) {
+  /**
+   * Starts OAuth for the selected server, or for `target`: a server in the
+   * list with its own OAuth client (a Gmail bridge, say), offered on the page
+   * whichever server is selected so that "Sign in with Google" is one tap.
+   */
+  const handleOAuthLogin = async (target?: PublicJmapServerEntry) => {
+    if (LITE_OAUTH_AVAILABLE && !target) {
       await startLiteOAuth(probeTarget);
       return;
     }
-    if (!oauthMetadata || !effectiveOauthClientId) return;
+    const server = target ?? selectedServer;
+    const clientId = target ? target.oauth?.clientId : effectiveOauthClientId;
+    let metadata = target ? null : oauthMetadata;
+    if (target) {
+      setOauthLoading(true);
+      setSelectedServerId(target.id);
+      try {
+        const res = await apiFetch(`/api/auth/oauth/metadata?server_id=${encodeURIComponent(target.id)}`);
+        metadata = res.ok ? ((await res.json()) as OAuthMetadata) : null;
+      } catch {
+        metadata = null;
+      }
+      if (!metadata) {
+        // The target is now the selected server: its discovery runs again and
+        // the page shows the usual "discovery failed" notice.
+        setOauthLoading(false);
+        return;
+      }
+    }
+    if (!metadata || !clientId) return;
     // In mobile-handoff mode the client-side PKCE flow doesn't help us:
     // tokens would land in sessionStorage on the webmail origin and the
     // mobile app couldn't read them. Route through the server-side SSO
@@ -730,14 +764,14 @@ function LoginPageContent() {
 
     // Resolve the JMAP URL to send to the callback. Server-list entries win
     // over the custom-endpoint input, which wins over the global server URL.
-    const oauthServerUrl = selectedServer?.url
+    const oauthServerUrl = server?.url
       || (allowCustomJmapEndpoint ? jmapEndpoint : configuredServerUrl);
 
     sessionStorage.setItem("oauth_code_verifier", verifier);
     sessionStorage.setItem("oauth_state", state);
     sessionStorage.setItem("oauth_server_url", oauthServerUrl!);
-    if (selectedServer?.id) {
-      sessionStorage.setItem("oauth_server_id", selectedServer.id);
+    if (server?.id) {
+      sessionStorage.setItem("oauth_server_id", server.id);
     } else {
       sessionStorage.removeItem("oauth_server_id");
     }
@@ -755,9 +789,9 @@ function LoginPageContent() {
     const nextSlot = useAccountStore.getState().getNextCookieSlot();
     sessionStorage.setItem("oauth_cookie_slot", nextSlot.toString());
 
-    const authUrl = new URL(oauthMetadata.authorization_endpoint);
+    const authUrl = new URL(metadata.authorization_endpoint);
     authUrl.searchParams.set("response_type", "code");
-    authUrl.searchParams.set("client_id", effectiveOauthClientId);
+    authUrl.searchParams.set("client_id", clientId);
     authUrl.searchParams.set("redirect_uri", redirectUri);
     authUrl.searchParams.set("scope", oauthScopes || DEFAULT_OAUTH_SCOPES);
     authUrl.searchParams.set("state", state);
@@ -777,6 +811,12 @@ function LoginPageContent() {
     // when the admin hasn't configured a server list.
     const effectiveServerUrl = selectedServer?.url
       || (allowCustomJmapEndpoint ? jmapEndpoint : serverUrl);
+    if (signInWithToken) {
+      if (await loginWithToken(effectiveServerUrl, accessToken, rememberMeEnabled && rememberMe)) {
+        router.push('/');
+      }
+      return;
+    }
     // Lite on Stalwart: an account whose domain signs in at an external
     // provider has no password Stalwart could check. Asked again here (cached)
     // because Enter can beat the debounced lookup; a name without a domain is
@@ -884,10 +924,32 @@ function LoginPageContent() {
     </div>
   ) : null;
 
+  // Other servers in the list that sign in with their own OAuth client get a
+  // button of their own, so signing in with Google does not first mean finding
+  // the bridge in the server menu. Not in mobile handoff, which signs in
+  // server-side against the selected server.
+  const otherOauthServers = isMobileHandoff
+    ? []
+    : jmapServers.filter((s) => offersOwnOAuth(s) && s.id !== selectedServer?.id);
+  const otherOauthButtons = otherOauthServers.map((s) => (
+    <Button
+      key={s.id}
+      type="button"
+      variant="outline"
+      className="w-full h-11 font-medium text-[15px] rounded-xl border-border/60 hover:bg-muted/50"
+      onClick={() => handleOAuthLogin(s)}
+      disabled={oauthLoading || isLoading}
+    >
+      <LogIn className="w-4 h-4 me-2" />
+      {s.oauth?.buttonLabel}
+    </Button>
+  ));
+
   // Servers that onboard accounts elsewhere (e.g. a Gmail bridge issuing its own
   // credentials after Google consent) advertise a connect page; link it so a
-  // user without credentials yet knows where to get them.
-  const connectLink = selectedServer?.connectUrl ? (
+  // user without credentials yet knows where to get them. A server with its own
+  // OAuth button connects new accounts through it, and needs no such link.
+  const connectLink = selectedServer?.connectUrl && !offersOwnOAuth(selectedServer) ? (
     <p className="text-xs text-muted-foreground leading-snug">
       <a
         href={selectedServer.connectUrl}
@@ -1217,7 +1279,7 @@ function LoginPageContent() {
                   <Button
                     type="button"
                     className="w-full h-11 font-medium text-[15px] bg-primary hover:bg-primary/90 transition-all duration-200 rounded-xl shadow-md shadow-primary/15 hover:shadow-lg hover:shadow-primary/20"
-                    onClick={handleOAuthLogin}
+                    onClick={() => handleOAuthLogin()}
                     disabled={oauthLoading}
                   >
                     {oauthLoading ? (
@@ -1228,7 +1290,7 @@ function LoginPageContent() {
                     ) : (
                       <div className="flex items-center gap-2">
                         <LogIn className="w-4 h-4" />
-                        {t("sign_in_sso")}
+                        {selectedServer?.oauth?.buttonLabel || t("sign_in_sso")}
                       </div>
                     )}
                   </Button>
@@ -1276,8 +1338,9 @@ function LoginPageContent() {
                     </div>
                   )}
 
-                  {/* Username field */}
-                  <div className="space-y-1.5">
+                  {/* Username field. The access token names the account, so
+                      token sign-in has none. */}
+                  <div className={cn("space-y-1.5", signInWithToken && "hidden")}>
                     <label htmlFor="username" className="block text-sm font-medium text-foreground">
                       {t("username_label")}
                     </label>
@@ -1292,7 +1355,7 @@ function LoginPageContent() {
                         onKeyDown={handleKeyDown}
                         className="h-11 px-3.5 bg-muted/40 border-border/60 rounded-xl focus:bg-background focus:border-primary/50 transition-all duration-200"
                         placeholder={t("username_placeholder")}
-                        required
+                        required={!signInWithToken}
                         autoComplete="off"
                         data-form-type="other"
                         data-lpignore="true"
@@ -1333,7 +1396,7 @@ function LoginPageContent() {
                   {/* Password field. Hidden for an account that signs in at an
                       external provider (Lite on Stalwart): the submit button is
                       the SSO button then. */}
-                  <div className={cn("space-y-1.5", liteSsoRequired && "hidden")}>
+                  <div className={cn("space-y-1.5", (liteSsoRequired || signInWithToken) && "hidden")}>
                     <label htmlFor="password" className="block text-sm font-medium text-foreground">
                       {t("password_label")}
                     </label>
@@ -1345,7 +1408,7 @@ function LoginPageContent() {
                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                         className="h-11 px-3.5 pe-11 bg-muted/40 border-border/60 rounded-xl focus:bg-background focus:border-primary/50 transition-all duration-200"
                         placeholder={t("password_placeholder")}
-                        required={!liteSsoRequired}
+                        required={!liteSsoRequired && !signInWithToken}
                         autoComplete="current-password"
                       />
                       <button
@@ -1364,11 +1427,35 @@ function LoginPageContent() {
                     </div>
                   </div>
 
+                  {signInWithToken && (
+                    <div className="space-y-1.5">
+                      <label htmlFor="access-token" className="block text-sm font-medium text-foreground">
+                        {t("token_label")}
+                      </label>
+                      <Input
+                        ref={tokenInputRef}
+                        id="access-token"
+                        type="password"
+                        value={accessToken}
+                        onChange={(e) => setAccessToken(e.target.value)}
+                        className="h-11 px-3.5 bg-muted/40 border-border/60 rounded-xl focus:bg-background focus:border-primary/50 transition-all duration-200 font-mono"
+                        placeholder={t("token_placeholder")}
+                        required
+                        autoComplete="off"
+                        spellCheck={false}
+                        data-lpignore="true"
+                      />
+                      <p className="text-[11px] text-muted-foreground leading-snug">
+                        {t("token_hint")}
+                      </p>
+                    </div>
+                  )}
+
                   {/* 2FA toggle / field. The manual toggle can be hidden via
                       LOGIN_SHOW_TOTP (loginShowTotp) for deployments whose mail
                       server has no per-account TOTP (auth delegated to an
                       external directory); server-required TOTP still shows. */}
-                  {liteSsoRequired ? null : !showTotpField ? (
+                  {liteSsoRequired || signInWithToken ? null : !showTotpField ? (
                     loginShowTotp ? (
                     <button
                       type="button"
@@ -1404,6 +1491,21 @@ function LoginPageContent() {
                         aria-label={t("totp_label")}
                       />
                     </div>
+                  )}
+
+                  {loginShowTokenLogin && !isMobileHandoff && !liteSsoRequired && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        clearError();
+                        setTokenMode(!signInWithToken);
+                        setTimeout(() => (signInWithToken ? inputRef : tokenInputRef).current?.focus(), 50);
+                      }}
+                      className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <KeyRound className="w-3.5 h-3.5" />
+                      {signInWithToken ? t("password_toggle") : t("token_toggle")}
+                    </button>
                   )}
 
                   {/* Remember me */}
@@ -1449,7 +1551,7 @@ function LoginPageContent() {
                   )}
                 </Button>
 
-                {(oauthMetadata || liteSsoOffered) && (
+                {(oauthMetadata || liteSsoOffered || otherOauthButtons.length > 0) && (
                   <>
                     <div className="relative my-2">
                       <div className="absolute inset-0 flex items-center">
@@ -1460,24 +1562,27 @@ function LoginPageContent() {
                       </div>
                     </div>
 
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="w-full h-11 font-medium text-[15px] rounded-xl border-border/60 hover:bg-muted/50"
-                      onClick={handleOAuthLogin}
-                      disabled={oauthLoading || isLoading}
-                    >
-                      {oauthLoading ? (
-                        <Loader2 className="w-4 h-4 animate-spin me-2" />
-                      ) : (
-                        <LogIn className="w-4 h-4 me-2" />
-                      )}
-                      {t("sign_in_sso")}
-                    </Button>
+                    {(oauthMetadata || liteSsoOffered) && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full h-11 font-medium text-[15px] rounded-xl border-border/60 hover:bg-muted/50"
+                        onClick={() => handleOAuthLogin()}
+                        disabled={oauthLoading || isLoading}
+                      >
+                        {oauthLoading ? (
+                          <Loader2 className="w-4 h-4 animate-spin me-2" />
+                        ) : (
+                          <LogIn className="w-4 h-4 me-2" />
+                        )}
+                        {selectedServer?.oauth?.buttonLabel || t("sign_in_sso")}
+                      </Button>
+                    )}
+                    {otherOauthButtons}
                   </>
                 )}
 
-                {((oauthEnabled && oauthDiscoveryDone && !oauthMetadata) || liteOAuthFailed) && (
+                {((serverOauthEnabled && oauthDiscoveryDone && !oauthMetadata) || liteOAuthFailed) && (
                   <div className="mt-2 p-3 rounded-xl border border-warning/20 bg-warning/5 flex items-start gap-3">
                     <div className="w-10 h-10 rounded-full bg-warning/15 text-warning flex items-center justify-center flex-shrink-0 shadow-sm">
                       <AlertCircle className="w-5 h-5" />

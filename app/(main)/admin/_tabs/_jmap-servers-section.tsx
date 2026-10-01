@@ -21,6 +21,7 @@ interface RowDraft {
   oauthClientId: string;
   oauthIssuerUrl: string;
   oauthClientSecret: string;
+  oauthButtonLabel: string;
   oauthExpanded: boolean;
 }
 
@@ -35,6 +36,7 @@ function entryToDraft(e: JmapServerEntry): RowDraft {
     oauthClientId: e.oauth?.clientId ?? '',
     oauthIssuerUrl: e.oauth?.issuerUrl ?? '',
     oauthClientSecret: e.oauth?.clientSecret ?? '',
+    oauthButtonLabel: e.oauth?.buttonLabel ?? '',
     oauthExpanded: !!(e.oauth && (e.oauth.clientId || e.oauth.issuerUrl || e.oauth.clientSecret)),
   };
 }
@@ -51,11 +53,13 @@ function draftToEntry(d: RowDraft): JmapServerEntry | null {
   const clientId = d.oauthClientId.trim();
   const issuerUrl = d.oauthIssuerUrl.trim().replace(/\/+$/, '');
   const clientSecret = d.oauthClientSecret;
+  const buttonLabel = d.oauthButtonLabel.trim();
   const oauth = clientId || issuerUrl || clientSecret
     ? {
         ...(clientId ? { clientId } : {}),
         ...(issuerUrl ? { issuerUrl } : {}),
         ...(clientSecret ? { clientSecret } : {}),
+        ...(buttonLabel ? { buttonLabel } : {}),
       }
     : undefined;
   return {
@@ -80,6 +84,7 @@ function emptyDraft(): RowDraft {
     oauthClientId: '',
     oauthIssuerUrl: '',
     oauthClientSecret: '',
+    oauthButtonLabel: '',
     oauthExpanded: false,
   };
 }
@@ -279,6 +284,20 @@ export function JmapServersSection({ value, source, onChange, onRevert }: Props)
                     onChange={(e) => update(i, { oauthClientSecret: e.target.value })}
                     className="h-8 w-full rounded-md border border-input bg-background px-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   />
+                </div>
+                <div className="sm:col-span-3">
+                  <label className="block text-[11px] font-medium text-muted-foreground mb-1">Sign-in button label</label>
+                  <input
+                    type="text"
+                    value={d.oauthButtonLabel}
+                    onChange={(e) => update(i, { oauthButtonLabel: e.target.value })}
+                    placeholder="Sign in with Google"
+                    maxLength={64}
+                    className="h-8 w-full rounded-md border border-input bg-background px-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  />
+                  <p className="mt-1 text-[11px] text-muted-foreground">
+                    With a client ID, this label gives the server its own sign-in button on the login page, whichever server is selected and even while OAuth is off globally.
+                  </p>
                 </div>
               </div>
             )}

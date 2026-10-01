@@ -18,6 +18,7 @@
     "reconnecting": "Connection lost. Attempting to reconnect…",
     "error": {
       "invalid_credentials": "Invalid email or password. Please check your credentials and try again.",
+      "invalid_token": "The server did not accept this access token. Check that it is complete and has not expired or been revoked.",
       "connection_failed": "Unable to reach the server. Check your internet connection and try again.",
       "cors_blocked": "The server is reachable but is blocking cross-origin requests. Check your JMAP server's CORS settings and allow this domain.",
       "server_error": "The server is temporarily unavailable. Please try again later.",
@@ -29,6 +30,11 @@
     "show_password": "Show password",
     "hide_password": "Hide password",
     "totp_toggle": "I have a 2FA code",
+    "token_toggle": "Sign in with an access token",
+    "password_toggle": "Sign in with a password",
+    "token_label": "Access token",
+    "token_placeholder": "Paste your API token",
+    "token_hint": "Create an API token in your mail provider's settings and paste it here.",
     "remember_me": "Remember me",
     "config_error": {
       "title": "Configuration Error",
@@ -115,6 +121,7 @@
     "unified_archive": "All Archive",
     "unified_junk": "All Junk",
     "all_accounts": "All Accounts",
+    "all_accounts_loading": "Loading accounts: {loaded} of {total}",
     "unified_mailbox": "Unified Mailbox",
     "expand": "Expand",
     "collapse": "Collapse",
@@ -719,6 +726,7 @@
     "recipient_name_placeholder": "Display name",
     "autocomplete_search_server": "Search the server",
     "autocomplete_searching": "Searching...",
+    "mention_recipients": "Recipients",
     "toolbar": {
       "bold": "Bold",
       "italic": "Italic",
@@ -1511,6 +1519,10 @@
         "label": "Empty subject warning",
         "description": "Ask for confirmation before sending a message with no subject."
       },
+      "recipient_mentions": {
+        "label": "Mention recipients with @",
+        "description": "Typing @ in the message offers its recipients and inserts the chosen one's first name. Enter or Tab picks the highlighted name."
+      },
       "hide_inline_image_attachments": {
         "label": "Hide inline images from attachments",
         "description": "Images embedded in the message body are not listed as separate attachments"
@@ -1605,6 +1617,7 @@
       "auth_method_label": "Authentication",
       "auth_method_oauth": "Single Sign-On (OAuth/OIDC)",
       "auth_method_basic": "Password",
+      "auth_method_token": "Access token",
       "demo_account": "Demo Account",
       "email": {
         "label": "Email Address",
@@ -1966,6 +1979,32 @@
       },
       "about": {
         "title": "Bulwark Webmail"
+      },
+      "spam_siege": {
+        "title": "Spam Siege",
+        "intro": "Click spam and phishing before they reach your inbox. Let real mail through. Lose all three shields and the inbox falls.",
+        "kinds": {
+          "spam": "Spam",
+          "phishing": "Phishing",
+          "legit": "Real mail"
+        },
+        "click_to_block": "Click to block",
+        "let_through": "Let it through",
+        "start": "Start",
+        "play_again": "Play again",
+        "score": "Score",
+        "combo": "Streak bonus",
+        "shields_left": "{count} of {total} shields left",
+        "seconds": "{seconds}s",
+        "best": "Best: {score}",
+        "new_best": "New best",
+        "held": "Inbox held",
+        "overrun": "Inbox overrun",
+        "stats": {
+          "caught": "Blocked",
+          "delivered": "Delivered",
+          "mistakes": "Mistakes"
+        }
       }
     },
     "sidebar_apps": {
@@ -2929,6 +2968,7 @@
       "save_note": "Save",
       "note_saved": "Note added",
       "open_link": "Open link",
+      "copy_location": "Copy location",
       "meeting_link": "Meeting link",
       "tentative": "Tentative",
       "cancelled": "Cancelled",

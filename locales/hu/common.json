@@ -18,6 +18,7 @@
     "reconnecting": "Kapcsolat megszakadt. Újracsatlakozás...",
     "error": {
       "invalid_credentials": "Helytelen e-mail vagy jelszó. Ellenőrizd a megadott adatokat és próbáld újra.",
+      "invalid_token": "A szerver nem fogadta el ezt a hozzáférési tokent. Ellenőrizd, hogy teljes-e, és hogy nem járt-e le, vagy nem vonták-e vissza.",
       "connection_failed": "Nem sikerült elérni a szervert. Ellenőrizd az internetkapcsolatod és próbáld újra.",
       "cors_blocked": "A szerver elérhető, de blokkolja a több tartományból érkező kéréseket. Ellenőrizd a JMAP szerver CORS beállításait és engedélyezd ezt a tartományt.",
       "server_error": "A szerver átmenetileg nem elérhető. Kérjük, próbáld újra később.",
@@ -29,6 +30,11 @@
     "show_password": "Jelszó megjelenítése",
     "hide_password": "Jelszó elrejtése",
     "totp_toggle": "Van egy 2FA kódom",
+    "token_toggle": "Bejelentkezés hozzáférési tokennel",
+    "password_toggle": "Bejelentkezés jelszóval",
+    "token_label": "Hozzáférési token",
+    "token_placeholder": "Illeszd be az API-tokened",
+    "token_hint": "Hozz létre egy API-tokent a levelezési szolgáltatód beállításaiban, és illeszd be ide.",
     "remember_me": "Emlékezz rám",
     "config_error": {
       "title": "Konfigurációs hiba",
@@ -115,6 +121,7 @@
     "unified_archive": "Összes archívum",
     "unified_junk": "Összes spam",
     "all_accounts": "Minden fiók",
+    "all_accounts_loading": "Fiókok betöltése: {loaded} / {total}",
     "unified_mailbox": "Egységes postafiók",
     "expand": "Kibontás",
     "collapse": "Összecsukás",
@@ -719,6 +726,7 @@
     "recipient_name_placeholder": "Megjelenített név",
     "autocomplete_search_server": "Keresés a kiszolgálón",
     "autocomplete_searching": "Keresés...",
+    "mention_recipients": "Címzettek",
     "toolbar": {
       "bold": "Félkövér",
       "italic": "Dőlt",
@@ -1511,6 +1519,10 @@
         "label": "Figyelmeztetés üres tárgy esetén",
         "description": "Megerősítés kérése tárgy nélküli üzenet küldése előtt."
       },
+      "recipient_mentions": {
+        "label": "Címzettek említése @ jellel",
+        "description": "Ha @ jelet ír az üzenetbe, megjelennek a címzettek, és a kiválasztott keresztneve kerül beszúrásra. Az Enter vagy a Tab a kiemelt nevet választja."
+      },
       "hide_inline_image_attachments": {
         "label": "Beágyazott képek elrejtése a csatolmányok közül",
         "description": "Az üzenet törzsébe ágyazott képek nem jelennek meg külön csatolmányként"
@@ -1605,6 +1617,7 @@
       "auth_method_label": "Hitelesítés",
       "auth_method_oauth": "Egyszeri bejelentkezés (OAuth/OIDC)",
       "auth_method_basic": "Jelszó",
+      "auth_method_token": "Hozzáférési token",
       "demo_account": "Demó fiók",
       "email": {
         "label": "E-mail cím",
@@ -1962,6 +1975,32 @@
       },
       "about": {
         "title": "Bulwark Webmail"
+      },
+      "spam_siege": {
+        "title": "Spam Siege",
+        "intro": "Kattints a spamre és az adathalász levelekre, mielőtt elérik a beérkezett leveleidet. A valódi leveleket engedd át. Ha mindhárom pajzsot elveszíted, a postafiók elesik.",
+        "kinds": {
+          "spam": "Spam",
+          "phishing": "Adathalászat",
+          "legit": "Valódi levél"
+        },
+        "click_to_block": "Kattints a blokkoláshoz",
+        "let_through": "Engedd át",
+        "start": "Indítás",
+        "play_again": "Újra",
+        "score": "Pontszám",
+        "combo": "Sorozatbónusz",
+        "shields_left": "{total} pajzsból {count} maradt",
+        "seconds": "{seconds} mp",
+        "best": "Rekord: {score}",
+        "new_best": "Új rekord",
+        "held": "A postafiók kitartott",
+        "overrun": "A postafiók elesett",
+        "stats": {
+          "caught": "Blokkolva",
+          "delivered": "Kézbesítve",
+          "mistakes": "Hibák"
+        }
       }
     },
     "sidebar_apps": {
@@ -2929,6 +2968,7 @@
       "save_note": "Mentés",
       "note_saved": "Megjegyzés hozzáadva",
       "open_link": "Link megnyitása",
+      "copy_location": "Helyszín másolása",
       "meeting_link": "Találkozó link",
       "tentative": "Előzetes",
       "cancelled": "Lemondva",

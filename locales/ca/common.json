@@ -18,6 +18,7 @@
     "reconnecting": "S'ha perdut la connexió. S'està intentant reconnectar…",
     "error": {
       "invalid_credentials": "El correu electrònic o la contrasenya no són vàlids. Comproveu les credencials i torneu-ho a provar.",
+      "invalid_token": "El servidor no ha acceptat aquest token d'accés. Comproveu que sigui complet i que no hagi caducat ni s'hagi revocat.",
       "connection_failed": "No s'ha pogut contactar amb el servidor. Comproveu la connexió a Internet i torneu-ho a provar.",
       "cors_blocked": "El servidor és accessible, però està bloquejant les sol·licituds d'origen creuat. Comproveu la configuració CORS del servidor JMAP i permeteu aquest domini.",
       "server_error": "El servidor no està disponible temporalment. Torneu-ho a provar més tard.",
@@ -29,6 +30,11 @@
     "show_password": "Mostra la contrasenya",
     "hide_password": "Amaga la contrasenya",
     "totp_toggle": "Tinc un codi 2FA",
+    "token_toggle": "Inicia la sessió amb un token d'accés",
+    "password_toggle": "Inicia la sessió amb una contrasenya",
+    "token_label": "Token d'accés",
+    "token_placeholder": "Enganxeu el vostre token d'API",
+    "token_hint": "Creeu un token d'API a la configuració del vostre proveïdor de correu i enganxeu-lo aquí.",
     "remember_me": "Recorda'm",
     "config_error": {
       "title": "Error de configuració",
@@ -115,6 +121,7 @@
     "unified_archive": "Tot l'arxiu",
     "unified_junk": "Tot el correu brossa",
     "all_accounts": "Tots els comptes",
+    "all_accounts_loading": "Carregant comptes: {loaded} de {total}",
     "unified_mailbox": "Bústia unificada",
     "expand": "Desplega",
     "collapse": "Replega",
@@ -719,6 +726,7 @@
     "recipient_name_placeholder": "Nom mostrat",
     "autocomplete_search_server": "Cerca al servidor",
     "autocomplete_searching": "Cercant...",
+    "mention_recipients": "Destinataris",
     "toolbar": {
       "bold": "Negreta",
       "italic": "Cursiva",
@@ -1511,6 +1519,10 @@
         "label": "Avís d'assumpte buit",
         "description": "Demana confirmació abans d'enviar un missatge sense assumpte."
       },
+      "recipient_mentions": {
+        "label": "Esmentar destinataris amb @",
+        "description": "En escriure @ al missatge s'ofereixen els destinataris i s'insereix el nom de pila del triat. Retorn o Tab tria el nom ressaltat."
+      },
       "hide_inline_image_attachments": {
         "label": "Amaga les imatges incrustades dels fitxers adjunts",
         "description": "Les imatges incrustades al cos del missatge no es llisten com a fitxers adjunts separats"
@@ -1605,6 +1617,7 @@
       "auth_method_label": "Autenticació",
       "auth_method_oauth": "Inici de sessió únic (OAuth/OIDC)",
       "auth_method_basic": "Contrasenya",
+      "auth_method_token": "Token d'accés",
       "demo_account": "Compte de demostració",
       "email": {
         "label": "Adreça electrònica",
@@ -1966,6 +1979,32 @@
       },
       "about": {
         "title": "Bulwark Webmail"
+      },
+      "spam_siege": {
+        "title": "Spam Siege",
+        "intro": "Fes clic a la brossa i al phishing abans que arribin a la teva safata d'entrada. Deixa passar el correu real. Si perds els tres escuts, la safata cau.",
+        "kinds": {
+          "spam": "Brossa",
+          "phishing": "Phishing",
+          "legit": "Correu real"
+        },
+        "click_to_block": "Fes clic per bloquejar",
+        "let_through": "Deixa'l passar",
+        "start": "Comença",
+        "play_again": "Torna a jugar",
+        "score": "Punts",
+        "combo": "Bonificació de ratxa",
+        "shields_left": "Queden {count} de {total} escuts",
+        "seconds": "{seconds} s",
+        "best": "Rècord: {score}",
+        "new_best": "Nou rècord",
+        "held": "La safata ha resistit",
+        "overrun": "La safata ha caigut",
+        "stats": {
+          "caught": "Bloquejats",
+          "delivered": "Lliurats",
+          "mistakes": "Errors"
+        }
       }
     },
     "sidebar_apps": {
@@ -2929,6 +2968,7 @@
       "save_note": "Desa",
       "note_saved": "Nota afegida",
       "open_link": "Obre l'enllaç",
+      "copy_location": "Copia la ubicació",
       "meeting_link": "Enllaç de la reunió",
       "tentative": "Provisional",
       "cancelled": "Cancel·lat",

@@ -14,6 +14,7 @@
     "reconnecting": "החיבור אבד. מנסה להתחבר מחדש...",
     "error": {
       "invalid_credentials": "אימייל או סיסמה לא חוקיים. אנא בדוק את האישורים שלך ונסה שוב.",
+      "invalid_token": "השרת לא קיבל את אסימון הגישה הזה. בדוק שהוא הועתק במלואו, שתוקפו לא פג ושהוא לא בוטל.",
       "connection_failed": "לא ניתן להגיע לשרת. בדוק את חיבור האינטרנט שלך ונסה שוב.",
       "cors_blocked": "השרת נגיש אך חוסם בקשות חוצות מוצא. בדוק את הגדרות CORS של שרת ה-JMAP שלך ואפשר את הדומיין הזה.",
       "server_error": "השרת אינו זמין באופן זמני. אנא נסה שוב מאוחר יותר.",
@@ -25,6 +26,11 @@
     "show_password": "הצג סיסמה",
     "hide_password": "הסתר את הסיסמה",
     "totp_toggle": "יש לי קוד 2FA",
+    "token_toggle": "כניסה באמצעות אסימון גישה",
+    "password_toggle": "כניסה באמצעות סיסמה",
+    "token_label": "אסימון גישה",
+    "token_placeholder": "הדבק את אסימון ה-API שלך",
+    "token_hint": "צור אסימון API בהגדרות של ספק הדואר שלך והדבק אותו כאן.",
     "remember_me": "תזכור אותי",
     "config_error": {
       "title": "שגיאת תצורה",
@@ -137,6 +143,7 @@
     "unified_archive": "הכל ארכיון",
     "unified_junk": "הכל דואר זבל",
     "all_accounts": "כל החשבונות",
+    "all_accounts_loading": "טוען חשבונות: {loaded} מתוך {total}",
     "shared": "משותף",
     "scheduled": "מתוכננים",
     "unified_all_unread": "הכל שלא נקראו",
@@ -684,6 +691,7 @@
     "recipient_name_placeholder": "שם תצוגה",
     "autocomplete_search_server": "חיפוש בשרת",
     "autocomplete_searching": "מחפש...",
+    "mention_recipients": "נמענים",
     "toolbar": {
       "bold": "מודגש",
       "italic": "נטוי",
@@ -1473,6 +1481,10 @@
         "label": "אזהרה על נושא ריק",
         "description": "בקש אישור לפני שליחת הודעה ללא נושא."
       },
+      "recipient_mentions": {
+        "label": "אזכור נמענים עם @",
+        "description": "הקלדת @ בהודעה מציעה את הנמענים ומכניסה את השם הפרטי של הנמען שנבחר. Enter או Tab בוחרים את השם המסומן."
+      },
       "hide_inline_image_attachments": {
         "label": "הסתר תמונות מוטבעות מקבצים מצורפים",
         "description": "תמונות מוטבעות בגוף ההודעה אינן מופיעות כקבצים מצורפים נפרדים"
@@ -1567,6 +1579,7 @@
       "auth_method_label": "אימות",
       "auth_method_oauth": "כניסה יחידה (OAuth/OIDC)",
       "auth_method_basic": "סִיסמָה",
+      "auth_method_token": "אסימון גישה",
       "demo_account": "חשבון הדגמה",
       "email": {
         "label": "כתובת אימייל",
@@ -1921,6 +1934,32 @@
       },
       "about": {
         "title": "Bulwark Webmail"
+      },
+      "spam_siege": {
+        "title": "Spam Siege",
+        "intro": "לחצו על ספאם ופישינג לפני שהם מגיעים לתיבת הדואר הנכנס. תנו לדואר אמיתי לעבור. אם תאבדו את שלושת המגנים, התיבה נופלת.",
+        "kinds": {
+          "spam": "ספאם",
+          "phishing": "פישינג",
+          "legit": "דואר אמיתי"
+        },
+        "click_to_block": "לחצו לחסימה",
+        "let_through": "תנו לעבור",
+        "start": "התחלה",
+        "play_again": "משחק חוזר",
+        "score": "ניקוד",
+        "combo": "בונוס רצף",
+        "shields_left": "נותרו {count} מתוך {total} מגנים",
+        "seconds": "{seconds} ש׳",
+        "best": "שיא: {score}",
+        "new_best": "שיא חדש",
+        "held": "התיבה הוגנה",
+        "overrun": "התיבה נפרצה",
+        "stats": {
+          "caught": "נחסמו",
+          "delivered": "נמסרו",
+          "mistakes": "טעויות"
+        }
       },
       "show_avatars_in_junk": {
         "label": "הצג אווטרים בתיקייה זבל",
@@ -2853,6 +2892,7 @@
       "save_note": "שמור",
       "note_saved": "הערה נוספה",
       "open_link": "פתח קישור",
+      "copy_location": "העתק מיקום",
       "meeting_link": "קישור לפגישה",
       "tentative": "טנטטיבי",
       "cancelled": "בוטל",

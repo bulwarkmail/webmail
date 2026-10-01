@@ -28,6 +28,7 @@ export function ComposingSettings() {
     attachmentReminderEnabled,
     attachmentReminderKeywords,
     emptySubjectWarningEnabled,
+    recipientMentionsEnabled,
     sendDelaySeconds,
     subAddressDelimiter,
     signaturePosition,
@@ -177,6 +178,13 @@ export function ComposingSettings() {
         <ToggleSwitch
           checked={emptySubjectWarningEnabled}
           onChange={(checked) => updateSetting('emptySubjectWarningEnabled', checked)}
+        />
+      </SettingItem>
+
+      <SettingItem label={t('recipient_mentions.label')} description={t('recipient_mentions.description')}>
+        <ToggleSwitch
+          checked={recipientMentionsEnabled}
+          onChange={(checked) => updateSetting('recipientMentionsEnabled', checked)}
         />
       </SettingItem>
 

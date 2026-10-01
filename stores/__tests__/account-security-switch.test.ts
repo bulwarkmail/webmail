@@ -1,4 +1,5 @@
 import { beforeAll, expect, it, vi } from 'vitest';
+import { createConfig } from '@/lib/__tests__/fixtures/config';
 
 // The Account Security store was never reset on an account switch, and the
 // settings page only fetches while isStalwart is null. After switching from
@@ -56,7 +57,7 @@ beforeAll(() => {
       passthrough.push({ slot: h.get('X-JMAP-Cookie-Slot'), body: JSON.parse(String(init?.body)) });
       return new Response(JSON.stringify({ methodResponses: [['x:AppPassword/set', { destroyed: ['a'] }, '0'], ['x:AccountPassword/get', { list: [{}] }, '0'], ['x:AppPassword/query', { ids: [] }, '1'], ['x:ApiKey/query', { ids: [] }, '2']] }), { status: 200 });
     }
-    if (url.includes('/api/config')) return new Response(JSON.stringify({ settingsSyncEnabled: false }), { status: 200 });
+    if (url.includes('/api/config')) return new Response(JSON.stringify(createConfig()), { status: 200 });
     return new Response('{}', { status: 200 });
   }));
 });

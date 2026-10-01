@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback } from "react";
-import { formatDate, formatDateTime, stripInvisibleLeading } from "@/lib/utils";
+import { cleanPreview, formatDate, formatDateTime } from "@/lib/utils";
 import { Email, ThreadGroup } from "@/lib/jmap/types";
 import { cn } from "@/lib/utils";
 import { ListAttachmentChips } from "./attachment-chips";
@@ -212,7 +212,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
     const isMobile = useUIStore((state) => state.isMobile);
     // The horizontal one-line "focus" layout doesn't fit on narrow screens; fall back to multi-line on mobile.
     const isFocusedMailLayout = mailLayout === 'focus' && !isMobile;
-    const trimmedPreview = stripInvisibleLeading(email.preview ?? '');
+    const trimmedPreview = cleanPreview(email.preview);
     const inlinePreview = showPreview && trimmedPreview ? ` ${trimmedPreview}` : '';
     // Search hits carry server snippets with the matched terms marked; they
     // replace the plain subject / preview so the user sees why a mail matched.
@@ -664,7 +664,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
     const { latestEmail, participantNames, hasUnread, hasStarred, hasPinned, hasAttachment, hasAnswered, hasForwarded, emailCount } = thread;
     // The horizontal one-line "focus" layout doesn't fit on narrow screens; fall back to multi-line on mobile.
     const isFocusedMailLayout = mailLayout === 'focus' && !isMobile;
-    const trimmedPreview = stripInvisibleLeading(latestEmail.preview ?? '');
+    const trimmedPreview = cleanPreview(latestEmail.preview);
     const inlinePreview = showPreview && trimmedPreview ? ` ${trimmedPreview}` : '';
     // In a search the matched mail need not be the thread's latest one: show
     // the snippet of whichever email in the thread carries one.

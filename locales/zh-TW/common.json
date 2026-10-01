@@ -18,6 +18,7 @@
     "reconnecting": "連線中斷，正在嘗試重新連線…",
     "error": {
       "invalid_credentials": "電子郵件地址或密碼不正確。請檢查您的登入資訊後再試一次。",
+      "invalid_token": "伺服器不接受此存取權杖。請確認權杖完整，且未過期或遭撤銷。",
       "connection_failed": "無法連線至伺服器。請檢查網路連線後再試一次。",
       "cors_blocked": "可連線至伺服器，但跨來源請求遭到封鎖。請檢查 JMAP 伺服器的 CORS 設定，並允許此網域。",
       "server_error": "伺服器目前無法使用，請稍後再試。",
@@ -29,6 +30,11 @@
     "show_password": "顯示密碼",
     "hide_password": "隱藏密碼",
     "totp_toggle": "我有 2FA 驗證碼",
+    "token_toggle": "使用存取權杖登入",
+    "password_toggle": "使用密碼登入",
+    "token_label": "存取權杖",
+    "token_placeholder": "貼上 API 權杖",
+    "token_hint": "請在郵件服務供應商的設定中建立 API 權杖，然後貼到這裡。",
     "remember_me": "記住我",
     "config_error": {
       "title": "設定錯誤",
@@ -115,6 +121,7 @@
     "unified_archive": "所有封存郵件",
     "unified_junk": "所有垃圾郵件",
     "all_accounts": "所有帳號",
+    "all_accounts_loading": "正在載入帳號：{loaded}/{total}",
     "unified_mailbox": "整合信箱",
     "expand": "展開",
     "collapse": "收合",
@@ -719,6 +726,7 @@
     "recipient_name_placeholder": "顯示名稱",
     "autocomplete_search_server": "在伺服器上搜尋",
     "autocomplete_searching": "正在搜尋…",
+    "mention_recipients": "收件者",
     "toolbar": {
       "bold": "粗體",
       "italic": "斜體",
@@ -1511,6 +1519,10 @@
         "label": "空主題提醒",
         "description": "傳送沒有主題的郵件前請求確認。"
       },
+      "recipient_mentions": {
+        "label": "使用 @ 提及收件者",
+        "description": "在內文輸入 @ 會列出收件者，並插入所選收件者的名字。按 Enter 或 Tab 選擇醒目標示的名字。"
+      },
       "hide_inline_image_attachments": {
         "label": "在附件清單中隱藏內嵌圖片",
         "description": "嵌入到郵件內文中的圖片不會作為單獨的附件顯示"
@@ -1605,6 +1617,7 @@
       "auth_method_label": "驗證方式",
       "auth_method_oauth": "單一登入（OAuth/OIDC）",
       "auth_method_basic": "密碼",
+      "auth_method_token": "存取權杖",
       "demo_account": "示範帳號",
       "email": {
         "label": "電子郵件地址",
@@ -1966,6 +1979,32 @@
       },
       "about": {
         "title": "Bulwark 網頁郵件"
+      },
+      "spam_siege": {
+        "title": "Spam Siege",
+        "intro": "在垃圾郵件和釣魚郵件進入收件匣之前點擊攔截。放行真實郵件。三面盾牌全部失去，收件匣就會失守。",
+        "kinds": {
+          "spam": "垃圾郵件",
+          "phishing": "釣魚郵件",
+          "legit": "真實郵件"
+        },
+        "click_to_block": "點擊攔截",
+        "let_through": "放行",
+        "start": "開始",
+        "play_again": "再玩一次",
+        "score": "得分",
+        "combo": "連擊獎勵",
+        "shields_left": "剩餘盾牌 {count}/{total}",
+        "seconds": "{seconds} 秒",
+        "best": "最高分：{score}",
+        "new_best": "新紀錄",
+        "held": "收件匣守住了",
+        "overrun": "收件匣失守",
+        "stats": {
+          "caught": "已攔截",
+          "delivered": "已送達",
+          "mistakes": "失誤"
+        }
       }
     },
     "sidebar_apps": {
@@ -2929,6 +2968,7 @@
       "save_note": "儲存",
       "note_saved": "已新增備註",
       "open_link": "開啟連結",
+      "copy_location": "複製地點",
       "meeting_link": "會議連結",
       "tentative": "暫定",
       "cancelled": "已取消",

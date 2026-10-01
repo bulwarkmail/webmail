@@ -18,6 +18,7 @@
     "reconnecting": "Connessione persa. Tentativo di riconnessione…",
     "error": {
       "invalid_credentials": "Email o password non valida",
+      "invalid_token": "Il server non ha accettato questo token di accesso. Verifica che sia completo e che non sia scaduto o revocato.",
       "connection_failed": "Impossibile connettersi al server",
       "cors_blocked": "Il server è raggiungibile ma sta bloccando le richieste cross-origin. Controlla le impostazioni CORS del tuo server JMAP e consenti questo dominio.",
       "server_error": "Il server non è temporaneamente disponibile. Riprova più tardi.",
@@ -29,6 +30,11 @@
     "show_password": "Mostra password",
     "hide_password": "Nascondi password",
     "totp_toggle": "Ho un codice 2FA",
+    "token_toggle": "Accedi con un token di accesso",
+    "password_toggle": "Accedi con una password",
+    "token_label": "Token di accesso",
+    "token_placeholder": "Incolla il tuo token API",
+    "token_hint": "Crea un token API nelle impostazioni del tuo provider di posta e incollalo qui.",
     "remember_me": "Ricordami",
     "config_error": {
       "title": "Errore di configurazione",
@@ -115,6 +121,7 @@
     "unified_archive": "Tutti gli archivi",
     "unified_junk": "Tutto lo spam",
     "all_accounts": "Tutti gli account",
+    "all_accounts_loading": "Caricamento account: {loaded} di {total}",
     "unified_mailbox": "Casella di posta unificata",
     "expand": "Espandi",
     "collapse": "Comprimi",
@@ -719,6 +726,7 @@
     "recipient_name_placeholder": "Nome visualizzato",
     "autocomplete_search_server": "Cerca nel server",
     "autocomplete_searching": "Ricerca in corso...",
+    "mention_recipients": "Destinatari",
     "toolbar": {
       "bold": "Grassetto",
       "italic": "Corsivo",
@@ -1508,6 +1516,10 @@
         "label": "Avviso oggetto vuoto",
         "description": "Chiedi conferma prima di inviare un messaggio senza oggetto."
       },
+      "recipient_mentions": {
+        "label": "Menziona i destinatari con @",
+        "description": "Digitando @ nel messaggio vengono proposti i destinatari e viene inserito il nome di quello scelto. Invio o Tab seleziona il nome evidenziato."
+      },
       "hide_inline_image_attachments": {
         "label": "Nascondi le immagini inline dagli allegati",
         "description": "Le immagini incorporate nel corpo del messaggio non vengono elencate come allegati separati"
@@ -1602,6 +1614,7 @@
       "auth_method_label": "Autenticazione",
       "auth_method_oauth": "Single Sign-On (OAuth/OIDC)",
       "auth_method_basic": "Password",
+      "auth_method_token": "Token di accesso",
       "demo_account": "Account dimostrativo",
       "email": {
         "label": "Indirizzo email",
@@ -1959,6 +1972,32 @@
       },
       "about": {
         "title": "Bulwark Webmail"
+      },
+      "spam_siege": {
+        "title": "Spam Siege",
+        "intro": "Clicca su spam e phishing prima che raggiungano la tua posta in arrivo. Lascia passare la posta vera. Se perdi tutti e tre gli scudi, la casella cade.",
+        "kinds": {
+          "spam": "Spam",
+          "phishing": "Phishing",
+          "legit": "Posta vera"
+        },
+        "click_to_block": "Clicca per bloccare",
+        "let_through": "Lascia passare",
+        "start": "Inizia",
+        "play_again": "Gioca ancora",
+        "score": "Punti",
+        "combo": "Bonus serie",
+        "shields_left": "{count} scudi su {total} rimasti",
+        "seconds": "{seconds} s",
+        "best": "Record: {score}",
+        "new_best": "Nuovo record",
+        "held": "Posta difesa",
+        "overrun": "Posta invasa",
+        "stats": {
+          "caught": "Bloccati",
+          "delivered": "Consegnati",
+          "mistakes": "Errori"
+        }
       }
     },
     "sidebar_apps": {
@@ -2929,6 +2968,7 @@
       "save_note": "Salva",
       "note_saved": "Nota aggiunta",
       "open_link": "Apri link",
+      "copy_location": "Copia luogo",
       "meeting_link": "Link riunione",
       "tentative": "Provvisorio",
       "cancelled": "Annullato",
