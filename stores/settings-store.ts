@@ -147,6 +147,23 @@ export type ProtocolOpenMode = 'active-session' | 'new-tab';
  */
 const DEVICE_LOCAL_SETTING_KEYS = new Set<string>(['proInterface']);
 
+/**
+ * Settings that shape views spanning every logged-in account. They are synced
+ * with the active account's settings like everything else, but once a device
+ * holds several logins they are that device's choice: switching to another
+ * account must not turn the merged mailbox off just because that account's
+ * stored settings predate it. A first login on a device still takes them from
+ * the server.
+ */
+const CROSS_ACCOUNT_VIEW_KEYS = new Set<string>([
+  'enableUnifiedMailbox',
+  'includeGroupInUnified',
+  'unifiedCrossAccount',
+  'enableCrossUnreadView',
+  'enableCrossStarredView',
+  'enableCrossAllView',
+]);
+
 export type HoverAction = 'delete' | 'star' | 'markRead' | 'archive' | 'tag' | 'spam';
 /** Action fired by a mobile list-row swipe. 'none' disables that direction. */
 export type SwipeAction = 'none' | 'archive' | 'delete' | 'markRead' | 'star' | 'spam';
@@ -513,7 +530,7 @@ interface SettingsState {
   ) => void;
   resetToDefaults: () => void;
   exportSettings: () => string;
-  importSettings: (json: string, opts?: { serverAccountId?: string }) => boolean;
+  importSettings: (json: string, opts?: { serverAccountId?: string; keepCrossAccountViews?: boolean }) => boolean;
 
   // Folder icons
   setFolderIcon: (mailboxId: string, icon: string) => void;
@@ -905,7 +922,7 @@ export const useSettingsStore = create<SettingsState>()(
         return JSON.stringify(settings, null, 2);
       },
 
-      importSettings: (json: string, opts?: { serverAccountId?: string }) => {
+      importSettings: (json: string, opts?: { serverAccountId?: string; keepCrossAccountViews?: boolean }) => {
         try {
           const settings = JSON.parse(json);
 
@@ -955,6 +972,9 @@ export const useSettingsStore = create<SettingsState>()(
                 return;
               }
               if (DEVICE_LOCAL_SETTING_KEYS.has(key)) {
+                return;
+              }
+              if (opts?.keepCrossAccountViews && CROSS_ACCOUNT_VIEW_KEYS.has(key)) {
                 return;
               }
               // Per-account maps (accountId -> value) live in every account's
@@ -1168,11 +1188,16 @@ export const useSettingsStore = create<SettingsState>()(
             return false;
           }
           if (settings && typeof settings === 'object') {
+            // With several logins on this device, the views spanning them stay
+            // as the device has them (see CROSS_ACCOUNT_VIEW_KEYS).
+            const { useAccountStore } = await import('./account-store');
+            const keepCrossAccountViews = useAccountStore.getState().accounts.length > 1;
             isLoadingFromServer = true;
             // Merge (not replace) per-account maps for the account being loaded,
             // so multi-account logins don't clobber each other by login order.
             get().importSettings(JSON.stringify(settings), {
               serverAccountId: generateAccountId(username, serverUrl),
+              keepCrossAccountViews,
             });
             isLoadingFromServer = false;
             syncLog('Settings loaded from server successfully');
