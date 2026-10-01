@@ -217,19 +217,19 @@ describe('KeywordSettings', () => {
 // whose keywords are still intact on every message. Scanning finds those
 // keywords and offers them back under a name the user never had to remember.
 describe('KeywordSettings unrecognized tags', () => {
-  const discoverKeywords = vi.fn();
+  const getKeywords = vi.fn();
 
   beforeEach(() => {
     useSettingsStore.setState({ emailKeywords: [...DEFAULT_KEYWORDS], nestedTags: false });
-    discoverKeywords.mockReset();
-    discoverKeywords.mockResolvedValue({ keywords: {}, scanned: 0, total: 0, complete: true });
-    useAuthStore.setState({ client: { discoverKeywords, getTagCounts: vi.fn().mockResolvedValue({}) } as never });
+    getKeywords.mockReset();
+    getKeywords.mockResolvedValue({ keywords: {}, labels: [], scanned: 0, total: 0, complete: true });
+    useAuthStore.setState({ client: { getKeywords, getTagCounts: vi.fn().mockResolvedValue({}) } as never });
     useEmailStore.setState({ tagCounts: {} });
   });
 
   const scan = async () => {
     fireEvent.click(screen.getByText('unrecognized.scan'));
-    await waitFor(() => expect(discoverKeywords).toHaveBeenCalled());
+    await waitFor(() => expect(getKeywords).toHaveBeenCalled());
   };
 
   it('offers no scan when there is no connected account', async () => {
@@ -240,8 +240,9 @@ describe('KeywordSettings unrecognized tags', () => {
   });
 
   it('says so when every keyword on the server is already defined', async () => {
-    discoverKeywords.mockResolvedValue({
+    getKeywords.mockResolvedValue({
       keywords: { $seen: 9, '$label:red': 4 },
+      labels: [],
       scanned: 9,
       total: 9,
       complete: true,
@@ -253,8 +254,9 @@ describe('KeywordSettings unrecognized tags', () => {
   });
 
   it('surfaces an unrecognized keyword with a proposed name and its raw id', async () => {
-    discoverKeywords.mockResolvedValue({
+    getKeywords.mockResolvedValue({
       keywords: { '$label:q3-invoices': 7 },
+      labels: [],
       scanned: 9,
       total: 9,
       complete: true,
@@ -266,9 +268,35 @@ describe('KeywordSettings unrecognized tags', () => {
     expect(screen.getByText('$label:q3-invoices')).toBeInTheDocument();
   });
 
-  it('adds the tag under the keyword the messages already carry', async () => {
-    discoverKeywords.mockResolvedValue({
+  it('names and colours a tag the server describes for itself', async () => {
+    getKeywords.mockResolvedValue({
       keywords: { '$label:q3-invoices': 7 },
+      labels: [
+        {
+          id: '$label:q3-invoices',
+          name: 'Fatture Q3',
+          color: '#b6cff5',
+          total: 7,
+          unread: 0,
+          isProviderLabel: true,
+          source: 'provider',
+        },
+      ],
+      scanned: 9,
+      total: 9,
+      complete: true,
+    });
+    render(<KeywordSettings />);
+    await scan();
+
+    // The server's own name for it, not "Q3 Invoices" read off the id.
+    expect(await screen.findByDisplayValue('Fatture Q3')).toBeInTheDocument();
+  });
+
+  it('adds the tag under the keyword the messages already carry', async () => {
+    getKeywords.mockResolvedValue({
+      keywords: { '$label:q3-invoices': 7 },
+      labels: [],
       scanned: 9,
       total: 9,
       complete: true,
@@ -285,8 +313,9 @@ describe('KeywordSettings unrecognized tags', () => {
   });
 
   it('keeps the id when the proposed name is edited first', async () => {
-    discoverKeywords.mockResolvedValue({
+    getKeywords.mockResolvedValue({
       keywords: { '$label:q3-invoices': 7 },
+      labels: [],
       scanned: 9,
       total: 9,
       complete: true,
@@ -303,8 +332,9 @@ describe('KeywordSettings unrecognized tags', () => {
   });
 
   it('drops a row from the list once its tag is defined', async () => {
-    discoverKeywords.mockResolvedValue({
+    getKeywords.mockResolvedValue({
       keywords: { '$label:q3-invoices': 7 },
+      labels: [],
       scanned: 9,
       total: 9,
       complete: true,
@@ -322,8 +352,9 @@ describe('KeywordSettings unrecognized tags', () => {
   });
 
   it('adds every found tag at once', async () => {
-    discoverKeywords.mockResolvedValue({
+    getKeywords.mockResolvedValue({
       keywords: { '$label:q3-invoices': 7, '$label:receipts': 3 },
+      labels: [],
       scanned: 9,
       total: 9,
       complete: true,
@@ -339,8 +370,9 @@ describe('KeywordSettings unrecognized tags', () => {
   });
 
   it('warns that a capped scan may have missed tags on older mail', async () => {
-    discoverKeywords.mockResolvedValue({
+    getKeywords.mockResolvedValue({
       keywords: { '$label:q3-invoices': 7 },
+      labels: [],
       scanned: 25000,
       total: 90000,
       complete: false,
@@ -353,7 +385,7 @@ describe('KeywordSettings unrecognized tags', () => {
 
   it('reports a failed scan instead of claiming nothing was found', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
-    discoverKeywords.mockRejectedValue(new Error('network down'));
+    getKeywords.mockRejectedValue(new Error('network down'));
     render(<KeywordSettings />);
     await scan();
 

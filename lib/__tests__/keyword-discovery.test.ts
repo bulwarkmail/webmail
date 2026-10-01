@@ -169,4 +169,41 @@ describe('findUnrecognizedKeywords', () => {
     expect(entry.id).toBe('work/clients/acme');
     expect(entry.label).toBe('Acme');
   });
+
+  it('prefers what the server calls a tag over what its id looks like', () => {
+    const [entry] = findUnrecognizedKeywords(
+      { '$label:societa-agricola': 12 },
+      [],
+      false,
+      [{ id: '$label:societa-agricola', name: 'Società Agricola', color: '#42d692' }],
+    );
+    expect(entry.label).toBe('Società Agricola');
+    // #42d692 is a green of ordinary lightness: the palette entry nearest it,
+    // not a hashed hue.
+    expect(entry.color).toBe('green');
+  });
+
+  it('offers a described tag the scan never met, and keeps it last', () => {
+    const found = findUnrecognizedKeywords({ '$label:seen': 9 }, [], false, [
+      { id: '$label:unused', name: 'Unused', color: null },
+    ]);
+    expect(found.map((entry) => entry.id)).toEqual(['seen', 'unused']);
+    expect(found[1].count).toBe(0);
+  });
+
+  it('leaves a described tag alone once it has a definition', () => {
+    expect(
+      findUnrecognizedKeywords({}, defined('work'), false, [
+        { id: '$label:work', name: 'Work', color: '#ff0000' },
+      ]),
+    ).toEqual([]);
+  });
+
+  it('falls back to its own suggestion when the server keeps no colour', () => {
+    const [entry] = findUnrecognizedKeywords({ '$label:q3': 4 }, [], false, [
+      { id: '$label:q3', name: 'Q3', color: null },
+    ]);
+    expect(entry.label).toBe('Q3');
+    expect(entry.color).toBeTruthy();
+  });
 });

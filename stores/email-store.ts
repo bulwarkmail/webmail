@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { importDescribedTags } from "@/lib/described-tags";
 import { Email, Mailbox, StateChange, ScheduledEmail, SendEmailResult, isUnifiedMailboxId, isCrossViewId } from "@/lib/jmap/types";
 import type { UnifiedMailboxRole, CrossView } from "@/lib/jmap/types";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
@@ -1949,6 +1950,9 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         }
         // Tag counts can finish whenever; don't block the prefetch on them.
         void get().fetchTagCounts(client);
+        // Same for adopting the tags the server names itself: one request on a
+        // server that can answer it, nothing at all on one that cannot.
+        void importDescribedTags(client);
       } finally {
         delete target.__prefetchPromise;
       }

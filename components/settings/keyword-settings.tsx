@@ -402,7 +402,10 @@ function UnrecognizedKeywords() {
     setError(false);
     setProgress({ scanned: 0, total: 0 });
     try {
-      const result = await client.discoverKeywords({
+      // getKeywords, not discoverKeywords: a server that can enumerate its own
+      // keywords answers in one request instead of a walk through the mailbox,
+      // and the tags it describes come back named and coloured as it has them.
+      const result = await client.getKeywords({
         signal: controller.signal,
         onProgress: (scanned, total) => {
           if (!controller.signal.aborted) setProgress({ scanned, total });
@@ -410,7 +413,12 @@ function UnrecognizedKeywords() {
       });
       if (controller.signal.aborted) return;
       setScan({
-        found: findUnrecognizedKeywords(result.keywords, emailKeywords, nestedTags),
+        found: findUnrecognizedKeywords(
+          result.keywords,
+          emailKeywords,
+          nestedTags,
+          result.labels.filter((label) => label.isProviderLabel),
+        ),
         complete: result.complete,
         scanned: result.scanned,
         total: result.total,

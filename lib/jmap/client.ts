@@ -5277,6 +5277,15 @@ export class JMAPClient implements IJMAPClient {
     return this.hasCapability("urn:ietf:params:jmap:quota");
   }
 
+  /**
+   * Whether the server can list its own keywords, so asking what tags exist
+   * costs one request rather than a walk through the mailbox. Gated on the
+   * account capability too: the enumeration is answered per account.
+   */
+  supportsKeywordEnumeration(): boolean {
+    return this.hasCapability(KEYWORDS_CAPABILITY) && this.hasAccountCapability(KEYWORDS_CAPABILITY);
+  }
+
   supportsVacationResponse(): boolean {
     return this.hasCapability("urn:ietf:params:jmap:vacationresponse");
   }
