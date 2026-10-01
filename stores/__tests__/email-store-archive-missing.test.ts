@@ -74,7 +74,7 @@ describe('batchArchive without an archive mailbox (#578)', () => {
       ],
       accountMailboxes: {},
       emails: [makeEmail({ id: 'e1', mailboxIds: { 'a-inbox': true } })],
-      selectedEmailIds: new Set(['e1']),
+      selectedEmailKeys: new Set(['e1']),
     });
   });
 
@@ -86,6 +86,6 @@ describe('batchArchive without an archive mailbox (#578)', () => {
     expect(useEmailStore.getState().error).toMatch(/archive mailbox not found/i);
     expect(client.batchArchiveEmails).not.toHaveBeenCalled();
     // Nothing was archived, so the selection must survive.
-    expect(useEmailStore.getState().selectedEmailIds.has('e1')).toBe(true);
+    expect(useEmailStore.getState().selectedEmailKeys.has('e1')).toBe(true);
   });
 });

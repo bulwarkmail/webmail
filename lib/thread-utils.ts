@@ -20,6 +20,23 @@ export function threadKeyFor(
 }
 
 /**
+ * Client-side identity of a single message.
+ *
+ * Email ids are per-account too, so in a merged view two unrelated messages can
+ * share an `id` - `eiaaaabc` exists in every account that got that far. Batch
+ * selection is what makes that dangerous: keyed by the bare id, ticking one row
+ * also ticks its namesake in another account, and delete, move or archive then
+ * act on both. Same scoping as `threadKeyFor`; unstamped emails keep the bare
+ * id, so single-account views are untouched.
+ */
+export function emailKeyFor(
+  email: Pick<Email, "id" | "sourceClientAccountId" | "sourceAccountId">,
+): string {
+  const scope = [email.sourceClientAccountId, email.sourceAccountId].filter(Boolean).join("/");
+  return scope ? `${scope}:${email.id}` : email.id;
+}
+
+/**
  * The JMAP thread id behind a `threadKeyFor` key. JMAP ids never contain ":"
  * (RFC 8620 §1.2 limits them to the URL-safe base64 alphabet), so the last
  * separator always splits the scope from the id.
