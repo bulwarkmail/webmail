@@ -1085,6 +1085,10 @@
         "label": "Rādīt kontu avatarus navigācijas joslā",
         "description": "Rādīt kontu apļus navigācijas joslas apakšā ātrai pārslēgšanai."
       },
+      "settings_from_main_account": {
+        "label": "Vienādi iestatījumi visos kontos",
+        "description": "Izmantot galvenā konta ({account}) iestatījumus neatkarīgi no atvērtā konta un saglabāt izmaiņas tur. Attiecas uz šo ierīci."
+      },
       "unified_mailbox": {
         "label": "Apvienotā pastkaste",
         "description": "Rādīt apvienotās mapes (Iesūtne, Nosūtītie u.c.) no visiem pievienotajiem kontiem",

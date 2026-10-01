@@ -1088,6 +1088,10 @@
         "label": "Zobraziť avatáry účtov na navigačnej lište",
         "description": "Zobrazovať jednotlivé ikony účtov v dolnej časti navigačnej lišty pre rýchle prepínanie."
       },
+      "settings_from_main_account": {
+        "label": "Rovnaké nastavenia pre všetky účty",
+        "description": "Používať nastavenia hlavného účtu ({account}) bez ohľadu na otvorený účet a ukladať doň zmeny. Platí pre toto zariadenie."
+      },
       "unified_mailbox": {
         "label": "Zjednotená schránka",
         "description": "Zobrazovať zlúčené priečinky (Doručené, Odoslané atd.) zo všetkých pripojených účtov",

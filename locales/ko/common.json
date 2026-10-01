@@ -1085,6 +1085,10 @@
         "label": "내비게이션 바에 계정 아바타 표시",
         "description": "내비게이션 바 아래에 계정 프로필을 표시해서 빠르게 전환할 수 있어요."
       },
+      "settings_from_main_account": {
+        "label": "모든 계정에서 같은 설정",
+        "description": "어떤 계정을 열어도 기본 계정({account})의 설정을 사용하고 변경 사항도 그곳에 저장합니다. 이 기기에 적용됩니다."
+      },
       "unified_mailbox": {
         "label": "통합 메일함",
         "description": "연결된 모든 계정의 통합 폴더(받은편지함, 보낸편지함 등)를 표시합니다",

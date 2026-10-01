@@ -1085,6 +1085,10 @@
         "label": "Pokazuj awatary kont na pasku nawigacyjnym",
         "description": "Wyświetlaj osobne ikony kont na dole paska nawigacyjnego, aby szybko się przełączać, z przyciskiem wylogowania poniżej."
       },
+      "settings_from_main_account": {
+        "label": "Te same ustawienia na każdym koncie",
+        "description": "Używaj ustawień konta głównego ({account}) niezależnie od otwartego konta i zapisuj tam zmiany. Dotyczy tego urządzenia."
+      },
       "unified_mailbox": {
         "label": "Wspólna skrzynka",
         "description": "Wyświetlaj połączone foldery (Odebrane, Wysłane itp.) ze wszystkich połączonych kont",

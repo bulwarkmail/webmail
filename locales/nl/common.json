@@ -1085,6 +1085,10 @@
         "label": "Accountavatars tonen op navigatiebalk",
         "description": "Toon individuele accountcirkels onderaan de navigatiebalk voor snel wisselen, met een afmeldknop eronder."
       },
+      "settings_from_main_account": {
+        "label": "Dezelfde instellingen voor elk account",
+        "description": "Gebruik de instellingen van het hoofdaccount ({account}) ongeacht welk account open is, en sla wijzigingen daar op. Geldt voor dit apparaat."
+      },
       "unified_mailbox": {
         "label": "Gecombineerd postvak",
         "description": "Gecombineerde mappen (Postvak IN, Verzonden, enz.) van alle verbonden accounts weergeven",

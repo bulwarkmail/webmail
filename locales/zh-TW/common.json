@@ -1088,6 +1088,10 @@
         "label": "在導覽列顯示帳號頭像",
         "description": "在導覽列底部顯示各帳號的圓形頭像，方便快速切換，並在下方顯示登出按鈕。"
       },
+      "settings_from_main_account": {
+        "label": "所有帳戶使用相同設定",
+        "description": "無論開啟哪個帳戶，都使用主帳戶（{account}）的設定，並將變更儲存到該帳戶。僅適用於此裝置。"
+      },
       "unified_mailbox": {
         "label": "整合信箱",
         "description": "顯示使用中帳號及其共用信件匣的整合信件匣（收件匣、寄件備份等）。",

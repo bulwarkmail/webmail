@@ -1085,6 +1085,10 @@
         "label": "在导航导轨上显示账户头像",
         "description": "在导航栏底部显示账户头像，方便快速切换；下方会保留退出按钮。"
       },
+      "settings_from_main_account": {
+        "label": "所有账户使用相同设置",
+        "description": "无论打开哪个账户，都使用主账户（{account}）的设置，并将更改保存到该账户。仅适用于此设备。"
+      },
       "unified_mailbox": {
         "label": "统一邮箱",
         "description": "显示所有已连接账户的合并文件夹（收件箱、已发送等）",
