@@ -514,7 +514,12 @@ export interface IJMAPClient {
   copyFileNode(id: string, newName: string, parentId: string | null): Promise<FileNode>;
 
   // ── S/MIME raw-email helpers ──────────────────────────────────
-  importRawEmail(blob: Blob, mailboxIds: Record<string, boolean>, keywords?: Record<string, boolean>, accountId?: string): Promise<string>;
+  /**
+   * Upload a raw message and import it (Email/import). `receivedAt` keeps the
+   * original date when a message is carried over from another account;
+   * without it the server stamps the import time.
+   */
+  importRawEmail(blob: Blob, mailboxIds: Record<string, boolean>, keywords?: Record<string, boolean>, accountId?: string, receivedAt?: string): Promise<string>;
   submitEmail(emailId: string, identityId: string): Promise<void>;
   /**
    * Server-side move of one email across accounts reachable through THIS client

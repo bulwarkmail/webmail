@@ -9053,6 +9053,7 @@ export class JMAPClient implements IJMAPClient {
     mailboxIds: Record<string, boolean>,
     keywords?: Record<string, boolean>,
     accountId?: string,
+    receivedAt?: string,
   ): Promise<string> {
     const targetAccountId = accountId || this.accountId;
     // First upload the blob. Blob uploads are scoped to an account too —
@@ -9070,6 +9071,7 @@ export class JMAPClient implements IJMAPClient {
             blobId,
             mailboxIds,
             keywords: keywords ?? { '$seen': true },
+            ...(receivedAt ? { receivedAt } : {}),
           },
         },
       }, '0'],

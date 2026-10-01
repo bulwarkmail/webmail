@@ -3785,5 +3785,33 @@
     "preview_empty": "Válasszon egy találatot az előnézethez",
     "open_full": "Megnyitás",
     "view_label": "Nézet"
+  },
+  "folder_migration": {
+    "title": "Mappa áthelyezése másik fiókba",
+    "description": "Egy mappa összes üzenetének másolása vagy áthelyezése egy másik csatlakoztatott fiók mappájába.",
+    "source": "Innen",
+    "destination": "Ide",
+    "source_account": "Forrásfiók",
+    "source_folder": "Forrásmappa",
+    "destination_account": "Célfiók",
+    "destination_folder": "Célmappa",
+    "choose_account": "Válasszon fiókot",
+    "choose_folder": "Válasszon mappát",
+    "mode": "Mód",
+    "copy": "Másolás",
+    "move": "Áthelyezés",
+    "copy_hint": "Az üzenetek a forrásmappában maradnak.",
+    "move_hint": "Minden üzenet törlődik a forrásból, amint a másik fiókba bekerült.",
+    "start": "Indítás",
+    "stop": "Leállítás",
+    "reading": "A mappa beolvasása…",
+    "progress": "{done} / {total} üzenet",
+    "finished": "Kész.",
+    "stopped": "Leállítva.",
+    "kept": "{count} a forrásban maradt, mert más mappákban is szerepel.",
+    "failed": "Leállítva: egy üzenetet nem sikerült másolni ({error}).",
+    "failed_after_import": "Leállítva: egy üzenet átmásolódott, de nem törlődött a forrásból ({error}).",
+    "folder_changed": "A mappa beolvasás közben megváltozott. Próbálja újra.",
+    "same_account": "Válasszon egy másik fiókban lévő mappát."
   }
 }

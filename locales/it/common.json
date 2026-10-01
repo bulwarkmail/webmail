@@ -3785,5 +3785,33 @@
     "preview_empty": "Seleziona un risultato per l'anteprima",
     "open_full": "Apri",
     "view_label": "Vista"
+  },
+  "folder_migration": {
+    "title": "Sposta una cartella in un altro account",
+    "description": "Copia o sposta tutti i messaggi di una cartella in una cartella di un altro account collegato.",
+    "source": "Da",
+    "destination": "A",
+    "source_account": "Account di origine",
+    "source_folder": "Cartella di origine",
+    "destination_account": "Account di destinazione",
+    "destination_folder": "Cartella di destinazione",
+    "choose_account": "Scegli un account",
+    "choose_folder": "Scegli una cartella",
+    "mode": "Modalità",
+    "copy": "Copia",
+    "move": "Sposta",
+    "copy_hint": "I messaggi restano nella cartella di origine.",
+    "move_hint": "Ogni messaggio viene eliminato dall'origine quando l'altro account lo ha ricevuto.",
+    "start": "Avvia",
+    "stop": "Ferma",
+    "reading": "Lettura della cartella…",
+    "progress": "{done} di {total} messaggi",
+    "finished": "Fatto.",
+    "stopped": "Interrotto.",
+    "kept": "{count} sono rimasti nell'origine perché si trovano anche in altre cartelle.",
+    "failed": "Interrotto: un messaggio non è stato copiato ({error}).",
+    "failed_after_import": "Interrotto: un messaggio è stato copiato ma non eliminato dall'origine ({error}).",
+    "folder_changed": "La cartella è cambiata durante la lettura. Riprova.",
+    "same_account": "Scegli una cartella di un altro account."
   }
 }

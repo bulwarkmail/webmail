@@ -3785,5 +3785,33 @@
     "preview_empty": "Seleccioneu un resultat per previsualitzar-lo",
     "open_full": "Obre",
     "view_label": "Vista"
+  },
+  "folder_migration": {
+    "title": "Mou una carpeta a un altre compte",
+    "description": "Copia o mou tots els missatges d'una carpeta a una carpeta d'un altre compte connectat.",
+    "source": "De",
+    "destination": "A",
+    "source_account": "Compte d'origen",
+    "source_folder": "Carpeta d'origen",
+    "destination_account": "Compte de destinació",
+    "destination_folder": "Carpeta de destinació",
+    "choose_account": "Tria un compte",
+    "choose_folder": "Tria una carpeta",
+    "mode": "Mode",
+    "copy": "Copia",
+    "move": "Mou",
+    "copy_hint": "Els missatges es queden a la carpeta d'origen.",
+    "move_hint": "Cada missatge s'esborra de l'origen quan l'altre compte el té.",
+    "start": "Inicia",
+    "stop": "Atura",
+    "reading": "S'està llegint la carpeta…",
+    "progress": "{done} de {total} missatges",
+    "finished": "Fet.",
+    "stopped": "Aturat.",
+    "kept": "{count} s'han quedat a l'origen perquè també són en altres carpetes.",
+    "failed": "Aturat: no s'ha pogut copiar un missatge ({error}).",
+    "failed_after_import": "Aturat: un missatge s'ha copiat però no s'ha esborrat de l'origen ({error}).",
+    "folder_changed": "La carpeta ha canviat mentre es llegia. Torna-ho a provar.",
+    "same_account": "Tria una carpeta d'un altre compte."
   }
 }

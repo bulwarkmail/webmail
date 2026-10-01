@@ -3785,5 +3785,33 @@
     "preview_empty": "Sélectionnez un résultat pour l'aperçu",
     "open_full": "Ouvrir",
     "view_label": "Affichage"
+  },
+  "folder_migration": {
+    "title": "Déplacer un dossier vers un autre compte",
+    "description": "Copier ou déplacer tous les messages d'un dossier vers un dossier d'un autre compte connecté.",
+    "source": "De",
+    "destination": "Vers",
+    "source_account": "Compte source",
+    "source_folder": "Dossier source",
+    "destination_account": "Compte de destination",
+    "destination_folder": "Dossier de destination",
+    "choose_account": "Choisir un compte",
+    "choose_folder": "Choisir un dossier",
+    "mode": "Mode",
+    "copy": "Copier",
+    "move": "Déplacer",
+    "copy_hint": "Les messages restent dans le dossier source.",
+    "move_hint": "Chaque message est supprimé de la source dès que l'autre compte l'a reçu.",
+    "start": "Démarrer",
+    "stop": "Arrêter",
+    "reading": "Lecture du dossier…",
+    "progress": "{done} sur {total} messages",
+    "finished": "Terminé.",
+    "stopped": "Arrêté.",
+    "kept": "{count} sont restés dans la source car ils sont aussi dans d'autres dossiers.",
+    "failed": "Arrêté : un message n'a pas pu être copié ({error}).",
+    "failed_after_import": "Arrêté : un message a été copié mais pas supprimé de la source ({error}).",
+    "folder_changed": "Le dossier a changé pendant la lecture. Réessayez.",
+    "same_account": "Choisissez un dossier d'un autre compte."
   }
 }
