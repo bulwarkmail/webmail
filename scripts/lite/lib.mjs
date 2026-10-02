@@ -105,6 +105,8 @@ export const LITE_API_STRING_ALLOWLIST = [
   // Settings/policy - replaced by config.json / policy.json.
   "/api/config",
   "/api/admin/policy",
+  // lib/account-vault-client.ts - the archive UI is not mounted in Lite, and request() refuses to call it there.
+  "/api/account-vault",
   // WOPI (#425) - use-wopi-status returns disabled in Lite.
   "/api/wopi/status",
   "/api/wopi/launch",
