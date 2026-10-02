@@ -105,6 +105,8 @@ export const LITE_API_STRING_ALLOWLIST = [
   // Settings/policy - replaced by config.json / policy.json.
   "/api/config",
   "/api/admin/policy",
+  // components/build-refresh.tsx - not mounted in Lite, and fetchServerBuildStamp() returns null there.
+  "/api/system/build",
   // WOPI (#425) - use-wopi-status returns disabled in Lite.
   "/api/wopi/status",
   "/api/wopi/launch",
