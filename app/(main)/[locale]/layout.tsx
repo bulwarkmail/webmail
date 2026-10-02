@@ -15,6 +15,8 @@ import { PluginOAuthCallbackListener } from "@/components/providers/plugin-oauth
 import { PWAInstallPrompt } from "@/components/pwa-install-prompt";
 import { PushNotificationPrompt } from "@/components/push-notification-prompt";
 import { setRequestLocale } from "next-intl/server";
+import { BuildRefresh } from "@/components/build-refresh";
+import { IS_LITE } from "@/lib/lite";
 import { locales } from "@/i18n/routing";
 import { generateLiteLocaleParams } from "@/lib/lite-static-params";
 
@@ -61,6 +63,8 @@ export default async function LocaleLayout({
                   <PluginOAuthCallbackListener />
                   <PWAInstallPrompt />
                   <PushNotificationPrompt />
+                  {/* Lite is a static bundle: no /api/system/build to ask, and no server build to follow. */}
+                  {!IS_LITE && <BuildRefresh />}
                 </ProtocolLaunchHandlerProvider>
               </TourProvider>
             </EmbeddedBridgeProvider>
