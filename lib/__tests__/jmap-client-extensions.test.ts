@@ -122,7 +122,10 @@ describe('JMAP client extensions', () => {
     it('reports the Mailbox state per account from getAllMailboxesWithState', async () => {
       await setup();
       answer(() => ({
-        methodResponses: [['Mailbox/get', { accountId: 'acct-1', state: 'm7', list: [{ id: 'inbox', name: 'Inbox', role: 'inbox' }] }, '0']],
+        methodResponses: [
+          ['Mailbox/query', { accountId: 'acct-1', queryState: 'q1', total: 1, ids: ['inbox'] }, 'query'],
+          ['Mailbox/get', { accountId: 'acct-1', state: 'm7', list: [{ id: 'inbox', name: 'Inbox', role: 'inbox' }] }, 'get'],
+        ],
       }));
       const { mailboxes, states } = await client.getAllMailboxesWithState();
       expect(mailboxes.map((m) => m.id)).toEqual(['inbox']);

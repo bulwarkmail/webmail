@@ -233,11 +233,14 @@ describe('JMAPClient request limits', () => {
   // (maxConcurrentRequests, default 4) and refuses the surplus with the same
   // 400 jmap:error:limit shape - BEFORE running any method. A push event fans
   // out several refreshes at once, so the ceiling is reached in ordinary use;
-  // a refused Mailbox/get used to be answered with a fake lone "Inbox" that
+  // a refused mailbox refresh used to be answered with a fake lone "Inbox" that
   // then replaced the real folder tree in the sidebar (#780).
   describe('maxConcurrentRequests', () => {
     const inboxList = {
-      methodResponses: [['Mailbox/get', { list: [{ id: 'mb-inbox', name: 'Inbox', role: 'inbox' }] }, '0']],
+      methodResponses: [
+        ['Mailbox/query', { ids: ['mb-inbox'], queryState: 's', total: 1 }, 'query'],
+        ['Mailbox/get', { list: [{ id: 'mb-inbox', name: 'Inbox', role: 'inbox' }] }, 'get'],
+      ],
     };
 
     it('backs off and replays a refused request instead of failing it', async () => {
