@@ -834,8 +834,8 @@
     "identity_delete_failed": "Kunne ikke slette identitet: {error}",
     "identity_unauthorized": "Du er ikke autoriseret til at sende fra denne e-mailadresse",
     "identity_not_found": "Identitet ikke fundet",
-    "vacation_saved": "Fraværsbesked-indstillinger gemt",
-    "vacation_save_failed": "Kunne ikke gemme fraværsbesked-indstillinger",
+    "vacation_saved": "Fraværsindstillinger gemt",
+    "vacation_save_failed": "Kunne ikke gemme fraværsindstillinger",
     "filters_saved": "Filtre gemt succesfuldt",
     "filters_save_failed": "Kunne ikke gemme filtre",
     "filters_deleted": "Filterregel slettet",
@@ -857,7 +857,8 @@
     "rule_undone": "Regelændring fortrudt",
     "rule_undo_failed": "Regelændringen kunne ikke fortrydes",
     "rule_undo_conflict": "Dine filtre er ændret siden. Fortryd ændringen i filterindstillingerne.",
-    "rule_folder_failed": "Mappen kunne ikke oprettes"
+    "rule_folder_failed": "Mappen kunne ikke oprettes",
+    "vacation_filters_save_failed": "Fraværsindstillinger gemt, men videresendelse og svarmodtagere kunne ikke gemmes"
   },
   "date": {
     "today": "I dag",
@@ -945,7 +946,7 @@
       "privacy": "Privatliv & sikkerhed",
       "account": "Konto",
       "identities": "Identiteter",
-      "vacation": "Fraværsbeskeder",
+      "vacation": "Fravær",
       "advanced": "Avanceret",
       "calendar": "Kalender",
       "filters": "Filtre",
@@ -1820,28 +1821,24 @@
       }
     },
     "vacation": {
-      "title": "Fraværsbeskeder",
-      "description": "Svar automatisk på indkommende e-mails, mens du er væk",
+      "title": "Fravær",
+      "description": "Håndter indkommende e-mails automatisk, mens du er væk",
       "loading": "Indlæser ferieindstillinger...",
       "not_supported": "Din mailserver understøtter ikke fraværsbeskeder.",
       "fetch_error": "Kunne ikke indlæse ferieindstillinger. Prøv igen.",
       "status": {
-        "label": "Fraværsbeskeder",
+        "label": "Svar automatisk",
         "description": "Send et automatisk svar til personer, der skriver til dig",
         "active": "Aktiv",
         "inactive": "Inaktiv"
       },
       "date_range": {
-        "title": "Datoperiode",
-        "description": "Begræns eventuelt auto-svaret til en bestemt periode",
         "start": "Startdato",
         "start_description": "Lad være tom for ingen startbegrænsning",
         "end": "Slutdato",
         "end_description": "Lad være tom for ingen slutbegrænsning"
       },
       "message": {
-        "title": "Auto-svar-besked",
-        "description": "Beskeden der sendes som svar",
         "subject_label": "Emne",
         "subject_description": "Emnelinje for auto-svaret",
         "subject_placeholder": "Fraværende",
@@ -1861,10 +1858,32 @@
       "saving": "Gemmer...",
       "warnings": {
         "end_before_start": "Slutdato skal være efter startdato",
+        "invalid_date": "Angiv en gyldig start- og slutdato med klokkeslæt, eller lad feltet stå tomt",
         "start_in_past": "Startdato er tidligere end i dag",
         "empty_body": "Beskedteksten er tom - modtagere vil modtage et tomt svar",
         "subject_too_long": "Emnet er for langt til serveren (højst {max} byte).",
-        "body_too_long": "Beskeden er for lang til serveren (højst {max} byte inkl. formatering)."
+        "body_too_long": "Beskeden er for lang til serveren (højst {max} byte inkl. formatering).",
+        "forward_address": "Angiv en gyldig adresse at videresende til",
+        "not_running": "Videresendelse eller svarmodtagere er gemt, men er ikke aktive lige nu. Gem for at slå dem til igen."
+      },
+      "forward": {
+        "title": "Videresendelse",
+        "description": "Videresender indgående beskeder til en anden adresse, med eller uden fraværsbesked, i perioden ovenfor (uden slutdato, indtil den slås fra). Spam videresendes ikke.",
+        "enabled_label": "Videresend beskeder",
+        "to_label": "Videresend til",
+        "to_placeholder": "email@eksempel.dk",
+        "keep_label": "Behold i indbakke",
+        "keep_description": "Ellers bliver beskeden kun videresendt: Den bliver ikke i denne postkasse, og ingen filterregel køres på den."
+      },
+      "audience": {
+        "label": "Svar til",
+        "description": "Interne afsendere: {domains}",
+        "all": "Alle afsendere",
+        "internal": "Kun interne afsendere",
+        "external": "Kun eksterne afsendere"
+      },
+      "auto_reply": {
+        "title": "Automatisk svar"
       }
     },
     "folders": {
@@ -2232,7 +2251,19 @@
       "suggest_list": "List-Id",
       "suggest_domain": "@{domain}",
       "apply_existing": "Anvend også på beskeder, der allerede ligger i denne mappe",
-      "apply_existing_unsupported": "Kun regler, der tjekker afsender, modtagere, emne eller headere, og som flytter, kopierer, markerer som læst, stjernemarkerer eller tagger, kan anvendes på eksisterende beskeder."
+      "apply_existing_unsupported": "Kun regler, der tjekker afsender, modtagere, emne eller headere, og som flytter, kopierer, markerer som læst, stjernemarkerer eller tagger, kan anvendes på eksisterende beskeder.",
+      "period_title": "Datoperiode",
+      "period_start": "Startdato",
+      "period_end": "Slutdato",
+      "validation_period_order": "Slutdato skal være efter startdato",
+      "period_toggle": "Kun aktiv i en periode",
+      "period_hint": "Gælder for beskeder, der ankommer i denne periode. Lad et felt stå tomt for at holde den ende åben.",
+      "validation_period_empty": "Angiv en start- eller slutdato for perioden",
+      "validation_period_invalid": "Angiv en gyldig dato med klokkeslæt for perioden, eller lad feltet stå tomt",
+      "apply_existing_period": "En regel med en periode virker kun på beskeder, der ankommer i perioden, og kan derfor ikke køres på eksisterende beskeder.",
+      "period_status_scheduled": "planlagt",
+      "period_status_active": "aktiv",
+      "period_status_expired": "udløbet"
     },
     "templates": {
       "title": "E-mail-skabeloner",

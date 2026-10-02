@@ -834,8 +834,8 @@
     "identity_delete_failed": "Échec de la suppression de l'identité: {error}",
     "identity_unauthorized": "Vous n'êtes pas autorisé à envoyer depuis cette adresse email",
     "identity_not_found": "Identité introuvable",
-    "vacation_saved": "Paramètres du répondeur d'absence enregistrés",
-    "vacation_save_failed": "Échec de l'enregistrement des paramètres du répondeur d'absence",
+    "vacation_saved": "Paramètres d'absence enregistrés",
+    "vacation_save_failed": "Échec de l'enregistrement des paramètres d'absence",
     "filters_saved": "Filtres enregistrés avec succès",
     "filters_save_failed": "Échec de l'enregistrement des filtres",
     "filters_deleted": "Règle de filtrage supprimée",
@@ -857,7 +857,8 @@
     "rule_undone": "Modification de la règle annulée",
     "rule_undo_failed": "Impossible d'annuler la modification de la règle",
     "rule_undo_conflict": "Vos filtres ont changé entre-temps. Annulez la modification dans les réglages des filtres.",
-    "rule_folder_failed": "Impossible de créer le dossier"
+    "rule_folder_failed": "Impossible de créer le dossier",
+    "vacation_filters_save_failed": "Paramètres d'absence enregistrés, mais le transfert et les destinataires de la réponse n'ont pas pu être enregistrés"
   },
   "date": {
     "today": "Aujourd'hui",
@@ -942,7 +943,7 @@
       "privacy": "Confidentialité et sécurité",
       "account": "Compte",
       "identities": "Identités",
-      "vacation": "Répondeur d'absence",
+      "vacation": "Absence",
       "advanced": "Avancé",
       "calendar": "Calendrier",
       "filters": "Filtres",
@@ -1817,28 +1818,24 @@
       }
     },
     "vacation": {
-      "title": "Répondeur d'absence",
-      "description": "Répondre automatiquement aux emails entrants pendant votre absence",
+      "title": "Absence",
+      "description": "Traiter automatiquement les emails entrants pendant votre absence",
       "loading": "Chargement des paramètres d'absence...",
       "not_supported": "Votre serveur de messagerie ne prend pas en charge les réponses d'absence.",
       "fetch_error": "Échec du chargement des paramètres d'absence. Veuillez réessayer.",
       "status": {
-        "label": "Répondeur d'absence",
+        "label": "Répondre automatiquement",
         "description": "Envoyer une réponse automatique aux personnes qui vous envoient un email",
         "active": "Actif",
         "inactive": "Inactif"
       },
       "date_range": {
-        "title": "Période",
-        "description": "Limiter optionnellement la réponse automatique à une période spécifique",
         "start": "Date de début",
         "start_description": "Laisser vide pour aucune limite de début",
         "end": "Date de fin",
         "end_description": "Laisser vide pour aucune limite de fin"
       },
       "message": {
-        "title": "Message de réponse automatique",
-        "description": "Le message qui sera envoyé en réponse",
         "subject_label": "Objet",
         "subject_description": "Ligne d'objet de la réponse automatique",
         "subject_placeholder": "Absence du bureau",
@@ -1858,10 +1855,32 @@
       "saving": "Enregistrement...",
       "warnings": {
         "end_before_start": "La date de fin doit être postérieure à la date de début",
+        "invalid_date": "Indiquez une date de début et de fin valides avec l'heure, ou laissez le champ vide",
         "start_in_past": "La date de début est dans le passé",
         "empty_body": "Le corps du message est vide - les destinataires recevront une réponse vide",
         "subject_too_long": "L'objet est trop long pour le serveur ({max} octets au maximum).",
-        "body_too_long": "Le message est trop long pour le serveur ({max} octets au maximum, mise en forme comprise)."
+        "body_too_long": "Le message est trop long pour le serveur ({max} octets au maximum, mise en forme comprise).",
+        "forward_address": "Indiquez une adresse valide pour le transfert",
+        "not_running": "Le transfert ou les destinataires de la réponse sont enregistrés mais pas actifs pour le moment. Enregistrez pour les réactiver."
+      },
+      "forward": {
+        "title": "Transfert",
+        "description": "Transfère les messages entrants à une autre adresse, avec ou sans réponse automatique, pendant la période ci-dessus (sans date de fin, jusqu'à sa désactivation). Les spams ne sont pas transférés.",
+        "enabled_label": "Transférer les messages",
+        "to_label": "Transférer à",
+        "to_placeholder": "email@exemple.com",
+        "keep_label": "Conserver dans la boîte de réception",
+        "keep_description": "Sinon, le message est seulement transféré : il n'est pas conservé dans cette boîte aux lettres et aucune règle de filtre ne s'y applique."
+      },
+      "audience": {
+        "label": "Répondre à",
+        "description": "Expéditeurs internes : {domains}",
+        "all": "Tous les expéditeurs",
+        "internal": "Expéditeurs internes uniquement",
+        "external": "Expéditeurs externes uniquement"
+      },
+      "auto_reply": {
+        "title": "Réponse automatique"
       }
     },
     "folders": {
@@ -2229,7 +2248,19 @@
       "suggest_list": "List-Id",
       "suggest_domain": "@{domain}",
       "apply_existing": "Appliquer aussi aux messages déjà présents dans ce dossier",
-      "apply_existing_unsupported": "Seules les règles qui vérifient l'expéditeur, les destinataires, l'objet ou les en-têtes, et qui déplacent, copient, marquent comme lu, suivent ou étiquettent, peuvent s'appliquer aux messages existants."
+      "apply_existing_unsupported": "Seules les règles qui vérifient l'expéditeur, les destinataires, l'objet ou les en-têtes, et qui déplacent, copient, marquent comme lu, suivent ou étiquettent, peuvent s'appliquer aux messages existants.",
+      "period_title": "Période",
+      "period_start": "Date de début",
+      "period_end": "Date de fin",
+      "validation_period_order": "La date de fin doit être postérieure à la date de début",
+      "period_toggle": "Active uniquement pendant une période",
+      "period_hint": "S'applique aux messages qui arrivent pendant cette période. Laissez un champ vide pour ne pas limiter ce côté.",
+      "validation_period_empty": "Indiquez une date de début ou de fin pour la période",
+      "validation_period_invalid": "Indiquez une date valide avec l'heure pour la période, ou laissez le champ vide",
+      "apply_existing_period": "Une règle avec une période n'agit que sur les messages qui arrivent pendant celle-ci ; elle ne peut donc pas s'appliquer aux messages existants.",
+      "period_status_scheduled": "planifiée",
+      "period_status_active": "active",
+      "period_status_expired": "expirée"
     },
     "templates": {
       "title": "Modèles d'e-mails",

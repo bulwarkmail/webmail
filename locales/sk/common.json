@@ -834,8 +834,8 @@
     "identity_delete_failed": "Odstránenie identity zlyhalo: {error}",
     "identity_unauthorized": "Nemáte oprávnenie odosielať z tejto e-mailovej adresy",
     "identity_not_found": "Identita sa nenašla",
-    "vacation_saved": "Nastavenia automatickej odpovede boli uložené",
-    "vacation_save_failed": "Uloženie nastavenia automatickej odpovede zlyhalo",
+    "vacation_saved": "Nastavenia neprítomnosti boli uložené",
+    "vacation_save_failed": "Uloženie nastavení neprítomnosti zlyhalo",
     "filters_saved": "Filtre boli úspešne uložené",
     "filters_save_failed": "Uloženie filtrov zlyhalo",
     "filters_deleted": "Pravidlo filtra bolo odstránené",
@@ -857,7 +857,8 @@
     "rule_undone": "Zmena pravidla bola vrátená",
     "rule_undo_failed": "Zmenu pravidla sa nepodarilo vrátiť",
     "rule_undo_conflict": "Vaše filtre sa medzitým zmenili. Vráťte zmenu v nastaveniach filtrov.",
-    "rule_folder_failed": "Priečinok sa nepodarilo vytvoriť"
+    "rule_folder_failed": "Priečinok sa nepodarilo vytvoriť",
+    "vacation_filters_save_failed": "Nastavenia neprítomnosti boli uložené, ale preposielanie a príjemcov odpovede sa nepodarilo uložiť"
   },
   "date": {
     "today": "Dnes",
@@ -945,7 +946,7 @@
       "privacy": "Súkromie a zabezpečenie",
       "account": "Účet",
       "identities": "Identity",
-      "vacation": "Automatická odpoveď",
+      "vacation": "Neprítomnosť",
       "advanced": "Pokročilé",
       "calendar": "Kalendár",
       "filters": "Filtre",
@@ -1824,28 +1825,24 @@
       }
     },
     "vacation": {
-      "title": "Automatická odpoveď",
-      "description": "Automaticky odpovedať na prichádzajúce e-maily počas vašej neprítomnosti",
+      "title": "Neprítomnosť",
+      "description": "Automaticky spracovať prichádzajúce e-maily počas vašej neprítomnosti",
       "loading": "Načítavanie nastavení automatickej odpovede...",
       "not_supported": "Váš poštový server nepodporuje automatické odpovede v neprítomnosti.",
       "fetch_error": "Nepodarilo sa načítať nastavenia automatickej odpovede. Skúste to znova.",
       "status": {
-        "label": "Automatická odpoveď",
+        "label": "Odpovedať automaticky",
         "description": "Odosielať automatickú odpoveď ľuďom, ktorí vám napíšu",
         "active": "Aktívna",
         "inactive": "Neaktívna"
       },
       "date_range": {
-        "title": "Časové obdobie",
-        "description": "Voliteľne obmedzte automatickú odpoveď na určité obdobie",
         "start": "Dátum začiatku",
         "start_description": "Nechajte prázdne pre okamžité spustenie",
         "end": "Dátum ukončenia",
         "end_description": "Nechajte prázdne pre beh bez ukončenia"
       },
       "message": {
-        "title": "Správa automatickej odpovede",
-        "description": "Správa, ktorá bude odoslaná ako odpoveď",
         "subject_label": "Predmet",
         "subject_description": "Predmet automatickej odpovede",
         "subject_placeholder": "Mimo kancelárie",
@@ -1865,10 +1862,32 @@
       "saving": "Ukladanie...",
       "warnings": {
         "end_before_start": "Dátum ukončenia musí byť po dátume začiatku",
+        "invalid_date": "Zadajte platný dátum začiatku a konca aj s časom alebo pole nechajte prázdne",
         "start_in_past": "Dátum začiatku je v minulosti",
         "empty_body": "Telo správy je prázdne – príjemcovia dostanú prázdnu odpoveď",
         "subject_too_long": "Predmet je pre server príliš dlhý (najviac {max} bajtov).",
-        "body_too_long": "Správa je pre server príliš dlhá (najviac {max} bajtov vrátane formátovania)."
+        "body_too_long": "Správa je pre server príliš dlhá (najviac {max} bajtov vrátane formátovania).",
+        "forward_address": "Zadajte platnú adresu na preposielanie",
+        "not_running": "Preposielanie alebo príjemcovia odpovede sú uložení, ale momentálne nie sú aktívni. Uložením ich znova zapnete."
+      },
+      "forward": {
+        "title": "Preposielanie",
+        "description": "Preposiela prichádzajúce správy na inú adresu, s automatickou odpoveďou alebo bez nej, v období uvedenom vyššie (bez dátumu ukončenia, kým ho nevypnete). Spam sa nepreposiela.",
+        "enabled_label": "Preposielať správy",
+        "to_label": "Preposlať na",
+        "to_placeholder": "email@example.com",
+        "keep_label": "Ponechať v Doručených",
+        "keep_description": "Inak sa správa iba prepošle: nezostane v tejto schránke a nepoužije sa na ňu žiadne pravidlo filtra."
+      },
+      "audience": {
+        "label": "Odpovedať",
+        "description": "Interní odosielatelia: {domains}",
+        "all": "Všetkým odosielateľom",
+        "internal": "Iba interným odosielateľom",
+        "external": "Iba externým odosielateľom"
+      },
+      "auto_reply": {
+        "title": "Automatická odpoveď"
       }
     },
     "folders": {
@@ -2236,7 +2255,19 @@
       "suggest_list": "List-Id",
       "suggest_domain": "@{domain}",
       "apply_existing": "Použiť aj na správy, ktoré už sú v tomto priečinku",
-      "apply_existing_unsupported": "Na existujúce správy možno použiť len pravidlá, ktoré kontrolujú odosielateľa, príjemcov, predmet alebo hlavičky a ktoré presúvajú, kopírujú, označujú ako prečítané, hviezdičkou alebo štítkom."
+      "apply_existing_unsupported": "Na existujúce správy možno použiť len pravidlá, ktoré kontrolujú odosielateľa, príjemcov, predmet alebo hlavičky a ktoré presúvajú, kopírujú, označujú ako prečítané, hviezdičkou alebo štítkom.",
+      "period_title": "Časové obdobie",
+      "period_start": "Dátum začiatku",
+      "period_end": "Dátum ukončenia",
+      "validation_period_order": "Dátum ukončenia musí byť po dátume začiatku",
+      "period_toggle": "Aktívne iba v určitom období",
+      "period_hint": "Platí pre správy, ktoré prídu v tomto období. Prázdne pole ponechá daný koniec otvorený.",
+      "validation_period_empty": "Zadajte dátum začiatku alebo ukončenia obdobia",
+      "validation_period_invalid": "Zadajte pre obdobie platný dátum aj s časom alebo pole nechajte prázdne",
+      "apply_existing_period": "Pravidlo s obdobím pôsobí len na správy, ktoré v ňom prídu, preto ho nemožno použiť na existujúce správy.",
+      "period_status_scheduled": "naplánované",
+      "period_status_active": "aktívne",
+      "period_status_expired": "uplynulo"
     },
     "templates": {
       "title": "E-mailové šablóny",

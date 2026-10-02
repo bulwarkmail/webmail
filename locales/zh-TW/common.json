@@ -834,8 +834,8 @@
     "identity_delete_failed": "無法刪除寄件身分：{error}",
     "identity_unauthorized": "您沒有使用此電子郵件地址寄信的權限",
     "identity_not_found": "找不到寄件身分",
-    "vacation_saved": "休假自動回覆設定已儲存",
-    "vacation_save_failed": "無法儲存休假自動回覆設定",
+    "vacation_saved": "外出設定已儲存",
+    "vacation_save_failed": "無法儲存外出設定",
     "filters_saved": "篩選規則已成功儲存",
     "filters_save_failed": "無法儲存篩選規則",
     "filters_deleted": "篩選規則已刪除",
@@ -857,7 +857,8 @@
     "rule_undone": "已復原規則變更",
     "rule_undo_failed": "無法復原規則變更",
     "rule_undo_conflict": "篩選規則在那之後已變更。請在篩選規則設定中復原該變更。",
-    "rule_folder_failed": "無法建立資料夾"
+    "rule_folder_failed": "無法建立資料夾",
+    "vacation_filters_save_failed": "外出設定已儲存，但轉寄和回覆對象設定未能儲存"
   },
   "date": {
     "today": "今天",
@@ -945,7 +946,7 @@
       "privacy": "隱私權與安全",
       "account": "帳號",
       "identities": "寄件身分",
-      "vacation": "休假自動回覆",
+      "vacation": "外出",
       "advanced": "進階",
       "calendar": "行事曆",
       "filters": "篩選規則",
@@ -1824,28 +1825,24 @@
       }
     },
     "vacation": {
-      "title": "休假自動回覆",
-      "description": "您不在時，自動回覆收到的郵件",
+      "title": "外出",
+      "description": "您不在時，自動處理收到的郵件",
       "loading": "正在載入自動回覆設定…",
       "not_supported": "您的郵件伺服器不支援自動回覆功能。",
       "fetch_error": "無法載入自動回覆設定。請再試一次。",
       "status": {
-        "label": "休假自動回覆",
+        "label": "傳送自動回覆",
         "description": "自動回覆寄信給您的人",
         "active": "已啟用",
         "inactive": "已停用"
       },
       "date_range": {
-        "title": "日期範圍",
-        "description": "可選擇將自動回覆限制在特定期間",
         "start": "開始日期",
         "start_description": "留空表示不限制開始時間",
         "end": "結束日期",
         "end_description": "留空表示不限制結束時間"
       },
       "message": {
-        "title": "自動回覆郵件",
-        "description": "作為回覆傳送的郵件內容",
         "subject_label": "主題",
         "subject_description": "自動回覆郵件的主題",
         "subject_placeholder": "不在辦公室",
@@ -1865,10 +1862,32 @@
       "saving": "正在儲存…",
       "warnings": {
         "end_before_start": "結束日期必須晚於開始日期",
+        "invalid_date": "請輸入含時間的有效開始與結束日期，或將該欄位留空",
         "start_in_past": "開始日期已在過去",
         "empty_body": "郵件內文為空 — 收件者將收到空白回覆",
         "subject_too_long": "主旨對伺服器來說太長（最多 {max} 位元組）。",
-        "body_too_long": "訊息對伺服器來說太長（含格式最多 {max} 位元組）。"
+        "body_too_long": "訊息對伺服器來說太長（含格式最多 {max} 位元組）。",
+        "forward_address": "請輸入有效的轉寄地址",
+        "not_running": "轉寄或回覆對象已儲存，但目前未生效。儲存即可重新啟用。"
+      },
+      "forward": {
+        "title": "轉寄",
+        "description": "在上方期間內將收到的郵件轉寄到另一個地址，無論是否啟用自動回覆（未設結束日期時，直到關閉為止）。垃圾郵件不會被轉寄。",
+        "enabled_label": "轉寄郵件",
+        "to_label": "轉寄至",
+        "to_placeholder": "email@example.com",
+        "keep_label": "保留在收件匣中",
+        "keep_description": "否則郵件只會被轉寄：不會保留在此信箱中，也不會對其執行任何篩選規則。"
+      },
+      "audience": {
+        "label": "回覆對象",
+        "description": "內部寄件者：{domains}",
+        "all": "所有寄件者",
+        "internal": "僅內部寄件者",
+        "external": "僅外部寄件者"
+      },
+      "auto_reply": {
+        "title": "自動回覆"
       }
     },
     "folders": {
@@ -2236,7 +2255,19 @@
       "suggest_list": "List-Id",
       "suggest_domain": "@{domain}",
       "apply_existing": "也套用到此資料夾中既有的郵件",
-      "apply_existing_unsupported": "只有檢查寄件者、收件者、主旨或標頭，並執行移動、複製、標示為已讀、加上星號或標籤的規則，才能套用到既有郵件。"
+      "apply_existing_unsupported": "只有檢查寄件者、收件者、主旨或標頭，並執行移動、複製、標示為已讀、加上星號或標籤的規則，才能套用到既有郵件。",
+      "period_title": "日期範圍",
+      "period_start": "開始日期",
+      "period_end": "結束日期",
+      "validation_period_order": "結束日期必須晚於開始日期",
+      "period_toggle": "僅在指定期間內生效",
+      "period_hint": "適用於在此期間內收到的郵件。留空某一欄即表示該端不設限制。",
+      "validation_period_empty": "請輸入期間的開始日期或結束日期",
+      "validation_period_invalid": "請為期間輸入含時間的有效日期，或將該欄位留空",
+      "apply_existing_period": "設定了期間的規則只作用於在該期間內收到的郵件，因此無法套用到既有郵件。",
+      "period_status_scheduled": "尚未開始",
+      "period_status_active": "生效中",
+      "period_status_expired": "已過期"
     },
     "templates": {
       "title": "郵件範本",

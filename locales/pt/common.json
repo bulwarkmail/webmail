@@ -834,8 +834,8 @@
     "identity_delete_failed": "Falha ao excluir identidade: {error}",
     "identity_unauthorized": "Você não está autorizado a enviar deste endereço de e-mail",
     "identity_not_found": "Identidade não encontrada",
-    "vacation_saved": "Configurações de resposta automática salvas",
-    "vacation_save_failed": "Falha ao salvar configurações de resposta automática",
+    "vacation_saved": "Configurações de ausência salvas",
+    "vacation_save_failed": "Falha ao salvar configurações de ausência",
     "filters_saved": "Filtros salvos com sucesso",
     "filters_save_failed": "Falha ao salvar os filtros",
     "filters_deleted": "Regra de filtragem eliminada",
@@ -857,7 +857,8 @@
     "rule_undone": "Alteração da regra desfeita",
     "rule_undo_failed": "Não foi possível desfazer a alteração da regra",
     "rule_undo_conflict": "Seus filtros mudaram desde então. Desfaça a alteração nas configurações de filtros.",
-    "rule_folder_failed": "Não foi possível criar a pasta"
+    "rule_folder_failed": "Não foi possível criar a pasta",
+    "vacation_filters_save_failed": "Configurações de ausência salvas, mas não foi possível salvar o encaminhamento e os destinatários da resposta"
   },
   "date": {
     "today": "Hoje",
@@ -942,7 +943,7 @@
       "privacy": "Privacidade e Segurança",
       "account": "Conta",
       "identities": "Identidades",
-      "vacation": "Resposta automática",
+      "vacation": "Ausência",
       "advanced": "Avançado",
       "calendar": "Calendário",
       "filters": "Filtros",
@@ -1817,28 +1818,24 @@
       }
     },
     "vacation": {
-      "title": "Resposta automática",
-      "description": "Responder automaticamente a e-mails recebidos enquanto estiver ausente",
+      "title": "Ausência",
+      "description": "Tratar automaticamente os e-mails recebidos enquanto estiver ausente",
       "loading": "Carregando configurações de resposta automática...",
       "not_supported": "Seu servidor de e-mail não suporta respostas automáticas de ausência.",
       "fetch_error": "Falha ao carregar as configurações de resposta automática. Tente novamente.",
       "status": {
-        "label": "Resposta automática",
+        "label": "Responder automaticamente",
         "description": "Enviar uma resposta automática para quem lhe enviar um e-mail",
         "active": "Ativo",
         "inactive": "Inativo"
       },
       "date_range": {
-        "title": "Período",
-        "description": "Opcionalmente limitar a resposta automática a um período específico",
         "start": "Data de início",
         "start_description": "Deixe vazio para sem limite de início",
         "end": "Data de fim",
         "end_description": "Deixe vazio para sem limite de fim"
       },
       "message": {
-        "title": "Mensagem de resposta automática",
-        "description": "A mensagem que será enviada como resposta",
         "subject_label": "Assunto",
         "subject_description": "Linha de assunto da resposta automática",
         "subject_placeholder": "Fora do escritório",
@@ -1858,10 +1855,32 @@
       "saving": "Salvando...",
       "warnings": {
         "end_before_start": "A data de fim deve ser posterior à data de início",
+        "invalid_date": "Indique uma data de início e de fim válidas com hora ou deixe o campo vazio",
         "start_in_past": "A data de início está no passado",
         "empty_body": "O corpo da mensagem está vazio - os destinatários receberão uma resposta em branco",
         "subject_too_long": "O assunto é demasiado longo para o servidor (no máximo {max} bytes).",
-        "body_too_long": "A mensagem é demasiado longa para o servidor (no máximo {max} bytes, incluindo a formatação)."
+        "body_too_long": "A mensagem é demasiado longa para o servidor (no máximo {max} bytes, incluindo a formatação).",
+        "forward_address": "Informe um endereço válido para o encaminhamento",
+        "not_running": "O encaminhamento ou os destinatários da resposta estão salvos, mas não estão ativos agora. Salve para reativá-los."
+      },
+      "forward": {
+        "title": "Encaminhamento",
+        "description": "Encaminha as mensagens recebidas para outro endereço, com ou sem resposta automática, dentro do período acima (sem data de término, até ser desativado). Spam não é encaminhado.",
+        "enabled_label": "Encaminhar mensagens",
+        "to_label": "Encaminhar para",
+        "to_placeholder": "email@exemplo.com",
+        "keep_label": "Manter na caixa de entrada",
+        "keep_description": "Caso contrário, a mensagem é apenas encaminhada: ela não fica nesta caixa de correio e nenhuma regra de filtro é aplicada a ela."
+      },
+      "audience": {
+        "label": "Responder a",
+        "description": "Remetentes internos: {domains}",
+        "all": "Todos os remetentes",
+        "internal": "Somente remetentes internos",
+        "external": "Somente remetentes externos"
+      },
+      "auto_reply": {
+        "title": "Resposta automática"
       }
     },
     "folders": {
@@ -2229,7 +2248,19 @@
       "suggest_list": "List-Id",
       "suggest_domain": "@{domain}",
       "apply_existing": "Aplicar também às mensagens que já estão nesta pasta",
-      "apply_existing_unsupported": "Só regras que verificam o remetente, os destinatários, o assunto ou os cabeçalhos, e que movem, copiam, marcam como lida, marcam com estrela ou etiquetam, podem ser aplicadas a mensagens existentes."
+      "apply_existing_unsupported": "Só regras que verificam o remetente, os destinatários, o assunto ou os cabeçalhos, e que movem, copiam, marcam como lida, marcam com estrela ou etiquetam, podem ser aplicadas a mensagens existentes.",
+      "period_title": "Período",
+      "period_start": "Data de início",
+      "period_end": "Data de fim",
+      "validation_period_order": "A data de fim deve ser posterior à data de início",
+      "period_toggle": "Ativa apenas durante um período",
+      "period_hint": "Aplica-se às mensagens que chegam durante este período. Deixe um campo vazio para não limitar esse extremo.",
+      "validation_period_empty": "Indique uma data de início ou de fim para o período",
+      "validation_period_invalid": "Indique uma data válida com hora para o período ou deixe o campo vazio",
+      "apply_existing_period": "Uma regra com período só atua sobre as mensagens que chegam dentro dele, por isso não pode ser aplicada às mensagens existentes.",
+      "period_status_scheduled": "agendada",
+      "period_status_active": "ativa",
+      "period_status_expired": "expirada"
     },
     "templates": {
       "title": "Modelos de e-mail",

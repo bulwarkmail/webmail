@@ -834,8 +834,8 @@
     "identity_delete_failed": "Nem sikerült törölni az identitást: {error}",
     "identity_unauthorized": "Nem vagy jogosult erről az e-mail címről küldeni",
     "identity_not_found": "Identitás nem található",
-    "vacation_saved": "Automatikus válasz beállítások elmentve",
-    "vacation_save_failed": "Nem sikerült menteni az automatikus válasz beállításokat",
+    "vacation_saved": "Távolléti beállítások elmentve",
+    "vacation_save_failed": "Nem sikerült menteni a távolléti beállításokat",
     "filters_saved": "Szűrők sikeresen elmentve",
     "filters_save_failed": "Nem sikerült menteni a szűrőket",
     "filters_deleted": "Szűrő szabály törölve",
@@ -857,7 +857,8 @@
     "rule_undone": "A szabálymódosítás visszavonva",
     "rule_undo_failed": "Nem sikerült visszavonni a szabálymódosítást",
     "rule_undo_conflict": "A szűrőid azóta megváltoztak. A módosítást a szűrőbeállításokban vond vissza.",
-    "rule_folder_failed": "Nem sikerült létrehozni a mappát"
+    "rule_folder_failed": "Nem sikerült létrehozni a mappát",
+    "vacation_filters_save_failed": "Távolléti beállítások elmentve, de a továbbítást és a válasz címzettjeit nem sikerült menteni"
   },
   "date": {
     "today": "Ma",
@@ -945,7 +946,7 @@
       "privacy": "Adatvédelem és biztonság",
       "account": "Fiók",
       "identities": "Azonosságok",
-      "vacation": "Automatikus válasz",
+      "vacation": "Távollét",
       "advanced": "Speciális",
       "calendar": "Naptár",
       "filters": "Szűrők",
@@ -1820,28 +1821,24 @@
       }
     },
     "vacation": {
-      "title": "Automatikus válasz",
-      "description": "Automatikus válasz a beérkező e-mailekre távolléted alatt",
+      "title": "Távollét",
+      "description": "A beérkező e-mailek automatikus kezelése távolléted alatt",
       "loading": "Automatikus válasz beállítások betöltése...",
       "not_supported": "A levelezőszervered nem támogatja az automatikus válaszokat.",
       "fetch_error": "Nem sikerült betölteni az automatikus válasz beállításokat. Kérjük, próbáld újra.",
       "status": {
-        "label": "Automatikus válasz",
+        "label": "Automatikus válasz küldése",
         "description": "Automatikus válasz küldése azoknak, akik e-mailt írnak neked",
         "active": "Aktív",
         "inactive": "Inaktív"
       },
       "date_range": {
-        "title": "Dátumtartomány",
-        "description": "Opcionálisan korlátozd az automatikus választ egy adott időszakra",
         "start": "Kezdő dátum",
         "start_description": "Hagyd üresen, ha nincs kezdő korlát",
         "end": "Befejező dátum",
         "end_description": "Hagyd üresen, ha nincs befejező korlát"
       },
       "message": {
-        "title": "Automatikus válasz üzenet",
-        "description": "Az üzenet, amely válaszként lesz elküldve",
         "subject_label": "Tárgy",
         "subject_description": "Az automatikus válasz tárgysora",
         "subject_placeholder": "Távol vagyok",
@@ -1861,10 +1858,32 @@
       "saving": "Mentés...",
       "warnings": {
         "end_before_start": "A befejező dátumnak a kezdő dátum után kell lennie",
+        "invalid_date": "Adjon meg érvényes kezdő és befejező dátumot időponttal, vagy hagyja üresen a mezőt",
         "start_in_past": "A kezdő dátum a múltban van",
         "empty_body": "Az üzenet szövege üres - a címzettek üres választ kapnak",
         "subject_too_long": "A tárgy túl hosszú a kiszolgálónak (legfeljebb {max} bájt).",
-        "body_too_long": "Az üzenet túl hosszú a kiszolgálónak (legfeljebb {max} bájt a formázással együtt)."
+        "body_too_long": "Az üzenet túl hosszú a kiszolgálónak (legfeljebb {max} bájt a formázással együtt).",
+        "forward_address": "Adjon meg egy érvényes címet a továbbításhoz",
+        "not_running": "A továbbítás vagy a válasz címzettjei el vannak mentve, de most nem aktívak. Mentéssel újra bekapcsolja őket."
+      },
+      "forward": {
+        "title": "Továbbítás",
+        "description": "A beérkező üzeneteket egy másik címre továbbítja, automatikus válasszal vagy anélkül, a fenti időszakban (befejező dátum nélkül a kikapcsolásig). A levélszemét nem lesz továbbítva.",
+        "enabled_label": "Üzenetek továbbítása",
+        "to_label": "Továbbítás",
+        "to_placeholder": "email@example.com",
+        "keep_label": "Megtartás a beérkezőben",
+        "keep_description": "Ellenkező esetben az üzenet csak továbbítva lesz: nem marad ebben a postafiókban, és egyetlen szűrőszabály sem fut rá."
+      },
+      "audience": {
+        "label": "Válasz küldése",
+        "description": "Belső feladók: {domains}",
+        "all": "Minden feladónak",
+        "internal": "Csak belső feladóknak",
+        "external": "Csak külső feladóknak"
+      },
+      "auto_reply": {
+        "title": "Automatikus válasz"
       }
     },
     "folders": {
@@ -2232,7 +2251,19 @@
       "suggest_list": "List-Id",
       "suggest_domain": "@{domain}",
       "apply_existing": "Alkalmazás a mappában már meglévő üzenetekre is",
-      "apply_existing_unsupported": "Meglévő üzenetekre csak olyan szabály alkalmazható, amely a feladót, a címzetteket, a tárgyat vagy a fejléceket vizsgálja, és áthelyez, másol, olvasottnak jelöl, csillagoz vagy címkéz."
+      "apply_existing_unsupported": "Meglévő üzenetekre csak olyan szabály alkalmazható, amely a feladót, a címzetteket, a tárgyat vagy a fejléceket vizsgálja, és áthelyez, másol, olvasottnak jelöl, csillagoz vagy címkéz.",
+      "period_title": "Dátumtartomány",
+      "period_start": "Kezdő dátum",
+      "period_end": "Befejező dátum",
+      "validation_period_order": "A befejező dátumnak a kezdő dátum után kell lennie",
+      "period_toggle": "Csak egy időszakban aktív",
+      "period_hint": "Az ebben az időszakban érkező üzenetekre vonatkozik. Hagyjon egy mezőt üresen, ha azt a végét nem szeretné korlátozni.",
+      "validation_period_empty": "Adjon meg kezdő vagy befejező dátumot az időszakhoz",
+      "validation_period_invalid": "Adjon meg érvényes dátumot időponttal az időszakhoz, vagy hagyja üresen a mezőt",
+      "apply_existing_period": "Az időszakhoz kötött szabály csak az abban érkező üzenetekre hat, ezért meglévő üzenetekre nem alkalmazható.",
+      "period_status_scheduled": "ütemezett",
+      "period_status_active": "aktív",
+      "period_status_expired": "lejárt"
     },
     "templates": {
       "title": "E-mail sablonok",

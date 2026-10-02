@@ -834,8 +834,8 @@
     "identity_delete_failed": "Kunne ikke slette identitet: {error}",
     "identity_unauthorized": "Du er ikke autorisert til å sende fra denne e-postadressen",
     "identity_not_found": "Finner ikke identiteten",
-    "vacation_saved": "Innstillinger for feriesvar er lagret",
-    "vacation_save_failed": "Kunne ikke lagre innstillingene for feriesvar",
+    "vacation_saved": "Fraværsinnstillinger er lagret",
+    "vacation_save_failed": "Kunne ikke lagre fraværsinnstillingene",
     "filters_saved": "Filtrene er lagret",
     "filters_save_failed": "Kunne ikke lagre filtrene",
     "filters_deleted": "Filterregelen er slettet",
@@ -857,7 +857,8 @@
     "rule_undone": "Regelendringen er angret",
     "rule_undo_failed": "Kunne ikke angre regelendringen",
     "rule_undo_conflict": "Filtrene dine er endret siden. Angre endringen i filterinnstillingene.",
-    "rule_folder_failed": "Kunne ikke opprette mappen"
+    "rule_folder_failed": "Kunne ikke opprette mappen",
+    "vacation_filters_save_failed": "Fraværsinnstillinger er lagret, men videresending og svarmottakere kunne ikke lagres"
   },
   "date": {
     "today": "I dag",
@@ -945,7 +946,7 @@
       "privacy": "Personvern og sikkerhet",
       "account": "Konto",
       "identities": "Identiteter",
-      "vacation": "Feriesvar",
+      "vacation": "Fravær",
       "advanced": "Avansert",
       "calendar": "Kalender",
       "filters": "Filtre",
@@ -1824,28 +1825,24 @@
       }
     },
     "vacation": {
-      "title": "Feriesvar",
-      "description": "Svar automatisk på innkommende e-poster mens du er borte",
+      "title": "Fravær",
+      "description": "Håndter innkommende e-poster automatisk mens du er borte",
       "loading": "Laster inn innstillinger for feriesvar...",
       "not_supported": "E-postserveren din støtter ikke feriesvar.",
       "fetch_error": "Kunne ikke laste inn innstillingene for feriesvar. Prøv igjen.",
       "status": {
-        "label": "Feriesvar",
+        "label": "Svar automatisk",
         "description": "Send et automatisk svar til folk som sender deg e-post",
         "active": "Aktiv",
         "inactive": "Inaktiv"
       },
       "date_range": {
-        "title": "Datoperiode",
-        "description": "Begrens om ønskelig autosvaret til en bestemt periode",
         "start": "Startdato",
         "start_description": "La feltet stå tomt hvis det ikke skal være noen startdato",
         "end": "Sluttdato",
         "end_description": "La feltet stå tomt hvis det ikke skal være noen sluttdato"
       },
       "message": {
-        "title": "Melding for automatisk svar",
-        "description": "Meldingen som sendes som svar",
         "subject_label": "Emne",
         "subject_description": "Emnelinje for autosvaret",
         "subject_placeholder": "Ikke på kontoret",
@@ -1865,10 +1862,32 @@
       "saving": "Lagrer...",
       "warnings": {
         "end_before_start": "Sluttdatoen må være etter startdatoen",
+        "invalid_date": "Angi en gyldig start- og sluttdato med klokkeslett, eller la feltet stå tomt",
         "start_in_past": "Startdatoen er i fortiden",
         "empty_body": "Meldingsteksten er tom – mottakerne får et tomt svar",
         "subject_too_long": "Emnet er for langt for serveren (maks. {max} byte).",
-        "body_too_long": "Meldingen er for lang for serveren (maks. {max} byte inkludert formatering)."
+        "body_too_long": "Meldingen er for lang for serveren (maks. {max} byte inkludert formatering).",
+        "forward_address": "Angi en gyldig adresse å videresende til",
+        "not_running": "Videresending eller svarmottakere er lagret, men er ikke aktive akkurat nå. Lagre for å slå dem på igjen."
+      },
+      "forward": {
+        "title": "Videresending",
+        "description": "Videresender innkommende meldinger til en annen adresse, med eller uten feriesvar, i perioden ovenfor (uten sluttdato, til den slås av). Søppelpost videresendes ikke.",
+        "enabled_label": "Videresend meldinger",
+        "to_label": "Videresend til",
+        "to_placeholder": "email@example.com",
+        "keep_label": "Behold i innboksen",
+        "keep_description": "Ellers blir meldingen bare videresendt: Den blir ikke liggende i denne postkassen, og ingen filterregel kjøres på den."
+      },
+      "audience": {
+        "label": "Svar til",
+        "description": "Interne avsendere: {domains}",
+        "all": "Alle avsendere",
+        "internal": "Bare interne avsendere",
+        "external": "Bare eksterne avsendere"
+      },
+      "auto_reply": {
+        "title": "Automatisk svar"
       }
     },
     "folders": {
@@ -2236,7 +2255,19 @@
       "suggest_list": "List-Id",
       "suggest_domain": "@{domain}",
       "apply_existing": "Bruk også på meldinger som allerede ligger i denne mappen",
-      "apply_existing_unsupported": "Bare regler som sjekker avsender, mottakere, emne eller hoder, og som flytter, kopierer, merker som lest, stjernemerker eller setter etikett, kan brukes på eksisterende meldinger."
+      "apply_existing_unsupported": "Bare regler som sjekker avsender, mottakere, emne eller hoder, og som flytter, kopierer, merker som lest, stjernemerker eller setter etikett, kan brukes på eksisterende meldinger.",
+      "period_title": "Datoperiode",
+      "period_start": "Startdato",
+      "period_end": "Sluttdato",
+      "validation_period_order": "Sluttdatoen må være etter startdatoen",
+      "period_toggle": "Bare aktiv i en periode",
+      "period_hint": "Gjelder meldinger som kommer i denne perioden. La et felt stå tomt for å holde den enden åpen.",
+      "validation_period_empty": "Angi en start- eller sluttdato for perioden",
+      "validation_period_invalid": "Angi en gyldig dato med klokkeslett for perioden, eller la feltet stå tomt",
+      "apply_existing_period": "En regel med periode virker bare på meldinger som kommer i perioden, og kan derfor ikke brukes på eksisterende meldinger.",
+      "period_status_scheduled": "planlagt",
+      "period_status_active": "aktiv",
+      "period_status_expired": "utløpt"
     },
     "templates": {
       "title": "E-postmaler",

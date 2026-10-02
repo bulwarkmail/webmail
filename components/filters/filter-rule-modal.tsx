@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +20,8 @@ import { buildMailboxTree, flattenMailboxTree, type MailboxNode, generateUUID, c
 import type { RuleSuggestion } from "@/lib/filters/quick-rules";
 import { retroactiveSupport } from "@/lib/filters/retroactive";
 import { ruleForwards, ruleStops } from "@/lib/filters/forward-limit";
+import { hasPeriod, isPeriodBoundary } from "@/lib/sieve/period";
+import { fromWallClock, getEffectiveTimeZone, getWallClock } from "@/lib/timezone";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useKeywordFormat } from "@/hooks/use-keyword-format";
 
@@ -44,6 +46,8 @@ interface FilterRuleModalProps {
    */
   forwardsBefore?: number;
   forwardsAfter?: number;
+  /** The server can confine a rule to a period (Sieve "date" and "relational"). */
+  periodsSupported?: boolean;
   onSave: (rule: FilterRule, options?: { applyToExisting: boolean }) => void;
   onClose: () => void;
 }
@@ -115,6 +119,37 @@ function makeEmptyAction(): FilterAction {
   return { type: "move", value: "" };
 }
 
+// A period boundary as the "yyyy-mm-ddThh:mm" a datetime-local input shows,
+// read on the clock of the user's time zone - the one dates are shown in.
+function toPeriodInput(boundary: string | undefined): string {
+  if (!isPeriodBoundary(boundary)) return "";
+  const w = getWallClock(new Date(boundary), getEffectiveTimeZone());
+  const pad = (n: number, len = 2) => String(n).padStart(len, "0");
+  return `${pad(w.year, 4)}-${pad(w.month)}-${pad(w.day)}T${pad(w.hour)}:${pad(w.minute)}`;
+}
+
+// The latest moment the period fields offer: a later year has no room in
+// the four digits a stored boundary has.
+const PERIOD_INPUT_MAX = "9999-12-31T23:59";
+
+// The input's wall-clock time in the user's time zone, as the UTC moment the
+// rule stores: undefined for an empty field, null for one that holds no
+// usable moment (a five-digit year). A boundary left as the dialog showed it
+// is kept exactly: the input shows whole minutes, so reading it back would
+// drop a saved second, or pick the other one of the two moments in the hour
+// a DST switch repeats.
+function fromPeriodInput(value: string, saved: string | undefined): string | null | undefined {
+  if (!value) return undefined;
+  if (saved !== undefined && value === toPeriodInput(saved)) return saved;
+  const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/.exec(value);
+  if (!m) return null;
+  const [year, month, day, hour, minute, second] = m.slice(1).map((part) => Number(part ?? 0));
+  const moment = fromWallClock({ year, month, day, hour, minute, second }, getEffectiveTimeZone());
+  if (Number.isNaN(moment.getTime())) return null;
+  const boundary = moment.toISOString();
+  return isPeriodBoundary(boundary) ? boundary : null;
+}
+
 export function FilterRuleModal({
   rule,
   initialRule,
@@ -124,6 +159,7 @@ export function FilterRuleModal({
   maxRedirects,
   forwardsBefore = 0,
   forwardsAfter = 0,
+  periodsSupported = false,
   onSave,
   onClose,
 }: FilterRuleModalProps) {
@@ -145,6 +181,12 @@ export function FilterRuleModal({
   const [includeSpam, setIncludeSpam] = useState(start?.includeSpam ?? false);
   const [usedSuggestions, setUsedSuggestions] = useState<ReadonlySet<string>>(new Set());
   const [applyToExisting, setApplyToExisting] = useState(false);
+  const hadPeriod = !!start && hasPeriod(start);
+  const [periodOn, setPeriodOn] = useState(hadPeriod);
+  const [periodStart, setPeriodStart] = useState(toPeriodInput(start?.activeFrom));
+  const [periodEnd, setPeriodEnd] = useState(toPeriodInput(start?.activeUntil));
+  const periodStartRef = useRef<HTMLInputElement>(null);
+  const periodEndRef = useRef<HTMLInputElement>(null);
 
   const modalRef = useFocusTrap({ isActive: true, onEscape: onClose });
 
@@ -217,9 +259,12 @@ export function FilterRuleModal({
   // the conditions decide.
   const canApplyToExisting = useMemo(() => {
     if (!offerApplyToExisting) return false;
+    // A rule with a period acts on mail as it arrives within it, which says
+    // nothing about the mail already there.
+    if (periodOn) return false;
     const checkActions: FilterAction[] = validActions.length > 0 ? validActions : [{ type: "mark_read" }];
     return retroactiveSupport({ conditions: validConditions, actions: checkActions }).ok;
-  }, [offerApplyToExisting, validConditions, validActions]);
+  }, [offerApplyToExisting, validConditions, validActions, periodOn]);
 
   const handleSave = useCallback(() => {
     const trimmedName = name.trim();
@@ -238,6 +283,24 @@ export function FilterRuleModal({
       return;
     }
 
+    const activeFrom = periodOn ? fromPeriodInput(periodStart, start?.activeFrom) : undefined;
+    const activeUntil = periodOn ? fromPeriodInput(periodEnd, start?.activeUntil) : undefined;
+    // A field the browser holds half filled in (a date without its time)
+    // reads as empty, and must not pass for an open end of the period.
+    const halfFilled = !!periodStartRef.current?.validity.badInput || !!periodEndRef.current?.validity.badInput;
+    if (activeFrom === null || activeUntil === null || (periodOn && halfFilled)) {
+      toast.error(t("validation_period_invalid"));
+      return;
+    }
+    if (periodOn && !activeFrom && !activeUntil) {
+      toast.error(t("validation_period_empty"));
+      return;
+    }
+    if (activeFrom && activeUntil && Date.parse(activeUntil) <= Date.parse(activeFrom)) {
+      toast.error(t("validation_period_order"));
+      return;
+    }
+
     onSave({
       id: start?.id || generateUUID(),
       name: trimmedName,
@@ -246,9 +309,14 @@ export function FilterRuleModal({
       conditions: validConditions,
       actions: validActions,
       stopProcessing,
-      ...(includeSpam && validActions.some((a) => ACTIONS_WITH_MAILBOX.has(a.type)) ? { includeSpam: true } : {}),
+      // Each optional field this dialog controls is set, to undefined when it
+      // is off: the settings page merges the result into the stored rule, and
+      // a field left out would keep its old value there.
+      includeSpam: includeSpam && validActions.some((a) => ACTIONS_WITH_MAILBOX.has(a.type)) ? true : undefined,
+      activeFrom,
+      activeUntil,
     }, { applyToExisting: applyToExisting && canApplyToExisting });
-  }, [name, matchType, validConditions, validActions, stopProcessing, includeSpam, start, onSave, t, applyToExisting, canApplyToExisting]);
+  }, [name, matchType, validConditions, validActions, stopProcessing, includeSpam, periodOn, periodStart, periodEnd, start, onSave, t, applyToExisting, canApplyToExisting]);
 
   const visibleSuggestions = suggestions.filter((s) => !usedSuggestions.has(s.id));
 
@@ -687,6 +755,54 @@ export function FilterRuleModal({
             </div>
           )}
 
+          {/* Offered where the server supports it; a rule that already has a
+              period always shows it, so it can be removed. */}
+          {(periodsSupported || hadPeriod) && (
+            <div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="limitToPeriod"
+                  checked={periodOn}
+                  onChange={(e) => setPeriodOn(e.target.checked)}
+                  className="rounded border-input"
+                />
+                <label htmlFor="limitToPeriod" className="text-sm text-foreground">
+                  {t("period_toggle")}
+                </label>
+              </div>
+              {periodOn && (
+                <div className="mt-2 ms-6 space-y-2">
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                    <label className="flex items-center gap-2 text-sm text-muted-foreground">
+                      {t("period_start")}
+                      <input
+                        ref={periodStartRef}
+                        type="datetime-local"
+                        max={PERIOD_INPUT_MAX}
+                        value={periodStart}
+                        onChange={(e) => setPeriodStart(e.target.value)}
+                        className="px-3 py-1.5 text-sm rounded-md bg-muted border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-colors duration-150 hover:border-muted-foreground"
+                      />
+                    </label>
+                    <label className="flex items-center gap-2 text-sm text-muted-foreground">
+                      {t("period_end")}
+                      <input
+                        ref={periodEndRef}
+                        type="datetime-local"
+                        max={PERIOD_INPUT_MAX}
+                        value={periodEnd}
+                        onChange={(e) => setPeriodEnd(e.target.value)}
+                        className="px-3 py-1.5 text-sm rounded-md bg-muted border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-colors duration-150 hover:border-muted-foreground"
+                      />
+                    </label>
+                  </div>
+                  <p className="text-xs text-muted-foreground">{t("period_hint")}</p>
+                </div>
+              )}
+            </div>
+          )}
+
           {offerApplyToExisting && (
             <div>
               <div className="flex items-center gap-2">
@@ -708,7 +824,7 @@ export function FilterRuleModal({
               </div>
               {!canApplyToExisting && (
                 <p id="applyToExistingHint" className="mt-1 ms-6 text-xs text-muted-foreground">
-                  {t("apply_existing_unsupported")}
+                  {periodOn ? t("apply_existing_period") : t("apply_existing_unsupported")}
                 </p>
               )}
             </div>

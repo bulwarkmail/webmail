@@ -1,5 +1,6 @@
 import type { EmailAddress } from '@/lib/jmap/types';
 import type { FilterAction, FilterCondition, FilterRule } from '@/lib/jmap/sieve-types';
+import { hasPeriod } from '@/lib/sieve/period';
 import { unfoldHeader } from './quick-rules';
 
 /**
@@ -38,7 +39,9 @@ export type RetroSupport =
   /** A condition the client cannot evaluate like Sieve does (body, size, attachment). */
   | { ok: false; reason: 'condition' }
   /** An action that must never run on old mail (forward, reject, discard) or has no meaning there (keep). */
-  | { ok: false; reason: 'action' };
+  | { ok: false; reason: 'action' }
+  /** A period: the rule acts on mail as it arrives within it, which says nothing about the mail already there. */
+  | { ok: false; reason: 'period' };
 
 /** A header condition the client can evaluate: which header it reads. */
 function conditionHeader(condition: FilterCondition): string | null {
@@ -55,7 +58,10 @@ function usesAddressTest(condition: FilterCondition): boolean {
     && ADDRESS_FIELDS.has(condition.field);
 }
 
-export function retroactiveSupport(rule: Pick<FilterRule, 'conditions' | 'actions'>): RetroSupport {
+export function retroactiveSupport(
+  rule: Pick<FilterRule, 'conditions' | 'actions' | 'activeFrom' | 'activeUntil'>,
+): RetroSupport {
+  if (hasPeriod(rule)) return { ok: false, reason: 'period' };
   if (rule.conditions.length === 0) return { ok: false, reason: 'condition' };
   for (const condition of rule.conditions) {
     if (!TEXT_COMPARATORS.has(condition.comparator) || !conditionHeader(condition)) {

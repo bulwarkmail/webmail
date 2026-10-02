@@ -834,8 +834,8 @@
     "identity_delete_failed": "Neizdevās izdzēst identitāti: {error}",
     "identity_unauthorized": "Jums nav tiesību sūtīt no šīs e-pasta adreses",
     "identity_not_found": "Identitāte netika atrasta",
-    "vacation_saved": "Atvaļinājuma atbildes iestatījumi saglabāti",
-    "vacation_save_failed": "Neizdevās saglabāt atvaļinājuma atbildes iestatījumus",
+    "vacation_saved": "Prombūtnes iestatījumi saglabāti",
+    "vacation_save_failed": "Neizdevās saglabāt prombūtnes iestatījumus",
     "filters_saved": "Filtri veiksmīgi saglabāti",
     "filters_save_failed": "Neizdevās saglabāt filtrus",
     "filters_deleted": "Filtra nosacījums izdzēsts",
@@ -857,7 +857,8 @@
     "rule_undone": "Noteikuma izmaiņa atsaukta",
     "rule_undo_failed": "Neizdevās atsaukt noteikuma izmaiņu",
     "rule_undo_conflict": "Jūsu filtri kopš tā laika ir mainījušies. Atsauciet izmaiņu filtru iestatījumos.",
-    "rule_folder_failed": "Neizdevās izveidot mapi"
+    "rule_folder_failed": "Neizdevās izveidot mapi",
+    "vacation_filters_save_failed": "Prombūtnes iestatījumi saglabāti, taču pārsūtīšanu un atbildes saņēmējus neizdevās saglabāt"
   },
   "date": {
     "today": "Šodien",
@@ -942,7 +943,7 @@
       "privacy": "Privātums un drošība",
       "account": "Konts",
       "identities": "Identitātes",
-      "vacation": "Atvaļinājuma atbilde",
+      "vacation": "Prombūtne",
       "advanced": "Papildu",
       "calendar": "Kalendārs",
       "filters": "Filtri",
@@ -1817,28 +1818,24 @@
       }
     },
     "vacation": {
-      "title": "Atvaļinājuma atbilde",
-      "description": "Automātiski atbildēt uz ienākošajām vēstulēm prombūtnes laikā",
+      "title": "Prombūtne",
+      "description": "Automātiski apstrādāt ienākošās vēstules prombūtnes laikā",
       "loading": "Ielādē atvaļinājuma iestatījumus...",
       "not_supported": "Jūsu pasta serveris neatbalsta atvaļinājuma atbildes.",
       "fetch_error": "Neizdevās ielādēt atvaļinājuma iestatījumus.",
       "status": {
-        "label": "Atvaļinājuma atbilde",
+        "label": "Atbildēt automātiski",
         "description": "Sūtīt automātisku atbildi uz ienākošajām vēstulēm",
         "active": "Aktīva",
         "inactive": "Neaktīva"
       },
       "date_range": {
-        "title": "Datumu diapazons",
-        "description": "Ierobežojiet atbildi noteiktā periodā (pēc izvēles)",
         "start": "Sākuma datums",
         "start_description": "Atstājiet tukšu, lai nebūtu ierobežojuma",
         "end": "Beigu datums",
         "end_description": "Atstājiet tukšu, lai nebūtu ierobežojuma"
       },
       "message": {
-        "title": "Atbildes ziņojums",
-        "description": "Ziņojums, kas tiks nosūtīts kā atbilde",
         "subject_label": "Temats",
         "subject_description": "Atvaļinājuma atbildes temats",
         "subject_placeholder": "Atvaļinājumā / Esmu prom",
@@ -1858,10 +1855,32 @@
       "saving": "Saglabā...",
       "warnings": {
         "end_before_start": "Beigu datumam jābūt vēlāk par sākuma datumu",
+        "invalid_date": "Norādiet derīgu sākuma un beigu datumu ar laiku vai atstājiet lauku tukšu",
         "start_in_past": "Sākuma datums ir pagātnē",
         "empty_body": "Ziņojuma teksts ir tukšs - saņēmēji saņems tukšu atbildi",
         "subject_too_long": "Temats serverim ir pārāk garš (ne vairāk kā {max} baiti).",
-        "body_too_long": "Ziņa serverim ir pārāk gara (ne vairāk kā {max} baiti, ieskaitot formatējumu)."
+        "body_too_long": "Ziņa serverim ir pārāk gara (ne vairāk kā {max} baiti, ieskaitot formatējumu).",
+        "forward_address": "Norādiet derīgu adresi pārsūtīšanai",
+        "not_running": "Pārsūtīšana vai atbildes saņēmēji ir saglabāti, taču pašlaik nav aktīvi. Saglabājiet, lai tos atkal ieslēgtu."
+      },
+      "forward": {
+        "title": "Pārsūtīšana",
+        "description": "Pārsūta ienākošos ziņojumus uz citu adresi, ar automātisko atbildi vai bez tās, iepriekš norādītajā laika posmā (bez beigu datuma, līdz to izslēdz). Mēstules netiek pārsūtītas.",
+        "enabled_label": "Pārsūtīt ziņojumus",
+        "to_label": "Pārsūtīt uz",
+        "to_placeholder": "lietotajs@piemers.lv",
+        "keep_label": "Atstāt iesūtnē",
+        "keep_description": "Pretējā gadījumā ziņojums tiek tikai pārsūtīts: tas nepaliek šajā pastkastē, un tam netiek piemērots neviens filtra noteikums."
+      },
+      "audience": {
+        "label": "Atbildēt",
+        "description": "Iekšējie sūtītāji: {domains}",
+        "all": "Visiem sūtītājiem",
+        "internal": "Tikai iekšējiem sūtītājiem",
+        "external": "Tikai ārējiem sūtītājiem"
+      },
+      "auto_reply": {
+        "title": "Automātiskā atbilde"
       }
     },
     "folders": {
@@ -2229,7 +2248,19 @@
       "suggest_list": "List-Id",
       "suggest_domain": "@{domain}",
       "apply_existing": "Piemērot arī vēstulēm, kas jau ir šajā mapē",
-      "apply_existing_unsupported": "Esošajām vēstulēm var piemērot tikai noteikumus, kas pārbauda sūtītāju, adresātus, tematu vai galvenes un kas pārvieto, kopē, atzīmē kā izlasītu, ar zvaigznīti vai tagu."
+      "apply_existing_unsupported": "Esošajām vēstulēm var piemērot tikai noteikumus, kas pārbauda sūtītāju, adresātus, tematu vai galvenes un kas pārvieto, kopē, atzīmē kā izlasītu, ar zvaigznīti vai tagu.",
+      "period_title": "Datumu diapazons",
+      "period_start": "Sākuma datums",
+      "period_end": "Beigu datums",
+      "validation_period_order": "Beigu datumam jābūt vēlāk par sākuma datumu",
+      "period_toggle": "Aktīvs tikai noteiktā laika posmā",
+      "period_hint": "Attiecas uz ziņojumiem, kas pienāk šajā laika posmā. Atstājiet lauku tukšu, lai šo galu neierobežotu.",
+      "validation_period_empty": "Norādiet laika posma sākuma vai beigu datumu",
+      "validation_period_invalid": "Norādiet laika posmam derīgu datumu ar laiku vai atstājiet lauku tukšu",
+      "apply_existing_period": "Noteikums ar laika posmu darbojas tikai ar ziņojumiem, kas pienāk šajā posmā, tāpēc to nevar lietot esošajiem ziņojumiem.",
+      "period_status_scheduled": "ieplānots",
+      "period_status_active": "aktīvs",
+      "period_status_expired": "beidzies"
     },
     "templates": {
       "title": "Vēstuļu veidnes",

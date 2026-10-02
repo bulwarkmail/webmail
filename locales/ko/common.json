@@ -834,8 +834,8 @@
     "identity_delete_failed": "보내는 사람 삭제 실패: {error}",
     "identity_unauthorized": "이 이메일 주소로 메일을 보낼 권한이 없어요",
     "identity_not_found": "해당 계정을 찾을 수 없어요",
-    "vacation_saved": "부재중 자동 응답 설정이 저장되었어요",
-    "vacation_save_failed": "부재중 자동 응답 설정을 저장하지 못했어요",
+    "vacation_saved": "부재중 설정이 저장되었어요",
+    "vacation_save_failed": "부재중 설정을 저장하지 못했어요",
     "filters_saved": "필터가 저장되었어요",
     "filters_save_failed": "필터 저장에 실패했어요",
     "filters_deleted": "필터 규칙이 삭제되었어요",
@@ -857,7 +857,8 @@
     "rule_undone": "규칙 변경을 취소했어요",
     "rule_undo_failed": "규칙 변경을 취소하지 못했어요",
     "rule_undo_conflict": "그 사이에 필터가 바뀌었어요. 필터 설정에서 변경을 취소하세요.",
-    "rule_folder_failed": "폴더를 만들지 못했어요"
+    "rule_folder_failed": "폴더를 만들지 못했어요",
+    "vacation_filters_save_failed": "부재중 설정은 저장되었지만 전달 및 응답 대상 설정을 저장하지 못했어요"
   },
   "date": {
     "today": "오늘",
@@ -942,7 +943,7 @@
       "privacy": "개인정보 및 보안",
       "account": "계정",
       "identities": "보내는 사람",
-      "vacation": "부재중 자동 응답",
+      "vacation": "부재중",
       "advanced": "고급 설정",
       "calendar": "캘린더",
       "filters": "필터",
@@ -1817,28 +1818,24 @@
       }
     },
     "vacation": {
-      "title": "부재중 자동 응답",
-      "description": "자리를 비웠을 때 도착한 메일에 자동으로 답장을 보내요",
+      "title": "부재중",
+      "description": "자리를 비웠을 때 도착한 메일을 자동으로 처리해요",
       "loading": "자동 응답 설정을 불러오는 중...",
       "not_supported": "사용 중인 메일 서버는 자동 응답 기능을 지원하지 않아요.",
       "fetch_error": "자동 응답 설정을 불러오지 못했어요. 다시 시도해 주세요.",
       "status": {
-        "label": "자동 응답",
+        "label": "자동으로 응답하기",
         "description": "나에게 메일을 보낸 사람에게 자동으로 답장을 보내요",
         "active": "사용 중",
         "inactive": "사용 안 함"
       },
       "date_range": {
-        "title": "기간 설정",
-        "description": "자동 응답을 보낼 특정 기간을 설정할 수 있어요",
         "start": "시작일",
         "start_description": "비워두면 지금부터 바로 시작해요",
         "end": "종료일",
         "end_description": "비워두면 계속해서 켜져 있어요"
       },
       "message": {
-        "title": "자동 응답 메시지",
-        "description": "답장으로 보낼 메시지 내용을 작성해 주세요",
         "subject_label": "제목",
         "subject_description": "자동 응답 메일의 제목이에요",
         "subject_placeholder": "부재중 알림",
@@ -1858,10 +1855,32 @@
       "saving": "저장 중...",
       "warnings": {
         "end_before_start": "종료일은 시작일보다 나중이어야 해요",
+        "invalid_date": "시작일과 종료일에 시간을 포함한 올바른 날짜를 입력하거나 칸을 비워 두세요",
         "start_in_past": "시작일이 이미 지났어요",
         "empty_body": "메시지 내용이 비어있어요. 상대방에게 빈 메일이 가게 돼요",
         "subject_too_long": "제목이 서버에 비해 너무 깁니다(최대 {max}바이트).",
-        "body_too_long": "메시지가 서버에 비해 너무 깁니다(서식 포함 최대 {max}바이트)."
+        "body_too_long": "메시지가 서버에 비해 너무 깁니다(서식 포함 최대 {max}바이트).",
+        "forward_address": "전달받을 올바른 주소를 입력해 주세요",
+        "not_running": "전달 또는 응답 대상이 저장되어 있지만 지금은 작동하지 않아요. 저장하면 다시 켜져요."
+      },
+      "forward": {
+        "title": "전달",
+        "description": "받은 메시지를 자동 응답 여부와 관계없이 위 기간 동안 다른 주소로 전달해요(종료일이 없으면 끌 때까지). 스팸은 전달하지 않아요.",
+        "enabled_label": "메시지 전달",
+        "to_label": "다음으로 전달",
+        "to_placeholder": "email@example.com",
+        "keep_label": "받은편지함에 유지",
+        "keep_description": "끄면 메시지는 전달만 되고, 이 메일함에 남지 않으며 필터 규칙도 적용되지 않아요."
+      },
+      "audience": {
+        "label": "응답 대상",
+        "description": "내부 보낸 사람: {domains}",
+        "all": "모든 보낸 사람",
+        "internal": "내부 보낸 사람만",
+        "external": "외부 보낸 사람만"
+      },
+      "auto_reply": {
+        "title": "자동 응답"
       }
     },
     "folders": {
@@ -2229,7 +2248,19 @@
       "suggest_list": "List-Id",
       "suggest_domain": "@{domain}",
       "apply_existing": "이 폴더에 이미 있는 메일에도 적용",
-      "apply_existing_unsupported": "보낸 사람, 받는 사람, 제목 또는 헤더를 확인하고 이동, 복사, 읽음 표시, 별표 또는 태그를 하는 규칙만 기존 메일에 적용할 수 있어요."
+      "apply_existing_unsupported": "보낸 사람, 받는 사람, 제목 또는 헤더를 확인하고 이동, 복사, 읽음 표시, 별표 또는 태그를 하는 규칙만 기존 메일에 적용할 수 있어요.",
+      "period_title": "기간 설정",
+      "period_start": "시작일",
+      "period_end": "종료일",
+      "validation_period_order": "종료일은 시작일보다 나중이어야 해요",
+      "period_toggle": "특정 기간에만 활성화",
+      "period_hint": "이 기간에 도착하는 메시지에 적용돼요. 한쪽을 비워 두면 그쪽은 제한이 없어요.",
+      "validation_period_empty": "기간의 시작일 또는 종료일을 입력해 주세요",
+      "validation_period_invalid": "기간에 시간을 포함한 올바른 날짜를 입력하거나 칸을 비워 두세요",
+      "apply_existing_period": "기간이 설정된 규칙은 그 기간에 도착한 메시지에만 적용되므로 기존 메시지에는 적용할 수 없어요.",
+      "period_status_scheduled": "예정",
+      "period_status_active": "활성",
+      "period_status_expired": "만료"
     },
     "templates": {
       "title": "이메일 템플릿",

@@ -834,8 +834,8 @@
     "identity_delete_failed": "Failed to delete identity: {error}",
     "identity_unauthorized": "You are not authorized to send from this email address",
     "identity_not_found": "Identity not found",
-    "vacation_saved": "Vacation responder settings saved",
-    "vacation_save_failed": "Failed to save vacation responder settings",
+    "vacation_saved": "Out of office settings saved",
+    "vacation_save_failed": "Failed to save out of office settings",
     "filters_saved": "Filters saved successfully",
     "filters_save_failed": "Failed to save filters",
     "filters_deleted": "Filter rule deleted",
@@ -857,7 +857,8 @@
     "rule_undone": "Rule change undone",
     "rule_undo_failed": "Could not undo the rule change",
     "rule_undo_conflict": "Your filters have changed since. Undo the change in Filters settings.",
-    "rule_folder_failed": "Could not create the folder"
+    "rule_folder_failed": "Could not create the folder",
+    "vacation_filters_save_failed": "Out of office settings saved, but the forwarding and reply recipients could not be saved"
   },
   "date": {
     "today": "Today",
@@ -945,7 +946,7 @@
       "privacy": "Privacy & Security",
       "account": "Account",
       "identities": "Identities",
-      "vacation": "Vacation Responder",
+      "vacation": "Out of Office",
       "advanced": "Advanced",
       "calendar": "Calendar",
       "filters": "Filters",
@@ -1824,28 +1825,24 @@
       }
     },
     "vacation": {
-      "title": "Vacation Responder",
-      "description": "Automatically reply to incoming emails while you're away",
+      "title": "Out of Office",
+      "description": "Automatically handle incoming emails while you're away",
       "loading": "Loading vacation settings...",
       "not_supported": "Your mail server does not support vacation responses.",
       "fetch_error": "Failed to load vacation settings. Please try again.",
       "status": {
-        "label": "Vacation Responder",
+        "label": "Reply automatically",
         "description": "Send an automatic reply to people who email you",
         "active": "Active",
         "inactive": "Inactive"
       },
       "date_range": {
-        "title": "Date Range",
-        "description": "Optionally limit the auto-reply to a specific period",
         "start": "Start Date",
         "start_description": "Leave empty for no start limit",
         "end": "End Date",
         "end_description": "Leave empty for no end limit"
       },
       "message": {
-        "title": "Auto-Reply Message",
-        "description": "The message that will be sent as a reply",
         "subject_label": "Subject",
         "subject_description": "Subject line of the auto-reply",
         "subject_placeholder": "Out of Office",
@@ -1865,10 +1862,32 @@
       "saving": "Saving...",
       "warnings": {
         "end_before_start": "End date must be after start date",
+        "invalid_date": "Enter a valid start and end date with a time, or leave the field empty",
         "start_in_past": "Start date is in the past",
         "empty_body": "Message body is empty - recipients will receive a blank reply",
         "subject_too_long": "The subject is too long for the server (at most {max} bytes).",
-        "body_too_long": "The message is too long for the server (at most {max} bytes, formatting included)."
+        "body_too_long": "The message is too long for the server (at most {max} bytes, formatting included).",
+        "forward_address": "Enter a valid address to forward to",
+        "not_running": "Forwarding or the reply recipients are saved but not active right now. Save to turn them back on."
+      },
+      "forward": {
+        "title": "Forwarding",
+        "description": "Passes incoming messages on to another address, with or without the auto-reply, within the period above (without an end date, until switched off). Spam is not forwarded.",
+        "enabled_label": "Forward messages",
+        "to_label": "Forward to",
+        "to_placeholder": "email@example.com",
+        "keep_label": "Keep in inbox",
+        "keep_description": "Otherwise the message is only forwarded: it is not kept in this mailbox, and no filter rule runs on it."
+      },
+      "audience": {
+        "label": "Reply to",
+        "description": "Internal senders: {domains}",
+        "all": "All senders",
+        "internal": "Internal senders only",
+        "external": "External senders only"
+      },
+      "auto_reply": {
+        "title": "Automatic Reply"
       }
     },
     "folders": {
@@ -2236,7 +2255,19 @@
       "suggest_list": "List-Id",
       "suggest_domain": "@{domain}",
       "apply_existing": "Also apply to existing messages in this folder",
-      "apply_existing_unsupported": "Only rules that check the sender, recipients, subject or headers, and that move, copy, mark as read, star or tag, can run on existing messages."
+      "apply_existing_unsupported": "Only rules that check the sender, recipients, subject or headers, and that move, copy, mark as read, star or tag, can run on existing messages.",
+      "period_title": "Date Range",
+      "period_start": "Start Date",
+      "period_end": "End Date",
+      "validation_period_order": "End date must be after start date",
+      "period_toggle": "Only active during a period",
+      "period_hint": "Applies to messages that arrive during this period. Leave a field empty to keep that end open.",
+      "validation_period_empty": "Enter a start or end date for the period",
+      "validation_period_invalid": "Enter a valid date with a time for the period, or leave the field empty",
+      "apply_existing_period": "A rule with a period acts only on messages that arrive within it, so it cannot run on existing messages.",
+      "period_status_scheduled": "scheduled",
+      "period_status_active": "active",
+      "period_status_expired": "expired"
     },
     "templates": {
       "title": "Email Templates",

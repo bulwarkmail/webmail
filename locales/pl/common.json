@@ -834,8 +834,8 @@
     "identity_delete_failed": "Nie udało się usunąć tożsamości: {error}",
     "identity_unauthorized": "Nie masz uprawnień do wysyłania z tego adresu e-mail",
     "identity_not_found": "Nie znaleziono tożsamości",
-    "vacation_saved": "Ustawienia autorespondera wakacyjnego zapisane",
-    "vacation_save_failed": "Nie udało się zapisać ustawień autorespondera wakacyjnego",
+    "vacation_saved": "Ustawienia nieobecności zapisane",
+    "vacation_save_failed": "Nie udało się zapisać ustawień nieobecności",
     "filters_saved": "Filtry zapisane pomyślnie",
     "filters_save_failed": "Nie udało się zapisać filtrów",
     "filters_deleted": "Reguła filtra usunięta",
@@ -857,7 +857,8 @@
     "rule_undone": "Cofnięto zmianę reguły",
     "rule_undo_failed": "Nie udało się cofnąć zmiany reguły",
     "rule_undo_conflict": "Twoje filtry zmieniły się w międzyczasie. Cofnij zmianę w ustawieniach filtrów.",
-    "rule_folder_failed": "Nie udało się utworzyć folderu"
+    "rule_folder_failed": "Nie udało się utworzyć folderu",
+    "vacation_filters_save_failed": "Ustawienia nieobecności zapisane, ale nie udało się zapisać przekazywania ani odbiorców odpowiedzi"
   },
   "date": {
     "today": "Dzisiaj",
@@ -942,7 +943,7 @@
       "privacy": "Prywatność i bezpieczeństwo",
       "account": "Konto",
       "identities": "Tożsamości",
-      "vacation": "Autoresponder urlopowy",
+      "vacation": "Nieobecność",
       "advanced": "Zaawansowane",
       "calendar": "Kalendarz",
       "filters": "Filtry",
@@ -1817,28 +1818,24 @@
       }
     },
     "vacation": {
-      "title": "Autoresponder urlopowy",
-      "description": "Automatycznie odpowiadaj na przychodzące wiadomości e-mail podczas nieobecności",
+      "title": "Nieobecność",
+      "description": "Automatycznie obsługuj przychodzące wiadomości e-mail podczas nieobecności",
       "loading": "Ładowanie ustawień autorespondera urlopowego...",
       "not_supported": "Twój serwer pocztowy nie obsługuje odpowiedzi urlopowych.",
       "fetch_error": "Nie udało się załadować ustawień urlopowych. Spróbuj ponownie.",
       "status": {
-        "label": "Autoresponder urlopowy",
+        "label": "Odpowiadaj automatycznie",
         "description": "Wysyłaj automatyczną odpowiedź do osób, które do Ciebie piszą",
         "active": "Aktywny",
         "inactive": "Nieaktywny"
       },
       "date_range": {
-        "title": "Zakres dat",
-        "description": "Opcjonalnie ogranicz automatyczną odpowiedź do określonego okresu",
         "start": "Data rozpoczęcia",
         "start_description": "Pozostaw puste, aby nie ustawiać daty początkowej",
         "end": "Data zakończenia",
         "end_description": "Pozostaw puste, aby nie ustawiać daty końcowej"
       },
       "message": {
-        "title": "Wiadomość automatycznej odpowiedzi",
-        "description": "Wiadomość, która zostanie wysłana jako odpowiedź",
         "subject_label": "Temat",
         "subject_description": "Wiersz tematu automatycznej odpowiedzi",
         "subject_placeholder": "Poza biurem",
@@ -1858,10 +1855,32 @@
       "saving": "Zapisywanie...",
       "warnings": {
         "end_before_start": "Data zakończenia musi być późniejsza niż data rozpoczęcia",
+        "invalid_date": "Podaj prawidłową datę rozpoczęcia i zakończenia z godziną albo pozostaw pole puste",
         "start_in_past": "Data rozpoczęcia jest w przeszłości",
         "empty_body": "Treść wiadomości jest pusta - odbiorcy otrzymają pustą odpowiedź",
         "subject_too_long": "Temat jest za długi dla serwera (maksymalnie {max} bajtów).",
-        "body_too_long": "Wiadomość jest za długa dla serwera (maksymalnie {max} bajtów wraz z formatowaniem)."
+        "body_too_long": "Wiadomość jest za długa dla serwera (maksymalnie {max} bajtów wraz z formatowaniem).",
+        "forward_address": "Podaj prawidłowy adres do przekazywania",
+        "not_running": "Przekazywanie lub odbiorcy odpowiedzi są zapisani, ale obecnie nieaktywni. Zapisz, aby ponownie je włączyć."
+      },
+      "forward": {
+        "title": "Przekazywanie",
+        "description": "Przekazuje wiadomości przychodzące na inny adres, z automatyczną odpowiedzią lub bez niej, w okresie podanym powyżej (bez daty zakończenia, dopóki nie zostanie wyłączone). Spam nie jest przekazywany.",
+        "enabled_label": "Przekazuj wiadomości",
+        "to_label": "Prześlij dalej do",
+        "to_placeholder": "email@example.com",
+        "keep_label": "Pozostaw w Odebranych",
+        "keep_description": "W przeciwnym razie wiadomość jest tylko przekazywana: nie zostaje w tej skrzynce i nie działa na nią żadna reguła filtrowania."
+      },
+      "audience": {
+        "label": "Odpowiadaj",
+        "description": "Nadawcy wewnętrzni: {domains}",
+        "all": "Wszystkim nadawcom",
+        "internal": "Tylko nadawcom wewnętrznym",
+        "external": "Tylko nadawcom zewnętrznym"
+      },
+      "auto_reply": {
+        "title": "Automatyczna odpowiedź"
       }
     },
     "folders": {
@@ -2229,7 +2248,19 @@
       "suggest_list": "List-Id",
       "suggest_domain": "@{domain}",
       "apply_existing": "Zastosuj też do wiadomości, które już są w tym folderze",
-      "apply_existing_unsupported": "Do istniejących wiadomości można zastosować tylko reguły, które sprawdzają nadawcę, odbiorców, temat lub nagłówki i które przenoszą, kopiują, oznaczają jako przeczytane, oznaczają gwiazdką lub etykietą."
+      "apply_existing_unsupported": "Do istniejących wiadomości można zastosować tylko reguły, które sprawdzają nadawcę, odbiorców, temat lub nagłówki i które przenoszą, kopiują, oznaczają jako przeczytane, oznaczają gwiazdką lub etykietą.",
+      "period_title": "Zakres dat",
+      "period_start": "Data rozpoczęcia",
+      "period_end": "Data zakończenia",
+      "validation_period_order": "Data zakończenia musi być późniejsza niż data rozpoczęcia",
+      "period_toggle": "Aktywna tylko w wybranym okresie",
+      "period_hint": "Dotyczy wiadomości, które przychodzą w tym okresie. Pozostaw pole puste, aby nie ograniczać tej strony.",
+      "validation_period_empty": "Podaj datę rozpoczęcia lub zakończenia okresu",
+      "validation_period_invalid": "Podaj prawidłową datę z godziną dla okresu albo pozostaw pole puste",
+      "apply_existing_period": "Reguła z okresem działa tylko na wiadomości, które przychodzą w tym okresie, dlatego nie można jej zastosować do istniejących wiadomości.",
+      "period_status_scheduled": "zaplanowana",
+      "period_status_active": "aktywna",
+      "period_status_expired": "wygasła"
     },
     "templates": {
       "title": "Szablony wiadomości e-mail",

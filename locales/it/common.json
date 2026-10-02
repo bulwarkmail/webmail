@@ -834,8 +834,8 @@
     "identity_delete_failed": "Impossibile eliminare l'identità: {error}",
     "identity_unauthorized": "Non sei autorizzato a inviare da questo indirizzo email",
     "identity_not_found": "Identità non trovata",
-    "vacation_saved": "Impostazioni del risponditore automatico salvate",
-    "vacation_save_failed": "Impossibile salvare le impostazioni del risponditore automatico",
+    "vacation_saved": "Impostazioni di assenza salvate",
+    "vacation_save_failed": "Impossibile salvare le impostazioni di assenza",
     "filters_saved": "Filtri salvati con successo",
     "filters_save_failed": "Impossibile salvare i filtri",
     "filters_deleted": "Regola di filtraggio eliminata",
@@ -857,7 +857,8 @@
     "rule_undone": "Modifica della regola annullata",
     "rule_undo_failed": "Impossibile annullare la modifica della regola",
     "rule_undo_conflict": "I tuoi filtri sono cambiati nel frattempo. Annulla la modifica nelle impostazioni dei filtri.",
-    "rule_folder_failed": "Impossibile creare la cartella"
+    "rule_folder_failed": "Impossibile creare la cartella",
+    "vacation_filters_save_failed": "Impostazioni di assenza salvate, ma non è stato possibile salvare l'inoltro e i destinatari della risposta"
   },
   "date": {
     "today": "Oggi",
@@ -942,7 +943,7 @@
       "privacy": "Privacy e sicurezza",
       "account": "Account",
       "identities": "Identità",
-      "vacation": "Risponditore automatico",
+      "vacation": "Assenza",
       "advanced": "Avanzate",
       "calendar": "Calendario",
       "filters": "Filtri",
@@ -1817,28 +1818,24 @@
       }
     },
     "vacation": {
-      "title": "Risponditore automatico",
-      "description": "Rispondi automaticamente alle email in arrivo durante la tua assenza",
+      "title": "Assenza",
+      "description": "Gestisci automaticamente le email in arrivo durante la tua assenza",
       "loading": "Caricamento impostazioni di risposta automatica...",
       "not_supported": "Il server di posta non supporta le risposte automatiche di assenza.",
       "fetch_error": "Impossibile caricare le impostazioni di risposta automatica. Riprova.",
       "status": {
-        "label": "Risponditore automatico",
+        "label": "Rispondi automaticamente",
         "description": "Invia una risposta automatica a chi ti scrive",
         "active": "Attivo",
         "inactive": "Inattivo"
       },
       "date_range": {
-        "title": "Periodo",
-        "description": "Limita opzionalmente la risposta automatica a un periodo specifico",
         "start": "Data di inizio",
         "start_description": "Lascia vuoto per nessun limite di inizio",
         "end": "Data di fine",
         "end_description": "Lascia vuoto per nessun limite di fine"
       },
       "message": {
-        "title": "Messaggio di risposta automatica",
-        "description": "Il messaggio che verrà inviato come risposta",
         "subject_label": "Oggetto",
         "subject_description": "Oggetto della risposta automatica",
         "subject_placeholder": "Fuori ufficio",
@@ -1858,10 +1855,32 @@
       "saving": "Salvataggio...",
       "warnings": {
         "end_before_start": "La data di fine deve essere successiva alla data di inizio",
+        "invalid_date": "Inserisci una data di inizio e di fine valide con l'ora oppure lascia vuoto il campo",
         "start_in_past": "La data di inizio è nel passato",
         "empty_body": "Il corpo del messaggio è vuoto - i destinatari riceveranno una risposta vuota",
         "subject_too_long": "L'oggetto è troppo lungo per il server (al massimo {max} byte).",
-        "body_too_long": "Il messaggio è troppo lungo per il server (al massimo {max} byte, formattazione inclusa)."
+        "body_too_long": "Il messaggio è troppo lungo per il server (al massimo {max} byte, formattazione inclusa).",
+        "forward_address": "Inserisci un indirizzo valido per l'inoltro",
+        "not_running": "L'inoltro o i destinatari della risposta sono salvati ma al momento non sono attivi. Salva per riattivarli."
+      },
+      "forward": {
+        "title": "Inoltro",
+        "description": "Inoltra i messaggi in arrivo a un altro indirizzo, con o senza risposta automatica, nel periodo indicato sopra (senza data di fine, finché non viene disattivato). Lo spam non viene inoltrato.",
+        "enabled_label": "Inoltra i messaggi",
+        "to_label": "Inoltra a",
+        "to_placeholder": "email@esempio.com",
+        "keep_label": "Mantieni nella posta in arrivo",
+        "keep_description": "Altrimenti il messaggio viene solo inoltrato: non resta in questa casella e non gli si applica nessuna regola di filtro."
+      },
+      "audience": {
+        "label": "Rispondi a",
+        "description": "Mittenti interni: {domains}",
+        "all": "Tutti i mittenti",
+        "internal": "Solo mittenti interni",
+        "external": "Solo mittenti esterni"
+      },
+      "auto_reply": {
+        "title": "Risposta automatica"
       }
     },
     "folders": {
@@ -2229,7 +2248,19 @@
       "suggest_list": "List-Id",
       "suggest_domain": "@{domain}",
       "apply_existing": "Applica anche ai messaggi già presenti in questa cartella",
-      "apply_existing_unsupported": "Solo le regole che controllano mittente, destinatari, oggetto o intestazioni, e che spostano, copiano, segnano come letto, contrassegnano con stella o etichettano, si possono applicare ai messaggi esistenti."
+      "apply_existing_unsupported": "Solo le regole che controllano mittente, destinatari, oggetto o intestazioni, e che spostano, copiano, segnano come letto, contrassegnano con stella o etichettano, si possono applicare ai messaggi esistenti.",
+      "period_title": "Periodo",
+      "period_start": "Data di inizio",
+      "period_end": "Data di fine",
+      "validation_period_order": "La data di fine deve essere successiva alla data di inizio",
+      "period_toggle": "Attiva solo in un periodo",
+      "period_hint": "Si applica ai messaggi che arrivano in questo periodo. Lascia un campo vuoto per non limitare quell'estremo.",
+      "validation_period_empty": "Inserisci una data di inizio o di fine per il periodo",
+      "validation_period_invalid": "Inserisci una data valida con l'ora per il periodo oppure lascia vuoto il campo",
+      "apply_existing_period": "Una regola con periodo agisce solo sui messaggi che arrivano al suo interno, quindi non si può applicare ai messaggi esistenti.",
+      "period_status_scheduled": "programmata",
+      "period_status_active": "attiva",
+      "period_status_expired": "scaduta"
     },
     "templates": {
       "title": "Modelli email",

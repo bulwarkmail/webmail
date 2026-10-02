@@ -43,7 +43,7 @@ describe('parseScript', () => {
   });
 
   it('returns isOpaque for version mismatch', () => {
-    const script = '/* @metadata:begin\n{"version":2,"rules":[]}\n@metadata:end */';
+    const script = '/* @metadata:begin\n{"version":3,"rules":[]}\n@metadata:end */';
     const result = parseScript(script);
     expect(result.isOpaque).toBe(true);
     expect(result.rules).toEqual([]);
