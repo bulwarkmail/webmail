@@ -432,7 +432,12 @@ export function FilterSettings() {
     );
   }
 
-  if (isLoading) {
+  // A reload in the background (another device or tab changed the script)
+  // must not take away a dialog the user is typing in: while one is open,
+  // the page keeps what it has.
+  const editing = showRuleModal || showSieveEditor;
+
+  if (isLoading && !editing) {
     return (
       <SettingsSection title={t("title")} description={t("description")}>
         <div className="flex items-center gap-2 py-4 text-sm text-muted-foreground">
@@ -443,7 +448,7 @@ export function FilterSettings() {
     );
   }
 
-  if (error) {
+  if (error && !editing) {
     return (
       <SettingsSection title={t("title")} description={t("description")}>
         <div className="text-sm text-red-600 dark:text-red-400 py-4">
