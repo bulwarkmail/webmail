@@ -103,6 +103,7 @@ APP_NAME=My Webmail
 | Several JMAP servers, custom endpoints | [Multi-server deployments](https://bulwarkmail.org/docs/getting-started/configuration/stalwart-setup#multi-server-deployments), [Custom endpoints](https://bulwarkmail.org/docs/getting-started/configuration#custom-jmap-server-endpoints) |
 | Branding, logos, per-domain branding | [Customization](https://bulwarkmail.org/docs/guides/customization) |
 | Anonymous telemetry (off by default) | [Anonymous usage stats](https://bulwarkmail.org/docs/features/telemetry) |
+| Browser-encrypted archive of saved accounts (settings sync) | [Account archive](ACCOUNT_VAULT.md) |
 
 ## Documentation
 

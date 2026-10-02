@@ -20,6 +20,8 @@ export interface AccountEntry {
   cookieSlot: number;
   /** Whether "Remember Me" was checked (password and access-token logins) */
   rememberMe: boolean;
+  /** Restorable from a user-encrypted server archive; keep metadata on expiry. */
+  vaultManaged?: boolean;
   /**
    * Signed in through the identity provider's own login (OAuth code or SSO
    * flow), so the provider may hold a login session that signing out should
