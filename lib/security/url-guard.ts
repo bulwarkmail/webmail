@@ -64,12 +64,28 @@ export function isIntranetHostName(hostname: string): boolean {
   return !host.includes('.');
 }
 
+/** Private exceptions are exact HTTP(S) origins, without wildcards or credentials. */
+export function isAllowedPrivateUrl(rawUrl: string, allowedPrivateUrls: readonly string[] = []): boolean {
+  try {
+    const target = new URL(rawUrl);
+    return allowedPrivateUrls.some((entry) => {
+      try {
+        const allowed = new URL(entry.trim());
+        return ['http:', 'https:'].includes(allowed.protocol)
+          && !allowed.hostname.includes('*')
+          && !allowed.username && !allowed.password && !allowed.search && !allowed.hash
+          && allowed.pathname === '/' && allowed.origin === target.origin;
+      } catch { return false; }
+    });
+  } catch { return false; }
+}
+
 /**
  * Synchronous part of the guard: protocol, embedded credentials, blocked
  * hostnames / suffixes, and literal IP addresses. Returns the parsed URL when
  * those checks pass, `null` otherwise. Does NOT touch DNS.
  */
-function parseAllowedUrl(urlString: string, privateHost?: string): URL | null {
+function parseAllowedUrl(urlString: string, privateHost?: string, allowedPrivateUrls: readonly string[] = []): URL | null {
   let url: URL;
   try {
     url = new URL(urlString);
@@ -82,8 +98,8 @@ function parseAllowedUrl(urlString: string, privateHost?: string): URL | null {
 
   const hostname = normalizeHostname(url.hostname);
   if (privateHost && hostname === privateHost && isIntranetHostName(hostname)) return url;
-  if (isBlockedHostname(hostname)) return null;
-  if (isBlockedIpAddress(hostname)) return null;
+  if ((isBlockedHostname(hostname) || isBlockedIpAddress(hostname))
+    && !isAllowedPrivateUrl(urlString, allowedPrivateUrls)) return null;
 
   return url;
 }
@@ -160,6 +176,7 @@ export function guardedLookup(
   hostname: string,
   options: LookupOptions | number | LookupCallback,
   callback?: LookupCallback,
+  allowedPrivateHostname?: string,
 ): void {
   let cb: LookupCallback;
   let opts: LookupOptions;
@@ -172,7 +189,8 @@ export function guardedLookup(
   }
 
   const normalized = normalizeHostname(hostname);
-  if (isBlockedHostname(normalized) || isBlockedIpAddress(normalized)) {
+  const privateAllowed = normalized === allowedPrivateHostname;
+  if (!privateAllowed && (isBlockedHostname(normalized) || isBlockedIpAddress(normalized))) {
     queueMicrotask(() => cb(new BlockedAddressError(hostname, isIP(normalized) ? normalized : null)));
     return;
   }
@@ -186,7 +204,7 @@ export function guardedLookup(
         return;
       }
       const blocked = records.find((record) => isBlockedIpAddress(record.address));
-      if (blocked) {
+      if (blocked && !privateAllowed) {
         cb(new BlockedAddressError(hostname, blocked.address));
         return;
       }
@@ -296,8 +314,14 @@ function getPrivateHostDispatcher(privateHost: string): Dispatcher {
   return dispatcher;
 }
 
-function lookupChecked(hostname: string, privateHost?: string): Promise<string> {
-  const look = privateHost ? lookupAllowing(privateHost) : guardedLookup;
+function lookupChecked(
+  hostname: string,
+  privateHost?: string,
+  allowedPrivateHostname?: string,
+): Promise<string> {
+  const look: typeof guardedLookup = privateHost
+    ? lookupAllowing(privateHost)
+    : (host, options, callback) => guardedLookup(host, options, callback, allowedPrivateHostname);
   return new Promise((resolve, reject) => {
     look(hostname, {}, (err, address) => (err ? reject(err) : resolve(address as string)));
   });
@@ -311,10 +335,15 @@ const proxiedDispatchers = new Map<string, Dispatcher>();
  * and bypass the private-address check, so each connection resolves and
  * checks the name here, then asks the proxy to CONNECT to exactly that
  * address. The request keeps its Host header, and TLS inside the tunnel uses
- * the hostname for SNI and the certificate check.
+ * the hostname for SNI and the certificate check. A private exception applies
+ * here too: the proxy must not undo an origin the caller was allowed to use.
  */
-function getProxiedPublicDispatcher(proxy: URL, privateHost?: string): Dispatcher {
-  const cacheKey = privateHost ? `${proxy.href}|${privateHost}` : proxy.href;
+function getProxiedPublicDispatcher(
+  proxy: URL,
+  privateHost?: string,
+  allowedPrivateHostname?: string,
+): Dispatcher {
+  const cacheKey = JSON.stringify([proxy.href, privateHost ?? null, allowedPrivateHostname ?? null]);
   let dispatcher = proxiedDispatchers.get(cacheKey);
   if (dispatcher) return dispatcher;
 
@@ -326,7 +355,7 @@ function getProxiedPublicDispatcher(proxy: URL, privateHost?: string): Dispatche
   const connect: buildConnector.connector = (opts, callback) => {
     const hostname = normalizeHostname(opts.hostname);
     const port = Number(opts.port) || (opts.protocol === 'https:' ? 443 : 80);
-    lookupChecked(hostname, privateHost)
+    lookupChecked(hostname, privateHost, allowedPrivateHostname)
       .then(async (address) => {
         const authority = `${isIP(address) === 6 ? `[${address}]` : address}:${port}`;
         const tunnel = await proxyClient.connect({
@@ -354,6 +383,12 @@ function getProxiedPublicDispatcher(proxy: URL, privateHost?: string): Dispatche
   return dispatcher;
 }
 
+/** Separate connections keep the exact allowlisted origin's DNS exception scoped to this fetch. */
+function createPrivateDispatcher(hostname: string): Agent {
+  return new Agent({ connect: { lookup: ((host, options, callback) =>
+    guardedLookup(host, options, callback as LookupCallback, hostname)) as LookupFunction } });
+}
+
 function findBlockedCause(err: unknown, depth = 0): BlockedAddressError | null {
   if (depth > 5 || !(err instanceof Error)) return null;
   if (err instanceof BlockedAddressError) return err;
@@ -369,7 +404,13 @@ export type PublicFetchResponse = UndiciResponse;
  * then validates the DNS answer *inside the socket's own lookup*, so the
  * address that passed the check is the one the socket connects to. With an
  * outbound proxy configured for Node ({@link envProxyFor}) the checked
- * address is the one the proxy tunnels to.
+ * address is the one the proxy tunnels to, and a private exception applies to
+ * that check as well.
+ *
+ * Optional private exceptions: `allowPrivateHost` for an admin-entered company
+ * intranet host, or `allowedPrivateUrls` for exact origins enabled by
+ * ICAL_ALLOWED_LOCAL_ORIGINS (which trust those hostnames' DNS answers). All
+ * other hosts retain the DNS guard.
  *
  * Redirects are never followed automatically: a redirect target is a fresh
  * caller-supplied URL and must be passed back through this function so its
@@ -389,25 +430,33 @@ export async function fetchPublicUrl(
      * a public name here changes nothing.
      */
     allowPrivateHost?: string;
+    /** Exact HTTP(S) origins enabled via ICAL_ALLOWED_LOCAL_ORIGINS. */
+    allowedPrivateUrls?: readonly string[];
   } = {},
 ): Promise<PublicFetchResponse> {
   const privateHost = options.allowPrivateHost && isIntranetHostName(options.allowPrivateHost)
     ? normalizeHostname(options.allowPrivateHost)
     : undefined;
-  const parsed = parseAllowedUrl(url, privateHost);
+  const parsed = parseAllowedUrl(url, privateHost, options.allowedPrivateUrls);
   if (!parsed) {
     throw new DisallowedUrlError(url);
   }
   const proxy = envProxyFor(parsed);
   const exempt = privateHost && normalizeHostname(parsed.hostname) === privateHost ? privateHost : undefined;
 
+  const hostname = normalizeHostname(parsed.hostname);
+  const privateUrlHost = !exempt && isAllowedPrivateUrl(url, options.allowedPrivateUrls) ? hostname : undefined;
+  const privateDispatcher = privateUrlHost && !isIP(hostname)
+    ? createPrivateDispatcher(privateUrlHost)
+    : null;
+
   try {
     return await undiciFetch(url, {
       ...init,
       redirect: 'manual',
       dispatcher: proxy
-        ? getProxiedPublicDispatcher(proxy, exempt)
-        : exempt ? getPrivateHostDispatcher(exempt) : getPublicDispatcher(),
+        ? getProxiedPublicDispatcher(proxy, exempt, privateUrlHost)
+        : exempt ? getPrivateHostDispatcher(exempt) : privateDispatcher ?? getPublicDispatcher(),
     });
   } catch (err) {
     const blocked = findBlockedCause(err);
@@ -415,5 +464,8 @@ export async function fetchPublicUrl(
       throw new DisallowedUrlError(url, blocked);
     }
     throw err;
+  } finally {
+    // Graceful close waits for the response body before releasing sockets.
+    if (privateDispatcher) void privateDispatcher.close().catch(() => undefined);
   }
 }
