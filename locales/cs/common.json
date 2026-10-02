@@ -36,6 +36,7 @@
     "token_placeholder": "Vložte svůj API token",
     "token_hint": "Vytvořte API token v nastavení svého poskytovatele e-mailu a vložte ho sem.",
     "remember_me": "Zapamatovat si mě",
+    "remember_me_hint": "Pokud ji nezaškrtnete, po obnovení stránky budete odhlášeni.",
     "config_error": {
       "title": "Chyba konfigurace",
       "fetch_failed": "Konfiguraci aplikace nelze načíst. Zkuste to prosím později.",

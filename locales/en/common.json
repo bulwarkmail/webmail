@@ -36,6 +36,8 @@
     "token_placeholder": "Paste your API token",
     "token_hint": "Create an API token in your mail provider's settings and paste it here.",
     "remember_me": "Remember me",
+    "remember_me_hint": "If unchecked, reloading the page signs you out.",
+    "remember_me_hint": "If unchecked, reloading the page signs you out.",
     "config_error": {
       "title": "Configuration Error",
       "fetch_failed": "Unable to load application configuration. Please try again later.",
