@@ -1090,6 +1090,10 @@
         "label": "Mostra avatar account nella barra di navigazione",
         "description": "Visualizza i cerchi degli account individuali nella parte inferiore della barra di navigazione per un cambio rapido, con un pulsante di disconnessione sotto."
       },
+      "settings_from_main_account": {
+        "label": "Stesse impostazioni su tutti gli account",
+        "description": "Usa le impostazioni dell'account principale ({account}) qualunque account sia aperto, e salva lì le modifiche. Vale per questo dispositivo."
+      },
       "unified_mailbox": {
         "label": "Casella di posta unificata",
         "description": "Mostra le cartelle combinate (Posta in arrivo, Inviati, ecc.) di tutti gli account collegati",

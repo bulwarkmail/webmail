@@ -1090,6 +1090,10 @@
         "label": "Mostrar avatares de cuentas en la barra de navegación",
         "description": "Mostrar círculos de cuentas individuales en la parte inferior de la barra de navegación para un cambio rápido, con un botón de cerrar sesión debajo."
       },
+      "settings_from_main_account": {
+        "label": "Mismos ajustes en todas las cuentas",
+        "description": "Usar los ajustes de la cuenta principal ({account}) sea cual sea la cuenta abierta, y guardar allí los cambios. Se aplica a este dispositivo."
+      },
       "unified_mailbox": {
         "label": "Buzón unificado",
         "description": "Mostrar carpetas combinadas (Entrada, Enviados, etc.) de todas las cuentas conectadas",

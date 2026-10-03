@@ -1093,6 +1093,10 @@
         "label": "Mostra els avatars dels comptes a la barra de navegació",
         "description": "Mostra cercles individuals per a cada compte a la part inferior de la barra de navegació per canviar-hi ràpidament, amb un botó de tancament de sessió a sota."
       },
+      "settings_from_main_account": {
+        "label": "Mateixa configuració a tots els comptes",
+        "description": "Fes servir la configuració del compte principal ({account}) sigui quin sigui el compte obert, i desa-hi els canvis. S'aplica a aquest dispositiu."
+      },
       "unified_mailbox": {
         "label": "Bústia unificada",
         "description": "Mostra carpetes combinades (Safata d'entrada, Enviats, etc.) del compte actiu i les seves carpetes compartides.",

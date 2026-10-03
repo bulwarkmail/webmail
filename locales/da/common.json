@@ -1093,6 +1093,10 @@
         "label": "Vis kontoavatarer på navigationslinje",
         "description": "Vis individuelle kontocirkler nederst på navigationslinjen for hurtig skift, med en log-ud-knap nedenunder."
       },
+      "settings_from_main_account": {
+        "label": "Samme indstillinger på alle konti",
+        "description": "Brug hovedkontoens indstillinger ({account}) uanset hvilken konto der er åben, og gem ændringer der. Gælder for denne enhed."
+      },
       "unified_mailbox": {
         "label": "Samlet postkasse",
         "description": "Vis samlede mapper (Indbakke, Sendt osv.) på tværs af alle tilknyttede konti",

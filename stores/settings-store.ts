@@ -145,7 +145,7 @@ export type ProtocolOpenMode = 'active-session' | 'new-tab';
  * a value already stored on the server (from a prior build) is ignored on
  * import.
  */
-const DEVICE_LOCAL_SETTING_KEYS = new Set<string>(['proInterface']);
+const DEVICE_LOCAL_SETTING_KEYS = new Set<string>(['proInterface', 'settingsFromMainAccount']);
 
 export type HoverAction = 'delete' | 'star' | 'markRead' | 'archive' | 'tag' | 'spam';
 /** Action fired by a mobile list-row swipe. 'none' disables that direction. */
@@ -424,6 +424,13 @@ interface SettingsState {
   hideAccountSwitcher: boolean;
   showRailAccountList: boolean;
   proInterface: boolean;
+  /**
+   * Use the main (default) account's synced settings whichever account is
+   * active, and save edits there, instead of each account's own copy. Decided
+   * per device: it says where the other settings come from, so it cannot
+   * itself come from there.
+   */
+  settingsFromMainAccount: boolean;
 
   // Unified Mailbox
   enableUnifiedMailbox: boolean;
@@ -667,6 +674,7 @@ const DEFAULT_SETTINGS = {
   hideAccountSwitcher: false,
   showRailAccountList: false,
   proInterface: false,
+  settingsFromMainAccount: false,
 
   // Unified Mailbox
   enableUnifiedMailbox: false,

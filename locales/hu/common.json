@@ -1093,6 +1093,10 @@
         "label": "Fiók avatárok mutatása a navigációs sávon",
         "description": "Egyedi fiókkörök megjelenítése a navigációs sáv alján a gyors váltáshoz, kijelentkezés gombbal alatta."
       },
+      "settings_from_main_account": {
+        "label": "Ugyanazok a beállítások minden fiókon",
+        "description": "A fő fiók ({account}) beállításainak használata bármelyik fiók van megnyitva, és a módosítások ott mentése. Erre az eszközre vonatkozik."
+      },
       "unified_mailbox": {
         "label": "Egységes postafiók",
         "description": "Összevont mappák (Beérkező, Elküldött, stb.) megjelenítése az összes csatlakoztatott fiók között",

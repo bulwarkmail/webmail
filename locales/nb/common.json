@@ -1093,6 +1093,10 @@
         "label": "Vis kontobilder i navigasjonsfeltet",
         "description": "Vis et kontobilde for hver konto nederst i navigasjonsfeltet, slik at du raskt kan bytte konto. En utloggingsknapp vises nedenfor."
       },
+      "settings_from_main_account": {
+        "label": "Samme innstillinger på alle kontoer",
+        "description": "Bruk hovedkontoens innstillinger ({account}) uansett hvilken konto som er åpen, og lagre endringer der. Gjelder denne enheten."
+      },
       "unified_mailbox": {
         "label": "Samlet postkasse",
         "description": "Vis kombinerte mapper (innboks, sendt osv.) for den aktive kontoen og dens delte mapper.",

@@ -1093,6 +1093,10 @@
         "label": "Show Account Avatars on Navigation Rail",
         "description": "Display individual account circles at the bottom of the navigation rail for quick switching, with a sign-out button below."
       },
+      "settings_from_main_account": {
+        "label": "Same settings on every account",
+        "description": "Use the main account's settings ({account}) whichever account is open, and save changes there. Applies to this device."
+      },
       "unified_mailbox": {
         "label": "Unified Mailbox",
         "description": "Show combined folders (Inbox, Sent, etc.) for the active account and its shared folders. Needs more than one connected account (or a group inbox included below) before any folders appear here - with just one account, this only adds the section header. The All mail / Unread / Starred entries below are separate, admin-gated options that won't show up until your admin turns them on.",

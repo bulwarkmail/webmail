@@ -1090,6 +1090,10 @@
         "label": "Konto-Avatare in der Navigationsleiste anzeigen",
         "description": "Individuelle Kontokreise am unteren Rand der Navigationsleiste für schnelles Umschalten anzeigen, mit einer Abmelde-Schaltfläche darunter."
       },
+      "settings_from_main_account": {
+        "label": "Gleiche Einstellungen für alle Konten",
+        "description": "Die Einstellungen des Hauptkontos ({account}) gelten unabhängig vom geöffneten Konto, und Änderungen werden dort gespeichert. Gilt für dieses Gerät."
+      },
       "unified_mailbox": {
         "label": "Gemeinsames Postfach",
         "description": "Kombinierte Ordner (Posteingang, Gesendet usw.) für alle verbundenen Konten anzeigen",

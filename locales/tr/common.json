@@ -1090,6 +1090,10 @@
         "label": "Gezinme Çubuğunda Hesap Avatarlarını Göster",
         "description": "Hızlı geçiş için gezinme çubuğunun altında ayrı hesap dairelerini ve altında oturumu kapat düğmesini görüntüleyin."
       },
+      "settings_from_main_account": {
+        "label": "Tüm hesaplarda aynı ayarlar",
+        "description": "Hangi hesap açık olursa olsun ana hesabın ({account}) ayarlarını kullan ve değişiklikleri oraya kaydet. Bu cihaz için geçerlidir."
+      },
       "unified_mailbox": {
         "label": "Birleşik Posta Kutusu",
         "description": "Bağlı tüm hesaplardaki birleşik klasörleri (Gelen Kutusu, Gönderilenler vb.) göster",

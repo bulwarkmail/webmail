@@ -7,6 +7,7 @@ import { useSettingsStore, type ToolbarPosition, type MailLayout } from '@/store
 import { SettingsSection, SettingItem, RadioGroup, ToggleSwitch } from './settings-section';
 import { cn } from '@/lib/utils';
 import { usePolicyStore } from '@/stores/policy-store';
+import { reloadSettingsHome } from '@/stores/auth-store';
 import { useAccountStore } from '@/stores/account-store';
 import { useEmailStore } from '@/stores/email-store';
 
@@ -118,10 +119,11 @@ function MailLayoutPreview({
 export function LayoutSettings() {
   const t = useTranslations('settings.appearance');
   const tEmail = useTranslations('settings.email_behavior');
-  const { toolbarPosition, showToolbarLabels, hideAccountSwitcher, showRailAccountList, enableUnifiedMailbox, includeGroupInUnified, unifiedCrossAccount, allMailFolderIds, enableCrossUnreadView, enableCrossStarredView, enableCrossAllView, colorfulSidebarIcons, tintListRowsByTag, tintListRowsByAccount, showFolderTotalCount, faviconUnreadBadge, mailLayout, proInterface, updateSetting } = useSettingsStore();
+  const { toolbarPosition, showToolbarLabels, hideAccountSwitcher, showRailAccountList, enableUnifiedMailbox, includeGroupInUnified, unifiedCrossAccount, allMailFolderIds, enableCrossUnreadView, enableCrossStarredView, enableCrossAllView, colorfulSidebarIcons, tintListRowsByTag, tintListRowsByAccount, showFolderTotalCount, faviconUnreadBadge, mailLayout, proInterface, settingsFromMainAccount, updateSetting } = useSettingsStore();
   const { isSettingLocked, isSettingHidden, isFeatureEnabled } = usePolicyStore();
   const accounts = useAccountStore(s => s.accounts);
   const activeAccountId = useAccountStore(s => s.activeAccountId);
+  const mainAccount = accounts.find(a => a.isDefault) ?? null;
   const mailboxes = useEmailStore(s => s.mailboxes);
   const hasGroupInboxes = useMemo(() => mailboxes.some(m => m.isShared), [mailboxes]);
   const connectedAccountCount = useMemo(() => accounts.filter(a => a.isConnected).length, [accounts]);
@@ -216,6 +218,22 @@ export function LayoutSettings() {
           onChange={(checked) => updateSetting('showRailAccountList', checked)}
         />
       </SettingItem>
+
+      {mainAccount && accounts.length > 1 && (
+        <SettingItem
+          label={t('settings_from_main_account.label')}
+          description={t('settings_from_main_account.description', { account: mainAccount.email || mainAccount.username })}
+        >
+          <ToggleSwitch
+            checked={settingsFromMainAccount}
+            onChange={(checked) => {
+              updateSetting('settingsFromMainAccount', checked);
+              // Take the settings from where they now live, at once.
+              reloadSettingsHome();
+            }}
+          />
+        </SettingItem>
+      )}
 
       <SettingItem label={t('colorful_sidebar_icons.label')} description={t('colorful_sidebar_icons.description')}>
         <ToggleSwitch

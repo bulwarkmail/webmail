@@ -1090,6 +1090,10 @@
         "label": "Afficher les avatars de compte sur la barre de navigation",
         "description": "Afficher les cercles de comptes individuels en bas de la barre de navigation pour un changement rapide, avec un bouton de déconnexion en dessous."
       },
+      "settings_from_main_account": {
+        "label": "Mêmes réglages pour tous les comptes",
+        "description": "Utiliser les réglages du compte principal ({account}) quel que soit le compte ouvert, et y enregistrer les modifications. S'applique à cet appareil."
+      },
       "unified_mailbox": {
         "label": "Boîte aux lettres unifiée",
         "description": "Afficher les dossiers combinés (Réception, Envoyés, etc.) de tous les comptes connectés",

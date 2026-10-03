@@ -775,11 +775,45 @@ function loadIdentities(rawIdentities: Identity[], username: string): { identiti
 function resumeSettingsSync(account: Pick<AccountEntry, 'id' | 'username' | 'serverUrl'>): void {
   fetchConfig().then(config => {
     if (!config.settingsSyncEnabled) return;
-    useSettingsStore.getState().loadFromServer(account.username, account.serverUrl).finally(() => {
-      useSettingsStore.getState().enableSync(account.username, account.serverUrl);
+    loadAndSyncSettings(account.username, account.serverUrl).finally(() => {
       applyPreferredIdentity(account.id);
     });
   }).catch(() => {});
+}
+
+/**
+ * The login whose synced settings the app uses. Normally the one being made
+ * active. With `settingsFromMainAccount` on, the main (default) account,
+ * whichever account is on screen: one set of settings for every account, so a
+ * switch does not swap theme, layout or the merged mailbox for that account's
+ * stored copy. Falls back to the given login when there is no main account
+ * yet (the first sign-in).
+ */
+function settingsHome(username: string, serverUrl: string): { username: string; serverUrl: string } {
+  if (!useSettingsStore.getState().settingsFromMainAccount) return { username, serverUrl };
+  const main = useAccountStore.getState().getDefaultAccount();
+  return main?.username && main.serverUrl
+    ? { username: main.username, serverUrl: main.serverUrl }
+    : { username, serverUrl };
+}
+
+/** Load the main account's settings, then keep syncing them to it. */
+function loadAndSyncSettings(username: string, serverUrl: string): Promise<unknown> {
+  const home = settingsHome(username, serverUrl);
+  return useSettingsStore.getState().loadFromServer(home.username, home.serverUrl).finally(() => {
+    useSettingsStore.getState().enableSync(home.username, home.serverUrl);
+  });
+}
+
+/**
+ * Load the settings from wherever they now come from, after
+ * `settingsFromMainAccount` was switched, and sync there from now on.
+ */
+export function reloadSettingsHome(): void {
+  const active = useAccountStore.getState().getActiveAccount();
+  if (!active) return;
+  useSettingsStore.getState().disableSync();
+  resumeSettingsSync(active);
 }
 
 export function applyPreferredIdentity(accountId?: string | null): void {
@@ -1479,8 +1513,7 @@ export const useAuthStore = create<AuthState>()(
           // Sync settings from server (only if enabled)
           fetchConfig().then(config => {
             if (!config.settingsSyncEnabled) return;
-            useSettingsStore.getState().loadFromServer(username, serverUrl).finally(() => {
-              useSettingsStore.getState().enableSync(username, serverUrl);
+            loadAndSyncSettings(username, serverUrl).finally(() => {
               applyPreferredIdentity(accountId);
             });
           }).catch(() => {});
@@ -1796,8 +1829,7 @@ export const useAuthStore = create<AuthState>()(
           // Sync settings from server (only if enabled)
           fetchConfig().then(config => {
             if (!config.settingsSyncEnabled) return;
-            useSettingsStore.getState().loadFromServer(username, serverUrl).finally(() => {
-              useSettingsStore.getState().enableSync(username, serverUrl);
+            loadAndSyncSettings(username, serverUrl).finally(() => {
               applyPreferredIdentity(accountId);
             });
           }).catch(() => {});
@@ -1938,8 +1970,7 @@ export const useAuthStore = create<AuthState>()(
 
           fetchConfig().then(cfg => {
             if (!cfg.settingsSyncEnabled) return;
-            useSettingsStore.getState().loadFromServer(username, ssoServerUrl).finally(() => {
-              useSettingsStore.getState().enableSync(username, ssoServerUrl);
+            loadAndSyncSettings(username, ssoServerUrl).finally(() => {
               applyPreferredIdentity(accountId);
             });
           }).catch(() => {});
@@ -2710,8 +2741,7 @@ export const useAuthStore = create<AuthState>()(
 
             fetchConfig().then(config => {
               if (!config.settingsSyncEnabled) return;
-              useSettingsStore.getState().loadFromServer(targetAccount.username, targetAccount.serverUrl).finally(() => {
-                useSettingsStore.getState().enableSync(targetAccount.username, targetAccount.serverUrl);
+              loadAndSyncSettings(targetAccount.username, targetAccount.serverUrl).finally(() => {
                 // The preferred identity can only be applied once identities
                 // are known; both loads run concurrently, so join here.
                 identitiesLoaded.then(() => applyPreferredIdentity(targetAccount.id));
@@ -2829,8 +2859,7 @@ export const useAuthStore = create<AuthState>()(
 
                 fetchConfig().then(config => {
                   if (!config.settingsSyncEnabled) return;
-                  useSettingsStore.getState().loadFromServer(state.username || '', state.serverUrl!).finally(() => {
-                    useSettingsStore.getState().enableSync(state.username || '', state.serverUrl!);
+                  loadAndSyncSettings(state.username || '', state.serverUrl!).finally(() => {
                     applyPreferredIdentity(accountId);
                   });
                 }).catch(() => {});
@@ -2902,8 +2931,7 @@ export const useAuthStore = create<AuthState>()(
 
                 fetchConfig().then(config => {
                   if (!config.settingsSyncEnabled) return;
-                  useSettingsStore.getState().loadFromServer(username, serverUrl).finally(() => {
-                    useSettingsStore.getState().enableSync(username, serverUrl);
+                  loadAndSyncSettings(username, serverUrl).finally(() => {
                     applyPreferredIdentity(accountId);
                   });
                 }).catch(() => {});

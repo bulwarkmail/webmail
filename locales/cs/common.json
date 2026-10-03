@@ -1090,6 +1090,10 @@
         "label": "Zobrazovat avatary účtů v navigačním panelu",
         "description": "Zobrazovat samostatné ikony účtů ve spodní části navigačního panelu pro rychlé přepínání, s tlačítkem odhlášení níže."
       },
+      "settings_from_main_account": {
+        "label": "Stejná nastavení pro všechny účty",
+        "description": "Používat nastavení hlavního účtu ({account}) bez ohledu na otevřený účet a ukládat do něj změny. Platí pro toto zařízení."
+      },
       "unified_mailbox": {
         "label": "Sjednocená schránka",
         "description": "Zobrazovat sloučené složky (Doručené, Odeslané atd.) ze všech připojených účtů",

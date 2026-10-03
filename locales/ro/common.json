@@ -1093,6 +1093,10 @@
         "label": "Afișați avatarurile conturilor în bara de navigare",
         "description": "Afișați cercurile conturilor individuale în partea de jos a barei de navigare pentru comutarea rapidă, cu un buton de deconectare sub acestea."
       },
+      "settings_from_main_account": {
+        "label": "Aceleași setări pentru toate conturile",
+        "description": "Folosește setările contului principal ({account}) indiferent de contul deschis și salvează acolo modificările. Se aplică acestui dispozitiv."
+      },
       "unified_mailbox": {
         "label": "Căsuță poștală unificată",
         "description": "Afișați folderele combinate (Mesaje primite, Mesaje trimise etc.) pentru toate conturile conectate",
