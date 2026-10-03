@@ -1423,7 +1423,7 @@
       },
       "sub_address_delimiter": {
         "label": "جداکننده زیرآدرس",
-        "description": "کاراکتر جداکننده",
+        "description": "کاراکتری که نام کاربری را از برچسب زیرآدرس جدا می‌کند. با جداکننده‌ای که سرور ایمیل شما استفاده می‌کند مطابقت دهید (مثلاً user{delimiter}tag@domain.com).",
         "option": "{delimiter}  (user{delimiter}tag@domain.com)",
         "custom": "سفارشی…",
         "custom_input_label": "کاراکتر سفارشی"
@@ -1503,7 +1503,7 @@
       },
       "default_mail_program": {
         "label": "برنامه ایمیل پیش‌فرض",
-        "description": "ثبت برای mailto:",
+        "description": "{appName} را به‌عنوان برنامهٔ پیش‌فرض ایمیل برای پیوندهای mailto: ثبت کنید",
         "button": "تنظیم به عنوان پیش‌فرض",
         "success": "ثبت شد",
         "error": "پشتیبانی نمی‌شود"
@@ -2049,7 +2049,7 @@
       },
       "attachment_template": {
         "label": "نام فایل پیوست",
-        "description": "قالب استفاده شده هنگام دانلود یا کشیدن پیوست."
+        "description": "قالبی که هنگام دانلود یا بیرون کشیدن پیوست استفاده می‌شود. اگر '{filename}' و '{ext}' را حذف کنید، پسوند اصلی فایل حفظ می‌شود."
       },
       "bundle_template": {
         "label": "نام فایل .zip چند ایمیل",

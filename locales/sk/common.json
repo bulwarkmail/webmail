@@ -1423,7 +1423,7 @@
       },
       "sub_address_delimiter": {
         "label": "Oddeľovač podadresy",
-        "description": "Znak oddeľujúci používateľské meno od podadresy.",
+        "description": "Znak oddeľujúci používateľské meno od podadresy. Použite rovnaký oddeľovač, aký používa váš poštový server (napr. user{delimiter}tag@domain.com).",
         "option": "{delimiter}  (pouzivatel{delimiter}stitok@domena.sk)",
         "custom": "Vlastný…",
         "custom_input_label": "Vlastný znak oddeľovača"
@@ -2049,7 +2049,7 @@
       },
       "attachment_template": {
         "label": "Názov súboru prílohy",
-        "description": "Šablóna použitá pri sťahovaní alebo presunutí prílohy."
+        "description": "Šablóna použitá pri sťahovaní alebo presunutí prílohy. Ak vynecháte '{filename}' a '{ext}', zachová sa pôvodná prípona."
       },
       "bundle_template": {
         "label": "Názov .zip súboru s viacerými e-mailmi",

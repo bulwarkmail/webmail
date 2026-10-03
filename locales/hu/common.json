@@ -1423,8 +1423,8 @@
       },
       "sub_address_delimiter": {
         "label": "Alcím elválasztó",
-        "description": "Karakter, amely elválasztja a felhasználónevet az alcím címkétől. Illeszkedjen a levelezőszerver által használt elválasztóhoz (pl. felhasználó{elválasztó}cimke@domain.com).",
-        "option": "{elválasztó}  (felhasználó{elválasztó}cimke@domain.com)",
+        "description": "Karakter, amely elválasztja a felhasználónevet az alcím címkétől. Illeszkedjen a levelezőszerver által használt elválasztóhoz (pl. felhasználó{delimiter}cimke@domain.com).",
+        "option": "{delimiter}  (felhasználó{delimiter}cimke@domain.com)",
         "custom": "Egyéni...",
         "custom_input_label": "Egyéni elválasztó karakter"
       },
@@ -2540,7 +2540,7 @@
       "use_address": "Cím használata",
       "invalid_tag": "A címke csak betűket, számokat és kötőjeleket tartalmazhat",
       "tag_too_long": "A címke legfeljebb 30 karakter lehet",
-      "help_text": "A felhasználó{elválasztó}cimke@domain.com címre küldött e-mailek a beérkeződbe érkeznek",
+      "help_text": "A felhasználó{delimiter}cimke@domain.com címre küldött e-mailek a beérkeződbe érkeznek",
       "validation": {
         "empty": "A címke nem lehet üres",
         "too_long": "A címke legfeljebb {max} karakter lehet",

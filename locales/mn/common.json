@@ -543,7 +543,7 @@
       "change_location": "Байршил",
       "change_description": "Тодорхойлолт",
       "change_empty": "Байхгүй",
-      "change_from_to": "{from} → {to}",
+      "change_from_to": "{before} → {after}",
       "apply_proposal": "Санал болгож буй өөрчлөлтийг хэрэгжүүлэх",
       "proposal_applied": "Санал болгож буй өөрчлөлтүүдийг хэрэгжүүлсэн.",
       "review_proposal": "Саналыг хянан үзэх",
@@ -1423,7 +1423,7 @@
       },
       "sub_address_delimiter": {
         "label": "Дэд хаяг хязгаарлагч",
-        "description": "Хэрэглэгчийн нэрийг дэд хаягийн шошгоос тусгаарлах тэмдэгт. Таны мэйл сервер ашигладаг хязгаарлагчтай тааруулна уу (жишээ нь user+tag@domain.com).",
+        "description": "Хэрэглэгчийн нэрийг дэд хаягийн шошгоос тусгаарлах тэмдэгт. Таны мэйл сервер ашигладаг хязгаарлагчтай тааруулна уу (жишээ нь user{delimiter}tag@domain.com).",
         "option": "{delimiter} (user{delimiter}tag@domain.com)",
         "custom": "Захиалгат…",
         "custom_input_label": "Захиалгат хязгаарлагч тэмдэгт"
@@ -1623,11 +1623,11 @@
       "demo_account": "Демо данс",
       "email": {
         "label": "Имэйл хаяг",
-        "value": "Имэйл"
+        "value": "{email}"
       },
       "server": {
         "label": "JMAP сервер",
-        "value": "Сервер"
+        "value": "{server}"
       },
       "storage": {
         "label": "Хадгалалтын ашиглалт",
@@ -1636,7 +1636,7 @@
       },
       "last_sync": {
         "label": "Сүүлийн синк",
-        "value": "Сүүлд синк хийсэн"
+        "value": "{time}"
       },
       "accounts": {
         "title": "Нэвтэрсэн бүртгэлүүд",
@@ -2540,7 +2540,7 @@
       "use_address": "Энэ хаягийг ашиглах",
       "invalid_tag": "Таг нь зөвхөн үсэг, тоо, зураастай байх ёстой",
       "tag_too_long": "Таг нь 30 тэмдэгт буюу түүнээс бага байх ёстой",
-      "help_text": "user+tag@domain.com руу ирсэн имэйлүүд таны ирсэн хайрцагт хүрнэ",
+      "help_text": "user{delimiter}tag@domain.com руу ирсэн имэйлүүд таны ирсэн хайрцагт хүрнэ",
       "validation": {
         "empty": "Таг хоосон байж болохгүй",
         "too_long": "Таг нь {max} буюу түүнээс бага тэмдэгт байх ёстой",
