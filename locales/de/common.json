@@ -3803,5 +3803,33 @@
     "preview_empty": "Ergebnis auswählen, um es anzuzeigen",
     "open_full": "Öffnen",
     "view_label": "Ansicht"
+  },
+  "folder_migration": {
+    "title": "Ordner in ein anderes Konto verschieben",
+    "description": "Alle Nachrichten eines Ordners in einen Ordner eines anderen verbundenen Kontos kopieren oder verschieben.",
+    "source": "Von",
+    "destination": "Nach",
+    "source_account": "Quellkonto",
+    "source_folder": "Quellordner",
+    "destination_account": "Zielkonto",
+    "destination_folder": "Zielordner",
+    "choose_account": "Konto wählen",
+    "choose_folder": "Ordner wählen",
+    "mode": "Modus",
+    "copy": "Kopieren",
+    "move": "Verschieben",
+    "copy_hint": "Die Nachrichten bleiben im Quellordner.",
+    "move_hint": "Jede Nachricht wird in der Quelle gelöscht, sobald das andere Konto sie hat.",
+    "start": "Starten",
+    "stop": "Stoppen",
+    "reading": "Ordner wird gelesen…",
+    "progress": "{done} von {total} Nachrichten",
+    "finished": "Fertig.",
+    "stopped": "Gestoppt.",
+    "kept": "{count} blieben in der Quelle, weil sie auch in anderen Ordnern liegen.",
+    "failed": "Gestoppt: Eine Nachricht konnte nicht kopiert werden ({error}).",
+    "failed_after_import": "Gestoppt: Eine Nachricht wurde kopiert, aber nicht in der Quelle gelöscht ({error}).",
+    "folder_changed": "Der Ordner hat sich beim Lesen geändert. Bitte erneut versuchen.",
+    "same_account": "Wähle einen Ordner in einem anderen Konto."
   }
 }

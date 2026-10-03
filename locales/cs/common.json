@@ -3803,5 +3803,33 @@
     "preview_empty": "Vyberte výsledek pro náhled",
     "open_full": "Otevřít",
     "view_label": "Zobrazení"
+  },
+  "folder_migration": {
+    "title": "Přesunout složku do jiného účtu",
+    "description": "Zkopírujte nebo přesuňte všechny zprávy složky do složky jiného připojeného účtu.",
+    "source": "Z",
+    "destination": "Do",
+    "source_account": "Zdrojový účet",
+    "source_folder": "Zdrojová složka",
+    "destination_account": "Cílový účet",
+    "destination_folder": "Cílová složka",
+    "choose_account": "Vyberte účet",
+    "choose_folder": "Vyberte složku",
+    "mode": "Režim",
+    "copy": "Kopírovat",
+    "move": "Přesunout",
+    "copy_hint": "Zprávy zůstanou ve zdrojové složce.",
+    "move_hint": "Každá zpráva se ze zdroje smaže, jakmile ji má druhý účet.",
+    "start": "Spustit",
+    "stop": "Zastavit",
+    "reading": "Čtení složky…",
+    "progress": "{done} z {total} zpráv",
+    "finished": "Hotovo.",
+    "stopped": "Zastaveno.",
+    "kept": "{count} zůstalo ve zdroji, protože jsou i v jiných složkách.",
+    "failed": "Zastaveno: zprávu se nepodařilo zkopírovat ({error}).",
+    "failed_after_import": "Zastaveno: zpráva byla zkopírována, ale ze zdroje nesmazána ({error}).",
+    "folder_changed": "Složka se během čtení změnila. Zkuste to znovu.",
+    "same_account": "Vyberte složku v jiném účtu."
   }
 }

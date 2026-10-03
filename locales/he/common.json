@@ -3804,5 +3804,33 @@
     "preview_empty": "בחרו תוצאה לתצוגה מקדימה",
     "open_full": "פתיחה",
     "view_label": "תצוגה"
+  },
+  "folder_migration": {
+    "title": "העברת תיקייה לחשבון אחר",
+    "description": "העתקה או העברה של כל ההודעות בתיקייה לתיקייה בחשבון מחובר אחר.",
+    "source": "מקור",
+    "destination": "יעד",
+    "source_account": "חשבון מקור",
+    "source_folder": "תיקיית מקור",
+    "destination_account": "חשבון יעד",
+    "destination_folder": "תיקיית יעד",
+    "choose_account": "בחירת חשבון",
+    "choose_folder": "בחירת תיקייה",
+    "mode": "מצב",
+    "copy": "העתקה",
+    "move": "העברה",
+    "copy_hint": "ההודעות נשארות בתיקיית המקור.",
+    "move_hint": "כל הודעה נמחקת מהמקור אחרי שהחשבון השני קיבל אותה.",
+    "start": "התחלה",
+    "stop": "עצירה",
+    "reading": "קורא את התיקייה…",
+    "progress": "{done} מתוך {total} הודעות",
+    "finished": "הסתיים.",
+    "stopped": "נעצר.",
+    "kept": "{count} נשארו במקור כי הן נמצאות גם בתיקיות אחרות.",
+    "failed": "נעצר: לא ניתן היה להעתיק הודעה ({error}).",
+    "failed_after_import": "נעצר: הודעה הועתקה אך לא נמחקה מהמקור ({error}).",
+    "folder_changed": "התיקייה השתנתה בזמן הקריאה. נסו שוב.",
+    "same_account": "יש לבחור תיקייה בחשבון אחר."
   }
 }

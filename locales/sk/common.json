@@ -3803,5 +3803,33 @@
     "preview_empty": "Vyberte výsledok pre náhľad",
     "open_full": "Otvoriť",
     "view_label": "Zobrazenie"
+  },
+  "folder_migration": {
+    "title": "Presunúť priečinok do iného účtu",
+    "description": "Skopírujte alebo presuňte všetky správy priečinka do priečinka iného pripojeného účtu.",
+    "source": "Z",
+    "destination": "Do",
+    "source_account": "Zdrojový účet",
+    "source_folder": "Zdrojový priečinok",
+    "destination_account": "Cieľový účet",
+    "destination_folder": "Cieľový priečinok",
+    "choose_account": "Vyberte účet",
+    "choose_folder": "Vyberte priečinok",
+    "mode": "Režim",
+    "copy": "Kopírovať",
+    "move": "Presunúť",
+    "copy_hint": "Správy zostanú v zdrojovom priečinku.",
+    "move_hint": "Každá správa sa zo zdroja vymaže, keď ju má druhý účet.",
+    "start": "Spustiť",
+    "stop": "Zastaviť",
+    "reading": "Čítanie priečinka…",
+    "progress": "{done} z {total} správ",
+    "finished": "Hotovo.",
+    "stopped": "Zastavené.",
+    "kept": "{count} zostalo v zdroji, pretože sú aj v iných priečinkoch.",
+    "failed": "Zastavené: správu sa nepodarilo skopírovať ({error}).",
+    "failed_after_import": "Zastavené: správa bola skopírovaná, ale nevymazaná zo zdroja ({error}).",
+    "folder_changed": "Priečinok sa počas čítania zmenil. Skúste to znova.",
+    "same_account": "Vyberte priečinok v inom účte."
   }
 }

@@ -3803,5 +3803,33 @@
     "preview_empty": "Selectează un rezultat pentru previzualizare",
     "open_full": "Deschide",
     "view_label": "Vizualizare"
+  },
+  "folder_migration": {
+    "title": "Mută un dosar în alt cont",
+    "description": "Copiază sau mută toate mesajele unui dosar într-un dosar al altui cont conectat.",
+    "source": "Din",
+    "destination": "În",
+    "source_account": "Cont sursă",
+    "source_folder": "Dosar sursă",
+    "destination_account": "Cont destinație",
+    "destination_folder": "Dosar destinație",
+    "choose_account": "Alege un cont",
+    "choose_folder": "Alege un dosar",
+    "mode": "Mod",
+    "copy": "Copiază",
+    "move": "Mută",
+    "copy_hint": "Mesajele rămân în dosarul sursă.",
+    "move_hint": "Fiecare mesaj e șters din sursă după ce celălalt cont îl are.",
+    "start": "Pornește",
+    "stop": "Oprește",
+    "reading": "Se citește dosarul…",
+    "progress": "{done} din {total} mesaje",
+    "finished": "Gata.",
+    "stopped": "Oprit.",
+    "kept": "{count} au rămas în sursă pentru că sunt și în alte dosare.",
+    "failed": "Oprit: un mesaj nu a putut fi copiat ({error}).",
+    "failed_after_import": "Oprit: un mesaj a fost copiat, dar nu a fost șters din sursă ({error}).",
+    "folder_changed": "Dosarul s-a schimbat în timpul citirii. Încearcă din nou.",
+    "same_account": "Alege un dosar din alt cont."
   }
 }

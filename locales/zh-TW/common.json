@@ -3803,5 +3803,33 @@
     "preview_empty": "選擇結果以預覽",
     "open_full": "開啟",
     "view_label": "檢視"
+  },
+  "folder_migration": {
+    "title": "將資料夾移至其他帳戶",
+    "description": "將資料夾中的所有郵件複製或移動到另一個已連線帳戶的資料夾。",
+    "source": "從",
+    "destination": "到",
+    "source_account": "來源帳戶",
+    "source_folder": "來源資料夾",
+    "destination_account": "目標帳戶",
+    "destination_folder": "目標資料夾",
+    "choose_account": "選擇帳戶",
+    "choose_folder": "選擇資料夾",
+    "mode": "模式",
+    "copy": "複製",
+    "move": "移動",
+    "copy_hint": "郵件保留在來源資料夾中。",
+    "move_hint": "每封郵件在另一個帳戶收到後從來源刪除。",
+    "start": "開始",
+    "stop": "停止",
+    "reading": "正在讀取資料夾…",
+    "progress": "{done} / {total} 封郵件",
+    "finished": "已完成。",
+    "stopped": "已停止。",
+    "kept": "{count} 封郵件因同時位於其他資料夾而保留在來源中。",
+    "failed": "已停止：有郵件無法複製（{error}）。",
+    "failed_after_import": "已停止：有郵件已複製但未從來源刪除（{error}）。",
+    "folder_changed": "讀取時資料夾有變動，請重試。",
+    "same_account": "請選擇另一個帳戶中的資料夾。"
   }
 }

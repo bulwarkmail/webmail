@@ -3803,5 +3803,33 @@
     "preview_empty": "Select a result to preview it",
     "open_full": "Open",
     "view_label": "View"
+  },
+  "folder_migration": {
+    "title": "Move a folder to another account",
+    "description": "Copy or move every message of a folder into a folder of another connected account.",
+    "source": "From",
+    "destination": "To",
+    "source_account": "Source account",
+    "source_folder": "Source folder",
+    "destination_account": "Destination account",
+    "destination_folder": "Destination folder",
+    "choose_account": "Choose an account",
+    "choose_folder": "Choose a folder",
+    "mode": "Mode",
+    "copy": "Copy",
+    "move": "Move",
+    "copy_hint": "The messages stay in the source folder.",
+    "move_hint": "Each message is deleted from the source once the other account has it.",
+    "start": "Start",
+    "stop": "Stop",
+    "reading": "Reading the folder…",
+    "progress": "{done} of {total} messages",
+    "finished": "Done.",
+    "stopped": "Stopped.",
+    "kept": "{count} stayed in the source because they are also in other folders.",
+    "failed": "Stopped: a message could not be copied ({error}).",
+    "failed_after_import": "Stopped: a message was copied but not deleted from the source ({error}).",
+    "folder_changed": "The folder changed while it was being read. Try again.",
+    "same_account": "Choose a folder in another account."
   }
 }

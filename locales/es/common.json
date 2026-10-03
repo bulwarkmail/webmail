@@ -3803,5 +3803,33 @@
     "preview_empty": "Selecciona un resultado para previsualizarlo",
     "open_full": "Abrir",
     "view_label": "Vista"
+  },
+  "folder_migration": {
+    "title": "Mover una carpeta a otra cuenta",
+    "description": "Copia o mueve todos los mensajes de una carpeta a una carpeta de otra cuenta conectada.",
+    "source": "De",
+    "destination": "A",
+    "source_account": "Cuenta de origen",
+    "source_folder": "Carpeta de origen",
+    "destination_account": "Cuenta de destino",
+    "destination_folder": "Carpeta de destino",
+    "choose_account": "Elige una cuenta",
+    "choose_folder": "Elige una carpeta",
+    "mode": "Modo",
+    "copy": "Copiar",
+    "move": "Mover",
+    "copy_hint": "Los mensajes se quedan en la carpeta de origen.",
+    "move_hint": "Cada mensaje se borra del origen cuando la otra cuenta lo tiene.",
+    "start": "Iniciar",
+    "stop": "Detener",
+    "reading": "Leyendo la carpeta…",
+    "progress": "{done} de {total} mensajes",
+    "finished": "Hecho.",
+    "stopped": "Detenido.",
+    "kept": "{count} se quedaron en el origen porque también están en otras carpetas.",
+    "failed": "Detenido: no se pudo copiar un mensaje ({error}).",
+    "failed_after_import": "Detenido: un mensaje se copió pero no se borró del origen ({error}).",
+    "folder_changed": "La carpeta cambió mientras se leía. Inténtalo de nuevo.",
+    "same_account": "Elige una carpeta de otra cuenta."
   }
 }

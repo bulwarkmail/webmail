@@ -3803,5 +3803,33 @@
     "preview_empty": "Önizlemek için bir sonuç seçin",
     "open_full": "Aç",
     "view_label": "Görünüm"
+  },
+  "folder_migration": {
+    "title": "Klasörü başka bir hesaba taşı",
+    "description": "Bir klasördeki tüm iletileri bağlı başka bir hesabın klasörüne kopyalayın veya taşıyın.",
+    "source": "Kaynak",
+    "destination": "Hedef",
+    "source_account": "Kaynak hesap",
+    "source_folder": "Kaynak klasör",
+    "destination_account": "Hedef hesap",
+    "destination_folder": "Hedef klasör",
+    "choose_account": "Bir hesap seçin",
+    "choose_folder": "Bir klasör seçin",
+    "mode": "Mod",
+    "copy": "Kopyala",
+    "move": "Taşı",
+    "copy_hint": "İletiler kaynak klasörde kalır.",
+    "move_hint": "Her ileti, diğer hesaba ulaştığında kaynaktan silinir.",
+    "start": "Başlat",
+    "stop": "Durdur",
+    "reading": "Klasör okunuyor…",
+    "progress": "{total} iletiden {done}",
+    "finished": "Tamamlandı.",
+    "stopped": "Durduruldu.",
+    "kept": "{count} ileti başka klasörlerde de olduğu için kaynakta kaldı.",
+    "failed": "Durduruldu: bir ileti kopyalanamadı ({error}).",
+    "failed_after_import": "Durduruldu: bir ileti kopyalandı ama kaynaktan silinmedi ({error}).",
+    "folder_changed": "Klasör okunurken değişti. Tekrar deneyin.",
+    "same_account": "Başka bir hesaptaki klasörü seçin."
   }
 }

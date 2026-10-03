@@ -3803,5 +3803,33 @@
     "preview_empty": "미리 볼 결과를 선택하세요",
     "open_full": "열기",
     "view_label": "보기"
+  },
+  "folder_migration": {
+    "title": "폴더를 다른 계정으로 이동",
+    "description": "폴더의 모든 메일을 연결된 다른 계정의 폴더로 복사하거나 이동해요.",
+    "source": "보낸 곳",
+    "destination": "받을 곳",
+    "source_account": "원본 계정",
+    "source_folder": "원본 폴더",
+    "destination_account": "대상 계정",
+    "destination_folder": "대상 폴더",
+    "choose_account": "계정 선택",
+    "choose_folder": "폴더 선택",
+    "mode": "모드",
+    "copy": "복사",
+    "move": "이동",
+    "copy_hint": "메일이 원본 폴더에 남아요.",
+    "move_hint": "각 메일은 다른 계정에 들어간 뒤 원본에서 삭제돼요.",
+    "start": "시작",
+    "stop": "중지",
+    "reading": "폴더를 읽는 중…",
+    "progress": "{total}개 중 {done}개",
+    "finished": "완료했어요.",
+    "stopped": "중지했어요.",
+    "kept": "{count}개는 다른 폴더에도 있어서 원본에 남았어요.",
+    "failed": "중지됨: 메일을 복사하지 못했어요 ({error}).",
+    "failed_after_import": "중지됨: 메일은 복사됐지만 원본에서 삭제되지 않았어요 ({error}).",
+    "folder_changed": "읽는 동안 폴더가 바뀌었어요. 다시 시도해 주세요.",
+    "same_account": "다른 계정의 폴더를 선택하세요."
   }
 }
