@@ -29,6 +29,7 @@
     "hide_password": "Şifreyi gizle",
     "totp_toggle": "2FA kodum var",
     "remember_me": "Beni hatırla",
+    "remember_me_hint": "İşaretlenmezse, sayfayı yeniden yüklemek oturumunuzu kapatır.",
     "config_error": {
       "title": "Yapılandırma Hatası",
       "fetch_failed": "Uygulama yapılandırması yüklenemiyor. Lütfen daha sonra tekrar deneyin.",

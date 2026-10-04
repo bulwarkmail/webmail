@@ -29,6 +29,7 @@
     "hide_password": "Wachtwoord verbergen",
     "totp_toggle": "Ik heb een 2FA-code",
     "remember_me": "Onthoud mij",
+    "remember_me_hint": "Als dit niet is aangevinkt, wordt u bij het herladen van de pagina afgemeld.",
     "config_error": {
       "title": "Configuratiefout",
       "fetch_failed": "Kan de applicatieconfiguratie niet laden. Probeer het later opnieuw.",

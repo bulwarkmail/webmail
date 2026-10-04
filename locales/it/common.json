@@ -29,6 +29,7 @@
     "hide_password": "Nascondi password",
     "totp_toggle": "Ho un codice 2FA",
     "remember_me": "Ricordami",
+    "remember_me_hint": "Se non la selezioni, ricaricando la pagina la sessione verrà chiusa.",
     "config_error": {
       "title": "Errore di configurazione",
       "fetch_failed": "Impossibile caricare la configurazione dell'applicazione. Riprovare più tardi.",

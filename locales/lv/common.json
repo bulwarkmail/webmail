@@ -29,6 +29,7 @@
     "hide_password": "Slēpt paroli",
     "totp_toggle": "Man ir 2FA kods",
     "remember_me": "Atcerēties mani",
+    "remember_me_hint": "Ja tas nav atzīmēts, lapas pārlāde jūs izrakstīs.",
     "config_error": {
       "title": "Konfigurācijas kļūda",
       "fetch_failed": "Neizdevās ielādēt lietotnes konfigurāciju. Mēģiniet vēlāk.",

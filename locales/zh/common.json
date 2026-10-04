@@ -29,6 +29,7 @@
     "hide_password": "隐藏密码",
     "totp_toggle": "我有双重验证代码",
     "remember_me": "记住我",
+    "remember_me_hint": "若未勾选，刷新页面将退出登录。",
     "config_error": {
       "title": "配置错误",
       "fetch_failed": "无法加载应用配置。请稍后重试。",
