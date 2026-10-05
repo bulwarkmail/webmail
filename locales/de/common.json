@@ -142,6 +142,8 @@
     "show_all_tags": "Alle anzeigen ({count})",
     "show_fewer_tags": "Weniger anzeigen",
     "folders": "Ordner",
+    "show_more": "Mehr",
+    "show_fewer": "Weniger",
     "mail": "E-Mail",
     "nav_label": "Navigation",
     "add_app": "Apps",
@@ -237,6 +239,7 @@
     "replied": "Beantwortet",
     "forwarded": "Weitergeleitet",
     "has_attachment": "Mit Anhang",
+    "conversations_range": "{from}–{to, number} von {total, number}",
     "conversations_count": "{count} von {total} Unterhaltungen",
     "conversations_count_plus": "{count}+ Unterhaltungen",
     "conversations_count_simple": "{count} Unterhaltungen",
@@ -597,6 +600,9 @@
     }
   },
   "email_composer": {
+    "minimize": "Minimieren",
+    "maximize": "Vollbild",
+    "restore": "Wiederherstellen",
     "read_receipt_on": "Lesebestätigung angefordert (klicken zum Deaktivieren)",
     "read_receipt_off": "Lesebestätigung anfordern",
     "dsn_on": "Zustellbenachrichtigung angefordert (zum Deaktivieren klicken)",
@@ -1067,6 +1073,12 @@
         "compact": "Kompakt",
         "regular": "Normal",
         "comfortable": "Komfortabel"
+      },
+      "interface_layout": {
+        "label": "Oberflächen-Layout",
+        "description": "Wo Suche, Navigation und Symbolleisten liegen",
+        "default": "Standard",
+        "mountain_view": "Mountain View"
       },
       "animations": {
         "label": "Animationen aktivieren",
@@ -2444,7 +2456,8 @@
       "next_email": "Nächste E-Mail",
       "previous_email": "Vorherige E-Mail",
       "open_email": "E-Mail öffnen",
-      "close_email": "Schließen / Auswahl aufheben"
+      "close_email": "Schließen / Auswahl aufheben",
+      "go_to_folder": "Zum Ordner springen"
     },
     "actions": {
       "reply": "Antworten",
@@ -2466,7 +2479,8 @@
       "global_search": "Alles durchsuchen"
     },
     "threads": {
-      "expand_collapse": "Unterhaltung erweitern/einklappen"
+      "expand_collapse": "Unterhaltung erweitern/einklappen",
+      "select_mountain_view": "Konversation auswählen"
     },
     "composer": {
       "send": "E-Mail senden",

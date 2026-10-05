@@ -142,6 +142,8 @@
     "show_all_tags": "Összes megjelenítése ({count})",
     "show_fewer_tags": "Kevesebb megjelenítése",
     "folders": "Mappák",
+    "show_more": "Több",
+    "show_fewer": "Kevesebb",
     "shared": "Megosztott",
     "mail": "Levelek",
     "nav_label": "Navigáció",
@@ -237,6 +239,7 @@
     "replied": "Megválaszolva",
     "forwarded": "Továbbítva",
     "has_attachment": "Melléklettel",
+    "conversations_range": "{from}–{to, number} / {total, number}",
     "conversations_count": "{count} / {total} beszélgetés",
     "conversations_count_plus": "{count}+ beszélgetés",
     "conversations_count_simple": "{count} beszélgetés",
@@ -597,6 +600,9 @@
     }
   },
   "email_composer": {
+    "minimize": "Kis méret",
+    "maximize": "Teljes képernyő",
+    "restore": "Visszaállítás",
     "read_receipt_on": "Olvasási visszaigazolás kérve (kattints a letiltáshoz)",
     "read_receipt_off": "Olvasási visszaigazolás kérése",
     "dsn_on": "Kézbesítési értesítés kérve (kattints a kikapcsoláshoz)",
@@ -1070,6 +1076,12 @@
         "compact": "Kompakt",
         "regular": "Normál",
         "comfortable": "Kényelmes"
+      },
+      "interface_layout": {
+        "label": "Felület elrendezése",
+        "description": "Hol helyezkedik el a keresés, a navigáció és az eszköztárak",
+        "default": "Alapértelmezett",
+        "mountain_view": "Mountain View"
       },
       "animations": {
         "label": "Animációk engedélyezése",
@@ -2444,7 +2456,8 @@
       "next_email": "Következő e-mail",
       "previous_email": "Előző e-mail",
       "open_email": "E-mail megnyitása",
-      "close_email": "Bezárás / Kijelölés megszüntetése"
+      "close_email": "Bezárás / Kijelölés megszüntetése",
+      "go_to_folder": "Ugrás mappára"
     },
     "actions": {
       "reply": "Válasz",
@@ -2466,7 +2479,8 @@
       "global_search": "Keresés mindenben"
     },
     "threads": {
-      "expand_collapse": "Beszélgetés kibontása/összecsukása"
+      "expand_collapse": "Beszélgetés kibontása/összecsukása",
+      "select_mountain_view": "Beszélgetés kijelölése"
     },
     "composer": {
       "send": "E-mail küldése",

@@ -14,6 +14,12 @@ import type { IJMAPClient } from "@/lib/jmap/client-interface";
  * sidebar reads this cache to render a Thunderbird-style per-account folder
  * tree (see [[project_pro_mode]]). Outside Pro the cache stays empty.
  *
+ * Mountain View needs the same cache for a different reason: its account
+ * popover puts the unread waiting in each account next to that address, and
+ * the active login's folder list knows nothing about the others. It is only
+ * worth the extra round trips once a second account is connected - with one
+ * account the popover has nothing to compare.
+ *
  * Each login is loaded once per client, not once per connection: while a
  * browser restores its logins they connect one after another, and reloading
  * every connected account on each connection cost 1 + 2 + … + N folder lists
@@ -25,6 +31,7 @@ import type { IJMAPClient } from "@/lib/jmap/client-interface";
 export function useProMultiAccountMailboxes(): void {
   const isEmbedded = useIsEmbedded();
   const proInterface = useSettingsStore((s) => s.proInterface);
+  const mountainView = useSettingsStore((s) => s.interfaceLayout === "mountain-view");
   // The ids of the connected logins, as one string: `accounts` itself changes
   // for display-name and login-time updates that call for no fetch at all.
   const connectedSignature = useAccountStore((s) =>
@@ -35,8 +42,8 @@ export function useProMultiAccountMailboxes(): void {
   const lastActive = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!proInterface && !isEmbedded) return;
     const connected = connectedSignature ? connectedSignature.split("\n") : [];
+    if (!proInterface && !isEmbedded && !(mountainView && connected.length > 1)) return;
     if (connected.length === 0) return;
 
     if (lastActive.current !== null && lastActive.current !== activeAccountId) {
@@ -58,5 +65,5 @@ export function useProMultiAccountMailboxes(): void {
         if (!ok && loaded.current.get(id) === client) loaded.current.delete(id);
       });
     }
-  }, [proInterface, isEmbedded, connectedSignature, activeAccountId]);
+  }, [proInterface, isEmbedded, mountainView, connectedSignature, activeAccountId]);
 }

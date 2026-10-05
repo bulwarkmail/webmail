@@ -142,6 +142,8 @@
     "show_all_tags": "نمایش همه ({count})",
     "show_fewer_tags": "نمایش کمتر",
     "folders": "پوشه‌ها",
+    "show_more": "بیشتر",
+    "show_fewer": "کمتر",
     "shared": "اشتراکی",
     "mail": "ایمیل",
     "nav_label": "ناوبری",
@@ -237,6 +239,7 @@
     "replied": "پاسخ داده شده",
     "forwarded": "بازارسال شده",
     "has_attachment": "دارای پیوست",
+    "conversations_range": "{from}–{to, number} از {total, number}",
     "conversations_count": "{count} از {total} مکالمه",
     "conversations_count_plus": "+{count} مکالمه",
     "conversations_count_simple": "{count} مکالمه",
@@ -597,6 +600,9 @@
     }
   },
   "email_composer": {
+    "minimize": "کوچک کردن",
+    "maximize": "تمام‌صفحه",
+    "restore": "بازگردانی",
     "read_receipt_on": "درخواست تأیید خواندن فعال (کلیک برای غیرفعال کردن)",
     "read_receipt_off": "درخواست تأیید خواندن",
     "dsn_on": "اعلان تحویل درخواست شد (برای غیرفعال کردن کلیک کنید)",
@@ -1070,6 +1076,12 @@
         "compact": "فشرده",
         "regular": "معمولی",
         "comfortable": "راحت"
+      },
+      "interface_layout": {
+        "label": "چیدمان رابط",
+        "description": "جای جست‌وجو، ناوبری و نوارهای ابزار",
+        "default": "پیش‌فرض",
+        "mountain_view": "Mountain View"
       },
       "animations": {
         "label": "فعال کردن انیمیشن‌ها",
@@ -2444,7 +2456,8 @@
       "next_email": "ایمیل بعدی",
       "previous_email": "ایمیل قبلی",
       "open_email": "باز کردن ایمیل",
-      "close_email": "بستن / لغو انتخاب"
+      "close_email": "بستن / لغو انتخاب",
+      "go_to_folder": "رفتن به پوشه"
     },
     "actions": {
       "reply": "پاسخ",
@@ -2466,7 +2479,8 @@
       "global_search": "جستجو در همه جا"
     },
     "threads": {
-      "expand_collapse": "باز/بسته کردن رشته"
+      "expand_collapse": "باز/بسته کردن رشته",
+      "select_mountain_view": "انتخاب گفت‌وگو"
     },
     "composer": {
       "send": "ارسال ایمیل",

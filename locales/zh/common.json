@@ -142,6 +142,8 @@
     "show_all_tags": "显示全部（{count}）",
     "show_fewer_tags": "收起",
     "folders": "文件夹",
+    "show_more": "更多",
+    "show_fewer": "收起",
     "mail": "邮件",
     "nav_label": "导航",
     "add_app": "应用",
@@ -237,6 +239,7 @@
     "replied": "已回复",
     "forwarded": "已转发",
     "has_attachment": "有附件",
+    "conversations_range": "第 {from}–{to, number} 个，共 {total, number} 个",
     "conversations_count": "共 {total} 个会话，当前显示 {count} 个",
     "conversations_count_plus": "{count}+ 个会话",
     "conversations_count_simple": "{count} 个会话",
@@ -597,6 +600,9 @@
     }
   },
   "email_composer": {
+    "minimize": "最小化",
+    "maximize": "全屏",
+    "restore": "还原",
     "read_receipt_on": "已请求已读回执（点击以关闭）",
     "read_receipt_off": "请求已读回执",
     "dsn_on": "已请求投递通知（点击禁用）",
@@ -1067,6 +1073,12 @@
         "compact": "紧凑",
         "regular": "默认",
         "comfortable": "宽松"
+      },
+      "interface_layout": {
+        "label": "界面布局",
+        "description": "搜索、导航和工具栏的位置",
+        "default": "默认",
+        "mountain_view": "Mountain View"
       },
       "animations": {
         "label": "启用动画",
@@ -2444,7 +2456,8 @@
       "next_email": "下一封邮件",
       "previous_email": "上一封邮件",
       "open_email": "打开邮件",
-      "close_email": "关闭/取消选择"
+      "close_email": "关闭/取消选择",
+      "go_to_folder": "跳转到文件夹"
     },
     "actions": {
       "reply": "回复",
@@ -2466,7 +2479,8 @@
       "global_search": "全局搜索"
     },
     "threads": {
-      "expand_collapse": "展开/折叠会话"
+      "expand_collapse": "展开/折叠会话",
+      "select_mountain_view": "选择会话"
     },
     "composer": {
       "send": "发送邮件",

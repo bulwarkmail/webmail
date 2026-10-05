@@ -142,6 +142,8 @@
     "show_all_tags": "Pokaż wszystkie ({count})",
     "show_fewer_tags": "Pokaż mniej",
     "folders": "Foldery",
+    "show_more": "Więcej",
+    "show_fewer": "Mniej",
     "mail": "Poczta",
     "nav_label": "Nawigacja",
     "add_app": "Aplikacje",
@@ -237,6 +239,7 @@
     "replied": "Odpowiedziano",
     "forwarded": "Przekazano",
     "has_attachment": "Z załącznikiem",
+    "conversations_range": "{from}–{to, number} z {total, number}",
     "conversations_count": "{count} z {total} konwersacji",
     "conversations_count_plus": "{count}+ konwersacji",
     "conversations_count_simple": "{count} konwersacji",
@@ -597,6 +600,9 @@
     }
   },
   "email_composer": {
+    "minimize": "Minimalizuj",
+    "maximize": "Pełny ekran",
+    "restore": "Przywróć",
     "read_receipt_on": "Zażądano potwierdzenia przeczytania (kliknij, aby wyłączyć)",
     "read_receipt_off": "Zażądaj potwierdzenia przeczytania",
     "dsn_on": "Zażądano powiadomienia o dostarczeniu (kliknij, aby wyłączyć)",
@@ -1067,6 +1073,12 @@
         "compact": "Kompaktowy",
         "regular": "Zwykły",
         "comfortable": "Wygodny"
+      },
+      "interface_layout": {
+        "label": "Układ interfejsu",
+        "description": "Gdzie znajdują się wyszukiwarka, nawigacja i paski narzędzi",
+        "default": "Domyślny",
+        "mountain_view": "Mountain View"
       },
       "animations": {
         "label": "Włącz animacje",
@@ -2444,7 +2456,8 @@
       "next_email": "Następna wiadomość",
       "previous_email": "Poprzednia wiadomość",
       "open_email": "Otwórz wiadomość",
-      "close_email": "Zamknij / Odznacz"
+      "close_email": "Zamknij / Odznacz",
+      "go_to_folder": "Przejdź do folderu"
     },
     "actions": {
       "reply": "Odpowiedz",
@@ -2466,7 +2479,8 @@
       "global_search": "Szukaj wszędzie"
     },
     "threads": {
-      "expand_collapse": "Rozwiń/zwiń wątek"
+      "expand_collapse": "Rozwiń/zwiń wątek",
+      "select_mountain_view": "Zaznacz konwersację"
     },
     "composer": {
       "send": "Wyślij e-mail",

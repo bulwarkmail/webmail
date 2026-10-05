@@ -142,6 +142,8 @@
     "show_all_tags": "Alles tonen ({count})",
     "show_fewer_tags": "Minder tonen",
     "folders": "Mappen",
+    "show_more": "Meer",
+    "show_fewer": "Minder",
     "mail": "E-mail",
     "nav_label": "Navigatie",
     "add_app": "Apps",
@@ -237,6 +239,7 @@
     "replied": "Beantwoord",
     "forwarded": "Doorgestuurd",
     "has_attachment": "Met bijlage",
+    "conversations_range": "{from}–{to, number} van {total, number}",
     "conversations_count": "{count} van {total} gesprekken",
     "conversations_count_plus": "{count}+ gesprekken",
     "conversations_count_simple": "{count} gesprekken",
@@ -597,6 +600,9 @@
     }
   },
   "email_composer": {
+    "minimize": "Minimaliseren",
+    "maximize": "Volledig scherm",
+    "restore": "Herstellen",
     "read_receipt_on": "Leesbevestiging aangevraagd (klik om uit te schakelen)",
     "read_receipt_off": "Leesbevestiging aanvragen",
     "dsn_on": "Bezorgmelding aangevraagd (klik om uit te schakelen)",
@@ -1067,6 +1073,12 @@
         "compact": "Compact",
         "regular": "Normaal",
         "comfortable": "Comfortabel"
+      },
+      "interface_layout": {
+        "label": "Interface-indeling",
+        "description": "Waar zoeken, navigatie en werkbalken staan",
+        "default": "Standaard",
+        "mountain_view": "Mountain View"
       },
       "animations": {
         "label": "Animaties inschakelen",
@@ -2444,7 +2456,8 @@
       "next_email": "Volgende e-mail",
       "previous_email": "Vorige e-mail",
       "open_email": "E-mail openen",
-      "close_email": "Sluiten / Deselecteren"
+      "close_email": "Sluiten / Deselecteren",
+      "go_to_folder": "Ga naar map"
     },
     "actions": {
       "reply": "Beantwoorden",
@@ -2466,7 +2479,8 @@
       "global_search": "Alles doorzoeken"
     },
     "threads": {
-      "expand_collapse": "Gesprek uitklappen/inklappen"
+      "expand_collapse": "Gesprek uitklappen/inklappen",
+      "select_mountain_view": "Gesprek selecteren"
     },
     "composer": {
       "send": "E-mail verzenden",

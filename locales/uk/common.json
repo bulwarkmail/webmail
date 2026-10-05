@@ -142,6 +142,8 @@
     "show_all_tags": "Показати всі ({count})",
     "show_fewer_tags": "Показати менше",
     "folders": "Папки",
+    "show_more": "Більше",
+    "show_fewer": "Менше",
     "mail": "Пошта",
     "nav_label": "Навігація",
     "add_app": "програми",
@@ -237,6 +239,7 @@
     "replied": "Відповіли",
     "forwarded": "Переслано",
     "has_attachment": "З вкладенням",
+    "conversations_range": "{from}–{to, number} з {total, number}",
     "conversations_count": "{count} з {total} розмов",
     "conversations_count_plus": "{count}+ розмов",
     "conversations_count_simple": "{count} розмов",
@@ -597,6 +600,9 @@
     }
   },
   "email_composer": {
+    "minimize": "Згорнути",
+    "maximize": "На весь екран",
+    "restore": "Відновити",
     "read_receipt_on": "Запитано сповіщення про прочитання (натисніть, щоб вимкнути)",
     "read_receipt_off": "Запитати сповіщення про прочитання",
     "dsn_on": "Запитано сповіщення про доставку (натисніть, щоб вимкнути)",
@@ -1067,6 +1073,12 @@
         "compact": "Компактний",
         "regular": "Регулярний",
         "comfortable": "Комфортно"
+      },
+      "interface_layout": {
+        "label": "Макет інтерфейсу",
+        "description": "Де розташовані пошук, навігація та панелі інструментів",
+        "default": "За замовчуванням",
+        "mountain_view": "Mountain View"
       },
       "animations": {
         "label": "Увімкнути анімацію",
@@ -2444,7 +2456,8 @@
       "next_email": "Наступний електронний лист",
       "previous_email": "Попередній електронний лист",
       "open_email": "Відкрийте електронну пошту",
-      "close_email": "Закрити / Скасувати вибір"
+      "close_email": "Закрити / Скасувати вибір",
+      "go_to_folder": "Перейти до теки"
     },
     "actions": {
       "reply": "Відповісти",
@@ -2466,7 +2479,8 @@
       "global_search": "Шукати скрізь"
     },
     "threads": {
-      "expand_collapse": "Розгорнути/згорнути ланцюжок"
+      "expand_collapse": "Розгорнути/згорнути ланцюжок",
+      "select_mountain_view": "Вибрати листування"
     },
     "composer": {
       "send": "Надіслати лист",

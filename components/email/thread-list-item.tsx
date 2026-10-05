@@ -12,6 +12,7 @@ import { SelectableAvatar } from "@/components/email/selectable-avatar";
 import { Paperclip, Star, Pin, Circle, ChevronRight, ChevronDown, Loader2, MessageSquare, CheckSquare, Square, Reply, Forward, CalendarClock, Folder, Archive, Trash2, MailOpen, ShieldAlert } from "@/components/icons";
 import type { AppIcon } from "@/components/icons";
 import { useSettingsStore, KEYWORD_PALETTE } from "@/stores/settings-store";
+import { useEffectiveMailLayout } from "@/hooks/use-effective-mail-layout";
 import { accountTintKey, generateAvatarColor } from "@/lib/account-utils";
 import { useUIStore } from "@/stores/ui-store";
 import { useEmailStore } from "@/stores/email-store";
@@ -64,6 +65,101 @@ function RowChips({ email, loadAttachments, onOpenAttachment }: {
     return <ListAttachmentChips email={email} load={loadAttachments} onOpen={onOpenAttachment} leading={leading} className="mt-1.5" />;
   }
   return leading ? <div className="mt-1.5 flex">{leading}</div> : null;
+}
+
+/**
+ * Mountain View's leading controls: a checkbox and a star, both always
+ * visible and both acting on the row without opening it. They take the slot
+ * the default layout gives to the sender avatar.
+ */
+function MvRowLead({
+  checked,
+  onToggleChecked,
+  starred,
+  onToggleStar,
+  selectLabel,
+  starLabel,
+}: {
+  checked: boolean;
+  onToggleChecked: (e: React.MouseEvent) => void;
+  starred: boolean;
+  onToggleStar?: () => void;
+  selectLabel: string;
+  starLabel: string;
+}) {
+  return (
+    <div className="flex items-center gap-0.5 flex-shrink-0 self-center">
+      <button
+        type="button"
+        role="checkbox"
+        aria-checked={checked}
+        aria-label={selectLabel}
+        onClick={onToggleChecked}
+        className={cn(
+          "p-1 rounded-full transition-colors hover:bg-foreground/10",
+          checked && "text-primary"
+        )}
+      >
+        {checked ? (
+          <CheckSquare className="w-[18px] h-[18px]" />
+        ) : (
+          <Square className="w-[18px] h-[18px] text-muted-foreground" />
+        )}
+      </button>
+      {onToggleStar && (
+        <button
+          type="button"
+          aria-label={starLabel}
+          aria-pressed={starred}
+          title={starLabel}
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleStar();
+          }}
+          className="p-1 rounded-full transition-colors hover:bg-foreground/10"
+        >
+          <Star
+            className={cn(
+              "w-[18px] h-[18px]",
+              starred ? "fill-amber-400 text-amber-400" : "text-muted-foreground/60"
+            )}
+          />
+        </button>
+      )}
+    </div>
+  );
+}
+
+function MvMobileStar({
+  starred,
+  onToggle,
+  label,
+}: {
+  starred: boolean;
+  onToggle?: () => void;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      aria-pressed={starred}
+      title={label}
+      disabled={!onToggle}
+      onClick={(event) => {
+        event.stopPropagation();
+        onToggle?.();
+      }}
+      className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-foreground/10 disabled:pointer-events-none"
+    >
+      <Star
+        className={cn(
+          "h-[18px] w-[18px]",
+          starred ? "fill-amber-400 text-amber-400" : "text-muted-foreground/70"
+        )}
+      />
+    </button>
+  );
 }
 
 function StatusIcon({ icon: Icon, label, className }: { icon: AppIcon; label: string; className: string }) {
@@ -178,6 +274,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
   function SingleEmailItem({ email, selected, onClick, onDoubleClick, onContextMenu, showPreview, rowTint, onToggleStar, onMarkAsRead, onDelete, onArchive, onSetTag, onMarkAsSpam, onUndoSpam, onOpenAttachment, loadAttachments }, ref) {
     const t = useTranslations('email_viewer');
     const tBatch = useTranslations('email_list.batch_actions');
+    const tHover = useTranslations('settings.email_behavior.hover_actions');
     const tStatus = useTranslations('email_list');
     const isUnread = !email.keywords?.$seen;
     const isStarred = email.keywords?.$flagged;
@@ -198,9 +295,10 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
     const tintListRowsByTag = useSettingsStore((state) => state.tintListRowsByTag);
     const tintListRowsByAccount = useSettingsStore((state) => state.tintListRowsByAccount);
     const density = useSettingsStore((state) => state.density);
-    const mailLayout = useSettingsStore((state) => state.mailLayout);
+    const mailLayout = useEffectiveMailLayout();
     const timeFormat = useSettingsStore((state) => state.timeFormat);
     const showAvatarsInJunk = useSettingsStore((state) => state.showAvatarsInJunk);
+    const interfaceLayout = useSettingsStore((state) => state.interfaceLayout);
     const hideJunkAvatarImages = currentMailboxRole === 'junk' && !showAvatarsInJunk;
     // Show the originating folder in the aggregate "All …" views.
     const showSourceFolder = isUnifiedView && !!email.sourceFolder;
@@ -212,6 +310,12 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
     const isMobile = useUIStore((state) => state.isMobile);
     // The horizontal one-line "focus" layout doesn't fit on narrow screens; fall back to multi-line on mobile.
     const isFocusedMailLayout = mailLayout === 'focus' && !isMobile;
+    // Mountain View leads its rows with a checkbox and a clickable star
+    // instead of an avatar, and marks unread with weight alone. Only the
+    // one-line layout is shaped that way, so the two conditions travel
+    // together.
+    const mvRow = interfaceLayout === 'mountain-view' && isFocusedMailLayout;
+    const mvMobileRow = interfaceLayout === 'mountain-view' && isMobile;
     const trimmedPreview = cleanPreview(email.preview);
     const inlinePreview = showPreview && trimmedPreview ? ` ${trimmedPreview}` : '';
     // Search hits carry server snippets with the matched terms marked; they
@@ -337,19 +441,23 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
         data-subject={email.subject || ''}
         data-unread={isUnread ? 'true' : 'false'}
         data-starred={email.keywords?.$flagged ? 'true' : 'false'}
+        data-mv-mobile-row={mvMobileRow ? "" : undefined}
         aria-current={selected ? 'true' : undefined}
         className={cn(
           "relative group cursor-pointer select-none transition-shadow duration-200 border-b border-border overflow-hidden",
+          mvMobileRow && "border-b-transparent",
           resolvedRowTint ? resolvedRowTint : (
             selected
               ? "bg-accent"
-              : "bg-background"
+              : mvRow && !isUnread
+                ? "bg-muted/60"
+                : "bg-background"
           ),
           selected && !resolvedRowTint && "shadow-sm",
           !resolvedRowTint && !selected && !isChecked && "hover:bg-muted hover:shadow-sm",
           !resolvedRowTint && (selected || isChecked) && "hover:bg-accent hover:shadow-sm",
           resolvedRowTint && "hover:brightness-95 dark:hover:brightness-110",
-          isUnread && !resolvedRowTint && "bg-accent/30",
+          isUnread && !resolvedRowTint && !mvRow && !mvMobileRow && "bg-accent/30",
           isChecked && "ring-2 ring-primary/20",
           isChecked && !resolvedRowTint && "bg-accent/40",
           isDragging && "opacity-50 scale-[0.98] ring-2 ring-primary/30",
@@ -384,7 +492,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
           style={{ gap: 'var(--density-item-gap)', paddingBlock: 'var(--density-item-py)', transform: swipeEnabled && offsetX ? `translateX(${offsetX}px)` : undefined, transition: swipeEnabled && offsetX === 0 ? 'transform 200ms ease-out' : undefined }}
         >
           {/* Checkbox - only for extra-compact density (no avatar) while in selection mode */}
-          {density === 'extra-compact' && selectedEmailIds.size > 0 && (
+          {!mvRow && density === 'extra-compact' && selectedEmailIds.size > 0 && (
             <button
               onClick={handleCheckboxClick}
               role="checkbox"
@@ -407,7 +515,18 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
             </button>
           )}
 
-          {density !== 'extra-compact' && (
+          {mvRow && (
+            <MvRowLead
+              checked={isChecked}
+              onToggleChecked={handleCheckboxClick}
+              starred={!!isStarred}
+              onToggleStar={onToggleStar}
+              selectLabel={tBatch('select')}
+              starLabel={tHover('star')}
+            />
+          )}
+
+          {!mvRow && density !== 'extra-compact' && (
             <div className="relative flex flex-shrink-0 self-center">
               <SelectableAvatar
                 name={sender?.name}
@@ -423,12 +542,13 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
             </div>
           )}
 
-          {isUnread && density === 'extra-compact' && (
+          {isUnread && !mvRow && density === 'extra-compact' && (
             <UnreadDot besideAvatar={false} />
           )}
 
           <div className="flex-1 min-w-0">
             {isFocusedMailLayout ? (
+              <>
               <div className="flex items-center justify-between gap-3">
                 <div className="flex min-w-0 flex-1 items-center gap-3">
                   {isUnifiedView && email.accountId && accountColor && !tintListRowsByAccount && (
@@ -469,7 +589,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                 </div>
                 <div className="flex items-center gap-2.5 shrink-0">
                   {isPinned && <StatusIcon icon={Pin} label={tStatus('pinned')} className="w-3.5 h-3.5 text-primary" />}
-                  {isStarred && <StatusIcon icon={Star} label={tStatus('starred')} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />}
+                  {isStarred && !mvRow && <StatusIcon icon={Star} label={tStatus('starred')} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />}
                   {isAnswered && !isForwarded && <StatusIcon icon={Reply} label={tStatus('replied')} className="w-3.5 h-3.5 text-muted-foreground" />}
                   {isForwarded && !isAnswered && <StatusIcon icon={Forward} label={tStatus('forwarded')} className="w-3.5 h-3.5 text-muted-foreground" />}
                   {isAnswered && isForwarded && (
@@ -498,6 +618,10 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                   )}
                 </div>
               </div>
+              {mvRow && (
+                <RowChips email={email} loadAttachments={loadAttachments} onOpenAttachment={onOpenAttachment} />
+              )}
+              </>
             ) : (
               <>
                 <div className="flex items-center justify-between gap-2 mb-1">
@@ -530,7 +654,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                       {isPinned && (
                         <StatusIcon icon={Pin} label={tStatus('pinned')} className="w-3.5 h-3.5 text-primary" />
                       )}
-                      {isStarred && (
+                      {isStarred && !mvMobileRow && (
                         <StatusIcon icon={Star} label={tStatus('starred')} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
                       )}
                       {isAnswered && !isForwarded && (
@@ -570,6 +694,13 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                         {formatDate(email.receivedAt)}
                       </span>
                     )}
+                    {mvMobileRow && !(showPreview && density !== 'extra-compact' && density !== 'compact') && (
+                      <MvMobileStar
+                        starred={!!isStarred}
+                        onToggle={onToggleStar}
+                        label={tHover('star')}
+                      />
+                    )}
                   </div>
                 </div>
 
@@ -592,14 +723,24 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                 </div>
 
                 {showPreview && density !== 'extra-compact' && density !== 'compact' && (
-                  <p className={cn(
-                    "text-sm leading-relaxed line-clamp-2",
-                    isUnread
-                      ? "text-muted-foreground"
-                      : "text-muted-foreground/80"
-                  )}>
-                    {previewSnippet ? <SearchSnippetText snippet={previewSnippet} /> : (trimmedPreview || t('no_preview_available'))}
-                  </p>
+                  <div className={cn("flex min-w-0 items-center gap-1", !mvMobileRow && "contents")}>
+                    <p className={cn(
+                      "text-sm leading-relaxed",
+                      mvMobileRow ? "line-clamp-1 min-w-0 flex-1" : "line-clamp-2",
+                      isUnread
+                        ? "text-muted-foreground"
+                        : "text-muted-foreground/80"
+                    )}>
+                      {previewSnippet ? <SearchSnippetText snippet={previewSnippet} /> : (trimmedPreview || t('no_preview_available'))}
+                    </p>
+                    {mvMobileRow && (
+                      <MvMobileStar
+                        starred={!!isStarred}
+                        onToggle={onToggleStar}
+                        label={tHover('star')}
+                      />
+                    )}
+                  </div>
                 )}
                 <RowChips email={email} loadAttachments={loadAttachments} onOpenAttachment={onOpenAttachment} />
               </>
@@ -654,16 +795,24 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
     const t = useTranslations('threads');
     const tEmailViewer = useTranslations('email_viewer');
     const tBatch = useTranslations('email_list.batch_actions');
+    const tHover = useTranslations('settings.email_behavior.hover_actions');
     const tStatus = useTranslations('email_list');
     const showPreview = useSettingsStore((state) => state.showPreview);
     const density = useSettingsStore((state) => state.density);
-    const mailLayout = useSettingsStore((state) => state.mailLayout);
+    const mailLayout = useEffectiveMailLayout();
     const timeFormat = useSettingsStore((state) => state.timeFormat);
     const showAvatarsInJunk = useSettingsStore((state) => state.showAvatarsInJunk);
+    const interfaceLayout = useSettingsStore((state) => state.interfaceLayout);
     const isMobile = useUIStore((state) => state.isMobile);
     const { latestEmail, participantNames, hasUnread, hasStarred, hasPinned, hasAttachment, hasAnswered, hasForwarded, emailCount } = thread;
     // The horizontal one-line "focus" layout doesn't fit on narrow screens; fall back to multi-line on mobile.
     const isFocusedMailLayout = mailLayout === 'focus' && !isMobile;
+    // Mountain View leads its rows with a checkbox and a clickable star
+    // instead of an avatar, and marks unread with weight alone. Only the
+    // one-line layout is shaped that way, so the two conditions travel
+    // together.
+    const mvRow = interfaceLayout === 'mountain-view' && isFocusedMailLayout;
+    const mvMobileRow = interfaceLayout === 'mountain-view' && isMobile;
     const trimmedPreview = cleanPreview(latestEmail.preview);
     const inlinePreview = showPreview && trimmedPreview ? ` ${trimmedPreview}` : '';
     // In a search the matched mail need not be the thread's latest one: show
@@ -817,23 +966,31 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
     };
 
     return (
-      <div ref={ref} className={cn("border-b border-border", isThreadDragging && "opacity-50 scale-[0.98] ring-2 ring-primary/30")}>
+      <div ref={ref} className={cn(
+        "border-b border-border",
+        mvMobileRow && "border-b-transparent",
+        isThreadDragging && "opacity-50 scale-[0.98] ring-2 ring-primary/30"
+      )}>
         <div
           {...dragHandlers}
           {...threadLongPressHandlers}
           aria-current={isSelected ? 'true' : undefined}
+          data-unread={hasUnread ? 'true' : 'false'}
+          data-mv-mobile-row={mvMobileRow ? "" : undefined}
           className={cn(
             "relative group cursor-pointer select-none transition-shadow duration-200 overflow-hidden",
             rowTint ? rowTint : (
               isSelected
                 ? "bg-accent"
-                : "bg-background"
+                : mvRow && !hasUnread
+                  ? "bg-muted/60"
+                  : "bg-background"
             ),
             isSelected && !rowTint && "shadow-sm",
             !rowTint && !isSelected && !isChecked && "hover:bg-muted hover:shadow-sm",
             !rowTint && (isSelected || isChecked) && "hover:bg-accent hover:shadow-sm",
             rowTint && "hover:brightness-95 dark:hover:brightness-110",
-            hasUnread && !rowTint && !isSelected && "bg-accent/30",
+            hasUnread && !rowTint && !isSelected && !mvRow && !mvMobileRow && "bg-accent/30",
             isExpanded && "border-b border-border/50",
             isChecked && "ring-2 ring-primary/20",
             isChecked && !rowTint && "bg-accent/40",
@@ -855,7 +1012,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
             style={{ gap: 'var(--density-item-gap)', paddingBlock: 'var(--density-item-py)' }}
           >
             {/* Checkbox for thread selection - only for extra-compact density (no avatar) while in selection mode */}
-            {density === 'extra-compact' && selectedEmailIds.size > 0 && (
+            {!mvRow && density === 'extra-compact' && selectedEmailIds.size > 0 && (
               <button
                 onClick={handleThreadCheckboxClick}
                 role="checkbox"
@@ -878,7 +1035,18 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
               </button>
             )}
 
-            {density !== 'extra-compact' && (
+            {mvRow && (
+              <MvRowLead
+                checked={isChecked}
+                onToggleChecked={handleThreadCheckboxClick}
+                starred={!!hasStarred}
+                onToggleStar={onToggleStar ? () => onToggleStar(latestEmail) : undefined}
+                selectLabel={tBatch('select')}
+                starLabel={tHover('star')}
+              />
+            )}
+
+            {!mvRow && density !== 'extra-compact' && (
               <div className="relative flex-shrink-0 self-center">
                 <SelectableAvatar
                   name={avatarPerson?.name}
@@ -921,12 +1089,13 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
               </div>
             )}
 
-            {hasUnread && density === 'extra-compact' && (
+            {hasUnread && !mvRow && density === 'extra-compact' && (
               <UnreadDot besideAvatar={false} />
             )}
 
             <div className="flex-1 min-w-0">
               {isFocusedMailLayout ? (
+                <>
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex min-w-0 flex-1 items-center gap-3">
                     {isUnifiedView && latestEmail.accountId && threadAccountColor && !tintListRowsByAccount && (
@@ -973,7 +1142,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                   </div>
                   <div className="flex items-center gap-2.5 shrink-0">
                     {hasPinned && <StatusIcon icon={Pin} label={tStatus('pinned')} className="w-3.5 h-3.5 text-primary" />}
-                    {hasStarred && <StatusIcon icon={Star} label={tStatus('starred')} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />}
+                    {hasStarred && !mvRow && <StatusIcon icon={Star} label={tStatus('starred')} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />}
                     {hasAnswered && !hasForwarded && <StatusIcon icon={Reply} label={tStatus('replied')} className="w-3.5 h-3.5 text-muted-foreground" />}
                     {hasForwarded && !hasAnswered && <StatusIcon icon={Forward} label={tStatus('forwarded')} className="w-3.5 h-3.5 text-muted-foreground" />}
                     {hasAnswered && hasForwarded && (
@@ -1002,6 +1171,14 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                     )}
                   </div>
                 </div>
+                {mvRow && (
+                  <RowChips
+                    email={latestEmail}
+                    loadAttachments={loadAttachments}
+                    onOpenAttachment={onOpenAttachment ? (a) => onOpenAttachment(latestEmail, a) : undefined}
+                  />
+                )}
+                </>
               ) : (
                 <>
                   <div className="flex items-center justify-between gap-2 mb-1">
@@ -1037,7 +1214,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                         {hasPinned && (
                           <StatusIcon icon={Pin} label={tStatus('pinned')} className="w-3.5 h-3.5 text-primary" />
                         )}
-                        {hasStarred && (
+                        {hasStarred && !mvMobileRow && (
                           <StatusIcon icon={Star} label={tStatus('starred')} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
                         )}
                         {hasAnswered && !hasForwarded && (
@@ -1077,6 +1254,13 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                           {formatDate(latestEmail.receivedAt)}
                         </span>
                       )}
+                      {mvMobileRow && !(showPreview && density !== 'extra-compact' && density !== 'compact') && (
+                        <MvMobileStar
+                          starred={!!hasStarred}
+                          onToggle={onToggleStar ? () => onToggleStar(latestEmail) : undefined}
+                          label={tHover('star')}
+                        />
+                      )}
                     </div>
                   </div>
 
@@ -1099,14 +1283,24 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                   </div>
 
                   {showPreview && density !== 'extra-compact' && density !== 'compact' && (
-                    <p className={cn(
-                      "text-sm leading-relaxed line-clamp-2",
-                      hasUnread
-                        ? "text-muted-foreground"
-                        : "text-muted-foreground/80"
-                    )}>
-                      {previewSnippet ? <SearchSnippetText snippet={previewSnippet} /> : (trimmedPreview || tEmailViewer('no_preview_available'))}
-                    </p>
+                    <div className={cn("flex min-w-0 items-center gap-1", !mvMobileRow && "contents")}>
+                      <p className={cn(
+                        "text-sm leading-relaxed",
+                        mvMobileRow ? "line-clamp-1 min-w-0 flex-1" : "line-clamp-2",
+                        hasUnread
+                          ? "text-muted-foreground"
+                          : "text-muted-foreground/80"
+                      )}>
+                        {previewSnippet ? <SearchSnippetText snippet={previewSnippet} /> : (trimmedPreview || tEmailViewer('no_preview_available'))}
+                      </p>
+                      {mvMobileRow && (
+                        <MvMobileStar
+                          starred={!!hasStarred}
+                          onToggle={onToggleStar ? () => onToggleStar(latestEmail) : undefined}
+                          label={tHover('star')}
+                        />
+                      )}
+                    </div>
                   )}
                   <RowChips
                     email={latestEmail}

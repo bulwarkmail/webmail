@@ -133,6 +133,8 @@
     "show_all_tags": "הצג הכל ({count})",
     "show_fewer_tags": "הצג פחות",
     "folders": "תיקיות",
+    "show_more": "עוד",
+    "show_fewer": "פחות",
     "mail": "דוֹאַר",
     "nav_label": "ניווט",
     "add_app": "אפליקציות",
@@ -202,6 +204,7 @@
     "replied": "נענה",
     "forwarded": "הועבר",
     "has_attachment": "כולל קובץ מצורף",
+    "conversations_range": "{from}–{to, number} מתוך {total, number}",
     "conversations_count": "{count}מתוך שיחות{total}",
     "conversations_count_plus": "{count}+ שיחות",
     "conversations_count_simple": "שיחות{count}",
@@ -562,6 +565,9 @@
     }
   },
   "email_composer": {
+    "minimize": "מזעור",
+    "maximize": "מסך מלא",
+    "restore": "שחזור",
     "new_message": "הודעה חדשה",
     "signature_edit_hint": "לחץ לחיצה כפולה לעריכת החתימה",
     "reply": "השב",
@@ -1032,6 +1038,12 @@
         "compact": "קומפקטי",
         "regular": "רגיל",
         "comfortable": "נוח"
+      },
+      "interface_layout": {
+        "label": "פריסת הממשק",
+        "description": "היכן ממוקמים החיפוש, הניווט וסרגלי הכלים",
+        "default": "ברירת מחדל",
+        "mountain_view": "Mountain View"
       },
       "animations": {
         "label": "הפעל אנימציות",
@@ -2368,7 +2380,8 @@
       "next_email": "המייל הבא",
       "previous_email": "אימייל קודם",
       "open_email": "פתח אימייל",
-      "close_email": "סגור / בטל בחירה"
+      "close_email": "סגור / בטל בחירה",
+      "go_to_folder": "מעבר לתיקייה"
     },
     "actions": {
       "reply": "השב",
@@ -2390,7 +2403,8 @@
       "global_search": "חיפוש בכל מקום"
     },
     "threads": {
-      "expand_collapse": "הרחב/כווץ את השרשור"
+      "expand_collapse": "הרחב/כווץ את השרשור",
+      "select_mountain_view": "בחירת השיחה"
     },
     "composer": {
       "template_picker": "פתח את בוחר התבניות",

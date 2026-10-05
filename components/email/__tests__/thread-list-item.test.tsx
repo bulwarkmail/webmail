@@ -1,8 +1,9 @@
-import { render, screen, act } from '@testing-library/react';
+import { render, screen, act, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ThreadListItem } from '../thread-list-item';
 import { useSettingsStore, DEFAULT_KEYWORDS } from '@/stores/settings-store';
 import { useEmailStore } from '@/stores/email-store';
+import { useUIStore } from '@/stores/ui-store';
 import { groupEmailsByThread } from '@/lib/thread-utils';
 import type { Email } from '@/lib/jmap/types';
 
@@ -60,12 +61,17 @@ function renderRow(email: Email) {
   );
 }
 
+beforeEach(() => {
+  useUIStore.setState({ isMobile: false, isTablet: false, isDesktop: true });
+});
+
 describe('ThreadListItem tag badge', () => {
   beforeEach(() => {
     useSettingsStore.setState({
       emailKeywords: [...DEFAULT_KEYWORDS],
       showPreview: false,
       mailLayout: 'split',
+      interfaceLayout: 'default',
     });
     useEmailStore.setState({
       selectedEmailIds: new Set<string>(),
@@ -139,6 +145,7 @@ describe('ThreadListItem multi-message thread', () => {
       emailKeywords: [...DEFAULT_KEYWORDS],
       showPreview: false,
       mailLayout: 'split',
+      interfaceLayout: 'default',
     });
     useEmailStore.setState({
       selectedEmailIds: new Set<string>(),
@@ -200,6 +207,7 @@ describe('ThreadListItem row content', () => {
       emailKeywords: [...DEFAULT_KEYWORDS],
       showPreview: false,
       mailLayout: 'split',
+      interfaceLayout: 'default',
     });
     useEmailStore.setState({
       selectedEmailIds: new Set<string>(),
@@ -223,6 +231,51 @@ describe('ThreadListItem row content', () => {
     // rather than getting a paragraph of its own.
     expect(container.querySelector('p')).toBeNull();
   });
+
+  it('puts the star at the trailing edge in the Mountain View phone row', () => {
+    useSettingsStore.setState({ interfaceLayout: 'mountain-view', mailLayout: 'split' });
+    useUIStore.setState({ isMobile: true, isTablet: false, isDesktop: false });
+    const onToggleStar = vi.fn();
+    const [thread] = groupEmailsByThread([makeEmail()]);
+    const { container } = render(
+      <ThreadListItem
+        thread={thread}
+        isExpanded={false}
+        onToggleExpand={() => {}}
+        onEmailSelect={() => {}}
+        onToggleStar={onToggleStar}
+      />,
+    );
+
+    const star = container.querySelector<HTMLButtonElement>('[data-mv-mobile-row] button[aria-pressed]');
+    expect(star).not.toBeNull();
+    fireEvent.click(star!);
+
+    expect(onToggleStar).toHaveBeenCalledTimes(1);
+    expect(container.querySelector('[data-mv-mobile-row]')).toBeInTheDocument();
+  });
+});
+
+describe('ThreadListItem Mountain View phone row layout', () => {
+  it('sets the star at the end of the preview line, not under the time', () => {
+    useSettingsStore.setState({ interfaceLayout: 'mountain-view', mailLayout: 'split', showPreview: true, density: 'regular' } as never);
+    useUIStore.setState({ isMobile: true, isTablet: false, isDesktop: false });
+    const [thread] = groupEmailsByThread([makeEmail()]);
+    const { container } = render(
+      <ThreadListItem
+        thread={thread}
+        isExpanded={false}
+        onToggleExpand={() => {}}
+        onEmailSelect={() => {}}
+        onToggleStar={() => {}}
+      />,
+    );
+
+    const stars = container.querySelectorAll('[data-mv-mobile-row] button[aria-pressed]');
+    expect(stars).toHaveLength(1);
+    // Same line as the preview text: snippet ... star.
+    expect(stars[0].parentElement?.querySelector('p')).not.toBeNull();
+  });
 });
 
 describe('ThreadListItem shift-range avatar selection', () => {
@@ -231,6 +284,7 @@ describe('ThreadListItem shift-range avatar selection', () => {
       emailKeywords: [...DEFAULT_KEYWORDS],
       showPreview: false,
       mailLayout: 'split',
+      interfaceLayout: 'default',
     });
   });
 
@@ -268,6 +322,7 @@ describe('ThreadListItem row tint', () => {
       emailKeywords: [...DEFAULT_KEYWORDS],
       showPreview: false,
       mailLayout: 'split',
+      interfaceLayout: 'default',
       tintListRowsByTag: true,
     });
     useEmailStore.setState({
@@ -311,6 +366,7 @@ describe('ThreadListItem account row tint', () => {
       emailKeywords: [...DEFAULT_KEYWORDS],
       showPreview: false,
       mailLayout: 'split',
+      interfaceLayout: 'default',
       tintListRowsByTag: true,
       tintListRowsByAccount: false,
     });

@@ -142,6 +142,8 @@
     "show_all_tags": "Бүгдийг нь харуулах ({count})",
     "show_fewer_tags": "Бага харуулах",
     "folders": "Хавтас",
+    "show_more": "Илүү",
+    "show_fewer": "Бага",
     "shared": "Хуваалцсан",
     "mail": "Мэйл",
     "nav_label": "Навигаци",
@@ -237,6 +239,7 @@
     "replied": "Хариулсан",
     "forwarded": "Дамжуулсан",
     "has_attachment": "Хавсралттай",
+    "conversations_range": "{from}–{to, number} / {total, number}",
     "conversations_count": "{total} харилцан ярианы {count}",
     "conversations_count_plus": "{count}+ харилцан яриа",
     "conversations_count_simple": "{count} харилцан яриа",
@@ -597,6 +600,9 @@
     }
   },
   "email_composer": {
+    "minimize": "Багасгах",
+    "maximize": "Бүтэн дэлгэц",
+    "restore": "Сэргээх",
     "read_receipt_on": "Уншсан баримт хүссэн (идэвхгүй болгохын тулд дарна уу)",
     "read_receipt_off": "Уншсан баримт хүсэх",
     "dsn_on": "Хүргэлтийн мэдэгдэл хүссэн (идэвхгүй болгох бол дарна уу)",
@@ -1070,6 +1076,12 @@
         "compact": "Компакт",
         "regular": "Тогтмол",
         "comfortable": "Тав тухтай"
+      },
+      "interface_layout": {
+        "label": "Интерфейсийн байрлал",
+        "description": "Хайлт, навигаци, хэрэгслийн мөр хаана байрлах",
+        "default": "Үндсэн",
+        "mountain_view": "Mountain View"
       },
       "animations": {
         "label": "Анимацийг идэвхжүүлэх",
@@ -2444,7 +2456,8 @@
       "next_email": "Дараагийн имэйл",
       "previous_email": "Өмнөх имэйл",
       "open_email": "Имэйл нээх",
-      "close_email": "Хаах / Сонголтыг цуцлах"
+      "close_email": "Хаах / Сонголтыг цуцлах",
+      "go_to_folder": "Хавтас руу очих"
     },
     "actions": {
       "reply": "Хариулах",
@@ -2466,7 +2479,8 @@
       "global_search": "Бүгдийг хайх"
     },
     "threads": {
-      "expand_collapse": "Хэлхээсийг дэлгэх/хумих"
+      "expand_collapse": "Хэлхээсийг дэлгэх/хумих",
+      "select_mountain_view": "Харилцааг сонгох"
     },
     "composer": {
       "send": "Имэйл илгээх",

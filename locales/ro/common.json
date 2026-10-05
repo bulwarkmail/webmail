@@ -142,6 +142,8 @@
     "show_all_tags": "Afișează tot ({count})",
     "show_fewer_tags": "Afișează mai puține",
     "folders": "Dosare",
+    "show_more": "Mai multe",
+    "show_fewer": "Mai puține",
     "shared": "Partajat",
     "mail": "E-mail",
     "nav_label": "Navigare",
@@ -237,6 +239,7 @@
     "replied": "Răspuns",
     "forwarded": "Redirecționat",
     "has_attachment": "Cu atașament",
+    "conversations_range": "{from}–{to, number} din {total, number}",
     "conversations_count": "{count} din conversațiile de pe {total}",
     "conversations_count_plus": "{count}+ conversations",
     "conversations_count_simple": "{count} conversații",
@@ -597,6 +600,9 @@
     }
   },
   "email_composer": {
+    "minimize": "Minimizează",
+    "maximize": "Ecran complet",
+    "restore": "Restabilește",
     "read_receipt_on": "Solicitare confirmare de citire (faceți clic pentru a dezactiva)",
     "read_receipt_off": "Solicitați o confirmare de citire",
     "dsn_on": "Notificare de livrare solicitată (clic pentru a dezactiva)",
@@ -1070,6 +1076,12 @@
         "compact": "Compact",
         "regular": "Regulat",
         "comfortable": "Confortabil"
+      },
+      "interface_layout": {
+        "label": "Aspectul interfeței",
+        "description": "Unde se află căutarea, navigarea și barele de instrumente",
+        "default": "Implicit",
+        "mountain_view": "Mountain View"
       },
       "animations": {
         "label": "Activați animațiile",
@@ -2444,7 +2456,8 @@
       "next_email": "Următorul e-mail",
       "previous_email": "E-mailul anterior",
       "open_email": "Deschide e-mailul",
-      "close_email": "Închide / Deselectează"
+      "close_email": "Închide / Deselectează",
+      "go_to_folder": "Mergi la dosar"
     },
     "actions": {
       "reply": "Răspunde",
@@ -2466,7 +2479,8 @@
       "global_search": "Caută în tot"
     },
     "threads": {
-      "expand_collapse": "Extindeți/reduceți firul de discuție"
+      "expand_collapse": "Extindeți/reduceți firul de discuție",
+      "select_mountain_view": "Selectează conversația"
     },
     "composer": {
       "send": "Trimite e-mail",

@@ -142,6 +142,8 @@
     "show_all_tags": "顯示全部（{count}）",
     "show_fewer_tags": "顯示較少",
     "folders": "信件匣",
+    "show_more": "更多",
+    "show_fewer": "收合",
     "shared": "共用",
     "mail": "郵件",
     "nav_label": "導覽",
@@ -237,6 +239,7 @@
     "replied": "已回覆",
     "forwarded": "已轉寄",
     "has_attachment": "有附件",
+    "conversations_range": "第 {from}–{to, number} 封，共 {total, number} 封",
     "conversations_count": "顯示 {count} 個對話串，共 {total} 個",
     "conversations_count_plus": "{count}+ 個對話串",
     "conversations_count_simple": "{count} 個對話串",
@@ -597,6 +600,9 @@
     }
   },
   "email_composer": {
+    "minimize": "最小化",
+    "maximize": "全螢幕",
+    "restore": "還原",
     "read_receipt_on": "已要求傳送已讀回執（點擊以停用）",
     "read_receipt_off": "請求已讀回執",
     "dsn_on": "已要求遞送通知（點擊停用）",
@@ -1070,6 +1076,12 @@
         "compact": "緊湊",
         "regular": "預設",
         "comfortable": "寬鬆"
+      },
+      "interface_layout": {
+        "label": "介面版面配置",
+        "description": "搜尋、導覽與工具列的位置",
+        "default": "預設",
+        "mountain_view": "Mountain View"
       },
       "animations": {
         "label": "啟用動畫",
@@ -2444,7 +2456,8 @@
       "next_email": "下一封郵件",
       "previous_email": "上一封郵件",
       "open_email": "開啟郵件",
-      "close_email": "關閉／取消選取"
+      "close_email": "關閉／取消選取",
+      "go_to_folder": "跳至資料夾"
     },
     "actions": {
       "reply": "回覆",
@@ -2466,7 +2479,8 @@
       "global_search": "全域搜尋"
     },
     "threads": {
-      "expand_collapse": "展開／收合對話串"
+      "expand_collapse": "展開／收合對話串",
+      "select_mountain_view": "選取會話"
     },
     "composer": {
       "send": "傳送郵件",
