@@ -575,7 +575,12 @@ export const useFileStore = create<FileState>((set, get) => ({
     const { client } = get();
     if (client) {
       try {
-        const allNodes = await client.listAllFileNodes();
+        // Folders shared by another principal live in that account and are
+        // listed with namespaced ids ("<accountId>:<nodeId>"), so a path that
+        // points at a shared root (deep link, breadcrumb, reload) only
+        // resolves against the cross-account listing. Resolving against the
+        // primary account alone left such paths dangling.
+        const allNodes = await client.listAllFileNodesAcrossAccounts();
         const id = resolvePathToId(allNodes, path);
         if (id !== undefined) {
           await navigate(id, segments[segments.length - 1]);

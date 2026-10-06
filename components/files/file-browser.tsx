@@ -25,7 +25,7 @@ import { FolderTreeSidebar } from "@/components/files/folder-tree-sidebar";
 import { ResizeHandle } from "@/components/layout/resize-handle";
 import { Avatar } from "@/components/ui/avatar";
 import { getDroppedFilesAndFolders } from "@/lib/webdav/drop-utils";
-import type { FileResource } from "@/stores/file-store";
+import { useFileStore, type FileResource } from "@/stores/file-store";
 import { ShareCollectionDialog } from "@/components/settings/share-collection-dialog";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
 import type { FileNodeRights } from "@/lib/jmap/types";
@@ -323,6 +323,20 @@ export function FileBrowser({
   const [isResizing, setIsResizing] = useState(false);
   const dragStartWidth = useRef(256);
   const [dragTarget, setDragTarget] = useState<string | null>(null);
+  const sharedRoots = useFileStore(s => s.sharedRoots);
+  const loadSharedRoots = useFileStore(s => s.loadSharedRoots);
+  // Folders another principal has shared with the user. The folder-tree sidebar
+  // loads them for its own "Shared with me" list; without the tree (inline
+  // layout) the file browser has to ask for them so they can be listed here too.
+  useEffect(() => {
+    if (client && folderLayout !== "sidebar") {
+      void loadSharedRoots();
+    }
+  }, [client, folderLayout, loadSharedRoots]);
+  const sharedFolders = useMemo(
+    () => sharedRoots.filter(r => r.isDirectory),
+    [sharedRoots],
+  );
   // Pane-aware: in a Pro split pane (or a narrow window) the folder tree
   // sidebar collapses into a burger-toggled overlay so it doesn't crowd the
   // file list.
@@ -1218,6 +1232,32 @@ export function FileBrowser({
           className="flex-1 min-w-0 overflow-y-auto relative"
           onMouseDown={handleMarqueeMouseDown}
         >
+        {/* Folders shared with the user by other principals. The folder-tree
+            sidebar lists them too, so this is only for the layouts without the
+            tree - otherwise shared folders would be invisible there. */}
+        {folderLayout !== "sidebar" && !accountPickerMode && !searchQuery && currentPath === "/" && sharedFolders.length > 0 && (
+          <div className="border-b border-border/60 bg-muted/20" data-testid="shared-with-me">
+            <div className="px-4 py-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground flex items-center gap-1.5">
+              <Share2 className="w-3 h-3" />
+              <span className="truncate">{t("shared_with_me")}</span>
+            </div>
+            {sharedFolders.map(folder => (
+              <button
+                key={folder.id}
+                type="button"
+                onClick={() => onNavigate(`/${folder.name}`, folder.id)}
+                title={folder.ownerName ? t("shared_by", { name: folder.ownerName }) : folder.name}
+                className="w-full flex items-center gap-2 px-4 py-2 text-sm text-start hover:bg-muted transition-colors"
+              >
+                <Folder className="w-4 h-4 text-primary shrink-0" />
+                <span className="truncate">{folder.name}</span>
+                {folder.ownerName && (
+                  <span className="ms-auto truncate text-xs text-muted-foreground">{folder.ownerName}</span>
+                )}
+              </button>
+            ))}
+          </div>
+        )}
         {isLoading && resources.length === 0 ? (
           <table className="w-full text-sm">
             <thead className="bg-muted/50 sticky top-0 z-10">
@@ -1392,7 +1432,12 @@ export function FileBrowser({
                     {showThumbnails && isImageFile(resource.name)
                       ? <Thumbnail name={resource.name} getImageUrl={getImageUrl} size="lg" />
                       : getGridIcon(resource)}
-                    <span className="text-xs truncate w-full text-center flex items-center justify-center gap-1" title={resource.name}>
+                    <span
+                      className="text-xs truncate w-full text-center flex items-center justify-center gap-1"
+                      title={resource.isShared && resource.ownerName
+                        ? t("shared_by", { name: resource.ownerName })
+                        : resource.name}
+                    >
                       <span className="truncate">{resource.name}</span>
                       <ShareBadge resource={resource} t={t} />
                     </span>
@@ -1543,6 +1588,11 @@ export function FileBrowser({
                         ? <Thumbnail name={resource.name} getImageUrl={getImageUrl} size="sm" />
                         : getFileIcon(resource)}
                       <span className="truncate">{resource.name}</span>
+                      {resource.isShared && resource.ownerName && (
+                        <span className="truncate text-xs text-muted-foreground shrink-0 hidden md:inline">
+                          {t("shared_by", { name: resource.ownerName })}
+                        </span>
+                      )}
                       <ShareBadge resource={resource} t={t} />
                     </div>
                   </td>

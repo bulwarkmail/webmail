@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { ArrowLeft } from "@/components/icons";
@@ -108,6 +108,8 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
     lastAction,
     shareResource,
   } = useFileStore();
+  const sharedRoots = useFileStore((s) => s.sharedRoots);
+  const loadSharedRoots = useFileStore((s) => s.loadSharedRoots);
 
   const isMobile = useIsMobile();
   const isEmbedded = useIsEmbedded();
@@ -129,6 +131,27 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
       window.removeEventListener("files-settings-changed", reload);
     };
   }, []);
+
+  // Folders another principal shared with the user. The folder-tree sidebar
+  // loads them for its own list; without the tree (inline layout) the file list
+  // has to ask for them.
+  const filesClient = useFileStore((s) => s.client);
+  useEffect(() => {
+    if (filesClient && folderLayout !== "sidebar") void loadSharedRoots();
+  }, [filesClient, folderLayout, loadSharedRoots]);
+
+  // List shared folders next to the account's own entries at the root so they
+  // behave like any other row (sorting, selection, breadcrumbs, grid view).
+  // Their ids are namespaced with the owning account ("<accountId>:<nodeId>"),
+  // which is how previews, downloads and writes resolve that account.
+  const browserResources = useMemo(() => {
+    if (currentPath !== "/" || sharedRoots.length === 0) return resources;
+    const shared = sharedRoots.filter(
+      (r) => r.isDirectory && !resources.some((own) => own.id === r.id),
+    );
+    return shared.length > 0 ? [...shared, ...resources] : resources;
+  }, [resources, sharedRoots, currentPath]);
+
   const { dialogProps: confirmDialogProps, confirm: confirmDialog } = useConfirmDialog();
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [previewFile, setPreviewFile] = useState<string | null>(null);
@@ -629,7 +652,7 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
                   </div>
                 <FileBrowser
                   currentPath={currentPath}
-                  resources={resources}
+                  resources={browserResources}
                   isLoading={isLoading}
                   error={error}
                   selectedResources={selectedResources}
