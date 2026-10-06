@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo, useId } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { toast } from "@/stores/toast-store";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,7 @@ import {
   buildParticipantMap,
 } from "@/lib/calendar-participants";
 import { canUserRsvp, getEventEditability, canCreateEventsIn } from "@/lib/calendar-editability";
+import { isCrossAccountCalendarMove, isUnsupportedCalendarMove } from "@/lib/calendar-move";
 import { PluginSlot } from "@/components/plugins/plugin-slot";
 import { useSettingsStore } from "@/stores/settings-store";
 import { generateUUID } from "@/lib/utils";
@@ -343,6 +344,9 @@ export function EventModal({
     () => calendars.filter(c => canCreateEventsIn(c, isSubscriptionCalendar) || c.id === calendarId),
     [calendars, isSubscriptionCalendar, calendarId]
   );
+  const calendarSelectId = useId();
+  const selectedCalendar = calendars.find(c => c.id === calendarId);
+  const isAccountMove = Boolean(event && selectedCalendar && isCrossAccountCalendarMove(event, selectedCalendar));
   const [recurrence, setRecurrence] = useState<RecurrenceOption>(() => {
     if (!event?.recurrenceRules?.length) return "none";
     const rule = event.recurrenceRules[0];
@@ -426,6 +430,7 @@ export function EventModal({
         return acc;
       }, []);
   });
+  const originalAttendees = useRef(attendees);
   const [sendInvitations, setSendInvitations] = useState(true);
   const participantInputRef = useRef<ParticipantInputHandle>(null);
 
@@ -505,6 +510,10 @@ export function EventModal({
 
     const pendingAttendee = participantInputRef.current?.flush() ?? null;
     const effectiveAttendees = pendingAttendee ? [...attendees, pendingAttendee] : attendees;
+    if (isAccountMove && JSON.stringify(effectiveAttendees) !== JSON.stringify(originalAttendees.current)) {
+      toast.error(t("move.no_scheduling"));
+      return;
+    }
 
     const startStr = allDay
       ? `${startDate}T00:00:00`
@@ -619,7 +628,7 @@ export function EventModal({
       data.alerts = null;
     }
 
-    if (effectiveAttendees.length > 0 && currentUserEmails.length > 0) {
+    if (!isAccountMove && effectiveAttendees.length > 0 && currentUserEmails.length > 0) {
       const organizerEmail = currentUserEmails[0];
       // On create there are no existing participants, so a fresh event would
       // store an empty organizer name — fall back to the contact card.
@@ -634,21 +643,21 @@ export function EventModal({
       // scheduling is silently skipped (NoSchedulingInfo), so no invites are sent.
       // The RFC 8984 replyTo property is retired in jscalendarbis and ignored.
       data.organizerCalendarAddress = `mailto:${organizerEmail}`;
-    } else if (effectiveAttendees.length === 0 && event?.participants) {
+    } else if (!isAccountMove && effectiveAttendees.length === 0 && event?.participants) {
       data.participants = null;
       // Also clear the retired replyTo that older releases (<= 1.7.6) wrote.
       data.replyTo = null;
       data.organizerCalendarAddress = null;
     }
 
-    const shouldSendScheduling = effectiveAttendees.length > 0 && sendInvitations;
+    const shouldSendScheduling = !isAccountMove && effectiveAttendees.length > 0 && sendInvitations;
     setIsSaving(true);
     try {
       await onSave(data, shouldSendScheduling);
     } finally {
       setIsSaving(false);
     }
-  }, [title, description, location, virtualLocation, startDate, startTime, endDate, endTime, allDay, calendarId, recurrence, customRule, alertRows, attendees, sendInvitations, currentUserEmails, existingParticipants, resolveContactName, event, onSave, isSaving, t]);
+  }, [title, description, location, virtualLocation, startDate, startTime, endDate, endTime, allDay, calendarId, recurrence, customRule, alertRows, attendees, sendInvitations, isAccountMove, currentUserEmails, existingParticipants, resolveContactName, event, onSave, isSaving, t]);
 
   const handleRsvp = useCallback((status: CalendarParticipant['participationStatus']) => {
     if (!event || !userParticipantId || !onRsvp) return;
@@ -1121,6 +1130,7 @@ export function EventModal({
             </label>
             <ParticipantInput
               ref={participantInputRef}
+              disabled={isAccountMove}
               participants={attendees}
               onAdd={handleAddAttendee}
               onRemove={handleRemoveAttendee}
@@ -1216,15 +1226,16 @@ export function EventModal({
 
           {selectableCalendars.length > 1 && (
             <div>
-              <label className="text-sm font-medium mb-1 block">{t("form.calendar_select")}</label>
+              <label htmlFor={calendarSelectId} className="text-sm font-medium mb-1 block">{t("form.calendar_select")}</label>
               <select
+                id={calendarSelectId}
                 value={calendarId}
                 onChange={(e) => setCalendarId(e.target.value)}
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 {selectableCalendars.map((cal) => (
-                  <option key={cal.id} value={cal.id}>
-                    {cal.name}
+                  <option key={cal.id} value={cal.id} disabled={Boolean(event && isUnsupportedCalendarMove(event, cal))}>
+                    {cal.name}{event && isUnsupportedCalendarMove(event, cal) ? ` (${t("move.unsupported_destination")})` : ''}
                   </option>
                 ))}
               </select>
@@ -1342,7 +1353,8 @@ export function EventModal({
             </button>
           </div>
 
-          {attendees.length > 0 && (
+          {isAccountMove && <p className="text-sm text-muted-foreground" role="status">{t("move.no_scheduling")}</p>}
+          {attendees.length > 0 && !isAccountMove && (
             <div className="flex items-center gap-2">
               <input
                 type="checkbox"

@@ -7,6 +7,7 @@ import { normalizeAllDayDuration } from '@/lib/calendar-utils';
 import { displayNow } from '@/lib/timezone';
 import { parseDuration } from '@/components/calendar/event-card';
 import { sanitizeOutgoingCalendarEventData } from '@/lib/calendar-event-normalization';
+import { CalendarMoveError, hasCalendarRecurrence, isUnsupportedCalendarMove } from '@/lib/calendar-move';
 import { expandRecurringEvents } from '@/lib/recurrence-expansion';
 import { SchedulingDeniedError } from '@/lib/jmap/scheduling-error';
 import {
@@ -898,15 +899,43 @@ export const useCalendarStore = create<CalendarStore>()(
             targetAccountId,
             updateKeys: Object.keys(updates),
           });
-          // Remap namespaced calendarIds back to original IDs
+          // Resolve account ownership before discarding the client-side calendar namespaces.
           const cleanUpdates = sanitizeOutgoingCalendarEventData(withInstanceTimeZone(storeEvent, { ...updates }));
+          let destinationAccountId = targetAccountId;
           if (cleanUpdates.calendarIds) {
             const remapped: Record<string, boolean> = {};
+            const accounts = new Set<string>();
             for (const [calId, v] of Object.entries(cleanUpdates.calendarIds)) {
               const cal = get().calendars.find(c => c.id === calId);
+              if (v && cal) {
+                if (storeEvent && isUnsupportedCalendarMove(storeEvent, cal)) throw new CalendarMoveError('unsupported');
+                if (cal.accountId) accounts.add(cal.accountId);
+              }
               remapped[cal?.originalId || calId] = v;
             }
+            if (accounts.size > 1) throw new CalendarMoveError('unsupported');
+            destinationAccountId = accounts.values().next().value ?? targetAccountId;
             cleanUpdates.calendarIds = remapped;
+          }
+          const sourceAccountId = targetAccountId || (destinationAccountId ? client.getCalendarsAccountId() : undefined);
+          if (destinationAccountId && destinationAccountId !== sourceAccountId) {
+            if (!storeEvent || target.isOccurrence || target.isBrowserOccurrence
+              || hasCalendarRecurrence(storeEvent) || hasCalendarRecurrence(cleanUpdates)) {
+              throw new CalendarMoveError('unsupported');
+            }
+            try {
+              const moved = await client.moveCalendarEvent(realId, cleanUpdates, sourceAccountId!, destinationAccountId);
+              const calendars = get().calendars.filter(c => c.localAccountId === target.localAccountId);
+              const mapped = mapServerEventToStoreEvent(moved, calendars, destinationAccountId);
+              set(state => ({
+                events: [...state.events.filter(e => e.id !== id), mapped],
+                selectedEventId: state.selectedEventId === id ? mapped.id : state.selectedEventId,
+                selectedCalendarIds: [...new Set([...state.selectedCalendarIds, ...Object.keys(mapped.calendarIds)])],
+              }));
+            } finally {
+              await refetchAfterOccurrenceMutation();
+            }
+            return;
           }
           if (target.isOccurrence && storeEvent) {
             await updateOccurrence(client, storeEvent, realId, cleanUpdates, sendSchedulingMessages, targetAccountId);
@@ -919,6 +948,10 @@ export const useCalendarStore = create<CalendarStore>()(
             events: state.events.map(e => {
               if (e.id !== id) return e;
               const merged = { ...e, ...cleanUpdates };
+              if (updates.calendarIds) {
+                merged.calendarIds = updates.calendarIds;
+                merged.originalCalendarIds = cleanUpdates.calendarIds;
+              }
               // When start changes, shift utcStart/utcEnd by the same delta so the
               // event renders at the new position immediately (optimistic update).
               if (cleanUpdates.start && e.start && e.utcStart) {
