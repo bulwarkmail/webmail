@@ -6,6 +6,7 @@ vi.mock('@/lib/browser-navigation', () => ({ apiFetch }));
 
 import { useSettingsStore } from '../settings-store';
 import { useTemplateStore } from '../template-store';
+import { useCalendarStore } from '../calendar-store';
 
 describe('settings sync debounce', () => {
   beforeEach(() => {
@@ -17,6 +18,7 @@ describe('settings sync debounce', () => {
     useSettingsStore.getState().disableSync();
     useSettingsStore.setState({ sendDelaySeconds: 0, settingsSyncDisabled: false });
     useTemplateStore.setState({ templates: [], recentTemplateIds: [], deletedTemplateIds: {} });
+    useCalendarStore.setState({ icalSubscriptions: [], deletedSubscriptionIds: {} });
   });
 
   it('flushes a pending snapshot for the account that scheduled it', async () => {
@@ -183,5 +185,139 @@ describe('template sync (#825)', () => {
     expect(exported.templates).toHaveLength(1);
     expect(exported.templates[0].name).toBe('Exported');
     expect(exported.deletedTemplateIds).toEqual({});
+  });
+});
+
+describe('calendar subscription sync', () => {
+  beforeEach(() => {
+    apiFetch.mockReset();
+    apiFetch.mockResolvedValue(new Response(JSON.stringify({ ok: true }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    }));
+    useSettingsStore.getState().disableSync();
+    useSettingsStore.setState({ settingsSyncDisabled: false });
+    useCalendarStore.setState({ icalSubscriptions: [], deletedSubscriptionIds: {} });
+  });
+
+  it('merges server-loaded subscriptions instead of replacing local ones', () => {
+    useCalendarStore.setState({
+      icalSubscriptions: [{
+        id: 'local-1',
+        url: 'https://example.com/local.ics',
+        calendarId: 'cal-local',
+        name: 'Local',
+        color: '#3b82f6',
+        refreshInterval: 60,
+        lastRefreshed: null,
+      }],
+    });
+
+    const ok = useSettingsStore.getState().importSettings(
+      JSON.stringify({
+        icalSubscriptions: [{
+          id: 'remote-1',
+          url: 'https://example.com/remote.ics',
+          calendarId: 'cal-remote',
+          name: 'Remote',
+          color: '#ef4444',
+          refreshInterval: 60,
+          lastRefreshed: null,
+        }],
+        deletedSubscriptionIds: {},
+      }),
+      { serverAccountId: 'acct-1' }
+    );
+
+    expect(ok).toBe(true);
+    const ids = useCalendarStore.getState().icalSubscriptions.map((s) => s.id).sort();
+    expect(ids).toEqual(['local-1', 'remote-1']);
+  });
+
+  it('leaves local subscriptions untouched when importing a pre-subscription settings blob', () => {
+    useCalendarStore.setState({
+      icalSubscriptions: [{
+        id: 'keep-1',
+        url: 'https://example.com/keep.ics',
+        calendarId: 'cal-keep',
+        name: 'Keep',
+        color: '#3b82f6',
+        refreshInterval: 60,
+        lastRefreshed: null,
+      }],
+    });
+
+    const ok = useSettingsStore.getState().importSettings(
+      JSON.stringify({ sendDelaySeconds: 10 }),
+      { serverAccountId: 'acct-1' }
+    );
+
+    expect(ok).toBe(true);
+    expect(useCalendarStore.getState().icalSubscriptions).toHaveLength(1);
+  });
+
+  it('round-trips subscriptions through exportSettings', () => {
+    useCalendarStore.setState({
+      icalSubscriptions: [{
+        id: 'export-1',
+        url: 'https://example.com/export.ics',
+        calendarId: 'cal-export',
+        name: 'Exported Sub',
+        color: '#3b82f6',
+        refreshInterval: 60,
+        lastRefreshed: null,
+      }],
+    });
+
+    const exported = JSON.parse(useSettingsStore.getState().exportSettings());
+    expect(exported.icalSubscriptions).toHaveLength(1);
+    expect(exported.icalSubscriptions[0].name).toBe('Exported Sub');
+    expect(exported.deletedSubscriptionIds).toEqual({});
+  });
+
+  it('pushes only the active login\'s subscriptions into its server blob', async () => {
+    const sub = (id: string, owner?: string) => ({
+      id, url: `https://example.com/${id}.ics`, calendarId: `cal-${id}`, name: id,
+      color: '#3b82f6', refreshInterval: 60, lastRefreshed: null, owner,
+    });
+    useSettingsStore.getState().enableSync('Alice@Example.com', 'https://mail.example.com/');
+    // Secret feed URLs of another login must not land in this login's blob,
+    // and unowned (pre-owner) entries are claimed locally before they sync.
+    useCalendarStore.setState({
+      icalSubscriptions: [
+        sub('mine', 'https://mail.example.com|alice@example.com'),
+        sub('bobs', 'https://other.example.org|bob@example.org'),
+        sub('unowned'),
+      ],
+    });
+
+    await useSettingsStore.getState().flushSync();
+
+    const body = JSON.parse((apiFetch.mock.calls[0][1] as RequestInit).body as string);
+    expect(body.settings.icalSubscriptions.map((s: { id: string }) => s.id)).toEqual(['mine']);
+  });
+
+  it('ignores other logins\' subscriptions in a server blob written before owners were synced', async () => {
+    const sub = (id: string, owner?: string) => ({
+      id, url: `https://example.com/${id}.ics`, calendarId: `cal-${id}`, name: id,
+      color: '#3b82f6', refreshInterval: 60, lastRefreshed: null, owner,
+    });
+    apiFetch.mockResolvedValueOnce(new Response(JSON.stringify({
+      settings: {
+        icalSubscriptions: [
+          sub('mine', 'https://mail.example.com|alice@example.com'),
+          sub('bobs', 'https://other.example.org|bob@example.org'),
+          sub('unowned'),
+        ],
+        deletedSubscriptionIds: {},
+      },
+    }), { status: 200, headers: { 'Content-Type': 'application/json' } }));
+
+    await useSettingsStore.getState().loadFromServer('alice@example.com', 'https://mail.example.com');
+
+    // Unowned entries stay: calendar-store only adopts them once their
+    // calendar id and name are found in this login's account.
+    const ids = useCalendarStore.getState().icalSubscriptions.map((s) => s.id).sort();
+    expect(ids).toEqual(['mine', 'unowned']);
   });
 });

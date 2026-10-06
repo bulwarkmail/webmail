@@ -26,6 +26,13 @@ import { apiFetch } from '@/lib/browser-navigation';
 import { explainServerAuthError } from '@/lib/server-auth-status';
 import { BIRTHDAY_CALENDAR_ID } from '@/lib/birthday-calendar';
 import { getClientByLocalAccountId } from './client-registry';
+import {
+  parseSyncedSubscriptions,
+  parseSubscriptionTombstones,
+  mergeSyncedSubscriptions,
+  subscriptionOwnerFor,
+} from '@/lib/calendar-subscription-sync';
+import { registerCalendarSubscriptionSyncBridge } from './settings-store';
 
 /**
  * When the Pro shell aggregates calendars/events from every connected
@@ -492,7 +499,7 @@ function getStoreEventDebugSnapshot(event: Partial<CalendarEvent> | null | undef
 
 /** Identifies the login a subscription belongs to: server plus login name. */
 export function subscriptionOwner(client: Pick<IJMAPClient, 'getServerUrl' | 'getUsername'>): string {
-  return `${client.getServerUrl().replace(/\/+$/, '').toLowerCase()}|${client.getUsername().toLowerCase()}`;
+  return subscriptionOwnerFor(client.getServerUrl(), client.getUsername());
 }
 
 type CalendarStoreSet = (partial: Partial<CalendarStore> | ((state: CalendarStore) => Partial<CalendarStore>)) => void;
@@ -544,6 +551,7 @@ export interface ICalSubscription {
   color: string;
   refreshInterval: number; // minutes
   lastRefreshed: string | null;
+  updatedAt?: string;
 }
 
 /**
@@ -604,6 +612,7 @@ interface CalendarStore {
 
   // iCal subscriptions
   icalSubscriptions: ICalSubscription[];
+  deletedSubscriptionIds: Record<string, string>;
   addICalSubscription: (client: IJMAPClient, url: string, name: string, color: string, refreshInterval?: number) => Promise<ICalSubscription | null>;
   updateICalSubscription: (client: IJMAPClient, subscriptionId: string, updates: { url?: string; name?: string; color?: string; refreshInterval?: number }) => Promise<void>;
   removeICalSubscription: (client: IJMAPClient, subscriptionId: string) => Promise<void>;
@@ -614,6 +623,12 @@ interface CalendarStore {
   clearICalSubscriptions: () => void;
   refreshAllSubscriptions: (client: IJMAPClient) => Promise<void>;
   isSubscriptionCalendar: (calendarId: string) => boolean;
+
+  applySyncedState: (
+    subscriptions: unknown,
+    deletedSubscriptionIds: unknown,
+    opts: { merge: boolean; owner?: string }
+  ) => void;
 }
 
 const initialState = {
@@ -629,6 +644,7 @@ const initialState = {
   error: null as string | null,
   dateRange: null as { start: string; end: string } | null,
   icalSubscriptions: [] as ICalSubscription[],
+  deletedSubscriptionIds: {} as Record<string, string>,
 };
 
 function getSafeCalendarViewMode(value: unknown): CalendarViewMode {
@@ -1491,6 +1507,7 @@ export const useCalendarStore = create<CalendarStore>()(
           });
           if (!calendar) throw new Error('Failed to create calendar');
 
+          const now = new Date().toISOString();
           const subscription: ICalSubscription = {
             id: generateUUID(),
             url: normalizedUrl,
@@ -1501,13 +1518,18 @@ export const useCalendarStore = create<CalendarStore>()(
             color,
             refreshInterval,
             lastRefreshed: null,
+            updatedAt: now,
           };
 
-          set((state) => ({
-            calendars: [...state.calendars, calendar!],
-            selectedCalendarIds: [...state.selectedCalendarIds, calendar!.id],
-            icalSubscriptions: [...state.icalSubscriptions, subscription],
-          }));
+          set((state) => {
+            const { [subscription.id]: _, ...remainingTombstones } = state.deletedSubscriptionIds;
+            return {
+              calendars: [...state.calendars, calendar!],
+              selectedCalendarIds: [...state.selectedCalendarIds, calendar!.id],
+              icalSubscriptions: [...state.icalSubscriptions, subscription],
+              deletedSubscriptionIds: remainingTombstones,
+            };
+          });
 
           // Initial fetch - roll back the calendar create if it fails so we
           // don't leave a phantom calendar around after a bad URL / 404 / etc.
@@ -1558,7 +1580,11 @@ export const useCalendarStore = create<CalendarStore>()(
         }
 
         // Update local subscription record
-        const updated = { ...sub, ...normalizedUpdates };
+        const updated: ICalSubscription = {
+          ...sub,
+          ...normalizedUpdates,
+          updatedAt: new Date().toISOString(),
+        };
         set((state) => ({
           icalSubscriptions: state.icalSubscriptions.map(s => s.id === subscriptionId ? updated : s),
           calendars: state.calendars.map(c => {
@@ -1592,12 +1618,48 @@ export const useCalendarStore = create<CalendarStore>()(
           }
         }
 
+        const now = new Date().toISOString();
         set((state) => ({
           icalSubscriptions: state.icalSubscriptions.filter(s => s.id !== subscriptionId),
+          deletedSubscriptionIds: { ...state.deletedSubscriptionIds, [subscriptionId]: now },
           calendars: state.calendars.filter(c => c.id !== sub.calendarId),
           selectedCalendarIds: state.selectedCalendarIds.filter(id => id !== sub.calendarId),
           events: state.events.filter(e => !e.calendarIds?.[sub.calendarId]),
         }));
+      },
+
+      applySyncedState: (subscriptions, deletedSubscriptionIds, opts) => {
+        const parsed = parseSyncedSubscriptions(subscriptions);
+        if (parsed === null) return;
+        // A server blob speaks only for its own login. Older blobs may still
+        // carry other logins' subscriptions; unowned ones stay and are
+        // adopted by claimSubscription() only if their calendar is found.
+        const parsedSubs = opts.owner
+          ? parsed.filter((s) => !s.owner || s.owner === opts.owner)
+          : parsed;
+        const parsedTombstones = parseSubscriptionTombstones(deletedSubscriptionIds);
+
+        if (opts.merge) {
+          const merged = mergeSyncedSubscriptions(
+            {
+              icalSubscriptions: get().icalSubscriptions,
+              deletedSubscriptionIds: get().deletedSubscriptionIds,
+            },
+            {
+              icalSubscriptions: parsedSubs,
+              deletedSubscriptionIds: parsedTombstones,
+            }
+          );
+          set({
+            icalSubscriptions: merged.icalSubscriptions,
+            deletedSubscriptionIds: merged.deletedSubscriptionIds,
+          });
+        } else {
+          set({
+            icalSubscriptions: parsedSubs,
+            deletedSubscriptionIds: parsedTombstones,
+          });
+        }
       },
 
       refreshICalSubscription: async (client, subscriptionId) => {
@@ -1751,10 +1813,12 @@ export const useCalendarStore = create<CalendarStore>()(
         // They're now scoped per-account via sub.accountId - wiping them
         // here would lose them from localStorage on every switch.
         const preservedSubs = get().icalSubscriptions;
+        const preservedTombstones = get().deletedSubscriptionIds;
         set({
           ...initialState,
           selectedDate: displayNow(),
           icalSubscriptions: preservedSubs,
+          deletedSubscriptionIds: preservedTombstones,
         });
         import('./calendar-notification-store').then(({ useCalendarNotificationStore }) => {
           useCalendarNotificationStore.getState().clearAll();
@@ -1779,7 +1843,22 @@ export const useCalendarStore = create<CalendarStore>()(
         selectedCalendarIds: state.selectedCalendarIds,
         viewMode: state.viewMode,
         icalSubscriptions: state.icalSubscriptions,
+        deletedSubscriptionIds: state.deletedSubscriptionIds,
       }),
     }
   )
 );
+
+registerCalendarSubscriptionSyncBridge(
+  {
+    getSyncedState: () => ({
+      icalSubscriptions: useCalendarStore.getState().icalSubscriptions,
+      deletedSubscriptionIds: useCalendarStore.getState().deletedSubscriptionIds,
+    }),
+    applySyncedState: (subscriptions, deletedSubscriptionIds, opts) => {
+      useCalendarStore.getState().applySyncedState(subscriptions, deletedSubscriptionIds, opts);
+    },
+  },
+  (listener) => useCalendarStore.subscribe(listener)
+);
+
