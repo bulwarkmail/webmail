@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
 import { getStalwartCredentials } from '@/lib/stalwart/credentials';
 import { DisallowedUrlError, fetchPublicUrl, type PublicFetchResponse } from '@/lib/security/url-guard';
+import { requireAdminAuth } from '@/lib/admin/session';
 
 const DEFAULT_MAX_BYTES = 25 * 1024 * 1024; // 25MB
 // Base budget for a default-sized feed; scaled up with the configured cap so a
@@ -56,6 +57,8 @@ function extractBasicAuth(rawUrl: string): { cleanUrl: string; authHeader: strin
  * validates the resolved address inside the socket lookup so a rebinding DNS
  * server cannot steer the connection at an internal host
  * (GHSA-24w9-8r42-8jwm).
+ * Explicit ICAL_ALLOWED_LOCAL_ORIGINS exceptions require an admin session
+ * and match exact origins (including trusted private hostnames).
  */
 export async function POST(request: NextRequest) {
   // CSRF gate (GHSA-9mvj-98f5-9q6g): this handler acts with the caller's
@@ -90,8 +93,11 @@ export async function POST(request: NextRequest) {
   const maxResponseSize = getMaxResponseSize();
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), getFetchTimeoutMs(maxResponseSize));
+  const allowedPrivateUrls = (process.env.ICAL_ALLOWED_LOCAL_ORIGINS ?? '').split(',');
 
   try {
+    const admin = await requireAdminAuth(request);
+    const privateUrls = 'error' in admin ? [] : allowedPrivateUrls;
     const MAX_REDIRECTS = 5;
     let currentUrl = cleanUrl;
     const originalOrigin = new URL(cleanUrl).origin;
@@ -110,7 +116,7 @@ export async function POST(request: NextRequest) {
         response = await fetchPublicUrl(currentUrl, {
           signal: controller.signal,
           headers,
-        });
+        }, privateUrls);
       } catch (error) {
         if (error instanceof DisallowedUrlError) {
           return NextResponse.json(
