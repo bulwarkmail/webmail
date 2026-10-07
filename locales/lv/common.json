@@ -2968,6 +2968,12 @@
     "open_categories": "Atvērt kategorijas"
   },
   "calendar": {
+    "move": {
+      "unsupported_destination": "move unavailable",
+      "unsupported": "Only non-recurring events can be moved between accounts accessible through the same login.",
+      "incomplete": "The move could not be confirmed. Check both calendars before trying again; a copy may already exist.",
+      "no_scheduling": "Moving preserves the organizer, participants and RSVP responses without sending invitations or cancellations. Save attendee changes separately before moving."
+    },
     "title": "Kalendārs",
     "back_to_email": "Atgriezties pie pasta",
     "back_to_month": "Atpakaļ uz mēneša skatu",

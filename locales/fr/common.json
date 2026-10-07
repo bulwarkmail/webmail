@@ -2968,6 +2968,12 @@
     "open_categories": "Ouvrir les catégories"
   },
   "calendar": {
+    "move": {
+      "unsupported_destination": "move unavailable",
+      "unsupported": "Only non-recurring events can be moved between accounts accessible through the same login.",
+      "incomplete": "The move could not be confirmed. Check both calendars before trying again; a copy may already exist.",
+      "no_scheduling": "Moving preserves the organizer, participants and RSVP responses without sending invitations or cancellations. Save attendee changes separately before moving."
+    },
     "title": "Calendrier",
     "back_to_email": "Retour aux e-mails",
     "back_to_month": "Retour au mois",

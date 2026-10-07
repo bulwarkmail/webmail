@@ -8,6 +8,7 @@ import { keywordPointer } from "./patch-pointer";
 import { FirstTouchGate } from "./first-touch-gate";
 import { debug } from "@/lib/debug";
 import { normalizeCalendarEventLike } from "@/lib/calendar-event-normalization";
+import { CalendarMoveError, hasCalendarRecurrence } from "@/lib/calendar-move";
 import { SYNTHETIC_ID_PROBE, RECURRENCE_BASE_PROPERTIES, hydrateRecurrenceInstances, isServerRecurrenceInstance } from "@/lib/recurrence-instances";
 import { findTasksOnlyCalendarIds, isTaskLikeObject, type ScannedCalendarObject } from "@/lib/calendar-component-detection";
 import { DEFAULT_CALENDAR_COMPONENTS, mkCalendarCollection, newCalendarCollectionName } from "@/lib/webdav/calendar-collection";
@@ -7350,6 +7351,79 @@ export class JMAPClient implements IJMAPClient {
     return { created: createdEvents, failed, notCreated };
   }
 
+  private calendarEventUpdates(updates: Partial<CalendarEvent>, options?: CalendarEventUpdateOptions): Partial<CalendarEvent> {
+    const { id: _id, uid: _uid, '@type': _typ, created: _cr, updated: _up, sequence: _sq, isOrigin: _io, isDraft: _idr, originalId: _oi, baseEventId: _be, originalCalendarIds: _oc, accountId: _ai, accountName: _an, localAccountId: _la, isShared: _is, progressUpdated: _pu, ...cleanUpdates } = updates as CalendarEvent & { progressUpdated?: string | null };
+    if (options?.keepSequence && _sq != null) (cleanUpdates as Partial<CalendarEvent>).sequence = _sq;
+    cleanRecurrenceRules(cleanUpdates as unknown as Record<string, unknown>);
+    return cleanUpdates;
+  }
+
+  async moveCalendarEvent(
+    eventId: string,
+    updates: Partial<CalendarEvent>,
+    fromAccountId: string,
+    targetAccountId: string,
+  ): Promise<CalendarEvent> {
+    if (fromAccountId === targetAccountId || hasCalendarRecurrence(updates)) {
+      throw new CalendarMoveError('unsupported');
+    }
+    const before = await this.request([
+      ['CalendarEvent/get', { accountId: fromAccountId, ids: [eventId] }, '0'],
+    ], this.calendarUsing());
+    const [method, result] = before.methodResponses?.[0] ?? [];
+    const source = result?.list?.[0] as CalendarEvent | undefined;
+    if (method !== 'CalendarEvent/get' || !source || source.id !== eventId || !result.state) {
+      throw new Error('Cannot read the event before moving it');
+    }
+    if (hasCalendarRecurrence(normalizeCalendarEventLike(source))) throw new CalendarMoveError('unsupported');
+    const cleanUpdates = this.calendarEventUpdates(updates);
+    let response: JMAPResponse;
+    try {
+      response = await this.request([
+        ['CalendarEvent/copy', {
+          fromAccountId,
+          accountId: targetAccountId,
+          create: { [eventId]: { ...cleanUpdates, isDraft: source.isDraft ?? false } },
+          onSuccessDestroyOriginal: false,
+        }, '0'],
+      ], this.calendarUsing());
+    } catch (cause) {
+      // A lost response does not prove that the server failed to create the copy.
+      throw new CalendarMoveError('incomplete', { cause });
+    }
+    const [copyMethod, copied] = response.methodResponses?.[0] ?? [];
+    if (copyMethod === 'error' || copied?.notCreated?.[eventId]) {
+      throw new Error(copied?.notCreated?.[eventId]?.description || copied?.description || 'Cannot copy the calendar event');
+    }
+    try {
+      const copiedId = copied?.created?.[eventId]?.id;
+      if (copyMethod !== 'CalendarEvent/copy' || !copiedId) throw new Error('Copy was not confirmed');
+      const destination = await this.getCalendarEvent(copiedId, targetAccountId);
+      const calendarIds = Object.keys(cleanUpdates.calendarIds ?? {}).filter(id => cleanUpdates.calendarIds?.[id]);
+      if (!destination || destination.uid !== source.uid || !calendarIds.length
+        || calendarIds.some(id => !destination.calendarIds[id])
+        || Object.keys(destination.calendarIds).length !== calendarIds.length) {
+        throw new Error('Cannot verify the destination event');
+      }
+      // Keep concurrent source edits, and never cancel the meeting just because its storage account changed.
+      const removed = await this.request([
+        ['CalendarEvent/set', {
+          accountId: fromAccountId,
+          ifInState: result.state,
+          destroy: [eventId],
+          sendSchedulingMessages: false,
+        }, '0'],
+      ], this.calendarUsing());
+      const [removeMethod, removal] = removed.methodResponses?.[0] ?? [];
+      if (removeMethod !== 'CalendarEvent/set' || !removal?.destroyed?.includes(eventId)) {
+        throw new Error('Source removal was not confirmed');
+      }
+      return destination;
+    } catch (cause) {
+      throw new CalendarMoveError('incomplete', { cause });
+    }
+  }
+
   async updateCalendarEvent(
     eventId: string,
     updates: Partial<CalendarEvent>,
@@ -7359,10 +7433,7 @@ export class JMAPClient implements IJMAPClient {
   ): Promise<void> {
     const accountId = targetAccountId || this.getCalendarsAccountId();
 
-    // Strip client-only and server-immutable fields before sending to JMAP
-    const { id: _id, uid: _uid, '@type': _typ, created: _cr, updated: _up, sequence: _sq, isOrigin: _io, isDraft: _idr, originalId: _oi, baseEventId: _be, originalCalendarIds: _oc, accountId: _ai, accountName: _an, isShared: _is, progressUpdated: _pu, ...cleanUpdates } = updates as CalendarEvent & { progressUpdated?: string | null };
-    if (options?.keepSequence && _sq != null) (cleanUpdates as Partial<CalendarEvent>).sequence = _sq;
-    cleanRecurrenceRules(cleanUpdates as unknown as Record<string, unknown>);
+    const cleanUpdates = this.calendarEventUpdates(updates, options);
 
     const setArgs: Record<string, unknown> = {
       accountId,

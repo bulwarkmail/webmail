@@ -72,6 +72,7 @@ import { ShareCollectionDialog } from "@/components/settings/share-collection-di
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { SchedulingDeniedError } from "@/lib/jmap/scheduling-error";
+import { CalendarMoveError, isUnsupportedCalendarMove } from "@/lib/calendar-move";
 import { CreateCalendarModal } from "@/components/calendar/create-calendar-modal";
 import { getUserParticipantId, collectUserCalendarAddresses } from "@/lib/calendar-participants";
 import { generateBirthdayEvents, createBirthdayCalendar, BIRTHDAY_CALENDAR_ID } from "@/lib/birthday-calendar";
@@ -881,6 +882,10 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     const save = async (sendSchedulingMessages: boolean | undefined): Promise<void> => {
       try {
         if (editEvent) {
+          if (Object.keys(data.calendarIds ?? {}).some(id => {
+            const destination = calendars.find(c => c.id === id);
+            return destination && isUnsupportedCalendarMove(editEvent, destination);
+          })) throw new CalendarMoveError('unsupported');
           if (isRecurringEvent(editEvent)) {
             setPendingScopeAction({
               type: "edit",
@@ -913,6 +918,14 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
         setShowEventModal(false);
         setEditEvent(null);
       } catch (error) {
+        if (error instanceof CalendarMoveError) {
+          toast.error(error.reason === 'incomplete' ? t("move.incomplete") : t("move.unsupported"));
+          if (error.reason === 'incomplete') {
+            setShowEventModal(false);
+            setEditEvent(null);
+          }
+          return;
+        }
         // The server refuses to send the invitations (Stalwart 0.16.21+ fails
         // the whole save then). Offer to keep the event without them.
         if (error instanceof SchedulingDeniedError && sendSchedulingMessages) {
@@ -928,7 +941,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
       }
     };
     await save(requestedScheduling);
-  }, [client, editEvent, createEvent, updateEvent, focusCalendarOnEvent, confirmAction, t]);
+  }, [client, editEvent, calendars, createEvent, updateEvent, focusCalendarOnEvent, confirmAction, t]);
 
   const handleDuplicateEvent = useCallback(async (data: Partial<CalendarEvent>) => {
     if (!client) { toast.error(t("notifications.event_error")); return; }

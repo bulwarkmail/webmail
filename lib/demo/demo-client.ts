@@ -1022,6 +1022,10 @@ export class DemoJMAPClient implements IJMAPClient {
     Object.assign(event, updates, { updated: new Date().toISOString() });
   }
 
+  async moveCalendarEvent(): Promise<CalendarEvent> {
+    throw new Error('The demo has no shared calendar accounts');
+  }
+
   async deleteCalendarEvent(eventId: string): Promise<void> {
     this.data.calendarEvents = this.data.calendarEvents.filter(e => e.id !== eventId);
   }
