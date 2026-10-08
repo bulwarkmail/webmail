@@ -3858,5 +3858,33 @@
     "preview_empty": "Wybierz wynik, aby zobaczyć podgląd",
     "open_full": "Otwórz",
     "view_label": "Widok"
+  },
+  "folder_migration": {
+    "title": "Przenieś folder na inne konto",
+    "description": "Skopiuj lub przenieś wszystkie wiadomości folderu do folderu innego połączonego konta.",
+    "source": "Z",
+    "destination": "Do",
+    "source_account": "Konto źródłowe",
+    "source_folder": "Folder źródłowy",
+    "destination_account": "Konto docelowe",
+    "destination_folder": "Folder docelowy",
+    "choose_account": "Wybierz konto",
+    "choose_folder": "Wybierz folder",
+    "mode": "Tryb",
+    "copy": "Kopiuj",
+    "move": "Przenieś",
+    "copy_hint": "Wiadomości zostają w folderze źródłowym.",
+    "move_hint": "Każda wiadomość jest usuwana ze źródła, gdy drugie konto ją ma.",
+    "start": "Rozpocznij",
+    "stop": "Zatrzymaj",
+    "reading": "Odczytywanie folderu…",
+    "progress": "{done} z {total} wiadomości",
+    "finished": "Gotowe.",
+    "stopped": "Zatrzymano.",
+    "kept": "{count} zostało w źródle, bo są też w innych folderach.",
+    "failed": "Zatrzymano: nie udało się skopiować wiadomości ({error}).",
+    "failed_after_import": "Zatrzymano: wiadomość skopiowano, ale nie usunięto ze źródła ({error}).",
+    "folder_changed": "Folder zmienił się podczas odczytu. Spróbuj ponownie.",
+    "same_account": "Wybierz folder na innym koncie."
   }
 }

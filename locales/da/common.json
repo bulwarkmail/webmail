@@ -3858,5 +3858,33 @@
     "preview_empty": "Vælg et resultat for at se det",
     "open_full": "Åbn",
     "view_label": "Visning"
+  },
+  "folder_migration": {
+    "title": "Flyt en mappe til en anden konto",
+    "description": "Kopiér eller flyt alle beskeder i en mappe til en mappe i en anden forbundet konto.",
+    "source": "Fra",
+    "destination": "Til",
+    "source_account": "Kildekonto",
+    "source_folder": "Kildemappe",
+    "destination_account": "Destinationskonto",
+    "destination_folder": "Destinationsmappe",
+    "choose_account": "Vælg en konto",
+    "choose_folder": "Vælg en mappe",
+    "mode": "Tilstand",
+    "copy": "Kopiér",
+    "move": "Flyt",
+    "copy_hint": "Beskederne bliver i kildemappen.",
+    "move_hint": "Hver besked slettes i kilden, når den anden konto har den.",
+    "start": "Start",
+    "stop": "Stop",
+    "reading": "Læser mappen…",
+    "progress": "{done} af {total} beskeder",
+    "finished": "Færdig.",
+    "stopped": "Stoppet.",
+    "kept": "{count} blev i kilden, fordi de også ligger i andre mapper.",
+    "failed": "Stoppet: en besked kunne ikke kopieres ({error}).",
+    "failed_after_import": "Stoppet: en besked blev kopieret, men ikke slettet i kilden ({error}).",
+    "folder_changed": "Mappen ændrede sig under læsningen. Prøv igen.",
+    "same_account": "Vælg en mappe i en anden konto."
   }
 }

@@ -9,6 +9,7 @@ import { useAccountStore, type AccountEntry } from '@/stores/account-store';
 import { useManagedAccountStore } from '@/stores/managed-account-store';
 import type { SharedAccount } from '@/lib/jmap/types';
 import { SettingsSection, SettingItem } from './settings-section';
+import { FolderMigrationSettings } from './folder-migration-settings';
 import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { useRouter } from '@/i18n/navigation';
@@ -234,6 +235,8 @@ export function AccountSettings() {
           </div>
         </SettingsSection>
       )}
+
+      <FolderMigrationSettings />
 
       {/* Shared / group accounts delegated to this session. Clicking one drills
           into a scoped settings view (filters, vacation, calendars, contacts). */}

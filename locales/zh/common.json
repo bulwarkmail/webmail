@@ -3858,5 +3858,33 @@
     "preview_empty": "选择一个结果以预览",
     "open_full": "打开",
     "view_label": "视图"
+  },
+  "folder_migration": {
+    "title": "将文件夹移至其他账户",
+    "description": "将文件夹中的所有邮件复制或移动到另一个已连接账户的文件夹。",
+    "source": "从",
+    "destination": "到",
+    "source_account": "源账户",
+    "source_folder": "源文件夹",
+    "destination_account": "目标账户",
+    "destination_folder": "目标文件夹",
+    "choose_account": "选择账户",
+    "choose_folder": "选择文件夹",
+    "mode": "模式",
+    "copy": "复制",
+    "move": "移动",
+    "copy_hint": "邮件保留在源文件夹中。",
+    "move_hint": "每封邮件在另一个账户收到后从源中删除。",
+    "start": "开始",
+    "stop": "停止",
+    "reading": "正在读取文件夹…",
+    "progress": "{done} / {total} 封邮件",
+    "finished": "已完成。",
+    "stopped": "已停止。",
+    "kept": "{count} 封邮件因同时位于其他文件夹而保留在源中。",
+    "failed": "已停止：有邮件无法复制（{error}）。",
+    "failed_after_import": "已停止：有邮件已复制但未从源中删除（{error}）。",
+    "folder_changed": "读取时文件夹发生了变化，请重试。",
+    "same_account": "请选择另一个账户中的文件夹。"
   }
 }

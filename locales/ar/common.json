@@ -3858,5 +3858,33 @@
     "preview_empty": "اختر نتيجة لمعاينتها",
     "open_full": "فتح",
     "view_label": "العرض"
+  },
+  "folder_migration": {
+    "title": "نقل مجلد إلى حساب آخر",
+    "description": "انسخ أو انقل كل رسائل مجلد إلى مجلد في حساب آخر متصل.",
+    "source": "من",
+    "destination": "إلى",
+    "source_account": "الحساب المصدر",
+    "source_folder": "المجلد المصدر",
+    "destination_account": "الحساب الوجهة",
+    "destination_folder": "المجلد الوجهة",
+    "choose_account": "اختر حسابًا",
+    "choose_folder": "اختر مجلدًا",
+    "mode": "الوضع",
+    "copy": "نسخ",
+    "move": "نقل",
+    "copy_hint": "تبقى الرسائل في المجلد المصدر.",
+    "move_hint": "تُحذف كل رسالة من المصدر بعد وصولها إلى الحساب الآخر.",
+    "start": "ابدأ",
+    "stop": "إيقاف",
+    "reading": "جارٍ قراءة المجلد…",
+    "progress": "{done} من {total} رسالة",
+    "finished": "تم.",
+    "stopped": "تم الإيقاف.",
+    "kept": "بقيت {count} في المصدر لأنها موجودة في مجلدات أخرى أيضًا.",
+    "failed": "تم الإيقاف: تعذر نسخ رسالة ({error}).",
+    "failed_after_import": "تم الإيقاف: نُسخت رسالة لكنها لم تُحذف من المصدر ({error}).",
+    "folder_changed": "تغيّر المجلد أثناء قراءته. حاول مرة أخرى.",
+    "same_account": "اختر مجلدًا في حساب آخر."
   }
 }

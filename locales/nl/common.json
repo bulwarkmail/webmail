@@ -3858,5 +3858,33 @@
     "preview_empty": "Selecteer een resultaat voor een voorbeeld",
     "open_full": "Openen",
     "view_label": "Weergave"
+  },
+  "folder_migration": {
+    "title": "Map naar een ander account verplaatsen",
+    "description": "Kopieer of verplaats alle berichten van een map naar een map van een ander verbonden account.",
+    "source": "Van",
+    "destination": "Naar",
+    "source_account": "Bronaccount",
+    "source_folder": "Bronmap",
+    "destination_account": "Doelaccount",
+    "destination_folder": "Doelmap",
+    "choose_account": "Kies een account",
+    "choose_folder": "Kies een map",
+    "mode": "Modus",
+    "copy": "Kopiëren",
+    "move": "Verplaatsen",
+    "copy_hint": "De berichten blijven in de bronmap.",
+    "move_hint": "Elk bericht wordt uit de bron verwijderd zodra het andere account het heeft.",
+    "start": "Starten",
+    "stop": "Stoppen",
+    "reading": "Map wordt gelezen…",
+    "progress": "{done} van {total} berichten",
+    "finished": "Klaar.",
+    "stopped": "Gestopt.",
+    "kept": "{count} bleven in de bron omdat ze ook in andere mappen staan.",
+    "failed": "Gestopt: een bericht kon niet worden gekopieerd ({error}).",
+    "failed_after_import": "Gestopt: een bericht is gekopieerd maar niet uit de bron verwijderd ({error}).",
+    "folder_changed": "De map veranderde tijdens het lezen. Probeer het opnieuw.",
+    "same_account": "Kies een map in een ander account."
   }
 }

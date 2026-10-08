@@ -3858,5 +3858,33 @@
     "preview_empty": "プレビューする結果を選択してください",
     "open_full": "開く",
     "view_label": "表示"
+  },
+  "folder_migration": {
+    "title": "フォルダーを別のアカウントに移動",
+    "description": "フォルダー内のすべてのメールを、接続中の別のアカウントのフォルダーにコピーまたは移動します。",
+    "source": "移動元",
+    "destination": "移動先",
+    "source_account": "移動元アカウント",
+    "source_folder": "移動元フォルダー",
+    "destination_account": "移動先アカウント",
+    "destination_folder": "移動先フォルダー",
+    "choose_account": "アカウントを選択",
+    "choose_folder": "フォルダーを選択",
+    "mode": "モード",
+    "copy": "コピー",
+    "move": "移動",
+    "copy_hint": "メールは移動元フォルダーに残ります。",
+    "move_hint": "各メールは、別のアカウントに取り込まれた後に移動元から削除されます。",
+    "start": "開始",
+    "stop": "停止",
+    "reading": "フォルダーを読み込み中…",
+    "progress": "{done} / {total} 件",
+    "finished": "完了しました。",
+    "stopped": "停止しました。",
+    "kept": "{count} 件は他のフォルダーにもあるため移動元に残りました。",
+    "failed": "停止しました: メールをコピーできませんでした ({error})。",
+    "failed_after_import": "停止しました: メールはコピーされましたが移動元から削除されませんでした ({error})。",
+    "folder_changed": "読み込み中にフォルダーが変更されました。もう一度お試しください。",
+    "same_account": "別のアカウントのフォルダーを選択してください。"
   }
 }

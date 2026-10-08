@@ -3858,5 +3858,33 @@
     "preview_empty": "Velg et resultat for å forhåndsvise det",
     "open_full": "Åpne",
     "view_label": "Visning"
+  },
+  "folder_migration": {
+    "title": "Flytt en mappe til en annen konto",
+    "description": "Kopier eller flytt alle meldinger i en mappe til en mappe i en annen tilkoblet konto.",
+    "source": "Fra",
+    "destination": "Til",
+    "source_account": "Kildekonto",
+    "source_folder": "Kildemappe",
+    "destination_account": "Målkonto",
+    "destination_folder": "Målmappe",
+    "choose_account": "Velg en konto",
+    "choose_folder": "Velg en mappe",
+    "mode": "Modus",
+    "copy": "Kopier",
+    "move": "Flytt",
+    "copy_hint": "Meldingene blir værende i kildemappen.",
+    "move_hint": "Hver melding slettes i kilden når den andre kontoen har den.",
+    "start": "Start",
+    "stop": "Stopp",
+    "reading": "Leser mappen…",
+    "progress": "{done} av {total} meldinger",
+    "finished": "Ferdig.",
+    "stopped": "Stoppet.",
+    "kept": "{count} ble værende i kilden fordi de også ligger i andre mapper.",
+    "failed": "Stoppet: en melding kunne ikke kopieres ({error}).",
+    "failed_after_import": "Stoppet: en melding ble kopiert, men ikke slettet i kilden ({error}).",
+    "folder_changed": "Mappen endret seg mens den ble lest. Prøv igjen.",
+    "same_account": "Velg en mappe i en annen konto."
   }
 }

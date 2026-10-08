@@ -3858,5 +3858,33 @@
     "preview_empty": "Selecione um resultado para pré-visualizar",
     "open_full": "Abrir",
     "view_label": "Vista"
+  },
+  "folder_migration": {
+    "title": "Mover uma pasta para outra conta",
+    "description": "Copie ou mova todas as mensagens de uma pasta para uma pasta de outra conta conectada.",
+    "source": "De",
+    "destination": "Para",
+    "source_account": "Conta de origem",
+    "source_folder": "Pasta de origem",
+    "destination_account": "Conta de destino",
+    "destination_folder": "Pasta de destino",
+    "choose_account": "Escolha uma conta",
+    "choose_folder": "Escolha uma pasta",
+    "mode": "Modo",
+    "copy": "Copiar",
+    "move": "Mover",
+    "copy_hint": "As mensagens ficam na pasta de origem.",
+    "move_hint": "Cada mensagem é excluída da origem quando a outra conta a recebe.",
+    "start": "Iniciar",
+    "stop": "Parar",
+    "reading": "Lendo a pasta…",
+    "progress": "{done} de {total} mensagens",
+    "finished": "Concluído.",
+    "stopped": "Interrompido.",
+    "kept": "{count} ficaram na origem porque também estão em outras pastas.",
+    "failed": "Interrompido: uma mensagem não pôde ser copiada ({error}).",
+    "failed_after_import": "Interrompido: uma mensagem foi copiada mas não excluída da origem ({error}).",
+    "folder_changed": "A pasta mudou durante a leitura. Tente novamente.",
+    "same_account": "Escolha uma pasta de outra conta."
   }
 }

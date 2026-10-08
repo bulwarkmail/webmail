@@ -3858,5 +3858,33 @@
     "preview_empty": "Izvēlieties rezultātu, lai to priekšskatītu",
     "open_full": "Atvērt",
     "view_label": "Skats"
+  },
+  "folder_migration": {
+    "title": "Pārvietot mapi uz citu kontu",
+    "description": "Kopējiet vai pārvietojiet visas mapes vēstules uz cita pievienota konta mapi.",
+    "source": "No",
+    "destination": "Uz",
+    "source_account": "Avota konts",
+    "source_folder": "Avota mape",
+    "destination_account": "Mērķa konts",
+    "destination_folder": "Mērķa mape",
+    "choose_account": "Izvēlieties kontu",
+    "choose_folder": "Izvēlieties mapi",
+    "mode": "Režīms",
+    "copy": "Kopēt",
+    "move": "Pārvietot",
+    "copy_hint": "Vēstules paliek avota mapē.",
+    "move_hint": "Katra vēstule tiek dzēsta no avota, kad otrs konts to ir saņēmis.",
+    "start": "Sākt",
+    "stop": "Apturēt",
+    "reading": "Nolasa mapi…",
+    "progress": "{done} no {total} vēstulēm",
+    "finished": "Gatavs.",
+    "stopped": "Apturēts.",
+    "kept": "{count} palika avotā, jo tās ir arī citās mapēs.",
+    "failed": "Apturēts: vēstuli neizdevās nokopēt ({error}).",
+    "failed_after_import": "Apturēts: vēstule nokopēta, bet nav dzēsta no avota ({error}).",
+    "folder_changed": "Mape mainījās nolasīšanas laikā. Mēģiniet vēlreiz.",
+    "same_account": "Izvēlieties mapi citā kontā."
   }
 }
