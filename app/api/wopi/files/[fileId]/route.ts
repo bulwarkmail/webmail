@@ -12,6 +12,14 @@ import { wopiContext } from '@/lib/wopi/request';
  * cookie on these requests.
  */
 
+/**
+ * ONLYOFFICE treats a document the user may not edit as forced into view
+ * mode and warns about it ("Error code: -103" on 9.1), even when the document
+ * was opened through the view action. UserCanReview keeps it off that path,
+ * and with SupportsReviewing false it grants nothing (#1187).
+ */
+const VIEW_ONLY_INFO = { UserCanReview: true, SupportsReviewing: false };
+
 /** GET = CheckFileInfo */
 export async function GET(
   request: NextRequest,
@@ -39,6 +47,7 @@ export async function GET(
         UserCanNotWriteRelative: true,
         SupportsUpdate: false,
         SupportsLocks: false,
+        ...VIEW_ONLY_INFO,
         Version: payload.fileId,
         PostMessageOrigin: payload.postMessageOrigin || payload.origin,
       });
@@ -59,6 +68,7 @@ export async function GET(
       UserCanNotWriteRelative: true,
       SupportsUpdate: true,
       SupportsLocks: false,
+      ...(auth.payload.canWrite ? {} : VIEW_ONLY_INFO),
       LastModifiedTime: node.modified,
       Version: node.blobId,
       PostMessageOrigin: auth.payload.postMessageOrigin || auth.payload.origin,

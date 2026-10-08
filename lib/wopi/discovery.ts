@@ -68,13 +68,24 @@ function discoveryUrlFor(clientUrl: string): string {
   }
 }
 
+const XML_ENTITIES: Record<string, string> = { lt: '<', gt: '>', amp: '&', quot: '"', apos: "'" };
+
+/**
+ * Attribute values are XML-escaped: ONLYOFFICE writes its urlsrc placeholders
+ * as `&lt;ui=UI_LLCC&amp;&gt;`, which buildWopiActionUrl only recognises once
+ * they read `<ui=UI_LLCC&>` again (#1187).
+ */
+function decodeXmlEntities(value: string): string {
+  return value.replace(/&(lt|gt|amp|quot|apos);/g, (_match, name: string) => XML_ENTITIES[name]);
+}
+
 export function parseWopiDiscovery(xml: string): WopiActions {
   const actions: WopiActions = { edit: {}, view: {} };
   const tags = xml.match(/<action\b[^>]*\/?>/gi) || [];
   for (const tag of tags) {
     const attr = (name: string): string => {
       const m = tag.match(new RegExp(`\\b${name}\\s*=\\s*"([^"]*)"`, 'i'));
-      return m?.[1] ?? '';
+      return decodeXmlEntities(m?.[1] ?? '');
     };
     const name = attr('name').toLowerCase();
     const ext = attr('ext').toLowerCase();

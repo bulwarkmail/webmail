@@ -158,6 +158,9 @@ describe('WOPI calls for an attachment token', () => {
       UserCanWrite: false,
       ReadOnly: true,
       UserCanNotWriteRelative: true,
+      // Keeps ONLYOFFICE from warning that it was forced into view mode (#1187).
+      UserCanReview: true,
+      SupportsReviewing: false,
       Version: 'Gblob1',
       PostMessageOrigin: ORIGIN,
     });

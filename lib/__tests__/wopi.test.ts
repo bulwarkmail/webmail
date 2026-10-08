@@ -38,6 +38,23 @@ describe('parseWopiDiscovery', () => {
     expect(actions.edit.docx).toContain('/cool.html');
   });
 
+  it('unescapes the urlsrc, so ONLYOFFICE placeholders are filled in or dropped (#1187)', () => {
+    const xml =
+      '<wopi-discovery><net-zone name="external-http"><app name="Excel">' +
+      '<action name="view" ext="xlsx" urlsrc="https://oo.example/hosting/wopi/cell/view?' +
+      '&lt;rs=DC_LLCC&amp;&gt;&lt;dchat=DISABLE_CHAT&amp;&gt;&lt;ui=UI_LLCC&amp;&gt;&lt;wopisrc=WOPI_SOURCE&amp;&gt;&amp;"/>' +
+      '<action name="edit" ext="xlsx" default="true" requires="locks,update" urlsrc="https://oo.example/hosting/wopi/cell/edit?' +
+      '&lt;ui=UI_LLCC&amp;&gt;&amp;"/>' +
+      '</app></net-zone></wopi-discovery>';
+    const actions = parseWopiDiscovery(xml);
+    expect(actions.view.xlsx).toBe(
+      'https://oo.example/hosting/wopi/cell/view?<rs=DC_LLCC&><dchat=DISABLE_CHAT&><ui=UI_LLCC&><wopisrc=WOPI_SOURCE&>&',
+    );
+    expect(buildWopiActionUrl(actions.view.xlsx, 'https://mail.example/api/wopi/files/f1', 'de')).toBe(
+      'https://oo.example/hosting/wopi/cell/view?rs=de&ui=de&&WOPISrc=https%3A%2F%2Fmail.example%2Fapi%2Fwopi%2Ffiles%2Ff1',
+    );
+  });
+
   it('ignores actions without an extension and tolerates junk', () => {
     expect(parseWopiDiscovery('<notxml>')).toEqual({ edit: {}, view: {} });
     expect(parseWopiDiscovery('')).toEqual({ edit: {}, view: {} });
