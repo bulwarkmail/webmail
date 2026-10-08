@@ -36,10 +36,19 @@ export function useDocumentTitle(context?: string | null): void {
     if (!inView) return;
     const self = Symbol('document-title');
     owner = self;
-    // Termination: setting the title is itself a <head> mutation; on that run
-    // the title is already ours and nothing is written.
+    // Setting the title is itself a <head> mutation. The browser reads it
+    // back with its whitespace stripped and collapsed (HTML's "strip and
+    // collapse ASCII whitespace"), so a subject with two spaces in a row
+    // never reads back as written. Comparing with what it read back after
+    // our own write ends the round; without that, every write set off the
+    // observer again, an endless loop that froze the tab.
+    let readBack: string | null = null;
     const apply = () => {
-      if (owner === self && document.title !== title) document.title = title;
+      if (owner !== self) return;
+      const current = document.title;
+      if (current === title || current === readBack) return;
+      document.title = title;
+      readBack = document.title;
     };
     apply();
     const observer = new MutationObserver(apply);

@@ -71,6 +71,35 @@ describe('useDocumentTitle', () => {
     expect(document.title).toBe('Settings - Acme Mail');
   });
 
+  it('writes a title with runs of whitespace once instead of over and over', async () => {
+    // The browser reads the title back with its whitespace collapsed, so it
+    // never equals what was written. Count the writes, and stop a runaway
+    // loop instead of hanging the test.
+    const native = Object.getOwnPropertyDescriptor(Document.prototype, 'title')!;
+    let writes = 0;
+    Object.defineProperty(document, 'title', {
+      configurable: true,
+      get: () => native.get!.call(document),
+      set: (value: string) => {
+        writes += 1;
+        if (writes > 20) throw new Error('the title is written over and over');
+        native.set!.call(document, value);
+      },
+    });
+    try {
+      renderHook(() => useDocumentTitle('[Spam]  Offer\tinside '));
+      expect(document.title).toBe('[Spam] Offer inside - jane@example.com - Acme Mail');
+      expect(writes).toBe(1);
+      // Next renders its metadata title again: the title is put back once.
+      rerenderMetadataTitle();
+      await settle();
+      expect(document.title).toBe('[Spam] Offer inside - jane@example.com - Acme Mail');
+      expect(writes).toBe(2);
+    } finally {
+      delete (document as { title?: string }).title;
+    }
+  });
+
   it('puts its title back when the metadata title is rendered again', async () => {
     renderHook(() => useDocumentTitle('Settings'));
     rerenderMetadataTitle();
