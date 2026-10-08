@@ -12,9 +12,14 @@ import type { CalendarEvent } from '@/lib/jmap/types';
  * POST /api/calendar-agenda
  *
  * Sidecar for the "Calendar Agenda" plugin. Resolves the caller's calendar
- * account from the stored Stalwart auth context, queries upcoming
+ * accounts from the stored Stalwart auth context, queries upcoming
  * CalendarEvents over JMAP, expands recurring series server-side, and returns
  * a slim, structured-cloneable agenda the plugin can render directly.
+ *
+ * Events come from every account that has calendars: the primary calendar
+ * account plus shared and group accounts (a family or team calendar), the
+ * same set the calendar app shows. Ids are scoped by account, since event
+ * and calendar ids repeat across accounts.
  *
  * Credentials never leave the server — the sandboxed plugin only ever sees
  * the resulting agenda DTOs.
@@ -35,7 +40,9 @@ const EVENT_PROPERTIES = [
 ] as const;
 
 interface AgendaEvent {
+  /** Unique across accounts: `<accountId>:<event id>`. */
   id: string;
+  accountId: string;
   uid: string | null;
   title: string;
   start: string;
@@ -131,8 +138,8 @@ export async function POST(request: NextRequest) {
     if (!session) {
       return NextResponse.json({ error: 'JMAP session fetch failed' }, { status: 502 });
     }
-    const accountId = session.primaryAccounts?.[CALENDAR_CAP];
-    if (!accountId) {
+    const accountIds = calendarAccountIds(session);
+    if (accountIds.length === 0) {
       // No calendar account for this user — return an empty agenda, not an error.
       return NextResponse.json({ events: [], generatedAt: new Date().toISOString() });
     }
@@ -153,84 +160,93 @@ export async function POST(request: NextRequest) {
     const windowStart = new Date(now);
     windowStart.setHours(0, 0, 0, 0);
 
-    // ── 1) Query event IDs in range + load calendars (colours) ──
-    const queryReq = {
-      using,
-      methodCalls: [
-        [
-          'CalendarEvent/query',
-          {
-            accountId,
-            // Mirror the app's calendar store: an { after, before } window lets
-            // Stalwart evaluate recurrence so masters with occurrences in range
-            // are returned (a `before`-only filter can drop unbounded series).
-            filter: { after: windowStart.toISOString(), before: horizon.toISOString() },
-            limit: 1000,
-          },
-          '0',
-        ],
-        [
-          'Calendar/get',
-          { accountId, ids: null, properties: ['id', 'name', 'color'] },
-          'c',
-        ],
-      ],
-    };
-
-    const queryRes = await jmapPost(apiUrl, creds.authHeader, queryReq, fetchOptions);
-    const queryResp = findResponse(queryRes, 'CalendarEvent/query', '0');
-    if (!queryResp) {
-      const err = findResponse(queryRes, 'error', '0');
-      return NextResponse.json(
-        { error: (err?.description as string) || 'CalendarEvent/query failed' },
-        { status: 502 },
-      );
-    }
-    const ids = (queryResp.ids as string[]) || [];
-
+    // ── 1–3) Per account: query ids in range, load calendars (colours),
+    // fetch the events, normalize and expand recurrences server-side ──
     const calColors = new Map<string, { name: string; color: string | null }>();
-    const calResp = findResponse(queryRes, 'Calendar/get', 'c');
-    for (const cal of ((calResp?.list as Array<Record<string, unknown>>) || [])) {
-      if (typeof cal.id === 'string') {
-        calColors.set(cal.id, {
-          name: typeof cal.name === 'string' ? cal.name : '',
-          color: typeof cal.color === 'string' ? cal.color : null,
-        });
-      }
-    }
+    const expanded: Array<CalendarEvent & { accountId: string }> = [];
 
-    if (ids.length === 0) {
-      return NextResponse.json({ events: [], generatedAt: now.toISOString() });
-    }
-
-    // ── 2) Fetch full event objects (batched) ──
-    const raw: Array<Record<string, unknown>> = [];
-    const BATCH = 100;
-    for (let i = 0; i < ids.length; i += BATCH) {
-      const batch = ids.slice(i, i + BATCH);
-      const getRes = await jmapPost(apiUrl, creds.authHeader, {
+    for (const accountId of accountIds) {
+      const queryReq = {
         using,
         methodCalls: [
-          ['CalendarEvent/get', { accountId, ids: batch, properties: EVENT_PROPERTIES }, '0'],
+          [
+            'CalendarEvent/query',
+            {
+              accountId,
+              // Mirror the app's calendar store: an { after, before } window lets
+              // Stalwart evaluate recurrence so masters with occurrences in range
+              // are returned (a `before`-only filter can drop unbounded series).
+              filter: { after: windowStart.toISOString(), before: horizon.toISOString() },
+              limit: 1000,
+            },
+            '0',
+          ],
+          [
+            'Calendar/get',
+            { accountId, ids: null, properties: ['id', 'name', 'color'] },
+            'c',
+          ],
         ],
-      }, fetchOptions);
-      const getResp = findResponse(getRes, 'CalendarEvent/get', '0');
-      if (getResp?.list) raw.push(...(getResp.list as Array<Record<string, unknown>>));
+      };
+
+      const queryRes = await jmapPost(apiUrl, creds.authHeader, queryReq, fetchOptions);
+      const queryResp = findResponse(queryRes, 'CalendarEvent/query', '0');
+      if (!queryResp) {
+        const err = findResponse(queryRes, 'error', '0');
+        if (accountId !== accountIds[0]) {
+          // A shared account the caller can see but not read calendars from
+          // (Stalwart answers forbidden/accountNotSupported) must not empty
+          // the agenda for the accounts that do work.
+          logger.debug('Calendar agenda: skipping account', {
+            accountId,
+            error: (err?.type as string) || 'CalendarEvent/query failed',
+          });
+          continue;
+        }
+        return NextResponse.json(
+          { error: (err?.description as string) || 'CalendarEvent/query failed' },
+          { status: 502 },
+        );
+      }
+      const ids = (queryResp.ids as string[]) || [];
+
+      const calResp = findResponse(queryRes, 'Calendar/get', 'c');
+      for (const cal of ((calResp?.list as Array<Record<string, unknown>>) || [])) {
+        if (typeof cal.id === 'string') {
+          calColors.set(scopedId(accountId, cal.id), {
+            name: typeof cal.name === 'string' ? cal.name : '',
+            color: typeof cal.color === 'string' ? cal.color : null,
+          });
+        }
+      }
+
+      if (ids.length === 0) continue;
+
+      const raw: Array<Record<string, unknown>> = [];
+      const BATCH = 100;
+      for (let i = 0; i < ids.length; i += BATCH) {
+        const batch = ids.slice(i, i + BATCH);
+        const getRes = await jmapPost(apiUrl, creds.authHeader, {
+          using,
+          methodCalls: [
+            ['CalendarEvent/get', { accountId, ids: batch, properties: EVENT_PROPERTIES }, '0'],
+          ],
+        }, fetchOptions);
+        const getResp = findResponse(getRes, 'CalendarEvent/get', '0');
+        if (getResp?.list) raw.push(...(getResp.list as Array<Record<string, unknown>>));
+      }
+
+      const normalized = raw
+        .map((e) => normalizeCalendarEventLike(e as Partial<CalendarEvent>))
+        .filter((e) => (e['@type'] ?? 'Event') === 'Event')
+        // Drop malformed events without a parseable start (would crash format()/
+        // parseISO downstream) — mirrors the calendar store guard (#316).
+        .filter((e) => typeof e.start === 'string' && e.start && !isNaN(parseISO(e.start).getTime())) as CalendarEvent[];
+
+      for (const e of expandRecurringEvents(normalized, windowStart.toISOString(), horizon.toISOString())) {
+        expanded.push({ ...e, accountId });
+      }
     }
-
-    // ── 3) Normalize + expand recurrences server-side ──
-    const normalized = raw
-      .map((e) => normalizeCalendarEventLike(e as Partial<CalendarEvent>))
-      .filter((e) => (e['@type'] ?? 'Event') === 'Event')
-      // Drop malformed events without a parseable start (would crash format()/
-      // parseISO downstream) — mirrors the calendar store guard (#316).
-      .filter((e) => typeof e.start === 'string' && e.start && !isNaN(parseISO(e.start).getTime())) as CalendarEvent[];
-
-    const expanded = expandRecurringEvents(
-      normalized,
-      windowStart.toISOString(),
-      horizon.toISOString(),
-    );
 
     // ── 4) Keep ongoing/upcoming, sort, slice, map to DTOs ──
     const agenda: AgendaEvent[] = expanded
@@ -239,9 +255,10 @@ export async function POST(request: NextRequest) {
       .slice(0, limit)
       .map((e) => {
         const calId = firstCalendarId(e);
-        const cal = calId ? calColors.get(calId) : undefined;
+        const cal = calId ? calColors.get(scopedId(e.accountId, calId)) : undefined;
         return {
-          id: String(e.id ?? ''),
+          id: scopedId(e.accountId, String(e.id ?? '')),
+          accountId: e.accountId,
           uid: e.uid ?? null,
           title: (e.title ?? '').trim() || '(no title)',
           start: eventStart(e).toISOString(),
@@ -266,6 +283,31 @@ export async function POST(request: NextRequest) {
     });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
+}
+
+/**
+ * The accounts to read calendars from, primary first. Mirrors the client's
+ * getCalendarCapableAccountIds(): shared and group accounts count even when
+ * Stalwart does not advertise the calendar capability on them.
+ */
+function calendarAccountIds(session: {
+  primaryAccounts?: Record<string, string>;
+  accounts?: Record<string, unknown>;
+}): string[] {
+  const primary = session.primaryAccounts?.[CALENDAR_CAP];
+  const ids: string[] = primary ? [primary] : [];
+  for (const [id, value] of Object.entries(session.accounts ?? {})) {
+    if (id === primary || !value || typeof value !== 'object') continue;
+    const account = value as { isPersonal?: unknown; accountCapabilities?: Record<string, unknown> };
+    if (account.accountCapabilities?.[CALENDAR_CAP] || account.isPersonal === false) {
+      ids.push(id);
+    }
+  }
+  return ids;
+}
+
+function scopedId(accountId: string, id: string): string {
+  return `${accountId}:${id}`;
 }
 
 function clampInt(value: unknown, min: number, max: number, fallback: number): number {

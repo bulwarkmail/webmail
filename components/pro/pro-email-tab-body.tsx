@@ -347,7 +347,9 @@ export function ProEmailView({ emailId, client: clientOverride, accountId, onLoa
         to: email.to?.map((a) => a.email).filter(Boolean).join(', ') || '',
         cc: email.cc?.map((a) => a.email).filter(Boolean).join(', ') || '',
         bcc: email.bcc?.map((a) => a.email).filter(Boolean).join(', ') || '',
-        subject: email.subject || '',
+        // Drafts saved before #1189 stored an empty subject as the composer's
+        // "(No Subject)" placeholder; reopen those with an empty field.
+        subject: email.subject && email.subject !== t('email_composer.no_subject') ? email.subject : '',
         body: htmlBody || bodyText,
         showCc: (email.cc?.length || 0) > 0,
         showBcc: (email.bcc?.length || 0) > 0,

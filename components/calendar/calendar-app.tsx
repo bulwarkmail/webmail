@@ -50,7 +50,7 @@ import { useIsEmbedded } from "@/hooks/use-is-embedded";
 import { useIsFocusedProTab, useIsPaneScoped } from "@/hooks/use-pane-context";
 import { useProMultiAccountCalendars } from "@/hooks/use-pro-multi-account-calendars";
 import { ResizeHandle } from "@/components/layout/resize-handle";
-import { sanitizeOutgoingCalendarEventData } from "@/lib/calendar-event-normalization";
+import { buildDuplicateEventData } from "@/lib/calendar-duplicate";
 import { filterTasksByCalendars } from "@/lib/calendar-tasks";
 import {
   baseEventStoreId,
@@ -91,6 +91,7 @@ import {
 } from "@/lib/calendar-scroll-window";
 import { useLiteLinkSegments } from "@/hooks/use-lite-link-segments";
 import { findMeetingLink } from "@/lib/event-links";
+import { useDocumentTitle } from "@/hooks/use-document-title";
 
 type PendingScopeAction =
   | { type: "edit"; event: CalendarEvent; updates: Partial<CalendarEvent>; sendScheduling?: boolean }
@@ -111,6 +112,8 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
   const linkSegments = useLiteLinkSegments('calendar', routeSegments);
   const router = useRouter();
   const t = useTranslations("calendar");
+  const tSidebar = useTranslations("sidebar");
+  useDocumentTitle(tSidebar("calendar"));
   const tWebcalAction = useTranslations("calendar.webcal_action");
   const tDeepLink = useTranslations("deep_link");
   const isMobile = useIsMobile();
@@ -1171,24 +1174,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
 
   const handleDuplicateFromDetail = useCallback(async () => {
     if (!detailEvent || !client) return;
-    const start = parseISO(detailEvent.start);
-    const newStart = addDays(start, 1);
-    const data = sanitizeOutgoingCalendarEventData<Partial<CalendarEvent>>({
-      title: detailEvent.title,
-      description: detailEvent.description,
-      start: format(newStart, "yyyy-MM-dd'T'HH:mm:ss"),
-      duration: detailEvent.duration,
-      timeZone: detailEvent.timeZone,
-      showWithoutTime: detailEvent.showWithoutTime,
-      calendarIds: { ...detailEvent.calendarIds },
-      status: "confirmed",
-      freeBusyStatus: detailEvent.freeBusyStatus,
-      privacy: detailEvent.privacy,
-    });
-    if (detailEvent.locations) data.locations = structuredClone(detailEvent.locations);
-    if (detailEvent.recurrenceRules) data.recurrenceRules = structuredClone(detailEvent.recurrenceRules);
-    if (detailEvent.alerts) data.alerts = structuredClone(detailEvent.alerts);
-    if (detailEvent.participants) data.participants = structuredClone(detailEvent.participants);
+    const data = buildDuplicateEventData(detailEvent);
     closeDetail();
     try {
       const created = await createEvent(client, data);
@@ -1219,24 +1205,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
 
   const handleDuplicateContextMenu = useCallback(async (event: CalendarEvent) => {
     if (!client) { toast.error(t("notifications.event_error")); return; }
-    const start = parseISO(event.start);
-    const newStart = addDays(start, 1);
-    const data = sanitizeOutgoingCalendarEventData<Partial<CalendarEvent>>({
-      title: event.title,
-      description: event.description,
-      start: format(newStart, "yyyy-MM-dd'T'HH:mm:ss"),
-      duration: event.duration,
-      timeZone: event.timeZone,
-      showWithoutTime: event.showWithoutTime,
-      calendarIds: { ...event.calendarIds },
-      status: "confirmed",
-      freeBusyStatus: event.freeBusyStatus,
-      privacy: event.privacy,
-    });
-    if (event.locations) data.locations = structuredClone(event.locations);
-    if (event.recurrenceRules) data.recurrenceRules = structuredClone(event.recurrenceRules);
-    if (event.alerts) data.alerts = structuredClone(event.alerts);
-    if (event.participants) data.participants = structuredClone(event.participants);
+    const data = buildDuplicateEventData(event);
     try {
       const created = await createEvent(client, data);
       if (created) {

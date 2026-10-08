@@ -348,6 +348,15 @@
     "external_content_warning": "Bilder und externe Inhalte wurden blockiert",
     "load_external_content": "Bilder laden",
     "trust_sender": "Diesem Absender immer vertrauen",
+    "sender_check": {
+      "unverified_label": "Absender nicht bestätigt",
+      "failed_label": "Absenderprüfung fehlgeschlagen",
+      "unverified": "Diese Nachricht gibt vor, von {domain} zu kommen, aber nichts bestätigt das. Sie trägt keine gültige Signatur von {domain} und kam nicht von einem Server, den {domain} zulässt.",
+      "unverified_sent_from": "Diese Nachricht gibt vor, von {domain} zu kommen, wurde aber von {host} verschickt und trägt keine gültige Signatur von {domain}.",
+      "failed": "Diese Nachricht gibt vor, von {domain} zu kommen, hat aber die Absenderprüfung dieser Domain nicht bestanden. Sie ist möglicherweise gefälscht.",
+      "failed_sent_from": "Diese Nachricht gibt vor, von {domain} zu kommen, wurde aber von {host} verschickt und hat die Absenderprüfung von {domain} nicht bestanden. Sie ist möglicherweise gefälscht.",
+      "caution": "Seien Sie vorsichtig mit Links, Anhängen und Fragen nach Passwörtern oder Zahlungsdaten."
+    },
     "back_to_list": "Zurück zur Liste",
     "view_contact": "Kontakt anzeigen",
     "message_details": "Nachrichtendetails",
@@ -630,6 +639,12 @@
     "attach": "Anhängen",
     "attach_photos": "Fotos & Videos",
     "attach_files": "Dateien",
+    "attach_from_files": "Aus Dateien anhängen",
+    "files_picker": {
+      "attach": "{count, plural, =0 {Anhängen} one {1 Datei anhängen} other {# Dateien anhängen}}",
+      "empty_folder": "Dieser Ordner ist leer",
+      "load_failed": "Ihre Dateien konnten nicht geladen werden"
+    },
     "discard": "Verwerfen",
     "discard_draft_title": "Entwurf verwerfen?",
     "discard_draft_confirm": "Sie haben ungespeicherte Änderungen. Möchten Sie diesen Entwurf verwerfen?",
@@ -841,8 +856,8 @@
     "identity_delete_failed": "Identität löschen fehlgeschlagen: {error}",
     "identity_unauthorized": "Sie sind nicht autorisiert, von dieser E-Mail-Adresse zu senden",
     "identity_not_found": "Identität nicht gefunden",
-    "vacation_saved": "Abwesenheitsnotiz-Einstellungen gespeichert",
-    "vacation_save_failed": "Fehler beim Speichern der Abwesenheitsnotiz-Einstellungen",
+    "vacation_saved": "Abwesenheits-Einstellungen gespeichert",
+    "vacation_save_failed": "Fehler beim Speichern der Abwesenheits-Einstellungen",
     "filters_saved": "Filter erfolgreich gespeichert",
     "filters_save_failed": "Fehler beim Speichern der Filter",
     "filters_deleted": "Filterregel gelöscht",
@@ -864,7 +879,8 @@
     "rule_undone": "Regeländerung rückgängig gemacht",
     "rule_undo_failed": "Die Regeländerung konnte nicht rückgängig gemacht werden",
     "rule_undo_conflict": "Ihre Filter wurden inzwischen geändert. Machen Sie die Änderung in den Filter-Einstellungen rückgängig.",
-    "rule_folder_failed": "Der Ordner konnte nicht erstellt werden"
+    "rule_folder_failed": "Der Ordner konnte nicht erstellt werden",
+    "vacation_filters_save_failed": "Abwesenheits-Einstellungen gespeichert, Weiterleitung und Antwortempfänger konnten aber nicht gespeichert werden"
   },
   "date": {
     "today": "Heute",
@@ -949,7 +965,7 @@
       "privacy": "Datenschutz & Sicherheit",
       "account": "Konto",
       "identities": "Identitäten",
-      "vacation": "Abwesenheitsnotiz",
+      "vacation": "Abwesenheit",
       "advanced": "Erweitert",
       "calendar": "Kalender",
       "filters": "Filter",
@@ -1830,28 +1846,24 @@
       }
     },
     "vacation": {
-      "title": "Abwesenheitsnotiz",
-      "description": "Automatisch auf eingehende E-Mails antworten, während Sie abwesend sind",
+      "title": "Abwesenheit",
+      "description": "Automatisch auf eingehende E-Mails reagieren, während Sie abwesend sind",
       "loading": "Abwesenheitseinstellungen werden geladen...",
       "not_supported": "Ihr Mailserver unterstützt keine Abwesenheitsantworten.",
       "fetch_error": "Fehler beim Laden der Abwesenheitseinstellungen. Bitte versuchen Sie es erneut.",
       "status": {
-        "label": "Abwesenheitsnotiz",
+        "label": "Automatisch antworten",
         "description": "Senden Sie eine automatische Antwort an Personen, die Ihnen eine E-Mail senden",
         "active": "Aktiv",
         "inactive": "Inaktiv"
       },
       "date_range": {
-        "title": "Zeitraum",
-        "description": "Optional die automatische Antwort auf einen bestimmten Zeitraum beschränken",
         "start": "Startdatum",
         "start_description": "Leer lassen für kein Startlimit",
         "end": "Enddatum",
         "end_description": "Leer lassen für kein Endlimit"
       },
       "message": {
-        "title": "Automatische Antwortnachricht",
-        "description": "Die Nachricht, die als Antwort gesendet wird",
         "subject_label": "Betreff",
         "subject_description": "Betreffzeile der automatischen Antwort",
         "subject_placeholder": "Abwesenheitsnotiz",
@@ -1871,10 +1883,32 @@
       "saving": "Speichern...",
       "warnings": {
         "end_before_start": "Das Enddatum muss nach dem Startdatum liegen",
+        "invalid_date": "Bitte ein gültiges Start- und Enddatum mit Uhrzeit angeben oder das Feld leer lassen",
         "start_in_past": "Das Startdatum liegt in der Vergangenheit",
         "empty_body": "Der Nachrichtentext ist leer - Empfänger erhalten eine leere Antwort",
         "subject_too_long": "Der Betreff ist für den Server zu lang (höchstens {max} Byte).",
-        "body_too_long": "Die Nachricht ist für den Server zu lang (höchstens {max} Byte, inklusive Formatierung)."
+        "body_too_long": "Die Nachricht ist für den Server zu lang (höchstens {max} Byte, inklusive Formatierung).",
+        "forward_address": "Bitte eine gültige Adresse für die Weiterleitung angeben",
+        "not_running": "Weiterleitung oder Antwortempfänger sind gespeichert, aber gerade nicht aktiv. Speichern aktiviert sie wieder."
+      },
+      "forward": {
+        "title": "Weiterleitung",
+        "description": "Leitet eingehende Nachrichten an eine andere Adresse weiter, mit oder ohne automatische Antwort, im Zeitraum oben (ohne Enddatum, bis sie ausgeschaltet wird). Spam wird nicht weitergeleitet.",
+        "enabled_label": "Nachrichten weiterleiten",
+        "to_label": "Weiterleiten an",
+        "to_placeholder": "email@beispiel.de",
+        "keep_label": "Im Posteingang behalten",
+        "keep_description": "Sonst wird die Nachricht nur weitergeleitet: Sie bleibt nicht in diesem Postfach, und keine Filterregel läuft für sie."
+      },
+      "audience": {
+        "label": "Antworten an",
+        "description": "Interne Absender: {domains}",
+        "all": "Alle Absender",
+        "internal": "Nur interne Absender",
+        "external": "Nur externe Absender"
+      },
+      "auto_reply": {
+        "title": "Automatische Antwort"
       }
     },
     "folders": {
@@ -1899,6 +1933,15 @@
       "reorder": "Zum Neuanordnen ziehen",
       "reorder_error": "Ordner konnten nicht neu angeordnet werden",
       "move_error": "Ordner konnte nicht verschoben werden",
+      "select_folder": "{name} auswählen",
+      "select_hint": "Auswählen. Umschalt+Klick wählt alle Ordner bis zum zuletzt angeklickten aus.",
+      "selected_count": "{count, plural, one {# Ordner} other {# Ordner}} ausgewählt",
+      "move_to": "Verschieben nach...",
+      "move_to_top_level": "Oberste Ebene",
+      "move": "Verschieben",
+      "clear_selection": "Auswahl aufheben",
+      "folders_moved": "{count, plural, one {# Ordner verschoben} other {# Ordner verschoben}}",
+      "move_partial_error": "{count, plural, one {# Ordner konnte} other {# Ordner konnten}} nicht verschoben werden",
       "subfolder_of": "In {name}",
       "subfolder_name": "Name des Unterordners",
       "new_folder_name": "Ordnername",
@@ -2243,7 +2286,19 @@
       "suggest_list": "List-Id",
       "suggest_domain": "@{domain}",
       "apply_existing": "Auch auf vorhandene Nachrichten in diesem Ordner anwenden",
-      "apply_existing_unsupported": "Nur Regeln, die Absender, Empfänger, Betreff oder Kopfzeilen prüfen und verschieben, kopieren, als gelesen markieren, mit Stern markieren oder mit Label versehen, lassen sich auf vorhandene Nachrichten anwenden."
+      "apply_existing_unsupported": "Nur Regeln, die Absender, Empfänger, Betreff oder Kopfzeilen prüfen und verschieben, kopieren, als gelesen markieren, mit Stern markieren oder mit Label versehen, lassen sich auf vorhandene Nachrichten anwenden.",
+      "period_title": "Zeitraum",
+      "period_start": "Startdatum",
+      "period_end": "Enddatum",
+      "validation_period_order": "Das Enddatum muss nach dem Startdatum liegen",
+      "period_toggle": "Nur in einem Zeitraum aktiv",
+      "period_hint": "Gilt für Nachrichten, die in diesem Zeitraum eintreffen. Ein leeres Feld lässt den Zeitraum an dieser Seite offen.",
+      "validation_period_empty": "Bitte ein Start- oder Enddatum für den Zeitraum angeben",
+      "validation_period_invalid": "Bitte für den Zeitraum ein gültiges Datum mit Uhrzeit angeben oder das Feld leer lassen",
+      "apply_existing_period": "Eine Regel mit Zeitraum wirkt nur auf Nachrichten, die in diesem Zeitraum eintreffen, und lässt sich daher nicht auf vorhandene Nachrichten anwenden.",
+      "period_status_scheduled": "geplant",
+      "period_status_active": "aktiv",
+      "period_status_expired": "abgelaufen"
     },
     "templates": {
       "title": "E-Mail-Vorlagen",

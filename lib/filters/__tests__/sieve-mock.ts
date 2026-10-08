@@ -80,3 +80,50 @@ export function mockSieveAccount(
     },
   };
 }
+
+export const STALWART_VACATION_SCRIPT = 'require "vacation";\nvacation "Ich bin nicht da.";\n';
+
+interface VacationFields {
+  fromDate: string | null;
+  toDate: string | null;
+  subject: string;
+  textBody: string;
+  htmlBody: string | null;
+}
+
+/**
+ * A Sieve account that behaves like Stalwart for VacationResponse: turning
+ * the auto-reply on activates its own "vacation" script, which switches
+ * every other script off, and it reads as on only while that script is the
+ * active one. Like Stalwart, an update that leaves isEnabled out switches
+ * that script off, and one redirect per message is the default limit.
+ */
+export function mockStalwartAccount(
+  accountId: string,
+  initial: Parameters<typeof mockSieveAccount>[1],
+  extensions: string[],
+  options: { maxNumberRedirects?: number; vacation?: Partial<VacationFields> } = {},
+) {
+  const account = mockSieveAccount(accountId, initial, extensions);
+  let vacation: VacationFields = { fromDate: null, toDate: null, subject: '', textBody: 'away', htmlBody: null, ...options.vacation };
+  const maxNumberRedirects = 'maxNumberRedirects' in options ? options.maxNumberRedirects : 1;
+  const client = Object.assign(account.client, {
+    supportsSieve: () => true,
+    hasAccountCapability: () => false,
+    getSieveAccounts: () => [{ id: accountId, name: 'Me', isPrimary: true }],
+    getSieveCapabilities: () => ({ sieveExtensions: extensions, maxNumberRedirects }) as never,
+    getVacationResponse: vi.fn(async () => ({ ...vacation, isEnabled: account.active() === 'vacation' })),
+    setVacationResponse: vi.fn(async (updates: Record<string, unknown>) => {
+      const { isEnabled, ...fields } = updates;
+      vacation = { ...vacation, ...fields };
+      if (isEnabled === true) {
+        const own = account.scripts.find((s) => s.name === 'vacation');
+        if (own) await client.activateSieveScript(own.id, accountId);
+        else await client.createSieveScript('vacation', STALWART_VACATION_SCRIPT, true, accountId);
+      } else if (account.active() === 'vacation') {
+        await client.deactivateSieveScript(accountId);
+      }
+    }),
+  });
+  return { ...account, client };
+}

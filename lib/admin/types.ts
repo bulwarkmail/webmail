@@ -58,6 +58,7 @@ export interface FeatureGates {
   debugModeEnabled: boolean;
   folderIconsEnabled: boolean;
   hoverActionsConfigEnabled: boolean;
+  tabTitleSubjectEnabled: boolean;
   filesEnabled: boolean;
   contactsEnabled: boolean;
   /** @deprecated Folded into `crossAllViewEnabled`; normalized forward on policy load. */
@@ -85,6 +86,7 @@ export const DEFAULT_FEATURE_GATES: FeatureGates = {
   debugModeEnabled: true,
   folderIconsEnabled: true,
   hoverActionsConfigEnabled: true,
+  tabTitleSubjectEnabled: true,
   filesEnabled: true,
   contactsEnabled: true,
   allMailViewEnabled: false,

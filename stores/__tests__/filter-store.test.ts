@@ -531,9 +531,9 @@ describe('filter-store', () => {
     });
 
     it('reports the auto-reply as on while the filters include it', async () => {
-      const { isVacationIncludedInFilters } = await import('../filter-store');
-      expect(await isVacationIncludedInFilters((await makeClient(false, true, true)).client)).toBe(true);
-      expect(await isVacationIncludedInFilters((await makeClient(false, true)).client)).toBe(false);
+      const { readVacationFilters } = await import('../filter-store');
+      expect((await readVacationFilters((await makeClient(false, true, true)).client)).includesVacation).toBe(true);
+      expect((await readVacationFilters((await makeClient(false, true)).client)).includesVacation).toBe(false);
     });
   });
 });

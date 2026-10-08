@@ -13,7 +13,7 @@ import {
   Inbox, Send, FileText, Trash, ShieldAlert, Archive,
   Star, Heart, Bookmark, Tag, Flag, Briefcase, Users,
   Bell, Zap, Globe, Lock, Eye, MessageSquare, Mail,
-  AlertTriangle, NotebookPen, CalendarClock, BellOff,
+  AlertTriangle, NotebookPen, CalendarClock, BellOff, CheckSquare, Square,
   type AppIcon,
 } from '@/components/icons';
 import { cn, buildMailboxTree, flattenMailboxTree, type MailboxNode } from '@/lib/utils';
@@ -38,6 +38,9 @@ import { CSS } from '@dnd-kit/utilities';
 const INDENTATION_WIDTH = 16;
 
 const STANDARD_ROLES = ['inbox', 'drafts', 'sent', 'trash', 'junk', 'archive'] as const;
+
+// "Move to" value for the root of the folder tree.
+const TOP_LEVEL = '__top__';
 
 const ROLE_ICONS: Record<string, AppIcon> = {
   inbox: Inbox,
@@ -154,7 +157,7 @@ function SortableFolderRow({ id, title, children }: { id: string; title: string;
 export function FolderSettings() {
   const t = useTranslations('settings.folders');
   const { client } = useAuthStore();
-  const { mailboxes, fetchMailboxes, createMailbox, renameMailbox, deleteMailbox, setMailboxRole, reorderMailboxes, moveMailbox } = useEmailStore();
+  const { mailboxes, fetchMailboxes, createMailbox, renameMailbox, deleteMailbox, setMailboxRole, reorderMailboxes, moveMailbox, moveMailboxes } = useEmailStore();
 
   const sensors = useSensors(
     // Small activation distance so clicking the row's buttons still works.
@@ -188,6 +191,13 @@ export function FolderSettings() {
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
   const [offsetLeft, setOffsetLeft] = useState(0);
+
+  // Folders ticked for a bulk move (#1173). Shift-click ticks or unticks the
+  // visible rows between the last clicked checkbox and this one.
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [selectionAnchor, setSelectionAnchor] = useState<string | null>(null);
+  const [moveTarget, setMoveTarget] = useState('');
+  const [isMoving, setIsMoving] = useState(false);
 
   const ownMailboxes = mailboxes.filter(mb => !mb.isShared);
   const folderTree = buildMailboxTree(ownMailboxes);
@@ -261,6 +271,98 @@ export function FolderSettings() {
     moveMailbox(client, activeId, plan.parentId, siblingsVisible ? plan.orderedSiblingIds : undefined).catch(() => {
       toast.error(t('move_error'));
     });
+  };
+
+  const selectedCount = ownMailboxes.filter(mb => selectedIds.has(mb.id)).length;
+
+  // A ticked folder inside another ticked folder travels with it, so only the
+  // topmost ticked folders get a new parent; the rest keep their place.
+  const moveRoots: MailboxNode[] = [];
+  const collectMoveRoots = (nodes: MailboxNode[]) => {
+    for (const n of nodes) {
+      if (selectedIds.has(n.id)) moveRoots.push(n);
+      else collectMoveRoots(n.children);
+    }
+  };
+  collectMoveRoots(folderTree);
+
+  // A folder can't move into itself or below itself.
+  const blockedTargets = new Set<string>();
+  const blockSubtree = (n: MailboxNode) => {
+    blockedTargets.add(n.id);
+    n.children.forEach(blockSubtree);
+  };
+  moveRoots.forEach(blockSubtree);
+
+  const getFolderPath = (mb: { parentId?: string; name: string }): string => {
+    const parts = [mb.name];
+    const seen = new Set<string>();
+    let parentId = mb.parentId;
+    while (parentId && !seen.has(parentId)) {
+      seen.add(parentId);
+      const parent = ownMailboxes.find(p => p.id === parentId);
+      if (!parent) break;
+      parts.unshift(parent.name);
+      parentId = parent.parentId;
+    }
+    return parts.join(' / ');
+  };
+
+  const moveTargetOptions = flattenMailboxTree(folderTree)
+    .filter(mb => !blockedTargets.has(mb.id) && !(mb.myRights && !mb.myRights.mayCreateChild))
+    .map(mb => ({ value: mb.id, label: getFolderPath(mb) }));
+
+  const handleSelectClick = (id: string, e: React.MouseEvent) => {
+    const tick = !selectedIds.has(id);
+    let ids = [id];
+    if (e.shiftKey && selectionAnchor) {
+      const order = visibleItems.filter(i => i.node.myRights?.mayRename).map(i => i.id);
+      const from = order.indexOf(selectionAnchor);
+      const to = order.indexOf(id);
+      if (from >= 0 && to >= 0) ids = order.slice(Math.min(from, to), Math.max(from, to) + 1);
+    }
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      for (const x of ids) {
+        if (tick) next.add(x);
+        else next.delete(x);
+      }
+      return next;
+    });
+    setSelectionAnchor(id);
+  };
+
+  const clearSelection = () => {
+    setSelectedIds(new Set());
+    setSelectionAnchor(null);
+    setMoveTarget('');
+  };
+
+  const handleMoveSelected = async () => {
+    if (!client || !moveTarget) return;
+    const parentId = moveTarget === TOP_LEVEL ? null : moveTarget;
+    const ids = moveRoots.filter(n => (n.parentId ?? null) !== parentId).map(n => n.id);
+    if (ids.length === 0) {
+      clearSelection();
+      return;
+    }
+    setIsMoving(true);
+    try {
+      const failed = await moveMailboxes(client, ids, parentId);
+      if (parentId) setExpandedFolders(prev => new Set(prev).add(parentId));
+      if (failed.length === 0) {
+        toast.success(t('folders_moved', { count: ids.length }));
+        clearSelection();
+      } else {
+        toast.error(t('move_partial_error', { count: failed.length }));
+        // Leave the refused folders ticked so they are easy to find.
+        setSelectedIds(new Set(failed));
+      }
+    } catch {
+      toast.error(t('move_error'));
+    } finally {
+      setIsMoving(false);
+    }
   };
 
   const getRoleMailboxId = (role: string): string => {
@@ -451,6 +553,7 @@ export function FolderSettings() {
     const mb = item.node;
     const hasChildren = mb.children.length > 0;
     const isExpanded = expandedFolders.has(item.id);
+    const isSelected = selectedIds.has(item.id);
     // The dragged row previews its projected nesting depth, so a horizontal
     // drag shows which parent the folder will land under.
     const depth = activeDragId === item.id && projected ? projected.depth : item.depth;
@@ -523,10 +626,36 @@ export function FolderSettings() {
       <div key={mb.id}>
         <SortableFolderRow id={mb.id} title={t('reorder')}>
         <div
-          className="flex items-center justify-between py-2 px-3 rounded-md hover:bg-muted/50"
+          className={cn(
+            "flex items-center justify-between py-2 px-3 rounded-md hover:bg-muted/50",
+            isSelected && "bg-muted",
+          )}
           style={{ paddingLeft: 12 + depth * 16 }}
         >
           <div className="flex items-center gap-2.5 min-w-0">
+            {mb.myRights?.mayRename ? (
+              <button
+                type="button"
+                role="checkbox"
+                aria-checked={isSelected}
+                aria-label={t('select_folder', { name: mb.name })}
+                title={t('select_hint')}
+                // Keep Shift+click from selecting the page text in between.
+                onMouseDown={(e) => { if (e.shiftKey) e.preventDefault(); }}
+                onClick={(e) => handleSelectClick(mb.id, e)}
+                className={cn(
+                  "p-0.5 rounded flex-shrink-0 transition-colors hover:bg-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                  isSelected ? "text-primary" : "text-muted-foreground",
+                )}
+              >
+                {isSelected
+                  ? <CheckSquare className="w-4 h-4" />
+                  : <Square className="w-4 h-4 opacity-60" />
+                }
+              </button>
+            ) : (
+              <span className="w-5 flex-shrink-0" />
+            )}
             {/* Expand/collapse toggle for folders with children */}
             {hasChildren ? (
               <button
@@ -630,6 +759,39 @@ export function FolderSettings() {
     <div className="space-y-8">
       {/* Folder List - primary section */}
       <SettingsSection title={t('folder_list')} description={t('folder_list_description')}>
+        {selectedCount > 0 && (
+          <div className="sticky top-0 z-20 flex flex-wrap items-center gap-2 p-2.5 rounded-md border border-border bg-background">
+            <span className="text-sm text-foreground me-auto">
+              {t('selected_count', { count: selectedCount })}
+            </span>
+            <Select
+              value={moveTarget}
+              onChange={setMoveTarget}
+              ariaLabel={t('move_to')}
+              disabled={isMoving}
+              className="min-w-0 max-w-full"
+              options={[
+                { value: '', label: t('move_to') },
+                { value: TOP_LEVEL, label: t('move_to_top_level') },
+                ...moveTargetOptions,
+              ]}
+            />
+            <button
+              onClick={handleMoveSelected}
+              disabled={isMoving || !moveTarget}
+              className="px-3 py-1.5 text-xs font-medium bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50"
+            >
+              {t('move')}
+            </button>
+            <button
+              onClick={clearSelection}
+              disabled={isMoving}
+              className="px-3 py-1.5 text-xs bg-muted text-foreground rounded-md hover:bg-accent disabled:opacity-50"
+            >
+              {t('clear_selection')}
+            </button>
+          </div>
+        )}
         <div className="space-y-0.5">
           {folderTree.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-center">

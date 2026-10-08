@@ -496,6 +496,12 @@ export async function fetchCrossViewEmails(
 /**
  * Text search within a cross-account view: the view filter AND a free-text
  * condition, fanned out across accounts.
+ *
+ * Searching from "All mail" is the exception: it searches every folder of
+ * every account except Trash and Junk, the standard search panel's default
+ * scope. The All mail list leaves Sent, Archive and Drafts out (or whatever
+ * the folder picker excludes), and narrowing the search to that list hid
+ * every sent reply from it. Unread and Starred still narrow to their list.
  */
 export async function searchCrossViewEmails(
   accounts: UnifiedAccountClient[],
@@ -504,6 +510,9 @@ export async function searchCrossViewEmails(
   limit: number,
   position: FanOutPosition,
 ): Promise<UnifiedFetchResult> {
+  if (view === 'all') {
+    return searchAcrossAccounts(accounts, query, limit, position, { excludeTrashAndJunk: true });
+  }
   return fanOutCrossQuery(accounts, (account, jmapAccountId, ids) =>
     account.client.advancedSearchEmails(
       { operator: 'AND', conditions: [buildCrossFilter(view, ids), { text: query }] },
@@ -517,7 +526,9 @@ export async function searchCrossViewEmails(
  * Like `searchCrossViewEmails`, but applies an advanced filter (text + field
  * conditions from `buildJMAPFilter`, built WITHOUT an `inMailbox` clause) on top
  * of the cross-view membership. `extraFilter` may be empty ({}), in which case
- * only the membership filter is used (equivalent to a plain browse).
+ * only the membership filter is used (equivalent to a plain browse). A
+ * non-empty filter on "All mail" searches every folder except Trash and Junk,
+ * as in `searchCrossViewEmails`.
  */
 export async function advancedSearchCrossViewEmails(
   accounts: UnifiedAccountClient[],
@@ -527,6 +538,9 @@ export async function advancedSearchCrossViewEmails(
   position: FanOutPosition,
 ): Promise<UnifiedFetchResult> {
   const hasExtra = Object.keys(extraFilter).length > 0;
+  if (view === 'all' && hasExtra) {
+    return advancedSearchAcrossAccounts(accounts, extraFilter, limit, position, { excludeTrashAndJunk: true });
+  }
   return fanOutCrossQuery(accounts, (account, jmapAccountId, ids) => {
     const membership = buildCrossFilter(view, ids);
     const filter = hasExtra

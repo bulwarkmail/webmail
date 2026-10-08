@@ -140,10 +140,11 @@ export class DemoJMAPClient implements IJMAPClient {
   async getMailboxes(_accountId?: string): Promise<Mailbox[]> { return [...this.data.mailboxes]; }
   async getAllMailboxes(): Promise<Mailbox[]> { return [...this.data.mailboxes]; }
 
-  async createMailbox(name: string, parentId?: string, _accountId?: string): Promise<Mailbox> {
+  async createMailbox(name: string, parentId?: string, _accountId?: string, options?: { role?: string }): Promise<Mailbox> {
     const mb: Mailbox = {
       id: generateDemoId('mailbox'),
       name,
+      role: options?.role,
       sortOrder: 100,
       totalEmails: 0,
       unreadEmails: 0,
@@ -160,6 +161,16 @@ export class DemoJMAPClient implements IJMAPClient {
   async updateMailbox(mailboxId: string, changes: { name?: string; parentId?: string | null; role?: string | null; sortOrder?: number }, _accountId?: string): Promise<void> {
     const mb = this.data.mailboxes.find(m => m.id === mailboxId);
     if (mb) Object.assign(mb, changes);
+  }
+
+  async updateMailboxes(updates: Record<string, { name?: string; parentId?: string | null; role?: string | null; sortOrder?: number }>, _accountId?: string): Promise<Record<string, string>> {
+    const failed: Record<string, string> = {};
+    for (const [id, changes] of Object.entries(updates)) {
+      const mb = this.data.mailboxes.find(m => m.id === id);
+      if (mb) Object.assign(mb, changes);
+      else failed[id] = 'notFound';
+    }
+    return failed;
   }
 
   async deleteMailbox(mailboxId: string, _accountId?: string): Promise<void> {

@@ -102,6 +102,7 @@ import {
   tabSearchPaths,
 } from '@/lib/settings-search';
 import { useLiteLinkSegments } from '@/hooks/use-lite-link-segments';
+import { useDocumentTitle } from '@/hooks/use-document-title';
 
 type Tab = SettingsSearchTab;
 
@@ -217,6 +218,7 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
   const router = useRouter();
   const t = useTranslations('settings');
   const tSidebar = useTranslations('sidebar');
+  useDocumentTitle(tSidebar('settings'));
   const { client, isAuthenticated, logout, checkAuth, isLoading: authLoading } = useAuthStore();
   const { showAppsModal, inlineApp, loadedApps, handleManageApps, handleInlineApp, closeInlineApp, closeAppsModal } = useSidebarApps();
   const isEmbedded = useIsEmbedded();

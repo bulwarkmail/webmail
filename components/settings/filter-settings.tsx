@@ -13,7 +13,9 @@ import { useSettingsStore } from "@/stores/settings-store";
 import { toast } from "@/stores/toast-store";
 import type { FilterRule } from "@/lib/jmap/sieve-types";
 import type { Mailbox } from "@/lib/jmap/types";
-import { forwardsAround, worstCaseForwards } from "@/lib/filters/forward-limit";
+import { forwardsAround, inRunOrder, worstCaseForwards } from "@/lib/filters/forward-limit";
+import { isPeriodBoundary, periodStatus, supportsPeriods } from "@/lib/sieve/period";
+import { formatDateTime } from "@/lib/utils";
 import { useVacationStore } from "@/stores/vacation-store";
 import { useManagedAccountStore } from "@/stores/managed-account-store";
 import {
@@ -33,8 +35,29 @@ function isReadonlyRule(r: FilterRule): boolean {
   return r.origin === "external" || r.origin === "opaque";
 }
 
+/**
+ * The rule's period ("5 Oct 2026, 08:00 – …") and, for a rule that is on,
+ * where now falls in it; null without a period.
+ */
+function usePeriodLabel(rule: FilterRule): { range: string; status: string | null } | null {
+  const t = useTranslations("settings.filters");
+  const timeFormat = useSettingsStore((s) => s.timeFormat);
+  const status = periodStatus(rule);
+  if (!status) return null;
+  const format = (boundary: string | undefined) => isPeriodBoundary(boundary)
+    ? formatDateTime(boundary, timeFormat, { day: "numeric", month: "short", year: "numeric" })
+    : "…";
+  return {
+    range: `${format(rule.activeFrom)} – ${format(rule.activeUntil)}`,
+    // A rule that is off does nothing in any period; "active" next to it
+    // would say otherwise.
+    status: rule.enabled ? t(`period_status_${status}`) : null,
+  };
+}
+
 export function RuleSummary({ rule }: { rule: FilterRule }) {
   const t = useTranslations("settings.filters");
+  const period = usePeriodLabel(rule);
 
   const conditions = rule.conditions.slice(0, 2).map((c) => {
     const field = t(`condition_fields.${c.field}`);
@@ -85,12 +108,14 @@ export function RuleSummary({ rule }: { rule: FilterRule }) {
           </span>
         ))}
       </span>
+      {period && <span className="ms-1">· {period.range}{period.status && ` (${period.status})`}</span>}
     </div>
   );
 }
 
 export function VisualRuleSummary({ rule }: { rule: FilterRule }) {
   const t = useTranslations("settings.filters");
+  const period = usePeriodLabel(rule);
 
   const joiner = rule.matchType === "all" ? t("and") : t("or");
   const matchLabel = rule.matchType === "all" ? t("match_all_conditions") : t("match_any_condition");
@@ -157,6 +182,20 @@ export function VisualRuleSummary({ rule }: { rule: FilterRule }) {
           );
         })}
       </div>
+
+      {period && (
+        <div className="flex items-baseline gap-1.5 flex-wrap">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-violet-500 dark:text-violet-400">
+            {t("period_title")}
+          </span>
+          <span className="min-w-0 max-w-full px-1.5 py-px rounded-sm bg-muted/60 text-foreground wrap-anywhere">
+            {period.range}
+          </span>
+          {period.status && (
+            <span className="text-[10px] text-muted-foreground/60 italic">({period.status})</span>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -180,6 +219,7 @@ export function FilterSettings() {
     rawScript,
     vacationSettings,
     includeVacation,
+    vacationForward,
     sieveCapabilities,
     selectAccount,
     saveFilters,
@@ -254,16 +294,19 @@ export function FilterSettings() {
   const draggedIndexRef = useRef<number | null>(null);
 
   // A message can collect only so many forwards on this server. The rules run
-  // in the order listed, and one that stops ends the script for its messages,
-  // so the order counts (see lib/filters/forward-limit.ts).
+  // in the order listed, behind the out of office forwarding, and one that
+  // stops ends the script for its messages, so the order counts (see
+  // lib/filters/forward-limit.ts).
   const redirectLimit = sieveCapabilities?.maxNumberRedirects;
+  const runOrder = inRunOrder(rules, vacationForward);
   const tooManyForwards =
-    typeof redirectLimit === "number" && redirectLimit > 0 && worstCaseForwards(rules) > redirectLimit;
+    typeof redirectLimit === "number" && redirectLimit > 0 && worstCaseForwards(runOrder) > redirectLimit;
   // The edited rule where it is; a new one goes below Bulwark's own rules.
   const editedIndex = editingRule ? rules.findIndex((r) => r.id === editingRule.id) : -1;
   const forwardsOfEdited = forwardsAround(
-    rules,
-    editedIndex >= 0 ? editedIndex : rules.filter((r) => !isReadonlyRule(r)).length,
+    runOrder,
+    runOrder.length - rules.length +
+      (editedIndex >= 0 ? editedIndex : rules.filter((r) => !isReadonlyRule(r)).length),
     editedIndex >= 0,
   );
 
@@ -432,7 +475,12 @@ export function FilterSettings() {
     );
   }
 
-  if (isLoading) {
+  // A reload in the background (another device or tab changed the script)
+  // must not take away a dialog the user is typing in: while one is open,
+  // the page keeps what it has.
+  const editing = showRuleModal || showSieveEditor;
+
+  if (isLoading && !editing) {
     return (
       <SettingsSection title={t("title")} description={t("description")}>
         <div className="flex items-center gap-2 py-4 text-sm text-muted-foreground">
@@ -443,7 +491,7 @@ export function FilterSettings() {
     );
   }
 
-  if (error) {
+  if (error && !editing) {
     return (
       <SettingsSection title={t("title")} description={t("description")}>
         <div className="text-sm text-red-600 dark:text-red-400 py-4">
@@ -727,6 +775,7 @@ export function FilterSettings() {
           rule={editingRule}
           mailboxes={mailboxes}
           maxRedirects={sieveCapabilities?.maxNumberRedirects}
+          periodsSupported={supportsPeriods(sieveCapabilities?.sieveExtensions)}
           forwardsBefore={forwardsOfEdited.before}
           forwardsAfter={forwardsOfEdited.after}
           onSave={handleSaveRule}

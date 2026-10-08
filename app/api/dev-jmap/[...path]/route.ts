@@ -1773,7 +1773,7 @@ function handleEmailSet(args: MethodArgs, callId: string): MethodResult {
         from: (data.from as MockEmail['from']) || [{ name: 'Dev User', email: 'dev@localhost' }],
         to: (data.to as MockEmail['to']) || [],
         cc: (data.cc as MockEmail['cc']) || [],
-        subject: (data.subject as string) || '(no subject)',
+        subject: typeof data.subject === 'string' ? data.subject : '',
         preview: (previewText || (data.subject as string) || '').slice(0, 120),
         hasAttachment: false,
         textBody: [],

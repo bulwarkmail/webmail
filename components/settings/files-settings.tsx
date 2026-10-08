@@ -7,6 +7,7 @@ import { SettingsSection, SettingItem, ToggleSwitch, RadioGroup } from "./settin
 import { loadFilesSettings, saveFilesSettings, type FilesSettings, type FolderLayout } from "@/components/files/files-settings-dialog";
 import { cn } from "@/lib/utils";
 import { withBasePath } from "@/lib/browser-navigation";
+import { useConfig } from "@/hooks/use-config";
 
 interface SampleFile {
   name: string;
@@ -57,8 +58,12 @@ function formatSize(bytes: number): string {
 }
 
 function FilesSettingsPreview({ settings }: { settings: FilesSettings }) {
+  // The sample thumbnail shows the configured logo on a branded deployment,
+  // the bundled one otherwise. (#1160)
+  const { appLogoLightUrl, appLogoDarkUrl } = useConfig();
+  const thumbnailUrl = appLogoLightUrl || appLogoDarkUrl || "/branding/Bulwark_Logo_Color.png";
   const sortedFiles = useMemo(() => {
-    let files = SAMPLE_FILES.filter((f) => {
+    let files = SAMPLE_FILES.map((f) => (f.thumbnailUrl ? { ...f, thumbnailUrl } : f)).filter((f) => {
       if (!settings.showHiddenFiles && f.hidden) return false;
       if (settings.folderLayout === "sidebar" && f.isFolder) return false;
       return true;
@@ -78,7 +83,7 @@ function FilesSettingsPreview({ settings }: { settings: FilesSettings }) {
     });
 
     return files;
-  }, [settings.showHiddenFiles, settings.folderLayout, settings.defaultSortKey, settings.defaultSortDir]);
+  }, [settings.showHiddenFiles, settings.folderLayout, settings.defaultSortKey, settings.defaultSortDir, thumbnailUrl]);
 
   const listView = (
     <div className="flex-1 min-w-0 overflow-hidden">

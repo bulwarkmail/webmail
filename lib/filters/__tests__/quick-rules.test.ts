@@ -240,6 +240,15 @@ describe('applyQuickRule', () => {
     }
   });
 
+  it('leaves a rule with a period alone, since the new values would only act within it', () => {
+    for (const period of [{ activeFrom: '2026-10-05T06:00:00.000Z' }, { activeUntil: '2026-10-16T16:00:00.000Z' }]) {
+      const existing = [rule({ id: 'target', ...period })];
+      // Neither merged into it nor counted as covered by it.
+      expect(applyQuickRule(existing, candidate('bob@acme.com')).kind).toBe('created');
+      expect(applyQuickRule(existing, candidate('anna@acme.com')).kind).toBe('created');
+    }
+  });
+
   it('merges List-Id rules by header name, whatever its case', () => {
     const existing = [rule({ id: 'lists', conditions: [{ field: 'header', headerName: 'list-id', comparator: 'contains', value: 'a.example.org' }] })];
     const outcome = applyQuickRule(existing, rule({

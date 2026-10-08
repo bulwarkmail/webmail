@@ -195,6 +195,20 @@ export function fromZonedDisplayDate(wall: Date, timeZone: string): Date {
 }
 
 /**
+ * The instant at which the clock in `timeZone` reads `w`. Unlike
+ * fromZonedDisplayDate it never goes through a Date's local fields, so a
+ * time that the browser's own zone skips at a DST change is not shifted.
+ */
+export function fromWallClock(w: WallClock, timeZone: string): Date {
+  const d = new Date(0);
+  d.setUTCFullYear(w.year, w.month - 1, w.day);
+  d.setUTCHours(w.hour, w.minute, w.second, 0);
+  const asUtc = d.getTime();
+  const guess = asUtc - getTimeZoneOffsetMs(new Date(asUtc), timeZone);
+  return new Date(asUtc - getTimeZoneOffsetMs(new Date(guess), timeZone));
+}
+
+/**
  * Instant -> display date for the calendar grid. Identity unless the user's
  * time zone override differs from the browser zone.
  */

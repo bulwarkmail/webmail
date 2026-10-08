@@ -348,6 +348,15 @@
     "external_content_warning": "Görseller ve harici içerik engellendi",
     "load_external_content": "Görselleri yükle",
     "trust_sender": "Bu gönderene her zaman güven",
+    "sender_check": {
+      "unverified_label": "Doğrulanmamış gönderen",
+      "failed_label": "Gönderen denetimi başarısız",
+      "unverified": "Bu ileti {domain} etki alanından geldiğini iddia ediyor, ancak bunu doğrulayan hiçbir şey yok. {domain} etki alanından geçerli bir imzası yok ve {domain} etki alanının yetkilendirdiği bir sunucudan gelmedi.",
+      "unverified_sent_from": "Bu ileti {domain} etki alanından geldiğini iddia ediyor, ancak {host} etki alanından gönderildi ve {domain} etki alanından geçerli bir imzası yok.",
+      "failed": "Bu ileti {domain} etki alanından geldiğini iddia ediyor, ancak bu etki alanının gönderen denetimlerinden geçemedi. Sahte olabilir.",
+      "failed_sent_from": "Bu ileti {domain} etki alanından geldiğini iddia ediyor, ancak {host} etki alanından gönderildi ve {domain} etki alanının gönderen denetimlerinden geçemedi. Sahte olabilir.",
+      "caution": "Bağlantılara, eklere ve parola ya da ödeme bilgisi isteklerine karşı dikkatli olun."
+    },
     "back_to_list": "Listeye dön",
     "view_contact": "Kişiyi görüntüle",
     "message_details": "İleti Ayrıntıları",
@@ -630,6 +639,12 @@
     "attach": "Ekle",
     "attach_photos": "Photos & Videos",
     "attach_files": "Files",
+    "attach_from_files": "Dosyalar'dan ekle",
+    "files_picker": {
+      "attach": "{count, plural, =0 {Ekle} one {1 dosya ekle} other {# dosya ekle}}",
+      "empty_folder": "Bu klasör boş",
+      "load_failed": "Dosyalarınız yüklenemedi"
+    },
     "discard": "Vazgeç",
     "discard_draft_title": "Taslaktan vazgeçilsin mi?",
     "discard_draft_confirm": "Kaydedilmemiş değişiklikleriniz var. Bu taslaktan vazgeçmek istiyor musunuz?",
@@ -841,8 +856,8 @@
     "identity_delete_failed": "Kimlik silinemedi: {error}",
     "identity_unauthorized": "Bu e-posta adresinden gönderme yetkiniz yok",
     "identity_not_found": "Kimlik bulunamadı",
-    "vacation_saved": "Tatil otomatik yanıtı ayarları kaydedildi",
-    "vacation_save_failed": "Tatil otomatik yanıtı ayarları kaydedilemedi",
+    "vacation_saved": "Ofis dışında ayarları kaydedildi",
+    "vacation_save_failed": "Ofis dışında ayarları kaydedilemedi",
     "filters_saved": "Filtreler başarıyla kaydedildi",
     "filters_save_failed": "Filtreler kaydedilemedi",
     "filters_deleted": "Filtre kuralı silindi",
@@ -864,7 +879,8 @@
     "rule_undone": "Kural değişikliği geri alındı",
     "rule_undo_failed": "Kural değişikliği geri alınamadı",
     "rule_undo_conflict": "Filtreleriniz o zamandan beri değişti. Değişikliği filtre ayarlarından geri alın.",
-    "rule_folder_failed": "Klasör oluşturulamadı"
+    "rule_folder_failed": "Klasör oluşturulamadı",
+    "vacation_filters_save_failed": "Ofis dışında ayarları kaydedildi, ancak iletme ve yanıt alıcıları kaydedilemedi"
   },
   "date": {
     "today": "Bugün",
@@ -949,7 +965,7 @@
       "privacy": "Gizlilik ve Güvenlik",
       "account": "Hesap",
       "identities": "Kimlikler",
-      "vacation": "Tatil Yanıtlayıcı",
+      "vacation": "Ofis Dışında",
       "advanced": "Gelişmiş",
       "calendar": "Takvim",
       "filters": "Filtreler",
@@ -1830,28 +1846,24 @@
       }
     },
     "vacation": {
-      "title": "Tatil Yanıtlayıcı",
-      "description": "Yokken gelen e-postalara otomatik yanıt gönderin",
+      "title": "Ofis Dışında",
+      "description": "Yokken gelen e-postaları otomatik olarak yönetin",
       "loading": "Tatil ayarları yükleniyor...",
       "not_supported": "Posta sunucunuz tatil yanıtlarını desteklemiyor.",
       "fetch_error": "Tatil ayarları yüklenemedi. Lütfen tekrar deneyin.",
       "status": {
-        "label": "Tatil Yanıtlayıcı",
+        "label": "Otomatik yanıt gönder",
         "description": "Size e-posta gönderenlere otomatik yanıt gönderin",
         "active": "Etkin",
         "inactive": "Devre dışı"
       },
       "date_range": {
-        "title": "Tarih Aralığı",
-        "description": "Otomatik yanıtı isteğe bağlı olarak belirli bir dönemle sınırlayın",
         "start": "Başlangıç Tarihi",
         "start_description": "Başlangıç sınırı olmaması için boş bırakın",
         "end": "Bitiş Tarihi",
         "end_description": "Bitiş sınırı olmaması için boş bırakın"
       },
       "message": {
-        "title": "Otomatik Yanıt İletisi",
-        "description": "Yanıt olarak gönderilecek ileti",
         "subject_label": "Konu",
         "subject_description": "Otomatik yanıtın konu satırı",
         "subject_placeholder": "Ofis Dışındayım",
@@ -1871,10 +1883,32 @@
       "saving": "Kaydediliyor...",
       "warnings": {
         "end_before_start": "Bitiş tarihi başlangıç tarihinden sonra olmalıdır",
+        "invalid_date": "Saatiyle birlikte geçerli bir başlangıç ve bitiş tarihi girin veya alanı boş bırakın",
         "start_in_past": "Başlangıç tarihi geçmişte",
         "empty_body": "İleti gövdesi boş - alıcılar boş bir yanıt alacak",
         "subject_too_long": "Konu sunucu için çok uzun (en fazla {max} bayt).",
-        "body_too_long": "İleti sunucu için çok uzun (biçimlendirme dahil en fazla {max} bayt)."
+        "body_too_long": "İleti sunucu için çok uzun (biçimlendirme dahil en fazla {max} bayt).",
+        "forward_address": "İletilecek geçerli bir adres girin",
+        "not_running": "İletme veya yanıt alıcıları kaydedildi, ancak şu anda etkin değil. Yeniden etkinleştirmek için kaydedin."
+      },
+      "forward": {
+        "title": "İletme",
+        "description": "Gelen iletileri, otomatik yanıtla ya da yanıtsız, yukarıdaki dönem içinde başka bir adrese iletir (bitiş tarihi yoksa kapatılana kadar). İstenmeyen e-postalar iletilmez.",
+        "enabled_label": "İletileri ilet",
+        "to_label": "İlet",
+        "to_placeholder": "email@example.com",
+        "keep_label": "Gelen kutusunda tut",
+        "keep_description": "Aksi halde ileti yalnızca iletilir: bu posta kutusunda kalmaz ve ona hiçbir filtre kuralı uygulanmaz."
+      },
+      "audience": {
+        "label": "Yanıt gönderilecek kişiler",
+        "description": "Dahili gönderenler: {domains}",
+        "all": "Tüm gönderenler",
+        "internal": "Yalnızca dahili gönderenler",
+        "external": "Yalnızca harici gönderenler"
+      },
+      "auto_reply": {
+        "title": "Otomatik Yanıt"
       }
     },
     "folders": {
@@ -1899,6 +1933,15 @@
       "reorder": "Yeniden sıralamak için sürükleyin",
       "reorder_error": "Klasörler yeniden sıralanamadı",
       "move_error": "Klasör taşınamadı",
+      "select_folder": "{name} öğesini seç",
+      "select_hint": "Seç. Shift+tıklama, en son tıkladığınız klasöre kadar tüm klasörleri seçer.",
+      "selected_count": "{count, plural, one {# klasör} other {# klasör}} seçildi",
+      "move_to": "Taşı...",
+      "move_to_top_level": "En üst düzey",
+      "move": "Taşı",
+      "clear_selection": "Seçimi temizle",
+      "folders_moved": "{count, plural, one {# klasör taşındı} other {# klasör taşındı}}",
+      "move_partial_error": "{count, plural, one {# klasör} other {# klasör}} taşınamadı",
       "subfolder_of": "{name} içinde",
       "subfolder_name": "Alt klasör adı",
       "new_folder_name": "Klasör adı",
@@ -2243,7 +2286,19 @@
       "suggest_list": "List-Id",
       "suggest_domain": "@{domain}",
       "apply_existing": "Bu klasörde zaten bulunan iletilere de uygula",
-      "apply_existing_unsupported": "Mevcut iletilere yalnızca göndereni, alıcıları, konuyu veya üstbilgileri denetleyen ve taşıyan, kopyalayan, okundu işaretleyen, yıldızlayan veya etiketleyen kurallar uygulanabilir."
+      "apply_existing_unsupported": "Mevcut iletilere yalnızca göndereni, alıcıları, konuyu veya üstbilgileri denetleyen ve taşıyan, kopyalayan, okundu işaretleyen, yıldızlayan veya etiketleyen kurallar uygulanabilir.",
+      "period_title": "Tarih Aralığı",
+      "period_start": "Başlangıç Tarihi",
+      "period_end": "Bitiş Tarihi",
+      "validation_period_order": "Bitiş tarihi başlangıç tarihinden sonra olmalıdır",
+      "period_toggle": "Yalnızca belirli bir dönemde etkin",
+      "period_hint": "Bu dönemde gelen iletilere uygulanır. O ucu sınırlamamak için alanı boş bırakın.",
+      "validation_period_empty": "Dönem için bir başlangıç veya bitiş tarihi girin",
+      "validation_period_invalid": "Dönem için saatiyle birlikte geçerli bir tarih girin veya alanı boş bırakın",
+      "apply_existing_period": "Dönemi olan bir kural yalnızca o dönemde gelen iletilere uygulanır, bu nedenle mevcut iletilere uygulanamaz.",
+      "period_status_scheduled": "planlandı",
+      "period_status_active": "etkin",
+      "period_status_expired": "süresi doldu"
     },
     "templates": {
       "title": "E-posta Şablonları",

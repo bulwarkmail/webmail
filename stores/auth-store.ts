@@ -1196,6 +1196,10 @@ function forgetCalendarSubscriptions(client: IJMAPClient): void {
 
 function performFullLogout(set: (state: Partial<AuthState>) => void): void {
   useSettingsStore.getState().disableSync();
+  // With settings sync on, the local settings and templates are a copy of the
+  // signed-out account's server file. Left in place, the next account to sign
+  // in here would show them and push them to its own file (#1185).
+  useSettingsStore.getState().forgetSyncedSettings();
 
   set({
     isAuthenticated: false,
@@ -2234,6 +2238,9 @@ export const useAuthStore = create<AuthState>()(
         // Starts by marking every slot closing, so nothing renews a session
         // while the clients are torn down.
         const cleanup = clearAllCredentials(endSessionSlot);
+
+        // The settings are reset below; save the last edits first.
+        await useSettingsStore.getState().flushSync();
 
         // Disconnect all clients
         set({ client: null });

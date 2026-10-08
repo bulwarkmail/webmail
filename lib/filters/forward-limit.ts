@@ -1,4 +1,4 @@
-import type { FilterRule } from '@/lib/jmap/sieve-types';
+import type { FilterRule, VacationForward } from '@/lib/jmap/sieve-types';
 
 /*
  * A server lets one message trigger only so many redirects
@@ -60,4 +60,14 @@ export function forwardsAround(
     .reduce((n, rule) => n + ruleForwards(rule), 0);
   const after = worstCaseForwards(rules.slice(replaces ? index + 1 : index));
   return { before, after };
+}
+
+/**
+ * The rules in the order the script runs them: forwarding from the out of
+ * office card goes ahead of every rule, and ends the script unless it keeps
+ * a copy here.
+ */
+export function inRunOrder(rules: RuleForwards[], forward: VacationForward | null | undefined): RuleForwards[] {
+  if (!forward?.enabled) return rules;
+  return [{ enabled: true, actions: [{ type: 'forward', value: forward.to }], stopProcessing: !forward.keepCopy }, ...rules];
 }

@@ -348,6 +348,15 @@
     "external_content_warning": "图片和外部内容已被屏蔽",
     "load_external_content": "加载图片",
     "trust_sender": "始终信任此发件人",
+    "sender_check": {
+      "unverified_label": "发件人未经验证",
+      "failed_label": "发件人验证失败",
+      "unverified": "此邮件声称来自 {domain}，但没有任何证据能证实这一点。它没有 {domain} 的有效签名，也不是从 {domain} 授权的服务器发出的。",
+      "unverified_sent_from": "此邮件声称来自 {domain}，但它是从 {host} 发出的，并且没有 {domain} 的有效签名。",
+      "failed": "此邮件声称来自 {domain}，但未通过该域名的发件人验证。它可能是伪造的。",
+      "failed_sent_from": "此邮件声称来自 {domain}，但它是从 {host} 发出的，并且未通过 {domain} 的发件人验证。它可能是伪造的。",
+      "caution": "请谨慎对待其中的链接、附件，以及索要密码或付款信息的请求。"
+    },
     "back_to_list": "返回列表",
     "view_contact": "查看联系人",
     "message_details": "邮件详情",
@@ -630,6 +639,12 @@
     "attach": "附件",
     "attach_photos": "Photos & Videos",
     "attach_files": "Files",
+    "attach_from_files": "从文件添加附件",
+    "files_picker": {
+      "attach": "{count, plural, =0 {添加附件} other {添加 # 个文件}}",
+      "empty_folder": "此文件夹为空",
+      "load_failed": "无法加载你的文件"
+    },
     "discard": "丢弃",
     "discard_draft_title": "丢弃草稿？",
     "discard_draft_confirm": "您有未保存的更改。确定要丢弃这封草稿吗？",
@@ -841,8 +856,8 @@
     "identity_delete_failed": "无法删除身份：{error}",
     "identity_unauthorized": "您无权从此邮箱地址发送",
     "identity_not_found": "未找到身份",
-    "vacation_saved": "假期自动回复设置已保存",
-    "vacation_save_failed": "无法保存假期自动回复设置",
+    "vacation_saved": "外出设置已保存",
+    "vacation_save_failed": "无法保存外出设置",
     "filters_saved": "过滤规则保存成功",
     "filters_save_failed": "无法保存过滤器",
     "filters_deleted": "过滤规则已删除",
@@ -864,7 +879,8 @@
     "rule_undone": "已撤销规则更改",
     "rule_undo_failed": "无法撤销规则更改",
     "rule_undo_conflict": "过滤器在此之后已更改。请在过滤器设置中撤销该更改。",
-    "rule_folder_failed": "无法创建文件夹"
+    "rule_folder_failed": "无法创建文件夹",
+    "vacation_filters_save_failed": "外出设置已保存，但转发和回复对象设置未能保存"
   },
   "date": {
     "today": "今天",
@@ -949,7 +965,7 @@
       "privacy": "隐私与安全",
       "account": "账户",
       "identities": "身份",
-      "vacation": "假期自动回复",
+      "vacation": "外出",
       "advanced": "高级",
       "calendar": "日历",
       "filters": "过滤器",
@@ -1830,28 +1846,24 @@
       }
     },
     "vacation": {
-      "title": "假期自动回复",
-      "description": "在您不在时自动回复收到的邮件",
+      "title": "外出",
+      "description": "在您不在时自动处理收到的邮件",
       "loading": "正在加载自动回复设置…",
       "not_supported": "您的邮件服务器不支持自动回复功能。",
       "fetch_error": "加载自动回复设置失败，请重试。",
       "status": {
-        "label": "自动回复",
+        "label": "发送自动回复",
         "description": "向给您发送邮件的人自动发送回复",
         "active": "已开启",
         "inactive": "已关闭"
       },
       "date_range": {
-        "title": "日期范围",
-        "description": "可选择仅在指定时间段内启用自动回复",
         "start": "开始日期",
         "start_description": "留空表示不限制开始时间",
         "end": "结束日期",
         "end_description": "留空表示不限制结束时间"
       },
       "message": {
-        "title": "自动回复正文",
-        "description": "作为回复发送的邮件内容",
         "subject_label": "主题",
         "subject_description": "自动回复邮件的主题",
         "subject_placeholder": "外出办公",
@@ -1871,10 +1883,32 @@
       "saving": "正在保存…",
       "warnings": {
         "end_before_start": "结束日期必须晚于开始日期",
+        "invalid_date": "请输入带时间的有效开始和结束日期，或将该字段留空",
         "start_in_past": "开始日期已在过去",
         "empty_body": "邮件正文为空--收件人将收到空白回复",
         "subject_too_long": "主题对服务器来说太长（最多 {max} 字节）。",
-        "body_too_long": "消息对服务器来说太长（含格式最多 {max} 字节）。"
+        "body_too_long": "消息对服务器来说太长（含格式最多 {max} 字节）。",
+        "forward_address": "请输入有效的转发地址",
+        "not_running": "转发或回复对象已保存，但当前未生效。保存即可重新启用。"
+      },
+      "forward": {
+        "title": "转发",
+        "description": "在上方时间段内将收到的邮件转发到另一个地址，无论是否开启自动回复（未设结束日期时，直到关闭为止）。垃圾邮件不会被转发。",
+        "enabled_label": "转发邮件",
+        "to_label": "转发至",
+        "to_placeholder": "email@example.com",
+        "keep_label": "保留在收件箱中",
+        "keep_description": "否则邮件只会被转发：不会保留在此邮箱中，也不会对其执行任何过滤规则。"
+      },
+      "audience": {
+        "label": "回复对象",
+        "description": "内部发件人：{domains}",
+        "all": "所有发件人",
+        "internal": "仅内部发件人",
+        "external": "仅外部发件人"
+      },
+      "auto_reply": {
+        "title": "自动回复"
       }
     },
     "folders": {
@@ -1899,6 +1933,15 @@
       "reorder": "拖动以重新排序",
       "reorder_error": "文件夹重新排序失败",
       "move_error": "移动文件夹失败",
+      "select_folder": "选择 {name}",
+      "select_hint": "选择。按住 Shift 点击可选中直到上次点击的所有文件夹。",
+      "selected_count": "已选择 {count, plural, other {# 个文件夹}}",
+      "move_to": "移动到...",
+      "move_to_top_level": "顶层",
+      "move": "移动",
+      "clear_selection": "清除选择",
+      "folders_moved": "{count, plural, other {已移动 # 个文件夹}}",
+      "move_partial_error": "{count, plural, other {# 个文件夹}}无法移动",
       "subfolder_of": "{name} 内",
       "subfolder_name": "子文件夹名称",
       "new_folder_name": "文件夹名称",
@@ -2243,7 +2286,19 @@
       "suggest_list": "List-Id",
       "suggest_domain": "@{domain}",
       "apply_existing": "同时应用于此文件夹中已有的邮件",
-      "apply_existing_unsupported": "只有检查发件人、收件人、主题或邮件头，并执行移动、复制、标记为已读、加星标或添加标签的规则，才能应用于已有邮件。"
+      "apply_existing_unsupported": "只有检查发件人、收件人、主题或邮件头，并执行移动、复制、标记为已读、加星标或添加标签的规则，才能应用于已有邮件。",
+      "period_title": "日期范围",
+      "period_start": "开始日期",
+      "period_end": "结束日期",
+      "validation_period_order": "结束日期必须晚于开始日期",
+      "period_toggle": "仅在指定时间段内生效",
+      "period_hint": "适用于在此时间段内收到的邮件。留空某一项即表示该端不设限制。",
+      "validation_period_empty": "请输入时间段的开始日期或结束日期",
+      "validation_period_invalid": "请为时间段输入带时间的有效日期，或将该字段留空",
+      "apply_existing_period": "设置了时间段的规则只作用于在该时间段内收到的邮件，因此无法应用于已有邮件。",
+      "period_status_scheduled": "未开始",
+      "period_status_active": "生效中",
+      "period_status_expired": "已过期"
     },
     "templates": {
       "title": "邮件模板",

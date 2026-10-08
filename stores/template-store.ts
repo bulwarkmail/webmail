@@ -200,6 +200,17 @@ export const useTemplateStore = create<TemplateStore>()(
   )
 );
 
+// Every tab keeps its own in-memory copy and writes the whole list back to
+// localStorage on any change, so a second tab that never saw a template
+// created in the first one would overwrite it (and push the shorter list).
+// Pick up the other tab's write instead.
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', (event) => {
+    if (event.key !== 'template-storage' || event.storageArea !== window.localStorage) return;
+    void useTemplateStore.persist.rehydrate();
+  });
+}
+
 // Registers templates with the cross-device settings sync (#825): they are
 // included in the synced blob / settings export, applied back on server loads
 // and file imports, and template changes schedule a sync push. Registration

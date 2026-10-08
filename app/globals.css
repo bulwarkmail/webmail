@@ -212,6 +212,44 @@ optgroup {
   color-scheme: dark;
 }
 
+/* Tailwind v4's preflight no longer gives buttons a pointer cursor, so most
+   controls showed the arrow. Give everything clickable the pointer again, and
+   disabled controls not-allowed, as the components that style it themselves
+   already do. This sits in the base layer so a cursor utility on a component
+   (cursor-grab, cursor-text, disabled:cursor-default) still wins. */
+@layer base {
+  button:not(:disabled),
+  select:not(:disabled),
+  input:is([type="checkbox"], [type="radio"], [type="color"]):not(:disabled),
+  summary,
+  [role="button"]:not([aria-disabled="true"]),
+  [role="tab"]:not([aria-disabled="true"]),
+  [role="switch"]:not([aria-disabled="true"]),
+  [role="checkbox"]:not([aria-disabled="true"]),
+  [role="radio"]:not([aria-disabled="true"]),
+  [role="option"]:not([aria-disabled="true"]),
+  [role="menuitem"]:not([aria-disabled="true"]),
+  [role="menuitemcheckbox"]:not([aria-disabled="true"]),
+  [role="menuitemradio"]:not([aria-disabled="true"]) {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  select:disabled,
+  input:is([type="checkbox"], [type="radio"], [type="color"]):disabled,
+  [role="button"][aria-disabled="true"],
+  [role="tab"][aria-disabled="true"],
+  [role="switch"][aria-disabled="true"],
+  [role="checkbox"][aria-disabled="true"],
+  [role="radio"][aria-disabled="true"],
+  [role="option"][aria-disabled="true"],
+  [role="menuitem"][aria-disabled="true"],
+  [role="menuitemcheckbox"][aria-disabled="true"],
+  [role="menuitemradio"][aria-disabled="true"] {
+    cursor: not-allowed;
+  }
+}
+
 /* Minimalist scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
