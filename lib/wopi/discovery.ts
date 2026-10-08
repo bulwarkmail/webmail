@@ -25,8 +25,29 @@ export interface WopiActions {
 }
 
 const DISCOVERY_TTL_MS = 5 * 60 * 1000;
+// An unreachable editor is asked again sooner, but not on every request: the
+// proxy reads the discovery for the CSP of each page it serves (#1130).
+const DISCOVERY_FAILURE_TTL_MS = 30 * 1000;
+const DISCOVERY_TIMEOUT_MS = 5000;
+/** How long a page response waits for a discovery it has never seen. */
+const CSP_DISCOVERY_WAIT_MS = 2000;
 
-let discoveryCache: { url: string; fetchedAt: number; actions: WopiActions } | null = null;
+interface DiscoveryState {
+  cache: { url: string; fetchedAt: number; actions: WopiActions | null } | null;
+  inflight: { url: string; promise: Promise<WopiActions | null> } | null;
+}
+
+// The proxy and the route handlers are bundled separately; keeping the cache
+// on globalThis lets them share one discovery fetch (see config-manager.ts).
+const STATE_KEY = Symbol.for('bulwark.wopi.discovery');
+type GlobalWithDiscovery = typeof globalThis & { [STATE_KEY]?: DiscoveryState };
+const g = globalThis as GlobalWithDiscovery;
+const state: DiscoveryState = (g[STATE_KEY] ??= { cache: null, inflight: null });
+
+function isFresh(cache: NonNullable<DiscoveryState['cache']>): boolean {
+  const ttl = cache.actions ? DISCOVERY_TTL_MS : DISCOVERY_FAILURE_TTL_MS;
+  return Date.now() - cache.fetchedAt < ttl;
+}
 
 export async function getWopiClientUrl(): Promise<string> {
   await configManager.ensureLoaded();
@@ -75,16 +96,26 @@ export async function getWopiActions(): Promise<WopiActions | null> {
   const discoveryUrl = discoveryUrlFor(clientUrl);
   if (!discoveryUrl) return null;
 
-  if (
-    discoveryCache &&
-    discoveryCache.url === discoveryUrl &&
-    Date.now() - discoveryCache.fetchedAt < DISCOVERY_TTL_MS
-  ) {
-    return discoveryCache.actions;
+  if (state.cache && state.cache.url === discoveryUrl && isFresh(state.cache)) {
+    return state.cache.actions;
   }
+  if (state.inflight?.url === discoveryUrl) return state.inflight.promise;
 
+  const promise = fetchWopiActions(discoveryUrl).then((actions) => {
+    state.cache = { url: discoveryUrl, fetchedAt: Date.now(), actions };
+    if (state.inflight?.promise === promise) state.inflight = null;
+    return actions;
+  });
+  state.inflight = { url: discoveryUrl, promise };
+  return promise;
+}
+
+async function fetchWopiActions(discoveryUrl: string): Promise<WopiActions | null> {
   try {
-    const res = await fetch(discoveryUrl, { headers: { Accept: 'text/xml' } });
+    const res = await fetch(discoveryUrl, {
+      headers: { Accept: 'text/xml' },
+      signal: AbortSignal.timeout(DISCOVERY_TIMEOUT_MS),
+    });
     if (!res.ok) {
       logger.warn('WOPI discovery fetch failed', { discoveryUrl, status: res.status });
       return null;
@@ -94,7 +125,6 @@ export async function getWopiActions(): Promise<WopiActions | null> {
       logger.warn('WOPI discovery returned no actions', { discoveryUrl });
       return null;
     }
-    discoveryCache = { url: discoveryUrl, fetchedAt: Date.now(), actions };
     return actions;
   } catch (error) {
     logger.warn('WOPI discovery unreachable', {
@@ -105,15 +135,75 @@ export async function getWopiActions(): Promise<WopiActions | null> {
   }
 }
 
+function httpOrigin(url: string): string {
+  try {
+    const parsed = new URL(url.replace(/<[^>]*>/g, ''));
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:' ? parsed.origin : '';
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * The origins the browser loads the editor from, for the page CSP (#1130).
+ *
+ * `wopiClientUrl` is where the server fetches discovery, which behind a
+ * reverse proxy is often an internal address the browser never sees; the
+ * editor itself is served from the origins of the discovery `urlsrc`s (for
+ * Collabora, its `server_name`). Both are returned. A discovery that went
+ * stale is used as is and refreshed in the background, so only the first page
+ * after boot (or after an outage) waits for the editor.
+ */
+export async function getWopiEditorOrigins(): Promise<string[]> {
+  const clientUrl = await getWopiClientUrl();
+  if (!clientUrl) return [];
+  const discoveryUrl = discoveryUrlFor(clientUrl);
+
+  let actions: WopiActions | null = null;
+  const cached = state.cache?.url === discoveryUrl ? state.cache : null;
+  if (cached && (cached.actions || isFresh(cached))) {
+    actions = cached.actions;
+    if (!isFresh(cached)) void getWopiActions();
+  } else if (discoveryUrl) {
+    actions = await Promise.race([
+      getWopiActions(),
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), CSP_DISCOVERY_WAIT_MS)),
+    ]);
+  }
+
+  const origins = new Set<string>();
+  const add = (url: string) => {
+    const origin = httpOrigin(url);
+    if (origin) origins.add(origin);
+  };
+  add(clientUrl);
+  if (actions) {
+    for (const urlsrc of [...Object.values(actions.edit), ...Object.values(actions.view)]) add(urlsrc);
+  }
+  return Array.from(origins);
+}
+
+/** UI language as a BCP 47 tag, or '' when it is not one. */
+function languageTag(lang: string | undefined): string {
+  const tag = (lang ?? '').trim();
+  return /^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$/.test(tag) ? tag : '';
+}
+
 /**
  * Build the editor launch URL from a discovery `urlsrc` and the WOPISrc of
  * the file. Placeholder groups like `<ui=UI_LLCC&>` are optional per the WOPI
- * spec and are dropped.
+ * spec: the language ones are filled in from `lang`, the rest are dropped.
+ * Collabora's discovery has no placeholders and reads a `lang` parameter
+ * instead, so that is added when the urlsrc names no language itself (#1130).
  */
-export function buildWopiActionUrl(urlsrc: string, wopiSrc: string): string {
-  const base = urlsrc.replace(/<[^>]*>/g, '');
+export function buildWopiActionUrl(urlsrc: string, wopiSrc: string, lang?: string): string {
+  const tag = languageTag(lang);
+  const base = urlsrc.replace(/<([^=<>]+)=([^&<>]*)&?>/g, (_group, name: string, placeholder: string) =>
+    tag && (placeholder === 'UI_LLCC' || placeholder === 'DC_LLCC') ? `${name}=${tag}&` : '',
+  ).replace(/<[^>]*>/g, '');
   const sep = base.includes('?')
     ? (base.endsWith('?') || base.endsWith('&') ? '' : '&')
     : '?';
-  return `${base}${sep}WOPISrc=${encodeURIComponent(wopiSrc)}`;
+  const language = tag && !/[?&](?:lang|ui)=/.test(base) ? `lang=${tag}&` : '';
+  return `${base}${sep}${language}WOPISrc=${encodeURIComponent(wopiSrc)}`;
 }

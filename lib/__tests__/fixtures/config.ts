@@ -38,6 +38,7 @@ export function createConfig(overrides: Partial<ConfigData> = {}): ConfigData {
     jmapServerAutoPickByDomain: false,
     embeddedMode: false,
     parentOrigin: '',
+    sourceCodeUrl: '',
     ...overrides,
   };
 }

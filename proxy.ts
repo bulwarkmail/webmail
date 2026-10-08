@@ -10,6 +10,7 @@ import {
   pickAppFrameOriginsCookie,
 } from "./lib/security/app-frame-origins";
 import { configManager } from "./lib/admin/config-manager";
+import { getWopiEditorOrigins } from "./lib/wopi/discovery";
 import { detectSetupState } from "./lib/setup/state";
 
 const intlMiddleware = createIntlMiddleware(routing);
@@ -297,18 +298,14 @@ export async function proxy(request: NextRequest) {
 
   // WOPI document editor (#425): the editor is launched by POSTing the access
   // token into an iframe on its origin, so that origin must be allowed in both
-  // frame-src AND form-action (which is otherwise 'self').
-  let wopiOrigin = "";
-  try {
-    const wopiClientUrl = configManager.get<string>("wopiClientUrl", "").trim();
-    if (wopiClientUrl) wopiOrigin = new URL(wopiClientUrl).origin;
-  } catch {
-    // Invalid admin-supplied URL - leave the CSP unchanged.
-  }
+  // frame-src AND form-action (which is otherwise 'self'). The browser loads
+  // it from the origins the editor's discovery names, which are not that of
+  // wopiClientUrl when discovery is fetched over an internal address (#1130).
+  const wopiOrigins = await getWopiEditorOrigins();
 
   const frameOrigins: string[] = [];
   const seenFrameOrigins = new Set<string>();
-  for (const origin of [...pluginFrameOrigins, ...managedAppFrameOrigins, ...appFrameOrigins, ...(wopiOrigin ? [wopiOrigin] : [])]) {
+  for (const origin of [...pluginFrameOrigins, ...managedAppFrameOrigins, ...appFrameOrigins, ...wopiOrigins]) {
     const key = origin.toLowerCase();
     if (seenFrameOrigins.has(key)) continue;
     seenFrameOrigins.add(key);
@@ -330,7 +327,7 @@ export async function proxy(request: NextRequest) {
     frameSrc,
     `object-src 'self' blob:`,
     `base-uri 'self'`,
-    `form-action 'self'${wopiOrigin ? ` ${wopiOrigin}` : ""}`,
+    `form-action ${["'self'", ...wopiOrigins].join(" ")}`,
     `frame-ancestors ${frameAncestors}`,
     `media-src 'self' blob:`,
   ].join("; ");

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Check, Search } from "@/components/icons";
+import { Check, Minus, Search } from "@/components/icons";
 import { cn } from "@/lib/utils";
 import { useSettingsStore } from "@/stores/settings-store";
 import { buildKeywordTree, type KeywordNode } from "@/lib/keyword-nesting";
@@ -10,6 +10,8 @@ import { useKeywordFormat } from "@/hooks/use-keyword-format";
 
 /** Below this many tags a filter box costs more room than it saves. */
 const SEARCH_THRESHOLD = 10;
+
+const NO_IDS: string[] = [];
 
 /**
  * The list of tags to apply to a message.
@@ -25,10 +27,16 @@ const SEARCH_THRESHOLD = 10;
  */
 export function TagPicker({
   selectedIds,
+  partialIds = NO_IDS,
   onToggle,
   touch = false,
 }: {
   selectedIds: string[];
+  /**
+   * Tags only some of the messages carry, when the picker stands for a
+   * selection of several. Drawn with a dash instead of a check.
+   */
+  partialIds?: string[];
   onToggle: (tagId: string) => void;
   /** Larger hit areas for the mobile sheet. */
   touch?: boolean;
@@ -49,11 +57,11 @@ export function TagPicker({
    */
   const unknownIds = useMemo(
     () =>
-      selectedIds
+      [...selectedIds, ...partialIds]
         .filter((id) => !keywords.some((keyword) => keyword.id === id))
         .sort((a, b) => tagName(a).localeCompare(tagName(b))),
     // `tagName` is rebuilt whenever the definitions or the nesting setting change.
-    [selectedIds, keywords, tagName],
+    [selectedIds, partialIds, keywords, tagName],
   );
 
   const showSearch = keywords.length + unknownIds.length >= SEARCH_THRESHOLD;
@@ -82,12 +90,13 @@ export function TagPicker({
 
   const renderRow = (id: string, label: string) => {
     const isActive = selectedIds.includes(id);
+    const isPartial = !isActive && partialIds.includes(id);
     return (
       <button
         key={id}
         type="button"
         role="menuitemcheckbox"
-        aria-checked={isActive}
+        aria-checked={isActive ? true : isPartial ? "mixed" : false}
         onClick={() => onToggle(id)}
         className={cn(rowClass, isActive && "bg-accent font-medium")}
         title={tagName(id)}
@@ -95,6 +104,7 @@ export function TagPicker({
         <span className={cn("rounded-full flex-shrink-0", dotClass, tagColor(id).dot)} />
         <span className="flex-1 min-w-0 truncate">{label}</span>
         {isActive && <Check className={cn("ms-auto flex-shrink-0 text-foreground", checkClass)} />}
+        {isPartial && <Minus className={cn("ms-auto flex-shrink-0 text-muted-foreground", checkClass)} />}
       </button>
     );
   };

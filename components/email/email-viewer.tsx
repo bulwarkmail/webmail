@@ -14,14 +14,15 @@ import { buildContactsPath, buildMailPath } from "@/lib/deep-links";
 import { useCopyLink } from "@/hooks/use-copy-link";
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
-import { formatFileSize, cn, buildMailboxTree, MailboxNode, formatDateTime, generateUUID } from "@/lib/utils";
+import { formatFileSize, cn, MailboxNode, formatDateTime, generateUUID } from "@/lib/utils";
+import { buildMoveTargets, resolveMoveOwnerAccountId } from "@/lib/move-targets";
 import { emailDisplayDate } from "@/lib/email-date";
 import { TagBadge } from "./tag-badge";
 import { TagPicker } from "./tag-picker";
 import { useMeasuredTagDisplay } from "@/hooks/use-tag-display";
 import { useKeywordFormat } from "@/hooks/use-keyword-format";
 import { getEmailTagIds } from "@/lib/thread-utils";
-import { getSecurityStatus, extractListHeaders } from "@/lib/email-headers";
+import { getSecurityStatus, extractListHeaders, getSenderVerification } from "@/lib/email-headers";
 import { emailToReadView } from "@/lib/plugin-projection";
 import { generateEmailSource } from "@/lib/email-source";
 import {
@@ -131,6 +132,8 @@ const SUB_MENU_ITEM_SELECTOR = '[role="menuitem"],[role="menuitemcheckbox"],[rol
 
 interface EmailViewerProps {
   email: Email | null;
+  /** Captured message routing supplied by the standard mail UI. */
+  blobSource?: { client: IJMAPClient | null; accountId?: string };
   isLoading?: boolean;
   onReply?: (draftText?: string) => void;
   onReplyAll?: () => void;
@@ -600,7 +603,7 @@ function DraggableAttachmentChip({ attachment, client, accountId, enabled, downl
     getBlobUrl: async () => {
       if (attachment.blobId && client) {
         try {
-          return await client.fetchBlobAsObjectUrl(attachment.blobId, attachment.name || undefined, attachment.type, accountId);
+          return await client.fetchBlobAsObjectUrl(attachment.blobId, downloadName || attachment.name || undefined, attachment.type, accountId);
         } catch {
           return null;
         }
@@ -637,6 +640,7 @@ function SidebarSection({ icon: Icon, title, children }: { icon: React.Component
 
 export function EmailViewer({
   email,
+  blobSource,
   isLoading = false,
   onReply,
   onReplyAll,
@@ -766,18 +770,17 @@ export function EmailViewer({
   const { tabletListVisible } = useUIStore();
   const { identities, client, isDemoMode, activeAccountId } = useAuthStore();
   const activeAccount = useAccountStore((s) => s.accounts.find((a) => a.id === activeAccountId));
-  // Blobs (inline images, drag-out, TNEF, embedded messages, thumbnails, bundle
-  // downloads) are account-scoped. In the unified / All-Mail view the open
-  // message may belong to another login (route to its client) or a delegated
-  // shared account (same client, owner accountId in the URL). Resolve both from
-  // the message's source so cross-account blob fetches don't 404 against the
-  // active account.
+  // The standard mail UI supplies message routing for preview/download,
+  // inline images, export and attachment drag-out. Other viewer hosts keep
+  // their existing fallback routing.
   const isUnifiedView = useEmailStore((s) => s.isUnifiedView);
-  const blobClient = useMemo(() => {
+  const legacyBlobClient = useMemo(() => {
     const scid = isUnifiedView ? email?.sourceClientAccountId : undefined;
     return (scid ? useAuthStore.getState().getClientForAccount(scid) : null) ?? client;
   }, [isUnifiedView, email?.sourceClientAccountId, client]);
-  const blobAccountId = isUnifiedView ? email?.sourceAccountId : undefined;
+  const legacyBlobAccountId = isUnifiedView ? email?.sourceAccountId : undefined;
+  const blobClient = blobSource ? blobSource.client : legacyBlobClient;
+  const blobAccountId = blobSource ? blobSource.accountId : legacyBlobAccountId;
 
   // List-Unsubscribe mailto: send the message ourselves - this is a webmail
   // client, handing a mailto: URL to the OS mail handler goes nowhere for
@@ -1018,32 +1021,12 @@ export function EmailViewer({
   }, [detailSidebarWidth]);
 
 
-  // Build mailbox tree for move-to dropdown
-  const moveTargetIds = useMemo(() => new Set(
-    mailboxes
-      .filter(
-        (m) =>
-          m.id !== selectedMailbox &&
-          m.role !== "drafts" &&
-          !m.id.startsWith("shared-") &&
-          m.myRights?.mayAddItems
-      )
-      .map((m) => m.id)
-  ), [mailboxes, selectedMailbox]);
-
-  const moveTree = useMemo(() => {
-    const tree = buildMailboxTree(mailboxes);
-    const filterTree = (nodes: MailboxNode[]): MailboxNode[] => {
-      return nodes.reduce<MailboxNode[]>((acc, node) => {
-        const filteredChildren = filterTree(node.children);
-        if (moveTargetIds.has(node.id) || filteredChildren.length > 0) {
-          acc.push({ ...node, children: filteredChildren });
-        }
-        return acc;
-      }, []);
-    };
-    return filterTree(tree);
-  }, [mailboxes, moveTargetIds]);
+  // Move-to dropdown: the message's own account first (#1149)
+  const moveOwnerAccountId = resolveMoveOwnerAccountId(email, mailboxes, selectedMailbox);
+  const { tree: moveTree, targetIds: moveTargetIds } = useMemo(
+    () => buildMoveTargets(mailboxes, { currentMailboxId: selectedMailbox, ownerAccountId: moveOwnerAccountId }),
+    [mailboxes, selectedMailbox, moveOwnerAccountId],
+  );
 
   // Get mailbox icon based on role
   const getMoveMailboxIcon = (role?: string) => {
@@ -1387,7 +1370,7 @@ export function EmailViewer({
 
   // TNEF (winmail.dat) detection and processing
   useEffect(() => {
-    if (!email?.attachments || !client) return;
+    if (!email?.attachments || !blobClient) return;
 
     const tnefAtt = email.attachments.find(att => isTnefAttachment(att.name, att.type));
     if (!tnefAtt?.blobId) {
@@ -1479,7 +1462,7 @@ export function EmailViewer({
   // often empty Word boilerplate and the real content is inside a message/rfc822
   // attachment. Detect this pattern and unwrap the embedded email.
   useEffect(() => {
-    if (!email?.attachments || !client) return;
+    if (!email?.attachments || !blobClient) return;
 
     // Find message/rfc822 attachment
     const rfc822Att = email.attachments.find(
@@ -1586,7 +1569,7 @@ export function EmailViewer({
       };
     }
 
-    if (!client || !email?.attachments) {
+    if (!blobClient || !email?.attachments) {
       setCidBlobUrls({});
       return;
     }
@@ -2679,9 +2662,11 @@ export function EmailViewer({
 
   // Export email as .eml file
   const handleExportEmail = async () => {
-    if (!email?.blobId || !client) return;
+    const exportClient = blobSource ? blobSource.client : client;
+    const exportAccountId = blobSource?.accountId;
+    if (!email?.blobId || !exportClient) return;
     try {
-      await client.downloadBlob(email.blobId, emailExportFilename(email, emailFilenameOptions), 'message/rfc822');
+      await exportClient.downloadBlob(email.blobId, emailExportFilename(email, emailFilenameOptions), 'message/rfc822', exportAccountId);
     } catch {
       toast.error(tNotifications('export_email_error'));
       return;
@@ -3039,6 +3024,19 @@ export function EmailViewer({
   }
 
   const sender = email.from?.[0];
+  const senderVerification = getSenderVerification(email.authenticationResults, sender?.email);
+  const senderVerificationLabel = senderVerification?.status === 'failed'
+    ? t('sender_check.failed_label')
+    : t('sender_check.unverified_label');
+  const senderVerificationMessage = !senderVerification
+    ? ''
+    : senderVerification.status === 'failed'
+      ? senderVerification.sentFrom
+        ? t('sender_check.failed_sent_from', { domain: senderVerification.domain, host: senderVerification.sentFrom })
+        : t('sender_check.failed', { domain: senderVerification.domain })
+      : senderVerification.sentFrom
+        ? t('sender_check.unverified_sent_from', { domain: senderVerification.domain, host: senderVerification.sentFrom })
+        : t('sender_check.unverified', { domain: senderVerification.domain });
   const isStarred = email.keywords?.$flagged;
   const isUnread = !email.keywords?.$seen;
   const isImportant = email.keywords?.["$important"];
@@ -4530,6 +4528,20 @@ export function EmailViewer({
                           onViewContact={handleViewContactSidebar}
                           className="text-sm text-start"
                         />
+                        {senderVerification && (
+                          <span
+                            className={cn(
+                              "inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md border text-xs whitespace-nowrap cursor-help",
+                              senderVerification.status === 'failed'
+                                ? "bg-red-500/[0.07] border-red-500/30 text-red-700 dark:text-red-400"
+                                : "bg-amber-500/[0.07] border-amber-500/30 text-amber-700 dark:text-amber-400",
+                            )}
+                            title={senderVerificationMessage}
+                          >
+                            <AlertTriangle className="w-3 h-3 flex-shrink-0" />
+                            {senderVerificationLabel}
+                          </span>
+                        )}
                       </div>
                     </Row>
                     {replyToDifferent && (
@@ -4835,12 +4847,36 @@ export function EmailViewer({
         )}
 
         {/* Unified Notification Banner - External Content + Calendar Invitation + Read Receipt */}
-        {((hasBlockedContent && !allowExternalContent && externalContentPolicy !== 'allow') ||
+        {(senderVerification ||
+          (hasBlockedContent && !allowExternalContent && externalContentPolicy !== 'allow') ||
           hasCalendarInvitation ||
           (readReceiptResponse === 'ask' && shouldOfferReadReceipt)) && (
           <div className="border-b border-border bg-muted/30 isolate">
             <div className="px-6 py-1.5">
               <div className="flex flex-col gap-3 isolate">
+                {/* Sender the server's checks don't back */}
+                {senderVerification && (
+                  <div className="flex items-start gap-3 py-1">
+                    <div className={cn(
+                      "w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm",
+                      senderVerification.status === 'failed' ? "bg-destructive/15 text-destructive" : "bg-warning/15 text-warning",
+                    )}>
+                      <ShieldAlert className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                        {senderVerificationLabel}
+                      </div>
+                      <div className="text-sm font-medium text-foreground break-words">
+                        {senderVerificationMessage}
+                      </div>
+                      <div className="text-sm text-muted-foreground break-words">
+                        {t('sender_check.caution')}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* External Content Controls */}
                 {hasBlockedContent && !allowExternalContent && externalContentPolicy !== 'allow' && (
                   <div className="flex items-start gap-3 py-1">
@@ -4866,7 +4902,9 @@ export function EmailViewer({
                             {t('load_external_content')}
                           </button>
                         )}
-                        {email.from?.[0]?.email && (
+                        {/* Trusting a forged address would load remote content
+                            for the next forgery too. */}
+                        {email.from?.[0]?.email && !senderVerification && (
                           <button
                             onClick={() => {
                               const senderEmail = email.from?.[0]?.email;

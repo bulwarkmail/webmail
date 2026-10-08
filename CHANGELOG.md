@@ -1,5 +1,103 @@
 # Changelog
 
+## 1.13.0 (2026-10-07)
+
+1.13.0 turns the vacation settings into an Out of Office page that can also forward mail, lets filter rules run only for a date range, and copies messages into another connected account. Files from the Files app can be attached in the composer, tags can be set on many messages at once and folders moved in bulk. Messages whose sender can't be verified now carry a warning. It also stops one account's settings and templates from carrying over to the next account signed in on the same browser.
+
+Thank you for your donations:
+
+- _You? [Become a sponsor!](https://github.com/sponsors/bulwarkmail)_
+
+**One-time**
+
+- Anonymous
+- Anonymous
+- Anonymous
+
+**Monthly**
+
+- [@naokton](https://github.com/naokton)
+- [@yerTools](https://github.com/yerTools)
+- [@jsaathof](https://github.com/jsaathof)
+- [@berkersal](https://github.com/berkersal)
+- [@NABarnes](https://github.com/NABarnes)
+- [@felixzieger](https://github.com/felixzieger)
+- [@pr0ton11](https://github.com/pr0ton11)
+- [@fpauser](https://github.com/fpauser)
+- [@proxforge](https://github.com/proxforge)
+- [@spss20](https://github.com/spss20)
+- [@elgringoYan](https://github.com/elgringoYan)
+- [@pauladams8](https://github.com/pauladams8)
+- [@djpriest](https://github.com/djpriest)
+- [@umakers](https://github.com/umakers)
+- [@zplizzi](https://github.com/zplizzi)
+- [@jeremiah](https://github.com/jeremiah)
+- [@Theoretisch1337](https://github.com/Theoretisch1337)
+- [@svandive](https://github.com/svandive)
+- [@HiltMundell](https://github.com/HiltMundell)
+
+### Security
+
+- **Settings**: Signing out and then signing in with another account in the same browser no longer shows the previous account's settings, tags and templates, and no longer saves them to the new account's synced settings (#1185)
+
+### Features
+
+- **Mail**: A message whose sender fails the From domain's checks, or that passes neither SPF nor DKIM, shows a warning above the message and a badge next to the sender. "Always trust this sender" is not offered for it
+- **Mail**: "Copy to account..." in the message menu files a copy in a folder of another connected account and leaves the original where it is. Copies keep their original date (#1150, thanks @lucamzanon)
+- **Mail**: The selection toolbar and the right-click menu put a tag on, or take it off, every selected message at once (#1077)
+- **Out of office**: The vacation settings are now an Out of Office page: the period on top, then the automatic reply and forwarding, each with its own switch. Forwarding works with or without the reply, never forwards spam and can keep a copy in the inbox. The reply can go to all senders, internal senders only or external senders only (#1152, thanks @dealerweb)
+- **Filters**: A rule can be limited to a period, and the rule list shows whether it is scheduled, active or expired (#1152, thanks @dealerweb)
+- **Filters**: The new "All messages" condition matches every message (#1154, thanks @dealerweb)
+- **Composer**: "Attach from Files" attaches files from the Files app, including files shared with you, without downloading and uploading them again (#1179)
+- **Composer**: Typing @ in the message body offers the To and Cc recipients and inserts the chosen one's first name. Bcc recipients are never offered. "Mention recipients with @" in the composer settings turns it off (#1134, thanks @dealerweb)
+- **Folders**: The folder settings can select several folders, with Shift+click for a range, and move them together under another folder or to the top level (#1173)
+- **Calendar**: The day and week views can be limited to working hours, and the week view can leave out non-working days. Events outside the visible hours are counted at the top and bottom of each day and open from there, and a button in the view shows all hours (#1164)
+- **Login**: `LOGIN_SHOW_TOKEN_LOGIN=true` offers "Sign in with an access token", for JMAP servers that take API tokens instead of passwords, such as Fastmail
+- **Login**: A server in `JMAP_SERVERS` whose `oauth` block has both a `clientId` and a `buttonLabel` gets its own sign-in button on the login page, even while OAuth is off globally. This allows a "Sign in with Google" button for a Gmail bridge next to servers that use passwords (#1135, thanks @lucamzanon)
+- **UI**: The browser tab title names the active account, as in "Inbox - alice@example.com - Webmail", and Settings, Calendar, Contacts and Files set their own title. Turning off "Subject in Tab Title" under Admin > Policy keeps message subjects out of the title, and with it out of the browser history (#1186, thanks @oguzyilmaznet)
+- **Unified**: While logins reconnect after a page load, the "All accounts" header shows how many are already counted, such as "4/10" (#1140, thanks @lucamzanon)
+- **Push**: A message that reaches several of your accounts rings once. For 30 seconds after an alert, notifications from your other accounts arrive silently (#1141, thanks @lucamzanon)
+- **Server**: `SOURCE_CODE_URL` points the source code link in Settings > About at the code of a modified build, as AGPL section 13 asks of anyone running one (#1161)
+
+### Changes
+
+- **Calendar**: The day and week views show 08:00 to 20:00 by default. "Limit visible hours" in the calendar settings changes the range or turns it off (#1164)
+- **Tags**: Tag views and their counts leave out messages in Trash and Spam (#1156)
+- **Mail**: In a shared mailbox, the Move menus list that mailbox's folders first and your own folders after them, under your account name (#1149)
+- **Dependencies**: sharp 0.35.5 and source-map-js 1.2.2 (npm audit)
+- **Docs**: CONTRIBUTING.md explains what belongs in core and what in a plugin, and which changes need an agreed issue before a pull request
+
+### Fixes
+
+- **Mail**: Attachments, inline images and .eml downloads of messages in shared folders are fetched from the account that owns them. On Cyrus they failed with "failed to find blob by id" (#1188, thanks @VasilisNtovolos)
+- **Mail**: Archive creates an Archive folder when the account has none, instead of only reporting that it is missing (#1176, thanks @cybersmurf)
+- **Mail**: Opening the webmail starts in the inbox instead of a folder from an earlier visit, such as Trash
+- **Mail**: Opening another folder, tag, account or search starts the message list at the top instead of where the last one was scrolled to (#1138, thanks @dealerweb)
+- **Mail**: Previews no longer start with a style sheet ("@media screen and ...") in the message list and in push notifications (#1136, thanks @lucamzanon)
+- **Search**: Searching from the unified All mail view finds sent mail too
+- **Send**: A draft saved without a subject reopens with an empty subject, so Send warns about it again instead of sending "(No Subject)" (#1189)
+- **Send**: When the server does not confirm that a message was sent, the draft is kept and the composer asks you to check Sent before sending again (#1019, thanks @lucamzanon)
+- **Send**: A message the server refuses shows the server's reason instead of "Invalid reference to non-existing object"
+- **Send**: A forward sent from another account's address no longer fails with `blobNotFound`. Its attachments and inline images are copied to the sending account first (#1142, thanks @lucamzanon)
+- **Push**: Push turns itself back on when the browser lost its subscription, retrying at most every 15 minutes (#1147, thanks @lucamzanon)
+- **Push**: The notification settings check push again when you come back to the tab, so push turned off in the browser or another tab no longer shows as on (#1148, thanks @lucamzanon)
+- **Push**: When the new message cannot be read, the notification no longer announces another unread message from the Inbox in its place, and a failed lookup shows a generic notification instead of none (#1041, thanks @lucamzanon)
+- **Filters**: "Stop processing further rules" also stops after "Delete silently" and "Reject", so later rules no longer file the message. Rules whose name contains double spaces, a tab or a trailing space no longer gain a copy on every save, and the copies earlier saves left are removed (#1153, thanks @dealerweb)
+- **Filters**: The forwarding limit counts the forwards one message can collect, instead of adding up every enabled rule, and warns when the rule order lets one message go over it (#1155, thanks @dealerweb)
+- **Filters**: A condition with several values wraps inside its card in the expanded rule view (#1139, thanks @dealerweb)
+- **Filters**: An open rule dialog or Sieve editor, and what was typed in it, survives a filter change from another tab or device (#1162, thanks @dealerweb)
+- **Templates**: A tab or device that had not reloaded no longer deletes templates created elsewhere when it saves its settings
+- **Calendar**: Duplicating an event keeps its meeting link (#1170)
+- **Calendar**: The Calendar Agenda plugin shows events from shared and group calendars (#1175, thanks @cybersmurf)
+- **Files**: Folders shared with you can be opened, and your own folders shared, in both folder layouts (#1181)
+- **Files**: Office editing works behind a reverse proxy where the editor and the browser reach the webmail at different addresses. The WOPI client URL may be an internal address (#1130)
+- **Login**: When Stalwart accepts a password and TOTP code but refuses to issue tokens, the login page points at the OAuth client settings instead of opening the browser's own sign-in dialog and reporting a wrong code
+- **Branding**: With `APP_NAME` set, the authenticator app entry for two-factor sign-in, the About card and the Files preview use the configured name and logo (#1177, thanks @cybersmurf)
+- **UI**: Text fields in dialogs keep the focus when the page behind updates, which happened every 30 seconds and on new mail (#1162, thanks @dealerweb)
+- **UI**: Buttons, menu items, tabs and other controls show the pointer cursor again (#1184, thanks @gwku)
+- **UI**: The account group labels in the From dropdown are readable in dark themes (#1157, thanks @dealerweb)
+- **Translations**: Czech is fully translated (#1174, thanks @cybersmurf), and missing placeholders are restored in Persian, Hebrew, Hungarian, Mongolian and Slovak (#1165, thanks @owgreen-dev)
+
 ## 1.12.0 (2026-09-30)
 
 1.12.0 lets you create filter rules straight from a message, offers the code from sign-in mail for one-click copying, and gives a phone linked with "Link Mobile App" a sign-in of its own, for every kind of account. Search now leaves Spam and Trash out by default, and emptying an ordinary folder moves its mail to the Trash. Browsers with many logins start up much faster. It also contains three security fixes, so please update.

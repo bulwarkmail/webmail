@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useTemplateStore } from '../template-store';
 import type { EmailTemplate } from '@/lib/template-types';
 
@@ -89,5 +89,30 @@ describe('applySyncedState', () => {
     expect(state.templates.map((t) => t.id)).toEqual(['b']);
     expect(state.recentTemplateIds).toEqual(['b']);
     expect(state.deletedTemplateIds).toEqual({ a: deletedAt });
+  });
+});
+
+describe('another tab writing templates', () => {
+  it('reloads the list so this tab does not overwrite the other tab\'s template', async () => {
+    useTemplateStore.setState({ templates: [makeTemplate({ id: 'mine' })] });
+
+    // What the other tab's persist middleware writes after adding a template.
+    const otherTab = JSON.stringify({
+      state: {
+        templates: [makeTemplate({ id: 'mine' }), makeTemplate({ id: 'theirs' })],
+        recentTemplateIds: [],
+        deletedTemplateIds: {},
+      },
+      version: 1,
+    });
+    window.localStorage.setItem('template-storage', otherTab);
+    window.dispatchEvent(new StorageEvent('storage', {
+      key: 'template-storage',
+      newValue: otherTab,
+      storageArea: window.localStorage,
+    }));
+    await vi.waitFor(() => {
+      expect(useTemplateStore.getState().templates.map((t) => t.id)).toEqual(['mine', 'theirs']);
+    });
   });
 });

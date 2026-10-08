@@ -1,5 +1,6 @@
 import type { Email, Mailbox } from '@/lib/jmap/types';
 import type { FilterAction, FilterCondition, FilterRule } from '@/lib/jmap/sieve-types';
+import { hasPeriod } from '@/lib/sieve/period';
 
 /**
  * Rules made from a message: "Always move messages from Anna to…", "Block
@@ -350,7 +351,9 @@ export type QuickRuleOutcome =
 /**
  * Save a one-click rule without piling up near-duplicates: an enabled
  * Bulwark rule with a single condition of the same kind and the same actions
- * takes the new values into its value list and keeps its name and place.
+ * takes the new values into its value list and keeps its name and place. A
+ * rule with a period only acts within it, and the new values would too, so
+ * it is never the one.
  * `added` is the part of the rule that is new (the candidate itself, or the
  * merged rule narrowed to the added values), which is what the "apply to
  * existing messages" pass runs.
@@ -361,6 +364,7 @@ export function applyQuickRule(rules: FilterRule[], candidate: FilterRule): Quic
     ? rules.find(r =>
         isBulwarkRule(r)
         && r.enabled
+        && !hasPeriod(r)
         && r.conditions.length === 1
         && sameConditionKind(r.conditions[0], condition)
         && sameActions(r.actions, candidate.actions))

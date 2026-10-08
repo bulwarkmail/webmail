@@ -163,6 +163,15 @@ export interface AuthenticationResults {
     result: 'pass' | 'fail' | 'policy' | 'neutral' | 'temperror' | 'permerror';
     domain?: string;
     selector?: string;
+    /**
+     * Every DKIM result when the message carried more than one signature;
+     * `result` above is the first.
+     */
+    all?: Array<{
+      result: 'pass' | 'fail' | 'policy' | 'neutral' | 'temperror' | 'permerror';
+      domain?: string;
+      selector?: string;
+    }>;
   };
   dmarc?: {
     result: 'pass' | 'fail' | 'none';

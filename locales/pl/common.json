@@ -24,7 +24,8 @@
       "generic": "Wystąpił nieoczekiwany błąd. Jeśli problem się powtarza, skontaktuj się z administratorem.",
       "totp_required": "Wymagany jest kod uwierzytelniania dwuskładnikowego. Wprowadź kod poniżej.",
       "totp_invalid": "Nieprawidłowy kod uwierzytelniania. Sprawdź aplikację uwierzytelniającą i spróbuj ponownie.",
-      "oauth_discovery_failed": "SSO jest włączone, ale nie można połączyć się z dostawcą tożsamości. Sprawdź konfigurację OAuth."
+      "oauth_discovery_failed": "SSO jest włączone, ale nie można połączyć się z dostawcą tożsamości. Sprawdź konfigurację OAuth.",
+      "token_exchange_failed": "Hasło i kod zostały zaakceptowane, ale serwer poczty odmówił rozpoczęcia sesji dla tej aplikacji. Poproś administratora o sprawdzenie ustawień klienta OAuth."
     },
     "show_password": "Pokaż hasło",
     "hide_password": "Ukryj hasło",
@@ -344,6 +345,15 @@
     "external_content_warning": "Obrazy i treści zewnętrzne zostały zablokowane",
     "load_external_content": "Załaduj obrazy",
     "trust_sender": "Zawsze ufaj temu nadawcy",
+    "sender_check": {
+      "unverified_label": "Niezweryfikowany nadawca",
+      "failed_label": "Weryfikacja nadawcy nie powiodła się",
+      "unverified": "Ta wiadomość twierdzi, że pochodzi z domeny {domain}, ale nic tego nie potwierdza. Nie ma ważnego podpisu domeny {domain} i nie przyszła z serwera upoważnionego przez domenę {domain}.",
+      "unverified_sent_from": "Ta wiadomość twierdzi, że pochodzi z domeny {domain}, ale została wysłana z domeny {host} i nie ma ważnego podpisu domeny {domain}.",
+      "failed": "Ta wiadomość twierdzi, że pochodzi z domeny {domain}, ale nie przeszła weryfikacji nadawcy tej domeny. Może być sfałszowana.",
+      "failed_sent_from": "Ta wiadomość twierdzi, że pochodzi z domeny {domain}, ale została wysłana z domeny {host} i nie przeszła weryfikacji nadawcy domeny {domain}. Może być sfałszowana.",
+      "caution": "Uważaj na linki, załączniki i prośby o hasła lub dane płatnicze."
+    },
     "back_to_list": "Powrót do listy",
     "view_contact": "Pokaż kontakt",
     "message_details": "Szczegóły wiadomości",
@@ -623,6 +633,12 @@
     "attach": "Załącz",
     "attach_photos": "Photos & Videos",
     "attach_files": "Files",
+    "attach_from_files": "Dołącz z Plików",
+    "files_picker": {
+      "attach": "{count, plural, =0 {Dołącz} one {Dołącz 1 plik} few {Dołącz # pliki} many {Dołącz # plików} other {Dołącz # pliku}}",
+      "empty_folder": "Ten folder jest pusty",
+      "load_failed": "Nie udało się wczytać plików"
+    },
     "discard": "Odrzuć",
     "discard_draft_title": "Odrzucić szkic?",
     "discard_draft_confirm": "Masz niezapisane zmiany. Czy chcesz odrzucić ten szkic?",
@@ -819,6 +835,8 @@
     "emails_moved": "{count} wiadomości przeniesionych",
     "moved_to_mailbox": "Przeniesiono do {mailbox}",
     "move_failed": "Przenoszenie nie powiodło się",
+    "emails_copied": "{count} wiadomości skopiowanych",
+    "copy_failed": "Kopiowanie nie powiodło się",
     "move_error": "Nie można przenieść wiadomości do wybranego folderu",
     "email_tagged": "Wiadomość oznaczona etykietą",
     "emails_tagged": "{count} wiadomości oznaczonych etykietą",
@@ -832,8 +850,8 @@
     "identity_delete_failed": "Nie udało się usunąć tożsamości: {error}",
     "identity_unauthorized": "Nie masz uprawnień do wysyłania z tego adresu e-mail",
     "identity_not_found": "Nie znaleziono tożsamości",
-    "vacation_saved": "Ustawienia autorespondera wakacyjnego zapisane",
-    "vacation_save_failed": "Nie udało się zapisać ustawień autorespondera wakacyjnego",
+    "vacation_saved": "Ustawienia nieobecności zapisane",
+    "vacation_save_failed": "Nie udało się zapisać ustawień nieobecności",
     "filters_saved": "Filtry zapisane pomyślnie",
     "filters_save_failed": "Nie udało się zapisać filtrów",
     "filters_deleted": "Reguła filtra usunięta",
@@ -855,7 +873,8 @@
     "rule_undone": "Cofnięto zmianę reguły",
     "rule_undo_failed": "Nie udało się cofnąć zmiany reguły",
     "rule_undo_conflict": "Twoje filtry zmieniły się w międzyczasie. Cofnij zmianę w ustawieniach filtrów.",
-    "rule_folder_failed": "Nie udało się utworzyć folderu"
+    "rule_folder_failed": "Nie udało się utworzyć folderu",
+    "vacation_filters_save_failed": "Ustawienia nieobecności zapisane, ale nie udało się zapisać przekazywania ani odbiorców odpowiedzi"
   },
   "date": {
     "today": "Dzisiaj",
@@ -940,7 +959,7 @@
       "privacy": "Prywatność i bezpieczeństwo",
       "account": "Konto",
       "identities": "Tożsamości",
-      "vacation": "Autoresponder urlopowy",
+      "vacation": "Nieobecność",
       "advanced": "Zaawansowane",
       "calendar": "Kalendarz",
       "filters": "Filtry",
@@ -1815,28 +1834,24 @@
       }
     },
     "vacation": {
-      "title": "Autoresponder urlopowy",
-      "description": "Automatycznie odpowiadaj na przychodzące wiadomości e-mail podczas nieobecności",
+      "title": "Nieobecność",
+      "description": "Automatycznie obsługuj przychodzące wiadomości e-mail podczas nieobecności",
       "loading": "Ładowanie ustawień autorespondera urlopowego...",
       "not_supported": "Twój serwer pocztowy nie obsługuje odpowiedzi urlopowych.",
       "fetch_error": "Nie udało się załadować ustawień urlopowych. Spróbuj ponownie.",
       "status": {
-        "label": "Autoresponder urlopowy",
+        "label": "Odpowiadaj automatycznie",
         "description": "Wysyłaj automatyczną odpowiedź do osób, które do Ciebie piszą",
         "active": "Aktywny",
         "inactive": "Nieaktywny"
       },
       "date_range": {
-        "title": "Zakres dat",
-        "description": "Opcjonalnie ogranicz automatyczną odpowiedź do określonego okresu",
         "start": "Data rozpoczęcia",
         "start_description": "Pozostaw puste, aby nie ustawiać daty początkowej",
         "end": "Data zakończenia",
         "end_description": "Pozostaw puste, aby nie ustawiać daty końcowej"
       },
       "message": {
-        "title": "Wiadomość automatycznej odpowiedzi",
-        "description": "Wiadomość, która zostanie wysłana jako odpowiedź",
         "subject_label": "Temat",
         "subject_description": "Wiersz tematu automatycznej odpowiedzi",
         "subject_placeholder": "Poza biurem",
@@ -1856,10 +1871,32 @@
       "saving": "Zapisywanie...",
       "warnings": {
         "end_before_start": "Data zakończenia musi być późniejsza niż data rozpoczęcia",
+        "invalid_date": "Podaj prawidłową datę rozpoczęcia i zakończenia z godziną albo pozostaw pole puste",
         "start_in_past": "Data rozpoczęcia jest w przeszłości",
         "empty_body": "Treść wiadomości jest pusta - odbiorcy otrzymają pustą odpowiedź",
         "subject_too_long": "Temat jest za długi dla serwera (maksymalnie {max} bajtów).",
-        "body_too_long": "Wiadomość jest za długa dla serwera (maksymalnie {max} bajtów wraz z formatowaniem)."
+        "body_too_long": "Wiadomość jest za długa dla serwera (maksymalnie {max} bajtów wraz z formatowaniem).",
+        "forward_address": "Podaj prawidłowy adres do przekazywania",
+        "not_running": "Przekazywanie lub odbiorcy odpowiedzi są zapisani, ale obecnie nieaktywni. Zapisz, aby ponownie je włączyć."
+      },
+      "forward": {
+        "title": "Przekazywanie",
+        "description": "Przekazuje wiadomości przychodzące na inny adres, z automatyczną odpowiedzią lub bez niej, w okresie podanym powyżej (bez daty zakończenia, dopóki nie zostanie wyłączone). Spam nie jest przekazywany.",
+        "enabled_label": "Przekazuj wiadomości",
+        "to_label": "Prześlij dalej do",
+        "to_placeholder": "email@example.com",
+        "keep_label": "Pozostaw w Odebranych",
+        "keep_description": "W przeciwnym razie wiadomość jest tylko przekazywana: nie zostaje w tej skrzynce i nie działa na nią żadna reguła filtrowania."
+      },
+      "audience": {
+        "label": "Odpowiadaj",
+        "description": "Nadawcy wewnętrzni: {domains}",
+        "all": "Wszystkim nadawcom",
+        "internal": "Tylko nadawcom wewnętrznym",
+        "external": "Tylko nadawcom zewnętrznym"
+      },
+      "auto_reply": {
+        "title": "Automatyczna odpowiedź"
       }
     },
     "folders": {
@@ -1884,6 +1921,15 @@
       "reorder": "Przeciągnij, aby zmienić kolejność",
       "reorder_error": "Nie udało się zmienić kolejności folderów",
       "move_error": "Nie udało się przenieść folderu",
+      "select_folder": "Zaznacz {name}",
+      "select_hint": "Zaznacz. Shift+kliknięcie zaznacza wszystkie foldery aż do ostatnio klikniętego.",
+      "selected_count": "{count, plural, one {Zaznaczono # folder} few {Zaznaczono # foldery} many {Zaznaczono # folderów} other {Zaznaczono # folderu}}",
+      "move_to": "Przenieś do...",
+      "move_to_top_level": "Najwyższy poziom",
+      "move": "Przenieś",
+      "clear_selection": "Wyczyść zaznaczenie",
+      "folders_moved": "{count, plural, one {Przeniesiono # folder} few {Przeniesiono # foldery} many {Przeniesiono # folderów} other {Przeniesiono # folderu}}",
+      "move_partial_error": "{count, plural, one {Nie udało się przenieść # folderu} few {Nie udało się przenieść # folderów} many {Nie udało się przenieść # folderów} other {Nie udało się przenieść # folderu}}",
       "subfolder_of": "W folderze {name}",
       "subfolder_name": "Nazwa podfolderu",
       "new_folder_name": "Nazwa folderu",
@@ -1970,7 +2016,8 @@
         "button": "Importuj"
       },
       "about": {
-        "title": "Bulwark Webmail"
+        "title": "Bulwark Webmail",
+        "source_code": "Kod źródłowy"
       },
       "spam_siege": {
         "title": "Spam Siege",
@@ -2117,7 +2164,8 @@
         "subject": "Temat",
         "header": "Niestandardowy nagłówek",
         "size": "Rozmiar",
-        "body": "Treść"
+        "body": "Treść",
+        "all": "Wszystkie wiadomości"
       },
       "comparators": {
         "has_any": "jest obecny",
@@ -2226,7 +2274,19 @@
       "suggest_list": "List-Id",
       "suggest_domain": "@{domain}",
       "apply_existing": "Zastosuj też do wiadomości, które już są w tym folderze",
-      "apply_existing_unsupported": "Do istniejących wiadomości można zastosować tylko reguły, które sprawdzają nadawcę, odbiorców, temat lub nagłówki i które przenoszą, kopiują, oznaczają jako przeczytane, oznaczają gwiazdką lub etykietą."
+      "apply_existing_unsupported": "Do istniejących wiadomości można zastosować tylko reguły, które sprawdzają nadawcę, odbiorców, temat lub nagłówki i które przenoszą, kopiują, oznaczają jako przeczytane, oznaczają gwiazdką lub etykietą.",
+      "period_title": "Zakres dat",
+      "period_start": "Data rozpoczęcia",
+      "period_end": "Data zakończenia",
+      "validation_period_order": "Data zakończenia musi być późniejsza niż data rozpoczęcia",
+      "period_toggle": "Aktywna tylko w wybranym okresie",
+      "period_hint": "Dotyczy wiadomości, które przychodzą w tym okresie. Pozostaw pole puste, aby nie ograniczać tej strony.",
+      "validation_period_empty": "Podaj datę rozpoczęcia lub zakończenia okresu",
+      "validation_period_invalid": "Podaj prawidłową datę z godziną dla okresu albo pozostaw pole puste",
+      "apply_existing_period": "Reguła z okresem działa tylko na wiadomości, które przychodzą w tym okresie, dlatego nie można jej zastosować do istniejących wiadomości.",
+      "period_status_scheduled": "zaplanowana",
+      "period_status_active": "aktywna",
+      "period_status_expired": "wygasła"
     },
     "templates": {
       "title": "Szablony wiadomości e-mail",
@@ -2355,6 +2415,7 @@
     "pin": "Przypnij",
     "unpin": "Odepnij",
     "move_to": "Przenieś do...",
+    "copy_to_account": "Kopiuj do konta...",
     "archive": "Archiwizuj",
     "delete": "Usuń",
     "mark_as_spam": "Zgłoś spam",
@@ -2936,6 +2997,10 @@
       "tasks_hint": "Zadania (k)"
     },
     "events": {
+      "hidden_before": "{count, plural, one {# wcześniejsze wydarzenie} few {# wcześniejsze wydarzenia} many {# wcześniejszych wydarzeń} other {# wcześniejszego wydarzenia}}",
+      "hidden_after": "{count, plural, one {# późniejsze wydarzenie} few {# późniejsze wydarzenia} many {# późniejszych wydarzeń} other {# późniejszego wydarzenia}}",
+      "show_all_hours": "Pokaż wszystkie godziny",
+      "show_display_hours": "Pokaż tylko {start} – {end}",
       "create": "Utwórz wydarzenie",
       "edit": "Edytuj wydarzenie",
       "delete": "Usuń wydarzenie",
@@ -3095,6 +3160,14 @@
       "unit": "Jednostka przypomnienia"
     },
     "settings": {
+      "limit_hours": "Ogranicz widoczne godziny",
+      "limit_hours_desc": "Pokazuj w widoku dnia i tygodnia tylko te godziny. Wydarzenia poza nimi są dostępne przez strzałki u góry i u dołu każdego dnia.",
+      "visible_hours": "Widoczne godziny",
+      "visible_hours_start": "Początek widocznych godzin",
+      "visible_hours_end": "Koniec widocznych godzin",
+      "hide_non_working_days": "Ukryj dni wolne od pracy",
+      "hide_non_working_days_desc": "Pomijaj w widoku tygodnia dni, w które nie pracujesz. Ich wydarzenia nadal widać w widokach miesiąca, dnia i agendy.",
+      "working_days": "Dni robocze",
       "title": "Ustawienia kalendarza",
       "default_view": "Domyślny widok",
       "week_starts_on": "Tydzień zaczyna się w",

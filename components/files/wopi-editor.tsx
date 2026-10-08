@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Loader2, X } from "@/components/icons";
 import { getActiveAccountSlotHeaders } from "@/lib/auth/active-account-slot";
 import { apiFetch } from "@/lib/browser-navigation";
@@ -38,6 +38,7 @@ interface LaunchData {
  */
 export function WopiEditor({ target, accountId, slot, onClose }: WopiEditorProps) {
   const t = useTranslations("files");
+  const locale = useLocale();
   const [launch, setLaunch] = useState<LaunchData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [frameLoaded, setFrameLoaded] = useState(false);
@@ -46,8 +47,8 @@ export function WopiEditor({ target, accountId, slot, onClose }: WopiEditorProps
   // Launch once per document; the object itself is rebuilt on every render.
   const launchBody = JSON.stringify(
     target.kind === "attachment"
-      ? { blobId: target.blobId, name: target.name, type: target.type, size: target.size, accountId: accountId || undefined }
-      : { fileId: target.id, accountId: accountId || undefined },
+      ? { blobId: target.blobId, name: target.name, type: target.type, size: target.size, accountId: accountId || undefined, lang: locale }
+      : { fileId: target.id, accountId: accountId || undefined, lang: locale },
   );
 
   useEffect(() => {

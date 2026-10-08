@@ -11,12 +11,15 @@ import {
   Share2,
 } from "@/components/icons";
 import { cn } from "@/lib/utils";
+import { ContextMenu, ContextMenuItem } from "@/components/ui/context-menu";
+import { useContextMenu } from "@/hooks/use-context-menu";
 import { useFileStore, type FileResource } from "@/stores/file-store";
 
 interface FolderNode {
   id: string;
   name: string;
   path: string;
+  resource: FileResource;
 }
 
 interface FolderTreeSidebarProps {
@@ -25,13 +28,17 @@ interface FolderTreeSidebarProps {
   listByParentId: (parentId: string | null) => Promise<FileResource[]>;
   width?: number;
   isResizing?: boolean;
+  /** Whether the viewer may share this folder; gates the tree's context menu. */
+  canShare?: (resource: FileResource) => boolean;
+  onShare?: (resource: FileResource) => void;
 }
 
-export function FolderTreeSidebar({ currentPath, onNavigate, listByParentId, width = 256, isResizing }: FolderTreeSidebarProps) {
+export function FolderTreeSidebar({ currentPath, onNavigate, listByParentId, width = 256, isResizing, canShare, onShare }: FolderTreeSidebarProps) {
   const t = useTranslations("files");
+  const { contextMenu, openContextMenu, closeContextMenu, menuRef } = useContextMenu<FileResource>();
   const client = useFileStore(s => s.client);
+  // Loaded by the file browser, which shows them in either layout.
   const sharedRoots = useFileStore(s => s.sharedRoots);
-  const loadSharedRoots = useFileStore(s => s.loadSharedRoots);
   const [rootChildren, setRootChildren] = useState<FolderNode[] | null>(null);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set(["root"]));
   const [loadingIds, setLoadingIds] = useState<Set<string>>(new Set());
@@ -58,6 +65,7 @@ export function FolderTreeSidebar({ currentPath, onNavigate, listByParentId, wid
             id: r.id,
             name: r.name,
             path: folderPath,
+            resource: r,
           };
         });
 
@@ -84,8 +92,6 @@ export function FolderTreeSidebar({ currentPath, onNavigate, listByParentId, wid
   useEffect(() => {
     if (client) {
       loadChildren(null, "/");
-      // Discover folders shared with the user by other principals.
-      loadSharedRoots();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [client]);
@@ -131,6 +137,14 @@ export function FolderTreeSidebar({ currentPath, onNavigate, listByParentId, wid
   const handleFolderClick = useCallback((path: string, id: string | null) => {
     onNavigate(path, id);
   }, [onNavigate]);
+
+  // Folders are not listed in the file list in this layout, so the tree is
+  // the only place to reach a folder's actions. Leave the browser menu alone
+  // when there is nothing to offer.
+  const handleFolderContextMenu = useCallback((e: React.MouseEvent, resource: FileResource) => {
+    if (!onShare || !canShare?.(resource)) return;
+    openContextMenu(e, resource);
+  }, [canShare, onShare, openContextMenu]);
 
   return (
     <div
@@ -182,6 +196,7 @@ export function FolderTreeSidebar({ currentPath, onNavigate, listByParentId, wid
               onToggleExpand={handleToggleExpand}
               onFolderClick={handleFolderClick}
               onLoadChildren={loadChildren}
+              onContextMenu={handleFolderContextMenu}
             />
           ))
         )}
@@ -220,6 +235,19 @@ export function FolderTreeSidebar({ currentPath, onNavigate, listByParentId, wid
           </div>
         )}
       </div>
+
+      {onShare && (
+        <ContextMenu ref={menuRef} isOpen={contextMenu.isOpen} position={contextMenu.position} onClose={closeContextMenu}>
+          <ContextMenuItem
+            icon={Share2}
+            label={t("share")}
+            onClick={() => {
+              if (contextMenu.data) onShare(contextMenu.data);
+              closeContextMenu();
+            }}
+          />
+        </ContextMenu>
+      )}
     </div>
   );
 }
@@ -234,6 +262,7 @@ function FolderTreeItem({
   onToggleExpand,
   onFolderClick,
   onLoadChildren,
+  onContextMenu,
 }: {
   node: FolderNode;
   depth: number;
@@ -244,6 +273,7 @@ function FolderTreeItem({
   onToggleExpand: (folderId: string, folderPath: string) => void;
   onFolderClick: (path: string, id: string | null) => void;
   onLoadChildren: (parentId: string, parentPath: string) => Promise<void>;
+  onContextMenu: (e: React.MouseEvent, resource: FileResource) => void;
 }) {
   const isExpanded = expandedIds.has(node.id);
   const isSelected = currentPath === node.path;
@@ -272,6 +302,7 @@ function FolderTreeItem({
             : "hover:bg-muted text-foreground",
           depth === 0 && "font-medium"
         )}
+        onContextMenu={(e) => onContextMenu(e, node.resource)}
       >
         {/* Expand/collapse chevron */}
         {hasChildren ? (
@@ -327,6 +358,7 @@ function FolderTreeItem({
               onToggleExpand={onToggleExpand}
               onFolderClick={onFolderClick}
               onLoadChildren={onLoadChildren}
+              onContextMenu={onContextMenu}
             />
           ))}
         </div>

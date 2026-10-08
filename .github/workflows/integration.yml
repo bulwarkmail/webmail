@@ -1,0 +1,73 @@
+name: Integration tests
+
+# Runs the dockerised webmail + Stalwart Playwright suite in integration/
+# (see integration/README.md). It takes several minutes, so unlike the vitest
+# job in tests.yml it does not run on every push. It runs:
+#
+#   - every night on main,
+#   - on a pull request that carries the "integration" label (and again on
+#     each push to it while the label stays on),
+#   - on demand: gh workflow run integration.yml
+#
+# A fresh runner means a fresh Stalwart volume, so the declarative account
+# bootstrap always applies. Specs pinned with test.fail for known server bugs
+# count as passed when they fail as expected; only an unexpected result fails
+# the job.
+
+on:
+  schedule:
+    - cron: "17 2 * * *"
+  workflow_dispatch:
+  pull_request:
+    types: [opened, reopened, synchronize, labeled]
+
+permissions:
+  contents: read
+
+jobs:
+  playwright:
+    name: playwright
+    # On pull requests, run only when the "integration" label is on. A labeled
+    # event for some other label must not start (or cancel) a run.
+    if: >-
+      github.event_name != 'pull_request' ||
+      (github.event.action == 'labeled' && github.event.label.name == 'integration') ||
+      (github.event.action != 'labeled' && contains(github.event.pull_request.labels.*.name, 'integration'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    # Job-level, so a skipped run never cancels a real one.
+    concurrency:
+      group: integration-${{ github.event.pull_request.number || github.ref }}
+      cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        # The Playwright container runs the suite from this checkout, so it
+        # needs @playwright/test in node_modules.
+        run: npm ci
+
+      - name: Run integration suite
+        run: bash integration/run-tests.sh
+
+      - name: Show container logs
+        if: failure()
+        working-directory: integration
+        run: docker compose logs --no-color --timestamps
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-report
+          path: |
+            integration/playwright-report/
+            integration/test-results/
+          retention-days: 14

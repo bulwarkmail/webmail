@@ -24,6 +24,7 @@
       "generic": "Notikusi neparedzēta kļūda. Ja tā atkārtojas, sazinieties ar administratoru.",
       "totp_invalid": "Nepareizs autentifikācijas kods. Pārbaudiet lietotni un mēģiniet vēlreiz.",
       "oauth_discovery_failed": "SSO ir iespējots, bet autentifikācijas pakalpojums nav pieejams. Pārbaudiet OAuth iestatījumus.",
+      "token_exchange_failed": "Parole un kods tika pieņemti, taču pasta serveris atteicās sākt sesiju šai lietotnei. Lūdziet administratoram pārbaudīt OAuth klienta iestatījumus.",
       "totp_required": "Nepieciešams divu faktoru autentifikācijas kods. Lūdzu, ievadiet kodu zemāk."
     },
     "show_password": "Rādīt paroli",
@@ -344,6 +345,15 @@
     "external_content_warning": "Attēli un ārējais saturs ir bloķēts",
     "load_external_content": "Ielādēt attēlus",
     "trust_sender": "Vienmēr uzticēties šim sūtītājam",
+    "sender_check": {
+      "unverified_label": "Nepārbaudīts sūtītājs",
+      "failed_label": "Sūtītāja pārbaude neizdevās",
+      "unverified": "Šis ziņojums apgalvo, ka ir no domēna {domain}, taču nekas to neapstiprina. Tam nav derīga domēna {domain} paraksta, un tas nav nācis no servera, ko domēns {domain} ir atļāvis.",
+      "unverified_sent_from": "Šis ziņojums apgalvo, ka ir no domēna {domain}, taču tas nosūtīts no domēna {host}, un tam nav derīga domēna {domain} paraksta.",
+      "failed": "Šis ziņojums apgalvo, ka ir no domēna {domain}, taču tas neizturēja šī domēna sūtītāja pārbaudes. Tas var būt viltots.",
+      "failed_sent_from": "Šis ziņojums apgalvo, ka ir no domēna {domain}, taču tas nosūtīts no domēna {host} un neizturēja domēna {domain} sūtītāja pārbaudes. Tas var būt viltots.",
+      "caution": "Esiet piesardzīgi ar saitēm, pielikumiem un paroļu vai maksājumu datu pieprasījumiem."
+    },
     "back_to_list": "Atpakaļ uz sarakstu",
     "view_contact": "Skatīt kontaktu",
     "message_details": "Informācija par ziņojumu",
@@ -623,6 +633,12 @@
     "attach": "Pievienot",
     "attach_photos": "Photos & Videos",
     "attach_files": "Files",
+    "attach_from_files": "Pievienot no Failiem",
+    "files_picker": {
+      "attach": "{count, plural, =0 {Pievienot} one {Pievienot # failu} other {Pievienot # failus}}",
+      "empty_folder": "Šī mape ir tukša",
+      "load_failed": "Jūsu failus neizdevās ielādēt"
+    },
     "discard": "Atmest",
     "discard_draft_title": "Atmest melnrakstu?",
     "discard_draft_confirm": "Ir nesaglabātas izmaiņas. Vai tiešām vēlaties atmest šo melnrakstu?",
@@ -819,6 +835,8 @@
     "emails_moved": "{count} vēstules pārvietotas",
     "moved_to_mailbox": "Pārvietots uz {mailbox}",
     "move_failed": "Pārvietošanas kļūda",
+    "emails_copied": "{count} vēstules nokopētas",
+    "copy_failed": "Kopēšanas kļūda",
     "move_error": "Neizdevās pārvietot vēstules uz izvēlēto mapi",
     "email_tagged": "Vēstulei pievienots tags",
     "emails_tagged": "{count} vēstulēm pievienots tags",
@@ -832,8 +850,8 @@
     "identity_delete_failed": "Neizdevās izdzēst identitāti: {error}",
     "identity_unauthorized": "Jums nav tiesību sūtīt no šīs e-pasta adreses",
     "identity_not_found": "Identitāte netika atrasta",
-    "vacation_saved": "Atvaļinājuma atbildes iestatījumi saglabāti",
-    "vacation_save_failed": "Neizdevās saglabāt atvaļinājuma atbildes iestatījumus",
+    "vacation_saved": "Prombūtnes iestatījumi saglabāti",
+    "vacation_save_failed": "Neizdevās saglabāt prombūtnes iestatījumus",
     "filters_saved": "Filtri veiksmīgi saglabāti",
     "filters_save_failed": "Neizdevās saglabāt filtrus",
     "filters_deleted": "Filtra nosacījums izdzēsts",
@@ -855,7 +873,8 @@
     "rule_undone": "Noteikuma izmaiņa atsaukta",
     "rule_undo_failed": "Neizdevās atsaukt noteikuma izmaiņu",
     "rule_undo_conflict": "Jūsu filtri kopš tā laika ir mainījušies. Atsauciet izmaiņu filtru iestatījumos.",
-    "rule_folder_failed": "Neizdevās izveidot mapi"
+    "rule_folder_failed": "Neizdevās izveidot mapi",
+    "vacation_filters_save_failed": "Prombūtnes iestatījumi saglabāti, taču pārsūtīšanu un atbildes saņēmējus neizdevās saglabāt"
   },
   "date": {
     "today": "Šodien",
@@ -940,7 +959,7 @@
       "privacy": "Privātums un drošība",
       "account": "Konts",
       "identities": "Identitātes",
-      "vacation": "Atvaļinājuma atbilde",
+      "vacation": "Prombūtne",
       "advanced": "Papildu",
       "calendar": "Kalendārs",
       "filters": "Filtri",
@@ -1815,28 +1834,24 @@
       }
     },
     "vacation": {
-      "title": "Atvaļinājuma atbilde",
-      "description": "Automātiski atbildēt uz ienākošajām vēstulēm prombūtnes laikā",
+      "title": "Prombūtne",
+      "description": "Automātiski apstrādāt ienākošās vēstules prombūtnes laikā",
       "loading": "Ielādē atvaļinājuma iestatījumus...",
       "not_supported": "Jūsu pasta serveris neatbalsta atvaļinājuma atbildes.",
       "fetch_error": "Neizdevās ielādēt atvaļinājuma iestatījumus.",
       "status": {
-        "label": "Atvaļinājuma atbilde",
+        "label": "Atbildēt automātiski",
         "description": "Sūtīt automātisku atbildi uz ienākošajām vēstulēm",
         "active": "Aktīva",
         "inactive": "Neaktīva"
       },
       "date_range": {
-        "title": "Datumu diapazons",
-        "description": "Ierobežojiet atbildi noteiktā periodā (pēc izvēles)",
         "start": "Sākuma datums",
         "start_description": "Atstājiet tukšu, lai nebūtu ierobežojuma",
         "end": "Beigu datums",
         "end_description": "Atstājiet tukšu, lai nebūtu ierobežojuma"
       },
       "message": {
-        "title": "Atbildes ziņojums",
-        "description": "Ziņojums, kas tiks nosūtīts kā atbilde",
         "subject_label": "Temats",
         "subject_description": "Atvaļinājuma atbildes temats",
         "subject_placeholder": "Atvaļinājumā / Esmu prom",
@@ -1856,10 +1871,32 @@
       "saving": "Saglabā...",
       "warnings": {
         "end_before_start": "Beigu datumam jābūt vēlāk par sākuma datumu",
+        "invalid_date": "Norādiet derīgu sākuma un beigu datumu ar laiku vai atstājiet lauku tukšu",
         "start_in_past": "Sākuma datums ir pagātnē",
         "empty_body": "Ziņojuma teksts ir tukšs - saņēmēji saņems tukšu atbildi",
         "subject_too_long": "Temats serverim ir pārāk garš (ne vairāk kā {max} baiti).",
-        "body_too_long": "Ziņa serverim ir pārāk gara (ne vairāk kā {max} baiti, ieskaitot formatējumu)."
+        "body_too_long": "Ziņa serverim ir pārāk gara (ne vairāk kā {max} baiti, ieskaitot formatējumu).",
+        "forward_address": "Norādiet derīgu adresi pārsūtīšanai",
+        "not_running": "Pārsūtīšana vai atbildes saņēmēji ir saglabāti, taču pašlaik nav aktīvi. Saglabājiet, lai tos atkal ieslēgtu."
+      },
+      "forward": {
+        "title": "Pārsūtīšana",
+        "description": "Pārsūta ienākošos ziņojumus uz citu adresi, ar automātisko atbildi vai bez tās, iepriekš norādītajā laika posmā (bez beigu datuma, līdz to izslēdz). Mēstules netiek pārsūtītas.",
+        "enabled_label": "Pārsūtīt ziņojumus",
+        "to_label": "Pārsūtīt uz",
+        "to_placeholder": "lietotajs@piemers.lv",
+        "keep_label": "Atstāt iesūtnē",
+        "keep_description": "Pretējā gadījumā ziņojums tiek tikai pārsūtīts: tas nepaliek šajā pastkastē, un tam netiek piemērots neviens filtra noteikums."
+      },
+      "audience": {
+        "label": "Atbildēt",
+        "description": "Iekšējie sūtītāji: {domains}",
+        "all": "Visiem sūtītājiem",
+        "internal": "Tikai iekšējiem sūtītājiem",
+        "external": "Tikai ārējiem sūtītājiem"
+      },
+      "auto_reply": {
+        "title": "Automātiskā atbilde"
       }
     },
     "folders": {
@@ -1884,6 +1921,15 @@
       "reorder": "Velciet, lai pārkārtotu",
       "reorder_error": "Neizdevās pārkārtot mapes",
       "move_error": "Neizdevās pārvietot mapi",
+      "select_folder": "Atlasīt {name}",
+      "select_hint": "Atlasīt. Shift+klikšķis atlasa visas mapes līdz pēdējai, uz kuras noklikšķinājāt.",
+      "selected_count": "{count, plural, zero {Atlasītas # mapes} one {Atlasīta # mape} other {Atlasītas # mapes}}",
+      "move_to": "Pārvietot uz...",
+      "move_to_top_level": "Augšējais līmenis",
+      "move": "Pārvietot",
+      "clear_selection": "Notīrīt atlasi",
+      "folders_moved": "{count, plural, zero {Pārvietotas # mapes} one {Pārvietota # mape} other {Pārvietotas # mapes}}",
+      "move_partial_error": "{count, plural, zero {# mapes neizdevās pārvietot} one {# mapi neizdevās pārvietot} other {# mapes neizdevās pārvietot}}",
       "subfolder_of": "Mapē {name}",
       "subfolder_name": "Apakšmapes nosaukums",
       "new_folder_name": "Mapes nosaukums",
@@ -1970,7 +2016,8 @@
         "contacts_description": "Kontaktu sinhronizācija, adrešu grāmatu darbības un uzticamie sūtītāji"
       },
       "about": {
-        "title": "Bulwark Webmail"
+        "title": "Bulwark Webmail",
+        "source_code": "Pirmkods"
       },
       "spam_siege": {
         "title": "Spam Siege",
@@ -2117,7 +2164,8 @@
         "subject": "Temats",
         "header": "Pielāgota galvene",
         "size": "Izmērs",
-        "body": "Teksts"
+        "body": "Teksts",
+        "all": "Visas vēstules"
       },
       "comparators": {
         "has_any": "ir klāt",
@@ -2226,7 +2274,19 @@
       "suggest_list": "List-Id",
       "suggest_domain": "@{domain}",
       "apply_existing": "Piemērot arī vēstulēm, kas jau ir šajā mapē",
-      "apply_existing_unsupported": "Esošajām vēstulēm var piemērot tikai noteikumus, kas pārbauda sūtītāju, adresātus, tematu vai galvenes un kas pārvieto, kopē, atzīmē kā izlasītu, ar zvaigznīti vai tagu."
+      "apply_existing_unsupported": "Esošajām vēstulēm var piemērot tikai noteikumus, kas pārbauda sūtītāju, adresātus, tematu vai galvenes un kas pārvieto, kopē, atzīmē kā izlasītu, ar zvaigznīti vai tagu.",
+      "period_title": "Datumu diapazons",
+      "period_start": "Sākuma datums",
+      "period_end": "Beigu datums",
+      "validation_period_order": "Beigu datumam jābūt vēlāk par sākuma datumu",
+      "period_toggle": "Aktīvs tikai noteiktā laika posmā",
+      "period_hint": "Attiecas uz ziņojumiem, kas pienāk šajā laika posmā. Atstājiet lauku tukšu, lai šo galu neierobežotu.",
+      "validation_period_empty": "Norādiet laika posma sākuma vai beigu datumu",
+      "validation_period_invalid": "Norādiet laika posmam derīgu datumu ar laiku vai atstājiet lauku tukšu",
+      "apply_existing_period": "Noteikums ar laika posmu darbojas tikai ar ziņojumiem, kas pienāk šajā posmā, tāpēc to nevar lietot esošajiem ziņojumiem.",
+      "period_status_scheduled": "ieplānots",
+      "period_status_active": "aktīvs",
+      "period_status_expired": "beidzies"
     },
     "templates": {
       "title": "Vēstuļu veidnes",
@@ -2355,6 +2415,7 @@
     "pin": "Piespraust",
     "unpin": "Atspraust",
     "move_to": "Pārvietot uz...",
+    "copy_to_account": "Kopēt uz kontu...",
     "archive": "Arhivēt",
     "delete": "Dzēst",
     "mark_as_spam": "Atzīmēt kā mēstuli",
@@ -2935,6 +2996,10 @@
       "tasks_hint": "Uzdevumi (k)"
     },
     "events": {
+      "hidden_before": "{count, plural, zero {# agrāku notikumu} one {# agrāks notikums} other {# agrāki notikumi}}",
+      "hidden_after": "{count, plural, zero {# vēlāku notikumu} one {# vēlāks notikums} other {# vēlāki notikumi}}",
+      "show_all_hours": "Rādīt visas stundas",
+      "show_display_hours": "Rādīt tikai {start} – {end}",
       "create": "Izveidot pasākumu",
       "edit": "Rediģēt pasākumu",
       "delete": "Dzēst pasākumu",
@@ -3094,6 +3159,14 @@
       "unit": "Atgādinājuma vienība"
     },
     "settings": {
+      "limit_hours": "Ierobežot redzamās stundas",
+      "limit_hours_desc": "Dienas un nedēļas skatā rādīt tikai šīs stundas. Notikumi ārpus tām ir pieejami ar bultiņām katras dienas augšā un apakšā.",
+      "visible_hours": "Redzamās stundas",
+      "visible_hours_start": "Redzamo stundu sākums",
+      "visible_hours_end": "Redzamo stundu beigas",
+      "hide_non_working_days": "Slēpt brīvdienas",
+      "hide_non_working_days_desc": "Izlaist no nedēļas skata dienas, kurās nestrādājat. To notikumi joprojām redzami mēneša, dienas un darba kārtības skatā.",
+      "working_days": "Darba dienas",
       "title": "Kalendāra iestatījumi",
       "default_view": "Noklusējuma skats",
       "week_starts_on": "Nedēļa sākas ar",

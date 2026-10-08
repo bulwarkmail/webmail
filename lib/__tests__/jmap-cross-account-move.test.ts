@@ -29,9 +29,35 @@ describe('copyEmailAcrossAccounts', () => {
     expect(calls.find(([m]) => m === 'Email/set')![1]).toEqual({ accountId: 'me', destroy: ['m1'] });
   });
 
+  it('keeps the source when asked for a plain copy', async () => {
+    const { client, calls } = clientWithCopyResult({ created: { c: { id: 'new1' } } });
+    await expect(client.copyEmailAcrossAccounts('m1', 'me', 'grp', 'inbox', { keepOriginal: true })).resolves.toBe('new1');
+    expect(calls.some(([m]) => m === 'Email/copy')).toBe(true);
+    expect(calls.some(([m]) => m === 'Email/set')).toBe(false);
+  });
+
   it('keeps the source when the copy fails', async () => {
     const { client, calls } = clientWithCopyResult({ notCreated: { c: { type: 'overQuota' } } });
     await expect(client.copyEmailAcrossAccounts('m1', 'me', 'grp', 'inbox')).rejects.toThrow('overQuota');
     expect(calls.some(([m]) => m === 'Email/set')).toBe(false);
+  });
+});
+
+describe('importRawEmail', () => {
+  it('keeps the original date of a message carried over from another account', async () => {
+    const client = new JMAPClient('https://jmap.example.com', 'user@example.com', 'pass');
+    Object.assign(client, { accountId: 'me' });
+    vi.spyOn(client, 'uploadBlob').mockResolvedValue({ blobId: 'b1' } as never);
+    const request = vi.spyOn(client as unknown as { request: (c: Call[]) => Promise<unknown> }, 'request')
+      .mockResolvedValue({ methodResponses: [['Email/import', { created: { 'smime-import': { id: 'n1' } } }, '0']] });
+
+    await client.importRawEmail(new Blob(['raw']), { inbox: true }, { $seen: true }, undefined, '2024-03-01T10:00:00Z');
+    const emails = (request.mock.calls[0][0][0][1] as { emails: Record<string, Record<string, unknown>> }).emails;
+    expect(emails['smime-import'].receivedAt).toBe('2024-03-01T10:00:00Z');
+
+    // Without a date the server stamps the import time, as before.
+    await client.importRawEmail(new Blob(['raw']), { inbox: true });
+    const plain = (request.mock.calls[1][0][0][1] as { emails: Record<string, Record<string, unknown>> }).emails;
+    expect(plain['smime-import']).not.toHaveProperty('receivedAt');
   });
 });

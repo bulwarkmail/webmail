@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { JMAPClient } from '../jmap/client';
+import { JMAPClient, SendUnconfirmedError } from '../jmap/client';
 
 /**
  * #849: replacing a draft (autosave, send) used to bundle the destroy of the
@@ -29,7 +29,7 @@ interface CapturedRequest { methodCalls: JMAPMethodCall[] }
  * Email/set create come back as notCreated; `failSubmission` does the same
  * for EmailSubmission/set.
  */
-function mockFlow({ failCreate = false, failSubmission = false } = {}) {
+function mockFlow({ failCreate = false, failSubmission = false, methodError = false, missingSubmission = false, emptyErrors = false } = {}) {
   const captured: CapturedRequest[] = [];
   vi.spyOn(globalThis, 'fetch').mockImplementation(async (_url, init) => {
     const body = JSON.parse((init as { body: string }).body) as CapturedRequest;
@@ -56,11 +56,14 @@ function mockFlow({ failCreate = false, failSubmission = false } = {}) {
             result.created = { [key]: { id: 'email-new-1' } };
           }
         }
+        if (emptyErrors) result.notCreated = {};
         if (args.destroy) {
           result.destroyed = args.destroy;
         }
         methodResponses.push(['Email/set', result, callId]);
       } else if (method === 'EmailSubmission/set') {
+        if (missingSubmission) continue;
+        if (methodError) { methodResponses.push(['error', { type: 'serverFail', description: 'Google unavailable; draft retained' }, callId]); continue; }
         methodResponses.push(['EmailSubmission/set',
           failSubmission
             ? { notCreated: { '1': { type: 'forbiddenFrom', description: 'not allowed' } } }
@@ -228,5 +231,21 @@ describe('draft replace lifecycle (#849)', () => {
       { blobId: 'blob-1', name: 'logo.png', type: 'image/png', cid: 'img1@local', disposition: 'inline' },
       { blobId: 'blob-2', name: 'report.pdf', type: 'application/pdf', disposition: 'attachment' },
     ]);
+  });
+});
+
+describe('compose failure recovery', () => {
+  beforeEach(() => { vi.restoreAllMocks(); vi.spyOn(console, 'error').mockImplementation(() => {}); });
+  it.each([{ methodError: true }, { missingSubmission: true }])('does not claim success or delete the old draft without confirmation: %j', async options => {
+    const client = createClient(); const captured = mockFlow(options);
+    await expect(client.sendEmail(['bob@example.com'], 'Subject', 'body', undefined, undefined, 'identity-1', 'user@example.com', 'old-draft')).rejects.toThrow(
+      // Only the missing submission is unconfirmed; a method error is a plain failure.
+      options.missingSubmission ? SendUnconfirmedError : Error,
+    );
+    expect(emailSetCalls(captured).some(call => call.destroy)).toBe(false);
+  });
+  it('accepts empty notCreated maps as success', async () => {
+    const client = createClient(); mockFlow({ emptyErrors: true });
+    expect(await client.createDraft(['bob@example.com'], 'Subject', 'body')).toBe('email-new-1');
   });
 });

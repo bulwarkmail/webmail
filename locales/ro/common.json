@@ -24,7 +24,8 @@
       "generic": "A apărut o eroare neașteptată. Dacă problema persistă, contactați administratorul.",
       "totp_required": "Este necesar un cod de autentificare în doi pași. Vă rugăm să introduceți codul mai jos.",
       "totp_invalid": "Cod de autentificare invalid. Vă rugăm să verificați aplicația de autentificare și să încercați din nou.",
-      "oauth_discovery_failed": "SSO este activată, dar furnizorul de identitate nu a putut fi contactat. Verificați configurația OAuth."
+      "oauth_discovery_failed": "SSO este activată, dar furnizorul de identitate nu a putut fi contactat. Verificați configurația OAuth.",
+      "token_exchange_failed": "Parola și codul au fost acceptate, dar serverul de e-mail a refuzat să pornească o sesiune pentru această aplicație. Cereți administratorului să verifice setările clientului OAuth."
     },
     "show_password": "Afișează parola",
     "hide_password": "Ascunde parola",
@@ -344,6 +345,15 @@
     "external_content_warning": "Imaginile și conținutul extern au fost blocate",
     "load_external_content": "Încărcați imagini",
     "trust_sender": "Aveți întotdeauna încredere în acest expeditor",
+    "sender_check": {
+      "unverified_label": "Expeditor neverificat",
+      "failed_label": "Verificarea expeditorului a eșuat",
+      "unverified": "Acest mesaj pretinde că provine de la {domain}, dar nimic nu confirmă acest lucru. Nu are o semnătură validă de la {domain} și nu a venit de la un server autorizat de {domain}.",
+      "unverified_sent_from": "Acest mesaj pretinde că provine de la {domain}, dar a fost trimis de pe {host} și nu are o semnătură validă de la {domain}.",
+      "failed": "Acest mesaj pretinde că provine de la {domain}, dar nu a trecut de verificările de expeditor ale acestui domeniu. Este posibil să fie falsificat.",
+      "failed_sent_from": "Acest mesaj pretinde că provine de la {domain}, dar a fost trimis de pe {host} și nu a trecut de verificările de expeditor ale domeniului {domain}. Este posibil să fie falsificat.",
+      "caution": "Fiți atenți la linkuri, atașamente și solicitări de parole sau date de plată."
+    },
     "back_to_list": "Înapoi la listă",
     "view_contact": "Vizualizare contact",
     "message_details": "Detalii mesaj",
@@ -623,6 +633,12 @@
     "attach": "Atașați",
     "attach_photos": "Fotografii și videoclipuri",
     "attach_files": "Fișiere",
+    "attach_from_files": "Atașează din Fișiere",
+    "files_picker": {
+      "attach": "{count, plural, =0 {Atașează} one {Atașează 1 fișier} few {Atașează # fișiere} other {Atașează # de fișiere}}",
+      "empty_folder": "Acest dosar este gol",
+      "load_failed": "Fișierele tale nu au putut fi încărcate"
+    },
     "discard": "Ignorați",
     "discard_draft_title": "Doriți să ștergeți schița?",
     "discard_draft_confirm": "Aveți modificări nesalvate. Doriți să renunțați la această schiță?",
@@ -819,6 +835,8 @@
     "emails_moved": "{count} e-mailuri mutate",
     "moved_to_mailbox": "Mutată la {mailbox}",
     "move_failed": "Mutarea a eșuat",
+    "emails_copied": "{count} e-mailuri copiate",
+    "copy_failed": "Copierea a eșuat",
     "move_error": "Nu s-au putut muta e-mailurile în folderul selectat",
     "email_tagged": "E-mail etichetat",
     "emails_tagged": "{count} e-mailuri etichetate",
@@ -832,8 +850,8 @@
     "identity_delete_failed": "Nu s-a putut șterge identitatea: {error}",
     "identity_unauthorized": "Nu aveți autorizație să trimiteți mesaje de la această adresă de e-mail",
     "identity_not_found": "Identitate neidentificată",
-    "vacation_saved": "Setările răspunsului automat de vacanță au fost salvate",
-    "vacation_save_failed": "Nu s-au putut salva setările răspunsului automat de concediu",
+    "vacation_saved": "Setările de absență au fost salvate",
+    "vacation_save_failed": "Nu s-au putut salva setările de absență",
     "filters_saved": "Filtrele au fost salvate cu succes",
     "filters_save_failed": "Nu s-au putut salva filtrele",
     "filters_deleted": "Regula de filtrare a fost ștersă",
@@ -855,7 +873,8 @@
     "rule_undone": "Modificarea regulii a fost anulată",
     "rule_undo_failed": "Modificarea regulii nu a putut fi anulată",
     "rule_undo_conflict": "Filtrele dvs. s-au schimbat între timp. Anulați modificarea din setările filtrelor.",
-    "rule_folder_failed": "Dosarul nu a putut fi creat"
+    "rule_folder_failed": "Dosarul nu a putut fi creat",
+    "vacation_filters_save_failed": "Setările de absență au fost salvate, dar redirecționarea și destinatarii răspunsului nu au putut fi salvați"
   },
   "date": {
     "today": "Astăzi",
@@ -943,7 +962,7 @@
       "privacy": "Confidențialitate și securitate",
       "account": "Cont",
       "identities": "Identități",
-      "vacation": "Răspuns automat de vacanță",
+      "vacation": "Absență",
       "advanced": "Nivel avansat",
       "calendar": "Calendar",
       "filters": "Filtre",
@@ -1822,28 +1841,24 @@
       }
     },
     "vacation": {
-      "title": "Răspuns automat de vacanță",
-      "description": "Răspundeți automat la e-mailurile primite în timp ce sunteți plecat",
+      "title": "Absență",
+      "description": "Gestionați automat e-mailurile primite în timp ce sunteți plecat",
       "loading": "Se încarcă setările de concediu...",
       "not_supported": "Serverul dvs. de e-mail nu acceptă răspunsurile de vacanță.",
       "fetch_error": "Nu s-au putut încărca setările de concediu. Vă rugăm să încercați din nou.",
       "status": {
-        "label": "Răspuns automat de vacanță",
+        "label": "Răspunde automat",
         "description": "Trimiteți un răspuns automat persoanelor care vă trimit e-mailuri",
         "active": "Activ",
         "inactive": "Inactiv"
       },
       "date_range": {
-        "title": "Interval de date",
-        "description": "Opțional, limitați răspunsul automat la o anumită perioadă",
         "start": "Data de începere",
         "start_description": "Lăsați necompletat dacă nu există o limită inițială",
         "end": "Data de încheiere",
         "end_description": "Lăsați necompletat dacă nu există o limită de sfârșit"
       },
       "message": {
-        "title": "Mesaj de răspuns automat",
-        "description": "Mesajul care va fi trimis ca răspuns",
         "subject_label": "Subiect",
         "subject_description": "Subiectul răspunsului automat",
         "subject_placeholder": "Absent de la birou",
@@ -1863,10 +1878,32 @@
       "saving": "Se salvează...",
       "warnings": {
         "end_before_start": "Data de încheiere trebuie să fie ulterioară datei de începere",
+        "invalid_date": "Introduceți o dată de început și de sfârșit validă, cu oră, sau lăsați câmpul gol",
         "start_in_past": "Data de începere este în trecut",
         "empty_body": "Corpul mesajului este gol – destinatarii vor primi un răspuns gol",
         "subject_too_long": "Subiectul este prea lung pentru server (cel mult {max} octeți).",
-        "body_too_long": "Mesajul este prea lung pentru server (cel mult {max} octeți, inclusiv formatarea)."
+        "body_too_long": "Mesajul este prea lung pentru server (cel mult {max} octeți, inclusiv formatarea).",
+        "forward_address": "Introduceți o adresă validă pentru redirecționare",
+        "not_running": "Redirecționarea sau destinatarii răspunsului sunt salvați, dar momentan nu sunt activi. Salvați pentru a-i reactiva."
+      },
+      "forward": {
+        "title": "Redirecționare",
+        "description": "Redirecționează mesajele primite către o altă adresă, cu sau fără răspuns automat, în perioada de mai sus (fără dată de încheiere, până când este dezactivată). Spamul nu este redirecționat.",
+        "enabled_label": "Redirecționează mesajele",
+        "to_label": "Redirecționează către",
+        "to_placeholder": "email@example.com",
+        "keep_label": "Păstrează în căsuța de primire",
+        "keep_description": "Altfel, mesajul este doar redirecționat: nu rămâne în această căsuță poștală și nu i se aplică nicio regulă de filtrare."
+      },
+      "audience": {
+        "label": "Răspunde la",
+        "description": "Expeditori interni: {domains}",
+        "all": "Toți expeditorii",
+        "internal": "Doar expeditorii interni",
+        "external": "Doar expeditorii externi"
+      },
+      "auto_reply": {
+        "title": "Răspuns automat"
       }
     },
     "folders": {
@@ -1891,6 +1928,15 @@
       "reorder": "Trageți pentru a reordona",
       "reorder_error": "Reordonarea dosarelor a eșuat",
       "move_error": "Mutarea dosarului a eșuat",
+      "select_folder": "Selectează {name}",
+      "select_hint": "Selectează. Shift+clic selectează toate dosarele până la ultimul pe care ai dat clic.",
+      "selected_count": "{count, plural, one {# dosar selectat} few {# dosare selectate} other {# de dosare selectate}}",
+      "move_to": "Mută în...",
+      "move_to_top_level": "Nivelul superior",
+      "move": "Mută",
+      "clear_selection": "Golește selecția",
+      "folders_moved": "{count, plural, one {# dosar mutat} few {# dosare mutate} other {# de dosare mutate}}",
+      "move_partial_error": "{count, plural, one {# dosar nu a putut fi mutat} few {# dosare nu au putut fi mutate} other {# de dosare nu au putut fi mutate}}",
       "subfolder_of": "În interiorul {name}",
       "subfolder_name": "Numele subfolderului",
       "new_folder_name": "Numele folderului",
@@ -1977,7 +2023,8 @@
         "button": "Import"
       },
       "about": {
-        "title": "Bulwark Webmail"
+        "title": "Bulwark Webmail",
+        "source_code": "Cod sursă"
       },
       "spam_siege": {
         "title": "Spam Siege",
@@ -2124,7 +2171,8 @@
         "subject": "Subiect",
         "header": "Antet personalizat",
         "size": "Dimensiune",
-        "body": "Corpul mesajului"
+        "body": "Corpul mesajului",
+        "all": "Toate mesajele"
       },
       "comparators": {
         "has_any": "este prezent",
@@ -2233,7 +2281,19 @@
       "suggest_list": "List-Id",
       "suggest_domain": "@{domain}",
       "apply_existing": "Aplicați și mesajelor care sunt deja în acest dosar",
-      "apply_existing_unsupported": "Doar regulile care verifică expeditorul, destinatarii, subiectul sau antetele și care mută, copiază, marchează ca citit, marchează cu stea sau etichetează pot fi aplicate mesajelor existente."
+      "apply_existing_unsupported": "Doar regulile care verifică expeditorul, destinatarii, subiectul sau antetele și care mută, copiază, marchează ca citit, marchează cu stea sau etichetează pot fi aplicate mesajelor existente.",
+      "period_title": "Interval de date",
+      "period_start": "Data de începere",
+      "period_end": "Data de încheiere",
+      "validation_period_order": "Data de încheiere trebuie să fie ulterioară datei de începere",
+      "period_toggle": "Activă doar într-o anumită perioadă",
+      "period_hint": "Se aplică mesajelor care sosesc în această perioadă. Lăsați un câmp gol pentru a nu limita acel capăt.",
+      "validation_period_empty": "Introduceți o dată de începere sau de încheiere pentru perioadă",
+      "validation_period_invalid": "Introduceți o dată validă cu oră pentru perioadă sau lăsați câmpul gol",
+      "apply_existing_period": "O regulă cu perioadă acționează doar asupra mesajelor care sosesc în acea perioadă, deci nu poate fi aplicată mesajelor existente.",
+      "period_status_scheduled": "programată",
+      "period_status_active": "activă",
+      "period_status_expired": "expirată"
     },
     "templates": {
       "title": "Șabloane de e-mail",
@@ -2355,6 +2415,7 @@
     "pin": "Fixează",
     "unpin": "Anulează fixarea",
     "move_to": "Mergi la...",
+    "copy_to_account": "Copiază în cont...",
     "archive": "Arhivează",
     "delete": "Șterge",
     "mark_as_spam": "Raportează spamul",
@@ -2936,6 +2997,10 @@
       "tasks_hint": "Sarcini (k)"
     },
     "events": {
+      "hidden_before": "{count, plural, one {# eveniment anterior} few {# evenimente anterioare} other {# de evenimente anterioare}}",
+      "hidden_after": "{count, plural, one {# eveniment ulterior} few {# evenimente ulterioare} other {# de evenimente ulterioare}}",
+      "show_all_hours": "Afișează toate orele",
+      "show_display_hours": "Afișează doar {start} – {end}",
       "create": "Creați un eveniment",
       "edit": "Editați evenimentul",
       "delete": "Ștergere eveniment",
@@ -3095,6 +3160,14 @@
       "unit": "Unitatea de reamintire"
     },
     "settings": {
+      "limit_hours": "Limitează orele vizibile",
+      "limit_hours_desc": "Afișează doar aceste ore în vizualizările pe zi și pe săptămână. Evenimentele din afara lor rămân accesibile prin săgețile din partea de sus și de jos a fiecărei zile.",
+      "visible_hours": "Ore vizibile",
+      "visible_hours_start": "Începutul orelor vizibile",
+      "visible_hours_end": "Sfârșitul orelor vizibile",
+      "hide_non_working_days": "Ascunde zilele nelucrătoare",
+      "hide_non_working_days_desc": "Omite din vizualizarea pe săptămână zilele în care nu lucrezi. Evenimentele lor apar în continuare în vizualizările pe lună, pe zi și agendă.",
+      "working_days": "Zile lucrătoare",
       "title": "Setări calendar",
       "default_view": "Vizualizare implicită",
       "week_starts_on": "Săptămâna începe pe",

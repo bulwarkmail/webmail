@@ -40,8 +40,17 @@ export interface WopiTokenPayload {
    */
   uploadAccountId?: string;
   canWrite: boolean;
-  /** Browser origin that embeds the editor iframe (WOPI PostMessageOrigin). */
+  /**
+   * The origin this server sees itself on. It decides whether `serverUrl` is
+   * this process (see lib/wopi/request.ts), so it never comes from a header.
+   */
   origin: string;
+  /**
+   * Browser origin that embeds the editor iframe (WOPI PostMessageOrigin).
+   * Behind a reverse proxy it differs from `origin` (#1130). Absent on older
+   * tokens - those fall back to `origin`.
+   */
+  postMessageOrigin?: string;
   /**
    * The browser and account slot that minted the token, so signing out
    * there revokes it (see lib/wopi/revocation.ts). Absent on older tokens.
@@ -111,6 +120,7 @@ export function verifyWopiToken(token: string | null, documentId: string): WopiT
   if (p.kind !== undefined && p.kind !== 'file' && p.kind !== 'attachment') return null;
   if (p.bid !== undefined && typeof p.bid !== 'string') return null;
   if (p.slot !== undefined && typeof p.slot !== 'number') return null;
+  if (p.postMessageOrigin !== undefined && typeof p.postMessageOrigin !== 'string') return null;
   if (p.uploadAccountId !== undefined && (typeof p.uploadAccountId !== 'string' || !p.uploadAccountId)) return null;
   if (wopiDocumentId(p) !== documentId) return null;
   if (Date.now() > p.exp) return null;

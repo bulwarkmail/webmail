@@ -1,6 +1,7 @@
 import type { ConfigData } from '@/hooks/use-config';
 import type { SettingsPolicy } from '@/lib/admin/types';
 import { DEFAULT_POLICY } from '@/lib/admin/types';
+import { httpUrlOrEmpty } from '@/lib/config-validation';
 
 /**
  * Runtime configuration for the static Lite build.
@@ -40,6 +41,7 @@ export const LITE_CONFIG_KEYS = [
   'loginShowVersion',
   'embeddedMode',
   'parentOrigin',
+  'sourceCodeUrl',
 ] as const;
 
 /**
@@ -129,6 +131,7 @@ export function applyLiteConfig(raw: unknown, defaults?: { jmapServerUrl?: strin
     jmapServerAutoPickByDomain: bool(input.jmapServerAutoPickByDomain, false),
     embeddedMode: bool(input.embeddedMode, false),
     parentOrigin: str(input.parentOrigin, ''),
+    sourceCodeUrl: httpUrlOrEmpty(input.sourceCodeUrl),
     ...LITE_FORCED_FLAGS,
   };
 }

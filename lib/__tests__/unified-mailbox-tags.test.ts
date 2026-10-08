@@ -93,6 +93,29 @@ describe('fetchTagEmails', () => {
     expect(get).toHaveBeenNthCalledWith(2, undefined, 'g', 25, 50, keyword, true, undefined, order);
   });
 
+  it("leaves each account's Trash and Junk out, ANDed with a search filter (#1156)", async () => {
+    const role = (id: string, r: string, originalId?: string) => ({ ...mb(id, originalId), role: r } as Mailbox);
+    const ownGet = vi.fn(async () => ({ emails: [], total: 0, hasMore: false }));
+    const groupGet = vi.fn(async () => ({ emails: [], total: 0, hasMore: false }));
+    const own = makeAccount({
+      accountId: 'login', mailboxes: [mb('inbox'), role('trash', 'trash'), role('junk', 'junk')],
+    }, ownGet);
+    const group = makeAccount({
+      accountId: 'group', isShared: true, mailboxes: [mb('group:g-inbox', 'g-inbox'), role('group:g-trash', 'trash', 'g-trash')],
+    }, groupGet);
+
+    await fetchTagEmails([own, group], keyword, 50, 0, [], { text: 'invoice' });
+
+    expect(ownGet).toHaveBeenCalledWith(undefined, undefined, 50, 0, keyword, true,
+      { operator: 'AND', conditions: [{ text: 'invoice' }, { inMailboxOtherThan: ['trash', 'junk'] }] }, []);
+    expect(groupGet).toHaveBeenCalledWith(undefined, 'group', 50, 0, keyword, true,
+      { operator: 'AND', conditions: [{ text: 'invoice' }, { inMailboxOtherThan: ['g-trash'] }] }, []);
+
+    await fetchTagEmails([own], keyword, 50, 0);
+    expect(ownGet).toHaveBeenLastCalledWith(undefined, undefined, 50, 0, keyword, true,
+      { inMailboxOtherThan: ['trash', 'junk'] }, []);
+  });
+
   it('keeps the other accounts when one fails and reports the failure', async () => {
     const own = makeAccount({ accountId: 'login' },
       vi.fn(async () => ({ emails: [email('own-1', '2026-09-10T00:00:00Z', 'inbox')], total: 1, hasMore: false })));

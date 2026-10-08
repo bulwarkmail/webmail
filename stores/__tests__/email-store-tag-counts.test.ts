@@ -215,7 +215,7 @@ describe('email-store tag counts stay in step with read state', () => {
 
       // The server bulk-marks emails that are not in `state.emails`, so a local
       // delta would under-count: it has to refetch.
-      expect(client.getTagCounts).toHaveBeenCalledWith(['ingsel', 'work'], undefined);
+      expect(client.getTagCounts).toHaveBeenCalledWith(['ingsel', 'work'], undefined, []);
 
       await vi.waitFor(() => {
         expect(useEmailStore.getState().tagCounts).toEqual({

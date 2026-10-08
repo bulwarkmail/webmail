@@ -62,7 +62,23 @@ const configValidators = {
   jmapServerAutoPickByDomain: isBoolean,
   embeddedMode: isBoolean,
   parentOrigin: isString,
+  sourceCodeUrl: isString,
 } satisfies Validators<ConfigData>;
+
+/**
+ * An absolute http(s) URL as given, or '' for anything else, so a configured
+ * link can never carry a `javascript:` or other script-running scheme.
+ */
+export function httpUrlOrEmpty(value: unknown): string {
+  if (typeof value !== 'string') return '';
+  const trimmed = value.trim();
+  try {
+    const { protocol } = new URL(trimmed);
+    return protocol === 'http:' || protocol === 'https:' ? trimmed : '';
+  } catch {
+    return '';
+  }
+}
 
 /** Validate the server's complete response without rewriting configured values. */
 export function isConfigData(value: unknown): value is ConfigData {

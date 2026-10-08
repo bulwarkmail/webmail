@@ -17,6 +17,7 @@
 #   IT_VIDEO=on   record a video.webm for every test (not just failures);
 #                 also: off | retain-on-failure (default) | on-first-retry.
 #                 e.g. IT_VIDEO=on integration/run-tests.sh 01-login
+#   CI            passed through, so a CI run gets the config's one retry.
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -38,5 +39,6 @@ docker run --rm --network host \
   -e IT_NO_DOCKER=1 \
   -e HOME=/tmp \
   -e IT_VIDEO="${IT_VIDEO:-}" \
+  -e CI="${CI:-}" \
   "${PW_IMAGE}" \
   npx playwright test -c playwright.integration.config.ts ${FILTER:+"$FILTER"}

@@ -1,8 +1,15 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import React from 'react';
-import { VisualRuleSummary } from '../filter-settings';
+import { RuleSummary, VisualRuleSummary } from '../filter-settings';
 import type { FilterRule } from '@/lib/jmap/sieve-types';
+
+// Keys as text, except one a locale leaves empty: Mongolian has no words of
+// its own for "starts with" (nor for "ends with").
+vi.mock('next-intl', () => {
+  const t = (key: string) => (key === 'comparators.starts_with' ? '' : key);
+  return { useTranslations: () => t, useLocale: () => 'en' };
+});
 
 const rule = (overrides: Partial<FilterRule>): FilterRule => ({
   id: 'r1',
@@ -66,5 +73,26 @@ describe('filter rule summary (expanded view)', () => {
       'condition_fields.attachment',
       'comparators.has_any',
     ]);
+  });
+
+  it('shows the value where a locale leaves the comparator empty', () => {
+    render(<VisualRuleSummary rule={rule({
+      conditions: [{ field: 'subject', comparator: 'starts_with', value: 'Rechnung' }],
+    })} />);
+    expect(valuesOf('subject').values).toEqual(['“Rechnung”']);
+  });
+
+  it('shows "all messages" on its own, without a comparator or a value', () => {
+    const all = rule({
+      conditions: [{ field: 'all', comparator: 'any', value: '' }],
+      actions: [{ type: 'mark_read' }],
+    });
+    const { unmount } = render(<VisualRuleSummary rule={all} />);
+    const chip = screen.getByText('condition_fields.all').parentElement!;
+    expect([...chip.children].map((el) => el.textContent)).toEqual(['condition_fields.all']);
+    unmount();
+
+    const { container } = render(<RuleSummary rule={all} />);
+    expect(container.textContent).toBe('condition_fields.all→action_types.mark_read');
   });
 });

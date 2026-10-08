@@ -161,10 +161,16 @@ export async function GET(request: NextRequest) {
     };
 
     const inboxBody = inboxData.methodResponses.find(
-      ([method]) => method === 'Mailbox/query',
+      ([method, , callId]) => method === 'Mailbox/query' && callId === 'mb',
     )?.[1] as { ids?: string[] } | undefined;
 
-    const inboxId = inboxBody?.ids?.[0];
+    // A method-level JMAP error still has HTTP 200. Do not turn it into
+    // an empty Inbox: the service worker would silently discard the push.
+    if (!Array.isArray(inboxBody?.ids)) {
+      return NextResponse.json({ error: 'JMAP mailbox query failed' }, { status: 502 });
+    }
+
+    const inboxId = inboxBody.ids[0];
     const emailProperties = ['id', 'threadId', 'from', 'subject', 'preview', 'receivedAt'];
 
     if (!inboxId && !requestedEmailId) {
@@ -239,6 +245,21 @@ export async function GET(request: NextRequest) {
       methodResponses: [string, Record<string, unknown>, string][];
     };
 
+    // Missing/failed method responses are preview failures, not proof that
+    // there is no unread mail. A non-2xx response lets the SW show its fallback.
+    // The message the server named, once read, is a complete preview on its
+    // own, whatever became of the Inbox lookups next to it.
+    const resultOf = (name: string, id: string) =>
+      data.methodResponses.find(([method, , callId]) => method === name && callId === id)?.[1];
+    const failed = (methodCalls as [string, unknown, string][]).some(([name, , id]) => {
+      const result = resultOf(name, id);
+      return !result || (name === 'Email/query' ? !Array.isArray(result.ids) : !Array.isArray(result.list));
+    });
+    const deliveredList = resultOf('Email/get', 'delivered')?.list;
+    if (failed && !(Array.isArray(deliveredList) && deliveredList.length > 0)) {
+      return NextResponse.json({ error: 'JMAP email query failed' }, { status: 502 });
+    }
+
     type EmailLite = {
       id: string;
       threadId: string;
@@ -253,7 +274,9 @@ export async function GET(request: NextRequest) {
     let unreadTotal = 0;
     for (const [method, body, callId] of data.methodResponses) {
       if (method === 'Email/query') {
-        unreadTotal = ((body as { total?: number }).total) ?? 0;
+        // A server that leaves out the optional total still lists the ids.
+        const query = body as { total?: number; ids?: unknown[] };
+        unreadTotal = typeof query.total === 'number' ? query.total : (query.ids?.length ?? 0);
       }
       if (method === 'Email/get') {
         const list = (body as { list?: EmailLite[] }).list ?? [];
@@ -270,6 +293,13 @@ export async function GET(request: NextRequest) {
         unreadTotal = Math.max(unreadTotal, 1);
       }
       email = delivered;
+    } else if (requestedEmailId) {
+      // The server named the message that arrived and it could not be read -
+      // deleted since, or filed where this login cannot see it. "Newest unread
+      // in the Inbox" is then some other message, and announcing it would be
+      // confidently wrong. Name no message: the unread total still comes back,
+      // so the SW posts its generic toast instead of staying silent.
+      email = null;
     }
 
     // Some servers build the preview from HTML without skipping <style>; a

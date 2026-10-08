@@ -30,6 +30,41 @@ let syncServerUrl: string | null = null;
 let syncTimeout: ReturnType<typeof setTimeout> | null = null;
 let pendingSync: SettingsSyncJob | null = null;
 let isLoadingFromServer = false;
+// Set by loadFromServer when this browser holds templates (or deletions) the
+// server blob lacks; enableSync then pushes once instead of waiting for the
+// next unrelated settings change.
+let pushTemplatesAfterLoad = false;
+// Wired up in the window-only init block below; null during SSR.
+let requestSync: (() => void) | null = null;
+// Account whose settings could not be loaded while this browser still held
+// another account's. enableSync leaves sync off for it, or the next change
+// would push the other account's settings under its name (#1185).
+let blockedSyncAccountId: string | null = null;
+
+// settings-storage is one store for the whole browser. This key names the
+// account whose server copy it currently mirrors, so a different account
+// signing in can tell the local settings are not its own (#1185). Unset in
+// browsers that never synced, where the local settings are the user's own
+// device settings and the first sign-in adopts them.
+const SETTINGS_OWNER_KEY = 'settings-sync-owner';
+
+function readSettingsOwner(): string | null {
+  try {
+    return typeof window === 'undefined' ? null : window.localStorage.getItem(SETTINGS_OWNER_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function writeSettingsOwner(accountId: string | null): void {
+  try {
+    if (typeof window === 'undefined') return;
+    if (accountId) window.localStorage.setItem(SETTINGS_OWNER_KEY, accountId);
+    else window.localStorage.removeItem(SETTINGS_OWNER_KEY);
+  } catch {
+    /* storage unavailable */
+  }
+}
 
 const SYNC_DEBOUNCE_MS = 2000;
 
@@ -67,6 +102,32 @@ export function registerTemplateSyncBridge(
 ): void {
   templateSyncBridge = bridge;
   subscribe(() => onTemplateStoreChange?.());
+}
+
+/** Order-independent fingerprint of a template list plus its tombstones. */
+function templateStateKey(templates: unknown, deletedTemplateIds: unknown): string {
+  const list = Array.isArray(templates)
+    ? templates
+        .filter((t): t is { id: string; updatedAt?: unknown } =>
+          typeof t === 'object' && t !== null && typeof (t as { id?: unknown }).id === 'string')
+        .map((t) => `${t.id}@${String(t.updatedAt)}`)
+        .sort()
+    : [];
+  const tombstones = isPlainRecord(deletedTemplateIds) ? Object.keys(deletedTemplateIds).sort() : [];
+  return JSON.stringify([list, tombstones]);
+}
+
+/**
+ * Whether the local template state differs from what a server blob carries,
+ * so the blob needs a push. False when there is nothing local to push.
+ */
+function localTemplatesAhead(serverSettings: Record<string, unknown> | null): boolean {
+  const local = templateSyncBridge?.getSyncedState();
+  if (!local) return false;
+  if (local.templates.length === 0 && Object.keys(local.deletedTemplateIds).length === 0) return false;
+  if (!serverSettings) return true;
+  return templateStateKey(local.templates, local.deletedTemplateIds) !==
+    templateStateKey(serverSettings.templates, serverSettings.deletedTemplateIds);
 }
 
 async function syncSettingsJob(job: SettingsSyncJob, retries = 1): Promise<void> {
@@ -373,6 +434,14 @@ interface SettingsState {
   /** Scroll continuously through months/weeks/days (#759) instead of one period at a time. */
   calendarFreeScroll: boolean;
   calendarHoverPreview: CalendarHoverPreview;
+  /** Draw only calendarDayStartHour..calendarDayEndHour in the day and week views (#1164). */
+  calendarLimitHours: boolean;
+  calendarDayStartHour: number;
+  calendarDayEndHour: number;
+  /** Leave the days missing from calendarWorkingDays out of the week view (#1164). */
+  calendarHideNonWorkingDays: boolean;
+  /** Weekdays as `Date.getDay` numbers (0 = Sunday). */
+  calendarWorkingDays: number[];
 
   // Calendar Tasks
   enableCalendarTasks: boolean;
@@ -550,6 +619,12 @@ interface SettingsState {
   flushSync: () => Promise<void>;
   disableSync: () => void;
   loadFromServer: (username: string, serverUrl: string) => Promise<boolean>;
+  /**
+   * Called on a full sign-out: drops the settings and templates this browser
+   * mirrored from an account's server copy, so the next person to sign in
+   * does not start from them (#1185). Device-only settings are kept.
+   */
+  forgetSyncedSettings: () => void;
 }
 
 const DEFAULT_SETTINGS = {
@@ -618,6 +693,11 @@ const DEFAULT_SETTINGS = {
   showWeekNumbers: false,
   calendarFreeScroll: true,
   calendarHoverPreview: 'delay-500ms' as CalendarHoverPreview,
+  calendarLimitHours: true,
+  calendarDayStartHour: 8,
+  calendarDayEndHour: 20,
+  calendarHideNonWorkingDays: false,
+  calendarWorkingDays: [1, 2, 3, 4, 5] as number[],
 
   // Calendar Tasks
   enableCalendarTasks: false,
@@ -759,7 +839,29 @@ const DEFAULT_SETTINGS = {
 
 export const useSettingsStore = create<SettingsState>()(
   persist(
-    (set, get) => ({
+    (set, get) => {
+      /**
+       * Back to defaults for everything an account's server copy holds:
+       * settings (device-only ones kept) and templates. Never pushed, since
+       * sync may still point at the account the state came from.
+       */
+      const resetSyncedState = () => {
+        const defaults: Record<string, unknown> = { ...DEFAULT_SETTINGS };
+        for (const key of DEVICE_LOCAL_SETTING_KEYS) delete defaults[key];
+        const wasLoading = isLoadingFromServer;
+        isLoadingFromServer = true;
+        try {
+          set(defaults as Partial<SettingsState>);
+          templateSyncBridge?.applySyncedState([], {}, { merge: false });
+        } finally {
+          isLoadingFromServer = wasLoading;
+        }
+        applyFontSize(DEFAULT_SETTINGS.fontSize);
+        applyDensity(DEFAULT_SETTINGS.density);
+        applyAnimations(DEFAULT_SETTINGS.animationsEnabled);
+      };
+
+      return {
       ...DEFAULT_SETTINGS,
 
       updateSetting: (key, value) => {
@@ -858,6 +960,11 @@ export const useSettingsStore = create<SettingsState>()(
           showWeekNumbers: state.showWeekNumbers,
           calendarFreeScroll: state.calendarFreeScroll,
           calendarHoverPreview: state.calendarHoverPreview,
+          calendarLimitHours: state.calendarLimitHours,
+          calendarDayStartHour: state.calendarDayStartHour,
+          calendarDayEndHour: state.calendarDayEndHour,
+          calendarHideNonWorkingDays: state.calendarHideNonWorkingDays,
+          calendarWorkingDays: state.calendarWorkingDays,
           toolbarPosition: state.toolbarPosition,
           hideAccountSwitcher: state.hideAccountSwitcher,
           showRailAccountList: state.showRailAccountList,
@@ -1125,10 +1232,20 @@ export const useSettingsStore = create<SettingsState>()(
 
       // Settings sync methods
       enableSync: (username: string, serverUrl: string) => {
+        const accountId = generateAccountId(username, serverUrl);
+        if (blockedSyncAccountId === accountId) {
+          syncWarn('Settings sync stays off for', username, '- its settings could not be loaded');
+          return;
+        }
+        writeSettingsOwner(accountId);
         syncUsername = username;
         syncServerUrl = serverUrl;
         syncEnabled = true;
         syncLog('Settings sync enabled for', username);
+        if (pushTemplatesAfterLoad) {
+          pushTemplatesAfterLoad = false;
+          if (!get().settingsSyncDisabled) requestSync?.();
+        }
       },
 
       flushSync: async () => {
@@ -1154,8 +1271,24 @@ export const useSettingsStore = create<SettingsState>()(
       },
 
       loadFromServer: async (username: string, serverUrl: string) => {
+        const accountId = generateAccountId(username, serverUrl);
+        const owner = readSettingsOwner();
+        const heldByOther = owner !== null && owner !== accountId;
+        // The local settings belong to another account and this one's could
+        // not be read: show defaults and keep sync off, rather than showing
+        // the other account's settings or pushing them under this name.
+        const failWithoutForeignState = () => {
+          if (heldByOther) {
+            resetSyncedState();
+            writeSettingsOwner(null);
+            blockedSyncAccountId = accountId;
+          }
+          return false;
+        };
+        blockedSyncAccountId = null;
         try {
           syncLog('Loading settings from server for', username);
+          pushTemplatesAfterLoad = false;
           const res = await apiFetch('/api/settings', {
             headers: {
               'x-settings-username': username,
@@ -1165,21 +1298,32 @@ export const useSettingsStore = create<SettingsState>()(
           if (!res.ok) {
             const body = await res.json().catch(() => ({}));
             syncLog('Settings fetch failed:', body.error || `status ${res.status}`);
-            return false;
+            return failWithoutForeignState();
           }
           const { settings } = await res.json();
           if (!settings) {
             syncLog('No server settings found yet');
+            // A new account starts from defaults, not from whatever the
+            // previous account left in this browser (#1185).
+            if (heldByOther) resetSyncedState();
+            writeSettingsOwner(accountId);
+            pushTemplatesAfterLoad = localTemplatesAhead(null);
             return false;
           }
           if (settings && typeof settings === 'object') {
+            // Importing merges templates and leaves keys the blob lacks as
+            // they are, so another account's state would carry over into
+            // this one and be pushed back to its server copy.
+            if (heldByOther) resetSyncedState();
             isLoadingFromServer = true;
             // Merge (not replace) per-account maps for the account being loaded,
             // so multi-account logins don't clobber each other by login order.
             get().importSettings(JSON.stringify(settings), {
-              serverAccountId: generateAccountId(username, serverUrl),
+              serverAccountId: accountId,
             });
             isLoadingFromServer = false;
+            writeSettingsOwner(accountId);
+            pushTemplatesAfterLoad = localTemplatesAhead(settings);
             syncLog('Settings loaded from server successfully');
             // The per-account preferred sender identity (#507) is re-applied by
             // applyPreferredIdentity() in auth-store, invoked from the
@@ -1191,10 +1335,19 @@ export const useSettingsStore = create<SettingsState>()(
         } catch (error) {
           syncError('Failed to load settings from server:', error);
           isLoadingFromServer = false;
-          return false;
+          return failWithoutForeignState();
         }
       },
-    }),
+
+      forgetSyncedSettings: () => {
+        // Never synced: the local settings are this device's own and exist
+        // nowhere else. Synced but opted out: they were never uploaded either.
+        if (readSettingsOwner() === null || get().settingsSyncDisabled) return;
+        resetSyncedState();
+        writeSettingsOwner(null);
+      },
+      };
+    },
     {
       name: 'settings-storage',
       version: 7,
@@ -1388,6 +1541,8 @@ if (typeof window !== 'undefined') {
       }
     }, SYNC_DEBOUNCE_MS);
   };
+
+  requestSync = triggerSync;
 
   // Auto-sync settings to server on any state change
   let prevSyncDisabled = useSettingsStore.getState().settingsSyncDisabled;

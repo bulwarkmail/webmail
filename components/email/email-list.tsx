@@ -6,7 +6,8 @@ import type { Attachment } from "@/lib/jmap/types";
 import type { LoadListAttachments } from "@/lib/list-attachments";
 import { listRowShowsChips } from "./attachment-chips";
 import { listVerificationCode } from "@/lib/verification-code";
-import { EmailContextMenu } from "./email-context-menu";
+import { EmailContextMenu, type CopyTargetAccount } from "./email-context-menu";
+import { BatchTagButton } from "./batch-tag-button";
 import { cn, cleanPreview } from "@/lib/utils";
 import { Trash2, Mail, MailX, MailOpen, Loader2, SearchX, AlertTriangle, CalendarClock, ShieldCheck } from "@/components/icons";
 import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from "react";
@@ -14,10 +15,11 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useEmailStore, ArchiveMailboxNotFoundError } from "@/stores/email-store";
 import { useAuthStore } from "@/stores/auth-store";
+import { useAccountStore } from "@/stores/account-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useUIStore } from "@/stores/ui-store";
 import { useMessageListTabsStore } from "@/stores/message-list-tabs-store";
-import { emailKeyFor, groupEmailsByThread, sortThreadGroups, threadKeyFor } from "@/lib/thread-utils";
+import { emailKeyFor, groupEmailsByThread, sortThreadGroups, threadKeyFor, getEmailTagIds } from "@/lib/thread-utils";
 import { useContextMenu } from "@/hooks/use-context-menu";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { useTranslations } from "next-intl";
@@ -104,6 +106,7 @@ export function EmailList({
     selectAllEmails: _selectAllEmails,
     clearSelection,
     batchMarkAsRead,
+    batchSetTag,
     batchDelete,
     batchMoveToMailbox,
     batchArchive,
@@ -193,6 +196,35 @@ export function EmailList({
     return newestOther ? [newestOther] : undefined;
   }, [contextMenuEmail, selectedEmailKeys, emails, threadGroups, threadEmailsCache]);
   const { dialogProps: confirmDialogProps, confirm: confirmDialog } = useConfirmDialog();
+
+  // "Copy to" lists the folders of the other connected accounts. Only with
+  // more than one account connected; the menu's own account is left out.
+  const accounts = useAccountStore((state) => state.accounts);
+  const accountMailboxes = useEmailStore((state) => state.accountMailboxes);
+  const fetchAccountMailboxes = useEmailStore((state) => state.fetchAccountMailboxes);
+  const copyEmailsToAccount = useEmailStore((state) => state.copyEmailsToAccount);
+  const copySourceLogin = contextMenuEmail
+    ? contextMenuEmail.sourceClientAccountId ?? viewingAccountId ?? activeAccountId
+    : null;
+  const copyAccounts = useMemo(() => {
+    if (!contextMenu.isOpen) return [];
+    const connected = useAuthStore.getState().getAllConnectedClients();
+    if (connected.size < 2) return [];
+    return accounts.filter((account) => account.id !== copySourceLogin && connected.has(account.id));
+  }, [contextMenu.isOpen, accounts, copySourceLogin]);
+  useEffect(() => {
+    for (const account of copyAccounts) {
+      if (accountMailboxes[account.id]) continue;
+      const accountClient = useAuthStore.getState().getClientForAccount(account.id);
+      if (accountClient) void fetchAccountMailboxes(accountClient, account.id);
+    }
+  }, [copyAccounts, accountMailboxes, fetchAccountMailboxes]);
+  const copyTargets = useMemo<CopyTargetAccount[]>(
+    () => copyAccounts
+      .filter((account) => accountMailboxes[account.id])
+      .map((account) => ({ accountId: account.id, label: account.label || account.email || account.id, mailboxes: accountMailboxes[account.id] })),
+    [copyAccounts, accountMailboxes],
+  );
 
   const [isProcessing, setIsProcessing] = useState(false);
   const parentRef = useRef<HTMLDivElement>(null);
@@ -328,6 +360,32 @@ export function EmailList({
       await batchMarkAsRead(client, read);
     } finally {
       setTimeout(() => setIsProcessing(false), 500);
+    }
+  };
+
+  // What the tag picker shows for the selection: a tag on every selected
+  // message is checked, one on only some of them is drawn as partial.
+  const selectionTags = useMemo(() => {
+    const selected = emails.filter((email) => selectedEmailKeys.has(emailKeyFor(email)));
+    const counts = new Map<string, number>();
+    for (const email of selected) {
+      for (const tagId of getEmailTagIds(email.keywords)) counts.set(tagId, (counts.get(tagId) ?? 0) + 1);
+    }
+    const all: string[] = [];
+    const some: string[] = [];
+    for (const [tagId, count] of counts) (count === selected.length ? all : some).push(tagId);
+    return { all, some };
+  }, [emails, selectedEmailKeys]);
+
+  // A tag every selected message has comes off; any other goes onto all of
+  // them. The selection stays, so several tags can be changed in a row.
+  const handleBatchToggleTag = async (tagId: string) => {
+    if (!client) return;
+    try {
+      await batchSetTag(client, tagId, !selectionTags.all.includes(tagId));
+    } catch (error) {
+      console.error("Failed to tag emails:", error);
+      toast.error(tNotifications('error_updating'));
     }
   };
 
@@ -509,6 +567,15 @@ export function EmailList({
                 <Mail className="w-4 h-4" />
               )}
             </Button>
+            <BatchTagButton
+              key={hasSelection ? 'selection' : 'none'}
+              title={tContextMenu('tag')}
+              selectedIds={selectionTags.all}
+              partialIds={selectionTags.some}
+              onToggle={handleBatchToggleTag}
+              active={hasSelection && !isScheduledView}
+              disabled={isProcessing}
+            />
             {effectiveMailboxRole === 'junk' && (
               <Button
                 variant="ghost"
@@ -736,7 +803,21 @@ export function EmailList({
           onEditDraft={() => onEditDraft?.(contextMenuEmail!)}
           onCancelScheduledForEdit={onCancelScheduledForEdit ? () => onCancelScheduledForEdit(contextMenuEmail!) : undefined}
           onRescheduleScheduled={onRescheduleScheduled ? () => onRescheduleScheduled(contextMenuEmail!) : undefined}
+          copyTargets={copyTargets}
+          onCopyToAccount={async (accountId, mailboxId) => {
+            const ids = selectedEmailKeys.has(emailKeyFor(contextMenuEmail!)) && selectedEmailKeys.size > 1
+              ? emails.filter((email) => selectedEmailKeys.has(emailKeyFor(email))).map((email) => email.id)
+              : [contextMenuEmail!.id];
+            const target = accountMailboxes[accountId]?.find((mb) => mb.id === mailboxId);
+            await runBatchEmailAction(() => copyEmailsToAccount(ids, accountId, target?.originalId ?? mailboxId), {
+              success: tNotifications('emails_copied', { count: ids.length }),
+              error: tNotifications('copy_failed'),
+            });
+          }}
           onBatchMarkAsRead={(read) => client && batchMarkAsRead(client, read)}
+          batchTagIds={selectionTags.all}
+          batchPartialTagIds={selectionTags.some}
+          onBatchToggleTag={handleBatchToggleTag}
           onBatchDelete={async () => {
             if (!client) return;
             const count = selectedEmailKeys.size;

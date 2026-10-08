@@ -138,6 +138,7 @@ export interface LogoutOptions {
 const ERROR_PATTERNS: Array<{ key: string; matches: string[] }> = [
   { key: 'cors_blocked', matches: ['CORS_ERROR'] },
   { key: 'totp_required', matches: ['TOTP_REQUIRED'] },
+  { key: 'token_exchange_failed', matches: ['TOKEN_EXCHANGE_FAILED'] },
   { key: 'invalid_credentials', matches: ['Invalid username or password', '401', 'Unauthorized'] },
   { key: 'connection_failed', matches: ['network', 'Failed to fetch', 'NetworkError', 'ECONNREFUSED', 'Load failed', 'cancelled'] },
   { key: 'server_error', matches: ['500', '502', '503', '504', 'Internal Server Error', 'Service Unavailable'] },
@@ -1195,6 +1196,10 @@ function forgetCalendarSubscriptions(client: IJMAPClient): void {
 
 function performFullLogout(set: (state: Partial<AuthState>) => void): void {
   useSettingsStore.getState().disableSync();
+  // With settings sync on, the local settings and templates are a copy of the
+  // signed-out account's server file. Left in place, the next account to sign
+  // in here would show them and push them to its own file (#1185).
+  useSettingsStore.getState().forgetSyncedSettings();
 
   set({
     isAuthenticated: false,
@@ -1321,10 +1326,19 @@ export const useAuthStore = create<AuthState>()(
                 if (errorBody?.error === 'totp_required') {
                   throw new Error('TOTP_REQUIRED');
                 }
+                // The server took the password and code but would not issue
+                // tokens (in Lite: an OAuth client with a secret, which a
+                // browser cannot send). A server with the structured login
+                // endpoint is 0.16+ and refuses `password$totp` over Basic,
+                // so the legacy fallback would only pop the browser's
+                // Basic-auth dialog and then report a wrong code.
+                if (totp && errorBody?.error === 'token_exchange_failed') {
+                  throw new Error('TOKEN_EXCHANGE_FAILED');
+                }
                 debug.warn('auth', 'TOTP login exchange failed, trying legacy basic auth:', tokenRes.status, errorBody);
               }
             } catch (err) {
-              if (err instanceof Error && err.message === 'TOTP_REQUIRED') throw err;
+              if (err instanceof Error && (err.message === 'TOTP_REQUIRED' || err.message === 'TOKEN_EXCHANGE_FAILED')) throw err;
               // Unreachable (a server without /api/auth rarely answers CORS).
               tokenLoginUnavailable = true;
               debug.warn('auth', 'TOTP login exchange error, trying legacy basic auth:', err);
@@ -2224,6 +2238,9 @@ export const useAuthStore = create<AuthState>()(
         // Starts by marking every slot closing, so nothing renews a session
         // while the clients are torn down.
         const cleanup = clearAllCredentials(endSessionSlot);
+
+        // The settings are reset below; save the last edits first.
+        await useSettingsStore.getState().flushSync();
 
         // Disconnect all clients
         set({ client: null });

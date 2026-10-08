@@ -46,6 +46,8 @@ function stalwartFetch(options: {
   loginAnswer?: unknown;
   refreshAnswer?: () => Response;
   loginStatus?: number;
+  /** Stalwart's answer to the authorization_code grant (default: tokens). */
+  tokenAnswer?: () => Response;
   /** Advertise an RFC 7009 revocation endpoint in the metadata document. */
   revocation?: boolean;
 } = {}) {
@@ -78,6 +80,7 @@ function stalwartFetch(options: {
       if (params.get('grant_type') === 'refresh_token') {
         return options.refreshAnswer ? options.refreshAnswer() : jsonResponse({ access_token: 'AT-refreshed', expires_in: 3600, refresh_token: 'RT-2' });
       }
+      if (options.tokenAnswer) return options.tokenAnswer();
       return jsonResponse({ access_token: 'AT-1', expires_in: 3600, refresh_token: 'RT-1' });
     }
     throw new Error(`unexpected fetch ${url}`);
@@ -257,6 +260,30 @@ describe('auth-store in the static Lite build', () => {
     expect(ok).toBe(false);
     expect(useAuthStore.getState().error).toBe('totp_required');
     expect(connectSpy).not.toHaveBeenCalled();
+  });
+
+  // Stalwart answers `invalid_client` at /auth/token when the OAuth client has
+  // a secret, which Lite cannot send. Retrying `password$totp` over Basic
+  // only popped the browser's Basic-auth dialog and then blamed the code.
+  it('reports a refused token exchange after a TOTP login instead of retrying over Basic', async () => {
+    const { calls } = stalwartFetch({ tokenAnswer: () => jsonResponse({ error: 'invalid_client' }, 400) });
+
+    const ok = await useAuthStore.getState().login(SERVER, 'alice', 'pw', '123456', true);
+
+    expect(ok).toBe(false);
+    expect(useAuthStore.getState().error).toBe('token_exchange_failed');
+    expect(calls).toEqual([`POST ${SERVER}/api/auth`, `POST ${SERVER}/auth/token`]);
+    expect(connectSpy).not.toHaveBeenCalled();
+    expect(liteStorageKeys()).toEqual([]);
+  });
+
+  it('still falls back to Basic for a password-only login when the token exchange is refused', async () => {
+    stalwartFetch({ tokenAnswer: () => jsonResponse({ error: 'invalid_client' }, 400) });
+
+    const ok = await useAuthStore.getState().login(SERVER, 'alice', 'pw', undefined, true);
+
+    expect(ok).toBe(true);
+    expect(useAuthStore.getState().client?.getAuthHeader()).toBe(`Basic ${btoa('alice:pw')}`);
   });
 
   it('keeps no password in web storage when token login exists but failed', async () => {

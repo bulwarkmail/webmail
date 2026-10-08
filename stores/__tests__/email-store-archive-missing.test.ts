@@ -6,7 +6,8 @@ import type { Email, Mailbox } from '@/lib/jmap/types';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
 
 // #578: archiving with no archive folder used to return silently, leaving the
-// user with a shortcut/button that did nothing. The store must now report it.
+// user with a shortcut/button that did nothing. The store now creates the
+// folder on first use and archives into it; a refused creation is reported.
 
 function makeMailbox(overrides: Partial<Mailbox> = {}): Mailbox {
   return {
@@ -50,10 +51,17 @@ describe('batchArchive without an archive mailbox (#578)', () => {
   let client: IJMAPClient;
 
   beforeEach(() => {
+    const archive = makeMailbox({ id: 'a-archive', name: 'Archive', role: 'archive' });
     client = {
       batchArchiveEmails: vi.fn().mockResolvedValue(undefined),
+      createMailbox: vi.fn().mockResolvedValue(archive),
       getEmails: vi.fn().mockResolvedValue({ emails: [], hasMore: false, total: 0 }),
-      getMailboxes: vi.fn().mockResolvedValue([]),
+      // The reload after creation is what brings the new folder into the store.
+      getMailboxes: vi.fn().mockResolvedValue([
+        makeMailbox({ id: 'a-inbox', role: 'inbox' }),
+        makeMailbox({ id: 'a-trash', name: 'Trash', role: 'trash' }),
+        archive,
+      ]),
     } as unknown as IJMAPClient;
 
     useAuthStore.setState({
@@ -78,7 +86,22 @@ describe('batchArchive without an archive mailbox (#578)', () => {
     });
   });
 
-  it('rejects with ArchiveMailboxNotFoundError and records the error', async () => {
+  it('creates the archive folder and archives into it', async () => {
+    await useEmailStore.getState().batchArchive(client);
+
+    expect(client.createMailbox).toHaveBeenCalledWith('Archive', undefined, undefined, { role: 'archive' });
+    expect(client.batchArchiveEmails).toHaveBeenCalledWith(
+      [expect.objectContaining({ id: 'e1' })], 'a-archive', 'single', expect.any(Array), undefined,
+    );
+    expect(useEmailStore.getState().error).toBeNull();
+    expect(useEmailStore.getState().selectedEmailKeys.size).toBe(0);
+  });
+
+  it('rejects with ArchiveMailboxNotFoundError when the created folder does not come back', async () => {
+    (client.getMailboxes as ReturnType<typeof vi.fn>).mockResolvedValue([
+      makeMailbox({ id: 'a-inbox', role: 'inbox' }),
+    ]);
+
     await expect(useEmailStore.getState().batchArchive(client)).rejects.toBeInstanceOf(
       ArchiveMailboxNotFoundError,
     );
@@ -86,6 +109,15 @@ describe('batchArchive without an archive mailbox (#578)', () => {
     expect(useEmailStore.getState().error).toMatch(/archive mailbox not found/i);
     expect(client.batchArchiveEmails).not.toHaveBeenCalled();
     // Nothing was archived, so the selection must survive.
+    expect(useEmailStore.getState().selectedEmailKeys.has('e1')).toBe(true);
+  });
+
+  it('reports a refused creation and keeps the selection', async () => {
+    (client.createMailbox as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Failed to create mailbox: forbidden'));
+
+    await expect(useEmailStore.getState().batchArchive(client)).rejects.toThrow('forbidden');
+    expect(useEmailStore.getState().error).toMatch(/forbidden/);
+    expect(client.batchArchiveEmails).not.toHaveBeenCalled();
     expect(useEmailStore.getState().selectedEmailKeys.has('e1')).toBe(true);
   });
 });

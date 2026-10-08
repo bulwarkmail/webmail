@@ -34,7 +34,7 @@ const MANAGED_ENV = [
   'SESSION_SECRET_FILE', 'SETTINGS_SYNC_ENABLED', 'STALWART_FEATURES', 'DEV_MOCK_JMAP',
   'FAVICON_URL', 'APP_LOGO_LIGHT_URL', 'APP_LOGO_DARK_URL', 'LOGIN_COMPANY_NAME',
   'LOGIN_IMPRINT_URL', 'LOGIN_PRIVACY_POLICY_URL', 'LOGIN_WEBSITE_URL', 'DOMAIN_BRANDING',
-  'JMAP_SERVERS', 'JMAP_SERVER_AUTO_PICK_BY_DOMAIN',
+  'JMAP_SERVERS', 'JMAP_SERVER_AUTO_PICK_BY_DOMAIN', 'SOURCE_CODE_URL',
 ] as const;
 
 describe('config API route', () => {
@@ -107,6 +107,7 @@ describe('config API route', () => {
     expect(config.faviconUrl).toBe('/branding/Bulwark_Favicon.svg');
     expect(config.appLogoLightUrl).toBe('');
     expect(config.appLogoDarkUrl).toBe('');
+    expect(config.sourceCodeUrl).toBe('');
   });
 
   // The domain lists name every organisation served by this instance.
@@ -160,6 +161,21 @@ describe('config API route', () => {
     expect(config.loginPrivacyPolicyUrl).toBe('https://acme.com/privacy');
     expect(config.loginWebsiteUrl).toBe('https://acme.com');
   });
+
+  it('publishes the source code URL for the About card (#1161)', async () => {
+    vi.stubEnv('SOURCE_CODE_URL', 'https://git.example.com/acme/webmail/tree/v1.2.3');
+
+    expect((await getConfig()).sourceCodeUrl).toBe('https://git.example.com/acme/webmail/tree/v1.2.3');
+  });
+
+  it.each(['javascript:alert(1)', 'data:text/html,x', '/relative/path', 'not a url'])(
+    'drops a source code URL that is not absolute http(s): %s',
+    async (value) => {
+      vi.stubEnv('SOURCE_CODE_URL', value);
+
+      expect((await getConfig()).sourceCodeUrl).toBe('');
+    },
+  );
 
   it('should handle partial login customization', async () => {
     vi.stubEnv('LOGIN_COMPANY_NAME', 'Partial Corp');

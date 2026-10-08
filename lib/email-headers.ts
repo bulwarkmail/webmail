@@ -33,8 +33,60 @@ export function isAuthenticationSpoofed(auth?: AuthenticationResults): boolean {
   if (auth.dmarc?.result === 'fail') return true;
   // Otherwise a hard SPF fail with no valid DKIM signature means the sender
   // isn't authorized for the envelope domain.
-  if (auth.spf?.result === 'fail' && auth.dkim?.result !== 'pass') return true;
+  if (auth.spf?.result === 'fail' && !hasDkimPass(auth)) return true;
   return false;
+}
+
+function hasDkimPass(auth: AuthenticationResults): boolean {
+  return auth.dkim?.result === 'pass' || !!auth.dkim?.all?.some((entry) => entry.result === 'pass');
+}
+
+function domainOf(address: string): string | undefined {
+  const domain = address.slice(address.lastIndexOf('@') + 1).trim().toLowerCase().replace(/\.$/, '');
+  return /^[^\s<>@]+\.[^\s<>@]+$/.test(domain) ? domain : undefined;
+}
+
+export interface SenderVerification {
+  /**
+   * `failed`: the message fails the From domain's checks (see
+   * isAuthenticationSpoofed). `unverified`: neither SPF nor DKIM passes, so
+   * nothing ties the message to any domain, let alone the one in From.
+   */
+  status: 'failed' | 'unverified';
+  /** Domain of the visible From address. */
+  domain: string;
+  /** Envelope (MAIL FROM) host, when it differs from `domain`. */
+  sentFrom?: string;
+}
+
+/**
+ * Whether the receiving server's checks back the visible From domain.
+ * Returns null when they do, or when there are no results to judge by.
+ *
+ * DMARC alone can't answer this: mail-auth (Stalwart) only checks alignment
+ * once SPF or DKIM passes, so a message that passes neither reports
+ * `dmarc=none` even when the From domain publishes a policy. That is the
+ * plainest kind of forgery, so it gets its own verdict here.
+ */
+export function getSenderVerification(
+  auth: AuthenticationResults | undefined,
+  fromEmail: string | undefined,
+): SenderVerification | null {
+  if (!auth || !fromEmail || (!auth.spf && !auth.dkim && !auth.dmarc)) return null;
+  const domain = domainOf(fromEmail);
+  if (!domain) return null;
+
+  // DMARC only counts the MAIL FROM identity; a HELO pass proves nothing
+  // about who wrote the message.
+  const mailFrom = auth.spf?.all?.find((entry) => entry.identity === 'mailfrom');
+  const spfPass = auth.spf?.all ? mailFrom?.result === 'pass' : auth.spf?.result === 'pass';
+  const envelope = mailFrom?.domain ?? auth.spf?.domain;
+  const envelopeDomain = envelope ? domainOf(envelope) : undefined;
+  const sentFrom = envelopeDomain && envelopeDomain !== domain ? envelopeDomain : undefined;
+
+  if (isAuthenticationSpoofed(auth)) return { status: 'failed', domain, sentFrom };
+  if (auth.dmarc?.result === 'pass' || spfPass || hasDkimPass(auth)) return null;
+  return { status: 'unverified', domain, sentFrom };
 }
 
 interface ResInfo {
@@ -182,12 +234,20 @@ export function parseAuthenticationResults(headers: string | readonly string[]):
     };
   }
 
-  const dkim = own.find((info) => info.method === 'dkim');
-  if (dkim) {
+  // A message can carry several signatures (the author's domain and the
+  // sending service's). The first one stays the headline; keep them all so
+  // a pass further down still counts.
+  const dkimResults = own
+    .filter((info) => info.method === 'dkim')
+    .map((info) => ({
+      result: info.result as DkimResult,
+      domain: info.props['header.d'],
+      selector: info.props['header.s'],
+    }));
+  if (dkimResults.length > 0) {
     results.dkim = {
-      result: dkim.result as DkimResult,
-      domain: dkim.props['header.d'],
-      selector: dkim.props['header.s'],
+      ...dkimResults[0],
+      ...(dkimResults.length > 1 ? { all: dkimResults } : {}),
     };
   }
 

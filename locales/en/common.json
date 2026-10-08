@@ -24,7 +24,8 @@
       "generic": "An unexpected error occurred. If this persists, contact your administrator.",
       "totp_required": "A two-factor authentication code is required. Please enter your code below.",
       "totp_invalid": "Invalid authentication code. Please check your authenticator app and try again.",
-      "oauth_discovery_failed": "SSO is enabled but the identity provider could not be reached. Check your OAuth configuration."
+      "oauth_discovery_failed": "SSO is enabled but the identity provider could not be reached. Check your OAuth configuration.",
+      "token_exchange_failed": "Your password and code were accepted, but the mail server refused to start a session for this app. Ask your administrator to check its OAuth client settings."
     },
     "show_password": "Show password",
     "hide_password": "Hide password",
@@ -344,6 +345,15 @@
     "external_content_warning": "Images and external content have been blocked",
     "load_external_content": "Load images",
     "trust_sender": "Always trust this sender",
+    "sender_check": {
+      "unverified_label": "Unverified sender",
+      "failed_label": "Sender check failed",
+      "unverified": "This message claims to be from {domain}, but nothing confirms that. It has no valid signature from {domain} and didn't come from a server {domain} authorizes.",
+      "unverified_sent_from": "This message claims to be from {domain}, but it was sent from {host} and has no valid signature from {domain}.",
+      "failed": "This message claims to be from {domain}, but it failed that domain's sender checks. It may be forged.",
+      "failed_sent_from": "This message claims to be from {domain}, but it was sent from {host} and failed {domain}'s sender checks. It may be forged.",
+      "caution": "Be careful with links, attachments and requests for passwords or payment details."
+    },
     "back_to_list": "Back to list",
     "view_contact": "View contact",
     "message_details": "Message Details",
@@ -623,6 +633,12 @@
     "attach": "Attach",
     "attach_photos": "Photos & Videos",
     "attach_files": "Files",
+    "attach_from_files": "Attach from Files",
+    "files_picker": {
+      "attach": "{count, plural, =0 {Attach} one {Attach 1 file} other {Attach # files}}",
+      "empty_folder": "This folder is empty",
+      "load_failed": "Your files could not be loaded"
+    },
     "discard": "Discard",
     "discard_draft_title": "Discard draft?",
     "discard_draft_confirm": "You have unsaved changes. Do you want to discard this draft?",
@@ -819,6 +835,8 @@
     "emails_moved": "{count} emails moved",
     "moved_to_mailbox": "Moved to {mailbox}",
     "move_failed": "Move failed",
+    "emails_copied": "{count} emails copied",
+    "copy_failed": "Copy failed",
     "move_error": "Could not move emails to the selected folder",
     "email_tagged": "Email tagged",
     "emails_tagged": "{count} emails tagged",
@@ -832,8 +850,8 @@
     "identity_delete_failed": "Failed to delete identity: {error}",
     "identity_unauthorized": "You are not authorized to send from this email address",
     "identity_not_found": "Identity not found",
-    "vacation_saved": "Vacation responder settings saved",
-    "vacation_save_failed": "Failed to save vacation responder settings",
+    "vacation_saved": "Out of office settings saved",
+    "vacation_save_failed": "Failed to save out of office settings",
     "filters_saved": "Filters saved successfully",
     "filters_save_failed": "Failed to save filters",
     "filters_deleted": "Filter rule deleted",
@@ -855,7 +873,8 @@
     "rule_undone": "Rule change undone",
     "rule_undo_failed": "Could not undo the rule change",
     "rule_undo_conflict": "Your filters have changed since. Undo the change in Filters settings.",
-    "rule_folder_failed": "Could not create the folder"
+    "rule_folder_failed": "Could not create the folder",
+    "vacation_filters_save_failed": "Out of office settings saved, but the forwarding and reply recipients could not be saved"
   },
   "date": {
     "today": "Today",
@@ -943,7 +962,7 @@
       "privacy": "Privacy & Security",
       "account": "Account",
       "identities": "Identities",
-      "vacation": "Vacation Responder",
+      "vacation": "Out of Office",
       "advanced": "Advanced",
       "calendar": "Calendar",
       "filters": "Filters",
@@ -1822,28 +1841,24 @@
       }
     },
     "vacation": {
-      "title": "Vacation Responder",
-      "description": "Automatically reply to incoming emails while you're away",
+      "title": "Out of Office",
+      "description": "Automatically handle incoming emails while you're away",
       "loading": "Loading vacation settings...",
       "not_supported": "Your mail server does not support vacation responses.",
       "fetch_error": "Failed to load vacation settings. Please try again.",
       "status": {
-        "label": "Vacation Responder",
+        "label": "Reply automatically",
         "description": "Send an automatic reply to people who email you",
         "active": "Active",
         "inactive": "Inactive"
       },
       "date_range": {
-        "title": "Date Range",
-        "description": "Optionally limit the auto-reply to a specific period",
         "start": "Start Date",
         "start_description": "Leave empty for no start limit",
         "end": "End Date",
         "end_description": "Leave empty for no end limit"
       },
       "message": {
-        "title": "Auto-Reply Message",
-        "description": "The message that will be sent as a reply",
         "subject_label": "Subject",
         "subject_description": "Subject line of the auto-reply",
         "subject_placeholder": "Out of Office",
@@ -1863,10 +1878,32 @@
       "saving": "Saving...",
       "warnings": {
         "end_before_start": "End date must be after start date",
+        "invalid_date": "Enter a valid start and end date with a time, or leave the field empty",
         "start_in_past": "Start date is in the past",
         "empty_body": "Message body is empty - recipients will receive a blank reply",
         "subject_too_long": "The subject is too long for the server (at most {max} bytes).",
-        "body_too_long": "The message is too long for the server (at most {max} bytes, formatting included)."
+        "body_too_long": "The message is too long for the server (at most {max} bytes, formatting included).",
+        "forward_address": "Enter a valid address to forward to",
+        "not_running": "Forwarding or the reply recipients are saved but not active right now. Save to turn them back on."
+      },
+      "forward": {
+        "title": "Forwarding",
+        "description": "Passes incoming messages on to another address, with or without the auto-reply, within the period above (without an end date, until switched off). Spam is not forwarded.",
+        "enabled_label": "Forward messages",
+        "to_label": "Forward to",
+        "to_placeholder": "email@example.com",
+        "keep_label": "Keep in inbox",
+        "keep_description": "Otherwise the message is only forwarded: it is not kept in this mailbox, and no filter rule runs on it."
+      },
+      "audience": {
+        "label": "Reply to",
+        "description": "Internal senders: {domains}",
+        "all": "All senders",
+        "internal": "Internal senders only",
+        "external": "External senders only"
+      },
+      "auto_reply": {
+        "title": "Automatic Reply"
       }
     },
     "folders": {
@@ -1891,6 +1928,15 @@
       "reorder": "Drag up or down to reorder, left or right to change the parent folder",
       "reorder_error": "Failed to reorder folders",
       "move_error": "Failed to move folder",
+      "select_folder": "Select {name}",
+      "select_hint": "Select. Shift+click selects every folder up to the last one you clicked.",
+      "selected_count": "{count, plural, one {# folder} other {# folders}} selected",
+      "move_to": "Move to...",
+      "move_to_top_level": "Top level",
+      "move": "Move",
+      "clear_selection": "Clear selection",
+      "folders_moved": "{count, plural, one {# folder moved} other {# folders moved}}",
+      "move_partial_error": "{count, plural, one {# folder} other {# folders}} could not be moved",
       "subfolder_of": "Inside {name}",
       "subfolder_name": "Subfolder name",
       "new_folder_name": "Folder name",
@@ -1977,7 +2023,8 @@
         "button": "Import"
       },
       "about": {
-        "title": "Bulwark Webmail"
+        "title": "Bulwark Webmail",
+        "source_code": "Source code"
       },
       "spam_siege": {
         "title": "Spam Siege",
@@ -2124,7 +2171,8 @@
         "subject": "Subject",
         "header": "Custom Header",
         "size": "Size",
-        "body": "Body"
+        "body": "Body",
+        "all": "All messages"
       },
       "comparators": {
         "has_any": "is present",
@@ -2233,7 +2281,19 @@
       "suggest_list": "List-Id",
       "suggest_domain": "@{domain}",
       "apply_existing": "Also apply to existing messages in this folder",
-      "apply_existing_unsupported": "Only rules that check the sender, recipients, subject or headers, and that move, copy, mark as read, star or tag, can run on existing messages."
+      "apply_existing_unsupported": "Only rules that check the sender, recipients, subject or headers, and that move, copy, mark as read, star or tag, can run on existing messages.",
+      "period_title": "Date Range",
+      "period_start": "Start Date",
+      "period_end": "End Date",
+      "validation_period_order": "End date must be after start date",
+      "period_toggle": "Only active during a period",
+      "period_hint": "Applies to messages that arrive during this period. Leave a field empty to keep that end open.",
+      "validation_period_empty": "Enter a start or end date for the period",
+      "validation_period_invalid": "Enter a valid date with a time for the period, or leave the field empty",
+      "apply_existing_period": "A rule with a period acts only on messages that arrive within it, so it cannot run on existing messages.",
+      "period_status_scheduled": "scheduled",
+      "period_status_active": "active",
+      "period_status_expired": "expired"
     },
     "templates": {
       "title": "Email Templates",
@@ -2355,6 +2415,7 @@
     "pin": "Pin",
     "unpin": "Unpin",
     "move_to": "Move to...",
+    "copy_to_account": "Copy to account...",
     "archive": "Archive",
     "delete": "Delete",
     "mark_as_spam": "Report spam",
@@ -2936,6 +2997,10 @@
       "tasks_hint": "Tasks (k)"
     },
     "events": {
+      "hidden_before": "{count, plural, one {# earlier event} other {# earlier events}}",
+      "hidden_after": "{count, plural, one {# later event} other {# later events}}",
+      "show_all_hours": "Show all hours",
+      "show_display_hours": "Show only {start} – {end}",
       "create": "Create event",
       "edit": "Edit event",
       "delete": "Delete event",
@@ -3095,6 +3160,14 @@
       "unit": "Reminder unit"
     },
     "settings": {
+      "limit_hours": "Limit visible hours",
+      "limit_hours_desc": "Show only these hours in the day and week views. Events outside them stay reachable from the arrows at the top and bottom of each day.",
+      "visible_hours": "Visible hours",
+      "visible_hours_start": "Start of visible hours",
+      "visible_hours_end": "End of visible hours",
+      "hide_non_working_days": "Hide non-working days",
+      "hide_non_working_days_desc": "Leave the days you don't work out of the week view. Their events still show in the month, day and agenda views.",
+      "working_days": "Working days",
       "title": "Calendar settings",
       "default_view": "Default view",
       "week_starts_on": "Week starts on",

@@ -24,7 +24,8 @@
       "generic": "Si è verificato un errore. Riprova.",
       "totp_required": "È richiesto un codice di autenticazione a due fattori. Inserisci il codice qui sotto.",
       "totp_invalid": "Codice di autenticazione non valido. Controlla la tua app di autenticazione.",
-      "oauth_discovery_failed": "SSO è abilitato ma il provider di identità non è raggiungibile. Controlla la configurazione OAuth."
+      "oauth_discovery_failed": "SSO è abilitato ma il provider di identità non è raggiungibile. Controlla la configurazione OAuth.",
+      "token_exchange_failed": "Password e codice sono stati accettati, ma il server di posta ha rifiutato di avviare una sessione per questa app. Chiedi all'amministratore di controllare le impostazioni del client OAuth."
     },
     "show_password": "Mostra password",
     "hide_password": "Nascondi password",
@@ -344,6 +345,15 @@
     "external_content_warning": "Le immagini e i contenuti esterni sono stati bloccati",
     "load_external_content": "Carica immagini",
     "trust_sender": "Considera sempre attendibile questo mittente",
+    "sender_check": {
+      "unverified_label": "Mittente non verificato",
+      "failed_label": "Verifica del mittente non riuscita",
+      "unverified": "Questo messaggio dichiara di provenire da {domain}, ma nulla lo conferma. Non ha una firma valida di {domain} e non proviene da un server autorizzato da {domain}.",
+      "unverified_sent_from": "Questo messaggio dichiara di provenire da {domain}, ma è stato inviato da {host} e non ha una firma valida di {domain}.",
+      "failed": "Questo messaggio dichiara di provenire da {domain}, ma non ha superato i controlli sul mittente di quel dominio. Potrebbe essere falsificato.",
+      "failed_sent_from": "Questo messaggio dichiara di provenire da {domain}, ma è stato inviato da {host} e non ha superato i controlli sul mittente di {domain}. Potrebbe essere falsificato.",
+      "caution": "Fai attenzione a link, allegati e richieste di password o dati di pagamento."
+    },
     "back_to_list": "Torna all'elenco",
     "view_contact": "Visualizza contatto",
     "message_details": "Dettagli del messaggio",
@@ -623,6 +633,12 @@
     "attach": "Allega",
     "attach_photos": "Photos & Videos",
     "attach_files": "Files",
+    "attach_from_files": "Allega da File",
+    "files_picker": {
+      "attach": "{count, plural, =0 {Allega} one {Allega 1 file} other {Allega # file}}",
+      "empty_folder": "Questa cartella è vuota",
+      "load_failed": "Impossibile caricare i tuoi file"
+    },
     "discard": "Scarta",
     "discard_draft_title": "Eliminare la bozza?",
     "discard_draft_confirm": "Ci sono modifiche non salvate. Vuoi scartare questa bozza?",
@@ -819,6 +835,8 @@
     "emails_moved": "{count} messaggi spostati",
     "moved_to_mailbox": "Spostato in {mailbox}",
     "move_failed": "Spostamento non riuscito",
+    "emails_copied": "{count} messaggi copiati",
+    "copy_failed": "Copia non riuscita",
     "move_error": "Impossibile spostare i messaggi nella cartella selezionata",
     "email_tagged": "Email etichettata",
     "emails_tagged": "{count} email etichettate",
@@ -832,8 +850,8 @@
     "identity_delete_failed": "Impossibile eliminare l'identità: {error}",
     "identity_unauthorized": "Non sei autorizzato a inviare da questo indirizzo email",
     "identity_not_found": "Identità non trovata",
-    "vacation_saved": "Impostazioni del risponditore automatico salvate",
-    "vacation_save_failed": "Impossibile salvare le impostazioni del risponditore automatico",
+    "vacation_saved": "Impostazioni di assenza salvate",
+    "vacation_save_failed": "Impossibile salvare le impostazioni di assenza",
     "filters_saved": "Filtri salvati con successo",
     "filters_save_failed": "Impossibile salvare i filtri",
     "filters_deleted": "Regola di filtraggio eliminata",
@@ -855,7 +873,8 @@
     "rule_undone": "Modifica della regola annullata",
     "rule_undo_failed": "Impossibile annullare la modifica della regola",
     "rule_undo_conflict": "I tuoi filtri sono cambiati nel frattempo. Annulla la modifica nelle impostazioni dei filtri.",
-    "rule_folder_failed": "Impossibile creare la cartella"
+    "rule_folder_failed": "Impossibile creare la cartella",
+    "vacation_filters_save_failed": "Impostazioni di assenza salvate, ma non è stato possibile salvare l'inoltro e i destinatari della risposta"
   },
   "date": {
     "today": "Oggi",
@@ -940,7 +959,7 @@
       "privacy": "Privacy e sicurezza",
       "account": "Account",
       "identities": "Identità",
-      "vacation": "Risponditore automatico",
+      "vacation": "Assenza",
       "advanced": "Avanzate",
       "calendar": "Calendario",
       "filters": "Filtri",
@@ -1815,28 +1834,24 @@
       }
     },
     "vacation": {
-      "title": "Risponditore automatico",
-      "description": "Rispondi automaticamente alle email in arrivo durante la tua assenza",
+      "title": "Assenza",
+      "description": "Gestisci automaticamente le email in arrivo durante la tua assenza",
       "loading": "Caricamento impostazioni di risposta automatica...",
       "not_supported": "Il server di posta non supporta le risposte automatiche di assenza.",
       "fetch_error": "Impossibile caricare le impostazioni di risposta automatica. Riprova.",
       "status": {
-        "label": "Risponditore automatico",
+        "label": "Rispondi automaticamente",
         "description": "Invia una risposta automatica a chi ti scrive",
         "active": "Attivo",
         "inactive": "Inattivo"
       },
       "date_range": {
-        "title": "Periodo",
-        "description": "Limita opzionalmente la risposta automatica a un periodo specifico",
         "start": "Data di inizio",
         "start_description": "Lascia vuoto per nessun limite di inizio",
         "end": "Data di fine",
         "end_description": "Lascia vuoto per nessun limite di fine"
       },
       "message": {
-        "title": "Messaggio di risposta automatica",
-        "description": "Il messaggio che verrà inviato come risposta",
         "subject_label": "Oggetto",
         "subject_description": "Oggetto della risposta automatica",
         "subject_placeholder": "Fuori ufficio",
@@ -1856,10 +1871,32 @@
       "saving": "Salvataggio...",
       "warnings": {
         "end_before_start": "La data di fine deve essere successiva alla data di inizio",
+        "invalid_date": "Inserisci una data di inizio e di fine valide con l'ora oppure lascia vuoto il campo",
         "start_in_past": "La data di inizio è nel passato",
         "empty_body": "Il corpo del messaggio è vuoto - i destinatari riceveranno una risposta vuota",
         "subject_too_long": "L'oggetto è troppo lungo per il server (al massimo {max} byte).",
-        "body_too_long": "Il messaggio è troppo lungo per il server (al massimo {max} byte, formattazione inclusa)."
+        "body_too_long": "Il messaggio è troppo lungo per il server (al massimo {max} byte, formattazione inclusa).",
+        "forward_address": "Inserisci un indirizzo valido per l'inoltro",
+        "not_running": "L'inoltro o i destinatari della risposta sono salvati ma al momento non sono attivi. Salva per riattivarli."
+      },
+      "forward": {
+        "title": "Inoltro",
+        "description": "Inoltra i messaggi in arrivo a un altro indirizzo, con o senza risposta automatica, nel periodo indicato sopra (senza data di fine, finché non viene disattivato). Lo spam non viene inoltrato.",
+        "enabled_label": "Inoltra i messaggi",
+        "to_label": "Inoltra a",
+        "to_placeholder": "email@esempio.com",
+        "keep_label": "Mantieni nella posta in arrivo",
+        "keep_description": "Altrimenti il messaggio viene solo inoltrato: non resta in questa casella e non gli si applica nessuna regola di filtro."
+      },
+      "audience": {
+        "label": "Rispondi a",
+        "description": "Mittenti interni: {domains}",
+        "all": "Tutti i mittenti",
+        "internal": "Solo mittenti interni",
+        "external": "Solo mittenti esterni"
+      },
+      "auto_reply": {
+        "title": "Risposta automatica"
       }
     },
     "folders": {
@@ -1884,6 +1921,15 @@
       "reorder": "Trascina per riordinare",
       "reorder_error": "Impossibile riordinare le cartelle",
       "move_error": "Impossibile spostare la cartella",
+      "select_folder": "Seleziona {name}",
+      "select_hint": "Seleziona. Maiusc+clic seleziona tutte le cartelle fino all'ultima su cui hai fatto clic.",
+      "selected_count": "{count, plural, one {# cartella selezionata} other {# cartelle selezionate}}",
+      "move_to": "Sposta in...",
+      "move_to_top_level": "Livello superiore",
+      "move": "Sposta",
+      "clear_selection": "Annulla selezione",
+      "folders_moved": "{count, plural, one {# cartella spostata} other {# cartelle spostate}}",
+      "move_partial_error": "{count, plural, one {Impossibile spostare # cartella} other {Impossibile spostare # cartelle}}",
       "subfolder_of": "Dentro {name}",
       "subfolder_name": "Nome della sottocartella",
       "new_folder_name": "Nome della cartella",
@@ -1970,7 +2016,8 @@
         "button": "Importa"
       },
       "about": {
-        "title": "Bulwark Webmail"
+        "title": "Bulwark Webmail",
+        "source_code": "Codice sorgente"
       },
       "spam_siege": {
         "title": "Spam Siege",
@@ -2117,7 +2164,8 @@
         "subject": "Oggetto",
         "header": "Intestazione personalizzata",
         "size": "Dimensione",
-        "body": "Corpo"
+        "body": "Corpo",
+        "all": "Tutti i messaggi"
       },
       "comparators": {
         "has_any": "è presente",
@@ -2226,7 +2274,19 @@
       "suggest_list": "List-Id",
       "suggest_domain": "@{domain}",
       "apply_existing": "Applica anche ai messaggi già presenti in questa cartella",
-      "apply_existing_unsupported": "Solo le regole che controllano mittente, destinatari, oggetto o intestazioni, e che spostano, copiano, segnano come letto, contrassegnano con stella o etichettano, si possono applicare ai messaggi esistenti."
+      "apply_existing_unsupported": "Solo le regole che controllano mittente, destinatari, oggetto o intestazioni, e che spostano, copiano, segnano come letto, contrassegnano con stella o etichettano, si possono applicare ai messaggi esistenti.",
+      "period_title": "Periodo",
+      "period_start": "Data di inizio",
+      "period_end": "Data di fine",
+      "validation_period_order": "La data di fine deve essere successiva alla data di inizio",
+      "period_toggle": "Attiva solo in un periodo",
+      "period_hint": "Si applica ai messaggi che arrivano in questo periodo. Lascia un campo vuoto per non limitare quell'estremo.",
+      "validation_period_empty": "Inserisci una data di inizio o di fine per il periodo",
+      "validation_period_invalid": "Inserisci una data valida con l'ora per il periodo oppure lascia vuoto il campo",
+      "apply_existing_period": "Una regola con periodo agisce solo sui messaggi che arrivano al suo interno, quindi non si può applicare ai messaggi esistenti.",
+      "period_status_scheduled": "programmata",
+      "period_status_active": "attiva",
+      "period_status_expired": "scaduta"
     },
     "templates": {
       "title": "Modelli email",
@@ -2355,6 +2415,7 @@
     "pin": "Fissa",
     "unpin": "Non fissare più",
     "move_to": "Sposta in...",
+    "copy_to_account": "Copia in account...",
     "archive": "Archivia",
     "delete": "Elimina",
     "mark_as_spam": "Segnala come spam",
@@ -2936,6 +2997,10 @@
       "tasks_hint": "Attività (k)"
     },
     "events": {
+      "hidden_before": "{count, plural, one {# evento precedente} other {# eventi precedenti}}",
+      "hidden_after": "{count, plural, one {# evento successivo} other {# eventi successivi}}",
+      "show_all_hours": "Mostra tutte le ore",
+      "show_display_hours": "Mostra solo {start} – {end}",
       "create": "Crea evento",
       "edit": "Modifica evento",
       "delete": "Elimina evento",
@@ -3095,6 +3160,14 @@
       "unit": "Unità promemoria"
     },
     "settings": {
+      "limit_hours": "Limita le ore visibili",
+      "limit_hours_desc": "Mostra solo queste ore nelle viste giorno e settimana. Gli eventi al di fuori restano raggiungibili con le frecce in alto e in basso di ogni giorno.",
+      "visible_hours": "Ore visibili",
+      "visible_hours_start": "Inizio delle ore visibili",
+      "visible_hours_end": "Fine delle ore visibili",
+      "hide_non_working_days": "Nascondi i giorni non lavorativi",
+      "hide_non_working_days_desc": "Togli dalla vista settimanale i giorni in cui non lavori. I loro eventi restano visibili nelle viste mese, giorno e agenda.",
+      "working_days": "Giorni lavorativi",
       "title": "Impostazioni calendario",
       "default_view": "Vista predefinita",
       "week_starts_on": "La settimana inizia il",

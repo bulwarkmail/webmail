@@ -166,18 +166,13 @@ export interface ImportResult {
 // below, synced templates keep their ids so the same template converges to a
 // single entry across devices instead of duplicating on every server load.
 
-/**
- * Tombstones older than this are pruned from the synced blob. A device that
- * stays offline longer than this may resurrect a deletion - the accepted
- * trade-off for keeping the blob bounded.
- */
-export const TEMPLATE_TOMBSTONE_TTL_MS = 90 * 24 * 60 * 60 * 1000;
-
-export interface SyncedTemplateState {
-  templates: EmailTemplate[];
-  /** Template id -> ISO time it was deleted. */
-  deletedTemplateIds: Record<string, string>;
-}
+// The merge itself lives in template-merge so the settings API route can use
+// it without pulling DOMPurify into the server bundle.
+export {
+  mergeSyncedTemplates,
+  TEMPLATE_TOMBSTONE_TTL_MS,
+  type SyncedTemplateState,
+} from './template-merge';
 
 /**
  * Structurally validates a `templates` value from a synced settings blob or
@@ -233,54 +228,6 @@ export function parseTemplateTombstones(value: unknown): Record<string, string> 
     }
   }
   return out;
-}
-
-/**
- * Merges a synced template state into the local one. Per template id the
- * newer `updatedAt` wins (ties keep the local copy); a deletion tombstone
- * beats a template unless the template was edited after the deletion, which
- * resurrects it and clears the tombstone. Merging (rather than replacing)
- * keeps a stale per-account blob from wiping templates created under another
- * account or on another device.
- */
-export function mergeSyncedTemplates(
-  local: SyncedTemplateState,
-  incoming: SyncedTemplateState,
-  now: Date = new Date()
-): SyncedTemplateState {
-  const cutoff = now.getTime() - TEMPLATE_TOMBSTONE_TTL_MS;
-
-  // Union of tombstones, newest deletion time per id, pruned by TTL.
-  const tombstones: Record<string, string> = {};
-  for (const source of [local.deletedTemplateIds, incoming.deletedTemplateIds]) {
-    for (const [id, deletedAt] of Object.entries(source)) {
-      if (Date.parse(deletedAt) < cutoff) continue;
-      if (!tombstones[id] || Date.parse(deletedAt) > Date.parse(tombstones[id])) {
-        tombstones[id] = deletedAt;
-      }
-    }
-  }
-
-  const byId = new Map<string, EmailTemplate>();
-  for (const t of local.templates) byId.set(t.id, t);
-  for (const t of incoming.templates) {
-    const existing = byId.get(t.id);
-    if (!existing || Date.parse(t.updatedAt) > Date.parse(existing.updatedAt)) {
-      byId.set(t.id, t);
-    }
-  }
-
-  const templates: EmailTemplate[] = [];
-  for (const t of byId.values()) {
-    const deletedAt = tombstones[t.id];
-    if (deletedAt !== undefined) {
-      if (Date.parse(t.updatedAt) <= Date.parse(deletedAt)) continue;
-      delete tombstones[t.id];
-    }
-    templates.push(t);
-  }
-
-  return { templates, deletedTemplateIds: tombstones };
 }
 
 export function importTemplates(json: string): ImportResult {

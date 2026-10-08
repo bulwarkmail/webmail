@@ -53,6 +53,15 @@ describe('TagPicker', () => {
     expect(onToggle).toHaveBeenCalledWith('work/clients');
   });
 
+  it('draws a tag only part of a selection carries as mixed', () => {
+    render(<TagPicker selectedIds={['work']} partialIds={['personal', 'from-elsewhere']} onToggle={() => {}} />);
+
+    expect(screen.getByText('Work').closest('button')).toHaveAttribute('aria-checked', 'true');
+    expect(screen.getByText('Personal').closest('button')).toHaveAttribute('aria-checked', 'mixed');
+    // An undefined tag on part of the selection is still listed, so it can come off.
+    expect(screen.getByText('from-elsewhere').closest('button')).toHaveAttribute('aria-checked', 'mixed');
+  });
+
   it('lists a tag it has no definition for, so it can be taken off', () => {
     const onToggle = vi.fn();
     const { rerender } = render(<TagPicker selectedIds={['from-elsewhere']} onToggle={onToggle} />);

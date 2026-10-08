@@ -44,6 +44,19 @@ integration/run-tests.sh 01-login
 bundles can't always be downloaded/installed on the host; the official
 `mcr.microsoft.com/playwright` image sidesteps that.
 
+### In CI
+
+The "Integration tests" workflow (`.github/workflows/integration.yml`) runs
+`run-tests.sh` every night on main, on pull requests that carry the
+`integration` label, and on demand:
+
+```bash
+gh workflow run integration.yml
+```
+
+A failed run uploads the Playwright report, traces and failure videos as the
+`integration-report` artifact and prints the container logs.
+
 ### Running against a host browser instead
 
 If you *can* install Playwright browsers on your machine:
@@ -106,13 +119,13 @@ because the UI behaviour is currently incomplete. Worth a look:
   runs — they follow the reconcile, not the optimistic path.
 - **`mark-as-spam` doesn't optimistically decrement the source counter** the
   way `delete` does; it settles after a reconcile.
-- **Reopening a draft resets the From selector** to the default identity even
-  though the draft was saved with (and the server retains) the chosen sender.
-  Pinned with `test.fail` in `07-drafts`.
-- **Cross-account moves (own ⇆ shared folder) don't relocate the message.** The
-  "Move to" submenu offers the shared folder, but clicking it is a no-op.
-  Shared ⇆ shared (same owner) moves work. Pinned with `test.fail` in
-  `08-shared-moves`.
+- **Reopening a draft restores the chosen sender (fixed).** It used to reset
+  the From selector to the default identity (`08-drafts`).
+- **Cross-account moves (fixed).** Moves between the own account and shared
+  folders, and across owners, deliver the message, keep its read state and
+  remove the source (`09-shared-moves`). The client destroys the source itself
+  instead of using Stalwart's `onSuccessDestroyOriginal` (support.stalw.art
+  #1150).
 - **Cross-account attachments & inline images (fixed).** Blobs are account-
   scoped, so viewing/downloading/previewing an attachment, rendering an inline
   `cid:` image, dragging out, and the bundle/S-MIME/TNEF/embedded-message

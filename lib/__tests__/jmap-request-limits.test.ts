@@ -147,6 +147,27 @@ describe('JMAPClient request limits', () => {
 
       expect(sent.map(calls => calls.length)).toEqual([4, 4, 4, 4, 2]);
     });
+
+    it('leaves the excluded folders out of both counts (#1156)', async () => {
+      const client = await connectedClient({ maxCallsInRequest: 16 });
+      const sent = recordRequests((methodCalls) => ({
+        methodResponses: methodCalls.map(([, , callId]) => ['Email/query', { total: 0 }, callId]),
+      }));
+
+      await client.getTagCounts(['work'], undefined, ['trash', 'junk']);
+
+      const [total, unread] = sent[0].map(([, args]) => (args as { filter: unknown }).filter);
+      expect(total).toEqual({
+        operator: 'AND',
+        conditions: [{ hasKeyword: '$label:work' }, { inMailboxOtherThan: ['trash', 'junk'] }],
+      });
+      expect(unread).toEqual({
+        operator: 'AND',
+        conditions: [
+          { hasKeyword: '$label:work' }, { notKeyword: '$seen' }, { inMailboxOtherThan: ['trash', 'junk'] },
+        ],
+      });
+    });
   });
 
   describe('getCategoryUnreadCounts', () => {

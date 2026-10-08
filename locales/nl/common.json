@@ -24,7 +24,8 @@
       "generic": "Er is een fout opgetreden. Probeer het opnieuw.",
       "totp_required": "Een tweefactorauthenticatiecode is vereist. Voer uw code hieronder in.",
       "totp_invalid": "Ongeldige authenticatiecode. Controleer uw authenticator-app.",
-      "oauth_discovery_failed": "SSO is ingeschakeld maar de identiteitsprovider is niet bereikbaar. Controleer uw OAuth-configuratie."
+      "oauth_discovery_failed": "SSO is ingeschakeld maar de identiteitsprovider is niet bereikbaar. Controleer uw OAuth-configuratie.",
+      "token_exchange_failed": "Uw wachtwoord en code zijn geaccepteerd, maar de mailserver weigerde een sessie voor deze app te starten. Vraag uw beheerder de OAuth-clientinstellingen te controleren."
     },
     "show_password": "Wachtwoord tonen",
     "hide_password": "Wachtwoord verbergen",
@@ -344,6 +345,15 @@
     "external_content_warning": "Afbeeldingen en externe inhoud zijn geblokkeerd",
     "load_external_content": "Afbeeldingen laden",
     "trust_sender": "Deze afzender altijd vertrouwen",
+    "sender_check": {
+      "unverified_label": "Niet-geverifieerde afzender",
+      "failed_label": "Afzendercontrole mislukt",
+      "unverified": "Dit bericht beweert van {domain} te komen, maar niets bevestigt dat. Het heeft geen geldige handtekening van {domain} en kwam niet van een server die {domain} toestaat.",
+      "unverified_sent_from": "Dit bericht beweert van {domain} te komen, maar is verzonden vanaf {host} en heeft geen geldige handtekening van {domain}.",
+      "failed": "Dit bericht beweert van {domain} te komen, maar is niet door de afzendercontroles van dat domein gekomen. Het kan vervalst zijn.",
+      "failed_sent_from": "Dit bericht beweert van {domain} te komen, maar is verzonden vanaf {host} en is niet door de afzendercontroles van {domain} gekomen. Het kan vervalst zijn.",
+      "caution": "Wees voorzichtig met links, bijlagen en verzoeken om wachtwoorden of betaalgegevens."
+    },
     "back_to_list": "Terug naar lijst",
     "view_contact": "Contact bekijken",
     "message_details": "Berichtdetails",
@@ -623,6 +633,12 @@
     "attach": "Bijlage toevoegen",
     "attach_photos": "Photos & Videos",
     "attach_files": "Files",
+    "attach_from_files": "Bijvoegen uit Bestanden",
+    "files_picker": {
+      "attach": "{count, plural, =0 {Bijvoegen} one {1 bestand bijvoegen} other {# bestanden bijvoegen}}",
+      "empty_folder": "Deze map is leeg",
+      "load_failed": "Je bestanden konden niet worden geladen"
+    },
     "discard": "Verwijderen",
     "discard_draft_title": "Concept verwijderen?",
     "discard_draft_confirm": "Je hebt niet-opgeslagen wijzigingen. Wil je dit concept verwijderen?",
@@ -819,6 +835,8 @@
     "emails_moved": "{count} e-mails verplaatst",
     "moved_to_mailbox": "Verplaatst naar {mailbox}",
     "move_failed": "Verplaatsen mislukt",
+    "emails_copied": "{count} e-mails gekopieerd",
+    "copy_failed": "Kopiëren mislukt",
     "move_error": "Kan e-mails niet verplaatsen naar de geselecteerde map",
     "email_tagged": "E-mail gelabeld",
     "emails_tagged": "{count} e-mails gelabeld",
@@ -855,7 +873,8 @@
     "rule_undone": "Regelwijziging ongedaan gemaakt",
     "rule_undo_failed": "De regelwijziging kon niet ongedaan worden gemaakt",
     "rule_undo_conflict": "Je filters zijn intussen gewijzigd. Maak de wijziging ongedaan in de filterinstellingen.",
-    "rule_folder_failed": "De map kon niet worden gemaakt"
+    "rule_folder_failed": "De map kon niet worden gemaakt",
+    "vacation_filters_save_failed": "Afwezigheidsinstellingen opgeslagen, maar het doorsturen en de ontvangers van het antwoord konden niet worden opgeslagen"
   },
   "date": {
     "today": "Vandaag",
@@ -940,7 +959,7 @@
       "privacy": "Privacy & Beveiliging",
       "account": "Account",
       "identities": "Identiteiten",
-      "vacation": "Afwezigheidsmelder",
+      "vacation": "Afwezigheid",
       "advanced": "Geavanceerd",
       "calendar": "Agenda",
       "filters": "Filters",
@@ -1815,28 +1834,24 @@
       }
     },
     "vacation": {
-      "title": "Afwezigheidsmelder",
-      "description": "Automatisch antwoorden op inkomende e-mails terwijl je afwezig bent",
+      "title": "Afwezigheid",
+      "description": "Inkomende e-mails automatisch afhandelen terwijl je afwezig bent",
       "loading": "Afwezigheidsinstellingen laden...",
       "not_supported": "Je mailserver ondersteunt geen afwezigheidsantwoorden.",
       "fetch_error": "Kan afwezigheidsinstellingen niet laden. Probeer het opnieuw.",
       "status": {
-        "label": "Afwezigheidsmelder",
+        "label": "Automatisch antwoorden",
         "description": "Stuur een automatisch antwoord naar mensen die je mailen",
         "active": "Actief",
         "inactive": "Inactief"
       },
       "date_range": {
-        "title": "Periode",
-        "description": "Beperk optioneel het automatische antwoord tot een specifieke periode",
         "start": "Startdatum",
         "start_description": "Leeg laten voor geen startlimiet",
         "end": "Einddatum",
         "end_description": "Leeg laten voor geen eindlimiet"
       },
       "message": {
-        "title": "Automatisch antwoordbericht",
-        "description": "Het bericht dat als antwoord wordt verzonden",
         "subject_label": "Onderwerp",
         "subject_description": "Onderwerpregel van het automatische antwoord",
         "subject_placeholder": "Afwezigheidsbericht",
@@ -1856,10 +1871,32 @@
       "saving": "Opslaan...",
       "warnings": {
         "end_before_start": "De einddatum moet na de startdatum liggen",
+        "invalid_date": "Vul een geldige start- en einddatum met tijd in, of laat het veld leeg",
         "start_in_past": "De startdatum ligt in het verleden",
         "empty_body": "De berichttekst is leeg - ontvangers krijgen een leeg antwoord",
         "subject_too_long": "Het onderwerp is te lang voor de server (maximaal {max} bytes).",
-        "body_too_long": "Het bericht is te lang voor de server (maximaal {max} bytes, inclusief opmaak)."
+        "body_too_long": "Het bericht is te lang voor de server (maximaal {max} bytes, inclusief opmaak).",
+        "forward_address": "Vul een geldig adres in om naar door te sturen",
+        "not_running": "Doorsturen of de ontvangers van het antwoord zijn opgeslagen, maar nu niet actief. Sla op om ze weer in te schakelen."
+      },
+      "forward": {
+        "title": "Doorsturen",
+        "description": "Stuurt binnenkomende berichten door naar een ander adres, met of zonder automatisch antwoord, binnen de periode hierboven (zonder einddatum, tot het wordt uitgeschakeld). Spam wordt niet doorgestuurd.",
+        "enabled_label": "Berichten doorsturen",
+        "to_label": "Doorsturen naar",
+        "to_placeholder": "email@voorbeeld.nl",
+        "keep_label": "In postvak IN houden",
+        "keep_description": "Anders wordt het bericht alleen doorgestuurd: het blijft niet in deze mailbox en er wordt geen filterregel op toegepast."
+      },
+      "audience": {
+        "label": "Antwoorden aan",
+        "description": "Interne afzenders: {domains}",
+        "all": "Alle afzenders",
+        "internal": "Alleen interne afzenders",
+        "external": "Alleen externe afzenders"
+      },
+      "auto_reply": {
+        "title": "Automatisch antwoord"
       }
     },
     "folders": {
@@ -1884,6 +1921,15 @@
       "reorder": "Sleep om te herschikken",
       "reorder_error": "Herschikken van mappen is mislukt",
       "move_error": "Verplaatsen van map is mislukt",
+      "select_folder": "{name} selecteren",
+      "select_hint": "Selecteren. Shift+klik selecteert alle mappen tot en met de laatste waarop je hebt geklikt.",
+      "selected_count": "{count, plural, one {# map} other {# mappen}} geselecteerd",
+      "move_to": "Verplaatsen naar...",
+      "move_to_top_level": "Hoogste niveau",
+      "move": "Verplaatsen",
+      "clear_selection": "Selectie wissen",
+      "folders_moved": "{count, plural, one {# map verplaatst} other {# mappen verplaatst}}",
+      "move_partial_error": "{count, plural, one {# map kon} other {# mappen konden}} niet worden verplaatst",
       "subfolder_of": "In {name}",
       "subfolder_name": "Naam van submap",
       "new_folder_name": "Mapnaam",
@@ -1970,7 +2016,8 @@
         "button": "Importeren"
       },
       "about": {
-        "title": "Bulwark Webmail"
+        "title": "Bulwark Webmail",
+        "source_code": "Broncode"
       },
       "spam_siege": {
         "title": "Spam Siege",
@@ -2117,7 +2164,8 @@
         "subject": "Onderwerp",
         "header": "Aangepaste header",
         "size": "Grootte",
-        "body": "Inhoud"
+        "body": "Inhoud",
+        "all": "Alle berichten"
       },
       "comparators": {
         "has_any": "aanwezig",
@@ -2226,7 +2274,19 @@
       "suggest_list": "List-Id",
       "suggest_domain": "@{domain}",
       "apply_existing": "Ook toepassen op berichten die al in deze map staan",
-      "apply_existing_unsupported": "Alleen regels die de afzender, ontvangers, het onderwerp of headers controleren, en die verplaatsen, kopiëren, als gelezen markeren, een ster geven of labelen, kunnen op bestaande berichten worden toegepast."
+      "apply_existing_unsupported": "Alleen regels die de afzender, ontvangers, het onderwerp of headers controleren, en die verplaatsen, kopiëren, als gelezen markeren, een ster geven of labelen, kunnen op bestaande berichten worden toegepast.",
+      "period_title": "Periode",
+      "period_start": "Startdatum",
+      "period_end": "Einddatum",
+      "validation_period_order": "De einddatum moet na de startdatum liggen",
+      "period_toggle": "Alleen actief in een periode",
+      "period_hint": "Geldt voor berichten die in deze periode binnenkomen. Laat een veld leeg om die kant open te laten.",
+      "validation_period_empty": "Vul een start- of einddatum voor de periode in",
+      "validation_period_invalid": "Vul voor de periode een geldige datum met tijd in, of laat het veld leeg",
+      "apply_existing_period": "Een regel met een periode werkt alleen op berichten die binnen die periode binnenkomen en kan dus niet op bestaande berichten worden toegepast.",
+      "period_status_scheduled": "gepland",
+      "period_status_active": "actief",
+      "period_status_expired": "verlopen"
     },
     "templates": {
       "title": "E-mailsjablonen",
@@ -2355,6 +2415,7 @@
     "pin": "Vastmaken",
     "unpin": "Losmaken",
     "move_to": "Verplaatsen naar...",
+    "copy_to_account": "Kopiëren naar account...",
     "archive": "Archiveren",
     "delete": "Verwijderen",
     "mark_as_spam": "Spam melden",
@@ -2936,6 +2997,10 @@
       "tasks_hint": "Taken (k)"
     },
     "events": {
+      "hidden_before": "{count, plural, one {# eerder evenement} other {# eerdere evenementen}}",
+      "hidden_after": "{count, plural, one {# later evenement} other {# latere evenementen}}",
+      "show_all_hours": "Alle uren tonen",
+      "show_display_hours": "Alleen {start} – {end} tonen",
       "create": "Evenement aanmaken",
       "edit": "Evenement bewerken",
       "delete": "Evenement verwijderen",
@@ -3095,6 +3160,14 @@
       "unit": "Herinneringseenheid"
     },
     "settings": {
+      "limit_hours": "Zichtbare uren beperken",
+      "limit_hours_desc": "Toon alleen deze uren in de dag- en weekweergave. Evenementen daarbuiten blijven bereikbaar via de pijlen boven en onder elke dag.",
+      "visible_hours": "Zichtbare uren",
+      "visible_hours_start": "Begin van de zichtbare uren",
+      "visible_hours_end": "Einde van de zichtbare uren",
+      "hide_non_working_days": "Niet-werkdagen verbergen",
+      "hide_non_working_days_desc": "Laat de dagen waarop je niet werkt weg uit de weekweergave. Hun evenementen blijven zichtbaar in de maand-, dag- en agendaweergave.",
+      "working_days": "Werkdagen",
       "title": "Agenda-instellingen",
       "default_view": "Standaardweergave",
       "week_starts_on": "Week begint op",

@@ -40,7 +40,7 @@ export async function GET(
         SupportsUpdate: false,
         SupportsLocks: false,
         Version: payload.fileId,
-        PostMessageOrigin: payload.origin,
+        PostMessageOrigin: payload.postMessageOrigin || payload.origin,
       });
     }
 
@@ -61,7 +61,7 @@ export async function GET(
       SupportsLocks: false,
       LastModifiedTime: node.modified,
       Version: node.blobId,
-      PostMessageOrigin: auth.payload.origin,
+      PostMessageOrigin: auth.payload.postMessageOrigin || auth.payload.origin,
     });
   } catch (error) {
     logger.error('WOPI CheckFileInfo failed', {

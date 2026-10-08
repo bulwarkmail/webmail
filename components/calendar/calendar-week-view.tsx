@@ -4,16 +4,20 @@ import { useMemo, useEffect, useLayoutEffect, useRef, useState, useCallback } fr
 import { useTranslations } from "next-intl";
 import { useDisplayDateFormatter } from "@/hooks/use-display-date-formatter";
 import {
-  startOfWeek, format, isSameDay, eachDayOfInterval, differenceInCalendarDays,
+  startOfWeek, format, isSameDay, eachDayOfInterval,
 } from "date-fns";
 import { cn } from "@/lib/utils";
 import { EventCard } from "./event-card";
 import { QuickEventInput } from "./quick-event-input";
 import { CalendarTaskChip } from "./task-chip";
+import { AllHoursToggle, HiddenEventsIndicator } from "./display-hours-controls";
 import { groupTasksByDueDay } from "@/lib/calendar-tasks";
 import { buildTimedFullDayWeekSegments, buildWeekSegmentsRaw, formatSnapTime, getEventDayBounds, getPrimaryCalendarId, isTimedEventFullDayOnDate, layoutOverlappingEvents, packWeekSegments } from "@/lib/calendar-utils";
+import { clipToDisplayHours, indexOfDayOnOrAfter, partitionByDisplayHours, remapSegmentsToShownDays, resolveWorkingDays } from "@/lib/calendar-display-range";
 import { displayNow, isDisplayToday } from "@/lib/timezone";
 import type { CalendarEvent, Calendar, CalendarTask } from "@/lib/jmap/types";
+import { useSettingsStore } from "@/stores/settings-store";
+import { useDisplayHours } from "@/hooks/use-display-hours";
 import { useTimeGridInteractions } from "@/hooks/use-time-grid-interactions";
 import { useScrollWindow, getScrollStart, setScrollStart, scrollToStart } from "@/hooks/use-scroll-window";
 import { dayKey, type ScrollWindowViewProps } from "@/lib/calendar-scroll-window";
@@ -87,18 +91,36 @@ export function CalendarWeekView({
   const weekStart = (firstDayOfWeek === 0 ? 0 : firstDayOfWeek === 6 ? 6 : 1) as 0 | 1 | 6;
   const gutterWidth = isMobile ? 40 : 56;
 
-  // One column per loaded day (#759). Seven columns fill the viewport on
-  // desktop; the strip scrolls sideways and widens at either end.
-  const days = useMemo(
+  // One column per loaded day (#759). A week's columns fill the viewport on
+  // desktop; the strip scrolls sideways and widens at either end. Days the
+  // user does not work on can be left out (#1164).
+  const allDays = useMemo(
     () => eachDayOfInterval({ start: rangeStart, end: rangeEnd }),
     [rangeStart, rangeEnd],
   );
+  const hideNonWorkingDays = useSettingsStore((s) => s.calendarHideNonWorkingDays);
+  const workingDaysSetting = useSettingsStore((s) => s.calendarWorkingDays);
+  const workingDays = useMemo(
+    () => resolveWorkingDays(hideNonWorkingDays, workingDaysSetting),
+    [hideNonWorkingDays, workingDaysSetting],
+  );
+  const { days, shownIndexByDay } = useMemo(() => {
+    if (!workingDays) return { days: allDays, shownIndexByDay: null };
+    const shown: Date[] = [];
+    const indices = allDays.map((day) => {
+      if (!workingDays.has(day.getDay())) return -1;
+      shown.push(day);
+      return shown.length - 1;
+    });
+    return shown.length > 0 ? { days: shown, shownIndexByDay: indices } : { days: allDays, shownIndexByDay: null };
+  }, [allDays, workingDays]);
   const colCount = days.length;
+  const columnsPerWeek = shownIndexByDay && workingDays ? workingDays.size : 7;
 
   const measureColWidth = useCallback((root: HTMLElement | null) => {
     if (isMobile || !root) return MOBILE_COL_WIDTH;
-    return Math.max(MIN_COL_WIDTH, Math.floor((root.clientWidth - gutterWidth) / 7));
-  }, [isMobile, gutterWidth]);
+    return Math.max(MIN_COL_WIDTH, Math.floor((root.clientWidth - gutterWidth) / columnsPerWeek));
+  }, [isMobile, gutterWidth, columnsPerWeek]);
   const [colWidth, setColWidth] = useState(MOBILE_COL_WIDTH);
   const [viewportWidth, setViewportWidth] = useState(0);
   // First day in view, reported by the scroll handler below (#1293)
@@ -160,29 +182,40 @@ export function CalendarWeekView({
     return timed;
   }, [events]);
 
+  const {
+    hours, canToggle: canToggleHours, configured: configuredHours, showAllHours, toggleAllHours, revealMinutes,
+  } = useDisplayHours({ scrollRef: rootRef, hourHeight: HOUR_HEIGHT });
+  const firstHour = hours.startMinutes / 60;
+  const visibleHours = HOURS.slice(firstHour, hours.endMinutes / 60);
+  const gridHeight = visibleHours.length * HOUR_HEIGHT;
+
   // Column layouts are the costly part of a render; with months of columns
   // they must not be redone on every scroll-driven re-render.
   const layoutByDay = useMemo(() => {
-    const map = new Map<string, ReturnType<typeof layoutOverlappingEvents>>();
+    const map = new Map<string, ReturnType<typeof partitionByDisplayHours> & { layouts: ReturnType<typeof layoutOverlappingEvents> }>();
     for (const day of days) {
       const key = format(day, "yyyy-MM-dd");
-      map.set(key, layoutOverlappingEvents(timedEvents.get(key) || [], day));
+      const partition = partitionByDisplayHours(timedEvents.get(key) || [], day, hours);
+      map.set(key, { ...partition, layouts: layoutOverlappingEvents(partition.visible, day) });
     }
     return map;
-  }, [days, timedEvents]);
+  }, [days, timedEvents, hours]);
 
+  // Built over the consecutive days and then moved onto the drawn columns,
+  // so an event across a hidden weekend still spans Friday to Monday.
   const allDaySegments = useMemo(() => {
     const explicitAllDay = buildWeekSegmentsRaw(
       events.filter((event) => event.showWithoutTime),
-      days,
+      allDays,
     );
     const timedFullDay = buildTimedFullDayWeekSegments(
       events.filter((event) => !event.showWithoutTime),
-      days,
+      allDays,
     );
+    const segments = [...explicitAllDay, ...timedFullDay];
 
-    return packWeekSegments([...explicitAllDay, ...timedFullDay]);
-  }, [events, days]);
+    return packWeekSegments(shownIndexByDay ? remapSegmentsToShownDays(segments, shownIndexByDay) : segments);
+  }, [events, allDays, shownIndexByDay]);
 
   const tasksByDay = useMemo(() => groupTasksByDueDay(tasks), [tasks]);
 
@@ -207,9 +240,9 @@ export function CalendarWeekView({
     const tracked = visibleDayKey ? days.findIndex((d) => dayKey(d) === visibleDayKey) : -1;
     if (tracked >= 0) return tracked;
     const target = isMobile ? focus.date : startOfWeek(focus.date, { weekStartsOn: weekStart });
-    return Math.max(0, Math.min(days.length - 1, differenceInCalendarDays(target, rangeStart)));
-  }, [visibleDayKey, days, isMobile, focus.date, weekStart, rangeStart]);
-  const visibleColumns = isMobile ? Math.max(1, Math.ceil(viewportWidth / colWidth)) : 7;
+    return indexOfDayOnOrAfter(days, target);
+  }, [visibleDayKey, days, isMobile, focus.date, weekStart]);
+  const visibleColumns = isMobile ? Math.max(1, Math.ceil(viewportWidth / colWidth)) : columnsPerWeek;
 
   // Max combined rows (events + tasks) across the visible days
   const maxContentRows = useMemo(() => {
@@ -234,22 +267,14 @@ export function CalendarWeekView({
   const visibleRows = isAllDayExpanded ? maxContentRows : Math.min(DEFAULT_ALL_DAY_MAX_ROWS, maxContentRows);
   const allDayHeight = Math.max(28, visibleRows * 24 + 4);
 
-  useEffect(() => {
-    if (rootRef.current) {
-      const now = displayNow();
-      rootRef.current.scrollTop = Math.max(0, (now.getHours() - 1) * HOUR_HEIGHT);
-    }
-  }, []);
-
   // Navigation aligns the focused week (the focused day itself on mobile,
   // where fewer columns fit) with the start of the viewport.
   const scrollToFocus = useCallback(() => {
     const root = rootRef.current;
     if (!root) return;
     const target = isMobile ? focus.date : startOfWeek(focus.date, { weekStartsOn: weekStart });
-    const index = Math.max(0, Math.min(colCount - 1, differenceInCalendarDays(target, rangeStart)));
-    setScrollStart(root, "horizontal", index * colWidth);
-  }, [focus.date, isMobile, weekStart, colCount, rangeStart, colWidth]);
+    setScrollStart(root, "horizontal", indexOfDayOnOrAfter(days, target) * colWidth);
+  }, [focus.date, isMobile, weekStart, days, colWidth]);
 
   useScrollWindow({
     scrollRef: rootRef,
@@ -322,6 +347,8 @@ export function CalendarWeekView({
     dropTarget, handleColumnDragOver, handleColumnDragLeave, handleColumnDrop,
   } = useTimeGridInteractions({
     hourHeight: HOUR_HEIGHT,
+    gridStartMinutes: hours.startMinutes,
+    gridEndMinutes: hours.endMinutes,
     calendars,
     onCreateRange: onCreateAtTime,
     errorMessages: {
@@ -460,7 +487,16 @@ export function CalendarWeekView({
       )}
 
       <div className="flex border-b border-border" role="row">
-        <div className={gutterClass} />
+        <div className={cn(gutterClass, "flex items-end justify-center pb-1")}>
+          {canToggleHours && (
+            <AllHoursToggle
+              showAllHours={showAllHours}
+              configured={configuredHours}
+              timeFormat={timeFormat}
+              onToggle={toggleAllHours}
+            />
+          )}
+        </div>
         <div className="border-s border-border grid" style={columnsStyle}>
           {days.map((day) => {
             const todayCol = isDisplayToday(day);
@@ -498,16 +534,22 @@ export function CalendarWeekView({
       </div>
 
       <div>
-        <div className="flex relative" style={{ height: 24 * HOUR_HEIGHT }}>
+        <div className="flex relative" style={{ height: gridHeight }}>
           <div className={gutterClass}>
-            {HOURS.map((h) => (
+            {visibleHours.map((h) => (
               <div
                 key={h}
                 className="relative text-muted-foreground text-end pe-2"
                 style={{ height: HOUR_HEIGHT }}
               >
-                {h > 0 && (
-                  <span className={cn("absolute top-0 right-2 -translate-y-1/2 leading-none", isMobile ? "text-[9px]" : "text-[10px]")}>
+                {/* Midnight goes unlabelled; a later first hour is labelled
+                    inside its row, where the header cannot cover it. */}
+                {(h > firstHour || firstHour > 0) && (
+                  <span className={cn(
+                    "absolute right-2 leading-none",
+                    h > firstHour ? "top-0 -translate-y-1/2" : "top-1",
+                    isMobile ? "text-[9px]" : "text-[10px]",
+                  )}>
                     {formatHour(h)}
                   </span>
                 )}
@@ -519,7 +561,8 @@ export function CalendarWeekView({
             {days.map((day) => {
               const key = format(day, "yyyy-MM-dd");
               const todayCol = isDisplayToday(day);
-              const layouted = layoutByDay.get(key) ?? [];
+              const dayLayout = layoutByDay.get(key);
+              const layouted = dayLayout?.layouts ?? [];
 
               return (
                 <div
@@ -534,7 +577,7 @@ export function CalendarWeekView({
                   onDragLeave={handleColumnDragLeave}
                   onDrop={(e) => handleColumnDrop(e, day)}
                 >
-                  {HOURS.map((h) => (
+                  {visibleHours.map((h) => (
                     <div
                       key={h}
                       role="gridcell"
@@ -547,10 +590,30 @@ export function CalendarWeekView({
                     />
                   ))}
 
+                  {dayLayout && dayLayout.before > 0 && (
+                    <HiddenEventsIndicator
+                      count={dayLayout.before}
+                      direction="before"
+                      onReveal={() => revealMinutes(dayLayout.firstBeforeMinutes ?? 0)}
+                    />
+                  )}
+                  {dayLayout && dayLayout.after > 0 && (
+                    <HiddenEventsIndicator
+                      count={dayLayout.after}
+                      direction="after"
+                      onReveal={() => revealMinutes(dayLayout.firstAfterMinutes ?? hours.endMinutes)}
+                    />
+                  )}
+
                   {layouted.map(({ event: ev, column, totalColumns, startMinutes, endMinutes }) => {
                     const durMin = Math.max(15, endMinutes - startMinutes);
-                    const baseTop = (startMinutes / 60) * HOUR_HEIGHT;
-                    const baseHeight = Math.max(20, (durMin / 60) * HOUR_HEIGHT);
+                    const clip = clipToDisplayHours(startMinutes, endMinutes, hours);
+                    const baseHeight = Math.max(20, (Math.max(15, clip.endMinutes - clip.startMinutes) / 60) * HOUR_HEIGHT);
+                    // Short events at the bottom edge stay inside the grid.
+                    const baseTop = Math.max(0, Math.min(
+                      ((clip.startMinutes - hours.startMinutes) / 60) * HOUR_HEIGHT,
+                      gridHeight - baseHeight,
+                    ));
                     const isResizing = resizeVisual?.eventId === ev.id;
                     const top = isResizing ? resizeVisual!.topPx : baseTop;
                     const height = isResizing ? resizeVisual!.heightPx : baseHeight;
@@ -576,6 +639,8 @@ export function CalendarWeekView({
                           currentUserEmails={currentUserEmails}
                           draggable
                         />
+                        {/* An edge beyond the visible hours has nothing to grab. */}
+                        {!clip.clippedStart && (
                         <div
                           data-resize-handle
                           className="absolute top-0 left-1 right-1 h-3 cursor-n-resize z-20 flex items-start justify-center opacity-0 group-hover/event:opacity-100 transition-opacity"
@@ -586,6 +651,8 @@ export function CalendarWeekView({
                         >
                           <div className="w-8 h-1 rounded-full bg-foreground/30 mt-0.5" />
                         </div>
+                        )}
+                        {!clip.clippedEnd && (
                         <div
                           data-resize-handle
                           className="absolute bottom-0 left-1 right-1 h-3 cursor-s-resize z-20 flex items-end justify-center opacity-0 group-hover/event:opacity-100 transition-opacity"
@@ -596,14 +663,15 @@ export function CalendarWeekView({
                         >
                           <div className="w-8 h-1 rounded-full bg-foreground/30 mb-0.5" />
                         </div>
+                        )}
                       </div>
                     );
                   })}
 
-                  {todayCol && (
+                  {todayCol && nowMinutes >= hours.startMinutes && nowMinutes <= hours.endMinutes && (
                     <div
                       className="absolute left-0 right-0 z-20 pointer-events-none"
-                      style={{ top: (nowMinutes / 60) * HOUR_HEIGHT }}
+                      style={{ top: ((nowMinutes - hours.startMinutes) / 60) * HOUR_HEIGHT }}
                     >
                       <div className="flex items-center">
                         <div className="w-2 h-2 rounded-full bg-destructive -ms-1" />
@@ -624,7 +692,7 @@ export function CalendarWeekView({
                     <div
                       className="absolute left-1 right-1 z-30 rounded-md pointer-events-none bg-primary/15 border-2 border-primary/30 border-dashed"
                       style={{
-                        top: (dragCreate.startMinutes / 60) * HOUR_HEIGHT,
+                        top: ((dragCreate.startMinutes - hours.startMinutes) / 60) * HOUR_HEIGHT,
                         height: ((dragCreate.endMinutes - dragCreate.startMinutes) / 60) * HOUR_HEIGHT,
                       }}
                     >
@@ -637,7 +705,7 @@ export function CalendarWeekView({
                   {dropTarget?.dayKey === key && (
                     <div
                       className="absolute left-0 right-0 z-30 pointer-events-none"
-                      style={{ top: (dropTarget.minutes / 60) * HOUR_HEIGHT }}
+                      style={{ top: ((dropTarget.minutes - hours.startMinutes) / 60) * HOUR_HEIGHT }}
                     >
                       <div className="flex items-center">
                         <div className="w-2 h-2 rounded-full bg-primary -ms-1" />
@@ -655,14 +723,16 @@ export function CalendarWeekView({
                       let endMin = pendingPreview.end.getHours() * 60 + pendingPreview.end.getMinutes();
                       if (endMin <= startMin) endMin = 1440;
                       const durationMin = Math.max(15, endMin - startMin);
+                      if (startMin + durationMin <= hours.startMinutes || startMin >= hours.endMinutes) return null;
+                      const clip = clipToDisplayHours(startMin, startMin + durationMin, hours);
                       const cal = calendars.find(c => c.id === pendingPreview.calendarId);
                       const color = cal?.color || "hsl(var(--primary))";
                       return (
                         <div
                           className="absolute left-1 right-1 z-10 rounded-md pointer-events-none border-2 border-dashed overflow-hidden"
                           style={{
-                            top: (startMin / 60) * HOUR_HEIGHT,
-                            height: Math.max(20, (durationMin / 60) * HOUR_HEIGHT),
+                            top: ((clip.startMinutes - hours.startMinutes) / 60) * HOUR_HEIGHT,
+                            height: Math.max(20, ((clip.endMinutes - clip.startMinutes) / 60) * HOUR_HEIGHT),
                             borderColor: color,
                             backgroundColor: `${color}10`,
                           }}

@@ -54,6 +54,12 @@ describe('native <select> option colours (#999)', () => {
     expect(body).toMatch(/(?:^|[^-])color:\s*var\(--color-popover-foreground\)/);
   });
 
+  it('pins the group labels to the popover tokens too', () => {
+    const body = ruleBody('optgroup');
+    expect(body).toMatch(/background-color:\s*var\(--color-popover\)/);
+    expect(body).toMatch(/(?:^|[^-])color:\s*var\(--color-popover-foreground\)/);
+  });
+
   it('asks the browser for a dark popup in dark mode', () => {
     expect(ruleBody('.dark select')).toMatch(/color-scheme:\s*dark/);
   });

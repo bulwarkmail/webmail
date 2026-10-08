@@ -32,6 +32,16 @@ describe('sendMethodErrors', () => {
     expect(filing).toEqual({ type: 'serverFail' });
   });
 
+  it('reports a refused message create instead of the dangling reference it causes', () => {
+    const refused = { type: 'invalidProperties', description: 'Invalid blobId', properties: ['attachments'] };
+    const { failure } = sendMethodErrors([
+      ['Email/set', { created: {}, notCreated: { 'send-1': refused } }, '0'],
+      ['error', { type: 'invalidResultReference', description: 'Invalid reference to non-existing object "send-1" from "1"' }, '1'],
+      ['error', { type: 'invalidResultReference' }, 'deliveryStatus'],
+    ]);
+    expect(failure).toEqual(refused);
+  });
+
   it('treats a submission that created nothing as not sent', () => {
     const { failure } = sendMethodErrors([
       ['EmailSubmission/set', { created: {}, notCreated: { 1: { type: 'forbiddenFrom' } } }, '1'],

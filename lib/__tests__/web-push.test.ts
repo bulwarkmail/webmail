@@ -6,6 +6,7 @@ import {
   disableWebPush,
   enableWebPush,
   listPushDevices,
+  isWebPushEnabled,
   resetWebPushResyncState,
   resyncWebPush,
   revokePushDevice,
@@ -274,6 +275,60 @@ describe('enableWebPush', () => {
 // repaired in the background on app start - nobody should have to find the
 // settings toggle to stop the spam pushes.
 describe('resyncWebPush', () => {
+  it('repairs a lost browser subscription for an account that previously opted in', async () => {
+    localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
+    localStorage.setItem(SUB_KEY, 'push-old');
+    const { registration } = installPushBrowser();
+    registration.pushManager.getSubscription.mockResolvedValue(null as never);
+    const client = makeClient([sub('push-old', THIS_DEVICE)]);
+    const calls = installFetch({});
+
+    expect(await isWebPushEnabled(ACCOUNT_ID)).toBe(false);
+    expect(await resyncWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false })).toBe(true);
+    expect(registration.pushManager.subscribe).toHaveBeenCalledTimes(1);
+    expect(calls).toContainEqual({ url: `${RELAY}/api/push/register/web`, method: 'POST' });
+  });
+
+  it.each(['default', 'denied'])('does not resubscribe or prompt with %s permission', async (permission) => {
+    localStorage.setItem(SUB_KEY, 'push-old');
+    const { registration } = installPushBrowser();
+    vi.stubGlobal('Notification', { permission, requestPermission: vi.fn() });
+    const client = makeClient([sub('push-old', THIS_DEVICE)]);
+    expect(await resyncWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false })).toBe(false);
+    expect(registration.pushManager.subscribe).not.toHaveBeenCalled();
+    expect(Notification.requestPermission).not.toHaveBeenCalled();
+  });
+
+  it('allows retry after a transient relay failure', async () => {
+    localStorage.setItem(SUB_KEY, 'push-old');
+    localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
+    const client = makeClient([sub('push-old', THIS_DEVICE)]);
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline')));
+    expect(await resyncWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false })).toBe(false);
+    installFetch({});
+    // Not on the very next tab focus...
+    expect(await resyncWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false })).toBe(false);
+    // ...but a quarter of an hour later.
+    const later = Date.now() + 16 * 60_000;
+    vi.spyOn(Date, 'now').mockReturnValue(later);
+    try {
+      expect(await resyncWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false })).toBe(true);
+    } finally {
+      vi.mocked(Date.now).mockRestore();
+    }
+  });
+
+  it('keeps the opt-in when recreating the subscription fails', async () => {
+    localStorage.setItem(SUB_KEY, 'push-old');
+    localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
+    // The server lost the old subscription, and creating a new one fails.
+    const client = makeClient([]);
+    vi.mocked(client.createPushSubscription).mockRejectedValue(new Error('server down'));
+    installFetch({});
+    expect(await resyncWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false })).toBe(false);
+    expect(localStorage.getItem(SUB_KEY)).toBe('push-old');
+  });
+
   it('re-syncs an enabled registration and installs the missing filter', async () => {
     localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
     localStorage.setItem(SUB_KEY, 'push-old');

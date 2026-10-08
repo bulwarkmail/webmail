@@ -24,7 +24,8 @@
       "generic": "Došlo k neočekávané chybě. Pokud problém přetrvává, kontaktujte správce.",
       "totp_required": "Je vyžadován kód dvoufázového ověření. Zadejte kód níže.",
       "totp_invalid": "Neplatný ověřovací kód. Zkontrolujte svou ověřovací aplikaci a zkuste to znovu.",
-      "oauth_discovery_failed": "SSO je povoleno, ale nelze se připojit k poskytovateli identity. Zkontrolujte konfiguraci OAuth."
+      "oauth_discovery_failed": "SSO je povoleno, ale nelze se připojit k poskytovateli identity. Zkontrolujte konfiguraci OAuth.",
+      "token_exchange_failed": "Heslo a kód byly přijaty, ale poštovní server odmítl pro tuto aplikaci zahájit relaci. Požádejte správce o kontrolu nastavení klienta OAuth."
     },
     "show_password": "Zobrazit heslo",
     "hide_password": "Skrýt heslo",
@@ -149,8 +150,8 @@
     "unified_all_unread": "Vše nepřečtené",
     "unified_all_starred": "Vše s hvězdičkou",
     "unified_all_mail": "Veškerá pošta",
-    "remove_account": "Remove account",
-    "remove_account_confirm": "Remove {account} from this device? You can add it back later."
+    "remove_account": "Odebrat účet",
+    "remove_account_confirm": "Odebrat účet {account} z tohoto zařízení? Později ho můžete znovu přidat."
   },
   "protocol_handlers": {
     "title": "Výchozí aplikace",
@@ -304,7 +305,7 @@
     "forward": "Přeposlat",
     "delete": "Odstranit",
     "archive": "Archivovat",
-    "archive_mailbox_not_found": "Archive mailbox not found - cannot archive email",
+    "archive_mailbox_not_found": "Složka Archiv nebyla nalezena – e-mail nelze archivovat",
     "star": "Označit hvězdičkou",
     "unstar": "Odebrat hvězdičku",
     "mark_unread": "Označit jako nepřečtené",
@@ -344,6 +345,15 @@
     "external_content_warning": "Obrázky a externí obsah byly zablokovány",
     "load_external_content": "Načíst obrázky",
     "trust_sender": "Vždy důvěřovat tomuto odesílateli",
+    "sender_check": {
+      "unverified_label": "Neověřený odesílatel",
+      "failed_label": "Kontrola odesílatele selhala",
+      "unverified": "Tato zpráva tvrdí, že pochází z domény {domain}, ale nic to nepotvrzuje. Nemá platný podpis domény {domain} a nepřišla ze serveru, který doména {domain} povoluje.",
+      "unverified_sent_from": "Tato zpráva tvrdí, že pochází z domény {domain}, ale byla odeslána z domény {host} a nemá platný podpis domény {domain}.",
+      "failed": "Tato zpráva tvrdí, že pochází z domény {domain}, ale neprošla kontrolami odesílatele této domény. Může být podvržená.",
+      "failed_sent_from": "Tato zpráva tvrdí, že pochází z domény {domain}, ale byla odeslána z domény {host} a neprošla kontrolami odesílatele domény {domain}. Může být podvržená.",
+      "caution": "Buďte opatrní u odkazů, příloh a žádostí o hesla nebo platební údaje."
+    },
     "back_to_list": "Zpět na seznam",
     "view_contact": "Zobrazit kontakt",
     "message_details": "Podrobnosti zprávy",
@@ -539,7 +549,7 @@
       "recipients_routing": "Příjemci a směrování",
       "authentication_security": "Ověřování a zabezpečení",
       "identifiers_threading": "Identifikátory a vlákna",
-      "mailing_list": "Mailing list",
+      "mailing_list": "Diskusní skupina",
       "message_properties": "Vlastnosti zprávy",
       "sent": "Odesláno",
       "received": "Přijato",
@@ -621,8 +631,14 @@
     "send": "Odeslat",
     "cancel": "Zrušit",
     "attach": "Připojit",
-    "attach_photos": "Photos & Videos",
-    "attach_files": "Files",
+    "attach_photos": "Fotky a videa",
+    "attach_files": "Soubory",
+    "attach_from_files": "Připojit ze Souborů",
+    "files_picker": {
+      "attach": "{count, plural, =0 {Připojit} one {Připojit 1 soubor} few {Připojit # soubory} other {Připojit # souborů}}",
+      "empty_folder": "Tato složka je prázdná",
+      "load_failed": "Vaše soubory se nepodařilo načíst"
+    },
     "discard": "Zahodit",
     "discard_draft_title": "Zahodit koncept?",
     "discard_draft_confirm": "Máte neuložené změny. Chcete tento koncept zahodit?",
@@ -819,6 +835,8 @@
     "emails_moved": "{count} zpráv bylo přesunuto",
     "moved_to_mailbox": "Přesunuto do složky {mailbox}",
     "move_failed": "Přesun selhal",
+    "emails_copied": "{count} zpráv bylo zkopírováno",
+    "copy_failed": "Kopírování selhalo",
     "move_error": "Zprávu nelze přesunout do vybrané složky",
     "email_tagged": "Zpráva byla označena štítkem",
     "emails_tagged": "{count} zpráv bylo označeno štítkem",
@@ -832,8 +850,8 @@
     "identity_delete_failed": "Odstranění identity selhalo: {error}",
     "identity_unauthorized": "Nemáte oprávnění odesílat z této e-mailové adresy",
     "identity_not_found": "Identita nenalezena",
-    "vacation_saved": "Nastavení automatické odpovědi bylo uloženo",
-    "vacation_save_failed": "Uložení nastavení automatické odpovědi selhalo",
+    "vacation_saved": "Nastavení nepřítomnosti bylo uloženo",
+    "vacation_save_failed": "Uložení nastavení nepřítomnosti selhalo",
     "filters_saved": "Filtry úspěšně uloženy",
     "filters_save_failed": "Uložení filtrů selhalo",
     "filters_deleted": "Pravidlo filtru bylo odstraněno",
@@ -855,7 +873,8 @@
     "rule_undone": "Změna pravidla vrácena",
     "rule_undo_failed": "Změnu pravidla se nepodařilo vrátit",
     "rule_undo_conflict": "Vaše filtry se mezitím změnily. Vraťte změnu v nastavení filtrů.",
-    "rule_folder_failed": "Složku se nepodařilo vytvořit"
+    "rule_folder_failed": "Složku se nepodařilo vytvořit",
+    "vacation_filters_save_failed": "Nastavení nepřítomnosti bylo uloženo, ale přeposílání a příjemce odpovědi se uložit nepodařilo"
   },
   "date": {
     "today": "Dnes",
@@ -940,7 +959,7 @@
       "privacy": "Soukromí a bezpečnost",
       "account": "Účet",
       "identities": "Identity",
-      "vacation": "Automatická odpověď",
+      "vacation": "Nepřítomnost",
       "advanced": "Pokročilé",
       "calendar": "Kalendář",
       "filters": "Filtry",
@@ -1091,8 +1110,8 @@
         "label": "Sjednocená schránka",
         "description": "Zobrazovat sloučené složky (Doručené, Odeslané atd.) ze všech připojených účtů",
         "cross_account": {
-          "label": "Across all accounts",
-          "description": "Merge the unified mailbox across every connected account instead of staying within the active account."
+          "label": "Napříč všemi účty",
+          "description": "Sloučit sjednocenou schránku napříč všemi připojenými účty místo omezení na aktivní účet."
         },
         "include_group": {
           "label": "Zahrnout skupinové schránky",
@@ -1102,20 +1121,20 @@
       "all_mail": {
         "folders_label": "Folders in All Mail",
         "folders_description": "Choose which folders are merged into the All Mail view.",
-        "account_hint": "Applies to {account}.",
-        "no_folders": "No folders available."
+        "account_hint": "Platí pro účet {account}.",
+        "no_folders": "Nejsou k dispozici žádné složky."
       },
       "colorful_sidebar_icons": {
         "label": "Barevné ikony postranního panelu",
         "description": "Obarví ikony složek a štítků podle typu (modré Doručené, červený Spam, zelené Odeslané atd.). Vypněte pro jednobarevný postranní panel."
       },
       "tint_list_rows": {
-        "label": "Tint List Rows by Tag Color",
-        "description": "Shade each message row with its first tag color. Disable to keep rows plain; tag dots and chips still show the color."
+        "label": "Podbarvit řádky barvou štítku",
+        "description": "Podbarvit každý řádek zprávy barvou jejího prvního štítku. Po vypnutí zůstanou řádky bílé; tečky a chipy štítků barvu dál zobrazují."
       },
       "tint_list_rows_by_account": {
-        "label": "Tint List Rows by Account Color",
-        "description": "In the unified view, shade each row with its account color instead of showing the account dot. Takes precedence over the tag tint; tags keep their color on their chips."
+        "label": "Podbarvit řádky barvou účtu",
+        "description": "Ve sjednoceném zobrazení podbarvit každý řádek barvou účtu místo zobrazení tečky účtu. Má přednost před podbarvením štítkem; štítky si barvu na chipech ponechají."
       },
       "show_folder_total_count": {
         "label": "Zobrazit celkový počet zpráv",
@@ -1211,8 +1230,8 @@
         "enabled_desc": "Zobrazovat oznámení při příchodu nových e-mailů",
         "sound": "Zvuk oznámení",
         "sound_desc": "Přehrát zvukové upozornění při příchodu nových e-mailů",
-        "inbox_only": "Inbox only",
-        "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
+        "inbox_only": "Jen Doručené",
+        "inbox_only_desc": "Upozorňovat jen na poštu, která přijde do Doručených; poštu, kterou filtr uloží do jiné složky, přeskočit"
       },
       "calendar": {
         "title": "Oznámení kalendáře",
@@ -1241,7 +1260,7 @@
         "status_busy": "Pracuji…",
         "status_inactive": "Není povoleno na tomto zařízení",
         "status_unsupported": "Tento prohlížeč nepodporuje Web Push",
-        "status_lite": "Web Push is not available in Bulwark Lite; it needs the Bulwark server.",
+        "status_lite": "Web Push není v Bulwark Lite k dispozici; vyžaduje server Bulwark.",
         "title": "Oznámení na pozadí",
         "devices_title": "Registrovaná zařízení",
         "devices_desc": "Všechna zařízení registrovaná pro příjem oznamení na pozadí u tohoto účtu. Odvolání okamžitě zastaví jejich příjem.",
@@ -1281,12 +1300,12 @@
         "preview_older": "Starší:"
       },
       "date_locale": {
-        "label": "Date format region",
-        "description": "How numeric dates are ordered (day, month, year)",
-        "auto": "Automatic (match language)",
-        "iso": "ISO 8601 (YYYY-MM-DD)",
-        "dmy": "Day/Month/Year",
-        "mdy": "Month/Day/Year"
+        "label": "Region formátu data",
+        "description": "Pořadí částí číselného data (den, měsíc, rok)",
+        "auto": "Automaticky (podle jazyka)",
+        "iso": "ISO 8601 (RRRR-MM-DD)",
+        "dmy": "Den/měsíc/rok",
+        "mdy": "Měsíc/den/rok"
       },
       "time_format": {
         "label": "Formát času",
@@ -1301,10 +1320,10 @@
         "monday": "Pondělí"
       },
       "time_zone": {
-        "label": "Time zone",
-        "description": "Show email and calendar times in this time zone instead of the one reported by your browser",
-        "auto": "Automatic ({zone})",
-        "preview_now": "Now:"
+        "label": "Časové pásmo",
+        "description": "Zobrazovat časy e-mailů a kalendáře v tomto časovém pásmu místo pásma hlášeného prohlížečem",
+        "auto": "Automaticky ({zone})",
+        "preview_now": "Nyní:"
       }
     },
     "email_behavior": {
@@ -1611,7 +1630,7 @@
       "username_label": "Uživatelské jméno",
       "account_type_label": "Typ účtu",
       "auth_method_label": "Ověřování",
-      "auth_method_oauth": "Single Sign-On (OAuth/OIDC)",
+      "auth_method_oauth": "Jednotné přihlášení (OAuth/OIDC)",
       "auth_method_basic": "Heslo",
       "auth_method_token": "Přístupový token",
       "demo_account": "Demo účet",
@@ -1815,28 +1834,24 @@
       }
     },
     "vacation": {
-      "title": "Automatická odpověď",
-      "description": "Během vaší nepřítomnosti bude automaticky odpovídáno na příchozí e-maily",
+      "title": "Nepřítomnost",
+      "description": "Během vaší nepřítomnosti se na příchozí e-maily bude reagovat automaticky",
       "loading": "Načítání nastavení automatické odpovědi...",
       "not_supported": "Váš poštovní server nepodporuje automatické odpovědi v nepřítomnosti.",
       "fetch_error": "Nepodařilo se načíst nastavení automatické odpovědi. Zkuste to znovu.",
       "status": {
-        "label": "Automatická odpověď",
+        "label": "Odpovídat automaticky",
         "description": "Odesílat automatickou odpověď lidem, kteří vám napíší",
         "active": "Aktivní",
         "inactive": "Neaktivní"
       },
       "date_range": {
-        "title": "Časové období",
-        "description": "Volitelně omezte automatickou odpověď na určité období",
         "start": "Datum zahájení",
         "start_description": "Nechte prázdné pro spuštění ihned",
         "end": "Datum ukončení",
         "end_description": "Nechte prázdné pro běh bez ukončení"
       },
       "message": {
-        "title": "Zpráva automatické odpovědi",
-        "description": "Zpráva, která bude odeslána jako odpověď",
         "subject_label": "Předmět",
         "subject_description": "Předmět automatické odpovědi",
         "subject_placeholder": "Mimo kancelář",
@@ -1856,10 +1871,32 @@
       "saving": "Ukládání...",
       "warnings": {
         "end_before_start": "Datum ukončení musí být po datu zahájení",
+        "invalid_date": "Zadejte platné datum zahájení a ukončení včetně času, nebo pole nechte prázdné",
         "start_in_past": "Datum zahájení je v minulosti",
         "empty_body": "Tělo zprávy je prázdné - příjemci obdrží prázdnou odpověď",
         "subject_too_long": "Předmět je pro server příliš dlouhý (nejvýše {max} bajtů).",
-        "body_too_long": "Zpráva je pro server příliš dlouhá (nejvýše {max} bajtů včetně formátování)."
+        "body_too_long": "Zpráva je pro server příliš dlouhá (nejvýše {max} bajtů včetně formátování).",
+        "forward_address": "Zadejte platnou adresu pro přeposílání",
+        "not_running": "Přeposílání nebo příjemci odpovědi jsou uloženi, ale právě nejsou aktivní. Uložením je znovu zapnete."
+      },
+      "forward": {
+        "title": "Přeposílání",
+        "description": "Přeposílá příchozí zprávy na jinou adresu, s automatickou odpovědí i bez ní, v období uvedeném výše (bez data ukončení, dokud ho nevypnete). Spam se nepřeposílá.",
+        "enabled_label": "Přeposílat zprávy",
+        "to_label": "Přeposlat na",
+        "to_placeholder": "email@example.com",
+        "keep_label": "Ponechat v Doručených",
+        "keep_description": "Jinak se zpráva pouze přepošle: nezůstane v této schránce a nepoužije se na ni žádné pravidlo filtru."
+      },
+      "audience": {
+        "label": "Odpovídat",
+        "description": "Interní odesílatelé: {domains}",
+        "all": "Všem odesílatelům",
+        "internal": "Jen interním odesílatelům",
+        "external": "Jen externím odesílatelům"
+      },
+      "auto_reply": {
+        "title": "Automatická odpověď"
       }
     },
     "folders": {
@@ -1876,14 +1913,23 @@
       "role_trash": "Koš",
       "role_junk": "Spam / Nevyžádaná pošta",
       "role_archive": "Archiv",
-      "role_scheduled": "Scheduled",
-      "role_snoozed": "Snoozed",
+      "role_scheduled": "Naplánováno",
+      "role_snoozed": "Odloženo",
       "role_none": "Žádná",
       "create_folder": "Vytvořit složku",
       "create_subfolder": "Vytvořit podsložku",
       "reorder": "Přetažením změníte pořadí",
       "reorder_error": "Nepodařilo se změnit pořadí složek",
       "move_error": "Nepodařilo se přesunout složku",
+      "select_folder": "Vybrat {name}",
+      "select_hint": "Vybrat. Shift+kliknutí vybere všechny složky až po naposledy kliknutou.",
+      "selected_count": "{count, plural, one {Vybrána # složka} few {Vybrány # složky} other {Vybráno # složek}}",
+      "move_to": "Přesunout do...",
+      "move_to_top_level": "Nejvyšší úroveň",
+      "move": "Přesunout",
+      "clear_selection": "Zrušit výběr",
+      "folders_moved": "{count, plural, one {Přesunuta # složka} few {Přesunuty # složky} other {Přesunuto # složek}}",
+      "move_partial_error": "{count, plural, one {# složku} few {# složky} other {# složek}} se nepodařilo přesunout",
       "subfolder_of": "Ve složce {name}",
       "subfolder_name": "Název podsložky",
       "new_folder_name": "Název složky",
@@ -1950,9 +1996,9 @@
         "button": "Zobrazit zkratky"
       },
       "refresh_cache": {
-        "label": "Refresh cached data",
-        "description": "Reload contacts, calendars, and folders from the server. Keeps your accounts and sessions — fixes a stale or wrong view without signing out.",
-        "button": "Refresh"
+        "label": "Obnovit data z mezipaměti",
+        "description": "Znovu načíst kontakty, kalendáře a složky ze serveru. Účty a přihlášení zůstanou zachovány – opraví zastaralé nebo chybné zobrazení bez odhlášení.",
+        "button": "Obnovit"
       },
       "reset_settings": {
         "label": "Resetovat nastavení",
@@ -1970,7 +2016,8 @@
         "button": "Importovat"
       },
       "about": {
-        "title": "Bulwark Webmail"
+        "title": "Bulwark Webmail",
+        "source_code": "Zdrojový kód"
       },
       "spam_siege": {
         "title": "Spam Siege",
@@ -2117,7 +2164,8 @@
         "subject": "Předmět",
         "header": "Vlastní hlavička",
         "size": "Velikost",
-        "body": "Tělo zprávy"
+        "body": "Tělo zprávy",
+        "all": "Všechny zprávy"
       },
       "comparators": {
         "has_any": "je přítomna",
@@ -2226,7 +2274,19 @@
       "suggest_list": "List-Id",
       "suggest_domain": "@{domain}",
       "apply_existing": "Použít i na zprávy, které už v této složce jsou",
-      "apply_existing_unsupported": "Na existující zprávy lze použít jen pravidla, která kontrolují odesílatele, příjemce, předmět nebo hlavičky a která přesouvají, kopírují, označují jako přečtené, hvězdičkou nebo štítkem."
+      "apply_existing_unsupported": "Na existující zprávy lze použít jen pravidla, která kontrolují odesílatele, příjemce, předmět nebo hlavičky a která přesouvají, kopírují, označují jako přečtené, hvězdičkou nebo štítkem.",
+      "period_title": "Časové období",
+      "period_start": "Datum zahájení",
+      "period_end": "Datum ukončení",
+      "validation_period_order": "Datum ukončení musí být po datu zahájení",
+      "period_toggle": "Aktivní jen v určitém období",
+      "period_hint": "Platí pro zprávy, které přijdou v tomto období. Prázdné pole ponechá daný konec otevřený.",
+      "validation_period_empty": "Zadejte datum zahájení nebo ukončení období",
+      "validation_period_invalid": "Zadejte pro období platné datum včetně času, nebo pole nechte prázdné",
+      "apply_existing_period": "Pravidlo s obdobím působí jen na zprávy, které v něm přijdou, a proto ho nelze použít na existující zprávy.",
+      "period_status_scheduled": "naplánováno",
+      "period_status_active": "aktivní",
+      "period_status_expired": "vypršelo"
     },
     "templates": {
       "title": "E-mailové šablony",
@@ -2355,6 +2415,7 @@
     "pin": "Připnout",
     "unpin": "Odepnout",
     "move_to": "Přesunout do...",
+    "copy_to_account": "Kopírovat do účtu...",
     "archive": "Archivovat",
     "delete": "Odstranit",
     "mark_as_spam": "Nahlásit spam",
@@ -2829,11 +2890,11 @@
       "search_members": "Hledat kontakty k přidání...",
       "no_members": "Tato skupina nemá žádné členy",
       "member_count": "{count, plural, =0 {Žádní členové} one {1 člen} few {# členové} other {# členů}}",
-      "send_email": "Send email to group",
+      "send_email": "Poslat e-mail skupině",
       "send_email_to": "To",
       "send_email_cc": "Cc",
       "send_email_bcc": "Bcc",
-      "no_member_emails": "This group has no members with an email address."
+      "no_member_emails": "Tato skupina nemá žádné členy s e-mailovou adresou."
     },
     "import": {
       "title": "Importovat kontakty",
@@ -2936,6 +2997,10 @@
       "tasks_hint": "Úkoly (k)"
     },
     "events": {
+      "hidden_before": "{count, plural, one {# dřívější událost} few {# dřívější události} many {# dřívější události} other {# dřívějších událostí}}",
+      "hidden_after": "{count, plural, one {# pozdější událost} few {# pozdější události} many {# pozdější události} other {# pozdějších událostí}}",
+      "show_all_hours": "Zobrazit všechny hodiny",
+      "show_display_hours": "Zobrazit jen {start} – {end}",
       "create": "Vytvořit událost",
       "edit": "Upravit událost",
       "delete": "Odstranit událost",
@@ -3095,6 +3160,14 @@
       "unit": "Jednotka připomenutí"
     },
     "settings": {
+      "limit_hours": "Omezit zobrazené hodiny",
+      "limit_hours_desc": "V denním a týdenním zobrazení ukazovat jen tyto hodiny. Události mimo ně jsou dostupné přes šipky nahoře a dole u každého dne.",
+      "visible_hours": "Zobrazené hodiny",
+      "visible_hours_start": "Začátek zobrazených hodin",
+      "visible_hours_end": "Konec zobrazených hodin",
+      "hide_non_working_days": "Skrýt nepracovní dny",
+      "hide_non_working_days_desc": "Vynechat z týdenního zobrazení dny, kdy nepracujete. Jejich události se dál zobrazují v měsíčním, denním a agendovém zobrazení.",
+      "working_days": "Pracovní dny",
       "title": "Nastavení kalendáře",
       "default_view": "Výchozí zobrazení",
       "week_starts_on": "Týden začíná v",
@@ -3493,10 +3566,10 @@
     "duplicate": "Duplikovat",
     "duplicate_success": "Úspěšně duplikováno",
     "duplicate_error": "Duplikování selhalo",
-    "share": "Share",
-    "shared": "Shared",
-    "shared_with_me": "Shared with me",
-    "shared_by": "Shared by {name}",
+    "share": "Sdílet",
+    "shared": "Sdíleno",
+    "shared_with_me": "Sdíleno se mnou",
+    "shared_by": "Sdílí {name}",
     "create_file_success": "Soubor byl vytvořen",
     "create_file_error": "Vytvoření souboru selhalo",
     "favorites": "Oblíbené",
@@ -3777,7 +3850,7 @@
     "account_error": "Nepodařilo se prohledat {account}",
     "recent_searches": "Nedávná hledání",
     "recurring": "Opakovaná",
-    "no_subject": "(no subject)",
+    "no_subject": "(bez předmětu)",
     "empty_hint": "Hledejte poštu, kontakty, události a soubory ve všech účtech. Zkuste from:, subject:, has:attachment, after:2026-01-01.",
     "flat_by_date": "Ploše podle data",
     "grouped": "Seskupené",
