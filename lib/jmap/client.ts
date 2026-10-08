@@ -1,3 +1,4 @@
+import { ArchiveEmailsError } from "./archive-error";
 import { generateUUID } from '@/lib/utils';
 import type { Attachment, Email, Mailbox, MailboxRights, StateChange, AccountStates, CollectionChanges, ShareNotification, BusyPeriod, CalendarParticipantIdentity, CalendarEventNotification, Thread, Identity, EmailAddress, ContactCard, AddressBook, AddressBookRights, VacationResponse, Calendar, CalendarComponentType, CalendarRights, CalendarEvent, CalendarEventFilter, CalendarTask, CreateCalendarOptions, FileNode, FileNodeFilter, FileNodeRights, Principal, PushSubscription, EmailPushConfig, DeliveryStatus, EmailSubmission, RejectedRecipient, ScheduledEmail, SendEmailResult, SharedAccount } from "./types";
 import type { SieveScript, SieveCapabilities } from "./sieve-types";
@@ -2780,11 +2781,56 @@ export class JMAPClient implements IJMAPClient {
     existingMailboxes: Mailbox[],
     accountId?: string,
   ): Promise<void> {
+    const updatedIds: string[] = [];
+    try {
+      await this.archiveEmails(emails, archiveMailboxId, mode, existingMailboxes, accountId, updatedIds);
+    } catch (error) {
+      throw new ArchiveEmailsError(
+        error instanceof Error ? error.message : 'Failed to archive emails',
+        updatedIds,
+        { cause: error },
+      );
+    }
+  }
+
+  private confirmArchivedEmails(
+    entry: JMAPResponse['methodResponses'][number] | undefined,
+    requestedIds: string[],
+    updatedIds: string[],
+  ): void {
+    const [name, result] = entry ?? [];
+    if (name === 'Email/set') {
+      updatedIds.push(...requestedIds.filter(id =>
+        Object.prototype.hasOwnProperty.call(result?.updated ?? {}, id) && !result?.notUpdated?.[id],
+      ));
+    }
+    this.assertEmailSetSucceeded({ methodResponses: entry ? [entry] : [] } as JMAPResponse, 'archive emails');
+    if (requestedIds.some(id => !updatedIds.includes(id))) {
+      throw new Error('Failed to archive emails: update was not confirmed');
+    }
+  }
+
+  private async archiveEmails(
+    emails: Array<{ id: string; receivedAt: string }>,
+    archiveMailboxId: string,
+    mode: 'single' | 'year' | 'month',
+    existingMailboxes: Mailbox[],
+    accountId: string | undefined,
+    updatedIds: string[],
+  ): Promise<void> {
     if (emails.length === 0) return;
     const targetAccountId = accountId || this.accountId;
 
     if (mode === 'single') {
-      await this.batchMoveEmails(emails.map(e => e.id), archiveMailboxId, targetAccountId);
+      for (const batch of batched(emails, this.getMaxObjectsInSet())) {
+        const response = await this.request([
+          ['Email/set', {
+            accountId: targetAccountId,
+            update: Object.fromEntries(batch.map(e => [e.id, { mailboxIds: { [archiveMailboxId]: true } }])),
+          }, '0'],
+        ]);
+        this.confirmArchivedEmails(response.methodResponses?.[0], batch.map(e => e.id), updatedIds);
+      }
       return;
     }
 
@@ -2874,7 +2920,18 @@ export class JMAPClient implements IJMAPClient {
 
       const response = await this.request(methodCalls);
 
+      let emailError: unknown;
+      try {
+        this.confirmArchivedEmails(response.methodResponses?.[withCreates ? 1 : 0], batch.map(([id]) => id), updatedIds);
+      } catch (error) {
+        emailError = error;
+      }
+
       if (withCreates) {
+        if (response.methodResponses?.[0]?.[0] === 'error') {
+          const error = response.methodResponses[0][1];
+          throw new Error(`Failed to create archive folders: ${error?.description || error?.type || 'unknown error'}`);
+        }
         const mailboxResult = response.methodResponses?.[0]?.[1];
         const notCreated = mailboxResult?.notCreated as Record<string, { type?: string; properties?: string[]; description?: string }> | undefined;
         const failures = notCreated ? Object.entries(notCreated) : [];
@@ -2892,15 +2949,7 @@ export class JMAPClient implements IJMAPClient {
             .map(([cid, mailbox]) => [`#${cid}`, mailbox.id!]),
         );
       }
-
-      const emailIdx = withCreates ? 1 : 0;
-      const emailResult = response.methodResponses?.[emailIdx]?.[1];
-      const notUpdated = emailResult?.notUpdated as Record<string, { type?: string; description?: string }> | undefined;
-      const emailFailures = notUpdated ? Object.entries(notUpdated) : [];
-      if (emailFailures.length > 0) {
-        const [id, err] = emailFailures[0];
-        throw new Error(`Failed to move ${emailFailures.length} email(s), first: ${id} – ${err.type || 'unknown'}${err.description ? ` (${err.description})` : ''}`);
-      }
+      if (emailError) throw emailError;
     }
   }
 

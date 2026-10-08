@@ -39,6 +39,71 @@ function makeClient(): IJMAPClient & { createMailbox: ReturnType<typeof vi.fn> }
 }
 
 describe('ensureArchiveMailbox', () => {
+  it('uses an existing owner Archive when top-level creation is prohibited', async () => {
+    const client = { ...makeClient(), getAccountCapability: vi.fn(() => ({ mayCreateTopLevelMailbox: false })) };
+    const refresh = vi.fn();
+
+    const archive = await ensureArchiveMailbox({
+      client, mailboxes: [ownArchive, sharedInbox, sharedArchive],
+      selectedMailboxId: sharedInbox.id, refresh,
+    });
+
+    expect(archive).toBe(sharedArchive);
+    expect(client.createMailbox).not.toHaveBeenCalled();
+    expect(refresh).not.toHaveBeenCalled();
+  });
+
+  it.each(['selected owner', 'explicit owner'] as const)('does not create a missing Archive for a prohibited %s', async scope => {
+    const client = {
+      ...makeClient(),
+      getAccountCapability: vi.fn((_capability: string, owner?: string) => ({
+        mayCreateTopLevelMailbox: owner !== 'owner-x',
+      })),
+    };
+    const refresh = vi.fn(async () => [ownArchive, sharedInbox, sharedArchive]);
+
+    await expect(ensureArchiveMailbox({
+      client, mailboxes: [ownArchive, sharedInbox],
+      selectedMailboxId: scope === 'selected owner' ? sharedInbox.id : ownInbox.id,
+      accountId: scope === 'explicit owner' ? 'owner-x' : undefined, refresh,
+    })).rejects.toBeInstanceOf(ArchiveMailboxNotFoundError);
+
+    expect(client.getAccountCapability).toHaveBeenCalledWith('urn:ietf:params:jmap:mail', 'owner-x');
+    expect(client.createMailbox).not.toHaveBeenCalled();
+    expect(refresh).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    { capability: { mayCreateTopLevelMailbox: true }, label: 'allowed creation' },
+    { capability: {}, label: 'absent flag' },
+    { capability: undefined, label: 'absent mail capability' },
+  ])('preserves Archive creation with $label', async ({ capability }) => {
+    const client = { ...makeClient(), getAccountCapability: vi.fn(() => capability) };
+    const refresh = vi.fn(async () => [ownArchive, sharedInbox, sharedArchive]);
+
+    const archive = await ensureArchiveMailbox({
+      client, mailboxes: [ownArchive, sharedInbox], selectedMailboxId: sharedInbox.id, refresh,
+    });
+
+    expect(archive).toBe(sharedArchive);
+    expect(client.getAccountCapability).toHaveBeenCalledWith('urn:ietf:params:jmap:mail', 'owner-x');
+    expect(client.createMailbox).toHaveBeenCalledWith('Archive', undefined, 'owner-x', { role: 'archive' });
+    expect(refresh).toHaveBeenCalledOnce();
+  });
+
+  it('checks the client’s primary account when the archive owner is implicit', async () => {
+    const client = { ...makeClient(), getAccountCapability: vi.fn(() => ({ mayCreateTopLevelMailbox: false })) };
+    const refresh = vi.fn(async () => [ownInbox, ownArchive]);
+
+    await expect(ensureArchiveMailbox({
+      client, mailboxes: [ownInbox], selectedMailboxId: ownInbox.id, refresh,
+    })).rejects.toBeInstanceOf(ArchiveMailboxNotFoundError);
+
+    expect(client.getAccountCapability).toHaveBeenCalledWith('urn:ietf:params:jmap:mail', undefined);
+    expect(client.createMailbox).not.toHaveBeenCalled();
+    expect(refresh).not.toHaveBeenCalled();
+  });
+
   it('returns the existing archive folder without creating one', async () => {
     const client = makeClient();
     const refresh = vi.fn();

@@ -67,6 +67,8 @@ export interface IJMAPClient {
 
   // ── Capabilities ──────────────────────────────────────────────
   getCapabilities(): Record<string, unknown>;
+  /** Account-scoped session capability data; primary account by default. */
+  getAccountCapability?(capability: string, accountId?: string): unknown;
   hasAccountCapability(capability: string, accountId?: string): boolean;
   /** FileNode naming rules the server publishes (Stalwart 0.16.6+), if any. */
   getFileNameRules?(accountId?: string): FileNameRules | null;
