@@ -946,6 +946,16 @@ export interface SubmissionSendOptions {
   requireTls?: boolean;
 }
 
+/**
+ * The moment a held (FUTURERELEASE) message is released, as a JMAP UTCDate.
+ * The message is stamped with it rather than with the moment the user clicked
+ * "schedule": sentAt becomes the Date header the recipient sees, receivedAt the
+ * time the Sent mailbox shows. Seconds precision, no fractional part.
+ */
+export function scheduledReleaseDate(delayedUntil: string): string {
+  return new Date(delayedUntil).toISOString().replace(/\.\d{3}Z$/, 'Z');
+}
+
 /** The MAIL FROM / RCPT TO parameters the options translate to. */
 export function submissionEnvelopeParameters(options: SubmissionSendOptions | undefined, holdForSeconds?: number): {
   mailFrom: Record<string, string | null>;
@@ -4054,6 +4064,15 @@ export class JMAPClient implements IJMAPClient {
       keywords: { "$seen": true, "$draft": true },
       mailboxIds: { [draftsMailbox.id]: true },
     };
+
+    if (delayedUntil) {
+      // Without this the server stamps the creation time: a mail scheduled at
+      // 23:11 for 06:45 goes out at 06:45 but reads "sent 23:11", both for the
+      // recipient (Date header) and in the sender's Sent mailbox (receivedAt).
+      const releaseAt = scheduledReleaseDate(delayedUntil);
+      emailCreate.sentAt = releaseAt;
+      emailCreate.receivedAt = releaseAt;
+    }
 
     if (options?.requestReadReceipt) {
       // RFC 8098: ask the recipient's client to return a Message Disposition
@@ -9201,6 +9220,9 @@ export class JMAPClient implements IJMAPClient {
             blobId,
             mailboxIds: { [importMailboxId]: true },
             keywords: draftMailboxId ? { '$seen': true, '$draft': true } : { '$seen': true },
+            // The Date header is baked into the raw message; at least file the
+            // Sent copy at the release time (see scheduledReleaseDate).
+            ...(delayedUntil ? { receivedAt: scheduledReleaseDate(delayedUntil) } : {}),
           },
         },
       }, '0'],
