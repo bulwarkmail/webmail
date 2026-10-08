@@ -42,6 +42,20 @@ describe('views spanning every account across an account switch', () => {
     expect(s.sendDelaySeconds).toBe(30);
   });
 
+  it('keeps them when the switch starts from the other account\'s settings', async () => {
+    useAccountStore.setState({ accounts: [{ id: 'a' }, { id: 'b' }] as never });
+    // The settings on screen are account a's; b's copy does not name the views at all.
+    window.localStorage.setItem('settings-sync-owner', 'a@example.com@mail-a.example.com');
+    serverAnswers({ sendDelaySeconds: 30 });
+
+    await useSettingsStore.getState().loadFromServer('b@example.com', 'https://mail-b.example.com');
+
+    const s = useSettingsStore.getState();
+    expect(s.enableUnifiedMailbox).toBe(true);
+    expect(s.unifiedCrossAccount).toBe(true);
+    expect(s.sendDelaySeconds).toBe(30);
+  });
+
   it('takes them from the server on a device\'s first login', async () => {
     useAccountStore.setState({ accounts: [{ id: 'a' }] as never });
     serverAnswers(STORED);

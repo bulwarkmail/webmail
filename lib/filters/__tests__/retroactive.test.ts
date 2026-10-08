@@ -144,6 +144,14 @@ describe('retroactiveSupport', () => {
     }
   });
 
+  it('never runs a rule with a period on old mail', () => {
+    for (const period of [{ activeFrom: '2026-10-05T06:00:00.000Z' }, { activeUntil: '2026-10-16T16:00:00.000Z' }]) {
+      const r = rule([{ field: 'from', comparator: 'address_is', value: 'anna@acme.com' }], [{ type: 'mark_read' }], period);
+      expect(retroactiveSupport(r)).toEqual({ ok: false, reason: 'period' });
+      expect(planRetroactive(r, [message()])).toEqual({ ids: [], steps: [] });
+    }
+  });
+
   it('refuses conditions it cannot evaluate like Sieve', () => {
     for (const condition of [
       { field: 'body', comparator: 'contains', value: 'x' },
@@ -153,6 +161,13 @@ describe('retroactiveSupport', () => {
     ] as FilterCondition[]) {
       expect(retroactiveSupport(rule([condition]))).toEqual({ ok: false, reason: 'condition' });
     }
+  });
+
+  it('never runs a rule for all messages on old mail', () => {
+    // It would act on everything in the folder, a "delete" on the whole inbox.
+    const all = rule([{ field: 'all', comparator: 'any', value: '' }], [{ type: 'mark_read' }]);
+    expect(retroactiveSupport(all)).toEqual({ ok: false, reason: 'condition' });
+    expect(planRetroactive(all, [message()])).toEqual({ ids: [], steps: [] });
   });
 
   it('refuses a folder known only by its path, and keep', () => {

@@ -43,6 +43,7 @@ import { consumePendingDeepLinkEntry, subscribePendingDeepLink } from "@/lib/dee
 import { useDeepLinkUrl } from "@/hooks/use-deep-link-url";
 import { useProInterfaceActive } from "@/components/pro/pro-interface-redirect";
 import { useLiteLinkSegments } from "@/hooks/use-lite-link-segments";
+import { useDocumentTitle } from "@/hooks/use-document-title";
 
 type View =
   | "list"
@@ -63,6 +64,8 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
   // Static Lite build: the route params are empty, read the link from the URL.
   const linkSegments = useLiteLinkSegments('contacts', routeSegments);
   const t = useTranslations("contacts");
+  const tSidebar = useTranslations("sidebar");
+  useDocumentTitle(tSidebar("contacts"));
   const contactsEnabled = usePolicyStore((s) => s.isFeatureEnabled('contactsEnabled'));
   const { client, isAuthenticated, logout, checkAuth, isLoading: authLoading } = useAuthStore();
   const { showAppsModal, inlineApp, loadedApps, handleManageApps, handleInlineApp, closeInlineApp, closeAppsModal } = useSidebarApps();

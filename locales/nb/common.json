@@ -24,7 +24,8 @@
       "generic": "Det oppstod en uventet feil. Kontakt administratoren din hvis feilen vedvarer.",
       "totp_required": "Du må skrive inn en tofaktorautentiseringskode nedenfor.",
       "totp_invalid": "Ugyldig autentiseringskode. Sjekk autentiseringsappen din og prøv igjen.",
-      "oauth_discovery_failed": "SSO er aktivert, men identitetsleverandøren kunne ikke nås. Sjekk OAuth-konfigurasjonen."
+      "oauth_discovery_failed": "SSO er aktivert, men identitetsleverandøren kunne ikke nås. Sjekk OAuth-konfigurasjonen.",
+      "token_exchange_failed": "Passordet og koden ble godtatt, men e-postserveren nektet å starte en økt for denne appen. Be administratoren din om å sjekke OAuth-klientinnstillingene."
     },
     "show_password": "Vis passord",
     "hide_password": "Skjul passord",
@@ -120,6 +121,7 @@
     "unified_archive": "Alle arkiver",
     "unified_junk": "All søppelpost",
     "all_accounts": "Alle kontoer",
+    "all_accounts_loading": "Laster inn kontoer: {loaded} av {total}",
     "unified_mailbox": "Samlet postkasse",
     "expand": "Utvid",
     "collapse": "Fold sammen",
@@ -343,6 +345,15 @@
     "external_content_warning": "Bilder og eksternt innhold er blokkert",
     "load_external_content": "Last inn bilder",
     "trust_sender": "Stol alltid på denne avsenderen",
+    "sender_check": {
+      "unverified_label": "Ubekreftet avsender",
+      "failed_label": "Avsenderkontrollen mislyktes",
+      "unverified": "Denne meldingen utgir seg for å være fra {domain}, men ingenting bekrefter det. Den har ingen gyldig signatur fra {domain} og kom ikke fra en server som {domain} har godkjent.",
+      "unverified_sent_from": "Denne meldingen utgir seg for å være fra {domain}, men den ble sendt fra {host} og har ingen gyldig signatur fra {domain}.",
+      "failed": "Denne meldingen utgir seg for å være fra {domain}, men den besto ikke domenets avsenderkontroller. Den kan være forfalsket.",
+      "failed_sent_from": "Denne meldingen utgir seg for å være fra {domain}, men den ble sendt fra {host} og besto ikke avsenderkontrollene til {domain}. Den kan være forfalsket.",
+      "caution": "Vær forsiktig med lenker, vedlegg og forespørsler om passord eller betalingsopplysninger."
+    },
     "back_to_list": "Tilbake til listen",
     "view_contact": "Se kontakt",
     "message_details": "Meldingsdetaljer",
@@ -622,6 +633,12 @@
     "attach": "Legg ved",
     "attach_photos": "Bilder og videoer",
     "attach_files": "Filer",
+    "attach_from_files": "Legg ved fra Filer",
+    "files_picker": {
+      "attach": "{count, plural, =0 {Legg ved} one {Legg ved 1 fil} other {Legg ved # filer}}",
+      "empty_folder": "Denne mappen er tom",
+      "load_failed": "Filene dine kunne ikke lastes inn"
+    },
     "discard": "Forkast",
     "discard_draft_title": "Vil du forkaste utkastet?",
     "discard_draft_confirm": "Du har ulagrede endringer. Vil du forkaste dette utkastet?",
@@ -724,6 +741,7 @@
     "recipient_name_placeholder": "Visningsnavn",
     "autocomplete_search_server": "Søk på serveren",
     "autocomplete_searching": "Søker...",
+    "mention_recipients": "Mottakere",
     "toolbar": {
       "bold": "Fet skrift",
       "italic": "Kursiv",
@@ -817,6 +835,8 @@
     "emails_moved": "{count} e-poster er flyttet",
     "moved_to_mailbox": "Flyttet til {mailbox}",
     "move_failed": "Kunne ikke flytte e-posten",
+    "emails_copied": "{count} e-poster er kopiert",
+    "copy_failed": "Kunne ikke kopiere",
     "move_error": "Kunne ikke flytte e-poster til den valgte mappen",
     "email_tagged": "E-posten er merket med en etikett",
     "emails_tagged": "{count} e-poster er merket med en etikett",
@@ -830,8 +850,8 @@
     "identity_delete_failed": "Kunne ikke slette identitet: {error}",
     "identity_unauthorized": "Du er ikke autorisert til å sende fra denne e-postadressen",
     "identity_not_found": "Finner ikke identiteten",
-    "vacation_saved": "Innstillinger for feriesvar er lagret",
-    "vacation_save_failed": "Kunne ikke lagre innstillingene for feriesvar",
+    "vacation_saved": "Fraværsinnstillinger er lagret",
+    "vacation_save_failed": "Kunne ikke lagre fraværsinnstillingene",
     "filters_saved": "Filtrene er lagret",
     "filters_save_failed": "Kunne ikke lagre filtrene",
     "filters_deleted": "Filterregelen er slettet",
@@ -853,7 +873,8 @@
     "rule_undone": "Regelendringen er angret",
     "rule_undo_failed": "Kunne ikke angre regelendringen",
     "rule_undo_conflict": "Filtrene dine er endret siden. Angre endringen i filterinnstillingene.",
-    "rule_folder_failed": "Kunne ikke opprette mappen"
+    "rule_folder_failed": "Kunne ikke opprette mappen",
+    "vacation_filters_save_failed": "Fraværsinnstillinger er lagret, men videresending og svarmottakere kunne ikke lagres"
   },
   "date": {
     "today": "I dag",
@@ -941,7 +962,7 @@
       "privacy": "Personvern og sikkerhet",
       "account": "Konto",
       "identities": "Identiteter",
-      "vacation": "Feriesvar",
+      "vacation": "Fravær",
       "advanced": "Avansert",
       "calendar": "Kalender",
       "filters": "Filtre",
@@ -1516,6 +1537,10 @@
         "label": "Advarsel om tomt emne",
         "description": "Be om bekreftelse før du sender en melding uten emne."
       },
+      "recipient_mentions": {
+        "label": "Nevn mottakere med @",
+        "description": "Når du skriver @ i meldingen, foreslås mottakerne, og fornavnet til den valgte settes inn. Enter eller Tab velger det uthevede navnet."
+      },
       "hide_inline_image_attachments": {
         "label": "Skjul innebygde bilder i vedleggslisten",
         "description": "Bilder som er innebygd i meldingsteksten, er ikke oppført som separate vedlegg"
@@ -1816,28 +1841,24 @@
       }
     },
     "vacation": {
-      "title": "Feriesvar",
-      "description": "Svar automatisk på innkommende e-poster mens du er borte",
+      "title": "Fravær",
+      "description": "Håndter innkommende e-poster automatisk mens du er borte",
       "loading": "Laster inn innstillinger for feriesvar...",
       "not_supported": "E-postserveren din støtter ikke feriesvar.",
       "fetch_error": "Kunne ikke laste inn innstillingene for feriesvar. Prøv igjen.",
       "status": {
-        "label": "Feriesvar",
+        "label": "Svar automatisk",
         "description": "Send et automatisk svar til folk som sender deg e-post",
         "active": "Aktiv",
         "inactive": "Inaktiv"
       },
       "date_range": {
-        "title": "Datoperiode",
-        "description": "Begrens om ønskelig autosvaret til en bestemt periode",
         "start": "Startdato",
         "start_description": "La feltet stå tomt hvis det ikke skal være noen startdato",
         "end": "Sluttdato",
         "end_description": "La feltet stå tomt hvis det ikke skal være noen sluttdato"
       },
       "message": {
-        "title": "Melding for automatisk svar",
-        "description": "Meldingen som sendes som svar",
         "subject_label": "Emne",
         "subject_description": "Emnelinje for autosvaret",
         "subject_placeholder": "Ikke på kontoret",
@@ -1857,10 +1878,32 @@
       "saving": "Lagrer...",
       "warnings": {
         "end_before_start": "Sluttdatoen må være etter startdatoen",
+        "invalid_date": "Angi en gyldig start- og sluttdato med klokkeslett, eller la feltet stå tomt",
         "start_in_past": "Startdatoen er i fortiden",
         "empty_body": "Meldingsteksten er tom – mottakerne får et tomt svar",
         "subject_too_long": "Emnet er for langt for serveren (maks. {max} byte).",
-        "body_too_long": "Meldingen er for lang for serveren (maks. {max} byte inkludert formatering)."
+        "body_too_long": "Meldingen er for lang for serveren (maks. {max} byte inkludert formatering).",
+        "forward_address": "Angi en gyldig adresse å videresende til",
+        "not_running": "Videresending eller svarmottakere er lagret, men er ikke aktive akkurat nå. Lagre for å slå dem på igjen."
+      },
+      "forward": {
+        "title": "Videresending",
+        "description": "Videresender innkommende meldinger til en annen adresse, med eller uten feriesvar, i perioden ovenfor (uten sluttdato, til den slås av). Søppelpost videresendes ikke.",
+        "enabled_label": "Videresend meldinger",
+        "to_label": "Videresend til",
+        "to_placeholder": "email@example.com",
+        "keep_label": "Behold i innboksen",
+        "keep_description": "Ellers blir meldingen bare videresendt: Den blir ikke liggende i denne postkassen, og ingen filterregel kjøres på den."
+      },
+      "audience": {
+        "label": "Svar til",
+        "description": "Interne avsendere: {domains}",
+        "all": "Alle avsendere",
+        "internal": "Bare interne avsendere",
+        "external": "Bare eksterne avsendere"
+      },
+      "auto_reply": {
+        "title": "Automatisk svar"
       }
     },
     "folders": {
@@ -1885,6 +1928,15 @@
       "reorder": "Dra for å endre rekkefølgen",
       "reorder_error": "Kunne ikke endre rekkefølgen på mappene",
       "move_error": "Kunne ikke flytte mappen",
+      "select_folder": "Velg {name}",
+      "select_hint": "Velg. Shift+klikk velger alle mapper frem til den siste du klikket på.",
+      "selected_count": "{count, plural, one {# mappe} other {# mapper}} valgt",
+      "move_to": "Flytt til...",
+      "move_to_top_level": "Øverste nivå",
+      "move": "Flytt",
+      "clear_selection": "Fjern valg",
+      "folders_moved": "{count, plural, one {# mappe flyttet} other {# mapper flyttet}}",
+      "move_partial_error": "{count, plural, one {# mappe} other {# mapper}} kunne ikke flyttes",
       "subfolder_of": "I {name}",
       "subfolder_name": "Navn på undermappe",
       "new_folder_name": "Mappenavn",
@@ -1971,7 +2023,34 @@
         "button": "Importer"
       },
       "about": {
-        "title": "Bulwark nettpost"
+        "title": "Bulwark nettpost",
+        "source_code": "Kildekode"
+      },
+      "spam_siege": {
+        "title": "Spam Siege",
+        "intro": "Klikk på søppelpost og phishing før de når innboksen din. Slipp ekte e-post gjennom. Mister du alle tre skjoldene, faller innboksen.",
+        "kinds": {
+          "spam": "Søppelpost",
+          "phishing": "Phishing",
+          "legit": "Ekte e-post"
+        },
+        "click_to_block": "Klikk for å blokkere",
+        "let_through": "Slipp gjennom",
+        "start": "Start",
+        "play_again": "Spill igjen",
+        "score": "Poeng",
+        "combo": "Rekkebonus",
+        "shields_left": "{count} av {total} skjold igjen",
+        "seconds": "{seconds} s",
+        "best": "Rekord: {score}",
+        "new_best": "Ny rekord",
+        "held": "Innboksen holdt stand",
+        "overrun": "Innboksen ble overkjørt",
+        "stats": {
+          "caught": "Blokkert",
+          "delivered": "Levert",
+          "mistakes": "Feil"
+        }
       }
     },
     "sidebar_apps": {
@@ -2092,7 +2171,8 @@
         "subject": "Emne",
         "header": "Egendefinert meldingshode",
         "size": "Størrelse",
-        "body": "Meldingstekst"
+        "body": "Meldingstekst",
+        "all": "Alle meldinger"
       },
       "comparators": {
         "has_any": "finnes",
@@ -2201,7 +2281,19 @@
       "suggest_list": "List-Id",
       "suggest_domain": "@{domain}",
       "apply_existing": "Bruk også på meldinger som allerede ligger i denne mappen",
-      "apply_existing_unsupported": "Bare regler som sjekker avsender, mottakere, emne eller hoder, og som flytter, kopierer, merker som lest, stjernemerker eller setter etikett, kan brukes på eksisterende meldinger."
+      "apply_existing_unsupported": "Bare regler som sjekker avsender, mottakere, emne eller hoder, og som flytter, kopierer, merker som lest, stjernemerker eller setter etikett, kan brukes på eksisterende meldinger.",
+      "period_title": "Datoperiode",
+      "period_start": "Startdato",
+      "period_end": "Sluttdato",
+      "validation_period_order": "Sluttdatoen må være etter startdatoen",
+      "period_toggle": "Bare aktiv i en periode",
+      "period_hint": "Gjelder meldinger som kommer i denne perioden. La et felt stå tomt for å holde den enden åpen.",
+      "validation_period_empty": "Angi en start- eller sluttdato for perioden",
+      "validation_period_invalid": "Angi en gyldig dato med klokkeslett for perioden, eller la feltet stå tomt",
+      "apply_existing_period": "En regel med periode virker bare på meldinger som kommer i perioden, og kan derfor ikke brukes på eksisterende meldinger.",
+      "period_status_scheduled": "planlagt",
+      "period_status_active": "aktiv",
+      "period_status_expired": "utløpt"
     },
     "templates": {
       "title": "E-postmaler",
@@ -2323,6 +2415,7 @@
     "pin": "Fest",
     "unpin": "Løsne",
     "move_to": "Flytt til...",
+    "copy_to_account": "Kopier til konto...",
     "archive": "Arkiver",
     "delete": "Slett",
     "mark_as_spam": "Rapporter som søppelpost",
@@ -2904,6 +2997,10 @@
       "tasks_hint": "Oppgaver (k)"
     },
     "events": {
+      "hidden_before": "{count, plural, one {# tidligere hendelse} other {# tidligere hendelser}}",
+      "hidden_after": "{count, plural, one {# senere hendelse} other {# senere hendelser}}",
+      "show_all_hours": "Vis alle timer",
+      "show_display_hours": "Vis bare {start} – {end}",
       "create": "Opprett hendelse",
       "edit": "Rediger hendelse",
       "delete": "Slett hendelse",
@@ -3063,6 +3160,14 @@
       "unit": "Tidsenhet"
     },
     "settings": {
+      "limit_hours": "Begrens synlige timer",
+      "limit_hours_desc": "Vis bare disse timene i dag- og ukevisningen. Hendelser utenfor dem kan fortsatt nås via pilene øverst og nederst på hver dag.",
+      "visible_hours": "Synlige timer",
+      "visible_hours_start": "Start på synlige timer",
+      "visible_hours_end": "Slutt på synlige timer",
+      "hide_non_working_days": "Skjul fridager",
+      "hide_non_working_days_desc": "Utelat dagene du ikke jobber, fra ukevisningen. Hendelsene deres vises fortsatt i måneds-, dag- og agendavisningen.",
+      "working_days": "Arbeidsdager",
       "title": "Kalenderinnstillinger",
       "default_view": "Standardvisning",
       "week_starts_on": "Uken starter på",

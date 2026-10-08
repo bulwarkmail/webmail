@@ -7,10 +7,8 @@ import {
   Pencil, RefreshCw, Home, ChevronRight, MoreVertical,
   Search, ArrowUp, ArrowDown, X, LayoutGrid, LayoutList,
   Copy, Clipboard, Scissors, Info, Image as ImageIcon,
-  FilePlus, CopyPlus, FileText, FileAudio, FileVideo,
+  FilePlus, CopyPlus,
   AlertCircle, Star, Clock, FolderUp,
-  FileArchive, FileSpreadsheet, Presentation, FileCode,
-  Box, PenTool, Terminal as TerminalIcon, Database, Type as TypeIcon,
   Menu, Users, Share2, SquarePen,
 } from "@/components/icons";
 import { useIsDesktop } from "@/hooks/use-media-query";
@@ -20,13 +18,14 @@ import { NewFolderDialog } from "@/components/files/new-folder-dialog";
 import { RenameDialog } from "@/components/files/rename-dialog";
 import { fileNameProblem } from "@/lib/file-name-rules";
 import { FileUploadArea } from "@/components/files/file-upload-area";
+import { getFileIconByName, isAudioFile, isImageFile, isPdfFile, isTextFile, isVideoFile } from "@/components/files/file-icons";
 import { loadFilesSettings } from "@/components/files/files-settings-dialog";
 import type { FolderLayout } from "@/components/files/files-settings-dialog";
 import { FolderTreeSidebar } from "@/components/files/folder-tree-sidebar";
 import { ResizeHandle } from "@/components/layout/resize-handle";
 import { Avatar } from "@/components/ui/avatar";
 import { getDroppedFilesAndFolders } from "@/lib/webdav/drop-utils";
-import type { FileResource } from "@/stores/file-store";
+import { useFileStore, type FileResource } from "@/stores/file-store";
 import { ShareCollectionDialog } from "@/components/settings/share-collection-dialog";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
 import type { FileNodeRights } from "@/lib/jmap/types";
@@ -113,130 +112,8 @@ interface FileBrowserProps {
   onShare?: (id: string, principalId: string, rights: FileNodeRights | null) => Promise<void>;
 }
 
-const IMAGE_EXTENSIONS = new Set(["jpg", "jpeg", "png", "gif", "svg", "webp", "bmp", "ico", "avif"]);
-
-function isImageFile(name: string): boolean {
-  const ext = name.split(".").pop()?.toLowerCase() || "";
-  return IMAGE_EXTENSIONS.has(ext);
-}
-
-const TEXT_EXTENSIONS = new Set([
-  "txt", "md", "markdown", "json", "xml", "html", "htm", "css", "js", "ts",
-  "jsx", "tsx", "py", "rb", "java", "c", "cpp", "h", "hpp", "go", "rs",
-  "sh", "bash", "zsh", "yaml", "yml", "toml", "ini", "cfg", "conf", "env",
-  "log", "csv", "sql", "graphql", "vue", "svelte", "astro", "php", "pl",
-  "swift", "kt", "scala", "r", "lua", "vim",
-]);
-
-function isTextFile(name: string): boolean {
-  const ext = name.split(".").pop()?.toLowerCase() || "";
-  const baseName = name.toLowerCase();
-  return TEXT_EXTENSIONS.has(ext) || ["dockerfile", "makefile", "readme", "license", "changelog"].includes(baseName);
-}
-
-const AUDIO_EXTENSIONS = new Set(["mp3", "wav", "ogg", "flac", "aac", "m4a", "wma", "opus"]);
-function isAudioFile(name: string): boolean {
-  const ext = name.split(".").pop()?.toLowerCase() || "";
-  return AUDIO_EXTENSIONS.has(ext);
-}
-
-const VIDEO_EXTENSIONS = new Set(["mp4", "webm", "ogv", "mov", "avi", "mkv", "m4v"]);
-function isVideoFile(name: string): boolean {
-  const ext = name.split(".").pop()?.toLowerCase() || "";
-  return VIDEO_EXTENSIONS.has(ext);
-}
-
-const PDF_EXTENSIONS = new Set(["pdf"]);
-function isPdfFile(name: string): boolean {
-  const ext = name.split(".").pop()?.toLowerCase() || "";
-  return PDF_EXTENSIONS.has(ext);
-}
-
-const VECTOR_EXTENSIONS = new Set(["svg", "ai", "eps", "ps", "sketch", "fig", "xd", "gvdesign"]);
-function isVectorFile(name: string): boolean {
-  const ext = name.split(".").pop()?.toLowerCase() || "";
-  return VECTOR_EXTENSIONS.has(ext);
-}
-
-const THREE_D_EXTENSIONS = new Set([
-  "obj", "fbx", "gltf", "glb", "stl", "3mf", "step", "stp", "iges", "igs",
-  "blend", "3ds", "dae", "usdz", "usd", "usda", "usdc", "ply", "wrl",
-  "c4d", "max", "ma", "mb", "dwg", "dxf",
-]);
-function is3DFile(name: string): boolean {
-  const ext = name.split(".").pop()?.toLowerCase() || "";
-  return THREE_D_EXTENSIONS.has(ext);
-}
-
-const EXECUTABLE_EXTENSIONS = new Set([
-  "exe", "msi", "dmg", "app", "appimage", "deb", "rpm", "snap", "flatpak",
-  "bat", "cmd", "com", "scr", "ps1", "apk", "ipa", "jar", "run",
-]);
-function isExecutableFile(name: string): boolean {
-  const ext = name.split(".").pop()?.toLowerCase() || "";
-  return EXECUTABLE_EXTENSIONS.has(ext);
-}
-
-const ARCHIVE_EXTENSIONS = new Set([
-  "zip", "rar", "7z", "tar", "gz", "bz2", "xz", "zst", "lz", "lzma",
-  "tgz", "tbz2", "txz", "cab", "iso", "img",
-]);
-function isArchiveFile(name: string): boolean {
-  const ext = name.split(".").pop()?.toLowerCase() || "";
-  return ARCHIVE_EXTENSIONS.has(ext);
-}
-
-const SPREADSHEET_EXTENSIONS = new Set(["xls", "xlsx", "ods", "numbers", "tsv"]);
-function isSpreadsheetFile(name: string): boolean {
-  const ext = name.split(".").pop()?.toLowerCase() || "";
-  return SPREADSHEET_EXTENSIONS.has(ext);
-}
-
-const PRESENTATION_EXTENSIONS = new Set(["ppt", "pptx", "odp", "key"]);
-function isPresentationFile(name: string): boolean {
-  const ext = name.split(".").pop()?.toLowerCase() || "";
-  return PRESENTATION_EXTENSIONS.has(ext);
-}
-
-const WORD_DOCUMENT_EXTENSIONS = new Set(["doc", "docx", "odt", "rtf"]);
-function isWordDocumentFile(name: string): boolean {
-  const ext = name.split(".").pop()?.toLowerCase() || "";
-  return WORD_DOCUMENT_EXTENSIONS.has(ext);
-}
-
-const FONT_EXTENSIONS = new Set(["ttf", "otf", "woff", "woff2", "eot"]);
-function isFontFile(name: string): boolean {
-  const ext = name.split(".").pop()?.toLowerCase() || "";
-  return FONT_EXTENSIONS.has(ext);
-}
-
-const DATABASE_EXTENSIONS = new Set(["db", "sqlite", "sqlite3", "mdb", "accdb"]);
-function isDatabaseFile(name: string): boolean {
-  const ext = name.split(".").pop()?.toLowerCase() || "";
-  return DATABASE_EXTENSIONS.has(ext);
-}
-
 function isPreviewable(name: string): boolean {
   return isImageFile(name) || isTextFile(name) || isPdfFile(name) || isAudioFile(name) || isVideoFile(name);
-}
-
-function getFileIconByName(name: string, size: "sm" | "lg") {
-  const cls = size === "sm" ? "w-5 h-5" : "w-10 h-10";
-  if (isVectorFile(name)) return <PenTool className={`${cls} text-orange-500`} />;
-  if (is3DFile(name)) return <Box className={`${cls} text-cyan-500`} />;
-  if (isImageFile(name)) return <ImageIcon className={`${cls} text-emerald-500`} />;
-  if (isAudioFile(name)) return <FileAudio className={`${cls} text-purple-500`} />;
-  if (isVideoFile(name)) return <FileVideo className={`${cls} text-pink-500`} />;
-  if (isArchiveFile(name)) return <FileArchive className={`${cls} text-amber-600`} />;
-  if (isExecutableFile(name)) return <TerminalIcon className={`${cls} text-red-500`} />;
-  if (isSpreadsheetFile(name)) return <FileSpreadsheet className={`${cls} text-green-600`} />;
-  if (isPresentationFile(name)) return <Presentation className={`${cls} text-orange-600`} />;
-  if (isWordDocumentFile(name)) return <FileText className={`${cls} text-blue-600`} />;
-  if (isFontFile(name)) return <TypeIcon className={`${cls} text-indigo-500`} />;
-  if (isDatabaseFile(name)) return <Database className={`${cls} text-slate-500`} />;
-  if (isPdfFile(name)) return <FileText className={`${cls} text-red-600`} />;
-  if (isTextFile(name)) return <FileCode className={`${cls} text-yellow-600`} />;
-  return <File className={`${cls} text-muted-foreground`} />;
 }
 
 function getFileIcon(resource: FileResource) {
@@ -413,13 +290,38 @@ export function FileBrowser({
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   // The share dialog is bound to a node id (not name) so its shareWith stays
   // live after a share refresh re-derives the resource list.
-  const shareTarget = shareTargetId ? resources.find(r => r.id === shareTargetId) ?? null : null;
+  // A folder shared from the tree (sidebar layout) is usually not among the
+  // listed resources, so the dialog keeps its own copy and re-reads it after
+  // each change.
+  const [treeShareTarget, setTreeShareTarget] = useState<FileResource | null>(null);
+  const shareTarget = shareTargetId
+    ? resources.find(r => r.id === shareTargetId)
+      ?? (treeShareTarget?.id === shareTargetId ? treeShareTarget : null)
+    : null;
   // A node is shareable when the server supports JMAP Sharing, the viewer owns
   // it (not a shared-with-me node), and holds the mayShare right (owned nodes
   // report full rights; treat missing myRights as allowed).
   const canShare = useCallback((r: FileResource | null | undefined): boolean =>
     !!(sharingEnabled && onShare && client && r && !r.isShared && (r.myRights?.mayShare ?? true)),
     [sharingEnabled, onShare, client]);
+  const reloadTreeShareTarget = useCallback(async (target: FileResource) => {
+    const siblings = await listByParentId(target.parentId ?? null);
+    setTreeShareTarget(siblings.find(r => r.id === target.id) ?? target);
+  }, [listByParentId]);
+  const handleTreeShare = useCallback((target: FileResource) => {
+    setTreeShareTarget(target);
+    setShareTargetId(target.id);
+    // The tree caches its listing; fetch the current shares before editing.
+    void reloadTreeShareTarget(target);
+  }, [reloadTreeShareTarget]);
+  // Folders other principals shared with the user. The sidebar layout lists
+  // them in the folder tree; the inline layout lists them at the root (#1181).
+  const storeClient = useFileStore(s => s.client);
+  const sharedRoots = useFileStore(s => s.sharedRoots);
+  const loadSharedRoots = useFileStore(s => s.loadSharedRoots);
+  useEffect(() => {
+    if (storeClient) void loadSharedRoots();
+  }, [storeClient, loadSharedRoots]);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; name: string } | null>(null);
   const [emptyContextMenu, setEmptyContextMenu] = useState<{ x: number; y: number } | null>(null);
   const [showNewTextFile, setShowNewTextFile] = useState(false);
@@ -542,6 +444,13 @@ export function FileBrowser({
     });
     return sorted;
   }, [resources, searchQuery, sortKey, sortDir, folderLayout]);
+
+  const sharedFolders = useMemo(() => {
+    if (folderLayout !== "inline" || currentPath !== "/" || accountPickerMode) return [];
+    const q = searchQuery.toLowerCase();
+    return sharedRoots.filter(r => r.isDirectory && (!q || r.name.toLowerCase().includes(q)));
+  }, [folderLayout, currentPath, accountPickerMode, sharedRoots, searchQuery]);
+  const openSharedFolder = (resource: FileResource) => onNavigate(`/${resource.name}`, resource.id);
 
   // Build breadcrumb segments. In Pro mode an account is mounted "between"
   // Home and the account's filesystem - surfaced as a non-clickable label
@@ -1265,6 +1174,8 @@ export function FileBrowser({
                 onNavigate={onNavigate}
                 listByParentId={listByParentId}
                 width={288}
+                canShare={canShare}
+                onShare={handleTreeShare}
               />
             </div>
           ) : (
@@ -1275,6 +1186,8 @@ export function FileBrowser({
                 listByParentId={listByParentId}
                 width={sidebarWidth}
                 isResizing={isResizing}
+                canShare={canShare}
+                onShare={handleTreeShare}
               />
               <ResizeHandle
                 onResizeStart={() => { dragStartWidth.current = sidebarWidth; setIsResizing(true); }}
@@ -1400,7 +1313,7 @@ export function FileBrowser({
           <div className="flex items-center justify-center h-full">
             <p className="text-sm text-muted-foreground">{t("no_accounts")}</p>
           </div>
-        ) : resources.length === 0 && !searchQuery && currentPath === '/' ? (
+        ) : resources.length === 0 && sharedFolders.length === 0 && !searchQuery && currentPath === '/' ? (
           <FileUploadArea
             onUpload={async (files: File[]) => {
               setIsUploading(true);
@@ -1452,9 +1365,9 @@ export function FileBrowser({
                 <span className="text-xs text-muted-foreground truncate w-full text-center">..</span>
               </div>
             )}
-            {displayResources.length === 0 && searchQuery ? (
+            {displayResources.length === 0 && sharedFolders.length === 0 && searchQuery ? (
               <p className="px-4 py-8 text-center text-muted-foreground text-sm">{t("no_results")}</p>
-            ) : (
+            ) : displayResources.length === 0 ? null : (
               <div
                 className="grid grid-cols-[repeat(auto-fill,minmax(7rem,1fr))] gap-2"
                 onContextMenu={(e) => {
@@ -1522,6 +1435,31 @@ export function FileBrowser({
                   </div>
                 ))}
               </div>
+            )}
+            {sharedFolders.length > 0 && (
+              <section aria-label={t("shared_with_me")} className={cn(displayResources.length > 0 && "mt-4")}>
+                <h4 className="px-1 mb-2 text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                  <Share2 className="w-3 h-3" />
+                  {t("shared_with_me")}
+                </h4>
+                <div className="grid grid-cols-[repeat(auto-fill,minmax(7rem,1fr))] gap-2">
+                  {sharedFolders.map((resource) => (
+                    <button
+                      key={resource.id}
+                      type="button"
+                      onClick={() => openSharedFolder(resource)}
+                      title={resource.ownerName ? t("shared_by", { name: resource.ownerName }) : resource.name}
+                      className="flex flex-col items-center gap-2 p-3 rounded-lg cursor-pointer transition-colors hover:bg-muted/50"
+                    >
+                      {getGridIcon(resource)}
+                      <span className="text-xs truncate w-full text-center flex items-center justify-center gap-1">
+                        <span className="truncate">{resource.name}</span>
+                        <ShareBadge resource={resource} t={t} />
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </section>
             )}
           </div>
         ) : (
@@ -1605,7 +1543,7 @@ export function FileBrowser({
                   <td />
                 </tr>
               )}
-              {displayResources.length === 0 && searchQuery ? (
+              {displayResources.length === 0 && sharedFolders.length === 0 && searchQuery ? (
                 <tr>
                   <td colSpan={4} className="px-4 py-8 text-center text-muted-foreground text-sm">
                     {t("no_results")}
@@ -1686,6 +1624,44 @@ export function FileBrowser({
                       <MoreVertical className="w-4 h-4" />
                     </button>
                   </td>
+                </tr>
+              ))}
+              {sharedFolders.length > 0 && (
+                <tr className="border-b border-border bg-muted/30">
+                  <th colSpan={4} scope="rowgroup" className="px-4 py-1.5 text-start text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    <span className="flex items-center gap-1.5">
+                      <Share2 className="w-3 h-3" />
+                      {t("shared_with_me")}
+                    </span>
+                  </th>
+                </tr>
+              )}
+              {sharedFolders.map((resource) => (
+                <tr
+                  key={resource.id}
+                  className="border-b border-border cursor-pointer transition-colors hover:bg-muted/50"
+                  onClick={() => openSharedFolder(resource)}
+                  title={resource.ownerName ? t("shared_by", { name: resource.ownerName }) : undefined}
+                >
+                  <td className="px-4 py-2.5">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-4 h-4 shrink-0" />
+                      {getFileIcon(resource)}
+                      <button
+                        type="button"
+                        className="truncate text-start"
+                        onClick={(e) => { e.stopPropagation(); openSharedFolder(resource); }}
+                      >
+                        {resource.name}
+                      </button>
+                      <ShareBadge resource={resource} t={t} />
+                    </div>
+                  </td>
+                  <td className="px-4 py-2.5 text-muted-foreground hidden md:table-cell">-</td>
+                  <td className="px-4 py-2.5 text-muted-foreground hidden lg:table-cell tabular-nums">
+                    {formatDate(resource.lastModified)}
+                  </td>
+                  <td className="px-2 py-2.5" />
                 </tr>
               ))}
             </tbody>
@@ -2050,9 +2026,11 @@ export function FileBrowser({
           collectionName={shareTarget.name}
           shareWith={shareTarget.shareWith}
           ownAccountId={ownAccountId || ""}
-          onShare={(principalId, rights) =>
-            onShare(shareTarget.id, principalId, rights as FileNodeRights | null)}
-          onClose={() => setShareTargetId(null)}
+          onShare={async (principalId, rights) => {
+            await onShare(shareTarget.id, principalId, rights as FileNodeRights | null);
+            if (treeShareTarget?.id === shareTarget.id) await reloadTreeShareTarget(shareTarget);
+          }}
+          onClose={() => { setShareTargetId(null); setTreeShareTarget(null); }}
         />
       )}
     </div>

@@ -137,8 +137,11 @@ export interface IJMAPClient {
   getMailboxChanges?(sinceState: string, accountId?: string, maxChanges?: number): Promise<CollectionChanges | null>;
   /** Email/changes since `sinceState`; null when the server cannot compute the delta. */
   getEmailChanges?(sinceState: string, accountId?: string, maxChanges?: number): Promise<CollectionChanges | null>;
-  createMailbox(name: string, parentId?: string, accountId?: string): Promise<Mailbox>;
+  createMailbox(name: string, parentId?: string, accountId?: string, options?: { role?: string }): Promise<Mailbox>;
   updateMailbox(mailboxId: string, changes: { name?: string; parentId?: string | null; role?: string | null; sortOrder?: number }, accountId?: string): Promise<void>;
+  // Many folder updates in as few Mailbox/set calls as the server allows.
+  // Refused folders don't stop the rest: returns their ids with the SetError type.
+  updateMailboxes(updates: Record<string, { name?: string; parentId?: string | null; role?: string | null; sortOrder?: number }>, accountId?: string): Promise<Record<string, string>>;
   // `removeEmails` destroys the folder's messages too (onDestroyRemoveEmails,
   // RFC 8621 §2.5) instead of failing with mailboxHasEmail.
   deleteMailbox(mailboxId: string, accountId?: string, options?: { removeEmails?: boolean }): Promise<void>;
@@ -194,9 +197,10 @@ export interface IJMAPClient {
    * Total / unread message counts per tag id. `accountId` scopes the count to
    * a group/shared account reached through this client (defaults to the
    * client's own account); the store sums it over every account a tag view
-   * spans (#1038).
+   * spans (#1038). A message filed only in `excludeMailboxIds` (the account's
+   * Trash and Junk, which the tag view leaves out, #1156) is not counted.
    */
-  getTagCounts(tagIds: string[], accountId?: string): Promise<Record<string, { total: number; unread: number }>>;
+  getTagCounts(tagIds: string[], accountId?: string, excludeMailboxIds?: string[]): Promise<Record<string, { total: number; unread: number }>>;
   /**
    * Enumerate account keywords for extensions. Servers supporting Keyword/get
    * can return exact counts and provider-label metadata; other servers use the
@@ -514,14 +518,20 @@ export interface IJMAPClient {
   copyFileNode(id: string, newName: string, parentId: string | null): Promise<FileNode>;
 
   // ── S/MIME raw-email helpers ──────────────────────────────────
-  importRawEmail(blob: Blob, mailboxIds: Record<string, boolean>, keywords?: Record<string, boolean>, accountId?: string): Promise<string>;
+  /**
+   * Upload a raw message and import it (Email/import). `receivedAt` keeps the
+   * original date when a message is carried over from another account;
+   * without it the server stamps the import time.
+   */
+  importRawEmail(blob: Blob, mailboxIds: Record<string, boolean>, keywords?: Record<string, boolean>, accountId?: string, receivedAt?: string): Promise<string>;
   submitEmail(emailId: string, identityId: string): Promise<void>;
   /**
    * Server-side move of one email across accounts reachable through THIS client
    * (JMAP `Email/copy` + destroy-original). Used for delegated/shared folders,
    * where the two accounts share a client but a client can't stage a blob in a
    * delegated account (so the blob copy+import path doesn't work). Returns the
-   * new email id in the destination account.
+   * new email id in the destination account. `keepOriginal` makes it a plain
+   * copy: the source message is left where it is.
    */
-  copyEmailAcrossAccounts(emailId: string, fromAccountId: string, toAccountId: string, destMailboxId: string): Promise<string>;
+  copyEmailAcrossAccounts(emailId: string, fromAccountId: string, toAccountId: string, destMailboxId: string, options?: { keepOriginal?: boolean }): Promise<string>;
 }

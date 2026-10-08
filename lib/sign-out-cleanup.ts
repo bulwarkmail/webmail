@@ -8,7 +8,8 @@ import { fileStorage } from '@/lib/plugin-storage';
  * Kept on purpose: device preferences (`settings-storage`, `theme-storage`,
  * `locale-storage`, the Files view settings) and `template-storage`. With
  * settings sync off they exist only here, so deleting them would destroy
- * the user's own work rather than a cache.
+ * the user's own work rather than a cache. With sync on, the settings store
+ * resets settings and templates itself (forgetSyncedSettings).
  */
 const SIGNED_OUT_STORAGE_KEYS = [
   'email-snapshot',

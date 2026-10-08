@@ -24,7 +24,8 @@
       "generic": "Une erreur s'est produite. Veuillez réessayer.",
       "totp_required": "Un code d'authentification à deux facteurs est requis. Veuillez saisir votre code ci-dessous.",
       "totp_invalid": "Code d'authentification invalide. Vérifiez votre application d'authentification.",
-      "oauth_discovery_failed": "Le SSO est activé mais le fournisseur d'identité est injoignable. Vérifiez votre configuration OAuth."
+      "oauth_discovery_failed": "Le SSO est activé mais le fournisseur d'identité est injoignable. Vérifiez votre configuration OAuth.",
+      "token_exchange_failed": "Votre mot de passe et votre code ont été acceptés, mais le serveur de messagerie a refusé d'ouvrir une session pour cette application. Demandez à votre administrateur de vérifier les paramètres de son client OAuth."
     },
     "show_password": "Afficher le mot de passe",
     "hide_password": "Masquer le mot de passe",
@@ -120,6 +121,7 @@
     "unified_archive": "Toutes les archives",
     "unified_junk": "Tous les indésirables",
     "all_accounts": "Tous les comptes",
+    "all_accounts_loading": "Chargement des comptes : {loaded} sur {total}",
     "unified_mailbox": "Boîte aux lettres unifiée",
     "expand": "Développer",
     "collapse": "Réduire",
@@ -343,6 +345,15 @@
     "external_content_warning": "Les images et le contenu externe ont été bloqués",
     "load_external_content": "Charger les images",
     "trust_sender": "Toujours faire confiance à cet expéditeur",
+    "sender_check": {
+      "unverified_label": "Expéditeur non vérifié",
+      "failed_label": "Échec de la vérification de l'expéditeur",
+      "unverified": "Ce message prétend venir de {domain}, mais rien ne le confirme. Il ne porte aucune signature valide de {domain} et ne provient pas d'un serveur autorisé par {domain}.",
+      "unverified_sent_from": "Ce message prétend venir de {domain}, mais il a été envoyé depuis {host} et ne porte aucune signature valide de {domain}.",
+      "failed": "Ce message prétend venir de {domain}, mais il a échoué aux vérifications d'expéditeur de ce domaine. Il est peut-être falsifié.",
+      "failed_sent_from": "Ce message prétend venir de {domain}, mais il a été envoyé depuis {host} et a échoué aux vérifications d'expéditeur de {domain}. Il est peut-être falsifié.",
+      "caution": "Méfiez-vous des liens, des pièces jointes et des demandes de mots de passe ou d'informations de paiement."
+    },
     "back_to_list": "Retour à la liste",
     "view_contact": "Voir le contact",
     "message_details": "Détails du message",
@@ -622,6 +633,12 @@
     "attach": "Joindre",
     "attach_photos": "Photos & Videos",
     "attach_files": "Files",
+    "attach_from_files": "Joindre depuis Fichiers",
+    "files_picker": {
+      "attach": "{count, plural, =0 {Joindre} one {Joindre 1 fichier} other {Joindre # fichiers}}",
+      "empty_folder": "Ce dossier est vide",
+      "load_failed": "Impossible de charger vos fichiers"
+    },
     "discard": "Supprimer",
     "discard_draft_title": "Supprimer le brouillon ?",
     "discard_draft_confirm": "Vous avez des modifications non enregistrées. Voulez-vous supprimer ce brouillon ?",
@@ -724,6 +741,7 @@
     "recipient_name_placeholder": "Nom d'affichage",
     "autocomplete_search_server": "Rechercher sur le serveur",
     "autocomplete_searching": "Recherche en cours...",
+    "mention_recipients": "Destinataires",
     "toolbar": {
       "bold": "Gras",
       "italic": "Italique",
@@ -817,6 +835,8 @@
     "emails_moved": "{count} emails déplacés",
     "moved_to_mailbox": "Déplacé vers {mailbox}",
     "move_failed": "Échec du déplacement",
+    "emails_copied": "{count} emails copiés",
+    "copy_failed": "Échec de la copie",
     "move_error": "Impossible de déplacer les emails vers le dossier sélectionné",
     "email_tagged": "E-mail étiqueté",
     "emails_tagged": "{count} e-mails étiquetés",
@@ -830,8 +850,8 @@
     "identity_delete_failed": "Échec de la suppression de l'identité: {error}",
     "identity_unauthorized": "Vous n'êtes pas autorisé à envoyer depuis cette adresse email",
     "identity_not_found": "Identité introuvable",
-    "vacation_saved": "Paramètres du répondeur d'absence enregistrés",
-    "vacation_save_failed": "Échec de l'enregistrement des paramètres du répondeur d'absence",
+    "vacation_saved": "Paramètres d'absence enregistrés",
+    "vacation_save_failed": "Échec de l'enregistrement des paramètres d'absence",
     "filters_saved": "Filtres enregistrés avec succès",
     "filters_save_failed": "Échec de l'enregistrement des filtres",
     "filters_deleted": "Règle de filtrage supprimée",
@@ -853,7 +873,8 @@
     "rule_undone": "Modification de la règle annulée",
     "rule_undo_failed": "Impossible d'annuler la modification de la règle",
     "rule_undo_conflict": "Vos filtres ont changé entre-temps. Annulez la modification dans les réglages des filtres.",
-    "rule_folder_failed": "Impossible de créer le dossier"
+    "rule_folder_failed": "Impossible de créer le dossier",
+    "vacation_filters_save_failed": "Paramètres d'absence enregistrés, mais le transfert et les destinataires de la réponse n'ont pas pu être enregistrés"
   },
   "date": {
     "today": "Aujourd'hui",
@@ -938,7 +959,7 @@
       "privacy": "Confidentialité et sécurité",
       "account": "Compte",
       "identities": "Identités",
-      "vacation": "Répondeur d'absence",
+      "vacation": "Absence",
       "advanced": "Avancé",
       "calendar": "Calendrier",
       "filters": "Filtres",
@@ -1513,6 +1534,10 @@
         "label": "Avertissement d'objet vide",
         "description": "Demander confirmation avant d'envoyer un message sans objet."
       },
+      "recipient_mentions": {
+        "label": "Mentionner les destinataires avec @",
+        "description": "Saisir @ dans le message propose ses destinataires et insère le prénom de celui choisi. Entrée ou Tab sélectionne le nom en surbrillance."
+      },
       "hide_inline_image_attachments": {
         "label": "Masquer les images intégrées des pièces jointes",
         "description": "Les images intégrées au corps du message ne sont pas listées comme pièces jointes séparées"
@@ -1809,28 +1834,24 @@
       }
     },
     "vacation": {
-      "title": "Répondeur d'absence",
-      "description": "Répondre automatiquement aux emails entrants pendant votre absence",
+      "title": "Absence",
+      "description": "Traiter automatiquement les emails entrants pendant votre absence",
       "loading": "Chargement des paramètres d'absence...",
       "not_supported": "Votre serveur de messagerie ne prend pas en charge les réponses d'absence.",
       "fetch_error": "Échec du chargement des paramètres d'absence. Veuillez réessayer.",
       "status": {
-        "label": "Répondeur d'absence",
+        "label": "Répondre automatiquement",
         "description": "Envoyer une réponse automatique aux personnes qui vous envoient un email",
         "active": "Actif",
         "inactive": "Inactif"
       },
       "date_range": {
-        "title": "Période",
-        "description": "Limiter optionnellement la réponse automatique à une période spécifique",
         "start": "Date de début",
         "start_description": "Laisser vide pour aucune limite de début",
         "end": "Date de fin",
         "end_description": "Laisser vide pour aucune limite de fin"
       },
       "message": {
-        "title": "Message de réponse automatique",
-        "description": "Le message qui sera envoyé en réponse",
         "subject_label": "Objet",
         "subject_description": "Ligne d'objet de la réponse automatique",
         "subject_placeholder": "Absence du bureau",
@@ -1850,10 +1871,32 @@
       "saving": "Enregistrement...",
       "warnings": {
         "end_before_start": "La date de fin doit être postérieure à la date de début",
+        "invalid_date": "Indiquez une date de début et de fin valides avec l'heure, ou laissez le champ vide",
         "start_in_past": "La date de début est dans le passé",
         "empty_body": "Le corps du message est vide - les destinataires recevront une réponse vide",
         "subject_too_long": "L'objet est trop long pour le serveur ({max} octets au maximum).",
-        "body_too_long": "Le message est trop long pour le serveur ({max} octets au maximum, mise en forme comprise)."
+        "body_too_long": "Le message est trop long pour le serveur ({max} octets au maximum, mise en forme comprise).",
+        "forward_address": "Indiquez une adresse valide pour le transfert",
+        "not_running": "Le transfert ou les destinataires de la réponse sont enregistrés mais pas actifs pour le moment. Enregistrez pour les réactiver."
+      },
+      "forward": {
+        "title": "Transfert",
+        "description": "Transfère les messages entrants à une autre adresse, avec ou sans réponse automatique, pendant la période ci-dessus (sans date de fin, jusqu'à sa désactivation). Les spams ne sont pas transférés.",
+        "enabled_label": "Transférer les messages",
+        "to_label": "Transférer à",
+        "to_placeholder": "email@exemple.com",
+        "keep_label": "Conserver dans la boîte de réception",
+        "keep_description": "Sinon, le message est seulement transféré : il n'est pas conservé dans cette boîte aux lettres et aucune règle de filtre ne s'y applique."
+      },
+      "audience": {
+        "label": "Répondre à",
+        "description": "Expéditeurs internes : {domains}",
+        "all": "Tous les expéditeurs",
+        "internal": "Expéditeurs internes uniquement",
+        "external": "Expéditeurs externes uniquement"
+      },
+      "auto_reply": {
+        "title": "Réponse automatique"
       }
     },
     "folders": {
@@ -1878,6 +1921,15 @@
       "reorder": "Glissez pour réorganiser",
       "reorder_error": "Échec de la réorganisation des dossiers",
       "move_error": "Échec du déplacement du dossier",
+      "select_folder": "Sélectionner {name}",
+      "select_hint": "Sélectionner. Maj+clic sélectionne tous les dossiers jusqu'au dernier sur lequel vous avez cliqué.",
+      "selected_count": "{count, plural, one {# dossier sélectionné} other {# dossiers sélectionnés}}",
+      "move_to": "Déplacer vers...",
+      "move_to_top_level": "Niveau supérieur",
+      "move": "Déplacer",
+      "clear_selection": "Effacer la sélection",
+      "folders_moved": "{count, plural, one {# dossier déplacé} other {# dossiers déplacés}}",
+      "move_partial_error": "{count, plural, one {# dossier n'a pas pu être déplacé} other {# dossiers n'ont pas pu être déplacés}}",
       "subfolder_of": "Dans {name}",
       "subfolder_name": "Nom du sous-dossier",
       "new_folder_name": "Nom du dossier",
@@ -1964,7 +2016,34 @@
         "button": "Importer"
       },
       "about": {
-        "title": "Bulwark Webmail"
+        "title": "Bulwark Webmail",
+        "source_code": "Code source"
+      },
+      "spam_siege": {
+        "title": "Spam Siege",
+        "intro": "Cliquez sur le spam et le phishing avant qu'ils n'atteignent votre boîte de réception. Laissez passer le vrai courrier. Si vous perdez vos trois boucliers, la boîte tombe.",
+        "kinds": {
+          "spam": "Spam",
+          "phishing": "Phishing",
+          "legit": "Vrai courrier"
+        },
+        "click_to_block": "Cliquez pour bloquer",
+        "let_through": "Laissez passer",
+        "start": "Commencer",
+        "play_again": "Rejouer",
+        "score": "Score",
+        "combo": "Bonus de série",
+        "shields_left": "{count} boucliers sur {total} restants",
+        "seconds": "{seconds} s",
+        "best": "Record : {score}",
+        "new_best": "Nouveau record",
+        "held": "Boîte de réception défendue",
+        "overrun": "Boîte de réception submergée",
+        "stats": {
+          "caught": "Bloqués",
+          "delivered": "Distribués",
+          "mistakes": "Erreurs"
+        }
       }
     },
     "sidebar_apps": {
@@ -2085,7 +2164,8 @@
         "subject": "Objet",
         "header": "En-tête personnalisé",
         "size": "Taille",
-        "body": "Corps"
+        "body": "Corps",
+        "all": "Tous les messages"
       },
       "comparators": {
         "has_any": "est présent",
@@ -2194,7 +2274,19 @@
       "suggest_list": "List-Id",
       "suggest_domain": "@{domain}",
       "apply_existing": "Appliquer aussi aux messages déjà présents dans ce dossier",
-      "apply_existing_unsupported": "Seules les règles qui vérifient l'expéditeur, les destinataires, l'objet ou les en-têtes, et qui déplacent, copient, marquent comme lu, suivent ou étiquettent, peuvent s'appliquer aux messages existants."
+      "apply_existing_unsupported": "Seules les règles qui vérifient l'expéditeur, les destinataires, l'objet ou les en-têtes, et qui déplacent, copient, marquent comme lu, suivent ou étiquettent, peuvent s'appliquer aux messages existants.",
+      "period_title": "Période",
+      "period_start": "Date de début",
+      "period_end": "Date de fin",
+      "validation_period_order": "La date de fin doit être postérieure à la date de début",
+      "period_toggle": "Active uniquement pendant une période",
+      "period_hint": "S'applique aux messages qui arrivent pendant cette période. Laissez un champ vide pour ne pas limiter ce côté.",
+      "validation_period_empty": "Indiquez une date de début ou de fin pour la période",
+      "validation_period_invalid": "Indiquez une date valide avec l'heure pour la période, ou laissez le champ vide",
+      "apply_existing_period": "Une règle avec une période n'agit que sur les messages qui arrivent pendant celle-ci ; elle ne peut donc pas s'appliquer aux messages existants.",
+      "period_status_scheduled": "planifiée",
+      "period_status_active": "active",
+      "period_status_expired": "expirée"
     },
     "templates": {
       "title": "Modèles d'e-mails",
@@ -2323,6 +2415,7 @@
     "pin": "Épingler",
     "unpin": "Désépingler",
     "move_to": "Déplacer vers...",
+    "copy_to_account": "Copier vers un compte...",
     "archive": "Archiver",
     "delete": "Supprimer",
     "mark_as_spam": "Signaler comme spam",
@@ -2904,6 +2997,10 @@
       "tasks_hint": "Tâches (k)"
     },
     "events": {
+      "hidden_before": "{count, plural, one {# événement plus tôt} other {# événements plus tôt}}",
+      "hidden_after": "{count, plural, one {# événement plus tard} other {# événements plus tard}}",
+      "show_all_hours": "Afficher toutes les heures",
+      "show_display_hours": "Afficher seulement {start} – {end}",
       "create": "Créer un événement",
       "edit": "Modifier l'événement",
       "delete": "Supprimer l'événement",
@@ -3063,6 +3160,14 @@
       "unit": "Unité de rappel"
     },
     "settings": {
+      "limit_hours": "Limiter les heures affichées",
+      "limit_hours_desc": "N'afficher que ces heures dans les vues jour et semaine. Les événements en dehors restent accessibles via les flèches en haut et en bas de chaque jour.",
+      "visible_hours": "Heures affichées",
+      "visible_hours_start": "Début des heures affichées",
+      "visible_hours_end": "Fin des heures affichées",
+      "hide_non_working_days": "Masquer les jours non travaillés",
+      "hide_non_working_days_desc": "Retirer de la vue semaine les jours où vous ne travaillez pas. Leurs événements restent visibles dans les vues mois, jour et agenda.",
+      "working_days": "Jours travaillés",
       "title": "Paramètres du calendrier",
       "default_view": "Vue par défaut",
       "week_starts_on": "La semaine commence le",

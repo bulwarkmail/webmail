@@ -9,11 +9,13 @@ import { getWopiActions, buildWopiActionUrl } from '@/lib/wopi/discovery';
 import { getWopiFileNode, probeBlob } from '@/lib/wopi/files';
 import { mintWopiToken, wopiDocumentId, type WopiTokenPayload } from '@/lib/wopi/token';
 import { wopiBrowserBinding } from '@/lib/wopi/revocation';
+import { wopiBrowserOrigin, wopiHostBase } from '@/lib/wopi/origin';
 
 /**
  * POST /api/wopi/launch
  *   { fileId: string, accountId?: string }                          - a Files node
  *   { blobId: string, name: string, type?: string, accountId?: string } - a mail attachment
+ * plus an optional `lang`, the webmail's locale, for the editor's own UI.
  *
  * Mints a WOPI access token scoped to one document and returns the editor
  * URL to POST it to (#425). Attachments always open read-only (#1047).
@@ -108,9 +110,7 @@ export async function POST(request: NextRequest) {
     // Where the editor reaches this webmail. Deployments where the editor
     // sees a different host than the browser (docker networks, split DNS)
     // override it via wopiHostUrl.
-    const hostBase =
-      configManager.get<string>('wopiHostUrl', '').trim().replace(/\/+$/, '') ||
-      request.nextUrl.origin;
+    const hostBase = wopiHostBase(request, configManager.get<string>('wopiHostUrl', ''));
     const tokenPayload = {
       serverUrl,
       authHeader: creds.authHeader,
@@ -119,6 +119,7 @@ export async function POST(request: NextRequest) {
       ...document,
       canWrite: editable,
       origin: request.nextUrl.origin,
+      postMessageOrigin: wopiBrowserOrigin(request),
       // Signing out of this slot in this browser revokes the token.
       bid: wopiBrowserBinding(await cookies()),
       slot: creds.slot,
@@ -127,7 +128,7 @@ export async function POST(request: NextRequest) {
     const { token, expiresAt } = mintWopiToken(tokenPayload);
 
     return NextResponse.json({
-      url: buildWopiActionUrl(urlsrc, wopiSrc),
+      url: buildWopiActionUrl(urlsrc, wopiSrc, str('lang')),
       accessToken: token,
       accessTokenTtl: expiresAt,
       readOnly: !editable,

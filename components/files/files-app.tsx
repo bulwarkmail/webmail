@@ -38,6 +38,7 @@ import { consumePendingDeepLinkEntry, subscribePendingDeepLink } from "@/lib/dee
 import { useDeepLinkUrl } from "@/hooks/use-deep-link-url";
 import { useProInterfaceActive } from "@/components/pro/pro-interface-redirect";
 import { useLiteLinkSegments } from "@/hooks/use-lite-link-segments";
+import { useDocumentTitle } from "@/hooks/use-document-title";
 
 export interface FilesAppProps {
   /** Path segments after `/files` - the folder path, one segment per level. */
@@ -49,6 +50,8 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
   const linkSegments = useLiteLinkSegments('files', routeSegments);
   const router = useRouter();
   const t = useTranslations("files");
+  const tSidebar = useTranslations("sidebar");
+  useDocumentTitle(tSidebar("files"));
   const tDeepLink = useTranslations("deep_link");
   const filesEnabled = usePolicyStore((s) => s.isFeatureEnabled('filesEnabled'));
   const { isAuthenticated, logout, checkAuth, isLoading: authLoading, client } = useAuthStore();

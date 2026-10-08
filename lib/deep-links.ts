@@ -234,6 +234,15 @@ export function buildMailPath(state: MailLinkState, mailboxes: Mailbox[] = []): 
 }
 
 /**
+ * Whether a real browser path (any mount or locale prefix) opens a folder
+ * link, `/mail/folder/<ref>`. Read before the shell renders, when only the
+ * address bar can tell a reload of a folder from a plain visit to the app.
+ */
+export function pathNamesMailFolder(pathname: string): boolean {
+  return /(?:^|\/)mail\/folder\/[^/]+/.test(pathname);
+}
+
+/**
  * Parses the segments after `/mail`. Also accepts the legacy `?email=<id>`
  * query the push service worker used to emit, so notifications from an older
  * installed worker keep opening the right message.

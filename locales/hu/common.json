@@ -24,7 +24,8 @@
       "generic": "Váratlan hiba történt. Ha a probléma továbbra is fennáll, vedd fel a kapcsolatot a rendszergazdával.",
       "totp_required": "Kétfaktoros hitelesítési kód szükséges. Kérjük, add meg a kódot lent.",
       "totp_invalid": "Érvénytelen hitelesítési kód. Ellenőrizd a hitelesítő alkalmazásod és próbáld újra.",
-      "oauth_discovery_failed": "SSO engedélyezve van, de az identitásszolgáltató nem érhető el. Ellenőrizd az OAuth konfigurációt."
+      "oauth_discovery_failed": "SSO engedélyezve van, de az identitásszolgáltató nem érhető el. Ellenőrizd az OAuth konfigurációt.",
+      "token_exchange_failed": "A jelszót és a kódot elfogadtuk, de a levelezőszerver nem indított munkamenetet ehhez az alkalmazáshoz. Kérje meg a rendszergazdát, hogy ellenőrizze az OAuth-kliens beállításait."
     },
     "show_password": "Jelszó megjelenítése",
     "hide_password": "Jelszó elrejtése",
@@ -120,6 +121,7 @@
     "unified_archive": "Összes archívum",
     "unified_junk": "Összes spam",
     "all_accounts": "Minden fiók",
+    "all_accounts_loading": "Fiókok betöltése: {loaded} / {total}",
     "unified_mailbox": "Egységes postafiók",
     "expand": "Kibontás",
     "collapse": "Összecsukás",
@@ -343,6 +345,15 @@
     "external_content_warning": "Képek és külső tartalmak blokkolva",
     "load_external_content": "Képek betöltése",
     "trust_sender": "Feladó mindig megbízható",
+    "sender_check": {
+      "unverified_label": "Nem ellenőrzött feladó",
+      "failed_label": "Sikertelen feladóellenőrzés",
+      "unverified": "Ez az üzenet azt állítja, hogy a(z) {domain} tartományból jött, de ezt semmi sem igazolja. Nincs érvényes aláírása a(z) {domain} tartománytól, és nem olyan szerverről érkezett, amelyet a(z) {domain} tartomány engedélyez.",
+      "unverified_sent_from": "Ez az üzenet azt állítja, hogy a(z) {domain} tartományból jött, de a(z) {host} tartományból küldték, és nincs érvényes aláírása a(z) {domain} tartománytól.",
+      "failed": "Ez az üzenet azt állítja, hogy a(z) {domain} tartományból jött, de nem ment át a tartomány feladóellenőrzésén. Lehet, hogy hamisított.",
+      "failed_sent_from": "Ez az üzenet azt állítja, hogy a(z) {domain} tartományból jött, de a(z) {host} tartományból küldték, és nem ment át a(z) {domain} tartomány feladóellenőrzésén. Lehet, hogy hamisított.",
+      "caution": "Légy óvatos a linkekkel, a mellékletekkel, és ha jelszót vagy fizetési adatokat kérnek tőled."
+    },
     "back_to_list": "Vissza a listához",
     "view_contact": "Névjegy megtekintése",
     "message_details": "Üzenet részletei",
@@ -622,6 +633,12 @@
     "attach": "Csatolás",
     "attach_photos": "Fényképek és videók",
     "attach_files": "Fájlok",
+    "attach_from_files": "Csatolás a Fájlokból",
+    "files_picker": {
+      "attach": "{count, plural, =0 {Csatolás} one {1 fájl csatolása} other {# fájl csatolása}}",
+      "empty_folder": "Ez a mappa üres",
+      "load_failed": "A fájlokat nem sikerült betölteni"
+    },
     "discard": "Elvetés",
     "discard_draft_title": "Piszkozat elvetése?",
     "discard_draft_confirm": "Nem mentett változtatások vannak. El akarod vetni ezt a piszkozatot?",
@@ -724,6 +741,7 @@
     "recipient_name_placeholder": "Megjelenített név",
     "autocomplete_search_server": "Keresés a kiszolgálón",
     "autocomplete_searching": "Keresés...",
+    "mention_recipients": "Címzettek",
     "toolbar": {
       "bold": "Félkövér",
       "italic": "Dőlt",
@@ -817,6 +835,8 @@
     "emails_moved": "{count} e-mail áthelyezve",
     "moved_to_mailbox": "Áthelyezve ide: {mailbox}",
     "move_failed": "Áthelyezés sikertelen",
+    "emails_copied": "{count} e-mail másolva",
+    "copy_failed": "Másolás sikertelen",
     "move_error": "Nem sikerült áthelyezni az e-maileket a kiválasztott mappába",
     "email_tagged": "E-mail címkézve",
     "emails_tagged": "{count} e-mail címkézve",
@@ -830,8 +850,8 @@
     "identity_delete_failed": "Nem sikerült törölni az identitást: {error}",
     "identity_unauthorized": "Nem vagy jogosult erről az e-mail címről küldeni",
     "identity_not_found": "Identitás nem található",
-    "vacation_saved": "Automatikus válasz beállítások elmentve",
-    "vacation_save_failed": "Nem sikerült menteni az automatikus válasz beállításokat",
+    "vacation_saved": "Távolléti beállítások elmentve",
+    "vacation_save_failed": "Nem sikerült menteni a távolléti beállításokat",
     "filters_saved": "Szűrők sikeresen elmentve",
     "filters_save_failed": "Nem sikerült menteni a szűrőket",
     "filters_deleted": "Szűrő szabály törölve",
@@ -853,7 +873,8 @@
     "rule_undone": "A szabálymódosítás visszavonva",
     "rule_undo_failed": "Nem sikerült visszavonni a szabálymódosítást",
     "rule_undo_conflict": "A szűrőid azóta megváltoztak. A módosítást a szűrőbeállításokban vond vissza.",
-    "rule_folder_failed": "Nem sikerült létrehozni a mappát"
+    "rule_folder_failed": "Nem sikerült létrehozni a mappát",
+    "vacation_filters_save_failed": "Távolléti beállítások elmentve, de a továbbítást és a válasz címzettjeit nem sikerült menteni"
   },
   "date": {
     "today": "Ma",
@@ -941,7 +962,7 @@
       "privacy": "Adatvédelem és biztonság",
       "account": "Fiók",
       "identities": "Azonosságok",
-      "vacation": "Automatikus válasz",
+      "vacation": "Távollét",
       "advanced": "Speciális",
       "calendar": "Naptár",
       "filters": "Szűrők",
@@ -1418,8 +1439,8 @@
       },
       "sub_address_delimiter": {
         "label": "Alcím elválasztó",
-        "description": "Karakter, amely elválasztja a felhasználónevet az alcím címkétől. Illeszkedjen a levelezőszerver által használt elválasztóhoz (pl. felhasználó{elválasztó}cimke@domain.com).",
-        "option": "{elválasztó}  (felhasználó{elválasztó}cimke@domain.com)",
+        "description": "Karakter, amely elválasztja a felhasználónevet az alcím címkétől. Illeszkedjen a levelezőszerver által használt elválasztóhoz (pl. felhasználó{delimiter}cimke@domain.com).",
+        "option": "{delimiter}  (felhasználó{delimiter}cimke@domain.com)",
         "custom": "Egyéni...",
         "custom_input_label": "Egyéni elválasztó karakter"
       },
@@ -1515,6 +1536,10 @@
       "empty_subject_warning": {
         "label": "Figyelmeztetés üres tárgy esetén",
         "description": "Megerősítés kérése tárgy nélküli üzenet küldése előtt."
+      },
+      "recipient_mentions": {
+        "label": "Címzettek említése @ jellel",
+        "description": "Ha @ jelet ír az üzenetbe, megjelennek a címzettek, és a kiválasztott keresztneve kerül beszúrásra. Az Enter vagy a Tab a kiemelt nevet választja."
       },
       "hide_inline_image_attachments": {
         "label": "Beágyazott képek elrejtése a csatolmányok közül",
@@ -1812,28 +1837,24 @@
       }
     },
     "vacation": {
-      "title": "Automatikus válasz",
-      "description": "Automatikus válasz a beérkező e-mailekre távolléted alatt",
+      "title": "Távollét",
+      "description": "A beérkező e-mailek automatikus kezelése távolléted alatt",
       "loading": "Automatikus válasz beállítások betöltése...",
       "not_supported": "A levelezőszervered nem támogatja az automatikus válaszokat.",
       "fetch_error": "Nem sikerült betölteni az automatikus válasz beállításokat. Kérjük, próbáld újra.",
       "status": {
-        "label": "Automatikus válasz",
+        "label": "Automatikus válasz küldése",
         "description": "Automatikus válasz küldése azoknak, akik e-mailt írnak neked",
         "active": "Aktív",
         "inactive": "Inaktív"
       },
       "date_range": {
-        "title": "Dátumtartomány",
-        "description": "Opcionálisan korlátozd az automatikus választ egy adott időszakra",
         "start": "Kezdő dátum",
         "start_description": "Hagyd üresen, ha nincs kezdő korlát",
         "end": "Befejező dátum",
         "end_description": "Hagyd üresen, ha nincs befejező korlát"
       },
       "message": {
-        "title": "Automatikus válasz üzenet",
-        "description": "Az üzenet, amely válaszként lesz elküldve",
         "subject_label": "Tárgy",
         "subject_description": "Az automatikus válasz tárgysora",
         "subject_placeholder": "Távol vagyok",
@@ -1853,10 +1874,32 @@
       "saving": "Mentés...",
       "warnings": {
         "end_before_start": "A befejező dátumnak a kezdő dátum után kell lennie",
+        "invalid_date": "Adjon meg érvényes kezdő és befejező dátumot időponttal, vagy hagyja üresen a mezőt",
         "start_in_past": "A kezdő dátum a múltban van",
         "empty_body": "Az üzenet szövege üres - a címzettek üres választ kapnak",
         "subject_too_long": "A tárgy túl hosszú a kiszolgálónak (legfeljebb {max} bájt).",
-        "body_too_long": "Az üzenet túl hosszú a kiszolgálónak (legfeljebb {max} bájt a formázással együtt)."
+        "body_too_long": "Az üzenet túl hosszú a kiszolgálónak (legfeljebb {max} bájt a formázással együtt).",
+        "forward_address": "Adjon meg egy érvényes címet a továbbításhoz",
+        "not_running": "A továbbítás vagy a válasz címzettjei el vannak mentve, de most nem aktívak. Mentéssel újra bekapcsolja őket."
+      },
+      "forward": {
+        "title": "Továbbítás",
+        "description": "A beérkező üzeneteket egy másik címre továbbítja, automatikus válasszal vagy anélkül, a fenti időszakban (befejező dátum nélkül a kikapcsolásig). A levélszemét nem lesz továbbítva.",
+        "enabled_label": "Üzenetek továbbítása",
+        "to_label": "Továbbítás",
+        "to_placeholder": "email@example.com",
+        "keep_label": "Megtartás a beérkezőben",
+        "keep_description": "Ellenkező esetben az üzenet csak továbbítva lesz: nem marad ebben a postafiókban, és egyetlen szűrőszabály sem fut rá."
+      },
+      "audience": {
+        "label": "Válasz küldése",
+        "description": "Belső feladók: {domains}",
+        "all": "Minden feladónak",
+        "internal": "Csak belső feladóknak",
+        "external": "Csak külső feladóknak"
+      },
+      "auto_reply": {
+        "title": "Automatikus válasz"
       }
     },
     "folders": {
@@ -1881,6 +1924,15 @@
       "reorder": "Húzza az átrendezéshez",
       "reorder_error": "Nem sikerült átrendezni a mappákat",
       "move_error": "Nem sikerült áthelyezni a mappát",
+      "select_folder": "{name} kijelölése",
+      "select_hint": "Kijelölés. Shift+kattintás kijelöli az összes mappát az utoljára kattintottig.",
+      "selected_count": "{count, plural, one {# mappa} other {# mappa}} kijelölve",
+      "move_to": "Áthelyezés ide...",
+      "move_to_top_level": "Legfelső szint",
+      "move": "Áthelyezés",
+      "clear_selection": "Kijelölés törlése",
+      "folders_moved": "{count, plural, one {# mappa áthelyezve} other {# mappa áthelyezve}}",
+      "move_partial_error": "{count, plural, one {# mappát} other {# mappát}} nem sikerült áthelyezni",
       "subfolder_of": "Itt: {name}",
       "subfolder_name": "Almappa neve",
       "new_folder_name": "Mappa neve",
@@ -1967,7 +2019,34 @@
         "button": "Importálás"
       },
       "about": {
-        "title": "Bulwark Webmail"
+        "title": "Bulwark Webmail",
+        "source_code": "Forráskód"
+      },
+      "spam_siege": {
+        "title": "Spam Siege",
+        "intro": "Kattints a spamre és az adathalász levelekre, mielőtt elérik a beérkezett leveleidet. A valódi leveleket engedd át. Ha mindhárom pajzsot elveszíted, a postafiók elesik.",
+        "kinds": {
+          "spam": "Spam",
+          "phishing": "Adathalászat",
+          "legit": "Valódi levél"
+        },
+        "click_to_block": "Kattints a blokkoláshoz",
+        "let_through": "Engedd át",
+        "start": "Indítás",
+        "play_again": "Újra",
+        "score": "Pontszám",
+        "combo": "Sorozatbónusz",
+        "shields_left": "{total} pajzsból {count} maradt",
+        "seconds": "{seconds} mp",
+        "best": "Rekord: {score}",
+        "new_best": "Új rekord",
+        "held": "A postafiók kitartott",
+        "overrun": "A postafiók elesett",
+        "stats": {
+          "caught": "Blokkolva",
+          "delivered": "Kézbesítve",
+          "mistakes": "Hibák"
+        }
       }
     },
     "sidebar_apps": {
@@ -2088,7 +2167,8 @@
         "subject": "Tárgy",
         "header": "Egyéni fejléc",
         "size": "Méret",
-        "body": "Törzs"
+        "body": "Törzs",
+        "all": "Minden üzenet"
       },
       "comparators": {
         "has_any": "jelen van",
@@ -2197,7 +2277,19 @@
       "suggest_list": "List-Id",
       "suggest_domain": "@{domain}",
       "apply_existing": "Alkalmazás a mappában már meglévő üzenetekre is",
-      "apply_existing_unsupported": "Meglévő üzenetekre csak olyan szabály alkalmazható, amely a feladót, a címzetteket, a tárgyat vagy a fejléceket vizsgálja, és áthelyez, másol, olvasottnak jelöl, csillagoz vagy címkéz."
+      "apply_existing_unsupported": "Meglévő üzenetekre csak olyan szabály alkalmazható, amely a feladót, a címzetteket, a tárgyat vagy a fejléceket vizsgálja, és áthelyez, másol, olvasottnak jelöl, csillagoz vagy címkéz.",
+      "period_title": "Dátumtartomány",
+      "period_start": "Kezdő dátum",
+      "period_end": "Befejező dátum",
+      "validation_period_order": "A befejező dátumnak a kezdő dátum után kell lennie",
+      "period_toggle": "Csak egy időszakban aktív",
+      "period_hint": "Az ebben az időszakban érkező üzenetekre vonatkozik. Hagyjon egy mezőt üresen, ha azt a végét nem szeretné korlátozni.",
+      "validation_period_empty": "Adjon meg kezdő vagy befejező dátumot az időszakhoz",
+      "validation_period_invalid": "Adjon meg érvényes dátumot időponttal az időszakhoz, vagy hagyja üresen a mezőt",
+      "apply_existing_period": "Az időszakhoz kötött szabály csak az abban érkező üzenetekre hat, ezért meglévő üzenetekre nem alkalmazható.",
+      "period_status_scheduled": "ütemezett",
+      "period_status_active": "aktív",
+      "period_status_expired": "lejárt"
     },
     "templates": {
       "title": "E-mail sablonok",
@@ -2323,6 +2415,7 @@
     "pin": "Rögzítés",
     "unpin": "Rögzítés feloldása",
     "move_to": "Áthelyezés ide...",
+    "copy_to_account": "Másolás fiókba...",
     "archive": "Archiválás",
     "delete": "Törlés",
     "mark_as_spam": "Spam jelentése",
@@ -2502,7 +2595,7 @@
       "use_address": "Cím használata",
       "invalid_tag": "A címke csak betűket, számokat és kötőjeleket tartalmazhat",
       "tag_too_long": "A címke legfeljebb 30 karakter lehet",
-      "help_text": "A felhasználó{elválasztó}cimke@domain.com címre küldött e-mailek a beérkeződbe érkeznek",
+      "help_text": "A felhasználó{delimiter}cimke@domain.com címre küldött e-mailek a beérkeződbe érkeznek",
       "validation": {
         "empty": "A címke nem lehet üres",
         "too_long": "A címke legfeljebb {max} karakter lehet",
@@ -2904,6 +2997,10 @@
       "tasks_hint": "Feladatok (k)"
     },
     "events": {
+      "hidden_before": "{count, plural, one {# korábbi esemény} other {# korábbi esemény}}",
+      "hidden_after": "{count, plural, one {# későbbi esemény} other {# későbbi esemény}}",
+      "show_all_hours": "Minden óra megjelenítése",
+      "show_display_hours": "Csak {start} – {end} megjelenítése",
       "create": "Esemény létrehozása",
       "edit": "Esemény szerkesztése",
       "delete": "Esemény törlése",
@@ -3063,6 +3160,14 @@
       "unit": "Emlékeztető egysége"
     },
     "settings": {
+      "limit_hours": "Látható órák korlátozása",
+      "limit_hours_desc": "A napi és heti nézetben csak ezeket az órákat mutatja. Az ezen kívül eső események a napok tetején és alján lévő nyilakkal érhetők el.",
+      "visible_hours": "Látható órák",
+      "visible_hours_start": "Látható órák kezdete",
+      "visible_hours_end": "Látható órák vége",
+      "hide_non_working_days": "Munkaszüneti napok elrejtése",
+      "hide_non_working_days_desc": "A heti nézetből kimaradnak azok a napok, amikor nem dolgozol. Eseményeik továbbra is megjelennek a havi, napi és napirend nézetben.",
+      "working_days": "Munkanapok",
       "title": "Naptár beállítások",
       "default_view": "Alapértelmezett nézet",
       "week_starts_on": "Hét kezdőnapja",

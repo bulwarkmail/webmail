@@ -94,7 +94,7 @@ export async function readAccountFilters(client: IJMAPClient, accountId: string)
   };
 }
 
-/** The script for `rules`, keeping the account's vacation and external requires. */
+/** The script for `rules`, keeping the account's vacation, its forwarding and external requires. */
 export function renderFiltersScript(
   rules: FilterRule[],
   filters: Pick<AccountFilters, 'parsed' | 'includeVacation' | 'capabilities'>,
@@ -102,6 +102,8 @@ export function renderFiltersScript(
   return generateScript(rules, filters.parsed.vacation, {
     externalRequires: filters.parsed.externalRequires,
     includeVacation: filters.includeVacation,
+    vacationForward: filters.parsed.vacationForward,
+    vacationAudience: filters.parsed.vacationAudience,
     extensions: filters.capabilities?.sieveExtensions,
   });
 }

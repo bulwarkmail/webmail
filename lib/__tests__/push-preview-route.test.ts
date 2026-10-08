@@ -65,10 +65,10 @@ function mockJmap() {
   });
 }
 
-async function callRoute(accountId: string) {
+async function callRoute(accountId: string, emailId: string | null = null) {
   const { GET } = await import('@/app/api/push/preview/route');
   const request = {
-    nextUrl: { searchParams: { get: (k: string) => (k === 'accountId' ? accountId : null) } },
+    nextUrl: { searchParams: { get: (k: string) => (k === 'accountId' ? accountId : k === 'emailId' ? emailId : null) } },
   };
   const res = (await GET(request as unknown as Parameters<typeof GET>[0])) as unknown as {
     status: number;
@@ -114,5 +114,103 @@ describe('push preview route account resolution', () => {
   it('rejects an account the session does not know', async () => {
     const { status } = await callRoute('stranger');
     expect(status).toBe(401);
+  });
+});
+
+
+describe('push preview JMAP failures', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockJmap();
+  });
+
+  it.each([
+    ['error', { type: 'unsupportedFilter' }, 'mb'],
+    ['Mailbox/query', {}, 'mb'],
+  ])('does not silence a push when mailbox lookup fails (%s)', async (method, body, id) => {
+    fetchJmapServer.mockReset()
+      .mockResolvedValueOnce(jsonResponse(SESSION))
+      .mockResolvedValueOnce(jsonResponse({ methodResponses: [[method, body, id]] }));
+    expect((await callRoute('a')).status).toBe(502);
+  });
+
+  it.each([
+    [['error', { type: 'serverFail' }, 'eq'], ['error', { type: 'resultReference' }, 'eg']],
+    [['Email/query', { ids: ['e1'], total: 1 }, 'eq'], ['error', { type: 'serverFail' }, 'eg']],
+  ])('does not report zero unread on an email method failure', async (query, get) => {
+    fetchJmapServer.mockReset()
+      .mockResolvedValueOnce(jsonResponse(SESSION))
+      .mockResolvedValueOnce(jsonResponse({ methodResponses: [['Mailbox/query', { ids: ['inbox'] }, 'mb']] }))
+      .mockResolvedValueOnce(jsonResponse({ methodResponses: [query, get] }));
+    expect((await callRoute('a')).status).toBe(502);
+  });
+
+  it('still reports genuinely empty unread results', async () => {
+    fetchJmapServer.mockReset()
+      .mockResolvedValueOnce(jsonResponse(SESSION))
+      .mockResolvedValueOnce(jsonResponse({ methodResponses: [['Mailbox/query', { ids: ['inbox'] }, 'mb']] }))
+      .mockResolvedValueOnce(jsonResponse({ methodResponses: [
+        ['Email/query', { ids: [], total: 0 }, 'eq'],
+        ['Email/get', { list: [] }, 'eg'],
+      ] }));
+    expect(await callRoute('a')).toEqual({ status: 200, body: { email: null, unreadTotal: 0, slot: 0 } });
+  });
+
+  // `total` is optional in a JMAP Email/query response.
+  it('counts the ids when the server leaves out the total', async () => {
+    fetchJmapServer.mockReset()
+      .mockResolvedValueOnce(jsonResponse(SESSION))
+      .mockResolvedValueOnce(jsonResponse({ methodResponses: [['Mailbox/query', { ids: ['inbox'] }, 'mb']] }))
+      .mockResolvedValueOnce(jsonResponse({ methodResponses: [
+        ['Email/query', { ids: [] }, 'eq'],
+        ['Email/get', { list: [] }, 'eg'],
+      ] }));
+    expect(await callRoute('a')).toEqual({ status: 200, body: { email: null, unreadTotal: 0, slot: 0 } });
+  });
+
+  it('previews the named message even when the Inbox lookups fail', async () => {
+    fetchJmapServer.mockReset()
+      .mockResolvedValueOnce(jsonResponse(SESSION))
+      .mockResolvedValueOnce(jsonResponse({ methodResponses: [['Mailbox/query', { ids: ['inbox'] }, 'mb']] }))
+      .mockResolvedValueOnce(jsonResponse({ methodResponses: [
+        ['error', { type: 'serverFail' }, 'eq'],
+        ['error', { type: 'resultReference' }, 'eg'],
+        ['Email/get', { list: [{ id: 'd', threadId: 'td' }] }, 'delivered'],
+      ] }));
+    expect(await callRoute('a', 'd')).toEqual({
+      status: 200, body: { email: { id: 'd', threadId: 'td' }, unreadTotal: 1, slot: 0 },
+    });
+  });
+});
+
+
+it('previews a delivered message outside an empty Inbox', async () => {
+  fetchJmapServer.mockReset()
+    .mockResolvedValueOnce(jsonResponse(SESSION))
+    .mockResolvedValueOnce(jsonResponse({ methodResponses: [['Mailbox/query', { ids: ['inbox'] }, 'mb']] }))
+    .mockResolvedValueOnce(jsonResponse({ methodResponses: [
+      ['Email/query', { ids: [], total: 0 }, 'eq'],
+      ['Email/get', { list: [] }, 'eg'],
+      ['Email/get', { list: [{ id: 'filed', threadId: 't2' }] }, 'delivered'],
+    ] }));
+  expect(await callRoute('a', 'filed')).toEqual({
+    status: 200, body: { email: { id: 'filed', threadId: 't2' }, unreadTotal: 1, slot: 0 },
+  });
+});
+
+it('names no message when the delivered one cannot be read, rather than another', async () => {
+  // The push named a message - deleted since, or filed where this login
+  // cannot see it - and the Inbox happens to hold an older unread one. That
+  // older message is not what arrived.
+  fetchJmapServer.mockReset()
+    .mockResolvedValueOnce(jsonResponse(SESSION))
+    .mockResolvedValueOnce(jsonResponse({ methodResponses: [['Mailbox/query', { ids: ['inbox'] }, 'mb']] }))
+    .mockResolvedValueOnce(jsonResponse({ methodResponses: [
+      ['Email/query', { ids: ['stale'], total: 3 }, 'eq'],
+      ['Email/get', { list: [{ id: 'stale', threadId: 't9' }] }, 'eg'],
+      ['Email/get', { list: [] }, 'delivered'],
+    ] }));
+  expect(await callRoute('a', 'gone')).toEqual({
+    status: 200, body: { email: null, unreadTotal: 3, slot: 0 },
   });
 });

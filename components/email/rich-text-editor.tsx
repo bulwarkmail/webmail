@@ -1,7 +1,9 @@
 "use client";
 
 import React, { useEffect, useCallback, useState, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useEditor, EditorContent, type Editor } from "@tiptap/react";
+import type { SuggestionProps } from "@tiptap/suggestion";
 import StarterKit from "@tiptap/starter-kit";
 import Paragraph from "@tiptap/extension-paragraph";
 import Heading from "@tiptap/extension-heading";
@@ -22,6 +24,8 @@ import { TableCell } from "@tiptap/extension-table-cell";
 import { QuotedHtml, serializeEditorContent } from "@/components/email/quoted-html";
 import { SignatureBlock } from "@/components/email/signature-block";
 import { styledBlockAttributes } from "@/components/email/styled-block-attributes";
+import { RecipientMention, RecipientMentionList, type RecipientMentionListHandle } from "@/components/email/recipient-mention";
+import type { MentionCandidate } from "@/lib/recipient-mentions";
 import { cn } from "@/lib/utils";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useTranslations } from "next-intl";
@@ -83,6 +87,8 @@ interface RichTextEditorProps {
   className?: string;
   hasError?: boolean;
   onEditorReady?: (editor: Editor) => void;
+  /** Recipients an "@" in the text offers to mention; none turns it off. */
+  mentionCandidates?: MentionCandidate[];
 }
 
 function ToolbarButton({
@@ -173,6 +179,7 @@ export function RichTextEditor({
   className,
   hasError,
   onEditorReady,
+  mentionCandidates,
 }: RichTextEditorProps) {
   const rtlEditingSupport = useSettingsStore((st) => st.rtlEditingSupport);
   const tComposer = useTranslations("email_composer");
@@ -180,6 +187,10 @@ export function RichTextEditor({
   onImageUploadRef.current = onImageUpload;
   const onEditorReadyRef = React.useRef(onEditorReady);
   onEditorReadyRef.current = onEditorReady;
+  const mentionCandidatesRef = React.useRef<MentionCandidate[]>([]);
+  mentionCandidatesRef.current = mentionCandidates ?? [];
+  const [mention, setMention] = useState<SuggestionProps<MentionCandidate, MentionCandidate> | null>(null);
+  const mentionListRef = useRef<RecipientMentionListHandle>(null);
 
   const editor = useEditor({
     extensions: [
@@ -238,6 +249,22 @@ export function RichTextEditor({
       SignatureBlock.configure({ editHint: tComposer('signature_edit_hint') }),
       TextDirection,
       PlainTextPaste,
+      // "@" offers the recipients and inserts a first name (see
+      // recipient-mention.tsx). The editor is built once, so the candidates
+      // and the list are reached through refs and a stable state setter.
+      RecipientMention.configure({
+        getCandidates: () => mentionCandidatesRef.current,
+        render: () => ({
+          onStart: (props) => setMention(props),
+          // Every keystroke first reports a pending lookup with no items;
+          // keeping the last list until the new one is in avoids a flicker.
+          onUpdate: (props) => {
+            if (!props.loading) setMention(props);
+          },
+          onKeyDown: ({ event }) => mentionListRef.current?.onKeyDown(event) ?? false,
+          onExit: () => setMention(null),
+        }),
+      }),
     ],
     // One newline per paragraph when copying out as plain text, the inverse
     // of PlainTextPaste: a blank line is an empty paragraph, so the default
@@ -797,6 +824,17 @@ export function RichTextEditor({
 
       {/* Editor */}
       <EditorContent editor={editor} />
+
+      {mention && mention.items.length > 0 && createPortal(
+        <RecipientMentionList
+          ref={mentionListRef}
+          editor={mention.editor}
+          items={mention.items}
+          command={mention.command}
+          mount={mention.mount}
+        />,
+        document.body
+      )}
     </div>
   );
 }

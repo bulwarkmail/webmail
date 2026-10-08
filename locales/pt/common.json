@@ -24,7 +24,8 @@
       "generic": "Ocorreu um erro. Por favor, tente novamente.",
       "totp_required": "É necessário um código de autenticação de dois fatores. Insira seu código abaixo.",
       "totp_invalid": "Código de autenticação inválido. Verifique seu aplicativo de autenticação.",
-      "oauth_discovery_failed": "SSO está ativado mas o provedor de identidade não pôde ser contatado. Verifique sua configuração OAuth."
+      "oauth_discovery_failed": "SSO está ativado mas o provedor de identidade não pôde ser contatado. Verifique sua configuração OAuth.",
+      "token_exchange_failed": "Sua senha e o código foram aceitos, mas o servidor de e-mail se recusou a iniciar uma sessão para este aplicativo. Peça ao administrador que verifique as configurações do cliente OAuth."
     },
     "show_password": "Mostrar senha",
     "hide_password": "Ocultar senha",
@@ -120,6 +121,7 @@
     "unified_archive": "Todos os arquivos",
     "unified_junk": "Todo o spam",
     "all_accounts": "Todas as contas",
+    "all_accounts_loading": "A carregar contas: {loaded} de {total}",
     "unified_mailbox": "Caixa de correio unificada",
     "expand": "Expandir",
     "collapse": "Recolher",
@@ -343,6 +345,15 @@
     "external_content_warning": "Imagens e conteúdo externo foram bloqueados",
     "load_external_content": "Carregar imagens",
     "trust_sender": "Sempre confiar neste remetente",
+    "sender_check": {
+      "unverified_label": "Remetente não verificado",
+      "failed_label": "Falha na verificação do remetente",
+      "unverified": "Esta mensagem afirma ser de {domain}, mas nada confirma isso. Ela não tem uma assinatura válida de {domain} e não veio de um servidor autorizado por {domain}.",
+      "unverified_sent_from": "Esta mensagem afirma ser de {domain}, mas foi enviada de {host} e não tem uma assinatura válida de {domain}.",
+      "failed": "Esta mensagem afirma ser de {domain}, mas não passou nas verificações de remetente desse domínio. Pode ter sido falsificada.",
+      "failed_sent_from": "Esta mensagem afirma ser de {domain}, mas foi enviada de {host} e não passou nas verificações de remetente de {domain}. Pode ter sido falsificada.",
+      "caution": "Tenha cuidado com links, anexos e pedidos de senhas ou dados de pagamento."
+    },
     "back_to_list": "Voltar para a lista",
     "view_contact": "Ver contato",
     "message_details": "Detalhes da Mensagem",
@@ -622,6 +633,12 @@
     "attach": "Anexar",
     "attach_photos": "Fotos & Vídeos",
     "attach_files": "Arquivos",
+    "attach_from_files": "Anexar de Arquivos",
+    "files_picker": {
+      "attach": "{count, plural, =0 {Anexar} one {Anexar 1 arquivo} other {Anexar # arquivos}}",
+      "empty_folder": "Esta pasta está vazia",
+      "load_failed": "Não foi possível carregar seus arquivos"
+    },
     "discard": "Descartar",
     "discard_draft_title": "Descartar rascunho?",
     "discard_draft_confirm": "Você tem alterações não salvas. Deseja descartar este rascunho?",
@@ -724,6 +741,7 @@
     "recipient_name_placeholder": "Nome de exibição",
     "autocomplete_search_server": "Pesquisar no servidor",
     "autocomplete_searching": "Pesquisando...",
+    "mention_recipients": "Destinatários",
     "toolbar": {
       "bold": "Negrito",
       "italic": "Itálico",
@@ -817,6 +835,8 @@
     "emails_moved": "{count} e-mails movidos",
     "moved_to_mailbox": "Movido para {mailbox}",
     "move_failed": "Falha ao mover",
+    "emails_copied": "{count} e-mails copiados",
+    "copy_failed": "Falha ao copiar",
     "move_error": "Não foi possível mover os e-mails para a pasta selecionada",
     "email_tagged": "E-mail etiquetado",
     "emails_tagged": "{count} e-mails etiquetados",
@@ -830,8 +850,8 @@
     "identity_delete_failed": "Falha ao excluir identidade: {error}",
     "identity_unauthorized": "Você não está autorizado a enviar deste endereço de e-mail",
     "identity_not_found": "Identidade não encontrada",
-    "vacation_saved": "Configurações de resposta automática salvas",
-    "vacation_save_failed": "Falha ao salvar configurações de resposta automática",
+    "vacation_saved": "Configurações de ausência salvas",
+    "vacation_save_failed": "Falha ao salvar configurações de ausência",
     "filters_saved": "Filtros salvos com sucesso",
     "filters_save_failed": "Falha ao salvar os filtros",
     "filters_deleted": "Regra de filtragem eliminada",
@@ -853,7 +873,8 @@
     "rule_undone": "Alteração da regra desfeita",
     "rule_undo_failed": "Não foi possível desfazer a alteração da regra",
     "rule_undo_conflict": "Seus filtros mudaram desde então. Desfaça a alteração nas configurações de filtros.",
-    "rule_folder_failed": "Não foi possível criar a pasta"
+    "rule_folder_failed": "Não foi possível criar a pasta",
+    "vacation_filters_save_failed": "Configurações de ausência salvas, mas não foi possível salvar o encaminhamento e os destinatários da resposta"
   },
   "date": {
     "today": "Hoje",
@@ -938,7 +959,7 @@
       "privacy": "Privacidade e Segurança",
       "account": "Conta",
       "identities": "Identidades",
-      "vacation": "Resposta automática",
+      "vacation": "Ausência",
       "advanced": "Avançado",
       "calendar": "Calendário",
       "filters": "Filtros",
@@ -1513,6 +1534,10 @@
         "label": "Aviso de assunto vazio",
         "description": "Pedir confirmação antes de enviar uma mensagem sem assunto."
       },
+      "recipient_mentions": {
+        "label": "Mencionar destinatários com @",
+        "description": "Ao digitar @ na mensagem, são sugeridos os destinatários e é inserido o primeiro nome do escolhido. Enter ou Tab escolhe o nome destacado."
+      },
       "hide_inline_image_attachments": {
         "label": "Ocultar imagens incorporadas dos anexos",
         "description": "As imagens incorporadas no corpo da mensagem não são listadas como anexos separados"
@@ -1809,28 +1834,24 @@
       }
     },
     "vacation": {
-      "title": "Resposta automática",
-      "description": "Responder automaticamente a e-mails recebidos enquanto estiver ausente",
+      "title": "Ausência",
+      "description": "Tratar automaticamente os e-mails recebidos enquanto estiver ausente",
       "loading": "Carregando configurações de resposta automática...",
       "not_supported": "Seu servidor de e-mail não suporta respostas automáticas de ausência.",
       "fetch_error": "Falha ao carregar as configurações de resposta automática. Tente novamente.",
       "status": {
-        "label": "Resposta automática",
+        "label": "Responder automaticamente",
         "description": "Enviar uma resposta automática para quem lhe enviar um e-mail",
         "active": "Ativo",
         "inactive": "Inativo"
       },
       "date_range": {
-        "title": "Período",
-        "description": "Opcionalmente limitar a resposta automática a um período específico",
         "start": "Data de início",
         "start_description": "Deixe vazio para sem limite de início",
         "end": "Data de fim",
         "end_description": "Deixe vazio para sem limite de fim"
       },
       "message": {
-        "title": "Mensagem de resposta automática",
-        "description": "A mensagem que será enviada como resposta",
         "subject_label": "Assunto",
         "subject_description": "Linha de assunto da resposta automática",
         "subject_placeholder": "Fora do escritório",
@@ -1850,10 +1871,32 @@
       "saving": "Salvando...",
       "warnings": {
         "end_before_start": "A data de fim deve ser posterior à data de início",
+        "invalid_date": "Indique uma data de início e de fim válidas com hora ou deixe o campo vazio",
         "start_in_past": "A data de início está no passado",
         "empty_body": "O corpo da mensagem está vazio - os destinatários receberão uma resposta em branco",
         "subject_too_long": "O assunto é demasiado longo para o servidor (no máximo {max} bytes).",
-        "body_too_long": "A mensagem é demasiado longa para o servidor (no máximo {max} bytes, incluindo a formatação)."
+        "body_too_long": "A mensagem é demasiado longa para o servidor (no máximo {max} bytes, incluindo a formatação).",
+        "forward_address": "Informe um endereço válido para o encaminhamento",
+        "not_running": "O encaminhamento ou os destinatários da resposta estão salvos, mas não estão ativos agora. Salve para reativá-los."
+      },
+      "forward": {
+        "title": "Encaminhamento",
+        "description": "Encaminha as mensagens recebidas para outro endereço, com ou sem resposta automática, dentro do período acima (sem data de término, até ser desativado). Spam não é encaminhado.",
+        "enabled_label": "Encaminhar mensagens",
+        "to_label": "Encaminhar para",
+        "to_placeholder": "email@exemplo.com",
+        "keep_label": "Manter na caixa de entrada",
+        "keep_description": "Caso contrário, a mensagem é apenas encaminhada: ela não fica nesta caixa de correio e nenhuma regra de filtro é aplicada a ela."
+      },
+      "audience": {
+        "label": "Responder a",
+        "description": "Remetentes internos: {domains}",
+        "all": "Todos os remetentes",
+        "internal": "Somente remetentes internos",
+        "external": "Somente remetentes externos"
+      },
+      "auto_reply": {
+        "title": "Resposta automática"
       }
     },
     "folders": {
@@ -1878,6 +1921,15 @@
       "reorder": "Arraste para reordenar",
       "reorder_error": "Falha ao reordenar as pastas",
       "move_error": "Falha ao mover a pasta",
+      "select_folder": "Selecionar {name}",
+      "select_hint": "Selecionar. Shift+clique seleciona todas as pastas até a última em que você clicou.",
+      "selected_count": "{count, plural, one {# pasta selecionada} other {# pastas selecionadas}}",
+      "move_to": "Mover para...",
+      "move_to_top_level": "Nível superior",
+      "move": "Mover",
+      "clear_selection": "Limpar seleção",
+      "folders_moved": "{count, plural, one {# pasta movida} other {# pastas movidas}}",
+      "move_partial_error": "{count, plural, one {Não foi possível mover # pasta} other {Não foi possível mover # pastas}}",
       "subfolder_of": "Dentro de {name}",
       "subfolder_name": "Nome da subpasta",
       "new_folder_name": "Nome da pasta",
@@ -1964,7 +2016,34 @@
         "button": "Importar"
       },
       "about": {
-        "title": "Bulwark Webmail"
+        "title": "Bulwark Webmail",
+        "source_code": "Código-fonte"
+      },
+      "spam_siege": {
+        "title": "Spam Siege",
+        "intro": "Clique em spam e phishing antes que cheguem à sua caixa de entrada. Deixe passar os e-mails reais. Se perder os três escudos, a caixa cai.",
+        "kinds": {
+          "spam": "Spam",
+          "phishing": "Phishing",
+          "legit": "E-mail real"
+        },
+        "click_to_block": "Clique para bloquear",
+        "let_through": "Deixe passar",
+        "start": "Começar",
+        "play_again": "Jogar de novo",
+        "score": "Pontos",
+        "combo": "Bônus de sequência",
+        "shields_left": "{count} de {total} escudos restantes",
+        "seconds": "{seconds} s",
+        "best": "Recorde: {score}",
+        "new_best": "Novo recorde",
+        "held": "Caixa de entrada defendida",
+        "overrun": "Caixa de entrada invadida",
+        "stats": {
+          "caught": "Bloqueados",
+          "delivered": "Entregues",
+          "mistakes": "Erros"
+        }
       }
     },
     "sidebar_apps": {
@@ -2085,7 +2164,8 @@
         "subject": "Assunto",
         "header": "Cabeçalho personalizado",
         "size": "Tamanho",
-        "body": "Corpo"
+        "body": "Corpo",
+        "all": "Todas as mensagens"
       },
       "comparators": {
         "has_any": "está presente",
@@ -2194,7 +2274,19 @@
       "suggest_list": "List-Id",
       "suggest_domain": "@{domain}",
       "apply_existing": "Aplicar também às mensagens que já estão nesta pasta",
-      "apply_existing_unsupported": "Só regras que verificam o remetente, os destinatários, o assunto ou os cabeçalhos, e que movem, copiam, marcam como lida, marcam com estrela ou etiquetam, podem ser aplicadas a mensagens existentes."
+      "apply_existing_unsupported": "Só regras que verificam o remetente, os destinatários, o assunto ou os cabeçalhos, e que movem, copiam, marcam como lida, marcam com estrela ou etiquetam, podem ser aplicadas a mensagens existentes.",
+      "period_title": "Período",
+      "period_start": "Data de início",
+      "period_end": "Data de fim",
+      "validation_period_order": "A data de fim deve ser posterior à data de início",
+      "period_toggle": "Ativa apenas durante um período",
+      "period_hint": "Aplica-se às mensagens que chegam durante este período. Deixe um campo vazio para não limitar esse extremo.",
+      "validation_period_empty": "Indique uma data de início ou de fim para o período",
+      "validation_period_invalid": "Indique uma data válida com hora para o período ou deixe o campo vazio",
+      "apply_existing_period": "Uma regra com período só atua sobre as mensagens que chegam dentro dele, por isso não pode ser aplicada às mensagens existentes.",
+      "period_status_scheduled": "agendada",
+      "period_status_active": "ativa",
+      "period_status_expired": "expirada"
     },
     "templates": {
       "title": "Modelos de e-mail",
@@ -2323,6 +2415,7 @@
     "pin": "Fixar",
     "unpin": "Desafixar",
     "move_to": "Mover para...",
+    "copy_to_account": "Copiar para conta...",
     "archive": "Arquivar",
     "delete": "Excluir",
     "mark_as_spam": "Reportar spam",
@@ -2904,6 +2997,10 @@
       "tasks_hint": "Tarefas (k)"
     },
     "events": {
+      "hidden_before": "{count, plural, one {# evento anterior} other {# eventos anteriores}}",
+      "hidden_after": "{count, plural, one {# evento posterior} other {# eventos posteriores}}",
+      "show_all_hours": "Mostrar todas as horas",
+      "show_display_hours": "Mostrar apenas {start} – {end}",
       "create": "Criar evento",
       "edit": "Editar evento",
       "delete": "Excluir evento",
@@ -3063,6 +3160,14 @@
       "unit": "Unidade do lembrete"
     },
     "settings": {
+      "limit_hours": "Limitar as horas visíveis",
+      "limit_hours_desc": "Mostrar apenas estas horas nas visualizações de dia e semana. Os eventos fora delas continuam acessíveis pelas setas no topo e na base de cada dia.",
+      "visible_hours": "Horas visíveis",
+      "visible_hours_start": "Início das horas visíveis",
+      "visible_hours_end": "Fim das horas visíveis",
+      "hide_non_working_days": "Ocultar dias não úteis",
+      "hide_non_working_days_desc": "Remover da visualização semanal os dias em que você não trabalha. Os eventos desses dias continuam aparecendo nas visualizações de mês, dia e agenda.",
+      "working_days": "Dias úteis",
       "title": "Configurações do calendário",
       "default_view": "Visualização padrão",
       "week_starts_on": "Semana começa em",

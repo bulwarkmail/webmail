@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Folder, Loader2, Paperclip, RefreshCw, Star } from "@/components/icons";
-import { cn, formatDate } from "@/lib/utils";
+import { cn, cleanPreview, formatDate } from "@/lib/utils";
 import { localizeMailboxName } from "@/lib/mailbox-label";
 import { EmailViewer } from "@/components/email/email-viewer";
 import { ProEmailView } from "@/components/pro/pro-email-tab-body";
@@ -240,9 +240,9 @@ export function ProFolderTabBody({ tabId, data }: ProFolderTabBodyProps) {
                       <Star className="h-3.5 w-3.5 flex-shrink-0 fill-yellow-400 text-yellow-400" aria-hidden="true" />
                     )}
                   </div>
-                  {email.preview && (
+                  {cleanPreview(email.preview) && (
                     <div className="mt-0.5 truncate text-xs text-muted-foreground">
-                      {email.preview}
+                      {cleanPreview(email.preview)}
                     </div>
                   )}
                 </div>

@@ -8,6 +8,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import { useEmailStore } from "@/stores/email-store";
 import { useCalendarStore } from "@/stores/calendar-store";
 import { Avatar } from "@/components/ui/avatar";
+import { cleanPreview } from "@/lib/utils";
 import { Section } from "./contact-detail";
 import type { ContactCard, Email, CalendarEvent } from "@/lib/jmap/types";
 
@@ -244,9 +245,9 @@ export function ContactActivity({ contact }: ContactActivityProps) {
                     <div className="text-sm truncate">
                       {email.subject || t("no_subject")}
                     </div>
-                    {email.preview && (
+                    {cleanPreview(email.preview) && (
                       <p className="text-xs text-muted-foreground truncate mt-0.5">
-                        {email.preview}
+                        {cleanPreview(email.preview)}
                       </p>
                     )}
                   </div>

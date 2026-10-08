@@ -3,6 +3,7 @@ import {
   AUTO_TIME_ZONE,
   displayNow,
   fromDisplayDate,
+  fromWallClock,
   fromZonedDisplayDate,
   getBrowserTimeZone,
   getTimeZoneOffsetMs,
@@ -113,6 +114,15 @@ describe('wall-clock helpers', () => {
     const bad = new Date('nope');
     expect(isNaN(toZonedDisplayDate(bad, 'Europe/Berlin').getTime())).toBe(true);
     expect(isNaN(fromZonedDisplayDate(bad, 'Europe/Berlin').getTime())).toBe(true);
+  });
+
+  it('reads a wall-clock in a zone straight from its fields', () => {
+    const at = (year: number, month: number, day: number, hour: number, minute: number, zone: string) =>
+      fromWallClock({ year, month, day, hour, minute, second: 0 }, zone).toISOString();
+    expect(at(2026, 10, 5, 8, 0, 'Europe/Berlin')).toBe('2026-10-05T06:00:00.000Z');
+    expect(at(2026, 10, 26, 18, 0, 'Europe/Berlin')).toBe('2026-10-26T17:00:00.000Z');
+    // 02:30 on 29 March is skipped in Berlin, but exists in New York.
+    expect(at(2026, 3, 29, 2, 30, 'America/New_York')).toBe('2026-03-29T06:30:00.000Z');
   });
 });
 

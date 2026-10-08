@@ -3,6 +3,7 @@ import {
   buildFolderRef,
   resolveFolderRef,
   isFolderLinkOpen,
+  pathNamesMailFolder,
   buildMailPath,
   parseMailPath,
   buildCalendarPath,
@@ -149,6 +150,20 @@ describe('isFolderLinkOpen', () => {
   it('never treats a virtual view as open - the boot fetch does not load them', () => {
     for (const id of [UNIFIED_MAILBOX_IDS.inbox, CROSS_VIEW_IDS.unread, SCHEDULED_MAILBOX_ID]) {
       expect(isFolderLinkOpen(id, { ...plainInbox, selectedMailbox: id })).toBe(false);
+    }
+  });
+});
+
+describe('pathNamesMailFolder', () => {
+  it('spots a folder link behind any mount and locale prefix', () => {
+    expect(pathNamesMailFolder('/mail/folder/trash')).toBe(true);
+    expect(pathNamesMailFolder('/en/mail/folder/inbox')).toBe(true);
+    expect(pathNamesMailFolder('/webmail/de/mail/folder/Mxyz/')).toBe(true);
+  });
+
+  it('is false for the bare app, other mail links and other surfaces', () => {
+    for (const path of ['/', '/en', '/en/mail', '/mail/folder/', '/en/mail/message/m1', '/en/calendar', '/email/folder/x']) {
+      expect(pathNamesMailFolder(path), path).toBe(false);
     }
   });
 });

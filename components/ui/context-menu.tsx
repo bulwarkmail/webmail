@@ -225,7 +225,13 @@ export function ContextMenuSubMenu({
     }
     top = Math.max(VIEWPORT_MARGIN, top);
 
-    setSubMenuPos({ x: left, y: top });
+    // The submenu is measured while it still sits at left/top 0, so its rect
+    // is the origin `position: fixed` resolves against. That is the viewport,
+    // unless a theme gives the parent menu a backdrop-filter, filter or
+    // transform: then the parent is the containing block and viewport
+    // coordinates land offset by the parent's own position, far from the
+    // entry (#1149).
+    setSubMenuPos({ x: left - subRect.left, y: top - subRect.top });
   }, [isOpen]);
 
   useEffect(() => {

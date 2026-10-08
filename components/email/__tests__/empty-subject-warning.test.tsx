@@ -1,7 +1,8 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act, within } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import React from 'react';
 import { EmailComposer } from '../email-composer';
+import { useAuthStore } from '@/stores/auth-store';
 
 // ─── Heavy component mocks (mirrors reply-addressing.test.tsx) ────────────────
 
@@ -146,6 +147,7 @@ vi.mock('@/lib/plugin-hooks', () => ({
     getRecipientSuggestions: { call: async () => [] },
     onRecipientChipsChange: { transform: async (chips: unknown) => chips },
     onDraftChange: { emit: () => {} },
+    onBeforeDraftAutoSave: { transform: async (draft: unknown) => draft },
     onBeforeEmailSend: { intercept: async () => true },
     onComposeSend: { intercept: async () => true },
     onTransformOutgoingEmail: { transform: async (email: unknown) => email },
@@ -271,5 +273,38 @@ describe('composer empty subject warning', () => {
 
     await waitFor(() => expect(onSend).toHaveBeenCalledTimes(1));
     expect(screen.queryByText('empty_subject.title')).not.toBeInTheDocument();
+  });
+
+  // A draft saved with a "(No Subject)" placeholder came back with that as
+  // its subject, so sending the resumed draft skipped the warning (#1189).
+  it('saves a draft without a subject as an empty subject', async () => {
+    const createDraft = vi.fn().mockResolvedValue('draft-8');
+    useAuthStore.setState({
+      client: {
+        createDraft,
+        getEmail: vi.fn().mockResolvedValue({ id: 'draft-8', attachments: [] }),
+        hasDelayedSend: () => false,
+        getMaxDelayedSend: () => 0,
+      } as never,
+      activeAccountId: 'acct-A' as never,
+    });
+
+    const requestCloseRef = { current: null } as React.MutableRefObject<((afterClose?: () => void) => void) | null>;
+    render(
+      <EmailComposer
+        initialData={{ ...DRAFT_WITHOUT_SUBJECT, subject: 'Lunch' }}
+        requestCloseRef={requestCloseRef}
+        onClose={vi.fn()}
+      />
+    );
+    fireEvent.change(screen.getByDisplayValue('Lunch'), { target: { value: '' } });
+
+    act(() => requestCloseRef.current!(vi.fn()));
+    const dialog = await screen.findByRole('alertdialog');
+    fireEvent.click(within(dialog).getByText('save'));
+
+    await waitFor(() => expect(createDraft).toHaveBeenCalled());
+    expect(createDraft.mock.calls[0][1]).toBe('');
+    useAuthStore.setState({ client: null, activeAccountId: null });
   });
 });

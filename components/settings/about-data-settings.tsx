@@ -10,12 +10,13 @@ import { usePolicyStore } from '@/stores/policy-store';
 import { useUpdateStore } from '@/stores/update-store';
 import { ExternalLink } from '@/components/icons';
 import { cn } from '@/lib/utils';
-import { getPathPrefix } from '@/lib/browser-navigation';
+import { getPathPrefix, withBasePath } from '@/lib/browser-navigation';
 import { clearCachedData } from '@/lib/clear-cached-data';
 import { SpamSiegeGame } from './spam-siege-game';
 
 const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || "0.0.0";
 const GIT_COMMIT = process.env.NEXT_PUBLIC_GIT_COMMIT || "unknown";
+const UPSTREAM_SOURCE_URL = "https://github.com/bulwarkmail/webmail";
 
 function VersionUpdateTag() {
   const status = useUpdateStore((s) => s.status);
@@ -54,7 +55,14 @@ export function AboutDataSettings() {
   const tSettings = useTranslations('settings');
   const { settingsSyncDisabled, updateSetting, resetToDefaults, exportSettings, importSettings } =
     useSettingsStore();
-  const { settingsSyncEnabled } = useConfig();
+  // A modified build must offer its own source (AGPL-3.0 §13), so a
+  // configured URL replaces the upstream repository link.
+  const { settingsSyncEnabled, sourceCodeUrl, appName, appLogoLightUrl, appLogoDarkUrl } = useConfig();
+  // A branded deployment (APP_NAME / APP_LOGO_*) shows its own name and logo
+  // here; without them the card keeps the Bulwark mark and title. (#1160)
+  const branded = appName && appName !== 'Webmail';
+  const logoLight = withBasePath(appLogoLightUrl || appLogoDarkUrl) || `${getPathPrefix()}/branding/Bulwark_Logo_Color.svg`;
+  const logoDark = withBasePath(appLogoDarkUrl || appLogoLightUrl) || `${getPathPrefix()}/branding/Bulwark_Logo_White.svg`;
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showRefreshConfirm, setShowRefreshConfirm] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -136,19 +144,19 @@ export function AboutDataSettings() {
           <button onClick={handleLogoClick} className="flex items-center gap-4 flex-1 text-start focus:outline-none group/about cursor-pointer" aria-label="About">
             <div className="shrink-0">
               <img
-                src={`${getPathPrefix()}/branding/Bulwark_Logo_Color.svg`}
-                alt="Bulwark"
+                src={logoLight}
+                alt={branded ? appName : 'Bulwark'}
                 className="w-12 h-12 object-contain dark:hidden group-hover/about:scale-105 group-active/about:scale-95 transition-transform"
               />
               <img
-                src={`${getPathPrefix()}/branding/Bulwark_Logo_White.svg`}
-                alt="Bulwark"
+                src={logoDark}
+                alt={branded ? appName : 'Bulwark'}
                 className="w-12 h-12 object-contain hidden dark:block group-hover/about:scale-105 group-active/about:scale-95 transition-transform"
               />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-foreground">
-                {t('about.title')}
+                {branded ? appName : t('about.title')}
               </p>
               <p className="text-xs text-muted-foreground group-hover/about:translate-x-0.5 group-active/about:translate-y-px transition-transform">
                 v{APP_VERSION} <span className="text-muted-foreground/60">({GIT_COMMIT})</span>
@@ -157,12 +165,12 @@ export function AboutDataSettings() {
             </div>
           </button>
           <a
-            href="https://github.com/bulwarkmail/webmail"
+            href={sourceCodeUrl || UPSTREAM_SOURCE_URL}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
-            GitHub <ExternalLink className="w-3 h-3" />
+            {sourceCodeUrl ? t('about.source_code') : 'GitHub'} <ExternalLink className="w-3 h-3" />
           </a>
         </div>
       </div>

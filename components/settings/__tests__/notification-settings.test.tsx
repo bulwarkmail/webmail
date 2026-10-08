@@ -103,6 +103,20 @@ describe('NotificationSettings - pushNotifyInboxOnly', () => {
     );
   });
 
+  it('checks push again when the user comes back to the tab', async () => {
+    Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
+    const { findByText } = render(<NotificationSettings />);
+    await findByText('email.inbox_only');
+    const check = webPush.isWebPushEnabled as ReturnType<typeof vi.fn>;
+    await waitFor(() => expect(check).toHaveBeenCalled());
+    const before = check.mock.calls.length;
+
+    // Push may have been turned off elsewhere (site settings, another tab) meanwhile.
+    await act(async () => { window.dispatchEvent(new Event('focus')); });
+
+    await waitFor(() => expect(check.mock.calls.length).toBeGreaterThan(before));
+  });
+
   it('does not re-sync when push is disabled on this device', async () => {
     (webPush.isWebPushEnabled as ReturnType<typeof vi.fn>).mockResolvedValueOnce(false);
     render(<NotificationSettings />);

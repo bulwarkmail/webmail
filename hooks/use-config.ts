@@ -44,6 +44,7 @@ export interface ConfigData {
   jmapServerAutoPickByDomain: boolean;
   embeddedMode: boolean;
   parentOrigin: string;
+  sourceCodeUrl: string;
 }
 
 interface AppConfig extends ConfigData {
@@ -183,6 +184,7 @@ export function useConfig(): AppConfig {
     jmapServerAutoPickByDomain: configCache?.jmapServerAutoPickByDomain || false,
     embeddedMode: configCache?.embeddedMode || false,
     parentOrigin: configCache?.parentOrigin || '',
+    sourceCodeUrl: configCache?.sourceCodeUrl || '',
     isLoading: !configCache,
     error: null,
   });
@@ -226,6 +228,7 @@ export function useConfig(): AppConfig {
         jmapServerAutoPickByDomain: configCache.jmapServerAutoPickByDomain || false,
         embeddedMode: configCache.embeddedMode,
         parentOrigin: configCache.parentOrigin,
+        sourceCodeUrl: configCache.sourceCodeUrl,
         isLoading: false,
         error: null,
       });
@@ -270,6 +273,7 @@ export function useConfig(): AppConfig {
           jmapServerAutoPickByDomain: data.jmapServerAutoPickByDomain || false,
           embeddedMode: data.embeddedMode,
           parentOrigin: data.parentOrigin,
+          sourceCodeUrl: data.sourceCodeUrl,
           isLoading: false,
           error: null,
         });

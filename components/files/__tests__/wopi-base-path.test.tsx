@@ -8,7 +8,7 @@ import { WopiEditor } from '@/components/files/wopi-editor';
 // back 404, which left office editing permanently "unavailable" there. Both
 // WOPI requests have to carry the mount prefix.
 
-vi.mock('next-intl', () => ({ useTranslations: () => (key: string) => key }));
+vi.mock('next-intl', () => ({ useTranslations: () => (key: string) => key, useLocale: () => 'de' }));
 
 let fetchMock: ReturnType<typeof vi.fn>;
 

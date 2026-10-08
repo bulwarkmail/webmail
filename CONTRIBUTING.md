@@ -4,6 +4,18 @@ Bug reports, feature requests, translations and patches are all welcome.
 
 The full guide is in the documentation under [Contributing](https://bulwarkmail.org/docs/development/contributing). It covers the development setup, the test suites, translations and right-to-left layouts, code style, and how pull requests are reviewed.
 
+## What fits
+
+Read [What fits in Bulwark](https://bulwarkmail.org/docs/development/contributing#what-fits-in-bulwark) before you start on a feature. In short:
+
+- Bulwark is built for Stalwart. Changes for other JMAP servers are welcome if they cost Stalwart users nothing.
+- Core is for what most people expect from a mail, calendar, contacts and files client. Niche workflows and integrations with other services belong in plugins.
+- Not in core: IMAP or other non-JMAP backends, integrations with other services, Stalwart server administration, and changes to the look that go beyond themes.
+- New behaviour gets one good default. If deployments really need different behaviour, add an admin setting, not a per-user toggle.
+- Features must work in Bulwark Lite, or be hidden there, and UI changes must work at phone width.
+
+Open an issue and agree on the approach before you write a change that is larger than about 500 lines (not counting locales and tests), adds a runtime dependency, or touches sign-in, sessions, the HTML sanitizer, the plugin sandbox, outgoing-request guards or admin routes. Deliver large features as a series of pull requests that can each be reviewed on their own. Pull requests with review feedback unanswered for 30 days are closed.
+
 To get a development server running:
 
 ```bash

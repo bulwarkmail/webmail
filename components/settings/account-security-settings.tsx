@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils';
 import { sanitizeI18nHtml } from '@/lib/email-sanitization';
 import { IS_LITE } from '@/lib/lite';
 import { useConfig } from '@/hooks/use-config';
+import { totpIssuer } from '@/lib/totp-issuer';
 
 function PasswordChangeSection() {
   const t = useTranslations('settings.security');
@@ -195,9 +196,9 @@ function DisplayNameSection() {
   );
 }
 
-function generateTotp(accountLabel: string): { totp: OTPAuth.TOTP; url: string } {
+function generateTotp(accountLabel: string, issuer: string): { totp: OTPAuth.TOTP; url: string } {
   const totp = new OTPAuth.TOTP({
-    issuer: 'Stalwart',
+    issuer,
     label: accountLabel || 'account',
     algorithm: 'SHA1',
     digits: 6,
@@ -211,6 +212,7 @@ function TotpSection() {
   const t = useTranslations('settings.security');
   const { otpEnabled, enableTotp, disableTotp, isSaving, isLoadingAuth } = useAccountSecurityStore();
   const { client } = useAuthStore();
+  const { appName } = useConfig();
 
   const [setupUrl, setSetupUrl] = useState<string | null>(null);
   const [setupTotp, setSetupTotp] = useState<OTPAuth.TOTP | null>(null);
@@ -230,7 +232,7 @@ function TotpSection() {
   }, [setupUrl]);
 
   const startSetup = () => {
-    const { totp, url } = generateTotp(client?.getUsername() ?? 'account');
+    const { totp, url } = generateTotp(client?.getUsername() ?? 'account', totpIssuer(appName));
     setSetupTotp(totp);
     setSetupUrl(url);
     setPassword('');

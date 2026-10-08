@@ -18,11 +18,9 @@ import {
  * authoritative check is the server-side mailbox the message ends up in.
  *
  * Each cross-account case asserts delivery *and* that the read state survives
- * (Email/copy drops keywords unless carried). Removing the source, however, is
- * currently blocked by a Stalwart bug — onSuccessDestroyOriginal destroys the
- * copy's create-id instead of the source id, so the original is left behind
- * (support.stalw.art #1150). Those source-removal checks are pinned test.fail
- * until Stalwart ships the fix; same-account moves (Email/set) are unaffected.
+ * (Email/copy drops keywords unless carried), and that the source is removed.
+ * The client destroys the source itself once the copy exists rather than using
+ * onSuccessDestroyOriginal, which Stalwart got wrong (support.stalw.art #1150).
  */
 const { alice, bob, carol } = ACCOUNTS;
 const subj = (l: string) => `IT ${l} ${Date.now()}`;
@@ -100,8 +98,8 @@ test.describe('Shared-folder moves', () => {
     expect(seenOf(inA), 'read state kept').toBe(true);
   });
 
-  // Cross-account cases: delivery + read state must hold (our fix); removing the
-  // source is pinned test.fail below (Stalwart #1150).
+  // Cross-account cases: delivery + read state must hold; removing the source
+  // is checked below.
   test('cross-owner shared -> shared: delivers and keeps read state', async ({ page }) => {
     const s = subj('mv-a2c');
     await seedRead(teamA, s);
@@ -134,12 +132,9 @@ test.describe('Shared-folder moves', () => {
     expect(seenOf(inOwn), 'read state kept').toBe(true);
   });
 
-  // Pinned failing: Stalwart's onSuccessDestroyOriginal leaves the original in
-  // place on a cross-account copy (support.stalw.art #1150). Un-pin once fixed
-  // upstream (our copyEmailAcrossAccounts already requests the destroy).
+  // copyEmailAcrossAccounts destroys the source with its own Email/set once the
+  // copy exists (see the #1150 note at the top).
   test.describe('source is removed after a cross-account move', () => {
-    test.fail(true, 'blocked by Stalwart #1150 (onSuccessDestroyOriginal destroys wrong id)');
-
     test('cross-owner shared -> shared', async ({ page }) => {
       const s = subj('rm-a2c');
       await seedRead(teamA, s);
