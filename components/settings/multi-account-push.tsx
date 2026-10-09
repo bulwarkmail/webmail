@@ -91,7 +91,7 @@ export function MultiAccountPushSettings({ relayBaseUrl }: { relayBaseUrl?: stri
       </label>
       <ul className="space-y-2">
         {connected.map(account => <li key={account.id}>
-          <label className="flex items-start gap-2 pl-6 text-sm">
+          <label className="flex items-start gap-2 ps-6 text-sm">
             <input type="checkbox" className="mt-1" disabled={busy} checked={chosen.has(account.id)}
               onChange={e => toggle(account.id, e.target.checked)} />
             <span>
@@ -105,7 +105,7 @@ export function MultiAccountPushSettings({ relayBaseUrl }: { relayBaseUrl?: stri
       </ul>
       <div className="flex flex-wrap items-center gap-2">
         <Button type="button" onClick={() => void run('enable')} disabled={busy || !chosen.size}>
-          {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{t('enable_selected')}
+          {busy && <Loader2 className="me-2 h-4 w-4 animate-spin" />}{t('enable_selected')}
         </Button>
         <Button type="button" variant="outline" onClick={() => void run('disable')} disabled={busy || !chosen.size}>
           {t('disable_selected')}
