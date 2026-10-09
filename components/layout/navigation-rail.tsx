@@ -17,16 +17,15 @@ import { useResolvedSidebarApps } from "@/hooks/use-resolved-sidebar-apps";
 import { useAuthStore } from "@/stores/auth-store";
 import { useAccountStore } from "@/stores/account-store";
 import { useUpdateStore, selectHasUpdate } from "@/stores/update-store";
-import { getActiveAccountSlotHeaders } from "@/lib/auth/active-account-slot";
 import { getMaxAccounts } from "@/lib/account-utils";
 import { isDocumentRTL } from "@/i18n/direction";
 import { cn, formatFileSize } from "@/lib/utils";
 import { useMenuNavigation } from "@/hooks/use-menu-navigation";
 import { PluginSlot } from "@/components/plugins/plugin-slot";
+import { useStalwartAdmin } from "@/hooks/use-stalwart-admin";
 import { KeyboardShortcutsModal } from "@/components/keyboard-shortcuts-modal";
-import { apiFetch, getPathPrefix, withBasePath } from "@/lib/browser-navigation";
+import { getPathPrefix, withBasePath } from "@/lib/browser-navigation";
 import { Avatar } from "@/components/ui/avatar";
-import { IS_LITE } from "@/lib/lite";
 import { toUnicodeEmail } from "@/lib/idn";
 
 interface NavItem {
@@ -222,7 +221,7 @@ export function NavigationRail({
   // removes the user's, so a pinned set still shows when custom apps are off.
   const visibleSidebarApps = useResolvedSidebarApps();
   const inboxUnread = mailboxes.find(m => m.role === "inbox")?.unreadEmails || 0;
-  const [isStalwartAdmin, setIsStalwartAdmin] = useState(false);
+  const isStalwartAdmin = useStalwartAdmin();
   const hasUpdate = useUpdateStore(selectHasUpdate);
   const updateSeverity = useUpdateStore((s) => s.status?.severity);
   const startUpdatePolling = useUpdateStore((s) => s.startPolling);
@@ -293,30 +292,6 @@ export function NavigationRail({
     };
   }, [logoutMenuOpen, logoutPopoverRef]);
 
-  useEffect(() => {
-    let cancelled = false;
-    const headers = getActiveAccountSlotHeaders();
-    // No admin console in the static Lite build.
-    if (IS_LITE || !headers['X-JMAP-Cookie-Slot']) return;
-    apiFetch('/api/admin/auth', { headers })
-      .then(res => res.json())
-      .then(data => {
-        if (cancelled || !data.stalwartAdmin) return;
-        setIsStalwartAdmin(true);
-        // Only "auto" mode may mint the admin session here; in "password"
-        // mode the shield leads to /admin/login instead (#870).
-        if (!data.authenticated && data.stalwartAutoLogin === true) {
-          // Pre-create admin session so /admin works even after full page navigation
-          apiFetch('/api/admin/auth', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', ...headers },
-            body: JSON.stringify({ stalwartAuth: true }),
-          }).catch(() => {});
-        }
-      })
-      .catch(() => {});
-    return () => { cancelled = true; };
-  }, []);
 
   const navItems: NavItem[] = [
     { id: "mail", icon: Mail, labelKey: "mail", href: "/", badge: inboxUnread },

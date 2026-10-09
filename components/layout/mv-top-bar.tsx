@@ -11,6 +11,7 @@ import {
   Mail,
   Menu,
   Settings,
+  Shield,
   iconForName,
 } from "@/components/icons";
 import type { AppIcon as AppIconType } from "@/components/icons";
@@ -24,7 +25,9 @@ import { useResolvedSidebarApps } from "@/hooks/use-resolved-sidebar-apps";
 import { useThemeStore } from "@/stores/theme-store";
 import { useUIStore } from "@/stores/ui-store";
 import { useMenuNavigation } from "@/hooks/use-menu-navigation";
-import { withBasePath } from "@/lib/browser-navigation";
+import { getPathPrefix, withBasePath } from "@/lib/browser-navigation";
+import { useStalwartAdmin } from "@/hooks/use-stalwart-admin";
+import { useUpdateStore, selectHasUpdate } from "@/stores/update-store";
 import { cn } from "@/lib/utils";
 import { AccountSwitcher } from "@/components/layout/account-switcher";
 import { SearchBox, type ContactSearchField } from "@/components/search/search-box";
@@ -104,6 +107,10 @@ export function MvTopBar({
   // The same gate the navigation rail puts on its "add app" button.
   const sidebarAppsEnabled = usePolicyStore((s) => s.isFeatureEnabled("sidebarAppsEnabled"));
   const sidebarApps = useResolvedSidebarApps();
+  const isStalwartAdmin = useStalwartAdmin();
+  const hasUpdate = useUpdateStore(selectHasUpdate);
+  const updateSeverity = useUpdateStore((s) => s.status?.severity);
+  const updateImportant = updateSeverity === "security" || updateSeverity === "deprecated";
 
   const [appsOpen, setAppsOpen] = useState(false);
   const appsButtonRef = useRef<HTMLButtonElement>(null);
@@ -231,6 +238,27 @@ export function MvTopBar({
           >
             <Keyboard className="w-5 h-5" />
           </button>
+        )}
+        {/* Admin (Stalwart admins), as in the navigation rail this bar replaces.
+            A hard navigation because /admin lives outside the [locale] tree. */}
+        {isStalwartAdmin && (
+          <a
+            href={`${getPathPrefix()}/admin`}
+            className="relative grid place-items-center w-12 h-12 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+            title={t("admin")}
+            aria-label={t("admin")}
+          >
+            <Shield className="w-5 h-5" />
+            {hasUpdate && (
+              <span
+                className={cn(
+                  "absolute top-3 end-3 w-2 h-2 rounded-full ring-2 ring-background",
+                  updateImportant ? "bg-red-500" : "bg-amber-500",
+                )}
+                aria-label={updateImportant ? "Important update available" : "Update available"}
+              />
+            )}
+          </a>
         )}
         <Link
           href="/settings"
