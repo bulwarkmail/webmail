@@ -1663,6 +1663,33 @@
         "drag_handle": "Faire glisser pour réorganiser",
         "add": "Ajouter un compte"
       },
+      "backup": {
+        "title": "Sauvegarde de la liste des comptes",
+        "description": "Conservez sur le serveur la liste des comptes de ce navigateur, chiffrée avec un mot de passe que vous seul connaissez, et retrouvez-la sur un autre appareil. Les mots de passe des boîtes ne sont pas enregistrés : vous vous connectez vous-même à chaque compte restauré.",
+        "status_none": "Aucune liste enregistrée pour {account}.",
+        "status_saved": "Une liste est enregistrée pour {account}.",
+        "save": "Enregistrer la liste",
+        "restore": "Restaurer la liste",
+        "delete": "Supprimer la liste enregistrée",
+        "cancel": "Annuler",
+        "delete_confirm": "Supprimer du serveur la liste de comptes enregistrée ?",
+        "password": "Mot de passe de la sauvegarde",
+        "password_hint": "Au moins 10 caractères. Il ne peut pas être récupéré : si vous l'oubliez, enregistrez à nouveau la liste avec un nouveau mot de passe.",
+        "restore_hint": "Le mot de passe choisi lors de l'enregistrement de la liste.",
+        "confirm": "Confirmer le mot de passe",
+        "saved": "Liste enregistrée ({count, plural, one {# compte} other {# comptes}}).",
+        "restored": "Comptes ajoutés : {added}. Comptes déjà présents et mis à jour : {updated}. Ouvrez chaque nouveau compte depuis la liste des comptes pour vous connecter.",
+        "skipped": "{count, plural, one {# compte n'a pas été ajouté} other {# comptes n'ont pas été ajoutés}} : la limite de comptes est atteinte.",
+        "deleted": "Liste enregistrée supprimée.",
+        "errors": {
+          "mismatch": "Les mots de passe ne correspondent pas.",
+          "password_length": "Utilisez au moins 10 caractères.",
+          "unlock_failed": "Mot de passe incorrect, ou la liste a été enregistrée pour un autre compte.",
+          "owner_signin_required": "Reconnectez-vous à ce compte, puis réessayez.",
+          "https_required": "Une connexion sécurisée (HTTPS) est nécessaire.",
+          "storage_failed": "Le serveur n'a pas pu lire ou enregistrer la liste. Réessayez plus tard."
+        }
+      },
       "shared_accounts": {
         "title": "Partagé avec moi",
         "description": "Comptes de groupe et partagés que vous pouvez gérer. Sélectionnez-en un pour modifier ses filtres, son répondeur d'absence, ses calendriers et ses contacts.",

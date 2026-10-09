@@ -1663,6 +1663,33 @@
         "drag_handle": "Trascina per riordinare",
         "add": "Aggiungi account"
       },
+      "backup": {
+        "title": "Backup dell'elenco account",
+        "description": "Conserva sul server l'elenco degli account di questo browser, cifrato con una password che conosci solo tu, e ripristinalo su un altro dispositivo. Le password delle caselle non vengono salvate: accedi tu a ogni account ripristinato.",
+        "status_none": "Nessun elenco salvato per {account}.",
+        "status_saved": "C'è un elenco salvato per {account}.",
+        "save": "Salva elenco",
+        "restore": "Ripristina elenco",
+        "delete": "Elimina elenco salvato",
+        "cancel": "Annulla",
+        "delete_confirm": "Eliminare dal server l'elenco account salvato?",
+        "password": "Password del backup",
+        "password_hint": "Almeno 10 caratteri. Non si può recuperare: se la dimentichi, salva di nuovo l'elenco con una nuova password.",
+        "restore_hint": "La password scelta quando l'elenco è stato salvato.",
+        "confirm": "Conferma password",
+        "saved": "Elenco salvato ({count, plural, one {# account} other {# account}}).",
+        "restored": "Account aggiunti: {added}. Account già presenti e aggiornati: {updated}. Apri ogni nuovo account dall'elenco account per accedere.",
+        "skipped": "{count, plural, one {# account non è stato aggiunto} other {# account non sono stati aggiunti}}: è stato raggiunto il limite di account.",
+        "deleted": "Elenco salvato eliminato.",
+        "errors": {
+          "mismatch": "Le password non coincidono.",
+          "password_length": "Usa almeno 10 caratteri.",
+          "unlock_failed": "Password errata, oppure l'elenco è stato salvato per un altro account.",
+          "owner_signin_required": "Accedi di nuovo a questo account, poi riprova.",
+          "https_required": "Serve una connessione sicura (HTTPS).",
+          "storage_failed": "Il server non è riuscito a leggere o salvare l'elenco. Riprova più tardi."
+        }
+      },
       "shared_accounts": {
         "title": "Condivisi con me",
         "description": "Account di gruppo e condivisi che puoi gestire. Selezionane uno per modificarne filtri, risponditore automatico, calendari e contatti.",

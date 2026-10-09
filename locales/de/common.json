@@ -1663,6 +1663,33 @@
         "drag_handle": "Zum Sortieren ziehen",
         "add": "Konto hinzufügen"
       },
+      "backup": {
+        "title": "Sicherung der Kontoliste",
+        "description": "Speichert die Liste der Konten in diesem Browser auf dem Server, verschlüsselt mit einem Passwort, das nur Sie kennen, und stellt sie auf einem anderen Gerät wieder her. Postfachpasswörter werden nicht gespeichert: Sie melden sich bei jedem wiederhergestellten Konto selbst an.",
+        "status_none": "Für {account} ist keine Liste gespeichert.",
+        "status_saved": "Für {account} ist eine Liste gespeichert.",
+        "save": "Liste speichern",
+        "restore": "Liste wiederherstellen",
+        "delete": "Gespeicherte Liste löschen",
+        "cancel": "Abbrechen",
+        "delete_confirm": "Die gespeicherte Kontoliste vom Server löschen?",
+        "password": "Sicherungspasswort",
+        "password_hint": "Mindestens 10 Zeichen. Es kann nicht wiederhergestellt werden: Wenn Sie es vergessen, speichern Sie die Liste erneut mit einem neuen.",
+        "restore_hint": "Das Passwort, das beim Speichern der Liste gewählt wurde.",
+        "confirm": "Passwort bestätigen",
+        "saved": "Liste gespeichert ({count, plural, one {# Konto} other {# Konten}}).",
+        "restored": "Hinzugefügte Konten: {added}. Bereits vorhandene, aktualisierte Konten: {updated}. Öffnen Sie jedes neue Konto in der Kontoliste, um sich anzumelden.",
+        "skipped": "{count, plural, one {# Konto wurde} other {# Konten wurden}} nicht hinzugefügt: Die Höchstzahl an Konten ist erreicht.",
+        "deleted": "Gespeicherte Liste gelöscht.",
+        "errors": {
+          "mismatch": "Die Passwörter stimmen nicht überein.",
+          "password_length": "Verwenden Sie mindestens 10 Zeichen.",
+          "unlock_failed": "Falsches Passwort, oder die Liste wurde für ein anderes Konto gespeichert.",
+          "owner_signin_required": "Melden Sie sich erneut bei diesem Konto an und versuchen Sie es dann noch einmal.",
+          "https_required": "Dafür ist eine sichere (HTTPS-)Verbindung nötig.",
+          "storage_failed": "Der Server konnte die Liste nicht lesen oder speichern. Versuchen Sie es später erneut."
+        }
+      },
       "shared_accounts": {
         "title": "Mit mir geteilt",
         "description": "Gruppen- und freigegebene Konten, die Sie verwalten können. Wählen Sie eines aus, um dessen Filter, Abwesenheitsnotiz, Kalender und Kontakte zu bearbeiten.",

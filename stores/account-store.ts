@@ -49,6 +49,11 @@ export interface AccountEntry {
   errorMessage?: string;
   /** Whether this is the default account (loaded on app start) */
   isDefault: boolean;
+  /**
+   * Brought back from the account list backup and not signed in on this
+   * device yet. Kept across reloads, and opening it leads to the sign-in form.
+   */
+  awaitingSignIn?: boolean;
 }
 
 interface AccountState {
@@ -93,6 +98,8 @@ export const useAccountStore = create<AccountState>()(
                     errorMessage: undefined,
                     lastLoginAt: entry.lastLoginAt,
                     authMode: entry.authMode,
+                    // Any sign-in ends the wait, whichever way it went.
+                    awaitingSignIn: entry.awaitingSignIn,
                   }
                 : a
             ),
