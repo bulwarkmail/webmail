@@ -379,6 +379,10 @@ export interface CalendarEventFormView {
   location: string;
   virtualLocation: string;
   calendarId: string;
+  /** JMAP uid of the event being edited; undefined while composing a new one. */
+  uid?: string;
+  /** Attendee email addresses currently on the form. */
+  attendees: string[];
 }
 
 export interface KeyboardShortcut {
