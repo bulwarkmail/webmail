@@ -267,7 +267,9 @@ export function AccountSwitcher({
         data-testid="account-switcher"
         data-active-account-id={activeAccountId ?? undefined}
         className={cn(
-          "flex items-center gap-2 rounded-md transition-colors",
+          // Round under Mountain View, like every other button in its top bar.
+          "flex items-center gap-2 transition-colors",
+          mvPopover ? "rounded-full" : "rounded-md",
           variant !== "expanded"
             ? "justify-center w-10 h-10 hover:bg-muted"
             : "w-full px-2 py-1.5 hover:bg-muted text-start min-w-0",
