@@ -100,6 +100,8 @@ export function MvListToolbar({
   const tFolder = useTranslations("mailbox_context_menu");
   const tMenu = useTranslations("context_menu");
   const tSidebar = useTranslations("sidebar");
+  const tCommon = useTranslations("common");
+  const tViewer = useTranslations("email_viewer");
 
   const client = useAuthStore((s) => s.client);
   const {
@@ -328,7 +330,7 @@ export function MvListToolbar({
 
       <ToolbarButton
         icon={RotateCcw}
-        label={t("loading")}
+        label={tCommon("refresh")}
         onClick={onRefresh}
         disabled={!client || isRefreshing}
         busy={isRefreshing}
@@ -341,8 +343,8 @@ export function MvListToolbar({
           onClick={() => setMenuOpen((v) => !v)}
           aria-haspopup="menu"
           aria-expanded={menuOpen}
-          title={tFolder("mark_folder_read")}
-          aria-label={tFolder("mark_folder_read")}
+          title={tViewer("more_actions")}
+          aria-label={tViewer("more_actions")}
           className={cn(
             "grid place-items-center w-10 h-10 rounded-full transition-colors",
             menuOpen

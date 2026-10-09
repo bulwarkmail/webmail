@@ -23,7 +23,7 @@ export function MvComposeWindow({ children }: { children: ReactNode }) {
     <>
       {maximized && (
         <div
-          className="fixed inset-0 z-40 bg-black/40"
+          className="fixed inset-0 z-40 bg-black/50"
           aria-hidden
           onClick={() => setState("normal")}
         />

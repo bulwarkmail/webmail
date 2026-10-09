@@ -1483,11 +1483,12 @@ export function Sidebar({
                         {/* Mountain View lists Starred right under the Inbox. */}
                         {mvFlat && node.role === 'inbox' && onOpenStarred && (
                           <SidebarRow
-                            icon={<Star className="w-4 h-4 text-muted-foreground" />}
+                            // Drawn like the "All starred" row it stands in for.
+                            icon={<Star className={getIconClass(!selectedKeyword && selectedMailbox === CROSS_VIEW_IDS.starred, false, colorfulSidebarIcons)} />}
                             label={t("mailboxes.starred")}
                             testName="mv-starred"
                             depth={0}
-                            isSelected={selectedMailbox === CROSS_VIEW_IDS.starred}
+                            isSelected={!selectedKeyword && selectedMailbox === CROSS_VIEW_IDS.starred}
                             onClick={onOpenStarred}
                             isCollapsed={false}
                           />

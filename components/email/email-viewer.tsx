@@ -5433,15 +5433,15 @@ export function EmailViewer({
               className={cn("pb-6 pt-2", isMobile ? "grid grid-cols-3 gap-2 px-4" : "flex flex-wrap items-center gap-2 px-6")}
               data-mv-reply-row=""
             >
-              <Button variant="outline" className={cn("h-9 rounded-full gap-2", isMobile ? "min-w-0 px-2 text-xs" : "px-5")} onClick={() => onReply?.()}>
+              <Button variant="outline" size="sm" className={cn("rounded-full gap-2", isMobile ? "min-w-0 px-2 text-xs" : "px-5")} onClick={() => onReply?.()}>
                 <Reply className="w-4 h-4" />
                 {t('reply')}
               </Button>
-              <Button variant="outline" className={cn("h-9 rounded-full gap-2", isMobile ? "min-w-0 px-2 text-xs" : "px-5")} onClick={onReplyAll}>
+              <Button variant="outline" size="sm" className={cn("rounded-full gap-2", isMobile ? "min-w-0 px-2 text-xs" : "px-5")} onClick={onReplyAll}>
                 <ReplyAll className="w-4 h-4" />
                 {t('reply_all')}
               </Button>
-              <Button variant="outline" className={cn("h-9 rounded-full gap-2", isMobile ? "min-w-0 px-2 text-xs" : "px-5")} onClick={onForward}>
+              <Button variant="outline" size="sm" className={cn("rounded-full gap-2", isMobile ? "min-w-0 px-2 text-xs" : "px-5")} onClick={onForward}>
                 <Forward className="w-4 h-4" />
                 {t('forward')}
               </Button>

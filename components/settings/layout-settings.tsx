@@ -166,6 +166,8 @@ export function LayoutSettings() {
     ? t('all_mail.account_hint', { account: activeAccount.displayName || activeAccount.email })
     : null;
 
+  const mountainView = interfaceLayout === 'mountain-view';
+
   return (
     <SettingsSection title={t('title')} description={t('description')}>
       {/* The interface layout decides where search, navigation and toolbars
@@ -182,7 +184,10 @@ export function LayoutSettings() {
         />
       </SettingItem>
       )}
-      {!isSettingHidden('mailLayout') && (
+      {/* Mountain View always shows the list and then the conversation, and
+          its toolbars are icon-only, so these two would change nothing there.
+          Their saved values stay and apply again under the default layout. */}
+      {!isSettingHidden('mailLayout') && !mountainView && (
       <SettingItem label={tEmail('mail_layout.label')} description={tEmail('mail_layout.description')} locked={isSettingLocked('mailLayout')}>
         <div className="w-[22rem] max-w-full">
           <RadioGroup
@@ -210,12 +215,14 @@ export function LayoutSettings() {
         />
       </SettingItem>
 
+      {!mountainView && (
       <SettingItem label={t('toolbar_labels.label')} description={t('toolbar_labels.description')}>
         <ToggleSwitch
           checked={showToolbarLabels}
           onChange={(checked) => updateSetting('showToolbarLabels', checked)}
         />
       </SettingItem>
+      )}
 
       <SettingItem label={t('hide_account_switcher.label')} description={t('hide_account_switcher.description')}>
         <ToggleSwitch

@@ -451,7 +451,7 @@ export function AccountSwitcher({
           </div>
 
           {/* Mountain View: "Add another account" and "Sign out of all accounts" as two
-              pills side by side. */}
+              pills side by side; with a single login the second is plain "Sign out". */}
           {mvPopover && (
             <div className="flex flex-wrap items-center justify-center gap-2 border-t border-border px-4 py-3" data-mv-account-actions="">
               {accounts.length < getMaxAccounts() && (
@@ -465,16 +465,14 @@ export function AccountSwitcher({
                   {t("add_account")}
                 </button>
               )}
-              {accounts.length > 1 && (
-                <button
-                  onClick={handleLogoutAll}
-                  className="flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm hover:bg-muted transition-colors"
-                  role="menuitem"
-                >
-                  <LogOut className="w-4 h-4" />
-                  {t("sign_out_all")}
-                </button>
-              )}
+              <button
+                onClick={accounts.length > 1 ? handleLogoutAll : handleLogout}
+                className="flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm hover:bg-muted transition-colors"
+                role="menuitem"
+              >
+                <LogOut className="w-4 h-4" />
+                {accounts.length > 1 ? t("sign_out_all") : t("sign_out")}
+              </button>
             </div>
           )}
 
@@ -493,12 +491,13 @@ export function AccountSwitcher({
             </div>
           )}
 
-          {/* Separator + Actions */}
-          <div className="border-t border-border">
+          {/* Separator + Actions. Under Mountain View a single login signs out
+              from the pill above, so these rows are only for picking among several. */}
+          <div className={cn("border-t border-border", mvPopover && accounts.length < 2 && "hidden")}>
             {activeAccount && !activeAccount.isDefault && accounts.length > 1 && (
               <button
                 onClick={() => handleSetDefault(activeAccount.id)}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+                className={cn("w-full flex items-center gap-2 py-2 text-sm text-foreground hover:bg-muted transition-colors", mvPopover ? "px-4" : "px-3")}
                 role="menuitem"
               >
                 <Star className="w-4 h-4" />
@@ -507,7 +506,7 @@ export function AccountSwitcher({
             )}
             <button
               onClick={handleLogout}
-              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+              className={cn("w-full flex items-center gap-2 py-2 text-sm text-foreground hover:bg-muted transition-colors", mvPopover ? "px-4" : "px-3")}
               role="menuitem"
             >
               <LogOut className="w-4 h-4" />

@@ -120,7 +120,7 @@ describe('MvListToolbar overflow menu', () => {
     } as never);
   });
 
-  const open = () => fireEvent.click(screen.getAllByLabelText('mark_folder_read')[0]);
+  const open = () => fireEvent.click(screen.getByLabelText('more_actions'));
 
   it('offers marking every folder read, not just this one', () => {
     render(
