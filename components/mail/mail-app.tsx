@@ -3857,15 +3857,18 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         )}
         {mvShell && !fullscreenReading && (
           <MvTopBar
-            searchQuery={searchQuery}
-            onSearchQueryChange={setSearchQuery}
-            onSearchSubmit={handleSearch}
-            onSearchClear={handleClearSearch}
-            onSelectContact={handleSelectContactSuggestion}
-            onToggleFilters={toggleAdvancedSearch}
-            filtersOpen={isAdvancedSearchOpen}
-            activeFilterCount={activeFilterCount(searchFilters)}
-            searchDisabled={isScheduledView}
+            search={{
+              query: searchQuery,
+              onQueryChange: setSearchQuery,
+              onSubmit: handleSearch,
+              onClear: handleClearSearch,
+              onSelectContact: handleSelectContactSuggestion,
+              onToggleFilters: toggleAdvancedSearch,
+              filtersOpen: isAdvancedSearchOpen,
+              activeFilterCount: activeFilterCount(searchFilters),
+              disabled: isScheduledView,
+              onFilterAnchorChange: setFilterAnchor,
+            }}
             onShowShortcuts={() => setShowShortcutsModal(true)}
             onManageApps={handleManageApps}
             onInlineApp={handleInlineApp}
@@ -3875,7 +3878,6 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
               allInboxesReachable ? () => handleMailboxSelect(UNIFIED_MAILBOX_IDS.inbox) : undefined
             }
             allInboxesSelected={allInboxesSelected}
-            onFilterAnchorChange={setFilterAnchor}
           />
         )}
         <div className="flex flex-1 overflow-hidden">

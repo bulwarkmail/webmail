@@ -39,6 +39,8 @@ import { useDeepLinkUrl } from "@/hooks/use-deep-link-url";
 import { useProInterfaceActive } from "@/components/pro/pro-interface-redirect";
 import { useLiteLinkSegments } from "@/hooks/use-lite-link-segments";
 import { useDocumentTitle } from "@/hooks/use-document-title";
+import { MvTopBar } from "@/components/layout/mv-top-bar";
+import { useMountainViewShell } from "@/hooks/use-mountain-view-shell";
 
 export interface FilesAppProps {
   /** Path segments after `/files` - the folder path, one segment per level. */
@@ -114,6 +116,8 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
 
   const isMobile = useIsMobile();
   const isEmbedded = useIsEmbedded();
+  // Mountain View's desktop chrome: its top bar in place of the left rail.
+  const mvShell = useMountainViewShell(isEmbedded);
   const [folderLayout, setFolderLayout] = useState<FolderLayout>(() => loadFilesSettings().folderLayout);
   // The account the files client was last initialised for (`undefined` = never).
   // Tracked so a Pro-shell account switch re-initialises instead of showing the
@@ -573,8 +577,17 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
     <div className={cn("flex flex-col bg-background overflow-hidden pt-[env(safe-area-inset-top)]", isEmbedded ? "h-full" : "h-dvh")}>
       <AppTopBannerSlot />
       {refreshIndicator}
+      {mvShell && (
+        <MvTopBar
+          showMenuButton={false}
+          onManageApps={handleManageApps}
+          onInlineApp={handleInlineApp}
+          onCloseInlineApp={closeInlineApp}
+          activeAppId={inlineApp?.id ?? null}
+        />
+      )}
       <div className="flex flex-1 min-h-0 overflow-hidden">
-      {!isMobile && !isEmbedded && (
+      {!isMobile && !isEmbedded && !mvShell && (
         <div className="w-14 bg-secondary flex flex-col flex-shrink-0" style={{ borderRight: '1px solid rgba(128, 128, 128, 0.3)' }}>
           <NavigationRail
             collapsed

@@ -30,25 +30,18 @@ import { AccountSwitcher } from "@/components/layout/account-switcher";
 import { SearchBox, type ContactSearchField } from "@/components/search/search-box";
 import type { ContactSuggestion } from "@/lib/search-suggestions";
 
-interface MvTopBarProps {
-  searchQuery: string;
-  onSearchQueryChange: (value: string) => void;
-  onSearchSubmit: (query: string) => void;
-  onSearchClear: () => void;
+/** Mail search, which only the mail surface puts into the bar. */
+interface MvTopBarSearch {
+  query: string;
+  onQueryChange: (value: string) => void;
+  onSubmit: (query: string) => void;
+  onClear: () => void;
   onSelectContact: (contact: ContactSuggestion, field: ContactSearchField) => void;
   /** Opens the advanced-filter panel that lives under the message list. */
   onToggleFilters: () => void;
   filtersOpen: boolean;
   activeFilterCount: number;
-  searchDisabled?: boolean;
-  onShowShortcuts?: () => void;
-  onManageApps?: () => void;
-  onInlineApp?: (appId: string, url: string, name: string) => void;
-  onCloseInlineApp?: () => void;
-  activeAppId?: string | null;
-  /** Opens the merged across-accounts inbox from the account popover. */
-  onSelectAllInboxes?: () => void;
-  allInboxesSelected?: boolean;
+  disabled?: boolean;
   /**
    * Receives the node under the search field that the advanced-filter panel is
    * portalled into, so the panel drops from the field itself; without this
@@ -58,23 +51,36 @@ interface MvTopBarProps {
   onFilterAnchorChange?: (node: HTMLDivElement | null) => void;
 }
 
+interface MvTopBarProps {
+  /**
+   * The mail search field. Other surfaces leave it out and keep their own
+   * search where it was; the bar then carries the brand, the app grid and the
+   * account avatar only.
+   */
+  search?: MvTopBarSearch;
+  /** The hamburger folds the mail navigation, so only mail shows it. */
+  showMenuButton?: boolean;
+  onShowShortcuts?: () => void;
+  onManageApps?: () => void;
+  onInlineApp?: (appId: string, url: string, name: string) => void;
+  onCloseInlineApp?: () => void;
+  activeAppId?: string | null;
+  /** Opens the merged across-accounts inbox from the account popover. */
+  onSelectAllInboxes?: () => void;
+  allInboxesSelected?: boolean;
+}
+
 /**
  * Mountain View's global header: one 64px row that owns the hamburger, the
  * brand, the search field and the account cluster. It only renders on
- * desktop under `interfaceLayout === 'mountain-view'`; the default layout keeps
- * search inside the list column and navigation in the left rail, and neither
- * of those is touched here.
+ * desktop under `interfaceLayout === 'mountain-view'` (see
+ * useMountainViewShell), on every surface, in place of the left rail; the
+ * default layout keeps search inside the list column and navigation in the
+ * left rail, and neither of those is touched here.
  */
 export function MvTopBar({
-  searchQuery,
-  onSearchQueryChange,
-  onSearchSubmit,
-  onSearchClear,
-  onSelectContact,
-  onToggleFilters,
-  filtersOpen,
-  activeFilterCount,
-  searchDisabled = false,
+  search,
+  showMenuButton = true,
   onShowShortcuts,
   onManageApps,
   onInlineApp,
@@ -82,7 +88,6 @@ export function MvTopBar({
   activeAppId,
   onSelectAllInboxes,
   allInboxesSelected = false,
-  onFilterAnchorChange,
 }: MvTopBarProps) {
   const t = useTranslations("sidebar");
   const tSearch = useTranslations("advanced_search");
@@ -96,6 +101,8 @@ export function MvTopBar({
   const calendarEnabled = usePolicyStore((s) => s.isFeatureEnabled("calendarEnabled"));
   const contactsEnabled = usePolicyStore((s) => s.isFeatureEnabled("contactsEnabled"));
   const filesEnabled = usePolicyStore((s) => s.isFeatureEnabled("filesEnabled"));
+  // The same gate the navigation rail puts on its "add app" button.
+  const sidebarAppsEnabled = usePolicyStore((s) => s.isFeatureEnabled("sidebarAppsEnabled"));
   const sidebarApps = useResolvedSidebarApps();
 
   const [appsOpen, setAppsOpen] = useState(false);
@@ -147,15 +154,17 @@ export function MvTopBar({
       data-mv-topbar=""
     >
       {/* Brand block: occupies the sidebar's own column width */}
-      <div className="flex items-center gap-1 shrink-0">
-        <button
-          type="button"
-          onClick={toggleSidebarCollapsed}
-          className="grid place-items-center w-12 h-12 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-          aria-label={t("mobile.toggle_menu")}
-        >
-          <Menu className="w-5 h-5" />
-        </button>
+      <div className={cn("flex items-center gap-1 shrink-0", !showMenuButton && "ps-3")}>
+        {showMenuButton && (
+          <button
+            type="button"
+            onClick={toggleSidebarCollapsed}
+            className="grid place-items-center w-12 h-12 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+            aria-label={t("mobile.toggle_menu")}
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+        )}
         <Link href="/" className="flex items-center gap-2 pe-4 min-w-0" aria-label={appName}>
           {logoUrl ? <img src={logoUrl} alt="" className="w-8 h-8 object-contain" /> : null}
           <span className="text-[22px] leading-none text-foreground/80 truncate">{appName}</span>
@@ -163,48 +172,50 @@ export function MvTopBar({
       </div>
 
       {/* Search: left-anchored and capped, not centred */}
-      <div className="mv-topbar-search relative flex items-center gap-1 flex-1 min-w-0 max-w-[720px]">
-        <SearchBox
-          value={searchQuery}
-          onChange={onSearchQueryChange}
-          onSubmit={onSearchSubmit}
-          onClear={onSearchClear}
-          onSelectContact={onSelectContact}
-          disabled={searchDisabled}
-        />
-        <button
-          type="button"
-          onClick={onToggleFilters}
-          disabled={searchDisabled}
-          // Inside the field's trailing end, next to the typed query.
-          className={cn(
-            "absolute end-1 top-1/2 -translate-y-1/2 z-10 grid place-items-center w-10 h-10 rounded-full transition-colors",
-            searchDisabled && "opacity-50 cursor-not-allowed",
-            filtersOpen || activeFilterCount > 0
-              ? "bg-primary/10 text-primary"
-              : "text-muted-foreground hover:bg-muted hover:text-foreground"
-          )}
-          title={tSearch("toggle_filters")}
-          aria-label={tSearch("toggle_filters")}
-        >
-          <Filter className="w-5 h-5" />
-          {!filtersOpen && activeFilterCount > 0 && (
-            <span className="absolute top-1.5 end-1.5 grid place-items-center w-4 h-4 text-[10px] font-bold rounded-full bg-primary text-primary-foreground">
-              {activeFilterCount}
-            </span>
-          )}
-        </button>
+      {search && (
+        <div className="mv-topbar-search relative flex items-center gap-1 flex-1 min-w-0 max-w-[720px]">
+          <SearchBox
+            value={search.query}
+            onChange={search.onQueryChange}
+            onSubmit={search.onSubmit}
+            onClear={search.onClear}
+            onSelectContact={search.onSelectContact}
+            disabled={search.disabled}
+          />
+          <button
+            type="button"
+            onClick={search.onToggleFilters}
+            disabled={search.disabled}
+            // Inside the field's trailing end, next to the typed query.
+            className={cn(
+              "absolute end-1 top-1/2 -translate-y-1/2 z-10 grid place-items-center w-10 h-10 rounded-full transition-colors",
+              search.disabled && "opacity-50 cursor-not-allowed",
+              search.filtersOpen || search.activeFilterCount > 0
+                ? "bg-primary/10 text-primary"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+            )}
+            title={tSearch("toggle_filters")}
+            aria-label={tSearch("toggle_filters")}
+          >
+            <Filter className="w-5 h-5" />
+            {!search.filtersOpen && search.activeFilterCount > 0 && (
+              <span className="absolute top-1.5 end-1.5 grid place-items-center w-4 h-4 text-[10px] font-bold rounded-full bg-primary text-primary-foreground">
+                {search.activeFilterCount}
+              </span>
+            )}
+          </button>
 
-        {/* Anchor for the advanced-filter panel: the search field's own box,
-            filter button included, so the panel shares the field's edges. It
-            only marks the spot; the panel itself is drawn at the end of <body>. */}
-        <div
-          ref={onFilterAnchorChange}
-          aria-hidden
-          data-mv-filter-anchor=""
-          className="pointer-events-none absolute start-0 end-0 top-full h-0"
-        />
-      </div>
+          {/* Anchor for the advanced-filter panel: the search field's own box,
+              filter button included, so the panel shares the field's edges. It
+              only marks the spot; the panel itself is drawn at the end of <body>. */}
+          <div
+            ref={search.onFilterAnchorChange}
+            aria-hidden
+            data-mv-filter-anchor=""
+            className="pointer-events-none absolute start-0 end-0 top-full h-0"
+          />
+        </div>
+      )}
 
       {/* Spacer keeps the right cluster pinned while search stays left */}
       <div className="flex-1 min-w-0" />
@@ -306,7 +317,7 @@ export function MvTopBar({
                   );
                 })}
               </div>
-              {onManageApps && (
+              {sidebarAppsEnabled && onManageApps && (
                 <button
                   type="button"
                   role="menuitem"
