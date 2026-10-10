@@ -15,6 +15,7 @@ import { defaultSearchScopeFor, isAllFoldersSearchScope, SEARCH_SCOPE_ALL_FOLDER
 import { useAuthStore } from "@/stores/auth-store";
 import { pathNamesMailFolder } from "@/lib/deep-links";
 import { currentStoreEpoch } from "@/lib/store-epoch";
+import { folderListKey, forgetFolderLists, rememberFolderList, rememberedFolderList } from "@/lib/folder-list-cache";
 import { keywordPointer } from "@/lib/jmap/patch-pointer";
 import { useAccountStore } from "@/stores/account-store";
 import { useMessageListTabsStore } from "@/stores/message-list-tabs-store";
@@ -826,6 +827,13 @@ export function resolveEmailBlobContext(
 
 // List requests can finish after navigation. Never apply an old folder/tag
 // response (or error) to the view the user has since selected.
+/**
+ * The plain folder list on screen and the key it is remembered under (see
+ * lib/folder-list-cache). Null while the rows showing belong to no folder
+ * list - a search, a tag, a unified view, or a folder still loading.
+ */
+let shownFolderList: { key: string; mailboxId: string; pageSize: number } | null = null;
+
 function captureEmailListView(): () => boolean {
   const view = useEmailStore.getState();
   const activeAccountId = useAuthStore.getState().activeAccountId;
@@ -2037,7 +2045,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     // A background refresh (e.g. after an account switch restored a cached list)
     // repopulates the list without showing the loading overlay, so switching to
     // an already-visited account doesn't flash a spinner over the visible mail.
-    const background = opts?.background ?? false;
+    let background = opts?.background ?? false;
     // Loading a real mailbox is a fresh navigation (leaving any cross view), so
     // drop the unread/starred retain set and the held row.
     set(background ? { error: null, retainedInViewIds: new Set(), listHold: null } : { isLoading: true, error: null, retainedInViewIds: new Set(), listHold: null }); // Keep previous emails visible during transition
@@ -2154,6 +2162,38 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       // The configured list order (#718).
       const order = getMessageListOrderFor(mailbox?.role);
 
+      // Paint what this folder showed last time and load behind it: the rows
+      // are there at once, the fresh page replaces them when it lands, and a
+      // failed load leaves them in place instead of emptying the folder.
+      const listKey = folderListKey({
+        login: useAuthStore.getState().activeAccountId,
+        viewingAccountId: get().viewingAccountId,
+        // The login tells own accounts apart; a shared folder adds its owner.
+        accountId: accountId ?? '',
+        mailboxId: targetMailboxId,
+        filter: categoryFilter,
+        order,
+      });
+      const remembered = background ? undefined : rememberedFolderList(listKey);
+      if (remembered) {
+        background = true;
+        set({
+          emails: annotateScheduledEmails(remembered.emails, get().scheduledSubmissionByEmailId),
+          hasMoreEmails: remembered.hasMoreEmails,
+          totalEmails: remembered.totalEmails,
+          listOrder: order,
+          // The remembered page has no state a push delta could start from.
+          emailListSync: null,
+          threadEmailsCache: new Map(),
+          expandedThreadIds: new Set(),
+          isLoadingThread: null,
+          isLoading: false,
+        });
+      }
+      // Until this folder's rows are on screen, edits to the list belong to
+      // whatever was showing before and must not be remembered under this key.
+      shownFolderList = remembered ? { key: listKey, mailboxId: targetMailboxId, pageSize: emailsPerPage } : null;
+
       const result = await effectiveClient.getEmails(
         jmapMailboxId,
         accountId,
@@ -2189,6 +2229,8 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         isLoadingThread: null,
         isLoading: false
       });
+      shownFolderList = { key: listKey, mailboxId: targetMailboxId, pageSize: emailsPerPage };
+      rememberFolderList(listKey, get(), emailsPerPage);
       // Fetch full thread counts in the background (non-blocking)
       void get().fetchThreadEmailCounts(client);
     } catch (error) {
@@ -5978,6 +6020,30 @@ useEmailStore.subscribe((state, prev) => {
   const email = state.selectedEmail;
   if (!email || email.id === prev.selectedEmail?.id) return;
   state.holdListRow(listRowKey(email, state.isScheduledView));
+});
+
+// A folder's remembered list follows what happens to it on screen - a message
+// read, archived or deleted here is shown that way when the folder is opened
+// again, rather than as it was when the folder was loaded.
+useEmailStore.subscribe((state, prev) => {
+  if (state.mailboxes.length === 0 && state.emails.length === 0) {
+    shownFolderList = null;
+    forgetFolderLists();
+    return;
+  }
+  if (state.emails === prev.emails || !shownFolderList) return;
+  if (
+    state.selectedMailbox !== shownFolderList.mailboxId ||
+    state.searchQuery ||
+    !isFilterEmpty(state.searchFilters) ||
+    state.selectedKeyword ||
+    state.isUnifiedView ||
+    state.isScheduledView
+  ) {
+    shownFolderList = null;
+    return;
+  }
+  rememberFolderList(shownFolderList.key, state, shownFolderList.pageSize);
 });
 
 // ---------------------------------------------------------------------------
