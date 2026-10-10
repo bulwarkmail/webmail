@@ -1,6 +1,6 @@
 // Plugin Hook Bus - event bus system for plugin lifecycle hooks
 
-import type { Disposable } from './plugin-types';
+import type { CalendarEventFormView, Disposable } from './plugin-types';
 
 // ─── Error Tracker (Circuit Breaker) ─────────────────────────
 
@@ -369,9 +369,31 @@ export const calendarHooks = {
 };
 
 // §7.2b Calendar Form Hooks (UI integration)
+
+/** What onCalendarEventFormSave handlers may set on the event being saved. */
+export interface CalendarEventFormSavePatch {
+  virtualLocation?: string;
+}
+
 export const calendarFormHooks = {
   onCalendarEventFormOpen: new HookBus(),
-  onCalendarEventFormSave: new HookBus(),
+  /**
+   * Fires while the event form is being saved. Handlers receive the patch
+   * accumulated so far and the form view (including the event uid and
+   * attendee emails), and may return a partial patch that the form merges
+   * into the saved event, so a meeting plugin can refresh its link in the
+   * same save that sends scheduling messages and attendees receive the
+   * current URL. Returning undefined leaves the patch unchanged.
+   */
+  onCalendarEventFormSave: new HookBus<
+    (
+      patch: CalendarEventFormSavePatch,
+      view: CalendarEventFormView,
+    ) =>
+      | Promise<CalendarEventFormSavePatch | undefined>
+      | CalendarEventFormSavePatch
+      | undefined
+  >(),
 };
 
 // §7.3 Contact Hooks

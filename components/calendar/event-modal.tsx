@@ -32,7 +32,11 @@ import { buildDuplicateEventData } from "@/lib/calendar-duplicate";
 import { useFormatEventDate } from "@/hooks/use-format-event-date";
 import { useIsPaneScoped } from "@/hooks/use-pane-context";
 import { useContactNameResolver } from "@/hooks/use-contact-name-resolver";
-import { calendarHooks } from "@/lib/plugin-hooks";
+import {
+  calendarFormHooks,
+  calendarHooks,
+  type CalendarEventFormSavePatch,
+} from "@/lib/plugin-hooks";
 import type { ConflictWarning } from "@/lib/plugin-types";
 
 export interface PendingEventPreview {
@@ -641,6 +645,43 @@ export function EventModal({
       data.organizerCalendarAddress = null;
     }
 
+    // Plugin form-save hook: a handler may refresh form-derived values
+    // (currently the virtual-location link) in the same save that sends
+    // scheduling messages, so invites carry what plugins set here rather
+    // than a stale value from before the save.
+    const pluginPatch = await calendarFormHooks.onCalendarEventFormSave.transform<
+      CalendarEventFormSavePatch
+    >(
+      {},
+      {
+        title: trimmedTitle,
+        description: trimmedDescription,
+        start: startStr,
+        end: allDay ? `${endDate}T23:59:59` : `${endDate}T${endTime}:00`,
+        isAllDay: allDay,
+        location,
+        virtualLocation,
+        calendarId,
+        uid: data.uid ?? event?.uid,
+        attendees: effectiveAttendees.map((a) => a.email),
+      },
+    );
+    if (pluginPatch && typeof pluginPatch.virtualLocation === "string") {
+      if (pluginPatch.virtualLocation.trim()) {
+        data.virtualLocations = {
+          vl1: {
+            "@type": "VirtualLocation",
+            name: null,
+            description: null,
+            uri: pluginPatch.virtualLocation.trim(),
+            features: null,
+          },
+        };
+      } else {
+        data.virtualLocations = null;
+      }
+    }
+
     const shouldSendScheduling = effectiveAttendees.length > 0 && sendInvitations;
     setIsSaving(true);
     try {
@@ -1106,6 +1147,8 @@ export function EventModal({
                   location,
                   virtualLocation,
                   calendarId,
+                  uid: event?.uid,
+                  attendees: attendees.map((a) => a.email),
                 },
                 setVirtualLocation,
               }}
