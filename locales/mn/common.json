@@ -3436,6 +3436,11 @@
       "due_today": "Өнөөдөр",
       "due_tomorrow": "Маргааш",
       "overdue": "Хугацаа хэтэрсэн"
+    },
+    "create": "Үүсгэх",
+    "toolbar": {
+      "more": "Бусад үйлдэл",
+      "select_view": "Харагдац солих, одоо {view}"
     }
   },
   "calendar_event_notifications": {

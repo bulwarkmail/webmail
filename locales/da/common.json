@@ -3436,7 +3436,12 @@
       "due_tomorrow": "I morgen",
       "overdue": "Forfalden"
     },
-    "nav_open_menu": "Åbn menu"
+    "nav_open_menu": "Åbn menu",
+    "create": "Opret",
+    "toolbar": {
+      "more": "Flere handlinger",
+      "select_view": "Skift visning, aktuelt {view}"
+    }
   },
   "calendar_event_notifications": {
     "someone": "Nogen",

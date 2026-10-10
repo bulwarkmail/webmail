@@ -3436,7 +3436,12 @@
       "bah": "Bahman",
       "esf": "Esfand"
     },
-    "nav_open_menu": "Atvērt izvēlni"
+    "nav_open_menu": "Atvērt izvēlni",
+    "create": "Izveidot",
+    "toolbar": {
+      "more": "Citas darbības",
+      "select_view": "Mainīt skatu, pašlaik {view}"
+    }
   },
   "advanced_search": {
     "title": "Izvērstā meklēšana",

@@ -3436,7 +3436,12 @@
       "due_tomorrow": "Vence amanhã",
       "overdue": "Atrasada"
     },
-    "nav_open_menu": "Abrir menu"
+    "nav_open_menu": "Abrir menu",
+    "create": "Criar",
+    "toolbar": {
+      "more": "Mais ações",
+      "select_view": "Mudar vista, atualmente {view}"
+    }
   },
   "advanced_search": {
     "title": "Pesquisa avançada",

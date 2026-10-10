@@ -3436,6 +3436,11 @@
       "due_today": "I dag",
       "due_tomorrow": "I morgen",
       "overdue": "Forfalt"
+    },
+    "create": "Opprett",
+    "toolbar": {
+      "more": "Flere handlinger",
+      "select_view": "Bytt visning, nå {view}"
     }
   },
   "calendar_event_notifications": {

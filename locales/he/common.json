@@ -3360,6 +3360,11 @@
       "subscribe_title": "הירשם",
       "subscribe_description": "שמור את הלוח שנה הזה בסנכרון אוטומטי כלוח שנה נפרד.",
       "cancel": "בטל"
+    },
+    "create": "יצירה",
+    "toolbar": {
+      "more": "פעולות נוספות",
+      "select_view": "החלפת תצוגה, כעת {view}"
     }
   },
   "advanced_search": {

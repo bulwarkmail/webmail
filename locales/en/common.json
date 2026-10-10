@@ -3436,6 +3436,11 @@
       "due_today": "Today",
       "due_tomorrow": "Tomorrow",
       "overdue": "Overdue"
+    },
+    "create": "Create",
+    "toolbar": {
+      "more": "More actions",
+      "select_view": "Change view, currently {view}"
     }
   },
   "calendar_event_notifications": {

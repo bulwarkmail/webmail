@@ -3436,7 +3436,12 @@
       "bah": "Bahman",
       "esf": "Esfand"
     },
-    "nav_open_menu": "Відкрити меню"
+    "nav_open_menu": "Відкрити меню",
+    "create": "Створити",
+    "toolbar": {
+      "more": "Інші дії",
+      "select_view": "Змінити вигляд, зараз {view}"
+    }
   },
   "advanced_search": {
     "title": "Розширений пошук",

@@ -201,6 +201,18 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
   });
   const [isResizing, setIsResizing] = useState(false);
   const dragStartWidth = useRef(256);
+  // The burger in the toolbar hides the sidebar on wide screens, like
+  // Google Calendar's main menu button; remembered across visits.
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    try { return localStorage.getItem("calendar-sidebar-collapsed") === "1"; } catch { return false; }
+  });
+  const toggleSidebarCollapsed = useCallback(() => {
+    setSidebarCollapsed((prev) => {
+      const next = !prev;
+      try { localStorage.setItem("calendar-sidebar-collapsed", next ? "1" : "0"); } catch { /* storage unavailable */ }
+      return next;
+    });
+  }, []);
 
   // Swipe navigation ref (handlers defined after navigatePrev/navigateNext)
   const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
@@ -1567,6 +1579,30 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     );
   };
 
+  const calendarToolbar = (
+    <CalendarToolbar
+      selectedDate={selectedDate}
+      visibleDate={visibleDate}
+      viewMode={normalizedViewMode}
+      onPrev={navigatePrev}
+      onNext={navigateNext}
+      onToday={goToToday}
+      onViewModeChange={(mode) => { setMobileReturnToMonth(false); setViewMode(mode); }}
+      onCreateEvent={() => openCreateModal()}
+      onImport={() => setShowImportModal(true)}
+      onSubscribe={() => setShowSubscriptionModal(true)}
+      isMobile={isMobile}
+      onNavigateBack={isMobile && mobileReturnToMonth && normalizedViewMode === "day" ? navigateBackToMonth : undefined}
+      calendars={displayCalendars}
+      selectedCalendarIds={selectedCalendarIds}
+      onToggleVisibility={toggleCalendarVisibility}
+      enableCalendarTasks={enableCalendarTasks}
+      onMenuClick={isNarrow ? () => setNarrowSidebarOpen(true) : isMobile ? undefined : toggleSidebarCollapsed}
+      sidebarOpen={isNarrow ? narrowSidebarOpen : !sidebarCollapsed}
+      showCreateButton={isNarrow || sidebarCollapsed}
+    />
+  );
+
   return (
     <div className={cn("flex flex-col bg-background overflow-hidden pt-[env(safe-area-inset-top)]", isEmbedded ? "h-full" : "h-dvh")}>
       <AppTopBannerSlot />
@@ -1603,21 +1639,43 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
         />
       )}
 
-      {/* Sidebar - in-flow when desktop pane, overlay when narrow */}
       {!inlineApp && (
+      <div className="flex flex-col flex-1 min-w-0 min-h-0">
+      {/* Desktop: the bar spans the sidebar and the grid, as in Google Calendar. */}
+      {!isMobile && calendarToolbar}
+      <div className="flex flex-1 min-w-0 min-h-0">
+      {/* Sidebar - in-flow when desktop pane, overlay when narrow */}
+      {(isNarrow || !sidebarCollapsed) && (
         <>
           <div
             className={cn(
-              "border-e border-border bg-secondary overflow-y-auto flex-shrink-0 p-3",
+              "bg-background overflow-y-auto overflow-x-hidden flex-shrink-0 px-3 pb-3 pt-3",
               !isResizing && "transition-[width] duration-300",
               isNarrow && cn(
-                "absolute inset-y-0 left-0 z-50 w-72 pt-[env(safe-area-inset-top)]",
+                "absolute inset-y-0 left-0 z-50 w-72 pt-[calc(env(safe-area-inset-top)+0.75rem)] border-e border-border shadow-xl",
                 "transform transition-transform duration-300 ease-in-out",
                 !narrowSidebarOpen && "-translate-x-full"
               )
             )}
             style={isNarrow ? undefined : { width: `${calSidebarWidth}px` }}
           >
+            {!isMobile && (
+              <button
+                type="button"
+                onClick={() => { setNarrowSidebarOpen(false); openCreateModal(); }}
+                data-tour={isNarrow ? undefined : "create-event-button"}
+                className={cn(
+                  "inline-flex items-center gap-3 h-14 ps-4 pe-6 mb-4 rounded-2xl",
+                  "bg-background text-foreground text-sm font-medium",
+                  "shadow-[0_1px_3px_0_rgb(0_0_0/0.2),0_4px_8px_3px_rgb(0_0_0/0.08)] hover:shadow-[0_1px_3px_0_rgb(0_0_0/0.25),0_6px_10px_4px_rgb(0_0_0/0.12)]",
+                  "dark:bg-muted dark:shadow-none dark:hover:bg-accent",
+                  "transition-shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                )}
+              >
+                <Plus className="w-6 h-6 text-primary" />
+                {t("create")}
+              </button>
+            )}
             <MiniCalendar
               selectedDate={selectedDate}
               displayMonth={miniMonth}
@@ -1708,27 +1766,8 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
         </>
       )}
 
-      {!inlineApp && (
       <div className="flex flex-col flex-1 min-w-0 min-h-0">
-        <CalendarToolbar
-          selectedDate={selectedDate}
-          visibleDate={visibleDate}
-          viewMode={normalizedViewMode}
-          onPrev={navigatePrev}
-          onNext={navigateNext}
-          onToday={goToToday}
-          onViewModeChange={(mode) => { setMobileReturnToMonth(false); setViewMode(mode); }}
-          onCreateEvent={() => openCreateModal()}
-          onImport={() => setShowImportModal(true)}
-          onSubscribe={() => setShowSubscriptionModal(true)}
-          isMobile={isMobile}
-          onNavigateBack={isMobile && mobileReturnToMonth && normalizedViewMode === "day" ? navigateBackToMonth : undefined}
-          calendars={displayCalendars}
-          selectedCalendarIds={selectedCalendarIds}
-          onToggleVisibility={toggleCalendarVisibility}
-          enableCalendarTasks={enableCalendarTasks}
-          onMenuClick={isNarrow ? () => setNarrowSidebarOpen(true) : undefined}
-        />
+        {isMobile && calendarToolbar}
 
         {/* isolate keeps the views' sticky headers (z-50) below the toolbar's
             import dropdown, which overlaps this area (#1049). */}
@@ -1799,6 +1838,8 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
             </Button>
           )}
         </div>
+      </div>
+      </div>
       </div>
       )}
 

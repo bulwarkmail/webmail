@@ -3436,6 +3436,11 @@
       "due_today": "اليوم",
       "due_tomorrow": "غدًا",
       "overdue": "متأخرة"
+    },
+    "create": "إنشاء",
+    "toolbar": {
+      "more": "إجراءات أخرى",
+      "select_view": "تغيير العرض، الحالي: {view}"
     }
   },
   "calendar_event_notifications": {

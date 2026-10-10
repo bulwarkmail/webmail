@@ -3436,6 +3436,11 @@
       "due_today": "Avui",
       "due_tomorrow": "Demà",
       "overdue": "Vençuda"
+    },
+    "create": "Crea",
+    "toolbar": {
+      "more": "Més accions",
+      "select_view": "Canvia la vista, actualment {view}"
     }
   },
   "calendar_event_notifications": {

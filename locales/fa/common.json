@@ -3436,6 +3436,11 @@
       "due_today": "امروز",
       "due_tomorrow": "فردا",
       "overdue": "عقب‌افتاده"
+    },
+    "create": "ایجاد",
+    "toolbar": {
+      "more": "اقدامات بیشتر",
+      "select_view": "تغییر نما، نمای فعلی: {view}"
     }
   },
   "calendar_event_notifications": {

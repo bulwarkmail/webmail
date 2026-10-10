@@ -3436,7 +3436,12 @@
       "bah": "Bahman",
       "esf": "Esfand"
     },
-    "nav_open_menu": "Abrir menú"
+    "nav_open_menu": "Abrir menú",
+    "create": "Crear",
+    "toolbar": {
+      "more": "Más acciones",
+      "select_view": "Cambiar vista, actualmente {view}"
+    }
   },
   "advanced_search": {
     "title": "Búsqueda avanzada",

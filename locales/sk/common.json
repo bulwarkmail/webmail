@@ -3436,6 +3436,11 @@
       "due_today": "Dnes",
       "due_tomorrow": "Zajtra",
       "overdue": "Po termíne"
+    },
+    "create": "Vytvoriť",
+    "toolbar": {
+      "more": "Ďalšie akcie",
+      "select_view": "Zmeniť zobrazenie, teraz {view}"
     }
   },
   "calendar_event_notifications": {

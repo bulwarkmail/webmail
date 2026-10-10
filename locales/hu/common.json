@@ -3436,6 +3436,11 @@
       "due_today": "Ma",
       "due_tomorrow": "Holnap",
       "overdue": "Lejárt"
+    },
+    "create": "Létrehozás",
+    "toolbar": {
+      "more": "További műveletek",
+      "select_view": "Nézet váltása, jelenleg {view}"
     }
   },
   "calendar_event_notifications": {

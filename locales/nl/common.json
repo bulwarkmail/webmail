@@ -3436,7 +3436,12 @@
       "bah": "Bahman",
       "esf": "Esfand"
     },
-    "nav_open_menu": "Menu openen"
+    "nav_open_menu": "Menu openen",
+    "create": "Maken",
+    "toolbar": {
+      "more": "Meer acties",
+      "select_view": "Weergave wijzigen, nu {view}"
+    }
   },
   "advanced_search": {
     "title": "Geavanceerd zoeken",
