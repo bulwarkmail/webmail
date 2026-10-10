@@ -189,11 +189,17 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
   const [pendingScopeAction, setPendingScopeAction] = useState<PendingScopeAction | null>(null);
   const [detailEvent, setDetailEvent] = useState<CalendarEvent | null>(null);
   const [detailAnchorRect, setDetailAnchorRect] = useState<DOMRect | null>(null);
+  // A clicked event's card stays until closed; a hover preview goes when
+  // the pointer leaves. Held in a ref too for the hover timers.
+  const [detailPinned, setDetailPinned] = useState(false);
+  const detailPinnedRef = useRef(false);
+  useEffect(() => { detailPinnedRef.current = detailPinned; }, [detailPinned]);
   const [pendingPreview, setPendingPreview] = useState<PendingEventPreview | null>(null);
   // Quick create (#calendar redesign): an empty slot clicked in the week or
   // day view opens a small editor beside a placeholder block.
   const [quickDraft, setQuickDraft] = useState<QuickCreateDraft | null>(null);
   const [defaultModalTitle, setDefaultModalTitle] = useState<string | undefined>();
+  const [modalStartsInEdit, setModalStartsInEdit] = useState(false);
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [editTask, setEditTask] = useState<import("@/lib/jmap/types").CalendarTask | null>(null);
   const [mobileReturnToMonth, setMobileReturnToMonth] = useState(false);
@@ -618,7 +624,8 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     setShowEventModal(true);
   }, [selectedDate, setSelectedDate]);
 
-  const openEditModal = useCallback((event: CalendarEvent) => {
+  const openEditModal = useCallback((event: CalendarEvent, startInForm = false) => {
+    setModalStartsInEdit(startInForm);
     setEditEvent(event);
     setDefaultModalDate(undefined);
     setShowTaskModal(false);
@@ -675,15 +682,27 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
 
   const closeDetail = useCallback(() => {
     if (hoverTimerRef.current) { clearTimeout(hoverTimerRef.current); hoverTimerRef.current = null; }
+    detailPinnedRef.current = false;
+    setDetailPinned(false);
     setDetailEvent(null);
     setDetailAnchorRect(null);
   }, []);
 
-  const handleSelectEvent = useCallback((event: CalendarEvent, _anchorRect: DOMRect) => {
-    // Click opens the sidebar for viewing/editing
-    closeDetail();
-    openEditModal(event);
-  }, [closeDetail, openEditModal]);
+  const handleSelectEvent = useCallback((event: CalendarEvent, anchorRect: DOMRect) => {
+    // Phones open the full editor; wide screens show the event's card next
+    // to it, with edit and delete at the top (as in Google Calendar).
+    if (isMobile) {
+      closeDetail();
+      openEditModal(event);
+      return;
+    }
+    if (hoverTimerRef.current) { clearTimeout(hoverTimerRef.current); hoverTimerRef.current = null; }
+    setQuickDraft(null);
+    detailPinnedRef.current = true;
+    setDetailPinned(true);
+    setDetailEvent(event);
+    setDetailAnchorRect(anchorRect);
+  }, [isMobile, closeDetail, openEditModal]);
 
   const {
     contextMenu: eventContextMenu,
@@ -714,6 +733,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
 
   const handleHoverEvent = useCallback((event: CalendarEvent, anchorRect: DOMRect) => {
     if (isMobile) return;
+    if (detailPinnedRef.current) return;
     if (calendarHoverPreview === 'off') return;
     if (hoverTimerRef.current) { clearTimeout(hoverTimerRef.current); hoverTimerRef.current = null; }
     // Don't show hover popover if the sidebar is already open for this event
@@ -732,7 +752,9 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
 
   const handleHoverLeave = useCallback(() => {
     if (hoverTimerRef.current) { clearTimeout(hoverTimerRef.current); hoverTimerRef.current = null; }
+    if (detailPinnedRef.current) return;
     hoverTimerRef.current = setTimeout(() => {
+      if (detailPinnedRef.current) return;
       setDetailEvent(null);
       setDetailAnchorRect(null);
     }, 300);
@@ -822,7 +844,8 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     if (detailEvent) {
       const ev = detailEvent;
       closeDetail();
-      openEditModal(ev);
+      // The pencil on the event card goes straight to the form.
+      openEditModal(ev, true);
     }
   }, [detailEvent, closeDetail, openEditModal]);
 
@@ -983,8 +1006,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     setEditEvent(null);
     setShowTaskModal(false);
     setEditTask(null);
-    setDetailEvent(null);
-    setDetailAnchorRect(null);
+    closeDetail();
     setQuickDraft((prev) => ({
       start,
       end: finalEnd,
@@ -993,7 +1015,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
         ? prev.calendarId
         : preferred?.id ?? "",
     }));
-  }, [isMobile, openCreateModal, writableCalendars]);
+  }, [isMobile, openCreateModal, writableCalendars, closeDetail]);
 
   const closeQuickCreate = useCallback(() => setQuickDraft(null), []);
 
@@ -1883,13 +1905,14 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
           {!isMobile && showEventModal && (
             <div className="w-[400px] border-s border-border flex-shrink-0 overflow-hidden">
               <EventModal
-                key={editEvent?.id ?? 'new'}
+                key={`${editEvent?.id ?? 'new'}${modalStartsInEdit ? ':edit' : ''}`}
                 event={editEvent}
                 calendars={displayCalendars}
                 defaultDate={defaultModalDate}
                 defaultEndDate={defaultModalEndDate}
                 defaultAllDay={defaultModalAllDay}
                 defaultTitle={defaultModalTitle}
+                startInEditMode={modalStartsInEdit}
                 defaultCalendarId={defaultCalendarIdForCreate}
                 onSave={handleSaveEvent}
                 onDelete={handleDeleteEvent}
@@ -2018,6 +2041,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
           onEdit={handleEditFromDetail}
           onDelete={handleDeleteFromDetail}
           onDuplicate={handleDuplicateFromDetail}
+          onMore={(e) => handleContextMenuEvent(e, detailEvent)}
           onClose={closeDetail}
           onSaveNote={handleSaveNoteFromDetail}
           onRsvp={handleRsvpFromDetail}
@@ -2032,13 +2056,14 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
 
       {showEventModal && isMobile && (
         <EventModal
-          key={editEvent?.id ?? 'new'}
+          key={`${editEvent?.id ?? 'new'}${modalStartsInEdit ? ':edit' : ''}`}
           event={editEvent}
           calendars={displayCalendars}
           defaultDate={defaultModalDate}
           defaultEndDate={defaultModalEndDate}
           defaultAllDay={defaultModalAllDay}
           defaultTitle={defaultModalTitle}
+          startInEditMode={modalStartsInEdit}
           defaultCalendarId={defaultCalendarIdForCreate}
           onSave={handleSaveEvent}
           onDelete={handleDeleteEvent}

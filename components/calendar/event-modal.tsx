@@ -49,6 +49,8 @@ interface EventModalProps {
   defaultDate?: Date;
   defaultEndDate?: Date;
   defaultAllDay?: boolean;
+  /** Open an existing event straight in the form instead of its summary. */
+  startInEditMode?: boolean;
   /** Title to start a new event with (from the quick editor's "More options"). */
   defaultTitle?: string;
   defaultCalendarId?: string;
@@ -195,6 +197,7 @@ export function EventModal({
   defaultEndDate,
   defaultAllDay,
   defaultTitle,
+  startInEditMode,
   defaultCalendarId,
   onSave,
   onDelete,
@@ -220,7 +223,7 @@ export function EventModal({
     : "fixed inset-0 z-50 flex flex-col bg-background";
   const isEdit = !!event;
   const formatEventDate = useFormatEventDate();
-  const [mode, setMode] = useState<"view" | "edit">(isEdit ? "view" : "edit");
+  const [mode, setMode] = useState<"view" | "edit">(isEdit && !startInEditMode ? "view" : "edit");
 
   const userIsOrganizer = useMemo(() => {
     if (!event) return true;

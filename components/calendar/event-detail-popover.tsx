@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { LinkifiedText } from "@/components/ui/linkified-text";
 import {
   X, Clock, MapPin, Video, Users, Repeat, Bell, AlignLeft,
-  Pencil, Trash2, Copy, Send, Check,
+  Pencil, Trash2, Copy, Send, Check, MoreVertical, Calendar as CalendarIcon,
 } from "@/components/icons";
 import { format, isSameDay } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -32,6 +32,8 @@ interface EventDetailPopoverProps {
   onEdit: () => void;
   onDelete: () => void;
   onDuplicate: () => void;
+  /** Opens the event's full action menu (export, copy, ...) at the click. */
+  onMore?: (e: React.MouseEvent) => void;
   onClose: () => void;
   onSaveNote: (note: string) => void;
   onRsvp?: (status: CalendarParticipant["participationStatus"]) => void;
@@ -44,6 +46,7 @@ interface EventDetailPopoverProps {
 }
 
 const POPOVER_WIDTH = 360;
+const HEADER_BUTTON = "p-1.5 rounded-md hover:bg-muted transition-colors duration-150 text-muted-foreground hover:text-foreground";
 const POPOVER_GAP = 8;
 const VIEWPORT_MARGIN = 12;
 const MAX_HEIGHT = 480;
@@ -118,6 +121,7 @@ export function EventDetailPopover({
   onEdit,
   onDelete,
   onDuplicate,
+  onMore,
   onClose,
   onSaveNote,
   onRsvp,
@@ -324,47 +328,97 @@ export function EventDetailPopover({
         visibility: position ? "visible" : "hidden",
       }}
     >
-      {/* Color accent bar */}
-      <div className="h-1 w-full" style={{ backgroundColor: color }} />
-
-      {/* Header */}
-      <div className="flex items-start justify-between gap-2 px-4 pt-3 pb-1">
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <span
-              className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-              style={{ backgroundColor: color }}
-            />
-            <h3 className={cn(
-              "text-base font-semibold truncate text-foreground",
-              event.status === "cancelled" && "line-through text-muted-foreground"
-            )}>
-              {event.title || t("events.no_title")}
-            </h3>
-          </div>
-          {calendar && (
-            <p className="text-xs text-muted-foreground mt-0.5 ps-[18px]">
-              {calendar.name}
-              {event.status === "tentative" && (
-                <span className="ms-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-warning/15 text-warning">
-                  {t("detail.tentative")}
-                </span>
-              )}
-              {event.status === "cancelled" && (
-                <span className="ms-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 line-through">
-                  {t("detail.cancelled")}
-                </span>
-              )}
-            </p>
-          )}
-        </div>
+      {/* Actions sit at the top, the event's colour square beside its title. */}
+      <div className="flex items-center justify-end gap-0.5 px-2 pt-2">
+        {canEditBody && (
+          <button
+            type="button"
+            onClick={onEdit}
+            className={HEADER_BUTTON}
+            aria-label={t("events.edit")}
+            title={t("events.edit")}
+          >
+            <Pencil className="w-4 h-4" />
+          </button>
+        )}
+        {canEditBody && (
+          <button
+            type="button"
+            onClick={() => setShowDeleteConfirm(true)}
+            className={HEADER_BUTTON}
+            aria-label={t("events.delete")}
+            title={t("events.delete")}
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        )}
         <button
+          type="button"
+          onClick={onMore ?? onDuplicate}
+          className={HEADER_BUTTON}
+          aria-label={onMore ? t("toolbar.more") : t("events.duplicate")}
+          title={onMore ? t("toolbar.more") : t("events.duplicate")}
+        >
+          {onMore ? <MoreVertical className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+        </button>
+        <button
+          type="button"
           onClick={onClose}
-          className="p-1.5 rounded-md hover:bg-muted transition-colors duration-150 flex-shrink-0 mt-0.5 text-muted-foreground hover:text-foreground"
+          className={HEADER_BUTTON}
           aria-label={t("form.cancel")}
         >
           <X className="w-4 h-4" />
         </button>
+      </div>
+
+      {showDeleteConfirm && (
+        <div className="mx-4 mt-1 mb-2 flex items-center gap-2 rounded-md bg-destructive/10 px-3 py-2">
+          <span className="text-sm text-destructive flex-1">
+            {t("detail.delete_confirm")}
+          </span>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={onDelete}
+            className="h-7 text-xs"
+          >
+            {t("events.delete")}
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowDeleteConfirm(false)}
+            className="h-7 text-xs"
+          >
+            {t("form.cancel")}
+          </Button>
+        </div>
+      )}
+
+      <div className="flex items-start gap-2.5 px-4 pb-1">
+        <span
+          className="w-4 h-4 rounded-sm flex-shrink-0 mt-1"
+          style={{ backgroundColor: color }}
+          aria-hidden="true"
+        />
+        <div className="min-w-0 flex-1">
+          <h3 className={cn(
+            "text-lg font-semibold leading-snug break-words text-foreground",
+            event.status === "cancelled" && "line-through text-muted-foreground"
+          )}>
+            {event.title || t("events.no_title")}
+          </h3>
+          {event.status === "tentative" && (
+            <span className="mt-1 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-warning/15 text-warning">
+              {t("detail.tentative")}
+            </span>
+          )}
+          {event.status === "cancelled" && (
+            <span className="mt-1 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 line-through">
+              {t("detail.cancelled")}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Content */}
@@ -523,6 +577,14 @@ export function EventDetailPopover({
           </div>
         )}
 
+        {/* Calendar */}
+        {calendar && (
+          <div className="flex items-start gap-2.5">
+            <CalendarIcon className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+            <span className="text-sm text-foreground truncate">{calendar.name}</span>
+          </div>
+        )}
+
         {/* Description */}
         {event.description && (
           <div className="flex items-start gap-2.5">
@@ -634,63 +696,6 @@ export function EventDetailPopover({
         </div>
       )}
 
-      {/* Action Bar */}
-      <div className="px-4 py-2.5 border-t border-border flex items-center gap-1.5">
-        {showDeleteConfirm ? (
-          <div className="flex items-center gap-2 w-full">
-            <span className="text-sm text-destructive flex-1">
-              {t("form.delete_confirm")}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onDelete}
-              className="text-red-600 dark:text-red-400 border-red-300 dark:border-red-700 h-7 text-xs"
-            >
-              {t("events.delete")}
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowDeleteConfirm(false)}
-              className="h-7 text-xs"
-            >
-              {t("form.cancel")}
-            </Button>
-          </div>
-        ) : (
-          <>
-            {canEditBody && (
-              <Button variant="default" size="sm" onClick={onEdit} className="h-7 text-xs">
-                <Pencil className="w-3.5 h-3.5 me-1" />
-                {t("events.edit")}
-              </Button>
-            )}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onDuplicate}
-              className="h-7 text-xs"
-              title={t("events.duplicate")}
-            >
-              <Copy className="w-3.5 h-3.5 me-1" />
-              {t("events.duplicate")}
-            </Button>
-            <div className="flex-1" />
-            {canEditBody && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowDeleteConfirm(true)}
-                className="h-7 text-xs text-red-600 dark:text-red-400"
-                title={t("events.delete")}
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </Button>
-            )}
-          </>
-        )}
-      </div>
     </div>
   );
 
