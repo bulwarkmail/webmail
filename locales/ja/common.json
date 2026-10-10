@@ -3437,7 +3437,6 @@
       "esf": "Esfand"
     },
     "nav_open_menu": "メニューを開く",
-    "create": "作成",
     "toolbar": {
       "more": "その他の操作",
       "select_view": "表示を切り替え（現在: {view}）"

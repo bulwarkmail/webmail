@@ -3437,7 +3437,6 @@
       "due_tomorrow": "غدًا",
       "overdue": "متأخرة"
     },
-    "create": "إنشاء",
     "toolbar": {
       "more": "إجراءات أخرى",
       "select_view": "تغيير العرض، الحالي: {view}"

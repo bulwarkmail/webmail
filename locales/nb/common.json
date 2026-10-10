@@ -3437,7 +3437,6 @@
       "due_tomorrow": "I morgen",
       "overdue": "Forfalt"
     },
-    "create": "Opprett",
     "toolbar": {
       "more": "Flere handlinger",
       "select_view": "Bytt visning, nå {view}"

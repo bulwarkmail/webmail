@@ -3437,7 +3437,6 @@
       "due_tomorrow": "明天",
       "overdue": "逾期"
     },
-    "create": "建立",
     "toolbar": {
       "more": "更多動作",
       "select_view": "切換檢視，目前為{view}"

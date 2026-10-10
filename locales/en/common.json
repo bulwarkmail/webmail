@@ -3437,7 +3437,6 @@
       "due_tomorrow": "Tomorrow",
       "overdue": "Overdue"
     },
-    "create": "Create",
     "toolbar": {
       "more": "More actions",
       "select_view": "Change view, currently {view}"

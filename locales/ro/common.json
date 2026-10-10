@@ -3437,7 +3437,6 @@
       "due_tomorrow": "Mâine",
       "overdue": "Restant"
     },
-    "create": "Creează",
     "toolbar": {
       "more": "Mai multe acțiuni",
       "select_view": "Schimbă vizualizarea, acum {view}"

@@ -332,17 +332,17 @@ export function CalendarToolbar({
   const currentViewLabel = t(`views.${viewMode}`);
 
   return (
-    <div className="flex items-center gap-1 h-16 px-3 border-b border-border">
+    <div className="flex items-center gap-1 px-4 py-3 border-b border-border">
       {onMenuClick && (
         <Button
           variant="ghost"
           size="icon"
           onClick={onMenuClick}
-          className="h-10 w-10 rounded-full text-muted-foreground hover:text-foreground"
+          className="h-8 w-8 -ms-1 me-1"
           aria-label={t("nav_open_menu")}
           aria-expanded={sidebarOpen}
         >
-          <Menu className="w-5 h-5" />
+          <Menu className="w-4 h-4" />
         </Button>
       )}
       {showCreateButton && (
@@ -350,19 +350,19 @@ export function CalendarToolbar({
           variant="ghost"
           size="icon"
           onClick={onCreateEvent}
-          className="h-10 w-10 rounded-full text-primary"
+          className="h-8 w-8"
           aria-label={t("events.create")}
           title={t("events.create")}
           data-tour="create-event-button"
         >
-          <Plus className="w-5 h-5" />
+          <Plus className="w-4 h-4" />
         </Button>
       )}
       <Button
         variant="outline"
         size="sm"
         onClick={onToday}
-        className="h-9 rounded-full px-5 ms-2 me-2 border-border font-medium"
+        className="h-8 me-1"
         title={formatFullDate(displayNow())}
       >
         {t("views.today")}
@@ -370,22 +370,22 @@ export function CalendarToolbar({
       <Button
         variant="ghost"
         size="icon"
-        className="h-9 w-9 rounded-full text-muted-foreground hover:text-foreground"
+        className="h-8 w-8"
         onClick={onPrev}
         aria-label={t("nav_prev")}
       >
-        <ChevronLeft className="w-5 h-5 rtl:rotate-180" />
+        <ChevronLeft className="w-4 h-4 rtl:rotate-180" />
       </Button>
       <Button
         variant="ghost"
         size="icon"
-        className="h-9 w-9 rounded-full text-muted-foreground hover:text-foreground"
+        className="h-8 w-8"
         onClick={onNext}
         aria-label={t("nav_next")}
       >
-        <ChevronRight className="w-5 h-5 rtl:rotate-180" />
+        <ChevronRight className="w-4 h-4 rtl:rotate-180" />
       </Button>
-      <h1 className="ms-3 text-[22px] leading-7 font-normal text-foreground truncate select-none">
+      <h1 className="ms-2 text-base font-semibold truncate select-none">
         {getDateLabel()}
       </h1>
 
@@ -397,8 +397,8 @@ export function CalendarToolbar({
             variant="ghost"
             size="icon"
             className={cn(
-              "h-10 w-10 rounded-full text-muted-foreground hover:text-foreground",
-              showImportDropdown && "bg-accent text-foreground",
+              "h-8 w-8",
+              showImportDropdown && "bg-accent text-accent-foreground",
             )}
             onClick={() => setShowImportDropdown((v) => !v)}
             aria-label={t("toolbar.more")}
@@ -406,20 +406,20 @@ export function CalendarToolbar({
             aria-haspopup="menu"
             aria-expanded={showImportDropdown}
           >
-            <MoreVertical className="w-5 h-5" />
+            <MoreVertical className="w-4 h-4" />
           </Button>
           {showImportDropdown && (
             <div
               role="menu"
-              className="absolute top-full end-0 mt-1 z-50 bg-popover text-popover-foreground border border-border rounded-lg shadow-lg py-1.5 min-w-[220px]"
+              className="absolute top-full end-0 mt-1 z-50 bg-background border border-border rounded-lg shadow-lg p-1 min-w-[180px]"
             >
               {onImport && (
                 <button
                   role="menuitem"
                   onClick={() => { onImport(); setShowImportDropdown(false); }}
-                  className="flex items-center gap-3 w-full px-4 py-2 text-sm hover:bg-muted transition-colors text-foreground"
+                  className="flex items-center gap-2 w-full px-3 py-2 rounded-md text-sm hover:bg-muted transition-colors text-foreground"
                 >
-                  <Upload className="w-4 h-4 text-muted-foreground" />
+                  <Upload className="w-4 h-4" />
                   {t("import.title")}
                 </button>
               )}
@@ -427,9 +427,9 @@ export function CalendarToolbar({
                 <button
                   role="menuitem"
                   onClick={() => { onSubscribe(); setShowImportDropdown(false); }}
-                  className="flex items-center gap-3 w-full px-4 py-2 text-sm hover:bg-muted transition-colors text-foreground"
+                  className="flex items-center gap-2 w-full px-3 py-2 rounded-md text-sm hover:bg-muted transition-colors text-foreground"
                 >
-                  <Globe className="w-4 h-4 text-muted-foreground" />
+                  <Globe className="w-4 h-4" />
                   {t("subscription.title")}
                 </button>
               )}
@@ -442,7 +442,7 @@ export function CalendarToolbar({
         <Button
           variant="outline"
           size="sm"
-          className="h-9 rounded-full ps-4 pe-3 gap-1.5 border-border font-medium"
+          className="h-8 gap-1"
           onClick={() => setShowViewMenu((v) => !v)}
           aria-haspopup="menu"
           aria-expanded={showViewMenu}
@@ -450,12 +450,12 @@ export function CalendarToolbar({
           data-testid="calendar-view-menu"
         >
           {currentViewLabel}
-          <ChevronDown className="w-4 h-4 text-muted-foreground" />
+          <ChevronDown className="w-3 h-3" />
         </Button>
         {showViewMenu && (
           <div
             role="menu"
-            className="absolute top-full end-0 mt-1 z-50 bg-popover text-popover-foreground border border-border rounded-lg shadow-lg py-1.5 min-w-[180px]"
+            className="absolute top-full end-0 mt-1 z-50 bg-background border border-border rounded-lg shadow-lg p-1 min-w-[180px]"
           >
             {menuViews.map((v) => (
               <button
@@ -464,8 +464,8 @@ export function CalendarToolbar({
                 aria-checked={v === viewMode}
                 onClick={() => { onViewModeChange(v); setShowViewMenu(false); }}
                 className={cn(
-                  "flex items-center justify-between gap-6 w-full px-4 py-2 text-sm transition-colors",
-                  v === viewMode ? "bg-primary/10 text-foreground" : "hover:bg-muted text-foreground",
+                  "flex items-center justify-between gap-6 w-full px-3 py-2 rounded-md text-sm transition-colors",
+                  v === viewMode ? "bg-accent text-accent-foreground font-medium" : "hover:bg-muted text-foreground",
                 )}
               >
                 <span>{t(`views.${v}`)}</span>

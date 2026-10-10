@@ -1649,10 +1649,10 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
         <>
           <div
             className={cn(
-              "bg-background overflow-y-auto overflow-x-hidden flex-shrink-0 px-3 pb-3 pt-3",
+              "border-e border-border bg-secondary overflow-y-auto overflow-x-hidden flex-shrink-0 p-3",
               !isResizing && "transition-[width] duration-300",
               isNarrow && cn(
-                "absolute inset-y-0 left-0 z-50 w-72 pt-[calc(env(safe-area-inset-top)+0.75rem)] border-e border-border shadow-xl",
+                "absolute inset-y-0 left-0 z-50 w-72 pt-[env(safe-area-inset-top)]",
                 "transform transition-transform duration-300 ease-in-out",
                 !narrowSidebarOpen && "-translate-x-full"
               )
@@ -1660,21 +1660,15 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
             style={isNarrow ? undefined : { width: `${calSidebarWidth}px` }}
           >
             {!isMobile && (
-              <button
-                type="button"
+              <Button
+                size="sm"
                 onClick={() => { setNarrowSidebarOpen(false); openCreateModal(); }}
                 data-tour={isNarrow ? undefined : "create-event-button"}
-                className={cn(
-                  "inline-flex items-center gap-3 h-14 ps-4 pe-6 mb-4 rounded-2xl",
-                  "bg-background text-foreground text-sm font-medium",
-                  "shadow-[0_1px_3px_0_rgb(0_0_0/0.2),0_4px_8px_3px_rgb(0_0_0/0.08)] hover:shadow-[0_1px_3px_0_rgb(0_0_0/0.25),0_6px_10px_4px_rgb(0_0_0/0.12)]",
-                  "dark:bg-muted dark:shadow-none dark:hover:bg-accent",
-                  "transition-shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                )}
+                className="w-full h-8 mb-3"
               >
-                <Plus className="w-6 h-6 text-primary" />
-                {t("create")}
-              </button>
+                <Plus className="w-4 h-4 me-1" />
+                {t("events.create")}
+              </Button>
             )}
             <MiniCalendar
               selectedDate={selectedDate}
