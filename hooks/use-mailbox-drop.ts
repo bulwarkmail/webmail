@@ -3,6 +3,7 @@
 import { useCallback, useState, DragEvent } from "react";
 import { Mailbox, Email } from "@/lib/jmap/types";
 import { useEmailStore } from "@/stores/email-store";
+import { emailKeyFor } from "@/lib/thread-utils";
 import { useAuthStore } from "@/stores/auth-store";
 import { useDragDropContext } from "@/contexts/drag-drop-context";
 import { toast } from "@/stores/toast-store";
@@ -183,8 +184,9 @@ export function useMailboxDrop({ mailbox, onDropComplete, onSuccess, onError }: 
         await moveEmailsToMailbox(client, emailIds, mailbox.id);
       }
 
-      // Clear selection if any selected emails were moved
-      if (emailIds.some(id => selectedEmailKeys.has(id))) {
+      // Clear selection if any selected emails were moved. The selection is
+      // keyed by owning account, so compare the dragged emails, not their ids.
+      if (draggedEmails.some(em => selectedEmailKeys.has(emailKeyFor(em)))) {
         clearSelection();
       }
 

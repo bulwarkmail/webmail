@@ -19,7 +19,7 @@ import {
 } from "@/components/icons";
 import { useTranslations } from "next-intl";
 import { useAuthStore } from "@/stores/auth-store";
-import { useEmailStore, ArchiveMailboxNotFoundError } from "@/stores/email-store";
+import { useEmailStore, ArchiveMailboxNotFoundError, resolveSelectedEmails } from "@/stores/email-store";
 import { runBatchEmailAction } from "@/lib/email-action-toast";
 import { toast } from "@/stores/toast-store";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
@@ -247,7 +247,7 @@ export function MvListToolbar({
       });
     });
 
-  const selectedEmails = emails.filter((email) => selectedEmailKeys.has(email.id));
+  const selectedEmails = resolveSelectedEmails(useEmailStore.getState());
 
   // The same targets the row's own context menu offers, with the account of
   // the selection leading (#1149).
@@ -320,7 +320,7 @@ export function MvListToolbar({
   const handleSpam = () =>
     run(async () => {
       if (!client) return;
-      const ids = Array.from(selectedEmailKeys);
+      const ids = resolveSelectedEmails(useEmailStore.getState()).map((email) => email.id);
       try {
         if (isInJunk) {
           await batchUndoSpam(client, ids);

@@ -4,7 +4,7 @@ import { ThreadListItem } from '../thread-list-item';
 import { useSettingsStore, DEFAULT_KEYWORDS } from '@/stores/settings-store';
 import { useEmailStore } from '@/stores/email-store';
 import { useUIStore } from '@/stores/ui-store';
-import { groupEmailsByThread } from '@/lib/thread-utils';
+import { emailKeyFor, groupEmailsByThread } from '@/lib/thread-utils';
 import type { Email } from '@/lib/jmap/types';
 
 vi.mock('@/hooks/use-email-drag', () => ({
@@ -437,5 +437,69 @@ describe('ThreadListItem account row tint', () => {
 
     const { container } = renderRow(tagged);
     expect(row(container)!.className).toContain('bg-teal-100');
+  });
+});
+
+describe('ThreadListItem selection in a merged view', () => {
+  // Unified and tag views stamp each email with its owning account, and the
+  // selection holds `emailKeyFor` keys. A bare-id check never matches them.
+  const stamp = { sourceClientAccountId: 'account-b', sourceAccountId: 'account-b' };
+
+  beforeEach(() => {
+    useSettingsStore.setState({
+      emailKeywords: [...DEFAULT_KEYWORDS],
+      showPreview: false,
+      mailLayout: 'split',
+      density: 'regular',
+    });
+    useEmailStore.setState({
+      isUnifiedView: true,
+      selectedEmailKeys: new Set<string>(),
+      lastSelectedEmailKey: null,
+      selectedMailbox: '',
+    });
+  });
+
+  it('shows a ticked stamped row as checked', () => {
+    const email = makeEmail({ ...stamp });
+    useEmailStore.setState({ emails: [email], selectedEmailKeys: new Set([emailKeyFor(email)]) });
+    renderRow(email);
+
+    expect(screen.getByRole('checkbox')).toHaveAttribute('aria-checked', 'true');
+  });
+
+  it('does not show a namesake row from another account as checked', () => {
+    const mine = makeEmail({ sourceClientAccountId: 'account-a', sourceAccountId: 'account-a' });
+    const theirs = makeEmail({ ...stamp });
+    useEmailStore.setState({ emails: [mine, theirs], selectedEmailKeys: new Set([emailKeyFor(mine)]) });
+    renderRow(theirs);
+
+    expect(screen.getByRole('checkbox')).toHaveAttribute('aria-checked', 'false');
+  });
+
+  it('ticks a whole thread by key and shows it checked', () => {
+    const e1 = makeEmail({ id: 'e1', threadId: 't1', receivedAt: '2024-01-15T10:00:00Z', ...stamp });
+    const e2 = makeEmail({ id: 'e2', threadId: 't1', receivedAt: '2024-01-15T11:00:00Z', ...stamp });
+    useEmailStore.setState({ emails: [e1, e2] });
+    const [thread] = groupEmailsByThread([e1, e2]);
+    const ui = (
+      <ThreadListItem thread={thread} isExpanded={false} onToggleExpand={() => {}} onEmailSelect={() => {}} />
+    );
+    const { rerender } = render(ui);
+
+    act(() => {
+      screen.getByRole('checkbox').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    const { selectedEmailKeys, lastSelectedEmailKey } = useEmailStore.getState();
+    expect([...selectedEmailKeys].sort()).toEqual([emailKeyFor(e1), emailKeyFor(e2)].sort());
+    expect(lastSelectedEmailKey).toBe(emailKeyFor(e2));
+    rerender(ui);
+    expect(screen.getByRole('checkbox')).toHaveAttribute('aria-checked', 'true');
+
+    act(() => {
+      screen.getByRole('checkbox').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    expect(useEmailStore.getState().selectedEmailKeys.size).toBe(0);
   });
 });

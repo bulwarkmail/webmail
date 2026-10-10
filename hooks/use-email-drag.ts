@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, DragEvent } from "react";
 import { Email } from "@/lib/jmap/types";
 import { IJMAPClient } from "@/lib/jmap/client-interface";
 import { useEmailStore } from "@/stores/email-store";
+import { emailKeyFor } from "@/lib/thread-utils";
 import { useAuthStore } from "@/stores/auth-store";
 import { useDragDropContext } from "@/contexts/drag-drop-context";
 import { useUIStore } from "@/stores/ui-store";
@@ -195,10 +196,10 @@ export function useEmailDrag({ email, sourceMailboxId, threadEmails }: UseEmailD
 
   const handlePointerEnter = useCallback(() => {
     if (!dragOutEnabled || !client) return;
-    const isSelected = selectedEmailKeys.has(email.id);
+    const isSelected = selectedEmailKeys.has(emailKeyFor(email));
     const isMulti = isSelected && selectedEmailKeys.size > 1;
     if (isMulti) {
-      const selected = emails.filter((em) => selectedEmailKeys.has(em.id));
+      const selected = emails.filter((em) => selectedEmailKeys.has(emailKeyFor(em)));
       // Only worth bundling when at least one selected email has a blobId.
       if (selected.some((em) => em.blobId)) {
         prefetchEmailBundle(client, selected, filenameOptions, bundleOptions);
@@ -206,16 +207,16 @@ export function useEmailDrag({ email, sourceMailboxId, threadEmails }: UseEmailD
     } else {
       prefetchSingle();
     }
-  }, [dragOutEnabled, client, selectedEmailKeys, email.id, emails, prefetchSingle, filenameOptions, bundleOptions]);
+  }, [dragOutEnabled, client, selectedEmailKeys, email, emails, prefetchSingle, filenameOptions, bundleOptions]);
 
   const handleDragStart = useCallback((e: DragEvent<HTMLDivElement>) => {
     // Determine which emails to drag:
     // - If current email is selected, drag all selected
     // - If threadEmails provided (thread header), drag all thread emails
     // - Otherwise, drag only this email
-    const isSelected = selectedEmailKeys.has(email.id);
+    const isSelected = selectedEmailKeys.has(emailKeyFor(email));
     const emailsToDrag = isSelected
-      ? emails.filter(em => selectedEmailKeys.has(em.id))
+      ? emails.filter(em => selectedEmailKeys.has(emailKeyFor(em)))
       : threadEmails || [email];
 
     e.dataTransfer.effectAllowed = "copyMove";

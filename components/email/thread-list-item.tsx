@@ -17,7 +17,7 @@ import { accountTintKey, generateAvatarColor } from "@/lib/account-utils";
 import { useUIStore } from "@/stores/ui-store";
 import { useEmailStore } from "@/stores/email-store";
 import { useAccountStore, type AccountEntry } from "@/stores/account-store";
-import { getThreadTagIds, getEmailTagIds } from "@/lib/thread-utils";
+import { emailKeyFor, getThreadTagIds, getEmailTagIds } from "@/lib/thread-utils";
 import { useKeywordFormat } from "@/hooks/use-keyword-format";
 import { useTagDisplay } from "@/hooks/use-tag-display";
 import { TagBadge, TAG_GROUP_CLASS, TAG_LOZENGE_CLASS } from "./tag-badge";
@@ -306,7 +306,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
     const account = email.accountId ? getAccountById(email.accountId) : undefined;
     const accountColor = account?.avatarColor;
     const accountDescription = describeAccount(email.accountLabel, account);
-    const isChecked = selectedEmailKeys.has(email.id);
+    const isChecked = selectedEmailKeys.has(emailKeyFor(email));
     const isMobile = useUIStore((state) => state.isMobile);
     // The horizontal one-line "focus" layout doesn't fit on narrow screens; fall back to multi-line on mobile.
     const isFocusedMailLayout = mailLayout === 'focus' && !isMobile;
@@ -879,7 +879,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
     const isSelected = selectedEmailId === latestEmail.id ||
       thread.emails.some(e => e.id === selectedEmailId);
 
-    const isChecked = thread.emails.some(e => selectedEmailKeys.has(e.id));
+    const isChecked = thread.emails.some(e => selectedEmailKeys.has(emailKeyFor(e)));
 
     if (emailCount === 1) {
       return (
@@ -909,16 +909,16 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
 
     // Toggle selection for all emails in this thread.
     const toggleThreadSelection = () => {
-      const allSelected = thread.emails.every(em => selectedEmailKeys.has(em.id));
+      const allSelected = thread.emails.every(em => selectedEmailKeys.has(emailKeyFor(em)));
       const newSelection = new Set(selectedEmailKeys);
       thread.emails.forEach(em => {
         if (allSelected) {
-          newSelection.delete(em.id);
+          newSelection.delete(emailKeyFor(em));
         } else {
-          newSelection.add(em.id);
+          newSelection.add(emailKeyFor(em));
         }
       });
-      useEmailStore.setState({ selectedEmailKeys: newSelection, lastSelectedEmailKey: latestEmail.id });
+      useEmailStore.setState({ selectedEmailKeys: newSelection, lastSelectedEmailKey: emailKeyFor(latestEmail) });
     };
 
     const handleThreadCheckboxClick = (e: React.MouseEvent) => {

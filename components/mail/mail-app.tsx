@@ -32,7 +32,7 @@ import { usePolicyStore } from "@/stores/policy-store";
 import type { UnifiedAccountClient } from "@/lib/unified-mailbox";
 import { connectedAccountsGrew } from "@/lib/unified-mailbox";
 import { KeyboardShortcutsModal } from "@/components/keyboard-shortcuts-modal";
-import { useEmailStore, buildUnifiedAccountClients, invalidateUnifiedMailboxes, captureViewToken, ArchiveMailboxNotFoundError, ensureArchiveMailbox, resolveUnstampedEmailAccountId, resolveEmailBlobContext, emptyFolderMovesToTrash } from "@/stores/email-store";
+import { useEmailStore, buildUnifiedAccountClients, invalidateUnifiedMailboxes, captureViewToken, ArchiveMailboxNotFoundError, ensureArchiveMailbox, resolveSelectedEmails, resolveUnstampedEmailAccountId, resolveEmailBlobContext, emptyFolderMovesToTrash } from "@/stores/email-store";
 import { groupSearchScopeFolders, SEARCH_SCOPE_ALL_FOLDERS } from "@/lib/search-scope-folders";
 import { toast } from "@/stores/toast-store";
 import { formatRejectedRecipients, type JMAPClient } from "@/lib/jmap/client";
@@ -59,7 +59,7 @@ import { debug } from "@/lib/debug";
 import { playNotificationSound } from "@/lib/notification-sound";
 import { cn, getMailboxPath } from "@/lib/utils";
 import { localizeMailboxName } from "@/lib/mailbox-label";
-import { KEYWORD_PREFIX, KEYWORD_PREFIX_LEGACY, emailKeyFor, groupEmailsByThread, threadKeyFor } from "@/lib/thread-utils";
+import { KEYWORD_PREFIX, KEYWORD_PREFIX_LEGACY, groupEmailsByThread, threadKeyFor } from "@/lib/thread-utils";
 import { resolveThreadRoute } from "@/lib/thread-routing";
 import {
   ErrorBoundary,
@@ -849,8 +849,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       const isInJunk = currentMailbox?.role === 'junk';
       if (selectedEmailKeys.size > 0 && client) {
         // The spam actions take bare ids of the viewed account: resolve the
-        // selection keys through the loaded rows.
-        const ids = useEmailStore.getState().emails.filter(e => selectedEmailKeys.has(emailKeyFor(e))).map(e => e.id);
+        // selection keys through the loaded rows and thread members.
+        const ids = resolveSelectedEmails(useEmailStore.getState()).map(e => e.id);
         try {
           if (isInJunk) {
             await batchUndoSpam(client, ids);

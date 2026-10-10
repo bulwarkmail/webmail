@@ -12,7 +12,7 @@ import { useLongPress } from "@/hooks/use-long-press";
 import { useEmailStore } from "@/stores/email-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useUIStore } from "@/stores/ui-store";
-import { getEmailTagIds } from "@/lib/thread-utils";
+import { emailKeyFor, getEmailTagIds } from "@/lib/thread-utils";
 import { useKeywordFormat } from "@/hooks/use-keyword-format";
 import { useTagDisplay } from "@/hooks/use-tag-display";
 import { TagBadge } from "./tag-badge";
@@ -47,7 +47,7 @@ export function ThreadEmailItem({
   const sender = email.from?.[0];
   const { selectedMailbox, selectedEmailKeys, toggleEmailSelection, selectRangeEmails, clearSelection } = useEmailStore();
   const density = useSettingsStore((state) => state.density);
-  const isChecked = selectedEmailKeys.has(email.id);
+  const isChecked = selectedEmailKeys.has(emailKeyFor(email));
 
   const { dragHandlers, isDragging } = useEmailDrag({
     email,

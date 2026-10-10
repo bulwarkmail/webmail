@@ -13,7 +13,7 @@ import { Trash2, Mail, MailX, MailOpen, Loader2, SearchX, AlertTriangle, Calenda
 import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { useEmailStore, ArchiveMailboxNotFoundError } from "@/stores/email-store";
+import { useEmailStore, ArchiveMailboxNotFoundError, resolveSelectedEmails } from "@/stores/email-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { useAccountStore } from "@/stores/account-store";
 import { useSettingsStore } from "@/stores/settings-store";
@@ -400,7 +400,7 @@ export function EmailList({
     if (!client || isProcessing) return;
     setIsProcessing(true);
     try {
-      const emailIds = emails.filter(e => selectedEmailKeys.has(emailKeyFor(e))).map(e => e.id);
+      const emailIds = resolveSelectedEmails(useEmailStore.getState()).map(e => e.id);
       await batchUndoSpam(client, emailIds);
       toast.success(tSpam('toast_not_spam_batch', { count: emailIds.length }));
     } catch {
@@ -812,9 +812,11 @@ export function EmailList({
           onRescheduleScheduled={onRescheduleScheduled ? () => onRescheduleScheduled(contextMenuEmail!) : undefined}
           copyTargets={copyTargets}
           onCopyToAccount={async (accountId, mailboxId) => {
+            // Pass the emails, not their ids: an id alone cannot say which
+            // account's namesake to copy.
             const ids = selectedEmailKeys.has(emailKeyFor(contextMenuEmail!)) && selectedEmailKeys.size > 1
-              ? emails.filter((email) => selectedEmailKeys.has(emailKeyFor(email))).map((email) => email.id)
-              : [contextMenuEmail!.id];
+              ? resolveSelectedEmails(useEmailStore.getState())
+              : [contextMenuEmail!];
             const target = accountMailboxes[accountId]?.find((mb) => mb.id === mailboxId);
             await runBatchEmailAction(() => copyEmailsToAccount(ids, accountId, target?.originalId ?? mailboxId), {
               success: tNotifications('emails_copied', { count: ids.length }),
@@ -854,7 +856,7 @@ export function EmailList({
           }}
           onBatchMarkAsSpam={async () => {
             if (client) {
-              const emailIds = emails.filter(e => selectedEmailKeys.has(emailKeyFor(e))).map(e => e.id);
+              const emailIds = resolveSelectedEmails(useEmailStore.getState()).map(e => e.id);
               try {
                 await batchMarkAsSpam(client, emailIds);
                 toast.success(
@@ -867,7 +869,7 @@ export function EmailList({
           }}
           onBatchUndoSpam={async () => {
             if (client) {
-              const emailIds = emails.filter(e => selectedEmailKeys.has(emailKeyFor(e))).map(e => e.id);
+              const emailIds = resolveSelectedEmails(useEmailStore.getState()).map(e => e.id);
               try {
                 await batchUndoSpam(client, emailIds);
                 toast.success(
