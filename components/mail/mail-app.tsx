@@ -909,7 +909,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     // expansion.
     onToggleSelection: () => {
       if (isScheduledView || !selectedEmail) return;
-      toggleEmailSelection(selectedEmail.id);
+      toggleEmailSelection(selectedEmail);
     },
     // Mountain View's `g` sequences. `g s` goes to the "All starred" view when
     // the user has one - a list you arrive at and leave, like the other `g`
