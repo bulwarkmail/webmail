@@ -36,6 +36,7 @@
     "token_placeholder": "粘贴 API 令牌",
     "token_hint": "请在邮件服务商的设置中创建 API 令牌，然后粘贴到这里。",
     "remember_me": "记住我",
+    "remember_me_hint": "若未勾选，刷新页面将退出登录。",
     "config_error": {
       "title": "配置错误",
       "fetch_failed": "无法加载应用配置。请稍后重试。",
