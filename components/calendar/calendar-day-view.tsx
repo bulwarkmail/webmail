@@ -19,6 +19,7 @@ import { useTimeGridInteractions } from "@/hooks/use-time-grid-interactions";
 import { useScrollWindow, getScrollStart, setScrollStart, scrollToStart } from "@/hooks/use-scroll-window";
 import { dayKey, type ScrollWindowViewProps } from "@/lib/calendar-scroll-window";
 import type { PendingEventPreview } from "./event-modal";
+import { readableTextOn } from "@/lib/color-transform";
 
 interface CalendarDayViewProps extends ScrollWindowViewProps {
   selectedDate: Date;
@@ -604,21 +605,24 @@ export function CalendarDayView({
                         if (startMin + durationMin <= hours.startMinutes || startMin >= hours.endMinutes) return null;
                         const clip = clipToDisplayHours(startMin, startMin + durationMin, hours);
                         const cal = calendars.find(c => c.id === pendingPreview.calendarId);
-                        const color = cal?.color || "hsl(var(--primary))";
+                        const color = cal?.color || "#3b82f6";
+                        // Drawn like a saved event, so the new event shows where
+                        // it will land while it is being created.
                         return (
                           <div
-                            className="absolute left-2 right-2 z-10 rounded-md pointer-events-none border-2 border-dashed overflow-hidden"
+                            data-pending-preview
+                            className="absolute left-0.5 right-0.5 z-30 rounded-xs pointer-events-none overflow-hidden px-1.5 py-0.5 text-xs shadow-md"
                             style={{
                               top: ((clip.startMinutes - hours.startMinutes) / 60) * HOUR_HEIGHT,
                               height: Math.max(24, ((clip.endMinutes - clip.startMinutes) / 60) * HOUR_HEIGHT),
-                              borderColor: color,
-                              backgroundColor: `${color}10`,
+                              backgroundColor: color,
+                              color: readableTextOn(color),
                             }}
                           >
-                            <div className="text-[10px] font-medium px-1.5 py-0.5 truncate" style={{ color }}>
+                            <div className="font-medium truncate">
                               {pendingPreview.title}
                             </div>
-                            <div className="text-[9px] px-1.5 opacity-70" style={{ color }}>
+                            <div className="text-[10.5px] opacity-85 truncate">
                               {formatSnapTime(startMin, timeFormat)} – {formatSnapTime(startMin + durationMin, timeFormat)}
                             </div>
                           </div>

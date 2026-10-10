@@ -3251,7 +3251,9 @@
     },
     "quick_create": {
       "placeholder": "Titel des neuen Termins",
-      "aria_label": "Schnellerstellung eines Termins"
+      "aria_label": "Schnellerstellung eines Termins",
+      "add_title": "Titel hinzufügen",
+      "more_options": "Weitere Optionen"
     },
     "nav_prev": "Zurück",
     "nav_next": "Weiter",

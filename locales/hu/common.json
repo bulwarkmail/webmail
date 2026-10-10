@@ -3277,7 +3277,9 @@
     },
     "quick_create": {
       "placeholder": "Új esemény címe",
-      "aria_label": "Gyors esemény létrehozása"
+      "aria_label": "Gyors esemény létrehozása",
+      "add_title": "Cím hozzáadása",
+      "more_options": "További beállítások"
     },
     "nav_prev": "Előző",
     "nav_next": "Következő",

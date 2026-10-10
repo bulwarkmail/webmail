@@ -3250,7 +3250,9 @@
     },
     "quick_create": {
       "placeholder": "Jauna pasākuma nosaukums",
-      "aria_label": "Ātra pasākuma izveide"
+      "aria_label": "Ātra pasākuma izveide",
+      "add_title": "Pievienot nosaukumu",
+      "more_options": "Vairāk opciju"
     },
     "nav_prev": "Iepriekšējais",
     "nav_next": "Nākamais",

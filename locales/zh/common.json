@@ -3251,7 +3251,9 @@
     },
     "quick_create": {
       "placeholder": "新活动标题",
-      "aria_label": "快速创建事件"
+      "aria_label": "快速创建事件",
+      "add_title": "添加标题",
+      "more_options": "更多选项"
     },
     "nav_prev": "上一项",
     "nav_next": "下一项",

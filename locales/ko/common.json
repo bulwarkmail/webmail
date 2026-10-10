@@ -3251,7 +3251,9 @@
     },
     "quick_create": {
       "placeholder": "새 일정 제목",
-      "aria_label": "빠른 일정 만들기"
+      "aria_label": "빠른 일정 만들기",
+      "add_title": "제목 추가",
+      "more_options": "추가 옵션"
     },
     "nav_prev": "이전",
     "nav_next": "다음",

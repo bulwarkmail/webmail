@@ -3277,7 +3277,9 @@
     },
     "quick_create": {
       "placeholder": "Tittel på ny hendelse",
-      "aria_label": "Opprett en hendelse raskt"
+      "aria_label": "Opprett en hendelse raskt",
+      "add_title": "Legg til tittel",
+      "more_options": "Flere alternativer"
     },
     "nav_prev": "Forrige",
     "nav_next": "Neste",

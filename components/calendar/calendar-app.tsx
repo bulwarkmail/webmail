@@ -63,10 +63,12 @@ import {
 } from "@/lib/recurrence-instances";
 import { getClientByLocalAccountId } from "@/stores/client-registry";
 import { getEventStartDate } from "@/lib/calendar-utils";
-import { displayNow } from "@/lib/timezone";
+import { displayNow, getEffectiveTimeZone } from "@/lib/timezone";
+import { canCreateEventsIn } from "@/lib/calendar-editability";
+import { QuickCreatePopover, type QuickCreateDraft } from "@/components/calendar/quick-create-popover";
 import { useTaskStore } from "@/stores/task-store";
 import { useContactStore } from "@/stores/contact-store";
-import { cn } from "@/lib/utils";
+import { cn, generateUUID } from "@/lib/utils";
 import type { Calendar, CalendarEvent, CalendarParticipant, CalendarRights, CalendarTask } from "@/lib/jmap/types";
 import { ShareCollectionDialog } from "@/components/settings/share-collection-dialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -188,6 +190,10 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
   const [detailEvent, setDetailEvent] = useState<CalendarEvent | null>(null);
   const [detailAnchorRect, setDetailAnchorRect] = useState<DOMRect | null>(null);
   const [pendingPreview, setPendingPreview] = useState<PendingEventPreview | null>(null);
+  // Quick create (#calendar redesign): an empty slot clicked in the week or
+  // day view opens a small editor beside a placeholder block.
+  const [quickDraft, setQuickDraft] = useState<QuickCreateDraft | null>(null);
+  const [defaultModalTitle, setDefaultModalTitle] = useState<string | undefined>();
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [editTask, setEditTask] = useState<import("@/lib/jmap/types").CalendarTask | null>(null);
   const [mobileReturnToMonth, setMobileReturnToMonth] = useState(false);
@@ -599,6 +605,8 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
   }, [jumpTo]);
 
   const openCreateModal = useCallback((date?: Date, endDate?: Date, allDay?: boolean) => {
+    setQuickDraft(null);
+    setDefaultModalTitle(undefined);
     setEditEvent(null);
     const d = date || selectedDate;
     setDefaultModalDate(d);
@@ -955,6 +963,83 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     };
     await save(requestedScheduling);
   }, [client, editEvent, createEvent, updateEvent, focusCalendarOnEvent, confirmAction, t]);
+
+  // Calendars a new event can go into: never a subscription or read-only one (#762).
+  const writableCalendars = useMemo(
+    () => calendars.filter((c) => !c.isTasksOnly && canCreateEventsIn(c, isSubscriptionCalendar)),
+    [calendars, isSubscriptionCalendar],
+  );
+
+  // A click or drag on empty grid space. On wide screens it opens the quick
+  // editor at that spot; on phones the full editor, as before.
+  const handleGridCreate = useCallback((start: Date, end?: Date) => {
+    if (isMobile) {
+      openCreateModal(start, end);
+      return;
+    }
+    const finalEnd = end ?? new Date(start.getTime() + 60 * 60 * 1000);
+    const preferred = writableCalendars.find((c) => c.isDefault) ?? writableCalendars[0];
+    setShowEventModal(false);
+    setEditEvent(null);
+    setShowTaskModal(false);
+    setEditTask(null);
+    setDetailEvent(null);
+    setDetailAnchorRect(null);
+    setQuickDraft((prev) => ({
+      start,
+      end: finalEnd,
+      title: "",
+      calendarId: prev && writableCalendars.some((c) => c.id === prev.calendarId)
+        ? prev.calendarId
+        : preferred?.id ?? "",
+    }));
+  }, [isMobile, openCreateModal, writableCalendars]);
+
+  const closeQuickCreate = useCallback(() => setQuickDraft(null), []);
+
+  const handleQuickCreateMoreOptions = useCallback(() => {
+    if (!quickDraft) return;
+    const draft = quickDraft;
+    openCreateModal(draft.start, draft.end);
+    setDefaultCalendarIdForCreate(draft.calendarId || undefined);
+    setDefaultModalTitle(draft.title || undefined);
+  }, [quickDraft, openCreateModal]);
+
+  const handleQuickCreateSave = useCallback(async () => {
+    if (!quickDraft) return;
+    const { start, end, title, calendarId } = quickDraft;
+    const minutes = Math.max(15, Math.round((end.getTime() - start.getTime()) / 60000));
+    const hours = Math.floor(minutes / 60);
+    const rest = minutes % 60;
+    const duration = `PT${hours > 0 ? `${hours}H` : ""}${rest > 0 ? `${rest}M` : ""}`;
+    setQuickDraft(null);
+    // Grid dates are wall-clock times in the user's zone (#755), the same
+    // as the full editor's fields, so they are labelled with that zone.
+    await handleSaveEvent({
+      uid: generateUUID(),
+      title: title.trim(),
+      start: format(start, "yyyy-MM-dd'T'HH:mm:ss"),
+      duration,
+      timeZone: getEffectiveTimeZone(),
+      showWithoutTime: false,
+      calendarIds: { [calendarId]: true },
+      status: "confirmed",
+      freeBusyStatus: "busy",
+      privacy: "public",
+    });
+  }, [quickDraft, handleSaveEvent]);
+
+  // While the quick editor is open its placeholder takes the preview slot.
+  const gridPreview = useMemo<PendingEventPreview | null>(() => {
+    if (!quickDraft) return pendingPreview;
+    return {
+      start: quickDraft.start,
+      end: quickDraft.end,
+      title: quickDraft.title.trim() || t("events.no_title"),
+      allDay: false,
+      calendarId: quickDraft.calendarId,
+    };
+  }, [quickDraft, pendingPreview, t]);
 
   const handleDuplicateEvent = useCallback(async (data: Partial<CalendarEvent>) => {
     if (!client) { toast.error(t("notifications.event_error")); return; }
@@ -1502,11 +1587,11 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
               onHoverLeave={handleHoverLeave}
               onContextMenuEvent={handleContextMenuEvent}
               onContextMenuEmpty={handleContextMenuEmpty}
-              onCreateAtTime={openCreateModal}
+              onCreateAtTime={handleGridCreate}
               firstDayOfWeek={firstDayOfWeek}
               timeFormat={timeFormat}
               isMobile={isMobile}
-              pendingPreview={pendingPreview}
+              pendingPreview={gridPreview}
               tasks={calendarTasks}
               onToggleTaskComplete={handleToggleTaskComplete}
               onSelectTask={openEditTaskModal}
@@ -1525,10 +1610,10 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
               onHoverLeave={handleHoverLeave}
               onContextMenuEvent={handleContextMenuEvent}
               onContextMenuEmpty={handleContextMenuEmpty}
-              onCreateAtTime={openCreateModal}
+              onCreateAtTime={handleGridCreate}
               timeFormat={timeFormat}
               isMobile={isMobile}
-              pendingPreview={pendingPreview}
+              pendingPreview={gridPreview}
               tasks={calendarTasks}
               onToggleTaskComplete={handleToggleTaskComplete}
               onSelectTask={openEditTaskModal}
@@ -1804,6 +1889,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
                 defaultDate={defaultModalDate}
                 defaultEndDate={defaultModalEndDate}
                 defaultAllDay={defaultModalAllDay}
+                defaultTitle={defaultModalTitle}
                 defaultCalendarId={defaultCalendarIdForCreate}
                 onSave={handleSaveEvent}
                 onDelete={handleDeleteEvent}
@@ -1912,6 +1998,18 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
         );
       })()}
 
+      {quickDraft && !isMobile && (
+        <QuickCreatePopover
+          draft={quickDraft}
+          calendars={writableCalendars}
+          timeFormat={timeFormat}
+          onChange={setQuickDraft}
+          onSave={handleQuickCreateSave}
+          onMoreOptions={handleQuickCreateMoreOptions}
+          onClose={closeQuickCreate}
+        />
+      )}
+
       {detailEvent && detailAnchorRect && (
         <EventDetailPopover
           event={detailEvent}
@@ -1940,6 +2038,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
           defaultDate={defaultModalDate}
           defaultEndDate={defaultModalEndDate}
           defaultAllDay={defaultModalAllDay}
+          defaultTitle={defaultModalTitle}
           defaultCalendarId={defaultCalendarIdForCreate}
           onSave={handleSaveEvent}
           onDelete={handleDeleteEvent}

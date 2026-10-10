@@ -3175,7 +3175,9 @@
     },
     "quick_create": {
       "placeholder": "כותרת אירוע חדשה",
-      "aria_label": "אירוע יצירה מהיר"
+      "aria_label": "אירוע יצירה מהיר",
+      "add_title": "הוספת כותרת",
+      "more_options": "אפשרויות נוספות"
     },
     "nav_prev": "הקודם",
     "nav_next": "הבא",

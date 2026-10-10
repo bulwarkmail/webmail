@@ -3277,7 +3277,9 @@
     },
     "quick_create": {
       "placeholder": "Názov novej udalosti",
-      "aria_label": "Rýchle vytvorenie udalosti"
+      "aria_label": "Rýchle vytvorenie udalosti",
+      "add_title": "Pridať názov",
+      "more_options": "Ďalšie možnosti"
     },
     "nav_prev": "Predchádzajúci",
     "nav_next": "Ďalší",

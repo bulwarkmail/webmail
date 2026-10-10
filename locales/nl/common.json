@@ -3251,7 +3251,9 @@
     },
     "quick_create": {
       "placeholder": "Titel nieuw evenement",
-      "aria_label": "Snel evenement aanmaken"
+      "aria_label": "Snel evenement aanmaken",
+      "add_title": "Titel toevoegen",
+      "more_options": "Meer opties"
     },
     "nav_prev": "Vorige",
     "nav_next": "Volgende",

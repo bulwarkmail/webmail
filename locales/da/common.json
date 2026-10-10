@@ -3277,7 +3277,9 @@
     },
     "quick_create": {
       "placeholder": "Ny begivenhedstitel",
-      "aria_label": "Hurtig oprettelse af begivenhed"
+      "aria_label": "Hurtig oprettelse af begivenhed",
+      "add_title": "Tilføj titel",
+      "more_options": "Flere indstillinger"
     },
     "nav_prev": "Forrige",
     "nav_next": "Næste",

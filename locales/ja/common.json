@@ -3251,7 +3251,9 @@
     },
     "quick_create": {
       "placeholder": "新しい予定のタイトル",
-      "aria_label": "予定をすばやく作成"
+      "aria_label": "予定をすばやく作成",
+      "add_title": "タイトルを追加",
+      "more_options": "その他のオプション"
     },
     "nav_prev": "前へ",
     "nav_next": "次へ",

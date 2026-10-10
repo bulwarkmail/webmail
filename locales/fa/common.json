@@ -3277,7 +3277,9 @@
     },
     "quick_create": {
       "placeholder": "عنوان رویداد جدید",
-      "aria_label": "ایجاد سریع رویداد"
+      "aria_label": "ایجاد سریع رویداد",
+      "add_title": "افزودن عنوان",
+      "more_options": "گزینه‌های بیشتر"
     },
     "nav_prev": "قبلی",
     "nav_next": "بعدی",

@@ -3277,7 +3277,9 @@
     },
     "quick_create": {
       "placeholder": "عنوان الحدث الجديد",
-      "aria_label": "إنشاء حدث سريع"
+      "aria_label": "إنشاء حدث سريع",
+      "add_title": "أضف عنوانًا",
+      "more_options": "خيارات أخرى"
     },
     "nav_prev": "السابق",
     "nav_next": "التالي",

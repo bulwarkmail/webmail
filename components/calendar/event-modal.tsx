@@ -49,6 +49,8 @@ interface EventModalProps {
   defaultDate?: Date;
   defaultEndDate?: Date;
   defaultAllDay?: boolean;
+  /** Title to start a new event with (from the quick editor's "More options"). */
+  defaultTitle?: string;
   defaultCalendarId?: string;
   onSave: (data: Partial<CalendarEvent>, sendSchedulingMessages?: boolean) => void | Promise<void>;
   onDelete?: (id: string, sendSchedulingMessages?: boolean) => void;
@@ -192,6 +194,7 @@ export function EventModal({
   defaultDate,
   defaultEndDate,
   defaultAllDay,
+  defaultTitle,
   defaultCalendarId,
   onSave,
   onDelete,
@@ -299,7 +302,7 @@ export function EventModal({
     return addHours(getInitialStart(), 1);
   };
 
-  const [title, setTitle] = useState(event?.title || "");
+  const [title, setTitle] = useState(event?.title || defaultTitle || "");
   const [description, setDescription] = useState(event?.description || "");
   const [location, setLocation] = useState(
     event?.locations ? Object.values(event.locations)[0]?.name || "" : ""

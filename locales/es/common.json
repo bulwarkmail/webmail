@@ -3251,7 +3251,9 @@
     },
     "quick_create": {
       "placeholder": "Título del nuevo evento",
-      "aria_label": "Creación rápida de evento"
+      "aria_label": "Creación rápida de evento",
+      "add_title": "Añadir título",
+      "more_options": "Más opciones"
     },
     "nav_prev": "Anterior",
     "nav_next": "Siguiente",

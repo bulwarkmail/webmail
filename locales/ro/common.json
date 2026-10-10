@@ -3277,7 +3277,9 @@
     },
     "quick_create": {
       "placeholder": "Titlul unui eveniment nou",
-      "aria_label": "Creare rapidă a unui eveniment"
+      "aria_label": "Creare rapidă a unui eveniment",
+      "add_title": "Adaugă titlu",
+      "more_options": "Mai multe opțiuni"
     },
     "nav_prev": "Anterior",
     "nav_next": "Următorul",

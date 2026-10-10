@@ -3277,7 +3277,9 @@
     },
     "quick_create": {
       "placeholder": "Yeni etkinlik başlığı",
-      "aria_label": "Hızlı etkinlik oluştur"
+      "aria_label": "Hızlı etkinlik oluştur",
+      "add_title": "Başlık ekle",
+      "more_options": "Diğer seçenekler"
     },
     "nav_prev": "Önceki",
     "nav_next": "Sonraki",

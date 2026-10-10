@@ -3277,7 +3277,9 @@
     },
     "quick_create": {
       "placeholder": "新活動標題",
-      "aria_label": "快速建立活動"
+      "aria_label": "快速建立活動",
+      "add_title": "新增標題",
+      "more_options": "更多選項"
     },
     "nav_prev": "上一項",
     "nav_next": "下一項",
