@@ -3440,7 +3440,9 @@
     "toolbar": {
       "more": "その他の操作",
       "select_view": "表示を切り替え（現在: {view}）"
-    }
+    },
+    "other_calendars": "他のカレンダー",
+    "calendar_options": "{name} のオプション"
   },
   "advanced_search": {
     "title": "詳細検索",

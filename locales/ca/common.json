@@ -3440,7 +3440,9 @@
     "toolbar": {
       "more": "Més accions",
       "select_view": "Canvia la vista, actualment {view}"
-    }
+    },
+    "other_calendars": "Altres calendaris",
+    "calendar_options": "Opcions de {name}"
   },
   "calendar_event_notifications": {
     "someone": "Algú",

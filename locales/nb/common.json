@@ -3440,7 +3440,9 @@
     "toolbar": {
       "more": "Flere handlinger",
       "select_view": "Bytt visning, nå {view}"
-    }
+    },
+    "other_calendars": "Andre kalendere",
+    "calendar_options": "Alternativer for {name}"
   },
   "calendar_event_notifications": {
     "someone": "Noen",

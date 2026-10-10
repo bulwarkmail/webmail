@@ -3440,7 +3440,9 @@
     "toolbar": {
       "more": "更多操作",
       "select_view": "切换视图，当前为{view}"
-    }
+    },
+    "other_calendars": "其他日历",
+    "calendar_options": "{name} 的选项"
   },
   "advanced_search": {
     "title": "高级搜索",

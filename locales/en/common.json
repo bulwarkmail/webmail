@@ -3440,7 +3440,9 @@
     "toolbar": {
       "more": "More actions",
       "select_view": "Change view, currently {view}"
-    }
+    },
+    "other_calendars": "Other calendars",
+    "calendar_options": "Options for {name}"
   },
   "calendar_event_notifications": {
     "someone": "Someone",

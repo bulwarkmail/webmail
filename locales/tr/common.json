@@ -3440,7 +3440,9 @@
     "toolbar": {
       "more": "Diğer işlemler",
       "select_view": "Görünümü değiştir, şu an {view}"
-    }
+    },
+    "other_calendars": "Diğer takvimler",
+    "calendar_options": "{name} seçenekleri"
   },
   "calendar_event_notifications": {
     "someone": "Birisi",

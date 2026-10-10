@@ -3440,7 +3440,9 @@
     "toolbar": {
       "more": "Meer acties",
       "select_view": "Weergave wijzigen, nu {view}"
-    }
+    },
+    "other_calendars": "Andere agenda's",
+    "calendar_options": "Opties voor {name}"
   },
   "advanced_search": {
     "title": "Geavanceerd zoeken",

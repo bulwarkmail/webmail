@@ -3440,7 +3440,9 @@
     "toolbar": {
       "more": "Citas darbības",
       "select_view": "Mainīt skatu, pašlaik {view}"
-    }
+    },
+    "other_calendars": "Citi kalendāri",
+    "calendar_options": "{name} opcijas"
   },
   "advanced_search": {
     "title": "Izvērstā meklēšana",

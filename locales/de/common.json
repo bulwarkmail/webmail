@@ -3440,7 +3440,9 @@
     "toolbar": {
       "more": "Weitere Aktionen",
       "select_view": "Ansicht wechseln, aktuell {view}"
-    }
+    },
+    "other_calendars": "Weitere Kalender",
+    "calendar_options": "Optionen für {name}"
   },
   "advanced_search": {
     "title": "Erweiterte Suche",

@@ -3440,7 +3440,9 @@
     "toolbar": {
       "more": "Další akce",
       "select_view": "Změnit zobrazení, nyní {view}"
-    }
+    },
+    "other_calendars": "Další kalendáře",
+    "calendar_options": "Možnosti pro {name}"
   },
   "advanced_search": {
     "title": "Pokročilé hledání",

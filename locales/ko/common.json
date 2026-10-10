@@ -3440,7 +3440,9 @@
     "toolbar": {
       "more": "추가 작업",
       "select_view": "보기 변경, 현재 {view}"
-    }
+    },
+    "other_calendars": "다른 캘린더",
+    "calendar_options": "{name} 옵션"
   },
   "advanced_search": {
     "title": "상세 검색",

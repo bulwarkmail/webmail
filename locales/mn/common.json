@@ -3440,7 +3440,9 @@
     "toolbar": {
       "more": "Бусад үйлдэл",
       "select_view": "Харагдац солих, одоо {view}"
-    }
+    },
+    "other_calendars": "Бусад хуанли",
+    "calendar_options": "{name}-ийн тохиргоо"
   },
   "calendar_event_notifications": {
     "someone": "Хэн нэгэн",

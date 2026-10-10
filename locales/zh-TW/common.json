@@ -3440,7 +3440,9 @@
     "toolbar": {
       "more": "更多動作",
       "select_view": "切換檢視，目前為{view}"
-    }
+    },
+    "other_calendars": "其他日曆",
+    "calendar_options": "{name} 的選項"
   },
   "calendar_event_notifications": {
     "someone": "有人",

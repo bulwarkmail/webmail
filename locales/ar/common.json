@@ -3440,7 +3440,9 @@
     "toolbar": {
       "more": "إجراءات أخرى",
       "select_view": "تغيير العرض، الحالي: {view}"
-    }
+    },
+    "other_calendars": "تقويمات أخرى",
+    "calendar_options": "خيارات {name}"
   },
   "calendar_event_notifications": {
     "someone": "شخص ما",

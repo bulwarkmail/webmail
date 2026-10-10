@@ -3440,7 +3440,9 @@
     "toolbar": {
       "more": "Другие действия",
       "select_view": "Сменить вид, сейчас {view}"
-    }
+    },
+    "other_calendars": "Другие календари",
+    "calendar_options": "Параметры: {name}"
   },
   "advanced_search": {
     "title": "Расширенный поиск",

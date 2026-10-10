@@ -3440,7 +3440,9 @@
     "toolbar": {
       "more": "Інші дії",
       "select_view": "Змінити вигляд, зараз {view}"
-    }
+    },
+    "other_calendars": "Інші календарі",
+    "calendar_options": "Параметри: {name}"
   },
   "advanced_search": {
     "title": "Розширений пошук",

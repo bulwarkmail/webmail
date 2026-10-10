@@ -3364,7 +3364,9 @@
     "toolbar": {
       "more": "פעולות נוספות",
       "select_view": "החלפת תצוגה, כעת {view}"
-    }
+    },
+    "other_calendars": "יומנים אחרים",
+    "calendar_options": "אפשרויות עבור {name}"
   },
   "advanced_search": {
     "title": "חיפוש מתקדם",

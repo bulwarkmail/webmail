@@ -3440,7 +3440,9 @@
     "toolbar": {
       "more": "Mai multe acțiuni",
       "select_view": "Schimbă vizualizarea, acum {view}"
-    }
+    },
+    "other_calendars": "Alte calendare",
+    "calendar_options": "Opțiuni pentru {name}"
   },
   "calendar_event_notifications": {
     "someone": "Cineva",

@@ -3440,7 +3440,9 @@
     "toolbar": {
       "more": "Flere handlinger",
       "select_view": "Skift visning, aktuelt {view}"
-    }
+    },
+    "other_calendars": "Andre kalendere",
+    "calendar_options": "Indstillinger for {name}"
   },
   "calendar_event_notifications": {
     "someone": "Nogen",

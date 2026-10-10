@@ -3440,7 +3440,9 @@
     "toolbar": {
       "more": "اقدامات بیشتر",
       "select_view": "تغییر نما، نمای فعلی: {view}"
-    }
+    },
+    "other_calendars": "تقویم‌های دیگر",
+    "calendar_options": "گزینه‌های {name}"
   },
   "calendar_event_notifications": {
     "someone": "کسی",
