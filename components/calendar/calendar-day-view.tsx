@@ -313,13 +313,26 @@ export function CalendarDayView({
               const dayTasks = tasksByDay.get(key) ?? [];
               return (
                 <div key={key} data-day={key} className="min-w-0 border-e border-border last:border-e-0">
-                  <div className={cn("px-4 py-3", isMobile && "px-3 py-2")}>
-                    <h3 className={cn("font-semibold truncate", isMobile ? "text-base" : "text-lg", today && "text-primary")}>
-                      {isMobile
-                        ? intlFormatter.dateTime(day, { weekday: "short", month: "short", day: "numeric" })
-                        : intlFormatter.dateTime(day, { weekday: "long", month: "long", day: "numeric", year: "numeric" })
-                      }
-                    </h3>
+                  <div
+                    className={cn("flex flex-col items-start gap-0.5 px-3 pt-2 pb-1.5", isMobile && "px-2")}
+                    role="columnheader"
+                    aria-label={intlFormatter.dateTime(day, { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
+                  >
+                    <div className={cn(
+                      "w-10 text-center text-[11px] font-medium uppercase tracking-wide",
+                      today ? "text-primary" : "text-muted-foreground",
+                    )}>
+                      {intlFormatter.dateTime(day, { weekday: "short" })}
+                    </div>
+                    <div
+                      aria-current={today ? "date" : undefined}
+                      className={cn(
+                        "inline-flex items-center justify-center w-10 h-10 rounded-full text-xl",
+                        today ? "bg-primary text-primary-foreground font-semibold" : "text-foreground",
+                      )}
+                    >
+                      {format(day, "d")}
+                    </div>
                   </div>
 
                   {hasAllDayArea && (
@@ -539,9 +552,9 @@ export function CalendarDayView({
                         className="absolute left-0 right-0 z-20 pointer-events-none"
                         style={{ top: ((nowMinutes - hours.startMinutes) / 60) * HOUR_HEIGHT }}
                       >
-                        <div className="flex items-center">
-                          <div className="w-2.5 h-2.5 rounded-full bg-destructive -ms-1" />
-                          <div className="flex-1 h-px bg-destructive" />
+                        <div className="flex items-center -translate-y-1/2">
+                          <div className="w-3 h-3 rounded-full bg-destructive -ms-1.5 flex-shrink-0" />
+                          <div className="flex-1 h-0.5 bg-destructive" />
                         </div>
                       </div>
                     )}

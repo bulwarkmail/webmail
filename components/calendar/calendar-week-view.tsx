@@ -28,6 +28,8 @@ interface CalendarWeekViewProps extends ScrollWindowViewProps {
   events: CalendarEvent[];
   calendars: Calendar[];
   onSelectDate: (date: Date) => void;
+  /** Open a day in the day view (clicking its date in the header). */
+  onOpenDay?: (date: Date) => void;
   onSelectEvent: (event: CalendarEvent, anchorRect: DOMRect) => void;
   onHoverEvent?: (event: CalendarEvent, anchorRect: DOMRect) => void;
   onHoverLeave?: () => void;
@@ -63,6 +65,7 @@ export function CalendarWeekView({
   isLoading = false,
   onVisibleDateChange,
   onSelectDate,
+  onOpenDay,
   onSelectEvent,
   onHoverEvent,
   onHoverLeave,
@@ -384,6 +387,59 @@ export function CalendarWeekView({
       <div ref={startSentinelRef} data-testid="week-start-sentinel" className="absolute inset-y-0 start-0 w-px pointer-events-none" />
       <div ref={endSentinelRef} data-testid="week-end-sentinel" className="absolute inset-y-0 end-0 w-px pointer-events-none" />
       <div className="sticky top-0 z-50 bg-background">
+      <div className="flex border-b border-border" role="row">
+        <div className={cn(gutterClass, "flex items-end justify-center pb-1")}>
+          {canToggleHours && (
+            <AllHoursToggle
+              showAllHours={showAllHours}
+              configured={configuredHours}
+              timeFormat={timeFormat}
+              onToggle={toggleAllHours}
+            />
+          )}
+        </div>
+        <div className="border-s border-border grid" style={columnsStyle}>
+          {days.map((day) => {
+            const todayCol = isDisplayToday(day);
+            const selected = isSameDay(day, selectedDate);
+            const fullLabel = intlFormatter.dateTime(day, { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+            return (
+              <div
+                key={day.toISOString()}
+                role="columnheader"
+                aria-label={fullLabel}
+                data-day={dayKey(day)}
+                className="flex flex-col items-center gap-0.5 pt-2 pb-1.5 border-e border-border last:border-e-0"
+              >
+                <div className={cn(
+                  "text-[11px] font-medium uppercase tracking-wide",
+                  todayCol ? "text-primary" : "text-muted-foreground",
+                )}>
+                  {intlFormatter.dateTime(day, { weekday: "short" })}
+                </div>
+                {/* The date opens that day in the day view. */}
+                <button
+                  type="button"
+                  onClick={() => (onOpenDay ?? onSelectDate)(day)}
+                  aria-label={fullLabel}
+                  aria-current={todayCol ? "date" : undefined}
+                  className={cn(
+                    "inline-flex items-center justify-center rounded-full transition-colors touch-manipulation",
+                    isMobile ? "w-8 h-8 text-base" : "w-10 h-10 text-xl",
+                    todayCol
+                      ? "bg-primary text-primary-foreground font-semibold hover:bg-primary/90"
+                      : selected
+                        ? "bg-accent text-accent-foreground font-medium"
+                        : "text-foreground hover:bg-muted",
+                  )}
+                >
+                  {format(day, "d")}
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      </div>
       {hasAllDay && (
         <div className="flex border-b border-border">
           <div
@@ -486,50 +542,6 @@ export function CalendarWeekView({
         </div>
       )}
 
-      <div className="flex border-b border-border" role="row">
-        <div className={cn(gutterClass, "flex items-end justify-center pb-1")}>
-          {canToggleHours && (
-            <AllHoursToggle
-              showAllHours={showAllHours}
-              configured={configuredHours}
-              timeFormat={timeFormat}
-              onToggle={toggleAllHours}
-            />
-          )}
-        </div>
-        <div className="border-s border-border grid" style={columnsStyle}>
-          {days.map((day) => {
-            const todayCol = isDisplayToday(day);
-            const selected = isSameDay(day, selectedDate);
-            const fullLabel = intlFormatter.dateTime(day, { weekday: "long", month: "long", day: "numeric", year: "numeric" });
-            return (
-              <button
-                key={day.toISOString()}
-                onClick={() => onSelectDate(day)}
-                role="columnheader"
-                aria-label={fullLabel}
-                data-day={dayKey(day)}
-                className={cn(
-                  "text-center py-2 text-sm border-e border-border last:border-e-0 transition-colors touch-manipulation",
-                  "hover:bg-muted/50",
-                  todayCol && "font-bold",
-                )}
-              >
-                <div className="text-[10px] text-muted-foreground uppercase">
-                  {intlFormatter.dateTime(day, { weekday: "short" })}
-                </div>
-                <div className={cn(
-                  "inline-flex items-center justify-center w-7 h-7 rounded-full text-sm",
-                  todayCol && "bg-primary text-primary-foreground",
-                  selected && !todayCol && "bg-accent text-accent-foreground"
-                )}>
-                  {format(day, "d")}
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      </div>
 
       </div>
 
@@ -673,9 +685,9 @@ export function CalendarWeekView({
                       className="absolute left-0 right-0 z-20 pointer-events-none"
                       style={{ top: ((nowMinutes - hours.startMinutes) / 60) * HOUR_HEIGHT }}
                     >
-                      <div className="flex items-center">
-                        <div className="w-2 h-2 rounded-full bg-destructive -ms-1" />
-                        <div className="flex-1 h-px bg-destructive" />
+                      <div className="flex items-center -translate-y-1/2">
+                        <div className="w-3 h-3 rounded-full bg-destructive -ms-1.5 flex-shrink-0" />
+                        <div className="flex-1 h-0.5 bg-destructive" />
                       </div>
                     </div>
                   )}

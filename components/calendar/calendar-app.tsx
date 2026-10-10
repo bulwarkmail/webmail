@@ -566,6 +566,17 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     setNarrowSidebarOpen(false);
   }, [setSelectedDate, jumpTo, isMobile, normalizedViewMode, setViewMode]);
 
+  // Clicking a date number in the week or month header opens that day in
+  // the day view, as in Google Calendar.
+  const handleOpenDay = useCallback((date: Date) => {
+    setMobileReturnToMonth(isMobile && normalizedViewMode === "month");
+    jumpTo(date);
+    setSelectedDate(date);
+    setMiniMonth(date);
+    setViewMode("day");
+    setNarrowSidebarOpen(false);
+  }, [jumpTo, setSelectedDate, setViewMode, isMobile, normalizedViewMode]);
+
   // The mini calendar is a navigation control: unlike a click in the week or
   // month grid, which marks a day that is already on screen, picking a day
   // here has to bring that day into view.
@@ -1485,6 +1496,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
               events={visibleEvents}
               calendars={allCalendars}
               onSelectDate={handleSelectDate}
+              onOpenDay={handleOpenDay}
               onSelectEvent={handleSelectEvent}
               onHoverEvent={handleHoverEvent}
               onHoverLeave={handleHoverLeave}

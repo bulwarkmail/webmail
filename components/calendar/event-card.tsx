@@ -218,8 +218,14 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
       )}
       style={{ ...eventFillStyle(color, { inactive: isInactive, separated: true, selected: isSelected }), ...style }}
     >
-      <div className={cn("font-medium truncate", isInactive && "line-through")}>{event.title || t("events.no_title")}</div>
-      {/* Shorter blocks have no room for a second line at the 60px hour. */}
+      {/* Shorter blocks have no room for a second line at the 60px hour, so
+          their start time follows the title on the same line. */}
+      <div className="flex items-baseline gap-1 min-w-0">
+        <span className={cn("font-medium truncate", isInactive && "line-through")}>{event.title || t("events.no_title")}</span>
+        {!event.showWithoutTime && durationMinutes < 45 && (
+          <span className="flex-shrink-0 opacity-85 text-[10.5px]">{safeFormat(startDate, timeFmt)}</span>
+        )}
+      </div>
       {!event.showWithoutTime && durationMinutes >= 45 && (
         <div className="opacity-85 text-[10.5px]">
           {timeString}
