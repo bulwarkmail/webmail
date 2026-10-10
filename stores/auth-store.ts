@@ -2112,7 +2112,13 @@ export const useAuthStore = create<AuthState>()(
 
         // Check if there are remaining accounts to switch to. Read the store
         // afresh: `accountStore` is the state from before removeAccount().
-        const nextAccount = wasDemoMode ? undefined : useAccountStore.getState().accounts[0];
+        // Prefer an account that is signed in here: one restored from the
+        // account list backup (or otherwise not connected) has no client, and
+        // picking it signs out every account left.
+        const remainingAccounts = useAccountStore.getState().accounts;
+        const nextAccount = wasDemoMode
+          ? undefined
+          : remainingAccounts.find((a) => clients.has(a.id)) ?? remainingAccounts[0];
         const droppedAccounts: AccountEntry[] = [];
 
         if (nextAccount) {
@@ -2762,8 +2768,13 @@ export const useAuthStore = create<AuthState>()(
             }
           }
 
-          // No accounts could be restored
-          if (accounts.some((account) => accountStore.getAccountById(account.id))) {
+          // No accounts could be restored. Accounts restored from the account
+          // list backup were never signed in here, so they say nothing about
+          // the connection.
+          if (accounts.some((account) => {
+            const entry = accountStore.getAccountById(account.id);
+            return entry && !entry.awaitingSignIn;
+          })) {
             set({
               isAuthenticated: false,
               isLoading: false,

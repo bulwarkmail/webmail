@@ -95,3 +95,27 @@ it('stops waiting once the account is signed in', () => {
   expect(alice).toMatchObject({ label: 'Alice', avatarColor: '#16a34a', isConnected: true });
   expect(alice?.awaitingSignIn).toBeUndefined();
 });
+
+it('signs out to an account that is signed in, not to one awaiting sign-in', async () => {
+  restoreAccounts(archived);
+  useAccountStore.setState((s) => ({
+    accounts: [...s.accounts, { ...signedIn, id: 'carol@x.test@mail.x.test', username: 'carol@x.test', email: 'carol@x.test', label: 'Carol', cookieSlot: 2, isDefault: false }] as never,
+  }));
+  await useAuthStore.getState().checkAuth();
+  // Wait for the background restore of the other remembered account.
+  await vi.waitFor(() => expect(useAccountStore.getState().getAccountById('carol@x.test@mail.x.test')?.isConnected).toBe(true));
+
+  await useAuthStore.getState().logout();
+  expect(useAuthStore.getState().activeAccountId).toBe('carol@x.test@mail.x.test');
+  expect(useAuthStore.getState().isAuthenticated).toBe(true);
+  expect(useAccountStore.getState().accounts.map(a => a.id)).toEqual(['alice@x.test@mail.x.test', 'carol@x.test@mail.x.test']);
+});
+
+it('treats a browser left with only accounts awaiting sign-in as signed out, not as a connection failure', async () => {
+  useAccountStore.setState({ accounts: [{ ...signedIn, rememberMe: false }] as never });
+  restoreAccounts(archived.slice(1));
+  await useAuthStore.getState().checkAuth();
+  expect(useAuthStore.getState().isAuthenticated).toBe(false);
+  expect(useAuthStore.getState().error).not.toBe('connection_failed');
+  expect(useAccountStore.getState().accounts.map(a => a.id)).toEqual(['alice@x.test@mail.x.test']);
+});
