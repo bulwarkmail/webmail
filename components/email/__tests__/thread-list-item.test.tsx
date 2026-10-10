@@ -74,7 +74,7 @@ describe('ThreadListItem tag badge', () => {
       interfaceLayout: 'default',
     });
     useEmailStore.setState({
-      selectedEmailIds: new Set<string>(),
+      selectedEmailKeys: new Set<string>(),
       selectedMailbox: 'inbox',
     });
   });
@@ -148,7 +148,7 @@ describe('ThreadListItem multi-message thread', () => {
       interfaceLayout: 'default',
     });
     useEmailStore.setState({
-      selectedEmailIds: new Set<string>(),
+      selectedEmailKeys: new Set<string>(),
       selectedMailbox: 'inbox',
     });
   });
@@ -210,7 +210,7 @@ describe('ThreadListItem row content', () => {
       interfaceLayout: 'default',
     });
     useEmailStore.setState({
-      selectedEmailIds: new Set<string>(),
+      selectedEmailKeys: new Set<string>(),
       selectedMailbox: 'inbox',
     });
   });
@@ -295,8 +295,8 @@ describe('ThreadListItem shift-range avatar selection', () => {
     // Selection mode active, with the anchor on e1.
     useEmailStore.setState({
       emails: [e1, e2, e3],
-      selectedEmailIds: new Set(['e1']),
-      lastSelectedEmailId: 'e1',
+      selectedEmailKeys: new Set(['e1']),
+      lastSelectedEmailKey: 'e1',
       selectedMailbox: 'inbox',
     });
 
@@ -306,7 +306,7 @@ describe('ThreadListItem shift-range avatar selection', () => {
       avatar.dispatchEvent(new MouseEvent('click', { bubbles: true, shiftKey: true }));
     });
 
-    const selected = useEmailStore.getState().selectedEmailIds;
+    const selected = useEmailStore.getState().selectedEmailKeys;
     expect(selected.has('e1')).toBe(true);
     expect(selected.has('e2')).toBe(true); // the row in between got filled in
     expect(selected.has('e3')).toBe(true);
@@ -326,7 +326,7 @@ describe('ThreadListItem row tint', () => {
       tintListRowsByTag: true,
     });
     useEmailStore.setState({
-      selectedEmailIds: new Set(['email-1']),
+      selectedEmailKeys: new Set(['email-1']),
       selectedMailbox: 'inbox',
     });
   });
@@ -371,7 +371,7 @@ describe('ThreadListItem account row tint', () => {
       tintListRowsByAccount: false,
     });
     useEmailStore.setState({
-      selectedEmailIds: new Set<string>(),
+      selectedEmailKeys: new Set<string>(),
       selectedMailbox: 'inbox',
       isUnifiedView: false,
     });

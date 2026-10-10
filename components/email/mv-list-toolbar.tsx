@@ -112,7 +112,7 @@ export function MvListToolbar({
     emails,
     mailboxes,
     selectedMailbox,
-    selectedEmailIds,
+    selectedEmailKeys,
     selectAllEmails,
     clearSelection,
     batchArchive,
@@ -180,7 +180,7 @@ export function MvListToolbar({
     return () => document.removeEventListener("mousedown", onPointerDown);
   }, [moveOpen, tagOpen, moveRef, tagRef]);
 
-  const selectionCount = selectedEmailIds.size;
+  const selectionCount = selectedEmailKeys.size;
   const hasSelection = selectionCount > 0;
   const allSelected = hasSelection && selectionCount === emails.length;
   // Optimistic updates and demo fixtures can briefly leave the server total
@@ -247,7 +247,7 @@ export function MvListToolbar({
       });
     });
 
-  const selectedEmails = emails.filter((email) => selectedEmailIds.has(email.id));
+  const selectedEmails = emails.filter((email) => selectedEmailKeys.has(email.id));
 
   // The same targets the row's own context menu offers, with the account of
   // the selection leading (#1149).
@@ -320,7 +320,7 @@ export function MvListToolbar({
   const handleSpam = () =>
     run(async () => {
       if (!client) return;
-      const ids = Array.from(selectedEmailIds);
+      const ids = Array.from(selectedEmailKeys);
       try {
         if (isInJunk) {
           await batchUndoSpam(client, ids);

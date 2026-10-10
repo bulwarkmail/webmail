@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { emailKeyFor } from '@/lib/thread-utils';
 import { useEmailStore } from '../email-store';
 import { useSettingsStore } from '../settings-store';
 import { useAuthStore } from '../auth-store';
@@ -180,7 +181,8 @@ describe('"All folders" search across the own and group accounts (#1082)', () =>
 
   it('marks a mixed selection read in each owning account', async () => {
     await useEmailStore.getState().searchEmails(client, 'a');
-    useEmailStore.setState({ selectedEmailIds: new Set(['own-1', 'grp-1']) });
+    useEmailStore.setState({ selectedEmailKeys: new Set(useEmailStore.getState().emails
+      .filter(e => ['own-1', 'grp-1'].includes(e.id)).map(emailKeyFor)) });
 
     await useEmailStore.getState().batchMarkAsRead(client, true);
 

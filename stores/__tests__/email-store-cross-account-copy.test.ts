@@ -42,7 +42,7 @@ describe('email-store crossAccountMoveEmails keepOriginal', () => {
     useEmailStore.setState({
       emails: [e1, makeEmail('e2')],
       selectedEmail: e1,
-      selectedEmailIds: new Set(['e1', 'e2']),
+      selectedEmailKeys: new Set(['e1', 'e2']),
       selectedMailbox: 'inbox',
       viewingAccountId: null,
       mailboxes: [],
@@ -61,7 +61,7 @@ describe('email-store crossAccountMoveEmails keepOriginal', () => {
     const state = useEmailStore.getState();
     expect(state.emails.map((e) => e.id)).toEqual(['e2']);
     expect(state.selectedEmail).toBeNull();
-    expect(state.selectedEmailIds.has('e1')).toBe(false);
+    expect(state.selectedEmailKeys.has('e1')).toBe(false);
   });
 
   it('a copy imports but keeps the source, the view and the selection', async () => {
@@ -77,7 +77,7 @@ describe('email-store crossAccountMoveEmails keepOriginal', () => {
     const state = useEmailStore.getState();
     expect(state.emails.map((e) => e.id)).toEqual(['e1', 'e2']);
     expect(state.selectedEmail?.id).toBe('e1');
-    expect([...state.selectedEmailIds]).toEqual(['e1', 'e2']);
+    expect([...state.selectedEmailKeys]).toEqual(['e1', 'e2']);
     expect(state.isLoading).toBe(false);
     // Only the destination's folders changed.
     expect(useEmailStore.getState().fetchAccountMailboxes).toHaveBeenCalledWith(dest, 'local-B');

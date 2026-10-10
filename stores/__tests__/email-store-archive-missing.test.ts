@@ -82,7 +82,7 @@ describe('batchArchive without an archive mailbox (#578)', () => {
       ],
       accountMailboxes: {},
       emails: [makeEmail({ id: 'e1', mailboxIds: { 'a-inbox': true } })],
-      selectedEmailIds: new Set(['e1']),
+      selectedEmailKeys: new Set(['e1']),
     });
   });
 
@@ -94,7 +94,7 @@ describe('batchArchive without an archive mailbox (#578)', () => {
       [expect.objectContaining({ id: 'e1' })], 'a-archive', 'single', expect.any(Array), undefined,
     );
     expect(useEmailStore.getState().error).toBeNull();
-    expect(useEmailStore.getState().selectedEmailIds.size).toBe(0);
+    expect(useEmailStore.getState().selectedEmailKeys.size).toBe(0);
   });
 
   it('rejects with ArchiveMailboxNotFoundError when the created folder does not come back', async () => {
@@ -109,7 +109,7 @@ describe('batchArchive without an archive mailbox (#578)', () => {
     expect(useEmailStore.getState().error).toMatch(/archive mailbox not found/i);
     expect(client.batchArchiveEmails).not.toHaveBeenCalled();
     // Nothing was archived, so the selection must survive.
-    expect(useEmailStore.getState().selectedEmailIds.has('e1')).toBe(true);
+    expect(useEmailStore.getState().selectedEmailKeys.has('e1')).toBe(true);
   });
 
   it('reports a refused creation and keeps the selection', async () => {
@@ -118,6 +118,6 @@ describe('batchArchive without an archive mailbox (#578)', () => {
     await expect(useEmailStore.getState().batchArchive(client)).rejects.toThrow('forbidden');
     expect(useEmailStore.getState().error).toMatch(/forbidden/);
     expect(client.batchArchiveEmails).not.toHaveBeenCalled();
-    expect(useEmailStore.getState().selectedEmailIds.has('e1')).toBe(true);
+    expect(useEmailStore.getState().selectedEmailKeys.has('e1')).toBe(true);
   });
 });

@@ -43,7 +43,7 @@ describe('MvListToolbar filing actions', () => {
       emails,
       mailboxes,
       selectedMailbox: 'inbox',
-      selectedEmailIds: new Set(emails.map((email) => email.id)),
+      selectedEmailKeys: new Set(emails.map((email) => email.id)),
       isUnifiedView: false,
       unifiedRole: null,
       batchMoveToMailbox,
@@ -87,7 +87,7 @@ describe('MvListToolbar filing actions', () => {
     ];
     useEmailStore.setState({
       emails,
-      selectedEmailIds: new Set(emails.map((email) => email.id)),
+      selectedEmailKeys: new Set(emails.map((email) => email.id)),
     } as never);
     toolbar();
 
@@ -99,7 +99,7 @@ describe('MvListToolbar filing actions', () => {
   });
 
   it('shows neither control until something is selected', () => {
-    useEmailStore.setState({ selectedEmailIds: new Set() } as never);
+    useEmailStore.setState({ selectedEmailKeys: new Set() } as never);
     toolbar();
 
     expect(screen.queryByLabelText('move_to')).toBeNull();
@@ -114,7 +114,7 @@ describe('MvListToolbar overflow menu', () => {
       emails: [message('a')],
       mailboxes,
       selectedMailbox: 'inbox',
-      selectedEmailIds: new Set(),
+      selectedEmailKeys: new Set(),
       isUnifiedView: false,
       unifiedRole: null,
     } as never);
@@ -172,7 +172,7 @@ describe('MvListToolbar failure feedback', () => {
       emails: [message('a'), message('b')],
       mailboxes,
       selectedMailbox: 'inbox',
-      selectedEmailIds: new Set(['a', 'b']),
+      selectedEmailKeys: new Set(['a', 'b']),
       isUnifiedView: false,
       unifiedRole: null,
       error: null,
