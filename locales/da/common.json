@@ -142,6 +142,8 @@
     "show_all_tags": "Vis alle ({count})",
     "show_fewer_tags": "Vis færre",
     "folders": "Mapper",
+    "show_more": "Mere",
+    "show_fewer": "Mindre",
     "shared": "Delt",
     "mail": "Mail",
     "nav_label": "Navigation",
@@ -237,6 +239,7 @@
     "replied": "Besvaret",
     "forwarded": "Videresendt",
     "has_attachment": "Har vedhæftning",
+    "conversations_range": "{from}–{to, number} af {total, number}",
     "conversations_count": "{count} af {total} samtaler",
     "conversations_count_plus": "{count}+ samtaler",
     "conversations_count_simple": "{count} samtaler",
@@ -606,6 +609,9 @@
     }
   },
   "email_composer": {
+    "minimize": "Minimer",
+    "maximize": "Fuld skærm",
+    "restore": "Gendan",
     "read_receipt_on": "Læsekvittering anmodet (klik for at deaktivere)",
     "read_receipt_off": "Anmod om læsekvittering",
     "dsn_on": "Leveringsbesked anmodet (klik for at slå fra)",
@@ -1086,6 +1092,12 @@
         "compact": "Kompakt",
         "regular": "Almindelig",
         "comfortable": "Komfortabel"
+      },
+      "interface_layout": {
+        "label": "Grænsefladelayout",
+        "description": "Hvor søgning, navigation og værktøjslinjer er placeret",
+        "default": "Standard",
+        "mountain_view": "Mountain View"
       },
       "animations": {
         "label": "Aktivér animationer",
@@ -2526,7 +2538,8 @@
       "next_email": "Næste e-mail",
       "previous_email": "Forrige e-mail",
       "open_email": "Åbn e-mail",
-      "close_email": "Luk / Fravaælg"
+      "close_email": "Luk / Fravaælg",
+      "go_to_folder": "Gå til mappe"
     },
     "actions": {
       "reply": "Svar",
@@ -2548,7 +2561,8 @@
       "global_search": "Søg i alt"
     },
     "threads": {
-      "expand_collapse": "Udvid/skjul tråd"
+      "expand_collapse": "Udvid/skjul tråd",
+      "select_mountain_view": "Vælg samtalen"
     },
     "composer": {
       "send": "Send e-mail",

@@ -142,6 +142,8 @@
     "show_all_tags": "Mostra tutto ({count})",
     "show_fewer_tags": "Mostra meno",
     "folders": "Cartelle",
+    "show_more": "Altro",
+    "show_fewer": "Riduci",
     "mail": "Posta",
     "nav_label": "Navigazione",
     "add_app": "App",
@@ -237,6 +239,7 @@
     "replied": "Risposto",
     "forwarded": "Inoltrato",
     "has_attachment": "Con allegato",
+    "conversations_range": "{from}–{to, number} di {total, number}",
     "conversations_count": "{count} di {total} conversazioni",
     "conversations_count_plus": "{count}+ conversazioni",
     "conversations_count_simple": "{count} conversazioni",
@@ -606,6 +609,9 @@
     }
   },
   "email_composer": {
+    "minimize": "Riduci a icona",
+    "maximize": "Schermo intero",
+    "restore": "Ripristina",
     "read_receipt_on": "Conferma di lettura richiesta (clicca per disattivare)",
     "read_receipt_off": "Richiedi una conferma di lettura",
     "dsn_on": "Notifica di consegna richiesta (clic per disattivare)",
@@ -1083,6 +1089,12 @@
         "compact": "Compatto",
         "regular": "Normale",
         "comfortable": "Comodo"
+      },
+      "interface_layout": {
+        "label": "Layout dell'interfaccia",
+        "description": "Dove si trovano ricerca, navigazione e barre degli strumenti",
+        "default": "Predefinito",
+        "mountain_view": "Mountain View"
       },
       "animations": {
         "label": "Abilita animazioni",
@@ -2526,7 +2538,8 @@
       "next_email": "Messaggio successivo",
       "previous_email": "Messaggio precedente",
       "open_email": "Apri messaggio",
-      "close_email": "Chiudi / Deseleziona"
+      "close_email": "Chiudi / Deseleziona",
+      "go_to_folder": "Vai alla cartella"
     },
     "actions": {
       "reply": "Rispondi",
@@ -2548,7 +2561,8 @@
       "global_search": "Cerca ovunque"
     },
     "threads": {
-      "expand_collapse": "Espandi/comprimi conversazione"
+      "expand_collapse": "Espandi/comprimi conversazione",
+      "select_mountain_view": "Seleziona la conversazione"
     },
     "composer": {
       "send": "Invia email",

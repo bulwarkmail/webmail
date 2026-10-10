@@ -142,6 +142,8 @@
     "show_all_tags": "Показать все ({count})",
     "show_fewer_tags": "Показать меньше",
     "folders": "Папки",
+    "show_more": "Ещё",
+    "show_fewer": "Свернуть",
     "mail": "Почта",
     "nav_label": "Навигация",
     "add_app": "Приложения",
@@ -237,6 +239,7 @@
     "replied": "Отвечено",
     "forwarded": "Переслано",
     "has_attachment": "С вложением",
+    "conversations_range": "{from}–{to, number} из {total, number}",
     "conversations_count": "{count} из {total} бесед",
     "conversations_count_plus": "{count}+ бесед",
     "conversations_count_simple": "{count} бесед",
@@ -606,6 +609,9 @@
     }
   },
   "email_composer": {
+    "minimize": "Свернуть",
+    "maximize": "Во весь экран",
+    "restore": "Восстановить",
     "read_receipt_on": "Запрошено уведомление о прочтении (нажмите, чтобы отключить)",
     "read_receipt_off": "Запросить уведомление о прочтении",
     "dsn_on": "Запрошено уведомление о доставке (нажмите, чтобы отключить)",
@@ -1083,6 +1089,12 @@
         "compact": "Компактный",
         "regular": "Обычный",
         "comfortable": "Просторный"
+      },
+      "interface_layout": {
+        "label": "Макет интерфейса",
+        "description": "Где находятся поиск, навигация и панели инструментов",
+        "default": "По умолчанию",
+        "mountain_view": "Mountain View"
       },
       "animations": {
         "label": "Включить анимации",
@@ -2526,7 +2538,8 @@
       "next_email": "Следующее письмо",
       "previous_email": "Предыдущее письмо",
       "open_email": "Открыть письмо",
-      "close_email": "Закрыть / Отменить выбор"
+      "close_email": "Закрыть / Отменить выбор",
+      "go_to_folder": "Перейти к папке"
     },
     "actions": {
       "reply": "Ответить",
@@ -2548,7 +2561,8 @@
       "global_search": "Искать везде"
     },
     "threads": {
-      "expand_collapse": "Развернуть/свернуть цепочку"
+      "expand_collapse": "Развернуть/свернуть цепочку",
+      "select_mountain_view": "Выбрать переписку"
     },
     "composer": {
       "send": "Отправить письмо",

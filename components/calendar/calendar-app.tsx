@@ -92,6 +92,8 @@ import {
 import { useLiteLinkSegments } from "@/hooks/use-lite-link-segments";
 import { findMeetingLink } from "@/lib/event-links";
 import { useDocumentTitle } from "@/hooks/use-document-title";
+import { MvTopBar } from "@/components/layout/mv-top-bar";
+import { useMountainViewShell } from "@/hooks/use-mountain-view-shell";
 
 type PendingScopeAction =
   | { type: "edit"; event: CalendarEvent; updates: Partial<CalendarEvent>; sendScheduling?: boolean }
@@ -119,6 +121,8 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
   const isMobile = useIsMobile();
   const isDesktop = useIsDesktop();
   const isEmbedded = useIsEmbedded();
+  // Mountain View's desktop chrome: its top bar in place of the left rail.
+  const mvShell = useMountainViewShell(isEmbedded);
   // When the pane (Pro shell) or window is narrower than `lg`, the sidebar
   // collapses into a burger-toggled overlay instead of taking inline space.
   const isNarrow = !isDesktop;
@@ -1571,9 +1575,18 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     <div className={cn("flex flex-col bg-background overflow-hidden pt-[env(safe-area-inset-top)]", isEmbedded ? "h-full" : "h-dvh")}>
       <AppTopBannerSlot />
       {refreshIndicator}
+      {mvShell && (
+        <MvTopBar
+          showMenuButton={false}
+          onManageApps={handleManageApps}
+          onInlineApp={handleInlineApp}
+          onCloseInlineApp={closeInlineApp}
+          activeAppId={inlineApp?.id ?? null}
+        />
+      )}
       <div className={cn("relative flex flex-1 min-h-0 overflow-hidden", isMobile && "flex-col")}>
       {/* Left Navigation Rail (hidden when embedded in Pro shell) */}
-      {!isMobile && !isEmbedded && (
+      {!isMobile && !isEmbedded && !mvShell && (
         <div className="w-14 bg-secondary flex flex-col flex-shrink-0" style={{ borderRight: '1px solid rgba(128, 128, 128, 0.3)' }}>
           <NavigationRail
             collapsed

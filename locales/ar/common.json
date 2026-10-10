@@ -142,6 +142,8 @@
     "show_all_tags": "إظهار الكل ({count})",
     "show_fewer_tags": "إظهار أقل",
     "folders": "المجلدات",
+    "show_more": "المزيد",
+    "show_fewer": "أقل",
     "shared": "مشترك",
     "mail": "البريد",
     "nav_label": "التنقل",
@@ -237,6 +239,7 @@
     "replied": "تم الرد عليها",
     "forwarded": "تمت إعادة توجيهها",
     "has_attachment": "تحتوي على مرفق",
+    "conversations_range": "{from}–{to, number} من {total, number}",
     "conversations_count": "{count} من {total} محادثة",
     "conversations_count_plus": "{count}+ محادثة",
     "conversations_count_simple": "{count} محادثة",
@@ -606,6 +609,9 @@
     }
   },
   "email_composer": {
+    "minimize": "تصغير",
+    "maximize": "ملء الشاشة",
+    "restore": "استعادة",
     "read_receipt_on": "إيصال القراءة مطلوب (انقر للتعطيل)",
     "read_receipt_off": "طلب إيصال قراءة",
     "dsn_on": "تم طلب إشعار التسليم (انقر للتعطيل)",
@@ -1086,6 +1092,12 @@
         "compact": "مضغوط",
         "regular": "عادي",
         "comfortable": "مريح"
+      },
+      "interface_layout": {
+        "label": "تخطيط الواجهة",
+        "description": "موضع البحث والتنقل وأشرطة الأدوات",
+        "default": "افتراضي",
+        "mountain_view": "Mountain View"
       },
       "animations": {
         "label": "تفعيل الحركات",
@@ -2526,7 +2538,8 @@
       "next_email": "الرسالة التالية",
       "previous_email": "الرسالة السابقة",
       "open_email": "فتح الرسالة",
-      "close_email": "إغلاق / إلغاء التحديد"
+      "close_email": "إغلاق / إلغاء التحديد",
+      "go_to_folder": "الانتقال إلى المجلد"
     },
     "actions": {
       "reply": "رد",
@@ -2548,7 +2561,8 @@
       "global_search": "البحث في كل شيء"
     },
     "threads": {
-      "expand_collapse": "توسيع/طي المحادثة"
+      "expand_collapse": "توسيع/طي المحادثة",
+      "select_mountain_view": "تحديد المحادثة"
     },
     "composer": {
       "send": "إرسال الرسالة",

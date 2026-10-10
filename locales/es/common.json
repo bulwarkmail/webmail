@@ -142,6 +142,8 @@
     "show_all_tags": "Mostrar todo ({count})",
     "show_fewer_tags": "Mostrar menos",
     "folders": "Carpetas",
+    "show_more": "Más",
+    "show_fewer": "Menos",
     "mail": "Correo",
     "nav_label": "Navegación",
     "add_app": "Apps",
@@ -237,6 +239,7 @@
     "replied": "Respondido",
     "forwarded": "Reenviado",
     "has_attachment": "Tiene adjunto",
+    "conversations_range": "{from}–{to, number} de {total, number}",
     "conversations_count": "{count} de {total} conversaciones",
     "conversations_count_plus": "{count}+ conversaciones",
     "conversations_count_simple": "{count} conversaciones",
@@ -606,6 +609,9 @@
     }
   },
   "email_composer": {
+    "minimize": "Minimizar",
+    "maximize": "Pantalla completa",
+    "restore": "Restaurar",
     "read_receipt_on": "Confirmación de lectura solicitada (haz clic para desactivar)",
     "read_receipt_off": "Solicitar confirmación de lectura",
     "dsn_on": "Notificación de entrega solicitada (clic para desactivar)",
@@ -1083,6 +1089,12 @@
         "compact": "Compacto",
         "regular": "Normal",
         "comfortable": "Cómodo"
+      },
+      "interface_layout": {
+        "label": "Diseño de la interfaz",
+        "description": "Dónde se sitúan la búsqueda, la navegación y las barras de herramientas",
+        "default": "Predeterminado",
+        "mountain_view": "Mountain View"
       },
       "animations": {
         "label": "Habilitar Animaciones",
@@ -2526,7 +2538,8 @@
       "next_email": "Siguiente correo",
       "previous_email": "Correo anterior",
       "open_email": "Abrir correo",
-      "close_email": "Cerrar / Deseleccionar"
+      "close_email": "Cerrar / Deseleccionar",
+      "go_to_folder": "Ir a la carpeta"
     },
     "actions": {
       "reply": "Responder",
@@ -2548,7 +2561,8 @@
       "global_search": "Buscar en todo"
     },
     "threads": {
-      "expand_collapse": "Expandir/contraer conversación"
+      "expand_collapse": "Expandir/contraer conversación",
+      "select_mountain_view": "Seleccionar la conversación"
     },
     "composer": {
       "send": "Enviar correo",

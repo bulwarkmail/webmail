@@ -142,6 +142,8 @@
     "show_all_tags": "Tümünü göster ({count})",
     "show_fewer_tags": "Daha az göster",
     "folders": "Klasörler",
+    "show_more": "Diğer",
+    "show_fewer": "Daha az",
     "shared": "Paylaşılan",
     "mail": "Posta",
     "nav_label": "Gezinme",
@@ -237,6 +239,7 @@
     "replied": "Yanıtlandı",
     "forwarded": "İletildi",
     "has_attachment": "Ek içeriyor",
+    "conversations_range": "{total, number} içinde {from}–{to, number}",
     "conversations_count": "{total} konuşmadan {count} tanesi",
     "conversations_count_plus": "{count}+ konuşma",
     "conversations_count_simple": "{count} konuşma",
@@ -606,6 +609,9 @@
     }
   },
   "email_composer": {
+    "minimize": "Simge durumuna küçült",
+    "maximize": "Tam ekran",
+    "restore": "Geri yükle",
     "read_receipt_on": "Okundu bilgisi istendi (devre dışı bırakmak için tıklayın)",
     "read_receipt_off": "Okundu bilgisi iste",
     "dsn_on": "Teslimat bildirimi istendi (kapatmak için tıklayın)",
@@ -1083,6 +1089,12 @@
         "compact": "Sıkışık",
         "regular": "Normal",
         "comfortable": "Rahat"
+      },
+      "interface_layout": {
+        "label": "Arayüz düzeni",
+        "description": "Arama, gezinme ve araç çubuklarının konumu",
+        "default": "Varsayılan",
+        "mountain_view": "Mountain View"
       },
       "animations": {
         "label": "Animasyonları Etkinleştir",
@@ -2526,7 +2538,8 @@
       "next_email": "Sonraki e-posta",
       "previous_email": "Önceki e-posta",
       "open_email": "E-postayı aç",
-      "close_email": "Kapat / Seçimi kaldır"
+      "close_email": "Kapat / Seçimi kaldır",
+      "go_to_folder": "Klasöre git"
     },
     "actions": {
       "reply": "Yanıtla",
@@ -2548,7 +2561,8 @@
       "global_search": "Her yerde ara"
     },
     "threads": {
-      "expand_collapse": "İleti dizisini genişlet/daralt"
+      "expand_collapse": "İleti dizisini genişlet/daralt",
+      "select_mountain_view": "Konuşmayı seç"
     },
     "composer": {
       "send": "E-posta gönder",

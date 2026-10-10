@@ -158,6 +158,13 @@ async function syncSettingsJob(job: SettingsSyncJob, retries = 1): Promise<void>
 
 export type FontSize = 'small' | 'medium' | 'large';
 export type Density = 'extra-compact' | 'compact' | 'regular' | 'comfortable';
+/**
+ * Which interface layout drives the shell's geometry. `default` is the app's
+ * own layout; `mountain-view` is an optional alternative arrangement of the
+ * chrome (search-first top bar, flat 256px navigation rail, pill Compose,
+ * docked compose window) that keeps the theme's icons, type and palette.
+ */
+export type InterfaceLayout = 'default' | 'mountain-view';
 /** @deprecated Use Density instead */
 export type ListDensity = Density;
 export type DeleteAction = 'trash' | 'trash-and-read' | 'permanent';
@@ -185,6 +192,23 @@ export type AttachmentPosition = 'beside-sender' | 'below-header';
 export type ToolbarPosition = 'top' | 'below-subject';
 export type ArchiveMode = 'single' | 'year' | 'month';
 export type MailLayout = 'split' | 'focus' | 'horizontal';
+
+/**
+ * The mail layout the mail view actually uses.
+ *
+ * Mountain View shows the list at full width and opens a conversation in its
+ * place, which is the `focus` layout. Rather than writing `focus` into the
+ * user's saved `mailLayout`, the layout in force is derived: `focus` under
+ * Mountain View, the saved value otherwise. Switching back to the default
+ * layout therefore restores whatever the user had chosen.
+ *
+ * Read the layout through this (or `useEffectiveMailLayout`) wherever it
+ * decides what is drawn; read `mailLayout` itself only where the saved
+ * preference is being shown or edited.
+ */
+export function effectiveMailLayout(mailLayout: MailLayout, interfaceLayout: InterfaceLayout): MailLayout {
+  return interfaceLayout === 'mountain-view' ? 'focus' : mailLayout;
+}
 
 /**
  * Spacing around a message body in the reader.
@@ -382,6 +406,7 @@ interface SettingsState {
   // Appearance
   fontSize: FontSize;
   density: Density;
+  interfaceLayout: InterfaceLayout;
   animationsEnabled: boolean;
   // Message-list ordering (#718): prioritised sort levels mapped onto the JMAP
   // Email/query sort; empty = chronological. Scope: Inbox only or every folder.
@@ -648,6 +673,7 @@ const DEFAULT_SETTINGS = {
   // Appearance
   fontSize: 'medium' as FontSize,
   density: 'regular' as Density,
+  interfaceLayout: 'default' as InterfaceLayout,
   animationsEnabled: true,
   messageListOrder: [] as SortLevel[],
   messageListOrderScope: 'inbox' as MessageListOrderScope,
@@ -875,7 +901,8 @@ export const useSettingsStore = create<SettingsState>()(
           isLoadingFromServer = wasLoading;
         }
         applyFontSize(DEFAULT_SETTINGS.fontSize);
-        applyDensity(DEFAULT_SETTINGS.density);
+        applyDensity(DEFAULT_SETTINGS.density, DEFAULT_SETTINGS.interfaceLayout);
+        applyInterfaceLayout(DEFAULT_SETTINGS.interfaceLayout, DEFAULT_SETTINGS.density);
         applyAnimations(DEFAULT_SETTINGS.animationsEnabled);
       };
 
@@ -892,7 +919,13 @@ export const useSettingsStore = create<SettingsState>()(
 
         // Apply density to document root
         if (key === 'density') {
-          applyDensity(value as Density);
+          applyDensity(value as Density, get().interfaceLayout);
+        }
+
+        // Swap the shell geometry. Mountain View's list-then-conversation
+        // layout is not written into `mailLayout`: see effectiveMailLayout().
+        if (key === 'interfaceLayout') {
+          applyInterfaceLayout(value as InterfaceLayout, get().density);
         }
 
         // Apply animations to document root
@@ -904,7 +937,8 @@ export const useSettingsStore = create<SettingsState>()(
       resetToDefaults: () => {
         set(DEFAULT_SETTINGS);
         applyFontSize(DEFAULT_SETTINGS.fontSize);
-        applyDensity(DEFAULT_SETTINGS.density);
+        applyDensity(DEFAULT_SETTINGS.density, DEFAULT_SETTINGS.interfaceLayout);
+        applyInterfaceLayout(DEFAULT_SETTINGS.interfaceLayout, DEFAULT_SETTINGS.density);
         applyAnimations(DEFAULT_SETTINGS.animationsEnabled);
       },
 
@@ -914,6 +948,7 @@ export const useSettingsStore = create<SettingsState>()(
         const settings = {
           fontSize: state.fontSize,
           density: state.density,
+          interfaceLayout: state.interfaceLayout,
           animationsEnabled: state.animationsEnabled,
           messageListOrder: state.messageListOrder,
           messageListOrderScope: state.messageListOrderScope,
@@ -1114,7 +1149,8 @@ export const useSettingsStore = create<SettingsState>()(
 
           // Apply visual settings
           applyFontSize(get().fontSize);
-          applyDensity(get().density);
+          applyDensity(get().density, get().interfaceLayout);
+          applyInterfaceLayout(get().interfaceLayout, get().density);
           applyAnimations(get().animationsEnabled);
 
           // Apply cross-store settings
@@ -1395,7 +1431,8 @@ export const useSettingsStore = create<SettingsState>()(
               state.messageListOrderScope = 'inbox';
             }
             applyFontSize(state.fontSize);
-            applyDensity(state.density);
+            applyDensity(state.density, state.interfaceLayout);
+            applyInterfaceLayout(state.interfaceLayout, state.density);
             applyAnimations(state.animationsEnabled);
           }
         };
@@ -1483,50 +1520,85 @@ function applyFontSize(size: FontSize) {
   root.style.setProperty('--font-size-base', sizeMap[size]);
 }
 
-function applyDensity(density: Density) {
+type DensityVars = Record<string, string>;
+
+const DEFAULT_DENSITY: Record<Density, DensityVars> = {
+  'extra-compact': {
+    '--list-item-height': 'auto',
+    '--density-item-py': '2px',
+    '--density-item-gap': '6px',
+    '--density-header-py': '4px',
+    '--density-card-p': '8px',
+    '--density-sidebar-py': '0px',
+  },
+  compact: {
+    '--list-item-height': 'auto',
+    '--density-item-py': '4px',
+    '--density-item-gap': '8px',
+    '--density-header-py': '6px',
+    '--density-card-p': '10px',
+    '--density-sidebar-py': '1px',
+  },
+  regular: {
+    '--list-item-height': '48px',
+    '--density-item-py': '12px',
+    '--density-item-gap': '12px',
+    '--density-header-py': '12px',
+    '--density-card-p': '16px',
+    '--density-sidebar-py': '4px',
+  },
+  comfortable: {
+    '--list-item-height': '64px',
+    '--density-item-py': '16px',
+    '--density-item-gap': '16px',
+    '--density-header-py': '16px',
+    '--density-card-p': '20px',
+    '--density-sidebar-py': '6px',
+  },
+};
+
+/**
+ * Mountain View's rows come in three rhythms - 32, 40 and 48 pixels - and the
+ * app offers four densities. The four are laid over that scale: `compact`,
+ * `regular` and `comfortable` land on the three exactly, and `extra-compact`
+ * continues the series a step below, so every density still does something.
+ *
+ * Only the vertical rhythm is restated. Everything else a density touches -
+ * gaps, card padding, the sidebar's own row padding - keeps its default value;
+ * a navigation row is already pinned to 32px by the layout's own token.
+ */
+const MOUNTAIN_VIEW_DENSITY: Record<Density, DensityVars> = {
+  'extra-compact': { ...DEFAULT_DENSITY['extra-compact'], '--list-item-height': '28px', '--density-item-py': '4px' },
+  compact: { ...DEFAULT_DENSITY.compact, '--list-item-height': '32px', '--density-item-py': '6px' },
+  regular: { ...DEFAULT_DENSITY.regular, '--list-item-height': '40px', '--density-item-py': '10px' },
+  comfortable: { ...DEFAULT_DENSITY.comfortable, '--list-item-height': '48px', '--density-item-py': '14px' },
+};
+
+export function densityVarsFor(density: Density, layout: InterfaceLayout): DensityVars {
+  return (layout === 'mountain-view' ? MOUNTAIN_VIEW_DENSITY : DEFAULT_DENSITY)[density];
+}
+
+function applyDensity(density: Density, layout: InterfaceLayout) {
   if (typeof document === 'undefined') return;
 
   const root = document.documentElement;
-
-  const densityValues = {
-    'extra-compact': {
-      '--list-item-height': 'auto',
-      '--density-item-py': '2px',
-      '--density-item-gap': '6px',
-      '--density-header-py': '4px',
-      '--density-card-p': '8px',
-      '--density-sidebar-py': '0px',
-    },
-    compact: {
-      '--list-item-height': 'auto',
-      '--density-item-py': '4px',
-      '--density-item-gap': '8px',
-      '--density-header-py': '6px',
-      '--density-card-p': '10px',
-      '--density-sidebar-py': '1px',
-    },
-    regular: {
-      '--list-item-height': '48px',
-      '--density-item-py': '12px',
-      '--density-item-gap': '12px',
-      '--density-header-py': '12px',
-      '--density-card-p': '16px',
-      '--density-sidebar-py': '4px',
-    },
-    comfortable: {
-      '--list-item-height': '64px',
-      '--density-item-py': '16px',
-      '--density-item-gap': '16px',
-      '--density-header-py': '16px',
-      '--density-card-p': '20px',
-      '--density-sidebar-py': '6px',
-    },
-  };
-
-  const values = densityValues[density];
-  for (const [prop, val] of Object.entries(values)) {
+  for (const [prop, val] of Object.entries(densityVarsFor(density, layout))) {
     root.style.setProperty(prop, val);
   }
+}
+
+/**
+ * The interface layout is a single attribute on <html>; every geometry
+ * override lives in the `[data-interface-layout="mountain-view"]` block in
+ * globals.css, so nothing has to re-render for the shell to change shape.
+ */
+function applyInterfaceLayout(layout: InterfaceLayout, density: Density) {
+  if (typeof document === 'undefined') return;
+  document.documentElement.dataset.interfaceLayout = layout;
+  // The row rhythm depends on the layout as much as on the density, and it is
+  // written as an inline custom property, which no stylesheet rule could
+  // override. Re-applying it here is what keeps the two in step.
+  applyDensity(density, layout);
 }
 
 function applyAnimations(enabled: boolean) {
@@ -1544,7 +1616,8 @@ function applyAnimations(enabled: boolean) {
 if (typeof window !== 'undefined') {
   const store = useSettingsStore.getState();
   applyFontSize(store.fontSize);
-  applyDensity(store.density);
+  applyDensity(store.density, store.interfaceLayout);
+  applyInterfaceLayout(store.interfaceLayout, store.density);
   applyAnimations(store.animationsEnabled);
 
   const triggerSync = () => {

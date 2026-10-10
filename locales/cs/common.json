@@ -142,6 +142,8 @@
     "show_all_tags": "Zobrazit vše ({count})",
     "show_fewer_tags": "Zobrazit méně",
     "folders": "Složky",
+    "show_more": "Více",
+    "show_fewer": "Méně",
     "shared": "Sdílené",
     "mail": "Pošta",
     "nav_label": "Navigace",
@@ -237,6 +239,7 @@
     "replied": "Zodpovězeno",
     "forwarded": "Přeposláno",
     "has_attachment": "Obsahuje přílohu",
+    "conversations_range": "{from}–{to, number} z {total, number}",
     "conversations_count": "{count} z {total} konverzací",
     "conversations_count_plus": "Více než {count} konverzací",
     "conversations_count_simple": "{count} konverzací",
@@ -606,6 +609,9 @@
     }
   },
   "email_composer": {
+    "minimize": "Minimalizovat",
+    "maximize": "Celá obrazovka",
+    "restore": "Obnovit",
     "read_receipt_on": "Vyžádáno potvrzení o přečtení (kliknutím vypnete)",
     "read_receipt_off": "Vyžádat potvrzení o přečtení",
     "dsn_on": "Oznámení o doručení vyžádáno (kliknutím vypnete)",
@@ -1083,6 +1089,12 @@
         "compact": "Kompaktní",
         "regular": "Běžná",
         "comfortable": "Pohodlná"
+      },
+      "interface_layout": {
+        "label": "Rozvržení rozhraní",
+        "description": "Kde se nachází hledání, navigace a panely nástrojů",
+        "default": "Výchozí",
+        "mountain_view": "Mountain View"
       },
       "animations": {
         "label": "Povolit animace",
@@ -2526,7 +2538,8 @@
       "next_email": "Další zpráva",
       "previous_email": "Předchozí zpráva",
       "open_email": "Otevřít zprávu",
-      "close_email": "Zavřít / Zrušit výběr"
+      "close_email": "Zavřít / Zrušit výběr",
+      "go_to_folder": "Přejít do složky"
     },
     "actions": {
       "reply": "Odpovědět",
@@ -2548,7 +2561,8 @@
       "global_search": "Hledat ve všem"
     },
     "threads": {
-      "expand_collapse": "Rozbalit/sbalit vlákno"
+      "expand_collapse": "Rozbalit/sbalit vlákno",
+      "select_mountain_view": "Vybrat konverzaci"
     },
     "composer": {
       "send": "Odeslat e-mail",

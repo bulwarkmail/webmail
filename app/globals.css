@@ -948,3 +948,110 @@ optgroup {
 [dir="rtl"] .tabler-icon-layout-sidebar-right {
   transform: scaleX(-1);
 }
+
+/* ==========================================================================
+   Interface layouts
+   --------------------------------------------------------------------------
+   `data-interface-layout` is set on <html> by the settings store
+   (`applyInterfaceLayout`). The default layout declares no overrides, so
+   everything below is additive and switched off by a single attribute.
+   Mountain View sets its own geometry - bar heights, rail widths, pill shapes,
+   row rhythm - while colour, iconography and type keep coming from the active
+   theme.
+   ========================================================================== */
+
+[data-interface-layout="mountain-view"] {
+  --mv-topbar-h: 64px;
+  --mv-rail-w: 72px;
+  --mv-rail-peek-w: 256px;
+  --mv-nav-row-h: 32px;
+  --mv-nav-radius: 9999px;
+  --mv-compose-h: 56px;
+  --mv-search-h: 48px;
+  --mv-search-radius: 8px;
+  --mv-popover-w: 352px;
+  --mv-popover-radius: 28px;
+}
+
+/* Search: a filled 48px field that lifts onto a card while focused, rather
+   than the outlined input the default layout uses. */
+[data-interface-layout="mountain-view"] .mv-topbar input[data-search-input] {
+  height: var(--mv-search-h);
+  border-radius: var(--mv-search-radius);
+  border-color: transparent;
+  background-color: var(--color-muted);
+  padding-inline-start: 3rem;
+  font-size: 1rem;
+}
+
+[data-interface-layout="mountain-view"] .mv-topbar input[data-search-input]:hover {
+  border-color: transparent;
+  background-color: var(--color-accent);
+}
+
+[data-interface-layout="mountain-view"] .mv-topbar input[data-search-input]:focus-visible {
+  background-color: var(--color-background);
+  border-color: transparent;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.16), 0 4px 8px 3px rgb(0 0 0 / 0.08);
+}
+
+/* The filter button sits inside the field's trailing end: keep typed text and
+   the clear button clear of it. */
+[data-interface-layout="mountain-view"] .mv-topbar input[data-search-input] {
+  padding-inline-end: 5.5rem;
+}
+
+[data-interface-layout="mountain-view"] .mv-topbar-search > div > form > button {
+  inset-inline-end: 3.25rem;
+}
+
+/* The magnifier sits on the field's baseline grid, one 48px hit area in. */
+[data-interface-layout="mountain-view"] .mv-topbar-search > div > form > svg {
+  inset-inline-start: 1rem;
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+/* Folder rows: 32px pills flush with the rail's leading edge and rounded only
+   on the trailing side, so the selected label reads as one continuous shape
+   with the rail. The default layout's leading accent stripe goes away with it. */
+[data-interface-layout="mountain-view"] [data-mv-nav-row] {
+  min-height: var(--mv-nav-row-h);
+  margin-inline-end: 12px;
+  padding-inline-end: 16px;
+  border-inline-start-width: 0;
+  border-start-start-radius: 0;
+  border-end-start-radius: 0;
+  border-start-end-radius: var(--mv-nav-radius);
+  border-end-end-radius: var(--mv-nav-radius);
+}
+
+/* Compose: a 56px pill, which shrinks to a circle with the rail. */
+[data-interface-layout="mountain-view"] [data-mv-compose] {
+  height: var(--mv-compose-h);
+  border-radius: var(--mv-nav-radius);
+}
+
+/* The account popover: a wide card with a very round corner, rather
+   than the narrow menu the rail and the sidebar switchers drop. */
+[data-interface-layout="mountain-view"] [data-mv-account-popover] {
+  width: var(--mv-popover-w);
+  border-radius: var(--mv-popover-radius);
+}
+
+/* The advanced filters drop from the search field with a small gap and take
+   its corner, so the two read as one control. Position and width come from
+   the field's own box, measured by FilterPanelHost. */
+[data-interface-layout="mountain-view"] [data-mv-filter-panel] {
+  border-radius: var(--mv-search-radius);
+}
+
+/* The collapsed rail's hover peek. Only on desktop: below that breakpoint the
+   sidebar is already a drawer, opened by a tap rather than by a pointer that
+   does not exist. The width beats Tailwind's own `lg:w-full` on specificity,
+   which is what keeps the floating panel from filling the 72px column. */
+@media (min-width: 1024px) {
+  [data-interface-layout="mountain-view"] [data-mv-rail-peek] {
+    width: var(--mv-rail-peek-w);
+  }
+}

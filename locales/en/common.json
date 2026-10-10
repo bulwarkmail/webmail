@@ -142,6 +142,8 @@
     "show_all_tags": "Show all ({count})",
     "show_fewer_tags": "Show less",
     "folders": "Folders",
+    "show_more": "More",
+    "show_fewer": "Less",
     "shared": "Shared",
     "mail": "Mail",
     "nav_label": "Navigation",
@@ -237,6 +239,7 @@
     "replied": "Replied",
     "forwarded": "Forwarded",
     "has_attachment": "Has attachment",
+    "conversations_range": "{from}–{to, number} of {total, number}",
     "conversations_count": "{count} of {total} conversations",
     "conversations_count_plus": "{count}+ conversations",
     "conversations_count_simple": "{count} conversations",
@@ -606,6 +609,9 @@
     }
   },
   "email_composer": {
+    "minimize": "Minimize",
+    "maximize": "Full screen",
+    "restore": "Restore",
     "read_receipt_on": "Read receipt requested (click to disable)",
     "read_receipt_off": "Request a read receipt",
     "dsn_on": "Delivery notification requested (click to disable)",
@@ -1086,6 +1092,12 @@
         "compact": "Compact",
         "regular": "Regular",
         "comfortable": "Comfortable"
+      },
+      "interface_layout": {
+        "label": "Interface layout",
+        "description": "Where search, navigation and toolbars sit",
+        "default": "Default",
+        "mountain_view": "Mountain View"
       },
       "animations": {
         "label": "Enable Animations",
@@ -2526,7 +2538,8 @@
       "next_email": "Next email",
       "previous_email": "Previous email",
       "open_email": "Open email",
-      "close_email": "Close / Deselect"
+      "close_email": "Close / Deselect",
+      "go_to_folder": "Go to folder"
     },
     "actions": {
       "reply": "Reply",
@@ -2548,7 +2561,8 @@
       "global_search": "Search everything"
     },
     "threads": {
-      "expand_collapse": "Expand/collapse thread"
+      "expand_collapse": "Expand/collapse thread",
+      "select_mountain_view": "Select the conversation"
     },
     "composer": {
       "send": "Send email",

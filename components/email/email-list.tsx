@@ -17,6 +17,7 @@ import { useEmailStore, ArchiveMailboxNotFoundError } from "@/stores/email-store
 import { useAuthStore } from "@/stores/auth-store";
 import { useAccountStore } from "@/stores/account-store";
 import { useSettingsStore } from "@/stores/settings-store";
+import { useEffectiveMailLayout } from "@/hooks/use-effective-mail-layout";
 import { useUIStore } from "@/stores/ui-store";
 import { useMessageListTabsStore } from "@/stores/message-list-tabs-store";
 import { groupEmailsByThread, sortThreadGroups, threadKeyFor, getEmailTagIds } from "@/lib/thread-utils";
@@ -62,6 +63,11 @@ interface EmailListProps {
   onLoadMoreScheduled?: () => void;
   onCancelScheduledForEdit?: (email: Email) => void | Promise<void>;
   onRescheduleScheduled?: (email: Email) => void | Promise<void>;
+  /**
+   * Mountain View folds the batch verbs into the single toolbar above the
+   * list, so the separate bar that would otherwise slide in here is redundant.
+   */
+  hideBatchToolbar?: boolean;
 }
 
 export function EmailList({
@@ -91,6 +97,7 @@ export function EmailList({
   onMoveToMailbox,
   onEditDraft,
   isScheduledView = false,
+  hideBatchToolbar = false,
   onLoadMoreScheduled,
   onCancelScheduledForEdit,
   onRescheduleScheduled,
@@ -259,7 +266,7 @@ export function EmailList({
   const density = useSettingsStore((state) => state.density);
   const showPreview = useSettingsStore((state) => state.showPreview);
   const showVerificationCodes = useSettingsStore((state) => state.showVerificationCodes);
-  const mailLayout = useSettingsStore((state) => state.mailLayout);
+  const mailLayout = useEffectiveMailLayout();
   const footerHasMore = hasMore ?? hasMoreEmails;
   const footerIsLoadingMore = isLoadingMoreItems ?? isLoadingMore;
   const isMobile = useUIStore((state) => state.isMobile);
@@ -529,7 +536,7 @@ export function EmailList({
         ref={batchToolbarRef}
         className={cn(
           "transition-all duration-300 ease-in-out overflow-hidden",
-          hasSelection && !isScheduledView ? "max-h-16 opacity-100" : "max-h-0 opacity-0"
+          hasSelection && !isScheduledView && !hideBatchToolbar ? "max-h-16 opacity-100" : "max-h-0 opacity-0"
         )}
       >
         <div className="px-4 py-2 border-b bg-accent/30 border-border flex items-center justify-between">

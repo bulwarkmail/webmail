@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { Check, Folder } from '@/components/icons';
-import { useSettingsStore, type ToolbarPosition, type MailLayout } from '@/stores/settings-store';
+import { useSettingsStore, type ToolbarPosition, type MailLayout, type InterfaceLayout } from '@/stores/settings-store';
 import { SettingsSection, SettingItem, RadioGroup, ToggleSwitch } from './settings-section';
 import { cn } from '@/lib/utils';
 import { usePolicyStore } from '@/stores/policy-store';
@@ -118,7 +118,7 @@ function MailLayoutPreview({
 export function LayoutSettings() {
   const t = useTranslations('settings.appearance');
   const tEmail = useTranslations('settings.email_behavior');
-  const { toolbarPosition, showToolbarLabels, hideAccountSwitcher, showRailAccountList, enableUnifiedMailbox, includeGroupInUnified, unifiedCrossAccount, allMailFolderIds, enableCrossUnreadView, enableCrossStarredView, enableCrossAllView, colorfulSidebarIcons, tintListRowsByTag, tintListRowsByAccount, showFolderTotalCount, faviconUnreadBadge, mailLayout, proInterface, updateSetting } = useSettingsStore();
+  const { toolbarPosition, showToolbarLabels, hideAccountSwitcher, showRailAccountList, enableUnifiedMailbox, includeGroupInUnified, unifiedCrossAccount, allMailFolderIds, enableCrossUnreadView, enableCrossStarredView, enableCrossAllView, colorfulSidebarIcons, tintListRowsByTag, tintListRowsByAccount, showFolderTotalCount, faviconUnreadBadge, mailLayout, proInterface, interfaceLayout, updateSetting } = useSettingsStore();
   const { isSettingLocked, isSettingHidden, isFeatureEnabled } = usePolicyStore();
   const accounts = useAccountStore(s => s.accounts);
   const activeAccountId = useAccountStore(s => s.activeAccountId);
@@ -166,9 +166,28 @@ export function LayoutSettings() {
     ? t('all_mail.account_hint', { account: activeAccount.displayName || activeAccount.email })
     : null;
 
+  const mountainView = interfaceLayout === 'mountain-view';
+
   return (
     <SettingsSection title={t('title')} description={t('description')}>
-      {!isSettingHidden('mailLayout') && (
+      {/* The interface layout decides where search, navigation and toolbars
+          go - a layout choice, so it leads the Layout tab. */}
+      {!isSettingHidden('interfaceLayout') && (
+      <SettingItem label={t('interface_layout.label')} description={t('interface_layout.description')} locked={isSettingLocked('interfaceLayout')}>
+        <RadioGroup
+          value={interfaceLayout}
+          onChange={(value) => updateSetting('interfaceLayout', value as InterfaceLayout)}
+          options={[
+            { value: 'default', label: t('interface_layout.default') },
+            { value: 'mountain-view', label: t('interface_layout.mountain_view') },
+          ]}
+        />
+      </SettingItem>
+      )}
+      {/* Mountain View always shows the list and then the conversation, and
+          its toolbars are icon-only, so these two would change nothing there.
+          Their saved values stay and apply again under the default layout. */}
+      {!isSettingHidden('mailLayout') && !mountainView && (
       <SettingItem label={tEmail('mail_layout.label')} description={tEmail('mail_layout.description')} locked={isSettingLocked('mailLayout')}>
         <div className="w-[22rem] max-w-full">
           <RadioGroup
@@ -196,12 +215,14 @@ export function LayoutSettings() {
         />
       </SettingItem>
 
+      {!mountainView && (
       <SettingItem label={t('toolbar_labels.label')} description={t('toolbar_labels.description')}>
         <ToggleSwitch
           checked={showToolbarLabels}
           onChange={(checked) => updateSetting('showToolbarLabels', checked)}
         />
       </SettingItem>
+      )}
 
       <SettingItem label={t('hide_account_switcher.label')} description={t('hide_account_switcher.description')}>
         <ToggleSwitch

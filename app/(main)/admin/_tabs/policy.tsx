@@ -44,6 +44,7 @@ const FEATURE_GATE_LABELS: Partial<Record<keyof FeatureGates, { label: string; d
 const RESTRICTABLE_SETTINGS = [
   { key: 'fontSize', label: 'Font Size', category: 'Appearance', type: 'enum', allowedValues: ['small', 'medium', 'large'] },
   { key: 'density', label: 'Density', category: 'Appearance', type: 'enum', allowedValues: ['compact', 'regular', 'spacious'] },
+  { key: 'interfaceLayout', label: 'Interface Layout', category: 'Appearance', type: 'enum', allowedValues: ['default', 'mountain-view'] },
   { key: 'animationsEnabled', label: 'Animations', category: 'Appearance', type: 'boolean' },
   { key: 'markAsReadDelay', label: 'Mark as Read Delay', category: 'Email', type: 'number' },
   { key: 'deleteAction', label: 'Delete Action', category: 'Email', type: 'enum', allowedValues: ['trash', 'trash-and-read', 'permanent'] },

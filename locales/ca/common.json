@@ -142,6 +142,8 @@
     "show_all_tags": "Mostra-ho tot ({count})",
     "show_fewer_tags": "Mostra'n menys",
     "folders": "Carpetes",
+    "show_more": "Més",
+    "show_fewer": "Menys",
     "shared": "Compartit",
     "mail": "Correu",
     "nav_label": "Navegació",
@@ -237,6 +239,7 @@
     "replied": "Respost",
     "forwarded": "Reenviat",
     "has_attachment": "Té adjunt",
+    "conversations_range": "{from}–{to, number} de {total, number}",
     "conversations_count": "{count} de {total} converses",
     "conversations_count_plus": "{count}+ converses",
     "conversations_count_simple": "{count} converses",
@@ -606,6 +609,9 @@
     }
   },
   "email_composer": {
+    "minimize": "Minimitza",
+    "maximize": "Pantalla completa",
+    "restore": "Restaura",
     "read_receipt_on": "Confirmació de lectura sol·licitada (feu clic per desactivar-la)",
     "read_receipt_off": "Sol·licita una confirmació de lectura",
     "dsn_on": "Notificació de lliurament sol·licitada (fes clic per desactivar)",
@@ -1086,6 +1092,12 @@
         "compact": "Compacta",
         "regular": "Normal",
         "comfortable": "Còmoda"
+      },
+      "interface_layout": {
+        "label": "Disposició de la interfície",
+        "description": "On se situen la cerca, la navegació i les barres d'eines",
+        "default": "Predeterminat",
+        "mountain_view": "Mountain View"
       },
       "animations": {
         "label": "Activa les animacions",
@@ -2526,7 +2538,8 @@
       "next_email": "Correu següent",
       "previous_email": "Correu anterior",
       "open_email": "Obre el correu",
-      "close_email": "Tanca / Desselecciona"
+      "close_email": "Tanca / Desselecciona",
+      "go_to_folder": "Vés a la carpeta"
     },
     "actions": {
       "reply": "Respon",
@@ -2548,7 +2561,8 @@
       "global_search": "Cerca-ho tot"
     },
     "threads": {
-      "expand_collapse": "Desplega/replega el fil"
+      "expand_collapse": "Desplega/replega el fil",
+      "select_mountain_view": "Selecciona la conversa"
     },
     "composer": {
       "send": "Envia el correu",

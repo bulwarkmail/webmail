@@ -142,6 +142,8 @@
     "show_all_tags": "Zobraziť všetko ({count})",
     "show_fewer_tags": "Zobraziť menej",
     "folders": "Priečinky",
+    "show_more": "Viac",
+    "show_fewer": "Menej",
     "shared": "Zdieľané",
     "mail": "Pošta",
     "nav_label": "Navigácia",
@@ -237,6 +239,7 @@
     "replied": "Zodpovedané",
     "forwarded": "Preposlané",
     "has_attachment": "Obsahuje prílohu",
+    "conversations_range": "{from}–{to, number} z {total, number}",
     "conversations_count": "{count} z {total} konverzácií",
     "conversations_count_plus": "{count}+ konverzácií",
     "conversations_count_simple": "{count} konverzácií",
@@ -606,6 +609,9 @@
     }
   },
   "email_composer": {
+    "minimize": "Minimalizovať",
+    "maximize": "Celá obrazovka",
+    "restore": "Obnoviť",
     "read_receipt_on": "Potvrdenie o prečítaní požiadané (kliknutím vypnete)",
     "read_receipt_off": "Požiadať o potvrdenie o prečítaní",
     "dsn_on": "Oznámenie o doručení vyžiadané (kliknutím vypnete)",
@@ -1086,6 +1092,12 @@
         "compact": "Kompaktné",
         "regular": "Bežné",
         "comfortable": "Pohodlné"
+      },
+      "interface_layout": {
+        "label": "Rozloženie rozhrania",
+        "description": "Kde sa nachádza hľadanie, navigácia a panely nástrojov",
+        "default": "Predvolené",
+        "mountain_view": "Mountain View"
       },
       "animations": {
         "label": "Povoliť animácie",
@@ -2526,7 +2538,8 @@
       "next_email": "Ďalší e-mail",
       "previous_email": "Predchádzajúci e-mail",
       "open_email": "Otvoriť e-mail",
-      "close_email": "Zavrieť / Zrušiť výber"
+      "close_email": "Zavrieť / Zrušiť výber",
+      "go_to_folder": "Prejsť do priečinka"
     },
     "actions": {
       "reply": "Odpovedať",
@@ -2548,7 +2561,8 @@
       "global_search": "Hľadať všade"
     },
     "threads": {
-      "expand_collapse": "Rozbaliť/zbaliť vlákno"
+      "expand_collapse": "Rozbaliť/zbaliť vlákno",
+      "select_mountain_view": "Vybrať konverzáciu"
     },
     "composer": {
       "send": "Odoslať e-mail",

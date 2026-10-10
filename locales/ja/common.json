@@ -142,6 +142,8 @@
     "show_all_tags": "すべて表示（{count}）",
     "show_fewer_tags": "表示を減らす",
     "folders": "フォルダ",
+    "show_more": "もっと見る",
+    "show_fewer": "折りたたむ",
     "mail": "メール",
     "nav_label": "ナビゲーション",
     "add_app": "アプリ",
@@ -237,6 +239,7 @@
     "replied": "返信済み",
     "forwarded": "転送済み",
     "has_attachment": "添付ファイルあり",
+    "conversations_range": "{total, number} 件中 {from}–{to, number} 件",
     "conversations_count": "{total}件中{count}件の会話",
     "conversations_count_plus": "{count}件以上の会話",
     "conversations_count_simple": "{count}件の会話",
@@ -606,6 +609,9 @@
     }
   },
   "email_composer": {
+    "minimize": "最小化",
+    "maximize": "全画面表示",
+    "restore": "元に戻す",
     "read_receipt_on": "開封確認を要求中（クリックで無効化）",
     "read_receipt_off": "開封確認を要求する",
     "dsn_on": "配信通知を要求中（クリックで解除）",
@@ -1083,6 +1089,12 @@
         "compact": "コンパクト",
         "regular": "標準",
         "comfortable": "ゆったり"
+      },
+      "interface_layout": {
+        "label": "インターフェースのレイアウト",
+        "description": "検索・ナビゲーション・ツールバーの配置",
+        "default": "デフォルト",
+        "mountain_view": "Mountain View"
       },
       "animations": {
         "label": "アニメーションを有効にする",
@@ -2526,7 +2538,8 @@
       "next_email": "次のメール",
       "previous_email": "前のメール",
       "open_email": "メールを開く",
-      "close_email": "閉じる / 選択解除"
+      "close_email": "閉じる / 選択解除",
+      "go_to_folder": "フォルダーに移動"
     },
     "actions": {
       "reply": "返信",
@@ -2548,7 +2561,8 @@
       "global_search": "すべてを検索"
     },
     "threads": {
-      "expand_collapse": "スレッドの展開/折りたたみ"
+      "expand_collapse": "スレッドの展開/折りたたみ",
+      "select_mountain_view": "スレッドを選択"
     },
     "composer": {
       "send": "メールを送信",

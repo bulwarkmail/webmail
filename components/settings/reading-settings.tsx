@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useSettingsStore } from '@/stores/settings-store';
+import { useEffectiveMailLayout } from '@/hooks/use-effective-mail-layout';
 import type { ArchiveMode, HoverAction } from '@/stores/settings-store';
 import { ALL_HOVER_ACTIONS } from '@/stores/settings-store';
 import { useAuthStore } from '@/stores/auth-store';
@@ -28,7 +29,6 @@ export function ReadingSettings() {
     clearSearchOnFolderChange,
     showPreview,
     showVerificationCodes,
-    mailLayout,
     disableThreading,
     emailsPerPage,
     mailAttachmentAction,
@@ -44,7 +44,7 @@ export function ReadingSettings() {
     updateSetting,
   } = useSettingsStore();
 
-  const isFocusedLayout = mailLayout === 'focus';
+  const isFocusedLayout = useEffectiveMailLayout() === 'focus';
 
   const handleReorganizeArchive = async () => {
     const { client } = useAuthStore.getState();

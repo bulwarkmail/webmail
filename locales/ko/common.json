@@ -142,6 +142,8 @@
     "show_all_tags": "전체 보기({count})",
     "show_fewer_tags": "간략히 보기",
     "folders": "폴더",
+    "show_more": "더보기",
+    "show_fewer": "간략히",
     "mail": "메일",
     "nav_label": "내비게이션",
     "add_app": "앱",
@@ -237,6 +239,7 @@
     "replied": "답장함",
     "forwarded": "전달함",
     "has_attachment": "첨부 파일 있음",
+    "conversations_range": "{total, number}개 중 {from}–{to, number}",
     "conversations_count": "전체 {total}개 중 {count}개의 대화",
     "conversations_count_plus": "{count}개 이상의 대화",
     "conversations_count_simple": "{count}개의 대화",
@@ -606,6 +609,9 @@
     }
   },
   "email_composer": {
+    "minimize": "최소화",
+    "maximize": "전체 화면",
+    "restore": "복원",
     "read_receipt_on": "읽음 확인 요청됨 (클릭하여 해제)",
     "read_receipt_off": "읽음 확인 요청",
     "dsn_on": "배달 알림 요청됨 (클릭하여 해제)",
@@ -1083,6 +1089,12 @@
         "compact": "좁게",
         "regular": "보통",
         "comfortable": "넓게"
+      },
+      "interface_layout": {
+        "label": "인터페이스 레이아웃",
+        "description": "검색, 탐색, 도구 모음의 위치",
+        "default": "기본",
+        "mountain_view": "Mountain View"
       },
       "animations": {
         "label": "애니메이션 켜기",
@@ -2526,7 +2538,8 @@
       "next_email": "다음 메일",
       "previous_email": "이전 메일",
       "open_email": "메일 열기",
-      "close_email": "닫기 / 선택 해제"
+      "close_email": "닫기 / 선택 해제",
+      "go_to_folder": "폴더로 이동"
     },
     "actions": {
       "reply": "답장",
@@ -2548,7 +2561,8 @@
       "global_search": "전체 검색"
     },
     "threads": {
-      "expand_collapse": "대화 펼치기/접기"
+      "expand_collapse": "대화 펼치기/접기",
+      "select_mountain_view": "대화 선택"
     },
     "composer": {
       "send": "이메일 보내기",
