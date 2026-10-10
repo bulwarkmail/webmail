@@ -1580,6 +1580,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
               events={visibleEvents}
               calendars={allCalendars}
               onSelectDate={handleSelectDate}
+              onOpenDay={handleOpenDay}
               onSelectEvent={handleSelectEvent}
               onHoverEvent={handleHoverEvent}
               onHoverLeave={handleHoverLeave}
