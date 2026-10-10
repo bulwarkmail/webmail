@@ -67,6 +67,8 @@ export interface FeatureGates {
   crossStarredViewEnabled: boolean;
   crossAllViewEnabled: boolean;
   unifiedCrossAccountEnabled: boolean;
+  /** Encrypted account list kept on the server, restorable on another device. */
+  accountArchiveEnabled: boolean;
 }
 
 export const DEFAULT_FEATURE_GATES: FeatureGates = {
@@ -94,6 +96,7 @@ export const DEFAULT_FEATURE_GATES: FeatureGates = {
   crossStarredViewEnabled: false,
   crossAllViewEnabled: false,
   unifiedCrossAccountEnabled: false,
+  accountArchiveEnabled: false,
 };
 
 export interface ThemePolicy {

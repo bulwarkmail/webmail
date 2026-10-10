@@ -2279,6 +2279,12 @@ export const useAuthStore = create<AuthState>()(
         const accountStore = useAccountStore.getState();
         const targetAccount = accountStore.getAccountById(accountId);
         if (!targetAccount) return;
+        // Restored from the account list backup and never signed in here:
+        // there is no session to resume, so ask for the password instead.
+        if (targetAccount.awaitingSignIn && !clients.has(accountId)) {
+          replaceWindowLocation(`${getLocaleLoginPath()}?mode=add-account&username=${encodeURIComponent(targetAccount.username)}`);
+          return;
+        }
 
         // A switch between two already-connected accounts is done seamlessly:
         // the current account's client and mail stay on screen while we verify
@@ -2562,6 +2568,8 @@ export const useAuthStore = create<AuthState>()(
           // overlaps the connect instead of running after it.
           const restoreAccount = async (account: (typeof accounts)[number]) => {
             if (clients.has(account.id)) return; // Already connected
+            // Restored from the account list backup: listed until signed in.
+            if (account.awaitingSignIn) return;
 
             // A password or access token login without rememberMe leaves
             // nothing to restore - the user logged in without persisting

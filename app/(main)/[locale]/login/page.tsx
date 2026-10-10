@@ -168,7 +168,8 @@ function LoginPageContent() {
     : undefined;
 
   const [formData, setFormData] = useState({
-    username: "",
+    // An account restored from the list backup opens this form with its address.
+    username: isAddAccountMode ? searchParams.get("username") ?? "" : "",
     password: "",
   });
   const [jmapEndpoint, setJmapEndpoint] = useState("");

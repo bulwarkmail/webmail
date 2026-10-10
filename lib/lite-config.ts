@@ -162,6 +162,8 @@ export function applyLitePolicy(raw: unknown): SettingsPolicy {
       pluginsEnabled: false,
       pluginsUploadEnabled: false,
       sidebarAppsEnabled: false,
+      // Kept by this app's server, which Lite does not have.
+      accountArchiveEnabled: false,
     },
     forceEnabledPlugins: [],
     approvedPlugins: [],

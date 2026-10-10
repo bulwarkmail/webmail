@@ -1663,6 +1663,33 @@
         "drag_handle": "Arrastra para reordenar",
         "add": "Añadir cuenta"
       },
+      "backup": {
+        "title": "Copia de la lista de cuentas",
+        "description": "Guarda en el servidor la lista de cuentas de este navegador, cifrada con una contraseña que solo tú conoces, y recupérala en otro dispositivo. Las contraseñas de los buzones no se guardan: inicias sesión tú en cada cuenta restaurada.",
+        "status_none": "No hay ninguna lista guardada para {account}.",
+        "status_saved": "Hay una lista guardada para {account}.",
+        "save": "Guardar lista",
+        "restore": "Restaurar lista",
+        "delete": "Eliminar lista guardada",
+        "cancel": "Cancelar",
+        "delete_confirm": "¿Eliminar del servidor la lista de cuentas guardada?",
+        "password": "Contraseña de la copia",
+        "password_hint": "Al menos 10 caracteres. No se puede recuperar: si la olvidas, vuelve a guardar la lista con una nueva.",
+        "restore_hint": "La contraseña elegida al guardar la lista.",
+        "confirm": "Confirmar contraseña",
+        "saved": "Lista guardada ({count, plural, one {# cuenta} other {# cuentas}}).",
+        "restored": "Cuentas añadidas: {added}. Cuentas ya presentes y actualizadas: {updated}. Abre cada cuenta nueva desde la lista de cuentas para iniciar sesión.",
+        "skipped": "{count, plural, one {# cuenta no se ha añadido} other {# cuentas no se han añadido}}: se ha alcanzado el límite de cuentas.",
+        "deleted": "Lista guardada eliminada.",
+        "errors": {
+          "mismatch": "Las contraseñas no coinciden.",
+          "password_length": "Usa al menos 10 caracteres.",
+          "unlock_failed": "Contraseña incorrecta, o la lista se guardó para otra cuenta.",
+          "owner_signin_required": "Vuelve a iniciar sesión en esta cuenta y reinténtalo.",
+          "https_required": "Se necesita una conexión segura (HTTPS).",
+          "storage_failed": "El servidor no ha podido leer ni guardar la lista. Inténtalo más tarde."
+        }
+      },
       "shared_accounts": {
         "title": "Compartido conmigo",
         "description": "Cuentas de grupo y compartidas que puedes gestionar. Selecciona una para editar sus filtros, respuesta de vacaciones, calendarios y contactos.",
