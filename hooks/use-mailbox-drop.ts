@@ -3,6 +3,7 @@
 import { useCallback, useState, DragEvent } from "react";
 import { Mailbox, Email } from "@/lib/jmap/types";
 import { useEmailStore } from "@/stores/email-store";
+import { emailKeyFor } from "@/lib/thread-utils";
 import { useAuthStore } from "@/stores/auth-store";
 import { useDragDropContext } from "@/contexts/drag-drop-context";
 import { toast } from "@/stores/toast-store";
@@ -65,7 +66,7 @@ interface UseMailboxDropReturn {
 export function useMailboxDrop({ mailbox, onDropComplete, onSuccess, onError }: UseMailboxDropOptions): UseMailboxDropReturn {
   const [isOver, setIsOver] = useState(false);
   const { client } = useAuthStore();
-  const { moveEmailsToMailbox, crossAccountMoveEmails, selectedEmailIds, clearSelection, refreshCurrentMailbox, mailboxes } = useEmailStore();
+  const { moveEmailsToMailbox, crossAccountMoveEmails, selectedEmailKeys, clearSelection, refreshCurrentMailbox, mailboxes } = useEmailStore();
   const { isDragging, sourceMailboxId, draggedEmails, endDrag } = useDragDropContext();
 
   // Determine if this is a valid drop target
@@ -183,8 +184,9 @@ export function useMailboxDrop({ mailbox, onDropComplete, onSuccess, onError }: 
         await moveEmailsToMailbox(client, emailIds, mailbox.id);
       }
 
-      // Clear selection if any selected emails were moved
-      if (emailIds.some(id => selectedEmailIds.has(id))) {
+      // Clear selection if any selected emails were moved. The selection is
+      // keyed by owning account, so compare the dragged emails, not their ids.
+      if (draggedEmails.some(em => selectedEmailKeys.has(emailKeyFor(em)))) {
         clearSelection();
       }
 
@@ -222,7 +224,7 @@ export function useMailboxDrop({ mailbox, onDropComplete, onSuccess, onError }: 
     } finally {
       endDrag();
     }
-  }, [client, mailbox, mailboxes, isValidTarget, moveEmailsToMailbox, crossAccountMoveEmails, draggedEmails, sourceMailboxId, selectedEmailIds, clearSelection, refreshCurrentMailbox, endDrag, onDropComplete, onSuccess, onError]);
+  }, [client, mailbox, mailboxes, isValidTarget, moveEmailsToMailbox, crossAccountMoveEmails, draggedEmails, sourceMailboxId, selectedEmailKeys, clearSelection, refreshCurrentMailbox, endDrag, onDropComplete, onSuccess, onError]);
 
   const valid = isValidTarget();
 

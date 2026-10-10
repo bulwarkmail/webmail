@@ -17,16 +17,15 @@ import { useResolvedSidebarApps } from "@/hooks/use-resolved-sidebar-apps";
 import { useAuthStore } from "@/stores/auth-store";
 import { useAccountStore } from "@/stores/account-store";
 import { useUpdateStore, selectHasUpdate } from "@/stores/update-store";
-import { getActiveAccountSlotHeaders } from "@/lib/auth/active-account-slot";
 import { getMaxAccounts } from "@/lib/account-utils";
 import { isDocumentRTL } from "@/i18n/direction";
 import { cn, formatFileSize } from "@/lib/utils";
 import { useMenuNavigation } from "@/hooks/use-menu-navigation";
 import { PluginSlot } from "@/components/plugins/plugin-slot";
+import { useStalwartAdmin } from "@/hooks/use-stalwart-admin";
 import { KeyboardShortcutsModal } from "@/components/keyboard-shortcuts-modal";
-import { apiFetch, getPathPrefix, withBasePath } from "@/lib/browser-navigation";
+import { getPathPrefix, withBasePath } from "@/lib/browser-navigation";
 import { Avatar } from "@/components/ui/avatar";
-import { IS_LITE } from "@/lib/lite";
 import { toUnicodeEmail } from "@/lib/idn";
 
 interface NavItem {
@@ -213,6 +212,7 @@ export function NavigationRail({
   const supportsFiles = client?.supportsFiles() ?? false;
   const supportsContacts = client?.supportsContacts() ?? false;
   const showRailAccountList = useSettingsStore((s) => s.showRailAccountList);
+  const mountainView = useSettingsStore((s) => s.interfaceLayout === 'mountain-view');
   const sidebarAppsEnabled = usePolicyStore((s) => s.isFeatureEnabled('sidebarAppsEnabled'));
   const filesEnabled = usePolicyStore((s) => s.isFeatureEnabled('filesEnabled'));
   const contactsEnabled = usePolicyStore((s) => s.isFeatureEnabled('contactsEnabled'));
@@ -221,7 +221,7 @@ export function NavigationRail({
   // removes the user's, so a pinned set still shows when custom apps are off.
   const visibleSidebarApps = useResolvedSidebarApps();
   const inboxUnread = mailboxes.find(m => m.role === "inbox")?.unreadEmails || 0;
-  const [isStalwartAdmin, setIsStalwartAdmin] = useState(false);
+  const isStalwartAdmin = useStalwartAdmin();
   const hasUpdate = useUpdateStore(selectHasUpdate);
   const updateSeverity = useUpdateStore((s) => s.status?.severity);
   const startUpdatePolling = useUpdateStore((s) => s.startPolling);
@@ -292,30 +292,6 @@ export function NavigationRail({
     };
   }, [logoutMenuOpen, logoutPopoverRef]);
 
-  useEffect(() => {
-    let cancelled = false;
-    const headers = getActiveAccountSlotHeaders();
-    // No admin console in the static Lite build.
-    if (IS_LITE || !headers['X-JMAP-Cookie-Slot']) return;
-    apiFetch('/api/admin/auth', { headers })
-      .then(res => res.json())
-      .then(data => {
-        if (cancelled || !data.stalwartAdmin) return;
-        setIsStalwartAdmin(true);
-        // Only "auto" mode may mint the admin session here; in "password"
-        // mode the shield leads to /admin/login instead (#870).
-        if (!data.authenticated && data.stalwartAutoLogin === true) {
-          // Pre-create admin session so /admin works even after full page navigation
-          apiFetch('/api/admin/auth', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', ...headers },
-            body: JSON.stringify({ stalwartAuth: true }),
-          }).catch(() => {});
-        }
-      })
-      .catch(() => {});
-    return () => { cancelled = true; };
-  }, []);
 
   const navItems: NavItem[] = [
     { id: "mail", icon: Mail, labelKey: "mail", href: "/", badge: inboxUnread },
@@ -338,7 +314,8 @@ export function NavigationRail({
       return activeItemId === itemId;
     }
     if (href === "/") {
-      return pathname === "/" || pathname === "";
+      // Mountain View's bottom bar marks the mail tab on mail routes too.
+      return pathname === "/" || pathname === "" || (mountainView && pathname.startsWith("/mail"));
     }
     return pathname.startsWith(href);
   };
@@ -360,7 +337,12 @@ export function NavigationRail({
   if (orientation === "horizontal") {
     return (
       <nav
-        className={cn("flex items-center bg-background border-t border-border shrink-0 overflow-x-auto mobile-scroll-hidden pb-[calc(env(safe-area-inset-bottom)/2)]", className)}
+        data-mobile-navigation=""
+        className={cn(
+          "flex items-center bg-background border-t border-border shrink-0 overflow-x-auto mobile-scroll-hidden pb-[calc(env(safe-area-inset-bottom)/2)]",
+          mountainView && "min-h-16 border-t-0 bg-secondary shadow-[0_-1px_3px_rgb(0_0_0/0.08)]",
+          className
+        )}
         role="navigation"
         aria-label={t("nav_label")}
       >
@@ -381,14 +363,17 @@ export function NavigationRail({
               )}
               aria-current={isActive ? "page" : undefined}
             >
-              <div className="relative">
+              <div className={cn(
+                "relative",
+                mountainView && isActive && "min-w-14 rounded-full bg-primary/15 px-4 py-[3px]"
+              )}>
                 <Icon className="w-5 h-5" />
                 {item.badge != null && item.badge > 0 && (
                   <span className="absolute -top-1.5 -right-2.5 flex items-center justify-center min-w-[16px] h-4 text-[10px] font-bold rounded-full bg-red-500 text-white px-1">
                     {item.badge > 99 ? "99+" : item.badge}
                   </span>
                 )}
-                {isActive && (
+                {isActive && !mountainView && (
                   <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-0.5 rounded-full bg-primary" />
                 )}
               </div>

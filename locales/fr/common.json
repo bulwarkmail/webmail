@@ -142,6 +142,8 @@
     "show_all_tags": "Tout afficher ({count})",
     "show_fewer_tags": "Afficher moins",
     "folders": "Dossiers",
+    "show_more": "Plus",
+    "show_fewer": "Moins",
     "mail": "Messagerie",
     "nav_label": "Navigation",
     "add_app": "Apps",
@@ -237,6 +239,7 @@
     "replied": "Répondu",
     "forwarded": "Transféré",
     "has_attachment": "Avec pièce jointe",
+    "conversations_range": "{from}–{to, number} sur {total, number}",
     "conversations_count": "{count} sur {total} conversations",
     "conversations_count_plus": "{count}+ conversations",
     "conversations_count_simple": "{count} conversations",
@@ -606,6 +609,9 @@
     }
   },
   "email_composer": {
+    "minimize": "Réduire",
+    "maximize": "Plein écran",
+    "restore": "Restaurer",
     "read_receipt_on": "Accusé de lecture demandé (cliquez pour désactiver)",
     "read_receipt_off": "Demander un accusé de lecture",
     "dsn_on": "Notification de remise demandée (cliquer pour désactiver)",
@@ -1084,6 +1090,12 @@
         "regular": "Normale",
         "comfortable": "Confortable"
       },
+      "interface_layout": {
+        "label": "Disposition de l'interface",
+        "description": "Où se trouvent la recherche, la navigation et les barres d'outils",
+        "default": "Par défaut",
+        "mountain_view": "Mountain View"
+      },
       "animations": {
         "label": "Activer les animations",
         "description": "Afficher les transitions et effets fluides"
@@ -1217,6 +1229,18 @@
         "swift": "Geste rapide",
         "relax": "Détente"
       },
+      "push_all": {
+          "title": "All accounts",
+          "description": "Turn push on or off for several accounts at once. One browser subscription serves them all.",
+          "select_all": "Select every connected account",
+          "state_on": "notifications on",
+          "state_off": "notifications off",
+          "enable_selected": "Enable for selected",
+          "disable_selected": "Disable for selected",
+          "result_enabled": "Notifications enabled for {count} accounts.",
+          "result_partial": "Enabled for {enabled} accounts; {failed} could not be enabled.",
+          "result_disabled": "Notifications disabled for {count} accounts."
+        },
       "sound_selection": {
         "title": "Son de notification",
         "description": "Choisissez le son à jouer pour les notifications",
@@ -1662,6 +1686,33 @@
         "move_down": "Déplacer vers le bas",
         "drag_handle": "Faire glisser pour réorganiser",
         "add": "Ajouter un compte"
+      },
+      "backup": {
+        "title": "Sauvegarde de la liste des comptes",
+        "description": "Conservez sur le serveur la liste des comptes de ce navigateur, chiffrée avec un mot de passe que vous seul connaissez, et retrouvez-la sur un autre appareil. Les mots de passe des boîtes ne sont pas enregistrés : vous vous connectez vous-même à chaque compte restauré.",
+        "status_none": "Aucune liste enregistrée pour {account}.",
+        "status_saved": "Une liste est enregistrée pour {account}.",
+        "save": "Enregistrer la liste",
+        "restore": "Restaurer la liste",
+        "delete": "Supprimer la liste enregistrée",
+        "cancel": "Annuler",
+        "delete_confirm": "Supprimer du serveur la liste de comptes enregistrée ?",
+        "password": "Mot de passe de la sauvegarde",
+        "password_hint": "Au moins 10 caractères. Il ne peut pas être récupéré : si vous l'oubliez, enregistrez à nouveau la liste avec un nouveau mot de passe.",
+        "restore_hint": "Le mot de passe choisi lors de l'enregistrement de la liste.",
+        "confirm": "Confirmer le mot de passe",
+        "saved": "Liste enregistrée ({count, plural, one {# compte} other {# comptes}}).",
+        "restored": "Comptes ajoutés : {added}. Comptes déjà présents et mis à jour : {updated}. Ouvrez chaque nouveau compte depuis la liste des comptes pour vous connecter.",
+        "skipped": "{count, plural, one {# compte n'a pas été ajouté} other {# comptes n'ont pas été ajoutés}} : la limite de comptes est atteinte.",
+        "deleted": "Liste enregistrée supprimée.",
+        "errors": {
+          "mismatch": "Les mots de passe ne correspondent pas.",
+          "password_length": "Utilisez au moins 10 caractères.",
+          "unlock_failed": "Mot de passe incorrect, ou la liste a été enregistrée pour un autre compte.",
+          "owner_signin_required": "Reconnectez-vous à ce compte, puis réessayez.",
+          "https_required": "Une connexion sécurisée (HTTPS) est nécessaire.",
+          "storage_failed": "Le serveur n'a pas pu lire ou enregistrer la liste. Réessayez plus tard."
+        }
       },
       "shared_accounts": {
         "title": "Partagé avec moi",
@@ -2499,7 +2550,8 @@
       "next_email": "Email suivant",
       "previous_email": "Email précédent",
       "open_email": "Ouvrir l'email",
-      "close_email": "Fermer / Désélectionner"
+      "close_email": "Fermer / Désélectionner",
+      "go_to_folder": "Aller au dossier"
     },
     "actions": {
       "reply": "Répondre",
@@ -2521,7 +2573,8 @@
       "global_search": "Tout rechercher"
     },
     "threads": {
-      "expand_collapse": "Développer/réduire la conversation"
+      "expand_collapse": "Développer/réduire la conversation",
+      "select_mountain_view": "Sélectionner la conversation"
     },
     "composer": {
       "send": "Envoyer l'e-mail",

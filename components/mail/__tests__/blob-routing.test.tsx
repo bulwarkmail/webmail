@@ -110,7 +110,7 @@ beforeEach(() => {
     mailboxes: [primaryMailbox, sharedMailbox], viewingAccountId: null, accountMailboxes: {},
     isUnifiedView: false, unifiedRole: null, isScheduledView: false, isLoadingEmail: false,
     isLoading: false, searchQuery: '', searchFilters: { ...DEFAULT_SEARCH_FILTERS }, searchMailboxId: '',
-    selectedKeyword: null, selectedEmailIds: new Set(),
+    selectedKeyword: null, selectedEmailKeys: new Set(),
     fetchMailboxes: vi.fn().mockResolvedValue(undefined), fetchEmails: vi.fn().mockResolvedValue(undefined),
     fetchQuota: vi.fn().mockResolvedValue(undefined), fetchTagCounts: vi.fn().mockResolvedValue(undefined),
     refreshScheduledMetadata: vi.fn().mockResolvedValue(undefined),

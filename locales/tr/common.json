@@ -142,6 +142,8 @@
     "show_all_tags": "Tümünü göster ({count})",
     "show_fewer_tags": "Daha az göster",
     "folders": "Klasörler",
+    "show_more": "Diğer",
+    "show_fewer": "Daha az",
     "shared": "Paylaşılan",
     "mail": "Posta",
     "nav_label": "Gezinme",
@@ -237,6 +239,7 @@
     "replied": "Yanıtlandı",
     "forwarded": "İletildi",
     "has_attachment": "Ek içeriyor",
+    "conversations_range": "{total, number} içinde {from}–{to, number}",
     "conversations_count": "{total} konuşmadan {count} tanesi",
     "conversations_count_plus": "{count}+ konuşma",
     "conversations_count_simple": "{count} konuşma",
@@ -606,6 +609,9 @@
     }
   },
   "email_composer": {
+    "minimize": "Simge durumuna küçült",
+    "maximize": "Tam ekran",
+    "restore": "Geri yükle",
     "read_receipt_on": "Okundu bilgisi istendi (devre dışı bırakmak için tıklayın)",
     "read_receipt_off": "Okundu bilgisi iste",
     "dsn_on": "Teslimat bildirimi istendi (kapatmak için tıklayın)",
@@ -1084,6 +1090,12 @@
         "regular": "Normal",
         "comfortable": "Rahat"
       },
+      "interface_layout": {
+        "label": "Arayüz düzeni",
+        "description": "Arama, gezinme ve araç çubuklarının konumu",
+        "default": "Varsayılan",
+        "mountain_view": "Mountain View"
+      },
       "animations": {
         "label": "Animasyonları Etkinleştir",
         "description": "Akıcı geçişler ve efektler göster"
@@ -1217,6 +1229,18 @@
         "swift": "Hızlı Jest",
         "relax": "Rahatla"
       },
+      "push_all": {
+          "title": "All accounts",
+          "description": "Turn push on or off for several accounts at once. One browser subscription serves them all.",
+          "select_all": "Select every connected account",
+          "state_on": "notifications on",
+          "state_off": "notifications off",
+          "enable_selected": "Enable for selected",
+          "disable_selected": "Disable for selected",
+          "result_enabled": "Notifications enabled for {count} accounts.",
+          "result_partial": "Enabled for {enabled} accounts; {failed} could not be enabled.",
+          "result_disabled": "Notifications disabled for {count} accounts."
+        },
       "sound_selection": {
         "title": "Bildirim Sesi",
         "description": "Bildirimler için hangi sesin çalınacağını seçin",
@@ -1662,6 +1686,33 @@
         "move_down": "Aşağı taşı",
         "drag_handle": "Sıralamak için sürükleyin",
         "add": "Hesap ekle"
+      },
+      "backup": {
+        "title": "Account list backup",
+        "description": "Keep the list of accounts in this browser on the server, encrypted with a password only you know, and bring it back on another device. Mailbox passwords are not saved: you sign in to each restored account yourself.",
+        "status_none": "No list is saved for {account}.",
+        "status_saved": "A list is saved for {account}.",
+        "save": "Save list",
+        "restore": "Restore list",
+        "delete": "Delete saved list",
+        "cancel": "Cancel",
+        "delete_confirm": "Delete the saved account list from the server?",
+        "password": "Backup password",
+        "password_hint": "At least 10 characters. It cannot be recovered: if you forget it, save the list again with a new one.",
+        "restore_hint": "The password chosen when the list was saved.",
+        "confirm": "Confirm password",
+        "saved": "List saved ({count, plural, one {# account} other {# accounts}}).",
+        "restored": "Accounts added: {added}. Accounts already here and updated: {updated}. Open each new account from the account list to sign in.",
+        "skipped": "{count, plural, one {# account was} other {# accounts were}} not added: the account limit is reached.",
+        "deleted": "Saved list deleted.",
+        "errors": {
+          "mismatch": "The passwords do not match.",
+          "password_length": "Use at least 10 characters.",
+          "unlock_failed": "Wrong password, or the list was saved for another account.",
+          "owner_signin_required": "Sign in to this account again, then retry.",
+          "https_required": "This needs a secure (HTTPS) connection.",
+          "storage_failed": "The server could not read or store the list. Try again later."
+        }
       },
       "shared_accounts": {
         "title": "Benimle paylaşılanlar",
@@ -2499,7 +2550,8 @@
       "next_email": "Sonraki e-posta",
       "previous_email": "Önceki e-posta",
       "open_email": "E-postayı aç",
-      "close_email": "Kapat / Seçimi kaldır"
+      "close_email": "Kapat / Seçimi kaldır",
+      "go_to_folder": "Klasöre git"
     },
     "actions": {
       "reply": "Yanıtla",
@@ -2521,7 +2573,8 @@
       "global_search": "Her yerde ara"
     },
     "threads": {
-      "expand_collapse": "İleti dizisini genişlet/daralt"
+      "expand_collapse": "İleti dizisini genişlet/daralt",
+      "select_mountain_view": "Konuşmayı seç"
     },
     "composer": {
       "send": "E-posta gönder",

@@ -142,6 +142,8 @@
     "show_all_tags": "Zobrazit vše ({count})",
     "show_fewer_tags": "Zobrazit méně",
     "folders": "Složky",
+    "show_more": "Více",
+    "show_fewer": "Méně",
     "shared": "Sdílené",
     "mail": "Pošta",
     "nav_label": "Navigace",
@@ -237,6 +239,7 @@
     "replied": "Zodpovězeno",
     "forwarded": "Přeposláno",
     "has_attachment": "Obsahuje přílohu",
+    "conversations_range": "{from}–{to, number} z {total, number}",
     "conversations_count": "{count} z {total} konverzací",
     "conversations_count_plus": "Více než {count} konverzací",
     "conversations_count_simple": "{count} konverzací",
@@ -606,6 +609,9 @@
     }
   },
   "email_composer": {
+    "minimize": "Minimalizovat",
+    "maximize": "Celá obrazovka",
+    "restore": "Obnovit",
     "read_receipt_on": "Vyžádáno potvrzení o přečtení (kliknutím vypnete)",
     "read_receipt_off": "Vyžádat potvrzení o přečtení",
     "dsn_on": "Oznámení o doručení vyžádáno (kliknutím vypnete)",
@@ -1084,6 +1090,12 @@
         "regular": "Běžná",
         "comfortable": "Pohodlná"
       },
+      "interface_layout": {
+        "label": "Rozvržení rozhraní",
+        "description": "Kde se nachází hledání, navigace a panely nástrojů",
+        "default": "Výchozí",
+        "mountain_view": "Mountain View"
+      },
       "animations": {
         "label": "Povolit animace",
         "description": "Zobrazovat plynulé přechody a efekty"
@@ -1217,6 +1229,18 @@
         "swift": "Rychlý",
         "relax": "Relaxační"
       },
+      "push_all": {
+          "title": "All accounts",
+          "description": "Turn push on or off for several accounts at once. One browser subscription serves them all.",
+          "select_all": "Select every connected account",
+          "state_on": "notifications on",
+          "state_off": "notifications off",
+          "enable_selected": "Enable for selected",
+          "disable_selected": "Disable for selected",
+          "result_enabled": "Notifications enabled for {count} accounts.",
+          "result_partial": "Enabled for {enabled} accounts; {failed} could not be enabled.",
+          "result_disabled": "Notifications disabled for {count} accounts."
+        },
       "sound_selection": {
         "title": "Zvuk oznámení",
         "description": "Vyberte zvuk, který se přehraje při oznámení",
@@ -1662,6 +1686,33 @@
         "move_down": "Posunout dolů",
         "drag_handle": "Přetažením změňte pořadí",
         "add": "Přidat účet"
+      },
+      "backup": {
+        "title": "Account list backup",
+        "description": "Keep the list of accounts in this browser on the server, encrypted with a password only you know, and bring it back on another device. Mailbox passwords are not saved: you sign in to each restored account yourself.",
+        "status_none": "No list is saved for {account}.",
+        "status_saved": "A list is saved for {account}.",
+        "save": "Save list",
+        "restore": "Restore list",
+        "delete": "Delete saved list",
+        "cancel": "Cancel",
+        "delete_confirm": "Delete the saved account list from the server?",
+        "password": "Backup password",
+        "password_hint": "At least 10 characters. It cannot be recovered: if you forget it, save the list again with a new one.",
+        "restore_hint": "The password chosen when the list was saved.",
+        "confirm": "Confirm password",
+        "saved": "List saved ({count, plural, one {# account} other {# accounts}}).",
+        "restored": "Accounts added: {added}. Accounts already here and updated: {updated}. Open each new account from the account list to sign in.",
+        "skipped": "{count, plural, one {# account was} other {# accounts were}} not added: the account limit is reached.",
+        "deleted": "Saved list deleted.",
+        "errors": {
+          "mismatch": "The passwords do not match.",
+          "password_length": "Use at least 10 characters.",
+          "unlock_failed": "Wrong password, or the list was saved for another account.",
+          "owner_signin_required": "Sign in to this account again, then retry.",
+          "https_required": "This needs a secure (HTTPS) connection.",
+          "storage_failed": "The server could not read or store the list. Try again later."
+        }
       },
       "shared_accounts": {
         "title": "Sdíleno se mnou",
@@ -2499,7 +2550,8 @@
       "next_email": "Další zpráva",
       "previous_email": "Předchozí zpráva",
       "open_email": "Otevřít zprávu",
-      "close_email": "Zavřít / Zrušit výběr"
+      "close_email": "Zavřít / Zrušit výběr",
+      "go_to_folder": "Přejít do složky"
     },
     "actions": {
       "reply": "Odpovědět",
@@ -2521,7 +2573,8 @@
       "global_search": "Hledat ve všem"
     },
     "threads": {
-      "expand_collapse": "Rozbalit/sbalit vlákno"
+      "expand_collapse": "Rozbalit/sbalit vlákno",
+      "select_mountain_view": "Vybrat konverzaci"
     },
     "composer": {
       "send": "Odeslat e-mail",

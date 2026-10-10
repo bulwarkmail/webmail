@@ -38,11 +38,13 @@ const FEATURE_GATE_LABELS: Partial<Record<keyof FeatureGates, { label: string; d
   crossStarredViewEnabled: { label: 'Unified Mailbox: Starred', description: 'Allow a "Starred" entry in the Unified Mailbox section that lists flagged/starred mail across the account and its shared folders (or every account when the cross-account sub-option is on). Honors the user\'s folder selection. Requires the matching per-user toggle in Settings → Appearance.' },
   crossAllViewEnabled: { label: 'Unified Mailbox: All Mail', description: 'Allow an "All mail" entry in the Unified Mailbox section that lists all mail across the account and its shared folders (or every account when the cross-account sub-option is on). Honors the user\'s folder selection. Requires the matching per-user toggle in Settings → Appearance.' },
   unifiedCrossAccountEnabled: { label: 'Unified Mailbox: Cross-account', description: 'Allow users to expand the Unified Mailbox beyond the active account boundary so its lists merge across every logged-in account. When off, the Unified Mailbox stays within the active account and its shared folders.' },
+  accountArchiveEnabled: { label: 'Account List Backup', description: 'Let users save their list of accounts (address, server, label, colour) on this server, encrypted in the browser with a password of their choice, and restore it on another device. No mailbox passwords are stored. Archives live in SETTINGS_DATA_DIR/account-archives; requires SESSION_SECRET.' },
 };
 
 const RESTRICTABLE_SETTINGS = [
   { key: 'fontSize', label: 'Font Size', category: 'Appearance', type: 'enum', allowedValues: ['small', 'medium', 'large'] },
   { key: 'density', label: 'Density', category: 'Appearance', type: 'enum', allowedValues: ['compact', 'regular', 'spacious'] },
+  { key: 'interfaceLayout', label: 'Interface Layout', category: 'Appearance', type: 'enum', allowedValues: ['default', 'mountain-view'] },
   { key: 'animationsEnabled', label: 'Animations', category: 'Appearance', type: 'boolean' },
   { key: 'markAsReadDelay', label: 'Mark as Read Delay', category: 'Email', type: 'number' },
   { key: 'deleteAction', label: 'Delete Action', category: 'Email', type: 'enum', allowedValues: ['trash', 'trash-and-read', 'permanent'] },

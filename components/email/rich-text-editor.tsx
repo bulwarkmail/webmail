@@ -426,13 +426,12 @@ export function RichTextEditor({
   return (
     <div className={cn("flex flex-col", hasError && "ring-2 ring-red-500 dark:ring-red-400 rounded", className)}>
       {/* Toolbar - sticky within the composer's scroll container so it stays
-          visible while editing long bodies. The background stays at main's
-          bg-muted/30 in every state - backdrop-blur has no visual effect while
-          the toolbar rests on the solid page background, and blurs body text
-          sliding underneath only once pinned, so pinned legibility needs no
-          extra opaque overlay (an always-on stronger overlay would read darker
-          than main even at rest). */}
-      <div className="sticky top-0 z-20 flex flex-wrap items-center gap-0.5 px-3 py-1.5 border-b border-border/50 bg-muted/30 backdrop-blur-sm">
+          visible while editing long bodies. Its background is the colour
+          bg-muted/30 gives over the page, made opaque: the same at rest, and
+          body text scrolling underneath stays hidden instead of showing
+          through, which a backdrop blur alone did not guarantee (browsers
+          that skip backdrop-filter drew the text sharp under the buttons). */}
+      <div className="sticky top-0 z-20 flex flex-wrap items-center gap-0.5 px-3 py-1.5 border-b border-border/50 bg-[color-mix(in_oklab,var(--color-muted)_30%,var(--color-background))]">
         {/* Font size - two baseline-aligned A's read as "size" at a glance;
             once a size is chosen the button shows that number instead. */}
         <div ref={fontSizeWrapperRef} className="relative">

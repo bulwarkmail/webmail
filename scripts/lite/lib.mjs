@@ -105,6 +105,8 @@ export const LITE_API_STRING_ALLOWLIST = [
   // Settings/policy - replaced by config.json / policy.json.
   "/api/config",
   "/api/admin/policy",
+  // lib/account-archive-client.ts - the feature is pinned off in Lite.
+  "/api/account-archive",
   // WOPI (#425) - use-wopi-status returns disabled in Lite.
   "/api/wopi/status",
   "/api/wopi/launch",

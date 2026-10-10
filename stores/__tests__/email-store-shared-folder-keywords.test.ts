@@ -102,7 +102,7 @@ describe('non-unified shared-folder keyword routing', () => {
       accountMailboxes: {},
       selectedEmail: null,
       emails: [makeEmail({ id: 'e1', keywords: {}, mailboxIds: { 'owner-x:x-inbox': true } })],
-      selectedEmailIds: new Set<string>(),
+      selectedEmailKeys: new Set<string>(),
     } as never);
   });
 
@@ -249,7 +249,7 @@ describe('batchSetTag (#1077)', () => {
         makeEmail({ id: 'e3', keywords: { '$color:work': true } }),
         makeEmail({ id: 'e4', keywords: {} }),
       ],
-      selectedEmailIds: new Set(['e1', 'e2', 'e3']),
+      selectedEmailKeys: new Set(['e1', 'e2', 'e3']),
       fetchTagCounts,
     } as never);
   });
@@ -264,7 +264,7 @@ describe('batchSetTag (#1077)', () => {
     expect(client.batchUpdateKeywords).toHaveBeenCalledWith(['e1'], { 'keywords/$label:work': true }, undefined);
     expect(keywordsOf('e1')).toEqual({ $seen: true, '$label:home': true, '$label:work': true });
     expect(keywordsOf('e4')).toEqual({});
-    expect(useEmailStore.getState().selectedEmailIds.size).toBe(3);
+    expect(useEmailStore.getState().selectedEmailKeys.size).toBe(3);
     expect(fetchTagCounts).toHaveBeenCalled();
   });
 
@@ -292,13 +292,36 @@ describe('batchSetTag (#1077)', () => {
         makeEmail({ id: 'e1', sourceClientAccountId: 'account-a', sourceAccountId: 'jmap-a' }),
         makeEmail({ id: 'e2', sourceClientAccountId: 'account-b', sourceAccountId: 'jmap-b' }),
       ],
-      selectedEmailIds: new Set(['e1', 'e2']),
+      selectedEmailKeys: new Set(['account-a/jmap-a:e1', 'account-b/jmap-b:e2']),
     } as never);
 
     await useEmailStore.getState().batchSetTag(client, 'work', true);
 
     expect(client.batchUpdateKeywords).toHaveBeenCalledWith(['e1'], { 'keywords/$label:work': true }, 'jmap-a');
     expect(other.batchUpdateKeywords).toHaveBeenCalledWith(['e2'], { 'keywords/$label:work': true }, 'jmap-b');
+  });
+
+  it('leaves a namesake in another account alone', async () => {
+    const other = makeClient();
+    useAuthStore.setState({
+      getClientForAccount: (id: string) => (id === 'account-a' ? client : id === 'account-b' ? other : undefined) as never,
+    } as never);
+    useEmailStore.setState({
+      isUnifiedView: true,
+      emails: [
+        makeEmail({ id: 'e1', sourceClientAccountId: 'account-a', sourceAccountId: 'jmap-a' }),
+        makeEmail({ id: 'e1', sourceClientAccountId: 'account-b', sourceAccountId: 'jmap-b' }),
+      ],
+      selectedEmailKeys: new Set(['account-a/jmap-a:e1']),
+    } as never);
+
+    await useEmailStore.getState().batchSetTag(client, 'work', true);
+
+    expect(client.batchUpdateKeywords).toHaveBeenCalledWith(['e1'], { 'keywords/$label:work': true }, 'jmap-a');
+    expect(other.batchUpdateKeywords).not.toHaveBeenCalled();
+    const [mine, namesake] = useEmailStore.getState().emails;
+    expect(mine.keywords).toEqual({ '$label:work': true });
+    expect(namesake.keywords ?? {}).toEqual({});
   });
 
   it('rejects and leaves the rows untouched when the write fails', async () => {

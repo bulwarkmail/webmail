@@ -142,6 +142,8 @@
     "show_all_tags": "Alles tonen ({count})",
     "show_fewer_tags": "Minder tonen",
     "folders": "Mappen",
+    "show_more": "Meer",
+    "show_fewer": "Minder",
     "mail": "E-mail",
     "nav_label": "Navigatie",
     "add_app": "Apps",
@@ -237,6 +239,7 @@
     "replied": "Beantwoord",
     "forwarded": "Doorgestuurd",
     "has_attachment": "Met bijlage",
+    "conversations_range": "{from}–{to, number} van {total, number}",
     "conversations_count": "{count} van {total} gesprekken",
     "conversations_count_plus": "{count}+ gesprekken",
     "conversations_count_simple": "{count} gesprekken",
@@ -606,6 +609,9 @@
     }
   },
   "email_composer": {
+    "minimize": "Minimaliseren",
+    "maximize": "Volledig scherm",
+    "restore": "Herstellen",
     "read_receipt_on": "Leesbevestiging aangevraagd (klik om uit te schakelen)",
     "read_receipt_off": "Leesbevestiging aanvragen",
     "dsn_on": "Bezorgmelding aangevraagd (klik om uit te schakelen)",
@@ -1084,6 +1090,12 @@
         "regular": "Normaal",
         "comfortable": "Comfortabel"
       },
+      "interface_layout": {
+        "label": "Interface-indeling",
+        "description": "Waar zoeken, navigatie en werkbalken staan",
+        "default": "Standaard",
+        "mountain_view": "Mountain View"
+      },
       "animations": {
         "label": "Animaties inschakelen",
         "description": "Vloeiende overgangen en effecten tonen"
@@ -1217,6 +1229,18 @@
         "swift": "Snel gebaar",
         "relax": "Ontspannen"
       },
+      "push_all": {
+          "title": "All accounts",
+          "description": "Turn push on or off for several accounts at once. One browser subscription serves them all.",
+          "select_all": "Select every connected account",
+          "state_on": "notifications on",
+          "state_off": "notifications off",
+          "enable_selected": "Enable for selected",
+          "disable_selected": "Disable for selected",
+          "result_enabled": "Notifications enabled for {count} accounts.",
+          "result_partial": "Enabled for {enabled} accounts; {failed} could not be enabled.",
+          "result_disabled": "Notifications disabled for {count} accounts."
+        },
       "sound_selection": {
         "title": "Meldingsgeluid",
         "description": "Kies welk geluid wordt afgespeeld voor meldingen",
@@ -1662,6 +1686,33 @@
         "move_down": "Omlaag verplaatsen",
         "drag_handle": "Sleep om volgorde aan te passen",
         "add": "Account toevoegen"
+      },
+      "backup": {
+        "title": "Account list backup",
+        "description": "Keep the list of accounts in this browser on the server, encrypted with a password only you know, and bring it back on another device. Mailbox passwords are not saved: you sign in to each restored account yourself.",
+        "status_none": "No list is saved for {account}.",
+        "status_saved": "A list is saved for {account}.",
+        "save": "Save list",
+        "restore": "Restore list",
+        "delete": "Delete saved list",
+        "cancel": "Cancel",
+        "delete_confirm": "Delete the saved account list from the server?",
+        "password": "Backup password",
+        "password_hint": "At least 10 characters. It cannot be recovered: if you forget it, save the list again with a new one.",
+        "restore_hint": "The password chosen when the list was saved.",
+        "confirm": "Confirm password",
+        "saved": "List saved ({count, plural, one {# account} other {# accounts}}).",
+        "restored": "Accounts added: {added}. Accounts already here and updated: {updated}. Open each new account from the account list to sign in.",
+        "skipped": "{count, plural, one {# account was} other {# accounts were}} not added: the account limit is reached.",
+        "deleted": "Saved list deleted.",
+        "errors": {
+          "mismatch": "The passwords do not match.",
+          "password_length": "Use at least 10 characters.",
+          "unlock_failed": "Wrong password, or the list was saved for another account.",
+          "owner_signin_required": "Sign in to this account again, then retry.",
+          "https_required": "This needs a secure (HTTPS) connection.",
+          "storage_failed": "The server could not read or store the list. Try again later."
+        }
       },
       "shared_accounts": {
         "title": "Gedeeld met mij",
@@ -2499,7 +2550,8 @@
       "next_email": "Volgende e-mail",
       "previous_email": "Vorige e-mail",
       "open_email": "E-mail openen",
-      "close_email": "Sluiten / Deselecteren"
+      "close_email": "Sluiten / Deselecteren",
+      "go_to_folder": "Ga naar map"
     },
     "actions": {
       "reply": "Beantwoorden",
@@ -2521,7 +2573,8 @@
       "global_search": "Alles doorzoeken"
     },
     "threads": {
-      "expand_collapse": "Gesprek uitklappen/inklappen"
+      "expand_collapse": "Gesprek uitklappen/inklappen",
+      "select_mountain_view": "Gesprek selecteren"
     },
     "composer": {
       "send": "E-mail verzenden",

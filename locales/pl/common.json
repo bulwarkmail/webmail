@@ -142,6 +142,8 @@
     "show_all_tags": "Pokaż wszystkie ({count})",
     "show_fewer_tags": "Pokaż mniej",
     "folders": "Foldery",
+    "show_more": "Więcej",
+    "show_fewer": "Mniej",
     "mail": "Poczta",
     "nav_label": "Nawigacja",
     "add_app": "Aplikacje",
@@ -237,6 +239,7 @@
     "replied": "Odpowiedziano",
     "forwarded": "Przekazano",
     "has_attachment": "Z załącznikiem",
+    "conversations_range": "{from}–{to, number} z {total, number}",
     "conversations_count": "{count} z {total} konwersacji",
     "conversations_count_plus": "{count}+ konwersacji",
     "conversations_count_simple": "{count} konwersacji",
@@ -606,6 +609,9 @@
     }
   },
   "email_composer": {
+    "minimize": "Minimalizuj",
+    "maximize": "Pełny ekran",
+    "restore": "Przywróć",
     "read_receipt_on": "Zażądano potwierdzenia przeczytania (kliknij, aby wyłączyć)",
     "read_receipt_off": "Zażądaj potwierdzenia przeczytania",
     "dsn_on": "Zażądano powiadomienia o dostarczeniu (kliknij, aby wyłączyć)",
@@ -1084,6 +1090,12 @@
         "regular": "Zwykły",
         "comfortable": "Wygodny"
       },
+      "interface_layout": {
+        "label": "Układ interfejsu",
+        "description": "Gdzie znajdują się wyszukiwarka, nawigacja i paski narzędzi",
+        "default": "Domyślny",
+        "mountain_view": "Mountain View"
+      },
       "animations": {
         "label": "Włącz animacje",
         "description": "Pokazuj płynne przejścia i efekty"
@@ -1217,6 +1229,18 @@
         "swift": "Szybki gest",
         "relax": "Relaks"
       },
+      "push_all": {
+          "title": "All accounts",
+          "description": "Turn push on or off for several accounts at once. One browser subscription serves them all.",
+          "select_all": "Select every connected account",
+          "state_on": "notifications on",
+          "state_off": "notifications off",
+          "enable_selected": "Enable for selected",
+          "disable_selected": "Disable for selected",
+          "result_enabled": "Notifications enabled for {count} accounts.",
+          "result_partial": "Enabled for {enabled} accounts; {failed} could not be enabled.",
+          "result_disabled": "Notifications disabled for {count} accounts."
+        },
       "sound_selection": {
         "title": "Dźwięk powiadomienia",
         "description": "Wybierz dźwięk odtwarzany dla powiadomień",
@@ -1662,6 +1686,33 @@
         "move_down": "Przesuń w dół",
         "drag_handle": "Przeciągnij, aby zmienić kolejność",
         "add": "Dodaj konto"
+      },
+      "backup": {
+        "title": "Account list backup",
+        "description": "Keep the list of accounts in this browser on the server, encrypted with a password only you know, and bring it back on another device. Mailbox passwords are not saved: you sign in to each restored account yourself.",
+        "status_none": "No list is saved for {account}.",
+        "status_saved": "A list is saved for {account}.",
+        "save": "Save list",
+        "restore": "Restore list",
+        "delete": "Delete saved list",
+        "cancel": "Cancel",
+        "delete_confirm": "Delete the saved account list from the server?",
+        "password": "Backup password",
+        "password_hint": "At least 10 characters. It cannot be recovered: if you forget it, save the list again with a new one.",
+        "restore_hint": "The password chosen when the list was saved.",
+        "confirm": "Confirm password",
+        "saved": "List saved ({count, plural, one {# account} other {# accounts}}).",
+        "restored": "Accounts added: {added}. Accounts already here and updated: {updated}. Open each new account from the account list to sign in.",
+        "skipped": "{count, plural, one {# account was} other {# accounts were}} not added: the account limit is reached.",
+        "deleted": "Saved list deleted.",
+        "errors": {
+          "mismatch": "The passwords do not match.",
+          "password_length": "Use at least 10 characters.",
+          "unlock_failed": "Wrong password, or the list was saved for another account.",
+          "owner_signin_required": "Sign in to this account again, then retry.",
+          "https_required": "This needs a secure (HTTPS) connection.",
+          "storage_failed": "The server could not read or store the list. Try again later."
+        }
       },
       "shared_accounts": {
         "title": "Udostępnione mnie",
@@ -2499,7 +2550,8 @@
       "next_email": "Następna wiadomość",
       "previous_email": "Poprzednia wiadomość",
       "open_email": "Otwórz wiadomość",
-      "close_email": "Zamknij / Odznacz"
+      "close_email": "Zamknij / Odznacz",
+      "go_to_folder": "Przejdź do folderu"
     },
     "actions": {
       "reply": "Odpowiedz",
@@ -2521,7 +2573,8 @@
       "global_search": "Szukaj wszędzie"
     },
     "threads": {
-      "expand_collapse": "Rozwiń/zwiń wątek"
+      "expand_collapse": "Rozwiń/zwiń wątek",
+      "select_mountain_view": "Zaznacz konwersację"
     },
     "composer": {
       "send": "Wyślij e-mail",

@@ -103,6 +103,7 @@ export {
   IconFolderX as FolderX,
   IconArrowForwardUp as Forward,
   IconWorld as Globe,
+  IconGridDots as Grid3x3,
   IconGripVertical as GripVertical,
   IconServer2 as HardDrive,
   IconH1 as Heading1,

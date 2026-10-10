@@ -142,6 +142,8 @@
     "show_all_tags": "Rādīt visus ({count})",
     "show_fewer_tags": "Rādīt mazāk",
     "folders": "Mapes",
+    "show_more": "Vairāk",
+    "show_fewer": "Mazāk",
     "mail": "Pasts",
     "nav_label": "Navigācija",
     "add_app": "Lietotnes",
@@ -237,6 +239,7 @@
     "replied": "Atbildēts",
     "forwarded": "Pārsūtīts",
     "has_attachment": "Ar pielikumu",
+    "conversations_range": "{from}–{to, number} no {total, number}",
     "conversations_count": "{count} no {total} sarunām",
     "conversations_count_plus": "{count}+ sarunas",
     "conversations_count_simple": "{count} sarunas",
@@ -606,6 +609,9 @@
     }
   },
   "email_composer": {
+    "minimize": "Minimizēt",
+    "maximize": "Pilnekrāns",
+    "restore": "Atjaunot",
     "read_receipt_on": "Pieprasīts lasīšanas apstiprinājums (noklikšķiniet, lai atspējotu)",
     "read_receipt_off": "Pieprasīt lasīšanas apstiprinājumu",
     "dsn_on": "Piegādes paziņojums pieprasīts (noklikšķiniet, lai atspējotu)",
@@ -1084,6 +1090,12 @@
         "regular": "Parasts",
         "comfortable": "Plašs"
       },
+      "interface_layout": {
+        "label": "Saskarnes izkārtojums",
+        "description": "Kur atrodas meklēšana, navigācija un rīkjoslas",
+        "default": "Noklusējuma",
+        "mountain_view": "Mountain View"
+      },
       "animations": {
         "label": "Iespējot animācijas",
         "description": "Rādīt plūstošas pārejas un efektus"
@@ -1217,6 +1229,18 @@
         "swift": "Ātrs",
         "relax": "Relaksējošs"
       },
+      "push_all": {
+          "title": "All accounts",
+          "description": "Turn push on or off for several accounts at once. One browser subscription serves them all.",
+          "select_all": "Select every connected account",
+          "state_on": "notifications on",
+          "state_off": "notifications off",
+          "enable_selected": "Enable for selected",
+          "disable_selected": "Disable for selected",
+          "result_enabled": "Notifications enabled for {count} accounts.",
+          "result_partial": "Enabled for {enabled} accounts; {failed} could not be enabled.",
+          "result_disabled": "Notifications disabled for {count} accounts."
+        },
       "sound_selection": {
         "title": "Paziņojuma skaņa",
         "description": "Izvēlieties skaņu paziņojumiem",
@@ -1662,6 +1686,33 @@
         "move_down": "Pārvietot uz leju",
         "drag_handle": "Velciet, lai pārkārtotu",
         "add": "Pievienot kontu"
+      },
+      "backup": {
+        "title": "Account list backup",
+        "description": "Keep the list of accounts in this browser on the server, encrypted with a password only you know, and bring it back on another device. Mailbox passwords are not saved: you sign in to each restored account yourself.",
+        "status_none": "No list is saved for {account}.",
+        "status_saved": "A list is saved for {account}.",
+        "save": "Save list",
+        "restore": "Restore list",
+        "delete": "Delete saved list",
+        "cancel": "Cancel",
+        "delete_confirm": "Delete the saved account list from the server?",
+        "password": "Backup password",
+        "password_hint": "At least 10 characters. It cannot be recovered: if you forget it, save the list again with a new one.",
+        "restore_hint": "The password chosen when the list was saved.",
+        "confirm": "Confirm password",
+        "saved": "List saved ({count, plural, one {# account} other {# accounts}}).",
+        "restored": "Accounts added: {added}. Accounts already here and updated: {updated}. Open each new account from the account list to sign in.",
+        "skipped": "{count, plural, one {# account was} other {# accounts were}} not added: the account limit is reached.",
+        "deleted": "Saved list deleted.",
+        "errors": {
+          "mismatch": "The passwords do not match.",
+          "password_length": "Use at least 10 characters.",
+          "unlock_failed": "Wrong password, or the list was saved for another account.",
+          "owner_signin_required": "Sign in to this account again, then retry.",
+          "https_required": "This needs a secure (HTTPS) connection.",
+          "storage_failed": "The server could not read or store the list. Try again later."
+        }
       },
       "shared_accounts": {
         "title": "Kopīgots ar mani",
@@ -2499,7 +2550,8 @@
       "next_email": "Nākamā vēstule",
       "previous_email": "Iepriekšējā vēstule",
       "open_email": "Atvērt vēstuli",
-      "close_email": "Aizvērt / Noņemt atlasi"
+      "close_email": "Aizvērt / Noņemt atlasi",
+      "go_to_folder": "Pāriet uz mapi"
     },
     "actions": {
       "reply": "Atbildēt",
@@ -2521,7 +2573,8 @@
       "global_search": "Meklēt visā"
     },
     "threads": {
-      "expand_collapse": "Izvērst/sairt sarunu"
+      "expand_collapse": "Izvērst/sairt sarunu",
+      "select_mountain_view": "Atlasīt sarunu"
     },
     "composer": {
       "send": "Nosūtīt e-pastu",

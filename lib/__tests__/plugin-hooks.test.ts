@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { HookBus, pluginErrorTracker, removeAllPluginHooks, clearAllHooks, emailHooks, calendarHooks, isExternalAttachmentResult } from '../plugin-hooks';
+import type { CalendarEventFormView } from '../plugin-types';
 
 beforeEach(() => {
   pluginErrorTracker.resetAll();
@@ -293,6 +294,54 @@ describe('Hook domain instances', () => {
     expect(calendarHooks.onCalendarEventOpen).toBeInstanceOf(HookBus);
     expect(calendarHooks.onBeforeEventCreate).toBeInstanceOf(HookBus);
     expect(calendarHooks.onEventRsvp).toBeInstanceOf(HookBus);
+  });
+
+  it('onCalendarEventFormSave pipes a returned patch through transform with the form view', async () => {
+    const { calendarFormHooks } = await import('../plugin-hooks');
+    const views: CalendarEventFormView[] = [];
+    const disposable = calendarFormHooks.onCalendarEventFormSave.register(
+      'test-p',
+      async (_patch, view) => {
+        views.push(view);
+        return { virtualLocation: 'https://meet.example.com/rooms/x?role=host' };
+      },
+    );
+
+    const patch = await calendarFormHooks.onCalendarEventFormSave.transform(
+      {},
+      {
+        title: 'Team Sync',
+        description: '',
+        start: '2026-10-09T10:00:00',
+        end: '2026-10-09T11:00:00',
+        isAllDay: false,
+        location: '',
+        virtualLocation: '',
+        calendarId: 'cal-1',
+        uid: 'uid-1',
+        attendees: ['a@sunbeam.pt'],
+      },
+    );
+
+    expect(patch).toEqual({ virtualLocation: 'https://meet.example.com/rooms/x?role=host' });
+    expect(views[0]).toMatchObject({ title: 'Team Sync', uid: 'uid-1', attendees: ['a@sunbeam.pt'] });
+    disposable.dispose();
+  });
+
+  it('onCalendarEventFormSave keeps the form unchanged when handlers return undefined', async () => {
+    const { calendarFormHooks } = await import('../plugin-hooks');
+    const disposable = calendarFormHooks.onCalendarEventFormSave.register('test-p', async () => undefined);
+
+    const patch = await calendarFormHooks.onCalendarEventFormSave.transform(
+      { virtualLocation: 'keep-me' },
+      {
+        title: 'T', description: '', start: '', end: '', isAllDay: false,
+        location: '', virtualLocation: '', calendarId: 'cal-1', attendees: [],
+      },
+    );
+
+    expect(patch).toEqual({ virtualLocation: 'keep-me' });
+    disposable.dispose();
   });
 });
 

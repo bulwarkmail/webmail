@@ -24,29 +24,29 @@ describe('email-store selection', () => {
   beforeEach(() => {
     useEmailStore.setState({
       emails: [makeEmail('a'), makeEmail('b'), makeEmail('c'), makeEmail('d'), makeEmail('e')],
-      selectedEmailIds: new Set(),
-      lastSelectedEmailId: null,
+      selectedEmailKeys: new Set(),
+      lastSelectedEmailKey: null,
       selectedEmail: null,
     });
   });
 
   describe('toggleEmailSelection', () => {
     it('should add email to selection', () => {
-      useEmailStore.getState().toggleEmailSelection('b');
-      expect(useEmailStore.getState().selectedEmailIds.has('b')).toBe(true);
-      expect(useEmailStore.getState().lastSelectedEmailId).toBe('b');
+      useEmailStore.getState().toggleEmailSelection({ id: 'b' });
+      expect(useEmailStore.getState().selectedEmailKeys.has('b')).toBe(true);
+      expect(useEmailStore.getState().lastSelectedEmailKey).toBe('b');
     });
 
     it('should remove email from selection when toggled again', () => {
-      useEmailStore.getState().toggleEmailSelection('b');
-      useEmailStore.getState().toggleEmailSelection('b');
-      expect(useEmailStore.getState().selectedEmailIds.has('b')).toBe(false);
+      useEmailStore.getState().toggleEmailSelection({ id: 'b' });
+      useEmailStore.getState().toggleEmailSelection({ id: 'b' });
+      expect(useEmailStore.getState().selectedEmailKeys.has('b')).toBe(false);
     });
 
     it('should support selecting multiple emails', () => {
-      useEmailStore.getState().toggleEmailSelection('a');
-      useEmailStore.getState().toggleEmailSelection('c');
-      const ids = useEmailStore.getState().selectedEmailIds;
+      useEmailStore.getState().toggleEmailSelection({ id: 'a' });
+      useEmailStore.getState().toggleEmailSelection({ id: 'c' });
+      const ids = useEmailStore.getState().selectedEmailKeys;
       expect(ids.has('a')).toBe(true);
       expect(ids.has('c')).toBe(true);
       expect(ids.size).toBe(2);
@@ -55,9 +55,9 @@ describe('email-store selection', () => {
 
   describe('selectRangeEmails', () => {
     it('should select range from last selected to target (forward)', () => {
-      useEmailStore.getState().toggleEmailSelection('b'); // anchor at index 1
-      useEmailStore.getState().selectRangeEmails('d'); // target at index 3
-      const ids = useEmailStore.getState().selectedEmailIds;
+      useEmailStore.getState().toggleEmailSelection({ id: 'b' }); // anchor at index 1
+      useEmailStore.getState().selectRangeEmails({ id: 'd' }); // target at index 3
+      const ids = useEmailStore.getState().selectedEmailKeys;
       expect(ids.has('b')).toBe(true);
       expect(ids.has('c')).toBe(true);
       expect(ids.has('d')).toBe(true);
@@ -65,9 +65,9 @@ describe('email-store selection', () => {
     });
 
     it('should select range backward', () => {
-      useEmailStore.getState().toggleEmailSelection('d'); // anchor at index 3
-      useEmailStore.getState().selectRangeEmails('b'); // target at index 1
-      const ids = useEmailStore.getState().selectedEmailIds;
+      useEmailStore.getState().toggleEmailSelection({ id: 'd' }); // anchor at index 3
+      useEmailStore.getState().selectRangeEmails({ id: 'b' }); // target at index 1
+      const ids = useEmailStore.getState().selectedEmailKeys;
       expect(ids.has('b')).toBe(true);
       expect(ids.has('c')).toBe(true);
       expect(ids.has('d')).toBe(true);
@@ -75,8 +75,8 @@ describe('email-store selection', () => {
     });
 
     it('should use first email as anchor when no previous selection', () => {
-      useEmailStore.getState().selectRangeEmails('c'); // no anchor → uses first email 'a'
-      const ids = useEmailStore.getState().selectedEmailIds;
+      useEmailStore.getState().selectRangeEmails({ id: 'c' }); // no anchor → uses first email 'a'
+      const ids = useEmailStore.getState().selectedEmailKeys;
       expect(ids.has('a')).toBe(true);
       expect(ids.has('b')).toBe(true);
       expect(ids.has('c')).toBe(true);
@@ -84,10 +84,10 @@ describe('email-store selection', () => {
     });
 
     it('should add to existing selection', () => {
-      useEmailStore.getState().toggleEmailSelection('a');
-      useEmailStore.getState().toggleEmailSelection('b'); // anchor now at 'b'
-      useEmailStore.getState().selectRangeEmails('d');
-      const ids = useEmailStore.getState().selectedEmailIds;
+      useEmailStore.getState().toggleEmailSelection({ id: 'a' });
+      useEmailStore.getState().toggleEmailSelection({ id: 'b' }); // anchor now at 'b'
+      useEmailStore.getState().selectRangeEmails({ id: 'd' });
+      const ids = useEmailStore.getState().selectedEmailKeys;
       // 'a' still selected, plus b-d range
       expect(ids.has('a')).toBe(true);
       expect(ids.has('b')).toBe(true);
@@ -97,9 +97,9 @@ describe('email-store selection', () => {
     });
 
     it('should handle single-item range', () => {
-      useEmailStore.getState().toggleEmailSelection('c');
-      useEmailStore.getState().selectRangeEmails('c');
-      const ids = useEmailStore.getState().selectedEmailIds;
+      useEmailStore.getState().toggleEmailSelection({ id: 'c' });
+      useEmailStore.getState().selectRangeEmails({ id: 'c' });
+      const ids = useEmailStore.getState().selectedEmailKeys;
       expect(ids.has('c')).toBe(true);
       expect(ids.size).toBe(1);
     });
@@ -108,17 +108,17 @@ describe('email-store selection', () => {
   describe('selectAllEmails', () => {
     it('should select all emails', () => {
       useEmailStore.getState().selectAllEmails();
-      expect(useEmailStore.getState().selectedEmailIds.size).toBe(5);
+      expect(useEmailStore.getState().selectedEmailKeys.size).toBe(5);
     });
   });
 
   describe('clearSelection', () => {
     it('should clear all selections and reset anchor', () => {
-      useEmailStore.getState().toggleEmailSelection('a');
-      useEmailStore.getState().toggleEmailSelection('b');
+      useEmailStore.getState().toggleEmailSelection({ id: 'a' });
+      useEmailStore.getState().toggleEmailSelection({ id: 'b' });
       useEmailStore.getState().clearSelection();
-      expect(useEmailStore.getState().selectedEmailIds.size).toBe(0);
-      expect(useEmailStore.getState().lastSelectedEmailId).toBeNull();
+      expect(useEmailStore.getState().selectedEmailKeys.size).toBe(0);
+      expect(useEmailStore.getState().lastSelectedEmailKey).toBeNull();
     });
   });
 });

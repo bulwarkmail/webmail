@@ -13,13 +13,14 @@ import { Trash2, Mail, MailX, MailOpen, Loader2, SearchX, AlertTriangle, Calenda
 import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { useEmailStore, ArchiveMailboxNotFoundError } from "@/stores/email-store";
+import { useEmailStore, ArchiveMailboxNotFoundError, resolveSelectedEmails } from "@/stores/email-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { useAccountStore } from "@/stores/account-store";
 import { useSettingsStore } from "@/stores/settings-store";
+import { useEffectiveMailLayout } from "@/hooks/use-effective-mail-layout";
 import { useUIStore } from "@/stores/ui-store";
 import { useMessageListTabsStore } from "@/stores/message-list-tabs-store";
-import { groupEmailsByThread, sortThreadGroups, threadKeyFor, getEmailTagIds } from "@/lib/thread-utils";
+import { emailKeyFor, groupEmailsByThread, sortThreadGroups, threadKeyFor, getEmailTagIds } from "@/lib/thread-utils";
 import { useContextMenu } from "@/hooks/use-context-menu";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { useTranslations } from "next-intl";
@@ -62,6 +63,11 @@ interface EmailListProps {
   onLoadMoreScheduled?: () => void;
   onCancelScheduledForEdit?: (email: Email) => void | Promise<void>;
   onRescheduleScheduled?: (email: Email) => void | Promise<void>;
+  /**
+   * Mountain View folds the batch verbs into the single toolbar above the
+   * list, so the separate bar that would otherwise slide in here is redundant.
+   */
+  hideBatchToolbar?: boolean;
 }
 
 export function EmailList({
@@ -91,6 +97,7 @@ export function EmailList({
   onMoveToMailbox,
   onEditDraft,
   isScheduledView = false,
+  hideBatchToolbar = false,
   onLoadMoreScheduled,
   onCancelScheduledForEdit,
   onRescheduleScheduled,
@@ -102,7 +109,7 @@ export function EmailList({
   const tViewer = useTranslations('email_viewer');
   const { client } = useAuthStore();
   const {
-    selectedEmailIds,
+    selectedEmailKeys,
     selectAllEmails: _selectAllEmails,
     clearSelection,
     batchMarkAsRead,
@@ -181,8 +188,8 @@ export function EmailList({
    */
   const ruleEmails = useMemo(() => {
     if (!contextMenuEmail) return undefined;
-    if (selectedEmailIds.has(contextMenuEmail.id) && selectedEmailIds.size > 1) {
-      return emails.filter((email) => selectedEmailIds.has(email.id));
+    if (selectedEmailKeys.has(emailKeyFor(contextMenuEmail)) && selectedEmailKeys.size > 1) {
+      return emails.filter((email) => selectedEmailKeys.has(emailKeyFor(email)));
     }
     const own = getOwnAddresses();
     const isOwn = (email: Email) =>
@@ -194,7 +201,7 @@ export function EmailList({
       .filter((email) => !isOwn(email))
       .sort((a, b) => Date.parse(b.receivedAt) - Date.parse(a.receivedAt))[0];
     return newestOther ? [newestOther] : undefined;
-  }, [contextMenuEmail, selectedEmailIds, emails, threadGroups, threadEmailsCache]);
+  }, [contextMenuEmail, selectedEmailKeys, emails, threadGroups, threadEmailsCache]);
   const { dialogProps: confirmDialogProps, confirm: confirmDialog } = useConfirmDialog();
 
   // "Copy to" lists the folders of the other connected accounts. Only with
@@ -259,7 +266,7 @@ export function EmailList({
   const density = useSettingsStore((state) => state.density);
   const showPreview = useSettingsStore((state) => state.showPreview);
   const showVerificationCodes = useSettingsStore((state) => state.showVerificationCodes);
-  const mailLayout = useSettingsStore((state) => state.mailLayout);
+  const mailLayout = useEffectiveMailLayout();
   const footerHasMore = hasMore ?? hasMoreEmails;
   const footerIsLoadingMore = isLoadingMoreItems ?? isLoadingMore;
   const isMobile = useUIStore((state) => state.isMobile);
@@ -351,7 +358,7 @@ export function EmailList({
     </div>
   );
 
-  const hasSelection = selectedEmailIds.size > 0;
+  const hasSelection = selectedEmailKeys.size > 0;
 
   const handleBatchMarkAsRead = async (read: boolean) => {
     if (!client || isProcessing) return;
@@ -366,7 +373,7 @@ export function EmailList({
   // What the tag picker shows for the selection: a tag on every selected
   // message is checked, one on only some of them is drawn as partial.
   const selectionTags = useMemo(() => {
-    const selected = emails.filter((email) => selectedEmailIds.has(email.id));
+    const selected = emails.filter((email) => selectedEmailKeys.has(emailKeyFor(email)));
     const counts = new Map<string, number>();
     for (const email of selected) {
       for (const tagId of getEmailTagIds(email.keywords)) counts.set(tagId, (counts.get(tagId) ?? 0) + 1);
@@ -375,7 +382,7 @@ export function EmailList({
     const some: string[] = [];
     for (const [tagId, count] of counts) (count === selected.length ? all : some).push(tagId);
     return { all, some };
-  }, [emails, selectedEmailIds]);
+  }, [emails, selectedEmailKeys]);
 
   // A tag every selected message has comes off; any other goes onto all of
   // them. The selection stays, so several tags can be changed in a row.
@@ -393,7 +400,7 @@ export function EmailList({
     if (!client || isProcessing) return;
     setIsProcessing(true);
     try {
-      const emailIds = Array.from(selectedEmailIds);
+      const emailIds = resolveSelectedEmails(useEmailStore.getState()).map(e => e.id);
       await batchUndoSpam(client, emailIds);
       toast.success(tSpam('toast_not_spam_batch', { count: emailIds.length }));
     } catch {
@@ -414,8 +421,8 @@ export function EmailList({
         ? t('permanent_delete_confirm_title')
         : t('batch_actions.delete_confirm_title'),
       message: isInTrash
-        ? t('permanent_delete_confirm_batch_message', { count: selectedEmailIds.size })
-        : t('batch_actions.delete_confirm_message', { count: selectedEmailIds.size }),
+        ? t('permanent_delete_confirm_batch_message', { count: selectedEmailKeys.size })
+        : t('batch_actions.delete_confirm_message', { count: selectedEmailKeys.size }),
       confirmText: isInTrash
         ? t('permanent_delete')
         : t('batch_actions.delete'),
@@ -424,7 +431,7 @@ export function EmailList({
     if (!confirmed) return;
 
     setIsProcessing(true);
-    const count = selectedEmailIds.size;
+    const count = selectedEmailKeys.size;
     try {
       await runBatchEmailAction(() => batchDelete(client, isInTrash), {
         success: tNotifications('emails_deleted', { count }),
@@ -529,13 +536,13 @@ export function EmailList({
         ref={batchToolbarRef}
         className={cn(
           "transition-all duration-300 ease-in-out overflow-hidden",
-          hasSelection && !isScheduledView ? "max-h-16 opacity-100" : "max-h-0 opacity-0"
+          hasSelection && !isScheduledView && !hideBatchToolbar ? "max-h-16 opacity-100" : "max-h-0 opacity-0"
         )}
       >
         <div className="px-4 py-2 border-b bg-accent/30 border-border flex items-center justify-between">
           <div className="flex items-center gap-2 animate-in fade-in slide-in-from-left-3 duration-300">
             <span className="text-sm font-medium text-foreground">
-              {t('batch_actions.selected_messages', { count: selectedEmailIds.size })}
+              {t('batch_actions.selected_messages', { count: selectedEmailKeys.size })}
             </span>
           </div>
           <div className="flex items-center gap-1 animate-in fade-in slide-in-from-right-3 duration-300">
@@ -784,8 +791,8 @@ export function EmailList({
           mailboxes={mailboxes}
           selectedMailbox={selectedMailbox}
           currentMailboxRole={effectiveMailboxRole}
-          isMultiSelect={selectedEmailIds.has(contextMenuEmail.id)}
-          selectedCount={selectedEmailIds.size}
+          isMultiSelect={selectedEmailKeys.has(emailKeyFor(contextMenuEmail))}
+          selectedCount={selectedEmailKeys.size}
           ruleEmails={ruleEmails}
           onReply={() => onReply?.(contextMenuEmail!)}
           onReplyAll={() => onReplyAll?.(contextMenuEmail!)}
@@ -805,9 +812,11 @@ export function EmailList({
           onRescheduleScheduled={onRescheduleScheduled ? () => onRescheduleScheduled(contextMenuEmail!) : undefined}
           copyTargets={copyTargets}
           onCopyToAccount={async (accountId, mailboxId) => {
-            const ids = selectedEmailIds.has(contextMenuEmail!.id) && selectedEmailIds.size > 1
-              ? Array.from(selectedEmailIds)
-              : [contextMenuEmail!.id];
+            // Pass the emails, not their ids: an id alone cannot say which
+            // account's namesake to copy.
+            const ids = selectedEmailKeys.has(emailKeyFor(contextMenuEmail!)) && selectedEmailKeys.size > 1
+              ? resolveSelectedEmails(useEmailStore.getState())
+              : [contextMenuEmail!];
             const target = accountMailboxes[accountId]?.find((mb) => mb.id === mailboxId);
             await runBatchEmailAction(() => copyEmailsToAccount(ids, accountId, target?.originalId ?? mailboxId), {
               success: tNotifications('emails_copied', { count: ids.length }),
@@ -820,7 +829,7 @@ export function EmailList({
           onBatchToggleTag={handleBatchToggleTag}
           onBatchDelete={async () => {
             if (!client) return;
-            const count = selectedEmailIds.size;
+            const count = selectedEmailKeys.size;
             await runBatchEmailAction(() => batchDelete(client), {
               success: tNotifications('emails_deleted', { count }),
               error: tNotifications('error_deleting'),
@@ -828,7 +837,7 @@ export function EmailList({
           }}
           onBatchArchive={async () => {
             if (!client) return;
-            const count = selectedEmailIds.size;
+            const count = selectedEmailKeys.size;
             await runBatchEmailAction(() => batchArchive(client), {
               success: tNotifications('emails_archived', { count }),
               error: tNotifications('error_archiving'),
@@ -839,7 +848,7 @@ export function EmailList({
           }}
           onBatchMoveToMailbox={async (mailboxId) => {
             if (!client) return;
-            const count = selectedEmailIds.size;
+            const count = selectedEmailKeys.size;
             await runBatchEmailAction(() => batchMoveToMailbox(client, mailboxId), {
               success: tNotifications('emails_moved', { count }),
               error: tNotifications('move_failed'),
@@ -847,7 +856,7 @@ export function EmailList({
           }}
           onBatchMarkAsSpam={async () => {
             if (client) {
-              const emailIds = Array.from(selectedEmailIds);
+              const emailIds = resolveSelectedEmails(useEmailStore.getState()).map(e => e.id);
               try {
                 await batchMarkAsSpam(client, emailIds);
                 toast.success(
@@ -860,7 +869,7 @@ export function EmailList({
           }}
           onBatchUndoSpam={async () => {
             if (client) {
-              const emailIds = Array.from(selectedEmailIds);
+              const emailIds = resolveSelectedEmails(useEmailStore.getState()).map(e => e.id);
               try {
                 await batchUndoSpam(client, emailIds);
                 toast.success(

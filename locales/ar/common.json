@@ -142,6 +142,8 @@
     "show_all_tags": "إظهار الكل ({count})",
     "show_fewer_tags": "إظهار أقل",
     "folders": "المجلدات",
+    "show_more": "المزيد",
+    "show_fewer": "أقل",
     "shared": "مشترك",
     "mail": "البريد",
     "nav_label": "التنقل",
@@ -237,6 +239,7 @@
     "replied": "تم الرد عليها",
     "forwarded": "تمت إعادة توجيهها",
     "has_attachment": "تحتوي على مرفق",
+    "conversations_range": "{from}–{to, number} من {total, number}",
     "conversations_count": "{count} من {total} محادثة",
     "conversations_count_plus": "{count}+ محادثة",
     "conversations_count_simple": "{count} محادثة",
@@ -606,6 +609,9 @@
     }
   },
   "email_composer": {
+    "minimize": "تصغير",
+    "maximize": "ملء الشاشة",
+    "restore": "استعادة",
     "read_receipt_on": "إيصال القراءة مطلوب (انقر للتعطيل)",
     "read_receipt_off": "طلب إيصال قراءة",
     "dsn_on": "تم طلب إشعار التسليم (انقر للتعطيل)",
@@ -1087,6 +1093,12 @@
         "regular": "عادي",
         "comfortable": "مريح"
       },
+      "interface_layout": {
+        "label": "تخطيط الواجهة",
+        "description": "موضع البحث والتنقل وأشرطة الأدوات",
+        "default": "افتراضي",
+        "mountain_view": "Mountain View"
+      },
       "animations": {
         "label": "تفعيل الحركات",
         "description": "إظهار الانتقالات والتأثيرات السلسة"
@@ -1256,6 +1268,18 @@
         "confirm_revoke_message": "سيتوقّف فورًا عن تلقّي الإشعارات في الخلفية. تفعيل الدفع مجددًا على ذلك الجهاز سيسجّله من جديد.",
         "confirm_revoke_message_this": "سيتوقّف هذا الجهاز فورًا عن تلقّي الإشعارات في الخلفية."
       },
+      "push_all": {
+          "title": "All accounts",
+          "description": "Turn push on or off for several accounts at once. One browser subscription serves them all.",
+          "select_all": "Select every connected account",
+          "state_on": "notifications on",
+          "state_off": "notifications off",
+          "enable_selected": "Enable for selected",
+          "disable_selected": "Disable for selected",
+          "result_enabled": "Notifications enabled for {count} accounts.",
+          "result_partial": "Enabled for {enabled} accounts; {failed} could not be enabled.",
+          "result_disabled": "Notifications disabled for {count} accounts."
+        },
       "sound_selection": {
         "title": "صوت الإشعار",
         "description": "اختر الصوت الذي يُشغَّل للإشعارات",
@@ -1665,6 +1689,33 @@
         "move_down": "تحريك لأسفل",
         "drag_handle": "اسحب لإعادة الترتيب",
         "add": "إضافة حساب"
+      },
+      "backup": {
+        "title": "Account list backup",
+        "description": "Keep the list of accounts in this browser on the server, encrypted with a password only you know, and bring it back on another device. Mailbox passwords are not saved: you sign in to each restored account yourself.",
+        "status_none": "No list is saved for {account}.",
+        "status_saved": "A list is saved for {account}.",
+        "save": "Save list",
+        "restore": "Restore list",
+        "delete": "Delete saved list",
+        "cancel": "Cancel",
+        "delete_confirm": "Delete the saved account list from the server?",
+        "password": "Backup password",
+        "password_hint": "At least 10 characters. It cannot be recovered: if you forget it, save the list again with a new one.",
+        "restore_hint": "The password chosen when the list was saved.",
+        "confirm": "Confirm password",
+        "saved": "List saved ({count, plural, one {# account} other {# accounts}}).",
+        "restored": "Accounts added: {added}. Accounts already here and updated: {updated}. Open each new account from the account list to sign in.",
+        "skipped": "{count, plural, one {# account was} other {# accounts were}} not added: the account limit is reached.",
+        "deleted": "Saved list deleted.",
+        "errors": {
+          "mismatch": "The passwords do not match.",
+          "password_length": "Use at least 10 characters.",
+          "unlock_failed": "Wrong password, or the list was saved for another account.",
+          "owner_signin_required": "Sign in to this account again, then retry.",
+          "https_required": "This needs a secure (HTTPS) connection.",
+          "storage_failed": "The server could not read or store the list. Try again later."
+        }
       },
       "shared_accounts": {
         "title": "مشترك معي",
@@ -2499,7 +2550,8 @@
       "next_email": "الرسالة التالية",
       "previous_email": "الرسالة السابقة",
       "open_email": "فتح الرسالة",
-      "close_email": "إغلاق / إلغاء التحديد"
+      "close_email": "إغلاق / إلغاء التحديد",
+      "go_to_folder": "الانتقال إلى المجلد"
     },
     "actions": {
       "reply": "رد",
@@ -2521,7 +2573,8 @@
       "global_search": "البحث في كل شيء"
     },
     "threads": {
-      "expand_collapse": "توسيع/طي المحادثة"
+      "expand_collapse": "توسيع/طي المحادثة",
+      "select_mountain_view": "تحديد المحادثة"
     },
     "composer": {
       "send": "إرسال الرسالة",

@@ -14,7 +14,7 @@ import { buildContactsPath, buildMailPath } from "@/lib/deep-links";
 import { useCopyLink } from "@/hooks/use-copy-link";
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
-import { formatFileSize, cn, MailboxNode, formatDateTime, generateUUID } from "@/lib/utils";
+import { formatFileSize, cn, MailboxNode, formatDate, formatDateTime, generateUUID } from "@/lib/utils";
 import { buildMoveTargets, resolveMoveOwnerAccountId } from "@/lib/move-targets";
 import { emailDisplayDate } from "@/lib/email-date";
 import { TagBadge } from "./tag-badge";
@@ -89,6 +89,7 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import type { Attachment as PostalMimeAttachment } from 'postal-mime';
 import { useSettingsStore } from "@/stores/settings-store";
+import { useEffectiveMailLayout } from "@/hooks/use-effective-mail-layout";
 import { useUIStore } from "@/stores/ui-store";
 import { useContactStore, getContactDisplayName, getContactPrimaryEmail } from "@/stores/contact-store";
 import { toast } from "@/stores/toast-store";
@@ -708,8 +709,9 @@ export function EmailViewer({
   const emailKeywords = useSettingsStore((state) => state.emailKeywords);
   const { sortTagIds, tagColor } = useKeywordFormat();
   const toolbarPosition = useSettingsStore((state) => state.toolbarPosition);
-  const showToolbarLabels = useSettingsStore((state) => state.showToolbarLabels);
-  const mailLayout = useSettingsStore((state) => state.mailLayout);
+  const showToolbarLabelsSetting = useSettingsStore((state) => state.showToolbarLabels);
+  const interfaceLayout = useSettingsStore((state) => state.interfaceLayout);
+  const mailLayout = useEffectiveMailLayout();
   const calendarInvitationParsingEnabled = useSettingsStore((state) => state.calendarInvitationParsingEnabled);
   const readReceiptResponse = useSettingsStore((state) => state.readReceiptResponse);
   const hideInlineImageAttachments = useSettingsStore((state) => state.hideInlineImageAttachments);
@@ -761,6 +763,15 @@ export function EmailViewer({
 
   // Tablet list visibility
   const { isTablet, isMobile } = useDeviceDetection();
+  // Mountain View's conversation view: an icon-only toolbar at the top, and Reply /
+  // Reply all / Forward as buttons under the message rather than in the bar.
+  const mvViewer = interfaceLayout === 'mountain-view' && !isMobile;
+  // On the phone too Mountain View ends the message with Reply / Reply all / Forward
+  // and has no bar fixed at the bottom; previous / next move to the top bar.
+  const mvMobileViewer = interfaceLayout === 'mountain-view' && isMobile;
+  const mvReplyRow = mvViewer || mvMobileViewer;
+  // Mountain View's toolbars are icon-only, on the phone as on the desktop.
+  const showToolbarLabels = showToolbarLabelsSetting && interfaceLayout !== 'mountain-view';
   // Inside a Pro pane, `isMobile` above is pane-width based: overlays that
   // would go viewport-fixed must instead cover just the pane (via
   // PaneOverlay + absolute positioning), and viewport CSS breakpoints like
@@ -3057,6 +3068,32 @@ export function EmailViewer({
             <ChevronLeft className="w-5 h-5" />
           </Button>
         )}
+        {showBackButton && mvMobileViewer && (
+          <>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onNavigatePrev}
+              disabled={!onNavigatePrev}
+              className="h-9 w-9 flex-shrink-0"
+              aria-label={t('tooltips.previous')}
+              title={t('tooltips.previous')}
+            >
+              <ChevronUp className="w-5 h-5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onNavigateNext}
+              disabled={!onNavigateNext}
+              className="h-9 w-9 flex-shrink-0"
+              aria-label={t('tooltips.next')}
+              title={t('tooltips.next')}
+            >
+              <ChevronDown className="w-5 h-5" />
+            </Button>
+          </>
+        )}
         {isScheduled && canCancelScheduled && (
           <>
             <Button
@@ -3101,7 +3138,7 @@ export function EmailViewer({
             <span className="text-sm">{t('edit_draft')}</span>
           </Button>
         )}
-        {!isScheduled && !isDraft && (<>
+        {!isScheduled && !isDraft && !mvViewer && (<>
         <Button
           variant="ghost"
           size="sm"
@@ -3379,7 +3416,7 @@ export function EmailViewer({
             onClick={() => { setMoreMenuOpen(!moreMenuOpen); setMoreMenuSlideEnabled(true); setMoreMenuSub(null); setTagMenuOpen(false); setMoveMenuOpen(false); }}
           >
             <MoreVertical className="w-4 h-4 text-muted-foreground" />
-            <span className="text-[10px] leading-tight sm:hidden">{t('more_actions')}</span>
+            {interfaceLayout !== 'mountain-view' && <span className="text-[10px] leading-tight sm:hidden">{t('more_actions')}</span>}
           </Button>
           {moreMenuOpen && !isMobile && (
             <div
@@ -4002,8 +4039,9 @@ export function EmailViewer({
                 </div>
               )}
             </div>
-            {/* Date/time on the right of subject row - hidden on mobile, shown next to sender */}
-            <div className="hidden sm:block flex-shrink-0 text-end">
+            {/* Date/time on the right of subject row - hidden on mobile, shown next to sender.
+                Mountain View puts it on the sender's row instead, and shows no size. */}
+            <div className={cn("hidden flex-shrink-0 text-end", !mvViewer && "sm:block")}>
               <span className="text-xs lg:text-sm text-muted-foreground whitespace-nowrap">
                 {formatDateTime(emailDisplayDate(email), timeFormat, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
               </span>
@@ -4028,8 +4066,10 @@ export function EmailViewer({
         </div>
       )}
 
-      {/* Email Content Area */}
-      <div className={cn("flex-1 overflow-auto overscroll-contain bg-muted/30", isMobile && "pb-[calc(3.25rem+env(safe-area-inset-bottom)/2)] sm:pb-0")}>
+      {/* Email Content Area. Mountain View reads the conversation on one plain
+          sheet, so the reply buttons under the message sit on the page colour
+          rather than on a tinted strip. */}
+      <div className={cn("flex-1 overflow-auto overscroll-contain", mvViewer || mvMobileViewer ? "bg-background" : "bg-muted/30", isMobile && !mvMobileViewer && "pb-[calc(3.25rem+env(safe-area-inset-bottom)/2)] sm:pb-0")}>
       <div className="min-h-full flex flex-col">
 
       {/* === SENDER INFO (Desktop) === */}
@@ -4064,6 +4104,9 @@ export function EmailViewer({
                     ) : (
                       <span className="font-semibold text-foreground">{t('unknown_sender')}</span>
                     )}
+                    {mvViewer && sender?.email && sender?.name && (
+                      <span className="text-xs text-muted-foreground truncate">&lt;{sender.email}&gt;</span>
+                    )}
                     <EmailIdentityBadge email={email} identities={identities} />
                     {shouldShowUnsubBanner && listHeaders?.listUnsubscribe && (
                       <UnsubscribeBanner
@@ -4078,9 +4121,14 @@ export function EmailViewer({
                         }}
                       />
                     )}
+                    {mvViewer && (
+                      <span className="ms-auto ps-2 text-xs text-muted-foreground whitespace-nowrap" data-mv-sender-date="">
+                        {formatDateTime(emailDisplayDate(email), timeFormat, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
+                      </span>
+                    )}
                   </div>
-                  {/* Email address under name */}
-                  {sender?.email && sender?.name && (
+                  {/* Email address under name (on the name's line under Mountain View) */}
+                  {!mvViewer && sender?.email && sender?.name && (
                     <div className="text-sm text-muted-foreground mt-0.5 truncate">{sender.email}</div>
                   )}
                 </div>
@@ -4353,8 +4401,8 @@ export function EmailViewer({
                   />
                 )}
               </div>
-              {/* Email address under name */}
-              {sender?.email && sender?.name && (
+              {/* Email address under name - Mountain View keeps it in the details */}
+              {!mvMobileViewer && sender?.email && sender?.name && (
                 <div className="text-xs text-muted-foreground mt-0.5 truncate">{sender.email}</div>
               )}
               {/* Row 2: Recipients */}
@@ -4396,9 +4444,11 @@ export function EmailViewer({
             {/* Date/time + size on the right (mobile) */}
             <div className="sm:hidden flex-shrink-0 text-end ms-2">
               <span className="text-xs text-muted-foreground whitespace-nowrap">
-                {formatDateTime(emailDisplayDate(email), timeFormat, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
+                {mvMobileViewer
+                  ? formatDate(emailDisplayDate(email))
+                  : formatDateTime(emailDisplayDate(email), timeFormat, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
               </span>
-              {email.size > 0 && (
+              {email.size > 0 && !mvMobileViewer && (
                 <div className="text-xs text-muted-foreground/60">
                   {formatFileSize(email.size)}
                 </div>
@@ -5379,8 +5429,29 @@ export function EmailViewer({
 
           <PluginSlot name="email-footer" />
 
+          {/* Mountain View: Reply / Reply all / Forward as buttons under the message. */}
+          {mvReplyRow && !isDraft && !isScheduled && !isBodyLoading && (effectiveEmailContent.isHtml ? iframeReady : true) && (
+            <div
+              className={cn("pb-6 pt-2", isMobile ? "grid grid-cols-3 gap-2 px-4" : "flex flex-wrap items-center gap-2 px-6")}
+              data-mv-reply-row=""
+            >
+              <Button variant="outline" size="sm" className={cn("rounded-full gap-2", isMobile ? "min-w-0 px-2 text-xs" : "px-5")} onClick={() => onReply?.()}>
+                <Reply className="w-4 h-4" />
+                {t('reply')}
+              </Button>
+              <Button variant="outline" size="sm" className={cn("rounded-full gap-2", isMobile ? "min-w-0 px-2 text-xs" : "px-5")} onClick={onReplyAll}>
+                <ReplyAll className="w-4 h-4" />
+                {t('reply_all')}
+              </Button>
+              <Button variant="outline" size="sm" className={cn("rounded-full gap-2", isMobile ? "min-w-0 px-2 text-xs" : "px-5")} onClick={onForward}>
+                <Forward className="w-4 h-4" />
+                {t('forward')}
+              </Button>
+            </div>
+          )}
+
           {/* Quick Reply Section - hidden for drafts and while loading a new email */}
-          {!isDraft && !isScheduled && !isBodyLoading && (effectiveEmailContent.isHtml ? iframeReady : true) && (<div className="bg-background border-t border-border px-6 mt-auto" style={{ paddingBlock: 'var(--density-header-py)' }}>
+          {!mvReplyRow && !isDraft && !isScheduled && !isBodyLoading && (effectiveEmailContent.isHtml ? iframeReady : true) && (<div className="bg-background border-t border-border px-6 mt-auto" style={{ paddingBlock: 'var(--density-header-py)' }}>
             <div className="flex items-start" style={{ gap: 'var(--density-item-gap)' }}>
               <div className="flex-shrink-0">
                 <Avatar
@@ -5527,7 +5598,7 @@ export function EmailViewer({
     {/* Mobile bottom action bar - pane-scoped inside a Pro pane (the
         viewport `sm:hidden` guard would otherwise hide it there, and
         `fixed` would span the whole app instead of the pane). */}
-    {isMobile && (
+    {isMobile && !mvMobileViewer && (
       <nav className={cn(
         "z-50 bg-background border-t border-border overflow-hidden pb-[calc(env(safe-area-inset-bottom)/2)]",
         isPaneScoped ? "absolute bottom-0 left-0 right-0" : "fixed bottom-0 left-0 right-0 sm:hidden",

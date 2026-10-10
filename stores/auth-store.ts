@@ -2112,7 +2112,13 @@ export const useAuthStore = create<AuthState>()(
 
         // Check if there are remaining accounts to switch to. Read the store
         // afresh: `accountStore` is the state from before removeAccount().
-        const nextAccount = wasDemoMode ? undefined : useAccountStore.getState().accounts[0];
+        // Prefer an account that is signed in here: one restored from the
+        // account list backup (or otherwise not connected) has no client, and
+        // picking it signs out every account left.
+        const remainingAccounts = useAccountStore.getState().accounts;
+        const nextAccount = wasDemoMode
+          ? undefined
+          : remainingAccounts.find((a) => clients.has(a.id)) ?? remainingAccounts[0];
         const droppedAccounts: AccountEntry[] = [];
 
         if (nextAccount) {
@@ -2279,6 +2285,12 @@ export const useAuthStore = create<AuthState>()(
         const accountStore = useAccountStore.getState();
         const targetAccount = accountStore.getAccountById(accountId);
         if (!targetAccount) return;
+        // Restored from the account list backup and never signed in here:
+        // there is no session to resume, so ask for the password instead.
+        if (targetAccount.awaitingSignIn && !clients.has(accountId)) {
+          replaceWindowLocation(`${getLocaleLoginPath()}?mode=add-account&username=${encodeURIComponent(targetAccount.username)}`);
+          return;
+        }
 
         // A switch between two already-connected accounts is done seamlessly:
         // the current account's client and mail stay on screen while we verify
@@ -2562,6 +2574,8 @@ export const useAuthStore = create<AuthState>()(
           // overlaps the connect instead of running after it.
           const restoreAccount = async (account: (typeof accounts)[number]) => {
             if (clients.has(account.id)) return; // Already connected
+            // Restored from the account list backup: listed until signed in.
+            if (account.awaitingSignIn) return;
 
             // A password or access token login without rememberMe leaves
             // nothing to restore - the user logged in without persisting
@@ -2754,8 +2768,13 @@ export const useAuthStore = create<AuthState>()(
             }
           }
 
-          // No accounts could be restored
-          if (accounts.some((account) => accountStore.getAccountById(account.id))) {
+          // No accounts could be restored. Accounts restored from the account
+          // list backup were never signed in here, so they say nothing about
+          // the connection.
+          if (accounts.some((account) => {
+            const entry = accountStore.getAccountById(account.id);
+            return entry && !entry.awaitingSignIn;
+          })) {
             set({
               isAuthenticated: false,
               isLoading: false,

@@ -17,6 +17,7 @@ import {
   ChevronsRight,
   ChevronRight,
   ChevronDown,
+  ChevronUp,
   Folder,
   FolderOpen,
   User,
@@ -31,6 +32,7 @@ import {
   Loader2,
   AlertTriangle,
   NotebookPen,
+  PenSquare,
   CalendarClock,
   BellOff,
   Mails,
@@ -80,6 +82,12 @@ interface SidebarProps {
   onMailboxSelect?: (mailboxId: string) => void;
   onTagSelect?: (keywordId: string | null) => void;
   onCompose?: () => void;
+  /**
+   * Mountain View, desktop only: the rail grows a Compose pill at the top and
+   * drops its own header, because the global top bar already carries the
+   * collapse control and the account switcher.
+   */
+  mvShell?: boolean;
   onSidebarClose?: () => void;
   onUnreadFilterClick?: (mailboxId: string) => void;
   onMarkFolderRead?: (mailboxId: string) => void;
@@ -107,6 +115,8 @@ interface SidebarProps {
   /** Gated All mail / Unread / Starred entries in the "Unified Mailbox" section. */
   showCrossUnread?: boolean;
   showCrossStarred?: boolean;
+  /** Mountain View: open Starred from its own row under the Inbox. */
+  onOpenStarred?: () => void;
   showCrossAll?: boolean;
   /** Unread total across all cross-view folders (badge for unread/all). */
   crossUnreadCount?: number;
@@ -320,6 +330,7 @@ function SidebarRow({
       {...(dropHandlers || {})}
       onContextMenu={onContextMenu}
       data-testid="folder-row"
+      data-mv-nav-row=""
       data-folder-role={testRole ?? undefined}
       data-folder-name={testName ?? undefined}
       data-mailbox-id={testMailboxId ?? undefined}
@@ -815,7 +826,7 @@ export function Sidebar({
   selectedKeyword = null,
   onMailboxSelect,
   onTagSelect,
-  onCompose: _onCompose,
+  onCompose,
   onSidebarClose,
   onUnreadFilterClick,
   onMarkFolderRead,
@@ -836,6 +847,7 @@ export function Sidebar({
   crossAccountActive = false,
   showCrossUnread = false,
   showCrossStarred = false,
+  onOpenStarred,
   showCrossAll = false,
   crossUnreadCount = 0,
   className,
@@ -843,13 +855,23 @@ export function Sidebar({
   accountMailboxes,
   viewingAccountId = null,
   onAccountMailboxSelect,
+  mvShell = false,
 }: SidebarProps) {
   const router = useRouter();
-  const { sidebarCollapsed: isCollapsed, toggleSidebarCollapsed } = useUIStore();
+  const { sidebarCollapsed, toggleSidebarCollapsed } = useUIStore();
+  // Mountain View's collapsed rail is a peek, not a commitment: putting the pointer on
+  // it slides the full list back out over the message list and takes it away
+  // again on leaving, so a folder two clicks deep costs no clicks at all. It
+  // floats rather than widening the column, or every hover would reflow the
+  // list behind it.
+  const [railHovered, setRailHovered] = useState(false);
+  const hoverExpanded = mvShell && sidebarCollapsed && railHovered;
+  const isCollapsed = sidebarCollapsed && !hoverExpanded;
   const { primaryIdentity: _primaryIdentity, activeAccountId } = useAuthStore();
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const [expandedTags, setExpandedTags] = useState<Set<string>>(new Set());
   const [showAllTags, setShowAllTags] = useState(false);
+  const [moreExpanded, setMoreExpanded] = useState(false);
   const [foldersExpanded, setFoldersExpanded] = useState(() => {
     try {
       const stored = localStorage.getItem('sidebarFoldersExpanded');
@@ -1010,6 +1032,22 @@ export function Sidebar({
   const mailboxTree = buildMailboxTree(mailboxes);
   const ownTree = mailboxTree.filter(n => !n.id.startsWith('shared-account-') && !isServerScheduledNode(n));
   const sharedAccounts = mailboxTree.filter(n => n.id.startsWith('shared-account-'));
+
+  // Mountain View's navigation is one flat list of the few places mail
+  // actually goes, with everything else - the folders you made, the shared
+  // ones, the labels - behind a single "More". The "Folders" and "Tags"
+  // headings say the same thing the icons already do, so the first heading
+  // goes and the rest move below the expander. The collapsed rail is left as
+  // it is: it shows icons only, and hiding half of them behind a word would
+  // leave a control with no room to put it.
+  const mvFlat = mvShell && !isCollapsed;
+  const isPrimaryFolder = (node: MailboxNode) =>
+    node.role === 'inbox' || node.role === 'sent' || node.role === 'drafts';
+  const primaryTree = mvFlat ? ownTree.filter(isPrimaryFolder) : ownTree;
+  const secondaryTree = mvFlat ? ownTree.filter((node) => !isPrimaryFolder(node)) : [];
+  // Everything under "More" is hidden together, so one flag covers the extra
+  // folders, the shared accounts and the labels.
+  const showSecondary = !mvFlat || moreExpanded;
 
   // With nesting off every tag is its own root, so the same rows render through
   // one path whether or not the ids describe a hierarchy.
@@ -1213,17 +1251,24 @@ export function Sidebar({
 
   return (
     <div
+      onMouseEnter={mvShell && sidebarCollapsed ? () => setRailHovered(true) : undefined}
+      onMouseLeave={mvShell && sidebarCollapsed ? () => setRailHovered(false) : undefined}
+      data-mv-rail-peek={hoverExpanded ? "" : undefined}
       className={cn(
         "relative flex flex-col h-full border-e transition-all duration-300 overflow-hidden",
         "bg-secondary border-border",
         "max-lg:w-full",
         isCollapsed ? "lg:w-12" : "lg:w-full",
+        // Floats out of the rail's own column rather than widening it, so the
+        // message list underneath never moves while the pointer passes over.
+        // Width comes from --mv-rail-peek-w, keyed on data-mv-rail-peek.
+        hoverExpanded && "lg:absolute lg:inset-y-0 lg:start-0 lg:z-40 lg:shadow-xl",
         className
       )}
     >
       {/* Header - hidden in the Pro shell, which owns its own chrome and
           would otherwise render an empty strip (no collapse, no switcher). */}
-      {!isEmbedded && (
+      {!isEmbedded && !mvShell && (
         // Border lives on the wrapper (outside the h-14 box) so the bar's total
         // height matches the search/reply toolbars, which border-b their wrapper too.
         <div className="border-b border-border">
@@ -1252,6 +1297,26 @@ export function Sidebar({
               <AccountSwitcher variant="expanded" className="flex-1" />
             )}
           </div>
+        </div>
+      )}
+
+      {mvShell && onCompose && (
+        <div className={cn("pt-2 pb-3", isCollapsed ? "px-2" : "px-3")}>
+          <button
+            type="button"
+            onClick={onCompose}
+            data-mv-compose=""
+            data-tour="compose-button"
+            className={cn(
+              "flex items-center bg-primary text-primary-foreground shadow-sm hover:shadow-md transition-shadow",
+              isCollapsed ? "w-14 justify-center" : "gap-3 ps-4 pe-6"
+            )}
+            title={t("compose_hint")}
+            aria-label={t("compose")}
+          >
+            <PenSquare className="w-5 h-5 flex-shrink-0" />
+            {!isCollapsed && <span className="text-sm font-medium">{t("compose")}</span>}
+          </button>
         </div>
       )}
 
@@ -1382,16 +1447,18 @@ export function Sidebar({
           })
         ) : (
           <div onContextMenu={handleFoldersHeaderContextMenu}>
-            <SidebarSectionHeader
-              label={t("folders")}
-              expanded={foldersExpanded}
-              onToggle={toggleFolders}
-              onSettings={openFolderSettings}
-              settingsTitle={t('settings')}
-              isCollapsed={isCollapsed}
-              first={!showUnified}
-            />
-            {((foldersExpanded && !isCollapsed) || isCollapsed) && (
+            {!mvFlat && (
+              <SidebarSectionHeader
+                label={t("folders")}
+                expanded={foldersExpanded}
+                onToggle={toggleFolders}
+                onSettings={openFolderSettings}
+                settingsTitle={t('settings')}
+                isCollapsed={isCollapsed}
+                first={!showUnified}
+              />
+            )}
+            {(mvFlat || (foldersExpanded && !isCollapsed) || isCollapsed) && (
               <>
                 {mailboxes.length === 0 ? (
                   <div className="px-4 py-2 text-sm text-muted-foreground">
@@ -1399,7 +1466,7 @@ export function Sidebar({
                   </div>
                 ) : (
                   <>
-                    {ownTree.map((node) => (
+                    {primaryTree.map((node) => (
                       <Fragment key={node.id}>
                         <MailboxTreeItem
                           node={node}
@@ -1413,9 +1480,49 @@ export function Sidebar({
                           onContextMenu={handleMailboxContextMenu}
                         />
                         {node.role === 'drafts' && renderScheduledRow('scheduled')}
+                        {/* Mountain View lists Starred right under the Inbox. */}
+                        {mvFlat && node.role === 'inbox' && onOpenStarred && (
+                          <SidebarRow
+                            // Drawn like the "All starred" row it stands in for.
+                            icon={<Star className={getIconClass(!selectedKeyword && selectedMailbox === CROSS_VIEW_IDS.starred, false, colorfulSidebarIcons)} />}
+                            label={t("mailboxes.starred")}
+                            testName="mv-starred"
+                            depth={0}
+                            isSelected={!selectedKeyword && selectedMailbox === CROSS_VIEW_IDS.starred}
+                            onClick={onOpenStarred}
+                            isCollapsed={false}
+                          />
+                        )}
                       </Fragment>
                     ))}
-                    {!ownTree.some((node) => node.role === 'drafts') && renderScheduledRow('scheduled')}
+                    {!primaryTree.some((node) => node.role === 'drafts') && renderScheduledRow('scheduled')}
+                    {mvFlat && (
+                      <SidebarRow
+                        icon={moreExpanded
+                          ? <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                          : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+                        label={moreExpanded ? t("show_fewer") : t("show_more")}
+                        testName="mv-more"
+                        depth={0}
+                        isSelected={false}
+                        onClick={() => setMoreExpanded((prev) => !prev)}
+                        isCollapsed={false}
+                      />
+                    )}
+                    {mvFlat && moreExpanded && secondaryTree.map((node) => (
+                      <MailboxTreeItem
+                        key={node.id}
+                        node={node}
+                        selectedMailbox={selectedKeyword ? "" : selectedMailbox}
+                        expandedFolders={expandedFolders}
+                        onMailboxSelect={onMailboxSelect}
+                        onToggleExpand={handleToggleExpand}
+                        isCollapsed={isCollapsed}
+                        onUnreadFilterClick={onUnreadFilterClick}
+                        colorful={colorfulSidebarIcons}
+                        onContextMenu={handleMailboxContextMenu}
+                      />
+                    ))}
                   </>
                 )}
               </>
@@ -1423,7 +1530,7 @@ export function Sidebar({
           </div>
         )}
 
-        {!useMultiAccount && sharedAccounts.length > 0 && (
+        {!useMultiAccount && showSecondary && sharedAccounts.length > 0 && (
           <div>
             <SidebarSectionHeader
               label={t("shared")}
@@ -1482,7 +1589,7 @@ export function Sidebar({
           </div>
         )}
 
-        {emailKeywords.length > 0 && (
+        {showSecondary && emailKeywords.length > 0 && (
           <div data-tour="keyword-tags">
             <SidebarSectionHeader
               label={t("tags")}
