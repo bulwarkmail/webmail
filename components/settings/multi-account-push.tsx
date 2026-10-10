@@ -10,6 +10,18 @@ import { useAuthStore } from '@/stores/auth-store';
 import { useSettingsStore } from '@/stores/settings-store';
 import { disableWebPush, enableWebPushForAccounts, isWebPushEnabled, isWebPushSupported } from '@/lib/web-push';
 
+interface FailedAccount {
+  id: string;
+  name: string;
+  email: string;
+  reason: string;
+}
+
+function failureReason(error: unknown): string {
+  if (error instanceof Error && error.message) return error.message;
+  return String(error);
+}
+
 /**
  * Turn push on or off for several accounts at once.
  *
@@ -27,6 +39,9 @@ export function MultiAccountPushSettings({ relayBaseUrl }: { relayBaseUrl?: stri
   const [chosen, setChosen] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState('');
+  // Which accounts the last bulk enable left off, and why: a bare count
+  // leaves the user guessing which login to retry.
+  const [failures, setFailures] = useState<FailedAccount[]>([]);
 
   const connected = accounts.filter(a => a.isConnected && useAuthStore.getState().getClientForAccount(a.id));
 
@@ -56,7 +71,7 @@ export function MultiAccountPushSettings({ relayBaseUrl }: { relayBaseUrl?: stri
     const auth = useAuthStore.getState();
     const targets = connected.filter(a => chosen.has(a.id));
     if (!targets.length) return;
-    setBusy(true); setNotice('');
+    setBusy(true); setNotice(''); setFailures([]);
     try {
       if (action === 'enable') {
         const outcome = await enableWebPushForAccounts(
@@ -66,6 +81,15 @@ export function MultiAccountPushSettings({ relayBaseUrl }: { relayBaseUrl?: stri
         setNotice(outcome.failed.length
           ? t('result_partial', { enabled: outcome.enabled.length, failed: outcome.failed.length })
           : t('result_enabled', { count: outcome.enabled.length }));
+        setFailures(outcome.failed.map(({ accountId, error }) => {
+          const account = targets.find(a => a.id === accountId);
+          return {
+            id: accountId,
+            name: account ? (account.displayName || account.label || account.username) : accountId,
+            email: account ? (account.email || account.username) : '',
+            reason: failureReason(error),
+          };
+        }));
       } else {
         // Teardown swallows its own failures, so every account ends up local-off.
         for (const account of targets) {
@@ -112,6 +136,13 @@ export function MultiAccountPushSettings({ relayBaseUrl }: { relayBaseUrl?: stri
         </Button>
       </div>
       {notice && <p className="text-sm text-muted-foreground">{notice}</p>}
+      {failures.length > 0 && <ul role="alert" className="space-y-1 text-sm text-destructive">
+        {failures.map(f => <li key={f.id}>
+          <span className="font-medium">{f.name}</span>
+          {f.email && f.email !== f.name && <span> ({f.email})</span>}
+          <span>: {f.reason}</span>
+        </li>)}
+      </ul>}
     </div>
   </SettingsSection>;
 }

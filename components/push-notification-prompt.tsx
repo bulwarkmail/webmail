@@ -4,6 +4,7 @@ import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Bell, Loader2, X } from "@/components/icons";
+import { useAccountStore } from "@/stores/account-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { usePolicyStore } from "@/stores/policy-store";
 import { useSettingsStore } from "@/stores/settings-store";
@@ -24,6 +25,37 @@ export const PUSH_NOTIFICATION_PROMPT_DELAY_MS = 1_000;
 
 function dismissedKey(accountId: string): string {
   return `${DISMISSED_KEY_PREFIX}${accountId}`;
+}
+
+interface ResyncTarget {
+  client: NonNullable<ReturnType<typeof useAuthStore.getState>["client"]>;
+  accountLabel?: string;
+}
+
+/**
+ * Every login whose push registration this tab should keep alive: the active
+ * one first, then each other connected login. Push can be enabled for a login
+ * that is not on screen (the all-accounts panel in settings), and Stalwart
+ * expires a PushSubscription after 7 days, so renewing only the active login
+ * would let the others lapse. The other clients are the ones the auth store
+ * already keeps for the account switcher, so this opens no new connection;
+ * resyncWebPush itself skips logins without push in a local check.
+ */
+function resyncTargets(
+  activeClient: ResyncTarget["client"],
+  activeLabel: string | undefined,
+): ResyncTarget[] {
+  const targets: ResyncTarget[] = [{ client: activeClient, accountLabel: activeLabel }];
+  const auth = useAuthStore.getState();
+  const others = auth.getAllConnectedClients?.() ?? new Map();
+  if (others.size === 0) return targets;
+  const accounts = useAccountStore.getState().accounts;
+  for (const [loginId, other] of others) {
+    if (!other || other === activeClient) continue;
+    const account = accounts.find((a) => a.id === loginId);
+    targets.push({ client: other, accountLabel: account?.username });
+  }
+  return targets;
 }
 
 function isExcludedPath(pathname: string): boolean {
@@ -58,6 +90,11 @@ export function PushNotificationPrompt() {
   const username = useAuthStore((state) => state.username);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
+  // Bumped when the background logins finish connecting: the renewal below
+  // re-runs then so it reaches them too.
+  const connectedAccountsRevision = useAuthStore(
+    (state) => state.connectedAccountsRevision,
+  );
   const emailNotificationsEnabled = useSettingsStore(
     (state) => state.emailNotificationsEnabled,
   );
@@ -121,21 +158,30 @@ export function PushNotificationPrompt() {
   // live registration stale.
   useEffect(() => {
     if (!policyLoaded || !isAuthenticated || !client || !accountId || isDemoMode) return;
-    const resync = () => {
-      void resyncWebPush({
-        client,
-        relayBaseUrl,
-        accountLabel: username ?? undefined,
-        inboxOnly: pushNotifyInboxOnly,
-      });
+    let cancelled = false;
+    const resync = async () => {
+      // One login at a time: they share the browser's single
+      // PushSubscription, and a parallel re-create would race on it.
+      for (const target of resyncTargets(client, username ?? undefined)) {
+        if (cancelled) return;
+        await resyncWebPush({
+          client: target.client,
+          relayBaseUrl,
+          accountLabel: target.accountLabel,
+          inboxOnly: pushNotifyInboxOnly,
+        });
+      }
     };
-    resync();
+    void resync();
     // A long-open tab comes back to the foreground: renew the subscription
     // before the server's 7-day expiry (resyncWebPush runs at most daily).
-    const onVisible = () => { if (document.visibilityState === 'visible') resync(); };
+    const onVisible = () => { if (document.visibilityState === 'visible') void resync(); };
     document.addEventListener('visibilitychange', onVisible);
-    return () => document.removeEventListener('visibilitychange', onVisible);
-  }, [accountId, client, isAuthenticated, isDemoMode, policyLoaded, pushNotifyInboxOnly, relayBaseUrl, username]);
+    return () => {
+      cancelled = true;
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [accountId, client, connectedAccountsRevision, isAuthenticated, isDemoMode, policyLoaded, pushNotifyInboxOnly, relayBaseUrl, username]);
 
   useEffect(() => {
     let cancelled = false;
