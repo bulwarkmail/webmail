@@ -19,7 +19,9 @@ import {
 } from "@/components/icons";
 import { useTranslations } from "next-intl";
 import { useAuthStore } from "@/stores/auth-store";
-import { useEmailStore } from "@/stores/email-store";
+import { useEmailStore, ArchiveMailboxNotFoundError } from "@/stores/email-store";
+import { runBatchEmailAction } from "@/lib/email-action-toast";
+import { toast } from "@/stores/toast-store";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { useMenuNavigation } from "@/hooks/use-menu-navigation";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -102,6 +104,8 @@ export function MvListToolbar({
   const tSidebar = useTranslations("sidebar");
   const tCommon = useTranslations("common");
   const tViewer = useTranslations("email_viewer");
+  const tNotifications = useTranslations("notifications");
+  const tSpam = useTranslations("email_viewer.spam");
 
   const client = useAuthStore((s) => s.client);
   const {
@@ -190,11 +194,26 @@ export function MvListToolbar({
   // Marking your own drafts or sent mail as spam is meaningless.
   const spamApplicable = !["sent", "drafts", "scheduled"].includes(currentRole ?? "");
 
-  const run = async (action: () => Promise<void>) => {
+  // Every action reports its outcome the way the default toolbar does: a
+  // rejected promise or a store error turns into an error toast instead of
+  // an unhandled rejection with nothing on screen.
+  const run = async (
+    action: () => Promise<void>,
+    messages?: Parameters<typeof runBatchEmailAction>[1],
+  ) => {
     if (!client || isProcessing) return;
     setIsProcessing(true);
     try {
-      await action();
+      if (messages) {
+        await runBatchEmailAction(action, messages);
+      } else {
+        try {
+          await action();
+        } catch (error) {
+          console.error("Mountain View toolbar action failed:", error);
+          toast.error(tNotifications("error_updating"));
+        }
+      }
     } finally {
       setTimeout(() => setIsProcessing(false), 400);
     }
@@ -222,7 +241,10 @@ export function MvListToolbar({
         variant: "destructive",
       });
       if (!confirmed) return;
-      await batchDelete(client, isInTrash);
+      await runBatchEmailAction(() => batchDelete(client, isInTrash), {
+        success: tNotifications("emails_deleted", { count: selectionCount }),
+        error: tNotifications("error_deleting"),
+      });
     });
 
   const selectedEmails = emails.filter((email) => selectedEmailIds.has(email.id));
@@ -277,8 +299,12 @@ export function MvListToolbar({
 
   const handleMove = (mailboxId: string) => {
     setMoveOpen(false);
+    const count = selectionCount;
     void run(async () => {
       if (client) await batchMoveToMailbox(client, mailboxId);
+    }, {
+      success: tNotifications("emails_moved", { count }),
+      error: tNotifications("move_failed"),
     });
   };
 
@@ -295,8 +321,17 @@ export function MvListToolbar({
     run(async () => {
       if (!client) return;
       const ids = Array.from(selectedEmailIds);
-      if (isInJunk) await batchUndoSpam(client, ids);
-      else await batchMarkAsSpam(client, ids);
+      try {
+        if (isInJunk) {
+          await batchUndoSpam(client, ids);
+          toast.success(tSpam("toast_not_spam_batch", { count: ids.length }));
+        } else {
+          await batchMarkAsSpam(client, ids);
+          toast.success(tSpam("toast_batch", { count: ids.length }));
+        }
+      } catch {
+        toast.error(isInJunk ? tSpam("error_not_spam") : tSpam("error"));
+      }
     });
 
   return (
@@ -414,7 +449,13 @@ export function MvListToolbar({
           <ToolbarButton
             icon={Archive}
             label={tActions("archive")}
-            onClick={() => run(async () => { if (client) await batchArchive(client); })}
+            onClick={() => run(async () => { if (client) await batchArchive(client); }, {
+              success: tNotifications("emails_archived", { count: selectionCount }),
+              error: tNotifications("error_archiving"),
+              describeError: (error) => error instanceof ArchiveMailboxNotFoundError
+                ? tViewer("archive_mailbox_not_found")
+                : undefined,
+            })}
             disabled={isProcessing}
             busy={isProcessing}
           />

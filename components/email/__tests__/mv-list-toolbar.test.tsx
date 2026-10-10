@@ -156,3 +156,51 @@ describe('MvListToolbar overflow menu', () => {
     expect(onEmptyFolder).toHaveBeenCalledOnce();
   });
 });
+
+const { toast } = await import('@/stores/toast-store');
+const { ArchiveMailboxNotFoundError } = await import('@/stores/email-store');
+
+describe('MvListToolbar failure feedback', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    useAuthStore.setState({ client: {} as never } as never);
+    useSettingsStore.setState({
+      emailKeywords: [{ id: 'work', label: 'Work', color: 'blue' }],
+      nestedTags: false,
+    } as never);
+    useEmailStore.setState({
+      emails: [message('a'), message('b')],
+      mailboxes,
+      selectedMailbox: 'inbox',
+      selectedEmailIds: new Set(['a', 'b']),
+      isUnifiedView: false,
+      unifiedRole: null,
+      error: null,
+    } as never);
+  });
+
+  it('says why archiving failed instead of failing silently', async () => {
+    const error = vi.spyOn(toast, 'error').mockImplementation(() => '' as never);
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    useEmailStore.setState({
+      batchArchive: vi.fn().mockRejectedValue(new ArchiveMailboxNotFoundError()),
+    } as never);
+    render(<MvListToolbar loadedCount={2} onRefresh={() => {}} />);
+
+    fireEvent.click(screen.getByLabelText('archive'));
+
+    await waitFor(() => expect(error).toHaveBeenCalledWith('error_archiving', 'archive_mailbox_not_found'));
+  });
+
+  it('reports a tag write that the server refused', async () => {
+    const error = vi.spyOn(toast, 'error').mockImplementation(() => '' as never);
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    useEmailStore.setState({ batchSetTag: vi.fn().mockRejectedValue(new Error('forbidden')) } as never);
+    render(<MvListToolbar loadedCount={2} onRefresh={() => {}} />);
+
+    fireEvent.click(screen.getByLabelText('tag'));
+    fireEvent.click(screen.getByText('Work'));
+
+    await waitFor(() => expect(error).toHaveBeenCalledWith('error_updating'));
+  });
+});

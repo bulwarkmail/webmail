@@ -109,6 +109,10 @@ export function MvTopBar({
   const sidebarApps = useResolvedSidebarApps();
   const isStalwartAdmin = useStalwartAdmin();
   const hasUpdate = useUpdateStore(selectHasUpdate);
+  // The navigation rail starts the update check, and this bar replaces it on
+  // desktop; without this the admin shield's update dot never lights up.
+  const startUpdatePolling = useUpdateStore((s) => s.startPolling);
+  useEffect(() => { startUpdatePolling(); }, [startUpdatePolling]);
   const updateSeverity = useUpdateStore((s) => s.status?.severity);
   const updateImportant = updateSeverity === "security" || updateSeverity === "deprecated";
 
