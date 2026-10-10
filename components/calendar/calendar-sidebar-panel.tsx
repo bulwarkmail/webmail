@@ -255,10 +255,11 @@ export function CalendarSidebarPanel({
           data-account={cal.accountName ?? ''}
           data-visible={isVisible}
           className={cn(
-            "flex items-center gap-2 w-full px-1.5 py-1 rounded-md text-sm transition-colors duration-150",
+            "flex items-center gap-2 w-full ps-5 pe-3 text-sm text-foreground/80 transition-colors duration-150",
             "hover:bg-muted",
-            hasMenu && "pe-7"
+            hasMenu && "pe-9"
           )}
+          style={{ paddingBlock: 'var(--density-sidebar-py, 4px)', minHeight: '32px' }}
         >
           {/* A checkbox filled in the calendar colour, empty when hidden. */}
           <span
@@ -297,7 +298,7 @@ export function CalendarSidebarPanel({
             type="button"
             onClick={(e) => openContextMenu(e, cal)}
             className={cn(
-              "absolute end-1 top-1/2 -translate-y-1/2 p-0.5 rounded text-muted-foreground hover:text-foreground hover:bg-accent transition-opacity",
+              "absolute end-2 top-1/2 -translate-y-1/2 p-0.5 rounded text-muted-foreground hover:text-foreground hover:bg-accent transition-opacity",
               "opacity-0 group-hover/cal:opacity-100 focus-visible:opacity-100",
               contextMenu.isOpen && contextMenu.data?.id === cal.id && "opacity-100"
             )}
@@ -424,19 +425,19 @@ export function CalendarSidebarPanel({
   const renderSectionHeader = (key: string, label: string, onAdd?: () => void) => {
     const expanded = !collapsedAccountGroups.has(key);
     return (
-      <div className="group flex items-center gap-1 mb-1">
+      <div className="group flex items-center gap-1 pe-3">
         <button
           type="button"
           onClick={() => toggleAccountGroup(key)}
           aria-expanded={expanded}
-          className="flex-1 min-w-0 flex items-center gap-1 px-1 py-1 rounded-sm text-xs font-medium text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors"
+          className="flex-1 min-w-0 flex items-center gap-1 ps-3 py-1 text-start"
         >
-          <span className="truncate">{label}</span>
           {expanded ? (
-            <ChevronDown className="w-3.5 h-3.5 ms-auto flex-shrink-0" />
+            <ChevronDown className="w-3 h-3 text-muted-foreground flex-shrink-0" />
           ) : (
-            <ChevronRight className="w-3.5 h-3.5 ms-auto flex-shrink-0 rtl:rotate-180" />
+            <ChevronRight className="w-3 h-3 text-muted-foreground flex-shrink-0 rtl:rotate-180" />
           )}
+          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider truncate">{label}</span>
         </button>
         {onAdd && (
           <button
@@ -457,7 +458,7 @@ export function CalendarSidebarPanel({
     <div>
       {renderSectionHeader(key, label, onAdd)}
       {!collapsedAccountGroups.has(key) && (
-        <div className="space-y-0.5">
+        <div>
           {list.map(renderCalendarItem)}
         </div>
       )}
@@ -469,7 +470,8 @@ export function CalendarSidebarPanel({
       {enableCalendarTasks && (
         <button
           onClick={() => setViewMode('tasks')}
-          className="flex items-center gap-2 w-full px-1.5 py-1.5 mb-3 rounded-md text-sm hover:bg-muted transition-colors"
+          className="flex items-center gap-2 w-full px-3 mb-2 text-sm text-foreground/80 hover:bg-muted transition-colors"
+          style={{ paddingBlock: 'var(--density-sidebar-py, 4px)', minHeight: '32px' }}
         >
           <ListTodo className="w-4 h-4 text-muted-foreground" />
           <span>{t('tasks.label')}</span>
@@ -491,7 +493,7 @@ export function CalendarSidebarPanel({
               <div key={group.key} className={cn(idx === 0 ? "" : "mt-3")}>
                 <button
                   onClick={() => toggleAccountGroup(group.key)}
-                  className="group w-full flex items-center gap-1.5 px-1 py-1 rounded-sm hover:bg-muted/40 transition-colors"
+                  className="group w-full flex items-center gap-1.5 px-3 py-1 hover:bg-muted/40 transition-colors"
                 >
                   {expanded ? (
                     <ChevronDown className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
@@ -522,24 +524,24 @@ export function CalendarSidebarPanel({
                   )}
                 </button>
                 {expanded && (
-                  <div className="mt-1 ps-3">
+                  <div className="mt-1">
                     {owned.length > 0 && (
                       <div>
-                        <div className="px-1 mb-1 text-[10px] font-medium text-muted-foreground/80 uppercase tracking-wider">
+                        <div className="ps-5 pe-3 py-0.5 text-[10px] font-medium text-muted-foreground/80 uppercase tracking-wider">
                           {t('my_calendars')}
                         </div>
-                        <div className="space-y-0.5">
+                        <div>
                           {owned.map(renderCalendarItem)}
                         </div>
                       </div>
                     )}
                     {sharedGroups.map((sg) => (
                       <div key={`${group.key}-shared-${sg.label}`} className="mt-2">
-                        <div className="px-1 mb-1 text-[10px] font-medium text-muted-foreground/80 uppercase tracking-wider flex items-center gap-1">
+                        <div className="ps-5 pe-3 py-0.5 text-[10px] font-medium text-muted-foreground/80 uppercase tracking-wider flex items-center gap-1">
                           <Share2 className="w-3 h-3" />
                           {sg.label}
                         </div>
-                        <div className="space-y-0.5">
+                        <div>
                           {sg.calendars.map(renderCalendarItem)}
                         </div>
                       </div>
@@ -560,15 +562,15 @@ export function CalendarSidebarPanel({
           )}
 
           {sharedAccountGroups.length > 0 && (
-            <div className="mt-4">
+            <div className="mt-2">
               {renderSectionHeader('__others__', t('other_calendars'))}
               {!collapsedAccountGroups.has('__others__') && sharedAccountGroups.map((group) => (
                 <div key={group.accountName} className="mt-2">
-                  <div className="px-1 mb-1 text-[10px] font-medium text-muted-foreground/80 uppercase tracking-wider flex items-center gap-1">
+                  <div className="ps-5 pe-3 py-0.5 text-[10px] font-medium text-muted-foreground/80 uppercase tracking-wider flex items-center gap-1">
                     <Share2 className="w-3 h-3" />
                     {group.accountName}
                   </div>
-                  <div className="space-y-0.5">
+                  <div>
                     {group.calendars.map(renderCalendarItem)}
                   </div>
                 </div>

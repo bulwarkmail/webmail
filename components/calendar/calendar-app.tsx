@@ -75,6 +75,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { SchedulingDeniedError } from "@/lib/jmap/scheduling-error";
 import { CreateCalendarModal } from "@/components/calendar/create-calendar-modal";
+import { CalendarSidebarHeader } from "@/components/calendar/calendar-sidebar-header";
 import { getUserParticipantId, collectUserCalendarAddresses } from "@/lib/calendar-participants";
 import { generateBirthdayEvents, createBirthdayCalendar, BIRTHDAY_CALENDAR_ID } from "@/lib/birthday-calendar";
 import { sharedCalendarColorKey, pickUnusedCalendarColor } from "@/lib/shared-calendar-colors";
@@ -1774,15 +1775,13 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
 
       {!inlineApp && (
       <div className="flex flex-col flex-1 min-w-0 min-h-0">
-      {/* Desktop: the bar spans the sidebar and the grid, as in Google Calendar. */}
-      {!isMobile && calendarToolbar}
       <div className="flex flex-1 min-w-0 min-h-0">
       {/* Sidebar - in-flow when desktop pane, overlay when narrow */}
       {(isNarrow || !sidebarCollapsed) && (
         <>
           <div
             className={cn(
-              "border-e border-border bg-secondary overflow-y-auto overflow-x-hidden flex-shrink-0 p-3",
+              "border-e border-border bg-secondary flex flex-col overflow-hidden flex-shrink-0",
               !isResizing && "transition-[width] duration-300",
               isNarrow && cn(
                 "absolute inset-y-0 left-0 z-50 w-72 pt-[env(safe-area-inset-top)]",
@@ -1792,17 +1791,12 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
             )}
             style={isNarrow ? undefined : { width: `${calSidebarWidth}px` }}
           >
-            {!isMobile && (
-              <Button
-                size="sm"
-                onClick={() => { setNarrowSidebarOpen(false); openCreateModal(); }}
-                data-tour={isNarrow ? undefined : "create-event-button"}
-                className="w-full h-8 mb-3"
-              >
-                <Plus className="w-4 h-4 me-1" />
-                {t("events.create")}
-              </Button>
-            )}
+            <CalendarSidebarHeader
+              onCreateEvent={() => { setNarrowSidebarOpen(false); openCreateModal(); }}
+              tourTarget={!isNarrow}
+            />
+            <div className="flex-1 overflow-y-auto overflow-x-hidden py-3">
+            <div className="px-3">
             <MiniCalendar
               selectedDate={selectedDate}
               displayMonth={miniMonth}
@@ -1812,6 +1806,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
               firstDayOfWeek={firstDayOfWeek}
               showWeekNumbers={showWeekNumbers}
             />
+            </div>
             <CalendarSidebarPanel
               calendars={allCalendars}
               selectedCalendarIds={selectedCalendarIds}
@@ -1878,6 +1873,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
               client={client}
               multiAccountMode={multiAccountEnabled && accountClients.length > 1}
             />
+            </div>
           </div>
           {!isNarrow && (
             <ResizeHandle
@@ -1894,7 +1890,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
       )}
 
       <div className="flex flex-col flex-1 min-w-0 min-h-0">
-        {isMobile && calendarToolbar}
+        {calendarToolbar}
 
         {/* isolate keeps the views' sticky headers (z-50) below the toolbar's
             import dropdown, which overlaps this area (#1049). */}
