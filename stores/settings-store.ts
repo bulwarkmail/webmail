@@ -1607,8 +1607,12 @@ function applyAnimations(enabled: boolean) {
   const root = document.documentElement;
   if (enabled) {
     root.style.removeProperty('--transition-duration');
+    delete root.dataset.animations;
   } else {
     root.style.setProperty('--transition-duration', '0s');
+    // Transitions and animations use fixed durations rather than
+    // --transition-duration, so globals.css turns them off from this attribute.
+    root.dataset.animations = 'off';
   }
 }
 
