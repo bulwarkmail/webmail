@@ -287,7 +287,7 @@ Thank you for your donations:
 - **Auth**: Signing out when another account's restore had failed no longer leaves that account resumable
 - **Auth**: The failed TOTP login no longer passes on a user-chosen server's error body
 - **Server**: Visitors who are not signed in no longer get detailed health data, the pending advisory text, the plugin list, the full admin policy or every server's domain list
-- **Server**: The setup token is passed in the URL fragment, so it stays out of access logs, referers and history
+- **Server**: The setup token is passed in the URL fragment, so it stays out of access logs, referrers and history
 - **Server**: Not-found pages outside the app tree cannot be framed, `ALLOWED_FRAME_ANCESTORS` never applies to the admin dashboard or setup, and sibling subdomains can no longer widen the sidebar-app `frame-src`
 - **Server**: Favicons are only served as raster images
 - **Docker**: Runtime state and secrets (`data/`, `local-data/`, `.env`) stay out of the standalone build and the image, and the mock JMAP server can no longer be switched on in a release build

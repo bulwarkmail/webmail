@@ -324,8 +324,8 @@ function buildPluginApi(manifest: PluginManifest) {
       create: (name: string) => callApi('addressbook.create', [name]) as Promise<AddressBook>,
     },
     /**
-     * Used to alterate files before they are uploaded to server.
-     * Edited files are saved on indexedDB and remove once the upload to server begins.
+     * Used to alter files before they are uploaded to the server.
+     * Edited files are saved in IndexedDB and removed once the upload to the server begins.
      * `get` needs the email:blob-read permission. `save` needs
      * email:blob-write AND the privileged tier - replacing the bytes of a file
      * the user is about to send is not something an untrusted plugin may do.

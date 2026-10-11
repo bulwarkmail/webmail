@@ -296,7 +296,7 @@ export const emailHooks = {
   // It is fired after onBeforeAttachmentUpload.
   // Handler receive the {file: File, blobId: 'undefined'} object. 
   // If it uploaded, it must return the object with true blobId. 
-  // Here, the raw file sended is exposed and can be modified or replaced.
+  // Here, the raw file being sent is exposed and can be modified or replaced.
   // A handler may also return an ExternalAttachmentResult to drop the
   // attachment entirely and append replacement html/text to the body, which
   // lets a plugin offload the file elsewhere and leave a link behind. That
