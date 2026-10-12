@@ -341,6 +341,10 @@ const EMAIL_LIST_PROPERTIES = [
   "keywords",
   "size",
   "receivedAt",
+  // The "Date sent" list order (#718) sorts on it, server-side and in the
+  // client-side safety sort; without it the safety sort fell back to
+  // receivedAt and undid the server order (#1219). Served from stored metadata.
+  "sentAt",
   "from",
   "to",
   "cc",
