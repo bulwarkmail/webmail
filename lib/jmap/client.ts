@@ -4457,6 +4457,7 @@ export class JMAPClient implements IJMAPClient {
       from: [{ name: opts.attendeeName || undefined, email: opts.attendeeEmail }],
       to: [{ name: opts.organizerName || undefined, email: opts.organizerEmail }],
       subject,
+      messageId: [generateMessageId(opts.attendeeEmail)],
       keywords: { "$seen": true, "$draft": true },
       mailboxIds: { [draftsMailbox.id]: true },
       bodyStructure: {
@@ -4649,6 +4650,7 @@ export class JMAPClient implements IJMAPClient {
       from: [{ name: organizerName || undefined, email: organizerEmail }],
       to: toAddresses,
       subject,
+      messageId: [generateMessageId(organizerEmail)],
       keywords: { "$seen": true, "$draft": true },
       mailboxIds: { [draftsMailbox.id]: true },
       bodyStructure: {
@@ -4805,6 +4807,7 @@ export class JMAPClient implements IJMAPClient {
       from: [{ name: organizerName || undefined, email: organizerEmail }],
       to: toAddresses,
       subject,
+      messageId: [generateMessageId(organizerEmail)],
       keywords: { "$seen": true, "$draft": true },
       mailboxIds: { [draftsMailbox.id]: true },
       bodyStructure: {
