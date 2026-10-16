@@ -81,4 +81,33 @@ describe('fetchPublicUrl pins the validated address at connect time', () => {
     expect(lookup).not.toHaveBeenCalled();
     expect(hits).toBe(0);
   });
+
+  it('allows only the configured private IP origin and keeps DNS guards active', async () => {
+    const { fetchPublicUrl, DisallowedUrlError } = await import('@/lib/security/url-guard');
+    const origin = `http://127.0.0.1:${port}`;
+    const response = await fetchPublicUrl(`${origin}/cal.ics`, {}, [origin]);
+    expect(await response.text()).toContain('BEGIN:VCALENDAR');
+    expect(hits).toBe(1);
+    await expect(fetchPublicUrl('http://127.0.0.1:1/cal.ics', {}, [origin]))
+      .rejects.toBeInstanceOf(DisallowedUrlError);
+    lookup.mockResolvedValue([{ address: '127.0.0.1', family: 4 }]);
+    await expect(fetchPublicUrl(`http://rebind.example:${port}/cal.ics`, {}, [origin]))
+      .rejects.toBeInstanceOf(DisallowedUrlError);
+    expect(hits).toBe(1);
+  });
+
+  it('allows the exact configured private hostname but rejects other hosts and ports', async () => {
+    const { fetchPublicUrl, DisallowedUrlError, isAllowedPrivateUrl } = await import('@/lib/security/url-guard');
+    const origin = `http://calendar.internal:${port}`;
+    lookup.mockResolvedValue([{ address: '127.0.0.1', family: 4 }]);
+    const response = await fetchPublicUrl(`${origin}/cal.ics`, {}, [origin]);
+    expect(await response.text()).toContain('BEGIN:VCALENDAR');
+    expect(hits).toBe(1);
+    await expect(fetchPublicUrl(`http://other.internal:${port}/cal.ics`, {}, [origin]))
+      .rejects.toBeInstanceOf(DisallowedUrlError);
+    await expect(fetchPublicUrl('http://calendar.internal:1/cal.ics', {}, [origin]))
+      .rejects.toBeInstanceOf(DisallowedUrlError);
+    expect(isAllowedPrivateUrl(`${origin}/cal.ics`, ['http://*.internal'])).toBe(false);
+    expect(hits).toBe(1);
+  });
 });

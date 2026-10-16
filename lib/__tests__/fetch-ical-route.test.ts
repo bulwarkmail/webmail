@@ -19,6 +19,7 @@ vi.mock('next/server', () => {
   return { NextResponse, NextRequest: class {} };
 });
 vi.mock('@/lib/stalwart/credentials', () => ({ getStalwartCredentials: vi.fn() }));
+vi.mock('@/lib/admin/session', () => ({ requireAdminAuth: vi.fn() }));
 
 const guardedFetch = vi.fn();
 vi.mock('@/lib/security/url-guard', async (importOriginal) => {
@@ -30,8 +31,10 @@ vi.mock('@/lib/security/url-guard', async (importOriginal) => {
 });
 
 import { POST } from '@/app/api/fetch-ical/route';
+import { NextResponse } from 'next/server';
 import { getStalwartCredentials } from '@/lib/stalwart/credentials';
 import { DisallowedUrlError } from '@/lib/security/url-guard';
+import { requireAdminAuth } from '@/lib/admin/session';
 
 const mockCreds = getStalwartCredentials as unknown as Mock;
 
@@ -52,11 +55,39 @@ describe('POST /api/fetch-ical', () => {
   beforeEach(() => {
     mockCreds.mockReset();
     guardedFetch.mockReset();
+    vi.mocked(requireAdminAuth).mockReset();
+    vi.mocked(requireAdminAuth).mockResolvedValue({ error: NextResponse.json({ error: 'Not authenticated' }, { status: 401 }) });
+    vi.stubEnv('ICAL_ALLOWED_LOCAL_ORIGINS', '');
     mockCreds.mockResolvedValue({ serverUrl: 'https://mail.example.com', authHeader: 'Basic x', username: 'u' });
   });
 
   afterEach(() => {
     vi.unstubAllEnvs();
+  });
+
+  it('withholds the private allowlist from callers without an admin session', async () => {
+    vi.stubEnv('ICAL_ALLOWED_LOCAL_ORIGINS', 'http://10.0.0.5:8080');
+    vi.mocked(requireAdminAuth).mockResolvedValue({ error: NextResponse.json({ error: 'Not authenticated' }, { status: 401 }) });
+    guardedFetch.mockRejectedValueOnce(new DisallowedUrlError('http://10.0.0.5:8080/feed.ics'));
+    const res = await POST(makeReq({ url: 'http://10.0.0.5:8080/feed.ics' }));
+    expect(res.status).toBe(400);
+    expect(guardedFetch.mock.calls[0][2]).toEqual([]);
+  });
+
+  it('allows admins to fetch the configured origin but guards every redirect', async () => {
+    vi.stubEnv('ICAL_ALLOWED_LOCAL_ORIGINS', 'http://10.0.0.5:8080');
+    vi.mocked(requireAdminAuth).mockResolvedValue({ payload: { role: 'admin', iat: 0, exp: 9999999999 } });
+    guardedFetch.mockResolvedValueOnce(new Response(null, {
+      status: 302, headers: { location: 'http://10.0.0.6:8080/feed.ics' },
+    }));
+    guardedFetch.mockRejectedValueOnce(new DisallowedUrlError('http://10.0.0.6:8080/feed.ics'));
+    const res = await POST(makeReq({ url: 'http://10.0.0.5:8080/feed.ics' }));
+    expect(res.status).toBe(400);
+    expect(guardedFetch).toHaveBeenCalledTimes(2);
+    expect(guardedFetch.mock.calls[0][2]).toEqual(['http://10.0.0.5:8080']);
+    expect(guardedFetch.mock.calls[1][2]).toEqual(['http://10.0.0.5:8080']);
+    expect(requireAdminAuth).toHaveBeenCalledTimes(1);
+    expect(guardedFetch.mock.calls[1][0]).toBe('http://10.0.0.6:8080/feed.ics');
   });
 
   describe('response size limit (#692)', () => {
@@ -101,6 +132,7 @@ describe('POST /api/fetch-ical', () => {
     expect(guardedFetch).toHaveBeenCalledWith(
       'https://calendar.example.com/feed.ics',
       expect.objectContaining({ headers: expect.objectContaining({ 'User-Agent': 'JMAP-Webmail/1.0 Calendar-Fetcher' }) }),
+      [],
     );
   });
 
