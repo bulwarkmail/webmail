@@ -10,7 +10,7 @@ export { DialogButtons, SlotPropsContext, useSlotProps } from './dialog-buttons'
 export type { DialogButtonSpec } from './dialog-buttons';
 
 /** Bumped when a component is added or its props change in a way plugins can see. */
-export const KIT_VERSION = 1;
+export const KIT_VERSION = 2;
 
 export const pluginUiKit = Object.freeze({
   ...components,

@@ -152,7 +152,7 @@ describe('plugin UI kit components', () => {
     const { makePluginRequire } = await import('../plugin-sandbox/runtime');
     const req = makePluginRequire(null);
     expect(req('@plugin-host/ui')).toBe(kit.pluginUiKit);
-    expect(kit.KIT_EXPORTS).toEqual(expect.arrayContaining(['Button', 'Input', 'Select', 'Checkbox', 'Field', 'Tabs', 'List', 'ListRow', 'Badge', 'EmptyState', 'PageHeader', 'Spinner', 'DialogButtons', 'InfoBar', 'Chip']));
+    expect(kit.KIT_EXPORTS).toEqual(expect.arrayContaining(['Button', 'Input', 'Select', 'Combobox', 'Checkbox', 'Field', 'Tabs', 'List', 'ListRow', 'Badge', 'EmptyState', 'PageHeader', 'Spinner', 'DialogButtons', 'InfoBar', 'Chip']));
     expect(() => req('left-pad')).toThrow(/not available/);
   });
 });
@@ -221,6 +221,183 @@ describe('plugin dialog footer', () => {
     await act(async () => {});
     expect(result).toBeNull();
     vi.doUnmock('@/components/plugins/plugin-iframe-slot');
+  });
+});
+
+describe('Combobox', () => {
+  const options = [
+    { value: 'apple', label: 'Apple' },
+    { value: 'banana', label: 'Banana' },
+    { value: 'cherry', label: 'Cherry' },
+  ];
+
+  it('renders with placeholder and closed dropdown', () => {
+    render(<kit.Combobox options={options} placeholder="Choose fruit" />);
+    const input = screen.getByRole('combobox');
+    expect(input).toHaveAttribute('placeholder', 'Choose fruit');
+    expect(input).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByRole('listbox')).toBeNull();
+  });
+
+  it('opens and filters options on input', () => {
+    render(<kit.Combobox options={options} />);
+    const input = screen.getByRole('combobox');
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: 'ban' } });
+    expect(input).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByRole('listbox')).toBeTruthy();
+    expect(screen.getByText('Banana')).toBeTruthy();
+    expect(screen.queryByText('Apple')).toBeNull();
+  });
+
+  it('selects option on click', () => {
+    const onChange = vi.fn();
+    render(<kit.Combobox options={options} onChange={onChange} />);
+    const input = screen.getByRole('combobox');
+    fireEvent.click(input);
+    fireEvent.click(screen.getByText('Cherry'));
+    expect(onChange).toHaveBeenCalledWith('cherry');
+    expect(screen.queryByRole('listbox')).toBeNull();
+  });
+
+  it('navigates with keyboard and selects on Enter', () => {
+    const onChange = vi.fn();
+    render(<kit.Combobox options={options} onChange={onChange} />);
+    const input = screen.getByRole('combobox');
+    fireEvent.keyDown(input, { key: 'ArrowDown' }); // opens dropdown
+    expect(screen.getByRole('listbox')).toBeTruthy();
+    fireEvent.keyDown(input, { key: 'ArrowDown' }); // highlight next
+    fireEvent.keyDown(input, { key: 'Enter' });
+    expect(onChange).toHaveBeenCalled();
+  });
+
+  it('clears selection when clear button is clicked without opening dropdown', () => {
+    const onChange = vi.fn();
+    render(<kit.Combobox options={options} value="banana" onChange={onChange} />);
+    const clearBtn = screen.getByLabelText('Clear');
+    fireEvent.click(clearBtn);
+    expect(onChange).toHaveBeenCalledWith('');
+    expect(screen.queryByRole('listbox')).toBeNull();
+  });
+
+  it('closes dropdown and clears selection if clear button is clicked while open', () => {
+    const onChange = vi.fn();
+    render(<kit.Combobox options={options} value="banana" onChange={onChange} />);
+    const input = screen.getByRole('combobox');
+    fireEvent.focus(input);
+    expect(screen.getByRole('listbox')).toBeTruthy();
+
+    const clearBtn = screen.getByLabelText('Clear');
+    fireEvent.click(clearBtn);
+    expect(onChange).toHaveBeenCalledWith('');
+    expect(screen.queryByRole('listbox')).toBeNull();
+  });
+
+  it('supports multiselect mode with chip rendering, toggling and backspace removal', () => {
+    const onChange = vi.fn();
+    const { rerender } = render(
+      <kit.Combobox options={options} multiple value={['apple']} onChange={onChange} />
+    );
+    expect(screen.getByRole('checkbox', { name: 'Apple' })).toBeTruthy();
+    expect(screen.getByLabelText('Remove Apple')).toBeTruthy();
+
+    // Clicking remove chip does not open dropdown
+    fireEvent.click(screen.getByLabelText('Remove Apple'));
+    expect(onChange).toHaveBeenCalledWith([]);
+    expect(screen.queryByRole('listbox')).toBeNull();
+
+    // Open dropdown and toggle cherry
+    const input = screen.getByRole('combobox');
+    fireEvent.focus(input);
+    fireEvent.click(screen.getByText('Cherry'));
+    expect(onChange).toHaveBeenCalledWith(['apple', 'cherry']);
+
+    // Backspace on empty input removes last value
+    rerender(<kit.Combobox options={options} multiple value={['apple', 'cherry']} onChange={onChange} />);
+    fireEvent.keyDown(input, { key: 'Backspace' });
+    expect(onChange).toHaveBeenCalledWith(['apple']);
+  });
+
+  it('associates label when wrapped in Field', () => {
+    render(<kit.Field label="Fruit"><kit.Combobox options={options} /></kit.Field>);
+    expect(screen.getByLabelText('Fruit')).toBeInstanceOf(HTMLInputElement);
+  });
+});
+
+describe('Combobox floating dropdown bridge', () => {
+  const options = [
+    { value: 'apple', label: 'Apple' },
+    { value: 'banana', label: 'Banana' },
+  ];
+
+  it('delegates dropdown rendering to the host when supported and handles host selection', async () => {
+    const bridge = await import('../plugin-sandbox/ui-kit/floating-dropdown-bridge');
+    const sentMessages: any[] = [];
+    bridge.initFloatingDropdownBridge(
+      (msg) => { sentMessages.push(msg); },
+      () => true,
+    );
+
+    const onChange = vi.fn();
+    render(<kit.Combobox options={options} onChange={onChange} id="fruit-picker" />);
+    const input = screen.getByRole('combobox');
+    fireEvent.focus(input);
+
+    // Dropdown listbox is NOT rendered inside the component root
+    expect(screen.queryByRole('listbox')).toBeNull();
+
+    // Verify open message was sent to host
+    expect(sentMessages).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          type: 'floating-dropdown-open',
+          id: 'fruit-picker-listbox',
+          options,
+        }),
+      ]),
+    );
+
+    // Host selects banana
+    act(() => {
+      bridge.dispatchFloatingDropdownEvent('fruit-picker-listbox', {
+        type: 'select',
+        option: options[1],
+      });
+    });
+
+    expect(onChange).toHaveBeenCalledWith('banana');
+
+    // Tear down bridge for following tests
+    bridge.initFloatingDropdownBridge(null as any, () => false);
+  });
+
+  it('supports multiselect toggling and updates host with selected values', async () => {
+    const bridge = await import('../plugin-sandbox/ui-kit/floating-dropdown-bridge');
+    const sentMessages: any[] = [];
+    bridge.initFloatingDropdownBridge(
+      (msg) => { sentMessages.push(msg); },
+      () => true,
+    );
+
+    const onChange = vi.fn();
+    render(<kit.Combobox options={options} multiple value={['apple']} onChange={onChange} id="tag-picker" />);
+    const input = screen.getByRole('combobox');
+    fireEvent.focus(input);
+
+    expect(screen.queryByRole('listbox')).toBeNull();
+
+    // Host selects banana
+    act(() => {
+      bridge.dispatchFloatingDropdownEvent('tag-picker-listbox', {
+        type: 'select',
+        option: options[1],
+      });
+    });
+
+    expect(onChange).toHaveBeenCalledWith(['apple', 'banana']);
+
+    // Tear down bridge
+    bridge.initFloatingDropdownBridge(null as any, () => false);
   });
 });
 

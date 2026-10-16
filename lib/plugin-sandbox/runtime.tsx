@@ -29,6 +29,7 @@ import type {
 } from './protocol';
 import { themeSnapshotToCSS, type ThemeSnapshot } from './host-theme';
 import { pluginUiKit, SlotPropsContext } from './ui-kit';
+import { initFloatingDropdownBridge, dispatchFloatingDropdownEvent } from './ui-kit/floating-dropdown-bridge';
 import { interpolate, lookup, textDirection, type LocaleTables } from './plugin-i18n';
 import { isInlineSlot, MAX_INLINE_SLOT_WIDTH } from './slot-layout';
 import type {
@@ -1145,6 +1146,18 @@ function handleHostMessage(ev: MessageEvent): void {
     case 'stream-progress':
       try { proxyStreams.get(msg.streamId)?.onProgress?.(msg.loaded, msg.total); } catch { /* plugin's own error */ }
       break;
+
+    case 'floating-dropdown-select':
+      dispatchFloatingDropdownEvent(msg.id, { type: 'select', option: msg.option });
+      break;
+
+    case 'floating-dropdown-highlight':
+      dispatchFloatingDropdownEvent(msg.id, { type: 'highlight', index: msg.index });
+      break;
+
+    case 'floating-dropdown-dismiss':
+      dispatchFloatingDropdownEvent(msg.id, { type: 'dismiss' });
+      break;
   }
 }
 
@@ -1158,6 +1171,10 @@ export function SandboxRuntime(): React.JSX.Element {
     if (!host) return;
     parentWindow = host.window;
     parentOrigin = host.origin;
+    initFloatingDropdownBridge(
+      (msg) => sendToHost(msg),
+      () => !!parentWindow,
+    );
     window.addEventListener('message', handleHostMessage);
     // Initial ping, targeted at the host origin so it can only land on the
     // page that framed us. Guard at module scope so React strict mode's

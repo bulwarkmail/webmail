@@ -16,7 +16,11 @@ import { effectiveSettings } from '../plugin-settings';
 import { clampSlotHeight, clampSlotWidth, isInlineSlot, MAX_INLINE_SLOT_WIDTH } from './slot-layout';
 import type {
   SandboxToHost, HostToSandbox, InitMsg, InitPayload, StreamChunkMsg, StreamEndMsg, StreamProgressMsg,
+  FloatingDropdownOpenMsg, FloatingDropdownUpdateMsg, FloatingDropdownCloseMsg,
+  FloatingDropdownSelectMsg, FloatingDropdownHighlightMsg, FloatingDropdownDismissMsg,
 } from './protocol';
+
+export type FloatingDropdownHostMsg = FloatingDropdownOpenMsg | FloatingDropdownUpdateMsg | FloatingDropdownCloseMsg;
 
 // ─── Callback marshalling ────────────────────────────────────
 
@@ -75,6 +79,8 @@ export interface SlotOptions {
   hostContainer: HTMLElement;
   /** Called whenever the sandbox reports a new content size (width only for inline slots). */
   onResize: (height: number, width?: number) => void;
+  /** Called whenever the sandbox requests to open/update/close a floating dropdown. */
+  onFloatingDropdown?: (msg: FloatingDropdownHostMsg) => void;
 }
 
 export interface InitDoneInfo {
@@ -170,6 +176,7 @@ export class SandboxInstance {
     initPayload: InitPayload,
     hostContainer: HTMLElement,
     private slotResizeCb: ((height: number, width?: number) => void) | null,
+    private slotFloatingDropdownCb?: ((msg: FloatingDropdownHostMsg) => void) | null,
   ) {
     this.pluginId = plugin.id;
     this.mode = initPayload.mode;
@@ -360,6 +367,13 @@ export class SandboxInstance {
         this.slotResizeCb?.(height, width ?? undefined);
         return;
       }
+
+      case 'floating-dropdown-open':
+      case 'floating-dropdown-update':
+      case 'floating-dropdown-close': {
+        this.slotFloatingDropdownCb?.(msg);
+        return;
+      }
     }
   }
 
@@ -443,6 +457,11 @@ export class SandboxInstance {
     this.propCallbackIds = new Set(fresh.keys());
     for (const [id, fn] of fresh) this.callbackTable.set(id, fn);
     this.send({ type: 'props-update', props: encoded });
+  }
+
+  sendFloatingDropdownEvent(msg: FloatingDropdownSelectMsg | FloatingDropdownHighlightMsg | FloatingDropdownDismissMsg): void {
+    if (this.destroyed) return;
+    this.send(msg);
   }
 
   destroy(): void {
@@ -533,5 +552,5 @@ export function createSlotInstance(opts: SlotOptions): SandboxInstance {
     locale: opts.locale,
     theme: snapshotHostTheme(),
   };
-  return new SandboxInstance(opts.plugin, payload, opts.hostContainer, opts.onResize);
+  return new SandboxInstance(opts.plugin, payload, opts.hostContainer, opts.onResize, opts.onFloatingDropdown);
 }
