@@ -26,6 +26,7 @@ import { runBatchEmailAction } from "@/lib/email-action-toast";
 import { toast } from "@/stores/toast-store";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { useMenuNavigation } from "@/hooks/use-menu-navigation";
+import { useArchiveActionEnabled } from "@/lib/archive-gate";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TagPicker } from "@/components/email/tag-picker";
 import { localizeMailboxName } from "@/lib/mailbox-label";
@@ -105,6 +106,7 @@ export function MvListToolbar({
   const t = useTranslations("email_list");
   const tBatch = useTranslations("email_list.batch_actions");
   const tActions = useTranslations("settings.email_behavior.hover_actions");
+  const archiveActionEnabled = useArchiveActionEnabled();
   const tFolder = useTranslations("mailbox_context_menu");
   const tMenu = useTranslations("context_menu");
   const tSidebar = useTranslations("sidebar");
@@ -491,19 +493,21 @@ export function MvListToolbar({
       {hasSelection && !disabled && (
         <>
           <div className="w-px h-6 bg-border mx-1 shrink-0" />
-          <ToolbarButton
-            icon={Archive}
-            label={tActions("archive")}
-            onClick={() => run(async () => { if (client) await batchArchive(client); }, {
-              success: tNotifications("emails_archived", { count: selectionCount }),
-              error: tNotifications("error_archiving"),
-              describeError: (error) => error instanceof ArchiveMailboxNotFoundError
-                ? tViewer("archive_mailbox_not_found")
-                : undefined,
-            })}
-            disabled={isProcessing}
-            busy={isProcessing}
-          />
+          {archiveActionEnabled && (
+            <ToolbarButton
+              icon={Archive}
+              label={tActions("archive")}
+              onClick={() => run(async () => { if (client) await batchArchive(client); }, {
+                success: tNotifications("emails_archived", { count: selectionCount }),
+                error: tNotifications("error_archiving"),
+                describeError: (error) => error instanceof ArchiveMailboxNotFoundError
+                  ? tViewer("archive_mailbox_not_found")
+                  : undefined,
+              })}
+              disabled={isProcessing}
+              busy={isProcessing}
+            />
+          )}
           {spamApplicable && (
             <ToolbarButton
               icon={isInJunk ? ShieldCheck : ShieldAlert}

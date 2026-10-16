@@ -135,6 +135,7 @@ import { resolveExternalLink } from "@/lib/plugin-hook-result";
 import type { AttachmentInfo, AttachmentPreview } from "@/lib/plugin-types";
 import { useAttachmentDrag, isDragOutSupported, type AttachmentDragSource } from "@/hooks/use-attachment-drag";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
+import { useArchiveActionEnabled } from "@/lib/archive-gate";
 
 /** The More menu's two drill-downs: a folder list and a tag list. */
 type MoreMenuSub = 'move' | 'tag' | 'rules';
@@ -1033,6 +1034,7 @@ export function EmailViewer({
   className,
 }: EmailViewerProps) {
   const t = useTranslations('email_viewer');
+  const archiveActionEnabled = useArchiveActionEnabled();
   const tComposer = useTranslations('email_composer');
   const tNotifications = useTranslations('notifications');
   const tCommon = useTranslations('common');
@@ -3145,7 +3147,8 @@ export function EmailViewer({
       return;
     }
     const action = useSettingsStore.getState().postExportAction;
-    if (action === 'archive') onArchive?.();
+    // With the Archive action off a stored 'archive' keeps the message.
+    if (action === 'archive' && archiveActionEnabled) onArchive?.();
     else if (action === 'trash') onDelete?.();
   };
 
@@ -3654,18 +3657,20 @@ export function EmailViewer({
       {!isScheduled && (
       <div className="flex items-center gap-0 sm:gap-0.5">
         {/* Archive */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onArchive}
-          data-overflow-item
-          data-overflow-priority="4"
-          className={cn("flex-col items-center gap-0.5 h-auto py-1.5 px-2 sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0", mvViewer && "order-1")}
-          title={t('tooltips.archive')}
-        >
-          <Archive className="w-4 h-4" />
-          {showToolbarLabels && <span className="text-[10px] leading-tight sm:text-sm">{t('archive')}</span>}
-        </Button>
+        {archiveActionEnabled && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onArchive}
+            data-overflow-item
+            data-overflow-priority="4"
+            className={cn("flex-col items-center gap-0.5 h-auto py-1.5 px-2 sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0", mvViewer && "order-1")}
+            title={t('tooltips.archive')}
+          >
+            <Archive className="w-4 h-4" />
+            {showToolbarLabels && <span className="text-[10px] leading-tight sm:text-sm">{t('archive')}</span>}
+          </Button>
+        )}
         {/* Delete */}
         <Button
           variant="ghost"
@@ -3942,14 +3947,16 @@ export function EmailViewer({
                 {t('forward')}
               </button>
               {/* Overflow: archive */}
-              <button
-                role="menuitem"
-                onClick={() => { onArchive?.(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
-                className={cn("w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(4) ? "" : "sm:hidden")}
-              >
-                <Archive className="w-4 h-4" />
-                {t('archive')}
-              </button>
+              {archiveActionEnabled && (
+                <button
+                  role="menuitem"
+                  onClick={() => { onArchive?.(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
+                  className={cn("w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(4) ? "" : "sm:hidden")}
+                >
+                  <Archive className="w-4 h-4" />
+                  {t('archive')}
+                </button>
+              )}
               {/* Overflow: move to folder - submenu */}
               {moveTree.length > 0 && onMoveToMailbox && (
                 <div className={cn("relative", hiddenPriorities.has(5) ? "" : "sm:hidden")}

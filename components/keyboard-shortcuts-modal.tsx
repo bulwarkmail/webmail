@@ -9,6 +9,7 @@ import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { useTour } from "@/components/tour/tour-provider";
 import { useProInterfaceActive } from "@/components/pro/pro-interface-redirect";
 import { usePluginActions } from "@/components/plugins/plugin-actions";
+import { usePolicyStore } from "@/stores/policy-store";
 
 interface KeyboardShortcutsModalProps {
   isOpen: boolean;
@@ -20,11 +21,15 @@ export function KeyboardShortcutsModal({ isOpen, onClose }: KeyboardShortcutsMod
   const { startTour } = useTour();
   const interfaceLayout = useSettingsStore((state) => state.interfaceLayout);
   const shell = useProInterfaceActive() ? "pro" : "standard";
+  const features = usePolicyStore((s) => s.policy.features);
   // Plugin buttons in the composer that have a shortcut (composer-toolbar-actions).
   const pluginComposerShortcuts = usePluginActions("composer-toolbar-actions").filter((a) => a.shortcut);
-  // Rows that belong to one interface layout (or one shell) are listed only under it.
+  // Rows that belong to one interface layout (or one shell) are listed only under it,
+  // and a row of a gated feature only while the admin has it on.
   const shown = (entries: readonly ShortcutEntry[]) =>
-    entries.filter((entry) => (!entry.layout || entry.layout === interfaceLayout) && (!entry.shell || entry.shell === shell));
+    entries.filter((entry) => (!entry.layout || entry.layout === interfaceLayout)
+      && (!entry.shell || entry.shell === shell)
+      && (!entry.feature || (features[entry.feature] ?? true)));
 
   const modalRef = useFocusTrap({
     isActive: isOpen,

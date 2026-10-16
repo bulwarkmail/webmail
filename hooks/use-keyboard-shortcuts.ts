@@ -5,6 +5,7 @@ import { Email } from "@/lib/jmap/types";
 import { isEditableEventTarget } from "@/lib/keyboard";
 import { keyboardHooks } from "@/lib/plugin-hooks";
 import type { InterfaceLayout } from "@/stores/settings-store";
+import type { FeatureGates } from "@/lib/admin/types";
 
 export interface KeyboardShortcutHandlers {
   // Navigation
@@ -366,6 +367,8 @@ export interface ShortcutEntry {
   readonly layout?: InterfaceLayout;
   /** Listed only in the Pro shell, or only outside it. */
   readonly shell?: "pro" | "standard";
+  /** Listed only while this admin policy feature gate is on. */
+  readonly feature?: keyof FeatureGates;
 }
 
 // Shortcut definitions for the help modal
@@ -382,7 +385,7 @@ export const KEYBOARD_SHORTCUTS = {
     { key: "R / a", description: "shortcuts.actions.reply_all" },
     { key: "f", description: "shortcuts.actions.forward" },
     { key: "s", description: "shortcuts.actions.star" },
-    { key: "e", description: "shortcuts.actions.archive" },
+    { key: "e", description: "shortcuts.actions.archive", feature: "archiveActionEnabled" },
     { key: "# / Del", description: "shortcuts.actions.delete" },
     { key: "u", description: "shortcuts.actions.mark_unread" },
     { key: "Shift + I", description: "shortcuts.actions.mark_read" },

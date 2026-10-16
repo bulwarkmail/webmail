@@ -100,6 +100,7 @@ import {
   getByPath,
   tabKeywords,
   tabSearchPaths,
+  archiveActionSearchPaths,
 } from '@/lib/settings-search';
 import { useLiteLinkSegments } from '@/hooks/use-lite-link-segments';
 import { useDocumentTitle } from '@/hooks/use-document-title';
@@ -235,6 +236,7 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
   const { quota, isPushConnected } = useEmailStore();
   const { stalwartFeaturesEnabled } = useConfig();
   const { isFeatureEnabled } = usePolicyStore();
+  const archiveActionEnabled = isFeatureEnabled('archiveActionEnabled');
   // A tab in the URL wins over the persisted one; without it, nothing changes.
   const [activeTab, setActiveTab] = useState<SettingsTabId>(
     () => tabFromDeepLink(linkSegments) ?? readPersistedTab(),
@@ -308,6 +310,7 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
       const strings: string[] = [tabId.replace(/_/g, ' '), tabKeywords[tabId] ?? ''];
       const list: SubResult[] = [];
       for (const path of tabSearchPaths[tabId]) {
+        if (!archiveActionEnabled && archiveActionSearchPaths.has(path)) continue;
         const node = getByPath(messages, path);
         flattenStrings(node, strings);
         collectSubResults(node, list);
@@ -363,7 +366,7 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
       ];
     }
     return { tabSearchHaystacks: haystacks, tabSubResults: subs };
-  }, [messages, installedPlugins, installedThemes, sidebarAppsList]);
+  }, [messages, installedPlugins, installedThemes, sidebarAppsList, archiveActionEnabled]);
 
   // Sidebar resize state
   const [settingsSidebarWidth, setSettingsSidebarWidth] = useState(() => {

@@ -6,6 +6,7 @@ import { useSettingsStore } from "@/stores/settings-store";
 import { SettingsSection, SettingItem, Select, ToggleSwitch } from "./settings-section";
 import { RotateCcw } from "@/components/icons";
 import { cn } from "@/lib/utils";
+import { useArchiveActionEnabled } from "@/lib/archive-gate";
 import {
   DEFAULT_ATTACHMENT_TEMPLATE,
   DEFAULT_BUNDLE_TEMPLATE,
@@ -130,6 +131,7 @@ function TemplateEditor({
 
 export function DownloadsSettings() {
   const t = useTranslations("settings.downloads");
+  const archiveActionEnabled = useArchiveActionEnabled();
   const {
     emailDownloadTemplate,
     attachmentDownloadTemplate,
@@ -141,6 +143,8 @@ export function DownloadsSettings() {
     postExportAction,
     updateSetting,
   } = useSettingsStore();
+  // With the Archive action off a stored "archive" keeps the message, so it shows as "keep".
+  const postExportShown = archiveActionEnabled || postExportAction !== "archive" ? postExportAction : "keep";
 
   const sampleEmail = useMemo(() => buildSampleEmail(), []);
   const sampleAttachment = useMemo(() => ({ name: "Invoice-2026-05.pdf", type: "application/pdf" }), []);
@@ -252,11 +256,11 @@ export function DownloadsSettings() {
       </SettingItem>
       <SettingItem label={t("after_export.label")} description={t("after_export.description")}>
         <Select
-          value={postExportAction}
+          value={postExportShown}
           onChange={(value) => updateSetting("postExportAction", value as "keep" | "archive" | "trash")}
           options={[
             { value: "keep", label: t("after_export.keep") },
-            { value: "archive", label: t("after_export.archive") },
+            ...(archiveActionEnabled ? [{ value: "archive", label: t("after_export.archive") }] : []),
             { value: "trash", label: t("after_export.trash") },
           ]}
         />

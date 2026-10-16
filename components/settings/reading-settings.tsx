@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useSettingsStore } from '@/stores/settings-store';
 import { useEffectiveMailLayout } from '@/hooks/use-effective-mail-layout';
-import type { ArchiveMode, HoverAction } from '@/stores/settings-store';
+import type { ArchiveMode, HoverAction, SwipeAction } from '@/stores/settings-store';
 import { ALL_HOVER_ACTIONS } from '@/stores/settings-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { useEmailStore } from '@/stores/email-store';
@@ -20,6 +20,18 @@ export function ReadingSettings() {
   const [isReorganizing, setIsReorganizing] = useState(false);
   const [reorganizeResult, setReorganizeResult] = useState<string | null>(null);
   const { isSettingLocked, isSettingHidden, isFeatureEnabled } = usePolicyStore();
+  const archiveActionEnabled = isFeatureEnabled('archiveActionEnabled');
+  // With the Archive action off, a stored 'archive' swipe does nothing (the row
+  // has no archive handler), so the select shows it as "none".
+  const swipeShown = (action: SwipeAction) => (archiveActionEnabled || action !== 'archive' ? action : 'none');
+  const swipeOptions = [
+    { value: 'none', label: t('swipe_actions.none') },
+    ...(archiveActionEnabled ? [{ value: 'archive', label: t('swipe_actions.archive') }] : []),
+    { value: 'delete', label: t('swipe_actions.delete') },
+    { value: 'markRead', label: t('swipe_actions.mark_read') },
+    { value: 'star', label: t('swipe_actions.star') },
+    { value: 'spam', label: t('swipe_actions.spam') },
+  ];
 
   const {
     markAsReadDelay,
@@ -179,6 +191,7 @@ export function ReadingSettings() {
       </SettingItem>
       )}
 
+      {archiveActionEnabled && (
       <SettingItem label={t('archive_mode.label')} description={t('archive_mode.description')}>
         <div className="flex flex-col gap-2">
           <Select
@@ -211,6 +224,7 @@ export function ReadingSettings() {
           )}
         </div>
       </SettingItem>
+      )}
 
       <SettingItem label={t('permanently_delete_junk.label')} description={t('permanently_delete_junk.description')}>
         <ToggleSwitch
@@ -235,31 +249,17 @@ export function ReadingSettings() {
 
       <SettingItem label={t('swipe_right_action.label')} description={t('swipe_right_action.description')}>
         <Select
-          value={swipeRightAction}
+          value={swipeShown(swipeRightAction)}
           onChange={(value) => updateSetting('swipeRightAction', value as typeof swipeRightAction)}
-          options={[
-            { value: 'none', label: t('swipe_actions.none') },
-            { value: 'archive', label: t('swipe_actions.archive') },
-            { value: 'delete', label: t('swipe_actions.delete') },
-            { value: 'markRead', label: t('swipe_actions.mark_read') },
-            { value: 'star', label: t('swipe_actions.star') },
-            { value: 'spam', label: t('swipe_actions.spam') },
-          ]}
+          options={swipeOptions}
         />
       </SettingItem>
 
       <SettingItem label={t('swipe_left_action.label')} description={t('swipe_left_action.description')}>
         <Select
-          value={swipeLeftAction}
+          value={swipeShown(swipeLeftAction)}
           onChange={(value) => updateSetting('swipeLeftAction', value as typeof swipeLeftAction)}
-          options={[
-            { value: 'none', label: t('swipe_actions.none') },
-            { value: 'archive', label: t('swipe_actions.archive') },
-            { value: 'delete', label: t('swipe_actions.delete') },
-            { value: 'markRead', label: t('swipe_actions.mark_read') },
-            { value: 'star', label: t('swipe_actions.star') },
-            { value: 'spam', label: t('swipe_actions.spam') },
-          ]}
+          options={swipeOptions}
         />
       </SettingItem>
 
@@ -315,7 +315,7 @@ export function ReadingSettings() {
           <p className="text-xs text-muted-foreground mt-1">{t('hover_actions.description')}</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          {ALL_HOVER_ACTIONS.map((action) => {
+          {ALL_HOVER_ACTIONS.filter((action) => archiveActionEnabled || action.id !== 'archive').map((action) => {
             const isEnabled = hoverActions.includes(action.id);
             return (
               <button

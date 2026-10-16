@@ -65,6 +65,8 @@ export interface FeatureGates {
   accountArchiveEnabled: boolean;
   /** Composer "Custom" From: free-text sender address instead of an identity. */
   customFromEnabled: boolean;
+  /** The Archive action on messages (button, menus, hover, swipe, shortcut). */
+  archiveActionEnabled: boolean;
 }
 
 export const DEFAULT_FEATURE_GATES: FeatureGates = {
@@ -94,6 +96,7 @@ export const DEFAULT_FEATURE_GATES: FeatureGates = {
   unifiedCrossAccountEnabled: false,
   accountArchiveEnabled: false,
   customFromEnabled: true,
+  archiveActionEnabled: true,
 };
 
 export interface ThemePolicy {

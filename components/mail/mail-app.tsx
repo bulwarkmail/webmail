@@ -30,6 +30,7 @@ import { ThreadGroup, Email, Mailbox, type StateChange, isUnifiedMailboxId, UNIF
 import { useAccountStore, waitForConnectedAccount } from "@/stores/account-store";
 import { useShallow } from "zustand/react/shallow";
 import { usePolicyStore } from "@/stores/policy-store";
+import { isArchiveActionEnabled, useArchiveActionEnabled } from "@/lib/archive-gate";
 import type { UnifiedAccountClient } from "@/lib/unified-mailbox";
 import { connectedAccountsGrew } from "@/lib/unified-mailbox";
 import { KeyboardShortcutsModal } from "@/components/keyboard-shortcuts-modal";
@@ -638,6 +639,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const includeGroupInUnified = useSettingsStore((s) => s.includeGroupInUnified);
   const unifiedCrossAccount = useSettingsStore((s) => s.unifiedCrossAccount);
   const unifiedCrossAccountGate = usePolicyStore((s) => s.isFeatureEnabled('unifiedCrossAccountEnabled'));
+  const archiveActionEnabled = useArchiveActionEnabled();
   const accounts = useAccountStore((s) => s.accounts);
   const connectedAccountsSignature = useMemo(
     () => accounts.filter((a) => a.isConnected).map((a) => a.id).sort().join(","),
@@ -880,7 +882,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       if (isScheduledView) return;
       if (selectedEmail) handleToggleStar();
     },
-    onArchive: async () => {
+    onArchive: archiveActionEnabled ? async () => {
       if (isScheduledView) return;
       if (shortcutsTargetSelection && client) {
         const count = selectedEmailKeys.size;
@@ -894,7 +896,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       } else if (selectedEmail) {
         handleArchive();
       }
-    },
+    } : undefined,
     onDelete: async () => {
       if (isScheduledView) return;
       if (shortcutsTargetSelection && client) {
@@ -1061,7 +1063,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       }
     },
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [activeEmails, selectedEmail, client, selectedMailbox, isMobile, isTablet, selectedEmailKeys, mailboxes, isScheduledView, mvShell, showCrossStarred]);
+  }), [activeEmails, selectedEmail, client, selectedMailbox, isMobile, isTablet, selectedEmailKeys, mailboxes, isScheduledView, mvShell, showCrossStarred, archiveActionEnabled]);
 
   // Initialize keyboard shortcuts
   // Mountain View keeps the ticked rows while a message is read (#1231). The
@@ -2726,7 +2728,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   };
 
   const handleArchive = async (emailToArchive: Email | null = selectedEmail) => {
-    if (!client || !emailToArchive) return;
+    if (!client || !emailToArchive || !isArchiveActionEnabled()) return;
 
     // In unified view the archive folder (and any year/month subfolders we
     // create) must live in the email's own account, reached through the login it
@@ -5028,9 +5030,9 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                 onDelete={async (email) => {
                   await handleDelete(email);
                 }}
-                onArchive={async (email) => {
+                onArchive={archiveActionEnabled ? async (email) => {
                   await handleArchive(email);
-                }}
+                } : undefined}
                 onSetTag={(emailId, color) => {
                   handleSetTag(emailId, color);
                 }}
@@ -5195,7 +5197,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                       }
                       handleDelete(target);
                     }}
-                    onArchive={() => handleArchive()}
+                    onArchive={archiveActionEnabled ? () => handleArchive() : undefined}
                     onToggleStar={handleToggleStar}
                     onSetTag={handleSetTag}
                     onMarkAsSpam={() => handleMarkAsSpam()}

@@ -7,6 +7,7 @@ import { useSettingsStore } from "@/stores/settings-store";
 import type { HoverAction } from "@/stores/settings-store";
 import { cn } from "@/lib/utils";
 import { Trash2, Star, Mail, MailOpen, Archive, Tag, ShieldAlert, ShieldCheck } from "@/components/icons";
+import { useArchiveActionEnabled, withoutArchiveIfOff } from "@/lib/archive-gate";
 import { useTranslations } from "next-intl";
 import { useIsMobile } from "@/hooks/use-media-query";
 import { TagPicker } from "@/components/email/tag-picker";
@@ -112,7 +113,11 @@ export function EmailHoverActions({
 }: EmailHoverActionsProps) {
   const configuredHoverActions = useSettingsStore((state) => state.hoverActions);
   const mountainView = useSettingsStore((state) => state.interfaceLayout === 'mountain-view');
-  const hoverActions = mountainView ? mountainViewHoverActions(configuredHoverActions) : configuredHoverActions;
+  const archiveActionEnabled = useArchiveActionEnabled();
+  const hoverActions = withoutArchiveIfOff(
+    mountainView ? mountainViewHoverActions(configuredHoverActions) : configuredHoverActions,
+    archiveActionEnabled,
+  );
   const hoverActionsMode = useSettingsStore((state) => state.hoverActionsMode);
   const hoverActionsCorner = useSettingsStore((state) => state.hoverActionsCorner);
   const t = useTranslations("settings.email_behavior.hover_actions");

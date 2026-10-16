@@ -25,6 +25,7 @@ import { keywordPointer } from "@/lib/jmap/patch-pointer";
 import { useAccountStore } from "@/stores/account-store";
 import { useMessageListTabsStore } from "@/stores/message-list-tabs-store";
 import type { StorageQuota } from "@/lib/quota";
+import { isArchiveActionEnabled } from "@/lib/archive-gate";
 
 type ScheduledSubmissionMetadata = {
   submissionId: string;
@@ -907,6 +908,8 @@ export async function ensureArchiveMailbox(opts: {
   accountId?: string;
   refresh: () => Promise<Mailbox[]>;
 }): Promise<Mailbox | null> {
+  // The admin turned the Archive action off (#1257): never archive, never create the folder.
+  if (!isArchiveActionEnabled()) return null;
   const existing = findArchiveMailbox(opts.mailboxes, opts.selectedMailboxId, opts.accountId);
   if (existing) return existing;
 
@@ -4610,6 +4613,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   },
 
   batchArchive: async (client): Promise<boolean> => {
+    if (!isArchiveActionEnabled()) return false;
     const { selectedEmailKeys, emails } = get();
     const mailboxes = resolveActionMailboxes();
     if (selectedEmailKeys.size === 0) return true;

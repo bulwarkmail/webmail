@@ -40,6 +40,7 @@ const FEATURE_GATE_LABELS: Partial<Record<keyof FeatureGates, { label: string; d
   unifiedCrossAccountEnabled: { label: 'Unified Mailbox: Cross-account', description: 'Allow users to expand the Unified Mailbox beyond the active account boundary so its lists merge across every logged-in account. When off, the Unified Mailbox stays within the active account and its shared folders.' },
   accountArchiveEnabled: { label: 'Account List Backup', description: 'Let users save their list of accounts (address, server, label, colour) on this server, encrypted in the browser with a password of their choice, and restore it on another device. No mailbox passwords are stored. Archives live in SETTINGS_DATA_DIR/account-archives; requires SESSION_SECRET.' },
   customFromEnabled: { label: 'Custom From Address', description: 'Let users type any sender address in the composer instead of picking one of their identities, and let replies to a catch-all address on their domain send from that address. Turn this off when users may only send as their configured identities.' },
+  archiveActionEnabled: { label: 'Archive Action', description: 'Offer "Archive" on messages: the toolbar button, the context menu and selection bar, the hover and swipe actions, the E shortcut and archiving after an export. Turn this off when mail is archived elsewhere, for example by a mail gateway; existing Archive folders stay as ordinary folders and Bulwark no longer creates one.' },
 };
 
 const RESTRICTABLE_SETTINGS = [
