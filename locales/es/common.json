@@ -1733,6 +1733,7 @@
       "backup": {
         "title": "Copia de la lista de cuentas",
         "description": "Guarda en el servidor la lista de cuentas de este navegador, cifrada con una contraseña que solo tú conoces, y recupérala en otro dispositivo. Las contraseñas de los buzones no se guardan: inicias sesión tú en cada cuenta restaurada.",
+        "description_passwords": "Guarda en el servidor la lista de cuentas de este navegador, cifrada con una contraseña que solo tú conoces, y recupérala en otro dispositivo. Puedes incluir las contraseñas de los buzones, así las cuentas restauradas inician sesión solas.",
         "status_none": "No hay ninguna lista guardada para {account}.",
         "status_saved": "Hay una lista guardada para {account}.",
         "save": "Guardar lista",
@@ -1744,9 +1745,15 @@
         "password_hint": "Al menos 10 caracteres. No se puede recuperar: si la olvidas, vuelve a guardar la lista con una nueva.",
         "restore_hint": "La contraseña elegida al guardar la lista.",
         "confirm": "Confirmar contraseña",
+        "include_passwords": "Incluir las contraseñas de los buzones",
+        "include_passwords_hint": "Las cuentas iniciadas aquí con contraseña iniciarán sesión solas tras restaurar. Quien conozca la contraseña de la copia entra en todos los buzones de la lista.",
         "saved": "Lista guardada ({count, plural, one {# cuenta} other {# cuentas}}).",
         "restored": "Cuentas añadidas: {added}. Cuentas ya presentes y actualizadas: {updated}. Abre cada cuenta nueva desde la lista de cuentas para iniciar sesión.",
+        "restored_signed_in": "Cuentas añadidas: {added}. Cuentas ya presentes y actualizadas: {updated}.",
         "skipped": "{count, plural, one {# cuenta no se ha añadido} other {# cuentas no se han añadido}}: se ha alcanzado el límite de cuentas.",
+        "saved_passwords": "Contraseñas incluidas para {count, plural, one {# cuenta} other {# cuentas}}.",
+        "signed_in": "Sesión iniciada en {count, plural, one {# cuenta} other {# cuentas}} con la contraseña guardada.",
+        "sign_in_failed": "{count, plural, one {# contraseña guardada fue rechazada} other {# contraseñas guardadas fueron rechazadas}}: inicia sesión en esas cuentas desde la lista de cuentas.",
         "deleted": "Lista guardada eliminada.",
         "errors": {
           "mismatch": "Las contraseñas no coinciden.",

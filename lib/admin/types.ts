@@ -63,6 +63,8 @@ export interface FeatureGates {
   unifiedCrossAccountEnabled: boolean;
   /** Encrypted account list kept on the server, restorable on another device. */
   accountArchiveEnabled: boolean;
+  /** Lets that list carry mailbox passwords, so a restore signs in by itself. */
+  accountArchivePasswordsEnabled: boolean;
   /** Composer "Custom" From: free-text sender address instead of an identity. */
   customFromEnabled: boolean;
 }
@@ -93,6 +95,7 @@ export const DEFAULT_FEATURE_GATES: FeatureGates = {
   crossAllViewEnabled: false,
   unifiedCrossAccountEnabled: false,
   accountArchiveEnabled: false,
+  accountArchivePasswordsEnabled: false,
   customFromEnabled: true,
 };
 

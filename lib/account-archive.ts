@@ -3,12 +3,12 @@
  * can bring the same accounts back. Encryption happens in the browser with a
  * password the user chooses; the server only ever sees the envelope.
  *
- * The list holds no mailbox passwords: each restored account is signed in to
- * by hand.
+ * Mailbox passwords are optional: an account saved with its password is
+ * signed in to on restore, one saved without asks for its own sign-in.
  */
 
 export interface ArchiveOwner { username: string; serverUrl: string }
-export interface ArchivedAccount extends ArchiveOwner { label: string; avatarColor: string }
+export interface ArchivedAccount extends ArchiveOwner { label: string; avatarColor: string; password?: string }
 export interface ArchiveEnvelope {
   version: 1;
   iterations: typeof ARCHIVE_ITERATIONS;
@@ -55,9 +55,14 @@ export function parseArchivedAccounts(value: unknown): ArchivedAccount[] {
   return value.map((a: ArchivedAccount) => {
     archiveIdentity(a);
     if (typeof a.label !== 'string' || a.label.length > 320
-      || typeof a.avatarColor !== 'string' || !/^#[0-9a-f]{6}$/i.test(a.avatarColor)) throw new Error('invalid_archive');
-    // Rebuilt field by field, so nothing else (a password, say) survives a round trip.
-    return { username: a.username.trim(), serverUrl: trimUrl(a.serverUrl), label: a.label, avatarColor: a.avatarColor };
+      || typeof a.avatarColor !== 'string' || !/^#[0-9a-f]{6}$/i.test(a.avatarColor)
+      || (a.password !== undefined && (typeof a.password !== 'string' || !a.password || a.password.length > 1024))) {
+      throw new Error('invalid_archive');
+    }
+    // Rebuilt field by field, so nothing else (a token, say) survives a round trip.
+    const entry: ArchivedAccount = { username: a.username.trim(), serverUrl: trimUrl(a.serverUrl), label: a.label, avatarColor: a.avatarColor };
+    if (a.password !== undefined) entry.password = a.password;
+    return entry;
   });
 }
 

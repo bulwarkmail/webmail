@@ -38,12 +38,20 @@ describe('account archive encryption', () => {
     await expect(encryptArchive(owner, accounts, 'short')).rejects.toThrow('password_length');
   });
 
-  it('never carries a password or any other extra field', async () => {
-    const withSecrets = accounts.map(a => ({ ...a, password: 'mailbox-secret', token: 't' }));
+  it('carries a mailbox password when given one, and no other extra field', async () => {
+    const withSecrets = [{ ...accounts[0], password: 'mailbox-secret', token: 't' }, { ...accounts[1], token: 't' }];
     const envelope = await encryptArchive(owner, withSecrets, password);
+    expect(JSON.stringify(envelope)).not.toContain('mailbox-secret');
     const restored = await decryptArchive(owner, envelope, password);
-    expect(JSON.stringify(restored)).not.toContain('mailbox-secret');
-    expect(Object.keys(restored[0]).sort()).toEqual(['avatarColor', 'label', 'serverUrl', 'username']);
+    expect(restored[0].password).toBe('mailbox-secret');
+    expect(Object.keys(restored[0]).sort()).toEqual(['avatarColor', 'label', 'password', 'serverUrl', 'username']);
+    expect(Object.keys(restored[1]).sort()).toEqual(['avatarColor', 'label', 'serverUrl', 'username']);
+  });
+
+  it('rejects a password that is empty, too long or not a string', () => {
+    for (const bad of ['', 'x'.repeat(1025), 42]) {
+      expect(() => parseArchivedAccounts([{ ...accounts[0], password: bad as string }])).toThrow('invalid_archive');
+    }
   });
 
   it('rejects malformed lists and envelopes', async () => {

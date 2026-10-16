@@ -8,7 +8,7 @@ vi.mock('@/lib/jmap/client', () => {
   class JMAPClient {
     constructor(public serverUrl: string, public username: string, public password: string) {}
     static withBearer() { throw new Error('not used'); }
-    async connect() {}
+    async connect() { if (this.password === 'wrong') throw new Error('Authentication failed'); }
     getSessionUsername() { return this.username; }
     getUsername() { return this.username; }
     async getIdentities() { return [{ id: 'a', email: this.username, name: this.username, mayDelete: false }]; }
@@ -118,4 +118,26 @@ it('treats a browser left with only accounts awaiting sign-in as signed out, not
   expect(useAuthStore.getState().isAuthenticated).toBe(false);
   expect(useAuthStore.getState().error).not.toBe('connection_failed');
   expect(useAccountStore.getState().accounts.map(a => a.id)).toEqual(['alice@x.test@mail.x.test']);
+});
+
+it('signs in to a restored account with its saved password without leaving the active one', async () => {
+  restoreAccounts(archived);
+  await useAuthStore.getState().checkAuth();
+  const alice = 'alice@x.test@mail.x.test';
+  const fetchMock = vi.mocked(fetch);
+  fetchMock.mockClear();
+  const active = useAuthStore.getState().activeAccountId;
+
+  expect(await useAuthStore.getState().signInRestoredAccount(alice, 'wrong', true)).toBe(false);
+  expect(useAccountStore.getState().getAccountById(alice)?.awaitingSignIn).toBe(true);
+
+  expect(await useAuthStore.getState().signInRestoredAccount(alice, 'alice-pw', true)).toBe(true);
+  expect(useAuthStore.getState().activeAccountId).toBe(active);
+  expect(useAuthStore.getState().getClientForAccount(alice)).toBeDefined();
+  expect(useAccountStore.getState().getAccountById(alice)).toMatchObject({ isConnected: true, rememberMe: true, awaitingSignIn: false });
+  const sessionWrite = fetchMock.mock.calls.find(([url, init]) => String(url).includes('/api/auth/session') && init?.method === 'POST');
+  expect(JSON.parse(String(sessionWrite?.[1]?.body))).toMatchObject({ username: 'alice@x.test', password: 'alice-pw' });
+
+  // Already connected: nothing to do.
+  expect(await useAuthStore.getState().signInRestoredAccount(alice, 'alice-pw', true)).toBe(false);
 });

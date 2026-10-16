@@ -120,6 +120,12 @@ interface AuthState {
    * session still hold the old one, which the server now refuses.
    */
   updateBasicPassword: (newPassword: string) => Promise<void>;
+  /**
+   * Sign in, in the background, to a Basic account restored from the account
+   * list backup with its password. The active account stays as it is.
+   * Resolves false when the server refuses the password or cannot be reached.
+   */
+  signInRestoredAccount: (accountId: string, password: string, rememberMe: boolean) => Promise<boolean>;
   refreshIdentities: () => Promise<void>;
   getClientForAccount: (accountId: string) => JMAPClient | undefined;
   getAllConnectedClients: () => Map<string, JMAPClient>;
@@ -3029,6 +3035,37 @@ export const useAuthStore = create<AuthState>()(
         if (account.rememberMe || IS_LITE) {
           await persistSession(account.cookieSlot, { serverUrl: account.serverUrl, username: account.username, password: newPassword });
         }
+      },
+
+      signInRestoredAccount: async (accountId, password, rememberMe) => {
+        const accountStore = useAccountStore.getState();
+        const account = accountStore.getAccountById(accountId);
+        if (!account || account.authMode !== 'basic' || clients.has(accountId)) return false;
+        const { serverUrl, username, cookieSlot } = account;
+        if (await precheckCredentials(serverUrl, { username, password })) return false;
+        const client = new JMAPClient(serverUrl, username, password);
+        try {
+          await client.connect();
+        } catch (err) {
+          debug.error(`Failed to sign in to restored account ${accountId}:`, err);
+          client.disconnect();
+          return false;
+        }
+        // Without a remembered session the next reload would drop the account
+        // again, like any sign-in made without "Remember me".
+        await Promise.all([
+          rememberMe || IS_LITE ? persistSession(cookieSlot, { serverUrl, username, password }) : null,
+          syncStalwartAuthContext(serverUrl, username, client.getAuthHeader(), cookieSlot),
+        ]);
+        clients.set(accountId, client);
+        bindClientStatusHandlers(client, set, get, accountId);
+        accountStore.updateAccount(accountId, {
+          awaitingSignIn: false, isConnected: true, hasError: false, errorMessage: undefined,
+          rememberMe, lastLoginAt: Date.now(),
+        });
+        void syncAccountDisplayName(accountId, client);
+        set((state) => ({ connectedAccountsRevision: state.connectedAccountsRevision + 1 }));
+        return true;
       },
 
       syncIdentities: () => {

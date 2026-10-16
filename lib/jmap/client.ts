@@ -1177,6 +1177,15 @@ export class JMAPClient implements IJMAPClient {
     return this.authHeader;
   }
 
+  /**
+   * The password of a plain Basic session, or null for a bearer session and
+   * for one that appends a TOTP code (that code expires; the password alone
+   * would not sign in).
+   */
+  getBasicPassword(): string | null {
+    return this.authHeader.startsWith('Basic ') && !this.onTotpRequired ? this.password : null;
+  }
+
   getServerUrl(): string {
     return this.serverUrl;
   }

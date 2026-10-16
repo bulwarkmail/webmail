@@ -1733,6 +1733,7 @@
       "backup": {
         "title": "Sauvegarde de la liste des comptes",
         "description": "Conservez sur le serveur la liste des comptes de ce navigateur, chiffrée avec un mot de passe que vous seul connaissez, et retrouvez-la sur un autre appareil. Les mots de passe des boîtes ne sont pas enregistrés : vous vous connectez vous-même à chaque compte restauré.",
+        "description_passwords": "Conservez sur le serveur la liste des comptes de ce navigateur, chiffrée avec un mot de passe que vous seul connaissez, et retrouvez-la sur un autre appareil. Vous pouvez inclure les mots de passe des boîtes : les comptes restaurés se connectent alors tout seuls.",
         "status_none": "Aucune liste enregistrée pour {account}.",
         "status_saved": "Une liste est enregistrée pour {account}.",
         "save": "Enregistrer la liste",
@@ -1744,9 +1745,15 @@
         "password_hint": "Au moins 10 caractères. Il ne peut pas être récupéré : si vous l'oubliez, enregistrez à nouveau la liste avec un nouveau mot de passe.",
         "restore_hint": "Le mot de passe choisi lors de l'enregistrement de la liste.",
         "confirm": "Confirmer le mot de passe",
+        "include_passwords": "Inclure les mots de passe des boîtes",
+        "include_passwords_hint": "Les comptes connectés ici avec un mot de passe se connecteront tout seuls après une restauration. Quiconque connaît le mot de passe de la sauvegarde accède à toutes les boîtes de la liste.",
         "saved": "Liste enregistrée ({count, plural, one {# compte} other {# comptes}}).",
         "restored": "Comptes ajoutés : {added}. Comptes déjà présents et mis à jour : {updated}. Ouvrez chaque nouveau compte depuis la liste des comptes pour vous connecter.",
+        "restored_signed_in": "Comptes ajoutés : {added}. Comptes déjà présents et mis à jour : {updated}.",
         "skipped": "{count, plural, one {# compte n'a pas été ajouté} other {# comptes n'ont pas été ajoutés}} : la limite de comptes est atteinte.",
+        "saved_passwords": "Mots de passe inclus pour {count, plural, one {# compte} other {# comptes}}.",
+        "signed_in": "Connecté à {count, plural, one {# compte} other {# comptes}} avec le mot de passe enregistré.",
+        "sign_in_failed": "{count, plural, one {# mot de passe enregistré a été refusé} other {# mots de passe enregistrés ont été refusés}} : connectez-vous à ces comptes depuis la liste des comptes.",
         "deleted": "Liste enregistrée supprimée.",
         "errors": {
           "mismatch": "Les mots de passe ne correspondent pas.",

@@ -1733,6 +1733,7 @@
       "backup": {
         "title": "Backup dell'elenco account",
         "description": "Conserva sul server l'elenco degli account di questo browser, cifrato con una password che conosci solo tu, e ripristinalo su un altro dispositivo. Le password delle caselle non vengono salvate: accedi tu a ogni account ripristinato.",
+        "description_passwords": "Conserva sul server l'elenco degli account di questo browser, cifrato con una password che conosci solo tu, e ripristinalo su un altro dispositivo. Puoi includere le password delle caselle, così gli account ripristinati accedono da soli.",
         "status_none": "Nessun elenco salvato per {account}.",
         "status_saved": "C'è un elenco salvato per {account}.",
         "save": "Salva elenco",
@@ -1744,9 +1745,15 @@
         "password_hint": "Almeno 10 caratteri. Non si può recuperare: se la dimentichi, salva di nuovo l'elenco con una nuova password.",
         "restore_hint": "La password scelta quando l'elenco è stato salvato.",
         "confirm": "Conferma password",
+        "include_passwords": "Includi le password delle caselle",
+        "include_passwords_hint": "Gli account collegati qui con una password accederanno da soli dopo il ripristino. Chi conosce la password del backup entra in tutte le caselle dell'elenco.",
         "saved": "Elenco salvato ({count, plural, one {# account} other {# account}}).",
         "restored": "Account aggiunti: {added}. Account già presenti e aggiornati: {updated}. Apri ogni nuovo account dall'elenco account per accedere.",
+        "restored_signed_in": "Account aggiunti: {added}. Account già presenti e aggiornati: {updated}.",
         "skipped": "{count, plural, one {# account non è stato aggiunto} other {# account non sono stati aggiunti}}: è stato raggiunto il limite di account.",
+        "saved_passwords": "Password incluse per {count, plural, one {# account} other {# account}}.",
+        "signed_in": "Accesso fatto a {count, plural, one {# account} other {# account}} con la password salvata.",
+        "sign_in_failed": "{count, plural, one {# password salvata è stata rifiutata} other {# password salvate sono state rifiutate}}: accedi a quegli account dall'elenco account.",
         "deleted": "Elenco salvato eliminato.",
         "errors": {
           "mismatch": "Le password non coincidono.",
