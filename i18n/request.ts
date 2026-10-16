@@ -43,6 +43,9 @@ export default getRequestConfig(async ({ requestLocale }) => {
     case 'he':
       messages = (await import('../locales/he/common.json')).default;
       break;
+    case 'et':
+      messages = (await import('../locales/et/common.json')).default;
+      break;
     case 'fa':
       messages = (await import('../locales/fa/common.json')).default;
       break;

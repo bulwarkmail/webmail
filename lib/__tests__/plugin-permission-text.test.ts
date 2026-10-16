@@ -14,8 +14,8 @@ describe('permission texts', () => {
   const shown = ALL_PERMISSIONS.filter((p) => !implicit.has(p));
   const langs = readdirSync(LOCALES).filter((l) => !l.includes('.'));
 
-  it('covers all 27 locales', () => {
-    expect(langs).toHaveLength(27);
+  it('covers all 28 locales', () => {
+    expect(langs).toHaveLength(28);
   });
 
   it.each(langs)('has a title and body for every permission in %s', (lang) => {
