@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { JMAPClient } from '../jmap/client';
 import type { CalendarTask } from '../jmap/types';
+import wire from './fixtures/stalwart-task-due-wire.json';
 
 function makeSession() {
   return {
@@ -21,6 +22,31 @@ function jsonResponse(body: unknown): Response {
 }
 
 type Call = { method: string; args: Record<string, unknown> };
+
+const isBareDate = (value: string) => /^\d{4}-\d{2}-\d{2}$/.test(value);
+
+/**
+ * Whether Stalwart keeps a task due of this shape in the stored iCalendar,
+ * read from recorded round trips: it echoes a bare date over JMAP but writes
+ * no DUE, so CalDAV clients lose the date.
+ */
+function stalwartKeepsDue(due: string): boolean {
+  const rows = wire.allDayTaskDue.filter((row) => row.write.patch && isBareDate(row.write.patch.due) === isBareDate(due));
+  if (rows.length === 0) throw new Error(`no recorded round trip for a due like ${due}`);
+  return rows.every((row) => row.icalDue !== null);
+}
+
+/** What the task modal sends on save: every field, here for an all-day task. */
+const modalPayload = (due: string | null): Partial<CalendarTask> => ({
+  '@type': 'Task',
+  title: 'Pay rent',
+  description: '',
+  due,
+  showWithoutTime: true,
+  priority: 0,
+  progress: 'needs-action',
+  calendarIds: { 'cal-1': true },
+});
 
 describe('JMAPClient task operations (#958)', () => {
   let client: JMAPClient;
@@ -121,6 +147,32 @@ describe('JMAPClient task operations (#958)', () => {
     expect(createPayload.title).toBe('New Task');
     expect(createPayload).not.toHaveProperty('progressUpdated');
   });
+
+  const sentTask = (kind: 'create' | 'update', key: string) => {
+    const setCall = sentCalls.find((c) => c.method === 'CalendarEvent/set');
+    return (setCall?.args[kind] as Record<string, Record<string, unknown>>)[key];
+  };
+
+  it.each([
+    ['createCalendarTask', 'create', 'new-task', (c: JMAPClient) => c.createCalendarTask(modalPayload('2026-10-07'))],
+    ['updateCalendarTask', 'update', 'task-1', (c: JMAPClient) => c.updateCalendarTask('task-1', modalPayload('2026-10-07'))],
+  ] as const)('%s sends an all-day due as a LocalDateTime, which Stalwart keeps in the iCalendar', async (_name, kind, key, write) => {
+    await write(client);
+
+    const due = sentTask(kind, key).due as string;
+    expect(due).toBe('2026-10-07T00:00:00');
+    expect(stalwartKeepsDue(due)).toBe(true);
+  });
+
+  it('completes a bare start date as well and leaves a due with a time alone', async () => {
+    await client.updateCalendarTask('task-1', { start: '2026-10-01', due: '2026-10-14T09:30:00' });
+    expect(sentTask('update', 'task-1')).toMatchObject({ start: '2026-10-01T00:00:00', due: '2026-10-14T09:30:00' });
+  });
+
+  it('keeps a cleared due cleared', async () => {
+    await client.updateCalendarTask('task-1', modalPayload(null));
+    expect(sentTask('update', 'task-1').due).toBeNull();
+  });
 });
 
 describe('JMAPClient tasks in shared calendars (#1204)', () => {
@@ -129,7 +181,9 @@ describe('JMAPClient tasks in shared calendars (#1204)', () => {
 
   // Tasks per account as the server stores them (bare ids).
   const serverTasks: Record<string, Record<string, unknown>[]> = {
-    'acct-1': [{ id: 'own-1', '@type': 'Task', uid: 'uid-own', title: 'Mine', progress: 'needs-action', calendarIds: { 'cal-1': true }, created: '2026-10-01T00:00:00Z', isDraft: false, isOrigin: true, locations: { l1: { '@type': 'Location', name: 'Desk' } } }],
+    'acct-1': [{ id: 'own-1', '@type': 'Task', uid: 'uid-own', title: 'Mine', progress: 'needs-action', calendarIds: { 'cal-1': true }, created: '2026-10-01T00:00:00Z', isDraft: false, isOrigin: true, locations: { l1: { '@type': 'Location', name: 'Desk' } } },
+      // Saved by a client that sent a bare date: Stalwart echoes it as such.
+      { id: 'own-2', '@type': 'Task', uid: 'uid-due', title: 'Dated', progress: 'needs-action', calendarIds: { 'cal-1': true }, due: wire.allDayTaskDue[0].jmapAfter.due, showWithoutTime: true }],
     'acct-2': [{ id: 'shared-1', '@type': 'Task', uid: 'uid-shared', title: 'Theirs', progress: 'needs-action', calendarIds: { 'cal-s': true } }],
   };
 
@@ -193,6 +247,15 @@ describe('JMAPClient tasks in shared calendars (#1204)', () => {
     for (const key of ['id', 'created', 'isDraft', 'isOrigin']) expect(payload).not.toHaveProperty(key);
     expect(destroy.args).toMatchObject({ accountId: 'acct-1', destroy: ['own-1'] });
     expect(newId).toBe('acct-2:new-id');
+  });
+
+  it('moving a task with a bare due date to another account stores the due as a LocalDateTime', async () => {
+    await client.updateCalendarTask('own-2', { calendarIds: { 'acct-2:cal-s': true } });
+
+    const create = sentCalls.find((c) => c.method === 'CalendarEvent/set' && c.args.create);
+    const due = (create?.args.create as Record<string, Record<string, unknown>>)['new-task'].due as string;
+    expect(due).toBe('2026-10-14T00:00:00');
+    expect(stalwartKeepsDue(due)).toBe(true);
   });
 
   it('updates a shared task in place in its own account with real ids', async () => {

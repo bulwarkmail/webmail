@@ -568,6 +568,20 @@ function getUserTimeZone(): string | undefined {
   }
 }
 
+const BARE_DATE = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * A task's `due` and `start` are LocalDateTimes (RFC 8984). Stalwart accepts a
+ * bare date and echoes it over JMAP, but stores no DUE in the iCalendar, so
+ * CalDAV clients lose the date. Completes a bare date to midnight.
+ */
+function completeBareTaskDates<T extends Partial<CalendarTask>>(task: T): T {
+  const result = { ...task };
+  if (typeof result.due === 'string' && BARE_DATE.test(result.due)) result.due = `${result.due}T00:00:00`;
+  if (typeof result.start === 'string' && BARE_DATE.test(result.start)) result.start = `${result.start}T00:00:00`;
+  return result;
+}
+
 /**
  * Stalwart's calcard crate uses singular property names ("recurrenceRule")
  * instead of the RFC 8984 plural forms ("recurrenceRules").
@@ -7793,7 +7807,7 @@ export class JMAPClient implements IJMAPClient {
       accountId = resolved.accountId;
       taskData.calendarIds = resolved.calendarIds;
     }
-    const cleanTask = { ...taskData, '@type': 'Task' };
+    const cleanTask = { ...completeBareTaskDates(taskData), '@type': 'Task' };
 
     debug.group('CalendarTask/create', 'tasks');
     debug.log('tasks', 'CalendarTask/create accountId', accountId);
@@ -7876,10 +7890,10 @@ export class JMAPClient implements IJMAPClient {
    */
   async updateCalendarTask(taskId: string, updates: Partial<CalendarTask>, targetAccountId?: string): Promise<string> {
     const source = targetAccountId ? { accountId: targetAccountId, id: taskId } : this.splitCalendarObjectId(taskId);
-    let patch = updates;
-    if (!targetAccountId && updates.calendarIds) {
-      const dest = this.resolveTaskCalendarIds(updates.calendarIds);
-      patch = { ...updates, calendarIds: dest.calendarIds };
+    let patch = completeBareTaskDates(updates);
+    if (!targetAccountId && patch.calendarIds) {
+      const dest = this.resolveTaskCalendarIds(patch.calendarIds);
+      patch = { ...patch, calendarIds: dest.calendarIds };
       if (dest.accountId !== source.accountId) {
         return this.moveCalendarTaskToAccount(source, dest.accountId, patch);
       }

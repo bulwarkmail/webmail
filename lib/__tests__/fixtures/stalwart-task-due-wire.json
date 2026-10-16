@@ -1,0 +1,25 @@
+{
+  "_source": "Stalwart v0.16.24, local server, 2026-10-01. Each row: a JMAP CalendarEvent/set (or a CalDAV PUT), then CalendarEvent/get and a CalDAV GET of the stored iCalendar. icalDue is the DUE line of that iCalendar, null when it has none.",
+  "allDayTaskDue": [
+    {
+      "write": { "method": "update", "patch": { "due": "2026-10-14" } },
+      "jmapAfter": { "due": "2026-10-14", "showWithoutTime": true },
+      "icalDue": null
+    },
+    {
+      "write": { "method": "update", "patch": { "due": "2026-10-14T00:00:00" } },
+      "jmapAfter": { "due": "2026-10-14T00:00:00", "showWithoutTime": true },
+      "icalDue": "DUE;VALUE=DATE:20261014"
+    },
+    {
+      "write": { "method": "create", "patch": { "due": "2026-10-07", "showWithoutTime": true } },
+      "jmapAfter": { "due": "2026-10-07", "showWithoutTime": true },
+      "icalDue": null
+    },
+    {
+      "write": { "method": "caldav-put", "ical": "DUE;VALUE=DATE:20261020" },
+      "jmapAfter": { "due": "2026-10-20T00:00:00", "showWithoutTime": true },
+      "icalDue": "DUE;VALUE=DATE:20261020"
+    }
+  ]
+}
