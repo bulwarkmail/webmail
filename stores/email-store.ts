@@ -1,3 +1,4 @@
+import { ArchiveEmailsError } from "@/lib/jmap/archive-error";
 import { create } from "zustand";
 import { Email, Mailbox, StateChange, ScheduledEmail, SendEmailResult, isUnifiedMailboxId, isCrossViewId } from "@/lib/jmap/types";
 import type { UnifiedMailboxRole, CrossView } from "@/lib/jmap/types";
@@ -912,6 +913,11 @@ export async function ensureArchiveMailbox(opts: {
 
   const viewMailbox = opts.mailboxes.find(m => m.id === opts.selectedMailboxId);
   const scopeId = opts.accountId ?? (viewMailbox?.isShared ? viewMailbox.accountId : undefined);
+  const mailCapability = opts.client.getAccountCapability?.('urn:ietf:params:jmap:mail', scopeId) as
+    { mayCreateTopLevelMailbox?: boolean } | undefined;
+  // Only an explicit account-level denial prevents creating the root Archive.
+  // Existing Archives (and their year/month child folders) are unaffected.
+  if (mailCapability?.mayCreateTopLevelMailbox === false) throw new ArchiveMailboxNotFoundError();
   // null: a plugin refused the new folder (and said why).
   if (!(await createMailboxWithHooks(opts.client, 'Archive', undefined, scopeId, { role: 'archive' }))) return null;
 
@@ -4610,70 +4616,269 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   },
 
   batchArchive: async (client): Promise<boolean> => {
-    const { selectedEmailKeys, emails } = get();
-    const mailboxes = resolveActionMailboxes();
-    if (selectedEmailKeys.size === 0) return true;
-
-    // Scope the archive folder to the viewed shared/group account (if any) so the
-    // move lands on the owner account, not the user's own archive (which appears
-    // first in the merged list); see resolveViewAccountId. Own view is unchanged.
-    let archiveMailbox: Mailbox | null;
-    try {
-      archiveMailbox = await ensureArchiveMailbox({
-        client: resolveActionClient(client),
-        mailboxes,
-        selectedMailboxId: get().selectedMailbox,
-        refresh: async () => {
-          await refreshMailboxesForViewingAccount(client);
-          return resolveActionMailboxes();
-        },
-      });
-    } catch (error) {
-      set({ error: error instanceof Error ? error.message : 'Failed to archive emails' });
-      throw error;
-    }
-    if (!archiveMailbox) return false;
-
-    const mode = useSettingsStore.getState().archiveMode;
-    const archiveId = archiveMailbox.originalId || archiveMailbox.id;
-
-    const selected = emails.filter(e => selectedEmailKeys.has(emailKeyFor(e)));
+    const { selectedMailbox } = get();
+    const selected = resolveSelectedEmails(get());
     if (selected.length === 0) return true;
+    const listKeys = new Set(get().emails.map(emailKeyFor));
 
-    const hookMailboxes = [...resolveActionMailboxes(), archiveMailbox];
-    const move = {
-      emailIds: [...new Set(selected.map(e => e.id))],
-      fromMailboxId: moveSourceMailboxId(selected, hookMailboxes),
-      toMailboxId: archiveMailbox.id,
+    // A JMAP id is only unique within its owning account. Keep the reaching client in
+    // the grouping key as well as the owner account, including delegated owners.
+    type Group = ReturnType<typeof resolveEmailActionContext> & {
+      emails: Email[];
+      loginId: string | null;
+      stamped: boolean;
+      updatedIds: Set<string>;
+      createdArchive: boolean;
+      move?: Parameters<typeof allowEmailMove>[0];
+      hookMailboxes?: Mailbox[];
     };
-    if (!(await allowEmailMove(move, hookMailboxes))) return false;
-
-    set({ isLoading: true, error: null });
-    try {
-      await resolveActionClient(client).batchArchiveEmails(
-        selected.map(e => ({ id: e.id, receivedAt: e.receivedAt })),
-        archiveId,
-        mode,
-        mailboxes,
-        archiveMailbox.accountId,
-      );
-
-      const remaining = emails.filter(e => !selectedEmailKeys.has(emailKeyFor(e)));
-      set({ emails: remaining, selectedEmailKeys: new Set(), isLoading: false });
-      emitEmailMove(move, hookMailboxes);
-
-      // Refresh the active or viewed account's mailbox cache after the
-      // archive (a year/month archive can create new sub-folders).
-      await refreshMailboxesForViewingAccount(client);
-      await get().refreshCurrentMailbox(client);
-    } catch (error) {
-      set({
-        error: error instanceof Error ? error.message : 'Failed to archive emails',
-        isLoading: false,
+    const groups: Group[] = [];
+    const failures: Error[] = [];
+    let stoppedByPlugin = false;
+    const sourceClients = new Map<string, IJMAPClient | undefined>();
+    const clientForSource = (loginId: string) => {
+      if (!sourceClients.has(loginId)) {
+        sourceClients.set(loginId, useAuthStore.getState().getClientForAccount(loginId));
+      }
+      return sourceClients.get(loginId);
+    };
+    const viewerLoginId = get().selectedEmail?.sourceClientAccountId;
+    if (viewerLoginId) clientForSource(viewerLoginId);
+    for (const email of selected) {
+      const stamped = !!(email.sourceClientAccountId && email.sourceAccountId);
+      if (stamped && !clientForSource(email.sourceClientAccountId!)) {
+        failures.push(new Error('Email account is not connected - cannot archive email'));
+        continue;
+      }
+      const context = resolveEmailActionContext(email, client);
+      // Merge stamped and unstamped rows of the same primary account too.
+      context.accountId ??= context.client.getAccountId?.()
+        || context.mailboxes.find(m => !m.isShared)?.accountId;
+      const group = groups.find(g => g.client === context.client && g.accountId === context.accountId);
+      if (group) {
+        group.emails.push(email);
+        group.stamped ||= stamped;
+      } else groups.push({
+        ...context, emails: [email], stamped, updatedIds: new Set(), createdArchive: false,
+        loginId: email.sourceClientAccountId ?? get().viewingAccountId ?? useAuthStore.getState().activeAccountId,
       });
-      throw error;
     }
-    return true;
+
+    const isCurrentView = captureEmailListView();
+    const epoch = currentStoreEpoch();
+    const unstampedContext = resolveEmailActionContext({}, client);
+    const unstampedOwner = unstampedContext.accountId ?? unstampedContext.client.getAccountId?.()
+      ?? unstampedContext.mailboxes.find(m => !m.isShared)?.accountId;
+    const groupForEmail = (email: Email) => {
+      const stamped = !!(email.sourceClientAccountId && email.sourceAccountId);
+      const actionClient = stamped
+        ? clientForSource(email.sourceClientAccountId!)
+        : unstampedContext.client;
+      const owner = stamped ? email.sourceAccountId : unstampedOwner;
+      return groups.find(g => g.client === actionClient && g.accountId === owner);
+    };
+    const mode = useSettingsStore.getState().archiveMode;
+    set({ isLoading: true, error: null });
+    await Promise.all(groups.map(async group => {
+      try {
+        // The owner-only cache is ambiguous across servers/logins. Stamped
+        // selections resolve folders through their authenticated client instead.
+        let mailboxes = group.stamped
+          ? await group.client.getMailboxes(group.accountId)
+          : group.mailboxes;
+        // A primary-account action can start with the merged sidebar list.
+        // Keep only this owner's folders; older own-folder objects may lack
+        // accountId, whereas delegated folders must always name their owner.
+        const primaryOwner = !group.accountId || group.accountId === group.client.getAccountId?.();
+        const ownerMailboxes = (folders: Mailbox[]) => folders
+          .filter(m => group.accountId
+            ? m.accountId === group.accountId || (primaryOwner && !m.accountId && !m.isShared)
+            : !m.isShared)
+          .map(m => m.isShared ? {
+            ...m, id: `${m.accountId}:${m.originalId || m.id}`,
+            originalId: m.originalId || m.id,
+            parentId: m.parentId && !m.parentId.startsWith(`${m.accountId}:`)
+              ? `${m.accountId}:${m.parentId}` : m.parentId,
+          } : m.accountId ? m : { ...m, accountId: group.accountId });
+        mailboxes = ownerMailboxes(mailboxes);
+        const archive = await ensureArchiveMailbox({
+          client: group.client, mailboxes, selectedMailboxId: selectedMailbox,
+          accountId: group.accountId,
+          refresh: async () => {
+            mailboxes = ownerMailboxes(await group.client.getMailboxes(group.accountId));
+            group.createdArchive = !!findArchiveMailbox(mailboxes, selectedMailbox, group.accountId);
+            return mailboxes;
+          },
+        });
+        if (!archive) {
+          stoppedByPlugin = true;
+          return;
+        }
+        if (archive.myRights?.mayReadItems === false || archive.myRights?.mayAddItems === false) {
+          throw new ArchiveMailboxNotFoundError();
+        }
+        group.hookMailboxes = [...mailboxes, archive];
+        group.move = {
+          emailIds: [...new Set(group.emails.map(e => e.id))],
+          fromMailboxId: moveSourceMailboxId(group.emails, group.hookMailboxes),
+          toMailboxId: archive.id,
+        };
+        if (!(await allowEmailMove(group.move, group.hookMailboxes))) {
+          stoppedByPlugin = true;
+          return;
+        }
+        // Store-side shared folders may be namespaced; year/month lookup needs
+        // the server's bare parent ids so existing subfolders can be reused.
+        const jmapMailboxes = mailboxes.map(m => m.originalId ? {
+          ...m, id: m.originalId,
+          parentId: m.parentId?.startsWith(`${m.accountId}:`)
+            ? m.parentId.slice(`${m.accountId}:`.length) : m.parentId,
+        } : m);
+        await group.client.batchArchiveEmails(
+          group.emails.map(e => ({ id: e.id, receivedAt: e.receivedAt })),
+          archive.originalId || archive.id, mode, jmapMailboxes, group.accountId ?? archive.accountId,
+        );
+        group.emails.forEach(e => group.updatedIds.add(e.id));
+      } catch (error) {
+        if (error instanceof ArchiveEmailsError) {
+          // Only accept confirmations belonging to this request's owner.
+          group.emails.forEach(e => {
+            if (error.updatedIds.includes(e.id)) group.updatedIds.add(e.id);
+          });
+        }
+        failures.push(error instanceof Error ? error : new Error('Failed to archive emails'));
+      }
+      if (group.move && group.hookMailboxes && group.updatedIds.size > 0) {
+        emitEmailMove({ ...group.move, emailIds: [...group.updatedIds] }, group.hookMailboxes);
+      }
+    }));
+
+    // Match the actual authenticated client and owner, including an unstamped
+    // list row whose open viewer carries source stamps for that same account.
+    const confirmedEmails = groups.flatMap(g => g.emails.filter(e => g.updatedIds.has(e.id)));
+    const wasArchived = (email: Email) => groupForEmail(email)?.updatedIds.has(email.id) ?? false;
+    const failedEmails = selected.filter(e => !wasArchived(e));
+    if (isCurrentView() && confirmedEmails.length > 0) {
+      set(state => {
+        const remaining = state.emails.filter(e => !wasArchived(e));
+        const remainingIds = new Set(remaining.map(e => e.id));
+        const selectedEmailKeys = new Set(state.selectedEmailKeys);
+        for (const email of confirmedEmails) selectedEmailKeys.delete(emailKeyFor(email));
+        const changedThreads = new Set(confirmedEmails.map(threadKeyFor));
+        state.emails.filter(wasArchived).forEach(e => {
+          changedThreads.add(threadKeyFor(e));
+          selectedEmailKeys.delete(emailKeyFor(e));
+        });
+        const remainingThreads = new Set(remaining.map(threadKeyFor));
+        const threadEmailsCache = new Map(state.threadEmailsCache);
+        for (const [key, members] of threadEmailsCache) {
+          const cached = members.filter(e => !wasArchived(e));
+          if (cached.length === members.length) continue;
+          changedThreads.add(key);
+          members.filter(wasArchived).forEach(e => selectedEmailKeys.delete(emailKeyFor(e)));
+          if (cached.length) threadEmailsCache.set(key, cached);
+          else threadEmailsCache.delete(key);
+        }
+        return {
+          emails: remaining,
+          totalEmails: Math.max(remaining.length, state.totalEmails - (state.emails.length - remaining.length)),
+          selectedEmailKeys,
+          selectedEmail: state.selectedEmail && wasArchived(state.selectedEmail) ? null : state.selectedEmail,
+          threadEmailsCache,
+          expandedThreadIds: new Set([...state.expandedThreadIds].filter(key =>
+            !changedThreads.has(key) || remainingThreads.has(key) || threadEmailsCache.has(key))),
+          retainedInViewIds: new Set([...state.retainedInViewIds].filter(id =>
+            !confirmedEmails.some(e => e.id === id) || remainingIds.has(id))),
+        };
+      });
+    }
+
+    // Refresh every successful owner even if another owner (or another message
+    // in this owner's Email/set) failed. Also publish a newly created Archive
+    // when its email moves fail, as upstream's create-and-refresh path did.
+    await Promise.all(groups.filter(g => g.updatedIds.size > 0 || g.createdArchive).map(async group => {
+      try {
+        const fresh = await group.client.getMailboxes(group.accountId);
+        if (currentStoreEpoch() !== epoch || fresh.length === 0) return;
+        const owner = group.accountId ?? fresh[0]?.accountId;
+        const primary = group.client.getAccountId?.()
+          ? group.client.getAccountId() === owner
+          : !fresh[0]?.isShared;
+        const normalized = fresh.filter(m => !owner || !m.accountId || m.accountId === owner).map(m => m.isShared ? {
+          ...m, id: `${m.accountId}:${m.originalId || m.id}`,
+          originalId: m.originalId || m.id,
+          parentId: m.parentId && !m.parentId.startsWith(`${m.accountId}:`) ? `${m.accountId}:${m.parentId}` : m.parentId,
+        } : m);
+        set(state => {
+          const accountMailboxes = { ...state.accountMailboxes };
+          if (owner) accountMailboxes[owner] = normalized;
+          // Login caches may contain both personal and delegated folders.
+          // Replace this owner only, preserving the rest of that folder tree.
+          const mergeOwner = (folders: Mailbox[]) => [
+            ...folders.filter(m => primary ? m.isShared : m.accountId !== owner), ...normalized,
+          ];
+          if (group.loginId) {
+            accountMailboxes[group.loginId] = mergeOwner(state.accountMailboxes[group.loginId] ?? []);
+          }
+          const activeClient = useAuthStore.getState().getClientForAccount(useAuthStore.getState().activeAccountId ?? '');
+          return {
+            accountMailboxes,
+            mailboxes: activeClient === group.client
+              ? mergeOwner(state.mailboxes)
+              : state.mailboxes,
+          };
+        });
+      } catch (error) {
+        console.error('Failed to refresh mailboxes after archive:', error);
+        failures.push(error instanceof Error ? error : new Error('Failed to refresh mailboxes after archive'));
+      }
+    }));
+    if (confirmedEmails.length > 0 && isCurrentView()) {
+      const failedKeys = new Set(failedEmails.map(emailKeyFor));
+      const failedRows = failedEmails.filter(e => listKeys.has(emailKeyFor(e)));
+      const failedThreads = [...get().threadEmailsCache].filter(([, members]) =>
+        members.some(e => failedKeys.has(emailKeyFor(e))));
+      try {
+        await get().refreshCurrentMailbox(client);
+      } catch (error) {
+        failures.push(error instanceof Error ? error : new Error('Failed to refresh emails after archive'));
+      }
+      if (isCurrentView() && failedEmails.length > 0) {
+        // A refreshed first page can omit a failed selected row (or return an
+        // equal raw id from another owner). Preserve failed objects and their
+        // account-aware selection, including selected expanded-thread members.
+        set(state => {
+          const sameEmail = (a: Email, b: Email) => emailKeyFor(a) === emailKeyFor(b);
+          const emails = state.emails.map(e => failedEmails.find(f => sameEmail(e, f)) ?? e);
+          for (const failed of failedRows) {
+            if (!emails.some(e => sameEmail(e, failed))) emails.push(failed);
+          }
+          const threadEmailsCache = new Map(state.threadEmailsCache);
+          for (const [key, members] of failedThreads) {
+            const merged = new Map(members.map(e => [emailKeyFor(e), e]));
+            for (const e of threadEmailsCache.get(key) ?? []) merged.set(emailKeyFor(e), e);
+            for (const e of failedEmails) {
+              if (threadKeyFor(e) === key) merged.set(emailKeyFor(e), e);
+            }
+            threadEmailsCache.set(key, [...merged.values()]);
+          }
+          return {
+            emails,
+            totalEmails: Math.max(state.totalEmails, emails.length),
+            selectedEmailKeys: new Set([...state.selectedEmailKeys, ...failedEmails.map(emailKeyFor)]),
+            threadEmailsCache,
+          };
+        });
+      }
+    }
+
+    // Publish after refresh so a successful refresh cannot erase the archive
+    // failure, and reject so the existing bulk-action toast reports it.
+    const error = failures.length === 1 ? failures[0]
+      : failures.length > 1 ? new Error(failures.map(e => e.message).join('; ')) : null;
+    if (isCurrentView()) set({ isLoading: false, error: error?.message ?? null });
+    if (error) throw error;
+    return !stoppedByPlugin;
   },
 
   // Spam operations
