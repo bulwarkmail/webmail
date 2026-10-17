@@ -3750,7 +3750,7 @@ export function EmailComposer({
               onMoveChip={handleMoveChip}
             />
             <div className="flex gap-0.5 shrink-0">
-              {activeClient?.supportsPrincipals() && (
+              {activeClient?.supportsPrincipals?.() && (
                 <Button
                   type="button"
                   variant="ghost"
