@@ -36,6 +36,7 @@
     "token_placeholder": "APIトークンを貼り付け",
     "token_hint": "メールプロバイダーの設定でAPIトークンを作成し、ここに貼り付けてください。",
     "remember_me": "ログイン状態を保持",
+    "remember_me_hint": "チェックを外すと、ページを再読み込みした際にサインアウトします。",
     "config_error": {
       "title": "設定エラー",
       "fetch_failed": "アプリケーション設定を読み込めません。後でもう一度お試しください。",

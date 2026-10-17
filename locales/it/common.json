@@ -36,6 +36,7 @@
     "token_placeholder": "Incolla il tuo token API",
     "token_hint": "Crea un token API nelle impostazioni del tuo provider di posta e incollalo qui.",
     "remember_me": "Ricordami",
+    "remember_me_hint": "Se non la selezioni, ricaricando la pagina la sessione verrà chiusa.",
     "config_error": {
       "title": "Errore di configurazione",
       "fetch_failed": "Impossibile caricare la configurazione dell'applicazione. Riprovare più tardi.",

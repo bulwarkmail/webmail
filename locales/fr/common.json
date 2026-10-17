@@ -36,6 +36,7 @@
     "token_placeholder": "Collez votre jeton d'API",
     "token_hint": "Créez un jeton d'API dans les paramètres de votre fournisseur de messagerie, puis collez-le ici.",
     "remember_me": "Se souvenir de moi",
+    "remember_me_hint": "Si elle est décochée, recharger la page vous déconnecte.",
     "config_error": {
       "title": "Erreur de configuration",
       "fetch_failed": "Impossible de charger la configuration de l'application. Veuillez réessayer plus tard.",

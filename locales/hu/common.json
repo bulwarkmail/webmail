@@ -36,6 +36,7 @@
     "token_placeholder": "Illeszd be az API-tokened",
     "token_hint": "Hozz létre egy API-tokent a levelezési szolgáltatód beállításaiban, és illeszd be ide.",
     "remember_me": "Emlékezz rám",
+    "remember_me_hint": "Ha nem jelöli be, az oldal újratöltése kijelentkezteti.",
     "config_error": {
       "title": "Konfigurációs hiba",
       "fetch_failed": "Nem sikerült betölteni az alkalmazás konfigurációját. Kérjük, próbáld újra később.",

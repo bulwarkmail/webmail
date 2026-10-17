@@ -36,6 +36,7 @@
     "token_placeholder": "API belirtecinizi yapıştırın",
     "token_hint": "E-posta sağlayıcınızın ayarlarında bir API belirteci oluşturun ve buraya yapıştırın.",
     "remember_me": "Beni hatırla",
+    "remember_me_hint": "İşaretlenmezse, sayfayı yeniden yüklemek oturumunuzu kapatır.",
     "config_error": {
       "title": "Yapılandırma Hatası",
       "fetch_failed": "Uygulama yapılandırması yüklenemiyor. Lütfen daha sonra tekrar deneyin.",

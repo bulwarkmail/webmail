@@ -36,6 +36,7 @@
     "token_placeholder": "Ielīmējiet savu API marķieri",
     "token_hint": "Izveidojiet API marķieri sava e-pasta pakalpojumu sniedzēja iestatījumos un ielīmējiet to šeit.",
     "remember_me": "Atcerēties mani",
+    "remember_me_hint": "Ja tas nav atzīmēts, lapas pārlāde jūs izrakstīs.",
     "config_error": {
       "title": "Konfigurācijas kļūda",
       "fetch_failed": "Neizdevās ielādēt lietotnes konfigurāciju. Mēģiniet vēlāk.",

@@ -36,6 +36,7 @@
     "token_placeholder": "API 토큰을 붙여 넣으세요",
     "token_hint": "메일 서비스 설정에서 API 토큰을 만든 후 여기에 붙여 넣으세요.",
     "remember_me": "로그인 유지",
+    "remember_me_hint": "체크하지 않으면 페이지를 새로 고칠 때 로그아웃돼요.",
     "config_error": {
       "title": "설정 오류",
       "fetch_failed": "앱 설정을 불러올 수 없어요. 나중에 다시 시도해 주세요.",
