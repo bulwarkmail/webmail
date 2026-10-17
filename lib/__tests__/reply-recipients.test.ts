@@ -124,6 +124,40 @@ describe('buildReplyRecipients', () => {
     });
   });
 
+  describe('message from another connected account', () => {
+    // Two accounts connected: book@ sent this to mail@, and we reply from mail@.
+    const ALL = ['mail@hotel.example', 'book@hotel.example'];
+    const THIS_ACCOUNT = ['mail@hotel.example'];
+    const fromOtherAccount = {
+      from: [{ email: 'book@hotel.example', name: 'Booking' }],
+      to: [{ email: 'mail@hotel.example' }, { email: 'guest@other.com' }],
+      cc: [{ email: 'book@hotel.example' }],
+    };
+
+    it('replies to the other account, not back to ourselves', () => {
+      const { to, cc } = buildReplyRecipients(fromOtherAccount, 'reply', ALL, THIS_ACCOUNT);
+      expect(emails(to)).toEqual(['book@hotel.example']);
+      expect(cc).toEqual([]);
+    });
+
+    it('reply-all still drops every connected account from the other recipients', () => {
+      const { to, cc } = buildReplyRecipients(fromOtherAccount, 'replyAll', ALL, THIS_ACCOUNT);
+      expect(emails(to)).toEqual(['book@hotel.example', 'guest@other.com']);
+      expect(cc).toEqual([]);
+    });
+
+    it('still continues the thread for a message this account sent', () => {
+      const ownSent = { ...fromOtherAccount, from: [{ email: 'mail@hotel.example' }], to: [{ email: 'guest@other.com' }] };
+      const { to } = buildReplyRecipients(ownSent, 'reply', ALL, THIS_ACCOUNT);
+      expect(emails(to)).toEqual(['guest@other.com']);
+    });
+
+    it('without selfSentEmails every connected account counts as self (single-account behaviour)', () => {
+      const { to } = buildReplyRecipients(fromOtherAccount, 'reply', ALL);
+      expect(emails(to)).toEqual(['mail@hotel.example', 'guest@other.com']);
+    });
+  });
+
   it('returns nothing without a source message', () => {
     expect(buildReplyRecipients(undefined, 'replyAll', OWN)).toEqual({ to: [], cc: [] });
   });

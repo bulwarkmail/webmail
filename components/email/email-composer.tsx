@@ -538,17 +538,25 @@ export function EmailComposer({
     identities.map(i => i.email),
     [composerAccount?.email, composerAccount?.username, replyAccount?.email, replyAccount?.username],
   );
-  const ownIdentityEmailsKey = ownIdentityEmails.map((e) => e.toLowerCase()).join(',');
+  // "Self-sent" means sent by the account holding the original. A message
+  // another connected account sent to this one was received here, and its
+  // reply must go back to that sender, not to this account's own address.
+  const sourceAccount = replyAccount ?? composerAccount;
+  const sourceAccountEmails = ownReplyAddresses(
+    sourceAccountIdentities.map(i => i.email),
+    [sourceAccount?.email, sourceAccount?.username],
+  );
+  const ownIdentityEmailsKey = [...ownIdentityEmails, '|', ...sourceAccountEmails].map((e) => e.toLowerCase()).join(',');
 
   // Initialize with reply/forward data if provided
   const getInitialTo = (): Recipient[] => {
     if (mode !== 'reply' && mode !== 'replyAll') return [];
-    return buildReplyRecipients(replyTo, mode, ownIdentityEmails).to.map(toRecipient);
+    return buildReplyRecipients(replyTo, mode, ownIdentityEmails, sourceAccountEmails).to.map(toRecipient);
   };
 
   const getInitialCc = (): Recipient[] => {
     if (mode !== 'replyAll') return [];
-    return buildReplyRecipients(replyTo, mode, ownIdentityEmails).cc.map(toRecipient);
+    return buildReplyRecipients(replyTo, mode, ownIdentityEmails, sourceAccountEmails).cc.map(toRecipient);
   };
 
   const getInitialSubject = () => {
@@ -1194,10 +1202,10 @@ export function EmailComposer({
     // identity that sent it. Resolving from the recipients here would pick the
     // *other* party's address - and on a catch-all domain it would even set a
     // From override to their address. An identity on the message's own account
-    // wins when two accounts share the address.
-    if (isSelfSent({ from: replyTo?.from }, identities.map(i => i.email).filter(Boolean))) {
-      const senderIdentityId = findDraftIdentityId(sourceAccountIdentities, replyTo?.from?.[0])
-        ?? findDraftIdentityId(identities, replyTo?.from?.[0]);
+    // wins when two accounts share the address. Only the message's own account
+    // counts: mail another connected account sent here is a received message.
+    if (isSelfSent({ from: replyTo?.from }, sourceAccountIdentities.map(i => i.email).filter(Boolean))) {
+      const senderIdentityId = findDraftIdentityId(sourceAccountIdentities, replyTo?.from?.[0]);
       if (senderIdentityId) {
         setSelectedIdentityId(senderIdentityId);
         return;

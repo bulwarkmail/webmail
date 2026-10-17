@@ -95,11 +95,19 @@ export function isSelfSent(source: ReplySource | undefined, ownEmails: string[])
  *
  * A self-sent message with no visible recipients (Bcc-only) has nothing to
  * continue to, so it falls back to the normal behaviour.
+ *
+ * `selfSentEmails` decides what counts as "self-sent" and defaults to
+ * `ownEmails`. With several connected accounts, `ownEmails` holds every
+ * account's addresses (so reply-all still drops all of them), but a message
+ * one of those accounts sent to another is a received message for the
+ * account it landed in: pass only that account's addresses here, or the
+ * reply goes back to the original To - the account itself.
  */
 export function buildReplyRecipients(
   source: ReplySource | undefined,
   mode: 'reply' | 'replyAll',
   ownEmails: string[],
+  selfSentEmails: string[] = ownEmails,
 ): ReplyRecipientsResult {
   if (!source) return { to: [], cc: [] };
 
@@ -108,7 +116,7 @@ export function buildReplyRecipients(
   const replyToList = withEmail(source.replyToAddresses);
   const externalReplyTo = replyToList.filter((r) => !isOwnAddress(r.email, ownEmails));
 
-  if (!externalReplyTo.length && isSelfSent(source, ownEmails)) {
+  if (!externalReplyTo.length && isSelfSent(source, selfSentEmails)) {
     const originalTo = withEmail(source.to);
     if (originalTo.length > 0) {
       return {
