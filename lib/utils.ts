@@ -258,6 +258,10 @@ export function formatDateTime(
  * How long ago `date` was, in words ("3 minutes ago", "2 days ago"), for the
  * parenthesis Gmail puts after a message's time. Empty once it is a month
  * old, where the date alone says enough.
+ *
+ * Days are calendar days in the user's effective time zone, so a mail from
+ * the day before yesterday is never called "yesterday" just because fewer
+ * than 48 hours have passed. (#1259)
  */
 export function formatRelativeAgo(date: Date | string, now: Date = new Date()): string {
   const d = typeof date === 'string' ? new Date(date) : date;
@@ -265,7 +269,12 @@ export function formatRelativeAgo(date: Date | string, now: Date = new Date()): 
   const diff = Math.max(0, now.getTime() - d.getTime());
   const minutes = Math.floor(diff / 60000);
   const hours = Math.floor(diff / 3600000);
-  const days = Math.floor(diff / 86400000);
+  const timeZone = getEffectiveTimeZone();
+  const dayNumber = (x: Date) => {
+    const w = getWallClock(x, timeZone);
+    return Date.UTC(w.year, w.month - 1, w.day) / 86400000;
+  };
+  const days = Math.max(1, dayNumber(now) - dayNumber(d));
   if (days >= 30) return '';
   const locale = getEffectiveLocale();
   const rtf = new Intl.RelativeTimeFormat(locale === 'en' ? 'en-US' : locale, { numeric: 'auto' });
