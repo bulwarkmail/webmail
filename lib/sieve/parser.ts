@@ -13,6 +13,7 @@ import { debug } from '@/lib/debug';
 import { isPeriodBoundary } from '@/lib/sieve/period';
 import { VACATION_FORWARD_MARKER_RE, isValidVacationForward } from '@/lib/sieve/vacation-forward';
 import { isValidVacationAudience } from '@/lib/sieve/vacation-audience';
+import { extractServerRules } from '@/lib/sieve/server-rules';
 
 export interface ParseResult {
   rules: FilterRule[];
@@ -25,6 +26,8 @@ export interface ParseResult {
   vacationForward?: VacationForward;
   /** Who gets the auto-reply, when not everyone. */
   vacationAudience?: VacationAudience;
+  /** The server rules region, verbatim (see lib/sieve/server-rules). */
+  serverRules?: string;
 }
 
 const OPAQUE: ParseResult = { rules: [], isOpaque: true, externalRequires: [] };
@@ -874,7 +877,9 @@ export function parseScript(content: string): ParseResult {
     const afterMetadata = stripBulwarkExternalHeader(
       content.slice(endIdx + METADATA_END.length),
     );
-    const nextcloud = extractNextcloudRegions(afterMetadata);
+    // The server rules region is the host's, kept as it is (server-rules.ts).
+    const server = extractServerRules(afterMetadata);
+    const nextcloud = extractNextcloudRegions(server.cleaned);
     const external = parseExternalRules(nextcloud.cleaned, 'ext');
 
     // Parsed bulwark rules intentionally omit an explicit `origin` field so
@@ -912,9 +917,10 @@ export function parseScript(content: string): ParseResult {
       return true;
     });
 
-    // "include" belongs to the vacation include, which the generator adds
-    // back on its own; keep it only if an external rule uses it too, so that
-    // turning the auto-reply off drops it from the script.
+    // "include" belongs to the vacation include and the server rules, which
+    // the generator adds back on its own; keep it only if an external rule
+    // uses it too, so that turning the auto-reply off drops it from the
+    // script.
     const otherRules = [...nextcloud.rules, ...filteredExternal];
     if (!otherRules.some(r => /\binclude\b/.test(r.rawBlock || ''))) {
       externalRequires = externalRequires.filter(r => r !== 'include');
@@ -928,6 +934,7 @@ export function parseScript(content: string): ParseResult {
       ...(metadata.includeVacation === true ? { includeVacation: true } : {}),
       ...(metadata.vacationForward ? { vacationForward: metadata.vacationForward } : {}),
       ...(metadata.vacationAudience ? { vacationAudience: metadata.vacationAudience } : {}),
+      ...(server.serverRules ? { serverRules: server.serverRules } : {}),
     };
   }
 
@@ -938,8 +945,10 @@ export function parseScript(content: string): ParseResult {
   // Extract Nextcloud-managed marker regions first so their interior is not
   // parsed as a series of loose if-blocks (which would lose the outer markers
   // and mis-label later blocks as generic "External").
-  const nextcloud = extractNextcloudRegions(content);
+  const server = extractServerRules(content);
+  const nextcloud = extractNextcloudRegions(server.cleaned);
   const external = parseExternalRules(nextcloud.cleaned, 'ext');
+  const serverPart = server.serverRules ? { serverRules: server.serverRules } : {};
 
   const allRules = [...nextcloud.rules, ...external.rules];
   const allRequires = [
@@ -947,17 +956,19 @@ export function parseScript(content: string): ParseResult {
     ...nextcloud.requires.filter(r => !external.externalRequires.includes(r)),
   ];
 
-  if (!external.hasContent && allRules.length === 0) {
+  if (allRules.length === 0 && (!external.hasContent || server.serverRules)) {
     // Entirely empty or whitespace/comments only - treat as empty, editable.
     // Preserve any require tokens lifted out of Nextcloud marker regions so
-    // they can be re-emitted in the top-level require line.
-    return { rules: [], isOpaque: false, externalRequires: allRequires };
+    // they can be re-emitted in the top-level require line. So is a script
+    // with nothing but its requires and the server rules region: a host
+    // made it to run its own rules, and left the filters to the user.
+    return { rules: [], isOpaque: false, externalRequires: allRequires, ...serverPart };
   }
 
   // If at least one block parsed into a structured rule, expose them as external.
   const anyParsed = external.rules.some(r => r.origin === 'external');
   if (anyParsed || allRules.length > 0) {
-    return { rules: allRules, isOpaque: false, externalRequires: allRequires };
+    return { rules: allRules, isOpaque: false, externalRequires: allRequires, ...serverPart };
   }
 
   return OPAQUE;

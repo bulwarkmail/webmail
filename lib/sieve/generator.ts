@@ -3,6 +3,7 @@ import { debug } from '@/lib/debug';
 import { PERIOD_REQUIRES, hasPeriod, periodTests } from '@/lib/sieve/period';
 import { VACATION_FORWARD_MARKER, isValidVacationForward, normalizeVacationForward } from '@/lib/sieve/vacation-forward';
 import { isValidVacationAudience, normalizeVacationAudience } from '@/lib/sieve/vacation-audience';
+import { renderServerRules } from '@/lib/sieve/server-rules';
 
 const HEADER_MAP: Record<string, string> = {
   from: 'From',
@@ -280,10 +281,17 @@ export interface GenerateOptions {
    * lists "mailboxid"; without it they target the folder path only.
    */
   extensions?: string[];
+  /**
+   * The server rules region as parsed (see lib/sieve/server-rules). Written
+   * back first after `require`, ahead of the vacation include and the rules.
+   */
+  serverRules?: string;
 }
 
 /** Name of the script a server builds for VacationResponse (RFC 9661). */
 export const VACATION_SCRIPT_NAME = 'vacation';
+/** The script Bulwark creates for the filters. */
+export const FILTERS_SCRIPT_NAME = 'filters';
 
 export function generateScript(
   rules: FilterRule[],
@@ -345,6 +353,8 @@ export function generateScript(
   const bulwarkRequires = computeRequires(bulwarkRules, vacation, useMailboxId, options.extensions);
   if (options.includeVacation) bulwarkRequires.push('include');
   if (options.includeVacation && metadata.vacationAudience) bulwarkRequires.push('envelope');
+  const serverRules = options.serverRules?.trim() ?? '';
+  if (/\binclude\b/.test(serverRules)) bulwarkRequires.push('include');
 
   // Forwarding from the vacation card runs whenever it is switched on, with
   // or without the auto-reply, ahead of every rule. A period it cannot read
@@ -362,6 +372,11 @@ export function generateScript(
 
   if (allRequires.length > 0) {
     lines.push(`require [${allRequires.map(r => `"${r}"`).join(', ')}];`);
+  }
+
+  if (serverRules) {
+    lines.push('');
+    lines.push(...renderServerRules(serverRules));
   }
 
   if (options.includeVacation) {
