@@ -134,11 +134,24 @@ describe('thread identity across accounts (#1012)', () => {
   it('marks only the owning account\'s messages read when a thread is expanded', async () => {
     await useEmailStore.getState().markThreadAsRead(clientA, threadKeyFor(a1));
 
-    expect(clientA.batchMarkAsRead).toHaveBeenCalledWith(['a1'], true);
+    expect(clientA.batchMarkAsRead).toHaveBeenCalledWith(['a1'], true, 'acct-a');
     expect(clientB.batchMarkAsRead).not.toHaveBeenCalled();
     const byId = new Map(useEmailStore.getState().emails.map((e) => [e.id, e]));
     expect(byId.get('a1')?.keywords?.$seen).toBe(true);
     expect(byId.get('b1')?.keywords?.$seen).toBeUndefined();
+  });
+
+  it('marks a shared source\'s conversation read on the owner account, not the login\'s own', async () => {
+    // A shared (group) account in the unified view is reached through login-a
+    // but owns its ids; login-a's own account may hold a different "s1".
+    const shared = inAccount('a', 's1', { sourceAccountId: 'acct-shared' });
+    useEmailStore.setState({ emails: [a1, b1, shared] });
+
+    await useEmailStore.getState().markThreadAsRead(clientA, threadKeyFor(shared));
+
+    expect(clientA.batchMarkAsRead).toHaveBeenCalledTimes(1);
+    expect(clientA.batchMarkAsRead).toHaveBeenCalledWith(['s1'], true, 'acct-shared');
+    expect(clientB.batchMarkAsRead).not.toHaveBeenCalled();
   });
 
   it('keeps expansion state apart for same-id threads of different accounts', () => {

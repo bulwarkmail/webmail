@@ -172,7 +172,7 @@ export function EmailList({
     isLoadingThread,
     toggleThreadExpansion,
     fetchThreadEmails,
-    markThreadAsRead,
+    autoMarkExpandedThreadAsRead,
     collapseAllThreads,
     threadEmailCounts,
     searchFilters,
@@ -204,7 +204,7 @@ export function EmailList({
     isLoadingThread: state.isLoadingThread,
     toggleThreadExpansion: state.toggleThreadExpansion,
     fetchThreadEmails: state.fetchThreadEmails,
-    markThreadAsRead: state.markThreadAsRead,
+    autoMarkExpandedThreadAsRead: state.autoMarkExpandedThreadAsRead,
     collapseAllThreads: state.collapseAllThreads,
     threadEmailCounts: state.threadEmailCounts,
     searchFilters: state.searchFilters,
@@ -607,13 +607,13 @@ export function EmailList({
       toggleThreadExpansion(threadKey);
       await fetchThreadEmails(client, threadKey);
       emitThreadExpand(threadKey, threadMembers(threadKey), true);
-      // Mark all unread emails in this thread as read
-      void markThreadAsRead(client, threadKey);
+      // Mark the thread's unread emails read, following markAsReadDelay.
+      autoMarkExpandedThreadAsRead(client, threadKey);
     } else {
       toggleThreadExpansion(threadKey);
       emitThreadExpand(threadKey, threadMembers(threadKey), !isExpanded);
     }
-  }, [client, expandedThreadIds, toggleThreadExpansion, fetchThreadEmails, markThreadAsRead, threadMembers]);
+  }, [client, expandedThreadIds, toggleThreadExpansion, fetchThreadEmails, autoMarkExpandedThreadAsRead, threadMembers]);
 
   const collapseAllThreadsAndNotify = useCallback(() => {
     const wereExpanded = [...useEmailStore.getState().expandedThreadIds];

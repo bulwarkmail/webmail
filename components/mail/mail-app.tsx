@@ -1061,7 +1061,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     },
     // `x` in the help modal: expand/collapse the selected email's thread. Same
     // steps as EmailList.handleToggleThreadExpansion - expanding pulls the
-    // thread's messages and marks them read, collapsing only toggles. (#683)
+    // thread's messages and marks them read (following markAsReadDelay),
+    // collapsing only toggles. (#683)
     onToggleThreadExpansion: () => {
       if (isScheduledView || !client) return;
       if (!selectedEmail?.threadId) return;
@@ -1074,7 +1075,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       if (!wasExpanded) {
         void store.fetchThreadEmails(client, threadKey).then(() => {
           emitThreadExpand(threadKey, members(), true);
-          void useEmailStore.getState().markThreadAsRead(client, threadKey);
+          useEmailStore.getState().autoMarkExpandedThreadAsRead(client, threadKey);
         });
       } else {
         emitThreadExpand(threadKey, members(), false);
@@ -4092,6 +4093,19 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         && (email.sourceClientAccountId === undefined || e.sourceClientAccountId === email.sourceClientAccountId)
         && (email.sourceAccountId === undefined || e.sourceAccountId === email.sourceAccountId))
       ?? (email.sourceClientAccountId ? email : undefined);
+
+    // Expanding a conversation may have scheduled a delayed "mark read" for
+    // it (markAsReadDelay). Moving on to a message outside that conversation
+    // (j/k, a click) drops it, as the reading pane drops its own pending
+    // mark; the conversation stays expanded.
+    const openRef = (listEmail ?? email) as Partial<Email>;
+    if (openRef.threadId) {
+      const openThreadKey = threadKeyFor(openRef as Email);
+      const emailStore = useEmailStore.getState();
+      for (const key of emailStore.expandedThreadIds) {
+        if (key !== openThreadKey) emailStore.cancelAutoMarkThreadAsRead(key);
+      }
+    }
 
     // Only the newest open may touch the viewer: a slow fetch for a message
     // the user has already clicked away from must neither replace the one

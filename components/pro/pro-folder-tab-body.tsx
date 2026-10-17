@@ -16,6 +16,7 @@ import { useDeviceDetection } from "@/hooks/use-media-query";
 import { usePaneId } from "@/hooks/use-pane-context";
 import type { Email, Mailbox } from "@/lib/jmap/types";
 import { emailHooks } from "@/lib/plugin-hooks";
+import { scheduleAutoMarkAsRead } from "@/lib/mark-as-read-delay";
 
 interface ProFolderTabBodyProps {
   tabId: string;
@@ -152,8 +153,18 @@ export function ProFolderTabBody({ tabId, data }: ProFolderTabBodyProps) {
     );
   }, [data.mailboxId, paneId, t]);
 
+  // Opening a row marks it read on the user's markAsReadDelay, like the
+  // reading pane does; a pending delayed mark is dropped when another row is
+  // opened or the tab goes away.
+  const cancelRowReadRef = useRef<(() => void) | null>(null);
+  useEffect(() => () => cancelRowReadRef.current?.(), []);
+
   const handleRowClick = useCallback((email: Email) => {
-    void markRowAsRead(email);
+    cancelRowReadRef.current?.();
+    cancelRowReadRef.current = scheduleAutoMarkAsRead(
+      useSettingsStore.getState().markAsReadDelay,
+      () => void markRowAsRead(email),
+    );
     if (isMobile) {
       // No room for a reading pane - promote to a dedicated email tab.
       openAsEmailTab(email, true);

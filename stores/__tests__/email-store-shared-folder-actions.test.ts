@@ -142,6 +142,22 @@ describe('non-unified shared-folder batch action routing', () => {
     expect(activeClient.batchMarkAsRead).toHaveBeenCalledWith(['e1', 'e2'], true, 'owner-x');
   });
 
+  it('markThreadAsRead marks a shared conversation read on the owner account', async () => {
+    // Opening a conversation in the shared inbox. Its ids belong to owner-x;
+    // the login's own account may hold unrelated messages with the same ids.
+    useEmailStore.setState({
+      emails: [
+        makeEmail({ id: 'e1', threadId: 'thread-1', keywords: {}, mailboxIds: { 'owner-x:x-inbox': true } }),
+        makeEmail({ id: 'e2', threadId: 'thread-1', keywords: {}, mailboxIds: { 'owner-x:x-inbox': true } }),
+      ],
+    });
+
+    await useEmailStore.getState().markThreadAsRead(activeClient, 'thread-1');
+
+    expect(activeClient.batchMarkAsRead).toHaveBeenCalledTimes(1);
+    expect(activeClient.batchMarkAsRead).toHaveBeenCalledWith(['e1', 'e2'], true, 'owner-x');
+  });
+
   it('batchArchive archives shared emails into the SHARED archive on the owner account', async () => {
     await useEmailStore.getState().batchArchive(activeClient);
 
