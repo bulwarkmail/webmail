@@ -910,6 +910,9 @@ export const useCalendarStore = create<CalendarStore>()(
 
           set((state) => ({ events: [...state.events, mappedCreated] }));
           void calendarHooks.onAfterEventCreate.emit(eventToView(mappedCreated));
+          if (mappedCreated.recurrenceRules && mappedCreated.recurrenceRules.length > 0) {
+            await refetchAfterOccurrenceMutation();
+          }
           // Invitation emails are sent by the server: `sendSchedulingMessages`
           // on CalendarEvent/set makes Stalwart queue the iTIP REQUEST itself.
           // Sending a client-side iMIP copy here produced duplicate emails.
