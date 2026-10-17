@@ -5189,7 +5189,10 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
             windowSize = Math.min(Math.max(emailsPerPage, inOrder), effectiveClient.getMaxObjectsInGet());
             keepOpenThread = true;
           }
-          result = await effectiveClient.getEmails(jmapMailboxId, accountId, windowSize, 0, undefined, true, undefined, order);
+          // The open category tab filters the refresh like the first load and
+          // pagination, or other tabs' mail would merge into the list (#1264).
+          const categoryFilter = useMessageListTabsStore.getState().getCategoryFilter(mailbox?.role);
+          result = await effectiveClient.getEmails(jmapMailboxId, accountId, windowSize, 0, undefined, true, categoryFilter ?? undefined, order);
           // This page is the new delta-sync baseline for the folder; the
           // search / unified paths above cannot be delta-synced.
           syncAfterRefresh = result.state
