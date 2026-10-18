@@ -11,6 +11,7 @@
     "jmap_endpoint_cors_hint": "Сервер энэ домэйноос ирэх CORS хүсэлтийг зөвшөөрсөн байх ёстой.",
     "jmap_server_label": "Сервер",
     "jmap_server_auto_picked": "Таны имэйл хаягийн домэйноос серверийг автоматаар сонголоо.",
+    "jmap_server_connect_link": "No account on {server} yet? Connect one",
     "sign_in": "Нэвтрэх",
     "signing_in": "Нэвтэрч байна...",
     "loading": "Ачаалж байна...",
