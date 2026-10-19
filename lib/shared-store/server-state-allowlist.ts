@@ -55,6 +55,7 @@ export const SERVER_STATE_ALLOWLIST: AllowedState[] = [
   { site: 'app/api/auth/discover-server/route.ts#discoverBudget', class: 'store-backed', why: 'createFailureBudget: shared counters in shared mode' },
   { site: 'lib/auth/verify-budget.ts#loginBudget', class: 'store-backed', why: 'createFailureBudget: shared counters in shared mode' },
   { site: 'lib/auth/verify-budget.ts#adminSignInBudget', class: 'store-backed', why: 'createFailureBudget: shared counters in shared mode' },
+  { site: 'lib/auth/verify-budget.ts#allowlist', class: 'per-process', why: 'LOGIN_RATE_LIMIT_ALLOWLIST as parsed from this process\'s environment' },
   { site: 'lib/bimi/lookup.ts#shared', class: 'cache', why: 'BIMI records and logos, 24 h / 6 h / 10 min' },
   { site: 'lib/bimi/roots.ts#parsed', class: 'per-process', why: 'pinned root certificates parsed once' },
   { site: 'lib/demo/demo-utils.ts#demoIdCounter', class: 'per-process', why: 'demo mode ids, no real data' },
