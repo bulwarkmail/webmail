@@ -364,6 +364,7 @@
     "important": "Fontos",
     "download": "Letöltés",
     "download_all": "Összes letöltése",
+    "save_to_files": "Mentés a Fájlokba",
     "from": "Feladó",
     "to": "Címzett",
     "cc": "Másolat",
@@ -3917,7 +3918,16 @@
     "zoom_out": "Kicsinyítés",
     "zoom_reset": "Igazítás a képernyőhöz",
     "rotate": "Forgatás",
-    "close_preview": "Bezárás"
+    "close_preview": "Bezárás",
+    "save_attachment": {
+      "title": "Mentés a Fájlokba",
+      "loading": "Mappák betöltése...",
+      "load_error": "Nem sikerült betölteni a mappákat",
+      "no_folders": "Nincsenek almappák",
+      "save_here": "Mentés ide: {folder}",
+      "success": "\"{name}\" elmentve a Fájlokba",
+      "save_error": "Nem sikerült menteni a Fájlokba"
+    }
   },
   "smime": {
     "your_certificates": "Tanúsítványaid",

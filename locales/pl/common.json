@@ -364,6 +364,7 @@
     "important": "Ważne",
     "download": "Pobierz",
     "download_all": "Pobierz wszystkie",
+    "save_to_files": "Zapisz w Plikach",
     "from": "Od",
     "to": "Do",
     "cc": "DW",
@@ -3875,7 +3876,16 @@
     "zoom_out": "Pomniejsz",
     "zoom_reset": "Dopasuj do ekranu",
     "rotate": "Obróć",
-    "close_preview": "Zamknij"
+    "close_preview": "Zamknij",
+    "save_attachment": {
+      "title": "Zapisz w Plikach",
+      "loading": "Wczytywanie folderów...",
+      "load_error": "Nie udało się wczytać folderów",
+      "no_folders": "Brak podfolderów",
+      "save_here": "Zapisz w {folder}",
+      "success": "\"{name}\" zapisano w Plikach",
+      "save_error": "Nie udało się zapisać w Plikach"
+    }
   },
   "smime": {
     "your_certificates": "Twoje certyfikaty",

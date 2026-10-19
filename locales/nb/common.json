@@ -364,6 +364,7 @@
     "important": "Viktig",
     "download": "Last ned",
     "download_all": "Last ned alle",
+    "save_to_files": "Lagre i Filer",
     "from": "Fra",
     "to": "Til",
     "cc": "CC",
@@ -3917,7 +3918,16 @@
     "zoom_out": "Zoom ut",
     "zoom_reset": "Tilpass til skjermen",
     "rotate": "Roter",
-    "close_preview": "Lukk"
+    "close_preview": "Lukk",
+    "save_attachment": {
+      "title": "Lagre i Filer",
+      "loading": "Laster mapper...",
+      "load_error": "Kunne ikke laste mapper",
+      "no_folders": "Ingen undermapper",
+      "save_here": "Lagre i {folder}",
+      "success": "«{name}» lagret i Filer",
+      "save_error": "Kunne ikke lagre i Filer"
+    }
   },
   "smime": {
     "your_certificates": "Dine sertifikater",

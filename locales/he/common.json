@@ -311,6 +311,7 @@
     "important": "חָשׁוּב",
     "download": "הורד",
     "download_all": "הורד הכל",
+    "save_to_files": "שמור בקבצים",
     "from": "מאת",
     "to": "אל",
     "cc": "עותק",
@@ -3793,7 +3794,16 @@
     "zoom_out": "הקטן",
     "zoom_reset": "התאם למסך",
     "rotate": "סובב",
-    "close_preview": "סגור"
+    "close_preview": "סגור",
+    "save_attachment": {
+      "title": "שמור בקבצים",
+      "loading": "טוען תיקיות...",
+      "load_error": "טעינת התיקיות נכשלה",
+      "no_folders": "אין תיקיות משנה",
+      "save_here": "שמור ב-{folder}",
+      "success": "\"{name}\" נשמר בקבצים",
+      "save_error": "השמירה בקבצים נכשלה"
+    }
   },
   "smime": {
     "your_certificates": "התעודות שלך",

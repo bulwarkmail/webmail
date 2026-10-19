@@ -364,6 +364,7 @@
     "important": "Important",
     "download": "Baixa",
     "download_all": "Baixa-ho tot",
+    "save_to_files": "Desa a Fitxers",
     "from": "De",
     "to": "Per a",
     "cc": "CC",
@@ -3917,7 +3918,16 @@
     "zoom_out": "Redueix",
     "zoom_reset": "Ajusta a la pantalla",
     "rotate": "Gira",
-    "close_preview": "Tanca"
+    "close_preview": "Tanca",
+    "save_attachment": {
+      "title": "Desa a Fitxers",
+      "loading": "Carregant carpetes...",
+      "load_error": "No s'han pogut carregar les carpetes",
+      "no_folders": "Sense subcarpetes",
+      "save_here": "Desa a {folder}",
+      "success": "\"{name}\" desat a Fitxers",
+      "save_error": "No s'ha pogut desar a Fitxers"
+    }
   },
   "smime": {
     "your_certificates": "Els vostres certificats",

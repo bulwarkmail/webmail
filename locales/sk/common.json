@@ -364,6 +364,7 @@
     "important": "Dôležité",
     "download": "Stiahnuť",
     "download_all": "Stiahnuť všetko",
+    "save_to_files": "Uložiť do Súborov",
     "from": "Od",
     "to": "Komu",
     "cc": "Kópia",
@@ -3917,7 +3918,16 @@
     "zoom_out": "Oddialiť",
     "zoom_reset": "Prispôsobiť obrazovke",
     "rotate": "Otočiť",
-    "close_preview": "Zavrieť"
+    "close_preview": "Zavrieť",
+    "save_attachment": {
+      "title": "Uložiť do Súborov",
+      "loading": "Načítavanie priečinkov...",
+      "load_error": "Nepodarilo sa načítať priečinky",
+      "no_folders": "Žiadne podpriečinky",
+      "save_here": "Uložiť do {folder}",
+      "success": "\"{name}\" uložené do Súborov",
+      "save_error": "Nepodarilo sa uložiť do Súborov"
+    }
   },
   "smime": {
     "your_certificates": "Vaše certifikáty",

@@ -364,6 +364,7 @@
     "important": "Important",
     "download": "Télécharger",
     "download_all": "Tout télécharger",
+    "save_to_files": "Enregistrer dans Fichiers",
     "from": "De",
     "to": "À",
     "cc": "CC",
@@ -3875,7 +3876,16 @@
     "zoom_out": "Zoom arrière",
     "zoom_reset": "Ajuster à l'écran",
     "rotate": "Pivoter",
-    "close_preview": "Fermer"
+    "close_preview": "Fermer",
+    "save_attachment": {
+      "title": "Enregistrer dans Fichiers",
+      "loading": "Chargement des dossiers...",
+      "load_error": "Échec du chargement des dossiers",
+      "no_folders": "Aucun sous-dossier",
+      "save_here": "Enregistrer dans {folder}",
+      "success": "« {name} » enregistré dans Fichiers",
+      "save_error": "Échec de l'enregistrement dans Fichiers"
+    }
   },
   "smime": {
     "your_certificates": "Vos certificats",

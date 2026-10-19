@@ -364,6 +364,7 @@
     "important": "重要",
     "download": "下載",
     "download_all": "全部下載",
+    "save_to_files": "儲存至檔案",
     "from": "寄件者",
     "to": "收件者",
     "cc": "副本",
@@ -3917,7 +3918,16 @@
     "zoom_out": "縮小",
     "zoom_reset": "符合螢幕大小",
     "rotate": "旋轉",
-    "close_preview": "關閉"
+    "close_preview": "關閉",
+    "save_attachment": {
+      "title": "儲存至檔案",
+      "loading": "正在載入資料夾...",
+      "load_error": "載入資料夾失敗",
+      "no_folders": "沒有子資料夾",
+      "save_here": "儲存至 {folder}",
+      "success": "已將「{name}」儲存至檔案",
+      "save_error": "儲存至檔案失敗"
+    }
   },
   "smime": {
     "your_certificates": "您的憑證",

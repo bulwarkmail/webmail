@@ -364,6 +364,7 @@
     "important": "Importante",
     "download": "Descargar",
     "download_all": "Descargar todo",
+    "save_to_files": "Guardar en Archivos",
     "from": "De",
     "to": "Para",
     "cc": "CC",
@@ -3875,7 +3876,16 @@
     "zoom_out": "Alejar",
     "zoom_reset": "Ajustar a la pantalla",
     "rotate": "Girar",
-    "close_preview": "Cerrar"
+    "close_preview": "Cerrar",
+    "save_attachment": {
+      "title": "Guardar en Archivos",
+      "loading": "Cargando carpetas...",
+      "load_error": "No se pudieron cargar las carpetas",
+      "no_folders": "Sin subcarpetas",
+      "save_here": "Guardar en {folder}",
+      "success": "\"{name}\" guardado en Archivos",
+      "save_error": "No se pudo guardar en Archivos"
+    }
   },
   "smime": {
     "your_certificates": "Tus certificados",

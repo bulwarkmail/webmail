@@ -364,6 +364,7 @@
     "important": "важливо",
     "download": "Завантажити",
     "download_all": "Завантажити все",
+    "save_to_files": "Зберегти у Файли",
     "from": "Від",
     "to": "до",
     "cc": "CC",
@@ -3875,7 +3876,16 @@
     "zoom_out": "Зменшити",
     "zoom_reset": "За розміром екрана",
     "rotate": "Повернути",
-    "close_preview": "Закрити"
+    "close_preview": "Закрити",
+    "save_attachment": {
+      "title": "Зберегти у Файли",
+      "loading": "Завантаження папок...",
+      "load_error": "Не вдалося завантажити папки",
+      "no_folders": "Немає вкладених папок",
+      "save_here": "Зберегти у {folder}",
+      "success": "\"{name}\" збережено у Файли",
+      "save_error": "Не вдалося зберегти у Файли"
+    }
   },
   "smime": {
     "your_certificates": "Ваші сертифікати",

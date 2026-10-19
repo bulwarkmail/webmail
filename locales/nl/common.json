@@ -364,6 +364,7 @@
     "important": "Belangrijk",
     "download": "Downloaden",
     "download_all": "Alles downloaden",
+    "save_to_files": "Opslaan in Bestanden",
     "from": "Van",
     "to": "Aan",
     "cc": "CC",
@@ -3875,7 +3876,16 @@
     "zoom_out": "Uitzoomen",
     "zoom_reset": "Aanpassen aan scherm",
     "rotate": "Draaien",
-    "close_preview": "Sluiten"
+    "close_preview": "Sluiten",
+    "save_attachment": {
+      "title": "Opslaan in Bestanden",
+      "loading": "Mappen laden...",
+      "load_error": "Kan mappen niet laden",
+      "no_folders": "Geen submappen",
+      "save_here": "Opslaan in {folder}",
+      "success": "\"{name}\" opgeslagen in Bestanden",
+      "save_error": "Opslaan in Bestanden mislukt"
+    }
   },
   "smime": {
     "your_certificates": "Uw certificaten",

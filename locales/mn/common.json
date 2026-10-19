@@ -364,6 +364,7 @@
     "important": "Чухал",
     "download": "Татаж авах",
     "download_all": "Бүгдийг нь татаж авах",
+    "save_to_files": "Файлд хадгалах",
     "from": "",
     "to": "Хэнд",
     "cc": "Хуулбар",
@@ -3917,7 +3918,16 @@
     "zoom_out": "Жижигрүүлэх",
     "zoom_reset": "Дэлгэцэнд тааруулах",
     "rotate": "Эргүүлэх",
-    "close_preview": "Хаах"
+    "close_preview": "Хаах",
+    "save_attachment": {
+      "title": "Файлд хадгалах",
+      "loading": "Хавтас ачаалж байна...",
+      "load_error": "Хавтас ачаалж чадсангүй",
+      "no_folders": "Дэд хавтас алга",
+      "save_here": "{folder}-д хадгалах",
+      "success": "\"{name}\" файлд хадгалагдлаа",
+      "save_error": "Файлд хадгалж чадсангүй"
+    }
   },
   "smime": {
     "your_certificates": "Таны сертификатууд",
