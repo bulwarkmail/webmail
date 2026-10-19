@@ -50,6 +50,7 @@ export const SERVER_STATE_ALLOWLIST: AllowedState[] = [
   { site: 'lib/auth/stalwart-password-login.ts#defaultClients', class: 'cache', why: 'Stalwart\'s public client id, 10 min; registration is deterministic' },
   { site: 'lib/auth/verify-budget.ts#verifyBudget', class: 'store-backed', why: 'createFailureBudget: shared counters in shared mode' },
   { site: 'lib/auth/verify-budget.ts#loginBudget', class: 'store-backed', why: 'createFailureBudget: shared counters in shared mode' },
+  { site: 'lib/auth/verify-budget.ts#allowlist', class: 'per-process', why: 'LOGIN_RATE_LIMIT_ALLOWLIST as parsed from this process\'s environment' },
   { site: 'lib/bimi/lookup.ts#shared', class: 'cache', why: 'BIMI records and logos, 24 h / 6 h / 10 min' },
   { site: 'lib/bimi/roots.ts#parsed', class: 'per-process', why: 'pinned root certificates parsed once' },
   { site: 'lib/demo/demo-utils.ts#demoIdCounter', class: 'per-process', why: 'demo mode ids, no real data' },
