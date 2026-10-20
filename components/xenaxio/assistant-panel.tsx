@@ -5,12 +5,13 @@
 // "Mit KI antworten" for the open conversation. Shown only when the platform
 // has the assistant configured and enabled for the user.
 import { Fragment, type FormEvent, type ReactNode, useCallback, useEffect, useRef, useState } from "react";
+import { useLocale } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
-import { FileText, MessageSquare, PenLine, Plus, Send, Sparkles, Square, Trash2, X } from "@/components/icons";
+import { CalendarDays, Check, FileText, MessageSquare, PenLine, Plus, Send, Sparkles, Square, Trash2, X } from "@/components/icons";
 import { useEmailStore } from "@/stores/email-store";
 import { cn } from "@/lib/utils";
-import { errorKey } from "@/lib/xenaxio/api";
+import { errorKey, XenaxioApiError } from "@/lib/xenaxio/api";
 import {
   assistant,
   assistantAvailable,
@@ -19,15 +20,26 @@ import {
   type AssistantCommand,
   type AssistantEvent,
   OPEN_DRAFT_EVENT,
+  type ProposalSummary,
   type SourceEmail,
 } from "@/lib/xenaxio/assistant";
 import { XENAXIO_BFF } from "@/lib/xenaxio/bff";
 import { useXT } from "@/lib/xenaxio/i18n";
 
+type ProposalState = "pending" | "running" | "done" | "done_invited" | "invite_failed" | "rejected" | "expired" | "already" | "failed";
+
+interface Proposal {
+  id: string;
+  tool: string;
+  summary: ProposalSummary;
+  state: ProposalState;
+}
+
 interface Turn {
   role: "user" | "assistant";
   text: string;
   sources?: SourceEmail[];
+  proposals?: Proposal[];
   tool?: string;
   error?: string;
   title?: string;
@@ -36,6 +48,68 @@ interface Turn {
 const SURFACES = /\/(mail|calendar|contacts)(\/|$)|^\/$/;
 /** Per-tab only; cleared with the tab and on sign-out. Holds the visible chat, nothing else. */
 const STORAGE_KEY = ASSISTANT_STORAGE_KEY;
+
+/** "Di., 27.10.2026, 10:00–10:30" from the local times the platform sends. */
+function formatSpan(summary: ProposalSummary, locale: string): string {
+  if (!summary.start) return "";
+  // The times are wall-clock times in summary.timeZone; show them as they are.
+  const asUtc = (local: string) => new Date(`${local}:00Z`);
+  const date = new Intl.DateTimeFormat(locale, { weekday: "short", day: "2-digit", month: "2-digit", year: "numeric", timeZone: "UTC" }).format(asUtc(summary.start));
+  const time = new Intl.DateTimeFormat(locale, { hour: "2-digit", minute: "2-digit", timeZone: "UTC" });
+  const end = summary.end ? `–${time.format(asUtc(summary.end))}` : "";
+  return `${date}, ${time.format(asUtc(summary.start))}${end}`;
+}
+
+function ProposalCard({ proposal, locale, onDecide }: { proposal: Proposal; locale: string; onDecide: (p: Proposal, confirm: boolean) => void }) {
+  const t = useXT();
+  const s = proposal.summary;
+  const attendees = s.attendees ?? [];
+  const settled = proposal.state !== "pending" && proposal.state !== "running";
+  return (
+    <div className="space-y-2 rounded-lg border border-primary/40 bg-primary/5 p-3 text-xs">
+      <p className="flex items-center gap-1.5 font-medium text-sm">
+        <CalendarDays className="h-4 w-4 text-primary" />
+        {t("assistant.proposal.event")}
+      </p>
+      <p className="font-medium text-sm">{s.title}</p>
+      <dl className="grid grid-cols-[auto,1fr] gap-x-2 gap-y-1">
+        <dt className="text-muted-foreground">{t("assistant.proposal.when")}</dt>
+        <dd>
+          {formatSpan(s, locale)}
+          {s.timeZone ? <span className="text-muted-foreground"> ({s.timeZone})</span> : null}
+        </dd>
+        {s.location ? (
+          <>
+            <dt className="text-muted-foreground">{t("assistant.proposal.where")}</dt>
+            <dd>{s.location}</dd>
+          </>
+        ) : null}
+        {attendees.length > 0 ? (
+          <>
+            <dt className="text-muted-foreground">{t("assistant.proposal.attendees")}</dt>
+            <dd className="break-words">{attendees.join(", ")}</dd>
+          </>
+        ) : null}
+      </dl>
+      {attendees.length > 0 && proposal.state === "pending" && <p className="text-muted-foreground">{t("assistant.proposal.invites_note")}</p>}
+      {settled ? (
+        <p className={cn(["done", "done_invited"].includes(proposal.state) ? "text-primary" : "text-muted-foreground", "flex items-center gap-1")}>
+          {["done", "done_invited"].includes(proposal.state) && <Check className="h-3.5 w-3.5" />}
+          {t(`assistant.proposal.${proposal.state}`)}
+        </p>
+      ) : (
+        <div className="flex gap-2">
+          <Button size="sm" disabled={proposal.state === "running"} onClick={() => onDecide(proposal, true)}>
+            {proposal.state === "running" ? t("assistant.proposal.running") : t("assistant.proposal.confirm")}
+          </Button>
+          <Button size="sm" variant="outline" disabled={proposal.state === "running"} onClick={() => onDecide(proposal, false)}>
+            {t("assistant.proposal.reject")}
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
 
 /** Minimal, safe rendering: paragraphs, "- " lists, **bold**, and [[mail:ID]] citations. */
 function Formatted({ text, sources, onOpen }: { text: string; sources: SourceEmail[]; onOpen: (s: SourceEmail | string) => void }) {
@@ -82,6 +156,7 @@ function Formatted({ text, sources, onOpen }: { text: string; sources: SourceEma
 
 export function AssistantPanel() {
   const t = useXT();
+  const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
   const selectedEmail = useEmailStore((s) => s.selectedEmail);
@@ -152,6 +227,7 @@ export function AssistantPanel() {
           else if (e.type === "text") update((turn) => ({ ...turn, text: turn.text + e.text, tool: undefined }));
           else if (e.type === "tool") update((turn) => ({ ...turn, tool: e.status === "start" ? e.name : undefined, ...(e.status === "error" ? { error: t("assistant.tool_error") } : {}) }));
           else if (e.type === "sources") update((turn) => ({ ...turn, sources: e.emails }));
+          else if (e.type === "proposal") update((turn) => ({ ...turn, proposals: [...(turn.proposals ?? []), { id: e.id, tool: e.tool, summary: e.summary, state: "pending" }] }));
           else if (e.type === "error") update((turn) => ({ ...turn, error: t(`assistant.errors.${e.code}`) }));
         }
       } catch (err) {
@@ -167,6 +243,26 @@ export function AssistantPanel() {
     },
     [t],
   );
+
+  /** I5: the user confirms or discards a proposal; the platform runs it exactly as shown. */
+  const decide = useCallback(async (proposal: Proposal, confirm: boolean) => {
+    const set = (state: ProposalState) =>
+      setTurns((prev) => prev.map((turn) => (turn.proposals?.some((p) => p.id === proposal.id) ? { ...turn, proposals: turn.proposals.map((p) => (p.id === proposal.id ? { ...p, state } : p)) } : turn)));
+    set("running");
+    try {
+      if (!confirm) {
+        await assistant.reject(proposal.id);
+        set("rejected");
+        return;
+      }
+      const { result } = await assistant.confirm(proposal.id);
+      set(result.invited?.length ? (result.invitationSent ? "done_invited" : "invite_failed") : "done");
+    } catch (err) {
+      const status = err instanceof XenaxioApiError ? err.status : 0;
+      set(status === 410 ? "expired" : status === 409 ? "already" : status === 0 ? "pending" : "failed");
+      if (status === 0) setNotice(t("errors.network"));
+    }
+  }, [t]);
 
   const context = selectedEmail ? { emailId: selectedEmail.id, threadId: selectedEmail.threadId } : {};
 
@@ -346,6 +442,7 @@ export function AssistantPanel() {
               {turn.tool && <p className="animate-pulse text-xs text-muted-foreground">{t(`assistant.tool_${turn.tool}`)}</p>}
               {turn.role === "assistant" && !turn.text && !turn.tool && busy && i === turns.length - 1 && <p className="animate-pulse text-xs text-muted-foreground">…</p>}
               {turn.error && <p className="text-xs text-destructive">{turn.error}</p>}
+              {turn.proposals?.map((p) => <ProposalCard key={p.id} proposal={p} locale={locale} onDecide={decide} />)}
               {turn.sources && turn.sources.length > 0 && (
                 <div className="space-y-1">
                   <p className="text-xs font-medium text-muted-foreground">{t("assistant.sources")}</p>

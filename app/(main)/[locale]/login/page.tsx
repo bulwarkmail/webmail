@@ -28,7 +28,7 @@ function LoginForm() {
     setBusy(true);
     setError(null);
     try {
-      const me = await xenaxio.login(email.trim(), password);
+      const me = await xenaxio.login(email.trim(), password, locale);
       setPassword("");
       // A new sign-in never inherits an assistant chat left in this tab.
       clearAssistantState();
