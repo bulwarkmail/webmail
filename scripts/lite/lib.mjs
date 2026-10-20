@@ -72,6 +72,15 @@ export const LOCALE_STORAGE_KEY = "locale-storage";
  * new server dependency and fails `verify.mjs`.
  */
 export const LITE_API_STRING_ALLOWLIST = [
+  // xenaxio platform BFF (lib/xenaxio/api.ts). Served under /api by the
+  // platform, not by this app: in the xenaxio deployment it is always present.
+  "/api/me",
+  "/api/auth/login",
+  "/api/auth/logout",
+  "/api/onboarding",
+  "/api/admin/domain",
+  "/api/admin/users",
+  "/api/operator",
   // Path-independent generic prefix used by `apiFetch` docs/comments.
   "/api/",
   // stores/update-store.ts - startPolling() is a no-op in Lite.
