@@ -80,6 +80,8 @@ export const LITE_API_STRING_ALLOWLIST = [
   "/api/onboarding",
   "/api/admin/domain",
   "/api/admin/users",
+  "/api/admin/ai",
+  "/api/admin/audit",
   "/api/operator",
   "/api/ai",
   // Path-independent generic prefix used by `apiFetch` docs/comments.
