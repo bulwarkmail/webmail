@@ -87,6 +87,50 @@ export interface WorkspaceUser {
   status: "active" | "disabled";
   quotaBytes: number;
   mustChangePassword: boolean;
+  aliases: string[];
+  usedBytes?: number | null;
+}
+
+export interface AiAdmin {
+  configured: boolean;
+  companyEnabled: boolean;
+  model: string;
+  models: string[];
+  month: string;
+  limits: { userMonthlyTokens: number; tenantMonthlyTokens: number };
+  warnShare: number;
+  tenantTokens: number;
+  users: { id: string; email: string; displayName: string; status: "active" | "disabled"; aiEnabled: boolean; tokens: number }[];
+}
+
+export interface AuditEntry {
+  id: number;
+  createdAt: string;
+  userEmail: string | null;
+  source: "panel" | "mcp";
+  tokenName: string | null;
+  action: string;
+  objectIds: string[];
+  status: "ok" | "error" | "denied";
+  model: string | null;
+  inputTokens: number;
+  outputTokens: number;
+}
+
+export interface AuditFilter {
+  userId?: string;
+  tool?: string;
+  source?: "panel" | "mcp";
+  from?: string;
+  to?: string;
+  before?: number;
+}
+
+export function auditQuery(f: AuditFilter): string {
+  const q = new URLSearchParams();
+  for (const [k, v] of Object.entries(f)) if (v !== undefined && v !== "") q.set(k, String(v));
+  const s = q.toString();
+  return s ? `?${s}` : "";
 }
 
 export interface Invitation {
@@ -130,6 +174,14 @@ export const xenaxio = {
     request<WorkspaceUser>("POST", "/api/admin/users", input),
   resetPassword: (userId: string, password: string) =>
     request<{ ok: true }>("POST", `/api/admin/users/${encodeURIComponent(userId)}/password`, { password }),
+  setUserStatus: (userId: string, status: "active" | "disabled") =>
+    request<WorkspaceUser>("POST", `/api/admin/users/${encodeURIComponent(userId)}/status`, { status }),
+  setAliases: (userId: string, aliases: string[]) => request<WorkspaceUser>("POST", `/api/admin/users/${encodeURIComponent(userId)}/aliases`, { aliases }),
+  setQuota: (userId: string, quotaMb: number) => request<WorkspaceUser>("POST", `/api/admin/users/${encodeURIComponent(userId)}/quota`, { quotaMb }),
+  setUserAi: (userId: string, enabled: boolean) => request<{ ok: true }>("POST", `/api/admin/users/${encodeURIComponent(userId)}/ai`, { enabled }),
+  aiAdmin: () => request<AiAdmin>("GET", "/api/admin/ai"),
+  setAiAdmin: (change: { enabled?: boolean; model?: string }) => request<{ ok: true }>("POST", "/api/admin/ai", change),
+  audit: (f: AuditFilter) => request<{ entries: AuditEntry[]; next: number | null }>("GET", `/api/admin/audit${auditQuery(f)}`),
 
   operator: {
     me: () => request<{ operator: { id: string; email: string } }>("GET", "/api/operator/me"),

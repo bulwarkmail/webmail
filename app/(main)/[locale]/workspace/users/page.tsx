@@ -1,14 +1,104 @@
 "use client";
 
-// Employees (scenario 2, A2): add with a temporary password, reset passwords.
+// Employees (scenario 2, A2, C1): add, reset passwords, aliases, mailbox size,
+// AI per person (I8), disable and re-enable.
 import { type FormEvent, useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { KeyRound, Plus } from "@/components/icons";
+import { KeyRound, Pencil, Plus } from "@/components/icons";
 import { Field, Notice, PasswordField, TextField } from "@/components/xenaxio/ui";
 import { useMe, WorkspaceShell } from "@/components/xenaxio/workspace-shell";
 import { errorKey, type WorkspaceUser, xenaxio } from "@/lib/xenaxio/api";
 import { useXT } from "@/lib/xenaxio/i18n";
+
+const MB = 1024 * 1024;
+
+function formatBytes(bytes: number): string {
+  if (bytes >= 1024 * MB) return `${(bytes / (1024 * MB)).toLocaleString(undefined, { maximumFractionDigits: 1 })} GB`;
+  return `${Math.round(bytes / MB).toLocaleString()} MB`;
+}
+
+/** C1 and I8 settings of one employee. */
+function UserEditor({ user, isSelf, maxQuotaBytes, aiEnabled, onChanged, onMessage }: {
+  user: WorkspaceUser;
+  isSelf: boolean;
+  maxQuotaBytes: number;
+  aiEnabled: boolean | undefined;
+  onChanged: () => Promise<void>;
+  onMessage: (m: { kind: "error" | "success"; text: string }) => void;
+}) {
+  const t = useXT();
+  const [aliases, setAliases] = useState(user.aliases.join(", "));
+  const [quotaMb, setQuotaMb] = useState(String(Math.round(user.quotaBytes / MB)));
+  const [busy, setBusy] = useState(false);
+  const run = async (action: () => Promise<unknown>, success?: string) => {
+    setBusy(true);
+    try {
+      await action();
+      if (success) onMessage({ kind: "success", text: success });
+      await onChanged();
+    } catch (err) {
+      onMessage({ kind: "error", text: t(errorKey(err)) });
+    } finally {
+      setBusy(false);
+    }
+  };
+  const list = aliases.split(/[,\s]+/).map((a) => a.trim().toLowerCase()).filter(Boolean);
+
+  return (
+    <div className="space-y-4 rounded-md bg-muted/50 p-3">
+      <form
+        className="space-y-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          void run(() => xenaxio.setAliases(user.id, list), t("users.aliases_saved"));
+        }}
+      >
+        <TextField label={t("users.aliases")} hint={t("users.aliases_hint")} value={aliases} onChange={(e) => setAliases(e.target.value)} autoCapitalize="none" spellCheck={false} />
+        <Button type="submit" size="sm" variant="outline" disabled={busy}>{t("users.aliases_save")}</Button>
+      </form>
+      <form
+        className="space-y-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          void run(() => xenaxio.setQuota(user.id, Number(quotaMb)), t("users.quota_saved"));
+        }}
+      >
+        <TextField
+          label={t("users.quota")}
+          hint={t("users.quota_hint", { max: Math.round(maxQuotaBytes / MB).toLocaleString() })}
+          type="number"
+          min={100}
+          max={Math.round(maxQuotaBytes / MB)}
+          value={quotaMb}
+          onChange={(e) => setQuotaMb(e.target.value)}
+        />
+        <Button type="submit" size="sm" variant="outline" disabled={busy || !Number(quotaMb)}>{t("users.quota_save")}</Button>
+      </form>
+      <div className="flex flex-wrap items-center gap-2">
+        {aiEnabled !== undefined && (
+          <Button size="sm" variant={aiEnabled ? "default" : "outline"} disabled={busy} aria-pressed={aiEnabled} onClick={() => run(() => xenaxio.setUserAi(user.id, !aiEnabled))}>
+            {t("users.ai")}: {aiEnabled ? t("users.ai_on") : t("users.ai_off")}
+          </Button>
+        )}
+        {!isSelf && (
+          <Button
+            size="sm"
+            variant="outline"
+            className={user.status === "active" ? "text-destructive" : ""}
+            disabled={busy}
+            onClick={() => {
+              if (user.status === "active" && !window.confirm(t("users.disable_confirm", { email: user.email }))) return;
+              void run(() => xenaxio.setUserStatus(user.id, user.status === "active" ? "disabled" : "active"));
+            }}
+          >
+            {user.status === "active" ? t("users.disable") : t("users.enable")}
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}
 
 function UsersView() {
   const t = useXT();
@@ -16,6 +106,9 @@ function UsersView() {
   const domain = me.user.email.split("@")[1] ?? "";
   const [users, setUsers] = useState<WorkspaceUser[] | null>(null);
   const [limit, setLimit] = useState(0);
+  const [maxQuota, setMaxQuota] = useState(0);
+  const [ai, setAi] = useState<Map<string, boolean> | null>(null);
+  const [editing, setEditing] = useState<string | null>(null);
   const [form, setForm] = useState({ displayName: "", localPart: "", password: "" });
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ kind: "error" | "success"; text: string } | null>(null);
@@ -27,6 +120,10 @@ function UsersView() {
       const res = await xenaxio.users();
       setUsers(res.users);
       setLimit(res.limits.maxMailboxes);
+      setMaxQuota(res.limits.mailboxQuotaBytes);
+      // AI per person is shown only when the platform has AI configured.
+      const aiInfo = await xenaxio.aiAdmin().catch(() => null);
+      setAi(aiInfo?.configured ? new Map(aiInfo.users.map((u) => [u.id, u.aiEnabled])) : null);
     } catch (err) {
       setMessage({ kind: "error", text: t(errorKey(err)) });
     }
@@ -122,10 +219,20 @@ function UsersView() {
                 <div className="min-w-0">
                   <p className="font-medium truncate">{u.displayName}</p>
                   <p className="text-sm text-muted-foreground truncate">{u.email}</p>
+                  {u.aliases.length > 0 && <p className="text-xs text-muted-foreground truncate">{u.aliases.map((a) => `${a}@${domain}`).join(", ")}</p>}
+                  <p className="text-xs text-muted-foreground">
+                    {t("users.used", { used: u.usedBytes != null ? formatBytes(u.usedBytes) : "–", quota: formatBytes(u.quotaBytes) })}
+                  </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 text-xs">
                   <span className="rounded-full bg-muted px-2.5 py-0.5">{u.role === "admin" ? t("users.role_admin") : t("users.role_user")}</span>
+                  {u.status === "disabled" && <span className="rounded-full bg-destructive/15 px-2.5 py-0.5 text-destructive">{t("users.disabled_badge")}</span>}
+                  {ai?.get(u.id) && <span className="rounded-full bg-primary/15 px-2.5 py-0.5 text-primary">{t("users.ai_on")}</span>}
                   {u.mustChangePassword && <span className="rounded-full bg-amber-500/15 px-2.5 py-0.5 text-amber-700 dark:text-amber-400">{t("users.must_change")}</span>}
+                  <Button variant="outline" size="sm" onClick={() => setEditing(editing === u.id ? null : u.id)} aria-expanded={editing === u.id}>
+                    <Pencil className="w-4 h-4 mr-1.5" />
+                    {t("users.edit")}
+                  </Button>
                   {u.id !== me.user.id && (
                     <Button variant="outline" size="sm" onClick={() => setResetting(resetting?.id === u.id ? null : u)}>
                       <KeyRound className="w-4 h-4 mr-1.5" />
@@ -134,6 +241,17 @@ function UsersView() {
                   )}
                 </div>
               </div>
+              {editing === u.id && (
+                <UserEditor
+                  key={`${u.id}-${u.aliases.join()}-${u.quotaBytes}`}
+                  user={u}
+                  isSelf={u.id === me.user.id}
+                  maxQuotaBytes={maxQuota}
+                  aiEnabled={ai?.get(u.id)}
+                  onChanged={load}
+                  onMessage={setMessage}
+                />
+              )}
               {resetting?.id === u.id && (
                 <form onSubmit={reset} className="space-y-3 rounded-md bg-muted/50 p-3" noValidate>
                   <PasswordField
