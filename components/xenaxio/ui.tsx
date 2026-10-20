@@ -5,6 +5,7 @@ import { useId, useState, type ReactNode } from "react";
 import { Input, type InputProps } from "@/components/ui/input";
 import { AlertCircle, CheckCircle, Eye, EyeOff, Info } from "@/components/icons";
 import { useConfig } from "@/hooks/use-config";
+import { useThemeStore } from "@/stores/theme-store";
 import { withBasePath } from "@/lib/browser-navigation";
 import { cn } from "@/lib/utils";
 import { useXT } from "@/lib/xenaxio/i18n";
@@ -12,14 +13,23 @@ import { useXT } from "@/lib/xenaxio/i18n";
 /** Centered card for sign-in, password and onboarding pages. */
 export function AuthCard({ title, subtitle, children }: { title: string; subtitle?: string; children: ReactNode }) {
   const t = useXT();
-  // Brand logo from config.json (W1); no default, so no other product's logo flashes.
-  const { appLogoLightUrl } = useConfig();
+  // Brand logo and wordmark from config.json (W1). Shown only once the config
+  // is loaded, so the upstream default logo never flashes.
+  const { appLogoLightUrl, loginLogoLightUrl, loginLogoDarkUrl, isLoading } = useConfig();
+  const dark = useThemeStore((s) => s.resolvedTheme) === "dark";
+  const wordmark = isLoading ? "" : dark ? loginLogoDarkUrl || loginLogoLightUrl : loginLogoLightUrl || loginLogoDarkUrl;
   return (
     <main className="min-h-dvh flex items-center justify-center bg-background px-4 py-10">
       <div className="w-full max-w-md">
-        <div className="mb-6 flex flex-col items-center gap-2">
-          {appLogoLightUrl && <img src={withBasePath(appLogoLightUrl)} alt="" className="h-14 w-14" />}
-          <p className="text-center text-sm font-semibold tracking-wide text-primary">{t("common.app_name")}</p>
+        <div className="mb-6 flex flex-col items-center gap-3">
+          {!isLoading && appLogoLightUrl && <img src={withBasePath(appLogoLightUrl)} alt="" className="h-14 w-14" />}
+          {isLoading ? (
+            <div className="h-6" />
+          ) : wordmark ? (
+            <img src={withBasePath(wordmark)} alt={t("common.app_name")} className="h-6 w-auto" />
+          ) : (
+            <p className="text-center text-sm font-semibold tracking-wide text-primary">{t("common.app_name")}</p>
+          )}
         </div>
         <div className="rounded-xl border border-border bg-card text-card-foreground shadow-sm p-6 sm:p-8">
           <h1 className="text-xl font-semibold">{title}</h1>
