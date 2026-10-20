@@ -78,7 +78,9 @@
     "users": "Employees",
     "users_desc": "Add employees and reset passwords",
     "password": "Change password",
-    "password_desc": "Set a new password for your account"
+    "password_desc": "Set a new password for your account",
+    "mail": "Mail, calendar, contacts",
+    "mail_desc": "Open your mailbox"
   },
   "domain": {
     "title": "Domain and DNS",

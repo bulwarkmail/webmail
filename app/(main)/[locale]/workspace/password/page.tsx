@@ -2,7 +2,8 @@
 
 // Own password change (A2). Also the forced step after a temporary password.
 import { type FormEvent, useState } from "react";
-import { useRouter } from "@/i18n/navigation";
+import { useLocale } from "next-intl";
+import { withBasePath } from "@/lib/browser-navigation";
 import { Button } from "@/components/ui/button";
 import { Notice, PasswordField } from "@/components/xenaxio/ui";
 import { useMe, WorkspaceShell } from "@/components/xenaxio/workspace-shell";
@@ -13,7 +14,7 @@ const MIN_LENGTH = 10;
 
 function PasswordForm() {
   const t = useXT();
-  const router = useRouter();
+  const locale = useLocale();
   const me = useMe();
   const forced = me.user.mustChangePassword;
   const [current, setCurrent] = useState("");
@@ -36,7 +37,8 @@ function PasswordForm() {
       setCurrent("");
       setNext("");
       setConfirm("");
-      if (forced) router.replace("/workspace");
+      // Full navigation: the mail app restores the session on load.
+      if (forced) window.location.assign(withBasePath(`/${locale}/`));
       else setDone(true);
     } catch (err) {
       setError(t(errorKey(err)));

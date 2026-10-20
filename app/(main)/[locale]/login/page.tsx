@@ -5,7 +5,9 @@
 // cookie. The password never stays in the browser. Replaces Bulwark's login
 // page; the route stays /login so every existing redirect keeps working.
 import { type FormEvent, Suspense, useState } from "react";
+import { useLocale } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
+import { withBasePath } from "@/lib/browser-navigation";
 import { Button } from "@/components/ui/button";
 import { AuthCard, Notice, PasswordField, TextField } from "@/components/xenaxio/ui";
 import { errorKey, xenaxio } from "@/lib/xenaxio/api";
@@ -14,6 +16,7 @@ import { useXT } from "@/lib/xenaxio/i18n";
 function LoginForm() {
   const t = useXT();
   const router = useRouter();
+  const locale = useLocale();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -26,7 +29,9 @@ function LoginForm() {
     try {
       const me = await xenaxio.login(email.trim(), password);
       setPassword("");
-      router.replace(me.user.mustChangePassword ? "/workspace/password" : "/workspace");
+      // Full navigation: the mail app restores the session from the new cookie on load.
+      if (me.user.mustChangePassword) router.replace("/workspace/password");
+      else window.location.assign(withBasePath(`/${locale}/`));
     } catch (err) {
       setError(t(errorKey(err)));
       setBusy(false);
