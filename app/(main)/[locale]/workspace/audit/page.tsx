@@ -95,11 +95,11 @@ function AuditView() {
           {t("audit.filter_to")}
           <input type="date" className={select} value={filter.to ?? ""} onChange={(e) => set("to", e.target.value)} />
         </label>
-        <div className="flex items-end gap-2">
+        <div className="flex flex-wrap items-center gap-3 sm:col-span-3 lg:col-span-6">
           <Button type="submit" size="sm">
             {t("audit.apply")}
           </Button>
-          <a className="text-sm text-primary hover:underline" href={withBasePath(`/api/admin/audit.csv${auditQuery(applied)}`)} download>
+          <a className="whitespace-nowrap text-sm text-primary hover:underline" href={withBasePath(`/api/admin/audit.csv${auditQuery(applied)}`)} download>
             {t("audit.csv")}
           </a>
         </div>

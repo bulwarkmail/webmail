@@ -15,7 +15,8 @@ const MB = 1024 * 1024;
 
 function formatBytes(bytes: number): string {
   if (bytes >= 1024 * MB) return `${(bytes / (1024 * MB)).toLocaleString(undefined, { maximumFractionDigits: 1 })} GB`;
-  return `${Math.round(bytes / MB).toLocaleString()} MB`;
+  // Small mailboxes would otherwise all read "0 MB".
+  return `${(bytes / MB).toLocaleString(undefined, { maximumFractionDigits: bytes < 10 * MB ? 1 : 0 })} MB`;
 }
 
 /** C1 and I8 settings of one employee. */
