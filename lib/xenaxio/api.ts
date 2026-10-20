@@ -133,6 +133,29 @@ export function auditQuery(f: AuditFilter): string {
   return s ? `?${s}` : "";
 }
 
+export interface OperatorTenant {
+  id: string;
+  name: string;
+  status: "onboarding" | "active" | "blocked";
+  domain: string | null;
+  domainStatus: string | null;
+  createdAt: string;
+  maxMailboxes: number;
+  mailboxQuotaBytes: number;
+  mailboxes: number;
+  usedBytes: number;
+  aiEnabled: boolean;
+  aiUsers: number;
+  aiTokens: number;
+  aiUserMonthlyTokens: number | null;
+  aiTenantMonthlyTokens: number | null;
+}
+
+export interface OperatorReport {
+  month: string;
+  tenants: { id: string; name: string; domain: string | null; status: string; mailUsers: number; aiWorkspaceUsers: number; aiTokens: number }[];
+}
+
 export interface Invitation {
   id: string;
   note: string | null;
@@ -188,6 +211,14 @@ export const xenaxio = {
     login: (email: string, password: string) => request<{ operator: { id: string; email: string } }>("POST", "/api/operator/auth/login", { email, password }),
     logout: () => request<{ ok: true }>("POST", "/api/operator/auth/logout", {}),
     invitations: () => request<{ invitations: Invitation[] }>("GET", "/api/operator/invitations"),
+    tenants: () =>
+      request<{ defaults: { aiUserMonthlyTokens: number; aiTenantMonthlyTokens: number | null }; tenants: OperatorTenant[] }>("GET", "/api/operator/tenants"),
+    setTenantBlocked: (id: string, blocked: boolean) => request<{ id: string; status: string }>("POST", `/api/operator/tenants/${encodeURIComponent(id)}/status`, { blocked }),
+    setTenantLimits: (
+      id: string,
+      limits: { maxMailboxes?: number; mailboxQuotaMb?: number; aiUserMonthlyTokens?: number | null; aiTenantMonthlyTokens?: number | null },
+    ) => request<{ ok: true }>("POST", `/api/operator/tenants/${encodeURIComponent(id)}/limits`, limits),
+    report: (month?: string) => request<OperatorReport>("GET", `/api/operator/report${month ? `?month=${encodeURIComponent(month)}` : ""}`),
     createInvitation: (note: string, locale: "de" | "en") =>
       request<{ id: string; url: string; expiresAt: string }>("POST", "/api/operator/invitations", { note: note || undefined, locale }),
   },
