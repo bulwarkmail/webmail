@@ -164,7 +164,8 @@ async function liteMetadata(): Promise<Metadata> {
     formatDetection: {
       telephone: false,
     },
-    icons: { icon: withBasePath("/branding/Bulwark_Favicon.svg") },
+    // xenaxio: our mark; the static Lite build cannot read config.json here.
+    icons: { icon: withBasePath("/branding/xenaxio-favicon.svg") },
   };
 }
 

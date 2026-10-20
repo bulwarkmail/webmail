@@ -7,8 +7,9 @@ import { getEffectiveLocale } from '@/i18n/detect-locale';
 import { Check, ChevronDown, Search } from '@/components/icons';
 import { cn } from '@/lib/utils';
 import { flagComponents } from './flag-icons';
+import { XENAXIO_BFF } from '@/lib/xenaxio/bff';
 
-const languages = [
+const allLanguages = [
   { value: 'auto', label: 'Auto' },
   { value: 'ar', label: 'العربية' },
   { value: 'ca', label: 'Català' },
@@ -39,6 +40,9 @@ const languages = [
   { value: 'zh', label: '简体中文' },
   { value: 'zh-TW', label: '繁體中文（台灣）' },
 ];
+
+// xenaxio: the product supports German and English only (spec W6).
+const languages = XENAXIO_BFF ? allLanguages.filter((l) => ['auto', 'de', 'en'].includes(l.value)) : allLanguages;
 
 // Case- and accent-insensitive, so "espanol" finds "Español".
 function fold(text: string): string {

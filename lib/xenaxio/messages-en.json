@@ -150,5 +150,9 @@
     "status_used": "Used by {tenant}",
     "status_expired": "Expired",
     "status_open": "Open"
+  },
+  "about": {
+    "based_on": "Based on",
+    "source": "Source code"
   }
 }
