@@ -146,6 +146,7 @@ import type { AttachmentInfo, AttachmentPreview } from "@/lib/plugin-types";
 import { useAttachmentDrag, isDragOutSupported, type AttachmentDragSource } from "@/hooks/use-attachment-drag";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
 import { useArchiveActionEnabled } from "@/lib/archive-gate";
+import { AssistantEmailButtons } from "@/components/xenaxio/assistant-email-buttons";
 
 /** The More menu's two drill-downs: a folder list and a tag list. */
 type MoreMenuSub = 'move' | 'tag' | 'rules';
@@ -3754,6 +3755,8 @@ export function EmailViewer({
           </Button>
         )}
         {!isScheduled && !isDraft && !mvViewer && (<>
+        {/* xenaxio: AI summary and reply draft for this conversation (I3). */}
+        <AssistantEmailButtons threadId={email.threadId} subject={email.subject} />
         <Button
           variant="ghost"
           size="sm"

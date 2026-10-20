@@ -17,6 +17,7 @@ import { PluginAppEvents } from "@/components/providers/plugin-app-events";
 import { PluginOAuthCallbackListener } from "@/components/providers/plugin-oauth-callback-listener";
 import { PWAInstallPrompt } from "@/components/pwa-install-prompt";
 import { PushNotificationPrompt } from "@/components/push-notification-prompt";
+import { AssistantPanel } from "@/components/xenaxio/assistant-panel";
 import { setRequestLocale } from "next-intl/server";
 import { locales } from "@/i18n/routing";
 import { generateLiteLocaleParams } from "@/lib/lite-static-params";
@@ -67,6 +68,8 @@ export default async function LocaleLayout({
                   <PluginAppEvents />
                   <PWAInstallPrompt />
                   <PushNotificationPrompt />
+                  {/* xenaxio: AI assistant side panel (renders nothing unless enabled). */}
+                  <AssistantPanel />
                 </ProtocolLaunchHandlerProvider>
               </TourProvider>
             </EmbeddedBridgeProvider>

@@ -154,5 +154,39 @@
   "about": {
     "based_on": "Basiert auf",
     "source": "Quellcode"
+  },
+  "assistant": {
+    "title": "Assistent",
+    "open": "Assistent öffnen",
+    "close": "Assistent schließen",
+    "new_chat": "Neuer Chat",
+    "history": "Verlauf",
+    "delete_all": "Alle Chats löschen",
+    "delete": "Chat löschen",
+    "empty": "Fragen Sie zu Ihren E-Mails, z. B. „Was haben wir mit der Müller GmbH zum Preis vereinbart?“",
+    "placeholder": "Frage stellen…",
+    "send": "Senden",
+    "stop": "Stopp",
+    "context": "Bezogen auf: {subject}",
+    "summarize": "Kurz",
+    "reply": "Mit KI antworten",
+    "reply_instructions": "Wünsche für die Antwort (optional)",
+    "reply_creating": "Entwurf wird geschrieben…",
+    "reply_done": "Der Entwurf liegt in „Entwürfe“ und ist im Editor geöffnet.",
+    "summary_title": "Kurzfassung von „{subject}“",
+    "sources": "Quellen",
+    "tool_search_mail": "Durchsuche E-Mails…",
+    "tool_get_email": "Lese eine E-Mail…",
+    "tool_get_thread": "Lese die Unterhaltung…",
+    "tool_create_draft": "Speichere einen Entwurf…",
+    "tool_search_contacts": "Suche Kontakte…",
+    "tool_error": "Ein Schritt ist fehlgeschlagen; die Antwort ist eventuell unvollständig.",
+    "not_sent": "Es wird nichts automatisch gesendet: Entwürfe werden nur gespeichert.",
+    "errors": {
+      "ai_disabled": "Der Assistent ist für Ihr Konto ausgeschaltet.",
+      "ai_not_configured": "Der Assistent ist noch nicht eingerichtet.",
+      "assistant_failed": "Der Assistent konnte nicht antworten. Bitte versuchen Sie es erneut.",
+      "rate_limited": "Zu viele Anfragen. Bitte warten Sie einen Moment."
+    }
   }
 }

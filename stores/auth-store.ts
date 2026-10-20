@@ -46,6 +46,7 @@ import {
 import { clearLiteOAuthFlow, readLiteOAuthFlow } from '@/lib/auth/lite-oauth';
 import { bffJmapUrl, goToPage, redirectToLogin as redirectToBffLogin, XENAXIO_BFF } from '@/lib/xenaxio/bff';
 import { xenaxio as xenaxioApi } from '@/lib/xenaxio/api';
+import { clearAssistantState } from '@/lib/xenaxio/assistant';
 
 /** Logins restored at once after the one on screen: enough to overlap round trips, few enough not to crowd the server. */
 const RESTORE_CONCURRENCY = 4;
@@ -2245,7 +2246,10 @@ export const useAuthStore = create<AuthState>()(
 
         await beforeLogoutHooks(accountId ?? 'all');
         // xenaxio: end the platform session; the cookie is what signs the browser in.
-        if (XENAXIO_BFF) await xenaxioApi.logout().catch(() => {});
+        if (XENAXIO_BFF) {
+          await xenaxioApi.logout().catch(() => {});
+          clearAssistantState();
+        }
 
         // From here on nothing may renew this slot's session; the cleanup
         // below reopens it once the credentials are gone.
