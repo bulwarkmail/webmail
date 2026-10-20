@@ -4,16 +4,23 @@
 import { useId, useState, type ReactNode } from "react";
 import { Input, type InputProps } from "@/components/ui/input";
 import { AlertCircle, CheckCircle, Eye, EyeOff, Info } from "@/components/icons";
+import { useConfig } from "@/hooks/use-config";
+import { withBasePath } from "@/lib/browser-navigation";
 import { cn } from "@/lib/utils";
 import { useXT } from "@/lib/xenaxio/i18n";
 
 /** Centered card for sign-in, password and onboarding pages. */
 export function AuthCard({ title, subtitle, children }: { title: string; subtitle?: string; children: ReactNode }) {
   const t = useXT();
+  // Brand logo from config.json (W1); no default, so no other product's logo flashes.
+  const { appLogoLightUrl } = useConfig();
   return (
     <main className="min-h-dvh flex items-center justify-center bg-background px-4 py-10">
       <div className="w-full max-w-md">
-        <p className="text-center text-sm font-semibold tracking-wide text-primary mb-6">{t("common.app_name")}</p>
+        <div className="mb-6 flex flex-col items-center gap-2">
+          {appLogoLightUrl && <img src={withBasePath(appLogoLightUrl)} alt="" className="h-14 w-14" />}
+          <p className="text-center text-sm font-semibold tracking-wide text-primary">{t("common.app_name")}</p>
+        </div>
         <div className="rounded-xl border border-border bg-card text-card-foreground shadow-sm p-6 sm:p-8">
           <h1 className="text-xl font-semibold">{title}</h1>
           {subtitle && <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>}
