@@ -167,6 +167,8 @@ export interface Invitation {
 
 export interface McpTokenInfo {
   id: string;
+  /** "oauth": an AI chat connected by signing in; "token": created by hand. */
+  kind: "token" | "oauth";
   name: string;
   hint: string;
   createdAt: string;
@@ -179,6 +181,10 @@ export const xenaxio = {
   mcpTokens: () => request<{ mcpUrl: string; enabled: boolean; tokens: McpTokenInfo[] }>("GET", "/api/me/mcp-tokens"),
   createMcpToken: (name: string, days: number) => request<{ token: string; mcpUrl: string; info: McpTokenInfo }>("POST", "/api/me/mcp-tokens", { name, days }),
   revokeMcpToken: (id: string) => request<{ ok: true }>("DELETE", `/api/me/mcp-tokens/${encodeURIComponent(id)}`),
+  /** Step 9: consent screen for an AI chat connecting by OAuth; `query` is the authorization request. */
+  oauthRequest: (query: string) =>
+    request<{ clientName: string; redirectHost: string; loopback: boolean }>("GET", `/api/oauth/authorize/info?${query.replace(/^\?/, "")}`),
+  oauthDecision: (query: string, approve: boolean) => request<{ redirect: string }>("POST", "/api/oauth/authorize/decision", { query, approve }),
   login: (email: string, password: string, locale?: string) =>
     request<Me>("POST", "/api/auth/login", { email, password, ...(locale === "de" || locale === "en" ? { locale } : {}) }),
   logout: () => request<{ ok: true }>("POST", "/api/auth/logout", {}),

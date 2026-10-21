@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { safeHttpUrl } from '../brand';
+import { safeHttpUrl, safeNextPath } from '../brand';
 
 describe('safeHttpUrl', () => {
   it('keeps absolute http(s) links from config.json', () => {
@@ -15,3 +15,16 @@ describe('safeHttpUrl', () => {
     expect(safeHttpUrl('data:text/html,hi')).toBe('');
   });
 });
+
+describe('safeNextPath', () => {
+  it('keeps paths on this site', () => {
+    expect(safeNextPath('/de/connect/?client_id=a&state=b')).toBe('/de/connect/?client_id=a&state=b');
+  });
+
+  it('rejects other sites and tricks', () => {
+    for (const bad of ['https://evil.example/', '//evil.example/x', '/\\evil.example', 'javascript:alert(1)', '', null, undefined]) {
+      expect(safeNextPath(bad)).toBeNull();
+    }
+  });
+});
+

@@ -27,3 +27,19 @@ export function safeHttpUrl(value: string | undefined): string {
     return "";
   }
 }
+
+/**
+ * Where to go after sign-in (`/login?next=…`): only a path on this site, so the
+ * login page cannot be used to send people to another domain.
+ */
+export function safeNextPath(value: string | null | undefined): string | null {
+  if (!value || value.length > 4000) return null;
+  if (!value.startsWith("/") || value.startsWith("//") || value.includes("\\")) return null;
+  try {
+    // Resolving against a dummy origin must keep that origin.
+    return new URL(value, "https://x.invalid").origin === "https://x.invalid" ? value : null;
+  } catch {
+    return null;
+  }
+}
+
