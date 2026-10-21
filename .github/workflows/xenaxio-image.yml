@@ -1,0 +1,63 @@
+name: xenaxio web image
+
+# The xenaxio web client as a container (Dockerfile.lite with the xenaxio
+# build settings), published for the platform deploy:
+#   ghcr.io/xenaxiocom/webmail:<commit sha>  and  :main
+# The platform repository (es-ua/xenaxio) pulls it in its deploy workflow.
+# The package is public, like this repository (AGPL-3.0).
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: xenaxio-image
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  IMAGE: ghcr.io/${{ github.repository_owner }}/webmail
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.lite
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:${{ github.sha }}
+            ${{ env.IMAGE }}:main
+          labels: |
+            org.opencontainers.image.title=xenaxio web client
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.licenses=AGPL-3.0-only
+          build-args: |
+            LITE_LOCALES=en,de
+            LITE_APP_NAME=xenaxio
+            GIT_COMMIT=${{ github.sha }}
+          cache-from: type=gha,scope=xenaxio-web
+          cache-to: type=gha,mode=max,scope=xenaxio-web
+
+      - name: Summary
+        run: echo "Published \`${{ env.IMAGE }}:${{ github.sha }}\`" >> "$GITHUB_STEP_SUMMARY"
