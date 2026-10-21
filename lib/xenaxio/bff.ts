@@ -6,6 +6,12 @@ import { getLocaleFromPath, withBasePath } from "@/lib/browser-navigation";
 /** Build flag: `NEXT_PUBLIC_XENAXIO_BFF=1` (set by the xenaxio image). */
 export const XENAXIO_BFF = process.env.NEXT_PUBLIC_XENAXIO_BFF === "1";
 
+/**
+ * The product speaks German and English only (spec W6). The static build also
+ * exports only these (LITE_LOCALES=en,de), so any other locale in the URL is a 404.
+ */
+export const XENAXIO_LOCALES: readonly string[] = ["de", "en"];
+
 /** JMAP base URL for the cookie-mode client: discovery is `<this>/.well-known/jmap`. */
 export function bffJmapUrl(): string {
   return `${window.location.origin}${withBasePath("/api/jmap")}`;
