@@ -575,7 +575,7 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
 
   // Sharing: the browsing client (store-attached) drives the principal picker
   // and share mutations. supportsPrincipals() gates the whole Share affordance.
-  // xenaxio: sharing waits for the company-aware check in the BFF (step 10); the BFF rejects it until then.
+  // xenaxio: sharing waits for the company-aware check in the BFF (step 11); the BFF rejects it until then.
   const sharingEnabled = !XENAXIO_BFF && !!storeClient?.supportsPrincipals();
   const filesAccountId = storeClient?.getFilesAccountId() ?? null;
   const handleShare = useCallback(async (id: string, principalId: string, rights: FileNodeRights | null) => {
