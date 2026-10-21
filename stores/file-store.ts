@@ -1029,7 +1029,7 @@ export const useFileStore = create<FileState>((set, get) => ({
 
     const url = client.getBlobDownloadUrl(resource.blobId, resource.name, resource.contentType);
     const response = await fetch(url, {
-      headers: { 'Authorization': client.getAuthHeader() },
+      headers: client.getAuthHeader() ? { 'Authorization': client.getAuthHeader() } : { 'x-xenaxio-csrf': '1' },
     });
     if (!response.ok) throw new Error(`Failed to fetch file: ${response.status}`);
     const blob = await response.blob();

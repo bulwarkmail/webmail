@@ -3,7 +3,7 @@
 // Workspace home: company status and, for admins, the set-up pages.
 import type { ReactNode } from "react";
 import { Link } from "@/i18n/navigation";
-import { ChevronRight, Globe, KeyRound, Users } from "@/components/icons";
+import { ChevronRight, Globe, KeyRound, Mail, Users } from "@/components/icons";
 import { Notice } from "@/components/xenaxio/ui";
 import { useMe, WorkspaceShell } from "@/components/xenaxio/workspace-shell";
 import { useXT } from "@/lib/xenaxio/i18n";
@@ -32,6 +32,7 @@ function Overview() {
         {me.tenant.status === "active" ? t("workspace.status_active") : t("workspace.status_onboarding")}
       </Notice>
       <div className="grid gap-3">
+        <Tile href="/" icon={<Mail className="w-5 h-5" />} title={t("workspace.mail")} description={t("workspace.mail_desc")} />
         {isAdmin && <Tile href="/workspace/domain" icon={<Globe className="w-5 h-5" />} title={t("workspace.domain")} description={t("workspace.domain_desc")} />}
         {isAdmin && <Tile href="/workspace/users" icon={<Users className="w-5 h-5" />} title={t("workspace.users")} description={t("workspace.users_desc")} />}
         <Tile href="/workspace/password" icon={<KeyRound className="w-5 h-5" />} title={t("workspace.password")} description={t("workspace.password_desc")} />

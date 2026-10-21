@@ -14,6 +14,7 @@ import { getPathPrefix, withBasePath } from '@/lib/browser-navigation';
 import { clearCachedData } from '@/lib/clear-cached-data';
 import { SpamSiegeGame } from './spam-siege-game';
 import { DebugSettings } from './debug-settings';
+import { AboutAttribution } from '@/components/xenaxio/about-attribution';
 
 const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || "0.0.0";
 const GIT_COMMIT = process.env.NEXT_PUBLIC_GIT_COMMIT || "unknown";
@@ -111,6 +112,7 @@ export function AboutFooter() {
           {sourceCodeUrl ? t('about.source_code') : 'GitHub'} <ExternalLink className="w-3 h-3" />
         </a>
       </div>
+      <AboutAttribution />
     </div>
   );
 }

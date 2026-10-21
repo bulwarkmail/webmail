@@ -1039,7 +1039,9 @@ export class JMAPClient implements IJMAPClient {
   private password: string;
   private basePassword: string = '';
   private authHeader: string;
-  private authMode: 'basic' | 'bearer' = 'basic';
+  private authMode: 'basic' | 'bearer' | 'cookie' = 'basic';
+  /** xenaxio: called when the BFF session behind a cookie-mode client has ended. */
+  static onCookieSessionExpired?: () => void;
   private onTokenRefresh?: () => Promise<string | null>;
   private onTotpRequired?: () => Promise<string | null>;
   private apiUrl: string = "";
@@ -1098,6 +1100,24 @@ export class JMAPClient implements IJMAPClient {
     client.authHeader = `Bearer ${accessToken}`;
     client.onTokenRefresh = onTokenRefresh;
     return client;
+  }
+
+  /**
+   * xenaxio: a client that talks to the platform BFF (`serverUrl` = `<origin>/api/jmap`).
+   * The browser holds no credentials; the httpOnly session cookie authenticates
+   * every request, and the BFF forwards it with the user's own mail server token.
+   */
+  static withCookieSession(serverUrl: string, username: string): JMAPClient {
+    const client = new JMAPClient(serverUrl, username, '');
+    client.authMode = 'cookie';
+    client.authHeader = '';
+    return client;
+  }
+
+  /** Request headers that authenticate this client. */
+  private authHeaders(): Record<string, string> {
+    // Cookie mode: the cookie goes along by itself; the header is the BFF's CSRF guard.
+    return this.authMode === 'cookie' ? { 'x-xenaxio-csrf': '1' } : { 'Authorization': this.authHeader };
   }
 
   updateAccessToken(token: string): void {
@@ -1266,7 +1286,7 @@ export class JMAPClient implements IJMAPClient {
     }
 
     const timeoutMs = opts?.timeoutMs ?? JMAPClient.REQUEST_TIMEOUT_MS;
-    const headers = { ...init?.headers as Record<string, string>, 'Authorization': this.authHeader };
+    const headers = { ...init?.headers as Record<string, string>, ...this.authHeaders() };
     let response: Response;
 
     try {
@@ -1295,11 +1315,14 @@ export class JMAPClient implements IJMAPClient {
     }
 
     if (response.status === 401) {
-      if (this.authMode === 'bearer' && this.onTokenRefresh) {
+      if (this.authMode === 'cookie') {
+        // The platform session ended (sign-out elsewhere, password reset, expiry).
+        if (!this.intentionallyDisconnected) JMAPClient.onCookieSessionExpired?.();
+      } else if (this.authMode === 'bearer' && this.onTokenRefresh) {
         const newToken = await this.onTokenRefresh();
         if (newToken) {
           this.updateAccessToken(newToken);
-          const retryHeaders = { ...init?.headers as Record<string, string>, 'Authorization': this.authHeader };
+          const retryHeaders = { ...init?.headers as Record<string, string>, ...this.authHeaders() };
           response = await this.timedFetch(url, init, retryHeaders, timeoutMs);
         }
       } else if (this.authMode === 'basic' && !this.reconnecting && url !== `${this.serverUrl}/.well-known/jmap`) {
@@ -1308,7 +1331,7 @@ export class JMAPClient implements IJMAPClient {
         try {
           await this.refreshSession();
           this.connectionChangeCallback?.(true);
-          const retryHeaders = { ...init?.headers as Record<string, string>, 'Authorization': this.authHeader };
+          const retryHeaders = { ...init?.headers as Record<string, string>, ...this.authHeaders() };
           response = await this.timedFetch(url, init, retryHeaders, timeoutMs);
         } catch {
           // Session refresh failed - if TOTP was used, try re-auth with fresh TOTP
@@ -1319,7 +1342,7 @@ export class JMAPClient implements IJMAPClient {
                 this.updateBasicAuth(`${this.basePassword}$${newTotp}`);
                 await this.refreshSession();
                 this.connectionChangeCallback?.(true);
-                const retryHeaders = { ...init?.headers as Record<string, string>, 'Authorization': this.authHeader };
+                const retryHeaders = { ...init?.headers as Record<string, string>, ...this.authHeaders() };
                 response = await this.timedFetch(url, init, retryHeaders, timeoutMs);
               }
             } catch {
@@ -1359,7 +1382,7 @@ export class JMAPClient implements IJMAPClient {
     if (response.redirected && response.status === 401) {
       return fetch(response.url, {
         method: 'GET',
-        headers: { 'Authorization': this.authHeader },
+        headers: this.authHeaders(),
       });
     }
     if (!response.ok || !response.redirected) return response;
@@ -1371,7 +1394,7 @@ export class JMAPClient implements IJMAPClient {
 
     return fetch(response.url, {
       method: 'GET',
-      headers: { 'Authorization': this.authHeader },
+      headers: this.authHeaders(),
     });
   }
 
@@ -5000,7 +5023,7 @@ export class JMAPClient implements IJMAPClient {
       const xhr = new XMLHttpRequest();
       xhr.open('POST', url, true);
       xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
-      xhr.setRequestHeader('Authorization', this.authHeader);
+      for (const [name, value] of Object.entries(this.authHeaders())) xhr.setRequestHeader(name, value);
       xhr.responseType = 'text';
 
       const onAbort = () => xhr.abort();

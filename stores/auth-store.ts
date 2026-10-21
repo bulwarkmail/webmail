@@ -44,6 +44,8 @@ import {
   saveLiteRefreshToken,
 } from '@/lib/auth/lite-tokens';
 import { clearLiteOAuthFlow, readLiteOAuthFlow } from '@/lib/auth/lite-oauth';
+import { bffJmapUrl, goToPage, redirectToLogin as redirectToBffLogin, XENAXIO_BFF } from '@/lib/xenaxio/bff';
+import { xenaxio as xenaxioApi } from '@/lib/xenaxio/api';
 
 /** Logins restored at once after the one on screen: enough to overlap round trips, few enough not to crowd the server. */
 const RESTORE_CONCURRENCY = 4;
@@ -1002,6 +1004,89 @@ let refreshPromise: Promise<string | null> | null = null;
 
 // Multi-account state: per-account JMAP clients and refresh timers
 const clients = new Map<string, JMAPClient>();
+
+type AuthSet = (partial: Partial<AuthState>) => void;
+type AuthGet = () => AuthState;
+
+/**
+ * xenaxio: restores the signed-in user from the platform BFF. One account per
+ * browser session; the JMAP client talks to /api/jmap with the session cookie.
+ * Without a session (or with a temporary password still to change) the app
+ * goes to sign-in.
+ */
+async function restoreBffSession(set: AuthSet, get: AuthGet): Promise<void> {
+  set({ isLoading: true, isRateLimited: false, rateLimitUntil: null });
+  let me: Awaited<ReturnType<typeof xenaxioApi.me>>;
+  try {
+    me = await xenaxioApi.me();
+  } catch (error) {
+    const status = (error as { status?: number }).status;
+    set({ isAuthenticated: false, isLoading: false, client: null, ...(status && status !== 401 ? { error: 'connection_failed' } : {}) });
+    return;
+  }
+  if (me.user.mustChangePassword) {
+    set({ isAuthenticated: false, isLoading: false });
+    goToPage('workspace/password');
+    return;
+  }
+
+  const username = me.user.email;
+  const serverUrl = bffJmapUrl();
+  const accountId = generateAccountId(username, serverUrl);
+  let client = clients.get(accountId);
+  try {
+    if (!client) {
+      client = JMAPClient.withCookieSession(serverUrl, username);
+      JMAPClient.onCookieSessionExpired = () => {
+        set({ isAuthenticated: false, client: null });
+        redirectToBffLogin();
+      };
+      await client.connect();
+      clients.set(accountId, client);
+      bindClientStatusHandlers(client, set, get, accountId);
+    }
+  } catch (error) {
+    debug.error('BFF session restore failed:', error);
+    set({ isLoading: false, error: 'connection_failed' });
+    return;
+  }
+
+  const accountStore = useAccountStore.getState();
+  // Exactly one account: drop anything left from another login in this browser.
+  for (const other of accountStore.accounts) if (other.id !== accountId) accountStore.removeAccount(other.id);
+  if (!accountStore.getAccountById(accountId)) {
+    accountStore.addAccount({
+      label: username,
+      serverUrl,
+      username,
+      authMode: 'basic',
+      rememberMe: false,
+      displayName: me.user.displayName,
+      email: username,
+      lastLoginAt: Date.now(),
+      isConnected: true,
+      hasError: false,
+      isDefault: true,
+    });
+  }
+  accountStore.setActiveAccount(accountId);
+
+  const { identities, primaryIdentity } = loadIdentities(await client.getIdentities(), username);
+  initializeFeatureStores(client);
+  void syncAccountDisplayName(accountId, client, primaryIdentity?.name ?? me.user.displayName);
+  set({
+    isAuthenticated: true,
+    isLoading: false,
+    serverUrl,
+    username,
+    client,
+    ...getClientRateLimitState(client),
+    identities,
+    primaryIdentity,
+    authMode: 'basic',
+    activeAccountId: accountId,
+  });
+}
 
 /** Server URL recorded on the demo accounts; nothing is ever sent to it. */
 const DEMO_SERVER_URL = 'https://demo.example.com';
@@ -2159,6 +2244,8 @@ export const useAuthStore = create<AuthState>()(
         const endProviderSession = userInitiated && !wasDemoMode && shouldEndProviderSession(account);
 
         await beforeLogoutHooks(accountId ?? 'all');
+        // xenaxio: end the platform session; the cookie is what signs the browser in.
+        if (XENAXIO_BFF) await xenaxioApi.logout().catch(() => {});
 
         // From here on nothing may renew this slot's session; the cleanup
         // below reopens it once the credentials are gone.
@@ -2579,6 +2666,11 @@ export const useAuthStore = create<AuthState>()(
       },
 
       checkAuth: async () => {
+        // xenaxio: the platform BFF owns the session (see restoreBffSession).
+        if (XENAXIO_BFF) {
+          await restoreBffSession(set, get);
+          return;
+        }
         const accountStore = useAccountStore.getState();
         let accounts = accountStore.accounts;
 
