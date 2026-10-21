@@ -1,7 +1,9 @@
 "use client";
 
-// M2, M4: personal MCP tokens. The user names a token, copies it once together
-// with a ready command for Claude Code or a JSON config, and can revoke it.
+// Step 9: "Connect AI chats". For everyday users: how to add xenaxio to Claude
+// as a connector (sign-in and consent, no token to copy) and the list of
+// connected chats with a disconnect button. Personal tokens (M2, M4) for
+// scripts and automations live in a collapsed "advanced" section.
 import { type FormEvent, useCallback, useEffect, useState } from "react";
 import { useLocale } from "next-intl";
 import { Button } from "@/components/ui/button";
@@ -79,12 +81,63 @@ function Tokens() {
 
   if (!data) return error ? <Notice kind="error">{error}</Notice> : <Spinner label={t("common.loading")} />;
 
+  const howto = ["mcp.howto_1", "mcp.howto_2", "mcp.howto_3", "mcp.howto_4"];
   return (
     <div className="max-w-2xl space-y-6">
       <p className="text-sm text-muted-foreground">{t("mcp.intro")}</p>
       {error && <Notice kind="error">{error}</Notice>}
       {!data.enabled && <Notice kind="info">{t("mcp.disabled")}</Notice>}
 
+      {data.enabled && (
+        <section className="space-y-3 rounded-lg border border-border p-4">
+          <h2 className="font-medium">{t("mcp.howto_title")}</h2>
+          <ol className="space-y-3 text-sm">
+            {howto.map((key, i) => (
+              <li key={key} className="flex gap-3">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">{i + 1}</span>
+                <div className="min-w-0 flex-1 space-y-2 pt-0.5">
+                  <p>{t(key)}</p>
+                  {i === 1 && <Snippet label={t("mcp.url")} value={data.mcpUrl} />}
+                </div>
+              </li>
+            ))}
+          </ol>
+          <p className="text-xs text-muted-foreground">{t("mcp.howto_other")}</p>
+        </section>
+      )}
+
+      <section className="space-y-2">
+        <h2 className="font-medium">{t("mcp.connected")}</h2>
+        {data.tokens.length === 0 ? (
+          <p className="text-sm text-muted-foreground">{t("mcp.none")}</p>
+        ) : (
+          <ul className="divide-y divide-border rounded-lg border border-border">
+            {data.tokens.map((token) => (
+              <li key={token.id} className="flex flex-wrap items-center gap-3 px-4 py-3">
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate font-medium">
+                    {token.name}
+                    {token.kind === "token" && <span className="ml-2 rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">{t("mcp.kind_token")} {token.hint}</span>}
+                  </span>
+                  <span className="block text-xs text-muted-foreground">
+                    {t("mcp.connected_since", { date: date(token.createdAt) })} · {t("mcp.expires", { date: date(token.expiresAt) })} ·{" "}
+                    {token.lastUsedAt ? t("mcp.last_used", { date: date(token.lastUsedAt) }) : t("mcp.never_used")}
+                  </span>
+                </span>
+                <Button size="sm" variant="outline" onClick={() => revoke(token)}>
+                  {t("mcp.revoke")}
+                </Button>
+              </li>
+            ))}
+          </ul>
+        )}
+        <p className="text-xs text-muted-foreground">{t("mcp.audit_note")}</p>
+      </section>
+
+      <details className="group rounded-lg border border-border" open={created !== null}>
+        <summary className="cursor-pointer select-none px-4 py-3 text-sm font-medium">{t("mcp.advanced")}</summary>
+        <div className="space-y-4 border-t border-border p-4">
+          <p className="text-sm text-muted-foreground">{t("mcp.advanced_intro")}</p>
       {created ? (
         <section className="space-y-4 rounded-lg border border-primary/40 bg-primary/5 p-4">
           <Notice kind="success">{t("mcp.created")}</Notice>
@@ -116,31 +169,8 @@ function Tokens() {
         )
       )}
 
-      <section className="space-y-2">
-        <h2 className="font-medium">{t("mcp.list")}</h2>
-        {data.tokens.length === 0 ? (
-          <p className="text-sm text-muted-foreground">{t("mcp.none")}</p>
-        ) : (
-          <ul className="divide-y divide-border rounded-lg border border-border">
-            {data.tokens.map((token) => (
-              <li key={token.id} className="flex flex-wrap items-center gap-3 px-4 py-3">
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate font-medium">
-                    {token.name} <span className="font-mono text-xs text-muted-foreground">{token.hint}</span>
-                  </span>
-                  <span className="block text-xs text-muted-foreground">
-                    {t("mcp.expires", { date: date(token.expiresAt) })} · {token.lastUsedAt ? t("mcp.last_used", { date: date(token.lastUsedAt) }) : t("mcp.never_used")}
-                  </span>
-                </span>
-                <Button size="sm" variant="outline" onClick={() => revoke(token)}>
-                  {t("mcp.revoke")}
-                </Button>
-              </li>
-            ))}
-          </ul>
-        )}
-        <p className="text-xs text-muted-foreground">{t("mcp.audit_note")}</p>
-      </section>
+        </div>
+      </details>
     </div>
   );
 }
