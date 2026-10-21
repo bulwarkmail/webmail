@@ -33,7 +33,10 @@
     "invalid_local_part": "Use only letters, digits, dots, hyphens and underscores.",
     "validation": "Please check your entries.",
     "network": "No connection to the server.",
-    "internal": "Something went wrong. Please try again."
+    "internal": "Something went wrong. Please try again.",
+    "token_limit": "You already have 5 active tokens. Revoke one first.",
+    "token_not_found": "This token no longer exists.",
+    "ai_disabled": "AI features are switched off for your account."
   },
   "login": {
     "title": "Sign in",
@@ -80,7 +83,9 @@
     "password": "Change password",
     "password_desc": "Set a new password for your account",
     "mail": "Mail, calendar, contacts",
-    "mail_desc": "Open your mailbox"
+    "mail_desc": "Open your mailbox",
+    "mcp": "AI access for other apps (MCP)",
+    "mcp_desc": "Connect Claude Code and other AI apps to your mailbox"
   },
   "domain": {
     "title": "Domain and DNS",
@@ -181,12 +186,57 @@
     "tool_create_draft": "Saving a draft…",
     "tool_search_contacts": "Looking up contacts…",
     "tool_error": "A step failed; the answer may be incomplete.",
-    "not_sent": "Nothing is sent automatically: drafts are only saved.",
+    "not_sent": "Nothing is sent without your confirmation: drafts are only saved, events are created only after “Confirm”.",
     "errors": {
       "ai_disabled": "The assistant is turned off for your account.",
       "ai_not_configured": "The assistant is not set up yet.",
       "assistant_failed": "The assistant could not answer. Please try again.",
       "rate_limited": "Too many requests. Please wait a moment."
+    },
+    "tool_list_events": "Checking the calendar…",
+    "tool_find_free_time": "Looking for free time…",
+    "tool_create_event": "Preparing an event…",
+    "proposal": {
+      "event": "Proposed event",
+      "when": "When",
+      "where": "Where",
+      "attendees": "Invite",
+      "invites_note": "When you confirm, the people invited get an invitation by email.",
+      "confirm": "Confirm",
+      "reject": "Discard",
+      "running": "Creating…",
+      "done": "Event created.",
+      "done_invited": "Event created, invitation sent.",
+      "invite_failed": "Event created, but the invitation could not be sent.",
+      "rejected": "Discarded.",
+      "expired": "This proposal has expired. Ask the assistant for a new one.",
+      "already": "This proposal was already decided.",
+      "failed": "The event could not be created."
     }
+  },
+  "mcp": {
+    "title": "AI access (MCP)",
+    "intro": "With a personal token, AI apps such as Claude Code can search your email, contacts and calendar, save drafts and create events. They cannot send or delete anything.",
+    "disabled": "AI features are switched off for your account. Please contact your administrator.",
+    "new": "New token",
+    "name": "Name",
+    "name_hint": "What is the token for? For example “Claude Code laptop”.",
+    "lifetime": "Valid for",
+    "days": "{days} days",
+    "create": "Create token",
+    "created": "Token created. Copy it now: it is shown only once.",
+    "token": "Token",
+    "claude_code": "Command for Claude Code",
+    "json": "Settings for other apps (JSON)",
+    "url": "MCP server address",
+    "done": "Done",
+    "list": "Active tokens",
+    "none": "No tokens yet.",
+    "expires": "valid until {date}",
+    "last_used": "last used {date}",
+    "never_used": "not used yet",
+    "revoke": "Revoke",
+    "revoke_confirm": "Revoke token “{name}”? Apps using it lose access immediately.",
+    "audit_note": "Every access is logged with the token's name."
   }
 }

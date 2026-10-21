@@ -15,7 +15,7 @@ export class XenaxioApiError extends Error {
   }
 }
 
-async function request<T>(method: "GET" | "POST", path: string, body?: unknown): Promise<T> {
+async function request<T>(method: "GET" | "POST" | "DELETE", path: string, body?: unknown): Promise<T> {
   let res: Response;
   try {
     res = await apiFetch(path, {
@@ -98,9 +98,22 @@ export interface Invitation {
   tenantName: string | null;
 }
 
+export interface McpTokenInfo {
+  id: string;
+  name: string;
+  hint: string;
+  createdAt: string;
+  expiresAt: string;
+  lastUsedAt: string | null;
+}
+
 export const xenaxio = {
   me: () => request<Me>("GET", "/api/me"),
-  login: (email: string, password: string) => request<Me>("POST", "/api/auth/login", { email, password }),
+  mcpTokens: () => request<{ mcpUrl: string; enabled: boolean; tokens: McpTokenInfo[] }>("GET", "/api/me/mcp-tokens"),
+  createMcpToken: (name: string, days: number) => request<{ token: string; mcpUrl: string; info: McpTokenInfo }>("POST", "/api/me/mcp-tokens", { name, days }),
+  revokeMcpToken: (id: string) => request<{ ok: true }>("DELETE", `/api/me/mcp-tokens/${encodeURIComponent(id)}`),
+  login: (email: string, password: string, locale?: string) =>
+    request<Me>("POST", "/api/auth/login", { email, password, ...(locale === "de" || locale === "en" ? { locale } : {}) }),
   logout: () => request<{ ok: true }>("POST", "/api/auth/logout", {}),
   changePassword: (currentPassword: string, newPassword: string) =>
     request<{ ok: true }>("POST", "/api/me/password", { currentPassword, newPassword }),

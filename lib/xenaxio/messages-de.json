@@ -33,7 +33,10 @@
     "invalid_local_part": "Verwenden Sie nur Buchstaben, Ziffern, Punkte, Binde- und Unterstriche.",
     "validation": "Bitte prüfen Sie Ihre Eingaben.",
     "network": "Keine Verbindung zum Server.",
-    "internal": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut."
+    "internal": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
+    "token_limit": "Sie haben bereits 5 aktive Tokens. Widerrufen Sie zuerst eines.",
+    "token_not_found": "Dieses Token gibt es nicht mehr.",
+    "ai_disabled": "Die KI-Funktionen sind für Ihr Konto ausgeschaltet."
   },
   "login": {
     "title": "Anmelden",
@@ -80,7 +83,9 @@
     "password": "Passwort ändern",
     "password_desc": "Neues Passwort für Ihr Konto festlegen",
     "mail": "E-Mail, Kalender, Kontakte",
-    "mail_desc": "Ihr Postfach öffnen"
+    "mail_desc": "Ihr Postfach öffnen",
+    "mcp": "KI-Zugang für andere Programme (MCP)",
+    "mcp_desc": "Claude Code und andere KI-Programme mit Ihrem Postfach verbinden"
   },
   "domain": {
     "title": "Domain und DNS",
@@ -181,12 +186,57 @@
     "tool_create_draft": "Speichere einen Entwurf…",
     "tool_search_contacts": "Suche Kontakte…",
     "tool_error": "Ein Schritt ist fehlgeschlagen; die Antwort ist eventuell unvollständig.",
-    "not_sent": "Es wird nichts automatisch gesendet: Entwürfe werden nur gespeichert.",
+    "not_sent": "Ohne Ihre Bestätigung wird nichts gesendet: Entwürfe werden nur gespeichert, Termine erst nach „Bestätigen“ angelegt.",
     "errors": {
       "ai_disabled": "Der Assistent ist für Ihr Konto ausgeschaltet.",
       "ai_not_configured": "Der Assistent ist noch nicht eingerichtet.",
       "assistant_failed": "Der Assistent konnte nicht antworten. Bitte versuchen Sie es erneut.",
       "rate_limited": "Zu viele Anfragen. Bitte warten Sie einen Moment."
+    },
+    "tool_list_events": "Sehe im Kalender nach…",
+    "tool_find_free_time": "Suche freie Zeiten…",
+    "tool_create_event": "Bereite einen Termin vor…",
+    "proposal": {
+      "event": "Terminvorschlag",
+      "when": "Wann",
+      "where": "Wo",
+      "attendees": "Einladen",
+      "invites_note": "Beim Bestätigen erhalten die Eingeladenen eine Einladung per E-Mail.",
+      "confirm": "Bestätigen",
+      "reject": "Verwerfen",
+      "running": "Wird angelegt…",
+      "done": "Termin angelegt.",
+      "done_invited": "Termin angelegt, Einladung gesendet.",
+      "invite_failed": "Termin angelegt, aber die Einladung konnte nicht gesendet werden.",
+      "rejected": "Verworfen.",
+      "expired": "Dieser Vorschlag ist abgelaufen. Bitten Sie den Assistenten um einen neuen.",
+      "already": "Über diesen Vorschlag wurde bereits entschieden.",
+      "failed": "Der Termin konnte nicht angelegt werden."
     }
+  },
+  "mcp": {
+    "title": "KI-Zugang (MCP)",
+    "intro": "Mit einem persönlichen Token können KI-Programme wie Claude Code Ihre E-Mails, Kontakte und Ihren Kalender durchsuchen, Entwürfe speichern und Termine anlegen. Senden oder löschen können sie nichts.",
+    "disabled": "Die KI-Funktionen sind für Ihr Konto ausgeschaltet. Wenden Sie sich an Ihre Administration.",
+    "new": "Neues Token",
+    "name": "Name",
+    "name_hint": "Wofür ist das Token? Zum Beispiel „Claude Code Laptop“.",
+    "lifetime": "Gültig für",
+    "days": "{days} Tage",
+    "create": "Token erstellen",
+    "created": "Token erstellt. Kopieren Sie es jetzt: Es wird nur einmal angezeigt.",
+    "token": "Token",
+    "claude_code": "Befehl für Claude Code",
+    "json": "Einstellungen für andere Programme (JSON)",
+    "url": "Adresse des MCP-Servers",
+    "done": "Fertig",
+    "list": "Aktive Tokens",
+    "none": "Noch keine Tokens.",
+    "expires": "gültig bis {date}",
+    "last_used": "zuletzt benutzt {date}",
+    "never_used": "noch nicht benutzt",
+    "revoke": "Widerrufen",
+    "revoke_confirm": "Token „{name}“ widerrufen? Programme mit diesem Token verlieren sofort den Zugang.",
+    "audit_note": "Jeder Zugriff wird mit dem Namen des Tokens protokolliert."
   }
 }

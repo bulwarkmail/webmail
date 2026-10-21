@@ -11,11 +11,27 @@ export interface SourceEmail {
   receivedAt?: string;
 }
 
+/** What the assistant proposes to create (I5); runs only after "Bestätigen". */
+export interface ProposalSummary {
+  title?: string;
+  start?: string;
+  end?: string;
+  timeZone?: string;
+  location?: string;
+  attendees?: string[];
+}
+
+export interface ActionResult {
+  status: "done";
+  result: { eventId?: string; invited?: string[]; invitationSent?: boolean };
+}
+
 export type AssistantEvent =
   | { type: "start"; conversationId?: string }
   | { type: "text"; text: string }
   | { type: "tool"; name: string; status: "start" | "done" | "error" }
   | { type: "sources"; emails: SourceEmail[] }
+  | { type: "proposal"; id: string; tool: string; summary: ProposalSummary }
   | { type: "done"; inputTokens: number; outputTokens: number }
   | { type: "error"; code: string };
 
@@ -88,6 +104,12 @@ export const assistant = {
   },
   async reply(emailId: string, instructions = ""): Promise<{ draftId: string; threadId?: string }> {
     return (await post("/api/ai/reply", { emailId, instructions })).json();
+  },
+  async confirm(actionId: string): Promise<ActionResult> {
+    return (await post(`/api/ai/actions/${encodeURIComponent(actionId)}/confirm`, {})).json();
+  },
+  async reject(actionId: string): Promise<void> {
+    await post(`/api/ai/actions/${encodeURIComponent(actionId)}/reject`, {});
   },
   async conversations(): Promise<{ id: string; title: string; updatedAt: string }[]> {
     const res = await apiFetch("/api/ai/conversations", { credentials: "same-origin" });
