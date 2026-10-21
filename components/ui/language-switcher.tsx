@@ -7,7 +7,7 @@ import { getEffectiveLocale } from '@/i18n/detect-locale';
 import { Check, ChevronDown, Search } from '@/components/icons';
 import { cn } from '@/lib/utils';
 import { flagComponents } from './flag-icons';
-import { XENAXIO_BFF } from '@/lib/xenaxio/bff';
+import { XENAXIO_BFF, XENAXIO_LOCALES } from '@/lib/xenaxio/bff';
 
 const allLanguages = [
   { value: 'auto', label: 'Auto' },
@@ -42,7 +42,7 @@ const allLanguages = [
 ];
 
 // xenaxio: the product supports German and English only (spec W6).
-const languages = XENAXIO_BFF ? allLanguages.filter((l) => ['auto', 'de', 'en'].includes(l.value)) : allLanguages;
+const languages = XENAXIO_BFF ? allLanguages.filter((l) => l.value === 'auto' || XENAXIO_LOCALES.includes(l.value)) : allLanguages;
 
 // Case- and accent-insensitive, so "espanol" finds "Español".
 function fold(text: string): string {

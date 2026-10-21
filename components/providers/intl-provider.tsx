@@ -8,7 +8,7 @@ import { getBrowserTimeZone, resolveTimeZone } from '@/lib/timezone';
 import enMessages from '@/locales/en/common.json';
 import { getLocaleDirection } from '@/i18n/direction';
 import { mergeMessages } from '@/i18n/merge-messages';
-import { detectBrowserLocale } from '@/i18n/detect-locale';
+import { detectBrowserLocale, isUsableLocaleChoice } from '@/i18n/detect-locale';
 import { rebrandMessages } from '@/lib/xenaxio/brand';
 
 type Messages = Record<string, unknown>;
@@ -87,10 +87,9 @@ export function IntlProvider({ locale: initialLocale, messages: initialMessages,
   // is never overridden by detection. Loading a not-yet-cached catalog is
   // async; until it lands we keep rendering the previous locale.
   useEffect(() => {
-    const target =
-      !currentLocale || currentLocale === 'auto'
-        ? detectBrowserLocale(initialLocale)
-        : currentLocale;
+    const target = isUsableLocaleChoice(currentLocale)
+      ? currentLocale
+      : detectBrowserLocale(initialLocale);
 
     const cached = loadedRef.current[target];
     if (cached) {

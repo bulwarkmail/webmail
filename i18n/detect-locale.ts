@@ -1,6 +1,17 @@
 import { routing } from './routing';
 import { matchSupportedLocale } from './locale-matcher';
 import { useLocaleStore } from '@/stores/locale-store';
+import { XENAXIO_BFF, XENAXIO_LOCALES } from '@/lib/xenaxio/bff';
+
+// xenaxio: only DE/EN exist (spec W6); a browser in any other language gets
+// the default instead of a locale whose pages the build does not have.
+const detectableLocales = XENAXIO_BFF ? XENAXIO_LOCALES : routing.locales;
+
+/** xenaxio: a stored or synced choice outside DE/EN counts as "auto". */
+export function isUsableLocaleChoice(choice: string | null | undefined): choice is string {
+  if (!choice || choice === 'auto') return false;
+  return !XENAXIO_BFF || XENAXIO_LOCALES.includes(choice);
+}
 
 /**
  * Pick the best supported locale for a first-time visitor from their browser
@@ -15,7 +26,7 @@ export function detectBrowserLocale(fallback: string): string {
   const prefs = navigator.languages?.length ? navigator.languages : [navigator.language];
   for (const tag of prefs) {
     if (!tag) continue;
-    const locale = matchSupportedLocale(tag, routing.locales);
+    const locale = matchSupportedLocale(tag, detectableLocales);
     if (locale === 'en') return fallback; // English is the top preference -> keep default
     if (locale) return locale;             // first supported non-English preference wins
   }
@@ -30,7 +41,7 @@ export function detectBrowserLocale(fallback: string): string {
  */
 export function getEffectiveLocale(): string {
   const choice = useLocaleStore.getState().locale;
-  if (choice && choice !== 'auto') return choice;
+  if (isUsableLocaleChoice(choice)) return choice;
   if (typeof document !== 'undefined' && document.documentElement.lang) {
     return document.documentElement.lang;
   }
