@@ -16,3 +16,14 @@ export function rebrandMessages(messages: Messages): Messages {
   }
   return out;
 }
+
+/** Only absolute http(s) links from config.json, so a typo cannot become a javascript: URL. */
+export function safeHttpUrl(value: string | undefined): string {
+  if (!value) return "";
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" || url.protocol === "http:" ? url.href : "";
+  } catch {
+    return "";
+  }
+}

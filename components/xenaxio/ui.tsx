@@ -9,33 +9,71 @@ import { useThemeStore } from "@/stores/theme-store";
 import { withBasePath } from "@/lib/browser-navigation";
 import { cn } from "@/lib/utils";
 import { useXT } from "@/lib/xenaxio/i18n";
+import { safeHttpUrl } from "@/lib/xenaxio/brand";
 
 /** Centered card for sign-in, password and onboarding pages. */
 export function AuthCard({ title, subtitle, children }: { title: string; subtitle?: string; children: ReactNode }) {
   const t = useXT();
   // Brand logo and wordmark from config.json (W1). Shown only once the config
   // is loaded, so the upstream default logo never flashes.
-  const { appLogoLightUrl, loginLogoLightUrl, loginLogoDarkUrl, isLoading } = useConfig();
+  const { appLogoLightUrl, loginLogoLightUrl, loginLogoDarkUrl, loginWebsiteUrl, loginImprintUrl, loginPrivacyPolicyUrl, isLoading } =
+    useConfig();
   const dark = useThemeStore((s) => s.resolvedTheme) === "dark";
   const wordmark = isLoading ? "" : dark ? loginLogoDarkUrl || loginLogoLightUrl : loginLogoLightUrl || loginLogoDarkUrl;
+  // Public website, imprint and privacy policy of the operator (config.json:
+  // loginWebsiteUrl, loginImprintUrl, loginPrivacyPolicyUrl). Empty = hidden.
+  const website = isLoading ? "" : safeHttpUrl(loginWebsiteUrl);
+  const legal = isLoading
+    ? []
+    : [
+        { href: safeHttpUrl(loginImprintUrl), label: t("common.imprint") },
+        { href: safeHttpUrl(loginPrivacyPolicyUrl), label: t("common.privacy") },
+      ].filter((l) => l.href);
+  const brand = (
+    <>
+      {!isLoading && appLogoLightUrl && <img src={withBasePath(appLogoLightUrl)} alt="" className="h-14 w-14" />}
+      {isLoading ? (
+        <div className="h-6" />
+      ) : wordmark ? (
+        <img src={withBasePath(wordmark)} alt={t("common.app_name")} className="h-6 w-auto" />
+      ) : (
+        <p className="text-center text-sm font-semibold tracking-wide text-primary">{t("common.app_name")}</p>
+      )}
+    </>
+  );
   return (
     <main className="min-h-dvh flex items-center justify-center bg-background px-4 py-10">
       <div className="w-full max-w-md">
-        <div className="mb-6 flex flex-col items-center gap-3">
-          {!isLoading && appLogoLightUrl && <img src={withBasePath(appLogoLightUrl)} alt="" className="h-14 w-14" />}
-          {isLoading ? (
-            <div className="h-6" />
-          ) : wordmark ? (
-            <img src={withBasePath(wordmark)} alt={t("common.app_name")} className="h-6 w-auto" />
-          ) : (
-            <p className="text-center text-sm font-semibold tracking-wide text-primary">{t("common.app_name")}</p>
-          )}
-        </div>
+        {website ? (
+          <a
+            href={website}
+            title={t("common.to_website")}
+            className="mb-6 flex flex-col items-center gap-3 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            {brand}
+          </a>
+        ) : (
+          <div className="mb-6 flex flex-col items-center gap-3">{brand}</div>
+        )}
         <div className="rounded-xl border border-border bg-card text-card-foreground shadow-sm p-6 sm:p-8">
           <h1 className="text-xl font-semibold">{title}</h1>
           {subtitle && <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>}
           <div className="mt-6">{children}</div>
         </div>
+        {(website || legal.length > 0) && (
+          <nav className="mt-6 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
+            {website && (
+              <a href={website} className="hover:text-foreground hover:underline">
+                ← {t("common.to_website")}
+              </a>
+            )}
+            {legal.map((l) => (
+              <a key={l.href} href={l.href} className="hover:text-foreground hover:underline">
+                {l.label}
+              </a>
+            ))}
+          </nav>
+        )}
       </div>
     </main>
   );

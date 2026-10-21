@@ -8,7 +8,10 @@
     "back": "Zurück",
     "sign_out": "Abmelden",
     "password_show": "Passwort anzeigen",
-    "password_hide": "Passwort verbergen"
+    "password_hide": "Passwort verbergen",
+    "to_website": "Zur Website",
+    "imprint": "Impressum",
+    "privacy": "Datenschutz"
   },
   "errors": {
     "invalid_credentials": "E-Mail-Adresse oder Passwort ist falsch.",
