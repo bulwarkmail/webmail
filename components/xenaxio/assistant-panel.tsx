@@ -200,6 +200,14 @@ export function AssistantPanel() {
     void assistantAvailable().then(setAvailable);
   }, []);
 
+  // I8: tell the user when most of this month's AI allowance is used.
+  useEffect(() => {
+    if (!open || !available) return;
+    void assistant.status().then((s) => {
+      if (s.usage?.warning) setNotice(t(s.usage.blocked ? "assistant.errors.ai_limit_reached" : "assistant.limit_warning"));
+    }, () => undefined);
+  }, [open, available, t]);
+
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: "end" });
   }, [turns]);
@@ -234,7 +242,7 @@ export function AssistantPanel() {
         if ((err as { name?: string }).name !== "AbortError") {
           const key = errorKey(err);
           const code = key.replace("errors.", "");
-          update((turn) => ({ ...turn, error: ["ai_disabled", "ai_not_configured", "rate_limited"].includes(code) ? t(`assistant.errors.${code}`) : t(key) }));
+          update((turn) => ({ ...turn, error: ["ai_disabled", "ai_not_configured", "ai_limit_reached", "rate_limited"].includes(code) ? t(`assistant.errors.${code}`) : t(key) }));
         }
       } finally {
         setBusy(false);

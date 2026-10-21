@@ -91,7 +91,7 @@ export interface ChatContext {
 }
 
 export const assistant = {
-  async status(): Promise<{ configured: boolean; enabled: boolean }> {
+  async status(): Promise<{ configured: boolean; enabled: boolean; usage?: { warning: boolean; blocked: boolean } }> {
     const res = await apiFetch("/api/ai/status", { credentials: "same-origin" });
     if (!res.ok) return { configured: false, enabled: false };
     return res.json();
