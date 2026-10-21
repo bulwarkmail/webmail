@@ -154,5 +154,39 @@
   "about": {
     "based_on": "Based on",
     "source": "Source code"
+  },
+  "assistant": {
+    "title": "Assistant",
+    "open": "Open assistant",
+    "close": "Close assistant",
+    "new_chat": "New chat",
+    "history": "History",
+    "delete_all": "Delete all chats",
+    "delete": "Delete chat",
+    "empty": "Ask about your email, e.g. “What did we agree with Müller GmbH on the price?”",
+    "placeholder": "Ask something…",
+    "send": "Send",
+    "stop": "Stop",
+    "context": "About: {subject}",
+    "summarize": "Summarize",
+    "reply": "Draft reply with AI",
+    "reply_instructions": "Wishes for the reply (optional)",
+    "reply_creating": "Writing the draft…",
+    "reply_done": "The draft is in Drafts and open in the editor.",
+    "summary_title": "Summary of “{subject}”",
+    "sources": "Sources",
+    "tool_search_mail": "Searching mail…",
+    "tool_get_email": "Reading an email…",
+    "tool_get_thread": "Reading the conversation…",
+    "tool_create_draft": "Saving a draft…",
+    "tool_search_contacts": "Looking up contacts…",
+    "tool_error": "A step failed; the answer may be incomplete.",
+    "not_sent": "Nothing is sent automatically: drafts are only saved.",
+    "errors": {
+      "ai_disabled": "The assistant is turned off for your account.",
+      "ai_not_configured": "The assistant is not set up yet.",
+      "assistant_failed": "The assistant could not answer. Please try again.",
+      "rate_limited": "Too many requests. Please wait a moment."
+    }
   }
 }

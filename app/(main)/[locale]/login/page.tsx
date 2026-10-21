@@ -11,6 +11,7 @@ import { withBasePath } from "@/lib/browser-navigation";
 import { Button } from "@/components/ui/button";
 import { AuthCard, Notice, PasswordField, TextField } from "@/components/xenaxio/ui";
 import { errorKey, xenaxio } from "@/lib/xenaxio/api";
+import { clearAssistantState } from "@/lib/xenaxio/assistant";
 import { useXT } from "@/lib/xenaxio/i18n";
 
 function LoginForm() {
@@ -29,6 +30,8 @@ function LoginForm() {
     try {
       const me = await xenaxio.login(email.trim(), password);
       setPassword("");
+      // A new sign-in never inherits an assistant chat left in this tab.
+      clearAssistantState();
       // Full navigation: the mail app restores the session from the new cookie on load.
       if (me.user.mustChangePassword) router.replace("/workspace/password");
       else window.location.assign(withBasePath(`/${locale}/`));

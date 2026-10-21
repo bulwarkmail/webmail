@@ -81,6 +81,7 @@ export const LITE_API_STRING_ALLOWLIST = [
   "/api/admin/domain",
   "/api/admin/users",
   "/api/operator",
+  "/api/ai",
   // Path-independent generic prefix used by `apiFetch` docs/comments.
   "/api/",
   // stores/update-store.ts - startPolling() is a no-op in Lite.

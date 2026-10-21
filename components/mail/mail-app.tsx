@@ -153,6 +153,7 @@ import { consumePendingDeepLink, subscribePendingDeepLink } from "@/lib/deep-lin
 import { useProInterfaceActive } from "@/components/pro/pro-interface-redirect";
 import type { QuoteHeader } from "@/lib/plugin-types";
 import { useLiteLinkSegments } from "@/hooks/use-lite-link-segments";
+import { OPEN_DRAFT_EVENT } from "@/lib/xenaxio/assistant";
 
 export interface MailAppProps {
   /**
@@ -2288,6 +2289,16 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     });
   };
 
+  // xenaxio: the assistant saved a reply draft; open it in the editor.
+  useEffect(() => {
+    const onOpenDraft = (ev: Event) => {
+      const draftId = (ev as CustomEvent<{ draftId?: string }>).detail?.draftId;
+      if (draftId) void handleEditDraftRef.current?.({ id: draftId } as Email);
+    };
+    window.addEventListener(OPEN_DRAFT_EVENT, onOpenDraft);
+    return () => window.removeEventListener(OPEN_DRAFT_EVENT, onOpenDraft);
+  }, []);
+
   const handleEditDraft = async (email?: Email) => {
     if (!client) return;
     const draftCandidate = email && typeof email === 'object' && typeof email.id === 'string'
@@ -2382,7 +2393,9 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     setComposerMode('compose');
     setShowComposer(true);
     if (isMobile) setActiveView('viewer');
-  };
+  };  const handleEditDraftRef = useRef(handleEditDraft);
+  handleEditDraftRef.current = handleEditDraft;
+
 
   useEffect(() => {
     if (!pendingUndoSend || !client) return;
