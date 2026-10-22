@@ -1,14 +1,14 @@
 "use client";
 
 // Employees (scenario 2, A2, C1): add, reset passwords, aliases, mailbox size,
-// AI per person (I8), disable and re-enable.
+// AI per person (I8), disable and re-enable, delete (step 17).
 import { type FormEvent, useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { KeyRound, Pencil, Plus } from "@/components/icons";
 import { Field, Notice, PasswordField, TextField } from "@/components/xenaxio/ui";
 import { useMe, WorkspaceShell } from "@/components/xenaxio/workspace-shell";
-import { errorKey, type WorkspaceUser, xenaxio } from "@/lib/xenaxio/api";
+import { errorKey, errorText, type WorkspaceUser, xenaxio } from "@/lib/xenaxio/api";
 import { useXT } from "@/lib/xenaxio/i18n";
 
 const MB = 1024 * 1024;
@@ -32,18 +32,40 @@ function UserEditor({ user, isSelf, maxQuotaBytes, aiEnabled, onChanged, onMessa
   const [aliases, setAliases] = useState(user.aliases.join(", "));
   const [quotaMb, setQuotaMb] = useState(String(Math.round(user.quotaBytes / MB)));
   const [busy, setBusy] = useState(false);
-  const run = async (action: () => Promise<unknown>, success?: string) => {
+  // Step 17: errors and confirmations show here, next to the button, not at the top of the page.
+  const [notice, setNotice] = useState<{ kind: "error" | "success"; text: string; field?: "aliases" } | null>(null);
+  const run = async (action: () => Promise<unknown>, success?: string, field?: "aliases") => {
     setBusy(true);
+    setNotice(null);
     try {
       await action();
-      if (success) onMessage({ kind: "success", text: success });
+      if (success) setNotice({ kind: "success", text: success });
       await onChanged();
     } catch (err) {
-      onMessage({ kind: "error", text: t(errorKey(err)) });
+      setNotice({ kind: "error", text: errorText(t, err), field });
     } finally {
       setBusy(false);
     }
   };
+  const remove = async () => {
+    const typed = window.prompt(t("users.delete_prompt", { email: user.email }));
+    if (typed === null) return;
+    if (typed.trim().toLowerCase() !== user.email.toLowerCase()) {
+      setNotice({ kind: "error", text: t("users.delete_mismatch") });
+      return;
+    }
+    setBusy(true);
+    setNotice(null);
+    try {
+      await xenaxio.deleteUser(user.id);
+      onMessage({ kind: "success", text: t("users.deleted", { email: user.email }) });
+      await onChanged();
+    } catch (err) {
+      setNotice({ kind: "error", text: errorText(t, err) });
+      setBusy(false);
+    }
+  };
+  const aliasError = notice?.kind === "error" && notice.field === "aliases" ? notice.text : undefined;
   const list = aliases.split(/[,\s]+/).map((a) => a.trim().toLowerCase()).filter(Boolean);
 
   return (
@@ -52,10 +74,10 @@ function UserEditor({ user, isSelf, maxQuotaBytes, aiEnabled, onChanged, onMessa
         className="space-y-2"
         onSubmit={(e) => {
           e.preventDefault();
-          void run(() => xenaxio.setAliases(user.id, list), t("users.aliases_saved"));
+          void run(() => xenaxio.setAliases(user.id, list), t("users.aliases_saved"), "aliases");
         }}
       >
-        <TextField label={t("users.aliases")} hint={t("users.aliases_hint")} value={aliases} onChange={(e) => setAliases(e.target.value)} autoCapitalize="none" spellCheck={false} />
+        <TextField label={t("users.aliases")} hint={t("users.aliases_hint")} error={aliasError} value={aliases} onChange={(e) => setAliases(e.target.value)} autoCapitalize="none" spellCheck={false} />
         <Button type="submit" size="sm" variant="outline" disabled={busy}>{t("users.aliases_save")}</Button>
       </form>
       <form
@@ -96,7 +118,13 @@ function UserEditor({ user, isSelf, maxQuotaBytes, aiEnabled, onChanged, onMessa
             {user.status === "active" ? t("users.disable") : t("users.enable")}
           </Button>
         )}
+        {!isSelf && (
+          <Button size="sm" variant="outline" className="text-destructive" disabled={busy} onClick={() => void remove()}>
+            {t("users.delete")}
+          </Button>
+        )}
       </div>
+      {notice && !aliasError && <Notice kind={notice.kind}>{notice.text}</Notice>}
     </div>
   );
 }
@@ -144,7 +172,7 @@ function UsersView() {
       setMessage({ kind: "success", text: t("users.created", { email: user.email }) });
       await load();
     } catch (err) {
-      setMessage({ kind: "error", text: t(errorKey(err)) });
+      setMessage({ kind: "error", text: errorText(t, err) });
     } finally {
       setBusy(false);
     }
