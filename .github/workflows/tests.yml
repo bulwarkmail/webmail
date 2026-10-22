@@ -11,9 +11,15 @@ permissions:
 
 jobs:
   vitest:
-    name: Vitest
+    # The whole suite (about 800 files) does not fit into 30 minutes on one
+    # runner; four parallel shards of about a quarter each do.
+    name: Vitest (${{ matrix.shard }}/4)
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -33,7 +39,7 @@ jobs:
         # forks + a small worker count keeps the load-sensitive component tests
         # from timing out on the shared runners; the longer per-test timeout
         # covers the jsdom-heavy suites.
-        run: npx vitest run --pool=forks --maxWorkers=2 --testTimeout=15000
+        run: npx vitest run --pool=forks --maxWorkers=2 --testTimeout=15000 --shard=${{ matrix.shard }}/4
 
   # The pre-commit hook lints only staged files and never runs on fork PRs,
   # so this is the one place the whole tree is checked.
