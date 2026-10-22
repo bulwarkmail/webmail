@@ -86,6 +86,8 @@ export const LITE_API_STRING_ALLOWLIST = [
   "/api/ai",
   // Step 9: consent screen for AI chats connecting by OAuth.
   "/api/oauth",
+  // Step 15: delivery status of a sent message (components/xenaxio/delivery-status.tsx).
+  "/api/delivery",
   // Path-independent generic prefix used by `apiFetch` docs/comments.
   "/api/",
   // stores/update-store.ts - startPolling() is a no-op in Lite.
