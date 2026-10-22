@@ -131,7 +131,16 @@
     "purpose_spf": "Allows our server to send for your domain",
     "purpose_dkim": "Signature against forgery",
     "purpose_dmarc": "Policy for unsigned mail",
-    "purpose_autodiscover": "Automatic set-up of mail apps (optional)"
+    "purpose_autodiscover": "Automatic set-up of mail apps (optional)",
+    "howto_title": "How to connect {domain}",
+    "provider": "The DNS records of {domain} are managed at {provider}. Sign in there and open the DNS settings of this domain.",
+    "provider_unknown": "Sign in at the provider that manages the DNS records of {domain} (usually where the domain is registered) and open the DNS settings.",
+    "nameservers": "Name servers: {list}",
+    "howto_2": "Add the records below. Use “Copy” to take name and value exactly. Remove existing MX records; replace an existing SPF record (“v=spf1 …”), because a domain may have only one.",
+    "howto_3": "Save. Changes usually show up after 15–60 minutes. We check automatically every 15 minutes and email you as soon as everything is right. You can also click “Check DNS” yourself.",
+    "name_hint": "Some providers expect only the part before your domain as the name (e.g. “_dmarc” instead of “_dmarc.{domain}”) or “@” for the domain itself.",
+    "other_mail_title": "Attention: {domain} receives email at another provider today",
+    "other_mail": "Email for {domain} currently goes to {mx}. As soon as you switch the MX record, all new email for @{domain} arrives in xenaxio and the mailboxes at your current provider receive nothing anymore. Create all mailboxes you need in xenaxio first. To try things out, use a subdomain such as test.{domain}."
   },
   "users": {
     "title": "Employees",
@@ -378,5 +387,16 @@
     "working": "One moment…",
     "invalid": "This connection request is invalid or has expired. Start the connection again in your AI chat.",
     "redirecting": "Taking you back to your AI chat…"
+  },
+  "domainbar": {
+    "pending_admin": "Your domain {domain} is not connected yet: email is sent and received only once the DNS records are correct.",
+    "pending_user": "The domain {domain} is not connected yet: email is sent and received only once your administrator has finished the setup.",
+    "open_dns": "Set up DNS records",
+    "send_blocked_title": "Sending is not possible yet",
+    "send_blocked": "The domain {domain} is not connected yet. Your draft is kept and can be sent as soon as the domain is connected."
+  },
+  "nav": {
+    "admin": "Administration",
+    "user": "Account"
   }
 }

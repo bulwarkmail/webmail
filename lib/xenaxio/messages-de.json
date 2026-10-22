@@ -131,7 +131,16 @@
     "purpose_spf": "Erlaubt unserem Server, für Ihre Domain zu senden",
     "purpose_dkim": "Signatur gegen Fälschung",
     "purpose_dmarc": "Richtlinie für nicht signierte E-Mails",
-    "purpose_autodiscover": "Automatische Einrichtung von Mail-Apps (optional)"
+    "purpose_autodiscover": "Automatische Einrichtung von Mail-Apps (optional)",
+    "howto_title": "So verbinden Sie {domain}",
+    "provider": "Die DNS-Einträge von {domain} werden bei {provider} verwaltet. Melden Sie sich dort an und öffnen Sie die DNS-Einstellungen dieser Domain.",
+    "provider_unknown": "Melden Sie sich bei dem Anbieter an, bei dem die DNS-Einträge von {domain} verwaltet werden (meist dort, wo die Domain registriert ist), und öffnen Sie die DNS-Einstellungen.",
+    "nameservers": "Nameserver: {list}",
+    "howto_2": "Legen Sie die Einträge unten an. Mit „Kopieren“ übernehmen Sie Name und Wert genau. Bestehende MX-Einträge entfernen Sie; einen vorhandenen SPF-Eintrag („v=spf1 …“) ersetzen Sie, denn pro Domain darf es nur einen geben.",
+    "howto_3": "Speichern. Änderungen werden meist nach 15–60 Minuten sichtbar. Wir prüfen alle 15 Minuten automatisch und schicken Ihnen eine E-Mail, sobald alles passt. Sie können auch selbst auf „DNS prüfen“ klicken.",
+    "name_hint": "Manche Anbieter erwarten als Name nur den Teil vor Ihrer Domain (z. B. „_dmarc“ statt „_dmarc.{domain}“) oder „@“ für die Domain selbst.",
+    "other_mail_title": "Achtung: {domain} empfängt E-Mails heute bei einem anderen Anbieter",
+    "other_mail": "Die E-Mails für {domain} gehen derzeit an {mx}. Sobald Sie den MX-Eintrag umstellen, kommen alle neuen E-Mails für @{domain} in xenaxio an, und die Postfächer beim bisherigen Anbieter erhalten nichts mehr. Legen Sie vorher alle benötigten Postfächer in xenaxio an. Zum Ausprobieren eignet sich eine Subdomain, zum Beispiel test.{domain}."
   },
   "users": {
     "title": "Mitarbeitende",
@@ -378,5 +387,16 @@
     "working": "Einen Moment…",
     "invalid": "Diese Verbindungsanfrage ist ungültig oder abgelaufen. Starten Sie die Verbindung in Ihrem KI-Chat neu.",
     "redirecting": "Sie werden zurück zu Ihrem KI-Chat geleitet…"
+  },
+  "domainbar": {
+    "pending_admin": "Ihre Domain {domain} ist noch nicht verbunden: E-Mails werden erst gesendet und empfangen, wenn die DNS-Einträge stimmen.",
+    "pending_user": "Die Domain {domain} ist noch nicht verbunden: E-Mails werden erst gesendet und empfangen, wenn Ihre Administration die Einrichtung abgeschlossen hat.",
+    "open_dns": "DNS-Einträge einrichten",
+    "send_blocked_title": "Senden noch nicht möglich",
+    "send_blocked": "Die Domain {domain} ist noch nicht verbunden. Ihr Entwurf bleibt erhalten und kann gesendet werden, sobald die Domain verbunden ist."
+  },
+  "nav": {
+    "admin": "Verwaltung",
+    "user": "Konto"
   }
 }

@@ -55,6 +55,8 @@ export interface Me {
   user: { id: string; email: string; displayName: string; role: "user" | "admin"; mustChangePassword: boolean };
   tenant: { id: string; name: string; status: "onboarding" | "active" | "blocked" };
   edition: "cloud" | "onprem";
+  /** The company's domain; mail works only once it is "active" (DNS checked). */
+  domain?: { name: string; status: "pending" | "active" } | null;
 }
 
 export type DnsState = "ok" | "missing" | "mismatch" | "error";
@@ -77,6 +79,8 @@ export interface DomainInfo {
   domain: { name: string; status: "pending" | "active" };
   records: DnsRecord[];
   lastCheck: DnsReport | null;
+  /** While not connected: where DNS is edited and whether mail of the domain lives elsewhere. */
+  context?: { nameservers: string[]; provider: string | null; currentMx: string[]; otherMail: boolean } | null;
 }
 
 export interface WorkspaceUser {

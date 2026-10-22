@@ -1,10 +1,13 @@
 "use client";
 
 // DNS page (T3, C4): the records to publish, each with a check result.
+// While the domain is not connected it also says where DNS is edited, warns
+// when mail of the domain lives at another provider today, and explains the
+// steps (owner's request, 22.10.2026: "no instructions at all").
 import { useCallback, useEffect, useState } from "react";
 import { useLocale } from "next-intl";
 import { Button } from "@/components/ui/button";
-import { RefreshCw } from "@/components/icons";
+import { AlertTriangle, RefreshCw } from "@/components/icons";
 import { CopyButton } from "@/components/xenaxio/copy-button";
 import { Notice } from "@/components/xenaxio/ui";
 import { WorkspaceShell } from "@/components/xenaxio/workspace-shell";
@@ -67,6 +70,46 @@ function DomainView() {
         </span>
       </div>
       <p className="text-sm text-muted-foreground">{t("domain.intro", { domain: info.domain.name })}</p>
+
+      {!active && info.context?.otherMail && (
+        <div role="alert" className="flex gap-3 rounded-lg border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-900 dark:text-amber-200">
+          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" aria-hidden />
+          <div className="space-y-1">
+            <p className="font-medium">{t("domain.other_mail_title", { domain: info.domain.name })}</p>
+            <p>{t("domain.other_mail", { domain: info.domain.name, mx: info.context.currentMx.join(", ") })}</p>
+          </div>
+        </div>
+      )}
+
+      {!active && (
+        <section className="space-y-3 rounded-lg border border-border p-4">
+          <h2 className="font-medium">{t("domain.howto_title", { domain: info.domain.name })}</h2>
+          <ol className="space-y-3 text-sm">
+            {[
+              <>
+                <p>
+                  {info.context?.provider
+                    ? t("domain.provider", { domain: info.domain.name, provider: info.context.provider })
+                    : t("domain.provider_unknown", { domain: info.domain.name })}
+                </p>
+                {info.context && info.context.nameservers.length > 0 && (
+                  <p className="mt-1 font-mono text-xs text-muted-foreground break-all">{t("domain.nameservers", { list: info.context.nameservers.join(", ") })}</p>
+                )}
+              </>,
+              <>
+                <p>{t("domain.howto_2")}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{t("domain.name_hint", { domain: info.domain.name })}</p>
+              </>,
+              <p key="3">{t("domain.howto_3")}</p>,
+            ].map((content, i) => (
+              <li key={i} className="flex gap-3">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">{i + 1}</span>
+                <div className="min-w-0 flex-1 pt-0.5">{content}</div>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
 
       <div className="flex flex-wrap items-center gap-3">
         <Button onClick={check} disabled={checking}>

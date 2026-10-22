@@ -1,6 +1,9 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback, useMemo, useId } from "react";
+import { XENAXIO_BFF } from '@/lib/xenaxio/bff';
+import { domainPending, useXenaxioMeStore } from '@/lib/xenaxio/me-store';
+import { useXT } from '@/lib/xenaxio/i18n';
 import { useMvComposeWindow } from "@/components/email/mv-compose-context";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { useTranslations } from "next-intl";
@@ -413,6 +416,7 @@ export function EmailComposer({
   replyTo
 }: EmailComposerProps) {
   const t = useTranslations('email_composer');
+  const xt = useXT();
   const tCommon = useTranslations('common');
   const tQuote = useTranslations('quote_header');
   const tViewer = useTranslations('email_viewer');
@@ -3415,6 +3419,13 @@ export function EmailComposer({
         // fetch() rejects with a TypeError when the network is gone; its
         // "Failed to fetch" told the user nothing.
         toast.error(t('send_failed'), { message: t('send_offline') });
+      } else if (XENAXIO_BFF && domainPending(useXenaxioMeStore.getState().me)) {
+        // xenaxio: the company's domain is not connected yet, so the server
+        // refuses to send. Say that instead of a bare "forbidden".
+        const me = useXenaxioMeStore.getState().me;
+        toast.error(xt('domainbar.send_blocked_title'), {
+          message: xt('domainbar.send_blocked', { domain: me?.domain?.name ?? '' }),
+        });
       } else {
         // The server's own words go under a plain title instead of on their own.
         toast.error(t('send_failed'), { message: err instanceof Error ? err.message : undefined });

@@ -31,6 +31,8 @@ import { Avatar } from "@/components/ui/avatar";
 import { toUnicodeEmail } from "@/lib/idn";
 import { usePluginPages, pluginPageHref, isPluginPageActive } from "@/hooks/use-plugin-pages";
 import { NotificationBell } from "@/components/notifications/notification-center";
+import { WorkspaceNavLink } from "@/components/xenaxio/workspace-nav-link";
+import { XENAXIO_BFF } from "@/lib/xenaxio/bff";
 
 interface NavItem {
   id: string;
@@ -494,6 +496,9 @@ export function NavigationRail({
           </a>
         )}
 
+        {/* xenaxio: company workspace ("Verwaltung" for admins) */}
+        {XENAXIO_BFF && <WorkspaceNavLink variant="bar" />}
+
         {/* Settings */}
         <Link
           href="/settings"
@@ -729,6 +734,9 @@ export function NavigationRail({
         )}
 
         <NotificationBell placement="side" className="w-10 h-10 rounded-md" />
+
+        {/* xenaxio: company workspace ("Verwaltung" for admins) */}
+        {XENAXIO_BFF && <WorkspaceNavLink variant="rail" />}
 
         <Link
           href="/settings"
