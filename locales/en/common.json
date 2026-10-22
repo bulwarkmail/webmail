@@ -3695,7 +3695,7 @@
   },
   "sharing": {
     "title": "Share \"{name}\"",
-    "description": "Grant access to other users or groups on this server. Changes take effect immediately.",
+    "description": "Grant access to colleagues in your company. Changes take effect immediately.",
     "no_shares": "Not shared with anyone yet.",
     "add_person": "Add person or group",
     "search_placeholder": "Search by name or email…",
