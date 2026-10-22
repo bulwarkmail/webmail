@@ -101,6 +101,12 @@ export function DeliveryStatus({ emailId, className }: { emailId: string; classN
                 <div className="ps-6 text-muted-foreground">
                   {r.reason && <p>{t(`delivery.reason.${r.state === "deferred" && r.reason === "other" ? "temporary" : r.reason}`)}</p>}
                   {r.reply && <p className="text-xs font-mono break-words opacity-80">{r.reply}</p>}
+                  {r.server && <ServerLine server={r.server} t={t} />}
+                </div>
+              )}
+              {r.state === "delivered" && r.server && (
+                <div className="ps-6 text-muted-foreground">
+                  <ServerLine server={r.server} t={t} />
                 </div>
               )}
             </li>
@@ -125,4 +131,9 @@ function StateIcon({ state }: { state: RecipientDelivery["state"] }) {
     default:
       return <HelpCircle className={cn(cls, "text-muted-foreground")} aria-hidden />;
   }
+}
+
+/** Which server answered: helps tell our server's answers from the recipient's. */
+function ServerLine({ server, t }: { server: string; t: (key: string, values?: Record<string, string>) => string }) {
+  return <p className="text-xs opacity-80">{server === "local" ? t("delivery.server_local") : t("delivery.server", { server })}</p>;
 }

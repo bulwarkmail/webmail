@@ -423,6 +423,8 @@
       "unreachable": "Der Mailserver des Empfängers ist nicht erreichbar.",
       "temporary": "Vorübergehendes Problem beim Empfängerserver. Wir versuchen es bis zu 3 Tage lang weiter.",
       "other": "Der Empfängerserver hat die Nachricht abgelehnt."
-    }
+    },
+    "server": "Antwort von: {server}",
+    "server_local": "Antwort von: diesem Server (xenaxio)"
   }
 }
