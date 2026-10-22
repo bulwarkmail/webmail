@@ -813,6 +813,9 @@ export function MvExpandedConversationCard({
   const sender = email.from?.[0];
   const hasBody = !!email.bodyValues;
   const [showDetails, setShowDetails] = useState(false);
+  // xenaxio (step 15): delivery status on the user's own sent copies.
+  const sentMailboxId = useEmailStore((s) => s.mailboxes.find((m) => m.role === 'sent')?.id);
+  const isSentCopy = !!sentMailboxId && !!email.mailboxIds?.[sentMailboxId] && !email.keywords?.$draft;
   const loadRequested = useRef(false);
   useEffect(() => {
     if (hasBody || loadRequested.current || !onLoadBody) return;
@@ -882,6 +885,7 @@ export function MvExpandedConversationCard({
         )}
       </div>
       {showDetails && <MvConversationDetails email={email} timeFormat={timeFormat} className={compact ? "px-4" : "ps-[80px] pe-6"} />}
+      {isSentCopy && <DeliveryStatus emailId={email.id} className={cn("pb-1", compact ? "px-4" : "ps-[80px] pe-6")} />}
       {hasBody ? (
         <ConversationEmailBody
           email={email}
