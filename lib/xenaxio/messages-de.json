@@ -49,7 +49,27 @@
     "ai_limit_reached": "Das KI-Limit für diesen Monat ist erreicht.",
     "invalid_request": "Ungültige Anfrage.",
     "invalid_client": "Unbekannte Anwendung. Starten Sie die Verbindung neu.",
-    "invalid_target": "Falsche Adresse des Konnektors."
+    "invalid_target": "Falsche Adresse des Konnektors.",
+    "slug_invalid": "Nur Kleinbuchstaben, Ziffern und Bindestriche, 3 bis 40 Zeichen, nicht mit Bindestrich am Anfang oder Ende.",
+    "slug_reserved": "Diese Adresse ist reserviert. Bitte wählen Sie eine andere.",
+    "slug_taken": "Diese Adresse ist bereits vergeben.",
+    "portals_disabled": "Eigene Adressen sind auf dieser Installation nicht aktiviert.",
+    "portal_not_found": "Diese Adresse gehört zu keinem Unternehmen.",
+    "portal_moved": "Diese Adresse wurde geändert. Die Seite wird weitergeleitet.",
+    "logo_invalid_type": "Bitte laden Sie ein PNG- oder WebP-Bild hoch.",
+    "logo_too_large": "Das Logo ist zu groß (höchstens 256 KB).",
+    "logo_too_big_dimensions": "Das Logo darf höchstens 1024 × 1024 Pixel groß sein.",
+    "invalid_color": "Bitte geben Sie eine Farbe im Format #rrggbb an.",
+    "invalid_hostname": "Bitte geben Sie eine Adresse wie mail.firma.de ein.",
+    "hostname_outside_domain": "Die Adresse muss unter Ihrer verbundenen E-Mail-Domain liegen, z. B. mail.ihre-domain.de. Verbinden Sie zuerst die Domain.",
+    "hostname_not_allowed": "Diese Adresse kann nicht verwendet werden.",
+    "hostname_exists": "Sie haben bereits eine eigene Adresse. Entfernen Sie sie zuerst.",
+    "hostname_taken": "Diese Adresse wird bereits verwendet.",
+    "hostname_not_active": "Die Adresse ist noch nicht aktiv.",
+    "hostname_not_found": "Keine eigene Adresse eingerichtet.",
+    "hostname_rejected": "Der Zertifikatsdienst hat die Adresse abgelehnt.",
+    "hostname_provider_unavailable": "Der Zertifikatsdienst ist gerade nicht erreichbar. Bitte versuchen Sie es später erneut.",
+    "custom_hostnames_disabled": "Eigene Domains sind auf dieser Installation nicht aktiviert."
   },
   "login": {
     "title": "Anmelden",
@@ -82,7 +102,9 @@
     "admin_address": "Ihre E-Mail-Adresse",
     "password": "Passwort",
     "submit": "Arbeitsbereich anlegen",
-    "submitting": "Wird angelegt…"
+    "submitting": "Wird angelegt…",
+    "address": "Adresse Ihres Arbeitsbereichs",
+    "address_hint": "Hier meldet sich Ihr Team an. Sie können sie später ändern."
   },
   "workspace": {
     "title": "Arbeitsbereich",
@@ -104,7 +126,9 @@
     "audit": "Protokoll",
     "audit_desc": "Wer hat wann welches KI-Werkzeug auf welche Daten angewendet",
     "dns_ok": "Domain und DNS: in Ordnung",
-    "dns_pending": "Domain und DNS: noch nicht bestätigt"
+    "dns_pending": "Domain und DNS: noch nicht bestätigt",
+    "appearance": "Erscheinungsbild und Adresse",
+    "appearance_desc": "Logo, Farbe und Anmeldeadresse Ihres Unternehmens"
   },
   "domain": {
     "title": "Domain und DNS",
@@ -230,7 +254,11 @@
     "col_mail": "Mail",
     "col_aiws": "AI Workspace",
     "col_tokens": "KI-Tokens",
-    "download_csv": "Als CSV herunterladen"
+    "download_csv": "Als CSV herunterladen",
+    "address": "Adresse",
+    "slug": "Adresse des Unternehmens",
+    "slug_hint": "Die alte Adresse leitet 30 Tage lang weiter.",
+    "slug_confirm": "Adresse von {name} wirklich ändern?"
   },
   "about": {
     "based_on": "Basiert auf",
@@ -426,5 +454,52 @@
     },
     "server": "Antwort von: {server}",
     "server_local": "Antwort von: diesem Server (xenaxio)"
+  },
+  "portal": {
+    "powered_by": "powered by xenaxio",
+    "login_subtitle": "Melden Sie sich bei {company} an.",
+    "unknown_title": "Diese Adresse ist nicht vergeben",
+    "unknown_text": "Unter dieser Adresse gibt es kein Unternehmen. Bitte prüfen Sie die Adresse oder fragen Sie Ihre Administration nach dem richtigen Link."
+  },
+  "appearance": {
+    "title": "Erscheinungsbild und Adresse",
+    "saving": "Wird gespeichert…",
+    "saved_reload": "Gespeichert. In bereits geöffneten Fenstern erscheint die Änderung nach dem Neuladen.",
+    "address_title": "Anmeldeadresse",
+    "address_intro": "Unter dieser Adresse meldet sich Ihr Team an. Sie zeigt Ihr Logo und Ihre Farbe.",
+    "address_label": "Adresse",
+    "address_hint": "Kleinbuchstaben, Ziffern und Bindestriche. Die alte Adresse leitet 30 Tage lang weiter.",
+    "address_save": "Adresse ändern",
+    "address_confirm": "Adresse wirklich ändern? {old} leitet dann 30 Tage lang auf die neue Adresse weiter; teilen Sie Ihrem Team die neue Adresse mit.",
+    "logo_title": "Logo",
+    "logo_intro": "Erscheint auf der Anmeldeseite und in der App.",
+    "logo_none": "Kein Logo",
+    "logo_upload": "Logo hochladen",
+    "logo_replace": "Logo ersetzen",
+    "logo_remove": "Entfernen",
+    "logo_hint": "PNG oder WebP, höchstens 256 KB und 1024 × 1024 Pixel. Am besten ein breites Logo mit transparentem Hintergrund.",
+    "color_title": "Farbe",
+    "color_intro": "Für Schaltflächen und Hervorhebungen. Die Schriftfarbe darauf wird automatisch gewählt.",
+    "color_preview": "Beispiel",
+    "color_save": "Farbe speichern",
+    "color_reset": "Standardfarbe",
+    "own_title": "Eigene Domain",
+    "own_intro": "Ihr Team kann sich auch unter einer Adresse Ihrer eigenen Domain anmelden, z. B. mail.ihre-firma.de.",
+    "own_label": "Adresse",
+    "own_hint": "Eine Subdomain Ihrer verbundenen E-Mail-Domain.",
+    "own_add": "Hinzufügen",
+    "own_status_pending": "Wird eingerichtet",
+    "own_status_active": "Aktiv",
+    "own_status_failed": "Fehlgeschlagen",
+    "own_primary": "Hauptadresse",
+    "own_record_intro": "Legen Sie bei Ihrem DNS-Anbieter diesen Eintrag an:",
+    "own_wait": "Danach stellt das System das Zertifikat automatisch aus. Das dauert meist einige Minuten; wir prüfen alle 15 Minuten und schreiben Ihnen, sobald die Adresse aktiv ist.",
+    "own_provider_says": "Stand der Prüfung: {message}",
+    "own_check": "Jetzt prüfen",
+    "own_make_primary": "Als Hauptadresse verwenden",
+    "own_make_primary_hint": "Die Anmeldung über die gemeinsame Adresse und Links in E-Mails führen dann hierher. {base} funktioniert weiterhin.",
+    "own_remove": "Entfernen",
+    "own_remove_confirm": "{host} entfernen? Die Adresse funktioniert dann sofort nicht mehr.",
+    "col_type": "Typ"
   }
 }

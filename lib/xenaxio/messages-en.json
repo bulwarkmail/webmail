@@ -49,7 +49,27 @@
     "ai_limit_reached": "This month's AI limit is reached.",
     "invalid_request": "Invalid request.",
     "invalid_client": "Unknown application. Start the connection again.",
-    "invalid_target": "Wrong connector address."
+    "invalid_target": "Wrong connector address.",
+    "slug_invalid": "Only lowercase letters, digits and hyphens, 3 to 40 characters, no hyphen at the start or end.",
+    "slug_reserved": "This address is reserved. Please choose another one.",
+    "slug_taken": "This address is already taken.",
+    "portals_disabled": "Own addresses are not enabled on this installation.",
+    "portal_not_found": "This address does not belong to any company.",
+    "portal_moved": "This address has changed. You are being redirected.",
+    "logo_invalid_type": "Please upload a PNG or WebP image.",
+    "logo_too_large": "The logo is too large (256 KB at most).",
+    "logo_too_big_dimensions": "The logo may be at most 1024 × 1024 pixels.",
+    "invalid_color": "Please enter a colour as #rrggbb.",
+    "invalid_hostname": "Please enter an address such as mail.company.com.",
+    "hostname_outside_domain": "The address must be under your connected email domain, e.g. mail.your-domain.com. Connect the domain first.",
+    "hostname_not_allowed": "This address cannot be used.",
+    "hostname_exists": "You already have an own address. Remove it first.",
+    "hostname_taken": "This address is already in use.",
+    "hostname_not_active": "The address is not active yet.",
+    "hostname_not_found": "No own address set up.",
+    "hostname_rejected": "The certificate service rejected the address.",
+    "hostname_provider_unavailable": "The certificate service cannot be reached right now. Please try again later.",
+    "custom_hostnames_disabled": "Own domains are not enabled on this installation."
   },
   "login": {
     "title": "Sign in",
@@ -82,7 +102,9 @@
     "admin_address": "Your email address",
     "password": "Password",
     "submit": "Create workspace",
-    "submitting": "Creating…"
+    "submitting": "Creating…",
+    "address": "Address of your workspace",
+    "address_hint": "Your team signs in here. You can change it later."
   },
   "workspace": {
     "title": "Workspace",
@@ -104,7 +126,9 @@
     "audit": "Audit log",
     "audit_desc": "Who used which AI tool on which data, and when",
     "dns_ok": "Domain and DNS: OK",
-    "dns_pending": "Domain and DNS: not verified yet"
+    "dns_pending": "Domain and DNS: not verified yet",
+    "appearance": "Appearance and address",
+    "appearance_desc": "Your company's logo, colour and sign-in address"
   },
   "domain": {
     "title": "Domain and DNS",
@@ -230,7 +254,11 @@
     "col_mail": "Mail",
     "col_aiws": "AI Workspace",
     "col_tokens": "AI tokens",
-    "download_csv": "Download as CSV"
+    "download_csv": "Download as CSV",
+    "address": "Address",
+    "slug": "Company's address",
+    "slug_hint": "The old address forwards for 30 days.",
+    "slug_confirm": "Change the address of {name}?"
   },
   "about": {
     "based_on": "Based on",
@@ -426,5 +454,52 @@
     },
     "server": "Answered by: {server}",
     "server_local": "Answered by: this server (xenaxio)"
+  },
+  "portal": {
+    "powered_by": "powered by xenaxio",
+    "login_subtitle": "Sign in to {company}.",
+    "unknown_title": "This address is not in use",
+    "unknown_text": "There is no company at this address. Please check the address or ask your administrator for the right link."
+  },
+  "appearance": {
+    "title": "Appearance and address",
+    "saving": "Saving…",
+    "saved_reload": "Saved. Windows that are already open show the change after a reload.",
+    "address_title": "Sign-in address",
+    "address_intro": "Your team signs in at this address. It shows your logo and colour.",
+    "address_label": "Address",
+    "address_hint": "Lowercase letters, digits and hyphens. The old address forwards for 30 days.",
+    "address_save": "Change address",
+    "address_confirm": "Change the address? {old} will forward to the new address for 30 days; tell your team the new address.",
+    "logo_title": "Logo",
+    "logo_intro": "Shown on the sign-in page and in the app.",
+    "logo_none": "No logo",
+    "logo_upload": "Upload logo",
+    "logo_replace": "Replace logo",
+    "logo_remove": "Remove",
+    "logo_hint": "PNG or WebP, at most 256 KB and 1024 × 1024 pixels. A wide logo with a transparent background works best.",
+    "color_title": "Colour",
+    "color_intro": "For buttons and highlights. The text colour on it is chosen automatically.",
+    "color_preview": "Example",
+    "color_save": "Save colour",
+    "color_reset": "Default colour",
+    "own_title": "Own domain",
+    "own_intro": "Your team can also sign in at an address on your own domain, e.g. mail.your-company.com.",
+    "own_label": "Address",
+    "own_hint": "A subdomain of your connected email domain.",
+    "own_add": "Add",
+    "own_status_pending": "Being set up",
+    "own_status_active": "Active",
+    "own_status_failed": "Failed",
+    "own_primary": "Main address",
+    "own_record_intro": "Create this record at your DNS provider:",
+    "own_wait": "The certificate is then issued automatically. This usually takes a few minutes; we check every 15 minutes and email you once the address is active.",
+    "own_provider_says": "Check status: {message}",
+    "own_check": "Check now",
+    "own_make_primary": "Use as main address",
+    "own_make_primary_hint": "Sign-in on the shared address and links in emails then lead here. {base} keeps working.",
+    "own_remove": "Remove",
+    "own_remove_confirm": "Remove {host}? The address stops working at once.",
+    "col_type": "Type"
   }
 }

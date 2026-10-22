@@ -10,6 +10,7 @@ import { withBasePath } from "@/lib/browser-navigation";
 import { cn } from "@/lib/utils";
 import { useXT } from "@/lib/xenaxio/i18n";
 import { safeHttpUrl } from "@/lib/xenaxio/brand";
+import { usePortal } from "@/lib/xenaxio/portal";
 
 /** Centered card for sign-in, password and onboarding pages. */
 export function AuthCard({ title, subtitle, children }: { title: string; subtitle?: string; children: ReactNode }) {
@@ -29,11 +30,21 @@ export function AuthCard({ title, subtitle, children }: { title: string; subtitl
         { href: safeHttpUrl(loginImprintUrl), label: t("common.imprint") },
         { href: safeHttpUrl(loginPrivacyPolicyUrl), label: t("common.privacy") },
       ].filter((l) => l.href);
-  const brand = (
+  // Step 17: on a company portal its logo (or name) instead of xenaxio's.
+  const portal = usePortal();
+  const company = portal?.kind === "tenant" ? portal : null;
+  const waiting = isLoading || !portal;
+  const brand = company ? (
+    company.logoUrl ? (
+      <img src={withBasePath(company.logoUrl)} alt={company.name} className="max-h-16 max-w-[240px] w-auto object-contain" />
+    ) : (
+      <p className="text-center text-xl font-semibold">{company.name}</p>
+    )
+  ) : (
     <>
-      {!isLoading && appLogoLightUrl && <img src={withBasePath(appLogoLightUrl)} alt="" className="h-14 w-14" />}
-      {isLoading ? (
-        <div className="h-6" />
+      {!waiting && appLogoLightUrl && <img src={withBasePath(appLogoLightUrl)} alt="" className="h-14 w-14" />}
+      {waiting ? (
+        <div className="h-20" />
       ) : wordmark ? (
         <img src={withBasePath(wordmark)} alt={t("common.app_name")} className="h-6 w-auto" />
       ) : (
@@ -60,6 +71,7 @@ export function AuthCard({ title, subtitle, children }: { title: string; subtitl
           {subtitle && <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>}
           <div className="mt-6">{children}</div>
         </div>
+        {company && <p className="mt-4 text-center text-xs text-muted-foreground">{t("portal.powered_by")}</p>}
         {(website || legal.length > 0) && (
           <nav className="mt-6 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
             {website && (
