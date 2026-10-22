@@ -17,7 +17,7 @@ const POLL_FOR_MS = 30 * 60_000;
 
 const pending = (r: RecipientDelivery) => r.state === "queued" || r.state === "deferred";
 
-export function DeliveryStatus({ emailId }: { emailId: string }) {
+export function DeliveryStatus({ emailId, className }: { emailId: string; className?: string }) {
   const t = useXT();
   const locale = useLocale();
   const [recipients, setRecipients] = useState<RecipientDelivery[] | null>(null);
@@ -72,7 +72,7 @@ export function DeliveryStatus({ emailId }: { emailId: string }) {
   const SummaryIcon = failed > 0 ? XCircle : delayed > 0 ? Clock : onTheWay > 0 ? Send : CheckCircle;
 
   return (
-    <div className="py-1" data-testid="delivery-status">
+    <div className={cn("py-1", className)} data-testid="delivery-status">
       <button
         type="button"
         className={cn("flex items-center gap-1.5 text-sm hover:underline", tone)}

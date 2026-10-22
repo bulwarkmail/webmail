@@ -3474,7 +3474,8 @@ export function EmailViewer({
   const inReceiptEligibleFolder = !['sent', 'drafts', 'trash', 'junk'].includes(currentMailboxRole || '');
 
   // xenaxio (step 15): the delivery status shows on the user's own sent copies.
-  const sentMailboxId = mailboxes.find((m) => m.role === 'sent')?.id;
+  const storeMailboxes = useEmailStore((s) => s.mailboxes);
+  const sentMailboxId = (mailboxes.length ? mailboxes : storeMailboxes).find((m) => m.role === 'sent')?.id;
   const isSentCopy = !!email && !!sentMailboxId && !!email.mailboxIds?.[sentMailboxId];
 
   const shouldOfferReadReceipt =
@@ -5755,9 +5756,6 @@ export function EmailViewer({
                   </div>
                 )}
 
-                {/* xenaxio: delivery status of a sent message (step 15). */}
-                {isSentCopy && !isDraft && <DeliveryStatus emailId={email.id} />}
-
                 {/* Calendar Invitation Banner */}
                 {hasCalendarInvitation && (
                   <div className="py-1">
@@ -5770,6 +5768,11 @@ export function EmailViewer({
         )}
 
         <PluginSlot name="email-banner" extraProps={pluginEmailProps} />
+
+        {/* xenaxio: delivery status of a sent message (step 15), below both header layouts. */}
+        {isSentCopy && !isDraft && (
+          <DeliveryStatus emailId={email.id} className="bg-background border-b border-border px-4 lg:px-6 py-1.5" />
+        )}
 
       {/* === ATTACHMENTS below header (below-header mode, desktop only) === */}
       {attachmentPosition === 'below-header' && effectiveAttachments.length > 0 && (
