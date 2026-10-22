@@ -88,6 +88,11 @@ export const LITE_API_STRING_ALLOWLIST = [
   "/api/oauth",
   // Step 15: delivery status of a sent message (components/xenaxio/delivery-status.tsx).
   "/api/delivery",
+  // Step 17: company portal (lib/xenaxio/portal.ts), hand-over from the shared
+  // address, and the admin's appearance page.
+  "/api/portal",
+  "/api/auth/handoff",
+  "/api/admin/portal",
   // Path-independent generic prefix used by `apiFetch` docs/comments.
   "/api/",
   // stores/update-store.ts - startPolling() is a no-op in Lite.
