@@ -10,6 +10,7 @@ import { useCalendarStore } from "@/stores/calendar-store";
 import { useContactStore } from "@/stores/contact-store";
 import { useFileStore } from "@/stores/file-store";
 import { toast } from "@/stores/toast-store";
+import { isQuietFreeBusyNotice } from "@/lib/xenaxio/free-busy";
 
 /** What happened to the user's rights, for the message wording. */
 export function shareNotificationKind(n: ShareNotification): "shared" | "changed" | "revoked" {
@@ -49,6 +50,8 @@ export function ShareNotificationToaster({ client }: { client: IJMAPClient | nul
     const touched = new Set<string>();
     for (const n of fresh) {
       handled.current.add(n.id);
+      // xenaxio: colleagues' free/busy grants are acknowledged without a toast.
+      if (isQuietFreeBusyNotice(n)) continue;
       touched.add(n.objectType);
       const kind = shareNotificationKind(n);
       const objectKey = OBJECT_KEYS[n.objectType];

@@ -3269,7 +3269,7 @@
         "free": "Verfügbar",
         "busy": "Beschäftigt",
         "tentative": "Vorläufig",
-        "unknown": "Kein Benutzer auf diesem Server",
+        "unknown": "Verfügbarkeit nicht bekannt",
         "checking": "Wird geprüft…"
       },
       "title": "Teilnehmer",
