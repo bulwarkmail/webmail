@@ -15,8 +15,10 @@ export class XenaxioApiError extends Error {
   }
 }
 
-async function request<T>(method: "GET" | "POST" | "DELETE", path: string, body?: unknown): Promise<T> {
+async function request<T>(method: "GET" | "POST" | "DELETE" | "PUT", path: string, body?: unknown): Promise<T> {
   let res: Response;
+  // Step 17: a logo goes up as the raw file; everything else as JSON.
+  const raw = typeof Blob !== "undefined" && body instanceof Blob;
   try {
     res = await apiFetch(path, {
       method,
@@ -25,9 +27,9 @@ async function request<T>(method: "GET" | "POST" | "DELETE", path: string, body?
         Accept: "application/json",
         // CSRF guard of the BFF: a cross-site page cannot send this header.
         "x-xenaxio-csrf": "1",
-        ...(body !== undefined ? { "Content-Type": "application/json" } : {}),
+        ...(body !== undefined ? { "Content-Type": raw ? (body as Blob).type || "application/octet-stream" : "application/json" } : {}),
       },
-      ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+      ...(body !== undefined ? { body: raw ? (body as Blob) : JSON.stringify(body) } : {}),
     });
   } catch {
     throw new XenaxioApiError(0, "network");
@@ -57,6 +59,36 @@ export interface Me {
   edition: "cloud" | "onprem";
   /** The company's domain; mail works only once it is "active" (DNS checked). */
   domain?: { name: string; status: "pending" | "active" } | null;
+  /** Step 17: the company's portal (address, logo, colour). */
+  portal?: PortalInfo;
+}
+
+/** Step 17: a company's login portal. */
+export interface PortalInfo {
+  name: string;
+  slug: string | null;
+  /** Main address, e.g. https://firma.xenaxio.com. */
+  url: string;
+  color: string | null;
+  colorText: string | null;
+  /** Path on this origin (versioned); null = the xenaxio logo. */
+  logoUrl: string | null;
+}
+
+/** Step 17: whose address this page was opened on. */
+export type PortalState =
+  | ({ kind: "tenant" } & PortalInfo)
+  | { kind: "app"; portals: boolean; baseDomain: string | null }
+  | { kind: "moved"; url: string }
+  | { kind: "unknown" };
+
+export type SlugProblem = "invalid" | "reserved" | "taken";
+
+export interface AdminPortal extends PortalInfo {
+  baseDomain: string | null;
+  /** Null when own hostnames are not offered on this installation. */
+  customHostnames: { target: string } | null;
+  hostname: { hostname: string; status: "pending" | "active" | "failed"; primary: boolean; error: string | null; checkedAt: string | null } | null;
 }
 
 export type DnsState = "ok" | "missing" | "mismatch" | "error";
@@ -153,6 +185,10 @@ export interface OperatorTenant {
   aiTokens: number;
   aiUserMonthlyTokens: number | null;
   aiTenantMonthlyTokens: number | null;
+  /** Step 17: the company's subdomain and portal. */
+  slug: string | null;
+  portalUrl: string | null;
+  hostname: string | null;
 }
 
 export interface OperatorReport {
@@ -203,15 +239,37 @@ export const xenaxio = {
     request<{ clientName: string; redirectHost: string; loopback: boolean }>("GET", `/api/oauth/authorize/info?${query.replace(/^\?/, "")}`),
   oauthDecision: (query: string, approve: boolean) => request<{ redirect: string }>("POST", "/api/oauth/authorize/decision", { query, approve }),
   login: (email: string, password: string, locale?: string) =>
-    request<Me>("POST", "/api/auth/login", { email, password, ...(locale === "de" || locale === "en" ? { locale } : {}) }),
+    request<Me & { portalUrl: string }>("POST", "/api/auth/login", { email, password, ...(locale === "de" || locale === "en" ? { locale } : {}) }),
+  /** Step 17: whose address this is (no sign-in needed). */
+  portal: () => request<PortalState>("GET", "/api/portal"),
+  /** Step 17: a one-time link that moves the session to the company portal (or `next` when already there). */
+  handoff: (next: string) => request<{ url: string }>("POST", "/api/auth/handoff", { next }),
   logout: () => request<{ ok: true }>("POST", "/api/auth/logout", {}),
   changePassword: (currentPassword: string, newPassword: string) =>
     request<{ ok: true }>("POST", "/api/me/password", { currentPassword, newPassword }),
 
   invitationStatus: (token: string) =>
     request<{ status: "valid" | "used" | "expired" | "unknown" }>("GET", `/api/onboarding/invitation?token=${encodeURIComponent(token)}`),
-  onboard: (input: { token: string; companyName: string; domain: string; adminName: string; adminLocalPart: string; password: string }) =>
-    request<Me>("POST", "/api/onboarding", input),
+  onboard: (input: { token: string; companyName: string; domain: string; adminName: string; adminLocalPart: string; password: string; slug?: string }) =>
+    request<Me & { portalUrl: string }>("POST", "/api/onboarding", input),
+  /** Step 17: suggestion from the company name and whether a typed address is free. */
+  onboardingSlug: (token: string, q: { name?: string; slug?: string }) => {
+    const params = new URLSearchParams({ token });
+    if (q.name) params.set("name", q.name);
+    if (q.slug !== undefined) params.set("slug", q.slug);
+    return request<{ baseDomain: string; suggestion: string | null; slug?: string; problem?: SlugProblem | null }>("GET", `/api/onboarding/slug?${params}`);
+  },
+
+  adminPortal: () => request<AdminPortal>("GET", "/api/admin/portal"),
+  checkSlug: (slug: string) => request<{ slug: string; problem: SlugProblem | null }>("GET", `/api/admin/portal/slug?slug=${encodeURIComponent(slug)}`),
+  setSlug: (slug: string, next: string) => request<AdminPortal & { handoffUrl: string | null }>("POST", "/api/admin/portal/slug", { slug, next }),
+  uploadLogo: (file: Blob) => request<AdminPortal>("PUT", "/api/admin/portal/logo", file),
+  removeLogo: () => request<AdminPortal>("DELETE", "/api/admin/portal/logo"),
+  setColor: (color: string | null) => request<AdminPortal>("POST", "/api/admin/portal/color", { color }),
+  addHostname: (hostname: string) => request<AdminPortal>("POST", "/api/admin/portal/hostname", { hostname }),
+  checkHostname: () => request<AdminPortal>("POST", "/api/admin/portal/hostname/check", {}),
+  setHostnamePrimary: (primary: boolean) => request<AdminPortal>("POST", "/api/admin/portal/hostname/primary", { primary }),
+  removeHostname: () => request<AdminPortal>("DELETE", "/api/admin/portal/hostname"),
 
   domain: () => request<DomainInfo>("GET", "/api/admin/domain"),
   checkDomain: () => request<{ domain: DomainInfo["domain"]; report: DnsReport }>("POST", "/api/admin/domain/check", {}),
@@ -235,13 +293,14 @@ export const xenaxio = {
     logout: () => request<{ ok: true }>("POST", "/api/operator/auth/logout", {}),
     invitations: () => request<{ invitations: Invitation[] }>("GET", "/api/operator/invitations"),
     tenants: () =>
-      request<{ defaults: { aiUserMonthlyTokens: number; aiTenantMonthlyTokens: number | null }; tenants: OperatorTenant[] }>("GET", "/api/operator/tenants"),
+      request<{ defaults: { aiUserMonthlyTokens: number; aiTenantMonthlyTokens: number | null }; tenants: OperatorTenant[]; baseDomain?: string | null }>("GET", "/api/operator/tenants"),
     setTenantBlocked: (id: string, blocked: boolean) => request<{ id: string; status: string }>("POST", `/api/operator/tenants/${encodeURIComponent(id)}/status`, { blocked }),
     setTenantLimits: (
       id: string,
       limits: { maxMailboxes?: number; mailboxQuotaMb?: number; aiUserMonthlyTokens?: number | null; aiTenantMonthlyTokens?: number | null },
     ) => request<{ ok: true }>("POST", `/api/operator/tenants/${encodeURIComponent(id)}/limits`, limits),
     report: (month?: string) => request<OperatorReport>("GET", `/api/operator/report${month ? `?month=${encodeURIComponent(month)}` : ""}`),
+    setTenantSlug: (id: string, slug: string) => request<{ id: string; slug: string }>("POST", `/api/operator/tenants/${encodeURIComponent(id)}/slug`, { slug }),
     createInvitation: (note: string, locale: "de" | "en") =>
       request<{ id: string; url: string; expiresAt: string }>("POST", "/api/operator/invitations", { note: note || undefined, locale }),
   },
