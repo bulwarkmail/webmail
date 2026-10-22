@@ -399,5 +399,30 @@
   "nav": {
     "admin": "Administration",
     "user": "Account"
+  },
+  "delivery": {
+    "summary_delivered": "Delivered",
+    "summary_on_the_way": "Being delivered …",
+    "summary_partly": "Delivered to {delivered} of {total}",
+    "summary_delayed": "Delayed: {delayed} of {total} recipients",
+    "summary_failed": "Not delivered: {failed} of {total} recipients",
+    "state": {
+      "delivered": "Delivered",
+      "queued": "Being delivered",
+      "deferred": "Delayed – will be retried",
+      "deferred_next": "Delayed – next attempt {time}",
+      "failed": "Not delivered",
+      "unknown": "Status unknown"
+    },
+    "reason": {
+      "no_mailbox": "This mailbox does not exist. Please check the address.",
+      "no_domain": "The domain has no mail server – probably a typo in the address.",
+      "mailbox_full": "The recipient's mailbox is full.",
+      "sender_not_verified": "The recipient's server did not accept the sender (SPF, DKIM or DMARC). Is your domain fully connected?",
+      "rejected_as_spam": "Rejected by the recipient's server as spam or by policy.",
+      "unreachable": "The recipient's mail server cannot be reached.",
+      "temporary": "Temporary problem at the recipient's server. We keep trying for up to 3 days.",
+      "other": "The recipient's server refused the message."
+    }
   }
 }

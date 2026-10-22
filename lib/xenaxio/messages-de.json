@@ -399,5 +399,30 @@
   "nav": {
     "admin": "Verwaltung",
     "user": "Konto"
+  },
+  "delivery": {
+    "summary_delivered": "Zugestellt",
+    "summary_on_the_way": "Wird zugestellt …",
+    "summary_partly": "Zugestellt an {delivered} von {total}",
+    "summary_delayed": "Verzögert: {delayed} von {total} Empfängern",
+    "summary_failed": "Nicht zugestellt: {failed} von {total} Empfängern",
+    "state": {
+      "delivered": "Zugestellt",
+      "queued": "Wird zugestellt",
+      "deferred": "Verzögert – wird erneut versucht",
+      "deferred_next": "Verzögert – nächster Versuch {time}",
+      "failed": "Nicht zugestellt",
+      "unknown": "Status unbekannt"
+    },
+    "reason": {
+      "no_mailbox": "Dieses Postfach gibt es nicht. Bitte prüfen Sie die Adresse.",
+      "no_domain": "Die Domain hat keinen Mailserver – vermutlich ein Tippfehler in der Adresse.",
+      "mailbox_full": "Das Postfach des Empfängers ist voll.",
+      "sender_not_verified": "Der Empfängerserver hat den Absender nicht akzeptiert (SPF, DKIM oder DMARC). Ist Ihre Domain vollständig verbunden?",
+      "rejected_as_spam": "Vom Empfängerserver als Spam oder durch eine Richtlinie abgelehnt.",
+      "unreachable": "Der Mailserver des Empfängers ist nicht erreichbar.",
+      "temporary": "Vorübergehendes Problem beim Empfängerserver. Wir versuchen es bis zu 3 Tage lang weiter.",
+      "other": "Der Empfängerserver hat die Nachricht abgelehnt."
+    }
   }
 }
