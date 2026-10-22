@@ -180,8 +180,21 @@ export interface McpTokenInfo {
   lastUsedAt: string | null;
 }
 
+/** Step 15: what happened to one recipient of a sent message. */
+export interface RecipientDelivery {
+  address: string;
+  state: "delivered" | "queued" | "deferred" | "failed" | "unknown";
+  at?: string;
+  nextRetry?: string;
+  expires?: string;
+  /** The receiving server's reply or the error, as sent. */
+  reply?: string;
+  reason?: "no_mailbox" | "no_domain" | "mailbox_full" | "sender_not_verified" | "rejected_as_spam" | "unreachable" | "other";
+}
+
 export const xenaxio = {
   me: () => request<Me>("GET", "/api/me"),
+  delivery: (emailId: string) => request<{ recipients: RecipientDelivery[] }>("GET", `/api/delivery?emailId=${encodeURIComponent(emailId)}`),
   mcpTokens: () => request<{ mcpUrl: string; enabled: boolean; tokens: McpTokenInfo[] }>("GET", "/api/me/mcp-tokens"),
   createMcpToken: (name: string, days: number) => request<{ token: string; mcpUrl: string; info: McpTokenInfo }>("POST", "/api/me/mcp-tokens", { name, days }),
   revokeMcpToken: (id: string) => request<{ ok: true }>("DELETE", `/api/me/mcp-tokens/${encodeURIComponent(id)}`),

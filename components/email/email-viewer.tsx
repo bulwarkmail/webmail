@@ -147,6 +147,7 @@ import { useAttachmentDrag, isDragOutSupported, type AttachmentDragSource } from
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
 import { useArchiveActionEnabled } from "@/lib/archive-gate";
 import { AssistantEmailButtons } from "@/components/xenaxio/assistant-email-buttons";
+import { DeliveryStatus } from "@/components/xenaxio/delivery-status";
 
 /** The More menu's two drill-downs: a folder list and a tag list. */
 type MoreMenuSub = 'move' | 'tag' | 'rules';
@@ -3472,6 +3473,10 @@ export function EmailViewer({
   // and user folders all qualify.
   const inReceiptEligibleFolder = !['sent', 'drafts', 'trash', 'junk'].includes(currentMailboxRole || '');
 
+  // xenaxio (step 15): the delivery status shows on the user's own sent copies.
+  const sentMailboxId = mailboxes.find((m) => m.role === 'sent')?.id;
+  const isSentCopy = !!email && !!sentMailboxId && !!email.mailboxIds?.[sentMailboxId];
+
   const shouldOfferReadReceipt =
     !!readReceiptRequestedBy &&
     !mdnAlreadyHandled &&
@@ -5749,6 +5754,9 @@ export function EmailViewer({
                     />
                   </div>
                 )}
+
+                {/* xenaxio: delivery status of a sent message (step 15). */}
+                {isSentCopy && !isDraft && <DeliveryStatus emailId={email.id} />}
 
                 {/* Calendar Invitation Banner */}
                 {hasCalendarInvitation && (
