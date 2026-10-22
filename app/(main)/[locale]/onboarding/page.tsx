@@ -7,7 +7,9 @@ import { useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { AuthCard, Field, Notice, PasswordField, TextField } from "@/components/xenaxio/ui";
 import { Input } from "@/components/ui/input";
-import { errorKey, xenaxio, XenaxioApiError } from "@/lib/xenaxio/api";
+import { errorKey, type SlugProblem, xenaxio, XenaxioApiError } from "@/lib/xenaxio/api";
+import { goToPortal, shouldHandOff } from "@/lib/xenaxio/portal";
+import { useLocale } from "next-intl";
 import { useXT } from "@/lib/xenaxio/i18n";
 
 type Status = "checking" | "valid" | "used" | "expired" | "unknown";
@@ -15,12 +17,18 @@ type Status = "checking" | "valid" | "used" | "expired" | "unknown";
 function OnboardingForm() {
   const t = useXT();
   const router = useRouter();
+  const locale = useLocale();
   const token = useSearchParams().get("token") ?? "";
   const [status, setStatus] = useState<Status>("checking");
   const [form, setForm] = useState({ companyName: "", domain: "", adminName: "", adminLocalPart: "", password: "" });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  // Step 17: the company's address <slug>.<baseDomain>; suggested from the name until edited.
+  const [slug, setSlug] = useState("");
+  const [slugEdited, setSlugEdited] = useState(false);
+  const [baseDomain, setBaseDomain] = useState<string | null>(null);
+  const [slugProblem, setSlugProblem] = useState<SlugProblem | null>(null);
 
   useEffect(() => {
     if (!token) return setStatus("unknown");
@@ -29,6 +37,36 @@ function OnboardingForm() {
       .then((r) => setStatus(r.status))
       .catch(() => setStatus("unknown"));
   }, [token]);
+
+  // Suggestion from the company name (while the address was not edited by hand).
+  useEffect(() => {
+    if (status !== "valid" || slugEdited) return;
+    const name = form.companyName.trim();
+    const timer = setTimeout(() => {
+      xenaxio
+        .onboardingSlug(token, { name: name || "firma" })
+        .then((r) => {
+          setBaseDomain(r.baseDomain || null);
+          if (name && r.suggestion) setSlug(r.suggestion);
+          setSlugProblem(null);
+        })
+        .catch(() => {});
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [form.companyName, slugEdited, status, token]);
+
+  // A typed address: is it free?
+  useEffect(() => {
+    if (status !== "valid" || !slugEdited) return;
+    if (!slug) return setSlugProblem("invalid");
+    const timer = setTimeout(() => {
+      xenaxio
+        .onboardingSlug(token, { slug })
+        .then((r) => setSlugProblem(r.problem ?? null))
+        .catch(() => {});
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [slug, slugEdited, status, token]);
 
   const set = (key: keyof typeof form) => (e: { target: { value: string } }) => setForm((f) => ({ ...f, [key]: e.target.value }));
   // Pasted addresses or URLs: keep only the domain part.
@@ -40,7 +78,15 @@ function OnboardingForm() {
     setError(null);
     setFieldErrors({});
     try {
-      await xenaxio.onboard({ token, ...form, domain, adminLocalPart: form.adminLocalPart.trim().toLowerCase() });
+      const me = await xenaxio.onboard({
+        token,
+        ...form,
+        domain,
+        adminLocalPart: form.adminLocalPart.trim().toLowerCase(),
+        ...(baseDomain && slug ? { slug } : {}),
+      });
+      // Step 17: continue on the company's own address.
+      if (shouldHandOff(me.portalUrl, window.location.origin, "/") && (await goToPortal(`/${locale}/workspace/domain/`))) return;
       router.replace("/workspace/domain");
     } catch (err) {
       if (err instanceof XenaxioApiError && err.issues?.length) {
@@ -83,6 +129,31 @@ function OnboardingForm() {
           error={fieldErrors.domain}
           required
         />
+        {baseDomain && (
+          <Field
+            label={t("onboarding.address")}
+            htmlFor="portal-address"
+            hint={slugProblem ? undefined : t("onboarding.address_hint")}
+            error={slugProblem ? t(`errors.slug_${slugProblem}`) : fieldErrors.slug}
+          >
+            <div className="flex items-center gap-2">
+              <Input
+                id="portal-address"
+                value={slug}
+                onChange={(e) => {
+                  setSlugEdited(true);
+                  setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 40));
+                }}
+                autoCapitalize="none"
+                spellCheck={false}
+                placeholder="mueller"
+                className="flex-1 min-w-0"
+                aria-invalid={slugProblem ? true : undefined}
+              />
+              <span className="text-sm text-muted-foreground truncate max-w-[55%]">.{baseDomain}</span>
+            </div>
+          </Field>
+        )}
         <TextField label={t("onboarding.admin_name")} value={form.adminName} onChange={set("adminName")} autoComplete="name" error={fieldErrors.adminName} required />
         <Field label={t("onboarding.admin_address")} htmlFor="admin-address" error={fieldErrors.adminLocalPart}>
           <div className="flex items-center gap-2">
@@ -108,7 +179,7 @@ function OnboardingForm() {
           error={fieldErrors.password}
           required
         />
-        <Button type="submit" className="w-full" disabled={busy || !form.companyName || !domain || !form.adminName || !form.adminLocalPart || form.password.length < 10}>
+        <Button type="submit" className="w-full" disabled={busy || !form.companyName || !domain || !form.adminName || !form.adminLocalPart || form.password.length < 10 || (!!baseDomain && (!slug || !!slugProblem))}>
           {busy ? t("onboarding.submitting") : t("onboarding.submit")}
         </Button>
       </form>
