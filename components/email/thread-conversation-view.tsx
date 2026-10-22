@@ -53,6 +53,7 @@ import { useDeviceDetection } from "@/hooks/use-media-query";
 import { usePluginRenderedBody } from "@/hooks/use-plugin-rendered-body";
 import { emailToReadView } from "@/lib/plugin-projection";
 import { AttachmentPluginMenu, ReaderAboveQuoteSlot } from "./reader-plugin-surfaces";
+import { DeliveryStatus } from "@/components/xenaxio/delivery-status";
 
 export type ConversationAttachmentHandler = (
   blobId: string, name: string, type: string | undefined, source: EmailBlobContext,
@@ -357,6 +358,9 @@ function EmailCard({
   const formatAddress = useOwnDomainAddress();
   const isUnread = !email.keywords?.$seen;
   const isStarred = email.keywords?.$flagged;
+  // xenaxio (step 15): delivery status on the user's own sent copies, as in the single reader.
+  const sentMailboxId = useEmailStore((s) => s.mailboxes.find((m) => m.role === 'sent')?.id);
+  const isSentCopy = !!sentMailboxId && !!email.mailboxIds?.[sentMailboxId] && !email.keywords?.$draft;
 
   // Mark as read when email is expanded
   useMarkReadWhenShown(email, isExpanded, onMarkAsRead);
@@ -423,6 +427,7 @@ function EmailCard({
         <div className="border-t border-border animate-in slide-in-from-top-2 duration-200">
           <PluginSlot name="reader-below-subject" className="w-full" extraProps={plugin.emailProps} />
           <PluginSlot name="email-banner" className="w-full" extraProps={plugin.emailProps} />
+          {isSentCopy && <DeliveryStatus emailId={email.id} className="border-b border-border px-4 py-1.5" />}
           <ConversationEmailBody
             email={email}
             allowExternal={allowExternal}
