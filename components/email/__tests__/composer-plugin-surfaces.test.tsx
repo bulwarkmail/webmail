@@ -520,15 +520,16 @@ describe('composer-sidebar and composer-sidebar-right', () => {
 
     // The right panel's handle is on its left edge: dragging left widens it.
     const right = screen.getByTestId('composer-sidebar-resize-right');
-    fireEvent.mouseDown(right, { clientX: 1000 });
-    fireEvent.mouseMove(document, { clientX: 900 });
-    fireEvent.mouseUp(document);
+    // ResizeHandle follows pointer events (as in resize-handle.test.tsx).
+    fireEvent.pointerDown(right, { pointerId: 1, button: 0, buttons: 1, pointerType: 'mouse', clientX: 1000 });
+    fireEvent.pointerMove(document, { pointerId: 1, buttons: 1, pointerType: 'mouse', clientX: 900 });
+    fireEvent.pointerUp(document, { pointerId: 1, button: 0, buttons: 0, pointerType: 'mouse' });
     expect(panel('right').style.width).toBe('360px');
     // The left panel's handle is on its right edge: dragging left narrows it, down to the minimum.
     const left = screen.getByTestId('composer-sidebar-resize-left');
-    fireEvent.mouseDown(left, { clientX: 300 });
-    fireEvent.mouseMove(document, { clientX: 100 });
-    fireEvent.mouseUp(document);
+    fireEvent.pointerDown(left, { pointerId: 1, button: 0, buttons: 1, pointerType: 'mouse', clientX: 300 });
+    fireEvent.pointerMove(document, { pointerId: 1, buttons: 1, pointerType: 'mouse', clientX: 100 });
+    fireEvent.pointerUp(document, { pointerId: 1, button: 0, buttons: 0, pointerType: 'mouse' });
     expect(panel('left').style.width).toBe('220px');
     fireEvent.keyDown(left, { key: 'ArrowRight' });
     expect(panel('left').style.width).toBe('230px');

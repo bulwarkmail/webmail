@@ -10,12 +10,15 @@ const toastError = vi.hoisted(() => vi.fn());
 
 const editorFocus = vi.hoisted(() => vi.fn());
 
-// Reports a stub editor as ready, the way the real one does once mounted.
+// Reports a stub editor as ready once, the way the real one does once mounted.
+// The composer passes a new callback on every render, so firing it again on
+// each new callback would re-render the composer forever.
 vi.mock('@/components/email/rich-text-editor', () => ({
   RichTextEditor: ({ onEditorReady }: { onEditorReady?: (editor: unknown) => void }) => {
     React.useEffect(() => {
       onEditorReady?.({ commands: { focus: editorFocus, setContent: () => {} }, isDestroyed: false });
-    }, [onEditorReady]);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
     return React.createElement('div', { 'data-testid': 'rich-text-editor' });
   },
 }));
