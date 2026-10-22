@@ -24,6 +24,7 @@ import type { FileNodeRights } from "@/lib/jmap/types";
 import { ImagePreviewModal } from "@/components/files/image-preview-modal";
 import { FilePreviewModal } from "@/components/files/file-preview-modal";
 import { WopiEditor } from "@/components/files/wopi-editor";
+import { XENAXIO_BFF } from "@/lib/xenaxio/bff";
 import { useWopiStatus, canWopiOpen } from "@/hooks/use-wopi-status";
 import { AppTopBannerSlot } from "@/components/plugins/app-top-banner-slot";
 import { AlertTriangle, Loader2 } from "@/components/icons";
@@ -559,9 +560,23 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
 
   const currentFilesAccountId = useFileStore((s) => s.currentAccountId);
 
+  // xenaxio: list the open folder again when the user comes back to the tab, so
+  // files added on another device show up (live pushes arrive only while the
+  // mail app has set up the connection).
+  useEffect(() => {
+    if (!XENAXIO_BFF) return;
+    const onVisible = () => {
+      const files = useFileStore.getState();
+      if (document.visibilityState === "visible" && files.hasListed && !files.isLoading) void files.refresh();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, []);
+
   // Sharing: the browsing client (store-attached) drives the principal picker
   // and share mutations. supportsPrincipals() gates the whole Share affordance.
-  const sharingEnabled = !!storeClient?.supportsPrincipals();
+  // xenaxio: sharing waits for the company-aware check in the BFF (step 11); the BFF rejects it until then.
+  const sharingEnabled = !XENAXIO_BFF && !!storeClient?.supportsPrincipals();
   const filesAccountId = storeClient?.getFilesAccountId() ?? null;
   const handleShare = useCallback(async (id: string, principalId: string, rights: FileNodeRights | null) => {
     await shareResource(id, principalId, rights);

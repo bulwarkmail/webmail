@@ -7,6 +7,7 @@ This is the web client of **xenaxio**, a sovereign AI workspace (mail, calendar,
 - The client talks only to the xenaxio platform API under `/api` (a backend-for-frontend with an httpOnly session cookie). It never connects to the mail server directly and holds no mail credentials.
 - Own pages: sign-in, company onboarding, workspace (domain and DNS, employees, AI settings, audit log, MCP tokens, password) and the operator console.
 - AI assistant side panel: questions about the mailbox with sources, "Kurz" (summary), "Mit KI antworten" (reply draft), meeting proposals that run only after "Bestätigen".
+- Files: the Bulwark file manager on the mail server's JMAP file storage, through the same proxy; up to 100 MB per file in the cloud. Sharing folders and Office editing are switched off for now (sharing comes with a company-aware check in the platform).
 - xenaxio branding, German and English only, features that call external services switched off.
 
 xenaxio code lives in `lib/xenaxio/`, `components/xenaxio/` and `app/(main)/[locale]/{login,onboarding,workspace,operator}`; changes to upstream files are kept small.
