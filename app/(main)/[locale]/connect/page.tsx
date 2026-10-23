@@ -88,7 +88,7 @@ function Consent() {
   if (leaving) return <Spinner label={t("connect.redirecting")} />;
   if (!me || !request) return error ? <AuthCard title={t("connect.title")}><Notice kind="error">{error}</Notice></AuthCard> : <Spinner label={t("common.loading")} />;
 
-  const can = ["connect.can_1", "connect.can_2", "connect.can_3", "connect.can_4"];
+  const can = ["connect.can_1", "connect.can_2", "connect.can_3", "connect.can_4", "connect.can_5"];
   return (
     <AuthCard title={t("connect.title")}>
       <div className="space-y-5">
