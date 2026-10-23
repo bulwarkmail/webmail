@@ -37,6 +37,8 @@ import { PluginActions } from "@/components/plugins/plugin-actions";
 import { usePluginPages, pluginPageHref, isPluginPageActive } from "@/hooks/use-plugin-pages";
 import { NotificationBell } from "@/components/notifications/notification-center";
 import type { ContactSuggestion } from "@/lib/search-suggestions";
+import { XENAXIO_BFF } from "@/lib/xenaxio/bff";
+import { WorkspaceNavLink } from "@/components/xenaxio/workspace-nav-link";
 
 /** The top bar is not about any one item: plugin clicks carry no context. */
 const TOP_BAR_CONTEXT: Record<string, unknown> = {};
@@ -279,6 +281,8 @@ export function MvTopBar({
             )}
           </a>
         )}
+        {/* xenaxio: company workspace, as in the navigation rail this bar replaces */}
+        {XENAXIO_BFF && <WorkspaceNavLink variant="top" />}
         <Link
           href="/settings"
           className="grid place-items-center w-12 h-12 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
@@ -336,6 +340,15 @@ export function MvTopBar({
                     </Link>
                   );
                 })}
+                {XENAXIO_BFF && (
+                  <WorkspaceNavLink
+                    variant="grid"
+                    onNavigate={() => {
+                      if (activeAppId) onCloseInlineApp?.();
+                      setAppsOpen(false);
+                    }}
+                  />
+                )}
                 {pluginPages.map((page) => {
                   const PageIcon = iconForName(page.icon) ?? Puzzle;
                   return (
