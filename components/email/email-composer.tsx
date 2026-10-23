@@ -2454,11 +2454,12 @@ export function EmailComposer({
 
     // Get the selected identity or primary identity
     // Generate sub-addressed email if tag is set
+    const fallbackAccountEmail = client?.username?.includes('@') ? client.username : undefined;
     const identityFromEmail = currentIdentity?.email
       ? subAddressTag
         ? generateSubAddress(currentIdentity.email, subAddressTag, subAddressDelimiter)
         : currentIdentity.email
-      : undefined;
+      : fallbackAccountEmail;
     const fromEmail = (fromOverrideEnabled && fromOverrideEmail.trim())
       ? fromOverrideEmail.trim()
       : identityFromEmail;
@@ -3153,11 +3154,12 @@ export function EmailComposer({
       }
     }
 
+    const fallbackAccountEmail = client?.username?.includes('@') ? client.username : undefined;
     const identityFromEmail = currentIdentity?.email
       ? subAddressTag
         ? generateSubAddress(currentIdentity.email, subAddressTag, subAddressDelimiter)
         : currentIdentity.email
-      : undefined;
+      : fallbackAccountEmail;
     // When the user has typed a From override, that becomes the header From
     // (and MIME-builder From in the S/MIME path) and is asked for as the SMTP
     // envelope MAIL FROM too, so the Return-Path doesn't reveal the identity's
