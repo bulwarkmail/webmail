@@ -15,6 +15,7 @@ import { clearCachedData } from '@/lib/clear-cached-data';
 import { SpamSiegeGame } from './spam-siege-game';
 import { DebugSettings } from './debug-settings';
 import { AboutAttribution } from '@/components/xenaxio/about-attribution';
+import { productLogoUrls } from '@/lib/xenaxio/portal-config';
 
 const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || "0.0.0";
 const GIT_COMMIT = process.env.NEXT_PUBLIC_GIT_COMMIT || "unknown";
@@ -59,7 +60,12 @@ function VersionUpdateTag() {
  */
 export function AboutFooter() {
   const t = useTranslations('settings.advanced');
-  const { sourceCodeUrl, appName, appLogoLightUrl, appLogoDarkUrl } = useConfig();
+  const config = useConfig();
+  const { sourceCodeUrl, appName } = config;
+  // xenaxio: the card names the product, so it shows the product's logo, not the company's.
+  const product = productLogoUrls();
+  const appLogoLightUrl = product ? product.light : config.appLogoLightUrl;
+  const appLogoDarkUrl = product ? product.dark : config.appLogoDarkUrl;
   // A branded deployment (APP_NAME / APP_LOGO_*) shows its own name and logo
   // here; without them the card keeps the Bulwark mark and title. (#1160)
   const branded = appName && appName !== 'Webmail';
