@@ -73,6 +73,7 @@ import { useEmailStore } from "@/stores/email-store";
 import { toast } from "@/stores/toast-store";
 import { debug } from "@/lib/debug";
 import { AccountSwitcher } from "./account-switcher";
+import { MenuBrand } from "@/components/xenaxio/menu-brand";
 import { useIsEmbedded } from "@/hooks/use-is-embedded";
 import { buildSettingsPath, SCHEDULED_MAILBOX_ID, scopedScheduledMailboxId } from "@/lib/deep-links";
 import { useTour } from "@/components/tour/tour-provider";
@@ -1478,6 +1479,7 @@ function SidebarImpl({
         // Border lives on the wrapper (outside the h-14 box) so the bar's total
         // height matches the search/reply toolbars, which border-b their wrapper too.
         <div className="border-b border-border">
+          <MenuBrand />
           <div className={cn("flex items-center h-14", isCollapsed ? "justify-center px-2" : "gap-1 px-2")}>
             <Button
               variant="ghost"
