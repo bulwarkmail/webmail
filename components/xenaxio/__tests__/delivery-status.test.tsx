@@ -23,12 +23,16 @@ describe("DeliveryStatus (step 15)", () => {
   it("opens by itself and explains a failure", async () => {
     delivery.mockResolvedValue({
       recipients: [
-        { address: "lea@firma.de", state: "delivered" },
+        { address: "lea@firma.de", state: "delivered", server: "mx.firma.de" },
         { address: "x@tippfehler.de", state: "failed", reply: "DNS lookup failed: no MX record found.", reason: "no_domain" },
+        { address: "ic@kunde.de", state: "failed", reply: "550 5.1.2 Mailbox does not exist.", reason: "no_mailbox", server: "local" },
       ],
     });
     await act(async () => render(<DeliveryStatus emailId="m2" />));
-    expect(screen.getByText("Nicht zugestellt: 1 von 2 Empfängern")).toBeTruthy();
+    expect(screen.getByText("Nicht zugestellt: 2 von 3 Empfängern")).toBeTruthy();
+    // Which server answered: the recipient's or ours.
+    expect(screen.getByText("Antwort von: mx.firma.de")).toBeTruthy();
+    expect(screen.getByText("Antwort von: diesem Server (xenaxio)")).toBeTruthy();
     expect(screen.getByText(/vermutlich ein Tippfehler/)).toBeTruthy();
     expect(screen.getByText("DNS lookup failed: no MX record found.")).toBeTruthy();
   });

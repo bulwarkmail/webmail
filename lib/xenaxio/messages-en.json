@@ -451,7 +451,9 @@
       "unreachable": "The recipient's mail server cannot be reached.",
       "temporary": "Temporary problem at the recipient's server. We keep trying for up to 3 days.",
       "other": "The recipient's server refused the message."
-    }
+    },
+    "server": "Answered by: {server}",
+    "server_local": "Answered by: this server (xenaxio)"
   },
   "portal": {
     "powered_by": "powered by xenaxio",

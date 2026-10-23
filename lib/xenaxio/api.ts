@@ -226,6 +226,8 @@ export interface RecipientDelivery {
   /** The receiving server's reply or the error, as sent. */
   reply?: string;
   reason?: "no_mailbox" | "no_domain" | "mailbox_full" | "sender_not_verified" | "rejected_as_spam" | "unreachable" | "other";
+  /** The server that answered; "local" is a mailbox on this server. */
+  server?: string;
 }
 
 export const xenaxio = {
