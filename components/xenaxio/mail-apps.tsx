@@ -19,11 +19,14 @@ export const MAIL_APPS = [
   { id: "android", steps: 4 },
 ] as const;
 
-function Row({ label, value, copy }: { label: string; value: string; copy?: boolean }) {
+/** One setting; on a phone the label sits above the value so addresses do not break. */
+function Row({ label, value, copy, plain }: { label: string; value: string; copy?: boolean; plain?: boolean }) {
   return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2.5">
-      <dt className="w-36 shrink-0 text-sm text-muted-foreground">{label}</dt>
-      <dd className="min-w-0 flex-1 break-all font-mono text-sm">{value}</dd>
+    <div className="flex items-center gap-3 px-4 py-2.5">
+      <div className="min-w-0 flex-1 sm:flex sm:items-center sm:gap-3">
+        <dt className="text-xs text-muted-foreground sm:w-36 sm:shrink-0 sm:text-sm">{label}</dt>
+        <dd className={`break-all text-sm ${plain ? "" : "font-mono"}`}>{value}</dd>
+      </div>
       {copy && <CopyButton value={value} />}
     </div>
   );
@@ -37,7 +40,7 @@ function Server({ title, server }: { title: string; server: MailAppSettings["ima
       <dl className="divide-y divide-border rounded-lg border border-border">
         <Row label={t("mail_apps.server")} value={server.host} copy />
         <Row label={t("mail_apps.port")} value={String(server.port)} copy />
-        <Row label={t("mail_apps.security")} value={t("mail_apps.security_ssl")} />
+        <Row label={t("mail_apps.security")} value={t("mail_apps.security_ssl")} plain />
       </dl>
     </section>
   );
@@ -66,7 +69,7 @@ export function MailApps({ settings, domainPending }: { settings: MailAppSetting
         <h2 className="font-medium">{t("mail_apps.account")}</h2>
         <dl className="divide-y divide-border rounded-lg border border-border">
           <Row label={t("mail_apps.username")} value={settings.username} copy />
-          <Row label={t("mail_apps.password")} value={t("mail_apps.password_value")} />
+          <Row label={t("mail_apps.password")} value={t("mail_apps.password_value")} plain />
         </dl>
         <p className="text-xs text-muted-foreground">{t("mail_apps.password_note")}</p>
       </section>
