@@ -50,6 +50,8 @@
     "invalid_request": "Invalid request.",
     "invalid_client": "Unknown application. Start the connection again.",
     "invalid_target": "Wrong connector address.",
+    "already_exists_list": "Already taken: {addresses}. An address can be either a mailbox or an additional address. To use it here, first delete that mailbox or remove the address from the other person.",
+    "cannot_delete_self": "You cannot delete your own account.",
     "slug_invalid": "Only lowercase letters, digits and hyphens, 3 to 40 characters, no hyphen at the start or end.",
     "slug_reserved": "This address is reserved. Please choose another one.",
     "slug_taken": "This address is already taken.",
@@ -206,7 +208,11 @@
     "used": "{used} of {quota} used",
     "ai": "AI (AI Workspace plan)",
     "ai_on": "AI on",
-    "ai_off": "AI off"
+    "ai_off": "AI off",
+    "delete": "Delete",
+    "delete_prompt": "Delete {email} for good? All email, calendars, contacts and files of this mailbox are deleted; this cannot be undone. The address becomes free again.\n\nType {email} to confirm:",
+    "delete_mismatch": "The address does not match. Nothing was deleted.",
+    "deleted": "{email} has been deleted."
   },
   "operator": {
     "title": "Operator console",

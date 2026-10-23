@@ -50,6 +50,8 @@
     "invalid_request": "Ungültige Anfrage.",
     "invalid_client": "Unbekannte Anwendung. Starten Sie die Verbindung neu.",
     "invalid_target": "Falsche Adresse des Konnektors.",
+    "already_exists_list": "Bereits vergeben: {addresses}. Eine Adresse kann nur ein Postfach oder eine weitere Adresse sein. Um sie hier zu verwenden, löschen Sie zuerst das Postfach oder entfernen Sie die Adresse bei der anderen Person.",
+    "cannot_delete_self": "Ihr eigenes Konto können Sie nicht löschen.",
     "slug_invalid": "Nur Kleinbuchstaben, Ziffern und Bindestriche, 3 bis 40 Zeichen, nicht mit Bindestrich am Anfang oder Ende.",
     "slug_reserved": "Diese Adresse ist reserviert. Bitte wählen Sie eine andere.",
     "slug_taken": "Diese Adresse ist bereits vergeben.",
@@ -206,7 +208,11 @@
     "used": "{used} von {quota} belegt",
     "ai": "KI (Tarif AI Workspace)",
     "ai_on": "KI an",
-    "ai_off": "KI aus"
+    "ai_off": "KI aus",
+    "delete": "Löschen",
+    "delete_prompt": "{email} endgültig löschen? Alle E-Mails, Kalender, Kontakte und Dateien dieses Postfachs werden gelöscht, das lässt sich nicht rückgängig machen. Die Adresse wird danach wieder frei.\n\nGeben Sie zur Bestätigung {email} ein:",
+    "delete_mismatch": "Die Adresse stimmt nicht überein. Nichts wurde gelöscht.",
+    "deleted": "{email} wurde gelöscht."
   },
   "operator": {
     "title": "Betreiberkonsole",

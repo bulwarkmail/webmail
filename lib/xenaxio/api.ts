@@ -53,6 +53,13 @@ export function errorKey(err: unknown): string {
   return `errors.${issue ? issue.message : err.code}`;
 }
 
+/** The error text for the user; names the taken addresses when the server sent them (step 18). */
+export function errorText(t: (key: string, values?: Record<string, string | number>) => string, err: unknown): string {
+  const addresses = err instanceof XenaxioApiError ? err.details?.addresses : undefined;
+  if (Array.isArray(addresses) && addresses.length > 0) return t("errors.already_exists_list", { addresses: addresses.join(", ") });
+  return t(errorKey(err));
+}
+
 export interface Me {
   user: { id: string; email: string; displayName: string; role: "user" | "admin"; mustChangePassword: boolean };
   tenant: { id: string; name: string; status: "onboarding" | "active" | "blocked" };
@@ -282,6 +289,7 @@ export const xenaxio = {
     request<{ ok: true }>("POST", `/api/admin/users/${encodeURIComponent(userId)}/password`, { password }),
   setUserStatus: (userId: string, status: "active" | "disabled") =>
     request<WorkspaceUser>("POST", `/api/admin/users/${encodeURIComponent(userId)}/status`, { status }),
+  deleteUser: (userId: string) => request<{ ok: true }>("DELETE", `/api/admin/users/${encodeURIComponent(userId)}`),
   setAliases: (userId: string, aliases: string[]) => request<WorkspaceUser>("POST", `/api/admin/users/${encodeURIComponent(userId)}/aliases`, { aliases }),
   setQuota: (userId: string, quotaMb: number) => request<WorkspaceUser>("POST", `/api/admin/users/${encodeURIComponent(userId)}/quota`, { quotaMb }),
   setUserAi: (userId: string, enabled: boolean) => request<{ ok: true }>("POST", `/api/admin/users/${encodeURIComponent(userId)}/ai`, { enabled }),
