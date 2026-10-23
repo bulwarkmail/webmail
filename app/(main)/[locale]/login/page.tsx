@@ -15,6 +15,7 @@ import { errorKey, xenaxio } from "@/lib/xenaxio/api";
 import { clearAssistantState } from "@/lib/xenaxio/assistant";
 import { useXT } from "@/lib/xenaxio/i18n";
 import { safeNextPath } from "@/lib/xenaxio/brand";
+import { goToPortal, shouldHandOff, usePortal } from "@/lib/xenaxio/portal";
 
 function LoginForm() {
   const t = useXT();
@@ -26,6 +27,8 @@ function LoginForm() {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const portal = usePortal();
+  const company = portal?.kind === "tenant" ? portal : null;
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -36,6 +39,10 @@ function LoginForm() {
       setPassword("");
       // A new sign-in never inherits an assistant chat left in this tab.
       clearAssistantState();
+      // Step 17: signed in on the shared address — continue on the company's own one
+      // (not when sign-in was for something specific here, e.g. an AI chat's consent).
+      const target = me.user.mustChangePassword ? `/${locale}/workspace/password/` : `/${locale}/`;
+      if (!next && shouldHandOff(me.portalUrl, window.location.origin, window.location.pathname) && (await goToPortal(target))) return;
       // Full navigation: the mail app restores the session from the new cookie on load.
       if (me.user.mustChangePassword) router.replace("/workspace/password");
       else window.location.assign(withBasePath(next ?? `/${locale}/`));
@@ -46,7 +53,7 @@ function LoginForm() {
   };
 
   return (
-    <AuthCard title={t("login.title")} subtitle={t("login.subtitle")}>
+    <AuthCard title={t("login.title")} subtitle={company ? t("portal.login_subtitle", { company: company.name }) : t("login.subtitle")}>
       <form onSubmit={submit} className="space-y-4" noValidate>
         {error && <Notice kind="error">{error}</Notice>}
         <TextField

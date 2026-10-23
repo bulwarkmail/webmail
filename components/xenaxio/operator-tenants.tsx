@@ -75,6 +75,48 @@ function Limits({ tenant, defaults, onSaved }: { tenant: OperatorTenant; default
   );
 }
 
+/** Step 17: rename a company's address (e.g. one that imitates someone else's brand). */
+function SlugForm({ tenant, baseDomain, onSaved }: { tenant: OperatorTenant; baseDomain: string; onSaved: () => Promise<void> }) {
+  const t = useXT();
+  const [slug, setSlug] = useState(tenant.slug ?? "");
+  const [message, setMessage] = useState<{ kind: "error" | "success"; text: string } | null>(null);
+  const save = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!window.confirm(t("operator.slug_confirm", { name: tenant.name }))) return;
+    setMessage(null);
+    try {
+      await xenaxio.operator.setTenantSlug(tenant.id, slug);
+      setMessage({ kind: "success", text: t("operator.saved") });
+      await onSaved();
+    } catch (err) {
+      setMessage({ kind: "error", text: t(errorKey(err)) });
+    }
+  };
+  return (
+    <form onSubmit={save} className="space-y-2 rounded-md bg-muted/50 p-3" noValidate>
+      <div className="flex items-end gap-2">
+        <div className="flex-1 min-w-0">
+          <TextField
+            label={t("operator.slug")}
+            hint={t("operator.slug_hint")}
+            value={slug}
+            onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 40))}
+            autoCapitalize="none"
+            spellCheck={false}
+          />
+        </div>
+        <span className="pb-8 text-sm text-muted-foreground">.{baseDomain}</span>
+      </div>
+      <div className="flex items-center gap-3">
+        <Button type="submit" size="sm" disabled={!slug || slug === tenant.slug}>
+          {t("operator.save")}
+        </Button>
+        {message && <span className={cn("text-sm", message.kind === "error" ? "text-destructive" : "text-muted-foreground")}>{message.text}</span>}
+      </div>
+    </form>
+  );
+}
+
 export function OperatorTenants() {
   const t = useXT();
   const [data, setData] = useState<Awaited<ReturnType<typeof xenaxio.operator.tenants>> | null>(null);
@@ -127,6 +169,14 @@ export function OperatorTenants() {
                   </span>
                 </p>
                 <p className="text-sm text-muted-foreground">{tenant.domain ?? "—"}</p>
+                {tenant.portalUrl && (
+                  <p className="text-xs">
+                    <a href={tenant.portalUrl} className="text-primary hover:underline break-all" target="_blank" rel="noreferrer">
+                      {tenant.portalUrl.replace(/^https:\/\//, "")}
+                    </a>
+                    {tenant.hostname && <span className="text-muted-foreground"> · {tenant.hostname}</span>}
+                  </p>
+                )}
                 <p className="text-xs text-muted-foreground">
                   {t("operator.col_mailboxes")}: {tenant.mailboxes} / {tenant.maxMailboxes} · {t("operator.col_space")}: {formatBytes(tenant.usedBytes)} · {t("operator.col_ai")}:{" "}
                   {t("operator.ai_users", { count: tenant.aiUsers })}, {t("operator.tokens_month", { tokens: tenant.aiTokens.toLocaleString() })}
@@ -136,12 +186,18 @@ export function OperatorTenants() {
                 <Button size="sm" variant="outline" onClick={() => setOpen(open === tenant.id ? null : tenant.id)} aria-expanded={open === tenant.id}>
                   {t("operator.limits")}
                 </Button>
+                {data.baseDomain && (
+                  <Button size="sm" variant="outline" onClick={() => setOpen(open === `slug:${tenant.id}` ? null : `slug:${tenant.id}`)} aria-expanded={open === `slug:${tenant.id}`}>
+                    {t("operator.address")}
+                  </Button>
+                )}
                 <Button size="sm" variant="outline" className={tenant.status === "blocked" ? "" : "text-destructive"} onClick={() => toggleBlock(tenant)}>
                   {tenant.status === "blocked" ? t("operator.unblock") : t("operator.block")}
                 </Button>
               </div>
             </div>
             {open === tenant.id && <Limits tenant={tenant} defaults={data.defaults} onSaved={load} />}
+            {open === `slug:${tenant.id}` && data.baseDomain && <SlugForm tenant={tenant} baseDomain={data.baseDomain} onSaved={load} />}
           </li>
         ))}
       </ul>

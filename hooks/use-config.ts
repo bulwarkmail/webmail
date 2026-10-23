@@ -7,6 +7,7 @@ import type { PublicJmapServerEntry } from '@/lib/admin/jmap-servers';
 import { IS_LITE, IS_LITE_STALWART, LITE_CONFIG_PATH, withLiteBuildId } from '@/lib/lite';
 import { applyLiteConfig, liteStalwartDefaults } from '@/lib/lite-config';
 import { isConfigData } from '@/lib/config-validation';
+import { withPortalLogo } from '@/lib/xenaxio/portal-config';
 
 export interface ConfigData {
   appName: string;
@@ -121,6 +122,8 @@ export async function fetchConfig(): Promise<ConfigData> {
 
   // Start a new fetch
   configPromise = (IS_LITE ? fetchLiteConfig() : fetchServerConfig())
+    // xenaxio step 17: the company's logo replaces the product logo in the app.
+    .then(withPortalLogo)
     .then((data) => {
       configCache = data;
       // Fetch admin policy alongside config (non-blocking)

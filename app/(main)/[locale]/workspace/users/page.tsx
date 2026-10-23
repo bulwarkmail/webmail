@@ -1,7 +1,7 @@
 "use client";
 
 // Employees (scenario 2, A2, C1): add, reset passwords, aliases, mailbox size,
-// AI per person (I8), disable and re-enable, delete (step 17).
+// AI per person (I8), disable and re-enable, delete (step 18).
 import { type FormEvent, useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,7 +32,7 @@ function UserEditor({ user, isSelf, maxQuotaBytes, aiEnabled, onChanged, onMessa
   const [aliases, setAliases] = useState(user.aliases.join(", "));
   const [quotaMb, setQuotaMb] = useState(String(Math.round(user.quotaBytes / MB)));
   const [busy, setBusy] = useState(false);
-  // Step 17: errors and confirmations show here, next to the button, not at the top of the page.
+  // Step 18: errors and confirmations show here, next to the button, not at the top of the page.
   const [notice, setNotice] = useState<{ kind: "error" | "success"; text: string; field?: "aliases" } | null>(null);
   const run = async (action: () => Promise<unknown>, success?: string, field?: "aliases") => {
     setBusy(true);
