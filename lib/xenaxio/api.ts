@@ -70,6 +70,13 @@ export interface Me {
   portal?: PortalInfo;
 }
 
+/** Step 23: settings for mail apps; the password is the one for xenaxio. */
+export interface MailAppSettings {
+  username: string;
+  imap: { host: string; port: number; security: "ssl" };
+  smtp: { host: string; port: number; security: "ssl" };
+}
+
 /** Step 17: a company's login portal. */
 export interface PortalInfo {
   name: string;
@@ -240,6 +247,7 @@ export interface RecipientDelivery {
 export const xenaxio = {
   me: () => request<Me>("GET", "/api/me"),
   delivery: (emailId: string) => request<{ recipients: RecipientDelivery[] }>("GET", `/api/delivery?emailId=${encodeURIComponent(emailId)}`),
+  mailApps: () => request<MailAppSettings>("GET", "/api/me/mail-apps"),
   mcpTokens: () => request<{ mcpUrl: string; enabled: boolean; tokens: McpTokenInfo[] }>("GET", "/api/me/mcp-tokens"),
   createMcpToken: (name: string, days: number) => request<{ token: string; mcpUrl: string; info: McpTokenInfo }>("POST", "/api/me/mcp-tokens", { name, days }),
   revokeMcpToken: (id: string) => request<{ ok: true }>("DELETE", `/api/me/mcp-tokens/${encodeURIComponent(id)}`),
