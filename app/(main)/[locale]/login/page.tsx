@@ -16,13 +16,17 @@ import { clearAssistantState } from "@/lib/xenaxio/assistant";
 import { useXT } from "@/lib/xenaxio/i18n";
 import { safeNextPath } from "@/lib/xenaxio/brand";
 import { goToPortal, shouldHandOff, usePortal } from "@/lib/xenaxio/portal";
+import { openAccount } from "@/lib/xenaxio/accounts";
 
 function LoginForm() {
   const t = useXT();
   const router = useRouter();
   const locale = useLocale();
+  const params = useSearchParams();
   // Back to where sign-in was needed, e.g. the consent screen of an AI chat (step 9).
-  const next = safeNextPath(useSearchParams().get("next"));
+  const next = safeNextPath(params.get("next"));
+  // Step 29: "Add account" in the account menu; the accounts signed in here stay.
+  const add = params.get("mode") === "add-account";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -35,10 +39,12 @@ function LoginForm() {
     setBusy(true);
     setError(null);
     try {
-      const me = await xenaxio.login(email.trim(), password, locale);
+      const me = await xenaxio.login(email.trim(), password, locale, add ? { next: `/${locale}/` } : undefined);
       setPassword("");
       // A new sign-in never inherits an assistant chat left in this tab.
       clearAssistantState();
+      // Step 29: the added account opens here or on its company's portal.
+      if (add && me.url) return openAccount(me.url);
       // Step 17: signed in on the shared address — continue on the company's own one
       // (not when sign-in was for something specific here, e.g. an AI chat's consent).
       const target = me.user.mustChangePassword ? `/${locale}/workspace/password/` : `/${locale}/`;
@@ -53,7 +59,10 @@ function LoginForm() {
   };
 
   return (
-    <AuthCard title={t("login.title")} subtitle={company ? t("portal.login_subtitle", { company: company.name }) : t("login.subtitle")}>
+    <AuthCard
+      title={add ? t("login.add_title") : t("login.title")}
+      subtitle={add ? t("login.add_subtitle") : company ? t("portal.login_subtitle", { company: company.name }) : t("login.subtitle")}
+    >
       <form onSubmit={submit} className="space-y-4" noValidate>
         {error && <Notice kind="error">{error}</Notice>}
         <TextField
@@ -76,6 +85,11 @@ function LoginForm() {
         <Button type="submit" className="w-full" disabled={busy || !email || !password}>
           {busy ? t("login.submitting") : t("login.submit")}
         </Button>
+        {add && (
+          <Button type="button" variant="ghost" className="w-full" onClick={() => window.location.assign(withBasePath(`/${locale}/`))}>
+            {t("common.cancel")}
+          </Button>
+        )}
       </form>
     </AuthCard>
   );

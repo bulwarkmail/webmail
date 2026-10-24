@@ -12,6 +12,9 @@ export const XENAXIO_BFF = process.env.NEXT_PUBLIC_XENAXIO_BFF === "1";
  */
 export const XENAXIO_LOCALES: readonly string[] = ["de", "en"];
 
+/** Step 29: accounts in one browser, the active one included (the platform's limit). */
+export const BFF_MAX_ACCOUNTS = 5;
+
 /** JMAP base URL for the cookie-mode client: discovery is `<this>/.well-known/jmap`. */
 export function bffJmapUrl(): string {
   return `${window.location.origin}${withBasePath("/api/jmap")}`;
