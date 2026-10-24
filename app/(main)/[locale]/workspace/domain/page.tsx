@@ -8,6 +8,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useLocale } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, RefreshCw } from "@/components/icons";
+import { CatchAllSettings } from "@/components/xenaxio/catch-all";
 import { CopyButton } from "@/components/xenaxio/copy-button";
 import { Notice } from "@/components/xenaxio/ui";
 import { WorkspaceShell } from "@/components/xenaxio/workspace-shell";
@@ -158,6 +159,8 @@ function DomainView() {
           );
         })}
       </ul>
+
+      <CatchAllSettings domain={info.domain.name} />
     </div>
   );
 }

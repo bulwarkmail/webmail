@@ -74,7 +74,9 @@
     "custom_hostnames_disabled": "Eigene Domains sind auf dieser Installation nicht aktiviert.",
     "tenant_inactive": "Das Unternehmen ist deaktiviert. Reaktivieren Sie es zuerst.",
     "tenant_not_inactive": "Das Unternehmen ist nicht deaktiviert.",
-    "invitation_not_found": "Diese Einladung gibt es nicht."
+    "invitation_not_found": "Diese Einladung gibt es nicht.",
+    "user_disabled": "Dieses Postfach ist deaktiviert. Wählen Sie ein aktives.",
+    "user_not_found": "Diese Person gibt es nicht mehr."
   },
   "login": {
     "title": "Anmelden",
@@ -172,7 +174,13 @@
     "howto_3": "Speichern. Änderungen werden meist nach 15–60 Minuten sichtbar. Wir prüfen alle 15 Minuten automatisch und schicken Ihnen eine E-Mail, sobald alles passt. Sie können auch selbst auf „DNS prüfen“ klicken.",
     "name_hint": "Manche Anbieter erwarten als Name nur den Teil vor Ihrer Domain (z. B. „_dmarc“ statt „_dmarc.{domain}“) oder „@“ für die Domain selbst.",
     "other_mail_title": "Achtung: {domain} empfängt E-Mails heute bei einem anderen Anbieter",
-    "other_mail": "Die E-Mails für {domain} gehen derzeit an {mx}. Sobald Sie den MX-Eintrag umstellen, kommen alle neuen E-Mails für @{domain} in xenaxio an, und die Postfächer beim bisherigen Anbieter erhalten nichts mehr. Legen Sie vorher alle benötigten Postfächer in xenaxio an. Zum Ausprobieren eignet sich eine Subdomain, zum Beispiel test.{domain}."
+    "other_mail": "Die E-Mails für {domain} gehen derzeit an {mx}. Sobald Sie den MX-Eintrag umstellen, kommen alle neuen E-Mails für @{domain} in xenaxio an, und die Postfächer beim bisherigen Anbieter erhalten nichts mehr. Legen Sie vorher alle benötigten Postfächer in xenaxio an. Zum Ausprobieren eignet sich eine Subdomain, zum Beispiel test.{domain}.",
+    "catchall_title": "Unbekannte Adressen",
+    "catchall_toggle": "Mails an unbekannte Adressen annehmen",
+    "catchall_hint": "E-Mails an Adressen, die es auf {domain} nicht gibt (z. B. vertippte Namen oder alte Adressen), landen im gewählten Postfach. Ohne diese Einstellung werden sie abgelehnt, und der Absender erhält eine Fehlermeldung.",
+    "catchall_mailbox": "Postfach für unbekannte Adressen",
+    "catchall_spam": "Dadurch kommt meist mehr Spam an: Spammer probieren oft erfundene Adressen aus.",
+    "catchall_auto_off": "Wird das Postfach deaktiviert oder gelöscht, schaltet sich die Einstellung aus."
   },
   "users": {
     "title": "Mitarbeitende",

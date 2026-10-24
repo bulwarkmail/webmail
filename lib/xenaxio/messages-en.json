@@ -74,7 +74,9 @@
     "custom_hostnames_disabled": "Own domains are not enabled on this installation.",
     "tenant_inactive": "The company is deactivated. Reactivate it first.",
     "tenant_not_inactive": "The company is not deactivated.",
-    "invitation_not_found": "This invitation does not exist."
+    "invitation_not_found": "This invitation does not exist.",
+    "user_disabled": "This mailbox is disabled. Choose an active one.",
+    "user_not_found": "This person no longer exists."
   },
   "login": {
     "title": "Sign in",
@@ -172,7 +174,13 @@
     "howto_3": "Save. Changes usually show up after 15–60 minutes. We check automatically every 15 minutes and email you as soon as everything is right. You can also click “Check DNS” yourself.",
     "name_hint": "Some providers expect only the part before your domain as the name (e.g. “_dmarc” instead of “_dmarc.{domain}”) or “@” for the domain itself.",
     "other_mail_title": "Attention: {domain} receives email at another provider today",
-    "other_mail": "Email for {domain} currently goes to {mx}. As soon as you switch the MX record, all new email for @{domain} arrives in xenaxio and the mailboxes at your current provider receive nothing anymore. Create all mailboxes you need in xenaxio first. To try things out, use a subdomain such as test.{domain}."
+    "other_mail": "Email for {domain} currently goes to {mx}. As soon as you switch the MX record, all new email for @{domain} arrives in xenaxio and the mailboxes at your current provider receive nothing anymore. Create all mailboxes you need in xenaxio first. To try things out, use a subdomain such as test.{domain}.",
+    "catchall_title": "Unknown addresses",
+    "catchall_toggle": "Accept mail to unknown addresses",
+    "catchall_hint": "Mail to addresses that do not exist on {domain} (for example mistyped names or old addresses) goes to the chosen mailbox. Without this setting it is refused, and the sender gets an error message.",
+    "catchall_mailbox": "Mailbox for unknown addresses",
+    "catchall_spam": "This usually brings more spam: spammers often try made-up addresses.",
+    "catchall_auto_off": "If the mailbox is disabled or deleted, the setting turns itself off."
   },
   "users": {
     "title": "Employees",
