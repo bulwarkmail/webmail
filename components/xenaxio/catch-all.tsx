@@ -1,13 +1,14 @@
 "use client";
 
 // Step 27: the admin picks the mailbox that receives mail to addresses that
-// do not exist on the company's domain (catch-all), with a checkbox.
+// do not exist on a domain of the company (catch-all), with a checkbox.
+// Step 28: one setting per domain; any mailbox of the company can receive.
 import { useCallback, useEffect, useState } from "react";
 import { Notice } from "@/components/xenaxio/ui";
 import { type CatchAll, type WorkspaceUser, errorKey, xenaxio } from "@/lib/xenaxio/api";
 import { useXT } from "@/lib/xenaxio/i18n";
 
-export function CatchAllSettings({ domain }: { domain: string }) {
+export function CatchAllSettings({ domain, domainId }: { domain: string; domainId: string }) {
   const t = useXT();
   const [current, setCurrent] = useState<CatchAll | null | undefined>(undefined);
   const [users, setUsers] = useState<WorkspaceUser[]>([]);
@@ -16,7 +17,7 @@ export function CatchAllSettings({ domain }: { domain: string }) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    Promise.all([xenaxio.catchAll(), xenaxio.users()])
+    Promise.all([xenaxio.catchAll(domainId), xenaxio.users()])
       .then(([res, list]) => {
         const active = list.users.filter((u) => u.status === "active");
         setUsers(active);
@@ -25,21 +26,21 @@ export function CatchAllSettings({ domain }: { domain: string }) {
         setSelected(res.catchAll?.userId ?? (active.find((u) => u.role === "admin") ?? active[0])?.id ?? "");
       })
       .catch((err) => setError(t(errorKey(err))));
-  }, [t]);
+  }, [t, domainId]);
 
   const save = useCallback(
     async (userId: string | null) => {
       setBusy(true);
       setError(null);
       try {
-        setCurrent((await xenaxio.setCatchAll(userId)).catchAll);
+        setCurrent((await xenaxio.setCatchAll(userId, domainId)).catchAll);
       } catch (err) {
         setError(t(errorKey(err)));
       } finally {
         setBusy(false);
       }
     },
-    [t],
+    [t, domainId],
   );
 
   if (current === undefined) return error ? <Notice kind="error">{error}</Notice> : null;
@@ -62,11 +63,11 @@ export function CatchAllSettings({ domain }: { domain: string }) {
         </span>
       </label>
       <div className="space-y-1">
-        <label htmlFor="catch-all-mailbox" className="text-sm text-muted-foreground">
+        <label htmlFor={`catch-all-mailbox-${domainId}`} className="text-sm text-muted-foreground">
           {t("domain.catchall_mailbox")}
         </label>
         <select
-          id="catch-all-mailbox"
+          id={`catch-all-mailbox-${domainId}`}
           className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
           value={selected}
           disabled={busy}
