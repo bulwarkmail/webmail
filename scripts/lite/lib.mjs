@@ -79,6 +79,8 @@ export const LITE_API_STRING_ALLOWLIST = [
   "/api/auth/logout",
   "/api/onboarding",
   "/api/admin/domain",
+  // Step 28: the company's domains (workspace/domain page).
+  "/api/admin/domains",
   "/api/admin/users",
   "/api/admin/ai",
   "/api/admin/audit",
