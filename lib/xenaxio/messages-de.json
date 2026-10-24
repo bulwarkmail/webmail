@@ -76,7 +76,15 @@
     "tenant_not_inactive": "Das Unternehmen ist nicht deaktiviert.",
     "invitation_not_found": "Diese Einladung gibt es nicht.",
     "user_disabled": "Dieses Postfach ist deaktiviert. Wählen Sie ein aktives.",
-    "user_not_found": "Diese Person gibt es nicht mehr."
+    "user_not_found": "Diese Person gibt es nicht mehr.",
+    "domain_limit_reached": "Ihr Tarif erlaubt höchstens {limit} Domains.",
+    "domain_not_found": "Diese Domain gibt es nicht mehr.",
+    "primary_domain": "Die erste Domain des Unternehmens kann nicht entfernt werden.",
+    "domain_in_use": "Die Domain wird noch verwendet: Postfächer: {mailboxes}; weitere Adressen: {aliases}. Löschen Sie diese zuerst oder verschieben Sie die Adressen.",
+    "domain_has_hostname": "Unter dieser Domain liegt Ihre eigene Adresse {hostname}. Entfernen Sie sie zuerst unter „Erscheinungsbild und Adresse“.",
+    "alias_domain_pending": "{domain} ist noch nicht verbunden. Adressen auf dieser Domain sind erst möglich, wenn ihre DNS-Einträge stimmen.",
+    "alias_domain_unknown": "{address}: Diese Domain gehört nicht zu Ihrem Unternehmen. Fügen Sie sie zuerst unter „Domains und DNS“ hinzu.",
+    "invalid_alias": "Geben Sie Adressen wie info oder info@ihre-domain.de ein."
   },
   "login": {
     "title": "Anmelden",
@@ -118,7 +126,7 @@
     "signed_in_as": "Angemeldet als {email}",
     "status_onboarding": "Einrichtung: E-Mail startet, sobald die DNS-Einträge geprüft sind.",
     "status_active": "Ihr Arbeitsbereich ist aktiv.",
-    "domain": "Domain und DNS",
+    "domain": "Domains und DNS",
     "domain_desc": "Einzutragende Einträge und ihr Status",
     "users": "Mitarbeitende",
     "users_desc": "Mitarbeitende anlegen und Passwörter zurücksetzen",
@@ -140,7 +148,7 @@
     "appearance_desc": "Logo, Farbe und Anmeldeadresse Ihres Unternehmens"
   },
   "domain": {
-    "title": "Domain und DNS",
+    "title": "Domains und DNS",
     "intro": "Tragen Sie diese Einträge bei Ihrem Domain-Anbieter ein. E-Mail auf {domain} startet, sobald MX und SPF stimmen; DKIM und DMARC halten Ihre E-Mails aus dem Spam-Ordner.",
     "status_pending": "Warten auf DNS",
     "status_active": "Aktiv",
@@ -180,7 +188,20 @@
     "catchall_hint": "E-Mails an Adressen, die es auf {domain} nicht gibt (z. B. vertippte Namen oder alte Adressen), landen im gewählten Postfach. Ohne diese Einstellung werden sie abgelehnt, und der Absender erhält eine Fehlermeldung.",
     "catchall_mailbox": "Postfach für unbekannte Adressen",
     "catchall_spam": "Dadurch kommt meist mehr Spam an: Spammer probieren oft erfundene Adressen aus.",
-    "catchall_auto_off": "Wird das Postfach deaktiviert oder gelöscht, schaltet sich die Einstellung aus."
+    "catchall_auto_off": "Wird das Postfach deaktiviert oder gelöscht, schaltet sich die Einstellung aus.",
+    "list_title": "Ihre Domains",
+    "count": "{count} von {limit} Domains",
+    "mailboxes": "Postfächer: {count}",
+    "primary": "Hauptdomain",
+    "show": "Anzeigen",
+    "delete": "Entfernen",
+    "delete_confirm": "{domain} entfernen? Das geht nur, wenn dort keine Postfächer und Adressen mehr sind. E-Mails an {domain} werden danach nicht mehr angenommen.",
+    "deleted": "{domain} wurde entfernt.",
+    "add": "Domain hinzufügen",
+    "add_label": "Neue Domain",
+    "add_placeholder": "z. B. firma.com",
+    "added": "{domain} wurde hinzugefügt. Tragen Sie jetzt die DNS-Einträge unten ein.",
+    "limit_reached": "Sie nutzen alle {limit} Domains Ihres Tarifs. Für mehr wenden Sie sich an uns."
   },
   "users": {
     "title": "Mitarbeitende",
@@ -211,7 +232,7 @@
     "disabled_badge": "Deaktiviert",
     "disable_confirm": "{email} deaktivieren? Die Person wird abgemeldet und kann sich nicht mehr anmelden; E-Mails an diese Adresse werden abgewiesen.",
     "aliases": "Weitere Adressen",
-    "aliases_hint": "Durch Komma getrennt, z. B. info, buchhaltung. Bis zu 10.",
+    "aliases_hint": "Durch Komma getrennt, z. B. info (wird zu info@{domain}) oder info@firma.com auf einer anderen verbundenen Domain. Bis zu 10.",
     "aliases_save": "Adressen speichern",
     "aliases_saved": "Adressen gespeichert.",
     "quota": "Postfachgröße (MB)",
@@ -225,7 +246,9 @@
     "delete": "Löschen",
     "delete_prompt": "{email} endgültig löschen? Alle E-Mails, Kalender, Kontakte und Dateien dieses Postfachs werden gelöscht, das lässt sich nicht rückgängig machen. Die Adresse wird danach wieder frei.\n\nGeben Sie zur Bestätigung {email} ein:",
     "delete_mismatch": "Die Adresse stimmt nicht überein. Nichts wurde gelöscht.",
-    "deleted": "{email} wurde gelöscht."
+    "deleted": "{email} wurde gelöscht.",
+    "domain": "Domain",
+    "domain_pending_hint": "Diese Domain ist noch nicht verbunden: Das Postfach kann sich anmelden, sendet und empfängt aber erst, wenn ihre DNS-Einträge stimmen."
   },
   "operator": {
     "title": "Betreiberkonsole",
@@ -287,7 +310,8 @@
     "inactive_note": "Deaktiviert am {date}. Die Domain ist vom Mailserver entfernt, Postfächer und Daten sind erhalten.",
     "revoke": "Widerrufen",
     "revoke_confirm": "Diese Einladung widerrufen? Der Link funktioniert danach nicht mehr.",
-    "status_revoked": "Widerrufen"
+    "status_revoked": "Widerrufen",
+    "max_domains": "Domains höchstens"
   },
   "about": {
     "based_on": "Basiert auf",

@@ -76,7 +76,15 @@
     "tenant_not_inactive": "The company is not deactivated.",
     "invitation_not_found": "This invitation does not exist.",
     "user_disabled": "This mailbox is disabled. Choose an active one.",
-    "user_not_found": "This person no longer exists."
+    "user_not_found": "This person no longer exists.",
+    "domain_limit_reached": "Your plan allows at most {limit} domains.",
+    "domain_not_found": "This domain no longer exists.",
+    "primary_domain": "The company's first domain cannot be removed.",
+    "domain_in_use": "The domain is still in use: mailboxes: {mailboxes}; additional addresses: {aliases}. Delete them first or move the addresses.",
+    "domain_has_hostname": "Your own address {hostname} is under this domain. Remove it first under “Appearance and address”.",
+    "alias_domain_pending": "{domain} is not connected yet. Addresses on this domain are possible once its DNS records are correct.",
+    "alias_domain_unknown": "{address}: this domain does not belong to your company. Add it first under “Domains and DNS”.",
+    "invalid_alias": "Enter addresses like info or info@your-domain.com."
   },
   "login": {
     "title": "Sign in",
@@ -118,7 +126,7 @@
     "signed_in_as": "Signed in as {email}",
     "status_onboarding": "Set-up: mail starts once the DNS records are verified.",
     "status_active": "Your workspace is active.",
-    "domain": "Domain and DNS",
+    "domain": "Domains and DNS",
     "domain_desc": "Records to publish and their status",
     "users": "Employees",
     "users_desc": "Add employees and reset passwords",
@@ -140,7 +148,7 @@
     "appearance_desc": "Your company's logo, colour and sign-in address"
   },
   "domain": {
-    "title": "Domain and DNS",
+    "title": "Domains and DNS",
     "intro": "Add these records at your domain provider. Mail on {domain} starts as soon as MX and SPF are correct; DKIM and DMARC keep your mail out of spam folders.",
     "status_pending": "Waiting for DNS",
     "status_active": "Active",
@@ -180,7 +188,20 @@
     "catchall_hint": "Mail to addresses that do not exist on {domain} (for example mistyped names or old addresses) goes to the chosen mailbox. Without this setting it is refused, and the sender gets an error message.",
     "catchall_mailbox": "Mailbox for unknown addresses",
     "catchall_spam": "This usually brings more spam: spammers often try made-up addresses.",
-    "catchall_auto_off": "If the mailbox is disabled or deleted, the setting turns itself off."
+    "catchall_auto_off": "If the mailbox is disabled or deleted, the setting turns itself off.",
+    "list_title": "Your domains",
+    "count": "{count} of {limit} domains",
+    "mailboxes": "Mailboxes: {count}",
+    "primary": "Main domain",
+    "show": "Show",
+    "delete": "Remove",
+    "delete_confirm": "Remove {domain}? This only works when it has no mailboxes and addresses left. Mail to {domain} is refused afterwards.",
+    "deleted": "{domain} was removed.",
+    "add": "Add domain",
+    "add_label": "New domain",
+    "add_placeholder": "e.g. company.com",
+    "added": "{domain} was added. Now add the DNS records below.",
+    "limit_reached": "You use all {limit} domains of your plan. Contact us for more."
   },
   "users": {
     "title": "Employees",
@@ -211,7 +232,7 @@
     "disabled_badge": "Disabled",
     "disable_confirm": "Disable {email}? They are signed out and can no longer sign in; email to this address is rejected.",
     "aliases": "Additional addresses",
-    "aliases_hint": "Comma-separated, e.g. info, accounts. Up to 10.",
+    "aliases_hint": "Comma-separated, e.g. info (becomes info@{domain}) or info@company.com on another connected domain. Up to 10.",
     "aliases_save": "Save addresses",
     "aliases_saved": "Addresses saved.",
     "quota": "Mailbox size (MB)",
@@ -225,7 +246,9 @@
     "delete": "Delete",
     "delete_prompt": "Delete {email} for good? All email, calendars, contacts and files of this mailbox are deleted; this cannot be undone. The address becomes free again.\n\nType {email} to confirm:",
     "delete_mismatch": "The address does not match. Nothing was deleted.",
-    "deleted": "{email} has been deleted."
+    "deleted": "{email} has been deleted.",
+    "domain": "Domain",
+    "domain_pending_hint": "This domain is not connected yet: the mailbox can sign in, but sends and receives only once its DNS records are correct."
   },
   "operator": {
     "title": "Operator console",
@@ -287,7 +310,8 @@
     "inactive_note": "Deactivated on {date}. The domain is off the mail server; mailboxes and data are kept.",
     "revoke": "Revoke",
     "revoke_confirm": "Revoke this invitation? The link stops working.",
-    "status_revoked": "Revoked"
+    "status_revoked": "Revoked",
+    "max_domains": "Domains at most"
   },
   "about": {
     "based_on": "Based on",
