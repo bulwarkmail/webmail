@@ -487,7 +487,9 @@
     "pending_user": "Die Domain {domain} ist noch nicht verbunden: E-Mails werden erst gesendet und empfangen, wenn Ihre Administration die Einrichtung abgeschlossen hat.",
     "open_dns": "DNS-Einträge einrichten",
     "send_blocked_title": "Senden noch nicht möglich",
-    "send_blocked": "Die Domain {domain} ist noch nicht verbunden. Ihr Entwurf bleibt erhalten und kann gesendet werden, sobald die Domain verbunden ist."
+    "send_blocked": "Die Domain {domain} ist noch nicht verbunden. Ihr Entwurf bleibt erhalten und kann gesendet werden, sobald die Domain verbunden ist.",
+    "from_not_own_title": "Absender nicht erlaubt",
+    "from_not_own": "Sie können nur von Ihrer eigenen Adresse oder von Adressen senden, die Ihnen Ihre Administration freigegeben hat. Wählen Sie unter „Von“ eine dieser Adressen. Ihr Entwurf bleibt erhalten."
   },
   "nav": {
     "admin": "Verwaltung",

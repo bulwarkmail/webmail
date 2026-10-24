@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo, useId } from "react";
 import { XENAXIO_BFF } from '@/lib/xenaxio/bff';
 import { domainPending, useXenaxioMeStore } from '@/lib/xenaxio/me-store';
+import { isForeignFromRefusal } from '@/lib/xenaxio/send-errors';
 import { useXT } from '@/lib/xenaxio/i18n';
 import { useMvComposeWindow } from "@/components/email/mv-compose-context";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
@@ -3419,6 +3420,9 @@ export function EmailComposer({
         // fetch() rejects with a TypeError when the network is gone; its
         // "Failed to fetch" told the user nothing.
         toast.error(t('send_failed'), { message: t('send_offline') });
+      } else if (XENAXIO_BFF && isForeignFromRefusal(err)) {
+        // xenaxio (step 30): a From the user typed in that is not their own.
+        toast.error(xt('domainbar.from_not_own_title'), { message: xt('domainbar.from_not_own') });
       } else if (XENAXIO_BFF && domainPending(useXenaxioMeStore.getState().me)) {
         // xenaxio: the company's domain is not connected yet, so the server
         // refuses to send. Say that instead of a bare "forbidden".
