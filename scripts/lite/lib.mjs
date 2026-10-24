@@ -95,6 +95,10 @@ export const LITE_API_STRING_ALLOWLIST = [
   "/api/portal",
   "/api/auth/handoff",
   "/api/admin/portal",
+  // Step 29: several accounts in one browser (lib/xenaxio/api.ts).
+  "/api/auth/accounts",
+  "/api/auth/switch",
+  "/api/auth/forget",
   // Path-independent generic prefix used by `apiFetch` docs/comments.
   "/api/",
   // stores/update-store.ts - startPolling() is a no-op in Lite.
