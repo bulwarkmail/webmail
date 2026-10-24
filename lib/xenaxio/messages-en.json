@@ -458,7 +458,9 @@
     "pending_user": "The domain {domain} is not connected yet: email is sent and received only once your administrator has finished the setup.",
     "open_dns": "Set up DNS records",
     "send_blocked_title": "Sending is not possible yet",
-    "send_blocked": "The domain {domain} is not connected yet. Your draft is kept and can be sent as soon as the domain is connected."
+    "send_blocked": "The domain {domain} is not connected yet. Your draft is kept and can be sent as soon as the domain is connected.",
+    "from_not_own_title": "Sender not allowed",
+    "from_not_own": "You can only send from your own address or from addresses your administrator has given you. Choose one of them under “From”. Your draft is kept."
   },
   "nav": {
     "admin": "Administration",
