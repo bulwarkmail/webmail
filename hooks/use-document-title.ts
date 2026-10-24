@@ -5,6 +5,7 @@ import { useConfig } from '@/hooks/use-config';
 import { useIsFocusedProTab, usePaneId } from '@/hooks/use-pane-context';
 import { useAccountStore } from '@/stores/account-store';
 import { formatTabTitle } from '@/lib/tab-title';
+import { useCompanyName, withCompanyName } from '@/lib/xenaxio/portal';
 
 // The surface that set the title last owns it. One that is still mounted
 // (during a route transition) stops re-applying, so two titles never fight.
@@ -13,19 +14,21 @@ let owner: symbol | null = null;
 /**
  * Sets the browser-tab title for a surface: "<context> - <account> - <app>"
  * (see formatTabTitle). Pass a context that is already localized, or nothing
- * for a surface that has nothing to add.
+ * for a surface that has nothing to add. The sign-in page leaves the account
+ * out (`withAccount: false`): the one remembered there is no longer signed in.
  *
  * Next renders the root layout's metadata <title> again on every client-side
  * navigation, after the new surface has mounted, which puts the bare app name
  * back. So the title is re-applied whenever <head> changes and it is not ours.
  */
-export function useDocumentTitle(context?: string | null): void {
+export function useDocumentTitle(context?: string | null, { withAccount = true }: { withAccount?: boolean } = {}): void {
   const { appName } = useConfig();
   // The account actually in view, so two windows on two accounts stay apart.
   const account = useAccountStore(
     (s) => s.accounts.find((a) => a.id === s.activeAccountId)?.email || null,
   );
-  const title = formatTabTitle(context, account, appName);
+  // xenaxio: the company name goes first (lib/xenaxio/portal.ts).
+  const title = withCompanyName(useCompanyName(withAccount), formatTabTitle(context, withAccount ? account : null, appName));
   // The Pro shell keeps every opened tab mounted (hidden), so only the
   // focused tab may claim the title; outside Pro every surface is in view.
   const paneId = usePaneId();

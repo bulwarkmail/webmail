@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { activeBrand, brandCss, contrastRatio, movedUrl, shouldHandOff } from "../portal";
+import { activeBrand, brandCss, contrastRatio, movedUrl, shouldHandOff, withCompanyName } from "../portal";
 import type { Me, PortalState } from "../api";
 
 const acme = { name: "Acme", slug: "acme", url: "https://acme.xenaxio.com", color: "#003366", colorText: "#ffffff", logoUrl: "/api/portal/logo?v=1" };
@@ -43,5 +43,14 @@ describe("step 17: company portal", () => {
     expect(brandCss("#123456;}body{display:none", null)).toBe("");
     expect(brandCss(null, null)).toBe("");
     expect(contrastRatio("#ffffff", "#000000")).toBeCloseTo(21, 0);
+  });
+
+  it("starts the tab title with the company name", () => {
+    expect(withCompanyName("Acme", "Posteingang (3) - jane@acme.de - xenaxio")).toBe("Acme - Posteingang (3) - jane@acme.de - xenaxio");
+    expect(withCompanyName("Acme", "xenaxio")).toBe("Acme - xenaxio");
+    expect(withCompanyName("Acme", "Acme - xenaxio")).toBe("Acme - xenaxio");
+    expect(withCompanyName("Acme", "")).toBe("Acme");
+    expect(withCompanyName(null, "xenaxio")).toBe("xenaxio");
+    expect(withCompanyName("  ", "xenaxio")).toBe("xenaxio");
   });
 });

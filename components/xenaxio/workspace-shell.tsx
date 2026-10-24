@@ -8,6 +8,7 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, LogOut, Mail } from "@/components/icons";
 import { useXT } from "@/lib/xenaxio/i18n";
+import { useDocumentTitle } from "@/hooks/use-document-title";
 import { type Me, xenaxio, XenaxioApiError } from "@/lib/xenaxio/api";
 import { Spinner } from "./ui";
 
@@ -36,6 +37,7 @@ export function WorkspaceShell({
   const t = useXT();
   const router = useRouter();
   const [me, setMe] = useState<Me | null>(null);
+  useDocumentTitle(title);
 
   useEffect(() => {
     let cancelled = false;
