@@ -186,7 +186,9 @@ export function auditQuery(f: AuditFilter): string {
 export interface OperatorTenant {
   id: string;
   name: string;
-  status: "onboarding" | "active" | "blocked";
+  /** Step 26: "inactive" = deactivated, the domain is off the mail server. */
+  status: "onboarding" | "active" | "blocked" | "inactive";
+  deactivatedAt?: string | null;
   domain: string | null;
   domainStatus: string | null;
   createdAt: string;
@@ -216,6 +218,7 @@ export interface Invitation {
   createdAt: string;
   expiresAt: string;
   usedAt: string | null;
+  revokedAt?: string | null;
   tenantName: string | null;
 }
 
@@ -313,12 +316,15 @@ export const xenaxio = {
     tenants: () =>
       request<{ defaults: { aiUserMonthlyTokens: number; aiTenantMonthlyTokens: number | null }; tenants: OperatorTenant[]; baseDomain?: string | null }>("GET", "/api/operator/tenants"),
     setTenantBlocked: (id: string, blocked: boolean) => request<{ id: string; status: string }>("POST", `/api/operator/tenants/${encodeURIComponent(id)}/status`, { blocked }),
+    deactivateTenant: (id: string) => request<{ id: string; status: string }>("POST", `/api/operator/tenants/${encodeURIComponent(id)}/deactivate`, {}),
+    reactivateTenant: (id: string) => request<{ id: string; status: string }>("POST", `/api/operator/tenants/${encodeURIComponent(id)}/reactivate`, {}),
     setTenantLimits: (
       id: string,
       limits: { maxMailboxes?: number; mailboxQuotaMb?: number; aiUserMonthlyTokens?: number | null; aiTenantMonthlyTokens?: number | null },
     ) => request<{ ok: true }>("POST", `/api/operator/tenants/${encodeURIComponent(id)}/limits`, limits),
     report: (month?: string) => request<OperatorReport>("GET", `/api/operator/report${month ? `?month=${encodeURIComponent(month)}` : ""}`),
     setTenantSlug: (id: string, slug: string) => request<{ id: string; slug: string }>("POST", `/api/operator/tenants/${encodeURIComponent(id)}/slug`, { slug }),
+    revokeInvitation: (id: string) => request<{ id: string; revokedAt: string }>("POST", `/api/operator/invitations/${encodeURIComponent(id)}/revoke`, {}),
     createInvitation: (note: string, locale: "de" | "en") =>
       request<{ id: string; url: string; expiresAt: string }>("POST", "/api/operator/invitations", { note: note || undefined, locale }),
   },
