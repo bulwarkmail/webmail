@@ -12,9 +12,8 @@ import type { TagBadgeVariant } from "@/components/email/tag-badge";
 const TAG_BESIDE_SUBJECT_MIN_WIDTH = 560;
 
 /**
- * Below this there is no room to name a tag anywhere on the row, and colour
- * alone has to carry it. Well under the split list's default, because the
- * sender line still has room for a name long after the subject line does not.
+ * The reading pane can keep named header tags down to this width because its
+ * tag row wraps independently of the sender and date.
  */
 const TAG_NAME_MIN_WIDTH = 320;
 
@@ -30,9 +29,8 @@ const NAMED_BESIDE_SUBJECT: TagDisplay = { variant: "badge", placement: "subject
 /**
  * How message rows should draw their tags.
  *
- * One value for the whole list, never per row: rows are all the same width, so
- * measuring each would burn a `ResizeObserver` per virtualised row and, worse,
- * let neighbours disagree - one naming its tags while the next showed dots.
+ * Placement is shared by the list. Sender-line rows measure their own tag
+ * labels to decide how many names fit beside the reserved date space.
  */
 export const TagDisplayContext = createContext<TagDisplay>(NAMED_BESIDE_SUBJECT);
 
