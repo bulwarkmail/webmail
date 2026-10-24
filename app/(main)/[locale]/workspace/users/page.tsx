@@ -1,14 +1,15 @@
 "use client";
 
 // Employees (scenario 2, A2, C1): add, reset passwords, aliases, mailbox size,
-// AI per person (I8), disable and re-enable, delete (step 18).
+// AI per person (I8), disable and re-enable, delete (step 18). Step 28: the
+// mailbox goes on one of the company's domains; aliases on any of them.
 import { type FormEvent, useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { KeyRound, Pencil, Plus } from "@/components/icons";
 import { Field, Notice, PasswordField, TextField } from "@/components/xenaxio/ui";
 import { useMe, WorkspaceShell } from "@/components/xenaxio/workspace-shell";
-import { errorKey, errorText, type WorkspaceUser, xenaxio } from "@/lib/xenaxio/api";
+import { errorKey, errorText, type WorkspaceDomain, type WorkspaceUser, xenaxio } from "@/lib/xenaxio/api";
 import { useXT } from "@/lib/xenaxio/i18n";
 
 const MB = 1024 * 1024;
@@ -77,7 +78,7 @@ function UserEditor({ user, isSelf, maxQuotaBytes, aiEnabled, onChanged, onMessa
           void run(() => xenaxio.setAliases(user.id, list), t("users.aliases_saved"), "aliases");
         }}
       >
-        <TextField label={t("users.aliases")} hint={t("users.aliases_hint")} error={aliasError} value={aliases} onChange={(e) => setAliases(e.target.value)} autoCapitalize="none" spellCheck={false} />
+        <TextField label={t("users.aliases")} hint={t("users.aliases_hint", { domain: user.email.split("@")[1] ?? "" })} error={aliasError} value={aliases} onChange={(e) => setAliases(e.target.value)} autoCapitalize="none" spellCheck={false} />
         <Button type="submit" size="sm" variant="outline" disabled={busy}>{t("users.aliases_save")}</Button>
       </form>
       <form
@@ -132,13 +133,13 @@ function UserEditor({ user, isSelf, maxQuotaBytes, aiEnabled, onChanged, onMessa
 function UsersView() {
   const t = useXT();
   const me = useMe();
-  const domain = me.user.email.split("@")[1] ?? "";
+  const [domains, setDomains] = useState<WorkspaceDomain[]>([]);
   const [users, setUsers] = useState<WorkspaceUser[] | null>(null);
   const [limit, setLimit] = useState(0);
   const [maxQuota, setMaxQuota] = useState(0);
   const [ai, setAi] = useState<Map<string, boolean> | null>(null);
   const [editing, setEditing] = useState<string | null>(null);
-  const [form, setForm] = useState({ displayName: "", localPart: "", password: "" });
+  const [form, setForm] = useState({ displayName: "", localPart: "", password: "", domainId: "" });
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ kind: "error" | "success"; text: string } | null>(null);
   const [resetting, setResetting] = useState<WorkspaceUser | null>(null);
@@ -150,6 +151,7 @@ function UsersView() {
       setUsers(res.users);
       setLimit(res.limits.maxMailboxes);
       setMaxQuota(res.limits.mailboxQuotaBytes);
+      setDomains((await xenaxio.domains()).domains);
       // AI per person is shown only when the platform has AI configured.
       const aiInfo = await xenaxio.aiAdmin().catch(() => null);
       setAi(aiInfo?.configured ? new Map(aiInfo.users.map((u) => [u.id, u.aiEnabled])) : null);
@@ -167,8 +169,9 @@ function UsersView() {
     setBusy(true);
     setMessage(null);
     try {
-      const user = await xenaxio.createUser({ ...form, localPart: form.localPart.trim().toLowerCase() });
-      setForm({ displayName: "", localPart: "", password: "" });
+      const { domainId, ...rest } = form;
+      const user = await xenaxio.createUser({ ...rest, localPart: form.localPart.trim().toLowerCase(), ...(domainId ? { domainId } : {}) });
+      setForm({ displayName: "", localPart: "", password: "", domainId });
       setMessage({ kind: "success", text: t("users.created", { email: user.email }) });
       await load();
     } catch (err) {
@@ -217,9 +220,27 @@ function UsersView() {
                 className="flex-1 min-w-0"
                 required
               />
-              <span className="text-sm text-muted-foreground truncate max-w-[50%]">@{domain}</span>
+              {domains.length > 1 ? (
+                <select
+                  aria-label={t("users.domain")}
+                  className="h-9 max-w-[55%] rounded-md border border-input bg-background px-2 text-sm"
+                  value={form.domainId || domains[0]?.id}
+                  onChange={(e) => setForm({ ...form, domainId: e.target.value })}
+                >
+                  {domains.map((d) => (
+                    <option key={d.id} value={d.id}>
+                      {`@${d.name}${d.status === "active" ? "" : ` (${t("domain.status_pending")})`}`}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <span className="text-sm text-muted-foreground truncate max-w-[50%]">@{domains[0]?.name ?? me.user.email.split("@")[1]}</span>
+              )}
             </div>
           </Field>
+          {domains.find((d) => d.id === (form.domainId || domains[0]?.id))?.status === "pending" && (
+            <p className="sm:col-span-2 text-xs text-muted-foreground">{t("users.domain_pending_hint")}</p>
+          )}
           <div className="sm:col-span-2">
             <PasswordField
               label={t("users.temp_password")}
@@ -248,7 +269,7 @@ function UsersView() {
                 <div className="min-w-0">
                   <p className="font-medium truncate">{u.displayName}</p>
                   <p className="text-sm text-muted-foreground truncate">{u.email}</p>
-                  {u.aliases.length > 0 && <p className="text-xs text-muted-foreground truncate">{u.aliases.map((a) => `${a}@${domain}`).join(", ")}</p>}
+                  {u.aliases.length > 0 && <p className="text-xs text-muted-foreground truncate">{u.aliases.join(", ")}</p>}
                   <p className="text-xs text-muted-foreground">
                     {t("users.used", { used: u.usedBytes != null ? formatBytes(u.usedBytes) : "–", quota: formatBytes(u.quotaBytes) })}
                   </p>

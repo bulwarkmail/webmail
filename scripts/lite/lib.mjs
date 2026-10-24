@@ -79,6 +79,8 @@ export const LITE_API_STRING_ALLOWLIST = [
   "/api/auth/logout",
   "/api/onboarding",
   "/api/admin/domain",
+  // Step 28: the company's domains (workspace/domain page).
+  "/api/admin/domains",
   "/api/admin/users",
   "/api/admin/ai",
   "/api/admin/audit",
@@ -93,6 +95,10 @@ export const LITE_API_STRING_ALLOWLIST = [
   "/api/portal",
   "/api/auth/handoff",
   "/api/admin/portal",
+  // Step 29: several accounts in one browser (lib/xenaxio/api.ts).
+  "/api/auth/accounts",
+  "/api/auth/switch",
+  "/api/auth/forget",
   // Path-independent generic prefix used by `apiFetch` docs/comments.
   "/api/",
   // stores/update-store.ts - startPolling() is a no-op in Lite.

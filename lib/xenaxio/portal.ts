@@ -7,6 +7,7 @@ import { useEffect } from "react";
 import { create } from "zustand";
 import { type Me, type PortalInfo, type PortalState, xenaxio, XenaxioApiError } from "@/lib/xenaxio/api";
 import { XENAXIO_BFF } from "@/lib/xenaxio/bff";
+import { useXenaxioMe } from "@/lib/xenaxio/me-store";
 
 const NO_PORTALS: PortalState = { kind: "app", portals: false, baseDomain: null };
 
@@ -41,6 +42,24 @@ export function activeBrand(portal: PortalState | null, me: Me | null): PortalIn
   if (portal?.kind === "tenant") return portal;
   if (portal?.kind === "app" && me?.portal) return me.portal;
   return null;
+}
+
+/**
+ * The company whose portal this is, or the signed-in person's on the shared
+ * address. The sign-in page passes `signedIn: false`: whoever was signed in
+ * before is not any more.
+ */
+export function useCompanyName(signedIn = true): string | null {
+  const portal = usePortal();
+  const me = useXenaxioMe();
+  return activeBrand(portal, signedIn ? me : null)?.name || null;
+}
+
+/** Browser-tab titles start with the company name, so its tabs are easy to find. */
+export function withCompanyName(company: string | null | undefined, title: string): string {
+  const name = company?.trim();
+  if (!name || title === name || title.startsWith(`${name} - `)) return title;
+  return title ? `${name} - ${title}` : name;
 }
 
 /** After a rename the same page on the new address. */

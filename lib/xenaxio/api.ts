@@ -46,6 +46,11 @@ async function request<T>(method: "GET" | "POST" | "DELETE" | "PUT", path: strin
   return data as T;
 }
 
+/** Step 28: one domain of the company by id; the primary one without. */
+function domainPath(id?: string): string {
+  return id ? `/api/admin/domains/${encodeURIComponent(id)}` : "/api/admin/domain";
+}
+
 /** The translation key for an API error: a field-level code if the server sent one. */
 export function errorKey(err: unknown): string {
   if (!(err instanceof XenaxioApiError)) return "errors.internal";
@@ -53,21 +58,40 @@ export function errorKey(err: unknown): string {
   return `errors.${issue ? issue.message : err.code}`;
 }
 
-/** The error text for the user; names the taken addresses when the server sent them (step 18). */
+/**
+ * The error text for the user; names the taken addresses when the server sent
+ * them (step 18), and fills in other details (limit, domain, …; step 28).
+ */
 export function errorText(t: (key: string, values?: Record<string, string | number>) => string, err: unknown): string {
-  const addresses = err instanceof XenaxioApiError ? err.details?.addresses : undefined;
+  const details = err instanceof XenaxioApiError ? err.details : undefined;
+  const addresses = details?.addresses;
   if (Array.isArray(addresses) && addresses.length > 0) return t("errors.already_exists_list", { addresses: addresses.join(", ") });
-  return t(errorKey(err));
+  const values: Record<string, string | number> = {};
+  for (const [key, value] of Object.entries(details ?? {})) {
+    if (typeof value === "string" || typeof value === "number") values[key] = value;
+    else if (Array.isArray(value)) values[key] = value.join(", ");
+  }
+  return t(errorKey(err), values);
 }
 
 export interface Me {
   user: { id: string; email: string; displayName: string; role: "user" | "admin"; mustChangePassword: boolean };
   tenant: { id: string; name: string; status: "onboarding" | "active" | "blocked" };
   edition: "cloud" | "onprem";
-  /** The company's domain; mail works only once it is "active" (DNS checked). */
+  /** The user's own domain; mail works only once it is "active" (DNS checked). */
   domain?: { name: string; status: "pending" | "active" } | null;
   /** Step 17: the company's portal (address, logo, colour). */
   portal?: PortalInfo;
+}
+
+/** Step 29: an account signed in in this browser; `portalUrl` is where it opens. */
+export interface BrowserAccount {
+  userId: string;
+  email: string;
+  displayName: string;
+  company: string;
+  portalUrl: string;
+  active: boolean;
 }
 
 /** Step 23: settings for mail apps; the password is the one for xenaxio. */
@@ -121,8 +145,18 @@ export interface DnsReport {
   records: (Omit<DnsRecord, "value"> & { expected: string; state: DnsState; found: string[] })[];
 }
 
+/** Step 28: one of the company's mail domains. */
+export interface WorkspaceDomain {
+  id: string;
+  name: string;
+  status: "pending" | "active";
+  /** The first domain: cannot be removed. */
+  primary: boolean;
+  mailboxes: number;
+}
+
 export interface DomainInfo {
-  domain: { name: string; status: "pending" | "active" };
+  domain: { id: string; name: string; status: "pending" | "active" };
   records: DnsRecord[];
   lastCheck: DnsReport | null;
   /** While not connected: where DNS is edited and whether mail of the domain lives elsewhere. */
@@ -137,6 +171,9 @@ export interface WorkspaceUser {
   status: "active" | "disabled";
   quotaBytes: number;
   mustChangePassword: boolean;
+  /** Step 28: the domain of the mailbox. */
+  domainId: string;
+  /** Full addresses, on any domain of the company (step 28). */
   aliases: string[];
   usedBytes?: number | null;
 }
@@ -198,8 +235,11 @@ export interface OperatorTenant {
   deactivatedAt?: string | null;
   domain: string | null;
   domainStatus: string | null;
+  /** Step 28: all domains of the company, the primary one first. */
+  domains?: { name: string; status: string }[];
   createdAt: string;
   maxMailboxes: number;
+  maxDomains?: number;
   mailboxQuotaBytes: number;
   mailboxes: number;
   usedBytes: number;
@@ -265,13 +305,24 @@ export const xenaxio = {
   oauthRequest: (query: string) =>
     request<{ clientName: string; redirectHost: string; loopback: boolean }>("GET", `/api/oauth/authorize/info?${query.replace(/^\?/, "")}`),
   oauthDecision: (query: string, approve: boolean) => request<{ redirect: string }>("POST", "/api/oauth/authorize/decision", { query, approve }),
-  login: (email: string, password: string, locale?: string) =>
-    request<Me & { portalUrl: string }>("POST", "/api/auth/login", { email, password, ...(locale === "de" || locale === "en" ? { locale } : {}) }),
+  /** Step 29: `add` keeps the accounts signed in here; `url` says where the added one opens. */
+  login: (email: string, password: string, locale?: string, add?: { next: string }) =>
+    request<Me & { portalUrl: string; url?: string }>("POST", "/api/auth/login", {
+      email,
+      password,
+      ...(locale === "de" || locale === "en" ? { locale } : {}),
+      ...(add ? { add: true, next: add.next } : {}),
+    }),
   /** Step 17: whose address this is (no sign-in needed). */
   portal: () => request<PortalState>("GET", "/api/portal"),
   /** Step 17: a one-time link that moves the session to the company portal (or `next` when already there). */
   handoff: (next: string) => request<{ url: string }>("POST", "/api/auth/handoff", { next }),
-  logout: () => request<{ ok: true }>("POST", "/api/auth/logout", {}),
+  /** Step 29: the next account takes over at `url` (null when nobody is left); `all` signs everyone out. */
+  logout: (opts: { all?: boolean; next?: string } = {}) => request<{ ok: true; url: string | null }>("POST", "/api/auth/logout", opts),
+  /** Step 29: the accounts signed in in this browser, the active one first. */
+  accounts: () => request<{ accounts: BrowserAccount[]; max: number }>("GET", "/api/auth/accounts"),
+  switchAccount: (userId: string, next: string) => request<{ url: string }>("POST", "/api/auth/switch", { userId, next }),
+  forgetAccount: (userId: string) => request<{ ok: true }>("POST", "/api/auth/forget", { userId }),
   changePassword: (currentPassword: string, newPassword: string) =>
     request<{ ok: true }>("POST", "/api/me/password", { currentPassword, newPassword }),
 
@@ -298,12 +349,16 @@ export const xenaxio = {
   setHostnamePrimary: (primary: boolean) => request<AdminPortal>("POST", "/api/admin/portal/hostname/primary", { primary }),
   removeHostname: () => request<AdminPortal>("DELETE", "/api/admin/portal/hostname"),
 
-  domain: () => request<DomainInfo>("GET", "/api/admin/domain"),
-  checkDomain: () => request<{ domain: DomainInfo["domain"]; report: DnsReport }>("POST", "/api/admin/domain/check", {}),
-  catchAll: () => request<{ catchAll: CatchAll | null }>("GET", "/api/admin/domain/catch-all"),
-  setCatchAll: (userId: string | null) => request<{ catchAll: CatchAll | null }>("PUT", "/api/admin/domain/catch-all", { userId }),
+  // Step 28: without an id, the primary domain.
+  domains: () => request<{ domains: WorkspaceDomain[]; limits: { maxDomains: number } }>("GET", "/api/admin/domains"),
+  addDomain: (name: string) => request<DomainInfo["domain"]>("POST", "/api/admin/domains", { name }),
+  deleteDomain: (id: string) => request<{ ok: true }>("DELETE", `/api/admin/domains/${encodeURIComponent(id)}`),
+  domain: (id?: string) => request<DomainInfo>("GET", domainPath(id)),
+  checkDomain: (id?: string) => request<{ domain: DomainInfo["domain"]; report: DnsReport }>("POST", `${domainPath(id)}/check`, {}),
+  catchAll: (id?: string) => request<{ catchAll: CatchAll | null }>("GET", `${domainPath(id)}/catch-all`),
+  setCatchAll: (userId: string | null, id?: string) => request<{ catchAll: CatchAll | null }>("PUT", `${domainPath(id)}/catch-all`, { userId }),
   users: () => request<{ users: WorkspaceUser[]; limits: { maxMailboxes: number; mailboxQuotaBytes: number } }>("GET", "/api/admin/users"),
-  createUser: (input: { localPart: string; displayName: string; password: string }) =>
+  createUser: (input: { localPart: string; displayName: string; password: string; domainId?: string }) =>
     request<WorkspaceUser>("POST", "/api/admin/users", input),
   resetPassword: (userId: string, password: string) =>
     request<{ ok: true }>("POST", `/api/admin/users/${encodeURIComponent(userId)}/password`, { password }),
@@ -329,7 +384,7 @@ export const xenaxio = {
     reactivateTenant: (id: string) => request<{ id: string; status: string }>("POST", `/api/operator/tenants/${encodeURIComponent(id)}/reactivate`, {}),
     setTenantLimits: (
       id: string,
-      limits: { maxMailboxes?: number; mailboxQuotaMb?: number; aiUserMonthlyTokens?: number | null; aiTenantMonthlyTokens?: number | null },
+      limits: { maxMailboxes?: number; maxDomains?: number; mailboxQuotaMb?: number; aiUserMonthlyTokens?: number | null; aiTenantMonthlyTokens?: number | null },
     ) => request<{ ok: true }>("POST", `/api/operator/tenants/${encodeURIComponent(id)}/limits`, limits),
     report: (month?: string) => request<OperatorReport>("GET", `/api/operator/report${month ? `?month=${encodeURIComponent(month)}` : ""}`),
     setTenantSlug: (id: string, slug: string) => request<{ id: string; slug: string }>("POST", `/api/operator/tenants/${encodeURIComponent(id)}/slug`, { slug }),

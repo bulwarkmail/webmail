@@ -5,6 +5,8 @@
  * - Account-scoped localStorage keys
  */
 
+import { BFF_MAX_ACCOUNTS, XENAXIO_BFF } from '@/lib/xenaxio/bff';
+
 /** Generate a unique, deterministic account ID from username and server URL */
 export function generateAccountId(username: string, serverUrl: string): string {
   try {
@@ -136,6 +138,8 @@ export function isHttp2Available(): boolean {
  * once HTTP/2+ is observed, otherwise returns {@link MAX_ACCOUNTS_HTTP1}.
  */
 export function getMaxAccounts(): number {
+  // xenaxio: the platform keeps at most this many accounts per browser (step 29).
+  if (XENAXIO_BFF) return BFF_MAX_ACCOUNTS;
   return isHttp2Available() ? MAX_ACCOUNT_SLOTS : MAX_ACCOUNTS_HTTP1;
 }
 

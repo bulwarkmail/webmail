@@ -47,6 +47,7 @@ import { clearLiteOAuthFlow, readLiteOAuthFlow } from '@/lib/auth/lite-oauth';
 import { bffJmapUrl, goToPage, redirectToLogin as redirectToBffLogin, XENAXIO_BFF } from '@/lib/xenaxio/bff';
 import { xenaxio as xenaxioApi } from '@/lib/xenaxio/api';
 import { clearAssistantState } from '@/lib/xenaxio/assistant';
+import * as browserAccounts from '@/lib/xenaxio/accounts';
 
 /** Logins restored at once after the one on screen: enough to overlap round trips, few enough not to crowd the server. */
 const RESTORE_CONCURRENCY = 4;
@@ -1053,8 +1054,9 @@ async function restoreBffSession(set: AuthSet, get: AuthGet): Promise<void> {
   }
 
   const accountStore = useAccountStore.getState();
-  // Exactly one account: drop anything left from another login in this browser.
-  for (const other of accountStore.accounts) if (other.id !== accountId) accountStore.removeAccount(other.id);
+  // Step 29: the other accounts signed in in this browser, as the platform
+  // lists them; anything else left in the menu goes.
+  browserAccounts.applyBrowserAccounts(await xenaxioApi.accounts().then((r) => r.accounts, () => []), accountId);
   if (!accountStore.getAccountById(accountId)) {
     accountStore.addAccount({
       label: username,
@@ -1070,6 +1072,7 @@ async function restoreBffSession(set: AuthSet, get: AuthGet): Promise<void> {
       isDefault: true,
     });
   }
+  accountStore.setDefaultAccount(accountId);
   accountStore.setActiveAccount(accountId);
 
   const { identities, primaryIdentity } = loadIdentities(await client.getIdentities(), username);
@@ -1087,6 +1090,22 @@ async function restoreBffSession(set: AuthSet, get: AuthGet): Promise<void> {
     authMode: 'basic',
     activeAccountId: accountId,
   });
+}
+
+/**
+ * xenaxio (step 29): another account of this browser takes over at `url`. The
+ * page reloads with it (or opens its company's portal); nothing of the account
+ * on screen stays in this browser's caches.
+ */
+async function leaveForBffAccount(set: AuthSet, get: AuthGet, url: string): Promise<void> {
+  const client = get().client;
+  set({ client: null, isLoading: true });
+  client?.disconnect();
+  await useSettingsStore.getState().flushSync();
+  useSettingsStore.getState().disableSync();
+  clearAllStores();
+  purgeSignedOutData();
+  browserAccounts.openAccount(url);
 }
 
 /** Server URL recorded on the demo accounts; nothing is ever sent to it. */
@@ -2247,8 +2266,13 @@ export const useAuthStore = create<AuthState>()(
         await beforeLogoutHooks(accountId ?? 'all');
         // xenaxio: end the platform session; the cookie is what signs the browser in.
         if (XENAXIO_BFF) {
-          await xenaxioApi.logout().catch(() => {});
           clearAssistantState();
+          // Step 29: the next account signed in in this browser takes over.
+          const next = await browserAccounts.signOut(false);
+          if (next) {
+            await leaveForBffAccount(set, get, next);
+            return;
+          }
         }
 
         // From here on nothing may renew this slot's session; the cleanup
@@ -2375,6 +2399,13 @@ export const useAuthStore = create<AuthState>()(
       // away or redirecting.
       removeAccount: (accountId: string) => {
         if (accountId === get().activeAccountId) { void get().logout(); return; }
+        // xenaxio (step 29): the platform ends that account's session in this browser.
+        if (XENAXIO_BFF) {
+          void browserAccounts.forget(accountId).catch(() => {});
+          useAccountStore.getState().removeAccount(accountId);
+          clearPluginStorageForAccount(accountId);
+          return;
+        }
         const accountStore = useAccountStore.getState();
         const account = accountStore.getAccountById(accountId);
         if (!account) return;
@@ -2398,6 +2429,11 @@ export const useAuthStore = create<AuthState>()(
 
       logoutAll: async () => {
         await beforeLogoutHooks('all');
+        // xenaxio (step 29): every account signed in in this browser.
+        if (XENAXIO_BFF) {
+          clearAssistantState();
+          await browserAccounts.signOut(true);
+        }
 
         const accountStore = useAccountStore.getState();
         const allAccounts = [...accountStore.accounts];
@@ -2441,6 +2477,21 @@ export const useAuthStore = create<AuthState>()(
       switchAccount: async (accountId: string) => {
         const state = get();
         if (state.activeAccountId === accountId) return;
+        // xenaxio (step 29): the platform switches the session; the page reloads with it.
+        if (XENAXIO_BFF) {
+          const url = await browserAccounts.switchTo(accountId).catch(() => null);
+          if (url) {
+            clearAssistantState();
+            await leaveForBffAccount(set, get, url);
+            return;
+          }
+          // Signed out meanwhile: show what is left.
+          if (state.activeAccountId) {
+            const list = await xenaxioApi.accounts().then((r) => r.accounts, () => null);
+            if (list) browserAccounts.applyBrowserAccounts(list, state.activeAccountId);
+          }
+          return;
+        }
         const generation = ++switchGeneration;
         const superseded = () => generation !== switchGeneration;
 
@@ -3257,6 +3308,8 @@ if (typeof window !== 'undefined') {
   onSignedOutElsewhere(() => {
     if (useAuthStore.getState().isAuthenticated) navigateToLogin();
   });
+  // xenaxio (step 29): another tab switched accounts; reload with the one now active.
+  browserAccounts.reloadOnSwitchElsewhere();
 }
 
 // Plugins hear when a session becomes usable (after start-up or a sign-in)
