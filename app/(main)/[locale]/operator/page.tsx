@@ -111,12 +111,27 @@ function Console({
     }
   };
 
+  const isOpen = (i: Invitation) => !i.usedAt && !i.revokedAt && new Date(i.expiresAt) >= new Date();
   const status = (i: Invitation) =>
     i.usedAt
       ? t("operator.status_used", { tenant: i.tenantName ?? "—" })
-      : new Date(i.expiresAt) < new Date()
-        ? t("operator.status_expired")
-        : t("operator.status_open");
+      : i.revokedAt
+        ? t("operator.status_revoked")
+        : new Date(i.expiresAt) < new Date()
+          ? t("operator.status_expired")
+          : t("operator.status_open");
+
+  // Step 26: take back a link that was not used yet.
+  const revoke = async (i: Invitation) => {
+    if (!window.confirm(t("operator.revoke_confirm"))) return;
+    setError(null);
+    try {
+      await xenaxio.operator.revokeInvitation(i.id);
+      load();
+    } catch (err) {
+      setError(t(errorKey(err)));
+    }
+  };
   const date = (s: string) => new Date(s).toLocaleDateString(locale);
 
   return (
@@ -207,6 +222,16 @@ function Console({
                     {t("operator.col_expires")}: {date(i.expiresAt)} ·{" "}
                     {status(i)}
                   </span>
+                  {isOpen(i) && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-destructive"
+                      onClick={() => void revoke(i)}
+                    >
+                      {t("operator.revoke")}
+                    </Button>
+                  )}
                 </li>
               ))}
             </ul>

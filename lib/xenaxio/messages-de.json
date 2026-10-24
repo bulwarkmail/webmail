@@ -71,7 +71,10 @@
     "hostname_not_found": "Keine eigene Adresse eingerichtet.",
     "hostname_rejected": "Der Zertifikatsdienst hat die Adresse abgelehnt.",
     "hostname_provider_unavailable": "Der Zertifikatsdienst ist gerade nicht erreichbar. Bitte versuchen Sie es später erneut.",
-    "custom_hostnames_disabled": "Eigene Domains sind auf dieser Installation nicht aktiviert."
+    "custom_hostnames_disabled": "Eigene Domains sind auf dieser Installation nicht aktiviert.",
+    "tenant_inactive": "Das Unternehmen ist deaktiviert. Reaktivieren Sie es zuerst.",
+    "tenant_not_inactive": "Das Unternehmen ist nicht deaktiviert.",
+    "invitation_not_found": "Diese Einladung gibt es nicht."
   },
   "login": {
     "title": "Anmelden",
@@ -266,7 +269,17 @@
     "address": "Adresse",
     "slug": "Adresse des Unternehmens",
     "slug_hint": "Die alte Adresse leitet 30 Tage lang weiter.",
-    "slug_confirm": "Adresse von {name} wirklich ändern?"
+    "slug_confirm": "Adresse von {name} wirklich ändern?",
+    "status_inactive": "Deaktiviert",
+    "deactivate": "Deaktivieren",
+    "reactivate": "Reaktivieren",
+    "deactivate_prompt": "{name} vollständig deaktivieren? Alle Personen werden abgemeldet, die Domain {domain} wird vom Mailserver entfernt und kann danach neu verbunden werden. Postfächer und Daten bleiben erhalten. Geben Sie zur Bestätigung den Namen des Unternehmens ein:",
+    "deactivate_mismatch": "Der Name stimmt nicht überein. Es wurde nichts geändert.",
+    "reactivate_confirm": "{name} reaktivieren? Die Domain {domain} wird wieder eingerichtet und bekommt einen neuen DKIM-Schlüssel: Das Unternehmen muss diesen DNS-Eintrag aktualisieren.",
+    "inactive_note": "Deaktiviert am {date}. Die Domain ist vom Mailserver entfernt, Postfächer und Daten sind erhalten.",
+    "revoke": "Widerrufen",
+    "revoke_confirm": "Diese Einladung widerrufen? Der Link funktioniert danach nicht mehr.",
+    "status_revoked": "Widerrufen"
   },
   "about": {
     "based_on": "Basiert auf",

@@ -71,7 +71,10 @@
     "hostname_not_found": "No own address set up.",
     "hostname_rejected": "The certificate service rejected the address.",
     "hostname_provider_unavailable": "The certificate service cannot be reached right now. Please try again later.",
-    "custom_hostnames_disabled": "Own domains are not enabled on this installation."
+    "custom_hostnames_disabled": "Own domains are not enabled on this installation.",
+    "tenant_inactive": "The company is deactivated. Reactivate it first.",
+    "tenant_not_inactive": "The company is not deactivated.",
+    "invitation_not_found": "This invitation does not exist."
   },
   "login": {
     "title": "Sign in",
@@ -266,7 +269,17 @@
     "address": "Address",
     "slug": "Company's address",
     "slug_hint": "The old address forwards for 30 days.",
-    "slug_confirm": "Change the address of {name}?"
+    "slug_confirm": "Change the address of {name}?",
+    "status_inactive": "Deactivated",
+    "deactivate": "Deactivate",
+    "reactivate": "Reactivate",
+    "deactivate_prompt": "Deactivate {name} completely? Everyone is signed out, the domain {domain} is removed from the mail server and can be connected again afterwards. Mailboxes and data are kept. Type the company name to confirm:",
+    "deactivate_mismatch": "The name does not match. Nothing was changed.",
+    "reactivate_confirm": "Reactivate {name}? The domain {domain} is set up again with a new DKIM key: the company has to update this DNS record.",
+    "inactive_note": "Deactivated on {date}. The domain is off the mail server; mailboxes and data are kept.",
+    "revoke": "Revoke",
+    "revoke_confirm": "Revoke this invitation? The link stops working.",
+    "status_revoked": "Revoked"
   },
   "about": {
     "based_on": "Based on",

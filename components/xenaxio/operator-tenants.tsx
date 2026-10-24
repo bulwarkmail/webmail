@@ -1,7 +1,7 @@
 "use client";
 
-// Operator console (O1, O2): companies with usage, blocking, limits, and the
-// monthly report for invoices.
+// Operator console (O1, O2): companies with usage, blocking, limits,
+// deactivation (step 26), and the monthly report for invoices.
 import { type FormEvent, useCallback, useEffect, useState } from "react";
 import { useLocale } from "next-intl";
 import { Button } from "@/components/ui/button";
@@ -119,6 +119,7 @@ function SlugForm({ tenant, baseDomain, onSaved }: { tenant: OperatorTenant; bas
 
 export function OperatorTenants() {
   const t = useXT();
+  const locale = useLocale();
   const [data, setData] = useState<Awaited<ReturnType<typeof xenaxio.operator.tenants>> | null>(null);
   const [open, setOpen] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -146,6 +147,34 @@ export function OperatorTenants() {
     }
   };
 
+  // Step 26: blocked, and the domain leaves the mail server; confirmed by typing the name.
+  const deactivate = async (tenant: OperatorTenant) => {
+    const typed = window.prompt(t("operator.deactivate_prompt", { name: tenant.name, domain: tenant.domain ?? "—" }));
+    if (typed === null) return;
+    if (typed.trim().toLowerCase() !== tenant.name.trim().toLowerCase()) {
+      setError(t("operator.deactivate_mismatch"));
+      return;
+    }
+    setError(null);
+    try {
+      await xenaxio.operator.deactivateTenant(tenant.id);
+      await load();
+    } catch (err) {
+      setError(t(errorKey(err)));
+    }
+  };
+
+  const reactivate = async (tenant: OperatorTenant) => {
+    if (!window.confirm(t("operator.reactivate_confirm", { name: tenant.name, domain: tenant.domain ?? "—" }))) return;
+    setError(null);
+    try {
+      await xenaxio.operator.reactivateTenant(tenant.id);
+      await load();
+    } catch (err) {
+      setError(t(errorKey(err)));
+    }
+  };
+
   if (!data) return error ? <Notice kind="error">{error}</Notice> : <Spinner label={t("common.loading")} />;
   if (data.tenants.length === 0) return <p className="text-sm text-muted-foreground">{t("operator.tenants_empty")}</p>;
 
@@ -162,13 +191,18 @@ export function OperatorTenants() {
                   <span
                     className={cn(
                       "ml-1 rounded-full px-2 py-0.5 text-xs",
-                      tenant.status === "blocked" ? "bg-destructive/15 text-destructive" : tenant.status === "active" ? "bg-green-500/15 text-green-700 dark:text-green-400" : "bg-muted",
+                      tenant.status === "blocked" || tenant.status === "inactive" ? "bg-destructive/15 text-destructive" : tenant.status === "active" ? "bg-green-500/15 text-green-700 dark:text-green-400" : "bg-muted",
                     )}
                   >
                     {t(`operator.status_${tenant.status}`)}
                   </span>
                 </p>
                 <p className="text-sm text-muted-foreground">{tenant.domain ?? "—"}</p>
+                {tenant.status === "inactive" && (
+                  <p className="text-xs text-muted-foreground">
+                    {t("operator.inactive_note", { date: tenant.deactivatedAt ? new Date(tenant.deactivatedAt).toLocaleDateString(locale) : "—" })}
+                  </p>
+                )}
                 {tenant.portalUrl && (
                   <p className="text-xs">
                     <a href={tenant.portalUrl} className="text-primary hover:underline break-all" target="_blank" rel="noreferrer">
@@ -182,7 +216,7 @@ export function OperatorTenants() {
                   {t("operator.ai_users", { count: tenant.aiUsers })}, {t("operator.tokens_month", { tokens: tenant.aiTokens.toLocaleString() })}
                 </p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button size="sm" variant="outline" onClick={() => setOpen(open === tenant.id ? null : tenant.id)} aria-expanded={open === tenant.id}>
                   {t("operator.limits")}
                 </Button>
@@ -191,9 +225,20 @@ export function OperatorTenants() {
                     {t("operator.address")}
                   </Button>
                 )}
-                <Button size="sm" variant="outline" className={tenant.status === "blocked" ? "" : "text-destructive"} onClick={() => toggleBlock(tenant)}>
-                  {tenant.status === "blocked" ? t("operator.unblock") : t("operator.block")}
-                </Button>
+                {tenant.status === "inactive" ? (
+                  <Button size="sm" variant="outline" onClick={() => reactivate(tenant)}>
+                    {t("operator.reactivate")}
+                  </Button>
+                ) : (
+                  <>
+                    <Button size="sm" variant="outline" className={tenant.status === "blocked" ? "" : "text-destructive"} onClick={() => toggleBlock(tenant)}>
+                      {tenant.status === "blocked" ? t("operator.unblock") : t("operator.block")}
+                    </Button>
+                    <Button size="sm" variant="outline" className="text-destructive" onClick={() => deactivate(tenant)}>
+                      {t("operator.deactivate")}
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
             {open === tenant.id && <Limits tenant={tenant} defaults={data.defaults} onSaved={load} />}
