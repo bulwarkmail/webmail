@@ -141,6 +141,13 @@ export interface WorkspaceUser {
   usedBytes?: number | null;
 }
 
+/** Step 27: the mailbox that receives mail to unknown addresses of the domain. */
+export interface CatchAll {
+  userId: string;
+  email: string;
+  displayName: string;
+}
+
 export interface AiAdmin {
   configured: boolean;
   companyEnabled: boolean;
@@ -293,6 +300,8 @@ export const xenaxio = {
 
   domain: () => request<DomainInfo>("GET", "/api/admin/domain"),
   checkDomain: () => request<{ domain: DomainInfo["domain"]; report: DnsReport }>("POST", "/api/admin/domain/check", {}),
+  catchAll: () => request<{ catchAll: CatchAll | null }>("GET", "/api/admin/domain/catch-all"),
+  setCatchAll: (userId: string | null) => request<{ catchAll: CatchAll | null }>("PUT", "/api/admin/domain/catch-all", { userId }),
   users: () => request<{ users: WorkspaceUser[]; limits: { maxMailboxes: number; mailboxQuotaBytes: number } }>("GET", "/api/admin/users"),
   createUser: (input: { localPart: string; displayName: string; password: string }) =>
     request<WorkspaceUser>("POST", "/api/admin/users", input),
