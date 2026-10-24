@@ -3421,7 +3421,7 @@ export function EmailComposer({
         // "Failed to fetch" told the user nothing.
         toast.error(t('send_failed'), { message: t('send_offline') });
       } else if (XENAXIO_BFF && isForeignFromRefusal(err)) {
-        // xenaxio (step 28): a From the user typed in that is not their own.
+        // xenaxio (step 30): a From the user typed in that is not their own.
         toast.error(xt('domainbar.from_not_own_title'), { message: xt('domainbar.from_not_own') });
       } else if (XENAXIO_BFF && domainPending(useXenaxioMeStore.getState().me)) {
         // xenaxio: the company's domain is not connected yet, so the server
