@@ -41,6 +41,8 @@ interface Turn {
   sources?: SourceEmail[];
   proposals?: Proposal[];
   tool?: string;
+  /** A tool call failed; worth showing only if no answer came after it. */
+  toolFailed?: boolean;
   error?: string;
   title?: string;
 }
@@ -233,7 +235,7 @@ export function AssistantPanel() {
         for await (const e of events(controller.signal)) {
           if (e.type === "start" && e.conversationId) setConversationId(e.conversationId);
           else if (e.type === "text") update((turn) => ({ ...turn, text: turn.text + e.text, tool: undefined }));
-          else if (e.type === "tool") update((turn) => ({ ...turn, tool: e.status === "start" ? e.name : undefined, ...(e.status === "error" ? { error: t("assistant.tool_error") } : {}) }));
+          else if (e.type === "tool") update((turn) => ({ ...turn, tool: e.status === "start" ? e.name : undefined, ...(e.status === "error" ? { toolFailed: true } : {}) }));
           else if (e.type === "sources") update((turn) => ({ ...turn, sources: e.emails }));
           else if (e.type === "proposal") update((turn) => ({ ...turn, proposals: [...(turn.proposals ?? []), { id: e.id, tool: e.tool, summary: e.summary, state: "pending" }] }));
           else if (e.type === "error") update((turn) => ({ ...turn, error: t(`assistant.errors.${e.code}`) }));
@@ -450,6 +452,8 @@ export function AssistantPanel() {
               {turn.tool && <p className="animate-pulse text-xs text-muted-foreground">{t(`assistant.tool_${turn.tool}`)}</p>}
               {turn.role === "assistant" && !turn.text && !turn.tool && busy && i === turns.length - 1 && <p className="animate-pulse text-xs text-muted-foreground">…</p>}
               {turn.error && <p className="text-xs text-destructive">{turn.error}</p>}
+              {/* The model usually recovers from a failed step; warn only when no answer came. */}
+              {turn.toolFailed && !turn.error && !turn.text.trim() && !(busy && i === turns.length - 1) && <p className="text-xs text-destructive">{t("assistant.tool_error")}</p>}
               {turn.proposals?.map((p) => <ProposalCard key={p.id} proposal={p} locale={locale} onDecide={decide} />)}
               {turn.sources && turn.sources.length > 0 && (
                 <div className="space-y-1">
