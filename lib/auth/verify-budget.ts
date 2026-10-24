@@ -1,3 +1,7 @@
+import { BlockList, isIP } from 'node:net';
+import { logger } from '@/lib/logger';
+import { parseV6Groups } from '@/lib/security/ip-ranges';
+
 /**
  * Budget for the unauthenticated login pre-check (/api/auth/verify).
  *
@@ -114,7 +118,84 @@ export function reserveVerifyProbe(client: string, now: number = Date.now()): ((
  */
 const loginBudget = createFailureBudget({ clientMax: CLIENT_MAX_FAILURES, globalMax: Infinity });
 
+/**
+ * Networks on LOGIN_RATE_LIMIT_ALLOWLIST skip the sign-in budget. Everyone
+ * behind one NAT address (an office, a branch) shares a client key, so one
+ * person retrying an old password would otherwise block every colleague
+ * there from signing in for the rest of the window. The list is parsed again
+ * only when the variable changes. An entry it cannot use is logged and
+ * ignored, so a malformed one exempts nobody.
+ */
+interface Allowlist {
+  v4: BlockList;
+  v6: BlockList;
+}
+
+let allowlist: { raw: string; networks: Allowlist | null } | undefined;
+
+/** An IPv4 address written as IPv6 (::ffff:192.0.2.1), in any spelling. */
+function isV4Mapped(address: string): boolean {
+  const groups = parseV6Groups(address);
+  return !!groups && groups.slice(0, 5).every((g) => g === 0) && groups[5] === 0xffff;
+}
+
+function addAllowlistEntry(networks: Allowlist, entry: string): boolean {
+  const slash = entry.indexOf('/');
+  const address = slash < 0 ? entry : entry.slice(0, slash);
+  const family = isIP(address);
+  // A zone id names an interface of this host, never a remote client. IPv4
+  // networks must be written as IPv4: a client is matched only against its
+  // own family, so ::ffff:192.0.2.0/120 would silently match nobody.
+  if (family === 0 || address.includes('%') || (family === 6 && isV4Mapped(address))) return false;
+  const list = family === 6 ? networks.v6 : networks.v4;
+  const type = family === 6 ? 'ipv6' : 'ipv4';
+  try {
+    if (slash < 0) {
+      list.addAddress(address, type);
+      return true;
+    }
+    // Plain digits without a leading zero, so neither "/" nor "/00" becomes /0.
+    const prefix = entry.slice(slash + 1);
+    if (!/^(0|[1-9]\d{0,2})$/.test(prefix) || Number(prefix) > (family === 6 ? 128 : 32)) return false;
+    list.addSubnet(address, Number(prefix), type);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function allowlistedNetworks(): Allowlist | null {
+  const raw = process.env.LOGIN_RATE_LIMIT_ALLOWLIST ?? '';
+  if (allowlist?.raw === raw) return allowlist.networks;
+  const networks: Allowlist = { v4: new BlockList(), v6: new BlockList() };
+  let entries = 0;
+  for (const entry of raw.split(/[\s,]+/).filter(Boolean)) {
+    if (addAllowlistEntry(networks, entry)) entries++;
+    else logger.warn('LOGIN_RATE_LIMIT_ALLOWLIST: ignoring an invalid entry', { entry });
+  }
+  allowlist = { raw, networks: entries > 0 ? networks : null };
+  return allowlist.networks;
+}
+
+/**
+ * True when `client` is an address inside a network on
+ * LOGIN_RATE_LIMIT_ALLOWLIST. A client is matched only against entries of its
+ * own family: ::/0 covers every IPv6 client and no IPv4 one, and an
+ * IPv4-mapped client counts as its IPv4 address. A zone id is refused; it
+ * never belongs to a remote client, and Node may shorten a long address in
+ * front of it.
+ */
+export function isExemptFromLoginBudget(client: string): boolean {
+  const networks = allowlistedNetworks();
+  const family = isIP(client);
+  if (!networks || family === 0 || client.includes('%')) return false;
+  if (family === 4) return networks.v4.check(client, 'ipv4');
+  return isV4Mapped(client) ? networks.v4.check(client, 'ipv6') : networks.v6.check(client, 'ipv6');
+}
+
 export function reserveLoginAttempt(client: string, now: number = Date.now()): (() => void) | null {
+  // Nothing reserved, so nothing to refund.
+  if (isExemptFromLoginBudget(client)) return () => {};
   return loginBudget.reserve(client, now);
 }
 
