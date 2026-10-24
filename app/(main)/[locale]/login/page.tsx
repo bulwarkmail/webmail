@@ -14,6 +14,7 @@ import { AuthCard, Notice, PasswordField, TextField } from "@/components/xenaxio
 import { errorKey, xenaxio } from "@/lib/xenaxio/api";
 import { clearAssistantState } from "@/lib/xenaxio/assistant";
 import { useXT } from "@/lib/xenaxio/i18n";
+import { useDocumentTitle } from "@/hooks/use-document-title";
 import { safeNextPath } from "@/lib/xenaxio/brand";
 import { goToPortal, shouldHandOff, usePortal } from "@/lib/xenaxio/portal";
 import { openAccount } from "@/lib/xenaxio/accounts";
@@ -33,6 +34,7 @@ function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const portal = usePortal();
   const company = portal?.kind === "tenant" ? portal : null;
+  useDocumentTitle(add ? t("login.add_title") : t("login.title"), { withAccount: false });
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();

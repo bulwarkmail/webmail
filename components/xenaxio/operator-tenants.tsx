@@ -23,6 +23,7 @@ function Limits({ tenant, defaults, onSaved }: { tenant: OperatorTenant; default
   const t = useXT();
   const [form, setForm] = useState({
     maxMailboxes: String(tenant.maxMailboxes),
+    maxDomains: String(tenant.maxDomains ?? 5),
     mailboxQuotaMb: String(Math.round(tenant.mailboxQuotaBytes / MB)),
     aiUser: tenant.aiUserMonthlyTokens ? String(tenant.aiUserMonthlyTokens) : "",
     aiTenant: tenant.aiTenantMonthlyTokens ? String(tenant.aiTenantMonthlyTokens) : "",
@@ -34,6 +35,7 @@ function Limits({ tenant, defaults, onSaved }: { tenant: OperatorTenant; default
     try {
       await xenaxio.operator.setTenantLimits(tenant.id, {
         maxMailboxes: Number(form.maxMailboxes),
+        maxDomains: Number(form.maxDomains),
         mailboxQuotaMb: Number(form.mailboxQuotaMb),
         aiUserMonthlyTokens: form.aiUser ? Number(form.aiUser) : null,
         aiTenantMonthlyTokens: form.aiTenant ? Number(form.aiTenant) : null,
@@ -48,6 +50,7 @@ function Limits({ tenant, defaults, onSaved }: { tenant: OperatorTenant; default
   return (
     <form onSubmit={save} className="grid gap-3 rounded-md bg-muted/50 p-3 sm:grid-cols-2" noValidate>
       <TextField label={t("operator.max_mailboxes")} type="number" min={1} value={form.maxMailboxes} onChange={set("maxMailboxes")} />
+      <TextField label={t("operator.max_domains")} type="number" min={1} max={100} value={form.maxDomains} onChange={set("maxDomains")} />
       <TextField label={t("operator.mailbox_quota")} type="number" min={100} value={form.mailboxQuotaMb} onChange={set("mailboxQuotaMb")} />
       <TextField
         label={t("operator.ai_user_limit")}
@@ -197,7 +200,10 @@ export function OperatorTenants() {
                     {t(`operator.status_${tenant.status}`)}
                   </span>
                 </p>
-                <p className="text-sm text-muted-foreground">{tenant.domain ?? "—"}</p>
+                {/* Step 28: every domain of the company, the primary one first. */}
+                <p className="text-sm text-muted-foreground break-all">
+                  {tenant.domains?.length ? tenant.domains.map((d) => d.name).join(", ") : (tenant.domain ?? "—")}
+                </p>
                 {tenant.status === "inactive" && (
                   <p className="text-xs text-muted-foreground">
                     {t("operator.inactive_note", { date: tenant.deactivatedAt ? new Date(tenant.deactivatedAt).toLocaleDateString(locale) : "—" })}
