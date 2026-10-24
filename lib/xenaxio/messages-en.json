@@ -77,6 +77,9 @@
     "invitation_not_found": "This invitation does not exist.",
     "user_disabled": "This mailbox is disabled. Choose an active one.",
     "user_not_found": "This person no longer exists.",
+    "too_many_accounts": "5 accounts are already signed in in this browser. Please sign out of one first.",
+    "account_not_found": "This account is no longer signed in. Please add it again.",
+    "account_active": "To leave the active account, use “Sign out”.",
     "domain_limit_reached": "Your plan allows at most {limit} domains.",
     "domain_not_found": "This domain no longer exists.",
     "primary_domain": "The company's first domain cannot be removed.",
@@ -93,7 +96,9 @@
     "email_placeholder": "name@company.com",
     "password": "Password",
     "submit": "Sign in",
-    "submitting": "Signing in…"
+    "submitting": "Signing in…",
+    "add_title": "Add another account",
+    "add_subtitle": "The accounts you are signed in to stay signed in. Switch between them in the account menu without a password."
   },
   "password": {
     "title": "Change password",

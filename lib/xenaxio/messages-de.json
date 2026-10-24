@@ -77,6 +77,9 @@
     "invitation_not_found": "Diese Einladung gibt es nicht.",
     "user_disabled": "Dieses Postfach ist deaktiviert. Wählen Sie ein aktives.",
     "user_not_found": "Diese Person gibt es nicht mehr.",
+    "too_many_accounts": "In diesem Browser sind schon 5 Konten angemeldet. Melden Sie sich zuerst von einem ab.",
+    "account_not_found": "Dieses Konto ist nicht mehr angemeldet. Bitte fügen Sie es erneut hinzu.",
+    "account_active": "Vom aktiven Konto melden Sie sich über „Abmelden“ ab.",
     "domain_limit_reached": "Ihr Tarif erlaubt höchstens {limit} Domains.",
     "domain_not_found": "Diese Domain gibt es nicht mehr.",
     "primary_domain": "Die erste Domain des Unternehmens kann nicht entfernt werden.",
@@ -93,7 +96,9 @@
     "email_placeholder": "name@unternehmen.de",
     "password": "Passwort",
     "submit": "Anmelden",
-    "submitting": "Anmeldung läuft…"
+    "submitting": "Anmeldung läuft…",
+    "add_title": "Weiteres Konto hinzufügen",
+    "add_subtitle": "Ihre angemeldeten Konten bleiben angemeldet. Zwischen ihnen wechseln Sie im Kontomenü ohne Passwort."
   },
   "password": {
     "title": "Passwort ändern",

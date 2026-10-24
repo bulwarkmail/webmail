@@ -84,6 +84,16 @@ export interface Me {
   portal?: PortalInfo;
 }
 
+/** Step 29: an account signed in in this browser; `portalUrl` is where it opens. */
+export interface BrowserAccount {
+  userId: string;
+  email: string;
+  displayName: string;
+  company: string;
+  portalUrl: string;
+  active: boolean;
+}
+
 /** Step 23: settings for mail apps; the password is the one for xenaxio. */
 export interface MailAppSettings {
   username: string;
@@ -295,13 +305,24 @@ export const xenaxio = {
   oauthRequest: (query: string) =>
     request<{ clientName: string; redirectHost: string; loopback: boolean }>("GET", `/api/oauth/authorize/info?${query.replace(/^\?/, "")}`),
   oauthDecision: (query: string, approve: boolean) => request<{ redirect: string }>("POST", "/api/oauth/authorize/decision", { query, approve }),
-  login: (email: string, password: string, locale?: string) =>
-    request<Me & { portalUrl: string }>("POST", "/api/auth/login", { email, password, ...(locale === "de" || locale === "en" ? { locale } : {}) }),
+  /** Step 29: `add` keeps the accounts signed in here; `url` says where the added one opens. */
+  login: (email: string, password: string, locale?: string, add?: { next: string }) =>
+    request<Me & { portalUrl: string; url?: string }>("POST", "/api/auth/login", {
+      email,
+      password,
+      ...(locale === "de" || locale === "en" ? { locale } : {}),
+      ...(add ? { add: true, next: add.next } : {}),
+    }),
   /** Step 17: whose address this is (no sign-in needed). */
   portal: () => request<PortalState>("GET", "/api/portal"),
   /** Step 17: a one-time link that moves the session to the company portal (or `next` when already there). */
   handoff: (next: string) => request<{ url: string }>("POST", "/api/auth/handoff", { next }),
-  logout: () => request<{ ok: true }>("POST", "/api/auth/logout", {}),
+  /** Step 29: the next account takes over at `url` (null when nobody is left); `all` signs everyone out. */
+  logout: (opts: { all?: boolean; next?: string } = {}) => request<{ ok: true; url: string | null }>("POST", "/api/auth/logout", opts),
+  /** Step 29: the accounts signed in in this browser, the active one first. */
+  accounts: () => request<{ accounts: BrowserAccount[]; max: number }>("GET", "/api/auth/accounts"),
+  switchAccount: (userId: string, next: string) => request<{ url: string }>("POST", "/api/auth/switch", { userId, next }),
+  forgetAccount: (userId: string) => request<{ ok: true }>("POST", "/api/auth/forget", { userId }),
   changePassword: (currentPassword: string, newPassword: string) =>
     request<{ ok: true }>("POST", "/api/me/password", { currentPassword, newPassword }),
 

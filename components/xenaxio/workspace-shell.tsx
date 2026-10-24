@@ -8,6 +8,7 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, LogOut, Mail } from "@/components/icons";
 import { useXT } from "@/lib/xenaxio/i18n";
+import { openAccount, signOut as signOutAccount } from "@/lib/xenaxio/accounts";
 import { useDocumentTitle } from "@/hooks/use-document-title";
 import { type Me, xenaxio, XenaxioApiError } from "@/lib/xenaxio/api";
 import { Spinner } from "./ui";
@@ -63,7 +64,9 @@ export function WorkspaceShell({
   const toMail = !me.user.mustChangePassword;
 
   const signOut = async () => {
-    await xenaxio.logout().catch(() => {});
+    // Step 29: the next account signed in in this browser takes over.
+    const next = await signOutAccount(false);
+    if (next) return openAccount(next);
     router.replace("/login");
   };
 
