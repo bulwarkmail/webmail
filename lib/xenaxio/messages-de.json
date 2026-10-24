@@ -297,7 +297,7 @@
     "tool_get_thread": "Lese die Unterhaltung…",
     "tool_create_draft": "Speichere einen Entwurf…",
     "tool_search_contacts": "Suche Kontakte…",
-    "tool_error": "Ein Schritt ist fehlgeschlagen; die Antwort ist eventuell unvollständig.",
+    "tool_error": "Ein Schritt ist fehlgeschlagen. Bitte fragen Sie noch einmal, gern mit anderen Worten.",
     "not_sent": "Ohne Ihre Bestätigung wird nichts gesendet: Entwürfe werden nur gespeichert, Termine erst nach „Bestätigen“ angelegt.",
     "errors": {
       "ai_disabled": "Der Assistent ist für Ihr Konto ausgeschaltet.",
