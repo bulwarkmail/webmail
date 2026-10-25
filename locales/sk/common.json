@@ -1542,6 +1542,10 @@
         "label": "Zobraziť zdieľané poštové účty",
         "description": "Zobraziť priečinky schránok zdieľaných s vami v bočnom paneli pod Zdieľané. Vypnutím skryjete všetky, alebo nižšie skryte jednotlivé účty. Ich kalendáre a kontakty zostanú."
       },
+      "compact_shared_mailboxes": {
+        "label": "Kompaktné zdieľané schránky",
+        "description": "Zobraziť každú zdieľanú schránku ako jeden riadok, ktorý otvorí jej Doručené, s priečinkami pod ním. Prázdne priečinky ako Koncepty alebo Koš sa vynechajú."
+      },
       "pro_interface": {
         "label": "Pro rozhranie (experimentálne)",
         "description": "Rozloženie pre pokročilých používateľov iba pre stolné počítače.",
@@ -3529,7 +3533,8 @@
       "manage": "Spravovať pravidlá",
       "senders_count": "{count, plural, one {# odosielateľa} few {# odosielateľov} many {# odosielateľa} other {# odosielateľov}}",
       "cross_account": "Vyberte správy z jedného účtu",
-      "opaque_hint": "Vaše filtre boli upravené ručne. Otvorte nastavenia filtrov",
+      "opaque_hint": "Vaše filtre boli upravené ručne. Otvorte nastavenia filtrov"
+,
       "loading": "Načítavajú sa pravidlá…",
       "load_failed": "Pravidlá sa nepodarilo načítať",
       "none": "Zatiaľ žiadne pravidlá",

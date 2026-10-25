@@ -1539,6 +1539,10 @@
         "label": "Mostrar cuentas de correo compartidas",
         "description": "Muestra las carpetas de los buzones compartidos contigo en Compartido, en la barra lateral. Desactívalo para ocultarlas todas, u oculta cuentas concretas abajo. Sus calendarios y contactos se mantienen."
       },
+      "compact_shared_mailboxes": {
+        "label": "Buzones compartidos compactos",
+        "description": "Muestra cada buzón compartido como una sola fila que abre su bandeja de entrada, con sus carpetas debajo. Las vacías, como Borradores o Papelera, se omiten."
+      },
       "pro_interface": {
         "label": "Interfaz Pro (experimental)",
         "description": "Diseño de escritorio para usuarios avanzados con exploración de mensajes en varias pestañas y flujos de trabajo entre cuentas. La interfaz estándar no se ve afectada; puedes volver en cualquier momento.",
@@ -3529,7 +3533,8 @@
       "manage": "Administrar reglas",
       "senders_count": "{count, plural, one {# remitente} other {# remitentes}}",
       "cross_account": "Selecciona mensajes de una sola cuenta",
-      "opaque_hint": "Tus filtros se editaron a mano. Abre la configuración de filtros",
+      "opaque_hint": "Tus filtros se editaron a mano. Abre la configuración de filtros"
+,
       "loading": "Cargando reglas…",
       "load_failed": "No se pudieron cargar las reglas",
       "none": "Aún no hay reglas",

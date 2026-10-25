@@ -1539,6 +1539,10 @@
         "label": "Gedeelde mailaccounts tonen",
         "description": "Toon de mappen van postvakken die met je zijn gedeeld onder Gedeeld in de zijbalk. Zet uit om ze allemaal te verbergen, of verberg hieronder losse accounts. Hun agenda's en contacten blijven zichtbaar."
       },
+      "compact_shared_mailboxes": {
+        "label": "Compacte gedeelde postvakken",
+        "description": "Toon elk gedeeld postvak als één regel die het Postvak IN opent, met de mappen eronder. Lege mappen zoals Concepten of Prullenbak worden weggelaten."
+      },
       "pro_interface": {
         "label": "Pro-interface (experimenteel)",
         "description": "Power user-indeling alleen voor desktop met meertabs berichtweergave en accountoverschrijdende workflows. De standaardinterface blijft onveranderd; u kunt op elk moment terugkeren.",
@@ -3529,7 +3533,8 @@
       "manage": "Regels beheren",
       "senders_count": "{count, plural, one {# afzender} other {# afzenders}}",
       "cross_account": "Selecteer berichten uit één account",
-      "opaque_hint": "Je filters zijn met de hand bewerkt. Open de filterinstellingen",
+      "opaque_hint": "Je filters zijn met de hand bewerkt. Open de filterinstellingen"
+,
       "loading": "Regels laden…",
       "load_failed": "De regels konden niet worden geladen",
       "none": "Nog geen regels",

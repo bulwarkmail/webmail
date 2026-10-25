@@ -1539,6 +1539,10 @@
         "label": "Geteilte E-Mail-Konten anzeigen",
         "description": "Die Ordner von Postfächern, die mit Ihnen geteilt wurden, in der Seitenleiste unter „Geteilt“ anzeigen. Ausschalten, um alle auszublenden, oder einzelne Konten unten ausblenden. Kalender und Kontakte bleiben sichtbar."
       },
+      "compact_shared_mailboxes": {
+        "label": "Geteilte Postfächer kompakt",
+        "description": "Jedes geteilte Postfach als eine Zeile anzeigen, die seinen Posteingang öffnet, mit seinen Ordnern darunter. Leere wie Entwürfe oder Papierkorb werden ausgelassen."
+      },
       "pro_interface": {
         "label": "Pro-Oberfläche (experimentell)",
         "description": "Desktop-Power-User-Layout mit Multi-Tab-Nachrichtenansicht und kontoübergreifenden Workflows. Die Standardoberfläche bleibt unverändert; Sie können jederzeit zurückwechseln.",

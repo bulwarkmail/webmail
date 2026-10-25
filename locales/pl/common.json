@@ -1539,6 +1539,10 @@
         "label": "Pokaż udostępnione konta pocztowe",
         "description": "Pokazuj foldery skrzynek udostępnionych Ci w sekcji Udostępnione na pasku bocznym. Wyłącz, aby ukryć wszystkie, lub ukryj poszczególne konta poniżej. Ich kalendarze i kontakty pozostaną."
       },
+      "compact_shared_mailboxes": {
+        "label": "Kompaktowe udostępnione skrzynki",
+        "description": "Pokazuj każdą udostępnioną skrzynkę jako jeden wiersz, który otwiera jej Odebrane, z folderami pod spodem. Puste foldery, takie jak Szkice czy Kosz, są pomijane."
+      },
       "pro_interface": {
         "label": "Interfejs Pro (eksperymentalny)",
         "description": "Układ dla zaawansowanych użytkowników (tylko na komputerze) z przeglądaniem wiadomości w wielu kartach i obiegami pracy między kontami. Standardowy interfejs pozostaje nietknięty; możesz wrócić w dowolnej chwili.",
@@ -3529,7 +3533,8 @@
       "manage": "Zarządzaj regułami",
       "senders_count": "{count, plural, one {# nadawcy} few {# nadawców} many {# nadawców} other {# nadawcy}}",
       "cross_account": "Wybierz wiadomości z jednego konta",
-      "opaque_hint": "Twoje filtry zostały edytowane ręcznie. Otwórz ustawienia filtrów",
+      "opaque_hint": "Twoje filtry zostały edytowane ręcznie. Otwórz ustawienia filtrów"
+,
       "loading": "Wczytywanie reguł…",
       "load_failed": "Nie udało się wczytać reguł",
       "none": "Brak reguł",

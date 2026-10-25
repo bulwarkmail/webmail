@@ -35,7 +35,10 @@ interface Position {
 }
 
 export type MailboxContextTarget =
-  | { kind: "mailbox"; mailbox: Mailbox; hasChildren: boolean }
+  /** `sharedAccountId`: the folder is a shared account's inbox standing for the
+   *  whole account (compact shared mailboxes, #1342), so the account's entries
+   *  are added. */
+  | { kind: "mailbox"; mailbox: Mailbox; hasChildren: boolean; sharedAccountId?: string }
   | { kind: "folders-section"; accountId?: string };
 
 const PATH_SEPARATOR = " › ";
@@ -145,6 +148,46 @@ export function MailboxContextMenu({
 
   if (!target) return null;
 
+  // An account's notifications and, for a shared one, hiding it: on the
+  // account's heading, and on a compact shared mailbox's row.
+  const accountItems = (accountId?: string) => (
+    <>
+      {notifications && (() => {
+        const accountMuted = notifications.isAccountMuted(accountId);
+        return (
+          <>
+            <ContextMenuSeparator />
+            <ContextMenuItem
+              icon={accountMuted ? Bell : BellOff}
+              label={accountMuted ? t("unmute_account_notifications") : t("mute_account_notifications")}
+              onClick={() => handleAction(() => notifications.setAccountMuted(accountId, !accountMuted))}
+              testId="mailbox-mute-account"
+            />
+            {notifications.hasFolderSettings(accountId) && (
+              <ContextMenuItem
+                icon={RotateCcw}
+                label={t("reset_folder_notifications")}
+                onClick={() => handleAction(() => notifications.resetFolderSettings(accountId))}
+                testId="mailbox-reset-folder-mutes"
+              />
+            )}
+          </>
+        );
+      })()}
+      {accountId && onHideSharedAccount && (
+        <>
+          <ContextMenuSeparator />
+          <ContextMenuItem
+            icon={EyeOff}
+            label={t("hide_shared_account")}
+            onClick={() => handleAction(() => onHideSharedAccount(accountId))}
+            testId="mailbox-hide-shared-account"
+          />
+        </>
+      )}
+    </>
+  );
+
   if (target.kind === "folders-section") {
     return (
       <ContextMenu ref={menuRef} isOpen={isOpen} position={position} onClose={onClose}>
@@ -172,39 +215,7 @@ export function MailboxContextMenu({
           onClick={() => handleAction(onRefresh!)}
           disabled={!onRefresh}
         />
-        {notifications && (() => {
-          const accountMuted = notifications.isAccountMuted(target.accountId);
-          return (
-            <>
-              <ContextMenuSeparator />
-              <ContextMenuItem
-                icon={accountMuted ? Bell : BellOff}
-                label={accountMuted ? t("unmute_account_notifications") : t("mute_account_notifications")}
-                onClick={() => handleAction(() => notifications.setAccountMuted(target.accountId, !accountMuted))}
-                testId="mailbox-mute-account"
-              />
-              {notifications.hasFolderSettings(target.accountId) && (
-                <ContextMenuItem
-                  icon={RotateCcw}
-                  label={t("reset_folder_notifications")}
-                  onClick={() => handleAction(() => notifications.resetFolderSettings(target.accountId))}
-                  testId="mailbox-reset-folder-mutes"
-                />
-              )}
-            </>
-          );
-        })()}
-        {target.accountId && onHideSharedAccount && (
-          <>
-            <ContextMenuSeparator />
-            <ContextMenuItem
-              icon={EyeOff}
-              label={t("hide_shared_account")}
-              onClick={() => handleAction(() => onHideSharedAccount(target.accountId!))}
-              testId="mailbox-hide-shared-account"
-            />
-          </>
-        )}
+        {accountItems(target.accountId)}
       </ContextMenu>
     );
   }
@@ -224,7 +235,10 @@ export function MailboxContextMenu({
   // someone else shared with us, their permission to re-share it.
   const canShare = !!onShareFolder && (!mailbox.isShared || mailbox.myRights?.mayShare === true);
 
-  const fullPath = getMailboxPath(mailbox, mailboxes);
+  // A compact shared mailbox's row is named after its account, so is its menu.
+  const fullPath = target.sharedAccountId && mailbox.accountName
+    ? mailbox.accountName
+    : getMailboxPath(mailbox, mailboxes);
 
   return (
     <ContextMenu ref={menuRef} isOpen={isOpen} position={position} onClose={onClose}>
@@ -284,6 +298,20 @@ export function MailboxContextMenu({
           />
         );
       })()}
+
+      {target.sharedAccountId && (
+        <>
+          <ContextMenuSeparator />
+          <ContextMenuItem
+            icon={FolderPlus}
+            label={t("new_folder")}
+            onClick={() => handleAction(() => onCreateFolder?.(target.sharedAccountId))}
+            disabled={!onCreateFolder}
+            testId="mailbox-new-folder"
+          />
+          {accountItems(target.sharedAccountId)}
+        </>
+      )}
 
       <ContextMenuSeparator />
 

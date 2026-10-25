@@ -1542,6 +1542,10 @@
         "label": "Mostra els comptes de correu compartits",
         "description": "Mostra les carpetes de les bústies compartides amb tu a Compartit, a la barra lateral. Desactiva-ho per amagar-les totes, o amaga comptes concrets a sota. Els calendaris i contactes es mantenen."
       },
+      "compact_shared_mailboxes": {
+        "label": "Bústies compartides compactes",
+        "description": "Mostra cada bústia compartida com una sola fila que obre la seva safata d'entrada, amb les seves carpetes a sota. Les buides, com Esborranys o Paperera, no es mostren."
+      },
       "pro_interface": {
         "label": "Interfície Pro (experimental)",
         "description": "Disposició avançada només per a escriptori amb navegació de missatges en diverses pestanyes i fluxos de treball entre comptes. La interfície estàndard no es veu afectada; podeu tornar-hi en qualsevol moment.",
@@ -3529,7 +3533,8 @@
       "manage": "Gestiona les regles",
       "senders_count": "{count, plural, one {# remitent} other {# remitents}}",
       "cross_account": "Selecciona missatges d'un sol compte",
-      "opaque_hint": "Els teus filtres s'han editat a mà. Obre la configuració dels filtres",
+      "opaque_hint": "Els teus filtres s'han editat a mà. Obre la configuració dels filtres"
+,
       "loading": "S'estan carregant les regles…",
       "load_failed": "No s'han pogut carregar les regles",
       "none": "Encara no hi ha regles",

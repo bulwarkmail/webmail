@@ -724,6 +724,9 @@ interface SettingsState extends AccessibilitySettings {
   // Turning it off hides every shared account's folders; their calendars,
   // contacts and files stay. (#1228)
   showSharedMailAccounts: boolean;
+  // Each shared account's mail as one row that is its inbox, its folders
+  // below it and its empty Drafts, Scheduled, Junk and Trash left out (#1342).
+  compactSharedMailboxes: boolean;
   // Shared accounts whose mail folders are hidden one by one, keyed by
   // AccountEntry.id -> JMAP accountIds, since those ids are per server.
   hiddenSharedMailAccounts: Record<string, string[]>;
@@ -1011,6 +1014,7 @@ const DEFAULT_SETTINGS = {
   showAccountDot: true,
   showFolderTotalCount: true,
   showSharedMailAccounts: true,
+  compactSharedMailboxes: false,
   hiddenSharedMailAccounts: {} as Record<string, string[]>,
 
   // Folders
@@ -1404,6 +1408,7 @@ export const useSettingsStore = create<SettingsState>()(
           showAccountDot: state.showAccountDot,
           showFolderTotalCount: state.showFolderTotalCount,
           showSharedMailAccounts: state.showSharedMailAccounts,
+          compactSharedMailboxes: state.compactSharedMailboxes,
           hiddenSharedMailAccounts: state.hiddenSharedMailAccounts,
           folderIcons: state.folderIcons,
           folderCountModes: state.folderCountModes,

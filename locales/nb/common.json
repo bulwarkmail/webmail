@@ -1542,6 +1542,10 @@
         "label": "Vis delte e-postkontoer",
         "description": "Vis mappene fra postbokser som er delt med deg under Delt i sidepanelet. Slå av for å skjule alle, eller skjul enkeltkontoer nedenfor. Kalendere og kontakter blir værende."
       },
+      "compact_shared_mailboxes": {
+        "label": "Kompakte delte postbokser",
+        "description": "Vis hver delte postboks som én rad som åpner innboksen, med mappene under. Tomme mapper som Utkast eller Papirkurv utelates."
+      },
       "pro_interface": {
         "label": "Pro-grensesnitt (eksperimentelt)",
         "description": "Skrivebordsoppsett for erfarne brukere, med meldinger i flere faner og arbeidsflyter på tvers av kontoer. Standardgrensesnittet påvirkes ikke, og du kan bytte tilbake når som helst.",
@@ -3529,7 +3533,8 @@
       "manage": "Administrer regler",
       "senders_count": "{count, plural, one {# avsender} other {# avsendere}}",
       "cross_account": "Velg meldinger fra én konto",
-      "opaque_hint": "Filtrene dine er redigert for hånd. Åpne filterinnstillingene",
+      "opaque_hint": "Filtrene dine er redigert for hånd. Åpne filterinnstillingene"
+,
       "loading": "Laster inn regler…",
       "load_failed": "Kunne ikke laste inn reglene",
       "none": "Ingen regler ennå",

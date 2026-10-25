@@ -1542,6 +1542,10 @@
         "label": "Megosztott levelezőfiókok megjelenítése",
         "description": "A veled megosztott postafiókok mappáinak megjelenítése az oldalsávon, a Megosztott alatt. Kapcsold ki az összes elrejtéséhez, vagy rejts el egyes fiókokat lent. A naptárak és névjegyek megmaradnak."
       },
+      "compact_shared_mailboxes": {
+        "label": "Tömör megosztott postafiókok",
+        "description": "Minden megosztott postafiók egyetlen sorként jelenik meg, amely a beérkező leveleit nyitja meg, alatta a mappáival. Az üres mappák, például a Piszkozatok vagy a Kuka, rejtve maradnak."
+      },
       "pro_interface": {
         "label": "Pro felület (Kísérleti)",
         "description": "Asztali számítógépes erőfelhasználói elrendezés több lapos üzenetböngészéssel és fiókok közötti munkafolyamatokkal. A szabványos felületet nem érinti; bármikor visszaválthatsz.",
@@ -3529,7 +3533,8 @@
       "manage": "Szabályok kezelése",
       "senders_count": "{count, plural, one {# feladó} other {# feladó}}",
       "cross_account": "Egyetlen fiók üzeneteit válaszd ki",
-      "opaque_hint": "A szűrőidet kézzel szerkesztették. Nyisd meg a szűrőbeállításokat",
+      "opaque_hint": "A szűrőidet kézzel szerkesztették. Nyisd meg a szűrőbeállításokat"
+,
       "loading": "Szabályok betöltése…",
       "load_failed": "Nem sikerült betölteni a szabályokat",
       "none": "Még nincsenek szabályok",

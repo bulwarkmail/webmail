@@ -1539,6 +1539,10 @@
         "label": "Afficher les comptes de messagerie partagés",
         "description": "Afficher les dossiers des boîtes partagées avec vous sous Partagé dans la barre latérale. Désactivez pour les masquer tous, ou masquez des comptes un par un ci-dessous. Leurs agendas et contacts restent visibles."
       },
+      "compact_shared_mailboxes": {
+        "label": "Boîtes partagées compactes",
+        "description": "Afficher chaque boîte aux lettres partagée sur une seule ligne qui ouvre sa boîte de réception, avec ses dossiers en dessous. Les dossiers vides, comme Brouillons ou Corbeille, sont masqués."
+      },
       "pro_interface": {
         "label": "Interface Pro (expérimental)",
         "description": "Disposition pour utilisateurs avancés (bureau uniquement) avec navigation des messages multi-onglets et flux de travail multi-comptes. L'interface standard n'est pas affectée ; vous pouvez revenir à tout moment.",
@@ -3529,7 +3533,8 @@
       "manage": "Gérer les règles",
       "senders_count": "{count, plural, one {# expéditeur} other {# expéditeurs}}",
       "cross_account": "Sélectionnez des messages d'un seul compte",
-      "opaque_hint": "Vos filtres ont été modifiés à la main. Ouvrez les réglages des filtres",
+      "opaque_hint": "Vos filtres ont été modifiés à la main. Ouvrez les réglages des filtres"
+,
       "loading": "Chargement des règles…",
       "load_failed": "Impossible de charger les règles",
       "none": "Aucune règle pour l'instant",

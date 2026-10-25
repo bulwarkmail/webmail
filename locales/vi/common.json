@@ -1554,6 +1554,10 @@
         "label": "Hiển thị tài khoản thư được chia sẻ",
         "description": "Liệt kê thư mục của các hộp thư được chia sẻ với bạn trong mục Được chia sẻ ở thanh bên. Tắt để ẩn tất cả hoặc ẩn riêng từng tài khoản bên dưới. Lịch và danh bạ của chúng vẫn được giữ lại."
       },
+      "compact_shared_mailboxes": {
+        "label": "Thu gọn hộp thư được chia sẻ",
+        "description": "Hiển thị mỗi hộp thư được chia sẻ thành một dòng mở hộp thư đến, các thư mục của nó nằm bên dưới. Các thư mục trống như Thư nháp hoặc Thùng rác được ẩn đi."
+      },
       "pro_interface": {
         "label": "Giao diện Pro (thử nghiệm)",
         "description": "Bố cục chỉ dành cho máy tính, dành cho người dùng nâng cao, hỗ trợ duyệt thư bằng nhiều tab và thao tác giữa các tài khoản. Giao diện tiêu chuẩn không bị ảnh hưởng; bạn có thể chuyển lại bất cứ lúc nào.",

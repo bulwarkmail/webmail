@@ -1542,6 +1542,10 @@
         "label": "Näita jagatud meilikontosid",
         "description": "Näita sinuga jagatud postkastide kaustu külgribal jaotises Jagatud. Lülita välja, et peita kõik, või peida allpool üksikud kontod. Nende kalendrid ja kontaktid jäävad alles."
       },
+      "compact_shared_mailboxes": {
+        "label": "Kompaktsed jagatud postkastid",
+        "description": "Näita iga jagatud postkasti ühe reana, mis avab selle saabunud kirjad, kaustad selle all. Tühjad kaustad, nagu Mustandid või Prügikast, jäetakse välja."
+      },
       "pro_interface": {
         "label": "Pro liides (eksperimentaalne)",
         "description": "Ainult lauaarvutile mõeldud kogenud kasutaja paigutus mitme vahekaardiga kirjade sirvimiseks ja kontodeüleseks töövooks. Standardliidest see ei mõjuta ning saad igal ajal tagasi lülituda.",

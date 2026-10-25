@@ -87,6 +87,7 @@ import { buildSettingsPath, SCHEDULED_MAILBOX_ID, scopedScheduledMailboxId } fro
 import { useTour } from "@/components/tour/tour-provider";
 import { toUnicodeEmail } from "@/lib/idn";
 import { hiddenSharedMailIds, isSharedMailAccountVisible, setSharedMailAccountHidden } from "@/lib/shared-mail-visibility";
+import { compactSharedMailbox } from "@/lib/compact-shared-mailbox";
 import {
   isAccountMuted,
   isMailboxMuted,
@@ -676,6 +677,7 @@ function MailboxTreeItem({
   colorful,
   onContextMenu,
   dragAccountId = null,
+  sharedAccountName,
 }: {
   node: MailboxNode;
   selectedMailbox: string;
@@ -690,15 +692,19 @@ function MailboxTreeItem({
    *  Travels in the folder-drag payload so a folder tab fetches through the
    *  right client, and tells a message drop which login the folder is in. */
   dragAccountId?: string | null;
+  /** Set when this node is a shared account's inbox standing for the whole
+   *  account (compact shared mailboxes, #1342): the row is named after the
+   *  account and carries its icon. */
+  sharedAccountName?: string;
 }) {
   const tNotifications = useTranslations('notifications');
   const tSidebar = useTranslations('sidebar');
   const hasChildren = node.children.length > 0;
   const isExpanded = expandedFolders.has(node.id);
-  const Icon = getIconForMailbox(node.role, hasChildren, isExpanded, node.id);
+  const Icon = sharedAccountName ? User : getIconForMailbox(node.role, hasChildren, isExpanded, node.id);
   const isVirtualNode = node.id.startsWith('shared-');
   const isSelected = selectedMailbox === node.id;
-  const label = localizeMailboxName(node.role, node.name, (k) => tSidebar(`mailboxes.${k}`));
+  const label = sharedAccountName ?? localizeMailboxName(node.role, node.name, (k) => tSidebar(`mailboxes.${k}`));
   // Only for the active login's folders: its client tells a missing
   // accountId (own mailbox) apart.
   const muted = useMutedMailbox(isVirtualNode || dragAccountId ? null : node);
@@ -740,7 +746,7 @@ function MailboxTreeItem({
   return (
     <>
       <SidebarRow
-        icon={<Icon className={getIconClass(isSelected, isVirtualNode, colorful, node.role)} />}
+        icon={<Icon className={getIconClass(isSelected, isVirtualNode, colorful, sharedAccountName ? undefined : node.role)} />}
         label={label}
         testRole={node.role}
         testName={node.name}
@@ -1198,6 +1204,7 @@ function SidebarImpl({
   const enableUnifiedMailbox = useSettingsStore(s => s.enableUnifiedMailbox);
   const includeGroupInUnified = useSettingsStore(s => s.includeGroupInUnified);
   const showSharedMailAccounts = useSettingsStore(s => s.showSharedMailAccounts);
+  const compactSharedMailboxes = useSettingsStore(s => s.compactSharedMailboxes);
   const hiddenSharedMailAccounts = useSettingsStore(s => s.hiddenSharedMailAccounts);
   // Mountain View draws its navigation icons in the text colour.
   const colorfulSidebarIcons = useSettingsStore(s => s.colorfulSidebarIcons) && !mvShell;
@@ -1656,6 +1663,19 @@ function SidebarImpl({
     openMailboxContextMenu(e, { kind: "folders-section", accountId });
   };
 
+  // A compact shared mailbox's row is its inbox and stands for the account, so
+  // its menu is the inbox's plus what the account's header row offered.
+  const handleCompactSharedContextMenu = (e: React.MouseEvent, node: MailboxNode, inboxId: string, accountId?: string) => {
+    const mailbox = mailboxes.find(mb => mb.id === node.id);
+    if (!mailbox) return;
+    openMailboxContextMenu(e, {
+      kind: "mailbox",
+      mailbox,
+      hasChildren: node.children.length > 0,
+      sharedAccountId: node.id === inboxId ? accountId : undefined,
+    });
+  };
+
   const hideSharedAccount = activeAccountId
     ? (accountId: string) => {
         const { hiddenSharedMailAccounts: hidden, updateSetting } = useSettingsStore.getState();
@@ -2034,6 +2054,28 @@ function SidebarImpl({
                 {sharedAccounts.map((account) => {
                   const accountExpanded = expandedSharedAccounts.has(account.id);
                   const menuAccountId = sharedAccountMenuId(account.accountId);
+                  const compact = compactSharedMailboxes ? compactSharedMailbox(account) : null;
+                  if (compact) {
+                    const scheduledCount = menuAccountId ? (scheduledTotalByAccount?.[menuAccountId] ?? 0) : 0;
+                    return (
+                      <div key={account.id} data-testid="compact-shared-mailbox">
+                        <MailboxTreeItem
+                          node={compact}
+                          sharedAccountName={account.name}
+                          selectedMailbox={selectedKeyword ? "" : selectedMailbox}
+                          expandedFolders={expandedFolders}
+                          onMailboxSelect={onMailboxSelect}
+                          onToggleExpand={handleToggleExpand}
+                          isCollapsed={isCollapsed}
+                          onUnreadFilterClick={onUnreadFilterClick}
+                          colorful={colorfulSidebarIcons}
+                          onContextMenu={(e, node) => handleCompactSharedContextMenu(e, node, compact.id, menuAccountId)}
+                        />
+                        {expandedFolders.has(compact.id) && !isCollapsed && scheduledCount > 0
+                          && renderScheduledRow(`${account.id}-scheduled`, { accountId: menuAccountId, depth: 1 })}
+                      </div>
+                    );
+                  }
                   return (
                     <div key={account.id}>
                       <SidebarSectionHeader

@@ -1539,6 +1539,10 @@
         "label": "Mostra account di posta condivisi",
         "description": "Mostra le cartelle delle caselle condivise con te sotto Condiviso nella barra laterale. Disattiva per nasconderle tutte, oppure nascondi singoli account qui sotto. Calendari e contatti restano visibili."
       },
+      "compact_shared_mailboxes": {
+        "label": "Caselle condivise compatte",
+        "description": "Mostra ogni casella condivisa come una sola riga che apre la sua posta in arrivo, con le sue cartelle sotto. Quelle vuote, come Bozze o Cestino, vengono omesse."
+      },
       "pro_interface": {
         "label": "Interfaccia Pro (sperimentale)",
         "description": "Layout per utenti esperti solo desktop con esplorazione messaggi a più schede e flussi tra account. L'interfaccia standard non è influenzata; puoi tornare indietro in qualsiasi momento.",
@@ -3529,7 +3533,8 @@
       "manage": "Gestisci regole",
       "senders_count": "{count, plural, one {# mittente} other {# mittenti}}",
       "cross_account": "Seleziona messaggi di un solo account",
-      "opaque_hint": "I tuoi filtri sono stati modificati a mano. Apri le impostazioni dei filtri",
+      "opaque_hint": "I tuoi filtri sono stati modificati a mano. Apri le impostazioni dei filtri"
+,
       "loading": "Caricamento delle regole…",
       "load_failed": "Impossibile caricare le regole",
       "none": "Nessuna regola",

@@ -1539,6 +1539,10 @@
         "label": "Rādīt koplietotos pasta kontus",
         "description": "Rādīt ar jums koplietoto pastkastīšu mapes sānjoslā sadaļā Koplietots. Izslēdziet, lai paslēptu visas, vai paslēpiet atsevišķus kontus zemāk. To kalendāri un kontakti paliek redzami."
       },
+      "compact_shared_mailboxes": {
+        "label": "Kompaktas koplietotās pastkastes",
+        "description": "Rādīt katru koplietoto pastkasti kā vienu rindu, kas atver tās iesūtni, ar tās mapēm zem tās. Tukšas mapes, piemēram, Melnraksti, netiek rādītas."
+      },
       "pro_interface": {
         "label": "Pro saskarne (eksperimentāla)",
         "description": "Tikai darbvirsmas pieredzējušu lietotāju izkārtojums ar ziņojumu pārlūkošanu vairākās cilnēs un kontu pārvaldību. Standarta saskarne netiek ietekmēta; varat jebkurā brīdī pārslēgties atpakaļ.",
@@ -3529,7 +3533,8 @@
       "manage": "Pārvaldīt noteikumus",
       "senders_count": "{count, plural, zero {# sūtītājiem} one {# sūtītāja} other {# sūtītājiem}}",
       "cross_account": "Izvēlieties vēstules no viena konta",
-      "opaque_hint": "Jūsu filtri ir rediģēti manuāli. Atveriet filtru iestatījumus",
+      "opaque_hint": "Jūsu filtri ir rediģēti manuāli. Atveriet filtru iestatījumus"
+,
       "loading": "Ielādē kārtulas…",
       "load_failed": "Neizdevās ielādēt kārtulas",
       "none": "Vēl nav kārtulu",

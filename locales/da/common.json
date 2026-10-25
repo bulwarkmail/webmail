@@ -1542,6 +1542,10 @@
         "label": "Vis delte mailkonti",
         "description": "Vis mapperne fra postkasser, der er delt med dig, under Delt i sidepanelet. Slå fra for at skjule dem alle, eller skjul enkelte konti nedenfor. Deres kalendere og kontakter bliver."
       },
+      "compact_shared_mailboxes": {
+        "label": "Kompakte delte postkasser",
+        "description": "Vis hver delt postkasse som én række, der åbner dens indbakke, med dens mapper nedenunder. Tomme mapper som Kladder eller Papirkurv udelades."
+      },
       "pro_interface": {
         "label": "Pro-grænseflade (eksperimentel)",
         "description": "Power user-layout kun til skrivebordet med beskedvisning på flere faner og arbejdsforløb på tværs af konti. Standardgrænsefladen påvirkes ikke; du kan skifte tilbage når som helst.",
@@ -3529,7 +3533,8 @@
       "manage": "Administrer regler",
       "senders_count": "{count, plural, one {# afsender} other {# afsendere}}",
       "cross_account": "Vælg beskeder fra én konto",
-      "opaque_hint": "Dine filtre er redigeret manuelt. Åbn filterindstillingerne",
+      "opaque_hint": "Dine filtre er redigeret manuelt. Åbn filterindstillingerne"
+,
       "loading": "Indlæser regler…",
       "load_failed": "Reglerne kunne ikke indlæses",
       "none": "Ingen regler endnu",

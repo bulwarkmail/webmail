@@ -1542,6 +1542,10 @@
         "label": "Show shared mail accounts",
         "description": "List the folders of mailboxes shared with you under Shared in the sidebar. Turn off to hide them all, or hide single accounts below. Their calendars and contacts stay."
       },
+      "compact_shared_mailboxes": {
+        "label": "Compact shared mailboxes",
+        "description": "Show each shared mailbox as one row that opens its inbox, with its folders below it. Empty ones such as Drafts or Trash are left out."
+      },
       "pro_interface": {
         "label": "Pro interface (experimental)",
         "description": "Desktop-only power-user layout with multi-tab message browsing and cross-account workflows. The standard interface is unaffected; you can switch back at any time.",
