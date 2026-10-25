@@ -27,6 +27,7 @@ import { useContactNameResolver } from "@/hooks/use-contact-name-resolver";
 import { findMeetingLink, locationAction, mapsUrl, primaryLocationName } from "@/lib/event-links";
 import { PluginSlot } from "@/components/plugins/plugin-slot";
 import { eventToView } from "@/lib/plugin-projection";
+import { EventFiles } from "@/components/xenaxio/event-files";
 
 interface EventDetailPopoverProps {
   event: CalendarEvent;
@@ -601,6 +602,9 @@ export function EventDetailPopover({
             </p>
           </div>
         )}
+
+        {/* xenaxio: files of the meeting (step 34) */}
+        <EventFiles links={event.links} />
 
         <PluginSlot name="calendar-event-detail" className="w-full" extraProps={pluginProps} />
       </div>

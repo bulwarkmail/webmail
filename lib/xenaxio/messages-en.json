@@ -360,7 +360,7 @@
     "tool_create_draft": "Saving a draft…",
     "tool_search_contacts": "Looking up contacts…",
     "tool_error": "A step failed. Please ask again, perhaps in other words.",
-    "not_sent": "Nothing is sent without your confirmation: drafts are only saved, events are created only after “Confirm”.",
+    "not_sent": "Nothing is sent without your confirmation: drafts are only saved, events are created or changed only after “Confirm”.",
     "errors": {
       "ai_disabled": "The assistant is turned off for your account.",
       "ai_not_configured": "The assistant is not set up yet.",
@@ -371,6 +371,7 @@
     "tool_list_events": "Checking the calendar…",
     "tool_find_free_time": "Looking for free time…",
     "tool_create_event": "Preparing an event…",
+    "tool_update_event": "Preparing a change to the meeting…",
     "tool_list_files": "Looking through your files…",
     "tool_search_files": "Searching files…",
     "tool_read_file": "Reading a file…",
@@ -392,7 +393,19 @@
       "rejected": "Discarded.",
       "expired": "This proposal has expired. Ask the assistant for a new one.",
       "already": "This proposal was already decided.",
-      "failed": "The event could not be created."
+      "failed": "The event could not be created.",
+      "files": "Attachments"
+    },
+    "proposal_update": {
+      "event": "Meeting change",
+      "attendees": "Participants",
+      "added": "Newly invited",
+      "invites_note": "When you confirm, the participants get the change by email and the newly invited an invitation.",
+      "running": "Changing…",
+      "done": "Meeting changed.",
+      "done_invited": "Meeting changed, participants notified.",
+      "invite_failed": "Meeting changed, but the participants could not be notified.",
+      "failed": "The meeting could not be changed."
     },
     "limit_warning": "You have used over 80 % of your AI allowance for this month."
   },
@@ -484,7 +497,7 @@
     "can_1": "search, read and summarise emails",
     "can_2": "save replies as drafts",
     "can_3": "look up contacts",
-    "can_4": "view your calendar, find free slots and create meetings with invitations",
+    "can_4": "view your calendar, find free slots, create meetings with invitations and files, and change your meetings",
     "can_5": "find and read your files and those colleagues share with you, save new files and attachments to your own files",
     "cannot": "The chat cannot send emails, delete anything or change existing files.",
     "revoke_hint": "You can disconnect at any time under “Connect AI chats”.",
@@ -672,5 +685,11 @@
     "managers_save": "Save managers",
     "managers_saved": "Managers saved.",
     "delete_prompt": "Delete {email} for good? All bookings of this resource are deleted, which cannot be undone.\n\nType {email} to confirm:"
+  },
+  "event_files": {
+    "title": "Attachments",
+    "download": "Download {name}",
+    "in_invitation": "in the invitation email",
+    "failed": "The file could not be loaded. It may have been deleted in “Files”."
   }
 }

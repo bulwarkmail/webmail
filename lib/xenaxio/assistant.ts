@@ -11,7 +11,7 @@ export interface SourceEmail {
   receivedAt?: string;
 }
 
-/** What the assistant proposes to create (I5); runs only after "Bestätigen". */
+/** What the assistant proposes to create or change (I5); runs only after "Bestätigen". */
 export interface ProposalSummary {
   title?: string;
   start?: string;
@@ -19,6 +19,12 @@ export interface ProposalSummary {
   timeZone?: string;
   location?: string;
   attendees?: string[];
+  /** Names of the user's files attached to the meeting (step 34). */
+  files?: string[];
+  /** update_event only: what changes, who is newly invited, and the meeting as it was. */
+  changes?: string[];
+  addedAttendees?: string[];
+  before?: { title?: string; start?: string; end?: string; location?: string };
 }
 
 export interface ActionResult {
