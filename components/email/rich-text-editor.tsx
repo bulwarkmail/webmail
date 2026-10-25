@@ -318,7 +318,7 @@ export function RichTextEditor({
     content,
     editorProps: {
       attributes: {
-        class: "tiptap min-h-[100px] px-4 py-3 text-sm text-foreground",
+        class: "tiptap min-h-[100px] px-4 py-3 text-sm leading-[1.6] text-foreground",
       },
       handleDrop: (view, event) => {
         if (!event.dataTransfer?.files?.length) return false;

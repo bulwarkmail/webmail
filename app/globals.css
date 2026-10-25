@@ -751,6 +751,7 @@ optgroup {
 /* TipTap Rich Text Editor */
 .tiptap {
   outline: none;
+  line-height: 1.6;
 }
 
 .tiptap p {
