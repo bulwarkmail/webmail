@@ -603,7 +603,7 @@ export function EventDetailPopover({
           </div>
         )}
 
-        {/* xenaxio: files of the meeting (step 32) */}
+        {/* xenaxio: files of the meeting (step 34) */}
         <EventFiles links={event.links} />
 
         <PluginSlot name="calendar-event-detail" className="w-full" extraProps={pluginProps} />

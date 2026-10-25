@@ -19,7 +19,7 @@ export interface ProposalSummary {
   timeZone?: string;
   location?: string;
   attendees?: string[];
-  /** Names of the user's files attached to the meeting (step 32). */
+  /** Names of the user's files attached to the meeting (step 34). */
   files?: string[];
   /** update_event only: what changes, who is newly invited, and the meeting as it was. */
   changes?: string[];

@@ -66,7 +66,7 @@ function formatSpan(span: { start?: string; end?: string }, locale: string): str
   return `${day.format(asUtc(span.start))}, ${time.format(asUtc(span.start))}${end}`;
 }
 
-/** Texts that differ for a change of a meeting (step 32); the rest is shared with new events. */
+/** Texts that differ for a change of a meeting (step 34); the rest is shared with new events. */
 const UPDATE_KEYS = new Set(["event", "attendees", "invites_note", "running", "done", "done_invited", "invite_failed", "failed"]);
 
 function ProposalCard({ proposal, locale, onDecide }: { proposal: Proposal; locale: string; onDecide: (p: Proposal, confirm: boolean) => void }) {

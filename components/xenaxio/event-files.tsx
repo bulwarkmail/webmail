@@ -1,6 +1,6 @@
 "use client";
 
-// Step 32: files of a meeting. The assistant links them to the event as
+// Step 34: files of a meeting. The assistant links them to the event as
 // "enclosure" links: href names the part of the invitation email (cid:), and
 // on the organizer's own event blobId points at the file in "Dateien", so it
 // downloads from there. Invitations from others carry the file in their email;

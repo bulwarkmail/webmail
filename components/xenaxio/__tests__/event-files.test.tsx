@@ -11,7 +11,7 @@ vi.mock("@/stores/auth-store", () => ({ useAuthStore: (pick: (s: unknown) => unk
 const link = (over: Partial<CalendarLink> & { blobId?: string }): CalendarLink =>
   ({ "@type": "Link", href: "cid:x@acme.de", cid: null, contentType: "application/pdf", size: 8, rel: "enclosure", display: null, title: "Angebot.pdf", ...over }) as CalendarLink;
 
-describe("EventFiles (step 32)", () => {
+describe("EventFiles (step 34)", () => {
   beforeEach(() => downloadBlob.mockReset());
 
   it("keeps only file links, in a stable order", () => {
@@ -34,7 +34,9 @@ describe("EventFiles (step 32)", () => {
   });
 
   it("says so when the file is gone", async () => {
-    downloadBlob.mockRejectedValue(new Error("404"));
+    downloadBlob.mockImplementation(() => {
+      throw new Error("404");
+    });
     render(<EventFiles links={{ f1: link({ blobId: "b1" }) }} />);
     await act(async () => fireEvent.click(screen.getByRole("button", { name: "Angebot.pdf" })));
     expect(screen.getByText(/Die Datei konnte nicht geladen werden/)).toBeTruthy();
