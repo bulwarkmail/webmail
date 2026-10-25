@@ -86,6 +86,7 @@ export function MailApps({ settings, domainPending }: { settings: MailAppSetting
       </section>
 
       <p className="text-sm text-muted-foreground">{t("mail_apps.web_only")}</p>
+      <p className="text-sm text-muted-foreground">{t("mail_apps.shared")}</p>
     </div>
   );
 }

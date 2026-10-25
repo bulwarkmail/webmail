@@ -178,6 +178,19 @@ export interface WorkspaceUser {
   usedBytes?: number | null;
 }
 
+/** Step 31: a shared mailbox (info@) and who may use it. */
+export interface SharedMailbox {
+  id: string;
+  email: string;
+  domainId: string;
+  displayName: string;
+  quotaBytes: number;
+  aliases: string[];
+  /** canSend false: reads and sorts mail; true: also sends from its addresses. */
+  access: { userId: string; canSend: boolean }[];
+  usedBytes?: number | null;
+}
+
 /** Step 27: the mailbox that receives mail to unknown addresses of the domain. */
 export interface CatchAll {
   userId: string;
@@ -240,6 +253,9 @@ export interface OperatorTenant {
   createdAt: string;
   maxMailboxes: number;
   maxDomains?: number;
+  /** Step 31: shared mailboxes, outside the employee seats. */
+  maxSharedMailboxes?: number;
+  sharedMailboxes?: number;
   mailboxQuotaBytes: number;
   mailboxes: number;
   usedBytes: number;
@@ -367,6 +383,17 @@ export const xenaxio = {
   deleteUser: (userId: string) => request<{ ok: true }>("DELETE", `/api/admin/users/${encodeURIComponent(userId)}`),
   setAliases: (userId: string, aliases: string[]) => request<WorkspaceUser>("POST", `/api/admin/users/${encodeURIComponent(userId)}/aliases`, { aliases }),
   setQuota: (userId: string, quotaMb: number) => request<WorkspaceUser>("POST", `/api/admin/users/${encodeURIComponent(userId)}/quota`, { quotaMb }),
+  sharedMailboxes: () =>
+    request<{ sharedMailboxes: SharedMailbox[]; limits: { maxSharedMailboxes: number; mailboxQuotaBytes: number } }>("GET", "/api/admin/shared-mailboxes"),
+  createSharedMailbox: (input: { localPart: string; displayName: string; domainId?: string }) =>
+    request<SharedMailbox>("POST", "/api/admin/shared-mailboxes", input),
+  setSharedMailboxAccess: (id: string, access: SharedMailbox["access"]) =>
+    request<SharedMailbox>("PUT", `/api/admin/shared-mailboxes/${encodeURIComponent(id)}/access`, { access }),
+  setSharedMailboxAliases: (id: string, aliases: string[]) =>
+    request<SharedMailbox>("POST", `/api/admin/shared-mailboxes/${encodeURIComponent(id)}/aliases`, { aliases }),
+  setSharedMailboxQuota: (id: string, quotaMb: number) =>
+    request<SharedMailbox>("POST", `/api/admin/shared-mailboxes/${encodeURIComponent(id)}/quota`, { quotaMb }),
+  deleteSharedMailbox: (id: string) => request<{ ok: true }>("DELETE", `/api/admin/shared-mailboxes/${encodeURIComponent(id)}`),
   setUserAi: (userId: string, enabled: boolean) => request<{ ok: true }>("POST", `/api/admin/users/${encodeURIComponent(userId)}/ai`, { enabled }),
   aiAdmin: () => request<AiAdmin>("GET", "/api/admin/ai"),
   setAiAdmin: (change: { enabled?: boolean; model?: string }) => request<{ ok: true }>("POST", "/api/admin/ai", change),
@@ -384,7 +411,14 @@ export const xenaxio = {
     reactivateTenant: (id: string) => request<{ id: string; status: string }>("POST", `/api/operator/tenants/${encodeURIComponent(id)}/reactivate`, {}),
     setTenantLimits: (
       id: string,
-      limits: { maxMailboxes?: number; maxDomains?: number; mailboxQuotaMb?: number; aiUserMonthlyTokens?: number | null; aiTenantMonthlyTokens?: number | null },
+      limits: {
+        maxMailboxes?: number;
+        maxDomains?: number;
+        maxSharedMailboxes?: number;
+        mailboxQuotaMb?: number;
+        aiUserMonthlyTokens?: number | null;
+        aiTenantMonthlyTokens?: number | null;
+      },
     ) => request<{ ok: true }>("POST", `/api/operator/tenants/${encodeURIComponent(id)}/limits`, limits),
     report: (month?: string) => request<OperatorReport>("GET", `/api/operator/report${month ? `?month=${encodeURIComponent(month)}` : ""}`),
     setTenantSlug: (id: string, slug: string) => request<{ id: string; slug: string }>("POST", `/api/operator/tenants/${encodeURIComponent(id)}/slug`, { slug }),

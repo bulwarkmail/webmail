@@ -19,6 +19,8 @@ import {
   ASSISTANT_STORAGE_KEY,
   type AssistantCommand,
   type AssistantEvent,
+  assistantIds,
+  messageRouteId,
   OPEN_DRAFT_EVENT,
   type ProposalSummary,
   type SourceEmail,
@@ -217,7 +219,7 @@ export function AssistantPanel() {
   const openSource = useCallback(
     (s: SourceEmail | string) => {
       const id = typeof s === "string" ? s : s.id;
-      router.push(`/mail/message/${encodeURIComponent(id)}`);
+      router.push(`/mail/message/${encodeURIComponent(messageRouteId(id))}`);
     },
     [router],
   );
@@ -274,7 +276,8 @@ export function AssistantPanel() {
     }
   }, [t]);
 
-  const context = selectedEmail ? { emailId: selectedEmail.id, threadId: selectedEmail.threadId } : {};
+  // Step 31: mail of a shared mailbox is named with its account.
+  const context = selectedEmail ? assistantIds(selectedEmail) : {};
 
   const send = (e?: FormEvent) => {
     e?.preventDefault();
@@ -297,7 +300,7 @@ export function AssistantPanel() {
     setBusy(true);
     setNotice(t("assistant.reply_creating"));
     try {
-      const { draftId } = await assistant.reply(selectedEmail.id, input.trim());
+      const { draftId } = await assistant.reply(assistantIds(selectedEmail).emailId, input.trim());
       setInput("");
       setNotice(t("assistant.reply_done"));
       window.dispatchEvent(new CustomEvent(OPEN_DRAFT_EVENT, { detail: { draftId } }));

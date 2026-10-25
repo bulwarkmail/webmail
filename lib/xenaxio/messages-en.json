@@ -87,7 +87,9 @@
     "domain_has_hostname": "Your own address {hostname} is under this domain. Remove it first under “Appearance and address”.",
     "alias_domain_pending": "{domain} is not connected yet. Addresses on this domain are possible once its DNS records are correct.",
     "alias_domain_unknown": "{address}: this domain does not belong to your company. Add it first under “Domains and DNS”.",
-    "invalid_alias": "Enter addresses like info or info@your-domain.com."
+    "invalid_alias": "Enter addresses like info or info@your-domain.com.",
+    "shared_mailbox_limit_reached": "Your plan's limit of shared mailboxes ({limit}) is reached.",
+    "shared_mailbox_not_found": "This shared mailbox no longer exists."
   },
   "login": {
     "title": "Sign in",
@@ -150,7 +152,9 @@
     "dns_ok": "Domain and DNS: OK",
     "dns_pending": "Domain and DNS: not verified yet",
     "appearance": "Appearance and address",
-    "appearance_desc": "Your company's logo, colour and sign-in address"
+    "appearance_desc": "Your company's logo, colour and sign-in address",
+    "shared": "Shared mailboxes",
+    "shared_desc": "info@, billing@ & co.: who reads, who replies"
   },
   "domain": {
     "title": "Domains and DNS",
@@ -316,7 +320,9 @@
     "revoke": "Revoke",
     "revoke_confirm": "Revoke this invitation? The link stops working.",
     "status_revoked": "Revoked",
-    "max_domains": "Domains at most"
+    "max_domains": "Domains at most",
+    "max_shared_mailboxes": "Shared mailboxes at most",
+    "col_shared": "Shared mailboxes"
   },
   "about": {
     "based_on": "Based on",
@@ -614,6 +620,29 @@
     "android_2": "Choose \"Personal (IMAP)\" and enter your xenaxio password.",
     "android_3": "Incoming server: server and port from above, security type SSL/TLS.",
     "android_4": "Outgoing server: server and port from above, SSL/TLS, sign-in required, same details.",
-    "web_only": "Calendar, contacts, files and the AI assistant are only available on the web for now – on your phone too, in the browser."
+    "web_only": "Calendar, contacts, files and the AI assistant are only available on the web for now – on your phone too, in the browser.",
+    "shared": "Shared mailboxes (e.g. info@) you have access to are under “Shared Folders” in your mail app. The app files replies from their address in your own “Sent” folder."
+  },
+  "shared": {
+    "title": "Shared mailboxes",
+    "intro": "A shared mailbox such as info@ or billing@ belongs to no single person. You decide who may read it and who may also send from its address. Those people see it as a mailbox of its own in their email and under “Shared Folders” in mail apps. Shared mailboxes do not count towards your employees' mailboxes.",
+    "add": "Add a shared mailbox",
+    "name": "Name",
+    "name_hint": "What recipients and your team see, e.g. “Info Example Ltd”.",
+    "created": "{email} was created. Now choose who has access.",
+    "count": "{count} of {limit} shared mailboxes",
+    "empty": "No shared mailboxes yet.",
+    "nobody": "Nobody has access yet.",
+    "senders": "Read and send: {names}",
+    "readers": "Read: {names}",
+    "access": "Access",
+    "access_hint": "“Read”: read email, mark it as read, flag it, move it to folders and delete it, but not send from this address. “Read and send”: also reply and write from this address, from mail apps too. Read/unread is shared by everyone.",
+    "access_for": "Access for {name}",
+    "level_none": "No access",
+    "level_read": "Read",
+    "level_send": "Read and send",
+    "access_save": "Save access",
+    "access_saved": "Access saved.",
+    "delete_prompt": "Delete {email} for good? All email of this shared mailbox is deleted, which cannot be undone. The address becomes free again.\n\nType {email} to confirm:"
   }
 }
