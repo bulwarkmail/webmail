@@ -53,61 +53,91 @@ const SURFACES = /\/(mail|calendar|contacts)(\/|$)|^\/$/;
 /** Per-tab only; cleared with the tab and on sign-out. Holds the visible chat, nothing else. */
 const STORAGE_KEY = ASSISTANT_STORAGE_KEY;
 
-/** "Di., 27.10.2026, 10:00–10:30" from the local times the platform sends. */
-function formatSpan(summary: ProposalSummary, locale: string): string {
-  if (!summary.start) return "";
-  // The times are wall-clock times in summary.timeZone; show them as they are.
-  const asUtc = (local: string) => new Date(`${local}:00Z`);
-  const date = new Intl.DateTimeFormat(locale, { weekday: "short", day: "2-digit", month: "2-digit", year: "numeric", timeZone: "UTC" }).format(asUtc(summary.start));
+/** "Di., 27.10.2026, 10:00–10:30" from the local times the platform sends; all-day events as dates. */
+function formatSpan(span: { start?: string; end?: string }, locale: string): string {
+  if (!span.start) return "";
+  // The times are wall-clock times in the summary's time zone; show them as they are.
+  const dateOnly = span.start.length === 10;
+  const asUtc = (local: string) => new Date(local.length === 10 ? `${local}T00:00:00Z` : `${local}:00Z`);
+  const day = new Intl.DateTimeFormat(locale, { weekday: "short", day: "2-digit", month: "2-digit", year: "numeric", timeZone: "UTC" });
+  if (dateOnly) return span.end && span.end !== span.start ? `${day.format(asUtc(span.start))}–${day.format(asUtc(span.end))}` : day.format(asUtc(span.start));
   const time = new Intl.DateTimeFormat(locale, { hour: "2-digit", minute: "2-digit", timeZone: "UTC" });
-  const end = summary.end ? `–${time.format(asUtc(summary.end))}` : "";
-  return `${date}, ${time.format(asUtc(summary.start))}${end}`;
+  const end = span.end ? `–${time.format(asUtc(span.end))}` : "";
+  return `${day.format(asUtc(span.start))}, ${time.format(asUtc(span.start))}${end}`;
 }
+
+/** Texts that differ for a change of a meeting (step 32); the rest is shared with new events. */
+const UPDATE_KEYS = new Set(["event", "attendees", "invites_note", "running", "done", "done_invited", "invite_failed", "failed"]);
 
 function ProposalCard({ proposal, locale, onDecide }: { proposal: Proposal; locale: string; onDecide: (p: Proposal, confirm: boolean) => void }) {
   const t = useXT();
   const s = proposal.summary;
+  const update = proposal.tool === "update_event";
+  const label = (key: string) => t(update && UPDATE_KEYS.has(key) ? `assistant.proposal_update.${key}` : `assistant.proposal.${key}`);
+  const changed = (what: string) => update && !!s.changes?.includes(what);
+  const was = (text?: string) => (text ? <span className="block text-muted-foreground line-through">{text}</span> : null);
   const attendees = s.attendees ?? [];
+  const added = s.addedAttendees ?? [];
+  const files = s.files ?? [];
   const settled = proposal.state !== "pending" && proposal.state !== "running";
   return (
     <div className="space-y-2 rounded-lg border border-primary/40 bg-primary/5 p-3 text-xs">
       <p className="flex items-center gap-1.5 font-medium text-sm">
         <CalendarDays className="h-4 w-4 text-primary" />
-        {t("assistant.proposal.event")}
+        {label("event")}
       </p>
-      <p className="font-medium text-sm">{s.title}</p>
+      <p className="font-medium text-sm">
+        {s.title}
+        {changed("title") && was(s.before?.title)}
+      </p>
       <dl className="grid grid-cols-[auto,1fr] gap-x-2 gap-y-1">
-        <dt className="text-muted-foreground">{t("assistant.proposal.when")}</dt>
+        <dt className="text-muted-foreground">{label("when")}</dt>
         <dd>
           {formatSpan(s, locale)}
           {s.timeZone ? <span className="text-muted-foreground"> ({s.timeZone})</span> : null}
+          {changed("time") && s.before && was(formatSpan(s.before, locale))}
         </dd>
-        {s.location ? (
+        {s.location || changed("location") ? (
           <>
-            <dt className="text-muted-foreground">{t("assistant.proposal.where")}</dt>
-            <dd>{s.location}</dd>
+            <dt className="text-muted-foreground">{label("where")}</dt>
+            <dd className="break-words">
+              {s.location}
+              {changed("location") && was(s.before?.location)}
+            </dd>
           </>
         ) : null}
         {attendees.length > 0 ? (
           <>
-            <dt className="text-muted-foreground">{t("assistant.proposal.attendees")}</dt>
+            <dt className="text-muted-foreground">{label("attendees")}</dt>
             <dd className="break-words">{attendees.join(", ")}</dd>
           </>
         ) : null}
+        {added.length > 0 ? (
+          <>
+            <dt className="text-muted-foreground">{t("assistant.proposal_update.added")}</dt>
+            <dd className="break-words">{added.join(", ")}</dd>
+          </>
+        ) : null}
+        {files.length > 0 ? (
+          <>
+            <dt className="text-muted-foreground">{label("files")}</dt>
+            <dd className="break-words">{files.join(", ")}</dd>
+          </>
+        ) : null}
       </dl>
-      {attendees.length > 0 && proposal.state === "pending" && <p className="text-muted-foreground">{t("assistant.proposal.invites_note")}</p>}
+      {attendees.length > 0 && proposal.state === "pending" && <p className="text-muted-foreground">{label("invites_note")}</p>}
       {settled ? (
         <p className={cn(["done", "done_invited"].includes(proposal.state) ? "text-primary" : "text-muted-foreground", "flex items-center gap-1")}>
           {["done", "done_invited"].includes(proposal.state) && <Check className="h-3.5 w-3.5" />}
-          {t(`assistant.proposal.${proposal.state}`)}
+          {label(proposal.state)}
         </p>
       ) : (
         <div className="flex gap-2">
           <Button size="sm" disabled={proposal.state === "running"} onClick={() => onDecide(proposal, true)}>
-            {proposal.state === "running" ? t("assistant.proposal.running") : t("assistant.proposal.confirm")}
+            {proposal.state === "running" ? label("running") : label("confirm")}
           </Button>
           <Button size="sm" variant="outline" disabled={proposal.state === "running"} onClick={() => onDecide(proposal, false)}>
-            {t("assistant.proposal.reject")}
+            {label("reject")}
           </Button>
         </div>
       )}

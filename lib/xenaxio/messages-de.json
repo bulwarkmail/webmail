@@ -360,7 +360,7 @@
     "tool_create_draft": "Speichere einen Entwurf…",
     "tool_search_contacts": "Suche Kontakte…",
     "tool_error": "Ein Schritt ist fehlgeschlagen. Bitte fragen Sie noch einmal, gern mit anderen Worten.",
-    "not_sent": "Ohne Ihre Bestätigung wird nichts gesendet: Entwürfe werden nur gespeichert, Termine erst nach „Bestätigen“ angelegt.",
+    "not_sent": "Ohne Ihre Bestätigung wird nichts gesendet: Entwürfe werden nur gespeichert, Termine erst nach „Bestätigen“ angelegt oder geändert.",
     "errors": {
       "ai_disabled": "Der Assistent ist für Ihr Konto ausgeschaltet.",
       "ai_not_configured": "Der Assistent ist noch nicht eingerichtet.",
@@ -371,6 +371,7 @@
     "tool_list_events": "Sehe im Kalender nach…",
     "tool_find_free_time": "Suche freie Zeiten…",
     "tool_create_event": "Bereite einen Termin vor…",
+    "tool_update_event": "Bereite eine Terminänderung vor…",
     "tool_list_files": "Sehe in den Dateien nach…",
     "tool_search_files": "Suche Dateien…",
     "tool_read_file": "Lese eine Datei…",
@@ -392,7 +393,19 @@
       "rejected": "Verworfen.",
       "expired": "Dieser Vorschlag ist abgelaufen. Bitten Sie den Assistenten um einen neuen.",
       "already": "Über diesen Vorschlag wurde bereits entschieden.",
-      "failed": "Der Termin konnte nicht angelegt werden."
+      "failed": "Der Termin konnte nicht angelegt werden.",
+      "files": "Anhänge"
+    },
+    "proposal_update": {
+      "event": "Terminänderung",
+      "attendees": "Teilnehmer",
+      "added": "Neu eingeladen",
+      "invites_note": "Beim Bestätigen erhalten die Teilnehmer die Änderung per E-Mail, neu Eingeladene eine Einladung.",
+      "running": "Wird geändert…",
+      "done": "Termin geändert.",
+      "done_invited": "Termin geändert, Teilnehmer benachrichtigt.",
+      "invite_failed": "Termin geändert, aber die Teilnehmer konnten nicht benachrichtigt werden.",
+      "failed": "Der Termin konnte nicht geändert werden."
     },
     "limit_warning": "Sie haben über 80 % Ihres KI-Kontingents für diesen Monat verbraucht."
   },
@@ -484,7 +497,7 @@
     "can_1": "E-Mails suchen, lesen und zusammenfassen",
     "can_2": "Antworten als Entwurf speichern",
     "can_3": "Kontakte nachschlagen",
-    "can_4": "Ihren Kalender ansehen, freie Zeiten finden und Termine mit Einladungen anlegen",
+    "can_4": "Ihren Kalender ansehen, freie Zeiten finden, Termine mit Einladungen und Dateien anlegen und Ihre Termine ändern",
     "can_5": "Ihre Dateien und die von Kollegen mit Ihnen geteilten finden und lesen, neue Dateien und Anhänge in Ihren Dateien ablegen",
     "cannot": "Der Chat kann keine E-Mails senden, nichts löschen und keine vorhandenen Dateien ändern.",
     "revoke_hint": "Sie können die Verbindung jederzeit unter „KI-Chats verbinden“ trennen.",
@@ -672,5 +685,11 @@
     "managers_save": "Verwalter speichern",
     "managers_saved": "Verwalter gespeichert.",
     "delete_prompt": "{email} endgültig löschen? Alle Buchungen dieser Ressource werden gelöscht, das lässt sich nicht rückgängig machen.\n\nGeben Sie zur Bestätigung {email} ein:"
+  },
+  "event_files": {
+    "title": "Anhänge",
+    "download": "{name} herunterladen",
+    "in_invitation": "in der Einladungs-E-Mail",
+    "failed": "Die Datei konnte nicht geladen werden. Sie wurde vielleicht in „Dateien“ gelöscht."
   }
 }
