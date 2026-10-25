@@ -25,6 +25,7 @@ function Limits({ tenant, defaults, onSaved }: { tenant: OperatorTenant; default
     maxMailboxes: String(tenant.maxMailboxes),
     maxDomains: String(tenant.maxDomains ?? 5),
     maxSharedMailboxes: String(tenant.maxSharedMailboxes ?? 5),
+    maxResources: String(tenant.maxResources ?? 20),
     mailboxQuotaMb: String(Math.round(tenant.mailboxQuotaBytes / MB)),
     aiUser: tenant.aiUserMonthlyTokens ? String(tenant.aiUserMonthlyTokens) : "",
     aiTenant: tenant.aiTenantMonthlyTokens ? String(tenant.aiTenantMonthlyTokens) : "",
@@ -38,6 +39,7 @@ function Limits({ tenant, defaults, onSaved }: { tenant: OperatorTenant; default
         maxMailboxes: Number(form.maxMailboxes),
         maxDomains: Number(form.maxDomains),
         maxSharedMailboxes: Number(form.maxSharedMailboxes),
+        maxResources: Number(form.maxResources),
         mailboxQuotaMb: Number(form.mailboxQuotaMb),
         aiUserMonthlyTokens: form.aiUser ? Number(form.aiUser) : null,
         aiTenantMonthlyTokens: form.aiTenant ? Number(form.aiTenant) : null,
@@ -54,6 +56,7 @@ function Limits({ tenant, defaults, onSaved }: { tenant: OperatorTenant; default
       <TextField label={t("operator.max_mailboxes")} type="number" min={1} value={form.maxMailboxes} onChange={set("maxMailboxes")} />
       <TextField label={t("operator.max_domains")} type="number" min={1} max={100} value={form.maxDomains} onChange={set("maxDomains")} />
       <TextField label={t("operator.max_shared_mailboxes")} type="number" min={0} max={1000} value={form.maxSharedMailboxes} onChange={set("maxSharedMailboxes")} />
+      <TextField label={t("operator.max_resources")} type="number" min={0} max={1000} value={form.maxResources} onChange={set("maxResources")} />
       <TextField label={t("operator.mailbox_quota")} type="number" min={100} value={form.mailboxQuotaMb} onChange={set("mailboxQuotaMb")} />
       <TextField
         label={t("operator.ai_user_limit")}
@@ -221,7 +224,7 @@ export function OperatorTenants() {
                   </p>
                 )}
                 <p className="text-xs text-muted-foreground">
-                  {t("operator.col_mailboxes")}: {tenant.mailboxes} / {tenant.maxMailboxes} · {t("operator.col_shared")}: {tenant.sharedMailboxes ?? 0} / {tenant.maxSharedMailboxes ?? 5} · {t("operator.col_space")}: {formatBytes(tenant.usedBytes)} · {t("operator.col_ai")}:{" "}
+                  {t("operator.col_mailboxes")}: {tenant.mailboxes} / {tenant.maxMailboxes} · {t("operator.col_shared")}: {tenant.sharedMailboxes ?? 0} / {tenant.maxSharedMailboxes ?? 5} · {t("operator.col_resources")}: {tenant.resources ?? 0} / {tenant.maxResources ?? 20} · {t("operator.col_space")}: {formatBytes(tenant.usedBytes)} · {t("operator.col_ai")}:{" "}
                   {t("operator.ai_users", { count: tenant.aiUsers })}, {t("operator.tokens_month", { tokens: tenant.aiTokens.toLocaleString() })}
                 </p>
               </div>
