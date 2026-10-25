@@ -342,7 +342,7 @@
     "history": "History",
     "delete_all": "Delete all chats",
     "delete": "Delete chat",
-    "empty": "Ask about your email, e.g. “What did we agree with Müller GmbH on the price?”",
+    "empty": "Ask about your email, e.g. “What did we agree with Müller GmbH on the price?” You can attach, paste or drop files and screenshots.",
     "placeholder": "Ask something…",
     "send": "Send",
     "stop": "Stop",
@@ -366,7 +366,8 @@
       "ai_not_configured": "The assistant is not set up yet.",
       "assistant_failed": "The assistant could not answer. Please try again.",
       "rate_limited": "Too many requests. Please wait a moment.",
-      "ai_limit_reached": "This month's AI limit is reached."
+      "ai_limit_reached": "This month's AI limit is reached.",
+      "file_not_found": "An attached file was not found. Please attach it again."
     },
     "tool_list_events": "Checking the calendar…",
     "tool_find_free_time": "Looking for free time…",
@@ -407,7 +408,21 @@
       "invite_failed": "Meeting changed, but the participants could not be notified.",
       "failed": "The meeting could not be changed."
     },
-    "limit_warning": "You have used over 80 % of your AI allowance for this month."
+    "limit_warning": "You have used over 80 % of your AI allowance for this month.",
+    "attach": "Attach file",
+    "attach_device": "Upload from device",
+    "attach_files": "Choose from Files",
+    "attach_drop": "Drop files here",
+    "attach_uploading": "Uploading…",
+    "attach_saved": "Uploaded files are kept in “Files → AI Chat”.",
+    "attach_remove": "Remove",
+    "attach_limit": "At most {max} files per message.",
+    "attach_too_large": "Larger than 20 MB",
+    "attach_image_too_large": "Images up to 5 MB",
+    "attach_storage_full": "No storage space left",
+    "attach_failed": "Upload failed",
+    "pasted_image": "Image",
+    "file_deleted": "deleted"
   },
   "mcp": {
     "title": "Connect AI chats",
