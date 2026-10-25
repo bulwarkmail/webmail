@@ -6898,6 +6898,7 @@
       "intro_password": "{name} souhaite utiliser votre compte {label}. {appName} garde le mot de passe sur son serveur et ne l'envoie qu'à {host}. Le plugin ne le voit jamais.",
       "intro_password_any": "{name} souhaite utiliser votre compte {label}. {appName} garde le mot de passe sur son serveur et ne l'envoie qu'au serveur que vous saisissez ici. Le plugin ne le voit jamais.",
       "intro_signin": "{name} souhaite se connecter à votre compte {label}. Saisissez le serveur ici, puis connectez-vous sur sa propre page. {appName} garde l'accès obtenu sur son serveur ; le plugin ne le voit jamais.",
+      "intro_app_password": "{name} souhaite utiliser votre compte {account}. {appName} crée pour cela le mot de passe d'application « {description} » sur votre serveur de messagerie et le garde sur son propre serveur ; le plugin ne le voit jamais. Vous pouvez le supprimer à tout moment dans Paramètres → Sécurité.",
       "server": "Adresse du serveur",
       "server_hint": "cloud.example.com",
       "username": "Nom d'utilisateur",

@@ -6898,6 +6898,7 @@
       "intro_password": "{name}이(가) {label} 계정을 사용하려고 해요. {appName}은(는) 비밀번호를 자체 서버에 보관하고 {host}에만 보내요. 플러그인은 비밀번호를 볼 수 없어요.",
       "intro_password_any": "{name}이(가) {label} 계정을 사용하려고 해요. {appName}은(는) 비밀번호를 자체 서버에 보관하고 여기에 입력한 서버에만 보내요. 플러그인은 비밀번호를 볼 수 없어요.",
       "intro_signin": "{name}이(가) {label} 계정에 로그인하려고 해요. 여기에 서버를 입력한 다음 해당 서버의 페이지에서 로그인하세요. {appName}은(는) 받은 접근 권한을 자체 서버에 보관하며, 플러그인은 이를 볼 수 없어요.",
+      "intro_app_password": "{name}이(가) {account} 계정을 사용하려고 해요. {appName}은(는) 이를 위해 메일 서버에 앱 비밀번호 \"{description}\"을(를) 만들고 자체 서버에 보관해요. 플러그인은 비밀번호를 볼 수 없어요. 설정 → 보안에서 언제든지 삭제할 수 있어요.",
       "server": "서버 주소",
       "server_hint": "cloud.example.com",
       "username": "사용자 이름",

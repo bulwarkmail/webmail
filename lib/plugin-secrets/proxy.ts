@@ -400,8 +400,8 @@ export async function proxyRequest(input: ProxyInput): Promise<Response> {
         const record = json as Record<string, unknown>;
         const secret = record[input.capture.secret];
         const username = input.capture.username ? record[input.capture.username] : undefined;
-        if (typeof secret === 'string' && secret) {
-          await setUserCredentialSecret(input.user, input.pluginId, input.credentialId, secret, typeof username === 'string' ? username : undefined);
+        if (typeof secret === 'string' && secret
+          && await setUserCredentialSecret(input.user, input.pluginId, input.credentialId, secret, typeof username === 'string' ? username : undefined)) {
           audit(upstream.status, text.length, 'captured');
           return new Response(JSON.stringify({ ...redact(record, input.capture), captured: true }), { status: upstream.status, headers: out });
         }

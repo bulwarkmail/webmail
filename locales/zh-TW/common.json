@@ -6898,6 +6898,7 @@
       "intro_password": "{name} 想使用您的 {label} 帳號。{appName} 會將密碼保存在自己的伺服器上，只會傳送給 {host}。外掛程式永遠看不到密碼。",
       "intro_password_any": "{name} 想使用您的 {label} 帳號。{appName} 會將密碼保存在自己的伺服器上，只會傳送給您在此輸入的伺服器。外掛程式永遠看不到密碼。",
       "intro_signin": "{name} 想登入您的 {label} 帳號。請在此輸入伺服器，然後在該伺服器自己的頁面上登入。{appName} 會將取得的存取權保存在自己的伺服器上；外掛程式永遠看不到它。",
+      "intro_app_password": "{name} 想使用您的帳號 {account}。{appName} 會為此在您的郵件伺服器上建立應用程式密碼「{description}」，並保存在自己的伺服器上；外掛程式永遠看不到它。您隨時可以在 設定 → 安全 中刪除它。",
       "server": "伺服器位址",
       "server_hint": "cloud.example.com",
       "username": "使用者名稱",

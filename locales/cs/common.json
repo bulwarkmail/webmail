@@ -6898,6 +6898,7 @@
       "intro_password": "{name} chce používat váš účet {label}. {appName} uchovává heslo na svém serveru a posílá ho jen na {host}. Plugin ho nikdy nevidí.",
       "intro_password_any": "{name} chce používat váš účet {label}. {appName} uchovává heslo na svém serveru a posílá ho jen na server, který zde zadáte. Plugin ho nikdy nevidí.",
       "intro_signin": "{name} se chce přihlásit k vašemu účtu {label}. Zadejte zde server a pak se přihlaste na jeho vlastní stránce. {appName} uchovává získaný přístup na svém serveru; plugin ho nikdy nevidí.",
+      "intro_app_password": "{name} chce používat váš účet {account}. {appName} pro to vytvoří na vašem poštovním serveru heslo aplikace „{description}“ a uchová ho na svém vlastním serveru; plugin ho nikdy neuvidí. Kdykoli ho můžete smazat v Nastavení → Zabezpečení.",
       "server": "Adresa serveru",
       "server_hint": "cloud.example.com",
       "username": "Uživatelské jméno",

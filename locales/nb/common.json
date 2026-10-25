@@ -6898,6 +6898,7 @@
       "intro_password": "{name} vil bruke kontoen din hos {label}. {appName} lagrer passordet på sin server og sender det bare til {host}. Tillegget ser det aldri.",
       "intro_password_any": "{name} vil bruke kontoen din hos {label}. {appName} lagrer passordet på sin server og sender det bare til serveren du skriver inn her. Tillegget ser det aldri.",
       "intro_signin": "{name} vil logge på kontoen din hos {label}. Skriv inn serveren her, og logg deretter på via serverens egen side. {appName} lagrer tilgangen det får, på sin server; tillegget ser den aldri.",
+      "intro_app_password": "{name} vil bruke kontoen din {account}. {appName} oppretter app-passordet «{description}» for dette på e-postserveren din og lagrer det på sin egen server; utvidelsen ser det aldri. Du kan slette det når som helst under Innstillinger → Sikkerhet.",
       "server": "Serveradresse",
       "server_hint": "cloud.example.com",
       "username": "Brukernavn",

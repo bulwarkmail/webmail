@@ -6898,6 +6898,7 @@
       "intro_password": "{name} vēlas izmantot jūsu {label} kontu. {appName} glabā paroli savā serverī un sūta to tikai uz {host}. Spraudnis to nekad neredz.",
       "intro_password_any": "{name} vēlas izmantot jūsu {label} kontu. {appName} glabā paroli savā serverī un sūta to tikai uz serveri, ko šeit ievadāt. Spraudnis to nekad neredz.",
       "intro_signin": "{name} vēlas pierakstīties jūsu {label} kontā. Ievadiet šeit serveri un pēc tam pierakstieties šī servera lapā. {appName} glabā iegūto piekļuvi savā serverī; spraudnis to nekad neredz.",
+      "intro_app_password": "{name} vēlas izmantot jūsu kontu {account}. {appName} šim nolūkam jūsu pasta serverī izveido lietotnes paroli “{description}” un glabā to savā serverī; spraudnis to nekad neredz. To var jebkurā laikā izdzēst sadaļā Iestatījumi → Drošība.",
       "server": "Servera adrese",
       "server_hint": "cloud.example.com",
       "username": "Lietotājvārds",

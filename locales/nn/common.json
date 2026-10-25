@@ -6906,6 +6906,7 @@
       "intro_password": "{name} ønskjer å bruke {label}-kontoen din. {appName} lagrar passordet på tenaren sin og sender det berre til {host}. Plugin-en ser det aldri.",
       "intro_password_any": "{name} vil bruke {label}-kontoen din. {appName} oppbevarer passordet på tenaren sin og sender det berre til tenaren du skriv inn her. Plugin-en ser det aldri.",
       "intro_signin": "{name} ynskjer å logge på {label}-kontoen din. Skriv inn tenaren her, og logg deretter på på eiga side. {appName} beheld tilgangen på tenaren sin; plugin-en ser han aldri.",
+      "intro_app_password": "{name} vil bruke kontoen din {account}. {appName} lagar app-passordet «{description}» for dette på e-posttenaren din og oppbevarer det på tenaren sin; plugin-en ser det aldri. Du kan slette det når som helst under Innstillingar → Tryggleik.",
       "server": "Tenaradresse",
       "server_hint": "sky.example.com",
       "username": "Brukarnamn",

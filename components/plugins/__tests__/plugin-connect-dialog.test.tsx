@@ -15,6 +15,7 @@ vi.mock('@/hooks/use-config', () => ({ useConfig: () => ({ appName: appName.valu
 
 import { PluginConnectDialog } from '../plugin-connect-dialog';
 import { originFromInput, requestConnect, type ConnectResult } from '@/lib/plugin-sandbox/connect-dialog';
+import { useAuthStore } from '@/stores/auth-store';
 
 beforeEach(() => {
   apiFetch.mockReset();
@@ -63,6 +64,28 @@ describe('connect dialog', () => {
 
     await expect(result).resolves.toEqual({ connected: false, origin: 'https://cloud.example.org' });
     expect(JSON.parse(apiFetch.mock.calls[0][1].body)).not.toHaveProperty('secret');
+  });
+
+  it('asks nothing for an app password the server makes, and names it', async () => {
+    useAuthStore.setState({ username: 'alice@example.org', serverUrl: 'https://mail.example.org/' });
+    render(<PluginConnectDialog />);
+    let result: Promise<ConnectResult>;
+    act(() => {
+      result = requestConnect({
+        pluginId: 'team-calendar', pluginName: 'Teamkalender', credentialId: 'stalwart', mode: 'appPassword',
+        spec: { label: 'Stalwart', scope: 'user', inject: { type: 'basic' }, appPassword: true },
+      });
+    });
+
+    expect(screen.queryByRole('textbox')).toBeNull();
+    expect(document.querySelector('input')).toBeNull();
+    expect(screen.getByText(/intro_app_password /)).toHaveTextContent('"account":"alice@example.org","description":"Plugin: Teamkalender"');
+    fireEvent.click(screen.getByRole('button', { name: 'connect' }));
+
+    await expect(result!).resolves.toEqual({ connected: true, origin: 'https://mail.example.org' });
+    expect(JSON.parse(apiFetch.mock.calls[0][1].body)).toEqual({
+      pluginId: 'team-calendar', credentialId: 'stalwart', label: 'Stalwart', appPassword: true,
+    });
   });
 
   it('names the app as configured, and Bulwark on a stock install', async () => {

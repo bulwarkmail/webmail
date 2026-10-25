@@ -6898,6 +6898,7 @@
       "intro_password": "{name} chce používať váš účet {label}. {appName} uchováva heslo na svojom serveri a posiela ho len na {host}. Doplnok ho nikdy nevidí.",
       "intro_password_any": "{name} chce používať váš účet {label}. {appName} uchováva heslo na svojom serveri a posiela ho len na server, ktorý tu zadáte. Doplnok ho nikdy nevidí.",
       "intro_signin": "{name} sa chce prihlásiť do vášho účtu {label}. Zadajte tu server a potom sa prihláste na jeho vlastnej stránke. {appName} uchováva získaný prístup na svojom serveri; doplnok ho nikdy nevidí.",
+      "intro_app_password": "{name} chce používať váš účet {account}. {appName} na to vytvorí na vašom poštovom serveri heslo aplikácie „{description}“ a uchová ho na svojom vlastnom serveri; doplnok ho nikdy neuvidí. Kedykoľvek ho môžete odstrániť v Nastavenia → Zabezpečenie.",
       "server": "Adresa servera",
       "server_hint": "cloud.example.com",
       "username": "Používateľské meno",

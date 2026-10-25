@@ -7,11 +7,14 @@ import { Button } from '@/components/ui/button';
 import { useConfig } from '@/hooks/use-config';
 import { useFocusTrap } from '@/hooks/use-focus-trap';
 import { productName } from '@/lib/product-name';
+import { appPasswordDescription } from '@/lib/plugin-secrets/credentials';
+import { useAuthStore } from '@/stores/auth-store';
 import {
   currentConnect,
   originFromInput,
   saveCredential,
   subscribeConnect,
+  type SaveCredentialInput,
 } from '@/lib/plugin-sandbox/connect-dialog';
 import { ModalWindow } from '@/components/ui/dialog-surface';
 
@@ -24,6 +27,8 @@ export function PluginConnectDialog() {
   const request = useSyncExternalStore(subscribeConnect, currentConnect, () => null);
   const t = useTranslations('plugins.connect');
   const appName = productName(useConfig().appName);
+  const account = useAuthStore((s) => s.username) ?? '';
+  const serverUrl = useAuthStore((s) => s.serverUrl);
   const titleId = useId();
   const [server, setServer] = useState('');
   const [username, setUsername] = useState('');
@@ -60,42 +65,51 @@ export function PluginConnectDialog() {
   if (!request) return null;
 
   const { spec, mode, pluginName } = request;
-  const fixedOrigin = spec.origin;
+  // The server makes an app password on the account the user is signed in
+  // to: nothing to type, and that account's server is the origin.
+  const appPassword = mode === 'appPassword';
+  const fixedOrigin = spec.origin ?? (appPassword && serverUrl ? originFromInput(serverUrl) ?? undefined : undefined);
   const needsUsername = mode === 'password' && spec.inject.type === 'basic';
   const needsSecret = mode === 'password' && spec.inject.type !== 'none';
   const origin = fixedOrigin ?? originFromInput(server);
-  const canSubmit = !!origin && (!needsSecret || !!secret) && (!needsUsername || !!username.trim()) && !saving;
+  const canSubmit = (appPassword || !!origin) && (!needsSecret || !!secret) && (!needsUsername || !!username.trim()) && !saving;
 
   const submit = async () => {
-    if (!origin) {
+    const base = { pluginId: request.pluginId, credentialId: request.credentialId, label: spec.label };
+    const input: SaveCredentialInput | null = appPassword
+      ? { ...base, appPassword: true }
+      : origin
+        ? {
+          ...base,
+          origin,
+          inject: spec.inject,
+          ...(needsUsername ? { username: username.trim() } : {}),
+          ...(needsSecret ? { secret } : {}),
+        }
+        : null;
+    if (!input) {
       setError(t('error_server'));
       return;
     }
     setSaving(true);
     setError(null);
-    const failure = await saveCredential({
-      pluginId: request.pluginId,
-      credentialId: request.credentialId,
-      label: spec.label,
-      origin,
-      inject: spec.inject,
-      ...(needsUsername ? { username: username.trim() } : {}),
-      ...(needsSecret ? { secret } : {}),
-    });
+    const failure = await saveCredential(input);
     setSaving(false);
     if (failure) {
       setError(t('error_save', { error: failure }));
       return;
     }
-    request.resolve({ connected: mode === 'password', origin });
+    request.resolve({ connected: mode !== 'signin', ...(origin ? { origin } : {}) });
   };
 
   const host = origin ? new URL(origin).host : null;
-  const intro = mode === 'signin'
-    ? t('intro_signin', { name: pluginName, label: spec.label, appName })
-    : host
-      ? t('intro_password', { name: pluginName, label: spec.label, host, appName })
-      : t('intro_password_any', { name: pluginName, label: spec.label, appName });
+  const intro = appPassword
+    ? t('intro_app_password', { name: pluginName, account, description: appPasswordDescription(pluginName), appName })
+    : mode === 'signin'
+      ? t('intro_signin', { name: pluginName, label: spec.label, appName })
+      : host
+        ? t('intro_password', { name: pluginName, label: spec.label, host, appName })
+        : t('intro_password_any', { name: pluginName, label: spec.label, appName });
 
   return (
     <ModalWindow title={t('title', { label: spec.label })} onClose={() => request.resolve({ connected: false })}>
@@ -123,7 +137,7 @@ export function PluginConnectDialog() {
             </div>
             <p className="mb-4 text-sm text-muted-foreground [overflow-wrap:anywhere]">{intro}</p>
             <div className="mb-4 flex flex-col gap-3">
-              {!fixedOrigin && (
+              {!fixedOrigin && !appPassword && (
                 <label className="flex flex-col gap-1">
                   <span className="text-xs font-medium">{t('server')}</span>
                   {/* Not type="url": the browser would refuse "cloud.example.com"
@@ -168,7 +182,7 @@ export function PluginConnectDialog() {
             </div>
             <div className="flex justify-end gap-2">
               <Button type="button" variant="outline" onClick={() => request.resolve({ connected: false })}>{t('cancel')}</Button>
-              <Button type="submit" disabled={!canSubmit}>
+              <Button type="submit" disabled={!canSubmit} autoFocus={appPassword}>
                 {saving ? t('saving') : mode === 'signin' ? t('continue') : t('connect')}
               </Button>
             </div>
