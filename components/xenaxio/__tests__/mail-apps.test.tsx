@@ -33,6 +33,19 @@ describe("MailApps (step 23)", () => {
     expect(screen.getByText("„Manuell einrichten“ wählen.")).toBeTruthy();
   });
 
+  it("explains sending from shared mailboxes only to those who may (step 37)", () => {
+    const { unmount } = render(<MailApps settings={settings} domainPending={false} />);
+    expect(screen.queryByText("Von gemeinsamen Postfächern senden")).toBeNull();
+    unmount();
+    render(<MailApps settings={{ ...settings, sendAs: [{ email: "info@firma.de", displayName: "Info" }] }} domainPending={false} />);
+    expect(screen.getByText("Von gemeinsamen Postfächern senden")).toBeTruthy();
+    expect(screen.getByText("info@firma.de")).toBeTruthy();
+    expect(screen.getByText(/kein eigenes Passwort/)).toBeTruthy();
+    for (const key of ["send_as_title", "send_as_intro", "send_as_note"]) {
+      expect(translate("en", `mail_apps.${key}`)).not.toBe(`mail_apps.${key}`);
+    }
+  });
+
   it("has every step text in German and English", () => {
     for (const locale of ["de", "en"]) {
       for (const app of MAIL_APPS) {

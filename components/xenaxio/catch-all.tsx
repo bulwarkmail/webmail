@@ -3,37 +3,53 @@
 // Step 27: the admin picks the mailbox that receives mail to addresses that
 // do not exist on a domain of the company (catch-all), with a checkbox.
 // Step 28: one setting per domain; any mailbox of the company can receive.
+// Step 37: shared mailboxes (info@) too, in their own group of the list.
 import { useCallback, useEffect, useState } from "react";
 import { Notice } from "@/components/xenaxio/ui";
-import { type CatchAll, type WorkspaceUser, errorKey, xenaxio } from "@/lib/xenaxio/api";
+import { type CatchAll, type CatchAllTarget, type SharedMailbox, type WorkspaceUser, errorKey, xenaxio } from "@/lib/xenaxio/api";
 import { useXT } from "@/lib/xenaxio/i18n";
+
+/** The list value of a mailbox: `user:<id>` or `shared:<id>`. */
+function optionOf(c: CatchAll | null): string {
+  if (c?.sharedMailboxId) return `shared:${c.sharedMailboxId}`;
+  return c?.userId ? `user:${c.userId}` : "";
+}
+
+function targetOf(value: string): CatchAllTarget {
+  const [kind, id] = value.split(":");
+  if (!id) return null;
+  return kind === "shared" ? { sharedMailboxId: id } : { userId: id };
+}
 
 export function CatchAllSettings({ domain, domainId }: { domain: string; domainId: string }) {
   const t = useXT();
   const [current, setCurrent] = useState<CatchAll | null | undefined>(undefined);
   const [users, setUsers] = useState<WorkspaceUser[]>([]);
+  const [shared, setShared] = useState<SharedMailbox[]>([]);
   const [selected, setSelected] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    Promise.all([xenaxio.catchAll(domainId), xenaxio.users()])
-      .then(([res, list]) => {
+    Promise.all([xenaxio.catchAll(domainId), xenaxio.users(), xenaxio.sharedMailboxes()])
+      .then(([res, list, sharedList]) => {
         const active = list.users.filter((u) => u.status === "active");
         setUsers(active);
+        setShared(sharedList.sharedMailboxes);
         setCurrent(res.catchAll);
         // Off: the first admin is offered, so one click turns it on.
-        setSelected(res.catchAll?.userId ?? (active.find((u) => u.role === "admin") ?? active[0])?.id ?? "");
+        const admin = (active.find((u) => u.role === "admin") ?? active[0])?.id;
+        setSelected(optionOf(res.catchAll) || (admin ? `user:${admin}` : ""));
       })
       .catch((err) => setError(t(errorKey(err))));
   }, [t, domainId]);
 
   const save = useCallback(
-    async (userId: string | null) => {
+    async (value: string | null) => {
       setBusy(true);
       setError(null);
       try {
-        setCurrent((await xenaxio.setCatchAll(userId, domainId)).catchAll);
+        setCurrent((await xenaxio.setCatchAll(value ? targetOf(value) : null, domainId)).catchAll);
       } catch (err) {
         setError(t(errorKey(err)));
       } finally {
@@ -46,6 +62,11 @@ export function CatchAllSettings({ domain, domainId }: { domain: string; domainI
   if (current === undefined) return error ? <Notice kind="error">{error}</Notice> : null;
 
   const on = current !== null;
+  const userOptions = users.map((u) => (
+    <option key={u.id} value={`user:${u.id}`}>
+      {u.displayName} ({u.email})
+    </option>
+  ));
   return (
     <section className="space-y-3 rounded-lg border border-border bg-card p-4">
       <h2 className="font-medium">{t("domain.catchall_title")}</h2>
@@ -76,11 +97,20 @@ export function CatchAllSettings({ domain, domainId }: { domain: string; domainI
             if (on) void save(e.target.value);
           }}
         >
-          {users.map((u) => (
-            <option key={u.id} value={u.id}>
-              {u.displayName} ({u.email})
-            </option>
-          ))}
+          {shared.length > 0 ? (
+            <>
+              <optgroup label={t("domain.catchall_group_users")}>{userOptions}</optgroup>
+              <optgroup label={t("domain.catchall_group_shared")}>
+                {shared.map((m) => (
+                  <option key={m.id} value={`shared:${m.id}`}>
+                    {m.displayName} ({m.email})
+                  </option>
+                ))}
+              </optgroup>
+            </>
+          ) : (
+            userOptions
+          )}
         </select>
       </div>
       {on && <Notice kind="info">{t("domain.catchall_spam")} {t("domain.catchall_auto_off")}</Notice>}
