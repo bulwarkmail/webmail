@@ -91,7 +91,10 @@
     "shared_mailbox_limit_reached": "Die Anzahl gemeinsamer Postfächer in Ihrem Tarif ({limit}) ist erreicht.",
     "shared_mailbox_not_found": "Dieses gemeinsame Postfach gibt es nicht mehr.",
     "resource_limit_reached": "Die Anzahl der Ressourcen in Ihrem Tarif ({limit}) ist erreicht.",
-    "resource_not_found": "Diese Ressource gibt es nicht mehr."
+    "resource_not_found": "Diese Ressource gibt es nicht mehr.",
+    "memory_full": "Es sind bereits {max} Notizen gespeichert. Löschen Sie ältere, um neue hinzuzufügen.",
+    "memory_off": "Die Erinnerung ist ausgeschaltet.",
+    "memory_not_found": "Diese Notiz gibt es nicht mehr."
   },
   "login": {
     "title": "Anmelden",
@@ -158,7 +161,9 @@
     "shared": "Gemeinsame Postfächer",
     "shared_desc": "info@, rechnung@ & Co.: wer liest, wer antwortet",
     "resources": "Ressourcen",
-    "resources_desc": "Besprechungsräume, Fahrzeuge und Geräte buchen"
+    "resources_desc": "Besprechungsräume, Fahrzeuge und Geräte buchen",
+    "assistant": "Assistent",
+    "assistant_desc": "Was sich der KI-Assistent über Sie merkt – ansehen, ändern, löschen"
   },
   "domain": {
     "title": "Domains und DNS",
@@ -422,7 +427,28 @@
     "attach_storage_full": "Kein Speicherplatz mehr frei",
     "attach_failed": "Hochladen fehlgeschlagen",
     "pasted_image": "Bild",
-    "file_deleted": "gelöscht"
+    "file_deleted": "gelöscht",
+    "tool_remember": "Bereite eine Notiz vor…",
+    "tool_forget": "Bereite das Löschen einer Notiz vor…",
+    "memory": {
+      "remember": {
+        "title": "Merken",
+        "title_replace": "Notiz ändern",
+        "note": "Gespeichert wird erst, wenn Sie bestätigen. Der Assistent nutzt die Notiz in späteren Chats.",
+        "done": "Gemerkt."
+      },
+      "forget": {
+        "title": "Vergessen",
+        "title_replace": "Vergessen",
+        "note": "Die Notiz wird gelöscht, wenn Sie bestätigen.",
+        "done": "Vergessen."
+      },
+      "running": "Wird gespeichert…",
+      "failed": "Die Notiz konnte nicht gespeichert werden.",
+      "memory_full": "Es sind bereits 50 Notizen gespeichert. Löschen Sie ältere unter „Assistent“.",
+      "memory_off": "Die Erinnerung ist ausgeschaltet. Sie können sie unter „Assistent“ einschalten.",
+      "all_notes": "Alle Notizen ansehen"
+    }
   },
   "mcp": {
     "title": "KI-Chats verbinden",
@@ -706,5 +732,29 @@
     "download": "{name} herunterladen",
     "in_invitation": "in der Einladungs-E-Mail",
     "failed": "Die Datei konnte nicht geladen werden. Sie wurde vielleicht in „Dateien“ gelöscht."
+  },
+  "memory": {
+    "title": "Assistent",
+    "intro": "Hier steht, was sich der KI-Assistent über Sie merkt, zum Beispiel wie er Sie anspricht, Ihre Unterschrift oder Ihre Vertretung. Er merkt sich nur, was Sie ihm selbst sagen und mit „Bestätigen“ freigeben – nie etwas aus E-Mails oder Dateien. Die Notizen nutzt er im Chat und bei „Mit KI antworten“.",
+    "switch_title": "Erinnerung",
+    "on": "Der Assistent darf sich Dinge merken und nutzt Ihre Notizen.",
+    "off": "Die Erinnerung ist ausgeschaltet: Der Assistent nutzt keine Notizen und schlägt keine neuen vor. Gespeicherte Notizen bleiben, bis Sie sie löschen.",
+    "switch_off": "Ausschalten",
+    "switch_on": "Einschalten",
+    "notes": "Notizen ({count} von {max})",
+    "none": "Noch keine Notizen. Sagen Sie dem Assistenten zum Beispiel „Merk dir: Ich möchte geduzt werden“.",
+    "since": "geändert am {date}",
+    "edit": "Ändern",
+    "save": "Speichern",
+    "delete": "Löschen",
+    "delete_confirm": "Notiz „{text}“ löschen?",
+    "delete_all": "Alle löschen",
+    "delete_all_confirm": "Alle Notizen löschen? Das lässt sich nicht rückgängig machen.",
+    "add": "Neue Notiz",
+    "add_placeholder": "z. B. Unterschrift: Viele Grüße, Anna",
+    "add_button": "Hinzufügen",
+    "add_hint": "Ein kurzer Satz, höchstens {max} Zeichen.",
+    "full": "Es sind bereits {max} Notizen gespeichert. Löschen Sie ältere, um neue hinzuzufügen.",
+    "privacy": "Die Notizen werden verschlüsselt in Deutschland gespeichert und nur an die KI übermittelt, wenn Sie den Assistenten nutzen. Ihr Administrator sieht sie nicht; im Protokoll steht nur, dass sich Notizen geändert haben. Externe KI-Chats (MCP) sehen sie nicht."
   }
 }

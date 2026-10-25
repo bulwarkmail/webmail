@@ -322,10 +322,31 @@ export interface RecipientDelivery {
   server?: string;
 }
 
+/** Step 36: a note the assistant keeps about the user. */
+export interface MemoryNote {
+  id: string;
+  text: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MemoryState {
+  enabled: boolean;
+  notes: MemoryNote[];
+  maxNotes: number;
+  maxLength: number;
+}
+
 export const xenaxio = {
   me: () => request<Me>("GET", "/api/me"),
   delivery: (emailId: string) => request<{ recipients: RecipientDelivery[] }>("GET", `/api/delivery?emailId=${encodeURIComponent(emailId)}`),
   mailApps: () => request<MailAppSettings>("GET", "/api/me/mail-apps"),
+  memories: () => request<MemoryState>("GET", "/api/ai/memories"),
+  addMemory: (text: string) => request<{ note: MemoryNote }>("POST", "/api/ai/memories", { text }),
+  updateMemory: (id: string, text: string) => request<{ note: MemoryNote }>("PUT", `/api/ai/memories/${encodeURIComponent(id)}`, { text }),
+  deleteMemory: (id: string) => request<{ ok: true }>("DELETE", `/api/ai/memories/${encodeURIComponent(id)}`),
+  deleteAllMemories: () => request<{ ok: true }>("DELETE", "/api/ai/memories"),
+  setMemoryEnabled: (enabled: boolean) => request<{ enabled: boolean }>("POST", "/api/ai/memories/settings", { enabled }),
   mcpTokens: () => request<{ mcpUrl: string; enabled: boolean; tokens: McpTokenInfo[] }>("GET", "/api/me/mcp-tokens"),
   createMcpToken: (name: string, days: number) => request<{ token: string; mcpUrl: string; info: McpTokenInfo }>("POST", "/api/me/mcp-tokens", { name, days }),
   revokeMcpToken: (id: string) => request<{ ok: true }>("DELETE", `/api/me/mcp-tokens/${encodeURIComponent(id)}`),

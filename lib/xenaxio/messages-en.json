@@ -91,7 +91,10 @@
     "shared_mailbox_limit_reached": "Your plan's limit of shared mailboxes ({limit}) is reached.",
     "shared_mailbox_not_found": "This shared mailbox no longer exists.",
     "resource_limit_reached": "Your plan's limit of resources ({limit}) is reached.",
-    "resource_not_found": "This resource no longer exists."
+    "resource_not_found": "This resource no longer exists.",
+    "memory_full": "{max} notes are already saved. Delete older ones to add new ones.",
+    "memory_off": "Memory is switched off.",
+    "memory_not_found": "This note no longer exists."
   },
   "login": {
     "title": "Sign in",
@@ -158,7 +161,9 @@
     "shared": "Shared mailboxes",
     "shared_desc": "info@, billing@ & co.: who reads, who replies",
     "resources": "Resources",
-    "resources_desc": "Book meeting rooms, vehicles and equipment"
+    "resources_desc": "Book meeting rooms, vehicles and equipment",
+    "assistant": "Assistant",
+    "assistant_desc": "What the AI assistant remembers about you – view, change, delete"
   },
   "domain": {
     "title": "Domains and DNS",
@@ -422,7 +427,28 @@
     "attach_storage_full": "No storage space left",
     "attach_failed": "Upload failed",
     "pasted_image": "Image",
-    "file_deleted": "deleted"
+    "file_deleted": "deleted",
+    "tool_remember": "Preparing a note…",
+    "tool_forget": "Preparing to delete a note…",
+    "memory": {
+      "remember": {
+        "title": "Remember",
+        "title_replace": "Change note",
+        "note": "Nothing is saved until you confirm. The assistant uses the note in later chats.",
+        "done": "Remembered."
+      },
+      "forget": {
+        "title": "Forget",
+        "title_replace": "Forget",
+        "note": "The note is deleted when you confirm.",
+        "done": "Forgotten."
+      },
+      "running": "Saving…",
+      "failed": "The note could not be saved.",
+      "memory_full": "50 notes are already saved. Delete older ones under \"Assistant\".",
+      "memory_off": "Memory is switched off. You can switch it on under \"Assistant\".",
+      "all_notes": "See all notes"
+    }
   },
   "mcp": {
     "title": "Connect AI chats",
@@ -706,5 +732,29 @@
     "download": "Download {name}",
     "in_invitation": "in the invitation email",
     "failed": "The file could not be loaded. It may have been deleted in “Files”."
+  },
+  "memory": {
+    "title": "Assistant",
+    "intro": "This is what the AI assistant remembers about you, for example how to address you, your signature or your deputy. It only remembers what you tell it yourself and approve with \"Confirm\" – never anything from emails or files. It uses the notes in the chat and in \"Reply with AI\".",
+    "switch_title": "Memory",
+    "on": "The assistant may remember things and uses your notes.",
+    "off": "Memory is switched off: the assistant uses no notes and proposes no new ones. Saved notes stay until you delete them.",
+    "switch_off": "Switch off",
+    "switch_on": "Switch on",
+    "notes": "Notes ({count} of {max})",
+    "none": "No notes yet. Tell the assistant, for example, \"Remember: sign my emails with Best, Anna\".",
+    "since": "changed on {date}",
+    "edit": "Change",
+    "save": "Save",
+    "delete": "Delete",
+    "delete_confirm": "Delete the note \"{text}\"?",
+    "delete_all": "Delete all",
+    "delete_all_confirm": "Delete all notes? This cannot be undone.",
+    "add": "New note",
+    "add_placeholder": "e.g. Signature: Best regards, Anna",
+    "add_button": "Add",
+    "add_hint": "One short sentence, at most {max} characters.",
+    "full": "{max} notes are already saved. Delete older ones to add new ones.",
+    "privacy": "Notes are stored encrypted in Germany and sent to the AI only when you use the assistant. Your administrator does not see them; the log only shows that notes changed. External AI chats (MCP) do not see them."
   }
 }
