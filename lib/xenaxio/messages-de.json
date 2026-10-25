@@ -87,7 +87,9 @@
     "domain_has_hostname": "Unter dieser Domain liegt Ihre eigene Adresse {hostname}. Entfernen Sie sie zuerst unter „Erscheinungsbild und Adresse“.",
     "alias_domain_pending": "{domain} ist noch nicht verbunden. Adressen auf dieser Domain sind erst möglich, wenn ihre DNS-Einträge stimmen.",
     "alias_domain_unknown": "{address}: Diese Domain gehört nicht zu Ihrem Unternehmen. Fügen Sie sie zuerst unter „Domains und DNS“ hinzu.",
-    "invalid_alias": "Geben Sie Adressen wie info oder info@ihre-domain.de ein."
+    "invalid_alias": "Geben Sie Adressen wie info oder info@ihre-domain.de ein.",
+    "shared_mailbox_limit_reached": "Die Anzahl gemeinsamer Postfächer in Ihrem Tarif ({limit}) ist erreicht.",
+    "shared_mailbox_not_found": "Dieses gemeinsame Postfach gibt es nicht mehr."
   },
   "login": {
     "title": "Anmelden",
@@ -150,7 +152,9 @@
     "dns_ok": "Domain und DNS: in Ordnung",
     "dns_pending": "Domain und DNS: noch nicht bestätigt",
     "appearance": "Erscheinungsbild und Adresse",
-    "appearance_desc": "Logo, Farbe und Anmeldeadresse Ihres Unternehmens"
+    "appearance_desc": "Logo, Farbe und Anmeldeadresse Ihres Unternehmens",
+    "shared": "Gemeinsame Postfächer",
+    "shared_desc": "info@, rechnung@ & Co.: wer liest, wer antwortet"
   },
   "domain": {
     "title": "Domains und DNS",
@@ -316,7 +320,9 @@
     "revoke": "Widerrufen",
     "revoke_confirm": "Diese Einladung widerrufen? Der Link funktioniert danach nicht mehr.",
     "status_revoked": "Widerrufen",
-    "max_domains": "Domains höchstens"
+    "max_domains": "Domains höchstens",
+    "max_shared_mailboxes": "Gemeinsame Postfächer höchstens",
+    "col_shared": "Gemeinsame Postfächer"
   },
   "about": {
     "based_on": "Basiert auf",
@@ -614,6 +620,29 @@
     "android_2": "„Privat (IMAP)“ wählen und Ihr xenaxio-Passwort eingeben.",
     "android_3": "Server für eingehende Nachrichten: Server und Port von oben, Sicherheitstyp SSL/TLS.",
     "android_4": "Server für ausgehende Nachrichten: Server und Port von oben, SSL/TLS, Anmeldung erforderlich, gleiche Daten.",
-    "web_only": "Kalender, Kontakte, Dateien und der KI-Assistent sind vorerst nur im Web verfügbar – auch auf dem Handy im Browser."
+    "web_only": "Kalender, Kontakte, Dateien und der KI-Assistent sind vorerst nur im Web verfügbar – auch auf dem Handy im Browser.",
+    "shared": "Gemeinsame Postfächer (z. B. info@), auf die Sie Zugriff haben, finden Sie im Mail-Programm unter „Shared Folders“. Antworten von ihrer Adresse legt das Programm in Ihren eigenen „Gesendet“-Ordner."
+  },
+  "shared": {
+    "title": "Gemeinsame Postfächer",
+    "intro": "Ein gemeinsames Postfach wie info@ oder rechnung@ gehört keiner einzelnen Person. Sie legen fest, wer es lesen und wer zusätzlich von seiner Adresse senden darf. Es erscheint bei diesen Personen in der E-Mail als eigenes Postfach und in Mail-Programmen unter „Shared Folders“. Gemeinsame Postfächer zählen nicht zu den Postfächern Ihrer Mitarbeitenden.",
+    "add": "Gemeinsames Postfach anlegen",
+    "name": "Name",
+    "name_hint": "So sehen es Empfänger und Ihr Team, z. B. „Info Muster GmbH“.",
+    "created": "{email} wurde angelegt. Legen Sie jetzt fest, wer darauf zugreift.",
+    "count": "{count} von {limit} gemeinsamen Postfächern",
+    "empty": "Noch keine gemeinsamen Postfächer.",
+    "nobody": "Noch niemand hat Zugriff.",
+    "senders": "Lesen und senden: {names}",
+    "readers": "Lesen: {names}",
+    "access": "Zugriff",
+    "access_hint": "„Lesen“: E-Mails lesen, als gelesen markieren, markieren, in Ordner verschieben und löschen, aber nicht von dieser Adresse senden. „Lesen und senden“: zusätzlich von dieser Adresse antworten und schreiben, auch aus Mail-Programmen. Gelesen/ungelesen gilt für alle gemeinsam.",
+    "access_for": "Zugriff für {name}",
+    "level_none": "Kein Zugriff",
+    "level_read": "Lesen",
+    "level_send": "Lesen und senden",
+    "access_save": "Zugriff speichern",
+    "access_saved": "Zugriff gespeichert.",
+    "delete_prompt": "{email} endgültig löschen? Alle E-Mails dieses gemeinsamen Postfachs werden gelöscht, das lässt sich nicht rückgängig machen. Die Adresse wird danach wieder frei.\n\nGeben Sie zur Bestätigung {email} ein:"
   }
 }

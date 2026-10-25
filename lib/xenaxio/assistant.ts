@@ -128,6 +128,25 @@ export const assistant = {
   },
 };
 
+/**
+ * Step 31: ids of an email for the assistant. Mail of another account (a
+ * shared mailbox, info@) carries that account in front (`<account>:<id>`), as
+ * the platform's tools expect; the web client marks such mail by namespacing
+ * its mailbox ids the same way.
+ */
+export function assistantIds(email: { id: string; threadId: string; mailboxIds?: Record<string, boolean> | null }): { emailId: string; threadId: string } {
+  const key = Object.keys(email.mailboxIds ?? {})[0] ?? "";
+  const sep = key.indexOf(":");
+  const prefix = sep > 0 ? `${key.slice(0, sep)}:` : "";
+  return { emailId: `${prefix}${email.id}`, threadId: `${prefix}${email.threadId}` };
+}
+
+/** The web client's own id of a cited email (without the account the assistant adds). */
+export function messageRouteId(id: string): string {
+  const sep = id.indexOf(":");
+  return sep > 0 ? id.slice(sep + 1) : id;
+}
+
 /** Events between the assistant UI and the mail app (no shared imports needed). */
 export const OPEN_DRAFT_EVENT = "xenaxio:open-draft";
 export const ASSISTANT_COMMAND_EVENT = "xenaxio:assistant";

@@ -5,11 +5,13 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { FileText, PenLine } from "@/components/icons";
-import { assistantAvailable, sendAssistantCommand } from "@/lib/xenaxio/assistant";
+import { assistantAvailable, assistantIds, sendAssistantCommand } from "@/lib/xenaxio/assistant";
 import { XENAXIO_BFF } from "@/lib/xenaxio/bff";
 import { useXT } from "@/lib/xenaxio/i18n";
 
-export function AssistantEmailButtons({ threadId, subject }: { threadId: string; subject?: string }) {
+/** Step 31: `mailboxIds` tells mail of a shared mailbox (its ids carry the account). */
+export function AssistantEmailButtons({ threadId: ownThreadId, subject, mailboxIds }: { threadId: string; subject?: string; mailboxIds?: Record<string, boolean> | null }) {
+  const { threadId } = assistantIds({ id: "", threadId: ownThreadId, mailboxIds });
   const t = useXT();
   const [available, setAvailable] = useState(false);
   useEffect(() => {

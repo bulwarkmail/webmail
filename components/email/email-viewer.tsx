@@ -3766,7 +3766,7 @@ export function EmailViewer({
         )}
         {!isScheduled && !isDraft && !mvViewer && (<>
         {/* xenaxio: AI summary and reply draft for this conversation (I3). */}
-        <AssistantEmailButtons threadId={email.threadId} subject={email.subject} />
+        <AssistantEmailButtons threadId={email.threadId} subject={email.subject} mailboxIds={email.mailboxIds} />
         <Button
           variant="ghost"
           size="sm"
