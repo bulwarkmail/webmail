@@ -145,7 +145,7 @@ function formatSpan(span: { start?: string; end?: string }, locale: string): str
 /** Texts that differ for a change of a meeting (step 34); the rest is shared with new events. */
 const UPDATE_KEYS = new Set(["event", "attendees", "invites_note", "running", "done", "done_invited", "invite_failed", "failed"]);
 
-/** Step 35: remember or forget a note; saved only when the user confirms it here. */
+/** Step 36: remember or forget a note; saved only when the user confirms it here. */
 function MemoryCard({ proposal, onDecide }: { proposal: Proposal; onDecide: (p: Proposal, confirm: boolean) => void }) {
   const t = useXT();
   const forget = proposal.tool === "forget";
@@ -425,7 +425,7 @@ export function AssistantPanel() {
       set(result.invited?.length ? (result.invitationSent ? "done_invited" : "invite_failed") : "done");
     } catch (err) {
       const status = err instanceof XenaxioApiError ? err.status : 0;
-      // Step 35: the memory is full or was switched off after the proposal.
+      // Step 36: the memory is full or was switched off after the proposal.
       const code = err instanceof XenaxioApiError ? err.code : "";
       if (code === "memory_full" || code === "memory_off") return set(code);
       set(status === 410 ? "expired" : status === 409 ? "already" : status === 0 ? "pending" : "failed");

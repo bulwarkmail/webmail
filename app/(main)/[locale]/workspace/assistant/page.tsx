@@ -1,6 +1,6 @@
 "use client";
 
-// Step 35: "Assistent" — what the assistant remembers about the user. Every
+// Step 36: "Assistent" — what the assistant remembers about the user. Every
 // note was confirmed by the user in the panel or written here; the user edits
 // and deletes them and can switch memory off. Nobody else sees these notes.
 import { type FormEvent, useCallback, useEffect, useState } from "react";

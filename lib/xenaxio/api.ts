@@ -322,7 +322,7 @@ export interface RecipientDelivery {
   server?: string;
 }
 
-/** Step 35: a note the assistant keeps about the user. */
+/** Step 36: a note the assistant keeps about the user. */
 export interface MemoryNote {
   id: string;
   text: string;
