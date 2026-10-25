@@ -7,9 +7,9 @@
 // pictures go into the chat (paperclip, paste, drop) and are kept in Files.
 import { type ClipboardEvent, type DragEvent, Fragment, type FormEvent, type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { useLocale } from "next-intl";
-import { usePathname, useRouter } from "@/i18n/navigation";
+import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, Check, File as FileIcon, FileText, FolderOpen, Image as ImageIcon, Loader2, MessageSquare, Paperclip, PenLine, Plus, Send, Sparkles, Square, Trash2, Upload, X } from "@/components/icons";
+import { Brain, CalendarDays, Check, File as FileIcon, FileText, FolderOpen, Image as ImageIcon, Loader2, MessageSquare, Paperclip, PenLine, Plus, Send, Sparkles, Square, Trash2, Upload, X } from "@/components/icons";
 import { FilePickerDialog } from "@/components/files/file-picker-dialog";
 import type { FileNode } from "@/lib/jmap/types";
 import { useAuthStore } from "@/stores/auth-store";
@@ -38,7 +38,7 @@ import {
 import { XENAXIO_BFF } from "@/lib/xenaxio/bff";
 import { useXT } from "@/lib/xenaxio/i18n";
 
-type ProposalState = "pending" | "running" | "done" | "done_invited" | "invite_failed" | "rejected" | "expired" | "already" | "failed";
+type ProposalState = "pending" | "running" | "done" | "done_invited" | "invite_failed" | "rejected" | "expired" | "already" | "failed" | "memory_full" | "memory_off";
 
 interface Proposal {
   id: string;
@@ -144,6 +144,46 @@ function formatSpan(span: { start?: string; end?: string }, locale: string): str
 
 /** Texts that differ for a change of a meeting (step 34); the rest is shared with new events. */
 const UPDATE_KEYS = new Set(["event", "attendees", "invites_note", "running", "done", "done_invited", "invite_failed", "failed"]);
+
+/** Step 35: remember or forget a note; saved only when the user confirms it here. */
+function MemoryCard({ proposal, onDecide }: { proposal: Proposal; onDecide: (p: Proposal, confirm: boolean) => void }) {
+  const t = useXT();
+  const forget = proposal.tool === "forget";
+  const label = (key: string) => t(`assistant.memory.${forget ? "forget" : "remember"}.${key}`);
+  const shared = (key: string) => t(`assistant.memory.${key}`);
+  const settled = proposal.state !== "pending" && proposal.state !== "running";
+  const done = proposal.state === "done";
+  const stateText = done ? label("done") : ["memory_full", "memory_off", "failed"].includes(proposal.state) ? shared(proposal.state) : t(`assistant.proposal.${proposal.state}`);
+  return (
+    <div className="space-y-2 rounded-lg border border-primary/40 bg-primary/5 p-3 text-xs">
+      <p className="flex items-center gap-1.5 font-medium text-sm">
+        <Brain className="h-4 w-4 text-primary" />
+        {label(proposal.summary.replaces ? "title_replace" : "title")}
+      </p>
+      <p className={cn("border-l-2 border-primary/40 pl-2 text-sm break-words", forget && "line-through")}>{proposal.summary.text}</p>
+      {proposal.summary.replaces && <p className="border-l-2 border-border pl-2 break-words text-muted-foreground line-through">{proposal.summary.replaces}</p>}
+      {proposal.state === "pending" && <p className="text-muted-foreground">{label("note")}</p>}
+      {settled ? (
+        <p className={cn(done ? "text-primary" : "text-muted-foreground", "flex items-center gap-1")}>
+          {done && <Check className="h-3.5 w-3.5" />}
+          {stateText}
+        </p>
+      ) : (
+        <div className="flex gap-2">
+          <Button size="sm" disabled={proposal.state === "running"} onClick={() => onDecide(proposal, true)}>
+            {proposal.state === "running" ? shared("running") : t("assistant.proposal.confirm")}
+          </Button>
+          <Button size="sm" variant="outline" disabled={proposal.state === "running"} onClick={() => onDecide(proposal, false)}>
+            {t("assistant.proposal.reject")}
+          </Button>
+        </div>
+      )}
+      <Link href="/workspace/assistant" className="inline-block text-muted-foreground underline hover:text-foreground">
+        {shared("all_notes")}
+      </Link>
+    </div>
+  );
+}
 
 function ProposalCard({ proposal, locale, onDecide }: { proposal: Proposal; locale: string; onDecide: (p: Proposal, confirm: boolean) => void }) {
   const t = useXT();
@@ -385,6 +425,9 @@ export function AssistantPanel() {
       set(result.invited?.length ? (result.invitationSent ? "done_invited" : "invite_failed") : "done");
     } catch (err) {
       const status = err instanceof XenaxioApiError ? err.status : 0;
+      // Step 35: the memory is full or was switched off after the proposal.
+      const code = err instanceof XenaxioApiError ? err.code : "";
+      if (code === "memory_full" || code === "memory_off") return set(code);
       set(status === 410 ? "expired" : status === 409 ? "already" : status === 0 ? "pending" : "failed");
       if (status === 0) setNotice(t("errors.network"));
     }
@@ -654,7 +697,13 @@ export function AssistantPanel() {
               {turn.error && <p className="text-xs text-destructive">{turn.error}</p>}
               {/* The model usually recovers from a failed step; warn only when no answer came. */}
               {turn.toolFailed && !turn.error && !turn.text.trim() && !(busy && i === turns.length - 1) && <p className="text-xs text-destructive">{t("assistant.tool_error")}</p>}
-              {turn.proposals?.map((p) => <ProposalCard key={p.id} proposal={p} locale={locale} onDecide={decide} />)}
+              {turn.proposals?.map((p) =>
+                p.tool === "remember" || p.tool === "forget" ? (
+                  <MemoryCard key={p.id} proposal={p} onDecide={decide} />
+                ) : (
+                  <ProposalCard key={p.id} proposal={p} locale={locale} onDecide={decide} />
+                ),
+              )}
               {turn.sources && turn.sources.length > 0 && (
                 <div className="space-y-1">
                   <p className="text-xs font-medium text-muted-foreground">{t("assistant.sources")}</p>

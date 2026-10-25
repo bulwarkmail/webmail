@@ -26,6 +26,9 @@ export interface ProposalSummary {
   changes?: string[];
   addedAttendees?: string[];
   before?: { title?: string; start?: string; end?: string; location?: string };
+  /** remember and forget (step 35): the note, and the note it replaces. */
+  text?: string;
+  replaces?: string;
 }
 
 export interface ActionResult {
