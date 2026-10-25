@@ -2,7 +2,8 @@
 
 // Step 23: settings for mail apps (Outlook, Apple Mail, Thunderbird, Android)
 // and short set-up steps for each. Plain IMAP and SMTP with TLS; the login is
-// the address and the password is the one for xenaxio.
+// the address and the password is the one for xenaxio. Step 37: how to send
+// from a shared mailbox (same login, its address as an extra sender).
 import type { ReactNode } from "react";
 import { CopyButton } from "@/components/xenaxio/copy-button";
 import { Notice } from "@/components/xenaxio/ui";
@@ -77,6 +78,19 @@ export function MailApps({ settings, domainPending }: { settings: MailAppSetting
       <Server title={t("mail_apps.incoming")} server={settings.imap} />
       <Server title={t("mail_apps.outgoing")} server={settings.smtp} />
       <p className="text-xs text-muted-foreground">{t("mail_apps.outgoing_note")}</p>
+
+      {!!settings.sendAs?.length && (
+        <section className="space-y-2">
+          <h2 className="font-medium">{t("mail_apps.send_as_title")}</h2>
+          <p className="text-sm text-muted-foreground">{t("mail_apps.send_as_intro")}</p>
+          <dl className="divide-y divide-border rounded-lg border border-border">
+            {settings.sendAs.map((m) => (
+              <Row key={m.email} label={m.displayName} value={m.email} copy />
+            ))}
+          </dl>
+          <p className="text-xs text-muted-foreground">{t("mail_apps.send_as_note")}</p>
+        </section>
+      )}
 
       <section className="space-y-2">
         <h2 className="font-medium">{t("mail_apps.howto_title")}</h2>

@@ -99,6 +99,8 @@ export interface MailAppSettings {
   username: string;
   imap: { host: string; port: number; security: "ssl" };
   smtp: { host: string; port: number; security: "ssl" };
+  /** Step 37: shared mailboxes the user may send from, with the same login. */
+  sendAs?: { email: string; displayName: string }[];
 }
 
 /** Step 17: a company's login portal. */
@@ -203,10 +205,15 @@ export interface SharedMailbox {
 
 /** Step 27: the mailbox that receives mail to unknown addresses of the domain. */
 export interface CatchAll {
-  userId: string;
+  /** Step 37: an employee's mailbox (`userId`) or a shared one (`sharedMailboxId`). */
+  userId?: string;
+  sharedMailboxId?: string;
   email: string;
   displayName: string;
 }
+
+/** Step 37: whom to send mail to unknown addresses to; `null` turns it off. */
+export type CatchAllTarget = { userId: string } | { sharedMailboxId: string } | null;
 
 export interface AiAdmin {
   configured: boolean;
@@ -405,7 +412,8 @@ export const xenaxio = {
   domain: (id?: string) => request<DomainInfo>("GET", domainPath(id)),
   checkDomain: (id?: string) => request<{ domain: DomainInfo["domain"]; report: DnsReport }>("POST", `${domainPath(id)}/check`, {}),
   catchAll: (id?: string) => request<{ catchAll: CatchAll | null }>("GET", `${domainPath(id)}/catch-all`),
-  setCatchAll: (userId: string | null, id?: string) => request<{ catchAll: CatchAll | null }>("PUT", `${domainPath(id)}/catch-all`, { userId }),
+  setCatchAll: (target: CatchAllTarget, id?: string) =>
+    request<{ catchAll: CatchAll | null }>("PUT", `${domainPath(id)}/catch-all`, target ?? { userId: null }),
   users: () => request<{ users: WorkspaceUser[]; limits: { maxMailboxes: number; mailboxQuotaBytes: number } }>("GET", "/api/admin/users"),
   createUser: (input: { localPart: string; displayName: string; password: string; domainId?: string }) =>
     request<WorkspaceUser>("POST", "/api/admin/users", input),
