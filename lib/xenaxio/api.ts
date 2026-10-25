@@ -178,6 +178,16 @@ export interface WorkspaceUser {
   usedBytes?: number | null;
 }
 
+/** Step 31: a meeting room, car or piece of equipment; everyone books it by inviting it. */
+export interface WorkspaceResource {
+  id: string;
+  email: string;
+  displayName: string;
+  type: "room" | "vehicle" | "equipment";
+  /** Employees who see and change its bookings. */
+  managers: string[];
+}
+
 /** Step 31: a shared mailbox (info@) and who may use it. */
 export interface SharedMailbox {
   id: string;
@@ -256,6 +266,8 @@ export interface OperatorTenant {
   /** Step 31: shared mailboxes, outside the employee seats. */
   maxSharedMailboxes?: number;
   sharedMailboxes?: number;
+  maxResources?: number;
+  resources?: number;
   mailboxQuotaBytes: number;
   mailboxes: number;
   usedBytes: number;
@@ -394,6 +406,12 @@ export const xenaxio = {
   setSharedMailboxQuota: (id: string, quotaMb: number) =>
     request<SharedMailbox>("POST", `/api/admin/shared-mailboxes/${encodeURIComponent(id)}/quota`, { quotaMb }),
   deleteSharedMailbox: (id: string) => request<{ ok: true }>("DELETE", `/api/admin/shared-mailboxes/${encodeURIComponent(id)}`),
+  resources: () => request<{ resources: WorkspaceResource[]; limits: { maxResources: number } }>("GET", "/api/admin/resources"),
+  createResource: (input: { localPart: string; displayName: string; type: WorkspaceResource["type"]; domainId?: string }) =>
+    request<WorkspaceResource>("POST", "/api/admin/resources", input),
+  setResourceManagers: (id: string, userIds: string[]) =>
+    request<{ managers: string[] }>("PUT", `/api/admin/resources/${encodeURIComponent(id)}/managers`, { userIds }),
+  deleteResource: (id: string) => request<{ ok: true }>("DELETE", `/api/admin/resources/${encodeURIComponent(id)}`),
   setUserAi: (userId: string, enabled: boolean) => request<{ ok: true }>("POST", `/api/admin/users/${encodeURIComponent(userId)}/ai`, { enabled }),
   aiAdmin: () => request<AiAdmin>("GET", "/api/admin/ai"),
   setAiAdmin: (change: { enabled?: boolean; model?: string }) => request<{ ok: true }>("POST", "/api/admin/ai", change),
@@ -415,6 +433,7 @@ export const xenaxio = {
         maxMailboxes?: number;
         maxDomains?: number;
         maxSharedMailboxes?: number;
+        maxResources?: number;
         mailboxQuotaMb?: number;
         aiUserMonthlyTokens?: number | null;
         aiTenantMonthlyTokens?: number | null;

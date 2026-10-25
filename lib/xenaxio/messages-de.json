@@ -89,7 +89,9 @@
     "alias_domain_unknown": "{address}: Diese Domain gehört nicht zu Ihrem Unternehmen. Fügen Sie sie zuerst unter „Domains und DNS“ hinzu.",
     "invalid_alias": "Geben Sie Adressen wie info oder info@ihre-domain.de ein.",
     "shared_mailbox_limit_reached": "Die Anzahl gemeinsamer Postfächer in Ihrem Tarif ({limit}) ist erreicht.",
-    "shared_mailbox_not_found": "Dieses gemeinsame Postfach gibt es nicht mehr."
+    "shared_mailbox_not_found": "Dieses gemeinsame Postfach gibt es nicht mehr.",
+    "resource_limit_reached": "Die Anzahl der Ressourcen in Ihrem Tarif ({limit}) ist erreicht.",
+    "resource_not_found": "Diese Ressource gibt es nicht mehr."
   },
   "login": {
     "title": "Anmelden",
@@ -154,7 +156,9 @@
     "appearance": "Erscheinungsbild und Adresse",
     "appearance_desc": "Logo, Farbe und Anmeldeadresse Ihres Unternehmens",
     "shared": "Gemeinsame Postfächer",
-    "shared_desc": "info@, rechnung@ & Co.: wer liest, wer antwortet"
+    "shared_desc": "info@, rechnung@ & Co.: wer liest, wer antwortet",
+    "resources": "Ressourcen",
+    "resources_desc": "Besprechungsräume, Fahrzeuge und Geräte buchen"
   },
   "domain": {
     "title": "Domains und DNS",
@@ -322,7 +326,9 @@
     "status_revoked": "Widerrufen",
     "max_domains": "Domains höchstens",
     "max_shared_mailboxes": "Gemeinsame Postfächer höchstens",
-    "col_shared": "Gemeinsame Postfächer"
+    "col_shared": "Gemeinsame Postfächer",
+    "max_resources": "Ressourcen höchstens",
+    "col_resources": "Ressourcen"
   },
   "about": {
     "based_on": "Basiert auf",
@@ -644,5 +650,27 @@
     "access_save": "Zugriff speichern",
     "access_saved": "Zugriff gespeichert.",
     "delete_prompt": "{email} endgültig löschen? Alle E-Mails dieses gemeinsamen Postfachs werden gelöscht, das lässt sich nicht rückgängig machen. Die Adresse wird danach wieder frei.\n\nGeben Sie zur Bestätigung {email} ein:"
+  },
+  "resources": {
+    "title": "Ressourcen",
+    "intro": "Räume, Fahrzeuge und Geräte bucht Ihr Team, indem es sie wie eine Person zu einem Termin einlädt. xenaxio sagt automatisch zu, wenn die Zeit frei ist, und ab, wenn sie schon belegt ist oder die Einladung nicht aus Ihrem Unternehmen kommt. Alle sehen, wann eine Ressource belegt ist. Verwalter sehen und ändern zusätzlich ihre Buchungen. Ressourcen zählen nicht zu den Postfächern Ihrer Mitarbeitenden.",
+    "add": "Ressource anlegen",
+    "name": "Name",
+    "name_hint": "So erscheint sie bei der Terminplanung, z. B. „Besprechungsraum 1“.",
+    "type": "Art",
+    "type_room": "Raum",
+    "type_vehicle": "Fahrzeug",
+    "type_equipment": "Gerät",
+    "address_hint": "Nur für Einladungen, z. B. raum-1. Niemand liest die Post dieser Adresse.",
+    "created": "{email} wurde angelegt.",
+    "count": "{count} von {limit} Ressourcen",
+    "empty": "Noch keine Ressourcen.",
+    "managers": "Verwalter",
+    "managers_hint": "Sehen und ändern die Buchungen dieser Ressource. Buchen können alle.",
+    "managers_none": "Keine Verwalter – buchen können alle.",
+    "managers_list": "Verwalter: {names}",
+    "managers_save": "Verwalter speichern",
+    "managers_saved": "Verwalter gespeichert.",
+    "delete_prompt": "{email} endgültig löschen? Alle Buchungen dieser Ressource werden gelöscht, das lässt sich nicht rückgängig machen.\n\nGeben Sie zur Bestätigung {email} ein:"
   }
 }

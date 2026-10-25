@@ -89,7 +89,9 @@
     "alias_domain_unknown": "{address}: this domain does not belong to your company. Add it first under “Domains and DNS”.",
     "invalid_alias": "Enter addresses like info or info@your-domain.com.",
     "shared_mailbox_limit_reached": "Your plan's limit of shared mailboxes ({limit}) is reached.",
-    "shared_mailbox_not_found": "This shared mailbox no longer exists."
+    "shared_mailbox_not_found": "This shared mailbox no longer exists.",
+    "resource_limit_reached": "Your plan's limit of resources ({limit}) is reached.",
+    "resource_not_found": "This resource no longer exists."
   },
   "login": {
     "title": "Sign in",
@@ -154,7 +156,9 @@
     "appearance": "Appearance and address",
     "appearance_desc": "Your company's logo, colour and sign-in address",
     "shared": "Shared mailboxes",
-    "shared_desc": "info@, billing@ & co.: who reads, who replies"
+    "shared_desc": "info@, billing@ & co.: who reads, who replies",
+    "resources": "Resources",
+    "resources_desc": "Book meeting rooms, vehicles and equipment"
   },
   "domain": {
     "title": "Domains and DNS",
@@ -322,7 +326,9 @@
     "status_revoked": "Revoked",
     "max_domains": "Domains at most",
     "max_shared_mailboxes": "Shared mailboxes at most",
-    "col_shared": "Shared mailboxes"
+    "col_shared": "Shared mailboxes",
+    "max_resources": "Resources at most",
+    "col_resources": "Resources"
   },
   "about": {
     "based_on": "Based on",
@@ -644,5 +650,27 @@
     "access_save": "Save access",
     "access_saved": "Access saved.",
     "delete_prompt": "Delete {email} for good? All email of this shared mailbox is deleted, which cannot be undone. The address becomes free again.\n\nType {email} to confirm:"
+  },
+  "resources": {
+    "title": "Resources",
+    "intro": "Your team books rooms, vehicles and equipment by inviting them to an event like a person. xenaxio accepts automatically when the time is free and declines when it is already booked or the invitation does not come from your company. Everyone sees when a resource is booked. Managers also see and change its bookings. Resources do not count towards your employees' mailboxes.",
+    "add": "Add a resource",
+    "name": "Name",
+    "name_hint": "How it appears when planning, e.g. “Meeting room 1”.",
+    "type": "Type",
+    "type_room": "Room",
+    "type_vehicle": "Vehicle",
+    "type_equipment": "Equipment",
+    "address_hint": "Only for invitations, e.g. room-1. Nobody reads mail to this address.",
+    "created": "{email} was created.",
+    "count": "{count} of {limit} resources",
+    "empty": "No resources yet.",
+    "managers": "Managers",
+    "managers_hint": "See and change this resource's bookings. Everyone can book it.",
+    "managers_none": "No managers – everyone can book it.",
+    "managers_list": "Managers: {names}",
+    "managers_save": "Save managers",
+    "managers_saved": "Managers saved.",
+    "delete_prompt": "Delete {email} for good? All bookings of this resource are deleted, which cannot be undone.\n\nType {email} to confirm:"
   }
 }

@@ -84,6 +84,8 @@ export const LITE_API_STRING_ALLOWLIST = [
   "/api/admin/users",
   // Step 31: shared mailboxes (workspace/shared-mailboxes page).
   "/api/admin/shared-mailboxes",
+  // Step 31: resources (workspace/resources page).
+  "/api/admin/resources",
   "/api/admin/ai",
   "/api/admin/audit",
   "/api/operator",
