@@ -3,14 +3,18 @@
 // The AI assistant side panel (spec I1–I3): a chat that knows the open email,
 // streams answers, cites emails as clickable sources, and offers "Kurz" and
 // "Mit KI antworten" for the open conversation. Shown only when the platform
-// has the assistant configured and enabled for the user.
-import { Fragment, type FormEvent, type ReactNode, useCallback, useEffect, useRef, useState } from "react";
+// has the assistant configured and enabled for the user. Step 33: files and
+// pictures go into the chat (paperclip, paste, drop) and are kept in Files.
+import { type ClipboardEvent, type DragEvent, Fragment, type FormEvent, type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { useLocale } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, Check, FileText, MessageSquare, PenLine, Plus, Send, Sparkles, Square, Trash2, X } from "@/components/icons";
+import { CalendarDays, Check, File as FileIcon, FileText, FolderOpen, Image as ImageIcon, Loader2, MessageSquare, Paperclip, PenLine, Plus, Send, Sparkles, Square, Trash2, Upload, X } from "@/components/icons";
+import { FilePickerDialog } from "@/components/files/file-picker-dialog";
+import type { FileNode } from "@/lib/jmap/types";
+import { useAuthStore } from "@/stores/auth-store";
 import { useEmailStore } from "@/stores/email-store";
-import { cn } from "@/lib/utils";
+import { cn, formatFileSize } from "@/lib/utils";
 import { errorKey, XenaxioApiError } from "@/lib/xenaxio/api";
 import {
   assistant,
@@ -20,7 +24,13 @@ import {
   type AssistantCommand,
   type AssistantEvent,
   assistantIds,
+  type AttachedFile,
+  attachedFileLink,
+  chatFileProblem,
+  isChatImage,
+  MAX_CHAT_FILES,
   messageRouteId,
+  pastedName,
   OPEN_DRAFT_EVENT,
   type ProposalSummary,
   type SourceEmail,
@@ -40,6 +50,8 @@ interface Proposal {
 interface Turn {
   role: "user" | "assistant";
   text: string;
+  /** Files the user attached (step 33). */
+  files?: AttachedFile[];
   sources?: SourceEmail[];
   proposals?: Proposal[];
   tool?: string;
@@ -47,6 +59,70 @@ interface Turn {
   toolFailed?: boolean;
   error?: string;
   title?: string;
+}
+
+/** A file waiting under the input: uploading, ready to send, or refused. */
+interface PendingFile {
+  key: string;
+  name: string;
+  size: number;
+  type: string;
+  file?: AttachedFile;
+  /** Message key of why it cannot be sent. */
+  error?: string;
+  /** Local preview of a picture (object URL). */
+  preview?: string;
+}
+
+/** A file as a small card: picture or file icon, name and size; linked to Files when possible. */
+function FileChip({ name, size, type, preview, href, deleted, busy, error, onOpen, onRemove, removeLabel, deletedLabel }: {
+  name: string;
+  size: number;
+  type: string;
+  preview?: string;
+  href?: string | null;
+  deleted?: boolean;
+  busy?: boolean;
+  error?: string;
+  onOpen?: (href: string) => void;
+  onRemove?: () => void;
+  removeLabel?: string;
+  deletedLabel?: string;
+}) {
+  const body = (
+    <>
+      {preview ? (
+        <img src={preview} alt="" className="h-8 w-8 shrink-0 rounded object-cover" />
+      ) : isChatImage(type) ? (
+        <ImageIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
+      ) : (
+        <FileIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
+      )}
+      <span className="min-w-0 flex-1">
+        <span className={cn("block truncate font-medium", deleted && "line-through text-muted-foreground")}>{name}</span>
+        <span className={cn("block truncate", error ? "text-destructive" : "text-muted-foreground")}>
+          {error ?? (deleted ? deletedLabel : formatFileSize(size))}
+        </span>
+      </span>
+      {busy && <Loader2 className="h-4 w-4 shrink-0 animate-spin text-muted-foreground" />}
+    </>
+  );
+  return (
+    <div className={cn("flex items-center gap-2 rounded border px-2 py-1 text-xs", error ? "border-destructive/50" : "border-border", "bg-background")}>
+      {href && onOpen ? (
+        <button type="button" onClick={() => onOpen(href)} className="flex min-w-0 flex-1 items-center gap-2 text-left hover:underline">
+          {body}
+        </button>
+      ) : (
+        <div className="flex min-w-0 flex-1 items-center gap-2">{body}</div>
+      )}
+      {onRemove && (
+        <button type="button" onClick={onRemove} className="shrink-0 rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground" aria-label={removeLabel} title={removeLabel}>
+          <X className="h-3.5 w-3.5" />
+        </button>
+      )}
+    </div>
+  );
 }
 
 const SURFACES = /\/(mail|calendar|contacts)(\/|$)|^\/$/;
@@ -175,6 +251,13 @@ export function AssistantPanel() {
   const abort = useRef<AbortController | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const restored = useRef(false);
+  const [pending, setPending] = useState<PendingFile[]>([]);
+  const [attachMenu, setAttachMenu] = useState(false);
+  const [picking, setPicking] = useState(false);
+  const [dragging, setDragging] = useState(false);
+  const fileInput = useRef<HTMLInputElement>(null);
+  const filesClient = useAuthStore((s) => s.client);
+  const canPickFiles = !!filesClient?.supportsFiles();
 
   // Keep the panel and the current chat across page changes (e.g. opening a source).
   useEffect(() => {
@@ -226,12 +309,13 @@ export function AssistantPanel() {
 
   /** Runs one streamed request and fills the last assistant turn. */
   const run = useCallback(
-    async (events: (signal: AbortSignal) => AsyncIterable<AssistantEvent>, userText: string | null, title?: string) => {
+    async (events: (signal: AbortSignal) => AsyncIterable<AssistantEvent>, userText: string | null, title?: string, files?: AttachedFile[]) => {
       const controller = new AbortController();
       abort.current = controller;
       setBusy(true);
       setNotice(null);
-      setTurns((prev) => [...prev, ...(userText ? [{ role: "user" as const, text: userText }] : []), { role: "assistant", text: "", ...(title ? { title } : {}) }]);
+      const user: Turn[] = userText !== null ? [{ role: "user", text: userText, ...(files?.length ? { files } : {}) }] : [];
+      setTurns((prev) => [...prev, ...user, { role: "assistant", text: "", ...(title ? { title } : {}) }]);
       const update = (fn: (turn: Turn) => Turn) => setTurns((prev) => [...prev.slice(0, -1), fn(prev[prev.length - 1] as Turn)]);
       try {
         for await (const e of events(controller.signal)) {
@@ -246,7 +330,7 @@ export function AssistantPanel() {
         if ((err as { name?: string }).name !== "AbortError") {
           const key = errorKey(err);
           const code = key.replace("errors.", "");
-          update((turn) => ({ ...turn, error: ["ai_disabled", "ai_not_configured", "ai_limit_reached", "rate_limited"].includes(code) ? t(`assistant.errors.${code}`) : t(key) }));
+          update((turn) => ({ ...turn, error: ["ai_disabled", "ai_not_configured", "ai_limit_reached", "rate_limited", "file_not_found"].includes(code) ? t(`assistant.errors.${code}`) : t(key) }));
         }
       } finally {
         setBusy(false);
@@ -279,12 +363,75 @@ export function AssistantPanel() {
   // Step 31: mail of a shared mailbox is named with its account.
   const context = selectedEmail ? assistantIds(selectedEmail) : {};
 
+  // Step 33: files wait under the input until the message is sent.
+  const ready = pending.filter((p) => p.file).map((p) => p.file as AttachedFile);
+  const uploading = pending.some((p) => !p.file && !p.error);
+  const canSend = (!!input.trim() || ready.length > 0) && !busy && !uploading;
+
+  const dropPending = (key: string) =>
+    setPending((prev) => {
+      const gone = prev.find((p) => p.key === key);
+      if (gone?.preview) URL.revokeObjectURL(gone.preview);
+      return prev.filter((p) => p.key !== key);
+    });
+
+  const addFiles = (list: File[]) => {
+    setNotice(null);
+    const room = MAX_CHAT_FILES - pending.length;
+    if (list.length > room) setNotice(t("assistant.attach_limit", { max: String(MAX_CHAT_FILES) }));
+    for (const f of list.slice(0, Math.max(room, 0))) {
+      const key = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const problem = chatFileProblem(f);
+      const preview = !problem && isChatImage(f.type) ? URL.createObjectURL(f) : undefined;
+      setPending((prev) => [...prev, { key, name: f.name, size: f.size, type: f.type, ...(problem ? { error: problem } : {}), ...(preview ? { preview } : {}) }]);
+      if (problem) continue;
+      assistant.upload(f, f.name).then(
+        (file) => setPending((prev) => prev.map((p) => (p.key === key ? { ...p, file, name: file.name } : p))),
+        (err: unknown) => {
+          const code = err instanceof XenaxioApiError ? err.code : "";
+          const error = code === "file_too_large" ? "attach_too_large" : code === "storage_full" ? "attach_storage_full" : "attach_failed";
+          setPending((prev) => prev.map((p) => (p.key === key ? { ...p, error } : p)));
+        },
+      );
+    }
+  };
+
+  const addPicked = (nodes: FileNode[]) => {
+    setPicking(false);
+    const room = MAX_CHAT_FILES - pending.length;
+    if (nodes.length > room) setNotice(t("assistant.attach_limit", { max: String(MAX_CHAT_FILES) }));
+    const picked = nodes.slice(0, Math.max(room, 0)).map((n): PendingFile => {
+      const file = { id: n.id, name: n.name, type: n.type || "application/octet-stream", size: n.size ?? 0 };
+      const problem = chatFileProblem(file);
+      return { key: `pick-${n.id}`, ...file, ...(problem ? { error: problem } : { file }) };
+    });
+    setPending((prev) => [...prev, ...picked.filter((p) => !prev.some((q) => q.key === p.key))]);
+  };
+
+  const onPaste = (e: ClipboardEvent<HTMLTextAreaElement>) => {
+    const pasted = Array.from(e.clipboardData.files);
+    if (pasted.length === 0) return;
+    e.preventDefault();
+    // Screenshots come as "image.png"; name them by date so they can be found in Files.
+    addFiles(pasted.map((f) => (f.type.startsWith("image/") ? new File([f], pastedName(t("assistant.pasted_image"), f.type), { type: f.type }) : f)));
+  };
+
+  const onDrop = (e: DragEvent<HTMLElement>) => {
+    if (!e.dataTransfer.types.includes("Files")) return;
+    e.preventDefault();
+    setDragging(false);
+    addFiles(Array.from(e.dataTransfer.files));
+  };
+
   const send = (e?: FormEvent) => {
     e?.preventDefault();
     const text = input.trim();
-    if (!text || busy) return;
+    if (!canSend) return;
+    const files = ready;
     setInput("");
-    void run((signal) => assistant.chat(text, conversationId, context, signal), text);
+    for (const p of pending) if (p.preview) URL.revokeObjectURL(p.preview);
+    setPending([]);
+    void run((signal) => assistant.chat(text, conversationId, context, signal, files.map((f) => f.id)), text, undefined, files);
   };
 
   const summarize = useCallback(
@@ -340,12 +487,14 @@ export function AssistantPanel() {
     setConversationId(undefined);
     setHistory(null);
     setNotice(null);
+    for (const p of pending) if (p.preview) URL.revokeObjectURL(p.preview);
+    setPending([]);
   };
 
   const showHistory = async () => setHistory(await assistant.conversations());
   const loadConversation = async (id: string) => {
     const msgs = await assistant.messages(id);
-    setTurns(msgs.map((m) => ({ role: m.role, text: m.content })));
+    setTurns(msgs.map((m) => ({ role: m.role, text: m.content, ...(m.files?.length ? { files: m.files } : {}) })));
     setConversationId(id);
     setHistory(null);
   };
@@ -370,7 +519,22 @@ export function AssistantPanel() {
     <aside
       className="fixed inset-y-0 right-0 z-50 flex w-full flex-col border-l border-border bg-background text-foreground shadow-xl sm:w-[400px]"
       aria-label={t("assistant.title")}
+      onDragOver={(e) => {
+        if (!e.dataTransfer.types.includes("Files")) return;
+        e.preventDefault();
+        setDragging(true);
+      }}
+      onDragLeave={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setDragging(false);
+      }}
+      onDrop={onDrop}
     >
+      {dragging && (
+        <div className="pointer-events-none absolute inset-2 z-10 flex items-center justify-center rounded-lg border-2 border-dashed border-primary bg-background/90 text-sm font-medium text-primary">
+          <Upload className="mr-2 h-5 w-5" />
+          {t("assistant.attach_drop")}
+        </div>
+      )}
       <header className="flex h-14 items-center justify-between gap-2 border-b border-border px-3">
         <div className="flex items-center gap-2 font-medium">
           <Sparkles className="h-4 w-4 text-primary" />
@@ -451,7 +615,10 @@ export function AssistantPanel() {
           turns.map((turn, i) => (
             <div key={i} className={cn("space-y-2", turn.role === "user" && "ml-8 rounded-lg bg-primary/10 px-3 py-2")}>
               {turn.title && <p className="text-xs font-medium text-muted-foreground">{turn.title}</p>}
-              {turn.role === "user" ? <p className="whitespace-pre-wrap">{turn.text}</p> : <Formatted text={turn.text} sources={turn.sources ?? []} onOpen={openSource} />}
+              {turn.files?.map((f) => (
+                <FileChip key={f.id} name={f.name} size={f.size} type={f.type} href={attachedFileLink(f)} deleted={f.deleted} deletedLabel={t("assistant.file_deleted")} onOpen={(href) => router.push(href)} />
+              ))}
+              {turn.role === "user" ? turn.text && <p className="whitespace-pre-wrap">{turn.text}</p> : <Formatted text={turn.text} sources={turn.sources ?? []} onOpen={openSource} />}
               {turn.tool && <p className="animate-pulse text-xs text-muted-foreground">{t(`assistant.tool_${turn.tool}`)}</p>}
               {turn.role === "assistant" && !turn.text && !turn.tool && busy && i === turns.length - 1 && <p className="animate-pulse text-xs text-muted-foreground">…</p>}
               {turn.error && <p className="text-xs text-destructive">{turn.error}</p>}
@@ -482,9 +649,82 @@ export function AssistantPanel() {
       </div>
 
       {notice && <p className="border-t border-border px-3 py-2 text-xs text-muted-foreground">{notice}</p>}
-      <form onSubmit={send} className="flex items-end gap-2 border-t border-border p-3">
+      {pending.length > 0 && (
+        <div className="space-y-1 border-t border-border px-3 pt-2">
+          {pending.map((p) => (
+            <FileChip
+              key={p.key}
+              name={p.name}
+              size={p.size}
+              type={p.type}
+              {...(p.preview ? { preview: p.preview } : {})}
+              busy={!p.file && !p.error}
+              {...(p.error ? { error: t(`assistant.${p.error}`) } : {})}
+              onRemove={() => dropPending(p.key)}
+              removeLabel={t("assistant.attach_remove")}
+            />
+          ))}
+          <p className="text-[11px] text-muted-foreground">{uploading ? t("assistant.attach_uploading") : t("assistant.attach_saved")}</p>
+        </div>
+      )}
+      <form onSubmit={send} className="relative flex items-end gap-2 border-t border-border p-3">
+        <input
+          ref={fileInput}
+          type="file"
+          multiple
+          className="hidden"
+          onChange={(e) => {
+            addFiles(Array.from(e.target.files ?? []));
+            e.target.value = "";
+          }}
+        />
+        {attachMenu && (
+          <div className="absolute bottom-full left-3 z-10 mb-1 w-56 rounded-md border border-border bg-background p-1 text-sm shadow-lg" role="menu">
+            <button
+              type="button"
+              role="menuitem"
+              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left hover:bg-muted"
+              onClick={() => {
+                setAttachMenu(false);
+                fileInput.current?.click();
+              }}
+            >
+              <Upload className="h-4 w-4" />
+              {t("assistant.attach_device")}
+            </button>
+            {canPickFiles && (
+              <button
+                type="button"
+                role="menuitem"
+                className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left hover:bg-muted"
+                onClick={() => {
+                  setAttachMenu(false);
+                  setPicking(true);
+                }}
+              >
+                <FolderOpen className="h-4 w-4" />
+                {t("assistant.attach_files")}
+              </button>
+            )}
+          </div>
+        )}
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-10 px-2"
+          disabled={busy || pending.length >= MAX_CHAT_FILES}
+          onClick={() => setAttachMenu((v) => !v)}
+          aria-label={t("assistant.attach")}
+          title={t("assistant.attach")}
+          aria-haspopup="menu"
+          aria-expanded={attachMenu}
+        >
+          <Paperclip className="h-4 w-4" />
+        </Button>
         <textarea
           value={input}
+          onPaste={onPaste}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
@@ -502,11 +742,12 @@ export function AssistantPanel() {
             <Square className="h-4 w-4" />
           </Button>
         ) : (
-          <Button type="submit" disabled={!input.trim() || busy} aria-label={t("assistant.send")}>
+          <Button type="submit" disabled={!canSend} aria-label={t("assistant.send")}>
             <Send className="h-4 w-4" />
           </Button>
         )}
       </form>
+      {picking && filesClient && <FilePickerDialog client={filesClient} onClose={() => setPicking(false)} onPick={addPicked} />}
     </aside>
   );
 }

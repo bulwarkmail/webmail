@@ -1,6 +1,7 @@
 // Client for the xenaxio assistant (/api/ai): server-sent events over fetch,
 // so the request can carry the session cookie, a JSON body and the CSRF header.
 import { apiFetch } from "@/lib/browser-navigation";
+import { buildFilesPath } from "@/lib/deep-links";
 import { XenaxioApiError } from "./api";
 
 export interface SourceEmail {
@@ -85,6 +86,47 @@ export async function* readEvents(res: Response): AsyncGenerator<AssistantEvent>
   }
 }
 
+/** Step 33: a file attached to a chat message; kept in the user's files. */
+export interface AttachedFile {
+  id: string;
+  name: string;
+  type: string;
+  size: number;
+  /** Path in the user's own files; absent for files colleagues shared. */
+  path?: string;
+  /** Removed from Files since (only on a chat loaded from the history). */
+  deleted?: boolean;
+}
+
+/** Limits of the platform: files per message, bytes per file, bytes per picture the model sees. */
+export const MAX_CHAT_FILES = 5;
+export const MAX_CHAT_FILE_BYTES = 20 * 1024 * 1024;
+export const MAX_CHAT_IMAGE_BYTES = 5 * 1024 * 1024;
+const MODEL_IMAGE_TYPES = new Set(["image/png", "image/jpeg", "image/gif", "image/webp"]);
+
+export const isChatImage = (type: string) => MODEL_IMAGE_TYPES.has(type);
+
+/** Why a file cannot go into the chat, as a message key, or null when it can. */
+export function chatFileProblem(file: { size: number; type: string }): "attach_too_large" | "attach_image_too_large" | null {
+  if (file.size > MAX_CHAT_FILE_BYTES) return "attach_too_large";
+  if (isChatImage(file.type) && file.size > MAX_CHAT_IMAGE_BYTES) return "attach_image_too_large";
+  return null;
+}
+
+/** Name of a picture pasted from the clipboard: "Bild 2026-10-25 14-03.png". */
+export function pastedName(label: string, type: string, now = new Date()): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const ext = type.split("/")[1]?.replace("jpeg", "jpg").replace(/[^a-z0-9]/g, "") || "png";
+  return `${label} ${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}-${pad(now.getMinutes())}.${ext}`;
+}
+
+/** Where Files shows an attached file, or null when it cannot be linked (shared or deleted). */
+export function attachedFileLink(file: AttachedFile): string | null {
+  if (!file.path || file.deleted || file.id.includes(":")) return null;
+  const folder = file.path.slice(0, file.path.lastIndexOf("/")) || "/";
+  return buildFilesPath(folder, file.name);
+}
+
 export interface ChatContext {
   emailId?: string;
   threadId?: string;
@@ -96,8 +138,25 @@ export const assistant = {
     if (!res.ok) return { configured: false, enabled: false };
     return res.json();
   },
-  async *chat(message: string, conversationId: string | undefined, context: ChatContext, signal?: AbortSignal) {
-    yield* readEvents(await post("/api/ai/chat", { message, ...(conversationId ? { conversationId } : {}), context }, signal));
+  async *chat(message: string, conversationId: string | undefined, context: ChatContext, signal?: AbortSignal, fileIds: string[] = []) {
+    yield* readEvents(await post("/api/ai/chat", { message, ...(conversationId ? { conversationId } : {}), ...(fileIds.length ? { fileIds } : {}), context }, signal));
+  },
+  /** Step 33: puts a file into the user's chat folder in Files and returns it for the next message. */
+  async upload(file: Blob, name: string): Promise<AttachedFile> {
+    let res: Response;
+    try {
+      res = await apiFetch("/api/ai/files", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": file.type || "application/octet-stream", "X-File-Name": encodeURIComponent(name), Accept: "application/json", "x-xenaxio-csrf": "1" },
+        body: file,
+      });
+    } catch {
+      throw new XenaxioApiError(0, "network");
+    }
+    const data = (await res.json().catch(() => ({}))) as { file?: AttachedFile; error?: string };
+    if (!res.ok || !data.file) throw new XenaxioApiError(res.status, res.status === 413 ? "file_too_large" : (data.error ?? "internal"));
+    return data.file;
   },
   async *summarize(threadId: string, signal?: AbortSignal) {
     yield* readEvents(await post("/api/ai/summarize", { threadId }, signal));
@@ -115,7 +174,7 @@ export const assistant = {
     const res = await apiFetch("/api/ai/conversations", { credentials: "same-origin" });
     return res.ok ? (await res.json()).conversations : [];
   },
-  async messages(id: string): Promise<{ role: "user" | "assistant"; content: string }[]> {
+  async messages(id: string): Promise<{ role: "user" | "assistant"; content: string; files?: AttachedFile[] }[]> {
     const res = await apiFetch(`/api/ai/conversations/${encodeURIComponent(id)}`, { credentials: "same-origin" });
     return res.ok ? (await res.json()).messages : [];
   },

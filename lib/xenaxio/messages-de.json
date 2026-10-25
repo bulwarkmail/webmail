@@ -342,7 +342,7 @@
     "history": "Verlauf",
     "delete_all": "Alle Chats löschen",
     "delete": "Chat löschen",
-    "empty": "Fragen Sie zu Ihren E-Mails, z. B. „Was haben wir mit der Müller GmbH zum Preis vereinbart?“",
+    "empty": "Fragen Sie zu Ihren E-Mails, z. B. „Was haben wir mit der Müller GmbH zum Preis vereinbart?“ Dateien und Screenshots können Sie anhängen, einfügen oder hineinziehen.",
     "placeholder": "Frage stellen…",
     "send": "Senden",
     "stop": "Stopp",
@@ -366,7 +366,8 @@
       "ai_not_configured": "Der Assistent ist noch nicht eingerichtet.",
       "assistant_failed": "Der Assistent konnte nicht antworten. Bitte versuchen Sie es erneut.",
       "rate_limited": "Zu viele Anfragen. Bitte warten Sie einen Moment.",
-      "ai_limit_reached": "Das KI-Limit für diesen Monat ist erreicht."
+      "ai_limit_reached": "Das KI-Limit für diesen Monat ist erreicht.",
+      "file_not_found": "Eine angehängte Datei wurde nicht gefunden. Bitte hängen Sie sie erneut an."
     },
     "tool_list_events": "Sehe im Kalender nach…",
     "tool_find_free_time": "Suche freie Zeiten…",
@@ -394,7 +395,21 @@
       "already": "Über diesen Vorschlag wurde bereits entschieden.",
       "failed": "Der Termin konnte nicht angelegt werden."
     },
-    "limit_warning": "Sie haben über 80 % Ihres KI-Kontingents für diesen Monat verbraucht."
+    "limit_warning": "Sie haben über 80 % Ihres KI-Kontingents für diesen Monat verbraucht.",
+    "attach": "Datei anhängen",
+    "attach_device": "Vom Gerät hochladen",
+    "attach_files": "Aus Dateien wählen",
+    "attach_drop": "Dateien hier ablegen",
+    "attach_uploading": "Wird hochgeladen…",
+    "attach_saved": "Hochgeladene Dateien liegen in „Dateien → KI-Chat“.",
+    "attach_remove": "Entfernen",
+    "attach_limit": "Höchstens {max} Dateien pro Nachricht.",
+    "attach_too_large": "Größer als 20 MB",
+    "attach_image_too_large": "Bilder höchstens 5 MB",
+    "attach_storage_full": "Kein Speicherplatz mehr frei",
+    "attach_failed": "Hochladen fehlgeschlagen",
+    "pasted_image": "Bild",
+    "file_deleted": "gelöscht"
   },
   "mcp": {
     "title": "KI-Chats verbinden",
