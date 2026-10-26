@@ -49,8 +49,15 @@ async function request<T>(method: "GET" | "POST" | "DELETE" | "PUT", path: strin
 /** Step 41: whose picture: one's own (null), or someone of the company (admin). */
 export type AvatarTarget = null | { kind: "users" | "shared-mailboxes" | "resources"; id: string };
 
+// Whole paths, so the Lite build check (scripts/lite/lib.mjs) sees each one.
+const AVATAR_BASES = {
+  users: "/api/admin/users",
+  "shared-mailboxes": "/api/admin/shared-mailboxes",
+  resources: "/api/admin/resources",
+} as const;
+
 function avatarPath(target: AvatarTarget): string {
-  return target ? `/api/admin/${target.kind}/${encodeURIComponent(target.id)}/avatar` : "/api/me/avatar";
+  return target ? `${AVATAR_BASES[target.kind]}/${encodeURIComponent(target.id)}/avatar` : "/api/me/avatar";
 }
 
 /** Step 28: one domain of the company by id; the primary one without. */
