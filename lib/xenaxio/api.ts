@@ -248,6 +248,15 @@ export interface CatchAll {
 /** Step 37: whom to send mail to unknown addresses to; `null` turns it off. */
 export type CatchAllTarget = { userId: string } | { sharedMailboxId: string } | null;
 
+/** Step 43: the company's chat as the admin sees it. */
+export interface ChatAdmin {
+  available: boolean;
+  state: "off" | "provisioning" | "active" | "disabled" | "error";
+  serverName: string | null;
+  candidate: { name: string; status: string } | null;
+  error: string | null;
+}
+
 export interface AiAdmin {
   configured: boolean;
   companyEnabled: boolean;
@@ -485,6 +494,8 @@ export const xenaxio = {
     request<{ managers: string[] }>("PUT", `/api/admin/resources/${encodeURIComponent(id)}/managers`, { userIds }),
   deleteResource: (id: string) => request<{ ok: true }>("DELETE", `/api/admin/resources/${encodeURIComponent(id)}`),
   setUserAi: (userId: string, enabled: boolean) => request<{ ok: true }>("POST", `/api/admin/users/${encodeURIComponent(userId)}/ai`, { enabled }),
+  chatAdmin: () => request<ChatAdmin>("GET", "/api/admin/chat"),
+  setChatAdmin: (enabled: boolean) => request<ChatAdmin>("PUT", "/api/admin/chat", { enabled }),
   aiAdmin: () => request<AiAdmin>("GET", "/api/admin/ai"),
   setAiAdmin: (change: { enabled?: boolean; model?: string }) => request<{ ok: true }>("POST", "/api/admin/ai", change),
   audit: (f: AuditFilter) => request<{ entries: AuditEntry[]; next: number | null }>("GET", `/api/admin/audit${auditQuery(f)}`),
