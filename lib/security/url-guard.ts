@@ -27,12 +27,28 @@ function isBlockedHostname(hostname: string): boolean {
   return BLOCKED_HOSTNAME_SUFFIXES.some((suffix) => hostname.endsWith(suffix));
 }
 
+/** Private exceptions are exact HTTP(S) origins, without wildcards or credentials. */
+export function isAllowedPrivateUrl(rawUrl: string, allowedPrivateUrls: readonly string[] = []): boolean {
+  try {
+    const target = new URL(rawUrl);
+    return allowedPrivateUrls.some((entry) => {
+      try {
+        const allowed = new URL(entry.trim());
+        return ['http:', 'https:'].includes(allowed.protocol)
+          && !allowed.hostname.includes('*')
+          && !allowed.username && !allowed.password && !allowed.search && !allowed.hash
+          && allowed.pathname === '/' && allowed.origin === target.origin;
+      } catch { return false; }
+    });
+  } catch { return false; }
+}
+
 /**
  * Synchronous part of the guard: protocol, embedded credentials, blocked
  * hostnames / suffixes, and literal IP addresses. Returns the parsed URL when
  * those checks pass, `null` otherwise. Does NOT touch DNS.
  */
-function parseAllowedUrl(urlString: string): URL | null {
+function parseAllowedUrl(urlString: string, allowedPrivateUrls: readonly string[] = []): URL | null {
   let url: URL;
   try {
     url = new URL(urlString);
@@ -44,8 +60,8 @@ function parseAllowedUrl(urlString: string): URL | null {
   if (url.username || url.password) return null;
 
   const hostname = normalizeHostname(url.hostname);
-  if (isBlockedHostname(hostname)) return null;
-  if (isBlockedIpAddress(hostname)) return null;
+  if ((isBlockedHostname(hostname) || isBlockedIpAddress(hostname))
+    && !isAllowedPrivateUrl(urlString, allowedPrivateUrls)) return null;
 
   return url;
 }
@@ -122,6 +138,7 @@ export function guardedLookup(
   hostname: string,
   options: LookupOptions | number | LookupCallback,
   callback?: LookupCallback,
+  allowedPrivateHostname?: string,
 ): void {
   let cb: LookupCallback;
   let opts: LookupOptions;
@@ -134,7 +151,8 @@ export function guardedLookup(
   }
 
   const normalized = normalizeHostname(hostname);
-  if (isBlockedHostname(normalized) || isBlockedIpAddress(normalized)) {
+  const privateAllowed = normalized === allowedPrivateHostname;
+  if (!privateAllowed && (isBlockedHostname(normalized) || isBlockedIpAddress(normalized))) {
     queueMicrotask(() => cb(new BlockedAddressError(hostname, isIP(normalized) ? normalized : null)));
     return;
   }
@@ -148,7 +166,7 @@ export function guardedLookup(
         return;
       }
       const blocked = records.find((record) => isBlockedIpAddress(record.address));
-      if (blocked) {
+      if (blocked && !privateAllowed) {
         cb(new BlockedAddressError(hostname, blocked.address));
         return;
       }
@@ -176,6 +194,12 @@ export function getPublicDispatcher(): Dispatcher {
   return publicDispatcher;
 }
 
+/** Separate connections keep private access scoped to this fetch. */
+function createPrivateDispatcher(hostname: string): Agent {
+  return new Agent({ connect: { lookup: ((host, options, callback) =>
+    guardedLookup(host, options, callback as LookupCallback, hostname)) as LookupFunction } });
+}
+
 function findBlockedCause(err: unknown, depth = 0): BlockedAddressError | null {
   if (depth > 5 || !(err instanceof Error)) return null;
   if (err instanceof BlockedAddressError) return err;
@@ -191,6 +215,9 @@ export type PublicFetchResponse = UndiciResponse;
  * then validates the DNS answer *inside the socket's own lookup*, so the
  * address that passed the check is the one the socket connects to.
  *
+ * Optional private exceptions match exact origins and trust that hostname's DNS
+ * answers, including private addresses. All other hosts retain the DNS guard.
+ *
  * Redirects are never followed automatically: a redirect target is a fresh
  * caller-supplied URL and must be passed back through this function so its
  * literal-IP / hostname checks run as well. Callers loop on 3xx themselves.
@@ -201,16 +228,22 @@ export type PublicFetchResponse = UndiciResponse;
 export async function fetchPublicUrl(
   url: string,
   init: Omit<UndiciRequestInit, 'dispatcher' | 'redirect'> = {},
+  allowedPrivateUrls: readonly string[] = [],
 ): Promise<PublicFetchResponse> {
-  if (!parseAllowedUrl(url)) {
+  if (!parseAllowedUrl(url, allowedPrivateUrls)) {
     throw new DisallowedUrlError(url);
   }
+
+  const hostname = normalizeHostname(new URL(url).hostname);
+  const privateDispatcher = isAllowedPrivateUrl(url, allowedPrivateUrls) && !isIP(hostname)
+    ? createPrivateDispatcher(hostname)
+    : null;
 
   try {
     return await undiciFetch(url, {
       ...init,
       redirect: 'manual',
-      dispatcher: getPublicDispatcher(),
+      dispatcher: privateDispatcher ?? getPublicDispatcher(),
     });
   } catch (err) {
     const blocked = findBlockedCause(err);
@@ -218,5 +251,8 @@ export async function fetchPublicUrl(
       throw new DisallowedUrlError(url, blocked);
     }
     throw err;
+  } finally {
+    // Graceful close waits for the response body before releasing sockets.
+    if (privateDispatcher) void privateDispatcher.close().catch(() => undefined);
   }
 }
