@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { generateAccountId } from '@/lib/account-utils';
 import { useAccountStore } from '@/stores/account-store';
-import type { BrowserAccount } from '../api';
-import { accountServerUrl, applyBrowserAccounts, userIdOf } from '../accounts';
+import { type BrowserAccount, XenaxioApiError } from '../api';
+import { accountServerUrl, applyBrowserAccounts, otherCompanyPortal, userIdOf } from '../accounts';
 
 const HERE = 'https://portal.botkontor.com/api/jmap';
 
@@ -67,5 +67,17 @@ describe('applyBrowserAccounts', () => {
     expect(useAccountStore.getState().accounts).toHaveLength(2);
     applyBrowserAccounts([list[0] as BrowserAccount], active);
     expect(useAccountStore.getState().accounts.map((a) => a.email)).toEqual(['es@botkontor.com']);
+  });
+});
+
+describe('step 39: another company is added on its own portal', () => {
+  it('links only the https portal the platform named', () => {
+    const refused = (portalUrl: unknown) => new XenaxioApiError(409, 'account_other_company', { portalUrl });
+    expect(otherCompanyPortal(refused('https://beta.xenaxio.com'))).toBe('https://beta.xenaxio.com');
+    expect(otherCompanyPortal(refused('https://beta.xenaxio.com/x?y'))).toBe('https://beta.xenaxio.com');
+    expect(otherCompanyPortal(refused('javascript:alert(1)'))).toBe(null);
+    expect(otherCompanyPortal(refused(42))).toBe(null);
+    expect(otherCompanyPortal(new XenaxioApiError(400, 'too_many_accounts'))).toBe(null);
+    expect(otherCompanyPortal(new Error('x'))).toBe(null);
   });
 });

@@ -4,7 +4,7 @@
 // on its company's portal, and the other tabs of this address reload too.
 import { getLocaleFromPath, withBasePath } from "@/lib/browser-navigation";
 import { generateAccountId } from "@/lib/account-utils";
-import { type BrowserAccount, xenaxio } from "@/lib/xenaxio/api";
+import { type BrowserAccount, xenaxio, XenaxioApiError } from "@/lib/xenaxio/api";
 import { XENAXIO_BFF } from "@/lib/xenaxio/bff";
 import { useAccountStore } from "@/stores/account-store";
 
@@ -105,6 +105,23 @@ export async function forget(accountId: string): Promise<void> {
 export async function signOut(all: boolean): Promise<string | null> {
   try {
     return (await xenaxio.logout({ all, next: startPath() })).url;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Step 39: one company per browser (and per installed app). Adding another
+ * company's account is refused with the address of its portal; null for any
+ * other error. Only an https address, nothing else is linked.
+ */
+export function otherCompanyPortal(err: unknown): string | null {
+  if (!(err instanceof XenaxioApiError) || err.code !== "account_other_company") return null;
+  const url = err.details?.portalUrl;
+  if (typeof url !== "string") return null;
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === "https:" ? parsed.origin : null;
   } catch {
     return null;
   }
