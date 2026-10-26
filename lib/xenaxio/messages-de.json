@@ -169,9 +169,7 @@
     "resources": "Ressourcen",
     "resources_desc": "Besprechungsräume, Fahrzeuge und Geräte buchen",
     "assistant": "Assistent",
-    "assistant_desc": "Was sich der KI-Assistent über Sie merkt – ansehen, ändern, löschen",
-    "profile": "Profilbild",
-    "profile_desc": "Foto, das Kolleginnen und Kollegen in Mail und Kalender sehen"
+    "assistant_desc": "Was sich der KI-Assistent über Sie merkt – ansehen, ändern, löschen"
   },
   "domain": {
     "title": "Domains und DNS",
@@ -781,7 +779,6 @@
   "avatar": {
     "title": "Profilbild",
     "intro": "Ihr Foto erscheint bei Ihren Kolleginnen und Kollegen in Mail, Kalender und Adressbuch – nur innerhalb Ihrer Firma.",
-    "hint": "Jedes Foto geht: Es wird auf ein Quadrat aus der Mitte zugeschnitten und verkleinert.",
     "upload": "Foto hochladen",
     "upload_for": "Foto für {name} hochladen",
     "replace": "Foto ändern",

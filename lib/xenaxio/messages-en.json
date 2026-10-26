@@ -169,9 +169,7 @@
     "resources": "Resources",
     "resources_desc": "Book meeting rooms, vehicles and equipment",
     "assistant": "Assistant",
-    "assistant_desc": "What the AI assistant remembers about you – view, change, delete",
-    "profile": "Profile picture",
-    "profile_desc": "Photo your colleagues see in mail and calendar"
+    "assistant_desc": "What the AI assistant remembers about you – view, change, delete"
   },
   "domain": {
     "title": "Domains and DNS",
@@ -781,7 +779,6 @@
   "avatar": {
     "title": "Profile picture",
     "intro": "Your photo appears for your colleagues in mail, calendar and contacts – only within your company.",
-    "hint": "Any photo works: it is cropped to a square from the middle and made smaller.",
     "upload": "Upload photo",
     "upload_for": "Upload a photo for {name}",
     "replace": "Change photo",
