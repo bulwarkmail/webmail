@@ -115,6 +115,8 @@ export interface PortalInfo {
   logoUrl: string | null;
   /** Step 38: the app icon made from the logo (versioned path); null = xenaxio's. */
   iconUrl?: string | null;
+  /** Step 40: the icon's background behind the logo; null = white. */
+  iconBackground?: string | null;
 }
 
 /** Step 17: whose address this page was opened on. */
@@ -402,6 +404,7 @@ export const xenaxio = {
   uploadLogo: (file: Blob) => request<AdminPortal>("PUT", "/api/admin/portal/logo", file),
   removeLogo: () => request<AdminPortal>("DELETE", "/api/admin/portal/logo"),
   setColor: (color: string | null) => request<AdminPortal>("POST", "/api/admin/portal/color", { color }),
+  setIconBackground: (color: string | null) => request<AdminPortal>("POST", "/api/admin/portal/icon-background", { color }),
   addHostname: (hostname: string) => request<AdminPortal>("POST", "/api/admin/portal/hostname", { hostname }),
   checkHostname: () => request<AdminPortal>("POST", "/api/admin/portal/hostname/check", {}),
   setHostnamePrimary: (primary: boolean) => request<AdminPortal>("POST", "/api/admin/portal/hostname/primary", { primary }),
