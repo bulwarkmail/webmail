@@ -4492,7 +4492,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
 
   return (
     <DragDropProvider>
-      <div ref={appRootRef} className={cn("flex flex-col overflow-hidden pt-[env(safe-area-inset-top)]", mvShell ? "bg-[var(--mv-canvas)]" : "bg-background", isEmbedded ? "h-full" : "h-dvh")}>
+      <div ref={appRootRef} data-app-shell="" className={cn("flex flex-col overflow-hidden pt-[env(safe-area-inset-top)]", mvShell ? "bg-[var(--mv-canvas)]" : "bg-background", isEmbedded ? "h-full" : "h-dvh")}>
         <AppTopBannerSlot />
         {refreshIndicator}
         {isRateLimited && rateLimitSecondsLeft !== null && (
@@ -4537,7 +4537,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         {/* Desktop Navigation Rail (hidden when embedded inside Pro shell, and
             under Mountain View, whose header carries the app grid instead) */}
         {!isMobile && !isTablet && !isEmbedded && !mvShell && (
-          <div className="w-14 bg-secondary flex flex-col flex-shrink-0" style={{ borderRight: '1px solid rgba(128, 128, 128, 0.3)' }}>
+          <div data-app-rail="" className="w-14 bg-secondary flex flex-col flex-shrink-0" style={{ borderRight: '1px solid rgba(128, 128, 128, 0.3)' }}>
             <NavigationRail
               collapsed
               quota={quota}

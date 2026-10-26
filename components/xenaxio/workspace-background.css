@@ -1,0 +1,71 @@
+/* Step 42: the background under the web client (lib/xenaxio/backgrounds.ts).
+   Active while <html data-xenaxio-bg> is set, on screens of 1024 px and more.
+
+   The picture shows through the navigation only — the narrow rail, the folder
+   column, Mountain View's canvas and top bar — as frosted glass: a blurred
+   copy of it (made in advance, so the browser does not blur anything) under
+   a veil of the theme's colour. Every part paints it fixed to the window, so
+   the pieces join up into one picture. Lists, messages, the calendar grid and
+   settings keep their solid background, so text reads as before. On phones
+   and tablets the content fills the screen, so nothing changes there. */
+
+html[data-xenaxio-bg] {
+  --xenaxio-glass: color-mix(in srgb, var(--color-background) 52%, transparent);
+  --xenaxio-frost: linear-gradient(var(--xenaxio-glass), var(--xenaxio-glass)), var(--xenaxio-bg-soft);
+}
+
+@media (min-width: 1024px) {
+  /* Default layout: the rail and the folder column. */
+  html[data-xenaxio-bg]:not([data-interface-layout="mountain-view"]) [data-app-shell]:not(.h-full) :is([data-app-rail], [data-app-sidebar]) {
+    background: var(--xenaxio-frost);
+    background-attachment: fixed;
+    border-color: transparent !important;
+  }
+
+  /* Mountain View: the whole canvas around the content card; the navigation
+     and the top bar sit on it without a colour of their own. */
+  html[data-xenaxio-bg][data-interface-layout="mountain-view"] [data-app-shell]:not(.h-full) {
+    background: var(--xenaxio-frost);
+    background-attachment: fixed;
+  }
+  html[data-xenaxio-bg][data-interface-layout="mountain-view"] [data-app-shell]:not(.h-full) :is([data-app-sidebar], .mv-topbar) {
+    background: transparent;
+    border-color: transparent;
+  }
+  /* …except the folder column that floats over the list while hovered. */
+  html[data-xenaxio-bg][data-interface-layout="mountain-view"] [data-app-shell]:not(.h-full) [data-app-sidebar][data-mv-rail-peek] {
+    background: linear-gradient(color-mix(in srgb, var(--color-background) 80%, transparent), color-mix(in srgb, var(--color-background) 80%, transparent)), var(--xenaxio-bg-soft);
+    background-attachment: fixed;
+  }
+
+  /* Hover and selection in Mountain View's navigation tint the glass
+     instead of painting a solid colour onto it. */
+  html[data-xenaxio-bg][data-interface-layout="mountain-view"] {
+    --mv-nav-hover: color-mix(in oklab, var(--color-foreground) 8%, transparent);
+    --mv-nav-selected: color-mix(in oklab, var(--color-primary) 22%, transparent);
+  }
+
+  /* The content card floats on the picture. */
+  html[data-xenaxio-bg][data-interface-layout="mountain-view"] [data-mv-card] {
+    box-shadow: 0 2px 6px rgb(0 0 0 / 0.08), 0 12px 32px rgb(0 0 0 / 0.12);
+  }
+
+  /* The AI panel floats over the mail: real glass, the mail blurred behind it. */
+  html[data-xenaxio-bg] [data-xenaxio-glass] {
+    background-color: color-mix(in srgb, var(--color-background) 80%, transparent);
+    -webkit-backdrop-filter: blur(24px) saturate(140%);
+    backdrop-filter: blur(24px) saturate(140%);
+  }
+}
+
+/* "Reduce transparency" in the system settings: nearly solid. */
+@media (min-width: 1024px) and (prefers-reduced-transparency: reduce) {
+  html[data-xenaxio-bg] {
+    --xenaxio-glass: color-mix(in srgb, var(--color-background) 90%, transparent);
+  }
+  html[data-xenaxio-bg] [data-xenaxio-glass] {
+    background-color: var(--color-background);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
