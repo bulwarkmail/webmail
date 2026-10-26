@@ -257,7 +257,7 @@ export function FilesSidebar({
   );
 
   return (
-    <div className="flex flex-col h-full bg-secondary">
+    <div data-app-sidebar="" className="flex flex-col h-full bg-secondary">
       {/* Same h-14 box as the mail sidebar's account switcher, so the apps line up. */}
       <div className="px-3 h-14 border-b border-border flex items-center justify-between flex-shrink-0">
         <span className="text-sm font-semibold truncate">{t("title")}</span>

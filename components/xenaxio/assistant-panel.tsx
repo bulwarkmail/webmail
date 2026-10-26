@@ -590,6 +590,7 @@ export function AssistantPanel() {
 
   return (
     <aside
+      data-xenaxio-glass=""
       className="fixed inset-y-0 right-0 z-50 flex w-full flex-col border-l border-border bg-background text-foreground shadow-xl sm:w-[400px]"
       aria-label={t("assistant.title")}
       onDragOver={(e) => {

@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 import { useThemeStore } from '@/stores/theme-store';
 import { useSettingsStore, type Density } from '@/stores/settings-store';
 import { SettingsSection, SettingItem, RadioGroup, ToggleSwitch } from './settings-section';
+import { MyBackgroundSection } from '@/components/xenaxio/background-picker';
 import { ThemesSettings } from './themes-settings';
 import { LayoutSection, SidebarSection, ExperimentalSection } from './layout-settings';
 import { cn } from '@/lib/utils';
@@ -88,6 +89,9 @@ export function AppearanceSettings() {
         </SettingItem>
         {isFeatureEnabled('themesEnabled') && <ThemesSettings embedded />}
       </SettingsSection>
+
+      {/* xenaxio step 42: picture or gradient behind the window. */}
+      <MyBackgroundSection />
 
       <SettingsSection id="text" title={t('sections.text')}>
         {!isSettingHidden('fontSize') && (
