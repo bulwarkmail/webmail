@@ -9,6 +9,7 @@ import { avatarHooks } from "@/lib/plugin-hooks";
 import { withBasePath } from "@/lib/browser-navigation";
 import { IS_LITE } from "@/lib/lite";
 import { useFaviconRefreshStore, failedFaviconDomains } from "@/stores/favicon-refresh-store";
+import { useXenaxioAvatar } from "@/lib/xenaxio/avatars";
 
 const IS_DEV = process.env.NODE_ENV !== "production";
 
@@ -156,6 +157,8 @@ export function Avatar({ name, email, contactPhotoUri, size = "md", className, d
   const faviconRefreshedAt = useFaviconRefreshStore((s) => s.refreshedAt);
   const contacts = useContactStore((s) => s.contacts);
   const { devMode } = useConfig();
+  // xenaxio (step 41): the picture a colleague set for this address in the company.
+  const xenaxioAvatar = useXenaxioAvatar(email);
 
   // Ask plugins (e.g. Gravatar) to resolve an avatar URL for this email address.
   // Runs whenever email or name changes; resets plugin avatar state on each change.
@@ -241,7 +244,8 @@ export function Avatar({ name, email, contactPhotoUri, size = "md", className, d
   // Priority: contact photo > plugin avatar (e.g. Gravatar) > custom avatar > profile picture > company favicon > initials
   const customAvatar = devMode && email ? CUSTOM_AVATARS[email.toLowerCase()] : null;
   const pluginAvatar = pluginAvatarFailed ? null : pluginAvatarUrl;
-  const photoSrc = resolvedContactPhoto || pluginAvatar || customAvatar || profilePic || null;
+  const companyPhoto = imgError ? null : xenaxioAvatar;
+  const photoSrc = companyPhoto || resolvedContactPhoto || pluginAvatar || customAvatar || profilePic || null;
   const faviconSrc = !imgError && !domainFailed && showFavicon ? withBasePath(`/api/favicon?domain=${encodeURIComponent(faviconDomain!)}${faviconRefreshedAt ? `&v=${faviconRefreshedAt}` : ""}`) : null;
   const imgSrc = disableImages ? null : (photoSrc || faviconSrc);
   const isFavicon = imgSrc !== null && imgSrc === faviconSrc;
@@ -254,10 +258,10 @@ export function Avatar({ name, email, contactPhotoUri, size = "md", className, d
     }
     setImgError(true);
     // If this was a favicon URL (not a contact photo, plugin avatar, custom avatar or profile pic), remember the domain
-    if (faviconDomain && !resolvedContactPhoto && !pluginAvatar && !customAvatar && !profilePic) {
+    if (faviconDomain && !companyPhoto && !resolvedContactPhoto && !pluginAvatar && !customAvatar && !profilePic) {
       failedFaviconDomains.add(faviconDomain);
     }
-  }, [imgSrc, pluginAvatar, faviconDomain, resolvedContactPhoto, customAvatar, profilePic]);
+  }, [imgSrc, pluginAvatar, faviconDomain, companyPhoto, resolvedContactPhoto, customAvatar, profilePic]);
 
   return (
     <div

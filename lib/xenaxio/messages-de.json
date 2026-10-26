@@ -95,6 +95,10 @@
     "memory_full": "Es sind bereits {max} Notizen gespeichert. Löschen Sie ältere, um neue hinzuzufügen.",
     "memory_off": "Die Erinnerung ist ausgeschaltet.",
     "memory_not_found": "Diese Notiz gibt es nicht mehr.",
+    "avatar_invalid_type": "Bitte wählen Sie ein Foto (JPEG, PNG oder WebP).",
+    "avatar_too_large": "Das Bild ist zu groß (höchstens 256 KB).",
+    "avatar_too_big_dimensions": "Das Bild darf höchstens 1024 × 1024 Pixel groß sein.",
+    "avatar_not_found": "Kein Profilbild vorhanden.",
     "account_other_company": "Dieses Konto gehört zu einer anderen Firma. Hier stehen nur Konten dieser Firma; melden Sie sich auf dem Portal der anderen Firma an (dort auch als eigene App installierbar)."
   },
   "login": {
@@ -165,7 +169,9 @@
     "resources": "Ressourcen",
     "resources_desc": "Besprechungsräume, Fahrzeuge und Geräte buchen",
     "assistant": "Assistent",
-    "assistant_desc": "Was sich der KI-Assistent über Sie merkt – ansehen, ändern, löschen"
+    "assistant_desc": "Was sich der KI-Assistent über Sie merkt – ansehen, ändern, löschen",
+    "profile": "Profilbild",
+    "profile_desc": "Foto, das Kolleginnen und Kollegen in Mail und Kalender sehen"
   },
   "domain": {
     "title": "Domains und DNS",
@@ -771,5 +777,17 @@
     "add_hint": "Ein kurzer Satz, höchstens {max} Zeichen.",
     "full": "Es sind bereits {max} Notizen gespeichert. Löschen Sie ältere, um neue hinzuzufügen.",
     "privacy": "Die Notizen werden verschlüsselt in Deutschland gespeichert und nur an die KI übermittelt, wenn Sie den Assistenten nutzen. Ihr Administrator sieht sie nicht; im Protokoll steht nur, dass sich Notizen geändert haben. Externe KI-Chats (MCP) sehen sie nicht."
+  },
+  "avatar": {
+    "title": "Profilbild",
+    "intro": "Ihr Foto erscheint bei Ihren Kolleginnen und Kollegen in Mail, Kalender und Adressbuch – nur innerhalb Ihrer Firma.",
+    "hint": "Jedes Foto geht: Es wird auf ein Quadrat aus der Mitte zugeschnitten und verkleinert.",
+    "upload": "Foto hochladen",
+    "upload_for": "Foto für {name} hochladen",
+    "replace": "Foto ändern",
+    "remove": "Entfernen",
+    "saving": "Wird gespeichert …",
+    "unreadable": "Dieses Bild kann der Browser nicht öffnen. Bitte wählen Sie ein JPEG oder PNG.",
+    "alt": "Profilbild von {name}"
   }
 }

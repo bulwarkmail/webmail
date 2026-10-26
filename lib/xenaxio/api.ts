@@ -46,6 +46,13 @@ async function request<T>(method: "GET" | "POST" | "DELETE" | "PUT", path: strin
   return data as T;
 }
 
+/** Step 41: whose picture: one's own (null), or someone of the company (admin). */
+export type AvatarTarget = null | { kind: "users" | "shared-mailboxes" | "resources"; id: string };
+
+function avatarPath(target: AvatarTarget): string {
+  return target ? `/api/admin/${target.kind}/${encodeURIComponent(target.id)}/avatar` : "/api/me/avatar";
+}
+
 /** Step 28: one domain of the company by id; the primary one without. */
 function domainPath(id?: string): string {
   return id ? `/api/admin/domains/${encodeURIComponent(id)}` : "/api/admin/domain";
@@ -82,6 +89,8 @@ export interface Me {
   domain?: { name: string; status: "pending" | "active" } | null;
   /** Step 17: the company's portal (address, logo, colour). */
   portal?: PortalInfo;
+  /** Step 41: the user's own picture (versioned path); null = initials. */
+  avatarUrl?: string | null;
 }
 
 /** Step 29: an account signed in in this browser; `portalUrl` is where it opens. */
@@ -182,6 +191,8 @@ export interface WorkspaceUser {
   /** Full addresses, on any domain of the company (step 28). */
   aliases: string[];
   usedBytes?: number | null;
+  /** Step 41: picture (versioned path); null = initials. */
+  avatarUrl?: string | null;
 }
 
 /** Step 31: a meeting room, car or piece of equipment; everyone books it by inviting it. */
@@ -192,6 +203,7 @@ export interface WorkspaceResource {
   type: "room" | "vehicle" | "equipment";
   /** Employees who see and change its bookings. */
   managers: string[];
+  avatarUrl?: string | null;
 }
 
 /** Step 31: a shared mailbox (info@) and who may use it. */
@@ -205,6 +217,7 @@ export interface SharedMailbox {
   /** canSend false: reads and sorts mail; true: also sends from its addresses. */
   access: { userId: string; canSend: boolean }[];
   usedBytes?: number | null;
+  avatarUrl?: string | null;
 }
 
 /** Step 27: the mailbox that receives mail to unknown addresses of the domain. */
@@ -350,6 +363,10 @@ export interface MemoryState {
 
 export const xenaxio = {
   me: () => request<Me>("GET", "/api/me"),
+  // Step 41: pictures. `kind` null = the signed-in person's own.
+  avatars: () => request<{ avatars: { email: string; url: string }[] }>("GET", "/api/avatars"),
+  uploadAvatar: (target: AvatarTarget, image: Blob) => request<{ avatarUrl: string }>("PUT", avatarPath(target), image),
+  removeAvatar: (target: AvatarTarget) => request<{ avatarUrl: null }>("DELETE", avatarPath(target)),
   delivery: (emailId: string) => request<{ recipients: RecipientDelivery[] }>("GET", `/api/delivery?emailId=${encodeURIComponent(emailId)}`),
   mailApps: () => request<MailAppSettings>("GET", "/api/me/mail-apps"),
   memories: () => request<MemoryState>("GET", "/api/ai/memories"),

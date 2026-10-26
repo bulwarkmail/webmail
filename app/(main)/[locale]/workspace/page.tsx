@@ -3,7 +3,7 @@
 // Workspace home: company status and, for admins, the set-up pages.
 import type { ReactNode } from "react";
 import { Link } from "@/i18n/navigation";
-import { Brain, Building, ChevronRight, FileText, Globe, Inbox, KeyRound, Mail, Palette, Smartphone, Sparkles, Terminal, Users } from "@/components/icons";
+import { Brain, Building, ChevronRight, FileText, Globe, Inbox, KeyRound, Mail, Palette, Smartphone, Sparkles, Terminal, UserCircle, Users } from "@/components/icons";
 import { Notice } from "@/components/xenaxio/ui";
 import { useMe, WorkspaceShell } from "@/components/xenaxio/workspace-shell";
 import { useXT } from "@/lib/xenaxio/i18n";
@@ -40,6 +40,7 @@ function Overview() {
         {isAdmin && <Tile href="/workspace/resources" icon={<Building className="w-5 h-5" />} title={t("workspace.resources")} description={t("workspace.resources_desc")} />}
         {isAdmin && <Tile href="/workspace/ai" icon={<Sparkles className="w-5 h-5" />} title={t("workspace.ai")} description={t("workspace.ai_desc")} />}
         {isAdmin && <Tile href="/workspace/audit" icon={<FileText className="w-5 h-5" />} title={t("workspace.audit")} description={t("workspace.audit_desc")} />}
+        <Tile href="/workspace/profile" icon={<UserCircle className="w-5 h-5" />} title={t("workspace.profile")} description={t("workspace.profile_desc")} />
         <Tile href="/workspace/assistant" icon={<Brain className="w-5 h-5" />} title={t("workspace.assistant")} description={t("workspace.assistant_desc")} />
         <Tile href="/workspace/mail-apps" icon={<Smartphone className="w-5 h-5" />} title={t("workspace.mail_apps")} description={t("workspace.mail_apps_desc")} />
         <Tile href="/workspace/mcp" icon={<Terminal className="w-5 h-5" />} title={t("workspace.mcp")} description={t("workspace.mcp_desc")} />

@@ -95,6 +95,10 @@
     "memory_full": "{max} notes are already saved. Delete older ones to add new ones.",
     "memory_off": "Memory is switched off.",
     "memory_not_found": "This note no longer exists.",
+    "avatar_invalid_type": "Please choose a photo (JPEG, PNG or WebP).",
+    "avatar_too_large": "The picture is too large (256 KB at most).",
+    "avatar_too_big_dimensions": "The picture may be at most 1024 × 1024 pixels.",
+    "avatar_not_found": "No profile picture.",
     "account_other_company": "This account belongs to another company. Only this company's accounts can be added here; sign in on the other company's portal (it can be installed as its own app too)."
   },
   "login": {
@@ -165,7 +169,9 @@
     "resources": "Resources",
     "resources_desc": "Book meeting rooms, vehicles and equipment",
     "assistant": "Assistant",
-    "assistant_desc": "What the AI assistant remembers about you – view, change, delete"
+    "assistant_desc": "What the AI assistant remembers about you – view, change, delete",
+    "profile": "Profile picture",
+    "profile_desc": "Photo your colleagues see in mail and calendar"
   },
   "domain": {
     "title": "Domains and DNS",
@@ -771,5 +777,17 @@
     "add_hint": "One short sentence, at most {max} characters.",
     "full": "{max} notes are already saved. Delete older ones to add new ones.",
     "privacy": "Notes are stored encrypted in Germany and sent to the AI only when you use the assistant. Your administrator does not see them; the log only shows that notes changed. External AI chats (MCP) do not see them."
+  },
+  "avatar": {
+    "title": "Profile picture",
+    "intro": "Your photo appears for your colleagues in mail, calendar and contacts – only within your company.",
+    "hint": "Any photo works: it is cropped to a square from the middle and made smaller.",
+    "upload": "Upload photo",
+    "upload_for": "Upload a photo for {name}",
+    "replace": "Change photo",
+    "remove": "Remove",
+    "saving": "Saving …",
+    "unreadable": "The browser cannot open this picture. Please choose a JPEG or PNG.",
+    "alt": "Profile picture of {name}"
   }
 }
