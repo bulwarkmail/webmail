@@ -17,6 +17,7 @@ import { useIsEmbedded } from "@/hooks/use-is-embedded";
 import { useIsMobile } from "@/hooks/use-media-query";
 import { useMountainViewShell } from "@/hooks/use-mountain-view-shell";
 import { useSidebarApps } from "@/hooks/use-sidebar-apps";
+import { useChatBadge } from "@/lib/xenaxio/chat/nav";
 import { useChatStore } from "@/lib/xenaxio/chat/store";
 import { useXT } from "@/lib/xenaxio/i18n";
 import { useXenaxioMe } from "@/lib/xenaxio/me-store";
@@ -26,6 +27,7 @@ import { useEmailStore } from "@/stores/email-store";
 import { toast } from "@/stores/toast-store";
 import { cn } from "@/lib/utils";
 import { ChatDialogsProvider, CreateChannelDialog, PeoplePicker, QuickSwitcher } from "./dialogs";
+import { NotifySettingsDialog, PushBanner, useChatNotifyLoader } from "./notifications";
 import { RoomView } from "./room-view";
 import { ChatSidePanel } from "./side-panels";
 import { ChatSidebar } from "./sidebar";
@@ -60,7 +62,8 @@ function ChatInside() {
   const setFocus = useChatStore((s) => s.setFocus);
   const loadStatus = useChatStore((s) => s.loadStatus);
   const connect = useChatStore((s) => s.connect);
-  const [dialog, setDialog] = useState<"jump" | "create" | "dm" | null>(null);
+  const [dialog, setDialog] = useState<"jump" | "create" | "dm" | "notify" | null>(null);
+  useChatNotifyLoader(!!client?.ready);
 
   useEffect(() => {
     void loadStatus(true).then(() => connect());
@@ -90,6 +93,21 @@ function ChatInside() {
     if (event) setFocus({ roomId: room, eventId: event });
     window.history.replaceState(null, "", window.location.pathname);
   }, [client?.ready, setView, setFocus]);
+
+  // A click on a chat notification while the chat is open: switch the channel, no reload.
+  useEffect(() => {
+    if (!client?.ready || !("serviceWorker" in navigator)) return;
+    const onMessage = (e: MessageEvent) => {
+      const data = e.data as { kind?: string; roomId?: string; eventId?: string } | null;
+      if (data?.kind !== "xenaxio-chat-open" || !data.roomId) return;
+      setView({ kind: "room", roomId: data.roomId });
+      setPanel(null);
+      if (data.eventId) setFocus({ roomId: data.roomId, eventId: data.eventId });
+    };
+    navigator.serviceWorker.addEventListener("message", onMessage);
+    navigator.serviceWorker.startMessages();
+    return () => navigator.serviceWorker.removeEventListener("message", onMessage);
+  }, [client?.ready, setView, setPanel, setFocus]);
 
   // Focus is used once.
   useEffect(() => {
@@ -158,6 +176,7 @@ function ChatInside() {
       onJump={() => setDialog("jump")}
       onCreateChannel={() => setDialog("create")}
       onNewMessage={() => setDialog("dm")}
+      onNotify={() => setDialog("notify")}
     />
   );
 
@@ -170,7 +189,9 @@ function ChatInside() {
   );
 
   return (
-    <div className="flex min-h-0 flex-1">
+    <div className="flex min-h-0 flex-1 flex-col">
+      <PushBanner />
+      <div className="flex min-h-0 flex-1">
       {isMobile ? (
         panel ? (
           <div className="flex min-h-0 flex-1 flex-col">
@@ -201,15 +222,18 @@ function ChatInside() {
           onOpenPerson={(userId) => void client.openDirect([userId]).then(openRoom).catch(() => toast.error(t("chat.error")))}
         />
       )}
+      {dialog === "notify" && <NotifySettingsDialog client={client} onClose={() => setDialog(null)} />}
       {dialog === "create" && <CreateChannelDialog client={client} onClose={() => setDialog(null)} onCreated={openRoom} />}
       {dialog === "dm" && <PeoplePicker title={t("chat.dm_title")} action={t("chat.dm_start")} client={client} onClose={() => setDialog(null)} onDone={async (ids) => openRoom(await client.openDirect(ids))} />}
+      </div>
     </div>
   );
 }
 
 export function ChatApp() {
   const t = useXT();
-  useDocumentTitle(t("chat.title"));
+  const badge = useChatBadge();
+  useDocumentTitle(badge > 0 ? `(${badge}) ${t("chat.title")}` : t("chat.title"));
   const { logout, checkAuth } = useAuthStore();
   const { quota, isPushConnected } = useEmailStore();
   const { showAppsModal, inlineApp, loadedApps, handleManageApps, handleInlineApp, closeInlineApp, closeAppsModal } = useSidebarApps();

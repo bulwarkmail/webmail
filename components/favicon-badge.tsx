@@ -4,6 +4,7 @@ import { useEmailStore } from "@/stores/email-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useFaviconBadge } from "@/hooks/use-favicon-badge";
 import { useAppBadge } from "@/hooks/use-app-badge";
+import { useChatBadge } from "@/lib/xenaxio/chat/nav";
 
 /**
  * Badges the browser-tab favicon, and — where supported — the installed PWA's
@@ -35,8 +36,11 @@ export function FaviconBadge() {
   );
   const enabled = useSettingsStore((s) => s.faviconUnreadBadge);
 
-  useFaviconBadge(inboxUnread, enabled);
-  useAppBadge(inboxUnread, enabled);
+  // xenaxio: chat mentions and direct messages count too (step 43, part C).
+  const unread = inboxUnread + useChatBadge();
+
+  useFaviconBadge(unread, enabled);
+  useAppBadge(unread, enabled);
 
   return null;
 }

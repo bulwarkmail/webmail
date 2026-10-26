@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import { getLocale, getTranslations } from "next-intl/server";
 import { ServiceWorkerRegistration } from "@/components/service-worker-registration";
 import { FaviconBadge } from "@/components/favicon-badge";
+import { ChatPushBridge } from "@/components/xenaxio/chat/notifications";
 import { ThemeColorSync } from "@/components/theme-color-sync";
 import { IosViewportHeal } from "@/components/ios-viewport-heal";
 import { configManager } from "@/lib/admin/config-manager";
@@ -323,6 +324,7 @@ export default async function RootLayout({
         <ServiceWorkerRegistration />
         {!themeColorConfigured && <ThemeColorSync />}
         <FaviconBadge />
+        <ChatPushBridge />
         <IosViewportHeal />
         {children}
       </body>

@@ -5,6 +5,14 @@
 // so no crypto code is needed.
 import { ChatError, mx, newTxnId, paths } from "./api";
 
+const KEYWORD_PREFIX = "xenaxio-kw-";
+/** A stable rule id per keyword (ids allow only a few characters). */
+function keywordRuleId(word: string): string {
+  let hex = "";
+  for (const b of new TextEncoder().encode(word.toLowerCase())) hex += b.toString(16).padStart(2, "0");
+  return KEYWORD_PREFIX + hex.slice(0, 120);
+}
+
 export interface RawEvent {
   event_id?: string;
   type: string;
@@ -901,6 +909,21 @@ export class ChatClient {
     await mx("DELETE", paths.pushRule("room", roomId)).catch(() => undefined);
     if (level === "mentions") await mx("PUT", paths.pushRule("room", roomId), { actions: [] });
     if (level === "none") await mx("PUT", paths.pushRule("override", muteId), { actions: [], conditions: [{ kind: "event_match", key: "room_id", pattern: roomId }] });
+  }
+
+  /** Own keywords: a message containing one notifies like a mention (Slack's "My keywords"). */
+  async keywords(): Promise<string[]> {
+    const res = await mx<{ global?: { content?: { rule_id: string; pattern?: string }[] } }>("GET", paths.pushRules);
+    return (res.global?.content ?? []).filter((r) => r.rule_id.startsWith(KEYWORD_PREFIX) && r.pattern).map((r) => r.pattern as string);
+  }
+
+  async setKeywords(words: string[]): Promise<void> {
+    const wanted = new Map(words.map((w) => [keywordRuleId(w), w]));
+    const res = await mx<{ global?: { content?: { rule_id: string }[] } }>("GET", paths.pushRules);
+    for (const rule of res.global?.content ?? [])
+      if (rule.rule_id.startsWith(KEYWORD_PREFIX) && !wanted.has(rule.rule_id)) await mx("DELETE", paths.pushRule("content", rule.rule_id));
+    for (const [id, pattern] of wanted)
+      await mx("PUT", paths.pushRule("content", id), { pattern, actions: ["notify", { set_tweak: "sound", value: "default" }, { set_tweak: "highlight" }] });
   }
 
   /** The current notification level of a channel. */
