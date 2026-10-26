@@ -157,7 +157,7 @@ export function Avatar({ name, email, contactPhotoUri, size = "md", className, d
   const faviconRefreshedAt = useFaviconRefreshStore((s) => s.refreshedAt);
   const contacts = useContactStore((s) => s.contacts);
   const { devMode } = useConfig();
-  // xenaxio (step 39): the picture a colleague set for this address in the company.
+  // xenaxio (step 41): the picture a colleague set for this address in the company.
   const xenaxioAvatar = useXenaxioAvatar(email);
 
   // Ask plugins (e.g. Gravatar) to resolve an avatar URL for this email address.

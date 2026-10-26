@@ -6,7 +6,7 @@ vi.mock("@/lib/xenaxio/api", () => ({ xenaxio: { avatars: () => avatars() } }));
 
 import { centerSquare, useXenaxioAvatarStore } from "../avatars";
 
-describe("step 39: pictures", () => {
+describe("step 41: pictures", () => {
   beforeEach(() => {
     avatars.mockReset();
     useXenaxioAvatarStore.setState({ byEmail: {}, loadedAt: 0, loading: false });

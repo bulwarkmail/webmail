@@ -1,6 +1,6 @@
 "use client";
 
-// Step 39: a picture with "upload" and "remove": one's own (target null) or,
+// Step 41: a picture with "upload" and "remove": one's own (target null) or,
 // for the admin, an employee's, a shared mailbox's or a resource's.
 import { type ChangeEvent, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";

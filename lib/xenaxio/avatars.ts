@@ -1,4 +1,4 @@
-// Step 39: pictures of colleagues, shared mailboxes and resources. The
+// Step 41: pictures of colleagues, shared mailboxes and resources. The
 // platform answers which address of the company has one (aliases included);
 // the mail app's Avatar shows it before any other source. Loaded once per page
 // load, refreshed every few minutes and right after the user changes one.

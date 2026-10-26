@@ -1,6 +1,6 @@
 "use client";
 
-// Step 39: the signed-in person's own picture, shown to colleagues in mail and calendar.
+// Step 41: the signed-in person's own picture, shown to colleagues in mail and calendar.
 import { AvatarEditor } from "@/components/xenaxio/avatar-editor";
 import { useMe, WorkspaceShell } from "@/components/xenaxio/workspace-shell";
 import { useXT } from "@/lib/xenaxio/i18n";
