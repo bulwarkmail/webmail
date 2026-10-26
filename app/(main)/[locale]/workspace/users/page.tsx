@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { KeyRound, Pencil, Plus } from "@/components/icons";
 import { Field, Notice, PasswordField, TextField } from "@/components/xenaxio/ui";
+import { AvatarEditor } from "@/components/xenaxio/avatar-editor";
 import { useMe, WorkspaceShell } from "@/components/xenaxio/workspace-shell";
 import { errorKey, errorText, type WorkspaceDomain, type WorkspaceUser, xenaxio } from "@/lib/xenaxio/api";
 import { useXT } from "@/lib/xenaxio/i18n";
@@ -265,6 +266,7 @@ function UsersView() {
         <ul className="divide-y divide-border rounded-lg border border-border bg-card">
           {users.map((u) => (
             <li key={u.id} className="p-4 space-y-3">
+              <AvatarEditor key={u.avatarUrl ?? "none"} target={{ kind: "users", id: u.id }} url={u.avatarUrl} name={u.displayName} email={u.email} />
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="min-w-0">
                   <p className="font-medium truncate">{u.displayName}</p>
