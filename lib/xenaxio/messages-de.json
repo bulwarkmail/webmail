@@ -94,7 +94,8 @@
     "resource_not_found": "Diese Ressource gibt es nicht mehr.",
     "memory_full": "Es sind bereits {max} Notizen gespeichert. Löschen Sie ältere, um neue hinzuzufügen.",
     "memory_off": "Die Erinnerung ist ausgeschaltet.",
-    "memory_not_found": "Diese Notiz gibt es nicht mehr."
+    "memory_not_found": "Diese Notiz gibt es nicht mehr.",
+    "account_other_company": "Dieses Konto gehört zu einer anderen Firma. Hier stehen nur Konten dieser Firma; melden Sie sich auf dem Portal der anderen Firma an (dort auch als eigene App installierbar)."
   },
   "login": {
     "title": "Anmelden",
@@ -105,7 +106,8 @@
     "submit": "Anmelden",
     "submitting": "Anmeldung läuft…",
     "add_title": "Weiteres Konto hinzufügen",
-    "add_subtitle": "Ihre angemeldeten Konten bleiben angemeldet. Zwischen ihnen wechseln Sie im Kontomenü ohne Passwort."
+    "add_subtitle": "Ihre angemeldeten Konten bleiben angemeldet. Zwischen ihnen wechseln Sie im Kontomenü ohne Passwort.",
+    "other_company_link": "Zum Portal {host}"
   },
   "password": {
     "title": "Passwort ändern",

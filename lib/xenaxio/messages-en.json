@@ -94,7 +94,8 @@
     "resource_not_found": "This resource no longer exists.",
     "memory_full": "{max} notes are already saved. Delete older ones to add new ones.",
     "memory_off": "Memory is switched off.",
-    "memory_not_found": "This note no longer exists."
+    "memory_not_found": "This note no longer exists.",
+    "account_other_company": "This account belongs to another company. Only this company's accounts can be added here; sign in on the other company's portal (it can be installed as its own app too)."
   },
   "login": {
     "title": "Sign in",
@@ -105,7 +106,8 @@
     "submit": "Sign in",
     "submitting": "Signing in…",
     "add_title": "Add another account",
-    "add_subtitle": "The accounts you are signed in to stay signed in. Switch between them in the account menu without a password."
+    "add_subtitle": "The accounts you are signed in to stay signed in. Switch between them in the account menu without a password.",
+    "other_company_link": "Go to {host}"
   },
   "password": {
     "title": "Change password",
