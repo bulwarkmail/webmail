@@ -103,6 +103,8 @@ export const LITE_API_STRING_ALLOWLIST = [
   "/api/auth/accounts",
   "/api/auth/switch",
   "/api/auth/forget",
+  // Step 41: profile pictures (lib/xenaxio/avatars.ts, /api/me/avatar is under /api/me).
+  "/api/avatars",
   // Path-independent generic prefix used by `apiFetch` docs/comments.
   "/api/",
   // stores/update-store.ts - startPolling() is a no-op in Lite.
