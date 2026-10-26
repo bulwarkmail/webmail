@@ -8,6 +8,8 @@ import { useRouter } from "@/i18n/navigation";
 import { useTour } from "@/components/tour/tour-provider";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useDeviceDetection } from "@/hooks/use-media-query";
+import { XENAXIO_BFF } from "@/lib/xenaxio/bff";
+import { useXenaxioHint } from "@/lib/xenaxio/me-store";
 
 const ONBOARDING_KEY = "onboarding_completed";
 
@@ -22,6 +24,9 @@ export function WelcomeBanner() {
   const [dismissed, setDismissed] = useState(false);
   // A phone has no keyboard shortcuts and keeps the apps in the bottom bar.
   const { isMobile } = useDeviceDetection();
+  // xenaxio: the platform remembers the closed banner for the user, so it stays
+  // closed on every device and company address (the browser storage did not).
+  const { dismissed: serverDismissed, dismiss: dismissOnServer } = useXenaxioHint("welcome");
 
   useEffect(() => {
     // One-time migration: if the legacy per-device flag is set but the synced
@@ -36,6 +41,10 @@ export function WelcomeBanner() {
   }, [onboardingCompleted, updateSetting]);
 
   useEffect(() => {
+    if (XENAXIO_BFF) {
+      setVisible(serverDismissed === false);
+      return;
+    }
     if (!onboardingCompleted) {
       setVisible(true);
       return;
@@ -49,15 +58,16 @@ export function WelcomeBanner() {
       } catch { /* localStorage unavailable */ }
     }
     setVisible(false);
-  }, [onboardingCompleted, showOnboardingOnNewDevices]);
+  }, [onboardingCompleted, showOnboardingOnNewDevices, serverDismissed]);
 
   const dismiss = useCallback(() => {
     setDismissed(true);
+    if (XENAXIO_BFF) dismissOnServer();
     updateSetting("onboardingCompleted", true);
     try {
       localStorage.setItem(ONBOARDING_KEY, "true");
     } catch { /* localStorage unavailable */ }
-  }, [updateSetting]);
+  }, [updateSetting, dismissOnServer]);
 
   useEffect(() => {
     if (!visible) return;

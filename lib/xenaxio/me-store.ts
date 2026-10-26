@@ -2,9 +2,9 @@
 // (/api/me), shared by the domain banner, the "Verwaltung" menu entry and the
 // composer. Loaded once per page load and refreshed every few minutes, so the
 // banner disappears by itself once the domain gets connected.
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { create } from "zustand";
-import { type Me, xenaxio } from "@/lib/xenaxio/api";
+import { type DismissableHint, type Me, xenaxio } from "@/lib/xenaxio/api";
 import { XENAXIO_BFF } from "@/lib/xenaxio/bff";
 
 const REFRESH_MS = 5 * 60_000;
@@ -14,6 +14,7 @@ interface MeState {
   loadedAt: number;
   loading: boolean;
   load: () => Promise<void>;
+  dismissHint: (hint: DismissableHint) => void;
 }
 
 export const useXenaxioMeStore = create<MeState>((set, get) => ({
@@ -32,6 +33,12 @@ export const useXenaxioMeStore = create<MeState>((set, get) => ({
       set({ loading: false });
     }
   },
+  dismissHint: (hint) => {
+    const me = get().me;
+    if (me) set({ me: { ...me, dismissedHints: [...new Set([...(me.dismissedHints ?? []), hint])] } });
+    // Offline or signed out: it shows again next time, nothing else breaks.
+    void xenaxio.dismissHint(hint).catch(() => {});
+  },
 }));
 
 /** Current user and domain (null until loaded or outside the xenaxio build). */
@@ -49,4 +56,18 @@ export function useXenaxioMe(): Me | null {
 /** The domain is known and not connected yet: mail cannot be sent or received. */
 export function domainPending(me: Me | null): me is Me & { domain: { name: string; status: "pending" } } {
   return me?.domain?.status === "pending";
+}
+
+/**
+ * A hint the user can close for good, remembered by the platform for the user
+ * (every device and company address). `dismissed` is null until /api/me has
+ * loaded, so the hint does not flash up before that.
+ */
+export function useXenaxioHint(hint: DismissableHint): { dismissed: boolean | null; dismiss: () => void } {
+  const me = useXenaxioMe();
+  const dismissHint = useXenaxioMeStore((s) => s.dismissHint);
+  return {
+    dismissed: me ? (me.dismissedHints ?? []).includes(hint) : null,
+    dismiss: useCallback(() => dismissHint(hint), [dismissHint, hint]),
+  };
 }
