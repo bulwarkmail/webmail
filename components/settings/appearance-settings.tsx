@@ -90,7 +90,7 @@ export function AppearanceSettings() {
         {isFeatureEnabled('themesEnabled') && <ThemesSettings embedded />}
       </SettingsSection>
 
-      {/* xenaxio step 41: picture or gradient behind the window. */}
+      {/* xenaxio step 42: picture or gradient behind the window. */}
       <MyBackgroundSection />
 
       <SettingsSection id="text" title={t('sections.text')}>

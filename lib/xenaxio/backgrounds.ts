@@ -1,4 +1,4 @@
-// Step 41: the background under the web client, as in the new Outlook — a
+// Step 42: the background under the web client, as in the new Outlook — a
 // picture or a colour gradient behind the window, with see-through, blurred
 // navigation on top of it. The platform stores only a code (the person's own
 // choice and the company's default); this list is the client's.

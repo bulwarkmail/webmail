@@ -1,6 +1,6 @@
 "use client";
 
-// Step 41: puts the chosen background under the web client (the person's own,
+// Step 42: puts the chosen background under the web client (the person's own,
 // else the company's default). Only once signed in: the sign-in page keeps
 // its plain look. Styles: workspace-background.css.
 import { useEffect } from "react";

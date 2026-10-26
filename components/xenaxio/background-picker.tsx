@@ -1,6 +1,6 @@
 "use client";
 
-// Step 41: a grid of background previews, as in Outlook's "Appearance".
+// Step 42: a grid of background previews, as in Outlook's "Appearance".
 // Used by the person in Settings → Appearance and by the admin on
 // "Erscheinungsbild" (the company's default).
 import { useState } from "react";

@@ -95,6 +95,10 @@
     "memory_full": "{max} notes are already saved. Delete older ones to add new ones.",
     "memory_off": "Memory is switched off.",
     "memory_not_found": "This note no longer exists.",
+    "avatar_invalid_type": "Please choose a photo (JPEG, PNG or WebP).",
+    "avatar_too_large": "The picture is too large (256 KB at most).",
+    "avatar_too_big_dimensions": "The picture may be at most 1024 × 1024 pixels.",
+    "avatar_not_found": "No profile picture.",
     "account_other_company": "This account belongs to another company. Only this company's accounts can be added here; sign in on the other company's portal (it can be installed as its own app too)."
   },
   "login": {
@@ -799,5 +803,16 @@
       "red": "Red",
       "green": "Green"
     }
+  },
+  "avatar": {
+    "title": "Profile picture",
+    "intro": "Your photo appears for your colleagues in mail, calendar and contacts – only within your company.",
+    "upload": "Upload photo",
+    "upload_for": "Upload a photo for {name}",
+    "replace": "Change photo",
+    "remove": "Remove",
+    "saving": "Saving …",
+    "unreadable": "The browser cannot open this picture. Please choose a JPEG or PNG.",
+    "alt": "Profile picture of {name}"
   }
 }

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// xenaxio step 41: draws the background pictures of the web client
+// xenaxio step 42: draws the background pictures of the web client
 // (public/xenaxio/backgrounds). Our own artwork, so no third-party licence:
 // abstract landscapes made of SVG shapes, rendered and compressed by sharp.
 // Deterministic (seeded), so a re-run gives the same files.

@@ -95,6 +95,10 @@
     "memory_full": "Es sind bereits {max} Notizen gespeichert. Löschen Sie ältere, um neue hinzuzufügen.",
     "memory_off": "Die Erinnerung ist ausgeschaltet.",
     "memory_not_found": "Diese Notiz gibt es nicht mehr.",
+    "avatar_invalid_type": "Bitte wählen Sie ein Foto (JPEG, PNG oder WebP).",
+    "avatar_too_large": "Das Bild ist zu groß (höchstens 256 KB).",
+    "avatar_too_big_dimensions": "Das Bild darf höchstens 1024 × 1024 Pixel groß sein.",
+    "avatar_not_found": "Kein Profilbild vorhanden.",
     "account_other_company": "Dieses Konto gehört zu einer anderen Firma. Hier stehen nur Konten dieser Firma; melden Sie sich auf dem Portal der anderen Firma an (dort auch als eigene App installierbar)."
   },
   "login": {
@@ -799,5 +803,16 @@
       "red": "Rot",
       "green": "Grün"
     }
+  },
+  "avatar": {
+    "title": "Profilbild",
+    "intro": "Ihr Foto erscheint bei Ihren Kolleginnen und Kollegen in Mail, Kalender und Adressbuch – nur innerhalb Ihrer Firma.",
+    "upload": "Foto hochladen",
+    "upload_for": "Foto für {name} hochladen",
+    "replace": "Foto ändern",
+    "remove": "Entfernen",
+    "saving": "Wird gespeichert …",
+    "unreadable": "Dieses Bild kann der Browser nicht öffnen. Bitte wählen Sie ein JPEG oder PNG.",
+    "alt": "Profilbild von {name}"
   }
 }

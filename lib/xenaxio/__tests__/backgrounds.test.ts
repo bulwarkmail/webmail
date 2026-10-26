@@ -5,7 +5,7 @@ import { BACKGROUNDS, backgroundCss, effectiveBackground, findBackground } from 
 import de from "@/lib/xenaxio/messages-de.json";
 import en from "@/lib/xenaxio/messages-en.json";
 
-describe("step 41: backgrounds", () => {
+describe("step 42: backgrounds", () => {
   it("the person's own choice wins, else the company's, 'none' means none", () => {
     expect(effectiveBackground(null, null)).toBe(null);
     expect(effectiveBackground(null, "img-dunes")?.id).toBe("img-dunes");

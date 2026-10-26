@@ -46,6 +46,20 @@ async function request<T>(method: "GET" | "POST" | "DELETE" | "PUT", path: strin
   return data as T;
 }
 
+/** Step 41: whose picture: one's own (null), or someone of the company (admin). */
+export type AvatarTarget = null | { kind: "users" | "shared-mailboxes" | "resources"; id: string };
+
+// Whole paths, so the Lite build check (scripts/lite/lib.mjs) sees each one.
+const AVATAR_BASES = {
+  users: "/api/admin/users",
+  "shared-mailboxes": "/api/admin/shared-mailboxes",
+  resources: "/api/admin/resources",
+} as const;
+
+function avatarPath(target: AvatarTarget): string {
+  return target ? `${AVATAR_BASES[target.kind]}/${encodeURIComponent(target.id)}/avatar` : "/api/me/avatar";
+}
+
 /** Step 28: one domain of the company by id; the primary one without. */
 function domainPath(id?: string): string {
   return id ? `/api/admin/domains/${encodeURIComponent(id)}` : "/api/admin/domain";
@@ -82,7 +96,9 @@ export interface Me {
   domain?: { name: string; status: "pending" | "active" } | null;
   /** Step 17: the company's portal (address, logo, colour). */
   portal?: PortalInfo;
-  /** Step 41: the person's own background (null = the company's, "none" = none). */
+  /** Step 41: the user's own picture (versioned path); null = initials. */
+  avatarUrl?: string | null;
+  /** Step 42: the person's own background (null = the company's, "none" = none). */
   background?: string | null;
 }
 
@@ -119,7 +135,7 @@ export interface PortalInfo {
   iconUrl?: string | null;
   /** Step 40: the icon's background behind the logo; null = white. */
   iconBackground?: string | null;
-  /** Step 41: the company's default background under the web client; null = none. */
+  /** Step 42: the company's default background under the web client; null = none. */
   background?: string | null;
 }
 
@@ -186,6 +202,8 @@ export interface WorkspaceUser {
   /** Full addresses, on any domain of the company (step 28). */
   aliases: string[];
   usedBytes?: number | null;
+  /** Step 41: picture (versioned path); null = initials. */
+  avatarUrl?: string | null;
 }
 
 /** Step 31: a meeting room, car or piece of equipment; everyone books it by inviting it. */
@@ -196,6 +214,7 @@ export interface WorkspaceResource {
   type: "room" | "vehicle" | "equipment";
   /** Employees who see and change its bookings. */
   managers: string[];
+  avatarUrl?: string | null;
 }
 
 /** Step 31: a shared mailbox (info@) and who may use it. */
@@ -209,6 +228,7 @@ export interface SharedMailbox {
   /** canSend false: reads and sorts mail; true: also sends from its addresses. */
   access: { userId: string; canSend: boolean }[];
   usedBytes?: number | null;
+  avatarUrl?: string | null;
 }
 
 /** Step 27: the mailbox that receives mail to unknown addresses of the domain. */
@@ -354,6 +374,10 @@ export interface MemoryState {
 
 export const xenaxio = {
   me: () => request<Me>("GET", "/api/me"),
+  // Step 41: pictures. `kind` null = the signed-in person's own.
+  avatars: () => request<{ avatars: { email: string; url: string }[] }>("GET", "/api/avatars"),
+  uploadAvatar: (target: AvatarTarget, image: Blob) => request<{ avatarUrl: string }>("PUT", avatarPath(target), image),
+  removeAvatar: (target: AvatarTarget) => request<{ avatarUrl: null }>("DELETE", avatarPath(target)),
   delivery: (emailId: string) => request<{ recipients: RecipientDelivery[] }>("GET", `/api/delivery?emailId=${encodeURIComponent(emailId)}`),
   mailApps: () => request<MailAppSettings>("GET", "/api/me/mail-apps"),
   memories: () => request<MemoryState>("GET", "/api/ai/memories"),
@@ -409,9 +433,9 @@ export const xenaxio = {
   removeLogo: () => request<AdminPortal>("DELETE", "/api/admin/portal/logo"),
   setColor: (color: string | null) => request<AdminPortal>("POST", "/api/admin/portal/color", { color }),
   setIconBackground: (color: string | null) => request<AdminPortal>("POST", "/api/admin/portal/icon-background", { color }),
-  /** Step 41: the company's default background for everyone who has not picked their own. */
+  /** Step 42: the company's default background for everyone who has not picked their own. */
   setCompanyBackground: (background: string | null) => request<AdminPortal>("POST", "/api/admin/portal/background", { background }),
-  /** Step 41: the person's own background; null follows the company's. */
+  /** Step 42: the person's own background; null follows the company's. */
   setMyBackground: (background: string | null) => request<{ background: string | null }>("POST", "/api/me/background", { background }),
   addHostname: (hostname: string) => request<AdminPortal>("POST", "/api/admin/portal/hostname", { hostname }),
   checkHostname: () => request<AdminPortal>("POST", "/api/admin/portal/hostname/check", {}),

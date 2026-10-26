@@ -282,7 +282,7 @@ function AppearanceView() {
         </div>
       </Section>
 
-      {/* Step 41: the background under the web client for everyone who has not picked their own. */}
+      {/* Step 42: the background under the web client for everyone who has not picked their own. */}
       <Section title={t("background.company_title")} description={t("background.company_intro")}>
         <BackgroundPicker
           value={portal.background ?? null}

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Pencil, Plus } from "@/components/icons";
 import { Field, Notice, TextField } from "@/components/xenaxio/ui";
+import { AvatarEditor } from "@/components/xenaxio/avatar-editor";
 import { useMe, WorkspaceShell } from "@/components/xenaxio/workspace-shell";
 import { errorKey, errorText, type SharedMailbox, type WorkspaceDomain, type WorkspaceUser, xenaxio } from "@/lib/xenaxio/api";
 import { useXT } from "@/lib/xenaxio/i18n";
@@ -258,6 +259,7 @@ function SharedView() {
               const readers = m.access.filter((a) => !a.canSend).map((a) => names.get(a.userId) ?? "?");
               return (
                 <li key={m.id} className="p-4 space-y-3">
+                  <AvatarEditor key={m.avatarUrl ?? "none"} target={{ kind: "shared-mailboxes", id: m.id }} url={m.avatarUrl} name={m.displayName} email={m.email} />
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="min-w-0">
                       <p className="font-medium truncate">{m.displayName}</p>
