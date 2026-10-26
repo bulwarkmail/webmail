@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useLayoutEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { Mail, CalendarEvent, Users, Folder, Settings, Keyboard, Plus, Shield, LogOut, Check, Search, Puzzle } from "@/components/icons";
+import { Mail, CalendarEvent, Users, Folder, Settings, Keyboard, Plus, Shield, LogOut, Check, Search, Puzzle, MessagesSquare } from "@/components/icons";
 import { AccountSwitcher } from "./account-switcher";
 import { iconForName } from "@/components/icons";
 import { useConfig } from "@/hooks/use-config";
@@ -33,11 +33,14 @@ import { usePluginPages, pluginPageHref, isPluginPageActive } from "@/hooks/use-
 import { NotificationBell } from "@/components/notifications/notification-center";
 import { WorkspaceNavLink } from "@/components/xenaxio/workspace-nav-link";
 import { XENAXIO_BFF } from "@/lib/xenaxio/bff";
+import { useChatNavItem } from "@/lib/xenaxio/chat/nav";
 
 interface NavItem {
   id: string;
   icon: typeof Mail;
   labelKey: string;
+  /** xenaxio: a label of our own (not in Bulwark's sidebar strings). */
+  label?: string;
   href: string;
   hidden?: boolean;
   badge?: number;
@@ -308,11 +311,14 @@ export function NavigationRail({
   }, [logoutMenuOpen, logoutPopoverRef]);
 
 
+  const chatNav = useChatNavItem();
   const navItems: NavItem[] = [
     { id: "mail", icon: Mail, labelKey: "mail", href: "/", badge: inboxUnread },
     { id: "calendar", icon: CalendarEvent, labelKey: "calendar", href: "/calendar", hidden: !supportsCalendar || !calendarEnabled },
     { id: "contacts", icon: Users, labelKey: "contacts", href: "/contacts", hidden: !supportsContacts || !contactsEnabled },
     { id: "files", icon: Folder, labelKey: "files", href: "/files", hidden: !supportsFiles || !filesEnabled },
+    // xenaxio (step 43): the team chat, when the company has it on.
+    { id: "chat", icon: MessagesSquare, labelKey: "chat", label: chatNav.label, href: "/chat", hidden: !chatNav.visible, badge: chatNav.badge },
   ];
 
   // When the host (e.g. the Pro shell) takes over navigation via `onNavigate`,
@@ -392,7 +398,7 @@ export function NavigationRail({
                   <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-0.5 rounded-full bg-primary" />
                 )}
               </div>
-              <span className="text-[10px] font-medium leading-tight truncate max-w-full">{t(item.labelKey)}</span>
+              <span className="text-[10px] font-medium leading-tight truncate max-w-full">{item.label ?? t(item.labelKey)}</span>
             </Link>
           );
         })}
@@ -593,11 +599,11 @@ export function NavigationRail({
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
               )}
               aria-current={isActive ? "page" : undefined}
-              title={collapsed ? t(item.labelKey) : undefined}
+              title={collapsed ? (item.label ?? t(item.labelKey)) : undefined}
               style={collapsed ? undefined : { paddingBlock: 'var(--density-sidebar-py)' }}
             >
               <Icon className={cn("w-[18px] h-[18px] flex-shrink-0", isActive && "text-primary")} />
-              {!collapsed && <span className="truncate">{t(item.labelKey)}</span>}
+              {!collapsed && <span className="truncate">{item.label ?? t(item.labelKey)}</span>}
               {item.badge != null && item.badge > 0 && (
                 <span className={cn(
                   "absolute flex items-center justify-center min-w-[16px] h-4 text-[10px] font-bold rounded-full bg-red-500 text-white px-1",

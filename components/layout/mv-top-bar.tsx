@@ -9,6 +9,7 @@ import {
   HelpCircle,
   Mail,
   Menu,
+  MessagesSquare,
   Puzzle,
   Settings,
   Shield,
@@ -38,6 +39,7 @@ import { usePluginPages, pluginPageHref, isPluginPageActive } from "@/hooks/use-
 import { NotificationBell } from "@/components/notifications/notification-center";
 import type { ContactSuggestion } from "@/lib/search-suggestions";
 import { XENAXIO_BFF } from "@/lib/xenaxio/bff";
+import { useChatNavItem } from "@/lib/xenaxio/chat/nav";
 import { WorkspaceNavLink } from "@/components/xenaxio/workspace-nav-link";
 
 /** The top bar is not about any one item: plugin clicks carry no context. */
@@ -149,6 +151,7 @@ export function MvTopBar({
     return () => document.removeEventListener("mousedown", onPointerDown);
   }, [appsOpen, appsMenuRef]);
 
+  const chatNav = useChatNavItem();
   const apps: Array<{ id: string; icon: AppIconType; label: string; href: string }> = [
     { id: "mail", icon: Mail, label: t("mail"), href: "/" },
     ...(supportsCalendar && calendarEnabled
@@ -160,6 +163,8 @@ export function MvTopBar({
     ...((client?.supportsFiles() ?? false) && filesEnabled
       ? [{ id: "files", icon: Folder, label: t("files"), href: "/files" }]
       : []),
+    // xenaxio (step 43): the team chat, when the company has it on.
+    ...(chatNav.visible ? [{ id: "chat", icon: MessagesSquare, label: chatNav.label, href: "/chat" }] : []),
     { id: "settings", icon: Settings, label: t("settings"), href: "/settings" },
   ];
 
