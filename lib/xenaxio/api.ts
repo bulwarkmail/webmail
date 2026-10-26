@@ -98,7 +98,12 @@ export interface Me {
   portal?: PortalInfo;
   /** Step 41: the user's own picture (versioned path); null = initials. */
   avatarUrl?: string | null;
+  /** Hints the user has closed for good (kept by the platform, the same on every device). */
+  dismissedHints?: string[];
 }
+
+/** Hints of the web client a user can close for good (the platform's list). */
+export type DismissableHint = "welcome";
 
 /** Step 29: an account signed in in this browser; `portalUrl` is where it opens. */
 export interface BrowserAccount {
@@ -370,6 +375,7 @@ export interface MemoryState {
 
 export const xenaxio = {
   me: () => request<Me>("GET", "/api/me"),
+  dismissHint: (hint: DismissableHint) => request<{ dismissedHints: string[] }>("POST", `/api/me/hints/${hint}`),
   // Step 41: pictures. `kind` null = the signed-in person's own.
   avatars: () => request<{ avatars: { email: string; url: string }[] }>("GET", "/api/avatars"),
   uploadAvatar: (target: AvatarTarget, image: Blob) => request<{ avatarUrl: string }>("PUT", avatarPath(target), image),
