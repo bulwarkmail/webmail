@@ -771,5 +771,33 @@
     "add_hint": "Ein kurzer Satz, höchstens {max} Zeichen.",
     "full": "Es sind bereits {max} Notizen gespeichert. Löschen Sie ältere, um neue hinzuzufügen.",
     "privacy": "Die Notizen werden verschlüsselt in Deutschland gespeichert und nur an die KI übermittelt, wenn Sie den Assistenten nutzen. Ihr Administrator sieht sie nicht; im Protokoll steht nur, dass sich Notizen geändert haben. Externe KI-Chats (MCP) sehen sie nicht."
+  },
+  "background": {
+    "title": "Hintergrund",
+    "intro": "Bild oder Farbverlauf hinter dem Fenster, wie in Outlook. Navigation und Seitenleiste werden durchscheinend. Gilt auf allen Ihren Geräten, auf Bildschirmen ab 1024 Pixel Breite.",
+    "follow": "Wie Firma",
+    "follow_named": "Wie Firma ({name})",
+    "follow_none": "Ihre Firma hat keinen Hintergrund festgelegt.",
+    "none": "Ohne",
+    "images": "Bilder",
+    "gradients": "Farbverläufe",
+    "error": "Der Hintergrund konnte nicht gespeichert werden. Bitte erneut versuchen.",
+    "company_title": "Hintergrund für alle",
+    "company_intro": "Bild oder Farbverlauf hinter dem Fenster von Mail, Kalender und Kontakten. Gilt für alle im Team, die keinen eigenen gewählt haben; jede Person kann ihn unter Einstellungen → Darstellung ändern.",
+    "company_saved": "Gespeichert. Ihr Team sieht den Hintergrund beim nächsten Laden der Seite.",
+    "names": {
+      "mountains": "Berge",
+      "dunes": "Dünen",
+      "sea": "Meer",
+      "aurora": "Polarlicht",
+      "bloom": "Kugeln",
+      "hills": "Hügel",
+      "blue": "Blau",
+      "violet": "Violett",
+      "pink": "Pink",
+      "orange": "Orange",
+      "red": "Rot",
+      "green": "Grün"
+    }
   }
 }

@@ -82,6 +82,8 @@ export interface Me {
   domain?: { name: string; status: "pending" | "active" } | null;
   /** Step 17: the company's portal (address, logo, colour). */
   portal?: PortalInfo;
+  /** Step 41: the person's own background (null = the company's, "none" = none). */
+  background?: string | null;
 }
 
 /** Step 29: an account signed in in this browser; `portalUrl` is where it opens. */
@@ -117,6 +119,8 @@ export interface PortalInfo {
   iconUrl?: string | null;
   /** Step 40: the icon's background behind the logo; null = white. */
   iconBackground?: string | null;
+  /** Step 41: the company's default background under the web client; null = none. */
+  background?: string | null;
 }
 
 /** Step 17: whose address this page was opened on. */
@@ -405,6 +409,10 @@ export const xenaxio = {
   removeLogo: () => request<AdminPortal>("DELETE", "/api/admin/portal/logo"),
   setColor: (color: string | null) => request<AdminPortal>("POST", "/api/admin/portal/color", { color }),
   setIconBackground: (color: string | null) => request<AdminPortal>("POST", "/api/admin/portal/icon-background", { color }),
+  /** Step 41: the company's default background for everyone who has not picked their own. */
+  setCompanyBackground: (background: string | null) => request<AdminPortal>("POST", "/api/admin/portal/background", { background }),
+  /** Step 41: the person's own background; null follows the company's. */
+  setMyBackground: (background: string | null) => request<{ background: string | null }>("POST", "/api/me/background", { background }),
   addHostname: (hostname: string) => request<AdminPortal>("POST", "/api/admin/portal/hostname", { hostname }),
   checkHostname: () => request<AdminPortal>("POST", "/api/admin/portal/hostname/check", {}),
   setHostnamePrimary: (primary: boolean) => request<AdminPortal>("POST", "/api/admin/portal/hostname/primary", { primary }),

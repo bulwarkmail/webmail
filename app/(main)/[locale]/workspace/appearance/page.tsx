@@ -15,6 +15,8 @@ import { useXT } from "@/lib/xenaxio/i18n";
 import { withBasePath } from "@/lib/browser-navigation";
 import { contrastRatio } from "@/lib/xenaxio/portal";
 import { cn } from "@/lib/utils";
+import { BackgroundPicker } from "@/components/xenaxio/background-picker";
+import { useXenaxioMeStore } from "@/lib/xenaxio/me-store";
 
 const LOGO_MAX_BYTES = 256 * 1024;
 const HEX = /^#[0-9a-f]{6}$/i;
@@ -278,6 +280,28 @@ function AppearanceView() {
             </Button>
           )}
         </div>
+      </Section>
+
+      {/* Step 41: the background under the web client for everyone who has not picked their own. */}
+      <Section title={t("background.company_title")} description={t("background.company_intro")}>
+        <BackgroundPicker
+          value={portal.background ?? null}
+          extra={[{ code: null, label: t("background.none"), bg: null }]}
+          disabled={busy !== null}
+          onSelect={(code) =>
+            run(
+              "background",
+              async () => {
+                const result = await xenaxio.setCompanyBackground(code);
+                // This window follows at once (unless the admin picked their own).
+                const me = useXenaxioMeStore.getState().me;
+                if (me?.portal) useXenaxioMeStore.setState({ me: { ...me, portal: { ...me.portal, background: result.background ?? null } } });
+                return result;
+              },
+              t("background.company_saved"),
+            )
+          }
+        />
       </Section>
 
       {portal.customHostnames && (

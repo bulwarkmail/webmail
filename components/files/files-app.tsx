@@ -615,7 +615,7 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
   if (!isAuthenticated) return null;
 
   return (
-    <div className={cn("flex flex-col overflow-hidden pt-[env(safe-area-inset-top)]", mvShell ? "bg-[var(--mv-canvas)]" : "bg-background", isEmbedded ? "h-full" : "h-dvh")}>
+    <div data-app-shell="" className={cn("flex flex-col overflow-hidden pt-[env(safe-area-inset-top)]", mvShell ? "bg-[var(--mv-canvas)]" : "bg-background", isEmbedded ? "h-full" : "h-dvh")}>
       <AppTopBannerSlot />
       {refreshIndicator}
       {mvShell && (
@@ -629,7 +629,7 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
       )}
       <div data-mv-card={mvShell ? "" : undefined} className={cn("flex flex-1 min-h-0 overflow-hidden", mvShell && "mb-4 mx-4")}>
       {!isMobile && !isEmbedded && !mvShell && (
-        <div className="w-14 bg-secondary flex flex-col flex-shrink-0" style={{ borderRight: '1px solid rgba(128, 128, 128, 0.3)' }}>
+        <div data-app-rail="" className="w-14 bg-secondary flex flex-col flex-shrink-0" style={{ borderRight: '1px solid rgba(128, 128, 128, 0.3)' }}>
           <NavigationRail
             collapsed
             quota={quota}

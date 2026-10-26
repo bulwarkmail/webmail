@@ -1752,7 +1752,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
   );
 
   return (
-    <div className={cn("flex flex-col overflow-hidden pt-[env(safe-area-inset-top)]", mvShell ? "bg-[var(--mv-canvas)]" : "bg-background", isEmbedded ? "h-full" : "h-dvh")}>
+    <div data-app-shell="" className={cn("flex flex-col overflow-hidden pt-[env(safe-area-inset-top)]", mvShell ? "bg-[var(--mv-canvas)]" : "bg-background", isEmbedded ? "h-full" : "h-dvh")}>
       <AppTopBannerSlot />
       {refreshIndicator}
       {mvShell && (
@@ -1767,7 +1767,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
       <div data-mv-card={mvShell ? "" : undefined} className={cn("relative flex flex-1 min-h-0 overflow-hidden", isMobile && "flex-col", mvShell && "mb-4 mx-4")}>
       {/* Left Navigation Rail (hidden when embedded in Pro shell) */}
       {!isMobile && !isEmbedded && !mvShell && (
-        <div className="w-14 bg-secondary flex flex-col flex-shrink-0" style={{ borderRight: '1px solid rgba(128, 128, 128, 0.3)' }}>
+        <div data-app-rail="" className="w-14 bg-secondary flex flex-col flex-shrink-0" style={{ borderRight: '1px solid rgba(128, 128, 128, 0.3)' }}>
           <NavigationRail
             collapsed
             quota={quota}
@@ -1803,6 +1803,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
       {(isNarrow || !sidebarCollapsed) && (
         <>
           <div
+            data-app-sidebar=""
             className={cn(
               "border-e border-border bg-secondary flex flex-col overflow-hidden flex-shrink-0",
               !isResizing && "transition-[width] duration-300",

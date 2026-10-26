@@ -771,5 +771,33 @@
     "add_hint": "One short sentence, at most {max} characters.",
     "full": "{max} notes are already saved. Delete older ones to add new ones.",
     "privacy": "Notes are stored encrypted in Germany and sent to the AI only when you use the assistant. Your administrator does not see them; the log only shows that notes changed. External AI chats (MCP) do not see them."
+  },
+  "background": {
+    "title": "Background",
+    "intro": "A picture or colour gradient behind the window, as in Outlook. Navigation and the folder column become see-through. Applies on all your devices, on screens at least 1024 pixels wide.",
+    "follow": "As company",
+    "follow_named": "As company ({name})",
+    "follow_none": "Your company has not set a background.",
+    "none": "None",
+    "images": "Pictures",
+    "gradients": "Gradients",
+    "error": "The background could not be saved. Please try again.",
+    "company_title": "Background for everyone",
+    "company_intro": "A picture or colour gradient behind the window of mail, calendar and contacts. Applies to everyone in your team who has not picked their own; anyone can change it in Settings → Appearance.",
+    "company_saved": "Saved. Your team sees the background the next time the page loads.",
+    "names": {
+      "mountains": "Mountains",
+      "dunes": "Dunes",
+      "sea": "Sea",
+      "aurora": "Aurora",
+      "bloom": "Spheres",
+      "hills": "Hills",
+      "blue": "Blue",
+      "violet": "Violet",
+      "pink": "Pink",
+      "orange": "Orange",
+      "red": "Red",
+      "green": "Green"
+    }
   }
 }

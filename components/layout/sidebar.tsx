@@ -1456,6 +1456,7 @@ function SidebarImpl({
     <div
       onMouseEnter={mvShell && sidebarCollapsed ? () => setRailHovered(true) : undefined}
       onMouseLeave={mvShell && sidebarCollapsed ? () => setRailHovered(false) : undefined}
+      data-app-sidebar=""
       data-mv-rail-peek={hoverExpanded ? "" : undefined}
       className={cn(
         "relative flex flex-col h-full border-e transition-all duration-300 overflow-hidden",
