@@ -98,7 +98,8 @@
     "avatar_invalid_type": "Bitte wählen Sie ein Foto (JPEG, PNG oder WebP).",
     "avatar_too_large": "Das Bild ist zu groß (höchstens 256 KB).",
     "avatar_too_big_dimensions": "Das Bild darf höchstens 1024 × 1024 Pixel groß sein.",
-    "avatar_not_found": "Kein Profilbild vorhanden."
+    "avatar_not_found": "Kein Profilbild vorhanden.",
+    "account_other_company": "Dieses Konto gehört zu einer anderen Firma. Hier stehen nur Konten dieser Firma; melden Sie sich auf dem Portal der anderen Firma an (dort auch als eigene App installierbar)."
   },
   "login": {
     "title": "Anmelden",
@@ -109,7 +110,8 @@
     "submit": "Anmelden",
     "submitting": "Anmeldung läuft…",
     "add_title": "Weiteres Konto hinzufügen",
-    "add_subtitle": "Ihre angemeldeten Konten bleiben angemeldet. Zwischen ihnen wechseln Sie im Kontomenü ohne Passwort."
+    "add_subtitle": "Ihre angemeldeten Konten bleiben angemeldet. Zwischen ihnen wechseln Sie im Kontomenü ohne Passwort.",
+    "other_company_link": "Zum Portal {host}"
   },
   "password": {
     "title": "Passwort ändern",
@@ -619,6 +621,14 @@
     "logo_replace": "Logo ersetzen",
     "logo_remove": "Entfernen",
     "logo_hint": "PNG oder WebP, höchstens 256 KB und 1024 × 1024 Pixel. Am besten ein breites Logo mit transparentem Hintergrund.",
+    "icon_title": "App-Symbol",
+    "icon_intro": "Wenn Ihr Team die App installiert (z. B. „Zum Dock hinzufügen“), wird Ihr Logo auf diese Hintergrundfarbe gesetzt. Standard ist Weiß.",
+    "icon_preview": "Vorschau des App-Symbols",
+    "icon_use_brand": "Markenfarbe übernehmen",
+    "icon_save": "Hintergrund speichern",
+    "icon_reset": "Weiß",
+    "icon_saved": "Gespeichert. Bereits installierte Apps zeigen das neue Symbol unter Umständen erst nach erneuter Installation.",
+    "icon_no_png": "Aus diesem Logo kann kein App-Symbol erstellt werden; es wird das xenaxio-Symbol verwendet. Laden Sie dafür ein PNG-Logo hoch.",
     "color_title": "Farbe",
     "color_intro": "Für Schaltflächen und Hervorhebungen. Die Schriftfarbe darauf wird automatisch gewählt.",
     "color_preview": "Beispiel",

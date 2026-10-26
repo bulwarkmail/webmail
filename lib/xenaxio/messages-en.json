@@ -98,7 +98,8 @@
     "avatar_invalid_type": "Please choose a photo (JPEG, PNG or WebP).",
     "avatar_too_large": "The picture is too large (256 KB at most).",
     "avatar_too_big_dimensions": "The picture may be at most 1024 × 1024 pixels.",
-    "avatar_not_found": "No profile picture."
+    "avatar_not_found": "No profile picture.",
+    "account_other_company": "This account belongs to another company. Only this company's accounts can be added here; sign in on the other company's portal (it can be installed as its own app too)."
   },
   "login": {
     "title": "Sign in",
@@ -109,7 +110,8 @@
     "submit": "Sign in",
     "submitting": "Signing in…",
     "add_title": "Add another account",
-    "add_subtitle": "The accounts you are signed in to stay signed in. Switch between them in the account menu without a password."
+    "add_subtitle": "The accounts you are signed in to stay signed in. Switch between them in the account menu without a password.",
+    "other_company_link": "Go to {host}"
   },
   "password": {
     "title": "Change password",
@@ -619,6 +621,14 @@
     "logo_replace": "Replace logo",
     "logo_remove": "Remove",
     "logo_hint": "PNG or WebP, at most 256 KB and 1024 × 1024 pixels. A wide logo with a transparent background works best.",
+    "icon_title": "App icon",
+    "icon_intro": "When your team installs the app (e.g. “Add to Dock”), your logo is placed on this background colour. White by default.",
+    "icon_preview": "App icon preview",
+    "icon_use_brand": "Use brand colour",
+    "icon_save": "Save background",
+    "icon_reset": "White",
+    "icon_saved": "Saved. Apps that are already installed may show the new icon only after reinstalling.",
+    "icon_no_png": "This logo cannot be turned into an app icon, so the xenaxio icon is used. Upload a PNG logo for that.",
     "color_title": "Colour",
     "color_intro": "For buttons and highlights. The text colour on it is chosen automatically.",
     "color_preview": "Example",

@@ -17,7 +17,7 @@ import { useXT } from "@/lib/xenaxio/i18n";
 import { useDocumentTitle } from "@/hooks/use-document-title";
 import { safeNextPath } from "@/lib/xenaxio/brand";
 import { goToPortal, shouldHandOff, usePortal } from "@/lib/xenaxio/portal";
-import { openAccount } from "@/lib/xenaxio/accounts";
+import { openAccount, otherCompanyPortal } from "@/lib/xenaxio/accounts";
 
 function LoginForm() {
   const t = useXT();
@@ -32,6 +32,8 @@ function LoginForm() {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Step 39: the account belongs to another company; it signs in on that portal.
+  const [otherPortal, setOtherPortal] = useState<string | null>(null);
   const portal = usePortal();
   const company = portal?.kind === "tenant" ? portal : null;
   useDocumentTitle(add ? t("login.add_title") : t("login.title"), { withAccount: false });
@@ -40,6 +42,7 @@ function LoginForm() {
     e.preventDefault();
     setBusy(true);
     setError(null);
+    setOtherPortal(null);
     try {
       const me = await xenaxio.login(email.trim(), password, locale, add ? { next: `/${locale}/` } : undefined);
       setPassword("");
@@ -55,6 +58,7 @@ function LoginForm() {
       if (me.user.mustChangePassword) router.replace("/workspace/password");
       else window.location.assign(withBasePath(next ?? `/${locale}/`));
     } catch (err) {
+      setOtherPortal(otherCompanyPortal(err));
       setError(t(errorKey(err)));
       setBusy(false);
     }
@@ -66,7 +70,19 @@ function LoginForm() {
       subtitle={add ? t("login.add_subtitle") : company ? t("portal.login_subtitle", { company: company.name }) : t("login.subtitle")}
     >
       <form onSubmit={submit} className="space-y-4" noValidate>
-        {error && <Notice kind="error">{error}</Notice>}
+        {error && (
+          <Notice kind="error">
+            {error}
+            {otherPortal && (
+              <>
+                {" "}
+                <a className="font-medium underline" href={`${otherPortal}/${locale}/login/`}>
+                  {t("login.other_company_link", { host: new URL(otherPortal).host })}
+                </a>
+              </>
+            )}
+          </Notice>
+        )}
         <TextField
           label={t("login.email")}
           type="email"
