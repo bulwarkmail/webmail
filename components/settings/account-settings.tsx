@@ -22,6 +22,7 @@ import { DisplayNameSection } from './account-security-settings';
 import { EmailAddressesSection } from './identity-settings';
 import { MultipleAccountsSection } from './layout-settings';
 import { useAccountSecurityStore } from '@/stores/account-security-store';
+import { ProfilePictureSetting } from '@/components/xenaxio/profile-picture-setting';
 
 function hostnameOf(serverUrl: string): string {
   try { return toUnicodeDomain(new URL(serverUrl).hostname); } catch { return serverUrl; }
@@ -152,6 +153,9 @@ export function AccountSettings() {
             <span className="text-sm text-foreground">{displayName || tCommon('unknown')}</span>
           </SettingItem>
         )}
+
+        {/* xenaxio (step 41): the profile picture colleagues see. */}
+        <ProfilePictureSetting />
 
         {/* Email Address */}
         <SettingItem label={t('email.label')}>
