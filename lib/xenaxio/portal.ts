@@ -62,6 +62,34 @@ export function withCompanyName(company: string | null | undefined, title: strin
   return title ? `${name} - ${title}` : name;
 }
 
+/**
+ * Step 38: an app installed from a company portal is named after the company
+ * and carries its icon. The manifest comes from the platform; Safari ("Add to
+ * Dock", "Add to Home Screen") reads these tags of the page instead.
+ */
+export function applyAppIdentity(doc: Document, name: string, iconUrl: string | null | undefined): void {
+  const meta = (key: string) => {
+    let el = doc.head.querySelector<HTMLMetaElement>(`meta[name="${key}"]`);
+    if (!el) {
+      el = doc.createElement("meta");
+      el.name = key;
+      doc.head.appendChild(el);
+    }
+    el.content = name;
+  };
+  meta("apple-mobile-web-app-title");
+  meta("application-name");
+  // Only a path on this address (the platform's), never another site.
+  if (!iconUrl?.startsWith("/") || iconUrl.startsWith("//")) return;
+  let link = doc.head.querySelector<HTMLLinkElement>('link[rel="apple-touch-icon"]');
+  if (!link) {
+    link = doc.createElement("link");
+    link.rel = "apple-touch-icon";
+    doc.head.appendChild(link);
+  }
+  link.href = iconUrl;
+}
+
 /** After a rename the same page on the new address. */
 export function movedUrl(target: string, location: Pick<Location, "pathname" | "search" | "hash">): string {
   // Always the new address's own origin: a path like "//other.site/" must not become a host.

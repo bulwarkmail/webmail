@@ -113,6 +113,8 @@ export interface PortalInfo {
   colorText: string | null;
   /** Path on this origin (versioned); null = the xenaxio logo. */
   logoUrl: string | null;
+  /** Step 38: the app icon made from the logo (versioned path); null = xenaxio's. */
+  iconUrl?: string | null;
 }
 
 /** Step 17: whose address this page was opened on. */

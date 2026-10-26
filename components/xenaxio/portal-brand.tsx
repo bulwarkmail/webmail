@@ -5,7 +5,7 @@
 // one, and a clear page for addresses that belong to no company.
 import { useEffect } from "react";
 import { useXenaxioMe } from "@/lib/xenaxio/me-store";
-import { activeBrand, brandCss, goToPortal, movedUrl, shouldHandOff, usePortal } from "@/lib/xenaxio/portal";
+import { activeBrand, applyAppIdentity, brandCss, goToPortal, movedUrl, shouldHandOff, usePortal } from "@/lib/xenaxio/portal";
 import { useXT } from "@/lib/xenaxio/i18n";
 import { XENAXIO_BFF } from "@/lib/xenaxio/bff";
 
@@ -34,6 +34,8 @@ export function PortalBrand() {
 
   useEffect(() => {
     if (portal?.kind === "moved") window.location.replace(movedUrl(portal.url, window.location));
+    // Step 38: installed from a company portal, the app carries the company's name and icon.
+    if (portal?.kind === "tenant" && portal.name) applyAppIdentity(document, portal.name, portal.iconUrl);
   }, [portal]);
 
   if (!XENAXIO_BFF || !portal) return null;
