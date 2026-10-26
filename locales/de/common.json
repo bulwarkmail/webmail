@@ -36,6 +36,8 @@
     "token_placeholder": "API-Token einfügen",
     "token_hint": "Erstellen Sie in den Einstellungen Ihres E-Mail-Anbieters ein API-Token und fügen Sie es hier ein.",
     "remember_me": "Angemeldet bleiben",
+    "remember_accounts": "Kontenliste auf diesem Gerät speichern",
+    "remember_accounts_hint": "Kontonamen und Server nach dem Abmelden behalten. Eine erneute Anmeldung kann erforderlich sein.",
     "config_error": {
       "title": "Konfigurationsfehler",
       "fetch_failed": "Die Anwendungskonfiguration kann nicht geladen werden. Bitte versuchen Sie es später erneut.",

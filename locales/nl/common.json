@@ -36,6 +36,8 @@
     "token_placeholder": "Plak uw API-token",
     "token_hint": "Maak een API-token aan in de instellingen van uw e-mailprovider en plak het hier.",
     "remember_me": "Onthoud mij",
+    "remember_accounts": "Accountlijst op dit apparaat onthouden",
+    "remember_accounts_hint": "Bewaar accountnamen en servers na het afmelden. Opnieuw aanmelden kan nodig zijn.",
     "config_error": {
       "title": "Configuratiefout",
       "fetch_failed": "Kan de applicatieconfiguratie niet laden. Probeer het later opnieuw.",

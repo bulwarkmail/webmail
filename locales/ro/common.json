@@ -36,6 +36,8 @@
     "token_placeholder": "Lipiți tokenul API",
     "token_hint": "Creați un token API în setările furnizorului dvs. de e-mail și lipiți-l aici.",
     "remember_me": "Reține-mă",
+    "remember_accounts": "Reține lista de conturi pe acest dispozitiv",
+    "remember_accounts_hint": "Păstrează numele conturilor și serverele după deconectare. Poate fi necesară o nouă autentificare.",
     "config_error": {
       "title": "Eroare de configurare",
       "fetch_failed": "Nu se poate încărca configurația aplicației. Vă rugăm să încercați din nou mai târziu.",

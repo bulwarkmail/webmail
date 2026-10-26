@@ -36,6 +36,8 @@
     "token_placeholder": "Enganxeu el vostre token d'API",
     "token_hint": "Creeu un token d'API a la configuració del vostre proveïdor de correu i enganxeu-lo aquí.",
     "remember_me": "Recorda'm",
+    "remember_accounts": "Recorda la llista de comptes en aquest dispositiu",
+    "remember_accounts_hint": "Conserva els noms dels comptes i els servidors després de tancar la sessió. Pot caldre tornar a iniciar sessió.",
     "config_error": {
       "title": "Error de configuració",
       "fetch_failed": "No s'ha pogut carregar la configuració de l'aplicació. Torneu-ho a provar més tard.",

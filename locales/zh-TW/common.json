@@ -36,6 +36,8 @@
     "token_placeholder": "貼上 API 權杖",
     "token_hint": "請在郵件服務供應商的設定中建立 API 權杖，然後貼到這裡。",
     "remember_me": "記住我",
+    "remember_accounts": "在此裝置上記住帳號清單",
+    "remember_accounts_hint": "登出後保留帳號名稱和伺服器位址。可能仍需重新登入。",
     "config_error": {
       "title": "設定錯誤",
       "fetch_failed": "無法載入應用程式設定。請稍後再試。",

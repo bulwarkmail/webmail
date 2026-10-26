@@ -36,6 +36,8 @@
     "token_placeholder": "Indsæt dit API-token",
     "token_hint": "Opret et API-token i indstillingerne hos din mailudbyder, og indsæt det her.",
     "remember_me": "Husk mig",
+    "remember_accounts": "Husk kontolisten på denne enhed",
+    "remember_accounts_hint": "Behold kontonavne og servere efter udlogning. Det kan være nødvendigt at logge ind igen.",
     "config_error": {
       "title": "Konfigurationsfejl",
       "fetch_failed": "Kan ikke indlæse applikationskonfiguration. Prøv igen senere.",

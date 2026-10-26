@@ -263,6 +263,8 @@ export const CONFIG_ENV_MAP: Record<string, { envVar: string; fileEnvVar?: strin
   // Show the "Remember me" box on the login form. Off (the default) remembers
   // every sign-in, as long as a SESSION_SECRET makes that possible.
   loginShowRememberMe: { envVar: 'LOGIN_SHOW_REMEMBER_ME', type: 'boolean', defaultValue: false },
+  // Deployment default only; the browser's account-list choice takes precedence.
+  rememberAccountList: { envVar: 'REMEMBER_ACCOUNT_LIST', type: 'boolean', defaultValue: false },
   // Show the build version in the login footer. Off keeps the exact version
   // from being disclosed to unauthenticated visitors.
   loginShowVersion: { envVar: 'LOGIN_SHOW_VERSION', type: 'boolean', defaultValue: true },

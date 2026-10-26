@@ -7,6 +7,7 @@ import type { PublicJmapServerEntry } from '@/lib/admin/jmap-servers';
 import { IS_LITE, IS_LITE_STALWART, LITE_CONFIG_PATH, withLiteBuildId } from '@/lib/lite';
 import { applyLiteConfig, liteStalwartDefaults } from '@/lib/lite-config';
 import { isConfigData } from '@/lib/config-validation';
+import { useAccountListPreferencesStore } from '@/stores/account-list-preferences-store';
 
 export interface ConfigData {
   appName: string;
@@ -17,6 +18,7 @@ export interface ConfigData {
   oauthIssuerUrl: string;
   oauthScopes: string;
   rememberMeEnabled: boolean;
+  rememberAccountList: boolean;
   settingsSyncEnabled: boolean;
   stalwartFeaturesEnabled: boolean;
   stalwartJmapPassthroughEnabled: boolean;
@@ -111,6 +113,7 @@ async function fetchServerConfig(): Promise<ConfigData> {
 export async function fetchConfig(): Promise<ConfigData> {
   // Return cached config if available
   if (configCache) {
+    useAccountListPreferencesStore.getState().initialize(configCache.rememberAccountList);
     return configCache;
   }
 
@@ -123,6 +126,7 @@ export async function fetchConfig(): Promise<ConfigData> {
   configPromise = (IS_LITE ? fetchLiteConfig() : fetchServerConfig())
     .then((data) => {
       configCache = data;
+      useAccountListPreferencesStore.getState().initialize(data.rememberAccountList);
       // Fetch admin policy alongside config (non-blocking)
       usePolicyStore.getState().fetchPolicy();
       return data;
@@ -152,6 +156,7 @@ export function useConfig(): AppConfig {
     oauthIssuerUrl: configCache?.oauthIssuerUrl || '',
     oauthScopes: configCache?.oauthScopes || '',
     rememberMeEnabled: configCache?.rememberMeEnabled || false,
+    rememberAccountList: configCache?.rememberAccountList ?? false,
     settingsSyncEnabled: configCache?.settingsSyncEnabled || false,
     stalwartFeaturesEnabled: configCache?.stalwartFeaturesEnabled ?? true,
     stalwartJmapPassthroughEnabled: configCache?.stalwartJmapPassthroughEnabled ?? true,
@@ -197,6 +202,7 @@ export function useConfig(): AppConfig {
         oauthIssuerUrl: configCache.oauthIssuerUrl,
         oauthScopes: configCache.oauthScopes,
         rememberMeEnabled: configCache.rememberMeEnabled,
+        rememberAccountList: configCache.rememberAccountList,
         settingsSyncEnabled: configCache.settingsSyncEnabled,
         stalwartFeaturesEnabled: configCache.stalwartFeaturesEnabled,
         stalwartJmapPassthroughEnabled: configCache.stalwartJmapPassthroughEnabled,
@@ -243,6 +249,7 @@ export function useConfig(): AppConfig {
           oauthIssuerUrl: data.oauthIssuerUrl,
           oauthScopes: data.oauthScopes,
           rememberMeEnabled: data.rememberMeEnabled,
+          rememberAccountList: data.rememberAccountList,
           settingsSyncEnabled: data.settingsSyncEnabled,
           stalwartFeaturesEnabled: data.stalwartFeaturesEnabled,
           stalwartJmapPassthroughEnabled: data.stalwartJmapPassthroughEnabled,

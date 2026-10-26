@@ -36,6 +36,8 @@
     "token_placeholder": "Lim inn API-tokenet ditt",
     "token_hint": "Opprett et API-token i innstillingene hos e-postleverandøren din, og lim det inn her.",
     "remember_me": "Husk meg",
+    "remember_accounts": "Husk kontolisten på denne enheten",
+    "remember_accounts_hint": "Behold kontonavn og servere etter utlogging. Det kan være nødvendig å logge inn på nytt.",
     "config_error": {
       "title": "Konfigurasjonsfeil",
       "fetch_failed": "Kan ikke laste inn programoppsettet. Prøv igjen senere.",

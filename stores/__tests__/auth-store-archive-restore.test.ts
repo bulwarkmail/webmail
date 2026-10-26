@@ -80,7 +80,11 @@ it('keeps a restored account through a reload and sends it to the sign-in form',
   expect(useAccountStore.getState().accounts.map(a => a.id)).toEqual([signedIn.id, 'alice@x.test@mail.x.test']);
 
   await useAuthStore.getState().switchAccount('alice@x.test@mail.x.test');
-  expect(redirect).toHaveBeenCalledWith(expect.stringMatching(/\/login\?mode=add-account&username=alice%40x\.test$/));
+  const target = new URL(redirect.mock.lastCall![0], 'https://webmail.example.com');
+  expect(target.pathname).toBe('/en/login');
+  expect(target.searchParams.get('mode')).toBe('add-account');
+  expect(target.searchParams.get('username')).toBe('alice@x.test');
+  expect(target.searchParams.get('server')).toBe('https://mail.x.test');
   expect(useAccountStore.getState().accounts).toHaveLength(2);
   expect(useAuthStore.getState().activeAccountId).toBe(signedIn.id);
 });

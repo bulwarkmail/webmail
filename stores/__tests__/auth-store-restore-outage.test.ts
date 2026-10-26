@@ -39,6 +39,7 @@ vi.mock('@/lib/stalwart/principal', () => ({ fetchPrincipalDisplayName: async ()
 import { RequestTimeoutError } from '@/lib/jmap/client';
 import { useAuthStore } from '@/stores/auth-store';
 import { useAccountStore } from '@/stores/account-store';
+import { useAccountListPreferencesStore } from '@/stores/account-list-preferences-store';
 
 const account = {
   id: 'bob@x.test@mail.x.test', label: 'Bob', serverUrl: 'https://mail.x.test', username: 'bob@x.test', authMode: 'basic' as const,
@@ -64,6 +65,7 @@ beforeAll(() => {
 
 beforeEach(() => {
   fetchMock.mockClear();
+  useAccountListPreferencesStore.setState({ rememberAccountList: false });
   useAuthStore.setState({ isAuthenticated: false, client: null, activeAccountId: null, error: null });
   useAccountStore.setState({ accounts: [account] as never, activeAccountId: account.id, defaultAccountId: account.id });
 });
@@ -80,9 +82,17 @@ it.each([
   expect(credentialsCleared()).toBe(false);
 });
 
-it('signs out on a real rejection', async () => {
+it('removes the account on a real rejection when remembering accounts is disabled', async () => {
   connectError.current = () => new Error('Failed to get session: 401');
   await useAuthStore.getState().checkAuth();
   expect(useAccountStore.getState().getAccountById(account.id)).toBeUndefined();
+  await vi.waitFor(() => expect(credentialsCleared()).toBe(true));
+});
+
+it('keeps the account awaiting sign-in on a real rejection when opted in', async () => {
+  useAccountListPreferencesStore.setState({ rememberAccountList: true });
+  connectError.current = () => new Error('Failed to get session: 401');
+  await useAuthStore.getState().checkAuth();
+  expect(useAccountStore.getState().getAccountById(account.id)).toMatchObject({ awaitingSignIn: true, isConnected: false });
   await vi.waitFor(() => expect(credentialsCleared()).toBe(true));
 });

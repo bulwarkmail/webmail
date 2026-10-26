@@ -71,6 +71,17 @@ describe('AccountSwitcher under Mountain View', () => {
     expect(within(screen.getByTestId('account-option')).getByText('mail.example.com').closest('.hidden')).toBeNull();
   });
 
+  it('keeps a signed-out account selectable with a sign-in label and no stale unread count', () => {
+    useAccountStore.setState({ accounts: [account('a'), account('b', { awaitingSignIn: true, isConnected: false })] } as never);
+    render(<AccountSwitcher variant="header" />);
+    openPopover();
+    const row = screen.getByTestId('account-option');
+    expect(within(row).getByText('sign_in')).toBeInTheDocument();
+    expect(within(row).getByText('mail.example.com').closest('.hidden')).toBeNull();
+    expect(within(row).queryByText('5')).toBeNull();
+    expect(row).not.toBeDisabled();
+  });
+
   it("closes the account card with Gmail's rows: add another, sign out of this one, sign out of all", () => {
     render(<AccountSwitcher variant="header" />);
     openPopover();

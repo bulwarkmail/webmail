@@ -36,6 +36,8 @@
     "token_placeholder": "Kleebi oma API-luba",
     "token_hint": "Loo oma meiliteenuse seadetes API-luba ja kleebi see siia.",
     "remember_me": "Jäta mind meelde",
+    "remember_accounts": "Jäta kontode loend selles seadmes meelde",
+    "remember_accounts_hint": "Säilita kontonimed ja serverid pärast väljalogimist. Uuesti sisselogimine võib olla vajalik.",
     "config_error": {
       "title": "Seadistuse viga",
       "fetch_failed": "Rakenduse seadistust ei õnnestunud laadida. Palun proovi hiljem uuesti.",

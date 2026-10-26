@@ -67,6 +67,7 @@ export function AccountSwitcher({
   allInboxesSelected = false,
 }: AccountSwitcherProps) {
   const t = useTranslations("sidebar");
+  const login = useTranslations("login");
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -424,14 +425,17 @@ export function AccountSwitcher({
                       {account.isDefault && (
                         <Star className="w-3 h-3 text-amber-500 flex-shrink-0 fill-amber-500" />
                       )}
-                      <UnreadBadge count={unreadFor(account)} />
+                      {!account.awaitingSignIn && <UnreadBadge count={unreadFor(account)} />}
                     </div>
                     <p className="text-xs text-muted-foreground truncate">
                       {toUnicodeEmail(account.email || account.username)}
                     </p>
+                    {account.awaitingSignIn && (
+                      <p className="text-xs text-primary">{login('sign_in')}</p>
+                    )}
                     {/* Server and connection state: Mountain View keeps the line
                         only for an account in trouble. */}
-                    <div className={cn("flex items-center gap-1 mt-0.5", mvPopover && !account.hasError && "hidden")}>
+                    <div className={cn("flex items-center gap-1 mt-0.5", mvPopover && !account.hasError && !account.awaitingSignIn && "hidden")}>
                       {account.hasError ? (
                         <AlertCircle className="w-3 h-3 text-destructive" />
                       ) : (
@@ -454,7 +458,7 @@ export function AccountSwitcher({
                     <GripVertical className="w-4 h-4" />
                   </span>
                 )}
-                {!isActive && !account.isDefault && (
+                {!isActive && (!account.isDefault || account.awaitingSignIn) && (
                   <button
                     type="button"
                     onClick={(e) => handleRemove(e, account)}

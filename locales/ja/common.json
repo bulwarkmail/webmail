@@ -36,6 +36,8 @@
     "token_placeholder": "APIトークンを貼り付け",
     "token_hint": "メールプロバイダーの設定でAPIトークンを作成し、ここに貼り付けてください。",
     "remember_me": "ログイン状態を保持",
+    "remember_accounts": "この端末にアカウント一覧を保存する",
+    "remember_accounts_hint": "ログアウト後もアカウント名とサーバーを保存します。再ログインが必要な場合があります。",
     "config_error": {
       "title": "設定エラー",
       "fetch_failed": "アプリケーション設定を読み込めません。後でもう一度お試しください。",

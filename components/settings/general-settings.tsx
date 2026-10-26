@@ -9,6 +9,7 @@ import { useTour } from '@/components/tour/tour-provider';
 import { Button } from '@/components/ui/button';
 import { PlayCircle } from '@/components/icons';
 import { IS_LITE } from '@/lib/lite';
+import { RememberAccountsControl } from '@/components/auth/remember-accounts-control';
 
 /**
  * The General page: language and time, which links the browser hands to
@@ -17,12 +18,17 @@ import { IS_LITE } from '@/lib/lite';
  */
 export function GeneralSettings({ supportsCalendar }: { supportsCalendar: boolean }) {
   const tTour = useTranslations('tour');
+  const tSidebar = useTranslations('sidebar');
   const { showOnboardingOnNewDevices, updateSetting } = useSettingsStore();
   const { startTour, resetTourCompletion } = useTour();
 
   return (
     <div className="space-y-8">
       <LanguageSettings />
+
+      <SettingsSection id="saved-accounts" title={tSidebar('all_accounts')}>
+        <RememberAccountsControl />
+      </SettingsSection>
 
       {!IS_LITE && <ProtocolHandlerSettings supportsCalendar={supportsCalendar} />}
 

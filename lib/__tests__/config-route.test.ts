@@ -35,6 +35,7 @@ const MANAGED_ENV = [
   'FAVICON_URL', 'APP_LOGO_LIGHT_URL', 'APP_LOGO_DARK_URL', 'LOGIN_COMPANY_NAME',
   'LOGIN_IMPRINT_URL', 'LOGIN_PRIVACY_POLICY_URL', 'LOGIN_WEBSITE_URL', 'DOMAIN_BRANDING',
   'JMAP_SERVERS', 'JMAP_SERVER_AUTO_PICK_BY_DOMAIN', 'SOURCE_CODE_URL', 'LOGIN_SHOW_REMEMBER_ME',
+  'REMEMBER_ACCOUNT_LIST',
 ] as const;
 
 describe('config API route', () => {
@@ -221,6 +222,14 @@ describe('config API route', () => {
     vi.stubEnv('SESSION_SECRET', 'test-secret');
     const config2 = await getConfig();
     expect(config2.settingsSyncEnabled).toBe(true);
+  });
+
+  it('defaults account-list remembering off and exposes an explicit deployment default independently of session storage', async () => {
+    expect((await getConfig()).rememberAccountList).toBe(false);
+    vi.stubEnv('REMEMBER_ACCOUNT_LIST', 'true');
+    const config = await getConfig();
+    expect(config.rememberAccountList).toBe(true);
+    expect(config.rememberMeEnabled).toBe(false);
   });
 
   it('should enable settingsSync only when both SESSION_SECRET_FILE and SETTINGS_SYNC_ENABLED are set', async () => {

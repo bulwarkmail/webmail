@@ -5,10 +5,16 @@ import { createConfig } from '@/lib/__tests__/fixtures/config';
 const mocks = vi.hoisted(() => ({
   apiFetch: vi.fn<(url: string, init?: RequestInit) => Promise<Response>>(),
   fetchPolicy: vi.fn(),
+  initializeAccounts: vi.fn(),
 }));
 vi.mock('@/lib/browser-navigation', () => ({ apiFetch: mocks.apiFetch }));
 vi.mock('@/stores/policy-store', () => ({
   usePolicyStore: { getState: () => ({ fetchPolicy: mocks.fetchPolicy }) },
+}));
+// Keep storage-event timers out of the config loader's timeout contract.
+// 저장소 이벤트와 분리해 설정 로더 자체의 타임아웃만 검증합니다.
+vi.mock('@/stores/account-list-preferences-store', () => ({
+  useAccountListPreferencesStore: { getState: () => ({ initialize: mocks.initializeAccounts }) },
 }));
 
 const config = createConfig();
@@ -39,6 +45,15 @@ describe('server configuration recovery', () => {
     expect(await fetchConfig()).toEqual(config);
     expect(mocks.apiFetch).toHaveBeenCalledTimes(1);
     expect(mocks.fetchPolicy).toHaveBeenCalledTimes(1);
+    expect(mocks.initializeAccounts).toHaveBeenCalledWith(false);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('passes an enabled deployment default to the device preference without leaving a timeout', async () => {
+    mocks.apiFetch.mockResolvedValueOnce(Response.json(createConfig({ rememberAccountList: true })));
+    const { fetchConfig } = await import('../use-config');
+    expect((await fetchConfig()).rememberAccountList).toBe(true);
+    expect(mocks.initializeAccounts).toHaveBeenCalledExactlyOnceWith(true);
     expect(vi.getTimerCount()).toBe(0);
   });
 
@@ -85,6 +100,7 @@ describe('server configuration recovery', () => {
     const pending = fetchConfig();
     await vi.advanceTimersByTimeAsync(0);
     expect(mocks.fetchPolicy).not.toHaveBeenCalled();
+    expect(mocks.initializeAccounts).not.toHaveBeenCalled();
     await vi.runAllTimersAsync();
     expect(await pending).toEqual(config);
     expect(await fetchConfig()).toEqual(config);

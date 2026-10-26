@@ -36,6 +36,8 @@
     "token_placeholder": "Vložte svoj API token",
     "token_hint": "Vytvorte API token v nastaveniach svojho poskytovateľa e-mailu a vložte ho sem.",
     "remember_me": "Zapamätať si ma",
+    "remember_accounts": "Zapamätať zoznam účtov v tomto zariadení",
+    "remember_accounts_hint": "Po odhlásení zachovať názvy účtov a servery. Môže byť potrebné opätovné prihlásenie.",
     "config_error": {
       "title": "Chyba konfigurácie",
       "fetch_failed": "Konfiguráciu aplikácie sa nepodarilo načítať. Skúste to neskôr.",

@@ -36,6 +36,8 @@
     "token_placeholder": "Wklej swój token API",
     "token_hint": "Utwórz token API w ustawieniach swojego dostawcy poczty i wklej go tutaj.",
     "remember_me": "Zapamiętaj mnie",
+    "remember_accounts": "Zapamiętaj listę kont na tym urządzeniu",
+    "remember_accounts_hint": "Zachowaj nazwy kont i serwery po wylogowaniu. Może być wymagane ponowne logowanie.",
     "config_error": {
       "title": "Błąd konfiguracji",
       "fetch_failed": "Nie można załadować konfiguracji aplikacji. Spróbuj ponownie później.",

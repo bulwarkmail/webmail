@@ -36,6 +36,8 @@
     "token_placeholder": "Pega tu token de API",
     "token_hint": "Crea un token de API en la configuración de tu proveedor de correo y pégalo aquí.",
     "remember_me": "Recordarme",
+    "remember_accounts": "Recordar la lista de cuentas en este dispositivo",
+    "remember_accounts_hint": "Conservar los nombres de cuenta y servidores al cerrar sesión. Puede ser necesario volver a iniciar sesión.",
     "config_error": {
       "title": "Error de Configuración",
       "fetch_failed": "No se pudo cargar la configuración de la aplicación. Por favor, inténtelo más tarde.",
