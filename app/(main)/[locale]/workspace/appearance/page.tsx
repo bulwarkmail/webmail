@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 const LOGO_MAX_BYTES = 256 * 1024;
 const HEX = /^#[0-9a-f]{6}$/i;
 const DEFAULT_COLOR = "#3b82f6";
+const WHITE = "#ffffff";
 
 const STATUS_STYLE = {
   active: "bg-green-600/15 text-green-700 dark:text-green-400",
@@ -51,6 +52,8 @@ function AppearanceView() {
   const [slugProblem, setSlugProblem] = useState<SlugProblem | null>(null);
   // Colour
   const [color, setColor] = useState(DEFAULT_COLOR);
+  // Step 40: the app icon's background
+  const [iconBg, setIconBg] = useState(WHITE);
   // Own hostname
   const [hostname, setHostname] = useState("");
   const fileInput = useRef<HTMLInputElement>(null);
@@ -60,6 +63,7 @@ function AppearanceView() {
     setSlug(p.slug ?? "");
     setSlugProblem(null);
     setColor(p.color ?? DEFAULT_COLOR);
+    setIconBg(p.iconBackground ?? WHITE);
   };
 
   useEffect(() => {
@@ -123,6 +127,8 @@ function AppearanceView() {
   };
 
   const validColor = HEX.test(color);
+  const validIconBg = HEX.test(iconBg);
+  const savedIconBg = portal.iconBackground ?? WHITE;
   const previewText = validColor && contrastRatio(color, "#ffffff") >= contrastRatio(color, "#111111") ? "#ffffff" : "#111111";
   const own = portal.hostname;
   const baseHost = portal.slug && portal.baseDomain ? `${portal.slug}.${portal.baseDomain}` : null;
@@ -190,6 +196,55 @@ function AppearanceView() {
         </div>
         <p className="text-xs text-muted-foreground">{t("appearance.logo_hint")}</p>
       </Section>
+
+      {portal.logoUrl && (
+        <Section title={t("appearance.icon_title")} description={t("appearance.icon_intro")}>
+          {portal.iconUrl ? (
+            <>
+              <div className="flex flex-wrap items-center gap-3">
+                <div
+                  className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-border shadow-sm"
+                  style={{ backgroundColor: validIconBg ? iconBg : savedIconBg }}
+                  aria-label={t("appearance.icon_preview")}
+                  role="img"
+                >
+                  <img src={withBasePath(portal.logoUrl)} alt="" className="max-h-[80%] max-w-[80%] object-contain" />
+                </div>
+                <input
+                  type="color"
+                  value={validIconBg ? iconBg : WHITE}
+                  onChange={(e) => setIconBg(e.target.value)}
+                  aria-label={t("appearance.icon_title")}
+                  className="h-10 w-14 cursor-pointer rounded border border-border bg-background p-1"
+                />
+                <Input value={iconBg} onChange={(e) => setIconBg(e.target.value.trim())} className="w-28 font-mono" spellCheck={false} aria-invalid={validIconBg ? undefined : true} />
+                {portal.color && portal.color !== iconBg.toLowerCase() && (
+                  <Button type="button" variant="outline" onClick={() => setIconBg(portal.color!)} disabled={busy !== null}>
+                    <span className="mr-1.5 inline-block h-3 w-3 rounded-full border border-border" style={{ backgroundColor: portal.color }} aria-hidden />
+                    {t("appearance.icon_use_brand")}
+                  </Button>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  onClick={() => run("icon", () => xenaxio.setIconBackground(iconBg.toLowerCase() === WHITE ? null : iconBg.toLowerCase()), t("appearance.icon_saved"))}
+                  disabled={busy !== null || !validIconBg || iconBg.toLowerCase() === savedIconBg}
+                >
+                  {busy === "icon" ? t("appearance.saving") : t("appearance.icon_save")}
+                </Button>
+                {portal.iconBackground && (
+                  <Button type="button" variant="ghost" onClick={() => run("icon", () => xenaxio.setIconBackground(null), t("appearance.icon_saved"))} disabled={busy !== null}>
+                    {t("appearance.icon_reset")}
+                  </Button>
+                )}
+              </div>
+            </>
+          ) : (
+            <p className="text-sm text-muted-foreground">{t("appearance.icon_no_png")}</p>
+          )}
+        </Section>
+      )}
 
       <Section title={t("appearance.color_title")} description={t("appearance.color_intro")}>
         <div className="flex flex-wrap items-center gap-3">
