@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { activeBrand, brandCss, contrastRatio, movedUrl, shouldHandOff, withCompanyName } from "../portal";
+import { activeBrand, applyAppIdentity, brandCss, contrastRatio, movedUrl, shouldHandOff, withCompanyName } from "../portal";
 import type { Me, PortalState } from "../api";
 
 const acme = { name: "Acme", slug: "acme", url: "https://acme.xenaxio.com", color: "#003366", colorText: "#ffffff", logoUrl: "/api/portal/logo?v=1" };
@@ -52,5 +52,24 @@ describe("step 17: company portal", () => {
     expect(withCompanyName("Acme", "")).toBe("Acme");
     expect(withCompanyName(null, "xenaxio")).toBe("xenaxio");
     expect(withCompanyName("  ", "xenaxio")).toBe("xenaxio");
+  });
+});
+
+describe("step 38: installed app", () => {
+  it("names the app after the company and uses its icon", () => {
+    document.head.innerHTML = '<meta name="apple-mobile-web-app-title" content="xenaxio">';
+    applyAppIdentity(document, "Acme GmbH", "/api/portal/icon/180?v=1");
+    expect(document.head.querySelector('meta[name="apple-mobile-web-app-title"]')?.getAttribute("content")).toBe("Acme GmbH");
+    expect(document.head.querySelectorAll('meta[name="apple-mobile-web-app-title"]')).toHaveLength(1);
+    expect(document.head.querySelector('meta[name="application-name"]')?.getAttribute("content")).toBe("Acme GmbH");
+    expect(document.head.querySelector('link[rel="apple-touch-icon"]')?.getAttribute("href")).toBe("/api/portal/icon/180?v=1");
+  });
+
+  it("keeps the product icon without a company icon or with a foreign one", () => {
+    document.head.innerHTML = "";
+    applyAppIdentity(document, "Acme GmbH", null);
+    applyAppIdentity(document, "Acme GmbH", "https://evil.example/icon.png");
+    applyAppIdentity(document, "Acme GmbH", "//evil.example/icon.png");
+    expect(document.head.querySelector('link[rel="apple-touch-icon"]')).toBe(null);
   });
 });
