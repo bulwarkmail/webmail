@@ -257,8 +257,49 @@ export interface ChatAdmin {
   error: string | null;
 }
 
+/** Step 44: result of the connection test of a company's own model. */
+export interface CustomModelCheck {
+  ok: boolean;
+  models: string[] | null;
+  stream: boolean;
+  tools: boolean;
+  usage: boolean;
+  firstTokenMs: number | null;
+  error: "address_not_allowed" | "unreachable" | "timeout" | "unauthorized" | "model_not_found" | "bad_response" | null;
+  status: number | null;
+}
+
+/** Step 44: the company's own model; the key and header values are never sent back. */
+export interface CustomModel {
+  baseUrl: string;
+  profile: "openai" | "mistral";
+  model: string;
+  apiKeySet: boolean;
+  headers: { name: string }[];
+  check: CustomModelCheck | null;
+  checkedAt: string | null;
+}
+
+export interface CustomModelInput {
+  baseUrl: string;
+  profile: "openai" | "mistral";
+  model: string;
+  /** Omitted or "" keeps the stored key, null removes it. */
+  apiKey?: string | null;
+  /** A header without value keeps the stored value. */
+  headers: { name: string; value?: string }[];
+}
+
+export type AiProvider = "xenaxio" | "custom";
+
 export interface AiAdmin {
   configured: boolean;
+  /** Step 44: the platform's model (Mistral) is set up on this server. */
+  platformConfigured: boolean;
+  provider: AiProvider;
+  custom: CustomModel | null;
+  /** Addresses our requests to the own model come from (for a firewall). */
+  egressIps: string[];
   companyEnabled: boolean;
   model: string;
   models: string[];
@@ -497,7 +538,10 @@ export const xenaxio = {
   chatAdmin: () => request<ChatAdmin>("GET", "/api/admin/chat"),
   setChatAdmin: (enabled: boolean) => request<ChatAdmin>("PUT", "/api/admin/chat", { enabled }),
   aiAdmin: () => request<AiAdmin>("GET", "/api/admin/ai"),
-  setAiAdmin: (change: { enabled?: boolean; model?: string }) => request<{ ok: true }>("POST", "/api/admin/ai", change),
+  setAiAdmin: (change: { enabled?: boolean; model?: string; provider?: AiProvider }) => request<{ ok: true }>("POST", "/api/admin/ai", change),
+  saveCustomModel: (input: CustomModelInput) => request<{ custom: CustomModel }>("PUT", "/api/admin/ai/custom", input),
+  testCustomModel: () => request<{ check: CustomModelCheck; custom: CustomModel | null }>("POST", "/api/admin/ai/custom/test"),
+  removeCustomModel: () => request<{ ok: true }>("DELETE", "/api/admin/ai/custom"),
   audit: (f: AuditFilter) => request<{ entries: AuditEntry[]; next: number | null }>("GET", `/api/admin/audit${auditQuery(f)}`),
 
   operator: {
