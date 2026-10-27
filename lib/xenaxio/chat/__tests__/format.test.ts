@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { messageHtml, mentionsUser, plainPreview, textContent, toHtml } from "../format";
+import { appOf, emailShareContent, messageHtml, mentionsUser, plainPreview, sharedEmailOf, textContent, toHtml } from "../format";
 
 describe("composer text → message", () => {
   it("sends plain text without HTML", () => {
@@ -50,5 +50,24 @@ describe("showing messages", () => {
     expect(mentionsUser({ "m.mentions": { room: true } }, "@b:x")).toBe(true);
     expect(mentionsUser({ body: "@a" }, "@a:x")).toBe(false);
     expect(plainPreview({ msgtype: "m.image", body: "foto.png" })).toBe("🖼 foto.png");
+  });
+});
+
+describe("integrations and shared e-mails (step 43, part D)", () => {
+  it("labels only integration bots as apps", () => {
+    expect(appOf({ "com.xenaxio.webhook": { name: "CI", icon: "🚨" } }, "@xenaxio.hook.0a1b2c3d4e5f:acme.de")).toEqual({ name: "CI", icon: "🚨" });
+    expect(appOf({}, "@xenaxio.hook.0a1b2c3d4e5f:acme.de")).toEqual({ name: null, icon: null });
+    // A colleague cannot pose as an app by adding the field.
+    expect(appOf({ "com.xenaxio.webhook": { name: "Chef" } }, "@anna:acme.de")).toBeNull();
+    expect(appOf({ "com.xenaxio.webhook": { icon: "<img src=x>" } }, "@xenaxio.hook.0a:acme.de")?.icon).toBeNull();
+  });
+
+  it("builds and reads the e-mail card, checking what others send", () => {
+    const content = emailShareContent({ emailId: "Mabc", subject: "Angebot", from: "Max Müller", fromEmail: "max@kunde.de", preview: "Guten   Tag,\n anbei", date: "2026-10-27T09:00:00Z" }, " Bitte prüfen ", "(kein Betreff)");
+    expect(content.body).toBe("Bitte prüfen\n\n📧 Angebot — Max Müller <max@kunde.de>\nGuten Tag, anbei");
+    expect(sharedEmailOf(content)).toEqual({ emailId: "Mabc", subject: "Angebot", from: "Max Müller", fromEmail: "max@kunde.de", preview: "Guten Tag, anbei", date: "2026-10-27T09:00:00Z", note: "Bitte prüfen" });
+    expect(sharedEmailOf({ "com.xenaxio.email": { emailId: "../../admin" } })).toBeNull();
+    expect(sharedEmailOf({ "com.xenaxio.email": { emailId: "M1", subject: 5, date: "nope" } })).toMatchObject({ subject: "", date: null });
+    expect(sharedEmailOf({ body: "x" })).toBeNull();
   });
 });

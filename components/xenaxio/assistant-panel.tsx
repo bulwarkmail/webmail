@@ -125,7 +125,8 @@ function FileChip({ name, size, type, preview, href, deleted, busy, error, onOpe
   );
 }
 
-const SURFACES = /\/(mail|calendar|contacts)(\/|$)|^\/$/;
+// Step 43, part D: also the team chat (not its admin page under /workspace).
+const SURFACES = /\/(mail|calendar|contacts)(\/|$)|^\/$|^\/chat(\/|$)/;
 /** Per-tab only; cleared with the tab and on sign-out. Holds the visible chat, nothing else. */
 const STORAGE_KEY = ASSISTANT_STORAGE_KEY;
 
@@ -534,12 +535,21 @@ export function AssistantPanel() {
   const draftReplyRef = useRef(draftReply);
   draftReplyRef.current = draftReply;
 
+  // Step 43, part D: a question from elsewhere (the chat's "Zusammenfassen").
+  const ask = (text: string) => {
+    setOpen(true);
+    void run((signal) => assistant.chat(text, conversationId, context, signal, []), text);
+  };
+  const askRef = useRef(ask);
+  askRef.current = ask;
+
   // Commands from elsewhere in the app (e.g. the "Kurz" button on an email).
   useEffect(() => {
     const onCommand = (ev: Event) => {
       const cmd = (ev as CustomEvent<AssistantCommand>).detail;
       if (cmd.action === "open") setOpen(true);
       if (cmd.action === "summarize") summarize(cmd.threadId, cmd.subject ?? "");
+      if (cmd.action === "ask" && cmd.text.trim()) askRef.current(cmd.text.trim());
       if (cmd.action === "reply") {
         setOpen(true);
         void draftReplyRef.current();

@@ -85,6 +85,8 @@ function AuditView() {
             <option value="">{t("audit.all")}</option>
             <option value="panel">{t("audit.source_panel")}</option>
             <option value="mcp">{t("audit.source_mcp")}</option>
+            <option value="admin">{t("audit.source_admin")}</option>
+            <option value="chat">{t("audit.source_chat")}</option>
           </select>
         </label>
         <label className="space-y-1 text-xs font-medium">
@@ -128,7 +130,7 @@ function AuditView() {
                 <tr key={e.id}>
                   <td className="whitespace-nowrap px-3 py-2 text-xs">{time(e.createdAt)}</td>
                   <td className="max-w-[12rem] truncate px-3 py-2">{e.userEmail ?? "–"}</td>
-                  <td className="px-3 py-2 text-xs">{e.source === "mcp" ? `MCP${e.tokenName ? ` · ${e.tokenName}` : ""}` : t("audit.source_panel")}</td>
+                  <td className="px-3 py-2 text-xs">{e.source === "mcp" ? `MCP${e.tokenName ? ` · ${e.tokenName}` : ""}` : e.source === "admin" ? t("audit.source_admin") : e.source === "chat" ? t("audit.source_chat") : t("audit.source_panel")}</td>
                   <td className="px-3 py-2 font-mono text-xs">
                     {action(e.action)}
                     {e.status !== "ok" && <span className="ml-1 text-destructive">({t("audit.status_error")})</span>}
