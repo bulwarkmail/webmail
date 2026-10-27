@@ -437,7 +437,7 @@ export interface MemoryNote {
   updatedAt: string;
 }
 
-/** Step 47: a task the assistant carries out on a schedule (the user's page "Geplante Aufgaben"). */
+/** Step 49: a task the assistant carries out on a schedule (the user's page "Geplante Aufgaben"). */
 export interface ScheduleInfo {
   id: string;
   title: string;

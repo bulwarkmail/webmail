@@ -25,7 +25,7 @@ const { ScheduleList, scheduleState } = await import("../schedule-list");
 
 const proposal = (tool: string, summary: ProposalSummary, state = "pending") => ({ id: "p1", tool, summary, state });
 
-describe("ScheduleCard (step 47)", () => {
+describe("ScheduleCard (step 49)", () => {
   it("formats runs and tells the kinds of proposals apart", () => {
     expect(formatRun("2026-10-29T08:00", "de")).toBe("Do., 29.10.2026, 08:00");
     expect(scheduleCardKind("schedule_task", {})).toBe("create");
@@ -84,7 +84,7 @@ const schedule = (over: Partial<ScheduleInfo> = {}): ScheduleInfo => ({
   ...over,
 });
 
-describe("ScheduleList (step 47)", () => {
+describe("ScheduleList (step 49)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     api.schedules.mockResolvedValue({ timeZone: "Europe/Berlin", schedules: [schedule(), schedule({ id: "s2", title: "Mahnung", status: "paused", pausedReason: "failures", nextRun: null, lastRun: null, lastStatus: null, conversationId: null })], maxSchedules: 20, maxRunsPerDay: 24 });
@@ -117,7 +117,7 @@ describe("ScheduleList (step 47)", () => {
   });
 });
 
-describe("the KI-Aufgaben calendar shows once a task is set up (step 47)", () => {
+describe("the KI-Aufgaben calendar shows once a task is set up (step 49)", () => {
   it("is added to the ticked calendars, unless none is chosen yet (then all show)", async () => {
     const { withCalendar } = await import("@/lib/xenaxio/calendar-visibility");
     expect(withCalendar(["b"], "k")).toEqual(["b", "k"]);

@@ -1,4 +1,4 @@
-// Step 47: the platform makes the user's "KI-Aufgaben" calendar on the server.
+// Step 49: the platform makes the user's "KI-Aufgaben" calendar on the server.
 // Bulwark remembers which calendars are ticked, so a calendar it did not make
 // itself stays unticked; this ticks it once the user set up a scheduled task.
 import { BIRTHDAY_CALENDAR_ID } from "@/lib/birthday-calendar";

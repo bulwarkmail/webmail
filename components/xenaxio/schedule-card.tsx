@@ -1,6 +1,6 @@
 "use client";
 
-// Step 47: the assistant proposes a scheduled task (schedule_task), a change
+// Step 49: the assistant proposes a scheduled task (schedule_task), a change
 // to one (update_schedule) or deleting one (delete_schedule); nothing happens
 // until the user confirms it here.
 import { Link } from "@/i18n/navigation";

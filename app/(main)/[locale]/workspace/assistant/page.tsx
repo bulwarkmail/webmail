@@ -3,7 +3,7 @@
 // Step 36: "Assistent" — what the assistant remembers about the user. Every
 // note was confirmed by the user in the panel or written here; the user edits
 // and deletes them and can switch memory off. Nobody else sees these notes.
-// Step 47: above them, the tasks the assistant carries out on a schedule.
+// Step 49: above them, the tasks the assistant carries out on a schedule.
 import { type FormEvent, useCallback, useEffect, useState } from "react";
 import { useLocale } from "next-intl";
 import { Button } from "@/components/ui/button";
@@ -174,7 +174,7 @@ export default function AssistantMemoryPage() {
   return (
     <WorkspaceShell title={t("memory.title")} backHref="/workspace">
       <div className="max-w-2xl space-y-10">
-        {/* Step 47: scheduled tasks of the assistant. */}
+        {/* Step 49: scheduled tasks of the assistant. */}
         <ScheduleList />
         <Memory />
       </div>

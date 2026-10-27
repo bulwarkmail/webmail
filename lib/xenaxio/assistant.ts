@@ -43,11 +43,11 @@ export interface ProposalSummary {
   priority?: "high" | "medium" | "low" | "none";
   reminder?: boolean;
   description?: string;
-  /** Tasks: open | in-progress | done | cancelled; scheduled tasks (step 47): active | paused | ended. */
+  /** Tasks: open | in-progress | done | cancelled; scheduled tasks (step 49): active | paused | ended. */
   status?: "open" | "in-progress" | "done" | "cancelled" | "active" | "paused" | "ended";
   /** create_task from an email: the email it links to. */
   email?: { subject: string; from: string };
-  /** schedule_task, update_schedule, delete_schedule (step 47). */
+  /** schedule_task, update_schedule, delete_schedule (step 49). */
   scheduleId?: string;
   instruction?: string;
   when?: string;
@@ -57,7 +57,7 @@ export interface ProposalSummary {
   sendTo?: string[];
 }
 
-/** Step 47: a chat in the history; scheduled tasks have their own, unread until opened. */
+/** Step 49: a chat in the history; scheduled tasks have their own, unread until opened. */
 export interface ConversationInfo {
   id: string;
   title: string;
@@ -66,19 +66,19 @@ export interface ConversationInfo {
   unread?: boolean;
 }
 
-/** Step 47: proposals of a scheduled run still waiting for the user's click in that chat. */
+/** Step 49: proposals of a scheduled run still waiting for the user's click in that chat. */
 export interface WaitingProposal {
   id: string;
   tool: string;
   summary: ProposalSummary;
 }
 
-/** Step 47: a link (push, email copy) opens this chat in the panel: ?assistant=<id>. */
+/** Step 49: a link (push, email copy) opens this chat in the panel: ?assistant=<id>. */
 export const ASSISTANT_OPEN_PARAM = "assistant";
 
 export interface ActionResult {
   status: "done";
-  /** Step 47: calendarId — the "KI-Aufgaben" calendar a scheduled task shows in. */
+  /** Step 49: calendarId — the "KI-Aufgaben" calendar a scheduled task shows in. */
   result: { eventId?: string; invited?: string[]; invitationSent?: boolean; calendarId?: string };
 }
 
@@ -234,7 +234,7 @@ export const assistant = {
   async messages(id: string): Promise<{ role: "user" | "assistant"; content: string; files?: AttachedFile[] }[]> {
     return (await this.conversation(id)).messages;
   },
-  /** Step 47: the messages and the proposals still waiting in the chat; opening it marks it read. */
+  /** Step 49: the messages and the proposals still waiting in the chat; opening it marks it read. */
   async conversation(id: string): Promise<{ messages: { role: "user" | "assistant"; content: string; files?: AttachedFile[] }[]; proposals: WaitingProposal[] }> {
     const res = await apiFetch(`/api/ai/conversations/${encodeURIComponent(id)}`, { credentials: "same-origin" });
     if (!res.ok) return { messages: [], proposals: [] };

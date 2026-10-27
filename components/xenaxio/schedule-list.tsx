@@ -1,6 +1,6 @@
 "use client";
 
-// Step 47: "Geplante Aufgaben" on the page "Assistent": what the assistant
+// Step 49: "Geplante Aufgaben" on the page "Assistent": what the assistant
 // does on its own, when it runs next and how the last run went; pause,
 // resume, run now and delete. New ones are set up in the assistant panel.
 import { useCallback, useEffect, useState } from "react";

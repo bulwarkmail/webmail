@@ -55,7 +55,7 @@ async function handlePush(event) {
   } catch (_) {
     data = null;
   }
-  // Step 47: the result of a scheduled task of the assistant.
+  // Step 49: the result of a scheduled task of the assistant.
   if (data && data.kind === "xenaxio-assistant") return showAssistant(data);
   if (!data || data.kind !== "xenaxio-chat") return;
 
@@ -87,7 +87,7 @@ async function handlePush(event) {
   });
 }
 
-/** Step 47: one notification per scheduled task; a click opens its chat in the assistant. */
+/** Step 49: one notification per scheduled task; a click opens its chat in the assistant. */
 async function showAssistant(data) {
   const id = typeof data.conversationId === "string" ? data.conversationId : "";
   if (!/^[0-9a-f-]{36}$/i.test(id)) return;
@@ -137,7 +137,7 @@ async function handleClick(data) {
   if (self.clients.openWindow) await self.clients.openWindow(target);
 }
 
-/** Step 47: brings a window of the app forward and opens the chat there, else a new window. */
+/** Step 49: brings a window of the app forward and opens the chat there, else a new window. */
 async function openAssistant(id) {
   const target = `${BASE_PATH}/${LOCALE}/mail/?assistant=${encodeURIComponent(id)}`;
   for (const client of await windows()) {

@@ -329,7 +329,7 @@ export function AssistantPanel() {
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [history, setHistory] = useState<ConversationInfo[] | null>(null);
-  // Step 47: results of scheduled tasks not opened yet (a dot on the button and in the history).
+  // Step 49: results of scheduled tasks not opened yet (a dot on the button and in the history).
   const [unread, setUnread] = useState(0);
   const abort = useRef<AbortController | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
@@ -378,7 +378,7 @@ export function AssistantPanel() {
     }, () => undefined);
   }, [open, available, t]);
 
-  // Step 47: new results of scheduled tasks, checked every two minutes while the page is open.
+  // Step 49: new results of scheduled tasks, checked every two minutes while the page is open.
   useEffect(() => {
     if (!available) return;
     const check = () => void assistant.status().then((s) => setUnread(s.unread ?? 0), () => undefined);
@@ -445,7 +445,7 @@ export function AssistantPanel() {
         return;
       }
       const { result } = await assistant.confirm(proposal.id);
-      // Step 47: the "KI-Aufgaben" calendar shows from now on.
+      // Step 49: the "KI-Aufgaben" calendar shows from now on.
       if (result.calendarId) showCalendar(result.calendarId);
       set(result.invited?.length ? (result.invitationSent ? "done_invited" : "invite_failed") : "done");
     } catch (err) {
@@ -602,7 +602,7 @@ export function AssistantPanel() {
   const loadConversation = useCallback(async (id: string) => {
     const { messages: msgs, proposals } = await assistant.conversation(id);
     const loaded: Turn[] = msgs.map((m) => ({ role: m.role, text: m.content, ...(m.files?.length ? { files: m.files } : {}) }));
-    // Step 47: what a scheduled run proposed still waits here for the user's click.
+    // Step 49: what a scheduled run proposed still waits here for the user's click.
     if (proposals.length) loaded.push({ role: "assistant", text: "", proposals: proposals.map((p) => ({ ...p, state: "pending" as const })) });
     setTurns(loaded);
     setConversationId(id);
@@ -610,7 +610,7 @@ export function AssistantPanel() {
     void assistant.status().then((s) => setUnread(s.unread ?? 0), () => undefined);
   }, []);
 
-  // Step 47: a link from a notification or the email copy (?assistant=<chat>) opens that chat.
+  // Step 49: a link from a notification or the email copy (?assistant=<chat>) opens that chat.
   useEffect(() => {
     if (!available) return;
     const params = new URLSearchParams(window.location.search);
