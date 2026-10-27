@@ -324,7 +324,38 @@ export interface AiAdmin {
   limits: { userMonthlyTokens: number; tenantMonthlyTokens: number };
   warnShare: number;
   tenantTokens: number;
+  /** Step 50: what the company allows for scheduled tasks (absent on older servers). */
+  schedules?: ScheduleSettingsInfo;
   users: { id: string; email: string; displayName: string; status: "active" | "disabled"; aiEnabled: boolean; tokens: number }[];
+}
+
+/** Step 50: the company's settings for the assistant's scheduled tasks. */
+export interface ScheduleSettings {
+  enabled: boolean;
+  sendAllowed: boolean;
+  /** Active tasks per person. */
+  maxPerUser: number;
+  /** Runs per person and day, all tasks together. */
+  runsPerDay: number;
+  minIntervalMinutes: number;
+}
+
+export interface ScheduleSettingsInfo extends ScheduleSettings {
+  /** The platform's ceilings. */
+  caps: { maxPerUser: number; runsPerDay: number; minIntervalMinutes: number };
+  active: number;
+  paused: number;
+}
+
+/** GET /api/ai/schedules: the user's tasks and the company's limits (step 50). */
+export interface ScheduleList {
+  timeZone: string;
+  schedules: ScheduleInfo[];
+  maxSchedules: number;
+  maxRunsPerDay: number;
+  minIntervalMinutes?: number;
+  enabled?: boolean;
+  sendAllowed?: boolean;
 }
 
 export interface AuditEntry {
@@ -519,7 +550,7 @@ export const xenaxio = {
   deleteMemory: (id: string) => request<{ ok: true }>("DELETE", `/api/ai/memories/${encodeURIComponent(id)}`),
   deleteAllMemories: () => request<{ ok: true }>("DELETE", "/api/ai/memories"),
   setMemoryEnabled: (enabled: boolean) => request<{ enabled: boolean }>("POST", "/api/ai/memories/settings", { enabled }),
-  schedules: () => request<{ timeZone: string; schedules: ScheduleInfo[]; maxSchedules: number; maxRunsPerDay: number }>("GET", "/api/ai/schedules"),
+  schedules: () => request<ScheduleList>("GET", "/api/ai/schedules"),
   pauseSchedule: (id: string) => request<{ schedule: ScheduleInfo }>("POST", `/api/ai/schedules/${encodeURIComponent(id)}/pause`),
   resumeSchedule: (id: string) => request<{ schedule: ScheduleInfo }>("POST", `/api/ai/schedules/${encodeURIComponent(id)}/resume`),
   runSchedule: (id: string) => request<{ started: true; conversationId: string }>("POST", `/api/ai/schedules/${encodeURIComponent(id)}/run`),
@@ -626,6 +657,7 @@ export const xenaxio = {
   setActiveCustomModel: (model: string) => request<{ custom: CustomModel }>("POST", "/api/admin/ai/custom/active", { model }),
   setCustomModelFallback: (enabled: boolean) => request<{ custom: CustomModel }>("POST", "/api/admin/ai/custom/fallback", { enabled }),
   removeCustomModel: () => request<{ ok: true }>("DELETE", "/api/admin/ai/custom"),
+  saveScheduleSettings: (settings: ScheduleSettings) => request<{ paused: number; schedules: ScheduleSettingsInfo }>("PUT", "/api/admin/ai/schedules", settings),
   audit: (f: AuditFilter) => request<{ entries: AuditEntry[]; next: number | null }>("GET", `/api/admin/audit${auditQuery(f)}`),
 
   operator: {

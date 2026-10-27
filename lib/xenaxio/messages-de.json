@@ -128,10 +128,12 @@
     "calendar_not_found": "Diesen Kalender gibt es nicht mehr.",
     "feed_not_found": "Für diesen Kalender gibt es keinen Link.",
     "too_many_models": "Höchstens fünf Modelle.",
-    "schedule_limit": "Sie haben schon die höchste Zahl geplanter Aufgaben. Löschen Sie zuerst eine.",
+    "schedule_limit": "Sie haben schon so viele aktive Aufgaben, wie Ihre Firma erlaubt ({max}). Pausieren oder löschen Sie zuerst eine.",
     "schedule_running": "Diese Aufgabe läuft gerade.",
     "schedule_in_past": "Der Zeitpunkt dieser einmaligen Aufgabe ist vorbei.",
-    "schedule_not_found": "Diese geplante Aufgabe gibt es nicht mehr."
+    "schedule_not_found": "Diese geplante Aufgabe gibt es nicht mehr.",
+    "schedule_interval": "Diese Aufgabe läuft öfter, als Ihre Firma erlaubt. Bitten Sie den Assistenten, sie seltener zu planen.",
+    "schedules_off": "Ihre Firma hat geplante Aufgaben ausgeschaltet."
   },
   "login": {
     "title": "Anmelden",
@@ -519,7 +521,7 @@
       "done_resume": "Fortgesetzt.",
       "done_delete": "Gelöscht.",
       "failed": "Das konnte nicht gespeichert werden.",
-      "limit": "Sie haben schon 20 geplante Aufgaben. Löschen Sie zuerst eine unter Konto → Assistent.",
+      "limit": "Sie haben schon so viele aktive Aufgaben, wie Ihre Firma erlaubt. Pausieren oder löschen Sie zuerst eine unter Konto → Assistent.",
       "all": "Alle geplanten Aufgaben"
     },
     "limit_warning": "Sie haben über 80 % Ihres KI-Kontingents für diesen Monat verbraucht.",
@@ -690,7 +692,25 @@
     "health_ok": "Erreichbar, zuletzt geprüft {time}",
     "health_down": "Das eigene Modell antwortet seit {time} nicht. {reason}",
     "health_unknown": "Noch nicht geprüft",
-    "health_hint": "Wir prüfen alle 15 Minuten. Fällt das Modell aus, bekommen die Admins eine E-Mail."
+    "health_hint": "Wir prüfen alle 15 Minuten. Fällt das Modell aus, bekommen die Admins eine E-Mail.",
+    "schedules_title": "Geplante Aufgaben des Assistenten",
+    "schedules_intro": "Mitarbeitende können dem Assistenten Aufgaben geben, die er selbst erledigt – einmalig oder regelmäßig. Hier legen Sie fest, wie viel davon in Ihrer Firma erlaubt ist.",
+    "schedules_count": "Zurzeit {active} aktiv, {paused} pausiert.",
+    "schedules_enabled": "Geplante Aufgaben erlauben",
+    "schedules_enabled_hint": "Ausgeschaltet: Niemand kann neue einrichten, bestehende pausieren. Gelöscht wird nichts.",
+    "schedules_send": "Selbst senden erlauben",
+    "schedules_send_hint": "Nur wenn die Person es pro Aufgabe erlaubt und nur an die Adressen, die sie nennt. Ausgeschaltet: Der Assistent speichert nur Entwürfe.",
+    "schedules_max": "Aufgaben pro Person",
+    "schedules_runs": "Läufe pro Tag und Person",
+    "schedules_range": "{min} bis {max}",
+    "schedules_interval": "Höchstens alle",
+    "schedules_interval_hint": "So oft darf eine Aufgabe höchstens laufen.",
+    "schedules_interval_minutes": "{n} Min.",
+    "schedules_interval_hours": "{n} Std.",
+    "schedules_interval_day": "1 Tag",
+    "schedules_note": "Wenn Sie die Grenzen senken, werden die neuesten Aufgaben über der Grenze und zu häufige Aufgaben pausiert, mit Hinweis für die Person. Jeder Lauf verbraucht KI-Kontingent.",
+    "schedules_save": "Speichern",
+    "schedules_saved_paused": "Gespeichert. {count} Aufgaben wurden pausiert, weil sie nicht mehr in die Grenzen passen."
   },
   "audit": {
     "title": "Protokoll",
@@ -958,8 +978,8 @@
     "privacy": "Die Notizen werden verschlüsselt in Deutschland gespeichert und nur an die KI übermittelt, wenn Sie den Assistenten nutzen. Ihr Administrator sieht sie nicht; im Protokoll steht nur, dass sich Notizen geändert haben. Externe KI-Chats (MCP) sehen sie nicht."
   },
   "schedules": {
-    "title": "Geplante Aufgaben ({count} von {max})",
-    "intro": "Aufgaben, die der Assistent selbst erledigt – einmalig oder regelmäßig. Das Ergebnis kommt in einen eigenen Chat im Assistenten, auf Wunsch auch per E-Mail. Höchstens {max} Läufe pro Tag.",
+    "title": "Geplante Aufgaben ({count} von {max} aktiv)",
+    "intro": "Aufgaben, die der Assistent selbst erledigt – einmalig oder regelmäßig. Das Ergebnis kommt in einen eigenen Chat im Assistenten, auf Wunsch auch per E-Mail. Ihre Firma erlaubt höchstens {max} Läufe pro Tag, eine Aufgabe höchstens alle {every}.",
     "none": "Noch keine geplanten Aufgaben.",
     "how": "Neue Aufgaben richten Sie im Assistenten ein, zum Beispiel: „Fasse mir jeden Morgen um 8 die neuen E-Mails zusammen.“ Sie stehen auch in Ihrem Kalender „KI-Aufgaben“.",
     "status_active": "Aktiv",
@@ -982,7 +1002,12 @@
     "run_started": "Läuft – das Ergebnis erscheint gleich im Chat der Aufgabe.",
     "open_chat": "Im Chat öffnen",
     "delete": "Löschen",
-    "delete_confirm": "„{title}“ löschen? Der Eintrag im Kalender wird entfernt, der Chat bleibt."
+    "delete_confirm": "„{title}“ löschen? Der Eintrag im Kalender wird entfernt, der Chat bleibt.",
+    "company_off": "Ihre Firma hat geplante Aufgaben ausgeschaltet. Bestehende Aufgaben sind pausiert; Sie können sie ansehen und löschen.",
+    "company_no_send": "Ihre Firma erlaubt dem Assistenten nicht, selbst zu senden: Er speichert nur Entwürfe.",
+    "paused_company_off": "Pausiert: Ihre Firma hat geplante Aufgaben ausgeschaltet.",
+    "paused_company_limit": "Pausiert: mehr Aufgaben, als Ihre Firma pro Person erlaubt. Pausieren oder löschen Sie eine andere, dann „Fortsetzen“.",
+    "paused_company_interval": "Pausiert: Sie läuft öfter, als Ihre Firma erlaubt. Bitten Sie den Assistenten, sie seltener zu planen."
   },
   "background": {
     "title": "Hintergrund",

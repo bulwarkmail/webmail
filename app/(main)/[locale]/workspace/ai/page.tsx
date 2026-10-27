@@ -3,6 +3,7 @@
 // AI settings of the company (C2, I8, scenario 8): switch AI on or off for
 // everyone, pick the model, see this month's usage per person against the limits.
 // Step 44 (I9): or connect the company's own model (any OpenAI-compatible server).
+// Step 50: and set the limits of the assistant's scheduled tasks.
 import { type FormEvent, useCallback, useEffect, useState } from "react";
 import { useLocale } from "next-intl";
 import { Plus, Trash2 } from "@/components/icons";
@@ -11,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Notice, PasswordField, Spinner, TextField } from "@/components/xenaxio/ui";
 import { CustomModelCheckResult } from "@/components/xenaxio/custom-model-check";
 import { CustomModelList } from "@/components/xenaxio/custom-model-list";
+import { ScheduleSettings } from "@/components/xenaxio/schedule-settings";
 import { WorkspaceShell } from "@/components/xenaxio/workspace-shell";
 import { type AiAdmin, type AiProvider, type CustomModel, type CustomModelCheck, errorText, xenaxio } from "@/lib/xenaxio/api";
 import { useXT } from "@/lib/xenaxio/i18n";
@@ -381,6 +383,8 @@ function AiSettings() {
         }}
       />
       {data.custom && <CustomModelList custom={data.custom} platformConfigured={data.platformConfigured} onChanged={load} />}
+
+      {data.schedules && <ScheduleSettings value={data.schedules} onSaved={load} />}
 
       <section className="space-y-3 rounded-lg border border-border bg-card p-4">
         <h2 className="font-medium">{t("aiadmin.usage", { month })}</h2>

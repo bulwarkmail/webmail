@@ -61,7 +61,7 @@ describe("ScheduleCard (step 49)", () => {
     expect(screen.getByText("jeden Tag um 08:00").className).toContain("line-through");
     expect(screen.getByText("nein, nur Entwürfe")).toBeTruthy();
     rerender(<ScheduleCard proposal={proposal("schedule_task", { title: "x", when: "y" }, "schedule_limit")} locale="de" onDecide={() => {}} />);
-    expect(screen.getByText(/schon 20 geplante Aufgaben/)).toBeTruthy();
+    expect(screen.getByText(/so viele aktive Aufgaben, wie Ihre Firma erlaubt/)).toBeTruthy();
     expect(screen.queryByText("Bestätigen")).toBeNull();
   });
 });
@@ -99,7 +99,8 @@ describe("ScheduleList (step 49)", () => {
 
   it("lists the tasks and pauses, resumes, runs, opens and deletes them", async () => {
     render(<ScheduleList />);
-    expect(await screen.findByText("Geplante Aufgaben (2 von 20)")).toBeTruthy();
+    expect(await screen.findByText("Geplante Aufgaben (1 von 20 aktiv)")).toBeTruthy();
+    expect(screen.getByText(/Ihre Firma erlaubt höchstens 24 Läufe pro Tag, eine Aufgabe höchstens alle 1 Std\./)).toBeTruthy();
     expect(screen.getByText("Nächster Lauf: Do., 29.10.2026, 08:00 · letzter Lauf Mi., 28.10.2026, 08:00")).toBeTruthy();
     expect(screen.getByText("Pausiert nach drei Fehlern in Folge.")).toBeTruthy();
     await act(async () => fireEvent.click(screen.getByText("Pausieren")));
@@ -114,6 +115,53 @@ describe("ScheduleList (step 49)", () => {
     vi.spyOn(window, "confirm").mockReturnValueOnce(true);
     await act(async () => fireEvent.click(screen.getAllByText("Löschen")[1]!));
     expect(api.deleteSchedule).toHaveBeenCalledWith("s2");
+  });
+
+  it("step 50: says what the company set and why a task is paused; off, nothing can be resumed or run", async () => {
+    api.schedules.mockResolvedValue({
+      timeZone: "Europe/Berlin",
+      schedules: [schedule({ status: "paused", pausedReason: "company_off", nextRun: null, maySend: true, sendTo: ["jan@mueller.de"] })],
+      maxSchedules: 5,
+      maxRunsPerDay: 12,
+      minIntervalMinutes: 15,
+      enabled: false,
+      sendAllowed: false,
+    });
+    render(<ScheduleList />);
+    expect(await screen.findByText(/Ihre Firma hat geplante Aufgaben ausgeschaltet\. Bestehende/)).toBeTruthy();
+    expect(screen.getByText(/höchstens alle 15 Min\./)).toBeTruthy();
+    expect(screen.getByText(/^Pausiert: Ihre Firma hat geplante Aufgaben ausgeschaltet\./)).toBeTruthy();
+    expect(screen.queryByText("Fortsetzen")).toBeNull();
+    expect(screen.queryByText("Jetzt ausführen")).toBeNull();
+    expect(screen.getByText("Löschen")).toBeTruthy();
+  });
+});
+
+describe("ScheduleSettings in Verwaltung → KI (step 50)", () => {
+  const value = { enabled: true, sendAllowed: true, maxPerUser: 20, runsPerDay: 24, minIntervalMinutes: 60, caps: { maxPerUser: 50, runsPerDay: 96, minIntervalMinutes: 15 }, active: 3, paused: 1 };
+
+  it("saves the company's limits and says how many tasks were paused", async () => {
+    const save = vi.fn(async () => ({ paused: 2, schedules: value }));
+    (api as unknown as { saveScheduleSettings: typeof save }).saveScheduleSettings = save;
+    const saved = vi.fn(async () => {});
+    const { ScheduleSettings, intervalLabel } = await import("../schedule-settings");
+    const t = (key: string, values?: Record<string, string | number>) => `${key}${values ? JSON.stringify(values) : ""}`;
+    expect([15, 120, 1440].map((m) => intervalLabel(m, t))).toEqual(['aiadmin.schedules_interval_minutes{"n":15}', 'aiadmin.schedules_interval_hours{"n":2}', "aiadmin.schedules_interval_day"]);
+    render(<ScheduleSettings value={value} onSaved={saved} />);
+    expect(screen.getByText("Zurzeit 3 aktiv, 1 pausiert.")).toBeTruthy();
+    const interval = screen.getByLabelText("Höchstens alle") as HTMLSelectElement;
+    expect([...interval.options].map((o) => o.textContent)).toEqual(["15 Min.", "30 Min.", "1 Std.", "2 Std.", "4 Std.", "1 Tag"]);
+    fireEvent.change(interval, { target: { value: "15" } });
+    fireEvent.change(screen.getByLabelText("Aufgaben pro Person"), { target: { value: "5" } });
+    fireEvent.change(screen.getByLabelText("Läufe pro Tag und Person"), { target: { value: "48" } });
+    fireEvent.click(screen.getByLabelText(/^Selbst senden erlauben/));
+    await act(async () => fireEvent.click(screen.getByText("Speichern")));
+    expect(save).toHaveBeenCalledWith({ enabled: true, sendAllowed: false, maxPerUser: 5, runsPerDay: 48, minIntervalMinutes: 15 });
+    expect(screen.getByText(/2 Aufgaben wurden pausiert/)).toBeTruthy();
+    expect(saved).toHaveBeenCalled();
+    // Off: the other settings wait until it is on again.
+    fireEvent.click(screen.getByLabelText(/^Geplante Aufgaben erlauben/));
+    expect((screen.getByLabelText("Aufgaben pro Person") as HTMLInputElement).disabled).toBe(true);
   });
 });
 
