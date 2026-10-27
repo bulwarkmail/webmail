@@ -34,7 +34,7 @@ const sub = {
 };
 const feed = { calendarId: "cal1", mode: "full" as const, url: "https://app.xenaxio.com/api/ical/tok.ics", createdAt: "2026-10-27T10:00:00Z", lastFetchedAt: null };
 
-describe("step 46: calendars from Google, Outlook & co.", () => {
+describe("step 48: calendars from Google, Outlook & co.", () => {
   beforeEach(() => {
     for (const fn of Object.values(api)) fn.mockReset();
     api.calendarSubscriptions.mockResolvedValue({ subscriptions: [sub] });

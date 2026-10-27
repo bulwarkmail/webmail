@@ -838,7 +838,7 @@ export function CalendarManagementSettings() {
         )}
       </div>
 
-      {/* xenaxio step 46: calendars from Google, Outlook & co. by link, both ways (kept by the platform). */}
+      {/* xenaxio step 48: calendars from Google, Outlook & co. by link, both ways (kept by the platform). */}
       <CalendarLinksSettings calendars={orderableCalendars} onChanged={() => { if (client) void fetchCalendars(client); }} />
 
       {/* iCal Subscriptions */}

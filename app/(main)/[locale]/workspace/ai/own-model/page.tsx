@@ -2,6 +2,7 @@
 
 // Step 44: guide for admins — run a model on own hardware (Ollama, e.g. on a
 // Mac Studio) and connect it through a Cloudflare Tunnel, no open ports.
+// Step 45: everything as system services, so it survives a restart.
 import { Link } from "@/i18n/navigation";
 import { CopyButton } from "@/components/xenaxio/copy-button";
 import { WorkspaceShell } from "@/components/xenaxio/workspace-shell";
@@ -12,12 +13,42 @@ const HOST = "llm.ihre-firma.de";
 const OLLAMA = `brew install ollama
 ollama pull qwen3.6:35b-a3b`;
 
-const OLLAMA_ENV = `launchctl setenv OLLAMA_CONTEXT_LENGTH 32768
-launchctl setenv OLLAMA_KEEP_ALIVE -1
-launchctl setenv OLLAMA_NUM_PARALLEL 2`;
+// Step 45: Ollama as a system service (starts at boot, without anyone signed in),
+// with the settings for xenaxio; the GPU memory is set again at every boot.
+const OLLAMA_SERVICE = `OLLAMA_BIN="$(command -v ollama)"
+sudo tee /Library/LaunchDaemons/de.xenaxio.ollama.plist >/dev/null <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+  <key>Label</key><string>de.xenaxio.ollama</string>
+  <key>UserName</key><string>$USER</string>
+  <key>ProgramArguments</key><array><string>$OLLAMA_BIN</string><string>serve</string></array>
+  <key>EnvironmentVariables</key><dict>
+    <key>HOME</key><string>$HOME</string>
+    <key>OLLAMA_CONTEXT_LENGTH</key><string>32768</string>
+    <key>OLLAMA_KEEP_ALIVE</key><string>-1</string>
+    <key>OLLAMA_NUM_PARALLEL</key><string>2</string>
+  </dict>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+</dict></plist>
+EOF
+sudo launchctl bootstrap system /Library/LaunchDaemons/de.xenaxio.ollama.plist`;
 
-const MAC = `sudo sysctl iogpu.wired_limit_mb=56000
+const MAC = `sudo tee /Library/LaunchDaemons/de.xenaxio.gpu-memory.plist >/dev/null <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+  <key>Label</key><string>de.xenaxio.gpu-memory</string>
+  <key>ProgramArguments</key><array><string>/usr/sbin/sysctl</string><string>iogpu.wired_limit_mb=56000</string></array>
+  <key>RunAtLoad</key><true/>
+</dict></plist>
+EOF
+sudo launchctl bootstrap system /Library/LaunchDaemons/de.xenaxio.gpu-memory.plist
 sudo pmset -a sleep 0 disksleep 0 autorestart 1`;
+
+const OLLAMA_CHECK = `ollama run qwen3.6:35b-a3b "Hallo"
+ollama ps`;
 
 const TUNNEL = `brew install cloudflared
 cloudflared tunnel login
@@ -77,9 +108,11 @@ function Guide() {
       </Step>
       <Step n={2} title={t("ownmodel.s2_title")}>
         {p("s2_text")}
-        <Snippet value={OLLAMA_ENV} />
+        <Snippet value={OLLAMA_SERVICE} />
         {p("s2_mac")}
         <Snippet value={MAC} />
+        {p("s2_check")}
+        <Snippet value={OLLAMA_CHECK} />
         {p("s2_note")}
       </Step>
       <Step n={3} title={t("ownmodel.s3_title")}>

@@ -37,6 +37,8 @@ import {
 } from "@/lib/xenaxio/assistant";
 import { XENAXIO_BFF } from "@/lib/xenaxio/bff";
 import { useXT } from "@/lib/xenaxio/i18n";
+import { TaskCard } from "@/components/xenaxio/task-card";
+import { ProposalSeriesNote, ProposalSeriesRows } from "./proposal-series";
 
 type ProposalState = "pending" | "running" | "done" | "done_invited" | "invite_failed" | "rejected" | "expired" | "already" | "failed" | "memory_full" | "memory_off";
 
@@ -58,6 +60,8 @@ interface Turn {
   /** A tool call failed; worth showing only if no answer came after it. */
   toolFailed?: boolean;
   error?: string;
+  /** Step 45: a note about the answer (it came from the fallback model). */
+  notice?: string;
   title?: string;
 }
 
@@ -125,7 +129,8 @@ function FileChip({ name, size, type, preview, href, deleted, busy, error, onOpe
   );
 }
 
-const SURFACES = /\/(mail|calendar|contacts)(\/|$)|^\/$/;
+// Step 43, part D: also the team chat (not its admin page under /workspace).
+const SURFACES = /\/(mail|calendar|contacts)(\/|$)|^\/$|^\/chat(\/|$)/;
 /** Per-tab only; cleared with the tab and on sign-out. Holds the visible chat, nothing else. */
 const STORAGE_KEY = ASSISTANT_STORAGE_KEY;
 
@@ -213,6 +218,7 @@ function ProposalCard({ proposal, locale, onDecide }: { proposal: Proposal; loca
           {s.timeZone ? <span className="text-muted-foreground"> ({s.timeZone})</span> : null}
           {changed("time") && s.before && was(formatSpan(s.before, locale))}
         </dd>
+        <ProposalSeriesRows summary={s} locale={locale} />
         {s.location || changed("location") ? (
           <>
             <dt className="text-muted-foreground">{label("where")}</dt>
@@ -242,6 +248,7 @@ function ProposalCard({ proposal, locale, onDecide }: { proposal: Proposal; loca
         ) : null}
       </dl>
       {attendees.length > 0 && proposal.state === "pending" && <p className="text-muted-foreground">{label("invites_note")}</p>}
+      {proposal.state === "pending" && <ProposalSeriesNote summary={s} />}
       {settled ? (
         <p className={cn(["done", "done_invited"].includes(proposal.state) ? "text-primary" : "text-muted-foreground", "flex items-center gap-1")}>
           {["done", "done_invited"].includes(proposal.state) && <Check className="h-3.5 w-3.5" />}
@@ -395,6 +402,7 @@ export function AssistantPanel() {
           else if (e.type === "sources") update((turn) => ({ ...turn, sources: e.emails }));
           else if (e.type === "proposal") update((turn) => ({ ...turn, proposals: [...(turn.proposals ?? []), { id: e.id, tool: e.tool, summary: e.summary, state: "pending" }] }));
           else if (e.type === "error") update((turn) => ({ ...turn, error: t(`assistant.errors.${e.code}`) }));
+          else if (e.type === "notice") update((turn) => ({ ...turn, notice: t(`assistant.notice_${e.code}`) }));
         }
       } catch (err) {
         if ((err as { name?: string }).name !== "AbortError") {
@@ -534,12 +542,21 @@ export function AssistantPanel() {
   const draftReplyRef = useRef(draftReply);
   draftReplyRef.current = draftReply;
 
+  // Step 43, part D: a question from elsewhere (the chat's "Zusammenfassen").
+  const ask = (text: string) => {
+    setOpen(true);
+    void run((signal) => assistant.chat(text, conversationId, context, signal, []), text);
+  };
+  const askRef = useRef(ask);
+  askRef.current = ask;
+
   // Commands from elsewhere in the app (e.g. the "Kurz" button on an email).
   useEffect(() => {
     const onCommand = (ev: Event) => {
       const cmd = (ev as CustomEvent<AssistantCommand>).detail;
       if (cmd.action === "open") setOpen(true);
       if (cmd.action === "summarize") summarize(cmd.threadId, cmd.subject ?? "");
+      if (cmd.action === "ask" && cmd.text.trim()) askRef.current(cmd.text.trim());
       if (cmd.action === "reply") {
         setOpen(true);
         void draftReplyRef.current();
@@ -695,12 +712,15 @@ export function AssistantPanel() {
               {turn.role === "user" ? turn.text && <p className="whitespace-pre-wrap">{turn.text}</p> : <Formatted text={turn.text} sources={turn.sources ?? []} onOpen={openSource} />}
               {turn.tool && <p className="animate-pulse text-xs text-muted-foreground">{t(`assistant.tool_${turn.tool}`)}</p>}
               {turn.role === "assistant" && !turn.text && !turn.tool && busy && i === turns.length - 1 && <p className="animate-pulse text-xs text-muted-foreground">…</p>}
+              {turn.notice && <p className="text-xs text-amber-700 dark:text-amber-400">{turn.notice}</p>}
               {turn.error && <p className="text-xs text-destructive">{turn.error}</p>}
               {/* The model usually recovers from a failed step; warn only when no answer came. */}
               {turn.toolFailed && !turn.error && !turn.text.trim() && !(busy && i === turns.length - 1) && <p className="text-xs text-destructive">{t("assistant.tool_error")}</p>}
               {turn.proposals?.map((p) =>
                 p.tool === "remember" || p.tool === "forget" ? (
                   <MemoryCard key={p.id} proposal={p} onDecide={decide} />
+                ) : p.tool === "create_task" || p.tool === "update_task" ? (
+                  <TaskCard key={p.id} proposal={p} locale={locale} onDecide={(_task, confirm) => decide(p, confirm)} />
                 ) : (
                   <ProposalCard key={p.id} proposal={p} locale={locale} onDecide={decide} />
                 ),

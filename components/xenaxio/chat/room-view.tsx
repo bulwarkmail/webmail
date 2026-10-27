@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { PersonAvatar, presenceOf, useDisplayName } from "./common";
 import { sendFiles, Composer } from "./composer";
 import { PeoplePicker, useChatDialogs } from "./dialogs";
+import { IntegrationsDialog } from "./integrations";
 import { MessageList } from "./message-list";
 
 export function TypingLine({ room }: { room: Room }) {
@@ -48,7 +49,7 @@ function NotificationMenu({ client, room, onClose }: { client: ChatClient; room:
   );
 }
 
-function ChannelMenu({ client, room, onClose, onInvite }: { client: ChatClient; room: Room; onClose: () => void; onInvite: () => void }) {
+function ChannelMenu({ client, room, onClose, onInvite, onIntegrations }: { client: ChatClient; room: Room; onClose: () => void; onInvite: () => void; onIntegrations: () => void }) {
   const t = useXT();
   const { confirm, prompt } = useChatDialogs();
   const setView = useChatStore((s) => s.setView);
@@ -89,6 +90,11 @@ function ChannelMenu({ client, room, onClose, onInvite }: { client: ChatClient; 
             {t("chat.set_topic")}
           </button>
         </>
+      )}
+      {room.kind === "channel" && !room.archived && (
+        <button type="button" className={item} onClick={() => (onClose(), onIntegrations())}>
+          {t("chat.hooks_menu")}
+        </button>
       )}
       {room.kind === "channel" && (
         <button
@@ -146,6 +152,7 @@ export function RoomView({ client, room, focusId }: { client: ChatClient; room: 
   const setEditing = useChatStore((s) => s.setEditing);
   const [menu, setMenu] = useState<"channel" | "notify" | "pinned" | null>(null);
   const [inviting, setInviting] = useState(false);
+  const [integrations, setIntegrations] = useState(false);
   const [dragging, setDragging] = useState(false);
   const roomName = client.roomName(room);
   const partners = room.kind === "dm" ? client.dmPartners(room) : [];
@@ -212,7 +219,7 @@ export function RoomView({ client, room, focusId }: { client: ChatClient; room: 
             <span className="truncate">{roomName}</span>
             <IconChevronDown size={14} className="text-muted-foreground" />
           </button>
-          {menu === "channel" && <ChannelMenu client={client} room={room} onClose={() => setMenu(null)} onInvite={() => setInviting(true)} />}
+          {menu === "channel" && <ChannelMenu client={client} room={room} onClose={() => setMenu(null)} onInvite={() => setInviting(true)} onIntegrations={() => setIntegrations(true)} />}
         </div>
         <button type="button" onClick={() => void toggleStar()} className="rounded p-1 text-muted-foreground hover:bg-accent" title={starred ? t("chat.unstar") : t("chat.star")} aria-label={starred ? t("chat.unstar") : t("chat.star")}>
           {starred ? <IconStarFilled size={16} className="text-amber-500" /> : <IconStar size={16} />}
@@ -258,6 +265,7 @@ export function RoomView({ client, room, focusId }: { client: ChatClient; room: 
           {t("chat.drop_files")}
         </div>
       )}
+      {integrations && <IntegrationsDialog room={room} roomName={roomName} onClose={() => setIntegrations(false)} />}
       {inviting && (
         <PeoplePicker
           title={t("chat.invite_title", { name: roomName })}

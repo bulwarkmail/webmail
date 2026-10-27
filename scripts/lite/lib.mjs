@@ -111,8 +111,9 @@ export const LITE_API_STRING_ALLOWLIST = [
   "/api/chat/matrix",
   "/api/chat/push",
   "/api/chat/settings",
+  "/api/chat/rooms",
   "/api/admin/chat",
-  // Step 46: calendars by link, both ways (components/xenaxio/calendar-links.tsx).
+  // Step 48: calendars by link, both ways (components/xenaxio/calendar-links.tsx).
   "/api/calendar/subscriptions",
   "/api/calendar/feeds",
   // Path-independent generic prefix used by `apiFetch` docs/comments.

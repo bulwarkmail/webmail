@@ -269,21 +269,38 @@ export interface CustomModelCheck {
   status: number | null;
 }
 
+/** Step 45: one of the company's models and its last connection test. */
+export interface CustomModelEntry {
+  name: string;
+  check: CustomModelCheck | null;
+  checkedAt: string | null;
+}
+
 /** Step 44: the company's own model; the key and header values are never sent back. */
 export interface CustomModel {
   baseUrl: string;
   profile: "openai" | "mistral";
+  /** The active model. */
   model: string;
+  /** Step 45: up to five models. */
+  models: CustomModelEntry[];
   apiKeySet: boolean;
   headers: { name: string }[];
+  /** Step 45: the AI by xenaxio answers while the own model is down. */
+  fallback: boolean;
   check: CustomModelCheck | null;
   checkedAt: string | null;
+  /** Step 45: availability, checked every 15 minutes. */
+  health: { status: "ok" | "down" | null; since: string | null; error: CustomModelCheck["error"]; checkedAt: string | null };
 }
 
 export interface CustomModelInput {
   baseUrl: string;
   profile: "openai" | "mistral";
-  model: string;
+  /** Step 45: 1–5 models. */
+  models: string[];
+  /** The active one (default: the current one, else the first). */
+  model?: string;
   /** Omitted or "" keeps the stored key, null removes it. */
   apiKey?: string | null;
   /** A header without value keeps the stored value. */
@@ -314,7 +331,7 @@ export interface AuditEntry {
   id: number;
   createdAt: string;
   userEmail: string | null;
-  source: "panel" | "mcp";
+  source: "panel" | "mcp" | "admin" | "chat";
   tokenName: string | null;
   action: string;
   objectIds: string[];
@@ -327,7 +344,7 @@ export interface AuditEntry {
 export interface AuditFilter {
   userId?: string;
   tool?: string;
-  source?: "panel" | "mcp";
+  source?: "panel" | "mcp" | "admin" | "chat";
   from?: string;
   to?: string;
   before?: number;
@@ -427,7 +444,7 @@ export interface MemoryState {
   maxLength: number;
 }
 
-/** Step 46: an outside calendar (Google, Outlook, any .ics link) the platform keeps in a calendar here. */
+/** Step 48: an outside calendar (Google, Outlook, any .ics link) the platform keeps in a calendar here. */
 export interface CalendarSubscription {
   id: string;
   name: string;
@@ -443,7 +460,7 @@ export interface CalendarSubscription {
   paused: boolean;
 }
 
-/** Step 46: the secret link to one of the user's calendars, for Google or Outlook. */
+/** Step 48: the secret link to one of the user's calendars, for Google or Outlook. */
 export interface CalendarFeed {
   calendarId: string;
   mode: "full" | "busy";
@@ -459,7 +476,7 @@ const CALENDAR_FEEDS = "/api/calendar/feeds";
 export const xenaxio = {
   me: () => request<Me>("GET", "/api/me"),
   dismissHint: (hint: DismissableHint) => request<{ dismissedHints: string[] }>("POST", `/api/me/hints/${hint}`),
-  // Step 46: calendars from Google, Outlook and others by link, both ways.
+  // Step 48: calendars from Google, Outlook and others by link, both ways.
   calendarSubscriptions: () => request<{ subscriptions: CalendarSubscription[] }>("GET", CALENDAR_SUBSCRIPTIONS),
   addCalendarSubscription: (input: { url: string; name: string; color?: string | null }) =>
     request<{ subscription: CalendarSubscription }>("POST", CALENDAR_SUBSCRIPTIONS, input),
@@ -581,7 +598,9 @@ export const xenaxio = {
   aiAdmin: () => request<AiAdmin>("GET", "/api/admin/ai"),
   setAiAdmin: (change: { enabled?: boolean; model?: string; provider?: AiProvider }) => request<{ ok: true }>("POST", "/api/admin/ai", change),
   saveCustomModel: (input: CustomModelInput) => request<{ custom: CustomModel }>("PUT", "/api/admin/ai/custom", input),
-  testCustomModel: () => request<{ check: CustomModelCheck; custom: CustomModel | null }>("POST", "/api/admin/ai/custom/test"),
+  testCustomModel: (model?: string) => request<{ check: CustomModelCheck; custom: CustomModel | null }>("POST", "/api/admin/ai/custom/test", model ? { model } : {}),
+  setActiveCustomModel: (model: string) => request<{ custom: CustomModel }>("POST", "/api/admin/ai/custom/active", { model }),
+  setCustomModelFallback: (enabled: boolean) => request<{ custom: CustomModel }>("POST", "/api/admin/ai/custom/fallback", { enabled }),
   removeCustomModel: () => request<{ ok: true }>("DELETE", "/api/admin/ai/custom"),
   audit: (f: AuditFilter) => request<{ entries: AuditEntry[]; next: number | null }>("GET", `/api/admin/audit${auditQuery(f)}`),
 

@@ -1,6 +1,6 @@
 "use client";
 
-// Step 46: calendars from Google, Outlook and others by link, both ways, in
+// Step 48: calendars from Google, Outlook and others by link, both ways, in
 // Settings → Calendars (xenaxio build only).
 // - Subscriptions: the platform fetches the outside .ics feed and keeps a
 //   calendar here in step with it (every 30 minutes; the browser can be closed).
