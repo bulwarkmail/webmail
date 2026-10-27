@@ -697,7 +697,7 @@
     "schedules_intro": "Mitarbeitende können dem Assistenten Aufgaben geben, die er selbst erledigt – einmalig oder regelmäßig. Hier legen Sie fest, wie viel davon in Ihrer Firma erlaubt ist.",
     "schedules_count": "Zurzeit {active} aktiv, {paused} pausiert.",
     "schedules_enabled": "Geplante Aufgaben erlauben",
-    "schedules_enabled_hint": "Ausgeschaltet: Niemand kann neue einrichten, bestehende pausieren. Gelöscht wird nichts.",
+    "schedules_enabled_hint": "Ausgeschaltet: Niemand kann neue einrichten, alle bestehenden werden pausiert. Gelöscht wird nichts; nach dem Einschalten setzt jede Person ihre Aufgaben selbst fort.",
     "schedules_send": "Selbst senden erlauben",
     "schedules_send_hint": "Nur wenn die Person es pro Aufgabe erlaubt und nur an die Adressen, die sie nennt. Ausgeschaltet: Der Assistent speichert nur Entwürfe.",
     "schedules_max": "Aufgaben pro Person",
@@ -710,7 +710,7 @@
     "schedules_interval_day": "1 Tag",
     "schedules_note": "Wenn Sie die Grenzen senken, werden die neuesten Aufgaben über der Grenze und zu häufige Aufgaben pausiert, mit Hinweis für die Person. Jeder Lauf verbraucht KI-Kontingent.",
     "schedules_save": "Speichern",
-    "schedules_saved_paused": "Gespeichert. {count} Aufgaben wurden pausiert, weil sie nicht mehr in die Grenzen passen."
+    "schedules_saved_paused": "Gespeichert. Pausiert, weil sie nicht mehr in die Grenzen passen: {count}."
   },
   "audit": {
     "title": "Protokoll",
@@ -979,7 +979,7 @@
   },
   "schedules": {
     "title": "Geplante Aufgaben ({count} von {max} aktiv)",
-    "intro": "Aufgaben, die der Assistent selbst erledigt – einmalig oder regelmäßig. Das Ergebnis kommt in einen eigenen Chat im Assistenten, auf Wunsch auch per E-Mail. Ihre Firma erlaubt höchstens {max} Läufe pro Tag, eine Aufgabe höchstens alle {every}.",
+    "intro": "Aufgaben, die der Assistent selbst erledigt – einmalig oder regelmäßig. Das Ergebnis kommt in einen eigenen Chat im Assistenten, auf Wunsch auch per E-Mail. Ihre Firma erlaubt eine Aufgabe höchstens alle {every} und insgesamt höchstens {max} Läufe pro Tag.",
     "none": "Noch keine geplanten Aufgaben.",
     "how": "Neue Aufgaben richten Sie im Assistenten ein, zum Beispiel: „Fasse mir jeden Morgen um 8 die neuen E-Mails zusammen.“ Sie stehen auch in Ihrem Kalender „KI-Aufgaben“.",
     "status_active": "Aktiv",
@@ -1003,9 +1003,9 @@
     "open_chat": "Im Chat öffnen",
     "delete": "Löschen",
     "delete_confirm": "„{title}“ löschen? Der Eintrag im Kalender wird entfernt, der Chat bleibt.",
-    "company_off": "Ihre Firma hat geplante Aufgaben ausgeschaltet. Bestehende Aufgaben sind pausiert; Sie können sie ansehen und löschen.",
+    "company_off": "Ihre Firma hat geplante Aufgaben ausgeschaltet. Ihre Aufgaben sind pausiert; Sie können sie ansehen und löschen.",
     "company_no_send": "Ihre Firma erlaubt dem Assistenten nicht, selbst zu senden: Er speichert nur Entwürfe.",
-    "paused_company_off": "Pausiert: Ihre Firma hat geplante Aufgaben ausgeschaltet.",
+    "paused_company_off": "Pausiert: Ihre Firma hatte geplante Aufgaben ausgeschaltet. „Fortsetzen“, sobald sie wieder erlaubt sind.",
     "paused_company_limit": "Pausiert: mehr Aufgaben, als Ihre Firma pro Person erlaubt. Pausieren oder löschen Sie eine andere, dann „Fortsetzen“.",
     "paused_company_interval": "Pausiert: Sie läuft öfter, als Ihre Firma erlaubt. Bitten Sie den Assistenten, sie seltener zu planen."
   },

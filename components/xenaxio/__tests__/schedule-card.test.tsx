@@ -100,7 +100,7 @@ describe("ScheduleList (step 49)", () => {
   it("lists the tasks and pauses, resumes, runs, opens and deletes them", async () => {
     render(<ScheduleList />);
     expect(await screen.findByText("Geplante Aufgaben (1 von 20 aktiv)")).toBeTruthy();
-    expect(screen.getByText(/Ihre Firma erlaubt höchstens 24 Läufe pro Tag, eine Aufgabe höchstens alle 1 Std\./)).toBeTruthy();
+    expect(screen.getByText(/Ihre Firma erlaubt eine Aufgabe höchstens alle 1 Std\. und insgesamt höchstens 24 Läufe pro Tag\./)).toBeTruthy();
     expect(screen.getByText("Nächster Lauf: Do., 29.10.2026, 08:00 · letzter Lauf Mi., 28.10.2026, 08:00")).toBeTruthy();
     expect(screen.getByText("Pausiert nach drei Fehlern in Folge.")).toBeTruthy();
     await act(async () => fireEvent.click(screen.getByText("Pausieren")));
@@ -128,9 +128,9 @@ describe("ScheduleList (step 49)", () => {
       sendAllowed: false,
     });
     render(<ScheduleList />);
-    expect(await screen.findByText(/Ihre Firma hat geplante Aufgaben ausgeschaltet\. Bestehende/)).toBeTruthy();
+    expect(await screen.findByText(/Ihre Firma hat geplante Aufgaben ausgeschaltet\. Ihre Aufgaben sind pausiert/)).toBeTruthy();
     expect(screen.getByText(/höchstens alle 15 Min\./)).toBeTruthy();
-    expect(screen.getByText(/^Pausiert: Ihre Firma hat geplante Aufgaben ausgeschaltet\./)).toBeTruthy();
+    expect(screen.getByText(/^Pausiert: Ihre Firma hatte geplante Aufgaben ausgeschaltet\./)).toBeTruthy();
     expect(screen.queryByText("Fortsetzen")).toBeNull();
     expect(screen.queryByText("Jetzt ausführen")).toBeNull();
     expect(screen.getByText("Löschen")).toBeTruthy();
@@ -157,7 +157,7 @@ describe("ScheduleSettings in Verwaltung → KI (step 50)", () => {
     fireEvent.click(screen.getByLabelText(/^Selbst senden erlauben/));
     await act(async () => fireEvent.click(screen.getByText("Speichern")));
     expect(save).toHaveBeenCalledWith({ enabled: true, sendAllowed: false, maxPerUser: 5, runsPerDay: 48, minIntervalMinutes: 15 });
-    expect(screen.getByText(/2 Aufgaben wurden pausiert/)).toBeTruthy();
+    expect(screen.getByText("Gespeichert. Pausiert, weil sie nicht mehr in die Grenzen passen: 2.")).toBeTruthy();
     expect(saved).toHaveBeenCalled();
     // Off: the other settings wait until it is on again.
     fireEvent.click(screen.getByLabelText(/^Geplante Aufgaben erlauben/));
