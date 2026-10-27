@@ -114,7 +114,8 @@
     "api_key_invalid": "Der API-Schlüssel ist ungültig.",
     "custom_model_missing": "Es ist noch kein eigenes Modell eingerichtet.",
     "custom_model_not_checked": "Testen Sie die Verbindung erfolgreich, bevor Sie das eigene Modell einschalten.",
-    "custom_model_unavailable": "Das eigene KI-Modell Ihres Unternehmens antwortet nicht. Bitte wenden Sie sich an Ihren Administrator."
+    "custom_model_unavailable": "Das eigene KI-Modell Ihres Unternehmens antwortet nicht. Bitte wenden Sie sich an Ihren Administrator.",
+    "too_many_models": "Höchstens fünf Modelle."
   },
   "login": {
     "title": "Anmelden",
@@ -474,7 +475,8 @@
       "memory_full": "Es sind bereits 50 Notizen gespeichert. Löschen Sie ältere unter „Assistent“.",
       "memory_off": "Die Erinnerung ist ausgeschaltet. Sie können sie unter „Assistent“ einschalten.",
       "all_notes": "Alle Notizen ansehen"
-    }
+    },
+    "notice_custom_model_fallback": "Antwort von der KI von xenaxio – das eigene KI-Modell Ihres Unternehmens war nicht erreichbar."
   },
   "mcp": {
     "title": "KI-Chats verbinden",
@@ -560,7 +562,7 @@
     "header_value_stored": "gespeichert",
     "header_add": "Header hinzufügen",
     "header_remove": "Header entfernen",
-    "save_test": "Speichern und testen",
+    "save_test": "Speichern und aktives Modell testen",
     "testing": "Verbindung wird getestet … Das kann bis zu einer Minute dauern, wenn das Modell erst geladen wird.",
     "remove": "Eigenes Modell entfernen",
     "remove_confirm": "Eigenes Modell entfernen? Das Unternehmen nutzt danach wieder die KI von xenaxio.",
@@ -583,7 +585,27 @@
     "check_error_bad_response": "Der Server hat mit einem Fehler geantwortet ({status}).",
     "egress": "Anfragen an Ihr Modell kommen von: {ips}",
     "usage_custom": "Eigenes Modell: {used} Tokens. Für das eigene Modell gelten keine Limits.",
-    "usage_custom_person": "{used} Tokens"
+    "usage_custom_person": "{used} Tokens",
+    "models": "Modelle",
+    "models_hint": "Bis zu fünf Modelle auf Ihrem Server, z. B. ein schnelles und ein großes. Aktiv ist eines; wechseln können Sie nur zu einem erfolgreich getesteten.",
+    "model_add": "Modell hinzufügen",
+    "model_remove": "Modell entfernen",
+    "models_title": "Modelle und Betrieb",
+    "model_active": "Aktiv",
+    "model_activate": "Verwenden",
+    "model_activate_untested": "Erst erfolgreich testen",
+    "model_test": "Testen",
+    "model_testing": "Teste …",
+    "model_checked_ok": "Getestet",
+    "model_checked_failed": "Test fehlgeschlagen",
+    "model_unchecked": "Nicht getestet",
+    "fallback_label": "Wenn das eigene Modell nicht antwortet, die KI von xenaxio verwenden",
+    "fallback_hint": "Nur solange Ihr Modell nicht erreichbar ist, antwortet die KI von xenaxio (Mistral, EU). Ihre Mitarbeitenden sehen dann einen Hinweis, die Tokens zählen zum Monatslimit. Ausgeschaltet gehen Inhalte nie an Mistral.",
+    "fallback_unavailable": "Auf diesem Server gibt es keine KI von xenaxio als Ersatz.",
+    "health_ok": "Erreichbar, zuletzt geprüft {time}",
+    "health_down": "Das eigene Modell antwortet seit {time} nicht. {reason}",
+    "health_unknown": "Noch nicht geprüft",
+    "health_hint": "Wir prüfen alle 15 Minuten. Fällt das Modell aus, bekommen die Admins eine E-Mail."
   },
   "audit": {
     "title": "Protokoll",
@@ -1103,10 +1125,10 @@
     "s1_title": "Ollama installieren und das Modell laden",
     "s1_text": "Ollama stellt das Modell über eine OpenAI-kompatible Schnittstelle unter http://localhost:11434/v1 bereit.",
     "s1_models": "Das Modell muss Werkzeuge aufrufen können (Tool Calling), sonst kann der Assistent keine E-Mails, Termine oder Dateien lesen. Bilder versteht es optional. Für 64 GB Arbeitsspeicher passt qwen3.6:35b-a3b (schnell, da nur ein kleiner Teil des Modells pro Wort rechnet); Alternative: gemma4:31b (langsamer).",
-    "s2_title": "Ollama einstellen",
-    "s2_text": "Längerer Kontext (der Assistent schickt mit Werkzeugen rund 4 000 Tokens, lange E-Mails mehr), Modell bleibt geladen, zwei Anfragen gleichzeitig. Danach Ollama neu starten.",
-    "s2_mac": "Auf dem Mac: mehr Speicher für die Grafikeinheit, nicht schlafen gehen, nach Stromausfall neu starten.",
-    "s2_note": "launchctl setenv und sysctl gelten bis zum nächsten Neustart: Nach einem Neustart erneut ausführen (oder als Anmeldeobjekt einrichten). Der Mac muss eingeschaltet und online sein, solange Ihr Team den Assistenten nutzt.",
+    "s2_title": "Ollama als Dienst einrichten",
+    "s2_text": "Ollama läuft als Systemdienst: Er startet beim Hochfahren, auch ohne dass jemand angemeldet ist, mit den Einstellungen für xenaxio – längerer Kontext (der Assistent schickt mit Werkzeugen rund 4 000 Tokens, lange E-Mails mehr), das Modell bleibt geladen, zwei Anfragen gleichzeitig. Vorher die Ollama-App beenden und aus den Anmeldeobjekten entfernen (bzw. brew services stop ollama), sonst wollen zwei Ollama denselben Port.",
+    "s2_mac": "Auf dem Mac: mehr Speicher für die Grafikeinheit bei jedem Start, nie schlafen, nach Stromausfall neu starten.",
+    "s2_note": "Danach den Mac einmal neu starten, ohne sich anzumelden, und von einem anderen Gerät über den Tunnel testen (Schritt 4). Steht bei ollama ps „CPU“ statt „GPU“, rechnet das Modell ohne Grafikeinheit und ist sehr langsam: Dann den Dienst entfernen (sudo launchctl bootout system/de.xenaxio.ollama), die automatische Anmeldung einschalten und die Ollama-App mit „Beim Anmelden öffnen“ verwenden. Der Mac muss eingeschaltet und online sein, solange Ihr Team den Assistenten nutzt; fällt er aus, bekommen die Admins eine E-Mail.",
     "s3_title": "Cloudflare Tunnel einrichten",
     "s3_text": "Sie brauchen eine Domain bei Cloudflare (kostenloser Tarif genügt). Ersetzen Sie llm.ihre-firma.de durch eine Adresse Ihrer Domain.",
     "s3_config": "Konfiguration /etc/cloudflared/config.yml (die Tunnel-ID zeigt der Befehl create). httpHostHeader ist nötig: Ollama nimmt nur Anfragen an, die an localhost gerichtet sind.",
@@ -1124,6 +1146,7 @@
     "other_title": "Andere Server",
     "other_text": "Es geht jeder Server mit OpenAI-kompatibler Schnittstelle: vLLM (…/v1), LM Studio (Server-Modus, …/v1), Azure OpenAI (…openai.azure.com/openai/v1, Schlüssel als API-Schlüssel) oder ein Anbieter Ihrer Wahl. Die Adresse muss öffentlich per https erreichbar sein; lokale und interne Adressen lehnt xenaxio ab.",
     "privacy_title": "Datenschutz",
-    "privacy_text": "Mit eigenem Modell gehen E-Mail-Inhalte, Termine und Dateien, die der Assistent liest, an Ihren Server und – als Durchleitung – über Cloudflare. Für diesen Server ist Ihr Unternehmen verantwortlich. Antwortet er nicht, zeigt der Assistent einen Fehler; xenaxio weicht nicht heimlich auf Mistral aus."
+    "privacy_text": "Mit eigenem Modell gehen E-Mail-Inhalte, Termine und Dateien, die der Assistent liest, an Ihren Server und – als Durchleitung – über Cloudflare. Für diesen Server ist Ihr Unternehmen verantwortlich. Antwortet er nicht, zeigt der Assistent einen Fehler; xenaxio weicht nicht heimlich auf Mistral aus.",
+    "s2_check": "Prüfen: Nach einer Antwort zeigt ollama ps in der Spalte PROCESSOR „100% GPU“."
   }
 }

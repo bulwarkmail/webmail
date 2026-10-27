@@ -10,6 +10,7 @@ import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { Notice, PasswordField, Spinner, TextField } from "@/components/xenaxio/ui";
 import { CustomModelCheckResult } from "@/components/xenaxio/custom-model-check";
+import { CustomModelList } from "@/components/xenaxio/custom-model-list";
 import { WorkspaceShell } from "@/components/xenaxio/workspace-shell";
 import { type AiAdmin, type AiProvider, type CustomModel, type CustomModelCheck, errorText, xenaxio } from "@/lib/xenaxio/api";
 import { useXT } from "@/lib/xenaxio/i18n";
@@ -33,17 +34,21 @@ interface HeaderRow {
   stored: boolean;
 }
 
-function OwnModel({ custom, egressIps, onChanged }: { custom: CustomModel | null; egressIps: string[]; onChanged: () => Promise<void> }) {
+function OwnModel({ custom, egressIps, onChanged }: { custom: CustomModel | null; egressIps: string[]; onChanged: (reset: boolean) => Promise<void> }) {
   const t = useXT();
   const [baseUrl, setBaseUrl] = useState(custom?.baseUrl ?? "");
   const [profile, setProfile] = useState<CustomModel["profile"]>(custom?.profile ?? "openai");
-  const [model, setModel] = useState(custom?.model ?? "");
+  // Step 45: up to five models; the first stays active unless the list below says otherwise.
+  const [models, setModels] = useState<string[]>(custom?.models.length ? custom.models.map((m) => m.name) : [""]);
   const [apiKey, setApiKey] = useState("");
   const [removeKey, setRemoveKey] = useState(false);
   const [headers, setHeaders] = useState<HeaderRow[]>(custom?.headers.map((h) => ({ name: h.name, value: "", stored: true })) ?? []);
   const [busy, setBusy] = useState<"test" | "remove" | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [check, setCheck] = useState<CustomModelCheck | null>(custom?.check ?? null);
+  const [check, setCheck] = useState<CustomModelCheck | null>(null);
+  const [tested, setTested] = useState("");
+  // Model names the server listed in any test: suggestions for the fields.
+  const known = [...new Set(custom?.models.flatMap((m) => m.check?.models ?? []) ?? [])];
 
   const setHeader = (i: number, change: Partial<HeaderRow>) => setHeaders((hs) => hs.map((h, j) => (j === i ? { ...h, ...change, ...(change.name !== undefined && change.name !== h.name ? { stored: false } : {}) } : h)));
 
@@ -53,19 +58,24 @@ function OwnModel({ custom, egressIps, onChanged }: { custom: CustomModel | null
     setError(null);
     setCheck(null);
     try {
-      await xenaxio.saveCustomModel({
+      const names = [...new Set(models.map((m) => m.trim()).filter(Boolean))];
+      const saved = await xenaxio.saveCustomModel({
         baseUrl: baseUrl.trim(),
         profile,
-        model: model.trim(),
+        models: names,
+        ...(custom && names.includes(custom.model) ? { model: custom.model } : {}),
         ...(removeKey ? { apiKey: null } : apiKey ? { apiKey } : {}),
         headers: headers.filter((h) => h.name.trim()).map((h) => (h.value ? { name: h.name.trim(), value: h.value } : { name: h.name.trim() })),
       });
       setApiKey("");
       setRemoveKey(false);
-      const res = await xenaxio.testCustomModel();
+      const res = await xenaxio.testCustomModel(saved.custom.model);
       setCheck(res.check);
+      setTested(saved.custom.model);
       setHeaders((hs) => hs.filter((h) => h.name.trim()).map((h) => ({ ...h, value: "", stored: true })));
-      await onChanged();
+      setModels(saved.custom.models.map((m) => m.name));
+      // The form stays as it is, with the test result under it.
+      await onChanged(false);
     } catch (err) {
       setError(errorText(t, err));
     } finally {
@@ -79,7 +89,7 @@ function OwnModel({ custom, egressIps, onChanged }: { custom: CustomModel | null
     setError(null);
     try {
       await xenaxio.removeCustomModel();
-      await onChanged();
+      await onChanged(true);
     } catch (err) {
       setError(errorText(t, err));
       setBusy(null);
@@ -124,24 +134,43 @@ function OwnModel({ custom, egressIps, onChanged }: { custom: CustomModel | null
             <option value="mistral">{t("aiadmin.profile_mistral")}</option>
           </select>
         </div>
-        <TextField
-          label={t("aiadmin.model_name")}
-          hint={t("aiadmin.model_name_hint")}
-          autoComplete="off"
-          spellCheck={false}
-          list="ai-model-list"
-          placeholder="qwen3.6:35b-a3b"
-          value={model}
-          onChange={(e) => setModel(e.target.value)}
-          required
-        />
-        {check?.models && (
-          <datalist id="ai-model-list">
-            {check.models.map((m) => (
-              <option key={m} value={m} />
-            ))}
-          </datalist>
-        )}
+        <fieldset className="space-y-2">
+          <legend className="text-sm font-medium">{t("aiadmin.models")}</legend>
+          <p className="text-xs text-muted-foreground">{t("aiadmin.models_hint")}</p>
+          {models.map((m, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <input
+                aria-label={t("aiadmin.model_name")}
+                className="min-w-0 flex-1 rounded-md border border-input bg-background px-3 py-2 font-mono text-sm"
+                placeholder="qwen3.6:35b-a3b"
+                autoComplete="off"
+                spellCheck={false}
+                list="ai-model-list"
+                value={m}
+                required={i === 0}
+                onChange={(e) => setModels((ms) => ms.map((x, j) => (j === i ? e.target.value : x)))}
+              />
+              {models.length > 1 && (
+                <Button type="button" variant="ghost" size="sm" aria-label={t("aiadmin.model_remove")} onClick={() => setModels((ms) => ms.filter((_, j) => j !== i))}>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          ))}
+          {models.length < 5 && (
+            <Button type="button" variant="outline" size="sm" onClick={() => setModels((ms) => [...ms, ""])}>
+              <Plus className="mr-1 h-4 w-4" />
+              {t("aiadmin.model_add")}
+            </Button>
+          )}
+          {known.length > 0 && (
+            <datalist id="ai-model-list">
+              {known.map((m) => (
+                <option key={m} value={m} />
+              ))}
+            </datalist>
+          )}
+        </fieldset>
         <div className="space-y-1">
           <PasswordField label={t("aiadmin.api_key")} hint={keyHint} autoComplete="off" value={apiKey} disabled={removeKey} onChange={(e) => setApiKey(e.target.value)} />
           {custom?.apiKeySet && !removeKey && (
@@ -193,7 +222,7 @@ function OwnModel({ custom, egressIps, onChanged }: { custom: CustomModel | null
             {t("aiadmin.testing")}
           </p>
         )}
-        {check && <CustomModelCheckResult check={check} model={model.trim()} />}
+        {check && <CustomModelCheckResult check={check} model={tested} />}
         {egressIps.length > 0 && <p className="text-xs text-muted-foreground">{t("aiadmin.egress", { ips: egressIps.join(", ") })}</p>}
 
         <div className="flex flex-wrap gap-2">
@@ -270,7 +299,7 @@ function AiSettings() {
   const [data, setData] = useState<AiAdmin | null>(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ kind: "error" | "success"; text: string } | null>(null);
-  // Remounts the form with the stored settings after save, test or removal.
+  // Remounts the form with empty settings after the own model is removed.
   const [formKey, setFormKey] = useState(0);
 
   const load = useCallback(async () => {
@@ -346,11 +375,12 @@ function AiSettings() {
         key={formKey}
         custom={data.custom}
         egressIps={data.egressIps}
-        onChanged={async () => {
+        onChanged={async (reset) => {
           await load();
-          setFormKey((k) => k + 1);
+          if (reset) setFormKey((k) => k + 1);
         }}
       />
+      {data.custom && <CustomModelList custom={data.custom} platformConfigured={data.platformConfigured} onChanged={load} />}
 
       <section className="space-y-3 rounded-lg border border-border bg-card p-4">
         <h2 className="font-medium">{t("aiadmin.usage", { month })}</h2>

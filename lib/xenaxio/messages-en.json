@@ -114,7 +114,8 @@
     "api_key_invalid": "The API key is not valid.",
     "custom_model_missing": "No own model is set up yet.",
     "custom_model_not_checked": "Test the connection successfully before you switch the own model on.",
-    "custom_model_unavailable": "Your company's own AI model is not answering. Please contact your administrator."
+    "custom_model_unavailable": "Your company's own AI model is not answering. Please contact your administrator.",
+    "too_many_models": "At most five models."
   },
   "login": {
     "title": "Sign in",
@@ -474,7 +475,8 @@
       "memory_full": "50 notes are already saved. Delete older ones under \"Assistant\".",
       "memory_off": "Memory is switched off. You can switch it on under \"Assistant\".",
       "all_notes": "See all notes"
-    }
+    },
+    "notice_custom_model_fallback": "Answer from the AI by xenaxio – your company's own AI model could not be reached."
   },
   "mcp": {
     "title": "Connect AI chats",
@@ -560,7 +562,7 @@
     "header_value_stored": "saved",
     "header_add": "Add header",
     "header_remove": "Remove header",
-    "save_test": "Save and test",
+    "save_test": "Save and test the active model",
     "testing": "Testing the connection … This can take up to a minute while the model loads.",
     "remove": "Remove own model",
     "remove_confirm": "Remove the own model? The company then uses the AI by xenaxio again.",
@@ -583,7 +585,27 @@
     "check_error_bad_response": "The server answered with an error ({status}).",
     "egress": "Requests to your model come from: {ips}",
     "usage_custom": "Own model: {used} tokens. No limits apply to the own model.",
-    "usage_custom_person": "{used} tokens"
+    "usage_custom_person": "{used} tokens",
+    "models": "Models",
+    "models_hint": "Up to five models on your server, e.g. a fast one and a large one. One is active; you can switch only to one that passed its test.",
+    "model_add": "Add model",
+    "model_remove": "Remove model",
+    "models_title": "Models and operation",
+    "model_active": "Active",
+    "model_activate": "Use",
+    "model_activate_untested": "Test it successfully first",
+    "model_test": "Test",
+    "model_testing": "Testing …",
+    "model_checked_ok": "Tested",
+    "model_checked_failed": "Test failed",
+    "model_unchecked": "Not tested",
+    "fallback_label": "If the own model does not answer, use the AI by xenaxio",
+    "fallback_hint": "Only while your model cannot be reached, the AI by xenaxio (Mistral, EU) answers. Your team then sees a note, and the tokens count towards the monthly limit. Switched off, content never goes to Mistral.",
+    "fallback_unavailable": "This server has no AI by xenaxio to fall back to.",
+    "health_ok": "Reachable, last checked {time}",
+    "health_down": "The own model has not been answering since {time}. {reason}",
+    "health_unknown": "Not checked yet",
+    "health_hint": "We check every 15 minutes. If the model goes down, the admins get an e-mail."
   },
   "audit": {
     "title": "Audit log",
@@ -1103,10 +1125,10 @@
     "s1_title": "Install Ollama and load the model",
     "s1_text": "Ollama serves the model through an OpenAI-compatible API at http://localhost:11434/v1.",
     "s1_models": "The model must be able to call tools (tool calling), or the assistant cannot read emails, events or files. Understanding images is optional. For 64 GB of memory qwen3.6:35b-a3b fits (fast, as only a small part of the model works per word); alternative: gemma4:31b (slower).",
-    "s2_title": "Configure Ollama",
-    "s2_text": "Longer context (the assistant sends about 4,000 tokens with its tools, long emails more), the model stays loaded, two requests at a time. Restart Ollama afterwards.",
-    "s2_mac": "On the Mac: more memory for the graphics unit, never sleep, restart after a power cut.",
-    "s2_note": "launchctl setenv and sysctl last until the next restart: run them again after a restart (or set them up as a login item). The Mac must be on and online while your team uses the assistant.",
+    "s2_title": "Run Ollama as a service",
+    "s2_text": "Ollama runs as a system service: it starts at boot, even with nobody signed in, with the settings for xenaxio – longer context (the assistant sends about 4,000 tokens with its tools, long emails more), the model stays loaded, two requests at a time. First quit the Ollama app and remove it from the login items (or brew services stop ollama), or two Ollamas will want the same port.",
+    "s2_mac": "On the Mac: more memory for the graphics unit at every start, never sleep, restart after a power cut.",
+    "s2_note": "Then restart the Mac once without signing in and test from another device through the tunnel (step 4). If ollama ps shows “CPU” instead of “GPU”, the model runs without the graphics unit and is very slow: remove the service (sudo launchctl bootout system/de.xenaxio.ollama), turn on automatic login and use the Ollama app with “Open at login”. The Mac must be on and online while your team uses the assistant; if it goes down, the admins get an e-mail.",
     "s3_title": "Set up a Cloudflare Tunnel",
     "s3_text": "You need a domain on Cloudflare (the free plan is enough). Replace llm.ihre-firma.de with an address on your domain.",
     "s3_config": "Configuration /etc/cloudflared/config.yml (the create command shows the tunnel ID). httpHostHeader is needed: Ollama only accepts requests addressed to localhost.",
@@ -1124,6 +1146,7 @@
     "other_title": "Other servers",
     "other_text": "Any server with an OpenAI-compatible API works: vLLM (…/v1), LM Studio (server mode, …/v1), Azure OpenAI (…openai.azure.com/openai/v1, key as API key) or a provider of your choice. The address must be publicly reachable over https; xenaxio refuses local and internal addresses.",
     "privacy_title": "Data protection",
-    "privacy_text": "With an own model, email content, events and files the assistant reads go to your server and – passing through – via Cloudflare. Your company is responsible for that server. If it does not answer, the assistant shows an error; xenaxio does not quietly fall back to Mistral."
+    "privacy_text": "With an own model, email content, events and files the assistant reads go to your server and – passing through – via Cloudflare. Your company is responsible for that server. If it does not answer, the assistant shows an error; xenaxio does not quietly fall back to Mistral.",
+    "s2_check": "Check: after an answer, ollama ps shows “100% GPU” in the PROCESSOR column."
   }
 }

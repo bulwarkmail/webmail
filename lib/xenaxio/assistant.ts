@@ -43,7 +43,9 @@ export type AssistantEvent =
   | { type: "sources"; emails: SourceEmail[] }
   | { type: "proposal"; id: string; tool: string; summary: ProposalSummary }
   | { type: "done"; inputTokens: number; outputTokens: number }
-  | { type: "error"; code: string };
+  | { type: "error"; code: string }
+  /** Step 45: the company's own model did not answer; the AI by xenaxio answered instead. */
+  | { type: "notice"; code: "custom_model_fallback" };
 
 async function post(path: string, body: unknown, signal?: AbortSignal): Promise<Response> {
   let res: Response;
