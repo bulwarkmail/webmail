@@ -25,7 +25,7 @@ export interface ProposalSummary {
   /** update_event only: what changes, who is newly invited, and the meeting as it was. */
   changes?: string[];
   addedAttendees?: string[];
-  before?: { title?: string; start?: string; end?: string; location?: string; due?: string | null; priority?: string; status?: string; reminder?: boolean };
+  before?: { title?: string; start?: string; end?: string; location?: string; due?: string | null; priority?: string; status?: string; reminder?: boolean; when?: string; emailCopy?: boolean; maySend?: boolean; sendTo?: string[] };
   /** Step 47: how the meeting repeats (in the user's language), what part of a series changes. */
   repeatText?: string;
   repeatBefore?: string;
@@ -43,14 +43,43 @@ export interface ProposalSummary {
   priority?: "high" | "medium" | "low" | "none";
   reminder?: boolean;
   description?: string;
-  status?: "open" | "in-progress" | "done" | "cancelled";
+  /** Tasks: open | in-progress | done | cancelled; scheduled tasks (step 49): active | paused | ended. */
+  status?: "open" | "in-progress" | "done" | "cancelled" | "active" | "paused" | "ended";
   /** create_task from an email: the email it links to. */
   email?: { subject: string; from: string };
+  /** schedule_task, update_schedule, delete_schedule (step 49). */
+  scheduleId?: string;
+  instruction?: string;
+  when?: string;
+  nextRuns?: string[];
+  emailCopy?: boolean;
+  maySend?: boolean;
+  sendTo?: string[];
 }
+
+/** Step 49: a chat in the history; scheduled tasks have their own, unread until opened. */
+export interface ConversationInfo {
+  id: string;
+  title: string;
+  updatedAt: string;
+  scheduled?: boolean;
+  unread?: boolean;
+}
+
+/** Step 49: proposals of a scheduled run still waiting for the user's click in that chat. */
+export interface WaitingProposal {
+  id: string;
+  tool: string;
+  summary: ProposalSummary;
+}
+
+/** Step 49: a link (push, email copy) opens this chat in the panel: ?assistant=<id>. */
+export const ASSISTANT_OPEN_PARAM = "assistant";
 
 export interface ActionResult {
   status: "done";
-  result: { eventId?: string; invited?: string[]; invitationSent?: boolean };
+  /** Step 49: calendarId — the "KI-Aufgaben" calendar a scheduled task shows in. */
+  result: { eventId?: string; invited?: string[]; invitationSent?: boolean; calendarId?: string };
 }
 
 export type AssistantEvent =
@@ -161,7 +190,7 @@ export interface ChatContext {
 }
 
 export const assistant = {
-  async status(): Promise<{ configured: boolean; enabled: boolean; usage?: { warning: boolean; blocked: boolean } }> {
+  async status(): Promise<{ configured: boolean; enabled: boolean; usage?: { warning: boolean; blocked: boolean }; unread?: number }> {
     const res = await apiFetch("/api/ai/status", { credentials: "same-origin" });
     if (!res.ok) return { configured: false, enabled: false };
     return res.json();
@@ -198,13 +227,19 @@ export const assistant = {
   async reject(actionId: string): Promise<void> {
     await post(`/api/ai/actions/${encodeURIComponent(actionId)}/reject`, {});
   },
-  async conversations(): Promise<{ id: string; title: string; updatedAt: string }[]> {
+  async conversations(): Promise<ConversationInfo[]> {
     const res = await apiFetch("/api/ai/conversations", { credentials: "same-origin" });
     return res.ok ? (await res.json()).conversations : [];
   },
   async messages(id: string): Promise<{ role: "user" | "assistant"; content: string; files?: AttachedFile[] }[]> {
+    return (await this.conversation(id)).messages;
+  },
+  /** Step 49: the messages and the proposals still waiting in the chat; opening it marks it read. */
+  async conversation(id: string): Promise<{ messages: { role: "user" | "assistant"; content: string; files?: AttachedFile[] }[]; proposals: WaitingProposal[] }> {
     const res = await apiFetch(`/api/ai/conversations/${encodeURIComponent(id)}`, { credentials: "same-origin" });
-    return res.ok ? (await res.json()).messages : [];
+    if (!res.ok) return { messages: [], proposals: [] };
+    const data = (await res.json()) as { messages?: { role: "user" | "assistant"; content: string; files?: AttachedFile[] }[]; proposals?: WaitingProposal[] };
+    return { messages: data.messages ?? [], proposals: data.proposals ?? [] };
   },
   async remove(id?: string): Promise<void> {
     await apiFetch(id ? `/api/ai/conversations/${encodeURIComponent(id)}` : "/api/ai/conversations", {

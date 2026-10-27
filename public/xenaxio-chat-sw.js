@@ -55,6 +55,8 @@ async function handlePush(event) {
   } catch (_) {
     data = null;
   }
+  // Step 49: the result of a scheduled task of the assistant.
+  if (data && data.kind === "xenaxio-assistant") return showAssistant(data);
   if (!data || data.kind !== "xenaxio-chat") return;
 
   const open = await windows();
@@ -85,7 +87,22 @@ async function handlePush(event) {
   });
 }
 
+/** Step 49: one notification per scheduled task; a click opens its chat in the assistant. */
+async function showAssistant(data) {
+  const id = typeof data.conversationId === "string" ? data.conversationId : "";
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return;
+  await self.registration.showNotification(typeof data.title === "string" && data.title ? data.title : "Assistent", {
+    body: typeof data.body === "string" ? data.body : "",
+    tag: `xenaxio-assistant:${id}`,
+    renotify: true,
+    icon: `${BASE_PATH}/api/pwa-icon/192`,
+    badge: `${BASE_PATH}/api/pwa-icon/192`,
+    data: { assistant: id },
+  });
+}
+
 async function handleClick(data) {
+  if (data.assistant) return openAssistant(data.assistant);
   const query = new URLSearchParams();
   if (data.roomId) query.set("room", data.roomId);
   if (data.eventId) query.set("event", data.eventId);
@@ -117,5 +134,20 @@ async function handleClick(data) {
     }
   }
 
+  if (self.clients.openWindow) await self.clients.openWindow(target);
+}
+
+/** Step 49: brings a window of the app forward and opens the chat there, else a new window. */
+async function openAssistant(id) {
+  const target = `${BASE_PATH}/${LOCALE}/mail/?assistant=${encodeURIComponent(id)}`;
+  for (const client of await windows()) {
+    try {
+      const focused = await client.focus();
+      focused.postMessage({ kind: "xenaxio-chat-navigate", url: target });
+      return;
+    } catch (_) {
+      // Next window, or a new one below.
+    }
+  }
   if (self.clients.openWindow) await self.clients.openWindow(target);
 }
