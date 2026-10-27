@@ -175,3 +175,65 @@ export function plainPreview(content: Record<string, unknown>, max = 140): strin
   const text = body.replace(/\s+/g, " ").trim();
   return prefix + (text.length > max ? `${text.slice(0, max - 1)}…` : text);
 }
+
+// ---------------------------------------------------------------------------
+// Step 43, part D: messages of integrations and e-mails shared into the chat.
+
+/** An integration (incoming webhook) shows its name and an "App" label, like in Slack. */
+export interface ChatApp {
+  /** The name the call gave itself (Slack's `username`); else the integration's name. */
+  name: string | null;
+  icon: string | null;
+}
+
+/** Bots of integrations have addresses like @xenaxio.hook.1a2b3c4d5e6f:company.de. */
+export function isAppSender(userId: string): boolean {
+  return /^@xenaxio\.hook\.[0-9a-f]+:/.test(userId);
+}
+
+export function appOf(content: Record<string, unknown>, sender: string): ChatApp | null {
+  if (!isAppSender(sender)) return null;
+  const hook = (content["com.xenaxio.webhook"] ?? {}) as { name?: unknown; icon?: unknown };
+  const name = typeof hook.name === "string" && hook.name.trim() ? hook.name.trim().slice(0, 80) : null;
+  // One emoji at most: the field comes from outside.
+  const icon = typeof hook.icon === "string" && /^\p{Extended_Pictographic}[️‍\p{Extended_Pictographic}]{0,6}$/u.test(hook.icon) ? hook.icon : null;
+  return { name, icon };
+}
+
+/** An e-mail shared into a channel: a card; the link opens it for those who have access. */
+export interface SharedEmail {
+  emailId: string;
+  subject: string;
+  from: string;
+  fromEmail: string;
+  preview: string;
+  /** ISO date the e-mail was received. */
+  date: string | null;
+  /** What the person who shared it wrote. */
+  note: string;
+}
+
+const clip = (v: unknown, max: number) => (typeof v === "string" ? v.slice(0, max) : "");
+
+/** The card of a message, if it is one; other people's fields are checked, never trusted. */
+export function sharedEmailOf(content: Record<string, unknown>): SharedEmail | null {
+  const e = content["com.xenaxio.email"] as Record<string, unknown> | undefined;
+  if (!e || typeof e !== "object" || typeof e.emailId !== "string" || !/^[A-Za-z0-9._:-]{1,200}$/.test(e.emailId)) return null;
+  return {
+    emailId: e.emailId,
+    subject: clip(e.subject, 300),
+    from: clip(e.from, 200),
+    fromEmail: clip(e.fromEmail, 200),
+    preview: clip(e.preview, 400),
+    date: typeof e.date === "string" && !Number.isNaN(Date.parse(e.date)) ? e.date : null,
+    note: clip(e.note, 4000),
+  };
+}
+
+/** The message that shares an e-mail: the card for our client, readable text for any other. */
+export function emailShareContent(email: Omit<SharedEmail, "note">, note: string, noSubject: string): Record<string, unknown> {
+  const card = { ...email, subject: email.subject.slice(0, 300), preview: email.preview.replace(/\s+/g, " ").trim().slice(0, 400), note: note.trim().slice(0, 4000) };
+  const sender = card.from && card.fromEmail && card.from !== card.fromEmail ? `${card.from} <${card.fromEmail}>` : card.from || card.fromEmail;
+  const fallback = `📧 ${card.subject || noSubject} — ${sender}${card.preview ? `\n${card.preview}` : ""}`;
+  return { msgtype: "m.text", body: card.note ? `${card.note}\n\n${fallback}` : fallback, "com.xenaxio.email": card };
+}

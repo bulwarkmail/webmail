@@ -222,7 +222,9 @@ export const ASSISTANT_COMMAND_EVENT = "xenaxio:assistant";
 export type AssistantCommand =
   | { action: "open" }
   | { action: "summarize"; threadId: string; subject?: string }
-  | { action: "reply" };
+  | { action: "reply" }
+  /** Step 43, part D: a question asked for the user (e.g. "summarize this chat thread"). */
+  | { action: "ask"; text: string };
 
 let availability: Promise<boolean> | null = null;
 /** Whether the assistant is configured and enabled for this user (asked once per page load). */

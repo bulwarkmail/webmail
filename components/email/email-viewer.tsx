@@ -148,6 +148,7 @@ import type { IJMAPClient } from "@/lib/jmap/client-interface";
 import { useArchiveActionEnabled } from "@/lib/archive-gate";
 import { AssistantEmailButtons } from "@/components/xenaxio/assistant-email-buttons";
 import { DeliveryStatus } from "@/components/xenaxio/delivery-status";
+import { ShareToChatButton } from "@/components/xenaxio/chat/share-email";
 
 /** The More menu's two drill-downs: a folder list and a tag list. */
 type MoreMenuSub = 'move' | 'tag' | 'rules';
@@ -3767,6 +3768,7 @@ export function EmailViewer({
         {!isScheduled && !isDraft && !mvViewer && (<>
         {/* xenaxio: AI summary and reply draft for this conversation (I3). */}
         <AssistantEmailButtons threadId={email.threadId} subject={email.subject} mailboxIds={email.mailboxIds} />
+        <ShareToChatButton email={email} />
         <Button
           variant="ghost"
           size="sm"

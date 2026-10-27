@@ -3,16 +3,17 @@
 // Step 43, part B: the chat's left column, as in Slack — company name, jump
 // and search, Threads / Erwähnungen / Gespeichert, starred, channels, direct
 // messages and invitations; unread in bold, mentions as a badge.
-import { IconAt, IconBookmark, IconChevronDown, IconChevronRight, IconHash, IconLock, IconMessages, IconPlus, IconSearch } from "@tabler/icons-react";
+import { IconAt, IconBookmark, IconChevronDown, IconChevronRight, IconHash, IconLock, IconMessages, IconPlus, IconSearch, IconSparkles } from "@tabler/icons-react";
 import { useState } from "react";
 import type { ChatClient, Room } from "@/lib/xenaxio/chat/client";
 import { type ChatView, useChatStore } from "@/lib/xenaxio/chat/store";
 import { sidebarSections, threadsOf } from "@/lib/xenaxio/chat/view";
+import { sendAssistantCommand } from "@/lib/xenaxio/assistant";
 import { useXT } from "@/lib/xenaxio/i18n";
 import { toast } from "@/stores/toast-store";
 import { NotifyButton } from "./notifications";
 import { cn } from "@/lib/utils";
-import { PersonAvatar, presenceOf } from "./common";
+import { PersonAvatar, presenceOf, useAssistant } from "./common";
 
 const COLLAPSED_KEY = "xenaxio.chat.collapsed";
 
@@ -107,6 +108,7 @@ export function ChatSidebar({
   const setView = useChatStore((s) => s.setView);
   const setPanel = useChatStore((s) => s.setPanel);
   const [collapsed, toggle] = useCollapsed();
+  const ai = useAssistant();
   const [search, setSearch] = useState("");
   const rooms = [...client.rooms.values()];
   const sections = sidebarSections(rooms, (r) => client.roomName(r));
@@ -164,6 +166,16 @@ export function ChatSidebar({
           {nav(t("chat.mentions"), <IconAt size={16} />, { kind: "mentions" })}
           {nav(t("chat.saved"), <IconBookmark size={16} />, { kind: "saved" })}
           {nav(t("chat.browse"), <IconHash size={16} />, { kind: "browse" })}
+          {ai && (
+            <button
+              type="button"
+              onClick={() => sendAssistantCommand({ action: "ask", text: t("chat.ai_missed_prompt") })}
+              className="flex h-8 w-full items-center gap-2 rounded-md px-2 text-left text-sm text-primary hover:bg-accent"
+            >
+              <IconSparkles size={16} />
+              <span className="flex-1">{t("chat.ai_missed")}</span>
+            </button>
+          )}
         </div>
 
         {sections.invites.length > 0 && (

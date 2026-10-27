@@ -314,7 +314,7 @@ export interface AuditEntry {
   id: number;
   createdAt: string;
   userEmail: string | null;
-  source: "panel" | "mcp";
+  source: "panel" | "mcp" | "admin" | "chat";
   tokenName: string | null;
   action: string;
   objectIds: string[];
@@ -327,7 +327,7 @@ export interface AuditEntry {
 export interface AuditFilter {
   userId?: string;
   tool?: string;
-  source?: "panel" | "mcp";
+  source?: "panel" | "mcp" | "admin" | "chat";
   from?: string;
   to?: string;
   before?: number;

@@ -2,20 +2,21 @@
 
 // Step 43, part B: the right-hand panel — a thread, a channel's members or a
 // colleague's profile.
-import { IconX } from "@tabler/icons-react";
+import { IconSparkles, IconX } from "@tabler/icons-react";
 import { useLocale } from "next-intl";
 import { useEffect, useState } from "react";
 import type { ChatClient } from "@/lib/xenaxio/chat/client";
 import { type SidePanel, useChatStore } from "@/lib/xenaxio/chat/store";
 import { useXT } from "@/lib/xenaxio/i18n";
+import { sendAssistantCommand } from "@/lib/xenaxio/assistant";
 import { toast } from "@/stores/toast-store";
-import { PersonAvatar, presenceOf, useColleague, useDisplayName } from "./common";
+import { PersonAvatar, presenceOf, useAssistant, useColleague, useDisplayName } from "./common";
 import { Composer } from "./composer";
 import { ChatMessage } from "./message";
 import { MessageList } from "./message-list";
 import { TypingLine } from "./room-view";
 
-function PanelFrame({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) {
+function PanelFrame({ title, subtitle, actions, children }: { title: string; subtitle?: string; actions?: React.ReactNode; children: React.ReactNode }) {
   const t = useXT();
   const setPanel = useChatStore((s) => s.setPanel);
   return (
@@ -25,6 +26,7 @@ function PanelFrame({ title, subtitle, children }: { title: string; subtitle?: s
           <div className="truncate text-base font-bold">{title}</div>
           {subtitle && <div className="truncate text-xs text-muted-foreground">{subtitle}</div>}
         </div>
+        {actions}
         <button type="button" onClick={() => setPanel(null)} className="rounded p-1 hover:bg-accent" aria-label={t("chat.close")}>
           <IconX size={18} />
         </button>
@@ -36,6 +38,7 @@ function PanelFrame({ title, subtitle, children }: { title: string; subtitle?: s
 
 function ThreadPanel({ client, roomId, rootId }: { client: ChatClient; roomId: string; rootId: string }) {
   const t = useXT();
+  const ai = useAssistant();
   const locale = useLocale();
   const room = client.rooms.get(roomId);
   const [error, setError] = useState(false);
@@ -46,8 +49,20 @@ function ThreadPanel({ client, roomId, rootId }: { client: ChatClient; roomId: s
   if (!room) return null;
   const root = room.byId.get(rootId);
   const replies = room.threads.get(rootId) ?? [];
+  // Part D: the assistant reads the thread (as this person) and sums it up.
+  const summarize = ai ? (
+    <button
+      type="button"
+      onClick={() => sendAssistantCommand({ action: "ask", text: t("chat.ai_thread_prompt", { room: client.roomName(room), roomId, rootId }) })}
+      className="flex h-8 items-center gap-1 rounded-md px-2 text-xs font-medium text-primary hover:bg-accent"
+      title={t("chat.ai_summarize")}
+    >
+      <IconSparkles size={15} />
+      {t("chat.ai_summarize")}
+    </button>
+  ) : null;
   return (
-    <PanelFrame title={t("chat.thread")} subtitle={client.roomName(room)}>
+    <PanelFrame title={t("chat.thread")} subtitle={client.roomName(room)} actions={summarize}>
       <MessageList
         room={room}
         client={client}

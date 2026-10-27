@@ -4,9 +4,11 @@
 import { format, isToday, isYesterday } from "date-fns";
 import { de, enUS } from "date-fns/locale";
 import { useLocale } from "next-intl";
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Avatar } from "@/components/ui/avatar";
 import { withBasePath } from "@/lib/browser-navigation";
+import { assistantAvailable } from "@/lib/xenaxio/assistant";
+import { XENAXIO_BFF } from "@/lib/xenaxio/bff";
 import type { ChatClient, PersonInfo } from "@/lib/xenaxio/chat/client";
 import { type Colleague, useChatStore } from "@/lib/xenaxio/chat/store";
 import { useXT } from "@/lib/xenaxio/i18n";
@@ -79,4 +81,13 @@ export function presenceOf(client: ChatClient | null, userId: string): PersonInf
 export function messageLink(locale: string, roomId: string, eventId: string): string {
   const prefix = typeof window === "undefined" ? "" : window.location.origin;
   return `${prefix}${withBasePath(`/${locale}/chat/`)}?room=${encodeURIComponent(roomId)}&event=${encodeURIComponent(eventId)}`;
+}
+
+/** Step 43, part D: whether the AI assistant is on for this person (its chat buttons show only then). */
+export function useAssistant(): boolean {
+  const [available, setAvailable] = useState(false);
+  useEffect(() => {
+    if (XENAXIO_BFF) void assistantAvailable().then(setAvailable, () => setAvailable(false));
+  }, []);
+  return available;
 }
