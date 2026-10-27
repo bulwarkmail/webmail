@@ -73,7 +73,10 @@ export function WorkspaceShell({
   return (
     <MeContext.Provider value={me}>
       <div className="min-h-dvh bg-background text-foreground">
-        <header className="border-b border-border">
+        {/* Installed on a phone the page runs under the status bar
+            (viewport-fit=cover), so the header keeps clear of it and stays
+            on screen while the page scrolls: the way back to mail. */}
+        <header className="sticky top-0 z-30 border-b border-border bg-background pt-[env(safe-area-inset-top)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
           <div className="mx-auto max-w-4xl px-4 h-14 flex items-center justify-between gap-3">
             <div className="flex items-center gap-2 min-w-0">
               {toMail ? (
@@ -103,7 +106,7 @@ export function WorkspaceShell({
             </div>
           </div>
         </header>
-        <main className="mx-auto max-w-4xl px-4 py-6">
+        <main className="mx-auto max-w-4xl pt-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pl-[calc(1rem+env(safe-area-inset-left))] pr-[calc(1rem+env(safe-area-inset-right))]">
           {backHref && (
             <Link href={backHref} className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-3">
               <ChevronLeft className="w-4 h-4 mr-1" />
