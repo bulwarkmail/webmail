@@ -25,10 +25,19 @@ export interface ProposalSummary {
   /** update_event only: what changes, who is newly invited, and the meeting as it was. */
   changes?: string[];
   addedAttendees?: string[];
-  before?: { title?: string; start?: string; end?: string; location?: string };
+  before?: { title?: string; start?: string; end?: string; location?: string; due?: string | null; priority?: string; status?: string; reminder?: boolean };
   /** remember and forget (step 36): the note, and the note it replaces. */
   text?: string;
   replaces?: string;
+  /** create_task and update_task (step 46): the task as it will be. */
+  due?: string | null;
+  allDay?: boolean;
+  priority?: "high" | "medium" | "low" | "none";
+  reminder?: boolean;
+  description?: string;
+  status?: "open" | "in-progress" | "done" | "cancelled";
+  /** create_task from an email: the email it links to. */
+  email?: { subject: string; from: string };
 }
 
 export interface ActionResult {

@@ -37,6 +37,7 @@ import {
 } from "@/lib/xenaxio/assistant";
 import { XENAXIO_BFF } from "@/lib/xenaxio/bff";
 import { useXT } from "@/lib/xenaxio/i18n";
+import { TaskCard } from "@/components/xenaxio/task-card";
 
 type ProposalState = "pending" | "running" | "done" | "done_invited" | "invite_failed" | "rejected" | "expired" | "already" | "failed" | "memory_full" | "memory_off";
 
@@ -715,6 +716,8 @@ export function AssistantPanel() {
               {turn.proposals?.map((p) =>
                 p.tool === "remember" || p.tool === "forget" ? (
                   <MemoryCard key={p.id} proposal={p} onDecide={decide} />
+                ) : p.tool === "create_task" || p.tool === "update_task" ? (
+                  <TaskCard key={p.id} proposal={p} locale={locale} onDecide={(_task, confirm) => decide(p, confirm)} />
                 ) : (
                   <ProposalCard key={p.id} proposal={p} locale={locale} onDecide={decide} />
                 ),
