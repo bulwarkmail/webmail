@@ -128,10 +128,12 @@
     "calendar_not_found": "This calendar no longer exists.",
     "feed_not_found": "This calendar has no link.",
     "too_many_models": "At most five models.",
-    "schedule_limit": "You already have the most scheduled tasks allowed. Delete one first.",
+    "schedule_limit": "You already have as many active tasks as your company allows ({max}). Pause or delete one first.",
     "schedule_running": "This task is running right now.",
     "schedule_in_past": "The time of this one-off task has passed.",
-    "schedule_not_found": "This scheduled task no longer exists."
+    "schedule_not_found": "This scheduled task no longer exists.",
+    "schedule_interval": "This task runs more often than your company allows. Ask the assistant to schedule it less often.",
+    "schedules_off": "Your company has switched scheduled tasks off."
   },
   "login": {
     "title": "Sign in",
@@ -519,7 +521,7 @@
       "done_resume": "Resumed.",
       "done_delete": "Deleted.",
       "failed": "This could not be saved.",
-      "limit": "You already have 20 scheduled tasks. Delete one first under Account → Assistant.",
+      "limit": "You already have as many active tasks as your company allows. Pause or delete one first under Account → Assistant.",
       "all": "All scheduled tasks"
     },
     "limit_warning": "You have used over 80 % of your AI allowance for this month.",
@@ -695,7 +697,25 @@
     "health_ok": "Reachable, last checked {time}",
     "health_down": "The own model has not been answering since {time}. {reason}",
     "health_unknown": "Not checked yet",
-    "health_hint": "We check every 15 minutes. If the model goes down, the admins get an e-mail."
+    "health_hint": "We check every 15 minutes. If the model goes down, the admins get an e-mail.",
+    "schedules_title": "The assistant's scheduled tasks",
+    "schedules_intro": "People can give the assistant tasks it does on its own, once or regularly. Here you decide how much of that your company allows.",
+    "schedules_count": "Currently {active} active, {paused} paused.",
+    "schedules_enabled": "Allow scheduled tasks",
+    "schedules_enabled_hint": "Off: nobody can set up new ones and all existing ones pause. Nothing is deleted; once it is on again, each person resumes their own tasks.",
+    "schedules_send": "Allow sending on its own",
+    "schedules_send_hint": "Only when the person allows it per task, and only to the addresses they name. Off: the assistant only saves drafts.",
+    "schedules_max": "Tasks per person",
+    "schedules_runs": "Runs per day and person",
+    "schedules_range": "{min} to {max}",
+    "schedules_interval": "At most every",
+    "schedules_interval_hint": "How often one task may run at most.",
+    "schedules_interval_minutes": "{n} min",
+    "schedules_interval_hours": "{n} h",
+    "schedules_interval_day": "1 day",
+    "schedules_note": "When you lower the limits, the newest tasks above the limit and tasks that run too often are paused, with a note to the person. Every run uses AI quota.",
+    "schedules_save": "Save",
+    "schedules_saved_paused": "Saved. Paused because they no longer fit the limits: {count}."
   },
   "audit": {
     "title": "Audit log",
@@ -969,8 +989,8 @@
     "privacy": "Notes are stored encrypted in Germany and sent to the AI only when you use the assistant. Your administrator does not see them; the log only shows that notes changed. External AI chats (MCP) do not see them."
   },
   "schedules": {
-    "title": "Scheduled tasks ({count} of {max})",
-    "intro": "Tasks the assistant carries out on its own – once or regularly. The result arrives in a chat of its own in the assistant, by email too if you like. At most {max} runs a day.",
+    "title": "Scheduled tasks ({count} of {max} active)",
+    "intro": "Tasks the assistant does on its own, once or regularly. The result arrives in a chat of its own in the assistant, by email too if you like. Your company allows one task at most every {every} and at most {max} runs a day in total.",
     "none": "No scheduled tasks yet.",
     "how": "Set up new ones in the assistant, for example: “Summarize my new emails every morning at 8.” They also show in your calendar “AI tasks”.",
     "status_active": "Active",
@@ -993,7 +1013,12 @@
     "run_started": "Running – the result will appear in the task's chat shortly.",
     "open_chat": "Open in chat",
     "delete": "Delete",
-    "delete_confirm": "Delete “{title}”? The calendar entry goes, the chat stays."
+    "delete_confirm": "Delete “{title}”? The calendar entry goes, the chat stays.",
+    "company_off": "Your company has switched scheduled tasks off. Your tasks are paused; you can see and delete them.",
+    "company_no_send": "Your company does not allow the assistant to send on its own: it only saves drafts.",
+    "paused_company_off": "Paused: your company had switched scheduled tasks off. Resume it once they are allowed again.",
+    "paused_company_limit": "Paused: more tasks than your company allows per person. Pause or delete another one, then resume.",
+    "paused_company_interval": "Paused: it runs more often than your company allows. Ask the assistant to schedule it less often."
   },
   "background": {
     "title": "Background",
