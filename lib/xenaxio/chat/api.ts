@@ -127,6 +127,7 @@ export const paths = {
   accountData: (user: string, type: string) => `/_matrix/client/v3/user/${enc(user)}/account_data/${enc(type)}`,
   roomAccountData: (user: string, room: string, type: string) => `/_matrix/client/v3/user/${enc(user)}/rooms/${enc(room)}/account_data/${enc(type)}`,
   tag: (user: string, room: string, tag: string) => `/_matrix/client/v3/user/${enc(user)}/rooms/${enc(room)}/tags/${enc(tag)}`,
+  pushRules: "/_matrix/client/v3/pushrules/",
   pushRule: (kind: string, id: string) => `/_matrix/client/v3/pushrules/global/${enc(kind)}/${enc(id)}`,
   profile: (user: string) => `/_matrix/client/v3/profile/${enc(user)}`,
 };

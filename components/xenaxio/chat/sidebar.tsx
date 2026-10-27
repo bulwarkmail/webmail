@@ -10,6 +10,7 @@ import { type ChatView, useChatStore } from "@/lib/xenaxio/chat/store";
 import { sidebarSections, threadsOf } from "@/lib/xenaxio/chat/view";
 import { useXT } from "@/lib/xenaxio/i18n";
 import { toast } from "@/stores/toast-store";
+import { NotifyButton } from "./notifications";
 import { cn } from "@/lib/utils";
 import { PersonAvatar, presenceOf } from "./common";
 
@@ -92,12 +93,14 @@ export function ChatSidebar({
   onJump,
   onCreateChannel,
   onNewMessage,
+  onNotify,
 }: {
   client: ChatClient;
   companyName: string;
   onJump: () => void;
   onCreateChannel: () => void;
   onNewMessage: () => void;
+  onNotify: () => void;
 }) {
   const t = useXT();
   const view = useChatStore((s) => s.view);
@@ -132,6 +135,7 @@ export function ChatSidebar({
     <nav className="flex h-full min-h-0 w-full flex-col bg-secondary/60 md:w-64 md:border-r md:border-border" aria-label={t("chat.title")}>
       <div className="flex h-14 shrink-0 items-center gap-2 border-b border-border px-3">
         <span className="min-w-0 flex-1 truncate text-base font-bold">{companyName}</span>
+        <NotifyButton onOpen={onNotify} />
         <button type="button" onClick={onNewMessage} className="rounded-md p-1.5 hover:bg-accent" title={t("chat.new_message")} aria-label={t("chat.new_message")}>
           <IconPlus size={18} />
         </button>

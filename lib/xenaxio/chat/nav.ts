@@ -12,8 +12,6 @@ const CONNECT_DELAY_MS = 3000;
 export function useChatNavItem(): { visible: boolean; label: string; badge: number } {
   const t = useXT();
   const enabled = useChatStore((s) => !!s.status?.enabled);
-  const client = useChatStore((s) => s.client);
-  useChatStore((s) => s.version);
   const loadStatus = useChatStore((s) => s.loadStatus);
   const connect = useChatStore((s) => s.connect);
 
@@ -26,9 +24,19 @@ export function useChatNavItem(): { visible: boolean; label: string; badge: numb
     return () => clearTimeout(timer);
   }, [loadStatus, connect]);
 
-  const totals = client?.ready ? client.totals() : { notifications: 0, highlights: 0 };
-  // Like Slack: direct messages and mentions count; ordinary channel messages only make the channel bold.
-  let badge = totals.highlights;
-  if (client?.ready) for (const room of client.rooms.values()) if (room.kind === "dm" && room.membership === "join") badge += room.notifications - room.highlights;
-  return { visible: XENAXIO_BFF && enabled, label: t("chat.nav"), badge: Math.max(0, badge) };
+  return { visible: XENAXIO_BFF && enabled, label: t("chat.nav"), badge: useChatBadge() };
+}
+
+/**
+ * The chat's unread count, without connecting (the navigation does that):
+ * like Slack, direct messages and mentions count; ordinary channel messages
+ * only make the channel bold. Also on the tab's icon and the app icon (part C).
+ */
+export function useChatBadge(): number {
+  const client = useChatStore((s) => s.client);
+  useChatStore((s) => s.version);
+  if (!client?.ready || client.signedOut) return 0;
+  let badge = client.totals().highlights;
+  for (const room of client.rooms.values()) if (room.kind === "dm" && room.membership === "join") badge += room.notifications - room.highlights;
+  return Math.max(0, badge);
 }
