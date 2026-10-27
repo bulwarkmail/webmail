@@ -8,7 +8,10 @@ import { useLocale } from "next-intl";
 import { useCallback, useState } from "react";
 import { mediaUrl } from "@/lib/xenaxio/chat/api";
 import type { ChatClient, Message, Room } from "@/lib/xenaxio/chat/client";
+import { serverOfUser } from "@/lib/xenaxio/chat/client";
+import { reportMessage } from "@/lib/xenaxio/chat/api";
 import { appOf, messageHtml, mentionsUser, sharedEmailOf, textContent } from "@/lib/xenaxio/chat/format";
+import { useChatDialogs } from "./dialogs";
 import { useChatStore } from "@/lib/xenaxio/chat/store";
 import { useXT } from "@/lib/xenaxio/i18n";
 import { toast } from "@/stores/toast-store";
@@ -228,7 +231,7 @@ function Editor({ message, client, onDone }: { message: Message; client: ChatCli
   );
 }
 
-function MoreMenu({ message, room, client, onEdit, onClose }: { message: Message; room: Room; client: ChatClient; onEdit: () => void; onClose: () => void }) {
+function MoreMenu({ message, room, client, onEdit, onReport, onClose }: { message: Message; room: Room; client: ChatClient; onEdit: () => void; onReport: () => Promise<void>; onClose: () => void }) {
   const t = useXT();
   const locale = useLocale();
   const mine = message.sender === client.userId;
@@ -266,6 +269,11 @@ function MoreMenu({ message, room, client, onEdit, onClose }: { message: Message
           {t("chat.copy_text")}
         </button>
       )}
+      {!mine && !message.redacted && (
+        <button type="button" className={item} onClick={run(onReport)}>
+          {t("chat.report")}
+        </button>
+      )}
       {(mine || client.can(room, "redact")) && !message.redacted && (
         <button
           type="button"
@@ -294,6 +302,14 @@ export function ChatMessage({ message, room, client, continued, inThread, highli
   const [menu, setMenu] = useState(false);
   const saved = client.saved.some((s) => s.eventId === message.id);
   const openProfile = useCallback((userId: string) => setPanel({ kind: "profile", userId }), [setPanel]);
+  const { prompt } = useChatDialogs();
+  // Part E: a report goes to the company's admins (they can block the sender's server).
+  const report = async () => {
+    const reason = await prompt({ title: t("chat.report_title"), message: t("chat.report_text"), confirmText: t("chat.report") });
+    if (reason === null) return;
+    await reportMessage({ roomId: room.id, eventId: message.id, sender: message.sender, excerpt: String(message.content.body ?? "").slice(0, 500), reason: reason.trim() });
+    toast.success(t("chat.report_sent"));
+  };
 
   if (message.type !== "m.room.message") return <SystemLine message={message} room={room} />;
   const real = !message.id.startsWith("~");
@@ -331,6 +347,8 @@ export function ChatMessage({ message, room, client, continued, inThread, highli
               {author}
             </button>
             {app && <span className="rounded bg-muted px-1 text-[10px] font-semibold uppercase text-muted-foreground">{t("chat.app")}</span>}
+            {/* Part E: people of other companies carry their domain, as in Slack Connect. */}
+            {!app && client.isExternalUser(message.sender) && <span className="rounded bg-primary/10 px-1 text-[10px] font-medium text-primary">{serverOfUser(message.sender)}</span>}
             <span className="text-xs text-muted-foreground tabular-nums" title={full(message.ts)}>
               {time(message.ts)}
             </span>
@@ -410,7 +428,7 @@ export function ChatMessage({ message, room, client, continued, inThread, highli
             <button type="button" className="flex h-8 w-8 items-center justify-center rounded hover:bg-accent" onClick={() => setMenu((m) => !m)} aria-label={t("chat.more")} title={t("chat.more")}>
               <IconDots size={16} />
             </button>
-            {menu && <MoreMenu message={message} room={room} client={client} onEdit={() => setEditing(true)} onClose={() => setMenu(false)} />}
+            {menu && <MoreMenu message={message} room={room} client={client} onEdit={() => setEditing(true)} onReport={report} onClose={() => setMenu(false)} />}
           </span>
         </div>
       )}

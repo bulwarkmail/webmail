@@ -5,6 +5,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Notice, Spinner } from "@/components/xenaxio/ui";
+import { FederationAdmin } from "@/components/xenaxio/chat/federation-admin";
 import { WorkspaceShell } from "@/components/xenaxio/workspace-shell";
 import { Link } from "@/i18n/navigation";
 import { type ChatAdmin, errorText, xenaxio } from "@/lib/xenaxio/api";
@@ -75,6 +76,8 @@ function ChatSettings() {
           )}
         </div>
       </section>
+      {/* Step 43, part E: other companies (federation), once the chat runs. */}
+      {data.state === "active" && <FederationAdmin />}
     </div>
   );
 }

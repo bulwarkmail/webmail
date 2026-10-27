@@ -112,6 +112,8 @@ export const LITE_API_STRING_ALLOWLIST = [
   "/api/chat/push",
   "/api/chat/settings",
   "/api/chat/rooms",
+  "/api/chat/report",
+  "/api/admin/chat/federation",
   "/api/admin/chat",
   // Step 48: calendars by link, both ways (components/xenaxio/calendar-links.tsx).
   "/api/calendar/subscriptions",

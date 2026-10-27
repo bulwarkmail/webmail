@@ -97,6 +97,8 @@ export interface Room {
   tags: Record<string, { order?: number }>;
   lastTs: number;
   archived: boolean;
+  /** Step 43, part E: made for people of other companies ("externer Kanal" or a conversation with them). */
+  external: boolean;
 }
 
 export interface PowerLevels {
@@ -144,6 +146,20 @@ export const SAVED_TYPE = "com.xenaxio.saved";
 export const ARCHIVED_TYPE = "com.xenaxio.archived";
 
 /** Events shown in a timeline; the rest only change room state. */
+/** Step 43, part E: our mark in a room's creation — made for people of other companies. */
+export const EXTERNAL_MARK = "com.xenaxio.external";
+
+/** The chat domain of a Matrix id ("@eva:beta.de" → "beta.de"). */
+export function serverOfUser(userId: string): string {
+  return userId.slice(userId.indexOf(":") + 1).toLowerCase();
+}
+
+/** A full chat address someone typed (@name:domain), or null. */
+export function parseMatrixId(input: string): string | null {
+  const s = input.trim();
+  return /^@[a-z0-9._=\-/+]+:[a-z0-9.-]+\.[a-z]{2,}(:\d{1,5})?$/i.test(s) ? s.toLowerCase() : null;
+}
+
 export function isVisible(m: Pick<Message, "type" | "content" | "prevContent" | "stateKey">): boolean {
   if (m.type === "m.room.message") return true;
   if (m.type === "m.room.member") {
@@ -215,6 +231,7 @@ function newRoom(id: string): Room {
     tags: {},
     lastTs: 0,
     archived: false,
+    external: false,
   };
 }
 
@@ -230,6 +247,8 @@ export class ChatClient {
   /** m.direct: partner → their DM rooms. */
   direct: Record<string, string[]> = {};
   saved: SavedItem[] = [];
+  /** People I blocked (Matrix ignore list). */
+  ignored: Record<string, object> = {};
   ready = false;
   /** Last sync failure (shown as "reconnecting"); null while all is well. */
   syncError: string | null = null;
@@ -393,6 +412,8 @@ export class ChatClient {
     if (ev.type === "m.direct") {
       this.direct = (ev.content ?? {}) as Record<string, string[]>;
       for (const room of this.rooms.values()) if (this.isDirectRoom(room.id) && room.kind !== "space") room.kind = "dm";
+    } else if (ev.type === "m.ignored_user_list") {
+      this.ignored = ((ev.content ?? {}).ignored_users ?? {}) as Record<string, object>;
     } else if (ev.type === SAVED_TYPE) {
       this.saved = Array.isArray(ev.content.items) ? (ev.content.items as SavedItem[]) : [];
     }
@@ -422,6 +443,7 @@ export class ChatClient {
       case "m.room.create":
         room.creator = (c.creator as string) ?? ev.sender;
         if (c.type === "m.space") room.kind = "space";
+        room.external = c[EXTERNAL_MARK] === true && c["m.federate"] !== false;
         break;
       case "m.room.name":
         room.name = typeof c.name === "string" && c.name ? c.name : null;
@@ -807,9 +829,11 @@ export class ChatClient {
   // --- Channels and people --------------------------------------------------
 
   /** A new channel: open ones are listed in the company's channel directory. */
-  async createChannel(input: { name: string; topic?: string; isPublic: boolean; invite?: string[] }): Promise<string> {
+  async createChannel(input: { name: string; topic?: string; isPublic: boolean; invite?: string[]; external?: boolean }): Promise<string> {
     const res = await mx<{ room_id: string }>("POST", paths.createRoom, {
       name: input.name,
+      // Part E: only channels made for it ever take people of other companies; others never federate.
+      creation_content: input.external ? { [EXTERNAL_MARK]: true } : { "m.federate": false },
       ...(input.topic ? { topic: input.topic } : {}),
       preset: input.isPublic ? "public_chat" : "private_chat",
       visibility: input.isPublic ? "public" : "private",
@@ -827,7 +851,13 @@ export class ChatClient {
       const existing = (this.direct[others[0] as string] ?? []).find((id) => this.rooms.get(id)?.membership === "join");
       if (existing) return existing;
     }
-    const res = await mx<{ room_id: string }>("POST", paths.createRoom, { is_direct: true, preset: "trusted_private_chat", invite: others });
+    const external = others.some((u) => this.isExternalUser(u));
+    const res = await mx<{ room_id: string }>("POST", paths.createRoom, {
+      is_direct: true,
+      preset: "trusted_private_chat",
+      invite: others,
+      creation_content: external ? { [EXTERNAL_MARK]: true } : { "m.federate": false },
+    });
     const direct = { ...this.direct };
     for (const u of others) direct[u] = [...new Set([...(direct[u] ?? []), res.room_id])];
     this.direct = direct;
@@ -840,6 +870,38 @@ export class ChatClient {
 
   async join(roomId: string): Promise<void> {
     await mx("POST", paths.join(roomId), {});
+  }
+
+  // --- Other companies (step 43, part E) ------------------------------------
+
+  /** The chat domain of the own company (e.g. "acme.de"). */
+  get homeServer(): string {
+    return this.userId.slice(this.userId.indexOf(":") + 1);
+  }
+
+  /** A person of another company (another chat server). */
+  isExternalUser(userId: string): boolean {
+    return !!userId && serverOfUser(userId) !== this.homeServer;
+  }
+
+  /** Checks an address of someone outside before writing to them; their name if known. */
+  async lookupPerson(userId: string): Promise<{ userId: string; displayName: string | null }> {
+    const res = await mx<{ displayname?: string }>("GET", paths.profile(userId));
+    return { userId, displayName: typeof res.displayname === "string" && res.displayname ? res.displayname : null };
+  }
+
+  /** Blocks (or unblocks) a person: their messages and invitations no longer reach me. */
+  async setIgnored(userId: string, ignored: boolean): Promise<void> {
+    const current = { ...this.ignored };
+    if (ignored) current[userId] = {};
+    else delete current[userId];
+    this.ignored = current;
+    this.changed();
+    await mx("PUT", paths.accountData(this.userId, "m.ignored_user_list"), { ignored_users: current });
+  }
+
+  isIgnored(userId: string): boolean {
+    return userId in this.ignored;
   }
 
   async leave(roomId: string): Promise<void> {

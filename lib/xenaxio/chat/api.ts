@@ -131,3 +131,14 @@ export const paths = {
   pushRule: (kind: string, id: string) => `/_matrix/client/v3/pushrules/global/${enc(kind)}/${enc(id)}`,
   profile: (user: string) => `/_matrix/client/v3/profile/${enc(user)}`,
 };
+
+/** Step 43, part E: reports a message to the company's admins (spam, abuse from outside). */
+export async function reportMessage(report: { roomId: string; eventId: string; sender: string; excerpt: string; reason: string }): Promise<void> {
+  const res = await apiFetch("/api/chat/report", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { Accept: "application/json", "Content-Type": "application/json", "x-xenaxio-csrf": "1" },
+    body: JSON.stringify(report),
+  });
+  if (!res.ok) throw new ChatError(res.status, "report_failed");
+}

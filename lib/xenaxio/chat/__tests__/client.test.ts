@@ -13,7 +13,7 @@ vi.mock("../api", async (orig) => {
   };
 });
 
-import { ChatClient, type RawEvent, type SyncResponse } from "../client";
+import { ChatClient, EXTERNAL_MARK, parseMatrixId, type RawEvent, serverOfUser, type SyncResponse } from "../client";
 
 const ROOM = "!alle:acme.de";
 let n = 0;
@@ -184,5 +184,66 @@ describe("chat client", () => {
     await c.markRead(ROOM);
     expect(calls.filter((x) => x.path.includes("read_markers"))).toHaveLength(1);
     expect(c.rooms.get(ROOM)!.notifications).toBe(0);
+  });
+});
+
+describe("other companies (step 43, part E)", () => {
+  let c: ChatClient;
+  beforeEach(() => {
+    calls.length = 0;
+    answer = () => ({ room_id: "!new:acme.de" });
+    c = new ChatClient();
+    c.userId = "@max:acme.de";
+  });
+
+  it("reads addresses and tells colleagues from outsiders", () => {
+    expect(parseMatrixId(" @Eva:Beta.de ")).toBe("@eva:beta.de");
+    expect(parseMatrixId("eva@beta.de")).toBeNull();
+    expect(parseMatrixId("@eva")).toBeNull();
+    expect(serverOfUser("@eva:beta.de")).toBe("beta.de");
+    expect(c.isExternalUser("@eva:beta.de")).toBe(true);
+    expect(c.isExternalUser("@anna:acme.de")).toBe(false);
+  });
+
+  it("makes internal rooms that never federate and marks external ones", async () => {
+    await c.createChannel({ name: "intern", isPublic: true });
+    expect((calls.at(-1)!.body as { creation_content: unknown }).creation_content).toEqual({ "m.federate": false });
+    await c.createChannel({ name: "projekt-beta", isPublic: false, external: true });
+    expect((calls.at(-1)!.body as { creation_content: unknown }).creation_content).toEqual({ [EXTERNAL_MARK]: true });
+    await c.openDirect(["@eva:beta.de"]);
+    const dm = calls.find((x) => x.path.endsWith("/createRoom") && (x.body as { is_direct?: boolean }).is_direct)!;
+    expect((dm.body as { creation_content: unknown }).creation_content).toEqual({ [EXTERNAL_MARK]: true });
+  });
+
+  it("knows external rooms from their creation and keeps outside invitations waiting", () => {
+    c.processSync(
+      {
+        next_batch: "s1",
+        rooms: {
+          join: { "!ext:acme.de": { state: { events: [ev({ type: "m.room.create", state_key: "", content: { [EXTERNAL_MARK]: true } })] }, timeline: { events: [] } } },
+          invite: {
+            "!x:beta.de": {
+              invite_state: {
+                events: [
+                  { type: "m.room.create", state_key: "", sender: "@eva:beta.de", content: { [EXTERNAL_MARK]: true } },
+                  { type: "m.room.member", state_key: "@max:acme.de", sender: "@eva:beta.de", content: { membership: "invite" } },
+                ],
+              },
+            },
+          },
+        },
+      },
+      true,
+    );
+    expect(c.rooms.get("!ext:acme.de")!.external).toBe(true);
+    expect(c.rooms.get("!x:beta.de")!.membership).toBe("invite");
+    // Not accepted by itself (colleagues' invitations are).
+    expect(calls.some((x) => x.path.includes("/join"))).toBe(false);
+  });
+
+  it("blocks a person through the ignore list", async () => {
+    await c.setIgnored("@spam:evil.example", true);
+    expect(c.isIgnored("@spam:evil.example")).toBe(true);
+    expect(calls.at(-1)).toMatchObject({ method: "PUT", body: { ignored_users: { "@spam:evil.example": {} } } });
   });
 });

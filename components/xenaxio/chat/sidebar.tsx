@@ -3,9 +3,9 @@
 // Step 43, part B: the chat's left column, as in Slack — company name, jump
 // and search, Threads / Erwähnungen / Gespeichert, starred, channels, direct
 // messages and invitations; unread in bold, mentions as a badge.
-import { IconAt, IconBookmark, IconChevronDown, IconChevronRight, IconHash, IconLock, IconMessages, IconPlus, IconSearch, IconSparkles } from "@tabler/icons-react";
+import { IconAt, IconBookmark, IconChevronDown, IconChevronRight, IconHash, IconLock, IconMessages, IconPlus, IconSearch, IconSparkles, IconWorld } from "@tabler/icons-react";
 import { useState } from "react";
-import type { ChatClient, Room } from "@/lib/xenaxio/chat/client";
+import { type ChatClient, type Room, serverOfUser } from "@/lib/xenaxio/chat/client";
 import { type ChatView, useChatStore } from "@/lib/xenaxio/chat/store";
 import { sidebarSections, threadsOf } from "@/lib/xenaxio/chat/view";
 import { sendAssistantCommand } from "@/lib/xenaxio/assistant";
@@ -58,12 +58,15 @@ function RoomRow({ client, room, active, onOpen }: { client: ChatClient; room: R
     >
       {room.kind === "dm" ? (
         partner ? <PersonAvatar userId={partner} name={name} size="sm" presence={presenceOf(client, partner)} className="scale-[0.8]" /> : <IconMessages size={16} />
+      ) : room.external ? (
+        <IconWorld size={16} className="shrink-0 opacity-80" />
       ) : room.joinRule === "public" ? (
         <IconHash size={16} className="shrink-0 opacity-80" />
       ) : (
         <IconLock size={16} className="shrink-0 opacity-80" />
       )}
       <span className="min-w-0 flex-1 truncate">{name}</span>
+      {room.kind === "dm" && partner && client.isExternalUser(partner) && <span className="shrink-0 text-[10px] opacity-70">{serverOfUser(partner)}</span>}
       {badge > 0 && <span className={cn("min-w-5 rounded-full px-1.5 text-center text-[11px] font-bold leading-5", active ? "bg-primary-foreground text-primary" : "bg-red-500 text-white")}>{badge}</span>}
     </button>
   );
@@ -184,6 +187,13 @@ export function ChatSidebar({
               <div key={r.id} className="rounded-md border border-border bg-background p-2 text-sm">
                 <div className="truncate font-semibold">{client.roomName(r)}</div>
                 {r.inviter && <div className="truncate text-xs text-muted-foreground">{t("chat.invited_by", { name: client.displayName(r.inviter, r) })}</div>}
+                {/* Part E: invitations from other companies wait for a yes; say where they come from. */}
+                {r.inviter && client.isExternalUser(r.inviter) && (
+                  <div className="mt-1 flex items-start gap-1 rounded bg-amber-100/70 px-1.5 py-1 text-[11px] text-amber-900 dark:bg-amber-500/15 dark:text-amber-200">
+                    <IconWorld size={13} className="mt-px shrink-0" />
+                    <span>{t("chat.ext_invite", { domain: serverOfUser(r.inviter) })}</span>
+                  </div>
+                )}
                 <div className="mt-1.5 flex gap-1.5">
                   <button
                     type="button"
