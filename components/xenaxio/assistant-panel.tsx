@@ -38,6 +38,7 @@ import {
 import { XENAXIO_BFF } from "@/lib/xenaxio/bff";
 import { useXT } from "@/lib/xenaxio/i18n";
 import { TaskCard } from "@/components/xenaxio/task-card";
+import { ProposalSeriesNote, ProposalSeriesRows } from "./proposal-series";
 
 type ProposalState = "pending" | "running" | "done" | "done_invited" | "invite_failed" | "rejected" | "expired" | "already" | "failed" | "memory_full" | "memory_off";
 
@@ -217,6 +218,7 @@ function ProposalCard({ proposal, locale, onDecide }: { proposal: Proposal; loca
           {s.timeZone ? <span className="text-muted-foreground"> ({s.timeZone})</span> : null}
           {changed("time") && s.before && was(formatSpan(s.before, locale))}
         </dd>
+        <ProposalSeriesRows summary={s} locale={locale} />
         {s.location || changed("location") ? (
           <>
             <dt className="text-muted-foreground">{label("where")}</dt>
@@ -246,6 +248,7 @@ function ProposalCard({ proposal, locale, onDecide }: { proposal: Proposal; loca
         ) : null}
       </dl>
       {attendees.length > 0 && proposal.state === "pending" && <p className="text-muted-foreground">{label("invites_note")}</p>}
+      {proposal.state === "pending" && <ProposalSeriesNote summary={s} />}
       {settled ? (
         <p className={cn(["done", "done_invited"].includes(proposal.state) ? "text-primary" : "text-muted-foreground", "flex items-center gap-1")}>
           {["done", "done_invited"].includes(proposal.state) && <Check className="h-3.5 w-3.5" />}

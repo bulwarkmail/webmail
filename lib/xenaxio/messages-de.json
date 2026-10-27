@@ -430,7 +430,12 @@
       "expired": "Dieser Vorschlag ist abgelaufen. Bitten Sie den Assistenten um einen neuen.",
       "already": "Über diesen Vorschlag wurde bereits entschieden.",
       "failed": "Der Termin konnte nicht angelegt werden.",
-      "files": "Anhänge"
+      "files": "Anhänge",
+      "repeats": "Wiederholung",
+      "scope": "Betrifft",
+      "scope_occurrence": "Nur den Termin vom {when}",
+      "scope_series": "Die ganze Serie",
+      "reset_note": "Einzeln geänderte Termine der Serie ({count}) werden dabei auf die Serie zurückgesetzt."
     },
     "proposal_update": {
       "event": "Terminänderung",
