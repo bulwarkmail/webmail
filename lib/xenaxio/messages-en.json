@@ -426,7 +426,12 @@
       "expired": "This proposal has expired. Ask the assistant for a new one.",
       "already": "This proposal was already decided.",
       "failed": "The event could not be created.",
-      "files": "Attachments"
+      "files": "Attachments",
+      "repeats": "Repeats",
+      "scope": "Applies to",
+      "scope_occurrence": "Only the occurrence of {when}",
+      "scope_series": "The whole series",
+      "reset_note": "Individually changed occurrences of the series ({count}) go back to the series."
     },
     "proposal_update": {
       "event": "Meeting change",

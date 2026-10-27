@@ -26,6 +26,14 @@ export interface ProposalSummary {
   changes?: string[];
   addedAttendees?: string[];
   before?: { title?: string; start?: string; end?: string; location?: string };
+  /** Step 45: how the meeting repeats (in the user's language), what part of a series changes. */
+  repeatText?: string;
+  repeatBefore?: string;
+  scope?: "occurrence" | "series";
+  /** The occurrence's original start ("2026-11-02T10:00"). */
+  occurrence?: string;
+  /** Changed occurrences that go back to the series when it moves. */
+  resetsChangedOccurrences?: number;
   /** remember and forget (step 36): the note, and the note it replaces. */
   text?: string;
   replaces?: string;
