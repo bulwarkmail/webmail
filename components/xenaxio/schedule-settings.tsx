@@ -33,7 +33,7 @@ function Switch({ id, label, hint, checked, disabled, onChange }: { id: string; 
 function NumberField({ id, label, hint, value, min, max, disabled, onChange }: { id: string; label: string; hint: string; value: number; min: number; max: number; disabled?: boolean; onChange: (n: number) => void }) {
   return (
     <div className="space-y-1">
-      <label htmlFor={id} className="text-sm font-medium">
+      <label htmlFor={id} className="block text-sm font-medium">
         {label}
       </label>
       <input
@@ -125,7 +125,7 @@ export function ScheduleSettings({ value, onSaved }: { value: ScheduleSettingsIn
             onChange={(runsPerDay) => set({ runsPerDay })}
           />
           <div className="space-y-1">
-            <label htmlFor="ai-schedules-interval" className="text-sm font-medium">
+            <label htmlFor="ai-schedules-interval" className="block text-sm font-medium">
               {t("aiadmin.schedules_interval")}
             </label>
             <select
