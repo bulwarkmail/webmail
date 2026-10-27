@@ -23,6 +23,7 @@ import { useAccountStore } from '@/stores/account-store';
 import { apiFetch } from '@/lib/browser-navigation';
 import { CALENDAR_COLORS, sharedCalendarColorKey } from '@/lib/shared-calendar-colors';
 import { IS_LITE } from '@/lib/lite';
+import { CalendarLinksSettings } from '@/components/xenaxio/calendar-links';
 import { shareRecipientNames, useShareRecipientLabels } from '@/hooks/use-share-recipient-labels';
 import { calendarAccountKey, moveCalendar } from '@/lib/calendar-sort';
 
@@ -836,6 +837,9 @@ export function CalendarManagementSettings() {
           </div>
         )}
       </div>
+
+      {/* xenaxio step 48: calendars from Google, Outlook & co. by link, both ways (kept by the platform). */}
+      <CalendarLinksSettings calendars={orderableCalendars} onChanged={() => { if (client) void fetchCalendars(client); }} />
 
       {/* iCal Subscriptions */}
       {icalSubscriptions.length > 0 && (

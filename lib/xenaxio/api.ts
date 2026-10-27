@@ -15,7 +15,7 @@ export class XenaxioApiError extends Error {
   }
 }
 
-async function request<T>(method: "GET" | "POST" | "DELETE" | "PUT", path: string, body?: unknown): Promise<T> {
+async function request<T>(method: "GET" | "POST" | "DELETE" | "PUT" | "PATCH", path: string, body?: unknown): Promise<T> {
   let res: Response;
   // Step 17: a logo goes up as the raw file; everything else as JSON.
   const raw = typeof Blob !== "undefined" && body instanceof Blob;
@@ -444,9 +444,50 @@ export interface MemoryState {
   maxLength: number;
 }
 
+/** Step 48: an outside calendar (Google, Outlook, any .ics link) the platform keeps in a calendar here. */
+export interface CalendarSubscription {
+  id: string;
+  name: string;
+  color: string | null;
+  /** Only the host: the full address may carry a secret. */
+  host: string;
+  calendarId: string;
+  refreshedAt: string | null;
+  /** "feed_http_error:404", "events_failed:3", … */
+  error: string | null;
+  failures: number;
+  /** Stopped after many failures; "Aktualisieren" starts it again. */
+  paused: boolean;
+}
+
+/** Step 48: the secret link to one of the user's calendars, for Google or Outlook. */
+export interface CalendarFeed {
+  calendarId: string;
+  mode: "full" | "busy";
+  url: string;
+  createdAt: string;
+  lastFetchedAt: string | null;
+}
+
+// Whole paths, so the Lite build check (scripts/lite/lib.mjs) sees each one.
+const CALENDAR_SUBSCRIPTIONS = "/api/calendar/subscriptions";
+const CALENDAR_FEEDS = "/api/calendar/feeds";
+
 export const xenaxio = {
   me: () => request<Me>("GET", "/api/me"),
   dismissHint: (hint: DismissableHint) => request<{ dismissedHints: string[] }>("POST", `/api/me/hints/${hint}`),
+  // Step 48: calendars from Google, Outlook and others by link, both ways.
+  calendarSubscriptions: () => request<{ subscriptions: CalendarSubscription[] }>("GET", CALENDAR_SUBSCRIPTIONS),
+  addCalendarSubscription: (input: { url: string; name: string; color?: string | null }) =>
+    request<{ subscription: CalendarSubscription }>("POST", CALENDAR_SUBSCRIPTIONS, input),
+  updateCalendarSubscription: (id: string, patch: { name?: string; color?: string | null }) =>
+    request<{ subscription: CalendarSubscription }>("PATCH", `${CALENDAR_SUBSCRIPTIONS}/${encodeURIComponent(id)}`, patch),
+  removeCalendarSubscription: (id: string) => request<{ ok: true }>("DELETE", `${CALENDAR_SUBSCRIPTIONS}/${encodeURIComponent(id)}`),
+  refreshCalendarSubscription: (id: string) => request<{ subscription: CalendarSubscription }>("POST", `${CALENDAR_SUBSCRIPTIONS}/${encodeURIComponent(id)}/refresh`),
+  calendarFeeds: () => request<{ feeds: CalendarFeed[] }>("GET", CALENDAR_FEEDS),
+  setCalendarFeed: (calendarId: string, mode: "full" | "busy") => request<{ feed: CalendarFeed }>("PUT", `${CALENDAR_FEEDS}/${encodeURIComponent(calendarId)}`, { mode }),
+  rotateCalendarFeed: (calendarId: string) => request<{ feed: CalendarFeed }>("POST", `${CALENDAR_FEEDS}/${encodeURIComponent(calendarId)}/rotate`),
+  removeCalendarFeed: (calendarId: string) => request<{ ok: true }>("DELETE", `${CALENDAR_FEEDS}/${encodeURIComponent(calendarId)}`),
   // Step 41: pictures. `kind` null = the signed-in person's own.
   avatars: () => request<{ avatars: { email: string; url: string }[] }>("GET", "/api/avatars"),
   uploadAvatar: (target: AvatarTarget, image: Blob) => request<{ avatarUrl: string }>("PUT", avatarPath(target), image),
