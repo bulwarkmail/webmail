@@ -652,6 +652,27 @@ function annotateScheduledEmail(
   };
 }
 
+/** Clear stale scheduling fields only after a complete refresh for this login. */
+function reconcileScheduledEmails(
+  emails: Email[],
+  metadata: Map<string, ScheduledSubmissionMetadata>,
+  client: IJMAPClient,
+): Email[] {
+  return emails.map(email => {
+    if (resolveEmailBlobContext(email, useAuthStore.getState().client).client !== client) return email;
+    const annotated = annotateScheduledEmail(email, metadata);
+    if (annotated !== email) return annotated;
+    const clean = { ...email };
+    delete clean.emailSubmissionId;
+    delete clean.scheduledSendAt;
+    delete clean.scheduledIdentityId;
+    delete clean.scheduledUndoStatus;
+    delete clean.scheduledAccountId;
+    delete clean.isScheduled;
+    return clean;
+  });
+}
+
 /** One scheduled send: submission and email ids repeat across accounts. */
 function isSameScheduledSend(a: ScheduledEmail, b: ScheduledEmail): boolean {
   return a.emailSubmissionId === b.emailSubmissionId && a.scheduledAccountId === b.scheduledAccountId;
@@ -7566,7 +7587,11 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         // Re-annotate the visible list: this refresh runs concurrently with
         // the initial fetchEmails, so rows fetched before the metadata landed
         // still get their scheduled badges.
-        emails: annotateScheduledEmails(get().emails, scheduledSubmissionByEmailId),
+        emails: reconcileScheduledEmails(get().emails, scheduledSubmissionByEmailId, client),
+        selectedEmail: get().selectedEmail
+          ? reconcileScheduledEmails([get().selectedEmail!], scheduledSubmissionByEmailId, client)[0] : null,
+        threadEmailsCache: new Map([...get().threadEmailsCache].map(([key, emails]) =>
+          [key, reconcileScheduledEmails(emails, scheduledSubmissionByEmailId, client)])),
         scheduledTotal: total,
         scheduledTotalByAccount: totalByAccount,
         scheduledHasMore: false,
@@ -7649,20 +7674,9 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       }
       throw error;
     } finally {
-      await get().fetchScheduledEmails(client);
-      if (result && get().selectedEmail?.id === emailId) {
-        const refreshed = get().scheduledEmails.find(email => email.id === emailId && inAccount(email.scheduledAccountId));
-        set(state => ({
-          selectedEmail: refreshed || (state.selectedEmail ? {
-            ...state.selectedEmail,
-            emailSubmissionId: result?.emailSubmissionId || submissionId,
-            scheduledSendAt: result?.sendAt || delayedUntil,
-            scheduledIdentityId: identityId,
-            scheduledUndoStatus: 'pending' as const,
-            isScheduled: true,
-          } : state.selectedEmail),
-        }));
-      }
+      // A release can leave the queue before the response arrives. Reconcile
+      // from the full queue instead of reintroducing a stale pending fallback.
+      await get().refreshScheduledMetadata(client);
     }
   },
 

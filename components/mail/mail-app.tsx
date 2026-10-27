@@ -2477,7 +2477,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
               if (!undoClient) return refuseSignedOut();
               void (async () => {
                 try {
-                  const result = await undoClient.rescheduleEmailSubmission(
+                  const result = await useEmailStore.getState().rescheduleScheduledEmail(
+                    undoClient,
                     pending.submissionId,
                     pending.emailId!,
                     pending.identityId!,
