@@ -255,7 +255,7 @@ export interface ChatAdmin {
   serverName: string | null;
   candidate: { name: string; status: string } | null;
   error: string | null;
-  /** Step 53: the assistant (side panel, scheduled tasks, connected AI chats) may read the chat. */
+  /** Step 54: the assistant (side panel, scheduled tasks, connected AI chats) may read the chat. */
   aiAccess: boolean;
 }
 

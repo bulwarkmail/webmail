@@ -1,7 +1,7 @@
 "use client";
 
 // xenaxio, step 43: the admin turns the company's team chat on or off and sees
-// its state (being set up, on, a problem). Step 53: and whether the assistant
+// its state (being set up, on, a problem). Step 54: and whether the assistant
 // and connected AI chats (MCP) may read it.
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
