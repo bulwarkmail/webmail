@@ -58,6 +58,8 @@ interface Turn {
   /** A tool call failed; worth showing only if no answer came after it. */
   toolFailed?: boolean;
   error?: string;
+  /** Step 45: a note about the answer (it came from the fallback model). */
+  notice?: string;
   title?: string;
 }
 
@@ -396,6 +398,7 @@ export function AssistantPanel() {
           else if (e.type === "sources") update((turn) => ({ ...turn, sources: e.emails }));
           else if (e.type === "proposal") update((turn) => ({ ...turn, proposals: [...(turn.proposals ?? []), { id: e.id, tool: e.tool, summary: e.summary, state: "pending" }] }));
           else if (e.type === "error") update((turn) => ({ ...turn, error: t(`assistant.errors.${e.code}`) }));
+          else if (e.type === "notice") update((turn) => ({ ...turn, notice: t(`assistant.notice_${e.code}`) }));
         }
       } catch (err) {
         if ((err as { name?: string }).name !== "AbortError") {
@@ -705,6 +708,7 @@ export function AssistantPanel() {
               {turn.role === "user" ? turn.text && <p className="whitespace-pre-wrap">{turn.text}</p> : <Formatted text={turn.text} sources={turn.sources ?? []} onOpen={openSource} />}
               {turn.tool && <p className="animate-pulse text-xs text-muted-foreground">{t(`assistant.tool_${turn.tool}`)}</p>}
               {turn.role === "assistant" && !turn.text && !turn.tool && busy && i === turns.length - 1 && <p className="animate-pulse text-xs text-muted-foreground">…</p>}
+              {turn.notice && <p className="text-xs text-amber-700 dark:text-amber-400">{turn.notice}</p>}
               {turn.error && <p className="text-xs text-destructive">{turn.error}</p>}
               {/* The model usually recovers from a failed step; warn only when no answer came. */}
               {turn.toolFailed && !turn.error && !turn.text.trim() && !(busy && i === turns.length - 1) && <p className="text-xs text-destructive">{t("assistant.tool_error")}</p>}
