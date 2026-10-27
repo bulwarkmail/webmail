@@ -3,12 +3,14 @@
 // Step 36: "Assistent" — what the assistant remembers about the user. Every
 // note was confirmed by the user in the panel or written here; the user edits
 // and deletes them and can switch memory off. Nobody else sees these notes.
+// Step 47: above them, the tasks the assistant carries out on a schedule.
 import { type FormEvent, useCallback, useEffect, useState } from "react";
 import { useLocale } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Notice, Spinner } from "@/components/xenaxio/ui";
 import { WorkspaceShell } from "@/components/xenaxio/workspace-shell";
+import { ScheduleList } from "@/components/xenaxio/schedule-list";
 import { errorText, type MemoryNote, type MemoryState, xenaxio } from "@/lib/xenaxio/api";
 import { useXT } from "@/lib/xenaxio/i18n";
 
@@ -171,7 +173,11 @@ export default function AssistantMemoryPage() {
   const t = useXT();
   return (
     <WorkspaceShell title={t("memory.title")} backHref="/workspace">
-      <Memory />
+      <div className="max-w-2xl space-y-10">
+        {/* Step 47: scheduled tasks of the assistant. */}
+        <ScheduleList />
+        <Memory />
+      </div>
     </WorkspaceShell>
   );
 }

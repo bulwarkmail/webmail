@@ -437,6 +437,25 @@ export interface MemoryNote {
   updatedAt: string;
 }
 
+/** Step 47: a task the assistant carries out on a schedule (the user's page "Geplante Aufgaben"). */
+export interface ScheduleInfo {
+  id: string;
+  title: string;
+  instruction: string;
+  when: string;
+  timeZone: string;
+  status: "active" | "paused" | "ended";
+  pausedReason?: "no_access" | "ai_off" | "failures" | string;
+  nextRun: string | null;
+  lastRun: string | null;
+  lastStatus: "done" | "failed" | "skipped" | null;
+  emailCopy: boolean;
+  maySend: boolean;
+  sendTo: string[];
+  conversationId: string | null;
+  createdAt: string;
+}
+
 export interface MemoryState {
   enabled: boolean;
   notes: MemoryNote[];
@@ -500,6 +519,11 @@ export const xenaxio = {
   deleteMemory: (id: string) => request<{ ok: true }>("DELETE", `/api/ai/memories/${encodeURIComponent(id)}`),
   deleteAllMemories: () => request<{ ok: true }>("DELETE", "/api/ai/memories"),
   setMemoryEnabled: (enabled: boolean) => request<{ enabled: boolean }>("POST", "/api/ai/memories/settings", { enabled }),
+  schedules: () => request<{ timeZone: string; schedules: ScheduleInfo[]; maxSchedules: number; maxRunsPerDay: number }>("GET", "/api/ai/schedules"),
+  pauseSchedule: (id: string) => request<{ schedule: ScheduleInfo }>("POST", `/api/ai/schedules/${encodeURIComponent(id)}/pause`),
+  resumeSchedule: (id: string) => request<{ schedule: ScheduleInfo }>("POST", `/api/ai/schedules/${encodeURIComponent(id)}/resume`),
+  runSchedule: (id: string) => request<{ started: true; conversationId: string }>("POST", `/api/ai/schedules/${encodeURIComponent(id)}/run`),
+  deleteSchedule: (id: string) => request<{ ok: true }>("DELETE", `/api/ai/schedules/${encodeURIComponent(id)}`),
   mcpTokens: () => request<{ mcpUrl: string; enabled: boolean; tokens: McpTokenInfo[] }>("GET", "/api/me/mcp-tokens"),
   createMcpToken: (name: string, days: number) => request<{ token: string; mcpUrl: string; info: McpTokenInfo }>("POST", "/api/me/mcp-tokens", { name, days }),
   revokeMcpToken: (id: string) => request<{ ok: true }>("DELETE", `/api/me/mcp-tokens/${encodeURIComponent(id)}`),

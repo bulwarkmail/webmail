@@ -9,7 +9,7 @@ import { type ClipboardEvent, type DragEvent, Fragment, type FormEvent, type Rea
 import { useLocale } from "next-intl";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
-import { Brain, CalendarDays, Check, File as FileIcon, FileText, FolderOpen, Image as ImageIcon, Loader2, MessageSquare, Paperclip, PenLine, Plus, Send, Sparkles, Square, Trash2, Upload, X } from "@/components/icons";
+import { Brain, CalendarClock, CalendarDays, Check, File as FileIcon, FileText, FolderOpen, Image as ImageIcon, Loader2, MessageSquare, Paperclip, PenLine, Plus, Send, Sparkles, Square, Trash2, Upload, X } from "@/components/icons";
 import { FilePickerDialog } from "@/components/files/file-picker-dialog";
 import type { FileNode } from "@/lib/jmap/types";
 import { useAuthStore } from "@/stores/auth-store";
@@ -25,6 +25,8 @@ import {
   type AssistantEvent,
   assistantIds,
   type AttachedFile,
+  ASSISTANT_OPEN_PARAM,
+  type ConversationInfo,
   attachedFileLink,
   chatFileProblem,
   isChatImage,
@@ -38,9 +40,10 @@ import {
 import { XENAXIO_BFF } from "@/lib/xenaxio/bff";
 import { useXT } from "@/lib/xenaxio/i18n";
 import { TaskCard } from "@/components/xenaxio/task-card";
+import { ScheduleCard } from "@/components/xenaxio/schedule-card";
 import { ProposalSeriesNote, ProposalSeriesRows } from "./proposal-series";
 
-type ProposalState = "pending" | "running" | "done" | "done_invited" | "invite_failed" | "rejected" | "expired" | "already" | "failed" | "memory_full" | "memory_off";
+type ProposalState = "pending" | "running" | "done" | "done_invited" | "invite_failed" | "rejected" | "expired" | "already" | "failed" | "memory_full" | "memory_off" | "schedule_limit";
 
 interface Proposal {
   id: string;
@@ -324,7 +327,9 @@ export function AssistantPanel() {
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
-  const [history, setHistory] = useState<{ id: string; title: string }[] | null>(null);
+  const [history, setHistory] = useState<ConversationInfo[] | null>(null);
+  // Step 47: results of scheduled tasks not opened yet (a dot on the button and in the history).
+  const [unread, setUnread] = useState(0);
   const abort = useRef<AbortController | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const restored = useRef(false);
@@ -371,6 +376,15 @@ export function AssistantPanel() {
       if (s.usage?.warning) setNotice(t(s.usage.blocked ? "assistant.errors.ai_limit_reached" : "assistant.limit_warning"));
     }, () => undefined);
   }, [open, available, t]);
+
+  // Step 47: new results of scheduled tasks, checked every two minutes while the page is open.
+  useEffect(() => {
+    if (!available) return;
+    const check = () => void assistant.status().then((s) => setUnread(s.unread ?? 0), () => undefined);
+    check();
+    const timer = window.setInterval(check, 120_000);
+    return () => window.clearInterval(timer);
+  }, [available]);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: "end" });
@@ -435,7 +449,7 @@ export function AssistantPanel() {
       const status = err instanceof XenaxioApiError ? err.status : 0;
       // Step 36: the memory is full or was switched off after the proposal.
       const code = err instanceof XenaxioApiError ? err.code : "";
-      if (code === "memory_full" || code === "memory_off") return set(code);
+      if (code === "memory_full" || code === "memory_off" || code === "schedule_limit") return set(code);
       set(status === 410 ? "expired" : status === 409 ? "already" : status === 0 ? "pending" : "failed");
       if (status === 0) setNotice(t("errors.network"));
     }
@@ -582,12 +596,29 @@ export function AssistantPanel() {
   };
 
   const showHistory = async () => setHistory(await assistant.conversations());
-  const loadConversation = async (id: string) => {
-    const msgs = await assistant.messages(id);
-    setTurns(msgs.map((m) => ({ role: m.role, text: m.content, ...(m.files?.length ? { files: m.files } : {}) })));
+  const loadConversation = useCallback(async (id: string) => {
+    const { messages: msgs, proposals } = await assistant.conversation(id);
+    const loaded: Turn[] = msgs.map((m) => ({ role: m.role, text: m.content, ...(m.files?.length ? { files: m.files } : {}) }));
+    // Step 47: what a scheduled run proposed still waits here for the user's click.
+    if (proposals.length) loaded.push({ role: "assistant", text: "", proposals: proposals.map((p) => ({ ...p, state: "pending" as const })) });
+    setTurns(loaded);
     setConversationId(id);
     setHistory(null);
-  };
+    void assistant.status().then((s) => setUnread(s.unread ?? 0), () => undefined);
+  }, []);
+
+  // Step 47: a link from a notification or the email copy (?assistant=<chat>) opens that chat.
+  useEffect(() => {
+    if (!available) return;
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get(ASSISTANT_OPEN_PARAM);
+    if (!id || !/^[0-9a-f-]{36}$/i.test(id)) return;
+    params.delete(ASSISTANT_OPEN_PARAM);
+    const rest = params.toString();
+    window.history.replaceState(window.history.state, "", `${window.location.pathname}${rest ? `?${rest}` : ""}${window.location.hash}`);
+    setOpen(true);
+    void loadConversation(id);
+  }, [available, loadConversation, pathname]);
 
   if (!available || !SURFACES.test(pathname)) return null;
 
@@ -597,10 +628,11 @@ export function AssistantPanel() {
         type="button"
         onClick={() => setOpen(true)}
         className="fixed bottom-24 right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 md:bottom-6 md:right-6"
-        aria-label={t("assistant.open")}
-        title={t("assistant.open")}
+        aria-label={unread ? t("assistant.open_unread", { count: unread }) : t("assistant.open")}
+        title={unread ? t("assistant.open_unread", { count: unread }) : t("assistant.open")}
       >
         <Sparkles className="h-5 w-5" />
+        {unread > 0 && <span className="absolute right-0.5 top-0.5 h-3 w-3 rounded-full border-2 border-background bg-red-500" aria-hidden="true" />}
       </button>
     );
   }
@@ -666,8 +698,10 @@ export function AssistantPanel() {
             <p className="text-xs font-medium text-muted-foreground">{t("assistant.history")}</p>
             {history.map((c) => (
               <div key={c.id} className="flex items-center gap-1">
-                <button type="button" className="flex-1 truncate rounded px-2 py-1.5 text-left hover:bg-muted" onClick={() => loadConversation(c.id)}>
-                  {c.title || "—"}
+                <button type="button" className={cn("flex min-w-0 flex-1 items-center gap-1.5 rounded px-2 py-1.5 text-left hover:bg-muted", c.unread && "font-medium")} onClick={() => loadConversation(c.id)}>
+                  {c.scheduled && <CalendarClock className="h-3.5 w-3.5 shrink-0 text-primary" aria-label={t("assistant.scheduled_chat")} />}
+                  <span className="truncate">{c.title || "—"}</span>
+                  {c.unread && <span className="ml-auto h-2 w-2 shrink-0 rounded-full bg-red-500" aria-label={t("assistant.unread")} />}
                 </button>
                 <Button
                   variant="ghost"
@@ -719,6 +753,8 @@ export function AssistantPanel() {
               {turn.proposals?.map((p) =>
                 p.tool === "remember" || p.tool === "forget" ? (
                   <MemoryCard key={p.id} proposal={p} onDecide={decide} />
+                ) : p.tool === "schedule_task" || p.tool === "update_schedule" || p.tool === "delete_schedule" ? (
+                  <ScheduleCard key={p.id} proposal={p} locale={locale} onDecide={(_card, confirm) => decide(p, confirm)} />
                 ) : p.tool === "create_task" || p.tool === "update_task" ? (
                   <TaskCard key={p.id} proposal={p} locale={locale} onDecide={(_task, confirm) => decide(p, confirm)} />
                 ) : (
