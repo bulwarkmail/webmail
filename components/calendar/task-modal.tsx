@@ -10,6 +10,7 @@ import { format, parseISO } from "date-fns";
 import type { CalendarTask, Calendar, CalendarEventAlert } from "@/lib/jmap/types";
 import { PluginSlot } from "@/components/plugins/plugin-slot";
 import { taskToView } from "@/lib/plugin-projection";
+import { TaskEmailLink } from "@/components/xenaxio/task-email-link";
 
 interface TaskModalProps {
   task?: CalendarTask | null;
@@ -195,6 +196,8 @@ export function TaskModal({
           rows={3}
           className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-none"
         />
+        {/* xenaxio (step 46): the email a task was made from. */}
+        <TaskEmailLink description={task?.description} />
 
         {/* Due Date */}
         <div className="space-y-2">
