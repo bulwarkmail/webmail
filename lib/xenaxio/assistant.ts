@@ -78,7 +78,8 @@ export const ASSISTANT_OPEN_PARAM = "assistant";
 
 export interface ActionResult {
   status: "done";
-  result: { eventId?: string; invited?: string[]; invitationSent?: boolean };
+  /** Step 47: calendarId — the "KI-Aufgaben" calendar a scheduled task shows in. */
+  result: { eventId?: string; invited?: string[]; invitationSent?: boolean; calendarId?: string };
 }
 
 export type AssistantEvent =

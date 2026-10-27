@@ -116,3 +116,15 @@ describe("ScheduleList (step 47)", () => {
     expect(api.deleteSchedule).toHaveBeenCalledWith("s2");
   });
 });
+
+describe("the KI-Aufgaben calendar shows once a task is set up (step 47)", () => {
+  it("is added to the ticked calendars, unless none is chosen yet (then all show)", async () => {
+    const { withCalendar } = await import("@/lib/xenaxio/calendar-visibility");
+    expect(withCalendar(["b"], "k")).toEqual(["b", "k"]);
+    const same = ["b", "k"];
+    expect(withCalendar(same, "k")).toBe(same);
+    const none: string[] = [];
+    expect(withCalendar(none, "k")).toBe(none);
+    expect(withCalendar(["__birthday-calendar__"], "k")).toEqual(["__birthday-calendar__"]);
+  });
+});

@@ -41,6 +41,7 @@ import { XENAXIO_BFF } from "@/lib/xenaxio/bff";
 import { useXT } from "@/lib/xenaxio/i18n";
 import { TaskCard } from "@/components/xenaxio/task-card";
 import { ScheduleCard } from "@/components/xenaxio/schedule-card";
+import { showCalendar } from "@/lib/xenaxio/calendar-visibility";
 import { ProposalSeriesNote, ProposalSeriesRows } from "./proposal-series";
 
 type ProposalState = "pending" | "running" | "done" | "done_invited" | "invite_failed" | "rejected" | "expired" | "already" | "failed" | "memory_full" | "memory_off" | "schedule_limit";
@@ -444,6 +445,8 @@ export function AssistantPanel() {
         return;
       }
       const { result } = await assistant.confirm(proposal.id);
+      // Step 47: the "KI-Aufgaben" calendar shows from now on.
+      if (result.calendarId) showCalendar(result.calendarId);
       set(result.invited?.length ? (result.invitationSent ? "done_invited" : "invite_failed") : "done");
     } catch (err) {
       const status = err instanceof XenaxioApiError ? err.status : 0;
