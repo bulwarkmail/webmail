@@ -1,10 +1,10 @@
 import { useState, useCallback, useRef, type PointerEvent, type DragEvent } from "react";
-import { format, parseISO } from "date-fns";
+import { format } from "date-fns";
 import { useAuthStore } from "@/stores/auth-store";
 import { useCalendarStore } from "@/stores/calendar-store";
 import { toast } from "@/stores/toast-store";
 import { debug } from "@/lib/debug";
-import { formatIsoInTimeZone } from "@/lib/calendar-utils";
+import { formatIsoInTimeZone, getEventStartDate } from "@/lib/calendar-utils";
 import { fromDisplayDate, getEffectiveTimeZone } from "@/lib/timezone";
 import { movedEventUpdates } from "@/lib/calendar-participants";
 import type { Calendar } from "@/lib/jmap/types";
@@ -59,6 +59,13 @@ interface UseTimeGridInteractionsOptions {
    */
   gridStartMinutes?: number;
   gridEndMinutes?: number;
+}
+
+/** `date` moved by `minutes` on the local clock, not by elapsed time. */
+function addWallClockMinutes(date: Date, minutes: number): Date {
+  const shifted = new Date(date);
+  shifted.setMinutes(shifted.getMinutes() + minutes);
+  return shifted;
 }
 
 export function useTimeGridInteractions({
@@ -237,13 +244,6 @@ export function useTimeGridInteractions({
       return;
     }
 
-    const hours = Math.floor(newDurationMinutes / 60);
-    const mins = newDurationMinutes % 60;
-    let dur = "PT";
-    if (hours > 0) dur += `${hours}H`;
-    if (mins > 0) dur += `${mins}M`;
-    if (dur === "PT") dur = "PT0M";
-
     const client = useAuthStore.getState().client;
     if (!client) {
       setResizeVisual(null);
@@ -253,13 +253,27 @@ export function useTimeGridInteractions({
 
     try {
       const event = useCalendarStore.getState().events.find(ev => ev.id === resize.eventId);
-      const updates: { start?: string; duration: string } = { duration: dur };
-      if (startChanged && event?.start) {
-        // Shift the event's floating `start` wall-clock by the delta (preserves event.timeZone).
-        const deltaMinutes = newStartMinutes - resize.originalStartMinutes;
-        const shifted = new Date(parseISO(event.start).getTime() + deltaMinutes * 60000);
-        updates.start = format(shifted, "yyyy-MM-dd'T'HH:mm:ss");
+      let durationMinutes = newDurationMinutes;
+      let start: string | undefined;
+      if (event?.start) {
+        // The grid counts wall-clock minutes. Move the edges by clock time
+        // and measure the duration between the real instants, so a resize
+        // across a DST change lands where the edge was dropped (#1348).
+        const newStart = addWallClockMinutes(getEventStartDate(event), newStartMinutes - resize.originalStartMinutes);
+        const newEnd = addWallClockMinutes(newStart, newDurationMinutes);
+        const startInstant = fromDisplayDate(newStart);
+        durationMinutes = Math.round((fromDisplayDate(newEnd).getTime() - startInstant.getTime()) / 60000);
+        // Emit `start` in the event's own timeZone, as a drop does.
+        if (startChanged) start = formatIsoInTimeZone(startInstant, event.timeZone || getEffectiveTimeZone());
       }
+      const hours = Math.floor(durationMinutes / 60);
+      const mins = durationMinutes % 60;
+      let dur = "PT";
+      if (hours > 0) dur += `${hours}H`;
+      if (mins > 0) dur += `${mins}M`;
+      if (dur === "PT") dur = "PT0M";
+      const updates: { start?: string; duration: string } = { duration: dur };
+      if (start) updates.start = start;
       const moved = movedEventUpdates(event, updates, currentUserEmails ?? []);
       await useCalendarStore.getState().updateEvent(client, resize.eventId, moved.updates, moved.sendSchedulingMessages);
     } catch (error) {

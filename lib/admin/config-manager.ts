@@ -242,7 +242,8 @@ class ConfigManager {
     await ensureConfigDir();
     const targetPath = getConfigPath(filename);
     const tmpPath = targetPath + '.tmp';
-    await writeFile(tmpPath, JSON.stringify(data, null, 2), 'utf-8');
+    // Owner-only: config.json carries the session secret and OAuth client secrets.
+    await writeFile(tmpPath, JSON.stringify(data, null, 2), { encoding: 'utf-8', mode: 0o600 });
     await rename(tmpPath, targetPath);
   }
 }

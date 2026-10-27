@@ -17,11 +17,12 @@ vi.mock('next/server', () => {
   }
   return { NextResponse, NextRequest: class {} };
 });
-vi.mock('@/lib/logger', () => ({ logger: { error: () => {}, debug: () => {} } }));
+vi.mock('@/lib/logger', () => ({ logger: { error: () => {}, warn: () => {}, debug: () => {} } }));
 vi.mock('@/lib/stalwart/credentials', () => ({ getStalwartCredentials: vi.fn() }));
 
 import { POST } from '@/app/api/webdav/route';
 import { getStalwartCredentials } from '@/lib/stalwart/credentials';
+import { endlessResponse } from './helpers/endless-body';
 
 const mockCreds = getStalwartCredentials as unknown as Mock;
 const CREDS = { serverUrl: 'https://mail.example.com', username: 'user@example.com', authHeader: 'Basic abc' };
@@ -102,6 +103,7 @@ describe('POST /api/webdav — proxying', () => {
   });
 
   it('PROPFIND forwards Depth and returns XML', async () => {
+    fetchSpy.mockResolvedValueOnce(new Response('<xml/>', { status: 207 }));
     const res = read(await POST(makeReq({ 'X-WebDAV-Method': 'PROPFIND', 'X-WebDAV-Path': 'dir', Depth: '1' })));
     expect(fetchSpy).toHaveBeenCalledWith(
       'https://mail.example.com/dav/file/user%40example.com/dir',
@@ -110,6 +112,23 @@ describe('POST /api/webdav — proxying', () => {
     expect(res.status).toBe(207);
     expect(res.body).toBe('<xml/>');
     expect(res.headers!.get('Content-Type')).toBe('application/xml; charset=utf-8');
+  });
+
+  it('PROPFIND refuses a request body over 1 MB without sending it on', async () => {
+    const big = endlessResponse(50);
+    const req = { ...makeReq({ 'X-WebDAV-Method': 'PROPFIND', 'X-WebDAV-Path': 'dir' }), body: big.response.body };
+    const res = read(await POST(req as unknown as Parameters<typeof POST>[0]));
+    expect(res.status).toBe(413);
+    expect(big.pulled()).toBeLessThan(5);
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it('PROPFIND answers 502 instead of buffering a listing that never ends', async () => {
+    const { response, pulled } = endlessResponse(500, { status: 207 });
+    fetchSpy.mockResolvedValueOnce(response);
+    const res = read(await POST(makeReq({ 'X-WebDAV-Method': 'PROPFIND', 'X-WebDAV-Path': 'dir', Depth: '1' })));
+    expect(res.status).toBe(502);
+    expect(pulled()).toBeLessThan(60);
   });
 
   it('MOVE rebuilds the Destination URL and forwards Overwrite', async () => {

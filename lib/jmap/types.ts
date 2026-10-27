@@ -927,6 +927,8 @@ export interface CalendarEventFilter {
   operator?: 'AND' | 'OR' | 'NOT';
   conditions?: CalendarEventFilter[];
   inCalendars?: string[];
+  /** One calendar: what Stalwart (0.16 and 1.0) takes; 0.16 refuses `inCalendars`. */
+  inCalendar?: string;
   after?: string;
   before?: string;
   text?: string;

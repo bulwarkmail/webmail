@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { collectReferencedCids, isEmbeddedInBody } from '@/lib/attachment-visibility';
+import { collectReferencedCids, isEmbeddedInBody, rewriteCidReferences } from '@/lib/attachment-visibility';
 
 describe('collectReferencedCids', () => {
   it('finds cid: references wherever the body uses them', () => {
@@ -70,5 +70,22 @@ describe('isEmbeddedInBody', () => {
   it('hides nothing when the message renders as plain text', () => {
     const none = collectReferencedCids(null);
     expect(isEmbeddedInBody({ cid: 'logoImage', type: 'application/octet-stream' }, none)).toBe(false);
+  });
+});
+
+describe('rewriteCidReferences', () => {
+  it('swaps a cid: reference for its URL and an unknown one for the placeholder', () => {
+    expect(rewriteCidReferences('<img src="cid:logo"><img src="cid:gone">', { logo: 'blob:x/1' }, 'data:,p'))
+      .toBe('<img src="blob:x/1"><img src="data:,p">');
+  });
+
+  it('ends an unquoted reference at the tag instead of swallowing the markup after it', () => {
+    const html = '<img src=cid:logo><p>Hello</p>';
+    expect(rewriteCidReferences(html, { logo: 'blob:x/1' }, 'data:,p')).toBe('<img src=blob:x/1><p>Hello</p>');
+    expect(collectReferencedCids(html)).toEqual(new Set(['logo']));
+  });
+
+  it('never resolves a reference through the object prototype', () => {
+    expect(rewriteCidReferences('<img src="cid:constructor">', {}, 'data:,p')).toBe('<img src="data:,p">');
   });
 });

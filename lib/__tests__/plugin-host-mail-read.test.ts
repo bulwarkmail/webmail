@@ -48,13 +48,14 @@ beforeEach(() => {
       : null)),
     getEmails: vi.fn(async () => ({ emails: [mail('a'), mail('b')], hasMore: false, total: 2 })),
     getMailboxes: vi.fn(async () => [inbox]),
+    getAccountId: vi.fn(() => 'acc1'),
   };
   useAuthStore.setState({ client: client as unknown as IJMAPClient });
   useEmailStore.setState({ mailboxes: [inbox, shared], selectedEmail: null });
 });
 
 afterEach(() => {
-  useAuthStore.setState({ client: null, getClientForAccount: realGetClientForAccount });
+  useAuthStore.setState({ client: null, activeAccountId: null, getClientForAccount: realGetClientForAccount });
   useEmailStore.setState({ mailboxes: [], selectedEmail: null, selectedMailbox: '', emails: [] });
 });
 
@@ -87,6 +88,33 @@ describe('api.email.get', () => {
     expect(other.getEmail).not.toHaveBeenCalled();
     // Nor is the signed-in login asked for an id that belongs to another one.
     expect(client.getEmail).not.toHaveBeenCalled();
+  });
+
+  // Ids repeat across accounts: a unified view lists the own message and a
+  // group's under the same id, and a bare id named whichever came first.
+  it('reads the message of the account a plugin names, and says which account it is', async () => {
+    client.getEmail.mockImplementation(async (id: string, accountId?: string) => (
+      id === 'm1' ? mail('m1', { subject: accountId === 'grp' ? 'Group' : 'Own' }) : null));
+    useAuthStore.setState({
+      activeAccountId: 'login1',
+      getClientForAccount: ((id: string) => (id === 'login1' ? client : undefined)) as never,
+    });
+    useEmailStore.setState({
+      emails: [
+        mail('m1', { sourceClientAccountId: 'login1', sourceAccountId: 'grp' }),
+        mail('m1', { sourceClientAccountId: 'login1', sourceAccountId: 'acc1' }),
+      ],
+    });
+
+    expect(await call(READER, 'email.get', 'm1', 'acc1')).toEqual(expect.objectContaining({ subject: 'Own', accountId: 'acc1' }));
+    expect(await call(READER, 'email.get', 'm1', 'grp')).toEqual(expect.objectContaining({ subject: 'Group', accountId: 'grp' }));
+    // Without one, as before: the first listed row.
+    expect(await call(READER, 'email.get', 'm1')).toEqual(expect.objectContaining({ subject: 'Group', accountId: 'grp' }));
+    // An account this login doesn't show is not asked.
+    client.getEmail.mockClear();
+    expect(await call(READER, 'email.get', 'm1', 'elsewhere')).toBeNull();
+    expect(client.getEmail).not.toHaveBeenCalled();
+    await expect(call(READER, 'email.get', 'm1', 7)).rejects.toThrow(/accountId must be a string/);
   });
 
   it('uses the open message when its body is loaded', async () => {
@@ -137,6 +165,13 @@ describe('api.email.list', () => {
   it('asks the owning account for a shared folder', async () => {
     await call(READER, 'email.list', { mailboxId: 'acc2:box' });
     expect(client.getEmails).toHaveBeenCalledWith('box', 'acc2', 50, 0);
+  });
+
+  it('names the account of each message', async () => {
+    const own = await call(READER, 'email.list', { mailboxId: 'inbox' }) as { accountId?: string }[];
+    const team = await call(READER, 'email.list', { mailboxId: 'acc2:box' }) as { accountId?: string }[];
+    expect(own.map((e) => e.accountId)).toEqual(['acc1', 'acc1']);
+    expect(team.map((e) => e.accountId)).toEqual(['acc2', 'acc2']);
   });
 
   it('caps the page at 100 and refuses unknown folders', async () => {

@@ -53,6 +53,7 @@ import { decryptPayload } from '@/lib/auth/crypto';
 import { setStalwartAuthContextInStore, type StalwartAuthContext } from '@/lib/stalwart/auth-context';
 import { IMPERSONATION_GRANT_COOKIE, sealImpersonationGrant } from '@/lib/impersonation/grant-cookie';
 import { resetPairingStoreForTests, stashGrant, type PairingGrant } from '@/lib/auth/pairing-store';
+import { resetStoredCredentialBudgetForTests } from '@/lib/stalwart/stored-credential-budget';
 import { readPairReauthFromStore, setPairReauthInStore } from '@/lib/auth/pair-reauth';
 import { openPhoneRefreshToken } from '@/lib/auth/pair-bundle';
 import { POST as createPOST } from '@/app/api/auth/pair/create/route';
@@ -227,6 +228,7 @@ beforeEach(() => {
   vi.stubEnv('OAUTH_CLIENT_SECRET', '');
   vi.stubEnv('OAUTH_CLIENT_SECRET_FILE', '');
   resetPairingStoreForTests();
+  resetStoredCredentialBudgetForTests();
   delete (globalThis as Record<string, unknown>).__bulwarkPairAttempts;
   calls.length = 0;
   handler = mailServer();

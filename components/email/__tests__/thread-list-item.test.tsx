@@ -809,3 +809,22 @@ describe('ThreadListItem hover actions', () => {
     expect(screen.getByTestId('hover-action-delete')).toBeTruthy();
   });
 });
+
+describe('ThreadListItem open message', () => {
+  beforeEach(() => {
+    useSettingsStore.setState({ emailKeywords: [...DEFAULT_KEYWORDS], showPreview: false, mailLayout: 'split', interfaceLayout: 'default' });
+    useEmailStore.setState({ selectedEmailKeys: new Set<string>(), selectedMailbox: '' });
+  });
+
+  // A tag view lists the own and the group's eaaaaab: opening one draws only that one open.
+  it.each([
+    ['own', makeEmail({ id: 'eaaaaab', sourceClientAccountId: 'login-a', sourceAccountId: 'cf' }), true],
+    ['group', makeEmail({ id: 'eaaaaab', sourceClientAccountId: 'login-a', sourceAccountId: 'ce' }), false],
+  ])('draws the %s row as open only when it is the open message', (_name, email, open) => {
+    const [thread] = groupEmailsByThread([email]);
+    const { container } = render(
+      <ThreadListItem thread={thread} isExpanded={false} selectedEmailKey="login-a/cf:eaaaaab" onToggleExpand={() => {}} onEmailSelect={() => {}} />,
+    );
+    expect(container.querySelector('[aria-current="true"]') !== null).toBe(open);
+  });
+});

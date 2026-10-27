@@ -471,6 +471,15 @@ describe('JMAPClient resilience', () => {
       );
     });
 
+    it('keeps only the last path component of a name, so no %2F reaches the proxy (#1371)', async () => {
+      const client = await connectWith({
+        downloadUrl: 'https://mail.example.com/download/{accountId}/{blobId}/{name}?accept={type}',
+      });
+      expect(client.getBlobDownloadUrl('blob1', '/images/banner.jpg', 'image/jpeg', 'acct-1')).toBe(
+        'https://mail.example.com/download/acct-1/blob1/banner.jpg?accept=image%2Fjpeg',
+      );
+    });
+
     it('leaves an empty downloadUrl falsy so the unavailable guard still fires', async () => {
       const client = await connectWith({ downloadUrl: '' });
       expect(() => client.getBlobDownloadUrl('blob1')).toThrow('Download URL not available');

@@ -90,7 +90,8 @@ async function writeConfigData(data: AdminConfigData): Promise<void> {
   await ensureConfigDir();
   const target = getConfigPath(ADMIN_CONFIG_FILE);
   const tmp = target + '.tmp';
-  await writeFile(tmp, JSON.stringify(data, null, 2), 'utf-8');
+  // Owner-only, like the other files that hold secrets.
+  await writeFile(tmp, JSON.stringify(data, null, 2), { encoding: 'utf-8', mode: 0o600 });
   await rename(tmp, target);
 }
 
@@ -111,6 +112,20 @@ let initialized = false;
 function freshState(): AdminStateData {
   const now = new Date().toISOString();
   return { createdAt: now, lastLogin: null, passwordChangedAt: now };
+}
+
+async function loadState(): Promise<AdminStateData | null> {
+  if (!cachedState) cachedState = await readStateData();
+  return cachedState;
+}
+
+/**
+ * Fresh state for a new admin password, one session generation on: every
+ * admin session of the old password is signed out (a stolen cookie with it).
+ */
+async function stateForNewPassword(): Promise<AdminStateData> {
+  const previous = await loadState();
+  return { ...freshState(), sessionGeneration: (previous?.sessionGeneration ?? 0) + 1 };
 }
 
 /**
@@ -148,7 +163,7 @@ export async function initAdminPassword(): Promise<boolean> {
 
   const hash = isHashed(envPassword) ? envPassword : await hashPassword(envPassword);
   cachedConfig = { passwordHash: hash, passwordHashFile: undefined };
-  cachedState = freshState();
+  cachedState = await stateForNewPassword();
   await writeConfigData(cachedConfig);
   await writeStateData(cachedState);
   initialized = true;
@@ -192,9 +207,11 @@ export async function changeAdminPassword(currentPassword: string, newPassword: 
   await writeConfigData(next);
   cachedConfig = next;
 
+  const previous = await loadState();
   cachedState = {
-    ...(cachedState ?? freshState()),
+    ...(previous ?? freshState()),
     passwordChangedAt: new Date().toISOString(),
+    sessionGeneration: (previous?.sessionGeneration ?? 0) + 1,
   };
   await writeStateData(cachedState);
   return true;
@@ -219,7 +236,7 @@ export async function setInitialAdminPassword(
   if (existing && !options.allowOverwrite) return false;
   const hash = await hashPassword(newPassword);
   cachedConfig = { passwordHash: hash, passwordHashFile: undefined };
-  cachedState = freshState();
+  cachedState = await stateForNewPassword();
   await writeConfigData(cachedConfig);
   await writeStateData(cachedState);
   initialized = true;
@@ -257,4 +274,29 @@ export function isAdminEnabled(): boolean {
 export function getAdminMeta(): AdminStateData | null {
   if (!cachedConfig) return null;
   return cachedState ?? freshState();
+}
+
+// ─── Admin session sign-out ─────────────────────────────────────────────────
+
+/** The session generation new admin tokens are issued in, and the only one accepted. */
+export async function getAdminSessionGeneration(): Promise<number> {
+  return (await loadState())?.sessionGeneration ?? 0;
+}
+
+export async function isAdminSessionRevoked(sid: string): Promise<boolean> {
+  const revoked = (await loadState())?.revokedSessions;
+  return !!revoked && Object.prototype.hasOwnProperty.call(revoked, sid);
+}
+
+/**
+ * Sign one admin token out (logout) until its exp, after which it is refused
+ * as expired anyway; expired entries are dropped on the way.
+ */
+export async function revokeAdminSession(sid: string, exp: number): Promise<void> {
+  const now = Math.floor(Date.now() / 1000);
+  const previous = await loadState();
+  const revoked = Object.fromEntries(Object.entries(previous?.revokedSessions ?? {}).filter(([, until]) => until >= now));
+  revoked[sid] = exp;
+  cachedState = { ...(previous ?? freshState()), revokedSessions: revoked };
+  await writeStateData(cachedState);
 }

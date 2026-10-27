@@ -569,6 +569,8 @@
       "authentication_missing_info": "Aquesta invitació no inclou autenticació de correu verificada. Confirmeu els detalls amb l'organitzador si alguna cosa sembla estranya.",
       "sender_mismatch_info": "Aquesta invitació s'ha enviat des de {sender}, mentre que l'organitzador indicat a les dades del calendari és {organizer}.",
       "sender_mismatch_unverified_info": "Aquesta invitació s'ha enviat des de {sender}, mentre que l'organitzador indicat a les dades del calendari és {organizer}, i no s'ha pogut verificar el missatge.",
+      "attendee_mismatch_info": "Aquesta resposta s'ha enviat des de {sender}, mentre que l'assistent que respon a les dades del calendari és {attendee}.",
+      "attendee_mismatch_unverified_info": "Aquesta resposta s'ha enviat des de {sender}, mentre que l'assistent que respon a les dades del calendari és {attendee}, i no s'ha pogut verificar el missatge.",
       "organizer_role": "Vós organitzeu aquest esdeveniment",
       "your_response": "La vostra resposta: {status}",
       "response_needed": "Cal resposta",
@@ -611,6 +613,7 @@
     "scheduled_send_created": "Correu programat per enviar-se",
     "sending_in": "S'enviarà d'aquí a {seconds} s",
     "undo_send_failed": "No s'ha pogut desfer. Potser el missatge ja s'ha enviat.",
+    "undo_send_signed_out": "No s'ha pogut desfer: el compte des del qual s'ha enviat el missatge ja no té la sessió iniciada.",
     "cancel_scheduled_send": "Cancel·la l'enviament",
     "reschedule_send": "Reprograma",
     "cancel_and_edit": "Cancel·la i edita",
@@ -698,6 +701,7 @@
     "link_url_prompt": "Introduïu l'URL",
     "draft_saved": "S'ha desat l'esborrany",
     "save_failed": "No s'ha pogut desar",
+    "discard_signed_out": "No s'ha suprimit l'esborrany: el compte on es va desar ja no té la sessió iniciada. Es queda als esborranys d'aquell compte.",
     "to_placeholder": "Adreces electròniques dels destinataris",
     "cc_placeholder": "Destinataris amb CC",
     "bcc_placeholder": "Destinataris amb CCO",
@@ -1534,6 +1538,10 @@
         "label": "Només text sense format",
         "description": "Desactiva l'editor de text enriquit i envia tots els correus només com a text sense format, incloses les respostes i els reenviaments"
       },
+      "quick_reply": {
+        "label": "Resposta ràpida",
+        "description": "Mostra el quadre de resposta ràpida sota els missatges."
+      },
       "auto_select_reply_identity": {
         "label": "Respon des de l'adreça de recepció",
         "description": "En respondre, envia des de l'adreça a la qual es va enviar originalment el missatge. Primer intenta coincidir amb les identitats; per als lliuraments de captura general de domini, reescriu la capçalera «De» amb l'àlies mentre envia a través de la identitat principal."
@@ -1779,6 +1787,10 @@
         "signed_in": "Signed in to {count, plural, one {# account} other {# accounts}} with the saved password.",
         "sign_in_failed": "{count, plural, one {# saved password was} other {# saved passwords were}} refused: sign in to those accounts from the account list.",
         "deleted": "Saved list deleted.",
+        "prompt_title": "Restore your other accounts?",
+        "prompt_description": "A list of accounts is saved for {account}. Enter its backup password to add them to this browser, or do it later from Settings.",
+        "prompt_not_now": "Not now",
+        "prompt_done": "Done",
         "errors": {
           "mismatch": "The passwords do not match.",
           "password_length": "Use at least 10 characters.",

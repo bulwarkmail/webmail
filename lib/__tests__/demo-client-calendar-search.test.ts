@@ -9,16 +9,16 @@ describe('DemoJMAPClient calendar search', () => {
     const client = new DemoJMAPClient();
     const events = await client.queryAllCalendarEvents({
       operator: 'AND',
-      conditions: [{ text: '"lunch meeting"' }, { text: 'sar*' }],
+      conditions: [{ text: '"lunch with"' }, { text: 'sar*' }],
     });
-    expect(events.map((e) => e.title)).toEqual(['Lunch Meeting with Sarah']);
+    expect(events.map((e) => e.title)).toEqual(['Lunch with Sarah: prototype v3']);
   });
 
   it('matches nothing when one part is missing', async () => {
     const client = new DemoJMAPClient();
     const events = await client.queryAllCalendarEvents({
       operator: 'AND',
-      conditions: [{ text: '"lunch meeting"' }, { text: 'standup' }],
+      conditions: [{ text: '"lunch with"' }, { text: 'standup' }],
     });
     expect(events).toEqual([]);
   });
@@ -26,6 +26,6 @@ describe('DemoJMAPClient calendar search', () => {
   it('still reads a flat text condition', async () => {
     const client = new DemoJMAPClient();
     const events = await client.queryAllCalendarEvents({ text: 'standup' });
-    expect(events.map((e) => e.title)).toEqual(['Weekly Standup']);
+    expect(events.map((e) => e.title)).toEqual(['Beacon standup']);
   });
 });

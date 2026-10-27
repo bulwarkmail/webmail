@@ -569,6 +569,8 @@
       "authentication_missing_info": "這封邀請未包含已驗證的郵件身分驗證資訊。若有任何可疑之處，請向主辦人確認詳細資料。",
       "sender_mismatch_info": "這封邀請是由 {sender} 傳送，但行事曆資料中列出的主辦人是 {organizer}。",
       "sender_mismatch_unverified_info": "這封邀請是由 {sender} 傳送，但行事曆資料中列出的主辦人是 {organizer}，而且無法驗證這封郵件。",
+      "attendee_mismatch_info": "這則回覆是由 {sender} 傳送，但行事曆資料中回覆的參與者是 {attendee}。",
+      "attendee_mismatch_unverified_info": "這則回覆是由 {sender} 傳送，但行事曆資料中回覆的參與者是 {attendee}，而且無法驗證這封郵件。",
       "organizer_role": "您是此活動的主辦人",
       "your_response": "您的回覆：{status}",
       "response_needed": "待回覆",
@@ -611,6 +613,7 @@
     "scheduled_send_created": "郵件已排程寄送",
     "sending_in": "{seconds} 秒後寄出",
     "undo_send_failed": "無法復原。郵件可能已經寄出。",
+    "undo_send_signed_out": "無法復原：寄出此郵件的帳戶已登出。",
     "cancel_scheduled_send": "取消傳送",
     "reschedule_send": "重新排程",
     "cancel_and_edit": "取消並編輯",
@@ -698,6 +701,7 @@
     "link_url_prompt": "輸入 URL",
     "draft_saved": "草稿已儲存",
     "save_failed": "儲存失敗",
+    "discard_signed_out": "草稿未刪除：儲存它的帳戶已登出。草稿仍保留在該帳戶的草稿匣中。",
     "to_placeholder": "收件者電子郵件地址",
     "cc_placeholder": "副本收件者",
     "bcc_placeholder": "密件副本收件者",
@@ -1534,6 +1538,10 @@
         "label": "僅純文字",
         "description": "停用富文字編輯器，並將所有郵件（包括回覆和轉寄）以純文字傳送"
       },
+      "quick_reply": {
+        "label": "快速回覆",
+        "description": "在郵件下方顯示快速回覆框。"
+      },
       "auto_select_reply_identity": {
         "label": "使用收件地址回覆",
         "description": "回覆時，使用原始郵件的收件地址寄送。系統會先比對寄件身分；若是網域 catch-all 收件，則透過主要寄件身分傳送，但將 From 標頭改寫為別名地址。"
@@ -1779,6 +1787,10 @@
         "signed_in": "Signed in to {count, plural, one {# account} other {# accounts}} with the saved password.",
         "sign_in_failed": "{count, plural, one {# saved password was} other {# saved passwords were}} refused: sign in to those accounts from the account list.",
         "deleted": "Saved list deleted.",
+        "prompt_title": "Restore your other accounts?",
+        "prompt_description": "A list of accounts is saved for {account}. Enter its backup password to add them to this browser, or do it later from Settings.",
+        "prompt_not_now": "Not now",
+        "prompt_done": "Done",
         "errors": {
           "mismatch": "The passwords do not match.",
           "password_length": "Use at least 10 characters.",

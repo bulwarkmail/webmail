@@ -478,14 +478,14 @@ describe('dev-jmap mock server', () => {
             create: {
               uploaded: { name: 'hello.txt', type: 'text/plain', blobId },
               // A copy points at the blob of a seeded node.
-              copied: { name: 'copy.pdf', type: 'application/pdf', blobId: 'demo-blob-file-2' },
+              copied: { name: 'copy.pdf', type: 'application/pdf', blobId: 'demo-blob-quarterly-report' },
             },
           }, '0']],
         }),
       }), { params: Promise.resolve({ path: ['api'] }) });
       const { created } = (await res.json()).methodResponses[0][1];
       expect(created.uploaded.size).toBe(5);
-      expect(created.copied.size).toBe(148480);
+      expect(created.copied.size).toBe(40644);
     });
 
     it('keeps a folder that still holds something unless onDestroyRemoveChildren is set, like a real server', async () => {
@@ -498,7 +498,7 @@ describe('dev-jmap mock server', () => {
         return (await res.json()).methodResponses[0][1];
       };
       const folder = (await fileNodeSet({ create: { f: { name: 'Rollback test' } } })).created.f.id;
-      const inside = (await fileNodeSet({ create: { x: { name: 'x.pdf', type: 'application/pdf', blobId: 'demo-blob-file-2', parentId: folder } } })).created.x.id;
+      const inside = (await fileNodeSet({ create: { x: { name: 'x.pdf', type: 'application/pdf', blobId: 'demo-blob-quarterly-report', parentId: folder } } })).created.x.id;
 
       expect((await fileNodeSet({ destroy: [folder] })).notDestroyed[folder].type).toBe('nodeHasChildren');
       expect((await fileNodeSet({ destroy: [inside] })).destroyed).toEqual([inside]);

@@ -61,6 +61,11 @@ export const QuotedHtml = TiptapNode.create({
 
   addAttributes() {
     return {
+      showQuoteBorder: {
+        default: true,
+        parseHTML: (el) => el.getAttribute("data-quote-border") !== "false",
+        renderHTML: (attrs) => attrs.showQuoteBorder === false ? { "data-quote-border": "false" } : {},
+      },
       html: {
         default: "",
         // Capture the verbatim inner HTML when parsing. Because the node is
@@ -138,7 +143,11 @@ export const QuotedHtml = TiptapNode.create({
       const dom = document.createElement("div");
       dom.setAttribute(QUOTED_HTML_MARKER, "");
       dom.className = "quoted-html-island";
-      dom.style.cssText = QUOTE_BAR_STYLE + QUOTE_ISLAND_CONTAINMENT_STYLE;
+      const updateQuoteStyle = (showBorder: boolean) => {
+        dom.style.cssText = (showBorder ? QUOTE_BAR_STYLE : "margin-top:8px;")
+          + QUOTE_ISLAND_CONTAINMENT_STYLE;
+      };
+      updateQuoteStyle(node.attrs.showQuoteBorder !== false);
 
       // CRITICAL: render the quoted email inside a Shadow Root. The app's
       // global CSS (Tailwind preflight, .tiptap table/td rules, box-sizing
@@ -218,6 +227,7 @@ export const QuotedHtml = TiptapNode.create({
         },
         update: (updatedNode) => {
           if (updatedNode.type.name !== "quotedHtml") return false;
+          updateQuoteStyle(updatedNode.attrs.showQuoteBorder !== false);
           // Don't clobber the caret while the user is redacting inside.
           if (!focused && (updatedNode.attrs.html || "") !== renderedHtml) {
             render(updatedNode.attrs.html || "");
@@ -256,7 +266,7 @@ export function serializeEditorContent(editor: Editor): string {
       // Emit the SAME wrapper buildQuotedHtmlBlock produces, so a saved draft
       // round-trips: re-opening parses this back into a QuotedHtml node
       // instead of letting the schema mangle the raw table layout again.
-      parts.push(buildQuotedHtmlBlock((node.attrs.html as string) || ""));
+      parts.push(buildQuotedHtmlBlock((node.attrs.html as string) || "", { showQuoteBorder: node.attrs.showQuoteBorder !== false }));
       return;
     }
     if (node.type.name === "signatureBlock") {
@@ -286,8 +296,32 @@ export function serializeEditorContent(editor: Editor): string {
  */
 export function buildQuotedHtmlBlock(
   sanitizedInnerHtml: string,
-  opts: { remoteAllowed?: boolean } = {},
+  opts: { remoteAllowed?: boolean; showQuoteBorder?: boolean } = {},
 ): string {
+  const showQuoteBorder = opts.showQuoteBorder !== false;
+  let html = sanitizedInnerHtml;
+  if (!showQuoteBorder) {
+    // Outlook-style replies flatten quote levels, including earlier replies.
+    // Work on sanitized DOM so tables, links and signatures remain intact.
+    // A template's content is inert: parsed into a plain div, the original's
+    // remote images would load here, past the parking the island does.
+    const container = document.createElement("template");
+    container.innerHTML = html;
+    const content = container.content;
+    content.querySelectorAll("blockquote").forEach((quote) => {
+      const block = content.ownerDocument.createElement("div");
+      block.append(...Array.from(quote.childNodes));
+      quote.replaceWith(block);
+    });
+    content.querySelectorAll<HTMLElement>(`[${QUOTED_HTML_MARKER}]`).forEach((quote) => {
+      quote.setAttribute("data-quote-border", "false");
+      quote.style.borderLeft = "none";
+      quote.style.paddingLeft = "0";
+    });
+    html = container.innerHTML;
+  }
   const remote = opts.remoteAllowed ? ` ${QUOTED_REMOTE_ALLOWED_ATTR}="allowed"` : "";
-  return `<div ${QUOTED_HTML_MARKER}${remote} style="${QUOTE_BAR_STYLE}">${sanitizedInnerHtml}</div>`;
+  const borderAttribute = showQuoteBorder ? "" : ' data-quote-border="false"';
+  const style = showQuoteBorder ? QUOTE_BAR_STYLE : "margin-top:8px;";
+  return `<div ${QUOTED_HTML_MARKER}${remote}${borderAttribute} style="${style}">${html}</div>`;
 }

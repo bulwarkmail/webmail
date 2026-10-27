@@ -5,6 +5,7 @@ import { NoLongerScheduledError, SubmissionQuotaError } from '@/lib/jmap/client'
 import { toast } from '@/stores/toast-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { useSettingsStore } from '@/stores/settings-store';
+import { useEmailStore } from '@/stores/email-store';
 
 // Sending from the viewer - quick reply, "Send now" / "Reschedule" of a
 // scheduled message, and read receipts - used to fail silently or as an
@@ -75,6 +76,7 @@ function makeEmail(overrides: Record<string, unknown> = {}): Email {
 let toastError: ReturnType<typeof vi.spyOn>;
 
 beforeEach(() => {
+  useSettingsStore.setState({ quickReplyEnabled: true });
   toastError = vi.spyOn(toast, 'error').mockImplementation(() => {});
   vi.spyOn(console, 'error').mockImplementation(() => {});
 });
@@ -84,6 +86,15 @@ afterEach(() => {
 });
 
 describe('viewer send failures', () => {
+  it('hides quick reply when disabled and restores it when enabled', () => {
+    useSettingsStore.setState({ quickReplyEnabled: false });
+    render(<EmailViewer email={makeEmail()} mailboxes={mailboxes} selectedMailbox="inbox" currentMailboxRole="inbox" />);
+
+    expect(screen.queryByPlaceholderText('quick_reply_placeholder')).not.toBeInTheDocument();
+    act(() => useSettingsStore.getState().updateSetting('quickReplyEnabled', true));
+    expect(screen.getByPlaceholderText('quick_reply_placeholder')).toBeInTheDocument();
+  });
+
   it('reports a failed quick reply and keeps the text on Stalwart 1.0', async () => {
     const onQuickReply = vi.fn().mockRejectedValue(new SubmissionQuotaError(QUOTA, true));
     render(
@@ -209,6 +220,21 @@ describe('viewer send failures', () => {
         rerender(<EmailViewer email={makeEmail({ headers: MDN_HEADERS })} {...props} />);
       });
       await waitFor(() => expect(sendReadReceipt).toHaveBeenCalledTimes(2));
+    });
+
+    // A group's message with an id the own account uses too: $MDNSent goes
+    // to the login and account the message was read in.
+    it('flags the message in the login and account it was read in', async () => {
+      sendReadReceipt.mockResolvedValue(undefined);
+      const markEmailKeyword = vi.fn().mockResolvedValue(undefined);
+      useEmailStore.setState({ markEmailKeyword } as never);
+      const client = useAuthStore.getState().client;
+      const blobSource = { client, clientAccountId: 'login-a', accountId: 'ce' };
+
+      render(<EmailViewer email={makeEmail({ headers: MDN_HEADERS })} blobSource={blobSource as never} mailboxes={mailboxes} selectedMailbox="inbox" currentMailboxRole="inbox" />);
+
+      await waitFor(() => expect(markEmailKeyword).toHaveBeenCalled());
+      expect(markEmailKeyword).toHaveBeenCalledWith(client, 'e1', '$mdnsent', expect.objectContaining({ clientAccountId: 'login-a', accountId: 'ce' }));
     });
   });
 });

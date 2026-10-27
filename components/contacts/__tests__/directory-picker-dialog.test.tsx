@@ -98,4 +98,14 @@ describe('DirectoryPickerDialog', () => {
     expect(rows()).toHaveLength(2);
     expect(screen.getByRole('alert')).toHaveTextContent('refresh_failed');
   });
+
+  // Stalwart 1.0 with directory queries off: the listing holds the principals
+  // the user knows (their own, their groups), and nothing failed.
+  it('says the directory is not browsable when it lists only the principals the user knows', () => {
+    setDirectory(people(1), 'forbidden');
+    render(<DirectoryPickerDialog client={client} onClose={vi.fn()} onAdd={vi.fn()} />);
+    expect(rows()).toHaveLength(1);
+    expect(screen.getByRole('status')).toHaveTextContent('forbidden_hint');
+    expect(screen.queryByText('refresh_failed')).not.toBeInTheDocument();
+  });
 });

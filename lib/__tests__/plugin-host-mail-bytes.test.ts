@@ -40,9 +40,10 @@ beforeEach(() => {
       if (blobId === 'blob-raw') return new TextEncoder().encode('From').buffer;
       return new Uint8Array([1, 2, 3]).buffer;
     }),
+    getAccountId: vi.fn(() => 'acc1'),
   };
   useAuthStore.setState({ client: client as unknown as IJMAPClient });
-  useEmailStore.setState({ selectedEmail: null });
+  useEmailStore.setState({ selectedEmail: null, emails: [], selectedMailbox: '' });
 });
 
 afterEach(() => {
@@ -94,6 +95,27 @@ describe('api.email.getRaw', () => {
     await expect(call(ARCHIVER, 'email.getRaw', 'missing')).rejects.toThrow(/no message/);
     await expect(call(plugin([]), 'email.getRaw', 'm1')).rejects.toThrow(/lacks permission "email:blob-read"/);
     expect(client.fetchBlobArrayBuffer).not.toHaveBeenCalled();
+  });
+
+  it('reads the source of the account a plugin names', async () => {
+    // A group folder is open and its message has the same id as an own one.
+    const group = { ...message, blobId: 'blob-group' } as Email;
+    client.getEmail.mockImplementation(async (id: string, accountId?: string) => (
+      id === 'm1' ? (accountId === 'grp' ? group : message) : null));
+    useEmailStore.setState({
+      mailboxes: [{ id: 'grp:inbox', originalId: 'inbox', name: 'Inbox', isShared: true, accountId: 'grp' } as never],
+      selectedMailbox: 'grp:inbox',
+      emails: [{ ...group, mailboxIds: { 'grp:inbox': true } } as Email],
+      selectedEmail: { ...group, mailboxIds: { 'grp:inbox': true } } as Email,
+    });
+
+    await call(ARCHIVER, 'email.getRaw', 'm1', 'grp');
+    expect(client.getEmail).toHaveBeenLastCalledWith('m1', 'grp');
+    expect(client.fetchBlobArrayBuffer).toHaveBeenLastCalledWith('blob-group', 'message.eml', 'message/rfc822', 'grp');
+
+    await call(ARCHIVER, 'email.getRaw', 'm1', 'acc1');
+    expect(client.getEmail).toHaveBeenLastCalledWith('m1');
+    expect(client.fetchBlobArrayBuffer).toHaveBeenLastCalledWith('blob-raw', 'message.eml', 'message/rfc822');
   });
 
   it('leaves arbitrary blob reads to the privileged tier', async () => {

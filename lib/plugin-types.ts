@@ -397,6 +397,14 @@ export interface KeyboardShortcut {
 
 export interface EmailReadView {
   id: string;
+  /**
+   * The JMAP account the message is in. Message ids repeat across accounts
+   * (own, shared, group), so pass it to email.get / getRaw / getAttachment /
+   * setKeyword to name this very message. Always set on what email.get,
+   * list and search return; elsewhere set at least when messages of several
+   * accounts are listed together.
+   */
+  accountId?: string;
   threadId: string;
   mailboxIds: string[];
   from: { name: string; email: string }[];
@@ -462,6 +470,8 @@ export interface EmailSummary {
   keywords: string[];
   hasAttachment: boolean;
   size: number;
+  /** See EmailReadView.accountId. */
+  accountId?: string;
 }
 
 export interface DraftView {
@@ -1105,7 +1115,8 @@ export interface QuoteHeader {
   text: string;
   /**
    * When false, the composer skips its default blockquote wrapping around the
-   * quoted body (HTML mode only). Use this for the Outlook style where the
+   * quoted body, including HTML islands and nested blockquotes (HTML mode only).
+   * This preference persists when saving/reopening drafts. Use this for the Outlook style where the
    * quoted message is intended to follow the header without indentation.
    * Defaults to true (preserve the existing blockquote wrapping).
    */
@@ -1188,19 +1199,33 @@ export interface ConflictWarning {
 }
 
 /**
- * Returned by onProvideSearchResults transform handlers. Plugins extend the
- * initial array with their own results (CRM hits, Slack messages, etc.).
- * The host renders these in a grouped section below native email results.
+ * Returned by onProvideSearchResults handlers: results from elsewhere (CRM
+ * hits, chat messages, ...) for the search that is running. The host draws
+ * them as a block above the search's message list, grouped by `source`.
+ * A click on an entry that names a message the user can reach (`email`)
+ * opens it in the reader, as a click on a row of the list does. Any other
+ * click reaches the plugin that returned the entry as `onAction`, with
+ * `surface: 'search-results'`, the entry's `key` as `actionId` and the
+ * search's `query` in the context. Plain text only; see
+ * lib/plugin-search-results.ts for the limits.
  */
 export interface ExternalSearchResult {
-  /** Stable unique key */
+  /** Unique among the plugin's entries for this search; comes back as actionId. */
   key: string;
   title: string;
   snippet: string;
-  /** Plugin-handled action when the result row is clicked */
-  onClick: () => void;
-  /** Optional source label, e.g. "Slack", "Notion" */
+  /** Group heading, e.g. "CRM", "Slack"; the plugin's name when missing. */
   source?: string;
+  /** The message the entry stands for, opened in the reader on a click. */
+  email?: SearchResultEmail;
+}
+
+/** A message named by a search result. */
+export interface SearchResultEmail {
+  /** The message's JMAP id. */
+  id: string;
+  /** The JMAP account holding it (a shared or group account); the signed-in account's own when missing. */
+  accountId?: string;
 }
 
 /**

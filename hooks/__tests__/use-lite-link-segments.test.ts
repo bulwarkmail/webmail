@@ -14,8 +14,40 @@ vi.mock('@/lib/lite', async (importOriginal) => {
   };
 });
 
-import { useLiteLinkSegments } from '@/hooks/use-lite-link-segments';
+import { initialLinkSearch, useLiteLinkSegments } from '@/hooks/use-lite-link-segments';
 import { LITE_PENDING_PATH_KEY } from '@/lib/lite';
+
+// Mail reads the query it was opened with on its first render, while the
+// address bar still shows the surface root the 404 shim jumped to (#1352).
+describe('initialLinkSearch', () => {
+  beforeEach(() => sessionStorage.clear());
+
+  it('takes the query of a parked deep link in the first render', () => {
+    liteState.IS_LITE = true;
+    window.history.replaceState({}, '', '/en/mail/');
+    sessionStorage.setItem(LITE_PENDING_PATH_KEY, '/en/mail/message/m1/?account=bob%40example.org#x');
+
+    const seen: string[] = [];
+    renderHook(() => {
+      useLiteLinkSegments('mail', []);
+      seen.push(initialLinkSearch('mail'));
+    });
+
+    expect(seen[0]).toBe('?account=bob%40example.org');
+    // The restored URL carries it from then on.
+    expect(window.location.search).toBe('?account=bob%40example.org');
+  });
+
+  it('reads the address bar otherwise', () => {
+    liteState.IS_LITE = true;
+    window.history.replaceState({}, '', '/en/mail/message/m1?account=a');
+    sessionStorage.setItem(LITE_PENDING_PATH_KEY, '/en/calendar/week/2026-09-17?view=1');
+    expect(initialLinkSearch('mail')).toBe('?account=a');
+    liteState.IS_LITE = false;
+    sessionStorage.setItem(LITE_PENDING_PATH_KEY, '/en/mail/message/m2?account=b');
+    expect(initialLinkSearch('mail')).toBe('?account=a');
+  });
+});
 
 describe('useLiteLinkSegments', () => {
   beforeEach(() => {

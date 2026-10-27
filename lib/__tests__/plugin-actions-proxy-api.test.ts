@@ -90,6 +90,15 @@ describe('ui.setActions', () => {
     expect(() => checkActions([{ id: 'x', label: 'X', icon: '<svg>' }])).toThrow(/icon/);
   });
 
+  it('takes a badge as a whole number from 0, none for 0', () => {
+    expect(checkActions([{ id: 'x', label: 'X', badge: 3 }])[0].badge).toBe(3);
+    expect(checkActions([{ id: 'x', label: 'X', badge: 250 }])[0].badge).toBe(250);
+    expect(checkActions([{ id: 'x', label: 'X', badge: 0 }])[0]).not.toHaveProperty('badge');
+    for (const badge of [-1, 1.5, '2', Number.NaN, Infinity, null]) {
+      expect(() => checkActions([{ id: 'x', label: 'X', badge }])).toThrow(/badge/);
+    }
+  });
+
   it('sends a click to the plugin with only the context it may see', async () => {
     const invokeHook = vi.fn().mockResolvedValue(undefined);
     const p = plugin({ permissions: ['ui:message-list'] });

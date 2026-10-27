@@ -14,6 +14,7 @@ import {
   getMetadata,
   getRequiredConfig,
   getTokenEndpoint,
+  defaultClientOptions,
   DEFAULT_CLIENT_ID,
 } from '@/lib/oauth/token-exchange';
 import type { OAuthMetadata } from '@/lib/oauth/discovery';
@@ -50,7 +51,7 @@ async function revokeRefreshToken(token: string, serverId: string | null, metada
   const params = buildOAuthParams({
     token,
     token_type_hint: 'refresh_token',
-  }, serverId, { fallbackClientId: DEFAULT_CLIENT_ID });
+  }, serverId, await defaultClientOptions(serverId).catch(() => ({ fallbackClientId: DEFAULT_CLIENT_ID })));
 
   try {
     // Never follow a redirect with the refresh token and client secret in
@@ -215,7 +216,7 @@ export async function PUT(request: NextRequest) {
     const params = buildOAuthParams({
       grant_type: 'refresh_token',
       refresh_token: refreshToken,
-    }, serverId, { fallbackClientId: DEFAULT_CLIENT_ID });
+    }, serverId, await defaultClientOptions(serverId));
 
     const tokenResponse = await fetch(tokenEndpoint, {
       method: 'POST',

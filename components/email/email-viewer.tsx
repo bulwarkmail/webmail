@@ -4,9 +4,9 @@ import { Fragment, useState, useEffect, useLayoutEffect, useMemo, useRef, useCal
 import { Email, ContactCard, Mailbox } from "@/lib/jmap/types";
 import { emailExportFilename, attachmentDownloadFilename, attachmentsBundleFilename, DEFAULT_EMAIL_TEMPLATE, DEFAULT_ATTACHMENT_TEMPLATE } from "@/lib/download-filename";
 import { EML_IMPORT_ACCEPT, expandImportableEmails } from "@/lib/eml-import";
-import { applyNewTabToAnchor, emailIframeCsp, escapeHtml, isExternalResourceUrl, isOpenableLinkHref, plainTextToSafeHtml, sanitizeEmailBodyForIframe, sanitizeEmailHtml, sanitizePlainTextRenderedHtml } from "@/lib/email-sanitization";
+import { TRANSPARENT_BLOCKED_PIXEL, applyNewTabToAnchor, emailIframeCsp, escapeHtml, isExternalResourceUrl, isOpenableLinkHref, plainTextToSafeHtml, sanitizeEmailBodyForIframe, sanitizeEmailHtml, sanitizePlainTextRenderedHtml } from "@/lib/email-sanitization";
 import { getRenderableHtmlBody } from "@/lib/email-body-selection";
-import { collectReferencedCids, isEmbeddedInBody, normalizeCid } from "@/lib/attachment-visibility";
+import { collectReferencedCids, isEmbeddedInBody, normalizeCid, rewriteCidReferences } from "@/lib/attachment-visibility";
 import { collapsePlainTextQuotes, setupQuoteCollapse } from "@/lib/quote-collapse";
 import { DARK_PENDING_CLASS, applyEmailDarkMode, emailColorScheme, emailDarkModeCss, emailHasNativeDarkMode as htmlHasNativeDarkMode, resolveColorSchemeMedia } from "@/lib/email-dark-mode";
 import { fitEmailBodyWidth } from "@/lib/email-fit-width";
@@ -111,7 +111,7 @@ import { useDeviceDetection } from "@/hooks/use-media-query";
 import { useIsPaneScoped } from "@/hooks/use-pane-context";
 import { useAuthStore } from "@/stores/auth-store";
 import { useAccountStore } from "@/stores/account-store";
-import { useEmailStore, resolveEmailBlobContext, type EmailBlobContext } from "@/stores/email-store";
+import { useEmailStore, resolveEmailBlobContext, emailWriteSource, emailLinkSource, type EmailBlobContext } from "@/stores/email-store";
 import { useThemeStore } from "@/stores/theme-store";
 import { EmailIdentityBadge } from "./email-identity-badge";
 import { UnsubscribeBanner } from "./unsubscribe-banner";
@@ -1084,6 +1084,7 @@ export function EmailViewer({
   const tContextMenu = useTranslations('context_menu');
   const copyLink = useCopyLink();
   const tWelcome = useTranslations('welcome');
+  const quickReplyEnabled = useSettingsStore((state) => state.quickReplyEnabled);
   const externalContentPolicy = useSettingsStore((state) => state.externalContentPolicy);
   const messageSpacing = useSettingsStore((state) => state.messageSpacing);
   const plainTextFont = useSettingsStore((state) => state.plainTextFont);
@@ -2307,8 +2308,9 @@ export function EmailViewer({
           } else {
             URL.revokeObjectURL(objectUrl);
           }
-        } catch {
-          // Failed to fetch inline image, will show placeholder
+        } catch (err) {
+          // The image shows as the placeholder; say why, or the failure is invisible.
+          console.warn(`Failed to fetch inline image cid:${cidValue}:`, err);
         }
       }));
       if (!cancelled) {
@@ -2492,12 +2494,7 @@ export function EmailViewer({
         // Replace cid: references with authenticated blob URLs (fetched via useEffect)
         // This prevents browser auth dialogs that occur when loading raw JMAP download URLs
         if (email.attachments) {
-          htmlContent = htmlContent.replace(
-            /\bcid:([^"'\s)]+)/gi,
-            (_match, cidRef) => {
-              return cidBlobUrls[cidRef] || 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
-            }
-          );
+          htmlContent = rewriteCidReferences(htmlContent, cidBlobUrls, TRANSPARENT_BLOCKED_PIXEL);
         }
 
         // Sanitize (no dark mode color transforms - emails render true-to-life
@@ -2594,13 +2591,7 @@ export function EmailViewer({
       };
     };
     if (pluginRenderedHtml) {
-      const htmlWithCidUrls = pluginRenderedHtml.replace(
-        /\bcid:([^"'\s)]+)/gi,
-        (_match, cidRef) => {
-          return cidBlobUrls[cidRef] || 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
-        }
-      );
-      return renderHtml(htmlWithCidUrls);
+      return renderHtml(rewriteCidReferences(pluginRenderedHtml, cidBlobUrls, TRANSPARENT_BLOCKED_PIXEL));
     }
     if (pluginRenderedText) {
       return { html: plainToHtml(pluginRenderedText), isHtml: false, hasStyleTag: false, externalBlocked: false };
@@ -3427,6 +3418,10 @@ export function EmailViewer({
 
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
+    // A link in the message that navigates the popup itself (no target, a
+    // non-web scheme) would hand the sender's page an opener to redirect
+    // the webmail tab with. We write the document through our own handle.
+    printWindow.opener = null;
 
     // The popup is an about:blank document of the app, so it carries the
     // app's CSP (img-src https:), not the message iframe's strict one. Add
@@ -3540,6 +3535,8 @@ export function EmailViewer({
 
   const sendReadReceiptNow = useCallback(async (automatic: boolean) => {
     if (!client || !email || !readReceiptRequestedBy || !receiptIdentity) return;
+    // Taken now: another folder may be open once the receipt is out.
+    const source = blobSource ?? emailWriteSource(email, client);
     const { rawId } = stripCrossAccountIdentityPrefix(receiptIdentity.id);
     try {
       await client.sendReadReceipt({
@@ -3566,21 +3563,21 @@ export function EmailViewer({
     // The receipt is out. Failing to flag that must not read as a failed
     // send, nor let the "always" mode send it again.
     try {
-      await useEmailStore.getState().markEmailKeyword(client, email.id, '$mdnsent');
+      await useEmailStore.getState().markEmailKeyword(client, email.id, '$mdnsent', source);
     } catch (err) {
       console.error('Read receipt sent, but setting $MDNSent failed:', err);
       setMdnHandledLocally(true);
     }
-  }, [client, email, readReceiptRequestedBy, receiptIdentity, t, tComposer]);
+  }, [client, email, blobSource, readReceiptRequestedBy, receiptIdentity, t, tComposer]);
 
   const ignoreReadReceipt = useCallback(async () => {
     setMdnHandledLocally(true);
     if (client && email) {
       // $MDNSent is the RFC 3503 flag every IMAP/JMAP client honours, so the
       // request is suppressed everywhere - not just locally.
-      try { await useEmailStore.getState().markEmailKeyword(client, email.id, '$mdnsent'); } catch { /* best effort */ }
+      try { await useEmailStore.getState().markEmailKeyword(client, email.id, '$mdnsent', blobSource ?? emailWriteSource(email, client)); } catch { /* best effort */ }
     }
-  }, [client, email]);
+  }, [client, email, blobSource]);
 
   // "always" mode: auto-send the MDN once when the message is opened. A
   // failure is not retried while the message stays open: the attempt itself
@@ -4464,7 +4461,7 @@ export function EmailViewer({
                 <button
                   role="menuitem"
                   onClick={() => {
-                    void copyLink(buildMailPath({ mailboxId: null, emailId: email.id, threadId: null }));
+                    void copyLink(buildMailPath({ mailboxId: null, emailId: email.id, threadId: null, ...emailLinkSource(email) }));
                     setMoreMenuOpen(false);
                     setMoreMenuSub(null);
                   }}
@@ -6384,7 +6381,7 @@ export function EmailViewer({
           )}
 
           {/* Quick Reply Section - hidden for drafts and while loading a new email */}
-          {!mvReplyRow && !isDraft && !isScheduled && !isBodyLoading && (effectiveEmailContent.isHtml ? iframeReady : true) && (<div className="bg-background border-t border-border px-6 mt-auto" style={{ paddingBlock: 'var(--density-header-py)' }}>
+          {quickReplyEnabled && !mvReplyRow && !isDraft && !isScheduled && !isBodyLoading && (effectiveEmailContent.isHtml ? iframeReady : true) && (<div className="bg-background border-t border-border px-6 mt-auto" style={{ paddingBlock: 'var(--density-header-py)' }}>
             <div className="flex items-start" style={{ gap: 'var(--density-item-gap)' }}>
               <div className="flex-shrink-0">
                 <Avatar

@@ -34,11 +34,13 @@ import {
   getDirectoryUrl,
   installedExtensions,
   installedStateOf,
+  readBundleBytes,
   toListing,
   v2Url,
   type DirectorySummary,
   type DirectoryVersion,
 } from '@/lib/admin/marketplace-directory';
+import { MAX_PLUGIN_SIZE, MAX_THEME_SIZE } from '@/lib/plugin-types';
 import { createHash } from 'node:crypto';
 
 /** Query parameters the UI may pass on to the directory's list endpoint. */
@@ -201,7 +203,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const buffer = await bundleRes.arrayBuffer();
+    const buffer = await readBundleBytes(bundleRes, type === 'theme' ? MAX_THEME_SIZE : MAX_PLUGIN_SIZE);
     const now = new Date().toISOString();
 
     // The directory signs every bundle it approves; refuse one whose

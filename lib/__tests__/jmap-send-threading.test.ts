@@ -271,7 +271,10 @@ describe('JMAPClient.rescheduleEmailSubmission (#1308)', () => {
           return { methodResponses: [[method, { list: [{ id: 'identity-1', email: 'user@example.com' }] }, '0']] };
         }
         if (method === 'EmailSubmission/get') {
-          return { methodResponses: [[method, { list: [{ id: 'sub-old', sendAt: originalSendAt, envelope: { rcptTo: [{ email: 'rcpt@example.com' }] } }] }, '0']] };
+          // Only the properties asked for, as the servers answer.
+          const wanted = (args.properties as string[] | undefined) ?? ['identityId', 'sendAt', 'envelope'];
+          const record: Record<string, unknown> = { id: 'sub-old', identityId: 'identity-1', sendAt: originalSendAt, envelope: { rcptTo: [{ email: 'rcpt@example.com' }] } };
+          return { methodResponses: [[method, { list: [Object.fromEntries(Object.entries(record).filter(([key]) => key === 'id' || wanted.includes(key)))] }, '0']] };
         }
         if (method === 'EmailSubmission/set' && args.update) {
           return opts.cancel === 'fail'
@@ -315,6 +318,21 @@ describe('JMAPClient.rescheduleEmailSubmission (#1308)', () => {
     // onSuccessUpdateEmail at cancel, the cancel just put it back in Drafts.
     expect(create.onSuccessUpdateEmail?.['#replacement']).toEqual({ mailboxIds: { 'mb-sent': true }, 'keywords/$draft': null });
     expect(result).toMatchObject({ scheduled: true, emailSubmissionId: 'sub-new-1' });
+  });
+
+  // The undo toast's "Send now" passes the composer's identity, an id in the
+  // login's own account. A group identity's message is submitted in the group
+  // account, where that id names nothing (Stalwart 1.0: "Identity not found")
+  // or another identity, and the message dropped out of the schedule.
+  it('submits the replacement with the identity of the original submission', async () => {
+    const client = createClient();
+    const { calls, submissionSets } = scriptServer(client, { creates: ['ok'] });
+
+    await client.rescheduleEmailSubmission('sub-old', 'email-1', 'own-identity-of-group-address', inTenMinutes());
+
+    const create = submissionSets().find(c => c.args.create)?.args.create as Record<string, { identityId: string }>;
+    expect(create.replacement.identityId).toBe('identity-1');
+    expect(calls.find(c => c.method === 'Identity/get')?.args.ids).toEqual(['identity-1']);
   });
 
   it('changes nothing when the original cannot be canceled', async () => {

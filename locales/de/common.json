@@ -542,6 +542,8 @@
       "authentication_missing_info": "Diese Einladung enthält keine verifizierte Mail-Authentifizierung. Bestätigen Sie die Details mit dem Organisator, wenn etwas ungewöhnlich wirkt.",
       "sender_mismatch_info": "Diese Einladung wurde von {sender} gesendet, während der in den Kalenderdaten angegebene Organisator {organizer} ist.",
       "sender_mismatch_unverified_info": "Diese Einladung wurde von {sender} gesendet, während der in den Kalenderdaten angegebene Organisator {organizer} ist, und die Nachricht konnte nicht verifiziert werden.",
+      "attendee_mismatch_info": "Diese Antwort wurde von {sender} gesendet, während der antwortende Teilnehmer in den Kalenderdaten {attendee} ist.",
+      "attendee_mismatch_unverified_info": "Diese Antwort wurde von {sender} gesendet, während der antwortende Teilnehmer in den Kalenderdaten {attendee} ist, und die Nachricht konnte nicht verifiziert werden.",
       "organizer_role": "Sie organisieren dieses Ereignis",
       "your_response": "Ihre Antwort: {status}",
       "response_needed": "Antwort ausstehend",
@@ -611,6 +613,7 @@
     "scheduled_send_created": "E-Mail wurde zum Senden geplant",
     "sending_in": "Wird in {seconds} s gesendet",
     "undo_send_failed": "Rückgängig machen nicht möglich. Die Nachricht ist vielleicht schon gesendet.",
+    "undo_send_signed_out": "Rückgängig machen nicht möglich: Das Konto, von dem die Nachricht gesendet wurde, ist nicht mehr angemeldet.",
     "cancel_scheduled_send": "Senden abbrechen",
     "reschedule_send": "Neu planen",
     "cancel_and_edit": "Abbrechen und bearbeiten",
@@ -695,6 +698,7 @@
     "saving": "Wird gespeichert...",
     "draft_saved": "Entwurf gespeichert",
     "save_failed": "Speichern fehlgeschlagen",
+    "discard_signed_out": "Der Entwurf wurde nicht gelöscht: Das Konto, in dem er gespeichert ist, ist nicht mehr angemeldet. Er bleibt in dessen Entwürfen.",
     "to_placeholder": "E-Mail-Adressen der Empfänger",
     "cc_placeholder": "CC-Empfänger",
     "bcc_placeholder": "BCC-Empfänger",
@@ -1531,6 +1535,10 @@
         "label": "Nur Klartext",
         "description": "Rich-Text-Editor deaktivieren und alle E-Mails nur als Klartext senden, einschließlich Antworten und Weiterleitungen"
       },
+      "quick_reply": {
+        "label": "Schnellantwort",
+        "description": "Das Feld für die Schnellantwort unter Nachrichten anzeigen."
+      },
       "auto_select_reply_identity": {
         "label": "Antwortadresse automatisch wählen",
         "description": "Beim Antworten die Absenderadresse automatisch auf die Identität umstellen, die die ursprüngliche Nachricht erhalten hat"
@@ -1776,6 +1784,10 @@
         "signed_in": "Bei {count, plural, one {# Konto} other {# Konten}} mit dem gespeicherten Passwort angemeldet.",
         "sign_in_failed": "{count, plural, one {# gespeichertes Passwort wurde} other {# gespeicherte Passwörter wurden}} abgelehnt: Melden Sie sich bei diesen Konten über die Kontoliste an.",
         "deleted": "Gespeicherte Liste gelöscht.",
+        "prompt_title": "Weitere Konten wiederherstellen?",
+        "prompt_description": "Für {account} ist eine Kontenliste gespeichert. Geben Sie das Backup-Passwort ein, um die Konten in diesem Browser hinzuzufügen, oder tun Sie es später in den Einstellungen.",
+        "prompt_not_now": "Nicht jetzt",
+        "prompt_done": "Fertig",
         "errors": {
           "mismatch": "Die Passwörter stimmen nicht überein.",
           "password_length": "Verwenden Sie mindestens 10 Zeichen.",

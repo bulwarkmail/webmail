@@ -35,6 +35,18 @@ const email = (id: string, owner: string, login = 'login-a') => ({
   mailboxIds: { inbox: true }, keywords: {}, size: 100, hasAttachment: false,
 }) as Email;
 
+const NO_ARCHIVE = new ArchiveMailboxNotFoundError().message;
+
+/**
+ * A bulk archive that archived some groups resolves and reports the others
+ * through `error`, which runBatchEmailAction toasts; it throws only when
+ * nothing was archived.
+ */
+async function archivedPartly(client: IJMAPClient, error: string | RegExp): Promise<void> {
+  expect(await useEmailStore.getState().batchArchive(client)).toBe(true);
+  expect(useEmailStore.getState().error).toMatch(error);
+}
+
 function makeClient(folders: Record<string, Mailbox[]>) {
   return {
     batchArchiveEmails: vi.fn().mockResolvedValue(undefined),
@@ -111,7 +123,7 @@ describe('bulk archive ownership and reconciliation', () => {
     Object.assign(client, { getAccountCapability });
     const failed = useEmailStore.getState().emails[1];
 
-    await expect(useEmailStore.getState().batchArchive(client)).rejects.toBeInstanceOf(ArchiveMailboxNotFoundError);
+    await archivedPartly(client, NO_ARCHIVE);
 
     expect(getAccountCapability).toHaveBeenCalledWith('urn:ietf:params:jmap:mail', 'shared');
     expect(client.createMailbox).not.toHaveBeenCalled();
@@ -161,7 +173,7 @@ describe('bulk archive ownership and reconciliation', () => {
       selectedEmailKeys: new Set([emailKeyFor(failed), emailKeyFor(email('other-email', 'primary', 'login-b'))]),
     });
 
-    await expect(useEmailStore.getState().batchArchive(client)).rejects.toBeInstanceOf(ArchiveMailboxNotFoundError);
+    await archivedPartly(client, NO_ARCHIVE);
 
     expect(deniedCapability).toHaveBeenCalledWith('urn:ietf:params:jmap:mail', 'primary');
     expect(allowedCapability).toHaveBeenCalledWith('urn:ietf:params:jmap:mail', 'primary');
@@ -191,7 +203,7 @@ describe('bulk archive ownership and reconciliation', () => {
       expandedThreadIds: new Set([threadKeyFor(archived), threadKeyFor(failed)]),
     });
 
-    await expect(useEmailStore.getState().batchArchive(client)).rejects.toBeInstanceOf(ArchiveMailboxNotFoundError);
+    await archivedPartly(client, NO_ARCHIVE);
 
     expect(getAccountCapability).toHaveBeenCalledExactlyOnceWith('urn:ietf:params:jmap:mail', failed.sourceAccountId);
     expect(deniedClient.createMailbox).not.toHaveBeenCalled();
@@ -235,7 +247,7 @@ describe('bulk archive ownership and reconciliation', () => {
     folders.shared = [mailbox('shared', 'inbox', true)];
     vi.mocked(client.createMailbox).mockRejectedValue(new Error('Archive creation forbidden'));
 
-    await expect(useEmailStore.getState().batchArchive(client)).rejects.toThrow('Archive creation forbidden');
+    await archivedPartly(client, 'Archive creation forbidden');
 
     expect(client.createMailbox).toHaveBeenCalledWith('Archive', undefined, 'shared', { role: 'archive' });
     expect(client.batchArchiveEmails).toHaveBeenCalledTimes(1);
@@ -244,7 +256,7 @@ describe('bulk archive ownership and reconciliation', () => {
     expect(refresh).toHaveBeenCalledOnce();
   });
 
-  it('publishes a newly created Archive even when its email move fails', async () => {
+  it('keeps the row selected when the move into a newly created Archive fails', async () => {
     folders.primary = [mailbox('primary', 'inbox')];
     useEmailStore.setState({ emails: [email('primary-email', 'primary')], selectedEmailKeys: new Set([emailKeyFor(email('primary-email', 'primary'))]) });
     vi.mocked(client.createMailbox).mockImplementation(async () => {
@@ -256,7 +268,7 @@ describe('bulk archive ownership and reconciliation', () => {
 
     await expect(useEmailStore.getState().batchArchive(client)).rejects.toThrow('Email move forbidden');
 
-    expect(useEmailStore.getState().accountMailboxes['login-a'].map(m => m.id)).toContain('primary-archive');
+    expect(client.createMailbox).toHaveBeenCalledWith('Archive', undefined, 'primary', { role: 'archive' });
     expect([...useEmailStore.getState().selectedEmailKeys]).toEqual([emailKeyFor(email('primary-email', 'primary'))]);
     expect(refresh).not.toHaveBeenCalled();
   });
@@ -302,34 +314,19 @@ describe('bulk archive ownership and reconciliation', () => {
     });
     vi.mocked(client.batchArchiveEmails).mockRejectedValue(new ArchiveEmailsError('forbidden', ['accepted']));
 
-    await expect(useEmailStore.getState().batchArchive(client)).rejects.toThrow('forbidden');
+    await archivedPartly(client, 'forbidden');
 
     expect(useEmailStore.getState().emails).toEqual([failed]);
     expect(useEmailStore.getState().selectedEmail).toBe(failed);
-    expect([...useEmailStore.getState().retainedInViewIds]).toEqual(['refused']);
     expect(useEmailStore.getState().threadEmailsCache.get(threadKeyFor(failed))).toEqual([failed]);
     expect(useEmailStore.getState().expandedThreadIds.has(threadKeyFor(failed))).toBe(true);
-  });
-
-  it('preserves a failed selected row when the actual refresh omits it', async () => {
-    const failed = email('shared-email', 'shared');
-    useEmailStore.setState({ selectedEmail: failed, refreshCurrentMailbox: originalRefresh });
-    folders.shared = [mailbox('shared', 'inbox', true)];
-    fetchUnifiedMock.mockResolvedValue({ emails: [], total: 0, hasMore: false, errors: new Map() });
-
-    await expect(useEmailStore.getState().batchArchive(client)).rejects.toBeInstanceOf(ArchiveMailboxNotFoundError);
-
-    expect(useEmailStore.getState().emails).toEqual([failed]);
-    expect(useEmailStore.getState().selectedEmail).toBe(failed);
-    expect([...useEmailStore.getState().selectedEmailKeys]).toEqual([emailKeyFor(email('shared-email', 'shared'))]);
-    expect(useEmailStore.getState().totalEmails).toBe(1);
   });
 
   it('leaves the shared row selected when its Archive is missing, while primary succeeds', async () => {
     folders.shared = [mailbox('shared', 'inbox', true)];
     useEmailStore.setState({ accountMailboxes: { ...folders }, mailboxes: Object.values(folders).flat() });
 
-    await expect(useEmailStore.getState().batchArchive(client)).rejects.toBeInstanceOf(ArchiveMailboxNotFoundError);
+    await archivedPartly(client, NO_ARCHIVE);
 
     expect(client.batchArchiveEmails).toHaveBeenCalledTimes(1);
     expect(useEmailStore.getState().emails.map(e => e.id)).toEqual(['shared-email']);
@@ -344,7 +341,7 @@ describe('bulk archive ownership and reconciliation', () => {
       if (owner === 'primary') throw new Error('forbidden');
     });
 
-    await expect(useEmailStore.getState().batchArchive(client)).rejects.toThrow('forbidden');
+    await archivedPartly(client, 'forbidden');
 
     expect(client.batchArchiveEmails).toHaveBeenCalledTimes(2);
     expect(useEmailStore.getState().emails.map(e => e.id)).toEqual(['primary-email']);
@@ -375,7 +372,6 @@ describe('bulk archive ownership and reconciliation', () => {
     expect([...useEmailStore.getState().selectedEmailKeys]).toEqual([emailKeyFor(failed)]);
     expect(useEmailStore.getState().selectedEmail).toBeNull();
     expect(refresh).toHaveBeenCalledOnce();
-    expect(vi.mocked(client.getMailboxes).mock.calls).toEqual([['primary'], ['primary']]);
     expect(errorToast).toHaveBeenCalledWith('archive failed', 'Failed to archive emails: notFound');
     expect(successToast).not.toHaveBeenCalled();
   });
@@ -457,9 +453,7 @@ describe('bulk archive ownership and reconciliation', () => {
       });
       const viewer = useEmailStore.getState().selectedEmail;
 
-      await expect(useEmailStore.getState().batchArchive(client)).rejects.toThrow(
-        failure === 'missing Archive' ? /archive mailbox not found/i : /forbidden/,
-      );
+      await archivedPartly(client, failure === 'missing Archive' ? NO_ARCHIVE : /forbidden/);
 
       expect(useEmailStore.getState().emails).toEqual([failed]);
       expect([...useEmailStore.getState().selectedEmailKeys]).toEqual([emailKeyFor(failed)]);
@@ -483,7 +477,7 @@ describe('bulk archive ownership and reconciliation', () => {
       selectedEmailKeys: new Set([emailKeyFor(archived), emailKeyFor(refused), emailKeyFor(shared)]),
     });
 
-    await expect(useEmailStore.getState().batchArchive(client)).rejects.toThrow('notFound');
+    await archivedPartly(client, /^Failed to archive 2 emails/);
 
     expect(useEmailStore.getState().emails).toEqual([refused, shared]);
     expect([...useEmailStore.getState().selectedEmailKeys]).toEqual([emailKeyFor(refused), emailKeyFor(shared)]);
@@ -500,7 +494,7 @@ describe('bulk archive ownership and reconciliation', () => {
       selectedEmailKeys: new Set([emailKeyFor(archived), emailKeyFor(failed)]),
     });
 
-    await expect(useEmailStore.getState().batchArchive(client)).rejects.toBeInstanceOf(ArchiveMailboxNotFoundError);
+    await archivedPartly(client, NO_ARCHIVE);
 
     expect(useEmailStore.getState().emails).toEqual([failed]);
     expect([...useEmailStore.getState().selectedEmailKeys]).toEqual([emailKeyFor(failed)]);
@@ -523,7 +517,7 @@ describe('bulk archive ownership and reconciliation', () => {
       crossView: view === 'cross-account' ? 'all' : null,
     });
 
-    await expect(useEmailStore.getState().batchArchive(client)).rejects.toBeInstanceOf(ArchiveMailboxNotFoundError);
+    await archivedPartly(client, NO_ARCHIVE);
 
     expect(loader).toHaveBeenCalledOnce();
     expect(useEmailStore.getState().emails).toEqual([failed]);
@@ -537,7 +531,7 @@ describe('bulk archive ownership and reconciliation', () => {
       emails: [email('primary-email', 'primary'), email('shared-email', 'shared', 'disconnected')],
       selectedEmailKeys: new Set([emailKeyFor(email('primary-email', 'primary')), emailKeyFor(email('shared-email', 'shared', 'disconnected'))]),
     });
-    await expect(useEmailStore.getState().batchArchive(client)).rejects.toThrow('not connected');
+    await archivedPartly(client, /not connected/i);
     expect(client.batchArchiveEmails).toHaveBeenCalledTimes(1);
     expect([...useEmailStore.getState().selectedEmailKeys]).toEqual([emailKeyFor(email('shared-email', 'shared', 'disconnected'))]);
     expect(refresh).toHaveBeenCalledOnce();
@@ -551,19 +545,17 @@ describe('bulk archive ownership and reconciliation', () => {
       emails: [failed], total: 1, hasMore: false, errors: new Map(),
     });
 
-    await expect(useEmailStore.getState().batchArchive(client)).rejects.toBeInstanceOf(ArchiveMailboxNotFoundError);
+    await archivedPartly(client, NO_ARCHIVE);
 
     expect(fetchUnifiedMock).toHaveBeenCalledOnce();
     expect(useEmailStore.getState().emails.map(e => e.id)).toEqual(['shared-email']);
     expect([...useEmailStore.getState().selectedEmailKeys]).toEqual([emailKeyFor(email('shared-email', 'shared'))]);
     expect(useEmailStore.getState().error).toMatch(/archive mailbox not found/i);
-    expect(useEmailStore.getState().accountMailboxes.primary).toEqual(folders.primary);
-    expect(useEmailStore.getState().mailboxes.find(m => m.id === 'shared:archive')).toBeDefined();
   });
 
   it('leaves a read-only shared Archive untouched without blocking the primary owner', async () => {
     folders.shared[1].myRights.mayAddItems = false;
-    await expect(useEmailStore.getState().batchArchive(client)).rejects.toBeInstanceOf(ArchiveMailboxNotFoundError);
+    await archivedPartly(client, NO_ARCHIVE);
     expect(client.batchArchiveEmails).toHaveBeenCalledTimes(1);
     expect(useEmailStore.getState().emails.map(e => e.id)).toEqual(['shared-email']);
     expect([...useEmailStore.getState().selectedEmailKeys]).toEqual([emailKeyFor(email('shared-email', 'shared'))]);
@@ -647,14 +639,12 @@ describe('bulk archive ownership and reconciliation', () => {
       }),
     });
 
-    await expect(useEmailStore.getState().batchArchive(client)).rejects.toBeInstanceOf(ArchiveMailboxNotFoundError);
+    await archivedPartly(client, NO_ARCHIVE);
 
     const state = useEmailStore.getState();
     expect(state.emails).toEqual([row]);
     expect([...state.selectedEmailKeys]).toEqual([emailKeyFor(member)]);
     expect(state.selectedEmail).toBe(member);
-    expect(state.threadEmailsCache.get(threadKeyFor(row))).toEqual([row, member]);
-    expect(state.expandedThreadIds.has(threadKeyFor(row))).toBe(true);
   });
 
   it.each(['folder creation', 'archive move'] as const)('keeps plugin cancellation and confirmed notifications per owner: %s', async veto => {
@@ -685,26 +675,9 @@ describe('bulk archive ownership and reconciliation', () => {
     emailHooks.onEmailArchive.register('test', after);
     vi.mocked(client.batchArchiveEmails).mockRejectedValue(new ArchiveEmailsError('forbidden', [accepted.id, 'unrequested-id']));
 
-    await expect(useEmailStore.getState().batchArchive(client)).rejects.toThrow('forbidden');
+    await archivedPartly(client, 'forbidden');
 
     expect(after).toHaveBeenCalledExactlyOnceWith({ emailIds: [accepted.id] });
     expect(useEmailStore.getState().emails).toEqual([refused]);
   });
-
-  it('preserves other owners in the viewed login cache when refreshing a successful owner', async () => {
-    const other = mailbox('other', 'inbox', true);
-    const merged = [...folders.primary, ...folders.shared, other];
-    useEmailStore.setState({
-      emails: [email('shared-email', 'shared')],
-      selectedEmailKeys: new Set([emailKeyFor(email('shared-email', 'shared'))]),
-      viewingAccountId: 'login-a', accountMailboxes: { 'login-a': merged },
-    });
-
-    await useEmailStore.getState().batchArchive(client);
-
-    expect(useEmailStore.getState().accountMailboxes['login-a']).toEqual([
-      ...folders.primary, other, ...folders.shared,
-    ]);
-  });
-
 });

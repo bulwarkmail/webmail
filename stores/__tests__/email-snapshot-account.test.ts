@@ -88,6 +88,31 @@ describe('email boot snapshot folder', { timeout: 30_000 }, () => {
     expect(state.emailListSync).toEqual(emailListSync);
   });
 
+  // A snapshot that says "no more mail" beside rows its total does not cover
+  // kept the inbox at one page across reloads: the delta catch-up after boot
+  // never re-reads the total (#1364).
+  it('re-reads a page whose saved total does not cover its rows', async () => {
+    const rows = [{ id: 'e1' }, { id: 'e2' }];
+    const emailListSync = { state: 's1', accountId: 'acc', mailboxId: 'm-inbox' };
+    const state = await boot('/', {
+      mailboxes: FOLDERS, selectedMailbox: 'm-inbox', emails: rows, totalEmails: 0, hasMoreEmails: false, emailListSync,
+    });
+    expect(state.emails).toHaveLength(2);
+    const { useEmailStore } = await import('@/stores/email-store');
+    const { useSettingsStore } = await import('@/stores/settings-store');
+    useSettingsStore.setState({ emailsPerPage: 2 });
+    const client = {
+      getAccountId: () => 'acc',
+      getEmailChanges: vi.fn(async () => ({ oldState: 's1', newState: 's1', hasMoreChanges: false, created: [], updated: [], destroyed: [], updatedProperties: null })),
+      getEmails: vi.fn(async () => ({ emails: rows, hasMore: true, total: 10853, state: 's1' })),
+      getThreadEmailCounts: vi.fn(async () => ({})),
+    };
+    await useEmailStore.getState().fetchEmails(client as never, 'm-inbox', { background: true });
+    expect(client.getEmails).toHaveBeenCalled();
+    expect(useEmailStore.getState().totalEmails).toBe(10853);
+    expect(useEmailStore.getState().hasMoreEmails).toBe(true);
+  });
+
   it('keeps the snapshot folder when the account has no inbox of its own', async () => {
     const state = await boot('/', { mailboxes: FOLDERS.slice(1), selectedMailbox: 'm-trash', emails: TRASH_ROWS });
     expect(state.selectedMailbox).toBe('m-trash');

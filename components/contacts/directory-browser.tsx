@@ -187,8 +187,13 @@ export function DirectoryBrowser({
             <RefreshCw className={cn("w-4 h-4", status === "loading" && "animate-spin")} />
           </button>
         </div>
-        {entries.length > 0 && (status === "error" || status === "forbidden") && (
+        {entries.length > 0 && status === "error" && (
           <p role="alert" className="mt-2 text-xs text-destructive">{t("refresh_failed")}</p>
+        )}
+        {/* A refused listing (Stalwart 1.0 with directory queries off) still
+            holds the principals the user knows; nothing failed to refresh. */}
+        {entries.length > 0 && status === "forbidden" && (
+          <p role="status" className="mt-2 text-xs text-muted-foreground">{t("forbidden_hint")}</p>
         )}
       </div>
 

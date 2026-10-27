@@ -39,7 +39,7 @@ describe('email list loading skeleton', () => {
     const skeleton = screen.getByTestId('email-list-skeleton');
 
     act(() => { useEmailStore.setState({ mailboxes: [], isLoadingMore: false, hasMoreEmails: true }); });
-    view.rerender(<EmailList emails={[]} isLoading selectedEmailId="x" />);
+    view.rerender(<EmailList emails={[]} isLoading selectedEmailKey="x" />);
 
     expect(screen.getByTestId('email-list-skeleton')).toBe(skeleton);
   });

@@ -48,6 +48,8 @@ export class JmapClient {
    *  personal mailboxes this equals the mail account, but read it from the
    *  session so the helper stays correct if that ever diverges. */
   filesAccountId = '';
+  /** Stalwart 1.0 (File Storage draft 18) wants `@type` on a FileNode create. */
+  private typedFileNodes = false;
   /** Every account visible in this user's session (own + shared/group),
    *  keyed by accountId -> account name (its email address). */
   accounts: Record<string, string> = {};
@@ -70,6 +72,8 @@ export class JmapClient {
     if (!primary) throw new Error(`No mail account for ${email} in JMAP session`);
     c.accountId = primary;
     c.filesAccountId = session.primaryAccounts?.[FILENODE] ?? primary;
+    c.typedFileNodes = 'supportedNodeTypes' in
+      (session.accounts?.[c.filesAccountId]?.accountCapabilities?.[FILENODE] ?? {});
     c.accounts = Object.fromEntries(
       Object.entries(session.accounts ?? {}).map(([id, a]) => [id, (a as { name: string }).name]),
     );
@@ -374,6 +378,7 @@ export class JmapClient {
   async createFileDirectory(name: string, parentId: string | null = null): Promise<string> {
     const props: Record<string, unknown> = { name };
     if (parentId !== null) props.parentId = parentId;
+    if (this.typedFileNodes) props['@type'] = 'Directory';
     const r = await this.request(
       [['FileNode/set', { accountId: this.filesAccountId, create: { dir0: props } }, '0']],
       [CORE, FILENODE],

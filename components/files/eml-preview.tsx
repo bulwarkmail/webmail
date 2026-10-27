@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { Paperclip, Download } from "@/components/icons";
 import { emailIframeCsp, sanitizeEmailBodyForIframe } from "@/lib/email-sanitization";
 import { getEffectiveTimeZone } from "@/lib/timezone";
+import { stripBidiControls } from "@/lib/bidi";
 import { useSettingsStore } from "@/stores/settings-store";
 
 // A parsed message/rfc822 (.eml), as produced by postal-mime. Only the fields
@@ -108,7 +109,7 @@ export function EmlPreview({ message }: { message: ParsedEml }) {
                 className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm bg-muted text-foreground hover:bg-muted/70"
               >
                 <Paperclip className="w-3 h-3 flex-shrink-0" />
-                <span className="max-w-[200px] truncate">{att.filename || "attachment"}</span>
+                <span className="max-w-[200px] truncate">{att.filename ? stripBidiControls(att.filename) : "attachment"}</span>
                 <Download className="w-3 h-3 flex-shrink-0 text-muted-foreground" />
               </button>
             ))}

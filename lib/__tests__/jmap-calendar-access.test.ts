@@ -31,12 +31,21 @@ function jsonResponse(body: unknown): Response {
   });
 }
 
+// How each version turns away a calendar call to an account that only shared
+// a mail folder, as seen live.
+const DENIALS = {
+  '0.16': { type: 'forbidden', description: 'You do not have access to account ev' },
+  '1.0': { type: 'accountNotSupportedByMethod', description: 'The accountId given corresponds to a valid account, but the account does not support this method or data type.' },
+};
+
 describe('calendar fan-out to shared accounts without access', () => {
   let fetchSpy: ReturnType<typeof vi.spyOn>;
   let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
   let client: JMAPClient;
+  let denial: { type: string; description: string };
 
   beforeEach(async () => {
+    denial = { type: 'accountNotFound', description: 'You do not have access to account ev' };
     fetchSpy = vi.spyOn(globalThis, 'fetch');
     fetchSpy.mockResolvedValueOnce(jsonResponse(makeSession()));
     client = new JMAPClient('https://mail.example.com', 'user@test.com', 'pass123');
@@ -49,7 +58,7 @@ describe('calendar fan-out to shared accounts without access', () => {
       if (args?.accountId === 'ev') {
         return jsonResponse({
           methodResponses: [
-            ['error', { type: 'accountNotFound', description: 'You do not have access to account ev' }, '0'],
+            ['error', denial, '0'],
           ],
         });
       }
@@ -59,6 +68,17 @@ describe('calendar fan-out to shared accounts without access', () => {
       return jsonResponse({ methodResponses: [['Calendar/get', { list: [] }, '0']] });
     });
     consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  it.each(Object.entries(DENIALS))('takes the answer of Stalwart %s as no access', async (_version, answer) => {
+    denial = answer;
+    const { failedAccountIds } = await client.getAllCalendarsWithFailures();
+    await client.queryAllCalendarEvents({});
+    await client.queryAllCalendarEvents({});
+
+    expect(failedAccountIds).toEqual([]);
+    expect(callsForAccount('ev')).toHaveLength(2);
+    expect(consoleErrorSpy).not.toHaveBeenCalled();
   });
 
   afterEach(() => {

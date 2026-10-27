@@ -544,6 +544,8 @@
       "authentication_missing_info": "Це запрошення не включає перевірену автентифікацію електронної пошти. Уточнюйте деталі в організатора, якщо щось виглядає незвичним.",
       "sender_mismatch_info": "Це запрошення надіслано з {sender}, а організатор, зазначений у даних календаря, {organizer}.",
       "sender_mismatch_unverified_info": "Це запрошення було надіслано з {sender}, а організатором, указаним у даних календаря, є {organizer}, і повідомлення не вдалося перевірити.",
+      "attendee_mismatch_info": "Цю відповідь було надіслано з {sender}, а учасником, який відповідає, у даних календаря є {attendee}.",
+      "attendee_mismatch_unverified_info": "Цю відповідь було надіслано з {sender}, а учасником, який відповідає, у даних календаря є {attendee}, і повідомлення не вдалося перевірити.",
       "organizer_role": "Ви організовуєте цю подію",
       "your_response": "Ваша відповідь: {status}",
       "response_needed": "Потребує відповіді",
@@ -611,6 +613,7 @@
     "scheduled_send_created": "Лист заплановано до надсилання",
     "sending_in": "Надсилання через {seconds} с",
     "undo_send_failed": "Не вдалося скасувати. Можливо, повідомлення вже надіслано.",
+    "undo_send_signed_out": "Не вдалося скасувати: обліковий запис, з якого надіслано повідомлення, більше не авторизований.",
     "cancel_scheduled_send": "Скасувати надсилання",
     "reschedule_send": "Перенести",
     "cancel_and_edit": "Скасувати й редагувати",
@@ -695,6 +698,7 @@
     "saving": "Збереження...",
     "draft_saved": "Чернетку збережено",
     "save_failed": "Не вдалося зберегти",
+    "discard_signed_out": "Чернетку не видалено: обліковий запис, у якому її збережено, більше не авторизований. Вона залишається в чернетках цього облікового запису.",
     "to_placeholder": "Адреси електронної пошти одержувачів",
     "cc_placeholder": "Одержувачі копії",
     "bcc_placeholder": "Одержувачі прихованої копії",
@@ -1531,6 +1535,10 @@
         "label": "Тільки звичайний текст",
         "description": "Вимкніть редактор форматованого тексту та надсилайте всі електронні листи лише як звичайний текст, включаючи відповіді та пересилання"
       },
+      "quick_reply": {
+        "label": "Швидка відповідь",
+        "description": "Показувати поле швидкої відповіді під листами."
+      },
       "auto_select_reply_identity": {
         "label": "Автоматичний вибір адреси для відповіді",
         "description": "Під час відповіді автоматично змінюйте адресу відправника на особу, яка спочатку отримала повідомлення"
@@ -1776,6 +1784,10 @@
         "signed_in": "Signed in to {count, plural, one {# account} other {# accounts}} with the saved password.",
         "sign_in_failed": "{count, plural, one {# saved password was} other {# saved passwords were}} refused: sign in to those accounts from the account list.",
         "deleted": "Saved list deleted.",
+        "prompt_title": "Restore your other accounts?",
+        "prompt_description": "A list of accounts is saved for {account}. Enter its backup password to add them to this browser, or do it later from Settings.",
+        "prompt_not_now": "Not now",
+        "prompt_done": "Done",
         "errors": {
           "mismatch": "The passwords do not match.",
           "password_length": "Use at least 10 characters.",

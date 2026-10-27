@@ -2172,12 +2172,12 @@ export async function dispatchApiCall(
     case 'vacation.get': return doVacationGet();
     case 'vacation.set': return doVacationSet(args[0]);
 
-    case 'email.get': return doEmailGet(args[0]);
+    case 'email.get': return doEmailGet(args[0], args[1]);
     case 'email.list': return doEmailList(args[0]);
     case 'email.search': return doEmailSearch(args[0]);
     case 'mailboxes.list': return doMailboxesList();
-    case 'email.getAttachment': return doEmailGetAttachment(args[0], args[1]);
-    case 'email.getRaw': return doEmailGetRaw(args[0]);
+    case 'email.getAttachment': return doEmailGetAttachment(args[0], args[1], args[2]);
+    case 'email.getRaw': return doEmailGetRaw(args[0], args[1]);
     case 'email.move': return doEmailMove(plugin.id, args[0], args[1]);
     case 'email.archive': return doEmailArchive(plugin.id, args[0]);
 

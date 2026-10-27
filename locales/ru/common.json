@@ -544,6 +544,8 @@
       "authentication_missing_info": "Это приглашение не содержит подтверждённой аутентификации почты. Если что-то кажется необычным, уточните детали у организатора.",
       "sender_mismatch_info": "Это приглашение отправлено от {sender}, тогда как организатором в данных календаря указан {organizer}.",
       "sender_mismatch_unverified_info": "Это приглашение отправлено от {sender}, тогда как организатором указан {organizer}, и сообщение не удалось проверить.",
+      "attendee_mismatch_info": "Этот ответ отправлен от {sender}, тогда как отвечающим участником указан {attendee}.",
+      "attendee_mismatch_unverified_info": "Этот ответ отправлен от {sender}, тогда как отвечающим участником указан {attendee}, и сообщение не удалось проверить.",
       "organizer_role": "Вы являетесь организатором этого события",
       "your_response": "Ваш ответ: {status}",
       "response_needed": "Требуется ответ",
@@ -611,6 +613,7 @@
     "scheduled_send_created": "Письмо запланировано к отправке",
     "sending_in": "Отправка через {seconds} с",
     "undo_send_failed": "Не удалось отменить. Возможно, сообщение уже отправлено.",
+    "undo_send_signed_out": "Не удалось отменить: аккаунт, с которого было отправлено сообщение, больше не авторизован.",
     "cancel_scheduled_send": "Отменить отправку",
     "reschedule_send": "Перенести",
     "cancel_and_edit": "Отменить и изменить",
@@ -695,6 +698,7 @@
     "saving": "Сохранение...",
     "draft_saved": "Черновик сохранён",
     "save_failed": "Не удалось сохранить",
+    "discard_signed_out": "Черновик не удалён: аккаунт, в котором он сохранён, больше не авторизован. Он остаётся в черновиках этого аккаунта.",
     "to_placeholder": "Адреса получателей",
     "cc_placeholder": "Получатели копии",
     "bcc_placeholder": "Получатели скрытой копии",
@@ -1522,6 +1526,10 @@
         "label": "Только простой текст",
         "description": "Отключить редактор форматированного текста и отправлять все письма только в виде простого текста, включая ответы и пересылки"
       },
+      "quick_reply": {
+        "label": "Быстрый ответ",
+        "description": "Показывать поле быстрого ответа под письмами."
+      },
       "auto_select_reply_identity": {
         "label": "Автоматически выбирать адрес для ответа",
         "description": "При ответе автоматически переключать адрес отправителя на ту учетную запись, которая получила исходное сообщение"
@@ -1776,6 +1784,10 @@
         "signed_in": "Signed in to {count, plural, one {# account} other {# accounts}} with the saved password.",
         "sign_in_failed": "{count, plural, one {# saved password was} other {# saved passwords were}} refused: sign in to those accounts from the account list.",
         "deleted": "Saved list deleted.",
+        "prompt_title": "Restore your other accounts?",
+        "prompt_description": "A list of accounts is saved for {account}. Enter its backup password to add them to this browser, or do it later from Settings.",
+        "prompt_not_now": "Not now",
+        "prompt_done": "Done",
         "errors": {
           "mismatch": "The passwords do not match.",
           "password_length": "Use at least 10 characters.",

@@ -548,9 +548,19 @@ describe('cross-account thread identity (#1012)', () => {
     expect(group.emailCount).toBe(7);
   });
 
-  it('uses the message id as both id and key when threading is disabled', () => {
+  it('uses the message as the thread when threading is disabled', () => {
     const [group] = groupEmailsByThread([inAccount('a', { id: 'm1', threadId: 'b' })], true);
-    expect(group.threadKey).toBe('m1');
+    expect(group.threadKey).toBe('login-a/acct-a:m1');
     expect(group.threadId).toBe('m1');
+  });
+
+  // The Scheduled list never threads. Live, the own and the group's scheduled
+  // mail were both "qaaaaae": one row, and the group's could not be opened.
+  it('keeps same-id messages of different accounts apart when threading is disabled', () => {
+    const groups = groupEmailsByThread([
+      inAccount('a', { id: 'm1', threadId: 'b' }),
+      inAccount('b', { id: 'm1', threadId: 'b' }),
+    ], true);
+    expect(groups.map((g) => g.emails.length)).toEqual([1, 1]);
   });
 });

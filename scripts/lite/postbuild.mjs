@@ -12,7 +12,7 @@ import { join } from "node:path";
 import {
   STALWART_EXCLUDED_DIRS, STALWART_EXCLUDED_FILES, STALWART_ZIP_NAME,
   buildCaddyExample, buildConnectorCapabilities, buildHeaders, buildLiteConfig, buildLitePolicy, buildManifest, buildNginxExample, buildNotFoundShim, buildReadme, buildRedirects, buildRootRedirect,
-  buildStalwartEntry, buildStalwartManifest, buildStalwartReadme, buildZip, collectZipEntries, discoverBuiltLocales, discoverShellDirs, findSegmentPrefetchDirs, isMainModule, makeBuildId, normalizeBasePath, parseLiteTarget, resolveRepoRoot,
+  buildStalwartAppManifest, buildStalwartEntry, buildStalwartManifest,buildStalwartReadme, buildZip, collectZipEntries, discoverBuiltLocales, discoverShellDirs, findSegmentPrefetchDirs, isMainModule, makeBuildId, normalizeBasePath, parseLiteTarget, resolveRepoRoot,
   withScriptHashCsp,
 } from "./lib.mjs";
 
@@ -105,6 +105,7 @@ function stalwartFiles({ outDir, config, locales, defaultLocale, version, commit
     "config.json": JSON.stringify(config, null, 2) + "\n",
     "policy.json": JSON.stringify(buildLitePolicy(), null, 2) + "\n",
     "manifest.json": JSON.stringify(buildStalwartManifest({ appName: config.appName }), null, 2) + "\n",
+    "stalwart-app.json": JSON.stringify(buildStalwartAppManifest({ version }), null, 2) + "\n",
     "LITE-README.md": buildStalwartReadme({ version, commit, locales, buildId, demoMode: config.demoMode }),
   };
 }

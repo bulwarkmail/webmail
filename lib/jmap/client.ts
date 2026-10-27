@@ -15,7 +15,7 @@ import { isTaskLikeObject, type ScannedCalendarObject } from "@/lib/calendar-com
 import { DEFAULT_CALENDAR_COMPONENTS, mkCalendarCollection, newCalendarCollectionName } from "@/lib/webdav/calendar-collection";
 import { sanitizeDisplayName, splitMailbox } from "@/lib/rfc5322-mailbox";
 import { decodeFileNodeName } from "./filenode-name";
-import { fileNodeKind } from "./filenode-kind";
+import { fileNodeKind, fromDraftFileNode, toDraftFileNodeCreate } from "./filenode-kind";
 import { fileNodeDepth } from "./filenode-depth";
 import { contactFromWire, contactToWire } from "./contact-wire";
 import { SchedulingDeniedError } from "./scheduling-error";
@@ -33,6 +33,7 @@ import { buildEmailSort, compareEmails, hasKeywordLevels, hasTextLevels, type Ke
 import { emailMatchesLogin, sortIdentities } from "@/lib/identity-order";
 import type { AccountInfo } from "./types";
 import { stalwartChangeId } from "./stalwart-state";
+import { downloadNameSegment } from "./download-name";
 import { toInertBlob } from "@/lib/file-preview";
 import { toStorageQuota, type JMAPQuota, type StorageQuota } from "@/lib/quota";
 import { messagePriorityHeaders, type MessagePriority } from "@/lib/message-priority";
@@ -86,7 +87,7 @@ function toLegacyRights(rights: FileNodeRights): LegacyFileNodeRights {
 
 /** A FileNode as the server sent it, normalized for the UI. */
 function fromWireFileNode(node: FileNode): FileNode {
-  const decoded = withDecodedName(node);
+  const decoded = withDecodedName(fromDraftFileNode(node));
   if (!decoded.myRights && !decoded.shareWith) return decoded;
   return {
     ...decoded,
@@ -556,10 +557,13 @@ function isTaskObject(obj: { '@type'?: string; progress?: unknown; due?: unknown
 /**
  * Whether a calendar method error means the account grants this user no
  * calendar access at all - the expected answer from a shared account the
- * fan-out probed on suspicion (see getCalendarCapableAccountIds).
+ * fan-out probed on suspicion (see getCalendarCapableAccountIds). Stalwart
+ * 1.0 answers `accountNotSupportedByMethod` for an account that only shared
+ * a mail folder, where 0.16 says `forbidden`.
  */
 function isCalendarAccessDenial(type: string | undefined, message: string | undefined): boolean {
-  return type === 'forbidden' || type === 'accountNotFound' || /not have access/i.test(message ?? '');
+  return type === 'forbidden' || type === 'accountNotFound' || type === 'accountNotSupportedByMethod'
+    || /not have access/i.test(message ?? '');
 }
 
 // Stalwart 1.0 fails a CalendarEvent/get that asks for `recurrenceOverrides`
@@ -5826,7 +5830,7 @@ export class JMAPClient implements IJMAPClient {
     return this.downloadUrl
       .replace('{accountId}', encodeURIComponent(accountId || this.accountId))
       .replace('{blobId}', encodeURIComponent(blobId))
-      .replace('{name}', encodeURIComponent(name || 'download'))
+      .replace('{name}', encodeURIComponent(downloadNameSegment(name)))
       .replace('{type}', encodeURIComponent(type || 'application/octet-stream'));
   }
 
@@ -6078,15 +6082,15 @@ export class JMAPClient implements IJMAPClient {
     return submission?.sendAt;
   }
 
-  private async getEmailSubmissionForReschedule(submissionId: string, accountId?: string): Promise<{ envelope?: { rcptTo?: Array<{ email: string }> }; sendAt?: string } | undefined> {
+  private async getEmailSubmissionForReschedule(submissionId: string, accountId?: string): Promise<{ identityId?: string; envelope?: { rcptTo?: Array<{ email: string }> }; sendAt?: string } | undefined> {
     const response = await this.request([
       ['EmailSubmission/get', {
         accountId: accountId ?? await this.resolveSubmissionAccountId(submissionId),
         ids: [submissionId],
-        properties: ['envelope', 'sendAt'],
+        properties: ['identityId', 'envelope', 'sendAt'],
       }, '0'],
     ]);
-    return response.methodResponses?.[0]?.[1]?.list?.[0] as { envelope?: { rcptTo?: Array<{ email: string }> }; sendAt?: string } | undefined;
+    return response.methodResponses?.[0]?.[1]?.list?.[0] as { identityId?: string; envelope?: { rcptTo?: Array<{ email: string }> }; sendAt?: string } | undefined;
   }
 
   /**
@@ -9140,6 +9144,8 @@ export class JMAPClient implements IJMAPClient {
     "id", "parentId", "name", "type", "blobId", "size", "created", "modified",
     // Tells 1.0's symlinks from folders (see fileNodeKind).
     "nodeType",
+    // `nodeType` and `type` as Stalwart 1.0.0 names them (see fromDraftFileNode).
+    "@type", "mediaType",
     // Stalwart omits shareWith/myRights from FileNode/get unless requested
     // explicitly, so the share dialog and indicators can't see existing
     // shares without naming them here (same as CALENDAR_PROPERTIES).
@@ -9239,7 +9245,7 @@ export class JMAPClient implements IJMAPClient {
       console.error('[Files] FileNode/get error:', getResult?.[1]);
       throw new Error(getResult?.[1]?.description || "FileNode list failed");
     }
-    const firstPage = (getResult[1].list || []) as FileNode[];
+    const firstPage = ((getResult[1].list || []) as FileNode[]).map(fromDraftFileNode);
     const maxObjects = this.getMaxObjectsInGet();
     if (firstPage.length < maxObjects) return firstPage;
 
@@ -9256,7 +9262,7 @@ export class JMAPClient implements IJMAPClient {
           if (result[0] !== "FileNode/get") {
             throw new Error(result[1]?.description || "FileNode/get failed");
           }
-          for (const node of (result[1].list || []) as FileNode[]) known.set(node.id, node);
+          for (const node of (result[1].list || []) as FileNode[]) known.set(node.id, fromDraftFileNode(node));
         }
       }
     };
@@ -9422,6 +9428,16 @@ export class JMAPClient implements IJMAPClient {
     return !!cap && !("forbiddenNameChars" in cap);
   }
 
+  /**
+   * Stalwart 1.0 implements File Storage draft 18, which wants `@type` and
+   * `mediaType` in a create (see toDraftFileNodeCreate). Of the drafts
+   * Stalwart has shipped, only that one lists `supportedNodeTypes`.
+   */
+  private usesDraftFileNodeCreate(accountId: string): boolean {
+    const limits = this.fileNodeLimits(accountId);
+    return !!limits && "supportedNodeTypes" in limits;
+  }
+
   /** Naming rules for new FileNodes in `accountId`, if the server publishes any. */
   getFileNameRules(accountId?: string): FileNameRules | null {
     return fileNameRulesFrom(this.fileNodeLimits(accountId));
@@ -9481,8 +9497,11 @@ export class JMAPClient implements IJMAPClient {
     const baseName = acceptedFileName(String(props.name ?? ''), this.getFileNameRules(accountId));
     for (let attempt = 1; ; attempt++) {
       const name = attempt === 1 ? baseName : numberedFileName(baseName, attempt);
+      const wire = this.usesDraftFileNodeCreate(accountId)
+        ? toDraftFileNodeCreate({ ...props, name })
+        : { ...props, name };
       const response = await this.request(
-        [["FileNode/set", { accountId, onExists: "rename", create: { n0: { ...props, name } } }, "fns0"]],
+        [["FileNode/set", { accountId, onExists: "rename", create: { n0: wire } }, "fns0"]],
         this.fileUsing(),
       );
       const result = response.methodResponses?.[0];
@@ -9493,7 +9512,7 @@ export class JMAPClient implements IJMAPClient {
       if (created) {
         // The create response carries only server-set properties; keep the
         // ones sent so callers can rely on name/parentId/type.
-        return withDecodedName({ ...props, name, ...created } as FileNode);
+        return withDecodedName(fromDraftFileNode({ ...wire, ...created } as FileNode));
       }
       const err = result[1].notCreated?.n0;
       // Servers before 0.16.6 ignore onExists and refuse the clash instead.
@@ -10892,7 +10911,8 @@ export class JMAPClient implements IJMAPClient {
     const submissions: EmailSubmission[] = [];
     // Which account each submission came from — needed to fetch its Email from
     // the right account below, and to route later cancel/reschedule calls.
-    const accountBySubmissionId = new Map<string, string>();
+    // Keyed by the record: submission and email ids repeat across accounts.
+    const accountBySubmission = new Map<EmailSubmission, string>();
     const primarySubmissionAccountId = this.getSubmissionAccountId();
 
     for (const submissionAccountId of submissionAccountIds) {
@@ -10933,7 +10953,7 @@ export class JMAPClient implements IJMAPClient {
               const sendAtTime = new Date(submission.sendAt).getTime();
               return Number.isFinite(sendAtTime) && sendAtTime > now;
             });
-          for (const submission of pending) accountBySubmissionId.set(submission.id, submissionAccountId);
+          for (const submission of pending) accountBySubmission.set(submission, submissionAccountId);
           submissions.push(...pending);
 
           rawPosition += ids.length;
@@ -10953,7 +10973,7 @@ export class JMAPClient implements IJMAPClient {
     // so a shared account's badge stays correct past the first page.
     const totalByAccount: Record<string, number> = {};
     for (const submission of submissions) {
-      const accountId = accountBySubmissionId.get(submission.id);
+      const accountId = accountBySubmission.get(submission);
       if (accountId) totalByAccount[accountId] = (totalByAccount[accountId] ?? 0) + 1;
     }
     const pageSubmissions = submissions.slice(position, position + limit);
@@ -10968,13 +10988,13 @@ export class JMAPClient implements IJMAPClient {
     // primary account returns nothing and the row would be dropped below.
     const emailIdsByAccount = new Map<string, string[]>();
     for (const submission of pageSubmissions) {
-      const accountId = accountBySubmissionId.get(submission.id) ?? this.accountId;
+      const accountId = accountBySubmission.get(submission) ?? this.accountId;
       const bucket = emailIdsByAccount.get(accountId);
       if (bucket) bucket.push(submission.emailId);
       else emailIdsByAccount.set(accountId, [submission.emailId]);
     }
 
-    const emailById = new Map<string, Email>();
+    const emailsByAccount = new Map<string, Map<string, Email>>();
     for (const [accountId, ids] of emailIdsByAccount) {
       const emailResponse = await this.request([
         ['Email/get', {
@@ -10993,23 +11013,26 @@ export class JMAPClient implements IJMAPClient {
       ]);
       const fetchedEmails = (emailResponse.methodResponses?.[0]?.[1]?.list ?? []) as Email[];
       await this.refetchTruncatedBodyValues(fetchedEmails, accountId);
-      for (const email of fetchedEmails) {
-        emailById.set(email.id, email);
-      }
+      emailsByAccount.set(accountId, new Map(fetchedEmails.map(email => [email.id, email])));
     }
     const emails = pageSubmissions
       .map((submission): ScheduledEmail | null => {
-        const email = emailById.get(submission.emailId);
+        const accountId = accountBySubmission.get(submission) ?? this.accountId;
+        const email = emailsByAccount.get(accountId)?.get(submission.emailId);
         if (!email || !submission.sendAt) return null;
         return {
           ...email,
+          // A group or shared account's row is stamped with its account, as in
+          // the merged views: it is read from there, and its message and
+          // thread ids repeat in the own account.
+          ...(accountId !== this.accountId ? { sourceAccountId: accountId } : {}),
           threadId: submission.threadId || email.threadId,
           scheduledSendAt: submission.sendAt,
           emailSubmissionId: submission.id,
           scheduledIdentityId: submission.identityId,
           scheduledUndoStatus: submission.undoStatus,
           scheduledDeliveryStatus: submission.deliveryStatus,
-          scheduledAccountId: accountBySubmissionId.get(submission.id),
+          scheduledAccountId: accountBySubmission.get(submission),
           isScheduled: true,
           isSmimeScheduled: isSmimeEmail(email),
         };
@@ -11058,6 +11081,12 @@ export class JMAPClient implements IJMAPClient {
     const mailboxes = await this.getMailboxes(submissionAccountId);
     const draftsMailbox = mailboxes.find(mb => mb.role === 'drafts');
     const sentMailbox = mailboxes.find(mb => mb.role === 'sent');
+    const original = await this.getEmailSubmissionForReschedule(submissionId, submissionAccountId);
+    // The original's identity is one of the submission account's. The caller's
+    // may be the composer's, from the login's own account: for a group
+    // identity's message that id names nothing in the group account, or
+    // another identity.
+    const submissionIdentityId = original?.identityId || identityId;
     // The identity and the Email live beside the submission, so look both up in
     // the owning account. getIdentities() only knows the primary account's
     // identities; a shared identity missing there would silently put the login
@@ -11065,14 +11094,13 @@ export class JMAPClient implements IJMAPClient {
     let identity: Identity | undefined;
     try {
       const identityResponse = await this.request([
-        ['Identity/get', { accountId: submissionAccountId, ids: [identityId], properties: ['id', 'email'] }, '0'],
+        ['Identity/get', { accountId: submissionAccountId, ids: [submissionIdentityId], properties: ['id', 'email'] }, '0'],
       ]);
       identity = ((identityResponse.methodResponses?.[0]?.[1]?.list ?? []) as Identity[])
-        .find(item => item.id === identityId);
+        .find(item => item.id === submissionIdentityId);
     } catch (error) {
       console.error('Failed to get identity for reschedule:', error);
     }
-    const original = await this.getEmailSubmissionForReschedule(submissionId, submissionAccountId);
     const existingEnvelope = original?.envelope;
     const email = existingEnvelope?.rcptTo?.length ? undefined : await this.getEmail(emailId, submissionAccountId);
     const envelopeRecipients = existingEnvelope?.rcptTo?.length
@@ -11091,7 +11119,7 @@ export class JMAPClient implements IJMAPClient {
         return this.request([
           ['EmailSubmission/set', {
             accountId: submissionAccountId,
-            create: { replacement: { emailId, identityId, ...(envelope ? { envelope } : {}) } },
+            create: { replacement: { emailId, identityId: submissionIdentityId, ...(envelope ? { envelope } : {}) } },
             ...(draftsMailbox && sentMailbox ? {
               onSuccessUpdateEmail: {
                 '#replacement': {

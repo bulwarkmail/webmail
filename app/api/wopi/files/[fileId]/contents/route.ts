@@ -2,6 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
 import { downloadFileBlob, getWopiFileNode, updateFileNodeBlob, uploadFileBlob } from '@/lib/wopi/files';
 import { wopiContext } from '@/lib/wopi/request';
+import { readBodyCapped } from '@/lib/security/capped-body';
+
+/**
+ * Largest document PutFile takes. proxy.ts doesn't run for this route, so
+ * nothing else caps the copy held in memory; past it the save is refused, not
+ * cut short. Stalwart's own upload limit (maxSizeUpload) is usually lower.
+ */
+const MAX_PUT_FILE_BYTES = 100 * 1024 * 1024;
 
 /**
  * WOPI GetFile / PutFile (#425). Content flows purely over JMAP: GetFile
@@ -111,7 +119,10 @@ export async function POST(
       }
     }
 
-    const body = await request.arrayBuffer();
+    const body = await readBodyCapped(request, MAX_PUT_FILE_BYTES);
+    if (!body) {
+      return NextResponse.json({ error: 'Document too large' }, { status: 413 });
+    }
     if (body.byteLength === 0) {
       return NextResponse.json({ error: 'Empty document rejected' }, { status: 409 });
     }

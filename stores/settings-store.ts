@@ -528,6 +528,7 @@ interface SettingsState {
   // Composer
   autoSaveDraftInterval: number; // milliseconds
   sendConfirmation: boolean;
+  quickReplyEnabled: boolean;
   defaultReplyMode: ReplyMode;
   autoSelectReplyIdentity: boolean;
   replyIdentityMatch: ReplyIdentityMatch; // With autoSelectReplyIdentity on: 'exact' = configured identities only, 'domain' = also same-domain catch-all addresses (rewrites From) #1000
@@ -836,6 +837,7 @@ const DEFAULT_SETTINGS = {
   // Composer
   autoSaveDraftInterval: 60000, // 1 minute
   sendConfirmation: false,
+  quickReplyEnabled: true,
   defaultReplyMode: 'reply' as ReplyMode,
   autoSelectReplyIdentity: false,
   replyIdentityMatch: 'domain' as ReplyIdentityMatch,
@@ -1202,6 +1204,7 @@ export const useSettingsStore = create<SettingsState>()(
           trustedSenders: state.trustedSenders,
           autoSaveDraftInterval: state.autoSaveDraftInterval,
           sendConfirmation: state.sendConfirmation,
+          quickReplyEnabled: state.quickReplyEnabled,
           defaultReplyMode: state.defaultReplyMode,
           autoSelectReplyIdentity: state.autoSelectReplyIdentity,
           replyIdentityMatch: state.replyIdentityMatch,

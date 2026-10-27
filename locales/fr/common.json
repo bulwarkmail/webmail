@@ -542,6 +542,8 @@
       "authentication_missing_info": "Cette invitation ne comporte pas d'authentification de messagerie vérifiée. Vérifiez les détails avec l'organisateur si quelque chose semble inhabituel.",
       "sender_mismatch_info": "Cette invitation a été envoyée depuis {sender}, alors que l'organisateur indiqué dans les données du calendrier est {organizer}.",
       "sender_mismatch_unverified_info": "Cette invitation a été envoyée depuis {sender}, alors que l'organisateur indiqué dans les données du calendrier est {organizer}, et le message n'a pas pu être vérifié.",
+      "attendee_mismatch_info": "Cette réponse a été envoyée depuis {sender}, alors que le participant qui répond dans les données du calendrier est {attendee}.",
+      "attendee_mismatch_unverified_info": "Cette réponse a été envoyée depuis {sender}, alors que le participant qui répond dans les données du calendrier est {attendee}, et le message n'a pas pu être vérifié.",
       "organizer_role": "Vous organisez cet événement",
       "your_response": "Votre réponse : {status}",
       "response_needed": "Réponse requise",
@@ -611,6 +613,7 @@
     "scheduled_send_created": "E-mail planifié pour envoi",
     "sending_in": "Envoi dans {seconds} s",
     "undo_send_failed": "Impossible d'annuler. Le message a peut-être déjà été envoyé.",
+    "undo_send_signed_out": "Impossible d'annuler : le compte depuis lequel le message a été envoyé n'est plus connecté.",
     "cancel_scheduled_send": "Annuler l’envoi",
     "reschedule_send": "Replanifier",
     "cancel_and_edit": "Annuler et modifier",
@@ -695,6 +698,7 @@
     "saving": "Enregistrement...",
     "draft_saved": "Brouillon enregistré",
     "save_failed": "Échec de l'enregistrement",
+    "discard_signed_out": "Le brouillon n'a pas été supprimé : le compte dans lequel il a été enregistré n'est plus connecté. Il reste dans les brouillons de ce compte.",
     "to_placeholder": "Adresses email des destinataires",
     "cc_placeholder": "Destinataires en copie",
     "bcc_placeholder": "Destinataires en copie cachée",
@@ -1522,6 +1526,10 @@
         "label": "Texte brut uniquement",
         "description": "Désactiver l'éditeur de texte enrichi et envoyer tous les e-mails en texte brut uniquement, y compris les réponses et les transferts"
       },
+      "quick_reply": {
+        "label": "Réponse rapide",
+        "description": "Afficher la zone de réponse rapide sous les messages."
+      },
       "auto_select_reply_identity": {
         "label": "Sélection automatique de l'adresse de réponse",
         "description": "Lors d'une réponse, bascule automatiquement l'adresse d'expédition vers l'identité qui a reçu le message d'origine"
@@ -1776,6 +1784,10 @@
         "signed_in": "Connecté à {count, plural, one {# compte} other {# comptes}} avec le mot de passe enregistré.",
         "sign_in_failed": "{count, plural, one {# mot de passe enregistré a été refusé} other {# mots de passe enregistrés ont été refusés}} : connectez-vous à ces comptes depuis la liste des comptes.",
         "deleted": "Liste enregistrée supprimée.",
+        "prompt_title": "Restaurer vos autres comptes ?",
+        "prompt_description": "Une liste de comptes est enregistrée pour {account}. Saisissez le mot de passe de la sauvegarde pour les ajouter à ce navigateur, ou faites-le plus tard dans les Paramètres.",
+        "prompt_not_now": "Plus tard",
+        "prompt_done": "Terminé",
         "errors": {
           "mismatch": "Les mots de passe ne correspondent pas.",
           "password_length": "Utilisez au moins 10 caractères.",

@@ -5,6 +5,7 @@ import {
   asksForOverridesWithUtc,
   type StalwartVersion,
 } from './helpers/stalwart-calendar';
+import { endlessResponse } from './helpers/endless-body';
 
 // ── module mocks (hoisted) ───────────────────────────────────────────────────
 vi.mock('next/server', () => {
@@ -15,7 +16,7 @@ vi.mock('next/server', () => {
   }
   return { NextResponse, NextRequest: class {} };
 });
-vi.mock('@/lib/logger', () => ({ logger: { error: () => {}, debug: () => {} } }));
+vi.mock('@/lib/logger', () => ({ logger: { error: () => {}, warn: () => {}, debug: () => {} } }));
 vi.mock('@/lib/stalwart/credentials', () => ({ getStalwartCredentials: vi.fn() }));
 vi.mock('@/lib/stalwart/jmap-api', () => ({
   fetchJmapSession: vi.fn(),
@@ -240,6 +241,28 @@ describe.each<StalwartVersion>(['0.16', '1.0'])('calendar-agenda route on Stalwa
     expect(events[0]).toMatchObject({ start: '2026-09-26T08:00:00.000Z', end: '2026-09-26T09:00:00.000Z' });
   });
 
+  it(`hands out an all-day event as its own date, not midnight in the server's zone, on Stalwart ${version}`, async () => {
+    // As the server answered live: 0.16 drops showWithoutTime and names
+    // Etc/UTC, 1.0 keeps showWithoutTime and names no zone.
+    const holiday = {
+      id: 'maaaaac', baseEventId: 'c', '@type': 'Event', uid: 'c@example.com', title: 'Holiday',
+      start: '2026-09-27T00:00:00', duration: 'P1D',
+      utcStart: '2026-09-27T00:00:00Z', utcEnd: '2026-09-28T00:00:00Z', calendarIds: { cal: true },
+      ...(version === '1.0' ? { showWithoutTime: true } : { timeZone: 'Etc/UTC' }),
+    };
+    answer = ({ method, args }) => method === 'CalendarEvent/get' && (args.ids as string[]).includes('maaaaac')
+      ? ['CalendarEvent/get', { list: [OCCURRENCES.maaaaab, holiday] }]
+      : undefined;
+    const { events } = await (await POST(makeReq())).json() as { events: Array<Record<string, unknown>> };
+
+    // The plugin files events under new Date(start) in the viewer's zone. An
+    // instant for midnight in the server's zone put the holiday on 26
+    // September for anyone west of the server; a date-time without an offset
+    // is read as the viewer's own midnight.
+    expect(events[1]).toMatchObject({ allDay: true, start: '2026-09-27T00:00:00', end: '2026-09-28T00:00:00' });
+    expect(new Date(events[1].start as string).getDate()).toBe(27);
+  });
+
   it(`answers 502 when a get fails on Stalwart ${version}`, async () => {
     answer = ({ method }) => method === 'CalendarEvent/get' ? ['error', { type: 'serverFail', description: 'Store unavailable' }] : undefined;
 
@@ -396,5 +419,19 @@ describe('calendar-agenda route (shared and group accounts)', () => {
 
     const res = await POST(makeReq());
     expect(res.status).toBe(502);
+  });
+});
+
+describe('calendar-agenda route (response size)', () => {
+  it('answers 502 instead of buffering an answer that never ends', async () => {
+    vi.clearAllMocks();
+    mockCreds.mockResolvedValue({ serverUrl: 'https://mail.example.com', username: 'user@example.com', authHeader: 'Basic abc' });
+    mockSession.mockResolvedValue(makeSession(BASE_CAPS));
+    const endless = endlessResponse(500);
+    mockPost.mockResolvedValue(endless.response);
+
+    const res = await POST(makeReq());
+    expect(res.status).toBe(502);
+    expect(endless.pulled()).toBeLessThan(30);
   });
 });

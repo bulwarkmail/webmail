@@ -11,6 +11,7 @@ import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
 import { insecureCookieHint, verificationFailureBody } from '@/lib/auth/verification-failure';
 import { loginClientAddress } from '@/lib/auth/client-address';
 import { LOGIN_BUDGET_RETRY_AFTER_SECONDS, reserveLoginAttempt } from '@/lib/auth/verify-budget';
+import { recordStoredCredentialStatus } from '@/lib/stalwart/stored-credential-budget';
 
 function getSlot(request: NextRequest, bodySlot: unknown): number {
   if (typeof bodySlot === 'number' && bodySlot >= 0 && bodySlot < MAX_ACCOUNT_SLOTS) {
@@ -97,6 +98,8 @@ export async function POST(request: NextRequest) {
       throw error;
     }
     refund();
+    // Just signed in: an older refusal of this credential no longer applies.
+    recordStoredCredentialStatus(authHeader, 200);
 
     await setStalwartAuthContext(slot, {
       serverUrl: normalizedServerUrl,

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { changeAdminPassword } from '@/lib/admin/password';
-import { requireAdminAuth, getClientIP } from '@/lib/admin/session';
+import { requireAdminAuth, getClientIP, setAdminSessionCookie } from '@/lib/admin/session';
 import { auditLog } from '@/lib/admin/audit';
 import { logger } from '@/lib/logger';
 import { configReadOnlyResponse } from '@/lib/admin/config-read-only-response';
@@ -29,6 +29,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Current password is incorrect' }, { status: 401 });
     }
 
+    // The new password signed every admin session out, this one included;
+    // the admin who changed it stays signed in.
+    await setAdminSessionCookie(request);
     await auditLog('admin.change-password', {}, ip);
     return NextResponse.json({ ok: true });
   } catch (error) {

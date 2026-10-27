@@ -242,6 +242,24 @@ describe('mail paths', () => {
     expect(link).toEqual({ kind: 'message', id: 'm1', accountId: 'acc-2' });
   });
 
+  // Email ids repeat across accounts: a link to a shared account's message
+  // names that account, or it opens the own message with the same id (#1351).
+  it('names the account owning a message or conversation outside the own one', () => {
+    const message = buildMailPath({ mailboxId: null, emailId: 'm1', threadId: null, ownerAccountId: 'cn', loginId: 'bob@x', fullscreen: true });
+    expect(message).toBe('/mail/message/m1?account=bob%40x&owner=cn&view=fullscreen');
+    const [, query] = message.split('?');
+    expect(parseMailPath(['message', 'm1'], new URLSearchParams(query))).toEqual({
+      kind: 'message', id: 'm1', accountId: 'bob@x', ownerAccountId: 'cn', fullscreen: true,
+    });
+    expect(buildMailPath({ mailboxId: null, emailId: null, threadId: 't1', ownerAccountId: 'cn' })).toBe('/mail/thread/t1?owner=cn');
+    expect(parseMailPath(['thread', 't1'], new URLSearchParams('owner=cn'))).toEqual({
+      kind: 'thread', id: 't1', accountId: undefined, ownerAccountId: 'cn',
+    });
+    // Only a message link opens fullscreen; a folder link names no owner.
+    expect(buildMailPath({ mailboxId: null, emailId: null, threadId: 't1', fullscreen: true })).toBe('/mail/thread/t1');
+    expect(buildMailPath({ mailboxId: 'c', emailId: null, threadId: null, ownerAccountId: 'cn' }, MAILBOXES)).toBe('/mail/folder/c');
+  });
+
   it('still understands the legacy ?email= notification link', () => {
     expect(parseMailPath([], new URLSearchParams('email=m9'))).toEqual({
       kind: 'message',

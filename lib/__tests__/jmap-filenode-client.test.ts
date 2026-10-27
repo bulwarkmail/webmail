@@ -168,6 +168,42 @@ describe('JMAPClient FileNode listing past maxObjectsInGet (#1069)', () => {
   });
 });
 
+describe('JMAPClient FileNode shapes of both drafts', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('reads the kind and media type from @type and mediaType on Stalwart 1.0.0', async () => {
+    const client = createClient();
+    // As 1.0.0 answers: it leaves `type` and `nodeType` out, 0.16.27 ignores
+    // `@type` and `mediaType`.
+    const fetchSpy = mockFetch({ methodResponses: [['FileNode/get', { list: [
+      { id: 'd1', parentId: null, name: 'Docs', '@type': 'Directory', created: '2026-10-26T19:00:30Z', modified: '2026-10-26T19:00:30Z' },
+      { id: 'l1', parentId: 'd1', name: 'latest', '@type': 'SymLink', created: '2026-10-26T19:00:30Z', modified: '2026-10-26T19:00:30Z' },
+      { id: 'f1', parentId: 'd1', name: 'a.txt', '@type': 'File', mediaType: 'text/plain', blobId: 'b1', size: 11, created: '2026-10-26T19:00:30Z', modified: '2026-10-26T19:00:30Z' },
+    ] }, 'fng0']] });
+
+    const nodes = await client.listAllFileNodes();
+    expect(nodes.map(n => [n.id, n.nodeType, n.type])).toEqual([
+      ['d1', 'directory', undefined],
+      ['l1', 'symlink', undefined],
+      ['f1', 'file', 'text/plain'],
+    ]);
+    const body = JSON.parse((fetchSpy.mock.calls[0][1] as RequestInit).body as string);
+    expect(body.methodCalls[0][1].properties).toEqual(expect.arrayContaining(['type', 'nodeType', '@type', 'mediaType']));
+  });
+
+  it('keeps the 0.16 shape as it is', async () => {
+    const client = createClient();
+    mockFetch({ methodResponses: [['FileNode/get', { list: [
+      { id: 'f1', parentId: null, name: 'a.txt', type: 'text/plain', nodeType: 'file', blobId: 'b1', size: 11, created: '2026-10-26T19:00:10Z', modified: '2026-10-26T19:00:10Z' },
+    ] }, 'fng0']] });
+
+    const [node] = await client.listAllFileNodes();
+    expect(node).toMatchObject({ nodeType: 'file', type: 'text/plain' });
+  });
+});
+
 describe('JMAPClient FileNode name decoding (#869)', () => {
   beforeEach(() => {
     vi.restoreAllMocks();

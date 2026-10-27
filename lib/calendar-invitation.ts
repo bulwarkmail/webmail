@@ -21,9 +21,13 @@ export interface InvitationTrustAssessment {
     | 'authentication_missing'
     | 'sender_mismatch'
     | 'sender_mismatch_unverified'
+    | 'attendee_mismatch'
+    | 'attendee_mismatch_unverified'
     | null;
   senderEmail: string | null;
   organizerEmail: string | null;
+  /** The attendee who answers in a reply, counter or refresh. */
+  attendeeEmail: string | null;
 }
 
 export interface InvitationActorSummary {
@@ -399,17 +403,22 @@ export function getInvitationTrustAssessment(
 ): InvitationTrustAssessment {
   const organizerEmail = getOrganizerEmail(event);
   const senderEmail = getPrimaryAddressEmail(email?.from) || getPrimaryAddressEmail(email?.replyTo);
+  // A reply, counter or refresh is sent by the attendee who answers; the
+  // organizer is usually the user reading it.
+  const fromAttendee = method === 'reply' || method === 'counter' || method === 'refresh';
+  const attendeeEmail = fromAttendee ? getInvitationActorSummary(event, method)?.email ?? null : null;
+  const expectedEmail = fromAttendee ? attendeeEmail : organizerEmail;
   const verifiedAuthentication = hasVerifiedAuthentication(email);
   const authenticationFailure = hasAuthenticationFailure(email);
-  const senderMismatch = Boolean(senderEmail && organizerEmail && senderEmail !== organizerEmail);
+  const senderMismatch = Boolean(senderEmail && expectedEmail && senderEmail !== expectedEmail);
   const expectsAuthenticatedTransport = method !== 'unknown';
+  const addresses = { senderEmail, organizerEmail, attendeeEmail };
 
   if (senderMismatch && (authenticationFailure || !verifiedAuthentication)) {
     return {
       level: 'warning',
-      reason: 'sender_mismatch_unverified',
-      senderEmail,
-      organizerEmail,
+      reason: fromAttendee ? 'attendee_mismatch_unverified' : 'sender_mismatch_unverified',
+      ...addresses,
     };
   }
 
@@ -417,17 +426,15 @@ export function getInvitationTrustAssessment(
     return {
       level: 'warning',
       reason: 'authentication_failed',
-      senderEmail,
-      organizerEmail,
+      ...addresses,
     };
   }
 
   if (senderMismatch) {
     return {
       level: 'caution',
-      reason: 'sender_mismatch',
-      senderEmail,
-      organizerEmail,
+      reason: fromAttendee ? 'attendee_mismatch' : 'sender_mismatch',
+      ...addresses,
     };
   }
 
@@ -435,16 +442,14 @@ export function getInvitationTrustAssessment(
     return {
       level: 'caution',
       reason: 'authentication_missing',
-      senderEmail,
-      organizerEmail,
+      ...addresses,
     };
   }
 
   return {
     level: 'trusted',
     reason: null,
-    senderEmail,
-    organizerEmail,
+    ...addresses,
   };
 }
 

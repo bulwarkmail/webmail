@@ -281,7 +281,7 @@ describe('a draft and the login it was saved with', () => {
     // Created through B with nothing for B to remove ...
     expect(clientB.createDraft).toHaveBeenCalledTimes(1);
     expect((clientB.createDraft as ReturnType<typeof vi.fn>).mock.calls[0][7]).toBeUndefined();
-    expect((clientB.createDraft as ReturnType<typeof vi.fn>).mock.calls[0][11]).toBeUndefined();
+    expect((clientB.createDraft as ReturnType<typeof vi.fn>).mock.calls[0][13]?.previousDraftAccountId).toBeUndefined();
     // ... the version A saved goes through A, and B removes nothing.
     expect(clientA.deleteEmail).toHaveBeenCalledWith('draft-a2', undefined);
     expect(clientB.deleteEmail).not.toHaveBeenCalled();

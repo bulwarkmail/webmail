@@ -569,6 +569,8 @@
       "authentication_missing_info": "این دعوت‌نامه فاقد احراز هویت ایمیل است.",
       "sender_mismatch_info": "این دعوت‌نامه از {sender} ارسال شده ولی برگزارکننده {organizer} است.",
       "sender_mismatch_unverified_info": "از {sender} ارسال شده ولی برگزارکننده {organizer} است و پیام تأیید نشد.",
+      "attendee_mismatch_info": "این پاسخ از {sender} ارسال شده ولی شرکت‌کننده‌ی پاسخ‌دهنده {attendee} است.",
+      "attendee_mismatch_unverified_info": "این پاسخ از {sender} ارسال شده ولی شرکت‌کننده‌ی پاسخ‌دهنده {attendee} است و پیام تأیید نشد.",
       "organizer_role": "شما برگزارکننده این رویداد هستید",
       "your_response": "پاسخ شما: {status}",
       "response_needed": "نیاز به پاسخ",
@@ -611,6 +613,7 @@
     "scheduled_send_created": "ایمیل برای ارسال زمان‌بندی شد",
     "sending_in": "ارسال تا {seconds} ثانیه دیگر",
     "undo_send_failed": "لغو ممکن نشد. شاید پیام ارسال شده باشد.",
+    "undo_send_signed_out": "لغو ممکن نشد: حسابی که پیام از آن ارسال شده دیگر وارد نشده است.",
     "cancel_scheduled_send": "لغو ارسال",
     "reschedule_send": "باززمان‌بندی",
     "cancel_and_edit": "لغو و ویرایش",
@@ -698,6 +701,7 @@
     "link_url_prompt": "آدرس را وارد کنید",
     "draft_saved": "پیش‌نویس ذخیره شد",
     "save_failed": "ذخیره ناموفق بود",
+    "discard_signed_out": "پیش‌نویس حذف نشد: حسابی که در آن ذخیره شده دیگر وارد نشده است. در پیش‌نویس‌های همان حساب می‌ماند.",
     "to_placeholder": "آدرس ایمیل گیرندگان",
     "cc_placeholder": "گیرندگان رونوشت",
     "bcc_placeholder": "گیرندگان رونوشت مخفی",
@@ -1534,6 +1538,10 @@
         "label": "فقط متن ساده",
         "description": "غیرفعال کردن rich text"
       },
+      "quick_reply": {
+        "label": "پاسخ سریع",
+        "description": "نمایش کادر پاسخ سریع زیر پیام‌ها."
+      },
       "auto_select_reply_identity": {
         "label": "پاسخ از آدرس دریافتی",
         "description": "ارسال با آدرس دریافت شده"
@@ -1779,6 +1787,10 @@
         "signed_in": "Signed in to {count, plural, one {# account} other {# accounts}} with the saved password.",
         "sign_in_failed": "{count, plural, one {# saved password was} other {# saved passwords were}} refused: sign in to those accounts from the account list.",
         "deleted": "Saved list deleted.",
+        "prompt_title": "Restore your other accounts?",
+        "prompt_description": "A list of accounts is saved for {account}. Enter its backup password to add them to this browser, or do it later from Settings.",
+        "prompt_not_now": "Not now",
+        "prompt_done": "Done",
         "errors": {
           "mismatch": "The passwords do not match.",
           "password_length": "Use at least 10 characters.",

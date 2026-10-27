@@ -189,18 +189,17 @@ function usernamesEqual(a: string, b: string): boolean {
  * Does the claimed login name denote the server-reported one? Stalwart
  * canonicalizes the login it echoes in `Session.username` (`UserA@x` and the
  * bare local part `usera` both come back as `usera@x`), so besides a
- * case-insensitive match we accept a bare local part on either side.
+ * case-insensitive match we accept a bare local part as the claim. Not the
+ * other way round: a bare `Session.username` names no domain, so `info`
+ * would vouch for `info@` any domain, another account's login among them.
+ * Such a claim has to be one of the account's identities instead.
  */
 export function usernameMatchesSession(claimed: string, sessionUsername: string | undefined): boolean {
   if (!sessionUsername) return false;
   if (usernamesEqual(claimed, sessionUsername)) return true;
-  const claimedAt = claimed.indexOf('@');
   const sessionAt = sessionUsername.indexOf('@');
-  if (claimedAt < 0 && sessionAt > 0) {
+  if (!claimed.includes('@') && sessionAt > 0) {
     return usernamesEqual(claimed, sessionUsername.slice(0, sessionAt));
-  }
-  if (sessionAt < 0 && claimedAt > 0) {
-    return usernamesEqual(claimed.slice(0, claimedAt), sessionUsername);
   }
   return false;
 }

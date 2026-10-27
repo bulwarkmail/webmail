@@ -232,9 +232,8 @@ describe('re-opened reply draft', () => {
 
     await waitFor(() => expect(createDraft).toHaveBeenCalled());
     const args = createDraft.mock.calls[0];
-    // After draftAccountId (index 11).
-    expect(args[12]).toEqual(['parent@example.com']);
-    expect(args[13]).toEqual(['root@example.com', 'parent@example.com']);
+    expect(args[11]).toEqual(['parent@example.com']);
+    expect(args[12]).toEqual(['root@example.com', 'parent@example.com']);
     useAuthStore.setState({ client: null, activeAccountId: null });
   });
 });

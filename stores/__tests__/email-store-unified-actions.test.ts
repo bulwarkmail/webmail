@@ -74,6 +74,17 @@ function makeClient() {
   } as unknown as IJMAPClient;
 }
 
+/** What `client` reads with Mailbox/get, by account (bulk archive reads its folders live). */
+function servesFolders(client: IJMAPClient, byAccount: Record<string, Mailbox[]>): IJMAPClient {
+  (client.getMailboxes as ReturnType<typeof vi.fn>).mockImplementation(async (accountId: string) => byAccount[accountId] ?? []);
+  return client;
+}
+
+/** An account without an Archive gets one, unless the server refuses it. */
+function refuseArchiveCreation(client: IJMAPClient): void {
+  Object.assign(client, { getAccountCapability: () => ({ mayCreateTopLevelMailbox: false }) });
+}
+
 // Some tests replace these with spies.
 const realCrossAccountMoveEmails = useEmailStore.getState().crossAccountMoveEmails;
 const realRefreshCurrentMailbox = useEmailStore.getState().refreshCurrentMailbox;
@@ -405,8 +416,8 @@ describe('unified-view batch actions with two logins that share account ids', ()
   ];
 
   beforeEach(() => {
-    client016 = makeClient();
-    client10 = makeClient();
+    client016 = servesFolders(makeClient(), { e: own016, c: team016 });
+    client10 = servesFolders(makeClient(), { e: own10, c: team10 });
     useAuthStore.setState({
       activeAccountId: 'userb@v016',
       getClientForAccount: (id: string) =>
@@ -605,6 +616,8 @@ describe('unified-view batch actions with two logins that share account ids', ()
 
   it('keeps the messages of an account without an Archive listed and selected, archiving the others', async () => {
     useSettingsStore.setState({ archiveMode: 'single' } as never);
+    servesFolders(client10, { e: own10, c: team10.filter((m) => m.role !== 'archive') });
+    refuseArchiveCreation(client10);
     useEmailStore.setState((s) => ({
       accountMailboxes: { ...s.accountMailboxes, 'userb@v10|c': team10.filter((m) => m.role !== 'archive') },
     }));
@@ -618,6 +631,8 @@ describe('unified-view batch actions with two logins that share account ids', ()
   });
 
   it('rejects with ArchiveMailboxNotFoundError when no message could be archived', async () => {
+    servesFolders(client10, { e: own10.filter((m) => m.role !== 'archive') });
+    refuseArchiveCreation(client10);
     useEmailStore.setState({
       accountMailboxes: {},
       selectedEmailKeys: new Set([keyOf('userb@v10', 'e', 'm10')]),
@@ -724,8 +739,8 @@ describe('lists that mix accounts, without the unified views\' cache and after b
     makeEmail({ id, sourceClientAccountId: login, sourceAccountId: account, mailboxIds: { a: true }, ...extra });
 
   beforeEach(() => {
-    client016 = Object.assign(makeClient(), { getAccountId: () => 'd' });
-    client10 = Object.assign(makeClient(), { getAccountId: () => 'd' });
+    client016 = servesFolders(Object.assign(makeClient(), { getAccountId: () => 'd' }), { d: own016, c: team016 });
+    client10 = servesFolders(Object.assign(makeClient(), { getAccountId: () => 'd' }), { d: own10 });
     useSettingsStore.setState({ archiveMode: 'single', deleteAction: 'trash' } as never);
     useAuthStore.setState({
       activeAccountId: 'usera@v016',

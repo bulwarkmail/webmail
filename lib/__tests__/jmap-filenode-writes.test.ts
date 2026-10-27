@@ -27,6 +27,12 @@ const STALWART_10_CAPABILITY = {
   forbiddenNodeNames: ['.', '..', 'CON', 'PRN', 'AUX', 'NUL', 'COM1', 'LPT1'],
 };
 
+// Stalwart 1.0.0 (File Storage draft 18) also lists the node types it has.
+const STALWART_100_CAPABILITY = {
+  ...STALWART_10_CAPABILITY,
+  supportedNodeTypes: ['Directory', 'File', 'SymLink'],
+};
+
 // A primary account "me" plus a shared drive "grp", as listed by
 // listAllFileNodesAcrossAccounts ("grp:<id>").
 function makeClient(nodes: Record<string, Array<Record<string, unknown>>>, options: FakeOptions = {}) {
@@ -192,6 +198,32 @@ describe('FileNode writes', () => {
     expect(sets(calls)).toEqual([
       { accountId: 'me', onExists: 'rename', create: { n0: { name: 'a.txt', type: 'text/plain', blobId: 'b1' } } },
     ]);
+  });
+
+  // Seen live: 1.0.0 answers a create without `@type` with "@type is
+  // required on creation." and one with `type` with "Invalid property.";
+  // 0.16.27 answers `@type` with "Invalid property.".
+  it('creates with @type and mediaType on Stalwart 1.0.0, and copies its nodes', async () => {
+    const { client, calls } = makeClient({
+      me: [
+        { id: 'd1', name: 'Docs', parentId: null, '@type': 'Directory' },
+        { id: 'l1', name: 'latest', parentId: 'd1', '@type': 'SymLink' },
+        { id: 'f1', name: 'a.txt', parentId: 'd1', '@type': 'File', mediaType: 'text/plain', blobId: 'b1', size: 3 },
+      ],
+    }, { capability: STALWART_100_CAPABILITY });
+
+    const dir = await client.createFileDirectory('New', null);
+    const made = await client.createFileNode('b.txt', 'b2', 'text/plain', 3, null);
+    await client.copyFileNode('d1', 'Docs (copy)', null);
+
+    expect(sets(calls).map(a => (a.create as { n0: Record<string, unknown> }).n0)).toEqual([
+      { '@type': 'Directory', name: 'New' },
+      { '@type': 'File', name: 'b.txt', mediaType: 'text/plain', blobId: 'b2' },
+      { '@type': 'Directory', name: 'Docs (copy)' },
+      { '@type': 'File', name: 'a.txt', parentId: 'new3', mediaType: 'text/plain', blobId: 'b1' },
+    ]);
+    expect(dir).toMatchObject({ id: 'new1', name: 'New', nodeType: 'directory' });
+    expect(made).toMatchObject({ id: 'new2', type: 'text/plain', nodeType: 'file' });
   });
 
   it('shares with the mayWrite rights of servers before 0.16.6', async () => {

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 import { setupQuoteCollapse, collapsePlainTextQuotes, QUOTE_TOGGLE_ATTR, QUOTE_COLLAPSED_ATTR } from '@/lib/quote-collapse';
 import { plainTextToSafeHtml, sanitizeEmailHtml, sanitizePlainTextRenderedHtml } from '@/lib/email-sanitization';
@@ -160,6 +160,23 @@ describe('setupQuoteCollapse', () => {
       <blockquote>Stay hungry, stay foolish.</blockquote>`;
     expect(setupQuoteCollapse(document, labels)).toBe(false);
     expect(toggle()).toBeNull();
+  });
+
+  it('looks for an attribution in one pass over many bare blockquotes', () => {
+    // Every outermost blockquote used to walk all text before it again, so a
+    // body of a few ten thousand blockquotes froze the reader for minutes.
+    const n = 2000;
+    document.body.innerHTML = '<p>Intro</p>' + '<blockquote>x</blockquote>'.repeat(n) + '<p>Earlier:</p><blockquote>late quote</blockquote>';
+    const nodes = document.body.querySelectorAll('*').length + n + 3;
+    const walkerSpy = vi.spyOn(Node.prototype, 'compareDocumentPosition');
+    try {
+      expect(setupQuoteCollapse(document, labels)).toBe(true);
+      expect(walkerSpy.mock.calls.length).toBeLessThan(nodes * 6);
+    } finally {
+      walkerSpy.mockRestore();
+    }
+    expect(document.body.lastElementChild!.textContent).toBe('late quote');
+    expect((document.body.lastElementChild as HTMLElement).style.display).toBe('none');
   });
 
   it('collapses a nested wrapper case: separator inside a wrapper div hides content outside it too', () => {

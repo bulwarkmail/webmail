@@ -104,6 +104,7 @@ export const tabSearchPaths: Record<Tab, string[]> = {
     'settings.templates',
     'settings.email_behavior.signatures_link',
     'settings.email_behavior.attachment_reminder',
+    'settings.email_behavior.quick_reply',
     'settings.email_behavior.auto_select_reply_identity',
     'settings.email_behavior.reply_identity_match',
     'settings.email_behavior.plain_text_mode',

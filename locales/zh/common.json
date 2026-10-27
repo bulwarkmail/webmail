@@ -544,6 +544,8 @@
       "authentication_missing_info": "此邀请不包括经过验证的邮件身份验证。如果有任何异常情况，请与组织者确认详细信息。",
       "sender_mismatch_info": "此邀请是从 {sender} 发送的，而日历数据中列出的组织者是 {organizer}。",
       "sender_mismatch_unverified_info": "此邀请是从 {sender} 发送的，而日历数据中列出的组织者是 {organizer}，且无法验证该消息。",
+      "attendee_mismatch_info": "此回复是从 {sender} 发送的，而日历数据中作出回复的参与者是 {attendee}。",
+      "attendee_mismatch_unverified_info": "此回复是从 {sender} 发送的，而日历数据中作出回复的参与者是 {attendee}，且无法验证该消息。",
       "organizer_role": "您是此活动的组织者",
       "your_response": "您的回复：{status}",
       "response_needed": "待回复",
@@ -611,6 +613,7 @@
     "scheduled_send_created": "邮件已计划发送",
     "sending_in": "{seconds} 秒后发送",
     "undo_send_failed": "无法撤销。邮件可能已经发出。",
+    "undo_send_signed_out": "无法撤销：发送此邮件的账户已退出登录。",
     "cancel_scheduled_send": "取消发送",
     "reschedule_send": "重新计划",
     "cancel_and_edit": "取消并编辑",
@@ -695,6 +698,7 @@
     "saving": "保存中...",
     "draft_saved": "草稿已保存",
     "save_failed": "保存失败",
+    "discard_signed_out": "草稿未删除：保存它的账户已退出登录。草稿仍保留在该账户的草稿箱中。",
     "to_placeholder": "收件人",
     "cc_placeholder": "抄送",
     "bcc_placeholder": "密送",
@@ -1531,6 +1535,10 @@
         "label": "仅纯文本",
         "description": "禁用富文本编辑器，并将所有邮件（包括回复和转发）以纯文本发送"
       },
+      "quick_reply": {
+        "label": "快速回复",
+        "description": "在邮件下方显示快速回复框。"
+      },
       "auto_select_reply_identity": {
         "label": "自动选择回复地址",
         "description": "回复时自动将发件人地址切换为最初收到该邮件的身份"
@@ -1776,6 +1784,10 @@
         "signed_in": "Signed in to {count, plural, one {# account} other {# accounts}} with the saved password.",
         "sign_in_failed": "{count, plural, one {# saved password was} other {# saved passwords were}} refused: sign in to those accounts from the account list.",
         "deleted": "Saved list deleted.",
+        "prompt_title": "Restore your other accounts?",
+        "prompt_description": "A list of accounts is saved for {account}. Enter its backup password to add them to this browser, or do it later from Settings.",
+        "prompt_not_now": "Not now",
+        "prompt_done": "Done",
         "errors": {
           "mismatch": "The passwords do not match.",
           "password_length": "Use at least 10 characters.",

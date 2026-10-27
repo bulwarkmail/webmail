@@ -9,6 +9,8 @@ import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
+const MIN_SESSION_SECRET_LENGTH = 32;
+
 /**
  * Mapping of wizard-friendly step keys to the config keys they update. Each
  * step's PATCH validates against this allowlist so a compromised wizard
@@ -108,6 +110,14 @@ export async function POST(request: NextRequest) {
     }
     if (!(key in CONFIG_ENV_MAP)) {
       return NextResponse.json({ error: `Unknown config key: ${key}` }, { status: 400 });
+    }
+    // Admin sign-in and remember me refuse a shorter key (lib/admin/session.ts,
+    // lib/auth/crypto.ts), so saving one would break them right after setup.
+    if (key === 'sessionSecret' && (typeof value !== 'string' || value.length < MIN_SESSION_SECRET_LENGTH)) {
+      return NextResponse.json(
+        { error: `sessionSecret must be at least ${MIN_SESSION_SECRET_LENGTH} characters` },
+        { status: 400 },
+      );
     }
     if (key === 'jmapServers') {
       // Sanitize: drop entries with bad ids, dup ids, or non-HTTP URLs

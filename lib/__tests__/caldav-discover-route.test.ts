@@ -86,6 +86,15 @@ describe('POST /api/caldav/discover', () => {
     expect((await res.json()).accounts.A).toEqual({ url: target('c2'), resolvedAccount: 'c2' });
   });
 
+  it('keeps the path prefix of a server mounted below the root', async () => {
+    mockCreds.mockResolvedValue({ ...CREDS, serverUrl: 'https://host.example.com/stalwart/' });
+    fetchSpy.mockResolvedValue({ status: 207, headers: new Headers() });
+    const data = await read(await POST(makeReq({ accounts: [{ key: 'A', candidates: ['c1'] }] }))).json();
+    expect(data.wellKnownUrl).toBe('https://host.example.com/stalwart/.well-known/caldav');
+    expect(data.accounts.A.url).toBe('https://host.example.com/stalwart/dav/cal/c1');
+    expect(fetchSpy).toHaveBeenCalledWith('https://host.example.com/stalwart/dav/cal/c1', expect.anything());
+  });
+
   it('de-duplicates and trims candidates before probing', async () => {
     fetchSpy.mockResolvedValue({ status: 404, headers: new Headers() });
     await POST(makeReq({ accounts: [{ key: 'A', candidates: ['  c1 ', 'c1', '', 'c1'] }] }));

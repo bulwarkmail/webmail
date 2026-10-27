@@ -86,25 +86,22 @@ function hasVisibleContent(body: HTMLElement, marker: Element, side: 'before' | 
  * ending with a colon ("On …, X wrote:", "Am … schrieb X:", "… a écrit :").
  */
 function findAttributedBlockquote(body: HTMLElement): Element | null {
-  for (const bq of Array.from(body.querySelectorAll('blockquote'))) {
-    if (bq.parentElement?.closest('blockquote')) continue; // outermost only
-    if (precedingTextEndsWithColon(body, bq)) return bq;
-  }
-  return null;
-}
-
-/** True when the last non-blank text node before `el` ends with a colon. */
-function precedingTextEndsWithColon(body: HTMLElement, el: Element): boolean {
-  const walker = body.ownerDocument.createTreeWalker(body, NodeFilter.SHOW_TEXT);
+  // One walk in document order, remembering the last non-blank text: a
+  // blockquote is reached before its own text, so that is the text preceding
+  // it. Walking from the start again per blockquote cost quadratic time.
+  const walker = body.ownerDocument.createTreeWalker(body, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT);
   let last: string | null = null;
   for (let node = walker.nextNode(); node; node = walker.nextNode()) {
-    const rel = el.compareDocumentPosition(node);
-    if (rel & Node.DOCUMENT_POSITION_CONTAINED_BY) continue;
-    if (!(rel & Node.DOCUMENT_POSITION_PRECEDING)) break; // reached/passed el
-    const text = (node.nodeValue || '').trim();
-    if (text !== '') last = text;
+    if (node.nodeType === Node.TEXT_NODE) {
+      const text = (node.nodeValue || '').trim();
+      if (text !== '') last = text;
+      continue;
+    }
+    const el = node as Element;
+    if (el.tagName !== 'BLOCKQUOTE' || el.parentElement?.closest('blockquote')) continue; // outermost only
+    if (last !== null && last.endsWith(':')) return el;
   }
-  return last !== null && last.endsWith(':');
+  return null;
 }
 
 /** Hide an element, remembering its original inline display for restore. */

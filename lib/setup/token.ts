@@ -58,7 +58,8 @@ export async function ensureSetupToken(ttlSeconds: number = DEFAULT_TTL_SECONDS)
     ttlSeconds,
   };
   const path = getStatePath(TOKEN_FILE);
-  await writeFile(path, JSON.stringify(payload, null, 2), 'utf-8');
+  // Owner-only: whoever reads it can finish the setup wizard.
+  await writeFile(path, JSON.stringify(payload, null, 2), { encoding: 'utf-8', mode: 0o600 });
   return token;
 }
 

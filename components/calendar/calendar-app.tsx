@@ -38,6 +38,7 @@ import { AppTopBannerSlot } from "@/components/plugins/app-top-banner-slot";
 import { EmptySpaceContextMenu } from "@/components/calendar/empty-space-context-menu";
 import { useContextMenu } from "@/hooks/use-context-menu";
 import { useRefreshGesture } from "@/hooks/use-refresh-gesture";
+import { useCalendarPushRefresh } from "@/hooks/use-calendar-push-refresh";
 import { downloadEventICS } from "@/lib/calendar-ics-export";
 import { ICalImportModal } from "@/components/calendar/ical-import-modal";
 import { ICalSubscriptionModal } from "@/components/calendar/ical-subscription-modal";
@@ -124,6 +125,8 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
   const isMobile = useIsMobile();
   const isDesktop = useIsDesktop();
   const isEmbedded = useIsEmbedded();
+  // The Pro interface takes over this route; the Pro tab loads the data then.
+  const proInterfaceActive = useProInterfaceActive();
   // Mountain View's desktop chrome: its top bar in place of the left rail.
   const mvShell = useMountainViewShell(isEmbedded);
   // When the pane (Pro shell) or window is narrower than `lg`, the sidebar
@@ -364,14 +367,17 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
   // Single-account fetch path. The Pro shell aggregates calendars from
   // every connected account via [[useProMultiAccountCalendars]] below, so
   // skip this fetch there to avoid clobbering the merged list with the
-  // active client's calendars only.
+  // active client's calendars only. That includes the standard instance
+  // that renders while the Pro interface takes over the route: its raw ids
+  // replaced the merged list after the Pro tab loaded it, and the selection
+  // the user made in between went to another account's calendar.
   useEffect(() => {
-    if (isEmbedded) return;
+    if (isEmbedded || proInterfaceActive) return;
     if (client && !hasFetched.current) {
       hasFetched.current = true;
       fetchCalendars(client);
     }
-  }, [client, fetchCalendars, isEmbedded]);
+  }, [client, fetchCalendars, isEmbedded, proInterfaceActive]);
 
   // Auto-refresh iCal subscriptions
   useEffect(() => {
@@ -496,11 +502,11 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
   }, [client, enableCalendarTasks, normalizedViewMode, showTasksOnCalendar, fetchTasksFn]);
 
   useEffect(() => {
-    if (isEmbedded) return;
+    if (isEmbedded || proInterfaceActive) return;
     if (client && calendars.length > 0 && dateRange) {
       fetchEvents(client, dateRange.start, dateRange.end);
     }
-  }, [client, calendars.length, dateRange, fetchEvents, isEmbedded]);
+  }, [client, calendars.length, dateRange, fetchEvents, isEmbedded, proInterfaceActive]);
 
   // Pro shell only: aggregate calendars and events from every connected
   // account so the sidebar lists them all (and the views render their
@@ -851,7 +857,6 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
   // The permalink for what the calendar is currently showing. In the Pro
   // shell only the focused tab writes the address bar; the standard instance
   // that renders while Pro takes over a route stays silent.
-  const proInterfaceActive = useProInterfaceActive();
   const isFocusedProTab = useIsFocusedProTab();
   const isPaneScoped = useIsPaneScoped();
   const eventLinkId = showEventModal && editEvent ? editEvent.id : null;
@@ -933,7 +938,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     onRefresh: async () => {
       if (!client) return;
       const calendarRefresh = multiAccountEnabled && accountClients.length > 0 && activeAccountId
-        ? fetchAllAccountsCalendarsFn(accountClients)
+        ? fetchAllAccountsCalendarsFn(accountClients, activeAccountId)
         : fetchCalendars(client);
       await Promise.all([
         calendarRefresh,
@@ -942,6 +947,19 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
       ]);
     },
   });
+
+  // Changes made elsewhere (another device, another session, an invitation)
+  // reach the open calendar through push (#1349).
+  useCalendarPushRefresh(() => {
+    if (!client || !supportsCalendar) return;
+    // The standard instance under the Pro takeover leaves the data to the Pro tab.
+    if (!isEmbedded && proInterfaceActive) return;
+    const merged = multiAccountEnabled && accountClients.length > 0 && activeAccountId;
+    void (merged ? fetchAllAccountsCalendarsFn(accountClients, activeAccountId) : fetchCalendars(client));
+    void refetchCurrentRange();
+    // Tasks are calendar objects too (e.g. one created over CalDAV).
+    if (enableCalendarTasks && (normalizedViewMode === "tasks" || showTasksOnCalendar)) void fetchTasksFn(client);
+  }, { enabled: isAuthenticated && !!client, includeBackground: multiAccountEnabled });
 
   const focusCalendarOnEvent = useCallback((event: Pick<Partial<CalendarEvent>, "start" | "utcStart" | "showWithoutTime">) => {
     if (!event.start) {

@@ -542,6 +542,8 @@
       "authentication_missing_info": "Questo invito non include un'autenticazione email verificata. Conferma i dettagli con l'organizzatore se qualcosa sembra insolito.",
       "sender_mismatch_info": "Questo invito è stato inviato da {sender}, mentre l'organizzatore indicato nei dati del calendario è {organizer}.",
       "sender_mismatch_unverified_info": "Questo invito è stato inviato da {sender}, mentre l'organizzatore indicato nei dati del calendario è {organizer}, e il messaggio non ha potuto essere verificato.",
+      "attendee_mismatch_info": "Questa risposta è stata inviata da {sender}, mentre il partecipante che risponde nei dati del calendario è {attendee}.",
+      "attendee_mismatch_unverified_info": "Questa risposta è stata inviata da {sender}, mentre il partecipante che risponde nei dati del calendario è {attendee}, e il messaggio non ha potuto essere verificato.",
       "organizer_role": "Sei l'organizzatore di questo evento",
       "your_response": "La tua risposta: {status}",
       "response_needed": "Risposta richiesta",
@@ -611,6 +613,7 @@
     "scheduled_send_created": "E-mail programmata per l’invio",
     "sending_in": "Invio tra {seconds} s",
     "undo_send_failed": "Impossibile annullare. Il messaggio potrebbe essere già stato inviato.",
+    "undo_send_signed_out": "Impossibile annullare: l'account da cui è stato inviato il messaggio non è più connesso.",
     "cancel_scheduled_send": "Annulla invio",
     "reschedule_send": "Riprogramma",
     "cancel_and_edit": "Annulla e modifica",
@@ -695,6 +698,7 @@
     "saving": "Salvataggio...",
     "draft_saved": "Bozza salvata",
     "save_failed": "Salvataggio non riuscito",
+    "discard_signed_out": "La bozza non è stata eliminata: l'account in cui è stata salvata non è più connesso. Rimane nelle bozze di quell'account.",
     "to_placeholder": "Indirizzi email dei destinatari",
     "cc_placeholder": "Destinatari in copia",
     "bcc_placeholder": "Destinatari in copia nascosta",
@@ -1522,6 +1526,10 @@
         "label": "Solo testo normale",
         "description": "Disabilita l'editor di testo formattato e invia tutte le email solo come testo normale, incluse risposte e inoltri"
       },
+      "quick_reply": {
+        "label": "Risposta rapida",
+        "description": "Mostra la casella di risposta rapida sotto i messaggi."
+      },
       "auto_select_reply_identity": {
         "label": "Seleziona automaticamente l'indirizzo di risposta",
         "description": "Quando rispondi, passa automaticamente l'indirizzo mittente all'identità che ha ricevuto il messaggio originale"
@@ -1776,6 +1784,10 @@
         "signed_in": "Accesso fatto a {count, plural, one {# account} other {# account}} con la password salvata.",
         "sign_in_failed": "{count, plural, one {# password salvata è stata rifiutata} other {# password salvate sono state rifiutate}}: accedi a quegli account dall'elenco account.",
         "deleted": "Elenco salvato eliminato.",
+        "prompt_title": "Ripristinare gli altri account?",
+        "prompt_description": "Per {account} è salvato un elenco di account. Inserisci la password del backup per aggiungerli a questo browser, oppure fallo più tardi dalle Impostazioni.",
+        "prompt_not_now": "Non ora",
+        "prompt_done": "Fatto",
         "errors": {
           "mismatch": "Le password non coincidono.",
           "password_length": "Usa almeno 10 caratteri.",

@@ -1,5 +1,96 @@
 # Changelog
 
+## 1.18.0 (2026-10-26)
+
+1.18.0 works with Stalwart 1.0, released today, as well as with 0.16. Sign-in, calendars, contacts, files and sending were adapted to what changed in 1.0, and a Stalwart that was moved from 0.16 to 1.0 with Stalwart's migration tool keeps working with the same open tabs. It also fixes the findings of a security review of the whole webmail, more places where an action in a view that mixes accounts could hit another account's message with the same id, and a series of calendar bugs around repeating events. Plugins can show their own search results and a count on their buttons, quick reply can be turned off, and a new device offers to restore your saved account list.
+
+Thank you for your donations:
+
+- _You? [Become a sponsor!](https://github.com/sponsors/bulwarkmail)_
+
+**One-time**
+
+- [@bultester](https://github.com/bultester)
+- Anonymous
+- Anonymous
+- Anonymous
+- Anonymous
+
+**Monthly**
+
+- Anonymous
+- [@superspacehosting](https://github.com/superspacehosting)
+- [@naokton](https://github.com/naokton)
+- [@yerTools](https://github.com/yerTools)
+- [@jsaathof](https://github.com/jsaathof)
+- [@berkersal](https://github.com/berkersal)
+- [@NABarnes](https://github.com/NABarnes)
+- [@felixzieger](https://github.com/felixzieger)
+- [@pr0ton11](https://github.com/pr0ton11)
+- [@fpauser](https://github.com/fpauser)
+- [@proxforge](https://github.com/proxforge)
+- [@spss20](https://github.com/spss20)
+- [@elgringoYan](https://github.com/elgringoYan)
+- [@pauladams8](https://github.com/pauladams8)
+- [@djpriest](https://github.com/djpriest)
+- [@umakers](https://github.com/umakers)
+- [@zplizzi](https://github.com/zplizzi)
+- [@jeremiah](https://github.com/jeremiah)
+- [@Theoretisch1337](https://github.com/Theoretisch1337)
+- [@svandive](https://github.com/svandive)
+- [@HiltMundell](https://github.com/HiltMundell)
+
+### Upgrading to Stalwart 1.0
+
+- After moving Stalwart to 1.0, run **Auto-configure OAuth** once on the admin **Authentication** page. It registers Bulwark with Stalwart as a first-party client. Without it, mail, contacts, calendars and files work, but the account security settings (password, two-factor, app passwords) are not available, and single sign-on through Stalwart needs the registered client
+- Stalwart 1.0 can't be installed over 0.16: its migration tool (`stalwart-migrate`) copies the data into a new store. Ids and sync state are kept, so Bulwark carries on without reloading anything, but OAuth tokens are not migrated: everyone who signed in with single sign-on, or with a password and a two-factor code, signs in again. Keep the server's public URL the same
+- Admin sessions are signed out once by this update, and they now also end when you sign out or change the admin password
+
+### Security
+
+- **Plugins**: `/api/plugin-approval-status` refuses plugin packages while user plugins, plugin uploads or their review are turned off. Any signed-in user could fill the admin's review queue and the data directory with packages (GHSA-qc44-275p-gqw9, thanks @oguzyilmaznet)
+- **Sidebar apps**: With `COOKIE_SECURE=true`, the unprefixed sidebar-app cookie is no longer trusted behind a TLS proxy that sends no `X-Forwarded-Proto`, so a sibling subdomain can't add origins to the page's `frame-src` (GHSA-cjm9-m826-mh78, thanks @oguzyilmaznet)
+- **Sign-in**: A stored credential that the mail server refused (password changed, app password revoked) is not sent again for an hour, and a global cap stops a loop of them, so a stale session can't get the webmail's address banned by Stalwart for every user. Server-side calls forward the client address (GHSA-g6c7-r7wq-xrm2, thanks @oguzyilmaznet)
+- **Multi-account**: More actions name both the login and the account. Removing a login whose folder was open, the Scheduled list, contacts in shared address books or another login, plugin moves, single-message archive and delete, the replied/forwarded flags, scheduled badges and Undo for a signed-out login could act on another account's message, contact or submission with the same id (GHSA-8x23-qw3w-mhrx)
+- **Sign-in**: On a server that reports a bare login name, a token sign-in could claim that name on any domain and reach the synced settings and stored plugin credentials of that address
+- **Sign-in**: A password and two-factor sign-in to a server you typed went to the default server when custom servers are allowed, and the password sign-in followed a mail server's redirect to another host with the password
+- **Sign-in**: A password and two-factor sign-in without "Remember me" ends with the browser session instead of staying signed in for 30 days
+- **Mail**: A link in a printed message can't redirect the webmail tab, links in conversation messages go through the same link check as the reader, a winmail.dat part whose type a browser would drop is downloaded instead of opened, and an unquoted `cid:` image no longer hides the rest of the message
+- **Mail**: Outlook-style replies (plugin) no longer load the quoted message's remote images
+- **Calendar**: Only a counter proposal from one of the meeting's participants can be applied to your meeting; anyone who knew its UID could propose a new time or place to all attendees
+- **Admin**: `config.json`, the admin password hash and the setup token are written readable only by the app's user, a synced settings file can no longer pass as an admin session, and the setup wizard refuses a session secret under 32 characters
+- **Server**: Request bodies over 10 MB are no longer buffered for every path before routing (only WebDAV uploads, the plugin proxy and office saves take more, and cap it themselves), answers from a mail server you picked are read up to a size limit, and the app files in the Docker image are read-only for the user it runs as
+- **Dependencies**: undici 7.30.1 (GHSA-xjj6-f33q-929c)
+
+### Features
+
+- **Stalwart 1.0**: Calendars, tasks, contact photos, files, free/busy, sending past Stalwart 1.0's submission limit, phrase search, and its rules for keywords, file names and time zones work on 1.0 as on 0.16. Bulwark Lite installs as a Stalwart 1.0 Application
+- **Plugins**: Plugins can show their own results in search and open the message a result names (#1336, #1338, thanks @HOLOEYE-JZ), and show a count on their buttons (#1345, thanks @HOLOEYE-JZ). `email.get`, `email.getRaw` and `email.getAttachment` take an optional account id, and summaries carry it
+- **Accounts**: A new device offers to restore the saved account list (#1363, thanks @lucamzanon)
+- **Mail**: Quick reply below messages can be turned off in Settings (#1370, thanks @maxhaomh)
+- **Mountain View**: The inbox splits into Unread and Everything else, and attachment and code chips look like Gmail's
+- **Server**: iCal subscriptions and other server-side fetches go through the outbound proxy when `NODE_USE_ENV_PROXY=1` is set. Bulwark still checks the address itself and asks the proxy for exactly that address (#1367, thanks @Jan0oo)
+
+### Fixes
+
+- **Sign-in**: Password and two-factor sign-in, Bulwark Lite and phone pairing work on Stalwart 1.0, single sign-on asks for mail, contacts, calendar and file access there, and a background account signed in with OAuth renews its own token instead of the active account's (#989, thanks @Almost-Senseless-Coder)
+- **Sign-in**: Signing out of one login switches to the remaining one when it was signed in before the page loaded, instead of signing out of all, and an OAuth account that can't be restored has its refresh token cleared
+- **Mail**: Bulk archive in the unified inbox creates each account's Archive, and a group account's year and month archive folders are reused
+- **Mail**: The unified inbox shows new mail of a group or shared account and of another signed-in login without a click (#1350, thanks @ClapsAndJiggles), and message links open the message of the account they name (#1351, thanks @ClapsAndJiggles)
+- **Mail**: The list keeps loading older mail when the server sent no total (#1364, thanks @inceblog), inline images whose part name is a path show (#1371, #1373, thanks @motofix), and Outlook-style HTML quotes without a border are kept (#1355, thanks @maxhaomh)
+- **Mail**: Sent paragraphs keep the spacing the composer shows (#1340, thanks @arnauda-gh), replies to deeply nested quotes and mails full of blockquotes no longer freeze the page, and attachment names drop direction-override characters everywhere
+- **Sending**: "Send now" of a group identity's delayed mail no longer drops it back into Drafts, own and group scheduled mail stay apart, a send refused for some recipients says so, and a held reply from a Pro compose tab still marks the original as answered
+- **Calendar**: The open calendar updates and reminders fire on time when events change elsewhere (#1349, thanks @ClapsAndJiggles), events sit and resize at their clock time on DST change days (#1348, thanks @ClapsAndJiggles), a calendar added later follows the server's visibility (#1372, thanks @somus), a colour from the system colour dialog is applied (#1366, thanks @chodid), and hiding every calendar sticks
+- **Calendar**: Editing, moving, splitting and answering repeating events keeps their changed and cancelled occurrences, organizer and answers, and asks attendees again only when the time changes
+- **Calendar**: A subscribed feed's changes to events it still carries are applied, meeting replies are checked against the attendee who answers, exported events keep emoji and names with a colon, and the Calendar Agenda shows all-day events on their day west of the server
+- **Contacts**: Photos, UIDs and group members are kept on Stalwart 1.0, and a closed directory says so instead of reporting a failed refresh
+- **Files**: Folders and uploads work on Stalwart 1.0, symlinks show as links, shared folders sit under "Shared with me", and files copy between your drive and shared drives
+- **Push**: Mail in an account shared into another signed-in login gets its notification again, previews work when the webmail reaches Stalwart on an internal address, and two logins with the same account id get a plain notification instead of the wrong preview
+- **Lite**: A replayed deep link keeps its query parameters (#1352, thanks @ClapsAndJiggles)
+- **Admin**: The allowed frame ancestors saved in the dashboard reach the header, and `setup.sh` asks again for a pasted session secret under 32 characters
+- **Accessibility**: The rail's Mail entry is named "Mail" for screen readers, not its unread count
+- **i18n**: Missing Estonian strings and the quick reply setting are translated, and the German account-list restore prompt addresses you formally
+
 ## 1.17.2 (2026-10-24)
 
 1.17.2 fixes a cross-site scripting hole in re-opened drafts and keeps Safari from dropping push subscriptions after pushes that had nothing new to show. Drafts written as a group identity now stay in the group's Drafts, and bulk delete, trash and move with several accounts on different servers act on the right server. Plugins can update and remove their own tags, format dates in the user's regional settings and put buttons beside a sidebar section's title. User-facing texts use the configured app name instead of "Bulwark".

@@ -7,8 +7,10 @@ import { NextRequest } from 'next/server';
 let signedIn = true;
 let pluginsEnabled = true;
 let sameOrigin = true;
+// A token sign-in may claim a bare name; the context then also names the account it resolved to.
+let claimed = { username: 'alice@example.org', accountName: 'alice@example.org' };
 vi.mock('@/lib/stalwart/credentials', () => ({
-  getStalwartCredentials: async () => (signedIn ? { username: 'alice@example.org', serverUrl: 'https://mail.example.org', authHeader: 'x' } : null),
+  getStalwartCredentials: async () => (signedIn ? { ...claimed, serverUrl: 'https://mail.example.org', authHeader: 'x' } : null),
 }));
 vi.mock('@/lib/admin/config-manager', () => ({
   configManager: { ensureLoaded: async () => {}, getPolicy: () => ({ features: { pluginsEnabled } }) },
@@ -65,6 +67,7 @@ beforeEach(() => {
   signedIn = true;
   pluginsEnabled = true;
   sameOrigin = true;
+  claimed = { username: 'alice@example.org', accountName: 'alice@example.org' };
   store.clear();
   proxied.length = 0;
 });
@@ -123,6 +126,14 @@ describe('POST /api/plugin-secrets', () => {
     expect((await save(VALID)).status).toBe(403);
     expect(store.size).toBe(0);
   });
+
+  it('keeps credentials under the account a bare-name token sign-in resolved to, not under the bare name', async () => {
+    const { putUserCredential } = await import('@/lib/plugin-secrets/vault');
+    claimed = { username: 'john', accountName: 'john@b.example' };
+
+    expect((await save(VALID)).status).toBe(200);
+    expect(vi.mocked(putUserCredential).mock.lastCall?.[0]).toEqual({ username: 'john@b.example', serverUrl: 'https://mail.example.org' });
+  });
 });
 
 describe('POST /api/plugin-proxy', () => {
@@ -149,5 +160,12 @@ describe('POST /api/plugin-proxy', () => {
     sameOrigin = true;
     expect((await proxyCall('plugin=nextcloud&credential=cloud&url=https%3A%2F%2Fa.example', { 'x-bulwark-capture': '{"secret":"a.b"}' })).status).toBe(400);
     expect(proxied).toEqual([]);
+  });
+
+  it('uses the credentials of the account a bare-name token sign-in resolved to', async () => {
+    claimed = { username: 'john', accountName: 'john@b.example' };
+
+    await proxyCall('plugin=nextcloud&credential=cloud&url=https%3A%2F%2Fcloud.example.org%2Fx');
+    expect(proxied[0]).toMatchObject({ user: { username: 'john@b.example' } });
   });
 });

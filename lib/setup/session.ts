@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers';
 import type { NextRequest } from 'next/server';
 import { verifySetupToken } from './token';
-import { isHttpsRequest } from '@/lib/security/request-protocol';
+import { secureCookieFlag } from '@/lib/security/request-protocol';
 
 export const SETUP_COOKIE = 'bulwark_setup_token';
 const COOKIE_MAX_AGE = 60 * 60; // 1 hour, matches token TTL
@@ -28,12 +28,12 @@ export function buildSessionCookieAttributes(request?: NextRequest) {
   // on plain HTTP, so unconditionally setting Secure in production breaks
   // setup over HTTP - the operator gets "Wizard session required" on every
   // step. The wizard surfaces a cleartext-credentials warning in the UI when
-  // HTTPS isn't in use.
+  // HTTPS isn't in use. COOKIE_SECURE wins, as for the admin cookie.
   return {
     name: SETUP_COOKIE,
     httpOnly: true,
     sameSite: 'lax' as const,
-    secure: request ? isHttpsRequest(request) : process.env.NODE_ENV === 'production',
+    secure: secureCookieFlag(request),
     path: '/',
     maxAge: COOKIE_MAX_AGE,
   };

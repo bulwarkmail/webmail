@@ -542,6 +542,8 @@
       "authentication_missing_info": "この招待には検証済みのメール認証がありません。不審な点があれば主催者に詳細を確認してください。",
       "sender_mismatch_info": "この招待は {sender} から送信されましたが、カレンダーデータ上の主催者は {organizer} です。",
       "sender_mismatch_unverified_info": "この招待は {sender} から送信されましたが、カレンダーデータ上の主催者は {organizer} であり、メッセージも検証できませんでした。",
+      "attendee_mismatch_info": "この返信は {sender} から送信されましたが、カレンダーデータ上で返信している参加者は {attendee} です。",
+      "attendee_mismatch_unverified_info": "この返信は {sender} から送信されましたが、カレンダーデータ上で返信している参加者は {attendee} であり、メッセージも検証できませんでした。",
       "organizer_role": "あなたがこのイベントの主催者です",
       "your_response": "あなたの返答: {status}",
       "response_needed": "返答が必要です",
@@ -611,6 +613,7 @@
     "scheduled_send_created": "メールを送信予約しました",
     "sending_in": "{seconds} 秒後に送信",
     "undo_send_failed": "取り消せませんでした。メッセージはすでに送信された可能性があります。",
+    "undo_send_signed_out": "取り消せませんでした: メッセージを送信したアカウントはサインアウトされています。",
     "cancel_scheduled_send": "送信をキャンセル",
     "reschedule_send": "再予約",
     "cancel_and_edit": "キャンセルして編集",
@@ -695,6 +698,7 @@
     "saving": "保存中...",
     "draft_saved": "下書きを保存しました",
     "save_failed": "保存に失敗しました",
+    "discard_signed_out": "下書きは削除されませんでした: 保存先のアカウントはサインアウトされています。下書きはそのアカウントの下書きフォルダーに残ります。",
     "to_placeholder": "受信者のメールアドレス",
     "cc_placeholder": "CC受信者",
     "bcc_placeholder": "BCC受信者",
@@ -1522,6 +1526,10 @@
         "label": "プレーンテキストのみ",
         "description": "リッチテキストエディターを無効にし、返信や転送を含むすべてのメールをプレーンテキストのみで送信します"
       },
+      "quick_reply": {
+        "label": "クイック返信",
+        "description": "メッセージの下にクイック返信欄を表示します。"
+      },
       "auto_select_reply_identity": {
         "label": "返信元アドレスを自動選択",
         "description": "返信時に、元のメッセージを受信したIDへ差出人アドレスを自動的に切り替えます"
@@ -1776,6 +1784,10 @@
         "signed_in": "Signed in to {count, plural, one {# account} other {# accounts}} with the saved password.",
         "sign_in_failed": "{count, plural, one {# saved password was} other {# saved passwords were}} refused: sign in to those accounts from the account list.",
         "deleted": "Saved list deleted.",
+        "prompt_title": "Restore your other accounts?",
+        "prompt_description": "A list of accounts is saved for {account}. Enter its backup password to add them to this browser, or do it later from Settings.",
+        "prompt_not_now": "Not now",
+        "prompt_done": "Done",
         "errors": {
           "mismatch": "The passwords do not match.",
           "password_length": "Use at least 10 characters.",

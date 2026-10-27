@@ -130,4 +130,47 @@ describe('undo send toast', () => {
 
     await waitFor(() => expect(useToastStore.getState().toasts.some((t) => t.type === 'error' && t.title === 'email_viewer.undo_send_failed')).toBe(true));
   });
+
+  // Sent through login B, which is signed out before Undo is clicked. The
+  // submission id names another submission in the active login.
+  describe('of a login that is gone', () => {
+    beforeEach(() => {
+      const active = useAuthStore.getState().client;
+      const rescheduleEmailSubmission = vi.fn();
+      Object.assign(active as object, { rescheduleEmailSubmission });
+      useAuthStore.setState({ getClientForAccount: (id: string) => (id === 'login' ? active : undefined) as never });
+    });
+    function sendThroughGoneLogin() {
+      act(() => {
+        useEmailStore.setState({
+          pendingUndoSend: {
+            submissionId: 'sub-1', emailId: 'email-1', identityId: 'id-1', localAccountId: 'login-b',
+            sendAt: new Date(Date.now() + 10_000).toISOString(), isSmime: false,
+          },
+        } as never);
+      });
+    }
+
+    it('does not undo through the active login', async () => {
+      render(<MailApp />);
+      sendThroughGoneLogin();
+      await waitFor(() => expect(undoToast()).toBeDefined());
+
+      act(() => { undoToast()!.action!.onClick(); });
+
+      await waitFor(() => expect(useToastStore.getState().toasts.some((t) => t.type === 'error' && t.title === 'email_viewer.undo_send_signed_out')).toBe(true));
+      expect(cancelUndoSend).not.toHaveBeenCalled();
+    });
+
+    it('does not send now through the active login', async () => {
+      render(<MailApp />);
+      sendThroughGoneLogin();
+      await waitFor(() => expect(undoToast()).toBeDefined());
+
+      act(() => { undoToast()!.secondaryAction!.onClick(); });
+
+      await waitFor(() => expect(useToastStore.getState().toasts.some((t) => t.type === 'error' && t.title === 'email_viewer.undo_send_signed_out')).toBe(true));
+      expect((useAuthStore.getState().client as unknown as { rescheduleEmailSubmission: ReturnType<typeof vi.fn> }).rescheduleEmailSubmission).not.toHaveBeenCalled();
+    });
+  });
 });

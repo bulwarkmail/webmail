@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
+import { configManager } from '@/lib/admin/config-manager';
 import { cookies } from 'next/headers';
 import { decryptSession } from '@/lib/auth/crypto';
 import { sessionCookieName } from '@/lib/auth/session-cookie';
@@ -14,6 +15,7 @@ import {
   type ApprovalEntry,
 } from '@/lib/admin/plugin-approvals';
 import { ExtensionPackageError, packageHash, readPluginPackage } from '@/lib/extension-package';
+import { MAX_PLUGIN_SIZE } from '@/lib/plugin-types';
 
 /**
  * GET /api/plugin-approval-status?pluginId=X&bundleHash=Y
@@ -30,16 +32,21 @@ import { ExtensionPackageError, packageHash, readPluginPackage } from '@/lib/ext
 async function resolveUsername(): Promise<string | null> {
   const cookieStore = await cookies();
   for (let slot = 0; slot < MAX_ACCOUNT_SLOTS; slot++) {
+    // The context first: a token sign-in may have claimed a bare name, and
+    // only the context knows the account it resolved to.
+    const ctx = readStalwartAuthContextFromStore(cookieStore, slot);
+    if (ctx?.username) return ctx.accountName ?? ctx.username;
     const token = cookieStore.get(sessionCookieName(slot))?.value;
     if (token) {
       const sess = decryptSession(token);
       if (sess?.username) return sess.username;
     }
-    const ctx = readStalwartAuthContextFromStore(cookieStore, slot);
-    if (ctx?.username) return ctx.username;
   }
   return null;
 }
+
+// The largest package plus room for the multipart framing around it.
+const MAX_UPLOAD_BYTES = MAX_PLUGIN_SIZE + 64 * 1024;
 
 function isValidId(s: unknown): s is string {
   return typeof s === 'string' && /^[a-z0-9][a-z0-9-]*[a-z0-9]$/.test(s) && s.length <= 64;
@@ -74,6 +81,20 @@ export async function POST(request: NextRequest) {
   try {
     const username = await resolveUsername();
     if (!username) return NextResponse.json({ error: 'unauthenticated' }, { status: 401 });
+
+    // Only take packages while users may install their own plugins and
+    // those need review (GHSA-qc44-275p-gqw9): otherwise nobody asked for
+    // the queue, and every request still stores a ZIP on disk.
+    await configManager.ensureLoaded();
+    const { features } = configManager.getPolicy();
+    if (!features.pluginsEnabled || !features.pluginsUploadEnabled || !features.requirePluginApproval) {
+      return NextResponse.json({ error: 'Plugin approval requests are turned off' }, { status: 403 });
+    }
+
+    // formData() buffers the whole body; refuse what can't be a package first.
+    if (Number(request.headers.get('content-length') ?? 0) > MAX_UPLOAD_BYTES) {
+      return NextResponse.json({ error: 'Plugin package too large' }, { status: 413 });
+    }
 
     // The request carries the package itself. The admin reviews the code
     // and manifest the server read from it, and the approval is pinned to

@@ -335,13 +335,13 @@ describe('a re-opened draft that lives in a group account', () => {
     await editSubject('Quarterly numbers', 'Quarterly numbers v2');
     expect(createDraft).toHaveBeenCalledTimes(1);
     expect(createDraft.mock.calls[0][7]).toBe('eaaaaab');
-    expect(createDraft.mock.calls[0][11]).toBe('c');
+    expect(createDraft.mock.calls[0][13]?.previousDraftAccountId).toBe('c');
 
     // The new version was saved in the own Drafts, like every draft.
     await editSubject('Quarterly numbers v2', 'Quarterly numbers v3');
     expect(createDraft).toHaveBeenCalledTimes(2);
     expect(createDraft.mock.calls[1][7]).toBe('draft-v2');
-    expect(createDraft.mock.calls[1][11]).toBeUndefined();
+    expect(createDraft.mock.calls[1][13]?.previousDraftAccountId).toBeUndefined();
   });
 
   it('tells the host where the draft lives when it is sent unchanged', async () => {
@@ -365,7 +365,7 @@ describe('a re-opened draft that lives in a group account', () => {
     fireEvent.click(screen.getAllByTestId('composer-send')[0]);
     await act(async () => { await vi.advanceTimersByTimeAsync(0); });
 
-    expect(createDraft.mock.calls[0][11]).toBe('c');
+    expect(createDraft.mock.calls[0][13]?.previousDraftAccountId).toBe('c');
     expect(onSend).toHaveBeenCalledWith(expect.objectContaining({ draftId: 'draft-v2', draftAccountId: undefined }));
   });
 
@@ -390,7 +390,7 @@ describe('a re-opened draft that lives in a group account', () => {
 
     await editSubject('Quarterly numbers', 'Quarterly numbers v2');
     expect(createDraft.mock.calls[0][7]).toBe('draft-v1');
-    expect(createDraft.mock.calls[0][11]).toBeUndefined();
+    expect(createDraft.mock.calls[0][13]?.previousDraftAccountId).toBeUndefined();
 
     fireEvent.change(screen.getByDisplayValue('Quarterly numbers v2'), { target: { value: 'Quarterly numbers v3' } });
     act(() => requestCloseRef.current!());

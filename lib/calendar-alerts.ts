@@ -285,6 +285,39 @@ export function getPendingAlerts(
   return pending;
 }
 
+/**
+ * When the next display alert of these events and tasks fires, after `now`;
+ * null when none is still to come. Lets the reminder check wake up at that
+ * moment instead of on its next periodic tick (#1349).
+ */
+export function getNextAlertFireTime(
+  events: CalendarEvent[],
+  tasks: CalendarTask[],
+  calendars: Calendar[],
+  now: number
+): number | null {
+  const fireTimes: number[] = [];
+  for (const event of events) {
+    if (event.status === 'cancelled') continue;
+    const alerts = getEffectiveAlerts(event, calendars);
+    if (!alerts) continue;
+    for (const alert of Object.values(alerts)) {
+      if (alert.action !== 'display' || alert.acknowledged) continue;
+      const fireTimeMs = computeFireTime(event, alert.trigger);
+      if (fireTimeMs !== null && fireTimeMs > now) fireTimes.push(fireTimeMs);
+    }
+  }
+  for (const task of tasks) {
+    if (!task.alerts || task.progress === 'completed' || task.progress === 'cancelled') continue;
+    for (const alert of Object.values(task.alerts)) {
+      if (alert.action !== 'display' || alert.acknowledged) continue;
+      const fireTimeMs = computeTaskFireTime(task, alert.trigger);
+      if (fireTimeMs !== null && fireTimeMs > now) fireTimes.push(fireTimeMs);
+    }
+  }
+  return fireTimes.length > 0 ? fireTimes.reduce((a, b) => Math.min(a, b)) : null;
+}
+
 export interface PendingTaskAlert {
   taskId: string;
   alertId: string;

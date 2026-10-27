@@ -303,6 +303,26 @@ export class HookBus<T extends (...args: any[]) => any> {
     return { allowed: true, value };
   }
 
+  /**
+   * Ask every handler at once, each with the same initial value, and keep
+   * each answer with the plugin that gave it, for hooks whose results the
+   * host shows per plugin (onProvideSearchResults). A handler that throws or
+   * runs out of time gives nothing.
+   */
+  async collect<V>(initial: V, ...rest: unknown[]): Promise<{ pluginId: string; value: unknown }[]> {
+    const asked = this.handlers.filter(({ pluginId }) => !pluginErrorTracker.isDisabled(pluginId));
+    const answers = await Promise.all(asked.map(async ({ pluginId, handler }) => {
+      try {
+        const value: unknown = await withTimeout(pluginId, handler(initial, ...rest), this.timeoutMs);
+        return { pluginId, value };
+      } catch (err) {
+        pluginErrorTracker.record(pluginId, err);
+        return null;
+      }
+    }));
+    return answers.filter((a): a is { pluginId: string; value: unknown } => a !== null);
+  }
+
   /** Fire handlers as transforms - each receives the output of the previous */
   async transform<V>(initial: V, ...rest: unknown[]): Promise<V> {
     let value = initial;
@@ -464,9 +484,10 @@ export const emailHooks = {
   // renderer for an attachment. Initial value: AttachmentPreview, second
   // argument: AttachmentInfo.
   onAttachmentPreview: new HookBus(),
-  // Transform hook - lets plugins contribute additional results to the global
-  // search panel. Initial value: ExternalSearchResult[]. Second argument:
-  // { query: string, filters: SearchFilters }.
+  // Lets plugins contribute results from elsewhere to a search, drawn above
+  // its message list (lib/plugin-search-results.ts). Each handler is asked
+  // on its own with an empty ExternalSearchResult[] and { query, filters },
+  // so a click can go back to the plugin that gave the entry.
   onProvideSearchResults: new HookBus(),
   // Observer fired (debounced) when the composer draft body, subject, or
   // recipients change. Handler receives a DraftView snapshot. Use for AI

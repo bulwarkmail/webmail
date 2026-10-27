@@ -35,6 +35,8 @@ describe('Next static asset CORS', () => {
       rule.headers.some((header) => header.key.toLowerCase() === 'access-control-allow-origin')
     );
 
-    expect(corsRules?.map((rule) => rule.source)).toEqual(['/_next/static/:path*']);
+    // The plugin sandbox's prebuilt, content-hashed script and stylesheet
+    // (scripts/build-plugin-sandbox.mjs) are public static files too.
+    expect(corsRules?.map((rule) => rule.source)).toEqual(['/_next/static/:path*', '/plugin-sandbox-assets/:path*']);
   });
 });

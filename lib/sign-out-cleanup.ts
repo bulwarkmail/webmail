@@ -28,6 +28,14 @@ const SIGNED_OUT_STORAGE_KEYS = [
 
 const SIGNED_OUT_SIGNAL = 'bulwark:signed-out';
 
+// Stores the auth store can't import (they import it) clear themselves here.
+const signedOutCleanups = new Set<() => void>();
+
+/** Run `cleanup` when everyone signs out in this tab. */
+export function onFullSignOut(cleanup: () => void): void {
+  signedOutCleanups.add(cleanup);
+}
+
 /** Remove the accounts' leftovers from browser storage. */
 export function purgeSignedOutData(): void {
   if (typeof window === 'undefined') return;
@@ -40,6 +48,13 @@ export function purgeSignedOutData(): void {
   }
   // Attachment bytes a plugin staged for an upload that never started.
   void fileStorage.clearFiles().catch(() => {});
+  for (const cleanup of signedOutCleanups) {
+    try {
+      cleanup();
+    } catch {
+      /* one store failing must not keep the others' data */
+    }
+  }
 }
 
 /** Tell the other tabs of this browser that everyone signed out. */

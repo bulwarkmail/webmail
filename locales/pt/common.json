@@ -542,6 +542,8 @@
       "authentication_missing_info": "Este convite não inclui autenticação de email verificada. Confirme os detalhes com o organizador se algo parecer incomum.",
       "sender_mismatch_info": "Este convite foi enviado por {sender}, enquanto o organizador indicado nos dados do calendário é {organizer}.",
       "sender_mismatch_unverified_info": "Este convite foi enviado por {sender}, enquanto o organizador indicado nos dados do calendário é {organizer}, e a mensagem não pôde ser verificada.",
+      "attendee_mismatch_info": "Esta resposta foi enviada por {sender}, enquanto o participante que responde nos dados do calendário é {attendee}.",
+      "attendee_mismatch_unverified_info": "Esta resposta foi enviada por {sender}, enquanto o participante que responde nos dados do calendário é {attendee}, e a mensagem não pôde ser verificada.",
       "organizer_role": "Você organiza este evento",
       "your_response": "Sua resposta: {status}",
       "response_needed": "Resposta necessária",
@@ -611,6 +613,7 @@
     "scheduled_send_created": "E-mail agendado para envio",
     "sending_in": "Enviando em {seconds} s",
     "undo_send_failed": "Não foi possível desfazer. A mensagem pode já ter sido enviada.",
+    "undo_send_signed_out": "Não foi possível desfazer: a conta a partir da qual a mensagem foi enviada já não tem sessão iniciada.",
     "cancel_scheduled_send": "Cancelar envio",
     "reschedule_send": "Reagendar",
     "cancel_and_edit": "Cancelar e editar",
@@ -695,6 +698,7 @@
     "saving": "Salvando...",
     "draft_saved": "Rascunho salvo",
     "save_failed": "Falha ao salvar",
+    "discard_signed_out": "O rascunho não foi eliminado: a conta onde foi guardado já não tem sessão iniciada. Fica nos rascunhos dessa conta.",
     "to_placeholder": "Endereços de e-mail dos destinatários",
     "cc_placeholder": "Destinatários CC",
     "bcc_placeholder": "Destinatários CCO",
@@ -1522,6 +1526,10 @@
         "label": "Apenas texto simples",
         "description": "Desativar o editor de texto formatado e enviar todos os e-mails apenas como texto simples, incluindo respostas e encaminhamentos"
       },
+      "quick_reply": {
+        "label": "Resposta rápida",
+        "description": "Mostrar a caixa de resposta rápida abaixo das mensagens."
+      },
       "auto_select_reply_identity": {
         "label": "Selecionar automaticamente o endereço de resposta",
         "description": "Ao responder, muda automaticamente o endereço do remetente para a identidade que recebeu a mensagem original"
@@ -1776,6 +1784,10 @@
         "signed_in": "Signed in to {count, plural, one {# account} other {# accounts}} with the saved password.",
         "sign_in_failed": "{count, plural, one {# saved password was} other {# saved passwords were}} refused: sign in to those accounts from the account list.",
         "deleted": "Saved list deleted.",
+        "prompt_title": "Restore your other accounts?",
+        "prompt_description": "A list of accounts is saved for {account}. Enter its backup password to add them to this browser, or do it later from Settings.",
+        "prompt_not_now": "Not now",
+        "prompt_done": "Done",
         "errors": {
           "mismatch": "The passwords do not match.",
           "password_length": "Use at least 10 characters.",

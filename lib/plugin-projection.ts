@@ -47,9 +47,14 @@ function plainTextFromEmail(email: Email): string {
   return (email.preview || '').trim();
 }
 
-export function emailToReadView(email: Email): EmailReadView {
+/**
+ * `accountId` names the JMAP account the message is in; rows of merged views
+ * carry it, others only the caller knows (see EmailReadView.accountId).
+ */
+export function emailToReadView(email: Email, accountId = email.sourceAccountId): EmailReadView {
   return {
     id: email.id,
+    ...(accountId ? { accountId } : {}),
     threadId: email.threadId,
     mailboxIds: Object.keys(email.mailboxIds || {}).filter(k => email.mailboxIds[k]),
     from: (email.from || []).map(a => ({ name: a.name || '', email: a.email })),
@@ -83,9 +88,10 @@ const trueKeys = (rec?: Record<string, boolean> | null): string[] =>
   Object.keys(rec || {}).filter((k) => rec?.[k]);
 
 /** Headers and flags of a message, without the body (see EmailSummary). */
-export function emailSummary(email: Email): EmailSummary {
+export function emailSummary(email: Email, accountId = email.sourceAccountId): EmailSummary {
   return {
     id: email.id,
+    ...(accountId ? { accountId } : {}),
     threadId: email.threadId,
     mailboxIds: trueKeys(email.mailboxIds),
     from: (email.from || []).map((a) => ({ name: a.name || '', email: a.email })),

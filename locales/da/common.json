@@ -569,6 +569,8 @@
       "authentication_missing_info": "Denne invitation inkluderer ikke bekræftet mailgodkendelse. Bekræft detaljerne med organisatoren, hvis noget ser usædvanligt ud.",
       "sender_mismatch_info": "Denne invitation blev sendt fra {sender}, mens organisatoren i kalenderdataene er {organizer}.",
       "sender_mismatch_unverified_info": "Denne invitation blev sendt fra {sender}, mens organisatoren i kalenderdataene er {organizer}, og beskeden kunne ikke bekræftes.",
+      "attendee_mismatch_info": "Dette svar blev sendt fra {sender}, mens deltageren, der svarer i kalenderdataene, er {attendee}.",
+      "attendee_mismatch_unverified_info": "Dette svar blev sendt fra {sender}, mens deltageren, der svarer i kalenderdataene, er {attendee}, og beskeden kunne ikke bekræftes.",
       "organizer_role": "Du organiserer denne begivenhed",
       "your_response": "Dit svar: {status}",
       "response_needed": "Kræver svar",
@@ -611,6 +613,7 @@
     "scheduled_send_created": "E-mail planlagt til afsendelse",
     "sending_in": "Sendes om {seconds} s",
     "undo_send_failed": "Kunne ikke fortrydes. Beskeden er måske allerede sendt.",
+    "undo_send_signed_out": "Kunne ikke fortrydes: kontoen, beskeden blev sendt fra, er ikke længere logget ind.",
     "cancel_scheduled_send": "Annuller afsendelse",
     "reschedule_send": "Planlæg om",
     "cancel_and_edit": "Annuller og redigér",
@@ -697,6 +700,7 @@
     "add_link": "Tilføj link",
     "draft_saved": "Kladde gemt",
     "save_failed": "Kunne ikke gemme",
+    "discard_signed_out": "Kladden blev ikke slettet: kontoen, den blev gemt i, er ikke længere logget ind. Den bliver i den kontos kladder.",
     "to_placeholder": "Modtageres e-mailadresser",
     "cc_placeholder": "Cc-modtagere",
     "bcc_placeholder": "Bcc-modtagere",
@@ -1534,6 +1538,10 @@
         "label": "Kun almindelig tekst",
         "description": "Deaktivér den rige teksteditor og send alle e-mails som ren tekst, inklusive svar og videresendelser"
       },
+      "quick_reply": {
+        "label": "Hurtigt svar",
+        "description": "Vis feltet til hurtigt svar under beskeder."
+      },
       "auto_select_reply_identity": {
         "label": "Svar fra modtaget adresse",
         "description": "Når du svarer, send fra den adresse som beskeden oprindeligt blev sendt til. Matcher først identiteter; for domæne catch-all-leveringer omskriver Fra-headeren til aliaset, mens der sendes gennem din primære identitet."
@@ -1779,6 +1787,10 @@
         "signed_in": "Signed in to {count, plural, one {# account} other {# accounts}} with the saved password.",
         "sign_in_failed": "{count, plural, one {# saved password was} other {# saved passwords were}} refused: sign in to those accounts from the account list.",
         "deleted": "Saved list deleted.",
+        "prompt_title": "Restore your other accounts?",
+        "prompt_description": "A list of accounts is saved for {account}. Enter its backup password to add them to this browser, or do it later from Settings.",
+        "prompt_not_now": "Not now",
+        "prompt_done": "Done",
         "errors": {
           "mismatch": "The passwords do not match.",
           "password_length": "Use at least 10 characters.",

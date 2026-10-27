@@ -544,6 +544,8 @@
       "authentication_missing_info": "Tato pozvánka neobsahuje ověření zprávy. Pokud se vám cokoli zdá neobvyklé, potvrďte si podrobnosti s organizátorem.",
       "sender_mismatch_info": "Tato pozvánka byla odeslána od {sender}, zatímco organizátor v datech kalendáře je {organizer}.",
       "sender_mismatch_unverified_info": "Tato pozvánka byla odeslána od {sender}, zatímco organizátor v datech kalendáře je {organizer}, a zprávu se nepodařilo ověřit.",
+      "attendee_mismatch_info": "Tato odpověď byla odeslána od {sender}, zatímco odpovídající účastník v datech kalendáře je {attendee}.",
+      "attendee_mismatch_unverified_info": "Tato odpověď byla odeslána od {sender}, zatímco odpovídající účastník v datech kalendáře je {attendee}, a zprávu se nepodařilo ověřit.",
       "organizer_role": "Jste organizátorem této události",
       "your_response": "Vaše odpověď: {status}",
       "response_needed": "Vyžaduje odpověď",
@@ -611,6 +613,7 @@
     "scheduled_send_created": "E-mail byl naplánován k odeslání",
     "sending_in": "Odeslání za {seconds} s",
     "undo_send_failed": "Odeslání nelze vrátit. Zpráva už možná byla odeslána.",
+    "undo_send_signed_out": "Nelze vrátit zpět: účet, ze kterého byla zpráva odeslána, už není přihlášen.",
     "cancel_scheduled_send": "Zrušit odeslání",
     "reschedule_send": "Přeplánovat",
     "cancel_and_edit": "Zrušit a upravit",
@@ -695,6 +698,7 @@
     "saving": "Ukládání...",
     "draft_saved": "Koncept byl uložen",
     "save_failed": "Uložení selhalo",
+    "discard_signed_out": "Koncept nebyl smazán: účet, ve kterém byl uložen, už není přihlášen. Zůstává v konceptech tohoto účtu.",
     "to_placeholder": "E-mailové adresy příjemců",
     "cc_placeholder": "Příjemci kopie",
     "bcc_placeholder": "Příjemci skryté kopie",
@@ -1531,6 +1535,10 @@
         "label": "Pouze prostý text",
         "description": "Zakázat editor formátovaného textu a odesílat všechny e-maily pouze jako prostý text, včetně odpovědí a přeposílání"
       },
+      "quick_reply": {
+        "label": "Rychlá odpověď",
+        "description": "Zobrazit pole pro rychlou odpověď pod zprávami."
+      },
       "auto_select_reply_identity": {
         "label": "Automaticky vybírat adresu pro odpověď",
         "description": "Při odpovídání automaticky přepnout adresu odesílatele na identitu, která původně obdržela zprávu"
@@ -1776,6 +1784,10 @@
         "signed_in": "Signed in to {count, plural, one {# account} other {# accounts}} with the saved password.",
         "sign_in_failed": "{count, plural, one {# saved password was} other {# saved passwords were}} refused: sign in to those accounts from the account list.",
         "deleted": "Saved list deleted.",
+        "prompt_title": "Restore your other accounts?",
+        "prompt_description": "A list of accounts is saved for {account}. Enter its backup password to add them to this browser, or do it later from Settings.",
+        "prompt_not_now": "Not now",
+        "prompt_done": "Done",
         "errors": {
           "mismatch": "The passwords do not match.",
           "password_length": "Use at least 10 characters.",

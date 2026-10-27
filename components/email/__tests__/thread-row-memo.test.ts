@@ -64,25 +64,33 @@ describe('areThreadRowPropsEqual', () => {
   it('ignores the open message moving between two OTHER rows', () => {
     const thread = group([email('e1')]);
     expect(areThreadRowPropsEqual(
-      props({ thread, selectedEmailId: 'other-1' }),
-      props({ thread, selectedEmailId: 'other-2' }),
+      props({ thread, selectedEmailKey: 'other-1' }),
+      props({ thread, selectedEmailKey: 'other-2' }),
     )).toBe(true);
-    expect(areThreadRowPropsEqual(props({ thread }), props({ thread, selectedEmailId: 'other-1' }))).toBe(true);
+    expect(areThreadRowPropsEqual(props({ thread }), props({ thread, selectedEmailKey: 'other-1' }))).toBe(true);
   });
 
   it('re-renders the row that gains or loses the open message', () => {
     const thread = group([email('e1'), email('e2')]);
-    expect(areThreadRowPropsEqual(props({ thread, selectedEmailId: 'other' }), props({ thread, selectedEmailId: 'e2' }))).toBe(false);
-    expect(areThreadRowPropsEqual(props({ thread, selectedEmailId: 'e2' }), props({ thread, selectedEmailId: 'other' }))).toBe(false);
-    expect(areThreadRowPropsEqual(props({ thread, selectedEmailId: 'e1' }), props({ thread, selectedEmailId: 'e2' }))).toBe(false);
+    expect(areThreadRowPropsEqual(props({ thread, selectedEmailKey: 'other' }), props({ thread, selectedEmailKey: 'e2' }))).toBe(false);
+    expect(areThreadRowPropsEqual(props({ thread, selectedEmailKey: 'e2' }), props({ thread, selectedEmailKey: 'other' }))).toBe(false);
+    expect(areThreadRowPropsEqual(props({ thread, selectedEmailKey: 'e1' }), props({ thread, selectedEmailKey: 'e2' }))).toBe(false);
+  });
+
+  // Ids repeat across accounts: another account's message with the open
+  // message's id is not drawn as open.
+  it('tells the open message from a namesake of another account', () => {
+    const thread = group([{ ...email('e1'), sourceClientAccountId: 'login-b', sourceAccountId: 'cf' }]);
+    expect(areThreadRowPropsEqual(props({ thread, selectedEmailKey: 'other' }), props({ thread, selectedEmailKey: 'e1' }))).toBe(true);
+    expect(areThreadRowPropsEqual(props({ thread, selectedEmailKey: 'other' }), props({ thread, selectedEmailKey: 'login-b/cf:e1' }))).toBe(false);
   });
 
   it('counts messages shown by the expanded thread as drawn by the row', () => {
     const thread = group([email('e1')]);
     const expandedEmails = [email('e1'), email('e9')];
     expect(areThreadRowPropsEqual(
-      props({ thread, expandedEmails, isExpanded: true, selectedEmailId: 'other' }),
-      props({ thread, expandedEmails, isExpanded: true, selectedEmailId: 'e9' }),
+      props({ thread, expandedEmails, isExpanded: true, selectedEmailKey: 'other' }),
+      props({ thread, expandedEmails, isExpanded: true, selectedEmailKey: 'e9' }),
     )).toBe(false);
   });
 

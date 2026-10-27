@@ -25,7 +25,10 @@ function email(mailboxIds: Record<string, boolean>, stamps: Partial<Email> = {})
 
 describe('resolveQuickRuleTarget', () => {
   beforeEach(() => {
-    useAuthStore.setState({ client, activeAccountId: 'login-a' } as never);
+    useAuthStore.setState({
+      client, activeAccountId: 'login-a',
+      getClientForAccount: (id: string) => (id === 'login-a' ? client : undefined),
+    } as never);
     useEmailStore.setState({ mailboxes, selectedMailbox: 'a', viewingAccountId: null, accountMailboxes: {} } as never);
   });
 
@@ -42,6 +45,10 @@ describe('resolveQuickRuleTarget', () => {
 
   it('treats a stamped message of another account as shared', () => {
     expect(resolveQuickRuleTarget(email({ 'c:a': true }, { sourceAccountId: 'c', sourceClientAccountId: 'login-a' }))?.shared).toBe(true);
+  });
+
+  it('offers no target for a message of a login that is gone', () => {
+    expect(resolveQuickRuleTarget(email({ a: true }, { sourceAccountId: 'd', sourceClientAccountId: 'login-b' }))).toBeNull();
   });
 
   it('finds the folder the message is in', () => {

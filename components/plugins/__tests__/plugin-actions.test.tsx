@@ -38,4 +38,31 @@ describe('PluginActions', () => {
     expect(screen.queryByRole('menuitem', { name: 'Send PDF' })).toBeNull();
     expect(screen.getByRole('menuitem', { name: 'Edit image' })).toBeInTheDocument();
   });
+
+  it('draws a badge on the button, tinted, as the filter button its count', () => {
+    act(() => setPluginActions('p', 'P', 'top-bar-actions', [
+      { id: 'labels', label: 'Labels', icon: 'tags', badge: 2 },
+      { id: 'other', label: 'Other' },
+    ]));
+
+    render(<PluginActions surface="top-bar-actions" context={{}} compact />);
+
+    const button = screen.getByRole('button', { name: 'Labels' });
+    expect(button.querySelector('[data-plugin-action-badge]')).toHaveTextContent('2');
+    expect(button).toHaveClass('bg-primary/10', 'text-primary');
+    const other = screen.getByRole('button', { name: 'Other' });
+    expect(other.querySelector('[data-plugin-action-badge]')).toBeNull();
+    expect(other).not.toHaveClass('bg-primary/10');
+  });
+
+  it('draws "99+" past two digits and the count after a menu entry\'s label', () => {
+    act(() => setPluginActions('p', 'P', 'top-bar-actions', [{ id: 'labels', label: 'Labels', badge: 120 }]));
+
+    const { unmount } = render(<PluginActions surface="top-bar-actions" context={{}} compact />);
+    expect(screen.getByRole('button', { name: 'Labels' })).toHaveTextContent('99+');
+    unmount();
+
+    render(<PluginActions surface="top-bar-actions" context={{}} variant="menu" />);
+    expect(screen.getByRole('menuitem', { name: /Labels/ })).toHaveTextContent('99+');
+  });
 });

@@ -53,3 +53,16 @@ export function useLiteLinkSegments(surface: AppSurface, linkSegments?: string[]
 
   return segments;
 }
+
+/**
+ * The query a surface was opened with, for a caller that reads it during its
+ * first render: until the effect above restores a parked deep link, the
+ * address bar shows the surface root without the link's query (#1352).
+ */
+export function initialLinkSearch(surface: AppSurface): string {
+  const pending = IS_LITE ? peekPendingLitePath(surface, getPathPrefix()) : null;
+  if (pending === null) return window.location.search;
+  const query = pending.split('#')[0];
+  const start = query.indexOf('?');
+  return start === -1 ? '' : query.slice(start);
+}

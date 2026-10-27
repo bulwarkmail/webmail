@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { ComposerDraftData } from '@/components/email/email-composer';
 import type { ComposePrefill } from '@/lib/plugin-compose-gate';
+import type { EmailWriteSource } from '@/stores/email-store';
 import type { SearchScope } from '@/lib/global-search/query-parser';
 
 export type ProTabKind =
@@ -60,6 +61,8 @@ export interface ProComposeTabData {
   /** Fields a plugin filled in through onBeforeCompose; dropped on the first state save. */
   prefill?: ComposePrefill | null;
   sourceEmailId?: string | null;
+  /** The login and account of that message, for its $answered / $forwarded flag. */
+  sourceEmailSource?: EmailWriteSource | null;
   title: string;
 }
 

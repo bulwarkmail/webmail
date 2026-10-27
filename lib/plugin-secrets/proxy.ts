@@ -13,7 +13,7 @@ import { authHeaderFor, credentialOrigin, privateProxyOrigins, type CredentialIn
 import { getUserCredential, setUserCredentialSecret, userKey, type VaultUser } from './vault';
 import { declaredUserCredential } from './known-plugins';
 
-/** Largest request body the proxy forwards (one upload chunk); see proxyClientMaxBodySize in next.config.ts. */
+/** Largest request body the proxy forwards (one upload chunk). */
 export const MAX_PROXY_REQUEST_BYTES = 100 * 1024 * 1024;
 /** Largest response body it passes back (a download). */
 export const MAX_PROXY_RESPONSE_BYTES = 2 * 1024 * 1024 * 1024;
@@ -306,8 +306,8 @@ export async function proxyRequest(input: ProxyInput): Promise<Response> {
     const headers = forwardHeaders(input.headers, credential);
     // Read the whole body first and send it with a Content-Length. Streamed
     // (chunked) uploads reach some servers empty: Paperless (Django) answers
-    // "No file was submitted". Next has buffered the body for proxy.ts
-    // already, up to the same limit (see proxyClientMaxBodySize).
+    // "No file was submitted". proxy.ts doesn't run for /api/plugin-proxy,
+    // so this is the only copy, and the only limit.
     let body = input.body && method !== 'GET' && method !== 'HEAD'
       ? await readBody(input.body, MAX_PROXY_REQUEST_BYTES)
       : null;

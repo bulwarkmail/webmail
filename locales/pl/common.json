@@ -544,6 +544,8 @@
       "authentication_missing_info": "To zaproszenie nie zawiera zweryfikowanego uwierzytelniania poczty. Potwierdź szczegóły z organizatorem, jeśli cokolwiek wygląda nietypowo.",
       "sender_mismatch_info": "To zaproszenie zostało wysłane z {sender}, podczas gdy organizator w danych kalendarza to {organizer}.",
       "sender_mismatch_unverified_info": "To zaproszenie zostało wysłane z {sender}, podczas gdy organizator w danych kalendarza to {organizer}, a wiadomość nie mogła zostać zweryfikowana.",
+      "attendee_mismatch_info": "Ta odpowiedź została wysłana z {sender}, podczas gdy odpowiadający uczestnik w danych kalendarza to {attendee}.",
+      "attendee_mismatch_unverified_info": "Ta odpowiedź została wysłana z {sender}, podczas gdy odpowiadający uczestnik w danych kalendarza to {attendee}, a wiadomość nie mogła zostać zweryfikowana.",
       "organizer_role": "Jesteś organizatorem tego wydarzenia",
       "your_response": "Twoja odpowiedź: {status}",
       "response_needed": "Wymaga odpowiedzi",
@@ -611,6 +613,7 @@
     "scheduled_send_created": "E-mail zaplanowany do wysłania",
     "sending_in": "Wysyłka za {seconds} s",
     "undo_send_failed": "Nie udało się cofnąć. Wiadomość mogła już zostać wysłana.",
+    "undo_send_signed_out": "Nie można cofnąć: konto, z którego wysłano wiadomość, nie jest już zalogowane.",
     "cancel_scheduled_send": "Anuluj wysyłkę",
     "reschedule_send": "Przełóż",
     "cancel_and_edit": "Anuluj i edytuj",
@@ -695,6 +698,7 @@
     "saving": "Zapisywanie...",
     "draft_saved": "Szkic zapisany",
     "save_failed": "Nie udało się zapisać",
+    "discard_signed_out": "Wersja robocza nie została usunięta: konto, w którym ją zapisano, nie jest już zalogowane. Pozostaje w wersjach roboczych tego konta.",
     "to_placeholder": "Adresy e-mail odbiorców",
     "cc_placeholder": "Odbiorcy DW",
     "bcc_placeholder": "Odbiorcy UDW",
@@ -1531,6 +1535,10 @@
         "label": "Tylko zwykły tekst",
         "description": "Wyłącz edytor tekstu sformatowanego i wysyłaj wszystkie wiadomości e-mail tylko jako zwykły tekst, w tym odpowiedzi i przekazywanie dalej"
       },
+      "quick_reply": {
+        "label": "Szybka odpowiedź",
+        "description": "Pokazuj pole szybkiej odpowiedzi pod wiadomościami."
+      },
       "auto_select_reply_identity": {
         "label": "Automatycznie wybieraj adres odpowiedzi",
         "description": "Podczas odpowiadania automatycznie przełączaj adres nadawcy na tożsamość, która pierwotnie otrzymała wiadomość"
@@ -1776,6 +1784,10 @@
         "signed_in": "Signed in to {count, plural, one {# account} other {# accounts}} with the saved password.",
         "sign_in_failed": "{count, plural, one {# saved password was} other {# saved passwords were}} refused: sign in to those accounts from the account list.",
         "deleted": "Saved list deleted.",
+        "prompt_title": "Restore your other accounts?",
+        "prompt_description": "A list of accounts is saved for {account}. Enter its backup password to add them to this browser, or do it later from Settings.",
+        "prompt_not_now": "Not now",
+        "prompt_done": "Done",
         "errors": {
           "mismatch": "The passwords do not match.",
           "password_length": "Use at least 10 characters.",

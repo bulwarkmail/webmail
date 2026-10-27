@@ -26,6 +26,7 @@ import { fetchServerPluginList } from '@/lib/server-plugin-list';
 import { IMPLICIT_PERMISSIONS } from '@/lib/plugin-types';
 import type { Permission } from '@/lib/plugin-types';
 import { IS_LITE } from '@/lib/lite';
+import { onFullSignOut } from '@/lib/sign-out-cleanup';
 
 let pluginInitializationPromise: Promise<void> | null = null;
 // One-time guard so we attach the locale and regional subscriptions only once.
@@ -818,4 +819,22 @@ usePluginStore.subscribe((state, prev) => {
     const next = effectiveSettings(plugin);
     forEachInstance(plugin.id, (instance) => instance.setSettings(next));
   }
+});
+
+// A plugin the user installed runs on that user's consent and settings. Once
+// everyone has signed out, the next person at this browser must be asked
+// again: the code stays, the grants and settings go, and it is left off.
+// The admin's plugins are the admin's choice and stay as they are.
+onFullSignOut(() => {
+  const { plugins } = usePluginStore.getState();
+  for (const plugin of plugins) {
+    if (!plugin.managed && plugin.enabled) deactivatePlugin(plugin.id);
+  }
+  usePluginStore.setState({
+    plugins: plugins.map((plugin) => {
+      if (plugin.managed) return plugin;
+      const { grantedPermissions: _granted, ...rest } = plugin;
+      return { ...rest, enabled: false, status: 'disabled' as PluginStatus, error: undefined, settings: {} };
+    }),
+  });
 });

@@ -15,11 +15,13 @@ import {
   historyFor,
   installedExtensions,
   installedStateOf,
+  readBundleBytes,
   toListing,
   v2Url,
   type DirectoryDetail,
   type DirectoryVersion,
 } from '@/lib/admin/marketplace-directory';
+import { MAX_PLUGIN_SIZE, MAX_THEME_SIZE } from '@/lib/plugin-types';
 
 const MAX_PREVIEW_SOURCE_LEN = 100_000;
 
@@ -118,7 +120,7 @@ export async function GET(
         if (!bundleRes.ok) {
           bundleError = `Bundle download failed (${bundleRes.status})`;
         } else {
-          const buffer = await bundleRes.arrayBuffer();
+          const buffer = await readBundleBytes(bundleRes, type === 'theme' ? MAX_THEME_SIZE : MAX_PLUGIN_SIZE);
           bundleSize = buffer.byteLength;
           signature = await checkBundleSignature({
             directoryUrl,

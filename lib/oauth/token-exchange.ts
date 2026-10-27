@@ -5,12 +5,14 @@ import { isPublicHttpUrl } from '@/lib/security/url-guard';
 import { readFileEnv } from '@/lib/read-file-env';
 import { configManager } from '@/lib/admin/config-manager';
 import { parseJmapServers, findServerById } from '@/lib/admin/jmap-servers';
+import { stalwartDefaultClientId } from '@/lib/auth/stalwart-password-login';
 
 // Fallback OAuth client id used when no client is configured. The password+TOTP
 // login route mints tokens against the mail server's built-in OAuth with this
-// id (Stalwart accepts any client id unless `require_client_registration` is
-// enabled), so refreshing/revoking those tokens must fall back to the same id
-// instead of failing on the missing OAUTH_CLIENT_ID (#873).
+// id (Stalwart 0.16 accepts any client id unless `require_client_registration`
+// is enabled; 1.0 gets a client of its own, see defaultClientOptions), so
+// refreshing/revoking those tokens must fall back to the same id instead of
+// failing on the missing OAUTH_CLIENT_ID (#873).
 export const DEFAULT_CLIENT_ID = 'bulwark-webmail';
 
 export interface ClientConfigOptions {
@@ -124,6 +126,18 @@ export function getRequiredConfig(serverId?: string | null, options?: ClientConf
     ? entry.oauth?.endSessionUrl
     : (configManager.get<string>('oauthEndSessionUrl', '') || process.env.OAUTH_END_SESSION_URL)?.trim() || undefined;
   return { clientId, serverUrl, discoveryUrl, serverId: entry?.id, endSessionUrl };
+}
+
+/**
+ * Options for refreshing or revoking a token the password+TOTP login may have
+ * minted without a configured client. On Stalwart 1.0 that login signs in
+ * with a client it registers itself (lib/auth/stalwart-password-login.ts),
+ * whose id the refresh must present instead of the default one.
+ */
+export async function defaultClientOptions(serverId?: string | null): Promise<ClientConfigOptions> {
+  const { clientId, serverUrl } = getRequiredConfig(serverId, { fallbackClientId: DEFAULT_CLIENT_ID });
+  if (clientId !== DEFAULT_CLIENT_ID) return { fallbackClientId: DEFAULT_CLIENT_ID };
+  return { fallbackClientId: await stalwartDefaultClientId(serverUrl, DEFAULT_CLIENT_ID, true) };
 }
 
 export function getClientSecret(serverId?: string | null): string {

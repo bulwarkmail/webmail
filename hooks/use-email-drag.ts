@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, DragEvent } from "react";
 import { Email } from "@/lib/jmap/types";
 import { IJMAPClient } from "@/lib/jmap/client-interface";
-import { resolveEmailBlobContext, resolveSelectedEmails, useEmailStore } from "@/stores/email-store";
+import { emailLinkSource, resolveEmailBlobContext, resolveSelectedEmails, useEmailStore } from "@/stores/email-store";
 import { emailKeyFor } from "@/lib/thread-utils";
 import { useAuthStore } from "@/stores/auth-store";
 import { useDragDropContext } from "@/contexts/drag-drop-context";
@@ -280,7 +280,7 @@ export function useEmailDrag({ email, sourceMailboxId, threadEmails }: UseEmailD
     e.dataTransfer.setData(
       "text/uri-list",
       emailsToDrag
-        .map(em => `${appUrl(buildMailPath({ mailboxId: null, emailId: em.id, threadId: null }))}?view=fullscreen`)
+        .map(em => appUrl(buildMailPath({ mailboxId: null, emailId: em.id, threadId: null, ...emailLinkSource(em), fullscreen: true })))
         .join("\r\n")
     );
 

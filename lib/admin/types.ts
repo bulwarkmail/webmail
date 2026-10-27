@@ -18,12 +18,20 @@ export interface AdminStateData {
   createdAt: string;
   lastLogin: string | null;
   passwordChangedAt: string;
+  /** Moves on with every new admin password; tokens of an older one are refused. */
+  sessionGeneration?: number;
+  /** Tokens signed out by a logout, by id, with the exp they would have run until. */
+  revokedSessions?: Record<string, number>;
 }
 
 export interface AdminSessionPayload {
   role: 'admin';
   iat: number;
   exp: number;
+  /** Token id, for signing this one token out. */
+  sid: string;
+  /** AdminStateData.sessionGeneration it was issued in. */
+  gen: number;
 }
 
 export interface SettingRestriction {

@@ -635,7 +635,7 @@ describe('Stalwart target: the entry document', () => {
   it('documents the install, reserved prefixes, updates and the redirect URI', () => {
     const readme = buildStalwartReadme({ version: '1.10.0', commit: 'abc1234', locales: ['en'], buildId: 'b' });
     // A tagged release by default: Stalwart verifies nothing it downloads.
-    expect(readme).toContain(`resourceUrl='https://github.com/bulwarkmail/webmail/releases/download/v`);
+    expect(readme).toContain(`resourceUrl='https://github.com/bulwarkmail/webmail/releases/download/1.10.0/`);
     expect(readme).not.toContain(`resourceUrl='https://github.com/bulwarkmail/webmail/releases/latest`);
     expect(readme).toContain(`sha256sum -c ${STALWART_ZIP_NAME}.sha256`);
     expect(readme).toContain('stalwart-cli create Application');
@@ -656,7 +656,7 @@ describe('Stalwart target: the entry document', () => {
 
   it('states the Stalwart floor and what a failed download does on each version', () => {
     const readme = buildStalwartReadme({ version: '1.10.0', commit: 'abc1234', locales: ['en'], buildId: 'b' });
-    expect(readme).toContain('Requires: Stalwart 0.16.6 or later (0.16.19 for `oauthClientId`).');
+    expect(readme).toContain('Requires: Stalwart 0.16.6 or later (0.16.19 for `oauthClientId`), or 1.0.');
     // Only 0.16.23 keeps the running bundle; 0.16.0-0.16.22 and the 1.0
     // pre-releases unmount the Application and delete the cached zip, so any
     // later unpack downloads again: a restart, UpdateApps, or a reload of the
@@ -818,6 +818,9 @@ describe('Stalwart target: postbuild + verify against a fake checkout', () => {
       const names = listZipEntries(readFileSync(result.zipPath!)).map((e) => e.name);
       expect(names).toContain('index.html');
       expect(names).toContain('en/mail/index.html');
+      // Stalwart 1.0 refuses a bundle without this manifest at the root.
+      expect(names).toContain('stalwart-app.json');
+      expect(JSON.parse(readFileSync(join(out, 'stalwart-app.json'), 'utf8'))).toEqual({ id: 'bulwark-webmail', version: expect.stringMatching(/^\d+\.\d+\.\d+/) });
       expect(names.some((n) => n.startsWith('out/'))).toBe(false);
 
       const verdict = verifyExport({ root });

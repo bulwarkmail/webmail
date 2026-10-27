@@ -643,9 +643,11 @@ function buildPluginApi(manifest: PluginManifest) {
       /**
        * One message with its plain text, headers and source, or null when
        * there is none with that id. Any message of the account, not only the
-       * open one.
+       * open one. Ids repeat across accounts: pass the view's `accountId` to
+       * name the message of that account.
        */
-      get: (emailId: string) => callApi('email.get', [emailId]) as Promise<EmailReadView | null>,
+      get: (emailId: string, accountId?: string) =>
+        callApi('email.get', [emailId, accountId]) as Promise<EmailReadView | null>,
       /**
        * Move messages (at most 100) into a folder of the account, like the
        * user would; the move hooks run. 20 moves a minute. Needs email:write.
@@ -673,13 +675,13 @@ function buildPluginApi(manifest: PluginManifest) {
        * 25 MB). `blobId` must be one of that message's attachments, e.g.
        * from an `attachment-actions` slot or onAttachmentDownload.
        */
-      getAttachment: (emailId: string, blobId: string) =>
-        callApi('email.getAttachment', [emailId, blobId], NETWORK_API_TIMEOUT_MS) as Promise<{
+      getAttachment: (emailId: string, blobId: string, accountId?: string) =>
+        callApi('email.getAttachment', [emailId, blobId, accountId], NETWORK_API_TIMEOUT_MS) as Promise<{
           name: string; type: string; size: number; data: ArrayBuffer;
         }>,
       /** The full RFC 5322 source of a message, to save as .eml (email:blob-read, at most 25 MB). */
-      getRaw: (emailId: string) =>
-        callApi('email.getRaw', [emailId], NETWORK_API_TIMEOUT_MS) as Promise<ArrayBuffer>,
+      getRaw: (emailId: string, accountId?: string) =>
+        callApi('email.getRaw', [emailId, accountId], NETWORK_API_TIMEOUT_MS) as Promise<ArrayBuffer>,
       setKeyword: (emailId: string, keyword: string, accountId?: string) =>
         callApi('email.setKeyword', [emailId, keyword, accountId]) as Promise<void>,
       removeKeyword: (emailId: string, keyword: string, accountId?: string) =>

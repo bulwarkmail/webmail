@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { useSettingsStore } from "@/stores/settings-store";
-import { useEmailStore, removalFolder, canRemoveFromFolder } from "@/stores/email-store";
+import { useEmailStore, removalFolder, canRemoveFromFolder, emailLinkSource } from "@/stores/email-store";
 import { Email, Mailbox } from "@/lib/jmap/types";
 import {
   ContextMenu,
@@ -353,7 +353,7 @@ export function EmailContextMenu({
               icon={LinkIcon}
               label={tDeepLink("copy_message")}
               onClick={() => handleAction(() => {
-                void copyLink(buildMailPath({ mailboxId: null, emailId: email.id, threadId: null }));
+                void copyLink(buildMailPath({ mailboxId: null, emailId: email.id, threadId: null, ...emailLinkSource(email) }));
               })}
             />
             {email.threadId && (
@@ -361,7 +361,7 @@ export function EmailContextMenu({
                 icon={MessagesSquare}
                 label={tDeepLink("copy_conversation")}
                 onClick={() => handleAction(() => {
-                  void copyLink(buildMailPath({ mailboxId: null, emailId: null, threadId: email.threadId! }));
+                  void copyLink(buildMailPath({ mailboxId: null, emailId: null, threadId: email.threadId!, ...emailLinkSource(email) }));
                 })}
               />
             )}

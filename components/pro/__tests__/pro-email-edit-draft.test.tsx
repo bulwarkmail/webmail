@@ -51,6 +51,8 @@ vi.mock('@/stores/auth-store', () => ({
 }));
 const store = vi.hoisted(() => ({ fetched: null as Record<string, unknown> | null, fetchEmailContent: vi.fn() }));
 vi.mock('@/stores/email-store', () => ({
+  // Where the viewer downloads parts from; not what this file tests.
+  resolveEmailBlobContext: (_email: unknown, client: unknown) => ({ client }),
   useEmailStore: selectorStore({
     // An own-folder message is read through the store, not by account.
     fetchEmailContent: async (client: unknown, id: string) => {
@@ -63,6 +65,8 @@ vi.mock('@/stores/email-store', () => ({
     moveToMailbox: async () => {},
     setEmailKeywordsLocal: () => {},
     mailboxes: [],
+    emails: [],
+    selectedEmail: null,
   }),
 }));
 vi.mock('@/stores/identity-store', () => ({
@@ -100,7 +104,7 @@ describe('Pro email view - editing a draft', () => {
   });
 
   async function openAndEdit(accountId?: string, clientAccountId?: string, draft: object = DRAFT) {
-    const client = { getEmail: vi.fn().mockResolvedValue(draft), getUsername: () => 'userb@example.org' };
+    const client = { getEmail: vi.fn().mockResolvedValue(draft), getUsername: () => 'userb@example.org', getAccountId: () => 'e' };
     render(<ProEmailView emailId="eaaaaab" client={client as never} clientAccountId={clientAccountId} accountId={accountId} onClose={vi.fn()} />);
     await waitFor(() => expect(viewerProps.current?.email).toBeTruthy());
     (viewerProps.current!.onEditDraft as () => void)();
@@ -144,7 +148,7 @@ describe('Pro email view - editing a draft', () => {
   // view that names no login can't tell, so it names none - the active one
   // made the composer destroy the draft's id in the 0.16.23 account.
   it('names no login for a draft of a view without a login of its own', async () => {
-    auth.state.client = { getEmail: vi.fn(), getUsername: () => 'userb@example.org' };
+    auth.state.client = { getEmail: vi.fn(), getUsername: () => 'userb@example.org', getAccountId: () => 'e' };
     multiAccount.value = {
       enabled: true,
       groups: [],
@@ -166,14 +170,48 @@ describe('Pro email view - editing a draft', () => {
   });
 
   it('reads a message of the login it names through that login\'s client, not through the main list', async () => {
-    const client = { getEmail: vi.fn().mockResolvedValue(DRAFT), getUsername: () => 'userb@example.org' };
+    const client = { getEmail: vi.fn().mockResolvedValue(DRAFT), getUsername: () => 'userb@example.org', getAccountId: () => 'e' };
 
     render(<ProEmailView emailId="eaaaaab" client={client as never} clientAccountId="userb@v10" onClose={vi.fn()} />);
     await waitFor(() => expect(viewerProps.current?.email).toBeTruthy());
 
-    expect(client.getEmail).toHaveBeenCalledWith('eaaaaab', undefined);
+    // Its own account of that login: the view names no other.
+    expect(client.getEmail).toHaveBeenCalledWith('eaaaaab', 'e');
     expect(store.fetchEmailContent).not.toHaveBeenCalled();
     (viewerProps.current!.onEditDraft as () => void)();
     expect(openComposeTab.mock.calls[0][0].initialData).toMatchObject({ draftLocalAccountId: 'userb@v10', draftAccountId: undefined });
+  });
+});
+
+describe('Pro email view - replying and forwarding', () => {
+  beforeEach(() => {
+    viewerProps.current = null;
+    openComposeTab.mockClear();
+    store.fetched = null;
+  });
+
+  // The answered message is flagged once the reply is sent, by then perhaps
+  // with another folder open that has a message with the same id.
+  it.each(['onReply', 'onReplyAll', 'onForward'])('names the login and account of the message (%s)', async (action) => {
+    const client = { getEmail: vi.fn().mockResolvedValue(DRAFT), getUsername: () => 'userb@example.org', getAccountId: () => 'e' };
+    render(<ProEmailView emailId="eaaaaab" client={client as never} clientAccountId="userb@v10" accountId="c" onClose={vi.fn()} />);
+    await waitFor(() => expect(viewerProps.current?.email).toBeTruthy());
+
+    (viewerProps.current![action] as () => void)();
+
+    expect(openComposeTab.mock.calls[0][0]).toMatchObject({
+      sourceEmailId: 'eaaaaab',
+      sourceEmailSource: { clientAccountId: 'userb@v10', accountId: 'c' },
+    });
+  });
+
+  it('names the active login for a message read through it', async () => {
+    auth.state.client = { getEmail: vi.fn(), getUsername: () => 'userb@example.org', getAccountId: () => 'e' };
+    render(<ProEmailView emailId="eaaaaab" onClose={vi.fn()} />);
+    await waitFor(() => expect(viewerProps.current?.email).toBeTruthy());
+
+    (viewerProps.current!.onReply as () => void)();
+
+    expect(openComposeTab.mock.calls[0][0].sourceEmailSource).toEqual({ clientAccountId: 'userb@v016', accountId: undefined });
   });
 });

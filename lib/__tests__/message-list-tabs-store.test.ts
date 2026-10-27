@@ -8,6 +8,7 @@ import {
   resolveTabFilter,
 } from '@/stores/message-list-tabs-store';
 import { useEmailStore } from '@/stores/email-store';
+import { useAuthStore } from '@/stores/auth-store';
 import { messageListTabHooks } from '@/lib/plugin-hooks';
 import { jmapError } from '@/lib/jmap/jmap-error';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
@@ -191,6 +192,11 @@ describe('categorizeEmails', () => {
     from: [{ email: `${id}@example.com` }],
     ...(sourceAccountId ? { accountId: 'login-1', sourceClientAccountId: 'login-1', sourceAccountId } : {}),
   }) as unknown as Email;
+  // The stamped login is connected, through this client.
+  const loginClient = (client: Partial<IJMAPClient>) => {
+    useAuthStore.setState({ getClientForAccount: (id: string) => (id === 'login-1' ? client : undefined) } as never);
+    return client as IJMAPClient;
+  };
   const PATCH = { 'keywords/$category-updates': null, 'keywords/$category-promotions': true };
 
   beforeEach(() => {
@@ -231,7 +237,7 @@ describe('categorizeEmails', () => {
     const emitted = vi.spyOn(messageListTabHooks.onEmailCategorize, 'emit');
 
     await expect(useMessageListTabsStore.getState()
-      .categorizeEmails({ batchUpdateKeywords } as unknown as IJMAPClient, ['m1', 'm2'], 'promotions')).rejects.toBe(refusal);
+      .categorizeEmails(loginClient({ batchUpdateKeywords }), ['m1', 'm2'], 'promotions')).rejects.toBe(refusal);
 
     // Both accounts were written; only the one the server accepted moved.
     expect(batchUpdateKeywords).toHaveBeenCalledTimes(2);
@@ -265,7 +271,7 @@ describe('categorizeEmails', () => {
     const batchUpdateKeywords = vi.fn().mockResolvedValue(undefined);
 
     await useMessageListTabsStore.getState()
-      .categorizeEmails({ batchUpdateKeywords } as unknown as IJMAPClient, ['m2'], 'promotions');
+      .categorizeEmails(loginClient({ batchUpdateKeywords }), ['m2'], 'promotions');
 
     expect(batchUpdateKeywords).toHaveBeenCalledWith(['m2'], PATCH, 'shared');
     expect(batchUpdateKeywords).not.toHaveBeenCalledWith(expect.anything(), expect.anything(), 'login-1');

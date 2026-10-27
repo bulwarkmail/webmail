@@ -490,6 +490,8 @@
       "authentication_missing_info": "הזמנה זו אינה כוללת אימות דואר מאומת. אשר את הפרטים עם המארגן אם משהו נראה חריג.",
       "sender_mismatch_info": "הזמנה זו נשלחה מ-{sender}, בעוד שהמארגן הרשום בנתוני היומן הוא{organizer}.",
       "sender_mismatch_unverified_info": "הזמנה זו נשלחה מ-{sender}, בעוד שהמארגן הרשום בנתוני היומן הוא{organizer}, ולא ניתן לאמת את ההודעה.",
+      "attendee_mismatch_info": "תגובה זו נשלחה מ-{sender}, בעוד שהמשתתף המשיב בנתוני היומן הוא {attendee}.",
+      "attendee_mismatch_unverified_info": "תגובה זו נשלחה מ-{sender}, בעוד שהמשתתף המשיב בנתוני היומן הוא {attendee}, ולא ניתן לאמת את ההודעה.",
       "organizer_role": "אתה מארגן את האירוע הזה",
       "your_response": "תגובתך:{status}",
       "response_needed": "צריך תגובה",
@@ -576,6 +578,7 @@
     "scheduled_send_created": "דוא״ל תוכנן לשליחה",
     "sending_in": "שליחה בעוד {seconds} שנ'",
     "undo_send_failed": "לא ניתן לבטל. ייתכן שההודעה כבר נשלחה.",
+    "undo_send_signed_out": "לא ניתן לבטל: החשבון שממנו נשלחה ההודעה כבר אינו מחובר.",
     "cancel_scheduled_send": "ביטול שליחה",
     "reschedule_send": "תזמן מחדש",
     "cancel_and_edit": "בטל וערוך",
@@ -652,6 +655,7 @@
     "saving": "שומר...",
     "draft_saved": "הטיוטה נשמרה",
     "save_failed": "השמירה נכשלה",
+    "discard_signed_out": "הטיוטה לא נמחקה: החשבון שבו נשמרה כבר אינו מחובר. היא נשארת בטיוטות של אותו חשבון.",
     "to_placeholder": "כתובות אימייל של נמענים",
     "cc_placeholder": "נמענים עותק",
     "bcc_placeholder": "נמעני עותק מוסתר",
@@ -1485,6 +1489,10 @@
         "label": "טקסט רגיל בלבד",
         "description": "השבת את עורך הטקסט העשיר ושלח את כל המיילים כטקסט רגיל בלבד, כולל תשובות והעברה"
       },
+      "quick_reply": {
+        "label": "תשובה מהירה",
+        "description": "הצגת תיבת התשובה המהירה מתחת להודעות."
+      },
       "auto_select_reply_identity": {
         "label": "בחירה אוטומטית בכתובת תשובה",
         "description": "בעת תשובה, העבר אוטומטית את הכתובת מאת לזהות שקיבלה את ההודעה במקור"
@@ -1741,6 +1749,10 @@
         "signed_in": "Signed in to {count, plural, one {# account} other {# accounts}} with the saved password.",
         "sign_in_failed": "{count, plural, one {# saved password was} other {# saved passwords were}} refused: sign in to those accounts from the account list.",
         "deleted": "Saved list deleted.",
+        "prompt_title": "Restore your other accounts?",
+        "prompt_description": "A list of accounts is saved for {account}. Enter its backup password to add them to this browser, or do it later from Settings.",
+        "prompt_not_now": "Not now",
+        "prompt_done": "Done",
         "errors": {
           "mismatch": "The passwords do not match.",
           "password_length": "Use at least 10 characters.",

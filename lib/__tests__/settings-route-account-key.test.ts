@@ -144,4 +144,25 @@ describe('settings route keys on the account the credential belongs to', () => {
     }));
     expect(claimed.status).toBe(413);
   });
+
+  it('keeps one blob per account however many slashes end the server address', async () => {
+    // The address is matched with its trailing slashes stripped but was
+    // stored as sent, so each extra slash wrote another blob of up to 2 MB.
+    await signIn({ username: 'alice@example.org' });
+    const { GET, POST } = await import('@/app/api/settings/route');
+    for (const slashes of [0, 1, 2, 3, 7]) {
+      const res = await POST(new NextRequest('https://webmail.example/api/settings', {
+        method: 'POST',
+        headers: SAME_ORIGIN,
+        body: JSON.stringify({ username: 'alice@example.org', serverUrl: SERVER + '/'.repeat(slashes), settings: { n: slashes } }),
+      }));
+      expect(res.status).toBe(200);
+    }
+    // Clients send the address with or without one slash; both keep their blob.
+    expect([...store.keys()].sort()).toEqual([`alice@example.org|${SERVER}`, `alice@example.org|${SERVER}/`]);
+    const read = await GET(new NextRequest('https://webmail.example/api/settings', {
+      headers: { 'x-settings-username': 'alice@example.org', 'x-settings-server': `${SERVER}//` },
+    }));
+    expect(await read.json()).toEqual({ settings: { n: 7 } });
+  });
 });

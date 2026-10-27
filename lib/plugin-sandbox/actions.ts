@@ -32,6 +32,12 @@ export interface PluginAction {
   checked?: boolean;
   /** A second line under the label, on menu surfaces. Up to 120 characters. */
   description?: string;
+  /**
+   * A count on the action, e.g. how many filters it applies: on buttons a
+   * bubble on the tinted button, as the search's filter button draws its
+   * count; in menus after the label. 0 shows none, above 99 "99+".
+   */
+  badge?: number;
 }
 
 export interface RegisteredAction extends PluginAction {
@@ -92,6 +98,10 @@ export function checkActions(value: unknown): PluginAction[] {
       if (typeof a.description !== 'string' || a.description.length > 120) throw new Error(`actions[${i}].description must be a string of up to 120 characters`);
       if (a.description.trim()) out.description = a.description.trim();
     }
+    if (a.badge !== undefined) {
+      if (typeof a.badge !== 'number' || !Number.isSafeInteger(a.badge) || a.badge < 0) throw new Error(`actions[${i}].badge must be a whole number from 0`);
+      if (a.badge > 0) out.badge = a.badge;
+    }
     if (a.shortcut !== undefined) {
       if (typeof a.shortcut !== 'string' || a.shortcut.length > 30 || !isAllowedPluginCombo(a.shortcut)) {
         throw new Error(`actions[${i}].shortcut must use Alt, Ctrl+Shift or Ctrl+Alt`);
@@ -149,6 +159,11 @@ export function actionsFor(surface: string): RegisteredAction[] {
   return out;
 }
 
+/** An action's badge as drawn: "99+" past two digits, like the other badges. */
+export function badgeText(count: number): string {
+  return count > 99 ? '99+' : String(count);
+}
+
 /** Whether an action applies to a folder role and/or a MIME type. */
 export function actionApplies(action: PluginAction, ctx: { mailboxRole?: string | null; mimeType?: string | null }): boolean {
   if (action.mailboxRoles && ctx.mailboxRole !== undefined && !action.mailboxRoles.includes(ctx.mailboxRole ?? '')) return false;
@@ -181,6 +196,11 @@ export function setActionDispatcher(next: ActionDispatcher | null): void {
 }
 
 export async function runAction(action: RegisteredAction, surface: string, context: Record<string, unknown>): Promise<void> {
+  await runPluginAction(action.pluginId, surface, action.id, context);
+}
+
+/** A click on something a plugin gave as data elsewhere (a search result's entry). */
+export async function runPluginAction(pluginId: string, surface: string, actionId: string, context: Record<string, unknown>): Promise<void> {
   if (!dispatcher) return;
-  await dispatcher(action.pluginId, surface, action.id, context);
+  await dispatcher(pluginId, surface, actionId, context);
 }

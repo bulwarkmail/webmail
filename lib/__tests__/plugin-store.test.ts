@@ -16,6 +16,7 @@ vi.mock('@/lib/plugin-storage', () => ({
     getPreview: vi.fn().mockResolvedValue(null),
     deletePreview: vi.fn().mockResolvedValue(undefined),
   },
+  fileStorage: { clearFiles: vi.fn().mockResolvedValue(undefined) },
 }));
 
 vi.mock('@/lib/plugin-validator', () => ({
@@ -61,7 +62,8 @@ import { register as registerActive, deregister as deregisterActive, get as getA
 // Import after mocks
 import { usePluginStore, PLUGIN_PERSIST_DELAY_MS } from '@/stores/plugin-store';
 import { pluginStorage } from '@/lib/plugin-storage';
-import { forgetSlotOffers } from '@/lib/plugin-loader';
+import { deactivatePlugin, forgetSlotOffers } from '@/lib/plugin-loader';
+import { purgeSignedOutData } from '@/lib/sign-out-cleanup';
 
 function resetStore() {
   usePluginStore.setState({
@@ -477,6 +479,35 @@ describe('plugins the admin removed', () => {
     expect(localStorage.getItem('plugin:gone:@acct:notes')).toBeNull();
     expect(pluginStorage.deletePreview).toHaveBeenCalledWith('gone');
     expect(forgetSlotOffers).toHaveBeenCalledWith('gone');
+  });
+});
+
+describe('a full sign-out', () => {
+  // On a shared browser the next person used to run the previous user's
+  // plugins with that user's grants and settings, without being asked.
+  it("drops the user's grants and settings from plugins they installed and leaves them off", () => {
+    usePluginStore.setState({
+      plugins: [
+        mockPlugin({
+          id: 'mine', enabled: true, status: 'running', permissions: ['email:read', 'http:fetch'],
+          grantedPermissions: ['email:read', 'http:fetch'], settings: { token: 'a-secret' },
+        }),
+        mockPlugin({ id: 'admins', managed: true, enabled: true, status: 'running', settings: { mode: 'dark' } }),
+      ],
+    });
+
+    purgeSignedOutData();
+    window.dispatchEvent(new Event('pagehide'));
+
+    const [mine, admins] = usePluginStore.getState().plugins;
+    expect(mine).toMatchObject({ id: 'mine', enabled: false, settings: {} });
+    expect(mine.grantedPermissions).toBeUndefined();
+    expect(deactivatePlugin).toHaveBeenCalledWith('mine');
+    expect(admins).toMatchObject({ id: 'admins', enabled: true, status: 'running', settings: { mode: 'dark' } });
+    const stored = JSON.parse(localStorage.getItem('plugin-storage')!).state.plugins;
+    expect(stored[0]).toMatchObject({ id: 'mine', enabled: false, settings: {} });
+    expect(stored[0].grantedPermissions).toBeUndefined();
+    expect(pluginStorage.deleteCode).not.toHaveBeenCalled();
   });
 });
 

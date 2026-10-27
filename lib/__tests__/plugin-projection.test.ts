@@ -31,6 +31,13 @@ describe('plugin projections', () => {
     expect(JSON.stringify(summary)).not.toContain('secret body');
   });
 
+  it("names the account of a merged view's row, which shares its id with others", () => {
+    const row = { id: 'm1', threadId: 't', mailboxIds: {}, keywords: {}, sourceClientAccountId: 'login1', sourceAccountId: 'grp' } as unknown as Email;
+    expect(emailSummary(row).accountId).toBe('grp');
+    expect(emailToReadView(row).accountId).toBe('grp');
+    expect(emailSummary({ ...row, sourceAccountId: undefined })).not.toHaveProperty('accountId');
+  });
+
   it('marks recurring events and completed tasks', () => {
     expect(eventToView({ id: 'e', uid: 'u', calendarIds: { c: true }, recurrenceRules: [{ frequency: 'yearly' }] } as unknown as CalendarEvent).isRecurring).toBe(true);
     expect(taskToView({ id: 't', uid: 'u', calendarIds: {}, progress: 'completed' } as unknown as CalendarTask).isComplete).toBe(true);

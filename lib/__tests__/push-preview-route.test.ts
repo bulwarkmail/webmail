@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { endlessResponse } from './helpers/endless-body';
 
 vi.mock('next/server', () => ({
   NextResponse: {
@@ -68,6 +69,7 @@ function mockJmap() {
 async function callRoute(accountId: string, emailId: string | null = null) {
   const { GET } = await import('@/app/api/push/preview/route');
   const request = {
+    headers: new Headers(),
     nextUrl: { searchParams: { get: (k: string) => (k === 'accountId' ? accountId : k === 'emailId' ? emailId : null) } },
   };
   const res = (await GET(request as unknown as Parameters<typeof GET>[0])) as unknown as {
@@ -213,4 +215,31 @@ it('names no message when the delivered one cannot be read, rather than another'
   expect(await callRoute('a', 'gone')).toEqual({
     status: 200, body: { email: null, unreadTotal: 3, slot: 0 },
   });
+});
+
+it('sends the method calls to the server address it was configured with, not the public one', async () => {
+  // Stalwart advertises its own public hostname in apiUrl, which the webmail
+  // may not reach when it talks to the server over an internal address (#627).
+  fetchJmapServer.mockReset();
+  mockJmap();
+  const session = { ...SESSION, apiUrl: 'https://public.example.org/jmap/' };
+  const reply = fetchJmapServer.getMockImplementation()!;
+  fetchJmapServer.mockImplementation(async (url: string, init?: { body?: string }) =>
+    url.endsWith('/.well-known/jmap') ? jsonResponse(session) : reply(url, init));
+
+  expect((await callRoute('a')).status).toBe(200);
+  const posted = fetchJmapServer.mock.calls.map(([url]) => url).filter((url) => !url.endsWith('/.well-known/jmap'));
+  expect(posted).toEqual(['https://mail.example.com/jmap/', 'https://mail.example.com/jmap/']);
+});
+
+it('answers 502 instead of buffering a mailbox answer that never ends', async () => {
+  fetchJmapServer.mockReset();
+  mockJmap();
+  const reply = fetchJmapServer.getMockImplementation()!;
+  const endless = endlessResponse(500);
+  fetchJmapServer.mockImplementation(async (url: string, init?: { body?: string }) =>
+    url.endsWith('/.well-known/jmap') ? reply(url, init) : endless.response);
+
+  expect((await callRoute('a')).status).toBe(502);
+  expect(endless.pulled()).toBeLessThan(10);
 });

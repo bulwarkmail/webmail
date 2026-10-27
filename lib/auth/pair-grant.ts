@@ -70,14 +70,14 @@ export interface PasswordGrantOptions {
   now?: Date;
 }
 
-function configuredClient(serverId: string | null): { clientId: string; clientSecret: string } {
-  let clientId = DEFAULT_CLIENT_ID;
+function configuredClient(serverId: string | null): { clientId: string; clientSecret: string; isDefault: boolean } {
+  let clientId = '';
   try {
-    clientId = getRequiredConfig(serverId, { fallbackClientId: DEFAULT_CLIENT_ID }).clientId;
+    clientId = getRequiredConfig(serverId).clientId;
   } catch {
-    // No server configured (custom endpoints only): the default client.
+    // None configured (or custom endpoints only): the default client.
   }
-  return { clientId, clientSecret: getClientSecret(serverId) };
+  return { clientId: clientId || DEFAULT_CLIENT_ID, clientSecret: getClientSecret(serverId), isDefault: !clientId };
 }
 
 function oauthGrant(
@@ -158,9 +158,11 @@ export async function mintGrantWithPassword(opts: PasswordGrantOptions): Promise
       clientSecret: configured.clientSecret,
       redirectUri: opts.webmailRedirectUri,
       trusted: opts.trusted,
+      // As the password+TOTP login: Stalwart 1.0 knows no default client.
+      registerUnknownClient: configured.isDefault,
     });
     if (second.ok) {
-      return { ok: true, grant: oauthGrant(opts, second, configured.clientId, configured.clientSecret !== '') };
+      return { ok: true, grant: oauthGrant(opts, second, second.clientId, configured.clientSecret !== '' && second.clientId === configured.clientId) };
     }
     const secondVerdict = verdict(second);
     if (secondVerdict) return secondVerdict;

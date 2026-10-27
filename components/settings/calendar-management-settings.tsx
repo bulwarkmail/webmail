@@ -36,6 +36,23 @@ function CalendarColorPicker({
   allowCustom?: boolean;
 }) {
   const selectedIsPreset = CALENDAR_COLORS.includes(value);
+  const customRef = useRef<HTMLInputElement>(null);
+  const onChangeRef = useRef(onChange);
+  useEffect(() => { onChangeRef.current = onChange; });
+  // Take the custom color when the system dialog confirms it (`change`), not
+  // at every step (`input`, React's onChange): the first step closed the
+  // calendar menu around the picker and saved a color the user passed by
+  // (#1366).
+  useEffect(() => {
+    const input = customRef.current;
+    if (!input) return;
+    const commit = () => onChangeRef.current(input.value);
+    input.addEventListener('change', commit);
+    return () => input.removeEventListener('change', commit);
+  }, [allowCustom]);
+  useEffect(() => {
+    if (customRef.current) customRef.current.value = value || "#3b82f6";
+  }, [value]);
 
   return (
     <div className="flex flex-wrap items-center gap-1.5">
@@ -62,9 +79,9 @@ function CalendarColorPicker({
           title="Custom color"
         >
           <input
+            ref={customRef}
             type="color"
-            value={value || "#3b82f6"}
-            onChange={(e) => onChange(e.target.value)}
+            defaultValue={value || "#3b82f6"}
             className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
           />
           {(selectedIsPreset || !value) && (
@@ -342,7 +359,8 @@ export function CalendarManagementSettings() {
         setDiscoveredCalDavUrls(next);
       })
       .catch(() => {
-        const fallbackWellKnown = new URL('/.well-known/caldav', serverUrl).toString();
+        // Below the server address, which may carry a path (https://host/stalwart).
+        const fallbackWellKnown = `${serverUrl.replace(/\/+$/, '')}/.well-known/caldav`;
         setDiscoveredCalDavUrls({});
         setWellKnownCalDavUrl(fallbackWellKnown);
       });

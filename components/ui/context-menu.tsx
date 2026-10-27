@@ -203,6 +203,7 @@ export function ContextMenuSubMenu({
 }: ContextMenuSubMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     return () => clearTimeout(closeTimerRef.current ?? undefined);
@@ -219,12 +220,16 @@ export function ContextMenuSubMenu({
 
   const handleMouseLeave = () => {
     closeTimerRef.current = setTimeout(() => {
+      // A control in the submenu that has the focus may have opened a system
+      // dialog (a color input): closing would drop its answer (#1366).
+      if (rootRef.current?.contains(document.activeElement)) return;
       setIsOpen(false);
     }, 150);
   };
 
   return (
     <div
+      ref={rootRef}
       className="relative"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}

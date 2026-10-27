@@ -544,6 +544,8 @@
       "authentication_missing_info": "이 초대장에는 확인된 메일 인증 정보가 없어요. 이상한 점이 있다면 주최자에게 확인해 보세요.",
       "sender_mismatch_info": "초대장은 {sender}님이 보냈지만, 캘린더에 등록된 주최자는 {organizer}님이에요.",
       "sender_mismatch_unverified_info": "초대장은 {sender}님이 보냈지만 캘린더의 주최자는 {organizer}님이며, 메시지를 검증할 수 없어요.",
+      "attendee_mismatch_info": "이 응답은 {sender}님이 보냈지만 캘린더에서 응답한 참석자는 {attendee}님이에요.",
+      "attendee_mismatch_unverified_info": "이 응답은 {sender}님이 보냈지만 캘린더에서 응답한 참석자는 {attendee}님이며, 메시지를 검증할 수 없어요.",
       "organizer_role": "내가 주최하는 일정이에요",
       "your_response": "내 응답: {status}",
       "response_needed": "응답이 필요해요",
@@ -611,6 +613,7 @@
     "scheduled_send_created": "메일 보내기가 예약되었습니다",
     "sending_in": "{seconds}초 후 전송",
     "undo_send_failed": "실행 취소할 수 없습니다. 메시지가 이미 전송되었을 수 있습니다.",
+    "undo_send_signed_out": "실행을 취소할 수 없습니다: 메시지를 보낸 계정이 더 이상 로그인되어 있지 않습니다.",
     "cancel_scheduled_send": "보내기 취소",
     "reschedule_send": "다시 예약",
     "cancel_and_edit": "취소하고 편집",
@@ -695,6 +698,7 @@
     "saving": "저장 중...",
     "draft_saved": "임시보관함에 저장되었어요",
     "save_failed": "저장에 실패했어요",
+    "discard_signed_out": "임시 보관 메일이 삭제되지 않았습니다: 저장된 계정이 더 이상 로그인되어 있지 않습니다. 해당 계정의 임시 보관함에 남아 있습니다.",
     "to_placeholder": "받는 사람 이메일 주소",
     "cc_placeholder": "참조 수신자",
     "bcc_placeholder": "숨은 참조 수신자",
@@ -1531,6 +1535,10 @@
         "label": "일반 텍스트만 사용",
         "description": "서식 있는 텍스트 편집기를 끄고, 답장이나 전달을 포함한 모든 메일을 일반 텍스트로만 보내요"
       },
+      "quick_reply": {
+        "label": "빠른 답장",
+        "description": "메시지 아래에 빠른 답장 상자를 표시합니다."
+      },
       "auto_select_reply_identity": {
         "label": "답장 시 보내는 사람 자동 선택",
         "description": "답장할 때 메일을 받았던 주소로 보내는 사람을 자동으로 변경해요"
@@ -1776,6 +1784,10 @@
         "signed_in": "Signed in to {count, plural, one {# account} other {# accounts}} with the saved password.",
         "sign_in_failed": "{count, plural, one {# saved password was} other {# saved passwords were}} refused: sign in to those accounts from the account list.",
         "deleted": "Saved list deleted.",
+        "prompt_title": "Restore your other accounts?",
+        "prompt_description": "A list of accounts is saved for {account}. Enter its backup password to add them to this browser, or do it later from Settings.",
+        "prompt_not_now": "Not now",
+        "prompt_done": "Done",
         "errors": {
           "mismatch": "The passwords do not match.",
           "password_length": "Use at least 10 characters.",

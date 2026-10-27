@@ -68,6 +68,16 @@ function normalizeUrl(url: string): string {
 }
 
 /**
+ * The server address settings are stored under. Identity matching ignores
+ * trailing slashes, so every extra one would key another blob of up to
+ * SETTINGS_MAX_BYTES on disk. Clients send the address with or without a
+ * single slash, and both keep the key they have always had.
+ */
+function storageServerUrl(url: string): string {
+  return url.replace(/\/{2,}$/, '/');
+}
+
+/**
  * Verify identity against session cookies across all account slots.
  * With multi-account, the requesting account may be on any slot.
  * Checks both basic-auth session cookies and stalwart auth context cookies
@@ -124,7 +134,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const settings = await loadUserSettings(accountName, serverUrl);
+    const settings = await loadUserSettings(accountName, storageServerUrl(serverUrl));
     return NextResponse.json({ settings: settings || null });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
@@ -197,10 +207,10 @@ export async function POST(request: NextRequest) {
 
     // Templates and iCal subscriptions are merged into the stored blob rather
     // than replaced, so a stale tab or device cannot drop ones another added.
-    const stored = await loadUserSettings(accountName, serverUrl);
+    const stored = await loadUserSettings(accountName, storageServerUrl(serverUrl));
     await saveUserSettings(
       accountName,
-      serverUrl,
+      storageServerUrl(serverUrl),
       mergeStoredSubscriptions(stored, mergeStoredTemplates(stored, filteredSettings)),
     );
     return NextResponse.json({ ok: true });
@@ -233,7 +243,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Identity mismatch' }, { status: 403 });
     }
 
-    await deleteUserSettings(accountName, serverUrl);
+    await deleteUserSettings(accountName, storageServerUrl(serverUrl));
     return NextResponse.json({ ok: true });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';

@@ -157,7 +157,11 @@ const INLINE_PREVIEW_UNSAFE_MIME_TYPES = new Set([
 // XML variants would execute in our origin. Only an explicit allowlist of inert
 // types is permitted; everything else must be downloaded.
 export function isMimeTypeSafeForInlinePreview(type?: string): boolean {
-  const mimeType = type?.split(';')[0]?.trim().toLowerCase() || '';
+  // new Blob() drops a type with any character outside U+0020-U+007E to "",
+  // and Firefox sniffs an untyped blob: document. A winmail.dat MIME tag is
+  // free text, so judge only types the Blob keeps as written.
+  if (!type || !/^[\x20-\x7e]+$/.test(type)) return false;
+  const mimeType = type.split(';')[0]?.trim().toLowerCase() || '';
   if (!mimeType) return false;
   if (INLINE_PREVIEW_UNSAFE_MIME_TYPES.has(mimeType)) return false;
   if (INLINE_PREVIEW_SAFE_MIME_TYPES.has(mimeType)) return true;

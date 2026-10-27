@@ -569,6 +569,8 @@
       "authentication_missing_info": "Această invitație nu include autentificarea verificată a adresei de e-mail. Confirmați detaliile cu organizatorul dacă ceva pare neobișnuit.",
       "sender_mismatch_info": "Această invitație a fost trimisă de la {sender}, în timp ce organizatorul menționat în datele din calendar este {organizer}.",
       "sender_mismatch_unverified_info": "Această invitație a fost trimisă de la adresa {sender}, în timp ce organizatorul menționat în datele din calendar este {organizer}, iar mesajul nu a putut fi verificat.",
+      "attendee_mismatch_info": "Acest răspuns a fost trimis de la adresa {sender}, în timp ce participantul care răspunde în datele din calendar este {attendee}.",
+      "attendee_mismatch_unverified_info": "Acest răspuns a fost trimis de la adresa {sender}, în timp ce participantul care răspunde în datele din calendar este {attendee}, iar mesajul nu a putut fi verificat.",
       "organizer_role": "Tu organizezi acest eveniment",
       "your_response": "Răspunsul dvs.: {status}",
       "response_needed": "Necesită răspuns",
@@ -611,6 +613,7 @@
     "scheduled_send_created": "E-mail programat pentru trimitere",
     "sending_in": "Se trimite în {seconds} s",
     "undo_send_failed": "Anularea nu a reușit. Este posibil ca mesajul să fi fost deja trimis.",
+    "undo_send_signed_out": "Nu se poate anula: contul din care a fost trimis mesajul nu mai este conectat.",
     "cancel_scheduled_send": "Anulează trimiterea",
     "reschedule_send": "Reprogramare",
     "cancel_and_edit": "Anulează și editează",
@@ -698,6 +701,7 @@
     "link_url_prompt": "Accesați URL",
     "draft_saved": "Ciorna a fost salvată",
     "save_failed": "Nu s-a putut salva",
+    "discard_signed_out": "Ciorna nu a fost ștearsă: contul în care a fost salvată nu mai este conectat. Rămâne în ciornele acelui cont.",
     "to_placeholder": "Adresele de e-mail ale destinatarilor",
     "cc_placeholder": "Destinatari în Cc",
     "bcc_placeholder": "Destinatari Bcc",
@@ -1534,6 +1538,10 @@
         "label": "Numai text simplu",
         "description": "Dezactivați editorul de text formatat și trimiteți toate e-mailurile doar ca text simplu, inclusiv răspunsurile și redirecționările"
       },
+      "quick_reply": {
+        "label": "Răspuns rapid",
+        "description": "Afișează caseta de răspuns rapid sub mesaje."
+      },
       "auto_select_reply_identity": {
         "label": "Răspunde de la adresa de la care a fost primit mesajul",
         "description": "Când răspundeți, trimiteți mesajul de la adresa la care a fost trimis inițial. Se potrivesc mai întâi identitățile; pentru livrările de tip „catch-all” ale domeniului, antetul „De la” este rescris cu aliasul, în timp ce trimiterea se face prin identitatea dvs. principală."
@@ -1779,6 +1787,10 @@
         "signed_in": "Signed in to {count, plural, one {# account} other {# accounts}} with the saved password.",
         "sign_in_failed": "{count, plural, one {# saved password was} other {# saved passwords were}} refused: sign in to those accounts from the account list.",
         "deleted": "Saved list deleted.",
+        "prompt_title": "Restore your other accounts?",
+        "prompt_description": "A list of accounts is saved for {account}. Enter its backup password to add them to this browser, or do it later from Settings.",
+        "prompt_not_now": "Not now",
+        "prompt_done": "Done",
         "errors": {
           "mismatch": "The passwords do not match.",
           "password_length": "Use at least 10 characters.",

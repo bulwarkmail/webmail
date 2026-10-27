@@ -542,6 +542,8 @@
       "authentication_missing_info": "Deze uitnodiging bevat geen geverifieerde mailauthenticatie. Controleer de details bij de organisator als iets ongewoon lijkt.",
       "sender_mismatch_info": "Deze uitnodiging is verzonden vanaf {sender}, terwijl de organisator in de kalendergegevens {organizer} is.",
       "sender_mismatch_unverified_info": "Deze uitnodiging is verzonden vanaf {sender}, terwijl de organisator in de kalendergegevens {organizer} is, en het bericht kon niet worden geverifieerd.",
+      "attendee_mismatch_info": "Dit antwoord is verzonden vanaf {sender}, terwijl de antwoordende deelnemer in de kalendergegevens {attendee} is.",
+      "attendee_mismatch_unverified_info": "Dit antwoord is verzonden vanaf {sender}, terwijl de antwoordende deelnemer in de kalendergegevens {attendee} is, en het bericht kon niet worden geverifieerd.",
       "organizer_role": "U organiseert dit evenement",
       "your_response": "Uw reactie: {status}",
       "response_needed": "Reactie vereist",
@@ -611,6 +613,7 @@
     "scheduled_send_created": "E-mail gepland voor verzending",
     "sending_in": "Wordt over {seconds} s verzonden",
     "undo_send_failed": "Ongedaan maken lukte niet. Het bericht is misschien al verzonden.",
+    "undo_send_signed_out": "Ongedaan maken mislukt: het account waarvanaf het bericht is verzonden, is niet meer aangemeld.",
     "cancel_scheduled_send": "Verzenden annuleren",
     "reschedule_send": "Opnieuw plannen",
     "cancel_and_edit": "Annuleren en bewerken",
@@ -695,6 +698,7 @@
     "saving": "Opslaan...",
     "draft_saved": "Concept opgeslagen",
     "save_failed": "Opslaan mislukt",
+    "discard_signed_out": "Het concept is niet verwijderd: het account waarin het is opgeslagen, is niet meer aangemeld. Het blijft in de concepten van dat account.",
     "to_placeholder": "E-mailadressen van ontvangers",
     "cc_placeholder": "CC-ontvangers",
     "bcc_placeholder": "BCC-ontvangers",
@@ -1522,6 +1526,10 @@
         "label": "Alleen platte tekst",
         "description": "Schakel de rich text-editor uit en verzend alle e-mails alleen als platte tekst, inclusief antwoorden en doorgestuurde berichten"
       },
+      "quick_reply": {
+        "label": "Snel antwoorden",
+        "description": "Het vak voor snel antwoorden onder berichten tonen."
+      },
       "auto_select_reply_identity": {
         "label": "Antwoordadres automatisch selecteren",
         "description": "Schakel bij het beantwoorden automatisch het Van-adres om naar de identiteit die het oorspronkelijke bericht ontving"
@@ -1776,6 +1784,10 @@
         "signed_in": "Signed in to {count, plural, one {# account} other {# accounts}} with the saved password.",
         "sign_in_failed": "{count, plural, one {# saved password was} other {# saved passwords were}} refused: sign in to those accounts from the account list.",
         "deleted": "Saved list deleted.",
+        "prompt_title": "Restore your other accounts?",
+        "prompt_description": "A list of accounts is saved for {account}. Enter its backup password to add them to this browser, or do it later from Settings.",
+        "prompt_not_now": "Not now",
+        "prompt_done": "Done",
         "errors": {
           "mismatch": "The passwords do not match.",
           "password_length": "Use at least 10 characters.",

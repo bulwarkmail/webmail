@@ -7,6 +7,7 @@ import { getEventStartDate, normalizeAllDayDuration } from '@/lib/calendar-utils
 import { displayNow } from '@/lib/timezone';
 import { parseDuration } from '@/components/calendar/event-card';
 import { sanitizeOutgoingCalendarEventData } from '@/lib/calendar-event-normalization';
+import { feedChanged, feedFields } from '@/lib/calendar-feed-diff';
 import { expandRecurringEvents } from '@/lib/recurrence-expansion';
 import { SchedulingDeniedError } from '@/lib/jmap/scheduling-error';
 import { hasAnsweredAttendees, participantLimitOf } from '@/lib/calendar-participants';
@@ -486,12 +487,15 @@ async function refetchAfterOccurrenceMutation(): Promise<void> {
  * calendar is the same. Remap by raw identity so the selection survives instead
  * of silently resetting to "all". Keeps BIRTHDAY_CALENDAR_ID and ids starting
  * with one of `unloadedPrefixes` (calendars of an account that failed to load
- * are unknown, not deleted); drops ids that resolve to no calendar.
+ * are unknown, not deleted); drops ids that resolve to no calendar. A raw id
+ * names a calendar of `rawOwner` (the login a single-account load was for)
+ * when it has one: raw ids repeat across accounts.
  */
 export function reconcileSelectedIds(
   selectedCalendarIds: string[],
   calendars: Calendar[],
   unloadedPrefixes: string[] = [],
+  rawOwner?: string,
 ): string[] {
   const byStoreId = new Set(calendars.map((c) => c.id));
   const rawToStoreId = new Map<string, string>();
@@ -506,6 +510,9 @@ export function reconcileSelectedIds(
     if (id === BIRTHDAY_CALENDAR_ID || byStoreId.has(id)) mapped = id;
     // Before the raw remap: another account may hold the same raw id.
     else if (unloadedPrefixes.some((prefix) => id.startsWith(prefix))) mapped = id;
+    else if (rawOwner && !id.includes(CROSS_ACCOUNT_ID_DELIMITER) && byStoreId.has(buildCrossAccountIdPrefix(rawOwner) + id)) {
+      mapped = buildCrossAccountIdPrefix(rawOwner) + id;
+    }
     else mapped = rawToStoreId.get(rawIdentityOf(id));
     if (mapped && !seen.has(mapped)) {
       out.push(mapped);
@@ -520,16 +527,50 @@ export function reconcileSelectedIds(
  * default when no real calendar is left in it. The virtual birthday calendar
  * always survives reconciliation, so it must not count - counting it pinned
  * the selection to "birthdays only" once the real calendars had dropped out.
+ * A selection the user emptied by hiding every calendar (`chosen`) stays
+ * empty; one that named calendars which are gone now falls back.
  */
 function selectionAfterFetch(
   selectedCalendarIds: string[],
   calendars: Calendar[],
   defaultSelected: string[],
   unloadedPrefixes?: string[],
+  rawOwner?: string,
+  chosen = false,
 ): string[] {
-  const reconciled = reconcileSelectedIds(selectedCalendarIds, calendars, unloadedPrefixes);
+  const reconciled = reconcileSelectedIds(selectedCalendarIds, calendars, unloadedPrefixes, rawOwner);
   if (reconciled.some((id) => id !== BIRTHDAY_CALENDAR_ID)) return reconciled;
+  if (chosen && !selectedCalendarIds.some((id) => id !== BIRTHDAY_CALENDAR_ID)) return reconciled;
   return reconciled.includes(BIRTHDAY_CALENDAR_ID) ? [...defaultSelected, BIRTHDAY_CALENDAR_ID] : defaultSelected;
+}
+
+/**
+ * Add the calendars that appeared since the last fetch, such as one just
+ * shared with the user or made in another client (#1372). They start shown
+ * when the default selection would hold them and the server doesn't say
+ * isVisible: false; a calendar the user hid is known and stays hidden.
+ * Nothing recorded yet (`known` null) counts every calendar as known.
+ * Returns the selection and the calendars known from now on.
+ */
+function withNewCalendars(
+  selection: string[],
+  known: string[] | null,
+  calendars: Calendar[],
+  defaultSelected: string[],
+  unloadedPrefixes?: string[],
+  rawOwner?: string,
+): { selectedCalendarIds: string[]; knownCalendarIds: string[] } {
+  const ids = calendars.map((c) => c.id);
+  if (!known) return { selectedCalendarIds: selection, knownCalendarIds: ids };
+  const seen = new Set(reconcileSelectedIds(known, calendars, unloadedPrefixes, rawOwner));
+  const eligible = new Set(defaultSelected);
+  const added = calendars
+    .filter((c) => !seen.has(c.id) && eligible.has(c.id) && c.isVisible !== false && !selection.includes(c.id))
+    .map((c) => c.id);
+  return {
+    selectedCalendarIds: added.length > 0 ? [...selection, ...added] : selection,
+    knownCalendarIds: [...new Set([...seen, ...ids])].filter((id) => id !== BIRTHDAY_CALENDAR_ID),
+  };
 }
 
 // In-flight refresh dedup. Concurrent callers (auto-interval +
@@ -762,6 +803,10 @@ interface CalendarStore {
   selectedDate: Date;
   viewMode: CalendarViewMode;
   selectedCalendarIds: string[];
+  /** The user picked the visible calendars by hand: an empty pick hides them all. */
+  calendarSelectionChosen: boolean;
+  /** Calendars the last fetch returned: one not in it is new and starts shown (#1372). Null before the first record. */
+  knownCalendarIds: string[] | null;
   selectedEventId: string | null;
   isLoading: boolean;
   isLoadingEvents: boolean;
@@ -784,7 +829,8 @@ interface CalendarStore {
   setSupported: (supported: boolean) => void;
   fetchCalendars: (client: IJMAPClient) => Promise<void>;
   fetchEvents: (client: IJMAPClient, start: string, end: string, options?: FetchEventsOptions) => Promise<void>;
-  fetchAllAccountsCalendars: (accounts: CalendarAccountClient[]) => Promise<void>;
+  /** `activeLocalAccountId`: the login whose calendars un-namespaced selected ids name. */
+  fetchAllAccountsCalendars: (accounts: CalendarAccountClient[], activeLocalAccountId?: string | null) => Promise<void>;
   fetchAllAccountsEvents: (accounts: CalendarAccountClient[], start: string, end: string, options?: FetchEventsOptions) => Promise<void>;
   createEvent: (client: IJMAPClient, event: Partial<CalendarEvent>, sendSchedulingMessages?: boolean) => Promise<CalendarEvent | null>;
   updateEvent: (
@@ -848,6 +894,8 @@ const initialState = {
   events: [],
   selectedDate: displayNow(),
   selectedCalendarIds: [] as string[],
+  calendarSelectionChosen: false,
+  knownCalendarIds: null as string[] | null,
   selectedEventId: null as string | null,
   isLoading: false,
   isLoadingEvents: false,
@@ -910,15 +958,24 @@ export const useCalendarStore = create<CalendarStore>()(
           // Default the visible selection to event calendars only - tasks-only
           // calendars stay out of the event grid.
           const defaultSelected = calendars.filter(c => !c.isTasksOnly).map(c => c.id);
+          // Shared calendars' ids are `<accountId>:<id>` (getAllCalendars).
+          const unloadedPrefixes = failedAccountIds.map((accountId) => `${accountId}:`);
           set({
             calendars,
             isLoading: false,
-            selectedCalendarIds: selectionAfterFetch(
-              get().selectedCalendarIds,
+            ...withNewCalendars(
+              selectionAfterFetch(
+                get().selectedCalendarIds,
+                calendars,
+                defaultSelected,
+                unloadedPrefixes,
+                undefined,
+                get().calendarSelectionChosen,
+              ),
+              get().knownCalendarIds,
               calendars,
               defaultSelected,
-              // Shared calendars' ids are `<accountId>:<id>` (getAllCalendars).
-              failedAccountIds.map((accountId) => `${accountId}:`),
+              unloadedPrefixes,
             ),
           });
         } catch (error) {
@@ -974,7 +1031,7 @@ export const useCalendarStore = create<CalendarStore>()(
         }
       },
 
-      fetchAllAccountsCalendars: async (accounts) => {
+      fetchAllAccountsCalendars: async (accounts, activeLocalAccountId) => {
         const epoch = currentStoreEpoch();
         set({ isLoading: true, error: null });
         try {
@@ -996,14 +1053,24 @@ export const useCalendarStore = create<CalendarStore>()(
           );
           if (currentStoreEpoch() !== epoch) return;
           const calendars = sortCalendars(results.flat());
+          const defaultSelected = calendars.map(c => c.id);
           set({
             calendars,
             isLoading: false,
-            selectedCalendarIds: selectionAfterFetch(
-              get().selectedCalendarIds,
+            ...withNewCalendars(
+              selectionAfterFetch(
+                get().selectedCalendarIds,
+                calendars,
+                defaultSelected,
+                unloadedPrefixes,
+                activeLocalAccountId ?? undefined,
+                get().calendarSelectionChosen,
+              ),
+              get().knownCalendarIds,
               calendars,
-              calendars.map(c => c.id),
+              defaultSelected,
               unloadedPrefixes,
+              activeLocalAccountId ?? undefined,
             ),
           });
         } catch (error) {
@@ -1140,9 +1207,6 @@ export const useCalendarStore = create<CalendarStore>()(
             await refetchAfterOccurrenceMutation();
           }
           void calendarHooks.onAfterEventCreate.emit(eventToView(mappedCreated));
-          if (mappedCreated.recurrenceRules && mappedCreated.recurrenceRules.length > 0) {
-            await refetchAfterOccurrenceMutation();
-          }
           // Invitation emails are sent by the server: `sendSchedulingMessages`
           // on CalendarEvent/set makes Stalwart queue the iTIP REQUEST itself.
           // Sending a client-side iMIP copy here produced duplicate emails.
@@ -1646,6 +1710,12 @@ export const useCalendarStore = create<CalendarStore>()(
           selectedCalendarIds: visible
             ? [...state.selectedCalendarIds, calendarId]
             : state.selectedCalendarIds.filter(id => id !== calendarId),
+          // Showing birthdays is a setting, not a pick of calendars.
+          calendarSelectionChosen: state.calendarSelectionChosen || calendarId !== BIRTHDAY_CALENDAR_ID,
+          // A calendar hidden before the next fetch recorded it stays hidden.
+          knownCalendarIds: state.knownCalendarIds && !state.knownCalendarIds.includes(calendarId) && calendarId !== BIRTHDAY_CALENDAR_ID
+            ? [...state.knownCalendarIds, calendarId]
+            : state.knownCalendarIds,
         }));
         void calendarHooks.onCalendarVisibilityToggle.emit({ calendarId, visible });
       },
@@ -1928,6 +1998,26 @@ export const useCalendarStore = create<CalendarStore>()(
             }
           }
 
+          // Events still in the feed take what the feed changed (time, title,
+          // place, recurrence, ...). Only those in the subscription calendar
+          // alone: one also linked to another calendar is the user's own
+          // event with the same UID (see importEventsUnhooked) and stays.
+          const keptUids = new Set(parsedEvents.map(e => e.uid).filter((uid): uid is string =>
+            !!uid && !!existingByUid.get(uid)?.some(e => Object.keys(e.calendarIds || {}).length === 1)));
+          if (keptUids.size > 0) {
+            const stored = await client.queryCalendarEvents({ inCalendar: sub.calendarId });
+            for (const incoming of parsedEvents) {
+              if (!incoming.uid || !keptUids.delete(incoming.uid)) continue;
+              const current = stored.find(e => e.uid === incoming.uid && Object.keys(e.calendarIds || {}).length === 1);
+              if (!current || !feedChanged(incoming, current)) continue;
+              try {
+                await client.updateCalendarEvent(current.originalId || current.id, feedFields(incoming), false);
+              } catch (err) {
+                debug.warn('calendar', 'Failed to apply a feed change to a subscribed event:', err);
+              }
+            }
+          }
+
           // Import only events that don't already exist on server
           const eventsToImport = parsedEvents.filter(e => !e.uid || !existingByUid.has(e.uid));
 
@@ -2033,6 +2123,8 @@ export const useCalendarStore = create<CalendarStore>()(
       },
       partialize: (state) => ({
         selectedCalendarIds: state.selectedCalendarIds,
+        calendarSelectionChosen: state.calendarSelectionChosen,
+        knownCalendarIds: state.knownCalendarIds,
         viewMode: state.viewMode,
         icalSubscriptions: state.icalSubscriptions,
         deletedSubscriptionIds: state.deletedSubscriptionIds,

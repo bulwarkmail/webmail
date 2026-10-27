@@ -544,6 +544,8 @@
       "authentication_missing_info": "Bu davet doğrulanmış posta kimlik doğrulaması içermiyor. Bir şey olağandışı görünüyorsa ayrıntıları organizatörle teyit edin.",
       "sender_mismatch_info": "Bu davet {sender} tarafından gönderildi; ancak takvim verisinde organizatör olarak {organizer} listeleniyor.",
       "sender_mismatch_unverified_info": "Bu davet {sender} tarafından gönderildi; ancak takvim verisinde organizatör olarak {organizer} listeleniyor ve ileti doğrulanamadı.",
+      "attendee_mismatch_info": "Bu yanıt {sender} tarafından gönderildi; ancak takvim verisinde yanıtlayan katılımcı olarak {attendee} listeleniyor.",
+      "attendee_mismatch_unverified_info": "Bu yanıt {sender} tarafından gönderildi; ancak takvim verisinde yanıtlayan katılımcı olarak {attendee} listeleniyor ve ileti doğrulanamadı.",
       "organizer_role": "Bu etkinliği siz düzenliyorsunuz",
       "your_response": "Yanıtınız: {status}",
       "response_needed": "Yanıt gerekiyor",
@@ -611,6 +613,7 @@
     "scheduled_send_created": "E-posta gönderim için zamanlandı",
     "sending_in": "{seconds} sn içinde gönderilecek",
     "undo_send_failed": "Geri alınamadı. İleti zaten gönderilmiş olabilir.",
+    "undo_send_signed_out": "Geri alınamadı: iletinin gönderildiği hesabın oturumu artık açık değil.",
     "cancel_scheduled_send": "Göndermeyi iptal et",
     "reschedule_send": "Yeniden zamanla",
     "cancel_and_edit": "İptal et ve düzenle",
@@ -698,6 +701,7 @@
     "link_url_prompt": "URL'yi girin",
     "draft_saved": "Taslak kaydedildi",
     "save_failed": "Kaydedilemedi",
+    "discard_signed_out": "Taslak silinmedi: kaydedildiği hesabın oturumu artık açık değil. O hesabın taslaklarında kalıyor.",
     "to_placeholder": "Alıcı e-posta adresleri",
     "cc_placeholder": "Cc alıcıları",
     "bcc_placeholder": "Bcc alıcıları",
@@ -1531,6 +1535,10 @@
         "label": "Yalnızca Düz Metin",
         "description": "Zengin metin düzenleyicisini devre dışı bırak ve yanıtlar ve iletmeler dahil tüm e-postaları yalnızca düz metin olarak gönder"
       },
+      "quick_reply": {
+        "label": "Hızlı yanıt",
+        "description": "İletilerin altında hızlı yanıt kutusunu göster."
+      },
       "auto_select_reply_identity": {
         "label": "Yanıt Adresini Otomatik Seç",
         "description": "Yanıtlarken, Kimden adresini iletiyi başlangıçta alan kimliğe otomatik olarak değiştir"
@@ -1776,6 +1784,10 @@
         "signed_in": "Signed in to {count, plural, one {# account} other {# accounts}} with the saved password.",
         "sign_in_failed": "{count, plural, one {# saved password was} other {# saved passwords were}} refused: sign in to those accounts from the account list.",
         "deleted": "Saved list deleted.",
+        "prompt_title": "Restore your other accounts?",
+        "prompt_description": "A list of accounts is saved for {account}. Enter its backup password to add them to this browser, or do it later from Settings.",
+        "prompt_not_now": "Not now",
+        "prompt_done": "Done",
         "errors": {
           "mismatch": "The passwords do not match.",
           "password_length": "Use at least 10 characters.",

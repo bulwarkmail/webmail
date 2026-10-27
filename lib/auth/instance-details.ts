@@ -4,7 +4,7 @@ import { MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
 import { decryptSession } from '@/lib/auth/crypto';
 import { hasSessionSecret } from '@/lib/auth/session-secret';
 import { sessionCookieName } from '@/lib/auth/session-cookie';
-import { verifyAdminSession } from '@/lib/admin/session';
+import { verifyCurrentAdminSession } from '@/lib/admin/session';
 import { ADMIN_SESSION_COOKIE } from '@/lib/admin/types';
 import { getStalwartCredentials } from '@/lib/stalwart/credentials';
 
@@ -29,5 +29,5 @@ export async function canSeeInstanceDetails(request: NextRequest): Promise<boole
     if (session && decryptSession(session)) return true;
   }
   const admin = jar.get(ADMIN_SESSION_COOKIE)?.value;
-  return !!admin && verifyAdminSession(admin) !== null;
+  return !!admin && (await verifyCurrentAdminSession(admin)) !== null;
 }

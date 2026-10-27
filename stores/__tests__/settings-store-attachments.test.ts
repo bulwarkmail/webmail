@@ -6,6 +6,14 @@ describe('settings-store attachment action', () => {
     useSettingsStore.getState().resetToDefaults();
   });
 
+  it('enables quick reply by default and exports the disabled preference', () => {
+    expect(useSettingsStore.getState().quickReplyEnabled).toBe(true);
+    useSettingsStore.getState().updateSetting('quickReplyEnabled', false);
+    expect(JSON.parse(useSettingsStore.getState().exportSettings()).quickReplyEnabled).toBe(false);
+    useSettingsStore.getState().resetToDefaults();
+    expect(useSettingsStore.getState().quickReplyEnabled).toBe(true);
+  });
+
   it('defaults to preview when settings are reset', () => {
     expect(useSettingsStore.getState().mailAttachmentAction).toBe('preview');
   });

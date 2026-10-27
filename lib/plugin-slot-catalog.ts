@@ -62,6 +62,7 @@ export const SLOT_CATALOG = {
   'message-bulk-actions': S('mail-list', 'action', ['ui:message-list'], { emailIds: 'email:read' }, 'buttons in the toolbar shown while messages are selected', true),
   'context-menu-email': S('mail-list', 'frame', ['ui:context-menu'], {}, 'the right-click menu of a message'),
   'toolbar-actions': S('mail-list', 'frame', ['ui:toolbar'], {}, 'the message toolbar', true),
+  'search-results': S('mail-list', 'data', ['email:read'], { query: 'email:read' }, 'entries a plugin returns from onProvideSearchResults, in a block above a search\'s message list; a click opens the message an entry names, any other reaches the plugin as onAction with the entry\'s key as actionId'),
 
   // ─── Reader ────────────────────────────────────────────────
   'reader-header': S('reader', 'frame', ['ui:email-banner'], { email: 'email:read' }, 'at the top of the open message, above the subject'),

@@ -27,6 +27,8 @@ process.env.SETTINGS_DATA_DIR = dataDir;
 afterAll(() => rmSync(dataDir, { recursive: true, force: true }));
 
 import { DELETE, GET, PUT } from '@/app/api/account-archive/route';
+import { JmapAuthVerificationError } from '@/lib/auth/verify-jmap-auth';
+import { resetStoredCredentialBudgetForTests } from '@/lib/stalwart/stored-credential-budget';
 
 const owner = { username: 'owner@example.com', serverUrl: 'https://mail.example.com' };
 const envelope = { version: 1, iterations: 600000, salt: 'A'.repeat(22) + '==', iv: 'A'.repeat(16), ciphertext: 'A'.repeat(43) + '=' };
@@ -44,6 +46,7 @@ const signIn = (username = owner.username, slot = 3) => {
 };
 
 beforeEach(() => {
+  resetStoredCredentialBudgetForTests();
   mocks.enabled = true;
   mocks.contexts.clear();
   mocks.verify.mockReset().mockResolvedValue(owner.serverUrl);
@@ -74,6 +77,13 @@ describe('account archive API', () => {
     expect((await PUT(request('PUT', { envelope }))).status).toBe(403);
   });
 
+  it('does not send a credential the mail server refused again', async () => {
+    signIn();
+    mocks.verify.mockRejectedValue(new JmapAuthVerificationError('Authentication failed', 401, 401));
+    for (let i = 0; i < 3; i++) expect((await GET(request('GET'))).status).toBe(403);
+    expect(mocks.verify).toHaveBeenCalledTimes(1);
+  });
+
   it('stores, returns and deletes the envelope for the verified owner, in any case', async () => {
     signIn('Owner@Example.com');
     let res = await GET(request('GET'));
@@ -83,7 +93,7 @@ describe('account archive API', () => {
 
     res = await PUT(request('PUT', { envelope: { ...envelope, password: 'forbidden' }, accounts: ['forbidden'] }));
     expect(res.status).toBe(200);
-    expect(mocks.verify).toHaveBeenCalledWith(owner.serverUrl, basic('Owner@Example.com'), { trusted: false });
+    expect(mocks.verify).toHaveBeenCalledWith(owner.serverUrl, basic('Owner@Example.com'), { trusted: false, clientIp: expect.any(String) });
     expect((await (await GET(request('GET'))).json()).envelope).toEqual(envelope);
 
     expect((await DELETE(request('DELETE'))).status).toBe(200);

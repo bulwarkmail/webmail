@@ -61,14 +61,10 @@ const nextConfig: NextConfig = {
   // it from node_modules at runtime instead of trying to bundle it. Used by
   // PLUGIN_DEV_DIR's on-the-fly bundler.
   serverExternalPackages: ["esbuild"],
-  experimental: {
-    // proxy.ts runs for every request, /api included, and Next buffers the
-    // body for it up to this size and silently cuts off the rest. 10 MB (the
-    // default) truncated WOPI saves and WebDAV uploads of bigger files, and
-    // plugin uploads through /api/plugin-proxy. Keep MAX_PROXY_REQUEST_BYTES
-    // in lib/plugin-secrets/proxy.ts in step with it.
-    proxyClientMaxBodySize: "100mb",
-  },
+  // No proxyClientMaxBodySize: Next copies every body proxy.ts runs for up to
+  // that size before routing, so it stays at the 10 MB default. The routes
+  // that take bigger uploads (WOPI saves, WebDAV, /api/plugin-proxy) are left
+  // out of the proxy's matcher instead.
   // Response headers are the host's job in a static export (see out/_headers).
   ...(isLite
     ? {}
@@ -91,6 +87,15 @@ const nextConfig: NextConfig = {
                 { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
               ],
             },
+            // The upload routes proxy.ts's matcher leaves out, with the
+            // headers it sets on every other API response.
+            ...["/api/webdav", "/api/plugin-proxy", "/api/wopi/files/:fileId/contents"].map((source) => ({
+              source,
+              headers: [
+                { key: "X-Content-Type-Options", value: "nosniff" },
+                { key: "X-Frame-Options", value: "DENY" },
+              ],
+            })),
           ];
         },
       }),

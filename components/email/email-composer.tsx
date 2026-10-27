@@ -719,7 +719,7 @@ export function EmailComposer({
         // first; cid rewrite runs after so its data-cid markers survive).
         const island = buildQuotedHtmlBlock(
           rewriteCidImagesForEditor(sanitizeEmailHtml(replyTo.htmlBody)),
-          { remoteAllowed: quoteRemoteAllowed },
+          { remoteAllowed: quoteRemoteAllowed, showQuoteBorder: replyTo.quoteWrapInBlockquote !== false },
         );
         return `${prefix}${signatureBlock}<br>${replyTo.quoteHeaderHtml}${island}`;
       }

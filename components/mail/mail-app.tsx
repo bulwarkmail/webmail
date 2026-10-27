@@ -28,7 +28,7 @@ const EmailComposer = dynamic(
 import { ProtocolAccountPicker } from "@/components/protocol/protocol-account-picker";
 import { ThreadConversationView } from "@/components/email/thread-conversation-view";
 import { MobileHeader } from "@/components/layout/mobile-header";
-import { ThreadGroup, Email, Mailbox, type StateChange, isUnifiedMailboxId, UNIFIED_MAILBOX_IDS, UNIFIED_ROLE_BY_ID, CROSS_VIEW_BY_ID, CROSS_VIEW_IDS, isCrossViewId } from "@/lib/jmap/types";
+import { ThreadGroup, Email, Mailbox, isUnifiedMailboxId, UNIFIED_MAILBOX_IDS, UNIFIED_ROLE_BY_ID, CROSS_VIEW_BY_ID, CROSS_VIEW_IDS, isCrossViewId } from "@/lib/jmap/types";
 import { useAccountStore, waitForConnectedAccount } from "@/stores/account-store";
 import { useShallow } from "zustand/react/shallow";
 import { usePolicyStore } from "@/stores/policy-store";
@@ -37,14 +37,15 @@ import type { UnifiedAccountClient } from "@/lib/unified-mailbox";
 import { connectedAccountsGrew } from "@/lib/unified-mailbox";
 import { messagePriorityFromHeaders, type MessagePriority } from "@/lib/message-priority";
 import { KeyboardShortcutsModal } from "@/components/keyboard-shortcuts-modal";
-import { useEmailStore, pendingInitialData, buildUnifiedAccountClients, invalidateUnifiedMailboxes, captureViewToken, ArchiveMailboxNotFoundError, ensureArchiveMailbox, resolveSelectedEmails, resolveUnstampedEmailAccountId, resolveEmailBlobContext, type EmailBlobContext, emptyFolderMovesToTrash, bulkDeleteIsPermanent, shouldConfirmBulkDelete, isAggregateListView, removalFolder, canRemoveFromFolder } from "@/stores/email-store";
+import { useEmailStore, pendingInitialData, buildUnifiedAccountClients, invalidateUnifiedMailboxes, captureViewToken, ArchiveMailboxNotFoundError, ensureArchiveMailbox, resolveSelectedEmails, resolveUnstampedEmailAccountId, resolveEmailBlobContext, resolveEmailActionContext, emailWriteSource, emailLinkSource, type EmailBlobContext, emptyFolderMovesToTrash, bulkDeleteIsPermanent, shouldConfirmBulkDelete, isAggregateListView, removalFolder, canRemoveFromFolder } from "@/stores/email-store";
 import { findDraftIdentityIdForLogin, listRowSource, resolveDraftSource, type DraftSource } from "@/lib/draft-source";
 import { useRemoveFromFolder } from "@/hooks/use-remove-from-folder";
 import { groupSearchScopeFolders, SEARCH_SCOPE_ALL_FOLDERS } from "@/lib/search-scope-folders";
 import { toast } from "@/stores/toast-store";
 import { cancelFailureToast, partlyRefusedWarning, rescheduleFailureToast } from "@/lib/send-failure-message";
-import { formatRejectedRecipients, RescheduleRestoredError, type JMAPClient } from "@/lib/jmap/client";
-import { reconcilePushBindings, releasePushBindings, type PushBinding } from "@/lib/push-bindings";
+import { formatRejectedRecipients, RescheduleRestoredError } from "@/lib/jmap/client";
+import { subscribePushStateChanges } from "@/lib/push-events";
+import { createMailPushListener } from "@/lib/mail-push-listener";
 import { runBatchEmailAction } from "@/lib/email-action-toast";
 import { MailboxShareDialog } from "@/components/layout/mailbox-share-dialog";
 import { ShareNotificationToaster } from "@/components/layout/share-notification-toaster";
@@ -157,7 +158,7 @@ import {
 import { consumePendingDeepLink, subscribePendingDeepLink } from "@/lib/deep-link-handoff";
 import { useProInterfaceActive } from "@/components/pro/pro-interface-redirect";
 import type { QuoteHeader } from "@/lib/plugin-types";
-import { useLiteLinkSegments } from "@/hooks/use-lite-link-segments";
+import { initialLinkSearch, useLiteLinkSegments } from "@/hooks/use-lite-link-segments";
 
 export interface MailAppProps {
   /**
@@ -199,6 +200,15 @@ const MV_CONVERSATION_WAIT_MS = 800;
 
 /** Plugin buttons in the top bar are not about any one item. */
 const TOP_BAR_CONTEXT: Record<string, unknown> = {};
+
+/** The unified views list every login's mail, so a background login's push reaches the list (#1350). */
+const UNIFIED_LIST_PUSH = {
+  isUnifiedView: () => useEmailStore.getState().isUnifiedView,
+  refreshList: () => {
+    const active = useAuthStore.getState().client;
+    return active ? useEmailStore.getState().refreshCurrentMailbox(active) : undefined;
+  },
+};
 
 export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // Static Lite build: the route params are empty, read the link from the URL.
@@ -433,7 +443,6 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     beginOpenEmail,
     finishOpenEmail,
     abandonOpenEmail,
-    setPushConnected,
     handleStateChange,
     clearNewEmailNotification,
     markAsSpam,
@@ -525,7 +534,6 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     beginOpenEmail: state.beginOpenEmail,
     finishOpenEmail: state.finishOpenEmail,
     abandonOpenEmail: state.abandonOpenEmail,
-    setPushConnected: state.setPushConnected,
     handleStateChange: state.handleStateChange,
     clearNewEmailNotification: state.clearNewEmailNotification,
     markAsSpam: state.markAsSpam,
@@ -664,9 +672,6 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     () => accounts.filter((a) => a.isConnected).map((a) => a.id).sort().join(","),
     [accounts],
   );
-  // Bumped when checkAuth finishes connecting background accounts after the UI
-  // already unblocked - the push-binding effect below must re-run over them.
-  const connectedAccountsRevision = useAuthStore((s) => s.connectedAccountsRevision);
   // Cross-account is "active" when the user opted in, the admin allows it, and
   // more than one account is connected. Drives the sidebar header label: the
   // old "All accounts" when spanning accounts, else "Unified Mailbox".
@@ -830,15 +835,23 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
 
   const buildMailUrl = useCallback((state: NavSnapshot) => {
     if (isEmbedded || proInterfaceActive) return null;
-    const path = appPath(
+    const open = useEmailStore.getState().selectedEmail;
+    const shown = open && (open.id === state.emailId || (!!state.threadId && open.threadId === state.threadId)) ? open : null;
+    // The shared account of the open message, so a reload opens it again
+    // (#1351). Not another login's: a reload must not switch the login.
+    const source = shown ? emailLinkSource(shown) : null;
+    return appPath(
       buildMailPath(
-        { mailboxId: state.mailboxId, emailId: state.emailId, threadId: state.threadId },
+        {
+          mailboxId: state.mailboxId, emailId: state.emailId, threadId: state.threadId,
+          ownerAccountId: source && !source.loginId ? source.ownerAccountId : null,
+          // Keep the marker while fullscreen is active, so reloading the dragged-out
+          // tab reopens the message fullscreen instead of in the normal layout.
+          fullscreen: fullscreenReading,
+        },
         useEmailStore.getState().mailboxes,
       ),
     );
-    // Keep the marker while fullscreen is active, so reloading the dragged-out
-    // tab reopens the message fullscreen instead of in the normal layout.
-    return fullscreenReading && state.emailId ? `${path}?view=fullscreen` : path;
   }, [isEmbedded, proInterfaceActive, fullscreenReading]);
 
   useBrowserNavigation({
@@ -1268,6 +1281,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       initialData: pendingDraft,
       prefill: composerPrefill,
       sourceEmailId: selectedEmail?.id ?? null,
+      sourceEmailSource: selectedEmail ? emailWriteSource(selectedEmail, client) : null,
       title,
     });
 
@@ -1572,76 +1586,14 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     return () => clearTimeout(id);
   }, [isAuthenticated]);
 
-  // Push notifications: one binding per CONNECTED client, kept for as long as
-  // that client is connected.
-  //
-  // We bind every connected login, not just the active one: background accounts
-  // must drive the unified-section counters too. The active client gets the
-  // full handler (current list / scheduled / calendar / filters); background
-  // logins only re-project the unified counts. (#281 background push)
-  //
-  // The bindings are reconciled, not rebuilt. This effect re-runs each time a
-  // login connects - once per account while a browser with many of them
-  // restores - and tearing every binding down to set them all up again made
-  // each run close and reopen the live streams and re-prime every slow poll:
-  // with ten logins, 21 stream openings and ~180 state-poll methods in the
-  // first seconds, quadratic in the number of accounts. Now a run binds only
-  // the clients that are new, unbinds only the ones that are gone, and on an
-  // account switch re-binds just the two whose role changed.
-  const pushBindingsRef = useRef(new Map<JMAPClient, PushBinding>());
-  // Handlers are read at event time, so a binding never holds a stale closure
-  // and never has to be re-created because a callback changed identity.
-  const pushHandlersRef = useRef({ handleStateChange, buildPopulatedUnifiedAccounts, refreshCrossCounts, refreshUnifiedCounts });
-  pushHandlersRef.current = { handleStateChange, buildPopulatedUnifiedAccounts, refreshCrossCounts, refreshUnifiedCounts };
-
-  useEffect(() => {
-    const bindings = pushBindingsRef.current;
-    if (!isAuthenticated || !client) {
-      releasePushBindings(bindings);
-      setPushConnected(false);
-      return;
-    }
-    reconcilePushBindings({
-      bindings,
-      clients: useAuthStore.getState().getAllConnectedClients(),
-      activeAccountId,
-      listen: (c, role) => {
-        // A login that reports a change has a folder list worth fetching again;
-        // the others keep theirs, which is what spares the unified scope a full
-        // round of Mailbox/get on every push.
-        if (role === 'active') {
-          c.onStateChange((change: StateChange) => {
-            invalidateUnifiedMailboxes(c);
-            pushHandlersRef.current.handleStateChange(change, c);
-          });
-          return;
-        }
-        c.onStateChange(() => {
-          invalidateUnifiedMailboxes(c);
-          const h = pushHandlersRef.current;
-          h.buildPopulatedUnifiedAccounts()
-            .then((built) => {
-              h.refreshCrossCounts(built);
-              h.refreshUnifiedCounts(built);
-            })
-            .catch(() => { /* per-account fetch failures surface elsewhere */ });
-        });
-      },
-      onError: (accId, error) => debug.log('push', '[Push] Failed to setup push notifications for account:', accId, error),
-    });
-    if (bindings.size > 0) {
-      setPushConnected(true);
-      debug.log('push', `[Push] Push notifications enabled for ${bindings.size} account(s)`);
-    } else {
-      setPushConnected(false);
-    }
-  }, [isAuthenticated, client, activeAccountId, connectedAccountsSignature, connectedAccountsRevision, setPushConnected]);
-
-  // Unbind everything when the mail app goes away.
-  useEffect(() => {
-    const bindings = pushBindingsRef.current;
-    return () => releasePushBindings(bindings);
-  }, []);
+  // Push notifications: the bindings live at the app level
+  // (components/providers/push-bindings-host.tsx) so other pages get changes
+  // too (#1349). The mail view handles them while it is mounted.
+  // Handlers are read at event time, so the subscription never holds a stale
+  // closure and never has to be re-created because a callback changed identity.
+  const pushHandlersRef = useRef({ handleStateChange, invalidateUnifiedMailboxes, buildPopulatedUnifiedAccounts, refreshCrossCounts, refreshUnifiedCounts, ...UNIFIED_LIST_PUSH });
+  pushHandlersRef.current = { handleStateChange, invalidateUnifiedMailboxes, buildPopulatedUnifiedAccounts, refreshCrossCounts, refreshUnifiedCounts, ...UNIFIED_LIST_PUSH };
+  useEffect(() => subscribePushStateChanges(createMailPushListener(() => pushHandlersRef.current)), []);
 
   // Keep unified mailbox counts in sync when the feature is enabled and more
   // than one account is connected. Runs whenever the set of connected accounts
@@ -1699,6 +1651,22 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const deepLinkHandledRef = useRef(false);
   const mailAppMountedRef = useRef(false);
   useEffect(() => { mailAppMountedRef.current = true; return () => { mailAppMountedRef.current = false; }; }, []);
+  // Point the list at a folder that actually holds a linked message, so the
+  // pane behind it shows real context and "back" lands somewhere useful.
+  const showInOwningFolder = async (activeClient: Parameters<typeof fetchEmails>[0], email: Email) => {
+    const state = useEmailStore.getState();
+    const owning = Object.keys(email.mailboxIds ?? {}).find((id) =>
+      state.mailboxes.some((mb) => mb.id === id || mb.originalId === id),
+    );
+    if (owning && owning !== state.selectedMailbox) {
+      const mailbox = state.mailboxes.find((mb) => mb.id === owning || mb.originalId === owning);
+      if (mailbox) {
+        await fetchEmails(activeClient, mailbox.id, { background: true });
+        selectMailbox(mailbox.id);
+        selectEmail(email);
+      }
+    }
+  };
   const applyMailDeepLink = async (link: MailDeepLink, opts?: { onLoad?: boolean }) => {
     // The folder list before an account switch, if one happened: until the
     // new mailbox's folders arrive the store still holds these (or nothing).
@@ -1766,8 +1734,12 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       // In the Pro shell a message permalink opens as its own fullscreen
       // email tab - the tab body fetches the message and retitles itself.
       if (isEmbedded) {
+        // A shared account's message is fetched from that account through
+        // the active login (#1351).
+        const loginId = link.ownerAccountId ? useAuthStore.getState().activeAccountId ?? undefined : undefined;
         useProTabStore.getState().openEmailTab({
-          accountId: '',
+          accountId: link.ownerAccountId ?? '',
+          ...(loginId ? { clientAccountId: loginId } : {}),
           emailId: link.id,
           mailboxId: null,
           title: t('common.loading'),
@@ -1776,25 +1748,12 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       }
       setLoadingEmail(true);
       try {
-        const email = await fetchEmailContent(activeClient, link.id);
+        const email = await fetchEmailContent(activeClient, link.id, link.ownerAccountId);
         if (!email) {
           toast.error(t('deep_link.message_not_found'));
           return;
         }
-        // Point the list at a folder that actually holds the message, so the
-        // pane behind it shows real context and "back" lands somewhere useful.
-        const state = useEmailStore.getState();
-        const owning = Object.keys(email.mailboxIds ?? {}).find((id) =>
-          state.mailboxes.some((mb) => mb.id === id || mb.originalId === id),
-        );
-        if (owning && owning !== state.selectedMailbox) {
-          const mailbox = state.mailboxes.find((mb) => mb.id === owning || mb.originalId === owning);
-          if (mailbox) {
-            await fetchEmails(activeClient, mailbox.id, { background: true });
-            selectMailbox(mailbox.id);
-            selectEmail(email);
-          }
-        }
+        await showInOwningFolder(activeClient, email);
         if (link.fullscreen && !isMobile) {
           // The owning-folder branch above may have skipped selecting (the
           // folder was already current) - fullscreen needs the message open.
@@ -1815,10 +1774,11 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     const openSeq = ++conversationOpenSeqRef.current;
     const source: EmailBlobContext = {
       client: activeClient, clientAccountId: useAuthStore.getState().activeAccountId ?? undefined,
+      accountId: link.ownerAccountId,
     };
     setLoadingEmail(true);
     try {
-      const threadEmails = await activeClient.getThreadEmails(link.id);
+      const threadEmails = await activeClient.getThreadEmails(link.id, link.ownerAccountId);
       if (openSeq !== conversationOpenSeqRef.current) return;
       const [group] = groupEmailsByThread(threadEmails);
       if (!group) {
@@ -1831,7 +1791,10 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         setConversationEmails(threadEmails);
         setActiveView('viewer');
       } else {
-        await fetchEmailContent(activeClient, group.latestEmail.id);
+        const email = await fetchEmailContent(activeClient, group.latestEmail.id, link.ownerAccountId);
+        // A shared account's conversation needs its folder open: the open
+        // message is acted on in the account of the folder on screen.
+        if (email && link.ownerAccountId) await showInOwningFolder(activeClient, email);
         if (isTablet) setTabletListVisible(false);
       }
     } finally {
@@ -1892,7 +1855,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // actually opened with on first client render.
   const initialSearchRef = useRef<string | null>(null);
   if (initialSearchRef.current === null && typeof window !== "undefined") {
-    initialSearchRef.current = window.location.search;
+    initialSearchRef.current = initialLinkSearch('mail');
   }
 
   useEffect(() => {
@@ -2072,6 +2035,9 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // Mountain View keeps its compose window open while other mail is read
   // (#1229), so the open message is no longer the one being replied to.
   const composerSourceEmail = usePinnedPerSession(composerSessionId, selectedEmail);
+  // Its login and account, pinned too: the folder open at send time may hold
+  // another account's message under the same id.
+  const composerSource = usePinnedPerSession(composerSessionId, selectedEmail ? emailWriteSource(selectedEmail, client) : undefined);
 
   const handleEmailSend = async (data: {
     to: string[];
@@ -2160,7 +2126,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       if (originalEmailId && (effectiveMode === 'reply' || effectiveMode === 'replyAll' || effectiveMode === 'forward')) {
         const keyword = effectiveMode === 'forward' ? '$forwarded' : '$answered';
         try {
-          await useEmailStore.getState().markEmailKeyword(client, originalEmailId, keyword);
+          await useEmailStore.getState().markEmailKeyword(client, originalEmailId, keyword, composerSource);
         } catch (e) {
           debug.error(`Failed to set ${keyword} keyword:`, e);
         }
@@ -2223,10 +2189,15 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     // Through the login the draft was saved with, as a send is (#461), and in
     // the account it lives in: a draft back from an undone group send is in
     // the group's Drafts, and the own account may hold another message under
-    // the same id.
+    // the same id. Never through another login, also not once that one is
+    // gone: the id names another message there (as removeDraftVersion).
     const draftClient = draft?.localAccountId
-      ? (useAuthStore.getState().getClientForAccount(draft.localAccountId) ?? client)
+      ? useAuthStore.getState().getClientForAccount(draft.localAccountId)
       : client;
+    if (!draftClient) {
+      toast.error(t('email_composer.discard_signed_out'));
+      return;
+    }
 
     try {
       await draftClient.deleteEmail(draftId, draft?.accountId);
@@ -2474,9 +2445,12 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     const pending = pendingUndoSend;
     // The submission lives on the account that owns the sending identity,
     // which is not always the active one in the multi-account shell (#461).
+    // Never another login, also not once that one is gone: the submission id
+    // names another submission there.
     const undoClient = pending.localAccountId
-      ? (useAuthStore.getState().getClientForAccount(pending.localAccountId) ?? client)
+      ? useAuthStore.getState().getClientForAccount(pending.localAccountId)
       : client;
+    const refuseSignedOut = () => toast.error(t('email_viewer.undo_send_signed_out'));
     // The login the draft is restored through. The classic shell leaves
     // `localAccountId` unset, and the user may switch logins before clicking
     // Undo: without this, the draft's next save would run through the new
@@ -2500,6 +2474,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         ? {
             label: t('email_viewer.send_now'),
             onClick: () => {
+              if (!undoClient) return refuseSignedOut();
               void (async () => {
                 try {
                   const result = await undoClient.rescheduleEmailSubmission(
@@ -2536,6 +2511,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       action: {
         label: t('email_viewer.undo_send'),
         onClick: () => {
+          if (!undoClient) return refuseSignedOut();
           void (async () => {
             let restored: Awaited<ReturnType<typeof cancelUndoSend>>;
             try {
@@ -2813,20 +2789,25 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const handleDelete = async (emailToDelete: Email | null = selectedEmail) => {
     if (!client || !emailToDelete) return;
 
-    // In unified view the trash destination and current-folder check must come
-    // from the email's own account, not the active one. The owning account's
-    // mailbox list is cached under its JMAP id (`sourceAccountId`). (#281)
-    const actionMailboxes =
-      isUnifiedView && emailToDelete.sourceAccountId
-        ? (accountMailboxes[emailToDelete.sourceAccountId] ?? mailboxes)
-        : mailboxes;
+    // The trash destination and current-folder check come from the email's own
+    // login and account, as the delete itself is routed: its source in a list
+    // that mixes accounts, else the folder being browsed. Never the list cached
+    // under the bare account id, which can be another server's account. (#281)
+    let action: ReturnType<typeof resolveEmailActionContext>;
+    try {
+      action = resolveEmailActionContext(emailToDelete, client);
+    } catch (error) {
+      toast.error(t('notifications.error_deleting'), error instanceof Error ? error.message : undefined);
+      return;
+    }
+    const actionMailboxes = action.mailboxes;
 
     // Check if we're currently in the trash or junk folder. In unified view the
     // "current folder" is the unified role within the email's account.
     const currentMailbox = isUnifiedView
       ? (actionMailboxes.find(m => m.role === unifiedRole && emailToDelete.mailboxIds?.[m.id])
           ?? actionMailboxes.find(m => m.role === unifiedRole))
-      : mailboxes.find(m => m.id === selectedMailbox);
+      : actionMailboxes.find(m => m.id === selectedMailbox);
     const isInTrash = currentMailbox?.role === 'trash';
     const isInJunk = currentMailbox?.role === 'junk';
     const permanentlyDeleteJunk = useSettingsStore.getState().permanentlyDeleteJunk;
@@ -2853,9 +2834,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       // the trash lookup to the email's account: for a shared/group source every
       // mailbox in the list is `isShared`, so we match by accountId instead of
       // excluding shared (otherwise no trash is found and the delete fails). (#281)
-      const sourceAccountId = isUnifiedView ? emailToDelete.sourceAccountId : undefined;
       const matchesScope = (m: Mailbox) =>
-        sourceAccountId ? m.accountId === sourceAccountId : !m.isShared;
+        action.accountId ? m.accountId === action.accountId : !m.isShared;
       const trashMailbox =
         actionMailboxes.find(m => m.role === 'trash' && matchesScope(m)) ??
         actionMailboxes.find(m => {
@@ -2879,27 +2859,27 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const handleArchive = async (emailToArchive: Email | null = selectedEmail) => {
     if (!client || !emailToArchive || !isArchiveActionEnabled()) return;
 
-    // In unified view the archive folder (and any year/month subfolders we
-    // create) must live in the email's own account, reached through the login it
-    // is reachable via (`sourceClientAccountId`) and routed to its owning JMAP
-    // account (`sourceAccountId`). For personal sources these resolve to the
-    // account itself, so behavior is unchanged. (#281)
-    const archiveClientId = isUnifiedView ? emailToArchive.sourceClientAccountId : undefined;
-    const archiveAccountId = isUnifiedView ? emailToArchive.sourceAccountId : undefined;
-    const archiveClient = archiveClientId
-      ? (useAuthStore.getState().getClientForAccount(archiveClientId) ?? client)
-      : client;
+    // In a list that mixes accounts (the unified views, a tag view) the archive
+    // folder (and any year/month subfolders we create) must live in the email's
+    // own account, reached through the login it is reachable via
+    // (`sourceClientAccountId`) and routed to its owning JMAP account
+    // (`sourceAccountId`), with that source's own folder list. For personal
+    // sources these resolve to the account itself, so behavior is unchanged. (#281)
+    const archiveClientId = emailToArchive.sourceAccountId ? emailToArchive.sourceClientAccountId : undefined;
+    const archiveAccountId = archiveClientId ? emailToArchive.sourceAccountId : undefined;
+    const archiveClient = archiveClientId ? useAuthStore.getState().getClientForAccount(archiveClientId) : client;
+    if (!archiveClient) {
+      toast.error(t('notifications.error_archiving'), 'Not connected');
+      return;
+    }
     // Read fresh mailboxes from the store – batch archive calls this in a loop,
     // and each iteration needs to see folders created by prior iterations.
-    const readMailboxes = () => {
-      const s = useEmailStore.getState();
-      return archiveAccountId
-        ? (s.accountMailboxes[archiveAccountId] ?? s.mailboxes)
-        : s.mailboxes;
-    };
+    const readMailboxes = () => archiveAccountId
+      ? resolveEmailActionContext(emailToArchive, client).mailboxes
+      : useEmailStore.getState().mailboxes;
     const refreshMailboxes = () =>
       archiveAccountId
-        ? useEmailStore.getState().fetchAccountMailboxes(archiveClient, archiveAccountId)
+        ? useEmailStore.getState().fetchAccountMailboxes(archiveClient, archiveAccountId, archiveClientId)
         : fetchMailboxes(client);
 
     const currentMailboxes = readMailboxes();
@@ -2930,12 +2910,20 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         const year = emailDate.getFullYear().toString();
         const month = (emailDate.getMonth() + 1).toString().padStart(2, '0');
         const archiveId = archiveMailbox.originalId || archiveMailbox.id;
+        // By the server's ids: the list names a shared account's folders and
+        // their parents `account:id`, so a group's year folder was never
+        // found again. The folders go in the Archive's own account, and only
+        // that account's are looked at: the own folders have server ids too.
+        const parentOf = (m: Mailbox) => (m.parentId && m.accountId && m.parentId.startsWith(`${m.accountId}:`)
+          ? m.parentId.slice(m.accountId.length + 1)
+          : m.parentId);
+        const folderAccountId = archiveMailbox.accountId ?? archiveAccountId;
+        const isFolder = (m: Mailbox, name: string, parentId: string) =>
+          m.name === name && parentOf(m) === parentId && (!folderAccountId || m.accountId === folderAccountId);
 
-        let yearMailbox = currentMailboxes.find(
-          m => m.name === year && m.parentId === archiveId
-        ) ?? null;
+        let yearMailbox = currentMailboxes.find(m => isFolder(m, year, archiveId)) ?? null;
         if (!yearMailbox) {
-          yearMailbox = await createMailboxWithHooks(archiveClient, year, archiveId, archiveAccountId);
+          yearMailbox = await createMailboxWithHooks(archiveClient, year, archiveId, folderAccountId);
           if (!yearMailbox) return; // a plugin refused the folder
           await refreshMailboxes();
         }
@@ -2945,11 +2933,9 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         } else {
           const yearId = yearMailbox.originalId || yearMailbox.id;
           const afterYear = readMailboxes();
-          let monthMailbox = afterYear.find(
-            m => m.name === month && m.parentId === yearId
-          ) ?? null;
+          let monthMailbox = afterYear.find(m => isFolder(m, month, yearId)) ?? null;
           if (!monthMailbox) {
-            monthMailbox = await createMailboxWithHooks(archiveClient, month, yearId, archiveAccountId);
+            monthMailbox = await createMailboxWithHooks(archiveClient, month, yearId, folderAccountId);
             if (!monthMailbox) return; // a plugin refused the folder
             await refreshMailboxes();
           }
@@ -3931,6 +3917,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       : undefined;
 
     const originalEmailId = selectedEmail.id;
+    const originalSource = emailWriteSource(selectedEmail, client);
     const sendDelaySeconds = useSettingsStore.getState().sendDelaySeconds;
     let delayedUntil: string | undefined;
     if (sendDelaySeconds > 0) {
@@ -3978,7 +3965,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     // scheduled early-return so a delayed (undo-send) reply is flagged too. (#985)
     {
       try {
-        await useEmailStore.getState().markEmailKeyword(client, originalEmailId, '$answered');
+        await useEmailStore.getState().markEmailKeyword(client, originalEmailId, '$answered', originalSource);
       } catch (e) {
         debug.error('Failed to set $answered keyword:', e);
       }
@@ -4319,6 +4306,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           fullEmail.emailSubmissionId = listEmail.emailSubmissionId;
           fullEmail.scheduledIdentityId = listEmail.scheduledIdentityId;
           fullEmail.scheduledUndoStatus = listEmail.scheduledUndoStatus;
+          fullEmail.scheduledAccountId = listEmail.scheduledAccountId;
           fullEmail.isScheduled = true;
           fullEmail.isSmimeScheduled = listEmail.isSmimeScheduled;
         }
@@ -5150,7 +5138,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                 onFindFromSender={mvShell ? (sender) => void handleSelectContactSuggestion(sender, 'from') : undefined}
                 hideBatchToolbar={mvShell}
                 emails={activeEmails}
-                selectedEmailId={selectedEmail?.id}
+                selectedEmailKey={selectedEmail ? emailKeyFor(selectedEmail) : undefined}
                 isLoading={activeIsLoading}
                 hasMore={activeHasMore}
                 isLoadingMoreItems={isScheduledView ? isLoadingScheduled && activeEmails.length > 0 : undefined}
@@ -5178,7 +5166,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                   if (delayedUntil && client && email.emailSubmissionId && email.scheduledIdentityId) {
                     // The context menu does not wait for this; report here.
                     try {
-                      const result = await rescheduleScheduledEmail(client, email.emailSubmissionId, email.id, email.scheduledIdentityId, delayedUntil);
+                      const result = await rescheduleScheduledEmail(client, email.emailSubmissionId, email.id, email.scheduledIdentityId, delayedUntil, email.scheduledAccountId);
                       const refused = partlyRefusedWarning(result, tComposer);
                       if (refused) toast.warning(refused);
                     } catch (error) {
@@ -5189,6 +5177,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                   }
                 }}
                 onEmailSelect={handleEmailSelect}
+                onOpenSearchResult={handleEmailSelect}
                 onEmailPrefetch={handleEmailPrefetch}
                 onEmailDoubleClick={isEmbedded ? ((email) => {
                   const store = useProTabStore.getState();
@@ -5499,7 +5488,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                     }}
                     onRescheduleScheduled={async (delayedUntil) => {
                       if (client && selectedEmail?.emailSubmissionId && selectedEmail.scheduledIdentityId) {
-                        const result = await rescheduleScheduledEmail(client, selectedEmail.emailSubmissionId, selectedEmail.id, selectedEmail.scheduledIdentityId, delayedUntil);
+                        const result = await rescheduleScheduledEmail(client, selectedEmail.emailSubmissionId, selectedEmail.id, selectedEmail.scheduledIdentityId, delayedUntil, selectedEmail.scheduledAccountId);
                         const refused = partlyRefusedWarning(result, tComposer);
                         if (refused) toast.warning(refused);
                       }

@@ -88,3 +88,48 @@ describe('undo and edit of a group-identity submission', () => {
     expect(client.getMailboxes).not.toHaveBeenCalled();
   });
 });
+
+// Submission and email ids repeat across accounts: live, the member's own
+// scheduled mail and the group's were both submission "f" of "maaaaad".
+describe('scheduled mail of two accounts with the same ids', () => {
+  // Collected before any test replaces them in the store.
+  const { refreshScheduledMetadata, fetchScheduledEmails } = useEmailStore.getState();
+  const own = { id: 'maaaaad', subject: 'own', emailSubmissionId: 'f', scheduledAccountId: PRIMARY, scheduledSendAt: '2099-01-01T10:00:00Z', scheduledUndoStatus: 'pending' } as ScheduledEmail;
+  const team = { ...own, subject: 'team', scheduledAccountId: GROUP, scheduledSendAt: '2099-01-01T11:00:00Z' } as ScheduledEmail;
+
+  beforeEach(() => {
+    useEmailStore.setState({ refreshScheduledMetadata, fetchScheduledEmails, scheduledEmails: [own, team], pendingUndoSend: null, isScheduledView: true });
+  });
+
+  it('reschedules the row it was asked for, in its account', async () => {
+    const client = makeClient();
+    (client as unknown as { rescheduleEmailSubmission: unknown }).rescheduleEmailSubmission = vi.fn().mockResolvedValue({ scheduled: true, emailSubmissionId: 'g' });
+    (client.getScheduledEmails as ReturnType<typeof vi.fn>).mockResolvedValue({ emails: [own, team], hasMore: false, total: 2, nextPosition: 2 });
+
+    await useEmailStore.getState().rescheduleScheduledEmail(client, 'f', 'maaaaad', 'b', '2099-01-02T10:00:00Z', GROUP);
+
+    expect(client.rescheduleEmailSubmission).toHaveBeenCalledWith('f', 'maaaaad', 'b', '2099-01-02T10:00:00Z', GROUP);
+  });
+
+  it('lists both when they come on different pages', async () => {
+    const client = makeClient();
+    (client as unknown as { pruneEmailSubmissions: unknown }).pruneEmailSubmissions = vi.fn().mockResolvedValue(undefined);
+    (client.getScheduledEmails as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ emails: [own], hasMore: true, total: 2, nextPosition: 1 })
+      .mockResolvedValueOnce({ emails: [team], hasMore: false, total: 2, nextPosition: 2 });
+
+    await useEmailStore.getState().refreshScheduledMetadata(client);
+
+    expect(useEmailStore.getState().scheduledEmails.map((email) => email.subject)).toEqual(['own', 'team']);
+  });
+
+  it('loads the next page of the other account', async () => {
+    const client = makeClient();
+    useEmailStore.setState({ scheduledEmails: [own], scheduledHasMore: true, scheduledNextPosition: 1, isLoadingScheduled: false });
+    (client.getScheduledEmails as ReturnType<typeof vi.fn>).mockResolvedValueOnce({ emails: [team], hasMore: false, total: 2, nextPosition: 2 });
+
+    await useEmailStore.getState().loadMoreScheduledEmails(client);
+
+    expect(useEmailStore.getState().scheduledEmails.map((email) => email.subject)).toEqual(['own', 'team']);
+  });
+});

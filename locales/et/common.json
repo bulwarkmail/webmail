@@ -569,6 +569,8 @@
       "authentication_missing_info": "Sellel kutsel puudub kinnitatud e-posti autentimine. Kui midagi tundub kahtlane, kontrolli üksikasju korraldajaga.",
       "sender_mismatch_info": "See kutse saadeti aadressilt {sender}, kuid kalendriandmetes märgitud korraldaja on {organizer}.",
       "sender_mismatch_unverified_info": "See kutse saadeti aadressilt {sender}, kuid kalendriandmetes märgitud korraldaja on {organizer}, ning kirja ei õnnestunud kinnitada.",
+      "attendee_mismatch_info": "See vastus saadeti aadressilt {sender}, kuid kalendriandmetes vastav osaleja on {attendee}.",
+      "attendee_mismatch_unverified_info": "See vastus saadeti aadressilt {sender}, kuid kalendriandmetes vastav osaleja on {attendee}, ning kirja ei õnnestunud kinnitada.",
       "organizer_role": "Sina oled selle sündmuse korraldaja",
       "your_response": "Sinu vastus: {status}",
       "response_needed": "Vajab vastust",
@@ -611,6 +613,7 @@
     "scheduled_send_created": "Kiri ajastatud saatmiseks",
     "sending_in": "Saatmine {seconds, plural, one {# sekundi} other {# sekundi}} pärast",
     "undo_send_failed": "Tagasivõtmine ei õnnestunud. Kiri võib juba olla saadetud.",
+    "undo_send_signed_out": "Tagasivõtmine ebaõnnestus: konto, millelt sõnum saadeti, pole enam sisse logitud.",
     "cancel_scheduled_send": "Tühista saatmine",
     "reschedule_send": "Ajasta uuesti",
     "cancel_and_edit": "Tühista ja muuda",
@@ -619,6 +622,14 @@
     "scheduled_actions_only": "Ajastatud vaade toetab ainult ajastatud toiminguid",
     "undo_send_scheduled": "Kiri ajastatud saatmiseks",
     "undo_send": "Võta saatmine tagasi",
+    "send_cancelled_restore_failed": "Saatmine tühistati, kuid kirja ei õnnestunud mustanditesse tagasi panna. See on endiselt kaustas Saadetud.",
+    "send_cancelled_remove_failed": "Saatmine tühistati, kuid saatmata kirja ei õnnestunud kaustast Saadetud eemaldada.",
+    "cancel_scheduled_failed": "Ajastatud saatmist ei õnnestunud tühistada",
+    "still_scheduled_at": "Kiri on endiselt ajastatud ajale {date}.",
+    "still_scheduled": "Kiri on endiselt ajastatud.",
+    "already_sent": "See kiri on juba saadetud.",
+    "no_longer_scheduled": "See kiri ei ole enam ajastatud.",
+    "reschedule_recipients_refused": "Midagi ei muudetud: server lükkas tagasi {recipients}.",
     "contact_sidebar": {
       "title": "Kontakt",
       "close": "Sulge külgriba",
@@ -691,6 +702,7 @@
     "link_url_prompt": "Sisesta URL",
     "draft_saved": "Mustand salvestatud",
     "save_failed": "Salvestamine ebaõnnestus",
+    "discard_signed_out": "Mustandit ei kustutatud: konto, kuhu see salvestati, pole enam sisse logitud. See jääb selle konto mustanditesse.",
     "to_placeholder": "Saaja e-posti aadressid",
     "cc_placeholder": "CC saajad",
     "bcc_placeholder": "BCC saajad",
@@ -759,6 +771,10 @@
     "send_failed": "Kirja saatmine ebaõnnestus",
     "send_offline": "Paistab, et oled võrgust väljas. Kiri on alles, saada see uuesti, kui oled taas ühenduses.",
     "send_timeout": "Server lakkas vastamast. Enne uuesti saatmist kontrolli oma saadetud kirjade kausta — sõnum võis siiski välja minna.",
+    "submission_quota": "Serveris on selle konto kohta liiga palju saadetud kirjade kirjeid. Bulwark eemaldas need, mida sai; kui see kordub, palu administraatoril e-kirjade saatmise piirangut tõsta.",
+    "submission_limit": "Server keeldus kirja saatmast, sest piirang on täis: {reason}",
+    "recipients_refused": "Ei saadetud: server lükkas tagasi {recipients}.",
+    "recipients_partly_refused": "Server lükkas tagasi {recipients}. Teised adressaadid saavad kirja kätte.",
     "send_recipients_rejected": "Ei saadetud - server lükkas kõik adressaadid tagasi.",
     "send_plugin_failed": "Ei saadetud - saatmist käsitlev pistikprogramm ebaõnnestus või võttis liiga kaua aega. Kontrolli enne uuesti saatmist kausta Saadetud.",
     "send_some_recipients_rejected": "Saadetud, kuid mitte neile adressaatidele - server lükkas nad tagasi.",
@@ -1336,7 +1352,10 @@
         "revoke": "Tühista",
         "confirm_revoke_title": "Kas tühistada see seade?",
         "confirm_revoke_message": "See lakkab taustateavitusi koheselt saamast. Pushi uuesti lubamine sellel seadmel registreerib selle uuesti.",
-        "confirm_revoke_message_this": "See seade lakkab taustateavitusi koheselt saamast."
+        "confirm_revoke_message_this": "See seade lakkab taustateavitusi koheselt saamast.",
+        "shared_mailboxes_no_push": "Postkastid, mida teised sinuga jagavad, taustateavitusi ei saada.",
+        "error_forbidden": "Meiliserver ei luba selle konto jaoks taustateavitusi.",
+        "error_over_quota": "Sellel kontol on meiliserveris liiga palju pushi registreeringuid (piirang on tavaliselt 15). Tühista teavituste seadetes seadmed, mida sa enam ei kasuta, ja proovi uuesti."
       },
       "push_all": {
         "title": "Kõik kontod",
@@ -1518,6 +1537,10 @@
       "plain_text_mode": {
         "label": "Ainult lihttekst",
         "description": "Keela vormindatud teksti redaktor ja saada kõik kirjad ainult lihttekstina, sealhulgas vastused ja edastused"
+      },
+      "quick_reply": {
+        "label": "Kiirvastus",
+        "description": "Näita kiirvastuse kasti kirjade all."
       },
       "auto_select_reply_identity": {
         "label": "Vasta kirja saanud aadressilt",
@@ -1764,6 +1787,10 @@
         "signed_in": "Salvestatud parooliga logiti sisse {count, plural, one {# kontosse} other {# kontosse}}.",
         "sign_in_failed": "{count, plural, one {# salvestatud parool lükati tagasi} other {# salvestatud parooli lükati tagasi}}: logi neisse kontodesse kontode nimekirjast sisse.",
         "deleted": "Salvestatud nimekiri kustutatud.",
+        "prompt_title": "Restore your other accounts?",
+        "prompt_description": "A list of accounts is saved for {account}. Enter its backup password to add them to this browser, or do it later from Settings.",
+        "prompt_not_now": "Not now",
+        "prompt_done": "Done",
         "errors": {
           "mismatch": "Paroolid ei kattu.",
           "password_length": "Kasuta vähemalt 10 märki.",
@@ -2366,6 +2393,7 @@
       "validation_empty_name": "Reegli nimi on kohustuslik",
       "validation_empty_conditions": "Vajalik on vähemalt üks väärtusega tingimus",
       "validation_empty_actions": "Vajalik on vähemalt üks tegevus",
+      "validation_header_name": "Päise nimes võivad olla ainult tähed A-Z, numbrid, sidekriipsud ja allkriipsud",
       "templates_section": "Alusta mallist",
       "template_newsletters": "Liiguta uudiskirjad kausta",
       "template_receipts": "Arhiveeri kviitungid automaatselt",
@@ -3139,7 +3167,8 @@
     },
     "export": {
       "title": "Ekspordi kontaktid",
-      "success": "{count, plural, one {Eksporditi 1 kontakt} other {Eksporditi # kontakti}}"
+      "success": "{count, plural, one {Eksporditi 1 kontakt} other {Eksporditi # kontakti}}",
+      "exporting": "Eksportimine..."
     },
     "bulk": {
       "selected": "{count, plural, one {1 valitud} other {# valitud}}",
@@ -3282,8 +3311,11 @@
         "free": "Saadaval",
         "busy": "Hõivatud",
         "tentative": "Esialgne",
+        "no_busy_times": "Hõivatud aegu pole jagatud",
         "unknown": "Ei ole selle serveri kasutaja",
-        "checking": "Kontrollimine…"
+        "error": "Ei õnnestunud kontrollida",
+        "checking": "Kontrollimine…",
+        "unavailable_on_server": "Vaba/hõivatud teave pole selles serveris saadaval"
       },
       "title": "Osalejad",
       "add": "Lisa osaleja",
@@ -3305,7 +3337,8 @@
       "you_organizer": "Sina oled korraldaja",
       "you_attendee": "Sina oled osaleja",
       "no_participants": "Osalejaid pole",
-      "count": "{count, plural, one {# osaleja} other {# osalejat}}"
+      "limit_warning": "Rohkem kui {max, plural, one {# osaleja} other {# osalejat}}, korraldaja kaasa arvatud: server võib keelduda seda sündmust salvestamast. Administraator saab piirangut tõsta.",
+      "count":"{count, plural, one {# osaleja} other {# osalejat}}"
     },
     "recurrence": {
       "title": "Kordumine",
@@ -3495,6 +3528,7 @@
       "save_without_invitations": "Salvesta kutseteta",
       "rsvp_updated": "Vastus uuendatud",
       "rsvp_error": "Vastuse uuendamine ebaõnnestus",
+      "participant_limit": "Server lubab sündmusel kuni {max, plural, one {# osaleja} other {# osalejat}}, korraldaja kaasa arvatud, seega lükkas ta selle muudatuse tagasi. Administraator saab piirangut tõsta.",
       "event_duplicated": "Sündmus dubleeritud",
       "event_error": "Sündmuse salvestamine ebaõnnestus",
       "task_due": "Ülesande tähtaeg",
@@ -3504,7 +3538,10 @@
     },
     "status": {
       "loading_calendars": "Kalendrite laadimine...",
-      "loading_events": "Sündmuste laadimine..."
+      "loading_events": "Sündmuste laadimine...",
+      "events_load_failed": "Sündmusi ei õnnestunud laadida. Kalender ei pruugi olla ajakohane.",
+      "tasks_load_failed": "Ülesandeid ei õnnestunud laadida. Loend ei pruugi olla ajakohane.",
+      "retry": "Proovi uuesti"
     },
     "quick_create": {
       "placeholder": "Uue sündmuse pealkiri",
@@ -3715,8 +3752,12 @@
     "loading_principals": "Kasutajate laadimine…",
     "no_principals": "Teisi kasutajaid ega gruppe ei leitud.",
     "no_match": "Vasteid ei leitud.",
+    "directory_restricted": "Sinu server ei luba oma kasutajakataloogi sirvida, seega on loetletud ainult sinu grupid ja inimesed, kes on sinuga midagi jaganud. Administraator saab kataloogipäringud Stalwarti jagamisseadetes sisse lülitada.",
+    "directory_not_browsable": "Sinu server ei luba sul oma kasutajakataloogi sirvida.",
+    "directory_failed": "Kasutajate ja gruppide loendit ei õnnestunud laadida.",
     "remove": "Eemalda juurdepääs",
     "group": "Grupp",
+    "unknown_user": "Tundmatu kasutaja",
     "share_added": "Juurdepääs antud",
     "share_updated": "Juurdepääs uuendatud",
     "share_removed": "Juurdepääs eemaldatud",
@@ -3812,6 +3853,8 @@
     "new_name": "Uus nimi",
     "name_forbidden_chars": "Server ei luba nimedes neid märke: {chars}",
     "name_reserved": "See nimi on serveris reserveeritud.",
+    "name_control_chars": "Nimed ei tohi sisaldada juhtmärke.",
+    "name_too_long": "See nimi on serveri jaoks liiga pikk.",
     "delete": "Kustuta",
     "delete_confirm_title": "Kustuta ressurss",
     "delete_confirm_message": "Kas oled kindel, et soovid kustutada \"{name}\"? Seda ei saa tagasi võtta.",
@@ -3822,12 +3865,22 @@
     "type": "Tüüp",
     "folder": "Kaust",
     "file": "Fail",
+    "symlink": "Sümboolne link",
+    "parent_directory": "Ülemkaust",
+    "breadcrumb_root": "Avaleht",
     "no_accounts": "Ühendatud kontosid pole.",
     "uploading": "Üleslaadimine...",
     "upload_success": "{count, plural, one {1 fail üles laaditud} other {# faili üles laaditud}}",
     "upload_canceled": "Üleslaadimine tühistatud",
     "upload_canceled_partial": "{count, plural, one {1 fail} other {# faili}} laaditi üles enne tühistamist",
     "upload_error": "Faili üleslaadimine ebaõnnestus",
+    "upload_failed": "{count, plural, one {1 faili ei õnnestunud üles laadida} other {# faili ei õnnestunud üles laadida}}",
+    "error_over_quota": "Failide või kaustade piirang on täis. Kustuta mõned ja proovi uuesti.",
+    "error_too_deep": "Kaustu ei saa nii sügavale üksteise sisse panna.",
+    "error_invalid_name": "Server ei aktsepteeri seda nime.",
+    "error_forbidden": "Sul pole siin selleks õigust.",
+    "error_too_large": "See fail on serveri jaoks liiga suur.",
+    "error_partial_copy": "Osa koopiast jäi alles.",
     "create_folder_success": "Kaust loodud",
     "create_folder_error": "Kausta loomine ebaõnnestus",
     "delete_success": "Edukalt kustutatud",
@@ -3866,6 +3919,7 @@
     "shared": "Jagatud",
     "shared_with_me": "Minuga jagatud",
     "shared_by": "Jagas {name}",
+    "shared_files_from": "Kasutaja {name} failid",
     "create_file_success": "Fail loodud",
     "create_file_error": "Faili loomine ebaõnnestus",
     "favorites": "Lemmikud",

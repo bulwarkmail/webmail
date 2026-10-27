@@ -15,6 +15,7 @@ import {
 } from '@/lib/impersonation/master-config';
 import { mintImpersonationCredential } from '@/lib/impersonation/app-password';
 import { IMPERSONATION_GRANT_COOKIE, sealImpersonationGrant } from '@/lib/impersonation/grant-cookie';
+import { IMPERSONATION_MARKER_COOKIE, IMPERSONATION_MARKER_MAX_AGE_SECONDS } from '@/lib/impersonation/marker-cookie';
 
 export const runtime = 'nodejs';
 
@@ -134,6 +135,12 @@ export async function GET(request: NextRequest) {
     }),
     impersonationCookieOptions(),
   );
+  // Lets ImpersonationReconciler tell this handoff from any link to /?impersonated=1.
+  cookieStore.set(IMPERSONATION_MARKER_COOKIE, '1', {
+    ...getCookieOptions(),
+    httpOnly: false,
+    maxAge: IMPERSONATION_MARKER_MAX_AGE_SECONDS,
+  });
 
   // Structured audit log - operators rely on this for security review.
   logger.info('Impersonation session granted', {

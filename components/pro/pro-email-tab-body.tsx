@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { EmailViewer } from "@/components/email/email-viewer";
 import { ErrorBoundary, EmailViewerErrorFallback } from "@/components/error";
 import { useAuthStore } from "@/stores/auth-store";
-import { useEmailStore, resolveEmailBlobContext, type EmailBlobContext } from "@/stores/email-store";
+import { useEmailStore, resolveEmailBlobContext, type EmailBlobContext, type EmailWriteSource } from "@/stores/email-store";
 import { useIdentityStore } from "@/stores/identity-store";
 import { useProMultiAccountIdentities } from "@/hooks/use-pro-multi-account-identities";
 import { findDraftIdentityIdForLogin } from "@/lib/draft-source";
@@ -112,6 +112,13 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
 
   const [email, setEmail] = useState<Email | null>(null);
   const [blobSource, setBlobSource] = useState<EmailBlobContext>({ client: null });
+  // The login and account the message was read in, for its $answered /
+  // $forwarded flag once a reply or forward from here is sent.
+  const activeAccountId = useAuthStore((s) => s.activeAccountId);
+  const writeSource = useMemo<EmailWriteSource>(() => ({
+    clientAccountId: blobSource.clientAccountId ?? (clientOverride ? localAccountId : activeAccountId ?? undefined),
+    accountId: blobSource.accountId,
+  }), [blobSource, clientOverride, localAccountId, activeAccountId]);
   // A reader owns its load, including an in-flight one across account switches.
   // Only a different message or explicit tab context starts a new load.
   const loadRef = useRef<{
@@ -214,10 +221,11 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
       mode: 'reply',
       replyTo: buildReplyContext(email),
       sourceEmailId: email.id,
+      sourceEmailSource: writeSource,
       initialDraftText: draftText,
       title: buildReplySubject(email.subject || t('email_composer.new_message'), t('email_composer.prefix.reply')),
     }, { source: email, body: draftText ?? '' });
-  }, [email, openComposeTab, t]);
+  }, [email, openComposeTab, t, writeSource]);
 
   const handleReplyAll = useCallback(() => {
     if (!email) return;
@@ -225,9 +233,10 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
       mode: 'replyAll',
       replyTo: buildReplyContext(email),
       sourceEmailId: email.id,
+      sourceEmailSource: writeSource,
       title: buildReplySubject(email.subject || t('email_composer.new_message'), t('email_composer.prefix.reply')),
     }, { source: email });
-  }, [email, openComposeTab, t]);
+  }, [email, openComposeTab, t, writeSource]);
 
   const handleForward = useCallback(() => {
     if (!email) return;
@@ -235,9 +244,10 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
       mode: 'forward',
       replyTo: buildReplyContext(email),
       sourceEmailId: email.id,
+      sourceEmailSource: writeSource,
       title: buildForwardSubject(email.subject || t('email_composer.new_message'), t('email_composer.prefix.forward')),
     }, { source: email });
-  }, [email, openComposeTab, t]);
+  }, [email, openComposeTab, t, writeSource]);
 
   // Mirrors handleForward, but attaches the original as a message/rfc822
   // file instead of quoting it inline - see lib/forward-as-attachment.ts.
@@ -271,6 +281,7 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
         attachments: [payload.attachment],
       },
       sourceEmailId: email.id,
+      sourceEmailSource: writeSource,
       // payload.subject is intentionally blank for a subject-less email (to
       // match normal Forward's *composer* subject behavior - see
       // buildForwardAsAttachmentPayload). The Pro tab *title* is a separate
@@ -279,7 +290,7 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
       // empty title instead of e.g. "Fwd: New message".
       title: buildForwardSubject(email.subject || t('email_composer.new_message'), t('email_composer.prefix.forward')),
     }, { subject: payload.subject });
-  }, [email, openComposeTab, t]);
+  }, [email, openComposeTab, t, writeSource]);
 
   const handleDelete = useCallback(async () => {
     if (!client || !email) return;

@@ -23,6 +23,7 @@ export function ComposingSettings() {
   const [newKeyword, setNewKeyword] = useState('');
 
   const {
+    quickReplyEnabled,
     autoSelectReplyIdentity,
     replyIdentityMatch,
     plainTextMode,
@@ -84,6 +85,13 @@ export function ComposingSettings() {
       </SettingsSection>
 
       <SettingsSection id="replying" title={tPage('sections.replying')}>
+        <SettingItem label={t('quick_reply.label')} description={t('quick_reply.description')}>
+          <ToggleSwitch
+            checked={quickReplyEnabled}
+            onChange={(checked) => updateSetting('quickReplyEnabled', checked)}
+          />
+        </SettingItem>
+
         <SettingItem label={t('auto_select_reply_identity.label')} description={t('auto_select_reply_identity.description')}>
           <ToggleSwitch
             checked={autoSelectReplyIdentity}

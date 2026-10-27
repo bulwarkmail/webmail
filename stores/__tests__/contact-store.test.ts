@@ -13,6 +13,7 @@ import type { ContactCard, ContactMedia } from '@/lib/jmap/types';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
 import { clearContactPhotoCache } from '@/lib/contact-photo-cache';
 import { PrincipalsRequestError } from '@/lib/jmap/principals-error';
+import { setClientLookup } from '../client-registry';
 
 vi.stubGlobal('crypto', { randomUUID: () => '00000000-0000-0000-0000-000000000000' });
 
@@ -660,6 +661,89 @@ describe('contact-store', () => {
     });
   });
 
+  // Multi-account Pro mode lists every login's cards together. Card ids
+  // repeat across logins (each account numbers its own), so a write sent
+  // through the active login with another login's card id hits the active
+  // login's card of that id.
+  describe('writes to another login\'s cards', () => {
+    const loginClient = () => ({
+      getContactsAccountId: vi.fn(() => 'acct-primary'),
+      updateContact: vi.fn().mockResolvedValue(undefined),
+      deleteContact: vi.fn().mockResolvedValue(undefined),
+    });
+    let active: ReturnType<typeof loginClient>;
+    let other: ReturnType<typeof loginClient>;
+
+    beforeEach(() => {
+      active = loginClient();
+      other = loginClient();
+      setClientLookup((localAccountId) => (localAccountId === 'b@host' ? other as unknown as IJMAPClient : undefined));
+      useContactStore.setState({
+        supportsSync: true,
+        contacts: [
+          makeContact({ id: 'a@host::c', originalId: 'c', localAccountId: 'a@host' }),
+          makeContact({ id: 'b@host::c', originalId: 'c', localAccountId: 'b@host' }),
+          makeGroup({ id: 'b@host::g', originalId: 'g', localAccountId: 'b@host', members: { 'urn:uuid:x': true } }),
+        ],
+      });
+    });
+
+    afterEach(() => {
+      setClientLookup(() => undefined);
+    });
+
+    it('deletes selected cards through the login they belong to', async () => {
+      await useContactStore.getState().bulkDeleteContacts(active as unknown as IJMAPClient, ['b@host::c']);
+
+      expect(other.deleteContact).toHaveBeenCalledWith('c', undefined);
+      expect(active.deleteContact).not.toHaveBeenCalled();
+    });
+
+    it('changes and deletes a group through the login it belongs to', async () => {
+      const client = active as unknown as IJMAPClient;
+      await useContactStore.getState().updateGroup(client, 'b@host::g', 'Renamed');
+      await useContactStore.getState().addMembersToGroup(client, 'b@host::g', ['b@host::c']);
+      await useContactStore.getState().removeMembersFromGroup(client, 'b@host::g', ['urn:uuid:x']);
+      await useContactStore.getState().deleteGroup(client, 'b@host::g');
+
+      expect(other.updateContact).toHaveBeenCalledTimes(3);
+      expect(other.updateContact.mock.calls.every(([id, , accountId]) => id === 'g' && accountId === undefined)).toBe(true);
+      expect(other.deleteContact).toHaveBeenCalledWith('g', undefined);
+      expect(active.updateContact).not.toHaveBeenCalled();
+      expect(active.deleteContact).not.toHaveBeenCalled();
+    });
+
+    it('moves a card between two books of its own login there', async () => {
+      // Each login's own books carry that login's primary account.
+      other.getContactsAccountId.mockReturnValue('acct-b');
+      const target = { id: 'b@host::ab-2', originalId: 'ab-2', localAccountId: 'b@host', accountId: 'acct-b', name: 'Work' };
+
+      await useContactStore.getState().moveContactToAddressBook(active as unknown as IJMAPClient, ['b@host::c'], target);
+
+      expect(other.updateContact).toHaveBeenCalledWith('c', { addressBookIds: { 'ab-2': true } }, undefined);
+      expect(active.updateContact).not.toHaveBeenCalled();
+      expect(active.deleteContact).not.toHaveBeenCalled();
+    });
+
+    it('moves a card into a shared book of its login by creating it and deleting the old one there', async () => {
+      other.getContactsAccountId.mockReturnValue('acct-b');
+      const created = makeContact({ id: 'n', addressBookIds: { 'ab-7': true } });
+      const otherCreate = vi.fn().mockResolvedValue(created);
+      Object.assign(other, { createContact: otherCreate });
+      const target = { id: 'b@host::acct-s:ab-7', originalId: 'ab-7', localAccountId: 'b@host', accountId: 'acct-s', accountName: 'Team', isShared: true, name: 'Team' };
+
+      await useContactStore.getState().moveContactToAddressBook(active as unknown as IJMAPClient, ['b@host::c'], target);
+
+      expect(otherCreate).toHaveBeenCalledWith(expect.objectContaining({ addressBookIds: { 'ab-7': true } }), 'acct-s');
+      expect(other.deleteContact).toHaveBeenCalledWith('c', undefined);
+      expect(active.deleteContact).not.toHaveBeenCalled();
+      expect(useContactStore.getState().contacts.find((c) => c.originalId === 'n')).toMatchObject({
+        id: 'b@host::acct-s:n', localAccountId: 'b@host', isShared: true, accountId: 'acct-s',
+        addressBookIds: { 'b@host::acct-s:ab-7': true },
+      });
+    });
+  });
+
   describe('bulkAddToGroup (local mode)', () => {
     it('should add contacts to group and clear selection', async () => {
       const m1 = makeContact({ id: 'm1' });
@@ -1199,6 +1283,58 @@ describe('contact-store', () => {
         expect.objectContaining({ addressBookIds: { 'ab-1': true } }),
         undefined,
       );
+    });
+
+    // Card ids repeat across accounts (live on 0.16 and 1.0: the sharee's own
+    // card and one it creates in the owner's shared book both got "c"). A card
+    // created in a shared book was kept under its bare id: deleting it right
+    // after deleted the own card with that id.
+    it('keeps a card created in a shared book apart from an own card with the same id', async () => {
+      useContactStore.setState({
+        addressBooks: [
+          { id: 'ab-1', name: 'Personal', isDefault: true },
+          { id: 'acct-a:ab-7', originalId: 'ab-7', name: 'Team', isShared: true, accountId: 'acct-a', accountName: 'Alice' },
+        ],
+        contacts: [makeContact({ id: 'c', addressBookIds: { 'ab-1': true } })],
+      });
+      const client = makeClient();
+      client.createContact.mockImplementation(async (c: Partial<ContactCard>) => ({ ...makeContact(), ...c, id: 'c' }));
+
+      await useContactStore.getState().createContact(
+        client as unknown as IJMAPClient,
+        { addressBookIds: { 'acct-a:ab-7': true } },
+      );
+
+      expect(client.createContact).toHaveBeenCalledWith(expect.objectContaining({ addressBookIds: { 'ab-7': true } }), 'acct-a');
+      const created = useContactStore.getState().contacts[1];
+      expect(created).toMatchObject({
+        id: 'acct-a:c', originalId: 'c', isShared: true, accountId: 'acct-a', accountName: 'Alice',
+        addressBookIds: { 'acct-a:ab-7': true },
+      });
+
+      await useContactStore.getState().deleteContact(client as unknown as IJMAPClient, 'acct-a:c');
+
+      expect(client.deleteContact).toHaveBeenCalledWith('c', 'acct-a');
+      expect(useContactStore.getState().contacts.map((c) => c.id)).toEqual(['c']);
+    });
+
+    it('namespaces a card created through another login like that login\'s listing', async () => {
+      useContactStore.setState({
+        addressBooks: [
+          { id: 'me@host::ab-1', originalId: 'ab-1', localAccountId: 'me@host', name: 'Personal', isDefault: true },
+        ],
+      });
+      const client = makeClient();
+
+      await useContactStore.getState().createContact(
+        client as unknown as IJMAPClient,
+        { addressBookIds: { 'me@host::ab-1': true } },
+      );
+
+      expect(useContactStore.getState().contacts[0]).toMatchObject({
+        id: 'me@host::created-id', originalId: 'created-id', localAccountId: 'me@host',
+        addressBookIds: { 'me@host::ab-1': true },
+      });
     });
 
     it('moves to a namespaced personal book with the raw id and keeps the display id locally', async () => {

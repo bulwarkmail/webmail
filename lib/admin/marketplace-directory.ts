@@ -69,6 +69,41 @@ export async function directoryJson<T>(url: URL, init: RequestInit & { timeoutMs
   return res.json() as Promise<T>;
 }
 
+/**
+ * The bytes of a bundle download, refused once they pass `maxBytes` (the
+ * package size limit). Reading the whole answer first let a directory, or
+ * anyone in the path to it, stream until the server ran out of memory.
+ */
+export async function readBundleBytes(res: Response, maxBytes: number): Promise<ArrayBuffer> {
+  const tooLarge = () => new DirectoryError(`The bundle is larger than ${Math.round(maxBytes / (1024 * 1024))} MB`, 413);
+  const declared = Number(res.headers.get('content-length'));
+  if (Number.isFinite(declared) && declared > maxBytes) {
+    await res.body?.cancel().catch(() => {});
+    throw tooLarge();
+  }
+  if (!res.body) return res.arrayBuffer();
+  const reader = res.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > maxBytes) {
+      await reader.cancel().catch(() => {});
+      throw tooLarge();
+    }
+    chunks.push(value);
+  }
+  const out = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    out.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return out.buffer;
+}
+
 // ─── Directory shapes (lib/api/views.ts in the directory) ──────────────────
 
 export interface DirectoryVersion {

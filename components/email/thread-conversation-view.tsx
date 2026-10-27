@@ -3,12 +3,15 @@
 import React, { useState, useEffect, useLayoutEffect, useMemo, useRef, useCallback } from "react";
 import DOMPurify from "dompurify";
 import { Email, ThreadGroup } from "@/lib/jmap/types";
-import { EMAIL_SANITIZE_CONFIG, blockExternalResourcesOnNode, collapseBlockedImageContainers, emailIframeCsp, plainTextToSafeHtml, restrictDataUriResourcesOnNode, sanitizeEmailBodyForIframe, sanitizePlainTextRenderedHtml } from "@/lib/email-sanitization";
+import { EMAIL_SANITIZE_CONFIG, TRANSPARENT_BLOCKED_PIXEL, blockExternalResourcesOnNode, collapseBlockedImageContainers, emailIframeCsp, isOpenableLinkHref, plainTextToSafeHtml, restrictDataUriResourcesOnNode, sanitizeEmailBodyForIframe, sanitizePlainTextRenderedHtml } from "@/lib/email-sanitization";
+import { resolveExternalLink } from "@/lib/plugin-hook-result";
+import { stripBidiControls } from "@/lib/bidi";
+import { requestInternalMailto } from "@/lib/protocol-handlers/mailto";
 import { emailDisplayDate } from "@/lib/email-date";
 import { getRenderableHtmlBody } from "@/lib/email-body-selection";
 import { findVerificationCode, verificationCodeBodyText } from "@/lib/verification-code";
 import { VerificationCodeChip } from "./verification-code-chip";
-import { collectReferencedCids, isEmbeddedInBody, normalizeCid } from "@/lib/attachment-visibility";
+import { collectReferencedCids, isEmbeddedInBody, normalizeCid, rewriteCidReferences } from "@/lib/attachment-visibility";
 import { collapsePlainTextQuotes, setupQuoteCollapse } from "@/lib/quote-collapse";
 import { fitEmailBodyWidth } from "@/lib/email-fit-width";
 import { DARK_PENDING_CLASS, applyEmailDarkMode, emailDarkModeCss } from "@/lib/email-dark-mode";
@@ -614,10 +617,7 @@ export function ConversationEmailBody({
     // Plugin-rendered bodies get the reader's sanitizer and remote-content
     // blocking, like any other mail body (#797).
     if (pluginBody.html) {
-      const withCids = pluginBody.html.replace(
-        /\bcid:([^"'\s)]+)/gi,
-        (_match, cidRef) => pluginBody.cidUrls[cidRef] || cidBlobUrls[cidRef] || 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7',
-      );
+      const withCids = rewriteCidReferences(pluginBody.html, { ...cidBlobUrls, ...pluginBody.cidUrls }, TRANSPARENT_BLOCKED_PIXEL);
       const { html, blockedExternalContent } = sanitizeEmailBodyForIframe(withCids, !allowExternal);
       if (blockedExternalContent) {
         if (!hasBlockedContent) setHasBlockedContent(true);
@@ -642,12 +642,7 @@ export function ConversationEmailBody({
         // Replace cid: references with authenticated blob URLs (fetched via useEffect)
         // This prevents browser auth dialogs that occur when loading raw JMAP download URLs
         if (email.attachments) {
-          htmlContent = htmlContent.replace(
-            /\bcid:([^"'\s)]+)/gi,
-            (_match, cidRef) => {
-              return cidBlobUrls[cidRef] || 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
-            }
-          );
+          htmlContent = rewriteCidReferences(htmlContent, cidBlobUrls, TRANSPARENT_BLOCKED_PIXEL);
         }
 
         let blockedExternalContent = false;
@@ -802,6 +797,25 @@ export function ConversationEmailBody({
         a.setAttribute('target', '_blank');
         a.setAttribute('rel', 'noopener noreferrer');
       });
+      // The reader's link gate (email-viewer handleIframeLoad): web links go
+      // through onBeforeExternalLink, and nothing resolving inside our own
+      // origin (a relative path, data:) is opened. mailto: is written here
+      // when the mail page takes it; the blob: URLs of cid: parts are inert.
+      doc.addEventListener('click', (ev) => {
+        const link = (ev.target as Element | null)?.closest?.('a[href], area[href]');
+        if (!link) return;
+        const href = link.getAttribute('href') || '';
+        if (!href || href.startsWith('#') || href.startsWith('blob:')) return;
+        if (/^mailto:/i.test(href)) {
+          if (requestInternalMailto(href)) ev.preventDefault();
+          return;
+        }
+        ev.preventDefault();
+        ev.stopPropagation();
+        if (!isOpenableLinkHref(href)) return;
+        void resolveExternalLink({ href, target: link.getAttribute('target') ?? undefined, emailId: email.id })
+          .then((target) => { if (target) window.open(target, '_blank', 'noopener,noreferrer'); });
+      }, true);
       // Selected text: the onTextSelectionChange hook and the right-click
       // menu plugins may add entries to.
       watchBodySelection(doc, iframe, {
@@ -915,7 +929,7 @@ export function ConversationEmailBody({
                   className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted hover:bg-muted/80 transition-colors text-sm"
                 >
                   <Icon className="w-4 h-4 text-muted-foreground" />
-                  <span className="truncate max-w-[150px]">{attachment.name || 'Attachment'}</span>
+                  <span className="truncate max-w-[150px]">{attachment.name ? stripBidiControls(attachment.name) : 'Attachment'}</span>
                   <span className="text-muted-foreground text-xs">
                     {formatFileSize(attachment.size)}
                   </span>

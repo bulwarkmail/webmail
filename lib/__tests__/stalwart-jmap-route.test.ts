@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { endlessResponse } from './helpers/endless-body';
 
 // #904: the Stalwart JMAP passthrough is registered unconditionally by Next,
 // so the server-side switch has to answer 404 inside the handler - before any
@@ -107,5 +108,15 @@ describe('Stalwart JMAP passthrough switch (#904)', () => {
     expect(status).toBe(200);
     expect(postJmap).toHaveBeenCalledTimes(1);
     expect(postJmap.mock.calls[0][0]).toBe('https://mail.example.com/jmap/');
+  });
+
+  it('answers 502 instead of buffering an answer that never ends', async () => {
+    const { response, pulled } = endlessResponse(500);
+    postJmap.mockResolvedValueOnce(response);
+
+    const { status } = await callRoute();
+
+    expect(status).toBe(502);
+    expect(pulled()).toBeLessThan(60);
   });
 });

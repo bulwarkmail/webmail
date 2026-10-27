@@ -46,7 +46,12 @@ function clientKey(client: IJMAPClient): number {
 export function resolveQuickRuleTarget(email: Email): QuickRuleTarget | null {
   const auth = useAuthStore.getState();
   if (!auth.client) return null;
-  const context = resolveEmailActionContext(email, auth.client);
+  let context: ReturnType<typeof resolveEmailActionContext>;
+  try {
+    context = resolveEmailActionContext(email, auth.client);
+  } catch {
+    return null; // a message of a login that is gone
+  }
   const client = context.client;
   const ownAccountId = client.getAccountId();
   const accountId = context.accountId ?? ownAccountId;

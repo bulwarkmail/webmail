@@ -2,11 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
 import { logger } from '@/lib/logger';
 import { getStalwartCredentials } from '@/lib/stalwart/credentials';
+import { loginClientAddress } from '@/lib/auth/client-address';
 import { fetchJmapSession, postJmap, rebaseApiUrl } from '@/lib/stalwart/jmap-api';
 import { normalizeCalendarEventLike } from '@/lib/calendar-event-normalization';
 import { RECURRENCE_BASE_PROPERTIES, hydrateRecurrenceInstances, isServerRecurrenceInstance } from '@/lib/recurrence-instances';
 import { parseISO } from 'date-fns';
 import type { CalendarEvent } from '@/lib/jmap/types';
+import { UpstreamBodyTooLargeError, readJsonCapped } from '@/lib/security/capped-body';
 
 /**
  * POST /api/calendar-agenda
@@ -45,6 +47,8 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const GET_BATCH = 100;
 // Stalwart's default maxCallsInRequest, for a session that names none.
 const MAX_CALLS_FALLBACK = 16;
+// One answer holds at most maxCallsInRequest x GET_BATCH slim events.
+const MAX_RESPONSE_BYTES = 20 * 1024 * 1024;
 
 interface AgendaEvent {
   /** Unique across accounts: `<accountId>:<event id>`. */
@@ -52,6 +56,7 @@ interface AgendaEvent {
   accountId: string;
   uid: string | null;
   title: string;
+  /** An instant (`...Z`); for an all-day event the date-time without an offset. */
   start: string;
   end: string;
   allDay: boolean;
@@ -97,6 +102,20 @@ function eventEnd(event: Partial<CalendarEvent>): Date {
   return new Date(start.getTime() + parseDurationMinutes(event.duration) * 60000);
 }
 
+/**
+ * An all-day event's start and end as the dates it is stored with
+ * (`2026-10-27T00:00:00`, no offset). As an instant it would be midnight in
+ * this server's time zone, which anyone west of the server reads as the day
+ * before; `new Date()` reads a date-time without an offset as the viewer's
+ * own local time.
+ */
+function allDayRange(event: Partial<CalendarEvent>): { start: string; end: string } {
+  const start = (event.start as string).slice(0, 19);
+  const startMs = Date.parse(`${start}Z`);
+  const end = new Date(startMs + parseDurationMinutes(event.duration) * 60000).toISOString().slice(0, 19);
+  return { start, end };
+}
+
 function firstLocationName(event: Partial<CalendarEvent>): string | null {
   const locations = event.locations;
   if (!locations || typeof locations !== 'object') return null;
@@ -140,7 +159,7 @@ export async function POST(request: NextRequest) {
     // configured public hostname, which the host process may not be able to
     // resolve (the browser client rewrites those URLs back to the origin for
     // the same reason). Fall back to /.well-known/jmap for non-Stalwart servers.
-    const fetchOptions = { trusted: creds.trusted };
+    const fetchOptions = { trusted: creds.trusted, clientIp: loginClientAddress(request) };
     const session = await fetchJmapSession(creds.serverUrl, creds.authHeader, fetchOptions);
     if (!session) {
       return NextResponse.json({ error: 'JMAP session fetch failed' }, { status: 502 });
@@ -318,8 +337,9 @@ export async function POST(request: NextRequest) {
           accountId: e.accountId,
           uid: e.uid ?? null,
           title: (e.title ?? '').trim() || '(no title)',
-          start: eventStart(e).toISOString(),
-          end: eventEnd(e).toISOString(),
+          ...(e.showWithoutTime
+            ? allDayRange(e)
+            : { start: eventStart(e).toISOString(), end: eventEnd(e).toISOString() }),
           allDay: !!e.showWithoutTime,
           status: e.status ?? null,
           color: e.color || cal?.color || null,
@@ -330,6 +350,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ events: agenda, generatedAt: now.toISOString() });
   } catch (error) {
+    if (error instanceof UpstreamBodyTooLargeError) {
+      logger.warn('Calendar agenda: JMAP response too large', { maxBytes: error.maxBytes });
+      return NextResponse.json({ error: 'JMAP server response is too large' }, { status: 502 });
+    }
     // `fetch failed` from undici is too generic to debug — the real reason
     // (ENOTFOUND, ECONNREFUSED, self-signed TLS, …) lives on `error.cause`.
     const err = error as Error & { cause?: { code?: string; message?: string } };
@@ -396,7 +420,7 @@ async function jmapPost(
   if (!res.ok) {
     throw new Error(`JMAP request failed (${res.status})`);
   }
-  return res.json();
+  return readJsonCapped(res, MAX_RESPONSE_BYTES);
 }
 
 function findResponse(

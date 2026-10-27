@@ -9,15 +9,18 @@ import { useSettingsStore } from '@/stores/settings-store';
 import { useTaskStore } from '@/stores/task-store';
 import { useCalendarNotificationStore } from '@/stores/calendar-notification-store';
 import { useToastStore } from '@/stores/toast-store';
-import { getPendingAlerts, getPendingTaskAlerts, buildAlertKey } from '@/lib/calendar-alerts';
+import { getPendingAlerts, getPendingTaskAlerts, getNextAlertFireTime, buildAlertKey } from '@/lib/calendar-alerts';
 import { playNotificationSound } from '@/lib/notification-sound';
 import { getPathPrefix } from '@/lib/browser-navigation';
 import type { CalendarEvent } from '@/lib/jmap/types';
 import { calendarHooks } from '@/lib/plugin-hooks';
+import { changesAnyType, subscribePushStateChanges } from '@/lib/push-events';
 
 const CHECK_INTERVAL_MS = 60 * 1000;
 const PROACTIVE_FETCH_HOURS = 24;
 const PROACTIVE_THROTTLE_MS = CHECK_INTERVAL_MS * 5;
+// Longest single wait for the next reminder; the periodic check covers the rest.
+const MAX_WAKE_DELAY_MS = 6 * 60 * 60 * 1000;
 
 export function useCalendarAlerts() {
   const { isAuthenticated, client } = useAuthStore();
@@ -32,14 +35,26 @@ export function useCalendarAlerts() {
   const lastProactiveFetchRef = useRef<number>(0);
   const proactiveEventsRef = useRef<CalendarEvent[]>([]);
   const shownKeysRef = useRef<Set<string>>(new Set());
+  // Wakes the check at the next reminder's fire time (#1349).
+  const wakeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const checkAlertsRef = useRef<() => void>(() => {});
 
   const checkAlerts = useCallback(() => {
+    if (wakeTimerRef.current) {
+      clearTimeout(wakeTimerRef.current);
+      wakeTimerRef.current = null;
+    }
     if (!calendarNotificationsEnabled || !isAuthenticated) return;
 
     try {
       const now = Date.now();
       const acknowledgedKeys = new Set(Object.keys(acknowledgedAlerts));
       const allEvents = [...events, ...proactiveEventsRef.current];
+      // A minute-tick alone showed reminders up to a minute late.
+      const nextFire = getNextAlertFireTime(allEvents, enableCalendarTasks ? storeTasks : [], calendars, now);
+      if (nextFire !== null) {
+        wakeTimerRef.current = setTimeout(() => checkAlertsRef.current(), Math.min(nextFire - now, MAX_WAKE_DELAY_MS));
+      }
       const pending = getPendingAlerts(allEvents, calendars, acknowledgedKeys, now);
 
       for (const alert of pending) {
@@ -122,12 +137,13 @@ export function useCalendarAlerts() {
     isAuthenticated, events, calendars, acknowledgedAlerts,
     acknowledgeAlert, addToast, t, locale, enableCalendarTasks, storeTasks,
   ]);
+  checkAlertsRef.current = checkAlerts;
 
-  const proactiveFetch = useCallback(async () => {
+  const proactiveFetch = useCallback(async (force = false) => {
     if (!client || !supportsCalendar || !calendarNotificationsEnabled || !isAuthenticated) return;
 
     const now = Date.now();
-    if (now - lastProactiveFetchRef.current < PROACTIVE_THROTTLE_MS) return;
+    if (!force && now - lastProactiveFetchRef.current < PROACTIVE_THROTTLE_MS) return;
 
     try {
       const start = new Date(now - 10 * 60 * 1000).toISOString();
@@ -135,6 +151,7 @@ export function useCalendarAlerts() {
       const fetched = await client.queryCalendarEvents({ after: start, before: end });
       proactiveEventsRef.current = fetched;
       lastProactiveFetchRef.current = Date.now();
+      checkAlertsRef.current();
     } catch {
       // Silently ignore proactive fetch errors
     }
@@ -166,4 +183,19 @@ export function useCalendarAlerts() {
     if (!calendarNotificationsEnabled || !isAuthenticated) return;
     checkAlerts();
   }, [events, calendarNotificationsEnabled, isAuthenticated, checkAlerts]);
+
+  // An event created or moved elsewhere can have a reminder due within the
+  // throttle window: read the next hours again when push reports a change.
+  const proactiveFetchRef = useRef(proactiveFetch);
+  proactiveFetchRef.current = proactiveFetch;
+  useEffect(() => {
+    if (!calendarNotificationsEnabled || !isAuthenticated) return;
+    return subscribePushStateChanges((change, _client, role) => {
+      if (role === 'active' && changesAnyType(change, ['CalendarEvent'])) void proactiveFetchRef.current(true);
+    });
+  }, [calendarNotificationsEnabled, isAuthenticated]);
+
+  useEffect(() => () => {
+    if (wakeTimerRef.current) clearTimeout(wakeTimerRef.current);
+  }, []);
 }

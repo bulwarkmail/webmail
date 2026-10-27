@@ -12,6 +12,7 @@ import {
 import { configManager } from "./lib/admin/config-manager";
 import { getWopiEditorOrigins } from "./lib/wopi/discovery";
 import { detectSetupState } from "./lib/setup/state";
+import { isServedOverHttps } from "./lib/security/request-protocol";
 
 const intlMiddleware = createIntlMiddleware(routing);
 
@@ -48,11 +49,26 @@ function withMatchedChineseAcceptLanguage(request: NextRequest): NextRequest {
   return new NextRequest(request, { headers, nextConfig: basePath ? { basePath } : undefined });
 }
 
-// Next 16's Proxy always runs on Node.js runtime and route-segment config
-// (e.g. `export const config = { matcher }`) is no longer allowed in the
-// proxy file. We replicate the previous matcher inline by short-circuiting
-// requests for API routes, Next internals and static assets.
+// Next 16's Proxy always runs on Node.js runtime (a `runtime` in the config
+// below is refused). The matcher only leaves out the upload routes; API
+// routes, Next internals and static assets still pass through here and are
+// short-circuited inline after the setup and CSRF gates.
 const PROXY_SKIP_PATTERN = /^\/(?:api|_next)(?:\/|$)/;
+
+/**
+ * Routes the proxy does not run for: the ones that take uploads over 10 MB.
+ * For every request it runs for, Next first copies the body for it, up to
+ * proxyClientMaxBodySize (10 MB) and silently cutting off the rest; raising
+ * that limit made any unauthenticated POST hold up to it in memory. These
+ * handlers gate cross-origin requests themselves (the WOPI file routes are
+ * token-authed) and cap what they read. Next tests the raw and the decoded
+ * path; the proxy is skipped only when both are one of these exactly.
+ * next.config.ts gives them the headers the proxy would have set.
+ * A literal: Next reads it at build time.
+ */
+export const config = {
+  matcher: ["/((?!api/webdav$|api/plugin-proxy$|api/wopi/files/[^/]+/contents$).*)"],
+};
 
 // What Next serves from public/: a single dotted segment at the root
 // (/sw.js, /favicon.ico, /manifest.webmanifest) and the branding/,
@@ -143,10 +159,14 @@ function isOriginGateExempt(routePath: string): boolean {
  * frame-ancestors for the mail UI. It always includes 'self': the PDF preview
  * frames a blob: document, and Safari enforces the page's frame-ancestors on
  * that document too, so without 'self' the preview stays blank (#1301).
- * 'none' in ALLOWED_FRAME_ANCESTORS means "no other site" here.
+ * 'none' in ALLOWED_FRAME_ANCESTORS means "no other site" here. The value
+ * can be saved in the admin dashboard, so a source that would end the
+ * directive (`;`, `,`) or break the header is dropped rather than written
+ * into it.
  */
 export function mailFrameAncestors(allowed: string | undefined): string {
-  const sources = (allowed ?? "").trim().split(/\s+/).filter((s) => s && s.toLowerCase() !== "'none'");
+  const sources = (typeof allowed === "string" ? allowed : "").trim().split(/\s+/)
+    .filter((s) => s && s.toLowerCase() !== "'none'" && /^[!-~]+$/.test(s) && !/[;,]/.test(s));
   if (!sources.some((s) => s.toLowerCase() === "'self'")) sources.unshift("'self'");
   return sources.join(" ");
 }
@@ -292,11 +312,14 @@ export async function proxy(request: NextRequest) {
     ? `'self'`
     : isAdminOrSetupPath
     ? "'none'"
-    : mailFrameAncestors(process.env.ALLOWED_FRAME_ANCESTORS);
+    : mailFrameAncestors(configManager.get<string>("allowedFrameAncestors", ""));
 
   // Plugins may declare iframe origins they need (e.g. for embedded video).
-  // Each origin is validated at install time and re-validated here.
-  const pluginFrameOrigins = await getEnabledPluginFrameOrigins();
+  // Each origin is validated at install time and re-validated here. None
+  // while the admin has plugins turned off: no plugin runs then.
+  const pluginFrameOrigins = configManager.getPolicy().features?.pluginsEnabled === true
+    ? await getEnabledPluginFrameOrigins()
+    : [];
 
   // Sidebar Apps set to open "inline" are a per-user setting the proxy can't
   // read, so the client mirrors their origins into a cookie (#787). Ignored
@@ -307,7 +330,7 @@ export async function proxy(request: NextRequest) {
   const appFrameOrigins = sidebarAppsEnabled
     ? parseAppFrameOrigins(pickAppFrameOriginsCookie(
         (name) => request.cookies.get(name)?.value,
-        request.nextUrl.protocol === "https:" || request.headers.get("x-forwarded-proto") === "https",
+        isServedOverHttps(request),
       ))
     : [];
 
@@ -412,11 +435,12 @@ export async function proxy(request: NextRequest) {
 
   response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
   response.headers.set("X-XSS-Protection", "0");
-  // Only on a request that arrived over TLS (directly or via the reverse
-  // proxy's X-Forwarded-Proto): a plain-http dev or LAN install must not be
-  // pinned to https by a header it cannot honour. No includeSubDomains, which
-  // would speak for the operator's other hosts.
-  if (request.nextUrl.protocol === "https:" || request.headers.get("x-forwarded-proto") === "https") {
+  // Only on a request that arrived over TLS (directly, via the reverse
+  // proxy's X-Forwarded-Proto, or as COOKIE_SECURE=true declares): a
+  // plain-http dev or LAN install must not be pinned to https by a header it
+  // cannot honour. No includeSubDomains, which would speak for the operator's
+  // other hosts.
+  if (isServedOverHttps(request)) {
     response.headers.set("Strict-Transport-Security", "max-age=63072000");
   }
   response.headers.set(

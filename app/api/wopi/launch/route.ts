@@ -4,6 +4,7 @@ import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
 import { logger } from '@/lib/logger';
 import { configManager } from '@/lib/admin/config-manager';
 import { getStalwartCredentials } from '@/lib/stalwart/credentials';
+import { loginClientAddress } from '@/lib/auth/client-address';
 import { fetchJmapSession, type JmapSessionDocument } from '@/lib/stalwart/jmap-api';
 import { getWopiActions, buildWopiActionUrl } from '@/lib/wopi/discovery';
 import { getWopiFileNode, probeBlob, shareeSavesNeedRename } from '@/lib/wopi/files';
@@ -70,7 +71,7 @@ export async function POST(request: NextRequest) {
     // into the login's own account, which is not the one holding a node
     // shared with the user (#1094).
     if (!accountId || !blobId) {
-      session = await fetchJmapSession(serverUrl, creds.authHeader, { trusted });
+      session = await fetchJmapSession(serverUrl, creds.authHeader, { trusted, clientIp: loginClientAddress(request) });
       const capability = blobId ? 'urn:ietf:params:jmap:mail' : 'urn:ietf:params:jmap:filenode';
       ownAccountId =
         session?.primaryAccounts?.[capability] ||

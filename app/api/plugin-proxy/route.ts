@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
 
   try {
     return await proxyRequest({
-      user: { username: creds.username, serverUrl: creds.serverUrl },
+      user: { username: creds.accountName, serverUrl: creds.serverUrl },
       pluginId,
       credentialId,
       url,

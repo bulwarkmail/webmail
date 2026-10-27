@@ -1,10 +1,14 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { postJmap, rebaseApiUrl, fetchJmapSession, JmapRedirectError } from '@/lib/stalwart/jmap-api';
+import { endlessResponse } from './helpers/endless-body';
+import { resetStoredCredentialBudgetForTests } from '@/lib/stalwart/stored-credential-budget';
 
 const realFetch = global.fetch;
 const mockedFetch = vi.fn();
 
 beforeEach(() => {
+  // A 401 below would keep 'Basic abc' from reaching the mock in later tests.
+  resetStoredCredentialBudgetForTests();
   mockedFetch.mockReset();
   global.fetch = mockedFetch as unknown as typeof fetch;
 });
@@ -132,5 +136,16 @@ describe('fetchJmapSession', () => {
   it('returns null when no candidate yields a session', async () => {
     mockedFetch.mockResolvedValue(response(404));
     expect(await fetchJmapSession('https://mail.example.com', 'Basic abc')).toBeNull();
+  });
+});
+
+describe('fetchJmapSession (response size)', () => {
+  it('stops reading a session document that never ends', async () => {
+    const first = endlessResponse(500);
+    const second = endlessResponse(500);
+    mockedFetch.mockResolvedValueOnce(first.response).mockResolvedValueOnce(second.response);
+
+    expect(await fetchJmapSession('https://mail.example.com', 'Basic abc')).toBeNull();
+    expect(first.pulled() + second.pulled()).toBeLessThan(20);
   });
 });

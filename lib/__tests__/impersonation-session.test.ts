@@ -156,7 +156,14 @@ describe('impersonation handoff', () => {
       methodCalls: [string, { destroy: string[] }, string][];
     };
     expect(destroy.methodCalls[0][1].destroy).toEqual(['cred-1']);
-    expect(jar.size).toBe(0);
+    // The reconcile marker is no credential and expires within a minute.
+    expect([...jar.keys()].filter((name) => name !== 'jmap_impersonated')).toEqual([]);
+  });
+
+  it('sets the marker cookie that lets the client reconcile its account list', async () => {
+    const res = await impersonate();
+    expect(res.headers.get('location')).toBe('/?impersonated=1');
+    expect(jar.get('jmap_impersonated')).toBe('1');
   });
 
   it('will not return a session that still holds the master password', async () => {

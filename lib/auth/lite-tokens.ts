@@ -1,5 +1,12 @@
-import { generateCodeVerifier, generateCodeChallenge } from '@/lib/oauth/pkce';
+import { generateCodeVerifier, generateCodeChallenge, generateState } from '@/lib/oauth/pkce';
 import { IS_LITE_STALWART, getLiteInjectedClientId } from '@/lib/lite';
+import {
+  STALWART_LOOPBACK_REDIRECT_URI,
+  readStalwartLoginResponse,
+  stalwartClientRegistration,
+  stalwartLoginBody,
+  type StalwartLoginOutcome,
+} from '@/lib/auth/stalwart-login-request';
 
 /**
  * Cookie-free sessions for the static Lite build.
@@ -64,6 +71,8 @@ export interface LiteTokens {
   accessToken: string;
   expiresIn: number;
   refreshToken: string | null;
+  /** The client the tokens belong to, when the login chose it; refreshes must present it. */
+  clientId?: string;
 }
 
 interface StoredRefreshToken {
@@ -337,11 +346,6 @@ export function clearAllLiteSessions(): void {
 // Stalwart endpoints
 // ---------------------------------------------------------------------------
 
-interface LoginResponse {
-  type?: string;
-  client_code?: string;
-}
-
 interface TokenResponse {
   access_token?: string;
   expires_in?: number;
@@ -349,9 +353,76 @@ interface TokenResponse {
   error?: string;
 }
 
+interface LiteLoginClient {
+  clientId: string;
+  redirectUri: string;
+}
+
+/**
+ * Clients this page registered at a Stalwart 1.0 that knows no client by the
+ * default name, per server. Registering again would return the same id.
+ */
+const registeredClients = new Map<string, string>();
+
+/** Test hook. */
+export function resetLiteRegisteredClients(): void {
+  registeredClients.clear();
+}
+
+async function registerLiteClient(base: string): Promise<string | null> {
+  try {
+    const response = await fetch(`${base}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(stalwartClientRegistration()),
+    });
+    if (!response.ok) return null;
+    const body = (await response.json().catch(() => ({}))) as { client_id?: unknown };
+    if (typeof body.client_id !== 'string' || !body.client_id) return null;
+    registeredClients.set(base, body.client_id);
+    return body.client_id;
+  } catch {
+    return null;
+  }
+}
+
+/** POST /api/auth for an authorization code. */
+async function requestLiteLoginCode(
+  base: string,
+  params: { username: string; password: string; totp?: string },
+  client: LiteLoginClient,
+  challenge: string,
+): Promise<StalwartLoginOutcome> {
+  const state = generateState();
+  const loginResponse = await fetch(`${base}/api/auth`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(stalwartLoginBody({
+      username: params.username,
+      password: params.password,
+      totp: params.totp,
+      clientId: client.clientId,
+      redirectUri: client.redirectUri,
+      codeChallenge: challenge,
+      state,
+    })),
+  });
+
+  if (!loginResponse.ok) {
+    if (loginResponse.status === 404 || loginResponse.status === 405 || loginResponse.status === 501) {
+      throw new LiteLoginError('endpoint_missing', loginResponse.status);
+    }
+    const detail = (await loginResponse.text().catch(() => '')).slice(0, 200);
+    throw new LiteLoginError('login_failed', loginResponse.status, detail);
+  }
+  return readStalwartLoginResponse(await loginResponse.json().catch(() => ({})), state);
+}
+
 /**
  * Password (+ optional TOTP) login against Stalwart's structured endpoint.
- * Mirrors app/api/auth/totp-token-exchange/route.ts, minus the server hop.
+ * Mirrors app/api/auth/totp-token-exchange/route.ts, minus the server hop:
+ * like it, the login registers a client of its own at a Stalwart 1.0 that
+ * knows none by the default name.
  */
 export async function liteTokenLogin(params: {
   serverUrl: string;
@@ -362,52 +433,43 @@ export async function liteTokenLogin(params: {
   clientId?: string;
 }): Promise<LiteTokens> {
   const base = trimUrl(params.serverUrl);
-  const clientId = params.clientId || getLiteClientId();
+  const explicitClientId = params.clientId || getLiteInjectedClientId();
+  const registered = explicitClientId ? undefined : registeredClients.get(base);
+  let client: LiteLoginClient = registered
+    ? { clientId: registered, redirectUri: STALWART_LOOPBACK_REDIRECT_URI }
+    : { clientId: explicitClientId || LITE_CLIENT_ID, redirectUri: params.redirectUri };
   const verifier = generateCodeVerifier();
   const challenge = await generateCodeChallenge(verifier);
 
-  const loginResponse = await fetch(`${base}/api/auth`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      type: 'authCode',
-      accountName: params.username,
-      accountSecret: params.password,
-      ...(params.totp ? { mfaToken: params.totp } : {}),
-      clientId,
-      redirectUri: params.redirectUri,
-      codeChallenge: challenge,
-      codeChallengeMethod: 'S256',
-    }),
-  });
-
-  if (!loginResponse.ok) {
-    if (loginResponse.status === 404 || loginResponse.status === 405 || loginResponse.status === 501) {
-      throw new LiteLoginError('endpoint_missing', loginResponse.status);
+  let login = await requestLiteLoginCode(base, params, client, challenge);
+  // Stalwart 1.0 checks the client before the credentials, so the first
+  // attempt costs no failed sign-in.
+  if (login.kind === 'rejected' && login.error === 'invalid_client' && !explicitClientId && !registered) {
+    const clientId = await registerLiteClient(base);
+    if (clientId) {
+      client = { clientId, redirectUri: STALWART_LOOPBACK_REDIRECT_URI };
+      login = await requestLiteLoginCode(base, params, client, challenge);
     }
-    const detail = (await loginResponse.text().catch(() => '')).slice(0, 200);
-    throw new LiteLoginError('login_failed', loginResponse.status, detail);
   }
-
-  const login = (await loginResponse.json().catch(() => ({}))) as LoginResponse;
-  switch (login.type) {
-    case 'authenticated':
+  switch (login.kind) {
+    case 'code':
       break;
-    case 'mfaRequired':
+    case 'mfa_required':
       throw new LiteLoginError('totp_required', 401);
-    default:
+    case 'invalid_credentials':
       throw new LiteLoginError('invalid_credentials', 401);
+    case 'rejected':
+      throw new LiteLoginError('login_failed', 400, [login.error, login.description].filter(Boolean).join(': '));
   }
-  if (!login.client_code) throw new LiteLoginError('login_failed', 502, 'missing client_code');
 
   const tokenResponse = await fetch(`${base}/auth/token`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
       grant_type: 'authorization_code',
-      code: login.client_code,
-      client_id: clientId,
-      redirect_uri: params.redirectUri,
+      code: login.code,
+      client_id: client.clientId,
+      redirect_uri: client.redirectUri,
       code_verifier: verifier,
     }).toString(),
   });
@@ -419,6 +481,7 @@ export async function liteTokenLogin(params: {
     accessToken: tokens.access_token,
     expiresIn: tokens.expires_in || 3600,
     refreshToken: tokens.refresh_token ?? null,
+    clientId: client.clientId,
   };
 }
 

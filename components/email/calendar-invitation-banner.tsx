@@ -155,6 +155,16 @@ function getTrustMessage(
         sender: trustAssessment.senderEmail ?? '',
         organizer: trustAssessment.organizerEmail ?? '',
       });
+    case 'attendee_mismatch':
+      return t('attendee_mismatch_info', {
+        sender: trustAssessment.senderEmail ?? '',
+        attendee: trustAssessment.attendeeEmail ?? '',
+      });
+    case 'attendee_mismatch_unverified':
+      return t('attendee_mismatch_unverified_info', {
+        sender: trustAssessment.senderEmail ?? '',
+        attendee: trustAssessment.attendeeEmail ?? '',
+      });
     default:
       return null;
   }
@@ -600,6 +610,12 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
   // A counter proposal applies to the occurrence it names, or to the meeting itself.
   const proposalTarget = method === 'counter' && parsedEvent ? counterTarget(storeEvents, parsedEvent) : existingEvent;
   const proposalPatch = proposalTarget && parsedEvent ? buildProposalPatch(proposalTarget, parsedEvent) : null;
+  // Applying a proposal sends it to every attendee. It has to come from one
+  // of the meeting's participants: anyone who learned the uid can write one,
+  // naming any attendee as the one proposing.
+  const proposalFromParticipant = Boolean(
+    proposalTarget && senderAddress && findParticipantByEmails(proposalTarget, [senderAddress]),
+  );
 
   const resolveExistingEventForRsvp = async () => {
     if (!client || !existingEvent) {
@@ -766,6 +782,7 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
     && userIsOrganizer
     && method === 'counter'
     && proposalPatch
+    && proposalFromParticipant
   );
   const viewActionLabel = getViewActionLabel(t, method, userIsOrganizer);
 

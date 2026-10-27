@@ -3,7 +3,9 @@ import { cookies } from 'next/headers';
 import { configManager } from '@/lib/admin/config-manager';
 import { hasSessionSecret } from '@/lib/auth/session-secret';
 import { readStalwartAuthContextFromStore } from '@/lib/stalwart/auth-context';
-import { assertBasicAuthMatchesUsername, verifyJmapAuth } from '@/lib/auth/verify-jmap-auth';
+import { JmapAuthVerificationError, assertBasicAuthMatchesUsername, verifyJmapAuth } from '@/lib/auth/verify-jmap-auth';
+import { loginClientAddress } from '@/lib/auth/client-address';
+import { isStoredCredentialRefused, recordStoredCredentialStatus } from '@/lib/stalwart/stored-credential-budget';
 import { parseJmapServers, resolveTrustedJmapUrl } from '@/lib/admin/jmap-servers';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
 import { MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
@@ -47,8 +49,15 @@ async function verifiedOwner(request: NextRequest): Promise<ArchiveOwner | NextR
       const trusted = resolveTrustedJmapUrl(ctx.serverUrl,
         configManager.get<string>('jmapServerUrl', ''),
         parseJmapServers(configManager.get<unknown>('jmapServers', [])));
-      await verifyJmapAuth(ctx.serverUrl, ctx.authHeader, { trusted: !!trusted });
-    } catch { return denied; }
+      if (isStoredCredentialRefused(ctx.authHeader)) return denied;
+      await verifyJmapAuth(ctx.serverUrl, ctx.authHeader, { trusted: !!trusted, clientIp: loginClientAddress(request) });
+      recordStoredCredentialStatus(ctx.authHeader, 200);
+    } catch (error) {
+      if (error instanceof JmapAuthVerificationError && error.upstreamStatus === 401) {
+        recordStoredCredentialStatus(ctx.authHeader, 401);
+      }
+      return denied;
+    }
     return { username: ctx.accountName ?? ctx.username, serverUrl: ctx.serverUrl };
   }
   return denied;

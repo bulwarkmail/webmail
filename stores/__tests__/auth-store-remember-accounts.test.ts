@@ -106,6 +106,45 @@ it('keeps an entry when its remembered cookie is missing', async () => {
   expect(useAuthStore.getState().isAuthenticated).toBe(false);
 });
 
+it('keeps a non-remembered TOTP account listed without resuming its token after reload', async () => {
+  const id = useAccountStore.getState().addAccount({
+    serverUrl: server, username, label: 'Gmail', email: username, displayName: 'Gmail',
+    authMode: 'oauth', rememberMe: false, lastLoginAt: Date.now(),
+    isConnected: false, hasError: false, isDefault: true,
+  });
+  const slot = useAccountStore.getState().getAccountById(id)!.cookieSlot;
+
+  await useAuthStore.getState().checkAuth();
+
+  expect(useAccountStore.getState().getAccountById(id)).toMatchObject({ awaitingSignIn: true, isConnected: false });
+  expect(useAuthStore.getState().isAuthenticated).toBe(false);
+  expect(fetchMock.mock.calls.some(([url, init]) => String(url).includes('/api/auth/token') && init?.method === 'PUT')).toBe(false);
+  expect(fetchMock.mock.calls.some(([url, init]) => String(url) === `/api/auth/token?slot=${slot}` && init?.method === 'DELETE')).toBe(true);
+  expect(sessionStorage.getItem('session_expired')).toBeNull();
+});
+
+it('restores the other signed-in account by reload while retaining the signed-out entry', async () => {
+  const otherId = useAccountStore.getState().addAccount({
+    serverUrl: server, username: 'other@gmail.com', label: 'Other', email: 'other@gmail.com', displayName: 'Other',
+    authMode: 'basic', rememberMe: true, lastLoginAt: Date.now(),
+    isConnected: false, hasError: false, isDefault: true,
+  });
+  const otherSlot = useAccountStore.getState().getAccountById(otherId)!.cookieSlot;
+  await useAuthStore.getState().login(server, username, 'test-password', undefined, true);
+  const id = useAuthStore.getState().activeAccountId!;
+  fetchMock.mockClear();
+  vi.mocked(navigation.replaceWindowLocation).mockClear();
+
+  await useAuthStore.getState().logout();
+
+  expect(useAccountStore.getState().getAccountById(id)).toMatchObject({ awaitingSignIn: true });
+  expect(useAccountStore.getState().getAccountById(otherId)?.awaitingSignIn).toBeFalsy();
+  expect(useAuthStore.getState().activeAccountId).toBe(otherId);
+  expect(navigation.replaceWindowLocation).toHaveBeenCalledTimes(1);
+  expect(vi.mocked(navigation.replaceWindowLocation).mock.lastCall?.[0]).not.toMatch(/\/login/);
+  expect(fetchMock.mock.calls.some(([url, init]) => String(url) === `/api/auth/session?slot=${otherSlot}` && init?.method === 'DELETE')).toBe(false);
+});
+
 it('does not try to resume a deliberately signed-out account after reload', async () => {
   await useAuthStore.getState().login(server, username, 'test-password', undefined, true);
   const id = useAuthStore.getState().activeAccountId!;

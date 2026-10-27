@@ -178,6 +178,33 @@ describe('Email/changes delta sync', () => {
     expect(useEmailStore.getState().emailListSync).toEqual({ state: 's2', accountId: 'acc', mailboxId: 'inbox' });
   });
 
+  // A total of 0 beside the rows it was read with is a total the server did
+  // not give; it says nothing about mail past the page (#1364).
+  it('keeps paging when the refresh after new mail comes back without a total', async () => {
+    useEmailStore.setState({ totalEmails: 10, hasMoreEmails: true });
+    const client = makeClient({
+      getEmailChanges: vi.fn(async () => delta({ created: ['new'] })),
+      getSomeEmails: vi.fn(async () => [makeEmail('new')]),
+      getEmails: vi.fn(async () => ({ emails: [makeEmail('new'), makeEmail('a'), makeEmail('b')], hasMore: true, total: 0, state: 's2' })),
+    });
+
+    await useEmailStore.getState().handleStateChange(push({ acc: { Email: 's2' } }), client);
+
+    expect(useEmailStore.getState().emails.map((e) => e.id)).toEqual(['new', 'a', 'b']);
+    expect(useEmailStore.getState().hasMoreEmails).toBe(true);
+  });
+
+  it('keeps paging when a delta is applied to a list whose total is not known', async () => {
+    useEmailStore.setState({ totalEmails: 0, hasMoreEmails: true });
+    const client = makeClient({ getEmailChanges: vi.fn(async () => delta({ destroyed: ['c'] })) });
+
+    await useEmailStore.getState().handleStateChange(push({ acc: { Email: 's2' } }), client);
+
+    expect(client.getEmails).not.toHaveBeenCalled();
+    expect(useEmailStore.getState().emails.map((e) => e.id)).toEqual(['a', 'b']);
+    expect(useEmailStore.getState().hasMoreEmails).toBe(true);
+  });
+
   it('falls back when the server cannot compute the delta', async () => {
     const client = makeClient({ getEmailChanges: vi.fn(async () => null) });
     await useEmailStore.getState().handleStateChange(push({ acc: { Email: 's2' } }), client);

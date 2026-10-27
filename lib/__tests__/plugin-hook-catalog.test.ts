@@ -37,7 +37,7 @@ const sources = ['app', 'components', 'contexts', 'hooks', 'lib', 'stores'].flat
 
 /** A call site that fires the hook: `xHooks.onFoo.emit(` and friends. */
 function isFired(hookName: string, groupName: string): boolean {
-  const re = new RegExp(`\\b${groupName}\\.${hookName}\\s*\\.(emit|emitSync|emitTo|intercept|interceptOutcome|interceptWithValue|transform|takeOver)\\b`);
+  const re = new RegExp(`\\b${groupName}\\.${hookName}\\s*\\.(emit|emitSync|emitTo|intercept|interceptOutcome|interceptWithValue|transform|takeOver|collect)\\b`);
   return re.test(sources);
 }
 

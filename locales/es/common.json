@@ -542,6 +542,8 @@
       "authentication_missing_info": "Esta invitación no incluye autenticación de correo verificada. Confirma los detalles con el organizador si algo parece inusual.",
       "sender_mismatch_info": "Esta invitación se envió desde {sender}, mientras que el organizador indicado en los datos del calendario es {organizer}.",
       "sender_mismatch_unverified_info": "Esta invitación se envió desde {sender}, mientras que el organizador indicado en los datos del calendario es {organizer}, y el mensaje no pudo verificarse.",
+      "attendee_mismatch_info": "Esta respuesta se envió desde {sender}, mientras que el asistente que responde en los datos del calendario es {attendee}.",
+      "attendee_mismatch_unverified_info": "Esta respuesta se envió desde {sender}, mientras que el asistente que responde en los datos del calendario es {attendee}, y el mensaje no pudo verificarse.",
       "organizer_role": "Organizas este evento",
       "your_response": "Tu respuesta: {status}",
       "response_needed": "Pendiente de respuesta",
@@ -611,6 +613,7 @@
     "scheduled_send_created": "Correo programado para envío",
     "sending_in": "Enviando en {seconds} s",
     "undo_send_failed": "No se pudo deshacer. Puede que el mensaje ya se haya enviado.",
+    "undo_send_signed_out": "No se pudo deshacer: la cuenta desde la que se envió el mensaje ya no tiene la sesión iniciada.",
     "cancel_scheduled_send": "Cancelar envío",
     "reschedule_send": "Reprogramar",
     "cancel_and_edit": "Cancelar y editar",
@@ -695,6 +698,7 @@
     "saving": "Guardando...",
     "draft_saved": "Borrador guardado",
     "save_failed": "Error al guardar",
+    "discard_signed_out": "No se ha eliminado el borrador: la cuenta en la que se guardó ya no tiene la sesión iniciada. Se queda en los borradores de esa cuenta.",
     "to_placeholder": "Direcciones de correo de destinatarios",
     "cc_placeholder": "Destinatarios CC",
     "bcc_placeholder": "Destinatarios CCO",
@@ -1522,6 +1526,10 @@
         "label": "Solo texto sin formato",
         "description": "Desactivar el editor de texto enriquecido y enviar todos los correos solo como texto sin formato, incluyendo respuestas y reenvíos"
       },
+      "quick_reply": {
+        "label": "Respuesta rápida",
+        "description": "Mostrar el cuadro de respuesta rápida debajo de los mensajes."
+      },
       "auto_select_reply_identity": {
         "label": "Seleccionar dirección de respuesta automáticamente",
         "description": "Al responder, cambia automáticamente la dirección del remitente a la identidad que recibió el mensaje original"
@@ -1776,6 +1784,10 @@
         "signed_in": "Sesión iniciada en {count, plural, one {# cuenta} other {# cuentas}} con la contraseña guardada.",
         "sign_in_failed": "{count, plural, one {# contraseña guardada fue rechazada} other {# contraseñas guardadas fueron rechazadas}}: inicia sesión en esas cuentas desde la lista de cuentas.",
         "deleted": "Lista guardada eliminada.",
+        "prompt_title": "¿Restaurar tus otras cuentas?",
+        "prompt_description": "Hay una lista de cuentas guardada para {account}. Introduce la contraseña de la copia para añadirlas a este navegador, o hazlo más tarde desde Ajustes.",
+        "prompt_not_now": "Ahora no",
+        "prompt_done": "Listo",
         "errors": {
           "mismatch": "Las contraseñas no coinciden.",
           "password_length": "Usa al menos 10 caracteres.",

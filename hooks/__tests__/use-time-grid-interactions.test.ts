@@ -4,6 +4,7 @@ import type { DragEvent, PointerEvent } from "react";
 import { useTimeGridInteractions } from "@/hooks/use-time-grid-interactions";
 import { useCalendarStore } from "@/stores/calendar-store";
 import { useAuthStore } from "@/stores/auth-store";
+import { useSettingsStore } from "@/stores/settings-store";
 import type { CalendarEvent } from "@/lib/jmap/types";
 
 const errorMessages = { resize: "resize", move: "move", created: "created", error: "error" };
@@ -208,5 +209,67 @@ describe.each<["0.16" | "1.0"]>([["0.16"], ["1.0"]])("useTimeGridInteractions mo
     expect(updates.duration).toBe("PT1H30M");
     expect(updates.participants.bob.participationStatus).toBe("needs-action");
     expect(send).toBe(true);
+  });
+});
+
+// The grid places events by wall clock (7845b2ca). On 2026-10-25 Berlin's
+// 02:00-03:00 happens twice, so a resize across it has to land where the
+// edge was dropped, not an hour off (#1348).
+describe("useTimeGridInteractions resize on a DST change day (#1348)", () => {
+  const original = useCalendarStore.getState().updateEvent;
+  const originalTimeZone = useSettingsStore.getState().timeZone;
+  const originalTZ = process.env.TZ;
+  let updateEvent: ReturnType<typeof vi.fn>;
+  const target = { setPointerCapture: () => {}, releasePointerCapture: () => {} };
+
+  function event(start: string, duration: string): CalendarEvent {
+    return {
+      id: "e1", uid: "u1", title: "Night shift", start, duration, timeZone: "Europe/Berlin",
+      showWithoutTime: false, calendarIds: { cal: true },
+    } as unknown as CalendarEvent;
+  }
+
+  async function resize(edge: "top" | "bottom", startMinutes: number, durationMinutes: number, deltaY: number) {
+    const { result } = renderHook(() =>
+      useTimeGridInteractions({ hourHeight: 60, calendars: [], onCreateRange: vi.fn(), errorMessages }),
+    );
+    act(() => result.current.handleResizePointerDown("e1", edge, startMinutes, durationMinutes, {
+      stopPropagation: () => {}, preventDefault: () => {}, clientY: 0, pointerId: 1, target,
+    } as unknown as PointerEvent));
+    await act(() => result.current.handleResizePointerUp({ clientY: deltaY, target } as unknown as PointerEvent));
+    return updateEvent.mock.calls[0][2];
+  }
+
+  beforeEach(() => {
+    process.env.TZ = "Europe/Berlin";
+    useSettingsStore.setState({ timeZone: "Europe/Berlin" });
+    updateEvent = vi.fn().mockResolvedValue(undefined);
+    useCalendarStore.setState({ updateEvent: updateEvent as never });
+    useAuthStore.setState({ client: { id: "client" } as never });
+  });
+  afterEach(() => {
+    process.env.TZ = originalTZ;
+    useSettingsStore.setState({ timeZone: originalTimeZone });
+    useCalendarStore.setState({ events: [], updateEvent: original });
+    useAuthStore.setState({ client: null });
+  });
+
+  it("moves the end to the dropped clock time", async () => {
+    // 01:00-04:00 lasts four hours that day; the grid draws rows 01 to 04.
+    useCalendarStore.setState({ events: [event("2026-10-25T01:00:00", "PT4H")] });
+
+    const updates = await resize("bottom", 60, 180, 15);
+
+    expect(updates.duration).toBe("PT4H15M");
+    expect(updates).not.toHaveProperty("start");
+  });
+
+  it("moves the start to the dropped clock time and keeps the end", async () => {
+    useCalendarStore.setState({ events: [event("2026-10-25T04:00:00", "PT1H")] });
+
+    const updates = await resize("top", 240, 60, -180);
+
+    expect(updates.start).toBe("2026-10-25T01:00:00");
+    expect(updates.duration).toBe("PT5H");
   });
 });

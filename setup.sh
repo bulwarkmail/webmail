@@ -692,6 +692,11 @@ screen_security_config() {
             fi
         else
             prompt_value "Session secret (paste your own)" "" "CFG_SESSION_SECRET"
+            # Admin sign-in and "Remember me" refuse a secret under 32 characters
+            while [[ -n "$CFG_SESSION_SECRET" && ${#CFG_SESSION_SECRET} -lt 32 ]]; do
+                echo -e "    ${RED}The session secret needs at least 32 characters. Leave it empty to go without one.${RESET}"
+                prompt_value "Session secret (paste your own)" "" "CFG_SESSION_SECRET"
+            done
         fi
     else
         echo -e "    ${OK} Session secret is already configured"

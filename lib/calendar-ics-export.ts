@@ -1,15 +1,26 @@
 import type { CalendarEvent } from "@/lib/jmap/types";
 
-const MAX_LINE_OCTETS = 74;
+const MAX_LINE_OCTETS = 75;
+const utf8 = new TextEncoder();
 
+// RFC 5545 §3.1: lines of at most 75 octets, folded between characters. Cut
+// by UTF-16 units, a fold could split an emoji, which the file then held as
+// two U+FFFD.
 function foldLine(line: string): string {
-  if (line.length <= MAX_LINE_OCTETS) return line;
-  const chunks: string[] = [line.slice(0, MAX_LINE_OCTETS)];
-  let pos = MAX_LINE_OCTETS;
-  while (pos < line.length) {
-    chunks.push(" " + line.slice(pos, pos + MAX_LINE_OCTETS - 1));
-    pos += MAX_LINE_OCTETS - 1;
+  const chunks: string[] = [];
+  let chunk = "";
+  let octets = 0;
+  for (const char of line) {
+    const size = utf8.encode(char).length;
+    if (octets + size > MAX_LINE_OCTETS) {
+      chunks.push(chunk);
+      chunk = " ";
+      octets = 1;
+    }
+    chunk += char;
+    octets += size;
   }
+  chunks.push(chunk);
   return chunks.join("\r\n");
 }
 
@@ -20,6 +31,14 @@ function escapeText(value: string): string {
     .replace(/;/g, "\\;")
     .replace(/,/g, "\\,")
     .replace(/\r\n|\r|\n/g, "\\n");
+}
+
+// RFC 5545 §3.2: a parameter value holding ":", ";" or "," is quoted, and
+// can't hold a DQUOTE or a line break. Unquoted, "CN=Ops: Alice" ended the
+// parameters at the colon.
+function paramValue(value: string): string {
+  const clean = value.replace(/"/g, "'").replace(/[\r\n]+/g, " ");
+  return /[:;,]/.test(clean) ? `"${clean}"` : clean;
 }
 
 function stripDateSeparators(value: string): string {
@@ -142,7 +161,7 @@ export function eventToICS(event: CalendarEvent): string {
     if (organizer) {
       const email = organizer.email || organizer.sendTo?.imip?.replace("mailto:", "");
       if (email) {
-        const cn = organizer.name ? `;CN=${escapeText(organizer.name)}` : "";
+        const cn = organizer.name ? `;CN=${paramValue(organizer.name)}` : "";
         lines.push(`ORGANIZER${cn}:mailto:${email}`);
       }
     }
@@ -150,7 +169,7 @@ export function eventToICS(event: CalendarEvent): string {
       if (p.roles?.owner) continue;
       const email = p.email || p.sendTo?.imip?.replace("mailto:", "");
       if (!email) continue;
-      const cn = p.name ? `;CN=${escapeText(p.name)}` : "";
+      const cn = p.name ? `;CN=${paramValue(p.name)}` : "";
       const partstat = p.participationStatus
         ? `;PARTSTAT=${p.participationStatus.toUpperCase()}`
         : ";PARTSTAT=NEEDS-ACTION";

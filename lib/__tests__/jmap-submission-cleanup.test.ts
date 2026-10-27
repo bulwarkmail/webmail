@@ -1033,6 +1033,37 @@ describe('getScheduledEmails', () => {
     expect(result.emails.map((email) => email.emailSubmissionId)).toEqual(['later']);
     expect(server.calls('EmailSubmission/query').map((q) => q.position)).toEqual([0, 50]);
   });
+
+  // Live on 0.16.27: the member's own scheduled mail and the group's were
+  // both submission "f" of message "maaaaad". Both rows came out as the
+  // group's message in the group account, and cancelling the own one
+  // cancelled the group's.
+  it('keeps two accounts\' submissions apart when their ids are the same', async () => {
+    const client = createClient({ accounts: ['account-1', 'team'] });
+    const sendAt = utcDate(Date.now() + HOUR);
+    vi.spyOn(client as unknown as { request: (calls: MethodCall[]) => Promise<unknown> }, 'request')
+      .mockImplementation(async (calls: MethodCall[]) => {
+        const [name, args, callId] = calls[0];
+        const accountId = args.accountId as string;
+        if (name === 'EmailSubmission/query') return { methodResponses: [[name, { accountId, ids: ['f'], total: 1 }, callId]] };
+        if (name === 'EmailSubmission/get') {
+          return { methodResponses: [[name, { accountId, list: [{ id: 'f', emailId: 'maaaaad', identityId: 'b', sendAt, undoStatus: 'pending' }] }, callId]] };
+        }
+        if (name === 'Email/get') {
+          return { methodResponses: [[name, { accountId, list: [{ id: 'maaaaad', subject: `from ${accountId}`, mailboxIds: {}, keywords: {} }] }, callId]] };
+        }
+        throw new Error(`unexpected ${name}`);
+      });
+
+    const { emails } = await client.getScheduledEmails(50, 0);
+
+    expect(emails.map((email) => [email.scheduledAccountId, email.subject]).sort()).toEqual([
+      ['account-1', 'from account-1'],
+      ['team', 'from team'],
+    ]);
+    // The group's row is read, keyed and threaded in its own account.
+    expect(emails.map((email) => email.sourceAccountId).sort()).toEqual(['team', undefined]);
+  });
 });
 
 /**

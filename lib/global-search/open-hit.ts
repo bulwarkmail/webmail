@@ -95,9 +95,13 @@ export async function openHit(hit: GlobalSearchHit, options: OpenHitOptions): Pr
   // Standard layout: switch the active login when needed, then navigate.
   if (!isActiveLogin) await auth.switchAccount(hit.localAccountId);
   switch (hit.kind) {
-    case 'mail':
-      navigate?.(appPath(buildMailPath({ mailboxId: null, emailId: hit.id, threadId: null })));
+    case 'mail': {
+      // A group or shared account's hit names its account: ids repeat (#1351).
+      const own = auth.getClientForAccount(hit.localAccountId)?.getAccountId();
+      const ownerAccountId = hit.jmapAccountId && hit.jmapAccountId !== own ? hit.jmapAccountId : null;
+      navigate?.(appPath(buildMailPath({ mailboxId: null, emailId: hit.id, threadId: null, ownerAccountId })));
       return;
+    }
     case 'contacts':
       // Outside the Pro shell the store holds the active login's contacts raw.
       navigate?.(appPath(buildContactsPath({ contactId: hit.id })));

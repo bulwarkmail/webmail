@@ -77,8 +77,8 @@ describe('batch spam actions route per account', () => {
     useSettingsStore.setState({ deleteAction: 'trash' } as never);
 
     const aMailboxes = [
-      makeMailbox({ id: 'a-inbox', role: 'inbox' }),
-      makeMailbox({ id: 'a-junk', name: 'Junk', role: 'junk', totalEmails: 1 }),
+      makeMailbox({ id: 'a-inbox', role: 'inbox', accountId: 'account-a' }),
+      makeMailbox({ id: 'a-junk', name: 'Junk', role: 'junk', totalEmails: 1, accountId: 'account-a' }),
     ];
     useEmailStore.setState({
       isUnifiedView: true,
@@ -90,8 +90,8 @@ describe('batch spam actions route per account', () => {
       accountMailboxes: {
         'account-a': aMailboxes,
         'account-b': [
-          makeMailbox({ id: 'b-inbox', role: 'inbox' }),
-          makeMailbox({ id: 'b-junk', name: 'Junk', role: 'junk', totalEmails: 2, unreadEmails: 1 }),
+          makeMailbox({ id: 'b-inbox', role: 'inbox', accountId: 'account-b' }),
+          makeMailbox({ id: 'b-junk', name: 'Junk', role: 'junk', totalEmails: 2, unreadEmails: 1, accountId: 'account-b' }),
         ],
       },
       emails: [emailA, emailB, emailB2],

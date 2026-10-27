@@ -14,10 +14,21 @@
  */
 
 /**
- * The exact pattern the viewers rewrite to blob URLs, so "referenced" here
- * means "rendered" and a chip is only ever hidden for a part the body shows.
+ * The exact pattern the viewers rewrite to blob URLs (rewriteCidReferences),
+ * so "referenced" here means "rendered" and a chip is only ever hidden for a
+ * part the body shows. A reference ends at `<`/`>` too: an unquoted
+ * `<img src=cid:logo>` would otherwise take the rest of the markup with it.
  */
-const CID_REFERENCE = /\bcid:([^"'\s)]+)/gi;
+const CID_REFERENCE = /\bcid:([^"'\s)<>]+)/gi;
+
+/**
+ * Swaps every `cid:` reference in a raw HTML body for the URL fetched for that
+ * part, or `fallback` when there is none.
+ */
+export function rewriteCidReferences(html: string, urls: Readonly<Record<string, string>>, fallback: string): string {
+  return html.replace(CID_REFERENCE, (_match, cid: string) =>
+    (Object.prototype.hasOwnProperty.call(urls, cid) ? urls[cid] : fallback));
+}
 
 const EMPTY: ReadonlySet<string> = new Set();
 

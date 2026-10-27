@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { getFilePreviewKind, imageBlobUrl, inertBlobType, isFilePreviewable, previewBlobType, toInertBlob } from '../file-preview';
+import { getFilePreviewKind, imageBlobUrl, inertBlobType, isFilePreviewable, isMimeTypeSafeForInlinePreview, previewBlobType, toInertBlob } from '../file-preview';
 
 describe('file preview detection', () => {
   it('detects browser-renderable image attachments', () => {
@@ -45,6 +45,17 @@ describe('inert blob typing for cid: parts (GHSA-xvjh-v9c6-qcvc)', () => {
     }
     expect(inertBlobType(undefined)).toBe('application/octet-stream');
     expect(inertBlobType('')).toBe('application/octet-stream');
+  });
+
+  it('refuses a type the Blob constructor would drop to an empty, sniffed type', () => {
+    // A TNEF/winmail.dat MIME tag is free text. new Blob() empties any type
+    // with a character outside U+0020-U+007E, and Firefox sniffs an untyped
+    // blob: document, so such a type must not count as inert.
+    for (const type of ['image/png\u0000', 'image/pngé', 'video/mp4\t', 'application/pdf\u0085']) {
+      expect(new Blob([], { type }).type).toBe('');
+      expect(isMimeTypeSafeForInlinePreview(type)).toBe(false);
+      expect(inertBlobType(type)).toBe('application/octet-stream');
+    }
   });
 
   it('re-types a fetched Blob without touching its bytes', async () => {

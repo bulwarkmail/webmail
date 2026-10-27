@@ -6,6 +6,7 @@ import { generateCodeVerifierServer, generateCodeChallengeServer, generateStateS
 import { getRequiredConfig, getDiscoveryValidator } from '@/lib/oauth/token-exchange';
 import { discoverOAuth } from '@/lib/oauth/discovery';
 import { getOauthScopes, refreshTokenServerCookieName } from '@/lib/oauth/tokens';
+import { withProviderDataScopes } from '@/lib/oauth/scopes';
 import { MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
 import { getCookieOptions } from '@/lib/oauth/cookie-config';
 import { hasSessionSecret } from '@/lib/auth/session-secret';
@@ -143,7 +144,8 @@ export async function POST(request: NextRequest) {
     authUrl.searchParams.set('response_type', 'code');
     authUrl.searchParams.set('client_id', clientId);
     authUrl.searchParams.set('redirect_uri', redirect_uri);
-    authUrl.searchParams.set('scope', reauthScopes(getOauthScopes(), isReauth, metadata.scopes_supported));
+    const scopes = withProviderDataScopes(getOauthScopes(), metadata.scopes_supported);
+    authUrl.searchParams.set('scope', reauthScopes(scopes, isReauth, metadata.scopes_supported));
     authUrl.searchParams.set('state', state);
     authUrl.searchParams.set('code_challenge', codeChallenge);
     authUrl.searchParams.set('code_challenge_method', 'S256');

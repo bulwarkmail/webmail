@@ -101,6 +101,9 @@ export function useContextMenu<T>(): UseContextMenuReturn<T> {
     };
 
     const handleBlur = () => {
+      // A focused control in the menu may have opened a system dialog that
+      // took the focus from the window, such as a color input's (#1366).
+      if (menuRef.current?.contains(document.activeElement)) return;
       closeContextMenu();
     };
 

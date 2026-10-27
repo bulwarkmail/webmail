@@ -303,12 +303,15 @@ describe('POST /api/auth/stalwart-context (GHSA-wxcm-j4jc-9fxq)', () => {
     expect(setStalwartAuthContext).toHaveBeenCalledWith(0, expect.objectContaining({ username: 'linus@example.org' }));
   });
 
-  it('accepts the bare local part of the session username (Stalwart canonicalizes it)', async () => {
+  it('refuses an address on a domain the bare session username does not name', async () => {
+    // `lrath` holds no address at corp.example; lrath@corp.example may be
+    // another account's login, with its own synced settings.
     const { status } = await postContext({
       serverUrl: SERVER, username: 'lrath@corp.example', authHeader: 'Bearer tok-linus', slot: 0,
     });
-    expect(status).toBe(200);
-    expect(identityGetCalls).toBe(0);
+    expect(status).toBe(403);
+    expect(identityGetCalls).toBe(1);
+    expect(setStalwartAuthContext).not.toHaveBeenCalled();
   });
 
   it('still mints the context for a Basic credential the server accepts', async () => {

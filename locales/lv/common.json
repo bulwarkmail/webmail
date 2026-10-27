@@ -544,6 +544,8 @@
       "authentication_missing_info": "Šim uzaicinājumam nav apstiprinātas autentifikācijas.",
       "sender_mismatch_info": "Uzaicinājumu nosūtīja {sender}, bet organizators ir {organizer}.",
       "sender_mismatch_unverified_info": "Uzaicinājumu nosūtīja {sender}, bet norādītais organizators ir {organizer}, un ziņojumu nevarēja pārbaudīt.",
+      "attendee_mismatch_info": "Atbildi nosūtīja {sender}, bet atbildošais dalībnieks ir {attendee}.",
+      "attendee_mismatch_unverified_info": "Atbildi nosūtīja {sender}, bet atbildošais dalībnieks ir {attendee}, un ziņojumu nevarēja pārbaudīt.",
       "organizer_role": "Jūs esat šī pasākuma organizators",
       "your_response": "Jūsu atbilde: {status}",
       "response_needed": "Nepieciešama atbilde",
@@ -611,6 +613,7 @@
     "scheduled_send_created": "E-pasts ieplānots nosūtīšanai",
     "sending_in": "Sūtīšana pēc {seconds} s",
     "undo_send_failed": "Nevarēja atsaukt. Ziņojums, iespējams, jau ir nosūtīts.",
+    "undo_send_signed_out": "Nevar atsaukt: konts, no kura ziņojums tika nosūtīts, vairs nav pieteicies.",
     "cancel_scheduled_send": "Atcelt sūtīšanu",
     "reschedule_send": "Pārplānot",
     "cancel_and_edit": "Atcelt un rediģēt",
@@ -695,6 +698,7 @@
     "saving": "Saglabā...",
     "draft_saved": "Melnraksts saglabāts",
     "save_failed": "Neizdevās saglabāt",
+    "discard_signed_out": "Melnraksts netika dzēsts: konts, kurā tas tika saglabāts, vairs nav pieteicies. Tas paliek šī konta melnrakstos.",
     "to_placeholder": "Saņēmēji",
     "cc_placeholder": "Kopijas saņēmēji",
     "bcc_placeholder": "Slepenās kopijas saņēmēji",
@@ -1522,6 +1526,10 @@
         "label": "Tikai parasts teksts",
         "description": "Izslēgt formatētā teksta redaktoru un sūtīt vēstules tikai kā parastu tekstu"
       },
+      "quick_reply": {
+        "label": "Ātrā atbilde",
+        "description": "Rādīt ātrās atbildes lauku zem ziņojumiem."
+      },
       "auto_select_reply_identity": {
         "label": "Automātiski izvēlēties atbildes adresi",
         "description": "Atbildot automātiski izmantot to kontu, uz kuru vēstule tika saņemta"
@@ -1776,6 +1784,10 @@
         "signed_in": "Signed in to {count, plural, one {# account} other {# accounts}} with the saved password.",
         "sign_in_failed": "{count, plural, one {# saved password was} other {# saved passwords were}} refused: sign in to those accounts from the account list.",
         "deleted": "Saved list deleted.",
+        "prompt_title": "Restore your other accounts?",
+        "prompt_description": "A list of accounts is saved for {account}. Enter its backup password to add them to this browser, or do it later from Settings.",
+        "prompt_not_now": "Not now",
+        "prompt_done": "Done",
         "errors": {
           "mismatch": "The passwords do not match.",
           "password_length": "Use at least 10 characters.",

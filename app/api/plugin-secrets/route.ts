@@ -24,7 +24,7 @@ async function currentUser(request: NextRequest): Promise<VaultUser | NextRespon
   }
   const creds = await getStalwartCredentials(request);
   if (!creds) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
-  return { username: creds.username, serverUrl: creds.serverUrl };
+  return { username: creds.accountName, serverUrl: creds.serverUrl };
 }
 
 /** GET /api/plugin-secrets[?plugin=<id>] - the user's connected accounts, without secrets. */

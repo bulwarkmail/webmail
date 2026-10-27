@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
 import { getStalwartCredentials } from '@/lib/stalwart/credentials';
 import { DisallowedUrlError, fetchPublicUrl, type PublicFetchResponse } from '@/lib/security/url-guard';
+import { readBodyCapped } from '@/lib/security/capped-body';
 
 const DEFAULT_MAX_BYTES = 25 * 1024 * 1024; // 25MB
 // Base budget for a default-sized feed; scaled up with the configured cap so a
@@ -17,44 +18,6 @@ function getMaxResponseSize(): number {
 
 function getFetchTimeoutMs(maxBytes: number): number {
   return Math.max(BASE_TIMEOUT_MS, Math.ceil(BASE_TIMEOUT_MS * (maxBytes / DEFAULT_MAX_BYTES)));
-}
-
-/**
- * The body as bytes, or null once it exceeds `maxBytes`, in which case the
- * upstream connection is aborted rather than drained.
- */
-async function readBodyCapped(
-  response: PublicFetchResponse | Response,
-  maxBytes: number,
-  controller: AbortController,
-): Promise<ArrayBuffer | null> {
-  if (!response.body) {
-    const buffer = await response.arrayBuffer();
-    return buffer.byteLength > maxBytes ? null : buffer;
-  }
-  const reader = (response.body as ReadableStream<Uint8Array>).getReader();
-  const chunks: Uint8Array[] = [];
-  let received = 0;
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    if (!value) continue;
-    const chunk = value as Uint8Array;
-    received += chunk.byteLength;
-    if (received > maxBytes) {
-      controller.abort();
-      reader.cancel().catch(() => {});
-      return null;
-    }
-    chunks.push(chunk);
-  }
-  const out = new Uint8Array(received);
-  let offset = 0;
-  for (const chunk of chunks) {
-    out.set(chunk, offset);
-    offset += chunk.byteLength;
-  }
-  return out.buffer;
 }
 
 function tooLarge(maxBytes: number) {

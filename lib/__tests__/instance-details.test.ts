@@ -16,7 +16,7 @@ vi.mock('next/headers', () => ({
   cookies: async () => ({ get: (name: string) => (state.jar.has(name) ? { value: state.jar.get(name) } : undefined) }),
 }));
 vi.mock('@/lib/auth/crypto', () => ({ decryptSession: (token: string) => (token === 'valid' ? {} : null) }));
-vi.mock('@/lib/admin/session', () => ({ verifyAdminSession: (token: string) => (token === 'admin' ? {} : null) }));
+vi.mock('@/lib/admin/session', () => ({ verifyCurrentAdminSession: async (token: string) => (token === 'admin' ? {} : null) }));
 
 import { canSeeInstanceDetails } from '@/lib/auth/instance-details';
 

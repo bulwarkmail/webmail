@@ -569,6 +569,8 @@
       "authentication_missing_info": "Denne invitasjonen har ingen bekreftet e-postautentisering. Avklar detaljene med arrangøren hvis noe ser uvanlig ut.",
       "sender_mismatch_info": "Denne invitasjonen ble sendt fra {sender}, mens arrangøren som er oppført i kalenderdataene er {organizer}.",
       "sender_mismatch_unverified_info": "Denne invitasjonen ble sendt fra {sender}, mens arrangøren som er oppført i kalenderdataene er {organizer}, og meldingen kunne ikke bekreftes.",
+      "attendee_mismatch_info": "Dette svaret ble sendt fra {sender}, mens deltakeren som svarer i kalenderdataene er {attendee}.",
+      "attendee_mismatch_unverified_info": "Dette svaret ble sendt fra {sender}, mens deltakeren som svarer i kalenderdataene er {attendee}, og meldingen kunne ikke bekreftes.",
       "organizer_role": "Du er arrangør for denne hendelsen",
       "your_response": "Ditt svar: {status}",
       "response_needed": "Svar kreves",
@@ -611,6 +613,7 @@
     "scheduled_send_created": "Sendingen er planlagt",
     "sending_in": "Sendes om {seconds} s",
     "undo_send_failed": "Kunne ikke angres. Meldingen kan allerede være sendt.",
+    "undo_send_signed_out": "Kunne ikke angres: kontoen meldingen ble sendt fra, er ikke lenger logget på.",
     "cancel_scheduled_send": "Avbryt sending",
     "reschedule_send": "Planlegg på nytt",
     "cancel_and_edit": "Avbryt og rediger",
@@ -698,6 +701,7 @@
     "link_url_prompt": "Skriv inn nettadressen",
     "draft_saved": "Utkastet er lagret",
     "save_failed": "Kunne ikke lagre utkastet",
+    "discard_signed_out": "Utkastet ble ikke slettet: kontoen det ble lagret i, er ikke lenger logget på. Det blir liggende i utkastene til den kontoen.",
     "to_placeholder": "E-postadresser til mottakere",
     "cc_placeholder": "Kopimottakere",
     "bcc_placeholder": "Blindkopimottakere",
@@ -1534,6 +1538,10 @@
         "label": "Kun ren tekst",
         "description": "Deaktiver redigering av formatert tekst, og send all e-post som ren tekst, også svar og videresendinger"
       },
+      "quick_reply": {
+        "label": "Hurtigsvar",
+        "description": "Vis feltet for hurtigsvar under meldinger."
+      },
       "auto_select_reply_identity": {
         "label": "Svar fra mottatt adresse",
         "description": "Når du svarer, bruker Bulwark adressen meldingen opprinnelig ble sendt til. Programmet ser først etter en samsvarende identitet. For meldinger til et oppsamlingsdomene brukes aliaset i Fra-feltet, mens sendingen går gjennom hovedidentiteten din."
@@ -1779,6 +1787,10 @@
         "signed_in": "Signed in to {count, plural, one {# account} other {# accounts}} with the saved password.",
         "sign_in_failed": "{count, plural, one {# saved password was} other {# saved passwords were}} refused: sign in to those accounts from the account list.",
         "deleted": "Saved list deleted.",
+        "prompt_title": "Restore your other accounts?",
+        "prompt_description": "A list of accounts is saved for {account}. Enter its backup password to add them to this browser, or do it later from Settings.",
+        "prompt_not_now": "Not now",
+        "prompt_done": "Done",
         "errors": {
           "mismatch": "The passwords do not match.",
           "password_length": "Use at least 10 characters.",

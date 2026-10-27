@@ -54,3 +54,21 @@ describe('CalendarManagementSettings rename', () => {
     expect(updateCalendar.mock.calls[0].slice(1)).toEqual(['cal', { name: 'Home', color: CALENDAR_COLORS[0] }]);
   });
 });
+
+// When discovery fails, the CalDAV address falls back to the server's
+// well-known path. Built from the origin, it dropped the path of a server
+// mounted below the root (https://host/stalwart).
+describe('CalendarManagementSettings CalDAV fallback address', () => {
+  it('keeps the path of a server mounted below the root', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('{}', { status: 502 }));
+    useAuthStore.setState({
+      client: { getAccountId: () => 'acct-1' }, serverUrl: 'https://host.example/stalwart/', username: 'alice@example.com',
+    } as never);
+    useCalendarStore.setState({ calendars: [appleColored], icalSubscriptions: [], updateCalendar: vi.fn() } as never);
+
+    render(<CalendarManagementSettings />);
+
+    expect(await screen.findByText('https://host.example/stalwart/.well-known/caldav')).toBeInTheDocument();
+    vi.restoreAllMocks();
+  });
+});

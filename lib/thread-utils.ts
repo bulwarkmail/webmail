@@ -65,12 +65,12 @@ export function groupEmailsByThread(
     return [];
   }
 
-  // Group by the account-scoped thread key (or by message id when threading
-  // is disabled): bare thread ids collide across accounts in aggregate views.
+  // Group by the account-scoped thread key (or message key when threading is
+  // disabled): bare ids collide across accounts in aggregate views.
   const threadMap = new Map<string, Email[]>();
 
   for (const email of emails) {
-    const key = disableThreading ? email.id : threadKeyFor(email);
+    const key = disableThreading ? emailKeyFor(email) : threadKeyFor(email);
     if (!threadMap.has(key)) {
       threadMap.set(key, []);
     }

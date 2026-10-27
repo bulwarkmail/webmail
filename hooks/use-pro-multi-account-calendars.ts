@@ -49,7 +49,7 @@ export function useProMultiAccountCalendars(start: string | null, end: string | 
   // bootstrapping).
   useEffect(() => {
     if (!enabled || !activeAccountId || accountClients.length === 0) return;
-    void fetchAllAccountsCalendars(accountClients);
+    void fetchAllAccountsCalendars(accountClients, activeAccountId);
   }, [enabled, activeAccountId, accountClients, fetchAllAccountsCalendars]);
 
   // Fetch events for the current visible date range across all accounts.

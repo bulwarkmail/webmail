@@ -168,6 +168,28 @@ describe('POST /api/admin/marketplace', () => {
     expect(registry.size).toBe(0);
   });
 
+  it('stops downloading a bundle once it is larger than a package may be', async () => {
+    const meta = { version: '1.0.0', channel: 'stable', minAppVersion: null, maxAppVersion: null, permissions: [], sha256: '', yanked: null };
+    let sent = 0;
+    vi.stubGlobal('fetch', vi.fn(async (url: string) => {
+      if (!String(url).endsWith('/bundle')) return Response.json({ data: meta });
+      // A directory that never stops sending.
+      return new Response(new ReadableStream({
+        pull(controller) {
+          if (sent >= 200 * 1024 * 1024) { controller.close(); return; }
+          sent += 1024 * 1024;
+          controller.enqueue(new Uint8Array(1024 * 1024));
+        },
+      }));
+    }));
+
+    const res = await install({ slug: 'pretty-dates', version: '1.0.0', type: 'plugin' });
+
+    expect(res.status).toBeGreaterThanOrEqual(400);
+    expect(sent).toBeLessThan(10 * 1024 * 1024);
+    expect(registry.size).toBe(0);
+  });
+
   it('refuses a bundle whose manifest id differs from the slug', async () => {
     // Otherwise a directory entry can overwrite another installed plugin,
     // inheriting its enabled and force-enabled state, while the admin UI

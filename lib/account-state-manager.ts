@@ -15,6 +15,7 @@ import { useFileStore } from '@/stores/file-store';
 import { clearContactPhotoCache } from '@/lib/contact-photo-cache';
 import { bumpStoreEpoch } from '@/lib/store-epoch';
 import { useAccountSecurityStore } from '@/stores/account-security-store';
+import type { IJMAPClient } from '@/lib/jmap/client-interface';
 
 // Minimal snapshot shapes - we only capture what we need
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -69,6 +70,8 @@ export function snapshotAccount(accountId: string): void {
       calendars: [...calendarState.calendars],
       events: [...calendarState.events],
       selectedCalendarIds: [...calendarState.selectedCalendarIds],
+      calendarSelectionChosen: calendarState.calendarSelectionChosen,
+      knownCalendarIds: calendarState.knownCalendarIds,
       viewMode: calendarState.viewMode,
       supportsCalendar: calendarState.supportsCalendar,
     },
@@ -165,6 +168,33 @@ export function clearAllStores(): void {
   // from the mail view, then navigate to Files). Clearing centrally makes the
   // reset happen on every switch path, not just the one the component observes.
   useFileStore.getState().clearClient();
+}
+
+/**
+ * Drops what the mail list still shows of a login that was signed out while
+ * another one stays active: the login's folder, when the Pro sidebar had it
+ * open (`viewingAccountId`), for the active login's Inbox, and the login's
+ * rows of a list that mixes accounts. Without the login's client every
+ * action on those rows fell back to the active login's, where the same ids
+ * name other messages: deleting them deleted the active login's mail.
+ */
+export function forgetAccountRows(accountId: string, activeClient: IJMAPClient | null): void {
+  const state = useEmailStore.getState();
+  if (state.viewingAccountId === accountId) {
+    const inbox = state.mailboxes.find((m) => m.role === 'inbox' && !m.isShared);
+    state.selectAccountMailbox(null, inbox?.id ?? '');
+    useEmailStore.setState({ emails: [] });
+    if (activeClient && inbox) void useEmailStore.getState().fetchEmails(activeClient, inbox.id);
+    return;
+  }
+  const gone = (email: { sourceClientAccountId?: string } | null) => email?.sourceClientAccountId === accountId;
+  if (!state.emails.some(gone) && !gone(state.selectedEmail)) return;
+  useEmailStore.setState((s) => ({
+    emails: s.emails.filter((email) => !gone(email)),
+    selectedEmail: gone(s.selectedEmail) ? null : s.selectedEmail,
+    // emailKeyFor: "<login>/<account>:<id>".
+    selectedEmailKeys: new Set([...s.selectedEmailKeys].filter((key) => !key.startsWith(`${accountId}/`))),
+  }));
 }
 
 /** Evict cached state for one account */

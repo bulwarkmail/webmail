@@ -72,3 +72,26 @@ describe('conversation view header', () => {
     expect(screen.getByRole('button', { name: 'email_viewer.back_to_list' })).toBeInTheDocument();
   });
 });
+
+describe('conversation view attachment chips', () => {
+  it('show names without directional override characters', async () => {
+    const { ThreadConversationView } = await import('@/components/email/thread-conversation-view');
+    const name = 'report‮fdp.exe';
+    const email = {
+      id: 'e3', threadId: 't3', mailboxIds: { a: true }, keywords: { $seen: true },
+      from: [{ name: 'Sender', email: 'sender@t.example' }], to: [{ email: 'me@example.org' }],
+      subject: 's', receivedAt: '2026-09-26T10:00:00Z', size: 1, preview: 'hi', hasAttachment: true,
+      htmlBody: [], textBody: [], bodyValues: {},
+      attachments: [{ partId: '2', blobId: 'b2', name, type: 'application/octet-stream', size: 10 }],
+    };
+    render(
+      <ThreadConversationView
+        thread={{ threadId: 't3', emails: [email], latestEmail: email } as never}
+        emails={[email] as never}
+        onBack={() => {}}
+      />,
+    );
+    expect(screen.getByText('reportfdp.exe')).toBeInTheDocument();
+    expect(screen.queryByText(name)).toBeNull();
+  });
+});

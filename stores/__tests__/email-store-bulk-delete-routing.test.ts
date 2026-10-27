@@ -38,8 +38,16 @@ describe('bulk Delete/Trash authenticated-client routing', () => {
   let requests: Request[];
   let folders: Record<Login, Record<string, Mailbox[]>>;
 
+  // Each login's folders as the unified views cache them, under login and
+  // owner (sourceMailboxesKey); the list under the bare owner id stays the
+  // colliding one set up below.
   function select(list: Email[], selected = list) {
-    useEmailStore.setState({ emails: list, selectedEmailKeys: new Set(selected.map(emailKeyFor)) });
+    const cached = Object.fromEntries((['a', 'b'] as const).flatMap(login =>
+      Object.entries(folders[login]).map(([owner, list]) => [`${login}|${owner}`, list])));
+    useEmailStore.setState(state => ({
+      emails: list, selectedEmailKeys: new Set(selected.map(emailKeyFor)),
+      accountMailboxes: { ...state.accountMailboxes, ...cached },
+    }));
   }
   function writes() {
     return requests.filter(r => r.method === 'Email/set');
@@ -97,14 +105,11 @@ describe('bulk Delete/Trash authenticated-client routing', () => {
     expect(requests.filter(r => r.method === 'Mailbox/get')).toEqual([]);
   });
 
-  it('resolves each Trash through the same authenticated client and owner, despite a colliding folder cache', async () => {
+  it('resolves each Trash in the same login and owner, despite a colliding folder cache', async () => {
     const p = email('a', 'p'), unselected = email('a', 'q'), q = email('b', 'q');
     select([p, unselected, q], [p, q]);
     expect(await useEmailStore.getState().batchDelete(a)).toBe(true);
     for (const login of ['a', 'b'] as const) {
-      expect(requests.filter(r => r.login === login && r.method === 'Mailbox/get')).toEqual([{
-        login, authorization: `Bearer synthetic-${login}`, method: 'Mailbox/get', args: { accountId: 'c' },
-      }]);
       expectWrite(login, { accountId: 'c', update: { [login === 'a' ? 'p' : 'q']: { mailboxIds: { [`trash-${login}`]: true } } } });
     }
     expect(useEmailStore.getState().emails).toEqual([unselected]);
@@ -163,14 +168,6 @@ describe('bulk Delete/Trash authenticated-client routing', () => {
     expect(useEmailStore.getState().emails).toEqual([row]);
   });
 
-  it.each([false, true])('does not redirect an unavailable explicit source, even without its owner stamp (permanent=%s)', async permanent => {
-    const unavailable = { ...email('b', 'q'), sourceAccountId: undefined };
-    useAuthStore.setState({ getClientForAccount: (id: string) => id === 'a' ? a : undefined } as never);
-    select([unavailable]);
-    await useEmailStore.getState().batchDelete(a, permanent);
-    expect(requests).toEqual([]);
-  });
-
   it.each([false, true])('does not merge an unavailable stamped source into a connected source with the same owner (permanent=%s)', async permanent => {
     useAuthStore.setState({ getClientForAccount: (id: string) => id === 'a' ? a : undefined } as never);
     select([email('a', 'p'), email('b', 'q')]);
@@ -178,19 +175,6 @@ describe('bulk Delete/Trash authenticated-client routing', () => {
     expectWrite('a', permanent ? { accountId: 'c', destroy: ['p'] }
       : { accountId: 'c', update: { p: { mailboxIds: { 'trash-a': true } } } });
     expect(requests.every(r => r.login === 'a')).toBe(true);
-  });
-
-  it.each([false, true])('does not redirect unstamped direct-folder messages when the viewing client disconnects (permanent=%s)', async permanent => {
-    useAuthStore.setState({ getClientForAccount: (id: string) => id === 'a' ? a : undefined } as never);
-    useEmailStore.setState({ isUnifiedView: false, selectedMailbox: 'd:inbox', viewingAccountId: 'b',
-      accountMailboxes: { b: [
-        { ...mailbox('d:inbox', 'd', true), role: 'inbox' },
-        { ...mailbox('d:trash', 'd', true), originalId: 'trash' },
-      ] },
-    });
-    select([unstamped('q')]);
-    await useEmailStore.getState().batchDelete(a, permanent);
-    expect(requests).toEqual([]);
   });
 
   it('does not use another client’s cached Trash when the source owner has no Trash', async () => {

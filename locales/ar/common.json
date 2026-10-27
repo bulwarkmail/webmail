@@ -569,6 +569,8 @@
       "authentication_missing_info": "لا تتضمن هذه الدعوة مصادقة بريد موثّقة. تأكد من التفاصيل مع المنظّم إذا بدا أي شيء غير معتاد.",
       "sender_mismatch_info": "أُرسلت هذه الدعوة من {sender}، بينما المنظّم المدرج في بيانات التقويم هو {organizer}.",
       "sender_mismatch_unverified_info": "أُرسلت هذه الدعوة من {sender}، بينما المنظّم المدرج في بيانات التقويم هو {organizer}، ولم يتم التحقق من الرسالة.",
+      "attendee_mismatch_info": "أُرسل هذا الرد من {sender}، بينما الحاضر المجيب في بيانات التقويم هو {attendee}.",
+      "attendee_mismatch_unverified_info": "أُرسل هذا الرد من {sender}، بينما الحاضر المجيب في بيانات التقويم هو {attendee}، ولم يتم التحقق من الرسالة.",
       "organizer_role": "أنت منظّم هذا الحدث",
       "your_response": "ردّك: {status}",
       "response_needed": "بحاجة إلى رد",
@@ -611,6 +613,7 @@
     "scheduled_send_created": "تمت جدولة الرسالة للإرسال",
     "sending_in": "الإرسال خلال {seconds} ث",
     "undo_send_failed": "تعذّر التراجع. ربما أُرسلت الرسالة بالفعل.",
+    "undo_send_signed_out": "تعذّر التراجع: الحساب الذي أُرسلت منه الرسالة لم يعد مسجّل الدخول.",
     "cancel_scheduled_send": "إلغاء الإرسال",
     "reschedule_send": "إعادة الجدولة",
     "cancel_and_edit": "إلغاء والتعديل",
@@ -698,6 +701,7 @@
     "link_url_prompt": "أدخل الرابط",
     "draft_saved": "تم حفظ المسودة",
     "save_failed": "فشل الحفظ",
+    "discard_signed_out": "لم تُحذف المسودة: الحساب الذي حُفظت فيه لم يعد مسجّل الدخول. ستبقى في مسودات ذلك الحساب.",
     "to_placeholder": "عناوين البريد الإلكتروني للمستلمين",
     "cc_placeholder": "مستلمو النسخة",
     "bcc_placeholder": "مستلمو النسخة المخفية",
@@ -1534,6 +1538,10 @@
         "label": "نص عادي فقط",
         "description": "تعطيل محرر النصوص المنسقة وإرسال جميع الرسائل كنص عادي فقط، بما في ذلك الردود وإعادة التوجيه"
       },
+      "quick_reply": {
+        "label": "الرد السريع",
+        "description": "إظهار مربع الرد السريع أسفل الرسائل."
+      },
       "auto_select_reply_identity": {
         "label": "الرد من العنوان المستلَم إليه",
         "description": "عند الرد، الإرسال من العنوان الذي أُرسلت إليه الرسالة أصلًا. يطابق الهويات أولًا؛ وبالنسبة لعمليات التسليم الشاملة للنطاق، يعيد كتابة ترويسة \"من\" إلى العنوان البديل مع الإرسال عبر هويتك الأساسية."
@@ -1779,6 +1787,10 @@
         "signed_in": "Signed in to {count, plural, one {# account} other {# accounts}} with the saved password.",
         "sign_in_failed": "{count, plural, one {# saved password was} other {# saved passwords were}} refused: sign in to those accounts from the account list.",
         "deleted": "Saved list deleted.",
+        "prompt_title": "Restore your other accounts?",
+        "prompt_description": "A list of accounts is saved for {account}. Enter its backup password to add them to this browser, or do it later from Settings.",
+        "prompt_not_now": "Not now",
+        "prompt_done": "Done",
         "errors": {
           "mismatch": "The passwords do not match.",
           "password_length": "Use at least 10 characters.",

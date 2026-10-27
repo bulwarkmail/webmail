@@ -47,10 +47,15 @@ describe('usernameMatchesSession', () => {
     expect(usernameMatchesSession('UserA@Example.org', 'usera@example.org')).toBe(true);
   });
 
-  it('matches a bare local part against the canonical e-mail login on either side', async () => {
+  it('matches a bare local part against the canonical e-mail login', async () => {
     const { usernameMatchesSession } = await load();
     expect(usernameMatchesSession('usera', 'usera@example.org')).toBe(true);
-    expect(usernameMatchesSession('linus@example.org', 'linus')).toBe(true);
+  });
+
+  it('does not let a bare login name vouch for an address on any domain', async () => {
+    // `linus` says nothing about which domain is his; his identities do.
+    const { usernameMatchesSession } = await load();
+    expect(usernameMatchesSession('linus@example.org', 'linus')).toBe(false);
   });
 
   it('rejects different users, different domains and missing session usernames', async () => {
@@ -204,6 +209,24 @@ describe('resolveJmapIdentity account name', () => {
     const { resolveJmapIdentity } = await load();
     await expect(resolveJmapIdentity('https://mail.internal', 'Bearer tok', 'John@B.example', { trusted: true }))
       .resolves.toEqual({ serverUrl: 'https://mail.internal', accountName: 'John@B.example' });
+  });
+
+  it('does not key a bare login on an address of another domain', async () => {
+    // `info` (info@a.example) claiming info@b.example, another account's
+    // login, would read and write that account's synced settings.
+    const session = {
+      apiUrl: 'https://mail.internal/jmap/',
+      username: 'info',
+      primaryAccounts: { 'urn:ietf:params:jmap:mail': 'c' },
+      accounts: {},
+    };
+    const identities = { methodResponses: [['Identity/get', { accountId: 'c', list: [{ id: 'i0', email: 'info@a.example' }] }, '0']] };
+    fetchSpy.mockImplementation(async (url: RequestInfo | URL) => json(String(url).endsWith('/.well-known/jmap') ? session : identities));
+    const { resolveJmapIdentity } = await load();
+    await expect(resolveJmapIdentity('https://mail.internal', 'Bearer tok', 'info@b.example', { trusted: true }))
+      .rejects.toMatchObject({ status: 403 });
+    await expect(resolveJmapIdentity('https://mail.internal', 'Bearer tok', 'info@a.example', { trusted: true }))
+      .resolves.toEqual({ serverUrl: 'https://mail.internal', accountName: 'info@a.example' });
   });
 
   it('keeps a Basic claim as it is: the server accepted exactly that login', async () => {

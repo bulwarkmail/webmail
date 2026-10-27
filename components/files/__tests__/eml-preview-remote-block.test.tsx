@@ -39,3 +39,13 @@ describe('EmlPreview remote content', () => {
     expect(srcdoc()).toContain('src="https://t.example/pixel.gif"');
   });
 });
+
+describe('EmlPreview attachment names', () => {
+  it('show without directional override characters', () => {
+    const { getByText, queryByText } = render(
+      <EmlPreview message={{ subject: 's', text: 'x', attachments: [{ filename: 'report‮fdp.exe', mimeType: 'application/octet-stream' }] }} />,
+    );
+    expect(getByText('reportfdp.exe')).toBeTruthy();
+    expect(queryByText('report‮fdp.exe')).toBeNull();
+  });
+});

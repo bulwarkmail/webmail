@@ -82,8 +82,11 @@ function normalizeLineBreaks(value: string): string {
  * is the href. Used to derive the text/plain alternative of an HTML email.
  */
 export function htmlToPlainText(html: string, options: HtmlToPlainTextOptions = {}): string {
+  return nodesToPlainText(parseHtmlSafely(html).body.childNodes, options);
+}
+
+function nodesToPlainText(nodes: NodeListOf<ChildNode>, options: HtmlToPlainTextOptions): string {
   const { paragraphSpacing = false, mailMarkup = false } = options;
-  const document = parseHtmlSafely(html);
   const chunks: string[] = [];
 
   const appendText = (value: string) => {
@@ -164,7 +167,9 @@ export function htmlToPlainText(html: string, options: HtmlToPlainTextOptions = 
     const isBlock = BLOCK_TAGS.has(tagName);
 
     if (mailMarkup && (tagName === 'blockquote' || element.hasAttribute('data-quoted-html'))) {
-      const quoted = htmlToPlainText(element.innerHTML, options);
+      // The quote's own nodes: parsing its innerHTML again made each level
+      // re-read everything inside it, quadratic in a deeply nested reply.
+      const quoted = nodesToPlainText(element.childNodes, options);
       if (quoted) {
         ensureNewlines(separator);
         chunks.push(quoted.split('\n').map((line) => (line ? `> ${line}` : '>')).join('\n'));
@@ -199,6 +204,6 @@ export function htmlToPlainText(html: string, options: HtmlToPlainTextOptions = 
     }
   };
 
-  Array.from(document.body.childNodes).forEach(walk);
+  Array.from(nodes).forEach(walk);
   return normalizeLineBreaks(chunks.join(''));
 }

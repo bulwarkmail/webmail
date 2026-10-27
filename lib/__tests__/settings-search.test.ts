@@ -98,6 +98,7 @@ describe('settings search index (English messages)', () => {
     expect(labelsFor('composing')).toContain('Undo send / send delay');
     expect(labelsFor('composing')).toContain('Request read receipts by default');
     expect(labelsFor('composing')).toContain('Email Templates');
+    expect(labelsFor('composing')).toContain('Quick Reply');
     expect(labelsFor('composing')).not.toContain('Sub-Address Delimiter');
     expect(labelsFor('appearance')).toContain('Pro Interface (Experimental)');
     expect(labelsFor('account')).toContain('Tell accounts apart');

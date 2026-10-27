@@ -1,7 +1,10 @@
 import { postJmap, fetchJmapSession, rebaseApiUrl, type JmapSessionDocument } from '@/lib/stalwart/jmap-api';
 import { fetchJmapServer } from '@/lib/stalwart/server-fetch';
+import { UPSTREAM_JSON_MAX_BYTES, readJsonCapped } from '@/lib/security/capped-body';
 import { jmapError, type JmapErrorInfo } from '@/lib/jmap/jmap-error';
+import { fromDraftFileNode } from '@/lib/jmap/filenode-kind';
 import type { FileNode } from '@/lib/jmap/types';
+import { downloadNameSegment } from '@/lib/jmap/download-name';
 
 /**
  * Server-side JMAP FileNode content I/O for the WOPI host (#425).
@@ -25,6 +28,8 @@ const USING = ['urn:ietf:params:jmap:core', 'urn:ietf:params:jmap:filenode'];
 
 export const WOPI_FILE_NODE_PROPERTIES = [
   'id', 'parentId', 'name', 'type', 'blobId', 'size', 'modified', 'myRights',
+  // `type` as Stalwart 1.0.0 names it (see fromDraftFileNode).
+  'mediaType',
 ];
 
 type JmapMethodResponse = [string, Record<string, unknown>, string];
@@ -48,7 +53,7 @@ async function callJmap(ctx: WopiJmapContext, methodCalls: unknown[]): Promise<J
   if (!response.ok) {
     throw new Error(`JMAP request failed (${response.status})`);
   }
-  const json = (await response.json()) as { methodResponses?: JmapMethodResponse[] };
+  const json = await readJsonCapped<{ methodResponses?: JmapMethodResponse[] }>(response, UPSTREAM_JSON_MAX_BYTES);
   return json.methodResponses ?? [];
 }
 
@@ -83,7 +88,7 @@ export async function getWopiFileNode(
   const [name, payload] = responses[0] ?? [];
   if (name !== 'FileNode/get') return null;
   const list = (payload?.list as FileNode[] | undefined) ?? [];
-  return list[0] ?? null;
+  return list[0] ? fromDraftFileNode(list[0]) : null;
 }
 
 // The session's download/upload templates advertise the server's public
@@ -148,7 +153,7 @@ export async function downloadFileBlob(
   const url = expandTemplate(downloadUrl, {
     accountId,
     blobId,
-    name,
+    name: downloadNameSegment(name),
     type: type || 'application/octet-stream',
   });
   return fetchJmapServer(url, {
@@ -200,7 +205,7 @@ export async function uploadFileBlob(
   if (!response.ok) {
     throw new Error(`Blob upload failed (${response.status})`);
   }
-  const json = (await response.json()) as { blobId?: string; size?: number; type?: string };
+  const json = await readJsonCapped<{ blobId?: string; size?: number; type?: string }>(response, UPSTREAM_JSON_MAX_BYTES);
   if (!json.blobId) throw new Error('Blob upload returned no blobId');
   return { blobId: json.blobId, size: json.size ?? body.byteLength, type: json.type ?? contentType };
 }

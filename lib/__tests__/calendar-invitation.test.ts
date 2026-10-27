@@ -478,6 +478,28 @@ describe('getInvitationTrustAssessment', () => {
     expect(result.reason).toBeNull();
   });
 
+  // A reply comes from the attendee, and the organizer is the user reading
+  // it: comparing with the organizer warned on every genuine reply, and a
+  // forged one looked just the same.
+  it.each(['reply', 'counter', 'refresh'] as const)('compares the sender of a %s with the attendee who answers', (method) => {
+    const event: Partial<CalendarEvent> = {
+      participants: {
+        // As Stalwart parses it: the organizer is an attendee too, addresses as mailto:.
+        org: makeParticipant({ roles: { owner: true, attendee: true }, email: undefined, calendarAddress: 'mailto:me@example.com', participationStatus: 'accepted' }),
+        bob: makeParticipant({ roles: { attendee: true }, email: undefined, calendarAddress: 'mailto:Bob@example.net', participationStatus: 'accepted' }),
+      },
+    };
+    const aligned = { dkim: { result: 'pass', domain: 'example.net', selector: 's' } } as const;
+
+    const genuine = getInvitationTrustAssessment(event, makeEmail({ from: [{ email: 'bob@example.net' }], authenticationResults: aligned }), method);
+    expect(genuine.level).toBe('trusted');
+
+    const forged = getInvitationTrustAssessment(event, makeEmail({ from: [{ email: 'mallory@evil.example' }] }), method);
+    expect(forged).toMatchObject({
+      level: 'warning', reason: 'attendee_mismatch_unverified', senderEmail: 'mallory@evil.example', attendeeEmail: 'bob@example.net',
+    });
+  });
+
   it('does not trust an SPF or DKIM pass for a domain other than the From domain', () => {
     // MAIL FROM at the attacker's domain (SPF pass there), From and ORGANIZER
     // at the victim's; the victim publishes no DMARC policy, so dmarc=none.

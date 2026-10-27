@@ -10,6 +10,11 @@ export interface StalwartCredentials {
   serverUrl: string;
   authHeader: string;
   username: string;
+  /**
+   * The account the sign-in resolved to. Differs from `username` when a token
+   * sign-in claimed a bare name; key per-user data on this one.
+   */
+  accountName: string;
   hasSessionCookie: boolean;
   slot: number;
   /**
@@ -48,6 +53,7 @@ export async function getStalwartCredentials(request: NextRequest): Promise<Stal
       serverUrl,
       authHeader: context.authHeader,
       username: context.username,
+      accountName: context.accountName ?? context.username,
       hasSessionCookie: !!cookieStore.get(sessionCookieName(slot))?.value,
       slot,
       trusted: await isTrustedJmapServerUrl(serverUrl),

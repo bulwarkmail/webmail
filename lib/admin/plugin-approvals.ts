@@ -99,7 +99,18 @@ async function ensureLoaded(): Promise<void> {
   await loadPromise;
 }
 
-async function flushToDisk(): Promise<void> {
+// Writes run one after another. Requests of several users at once shared the
+// one ".tmp" file, and every rename after the first failed: the user got a
+// 500 and the server kept no ZIP for the admin to review.
+let flushQueue: Promise<void> = Promise.resolve();
+
+function flushToDisk(): Promise<void> {
+  const run = flushQueue.then(writeToDisk, writeToDisk);
+  flushQueue = run.catch(() => {});
+  return run;
+}
+
+async function writeToDisk(): Promise<void> {
   if (!cached) return;
   await ensureConfigDir();
   assertWritable('plugin-approvals.flushToDisk');

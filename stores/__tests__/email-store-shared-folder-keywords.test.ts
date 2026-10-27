@@ -168,6 +168,26 @@ describe('non-unified shared-folder keyword routing', () => {
     expect(activeClient.setKeyword).toHaveBeenCalledWith('e1', '$answered', 'owner-x');
   });
 
+  it('markEmailKeyword writes to the login and account the reply started from, not a namesake in the open folder', async () => {
+    // The reply was written to the group's e1; by the time it is sent the
+    // own Inbox is open, and the own account has an e1 too.
+    useEmailStore.setState({
+      selectedMailbox: 'a-inbox',
+      emails: [makeEmail({ id: 'e1', mailboxIds: { 'a-inbox': true } })],
+    } as never);
+
+    await useEmailStore.getState().markEmailKeyword(activeClient, 'e1', '$answered', { clientAccountId: 'account-a', accountId: 'owner-x' });
+
+    expect(activeClient.setKeyword).toHaveBeenCalledWith('e1', '$answered', 'owner-x');
+  });
+
+  it('markEmailKeyword writes nothing when the login the reply started from is gone', async () => {
+    await expect(useEmailStore.getState().markEmailKeyword(activeClient, 'e1', '$answered', { clientAccountId: 'account-b', accountId: 'owner-x' }))
+      .rejects.toThrow('Not connected');
+
+    expect(activeClient.setKeyword).not.toHaveBeenCalled();
+  });
+
   it('routes a keyword write for an email that is only the selected email', async () => {
     // The read-receipt ($mdnsent) path acts on the open message, which is not
     // necessarily in the current `emails` page.
