@@ -136,7 +136,7 @@ function Console({
 
   return (
     <div className="min-h-dvh bg-background text-foreground">
-      <header className="border-b border-border">
+      <header className="sticky top-0 z-30 border-b border-border bg-background pt-[env(safe-area-inset-top)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
         <div className="mx-auto max-w-4xl px-4 h-14 flex items-center justify-between">
           <span className="text-sm font-semibold text-primary">
             {t("common.app_name")} · {t("operator.title")}
@@ -152,7 +152,7 @@ function Console({
           </div>
         </div>
       </header>
-      <main className="mx-auto max-w-4xl px-4 py-6 space-y-6">
+      <main className="mx-auto max-w-4xl pt-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pl-[calc(1rem+env(safe-area-inset-left))] pr-[calc(1rem+env(safe-area-inset-right))] space-y-6">
         <nav
           className="flex gap-1 border-b border-border"
           aria-label={t("operator.title")}
