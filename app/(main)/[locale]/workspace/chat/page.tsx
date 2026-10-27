@@ -1,7 +1,8 @@
 "use client";
 
 // xenaxio, step 43: the admin turns the company's team chat on or off and sees
-// its state (being set up, on, a problem).
+// its state (being set up, on, a problem). Step 53: and whether the assistant
+// and connected AI chats (MCP) may read it.
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Notice, Spinner } from "@/components/xenaxio/ui";
@@ -52,6 +53,18 @@ function ChatSettings() {
     }
   };
 
+  const changeAi = async (enabled: boolean) => {
+    setBusy(true);
+    setError(null);
+    try {
+      setData(await xenaxio.setChatAi(enabled));
+    } catch (err) {
+      setError(errorText(t, err));
+    } finally {
+      setBusy(false);
+    }
+  };
+
   if (!data) return error ? <Notice kind="error">{error}</Notice> : <Spinner label={t("common.loading")} />;
   const on = data.state === "active" || data.state === "provisioning" || data.state === "error";
   const domain = data.serverName ?? data.candidate?.name ?? null;
@@ -75,6 +88,15 @@ function ChatSettings() {
             </Link>
           )}
         </div>
+        {data.state === "active" && (
+          <label htmlFor="chat-ai-access" className="flex cursor-pointer items-start gap-3 border-t border-border pt-3">
+            <input id="chat-ai-access" type="checkbox" className="mt-1 h-4 w-4" checked={data.aiAccess} disabled={busy} onChange={(e) => void changeAi(e.target.checked)} />
+            <span className="space-y-0.5">
+              <span className="block text-sm font-medium">{t("chatadmin.ai_access")}</span>
+              <span className="block text-xs text-muted-foreground">{t("chatadmin.ai_access_hint")}</span>
+            </span>
+          </label>
+        )}
       </section>
       {/* Step 43, part E: other companies (federation), once the chat runs. */}
       {data.state === "active" && <FederationAdmin />}

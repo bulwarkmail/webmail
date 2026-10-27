@@ -87,6 +87,7 @@ function Tokens() {
   return (
     <div className="max-w-2xl space-y-6">
       <p className="text-sm text-muted-foreground">{t("mcp.intro")}</p>
+      <p className="text-sm text-muted-foreground">{t("mcp.chat_note")}</p>
       {error && <Notice kind="error">{error}</Notice>}
       {!data.enabled && <Notice kind="info">{t("mcp.disabled")}</Notice>}
 

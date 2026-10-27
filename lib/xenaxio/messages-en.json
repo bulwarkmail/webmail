@@ -133,7 +133,8 @@
     "schedule_in_past": "The time of this one-off task has passed.",
     "schedule_not_found": "This scheduled task no longer exists.",
     "schedule_interval": "This task runs more often than your company allows. Ask the assistant to schedule it less often.",
-    "schedules_off": "Your company has switched scheduled tasks off."
+    "schedules_off": "Your company has switched scheduled tasks off.",
+    "chat_off": "The chat is not turned on."
   },
   "login": {
     "title": "Sign in",
@@ -603,7 +604,8 @@
     "several_title": "Several accounts in one Claude",
     "several_text": "Claude accepts each address only once. Every company has its own address (above). For a second account of the same company, add a name, for example:",
     "several_hint": "When connecting, sign in with the account Claude should use. Claude learns which account is behind which connector.",
-    "address": "Address: {address}"
+    "address": "Address: {address}",
+    "chat_note": "If your company uses the team chat, the AI chat can also read and search it (only your channels and direct messages). It cannot write there."
   },
   "aiadmin": {
     "title": "AI settings",
@@ -1341,7 +1343,9 @@
     "fed_way_redirect": "Or redirect the address permanently to:",
     "fed_way_dns": "Way 2: DNS records only",
     "fed_way_dns_text": "If you cannot change your website: two records at your domain's DNS provider. We then get the certificate ourselves.",
-    "fed_cname_missing": "The second record (for the certificate) cannot be shown right now – please open this page again later."
+    "fed_cname_missing": "The second record (for the certificate) cannot be shown right now – please open this page again later.",
+    "ai_access": "Share the chat with AI and MCP",
+    "ai_access_hint": "The assistant and connected AI chats such as Claude can read and search the chat, only the channels and direct messages the person is in. They never write in the chat."
   },
   "ownmodel": {
     "title": "Own AI model",

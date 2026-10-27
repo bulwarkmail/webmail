@@ -133,7 +133,8 @@
     "schedule_in_past": "Der Zeitpunkt dieser einmaligen Aufgabe ist vorbei.",
     "schedule_not_found": "Diese geplante Aufgabe gibt es nicht mehr.",
     "schedule_interval": "Diese Aufgabe läuft öfter, als Ihre Firma erlaubt. Bitten Sie den Assistenten, sie seltener zu planen.",
-    "schedules_off": "Ihre Firma hat geplante Aufgaben ausgeschaltet."
+    "schedules_off": "Ihre Firma hat geplante Aufgaben ausgeschaltet.",
+    "chat_off": "Der Chat ist nicht eingeschaltet."
   },
   "login": {
     "title": "Anmelden",
@@ -603,7 +604,8 @@
     "several_title": "Mehrere Konten in einem Claude",
     "several_text": "Claude nimmt jede Adresse nur einmal an. Jede Firma hat ihre eigene Adresse (oben). Für ein zweites Konto derselben Firma hängen Sie einen Namen an, zum Beispiel:",
     "several_hint": "Beim Verbinden melden Sie sich mit dem Konto an, das Claude nutzen soll. Claude erfährt, welches Konto hinter welchem Konnektor steht.",
-    "address": "Adresse: {address}"
+    "address": "Adresse: {address}",
+    "chat_note": "Nutzt Ihre Firma den Team-Chat, kann der KI-Chat ihn auch lesen und durchsuchen (nur Ihre Kanäle und Direktnachrichten). Schreiben kann er dort nicht."
   },
   "aiadmin": {
     "title": "KI-Einstellungen",
@@ -1341,7 +1343,9 @@
     "fed_way_redirect": "Oder leiten Sie die Adresse dauerhaft hierhin weiter:",
     "fed_way_dns": "Möglichkeit 2: nur DNS-Einträge",
     "fed_way_dns_text": "Wenn Sie Ihre Website nicht ändern können: zwei Einträge beim DNS-Anbieter Ihrer Domain. Das Zertifikat besorgen wir dann selbst.",
-    "fed_cname_missing": "Der zweite Eintrag (für das Zertifikat) ist gerade nicht abrufbar – bitte später erneut öffnen."
+    "fed_cname_missing": "Der zweite Eintrag (für das Zertifikat) ist gerade nicht abrufbar – bitte später erneut öffnen.",
+    "ai_access": "Chat für KI und MCP freigeben",
+    "ai_access_hint": "Der Assistent und verbundene KI-Chats wie Claude können den Chat lesen und durchsuchen, nur die Kanäle und Direktnachrichten der jeweiligen Person. Schreiben können sie im Chat nie."
   },
   "ownmodel": {
     "title": "Eigenes KI-Modell",

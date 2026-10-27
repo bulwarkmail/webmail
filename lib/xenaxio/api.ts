@@ -255,6 +255,8 @@ export interface ChatAdmin {
   serverName: string | null;
   candidate: { name: string; status: string } | null;
   error: string | null;
+  /** Step 53: the assistant (side panel, scheduled tasks, connected AI chats) may read the chat. */
+  aiAccess: boolean;
 }
 
 /** Step 44: result of the connection test of a company's own model. */
@@ -653,6 +655,7 @@ export const xenaxio = {
   setUserAi: (userId: string, enabled: boolean) => request<{ ok: true }>("POST", `/api/admin/users/${encodeURIComponent(userId)}/ai`, { enabled }),
   chatAdmin: () => request<ChatAdmin>("GET", "/api/admin/chat"),
   setChatAdmin: (enabled: boolean) => request<ChatAdmin>("PUT", "/api/admin/chat", { enabled }),
+  setChatAi: (enabled: boolean) => request<ChatAdmin>("PUT", "/api/admin/chat/ai", { enabled }),
   aiAdmin: () => request<AiAdmin>("GET", "/api/admin/ai"),
   setAiAdmin: (change: { enabled?: boolean; model?: string; provider?: AiProvider }) => request<{ ok: true }>("POST", "/api/admin/ai", change),
   saveCustomModel: (input: CustomModelInput) => request<{ custom: CustomModel }>("PUT", "/api/admin/ai/custom", input),
