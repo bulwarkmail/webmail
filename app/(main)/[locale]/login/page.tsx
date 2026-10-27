@@ -44,7 +44,8 @@ function LoginForm() {
     setError(null);
     setOtherPortal(null);
     try {
-      const me = await xenaxio.login(email.trim(), password, locale, add ? { next: `/${locale}/` } : undefined);
+      // Step 51: added from an AI chat's consent screen, it goes back there.
+      const me = await xenaxio.login(email.trim(), password, locale, add ? { next: next ?? `/${locale}/` } : undefined);
       setPassword("");
       // A new sign-in never inherits an assistant chat left in this tab.
       clearAssistantState();

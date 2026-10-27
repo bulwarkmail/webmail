@@ -4,6 +4,8 @@
 // as a connector (sign-in and consent, no token to copy) and the list of
 // connected chats with a disconnect button. Personal tokens (M2, M4) for
 // scripts and automations live in a collapsed "advanced" section.
+// Step 51: the company's own address comes first; claude.ai takes each address
+// once, so a second account connects under a label (…/mcp/<name>).
 import { type FormEvent, useCallback, useEffect, useState } from "react";
 import { useLocale } from "next-intl";
 import { Button } from "@/components/ui/button";
@@ -31,7 +33,7 @@ function Snippet({ label, value }: { label: string; value: string }) {
 function Tokens() {
   const t = useXT();
   const locale = useLocale();
-  const [data, setData] = useState<{ mcpUrl: string; enabled: boolean; tokens: McpTokenInfo[] } | null>(null);
+  const [data, setData] = useState<{ mcpUrl: string; sharedMcpUrl?: string; enabled: boolean; tokens: McpTokenInfo[] } | null>(null);
   const [name, setName] = useState("");
   const [days, setDays] = useState<(typeof LIFETIMES)[number]>(90);
   const [busy, setBusy] = useState(false);
@@ -103,6 +105,20 @@ function Tokens() {
             ))}
           </ol>
           <p className="text-xs text-muted-foreground">{t("mcp.howto_other")}</p>
+          {data.sharedMcpUrl && data.sharedMcpUrl !== data.mcpUrl && (
+            <p className="text-xs text-muted-foreground break-all">
+              {t("mcp.url_shared")}: <span className="font-mono">{data.sharedMcpUrl}</span>
+            </p>
+          )}
+        </section>
+      )}
+
+      {data.enabled && (
+        <section className="space-y-2 rounded-lg border border-border p-4 text-sm">
+          <h2 className="font-medium">{t("mcp.several_title")}</h2>
+          <p>{t("mcp.several_text")}</p>
+          <Snippet label={t("mcp.url")} value={`${data.mcpUrl}/${locale === "de" ? "konto-2" : "account-2"}`} />
+          <p className="text-xs text-muted-foreground">{t("mcp.several_hint")}</p>
         </section>
       )}
 
@@ -123,6 +139,7 @@ function Tokens() {
                     {t("mcp.connected_since", { date: date(token.createdAt) })} · {t("mcp.expires", { date: date(token.expiresAt) })} ·{" "}
                     {token.lastUsedAt ? t("mcp.last_used", { date: date(token.lastUsedAt) }) : t("mcp.never_used")}
                   </span>
+                  {token.address && <span className="block truncate font-mono text-xs text-muted-foreground">{t("mcp.address", { address: token.address })}</span>}
                 </span>
                 <Button size="sm" variant="outline" onClick={() => revoke(token)}>
                   {t("mcp.revoke")}
