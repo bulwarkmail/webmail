@@ -400,7 +400,7 @@ export function AssistantPanel() {
         if ((err as { name?: string }).name !== "AbortError") {
           const key = errorKey(err);
           const code = key.replace("errors.", "");
-          update((turn) => ({ ...turn, error: ["ai_disabled", "ai_not_configured", "ai_limit_reached", "rate_limited", "file_not_found"].includes(code) ? t(`assistant.errors.${code}`) : t(key) }));
+          update((turn) => ({ ...turn, error: ["ai_disabled", "ai_not_configured", "ai_limit_reached", "rate_limited", "file_not_found", "custom_model_unavailable"].includes(code) ? t(`assistant.errors.${code}`) : t(key) }));
         }
       } finally {
         setBusy(false);
