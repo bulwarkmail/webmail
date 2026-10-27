@@ -5,7 +5,7 @@
 import { IconSparkles, IconX } from "@tabler/icons-react";
 import { useLocale } from "next-intl";
 import { useEffect, useState } from "react";
-import type { ChatClient } from "@/lib/xenaxio/chat/client";
+import { type ChatClient, serverOfUser } from "@/lib/xenaxio/chat/client";
 import { type SidePanel, useChatStore } from "@/lib/xenaxio/chat/store";
 import { useXT } from "@/lib/xenaxio/i18n";
 import { sendAssistantCommand } from "@/lib/xenaxio/assistant";
@@ -140,6 +140,12 @@ function ProfilePanel({ client, userId }: { client: ChatClient; userId: string }
       <div className="flex-1 overflow-y-auto p-5">
         <PersonAvatar userId={userId} name={name(userId)} size="lg" presence={presence} />
         <h3 className="mt-3 text-lg font-bold">{name(userId)}</h3>
+        {client.isExternalUser(userId) && (
+          <div className="mt-1 inline-flex items-center gap-1 rounded bg-primary/10 px-1.5 py-0.5 text-xs text-primary">
+            {t("chat.ext_person", { domain: serverOfUser(userId) })}
+          </div>
+        )}
+        <div className="mt-1 break-all text-xs text-muted-foreground">{userId}</div>
         <div className="text-sm text-muted-foreground">{presenceLabel}</div>
         {person?.statusMsg && !me && <div className="mt-2 text-sm">{person.statusMsg}</div>}
         {colleague?.email && (
@@ -165,6 +171,16 @@ function ProfilePanel({ client, userId }: { client: ChatClient; userId: string }
             }}
           >
             {t("chat.message_person")}
+          </button>
+        )}
+        {/* Part E: block a person (their messages and invitations no longer reach me). */}
+        {!me && !colleague && (
+          <button
+            type="button"
+            className="ml-2 mt-5 h-9 rounded-md border border-border px-4 text-sm hover:bg-accent"
+            onClick={() => void client.setIgnored(userId, !client.isIgnored(userId)).catch(() => toast.error(t("chat.error")))}
+          >
+            {client.isIgnored(userId) ? t("chat.unblock") : t("chat.block")}
           </button>
         )}
         {me && (

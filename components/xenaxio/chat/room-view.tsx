@@ -3,7 +3,7 @@
 // Step 43, part B: a channel or direct conversation — header with topic,
 // members, pinned messages and settings; the timeline; who is typing; the
 // composer. Files can be dropped anywhere on it.
-import { IconBell, IconChevronDown, IconHash, IconLock, IconPin, IconStar, IconStarFilled, IconUsers } from "@tabler/icons-react";
+import { IconBell, IconChevronDown, IconHash, IconLock, IconPin, IconStar, IconStarFilled, IconUsers, IconWorld } from "@tabler/icons-react";
 import { useLocale } from "next-intl";
 import { useEffect, useState } from "react";
 import type { ChatClient, Room } from "@/lib/xenaxio/chat/client";
@@ -179,7 +179,7 @@ export function RoomView({ client, room, focusId }: { client: ChatClient; room: 
     ) : (
       <div className="px-5 pb-4 pt-8">
         <h2 className="text-xl font-bold">
-          {room.joinRule === "public" ? "#" : "🔒 "}
+          {room.external ? "🌐 " : room.joinRule === "public" ? "#" : "🔒 "}
           {roomName}
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">{t("chat.beginning", { name: roomName })}</p>
@@ -211,12 +211,15 @@ export function RoomView({ client, room, focusId }: { client: ChatClient; room: 
           <button type="button" onClick={() => setMenu(menu === "channel" ? null : "channel")} className="flex min-w-0 items-center gap-1 rounded px-1.5 py-1 text-base font-bold hover:bg-accent">
             {room.kind === "dm" ? (
               partners[0] && <PersonAvatar userId={partners[0]} name={roomName} size="sm" presence={presenceOf(client, partners[0])} className="mr-1" />
+            ) : room.external ? (
+              <IconWorld size={18} className="text-primary" />
             ) : room.joinRule === "public" ? (
               <IconHash size={18} />
             ) : (
               <IconLock size={18} />
             )}
             <span className="truncate">{roomName}</span>
+            {room.external && <span className="ml-1 rounded bg-primary/10 px-1.5 text-[10px] font-semibold uppercase text-primary">{t("chat.external")}</span>}
             <IconChevronDown size={14} className="text-muted-foreground" />
           </button>
           {menu === "channel" && <ChannelMenu client={client} room={room} onClose={() => setMenu(null)} onInvite={() => setInviting(true)} onIntegrations={() => setIntegrations(true)} />}
@@ -271,6 +274,7 @@ export function RoomView({ client, room, focusId }: { client: ChatClient; room: 
           title={t("chat.invite_title", { name: roomName })}
           action={t("chat.invite")}
           client={client}
+          allowExternal={room.external}
           max={20}
           exclude={[...room.members.values()].filter((m) => m.membership === "join" || m.membership === "invite").map((m) => m.userId)}
           onClose={() => setInviting(false)}

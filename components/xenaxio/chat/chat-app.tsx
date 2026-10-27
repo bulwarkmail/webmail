@@ -224,7 +224,7 @@ function ChatInside() {
       )}
       {dialog === "notify" && <NotifySettingsDialog client={client} onClose={() => setDialog(null)} />}
       {dialog === "create" && <CreateChannelDialog client={client} onClose={() => setDialog(null)} onCreated={openRoom} />}
-      {dialog === "dm" && <PeoplePicker title={t("chat.dm_title")} action={t("chat.dm_start")} client={client} onClose={() => setDialog(null)} onDone={async (ids) => openRoom(await client.openDirect(ids))} />}
+      {dialog === "dm" && <PeoplePicker title={t("chat.dm_title")} action={t("chat.dm_start")} client={client} allowExternal onClose={() => setDialog(null)} onDone={async (ids) => openRoom(await client.openDirect(ids))} />}
       </div>
     </div>
   );

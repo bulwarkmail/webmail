@@ -3,13 +3,14 @@
 // Step 43, part B: dialogs of the chat — confirm and prompt (shared with the
 // whole chat through a context), choosing people, creating a channel, and the
 // Ctrl+K switcher.
-import { IconHash, IconLock, IconSearch, IconX } from "@tabler/icons-react";
+import { IconHash, IconLock, IconSearch, IconWorld, IconX } from "@tabler/icons-react";
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { PromptDialog } from "@/components/ui/prompt-dialog";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { usePromptDialog } from "@/hooks/use-prompt-dialog";
-import type { ChatClient } from "@/lib/xenaxio/chat/client";
+import { ChatError } from "@/lib/xenaxio/chat/api";
+import { type ChatClient, parseMatrixId, serverOfUser } from "@/lib/xenaxio/chat/client";
 import { useChatStore } from "@/lib/xenaxio/chat/store";
 import { useXT } from "@/lib/xenaxio/i18n";
 import { toast } from "@/stores/toast-store";
@@ -71,6 +72,7 @@ export function PeoplePicker({
   client,
   max = 8,
   exclude = [],
+  allowExternal = false,
   onDone,
   onClose,
 }: {
@@ -79,6 +81,8 @@ export function PeoplePicker({
   client: ChatClient;
   max?: number;
   exclude?: string[];
+  /** Part E: people of other companies may be added by their chat address. */
+  allowExternal?: boolean;
   onDone: (userIds: string[]) => Promise<void> | void;
   onClose: () => void;
 }) {
@@ -87,6 +91,29 @@ export function PeoplePicker({
   const [query, setQuery] = useState("");
   const [picked, setPicked] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
+  const [outside, setOutside] = useState<Record<string, string>>({});
+  // A chat address of someone outside (@eva:beta.de), or an e-mail turned into one (eva@beta.de).
+  const typed = useMemo(() => {
+    if (!allowExternal) return null;
+    const q = query.trim().toLowerCase();
+    const email = /^([a-z0-9._=+-]+)@([a-z0-9.-]+\.[a-z]{2,})$/.exec(q);
+    const id = parseMatrixId(q) ?? (email ? `@${email[1]}:${email[2]}` : null);
+    return id && client.isExternalUser(id) && !picked.includes(id) && !exclude.includes(id) ? id : null;
+  }, [allowExternal, query, client, picked, exclude]);
+  const addOutside = async (id: string) => {
+    setBusy(true);
+    try {
+      const person = await client.lookupPerson(id);
+      setOutside((o) => ({ ...o, [id]: person.displayName ?? id }));
+      setPicked((p) => [...p, id]);
+      setQuery("");
+    } catch (err) {
+      const code = err instanceof ChatError ? err.message : "";
+      toast.error(t(code === "server_not_allowed" ? "chat.ext_server_not_allowed" : code === "federation_off" ? "chat.ext_federation_off" : "chat.ext_not_found"));
+    } finally {
+      setBusy(false);
+    }
+  };
   const people = useMemo(() => {
     const q = query.trim().toLowerCase();
     return [...colleagues.values()]
@@ -111,7 +138,8 @@ export function PeoplePicker({
       <div className="flex flex-wrap gap-1 rounded-md border border-input px-2 py-1.5 focus-within:ring-2 focus-within:ring-ring">
         {picked.map((u) => (
           <span key={u} className="inline-flex items-center gap-1 rounded bg-accent px-1.5 py-0.5 text-sm">
-            {colleagues.get(u)?.displayName ?? u}
+            {colleagues.get(u)?.displayName ?? outside[u] ?? u}
+            {client.isExternalUser(u) && <span className="text-[10px] text-muted-foreground">{serverOfUser(u)}</span>}
             <button type="button" onClick={() => setPicked(picked.filter((p) => p !== u))} aria-label={t("chat.close")}>
               <IconX size={12} />
             </button>
@@ -120,7 +148,19 @@ export function PeoplePicker({
         <input autoFocus value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("chat.dm_search")} className="min-w-32 flex-1 bg-transparent text-sm focus:outline-none" />
       </div>
       {picked.length >= max && <p className="mt-1 text-xs text-muted-foreground">{t("chat.dm_limit")}</p>}
+      {allowExternal && <p className="mt-1 text-xs text-muted-foreground">{t("chat.ext_hint")}</p>}
       <div className="mt-2 max-h-72 overflow-y-auto">
+        {typed && (
+          <button type="button" disabled={busy || picked.length >= max} onClick={() => void addOutside(typed)} className="flex w-full items-center gap-3 rounded-md px-2 py-1.5 text-left hover:bg-accent disabled:opacity-50">
+            <span className="flex h-7 w-7 items-center justify-center rounded-md bg-muted">
+              <IconWorld size={16} />
+            </span>
+            <span className="min-w-0">
+              <span className="block truncate text-sm font-medium">{typed}</span>
+              <span className="block truncate text-xs text-muted-foreground">{t("chat.ext_person", { domain: serverOfUser(typed) })}</span>
+            </span>
+          </button>
+        )}
         {people.map((c) => (
           <button
             key={c.address}
@@ -154,6 +194,7 @@ export function CreateChannelDialog({ client, onClose, onCreated }: { client: Ch
   const [name, setName] = useState("");
   const [topic, setTopic] = useState("");
   const [isPublic, setPublic] = useState(true);
+  const [external, setExternal] = useState(false);
   const [busy, setBusy] = useState(false);
   // Slack-style names: lower case, words joined by dashes.
   const clean = name.trim().toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9äöüß_-]/g, "").slice(0, 80);
@@ -161,7 +202,8 @@ export function CreateChannelDialog({ client, onClose, onCreated }: { client: Ch
     if (!clean) return;
     setBusy(true);
     try {
-      onCreated(await client.createChannel({ name: clean, topic: topic.trim() || undefined, isPublic }));
+      // Part E: an external channel is private (invitation only) and the only kind that takes other companies.
+      onCreated(await client.createChannel({ name: clean, topic: topic.trim() || undefined, isPublic: isPublic && !external, external }));
       onClose();
     } catch {
       toast.error(t("chat.error"));
@@ -187,6 +229,14 @@ export function CreateChannelDialog({ client, onClose, onCreated }: { client: Ch
         <label className="flex items-start gap-2">
           <input type="radio" checked={!isPublic} onChange={() => setPublic(false)} className="mt-1" />
           <span>{t("chat.create_private")}</span>
+        </label>
+        {/* Part E: Slack Connect-like channel with other companies. */}
+        <label className="flex items-start gap-2 border-t border-border pt-2">
+          <input type="checkbox" checked={external} onChange={(e) => setExternal(e.target.checked)} className="mt-1" />
+          <span>
+            {t("chat.create_external")}
+            {external && <span className="mt-0.5 block text-xs text-muted-foreground">{t("chat.external_privacy")}</span>}
+          </span>
         </label>
       </div>
       <div className="mt-4 flex justify-end">
