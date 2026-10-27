@@ -391,7 +391,7 @@
     "tool_create_draft": "Saving a draft…",
     "tool_search_contacts": "Looking up contacts…",
     "tool_error": "A step failed. Please ask again, perhaps in other words.",
-    "not_sent": "Nothing is sent without your confirmation: drafts are only saved, events are created or changed only after “Confirm”.",
+    "not_sent": "Nothing is sent without your confirmation: drafts are only saved, events and tasks are created or changed only after “Confirm”.",
     "errors": {
       "ai_disabled": "The assistant is turned off for your account.",
       "ai_not_configured": "The assistant is not set up yet.",
@@ -405,6 +405,9 @@
     "tool_find_free_time": "Looking for free time…",
     "tool_create_event": "Preparing an event…",
     "tool_update_event": "Preparing a change to the meeting…",
+    "tool_list_tasks": "Checking your tasks…",
+    "tool_create_task": "Preparing a task…",
+    "tool_update_task": "Preparing a change to the task…",
     "tool_list_files": "Looking through your files…",
     "tool_search_files": "Searching files…",
     "tool_read_file": "Reading a file…",

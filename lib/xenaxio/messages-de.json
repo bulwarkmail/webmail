@@ -391,7 +391,7 @@
     "tool_create_draft": "Speichere einen Entwurf…",
     "tool_search_contacts": "Suche Kontakte…",
     "tool_error": "Ein Schritt ist fehlgeschlagen. Bitte fragen Sie noch einmal, gern mit anderen Worten.",
-    "not_sent": "Ohne Ihre Bestätigung wird nichts gesendet: Entwürfe werden nur gespeichert, Termine erst nach „Bestätigen“ angelegt oder geändert.",
+    "not_sent": "Ohne Ihre Bestätigung wird nichts gesendet: Entwürfe werden nur gespeichert, Termine und Aufgaben erst nach „Bestätigen“ angelegt oder geändert.",
     "errors": {
       "ai_disabled": "Der Assistent ist für Ihr Konto ausgeschaltet.",
       "ai_not_configured": "Der Assistent ist noch nicht eingerichtet.",
@@ -405,6 +405,9 @@
     "tool_find_free_time": "Suche freie Zeiten…",
     "tool_create_event": "Bereite einen Termin vor…",
     "tool_update_event": "Bereite eine Terminänderung vor…",
+    "tool_list_tasks": "Sehe die Aufgaben durch…",
+    "tool_create_task": "Bereite eine Aufgabe vor…",
+    "tool_update_task": "Bereite eine Aufgabenänderung vor…",
     "tool_list_files": "Sehe in den Dateien nach…",
     "tool_search_files": "Suche Dateien…",
     "tool_read_file": "Lese eine Datei…",
