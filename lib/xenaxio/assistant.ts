@@ -25,8 +25,8 @@ export interface ProposalSummary {
   /** update_event only: what changes, who is newly invited, and the meeting as it was. */
   changes?: string[];
   addedAttendees?: string[];
-  before?: { title?: string; start?: string; end?: string; location?: string };
-  /** Step 45: how the meeting repeats (in the user's language), what part of a series changes. */
+  before?: { title?: string; start?: string; end?: string; location?: string; due?: string | null; priority?: string; status?: string; reminder?: boolean };
+  /** Step 47: how the meeting repeats (in the user's language), what part of a series changes. */
   repeatText?: string;
   repeatBefore?: string;
   scope?: "occurrence" | "series";
@@ -37,6 +37,15 @@ export interface ProposalSummary {
   /** remember and forget (step 36): the note, and the note it replaces. */
   text?: string;
   replaces?: string;
+  /** create_task and update_task (step 46): the task as it will be. */
+  due?: string | null;
+  allDay?: boolean;
+  priority?: "high" | "medium" | "low" | "none";
+  reminder?: boolean;
+  description?: string;
+  status?: "open" | "in-progress" | "done" | "cancelled";
+  /** create_task from an email: the email it links to. */
+  email?: { subject: string; from: string };
 }
 
 export interface ActionResult {
@@ -51,7 +60,9 @@ export type AssistantEvent =
   | { type: "sources"; emails: SourceEmail[] }
   | { type: "proposal"; id: string; tool: string; summary: ProposalSummary }
   | { type: "done"; inputTokens: number; outputTokens: number }
-  | { type: "error"; code: string };
+  | { type: "error"; code: string }
+  /** Step 45: the company's own model did not answer; the AI by xenaxio answered instead. */
+  | { type: "notice"; code: "custom_model_fallback" };
 
 async function post(path: string, body: unknown, signal?: AbortSignal): Promise<Response> {
   let res: Response;
@@ -230,7 +241,9 @@ export const ASSISTANT_COMMAND_EVENT = "xenaxio:assistant";
 export type AssistantCommand =
   | { action: "open" }
   | { action: "summarize"; threadId: string; subject?: string }
-  | { action: "reply" };
+  | { action: "reply" }
+  /** Step 43, part D: a question asked for the user (e.g. "summarize this chat thread"). */
+  | { action: "ask"; text: string };
 
 let availability: Promise<boolean> | null = null;
 /** Whether the assistant is configured and enabled for this user (asked once per page load). */

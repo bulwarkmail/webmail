@@ -8,12 +8,13 @@ import { useLocale } from "next-intl";
 import { useCallback, useState } from "react";
 import { mediaUrl } from "@/lib/xenaxio/chat/api";
 import type { ChatClient, Message, Room } from "@/lib/xenaxio/chat/client";
-import { messageHtml, mentionsUser, textContent } from "@/lib/xenaxio/chat/format";
+import { appOf, messageHtml, mentionsUser, sharedEmailOf, textContent } from "@/lib/xenaxio/chat/format";
 import { useChatStore } from "@/lib/xenaxio/chat/store";
 import { useXT } from "@/lib/xenaxio/i18n";
 import { toast } from "@/stores/toast-store";
 import { cn } from "@/lib/utils";
 import { formatSize, messageLink, PersonAvatar, useChatTime, useDisplayName } from "./common";
+import { EmailCard } from "./email-card";
 import { EmojiPicker, quickReactions } from "./emoji-picker";
 
 interface Props {
@@ -92,7 +93,9 @@ function Body({ message, me, onMention }: { message: Message; me: string; onMent
   if (message.redacted) return <div className="text-sm italic text-muted-foreground">{t("chat.deleted")}</div>;
   const c = message.content;
   if (c.msgtype === "m.image" || c.msgtype === "m.file" || c.msgtype === "m.video" || c.msgtype === "m.audio") return <Attachment content={c} />;
-  const html = messageHtml(c);
+  // An e-mail shared into the chat: what the person wrote, then the card.
+  const email = sharedEmailOf(c);
+  const html = email ? (email.note ? messageHtml({ body: email.note }) : "") : messageHtml(c);
   return (
     <div
       className={cn(
@@ -109,8 +112,9 @@ function Body({ message, me, onMention }: { message: Message; me: string; onMent
       }}
     >
       {c.msgtype === "m.emote" && <span>* {name(message.sender)} </span>}
-      <span dangerouslySetInnerHTML={{ __html: html }} />
+      {html && <span dangerouslySetInnerHTML={{ __html: html }} />}
       {message.edited && <span className="ml-1 text-xs text-muted-foreground">{t("chat.edited")}</span>}
+      {email && <EmailCard email={email} />}
     </div>
   );
 }
@@ -293,6 +297,9 @@ export function ChatMessage({ message, room, client, continued, inThread, highli
 
   if (message.type !== "m.room.message") return <SystemLine message={message} room={room} />;
   const real = !message.id.startsWith("~");
+  // Part D: an integration posts under its own name with an "App" label.
+  const app = appOf(message.content, message.sender);
+  const author = app?.name ?? name(message.sender);
   const pinned = room.pinned.includes(message.id);
 
   return (
@@ -306,17 +313,24 @@ export function ChatMessage({ message, room, client, continued, inThread, highli
             {time(message.ts)}
           </span>
         ) : (
-          <button type="button" onClick={() => openProfile(message.sender)} aria-label={name(message.sender)}>
-            <PersonAvatar userId={message.sender} name={name(message.sender)} />
-          </button>
+          app?.icon ? (
+            <span className="flex h-9 w-9 items-center justify-center rounded-md bg-muted text-xl" aria-hidden>
+              {app.icon}
+            </span>
+          ) : (
+            <button type="button" onClick={() => openProfile(message.sender)} aria-label={author}>
+              <PersonAvatar userId={message.sender} name={author} />
+            </button>
+          )
         )}
       </div>
       <div className="min-w-0 flex-1">
         {!continued && (
           <div className="flex items-baseline gap-2">
             <button type="button" onClick={() => openProfile(message.sender)} className="text-sm font-bold hover:underline">
-              {name(message.sender)}
+              {author}
             </button>
+            {app && <span className="rounded bg-muted px-1 text-[10px] font-semibold uppercase text-muted-foreground">{t("chat.app")}</span>}
             <span className="text-xs text-muted-foreground tabular-nums" title={full(message.ts)}>
               {time(message.ts)}
             </span>

@@ -1,6 +1,6 @@
 "use client";
 
-// Step 45: what an assistant proposal says about a series - how it repeats,
+// Step 47: what an assistant proposal says about a series - how it repeats,
 // whether one occurrence or the whole series changes, and that changed
 // occurrences go back to the series when the series moves.
 import { useXT } from "@/lib/xenaxio/i18n";

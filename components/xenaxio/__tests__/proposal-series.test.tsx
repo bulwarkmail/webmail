@@ -11,7 +11,7 @@ const rows = (summary: Parameters<typeof ProposalSeriesRows>[0]["summary"]) =>
     </dl>,
   );
 
-describe("ProposalSeriesRows (step 45)", () => {
+describe("ProposalSeriesRows (step 47)", () => {
   it("shows nothing for a meeting that does not repeat", () => {
     const { container } = rows({ title: "Abstimmung" });
     expect(container.querySelector("dl")!.innerHTML).toBe("");

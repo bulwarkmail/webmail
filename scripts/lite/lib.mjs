@@ -111,6 +111,7 @@ export const LITE_API_STRING_ALLOWLIST = [
   "/api/chat/matrix",
   "/api/chat/push",
   "/api/chat/settings",
+  "/api/chat/rooms",
   "/api/admin/chat",
   // Path-independent generic prefix used by `apiFetch` docs/comments.
   "/api/",
