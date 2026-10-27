@@ -1,7 +1,7 @@
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
 import type { FilterRule, SieveCapabilities, SieveScript } from '@/lib/jmap/sieve-types';
 import { parseScript, type ParseResult } from '@/lib/sieve/parser';
-import { generateScript, VACATION_SCRIPT_NAME } from '@/lib/sieve/generator';
+import { FILTERS_SCRIPT_NAME, generateScript, VACATION_SCRIPT_NAME } from '@/lib/sieve/generator';
 import { filterHooks } from '@/lib/plugin-hooks';
 import type { FilterRuleView } from '@/lib/plugin-types';
 
@@ -108,7 +108,9 @@ export async function readAccountFilters(client: IJMAPClient, accountId: string)
   // server vacation script. Include it instead so both keep working.
   const vacationActive =
     allScripts.some(s => s.name === VACATION_SCRIPT_NAME && s.isActive) && supportsInclude(capabilities);
-  const script = scripts.find(s => s.isActive) || scripts[0] || null;
+  // Bulwark's own script when none is active: a host's script that its
+  // server rules include must not be taken for the filters.
+  const script = scripts.find(s => s.isActive) || scripts.find(s => s.name === FILTERS_SCRIPT_NAME) || scripts[0] || null;
   const activeScriptId = allScripts.find(s => s.isActive)?.id ?? null;
 
   if (!script) {
@@ -147,6 +149,7 @@ export function renderFiltersScript(
     vacationForward: filters.parsed.vacationForward,
     vacationAudience: filters.parsed.vacationAudience,
     extensions: filters.capabilities?.sieveExtensions,
+    serverRules: filters.parsed.serverRules,
   });
 }
 
@@ -166,7 +169,7 @@ export async function writeFiltersScript(
   if (id) {
     await client.updateSieveScript(id, transformed, true, accountId || undefined);
   } else {
-    id = (await client.createSieveScript('filters', transformed, true, accountId || undefined)).id;
+    id = (await client.createSieveScript(FILTERS_SCRIPT_NAME, transformed, true, accountId || undefined)).id;
   }
   void filterHooks.onFiltersSave.emit({ accountId });
   void filterHooks.onSieveScriptChange.emit({ accountId, script: transformed });
