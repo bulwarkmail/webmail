@@ -112,6 +112,9 @@ export const LITE_API_STRING_ALLOWLIST = [
   "/api/chat/push",
   "/api/chat/settings",
   "/api/admin/chat",
+  // Step 46: calendars by link, both ways (components/xenaxio/calendar-links.tsx).
+  "/api/calendar/subscriptions",
+  "/api/calendar/feeds",
   // Path-independent generic prefix used by `apiFetch` docs/comments.
   "/api/",
   // stores/update-store.ts - startPolling() is a no-op in Lite.
