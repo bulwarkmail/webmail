@@ -596,7 +596,12 @@
     "token": "Token",
     "claude_code": "Command for Claude Code",
     "json": "Settings for other programs (JSON)",
-    "done": "Done"
+    "done": "Done",
+    "url_shared": "Shared address (works too)",
+    "several_title": "Several accounts in one Claude",
+    "several_text": "Claude accepts each address only once. Every company has its own address (above). For a second account of the same company, add a name, for example:",
+    "several_hint": "When connecting, sign in with the account Claude should use. Claude learns which account is behind which connector.",
+    "address": "Address: {address}"
   },
   "aiadmin": {
     "title": "AI settings",
@@ -735,7 +740,13 @@
     "deny": "Decline",
     "working": "One moment…",
     "invalid": "This connection request is invalid or has expired. Start the connection again in your AI chat.",
-    "redirecting": "Taking you back to your AI chat…"
+    "redirecting": "Taking you back to your AI chat…",
+    "account_title": "This account will be connected",
+    "address": "Connector address",
+    "others": "Connect another account?",
+    "switch": "Connect this one instead",
+    "other_company": "This account belongs to another address. In your AI chat, connect it with this address: {url}",
+    "add_account": "Sign in with another account"
   },
   "domainbar": {
     "pending_admin": "Your domain {domain} is not connected yet: email is sent and received only once the DNS records are correct.",

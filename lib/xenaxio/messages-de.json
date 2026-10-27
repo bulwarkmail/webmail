@@ -596,7 +596,12 @@
     "token": "Token",
     "claude_code": "Befehl für Claude Code",
     "json": "Einstellungen für andere Programme (JSON)",
-    "done": "Fertig"
+    "done": "Fertig",
+    "url_shared": "Allgemeine Adresse (funktioniert ebenfalls)",
+    "several_title": "Mehrere Konten in einem Claude",
+    "several_text": "Claude nimmt jede Adresse nur einmal an. Jede Firma hat ihre eigene Adresse (oben). Für ein zweites Konto derselben Firma hängen Sie einen Namen an, zum Beispiel:",
+    "several_hint": "Beim Verbinden melden Sie sich mit dem Konto an, das Claude nutzen soll. Claude erfährt, welches Konto hinter welchem Konnektor steht.",
+    "address": "Adresse: {address}"
   },
   "aiadmin": {
     "title": "KI-Einstellungen",
@@ -735,7 +740,13 @@
     "deny": "Ablehnen",
     "working": "Einen Moment…",
     "invalid": "Diese Verbindungsanfrage ist ungültig oder abgelaufen. Starten Sie die Verbindung in Ihrem KI-Chat neu.",
-    "redirecting": "Sie werden zurück zu Ihrem KI-Chat geleitet…"
+    "redirecting": "Sie werden zurück zu Ihrem KI-Chat geleitet…",
+    "account_title": "Verbunden wird dieses Konto",
+    "address": "Adresse des Konnektors",
+    "others": "Ein anderes Konto verbinden?",
+    "switch": "Stattdessen verbinden",
+    "other_company": "Dieses Konto gehört zu einer anderen Adresse. Verbinden Sie es in Ihrem KI-Chat mit dieser Adresse: {url}",
+    "add_account": "Mit einem anderen Konto anmelden"
   },
   "domainbar": {
     "pending_admin": "Ihre Domain {domain} ist noch nicht verbunden: E-Mails werden erst gesendet und empfangen, wenn die DNS-Einträge stimmen.",

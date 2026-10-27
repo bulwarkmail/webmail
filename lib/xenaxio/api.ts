@@ -413,6 +413,8 @@ export interface McpTokenInfo {
   createdAt: string;
   expiresAt: string;
   lastUsedAt: string | null;
+  /** Step 51: the address an AI chat connected to; null for a token made by hand. */
+  address?: string | null;
 }
 
 /** Step 15: what happened to one recipient of a sent message. */
@@ -524,12 +526,13 @@ export const xenaxio = {
   resumeSchedule: (id: string) => request<{ schedule: ScheduleInfo }>("POST", `/api/ai/schedules/${encodeURIComponent(id)}/resume`),
   runSchedule: (id: string) => request<{ started: true; conversationId: string }>("POST", `/api/ai/schedules/${encodeURIComponent(id)}/run`),
   deleteSchedule: (id: string) => request<{ ok: true }>("DELETE", `/api/ai/schedules/${encodeURIComponent(id)}`),
-  mcpTokens: () => request<{ mcpUrl: string; enabled: boolean; tokens: McpTokenInfo[] }>("GET", "/api/me/mcp-tokens"),
+  /** Step 51: `mcpUrl` is the company's own address; `sharedMcpUrl` the shared one. */
+  mcpTokens: () => request<{ mcpUrl: string; sharedMcpUrl?: string; enabled: boolean; tokens: McpTokenInfo[] }>("GET", "/api/me/mcp-tokens"),
   createMcpToken: (name: string, days: number) => request<{ token: string; mcpUrl: string; info: McpTokenInfo }>("POST", "/api/me/mcp-tokens", { name, days }),
   revokeMcpToken: (id: string) => request<{ ok: true }>("DELETE", `/api/me/mcp-tokens/${encodeURIComponent(id)}`),
   /** Step 9: consent screen for an AI chat connecting by OAuth; `query` is the authorization request. */
   oauthRequest: (query: string) =>
-    request<{ clientName: string; redirectHost: string; loopback: boolean }>("GET", `/api/oauth/authorize/info?${query.replace(/^\?/, "")}`),
+    request<{ clientName: string; redirectHost: string; loopback: boolean; address?: string }>("GET", `/api/oauth/authorize/info?${query.replace(/^\?/, "")}`),
   oauthDecision: (query: string, approve: boolean) => request<{ redirect: string }>("POST", "/api/oauth/authorize/decision", { query, approve }),
   /** Step 29: `add` keeps the accounts signed in here; `url` says where the added one opens. */
   login: (email: string, password: string, locale?: string, add?: { next: string }) =>
