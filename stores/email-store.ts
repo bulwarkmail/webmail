@@ -33,6 +33,7 @@ import { useMessageListTabsStore } from "@/stores/message-list-tabs-store";
 import { SendCancelledCleanupError } from "@/lib/send-failure-message";
 import type { StorageQuota } from "@/lib/quota";
 import { isArchiveActionEnabled } from "@/lib/archive-gate";
+import { createCrossTabRefresh } from "@/lib/cross-tab-refresh";
 import {
   READ_FILTER, UNREAD_FILTER, UNREAD_SECTION_SIZE, andFilters, isUnreadFirstView, mergeUnreadSection,
   sectionFromUnreadRows, unreadSectionRowCount, withoutReached, type UnreadSection,
@@ -741,6 +742,31 @@ function coalesceRefresh(client: IJMAPClient, key: string, run: () => Promise<vo
   })();
   registry.set(key, entry);
   return entry.promise;
+}
+
+// A push re-counts the sidebar tag badges, which is the costliest refresh it
+// sets off (two queries per tag). Every open tab gets the same push, so the
+// tabs on one login take turns and share the counts (lib/cross-tab-refresh).
+const tagCountsAcrossTabs = createCrossTabRefresh<EmailStore['tagCounts']>('bulwark:tag-counts');
+
+function refreshTagCountsAfterPush(client: IJMAPClient, change: StateChange): Promise<void> {
+  const counted = resolveActionClient(client);
+  const key = `${counted.getServerUrl?.() ?? ''}|${counted.getAccountId()}`;
+  // Tabs that saw the same push for the same tags may share one result.
+  const pushed = Object.entries(change.changed).flatMap(([id, c]) => (c?.Email ? [`${id}=${c.Email}`] : [])).sort();
+  const tagIds = useSettingsStore.getState().emailKeywords.map((k) => k.id).sort();
+  return tagCountsAcrossTabs(
+    key,
+    JSON.stringify([pushed, tagIds]),
+    async () => {
+      const before = useEmailStore.getState().tagCounts;
+      await useEmailStore.getState().fetchTagCounts(client);
+      const after = useEmailStore.getState().tagCounts;
+      // A failed fetch leaves the old counts, which are not worth sharing.
+      return after === before ? undefined : after;
+    },
+    (tagCounts) => useEmailStore.setState({ tagCounts }),
+  ).catch((error) => console.error('Failed to fetch tag counts:', error));
 }
 
 /** See EmailStore.listHold. */
@@ -6324,7 +6350,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
           await get().refreshCurrentMailbox(client);
         }
         if (anyEmailChanged) {
-          get().fetchTagCounts(client);
+          void refreshTagCountsAfterPush(client, change);
         }
       }
 
