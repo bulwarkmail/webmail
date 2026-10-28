@@ -755,7 +755,8 @@ function mvSenderDate(date: Date | string, timeFormat: '12h' | '24h'): string {
  * snippet. Clicking it unfolds the message in place.
  */
 function MvConversationCard({ email, onOpen, timeFormat, compact }: { email: Email; onOpen?: (email: Email) => void; timeFormat: '12h' | '24h'; compact?: boolean }) {
-  const sender = email.from?.[0];
+  const primaryIdentity = useIdentityStore((s) => s.identities[0]);
+  const sender = email.from?.[0] || primaryIdentity;
   const unread = !email.keywords?.$seen;
   return (
     <button
@@ -848,7 +849,8 @@ export function MvExpandedConversationCard({
 }) {
   const t = useTranslations('email_viewer');
   const externalContent = useConversationExternalContent();
-  const sender = email.from?.[0];
+  const primaryIdentity = useIdentityStore((s) => s.identities[0]);
+  const sender = email.from?.[0] || primaryIdentity;
   const hasBody = !!email.bodyValues;
   const [showDetails, setShowDetails] = useState(false);
   const loadRequested = useRef(false);
@@ -4013,7 +4015,14 @@ export function EmailViewer({
     );
   }
 
-  const sender = email.from?.[0];
+  const isSentOrDraft = currentMailboxRole === 'sent' || currentMailboxRole === 'drafts';
+  const fallbackSender = isSentOrDraft
+    ? {
+        name: currentUserName || identities?.[0]?.name,
+        email: currentUserEmail || identities?.[0]?.email,
+      }
+    : undefined;
+  const sender = email.from?.[0] || (fallbackSender?.email ? fallbackSender : undefined);
   const senderVerification = getSenderVerification(email.authenticationResults, sender?.email);
   const senderVerificationLabel = senderVerification?.status === 'failed'
     ? t('sender_check.failed_label')
