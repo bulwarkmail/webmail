@@ -13,7 +13,7 @@ import { checkDayLabels, setDayLabels } from './day-labels';
 import { refreshRowBadges } from './row-badges';
 import { checkListFilters, setPluginListFilters } from './list-filters';
 import { checkPages, setPluginPages } from './pages';
-import { toast as appToast } from '@/stores/toast-store';
+import { dismissPluginToast, showPluginProgressToast, showPluginToast } from './host-api-toasts';
 import { useAuthStore } from '@/stores/auth-store';
 import { useAccountStore } from '@/stores/account-store';
 import { claimLegacyPluginStorage, pluginStoragePrefix } from './storage-scope';
@@ -112,6 +112,8 @@ export const PERM_PER_METHOD: Readonly<Record<string, Permission | null>> = {
   'toast.error': null,
   'toast.info': null,
   'toast.warning': null,
+  'toast.progress': null,
+  'toast.dismiss': null,
   // http
   'http.post': 'http:post',
   'http.fetch': 'http:fetch',
@@ -1935,30 +1937,6 @@ async function adminDelete(pluginId: string, key: string): Promise<void> {
   }));
 }
 
-// ─── Toasts ──────────────────────────────────────────────────
-
-const MAX_TOAST_LENGTH = 300;
-const TOASTS_PER_TEN_SECONDS = 5;
-const recentToasts = new Map<string, number[]>();
-
-function toastText(value: unknown): string {
-  const text = String(value ?? '');
-  return text.length > MAX_TOAST_LENGTH ? text.slice(0, MAX_TOAST_LENGTH - 1) + '…' : text;
-}
-
-/** A plugin may show a few toasts; past that they are dropped, not queued. */
-function mayToast(pluginId: string): boolean {
-  const now = Date.now();
-  const recent = (recentToasts.get(pluginId) ?? []).filter((t) => now - t < 10_000);
-  if (recent.length >= TOASTS_PER_TEN_SECONDS) {
-    recentToasts.set(pluginId, recent);
-    return false;
-  }
-  recent.push(now);
-  recentToasts.set(pluginId, recent);
-  return true;
-}
-
 // ─── Dispatcher ──────────────────────────────────────────────
 
 /** Resolves an api-request method against the per-plugin permissions. */
@@ -1966,7 +1944,7 @@ export async function dispatchApiCall(
   plugin: InstalledPlugin,
   method: string,
   args: unknown[],
-  opts?: { privileged?: boolean; sink?: StreamSink },
+  opts?: { privileged?: boolean; sink?: StreamSink; toastSignal?: AbortSignal },
 ): Promise<unknown> {
   // Tier gate: privileged-only methods are refused for untrusted (null-origin)
   // instances even if the permission is somehow present. Defence-in-depth on
@@ -2016,10 +1994,12 @@ export async function dispatchApiCall(
     case 'storage.remove': storageRemove(plugin.id, args[0] as string); return undefined;
     case 'storage.keys': return storageKeys(plugin.id);
 
-    case 'toast.success': if (mayToast(plugin.id)) appToast.success(toastText(args[0])); return undefined;
-    case 'toast.error':   if (mayToast(plugin.id)) appToast.error(toastText(args[0])); return undefined;
-    case 'toast.info':    if (mayToast(plugin.id)) appToast.info(toastText(args[0])); return undefined;
-    case 'toast.warning': if (mayToast(plugin.id)) appToast.warning(toastText(args[0])); return undefined;
+    case 'toast.success': showPluginToast(plugin.id, 'success', args[0]); return undefined;
+    case 'toast.error': showPluginToast(plugin.id, 'error', args[0]); return undefined;
+    case 'toast.info': showPluginToast(plugin.id, 'info', args[0]); return undefined;
+    case 'toast.warning': showPluginToast(plugin.id, 'warning', args[0]); return undefined;
+    case 'toast.progress': return showPluginProgressToast(plugin.id, args[0], opts?.toastSignal);
+    case 'toast.dismiss': dismissPluginToast(plugin.id, args[0], opts?.toastSignal); return undefined;
 
     case 'http.post':  return doHttpPost(plugin, args[0] as string, args[1], args[2] as PluginHttpPostOptions | undefined);
     case 'http.fetch': return doHttpFetch(plugin, args[0] as string, args[1] as PluginFetchInit | undefined);
