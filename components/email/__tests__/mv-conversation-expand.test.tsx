@@ -140,6 +140,54 @@ describe('Mountain View conversation folding (#1222)', () => {
     expect(foldedIds(container)).toContain('m1');
   });
 
+  it('replies to all from the selected header and keeps the bottom action', () => {
+    const open = withBody(mail(2), 'Open body');
+    const onReply = vi.fn();
+    const onReplyAll = vi.fn();
+    const { container } = renderViewer([mail(1), open], open, { onReply, onReplyAll });
+    const header = container.querySelector('[data-mv-open-header]')!;
+    const actions = header.querySelector('[data-mv-sender-actions]')!;
+    const buttons = actions.querySelectorAll('button');
+    expect(buttons[1]).toHaveAttribute('aria-label', 'reply');
+    expect(buttons[2]).toHaveAttribute('aria-label', 'reply_all');
+    fireEvent.click(buttons[2]);
+    expect(onReplyAll).toHaveBeenCalledTimes(1);
+    expect(onReply).not.toHaveBeenCalled();
+    expect(container.querySelector('[data-mv-open-folded]')).toBeNull();
+    expect(container.querySelector('[data-mv-reply-row]')).not.toBeNull();
+  });
+
+  it('replies to all from the clicked sibling without folding it or targeting the selected message', () => {
+    const first = withBody(mail(1, { to: [{ email: 'team@example.com' }], keywords: {} }), 'First body');
+    const open = withBody(mail(2), 'Open body');
+    const selectedReplyAll = vi.fn();
+    const siblingReplyAll = vi.fn();
+    const { container } = renderViewer([first, open], open, {
+      onReplyAll: selectedReplyAll,
+      onReplyAllConversationEmail: siblingReplyAll,
+    });
+    const header = container.querySelector('[data-mv-conversation-expanded] [data-mv-conversation-header]')!;
+    fireEvent.click(header.querySelector('button[aria-label="reply_all"]')!);
+    expect(siblingReplyAll).toHaveBeenCalledWith(first);
+    expect(selectedReplyAll).not.toHaveBeenCalled();
+    expect(expandedIds(container)).toEqual(['m1']);
+  });
+
+  it.each([{ keywords: { $draft: true } }, { isScheduled: true }])('does not add a selected-header reply-all action for %o', (flags) => {
+    const open = withBody(mail(2, flags), 'Open body');
+    const { container } = renderViewer([mail(1), open], open, { onReplyAll: vi.fn() });
+    expect(container.querySelector('[data-mv-sender-actions] button[aria-label="reply_all"]')).toBeNull();
+  });
+
+  it.each([{ keywords: { $draft: true } }, { isScheduled: true }])('does not add a sibling-header reply-all action for %o', (flags) => {
+    const first = withBody(mail(1, { ...flags, keywords: { ...flags.keywords, $seen: true } }), 'First body');
+    const open = withBody(mail(2), 'Open body');
+    const { container } = renderViewer([first, open], open, { onReplyAllConversationEmail: vi.fn() });
+    fireEvent.click(screen.getByText('Sender 1'));
+    expect(expandedIds(container)).toEqual(['m1']);
+    expect(container.querySelector('[data-mv-conversation-expanded] button[aria-label="reply_all"]')).toBeNull();
+  });
+
   it('folds the open message from its sender line and unfolds it again', () => {
     const open = withBody(mail(2), 'Open body');
     const conversation = [mail(1), open];
