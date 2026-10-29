@@ -1,7 +1,9 @@
-import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent, act, waitFor, cleanup } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { Email, Mailbox } from '@/lib/jmap/types';
 import { emailHooks, clearAllHooks } from '@/lib/plugin-hooks';
+import { composerHandle } from '@/lib/plugin-sandbox/composer-registry';
+import { resetActions, setActionDispatcher, setPluginActions } from '@/lib/plugin-sandbox/actions';
 
 // mail-read hooks fired by the reading pane: onEmailContentRender once the
 // body is on screen and onThreadExpand for the conversation cards. (The link
@@ -45,6 +47,70 @@ const viewer = (email: Email, extra: Record<string, unknown> = {}) => (
 );
 
 beforeEach(() => clearAllHooks());
+afterEach(() => { cleanup(); act(() => { resetActions(); setActionDispatcher(null); }); });
+
+/** Obtain the quick-reply handle through a generic plugin action click.
+ * 범용 플러그인 작업 클릭으로 간단 답장의 핸들을 얻습니다. */
+async function quickComposer() {
+  const clicks: Record<string, unknown>[] = [];
+  const send = vi.fn();
+  setActionDispatcher(async (_plugin, _surface, _action, context) => { clicks.push(context); });
+  setPluginActions('text-tools', 'Text tools', 'composer-toolbar-actions', [{ id: 'format', label: 'Format text' }]);
+  const view = render(viewer({ ...textEmail(), replyTo: [] }, { onQuickReply: send }));
+  const input = await screen.findByRole('textbox') as HTMLTextAreaElement;
+  fireEvent.change(input, { target: { value: 'First second third' } });
+  const button = await screen.findByRole('button', { name: 'Format text' });
+  expect(button).not.toHaveClass('hidden');
+  fireEvent.click(button);
+  await waitFor(() => expect(clicks).toHaveLength(1));
+  const id = clicks[0].composerId as string;
+  return { input, handle: composerHandle(id)!, id, view, send, clicks };
+}
+
+describe('generic quick-reply composer actions', () => {
+  it('provides the selected composer and unregisters it when the viewer closes', async () => {
+    const { input, handle, id, view, send } = await quickComposer();
+    expect(handle.readBody().text).toBe('First second third');
+    expect(handle.readMetadata?.()).toMatchObject({ subject: 'Hello', to: ['alice@example.com'], attachments: [] });
+    act(() => { expect(handle.replaceBody('', 'Formatted text')).toBe(true); });
+    expect(input).toHaveValue('Formatted text');
+    expect(send).not.toHaveBeenCalled();
+    view.unmount();
+    expect(composerHandle(id)).toBeNull();
+  });
+
+  it('inserts below a selection without removing the selected text', async () => {
+    const { input, handle } = await quickComposer();
+    input.setSelectionRange(6, 12);
+    act(() => { expect(handle.replaceSelection('', 'Inserted', { below: true })).toBe(true); });
+    expect(input).toHaveValue('First second\n\nInserted third');
+  });
+
+  it('replaces only the selection when below is false', async () => {
+    const { input, handle } = await quickComposer();
+    input.setSelectionRange(6, 12);
+    act(() => { expect(handle.replaceSelection('', 'replacement', { below: false })).toBe(true); });
+    expect(input).toHaveValue('First replacement third');
+  });
+
+  it('unregisters the handle when quick reply is hidden while loading', async () => {
+    const { id, view } = await quickComposer();
+    view.rerender(viewer(textEmail(), { isLoading: true }));
+    expect(screen.queryByRole('textbox')).toBeNull();
+    expect(composerHandle(id)).toBeNull();
+  });
+
+  it('gives a new message its own capability instead of reusing the previous id', async () => {
+    const { id, view, clicks } = await quickComposer();
+    view.rerender(viewer(textEmail('e2')));
+    expect(composerHandle(id)).toBeNull();
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'New draft' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Format text' }));
+    await waitFor(() => expect(clicks).toHaveLength(2));
+    expect(clicks[1].composerId).not.toBe(id);
+    expect(composerHandle(clicks[1].composerId)).not.toBeNull();
+  });
+});
 
 describe('onEmailContentRender', () => {
   it('fires once the body is on screen, once per message', async () => {

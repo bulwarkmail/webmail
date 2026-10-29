@@ -176,8 +176,10 @@ interface PluginItemsProps {
  * no room next to the app's own buttons, Discard and Send, so the buttons
  * are hidden and the same actions are listed in the Options menu instead
  * (ComposerPluginMenuItems with `onlyWhenNarrow`).
+ * `alwaysVisible` is for a wrapping toolbar without an Options fallback.
+ * Options 대체 메뉴가 없는 줄바꿈 툴바는 `alwaysVisible`로 작업을 표시합니다.
  */
-export function ComposerPluginToolbarButtons({ surface, context }: { surface: "composer-toolbar-actions"; context: () => Record<string, unknown> }) {
+export function ComposerPluginToolbarButtons({ surface, context, alwaysVisible = false }: { surface: "composer-toolbar-actions"; context: () => Record<string, unknown>; alwaysVisible?: boolean }) {
   const actions = usePluginActions(surface);
   if (actions.length === 0) return null;
   return (
@@ -190,15 +192,15 @@ export function ComposerPluginToolbarButtons({ surface, context }: { surface: "c
             key={`${action.pluginId}:${action.id}`}
             type="button"
             variant="ghost"
-            className={cn("hidden @[44rem]/composer-bar:inline-flex h-9 gap-1.5 px-2 sm:px-2.5", action.danger && "text-destructive")}
+            className={cn("h-9 gap-1.5 px-2 sm:px-2.5", alwaysVisible && "max-w-full", !alwaysVisible && "hidden @[44rem]/composer-bar:inline-flex", action.danger && "text-destructive")}
             title={tip}
             aria-label={action.label}
             aria-keyshortcuts={action.shortcut}
             data-plugin-action={`${action.pluginId}:${action.id}`}
             onClick={() => { void runAction(action, surface, context()); }}
           >
-            <Icon className="w-4 h-4" />
-            <span className="text-sm">{action.label}</span>
+            <Icon className="w-4 h-4 shrink-0" />
+            <span className={cn("text-sm", alwaysVisible && "truncate")}>{action.label}</span>
           </Button>
         );
       })}
