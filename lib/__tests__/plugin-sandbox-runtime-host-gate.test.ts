@@ -128,6 +128,26 @@ describe('plugin sandbox runtime host gate (GHSA-96cx-gx36-3g79)', () => {
     expect(marker.__sandboxBundleRan).toBe(HOST_ORIGIN);
   });
 
+  it('forwards composer reads and the conditional edit revision through RPC', async () => {
+    framed = true;
+    await mountRuntime();
+    const message = initMessage();
+    message.payload.code = 'module.exports = { activate: async (api) => { const draft = await api.composer.getSnapshot("composer"); await api.composer.readAttachment("composer", "attachment"); await api.composer.replaceBody("composer", { text: "Edited" }, { expectedRevision: draft.revision }); } };';
+    post(hostWindow, HOST_ORIGIN, message);
+    await flush();
+    const requests = () => hostWindow.postMessage.mock.calls.map(([msg]) => msg).filter((msg) => msg.type === 'api-request');
+    expect(requests()[0]).toMatchObject({ method: 'composer.getSnapshot', args: ['composer'] });
+    post(hostWindow, HOST_ORIGIN, { type: 'api-response', id: requests()[0].id, ok: true, result: { revision: 'revision-one' } });
+    await flush();
+    expect(requests()[1]).toMatchObject({ method: 'composer.readAttachment', args: ['composer', 'attachment'] });
+    post(hostWindow, HOST_ORIGIN, { type: 'api-response', id: requests()[1].id, ok: true, result: { data: new ArrayBuffer(1) } });
+    await flush();
+    expect(requests()[2]).toMatchObject({ method: 'composer.replaceBody', args: ['composer', { text: 'Edited' }, { expectedRevision: 'revision-one' }] });
+    post(hostWindow, HOST_ORIGIN, { type: 'api-response', id: requests()[2].id, ok: true, result: true });
+    await flush();
+    expect(postedTypes().some(([type]) => type === 'init-done')).toBe(true);
+  });
+
   it('boots the bundle for the framing window on its own origin and reports back to it', async () => {
     framed = true;
     await mountRuntime();

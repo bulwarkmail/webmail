@@ -1165,6 +1165,28 @@ export interface PluginAttachmentUpload {
   size: number;
 }
 
+/** Own text and metadata of one open composer, with an opaque edit revision.
+ * 열린 작성창 하나의 본문·메타데이터와 조건부 편집용 불투명 리비전입니다. */
+export type ComposerSnapshot = {
+  revision: string;
+  subject: string;
+  text: string;
+  to: string[];
+  cc: string[];
+  bcc: string[];
+  attachments: { id: string; name: string; type: string; size: number }[];
+  pending: boolean;
+};
+
+/** Bytes of a file still attached to the selected composer.
+ * 선택한 작성창에 계속 첨부되어 있는 파일의 바이트입니다. */
+export type ComposerAttachmentData = {
+  name: string;
+  type: string;
+  size: number;
+  data: ArrayBuffer;
+};
+
 /**
  * Initial value passed to the onAttachmentPreview transform hook. A handler
  * may return a different `previewUrl` (e.g. a proxied/sanitised URL) or a
@@ -1340,7 +1362,7 @@ export const ALL_PERMISSIONS = [
   // Open the composer filled in (api.compose.open). Low risk: the user still
   // has to press Send.
   'compose:open',
-  // Read the message being written (api.composer.getBody/getSelection), in
+  // Read the message being written (api.composer.getBody/getSelection/getSnapshot), in
   // a composer that handed the plugin its id.
   'compose:read',
   // Change the message being written (api.composer.replaceSelection/replaceBody).

@@ -44,6 +44,7 @@ import { ComposerPluginMenuItems, ComposerPluginToolbarButtons, ComposerToolbarM
 import { ComposerToolbarMenuRadioItem } from "@/components/email/composer-toolbar-menu";
 import type { MessagePriority } from "@/lib/message-priority";
 import { registerComposer } from "@/lib/plugin-sandbox/composer-registry";
+import { MAX_PLUGIN_FETCH_BYTES } from "@/lib/plugin-sandbox/host-api-input";
 import { plainOwnRange, readOwnContent, readSelection as readEditorSelection, replaceOwnContent, replaceSelection as replaceEditorSelection, replaceTextareaRange, textToEditorHtml, type OwnTextOptions } from "@/lib/plugin-sandbox/composer-edit";
 import { actionsFor, runAction } from "@/lib/plugin-sandbox/actions";
 import { matchesCombo } from "@/lib/plugin-sandbox/shortcuts";
@@ -2874,9 +2875,42 @@ export function EmailComposer({
   };
   const pluginAttachRef = useRef(handlePluginAttachmentAdd);
   pluginAttachRef.current = handlePluginAttachmentAdd;
+  const pluginAttachmentIdsRef = useRef(new WeakMap<ComposerAttachment, string>());
+  // Read live draft data without re-registering the composer on every edit.
+  // 매번 작성창을 재등록하지 않고 최신 초안 데이터를 읽습니다.
+  const pluginData = {
+    readMetadata: () => {
+      const draft = draftSnapshotRef.current();
+      return {
+        subject: draft.subject, to: draft.to, cc: draft.cc, bcc: draft.bcc,
+        accountKey: composerAccountId ?? '', identityId: draft.identityId,
+        pending: attachmentsRef.current.some(att => att.uploading || att.error || !att.blobId),
+        attachments: attachmentsRef.current.flatMap(att => {
+          if (!att.blobId || att.uploading || att.error) return [];
+          const id = pluginAttachmentIdsRef.current.get(att) ?? generateUUID();
+          pluginAttachmentIdsRef.current.set(att, id);
+          return [{ id, name: att.name, type: att.type || 'application/octet-stream', size: att.size }];
+        }),
+      };
+    },
+    readAttachment: async (attachmentId: string) => {
+      const file = attachmentsRef.current.find(att => pluginAttachmentIdsRef.current.get(att) === attachmentId && !att.uploading && !att.error);
+      if (!file?.blobId) throw new Error('attachment_unavailable');
+      let owner = composerClient;
+      if (file.sourceAccountId && file.sourceAccountId !== composerAccountId) owner = useAuthStore.getState().getClientForAccount(file.sourceAccountId) ?? null;
+      if (!owner) throw new Error('attachment_unavailable');
+      const blob = await owner.fetchBlob(file.blobId, file.name, file.type);
+      if (blob.size > MAX_PLUGIN_FETCH_BYTES) throw new Error('composer.readAttachment: attachment exceeds 25 MiB');
+      return { name: file.name, type: file.type || blob.type, size: blob.size, data: await blob.arrayBuffer() };
+    },
+  };
+  const pluginDataRef = useRef(pluginData);
+  pluginDataRef.current = pluginData;
   useEffect(() => {
     const plainRange = (value: string) => plainOwnRange(value, pluginEditOptsRef.current);
     const { id, unregister } = registerComposer({
+      readMetadata: () => pluginDataRef.current.readMetadata(),
+      readAttachment: (attachmentId) => pluginDataRef.current.readAttachment(attachmentId),
       readBody: () => {
         if (plainTextModeRef.current) {
           const value = bodyRef.current?.value ?? '';

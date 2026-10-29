@@ -62,7 +62,7 @@ import { doAccountDataGet, doAccountDataSet, doUserFindPeople, doUserGetMailAcco
 import { setSectionTitle } from './section-titles';
 import { requestPanel } from './panel-requests';
 import { requestPageNavigation } from './page-navigation';
-import { doComposerAttach, doComposerGetBody, doComposerGetSelection, doComposerReplaceBody, doComposerReplaceSelection } from './host-api-composer';
+import { doComposerAttach, doComposerGetBody, doComposerGetSelection, doComposerGetSnapshot, doComposerReadAttachment, doComposerReplaceBody, doComposerReplaceSelection } from './host-api-composer';
 import { pluginAllowed, wkdAllowed } from '../outgoing-hosts';
 
 /**
@@ -298,6 +298,8 @@ export const PERM_PER_METHOD: Readonly<Record<string, Permission | null>> = {
   'notifications.show': 'ui:notifications',
   // The message being written, in a composer that handed the plugin its id.
   'composer.getBody': 'compose:read',
+  'composer.getSnapshot': 'compose:read',
+  'composer.readAttachment': 'email:blob-read',
   'composer.getSelection': 'compose:read',
   'composer.replaceSelection': 'compose:write',
   'composer.replaceBody': 'compose:write',
@@ -2308,9 +2310,11 @@ export async function dispatchApiCall(
     case 'notifications.show': return doNotificationsShow(plugin, args[0]);
 
     case 'composer.getBody': return doComposerGetBody(plugin, args[0]);
+    case 'composer.getSnapshot': return doComposerGetSnapshot(plugin, args[0]);
+    case 'composer.readAttachment': return doComposerReadAttachment(plugin, args[0], args[1]);
     case 'composer.getSelection': return doComposerGetSelection(plugin, args[0]);
     case 'composer.replaceSelection': return doComposerReplaceSelection(plugin, args[0], args[1], args[2]);
-    case 'composer.replaceBody': return doComposerReplaceBody(plugin, args[0], args[1]);
+    case 'composer.replaceBody': return doComposerReplaceBody(plugin, args[0], args[1], args[2]);
     case 'composer.attach': return doComposerAttach(plugin, args[0], args[1]);
 
     default:
