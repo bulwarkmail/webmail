@@ -113,6 +113,7 @@
     "verify": "Vérifier"
   },
   "sidebar": {
+    "sign_in_again": "Se reconnecter",
     "close": "Fermer",
     "compose": "Composer",
     "compose_hint": "Composer (c)",

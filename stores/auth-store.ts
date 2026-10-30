@@ -1305,6 +1305,27 @@ function forgetCalendarSubscriptions(client: IJMAPClient): void {
   }
 }
 
+/** End a failed login's session without forgetting its account entry.
+ * 복원 실패한 로그인 세션을 종료하되 계정 항목은 잊지 않습니다. */
+function requireAccountSignIn(accountId: string): void {
+  const accountStore = useAccountStore.getState();
+  const account = accountStore.getAccountById(accountId);
+  if (!account) return;
+  void clearSlotCredentials(account.cookieSlot, account.authMode === 'oauth');
+  clearRefreshTimer(accountId);
+  const client = clients.get(accountId);
+  if (client) {
+    forgetCalendarSubscriptions(client);
+    try { client.disconnect(); } catch { /* cleanup must still remove session state */ }
+  }
+  clients.delete(accountId);
+  evictAccount(accountId);
+  forgetAccountRows(accountId, useAuthStore.getState().client);
+  accountStore.requireSignIn(accountId);
+  forgetPrincipals(accountId);
+  clearPluginStorageForAccount(accountId);
+}
+
 function performFullLogout(set: (state: Partial<AuthState>) => void): void {
   useSettingsStore.getState().disableSync();
   // With settings sync on, the local settings and templates are a copy of the
@@ -1343,7 +1364,13 @@ function performFullLogout(set: (state: Partial<AuthState>) => void): void {
   // Remove persisted state AFTER the final set() so the persist middleware
   // doesn't re-write stale values.
   try { localStorage.removeItem('auth-storage'); } catch { /* noop */ }
-  try { localStorage.removeItem('account-registry'); } catch { /* noop */ }
+  // Retained entries contain no session: keep them available on the next visit.
+  // 보존된 항목에는 세션이 없으므로 다음 방문의 재로그인에 사용합니다.
+  const accountStore = useAccountStore.getState();
+  useAccountStore.setState({ activeAccountId: null });
+  if (accountStore.accounts.length === 0) {
+    try { localStorage.removeItem('account-registry'); } catch { /* noop */ }
+  }
   purgeSignedOutData();
   // Other tabs still hold the accounts' mail in memory.
   broadcastSignOut();
@@ -2165,7 +2192,7 @@ export const useAuthStore = create<AuthState>()(
                 resetRefreshBackoff(accountId ?? undefined);
                 // Only this login's refresh token was refused.
                 if (accountId && !isActive) {
-                  get().removeAccount(accountId);
+                  requireAccountSignIn(accountId);
                   return null;
                 }
                 await saveDraftsBeforeExpiry(slot);
@@ -2183,7 +2210,7 @@ export const useAuthStore = create<AuthState>()(
                 notifyParent('sso:session-expired');
                 markSessionExpired();
                 // removeAccount() on the active account would sign out as if the user asked to.
-                if (accountId && accountId !== get().activeAccountId) get().removeAccount(accountId);
+                if (accountId && accountId !== get().activeAccountId) requireAccountSignIn(accountId);
                 else {
                   await saveDraftsBeforeExpiry(slot);
                   get().logout({ endProviderSession: false });
@@ -2276,7 +2303,8 @@ export const useAuthStore = create<AuthState>()(
         if (accountId) {
           clients.delete(accountId);
           evictAccount(accountId);
-          accountStore.removeAccount(accountId);
+          if (userInitiated || wasDemoMode) accountStore.removeAccount(accountId);
+          if (!userInitiated && !wasDemoMode) accountStore.requireSignIn(accountId);
           forgetPrincipals(accountId);
           if (!wasDemoMode) clearPluginStorageForAccount(accountId);
         }
@@ -2293,7 +2321,9 @@ export const useAuthStore = create<AuthState>()(
         // Prefer an account that is signed in here: one restored from the
         // account list backup (or otherwise not connected) has no client, and
         // picking it signs out every account left.
-        const remainingAccounts = useAccountStore.getState().accounts;
+        const remainingAccounts = useAccountStore.getState().accounts.filter(
+          (entry) => entry.id !== accountId && !entry.awaitingSignIn,
+        );
         const nextAccount = wasDemoMode
           ? undefined
           : remainingAccounts.find((a) => clients.has(a.id)) ?? remainingAccounts[0];
@@ -2360,9 +2390,8 @@ export const useAuthStore = create<AuthState>()(
           }
 
           // Its restore failed - sign out fully instead.
-          // A full logout leaves no account behind: drop every remaining one
-          // and clear its slot too. Left in place, its remembered session
-          // would sign the next visitor of this browser straight back in.
+          // Clear every remaining session so the next visitor cannot resume it.
+          // Metadata alone stays available for an explicit new sign-in.
           debug.error(`Cannot restore next account ${nextAccount.id}, performing full logout`);
           for (const remaining of useAccountStore.getState().accounts) {
             droppedAccounts.push(remaining);
@@ -2370,7 +2399,7 @@ export const useAuthStore = create<AuthState>()(
             clients.get(remaining.id)?.disconnect();
             clients.delete(remaining.id);
             evictAccount(remaining.id);
-            accountStore.removeAccount(remaining.id);
+            accountStore.requireSignIn(remaining.id);
           }
         }
 
@@ -2448,12 +2477,16 @@ export const useAuthStore = create<AuthState>()(
         // Credentials are cleared before the page state - see logout().
         const endSessionUrl = await cleanup;
 
-        performFullLogout(set);
-
-        // Clear all accounts from registry
+        // Explicit sign-out forgets the list. Automatic session limits retain
+        // only metadata, after every native credential has been cleared.
         for (const account of allAccounts) {
+          if (!endProviderSession && account.serverUrl !== DEMO_SERVER_URL) {
+            accountStore.requireSignIn(account.id);
+            continue;
+          }
           accountStore.removeAccount(account.id);
         }
+        performFullLogout(set);
 
         void authHooks.onAfterLogout.emit({
           accountId: 'all'
@@ -2572,10 +2605,8 @@ export const useAuthStore = create<AuthState>()(
             return;
           }
 
-          // Cannot restore - remove the stale account and redirect to login
-          evictAccount(accountId);
-          accountStore.removeAccount(accountId);
-          void clearSlotCredentials(targetAccount.cookieSlot, targetAccount.authMode === 'oauth');
+          // A failed restore keeps the entry, but never its credentials or mail.
+          requireAccountSignIn(accountId);
 
           // Restore the previous account if still available
           if (state.activeAccountId && state.activeAccountId !== accountId) {
@@ -2761,9 +2792,9 @@ export const useAuthStore = create<AuthState>()(
           // and sync the passthrough auth context. The context write never
           // throws and doesn't depend on the connect result, so its round trip
           // overlaps the connect instead of running after it.
-          // Accounts signed in without "Remember me": a reload ends them on
-          // purpose, so it is not reported as an expired session.
-          let forgottenAccounts = 0;
+          // Ending a non-remembered session or listing a backup account is not
+          // a session-expiry error. Only a rejected restore sets that notice.
+          let expiredDuringRestore = false;
           const restoreAccount = async (account: (typeof accounts)[number]) => {
             if (clients.has(account.id)) return; // Already connected
             // Restored from the account list backup: listed until signed in.
@@ -2771,17 +2802,14 @@ export const useAuthStore = create<AuthState>()(
 
             // A password or access token login without rememberMe leaves
             // nothing to restore - the user logged in without persisting
-            // credentials. Evict silently so the login screen is shown without
-            // flagging a fake error. (Lite keeps a tab-scoped session either
+            // credentials. Keep its name without flagging a fake error.
+            // (Lite keeps a tab-scoped session either
             // way; a missing one surfaces as a 401 from fetchSlotSession below
             // and evicts too.) A password + TOTP login runs on tokens, but
             // without rememberMe it ends the same way: its refresh token goes.
             // So does a provider sign-in made with the box left unticked.
             if (!account.rememberMe && !IS_LITE) {
-              forgottenAccounts += 1;
-              evictAccount(account.id);
-              accountStore.removeAccount(account.id);
-              if (account.authMode === 'oauth') void clearSlotCredentials(account.cookieSlot, true);
+              requireAccountSignIn(account.id);
               return;
             }
 
@@ -2847,12 +2875,8 @@ export const useAuthStore = create<AuthState>()(
                 });
                 return;
               }
-              // Remove unrestorable accounts so the user is prompted to log in
-              // again rather than seeing a stale error entry forever. Its
-              // refresh token goes with it: nothing would use or revoke it.
-              evictAccount(account.id);
-              accountStore.removeAccount(account.id);
-              void clearSlotCredentials(account.cookieSlot, account.authMode === 'oauth');
+              expiredDuringRestore = true;
+              requireAccountSignIn(account.id);
             }
           };
 
@@ -2982,8 +3006,8 @@ export const useAuthStore = create<AuthState>()(
             return;
           }
 
-          if (forgottenAccounts === accounts.length) saveRedirectAfterLogin();
-          else markSessionExpired();
+          if (expiredDuringRestore) markSessionExpired();
+          if (!expiredDuringRestore) saveRedirectAfterLogin();
           set({
             isAuthenticated: false,
             isLoading: false,

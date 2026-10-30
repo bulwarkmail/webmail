@@ -113,6 +113,7 @@
     "verify": "Bekreft"
   },
   "sidebar": {
+    "sign_in_again": "Logg inn på nytt",
     "close": "Lukk",
     "compose": "Skriv",
     "compose_hint": "Skriv (c)",

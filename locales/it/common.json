@@ -113,6 +113,7 @@
     "verify": "Verifica"
   },
   "sidebar": {
+    "sign_in_again": "Accedi di nuovo",
     "close": "Chiudi",
     "compose": "Scrivi",
     "compose_hint": "Scrivi (c)",

@@ -112,6 +112,7 @@
     "verify": "אימות"
   },
   "sidebar": {
+    "sign_in_again": "התחברות מחדש",
     "unified_mailbox": "תיבת דואר מאוחדת",
     "close": "סגור",
     "compose": "כתיבה",

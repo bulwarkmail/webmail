@@ -113,6 +113,7 @@
     "verify": "Overiť"
   },
   "sidebar": {
+    "sign_in_again": "Prihlásiť sa znova",
     "unified_mailbox": "Zjednotená schránka",
     "close": "Zavrieť",
     "compose": "Napísať",

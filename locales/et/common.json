@@ -113,6 +113,7 @@
     "verify": "Kinnita"
   },
   "sidebar": {
+    "sign_in_again": "Logi uuesti sisse",
     "close": "Sulge",
     "compose": "Koosta",
     "compose_hint": "Koosta (c)",

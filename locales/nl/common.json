@@ -113,6 +113,7 @@
     "verify": "Bevestigen"
   },
   "sidebar": {
+    "sign_in_again": "Opnieuw aanmelden",
     "close": "Sluiten",
     "compose": "Nieuw bericht",
     "compose_hint": "Opstellen (c)",

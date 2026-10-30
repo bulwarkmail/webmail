@@ -113,6 +113,7 @@
     "verify": "확인"
   },
   "sidebar": {
+    "sign_in_again": "다시 로그인",
     "close": "닫기",
     "compose": "메일 쓰기",
     "compose_hint": "메일 쓰기 (c)",

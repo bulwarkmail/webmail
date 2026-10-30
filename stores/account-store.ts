@@ -57,8 +57,8 @@ export interface AccountEntry {
   /** Whether this is the default account (loaded on app start) */
   isDefault: boolean;
   /**
-   * Brought back from the account list backup and not signed in on this
-   * device yet. Kept across reloads, and opening it leads to the sign-in form.
+   * A session that could not be restored, or an account restored from backup.
+   * Keep its metadata until explicit sign-out/removal; opening it asks to sign in.
    */
   awaitingSignIn?: boolean;
 }
@@ -70,6 +70,8 @@ interface AccountState {
 
   addAccount: (entry: Omit<AccountEntry, 'id' | 'cookieSlot' | 'avatarColor'>) => string;
   removeAccount: (accountId: string) => void;
+  /** Retain account metadata without a live session. 세션 없이 계정 메타데이터를 보존합니다. */
+  requireSignIn: (accountId: string) => void;
   setActiveAccount: (accountId: string) => void;
   setDefaultAccount: (accountId: string) => void;
   getDefaultAccount: () => AccountEntry | null;
@@ -140,6 +142,20 @@ export const useAccountStore = create<AccountState>()(
         void authHooks.onAccountAdd.emit({ accountId: id });
 
         return id;
+      },
+
+      /** Drop session state while keeping the existing account and cookie slot.
+       * 기존 계정과 쿠키 슬롯을 유지하면서 세션 상태를 정리합니다. */
+      requireSignIn: (accountId) => {
+        get().updateAccount(accountId, {
+          awaitingSignIn: true,
+          isConnected: false,
+          hasError: false,
+          errorMessage: undefined,
+          rememberMe: false,
+          providerSession: false,
+        });
+        if (get().activeAccountId === accountId) set({ activeAccountId: null });
       },
 
       removeAccount: (accountId) => {

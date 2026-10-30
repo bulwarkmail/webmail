@@ -113,6 +113,7 @@
     "verify": "Verify"
   },
   "sidebar": {
+    "sign_in_again": "Sign in again",
     "close": "Close",
     "compose": "Compose",
     "compose_hint": "Compose (c)",

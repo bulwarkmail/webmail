@@ -113,6 +113,7 @@
     "verify": "驗證"
   },
   "sidebar": {
+    "sign_in_again": "重新登入",
     "close": "關閉",
     "compose": "撰寫郵件",
     "compose_hint": "撰寫郵件 (c)",

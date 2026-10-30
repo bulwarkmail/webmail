@@ -113,6 +113,7 @@
     "verify": "Ellenőrzés"
   },
   "sidebar": {
+    "sign_in_again": "Újbóli bejelentkezés",
     "close": "Bezárás",
     "compose": "Új levél",
     "compose_hint": "Új levél (c)",

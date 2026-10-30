@@ -113,6 +113,7 @@
     "verify": "Verifică"
   },
   "sidebar": {
+    "sign_in_again": "Autentifică-te din nou",
     "close": "Închide",
     "compose": "Compune",
     "compose_hint": "Compune (c)",
