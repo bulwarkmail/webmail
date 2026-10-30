@@ -113,6 +113,7 @@
     "verify": "Doğrula"
   },
   "sidebar": {
+    "sign_in_again": "Yeniden oturum aç",
     "close": "Kapat",
     "compose": "Yeni E-posta",
     "compose_hint": "Yeni E-posta (c)",

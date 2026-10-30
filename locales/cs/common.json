@@ -113,6 +113,7 @@
     "verify": "Ověřit"
   },
   "sidebar": {
+    "sign_in_again": "Přihlásit se znovu",
     "close": "Zavřít",
     "compose": "Napsat",
     "compose_hint": "Napsat (c)",

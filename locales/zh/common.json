@@ -113,6 +113,7 @@
     "verify": "验证"
   },
   "sidebar": {
+    "sign_in_again": "重新登录",
     "close": "关闭",
     "compose": "撰写邮件",
     "compose_hint": "撰写邮件 (c)",

@@ -113,6 +113,7 @@
     "verify": "Баталгаажуулах"
   },
   "sidebar": {
+    "sign_in_again": "Дахин нэвтрэх",
     "close": "Хаах",
     "compose": "Бичилэх",
     "compose_hint": "Бичих (c)",

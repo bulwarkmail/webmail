@@ -367,7 +367,7 @@ describe('auth-store in the static Lite build', () => {
     expect(useAuthStore.getState().client?.getAuthHeader()).toBe(`Basic ${btoa('alice:pw')}`);
   });
 
-  it('evicts an account whose refresh token the server rejected', async () => {
+  it('requires sign-in again for an account whose refresh token the server rejected', async () => {
     saveLiteRefreshToken(0, { serverUrl: SERVER, username: 'alice', refreshToken: 'RT-dead' }, true);
     const id = registerAccount('oauth');
     stalwartFetch({ refreshAnswer: () => jsonResponse({ error: 'invalid_grant' }, 400) });
@@ -375,7 +375,7 @@ describe('auth-store in the static Lite build', () => {
     await useAuthStore.getState().checkAuth();
 
     expect(useAuthStore.getState().isAuthenticated).toBe(false);
-    expect(useAccountStore.getState().getAccountById(id)).toBeUndefined();
+    expect(useAccountStore.getState().getAccountById(id)).toMatchObject({ awaitingSignIn: true, isConnected: false });
     expect(readLiteRefreshToken(0)).toBeNull();
   });
 

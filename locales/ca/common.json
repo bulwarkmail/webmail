@@ -113,6 +113,7 @@
     "verify": "Verifica"
   },
   "sidebar": {
+    "sign_in_again": "Torna a iniciar la sessió",
     "close": "Tanca",
     "compose": "Redacta",
     "compose_hint": "Redacta (c)",

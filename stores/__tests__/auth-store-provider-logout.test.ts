@@ -393,7 +393,8 @@ describe('signing out of several accounts', () => {
 
     expect(calls).toEqual(['DELETE /api/auth/session?all=true', 'DELETE /api/auth/token?all=true']);
     expect(replaceSpy).toHaveBeenCalledWith('/en/login');
-    expect(useAccountStore.getState().accounts).toEqual([]);
+    expect(useAccountStore.getState().accounts).toHaveLength(3);
+    expect(useAccountStore.getState().accounts.every((entry) => entry.awaitingSignIn && !entry.isConnected && !entry.rememberMe)).toBe(true);
     // The login page shows the form rather than signing straight back in.
     expect(consumeSignedOut()).toBe(true);
   });

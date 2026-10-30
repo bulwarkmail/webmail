@@ -280,8 +280,11 @@ export function AccountSwitcher({
   const unreadByAccount: Record<string, Mailbox[] | undefined> = activeAccountId
     ? { ...accountMailboxes, [activeAccountId]: ownMailboxes }
     : accountMailboxes;
-  const unreadFor = (account: AccountEntry) =>
-    mvPopover ? inboxUnread(unreadByAccount[account.id]) : undefined;
+  const unreadFor = (account: AccountEntry) => {
+    if (account.awaitingSignIn) return undefined;
+    if (mvPopover) return inboxUnread(unreadByAccount[account.id]);
+    return undefined;
+  };
   const allInboxesUnread = totalInboxUnread(
     accounts.filter((account) => account.isConnected).map((account) => account.id),
     unreadByAccount
@@ -457,6 +460,9 @@ export function AccountSwitcher({
                     <p className="text-xs text-muted-foreground truncate">
                       {toUnicodeEmail(account.email || account.username)}
                     </p>
+                    {account.awaitingSignIn && (
+                      <p className="text-xs text-primary">{t("sign_in_again")}</p>
+                    )}
                     {/* Server and connection state: Mountain View keeps the line
                         only for an account in trouble. */}
                     <div className={cn("flex items-center gap-1 mt-0.5", mvPopover && !account.hasError && "hidden")}>

@@ -91,6 +91,19 @@ describe('AccountSwitcher under Mountain View', () => {
     expect(document.querySelector('[data-mv-account-popover]')).toBeNull();
   });
 
+  it('offers sign-in again instead of cached unread counts for an unrestorable account', () => {
+    useAccountStore.setState({ accounts: [account('a'), account('b', { awaitingSignIn: true, isConnected: false })] } as never);
+    const switchAccount = vi.spyOn(useAuthStore.getState(), 'switchAccount').mockResolvedValue();
+    render(<AccountSwitcher variant="header" />);
+    openPopover();
+    const row = screen.getByTestId('account-option');
+    expect(within(row).getByText('sign_in_again')).toBeInTheDocument();
+    expect(within(row).queryByText('5')).toBeNull();
+    fireEvent.click(row);
+    expect(switchAccount).toHaveBeenCalledWith('b');
+    switchAccount.mockRestore();
+  });
+
   it('puts the unread waiting in the other account next to it', () => {
     render(<AccountSwitcher variant="header" />);
     openPopover();

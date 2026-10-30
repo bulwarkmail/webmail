@@ -113,6 +113,7 @@
     "verify": "تحقّق"
   },
   "sidebar": {
+    "sign_in_again": "تسجيل الدخول مجددًا",
     "close": "إغلاق",
     "compose": "إنشاء رسالة",
     "compose_hint": "إنشاء رسالة (c)",

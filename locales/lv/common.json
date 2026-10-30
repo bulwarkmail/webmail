@@ -113,6 +113,7 @@
     "verify": "Apstiprināt"
   },
   "sidebar": {
+    "sign_in_again": "Pierakstīties vēlreiz",
     "close": "Aizvērt",
     "compose": "Rakstīt",
     "compose_hint": "Rakstīt (c)",

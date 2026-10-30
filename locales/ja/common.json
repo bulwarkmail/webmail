@@ -113,6 +113,7 @@
     "verify": "確認"
   },
   "sidebar": {
+    "sign_in_again": "再ログイン",
     "close": "閉じる",
     "compose": "作成",
     "compose_hint": "作成 (c)",

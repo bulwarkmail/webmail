@@ -2,7 +2,7 @@ import { beforeAll, beforeEach, expect, it, vi } from 'vitest';
 import { createConfig } from '@/lib/__tests__/fixtures/config';
 
 // A reload during a server outage must keep a remembered account. Only a real
-// rejection may evict it and clear its saved credentials. (#1167)
+// rejection may clear its saved credentials and require sign-in. (#1167)
 const connectError = vi.hoisted(() => ({ current: null as (() => Error) | null }));
 
 vi.mock('@/lib/jmap/client', () => {
@@ -80,9 +80,9 @@ it.each([
   expect(credentialsCleared()).toBe(false);
 });
 
-it('signs out on a real rejection', async () => {
+it('keeps account metadata but clears credentials on a real rejection', async () => {
   connectError.current = () => new Error('Failed to get session: 401');
   await useAuthStore.getState().checkAuth();
-  expect(useAccountStore.getState().getAccountById(account.id)).toBeUndefined();
+  expect(useAccountStore.getState().getAccountById(account.id)).toMatchObject({ awaitingSignIn: true, isConnected: false, hasError: false });
   await vi.waitFor(() => expect(credentialsCleared()).toBe(true));
 });
