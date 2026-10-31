@@ -44,7 +44,7 @@ const S = (
 export const SLOT_CATALOG = {
   // ─── App ───────────────────────────────────────────────────
   'app-top-banner': S('app', 'frame', ['ui:app-top-banner'], { username: 'account:read', serverUrl: 'account:read', impersonated: 'account:read' }, 'a banner across the top of every page; `impersonated` is true when an admin opened the mailbox through an impersonation handoff'),
-  'plugin-dialog': S('dialog', 'frame', ['ui:observe'], '*', 'inside a dialog the plugin opened with api.ui.openDialog'),
+  'plugin-dialog': S('dialog', 'frame', ['ui:observe'], '*', 'inside a dialog the plugin opened with api.ui.openDialog (with `anchor: \'trigger\'` a popover beside what the user clicked)'),
   'command-palette': S('app', 'action', ['ui:commands'], {}, 'entries in the command palette (Ctrl+K)'),
 
   // ─── Navigation ────────────────────────────────────────────

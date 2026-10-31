@@ -679,8 +679,18 @@ function buildPluginApi(manifest: PluginManifest) {
        *  a multi-step form, etc.) rather than a toolbar/row-sized control.
        *  Resolves to whatever value the slot component passes to its
        *  `onResult` prop, or null if the user closes the dialog without
-       *  calling it. No timeout - it waits for the user. */
-      openDialog: (opts: { title?: string; slot: string; extraProps?: Record<string, unknown>; width?: number }) =>
+       *  calling it. No timeout - it waits for the user.
+       *
+       *  `anchor: 'trigger'` draws it as a popover next to what the user
+       *  activated last - an action button (message row, reader), the
+       *  place a menu was opened at for a menu entry, the flag whose toggle
+       *  a hook intercepted - when that was at most 2 s ago and no other
+       *  key was pressed since; else centred as without it. Meant for a
+       *  small menu of choices. The popover has a one-line header naming
+       *  the plugin, takes `width` as the dialog does and the content's
+       *  height, and closes on Escape or a click outside (null). Hosts
+       *  without it ignore the option. */
+      openDialog: (opts: { title?: string; slot: string; extraProps?: Record<string, unknown>; width?: number; anchor?: 'trigger' }) =>
         callApi('ui.openDialog', [opts], 0) as Promise<unknown>,
       /** Re-runs the onRenderEmailBody hook for the open message (e.g. after a
        *  crypto plugin unlocks a key) so its body re-renders without a reload. */
