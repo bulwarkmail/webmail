@@ -9,7 +9,8 @@ import type { NotificationSoundChoice } from '@/lib/notification-sound';
 import { EMPTY_NOTIFICATION_MUTES, normalizeNotificationMutes, type NotificationMutes } from '@/lib/notification-mutes';
 import { apiFetch } from '@/lib/browser-navigation';
 import { writePushPreferences } from '@/lib/push-preferences';
-import { settingsHooks } from '@/lib/plugin-hooks';
+import { calendarHooks, settingsHooks } from '@/lib/plugin-hooks';
+import { BIRTHDAY_CALENDAR_ID } from '@/lib/birthday-calendar';
 import { generateAccountId } from '@/lib/account-utils';
 import { subscriptionOwnerFor } from '@/lib/calendar-subscription-sync';
 import type { FolderCountMode } from '@/lib/folder-counts';
@@ -1292,6 +1293,13 @@ export const useSettingsStore = create<SettingsState>()(
           applyInterfaceLayout(value as InterfaceLayout, get().density);
         }
 
+        // Notify calendar plugins (e.g. calendar-agenda) when the virtual birthday calendar is toggled or recolored
+        if (key === 'showBirthdayCalendar' || key === 'birthdayCalendarColor') {
+          void calendarHooks.onCalendarChange.emit({
+            calendarId: BIRTHDAY_CALENDAR_ID,
+            change: key === 'showBirthdayCalendar' && !value ? 'removed' : 'updated',
+          });
+        }
       };
 
       const buildExport = (opts?: { forSync?: boolean; subscriptionOwner?: string }): string => {

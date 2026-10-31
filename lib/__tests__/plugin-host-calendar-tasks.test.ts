@@ -7,6 +7,8 @@ import { useCalendarStore } from '@/stores/calendar-store';
 import { useTaskStore } from '@/stores/task-store';
 import { useIdentityStore } from '@/stores/identity-store';
 import { useSettingsStore } from '@/stores/settings-store';
+import { useContactStore } from '@/stores/contact-store';
+import { BIRTHDAY_CALENDAR_ID, BIRTHDAY_CALENDAR_COLOR } from '@/lib/birthday-calendar';
 import { calendarHooks, taskHooks } from '../plugin-hooks';
 
 vi.mock('@/stores/toast-store', () => ({
@@ -73,7 +75,8 @@ beforeEach(() => {
     identities: [{ id: 'id1', name: 'Ann', email: 'ann@example.com' }] as never,
     preferredPrimaryId: null,
   });
-  useSettingsStore.setState({ timeZone: 'Europe/Berlin' } as never);
+  useSettingsStore.setState({ timeZone: 'Europe/Berlin', showBirthdayCalendar: false, birthdayCalendarColor: BIRTHDAY_CALENDAR_COLOR } as never);
+  useContactStore.setState({ contacts: [], contactsLoaded: true });
 });
 
 afterEach(() => {
@@ -81,6 +84,8 @@ afterEach(() => {
   useCalendarStore.setState({ calendars: [], events: [] });
   useTaskStore.setState({ tasks: [] });
   useIdentityStore.setState({ identities: [] });
+  useSettingsStore.setState({ showBirthdayCalendar: false });
+  useContactStore.setState({ contacts: [] });
   calendarHooks.onBeforeEventCreate.removePlugin('veto');
   taskHooks.onBeforeTaskDelete.removePlugin('veto');
 });
@@ -195,6 +200,70 @@ describe('api.calendar', () => {
     expect(client.deleteCalendarEvent).toHaveBeenCalledWith('e1', false, undefined);
     await expect(call(WRITE, 'calendar.deleteEvent', 'missing')).rejects.toThrow(/no event with id "missing"/);
     await expect(call(WRITE, 'calendar.updateEvent', 'e1', {})).rejects.toThrow(/patch is empty/);
+  });
+
+  it('includes the virtual birthday calendar in listCalendars when showBirthdayCalendar is enabled', async () => {
+    useSettingsStore.setState({ showBirthdayCalendar: true, birthdayCalendarColor: '#f59e0b' });
+    const cals = await call(READ, 'calendar.listCalendars') as { id: string; name: string; color: string }[];
+    expect(cals).toEqual([
+      { id: 'cal-work', name: 'Work', color: '#f00', isVisible: true, isDefault: true, isTasksOnly: false },
+      { id: 'cal-todo', name: 'To do', color: '', isVisible: true, isDefault: false, isTasksOnly: true },
+      { id: BIRTHDAY_CALENDAR_ID, name: 'Birthdays', color: '#f59e0b', isVisible: true, isDefault: false, isTasksOnly: false },
+    ]);
+  });
+
+  it('returns contact birthdays in getEvents when showBirthdayCalendar is enabled', async () => {
+    useSettingsStore.setState({ showBirthdayCalendar: true });
+    useContactStore.setState({
+      contacts: [
+        {
+          id: 'c1',
+          name: { full: 'Alice Smith' },
+          anniversaries: { b1: { kind: 'birth', date: '1990-05-15' } },
+        } as never,
+      ],
+    });
+
+    const events = await call(READ, 'calendar.getEvents', { from: '2026-05-01', to: '2026-06-01' }) as {
+      id: string; title: string; calendarId: string; isAllDay: boolean; start: string;
+    }[];
+
+    const birthday = events.find((e) => e.calendarId === BIRTHDAY_CALENDAR_ID);
+    expect(birthday).toBeDefined();
+    expect(birthday).toEqual(expect.objectContaining({
+      id: 'birthday-c1-b1-2026',
+      title: '🎂 Alice Smith (36)',
+      calendarId: BIRTHDAY_CALENDAR_ID,
+      isAllDay: true,
+      start: '2026-05-15T00:00:00',
+    }));
+
+    // Respects calendarIds filtering
+    const onlyWork = await call(READ, 'calendar.getEvents', {
+      from: '2026-05-01', to: '2026-06-01', calendarIds: ['cal-work'],
+    }) as { calendarId: string }[];
+    expect(onlyWork.some((e) => e.calendarId === BIRTHDAY_CALENDAR_ID)).toBe(false);
+
+    const onlyBirthdays = await call(READ, 'calendar.getEvents', {
+      from: '2026-05-01', to: '2026-06-01', calendarIds: [BIRTHDAY_CALENDAR_ID],
+    }) as { calendarId: string }[];
+    expect(onlyBirthdays.every((e) => e.calendarId === BIRTHDAY_CALENDAR_ID)).toBe(true);
+
+    // Can fetch a birthday event by ID
+    const single = await call(READ, 'calendar.getEvent', 'birthday-c1-b1-2026');
+    expect(single).toEqual(expect.objectContaining({
+      id: 'birthday-c1-b1-2026',
+      title: '🎂 Alice Smith (36)',
+    }));
+
+    // Birthday events cannot be mutated
+    await expect(call(WRITE, 'calendar.updateEvent', 'birthday-c1-b1-2026', { title: 'New' }))
+      .rejects.toThrow(/birthday events cannot be modified/);
+    await expect(call(WRITE, 'calendar.deleteEvent', 'birthday-c1-b1-2026'))
+      .rejects.toThrow(/birthday events cannot be modified/);
+    await expect(call(WRITE, 'calendar.createEvent', {
+      title: 'New', calendarId: BIRTHDAY_CALENDAR_ID, start: '2026-05-15T10:00', end: '2026-05-15T11:00',
+    })).rejects.toThrow(/no calendar with id "__birthday-calendar__"/);
   });
 });
 
