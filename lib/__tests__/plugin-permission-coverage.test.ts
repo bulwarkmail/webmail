@@ -67,6 +67,7 @@ describe('plugin permissions', () => {
       'calendar.createEvent': 'calendar:write',
       'tasks.list': 'tasks:read',
       'tasks.setComplete': 'tasks:write',
+      'tasks.acknowledgeAlert': 'tasks:write',
       'templates.list': 'templates:read',
       'templates.create': 'templates:write',
       'identities.update': 'identity:write',

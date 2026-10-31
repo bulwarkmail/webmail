@@ -175,6 +175,23 @@ export function taskToView(task: CalendarTask): TaskView {
     priority: task.priority ?? 0,
     calendarId: trueKeys(task.calendarIds)[0] || '',
     keywords: trueKeys(task.keywords),
+    alerts: Object.fromEntries(Object.entries(task.alerts || {}).filter(([, alert]) => alert?.trigger).map(([id, alert]) => [id, {
+      trigger: alert.trigger['@type'] === 'AbsoluteTrigger'
+        ? { at: alert.trigger.when }
+        : { offset: alert.trigger.offset, relativeTo: alert.trigger.relativeTo === 'end' ? 'due' as const : 'start' as const },
+      action: alert.action === 'email' ? 'email' as const : 'display' as const,
+      acknowledged: alert.acknowledged || null,
+    }])),
+    useDefaultAlerts: !!task.useDefaultAlerts,
+    links: Object.fromEntries(Object.entries(task.links || {}).map(([id, link]) => [id, {
+      href: link.href,
+      rel: link.rel || null,
+      title: link.title || null,
+      contentType: link.contentType || null,
+    }])),
+    relatedTo: Object.fromEntries(Object.entries(task.relatedTo || {}).map(([uid, relation]) => [uid, {
+      relation: trueKeys(relation?.relation),
+    }])),
   };
 }
 

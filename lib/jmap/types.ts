@@ -894,6 +894,7 @@ export interface CalendarTask {
   useDefaultAlerts?: boolean;
   alerts: Record<string, CalendarEventAlert> | null;
   relatedTo: Record<string, CalendarRelation> | null;
+  links?: Record<string, CalendarLink> | null;
   // Client-only, set on tasks from a shared calendar account. Their `id` and
   // `calendarIds` are namespaced `accountId:id` like shared events.
   originalId?: string;

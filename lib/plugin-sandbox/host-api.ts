@@ -46,7 +46,7 @@ import { EncryptionAtRestConfig, PublicKeyInfo, PublicKeyInput, useAccountSecuri
 import {
   doCalendarCreateEvent, doCalendarDeleteEvent, doCalendarGetEvent, doCalendarGetEvents,
   doCalendarListCalendars, doCalendarUpdateEvent, doTasksCreate, doTasksDelete, doTasksGet,
-  doTasksList, doTasksSetComplete, doTasksUpdate,
+  doTasksAcknowledgeAlert, doTasksList, doTasksSetComplete, doTasksUpdate,
 } from './host-api-calendar';
 import {
   doIdentitiesUpdate, doTemplatesCreate, doTemplatesDelete, doTemplatesGet, doTemplatesList,
@@ -270,6 +270,7 @@ export const PERM_PER_METHOD: Readonly<Record<string, Permission | null>> = {
   'tasks.create': 'tasks:write',
   'tasks.update': 'tasks:write',
   'tasks.setComplete': 'tasks:write',
+  'tasks.acknowledgeAlert': 'tasks:write',
   'tasks.delete': 'tasks:write',
   // message templates
   'templates.list': 'templates:read',
@@ -2291,6 +2292,7 @@ export async function dispatchApiCall(
     case 'tasks.create': return doTasksCreate(args[0]);
     case 'tasks.update': return doTasksUpdate(args[0], args[1]);
     case 'tasks.setComplete': return doTasksSetComplete(args[0], args[1]);
+    case 'tasks.acknowledgeAlert': return doTasksAcknowledgeAlert(args[0], args[1], args[2]);
     case 'tasks.delete': return doTasksDelete(args[0]);
 
     case 'templates.list': return doTemplatesList();
