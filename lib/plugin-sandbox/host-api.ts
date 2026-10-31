@@ -69,6 +69,8 @@ import { doAccountDataGet, doAccountDataSet, doUserFindPeople, doUserGetMailAcco
 import { setSectionTitle } from './section-titles';
 import { requestPanel } from './panel-requests';
 import { requestPageNavigation } from './page-navigation';
+import { requestCalendarView } from './calendar-navigation';
+import { requestOpenTask } from './open-task';
 import { requestOpenEmail } from './open-email';
 import { doComposerAttach, doComposerGetBody, doComposerGetSelection, doComposerGetSnapshot, doComposerReadAttachment, doComposerReplaceBody, doComposerReplaceSelection } from './host-api-composer';
 import { wkdAllowed } from '../outgoing-hosts';
@@ -254,6 +256,12 @@ export const PERM_PER_METHOD: Readonly<Record<string, Permission | null>> = {
   'ui.setPages': 'ui:app-page',
   // Move the tab to one of the plugin's own pages (never anywhere else).
   'ui.openPage': 'ui:app-page',
+  // A view of the calendar; the view's own permission is checked per call
+  // (the task view: ui:tasks or tasks:read; the others: ui:calendar-action
+  // or calendar:read).
+  'ui.openCalendar': null,
+  // A task in Bulwark's task editor; ui:tasks or tasks:read, checked per call.
+  'ui.openTask': null,
   // Opening a message shows its content, as reading it does.
   'ui.openEmail': 'email:read',
   'ui.setSectionTitle': 'ui:sidebar-widget',
@@ -2035,6 +2043,8 @@ export async function dispatchApiCall(
     case 'ui.setDayLabels': setDayLabels(plugin.id, plugin.name, checkDayLabels(args[0])); return undefined;
     case 'ui.setPages': setPluginPages(plugin.id, plugin.name, checkPages(args[0])); return undefined;
     case 'ui.openPage': return requestPageNavigation(plugin.id, args[0], args[1]);
+    case 'ui.openCalendar': return requestCalendarView(plugin, args[0]);
+    case 'ui.openTask': return requestOpenTask(plugin, args[0]);
     case 'ui.openEmail': return requestOpenEmail(plugin, args[0]);
     case 'ui.setSectionTitle': setSectionTitle(plugin.id, args[0]); return undefined;
     case 'ui.setPanel': {

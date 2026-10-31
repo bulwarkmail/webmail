@@ -106,6 +106,7 @@ export const SLOT_CATALOG = {
   // ─── Tasks ─────────────────────────────────────────────────
   'task-detail-section': S('tasks', 'frame', ['ui:tasks'], { task: 'tasks:read' }, 'a section in a task\'s details'),
   'task-list-actions': S('tasks', 'action', ['ui:tasks'], { taskIds: 'tasks:read' }, 'buttons in the task list toolbar', true),
+  'calendar-task-view': S('tasks', 'frame', ['ui:tasks'], { filter: null, calendarIds: 'tasks:read' }, 'the calendar\'s task view (Calendar › Tasks) below its toolbar, in place of Bulwark\'s task list; the toolbar (filter, new task, task-list-actions) stays; one plugin at a time, the first offering it; `filter` is the toolbar\'s filter ("all" | "pending" | "completed" | "overdue"), `calendarIds` the calendars ticked in the sidebar; `slots[\'calendar-task-view\'].fill = true` makes the frame as tall as the area below the toolbar, so the plugin scrolls inside it; api.ui.openCalendar({ view: \'tasks\' }) opens the view'),
 
   // ─── Files ─────────────────────────────────────────────────
   'file-actions': S('files', 'action', ['ui:files'], { files: 'files:read' }, 'entries in a file\'s menu and the selection toolbar'),

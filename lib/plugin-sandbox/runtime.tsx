@@ -742,6 +742,24 @@ function buildPluginApi(manifest: PluginManifest) {
       openPage: (pageId: string, path?: string) =>
         callApi('ui.openPage', [pageId, path]) as Promise<boolean>,
       /**
+       * Moves this tab to a view of the calendar: 'month', 'week', 'day',
+       * 'agenda' (needs ui:calendar-action or calendar:read) or 'tasks', the
+       * task view (needs ui:tasks or tasks:read), which a plugin offering the
+       * calendar-task-view slot draws. Resolves to false when the app could
+       * not take it (not ready yet, or the user has tasks turned off). At
+       * most 10 a minute.
+       */
+      openCalendar: (options: { view: 'month' | 'week' | 'day' | 'agenda' | 'tasks' }) =>
+        callApi('ui.openCalendar', [options]) as Promise<boolean>,
+      /**
+       * Opens one of the user's tasks (an id from tasks.list) in Bulwark's
+       * task editor, as a click on it in the calendar's task list does: for
+       * a plugin drawing the task view (calendar-task-view). Resolves to
+       * false when the calendar is not on screen or has not loaded the task.
+       * Needs ui:tasks or tasks:read; at most 20 a minute.
+       */
+      openTask: (taskId: string) => callApi('ui.openTask', [taskId]) as Promise<boolean>,
+      /**
        * Opens a message in the reader of this tab, as a click on it in the
        * list does: in place on the mail page, in an email tab in the Pro
        * shell, else the tab loads the message's link (at most 5 times a
