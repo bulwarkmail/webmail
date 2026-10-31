@@ -589,6 +589,12 @@ function buildPluginApi(manifest: PluginManifest) {
         callApi('composer.attach', [composerId, file]) as Promise<boolean>,
     },
     toast: {
+      /** Stay visible until dismissed or this frame closes; returns a frame-owned handle.
+       * 직접 닫거나 프레임이 종료될 때까지 표시하고 프레임 소유 핸들을 반환합니다. */
+      progress: (m: string) => callApi('toast.progress', [m]) as Promise<string>,
+      /** Dismiss this frame's progress handle, even after the burst limit.
+       * 알림 빈도 제한과 관계없이 현재 프레임의 진행 알림을 닫습니다. */
+      dismiss: (id: string) => callApi('toast.dismiss', [id]) as Promise<void>,
       success: (m: string) => { void callApi('toast.success', [m]); },
       error: (m: string) => { void callApi('toast.error', [m]); },
       info: (m: string) => { void callApi('toast.info', [m]); },

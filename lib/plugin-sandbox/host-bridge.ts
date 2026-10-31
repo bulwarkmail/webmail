@@ -298,6 +298,9 @@ export class SandboxInstance {
   private rejectInit!: (err: Error) => void;
   private listener: (ev: MessageEvent) => void;
   private destroyed = false;
+  /** Own notification cleanup for exactly this sandbox frame.
+   * 현재 샌드박스 프레임의 알림 정리 수명을 소유합니다. */
+  private readonly toastLifetime = new AbortController();
   /** The frame has answered init-done: its hooks and slots are in place. */
   private initialized = false;
 
@@ -487,7 +490,7 @@ export class SandboxInstance {
         const { id, method, args } = msg;
         void (async () => {
           try {
-            const result = await dispatchApiCall(this.plugin, method, args ?? [], { privileged: this.privileged, sink: this });
+            const result = await dispatchApiCall(this.plugin, method, args ?? [], { privileged: this.privileged, sink: this, toastSignal: this.toastLifetime.signal });
             this.send({ type: 'api-response', id, ok: true, result });
           } catch (err) {
             this.send({ type: 'api-response', id, ok: false, error: (err as Error).message ?? String(err) });
@@ -694,6 +697,7 @@ export class SandboxInstance {
   destroy(): void {
     if (this.destroyed) return;
     this.destroyed = true;
+    this.toastLifetime.abort();
     // Whoever waits for init (the loader, calls held back below) stops waiting.
     this.rejectInit(new Error('sandbox destroyed'));
     liveInstances.delete(this);

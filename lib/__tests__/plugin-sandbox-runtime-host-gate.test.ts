@@ -128,6 +128,24 @@ describe('plugin sandbox runtime host gate (GHSA-96cx-gx36-3g79)', () => {
     expect(marker.__sandboxBundleRan).toBe(HOST_ORIGIN);
   });
 
+  it('returns the progress handle through RPC and awaits its explicit dismissal', async () => {
+    framed = true;
+    await mountRuntime();
+    const message = initMessage();
+    message.payload.code = 'module.exports = { activate: async (api) => { const id = await api.toast.progress("Working"); await api.toast.dismiss(id); } };';
+    post(hostWindow, HOST_ORIGIN, message);
+    await flush();
+    const request = hostWindow.postMessage.mock.calls.map(([msg]) => msg).find((msg) => msg.method === 'toast.progress');
+    expect(request).toMatchObject({ type: 'api-request', args: ['Working'] });
+    post(hostWindow, HOST_ORIGIN, { type: 'api-response', id: request.id, ok: true, result: 'owned-toast' });
+    await flush();
+    const dismiss = hostWindow.postMessage.mock.calls.map(([msg]) => msg).find((msg) => msg.method === 'toast.dismiss');
+    expect(dismiss).toMatchObject({ type: 'api-request', args: ['owned-toast'] });
+    post(hostWindow, HOST_ORIGIN, { type: 'api-response', id: dismiss.id, ok: true });
+    await flush();
+    expect(postedTypes().some(([type]) => type === 'init-done')).toBe(true);
+  });
+
   it('boots the bundle for the framing window on its own origin and reports back to it', async () => {
     framed = true;
     await mountRuntime();
