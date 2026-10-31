@@ -586,6 +586,33 @@ export interface TaskInput {
   priority?: number;
   /** Defaults to the tasks calendar, else the default calendar. */
   calendarId?: string;
+  /**
+   * The task's reminders by id (1-64 of `A-Z a-z 0-9 . _ -`); a task holds
+   * at most 5. On update only the ids named change: an alert given is set
+   * (one kept with the same trigger and action stays acknowledged; a new
+   * trigger, a snooze, makes it fire again), an id given null is removed,
+   * and alerts not named are left as they are. null for the whole map
+   * removes every alert. While the task uses its calendar's default alerts
+   * (TaskView.useDefaultAlerts), any change makes the defaults the task's
+   * own under new ids; `{}` does only that.
+   */
+  alerts?: Record<string, TaskAlertInput | null> | null;
+}
+
+/**
+ * When a task's alert fires: an ISO 8601 duration from the task's due
+ * (`-PT15M` before, `PT0S` at it; `relativeTo: 'start'` counts from its
+ * start, else from its due), at most a year either way; or an instant in
+ * UTC (`2026-05-01T07:30:00Z`).
+ */
+export type TaskAlertTrigger =
+  | { offset: string; relativeTo?: 'due' | 'start' }
+  | { at: string };
+
+export interface TaskAlertInput {
+  trigger: TaskAlertTrigger;
+  /** `display` (the default) shows a reminder; `email` has the server send one. */
+  action?: 'display' | 'email';
 }
 
 export interface ContactView {
@@ -651,6 +678,22 @@ export interface TaskView {
   priority: number;
   calendarId: string;
   keywords: string[];
+  /** By id; as written by any app, not only by plugins. */
+  alerts: Record<string, TaskAlertView>;
+  /**
+   * True while the task uses its calendar's default alerts: `alerts` then
+   * shows those defaults, which can't be acknowledged until an update of
+   * `alerts` makes them the task's own (under new ids).
+   */
+  useDefaultAlerts: boolean;
+}
+
+export interface TaskAlertView {
+  /** As in TaskAlertInput; `relativeTo` is always given for an offset. */
+  trigger: { offset: string; relativeTo: 'due' | 'start' } | { at: string };
+  action: 'display' | 'email';
+  /** When the alert was dismissed (UTC), or null while it is not. */
+  acknowledged: string | null;
 }
 
 export interface TemplateView {

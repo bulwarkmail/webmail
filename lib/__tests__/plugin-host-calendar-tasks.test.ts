@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { InstalledPlugin } from '../plugin-types';
 import type { IJMAPClient } from '../jmap/client-interface';
-import type { Calendar, CalendarEvent, CalendarTask } from '../jmap/types';
+import type { Calendar, CalendarEvent, CalendarEventAlert, CalendarTask } from '../jmap/types';
 import { useAuthStore } from '@/stores/auth-store';
 import { useCalendarStore } from '@/stores/calendar-store';
 import { useTaskStore } from '@/stores/task-store';
@@ -241,5 +241,244 @@ describe('api.tasks', () => {
     await call(WRITE, 'tasks.delete', 't1');
     expect(client.deleteCalendarTask).not.toHaveBeenCalled();
     await expect(call(WRITE, 'tasks.delete', 'nope')).rejects.toThrow(/no task with id "nope"/);
+  });
+});
+
+describe('api.tasks alerts', () => {
+  const at = (when: string, over: Partial<CalendarEventAlert> = {}): CalendarEventAlert => ({
+    '@type': 'Alert', trigger: { '@type': 'AbsoluteTrigger', when }, action: 'display', acknowledged: null, relatedTo: null, ...over,
+  });
+  const updates = () => client.updateCalendarTask.mock.calls.map((c) => c[1] as Record<string, unknown>);
+
+  it('creates a task with alerts, turning the calendar\'s defaults off', async () => {
+    await call(WRITE, 'tasks.create', {
+      title: 'Follow up: Offer',
+      due: '2026-05-04',
+      alerts: {
+        'follow-up': { trigger: { at: '2026-05-04T07:00:00Z' } },
+        'follow-up-mail': { trigger: { offset: '-PT1H' }, action: 'email' },
+      },
+    });
+    expect(client.createCalendarTask).toHaveBeenCalledWith(expect.objectContaining({
+      due: '2026-05-04', showWithoutTime: true, useDefaultAlerts: false,
+      alerts: {
+        'follow-up': at('2026-05-04T07:00:00Z'),
+        'follow-up-mail': {
+          '@type': 'Alert', trigger: { '@type': 'OffsetTrigger', offset: '-PT1H', relativeTo: 'end' },
+          action: 'email', acknowledged: null, relatedTo: null,
+        },
+      },
+    }));
+  });
+
+  it('returns them, each alert with whether it was acknowledged, and whether the defaults are in use', async () => {
+    client.getCalendarTasks.mockResolvedValue([task({
+      alerts: {
+        a: at('2026-05-04T07:00:00Z', { acknowledged: '2026-05-04T07:01:00Z' }),
+        b: { '@type': 'Alert', trigger: { '@type': 'OffsetTrigger', offset: '-PT15M', relativeTo: 'start' }, action: 'email', acknowledged: null, relatedTo: null },
+      },
+    })]);
+    expect(await call(READ, 'tasks.get', 't1')).toEqual(expect.objectContaining({
+      alerts: {
+        a: { trigger: { at: '2026-05-04T07:00:00Z' }, action: 'display', acknowledged: '2026-05-04T07:01:00Z' },
+        b: { trigger: { offset: '-PT15M', relativeTo: 'start' }, action: 'email', acknowledged: null },
+      },
+      useDefaultAlerts: false,
+    }));
+    const [listed] = await call(READ, 'tasks.list') as { alerts: object }[];
+    expect(Object.keys(listed.alerts)).toEqual(['a', 'b']);
+  });
+
+  it('refuses bad triggers, ids and too many alerts', async () => {
+    const create = (over: Record<string, unknown>) => call(WRITE, 'tasks.create', { title: 'x', ...over });
+    await expect(create({ alerts: [{ id: 'a', trigger: { offset: 'PT0S' } }] })).rejects.toThrow(/object keyed by id/);
+    const six = Object.fromEntries([0, 1, 2, 3, 4, 5].map((i) => [`a${i}`, { trigger: { offset: 'PT0S' } }]));
+    await expect(create({ alerts: six })).rejects.toThrow(/at most 5 entries/);
+    await expect(create({ alerts: { a: { trigger: { offset: 'P400D' } } } })).rejects.toThrow(/at most 366 days/);
+    await expect(create({ alerts: { a: { trigger: { offset: 'P' } } } })).rejects.toThrow(/ISO 8601 duration/);
+    await expect(create({ alerts: { a: { trigger: { at: '2026-05-04T09:00' } } } })).rejects.toThrow(/in UTC/);
+    await expect(create({ alerts: { a: { trigger: { offset: 'PT0S' }, action: 'audio' } } })).rejects.toThrow(/display or email/);
+    await expect(create({ alerts: { 'a b': { trigger: { offset: 'PT0S' } } } })).rejects.toThrow(/letters, digits/);
+    expect(client.createCalendarTask).not.toHaveBeenCalled();
+  });
+
+  it('merges by id with patch paths, leaving alerts it did not name and other fields alone', async () => {
+    useTaskStore.setState({ tasks: [task({
+      title: 'Kept',
+      alerts: { foreign: at('2026-05-04T06:00:00Z', { action: 'email' }), old: at('2026-05-04T05:00:00Z') },
+    })] });
+    await call(WRITE, 'tasks.update', 't1', {
+      alerts: { 'follow-up': { trigger: { at: '2026-05-04T07:00:00Z' } }, old: null },
+    });
+    expect(updates()[0]).toEqual({
+      'alerts/follow-up': at('2026-05-04T07:00:00Z'),
+      'alerts/old': null,
+    });
+    const held = useTaskStore.getState().tasks[0];
+    expect(held.title).toBe('Kept');
+    expect(Object.keys(held.alerts ?? {})).toEqual(['foreign', 'follow-up']);
+
+    await call(WRITE, 'tasks.update', 't1', { alerts: null });
+    expect(updates()[1]).toEqual({ alerts: null });
+  });
+
+  it('writes the alerts whole on a task that has none yet', async () => {
+    useTaskStore.setState({ tasks: [task({ alerts: null })] });
+    await call(WRITE, 'tasks.update', 't1', { alerts: { a: { trigger: { at: '2026-05-04T07:00:00Z' } } } });
+    expect(updates()[0]).toEqual({ alerts: { a: at('2026-05-04T07:00:00Z') } });
+  });
+
+  it('keeps an unchanged alert acknowledged and lets a snoozed one fire again', async () => {
+    useTaskStore.setState({ tasks: [task({
+      alerts: {
+        a: at('2026-05-04T07:00:00Z', { acknowledged: '2026-05-04T07:01:00Z' }),
+        b: at('2026-05-04T07:00:00Z', { acknowledged: '2026-05-04T07:01:00Z' }),
+      },
+    })] });
+    await call(WRITE, 'tasks.update', 't1', { alerts: {
+      a: { trigger: { at: '2026-05-04T07:00:00Z' } },
+      b: { trigger: { at: '2026-05-04T08:00:00Z' } },
+    } });
+    expect(updates()[0]).toEqual({ 'alerts/b': at('2026-05-04T08:00:00Z') });
+    const held = useTaskStore.getState().tasks[0];
+    expect(held.alerts?.a.acknowledged).toBe('2026-05-04T07:01:00Z');
+    expect(held.alerts?.b.acknowledged).toBeNull();
+  });
+
+  it('refuses a sixth alert counting those another app wrote', async () => {
+    useTaskStore.setState({ tasks: [task({
+      alerts: Object.fromEntries([1, 2, 3, 4, 5].map((i) => [`x${i}`, at('2026-05-04T07:00:00Z')])),
+    })] });
+    await expect(call(WRITE, 'tasks.update', 't1', { alerts: { new: { trigger: { offset: 'PT0S' } } } })).rejects.toThrow(/more than 5 alerts/);
+    await call(WRITE, 'tasks.update', 't1', { alerts: { x1: null, new: { trigger: { offset: 'PT0S' } } } });
+    expect(updates()[0]).toEqual({ 'alerts/x1': null, 'alerts/new': expect.objectContaining({ action: 'display' }) });
+  });
+
+  it('makes the calendar\'s default alerts the task\'s own under new ids, refusing a plugin alert under a default\'s id', async () => {
+    useTaskStore.setState({ tasks: [task({
+      useDefaultAlerts: true,
+      alerts: { d1: at('2026-05-04T06:00:00Z'), d2: at('2026-05-04T06:30:00Z') },
+    })] });
+    expect(await call(READ, 'tasks.get', 't1')).toEqual(expect.objectContaining({ useDefaultAlerts: true }));
+    await expect(call(WRITE, 'tasks.update', 't1', { alerts: { d1: { trigger: { offset: 'PT0S' } } } })).rejects.toThrow(/default alerts.*another id/);
+    await expect(call(WRITE, 'tasks.acknowledgeAlert', 't1', 'd1')).rejects.toThrow(/useDefaultAlerts/);
+    expect(client.updateCalendarTask).not.toHaveBeenCalled();
+
+    await call(WRITE, 'tasks.update', 't1', { alerts: { d2: null, mine: { trigger: { at: '2026-05-04T07:00:00Z' } } } });
+    expect(updates()[0]).toEqual({
+      useDefaultAlerts: false,
+      alerts: { alert1: at('2026-05-04T06:00:00Z'), mine: at('2026-05-04T07:00:00Z') },
+    });
+    useTaskStore.setState({ tasks: [task({ useDefaultAlerts: true, alerts: { d1: at('2026-05-04T06:00:00Z') } })] });
+    await call(WRITE, 'tasks.update', 't1', { alerts: {} });
+    expect(updates()[1]).toEqual({ useDefaultAlerts: false, alerts: { alert1: at('2026-05-04T06:00:00Z') } });
+  });
+
+  it('takes ids such as __proto__ and constructor as plain keys', async () => {
+    await call(WRITE, 'tasks.create', {
+      title: 'x',
+      alerts: JSON.parse('{"__proto__": {"trigger": {"offset": "PT0S"}}, "constructor": {"trigger": {"offset": "PT0S"}}}'),
+    });
+    const created = client.createCalendarTask.mock.calls[0][0] as CalendarTask;
+    expect(Object.getPrototypeOf(created.alerts)).toBe(Object.prototype);
+    expect(Object.keys(created.alerts ?? {})).toEqual(['__proto__', 'constructor']);
+
+    useTaskStore.setState({ tasks: [task({ alerts: { a: at('2026-05-04T07:00:00Z') } })] });
+    await expect(call(WRITE, 'tasks.acknowledgeAlert', 't1', 'constructor')).rejects.toThrow(/no alert "constructor"/);
+    await expect(call(WRITE, 'tasks.acknowledgeAlert', 't1', '__proto__')).rejects.toThrow(/no alert "__proto__"/);
+    await call(WRITE, 'tasks.update', 't1', { alerts: JSON.parse('{"__proto__": {"trigger": {"offset": "PT0S"}}}') });
+    expect(updates()[0]).toEqual(JSON.parse('{"alerts/__proto__": {"@type": "Alert", "trigger": {"@type": "OffsetTrigger", "offset": "PT0S", "relativeTo": "end"}, "action": "display", "acknowledged": null, "relatedTo": null}}'));
+    const held = useTaskStore.getState().tasks[0];
+    expect(Object.getPrototypeOf(held.alerts)).toBe(Object.prototype);
+    expect(Object.keys(held.alerts ?? {})).toEqual(['a', '__proto__']);
+  });
+
+  it('acknowledges an alert by its path, now or at a given time, and undoes it', async () => {
+    vi.useFakeTimers({ now: new Date('2026-05-04T07:02:03.456Z'), toFake: ['Date'] });
+    try {
+      useTaskStore.setState({ tasks: [task({ alerts: { a: at('2026-05-04T07:00:00Z'), b: at('2026-05-04T07:00:00Z', { action: 'email' }) } })] });
+      await call(WRITE, 'tasks.acknowledgeAlert', 't1', 'a');
+      expect(client.updateCalendarTask).toHaveBeenLastCalledWith('t1', { 'alerts/a/acknowledged': '2026-05-04T07:02:03Z' });
+      expect(useTaskStore.getState().tasks[0].alerts?.a.acknowledged).toBe('2026-05-04T07:02:03Z');
+      await call(WRITE, 'tasks.acknowledgeAlert', 't1', 'b', '2026-05-04T06:00:00Z');
+      expect(useTaskStore.getState().tasks[0].alerts?.b.acknowledged).toBe('2026-05-04T06:00:00Z');
+      await call(WRITE, 'tasks.acknowledgeAlert', 't1', 'a', null);
+      expect(client.updateCalendarTask).toHaveBeenLastCalledWith('t1', { 'alerts/a/acknowledged': null });
+      expect(await call(READ, 'tasks.get', 't1')).toEqual(expect.objectContaining({
+        alerts: expect.objectContaining({ a: expect.objectContaining({ acknowledged: null }) }),
+      }));
+
+      client.updateCalendarTask.mockClear();
+      await call(WRITE, 'tasks.acknowledgeAlert', 't1', 'a', null);
+      expect(client.updateCalendarTask).not.toHaveBeenCalled();
+      await expect(call(WRITE, 'tasks.acknowledgeAlert', 't1', 'zz')).rejects.toThrow(/no alert "zz"/);
+      await expect(call(WRITE, 'tasks.acknowledgeAlert', 't1', 'a', '2026-05-04T06:00')).rejects.toThrow(/in UTC/);
+      await expect(call(READ, 'tasks.acknowledgeAlert', 't1', 'a')).rejects.toThrow(/lacks permission "tasks:write"/);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('acknowledges two alerts at once one after the other, neither undoing the other', async () => {
+    useTaskStore.setState({ tasks: [task({ alerts: { a: at('2026-05-04T07:00:00Z'), b: at('2026-05-04T07:00:00Z') } })] });
+    let inFlight = 0;
+    let most = 0;
+    client.updateCalendarTask.mockImplementation(async (id: string) => {
+      most = Math.max(most, ++inFlight);
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      inFlight -= 1;
+      return id;
+    });
+    await Promise.all([
+      call(WRITE, 'tasks.acknowledgeAlert', 't1', 'a', '2026-05-04T07:01:00Z'),
+      call(WRITE, 'tasks.acknowledgeAlert', 't1', 'b', '2026-05-04T07:02:00Z'),
+    ]);
+    // Stalwart refuses a second set on an object while one is under way.
+    expect(most).toBe(1);
+    expect(updates()).toEqual([
+      { 'alerts/a/acknowledged': '2026-05-04T07:01:00Z' },
+      { 'alerts/b/acknowledged': '2026-05-04T07:02:00Z' },
+    ]);
+    const alerts = useTaskStore.getState().tasks[0].alerts;
+    expect([alerts?.a.acknowledged, alerts?.b.acknowledged]).toEqual(['2026-05-04T07:01:00Z', '2026-05-04T07:02:00Z']);
+  });
+
+  it('acknowledges an alert of a task the list does not hold, emitting the whole task', async () => {
+    const full = task({ title: 'From the server', alerts: { a: at('2026-05-04T07:00:00Z'), b: at('2026-05-04T08:00:00Z') } });
+    client.getCalendarTasks.mockResolvedValue([full]);
+    const seen: { patch: Record<string, unknown> }[] = [];
+    const emitted: { title: string; alerts: Record<string, { acknowledged: string | null }> }[] = [];
+    taskHooks.onBeforeTaskUpdate.register('watch', (e: unknown) => { seen.push(e as { patch: Record<string, unknown> }); return true; });
+    taskHooks.onTaskUpdate.register('watch', (v: unknown) => { emitted.push(v as never); });
+    try {
+      await call(WRITE, 'tasks.acknowledgeAlert', 't1', 'a', '2026-05-04T07:01:00Z');
+      expect(updates()).toEqual([{ 'alerts/a/acknowledged': '2026-05-04T07:01:00Z' }]);
+      expect(Object.keys(seen[0].patch.alerts as object)).toEqual(['a', 'b']);
+      await vi.waitFor(() => expect(emitted).toHaveLength(1));
+      expect(emitted[0].title).toBe('From the server');
+      expect(emitted[0].alerts.a.acknowledged).toBe('2026-05-04T07:01:00Z');
+      expect(emitted[0].alerts.b.acknowledged).toBeNull();
+    } finally {
+      taskHooks.onBeforeTaskUpdate.removePlugin('watch');
+      taskHooks.onTaskUpdate.removePlugin('watch');
+    }
+  });
+
+  it('decides on the alerts as the server holds them, not an older copy in the list', async () => {
+    useTaskStore.setState({ tasks: [task({ alerts: null })] });
+    client.getCalendarEvent.mockImplementation(async (id: string) => (id === 't1'
+      ? { id: 't1', alerts: { other: at('2026-05-04T06:00:00Z', { action: 'email' }) } }
+      : null));
+    await call(WRITE, 'tasks.update', 't1', { alerts: { mine: { trigger: { at: '2026-05-04T07:00:00Z' } } } });
+    expect(updates()[0]).toEqual({ 'alerts/mine': at('2026-05-04T07:00:00Z') });
+    const held = useTaskStore.getState().tasks[0];
+    expect(Object.keys(held.alerts ?? {})).toEqual(['other', 'mine']);
+    expect(client.getCalendarEvent).toHaveBeenCalledWith('t1', undefined);
+  });
+
+  it('turns the calendar\'s default alerts off when every alert is removed', async () => {
+    useTaskStore.setState({ tasks: [task({ useDefaultAlerts: true, alerts: { d1: at('2026-05-04T06:00:00Z') } })] });
+    await call(WRITE, 'tasks.update', 't1', { alerts: null });
+    expect(updates()[0]).toEqual({ alerts: null, useDefaultAlerts: false });
   });
 });

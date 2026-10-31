@@ -10,7 +10,9 @@ import { createRecurrenceRule } from '@/lib/recurrence-rule';
 import type {
   CalendarEventInput, CalendarEventView, CalendarView, TaskInput, TaskView,
 } from '../plugin-types';
-import type { Calendar, CalendarEvent, CalendarParticipant, CalendarRecurrenceRule, CalendarTask } from '../jmap/types';
+import type {
+  Calendar, CalendarEvent, CalendarEventAlert, CalendarParticipant, CalendarRecurrenceRule, CalendarTask,
+} from '../jmap/types';
 import type { IJMAPClient } from '../jmap/client-interface';
 import { useCalendarStore } from '@/stores/calendar-store';
 import { useTaskStore } from '@/stores/task-store';
@@ -19,10 +21,12 @@ import { eventToView, taskToView } from '../plugin-projection';
 import { expandRecurringEvents } from '../recurrence-expansion';
 import { buildParticipantMap } from '../calendar-participants';
 import { parseDurationSeconds } from '../calendar-event-normalization';
+import { parseAlertOffset, withOwnAlertIds } from '../calendar-alerts';
+import { patchPath } from '../jmap/patch-object';
 import { getEffectiveTimeZone } from '../timezone';
 import { generateUUID } from '../utils';
 import {
-  readBoolean, readId, readInteger, readObject, readString, sessionClient,
+  isPlainRecord, readBoolean, readId, readInteger, readObject, readString, sessionClient,
 } from './host-api-input';
 
 /** Longest range calendar.getEvents covers in one call. */
@@ -486,7 +490,218 @@ export async function doCalendarDeleteEvent(id: unknown): Promise<void> {
 
 // ─── Tasks ────────────────────────────────────────────────────
 
-const TASK_FIELDS = ['title', 'description', 'due', 'priority', 'calendarId'] as const;
+const TASK_FIELDS = ['title', 'description', 'due', 'priority', 'calendarId', 'alerts'] as const;
+/** Most alerts a plugin may give a task. */
+export const MAX_PLUGIN_TASK_ALERTS = 5;
+const MAX_ALERT_OFFSET_MS = MAX_PLUGIN_EVENT_RANGE_DAYS * DAY_MS;
+/** Longest key a plugin may name to remove an entry it did not write. */
+const MAX_REMOVED_KEY = 1024;
+
+const MEMBER_ID_RE = /^[A-Za-z0-9._-]{1,64}$/;
+const OFFSET_RE = /^-?P(?:\d+W|(?:\d+D)?(?:T(?:\d+H)?(?:\d+M)?(?:\d+S)?)?)$/;
+const CONTROL_RE = /\p{Cc}/u;
+
+/** The maps a plugin edits on a task, each keyed as JSCalendar keys it. */
+const TASK_MAPS = ['alerts'] as const;
+type TaskMap = typeof TASK_MAPS[number];
+
+/**
+ * A map change: `null` for the whole map (removes every entry), else the
+ * entries named, each a value to set or null to remove. Entries not named
+ * are left as they are.
+ */
+type MapChange<T> = null | [key: string, value: T | null][];
+
+/** An instant in UTC, as JSCalendar's UTCDateTime (`2026-05-01T07:30:00Z`). */
+function readInstant(value: unknown, method: string, field: string): string {
+  const when = readWhen(value, method, field);
+  if (!when.utc || when.time === null) throw new Error(`${method}: ${field} must be a time in UTC, like 2026-05-01T07:30:00Z`);
+  return `${when.date}T${when.time}Z`;
+}
+
+function utcNow(): string {
+  return new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
+}
+
+/**
+ * `{ key: value | null }` → its entries, each value read by `read`. A key
+ * set must pass `keyOk`; a key removed (null) may be any key the task could
+ * hold, so a plugin can remove entries another app wrote.
+ */
+function readMapChange<T>(
+  value: unknown,
+  method: string,
+  field: string,
+  max: number,
+  keyOk: (key: string) => boolean,
+  keyRule: string,
+  read: (value: unknown, field: string) => T,
+): MapChange<T> {
+  if (value === null) return null;
+  if (!isPlainRecord(value)) throw new Error(`${method}: ${field} must be an object keyed by id, or null`);
+  const entries = Object.entries(value);
+  if (entries.length > max) throw new Error(`${method}: ${field} may name at most ${max} entries`);
+  return entries.map(([key, entry]) => {
+    const where = `${field}["${key.slice(0, 64)}"]`;
+    if (entry === null) {
+      if (!key || key.length > MAX_REMOVED_KEY || CONTROL_RE.test(key)) throw new Error(`${method}: ${where} is not a key a task holds`);
+      return [key, null];
+    }
+    if (!keyOk(key)) throw new Error(`${method}: ${field} key "${key.slice(0, 64)}" must be ${keyRule}`);
+    return [key, read(entry, where)];
+  });
+}
+
+function readTrigger(value: unknown, method: string, field: string): CalendarEventAlert['trigger'] {
+  if (isPlainRecord(value) && Object.hasOwn(value, 'at')) {
+    const t = readObject(value, method, field, ['at']);
+    return { '@type': 'AbsoluteTrigger', when: readInstant(t.at, method, `${field}.at`) };
+  }
+  const t = readObject(value, method, field, ['offset', 'relativeTo']);
+  if (typeof t.offset !== 'string' || !OFFSET_RE.test(t.offset) || !/\d/.test(t.offset) || t.offset.endsWith('T')) {
+    throw new Error(`${method}: ${field}.offset must be an ISO 8601 duration such as -PT15M, or give ${field}.at`);
+  }
+  const ms = parseAlertOffset(t.offset);
+  if (ms === null || Math.abs(ms) > MAX_ALERT_OFFSET_MS) {
+    throw new Error(`${method}: ${field}.offset may be at most ${MAX_PLUGIN_EVENT_RANGE_DAYS} days`);
+  }
+  if (t.relativeTo !== undefined && t.relativeTo !== 'due' && t.relativeTo !== 'start') {
+    throw new Error(`${method}: ${field}.relativeTo must be due or start`);
+  }
+  // JSCalendar names a task's due its "end".
+  return { '@type': 'OffsetTrigger', offset: t.offset, relativeTo: t.relativeTo === 'start' ? 'start' : 'end' };
+}
+
+function alertsOf(value: unknown, method: string): MapChange<CalendarEventAlert> {
+  return readMapChange(value, method, 'alerts', MAX_PLUGIN_TASK_ALERTS, (k) => MEMBER_ID_RE.test(k),
+    '1-64 letters, digits or . _ -', (entry, field) => {
+      const a = readObject(entry, method, field, ['trigger', 'action']);
+      if (a.action !== undefined && a.action !== 'display' && a.action !== 'email') {
+        throw new Error(`${method}: ${field}.action must be display or email`);
+      }
+      return {
+        '@type': 'Alert',
+        trigger: readTrigger(a.trigger, method, `${field}.trigger`),
+        action: a.action === 'email' ? 'email' : 'display',
+        acknowledged: null,
+        relatedTo: null,
+      };
+    });
+}
+
+interface TaskMapChanges {
+  alerts?: MapChange<CalendarEventAlert>;
+}
+
+/** The plugin's map changes, read and checked before anything is asked of the server. */
+function mapChangesOf(data: Record<string, unknown>, method: string): TaskMapChanges {
+  const changes: TaskMapChanges = {};
+  if (data.alerts !== undefined) changes.alerts = alertsOf(data.alerts, method);
+  return changes;
+}
+
+/** The entries set, as a map (null when none), for a task that has none yet. */
+function wholeMap<T>(change: MapChange<T>): Record<string, T> | null {
+  const set = (change ?? []).filter((entry): entry is [string, T] => entry[1] !== null);
+  return set.length ? Object.fromEntries(set) : null;
+}
+
+/** Map changes on a new task: the entries set. Alerts turn the calendar's defaults off. */
+function createMaps(changes: TaskMapChanges): Partial<CalendarTask> {
+  const task: Partial<CalendarTask> = {};
+  for (const name of TASK_MAPS) {
+    const change = changes[name];
+    if (change !== undefined) Object.assign(task, { [name]: wholeMap(change as MapChange<unknown>) });
+  }
+  if (task.alerts) task.useDefaultAlerts = false;
+  return task;
+}
+
+function sameAlert(a: CalendarEventAlert, b: CalendarEventAlert): boolean {
+  const key = (t: CalendarEventAlert['trigger']) => t['@type'] === 'AbsoluteTrigger'
+    ? `at ${Date.parse(t.when)}`
+    : `offset ${parseAlertOffset(t.offset)} ${t.relativeTo === 'end' ? 'end' : 'start'}`;
+  return a.action === b.action && key(a.trigger) === key(b.trigger);
+}
+
+function countAfter(held: object | null | undefined, change: [string, unknown][]): number {
+  const keys = new Set(Object.keys(held ?? {}));
+  for (const [key, value] of change) {
+    if (value === null) keys.delete(key);
+    else keys.add(key);
+  }
+  return keys.size;
+}
+
+/**
+ * The patch for a task's maps: each entry named by its JMAP path, so entries
+ * the plugin did not name, and members changed meanwhile elsewhere, stay as
+ * the server holds them. A map the task does not have yet is written whole.
+ * An alert set with the trigger and action it has keeps its `acknowledged`;
+ * a new trigger (a snooze) makes it fire again.
+ */
+function updateMaps(method: string, task: CalendarTask, changes: TaskMapChanges): Record<string, unknown> {
+  const patch: Record<string, unknown> = {};
+  const limits: Record<TaskMap, number> = {
+    alerts: MAX_PLUGIN_TASK_ALERTS,
+  };
+  for (const name of TASK_MAPS) {
+    const change = changes[name] as MapChange<unknown> | undefined;
+    if (change === undefined) continue;
+    if (change === null) {
+      patch[name] = null;
+      // Else the calendar's defaults would still show and fire.
+      if (name === 'alerts' && task.useDefaultAlerts) patch.useDefaultAlerts = false;
+      continue;
+    }
+    const held = task[name] as Record<string, unknown> | null | undefined;
+    const adds = change.some(([key, value]) => value !== null && !(held && Object.hasOwn(held, key)));
+    if (adds && countAfter(held, change) > limits[name]) {
+      throw new Error(`${method}: the task would hold more than ${limits[name]} ${name}`);
+    }
+    if (name === 'alerts' && task.useDefaultAlerts) {
+      Object.assign(patch, ownAlerts(method, task, change as [string, CalendarEventAlert | null][]));
+      continue;
+    }
+    if (!held || Object.keys(held).length === 0) {
+      patch[name] = wholeMap(change);
+      continue;
+    }
+    for (const [key, value] of change) {
+      if (name === 'alerts' && value !== null && Object.hasOwn(held, key) && sameAlert(held[key] as CalendarEventAlert, value as CalendarEventAlert)) {
+        continue;
+      }
+      patch[patchPath(name, key)] = value;
+    }
+  }
+  return patch;
+}
+
+/**
+ * Alerts of a task that uses its calendar's default alerts. Stalwart shows
+ * the defaults in `alerts` under the defaults' ids and drops on save every
+ * alert under one of those ids, so the defaults the plugin keeps become the
+ * task's own under new ids (as the task form does), and an alert of the
+ * plugin's under a default's id is refused rather than lost.
+ */
+function ownAlerts(
+  method: string,
+  task: CalendarTask,
+  change: [string, CalendarEventAlert | null][],
+): Partial<CalendarTask> {
+  const defaults = task.alerts ?? {};
+  const removed = new Set<string>();
+  const set: [string, CalendarEventAlert][] = [];
+  for (const [key, value] of change) {
+    if (value === null) removed.add(key);
+    else if (Object.hasOwn(defaults, key)) {
+      throw new Error(`${method}: alert "${key}" is one of the calendar's default alerts the task uses (useDefaultAlerts); give yours another id`);
+    } else set.push([key, value]);
+  }
+  const kept = Object.entries(defaults).filter(([key]) => !removed.has(key)).map(([, alert]) => alert);
+  const alerts = { ...withOwnAlertIds(kept, [...Object.keys(defaults), ...set.map(([key]) => key)]), ...Object.fromEntries(set) };
+  return { useDefaultAlerts: false, alerts: Object.keys(alerts).length ? alerts : null };
+}
 
 function isDone(task: CalendarTask): boolean {
   return task.progress === 'completed' || task.progress === 'cancelled';
@@ -505,6 +720,22 @@ export async function doTasksList(options: unknown): Promise<TaskView[]> {
     .map(taskToView);
 }
 
+// A plugin's writes to one task, one after another: Stalwart refuses a
+// CalendarEvent/set while another is under way on the same object, and each
+// write is worked out against the task as the one before left it.
+const taskWrites = new Map<string, Promise<unknown>>();
+
+function oneAtATime<T>(taskId: string, write: () => Promise<T>): Promise<T> {
+  const before = taskWrites.get(taskId) ?? Promise.resolve();
+  const next = before.catch(() => undefined).then(write);
+  const settled = next.catch(() => undefined);
+  taskWrites.set(taskId, settled);
+  void settled.then(() => {
+    if (taskWrites.get(taskId) === settled) taskWrites.delete(taskId);
+  });
+  return next;
+}
+
 async function loadTask(client: IJMAPClient, id: string): Promise<CalendarTask | null> {
   const inStore = useTaskStore.getState().tasks.find((t) => t.id === id);
   if (inStore) return inStore;
@@ -515,6 +746,20 @@ async function requireTask(client: IJMAPClient, method: string, id: string): Pro
   const task = await loadTask(client, id);
   if (!task) throw new Error(`${method}: no task with id "${id}"`);
   return task;
+}
+
+/**
+ * The task with its alerts as the server holds them now: the store's copy may be older, and a map the task seems
+ * not to have is written whole, which would drop what the server gained.
+ */
+async function withServerMaps(client: IJMAPClient, task: CalendarTask): Promise<CalendarTask> {
+  const server = await client.getCalendarEvent(task.originalId ?? task.id, task.accountId);
+  if (!server) return task;
+  return {
+    ...task,
+    alerts: server.alerts ?? null,
+    useDefaultAlerts: server.useDefaultAlerts,
+  };
 }
 
 export async function doTasksGet(id: unknown): Promise<TaskView | null> {
@@ -547,6 +792,7 @@ export async function doTasksCreate(input: unknown): Promise<TaskView | null> {
     ...(data.due === undefined ? { due: null, showWithoutTime: true } : dueOf(data.due, method)),
     priority: data.priority === undefined ? 0 : readInteger(data.priority, method, 'priority', 0, 9),
     progress: 'needs-action',
+    ...createMaps(mapChangesOf(data, method)),
     calendarIds: { [await pickCalendar(client, method, data.calendarId, true)]: true },
   };
   const created = await useTaskStore.getState().createTask(client, task);
@@ -569,8 +815,37 @@ export async function doTasksUpdate(id: unknown, patch: unknown): Promise<void> 
   if (data.calendarId !== undefined) {
     updates.calendarIds = { [await pickCalendar(client, method, data.calendarId, true)]: true };
   }
-  await requireTask(client, method, taskId);
-  await useTaskStore.getState().updateTask(client, taskId, updates);
+  const maps = mapChangesOf(data, method);
+  await oneAtATime(taskId, async () => {
+    let task = await requireTask(client, method, taskId);
+    if (Object.keys(maps).length) task = await withServerMaps(client, task);
+    Object.assign(updates, updateMaps(method, task, maps));
+    if (Object.keys(updates).length === 0) return;
+    await useTaskStore.getState().updateTask(client, taskId, updates, task);
+  });
+}
+
+/**
+ * Mark one of a task's alerts dismissed at `when` (UTC; now when left out),
+ * or not dismissed with null. Only that alert's `acknowledged` is written.
+ */
+export async function doTasksAcknowledgeAlert(id: unknown, alertId: unknown, when: unknown): Promise<void> {
+  const method = 'tasks.acknowledgeAlert';
+  const taskId = readId(id, method);
+  const key = readId(alertId, method, 'alertId');
+  const acknowledged = when === undefined ? utcNow() : when === null ? null : readInstant(when, method, 'when');
+  const client = sessionClient(method);
+  await oneAtATime(taskId, async () => {
+    const task = await withServerMaps(client, await requireTask(client, method, taskId));
+    const alert = task.alerts && Object.hasOwn(task.alerts, key) ? task.alerts[key] : null;
+    if (!alert) throw new Error(`${method}: the task has no alert "${key}"`);
+    if (task.useDefaultAlerts) {
+      throw new Error(`${method}: the task uses its calendar's default alerts (useDefaultAlerts); make them its own with tasks.update(id, { alerts: {} }) first`);
+    }
+    if ((alert.acknowledged ?? null) === acknowledged) return;
+    const patch = { [patchPath('alerts', key, 'acknowledged')]: acknowledged } as Partial<CalendarTask>;
+    await useTaskStore.getState().updateTask(client, taskId, patch, task);
+  });
 }
 
 export async function doTasksSetComplete(id: unknown, complete: unknown): Promise<void> {
@@ -578,9 +853,11 @@ export async function doTasksSetComplete(id: unknown, complete: unknown): Promis
   const taskId = readId(id, method);
   const done = readBoolean(complete, method, 'complete');
   const client = sessionClient(method);
-  const task = await requireTask(client, method, taskId);
-  if ((task.progress === 'completed') === done) return;
-  await useTaskStore.getState().toggleTaskComplete(client, task);
+  await oneAtATime(taskId, async () => {
+    const task = await requireTask(client, method, taskId);
+    if ((task.progress === 'completed') === done) return;
+    await useTaskStore.getState().toggleTaskComplete(client, task);
+  });
 }
 
 export async function doTasksDelete(id: unknown): Promise<void> {

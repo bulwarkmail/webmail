@@ -28,6 +28,7 @@ import { buildShareSetCalls, failAll, parseShareTargets, readShareSetResults, SE
 import type { ShareKind } from "./share-rights";
 import { ARCHIVED_ITEM_USING, STALWART_CAPABILITY, buildRestoreCalls, hasArchivedEmail, listArchivedEmailsPaged, readRestoreResults, type ArchiveIo, type ArchiveListResult, type ArchiveQueryPage, type RestoreResult } from "@/lib/recovery/archived-items";
 import { RescheduleRestoredError } from "./reschedule-error";
+import { applyPatchObject } from "./patch-object";
 
 export { SchedulingDeniedError, RescheduleRestoredError };
 import { acceptedFileName, fileNameRulesFrom, type FileNameRules } from "@/lib/file-name-rules";
@@ -9621,7 +9622,8 @@ export class JMAPClient implements IJMAPClient {
 
     // Drop what the server sets itself; keep the uid so it stays the same task.
     const { id: _id, created: _cr, updated: _up, sequence: _sq, isDraft: _idr, isOrigin: _io, baseEventId: _be, blobId: _bl, utcStart: _us, utcEnd: _ue, ...rest } = original as Record<string, unknown>;
-    const created = await this.createCalendarTask({ ...rest, ...patch } as Partial<CalendarTask>, destAccountId);
+    // The patch may name members by path ("alerts/<id>/acknowledged").
+    const created = await this.createCalendarTask(applyPatchObject(rest, patch) as Partial<CalendarTask>, destAccountId);
     await this.deleteCalendarEvent(source.id, false, source.accountId);
     return created.id;
   }

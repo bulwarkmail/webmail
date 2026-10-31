@@ -993,10 +993,22 @@ function buildPluginApi(manifest: PluginManifest) {
       get: (id: string) => callApi('tasks.get', [id]) as Promise<TaskView | null>,
       /** Resolves to the new task, or null when another plugin stopped it. */
       create: (task: TaskInput) => callApi('tasks.create', [task]) as Promise<TaskView | null>,
-      /** Change the given fields. */
+      /**
+       * Change the given fields. `alerts` merges by id: an alert given is
+       * set, one given null is removed, the rest stay as they are (each
+       * written by its own JMAP patch path); null for the whole map clears it.
+       */
       update: (id: string, patch: Partial<TaskInput>) => callApi('tasks.update', [id, patch]) as Promise<void>,
       /** Mark a task done or not done. */
       setComplete: (id: string, complete: boolean) => callApi('tasks.setComplete', [id, complete]) as Promise<void>,
+      /**
+       * Dismiss one of a task's alerts at `when` (UTC, `2026-05-01T07:30:00Z`;
+       * now when left out), or undo that with null. Bulwark shows no reminder
+       * for a dismissed alert. Refused while the task uses its calendar's
+       * default alerts (TaskView.useDefaultAlerts).
+       */
+      acknowledgeAlert: (id: string, alertId: string, when?: string | null) =>
+        callApi('tasks.acknowledgeAlert', when === undefined ? [id, alertId] : [id, alertId, when]) as Promise<void>,
       delete: (id: string) => callApi('tasks.delete', [id]) as Promise<void>,
     },
     // Message templates (permissions: templates:read / templates:write).
