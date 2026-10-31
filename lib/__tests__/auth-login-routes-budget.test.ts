@@ -216,3 +216,32 @@ describe('/api/auth/totp-token-exchange failure budget', () => {
     ]);
   });
 });
+
+describe.each([
+  ['/api/auth/session', SESSION, sessionBody, sessionBody(PASSWORD)],
+  ['/api/auth/stalwart-context', CONTEXT, contextBody, contextBody(PASSWORD)],
+  ['/api/auth/totp-token-exchange', TOTP, totpBody, totpBody(PASSWORD, '123456')],
+])('%s with LOGIN_RATE_LIMIT_ALLOWLIST', (_name, route, body, rightBody) => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('keeps checking passwords from an allowlisted network past the cap', async () => {
+    vi.stubEnv('LOGIN_RATE_LIMIT_ALLOWLIST', '203.0.113.0/24, 2001:db8:1::/48');
+    for (let i = 0; i < 8; i++) {
+      expect((await post(route, body('wrong'), '203.0.113.40')).status).toBe(401);
+      expect((await post(route, body('wrong'), '2001:db8:1::7')).status).toBe(401);
+    }
+    expect((await post(route, rightBody, '203.0.113.40')).status).toBe(200);
+  });
+
+  it('still caps a client outside the allowlist', async () => {
+    vi.stubEnv('LOGIN_RATE_LIMIT_ALLOWLIST', '203.0.113.0/24');
+    for (let i = 0; i < 5; i++) {
+      expect((await post(route, body('wrong'), '198.51.100.7')).status).toBe(401);
+    }
+    expect((await post(route, body('wrong'), '198.51.100.7')).status).toBe(429);
+    expect((await post(route, rightBody, '198.51.100.7')).status).toBe(429);
+    expect((await post(route, rightBody, '203.0.113.40')).status).toBe(200);
+  });
+});
