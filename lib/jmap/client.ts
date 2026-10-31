@@ -315,6 +315,14 @@ export class SubmissionQuotaError extends Error {
   }
 }
 
+/** A /set response explicitly refused creation; a transport failure cannot prove this. */
+class RescheduleRejectedError extends Error {
+  constructor(readonly rejection: Error) {
+    super(rejection.message);
+    this.name = 'RescheduleRejectedError';
+  }
+}
+
 /**
  * "Send now" or "Reschedule" found the original submission no longer pending
  * after making room for its replacement, which can take a while: it went out
@@ -1529,6 +1537,7 @@ export class JMAPClient implements IJMAPClient {
   private intentionallyDisconnected = false;
   /** Hold limit learned from a rejected scheduled send (seconds). */
   private learnedMaxDelayedSend: number | null = null;
+  private reschedulesInFlight = new Map<string, Promise<SendEmailResult>>();
   /** When each account's submission records were last pruned (epoch ms). */
   private submissionPrunedAt = new Map<string, number>();
   /**
@@ -6287,15 +6296,15 @@ export class JMAPClient implements IJMAPClient {
     return submission?.sendAt;
   }
 
-  private async getEmailSubmissionForReschedule(submissionId: string, accountId?: string): Promise<{ identityId?: string; envelope?: { rcptTo?: Array<{ email: string }> }; sendAt?: string } | undefined> {
+  private async getEmailSubmissionForReschedule(submissionId: string, accountId?: string): Promise<{ identityId?: string; envelope?: { rcptTo?: Array<{ email: string }> }; sendAt?: string; undoStatus?: EmailSubmission['undoStatus'] } | undefined> {
     const response = await this.request([
       ['EmailSubmission/get', {
         accountId: accountId ?? await this.resolveSubmissionAccountId(submissionId),
         ids: [submissionId],
-        properties: ['identityId', 'envelope', 'sendAt'],
+        properties: ['identityId', 'envelope', 'sendAt', 'undoStatus'],
       }, '0'],
     ]);
-    return response.methodResponses?.[0]?.[1]?.list?.[0] as { identityId?: string; envelope?: { rcptTo?: Array<{ email: string }> }; sendAt?: string } | undefined;
+    return response.methodResponses?.[0]?.[1]?.list?.[0] as { identityId?: string; envelope?: { rcptTo?: Array<{ email: string }> }; sendAt?: string; undoStatus?: EmailSubmission['undoStatus'] } | undefined;
   }
 
   /**
@@ -11596,12 +11605,28 @@ export class JMAPClient implements IJMAPClient {
     // submission rescheduled through the primary account would be recreated
     // in the wrong account (and the original left running). See #874.
     const submissionAccountId = accountId ?? await this.resolveSubmissionAccountId(submissionId);
+    const key = JSON.stringify([submissionAccountId, submissionId]);
+    const existing = this.reschedulesInFlight.get(key);
+    if (existing) return existing;
+    const operation = this.replaceScheduledSubmission(submissionId, emailId, identityId, delayedUntil, submissionAccountId);
+    this.reschedulesInFlight.set(key, operation);
+    try {
+      return await operation;
+    } finally {
+      this.reschedulesInFlight.delete(key);
+    }
+  }
+
+  private async replaceScheduledSubmission(submissionId: string, emailId: string, identityId: string, delayedUntil: string, submissionAccountId: string): Promise<SendEmailResult> {
     const holdForSeconds = this.validateDelayedUntil(delayedUntil, submissionAccountId);
     const holdUntil = Date.now() + holdForSeconds * 1000;
     const mailboxes = await this.getMailboxes(submissionAccountId);
     const draftsMailbox = mailboxes.find(mb => mb.role === 'drafts');
     const sentMailbox = mailboxes.find(mb => mb.role === 'sent');
     const original = await this.getEmailSubmissionForReschedule(submissionId, submissionAccountId);
+    if (!original || original.undoStatus !== 'pending') {
+      throw new NoLongerScheduledError(original?.undoStatus === 'final');
+    }
     // The original's identity is one of the submission account's. The caller's
     // may be the composer's, from the login's own account: for a group
     // identity's message that id names nothing in the group account, or
@@ -11662,12 +11687,12 @@ export class JMAPClient implements IJMAPClient {
       // onSuccessUpdateEmail can fail while the submission was created.
       const [methodName, result] = statusReadBack.response.methodResponses?.[0] ?? [];
       if (methodName === 'error') {
-        throw jmapError(result?.description || result?.type || 'Failed to reschedule email', result);
+        throw new RescheduleRejectedError(jmapError(result?.description || result?.type || 'Failed to reschedule email', result));
       }
       const createError = result?.notCreated?.replacement;
       if (createError) {
-        if (createError.type === 'overQuota') throw this.submissionQuotaError(createError.description, submissionAccountId);
-        throw jmapError(createError.description || createError.type || 'Failed to reschedule email', createError);
+        if (createError.type === 'overQuota') throw new RescheduleRejectedError(this.submissionQuotaError(createError.description, submissionAccountId));
+        throw new RescheduleRejectedError(jmapError(createError.description || createError.type || 'Failed to reschedule email', createError));
       }
       const id = result?.created?.replacement?.id;
       if (!id) {
@@ -11712,6 +11737,12 @@ export class JMAPClient implements IJMAPClient {
       if (refused) throw new RecipientsRejectedError(refused);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to reschedule email';
+      // A lost or malformed response can hide an accepted replacement. Never
+      // create a second send or move its Email to Drafts while acceptance is unknown.
+      if (!(error instanceof RescheduleRejectedError) && !(error instanceof RecipientsRejectedError)) {
+        throw new Error(`The original send was canceled, but the new sending status is unconfirmed. Refresh before retrying: ${message}`);
+      }
+      const rejection = error instanceof RescheduleRejectedError ? error.rejection : error;
       // Put the original back at its old time. HOLDFOR with the seconds that
       // are left, not HOLDUNTIL: servers disagree on the HOLDUNTIL value format
       // (RFC 3339 vs Unix seconds), every FUTURERELEASE server takes HOLDFOR.
@@ -11720,6 +11751,9 @@ export class JMAPClient implements IJMAPClient {
       try {
         restored = await createSubmission(Number.isFinite(originalTime) && originalTime > Date.now() ? originalTime : undefined);
       } catch (restoreError) {
+        if (!(restoreError instanceof RescheduleRejectedError)) {
+          throw new Error('The original send was canceled, but restoration is unconfirmed. Refresh before retrying.');
+        }
         console.error('Failed to restore the original scheduled send after reschedule failure:', restoreError);
       }
       if (restored && !(await withdrawIfDead(restored).catch(() => null))) {
@@ -11734,7 +11768,7 @@ export class JMAPClient implements IJMAPClient {
           console.error('Failed to move the message back to Drafts after reschedule failure:', draftError);
         }
       }
-      if (error instanceof RecipientsRejectedError || error instanceof SubmissionQuotaError) throw error;
+      if (rejection instanceof RecipientsRejectedError || rejection instanceof SubmissionQuotaError) throw rejection;
       throw new Error(`Reschedule failed and the message is no longer scheduled: ${message}`);
     }
     const rejected = rejectedRecipients(replacement.deliveryStatus).rejected;
