@@ -36,10 +36,25 @@ export interface HookSpec {
   payload: string;
   /** When the host fires it. */
   when: string;
+  /**
+   * For a hook whose calls carry data behind one of two permissions (a
+   * reminder of an event or of a task): a plugin holding this one instead of
+   * `permission` may register too, and `callPermission` says which of the
+   * two each call needs, so a call reaches only plugins holding that one.
+   */
+  alsoPermission?: Permission;
+  callPermission?: (payload: unknown) => Permission;
 }
 
 const H = (group: HookGroup, kind: HookKind, permission: Permission, payload: string, when: string): HookSpec =>
   ({ group, kind, permission, payload, when });
+
+/** An event's reminder needs calendar:read, a task's tasks:read. */
+const REMINDER = {
+  alsoPermission: 'tasks:read',
+  callPermission: (payload: unknown): Permission =>
+    typeof payload === 'object' && payload !== null && 'taskId' in payload ? 'tasks:read' : 'calendar:read',
+} as const satisfies Pick<HookSpec, 'alsoPermission' | 'callPermission'>;
 
 export const HOOK_CATALOG = {
   // ─── Mail: message list ────────────────────────────────────
@@ -150,8 +165,9 @@ export const HOOK_CATALOG = {
   onCalendarChange: H('calendar', 'observer', 'calendar:read', '{ calendarId, change: "created" | "updated" | "removed" }', 'after a calendar was created, changed or removed'),
   onCalendarVisibilityToggle: H('calendar', 'observer', 'calendar:read', '{ calendarId, visible }', 'when a calendar is shown or hidden'),
   onICalSubscriptionChange: H('calendar', 'observer', 'calendar:read', '{ subscriptionId, change: "added" | "updated" | "removed" | "refreshed" }', 'when a calendar subscription changes'),
-  onCalendarAlert: H('calendar', 'observer', 'calendar:read', 'CalendarAlertView', 'when an event reminder fires'),
-  onCalendarAlertAcknowledge: H('calendar', 'observer', 'calendar:read', '{ alertId, eventId }', 'when a reminder is dismissed'),
+  onBeforeCalendarAlert: { ...H('calendar', 'intercept', 'calendar:read', 'CalendarAlertView', "before Bulwark shows a reminder of an event or a task, in every open tab; return false to show it yourself (no toast, sound or title alert from Bulwark; onCalendarAlert still fires); a task's needs tasks:read, an event's calendar:read"), ...REMINDER },
+  onCalendarAlert: { ...H('calendar', 'observer', 'calendar:read', 'CalendarAlertView ({ id, eventId, eventTitle, triggerTime } or { id, taskId, taskTitle, triggerTime })', "when a reminder of an event or a task fires, in every open tab, also one a plugin took over; a task's needs tasks:read, an event's calendar:read"), ...REMINDER },
+  onCalendarAlertAcknowledge: { ...H('calendar', 'observer', 'calendar:read', '{ alertId, eventId } or { alertId, taskId }', "when the user closes a reminder's toast, in that tab only; a task's needs tasks:read, an event's calendar:read"), ...REMINDER },
 
   // ─── Contacts ──────────────────────────────────────────────
   onContactOpen: H('contacts', 'observer', 'contacts:read', 'ContactView', 'when a contact is opened'),

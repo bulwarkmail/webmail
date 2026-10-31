@@ -892,12 +892,20 @@ export interface QuotaView {
   percentUsed: number;
 }
 
-export interface CalendarAlertView {
-  id: string;
-  eventId: string;
-  eventTitle: string;
-  triggerTime: string;
-}
+/**
+ * A reminder that is due: an event's display alert or a task's. `id` is the
+ * alert's id within its event or task; `triggerTime` when it fired (UTC).
+ * A task's reaches only plugins with `tasks:read`, an event's only plugins
+ * with `calendar:read`.
+ */
+export type CalendarAlertView =
+  | { id: string; eventId: string; eventTitle: string; triggerTime: string }
+  | { id: string; taskId: string; taskTitle: string; triggerTime: string };
+
+/** A reminder's toast closed by the user (onCalendarAlertAcknowledge). */
+export type CalendarAlertAcknowledgeView =
+  | { alertId: string; eventId: string }
+  | { alertId: string; taskId: string };
 
 export interface SearchFilters {
   from?: string;
