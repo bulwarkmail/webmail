@@ -72,6 +72,12 @@ describe('rail with the admin panel current', () => {
     expect(plain.innerHTML).toContain('boot-rail-admin:flex');
   });
 
+  it('has no account or quota circle: the admin panel has no mailbox', () => {
+    const circles = (html: string) => dom(html).querySelectorAll('.rounded-full.w-8.h-8').length;
+    expect(circles(renderToString(<RailSkeleton active="admin" />))).toBe(0);
+    expect(circles(renderToString(<RailSkeleton active="mail" />))).toBe(2);
+  });
+
   it('adds Admin to the bottom bar before Settings', () => {
     const bar = dom(renderToString(<BottomBarSkeleton active="admin" labels={{ mail: 'Mail', admin: 'Admin', settings: 'Settings' }} />));
     const labels = [...bar.querySelectorAll('span.truncate')].map((el) => el.textContent);

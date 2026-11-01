@@ -47,7 +47,6 @@ describe('AdminShell', () => {
     expect(region).not.toBeNull();
     expect(region!.querySelector('[role="status"]')?.textContent).toBe('common.loading');
     expect(container.querySelectorAll('a[href], button, input')).toHaveLength(0);
-    expect(html).not.toContain('admin_search');
     expect(html).not.toContain('<p>page</p>');
   });
 
@@ -67,7 +66,10 @@ describe('AdminShell', () => {
 
   it('hides the session links until the check says which kind of admin this is', () => {
     const { rerender } = render(shell({ authenticated: false, isStalwartAutoLogin: false }));
-    expect(screen.queryByText('Sign out of admin')).toBeNull();
+    // Only their shapes hold the place while the check runs.
+    expect(screen.queryByRole('button', { name: 'Sign out of admin' })).toBeNull();
+    expect(screen.queryByRole('link', { name: 'Change password' })).toBeNull();
+    expect(screen.getByText('Sign out of admin').closest('[aria-hidden="true"]')).not.toBeNull();
     rerender(shell({ authenticated: true, isStalwartAutoLogin: true }));
     expect(screen.queryByText('Sign out of admin')).toBeNull();
     rerender(shell({ authenticated: true, isStalwartAutoLogin: false }));

@@ -91,10 +91,15 @@ export function RailSkeleton({ active, className }: { active?: RailActive; class
           <span className={footerItem}>
             <Keyboard className="w-[18px] h-[18px]" />
           </span>
-          <Circle className="hidden boot-rail-quota:block w-8 h-8" />
-          <span className="flex items-center justify-center w-10 h-10 pointer-coarse:w-11 pointer-coarse:h-11">
-            <Circle className="w-8 h-8" />
-          </span>
+          {/* The admin panel's rail has no mailbox: no quota, no account. */}
+          {active === "admin" ? null : (
+            <>
+              <Circle className="hidden boot-rail-quota:block w-8 h-8" />
+              <span className="flex items-center justify-center w-10 h-10 pointer-coarse:w-11 pointer-coarse:h-11">
+                <Circle className="w-8 h-8" />
+              </span>
+            </>
+          )}
         </div>
       </div>
     </div>

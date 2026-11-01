@@ -6,7 +6,7 @@
  * English text in lib/admin/admin-nav.ts, so they are drawn for real; the
  * rest is placeholders.
  */
-import { ArrowLeft, ChevronRight, Search, Shield } from "@/components/icons";
+import { ArrowLeft, ChevronRight, KeyRound, LogOut, Search, Shield } from "@/components/icons";
 import { ADMIN_GROUPS, ADMIN_GROUP_LABELS, ADMIN_PAGE_ICONS } from "@/components/admin/admin-page-icons";
 import { ADMIN_PAGES, type AdminPageDef, type AdminPageId } from "@/lib/admin/admin-nav";
 import { cn } from "@/lib/cn";
@@ -25,12 +25,36 @@ function pageDef(id: AdminPageId | null | undefined): AdminPageDef | null {
 }
 
 /** The search field above the page list (an Input at h-9 with the icon inside). */
-function SearchField() {
+function SearchField({ placeholder }: { placeholder?: string }) {
   return (
     <span aria-hidden="true" className="relative block">
       <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-      <span className="block h-9 w-full rounded-md border border-input bg-background" />
+      <span className="flex h-9 w-full items-center rounded-md border border-input bg-background ps-9 pe-3 text-sm text-muted-foreground">
+        {placeholder}
+      </span>
     </span>
+  );
+}
+
+/**
+ * "Change password" and "Sign out of admin", which a password admin gets
+ * once the session check is done. Drawn while it runs (here and in the
+ * shell), so the foot of the list doesn't grow under the pointer then; a
+ * Stalwart admin signed in automatically loses them.
+ */
+export function AdminSessionLinksSkeleton({ mobile }: { mobile: boolean }) {
+  const item = cn("flex w-full items-center gap-2.5 rounded-md text-sm text-foreground", mobile ? "px-3 py-2.5" : "px-3 py-2");
+  return (
+    <>
+      <span aria-hidden="true" className={item}>
+        <KeyRound className="h-4 w-4 shrink-0 text-muted-foreground" />
+        Change password
+      </span>
+      <span aria-hidden="true" className={item}>
+        <LogOut className="h-4 w-4 shrink-0 text-muted-foreground" />
+        Sign out of admin
+      </span>
+    </>
   );
 }
 
@@ -129,12 +153,14 @@ export interface AdminSkeletonProps {
   page?: AdminPageId | null;
   /** settings.back_to_mail, for the box above the page list. */
   backLabel?: string;
+  /** shell.admin_search, the search field's placeholder. */
+  searchLabel?: string;
   /** The phone bottom bar's labels. */
   labels?: RailLabels;
   className?: string;
 }
 
-export function AdminSkeleton({ label, page, backLabel, labels, className }: AdminSkeletonProps) {
+export function AdminSkeleton({ label, page, backLabel, searchLabel, labels, className }: AdminSkeletonProps) {
   const active: AdminPageId | null = page === undefined ? null : page ?? "dashboard";
   const def = pageDef(page);
   // Phone: the list at /admin, the page below it.
@@ -162,7 +188,7 @@ export function AdminSkeleton({ label, page, backLabel, labels, className }: Adm
           </div>
 
           <div className="flex-1 overflow-hidden py-2">
-            <div className="px-3 pb-1 pt-1"><SearchField /></div>
+            <div className="px-3 pb-1 pt-1"><SearchField placeholder={searchLabel} /></div>
             <div className="space-y-0.5 px-2">
               {GROUPS.map(({ group, label: heading, pages }, groupIndex) => (
                 <div key={group}>
@@ -195,6 +221,7 @@ export function AdminSkeleton({ label, page, backLabel, labels, className }: Adm
           </div>
 
           <div className="border-t border-border px-1 py-1">
+            <div className="space-y-0.5 px-1 py-1"><AdminSessionLinksSkeleton mobile={false} /></div>
             <AboutFooterSkeleton />
           </div>
         </div>
@@ -229,7 +256,7 @@ export function AdminSkeleton({ label, page, backLabel, labels, className }: Adm
 
         <div className="flex-1 overflow-hidden">
           <div aria-hidden="true" className={showIndex}>
-            <div className="px-4 pb-1 pt-3"><SearchField /></div>
+            <div className="px-4 pb-1 pt-3"><SearchField placeholder={searchLabel} /></div>
             <div className="py-2">
               {GROUPS.map(({ group, label: heading, pages }, groupIndex) => (
                 <div key={group}>

@@ -15,7 +15,7 @@ import { useUpdateStore, selectHasUpdate } from '@/stores/update-store';
 import { useAdminUnsavedStore } from '@/stores/admin-unsaved-store';
 import { apiFetch, getPathPrefix } from '@/lib/browser-navigation';
 import { ADMIN_PAGES, adminPath, type AdminPageDef, type AdminPageId, type AdminSectionDef } from '@/lib/admin/admin-nav';
-import { AdminSkeleton } from '@/components/boot-skeleton/admin-skeleton';
+import { AdminSessionLinksSkeleton, AdminSkeleton } from '@/components/boot-skeleton/admin-skeleton';
 import { useSkeletonLabels } from '@/components/boot-skeleton/use-skeleton-labels';
 import { ADMIN_GROUPS, ADMIN_GROUP_LABELS, ADMIN_PAGE_ICONS as PAGE_ICONS } from './admin-page-icons';
 import { cn } from '@/lib/utils';
@@ -251,6 +251,7 @@ export function AdminShell({ authenticated, isStalwartAutoLogin, configReadOnly,
         page={location.page}
         label={loadingLabel}
         backLabel={tSettings('back_to_mail')}
+        searchLabel={tShell('admin_search')}
         labels={railLabels}
       />
     );
@@ -335,7 +336,11 @@ export function AdminShell({ authenticated, isStalwartAutoLogin, configReadOnly,
                     </div>
                   ))}
                 </div>
-                {showSessionLinks && <div className="border-t border-border px-2 py-2">{sessionLinks(true)}</div>}
+                {(showSessionLinks || !authenticated) && (
+                  <div className="border-t border-border px-2 py-2">
+                    {showSessionLinks ? sessionLinks(true) : <AdminSessionLinksSkeleton mobile />}
+                  </div>
+                )}
                 <div className="border-t border-border px-2 py-2"><AboutFooter /></div>
               </>
             ) : (
@@ -426,7 +431,12 @@ export function AdminShell({ authenticated, isStalwartAutoLogin, configReadOnly,
           </div>
 
           <div className="border-t border-border px-1 py-1">
-            {showSessionLinks && <div className="space-y-0.5 px-1 py-1">{sessionLinks(false)}</div>}
+            {/* Held in place while the session is checked, as the boot skeleton draws them. */}
+            {(showSessionLinks || !authenticated) && (
+              <div className="space-y-0.5 px-1 py-1">
+                {showSessionLinks ? sessionLinks(false) : <AdminSessionLinksSkeleton mobile={false} />}
+              </div>
+            )}
             <AboutFooter />
           </div>
         </aside>
