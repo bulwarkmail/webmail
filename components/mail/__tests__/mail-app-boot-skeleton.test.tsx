@@ -168,4 +168,15 @@ describe('mail page hand-off from the boot skeleton', () => {
     expect(reader.className).not.toMatch(/(^|\s)max-md:hidden(\s|$)/);
     expect(queryByTestId('bottom-nav')).toBeNull();
   });
+
+  it('draws a linked conversation on a phone as the conversation view, not the message viewer, while it loads', async () => {
+    device.isMobile = true;
+    const client = useAuthStore.getState().client as unknown as Record<string, unknown>;
+    client.getThreadEmails = vi.fn(() => new Promise(() => {}));
+    const { container, queryByTestId } = render(<MailApp linkSegments={['thread', 't9']} />);
+    await act(async () => {});
+    const reader = container.querySelector('[data-pane="reader"]')!;
+    expect(reader.querySelector('[aria-busy="true"] [role="status"]')).not.toBeNull();
+    expect(queryByTestId('viewer')).toBeNull();
+  });
 });

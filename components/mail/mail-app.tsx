@@ -176,7 +176,7 @@ import type { QuoteHeader } from "@/lib/plugin-types";
 import { initialLinkSearch, useLiteLinkSegments } from "@/hooks/use-lite-link-segments";
 import { useMinimisedComposerFlush } from "@/hooks/use-minimised-composer-flush";
 import { quickReplyEnvelope, saveQuickReplyDraft } from "@/lib/outgoing/quick-reply-envelope";
-import { MailSkeleton } from "@/components/boot-skeleton/mail-skeleton";
+import { MailConversationSkeleton, MailSkeleton } from "@/components/boot-skeleton/mail-skeleton";
 import { useSkeletonLabels } from "@/components/boot-skeleton/use-skeleton-labels";
 
 export interface MailAppProps {
@@ -5580,7 +5580,14 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
               </button>
             )}
             {/* Mobile Conversation View - shown when thread is selected on mobile */}
-            {isMobile && conversationThread ? (
+            {isMobile && !conversationThread && deepLinkPane === 'thread' ? (
+              // A linked conversation on a phone, still loading: the shape the
+              // page skeleton gave it.
+              <div className="flex flex-col h-full bg-background" aria-busy="true">
+                <span role="status" className="sr-only">{t('threads.loading')}</span>
+                <MailConversationSkeleton />
+              </div>
+            ) : isMobile && conversationThread ? (
               <ThreadConversationView
                 thread={conversationThread}
                 emails={conversationEmails}

@@ -13,8 +13,10 @@ describe('mail skeleton', () => {
   // skeleton of /mail/message/<id> must not draw one either.
   it('hides the phone bottom bar when a message or conversation is open', () => {
     const page = html(<MailSkeleton label="Loading" />);
-    // The bar's items are its 64px-basis tabs.
-    const bar = page.querySelector('.basis-\\[64px\\]')?.parentElement as HTMLElement;
+    // The bar's items are its 64px-basis tabs; it is the last such row on the page.
+    const tabs = page.querySelectorAll('.basis-\\[64px\\]');
+    const bar = tabs[tabs.length - 1]?.parentElement as HTMLElement;
+    expect(bar.querySelector('svg')).not.toBeNull();
     expect(bar).toBeTruthy();
     expect(bar.className.split(' ')).toContain('max-md:boot-open:hidden');
   });

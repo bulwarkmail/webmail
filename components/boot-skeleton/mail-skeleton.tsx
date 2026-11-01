@@ -14,7 +14,13 @@
  */
 import type { ReactNode } from "react";
 import {
+  ArrowLeft,
   CalendarEvent,
+  ChevronLeft,
+  ChevronRight,
+  Forward,
+  Reply,
+  ReplyAll,
   ChevronDown,
   ChevronsLeft,
   Filter,
@@ -396,18 +402,34 @@ function MobileHeaderSkeleton() {
  * default reader, then the message body's tinted sheet.
  */
 export function MailMessageSkeleton({ className }: { className?: string }) {
-  const button = "h-8 w-8 sm:w-20 rounded-md";
+  const button = "h-8 w-20 rounded-md";
   return (
     <div aria-hidden="true" className={cn("flex-1 min-w-0 flex flex-col h-full bg-background overflow-hidden", className)}>
       <div className="bg-background flex-shrink-0 border-b border-border">
         <div className="px-2 sm:px-4 lg:px-6 flex items-center h-14">
-          <div className="flex items-center justify-between gap-0.5 sm:gap-2 w-full">
-            <div className="flex items-center gap-0.5 sm:gap-2">
+          {/* Phones: back, then icon-over-label actions. */}
+          <div className="sm:hidden flex items-center justify-between gap-0.5 w-full">
+            <span className="flex items-center justify-center h-9 w-9 -ms-1 flex-shrink-0">
+              <ArrowLeft className="w-5 h-5" />
+            </span>
+            {repeat(6, (i) => (
+              <span className="flex flex-col items-center gap-1 px-1 flex-1">
+                <Block className="w-5 h-5 rounded" />
+                <Bar className="h-2" w={i === 5 ? "3.5rem" : "2.25rem"} />
+              </span>
+            ))}
+          </div>
+          <div className="max-sm:hidden flex items-center justify-between gap-2 w-full">
+            <div className="flex items-center gap-2">
+              {/* Back to the list, where the reader has the list's place (tablet, focus). */}
+              <span className="hidden md:max-lg:flex md:boot-focus:flex items-center justify-center h-9 w-9 -ms-1 flex-shrink-0">
+                <ArrowLeft className="w-5 h-5" />
+              </span>
               <Block className={button} />
-              <Block className={cn(button, "max-sm:hidden")} />
+              <Block className={button} />
               <Block className={button} />
             </div>
-            <div className="flex items-center gap-0.5 sm:gap-2">
+            <div className="flex items-center gap-2">
               <Block className={button} />
               <Block className={button} />
               <Block className={cn(button, "max-md:hidden")} />
@@ -420,7 +442,11 @@ export function MailMessageSkeleton({ className }: { className?: string }) {
         <div className="px-4 lg:px-6" style={{ paddingBlock: "var(--density-header-py)" }}>
           <div className="flex items-start justify-between gap-2 lg:gap-4">
             <TextLine className="flex-1 min-w-0 text-lg lg:text-xl font-bold" w="70%" bar="h-4 lg:h-5" />
-            <TextLine className="w-28 text-sm max-sm:hidden" w="100%" />
+            {/* Date and size. */}
+            <span className="w-28 max-sm:hidden flex flex-col items-end">
+              <TextLine className="w-full text-sm" w="100%" />
+              <TextLine className="w-8 text-xs" w="100%" bar="h-2.5" />
+            </span>
           </div>
         </div>
       </div>
@@ -429,7 +455,8 @@ export function MailMessageSkeleton({ className }: { className?: string }) {
           <Circle className="w-10 h-10" />
           <div className="flex-1 min-w-0">
             <TextLine className="font-semibold" w="10rem" />
-            <TextLine className="text-sm" w="13rem" />
+            <TextLine className="text-sm leading-6" w="13rem" />
+            <TextLine className="text-sm leading-6" w="16rem" />
           </div>
         </div>
       </div>
@@ -442,6 +469,62 @@ export function MailMessageSkeleton({ className }: { className?: string }) {
             <Bar className="h-4 w-full" />
             <Bar className="h-4 w-3/4" />
           </div>
+        </div>
+      </div>
+      {/* Phones: the reply bar along the bottom (previous, reply, reply all, forward, next). */}
+      <div className="sm:hidden flex items-center flex-shrink-0 bg-background border-t border-border pb-[calc(env(safe-area-inset-bottom)/2)] text-muted-foreground">
+        {[ChevronLeft, Reply, ReplyAll, Forward, ChevronRight].map((Icon, i) => (
+          <span key={i} className="flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px]">
+            <Icon className="w-5 h-5" />
+            <Bar className="h-2 my-px" w="2.25rem" />
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * A conversation on a phone while it loads (ThreadConversationView): the
+ * header with back, subject and count, then the message cards.
+ */
+export function MailConversationSkeleton({ className }: { className?: string }) {
+  return (
+    <div aria-hidden="true" className={cn("flex-1 min-w-0 flex flex-col h-full bg-background overflow-hidden", className)}>
+      <div
+        className="flex items-center px-4 border-b border-border bg-background"
+        style={{ gap: "var(--density-item-gap)", paddingBlock: "var(--density-header-py)" }}
+      >
+        <span className="flex items-center justify-center h-11 w-11 -ms-2 flex-shrink-0">
+          <ArrowLeft className="w-5 h-5" />
+        </span>
+        <span className="flex-1 min-w-0">
+          <TextLine className="font-semibold" w="80%" />
+          <TextLine className="font-semibold" w="45%" />
+          <TextLine className="text-sm" w="5rem" />
+        </span>
+        <span className="flex items-center gap-1 flex-shrink-0">
+          {repeat(4, () => <Block className="h-11 w-11 rounded-md" />)}
+        </span>
+      </div>
+      <div className="flex-1 overflow-hidden">
+        <div className="space-y-3" style={{ padding: "var(--density-card-p)" }}>
+          {repeat(3, (i) => (
+            <div className="rounded-lg border border-border overflow-hidden bg-background shadow-sm">
+              <div className="w-full flex items-start" style={{ gap: "var(--density-item-gap)", padding: "var(--density-card-p)" }}>
+                <Circle className="w-10 h-10" />
+                <span className="flex-1 min-w-0">
+                  <TextLine className="mb-0.5" w={textWidth(i, 35, 25)} />
+                  <TextLine className="text-sm" w="3rem" />
+                </span>
+              </div>
+              <div className="border-t border-border px-4 py-4 space-y-3">
+                <Bar className="h-3.5 w-full" />
+                <Bar className="h-3.5 w-5/6" />
+                <Bar className="h-3.5" w={textWidth(i + 2, 40, 40)} />
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>
@@ -524,7 +607,8 @@ export function MailSkeletonBody({ embedded = false }: { embedded?: boolean }) {
           <div
             className={cn(
               "relative flex flex-col bg-background min-w-0 h-full border-e border-border",
-              "max-md:flex-1 max-md:border-e-0 max-md:boot-open:hidden",
+              // Phones and tablets give an open message the whole width.
+              "max-md:flex-1 max-md:border-e-0 max-lg:boot-open:hidden",
               "md:flex-shrink-0 md:shadow-sm md:w-[var(--boot-mail-list-w,384px)]",
               embedded && "md:max-w-[max(220px,55%)]",
               // Focus: the list takes the width while nothing is open and makes way for the reader.
@@ -565,7 +649,9 @@ export function MailSkeletonBody({ embedded = false }: { embedded?: boolean }) {
           >
             <ReaderFrame>
               <EmptyReaderSkeleton className="boot-open:hidden" />
-              <MailMessageSkeleton className="hidden boot-open:flex" />
+              {/* A conversation link opens the conversation view on a phone, its newest message elsewhere. */}
+              <MailMessageSkeleton className="hidden boot-open:flex max-md:boot-thread:hidden" />
+              <MailConversationSkeleton className="hidden max-md:boot-thread:flex" />
             </ReaderFrame>
           </div>
         </div>
