@@ -91,3 +91,16 @@
     animation: none;
   }
 }
+
+/* mail */
+
+/* List density (the density setting, data-boot-density): extra-compact rows
+   have no avatar, compact and extra-compact ones no preview. */
+@custom-variant boot-xc (&:where([data-boot-density="extra-compact"] *));
+@custom-variant boot-dense (&:where([data-boot-density="compact"] *, [data-boot-density="extra-compact"] *));
+/* Message previews turned off (showPreview). */
+@custom-variant boot-no-preview (&:where([data-boot-preview="off"] *));
+/* The default interface layout, the opposite of mv: (both can't be told apart by order). */
+@custom-variant boot-std (&:where(:root:not([data-interface-layout="mountain-view"]) *));
+/* Mountain View's side panel shows only with calendar or contacts. */
+@custom-variant boot-no-mv-side (&:where([data-boot-rail]:not([data-boot-rail~="calendar"]):not([data-boot-rail~="contacts"]) *));

@@ -167,6 +167,9 @@ export function applyBootLayout(root: HTMLElement, c: BootLayoutConfig): void {
   var density = typeof s.density === 'string' && c.density[s.density] ? s.density : 'regular';
   var vars = (layout === 'mountain-view' ? c.mvDensity : c.density)[density];
   for (var prop in vars) root.style.setProperty(prop, vars[prop]);
+  // Which rows the mail list draws: avatars and previews depend on these.
+  mark('density', density);
+  mark('preview', s.showPreview === false ? 'off' : null);
 
   var mailLayout = s.mailLayout === 'focus' || s.mailLayout === 'horizontal' ? s.mailLayout : 'split';
   if (layout === 'mountain-view' || s.simpleMode === true) mailLayout = 'focus';

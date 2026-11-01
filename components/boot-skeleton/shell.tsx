@@ -182,6 +182,10 @@ export function MvTopBarSkeleton({ search = true, className }: { search?: boolea
         <span className={round}>
           <Grid3x3 className="w-5 h-5" />
         </span>
+        {/* The account switcher. */}
+        <span className="ms-1 flex items-center justify-center w-10 h-10 pointer-coarse:w-11 pointer-coarse:h-11">
+          <Circle className="w-8 h-8" />
+        </span>
       </div>
     </div>
   );
@@ -203,6 +207,8 @@ interface AppShellSkeletonProps {
   mvSearch?: boolean;
   /** Extra classes for the row under the top bar (Mountain View card margins etc.). */
   rowClassName?: string;
+  /** Extra classes for the phone/tablet bottom bar, e.g. to hide it while a message is open. */
+  bottomBarClassName?: string;
   children: ReactNode;
 }
 
@@ -222,6 +228,7 @@ export function AppShellSkeleton({
   labels,
   mvSearch = false,
   rowClassName,
+  bottomBarClassName,
   children,
 }: AppShellSkeletonProps) {
   return (
@@ -245,7 +252,7 @@ export function AppShellSkeleton({
         <BottomBarSkeleton
           active={active}
           labels={labels}
-          className={railBelow === "lg" ? "flex lg:hidden" : "flex md:hidden"}
+          className={cn(railBelow === "lg" ? "flex lg:hidden" : "flex md:hidden", bottomBarClassName)}
         />
       </SkeletonRegion>
     </>
