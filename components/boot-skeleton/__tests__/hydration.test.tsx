@@ -26,7 +26,7 @@ describe('page skeletons hydrate without a mismatch', () => {
   it.each(SURFACES)('%s', async (surface) => {
     const element = <RouteSkeleton surface={surface} label="Loading..." labels={LABELS} />;
     const html = renderToString(element);
-    expect(html).toContain(`data-boot-skeleton="${surface === 'admin-login' ? 'login' : surface}"`);
+    expect(html).toContain(`data-boot-skeleton="${surface}"`);
 
     const container = document.createElement('div');
     container.innerHTML = html;

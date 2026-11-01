@@ -27,6 +27,9 @@ import { LoginSkeleton } from "./login-skeleton";
 
 export type RailApp = "mail" | "calendar" | "contacts" | "files" | "settings";
 
+/** A rail item drawn as current: an app, or the admin panel (NavigationRail adminActive). */
+export type RailActive = RailApp | "admin";
+
 /** Translated rail labels for the phone bottom bar; bars are drawn where one is missing. */
 export type RailLabels = Partial<Record<RailApp | "admin", string>>;
 
@@ -51,7 +54,7 @@ const APPS = [
  * The 56px vertical rail (NavigationRail collapsed). `className` decides at
  * which widths it shows.
  */
-export function RailSkeleton({ active, className }: { active?: RailApp; className?: string }) {
+export function RailSkeleton({ active, className }: { active?: RailActive; className?: string }) {
   const item = (on: boolean) =>
     cn(
       "relative flex items-center justify-center w-10 h-10 rounded-md max-lg:min-h-[44px]",
@@ -72,7 +75,7 @@ export function RailSkeleton({ active, className }: { active?: RailApp; classNam
           </span>
         </div>
         <div className="mt-auto flex flex-col items-center gap-2 pb-3 px-1 text-muted-foreground">
-          <span className={cn(footerItem, "hidden boot-rail-admin:flex")}>
+          <span className={cn(footerItem, active === "admin" ? "bg-primary/10 text-primary" : "hidden boot-rail-admin:flex")}>
             <Shield className="w-[18px] h-[18px]" />
           </span>
           <span className={footerItem}>
@@ -107,11 +110,16 @@ export function BottomBarSkeleton({
   labels,
   className,
 }: {
-  active?: RailApp;
+  active?: RailActive;
   labels?: RailLabels;
   className?: string;
 }) {
-  const items: { id: RailApp; icon: typeof Mail }[] = [...APPS, { id: "settings", icon: Settings }];
+  // The admin panel's own bar has its entry before Settings.
+  const items: { id: RailActive; icon: typeof Mail }[] = [
+    ...APPS,
+    ...(active === "admin" ? [{ id: "admin" as const, icon: Shield }] : []),
+    { id: "settings", icon: Settings },
+  ];
   return (
     <div
       aria-hidden="true"
@@ -127,7 +135,7 @@ export function BottomBarSkeleton({
           className={cn(
             "flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px]",
             active === id ? "text-primary" : "text-muted-foreground",
-            id !== "mail" && id !== "settings" && APP_HIDE[id],
+            (id === "calendar" || id === "contacts" || id === "files") && APP_HIDE[id],
           )}
         >
           <span className={cn("relative", active === id && "mv:min-w-14 mv:rounded-full mv:bg-primary/15 mv:px-4 mv:py-[3px]")}>

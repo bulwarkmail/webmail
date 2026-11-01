@@ -3,36 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import {
-  ArrowLeft,
-  ArrowUpCircle,
-  Activity,
-  Bell,
-  HeartRateMonitor,
-  Building2,
-  CalendarDays,
-  ChevronRight,
-  KeyRound,
-  LayoutDashboard,
-  LayoutTemplate,
-  LogOut,
-  Palette,
-  PenLine,
-  Puzzle,
-  Scale,
-  ScrollText,
-  Search,
-  Server,
-  Share2,
-  Shield,
-  ShieldCheck,
-  Smartphone,
-  Store,
-  SwatchBook,
-  Tag,
-  X,
-  type AppIcon,
-} from '@/components/icons';
+import { ArrowLeft, ChevronRight, KeyRound, LogOut, Search, Shield, X } from '@/components/icons';
 import { Input } from '@/components/ui/input';
 import { NavigationRail } from '@/components/layout/navigation-rail';
 import { AboutFooter } from '@/components/settings/about-data-settings';
@@ -44,40 +15,12 @@ import { useUpdateStore, selectHasUpdate } from '@/stores/update-store';
 import { useAdminUnsavedStore } from '@/stores/admin-unsaved-store';
 import { apiFetch, getPathPrefix } from '@/lib/browser-navigation';
 import { ADMIN_PAGES, adminPath, type AdminPageDef, type AdminPageId, type AdminSectionDef } from '@/lib/admin/admin-nav';
+import { AdminSkeleton } from '@/components/boot-skeleton/admin-skeleton';
+import { useSkeletonLabels } from '@/components/boot-skeleton/use-skeleton-labels';
+import { ADMIN_GROUPS, ADMIN_GROUP_LABELS, ADMIN_PAGE_ICONS as PAGE_ICONS } from './admin-page-icons';
 import { cn } from '@/lib/utils';
 import { AdminLink } from './admin-link';
 import { AdminShellContext } from './shell-context';
-
-const PAGE_ICONS: Record<AdminPageId, AppIcon> = {
-  dashboard: LayoutDashboard,
-  settings: Server,
-  auth: Shield,
-  branding: Palette,
-  policy: Scale,
-  organisation: Building2,
-  'org-signatures': PenLine,
-  'org-templates': LayoutTemplate,
-  'org-security': ShieldCheck,
-  'org-sharing': Share2,
-  'org-labels': Tag,
-  'org-calendars': CalendarDays,
-  'org-notices': Bell,
-  'org-devices': Smartphone,
-  plugins: Puzzle,
-  themes: SwatchBook,
-  marketplace: Store,
-  version: ArrowUpCircle,
-  telemetry: Activity,
-  monitoring: HeartRateMonitor,
-  logs: ScrollText,
-};
-
-const GROUP_LABELS: Record<AdminPageDef['group'], string | null> = {
-  top: null,
-  organisation: 'Organisation',
-  extensions: 'Extensions',
-  system: 'System',
-};
 
 interface AdminShellProps {
   /** Whether the admin session is in place; the sidebar counts load then. */
@@ -107,6 +50,7 @@ export function AdminShell({ authenticated, isStalwartAutoLogin, configReadOnly,
   const tSettings = useTranslations('settings');
   const tSidebar = useTranslations('sidebar');
   const location = useAdminLocation();
+  const { label: loadingLabel, labels: railLabels } = useSkeletonLabels();
   const isDesktop = useIsDesktop();
   // The server can't know the window width, so its HTML would be the phone
   // layout, shown on desktop until hydration swaps it (the rail's Admin link
@@ -186,8 +130,8 @@ export function AdminShell({ authenticated, isStalwartAutoLogin, configReadOnly,
   }, [trimmed]);
 
   const groups = useMemo(() => (
-    (['top', 'organisation', 'extensions', 'system'] as const)
-      .map((group) => ({ group, label: GROUP_LABELS[group], items: matches.filter((m) => m.page.group === group) }))
+    ADMIN_GROUPS
+      .map((group) => ({ group, label: ADMIN_GROUP_LABELS[group], items: matches.filter((m) => m.page.group === group) }))
       .filter((g) => g.items.length > 0)
   ), [matches]);
 
@@ -299,7 +243,18 @@ export function AdminShell({ authenticated, isStalwartAutoLogin, configReadOnly,
     </div>
   );
 
-  if (!hydrated) return <div className="h-dvh bg-background" />;
+  // The server HTML and the hydration pass: the panel's skeleton, both
+  // layouts drawn and picked by CSS until the width is known.
+  if (!hydrated) {
+    return (
+      <AdminSkeleton
+        page={location.page}
+        label={loadingLabel}
+        backLabel={tSettings('back_to_mail')}
+        labels={railLabels}
+      />
+    );
+  }
 
   if (!isDesktop) {
     const showIndex = location.page === null && !onChangePassword;
