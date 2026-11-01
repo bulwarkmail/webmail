@@ -174,7 +174,70 @@ export function applyBootLayout(root: HTMLElement, c: BootLayoutConfig): void {
 
   var desktop = false;
   try { desktop = w.matchMedia('(min-width: 64rem)').matches; } catch { /* assume not */ }
-  mark('pro', s.proInterface === true && desktop && (surface === 'pro' || has(c.pro, surface)) ? 'on' : null);
+  var proOn = s.proInterface === true && desktop && (surface === 'pro' || has(c.pro, surface));
+  mark('pro', proOn ? 'on' : null);
+
+  // --- Pro tabs ----------------------------------------------------------
+  // What the Pro shell will show (stores/pro-tab-store.ts, normalizeProTabState):
+  // each pane's tabs and its active tab, after the redirect from a standard
+  // page has opened or focused that page's tab (ProInterfaceRedirect, openTab).
+  var proShows: string[] = [];
+  var proTabs: { id: unknown; kind: string; pane: string }[] = [];
+  var proState = proOn ? stateOf('pro-tabs') : {};
+  var rawTabs = Array.isArray(proState.tabs) ? (proState.tabs as unknown[]) : [];
+  for (var t = 0; t < rawTabs.length; t++) {
+    var rt = rawTabs[t] as Record<string, unknown> | null;
+    if (rt && typeof rt === 'object' && typeof rt.kind === 'string') {
+      proTabs.push({ id: rt.id, kind: rt.kind, pane: rt.paneId === 'split' ? 'split' : 'main' });
+    }
+  }
+  if (!proTabs.length) proTabs.push({ id: 'home-mail', kind: 'mail', pane: 'main' });
+  var activeMain = proState.activeTabId;
+  var activeSplit = proState.activeSplitTabId;
+  var inPane = function (which: string) {
+    return proTabs.filter(function (tab) { return tab.pane === which; });
+  };
+  if (!inPane('main').length) {
+    // An empty main pane takes the split pane's tabs over.
+    for (var m = 0; m < proTabs.length; m++) proTabs[m].pane = 'main';
+    activeMain = activeSplit;
+    activeSplit = null;
+  }
+  var proFocus = proState.focusedPaneId === 'split' && inPane('split').length ? 'split' : 'main';
+  if (proOn && surface !== 'pro') {
+    var opened = null as { id: unknown; kind: string; pane: string } | null;
+    for (var o = 0; o < proTabs.length && !opened; o++) if (proTabs[o].kind === surface) opened = proTabs[o];
+    if (!opened) {
+      opened = { id: '#boot-opened', kind: surface, pane: proFocus };
+      proTabs.push(opened);
+    }
+    if (opened.pane === 'split') activeSplit = opened.id;
+    else activeMain = opened.id;
+    proFocus = opened.pane;
+  }
+  var proPane = function (which: string, activeId: unknown): string {
+    var list = inPane(which);
+    if (!proOn || !list.length) {
+      mark('pro-' + which + '-tabs', null);
+      mark('pro-' + which + '-active', null);
+      mark('pro-' + which + '-kind', null);
+      return '';
+    }
+    var at = 0;
+    for (var p = 0; p < list.length; p++) if (list[p].id === activeId) at = p;
+    var kind = list[at].kind;
+    // The skeleton draws up to eight tabs; a longer strip scrolls anyway.
+    mark('pro-' + which + '-tabs', String(Math.min(list.length, 8)));
+    mark('pro-' + which + '-active', String(Math.min(at, 7)));
+    mark('pro-' + which + '-kind', has(c.pro, kind) ? kind : 'other');
+    proShows.push(kind);
+    return kind;
+  };
+  var mainKind = proPane('main', activeMain);
+  var splitKind = proPane('split', activeSplit);
+  mark('pro-split', proOn && splitKind ? (proState.splitSide === 'left' ? 'left' : 'right') : null);
+  mark('pro-focus', proOn ? proFocus : null);
+  mark('pro-kind', proOn ? (proFocus === 'split' ? splitKind : mainKind) : null);
 
   // --- Which pane is open ----------------------------------------------
   var pane = '';
@@ -187,21 +250,22 @@ export function applyBootLayout(root: HTMLElement, c: BootLayoutConfig): void {
     if (seg[1]) pane = 'detail';
   }
 
-  if (surface === 'settings') {
+  // A Pro pane showing settings or the calendar needs their variants too.
+  if (surface === 'settings' || proShows.indexOf('settings') !== -1) {
     var migrate = function (raw: string | null): string | null {
       if (!raw) return null;
       var id = c.legacyTabs[raw] || raw;
       return has(c.tabs, id) ? id : null;
     };
-    var linked = migrate(seg[1] || null) || migrate(readSession('settings-deep-link-tab'));
-    if (linked) pane = 'detail';
+    var linked = migrate(surface === 'settings' ? seg[1] || null : null) || migrate(readSession('settings-deep-link-tab'));
+    if (linked && surface === 'settings') pane = 'detail';
     mark('settings-tab', linked || migrate(readLocal('settings-active-tab')) || 'appearance');
   } else mark('settings-tab', null);
   mark('pane', pane);
 
   // --- Calendar ----------------------------------------------------------
-  if (surface === 'calendar') {
-    var view = seg[1] || '';
+  if (surface === 'calendar' || proShows.indexOf('calendar') !== -1) {
+    var view = surface === 'calendar' ? seg[1] || '' : '';
     var calView = has(c.calendarViews, view) ? view : '';
     if (!calView && /^\d{4}-\d{2}-\d{2}$/.test(view)) calView = 'month';
     if (!calView) {
