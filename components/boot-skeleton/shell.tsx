@@ -17,6 +17,7 @@ import {
   Mail,
   Menu,
   Plus,
+  Search,
   Settings,
   Shield,
   Users,
@@ -24,6 +25,7 @@ import {
 import { cn } from "@/lib/cn";
 import { Bar, Circle, SkeletonRegion, type SkeletonSurface } from "./kit";
 import { LoginSkeleton } from "./login-skeleton";
+import { ProFrameSkeleton } from "./pro-skeleton";
 
 export type RailApp = "mail" | "calendar" | "contacts" | "files" | "settings";
 
@@ -49,9 +51,19 @@ const APPS = [
 
 /**
  * The 56px vertical rail (NavigationRail collapsed). `className` decides at
- * which widths it shows.
+ * which widths it shows. `search` draws the global search button the Pro
+ * shell's rail starts with. Items carry `data-sk-rail` so the Pro frame can
+ * mark the focused tab's app from CSS.
  */
-export function RailSkeleton({ active, className }: { active?: RailApp; className?: string }) {
+export function RailSkeleton({
+  active,
+  search = false,
+  className,
+}: {
+  active?: RailApp;
+  search?: boolean;
+  className?: string;
+}) {
   const item = (on: boolean) =>
     cn(
       "relative flex items-center justify-center w-10 h-10 rounded-md max-lg:min-h-[44px]",
@@ -62,8 +74,13 @@ export function RailSkeleton({ active, className }: { active?: RailApp; classNam
     <div aria-hidden="true" className={cn("w-14 bg-secondary flex-col flex-shrink-0", className)} style={RAIL_BORDER}>
       <div className="flex flex-col h-full items-center">
         <div className="flex flex-col flex-1 min-h-0 items-center gap-1 py-3 px-1">
+          {search ? (
+            <span className={item(false)}>
+              <Search className="w-[18px] h-[18px] flex-shrink-0" />
+            </span>
+          ) : null}
           {APPS.map(({ id, icon: Icon }) => (
-            <span key={id} className={cn(item(active === id), id !== "mail" && APP_HIDE[id])}>
+            <span key={id} data-sk-rail={id} className={cn(item(active === id), id !== "mail" && APP_HIDE[id])}>
               <Icon className={cn("w-[18px] h-[18px] flex-shrink-0", active === id && "text-primary")} />
             </span>
           ))}
@@ -81,7 +98,7 @@ export function RailSkeleton({ active, className }: { active?: RailApp; classNam
           <span className={cn(footerItem, "hidden boot-rail-a11y:flex")}>
             <Accessibility className="w-[18px] h-[18px]" />
           </span>
-          <span className={cn(footerItem, active === "settings" && "bg-primary/10 text-primary")}>
+          <span data-sk-rail="settings" className={cn(footerItem, active === "settings" && "bg-primary/10 text-primary")}>
             <Settings className="w-[18px] h-[18px]" />
           </span>
           <div className="w-8 border-t" style={DIVIDER} />
@@ -213,6 +230,11 @@ interface AppShellSkeletonProps {
  * When nothing is stored that could sign the visitor back in, the boot script
  * marks the page `data-boot-auth="out"` and the login card is drawn instead:
  * that is where the app is about to send them.
+ *
+ * When the Pro interface is about to take the page over (`data-boot-pro="on"`:
+ * the setting is on and the screen is a desktop), the Pro frame is drawn
+ * instead, so the hop to /pro moves nothing. The login card wins over it: a
+ * signed-out visitor ends up on the login page either way.
  */
 export function AppShellSkeleton({
   surface,
@@ -229,10 +251,13 @@ export function AppShellSkeleton({
       <div className="hidden boot-out:block">
         <LoginSkeleton label={label} />
       </div>
+      <div className="hidden boot-pro-frame:block">
+        <ProFrameSkeleton label={label} />
+      </div>
       <SkeletonRegion
         surface={surface}
         label={label}
-        className="flex flex-col overflow-hidden pt-[env(safe-area-inset-top)] h-dvh bg-background lg:mv:bg-[var(--mv-canvas)] boot-out:hidden"
+        className="flex flex-col overflow-hidden pt-[env(safe-area-inset-top)] h-dvh bg-background lg:mv:bg-[var(--mv-canvas)] boot-out:hidden boot-pro-frame:hidden"
       >
         <MvTopBarSkeleton search={mvSearch} className="hidden lg:mv:flex" />
         <div className={cn("flex flex-1 min-h-0 overflow-hidden", rowClassName)}>
