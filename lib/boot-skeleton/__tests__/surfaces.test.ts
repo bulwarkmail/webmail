@@ -3,7 +3,7 @@ import { TARGET_NAMES, getTarget } from '@/lib/connector/registry';
 import { locales } from '@/i18n/routing';
 import { CONNECTOR_SURFACES, surfaceFromPath } from '../surfaces';
 import { BOOT_HINTS_KEY } from '../keys';
-import { resetRailHintsMemo, writeRailHints } from '../hints';
+import { resetRailHintsMemo, writeRailHints, writeSettingsHints } from '../hints';
 
 describe('connector targets', () => {
   it('every target the connector can resolve has a skeleton surface', () => {
@@ -74,5 +74,13 @@ describe('rail hints', () => {
     expect(localStorage.getItem(BOOT_HINTS_KEY)).toBeNull();
     writeRailHints(['files', 'admin']);
     expect(JSON.parse(localStorage.getItem(BOOT_HINTS_KEY)!).rail).toEqual(['mail', 'files', 'admin']);
+  });
+
+  it('keeps the rail and the settings pages side by side', () => {
+    writeRailHints(['calendar']);
+    writeSettingsHints(['account', 'filters']);
+    expect(JSON.parse(localStorage.getItem(BOOT_HINTS_KEY)!)).toEqual({ v: 1, rail: ['mail', 'calendar'], settings: ['account', 'filters'] });
+    writeRailHints(['files']);
+    expect(JSON.parse(localStorage.getItem(BOOT_HINTS_KEY)!)).toEqual({ v: 1, rail: ['mail', 'files'], settings: ['account', 'filters'] });
   });
 });

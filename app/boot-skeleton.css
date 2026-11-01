@@ -181,3 +181,46 @@
   background-color: color-mix(in oklab, var(--color-primary) 10%, transparent);
   color: var(--color-primary);
 }
+
+/* settings */
+
+/* The open settings page in the skeleton nav: the row whose
+   data-sk-settings-tab matches data-boot-settings-tab. */
+@custom-variant boot-settings-active (&:where(
+  [data-boot-settings-tab="account"] [data-sk-settings-tab="account"],
+  [data-boot-settings-tab="general"] [data-sk-settings-tab="general"],
+  [data-boot-settings-tab="notifications"] [data-sk-settings-tab="notifications"],
+  [data-boot-settings-tab="appearance"] [data-sk-settings-tab="appearance"],
+  [data-boot-settings-tab="accessibility"] [data-sk-settings-tab="accessibility"],
+  [data-boot-settings-tab="message_list"] [data-sk-settings-tab="message_list"],
+  [data-boot-settings-tab="reading"] [data-sk-settings-tab="reading"],
+  [data-boot-settings-tab="composing"] [data-sk-settings-tab="composing"],
+  [data-boot-settings-tab="vacation"] [data-sk-settings-tab="vacation"],
+  [data-boot-settings-tab="filters"] [data-sk-settings-tab="filters"],
+  [data-boot-settings-tab="organize"] [data-sk-settings-tab="organize"],
+  [data-boot-settings-tab="security"] [data-sk-settings-tab="security"],
+  [data-boot-settings-tab="sharing"] [data-sk-settings-tab="sharing"],
+  [data-boot-settings-tab="recovery"] [data-sk-settings-tab="recovery"],
+  [data-boot-settings-tab="calendar"] [data-sk-settings-tab="calendar"],
+  [data-boot-settings-tab="contacts"] [data-sk-settings-tab="contacts"],
+  [data-boot-settings-tab="files"] [data-sk-settings-tab="files"],
+  [data-boot-settings-tab="addons"] [data-sk-settings-tab="addons"],
+  [data-boot-settings-tab="backup"] [data-sk-settings-tab="backup"]
+));
+
+/* Settings pages the nav listed last time (bulwark-boot-hints). Without
+   hints every page is drawn except recovery (an Enterprise feature). */
+@custom-variant boot-no-settings-security (&:where([data-boot-settings-tabs]:not([data-boot-settings-tabs~="security"]) *));
+@custom-variant boot-no-settings-sharing (&:where([data-boot-settings-tabs]:not([data-boot-settings-tabs~="sharing"]) *));
+@custom-variant boot-no-settings-filters (&:where([data-boot-settings-tabs]:not([data-boot-settings-tabs~="filters"]) *));
+@custom-variant boot-no-settings-vacation (&:where([data-boot-settings-tabs]:not([data-boot-settings-tabs~="vacation"]) *));
+@custom-variant boot-no-settings-calendar (&:where([data-boot-settings-tabs]:not([data-boot-settings-tabs~="calendar"]) *));
+@custom-variant boot-no-settings-contacts (&:where([data-boot-settings-tabs]:not([data-boot-settings-tabs~="contacts"]) *));
+@custom-variant boot-no-settings-files (&:where([data-boot-settings-tabs]:not([data-boot-settings-tabs~="files"]) *));
+@custom-variant boot-no-settings-addons (&:where([data-boot-settings-tabs]:not([data-boot-settings-tabs~="addons"]) *));
+@custom-variant boot-settings-recovery (&:where([data-boot-settings-tabs~="recovery"] *));
+
+/* Settings pages with one section have no section jump row (SectionNav). */
+@custom-variant boot-settings-one-section (&:where([data-boot-settings-tab="security"] *, [data-boot-settings-tab="filters"] *, [data-boot-settings-tab="vacation"] *, [data-boot-settings-tab="recovery"] *, [data-boot-settings-tab="addons"] *));
+/* Accessibility has eleven sections: its jump row wraps to a second line. */
+@custom-variant boot-settings-two-rows (&:where([data-boot-settings-tab="accessibility"] *));

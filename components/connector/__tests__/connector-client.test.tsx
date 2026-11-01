@@ -1,5 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
+import { renderToString } from 'react-dom/server';
+import { TARGET_NAMES } from '@/lib/connector/registry';
+import { CONNECTOR_SURFACES } from '@/lib/boot-skeleton/surfaces';
 
 // A connector link that can't be opened explains why in the reader's
 // language (keys in tests), not in English only.
@@ -25,5 +28,23 @@ describe('connector link page', () => {
     render(<ConnectorClient target="calendar" />);
     expect(await screen.findByRole('heading', { name: /malformed_title/ })).toBeInTheDocument();
     window.history.replaceState(null, '', '/');
+  });
+});
+
+describe('connector link page while it resolves', () => {
+  // The server HTML is what shows until the redirect: the skeleton of the
+  // page the link opens, with the opening text as its status message.
+  it.each(TARGET_NAMES)('%s draws its destination skeleton', (target) => {
+    const html = renderToString(<ConnectorClient target={target} />);
+    const surface = CONNECTOR_SURFACES[target];
+    expect(html).toContain(`data-boot-skeleton="${surface}"`);
+    expect(html).toContain('role="status"');
+    expect(html).toContain('opening');
+  });
+
+  it('keeps the plain text for a target it does not know', () => {
+    const html = renderToString(<ConnectorClient target="constructor" />);
+    expect(html).not.toContain('data-boot-skeleton');
+    expect(html).toContain('opening');
   });
 });

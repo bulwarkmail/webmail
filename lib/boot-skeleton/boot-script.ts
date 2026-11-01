@@ -317,6 +317,12 @@ export function applyBootLayout(root: HTMLElement, c: BootLayoutConfig): void {
     ? (hints.rail as unknown[]).filter(function (r) { return typeof r === 'string' && /^[a-z-]+$/.test(r); })
     : null;
   mark('rail', rail && rail.length ? rail.join(' ') : null);
+  // The settings pages the nav listed: the skeleton hides the optional ones
+  // that weren't there. Pages only, from the known list.
+  var settingsTabs = hints && Array.isArray(hints.settings)
+    ? (hints.settings as unknown[]).filter(function (t) { return has(c.tabs, t); })
+    : null;
+  mark('settings-tabs', settingsTabs && settingsTabs.length ? settingsTabs.join(' ') : null);
 
   // --- Probably signed out? --------------------------------------------
   // No redirect here: a cookie-only session (impersonation, a server hand-off)
