@@ -360,6 +360,102 @@ describe('boot script: Pro interface', () => {
   });
 });
 
+describe('boot script: Pro tabs', () => {
+  const tab = (id: string, kind: string, paneId = 'main') => ({ id, kind, labelKey: kind, closeable: id !== 'home-mail', paneId });
+  const proTabs = (state: Record<string, unknown>) =>
+    localStorage.setItem('pro-tabs', JSON.stringify({ state, version: 4 }));
+  const pro = () => ({
+    split: attr('pro-split'),
+    focus: attr('pro-focus'),
+    kind: attr('pro-kind'),
+    main: [attr('pro-main-tabs'), attr('pro-main-active'), attr('pro-main-kind')],
+    side: [attr('pro-split-tabs'), attr('pro-split-active'), attr('pro-split-kind')],
+  });
+
+  beforeEach(() => settings({ proInterface: true }));
+
+  it('draws the single home mail tab when nothing is stored', () => {
+    boot('/en/pro');
+    expect(pro()).toEqual({ split: null, focus: 'main', kind: 'mail', main: ['1', '0', 'mail'], side: [null, null, null] });
+  });
+
+  it('falls back to the home mail tab for corrupt or empty tabs', () => {
+    localStorage.setItem('pro-tabs', '{not json');
+    boot('/en/pro');
+    expect(pro().main).toEqual(['1', '0', 'mail']);
+    proTabs({ tabs: 'nope', activeTabId: 3 });
+    boot('/en/pro');
+    expect(pro().main).toEqual(['1', '0', 'mail']);
+    proTabs({ tabs: [null, { id: 'x' }, 7], activeTabId: 'x' });
+    boot('/en/pro');
+    expect(pro().main).toEqual(['1', '0', 'mail']);
+  });
+
+  it('reads the tab count, the active tab and the split', () => {
+    proTabs({
+      tabs: [tab('home-mail', 'mail'), tab('c', 'calendar'), tab('f', 'folder'), tab('s', 'settings', 'split'), tab('e', 'email', 'split')],
+      activeTabId: 'c',
+      activeSplitTabId: 'e',
+      focusedPaneId: 'split',
+      splitSide: 'left',
+    });
+    boot('/en/pro');
+    expect(pro()).toEqual({
+      split: 'left', focus: 'split', kind: 'email',
+      main: ['3', '1', 'calendar'],
+      side: ['2', '1', 'other'],
+    });
+  });
+
+  it('gives the calendar and settings variants to a pane that shows them', () => {
+    proTabs({ tabs: [tab('home-mail', 'mail'), tab('c', 'calendar'), tab('s', 'settings', 'split')], activeTabId: 'c', activeSplitTabId: 's' });
+    localStorage.setItem('calendar-storage', JSON.stringify({ state: { viewMode: 'week' }, version: 0 }));
+    localStorage.setItem('settings-active-tab', 'filters');
+    boot('/en/pro');
+    expect(attr('calendar-view')).toBe('week');
+    expect(cssVar('--boot-cal-cols')).toBe('7');
+    expect(attr('settings-tab')).toBe('filters');
+    expect(attr('pane')).toBeNull();
+  });
+
+  it('merges a split pane into an empty main pane', () => {
+    proTabs({ tabs: [tab('c', 'calendar', 'split'), tab('f', 'files', 'split')], activeTabId: 'gone', activeSplitTabId: 'f', focusedPaneId: 'split' });
+    boot('/en/pro');
+    expect(pro()).toEqual({ split: null, focus: 'main', kind: 'files', main: ['2', '1', 'files'], side: [null, null, null] });
+  });
+
+  it('focuses the tab the redirect opens for a standard page', () => {
+    proTabs({
+      tabs: [tab('home-mail', 'mail'), tab('c', 'calendar', 'split')],
+      activeTabId: 'home-mail',
+      activeSplitTabId: 'c',
+      focusedPaneId: 'main',
+    });
+    boot('/en/calendar/week/2026-11-04');
+    expect(pro()).toMatchObject({ split: 'right', focus: 'split', kind: 'calendar', main: ['1', '0', 'mail'], side: ['1', '0', 'calendar'] });
+    expect(attr('calendar-view')).toBe('week');
+
+    // No contacts tab yet: a new one at the end of the focused pane.
+    boot('/en/contacts');
+    expect(pro()).toMatchObject({ focus: 'main', kind: 'contacts', main: ['2', '1', 'contacts'], side: ['1', '0', 'calendar'] });
+  });
+
+  it('caps the drawn tabs at eight', () => {
+    const many = Array.from({ length: 12 }, (_, i) => tab(`t${i}`, i === 11 ? 'files' : 'email'));
+    proTabs({ tabs: many, activeTabId: 't11' });
+    boot('/en/pro');
+    expect(pro().main).toEqual(['8', '7', 'files']);
+  });
+
+  it('sets nothing when Pro does not take the page over', () => {
+    proTabs({ tabs: [tab('home-mail', 'mail'), tab('c', 'calendar', 'split')], activeSplitTabId: 'c' });
+    desktop(false);
+    boot('/en/mail');
+    expect(pro()).toEqual({ split: null, focus: null, kind: null, main: [null, null, null], side: [null, null, null] });
+    expect(attr('calendar-view')).toBeNull();
+  });
+});
+
 describe('boot script: signed-out visitors', () => {
   it('marks a visitor with nothing stored as signed out on app pages', () => {
     boot('/en/mail');

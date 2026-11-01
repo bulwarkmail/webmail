@@ -91,3 +91,93 @@
     animation: none;
   }
 }
+
+/* pro */
+
+/* The Pro shell takes a standard page over (components/boot-skeleton/shell.tsx):
+   on a desktop with the Pro interface on, unless the visitor is signed out,
+   and never again inside the Pro shell itself (an embedded page's gate). */
+@custom-variant boot-pro-frame (&:where([data-boot-pro="on"]:not([data-boot-auth="out"]) *):not(:where([data-pro-shell] *)));
+
+/* The Pro split pane, on its stored side. */
+@custom-variant boot-pro-split (&:where([data-boot-pro-split] *));
+@custom-variant boot-pro-split-left (&:where([data-boot-pro-split="left"] *));
+
+/* Each pane's tab strip draws as many tabs as the store holds (up to eight),
+   and its body the active tab's page (lib/boot-skeleton/boot-script.ts,
+   data-boot-pro-<pane>-tabs / -active / -kind). One tab and mail without them. */
+[data-sk-pro-tab]:nth-child(n+2),
+[data-sk-pro-body] {
+  display: none;
+}
+:root[data-boot-pro-main-tabs="2"] [data-sk-pro-pane="main"] [data-sk-pro-tab]:nth-child(-n+2),
+:root[data-boot-pro-main-tabs="3"] [data-sk-pro-pane="main"] [data-sk-pro-tab]:nth-child(-n+3),
+:root[data-boot-pro-main-tabs="4"] [data-sk-pro-pane="main"] [data-sk-pro-tab]:nth-child(-n+4),
+:root[data-boot-pro-main-tabs="5"] [data-sk-pro-pane="main"] [data-sk-pro-tab]:nth-child(-n+5),
+:root[data-boot-pro-main-tabs="6"] [data-sk-pro-pane="main"] [data-sk-pro-tab]:nth-child(-n+6),
+:root[data-boot-pro-main-tabs="7"] [data-sk-pro-pane="main"] [data-sk-pro-tab]:nth-child(-n+7),
+:root[data-boot-pro-main-tabs="8"] [data-sk-pro-pane="main"] [data-sk-pro-tab]:nth-child(-n+8),
+:root[data-boot-pro-split-tabs="2"] [data-sk-pro-pane="split"] [data-sk-pro-tab]:nth-child(-n+2),
+:root[data-boot-pro-split-tabs="3"] [data-sk-pro-pane="split"] [data-sk-pro-tab]:nth-child(-n+3),
+:root[data-boot-pro-split-tabs="4"] [data-sk-pro-pane="split"] [data-sk-pro-tab]:nth-child(-n+4),
+:root[data-boot-pro-split-tabs="5"] [data-sk-pro-pane="split"] [data-sk-pro-tab]:nth-child(-n+5),
+:root[data-boot-pro-split-tabs="6"] [data-sk-pro-pane="split"] [data-sk-pro-tab]:nth-child(-n+6),
+:root[data-boot-pro-split-tabs="7"] [data-sk-pro-pane="split"] [data-sk-pro-tab]:nth-child(-n+7),
+:root[data-boot-pro-split-tabs="8"] [data-sk-pro-pane="split"] [data-sk-pro-tab]:nth-child(-n+8) {
+  display: flex;
+}
+:root:not([data-boot-pro-main-active]) [data-sk-pro-pane="main"] [data-sk-pro-tab]:first-child,
+:root:not([data-boot-pro-split-active]) [data-sk-pro-pane="split"] [data-sk-pro-tab]:first-child,
+:root[data-boot-pro-main-active="0"] [data-sk-pro-pane="main"] [data-sk-pro-tab]:nth-child(1),
+:root[data-boot-pro-main-active="1"] [data-sk-pro-pane="main"] [data-sk-pro-tab]:nth-child(2),
+:root[data-boot-pro-main-active="2"] [data-sk-pro-pane="main"] [data-sk-pro-tab]:nth-child(3),
+:root[data-boot-pro-main-active="3"] [data-sk-pro-pane="main"] [data-sk-pro-tab]:nth-child(4),
+:root[data-boot-pro-main-active="4"] [data-sk-pro-pane="main"] [data-sk-pro-tab]:nth-child(5),
+:root[data-boot-pro-main-active="5"] [data-sk-pro-pane="main"] [data-sk-pro-tab]:nth-child(6),
+:root[data-boot-pro-main-active="6"] [data-sk-pro-pane="main"] [data-sk-pro-tab]:nth-child(7),
+:root[data-boot-pro-main-active="7"] [data-sk-pro-pane="main"] [data-sk-pro-tab]:nth-child(8),
+:root[data-boot-pro-split-active="0"] [data-sk-pro-pane="split"] [data-sk-pro-tab]:nth-child(1),
+:root[data-boot-pro-split-active="1"] [data-sk-pro-pane="split"] [data-sk-pro-tab]:nth-child(2),
+:root[data-boot-pro-split-active="2"] [data-sk-pro-pane="split"] [data-sk-pro-tab]:nth-child(3),
+:root[data-boot-pro-split-active="3"] [data-sk-pro-pane="split"] [data-sk-pro-tab]:nth-child(4),
+:root[data-boot-pro-split-active="4"] [data-sk-pro-pane="split"] [data-sk-pro-tab]:nth-child(5),
+:root[data-boot-pro-split-active="5"] [data-sk-pro-pane="split"] [data-sk-pro-tab]:nth-child(6),
+:root[data-boot-pro-split-active="6"] [data-sk-pro-pane="split"] [data-sk-pro-tab]:nth-child(7),
+:root[data-boot-pro-split-active="7"] [data-sk-pro-pane="split"] [data-sk-pro-tab]:nth-child(8) {
+  /* ProTabBar's active tab; its bottom edge covers the strip's border. */
+  background-color: var(--color-background);
+  border-inline-color: rgba(128, 128, 128, 0.3);
+  --sk-pro-tab-accent: var(--sk-pro-pane-accent);
+}
+:root:not([data-boot-pro-focus="split"]) [data-sk-pro-pane="main"],
+:root[data-boot-pro-focus="split"] [data-sk-pro-pane="split"] {
+  /* The focused pane's active tab carries the accent top edge. */
+  --sk-pro-pane-accent: var(--color-primary);
+}
+:root:not([data-boot-pro-main-kind]) [data-sk-pro-pane="main"] [data-sk-pro-body="mail"],
+:root:not([data-boot-pro-split-kind]) [data-sk-pro-pane="split"] [data-sk-pro-body="mail"],
+:root[data-boot-pro-main-kind="mail"] [data-sk-pro-pane="main"] [data-sk-pro-body="mail"],
+:root[data-boot-pro-main-kind="calendar"] [data-sk-pro-pane="main"] [data-sk-pro-body="calendar"],
+:root[data-boot-pro-main-kind="contacts"] [data-sk-pro-pane="main"] [data-sk-pro-body="contacts"],
+:root[data-boot-pro-main-kind="files"] [data-sk-pro-pane="main"] [data-sk-pro-body="files"],
+:root[data-boot-pro-main-kind="settings"] [data-sk-pro-pane="main"] [data-sk-pro-body="settings"],
+:root[data-boot-pro-main-kind="other"] [data-sk-pro-pane="main"] [data-sk-pro-body="other"],
+:root[data-boot-pro-split-kind="mail"] [data-sk-pro-pane="split"] [data-sk-pro-body="mail"],
+:root[data-boot-pro-split-kind="calendar"] [data-sk-pro-pane="split"] [data-sk-pro-body="calendar"],
+:root[data-boot-pro-split-kind="contacts"] [data-sk-pro-pane="split"] [data-sk-pro-body="contacts"],
+:root[data-boot-pro-split-kind="files"] [data-sk-pro-pane="split"] [data-sk-pro-body="files"],
+:root[data-boot-pro-split-kind="settings"] [data-sk-pro-pane="split"] [data-sk-pro-body="settings"],
+:root[data-boot-pro-split-kind="other"] [data-sk-pro-pane="split"] [data-sk-pro-body="other"] {
+  display: block;
+}
+
+/* The rail marks the focused tab's app (pro/page.tsx, railActiveItemId). */
+:root:not([data-boot-pro-kind]) [data-pro-shell] [data-sk-rail="mail"],
+:root[data-boot-pro-kind="mail"] [data-pro-shell] [data-sk-rail="mail"],
+:root[data-boot-pro-kind="calendar"] [data-pro-shell] [data-sk-rail="calendar"],
+:root[data-boot-pro-kind="contacts"] [data-pro-shell] [data-sk-rail="contacts"],
+:root[data-boot-pro-kind="files"] [data-pro-shell] [data-sk-rail="files"],
+:root[data-boot-pro-kind="settings"] [data-pro-shell] [data-sk-rail="settings"] {
+  background-color: color-mix(in oklab, var(--color-primary) 10%, transparent);
+  color: var(--color-primary);
+}

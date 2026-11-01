@@ -36,6 +36,8 @@ import { useProTabStore, type ProTab, type ProTabKind, type ProPaneId, type ProS
 import { cn } from "@/lib/utils";
 import { getPathPrefix } from "@/lib/browser-navigation";
 import { onOpenEmail, proEmailTabOpener } from "@/lib/plugin-sandbox/open-email";
+import { ProSkeleton } from "@/components/boot-skeleton/pro-skeleton";
+import { useSkeletonLabels } from "@/components/boot-skeleton/use-skeleton-labels";
 
 import { MailApp } from "@/components/mail/mail-app";
 import { CalendarApp } from "@/components/calendar/calendar-app";
@@ -189,6 +191,7 @@ function Pane({ paneId, tabs, activeTabId, loadedTabIds, onPaneFocus, isFocused 
 
 export default function ProHome() {
   const t = useTranslations();
+  const { label: skeletonLabel } = useSkeletonLabels();
   const { isMobile, isTablet, isDesktop } = useDeviceDetection();
 
   const [initialCheckDone, setInitialCheckDone] = useState(
@@ -448,19 +451,13 @@ export default function ProHome() {
     }
   };
 
-  // Loading state (matches standard page exactly)
-  if (!initialCheckDone || authLoading || !isAuthenticated || !client) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-background">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-foreground mx-auto"></div>
-          <p className="mt-4 text-sm text-muted-foreground">{t("common.loading")}</p>
-        </div>
-      </div>
-    );
+  // Until the session is up: the same skeleton the server drew, so hydration
+  // matches and nothing moves. Below desktop width the effect above is about
+  // to send the visitor to the standard page; keep the skeleton up meanwhile
+  // rather than a blank page.
+  if (!initialCheckDone || authLoading || !isAuthenticated || !client || !isDesktop) {
+    return <ProSkeleton label={skeletonLabel} />;
   }
-
-  if (!isDesktop) return null;
 
   // Each pane renders as a column: its own tab strip directly above its
   // body, so a tab visibly belongs to the pane beneath it and clicking a
@@ -511,7 +508,8 @@ export default function ProHome() {
 
   return (
     <EmbeddedContext.Provider value={true}>
-      <div className="flex flex-col h-dvh bg-background overflow-hidden pt-[env(safe-area-inset-top)]">
+      {/* data-pro-shell: a page skeleton inside a pane draws its own frame, not the Pro one. */}
+      <div data-pro-shell="" className="flex flex-col h-dvh bg-background overflow-hidden pt-[env(safe-area-inset-top)]">
         {/* Once for the whole shell: email and folder tabs have no app strip, and split panes would show it twice. */}
         <OrgAnnouncement />
         <div className="flex flex-1 overflow-hidden">
