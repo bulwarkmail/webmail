@@ -1961,7 +1961,11 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   useEffect(() => {
     if (deepLinkHandledRef.current) return;
     if (!isAuthenticated || !client) return;
-    if (mailboxes.length === 0) return;
+    if (mailboxes.length === 0) {
+      // The account has no folders to open the link in: stop holding the reader open for it.
+      if (initialMailLoadDone) setDeepLinkPane(null);
+      return;
+    }
     if (!initialMailLoadDone) return;
 
     const params = new URLSearchParams(initialSearchRef.current ?? window.location.search);
