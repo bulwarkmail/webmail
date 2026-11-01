@@ -6,30 +6,17 @@ import { useState, useEffect, useCallback, useRef, useMemo, useSyncExternalStore
 import { useRouter } from '@/i18n/navigation';
 import { useTranslations, useMessages } from 'next-intl';
 import {
-  Accessibility,
   ArrowLeft,
   ChevronRight,
   LogOut,
   Settings as SettingsIcon,
-  Palette,
-  User,
-  Shield,
-  PalmtreeIcon,
-  Calendar,
-  Filter,
-  FolderOpen,
-  HardDrive,
-  BookUser,
-  Bell,
   Puzzle,
-  BookOpen,
-  PenLine,
-  LayoutList,
-  Database,
-  Users,
-  RotateCcw,
   type AppIcon,
 } from '@/components/icons';
+import { SETTINGS_TAB_ICONS, type SettingsTabGroup } from '@/components/settings/settings-tab-icons';
+import { SettingsSkeleton, SettingsSkeletonBody } from '@/components/boot-skeleton/settings-skeleton';
+import { useSkeletonLabels } from '@/components/boot-skeleton/use-skeleton-labels';
+import { writeSettingsHints } from '@/lib/boot-skeleton/hints';
 import { useRegisterCommands } from '@/lib/command-registry';
 import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
@@ -110,7 +97,7 @@ type Tab = SettingsSearchTab;
 
 // `top` and `bottom` have no heading: the first five pages, and Backup & reset
 // after a rule at the end.
-type TabGroup = 'top' | 'mail' | 'apps' | 'bottom';
+type TabGroup = SettingsTabGroup;
 
 // A plugin that exposes a `settings-section` slot gets its own first-class
 // Settings entry, keyed `plugin:<id>`, so its UI (e.g. S/MIME key import) is
@@ -131,27 +118,8 @@ interface TabDef {
   sub?: boolean;
 }
 
-const tabIcons: Record<Tab, AppIcon> = {
-  account: User,
-  general: SettingsIcon,
-  notifications: Bell,
-  appearance: Palette,
-  accessibility: Accessibility,
-  message_list: LayoutList,
-  reading: BookOpen,
-  composing: PenLine,
-  vacation: PalmtreeIcon,
-  filters: Filter,
-  organize: FolderOpen,
-  security: Shield,
-  sharing: Users,
-  recovery: RotateCcw,
-  calendar: Calendar,
-  contacts: BookUser,
-  files: HardDrive,
-  addons: Puzzle,
-  backup: Database,
-};
+// Shared with the boot skeleton, which draws the same nav before any script runs.
+const tabIcons = SETTINGS_TAB_ICONS;
 
 const tabGroupOrder: TabGroup[] = ['top', 'mail', 'apps', 'bottom'];
 
@@ -265,6 +233,7 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
   const tShell = useTranslations('shell');
   const tDelegates = useTranslations('delegates');
   const tPalette = useTranslations('command_palette');
+  const skeletonLabels = useSkeletonLabels();
   const { client, isAuthenticated, logout, checkAuth, isLoading: authLoading } = useAuthStore();
   const { showAppsModal, inlineApp, loadedApps, handleManageApps, handleInlineApp, closeInlineApp, closeAppsModal } = useSidebarApps();
   const isEmbedded = useIsEmbedded();
@@ -825,8 +794,24 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
     isAuthenticated,
   );
 
-  if (!isAuthenticated) {
-    return null;
+  // Which pages this account has, for the next load's skeleton nav
+  // (lib/boot-skeleton/hints.ts). Only the account's own list, once its
+  // capabilities are known; plugin entries are left out.
+  const hintedTabs = client && !managedAccountId
+    ? visibleTabs.filter((tab) => !tab.id.includes(':')).map((tab) => tab.id).join(' ')
+    : null;
+  useEffect(() => {
+    if (hintedTabs) writeSettingsHints(hintedTabs.split(' '));
+  }, [hintedTabs]);
+
+  // Until the session is up, the page's skeleton (the same one the server
+  // drew). Waiting for the client, not only the persisted sign-in, means the
+  // nav renders once with the account's pages instead of growing as the
+  // capabilities arrive.
+  if (!isAuthenticated || !client) {
+    return isEmbedded
+      ? <SettingsSkeletonBody embedded />
+      : <SettingsSkeleton label={skeletonLabels.label} labels={skeletonLabels.labels} />;
   }
 
   const renderTabContent = () => (

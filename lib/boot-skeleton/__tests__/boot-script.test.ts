@@ -406,6 +406,17 @@ describe('boot script: rail hints', () => {
     boot('/en/mail');
     expect(attr('rail')).toBe('mail calendar quota');
   });
+
+  it('passes the settings pages the nav listed on, known ids only', () => {
+    localStorage.setItem('bulwark-boot-hints', JSON.stringify({ v: 1, rail: ['mail'], settings: ['account', 'filters', 'recovery', 'plugin:x', 'nope', 7] }));
+    boot('/en/settings');
+    expect(attr('settings-tabs')).toBe('account filters recovery');
+  });
+
+  it('leaves the settings pages out without hints', () => {
+    boot('/en/settings');
+    expect(attr('settings-tabs')).toBeNull();
+  });
 });
 
 describe('boot script: Lite', () => {
