@@ -37,10 +37,18 @@ describe('AdminShell', () => {
     Element.prototype.scrollTo = () => {};
   });
 
-  it('does not server-render the phone layout, which desktop would show until hydration', () => {
+  // The server can't know the width: it draws the panel's skeleton, whose
+  // phone and desktop layouts CSS picks, rather than either real layout.
+  it('server-renders the panel skeleton, not a real layout', () => {
     const html = renderToString(shell({ authenticated: false, isStalwartAutoLogin: false }));
-    expect(html).not.toContain('back_to_mail');
+    const container = document.createElement('div');
+    container.innerHTML = html;
+    const region = container.querySelector('[data-boot-skeleton="admin"]');
+    expect(region).not.toBeNull();
+    expect(region!.querySelector('[role="status"]')?.textContent).toBe('common.loading');
+    expect(container.querySelectorAll('a[href], button, input')).toHaveLength(0);
     expect(html).not.toContain('admin_search');
+    expect(html).not.toContain('<p>page</p>');
   });
 
   // The shell's own names come from the translations, and the tab says
