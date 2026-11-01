@@ -4,7 +4,6 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { AlertCircle, Shield } from '@/components/icons';
 import { useConfig } from '@/hooks/use-config';
-import { useThemeStore } from '@/stores/theme-store';
 import { apiFetch, withBasePath } from '@/lib/browser-navigation';
 import { safeAdminNext } from '@/lib/connector/admin-next';
 
@@ -14,8 +13,10 @@ export default function AdminLoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { loginLogoLightUrl, loginLogoDarkUrl, appName } = useConfig();
-  const resolvedTheme = useThemeStore((s) => s.resolvedTheme);
-  const logoUrl = withBasePath(resolvedTheme === 'dark' ? loginLogoDarkUrl : loginLogoLightUrl);
+  // Both logos, picked by CSS: the server can't know the theme, and a logo
+  // chosen from the theme store swaps after the first paint.
+  const logoLight = withBasePath(loginLogoLightUrl || loginLogoDarkUrl);
+  const logoDark = withBasePath(loginLogoDarkUrl || loginLogoLightUrl);
 
   useEffect(() => {
     document.title = `Sign in - Admin - ${appName}`;
@@ -57,8 +58,11 @@ export default function AdminLoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm">
         <div className="flex flex-col items-center mb-8">
-          {logoUrl ? (
-            <img src={logoUrl} alt="" className="h-12 object-contain mb-4" />
+          {logoLight ? (
+            <>
+              <img src={logoLight} alt="" className="h-12 object-contain mb-4 dark:hidden" />
+              <img src={logoDark} alt="" className="h-12 object-contain mb-4 hidden dark:block" />
+            </>
           ) : (
             <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
               <Shield className="w-6 h-6 text-primary" />
