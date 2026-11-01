@@ -7,6 +7,8 @@ import { resolveTarget, type ResolveResult } from '@/lib/connector/registry';
 import { appPath } from '@/lib/deep-links';
 import { replaceWindowLocation } from '@/lib/browser-navigation';
 import { productName } from '@/lib/product-name';
+import { CONNECTOR_SURFACES } from '@/lib/boot-skeleton/surfaces';
+import { RouteSkeleton } from '@/components/boot-skeleton/route-skeleton';
 
 const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || '';
 
@@ -49,6 +51,12 @@ export function ConnectorClient({ target }: { target: string }) {
   }, [destination]);
 
   if (result === null || result.kind === 'ok') {
+    // The page the link opens, as its skeleton: the boot script has already
+    // set that page's variant attributes from the link's parameters, so the
+    // hard redirect lands on the same shapes. No bottom bar labels: this page
+    // is English only and the destination may not be.
+    const surface = Object.hasOwn(CONNECTOR_SURFACES, target) ? CONNECTOR_SURFACES[target] : null;
+    if (surface) return <RouteSkeleton surface={surface} label={t('opening')} />;
     return <Shell>{t('opening')}</Shell>;
   }
 
