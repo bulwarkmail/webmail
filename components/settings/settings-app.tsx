@@ -1,6 +1,7 @@
 "use client";
 
 import { AppMain, SkipLink } from "@/components/layout/app-landmarks";
+import { LEGACY_TAB_MAP } from "@/lib/settings-tabs";
 import { useState, useEffect, useCallback, useRef, useMemo, useSyncExternalStore } from 'react';
 import { useRouter } from '@/i18n/navigation';
 import { useTranslations, useMessages } from 'next-intl';
@@ -154,27 +155,9 @@ const tabIcons: Record<Tab, AppIcon> = {
 
 const tabGroupOrder: TabGroup[] = ['top', 'mail', 'apps', 'bottom'];
 
-// Map legacy tab IDs to current ones; runs once on read of localStorage and
-// for every deep link, so old bookmarks, connector links and sidebar gears
-// land on the page that now holds the setting.
-export const LEGACY_TAB_MAP: Record<string, Tab> = {
-  email: 'reading',
-  advanced: 'backup',
-  layout: 'appearance',
-  themes: 'appearance',
-  content_senders: 'reading',
-  identities: 'account',
-  language: 'general',
-  protocol_handlers: 'general',
-  templates: 'composing',
-  folders: 'organize',
-  keywords: 'organize',
-  downloads: 'reading',
-  sidebar_apps: 'addons',
-  plugins: 'addons',
-  about_data: 'backup',
-  debug: 'backup',
-};
+// Legacy tab ids and their current pages live in lib/settings-tabs.ts, which
+// the pre-paint boot script reads too.
+export { LEGACY_TAB_MAP };
 
 // Where on the new page a legacy tab's settings now sit, so an old link
 // lands on that section rather than at the top of the page.
