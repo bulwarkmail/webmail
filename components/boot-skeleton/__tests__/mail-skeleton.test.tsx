@@ -32,8 +32,8 @@ describe('mail skeleton', () => {
 
   it.each([
     ['extra-compact', 0, 0],
-    ['compact', 9, 0],
-    ['regular', 9, 9],
+    ['compact', 16, 0],
+    ['regular', 16, 16],
   ] as const)('draws %s stacked rows with %i avatars and %i previews', (density, avatars, previews) => {
     const rows = html(<MailListRowsSkeleton shape="stacked" density={density} preview />);
     expect(rows.querySelectorAll('.w-10.h-10').length).toBe(avatars);

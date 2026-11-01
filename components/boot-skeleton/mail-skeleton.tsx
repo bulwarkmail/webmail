@@ -74,7 +74,8 @@ function TextLine({ className, w, bar = "h-3" }: { className?: string; w: string
  */
 export function FolderRowsSkeleton({ count = 7 }: { count?: number }) {
   return (
-    <div aria-hidden="true">
+    // On the sidebar's panel colour, which dark themes share with the shapes.
+    <div aria-hidden="true" className="dark:[&_.sk-shape]:bg-foreground/10">
       {repeat(count, (i) => (
         <div
           className={cn(
@@ -116,6 +117,8 @@ function SidebarSkeleton({ embedded }: { embedded: boolean }) {
     <div
       className={cn(
         "relative flex flex-col h-full border-e overflow-hidden bg-secondary border-border",
+        // Dark themes draw the panel in the shapes' own colour: lift them off it.
+        "dark:[&_.sk-shape]:bg-foreground/10",
         !embedded && "lg:mv:bg-[var(--mv-canvas)] lg:mv:border-transparent",
       )}
     >
@@ -204,7 +207,8 @@ function StackedRow({ i, o }: { i: number; o: RowOptions }) {
             {preview !== null && (
               <span className={cn("block", preview)}>
                 <TextLine className="text-sm leading-relaxed" w="95%" />
-                <TextLine className="text-sm leading-relaxed" w={textWidth(i + 5, 45, 40)} />
+                {/* Mountain View's phone rows keep the preview to one line. */}
+                <TextLine className="text-sm leading-relaxed max-md:mv:hidden" w={textWidth(i + 5, 45, 40)} />
               </span>
             )}
           </span>
@@ -274,7 +278,7 @@ function MvRow({ i }: { i: number }) {
 }
 
 /** Enough rows of each shape to fill a tall viewport. */
-const ROWS: Record<MailRowShape, number> = { stacked: 9, "one-line": 24, mv: 22 };
+const ROWS: Record<MailRowShape, number> = { stacked: 16, "one-line": 32, mv: 22 };
 
 /**
  * Message list rows. With `shape`, the rows the loaded list is about to draw
@@ -370,6 +374,8 @@ function MobileHeaderSkeleton() {
         "lg:hidden flex items-center justify-between h-14 shrink-0",
         "border-b border-border bg-background px-4",
         "mv:mx-2 mv:mt-2 mv:mb-1 mv:rounded-full mv:border-0 mv:bg-muted mv:px-2 mv:shadow-sm",
+        // Mountain View's pill is the shapes' own colour: lift them off it.
+        "mv:[&_.sk-shape]:bg-foreground/10",
       )}
     >
       <span className="flex items-center gap-2 min-w-0 flex-shrink-0">
@@ -378,7 +384,7 @@ function MobileHeaderSkeleton() {
         </span>
         <TextLine className="max-md:hidden w-28 font-semibold text-lg" w="100%" bar="h-4" />
       </span>
-      <span className="md:hidden flex-1 min-w-0 h-10 flex items-center gap-2 rounded-full pe-1 mx-1 bg-muted ps-3 mv:mx-0 mv:bg-transparent mv:ps-2 text-muted-foreground">
+      <span className="md:hidden flex-1 min-w-0 h-10 flex items-center gap-2 rounded-full pe-1 mx-1 bg-muted ps-3 mv:mx-0 mv:bg-transparent mv:ps-2 text-muted-foreground [&_.sk-shape]:bg-foreground/10">
         <Search className="h-4 w-4 flex-shrink-0" />
         <TextLine className="flex-1 text-sm" w="7rem" />
       </span>
