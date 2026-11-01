@@ -193,6 +193,10 @@ export function MvTopBarSkeleton({
         <span className={round}>
           <Grid3x3 className="w-5 h-5" />
         </span>
+        {/* The account switcher (AccountSwitcher variant="header"). */}
+        <span className="flex items-center justify-center w-10 h-10 pointer-coarse:w-11 pointer-coarse:h-11 ms-1">
+          <Circle className="w-8 h-8" />
+        </span>
       </div>
     </div>
   );
