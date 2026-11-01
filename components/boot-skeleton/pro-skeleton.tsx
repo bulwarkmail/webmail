@@ -65,12 +65,12 @@ function TabStripSkeleton() {
 }
 
 /** One pane: its tab strip over the active tab's page. */
-function PaneSkeleton({ pane, className }: { pane: "main" | "split"; className?: string }) {
+function PaneSkeleton({ pane, bodies, className }: { pane: "main" | "split"; bodies: BootSurface[]; className?: string }) {
   return (
     <div data-sk-pro-pane={pane} className={cn("flex flex-1 flex-col overflow-hidden min-w-0 min-h-0", className)}>
       <TabStripSkeleton />
       <div className="@container relative flex flex-1 flex-col overflow-hidden min-w-0 min-h-0">
-        {BODIES.map((surface) => (
+        {bodies.map((surface) => (
           <div key={surface} data-sk-pro-body={surface} className="absolute inset-0 overflow-hidden">
             <div className="flex h-full min-h-0 overflow-hidden">
               <SkeletonBody surface={surface} embedded />
@@ -89,7 +89,20 @@ function PaneSkeleton({ pane, className }: { pane: "main" | "split"; className?:
  * page's frame when Pro is about to take that page over; `data-pro-shell`
  * keeps a skeleton inside the real Pro shell from doing that again.
  */
-export function ProFrameSkeleton({ label, className }: ProSkeletonProps & { className?: string }) {
+export function ProFrameSkeleton({
+  label,
+  className,
+  surface,
+}: ProSkeletonProps & {
+  className?: string;
+  /**
+   * The page Pro is taking over. Its tab is the one the redirect focuses, so
+   * only its body is drawn (a pane whose stored tab shows another page stays
+   * empty), which keeps every standard page's HTML from carrying all five.
+   */
+  surface?: BootSurface;
+}) {
+  const bodies = surface && BODIES.includes(surface) ? [surface] : BODIES;
   return (
     <SkeletonRegion
       surface="pro"
@@ -99,13 +112,13 @@ export function ProFrameSkeleton({ label, className }: ProSkeletonProps & { clas
       <div data-pro-shell="" className="flex flex-1 overflow-hidden">
         <RailSkeleton search className="flex" />
         <div className="relative flex flex-row flex-1 overflow-hidden min-w-0">
-          <PaneSkeleton pane="main" />
+          <PaneSkeleton pane="main" bodies={bodies} />
           <div
             aria-hidden="true"
             className="hidden boot-pro-split:block boot-pro-split-left:-order-1 flex-shrink-0 w-px"
             style={DIVIDER}
           />
-          <PaneSkeleton pane="split" className="hidden boot-pro-split:flex boot-pro-split-left:order-first" />
+          <PaneSkeleton pane="split" bodies={bodies} className="hidden boot-pro-split:flex boot-pro-split-left:order-first" />
         </div>
       </div>
     </SkeletonRegion>

@@ -26,6 +26,7 @@ import { cn } from "@/lib/cn";
 import { Bar, Circle, SkeletonRegion, type SkeletonSurface } from "./kit";
 import { LoginSkeleton } from "./login-skeleton";
 import { ProFrameSkeleton } from "./pro-skeleton";
+import { PRO_SURFACES, type BootSurface } from "@/lib/boot-skeleton/surfaces";
 
 export type RailApp = "mail" | "calendar" | "contacts" | "files" | "settings";
 
@@ -251,9 +252,11 @@ export function AppShellSkeleton({
       <div className="hidden boot-out:block">
         <LoginSkeleton label={label} />
       </div>
-      <div className="hidden boot-pro-frame:block">
-        <ProFrameSkeleton label={label} />
-      </div>
+      {(PRO_SURFACES as readonly string[]).includes(surface) ? (
+        <div className="hidden boot-pro-frame:block">
+          <ProFrameSkeleton label={label} surface={surface as BootSurface} />
+        </div>
+      ) : null}
       <SkeletonRegion
         surface={surface}
         label={label}
