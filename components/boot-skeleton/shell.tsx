@@ -148,14 +148,25 @@ export function BottomBarSkeleton({
 }
 
 /** Mountain View's 64px top bar (components/layout/mv-top-bar.tsx), desktop only. */
-export function MvTopBarSkeleton({ search = true, className }: { search?: boolean; className?: string }) {
+export function MvTopBarSkeleton({
+  search = true,
+  menu = true,
+  className,
+}: {
+  search?: boolean;
+  /** The burger that folds the sidebar; calendar's bar has none (showMenuButton={false}). */
+  menu?: boolean;
+  className?: string;
+}) {
   const round = "grid place-items-center w-12 h-12 rounded-full text-muted-foreground";
   return (
     <div aria-hidden="true" className={cn("items-center h-16 gap-2 ps-1 pe-4 shrink-0 bg-[var(--mv-canvas)]", className)}>
-      <div className="flex items-center gap-1 shrink-0">
-        <span className={round}>
-          <Menu className="w-5 h-5" />
-        </span>
+      <div className={cn("flex items-center gap-1 shrink-0", !menu && "ps-3")}>
+        {menu ? (
+          <span className={round}>
+            <Menu className="w-5 h-5" />
+          </span>
+        ) : null}
         <span className="flex items-center gap-2 pe-4 min-w-0">
           <Bar className="h-5" w="7rem" />
         </span>
@@ -201,6 +212,8 @@ interface AppShellSkeletonProps {
   labels?: RailLabels;
   /** Whether the Mountain View top bar holds the search field (mail does). */
   mvSearch?: boolean;
+  /** Whether the Mountain View top bar starts with the sidebar burger. */
+  mvMenu?: boolean;
   /** Extra classes for the row under the top bar (Mountain View card margins etc.). */
   rowClassName?: string;
   children: ReactNode;
@@ -221,6 +234,7 @@ export function AppShellSkeleton({
   railBelow,
   labels,
   mvSearch = false,
+  mvMenu = true,
   rowClassName,
   children,
 }: AppShellSkeletonProps) {
@@ -234,7 +248,7 @@ export function AppShellSkeleton({
         label={label}
         className="flex flex-col overflow-hidden pt-[env(safe-area-inset-top)] h-dvh bg-background lg:mv:bg-[var(--mv-canvas)] boot-out:hidden"
       >
-        <MvTopBarSkeleton search={mvSearch} className="hidden lg:mv:flex" />
+        <MvTopBarSkeleton search={mvSearch} menu={mvMenu} className="hidden lg:mv:flex" />
         <div className={cn("flex flex-1 min-h-0 overflow-hidden", rowClassName)}>
           <RailSkeleton
             active={active}
