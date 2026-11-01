@@ -16,6 +16,7 @@ import {
   Keyboard,
   Mail,
   Menu,
+  Plus,
   Settings,
   Shield,
   Users,
@@ -66,6 +67,9 @@ export function RailSkeleton({ active, className }: { active?: RailApp; classNam
               <Icon className={cn("w-[18px] h-[18px] flex-shrink-0", active === id && "text-primary")} />
             </span>
           ))}
+          <span className={cn(item(false), "hidden boot-rail-add-app:flex")}>
+            <Plus className="w-[18px] h-[18px] flex-shrink-0" />
+          </span>
         </div>
         <div className="mt-auto flex flex-col items-center gap-2 pb-3 px-1 text-muted-foreground">
           <span className={cn(footerItem, "hidden boot-rail-admin:flex")}>

@@ -6,7 +6,7 @@ import { BOOT_HINTS_KEY } from './keys';
  * admin rights, quota), which nothing else keeps across a reload. The boot
  * script turns it into `data-boot-rail` (lib/boot-skeleton/boot-script.ts).
  */
-export type RailHint = 'calendar' | 'contacts' | 'files' | 'admin' | 'a11y' | 'quota';
+export type RailHint = 'calendar' | 'contacts' | 'files' | 'add-app' | 'admin' | 'a11y' | 'quota';
 
 let lastWritten: string | null = null;
 

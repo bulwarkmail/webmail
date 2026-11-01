@@ -44,6 +44,7 @@
 @custom-variant boot-no-calendar (&:where([data-boot-rail]:not([data-boot-rail~="calendar"]) *));
 @custom-variant boot-no-contacts (&:where([data-boot-rail]:not([data-boot-rail~="contacts"]) *));
 @custom-variant boot-no-files (&:where([data-boot-rail]:not([data-boot-rail~="files"]) *));
+@custom-variant boot-rail-add-app (&:where([data-boot-rail~="add-app"] *));
 @custom-variant boot-rail-admin (&:where([data-boot-rail~="admin"] *));
 @custom-variant boot-rail-a11y (&:where([data-boot-rail~="a11y"] *));
 @custom-variant boot-rail-quota (&:where([data-boot-rail~="quota"] *));

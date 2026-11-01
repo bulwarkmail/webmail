@@ -357,13 +357,14 @@ export function NavigationRail({
     if (!client) return;
     const items: RailHint[] = [];
     for (const item of navItems) if (item.id !== 'mail' && !item.hidden) items.push(item.id as RailHint);
+    if (sidebarAppsEnabled && onManageApps) items.push('add-app');
     if (isStalwartAdmin) items.push('admin');
     if (showAccessibilityButton) items.push('a11y');
     if (quotaShown) items.push('quota');
     writeRailHints(items);
     // navItems is rebuilt every render; its inputs are listed instead.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [client, supportsCalendar, calendarEnabled, supportsContacts, contactsEnabled, supportsFiles, filesEnabled, isStalwartAdmin, showAccessibilityButton, quotaShown]);
+  }, [client, supportsCalendar, calendarEnabled, supportsContacts, contactsEnabled, supportsFiles, filesEnabled, sidebarAppsEnabled, !!onManageApps, isStalwartAdmin, showAccessibilityButton, quotaShown]);
 
   const getIsActive = (href: string, itemId: string) => {
     if (activeAppId) return false;
