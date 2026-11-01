@@ -194,7 +194,8 @@ describe('boot script: mail and contacts panes', () => {
 
   it.each([
     ['/en/contacts', null],
-    ['/en/contacts/new', 'detail'],
+    ['/en/contacts/new', 'create'],
+    ['/en/contacts?addEmail=a%40example.com', 'create'],
     ['/en/contacts/abc/edit', 'detail'],
     ['/en/contacts?contactId=abc', 'detail'],
   ])('%s opens pane %s', (path, pane) => {

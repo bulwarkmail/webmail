@@ -184,7 +184,9 @@ export function applyBootLayout(root: HTMLElement, c: BootLayoutConfig): void {
     if ((seg[1] === 'message' || seg[1] === 'thread') && seg[2]) pane = seg[1];
     else if (query('email')) pane = 'message';
   } else if (surface === 'contacts') {
-    if (seg[1] || query('contactId') || query('addEmail')) pane = 'detail';
+    // The new-contact form needs no data, so it is drawn for what it is.
+    if (seg[1] === 'new' || (!seg[1] && !query('contactId') && query('addEmail'))) pane = 'create';
+    else if (seg[1] || query('contactId')) pane = 'detail';
   } else if (surface === 'admin') {
     if (seg[1]) pane = 'detail';
   }

@@ -1,7 +1,7 @@
-import { ArrowLeft, Book, BookUser, ChevronDown, Filter, Menu, Plus, Printer, Square } from "@/components/icons";
+import { ArrowLeft, Book, BookUser, ChevronDown, Filter, Menu, Plus, Printer, Square, X } from "@/components/icons";
 import type { Density } from "@/lib/density";
 import { cn } from "@/lib/cn";
-import { Bar, Circle, repeat, textWidth } from "./kit";
+import { Bar, Block, Circle, repeat, textWidth } from "./kit";
 import { AppShellSkeleton, type RailLabels } from "./shell";
 import { PhoneActionsSkeleton, SearchFieldSkeleton, ToolIcon } from "./toolbar-skeleton";
 
@@ -39,7 +39,7 @@ const CONTACT_ROW_STYLE = {
 export function ContactRowsSkeleton({
   density,
   letters = true,
-  count = 14,
+  count = 18,
 }: {
   density?: Density;
   letters?: boolean;
@@ -141,14 +141,59 @@ function EmptyDetailSkeleton() {
 }
 
 /**
+ * ContactForm for a new contact (contact-form.tsx): its title bar, the photo
+ * row, the first fields and the Cancel/Save footer. /contacts/new opens it at
+ * once, without waiting for any data.
+ */
+function NewContactFormSkeleton() {
+  return (
+    <div className="flex flex-col h-full bg-background">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-border flex-shrink-0">
+        <span className="flex items-center h-7">
+          <Bar className="h-4" w="7rem" />
+        </span>
+        <span className="grid place-items-center w-8 h-8 text-muted-foreground">
+          <X className="w-4 h-4" />
+        </span>
+      </div>
+      <div className="flex-1 overflow-hidden">
+        <div className="px-6 py-4 max-w-3xl">
+          <div className="flex items-center gap-4 pb-4">
+            <Circle className="w-20 h-20" />
+            <span className="flex items-center h-4 flex-1 min-w-0">
+              <Bar className="h-3" w="60%" />
+            </span>
+          </div>
+          <div className="py-5 space-y-3">
+            <span className="flex items-center gap-2 h-5">
+              <Bar className="h-3.5" w="8rem" />
+            </span>
+            {repeat(3, () => (
+              <div className="space-y-1.5">
+                <Bar className="h-3" w="5rem" />
+                <Block className="h-10 w-full" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+      <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-border flex-shrink-0">
+        <Block className="h-10" w="5.5rem" />
+        <Block className="h-10" w="5rem" />
+      </div>
+    </div>
+  );
+}
+
+/**
  * The contacts page's own content: everything in the row next to the rail.
  * `embedded` is the variant drawn inside a Pro pane (useIsEmbedded()), which
  * has no rail, no Mountain View shell and fills its pane (h-full).
  *
  * Desktop: sidebar, list and the empty detail. Tablet: the sidebar is a
  * closed drawer and the list toolbar gets its Menu button. Phone: the list
- * with its create button, or, with a contact or the new-contact form in the
- * URL (data-boot-pane="detail"), the detail with its back bar.
+ * with its create button, or, with a contact (data-boot-pane="detail") or the
+ * new-contact form ("create") in the URL, the detail with its back bar.
  */
 export function ContactsSkeletonBody({ embedded = false }: { embedded?: boolean }) {
   return (
@@ -190,9 +235,14 @@ export function ContactsSkeletonBody({ embedded = false }: { embedded?: boolean 
                 </span>
               </div>
             )}
-            <div className="flex-1 min-h-0">
+            <div className={cn("flex-1 min-h-0", !embedded && "boot-create:hidden")}>
               <EmptyDetailSkeleton />
             </div>
+            {embedded ? null : (
+              <div className="hidden flex-1 min-h-0 boot-create:block">
+                <NewContactFormSkeleton />
+              </div>
+            )}
           </div>
         </div>
       </div>
