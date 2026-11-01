@@ -31,9 +31,19 @@ describe('signed-in pages for a signed-out visitor', () => {
     expect(login!.parentElement!.className.split(' ')).toEqual(expect.arrayContaining(['hidden', 'boot-out:block']));
     // The card itself: logo, fields, button.
     expect(login!.querySelectorAll('.h-11').length).toBeGreaterThanOrEqual(3);
+    // And the accessibility button the login page will have in its corner.
+    expect(login!.querySelector('.fixed.bottom-4.end-4')).not.toBeNull();
     // And the app's own frame goes away then.
     const app = container.querySelector(`[data-boot-skeleton="${surface}"]`);
     expect(app!.className.split(' ')).toContain('boot-out:hidden');
+  });
+});
+
+describe('login skeleton', () => {
+  // The login page renders the real accessibility button itself.
+  it('leaves the accessibility button to the login page', () => {
+    const container = dom(renderToString(<RouteSkeleton surface="login" label="Loading" />));
+    expect(container.querySelector('.fixed')).toBeNull();
   });
 });
 

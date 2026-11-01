@@ -45,10 +45,16 @@ function Field({ label }: { label: string }) {
 export interface LoginSkeletonProps {
   /** common.loading */
   label?: string;
+  /**
+   * Draw the accessibility button the login page has in its corner. The
+   * login page itself renders the real one (AccessibilityQuickPanelHost);
+   * a signed-in page drawing the card for a signed-out visitor doesn't.
+   */
+  accessibilityButton?: boolean;
   className?: string;
 }
 
-export function LoginSkeleton({ label, className }: LoginSkeletonProps) {
+export function LoginSkeleton({ label, accessibilityButton = false, className }: LoginSkeletonProps) {
   return (
     <SkeletonRegion
       surface="login"
@@ -62,9 +68,20 @@ export function LoginSkeleton({ label, className }: LoginSkeletonProps) {
       <div aria-hidden="true" className="absolute top-5 end-5">
         <span className="flex items-center gap-2 px-3 py-2 rounded-xl border text-sm bg-background/60 border-border/50">
           <Block className="w-4 h-4 rounded" />
-          <TextLine className="hidden sm:block w-12" w="100%" />
+          <TextLine className="hidden sm:block w-11" w="100%" />
         </span>
       </div>
+
+      {accessibilityButton ? (
+        <span
+          aria-hidden="true"
+          className="fixed bottom-4 end-4 z-40 inline-flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm shadow-sm"
+          style={{ marginBottom: "env(safe-area-inset-bottom, 0px)" }}
+        >
+          <Block className="w-4 h-4 rounded" />
+          <TextLine className="w-[4.625rem]" w="100%" />
+        </span>
+      ) : null}
 
       <div className="w-full max-w-[400px] mx-auto">
         <div className="rounded-2xl border border-border/60 bg-background/80 backdrop-blur-sm shadow-xl shadow-black/5 dark:shadow-black/20 overflow-hidden">

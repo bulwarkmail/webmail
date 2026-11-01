@@ -240,7 +240,7 @@ export function AppShellSkeleton({
   return (
     <>
       <div className="hidden boot-out:block">
-        <LoginSkeleton label={label} />
+        <LoginSkeleton label={label} accessibilityButton />
       </div>
       <SkeletonRegion
         surface={surface}
