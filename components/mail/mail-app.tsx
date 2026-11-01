@@ -107,6 +107,7 @@ import { PluginActions } from "@/components/plugins/plugin-actions";
 import { useAppCommands } from "@/lib/app-commands";
 import { MvSearchForm } from "@/components/search/mv-search-form";
 import { MvSidePanel } from "@/components/layout/mv-side-panel";
+import { PluginSidePanel } from "@/components/plugins/plugin-side-panels";
 import { MvListToolbar } from "@/components/email/mv-list-toolbar";
 import { SidebarAppsModal } from "@/components/layout/sidebar-apps-modal";
 import { InlineAppView } from "@/components/layout/inline-app-view";
@@ -5762,6 +5763,10 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         {/* Mountain View: Gmail's side panel - calendar, tasks and contacts
             next to the mail, with their icons down the right edge. */}
         {mvShell && !inlineApp && !fullscreenReading && <MvSidePanel />}
+        {/* The default layout: plugins' panels beside the mail (the
+            side-panel slot), with their buttons in a rail at the right edge.
+            Desktop only; Mountain View has them in its side panel. */}
+        {!mvShell && !isMobile && !isTablet && !isEmbedded && !inlineApp && !fullscreenReading && <PluginSidePanel />}
         </div>
 
         {/* Keyboard Shortcuts Modal */}

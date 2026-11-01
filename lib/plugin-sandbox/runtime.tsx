@@ -759,11 +759,22 @@ function buildPluginApi(manifest: PluginManifest) {
        */
       setSectionTitle: (title: string | null) => callApi('ui.setSectionTitle', [title]) as Promise<void>,
       /**
+       * The button and header of this plugin's `side-panel` slot, the panel
+       * beside the mail: a title (at most 40 characters, e.g. a translated
+       * "Upcoming for me") and a host icon by name (as for setPages). null
+       * goes back to the plugin's name and a puzzle piece. `rail: false`
+       * draws no button in the rail: the plugin opens the panel itself
+       * with openPanel / togglePanel('side-panel'), e.g. from a top bar
+       * action.
+       */
+      setSidePanel: (look: { title?: string; icon?: string; rail?: boolean } | null) => callApi('ui.setSidePanel', [look]) as Promise<void>,
+      /**
        * Open, close or toggle the panel this plugin's slot sits in:
        * 'composer-sidebar', 'composer-sidebar-right' (pass the composerId
-       * from the click context or the slot's props) or 'email-detail-sidebar'.
-       * Resolve to whether the panel is open afterwards, or null when no such
-       * panel is on screen (no composer or message open, or a phone), so the
+       * from the click context or the slot's props), 'email-detail-sidebar'
+       * or 'side-panel' (this plugin's panel beside the mail). Resolve to
+       * whether the panel is open afterwards, or null when no such panel is
+       * on screen (no composer or message open, or a phone), so the
        * plugin can fall back to a dialog. A panel opened this way gets a new
        * `focusRequest` prop, so the slot can focus its input.
        */
