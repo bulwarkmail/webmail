@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react';
+import { cleanup, render } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // The Pro shell takes over the standard routes and hands their deep link to
@@ -11,7 +11,9 @@ vi.mock('@/i18n/navigation', () => ({
   usePathname: () => nav.pathname,
   useRouter: () => ({ replace: nav.replace }),
 }));
-vi.mock('@/hooks/use-media-query', () => ({ useIsDesktop: () => true }));
+const device = vi.hoisted(() => ({ desktop: true }));
+vi.mock('@/hooks/use-media-query', () => ({ useIsDesktop: () => device.desktop }));
+vi.mock('next-intl', () => ({ useTranslations: () => (key: string) => key }));
 vi.mock('@/stores/settings-store', () => ({
   useSettingsStore: (selector: (s: { proInterface: boolean }) => unknown) => selector({ proInterface: true }),
 }));
@@ -25,6 +27,7 @@ const { ProInterfaceRedirect } = await import('../pro-interface-redirect');
 describe('ProInterfaceRedirect', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    device.desktop = true;
   });
 
   function visit(path: string, search: string) {
@@ -55,5 +58,25 @@ describe('ProInterfaceRedirect', () => {
     visit('/files', '');
     expect(setPendingDeepLink).not.toHaveBeenCalled();
     expect(openTab).toHaveBeenLastCalledWith('files');
+  });
+
+  it('covers the standard page with the Pro skeleton until /pro renders', () => {
+    visit('/calendar/week/2026-11-04', '');
+    const cover = document.querySelector('[data-pro-takeover]');
+    expect(cover?.querySelector('[data-boot-skeleton="pro"]')).not.toBeNull();
+    expect(cover?.className).toContain('fixed');
+  });
+
+  it('draws nothing on /pro itself, below desktop width, or on other pages', () => {
+    visit('/pro', '');
+    expect(document.querySelector('[data-pro-takeover]')).toBeNull();
+    cleanup();
+    visit('/login', '');
+    expect(document.querySelector('[data-pro-takeover]')).toBeNull();
+    cleanup();
+    device.desktop = false;
+    visit('/mail', '');
+    expect(document.querySelector('[data-pro-takeover]')).toBeNull();
+    expect(nav.replace).not.toHaveBeenCalled();
   });
 });
