@@ -446,8 +446,12 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
   // an advanced section stays hidden until the switch is on, so after a
   // short wait turn it on rather than give up.
   const updateSetting = useSettingsStore((s) => s.updateSetting);
+  // The page itself rather than its skeleton (see the gate below).
+  const pageShown = isAuthenticated && !!client;
   useEffect(() => {
     if (!pendingSection || pendingSection.tab !== activeTab) return;
+    // The skeleton has no sections: wait until the page is drawn.
+    if (!pageShown) return;
     if (typeof window === 'undefined') return;
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -468,7 +472,7 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
       window.cancelAnimationFrame(raf);
       if (timer) clearTimeout(timer);
     };
-  }, [pendingSection, activeTab, updateSetting]);
+  }, [pendingSection, activeTab, updateSetting, pageShown]);
 
   // Leaving the settings panel drops any shared-account scope so it never
   // leaks into the next visit or another session.

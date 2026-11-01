@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Until the session is up, Settings draws its page skeleton (the one the
@@ -23,12 +23,15 @@ vi.mock('@/hooks/use-config', () => ({ useConfig: () => ({ appName: 'Mail', stal
 vi.mock('@/components/layout/navigation-rail', () => ({ NavigationRail: () => null }));
 vi.mock('@/components/layout/sidebar-apps-modal', () => ({ SidebarAppsModal: () => null }));
 vi.mock('@/components/plugins/app-top-banner-slot', () => ({ AppTopBannerSlot: () => null }));
-vi.mock('@/components/settings/appearance-settings', () => ({ AppearanceSettings: () => <div>appearance pane</div> }));
+vi.mock('@/components/settings/appearance-settings', () => ({
+  AppearanceSettings: () => <div data-settings-section="theme">appearance pane</div>,
+}));
 
 const { SettingsApp } = await import('../settings-app');
 const { useAuthStore } = await import('@/stores/auth-store');
 const { usePluginStore } = await import('@/stores/plugin-store');
 const { useThemeStore } = await import('@/stores/theme-store');
+const { useSettingsStore } = await import('@/stores/settings-store');
 const { SETTINGS_NAV_GROUPS } = await import('../settings-tab-icons');
 const { BOOT_HINTS_KEY } = await import('@/lib/boot-skeleton/keys');
 const { resetRailHintsMemo } = await import('@/lib/boot-skeleton/hints');
@@ -100,5 +103,28 @@ describe('Settings while the session restores', () => {
     expect(hints?.settings).toContain('appearance');
     expect(hints?.settings).not.toContain('filters');
     expect(hints?.settings).not.toContain('vacation');
+  });
+});
+
+describe('a link to a section while the session restores', () => {
+  it('scrolls once the page is drawn, without switching Advanced on meanwhile', async () => {
+    vi.useFakeTimers();
+    try {
+      const scroll = vi.fn();
+      Element.prototype.scrollIntoView = scroll;
+      useSettingsStore.setState({ showAdvancedSettings: false });
+      useAuthStore.setState({ isAuthenticated: true, isLoading: true, client: null });
+      render(<SettingsApp linkSegments={['appearance', 'theme']} />);
+      await act(async () => { vi.advanceTimersByTime(3000); });
+      // The skeleton has no sections; nothing to find is not a hidden section.
+      expect(useSettingsStore.getState().showAdvancedSettings).toBe(false);
+      expect(scroll).not.toHaveBeenCalled();
+
+      act(() => { useAuthStore.setState({ isLoading: false, client: fullClient as never }); });
+      await act(async () => { vi.advanceTimersByTime(200); });
+      expect(scroll).toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
