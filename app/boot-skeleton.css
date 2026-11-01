@@ -154,20 +154,20 @@
   /* The focused pane's active tab carries the accent top edge. */
   --sk-pro-pane-accent: var(--color-primary);
 }
-:root:not([data-boot-pro-main-kind]) [data-sk-pro-pane="main"] > [data-sk-pro-body="mail"],
-:root:not([data-boot-pro-split-kind]) [data-sk-pro-pane="split"] > [data-sk-pro-body="mail"],
-:root[data-boot-pro-main-kind="mail"] [data-sk-pro-pane="main"] > [data-sk-pro-body="mail"],
-:root[data-boot-pro-main-kind="calendar"] [data-sk-pro-pane="main"] > [data-sk-pro-body="calendar"],
-:root[data-boot-pro-main-kind="contacts"] [data-sk-pro-pane="main"] > [data-sk-pro-body="contacts"],
-:root[data-boot-pro-main-kind="files"] [data-sk-pro-pane="main"] > [data-sk-pro-body="files"],
-:root[data-boot-pro-main-kind="settings"] [data-sk-pro-pane="main"] > [data-sk-pro-body="settings"],
-:root[data-boot-pro-main-kind="other"] [data-sk-pro-pane="main"] > [data-sk-pro-body="other"],
-:root[data-boot-pro-split-kind="mail"] [data-sk-pro-pane="split"] > [data-sk-pro-body="mail"],
-:root[data-boot-pro-split-kind="calendar"] [data-sk-pro-pane="split"] > [data-sk-pro-body="calendar"],
-:root[data-boot-pro-split-kind="contacts"] [data-sk-pro-pane="split"] > [data-sk-pro-body="contacts"],
-:root[data-boot-pro-split-kind="files"] [data-sk-pro-pane="split"] > [data-sk-pro-body="files"],
-:root[data-boot-pro-split-kind="settings"] [data-sk-pro-pane="split"] > [data-sk-pro-body="settings"],
-:root[data-boot-pro-split-kind="other"] [data-sk-pro-pane="split"] > [data-sk-pro-body="other"] {
+:root:not([data-boot-pro-main-kind]) [data-sk-pro-pane="main"] [data-sk-pro-body="mail"],
+:root:not([data-boot-pro-split-kind]) [data-sk-pro-pane="split"] [data-sk-pro-body="mail"],
+:root[data-boot-pro-main-kind="mail"] [data-sk-pro-pane="main"] [data-sk-pro-body="mail"],
+:root[data-boot-pro-main-kind="calendar"] [data-sk-pro-pane="main"] [data-sk-pro-body="calendar"],
+:root[data-boot-pro-main-kind="contacts"] [data-sk-pro-pane="main"] [data-sk-pro-body="contacts"],
+:root[data-boot-pro-main-kind="files"] [data-sk-pro-pane="main"] [data-sk-pro-body="files"],
+:root[data-boot-pro-main-kind="settings"] [data-sk-pro-pane="main"] [data-sk-pro-body="settings"],
+:root[data-boot-pro-main-kind="other"] [data-sk-pro-pane="main"] [data-sk-pro-body="other"],
+:root[data-boot-pro-split-kind="mail"] [data-sk-pro-pane="split"] [data-sk-pro-body="mail"],
+:root[data-boot-pro-split-kind="calendar"] [data-sk-pro-pane="split"] [data-sk-pro-body="calendar"],
+:root[data-boot-pro-split-kind="contacts"] [data-sk-pro-pane="split"] [data-sk-pro-body="contacts"],
+:root[data-boot-pro-split-kind="files"] [data-sk-pro-pane="split"] [data-sk-pro-body="files"],
+:root[data-boot-pro-split-kind="settings"] [data-sk-pro-pane="split"] [data-sk-pro-body="settings"],
+:root[data-boot-pro-split-kind="other"] [data-sk-pro-pane="split"] [data-sk-pro-body="other"] {
   display: block;
 }
 

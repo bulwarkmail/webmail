@@ -67,12 +67,9 @@ function TabStripSkeleton() {
 /** One pane: its tab strip over the active tab's page. */
 function PaneSkeleton({ pane, className }: { pane: "main" | "split"; className?: string }) {
   return (
-    <div className={cn("flex flex-1 flex-col overflow-hidden min-w-0 min-h-0", className)}>
+    <div data-sk-pro-pane={pane} className={cn("flex flex-1 flex-col overflow-hidden min-w-0 min-h-0", className)}>
       <TabStripSkeleton />
-      <div
-        data-sk-pro-pane={pane}
-        className="@container relative flex flex-1 flex-col overflow-hidden min-w-0 min-h-0"
-      >
+      <div className="@container relative flex flex-1 flex-col overflow-hidden min-w-0 min-h-0">
         {BODIES.map((surface) => (
           <div key={surface} data-sk-pro-body={surface} className="absolute inset-0 overflow-hidden">
             <div className="flex h-full min-h-0 overflow-hidden">

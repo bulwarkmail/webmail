@@ -1,4 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { renderToString } from 'react-dom/server';
 import { AppShellSkeleton } from '../shell';
 import { ProSkeleton } from '../pro-skeleton';
@@ -48,15 +50,17 @@ describe('AppShellSkeleton under the Pro interface', () => {
     const panes = pro?.querySelectorAll('[data-sk-pro-pane]') ?? [];
     expect([...panes].map((p) => p.getAttribute('data-sk-pro-pane'))).toEqual(['main', 'split']);
     for (const pane of panes) {
-      // Tab strip right above the pane body, eight tab slots for the CSS to pick from.
-      expect(pane.previousElementSibling?.querySelectorAll('[data-sk-pro-tab]')).toHaveLength(8);
-      expect(classes(pane.previousElementSibling)).toEqual(expect.arrayContaining(['h-9', 'bg-secondary']));
-      expect([...pane.children].map((b) => b.getAttribute('data-sk-pro-body'))).toEqual([
+      // The tab strip, with eight tab slots for the CSS to pick from, right
+      // above the pane body.
+      const [strip, body] = [...pane.children];
+      expect(strip.querySelectorAll('[data-sk-pro-tab]')).toHaveLength(8);
+      expect(classes(strip)).toEqual(expect.arrayContaining(['h-9', 'bg-secondary']));
+      expect([...body.children].map((b) => b.getAttribute('data-sk-pro-body'))).toEqual([
         'mail', 'calendar', 'contacts', 'files', 'settings', 'other',
       ]);
     }
     // The split pane only shows with a split.
-    expect(classes(panes[1]?.parentElement)).toEqual(expect.arrayContaining(['hidden', 'boot-pro-split:flex']));
+    expect(classes(panes[1])).toEqual(expect.arrayContaining(['hidden', 'boot-pro-split:flex']));
   });
 
   it('lets the login card win for a signed-out visitor', () => {
@@ -73,5 +77,60 @@ describe('ProSkeleton', () => {
     expect(classes(pro)).toContain('boot-out:hidden');
     expect(pro?.querySelector('[data-pro-shell]')).not.toBeNull();
     expect(container.querySelector('[data-boot-skeleton="login"]')).not.toBeNull();
+  });
+});
+
+describe('the Pro CSS picks the stored tabs and pages', () => {
+  // The "pro" section of app/boot-skeleton.css, minus the Tailwind variants,
+  // applied to the real markup with the attributes the boot script sets.
+  const css = readFileSync(path.resolve(__dirname, '../../../app/boot-skeleton.css'), 'utf8')
+    .split('/* pro */')[1]
+    .replace(/@custom-variant[^;]*;/g, '');
+
+  let container: HTMLElement;
+  beforeEach(() => {
+    const style = document.createElement('style');
+    style.id = 'pro-css';
+    style.textContent = css;
+    document.head.appendChild(style);
+    container = document.createElement('div');
+    container.innerHTML = renderToString(<ProSkeleton label="Loading" />);
+    document.body.appendChild(container);
+  });
+  afterEach(() => {
+    document.getElementById('pro-css')?.remove();
+    container.remove();
+    for (const a of [...document.documentElement.attributes]) {
+      if (a.name.startsWith('data-boot-')) document.documentElement.removeAttribute(a.name);
+    }
+  });
+
+  const boot = (attrs: Record<string, string>) => {
+    for (const [k, v] of Object.entries(attrs)) document.documentElement.setAttribute(`data-boot-${k}`, v);
+  };
+  const pane = (which: string) => container.querySelector(`[data-sk-pro-pane="${which}"]`)!;
+  const shown = (els: Iterable<Element>) => [...els].filter((el) => getComputedStyle(el).display !== 'none');
+  const tabs = (which: string) => shown(pane(which).querySelectorAll('[data-sk-pro-tab]'));
+  const active = (which: string) =>
+    [...pane(which).querySelectorAll('[data-sk-pro-tab]')].findIndex(
+      (el) => !['', 'transparent', 'rgba(0, 0, 0, 0)'].includes(getComputedStyle(el).backgroundColor),
+    );
+  const body = (which: string) =>
+    shown(pane(which).querySelectorAll('[data-sk-pro-body]')).map((el) => el.getAttribute('data-sk-pro-body'));
+
+  it('draws one active mail tab without attributes', () => {
+    expect(tabs('main')).toHaveLength(1);
+    expect(active('main')).toBe(0);
+    expect(body('main')).toEqual(['mail']);
+  });
+
+  it('draws the stored count, the active tab and its page in each pane', () => {
+    boot({ pro: 'on', 'pro-main-tabs': '3', 'pro-main-active': '2', 'pro-main-kind': 'calendar', 'pro-split-tabs': '2', 'pro-split-active': '0', 'pro-split-kind': 'other', 'pro-split': 'right' });
+    expect(tabs('main')).toHaveLength(3);
+    expect(active('main')).toBe(2);
+    expect(body('main')).toEqual(['calendar']);
+    expect(tabs('split')).toHaveLength(2);
+    expect(active('split')).toBe(0);
+    expect(body('split')).toEqual(['other']);
   });
 });
