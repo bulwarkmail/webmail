@@ -6037,6 +6037,10 @@
         "title": "Meniť správu, ktorú píšete",
         "body": "Nahrádzať alebo pridávať text v správe počas písania, keď doplnok použijete v editore. Každú zmenu môžete vrátiť a o odoslaní stále rozhodujete vy."
       },
+      "compose_check": {
+        "title": "Kontrolovať, čo píšete",
+        "body": "Počas písania číta, čo píšete v editore, a môže to posielať službe, ktorú používa. Len keď je kontrola zapnutá, a nikdy pri správe, ktorú podpisujete alebo šifrujete."
+      },
       "email_forward": {
         "title": "Preposielať vašu poštu",
         "body": "Preposiela správy z vášho účtu aj s prílohami bez otvorenia editora. Pred prvým preposlaním na každú adresu sa vás opýta."

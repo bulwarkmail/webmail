@@ -6037,6 +6037,10 @@
         "title": "Het bericht wijzigen dat je schrijft",
         "body": "Tekst in een bericht vervangen of toevoegen terwijl je het schrijft, als je de plug-in in de editor gebruikt. Je kunt elke wijziging ongedaan maken en je beslist nog steeds zelf of je het verstuurt."
       },
+      "compose_check": {
+        "title": "Controleren wat u schrijft",
+        "body": "Leest wat u in de editor schrijft terwijl u typt en kan het naar de dienst sturen die het gebruikt. Alleen als de controle aan staat, en nooit voor een bericht dat u ondertekent of versleutelt."
+      },
       "email_forward": {
         "title": "Je e-mail doorsturen",
         "body": "Berichten uit je account met hun bijlagen doorsturen, zonder de editor te openen. Voor de eerste keer doorsturen naar een adres wordt het je gevraagd."

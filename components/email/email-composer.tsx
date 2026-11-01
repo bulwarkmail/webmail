@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useMvComposeWindow } from "@/components/email/mv-compose-context";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Button, TOUCH_HIT_AREA } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Dialog } from "@/components/ui/dialog";
@@ -155,6 +155,7 @@ import { announce as announceStatus } from "@/lib/announce";
 import { isReportPart, normalizeCid } from "@/lib/attachment-visibility";
 import { unnamedAttachmentName } from "@/lib/attachment-name";
 import { RichTextEditor } from "@/components/email/rich-text-editor";
+import { useProofreading } from "@/components/email/proofreading/use-proofreading";
 import { isRecipientMentionActive } from "@/components/email/recipient-mention";
 import type { Editor } from "@tiptap/react";
 import { htmlToPlainText as htmlToPlainTextShared } from "@/lib/html-to-text";
@@ -3114,6 +3115,21 @@ export function EmailComposer({
     };
   }, [wantsPluginSelection, pluginEditor, plainTextMode]);
 
+  // Proofreading: checker plugins underline mistakes while the user types
+  // (components/email/proofreading). The browser's own spell check steps
+  // back while one checks spelling, and the text carries its language.
+  const uiLocale = useLocale();
+  const writingLanguage = useSettingsStore((s) => s.writingLanguage);
+  const textLang = writingLanguage && writingLanguage !== 'auto' ? writingLanguage : uiLocale;
+  const proofreading = useProofreading({
+    composerId: pluginComposerId,
+    sessionKey: effectiveSessionKey,
+    editor: pluginEditor,
+    textareaRef: bodyRef,
+    plainTextMode,
+    ownOptions: pluginEditOptsRef,
+  });
+
   const pluginDraftProps = useMemo(
     () => ({ draft: pluginDraft, selection: pluginSelection, insertText: pluginInsertText, getSelectedText: pluginSelectedText, composerId: pluginComposerId }),
     [pluginDraft, pluginSelection, pluginInsertText, pluginSelectedText, pluginComposerId],
@@ -4739,6 +4755,8 @@ export function EmailComposer({
             aria-invalid={validationErrors.body || undefined}
             aria-describedby={validationErrors.body ? `${fieldIdBase}-body-error` : undefined}
             onContextMenu={onBodyContextMenu}
+            spellCheck={proofreading.browserSpellcheck}
+            lang={textLang}
           />
           </>
         ) : (
@@ -4763,6 +4781,8 @@ export function EmailComposer({
               findMentionContacts={recipientMentionsEnabled && mentionAddsRecipientTo !== 'off' ? findMentionContacts : undefined}
               mentionAddsTo={mentionAddsRecipientTo === 'cc' ? 'cc' : 'to'}
               onMentionAdd={addMentionedRecipient}
+              spellcheck={proofreading.browserSpellcheck}
+              lang={textLang}
             />
           </div>
         )}

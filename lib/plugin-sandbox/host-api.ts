@@ -12,6 +12,7 @@ import { downloadAllowed, saveBlobAs } from '../download-guard';
 import '../device-policy';
 import { doAppGetSettings, doAppSearchSettings } from './host-api-app';
 import { mayOfferSlot, pluginHasPermission } from './permissions';
+import { doGetCheckText, doRecheck, doRegisterChecker, doSetAnnotations, doUnregisterChecker, doUpdateChecker } from './host-api-checker';
 import { proxyAccounts, proxyCancel, proxyConnect, proxyDisconnect, proxyFetch, type StreamSink } from './proxy-client';
 import { checkActions, isActionSurface, setPluginActions } from './actions';
 import { checkDayLabels, setDayLabels } from './day-labels';
@@ -325,6 +326,14 @@ export const PERM_PER_METHOD: Readonly<Record<string, Permission | null>> = {
   'composer.replaceBody': 'compose:write',
   // Attach a file the plugin uploaded (jmap.uploadBlob).
   'composer.attach': 'email:blob-write',
+  // Text checkers: the host sends what the user writes in every composer
+  // where checking is on (checkers.ts).
+  'composer.registerChecker': 'compose:check',
+  'composer.updateChecker': 'compose:check',
+  'composer.recheck': 'compose:check',
+  'composer.unregisterChecker': 'compose:check',
+  'composer.getCheckText': 'compose:check',
+  'composer.setAnnotations': 'compose:check',
 };
 
 // ─── Cross-origin allow-list (mirrors lib/plugin-api.ts) ──────
@@ -1997,7 +2006,7 @@ export async function dispatchApiCall(
   plugin: InstalledPlugin,
   method: string,
   args: unknown[],
-  opts?: { privileged?: boolean; sink?: StreamSink; toastSignal?: AbortSignal },
+  opts?: { privileged?: boolean; sink?: StreamSink; toastSignal?: AbortSignal; frame?: 'background' | 'slot' },
 ): Promise<unknown> {
   // Tier gate: privileged-only methods are refused for untrusted (null-origin)
   // instances even if the permission is somehow present. Defence-in-depth on
@@ -2027,7 +2036,13 @@ export async function dispatchApiCall(
       const surface = args[0];
       if (typeof surface !== 'string' || !isActionSurface(surface)) throw new Error(`"${String(surface)}" is not a surface that takes actions`);
       if (!mayOfferSlot(plugin, surface)) throw new Error(`Plugin "${plugin.id}" may not add actions to "${surface}"`);
-      setPluginActions(plugin.id, plugin.name, surface, checkActions(args[1]));
+      const actions = checkActions(args[1]);
+      // Only a plugin that can sign or encrypt may say an entry does; a
+      // false claim would only pause proofreading, but keep the signal honest.
+      if (actions.some((a) => a.protects) && !pluginHasPermission(plugin, 'crypto:full') && !pluginHasPermission(plugin, 'email:raw-send')) {
+        throw new Error('protects needs the crypto:full or email:raw-send permission');
+      }
+      setPluginActions(plugin.id, plugin.name, surface, actions);
       return undefined;
     }
     case 'ui.refreshRowBadges': refreshRowBadges(); return undefined;
@@ -2359,6 +2374,12 @@ export async function dispatchApiCall(
     case 'composer.replaceSelection': return doComposerReplaceSelection(plugin, args[0], args[1], args[2]);
     case 'composer.replaceBody': return doComposerReplaceBody(plugin, args[0], args[1], args[2]);
     case 'composer.attach': return doComposerAttach(plugin, args[0], args[1]);
+    case 'composer.registerChecker': return doRegisterChecker(plugin, args[0], opts?.frame);
+    case 'composer.updateChecker': return doUpdateChecker(plugin, args[0], args[1]);
+    case 'composer.recheck': return doRecheck(plugin, args[0]);
+    case 'composer.unregisterChecker': return doUnregisterChecker(plugin, args[0]);
+    case 'composer.getCheckText': return doGetCheckText(plugin, args[0], args[1]);
+    case 'composer.setAnnotations': return doSetAnnotations(plugin, args[0], args[1], args[2], args[3]);
 
     default:
       throw new Error(`Unhandled method "${method}"`);

@@ -6037,6 +6037,10 @@
         "title": "Mainīt ziņojumu, ko rakstāt",
         "body": "Aizstāt vai pievienot tekstu ziņojumā rakstīšanas laikā, kad izmantojat spraudni redaktorā. Katru izmaiņu var atsaukt, un jūs joprojām izlemjat, vai sūtīt."
       },
+      "compose_check": {
+        "title": "Pārbaudīt, ko rakstāt",
+        "body": "Rakstīšanas laikā lasa to, ko rakstāt redaktorā, un var to nosūtīt pakalpojumam, ko izmanto. Tikai tad, ja pārbaude ir ieslēgta, un nekad ziņojumam, ko parakstāt vai šifrējat."
+      },
       "email_forward": {
         "title": "Pārsūtīt jūsu pastu",
         "body": "Pārsūtīt vēstules no jūsu konta kopā ar pielikumiem, neatverot redaktoru. Pirms pirmās pārsūtīšanas uz katru adresi jums tiek jautāts."

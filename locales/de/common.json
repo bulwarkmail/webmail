@@ -6037,6 +6037,10 @@
         "title": "Die Nachricht ändern, die Sie schreiben",
         "body": "Text in einer Nachricht ersetzen oder ergänzen, während Sie sie schreiben, wenn Sie das Plugin im Editor benutzen. Jede Änderung lässt sich rückgängig machen, und Sie entscheiden weiterhin, ob Sie senden."
       },
+      "compose_check": {
+        "title": "Prüfen, was Sie schreiben",
+        "body": "Liest, was Sie im Editor schreiben, während Sie tippen, und kann es an den Dienst senden, den es nutzt. Nur wenn die Korrekturhilfe an ist, und nie bei einer Nachricht, die Sie signieren oder verschlüsseln."
+      },
       "email_forward": {
         "title": "E-Mails weiterleiten",
         "body": "Nachrichten aus Ihrem Konto samt Anhängen weiterleiten, ohne den Editor zu öffnen. Vor der ersten Weiterleitung an eine Adresse werden Sie gefragt."

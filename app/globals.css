@@ -913,6 +913,51 @@ optgroup {
   height: auto;
 }
 
+/*
+ * Proofreading underlines (components/email/proofreading). The kind shows in
+ * the line's style as well as its colour, so it survives forced colours and
+ * colour blindness: spelling wavy, grammar double, style dotted, other dashed.
+ */
+:root {
+  --text-issue-spelling: var(--color-destructive);
+  --text-issue-grammar: #2563eb;
+  --text-issue-style: #b45309;
+  --text-issue-other: #6b7280;
+}
+.dark {
+  --text-issue-grammar: #60a5fa;
+  --text-issue-style: #fbbf24;
+  --text-issue-other: #9ca3af;
+}
+.tiptap .text-issue {
+  text-decoration-line: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+  text-decoration-skip-ink: none;
+  cursor: pointer;
+}
+.tiptap .text-issue-spelling {
+  text-decoration-style: wavy;
+  text-decoration-color: var(--text-issue-spelling);
+}
+.tiptap .text-issue-grammar {
+  text-decoration-style: double;
+  text-decoration-color: var(--text-issue-grammar);
+}
+.tiptap .text-issue-style {
+  text-decoration-style: dotted;
+  text-decoration-thickness: 2px;
+  text-decoration-color: var(--text-issue-style);
+}
+.tiptap .text-issue-other {
+  text-decoration-style: dashed;
+  text-decoration-color: var(--text-issue-other);
+}
+.tiptap .text-issue-active {
+  background-color: color-mix(in srgb, var(--color-primary) 18%, transparent);
+  border-radius: 2px;
+}
+
 .tiptap hr {
   border: none;
   border-top: 1px solid var(--color-border);

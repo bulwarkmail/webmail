@@ -6037,6 +6037,10 @@
         "title": "Ændre den besked, du skriver",
         "body": "Erstatte eller tilføje tekst i en besked, mens du skriver den, når du bruger pluginet i editoren. Du kan fortryde hver ændring, og du bestemmer stadig, om den sendes."
       },
+      "compose_check": {
+        "title": "Tjekke det, du skriver",
+        "body": "Læser det, du skriver i editoren, mens du skriver, og kan sende det til den tjeneste, den bruger. Kun når korrekturen er slået til, og aldrig for en besked, du signerer eller krypterer."
+      },
       "email_forward": {
         "title": "Videresende din post",
         "body": "Videresende beskeder fra din konto med vedhæftninger uden at åbne editoren. Du bliver spurgt før første videresendelse til hver adresse."

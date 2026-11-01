@@ -6037,6 +6037,10 @@
         "title": "Modifier le message que vous écrivez",
         "body": "Remplacer ou ajouter du texte dans un message pendant que vous l'écrivez, quand vous utilisez le plugin dans l'éditeur. Chaque modification peut être annulée, et c'est toujours vous qui décidez de l'envoyer."
       },
+      "compose_check": {
+        "title": "Vérifier ce que vous écrivez",
+        "body": "Lit ce que vous écrivez dans l'éditeur pendant la saisie et peut l'envoyer au service qu'il utilise. Seulement quand la correction est activée, et jamais pour un message que vous signez ou chiffrez."
+      },
       "email_forward": {
         "title": "Transférer vos e-mails",
         "body": "Transférer des messages de votre compte avec leurs pièces jointes, sans ouvrir l'éditeur. Vous êtes consulté avant le premier transfert vers chaque adresse."

@@ -6037,6 +6037,10 @@
         "title": "Canviar el missatge que escriviu",
         "body": "Substituir o afegir text en un missatge mentre l'escriviu, quan feu servir el connector a l'editor. Podeu desfer cada canvi i continueu decidint si l'envieu."
       },
+      "compose_check": {
+        "title": "Revisar el que escriviu",
+        "body": "Llegeix el que escriviu a l'editor mentre teclegeu i ho pot enviar al servei que fa servir. Només quan la revisió està activada, i mai per a un missatge que signeu o xifreu."
+      },
       "email_forward": {
         "title": "Reenviar el vostre correu",
         "body": "Reenviar missatges del vostre compte amb els adjunts, sense obrir l'editor. Se us pregunta abans del primer reenviament a cada adreça."

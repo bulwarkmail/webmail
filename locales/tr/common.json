@@ -6037,6 +6037,10 @@
         "title": "Yazdığınız iletiyi değiştirme",
         "body": "Eklentiyi düzenleyicide kullandığınızda, yazarken iletide metni değiştirir veya ekler. Her değişikliği geri alabilirsiniz ve göndermeye yine siz karar verirsiniz."
       },
+      "compose_check": {
+        "title": "Yazdıklarınızı denetleme",
+        "body": "Düzenleyicide yazdıklarınızı siz yazarken okur ve kullandığı hizmete gönderebilir. Yalnızca yazım denetimi açıkken; imzaladığınız veya şifrelediğiniz bir iletide asla."
+      },
       "email_forward": {
         "title": "Postanızı iletme",
         "body": "Hesabınızdaki iletileri ekleriyle birlikte, düzenleyiciyi açmadan iletir. Her adrese ilk iletmeden önce size sorulur."

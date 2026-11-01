@@ -26,6 +26,7 @@ import { hasDialogFor, whenNoDialogFor } from './host-dialog';
 import { registerShortcuts } from './shortcuts';
 import { mayOfferSlot, mayRegisterHook, pluginHasPermission, slotPropsFor } from './permissions';
 import { clearPluginActions, setActionDispatcher } from './actions';
+import { clearPluginCheckers, setCheckerDispatcher } from './checkers';
 import { clearDayLabels } from './day-labels';
 import { clearPluginListFilters } from './list-filters';
 import { clearPluginPages } from './pages';
@@ -371,6 +372,24 @@ setActionDispatcher(async (pluginId, surface, actionId, context) => {
   }
 });
 
+// ─── Text checkers ────────────────────────────────────────────
+
+// Requests for a checker go to the `checker:<id>` handler the plugin put in
+// its background frame when it registered (api.composer.registerChecker).
+// A slow or failing checker is not a broken plugin: its server may be down.
+// Its errors stay with the composer that asked (shown as "checking
+// unavailable") and don't count towards turning the plugin off.
+function backgroundOf(pluginId: string) {
+  const entry = getActive(pluginId);
+  if (!entry) throw new Error('plugin is not running');
+  return entry.background;
+}
+
+setCheckerDispatcher({
+  check: (pluginId, checkerId, request) => backgroundOf(pluginId).invokeHook(`checker:${checkerId}`, [request]),
+  action: (pluginId, checkerId, payload) => backgroundOf(pluginId).invokeHook(`checker-action:${checkerId}`, [payload]),
+});
+
 // ─── Unload ───────────────────────────────────────────────────
 
 export function unloadSandboxedPlugin(pluginId: string): void {
@@ -386,6 +405,7 @@ export function unloadSandboxedPlugin(pluginId: string): void {
   // Same for the buttons, list filters, day labels and pages it declared,
   // and anything still running through the proxy for it.
   clearPluginActions(pluginId);
+  clearPluginCheckers(pluginId);
   clearPluginListFilters(pluginId);
   clearDayLabels(pluginId);
   clearPluginPages(pluginId);

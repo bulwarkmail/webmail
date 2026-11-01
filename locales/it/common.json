@@ -6037,6 +6037,10 @@
         "title": "Modificare il messaggio che stai scrivendo",
         "body": "Sostituire o aggiungere testo in un messaggio mentre lo scrivi, quando usi il plugin nell'editor. Puoi annullare ogni modifica e decidi sempre tu se inviarlo."
       },
+      "compose_check": {
+        "title": "Controllare ciò che scrivi",
+        "body": "Legge ciò che scrivi nell'editor mentre digiti e può inviarlo al servizio che usa. Solo quando la correzione è attiva, e mai per un messaggio che firmi o cifri."
+      },
       "email_forward": {
         "title": "Inoltrare la tua posta",
         "body": "Inoltrare messaggi dal tuo account con i loro allegati, senza aprire l'editor. Ti viene chiesto prima del primo inoltro a ciascun indirizzo."

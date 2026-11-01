@@ -256,6 +256,39 @@ html.dark[data-contrast="more"] {
 :root[data-contrast="more"] a[href]:not([role]) {
   text-decoration-line: underline;
 }
+/* Proofreading underlines: darker in light mode, lighter in dark mode. */
+@media (prefers-contrast: more) {
+  :root:not([data-contrast="normal"]) {
+    --text-issue-grammar: #1d4ed8;
+    --text-issue-style: #92400e;
+    --text-issue-other: #374151;
+  }
+  .dark:not([data-contrast="normal"]) {
+    --text-issue-grammar: #93c5fd;
+    --text-issue-style: #fcd34d;
+    --text-issue-other: #e5e7eb;
+  }
+}
+:root[data-contrast="more"] {
+  --text-issue-grammar: #1d4ed8;
+  --text-issue-style: #92400e;
+  --text-issue-other: #374151;
+}
+html.dark[data-contrast="more"] {
+  --text-issue-grammar: #93c5fd;
+  --text-issue-style: #fcd34d;
+  --text-issue-other: #e5e7eb;
+}
+@media (forced-colors: active) {
+  .tiptap .text-issue {
+    text-decoration-color: CanvasText;
+    text-decoration-thickness: 2px;
+  }
+  .tiptap .text-issue-active {
+    background-color: Highlight;
+    color: HighlightText;
+  }
+}
 
 /* ---------- Reduced transparency ---------- */
 

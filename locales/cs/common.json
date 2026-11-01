@@ -6037,6 +6037,10 @@
         "title": "Měnit zprávu, kterou píšete",
         "body": "Nahrazovat nebo přidávat text ve zprávě během psaní, když plugin použijete v editoru. Každou změnu můžete vrátit a o odeslání stále rozhodujete vy."
       },
+      "compose_check": {
+        "title": "Kontrolovat, co píšete",
+        "body": "Čte, co píšete v editoru, během psaní a může to posílat službě, kterou používá. Jen když je kontrola zapnutá, a nikdy u zprávy, kterou podepisujete nebo šifrujete."
+      },
       "email_forward": {
         "title": "Přeposílat vaši poštu",
         "body": "Přeposílá zprávy z vašeho účtu i s přílohami, aniž by otevřel editor. Před prvním přeposláním na každou adresu se vás zeptá."

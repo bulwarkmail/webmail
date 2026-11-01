@@ -6065,6 +6065,10 @@
         "title": "Muuda kirja, mida kirjutad",
         "body": "Asendada või lisada teksti kirjas selle kirjutamise ajal, kui kasutad pistikprogrammi kirjakoostajas. Iga muudatuse saad tagasi võtta ja sina otsustad ikka, kas saata."
       },
+      "compose_check": {
+        "title": "Kontrollida, mida kirjutate",
+        "body": "Loeb kirjutamise ajal, mida koostajas kirjutate, ja võib selle saata teenusele, mida kasutab. Ainult siis, kui õigekirja kontroll on sees, ja mitte kunagi sõnumi puhul, mille allkirjastate või krüpteerite."
+      },
       "email_forward": {
         "title": "Sinu kirjade edasisaatmine",
         "body": "Saadab sinu konto kirju koos manustega edasi ilma koostajat avamata. Enne esimest edasisaatmist igale aadressile küsitakse sinult luba."

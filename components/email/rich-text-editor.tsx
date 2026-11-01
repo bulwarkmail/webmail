@@ -41,6 +41,7 @@ export function withLinkScheme(value: string): string {
     : `https://${value}`;
 }
 import { useSettingsStore } from "@/stores/settings-store";
+import { createTextCheckExtension, type TextCheckOptions } from "@/components/email/proofreading/text-check-extension";
 import { useTranslations } from "next-intl";
 import {
   Bold,
@@ -136,16 +137,27 @@ interface RichTextEditorProps {
   ariaDescribedBy?: string;
   /** The font and size the text starts in (the sent mail carries them too). */
   defaultTextStyle?: ComposeTextStyle;
+  /**
+   * The browser's own spell check. Off while a proofreading plugin checks
+   * spelling here, so there aren't two sets of underlines.
+   */
+  spellcheck?: boolean;
+  /** The language the text is written in (the writing-language setting). */
+  lang?: string;
+  /** An underline of a proofreading issue was clicked, tapped or right-clicked. */
+  onTextIssueOpen?: TextCheckOptions['onOpen'];
 }
 
 /** What the editing area tells assistive technology, besides TipTap's role=textbox. */
-export function editorA11yAttributes({ ariaLabel, ariaInvalid, ariaDescribedBy, defaultTextStyle }: Pick<RichTextEditorProps, 'ariaLabel' | 'ariaInvalid' | 'ariaDescribedBy' | 'defaultTextStyle'>): Record<string, string> {
+export function editorA11yAttributes({ ariaLabel, ariaInvalid, ariaDescribedBy, defaultTextStyle, spellcheck = true, lang }: Pick<RichTextEditorProps, 'ariaLabel' | 'ariaInvalid' | 'ariaDescribedBy' | 'defaultTextStyle' | 'spellcheck' | 'lang'>): Record<string, string> {
   const style = defaultTextStyle ? composeTextStyleCss(defaultTextStyle) : "";
   return {
     class: "tiptap min-h-[100px] px-4 py-3 text-sm text-foreground",
     ...(style ? { style } : {}),
     role: "textbox",
     "aria-multiline": "true",
+    spellcheck: spellcheck ? "true" : "false",
+    ...(lang ? { lang } : {}),
     ...(ariaLabel ? { "aria-label": ariaLabel } : {}),
     ...(ariaInvalid ? { "aria-invalid": "true" } : {}),
     ...(ariaInvalid && ariaDescribedBy ? { "aria-describedby": ariaDescribedBy } : {}),
@@ -391,6 +403,9 @@ export function RichTextEditor({
   ariaInvalid,
   ariaDescribedBy,
   defaultTextStyle,
+  spellcheck = true,
+  lang,
+  onTextIssueOpen,
 }: RichTextEditorProps) {
   const rtlEditingSupport = useSettingsStore((st) => st.rtlEditingSupport);
   const tComposer = useTranslations("email_composer");
@@ -399,6 +414,12 @@ export function RichTextEditor({
   onImageUploadRef.current = onImageUpload;
   const onEditorReadyRef = React.useRef(onEditorReady);
   onEditorReadyRef.current = onEditorReady;
+  const onTextIssueOpenRef = React.useRef(onTextIssueOpen);
+  onTextIssueOpenRef.current = onTextIssueOpen;
+  // Built once with the editor; reads the latest handler.
+  const [textCheck] = useState(() => createTextCheckExtension(() => ({
+    onOpen: (key, anchor, via) => onTextIssueOpenRef.current?.(key, anchor, via),
+  })));
   const mentionCandidatesRef = React.useRef<MentionCandidate[]>([]);
   mentionCandidatesRef.current = mentionCandidates ?? [];
   // Read on every keystroke after an "@"; the editor is built only once.
@@ -496,6 +517,7 @@ export function RichTextEditor({
           onExit: () => setMention(null),
         }),
       }),
+      textCheck,
     ],
     // One newline per paragraph when copying out as plain text, the inverse
     // of PlainTextPaste: a blank line is an empty paragraph, so the default
@@ -505,7 +527,7 @@ export function RichTextEditor({
     },
     content,
     editorProps: {
-      attributes: editorA11yAttributes({ ariaLabel, ariaInvalid, ariaDescribedBy, defaultTextStyle }),
+      attributes: editorA11yAttributes({ ariaLabel, ariaInvalid, ariaDescribedBy, defaultTextStyle, spellcheck, lang }),
       handleKeyDown: (_view, event) => {
         if (event.altKey && event.key === "F10" && focusToolbarRef.current?.()) {
           event.preventDefault();
@@ -588,10 +610,10 @@ export function RichTextEditor({
     editor.setOptions({
       editorProps: {
         ...editor.options.editorProps,
-        attributes: editorA11yAttributes({ ariaLabel, ariaInvalid, ariaDescribedBy, defaultTextStyle }),
+        attributes: editorA11yAttributes({ ariaLabel, ariaInvalid, ariaDescribedBy, defaultTextStyle, spellcheck, lang }),
       },
     });
-  }, [editor, ariaLabel, ariaInvalid, ariaDescribedBy, defaultTextStyle]);
+  }, [editor, ariaLabel, ariaInvalid, ariaDescribedBy, defaultTextStyle, spellcheck, lang]);
 
   // Re-render the toolbar when what it shows changes, also on a caret move
   // or an image selection that changes no text (the parent re-renders only

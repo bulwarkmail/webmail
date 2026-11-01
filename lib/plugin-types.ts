@@ -1554,6 +1554,12 @@ export const ALL_PERMISSIONS = [
   'compose:read',
   // Change the message being written (api.composer.replaceSelection/replaceBody).
   'compose:write',
+  // Check the text of every open composer while the user types
+  // (api.composer.registerChecker): the host sends the plugin what the user
+  // writes, without the user pointing it at a composer, and draws its
+  // results as underlines. Only where the user (or the admin) turned
+  // proofreading on, and never for a message that will be signed or encrypted.
+  'compose:check',
   // Forward a message of the account with its attachments, without the
   // composer (api.email.forward). The host asks the user once per address.
   'email:forward',

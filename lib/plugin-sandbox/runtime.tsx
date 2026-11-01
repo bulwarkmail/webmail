@@ -165,6 +165,50 @@ function applyHostFeatures(next: HostFeaturesView | undefined): void {
   }
 }
 const pendingCallbacks = new Map<string, { resolve: (v: unknown) => void; reject: (err: Error) => void }>();
+
+// ─── Text checkers (api.composer.registerChecker) ─────────────
+
+type CheckKindName = 'spelling' | 'grammar' | 'style' | 'other';
+/** What the host sends a checker. Segment text uses U+FFFC for inline objects. */
+interface CheckRequest {
+  composerId: string;
+  revision: string;
+  language: string;
+  full: boolean;
+  order: string[];
+  segments: { id: string; text: string }[];
+  objectReplacement: string;
+}
+interface CheckAnnotation {
+  segmentId: string;
+  offset: number;
+  length: number;
+  kind: CheckKindName;
+  message: string;
+  shortMessage?: string;
+  replacements?: string[];
+  ruleId?: string;
+  ruleLabel?: string;
+  id?: string;
+}
+type CheckResult = CheckAnnotation[] | { annotations?: CheckAnnotation[]; status?: 'ok' | 'unavailable' | 'paused'; message?: string; retryAfterMs?: number };
+interface CheckerDefinition {
+  id: string;
+  label: string;
+  kinds: CheckKindName[];
+  debounceMs?: number;
+  languages?: string[];
+  mode?: 'typing' | 'on-demand';
+  warnBeforeSend?: boolean;
+  check?: (request: CheckRequest) => CheckResult | Promise<CheckResult>;
+  onAction?: (event: { composerId: string; annotation: CheckAnnotation & { text: string }; action: 'ignore' | 'dictionary' | 'disable-rule' }) => unknown;
+}
+interface CheckerHandle {
+  id: string;
+  update: (patch: { label?: string; kinds?: CheckKindName[]; debounceMs?: number; warnBeforeSend?: boolean }) => Promise<true>;
+  recheck: () => Promise<true>;
+  dispose: () => Promise<void>;
+}
 const hookHandlers: Record<string, (...args: unknown[]) => unknown> = {};
 
 function sendToHost(msg: SandboxToHost, transfer?: Transferable[]): void {
@@ -642,6 +686,52 @@ function buildPluginApi(manifest: PluginManifest) {
       /** Attach a blob from jmap.uploadBlob. Needs email:blob-write. */
       attach: (composerId: string, file: { blobId: string; name: string; type?: string; size: number }) =>
         callApi('composer.attach', [composerId, file]) as Promise<boolean>,
+      /**
+       * Register a text checker (needs compose:check), from activate(). In
+       * every composer where the user (or the admin) turned proofreading on,
+       * the host calls `check` with the user's own text in paragraphs while
+       * they type, and draws what it returns as underlines. Never for a
+       * message that will be signed or encrypted. `onAction` hears Ignore,
+       * Add to dictionary and Turn off rule. Mode 'on-demand' gets no text
+       * while typing: use getCheckText and setAnnotations from a user action.
+       */
+      registerChecker: async (def: CheckerDefinition): Promise<CheckerHandle> => {
+        if (mode !== 'background') throw new Error('composer.registerChecker: register checkers from activate(), not from a slot');
+        if (!def || typeof def !== 'object') throw new Error('composer.registerChecker: needs an object');
+        const { check, onAction, ...data } = def;
+        if (data.mode !== 'on-demand' && typeof check !== 'function') throw new Error('composer.registerChecker: check must be a function');
+        if (check !== undefined && typeof check !== 'function') throw new Error('composer.registerChecker: check must be a function');
+        if (onAction !== undefined && typeof onAction !== 'function') throw new Error('composer.registerChecker: onAction must be a function');
+        const id = String(data.id);
+        const checkKey = `checker:${id}`;
+        const actionKey = `checker-action:${id}`;
+        // In place before the host knows the checker, so its first request finds them.
+        if (check) hookHandlers[checkKey] = check as (...args: unknown[]) => unknown; else delete hookHandlers[checkKey];
+        if (onAction) hookHandlers[actionKey] = onAction as (...args: unknown[]) => unknown; else delete hookHandlers[actionKey];
+        try {
+          await callApi('composer.registerChecker', [data]);
+        } catch (err) {
+          delete hookHandlers[checkKey];
+          delete hookHandlers[actionKey];
+          throw err;
+        }
+        return {
+          id,
+          update: (patch) => callApi('composer.updateChecker', [id, patch]) as Promise<true>,
+          recheck: () => callApi('composer.recheck', [id]) as Promise<true>,
+          dispose: async () => {
+            delete hookHandlers[checkKey];
+            delete hookHandlers[actionKey];
+            await callApi('composer.unregisterChecker', [id]);
+          },
+        };
+      },
+      /** The whole text of a composer the plugin was handed, request-shaped, for an on-demand check. Needs compose:check. */
+      getCheckText: (composerId: string, checkerId: string) =>
+        callApi('composer.getCheckText', [composerId, checkerId]) as Promise<CheckRequest>,
+      /** Results for a request from getCheckText; resolves to how many were kept. Needs compose:check. */
+      setAnnotations: (composerId: string, checkerId: string, revision: string, annotations: CheckAnnotation[]) =>
+        callApi('composer.setAnnotations', [composerId, checkerId, revision, annotations]) as Promise<number>,
     },
     toast: {
       /** Stay visible until dismissed or this frame closes; returns a frame-owned handle. */

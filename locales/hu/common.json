@@ -6037,6 +6037,10 @@
         "title": "Az éppen írt üzeneted módosítása",
         "body": "Szöveg cseréje vagy hozzáadása az üzenetben írás közben, amikor a bővítményt a szerkesztőben használod. Minden módosítás visszavonható, és továbbra is te döntöd el, elküldöd-e."
       },
+      "compose_check": {
+        "title": "Ellenőrizni, amit ír",
+        "body": "Gépelés közben olvassa, amit a szerkesztőben ír, és elküldheti az általa használt szolgáltatásnak. Csak ha a helyesírás-ellenőrzés be van kapcsolva, és soha nem olyan üzenetnél, amelyet aláír vagy titkosít."
+      },
       "email_forward": {
         "title": "Leveleid továbbítása",
         "body": "Üzeneteket továbbít a fiókodból a mellékleteikkel együtt, a szerkesztő megnyitása nélkül. Minden címre az első továbbítás előtt megkérdez."

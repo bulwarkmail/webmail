@@ -6037,6 +6037,10 @@
         "title": "Zmiana pisanej wiadomości",
         "body": "Zastępowanie lub dodawanie tekstu w wiadomości podczas pisania, gdy używasz wtyczki w edytorze. Każdą zmianę możesz cofnąć, a o wysłaniu nadal decydujesz Ty."
       },
+      "compose_check": {
+        "title": "Sprawdzać to, co piszesz",
+        "body": "Czyta to, co piszesz w edytorze, w trakcie pisania i może wysyłać to do usługi, z której korzysta. Tylko gdy sprawdzanie jest włączone, i nigdy dla wiadomości, którą podpisujesz lub szyfrujesz."
+      },
       "email_forward": {
         "title": "Przekazywanie Twojej poczty",
         "body": "Przekazuje wiadomości z Twojego konta razem z załącznikami, bez otwierania edytora. Przed pierwszym przekazaniem na każdy adres zostaniesz zapytany."

@@ -357,6 +357,20 @@ export type ProtocolOpenMode = 'active-session' | 'new-tab';
  */
 const DEVICE_LOCAL_SETTING_KEYS = new Set<string>(['proInterface']);
 
+/** A map of plugin id → boolean, whatever came in (sync, import, storage). */
+function booleanRecord(value: unknown): Record<string, boolean> {
+  const out: Record<string, boolean> = {};
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return out;
+  for (const [k, v] of Object.entries(value)) {
+    if (typeof v === 'boolean' && k.length <= 200 && k !== '__proto__') out[k] = v;
+  }
+  return out;
+}
+
+export function isWritingLanguage(value: unknown): value is string {
+  return value === 'auto' || (typeof value === 'string' && /^[A-Za-z]{2,3}(-[A-Za-z0-9]{1,8}){0,3}$/.test(value));
+}
+
 /**
  * Settings that shape views spanning every logged-in account. They are synced
  * with the active account's settings like everything else, but once a device
@@ -586,6 +600,18 @@ interface SettingsState extends AccessibilitySettings {
   autoSelectReplyIdentity: boolean;
   replyIdentityMatch: ReplyIdentityMatch; // With autoSelectReplyIdentity on: 'exact' = configured identities only, 'domain' = also same-domain catch-all addresses (rewrites From) #1000
   plainTextMode: boolean; // Send plain text only (no rich text editor)
+  /**
+   * Proofreading: checker plugins (compose:check) get what the user writes
+   * and underline mistakes. The admin may preset or lock it; the checker
+   * reads the policy itself when it runs (lib/proofreading/gate.ts).
+   */
+  proofreading: boolean;
+  /** The user's own on/off per checker plugin id, over `proofreading`. */
+  proofreadingPlugins: Record<string, boolean>;
+  /** Plugin ids whose "what is sent where" notice the user has seen. */
+  proofreadingNoticeSeen: Record<string, boolean>;
+  /** The language the user writes in: 'auto' or a BCP 47 tag (editor lang, checkers). */
+  writingLanguage: string;
   rtlEditingSupport: boolean; // Show a per-paragraph LTR/RTL direction control in the composer (Gmail-style)
   subAddressDelimiter: string; // Character separating user from tag (e.g. "user+tag@")
   sendDelaySeconds: SendDelaySeconds;
@@ -926,6 +952,10 @@ const DEFAULT_SETTINGS = {
   autoSelectReplyIdentity: false,
   replyIdentityMatch: 'domain' as ReplyIdentityMatch,
   plainTextMode: false,
+  proofreading: false,
+  proofreadingPlugins: {} as Record<string, boolean>,
+  proofreadingNoticeSeen: {} as Record<string, boolean>,
+  writingLanguage: 'auto',
   rtlEditingSupport: false,
   subAddressDelimiter: DEFAULT_SUB_ADDRESS_DELIMITER,
   sendDelaySeconds: 0 as SendDelaySeconds,
@@ -1360,6 +1390,10 @@ export const useSettingsStore = create<SettingsState>()(
           autoSelectReplyIdentity: state.autoSelectReplyIdentity,
           replyIdentityMatch: state.replyIdentityMatch,
           plainTextMode: state.plainTextMode,
+          proofreading: state.proofreading,
+          proofreadingPlugins: state.proofreadingPlugins,
+          proofreadingNoticeSeen: state.proofreadingNoticeSeen,
+          writingLanguage: state.writingLanguage,
           rtlEditingSupport: state.rtlEditingSupport,
           subAddressDelimiter: state.subAddressDelimiter,
           sendDelaySeconds: state.sendDelaySeconds,
@@ -1605,6 +1639,13 @@ export const useSettingsStore = create<SettingsState>()(
               // Per-account map (accountId -> identityId); ignore any legacy
               // global/non-record value rather than corrupting the map.
               if (key === 'preferredIdentityIds' && !isPlainRecord(settings[key])) {
+                return;
+              }
+              if (key === 'proofreadingPlugins' || key === 'proofreadingNoticeSeen') {
+                put(key, { [key]: booleanRecord(settings[key]) });
+                return;
+              }
+              if (key === 'writingLanguage' && !isWritingLanguage(settings[key])) {
                 return;
               }
               if (key === 'hiddenSharedMailAccounts' && !isPlainRecord(settings[key])) {
@@ -1983,6 +2024,9 @@ export const useSettingsStore = create<SettingsState>()(
             if (!isPlainRecord(state.preferredIdentityIds)) {
               state.preferredIdentityIds = {};
             }
+            state.proofreadingPlugins = booleanRecord(state.proofreadingPlugins);
+            state.proofreadingNoticeSeen = booleanRecord(state.proofreadingNoticeSeen);
+            if (!isWritingLanguage(state.writingLanguage)) state.writingLanguage = 'auto';
             if (!isPlainRecord(state.hiddenSharedMailAccounts)) {
               state.hiddenSharedMailAccounts = {};
             }

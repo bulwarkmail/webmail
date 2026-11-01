@@ -499,7 +499,7 @@ export class SandboxInstance {
         const { id, method, args } = msg;
         void (async () => {
           try {
-            const result = await dispatchApiCall(this.plugin, method, args ?? [], { privileged: this.privileged, sink: this, toastSignal: this.toastLifetime.signal });
+            const result = await dispatchApiCall(this.plugin, method, args ?? [], { privileged: this.privileged, sink: this, toastSignal: this.toastLifetime.signal, frame: this.mode });
             this.send({ type: 'api-response', id, ok: true, result });
           } catch (err) {
             this.send({ type: 'api-response', id, ok: false, error: (err as Error).message ?? String(err) });

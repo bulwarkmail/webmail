@@ -6037,6 +6037,10 @@
         "title": "Alterar a mensagem que você está escrevendo",
         "body": "Substituir ou adicionar texto em uma mensagem enquanto você a escreve, quando usa o plugin no editor. Você pode desfazer cada alteração e continua decidindo se envia."
       },
+      "compose_check": {
+        "title": "Verificar o que escreve",
+        "body": "Lê o que escreve no editor enquanto digita e pode enviá-lo ao serviço que usa. Só quando a revisão está ativada, e nunca numa mensagem que assine ou cifre."
+      },
       "email_forward": {
         "title": "Encaminhar seus e-mails",
         "body": "Encaminhar mensagens da sua conta com os anexos, sem abrir o editor. Você é consultado antes do primeiro encaminhamento para cada endereço."

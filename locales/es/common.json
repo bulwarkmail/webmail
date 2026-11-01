@@ -6037,6 +6037,10 @@
         "title": "Cambiar el mensaje que escribes",
         "body": "Sustituir o añadir texto en un mensaje mientras lo escribes, cuando usas el complemento en el editor. Puedes deshacer cada cambio y sigues decidiendo si lo envías."
       },
+      "compose_check": {
+        "title": "Revisar lo que escribe",
+        "body": "Lee lo que escribe en el editor mientras teclea y puede enviarlo al servicio que usa. Solo cuando la revisión está activada, y nunca en un mensaje que firme o cifre."
+      },
       "email_forward": {
         "title": "Reenviar tu correo",
         "body": "Reenviar mensajes de tu cuenta con sus adjuntos, sin abrir el editor. Se te pregunta antes del primer reenvío a cada dirección."

@@ -6037,6 +6037,10 @@
         "title": "Modificarea mesajului pe care îl scrieți",
         "body": "Înlocuirea sau adăugarea de text într-un mesaj în timp ce îl scrieți, când folosiți pluginul în editor. Puteți anula fiecare modificare și decideți în continuare dacă îl trimiteți."
       },
+      "compose_check": {
+        "title": "Verificarea a ceea ce scrieți",
+        "body": "Citește ce scrieți în editor în timp ce tastați și poate trimite textul serviciului pe care îl folosește. Doar când verificarea este pornită și niciodată pentru un mesaj pe care îl semnați sau îl criptați."
+      },
       "email_forward": {
         "title": "Redirecționarea mesajelor dvs.",
         "body": "Redirecționează mesaje din contul dvs. împreună cu atașamentele, fără a deschide editorul. Sunteți întrebat înainte de prima redirecționare către fiecare adresă."

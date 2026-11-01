@@ -53,6 +53,12 @@ export interface PluginAction {
    * count; in menus after the label. 0 shows none, above 99 "99+".
    */
   badge?: number;
+  /**
+   * A check item that, ticked, makes the message signed or encrypted (the
+   * composer's Options menu). While one is ticked, proofreading sends
+   * nothing. Only for plugins with crypto:full or email:raw-send.
+   */
+  protects?: 'sign' | 'encrypt';
 }
 
 export interface RegisteredAction extends PluginAction {
@@ -124,6 +130,10 @@ export function checkActions(value: unknown): PluginAction[] {
     if (a.checked !== undefined) {
       if (typeof a.checked !== 'boolean') throw new Error(`actions[${i}].checked must be true or false`);
       out.checked = a.checked;
+    }
+    if (a.protects !== undefined) {
+      if (a.protects !== 'sign' && a.protects !== 'encrypt') throw new Error(`actions[${i}].protects must be "sign" or "encrypt"`);
+      out.protects = a.protects;
     }
     if (a.description !== undefined) {
       if (typeof a.description !== 'string' || a.description.length > 120) throw new Error(`actions[${i}].description must be a string of up to 120 characters`);

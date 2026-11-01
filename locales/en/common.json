@@ -6065,6 +6065,10 @@
         "title": "Change the message you are writing",
         "body": "Replace or add text in a message while you write it, when you use the plugin in the composer. You can undo each change, and you still decide whether to send."
       },
+      "compose_check": {
+        "title": "Check what you write",
+        "body": "Reads what you write in the composer while you type and may send it to the service it uses. Only where proofreading is on, and never for a message you sign or encrypt."
+      },
       "email_forward": {
         "title": "Forward your mail",
         "body": "Forward messages from your account with their attachments, without opening the composer. You are asked before the first forward to each address."

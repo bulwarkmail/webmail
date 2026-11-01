@@ -6077,6 +6077,10 @@
         "title": "Thay đổi thư bạn đang soạn",
         "body": "Thay thế hoặc thêm văn bản vào thư khi bạn đang soạn và sử dụng plugin trong khung soạn thư. Bạn có thể hoàn tác từng thay đổi và vẫn là người quyết định có gửi thư hay không."
       },
+      "compose_check": {
+        "title": "Kiểm tra những gì bạn viết",
+        "body": "Đọc những gì bạn viết trong trình soạn thảo khi bạn gõ và có thể gửi đến dịch vụ mà nó dùng. Chỉ khi bật soát lỗi, và không bao giờ với thư bạn ký hoặc mã hóa."
+      },
       "email_forward": {
         "title": "Chuyển tiếp thư của bạn",
         "body": "Chuyển tiếp thư từ tài khoản của bạn cùng tệp đính kèm mà không mở khung soạn thư. Plugin sẽ hỏi trước khi chuyển tiếp lần đầu đến từng địa chỉ."
