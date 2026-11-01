@@ -70,6 +70,17 @@ describe('settings skeleton nav', () => {
     expect(row('recovery').matches(showsRecovery)).toBe(false);
   });
 
+  it('drops the section jump row on pages with one section', () => {
+    const root = mount(renderToString(<SettingsSkeleton label="Loading" />));
+    const row = root.querySelector<HTMLElement>('.boot-settings-one-section\\:hidden')!;
+    expect(row).not.toBeNull();
+    const oneSection = variantSelector('boot-settings-one-section');
+    document.documentElement.setAttribute('data-boot-settings-tab', 'filters');
+    expect(row.matches(oneSection)).toBe(true);
+    document.documentElement.setAttribute('data-boot-settings-tab', 'appearance');
+    expect(row.matches(oneSection)).toBe(false);
+  });
+
   it('has the back-to-mail box only outside a Pro pane', () => {
     const page = mount(renderToString(<SettingsSkeleton label="Loading" />));
     expect(page.querySelector('.boot-pro\\:hidden')).not.toBeNull();

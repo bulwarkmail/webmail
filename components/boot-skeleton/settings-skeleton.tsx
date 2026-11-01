@@ -127,10 +127,13 @@ function SettingsNav({ embedded }: { embedded: boolean }) {
 function SettingsPage({ sections }: { sections: number }) {
   return (
     <>
-      <div className="flex flex-wrap gap-1.5 mb-6">
+      {/* The section jump row; none on a page with one section, two lines on
+          Accessibility (app/boot-skeleton.css). */}
+      <div className="flex flex-wrap gap-1.5 mb-6 boot-settings-one-section:hidden">
         {repeat(4, (i) => (
           <Block className="h-8" w={`${4.5 + ((i * 3) % 4)}rem`} />
         ))}
+        <Block className="h-8 basis-full hidden boot-settings-two-rows:block" />
       </div>
       <div className="space-y-8">
         {repeat(sections, (s) => (

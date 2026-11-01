@@ -129,3 +129,8 @@
 @custom-variant boot-no-settings-files (&:where([data-boot-settings-tabs]:not([data-boot-settings-tabs~="files"]) *));
 @custom-variant boot-no-settings-addons (&:where([data-boot-settings-tabs]:not([data-boot-settings-tabs~="addons"]) *));
 @custom-variant boot-settings-recovery (&:where([data-boot-settings-tabs~="recovery"] *));
+
+/* Settings pages with one section have no section jump row (SectionNav). */
+@custom-variant boot-settings-one-section (&:where([data-boot-settings-tab="security"] *, [data-boot-settings-tab="filters"] *, [data-boot-settings-tab="vacation"] *, [data-boot-settings-tab="recovery"] *, [data-boot-settings-tab="addons"] *));
+/* Accessibility has eleven sections: its jump row wraps to a second line. */
+@custom-variant boot-settings-two-rows (&:where([data-boot-settings-tab="accessibility"] *));
