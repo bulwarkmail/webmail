@@ -44,6 +44,7 @@ import {
   MoreVertical,
 } from "@/components/icons";
 import { cn, buildMailboxTree, MailboxNode } from "@/lib/utils";
+import { FOLDER_CHEVRON_SLOT, FOLDER_ROW_PX_BASE, FolderRowsSkeleton } from "@/components/boot-skeleton/mail-skeleton";
 import { localizeMailboxName } from "@/lib/mailbox-label";
 import {
   buildKeywordTree,
@@ -168,8 +169,8 @@ interface SidebarProps {
   onLoginSharedMailboxSelect?: (loginId: string, mailboxId: string) => void;
 }
 
-const ROW_PX_BASE = 8;
-const CHEVRON_SLOT = 20;
+const ROW_PX_BASE = FOLDER_ROW_PX_BASE;
+const CHEVRON_SLOT = FOLDER_CHEVRON_SLOT;
 const INDENT_STEP = 12;
 
 // Icons and colours follow the JMAP role only.
@@ -2054,8 +2055,11 @@ function SidebarImpl({
                 {((expanded && !isCollapsed) || isCollapsed) && (
                   <>
                     {tree.length === 0 ? (
-                      <div className="px-4 py-2 text-sm text-muted-foreground">
-                        {!isCollapsed && t("loading_mailboxes")}
+                      // The page skeleton's folder rows, so nothing moves when the
+                      // folders arrive (components/boot-skeleton).
+                      <div data-testid="folders-loading">
+                        <span className="sr-only">{t("loading_mailboxes")}</span>
+                        {!isCollapsed && <FolderRowsSkeleton />}
                       </div>
                     ) : (
                       <>
@@ -2120,8 +2124,11 @@ function SidebarImpl({
             {(mvFoldersHeadless || (foldersExpanded && !isCollapsed) || isCollapsed) && (
               <>
                 {mailboxes.length === 0 ? (
-                  <div className="px-4 py-2 text-sm text-muted-foreground">
-                    {!isCollapsed && t("loading_mailboxes")}
+                  // The page skeleton's folder rows, so nothing moves when the
+                  // folders arrive (components/boot-skeleton).
+                  <div data-testid="folders-loading">
+                    <span className="sr-only">{t("loading_mailboxes")}</span>
+                    {!isCollapsed && <FolderRowsSkeleton />}
                   </div>
                 ) : (
                   <>

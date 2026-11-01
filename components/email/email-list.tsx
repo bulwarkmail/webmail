@@ -29,6 +29,8 @@ import { useShallow } from "zustand/react/shallow";
 import { useAuthStore } from "@/stores/auth-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useListRowShape } from "@/hooks/use-list-row-shape";
+import { MailListRowsSkeleton, type MailRowShape } from "@/components/boot-skeleton/mail-skeleton";
+import type { Density } from "@/lib/density";
 import { useUIStore } from "@/stores/ui-store";
 import { useMessageListTabsStore } from "@/stores/message-list-tabs-store";
 import { emailKeyFor, groupEmailsByThread, sortThreadGroups, threadKeyFor, getEmailTagIds } from "@/lib/thread-utils";
@@ -124,27 +126,11 @@ const BATCH_TOOLBAR_WIDE = 480;
 
 // Declared out here so re-renders of the list keep the same element. Inside
 // EmailList every render made a new component, which remounted the skeleton
-// and replayed its fade-in each time the store changed while a list loaded.
-function LoadingSkeleton() {
-  return (
-    <div className="animate-in fade-in duration-200" data-testid="email-list-skeleton">
-      {[...Array(8)].map((_, i) => (
-        <div key={i} className="border-b border-border px-4 py-4">
-          <div className="flex items-start gap-3">
-            <div className="w-10 h-10 bg-muted/50 rounded-full" />
-            <div className="flex-1">
-              <div className="flex items-center justify-between mb-2">
-                <div className="h-4 bg-muted/50 rounded w-32" />
-                <div className="h-3 bg-muted/50 rounded w-16" />
-              </div>
-              <div className="h-4 bg-muted/50 rounded w-3/4 mb-2" />
-              <div className="h-3 bg-muted/50 rounded w-full" />
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
+// each time the store changed while a list loaded.
+function LoadingSkeleton({ shape, density, preview }: { shape: MailRowShape; density: Density; preview: boolean }) {
+  // The page skeleton's rows (components/boot-skeleton), so the list the app
+  // draws while it loads is the one the server painted before it started.
+  return <MailListRowsSkeleton shape={shape} density={density} preview={preview} className="contents" />;
 }
 
 /** Rows per page in simple mode's paged list. */
@@ -1222,7 +1208,13 @@ export function EmailList({
         )}
 
         {isLoading && emails.length === 0 ? (
-          <LoadingSkeleton />
+          <div data-testid="email-list-skeleton">
+            <LoadingSkeleton
+              shape={isFocusedMailLayout ? (mountainViewList ? 'mv' : 'one-line') : 'stacked'}
+              density={density}
+              preview={showPreview}
+            />
+          </div>
         ) : emails.length === 0 && !isLoading ? (
           <div className="flex flex-col items-center justify-center h-full">
             {/* R9: an empty search offers Clear search; Drafts, which the
