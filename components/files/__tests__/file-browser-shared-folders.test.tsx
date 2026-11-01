@@ -143,6 +143,19 @@ describe('FileBrowser', () => {
     act(() => { useFileStore.setState({ client: null, sharedRoots: [], allFolders: [] }); });
   });
 
+  it('draws the loading listing in the list view, as the page skeleton did', () => {
+    renderBrowser({ resources: [], hasListed: false });
+    expect(screen.getByTestId('files-list-skeleton')).toBeInTheDocument();
+    expect(screen.queryByTestId('files-grid-skeleton')).toBeNull();
+  });
+
+  it('draws the loading listing as tiles when the grid view is picked', () => {
+    act(() => { useSettingsStore.setState({ filesSettings: { ...DEFAULT_FILES_SETTINGS, defaultViewMode: 'grid' } }); });
+    renderBrowser({ resources: [], hasListed: false });
+    expect(screen.getByTestId('files-grid-skeleton')).toBeInTheDocument();
+    expect(screen.queryByTestId('files-list-skeleton')).toBeNull();
+  });
+
   it('lists folders shared with the user at the root and in the sidebar (#1181)', async () => {
     const { onNavigate } = renderBrowser();
     await screen.findAllByText('Team');

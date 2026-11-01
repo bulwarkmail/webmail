@@ -107,7 +107,7 @@ describe('plugin pages', () => {
     render(<PluginPageApp linkSegments={['kanban', 'board']} />);
 
     expect(screen.queryByText('not_available_title')).toBeNull();
-    expect(screen.getByLabelText('loading')).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('loading');
   });
 
   it('does not mount another plugin page under a wrong page id', () => {

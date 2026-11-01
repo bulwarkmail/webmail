@@ -224,3 +224,12 @@
 @custom-variant boot-settings-one-section (&:where([data-boot-settings-tab="security"] *, [data-boot-settings-tab="filters"] *, [data-boot-settings-tab="vacation"] *, [data-boot-settings-tab="recovery"] *, [data-boot-settings-tab="addons"] *));
 /* Accessibility has eleven sections: its jump row wraps to a second line. */
 @custom-variant boot-settings-two-rows (&:where([data-boot-settings-tab="accessibility"] *));
+
+/* contacts, files, apps */
+
+/* List density (data-boot-density, the settings' density): contact rows drop
+   the avatar and the second line in extra compact. */
+@custom-variant boot-density-xc (&:where([data-boot-density="extra-compact"] *));
+
+/* /contacts/new: the new-contact form (data-boot-pane="create"). */
+@custom-variant boot-create (&:where([data-boot-pane="create"] *));

@@ -167,6 +167,8 @@ export function applyBootLayout(root: HTMLElement, c: BootLayoutConfig): void {
   var density = typeof s.density === 'string' && c.density[s.density] ? s.density : 'regular';
   var vars = (layout === 'mountain-view' ? c.mvDensity : c.density)[density];
   for (var prop in vars) root.style.setProperty(prop, vars[prop]);
+  // Rows that drop their avatar or second line at some densities (contact rows).
+  mark('density', density);
 
   var mailLayout = s.mailLayout === 'focus' || s.mailLayout === 'horizontal' ? s.mailLayout : 'split';
   if (layout === 'mountain-view' || s.simpleMode === true) mailLayout = 'focus';
@@ -245,7 +247,9 @@ export function applyBootLayout(root: HTMLElement, c: BootLayoutConfig): void {
     if ((seg[1] === 'message' || seg[1] === 'thread') && seg[2]) pane = seg[1];
     else if (query('email')) pane = 'message';
   } else if (surface === 'contacts') {
-    if (seg[1] || query('contactId') || query('addEmail')) pane = 'detail';
+    // The new-contact form needs no data, so it is drawn for what it is.
+    if (seg[1] === 'new' || (!seg[1] && !query('contactId') && query('addEmail'))) pane = 'create';
+    else if (seg[1] || query('contactId')) pane = 'detail';
   } else if (surface === 'admin') {
     if (seg[1]) pane = 'detail';
   }

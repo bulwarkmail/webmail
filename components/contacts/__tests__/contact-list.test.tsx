@@ -77,6 +77,19 @@ describe('ContactList', () => {
     expect(screen.getByTestId('contact-list-skeleton')).toBeInTheDocument();
   });
 
+  it('draws the loading rows at the list density, as the page skeleton does', () => {
+    const avatars = () => [...screen.getByTestId('contact-list-skeleton').querySelectorAll('.rounded-full')];
+    act(() => { useSettingsStore.setState({ density: 'extra-compact', groupContactsByLetter: false }); });
+    const { unmount } = render(<ContactList {...defaultProps} contacts={[]} isLoading />);
+    expect(avatars().length).toBeGreaterThan(0);
+    expect(avatars().every((el) => el.classList.contains('hidden'))).toBe(true);
+    unmount();
+
+    act(() => { useSettingsStore.setState({ density: 'regular', groupContactsByLetter: true }); });
+    render(<ContactList {...defaultProps} contacts={[]} isLoading />);
+    expect(avatars().some((el) => el.classList.contains('hidden'))).toBe(false);
+  });
+
   it('shows the contacts as soon as they are there, even while loading', () => {
     render(<ContactList {...defaultProps} isLoading />);
     expect(screen.queryByTestId('contact-list-skeleton')).toBeNull();
