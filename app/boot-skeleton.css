@@ -91,3 +91,9 @@
     animation: none;
   }
 }
+
+/* contacts, files, apps */
+
+/* List density (data-boot-density, the settings' density): contact rows drop
+   the avatar and the second line in extra compact. */
+@custom-variant boot-density-xc (&:where([data-boot-density="extra-compact"] *));

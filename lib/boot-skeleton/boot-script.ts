@@ -167,6 +167,8 @@ export function applyBootLayout(root: HTMLElement, c: BootLayoutConfig): void {
   var density = typeof s.density === 'string' && c.density[s.density] ? s.density : 'regular';
   var vars = (layout === 'mountain-view' ? c.mvDensity : c.density)[density];
   for (var prop in vars) root.style.setProperty(prop, vars[prop]);
+  // Rows that drop their avatar or second line at some densities (contact rows).
+  mark('density', density);
 
   var mailLayout = s.mailLayout === 'focus' || s.mailLayout === 'horizontal' ? s.mailLayout : 'split';
   if (layout === 'mountain-view' || s.simpleMode === true) mailLayout = 'focus';
