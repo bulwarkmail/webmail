@@ -1,0 +1,92 @@
+/*
+ * Page skeletons (components/boot-skeleton).
+ *
+ * The server draws every variant of a skeleton; these variants show the one
+ * that matches the attributes the boot script set on <html> before the first
+ * paint (lib/boot-skeleton/boot-script.ts). Part of the first stylesheet, so
+ * nothing here arrives late.
+ */
+
+/* Mountain View shell. Its geometry only applies on desktop, so pair it with
+   lg: in markup (lg:mv:hidden), except the phone bottom bar, which follows
+   the layout at every width. */
+@custom-variant mv (&:where([data-interface-layout="mountain-view"] *));
+
+/* Mail layout (effectiveMailLayout: Mountain View and simple mode are focus). */
+@custom-variant boot-split (&:where([data-boot-mail-layout="split"] *));
+@custom-variant boot-horizontal (&:where([data-boot-mail-layout="horizontal"] *));
+@custom-variant boot-focus (&:where([data-boot-mail-layout="focus"] *));
+
+/* A message, thread, contact, settings page or admin page is open. */
+@custom-variant boot-open (&:where([data-boot-pane] *));
+@custom-variant boot-thread (&:where([data-boot-pane="thread"] *));
+
+/* The Pro interface takes this page over on a desktop. */
+@custom-variant boot-pro (&:where([data-boot-pro="on"] *));
+
+/* Nothing stored that checkAuth could restore: draw the login card. */
+@custom-variant boot-out (&:where([data-boot-auth="out"] *));
+
+/* Calendar view. */
+@custom-variant boot-cal-month (&:where([data-boot-calendar-view="month"] *));
+@custom-variant boot-cal-week (&:where([data-boot-calendar-view="week"] *));
+@custom-variant boot-cal-day (&:where([data-boot-calendar-view="day"] *));
+@custom-variant boot-cal-agenda (&:where([data-boot-calendar-view="agenda"] *));
+@custom-variant boot-cal-tasks (&:where([data-boot-calendar-view="tasks"] *));
+@custom-variant boot-cal-collapsed (&:where([data-boot-collapsed~="calendar"] *));
+
+/* Files. */
+@custom-variant boot-files-grid (&:where([data-boot-files-view="grid"] *));
+@custom-variant boot-files-details (&:where([data-boot-files-details="on"] *));
+
+/* What the rail showed last time (bulwark-boot-hints). Without hints every
+   app is drawn: the rail of a server with all of them. */
+@custom-variant boot-no-calendar (&:where([data-boot-rail]:not([data-boot-rail~="calendar"]) *));
+@custom-variant boot-no-contacts (&:where([data-boot-rail]:not([data-boot-rail~="contacts"]) *));
+@custom-variant boot-no-files (&:where([data-boot-rail]:not([data-boot-rail~="files"]) *));
+@custom-variant boot-rail-admin (&:where([data-boot-rail~="admin"] *));
+@custom-variant boot-rail-a11y (&:where([data-boot-rail~="a11y"] *));
+@custom-variant boot-rail-quota (&:where([data-boot-rail~="quota"] *));
+
+/* A placeholder shape. A slow opacity pulse rather than a moving shimmer:
+   opacity runs on the compositor, so the skeleton costs the main thread
+   nothing while the app's JS is still starting up. */
+.sk-shape {
+  background-color: var(--color-muted);
+  animation: sk-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes sk-pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+/* Reduced motion: no pulse at all (the global rule only shortens it). */
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-motion="full"]) .sk-shape {
+    animation: none;
+  }
+}
+:root[data-motion="reduce"] .sk-shape {
+  animation: none;
+}
+
+/* More contrast: shapes that stand out from the panels they sit on. */
+@media (prefers-contrast: more) {
+  :root:not([data-contrast="normal"]) .sk-shape {
+    background-color: color-mix(in oklab, var(--color-foreground) 28%, transparent);
+  }
+}
+:root[data-contrast="more"] .sk-shape {
+  background-color: color-mix(in oklab, var(--color-foreground) 28%, transparent);
+}
+
+/* Forced colours drop backgrounds; keep the shapes as system grey. */
+@media (forced-colors: active) {
+  .sk-shape {
+    forced-color-adjust: none;
+    background-color: GrayText;
+    animation: none;
+  }
+}
