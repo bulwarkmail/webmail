@@ -6035,7 +6035,7 @@
       },
       "ui_tasks": {
         "title": "Add to tasks",
-        "body": "Show its own sections in a task's details and buttons in the task list."
+        "body": "Show its own sections in a task's details, buttons in the task list, and its own task list in place of Bulwark's."
       },
       "ui_files": {
         "title": "Add to files",

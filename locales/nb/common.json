@@ -6055,7 +6055,7 @@
       },
       "ui_tasks": {
         "title": "Legge til i oppgavevisningen",
-        "body": "Vise egne seksjoner i detaljene for en oppgave og knapper i oppgavelisten."
+        "body": "Vise egne seksjoner i detaljene for en oppgave, knapper i oppgavelisten og en egen oppgaveliste i stedet for Bulwarks."
       },
       "ui_files": {
         "title": "Legge til i filvisningen",

@@ -6055,7 +6055,7 @@
       },
       "ui_tasks": {
         "title": "Ajouter à l'affichage des tâches",
-        "body": "Afficher ses propres sections dans les détails d'une tâche et des boutons dans la liste des tâches."
+        "body": "Afficher ses propres sections dans les détails d'une tâche, des boutons dans la liste des tâches et sa propre liste de tâches à la place de celle de Bulwark."
       },
       "ui_files": {
         "title": "Ajouter à l'affichage des fichiers",

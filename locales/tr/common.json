@@ -6055,7 +6055,7 @@
       },
       "ui_tasks": {
         "title": "Görevler görünümüne öğe ekleme",
-        "body": "Bir görevin ayrıntılarında kendi bölümlerini, görev listesinde düğmeler gösterme."
+        "body": "Bir görevin ayrıntılarında kendi bölümlerini, görev listesinde düğmeleri ve Bulwark'ın listesi yerine kendi görev listesini gösterme."
       },
       "ui_files": {
         "title": "Dosyalar görünümüne öğe ekleme",

@@ -6055,7 +6055,7 @@
       },
       "ui_tasks": {
         "title": "Aggiungere elementi alla vista attività",
-        "body": "Mostrare le proprie sezioni nei dettagli di un'attività e pulsanti nell'elenco delle attività."
+        "body": "Mostrare le proprie sezioni nei dettagli di un'attività, pulsanti nell'elenco delle attività e un proprio elenco delle attività al posto di quello di Bulwark."
       },
       "ui_files": {
         "title": "Aggiungere elementi alla vista file",
