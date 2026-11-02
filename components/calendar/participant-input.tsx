@@ -3,14 +3,18 @@
 import { useState, useRef, useCallback, useEffect, useLayoutEffect, forwardRef, useImperativeHandle } from "react";
 import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
-import { X } from "@/components/icons";
+import { X, Users } from "@/components/icons";
 import { Input } from "@/components/ui/input";
 import { Avatar } from "@/components/ui/avatar";
-import { useContactStore } from "@/stores/contact-store";
+import { useContactStore, getContactDisplayName, getContactPrimaryEmail } from "@/stores/contact-store";
 
 interface Participant {
   name: string;
   email: string;
+}
+
+interface ParticipantSuggestion extends Participant {
+  group?: { id: string; memberCount: number };
 }
 
 interface ParticipantInputProps {
@@ -30,8 +34,9 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export const ParticipantInput = forwardRef<ParticipantInputHandle, ParticipantInputProps>(function ParticipantInput({ participants, onAdd, onRemove, disabled, id }, ref) {
   const t = useTranslations("calendar.participants");
+  const tContacts = useTranslations("contacts");
   const [query, setQuery] = useState("");
-  const [suggestions, setSuggestions] = useState<Participant[]>([]);
+  const [suggestions, setSuggestions] = useState<ParticipantSuggestion[]>([]);
   const [activeIndex, setActiveIndex] = useState(-1);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -69,7 +74,7 @@ export const ParticipantInput = forwardRef<ParticipantInputHandle, ParticipantIn
     }
     const results = useContactStore.getState().getAutocomplete(q);
     const existing = new Set(participants.map(p => p.email.toLowerCase()));
-    const filtered = results.filter(r => !existing.has(r.email.toLowerCase()));
+    const filtered = results.filter(r => r.group || !existing.has(r.email.toLowerCase()));
     setSuggestions(filtered.slice(0, 8));
     setShowSuggestions(filtered.length > 0);
     setActiveIndex(-1);
@@ -87,10 +92,20 @@ export const ParticipantInput = forwardRef<ParticipantInputHandle, ParticipantIn
     };
   }, []);
 
-  const addParticipant = useCallback((p: Participant) => {
-    if (!p.email || !EMAIL_REGEX.test(p.email)) return;
-    if (participants.some(e => e.email.toLowerCase() === p.email.toLowerCase())) return;
-    onAdd(p);
+  const addParticipant = useCallback((p: ParticipantSuggestion) => {
+    if (!p.group && (!EMAIL_REGEX.test(p.email) || participants.some(e => e.email.toLowerCase() === p.email.toLowerCase()))) return;
+    const candidates = p.group
+      ? useContactStore.getState().getGroupMembers(p.group.id).map(contact => ({
+        name: getContactDisplayName(contact),
+        email: getContactPrimaryEmail(contact).trim(),
+      }))
+      : [p];
+    const existing = new Set(participants.map(participant => participant.email.toLowerCase()));
+    for (const candidate of candidates) {
+      if (!EMAIL_REGEX.test(candidate.email) || existing.has(candidate.email.toLowerCase())) continue;
+      existing.add(candidate.email.toLowerCase());
+      onAdd({ name: candidate.name, email: candidate.email });
+    }
     setQuery("");
     setSuggestions([]);
     setShowSuggestions(false);
@@ -174,7 +189,7 @@ export const ParticipantInput = forwardRef<ParticipantInputHandle, ParticipantIn
           >
             {suggestions.map((s, i) => (
               <li
-                key={s.email}
+                key={s.group ? `group-${s.group.id}` : s.email}
                 id={`suggestion-${i}`}
                 role="option"
                 aria-selected={i === activeIndex}
@@ -183,10 +198,20 @@ export const ParticipantInput = forwardRef<ParticipantInputHandle, ParticipantIn
                   i === activeIndex ? "bg-accent text-accent-foreground" : "hover:bg-muted"
                 }`}
               >
-                <Avatar name={s.name} email={s.email} size="sm" className="shrink-0 w-7 h-7 text-[0.625rem]" />
+                {s.group ? (
+                  <span title={tContacts("directory.type.group")} className="shrink-0 w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Users className="w-4 h-4 text-primary" aria-hidden />
+                  </span>
+                ) : (
+                  <Avatar name={s.name} email={s.email} size="sm" className="shrink-0 w-7 h-7 text-[0.625rem]" />
+                )}
                 <div className="min-w-0">
                   <div className="font-medium truncate" title={s.name || s.email}>{s.name || s.email}</div>
-                  {s.name && (
+                  {s.group ? (
+                    <div className="text-xs text-muted-foreground truncate">
+                      {tContacts("groups.member_count", { count: s.group.memberCount })}
+                    </div>
+                  ) : s.name && (
                     <div className="text-xs text-muted-foreground truncate" title={s.email}>{s.email}</div>
                   )}
                 </div>
