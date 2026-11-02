@@ -279,17 +279,6 @@ html.dark[data-contrast="more"] {
   --text-issue-style: #fcd34d;
   --text-issue-other: #e5e7eb;
 }
-@media (forced-colors: active) {
-  .tiptap .text-issue {
-    text-decoration-color: CanvasText;
-    text-decoration-thickness: 2px;
-  }
-  .tiptap .text-issue-active {
-    forced-color-adjust: none;
-    background-color: Highlight;
-    color: HighlightText;
-  }
-}
 
 /* ---------- Reduced transparency ---------- */
 
@@ -516,4 +505,17 @@ html.dark[data-contrast="more"] {
 
 :root[data-simple-mode="on"] [data-simple-hide] {
   display: none !important;
+}
+
+/* Proofreading underlines in forced colours: one colour, so the line styles tell the kinds apart. */
+@media (forced-colors: active) {
+  .tiptap .text-issue {
+    text-decoration-color: CanvasText;
+    text-decoration-thickness: 2px;
+  }
+  .tiptap .text-issue-active {
+    forced-color-adjust: none;
+    background-color: Highlight;
+    color: HighlightText;
+  }
 }
