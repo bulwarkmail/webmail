@@ -68,7 +68,6 @@ describe('JMAP mailbox pagination', () => {
     ['missing ids', undefined, 's', []],
     ['mixed ids', ['third', 4], 's', []],
     ['duplicate ids', ['parent'], 's', [{ id: 'parent', name: 'Parent' }]],
-    ['changed state', ['third'], 's2', [{ id: 'third', name: 'Third' }]],
     ['early empty page', [], 's', []],
     ['missing object', ['third'], 's', []],
   ])('rejects %s instead of publishing a partial hierarchy', async (_label, ids, queryState, list) => {
@@ -143,14 +142,65 @@ describe('JMAP mailbox pagination', () => {
     await expect(client.getAllMailboxesWithState()).rejects.toThrow('complete mailbox list');
   });
 
-  it('pages when an unbounded get is rejected as tooManyObjects', async () => {
+  it('pages when an unbounded get is rejected as requestTooLarge (Stalwart 1.0)', async () => {
     const client = createClient();
     const list = [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }, { id: 'c', name: 'C' }];
     serve(client, { primary: list });
     vi.mocked(client['request']).mockResolvedValueOnce({ methodResponses: [
-      ['error', { type: 'tooManyObjects' }, '0'],
+      ['error', { type: 'requestTooLarge' }, '0'],
     ] });
     expect((await client.getMailboxes()).map(({ id }) => id)).toEqual(['a', 'b', 'c']);
+  });
+
+  it('pages a shared account whose packed get is rejected as requestTooLarge', async () => {
+    const client = createClient(2, { primary: { name: 'Self' }, shared: { name: 'Shared' } });
+    const shared = [{ id: 'a', name: 'A' }, { id: 'b', name: 'B', parentId: 'a' }, { id: 'c', name: 'C', parentId: 'b' }];
+    serve(client, { primary: [{ id: 'inbox', name: 'Inbox' }], shared });
+    vi.mocked(client['request']).mockResolvedValueOnce({ methodResponses: [
+      ['Mailbox/get', { list: [{ id: 'inbox', name: 'Inbox' }], state: 'm' }, '0'],
+      ['error', { type: 'requestTooLarge' }, '1'],
+    ] });
+    const result = await client.getAllMailboxesWithState();
+    expect(result.mailboxes.map(({ id }) => id)).toEqual(['inbox', 'shared:a', 'shared:b', 'shared:c']);
+    expect(result.states).toEqual({ primary: 'm', shared: 'm' });
+  });
+
+  it('starts over when the mailbox state moves between pages', async () => {
+    const client = createClient();
+    const page = (ids: string[], queryState: string, total?: number) => ({ methodResponses: [
+      ['Mailbox/query', { ids, queryState, ...(total ? { total } : {}) }, 'query'],
+      ['Mailbox/get', { list: ids.map((id) => ({ id, name: id })), state: queryState }, 'get'],
+    ] });
+    const request = vi.spyOn(client as unknown as RequestTarget, 'request')
+      .mockResolvedValueOnce({ methodResponses: [['Mailbox/get', { list: [{ id: 'a' }, { id: 'b' }] }, '0']] })
+      .mockResolvedValueOnce(page(['a', 'b'], 's1', 3))
+      .mockResolvedValueOnce(page(['c'], 's2'))
+      .mockResolvedValueOnce(page(['a', 'b'], 's2', 3))
+      .mockResolvedValueOnce(page(['c'], 's2'));
+
+    const result = await client.getAllMailboxesWithState();
+    expect(result.mailboxes.map(({ id }) => id)).toEqual(['a', 'b', 'c']);
+    expect(result.states).toEqual({ primary: 's2' });
+    expect(request).toHaveBeenCalledTimes(5);
+  });
+
+  it('gives up when the mailbox state keeps moving', async () => {
+    const client = createClient();
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    let n = 0;
+    const request = vi.spyOn(client as unknown as RequestTarget, 'request').mockImplementation(async (calls) => {
+      if (calls[0][0] === 'Mailbox/get') return { methodResponses: [['Mailbox/get', { list: [{ id: 'a' }, { id: 'b' }] }, '0']] };
+      const position = calls[0][1].position as number;
+      const ids = position === 0 ? ['a', 'b'] : ['c'];
+      const state = `s${n++}`;
+      return { methodResponses: [
+        ['Mailbox/query', { ids, queryState: state, ...(position === 0 ? { total: 3 } : {}) }, 'query'],
+        ['Mailbox/get', { list: ids.map((id) => ({ id, name: id })), state }, 'get'],
+      ] };
+    });
+
+    await expect(client.getMailboxes()).rejects.toThrow('changed while it was being loaded');
+    expect(request).toHaveBeenCalledTimes(1 + 3 * 2);
   });
 
   it.each([false, true])('respects maxCallsInRequest=1 (shared: %s)', async (shared) => {

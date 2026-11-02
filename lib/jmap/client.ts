@@ -603,6 +603,23 @@ const MAILBOX_PROPERTIES = [
   "isSubscribed",
 ] as const;
 
+// A Mailbox/get without ids over maxObjectsInGet: Stalwart 0.16 cuts the list
+// at the limit without saying so, 1.0 answers requestTooLarge (RFC 8620 §5.1).
+function mailboxListCapped(response: JMAPResponse["methodResponses"][number] | undefined, maxObjects: number): boolean {
+  if (response?.[0] === "Mailbox/get") return Array.isArray(response[1].list) && response[1].list.length >= maxObjects;
+  return response?.[0] === "error" && response[1].type === "requestTooLarge";
+}
+
+// Every new message or flag change moves the Mailbox state (the counts), so a
+// paged load is retried a few times before the refresh gives up.
+const MAILBOX_TREE_ATTEMPTS = 3;
+
+class MailboxListChangedError extends Error {
+  constructor() {
+    super("Mailbox list changed while it was being loaded");
+  }
+}
+
 // SieveScript properties (RFC 9661 §2), explicit for the same reason.
 const SIEVE_SCRIPT_PROPERTIES = ["id", "name", "blobId", "isActive"] as const;
 
@@ -2277,6 +2294,16 @@ export class JMAPClient implements IJMAPClient {
    * children without their parents. Querying all ids keeps the tree complete.
    */
   private async fetchMailboxTree(accountId: string): Promise<JMAPResponse> {
+    for (let attempt = 1; ; attempt++) {
+      try {
+        return await this.fetchMailboxTreeOnce(accountId);
+      } catch (error) {
+        if (!(error instanceof MailboxListChangedError) || attempt >= MAILBOX_TREE_ATTEMPTS) throw error;
+      }
+    }
+  }
+
+  private async fetchMailboxTreeOnce(accountId: string): Promise<JMAPResponse> {
     const mailboxes: JMAPMailbox[] = [];
     const seenIds = new Set<string>();
     let position = 0;
@@ -2335,10 +2362,10 @@ export class JMAPClient implements IJMAPClient {
       }
 
       if (queryState !== undefined && pageQueryState !== queryState) {
-        throw new Error("Mailbox list changed while it was being loaded");
+        throw new MailboxListChangedError();
       }
       if (mailboxState !== undefined && pageMailboxState !== undefined && pageMailboxState !== mailboxState) {
-        throw new Error("Mailbox list changed while it was being loaded");
+        throw new MailboxListChangedError();
       }
       queryState = pageQueryState;
       if (typeof pageMailboxState === "string") mailboxState = pageMailboxState;
@@ -2367,8 +2394,7 @@ export class JMAPClient implements IJMAPClient {
       ];
       let response = await this.request(calls, undefined, { skipOfflineRecord: true });
       const first = response.methodResponses?.[0];
-      if ((first?.[0] === "Mailbox/get" && first[1].list?.length >= this.getMaxObjectsInGet()) ||
-          (first?.[0] === "error" && first[1].type === "tooManyObjects")) {
+      if (mailboxListCapped(first, this.getMaxObjectsInGet())) {
         response = await this.fetchMailboxTree(acctId);
       }
       getOfflineHooks()?.record(this, calls, response);
@@ -2454,8 +2480,7 @@ export class JMAPClient implements IJMAPClient {
             let match = response.methodResponses?.find((r) => r[2] === String(i));
             // Keep the packed fast path for small accounts. A full-sized result
             // may be capped, so reload that account through query/get pages.
-            if ((match?.[0] === "Mailbox/get" && Array.isArray(match[1].list) && match[1].list.length >= maxObjects) ||
-                (match?.[0] === "error" && match[1].type === "tooManyObjects")) {
+            if (mailboxListCapped(match, maxObjects)) {
               try {
                 const complete = await this.fetchMailboxTree(accountId);
                 match = complete.methodResponses[0];
