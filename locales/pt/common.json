@@ -5830,8 +5830,8 @@
         "body": "Enviar mensagens completas, por exemplo assinadas ou criptografadas, a partir da sua conta."
       },
       "email_blob_read": {
-        "title": "Ler o conteúdo bruto das mensagens",
-        "body": "Ler os dados originais das suas mensagens e anexos, e de cada arquivo que você anexa antes do envio."
+        "title": "Ler anexos e o código-fonte das mensagens",
+        "body": "Ler os anexos (incluindo o texto e as imagens deles) e o código-fonte completo das mensagens com que você trabalha, e cada arquivo que você anexa antes do envio."
       },
       "email_blob_write": {
         "title": "Substituir anexos antes do envio",

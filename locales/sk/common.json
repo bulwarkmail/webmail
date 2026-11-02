@@ -5830,8 +5830,8 @@
         "body": "Odosiela z vášho účtu kompletné správy, napríklad podpísané alebo šifrované."
       },
       "email_blob_read": {
-        "title": "Čítať nespracovaný obsah správ",
-        "body": "Číta pôvodné údaje vašich správ a príloh aj každého súboru, ktorý priložíte pred odoslaním."
+        "title": "Čítať prílohy a zdroj správ",
+        "body": "Číta prílohy (aj ich text a obrázky) a celý zdroj správ, s ktorými pracujete, aj každý súbor, ktorý priložíte pred odoslaním."
       },
       "email_blob_write": {
         "title": "Nahrádzať prílohy pred odoslaním",

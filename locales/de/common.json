@@ -5830,8 +5830,8 @@
         "body": "Vollständige Nachrichten, zum Beispiel signierte oder verschlüsselte, von Ihrem Konto senden."
       },
       "email_blob_read": {
-        "title": "Rohinhalt von Nachrichten lesen",
-        "body": "Die Originaldaten Ihrer Nachrichten und Anhänge lesen, auch jeder Datei, die Sie vor dem Senden anhängen."
+        "title": "Anhänge und Quelltext von Nachrichten lesen",
+        "body": "Anhänge lesen (auch ihren Text und ihre Bilder) und den vollständigen Quelltext der Nachrichten, mit denen Sie arbeiten, sowie jede Datei, die Sie vor dem Senden anhängen."
       },
       "email_blob_write": {
         "title": "Anhänge vor dem Senden ersetzen",

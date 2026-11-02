@@ -5830,8 +5830,8 @@
         "body": "Sende ferdige meldinger, for eksempel signerte eller krypterte, fra kontoen din."
       },
       "email_blob_read": {
-        "title": "Lese råinnholdet i meldinger",
-        "body": "Lese de opprinnelige dataene i meldingene og vedleggene dine, og i hver fil du legger ved før den sendes."
+        "title": "Lese vedlegg og kilden til meldinger",
+        "body": "Lese vedlegg (også teksten og bildene i dem) og hele kilden til meldingene du jobber med, og hver fil du legger ved før den sendes."
       },
       "email_blob_write": {
         "title": "Erstatte vedlegg før sending",

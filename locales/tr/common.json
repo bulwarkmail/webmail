@@ -5830,8 +5830,8 @@
         "body": "Hesabınızdan imzalı veya şifreli iletiler gibi eksiksiz iletiler gönderme."
       },
       "email_blob_read": {
-        "title": "İletilerin ham içeriğini okuma",
-        "body": "İletilerinizin ve eklerinizin özgün verilerini ve eklediğiniz her dosyayı gönderilmeden önce okuma."
+        "title": "Ekleri ve ileti kaynağını okuma",
+        "body": "Ekleri (metinleri ve resimleri dahil) ve üzerinde çalıştığınız iletilerin tam kaynağını, ayrıca eklediğiniz her dosyayı gönderilmeden önce okuma."
       },
       "email_blob_write": {
         "title": "Göndermeden önce ekleri değiştirme",

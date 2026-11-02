@@ -5830,8 +5830,8 @@
         "body": "Enviar mensajes completos, por ejemplo firmados o cifrados, desde tu cuenta."
       },
       "email_blob_read": {
-        "title": "Leer el contenido sin procesar de los mensajes",
-        "body": "Leer los datos originales de tus mensajes y adjuntos, y de cada archivo que adjuntas antes de enviarlo."
+        "title": "Leer los adjuntos y el código fuente de los mensajes",
+        "body": "Leer los adjuntos (también su texto y sus imágenes) y el código fuente completo de los mensajes con los que trabajas, y cada archivo que adjuntas antes de enviarlo."
       },
       "email_blob_write": {
         "title": "Reemplazar adjuntos antes de enviar",

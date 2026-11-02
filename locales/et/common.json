@@ -5830,8 +5830,8 @@
         "body": "Saata sinu kontolt täielikke kirju, näiteks allkirjastatud või krüpteeritud."
       },
       "email_blob_read": {
-        "title": "Loe kirjade toorsisu",
-        "body": "Lugeda manuseid ja kirjade täielikku lähteteksti, millega tegutsed, ning iga faili, mille lisad, enne selle saatmist."
+        "title": "Lugeda manuseid ja kirjade lähteteksti",
+        "body": "Lugeda manuseid (ka nende teksti ja pilte) ja kirjade täielikku lähteteksti, millega tegutsed, ning iga faili, mille lisad, enne selle saatmist."
       },
       "email_blob_write": {
         "title": "Asenda manuseid enne saatmist",
