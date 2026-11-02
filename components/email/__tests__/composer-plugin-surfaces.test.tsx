@@ -680,6 +680,36 @@ describe('composer-sidebar and composer-sidebar-right', () => {
     }
   });
 
+  it('show and hide the panels from the header, the left one at its start and the right one at its end', () => {
+    stubWidth(1400);
+    offerSlots('p1', ['composer-sidebar', 'composer-sidebar-right'], { startFolded: ['composer-sidebar-right'] });
+    render(<EmailComposer initialData={DRAFT} onClose={vi.fn()} />);
+    const header = document.querySelector('[data-composer-header]') as HTMLElement;
+    // As high as the reader's toolbar and the panels' own headers.
+    expect(header.className).toContain('md:h-14');
+    const left = header.querySelector('[data-composer-panel-toggle="left"]') as HTMLElement;
+    const right = header.querySelector('[data-composer-panel-toggle="right"]') as HTMLElement;
+    expect(left).toBeTruthy();
+    expect(right).toBeTruthy();
+    // Left first; right just before Close, at the end.
+    expect(left.compareDocumentPosition(right) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(right.nextElementSibling).toBe(screen.getByTestId('composer-close'));
+    // The panels hold no buttons of their own: no strip, no row above the plugin.
+    expect(panel('right').dataset.composerSidebarMode).toBe('folded');
+    expect(panel('right').hidden).toBe(true);
+    expect(panel('left').querySelector('button')).toBeNull();
+    expect(right.getAttribute('aria-pressed')).toBe('false');
+
+    // Opening by hand asks the panel to take the focus, as a plugin's request does.
+    fireEvent.click(right);
+    expect(panel('right').dataset.composerSidebarMode).toBe('docked');
+    expect(slotProps(screen.getByTestId('slot-composer-sidebar-right')).focusRequest).toBe(1);
+    expect(right.getAttribute('aria-pressed')).toBe('true');
+    expect(right.getAttribute('aria-label')).toBe('plugin_panel_hide');
+    fireEvent.click(right);
+    expect(panel('right').dataset.composerSidebarMode).toBe('folded');
+  });
+
   it('open a folded panel over the composer when there is no room beside it', () => {
     stubWidth(600);
     offerSlots('p1', ['composer-sidebar-right']);

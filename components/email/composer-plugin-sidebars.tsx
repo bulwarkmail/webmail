@@ -1,9 +1,11 @@
 "use client";
 
 // The composer-sidebar and composer-sidebar-right plugin panels. Each has a
-// width the user can drag (kept across composers) and a toggle to fold it
-// to a thin strip. When the composer is too narrow for an open panel next
-// to it, the panel folds by itself (right first); opening it anyway lays it
+// width the user can drag (kept across composers) and a button in the
+// composer's header that shows and hides it (the left panel's at the start,
+// the right one's at the end, like the reader's). Folded, a panel takes no
+// room at all. When the composer is too narrow for an open panel next to
+// it, the panel folds by itself (right first); opening it anyway lays it
 // over the composer instead of squeezing the message into a column nobody
 // can write in.
 
@@ -20,8 +22,6 @@ import { cn } from "@/lib/utils";
 export const COMPOSER_SIDEBAR_WIDTH = 260;
 export const MIN_COMPOSER_SIDEBAR_WIDTH = 220;
 export const MAX_COMPOSER_SIDEBAR_WIDTH = 480;
-/** Width of a folded panel (the strip with its toggle). */
-export const COMPOSER_SIDEBAR_STRIP = 37;
 /** Below this window width the panels are not shown at all (the `md` breakpoint). */
 export const COMPOSER_SIDEBAR_MIN_WINDOW = 768;
 /**
@@ -31,7 +31,7 @@ export const COMPOSER_SIDEBAR_MIN_WINDOW = 768;
 export const MIN_COMPOSER_WIDTH = 560;
 
 export type ComposerSidebarSide = "left" | "right";
-/** docked: open beside the composer; folded: a strip; overlay: open over the composer. */
+/** docked: open beside the composer; folded: hidden; overlay: open over the composer. */
 export type ComposerSidebarMode = "docked" | "folded" | "overlay";
 
 interface SideState {
@@ -54,12 +54,11 @@ export function composerSidebarModes(
   left: SideState,
   right: SideState,
 ): Record<ComposerSidebarSide, ComposerSidebarMode | null> {
-  const present = (left.present ? 1 : 0) + (right.present ? 1 : 0);
-  let room = width > 0 ? width - MIN_COMPOSER_WIDTH - present * COMPOSER_SIDEBAR_STRIP : Infinity;
+  let room = width > 0 ? width - MIN_COMPOSER_WIDTH : Infinity;
   const place = (side: SideState): ComposerSidebarMode | null => {
     if (!side.present) return null;
     if (side.collapsed) return "folded";
-    const extra = (side.width ?? COMPOSER_SIDEBAR_WIDTH) - COMPOSER_SIDEBAR_STRIP;
+    const extra = side.width ?? COMPOSER_SIDEBAR_WIDTH;
     if (extra <= room) {
       room -= extra;
       return "docked";
@@ -186,55 +185,73 @@ export function useComposerSidebars(root: HTMLElement | null, composerId: string
     return wantOpen;
   }), []);
 
-  return { modes, open, close, focusRequests, widths, setSideWidth };
+  /** The header button: open (and focus the panel, as a plugin's request does) or close. */
+  const toggle = (side: ComposerSidebarSide) => {
+    if (modes[side] === "docked" || modes[side] === "overlay") {
+      close(side);
+    } else if (modes[side]) {
+      open(side);
+      setFocusRequests((prev) => ({ ...prev, [side]: prev[side] + 1 }));
+    }
+  };
+
+  return { modes, open, close, toggle, focusRequests, widths, setSideWidth };
+}
+
+/** The button in the composer's header that shows and hides one panel (none on phones). */
+export function ComposerPanelToggle({
+  side,
+  mode,
+  onToggle,
+  className,
+}: {
+  side: ComposerSidebarSide;
+  mode: ComposerSidebarMode | null;
+  onToggle: () => void;
+  className?: string;
+}) {
+  const t = useTranslations("email_viewer");
+  if (!mode) return null;
+  const isOpen = mode !== "folded";
+  const Icon = side === "left" ? (isOpen ? PanelLeftClose : PanelLeftOpen) : (isOpen ? PanelRightClose : PanelRightOpen);
+  return (
+    <button
+      type="button"
+      onClick={(e) => { e.stopPropagation(); onToggle(); }}
+      className={cn("hidden md:grid h-8 w-8 shrink-0 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground", className)}
+      title={t(isOpen ? "plugin_panel_hide" : "plugin_panel_show")}
+      aria-label={t(isOpen ? "plugin_panel_hide" : "plugin_panel_show")}
+      aria-pressed={isOpen}
+      data-composer-panel-toggle={side}
+    >
+      <Icon className="h-4 w-4" />
+    </button>
+  );
 }
 
 /** One plugin panel of the composer, in the mode useComposerSidebars picked. */
 export function ComposerPluginSidebar({
   side,
   mode,
-  onOpen,
-  onClose,
   extraProps,
   width = COMPOSER_SIDEBAR_WIDTH,
   onWidthChange,
 }: {
   side: ComposerSidebarSide;
   mode: ComposerSidebarMode | null;
-  onOpen: () => void;
-  onClose: () => void;
   /** What the panel's plugins get: the composer id, the draft and the selection (see the slot catalogue). */
   extraProps?: Record<string, unknown>;
   width?: number;
   /** The user drags the panel's edge; without it the panel has no handle. */
   onWidthChange?: (width: number) => void;
 }) {
-  const t = useTranslations("email_viewer");
   const dragStart = useRef(width);
   if (!mode) return null;
   const border = side === "left" ? "border-e" : "border-s";
-  const OpenIcon = side === "left" ? PanelLeftOpen : PanelRightOpen;
-  const CloseIcon = side === "left" ? PanelLeftClose : PanelRightClose;
 
+  // Folded: nothing on screen (the header button brings it back).
   if (mode === "folded") {
-    return (
-      <div
-        className={cn("hidden md:flex flex-col items-center shrink-0 h-full border-border bg-background", border)}
-        style={{ width: COMPOSER_SIDEBAR_STRIP }}
-        data-composer-sidebar={side}
-        data-composer-sidebar-mode="folded"
-      >
-        <button
-          type="button"
-          onClick={onOpen}
-          className="m-1 grid h-7 w-7 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
-          title={t("plugin_panel_show")}
-          aria-label={t("plugin_panel_show")}
-        >
-          <OpenIcon className="h-4 w-4" />
-        </button>
-      </div>
-    );
+    return <div hidden data-composer-sidebar={side} data-composer-sidebar-mode="folded" />;
   }
 
   // Docked beside the composer: a handle on the panel's inner edge. Dragging
@@ -266,17 +283,6 @@ export function ComposerPluginSidebar({
       data-composer-sidebar={side}
       data-composer-sidebar-mode={mode}
     >
-      <div className={cn("flex items-center px-1 py-1 border-b border-border shrink-0", side === "left" ? "justify-end" : "justify-start")}>
-        <button
-          type="button"
-          onClick={onClose}
-          className="grid h-7 w-7 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
-          title={t("plugin_panel_hide")}
-          aria-label={t("plugin_panel_hide")}
-        >
-          <CloseIcon className="h-4 w-4" />
-        </button>
-      </div>
       <div className="flex-1 min-h-0 overflow-y-auto">
         {side === "left"
           ? <PluginSlot name="composer-sidebar" className="flex flex-col" extraProps={extraProps} />
