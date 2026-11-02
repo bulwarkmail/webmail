@@ -1,6 +1,6 @@
 # Memail development
 
-Production foundation: Bulwark Webmail. Upstream application files remain unchanged in this first customization. See [UPSTREAM.md](UPSTREAM.md) before changing core behavior.
+Production foundation: Bulwark Webmail. Customizations are isolated in .memail; the patch inventory tracks the small upstream integration points. See [UPSTREAM.md](UPSTREAM.md) before changing core behavior.
 
 ## Run the branded demo
 
@@ -11,7 +11,7 @@ npm ci
 node .memail/demo.mjs
 ```
 
-Open http://127.0.0.1:3000. The launcher uses Bulwark's built-in mock JMAP server; use any demo username/password. It binds to loopback and overrides the JMAP endpoint for this process so it does not connect to a configured real mailbox. It generates a temporary session secret and leaves your environment files untouched. Restarting invalidates the demo session. This is a development launcher, not a production server.
+Open http://127.0.0.1:3000. The launcher uses Bulwark's built-in mock JMAP server; use any demo username/password. It binds to loopback and overrides the JMAP endpoint for this process so it does not connect to a configured real mailbox. The absolute loopback JMAP URL also lets the server verify and remember the synthetic sign-in. It generates a temporary session secret and leaves your environment files untouched. Restarting invalidates the demo session. This is a development launcher, not a production server.
 
 Changes to upstream sandbox/PST sources require restarting the launcher so those assets rebuild. App code uses Next's normal development reload.
 
@@ -36,7 +36,9 @@ Package the light/dark theme using Bulwark's existing Theme API v2:
 node .memail/package-theme.mjs
 ```
 
-Upload `out/memail-theme.zip` through the existing theme upload UI in Settings or Admin > Themes, then select Memail. An administrator can make it the default using the existing theme policy. Packaging does not change anyone's theme automatically. The theme changes semantic color tokens only; upstream layout, component sizes and animation remain intact.
+Memail is included in Settings > Appearance > Themes in this fork; select it there. An administrator can make `builtin-memail` the default using the existing theme policy. Existing theme choices are preserved. The ZIP is also available for administrator deployment through Admin > Themes on a compatible Bulwark installation. Ordinary user settings provide theme selection, not ZIP upload.
+
+The 0.2 theme adds Geist typography (already self-hosted by the app), semantic light/dark status colors, consistent radii and a scoped component skin. The source manifest and skin drive both the built-in entry and ZIP, avoiding duplicate styles. User density, text size and accessibility font choices remain available. Virtualized row geometry, mail content and user tag colors are preserved. The earlier optional 0.1 package used ID `saivra-memail`; switch to the built-in Memail theme to use 0.2.
 
 
 ## Focus inbox plugin

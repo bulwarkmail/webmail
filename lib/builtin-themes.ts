@@ -1,3 +1,4 @@
+import { memailTheme } from '../.memail/theme';
 import type { InstalledTheme } from './plugin-types';
 import { flatFieldsCSS, flatFieldsSkin } from './theme-flat-fields';
 
@@ -879,6 +880,7 @@ body[data-theme-skin="builtin-aurora-glass"] [role="menu"] [role="menuitem"]:foc
 }`;
 
 export const BUILTIN_THEMES: InstalledTheme[] = [
+  memailTheme,
   {
     id: 'builtin-flat-fields',
     name: 'Flat fields',

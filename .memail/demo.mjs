@@ -13,7 +13,9 @@ const commit = execFileSync('git', ['rev-parse', 'HEAD'], {cwd: root, encoding:'
 const env = {
   ...process.env,
   DEV_MOCK_JMAP: 'true',
-  JMAP_SERVER_URL: '/api/dev-jmap',
+  // Server-side sign-in verification needs an absolute URL. Both the
+  // browser and the verifier use this same loopback-only synthetic endpoint.
+  JMAP_SERVER_URL: 'http://127.0.0.1:3000/api/dev-jmap',
   APP_NAME: 'Memail',
   APP_SHORT_NAME: 'Memail',
   APP_DESCRIPTION: 'A calmer place for email. Built on Bulwark and JMAP.',
