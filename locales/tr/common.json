@@ -5977,6 +5977,10 @@
         "title": "İleti ayrıntılarına panel ekleme",
         "body": "Açık bir iletinin yanında veya altında kendi panelini gösterme."
       },
+      "ui_side_panel": {
+        "title": "Diğer görünümlere panel ekleme",
+        "body": "Takvim, Kişiler, Dosyalar ve Ayarlar'ın yanında kendi panelini gösterme."
+      },
       "ui_download_file": {
         "title": "Dosyaları cihazınıza kaydetme",
         "body": "Oluşturduğu dosyaları indirmeniz için sunma."

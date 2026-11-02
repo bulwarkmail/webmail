@@ -5977,6 +5977,10 @@
         "title": "Přidávat panely do podrobností zprávy",
         "body": "Zobrazuje vlastní panel vedle otevřené zprávy nebo pod ní."
       },
+      "ui_side_panel": {
+        "title": "Přidat panel do dalších zobrazení",
+        "body": "Zobrazit vlastní panel vedle Kalendáře, Kontaktů, Souborů a Nastavení."
+      },
       "ui_download_file": {
         "title": "Ukládat soubory do zařízení",
         "body": "Nabízí ke stažení soubory, které vytvořil."

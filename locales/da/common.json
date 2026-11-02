@@ -5977,6 +5977,10 @@
         "title": "Tilføje paneler til beskeddetaljer",
         "body": "Vise sit eget panel ved siden af eller under en åben besked."
       },
+      "ui_side_panel": {
+        "title": "Tilføj et panel til andre visninger",
+        "body": "Vis sit eget panel ved siden af Kalender, Kontakter, Filer og Indstillinger."
+      },
       "ui_download_file": {
         "title": "Gemme filer på din enhed",
         "body": "Tilbyde filer, det har lavet, til download."

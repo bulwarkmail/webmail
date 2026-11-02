@@ -32,6 +32,8 @@ import { ResizeHandle } from "@/components/layout/resize-handle";
 import { AppMain } from "@/components/layout/app-landmarks";
 import { useIsEmbedded } from "@/hooks/use-is-embedded";
 import { getDroppedFilesAndFolders } from "@/lib/webdav/drop-utils";
+import { useAppSidePanel } from "@/components/plugins/app-side-panel";
+import { MAX_SIDE_PANEL_FILES } from "@/lib/plugin-sandbox/assistant/f.types";
 import { resourceToView, useFileStore, isSharedFilesPage, sharedFilePages, type FileResource } from "@/stores/file-store";
 import { TRASH_LOCATION, TRASH_PATH, isTrashLocation } from "@/lib/files-trash";
 import { PluginActions, usePluginActions } from "@/components/plugins/plugin-actions";
@@ -437,6 +439,21 @@ export function FileBrowser({
   const singleSelected = selectedList.length === 1 ? selectedList[0] : null;
   // What plugins see of the selection (file-actions, file-preview-section).
   const selectedViews = useMemo(() => selectedList.map((r) => resourceToView(r, currentPath)), [selectedList, currentPath]);
+
+  // The plugin side panel (app-side-panel), with the selected files and the
+  // open folder. It shares its place with the details panel: opening one
+  // folds the other.
+  const sidePanelContext = useMemo(() => ({
+    ...(selectedViews.length > 0 ? { files: selectedViews.slice(0, MAX_SIDE_PANEL_FILES), fileCount: selectedViews.length } : {}),
+    folder: { id: currentParentId ?? null, path: currentPath },
+  }), [selectedViews, currentParentId, currentPath]);
+  const sidePanel = useAppSidePanel({ view: "files", context: sidePanelContext, onOpen: () => toggleDetails(false) });
+  const closeSidePanel = sidePanel.close;
+  const detailsWereShown = useRef(showDetails);
+  useEffect(() => {
+    if (showDetails && !detailsWereShown.current) closeSidePanel();
+    detailsWereShown.current = showDetails;
+  }, [showDetails, closeSidePanel]);
 
   // ---- Breadcrumbs -----------------------------------------------------------
   const crumbs: Crumb[] = useMemo(() => {
@@ -1282,6 +1299,7 @@ export function FileBrowser({
           toolsHidden={accountPickerMode}
           selection={selectionActions}
           emptyTrash={inTrash && onEmptyTrash ? { onEmpty: onEmptyTrash, disabled: trashCount === 0 } : undefined}
+          panelToggle={sidePanel.toggle}
         />
 
         {error && (
@@ -1295,7 +1313,7 @@ export function FileBrowser({
           </div>
         )}
 
-        <div className="relative flex flex-1 min-h-0">
+        <div ref={sidePanel.rowRef} className="relative flex flex-1 min-h-0">
           <div
             ref={scrollAreaRef}
             className="relative flex-1 min-w-0 overflow-y-auto"
@@ -1356,6 +1374,7 @@ export function FileBrowser({
             </Button>
           )}
 
+          {sidePanel.panel}
         </div>
       </AppMain>
 

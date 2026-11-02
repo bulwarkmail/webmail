@@ -5977,6 +5977,10 @@
         "title": "Afegir panells als detalls del missatge",
         "body": "Mostrar un panell propi al costat o a sota d'un missatge obert."
       },
+      "ui_side_panel": {
+        "title": "Afegir un tauler a altres vistes",
+        "body": "Mostrar el seu propi tauler al costat del Calendari, els Contactes, els Fitxers i la Configuració."
+      },
       "ui_download_file": {
         "title": "Desar fitxers al dispositiu",
         "body": "Oferir per baixar fitxers que ha creat."

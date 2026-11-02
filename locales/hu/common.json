@@ -5977,6 +5977,10 @@
         "title": "Panelek az üzenet részleteiben",
         "body": "Saját panelt jelenít meg egy megnyitott üzenet mellett vagy alatt."
       },
+      "ui_side_panel": {
+        "title": "Panel hozzáadása más nézetekhez",
+        "body": "Saját panel megjelenítése a Naptár, a Névjegyek, a Fájlok és a Beállítások mellett."
+      },
       "ui_download_file": {
         "title": "Fájlok mentése az eszközödre",
         "body": "Letöltésre kínálja az általa létrehozott fájlokat."

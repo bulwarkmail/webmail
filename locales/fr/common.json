@@ -5977,6 +5977,10 @@
         "title": "Ajouter des panneaux aux détails des messages",
         "body": "Afficher son propre panneau à côté ou en dessous d'un message ouvert."
       },
+      "ui_side_panel": {
+        "title": "Ajouter un panneau aux autres vues",
+        "body": "Afficher son propre panneau à côté de l’Agenda, des Contacts, des Fichiers et des Paramètres."
+      },
       "ui_download_file": {
         "title": "Enregistrer des fichiers sur votre appareil",
         "body": "Proposer au téléchargement des fichiers qu'il a créés."

@@ -5977,6 +5977,10 @@
         "title": "Adicionar painéis aos detalhes da mensagem",
         "body": "Mostrar o próprio painel ao lado ou abaixo de uma mensagem aberta."
       },
+      "ui_side_panel": {
+        "title": "Adicionar um painel a outras vistas",
+        "body": "Mostrar o seu próprio painel ao lado do Calendário, Contactos, Ficheiros e Definições."
+      },
       "ui_download_file": {
         "title": "Salvar arquivos no seu dispositivo",
         "body": "Oferecer para download arquivos que ele criou."

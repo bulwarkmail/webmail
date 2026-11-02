@@ -5977,6 +5977,10 @@
         "title": "Add panels to message details",
         "body": "Show its own panel next to or below an open message."
       },
+      "ui_side_panel": {
+        "title": "Add a panel to other views",
+        "body": "Show its own panel next to Calendar, Contacts, Files and Settings."
+      },
       "ui_download_file": {
         "title": "Save files to your device",
         "body": "Offer files it created for download."

@@ -5977,6 +5977,10 @@
         "title": "Panele w szczegółach wiadomości",
         "body": "Pokazuje własny panel obok lub pod otwartą wiadomością."
       },
+      "ui_side_panel": {
+        "title": "Dodawanie panelu do innych widoków",
+        "body": "Wyświetlanie własnego panelu obok Kalendarza, Kontaktów, Plików i Ustawień."
+      },
       "ui_download_file": {
         "title": "Zapisywanie plików na urządzeniu",
         "body": "Udostępnia do pobrania utworzone przez siebie pliki."

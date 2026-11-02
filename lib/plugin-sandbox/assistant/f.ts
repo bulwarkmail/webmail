@@ -1,4 +1,8 @@
 // Area f of the assistant's host APIs, host side (see README.md).
+//
+// Area f adds no methods: the app-side-panel slot (plugin-slot-catalog.ts,
+// gated by ui:side-panel) and its panel requests (panel-requests.ts) are
+// the whole host side, mounted by components/plugins/app-side-panel.tsx.
 
 import type { InstalledPlugin, Permission } from '../../plugin-types';
 import { NOT_MINE } from './not-mine';
@@ -14,5 +18,5 @@ export async function dispatch(_plugin: InstalledPlugin, _method: string, _args:
 
 /** This area's flags in api.host.features, right now. */
 export function features(): AreaHostFeaturesF {
-  return {};
+  return { sidePanel: true };
 }

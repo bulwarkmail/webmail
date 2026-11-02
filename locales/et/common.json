@@ -5977,6 +5977,10 @@
         "title": "Lisa kirja üksikasjadele paneele",
         "body": "Näidata oma paneeli avatud kirja kõrval või all."
       },
+      "ui_side_panel": {
+        "title": "Lisa paneel teistesse vaadetesse",
+        "body": "Näita oma paneeli kalendri, kontaktide, failide ja seadete kõrval."
+      },
       "ui_download_file": {
         "title": "Salvesta faile sinu seadmesse",
         "body": "Pakkuda allalaadimiseks enda loodud faile."

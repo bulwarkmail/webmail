@@ -5977,6 +5977,10 @@
         "title": "Legge til paneler i meldingsdetaljene",
         "body": "Vise et eget panel ved siden av eller under en åpen melding."
       },
+      "ui_side_panel": {
+        "title": "Legg til et panel i andre visninger",
+        "body": "Vis sitt eget panel ved siden av Kalender, Kontakter, Filer og Innstillinger."
+      },
       "ui_download_file": {
         "title": "Lagre filer på enheten din",
         "body": "Tilby filer det har laget, for nedlasting."

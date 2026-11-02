@@ -5977,6 +5977,10 @@
         "title": "Pievienot paneļus vēstules informācijai",
         "body": "Rādīt savu paneli blakus atvērtai vēstulei vai zem tās."
       },
+      "ui_side_panel": {
+        "title": "Pievienot paneli citiem skatiem",
+        "body": "Rādīt savu paneli blakus kalendāram, kontaktiem, failiem un iestatījumiem."
+      },
       "ui_download_file": {
         "title": "Saglabāt failus jūsu ierīcē",
         "body": "Piedāvāt lejupielādei paša izveidotus failus."
