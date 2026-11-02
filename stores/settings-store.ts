@@ -1334,6 +1334,7 @@ export const useSettingsStore = create<SettingsState>()(
           deleteAction: state.deleteAction,
           returnToListAfterAction: state.returnToListAfterAction,
           confirmBulkDelete: state.confirmBulkDelete,
+          permanentlyDeleteJunk: state.permanentlyDeleteJunk,
           clearSearchOnFolderChange: state.clearSearchOnFolderChange,
           searchDefaultScope: state.searchDefaultScope,
           showPreview: state.showPreview,
@@ -1633,6 +1634,10 @@ export const useSettingsStore = create<SettingsState>()(
                 return;
               }
               if (key === 'searchDefaultScope' && !isSearchDefaultScope(settings[key])) {
+                return;
+              }
+              // Anything but a real true must not turn on deleting junk for good.
+              if (key === 'permanentlyDeleteJunk' && typeof settings[key] !== 'boolean') {
                 return;
               }
               if (DEVICE_LOCAL_SETTING_KEYS.has(key)) {
