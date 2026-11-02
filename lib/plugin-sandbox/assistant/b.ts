@@ -1,8 +1,8 @@
 // Area b of the assistant's host APIs, host side (see README.md): more
-// context for the assistant. The text of an attachment, and an image
-// attachment shrunk to what a model needs.
+// context for the assistant. The text of an attachment, an image
+// attachment shrunk to what a model needs, and a whole conversation.
 
-import type { InstalledPlugin, Permission } from '../../plugin-types';
+import type { EmailReadView, InstalledPlugin, Permission } from '../../plugin-types';
 import type { IJMAPClient } from '../../jmap/client-interface';
 import type { Attachment, Email } from '../../jmap/types';
 import { NOT_MINE } from './not-mine';
@@ -13,17 +13,23 @@ import { readBoolean, readId, readInteger, readObject, sessionClient, withinRate
 import { DEFAULT_TEXT_CHARS, MAX_TEXT_CHARS, MAX_TEXT_SOURCE_BYTES, extractText, textFormatOf } from '@/lib/attachment-text';
 import { DEFAULT_IMAGE_SIDE, MAX_IMAGE_SIDE, MIN_IMAGE_SIDE, shrinkImage, toBase64 } from '@/lib/image-shrink';
 import { readPhotoExif } from '@/lib/exif';
+import { emailToReadView } from '@/lib/plugin-projection';
 
 /** Method → permission, joined into PERM_PER_METHOD. */
 export const PERMS: Readonly<Record<string, Permission | null>> = {
   'email.getAttachmentText': 'email:blob-read',
   'email.getAttachmentImage': 'email:blob-read',
+  'email.getThread': 'email:read',
 };
 
 /** Attachment reads (text) a plugin may make per minute. */
 export const MAX_ATTACHMENT_TEXT_PER_MINUTE = 30;
 /** Attachment reads (images) a plugin may make per minute. */
 export const MAX_ATTACHMENT_IMAGE_PER_MINUTE = 30;
+/** Conversations a plugin may read per minute. */
+export const MAX_THREADS_PER_MINUTE = 60;
+/** Most messages api.email.getThread returns (the newest of a longer conversation). */
+export const MAX_THREAD_MESSAGES = 50;
 
 interface FoundAttachment {
   client: IJMAPClient;
@@ -133,16 +139,42 @@ export async function doEmailGetAttachmentImage(
   };
 }
 
+/**
+ * Every message of the conversation `emailId` belongs to, oldest first, as
+ * read views (at most the newest MAX_THREAD_MESSAGES). The message is found
+ * the way api.email.get finds it, and the conversation is read from the
+ * same account.
+ */
+export async function doEmailGetThread(plugin: InstalledPlugin, emailIdArg: unknown, optionsArg?: unknown): Promise<EmailReadView[]> {
+  const method = 'email.getThread';
+  const emailId = readId(emailIdArg, method, 'emailId');
+  const opts = readObject(optionsArg, method, 'options', ['accountId'], true);
+  if (!withinRate(method, plugin.id, MAX_THREADS_PER_MINUTE)) throw new Error(`${method}: too many reads, try again in a minute`);
+  const client = sessionClient(method);
+  const found = await readNamedEmail(client, emailId, method, opts.accountId);
+  if (!found) throw new Error(`${method}: no message with id "${emailId}"`);
+  const accountId = found.accountId ?? client.getAccountId();
+  const emails = found.email.threadId ? await client.getThreadEmails(found.email.threadId, found.accountId) : [];
+  // A server that knows no thread for it: the message on its own.
+  const list = emails.length ? emails : [found.email];
+  return list
+    .slice()
+    .sort((a, b) => String(a.receivedAt ?? '').localeCompare(String(b.receivedAt ?? '')))
+    .slice(-MAX_THREAD_MESSAGES)
+    .map((email) => emailToReadView(email, accountId));
+}
+
 /** Runs a method of this area; NOT_MINE for any other. */
 export async function dispatch(plugin: InstalledPlugin, method: string, args: unknown[]): Promise<unknown> {
   switch (method) {
     case 'email.getAttachmentText': return doEmailGetAttachmentText(plugin, args[0], args[1], args[2]);
     case 'email.getAttachmentImage': return doEmailGetAttachmentImage(plugin, args[0], args[1], args[2]);
+    case 'email.getThread': return doEmailGetThread(plugin, args[0], args[1]);
     default: return NOT_MINE;
   }
 }
 
 /** This area's flags in api.host.features, right now. */
 export function features(): AreaHostFeaturesB {
-  return { attachmentText: true, attachmentImages: true };
+  return { attachmentText: true, attachmentImages: true, threads: true };
 }

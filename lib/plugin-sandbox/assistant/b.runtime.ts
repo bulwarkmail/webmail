@@ -1,6 +1,7 @@
 // Area b of the assistant's host APIs, inside the plugin sandbox (see README.md).
 
 import type { CallApi, RuntimeAdditions } from './runtime';
+import type { EmailReadView } from '../../plugin-types';
 import type { AttachmentImageOptions, AttachmentImageView, AttachmentTextOptions, AttachmentTextView } from './b.types';
 
 /** Reads that download and unpack a file get the network timeout. */
@@ -25,6 +26,12 @@ export function runtime(callApi: CallApi): RuntimeAdditions {
        */
       getAttachmentImage: (emailId: string, blobId: string, options?: AttachmentImageOptions) =>
         callApi('email.getAttachmentImage', [emailId, blobId, options], READ_TIMEOUT_MS) as Promise<AttachmentImageView>,
+      /**
+       * Every message of the conversation a message belongs to, oldest
+       * first, at most the newest 50 (email:read, 60 a minute).
+       */
+      getThread: (emailId: string, options?: { accountId?: string }) =>
+        callApi('email.getThread', [emailId, options], READ_TIMEOUT_MS) as Promise<EmailReadView[]>,
     },
   };
 }

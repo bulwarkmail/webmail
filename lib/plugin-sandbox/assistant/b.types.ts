@@ -10,6 +10,8 @@ export interface AreaHostFeaturesB {
   attachmentText?: boolean;
   /** api.email.getAttachmentImage: an image attachment, shrunk for a model. */
   attachmentImages?: boolean;
+  /** api.email.getThread: every message of a conversation. */
+  threads?: boolean;
 }
 
 /** What EmailReadView.attachments adds for an image the message shows inline. */
