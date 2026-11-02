@@ -446,7 +446,6 @@ export function MailMessageToolbarSkeleton() {
 }
 
 export function MailMessageSkeleton({ className, toolbar = true }: { className?: string; toolbar?: boolean }) {
-  const button = "h-8 w-20 rounded-md";
   return (
     <div aria-hidden="true" className={cn("flex-1 min-w-0 flex flex-col h-full bg-background overflow-hidden", className)}>
       {toolbar ? <MailMessageToolbarSkeleton /> : null}
