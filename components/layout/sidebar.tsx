@@ -10,7 +10,7 @@ import { Button, TOUCH_HIT_AREA } from "@/components/ui/button";
 import {
   Inbox,
   Send,
-  File,
+  FilePenLine,
   Star,
   Trash2,
   Archive,
@@ -107,6 +107,7 @@ interface SidebarProps {
   onMailboxSelect?: (mailboxId: string) => void;
   onTagSelect?: (keywordId: string | null, accountId?: string | null) => void;
   onCompose?: () => void;
+  workspaceNavigation?: ReactNode;
   /**
    * Mountain View, desktop only: the rail grows a Compose pill at the top and
    * drops its own header, because the global top bar already carries the
@@ -181,7 +182,7 @@ const getIconForMailbox = (role?: string, hasChildren?: boolean, isExpanded?: bo
   switch (role) {
     case "inbox": return Inbox;
     case "sent": return Send;
-    case "drafts": return File;
+    case "drafts": return FilePenLine;
     case "trash": return Trash2;
     case "junk": return Ban;
     case "archive": return Archive;
@@ -295,6 +296,7 @@ function SidebarRowCounts({
         }}
         // 24px to hit, with a short count at the end of it, next to the
         // slash and the total, not in the middle with a gap before them.
+        data-memail-unread-count=""
         className={cn(unreadClass, "inline-flex items-center justify-end min-w-6 min-h-6 -my-1 cursor-pointer hover:underline rounded-sm focus-visible:outline-hidden")}
         title={t('unread_filter', { count: unreadCount })}
         aria-label={t('unread_filter', { count: unreadCount })}
@@ -303,7 +305,7 @@ function SidebarRowCounts({
       </button>
     ) : (
       // Said with the folder's name already.
-      <span className={unreadClass} aria-hidden="true">{unreadCountStyle === 'dot' ? unreadDot : unreadCount}</span>
+      <span data-memail-unread-count="" className={unreadClass} aria-hidden="true">{unreadCountStyle === 'dot' ? unreadDot : unreadCount}</span>
     )
   ) : null;
 
@@ -319,7 +321,7 @@ function SidebarRowCounts({
       {unreadCount > 0 && totalCount > 0 && (
         <span className="text-xs text-muted-foreground" aria-hidden="true">/</span>
       )}
-      {totalCount > 0 && <span className={totalClass}>{totalCount}</span>}
+      {totalCount > 0 && <span data-memail-total-count="" className={totalClass}>{totalCount}</span>}
     </span>
   );
 }
@@ -442,6 +444,7 @@ function SidebarRow({
       onTouchCancel={hasMenu ? longPress.onTouchCancel : undefined}
       data-testid="folder-row"
       data-mv-nav-row=""
+      data-sidebar-row=""
       data-folder-role={testRole ?? undefined}
       data-folder-name={testName ?? undefined}
       data-mailbox-id={testMailboxId ?? undefined}
@@ -506,7 +509,7 @@ function SidebarRow({
         )}
         title={isCollapsed ? label : undefined}
       >
-        <span className="flex items-center justify-center flex-shrink-0 w-4 h-4">
+        <span className="memail-folder-glyph flex items-center justify-center flex-shrink-0 w-4 h-4">
           {icon}
         </span>
         {!isCollapsed && (
@@ -542,11 +545,15 @@ function SidebarRow({
           onUnreadClick={onUnreadClick}
         />
       )}
-      {hasMenu && !isCollapsed && coarsePointer && (
+      {hasMenu && !isCollapsed && (
         <IconButton
           label={t('folder_options', { name: label })}
           data-testid="folder-row-menu"
-          className="ms-1 flex-shrink-0 text-muted-foreground"
+          aria-haspopup="menu"
+          onKeyDown={e => {
+            if (e.key === 'ArrowDown') { e.preventDefault(); e.stopPropagation(); onContextMenu?.(menuEventAt(e.currentTarget)); }
+          }}
+          className={cn("memail-folder-options ms-1 flex-shrink-0 text-muted-foreground", !coarsePointer && "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-visible:opacity-100")}
           onClick={(e) => {
             e.stopPropagation();
             onContextMenu(menuEventAt(e.currentTarget));
@@ -617,6 +624,7 @@ function SidebarSectionHeader({
   return (
     <div
       onContextMenu={onContextMenu}
+      data-memail-section=""
       className={cn(
         "group w-full flex items-center pb-1 select-none rounded-sm hover:bg-muted/40 transition-colors",
         paddingX,
@@ -1114,6 +1122,7 @@ function SidebarImpl({
   onMailboxSelect,
   onTagSelect,
   onCompose,
+  workspaceNavigation,
   onSidebarClose,
   onUnreadFilterClick,
   onMarkFolderRead,
@@ -1699,7 +1708,7 @@ function SidebarImpl({
     switch (role) {
       case 'inbox': return Inbox;
       case 'sent': return Send;
-      case 'drafts': return File;
+      case 'drafts': return FilePenLine;
       case 'trash': return Trash2;
       case 'archive': return Archive;
       case 'junk': return Ban;
@@ -1889,7 +1898,8 @@ function SidebarImpl({
       // The peek of the collapsed rail; not with hover opening turned off.
       onMouseEnter={mvShell && sidebarCollapsed ? () => { if (hoverOpens()) setRailHovered(true); } : undefined}
       onMouseLeave={mvShell && sidebarCollapsed ? () => setRailHovered(false) : undefined}
-      data-memail-sidebar=""
+      data-memail-sidebar={mvShell ? "legacy" : "workspace"}
+      data-memail-collapsed={isCollapsed ? "true" : undefined}
       data-mv-rail-peek={hoverExpanded ? "" : undefined}
       className={cn(
         "relative flex flex-col h-full border-e transition-all duration-300 overflow-hidden",
@@ -1948,6 +1958,7 @@ function SidebarImpl({
             onClick={onCompose}
             data-mv-compose={mvShell ? "" : undefined}
             data-tour="compose-button"
+            data-memail-compose={!mvShell ? "" : undefined}
             className={cn(
               "flex items-center transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
               mvShell ? "bg-[var(--mv-compose-bg)] text-[var(--mv-compose-fg)] hover:shadow-md" : "h-10 w-full rounded-lg bg-primary text-primary-foreground hover:bg-primary/90",
@@ -1957,7 +1968,8 @@ function SidebarImpl({
             aria-label={t("compose")}
           >
             <Pencil className="w-6 h-6 flex-shrink-0" />
-            {!isCollapsed && <span className="text-sm font-medium">{t("compose")}</span>}
+            {!isCollapsed && <span className="flex-1 text-start text-sm font-semibold">{t("compose")}</span>}
+            {!isCollapsed && !mvShell && <kbd aria-hidden="true" className="rounded border border-current/20 px-1.5 text-xs opacity-70">C</kbd>}
           </button>
         </div>
       )}
@@ -2228,6 +2240,8 @@ function SidebarImpl({
             ))}
           </div>
         )}
+
+        {!isCollapsed && workspaceNavigation}
 
         {tagsAboveShared && renderTags()}
 

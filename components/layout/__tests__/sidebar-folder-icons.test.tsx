@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { Mailbox } from '@/lib/jmap/types';
 
@@ -31,7 +31,7 @@ function mailbox(id: string, name: string, role: string | null = null): Mailbox 
 
 function iconOf(id: string): string {
   const row = document.querySelector(`[data-mailbox-id="${id}"]`);
-  return row?.querySelector('svg')?.getAttribute('class') ?? '';
+  return row?.querySelector('svg')?.getAttribute('data-memail-icon') ?? '';
 }
 
 describe('Sidebar folder icons (#1235)', () => {
@@ -51,9 +51,9 @@ describe('Sidebar folder icons (#1235)', () => {
       />,
     );
 
-    expect(iconOf('spamhaus')).toContain('tabler-icon-folder');
-    expect(iconOf('spamhaus')).not.toContain('tabler-icon-ban');
-    expect(iconOf('consent')).toContain('tabler-icon-folder');
+    expect(iconOf('spamhaus')).toContain('Folder');
+    expect(iconOf('spamhaus')).not.toContain('Ban');
+    expect(iconOf('consent')).toContain('Folder');
   });
 
   it('gives the junk folder the spam icon by its role, whatever it is called', () => {
@@ -64,6 +64,6 @@ describe('Sidebar folder icons (#1235)', () => {
       />,
     );
 
-    expect(iconOf('junk')).toContain('tabler-icon-ban');
+    expect(iconOf('junk')).toContain('Ban');
   });
 });

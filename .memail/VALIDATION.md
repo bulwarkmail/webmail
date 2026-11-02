@@ -123,3 +123,13 @@ The preview is in draft PR #3. Phase 0 and full phase 1 acceptance are not compl
 - Production build including TypeScript passes; existing Turbopack filesystem-tracing warnings remain.
 - Browser verified the 80px labeled dock, actual split mail reading/attachments, active Mail state on nested routes, and the shared workspace header. Phone page width equals the 390px viewport. Light and dark appearance were inspected; a stale development hot-reload rule was cleared with a reload, confirming dark dock background rgb(16,24,19) and foreground rgb(230,240,230). Original Light preference restored afterward.
 - Screenshots: research workspace `memail-native-workspace.jpg` and `memail-native-workspace-dark.jpg`. No draft was edited and no email sent. Full RTL/zoom and the remaining app-specific redesign acceptance remain open. Production is unchanged.
+
+
+## Sidebar hierarchy and saved views
+
+- The broader layout run passed 199 tests across 43 files, including shared folders, nesting, counts, plugin navigation and touch menus. After the final memoization and ArrowDown changes, 14 focused tests passed across saved views, folder icons and menu access.
+- Browser reviewed the production Sidebar in a temporary isolated route with fixture mailboxes and local search callbacks. Saved-view selection updated its current state. The 288px sidebar fits at 320px and 390px; the temporary fixture's adjacent explanatory text overflowed at 320px, so this is not a full mail-screen mobile acceptance claim. The fixture was removed and viewport reset.
+- Screenshot: research workspace `memail-sidebar-polish.jpg`. The live app restored the user's open draft during review; further checks used the isolated route. No draft content or saved entries were changed and no mail was sent.
+- Full RTL/zoom/dark and real-account search acceptance remain open. Production is unchanged.
+
+- Final production build including TypeScript passed after fixture removal; existing Turbopack filesystem-tracing warnings remain. Scoped lint has no errors; the existing mail-app effect-ref warning remains.

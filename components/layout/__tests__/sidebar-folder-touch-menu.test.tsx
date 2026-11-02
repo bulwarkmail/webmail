@@ -2,6 +2,8 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Mailbox } from '@/lib/jmap/types';
 
+const pointer = vi.hoisted(() => ({coarse:true}));
+
 // Touch has no right-click: a folder's menu (rename, delete, new subfolder,
 // empty, mark read) opens on a long-press and from the row's ⋮ (R7).
 
@@ -22,7 +24,7 @@ vi.mock('../account-switcher', () => ({ AccountSwitcher: () => null }));
 // A touch screen: the folder rows show their ⋮.
 vi.mock('@/hooks/use-media-query', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/hooks/use-media-query')>()),
-  useMediaQuery: (query: string) => query === '(pointer: coarse)',
+  useMediaQuery: (query: string) => query === '(pointer: coarse)' && pointer.coarse,
 }));
 
 const { Sidebar } = await import('../sidebar');
@@ -38,8 +40,9 @@ const mailboxes: Mailbox[] = [box('inbox', 'Inbox', 'inbox'), box('travel', 'Tra
 const row = (mailboxId: string) =>
   screen.getAllByTestId('folder-row').find((el) => el.getAttribute('data-mailbox-id') === mailboxId)!;
 
-describe('folder menu on touch', () => {
+describe('folder menu access', () => {
   beforeEach(() => {
+    pointer.coarse = true;
     vi.useFakeTimers();
     useAuthStore.setState({ activeAccountId: 'login-a', client: { getAccountId: () => 'me', getCapabilities: () => ({}) } } as never);
     useSettingsStore.setState({ hideAccountSwitcher: true } as never);
@@ -54,6 +57,28 @@ describe('folder menu on touch', () => {
     fireEvent.touchEnd(row('travel'));
     expect(screen.getByRole('menu')).toBeTruthy();
     expect(screen.getByText('rename')).toBeTruthy();
+    expect(onMailboxSelect).not.toHaveBeenCalled();
+  });
+
+  it('opens options with a mouse or keyboard without navigating to the folder', () => {
+    pointer.coarse = false;
+    const onMailboxSelect = vi.fn();
+    render(<Sidebar mailboxes={mailboxes} selectedMailbox="inbox" onMailboxSelect={onMailboxSelect} />);
+    const options = row('travel').querySelector<HTMLButtonElement>('[data-testid="folder-row-menu"]')!;
+    options.focus();
+    expect(options).toHaveFocus();
+    fireEvent.click(options);
+    expect(screen.getByRole('menu')).toBeTruthy();
+    expect(onMailboxSelect).not.toHaveBeenCalled();
+  });
+
+  it('opens the folder menu with ArrowDown without selecting the folder', () => {
+    pointer.coarse = false;
+    const onMailboxSelect = vi.fn();
+    render(<Sidebar mailboxes={mailboxes} selectedMailbox="inbox" onMailboxSelect={onMailboxSelect} />);
+    const options = row('travel').querySelector<HTMLButtonElement>('[data-testid="folder-row-menu"]')!;
+    fireEvent.keyDown(options, { key: 'ArrowDown' });
+    expect(screen.getByRole('menu')).toBeTruthy();
     expect(onMailboxSelect).not.toHaveBeenCalled();
   });
 

@@ -136,8 +136,8 @@ body[data-theme-skin="builtin-memail"] [data-memail-sidebar] {
   background-color: var(--color-sidebar);
 }
 body[data-theme-skin="builtin-memail"] [data-memail-sidebar] [data-folder-nav] {
-  padding-inline: 0.5rem;
-  padding-block-end: 1rem;
+  padding-inline: 0.75rem;
+  padding-block-end: 1.25rem;
   scrollbar-width: thin;
 }
 body[data-theme-skin="builtin-memail"] [data-testid="folder-row"] {
@@ -153,4 +153,9 @@ body[data-theme-skin="builtin-memail"] [data-memail-rail] [data-tour^="nav-"] {
 body[data-theme-skin="builtin-memail"] [data-memail-rail] [aria-current="page"] {
   box-shadow: inset 0 0 0 1px var(--color-border);
 }
+
+body[data-theme-skin="builtin-memail"] [data-memail-sidebar="workspace"] [data-testid="folder-row"][data-selected="true"] {
+  border-inline-start-color: transparent;
+}
+body[data-theme-skin="builtin-memail"] [data-memail-sidebar="workspace"][data-memail-collapsed="true"] [data-folder-nav] { padding-inline: 0.25rem; }
 `;

@@ -7,7 +7,6 @@ import {
   Accessibility as GlyphAccessibility,
   Activity as GlyphActivity,
   AlertCircle as GlyphAlertCircle,
-  AlertTriangle as GlyphAlertTriangle,
   AlignCenter as GlyphAlignCenter,
   AlignLeft as GlyphAlignLeft,
   AlignRight as GlyphAlignRight,
@@ -22,7 +21,6 @@ import {
   BadgeCheck as GlyphBadgeCheck,
   Baseline as GlyphBaseline,
   Bed as GlyphBed,
-  BellOff as GlyphBellOff,
   BellRing as GlyphBellRinging,
   Bold as GlyphBold,
   Book as GlyphBook,
@@ -41,7 +39,6 @@ import {
   Calendar as GlyphCalendar,
   CalendarArrowUp as GlyphCalendarArrowUp,
   CalendarCheck as GlyphCalendarCheck,
-  CalendarClock as GlyphCalendarClock,
   CalendarPlus as GlyphCalendarPlus,
   CalendarX as GlyphCalendarX,
   Camera as GlyphCamera,
@@ -121,7 +118,6 @@ import {
   LogIn as GlyphLogIn,
   MailCheck as GlyphMailCheck,
   MailX as GlyphMailX,
-  Mails as GlyphMails,
   MapPin as GlyphMapPin,
   Maximize2 as GlyphMaximize2,
   Menu as GlyphMenu,
@@ -131,7 +127,6 @@ import {
   Minus as GlyphMinus,
   Monitor as GlyphMonitor,
   Moon as GlyphMoon,
-  NotebookPen as GlyphNotebookPen,
   Package as GlyphPackage,
   PackageCheck as GlyphPackageCheck,
   Palette as GlyphPalette,
@@ -200,7 +195,6 @@ import {
   UnfoldVertical as GlyphUnfoldVertical,
   Unlock as GlyphUnlock,
   Upload as GlyphUpload,
-  User as GlyphUser,
   UserCircle as GlyphUserCircle,
   UserMinus as GlyphUserMinus,
   UserPen as GlyphUserPen,
@@ -216,7 +210,7 @@ import {
 export const Accessibility = /* @__PURE__ */ adaptIcon(GlyphAccessibility);
 export const Activity = /* @__PURE__ */ adaptIcon(GlyphActivity);
 export const AlertCircle = /* @__PURE__ */ adaptIcon(GlyphAlertCircle);
-export const AlertTriangle = /* @__PURE__ */ adaptIcon(GlyphAlertTriangle);
+export { AlertTriangle } from "./memail-glyphs";
 export const AlignCenter = /* @__PURE__ */ adaptIcon(GlyphAlignCenter);
 export const AlignLeft = /* @__PURE__ */ adaptIcon(GlyphAlignLeft);
 export const AlignRight = /* @__PURE__ */ adaptIcon(GlyphAlignRight);
@@ -234,7 +228,7 @@ export const BadgeCheck = /* @__PURE__ */ adaptIcon(GlyphBadgeCheck);
 export const Baseline = /* @__PURE__ */ adaptIcon(GlyphBaseline);
 export const Bed = /* @__PURE__ */ adaptIcon(GlyphBed);
 export { Bell } from "./memail-glyphs";
-export const BellOff = /* @__PURE__ */ adaptIcon(GlyphBellOff);
+export { BellOff } from "./memail-glyphs";
 export const BellRinging = /* @__PURE__ */ adaptIcon(GlyphBellRinging);
 export const Bold = /* @__PURE__ */ adaptIcon(GlyphBold);
 export const Book = /* @__PURE__ */ adaptIcon(GlyphBook);
@@ -254,7 +248,7 @@ export const Cake = /* @__PURE__ */ adaptIcon(GlyphCake);
 export const Calendar = /* @__PURE__ */ adaptIcon(GlyphCalendar);
 export const CalendarArrowUp = /* @__PURE__ */ adaptIcon(GlyphCalendarArrowUp);
 export const CalendarCheck = /* @__PURE__ */ adaptIcon(GlyphCalendarCheck);
-export const CalendarClock = /* @__PURE__ */ adaptIcon(GlyphCalendarClock);
+export { CalendarClock } from "./memail-glyphs";
 export { CalendarDays } from "./memail-glyphs";
 export { CalendarEvent } from "./memail-glyphs";
 export const CalendarPlus = /* @__PURE__ */ adaptIcon(GlyphCalendarPlus);
@@ -359,7 +353,7 @@ export { Mail } from "./memail-glyphs";
 export const MailCheck = /* @__PURE__ */ adaptIcon(GlyphMailCheck);
 export { MailOpen } from "./memail-glyphs";
 export const MailX = /* @__PURE__ */ adaptIcon(GlyphMailX);
-export const Mails = /* @__PURE__ */ adaptIcon(GlyphMails);
+export { Mails } from "./memail-glyphs";
 export const MapPin = /* @__PURE__ */ adaptIcon(GlyphMapPin);
 export const Maximize2 = /* @__PURE__ */ adaptIcon(GlyphMaximize2);
 export const Menu = /* @__PURE__ */ adaptIcon(GlyphMenu);
@@ -371,7 +365,7 @@ export const Monitor = /* @__PURE__ */ adaptIcon(GlyphMonitor);
 export const Moon = /* @__PURE__ */ adaptIcon(GlyphMoon);
 export { MoreHorizontal } from "./memail-glyphs";
 export { MoreVertical } from "./memail-glyphs";
-export const NotebookPen = /* @__PURE__ */ adaptIcon(GlyphNotebookPen);
+export { NotebookPen } from "./memail-glyphs";
 export const Package = /* @__PURE__ */ adaptIcon(GlyphPackage);
 export const PackageCheck = /* @__PURE__ */ adaptIcon(GlyphPackageCheck);
 export const Palette = /* @__PURE__ */ adaptIcon(GlyphPalette);
@@ -458,7 +452,7 @@ export const Undo = /* @__PURE__ */ adaptIcon(GlyphUndo);
 export const UnfoldVertical = /* @__PURE__ */ adaptIcon(GlyphUnfoldVertical);
 export const Unlock = /* @__PURE__ */ adaptIcon(GlyphUnlock);
 export const Upload = /* @__PURE__ */ adaptIcon(GlyphUpload);
-export const User = /* @__PURE__ */ adaptIcon(GlyphUser);
+export { User } from "./memail-glyphs";
 export const UserCircle = /* @__PURE__ */ adaptIcon(GlyphUserCircle);
 export const UserMinus = /* @__PURE__ */ adaptIcon(GlyphUserMinus);
 export const UserPen = /* @__PURE__ */ adaptIcon(GlyphUserPen);
@@ -473,3 +467,5 @@ export const XCircle = /* @__PURE__ */ adaptIcon(GlyphXCircle);
 export { Zap } from "./memail-glyphs";
 export const ZoomIn = /* @__PURE__ */ adaptIcon(GlyphZoomIn);
 export const ZoomOut = /* @__PURE__ */ adaptIcon(GlyphZoomOut);
+
+export { FilePenLine } from "./memail-glyphs";

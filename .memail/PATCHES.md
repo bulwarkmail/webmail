@@ -98,3 +98,11 @@ Add each customization here. Include the relevant upstream files, the reason it 
 - `components/icons/memail-glyphs.tsx`: 52 primary Phosphor glyph adapters with direct SSR imports; explicit unfilled state remains visible, heavy numeric stroke selects bold, and SVG/ref props are forwarded. The popular named-icon table shares these glyphs. Remaining specialized Lucide and custom Tabler names remain compatible. MIT notice: `.memail/licenses/PHOSPHOR-MIT.txt`.
 - `.memail/theme/manifest.json`: 0.4 forest/neutral theme with light/dark contrast checks; user accent settings still take precedence.
 - `.memail/DESIGN-ROADMAP.md`: researched overhaul sequence. AI supports multiple providers conceptually and is explicitly deferred until UI/core acceptance; no AI provider is enabled.
+
+
+## Sidebar hierarchy and saved views
+
+- Native sidebar rows now use rounded selection, restrained glyph tiles, clearer section headings and separate unread badges/total counts. Density settings and mobile target sizing remain native. Seven more primary icons use the Phosphor adapter (59 total); Drafts uses the writing glyph.
+- Folder options are available on desktop hover/focus as well as touch. Enter, Space and ArrowDown open the existing menu without selecting a folder; the menu slot stays reserved to avoid row shifts.
+- `.memail/saved-search-sidebar.tsx` adds account-scoped saved views using the existing search model. Missing-folder views are disabled with a reason; longer collections can expand beyond five entries. The header and sidebar share native filter application.
+- `Sidebar.workspaceNavigation` is a memoized React node slot. Stable event callbacks preserve the existing sidebar optimization. No ReUI or AI integration is introduced.

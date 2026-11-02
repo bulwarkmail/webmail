@@ -8,6 +8,8 @@ import { MvComposeInline, MvComposeWindow } from "@/components/email/mv-compose-
 import { usePinnedPerSession } from "@/hooks/use-pinned-per-session";
 import { useConfig } from "@/hooks/use-config";
 import { productName } from "@/lib/product-name";
+import { SavedSearchSidebar } from '@/.memail/saved-search-sidebar';
+import type { SavedSearch } from '@/.memail/saved-searches';
 import { SavedSearchMenu } from '@/.memail/saved-search-menu';
 import { WorkspaceToolbar } from "../../.memail/workspace-toolbar";
 import { MessageListTabs, useMessageListPanelProps } from "@/components/email/message-list-tabs";
@@ -4383,9 +4385,20 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   };
 
   // Show loading state while checking auth
+  function applySavedWorkspaceSearch(entry: SavedSearch) {
+    clearSearchFilters(); setSearchFilters(entry.filters); setSearchQuery(entry.query); setSearchMailboxId(entry.mailboxId);
+    setSidebarOpen(false);
+    void runAdvancedSearchNow();
+  }
+
   // The sidebar is memoised; handlers that keep their identity across renders
   // are what let it skip the mail view's renders (opening a message, a list
   // update), which change nothing it shows.
+  const savedSearchHandlers = useStableHandlers({ onApply: applySavedWorkspaceSearch });
+  const savedSearchNavigation = useMemo(() => !mvShell && !isUnifiedView && !isScheduledView && activeAccountId ? <SavedSearchSidebar
+    key={`${activeAccountId}:${viewingAccountId ?? ''}`} scope={`${activeAccountId}:${viewingAccountId ?? ''}`} collapsed={false}
+    query={searchQuery} filters={searchFilters} mailboxId={searchMailboxId} mailboxes={viewMailboxes} onApply={savedSearchHandlers.onApply}
+  /> : null, [mvShell, isUnifiedView, isScheduledView, activeAccountId, viewingAccountId, searchQuery, searchFilters, searchMailboxId, viewMailboxes, savedSearchHandlers]);
   const sidebarHandlers = useStableHandlers({
     onOpenStarred: mvShell ? goToStarred : undefined,
     onMailboxSelect: handleMailboxSelect,
@@ -5032,6 +5045,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           <ErrorBoundary fallback={SidebarErrorFallback}>
             <Sidebar
               mailboxes={mailboxes}
+              workspaceNavigation={savedSearchNavigation}
               selectedMailbox={selectedMailbox}
               selectedKeyword={selectedKeyword}
               scheduledTotal={scheduledTotal}
@@ -5087,10 +5101,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
               key={`${activeAccountId}:${viewingAccountId ?? ''}`}
               scope={`${activeAccountId}:${viewingAccountId ?? ''}`}
               query={searchQuery} filters={searchFilters} mailboxId={searchMailboxId} mailboxes={viewMailboxes}
-              onApply={entry => {
-                clearSearchFilters(); setSearchFilters(entry.filters); setSearchQuery(entry.query); setSearchMailboxId(entry.mailboxId);
-                void runAdvancedSearchNow();
-              }} /> : undefined} />}
+              onApply={applySavedWorkspaceSearch} /> : undefined} />}
           <div className={cn("relative flex flex-1 min-h-0", isHorizontalMailLayout && "md:flex-col")}>
           {/* Email List - full width on mobile, fixed width/height on tablet/desktop */}
           <section

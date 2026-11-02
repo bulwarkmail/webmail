@@ -1355,3 +1355,69 @@ optgroup {
   --memail-dock-background: #101813;
   --memail-dock-foreground: #e6f0e6;
 }
+
+
+/* Native mail navigation: folder geometry stays independent of virtual message rows. */
+[data-memail-sidebar="workspace"] {
+  background: var(--color-sidebar);
+  color: var(--color-sidebar-foreground);
+}
+[data-memail-sidebar="workspace"] [data-folder-nav] {
+  padding: 0 0.75rem 1.25rem;
+  scrollbar-width: thin;
+}
+[data-memail-sidebar="workspace"][data-memail-collapsed="true"] [data-folder-nav] { padding-inline: 0.25rem; }
+[data-memail-sidebar="workspace"] [data-sidebar-row] {
+  border-radius: 0.625rem;
+  margin-block: 0.125rem;
+}
+[data-memail-sidebar="workspace"] [data-sidebar-row][data-selected="true"] {
+  background: var(--color-sidebar-accent);
+  color: var(--color-sidebar-accent-foreground);
+  border-inline-start-color: transparent;
+}
+[data-memail-sidebar="workspace"] .memail-folder-glyph {
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 0.375rem;
+  background: color-mix(in srgb, currentColor 5%, transparent);
+}
+[data-memail-sidebar="workspace"] [data-memail-section] {
+  padding-inline: 0.5rem;
+  border-radius: 0;
+  padding-block-end: 0.5rem;
+}
+[data-memail-sidebar="workspace"] [data-section-name] > span,
+.memail-sidebar-section-toggle {
+  color: var(--color-muted-foreground);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+[data-memail-sidebar="workspace"] [data-section-name] > svg { order: 2; margin-inline-start: auto; }
+[data-memail-sidebar="workspace"] [data-memail-unread-count] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 1.5rem;
+  min-height: 1.5rem;
+  border-radius: 0.375rem;
+  padding-inline: 0.25rem;
+  background: color-mix(in srgb, var(--color-sidebar-foreground) 8%, transparent);
+  color: var(--color-sidebar-foreground);
+}
+[data-memail-sidebar="workspace"] [data-memail-total-count] { font-weight: 400; }
+.memail-saved-views { display: flex; flex-direction: column; gap: 0.375rem; padding-block-start: 1rem; }
+.memail-sidebar-section-toggle { display: flex; min-height: 2.25rem; width: 100%; align-items: center; gap: 0.5rem; padding-inline: 0.5rem; border-radius: 0.5rem; }
+.memail-saved-view-row { display: flex; min-height: 2.25rem; align-items: center; gap: 0.625rem; padding: 0.375rem 0.75rem; border-radius: 0.625rem; text-align: start; font-size: 0.875rem; }
+.memail-saved-view-row:hover, .memail-sidebar-section-toggle:hover { background: var(--color-accent); }
+.memail-saved-view-row[aria-current="page"] { background: var(--color-sidebar-accent); color: var(--color-sidebar-accent-foreground); font-weight: 600; }
+.memail-saved-view-row:disabled { opacity: 0.5; cursor: not-allowed; }
+.memail-saved-view-row:focus-visible, .memail-sidebar-section-toggle:focus-visible { outline: 2px solid var(--color-ring); outline-offset: 2px; }
+@media (width >= 1024px) {
+  [data-memail-sidebar="workspace"] [data-sidebar-row] { min-height: calc(1.75rem + 2 * var(--density-sidebar-py)); }
+}
+@media (pointer: coarse) {
+  .memail-saved-view-row, .memail-sidebar-section-toggle { min-height: 2.75rem; }
+}
