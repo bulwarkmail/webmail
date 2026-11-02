@@ -27,10 +27,18 @@ export function looksLikeText(bytes: Uint8Array): boolean {
   return !head.includes(0);
 }
 
-/** The readable text of an HTML file: no scripts, styles or head. */
+/** Characters of HTML read at most; the rest of a larger file is left out. */
+export const MAX_HTML_CHARS = 5_000_000;
+
+/**
+ * The readable text of an HTML file: its body without scripts, styles and
+ * templates. Parsed with DOMParser (linear in the file, whatever its tags);
+ * list markers left out, since numbering them is slow on long lists.
+ */
 export function htmlText(html: string): string {
-  const body = html.replace(/<(script|style|noscript|template|head)\b[\s\S]*?<\/\1\s*>/gi, ' ');
-  return htmlToPlainText(body, { paragraphSpacing: true, mailMarkup: true, imageAlt: (alt) => `[Image: ${alt}]` });
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  for (const el of Array.from(doc.querySelectorAll('script, style, noscript, template'))) el.remove();
+  return htmlToPlainText(doc.body?.innerHTML ?? '', { paragraphSpacing: true, imageAlt: (alt) => `[Image: ${alt}]` });
 }
 
 // ─── ICS ─────────────────────────────────────────────────────
@@ -87,9 +95,16 @@ export function icsToText(ics: string): string {
   const out: string[] = [];
   let current: Map<string, IcsLine> | null = null;
   let kind = '';
+  // Inside a component of the event (an alarm): its properties aren't the event's.
+  let nested = 0;
   for (const raw of unfold(ics)) {
     const line = parseIcsLine(raw);
     if (!line) continue;
+    if (current && line.name === 'BEGIN') { nested++; continue; }
+    if (current && nested > 0) {
+      if (line.name === 'END') nested--;
+      continue;
+    }
     if (line.name === 'BEGIN' && /^(VEVENT|VTODO)$/i.test(line.value.trim())) {
       current = new Map();
       kind = line.value.trim().toUpperCase() === 'VTODO' ? 'task' : 'event';

@@ -5,7 +5,7 @@
 // (pdf.js), office.ts (docx, xlsx, pptx, odt, ods, odp). Never throws: a
 // file that can't be read answers with a status.
 
-import { decodeText, htmlText, icsToText, looksLikeText, vcfText } from './plain';
+import { MAX_HTML_CHARS, decodeText, htmlText, icsToText, looksLikeText, vcfText } from './plain';
 import { pdfText } from './pdf';
 import { officeText } from './office';
 import {
@@ -68,7 +68,11 @@ async function read(bytes: Uint8Array, format: TextFormat, budget: number): Prom
       if (!looksLikeText(bytes)) return { status: 'unsupported', text: '', truncated: false };
       return { status: 'ok', text: decodeText(bytes).replace(/\r\n?/g, '\n'), truncated: false };
     case 'html':
-      return { status: 'ok', text: htmlText(decodeText(bytes)), truncated: false };
+    {
+      const html = decodeText(bytes);
+      const cut = html.length > MAX_HTML_CHARS;
+      return { status: 'ok', text: htmlText(cut ? html.slice(0, MAX_HTML_CHARS) : html), truncated: cut };
+    }
     case 'ics':
       return { status: 'ok', text: icsToText(decodeText(bytes)), truncated: false };
     case 'vcf':
