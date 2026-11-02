@@ -113,6 +113,7 @@ import { MvTopBar } from "@/components/layout/mv-top-bar";
 import { useMountainViewShell } from "@/hooks/use-mountain-view-shell";
 import { calendarHooks } from "@/lib/plugin-hooks";
 import { eventToView } from "@/lib/plugin-projection";
+import { useAppSidePanel } from "@/components/plugins/app-side-panel";
 import { AppMain, SkipLink } from "@/components/layout/app-landmarks";
 import { calendarShortcutAction } from "@/lib/calendar-shortcuts";
 import { isAppShortcutBlocked, isArrowKeyWidgetTarget } from "@/lib/keyboard";
@@ -1751,6 +1752,11 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
   // event gets the primary ring).
   const selectedEventId = detailPinned ? detailEvent?.id ?? null : showEventModal ? editEvent?.id ?? null : null;
 
+  // The plugin side panel (app-side-panel), with the event the user opened.
+  const openEvent = detailPinned ? detailEvent : showEventModal ? editEvent : null;
+  const sidePanelContext = useMemo(() => (openEvent ? { event: eventToView(openEvent) } : {}), [openEvent]);
+  const sidePanel = useAppSidePanel({ view: "calendar", context: sidePanelContext });
+
   const visibleEvents = useMemo(() => {
     const filtered = events.filter((e) => {
       if (!e.start || !e.calendarIds) return false;
@@ -2098,6 +2104,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
         />
       ) : null}
       onCloseSearch={leaveSearch}
+      panelToggle={sidePanel.toggle}
     />
   );
 
@@ -2277,6 +2284,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
         {/* isolate keeps the views' sticky headers (z-50) below the toolbar's
             import dropdown, which overlaps this area (#1049). */}
         <div
+          ref={sidePanel.rowRef}
           className="flex flex-1 overflow-hidden relative isolate"
           data-tour="calendar-view"
           // Where the focus goes after an event is saved or deleted and
@@ -2353,6 +2361,8 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
               <Plus className="h-6 w-6" />
             </Button>
           )}
+
+          {sidePanel.panel}
         </div>
       </AppMain>
       </div>

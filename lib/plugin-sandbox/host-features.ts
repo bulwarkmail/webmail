@@ -10,7 +10,7 @@
 
 import { usePolicyStore } from '@/stores/policy-store';
 import { noThirdPartyTraffic, subscribeThirdPartyMode } from '@/lib/third-party-mode';
-import type { HostFeaturesView } from '../plugin-types';
+import type { HostFeaturesView, InstalledPlugin } from '../plugin-types';
 import type { OrganisationPolicy } from '@/lib/admin/organisation-policy';
 import { assistantFeatures } from './assistant';
 
@@ -26,11 +26,11 @@ export function hostFeaturesFor(externalMail: OrganisationPolicy['externalMail']
   };
 }
 
-export function snapshotHostFeatures(): HostFeaturesView {
+export function snapshotHostFeatures(plugin?: InstalledPlugin): HostFeaturesView {
   return {
     ...hostFeaturesFor(usePolicyStore.getState().getOrganisation().externalMail, noThirdPartyTraffic()),
     // The AI assistant's host APIs this webmail offers (lib/plugin-sandbox/assistant).
-    ...assistantFeatures(),
+    ...assistantFeatures(plugin),
   };
 }
 

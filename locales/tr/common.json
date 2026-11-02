@@ -843,6 +843,7 @@
     "mv_position": "{index} / {total}",
     "plugin_panel_show": "Eklenti panelini göster",
     "plugin_panel_hide": "Eklenti panelini gizle",
+    "plugin_panel": "Eklenti paneli",
     "copy": "Kopyala",
     "contact_added": "Kişi eklendi",
     "save_to_files": {
@@ -5984,6 +5985,10 @@
       "ui_email_details": {
         "title": "İleti ayrıntılarına panel ekleme",
         "body": "Açık bir iletinin yanında veya altında kendi panelini gösterme."
+      },
+      "ui_side_panel": {
+        "title": "Diğer görünümlere panel ekleme",
+        "body": "Takvim, Kişiler, Dosyalar ve Ayarlar'ın yanında kendi panelini gösterme."
       },
       "ui_download_file": {
         "title": "Dosyaları cihazınıza kaydetme",

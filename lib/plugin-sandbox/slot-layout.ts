@@ -44,7 +44,7 @@ export function clampSlotWidth(width: unknown): number | null {
  * can pin controls at the bottom, like a chat input. Elsewhere a frame grows
  * with its content.
  */
-export const FILLABLE_SLOTS: readonly string[] = ['composer-sidebar', 'composer-sidebar-right', 'email-detail-sidebar', 'app-page'];
+export const FILLABLE_SLOTS: readonly string[] = ['composer-sidebar', 'composer-sidebar-right', 'email-detail-sidebar', 'app-side-panel', 'app-page', 'plugin-dialog'];
 
 export function isFillableSlot(slot: string): boolean {
   return FILLABLE_SLOTS.includes(slot);

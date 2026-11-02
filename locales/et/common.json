@@ -843,6 +843,7 @@
     "mv_position": "{index} / {total}",
     "plugin_panel_show": "Näita pistikprogrammi paneeli",
     "plugin_panel_hide": "Peida pistikprogrammi paneel",
+    "plugin_panel": "Pistikprogrammi paneel",
     "copy": "Kopeeri",
     "contact_added": "Kontakt lisatud",
     "save_to_files": {
@@ -5984,6 +5985,10 @@
       "ui_email_details": {
         "title": "Lisa kirja üksikasjadele paneele",
         "body": "Näidata oma paneeli avatud kirja kõrval või all."
+      },
+      "ui_side_panel": {
+        "title": "Lisa paneel teistesse vaadetesse",
+        "body": "Näita oma paneeli kalendri, kontaktide, failide ja seadete kõrval."
       },
       "ui_download_file": {
         "title": "Salvesta faile sinu seadmesse",

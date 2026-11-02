@@ -843,6 +843,7 @@
     "mv_position": "{index} van {total}",
     "plugin_panel_show": "Plug-inpaneel tonen",
     "plugin_panel_hide": "Plug-inpaneel verbergen",
+    "plugin_panel": "Plug-inpaneel",
     "copy": "Kopiëren",
     "contact_added": "Contact toegevoegd",
     "save_to_files": {
@@ -5984,6 +5985,10 @@
       "ui_email_details": {
         "title": "Panelen toevoegen aan berichtdetails",
         "body": "Een eigen paneel tonen naast of onder een geopend bericht."
+      },
+      "ui_side_panel": {
+        "title": "Een paneel toevoegen aan andere weergaven",
+        "body": "Een eigen paneel tonen naast Agenda, Contacten, Bestanden en Instellingen."
       },
       "ui_download_file": {
         "title": "Bestanden op je apparaat opslaan",

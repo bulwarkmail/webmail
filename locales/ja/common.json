@@ -843,6 +843,7 @@
     "mv_position": "{index} / {total}",
     "plugin_panel_show": "プラグインパネルを表示",
     "plugin_panel_hide": "プラグインパネルを隠す",
+    "plugin_panel": "プラグインパネル",
     "copy": "コピー",
     "contact_added": "連絡先を追加しました",
     "save_to_files": {
@@ -5984,6 +5985,10 @@
       "ui_email_details": {
         "title": "メッセージの詳細にパネルを追加",
         "body": "開いたメッセージの横または下に独自のパネルを表示します。"
+      },
+      "ui_side_panel": {
+        "title": "ほかの画面にパネルを追加",
+        "body": "カレンダー、連絡先、ファイル、設定の横に独自のパネルを表示します。"
       },
       "ui_download_file": {
         "title": "デバイスにファイルを保存",

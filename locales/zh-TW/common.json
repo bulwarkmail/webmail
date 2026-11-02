@@ -843,6 +843,7 @@
     "mv_position": "第 {index} 封，共 {total} 封",
     "plugin_panel_show": "顯示外掛程式面板",
     "plugin_panel_hide": "隱藏外掛程式面板",
+    "plugin_panel": "外掛程式面板",
     "copy": "複製",
     "contact_added": "已新增聯絡人",
     "save_to_files": {
@@ -5984,6 +5985,10 @@
       "ui_email_details": {
         "title": "在郵件詳細資料新增面板",
         "body": "在開啟的郵件旁邊或下方顯示它自己的面板。"
+      },
+      "ui_side_panel": {
+        "title": "在其他檢視中加入面板",
+        "body": "在行事曆、聯絡人、檔案和設定旁顯示自己的面板。"
       },
       "ui_download_file": {
         "title": "將檔案儲存到您的裝置",

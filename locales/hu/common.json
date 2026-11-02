@@ -843,6 +843,7 @@
     "mv_position": "{index} / {total}",
     "plugin_panel_show": "Bővítménypanel megjelenítése",
     "plugin_panel_hide": "Bővítménypanel elrejtése",
+    "plugin_panel": "Bővítménypanel",
     "copy": "Másolás",
     "contact_added": "Névjegy hozzáadva",
     "save_to_files": {
@@ -5984,6 +5985,10 @@
       "ui_email_details": {
         "title": "Panelek az üzenet részleteiben",
         "body": "Saját panelt jelenít meg egy megnyitott üzenet mellett vagy alatt."
+      },
+      "ui_side_panel": {
+        "title": "Panel hozzáadása más nézetekhez",
+        "body": "Saját panel megjelenítése a Naptár, a Névjegyek, a Fájlok és a Beállítások mellett."
       },
       "ui_download_file": {
         "title": "Fájlok mentése az eszközödre",

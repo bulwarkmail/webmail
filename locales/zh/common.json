@@ -843,6 +843,7 @@
     "mv_position": "第 {index} 封，共 {total} 封",
     "plugin_panel_show": "显示插件面板",
     "plugin_panel_hide": "隐藏插件面板",
+    "plugin_panel": "插件面板",
     "copy": "复制",
     "contact_added": "已添加联系人",
     "save_to_files": {
@@ -5984,6 +5985,10 @@
       "ui_email_details": {
         "title": "在邮件详情中添加面板",
         "body": "在打开的邮件旁边或下方显示它自己的面板。"
+      },
+      "ui_side_panel": {
+        "title": "在其他视图中添加面板",
+        "body": "在日历、联系人、文件和设置旁显示自己的面板。"
       },
       "ui_download_file": {
         "title": "将文件保存到您的设备",

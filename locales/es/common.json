@@ -843,6 +843,7 @@
     "mv_position": "{index} de {total}",
     "plugin_panel_show": "Mostrar el panel del complemento",
     "plugin_panel_hide": "Ocultar el panel del complemento",
+    "plugin_panel": "Panel del complemento",
     "copy": "Copiar",
     "contact_added": "Contacto añadido",
     "save_to_files": {
@@ -5984,6 +5985,10 @@
       "ui_email_details": {
         "title": "Añadir paneles a los detalles del mensaje",
         "body": "Mostrar su propio panel junto a un mensaje abierto o debajo de él."
+      },
+      "ui_side_panel": {
+        "title": "Añadir un panel a otras vistas",
+        "body": "Mostrar su propio panel junto al Calendario, los Contactos, los Archivos y los Ajustes."
       },
       "ui_download_file": {
         "title": "Guardar archivos en tu dispositivo",
