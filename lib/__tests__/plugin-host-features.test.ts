@@ -172,5 +172,10 @@ describe('api.host in the sandbox runtime', () => {
     expect((kept as { sidePanel?: boolean }).sidePanel).toBe(true);
     post(hostWindow, HOST_ORIGIN, { type: 'host-change', features: { externalSenderLabel: true, externalRecipientWarning: false, noThirdPartyTraffic: true, sidePanel: 'yes' } });
     expect((kept as { sidePanel?: boolean }).sidePanel).toBe(false);
+    // A flag the host no longer names turns off instead of keeping its old value.
+    post(hostWindow, HOST_ORIGIN, { type: 'host-change', features: { externalSenderLabel: true, externalRecipientWarning: false, noThirdPartyTraffic: true, sidePanel: true } });
+    expect((kept as { sidePanel?: boolean }).sidePanel).toBe(true);
+    post(hostWindow, HOST_ORIGIN, { type: 'host-change', features: { externalSenderLabel: true, externalRecipientWarning: false, noThirdPartyTraffic: true } });
+    expect((kept as { sidePanel?: boolean }).sidePanel).toBe(false);
   }, 30_000);
 });
