@@ -114,6 +114,7 @@ import {
   Pencil,
   Paperclip,
 } from "@/components/icons";
+import { MailMessageSkeleton } from "@/components/boot-skeleton/mail-skeleton";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import type { Attachment as PostalMimeAttachment } from 'postal-mime';
@@ -3926,54 +3927,11 @@ ${printWatermark ? printWatermark.html : ''}
     </div>
   );
 
-  // Show loading skeleton while email is being fetched
+  // Show loading skeleton while email is being fetched: the page skeleton's
+  // message pane, so a linked message keeps the shape it had before the app
+  // started.
   if (isLoading && !email) {
-    return shell(
-      <div className="flex-1 min-w-0 flex flex-col h-full bg-background overflow-hidden animate-in fade-in duration-200">
-        {/* Loading Header Skeleton - gentler animation */}
-        <div className="bg-background border-b border-border">
-          <div className="px-4 lg:px-6 py-3 lg:py-4">
-            <div className="flex items-start justify-between gap-2 lg:gap-4">
-              <div className="flex-1 min-w-0 space-y-2 lg:space-y-3">
-                <div className="h-6 lg:h-8 bg-muted/60 rounded-md w-3/4"></div>
-                <div className="flex items-center gap-2 lg:gap-3">
-                  <div className="h-3 lg:h-4 bg-muted/60 rounded w-24 lg:w-32"></div>
-                  <div className="h-3 lg:h-4 bg-muted/60 rounded w-16 lg:w-24"></div>
-                </div>
-              </div>
-              <div className="flex items-center gap-1 lg:gap-2">
-                <div className="h-8 w-8 lg:w-20 bg-muted/60 rounded"></div>
-                <div className="h-8 w-8 bg-muted/60 rounded hidden lg:block"></div>
-              </div>
-            </div>
-          </div>
-
-          {/* Loading Sender Info Skeleton */}
-          <div className="px-4 lg:px-6 pb-3 lg:pb-4">
-            <div className="flex items-start gap-3 lg:gap-4">
-              <div className="w-10 h-10 lg:w-12 lg:h-12 bg-muted/60 rounded-full"></div>
-              <div className="flex-1 space-y-2">
-                <div className="h-4 bg-muted/60 rounded w-48"></div>
-                <div className="h-3 bg-muted/60 rounded w-64"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Loading Content Skeleton */}
-        <div className="flex-1 overflow-auto bg-muted/20">
-          <div className="px-6 pt-4 pb-6">
-            <div className="space-y-3">
-              <div className="h-4 bg-muted/60 rounded w-full"></div>
-              <div className="h-4 bg-muted/60 rounded w-5/6"></div>
-              <div className="h-4 bg-muted/60 rounded w-4/6"></div>
-              <div className="h-4 bg-muted/60 rounded w-full"></div>
-              <div className="h-4 bg-muted/60 rounded w-3/4"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+    return shell(<MailMessageSkeleton />);
   }
 
   if (!email) {

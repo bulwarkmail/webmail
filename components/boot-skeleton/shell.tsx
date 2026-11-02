@@ -251,6 +251,8 @@ interface AppShellSkeletonProps {
   mvMenu?: boolean;
   /** Extra classes for the row under the top bar (Mountain View card margins etc.). */
   rowClassName?: string;
+  /** Extra classes for the phone/tablet bottom bar, e.g. to hide it while a message is open. */
+  bottomBarClassName?: string;
   children: ReactNode;
 }
 
@@ -276,6 +278,7 @@ export function AppShellSkeleton({
   mvSearch = false,
   mvMenu = true,
   rowClassName,
+  bottomBarClassName,
   children,
 }: AppShellSkeletonProps) {
   return (
@@ -304,7 +307,7 @@ export function AppShellSkeleton({
         <BottomBarSkeleton
           active={active}
           labels={labels}
-          className={railBelow === "lg" ? "flex lg:hidden" : "flex md:hidden"}
+          className={cn(railBelow === "lg" ? "flex lg:hidden" : "flex md:hidden", bottomBarClassName)}
         />
       </SkeletonRegion>
     </>

@@ -129,6 +129,20 @@ describe('boot script: layout settings', () => {
     expect(attr('density')).toBe(density);
   });
 
+  it('names the density and whether previews are off, for the mail rows', () => {
+    boot('/en/mail');
+    expect(attr('density')).toBe('regular');
+    expect(attr('preview')).toBeNull();
+    settings({ density: 'extra-compact', showPreview: false });
+    boot('/en/mail');
+    expect(attr('density')).toBe('extra-compact');
+    expect(attr('preview')).toBe('off');
+    settings({ density: 'cosy', showPreview: true });
+    boot('/en/mail');
+    expect(attr('density')).toBe('regular');
+    expect(attr('preview')).toBeNull();
+  });
+
   it('falls back to regular for an unknown density', () => {
     settings({ density: 'cosy' });
     boot('/en/mail');
