@@ -143,6 +143,25 @@ describe('identity plugin hooks', () => {
     expect(result.current.identity?.id).toBe('id-1');
   });
 
+  // Plain-text mode reads textSignature, rich mode htmlSignature.
+  it('makes the text signature from the HTML when a plugin changed only the HTML', async () => {
+    identityHooks.onSignatureRender.register('test', (sig: { html: string; text: string }) => ({ ...sig, html: '<p>Ann &amp; Bo</p><p>Sales</p>' }));
+    const ident = identity();
+    const { result } = renderHook(() => usePluginSignature(ident));
+
+    await waitFor(() => expect(result.current.revision).toBe(1));
+    expect(result.current.identity?.textSignature).toBe('Ann & Bo\nSales');
+  });
+
+  it('makes the HTML signature from the text when a plugin changed only the text', async () => {
+    identityHooks.onSignatureRender.register('test', (sig: { html: string; text: string }) => ({ ...sig, text: 'Ann <Sales>\n555' }));
+    const ident = identity();
+    const { result } = renderHook(() => usePluginSignature(ident));
+
+    await waitFor(() => expect(result.current.revision).toBe(1));
+    expect(result.current.identity?.htmlSignature).toBe('Ann &lt;Sales&gt;<br>555');
+  });
+
   it('leaves the signature alone when no plugin listens', () => {
     const ident = identity();
     const { result } = renderHook(() => usePluginSignature(ident));

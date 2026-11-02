@@ -50,7 +50,24 @@ describe('template plugin hooks', () => {
     const input = { subject: 'Hi', html: '<p>Hello</p>', text: 'Hello' };
     expect(await renderTemplateWithPlugins('t1', input)).toBeNull();
 
-    templateHooks.onTemplateRender.register('test', (value: typeof input) => ({ ...value, html: '<p>Changed</p>', text: 42 }));
-    expect(await renderTemplateWithPlugins('t1', input)).toEqual({ subject: 'Hi', html: '<p>Changed</p>', text: 'Hello' });
+    templateHooks.onTemplateRender.register('test', (value: typeof input) => ({ ...value, subject: 42, html: '<p>Changed</p>', text: 'Changed too' }));
+    expect(await renderTemplateWithPlugins('t1', input)).toEqual({ subject: 'Hi', html: '<p>Changed</p>', text: 'Changed too' });
+  });
+
+  // The composer takes the text in plain-text mode and the HTML in rich mode.
+  it('makes the text from the HTML when a plugin changed only the HTML', async () => {
+    const input = { subject: 'Hi', html: '<p>Hello</p>', text: 'Hello' };
+    templateHooks.onTemplateRender.register('test', (value: typeof input) => ({ ...value, html: '<p>Hello &amp; welcome</p><p>Ann</p>', text: 42 }));
+    expect(await renderTemplateWithPlugins('t1', input)).toEqual({
+      subject: 'Hi', html: '<p>Hello &amp; welcome</p><p>Ann</p>', text: 'Hello & welcome\n\nAnn',
+    });
+  });
+
+  it('makes the HTML from the text when a plugin changed only the text', async () => {
+    const input = { subject: 'Hi', html: '<p>Hello</p>', text: 'Hello' };
+    templateHooks.onTemplateRender.register('test', (value: typeof input) => ({ ...value, text: 'Hello <team>\nAnn' }));
+    expect(await renderTemplateWithPlugins('t1', input)).toEqual({
+      subject: 'Hi', html: '<p>Hello &lt;team&gt;<br>Ann</p>', text: 'Hello <team>\nAnn',
+    });
   });
 });
