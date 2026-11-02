@@ -2168,10 +2168,13 @@ export function EmailComposer({
       ? substitutePlaceholders(template.body, filledValues)
       : template.body;
 
-    // In plain text mode, use template body as-is; otherwise convert to HTML
-    let bodyContent = plainTextMode || template.isHTML
-      ? filledBody
-      : `<p>${filledBody.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>')}</p>`;
+    // Match the template to the draft's format: an HTML template goes into a
+    // plain-text draft as its text, not its markup (#1506).
+    let bodyContent = plainTextMode
+      ? (template.isHTML ? htmlToPlainText(filledBody) : filledBody)
+      : template.isHTML
+        ? filledBody
+        : `<p>${filledBody.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>')}</p>`;
     // Plugins may rewrite the template before it goes in (onTemplateRender).
     const rendered = await renderTemplateWithPlugins(template.id, {
       subject: filledSubject,
@@ -5299,6 +5302,7 @@ export function EmailComposer({
               initialData={{
                 subject,
                 body,
+                isHTML: !plainTextMode,
                 to: withInput(to, toInput).map(r => formatRecipient(r.name, r.email)),
                 cc: withInput(cc, ccInput).map(r => formatRecipient(r.name, r.email)),
                 bcc: withInput(bcc, bccInput).map(r => formatRecipient(r.name, r.email)),

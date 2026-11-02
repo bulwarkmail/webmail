@@ -29,7 +29,14 @@ vi.mock('@/components/templates/template-picker', () => ({
   TemplatePicker: ({ onSelect }: { onSelect: (t: unknown, v: Record<string, string>) => void }) =>
     React.createElement('button', { 'data-testid': 'pick-template', onClick: () => onSelect(TEMPLATE, {}) }, 'pick'),
 }));
-vi.mock('@/components/templates/template-form', () => ({ TemplateForm: () => null }));
+// Save as template: what the composer hands the form.
+const savedForm = vi.hoisted(() => ({ initialData: null as null | { body?: string; isHTML?: boolean } }));
+vi.mock('@/components/templates/template-form', () => ({
+  TemplateForm: (props: { initialData?: { body?: string; isHTML?: boolean } }) => {
+    savedForm.initialData = props.initialData ?? null;
+    return null;
+  },
+}));
 vi.mock('@/components/files/file-preview-modal', () => ({ FilePreviewModal: () => null }));
 vi.mock('@/hooks/use-focus-trap', () => ({
   useFocusTrap: () => ({ current: null }),
@@ -273,5 +280,54 @@ describe('applying a template to a reply (#911)', () => {
     await applyTemplate();
 
     expect(textarea.value).toBe('Hello Mr. XDear reader\n\nCheers, Me\n\nreply_line\n> Original message');
+  });
+
+  // An HTML template goes into a plain text draft as its text (#1506).
+  it('puts an HTML template into a plain text reply as text, not markup', async () => {
+    useSettingsStore.setState({ plainTextMode: true });
+    Object.assign(TEMPLATE, { body: '<p>Dear <strong>reader</strong></p>', isHTML: true });
+    try {
+      render(<EmailComposer mode="reply" replyTo={REPLY_TO} />);
+      const textarea = await waitFor(() => {
+        const el = document.querySelector('textarea');
+        expect(el).toBeTruthy();
+        return el as HTMLTextAreaElement;
+      });
+
+      await applyTemplate();
+
+      expect(textarea.value).toContain('Dear reader');
+      expect(textarea.value).not.toContain('<');
+    } finally {
+      Object.assign(TEMPLATE, { body: 'Dear reader', isHTML: false });
+    }
+  });
+
+  describe('saving the draft as a template (#1506)', () => {
+    afterEach(() => {
+      savedForm.initialData = null;
+    });
+
+    async function openSaveAsTemplate() {
+      fireEvent.click(await screen.findByTestId('composer-templates-menu'));
+      fireEvent.click(await screen.findByRole('menuitem', { name: 'save_as_template' }));
+      await waitFor(() => expect(savedForm.initialData).not.toBeNull());
+      return savedForm.initialData!;
+    }
+
+    it('marks a rich text draft as HTML', async () => {
+      await openReply();
+      const data = await openSaveAsTemplate();
+      expect(data.body).toContain('<');
+      expect(data.isHTML).toBe(true);
+    });
+
+    it('leaves a plain text draft as plain text', async () => {
+      useSettingsStore.setState({ plainTextMode: true });
+      render(<EmailComposer mode="reply" replyTo={REPLY_TO} />);
+      await waitFor(() => expect(document.querySelector('textarea')).toBeTruthy());
+      const data = await openSaveAsTemplate();
+      expect(data.isHTML).toBe(false);
+    });
   });
 });
