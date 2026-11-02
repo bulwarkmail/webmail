@@ -52,17 +52,17 @@ describe('settings sync debounce', () => {
     });
   });
 
-  it('defaults the signature auto-insert toggles to on and exports them', () => {
+  it('defaults the signature auto-insert toggles and the separator to on and exports them', () => {
     const settings = useSettingsStore.getState();
     expect(settings.signatureNewMailEnabled).toBe(true);
     expect(settings.signatureReplyForwardEnabled).toBe(true);
-    expect(settings.signatureSeparatorEnabled).toBe(false);
+    expect(settings.signatureSeparatorEnabled).toBe(true);
 
     const exported = JSON.parse(settings.exportSettings()) as Record<string, unknown>;
     expect(exported).toMatchObject({
       signatureNewMailEnabled: true,
       signatureReplyForwardEnabled: true,
-      signatureSeparatorEnabled: false,
+      signatureSeparatorEnabled: true,
     });
   });
 

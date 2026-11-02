@@ -936,7 +936,7 @@ const DEFAULT_SETTINGS = {
   // from older builds lack these keys and fall back to this default.
   signatureNewMailEnabled: true,
   signatureReplyForwardEnabled: true,
-  signatureSeparatorEnabled: false,
+  signatureSeparatorEnabled: true,
   signatureDetails: EMPTY_SIGNATURE_DETAILS,
   requestReadReceiptDefault: false,
   readReceiptResponse: 'ask' as ReadReceiptResponse,
