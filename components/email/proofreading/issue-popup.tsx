@@ -116,9 +116,10 @@ export function IssuePopup({ state, issue, anchor, onApply, onDismiss, onClose }
       style={{ width: WIDTH, maxWidth: "calc(100vw - 16px)", top: pos?.top ?? -9999, left: pos?.left ?? -9999 }}
       onKeyDown={onKeyDown}
       onBlur={(e) => {
-        // Tabbing out of it closes it; a click inside doesn't.
-        const next = e.relatedTarget as Node | null;
-        if (next && !ref.current?.contains(next)) onClose(false);
+        // Tabbing out of it closes it; a click inside, or going back to the
+        // text (where Escape closes it), doesn't.
+        const next = e.relatedTarget as Element | null;
+        if (next && !ref.current?.contains(next) && !next.closest?.(".tiptap")) onClose(false);
       }}
     >
       <IssueActions issue={issue} onApply={apply} onDismiss={onDismiss} error={error} />

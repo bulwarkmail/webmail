@@ -6,6 +6,7 @@
 
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState, useSyncExternalStore, type RefObject } from "react";
 import type { Editor } from "@tiptap/core";
+import { TextSelection } from "@tiptap/pm/state";
 import { ComposerProofreader, type DismissAction, type PlacedIssue, type ProofreaderStatus } from "@/lib/proofreading/composer-proofreader";
 import { checkerAccess, type PolicyView } from "@/lib/proofreading/gate";
 import { draftProtection, OPTIONS_SURFACE } from "@/lib/proofreading/protection";
@@ -271,7 +272,10 @@ export function useProofreading({ composerId, sessionKey, editor, textareaRef, p
     if (!ed || plainRef.current) return;
     const range = drawnIssues(ed.state).find((r) => r.key === issue.key);
     if (!range) return;
-    ed.chain().focus().setTextSelection({ from: range.from, to: range.to }).scrollIntoView().run();
+    // Focus now, not later as TipTap's focus command does: a late focus
+    // would pull the keyboard out of the popup again.
+    ed.view.focus();
+    ed.view.dispatch(ed.state.tr.setSelection(TextSelection.create(ed.state.doc, range.from, range.to)).scrollIntoView());
     openPopup(issue.key, issueRect(ed, issue.key), "keyboard");
   }, [openPopup]);
 
