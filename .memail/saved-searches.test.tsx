@@ -89,3 +89,20 @@ it('replaces saved criteria only when requested and quick searches use the curre
   fireEvent.click(screen.getByRole('button',{name:'Attachments'}));
   expect(onApply.mock.calls[0][0]).toMatchObject({query:'',mailboxId:'inbox',filters:{hasAttachment:true,isUnread:null}});
 });
+
+
+it('finds saved searches by criteria and folder without altering stored entries',()=>{
+  useSavedSearches.setState({entries:[entry,{...entry,id:'two',name:'Team notes',query:'planning',mailboxId:'archive',filters:{...DEFAULT_SEARCH_FILTERS}}]});
+  render(<SavedSearchMenu scope="account-a" query="" filters={DEFAULT_SEARCH_FILTERS} mailboxId="" mailboxes={[{id:'inbox',name:'Inbox'},{id:'archive',name:'Archive'}]} onApply={()=>{}} />);
+  fireEvent.click(screen.getByLabelText('Saved searches',{selector:'summary'}));
+  fireEvent.change(screen.getByRole('searchbox',{name:'Find saved searches'}),{target:{value:'attachments'}});
+  expect(screen.getByRole('button',{name:'Open saved search Invoices'})).toBeInTheDocument();
+  expect(screen.queryByRole('button',{name:'Open saved search Team notes'})).toBeNull();
+  fireEvent.change(screen.getByRole('searchbox',{name:'Find saved searches'}),{target:{value:'ARCHIVE'}});
+  expect(screen.getByRole('button',{name:'Open saved search Team notes'})).toBeInTheDocument();
+  fireEvent.change(screen.getByRole('searchbox',{name:'Find saved searches'}),{target:{value:'no match'}});
+  fireEvent.click(screen.getByRole('button',{name:'Show all saved searches'}));
+  expect(screen.getByRole('button',{name:'Open saved search Invoices'})).toBeInTheDocument();
+  expect(useSavedSearches.getState().entries).toHaveLength(2);
+  expect(document.activeElement).toBe(screen.getByRole('searchbox',{name:'Find saved searches'}));
+});

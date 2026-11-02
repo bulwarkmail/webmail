@@ -198,3 +198,20 @@ describe('useKeyboardShortcuts: single-key shortcuts off', () => {
     expect(h.onGoToMailbox).toHaveBeenCalledWith('inbox');
   });
 });
+
+
+it('blocks mailbox actions while a marked disclosure is open, and restores them when closed',()=>{
+  const h = handlers();
+  renderHook(()=>useKeyboardShortcuts({emails:[],selectedEmailId:'e1',handlers:h}));
+  const details = document.createElement('details');
+  details.setAttribute('data-keyboard-layer','');
+  const summary = document.createElement('summary'); summary.textContent='Workspace preferences';
+  details.append(summary); document.body.append(details);
+  details.open=true;
+  press(summary,'Delete','Delete');
+  press(summary,'e','KeyE');
+  expect(h.onDelete).not.toHaveBeenCalled(); expect(h.onArchive).not.toHaveBeenCalled();
+  details.open=false;
+  press(document,'Delete','Delete');
+  expect(h.onDelete).toHaveBeenCalledOnce();
+});

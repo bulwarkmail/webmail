@@ -10,6 +10,9 @@ export function SavedSearchMenu({scope,query,filters,mailboxId,mailboxes,onApply
 }) {
   const entries = useSavedSearches(s => s.entries).filter(e => e.scope === scope);
   const [name,setName] = useState('');
+  const [find,setFind] = useState('');
+  const finder = useRef<HTMLInputElement>(null);
+  const visibleEntries = entries.filter(entry=>[entry.name,savedSearchDescription(entry),entry.mailboxId ? mailboxes.find(mailbox=>mailbox.id===entry.mailboxId)?.name ?? '' : 'All folders'].join(' ').toLocaleLowerCase().includes(find.trim().toLocaleLowerCase()));
   const [status,setStatus] = useState('');
   const [editing,setEditing] = useState<string | null>(null);
   const [editName,setEditName] = useState('');
@@ -35,7 +38,9 @@ export function SavedSearchMenu({scope,query,filters,mailboxId,mailboxes,onApply
     document.addEventListener('pointerdown',dismiss);
     return () => document.removeEventListener('pointerdown',dismiss);
   },[]);
-  return <details ref={menu} onKeyDown={event => {
+  return <details ref={menu} data-keyboard-layer onBlur={event=>{
+    if(event.relatedTarget instanceof Node && !event.currentTarget.contains(event.relatedTarget)) menu.current?.removeAttribute('open');
+  }} onKeyDown={event => {
     if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); if(editing) {setEditing(null);menu.current?.querySelector('summary')?.focus();} else { menu.current?.removeAttribute('open'); menu.current?.querySelector('summary')?.focus(); } }
   }}>
     <summary aria-label="Saved searches" title="Saved searches" className="flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-md px-3 text-sm text-muted-foreground hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring [&::-webkit-details-marker]:hidden">
@@ -53,8 +58,13 @@ export function SavedSearchMenu({scope,query,filters,mailboxId,mailboxes,onApply
           }}>{preset.name}</button>)}
         </div>
       </div>
+      {!!entries.length && <div className="relative mt-3">
+        <Search className="pointer-events-none absolute start-3 top-3.5 size-4 text-muted-foreground" aria-hidden="true" />
+        <input ref={finder} type="search" aria-label="Find saved searches" placeholder="Find by name, filters or folder" value={find}
+          onChange={event=>setFind(event.target.value)} className="min-h-11 w-full rounded-md border border-input bg-background ps-9 pe-3 text-sm" />
+      </div>}
       <ul className="my-3 space-y-2">
-        {entries.map(entry => {
+        {visibleEntries.map(entry => {
           const missingFolder = !!entry.mailboxId && !mailboxes.some(m => m.id === entry.mailboxId);
           const folder = entry.mailboxId ? mailboxes.find(m => m.id === entry.mailboxId)?.name : 'All folders';
           const current = matchesSavedSearch(entry,query,filters,mailboxId);
@@ -85,6 +95,7 @@ export function SavedSearchMenu({scope,query,filters,mailboxId,mailboxes,onApply
             </>}
           </li>;
         })}
+        {!!entries.length && !visibleEntries.length && <li className="py-3 text-sm text-muted-foreground">No saved searches match your search.<button type="button" onClick={()=>{setFind('');finder.current?.focus();}} className="mt-2 block min-h-11 rounded-md px-2 text-primary hover:bg-accent">Show all saved searches</button></li>}
         {!entries.length && <li className="py-4 text-sm text-muted-foreground">Your reusable searches will appear here.</li>}
       </ul>
       <form className="border-t border-border pt-3" onSubmit={event => {

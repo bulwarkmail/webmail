@@ -93,3 +93,10 @@ The preview is in draft PR #3. Phase 0 and full phase 1 acceptance are not compl
 - Browser at 390×844: attachment quick search showed Search results / All folders and Filtered mail in the mobile search bar. Category tabs disappeared during the search, and Clear restored Inbox and its tabs. Document width equalled viewport width. Screenshot: research workspace `memail-mobile-search.jpg`.
 - Browser at 320×568: found and fixed below-screen panels. Saved searches occupied y=47..496; workspace preferences occupied y=24..496. Both fit above navigation and close controls returned focus. Temporary viewport override was reset. No draft edits or outgoing mail.
 - This is a responsive smoke check, not full mobile-device or assistive-technology acceptance. New downstream labels remain English.
+
+
+## Saved-search finder and keyboard ownership
+
+- 35 targeted tests pass across saved searches, workspace toolbar and global shortcut guards. New coverage checks criteria/folder matching, no-results recovery without store mutations, and Delete/Archive suppression while a marked disclosure is open, with shortcuts restored after closing.
+- TypeScript, scoped lint and production build passed. Final focus-return refinements passed the targeted suite afterward.
+- Browser verified saved-search matching, no-results recovery and Escape returning focus to the disclosure. No saved entries, messages or draft bodies changed. Screenshot: research workspace `memail-search-finder.jpg`.

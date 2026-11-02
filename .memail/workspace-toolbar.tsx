@@ -36,8 +36,10 @@ export function WorkspaceToolbar({ title, onShortcuts, searchActions, context, o
         <button type="button" aria-pressed={layout === 'focus'} onClick={() => update('mailLayout', 'focus')} className={control}><List className="size-4" aria-hidden="true" />Focus</button>
         <button type="button" aria-pressed={layout === 'split'} onClick={() => update('mailLayout', 'split')} className={control}><PanelRight className="size-4" aria-hidden="true" />Split</button>
       </div>
-      <details ref={menu} className="group" onKeyDown={event => {
-        if (event.key === 'Escape') { menu.current?.removeAttribute('open'); menu.current?.querySelector('summary')?.focus(); }
+      <details ref={menu} className="group" data-keyboard-layer onBlur={event=>{
+        if(event.relatedTarget instanceof Node && !event.currentTarget.contains(event.relatedTarget)) menu.current?.removeAttribute('open');
+      }} onKeyDown={event => {
+        if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); menu.current?.removeAttribute('open'); menu.current?.querySelector('summary')?.focus(); }
       }}>
         <summary className={`${control} cursor-pointer list-none [&::-webkit-details-marker]:hidden`} aria-label="Inbox view rules" title="Inbox view rules"><Settings className="size-4" aria-hidden="true" /><span className="hidden sm:inline">Views</span></summary>
         <section aria-label="Inbox view rules" className="absolute end-3 top-full z-50 mt-2 w-80 max-w-[calc(100vw-1.5rem)] rounded-xl border border-border bg-popover p-5 text-popover-foreground shadow-lg overflow-y-auto max-sm:fixed max-sm:inset-x-3 max-sm:bottom-[calc(4.5rem+env(safe-area-inset-bottom))] max-sm:top-auto max-sm:mt-0 max-sm:w-auto max-sm:max-w-none max-sm:max-h-[calc(100dvh-6rem)]">

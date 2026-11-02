@@ -46,6 +46,7 @@ export function isActivatableEventTarget(event: Event): boolean {
 // and the popup of a menu button, listbox button or combobox. A permanent
 // listbox or grid (a list on the page) is not one of them.
 const KEYBOARD_LAYER_SELECTOR = [
+  'details[open][data-keyboard-layer]',
   '[aria-modal="true"]',
   '[role="menu"]',
   '[role="combobox"][aria-expanded="true"]',

@@ -68,3 +68,9 @@ Add each customization here. Include the relevant upstream files, the reason it 
 - `components/mail/mail-app.tsx`, `.memail/workspace-toolbar.tsx`: active searches show a Search results heading, folder/unified scope and a visible Clear action using the existing clear-search handler. Mobile filter-only search is marked active. Narrow screens put the toolbar controls on a separate row to avoid truncating the heading.
 - `.memail/saved-search-menu.tsx`, `workspace-toolbar.tsx`: visible close controls restore disclosure focus; phone panels are viewport-bounded above the bottom navigation with internal scrolling.
 - `components/email/message-list-tabs.tsx`: category visibility now checks advanced filters as well as query text. The shared panel hook removes tabpanel ARIA references while categories are hidden and restores them on clear.
+
+
+## Saved-search finder and keyboard ownership
+
+- `.memail/saved-search-menu.tsx`: local case-insensitive finder matches saved names, criteria and folders; no-results recovery returns focus to the finder. It never changes stored entries.
+- `lib/keyboard.ts`: marked open native disclosures are keyboard-owning layers, alongside existing dialogs and menus. The two workspace panels carry `data-keyboard-layer`, close when focus leaves, and consume Escape before global mailbox shortcuts. Closed disclosures do not block shortcuts.
