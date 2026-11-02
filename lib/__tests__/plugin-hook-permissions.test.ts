@@ -152,10 +152,16 @@ describe('reminders', () => {
     return (mocks.invokeHook as ReturnType<typeof vi.fn>).mock.calls;
   }
 
-  it.each(reminderHooks)('%s may be registered with calendar:read or tasks:read', (hook) => {
+  it.each(['onCalendarAlert', 'onCalendarAlertAcknowledge'])('%s may be registered with calendar:read or tasks:read', (hook) => {
     expect(mayRegisterHook(plugin({ permissions: ['calendar:read'] }), hook)).toBe(true);
     expect(mayRegisterHook(plugin({ permissions: ['tasks:read'] }), hook)).toBe(true);
     expect(mayRegisterHook(plugin({ permissions: ['email:read'] }), hook)).toBe(false);
+  });
+
+  it('lets only a plugin that may change the calendar or the tasks take a reminder over', () => {
+    expect(mayRegisterHook(plugin({ permissions: ['calendar:read', 'tasks:read'] }), 'onBeforeCalendarAlert')).toBe(false);
+    expect(mayRegisterHook(plugin({ permissions: ['calendar:write'] }), 'onBeforeCalendarAlert')).toBe(true);
+    expect(mayRegisterHook(plugin({ permissions: ['tasks:write'] }), 'onBeforeCalendarAlert')).toBe(true);
   });
 
   it("hands a plugin with tasks:read a task's reminder only", async () => {
@@ -163,14 +169,33 @@ describe('reminders', () => {
     await loadSandboxedPlugin(plugin({ permissions: ['tasks:read'] }));
 
     await calendarHooks.onCalendarAlert.emit(eventAlert);
-    expect(await calendarHooks.onBeforeCalendarAlert.intercept(eventAlert)).toBe(true);
     await calendarHooks.onCalendarAlertAcknowledge.emit({ alertId: 'a1', eventId: 'e1' });
     expect(calls()).toHaveLength(0);
 
     await calendarHooks.onCalendarAlert.emit(taskAlert);
-    await calendarHooks.onBeforeCalendarAlert.intercept(taskAlert);
     await calendarHooks.onCalendarAlertAcknowledge.emit({ alertId: 'follow-up', taskId: 't1' });
-    expect(calls().map((c) => c[0])).toEqual(['onCalendarAlert', 'onBeforeCalendarAlert', 'onCalendarAlertAcknowledge']);
+    expect(calls().map((c) => c[0])).toEqual(['onCalendarAlert', 'onCalendarAlertAcknowledge']);
+  });
+
+  it("lets a plugin with tasks:write silence a task's reminder, never an event's", async () => {
+    mocks.background.hooks = ['onBeforeCalendarAlert'];
+    await loadSandboxedPlugin(plugin({ permissions: ['tasks:read', 'tasks:write', 'calendar:read'] }));
+    (mocks.invokeHook as ReturnType<typeof vi.fn>).mockResolvedValue(false);
+
+    expect(await calendarHooks.onBeforeCalendarAlert.intercept(eventAlert)).toBe(true);
+    expect(calls()).toHaveLength(0);
+    expect(await calendarHooks.onBeforeCalendarAlert.intercept(taskAlert)).toBe(false);
+    expect(calls().map((c) => c[0])).toEqual(['onBeforeCalendarAlert']);
+  });
+
+  it('does not let a plugin that only reads silence a reminder', async () => {
+    mocks.background.hooks = ['onBeforeCalendarAlert'];
+    await loadSandboxedPlugin(plugin({ permissions: ['calendar:read', 'tasks:read'] }));
+    (mocks.invokeHook as ReturnType<typeof vi.fn>).mockResolvedValue(false);
+
+    expect(await calendarHooks.onBeforeCalendarAlert.intercept(eventAlert)).toBe(true);
+    expect(await calendarHooks.onBeforeCalendarAlert.intercept(taskAlert)).toBe(true);
+    expect(calls()).toHaveLength(0);
   });
 
   it("hands a plugin with calendar:read an event's reminder only", async () => {

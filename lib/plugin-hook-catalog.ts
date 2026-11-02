@@ -56,6 +56,17 @@ const REMINDER = {
     typeof payload === 'object' && payload !== null && 'taskId' in payload ? 'tasks:read' : 'calendar:read',
 } as const satisfies Pick<HookSpec, 'alsoPermission' | 'callPermission'>;
 
+/**
+ * Taking a reminder over silences Bulwark's own, so it needs the permission
+ * that could remove the alert anyway: calendar:write for an event's,
+ * tasks:write for a task's. Reading a calendar does not let a plugin mute it.
+ */
+const REMINDER_TAKEOVER = {
+  alsoPermission: 'tasks:write',
+  callPermission: (payload: unknown): Permission =>
+    typeof payload === 'object' && payload !== null && 'taskId' in payload ? 'tasks:write' : 'calendar:write',
+} as const satisfies Pick<HookSpec, 'alsoPermission' | 'callPermission'>;
+
 export const HOOK_CATALOG = {
   // ─── Mail: message list ────────────────────────────────────
   onEmailsFetched: H('mail-list', 'transform', 'email:render-takeover', 'Email[] (list rows), { mailboxId }', 'after a page of the message list is loaded, before it is shown'),
@@ -165,7 +176,7 @@ export const HOOK_CATALOG = {
   onCalendarChange: H('calendar', 'observer', 'calendar:read', '{ calendarId, change: "created" | "updated" | "removed" }', 'after a calendar was created, changed or removed'),
   onCalendarVisibilityToggle: H('calendar', 'observer', 'calendar:read', '{ calendarId, visible }', 'when a calendar is shown or hidden'),
   onICalSubscriptionChange: H('calendar', 'observer', 'calendar:read', '{ subscriptionId, change: "added" | "updated" | "removed" | "refreshed" }', 'when a calendar subscription changes'),
-  onBeforeCalendarAlert: { ...H('calendar', 'intercept', 'calendar:read', 'CalendarAlertView', "before Bulwark shows a reminder of an event or a task, in every open tab; return false to show it yourself (no toast, sound or title alert from Bulwark; onCalendarAlert still fires); a task's needs tasks:read, an event's calendar:read"), ...REMINDER },
+  onBeforeCalendarAlert: { ...H('calendar', 'intercept', 'calendar:write', 'CalendarAlertView', "before Bulwark shows a reminder of an event or a task, in every open tab; return false to show it yourself (no toast, sound or title alert from Bulwark; onCalendarAlert still fires); a task's needs tasks:write, an event's calendar:write"), ...REMINDER_TAKEOVER },
   onCalendarAlert: { ...H('calendar', 'observer', 'calendar:read', 'CalendarAlertView ({ id, eventId, eventTitle, triggerTime } or { id, taskId, taskTitle, triggerTime })', "when a reminder of an event or a task fires, in every open tab, also one a plugin took over; a task's needs tasks:read, an event's calendar:read"), ...REMINDER },
   onCalendarAlertAcknowledge: { ...H('calendar', 'observer', 'calendar:read', '{ alertId, eventId } or { alertId, taskId }', "when the user closes a reminder's toast, in that tab only; a task's needs tasks:read, an event's calendar:read"), ...REMINDER },
 
