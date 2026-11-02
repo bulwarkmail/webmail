@@ -135,6 +135,7 @@ import { useIsPaneScoped } from "@/hooks/use-pane-context";
 import { useAuthStore } from "@/stores/auth-store";
 import { useAccountStore } from "@/stores/account-store";
 import { useEmailStore, resolveEmailBlobContext, emailWriteSource, type EmailBlobContext } from "@/stores/email-store";
+import { useListSelection } from "@/lib/plugin-sandbox/assistant/b.list-selection";
 import { useThemeStore } from "@/stores/theme-store";
 import { EmailIdentityBadge } from "./email-identity-badge";
 import { ExternalSenderChip } from "./external-sender-chip";
@@ -1817,9 +1818,11 @@ export function EmailViewer({
     setBodySelection((prev) => (prev.text === text ? prev : (text ? { text } : NO_BODY_SELECTION)));
   }, []);
   const [detailFocusRequest, setDetailFocusRequest] = useState(0);
+  // The messages ticked in the list, for the AI assistant (lib/plugin-sandbox/assistant).
+  const listSelection = useListSelection();
   const pluginDetailProps = useMemo(
-    () => ({ email: pluginEmailView, selection: bodySelection, focusRequest: detailFocusRequest }),
-    [pluginEmailView, bodySelection, detailFocusRequest],
+    () => ({ email: pluginEmailView, selection: bodySelection, listSelection, focusRequest: detailFocusRequest }),
+    [pluginEmailView, bodySelection, listSelection, detailFocusRequest],
   );
   const selectionMenu = useReaderSelectionMenu();
   const emailIdRef = useRef(email?.id);

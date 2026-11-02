@@ -12,6 +12,8 @@ export interface AreaHostFeaturesB {
   attachmentImages?: boolean;
   /** api.email.getThread: every message of a conversation. */
   threads?: boolean;
+  /** The reader panel (email-detail-sidebar) gets the messages ticked in the list as `listSelection`. */
+  listSelection?: boolean;
 }
 
 /** What EmailReadView.attachments adds for an image the message shows inline. */
@@ -82,4 +84,14 @@ export interface AttachmentImageOptions {
   exif?: boolean;
   /** The account the message is in (EmailSummary.accountId), for shared and group mail. */
   accountId?: string;
+}
+
+/**
+ * The reader panel's `listSelection` prop (email:read): the messages ticked
+ * in the list when two or more are, else null. `emails` names at most 50,
+ * each with the account it is in; `total` counts every ticked message.
+ */
+export interface ListSelectionView {
+  emails: { id: string; accountId?: string }[];
+  total: number;
 }

@@ -176,5 +176,5 @@ export async function dispatch(plugin: InstalledPlugin, method: string, args: un
 
 /** This area's flags in api.host.features, right now. */
 export function features(): AreaHostFeaturesB {
-  return { attachmentText: true, attachmentImages: true, threads: true };
+  return { attachmentText: true, attachmentImages: true, threads: true, listSelection: true };
 }
