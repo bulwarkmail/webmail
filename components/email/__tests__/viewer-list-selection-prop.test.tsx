@@ -77,6 +77,22 @@ describe('the reader panel prop listSelection', () => {
     expect(seen.length).toBeGreaterThan(renders);
   });
 
+  it('tells the panel when this login can not read the open message\'s parts', () => {
+    // An open message makes the viewer ask the login more; nothing of it matters here.
+    const client = new Proxy({ getAccountId: () => 'acc1' } as Record<string | symbol, unknown>, {
+      get: (target, key) => (key in target ? target[key] : key === 'then' ? undefined : () => undefined),
+    }) as unknown as IJMAPClient;
+    useAuthStore.setState({ client });
+    const message = { ...row('m'), textBody: [], htmlBody: [], attachments: [], bodyValues: {} } as unknown as Email;
+    const view = () => render(<EmailViewer email={message} isLoading={false} mailboxes={mailboxes} selectedMailbox="inbox" currentMailboxRole="inbox" onDelete={() => {}} blobSource={{ client: otherLogin, accountId: 'acc-2' }} />);
+    const otherLogin = { getAccountId: () => 'acc-2' } as unknown as IJMAPClient;
+    view();
+    expect((seen.at(-1)?.email as { blobsReadable?: boolean }).blobsReadable).toBe(false);
+    cleanup();
+    render(<EmailViewer email={message} isLoading={false} mailboxes={mailboxes} selectedMailbox="inbox" currentMailboxRole="inbox" onDelete={() => {}} blobSource={{ client, accountId: undefined }} />);
+    expect(seen.at(-1)?.email).not.toHaveProperty('blobsReadable');
+  });
+
   it('gives a panel outside the main list (a Pro tab) no ticks', () => {
     useAuthStore.setState({ client });
     useEmailStore.setState({ emails: [row('a'), row('b')], selectedEmailKeys: new Set(['a', 'b']), selectedMailbox: 'inbox', mailboxes });

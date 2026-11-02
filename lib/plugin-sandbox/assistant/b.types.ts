@@ -16,6 +16,17 @@ export interface AreaHostFeaturesB {
   listSelection?: boolean;
 }
 
+/** What EmailReadView adds for the assistant. */
+export interface EmailReadViewExtrasB {
+  /**
+   * false: this login can't read the message's attachments, text or
+   * conversation through the host (it belongs to another connected login,
+   * as in a unified view), so attachment, image and thread reads of it
+   * fail; offer none. Left out when they can be read.
+   */
+  blobsReadable?: boolean;
+}
+
 /** What EmailReadView.attachments adds for an image the message shows inline. */
 export interface AttachmentExtrasB {
   /** The Content-ID the message's HTML refers to (`<img src="cid:…">`), without angle brackets. */
