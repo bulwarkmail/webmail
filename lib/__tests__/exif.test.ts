@@ -72,9 +72,9 @@ describe('readPhotoExif', () => {
     }
   });
 
-  it('falls back to the file date when the original date is missing', () => {
+  it('gives no date when only the date the file changed is there', () => {
     const bytes = jpeg(tiff(false, { ifd0: [{ tag: 0x0132, type: 2, ascii: '2026:11:01 09:00:00' }], exif: [], gps: [] }));
-    expect(readPhotoExif(bytes)).toEqual({ taken: '2026-11-01T09:00:00' });
+    expect(readPhotoExif(bytes)).toEqual({});
   });
 
   it('gives nothing for a JPEG without EXIF, a PNG or broken bytes', () => {

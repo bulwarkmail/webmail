@@ -12,7 +12,6 @@ export interface PhotoExif {
 
 const TAG_EXIF_IFD = 0x8769;
 const TAG_GPS_IFD = 0x8825;
-const TAG_DATETIME = 0x0132;
 const TAG_DATETIME_ORIGINAL = 0x9003;
 const TAG_OFFSET_TIME_ORIGINAL = 0x9011;
 const GPS_LAT_REF = 1;
@@ -126,8 +125,8 @@ export function readPhotoExif(data: ArrayBuffer | Uint8Array): PhotoExif {
     const ifd0 = tiff.ifd(tiff.firstIfd());
     const exifAt = tiff.long(ifd0.get(TAG_EXIF_IFD));
     const exif = exifAt ? tiff.ifd(exifAt) : new Map<number, Entry>();
-    const taken = exifDate(tiff.ascii(exif.get(TAG_DATETIME_ORIGINAL)), tiff.ascii(exif.get(TAG_OFFSET_TIME_ORIGINAL)))
-      ?? exifDate(tiff.ascii(ifd0.get(TAG_DATETIME)), undefined);
+    // Only the date the photo was taken: IFD0's DateTime is when the file was last changed.
+    const taken = exifDate(tiff.ascii(exif.get(TAG_DATETIME_ORIGINAL)), tiff.ascii(exif.get(TAG_OFFSET_TIME_ORIGINAL)));
     if (taken) out.taken = taken;
     const gpsAt = tiff.long(ifd0.get(TAG_GPS_IFD));
     if (gpsAt) {
