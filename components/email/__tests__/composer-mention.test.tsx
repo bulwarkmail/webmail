@@ -523,4 +523,17 @@ describe('composer with the @ recipient list', () => {
     expect(screen.queryByRole('alertdialog')).toBeNull();
     expect(onClose).not.toHaveBeenCalled();
   });
+
+  it('lets Escape close the text-style menu without closing the composer', async () => {
+    const {onClose} = await renderComposer();
+    const trigger = screen.getByRole('button',{name:'Text style'});
+    fireEvent.click(trigger);
+    const menu = screen.getByRole('menu',{name:'Text style'});
+    fireEvent.keyDown(within(menu).getByRole('menuitemradio',{name:'Normal text'}),{key:'Escape'});
+    expect(screen.queryByRole('menu',{name:'Text style'})).toBeNull();
+    expect(screen.queryByRole('alertdialog')).toBeNull();
+    expect(onClose).not.toHaveBeenCalled();
+    expect(document.activeElement).toBe(trigger);
+  });
+
 });

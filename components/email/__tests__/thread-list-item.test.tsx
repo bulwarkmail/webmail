@@ -1,5 +1,6 @@
 import { render, screen, act, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { useWorkspacePreferences } from '@/.memail/workspace-preferences';
 import { ThreadListItem } from '../thread-list-item';
 import { useSettingsStore, DEFAULT_KEYWORDS } from '@/stores/settings-store';
 import { useEmailStore } from '@/stores/email-store';
@@ -66,6 +67,7 @@ function renderRow(email: Email) {
 }
 
 beforeEach(() => {
+  useWorkspacePreferences.setState({showSenderAvatars:true});
   useUIStore.setState({ isMobile: false, isTablet: false, isDesktop: true });
 });
 
@@ -1040,5 +1042,24 @@ describe('ThreadListItem for screen readers and keyboards (SR-01, MO-18)', () =>
     const [thread] = groupEmailsByThread([first, second]);
     render(<ThreadListItem thread={thread} isExpanded={false} onToggleExpand={() => {}} onEmailSelect={() => {}} />);
     expect(screen.getByRole('button', { name: /expand_named/ })).toBeTruthy();
+  });
+});
+
+
+describe('Memail minimal conversation rows', () => {
+  it('keeps selection and thread expansion available without avatars', () => {
+    useWorkspacePreferences.setState({showSenderAvatars:false});
+    useSettingsStore.setState({interfaceLayout:'default', mailLayout:'focus', density:'compact', listColumns:false});
+    useEmailStore.setState({selectedEmailKeys:new Set(), selectedMailbox:'inbox'});
+    const [thread] = groupEmailsByThread([makeEmail({id:'a'}), makeEmail({id:'b'})]);
+    const onToggleExpand = vi.fn();
+    const onEmailSelect = vi.fn();
+    const {container} = render(<ThreadListItem thread={thread} isExpanded={false} onToggleExpand={onToggleExpand} onEmailSelect={onEmailSelect} />);
+    fireEvent.click(screen.getByRole('checkbox'));
+    expect(useEmailStore.getState().selectedEmailKeys.size).toBe(2);
+    expect(onEmailSelect).not.toHaveBeenCalled();
+    fireEvent.click(container.querySelector('[data-expand-toggle]')!);
+    expect(onToggleExpand).toHaveBeenCalledTimes(1);
+    expect(onEmailSelect).not.toHaveBeenCalled();
   });
 });

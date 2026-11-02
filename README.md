@@ -1,3 +1,6 @@
+> **Memail by Saivra** — a downstream fork of Bulwark Webmail.
+> Start with the [Memail demo and branding guide](.memail/DEVELOPMENT.md). Our [upstream maintenance policy](.memail/UPSTREAM.md) preserves compatibility with future Bulwark updates.
+
 <p>
   <a href="https://bulwarkmail.org"><img src="https://raw.githubusercontent.com/bulwarkmail/.github/main/profile/banner.png" alt="Bulwark: webmail for Stalwart Mail Server. Mail, calendar, contacts and files in one browser client." width="100%" /></a>
 </p>

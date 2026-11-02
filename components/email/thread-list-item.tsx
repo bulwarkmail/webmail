@@ -11,6 +11,7 @@ import { ListAttachmentChips, useListHasAttachment } from "./attachment-chips";
 import { VerificationCodeChip, useListVerificationCode } from "./verification-code-chip";
 import type { Attachment } from "@/lib/jmap/types";
 import type { LoadListAttachments } from "@/lib/list-attachments";
+import { useWorkspacePreferences } from "@/.memail/workspace-preferences";
 import { SelectableAvatar } from "@/components/email/selectable-avatar";
 import { Paperclip, Star, Pin, Circle, ChevronRight, ChevronDown, Loader2, MessageSquare, CheckSquare, Square, Reply, Forward, CalendarClock, Folder, Archive, Trash2, MailOpen, ShieldAlert, MoreHorizontal } from "@/components/icons";
 import type { AppIcon } from "@/components/icons";
@@ -474,6 +475,8 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
     const isMobile = useUIStore((state) => state.isMobile);
     // One line per row where the list has the full width; stacked on phones.
     const { oneLine: oneLineRow, columns } = useListRowShape();
+    const showSenderAvatars = useWorkspacePreferences(s => s.showSenderAvatars);
+    const minimalLead = oneLineRow && !showSenderAvatars;
     // Mountain View leads its rows with a checkbox and a clickable star
     // instead of an avatar, and marks unread with weight alone. Only the
     // one-line layout is shaped that way, so the two conditions travel
@@ -707,11 +710,11 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
         )}
         <div
           role="gridcell"
-          className={cn('px-3', showRowActionButton && onContextMenu && 'pe-12', oneLineRow ? 'flex items-center' : 'flex items-start', mvRow && 'min-h-10', swipeEnabled && 'relative z-10 bg-inherit')}
+          className={cn('px-3', minimalLead && density === 'compact' && 'min-h-10', showRowActionButton && onContextMenu && 'pe-12', oneLineRow ? 'flex items-center' : 'flex items-start', mvRow && 'min-h-10', swipeEnabled && 'relative z-10 bg-inherit')}
           style={{ gap: 'var(--density-item-gap)', paddingBlock: mvRow ? undefined : 'var(--density-item-py)', transform: swipeEnabled && offsetX ? `translateX(${offsetX}px)` : undefined, transition: swipeEnabled && offsetX === 0 ? 'transform 200ms ease-out' : undefined }}
         >
           {/* Checkbox - only for extra-compact density (no avatar) while in selection mode */}
-          {!mvRow && density === 'extra-compact' && selectedEmailKeys.size > 0 && (
+          {!mvRow && (minimalLead || (density === 'extra-compact' && selectedEmailKeys.size > 0)) && (
             <button
               onClick={handleCheckboxClick}
               role="checkbox"
@@ -745,7 +748,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
             />
           )}
 
-          {!mvRow && density !== 'extra-compact' && (
+          {!mvRow && !minimalLead && density !== 'extra-compact' && (
             <AvatarGutter onToggle={handleCheckboxClick}>
               <div className="relative flex flex-shrink-0">
                 <SelectableAvatar
@@ -765,7 +768,8 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
             </AvatarGutter>
           )}
 
-          {isUnread && !mvRow && density === 'extra-compact' && (
+          {minimalLead && !mvRow && !columns && <span aria-hidden="true" className="w-[22px] shrink-0" />}
+          {isUnread && !mvRow && (minimalLead || density === 'extra-compact') && (
             <UnreadDot besideAvatar={false} />
           )}
 
@@ -1065,6 +1069,8 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
     const hasAttachment = latestHasAttachment || thread.emails.some((e) => e !== latestEmail && e.hasAttachment);
     // One line per row where the list has the full width; stacked on phones.
     const { oneLine: oneLineRow, columns } = useListRowShape();
+    const showSenderAvatars = useWorkspacePreferences(s => s.showSenderAvatars);
+    const minimalLead = oneLineRow && !showSenderAvatars;
     // Mountain View leads its rows with a checkbox and a clickable star
     // instead of an avatar, and marks unread with weight alone. Only the
     // one-line layout is shaped that way, so the two conditions travel
@@ -1411,11 +1417,11 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
           )}
           <div
             role="gridcell"
-            className={cn('px-3', showRowActionButton && onContextMenu && 'pe-12', oneLineRow ? 'flex items-center' : 'flex items-start', mvRow && 'min-h-10', threadSwipeEnabled && 'relative z-10 bg-inherit')}
+            className={cn('px-3', minimalLead && density === 'compact' && 'min-h-10', showRowActionButton && onContextMenu && 'pe-12', oneLineRow ? 'flex items-center' : 'flex items-start', mvRow && 'min-h-10', threadSwipeEnabled && 'relative z-10 bg-inherit')}
             style={{ gap: 'var(--density-item-gap)', paddingBlock: mvRow ? undefined : 'var(--density-item-py)', transform: threadSwipeEnabled && threadOffsetX ? `translateX(${threadOffsetX}px)` : undefined, transition: threadSwipeEnabled && threadOffsetX === 0 ? 'transform 200ms ease-out' : undefined }}
           >
             {/* Checkbox for thread selection - only for extra-compact density (no avatar) while in selection mode */}
-            {!mvRow && density === 'extra-compact' && selectedEmailKeys.size > 0 && (
+            {!mvRow && (minimalLead || (density === 'extra-compact' && selectedEmailKeys.size > 0)) && (
               <button
                 onClick={handleThreadCheckboxClick}
                 role="checkbox"
@@ -1449,7 +1455,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
               />
             )}
 
-            {!mvRow && density !== 'extra-compact' && (
+            {!mvRow && !minimalLead && density !== 'extra-compact' && (
               <AvatarGutter onToggle={handleThreadCheckboxClick}>
                 <div className="relative flex-shrink-0">
                   <SelectableAvatar
@@ -1496,7 +1502,15 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
               </AvatarGutter>
             )}
 
-            {hasUnread && !mvRow && density === 'extra-compact' && (
+            {minimalLead && !mvRow && !columns && (
+              <button type="button" data-expand-toggle aria-expanded={isExpanded}
+                aria-label={isExpanded ? t('collapse_named', { subject: threadSubject }) : t('expand_named', { subject: threadSubject })}
+                onClick={e => { e.stopPropagation(); onToggleExpand(); }}
+                className="shrink-0 rounded p-1 text-muted-foreground hover:bg-accent">
+                <ChevronRight className={cn('size-3.5', isExpanded && 'rotate-90')} />
+              </button>
+            )}
+            {hasUnread && !mvRow && (minimalLead || density === 'extra-compact') && (
               <UnreadDot besideAvatar={false} />
             )}
 

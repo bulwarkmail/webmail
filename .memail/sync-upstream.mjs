@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+import process from 'node:process';
+import console from 'node:console';
 import { spawnSync } from 'node:child_process';
 import { mkdtempSync, writeFileSync, unlinkSync, rmdirSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';

@@ -9,8 +9,8 @@ const toastError = vi.hoisted(() => vi.fn());
 
 // Shows whether the composer asked for the toolbar to be folded away.
 vi.mock('@/components/email/rich-text-editor', () => ({
-  RichTextEditor: ({ collapseToolbarOnMobile }: { collapseToolbarOnMobile?: boolean }) =>
-    React.createElement('div', { 'data-testid': 'rich-text-editor', 'data-collapsed': String(!!collapseToolbarOnMobile) }),
+  RichTextEditor: ({ collapseToolbarOnMobile, toolbarPlacement }: { collapseToolbarOnMobile?: boolean; toolbarPlacement?: string }) =>
+    React.createElement('div', { 'data-testid': 'rich-text-editor', 'data-collapsed': String(!!collapseToolbarOnMobile), 'data-placement': toolbarPlacement }),
 }));
 
 vi.mock('@/components/plugins/plugin-slot', () => ({ PluginSlot: () => null }));
@@ -212,9 +212,14 @@ describe('formatting toolbar on a phone', () => {
     render(<EmailComposer initialData={DATA} />);
     const editor = screen.getByTestId('rich-text-editor');
     expect(editor).toHaveAttribute('data-collapsed', 'true');
+    expect(editor).toHaveAttribute('data-placement', 'hidden');
 
     fireEvent.click(screen.getByRole('button', { name: 'formatting' }));
 
     expect(editor).toHaveAttribute('data-collapsed', 'false');
+    expect(editor).toHaveAttribute('data-placement', 'top');
+    fireEvent.click(screen.getByRole('button', { name: 'formatting' }));
+    expect(screen.getByTestId('rich-text-editor')).toBe(editor);
+    expect(editor).toHaveAttribute('data-placement', 'hidden');
   });
 });

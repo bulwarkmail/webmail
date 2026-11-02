@@ -1,0 +1,15 @@
+import skin from './theme/skin.mjs';
+import console from 'node:console';
+import JSZip from 'jszip';
+import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const manifest = JSON.parse(await readFile(resolve(root, '.memail/theme/manifest.json'), 'utf8'));
+const zip = new JSZip();
+zip.file('manifest.json', JSON.stringify(manifest, null, 2), {date:new Date('2026-01-01T00:00:00Z')});
+zip.file('skin.css', skin, {date:new Date('2026-01-01T00:00:00Z')});
+const destination = resolve(root, 'out/memail-theme.zip');
+await mkdir(dirname(destination), {recursive:true});
+await writeFile(destination, await zip.generateAsync({type:'nodebuffer', compression:'DEFLATE'}));
+console.log(destination);

@@ -1,10 +1,11 @@
+import process from 'node:process';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, relative, isAbsolute } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { URL, fileURLToPath } from 'node:url';
 
 // Exercise real local Git histories. Only the two allowed remote endpoints are
 // substituted in a temporary copy; no test fetches or pushes a public remote.

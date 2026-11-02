@@ -1940,16 +1940,17 @@ function SidebarImpl({
         </div>
       )}
 
-      {mvShell && onCompose && (
+      {onCompose && (
         <div className={cn("pt-2 pb-3", isCollapsed ? "px-2" : "px-3")}>
           <button
             type="button"
             onClick={onCompose}
-            data-mv-compose=""
+            data-mv-compose={mvShell ? "" : undefined}
             data-tour="compose-button"
             className={cn(
-              "flex items-center bg-[var(--mv-compose-bg)] text-[var(--mv-compose-fg)] hover:shadow-md transition-shadow",
-              isCollapsed ? "w-14 justify-center" : "gap-3 ps-4 pe-6"
+              "flex items-center transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+              mvShell ? "bg-[var(--mv-compose-bg)] text-[var(--mv-compose-fg)] hover:shadow-md" : "h-10 w-full rounded-lg bg-primary text-primary-foreground hover:bg-primary/90",
+              isCollapsed ? "justify-center" : "gap-3 ps-4 pe-6"
             )}
             title={t("compose_hint")}
             aria-label={t("compose")}

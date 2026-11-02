@@ -821,6 +821,10 @@ optgroup {
   margin: 0.5rem 0;
 }
 
+.tiptap h3 { font-size: 1.125rem; font-weight: 600; margin: 0.5rem 0; }
+.tiptap h4 { font-size: 1rem; font-weight: 600; margin: 0.5rem 0; }
+.tiptap h5, .tiptap h6 { font-size: 0.875rem; font-weight: 600; margin: 0.5rem 0; }
+
 .tiptap ul {
   list-style-type: disc;
   padding-inline-start: 1.5rem;
@@ -949,8 +953,8 @@ optgroup {
 }
 
 .tiptap table th {
-  background-color: var(--color-muted) !important;
-  color: var(--color-foreground) !important;
+  background-color: var(--color-muted);
+  color: var(--color-foreground);
   font-weight: 600;
   text-align: left;
 }

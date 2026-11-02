@@ -1,0 +1,66 @@
+{
+  "id": "memail-focus-inbox",
+  "name": "Memail Focus Inbox",
+  "version": "0.2.0",
+  "author": "Saivra",
+  "description": "Configurable read-only Focus views, with optional sign-in account scoping.",
+  "type": "ui-extension",
+  "entrypoint": "index.js",
+  "minAppVersion": "1.19.1",
+  "permissions": [
+    "ui:message-list-tabs",
+    "ui:commands",
+    "account:read"
+  ],
+  "settingsSchema": {
+    "enabled": {
+      "type": "boolean",
+      "label": "Show focus tabs",
+      "description": "Adds views to Inbox folders. Mail is never moved or relabeled.",
+      "default": true
+    },
+    "showNewsletters": {
+      "type": "boolean",
+      "label": "Show Newsletters view",
+      "description": "Matches messages with a List-Unsubscribe header. Starred newsletters also appear in Focus.",
+      "default": true
+    },
+    "showUnreadBadges": {
+      "type": "boolean",
+      "label": "Show unread counts",
+      "description": "Counts unread messages in each view, not total messages.",
+      "default": true
+    },
+    "focusMode": {
+      "type": "select",
+      "label": "Focus includes",
+      "description": "Starred mail remains in Focus after reading. Newsletters are detected by List-Unsubscribe.",
+      "default": "Unread correspondence and starred",
+      "options": [
+        "Unread correspondence and starred",
+        "All unread and starred",
+        "Starred only"
+      ]
+    },
+    "accountNames": {
+      "type": "string",
+      "label": "Apply to accounts",
+      "description": "Optional comma-separated sign-in names, for example alice@example.com, work-alice. Leave empty for every signed-in account.",
+      "default": ""
+    }
+  },
+  "locales": {
+    "en": {
+      "tab.all": "All inbox",
+      "tab.focus": "Focus",
+      "tab.newsletters": "Newsletters",
+      "action.hide": "Hide Memail focus tabs",
+      "action.show": "Show Memail focus tabs",
+      "error.otherTabs": "Another inbox category plugin is active. Memail focus tabs are paused; disable the other category plugin before showing them.",
+      "error.accountScope": "Enter up to 20 sign-in names separated by commas. Use literal usernames or email addresses; wildcards and display names are not supported.",
+      "error.focusMode": "Choose a supported Focus option in the plugin settings.",
+      "tab.starred": "Starred",
+      "tab.unread": "Unread + starred"
+    }
+  }
+}

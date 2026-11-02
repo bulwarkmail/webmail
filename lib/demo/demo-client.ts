@@ -523,7 +523,7 @@ export class DemoJMAPClient implements IJMAPClient {
   /**
    * Minimal JMAP filter evaluator for demo mode: supports the conditions the
    * message-list category tabs and the folder-less search scopes use
-   * (hasKeyword / notKeyword / from / text / inMailbox / inMailboxOtherThan
+   * (hasKeyword / notKeyword / header / minSize / maxSize / from / text / inMailbox / inMailboxOtherThan
    * and AND / OR / NOT operators). Unknown conditions are ignored.
    */
   private matchesFilter(e: Email, filter: Record<string, unknown>): boolean {
@@ -538,6 +538,19 @@ export class DemoJMAPClient implements IJMAPClient {
     }
     if (typeof filter.hasKeyword === 'string' && !e.keywords[filter.hasKeyword]) return false;
     if (typeof filter.notKeyword === 'string' && e.keywords[filter.notKeyword]) return false;
+    if (typeof filter.minSize === 'number' && e.size < filter.minSize) return false;
+    if (typeof filter.maxSize === 'number' && e.size >= filter.maxSize) return false;
+    if (filter.header !== undefined) {
+      const header = filter.header;
+      if (!Array.isArray(header) || header.length < 1 || header.length > 2 ||
+          header.some(value => typeof value !== 'string') || !header[0]) return false;
+      const wanted = header[0].toLowerCase();
+      const values = Object.entries(e.headers ?? {})
+        .filter(([name]) => name.toLowerCase() === wanted)
+        .flatMap(([, value]) => Array.isArray(value) ? value : [value]);
+      if (values.length === 0) return false;
+      if (header.length === 2 && !values.some(value => value.toLowerCase().includes(header[1].toLowerCase()))) return false;
+    }
     if (typeof filter.from === 'string') {
       const q = filter.from.toLowerCase();
       const match = (e.from || []).some(f =>

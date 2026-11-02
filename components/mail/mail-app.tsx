@@ -8,6 +8,8 @@ import { MvComposeInline, MvComposeWindow } from "@/components/email/mv-compose-
 import { usePinnedPerSession } from "@/hooks/use-pinned-per-session";
 import { useConfig } from "@/hooks/use-config";
 import { productName } from "@/lib/product-name";
+import { SavedSearchMenu } from '@/.memail/saved-search-menu';
+import { WorkspaceToolbar } from "../../.memail/workspace-toolbar";
 import { MessageListTabs, useMessageListPanelProps } from "@/components/email/message-list-tabs";
 import dynamic from "next/dynamic";
 import type { ComposerDraftData } from "@/components/email/email-composer";
@@ -5117,8 +5119,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
               sidebarId={sidebarId}
               onOpenSearch={isMobile ? () => setMobileSearchOpen(true) : undefined}
               // No "(press /)" on a phone: there is no key to press (R8).
-              searchPlaceholder={searchQuery || t('sidebar.search_placeholder')}
-              searchActive={!!searchQuery}
+              searchPlaceholder={searchQuery || (!isFilterEmpty(searchFilters) ? 'Filtered mail' : t('sidebar.search_placeholder'))}
+              searchActive={!!searchQuery || !isFilterEmpty(searchFilters)}
               onClearSearch={handleClearSearch}
               onSelectAllInboxes={
                 allInboxesReachable ? () => handleMailboxSelect(UNIFIED_MAILBOX_IDS.inbox) : undefined
@@ -5318,6 +5320,18 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             <div className="flex-1 min-h-0 flex flex-col">
             {/* Plugin-registered category tabs (Gmail-style). Renders nothing
                 unless an enabled plugin registered tabs via api.tabs.set. */}
+            {!mvShell && <WorkspaceToolbar
+              title={!isScheduledView && (searchQuery || !isFilterEmpty(searchFilters)) ? 'Search results' : currentMailboxName}
+              context={!isScheduledView && (searchQuery || !isFilterEmpty(searchFilters)) ? (isUnifiedView ? 'Unified search' : searchMailboxId ? viewMailboxes.find(mailbox=>mailbox.id===searchMailboxId)?.name ?? 'Selected folder' : 'All folders') : undefined}
+              onClearSearch={!isScheduledView && (searchQuery || !isFilterEmpty(searchFilters)) ? ()=>void handleClearSearch() : undefined}
+              onShortcuts={() => setShowShortcutsModal(true)} searchActions={!isUnifiedView && !isScheduledView && activeAccountId ? <SavedSearchMenu
+              key={`${activeAccountId}:${viewingAccountId ?? ''}`}
+              scope={`${activeAccountId}:${viewingAccountId ?? ''}`}
+              query={searchQuery} filters={searchFilters} mailboxId={searchMailboxId} mailboxes={viewMailboxes}
+              onApply={entry => {
+                clearSearchFilters(); setSearchFilters(entry.filters); setSearchQuery(entry.query); setSearchMailboxId(entry.mailboxId);
+                void runAdvancedSearchNow();
+              }} /> : undefined} />}
             {!isScheduledView && <MessageListTabs panelId={messageListPanelId} />}
             <WelcomeBanner />
 
@@ -5674,6 +5688,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                     onBack={handleMobileBack}
                     onNavigateNext={handleNavigateNext}
                     onNavigatePrev={handleNavigatePrev}
+                    listPosition={!mvShell && selectedEmailIndex >= 0 ? {index:selectedEmailIndex + 1, total:activeEmails.length} : undefined}
                     mvPosition={mvShell && selectedEmailIndex >= 0 ? {
                       index: selectedEmailIndex + 1,
                       // A unified view has no folder count; its accounts' query totals stand in (#1471).

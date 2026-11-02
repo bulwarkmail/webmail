@@ -2,8 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { BUILTIN_THEMES } from '../builtin-themes';
 
 describe('BUILTIN_THEMES', () => {
-  it('contains exactly 7 themes', () => {
-    expect(BUILTIN_THEMES).toHaveLength(7);
+  it('contains exactly 8 themes', () => {
+    expect(BUILTIN_THEMES).toHaveLength(8);
   });
 
   it('all themes have required fields', () => {
@@ -11,7 +11,7 @@ describe('BUILTIN_THEMES', () => {
       expect(theme.id).toBeTruthy();
       expect(theme.name).toBeTruthy();
       expect(theme.version).toBeTruthy();
-      expect(theme.author).toBe('Built-in');
+      expect(theme.author).toBe(theme.id === 'builtin-memail' ? 'Saivra' : 'Built-in');
       expect(theme.css).toBeTruthy();
       expect(theme.variants).toEqual(['light', 'dark']);
       expect(theme.enabled).toBe(true);

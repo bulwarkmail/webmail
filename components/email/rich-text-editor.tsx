@@ -4,6 +4,7 @@ import React, { useEffect, useCallback, useLayoutEffect, useState, useRef } from
 import { createPortal } from "react-dom";
 import { useEditor, useEditorState, EditorContent, type Editor } from "@tiptap/react";
 import type { SuggestionProps } from "@tiptap/suggestion";
+import { Slice, DOMParser as EditorDOMParser } from '@tiptap/pm/model';
 import StarterKit from "@tiptap/starter-kit";
 import Paragraph from "@tiptap/extension-paragraph";
 import Heading from "@tiptap/extension-heading";
@@ -11,9 +12,13 @@ import Underline from "@tiptap/extension-underline";
 import Link from "@tiptap/extension-link";
 import TextAlign from "@tiptap/extension-text-align";
 import { TextDirection } from "@/components/email/text-direction";
+import { normalizeComposeHtml, markdownToComposeHtml, looksLikeMarkdown, COMPOSE_FONTS } from '@/.memail/compose-content';
+import { clearComposeFormatting, setComposeLineHeight, composeLineHeightValue } from '@/.memail/compose-formatting';
+import { paragraphSpacingValue, setParagraphSpacing } from '@/.memail/paragraph-spacing';
+import { ComposeImportDialog } from '@/.memail/compose-import-dialog';
 import { PlainTextPaste } from "@/components/email/plain-text-paste";
 import { pastedImageFiles } from "@/components/email/paste-images";
-import { TextStyle, BackgroundColor } from "@tiptap/extension-text-style";
+import { TextStyle, BackgroundColor, FontFamily, LineHeight } from "@tiptap/extension-text-style";
 import Color from "@tiptap/extension-color";
 import { FontSize, FONT_SIZES, composeTextStyleCss, type ComposeTextStyle } from "@/components/email/font-size";
 import { ResizableImage } from "@/components/email/resizable-image";
@@ -59,8 +64,6 @@ import {
   Quote,
   Code,
   RemoveFormatting,
-  Heading1,
-  Heading2,
   Table as TableIcon,
   Baseline,
   Highlighter,
@@ -97,6 +100,41 @@ const StyledHeading = Heading.extend({
     };
   },
 });
+
+const StyledTableCell = TableCell.extend({
+  addAttributes() { return {...this.parent?.(), style:styledBlockAttributes.style}; },
+});
+const StyledTableHeader = TableHeader.extend({
+  addAttributes() { return {...this.parent?.(), style:styledBlockAttributes.style}; },
+});
+
+/** Menu choices share the formatting toolbar's keyboard and focus behavior. */
+function ToolbarChoice({item,label,value,choices,onSelect,buttonLabel}: {
+  item:string; label:string; value:string; buttonLabel?:string;
+  choices:{value:string;label:string}[]; onSelect:(value:string)=>void;
+}) {
+  const [open,setOpen] = useState(false);
+  const trigger = useRef<HTMLButtonElement>(null);
+  const wrapper = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const dismiss = (event:PointerEvent) => {
+      if (event.target instanceof Node && !wrapper.current?.contains(event.target)) setOpen(false);
+    };
+    document.addEventListener('pointerdown',dismiss);
+    return () => document.removeEventListener('pointerdown',dismiss);
+  },[open]);
+  return <div ref={wrapper} className="relative">
+    <ToolbarButton ref={trigger} item={item} title={label} popup="menu" expanded={open} active={open} onClick={()=>setOpen(v=>!v)}>
+      <span className="px-1 text-xs">{buttonLabel ?? choices.find(choice=>choice.value===value)?.label ?? label}</span>
+    </ToolbarButton>
+    {open && <ToolbarPopover label={label} role="menu" triggerRef={trigger} onClose={()=>setOpen(false)} className="min-w-40 p-1">
+      {choices.map(choice=><button key={choice.value} type="button" role="menuitemradio" aria-checked={choice.value===value}
+        className="block w-full rounded px-3 py-2 text-start text-sm hover:bg-accent focus-visible:bg-accent"
+        onClick={()=>{onSelect(choice.value);setOpen(false);}}>{choice.label}</button>)}
+    </ToolbarPopover>}
+  </div>;
+}
 
 interface RichTextEditorProps {
   content: string;
@@ -395,6 +433,7 @@ export function RichTextEditor({
   const rtlEditingSupport = useSettingsStore((st) => st.rtlEditingSupport);
   const tComposer = useTranslations("email_composer");
   const tQuote = useTranslations("email_viewer");
+  const plainPasteRequested = useRef(false);
   const onImageUploadRef = React.useRef(onImageUpload);
   onImageUploadRef.current = onImageUpload;
   const onEditorReadyRef = React.useRef(onEditorReady);
@@ -421,7 +460,7 @@ export function RichTextEditor({
         underline: false,
       }),
       StyledParagraph,
-      StyledHeading.configure({ levels: [1, 2] }),
+      StyledHeading.configure({ levels: [1, 2, 3, 4, 5, 6] }),
       Underline,
       Link.configure({
         openOnClick: false,
@@ -431,6 +470,8 @@ export function RichTextEditor({
         types: ["heading", "paragraph"],
       }),
       TextStyle,
+      FontFamily,
+      LineHeight,
       Color,
       BackgroundColor,
       FontSize,
@@ -452,12 +493,12 @@ export function RichTextEditor({
         },
       }),
       TableRow,
-      TableHeader.configure({
+      StyledTableHeader.configure({
         HTMLAttributes: {
           style: "padding:6px 8px;border:1px solid #ccc;background-color:#f5f5f5;color:#1f2937;text-align:left;",
         },
       }),
-      TableCell.configure({
+      StyledTableCell.configure({
         HTMLAttributes: {
           style: "padding:6px 8px;border:1px solid #ccc;vertical-align:top;",
         },
@@ -505,7 +546,15 @@ export function RichTextEditor({
     },
     content,
     editorProps: {
+      transformPastedHTML: normalizeComposeHtml,
+      transformPasted: (slice, view) => view.state.selection.$from.parent.content.size === 0 && slice.content.firstChild?.isBlock
+        ? new Slice(slice.content, 0, 0) : slice,
       attributes: editorA11yAttributes({ ariaLabel, ariaInvalid, ariaDescribedBy, defaultTextStyle }),
+      handleDOMEvents: { keydown: (_view, event) => {
+        if (event.key.toLowerCase() === 'v' && (event.ctrlKey || event.metaKey)) plainPasteRequested.current = event.shiftKey;
+        else if (!['Shift','Control','Meta'].includes(event.key)) plainPasteRequested.current = false;
+        return false;
+      } },
       handleKeyDown: (_view, event) => {
         if (event.altKey && event.key === "F10" && focusToolbarRef.current?.()) {
           event.preventDefault();
@@ -541,6 +590,35 @@ export function RichTextEditor({
         return true;
       },
       handlePaste: (view, event) => {
+        if (plainPasteRequested.current) {
+          plainPasteRequested.current = false;
+          const text = event.clipboardData?.getData('text/plain');
+          if (text === undefined) return false;
+          event.preventDefault();
+          if (view.state.selection.$from.parent.type.spec.code) {
+            view.dispatch(view.state.tr.insertText(text).scrollIntoView());
+          } else {
+            const container = document.createElement('div');
+            for (const line of text.split(/\r\n?|\n/)) {
+              const paragraph = document.createElement('p');
+              paragraph.textContent = line;
+              container.append(paragraph);
+            }
+            view.dispatch(view.state.tr.replaceSelection(EditorDOMParser.fromSchema(view.state.schema).parseSlice(container)).scrollIntoView());
+          }
+          return true;
+        }
+        const text = event.clipboardData?.getData('text/plain') ?? '';
+        const html = event.clipboardData?.getData('text/html') ?? '';
+        // Rich HTML wins when supplied by Docs/Word/chat apps. Plain Markdown
+        // is converted only when recognizable, and never inside code blocks.
+        if (!html && !view.state.selection.$from.parent.type.spec.code && looksLikeMarkdown(text)) {
+          event.preventDefault();
+          const container = document.createElement('div');
+          container.innerHTML = markdownToComposeHtml(text);
+          view.dispatch(view.state.tr.replaceSelection(EditorDOMParser.fromSchema(view.state.schema).parseSlice(container)).scrollIntoView());
+          return true;
+        }
         const upload = onImageUploadRef.current;
         if (!upload) return false;
         const imageFiles = pastedImageFiles(event.clipboardData);
@@ -606,7 +684,7 @@ export function RichTextEditor({
       ].map((name) => ed.isActive(name)).concat(
         ed.isActive("heading", { level: 1 }), ed.isActive("heading", { level: 2 }),
         ed.isActive({ textAlign: "left" }), ed.isActive({ textAlign: "center" }), ed.isActive({ textAlign: "right" }),
-      ).join() + `|${style.fontSize ?? ""}|${style.color ?? ""}|${style.backgroundColor ?? ""}|${ed.getAttributes("paragraph").dir ?? ""}`;
+      ).join() + `|${ed.getAttributes("heading").style ?? ""}|${ed.getAttributes("heading").level ?? ""}|${style.fontFamily ?? ""}|${style.fontSize ?? ""}|${style.color ?? ""}|${style.backgroundColor ?? ""}|${ed.getAttributes("paragraph").style ?? ""}|${ed.getAttributes("paragraph").dir ?? ""}`;
     },
   });
 
@@ -667,6 +745,16 @@ export function RichTextEditor({
   const colorWrapperRef = useRef<HTMLDivElement>(null);
   const [bgColorMenuOpen, setBgColorMenuOpen] = useState(false);
   const bgColorWrapperRef = useRef<HTMLDivElement>(null);
+  const [fontFamilyOpen, setFontFamilyOpen] = useState(false);
+  const fontFamilyButtonRef = useRef<HTMLButtonElement>(null);
+  const fontFamilyWrapperRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!fontFamilyOpen) return;
+    const dismiss = (event:MouseEvent) => { if (event.target instanceof Node && !fontFamilyWrapperRef.current?.contains(event.target)) setFontFamilyOpen(false); };
+    document.addEventListener('mousedown',dismiss);
+    return () => document.removeEventListener('mousedown',dismiss);
+  },[fontFamilyOpen]);
+  const [importOpen, setImportOpen] = useState(false);
   const [fontSizeMenuOpen, setFontSizeMenuOpen] = useState(false);
   const fontSizeWrapperRef = useRef<HTMLDivElement>(null);
   const fontSizeButtonRef = useRef<HTMLButtonElement>(null);
@@ -1045,22 +1133,18 @@ export function RichTextEditor({
 
         <ToolbarSeparator />
 
-        <ToolbarButton
-          item="heading-1"
-          pressed={editor.isActive("heading", { level: 1 })}
-          onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-          title={tToolbar("heading_1")}
-        >
-          <Heading1 className="w-4 h-4" />
-        </ToolbarButton>
-        <ToolbarButton
-          item="heading-2"
-          pressed={editor.isActive("heading", { level: 2 })}
-          onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-          title={tToolbar("heading_2")}
-        >
-          <Heading2 className="w-4 h-4" />
-        </ToolbarButton>
+        <ToolbarChoice
+          item="text-style" label="Text style"
+          value={String(editor.getAttributes('heading').level ?? 0)}
+          choices={[
+            {value:'0',label:'Normal text'},
+            ...([1,2,3,4,5,6] as const).map(level => ({value:String(level),label:`Heading ${level}`})),
+          ]}
+          onSelect={value => {
+            if (value === '0') editor.chain().focus().setParagraph().run();
+            else editor.chain().focus().setHeading({level:Number(value) as 1|2|3|4|5|6}).run();
+          }}
+        />
 
         <ToolbarSeparator />
 
@@ -1222,9 +1306,24 @@ export function RichTextEditor({
 
         <ToolbarSeparator />
 
+        <div ref={fontFamilyWrapperRef} className="relative">
+          <ToolbarButton ref={fontFamilyButtonRef} item="font-family" title="Font family" popup="menu" expanded={fontFamilyOpen} active={fontFamilyOpen} onClick={()=>setFontFamilyOpen(v=>!v)}><span className="px-1 text-xs">Font</span></ToolbarButton>
+          {fontFamilyOpen && <ToolbarPopover label="Font family" role="menu" triggerRef={fontFamilyButtonRef} onClose={()=>setFontFamilyOpen(false)} className="min-w-48 p-1">
+            {([['Default font',''],...COMPOSE_FONTS] as const).map(([name,value])=><button key={name} type="button" role="menuitemradio" aria-checked={(editor.getAttributes('textStyle').fontFamily ?? '')===value} className="block w-full rounded px-3 py-2 text-start text-sm hover:bg-accent focus-visible:bg-accent" style={{fontFamily:value || undefined}} onClick={()=>{if(value) editor.chain().focus().setFontFamily(value).run(); else editor.chain().focus().unsetFontFamily().run(); setFontFamilyOpen(false);}}>{name}</button>)}
+          </ToolbarPopover>}
+        </div>
+        <ToolbarChoice item="paragraph-spacing" label="Paragraph spacing" buttonLabel="Spacing"
+          value={paragraphSpacingValue(editor.getAttributes('paragraph').style)}
+          choices={[{value:'4px',label:'Compact'},{value:'1em',label:'Comfortable'},{value:'1.5em',label:'Spacious'}]}
+          onSelect={value=>{setParagraphSpacing(editor,value);}} />
+        <ToolbarChoice item="line-height" label="Line height" buttonLabel="Line height"
+          value={composeLineHeightValue(editor)}
+          choices={[{value:'',label:'Default line height'},{value:'1.15',label:'1.15 lines'},{value:'1.5',label:'1.5 lines'},{value:'1.75',label:'1.75 lines'},{value:'2',label:'Double spaced'}]}
+          onSelect={value=>{setComposeLineHeight(editor,value);}} />
+        <ToolbarButton item="insert-source" title="Insert Markdown or HTML" onClick={()=>setImportOpen(true)}><Code className="size-4" /></ToolbarButton>
         <ToolbarButton
           item="clear-formatting"
-          onClick={() => editor.chain().focus().clearNodes().unsetAllMarks().run()}
+          onClick={() => clearComposeFormatting(editor)}
           title={tToolbar("clear_formatting")}
         >
           <RemoveFormatting className="w-4 h-4" />
@@ -1272,6 +1371,7 @@ export function RichTextEditor({
         document.body
       )}
 
+      {importOpen && <ComposeImportDialog onClose={()=>setImportOpen(false)} onInsert={html=>editor.chain().focus().insertContent(html).run()} />}
       <PromptDialog
         isOpen={!!linkDialog}
         onClose={() => setLinkDialog(null)}
