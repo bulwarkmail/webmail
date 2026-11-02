@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
-import { noteContentType } from '@/lib/xenaxio/notes';
+import { textContentType } from '@/lib/xenaxio/text-files';
 import type { FileNode, FileNodeRights } from '@/lib/jmap/types';
 import { imageBlobUrl } from '@/lib/file-preview';
 import { fileHooks } from '@/lib/plugin-hooks';
@@ -1053,7 +1053,7 @@ export const useFileStore = create<FileState>((set, get) => ({
     if (!client) return null;
 
     // Xenaxio step 115: a Markdown note is stored as text/markdown.
-    const type = noteContentType(name);
+    const type = textContentType(name);
     const emptyBlob = new File([''], name, { type });
     const { blobId } = await client.uploadBlob(emptyBlob);
     const node = await client.createFileNode(name, blobId, type, 0, currentParentId);

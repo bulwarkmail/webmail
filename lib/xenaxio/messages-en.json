@@ -3488,8 +3488,6 @@
     "new_note": "New note",
     "default_name": "Note",
     "copy_suffix": "copy",
-    "write": "Write",
-    "preview": "Preview",
     "save": "Save",
     "close": "Close",
     "retry": "Try again",
@@ -3497,7 +3495,7 @@
     "read_only_hint": "You may view this file but not change it.",
     "loading": "Loading…",
     "load_failed": "The note could not be loaded.",
-    "empty_preview": "Nothing to see yet. Write something under “Write”.",
+    "empty_preview": "Nothing to see yet. Write something under “Edit”.",
     "placeholder": "Write here. Markdown works: # Heading, **bold**, - list, - [ ] task",
     "link_text": "link text",
     "status": {
@@ -3532,6 +3530,11 @@
       "number": "Numbered list",
       "task": "Task with checkbox",
       "link": "Link (Ctrl+K)"
-    }
+    },
+    "view": "View",
+    "edit": "Edit",
+    "json_broken": "The JSON is broken. The file is shown as it is.",
+    "json_broken_line": "The JSON is broken (line {line}). The file is shown as it is.",
+    "csv_more": "Showing {shown} of {total} rows. All rows under “Edit” or in the download."
   }
 }

@@ -3,31 +3,10 @@
 // The pure parts live here: which files open as notes, and what each button
 // does to the text and the selection.
 
-/** Extensions that open in the note editor. */
-const MARKDOWN_EXTENSIONS = new Set(["md", "markdown"]);
-const TEXT_EXTENSIONS = new Set(["txt"]);
-
-/** Bigger files open in the read-only preview, as before. */
-export const NOTE_MAX_BYTES = 1024 * 1024;
-
-function extensionOf(name: string): string {
-  const dot = name.lastIndexOf(".");
-  return dot > 0 ? name.slice(dot + 1).toLowerCase() : "";
-}
-
 export function isMarkdownName(name: string): boolean {
-  return MARKDOWN_EXTENSIONS.has(extensionOf(name));
-}
-
-/** A file the note editor opens: .md, .markdown or .txt up to 1 MB. */
-export function isNoteFile(name: string, size?: number): boolean {
-  const ext = extensionOf(name);
-  if (!MARKDOWN_EXTENSIONS.has(ext) && !TEXT_EXTENSIONS.has(ext)) return false;
-  return size === undefined || size <= NOTE_MAX_BYTES;
-}
-
-export function noteContentType(name: string): string {
-  return isMarkdownName(name) ? "text/markdown" : "text/plain";
+  const dot = name.lastIndexOf(".");
+  const ext = dot > 0 ? name.slice(dot + 1).toLowerCase() : "";
+  return ext === "md" || ext === "markdown";
 }
 
 /** "Notiz 2026-11-01.md": the prefix comes from the user's language. */

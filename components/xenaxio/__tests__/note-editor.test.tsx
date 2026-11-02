@@ -13,6 +13,7 @@ const store = vi.hoisted(() => ({
   resources: [] as { name: string; blobId: string | null; isDirectory: boolean }[],
 }));
 
+vi.mock("@/components/xenaxio/chat/code.css", () => ({}));
 vi.mock("next-intl", () => ({ useLocale: () => "de", useTranslations: () => (key: string) => key }));
 vi.mock("@/stores/toast-store", () => ({ toast: { success: () => {}, error: () => {} } }));
 vi.mock("@/stores/file-store", () => ({
@@ -65,7 +66,8 @@ describe("NoteEditor (step 115)", () => {
     setup();
     expect(await screen.findByRole("heading", { name: "Plan" })).toBeTruthy();
     expect(screen.getByRole("checkbox")).toBeTruthy();
-    fireEvent.click(screen.getByRole("tab", { name: "Schreiben" }));
+    expect(screen.getByRole("tab", { name: "Ansicht" }).getAttribute("aria-selected")).toBe("true");
+    fireEvent.click(screen.getByRole("tab", { name: "Bearbeiten" }));
     expect((screen.getByRole("textbox") as HTMLTextAreaElement).value).toBe("# Plan\n\n- [ ] Angebot");
   });
 
@@ -134,7 +136,7 @@ describe("NoteEditor (step 115)", () => {
     setup({ myRights: { mayRead: true, mayAddChildren: false, mayRename: false, mayDelete: false, mayModifyContent: false, mayShare: false } });
     expect(await screen.findByRole("heading", { name: "Nur Ansicht" })).toBeTruthy();
     expect(screen.getByText("Nur lesen")).toBeTruthy();
-    expect(screen.queryByRole("tab", { name: "Schreiben" })).toBeNull();
+    expect(screen.queryByRole("tab", { name: "Bearbeiten" })).toBeNull();
     expect(screen.queryByRole("button", { name: /Speichern/ })).toBeNull();
     ctrlS();
     expect(store.saves).toEqual([]);
@@ -153,12 +155,54 @@ describe("NoteEditor (step 115)", () => {
     expect(area.value).toBe("**Wort**");
   });
 
-  it("a .txt file is plain text without Markdown tools", async () => {
-    store.content = "# kein Titel";
+  it("a .txt file opens as text with clickable links, and is edited without Markdown tools", async () => {
+    store.content = "# kein Titel\nInfos: https://xenaxio.com.";
     setup({ name: "liste.txt", contentType: "text/plain" });
-    const area = (await screen.findByRole("textbox")) as HTMLTextAreaElement;
-    expect(area.value).toBe("# kein Titel");
+    const link = await screen.findByRole("link", { name: "https://xenaxio.com" });
+    expect(link.getAttribute("href")).toBe("https://xenaxio.com");
+    expect(link.getAttribute("target")).toBe("_blank");
+    expect(screen.queryByRole("heading", { level: 1 })).toBeNull();
+    fireEvent.click(screen.getByRole("tab", { name: "Bearbeiten" }));
+    expect((screen.getByRole("textbox") as HTMLTextAreaElement).value).toBe("# kein Titel\nInfos: https://xenaxio.com.");
     expect(screen.queryByRole("toolbar")).toBeNull();
-    expect(screen.queryByRole("tab")).toBeNull();
+  });
+
+  it("Tab indents in a code file instead of leaving the field", async () => {
+    setup({ name: "deploy.yml", contentType: "text/plain" });
+    const area = (await screen.findByRole("textbox")) as HTMLTextAreaElement;
+    type("a:\nb");
+    area.setSelectionRange(3, 3);
+    fireEvent.keyDown(area, { key: "Tab" });
+    expect(area.value).toBe("a:\n  b");
+  });
+
+  it("a CSV opens as a table, ';' separated as in Germany", async () => {
+    store.content = "Name;Seite\nAnna;https://anna.example\n";
+    setup({ name: "kontakte.csv", contentType: "text/csv" });
+    expect(await screen.findByRole("columnheader", { name: "Name" })).toBeTruthy();
+    expect(screen.getByRole("cell", { name: "Anna" })).toBeTruthy();
+    expect(screen.getByRole("link", { name: "https://anna.example" })).toBeTruthy();
+  });
+
+  it("a JSON opens formatted, and a broken one says the line", async () => {
+    store.content = '{"a":1}';
+    setup({ name: "config.json", contentType: "application/json" });
+    await waitFor(() => expect(document.querySelector("pre")?.textContent).toBe('{\n  "a": 1\n}'));
+  });
+
+  it("a broken JSON says where", async () => {
+    store.content = '{\n  "a": 1\n  "b": 2\n}';
+    setup({ name: "config.json", contentType: "application/json" });
+    expect((await screen.findByRole("alert")).textContent).toContain("Zeile 3");
+  });
+
+  it("an HTML file shows as a page in a locked frame", async () => {
+    store.content = "<h1>Hallo</h1><script>alert(1)</script>";
+    setup({ name: "seite.html", contentType: "text/html" });
+    await waitFor(() => expect(document.querySelector("iframe")).not.toBeNull());
+    const frame = document.querySelector("iframe") as HTMLIFrameElement;
+    expect(frame.getAttribute("sandbox")).toBe("allow-popups allow-popups-to-escape-sandbox");
+    expect(frame.getAttribute("srcdoc")).toContain("<h1>Hallo</h1>");
+    expect(frame.getAttribute("srcdoc")).not.toContain("<script");
   });
 });

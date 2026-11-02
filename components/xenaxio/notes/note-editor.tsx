@@ -11,13 +11,14 @@ import {
 } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { MarkdownView } from "@/components/xenaxio/markdown-view";
+import { TextFileView } from "@/components/xenaxio/notes/text-view";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { useXT } from "@/lib/xenaxio/i18n";
 import {
-  continueList, copyName, insertLink, isMarkdownName, noteContentType, toggleInline, toggleLines,
+  continueList, copyName, insertLink, isMarkdownName, toggleInline, toggleLines,
   type InlineMark, type LineMark, type SaveState, type TextEdit,
 } from "@/lib/xenaxio/notes";
+import { textContentType } from "@/lib/xenaxio/text-files";
 import { useFileStore, type FileResource } from "@/stores/file-store";
 import { toast } from "@/stores/toast-store";
 import { cn } from "@/lib/utils";
@@ -31,7 +32,7 @@ interface NoteEditorProps {
   onOpenOther: (name: string) => void;
 }
 
-type Tab = "write" | "preview";
+type Tab = "view" | "edit";
 type Problem = "conflict" | "gone" | null;
 
 export function NoteEditor({ resource, onClose, onOpenOther }: NoteEditorProps) {
@@ -41,7 +42,7 @@ export function NoteEditor({ resource, onClose, onOpenOther }: NoteEditorProps) 
 
   const [loaded, setLoaded] = useState<"loading" | "ready" | "failed">("loading");
   const [text, setText] = useState("");
-  const [tab, setTab] = useState<Tab>("write");
+  const [tab, setTab] = useState<Tab>("view");
   const [state, setState] = useState<SaveState>("saved");
   const [problem, setProblem] = useState<Problem>(null);
   const [askDiscard, setAskDiscard] = useState(false);
@@ -70,14 +71,15 @@ export function NoteEditor({ resource, onClose, onOpenOther }: NoteEditorProps) 
       setText(content);
       setState("saved");
       setAutosaveOff(false);
-      // A note with text opens as it reads; an empty one ready for typing.
-      setTab(readOnly || (markdown && content.trim() !== "") ? "preview" : "write");
+      // A file opens as it reads (owner 01.11.2026: "лучше просмотр"); an
+      // empty one, like a new note, ready for typing.
+      setTab(readOnly || content.trim() !== "" ? "view" : "edit");
       setLoaded("ready");
     } catch (err) {
       console.error("Failed to load the note:", err);
       setLoaded("failed");
     }
-  }, [markdown, readOnly]);
+  }, [readOnly]);
 
   useEffect(() => {
     void load(resource.name);
@@ -103,7 +105,7 @@ export function NoteEditor({ resource, onClose, onOpenOther }: NoteEditorProps) 
     const run = (async () => {
       setState("saving");
       try {
-        const file = new File([content], resource.name, { type: noteContentType(resource.name) });
+        const file = new File([content], resource.name, { type: textContentType(resource.name) });
         const result = await client.replaceFileNodeContent(resource.id, file, blobId.current);
         if (result === "conflict" || result === "gone") {
           setProblem(result);
@@ -166,7 +168,7 @@ export function NoteEditor({ resource, onClose, onOpenOther }: NoteEditorProps) 
     const wanted = copyName(resource.name, t("notes.copy_suffix"));
     try {
       setState("saving");
-      await store.uploadFile(new File([textRef.current], wanted, { type: noteContentType(wanted) }));
+      await store.uploadFile(new File([textRef.current], wanted, { type: textContentType(wanted) }));
       await store.refresh();
       const made = useFileStore.getState().resources.find((r) => !before.has(r.name) && !r.isDirectory)?.name ?? wanted;
       savedText.current = textRef.current;
@@ -253,6 +255,14 @@ export function NoteEditor({ resource, onClose, onOpenOther }: NoteEditorProps) 
       if (key === "b") { e.preventDefault(); inline("bold"); return; }
       if (key === "i") { e.preventDefault(); inline("italic"); return; }
       if (key === "k") { e.preventDefault(); link(); return; }
+    }
+    // Code and settings files: Tab indents (two spaces) instead of leaving the field.
+    if (!markdown && e.key === "Tab" && !mod && !e.shiftKey && !e.altKey) {
+      e.preventDefault();
+      const { start, end } = selection();
+      const indent = "  ";
+      apply({ text: textRef.current.slice(0, start) + indent + textRef.current.slice(end), start: start + indent.length, end: start + indent.length });
+      return;
     }
     if (markdown && e.key === "Enter" && !mod && !e.shiftKey && !e.altKey && !e.nativeEvent.isComposing) {
       const area = e.currentTarget;
@@ -348,15 +358,13 @@ export function NoteEditor({ resource, onClose, onOpenOther }: NoteEditorProps) 
 
       {loaded === "ready" && (
         <div className="flex min-h-0 flex-1 flex-col">
-          {markdown && (
+          {!readOnly && (
             <div className="flex items-center gap-1 border-b border-border px-3">
               <div role="tablist" className="flex shrink-0">
-                {!readOnly && (
-                  <TabButton active={tab === "write"} onClick={() => setTab("write")}>{t("notes.write")}</TabButton>
-                )}
-                <TabButton active={tab === "preview"} onClick={() => setTab("preview")}>{t("notes.preview")}</TabButton>
+                <TabButton active={tab === "view"} onClick={() => setTab("view")}>{t("notes.view")}</TabButton>
+                <TabButton active={tab === "edit"} onClick={() => setTab("edit")}>{t("notes.edit")}</TabButton>
               </div>
-              {tab === "write" && !readOnly && (
+              {tab === "edit" && markdown && (
                 <div role="toolbar" aria-label={t("notes.toolbar.label")} className="ml-2 flex min-w-0 flex-1 items-center gap-0.5 overflow-x-auto py-1">
                   {toolbar.map(({ label, icon: Icon, run }) => (
                     <button
@@ -379,7 +387,7 @@ export function NoteEditor({ resource, onClose, onOpenOther }: NoteEditorProps) 
 
           <div className="min-h-0 flex-1 overflow-auto">
             <div className="mx-auto flex h-full max-w-4xl flex-col px-4 py-4">
-              {tab === "write" && !readOnly ? (
+              {tab === "edit" && !readOnly ? (
                 <textarea
                   ref={areaRef}
                   value={text}
@@ -391,14 +399,10 @@ export function NoteEditor({ resource, onClose, onOpenOther }: NoteEditorProps) 
                   placeholder={markdown ? t("notes.placeholder") : undefined}
                   className="min-h-[60vh] w-full flex-1 resize-none bg-transparent font-mono text-sm leading-relaxed outline-none"
                 />
-              ) : markdown ? (
-                text.trim() === "" ? (
-                  <p className="text-sm text-muted-foreground">{t("notes.empty_preview")}</p>
-                ) : (
-                  <MarkdownView source={text} />
-                )
+              ) : text.trim() === "" ? (
+                <p className="text-sm text-muted-foreground">{t("notes.empty_preview")}</p>
               ) : (
-                <pre className="whitespace-pre-wrap break-words font-mono text-sm">{text}</pre>
+                <TextFileView name={resource.name} text={text} />
               )}
             </div>
           </div>

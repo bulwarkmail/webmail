@@ -3488,8 +3488,6 @@
     "new_note": "Neue Notiz",
     "default_name": "Notiz",
     "copy_suffix": "Kopie",
-    "write": "Schreiben",
-    "preview": "Vorschau",
     "save": "Speichern",
     "close": "Schließen",
     "retry": "Erneut versuchen",
@@ -3497,7 +3495,7 @@
     "read_only_hint": "Sie dürfen diese Datei ansehen, aber nicht ändern.",
     "loading": "Wird geladen…",
     "load_failed": "Die Notiz konnte nicht geladen werden.",
-    "empty_preview": "Noch nichts zu sehen. Schreiben Sie etwas unter „Schreiben“.",
+    "empty_preview": "Noch nichts zu sehen. Schreiben Sie etwas unter „Bearbeiten“.",
     "placeholder": "Hier schreiben. Markdown geht: # Überschrift, **fett**, - Liste, - [ ] Aufgabe",
     "link_text": "Linktext",
     "status": {
@@ -3532,6 +3530,11 @@
       "number": "Nummerierte Liste",
       "task": "Aufgabe mit Kästchen",
       "link": "Link (Strg+K)"
-    }
+    },
+    "view": "Ansicht",
+    "edit": "Bearbeiten",
+    "json_broken": "Das JSON ist fehlerhaft. Die Datei wird so gezeigt, wie sie ist.",
+    "json_broken_line": "Das JSON ist fehlerhaft (Zeile {line}). Die Datei wird so gezeigt, wie sie ist.",
+    "csv_more": "Gezeigt: {shown} von {total} Zeilen. Alle Zeilen unter „Bearbeiten“ oder im Download."
   }
 }

@@ -11,6 +11,7 @@ import dynamic from "next/dynamic";
 import { EmlPreview, type ParsedEml } from "@/components/files/eml-preview";
 import { FilePreviewPluginSection } from "@/components/files/file-preview-plugin-section";
 import { MarkdownView } from "@/components/xenaxio/markdown-view";
+import { LinkifiedText } from "@/components/ui/linkified-text";
 import { canOpenUrlInNewWindow } from "@/lib/standalone-display";
 import { emailIframeCsp, sanitizeEmailBodyForIframe } from "@/lib/email-sanitization";
 import { useSettingsStore } from "@/stores/settings-store";
@@ -269,7 +270,8 @@ export function FilePreviewModal({ name, onClose, onDownload, getFileContent, fi
             className="bg-background rounded-lg p-6 max-w-4xl w-full max-h-full overflow-auto text-sm font-mono whitespace-pre-wrap break-words"
             onClick={(e) => e.stopPropagation()}
           >
-            {content}
+            {/* Xenaxio step 115: addresses in a text file are clickable. */}
+            <LinkifiedText text={content} />
           </pre>
         )}
 

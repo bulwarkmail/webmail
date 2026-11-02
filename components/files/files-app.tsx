@@ -29,7 +29,7 @@ import { useXT } from "@/lib/xenaxio/i18n";
 import { fileOpenKind, linkedFileState, revealRecentFile } from "@/lib/xenaxio/file-open";
 import { findLinkedNode, localNodeId, type FileLinkTarget } from "@/lib/xenaxio/file-link";
 import { imageBlobUrl } from "@/lib/file-preview";
-import { isNoteFile } from "@/lib/xenaxio/notes";
+import { isTextFile } from "@/lib/xenaxio/text-files";
 import { NoteEditor } from "@/components/xenaxio/notes/note-editor";
 import { useAudioPlayer } from "@/lib/xenaxio/audio-player";
 import { isAudioResource } from "@/lib/xenaxio/transcripts";
@@ -139,10 +139,10 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
   const [sharedFile, setSharedFile] = useState<{ resource: FileResource; kind: "image" | "preview" | "edit" } | null>(null);
   const wopiStatus = useWopiStatus(filesEnabled);
   const isWopiEditable = useCallback((name: string) => canWopiOpen(wopiStatus, name), [wopiStatus]);
-  // Xenaxio step 115: notes (.md, .txt up to 1 MB) open in our own editor.
+  // Xenaxio step 115: text files up to 1 MB (notes, CSV, JSON, HTML, code) open in our own editor.
   const isNote = useCallback((name: string) => {
     const r = resources.find((x) => x.name === name);
-    return !!r && !r.isDirectory && !isWopiEditable(name) && isNoteFile(name, r.contentLength);
+    return !!r && !r.isDirectory && !isWopiEditable(name) && isTextFile(name, r.contentLength);
   }, [resources, isWopiEditable]);
   const isOfficeEditable = useCallback((name: string) => isWopiEditable(name) || isNote(name), [isWopiEditable, isNote]);
   // Xenaxio (step 89): the file open (or the one file selected) is what the assistant looks at first.
@@ -551,7 +551,7 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
     try {
       const created = await createTextFile(name);
       // Xenaxio step 115: a new note or text file opens for writing.
-      if (created && isNoteFile(created)) setEditFile(created);
+      if (created && isTextFile(created)) setEditFile(created);
       else toast.success(t("create_file_success"));
     } catch (err) {
       console.error("Failed to create file:", err);
@@ -915,7 +915,7 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
       {editFile && (() => {
         const editResource = resources.find(r => r.name === editFile);
         if (!editResource) return null;
-        if (!isWopiEditable(editResource.name) && isNoteFile(editResource.name)) {
+        if (!isWopiEditable(editResource.name) && isTextFile(editResource.name)) {
           return (
             <NoteEditor
               key={editResource.id}

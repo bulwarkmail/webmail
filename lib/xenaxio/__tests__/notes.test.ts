@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  continueList, copyName, defaultNoteName, insertLink, isMarkdownName, isNoteFile, NOTE_MAX_BYTES, noteContentType,
+  continueList, copyName, defaultNoteName, insertLink, isMarkdownName,
   toggleInline, toggleLines, insertCodeBlock,
 } from "../notes";
 import { renderMarkdown } from "../markdown";
@@ -17,22 +17,11 @@ function show(e: { text: string; start: number; end: number }) {
   return e.text.slice(0, e.start) + "|" + e.text.slice(e.start, e.end) + "|" + e.text.slice(e.end);
 }
 
-describe("which files are notes (step 115)", () => {
-  it("opens .md, .markdown and .txt up to 1 MB", () => {
-    expect(isNoteFile("Protokoll.md")).toBe(true);
-    expect(isNoteFile("README.MARKDOWN", 10)).toBe(true);
-    expect(isNoteFile("liste.txt", NOTE_MAX_BYTES)).toBe(true);
-    expect(isNoteFile("gross.md", NOTE_MAX_BYTES + 1)).toBe(false);
-    expect(isNoteFile("daten.csv")).toBe(false);
-    expect(isNoteFile("bericht.docx")).toBe(false);
-    expect(isNoteFile("md")).toBe(false);
-  });
-
-  it("stores Markdown as text/markdown and the rest as text/plain", () => {
+describe("notes (step 115)", () => {
+  it("knows Markdown by its extension", () => {
     expect(isMarkdownName("a.md")).toBe(true);
+    expect(isMarkdownName("A.MARKDOWN")).toBe(true);
     expect(isMarkdownName("a.txt")).toBe(false);
-    expect(noteContentType("a.md")).toBe("text/markdown");
-    expect(noteContentType("a.txt")).toBe("text/plain");
   });
 
   it("names a new note by its date and a copy by its suffix", () => {
