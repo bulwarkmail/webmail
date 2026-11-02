@@ -1578,3 +1578,43 @@ optgroup {
 [data-memail-composer] [data-testid="composer-subject"] {
   font-weight: 500;
 }
+
+/* Reader metadata follows the pane width, including a narrow split reader on
+   a wide desktop. Plugin sections keep their full-width slot when it fits. */
+[data-memail-reader-details] {
+  container-name: memail-reader-details;
+  container-type: inline-size;
+}
+.memail-reader-details-grid > section {
+  min-width: 0;
+  grid-column: auto;
+  padding: 0.875rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--color-muted) 20%, var(--color-background));
+}
+.memail-reader-details-grid [data-memail-details-list] {
+  grid-template-columns: minmax(4.5rem, 6rem) minmax(0, 1fr);
+  column-gap: 0.75rem;
+}
+.memail-reader-details-grid [data-memail-details-list] > dd { overflow-wrap: anywhere; }
+.memail-details-disclosure {
+  min-height: 1.75rem;
+  padding-inline: 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+}
+.memail-details-disclosure:hover { background: var(--color-muted); }
+.memail-details-disclosure:focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
+}
+@container memail-reader-details (min-width: 44rem) {
+  .memail-reader-details-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .memail-reader-details-grid > .lg\:col-span-2 { grid-column: span 2; }
+}
+@media (pointer: coarse) {
+  .memail-details-disclosure { min-height: 2.75rem; }
+}
+
+.memail-reader-details-grid { align-items: start; }

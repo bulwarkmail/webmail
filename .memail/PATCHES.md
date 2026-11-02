@@ -124,3 +124,11 @@ Add each customization here. Include the relevant upstream files, the reason it 
 - `attachment-filename.tsx` shares short-extension splitting with the reader (its old helper export is retained). Composer chips truncate the stem while preserving the extension, bound their width and keep native progress/error/cancel behavior. Tests now locate complete filenames by their labeled span rather than assuming a single text node.
 - Reader subjects wrap long text; composer fields have consistent targets and quieter labels. Attachment surfaces and borders use native semantic tokens. These styles do not reach received HTML or rich-editor content.
 - Corrected color references in the preceding inbox polish from undefined shorthand variables to the native `--color-*` tokens, including quick-action borders and keyboard focus.
+
+
+## Reader details and recipient disclosure
+
+- Recipient overflow now opens details consistently: phone To overflow is visible, desktop BCC overflow is actionable, and clicking an overflow count while details are open keeps them open. Existing localized labels and contact popovers are reused.
+- Full details is a named region with an explicit close control, connected disclosure state and Escape handling inside the panel. Closing returns focus to the opening control, or the corresponding visible disclosure after a breakpoint change.
+- Native detail cards use a named container query instead of desktop viewport breakpoints: one column in a narrow reader, two above 44rem of pane width. Full-width mailing-list/plugin slots remain full-width when appropriate; definition-list column rules only target host-owned lists.
+- Phone dates now use compact labels with semantic timestamps and precise UTC tooltips; complete local dates remain in details. Truncated sender addresses expose their full text in a title. Native actions, message bodies and quick reply are unchanged.

@@ -1,4 +1,4 @@
-import { render, act, screen } from '@testing-library/react';
+import { render, act, screen, fireEvent, within } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { Email, Mailbox } from '@/lib/jmap/types';
 import { clearAllHooks } from '@/lib/plugin-hooks';
@@ -328,4 +328,54 @@ describe('reading mask', () => {
     const mask = screen.getByTestId('reading-mask');
     expect(mask.closest('.email-content-wrapper')).not.toBeNull();
   });
+});
+
+describe('reader metadata disclosure', () => {
+  it('connects the disclosure to its region and returns focus from the close control', async () => {
+    await show(message({text:'Hello'}));
+    const trigger=screen.getAllByRole('button',{name:'show_details'})[0];
+    vi.spyOn(trigger, 'getClientRects').mockReturnValue({length:1} as DOMRectList);
+    expect(trigger).toHaveAttribute('aria-expanded','false');
+    fireEvent.click(trigger);
+    const panel=screen.getByRole('region',{name:'message_details'});
+    expect(trigger).toHaveAttribute('aria-controls',panel.id);
+    expect(trigger).toHaveAttribute('aria-expanded','true');
+    fireEvent.click(within(panel).getByRole('button',{name:'hide_details'}));
+    expect(screen.queryByRole('region',{name:'message_details'})).toBeNull();
+    expect(trigger).toHaveFocus();
+  });
+  it('closes details with Escape and restores the disclosure focus', async () => {
+    await show(message({text:'Hello'}));
+    const trigger=screen.getAllByRole('button',{name:'show_details'})[0];
+    vi.spyOn(trigger, 'getClientRects').mockReturnValue({length:1} as DOMRectList);
+    fireEvent.click(trigger);
+    fireEvent.keyDown(screen.getByRole('region',{name:'message_details'}),{key:'Escape'});
+    expect(screen.queryByRole('region',{name:'message_details'})).toBeNull();
+    expect(trigger).toHaveFocus();
+  });
+  it('exposes hidden To recipients on mobile and keeps details open when more is pressed again', async () => {
+    const recipients=Array.from({length:4},(_,i)=>({name:`Recipient ${i}`,email:`person-${i}@example.com`}));
+    const {container}=await show(message({text:'Hello',to:recipients}));
+    const mobile=container.querySelector('[data-memail-recipient-summary="mobile"]') as HTMLElement;
+    const more=within(mobile).getByRole('button',{name:/more_count/});
+    fireEvent.click(more);
+    expect(within(screen.getByRole('region',{name:'message_details'})).getByRole('button',{name:'Recipient 3'})).toBeInTheDocument();
+    fireEvent.click(more);
+    expect(screen.getByRole('region',{name:'message_details'})).toBeInTheDocument();
+    expect(more).toHaveAttribute('aria-expanded','true');
+  });
+  it('makes BCC overflow actionable and reveals all displayed recipients', async () => {
+    const bcc=Array.from({length:3},(_,i)=>({name:`Hidden ${i}`,email:`hidden-${i}@example.com`}));
+    const {container}=await show(message({text:'Hello',bcc}));
+    const summary=container.querySelector('[data-memail-recipient-summary="desktop"]') as HTMLElement;
+    fireEvent.click(within(summary).getByRole('button',{name:/more_count/}));
+    expect(within(screen.getByRole('region',{name:'message_details'})).getByRole('button',{name:'Hidden 2'})).toBeInTheDocument();
+  });
+  it('keeps a precise semantic timestamp behind the compact phone date', async () => {
+    const {container}=await show(message({text:'Hello',receivedAt:'2026-11-03T10:00:00Z'}));
+    const date=container.querySelector('[data-memail-phone-date] time');
+    expect(date).toHaveAttribute('datetime','2026-11-03T10:00:00.000Z');
+    expect(date?.getAttribute('title')).toContain('UTC');
+  });
+
 });

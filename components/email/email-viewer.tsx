@@ -13,6 +13,7 @@ import { applyMailTextSize, mailFitOptions } from "@/lib/mail-reading";
 import { useMailReading } from "@/hooks/use-mail-reading";
 import { useReadAloud } from "@/hooks/use-read-aloud";
 import { ReadAloudBar } from "./read-aloud-bar";
+import { MessageTimestamp } from "@/.memail/message-timestamp";
 import { ReaderAttachments, type AttachmentDragProps } from "./reader-attachments";
 import { ReaderViewDialog } from "./reader-view-dialog";
 import { ReadingMask } from "./reading-mask";
@@ -1573,6 +1574,20 @@ export function EmailViewer({
   const resolvedTheme = useThemeStore((state) => state.resolvedTheme);
   const { startTour } = useTour();
   const [showFullHeaders, setShowFullHeaders] = useState(false);
+  const detailsPanelId = useId();
+  const detailsTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const openFullHeaders = (event: React.MouseEvent<HTMLButtonElement>, toggle = false) => {
+    detailsTriggerRef.current = event.currentTarget;
+    setShowFullHeaders(value => toggle ? !value : true);
+  };
+  const closeFullHeaders = () => {
+    const trigger = detailsTriggerRef.current;
+    const viewer = trigger?.closest('[data-tour="email-viewer"]');
+    const target = trigger?.getClientRects().length ? trigger
+      : Array.from(viewer?.querySelectorAll<HTMLButtonElement>('[data-memail-details-toggle]') ?? []).find(button => button.getClientRects().length);
+    setShowFullHeaders(false);
+    target?.focus();
+  };
   const [isDownloadingAll, setIsDownloadingAll] = useState(false);
   const [imageThumbUrls, setImageThumbUrls] = useState<Record<string, string>>({});
   const [allowExternalContent, setAllowExternalContent] = useState(false);
@@ -4963,20 +4978,23 @@ ${printWatermark ? printWatermark.html : ''}
                   </div>
                   {/* Email address under name (on the name's line under Mountain View) */}
                   {!mvViewer && sender?.email && sender?.name && (
-                    <div className="text-sm text-muted-foreground mt-0.5 truncate">{sender.email}</div>
+                    <div title={sender.email} className="text-sm text-muted-foreground mt-0.5 truncate">{sender.email}</div>
                   )}
                 </div>
               </div>
 
               {/* Row 2: Recipients + Show details */}
-              <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
+              <div data-memail-recipient-summary="desktop" className="mt-1 flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
                 {email.to && email.to.length > 0 && (
                   <>
                     <span>{t('recipient_to_prefix')}</span>
                     {renderClickableRecipients(email.to, currentUserEmail, t, handleViewContactSidebar)}
                     {email.to.length > 2 && (
                       <button
-                        onClick={() => setShowFullHeaders(!showFullHeaders)}
+                        type="button"
+                        aria-expanded={showFullHeaders}
+                        aria-controls={showFullHeaders ? detailsPanelId : undefined}
+                        onClick={event => openFullHeaders(event)}
                         className="text-primary hover:underline text-sm"
                       >
                         {t('more_count', { count: email.to.length - 2 })}
@@ -4991,7 +5009,10 @@ ${printWatermark ? printWatermark.html : ''}
                     {renderClickableRecipients(email.cc, currentUserEmail, t, handleViewContactSidebar)}
                     {email.cc.length > 2 && (
                       <button
-                        onClick={() => setShowFullHeaders(!showFullHeaders)}
+                        type="button"
+                        aria-expanded={showFullHeaders}
+                        aria-controls={showFullHeaders ? detailsPanelId : undefined}
+                        onClick={event => openFullHeaders(event)}
                         className="text-primary hover:underline text-sm"
                       >
                         {t('more_count', { count: email.cc.length - 2 })}
@@ -5005,13 +5026,17 @@ ${printWatermark ? printWatermark.html : ''}
                     <span>{t('bcc')}:</span>
                     {renderClickableRecipients(email.bcc, currentUserEmail, t, handleViewContactSidebar)}
                     {email.bcc.length > 2 && (
-                      <span className="text-muted-foreground">+{email.bcc.length - 2}</span>
+                      <button type="button" aria-expanded={showFullHeaders} aria-controls={showFullHeaders ? detailsPanelId : undefined} onClick={event => openFullHeaders(event)} className="text-primary hover:underline text-sm">{t('more_count', {count: email.bcc.length - 2})}</button>
                     )}
                   </>
                 )}
                 <button
-                  onClick={() => setShowFullHeaders(!showFullHeaders)}
-                  className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors ms-1"
+                  type="button"
+                  data-memail-details-toggle=""
+                  aria-expanded={showFullHeaders}
+                  aria-controls={showFullHeaders ? detailsPanelId : undefined}
+                  onClick={event => openFullHeaders(event, true)}
+                  className="memail-details-disclosure text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors ms-1"
                 >
                   {showFullHeaders ? (
                     <>
@@ -5106,14 +5131,15 @@ ${printWatermark ? printWatermark.html : ''}
               </div>
               {/* Email address under name - Mountain View keeps it in the details */}
               {!mvMobileViewer && sender?.email && sender?.name && (
-                <div className="text-xs text-muted-foreground mt-0.5 truncate">{sender.email}</div>
+                <div title={sender.email} className="text-xs text-muted-foreground mt-0.5 truncate">{sender.email}</div>
               )}
               {/* Row 2: Recipients */}
-              <div className="mt-0.5 flex items-center gap-1 text-sm text-muted-foreground flex-wrap">
+              <div data-memail-recipient-summary="mobile" className="mt-0.5 flex items-center gap-1 text-sm text-muted-foreground flex-wrap">
                 {email.to && email.to.length > 0 && (
                   <>
                     <span>→ {t('recipient_to_prefix')}</span>
                     {renderClickableRecipients(email.to, currentUserEmail, t, handleViewContactSidebar)}
+                    {email.to.length > 2 && <button type="button" aria-expanded={showFullHeaders} aria-controls={showFullHeaders ? detailsPanelId : undefined} onClick={event => openFullHeaders(event)} className="text-primary hover:underline text-sm">{t('more_count', {count: email.to.length - 2})}</button>}
                   </>
                 )}
                 {email.cc && email.cc.length > 0 && (
@@ -5123,7 +5149,10 @@ ${printWatermark ? printWatermark.html : ''}
                     {renderClickableRecipients(email.cc, currentUserEmail, t, handleViewContactSidebar)}
                     {email.cc.length > 2 && (
                       <button
-                        onClick={() => setShowFullHeaders(!showFullHeaders)}
+                        type="button"
+                        aria-expanded={showFullHeaders}
+                        aria-controls={showFullHeaders ? detailsPanelId : undefined}
+                        onClick={event => openFullHeaders(event)}
                         className="text-primary hover:underline text-sm"
                       >
                         {t('more_count', { count: email.cc.length - 2 })}
@@ -5132,8 +5161,12 @@ ${printWatermark ? printWatermark.html : ''}
                   </>
                 )}
                 <button
-                  onClick={() => setShowFullHeaders(!showFullHeaders)}
-                  className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors ms-1"
+                  type="button"
+                  data-memail-details-toggle=""
+                  aria-expanded={showFullHeaders}
+                  aria-controls={showFullHeaders ? detailsPanelId : undefined}
+                  onClick={event => openFullHeaders(event, true)}
+                  className="memail-details-disclosure text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors ms-1"
                 >
                   {showFullHeaders ? (
                     <>
@@ -5151,10 +5184,10 @@ ${printWatermark ? printWatermark.html : ''}
             </div>
             {/* Date/time + size on the right (mobile) */}
             <div className="sm:hidden flex-shrink-0 text-end ms-2">
-              <span className="text-xs text-muted-foreground whitespace-nowrap">
-                {mvMobileViewer
-                  ? formatDate(emailDisplayDate(email))
-                  : formatDateTime(emailDisplayDate(email), timeFormat, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
+              <span data-memail-phone-date="">
+                <MessageTimestamp value={emailDisplayDate(email)} timeFormat={timeFormat} className="text-xs text-muted-foreground whitespace-nowrap">
+                  {formatDate(emailDisplayDate(email))}
+                </MessageTimestamp>
               </span>
               {email.size > 0 && !mvMobileViewer && (
                 <div className="text-xs text-muted-foreground">
@@ -5293,11 +5326,17 @@ ${printWatermark ? printWatermark.html : ''}
           );
 
           return (
-            <div className="bg-background border-b border-border px-4 lg:px-6" style={{ paddingBlock: 'var(--density-header-py)' }}>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-10 gap-y-5">
+            <section id={detailsPanelId} aria-label={t('message_details')} data-memail-reader-details={!mvViewer ? "" : undefined}
+              className="bg-background border-b border-border px-4 lg:px-6" style={{ paddingBlock: 'var(--density-header-py)' }}
+              onKeyDown={event => { if (event.key === 'Escape' && !event.defaultPrevented) { event.preventDefault(); event.stopPropagation(); closeFullHeaders(); } }}>
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <h3 className="text-sm font-semibold">{t('message_details')}</h3>
+                <IconButton label={t('hide_details')} onClick={closeFullHeaders}><X className="size-4" aria-hidden="true" /></IconButton>
+              </div>
+              <div className={cn("grid grid-cols-1 gap-x-6 gap-y-4", mvViewer ? "lg:grid-cols-2" : "memail-reader-details-grid")}>
                 <section className="min-w-0">
                   <SectionHeader>{t('details.recipients_routing')}</SectionHeader>
-                  <dl className="grid grid-cols-[7rem_1fr] gap-x-4 gap-y-1.5">
+                  <dl data-memail-details-list="" className="grid grid-cols-[7rem_1fr] gap-x-4 gap-y-1.5">
                     <Row label={t('from')}>
                       <div className="flex flex-wrap items-center gap-1">
                         <RecipientPopover
@@ -5459,7 +5498,7 @@ ${printWatermark ? printWatermark.html : ''}
                 {hasIdentifiers && (
                   <section className="min-w-0">
                     <SectionHeader>{t('details.identifiers_threading')}</SectionHeader>
-                    <dl className="grid grid-cols-[7rem_1fr] gap-x-4 gap-y-1.5">
+                    <dl data-memail-details-list="" className="grid grid-cols-[7rem_1fr] gap-x-4 gap-y-1.5">
                       {email.messageId && (
                         <Row label={t('headers.message_id')} mono>{email.messageId}</Row>
                       )}
@@ -5493,7 +5532,7 @@ ${printWatermark ? printWatermark.html : ''}
 
                 <section className="min-w-0">
                   <SectionHeader>{t('details.message_properties')}</SectionHeader>
-                  <dl className="grid grid-cols-[7rem_1fr] gap-x-4 gap-y-1.5">
+                  <dl data-memail-details-list="" className="grid grid-cols-[7rem_1fr] gap-x-4 gap-y-1.5">
                     {email.subject !== undefined && (
                       <Row label={t('subject')}>{email.subject || <span className="italic text-muted-foreground">{t('details.no_subject')}</span>}</Row>
                     )}
@@ -5521,7 +5560,7 @@ ${printWatermark ? printWatermark.html : ''}
                 {hasListInfo && (
                   <section className="lg:col-span-2 min-w-0">
                     <SectionHeader>{t('details.mailing_list')}</SectionHeader>
-                    <dl className="grid grid-cols-[7rem_1fr] gap-x-4 gap-y-1.5">
+                    <dl data-memail-details-list="" className="grid grid-cols-[7rem_1fr] gap-x-4 gap-y-1.5">
                       {listHeaders?.listId && (
                         <Row label={t('details.list_id')} mono>{listHeaders.listId}</Row>
                       )}
@@ -5553,7 +5592,7 @@ ${printWatermark ? printWatermark.html : ''}
                   </section>
                 )}
               </div>
-            </div>
+            </section>
           );
         })()}
 
