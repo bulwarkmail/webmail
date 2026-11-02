@@ -332,13 +332,15 @@ export function VacationSettings() {
     ? t('warnings.body_too_long', { max: sizeLimits.body })
     : localEnabled && !localTextBody.trim() && !hasHtmlContent ? t('warnings.empty_body') : null;
 
+  // The bodies are compared as a save sends them: the server keeps the
+  // sanitized HTML and the text derived from it, never what was typed.
   const userChanges =
     localEnabled !== isEnabled ||
     (localFromDate || null) !== (fromDate || null) ||
     (localToDate || null) !== (toDate || null) ||
     localSubject !== subject ||
-    localTextBody !== textBody ||
-    (htmlEnabled ? localHtmlBody : '') !== (htmlBody || '') ||
+    payload.textBody !== textBody ||
+    (payload.sanitizedHtml ?? '') !== (htmlBody || '') ||
     forwardChanged ||
     audienceChanged;
 
