@@ -1703,3 +1703,12 @@ optgroup {
   [data-memail-calendar-search] { order: 1; flex: 1 1 100%; }
   [data-memail-calendar-search] > * { width: 100%; }
 }
+
+/* Calendar results use their pane width, including embedded split workspaces. */
+.memail-calendar-results { container: memail-calendar-results / inline-size; }
+.memail-calendar-result { grid-template-columns: 8rem 9px minmax(0, 1fr); min-height: 3.5rem; }
+@container memail-calendar-results (max-width: 30rem) {
+  .memail-calendar-result { grid-template-columns: 9px minmax(0, 1fr); padding-block: 0.75rem; }
+  .memail-calendar-result-date { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 0.25rem 0.75rem; align-items: baseline; }
+  .memail-calendar-result-dot { margin-top: 0.375rem; }
+}

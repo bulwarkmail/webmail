@@ -179,3 +179,11 @@ Add each customization here. Include the relevant upstream files, the reason it 
 - Calendar's phone header separates date/account context, navigation/actions and full-width view choices. The view group uses one Tab stop and supports arrows, Home/End and RTL. The Tasks gate and native date/view callbacks remain unchanged.
 - Phone calendar visibility now uses the shared viewport-fitted menu with named checkbox items, checked state, shared-account headings, keyboard navigation and Escape focus return. Toggling retains the open menu for additional choices. Desktop search/tools wrap by pane width below 48rem, preserving date space. Desktop view/action menus expose localized names.
 - Calendar time-slot tests now select `[role="button"][data-slot]`, excluding Heroicons' vendor `data-slot="icon"` attribute. No production event editor or time-slot behavior changed.
+
+
+## Calendar search layout and pane-local navigation
+
+- CalendarApp declares its search scope. Down from the search field enters that pane's results; Up from its first result and Escape return to its own field. Home/End reach the first/last result and focus scrolls into view. Modified/composition keys retain native handling. Navigation never opens an event or clears a query.
+- Search clear keeps field focus; empty desktop Escape keeps focus when there is no dismissal handler. Phone dismissal restores the remounted Search trigger without stealing focus from another active control. While phone search is open, the redundant date/actions row is omitted and returns on close.
+- Result rows use pane-responsive grids, two-line titles, wrapped calendar/location/recurrence metadata and semantic timestamps. Upcoming/Past headings stay visible while scrolling and use per-instance IDs. Refreshing results exposes busy state while retaining loaded rows.
+- Empty-result Clear returns focus to the same pane. Native event selection, context actions, search matching, account routing and result loading remain in use. Existing Heroicons are reused throughout.

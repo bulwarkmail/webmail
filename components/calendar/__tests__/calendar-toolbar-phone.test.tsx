@@ -4,6 +4,7 @@ import type {CalendarViewMode} from '@/stores/calendar-store';
 import { render, screen, fireEvent, within, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { CalendarToolbar } from '../calendar-toolbar';
+import {CalendarSearchField} from '../calendar-search';
 
 // The phone day view's title was cut to "Th…": the long date beside the
 // menu, the back arrow, both chevrons, Today and the header buttons.
@@ -135,4 +136,25 @@ describe('calendar navigation controls', () => {
     fireEvent.click(screen.getByRole('button',{name:'nav_next'}));
     expect(onPrev).toHaveBeenCalledOnce();expect(onNext).toHaveBeenCalledOnce();
   });
+});
+
+
+it('returns from the phone search row to its search trigger', async () => {
+  function Host() {
+    const [open,setOpen]=useState(false);
+    return <CalendarToolbar selectedDate={new Date(2026,9,28)} viewMode="month" isMobile
+      onPrev={vi.fn()} onNext={vi.fn()} onToday={vi.fn()} onViewModeChange={vi.fn()} onCreateEvent={vi.fn()}
+      onOpenSearch={()=>setOpen(true)} onCloseSearch={()=>setOpen(false)}
+      mobileSearchField={open ? <CalendarSearchField value="" onChange={vi.fn()} onDismiss={()=>setOpen(false)} autoFocus/> : null}/>;
+  }
+  render(<Host/>);
+  fireEvent.click(screen.getByRole('button',{name:'search.title'}));
+  const input=screen.getByRole('searchbox');
+  await waitFor(()=>expect(input).toHaveFocus());
+  fireEvent.keyDown(input,{key:'Escape'});
+  expect(screen.queryByRole('searchbox')).toBeNull();
+  expect(screen.getByRole('button',{name:'search.title'})).toHaveFocus();
+  fireEvent.click(screen.getByRole('button',{name:'search.title'}));
+  fireEvent.click(screen.getByRole('button',{name:'search.close'}));
+  expect(screen.getByRole('button',{name:'search.title'})).toHaveFocus();
 });

@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode } from "react";
+import { useLayoutEffect, useRef, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
@@ -101,6 +101,15 @@ export function CalendarToolbar({
   mobileSearchField,
   onCloseSearch,
 }: CalendarToolbarProps) {
+  const searchTrigger = useRef<HTMLButtonElement>(null);
+  const hadMobileSearch = useRef(false);
+  useLayoutEffect(() => {
+    const wasOpen = hadMobileSearch.current;
+    hadMobileSearch.current = !!mobileSearchField;
+    if (isMobile && wasOpen && !mobileSearchField && document.activeElement === document.body) {
+      searchTrigger.current?.focus();
+    }
+  }, [isMobile, mobileSearchField]);
   const t = useTranslations("calendar");
   const paint = useCvdColor();
   const tCommon = useTranslations("common");
@@ -240,15 +249,16 @@ export function CalendarToolbar({
               <PhoneHeaderActions below="md" menuItems={phoneMenuItems}/>
             </div>
           )}
+          {!mobileSearchField && (
           <div className="flex min-w-0 items-center gap-1">
-            {hasDateNav && !mobileSearchField && <>
+            {hasDateNav && <>
               <IconButton size="icon-lg" label={t("nav_prev")} onClick={onPrev} className="touch-manipulation"><ChevronLeft/></IconButton>
               <Button variant="outline" size="xs" onClick={onToday} className="min-h-11 touch-manipulation" title={formatFullDate(displayNow())}>{t("views.today")}</Button>
               <IconButton size="icon-lg" label={t("nav_next")} onClick={onNext} className="touch-manipulation"><ChevronRight/></IconButton>
             </>}
             <div className="flex-1"/>
               {onOpenSearch && (
-                <IconButton size="icon-lg" variant="outline" label={t("search.title")} onClick={onOpenSearch} className="touch-manipulation">
+                <IconButton ref={searchTrigger} size="icon-lg" variant="outline" label={t("search.title")} onClick={onOpenSearch} className="touch-manipulation">
                   <Search />
                 </IconButton>
               )}
@@ -282,6 +292,7 @@ export function CalendarToolbar({
                 </>
               )}
           </div>
+          )}
               <div role="radiogroup" aria-label={t("toolbar.select_view", { view: t(`views.${viewMode}`) })}
                 className="flex min-w-0 flex-1 gap-0.5 overflow-x-auto rounded-lg border border-border bg-muted/30 p-0.5"
                 onKeyDown={(event) => {
