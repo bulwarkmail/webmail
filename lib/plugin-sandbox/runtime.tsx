@@ -828,9 +828,9 @@ function buildCoreApi(manifest: PluginManifest) {
        * body: `text` (sender, recipients, subject and body, whole words),
        * `from`, `to`, `subject`, `after`/`before` (dates), `hasAttachment`,
        * in one folder with `mailboxId`. At least one condition; limit 1-50
-       * (default 20).
+       * (default 20); `position` skips that many results (paging).
        */
-      search: (query: { text?: string; from?: string; to?: string; subject?: string; after?: string; before?: string; hasAttachment?: boolean; mailboxId?: string; limit?: number }) =>
+      search: (query: { text?: string; from?: string; to?: string; subject?: string; after?: string; before?: string; hasAttachment?: boolean; mailboxId?: string; limit?: number; position?: number }) =>
         callApi('email.search', [query]) as Promise<EmailSummary[]>,
       /**
        * The bytes of one attachment of a message (email:blob-read, at most
