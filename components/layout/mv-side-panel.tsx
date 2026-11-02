@@ -28,6 +28,7 @@ import { readableTextOn } from "@/lib/color-transform";
 import { Avatar } from "@/components/ui/avatar";
 import type { CalendarEvent } from "@/lib/jmap/types";
 import { useCvdColor } from "@/hooks/use-cvd-color";
+import { PluginSidePanelBody, SidePanelButton, usePluginSidePanel } from "@/components/plugins/plugin-side-panels";
 
 export type MvSidePanelId = "calendar" | "tasks" | "contacts";
 
@@ -46,6 +47,18 @@ export function MvSidePanel() {
   const contactsEnabled = usePolicyStore((s) => s.isFeatureEnabled("contactsEnabled"));
   const tasksEnabled = useSettingsStore((s) => s.enableCalendarTasks);
   const [open, setOpen] = useState<MvSidePanelId | null>(null);
+  // Plugins' panels (the side-panel slot), their buttons below the apps'.
+  // A plugin's panel opening (a click, or the plugin's openPanel) shuts the app's, and the other way round.
+  const plugins = usePluginSidePanel(() => setOpen(null));
+  const pluginOpen = plugins.entries.find((e) => e.pluginId === plugins.open) ?? null;
+  const openApp = (id: MvSidePanelId | null) => {
+    if (id) plugins.choose(null);
+    setOpen(id);
+  };
+  const openPlugin = (pluginId: string | null) => {
+    if (pluginId) setOpen(null);
+    plugins.choose(pluginId);
+  };
 
   const showCalendar = supportsCalendar && calendarEnabled;
   const showContacts = (client?.supportsContacts() ?? false) && contactsEnabled;
@@ -57,9 +70,11 @@ export function MvSidePanel() {
     ...(showContacts ? [{ id: "contacts" as const, label: t("contacts"), icon: Users, color: "text-[#1a73e8]" }] : []),
   ];
 
-  if (buttons.length === 0) return null;
+  if (buttons.length === 0 && plugins.entries.length === 0) return null;
+  // A plugin's panel without a rail button (setSidePanel's rail: false) opens on its request only.
+  const pluginButtons = plugins.entries.filter((e) => e.inRail);
   // A panel whose app went away (policy change, account switch) stays shut.
-  const active = open && buttons.some((b) => b.id === open) ? open : null;
+  const active = open && !pluginOpen && buttons.some((b) => b.id === open) ? open : null;
 
   return (
     <>
@@ -75,7 +90,17 @@ export function MvSidePanel() {
           {active === "contacts" && <ContactsPanel onClose={() => setOpen(null)} />}
         </aside>
       )}
-      <nav
+      {pluginOpen && (
+        <aside
+          data-simple-hide=""
+          data-plugin-side-panel={pluginOpen.pluginId}
+          className="mb-4 me-2 flex w-[300px] shrink-0 flex-col overflow-hidden rounded-2xl bg-background"
+          aria-label={pluginOpen.title}
+        >
+          <PluginSidePanelBody entry={pluginOpen} focusRequest={plugins.focusRequest} onClose={() => plugins.choose(null)} />
+        </aside>
+      )}
+      {(buttons.length > 0 || pluginButtons.length > 0) && <nav
         data-mv-side-rail=""
         className="flex w-14 shrink-0 flex-col items-center gap-2 pt-3"
         aria-label={t("mv_side_panel")}
@@ -84,7 +109,7 @@ export function MvSidePanel() {
           <button
             key={id}
             type="button"
-            onClick={() => setOpen((cur) => (cur === id ? null : id))}
+            onClick={() => openApp(active === id ? null : id)}
             className={cn(
               "relative grid h-10 w-10 place-items-center rounded-full transition-colors hover:bg-[var(--mv-nav-hover)]",
               active === id && "bg-[var(--mv-nav-selected)]",
@@ -96,8 +121,18 @@ export function MvSidePanel() {
             <Icon className={cn("h-5 w-5", color)} />
           </button>
         ))}
+        {pluginButtons.map((entry) => (
+          <SidePanelButton
+            key={entry.pluginId}
+            entry={entry}
+            pressed={pluginOpen?.pluginId === entry.pluginId}
+            onClick={() => openPlugin(pluginOpen?.pluginId === entry.pluginId ? null : entry.pluginId)}
+            className="h-10 w-10 rounded-full hover:bg-[var(--mv-nav-hover)]"
+            pressedClassName="bg-[var(--mv-nav-selected)] text-foreground"
+          />
+        ))}
         <div className="my-1 h-px w-5 bg-border" aria-hidden />
-      </nav>
+      </nav>}
     </>
   );
 }
