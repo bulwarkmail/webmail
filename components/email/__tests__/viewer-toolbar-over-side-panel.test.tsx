@@ -41,6 +41,7 @@ class NoopResizeObserver {
 vi.stubGlobal('ResizeObserver', NoopResizeObserver);
 
 const { EmailViewer } = await import('../email-viewer');
+const { useSettingsStore } = await import('@/stores/settings-store');
 
 const mailboxes = [
   { id: 'inbox', name: 'Inbox', role: 'inbox', parentId: null, myRights: { mayAddItems: true } },
@@ -68,7 +69,23 @@ const toolbarItem = () => document.querySelector('[data-overflow-item]') as HTML
 afterEach(() => {
   cleanup();
   device.isMobile = false;
+  useSettingsStore.setState({ toolbarPosition: 'top' });
 });
+
+const view = (props: { email: Email | null; isLoading: boolean }) => (
+  <EmailViewer mailboxes={mailboxes} selectedMailbox="inbox" currentMailboxRole="inbox" onDelete={() => {}} {...props} />
+);
+/** The panel button: there is exactly one, in a toolbar row at the top of the reader, never in the panel. */
+const theToggle = () => {
+  const all = document.querySelectorAll('[data-plugin-panel-toggle]');
+  expect(all).toHaveLength(1);
+  const toggle = all[0] as HTMLElement;
+  expect(toggle.closest('[data-viewer-top-toolbar="full-width"]')).toBeTruthy();
+  expect(toggle.closest('[data-plugin-detail-panel]')).toBeNull();
+  const root = document.querySelector('[data-tour="email-viewer"]') ?? toggle.closest('.relative.flex-col');
+  expect(root!.firstElementChild!.contains(toggle)).toBe(true);
+  return toggle;
+};
 
 describe('the reader toolbar and the plugin side panel', () => {
   it('runs the toolbar over the side panel on a desktop', () => {
@@ -129,6 +146,48 @@ describe('the reader toolbar and the plugin side panel', () => {
     expect(screen.getAllByLabelText('plugin_panel_show')).toHaveLength(1);
     act(() => { fireEvent.click(screen.getByLabelText('plugin_panel_show')); });
     expect(document.querySelector('[data-plugin-detail-panel]')).toBeTruthy();
+  });
+
+  it('puts the panel button in the same toolbar row with no message open, folded or not, and while one loads', () => {
+    const { rerender } = render(view({ email: null, isLoading: false }));
+    const row = () => theToggle().closest('[data-viewer-top-toolbar]') as HTMLElement;
+    expect(row().hasAttribute('data-toolbar-toggle-only')).toBe(true);
+    // As high as the full toolbar.
+    expect(row().firstElementChild!.className).toContain('h-14');
+    expect(theToggle().getAttribute('title')).toBe('plugin_panel_hide');
+    act(() => { fireEvent.click(theToggle()); });
+    // Folded: no strip and no row of the panel's own, the same button in the same row.
+    expect(document.querySelector('[data-plugin-detail-panel]')).toBeNull();
+    expect(document.querySelector('[data-reader-side-panel]')!.children).toHaveLength(0);
+    expect(theToggle().getAttribute('aria-label')).toBe('plugin_panel_show');
+    expect(theToggle().getAttribute('aria-pressed')).toBe('false');
+    act(() => { fireEvent.click(theToggle()); });
+    // Open: the panel holds no button row above the plugin's own header.
+    const panel = document.querySelector('[data-plugin-detail-panel]') as HTMLElement;
+    expect(panel.querySelector('button')).toBeNull();
+    rerender(view({ email: null, isLoading: true }));
+    theToggle();
+  });
+
+  it('keeps the panel button for a scheduled message', () => {
+    const scheduled = { ...email, id: 'e3', isScheduled: true, scheduledSendAt: '2030-01-01T10:00:00Z', scheduledUndoStatus: 'pending' } as unknown as Email;
+    render(view({ email: scheduled, isLoading: false }));
+    theToggle();
+  });
+
+  it('keeps the panel button at the top when the toolbar is below the subject', () => {
+    useSettingsStore.setState({ toolbarPosition: 'below-subject' });
+    render(view({ email, isLoading: false }));
+    expect(theToggle().closest('[data-toolbar-toggle-only]')).toBeTruthy();
+  });
+
+  it('keeps the side panel frame from a message to none and back', () => {
+    mounts['email-detail-sidebar'] = 0;
+    const { rerender } = render(view({ email, isLoading: false }));
+    rerender(view({ email: null, isLoading: true }));
+    rerender(view({ email: null, isLoading: false }));
+    rerender(view({ email, isLoading: false }));
+    expect(mounts['email-detail-sidebar']).toBe(1);
   });
 
   it('keeps the toolbar in the message column on a phone', () => {

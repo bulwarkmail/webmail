@@ -1883,6 +1883,22 @@ export function EmailViewer({
       setDetailSidebarForcedOpen(false);
     }
   };
+  // The one button that shows and hides the plugin side panel, at the end of
+  // the toolbar row in every state of the reader (message, loading, none, scheduled).
+  const panelToggle = hasDetailSidebar && !isMobile ? (
+    <Button
+      variant="ghost"
+      size="icon"
+      onClick={toggleDetailSidebar}
+      className={cn("h-8 w-8 shrink-0", mvViewer && "order-10")}
+      title={t(sidebarCollapsed ? 'plugin_panel_show' : 'plugin_panel_hide')}
+      aria-label={t(sidebarCollapsed ? 'plugin_panel_show' : 'plugin_panel_hide')}
+      aria-pressed={!sidebarCollapsed}
+      data-plugin-panel-toggle=""
+    >
+      {sidebarCollapsed ? <PanelRightOpen className="w-4 h-4 text-muted-foreground" /> : <PanelRightClose className="w-4 h-4 text-muted-foreground" />}
+    </Button>
+  ) : null;
   useEffect(() => onPanelRequest((request) => {
     if (request.slot !== 'email-detail-sidebar') return null;
     const state = detailPanelRef.current;
@@ -3851,31 +3867,29 @@ ${printWatermark ? printWatermark.html : ''}
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [readReceiptResponse, shouldOfferReadReceipt, email?.id, sendReadReceiptNow]);
 
+  // The toolbar row with only the panel button: over the empty or loading
+  // reader, and on top when the user put the toolbar below the subject. Same
+  // height and place as the full toolbar, so the button never moves.
+  const toggleOnlyToolbar = panelToggle && liftToolbar ? (
+    <div
+      data-viewer-top-toolbar="full-width"
+      data-toolbar-toggle-only=""
+      className={cn("bg-background flex-shrink-0", !mvViewer && "border-b border-border")}
+    >
+      <div className={cn("px-2 sm:px-4 lg:px-6 flex items-center justify-end", mvViewer ? "h-12 lg:ps-4" : "h-14")}>
+        {panelToggle}
+      </div>
+    </div>
+  ) : null;
+
   // The plugin side panel. One element in the same place whatever the viewer
   // shows (a message, the next one loading, none), so its frame lives on while
-  // the user reads on instead of starting over with every message.
-  const panelToggleInToolbar = !!email;
+  // the user reads on instead of starting over with every message. Its button
+  // is always at the end of the toolbar row above it.
   const sidePanel = (
   <>
     {hasDetailSidebar && !isMobile && (
       <div className="contents" data-reader-side-panel="">
-        {/* With a message open the toggle sits in its toolbar; without one, here. */}
-        {sidebarCollapsed && !panelToggleInToolbar && (
-          <div className="flex flex-col items-center border-s border-border bg-background">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => {
-                setDetailSidebarCollapsed(false);
-                if (readerTooNarrow) setDetailSidebarForcedOpen(true);
-              }}
-              className="h-8 w-8 m-1"
-              aria-label={t('plugin_panel_show')}
-            >
-              <PanelRightOpen className="w-4 h-4" />
-            </Button>
-          </div>
-        )}
         {!sidebarCollapsed && (
           <>
             {!sidebarOverlay && (
@@ -3903,22 +3917,6 @@ ${printWatermark ? printWatermark.html : ''}
                 ? { width: Math.min(detailSidebarWidth, Math.max(200, viewerWidth - 48)) }
                 : { width: detailSidebarWidth, minWidth: detailSidebarWidth }}
             >
-              {!panelToggleInToolbar && (
-                <div className="flex items-center justify-end px-1 py-1 border-b border-border shrink-0">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => {
-                      setDetailSidebarCollapsed(true);
-                      setDetailSidebarForcedOpen(false);
-                    }}
-                    className="h-7 w-7"
-                    aria-label={t('plugin_panel_hide')}
-                  >
-                    <PanelRightClose className="w-4 h-4" />
-                  </Button>
-                </div>
-              )}
               <div className="flex-1 min-h-0 overflow-y-auto">
                 <PluginSlot name="email-detail-sidebar" extraProps={pluginDetailProps} />
               </div>
@@ -3934,7 +3932,7 @@ ${printWatermark ? printWatermark.html : ''}
       ref={setViewerRootEl}
       className={cn("flex-1 flex flex-col h-full bg-background overflow-hidden relative", className)}
     >
-      {null}
+      {toggleOnlyToolbar}
       <div className="flex-1 min-h-0 flex flex-row overflow-hidden relative">
         {content}
         {sidePanel}
@@ -4527,22 +4525,11 @@ ${printWatermark ? printWatermark.html : ''}
           )}
         </div>
         {/* The plugin side panel: shown or hidden for every message alike. */}
-        {hasDetailSidebar && !isMobile && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleDetailSidebar}
-            className={cn("h-8 w-8", mvViewer && "order-10")}
-            title={t(sidebarCollapsed ? 'plugin_panel_show' : 'plugin_panel_hide')}
-            aria-label={t(sidebarCollapsed ? 'plugin_panel_show' : 'plugin_panel_hide')}
-            aria-pressed={!sidebarCollapsed}
-            data-plugin-panel-toggle=""
-          >
-            {sidebarCollapsed ? <PanelRightOpen className="w-4 h-4 text-muted-foreground" /> : <PanelRightClose className="w-4 h-4 text-muted-foreground" />}
-          </Button>
-        )}
+        {toolbarPosition === 'top' && panelToggle}
       </div>
       )}
+      {/* A scheduled message has no organize actions; the panel button still ends the row. */}
+      {isScheduled && toolbarPosition === 'top' && panelToggle}
     </>
   );
 
@@ -4579,7 +4566,7 @@ ${printWatermark ? printWatermark.html : ''}
       data-tour="email-viewer"
       className={cn("flex-1 flex flex-col h-full bg-background overflow-hidden relative", className)}
     >
-    {toolbarPosition === 'top' && liftToolbar && topToolbar}
+    {toolbarPosition === 'top' && liftToolbar ? topToolbar : toggleOnlyToolbar}
     {/* The message and the side panels, below the toolbar. Overlays anchor here. */}
     <div className="flex-1 min-h-0 flex flex-row overflow-hidden relative">
     <>
