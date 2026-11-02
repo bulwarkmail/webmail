@@ -78,10 +78,10 @@ export function ContactListItem({ contact, isSelected, isChecked, hasSelection, 
       onClick={onClick}
       onContextMenu={onContextMenu ? (e) => onContextMenu(e, contact) : undefined}
       className={cn(
-        "w-full flex items-center cursor-pointer select-none transition-all duration-200 border-b border-border outline-none focus-inset",
+        "w-full flex items-center cursor-pointer select-none transition-colors border-b border-border/60 outline-none focus-inset",
         isSelected
-          ? "bg-selection shadow-sm"
-          : "bg-background hover:bg-muted hover:shadow-sm",
+          ? "bg-selection"
+          : "bg-background hover:bg-muted/60",
         isChecked && !isSelected && "ring-2 ring-primary/20 bg-selection/60",
       )}
       style={{ gap: 'var(--density-item-gap)', paddingInline: '16px', paddingBlock: 'var(--density-item-py)' }}
@@ -114,14 +114,14 @@ export function ContactListItem({ contact, isSelected, isChecked, hasSelection, 
       )}
 
       <div className="flex-1 min-w-0">
-        <div className="text-sm font-medium truncate">
+        <div className="text-sm font-medium truncate" title={name || email || "-"}>
           {name || email || "-"}
         </div>
         {density !== 'extra-compact' && email && name && (
-          <div className="text-xs text-muted-foreground truncate">{email}</div>
+          <div className="text-xs text-muted-foreground truncate" title={email}>{email}</div>
         )}
         {density === 'comfortable' && org && (
-          <div className="text-xs text-muted-foreground truncate">{org}</div>
+          <div className="text-xs text-muted-foreground truncate" title={org}>{org}</div>
         )}
       </div>
     </div>

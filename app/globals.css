@@ -1681,3 +1681,16 @@ optgroup {
     max-width: 100%;
   }
 }
+
+/* Contacts filters follow the list pane, including a reader split on desktop. */
+[data-memail-contacts-list] { container: memail-contacts-list / inline-size; }
+[data-memail-contact-filters] { max-height: 58%; }
+.memail-contact-filter-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.memail-contact-presence-fields { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@container memail-contacts-list (max-width: 34rem) {
+  [data-memail-contact-filters] { max-height: 50%; }
+  .memail-contact-presence-fields { grid-template-columns: minmax(0, 1fr); }
+}
+@container memail-contacts-list (max-width: 23rem) {
+  .memail-contact-filter-fields { grid-template-columns: minmax(0, 1fr); }
+}

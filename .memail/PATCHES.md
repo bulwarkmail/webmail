@@ -162,3 +162,11 @@ Add each customization here. Include the relevant upstream files, the reason it 
 - Files separates account context from the folder path and wraps tools below it when the pane is at most 40rem wide. The root remains readable, long folder names retain full titles, and compact paths show root/current with every intermediate parent in the existing path menu.
 - List/grid uses a single radio Tab stop with arrow, Home/End and RTL navigation through the native view callback. Sort and path menus expose localized names and path disclosure state.
 - Clearing or escaping compact search restores focus after its trigger remounts; desktop search retains focus. Native file actions, selection tools, plugin actions and account navigation callbacks remain in place. No file storage or mail API changes.
+
+
+## Contacts search, filters and list hierarchy
+
+- Contacts has a compact heading/actions row and a separate full-width search row, keeping search readable when phone account/menu controls are present. Clearing search and empty-search recovery retain input focus; Escape clears the query without invoking row actions.
+- Presence filters use native All/Yes/No selects instead of implicit three-state cycling. Existing matching semantics, including false/exclusion and combinations, are retained. Labels reuse the existing locale catalogs. Sort chips now expose pressed state.
+- Advanced filters are a named, linked disclosure region with a scrollable pane, sticky Clear/Close controls and pane-width field grids. Height caps preserve results space (58% generally, 50% in narrow panes). Close/Escape returns to the filter trigger without resetting criteria; composition Escape is ignored. Empty filtered-result recovery clears criteria and focuses search.
+- Contact rows have quieter hover/separator treatment and full-name/email/organization titles for truncated values. Native density, selection, sorting, drag, context-menu and plugin callbacks remain in place. No contact storage, import/export or account APIs changed.

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Search, BookUser, Trash2, Users, Download, X, UserPlus, CheckSquare, Square, Filter, Mail, Phone, Image as ImageIcon, RotateCcw, Menu, ArrowDownAZ, Loader2, FolderInput, Upload, Printer } from "@/components/icons";
 import { Input } from "@/components/ui/input";
@@ -46,10 +46,6 @@ const EMPTY_FILTERS: ListFilters = {
   hasPhoto: null,
 };
 
-function cycleTri(v: TriState): TriState {
-  return v === null ? true : v === true ? false : null;
-}
-
 function countActiveFilters(f: ListFilters): number {
   let n = 0;
   if (f.organization.trim()) n++;
@@ -84,11 +80,36 @@ function getAnniversaryMonth(date: AnniversaryDate): number | null {
   return null;
 }
 
+function ContactPresenceFilter({ icon, label, value, onChange, anyLabel, yesLabel, noLabel }: {
+  icon: React.ReactNode;
+  label: string;
+  value: TriState;
+  onChange: (value: TriState) => void;
+  anyLabel: string;
+  yesLabel: string;
+  noLabel: string;
+}) {
+  return (
+    <label className="flex min-w-0 items-center gap-2 rounded-lg border border-border bg-background px-2.5 py-2 text-xs">
+      <span aria-hidden className="shrink-0 text-muted-foreground">{icon}</span>
+      <span className="min-w-0 flex-1">{label}</span>
+      <select aria-label={label} value={value === null ? "any" : String(value)}
+        onChange={(event) => onChange(event.target.value === "any" ? null : event.target.value === "true")}
+        className="max-w-[55%] min-w-0 rounded-md border border-input bg-background px-1 py-1 text-xs focus-visible:outline-2 focus-visible:outline-ring">
+        <option value="any">{anyLabel}</option>
+        <option value="true">{yesLabel}</option>
+        <option value="false">{noLabel}</option>
+      </select>
+    </label>
+  );
+}
+
 function ToggleChip({ icon, label, value, onClick }: { icon: React.ReactNode; label: string; value: TriState; onClick: () => void }) {
   return (
     <button
       type="button"
       onClick={onClick}
+      aria-pressed={value === true}
       className={cn(
         "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs transition-colors border",
         value === true && "bg-primary/10 border-primary/30 text-primary",
@@ -182,6 +203,12 @@ export function ContactList({
   // Opened by a long-press: the menu also offers Select, as touch has no Ctrl+click.
   const [menuByTouch, setMenuByTouch] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const filtersId = useId();
+  const filtersTrigger = useRef<HTMLButtonElement>(null);
+  const closeFilters = () => {
+    setFiltersOpen(false);
+    filtersTrigger.current?.focus();
+  };
   const [filters, setFilters] = useState<ListFilters>(EMPTY_FILTERS);
   const activeFilters = countActiveFilters(filters);
   const exporting = useContactExportBusy();
@@ -387,16 +414,17 @@ export function ContactList({
   }, []);
 
   return (
-    <div className={cn("flex flex-col h-full", className)}>
+    <div data-memail-contacts-list="" className={cn("flex min-h-0 min-w-0 flex-col h-full", className)}>
       {/* Toolbar: select / search / filter */}
-      <div className="border-b border-border bg-background">
-        <div className="px-3 h-14 flex items-center">
+      <div className="shrink-0 border-b border-border bg-background">
+        <div className="px-3 h-12 flex items-center">
           <div className="flex items-center gap-1 w-full">
             {onMenuClick && (
               <ToolbarButton label={t("open_categories")} onClick={onMenuClick}>
                 <Menu />
               </ToolbarButton>
             )}
+            <h2 className="min-w-0 flex-1 truncate px-1 text-sm font-semibold">{t("title")}</h2>
             <ToolbarButton
               label={hasSelection ? (allSelected ? t("bulk.clear") : t("bulk.select_all")) : t("filters.select")}
               onClick={() => {
@@ -414,34 +442,6 @@ export function ContactList({
             >
               {hasSelection ? <CheckSquare /> : <Square />}
             </ToolbarButton>
-            <ToolbarSearch
-              ref={searchRef}
-              className="flex-1"
-              placeholder={t("search_placeholder")}
-              aria-label={t("search_placeholder")}
-              autoComplete="off"
-              shortcut="/"
-              value={searchQuery}
-              onChange={(e) => onSearchChange(e.target.value)}
-              onClear={() => onSearchChange("")}
-              clearLabel={t("clear_search")}
-              trailing={
-                <ToolbarSearchAction
-                  aria-label={t("filters.toggle")}
-                  title={t("filters.toggle")}
-                  onClick={() => setFiltersOpen((v) => !v)}
-                  aria-expanded={filtersOpen}
-                  active={filtersOpen || activeFilters > 0}
-                >
-                  <Filter className="w-4 h-4" />
-                  {!filtersOpen && activeFilters > 0 && (
-                    <span className="absolute -top-1 -end-1 flex items-center justify-center w-4 h-4 text-[0.625rem] font-bold rounded-full bg-primary text-primary-foreground">
-                      {activeFilters}
-                    </span>
-                  )}
-                </ToolbarSearchAction>
-              }
-            />
             {onPrint && (
               <ToolbarButton label={tCommon("print")} onClick={onPrint} className="hidden md:inline-flex">
                 <Printer />
@@ -450,13 +450,58 @@ export function ContactList({
             <PhoneHeaderActions below="md" menuItems={phoneMenuItems} />
           </div>
         </div>
-
+        <div className="px-3 pb-3">
+          <ToolbarSearch
+            ref={searchRef}
+            className="flex-1"
+            placeholder={t("search_placeholder")}
+            aria-label={t("search_placeholder")}
+            autoComplete="off"
+            shortcut="/"
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
+            onClear={() => { onSearchChange(""); searchRef.current?.focus(); }}
+            onKeyDown={(event) => {
+              if (event.key !== "Escape" || event.nativeEvent.isComposing) return;
+              event.preventDefault();
+              event.stopPropagation();
+              onSearchChange("");
+            }}
+            clearLabel={t("clear_search")}
+            trailing={
+              <ToolbarSearchAction
+                ref={filtersTrigger}
+                aria-controls={filtersOpen ? filtersId : undefined}
+                aria-label={t("filters.toggle")}
+                title={t("filters.toggle")}
+                onClick={() => setFiltersOpen((v) => !v)}
+                aria-expanded={filtersOpen}
+                active={filtersOpen || activeFilters > 0}
+              >
+                <Filter className="w-4 h-4" />
+                {!filtersOpen && activeFilters > 0 && (
+                  <span className="absolute -top-1 -end-1 flex items-center justify-center w-4 h-4 text-[0.625rem] font-bold rounded-full bg-primary text-primary-foreground">
+                    {activeFilters}
+                  </span>
+                )}
+              </ToolbarSearchAction>
+            }
+          />
+        </div>
       </div>
 
       {filtersOpen && (
-        <div className="border-b border-border bg-muted/30 animate-in slide-in-from-top-2 fade-in duration-200">
-          <div className="px-4 py-3 space-y-3">
-            <div className="flex items-center justify-between">
+        <section id={filtersId} role="region" aria-label={t("filters.title")}
+          data-memail-contact-filters=""
+          onKeyDown={(event) => {
+            if (event.key !== "Escape" || event.defaultPrevented || event.nativeEvent.isComposing) return;
+            event.preventDefault();
+            event.stopPropagation();
+            closeFilters();
+          }}
+          className="shrink-0 overflow-y-auto border-b border-border bg-muted/20">
+          <div className="px-4 pb-4 space-y-3">
+            <div className="sticky top-0 z-10 -mx-4 flex items-center justify-between gap-2 border-b border-border bg-background px-4 py-2">
               <span className="text-sm font-medium text-foreground">{t("filters.title")}</span>
               <div className="flex items-center gap-1">
                 <Button
@@ -467,13 +512,13 @@ export function ContactList({
                   <RotateCcw className="w-3 h-3 me-1" />
                   {t("filters.clear")}
                 </Button>
-                <IconButton label={t("filters.close")} onClick={() => setFiltersOpen(false)}>
+                <IconButton label={t("filters.close")} onClick={closeFilters}>
                   <X />
                 </IconButton>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
+            <div className="memail-contact-filter-fields grid gap-3">
               <div>
                 <label className="text-xs text-muted-foreground mb-1 block">{t("filters.organization")}</label>
                 <Input
@@ -496,7 +541,7 @@ export function ContactList({
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
+            <div className="memail-contact-filter-fields grid gap-3">
               <div>
                 <label className="text-xs text-muted-foreground mb-1 block">{t("filters.location")}</label>
                 <Input
@@ -534,25 +579,17 @@ export function ContactList({
               </select>
             </div>
 
-            <div className="flex items-center gap-2 flex-wrap">
-              <ToggleChip
-                icon={<Mail className="w-3.5 h-3.5" />}
-                label={t("filters.has_email")}
-                value={filters.hasEmail}
-                onClick={() => setFilters((f) => ({ ...f, hasEmail: cycleTri(f.hasEmail) }))}
-              />
-              <ToggleChip
-                icon={<Phone className="w-3.5 h-3.5" />}
-                label={t("filters.has_phone")}
-                value={filters.hasPhone}
-                onClick={() => setFilters((f) => ({ ...f, hasPhone: cycleTri(f.hasPhone) }))}
-              />
-              <ToggleChip
-                icon={<ImageIcon className="w-3.5 h-3.5" />}
-                label={t("filters.has_photo")}
-                value={filters.hasPhoto}
-                onClick={() => setFilters((f) => ({ ...f, hasPhoto: cycleTri(f.hasPhoto) }))}
-              />
+            <div className="memail-contact-presence-fields grid gap-2">
+              {([
+                ["hasEmail", "filters.has_email", Mail],
+                ["hasPhone", "filters.has_phone", Phone],
+                ["hasPhoto", "filters.has_photo", ImageIcon],
+              ] as const).map(([key, label, Icon]) => (
+                <ContactPresenceFilter key={key} icon={<Icon className="h-3.5 w-3.5" />}
+                  label={t(label)} value={filters[key]}
+                  anyLabel={t("tabs.all")} yesLabel={tCommon("yes")} noLabel={tCommon("no")}
+                  onChange={(value) => setFilters((current) => ({ ...current, [key]: value }))} />
+              ))}
             </div>
 
             {/* Sort order (persisted setting, also on /settings/contacts) */}
@@ -575,7 +612,7 @@ export function ContactList({
               />
             </div>
           </div>
-        </div>
+        </section>
       )}
 
       {/* Bulk action bar */}
@@ -648,7 +685,7 @@ export function ContactList({
         aria-label={t("title")}
         aria-multiselectable
         onKeyDown={handleListKeyDown}
-        className="flex-1 overflow-y-auto"
+        className="min-h-0 flex-1 overflow-y-auto"
       >
         {sorted.length === 0 && isLoading && !searchQuery && activeFilters === 0 ? (
           <div aria-hidden className="py-1" data-testid="contact-list-skeleton">
@@ -672,12 +709,12 @@ export function ContactList({
               actions={
                 <>
                   {searchQuery && (
-                    <Button variant="outline" size="sm" onClick={() => onSearchChange("")}>
+                    <Button variant="outline" size="sm" onClick={() => { onSearchChange(""); searchRef.current?.focus(); }}>
                       {t("clear_search")}
                     </Button>
                   )}
                   {activeFilters > 0 && (
-                    <Button variant="outline" size="sm" onClick={() => setFilters(EMPTY_FILTERS)}>
+                    <Button variant="outline" size="sm" onClick={() => { setFilters(EMPTY_FILTERS); searchRef.current?.focus(); }}>
                       <RotateCcw className="w-3.5 h-3.5 me-1" />
                       {t("filters.clear")}
                     </Button>

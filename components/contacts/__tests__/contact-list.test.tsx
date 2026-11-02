@@ -139,7 +139,7 @@ describe('ContactList', () => {
     render(<ContactList {...defaultProps} contacts={[alice, carla]} />);
 
     fireEvent.click(screen.getByLabelText('filters.toggle'));
-    fireEvent.click(screen.getByText('filters.has_photo'));
+    fireEvent.change(screen.getByRole('combobox', { name: 'filters.has_photo' }), { target: { value: 'true' } });
 
     expect(screen.getByText('Carla Diaz')).toBeInTheDocument();
     expect(screen.queryByText('Alice Smith')).not.toBeInTheDocument();
@@ -253,5 +253,74 @@ describe('ContactList', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+});
+
+
+describe('Contacts filter disclosure and recovery', () => {
+  it('names the filter region and returns focus without clearing criteria on Escape', () => {
+    render(<ContactList {...defaultProps} />);
+    const trigger = screen.getByRole('button', { name: 'filters.toggle' });
+    fireEvent.click(trigger);
+    const panel = screen.getByRole('region', { name: 'filters.title' });
+    expect(trigger).toHaveAttribute('aria-controls', panel.id);
+    fireEvent.change(screen.getByRole('textbox', { name: 'filters.organization' }), { target: { value: 'Missing company' } });
+    fireEvent.keyDown(screen.getByRole('textbox', { name: 'filters.organization' }), { key: 'Escape' });
+    expect(screen.queryByRole('region', { name: 'filters.title' })).toBeNull();
+    expect(trigger).toHaveFocus();
+    expect(trigger).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.getByText('empty_filtered')).toBeInTheDocument();
+    fireEvent.click(trigger);
+    expect(screen.getByRole('textbox', { name: 'filters.organization' })).toHaveValue('Missing company');
+    fireEvent.click(screen.getByRole('button', { name: 'filters.close' }));
+    expect(trigger).toHaveFocus();
+  });
+
+  it('keeps composition Escape inside the filter field', () => {
+    render(<ContactList {...defaultProps} />);
+    fireEvent.click(screen.getByRole('button', { name: 'filters.toggle' }));
+    fireEvent.keyDown(screen.getByRole('textbox', { name: 'filters.organization' }), { key: 'Escape', isComposing: true });
+    expect(screen.getByRole('region', { name: 'filters.title' })).toBeInTheDocument();
+  });
+
+  it('offers explicit any, yes and no presence filters and combines exclusions', () => {
+    const carla = makeContact({ id: '3', name: { full: 'Carla' }, phones: { p: { number: '123' } } });
+    render(<ContactList {...defaultProps} contacts={[alice, bob, carla]} />);
+    fireEvent.click(screen.getByRole('button', { name: 'filters.toggle' }));
+    const email = screen.getByRole('combobox', { name: 'filters.has_email' });
+    expect(email).toHaveValue('any');
+    fireEvent.change(email, { target: { value: 'false' } });
+    expect(screen.getByRole('combobox', { name: 'filters.has_email' })).toHaveValue('false');
+    expect(screen.queryByText('Alice Smith')).toBeNull();
+    expect(screen.getByText('Carla')).toBeInTheDocument();
+    fireEvent.change(screen.getByRole('combobox', { name: 'filters.has_phone' }), { target: { value: 'false' } });
+    expect(screen.getByText('empty_filtered')).toBeInTheDocument();
+    fireEvent.change(email, { target: { value: 'any' } });
+    expect(screen.getByText('Alice Smith')).toBeInTheDocument();
+    expect(screen.queryByText('Carla')).toBeNull();
+  });
+
+  it('recovers from empty filtered results with search focus', () => {
+    render(<ContactList {...defaultProps} />);
+    fireEvent.click(screen.getByRole('button', { name: 'filters.toggle' }));
+    fireEvent.change(screen.getByRole('combobox', { name: 'filters.has_email' }), { target: { value: 'false' } });
+    fireEvent.click(screen.getByRole('button', { name: 'filters.close' }));
+    fireEvent.click(screen.getByRole('button', { name: 'filters.clear' }));
+    expect(screen.getByRole('searchbox', { name: 'search_placeholder' })).toHaveFocus();
+    expect(screen.getByText('Alice Smith')).toBeInTheDocument();
+    expect(screen.queryByText('empty_filtered')).toBeNull();
+  });
+
+  it('keeps focus in search when clearing and leaves row actions alone', () => {
+    const onSearchChange = vi.fn();
+    const onSelectContact = vi.fn();
+    render(<ContactList {...defaultProps} searchQuery="Alice" onSearchChange={onSearchChange} onSelectContact={onSelectContact} />);
+    const search = screen.getByRole('searchbox', { name: 'search_placeholder' });
+    fireEvent.click(screen.getByRole('button', { name: 'clear_search' }));
+    expect(search).toHaveFocus();
+    expect(onSearchChange).toHaveBeenCalledWith('');
+    fireEvent.keyDown(search, { key: 'Escape' });
+    expect(search).toHaveFocus();
+    expect(onSelectContact).not.toHaveBeenCalled();
   });
 });
