@@ -123,6 +123,22 @@ describe('api.email.forward', () => {
     expect(sendEmail).toHaveBeenCalledTimes(2);
   });
 
+  it('forwards the words of an HTML-only mail, not its markup', async () => {
+    // RFC 8621 lists the text/html part under textBody when there is no text/plain one.
+    const htmlPart = { partId: '1', blobId: 'hb', size: 90, type: 'text/html' };
+    client.getEmail.mockResolvedValue({
+      ...invoice, textBody: [htmlPart], htmlBody: [htmlPart],
+      bodyValues: { 1: { value: '<div style="font:14px Arial">Please pay &amp; book.</div><div>Thanks</div>' } },
+    });
+    const pending = call(FORWARDER, 'email.forward', 'E1', { to: ['buchhaltung@firma.example'] });
+    await answerDialog(true);
+    await pending;
+
+    const body = sendEmail.mock.calls[0][3] as string;
+    expect(body).not.toContain('<div');
+    expect(body).toMatch(/\n\nPlease pay & book\.\nThanks$/);
+  });
+
   it('sends nothing and remembers nothing when the user says no', async () => {
     const pending = call(FORWARDER, 'email.forward', 'E1', { to: ['eve@evil.example'] });
     await answerDialog(false);

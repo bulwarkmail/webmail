@@ -144,6 +144,9 @@ function nodesToPlainText(nodes: NodeListOf<ChildNode>, options: HtmlToPlainText
     const element = node as HTMLElement;
     const tagName = element.tagName.toLowerCase();
 
+    // A mail's own CSS and scripts are not part of what it says.
+    if (tagName === 'style' || tagName === 'script') return;
+
     if (tagName === 'img') {
       const alt = element.getAttribute('alt')?.replace(/\s+/g, ' ').trim();
       if (alt && options.imageAlt) appendText(options.imageAlt(alt));
