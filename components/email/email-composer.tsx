@@ -156,6 +156,10 @@ import { isReportPart, normalizeCid } from "@/lib/attachment-visibility";
 import { unnamedAttachmentName } from "@/lib/attachment-name";
 import { RichTextEditor } from "@/components/email/rich-text-editor";
 import { useProofreading } from "@/components/email/proofreading/use-proofreading";
+import { IssuePopup } from "@/components/email/proofreading/issue-popup";
+import { ProofreadingStatus } from "@/components/email/proofreading/proofreading-status";
+import { ProofreadingNotice } from "@/components/email/proofreading/proofreading-notice";
+import { issueRect } from "@/components/email/proofreading/text-check-extension";
 import { isRecipientMentionActive } from "@/components/email/recipient-mention";
 import type { Editor } from "@tiptap/react";
 import { htmlToPlainText as htmlToPlainTextShared } from "@/lib/html-to-text";
@@ -500,6 +504,7 @@ export function EmailComposer({
   const tQuote = useTranslations('quote_header');
   const tViewer = useTranslations('email_viewer');
   const tClassification = useTranslations('classification');
+  const tProofreading = useTranslations('proofreading');
   const tOffline = useTranslations('offline');
   const tSendGuards = useTranslations('send_guards');
   const timeFormat = useSettingsStore((state) => state.timeFormat);
@@ -1088,6 +1093,9 @@ export function EmailComposer({
   const [emptySubjectDelayedUntil, setEmptySubjectDelayedUntil] = useState<string | undefined>();
   const [emptySubjectDontAskAgain, setEmptySubjectDontAskAgain] = useState(false);
   const [showPlaceholderWarning, setShowPlaceholderWarning] = useState(false);
+  // A proofreading checker asked to warn before sending with open issues.
+  const [proofreadingWarning, setProofreadingWarning] = useState<{ count: number; delayedUntil?: string } | null>(null);
+  const proofreadingConfirmedRef = useRef(false);
   const [placeholderWarningMatches, setPlaceholderWarningMatches] = useState<string[]>([]);
   const [placeholderWarningDelayedUntil, setPlaceholderWarningDelayedUntil] = useState<string | undefined>();
   const [placeholderDontAskAgain, setPlaceholderDontAskAgain] = useState(false);
@@ -3518,6 +3526,16 @@ export function EmailComposer({
       }
     }
 
+    // Open proofreading issues, when a checker asked for the warning (the
+    // LanguageTool plugin's "warn before sending" option). Once per message.
+    if (!proofreadingConfirmedRef.current) {
+      const open = proofreading.sendWarningIssues().length;
+      if (open > 0) {
+        setProofreadingWarning({ count: open, delayedUntil });
+        return;
+      }
+    }
+
     // Checks other features register (lib/outgoing/send-pipeline.ts), such
     // as the external-recipient confirm. They may ask the user, so a second
     // click meanwhile does nothing.
@@ -4180,6 +4198,8 @@ export function EmailComposer({
       // Same for the "@" recipient list in the body: this handler runs in the
       // capture phase, before the editor could close the list itself.
       if (isRecipientMentionActive(editorRef.current)) return;
+      // And for a proofreading popup: Escape closes only it.
+      if (proofreading.popup) return;
       e.preventDefault();
       handleClose();
       return;
@@ -4735,6 +4755,20 @@ export function EmailComposer({
           <PluginSlot name="composer-above-body" className="w-full" extraProps={pluginDraftProps} />
         )}
         {/* Body */}
+        <ProofreadingNotice status={proofreading.status} />
+        {proofreading.popup && !plainTextMode && pluginEditor && (() => {
+          const issue = proofreading.issues.find((i) => i.key === proofreading.popup!.key);
+          return issue ? (
+            <IssuePopup
+              state={proofreading.popup}
+              issue={issue}
+              anchor={() => issueRect(pluginEditor, issue.key)}
+              onApply={proofreading.apply}
+              onDismiss={proofreading.dismiss}
+              onClose={proofreading.closePopup}
+            />
+          ) : null;
+        })()}
         {plainTextMode ? (
           <>
           <label htmlFor={`${fieldIdBase}-body`} className="sr-only">{t('body_label')}</label>
@@ -4755,12 +4789,13 @@ export function EmailComposer({
             aria-invalid={validationErrors.body || undefined}
             aria-describedby={validationErrors.body ? `${fieldIdBase}-body-error` : undefined}
             onContextMenu={onBodyContextMenu}
+            onMouseDown={selectionMenu.onMouseDown}
             spellCheck={proofreading.browserSpellcheck}
             lang={textLang}
           />
           </>
         ) : (
-          <div ref={editorContainerRef} onContextMenu={onBodyContextMenu}>
+          <div ref={editorContainerRef} onContextMenu={onBodyContextMenu} onMouseDownCapture={selectionMenu.onMouseDown}>
             <RichTextEditor
               content={body}
               onChange={(html) => {
@@ -4783,6 +4818,7 @@ export function EmailComposer({
               onMentionAdd={addMentionedRecipient}
               spellcheck={proofreading.browserSpellcheck}
               lang={textLang}
+              textCheck={proofreading.editorHandlers}
             />
           </div>
         )}
@@ -5127,6 +5163,7 @@ export function EmailComposer({
               </>}
             </ComposerToolbarMenu>
             <ComposerPluginToolbarButtons surface="composer-toolbar-actions" context={composerActionContext} />
+            <ProofreadingStatus proofreading={proofreading} plainTextMode={plainTextMode} />
           </div>
 
           {/* Right side - Discard + Send (desktop) */}
@@ -5398,6 +5435,40 @@ export function EmailComposer({
           {t('placeholder_warning.dont_ask_again')}
         </label>
       </Dialog>
+
+      <Dialog
+        isOpen={proofreadingWarning !== null}
+        onClose={() => setProofreadingWarning(null)}
+        role="alertdialog"
+        showClose={false}
+        title={tProofreading('send_warning.title')}
+        description={tProofreading('send_warning.body', { count: proofreadingWarning?.count ?? 0 })}
+        footer={
+          <>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setProofreadingWarning(null);
+                // After the focus trap hands focus back, go to the first issue.
+                setTimeout(() => proofreading.navigate(1), 0);
+              }}
+            >
+              {tProofreading('send_warning.review')}
+            </Button>
+            <Button
+              data-testid="proofreading-send-anyway"
+              onClick={() => {
+                const delayed = proofreadingWarning?.delayedUntil;
+                proofreadingConfirmedRef.current = true;
+                setProofreadingWarning(null);
+                handleSend({ skipSubjectCheck: true, skipAttachmentCheck: true, delayedUntil: delayed });
+              }}
+            >
+              {tProofreading('send_warning.send')}
+            </Button>
+          </>
+        }
+      />
 
       <Dialog
         isOpen={showCloseDialog}

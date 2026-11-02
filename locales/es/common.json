@@ -6359,5 +6359,76 @@
       "added_from": "Añadido desde un correo de {domain}",
       "added_from_subject": "Añadido desde el correo «{subject}» de {domain}"
     }
+  },
+  "proofreading": {
+    "kind": {
+      "spelling": "Ortografía",
+      "grammar": "Gramática",
+      "style": "Estilo",
+      "other": "Sugerencia"
+    },
+    "popup": {
+      "label": "{kind}: {word}",
+      "no_suggestions": "No hay sugerencias",
+      "suggestions": "Sugerencias",
+      "replace_with": "Reemplazar por {text}",
+      "also": "También de {checker}",
+      "ignore": "Ignorar",
+      "add_to_dictionary": "Añadir al diccionario",
+      "disable_rule": "Desactivar esta regla",
+      "changed": "El texto ha cambiado. Espera a la siguiente revisión."
+    },
+    "list_item": "{word}: {message} Sugerencia: {suggestion}",
+    "list_item_no_suggestion": "{word}: {message}",
+    "announce_count": "{count, plural, =0 {No hay errores de ortografía ni de gramática} one {# error de ortografía o gramática} other {# errores de ortografía o gramática}}",
+    "status": {
+      "title": "Revisión",
+      "off": "Revisión desactivada",
+      "paused": "Revisión en pausa",
+      "rate_limited": "Comprobación en pausa",
+      "unavailable": "Comprobación no disponible",
+      "checking": "Comprobando…",
+      "issues": "{count, plural, =0 {Sin problemas} one {# problema} other {# problemas}}"
+    },
+    "panel": {
+      "title": "Revisión",
+      "required": "Exigido por tu organización",
+      "check_message": "Revisar este mensaje",
+      "notice": "Mientras escribes, el texto se envía a {checkers} para revisarlo. Tu firma y el mensaje citado quedan fuera, y no se envía nada de un mensaje que firmes o cifres.",
+      "turn_on": "Activar la revisión",
+      "paused_protected": "No se revisa nada mientras este mensaje esté configurado para firmarse o cifrarse.",
+      "paused_unknown": "{plugin} puede firmar o cifrar mensajes sin mostrarlo aquí, así que no se revisa nada mientras esté activo.",
+      "rate_limited": "{checker} ha pedido esperar. La revisión se reanuda en un minuto.",
+      "unavailable": "{checker} no puede revisar ahora mismo. Lo vuelve a intentar cuando sigas escribiendo.",
+      "no_issues": "No se han encontrado problemas.",
+      "list_label": "Problemas en este mensaje",
+      "shortcuts": "Siguiente problema: {next}. Anterior: {previous}."
+    },
+    "notice": {
+      "on": "La revisión está activada. Mientras escribes, el texto se envía a {checkers} para revisarlo, sin tu firma ni el mensaje citado. No se envía nada de un mensaje que firmes o cifres.",
+      "forced": "Tu organización ha activado la revisión. Mientras escribes, el texto se envía a {checkers} para revisarlo, sin tu firma ni el mensaje citado. No se envía nada de un mensaje que firmes o cifres.",
+      "ok": "Aceptar"
+    },
+    "send_warning": {
+      "title": "¿Enviar con problemas pendientes?",
+      "body": "{count, plural, one {Queda # error de ortografía o gramática} other {Quedan # errores de ortografía o gramática}} sin resolver en este mensaje.",
+      "review": "Revisar",
+      "send": "Enviar de todos modos"
+    },
+    "settings": {
+      "title": "Revisión",
+      "description": "Subraya los errores de ortografía y gramática mientras escribes, con sugerencias para corregirlos.",
+      "enable": "Revisar la ortografía y la gramática mientras escribo",
+      "enable_description": "El texto que escribes se envía al complemento de revisión y al servicio que usa. Tu firma y los mensajes citados quedan fuera, y los mensajes firmados o cifrados nunca se revisan.",
+      "no_checker": "No hay ningún complemento de revisión instalado. Pide a tu administrador que añada uno.",
+      "plugin_description": "Envía lo que escribes a {plugin}.",
+      "writing_language": "Idioma de escritura",
+      "writing_language_description": "El idioma en el que sueles escribir. Lo usan la revisión y el corrector ortográfico de tu navegador.",
+      "auto": "Detectar automáticamente"
+    },
+    "shortcuts": {
+      "next_issue": "Siguiente error de ortografía o gramática",
+      "previous_issue": "Anterior error de ortografía o gramática"
+    }
   }
 }

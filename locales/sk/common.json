@@ -6359,5 +6359,76 @@
       "added_from": "Pridané z e-mailu od {domain}",
       "added_from_subject": "Pridané z e-mailu „{subject}“ od {domain}"
     }
+  },
+  "proofreading": {
+    "kind": {
+      "spelling": "Pravopis",
+      "grammar": "Gramatika",
+      "style": "Štýl",
+      "other": "Návrh"
+    },
+    "popup": {
+      "label": "{kind}: {word}",
+      "no_suggestions": "Žiadne návrhy",
+      "suggestions": "Návrhy",
+      "replace_with": "Nahradiť za {text}",
+      "also": "Aj od {checker}",
+      "ignore": "Ignorovať",
+      "add_to_dictionary": "Pridať do slovníka",
+      "disable_rule": "Vypnúť toto pravidlo",
+      "changed": "Text sa zmenil. Počkajte na ďalšiu kontrolu."
+    },
+    "list_item": "{word}: {message} Návrh: {suggestion}",
+    "list_item_no_suggestion": "{word}: {message}",
+    "announce_count": "{count, plural, =0 {Žiadne pravopisné ani gramatické chyby} one {# pravopisná alebo gramatická chyba} few {# pravopisné alebo gramatické chyby} many {# pravopisnej alebo gramatickej chyby} other {# pravopisných alebo gramatických chýb}}",
+    "status": {
+      "title": "Kontrola textu",
+      "off": "Kontrola textu vypnutá",
+      "paused": "Kontrola textu pozastavená",
+      "rate_limited": "Kontrola pozastavená",
+      "unavailable": "Kontrola nie je k dispozícii",
+      "checking": "Kontroluje sa…",
+      "issues": "{count, plural, =0 {Žiadne problémy} one {# problém} few {# problémy} many {# problému} other {# problémov}}"
+    },
+    "panel": {
+      "title": "Kontrola textu",
+      "required": "Vyžaduje vaša organizácia",
+      "check_message": "Skontrolovať túto správu",
+      "notice": "Počas písania sa váš text posiela na kontrolu službe {checkers}. Váš podpis a citovaná správa sa vynechávajú a pri správe, ktorú podpisujete alebo šifrujete, sa neposiela nič.",
+      "turn_on": "Zapnúť kontrolu textu",
+      "paused_protected": "Kým je táto správa nastavená na podpísanie alebo zašifrovanie, nič sa nekontroluje.",
+      "paused_unknown": "{plugin} môže podpisovať alebo šifrovať správy bez toho, aby sa to tu zobrazilo, preto sa nič nekontroluje, kým je zapnutý.",
+      "rate_limited": "{checker} požiadal o počkanie. Kontrola sa znova spustí o minútu.",
+      "unavailable": "{checker} teraz nemôže kontrolovať. Skúsi to znova, keď budete pokračovať v písaní.",
+      "no_issues": "Nenašli sa žiadne problémy.",
+      "list_label": "Problémy v tejto správe",
+      "shortcuts": "Ďalší problém: {next}. Predchádzajúci: {previous}."
+    },
+    "notice": {
+      "on": "Kontrola textu je zapnutá. Počas písania sa váš text posiela na kontrolu službe {checkers}, bez vášho podpisu a citovanej správy. Pri správe, ktorú podpisujete alebo šifrujete, sa neposiela nič.",
+      "forced": "Vaša organizácia zapla kontrolu textu. Počas písania sa váš text posiela na kontrolu službe {checkers}, bez vášho podpisu a citovanej správy. Pri správe, ktorú podpisujete alebo šifrujete, sa neposiela nič.",
+      "ok": "OK"
+    },
+    "send_warning": {
+      "title": "Odoslať s nevyriešenými problémami?",
+      "body": "{count, plural, one {V tejto správe zostáva # nevyriešená pravopisná alebo gramatická chyba.} few {V tejto správe zostávajú # nevyriešené pravopisné alebo gramatické chyby.} many {V tejto správe zostáva # nevyriešenej pravopisnej alebo gramatickej chyby.} other {V tejto správe zostáva # nevyriešených pravopisných alebo gramatických chýb.}}",
+      "review": "Skontrolovať",
+      "send": "Odoslať aj tak"
+    },
+    "settings": {
+      "title": "Kontrola textu",
+      "description": "Podčiarkuje pravopisné a gramatické chyby počas písania a ponúka návrhy na opravu.",
+      "enable": "Kontrolovať pravopis a gramatiku počas písania",
+      "enable_description": "Text, ktorý píšete, sa posiela doplnku na kontrolu textu a službe, ktorú používa. Váš podpis a citované správy sa vynechávajú a podpísané alebo šifrované správy sa nikdy nekontrolujú.",
+      "no_checker": "Nie je nainštalovaný žiadny doplnok na kontrolu textu. Požiadajte správcu, aby nejaký pridal.",
+      "plugin_description": "Posiela to, čo píšete, do {plugin}.",
+      "writing_language": "Jazyk písania",
+      "writing_language_description": "Jazyk, v ktorom zvyčajne píšete. Používa ho kontrola textu aj kontrola pravopisu vo vašom prehliadači.",
+      "auto": "Rozpoznať automaticky"
+    },
+    "shortcuts": {
+      "next_issue": "Ďalšia pravopisná alebo gramatická chyba",
+      "previous_issue": "Predchádzajúca pravopisná alebo gramatická chyba"
+    }
   }
 }

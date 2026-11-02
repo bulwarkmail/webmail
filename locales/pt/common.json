@@ -6359,5 +6359,76 @@
       "added_from": "Adicionado a partir de um e-mail de {domain}",
       "added_from_subject": "Adicionado a partir do e-mail “{subject}” de {domain}"
     }
+  },
+  "proofreading": {
+    "kind": {
+      "spelling": "Ortografia",
+      "grammar": "Gramática",
+      "style": "Estilo",
+      "other": "Sugestão"
+    },
+    "popup": {
+      "label": "{kind}: {word}",
+      "no_suggestions": "Nenhuma sugestão",
+      "suggestions": "Sugestões",
+      "replace_with": "Substituir por {text}",
+      "also": "Também de {checker}",
+      "ignore": "Ignorar",
+      "add_to_dictionary": "Adicionar ao dicionário",
+      "disable_rule": "Desativar esta regra",
+      "changed": "O texto mudou. Aguarde a próxima verificação."
+    },
+    "list_item": "{word}: {message} Sugestão: {suggestion}",
+    "list_item_no_suggestion": "{word}: {message}",
+    "announce_count": "{count, plural, =0 {Nenhum erro de ortografia ou gramática} one {# erro de ortografia ou gramática} other {# erros de ortografia ou gramática}}",
+    "status": {
+      "title": "Revisão",
+      "off": "Revisão desativada",
+      "paused": "Revisão em pausa",
+      "rate_limited": "Verificação em pausa",
+      "unavailable": "Verificação indisponível",
+      "checking": "Verificando…",
+      "issues": "{count, plural, =0 {Nenhum problema} one {# problema} other {# problemas}}"
+    },
+    "panel": {
+      "title": "Revisão",
+      "required": "Exigido pela sua organização",
+      "check_message": "Verificar esta mensagem",
+      "notice": "Enquanto digita, o texto que escreve é enviado para {checkers} para ser verificado. Sua assinatura e a mensagem citada ficam de fora, e nada é enviado de uma mensagem que você assine ou criptografe.",
+      "turn_on": "Ativar a revisão",
+      "paused_protected": "Nada é verificado enquanto esta mensagem estiver configurada para ser assinada ou criptografada.",
+      "paused_unknown": "{plugin} pode assinar ou criptografar mensagens sem mostrar isso aqui, por isso nada é verificado enquanto ele estiver ativo.",
+      "rate_limited": "{checker} pediu para aguardar. A verificação recomeça em um minuto.",
+      "unavailable": "{checker} não consegue verificar agora. Ele tenta de novo quando você continuar digitando.",
+      "no_issues": "Nenhum problema encontrado.",
+      "list_label": "Problemas nesta mensagem",
+      "shortcuts": "Próximo problema: {next}. Anterior: {previous}."
+    },
+    "notice": {
+      "on": "A revisão está ativada. Enquanto digita, o texto que escreve é enviado para {checkers} para ser verificado, sem sua assinatura nem a mensagem citada. Nada é enviado de uma mensagem que você assine ou criptografe.",
+      "forced": "Sua organização ativou a revisão. Enquanto digita, o texto que escreve é enviado para {checkers} para ser verificado, sem sua assinatura nem a mensagem citada. Nada é enviado de uma mensagem que você assine ou criptografe.",
+      "ok": "OK"
+    },
+    "send_warning": {
+      "title": "Enviar com problemas pendentes?",
+      "body": "{count, plural, one {# erro de ortografia ou gramática continua} other {# erros de ortografia ou gramática continuam}} pendentes nesta mensagem.",
+      "review": "Revisar",
+      "send": "Enviar mesmo assim"
+    },
+    "settings": {
+      "title": "Revisão",
+      "description": "Sublinha erros de ortografia e gramática enquanto você escreve, com sugestões para corrigi-los.",
+      "enable": "Verificar ortografia e gramática enquanto digito",
+      "enable_description": "O texto que você escreve é enviado para o extra de revisão e para o serviço que ele usa. Sua assinatura e as mensagens citadas ficam de fora, e mensagens assinadas ou criptografadas nunca são verificadas.",
+      "no_checker": "Nenhum extra de revisão está instalado. Peça ao administrador para adicionar um.",
+      "plugin_description": "Envia o que você escreve para {plugin}.",
+      "writing_language": "Idioma de escrita",
+      "writing_language_description": "O idioma em que você costuma escrever. A revisão e o corretor ortográfico do navegador o usam.",
+      "auto": "Detectar automaticamente"
+    },
+    "shortcuts": {
+      "next_issue": "Próximo erro de ortografia ou gramática",
+      "previous_issue": "Erro de ortografia ou gramática anterior"
+    }
   }
 }

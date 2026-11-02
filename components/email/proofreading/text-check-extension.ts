@@ -46,6 +46,19 @@ export type IssueOpenVia = 'click' | 'contextmenu' | 'keyboard';
 export interface TextCheckOptions {
   /** An underline was clicked, tapped or right-clicked. */
   onOpen: (key: string, anchor: DOMRect | null, via: IssueOpenVia) => void;
+  /** A key pressed in the text; true when it was handled (Escape, next/previous issue). */
+  onKey?: (event: KeyboardEvent) => boolean;
+}
+
+/**
+ * Next (1) or previous (-1) issue: Mod+' and Mod+;, by the key's place on
+ * the keyboard (Ä and Ö on a German one), with or without Shift.
+ */
+export function issueNavigationKey(event: KeyboardEvent): 1 | -1 | null {
+  if (!(event.ctrlKey || event.metaKey) || event.altKey) return null;
+  if (event.code === 'Quote') return 1;
+  if (event.code === 'Semicolon') return -1;
+  return null;
 }
 
 function decorationFor(range: TextIssueRange, active: boolean): Decoration {
@@ -130,6 +143,9 @@ export function createTextCheckExtension(options: () => TextCheckOptions) {
           props: {
             decorations(state) {
               return textCheckKey.getState(state)?.decos;
+            },
+            handleKeyDown(_view, event) {
+              return options().onKey?.(event) ?? false;
             },
             handleClick(view, pos, event) {
               const deco = issueAt(view, pos);

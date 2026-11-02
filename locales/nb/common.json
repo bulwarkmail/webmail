@@ -6359,5 +6359,76 @@
       "added_from": "Lagt til fra en e-post fra {domain}",
       "added_from_subject": "Lagt til fra e-posten «{subject}» fra {domain}"
     }
+  },
+  "proofreading": {
+    "kind": {
+      "spelling": "Stavemåte",
+      "grammar": "Grammatikk",
+      "style": "Stil",
+      "other": "Forslag"
+    },
+    "popup": {
+      "label": "{kind}: {word}",
+      "no_suggestions": "Ingen forslag",
+      "suggestions": "Forslag",
+      "replace_with": "Erstatt med {text}",
+      "also": "Også fra {checker}",
+      "ignore": "Ignorer",
+      "add_to_dictionary": "Legg til i ordboken",
+      "disable_rule": "Slå av denne regelen",
+      "changed": "Teksten er endret. Vent på neste sjekk."
+    },
+    "list_item": "{word}: {message} Forslag: {suggestion}",
+    "list_item_no_suggestion": "{word}: {message}",
+    "announce_count": "{count, plural, =0 {Ingen stave- eller grammatikkfeil} one {# stave- eller grammatikkfeil} other {# stave- eller grammatikkfeil}}",
+    "status": {
+      "title": "Korrektur",
+      "off": "Korrektur av",
+      "paused": "Korrektur satt på pause",
+      "rate_limited": "Sjekk satt på pause",
+      "unavailable": "Sjekk utilgjengelig",
+      "checking": "Sjekker…",
+      "issues": "{count, plural, =0 {Ingen problemer} one {# problem} other {# problemer}}"
+    },
+    "panel": {
+      "title": "Korrektur",
+      "required": "Påkrevd av organisasjonen din",
+      "check_message": "Sjekk denne meldingen",
+      "notice": "Mens du skriver, sendes teksten til {checkers} for å bli sjekket. Signaturen din og den siterte meldingen holdes utenfor, og ingenting sendes for en melding du signerer eller krypterer.",
+      "turn_on": "Slå på korrektur",
+      "paused_protected": "Ingenting sjekkes så lenge denne meldingen er satt til å bli signert eller kryptert.",
+      "paused_unknown": "{plugin} kan signere eller kryptere meldinger uten å vise det her, så ingenting sjekkes mens det er på.",
+      "rate_limited": "{checker} ba om å vente. Sjekkingen starter igjen om et minutt.",
+      "unavailable": "{checker} kan ikke sjekke akkurat nå. Det prøver igjen når du skriver videre.",
+      "no_issues": "Fant ingen problemer.",
+      "list_label": "Problemer i denne meldingen",
+      "shortcuts": "Neste problem: {next}. Forrige: {previous}."
+    },
+    "notice": {
+      "on": "Korrektur er på. Mens du skriver, sendes teksten til {checkers} for å bli sjekket, uten signaturen din eller den siterte meldingen. Ingenting sendes for en melding du signerer eller krypterer.",
+      "forced": "Organisasjonen din har slått på korrektur. Mens du skriver, sendes teksten til {checkers} for å bli sjekket, uten signaturen din eller den siterte meldingen. Ingenting sendes for en melding du signerer eller krypterer.",
+      "ok": "OK"
+    },
+    "send_warning": {
+      "title": "Sende med åpne problemer?",
+      "body": "{count, plural, one {# stave- eller grammatikkfeil er fortsatt åpen} other {# stave- eller grammatikkfeil er fortsatt åpne}} i denne meldingen.",
+      "review": "Gå gjennom",
+      "send": "Send likevel"
+    },
+    "settings": {
+      "title": "Korrektur",
+      "description": "Understrek stave- og grammatikkfeil mens du skriver, med forslag til å rette dem.",
+      "enable": "Sjekk stavemåte og grammatikk mens jeg skriver",
+      "enable_description": "Teksten du skriver, sendes til korrekturtillegget og tjenesten det bruker. Signaturen din og siterte meldinger holdes utenfor, og signerte eller krypterte meldinger sjekkes aldri.",
+      "no_checker": "Ingen korrekturtillegg er installert. Be administratoren din om å legge til et.",
+      "plugin_description": "Sender det du skriver, til {plugin}.",
+      "writing_language": "Skrivespråk",
+      "writing_language_description": "Språket du vanligvis skriver på. Korrekturen og stavekontrollen i nettleseren din bruker det.",
+      "auto": "Oppdag automatisk"
+    },
+    "shortcuts": {
+      "next_issue": "Neste stave- eller grammatikkfeil",
+      "previous_issue": "Forrige stave- eller grammatikkfeil"
+    }
   }
 }

@@ -16,7 +16,10 @@ import { all as allActivePlugins, subscribe as subscribeActivePlugins } from "@/
 import { replaceTextareaRange, type PlainOwnOptions } from "@/lib/plugin-sandbox/composer-edit";
 import { usePolicyStore } from "@/stores/policy-store";
 import { useSettingsStore } from "@/stores/settings-store";
-import { applyIssueReplacement, setTextIssues } from "./text-check-extension";
+import {
+  applyIssueReplacement, drawnIssues, issueNavigationKey, issueRect, selectNextIssue, setActiveIssue, setTextIssues,
+  type IssueOpenVia, type TextCheckOptions,
+} from "./text-check-extension";
 
 /** The policy as the gate needs it, read now. */
 export function currentPolicyView(): PolicyView {
@@ -53,11 +56,29 @@ export interface Proofreading {
   browserSpellcheck: boolean;
   /** Issues of checkers that asked for a warning before sending. */
   sendWarningIssues: () => PlacedIssue[];
+  /** The popup on one issue. */
+  popup: IssuePopupState | null;
+  openPopup: (key: string, anchor: DOMRect | null, via: IssueOpenVia) => void;
+  closePopup: (refocus: boolean) => void;
+  /** The status control's panel, and the issue to focus in its list. */
+  panel: { focusKey: string | null } | null;
+  setPanel: (panel: { focusKey: string | null } | null) => void;
+  navigate: (dir: 1 | -1) => boolean;
+  /** From the list: select the issue in the text and open its popup. */
+  jumpTo: (issue: PlacedIssue) => void;
+  /** For the rich editor (RichTextEditor's textCheck prop). */
+  editorHandlers: TextCheckOptions;
+}
+
+export interface IssuePopupState {
+  key: string;
+  anchor: DOMRect | null;
+  via: IssueOpenVia;
 }
 
 const EMPTY_STATUS: ProofreaderStatus = {
-  available: false, on: false, forced: false, lockedOff: false, paused: null,
-  checking: false, trouble: null, count: 0, activeLabels: [],
+  available: false, on: false, userOn: false, forced: false, lockedOff: false, paused: null,
+  checking: false, trouble: null, count: 0, activeLabels: [], activePlugins: [], availablePlugins: [],
 };
 
 export function useProofreading({ composerId, sessionKey, editor, textareaRef, plainTextMode, ownOptions }: UseProofreadingArgs): Proofreading {
@@ -165,12 +186,128 @@ export function useProofreading({ composerId, sessionKey, editor, textareaRef, p
     setTextIssues(editor, ranges);
   }, [editor, issues, plainTextMode]);
 
+  // Which underlines are still there: typing into one removes it at once,
+  // and the list and the count follow.
+  const [drawnKeys, setDrawnKeys] = useState<string[] | null>(null);
+  useEffect(() => {
+    if (!editor || editor.isDestroyed || plainTextMode) { setDrawnKeys(null); return; }
+    const read = () => {
+      const keys = drawnIssues(editor.state).map((r) => r.key);
+      setDrawnKeys((prev) => (prev && prev.length === keys.length && prev.every((k, i) => k === keys[i]) ? prev : keys));
+    };
+    read();
+    editor.on("transaction", read);
+    return () => { editor.off("transaction", read); };
+  }, [editor, plainTextMode]);
+  const visibleIssues = useMemo(() => {
+    if (drawnKeys === null) return issues;
+    const keep = new Set(drawnKeys);
+    return issues.filter((i) => keep.has(i.key));
+  }, [issues, drawnKeys]);
+  const visibleStatus = useMemo(
+    () => (status.count === visibleIssues.length ? status : { ...status, count: visibleIssues.length }),
+    [status, visibleIssues.length],
+  );
+
   const setComposerOn = useCallback((on: boolean) => {
     composerSwitches.set(sessionKey, on);
     composerOnRef.current = on;
     setComposerOnState(on);
     proofreader?.gateChanged();
   }, [sessionKey, proofreader]);
+
+  // ─── The popup on an issue, and the list in the status control ───
+  const [popup, setPopup] = useState<IssuePopupState | null>(null);
+  const [panel, setPanel] = useState<{ focusKey: string | null } | null>(null);
+  const popupRef = useRef(popup);
+  popupRef.current = popup;
+  const visibleRef = useRef(visibleIssues);
+  visibleRef.current = visibleIssues;
+
+  const openPopup = useCallback((key: string, anchor: DOMRect | null, via: IssueOpenVia) => {
+    setPanel(null);
+    setPopup({ key, anchor, via });
+    const ed = editorRef.current;
+    if (ed && !plainRef.current) setActiveIssue(ed, key);
+  }, []);
+
+  const closePopup = useCallback((refocus: boolean) => {
+    setPopup(null);
+    const ed = editorRef.current;
+    if (ed && !ed.isDestroyed && !plainRef.current) {
+      setActiveIssue(ed, null);
+      if (refocus) ed.commands.focus();
+    } else if (refocus) {
+      textareaRef.current?.focus();
+    }
+  }, [textareaRef]);
+
+  /** Go to the next or previous issue: in the text (rich) or in the list (plain). */
+  const navigate = useCallback((dir: 1 | -1) => {
+    const list = visibleRef.current;
+    if (!list.length) return false;
+    const ed = editorRef.current;
+    if (ed && !plainRef.current) {
+      const key = selectNextIssue(ed, dir);
+      if (!key) return false;
+      openPopup(key, issueRect(ed, key), "keyboard");
+      return true;
+    }
+    const ta = textareaRef.current;
+    const start = ta?.selectionStart ?? 0;
+    const end = ta?.selectionEnd ?? start;
+    const next = dir === 1
+      ? list.find((i) => i.from >= end && !(i.from === start && i.to === end)) ?? list[0]
+      : [...list].reverse().find((i) => i.to <= start && !(i.from === start && i.to === end)) ?? list[list.length - 1];
+    ta?.setSelectionRange(next.from, next.to);
+    setPopup(null);
+    setPanel({ focusKey: next.key });
+    return true;
+  }, [openPopup, textareaRef]);
+
+  /** Show an issue from the list: select it in the text and open its popup. */
+  const jumpTo = useCallback((issue: PlacedIssue) => {
+    const ed = editorRef.current;
+    if (!ed || plainRef.current) return;
+    const range = drawnIssues(ed.state).find((r) => r.key === issue.key);
+    if (!range) return;
+    ed.chain().focus().setTextSelection({ from: range.from, to: range.to }).scrollIntoView().run();
+    openPopup(issue.key, issueRect(ed, issue.key), "keyboard");
+  }, [openPopup]);
+
+  // Keys in the rich text (see text-check-extension.ts).
+  const editorHandlers = useMemo<TextCheckOptions>(() => ({
+    onOpen: openPopup,
+    onKey: (event) => {
+      if (event.key === "Escape" && popupRef.current) {
+        closePopup(true);
+        return true;
+      }
+      const dir = issueNavigationKey(event);
+      if (dir && navigate(dir)) {
+        event.preventDefault();
+        return true;
+      }
+      return false;
+    },
+  }), [openPopup, closePopup, navigate]);
+
+  // The same keys in the plain-text composer.
+  useEffect(() => {
+    const ta = textareaRef.current;
+    if (!plainTextMode || !ta || !proofreader) return;
+    const onKey = (event: KeyboardEvent) => {
+      const dir = issueNavigationKey(event);
+      if (dir && navigate(dir)) event.preventDefault();
+    };
+    ta.addEventListener("keydown", onKey);
+    return () => ta.removeEventListener("keydown", onKey);
+  }, [plainTextMode, textareaRef, proofreader, navigate]);
+
+  // An issue that went away (fixed, typed over) closes its popup.
+  useEffect(() => {
+    if (popup && !visibleIssues.some((i) => i.key === popup.key)) closePopup(false);
+  }, [popup, visibleIssues, closePopup]);
 
   const apply = useCallback((issue: PlacedIssue, replacement: string): boolean => {
     if (!proofreader) return false;
@@ -185,16 +322,25 @@ export function useProofreading({ composerId, sessionKey, editor, textareaRef, p
     } else if (editorRef.current) {
       done = applyIssueReplacement(editorRef.current, issue.key, replacement);
     }
-    if (done) proofreader.edited("now");
+    if (done) {
+      proofreader.edited("now");
+      setPopup(null);
+      const ed = editorRef.current;
+      if (ed && !plainRef.current) { setActiveIssue(ed, null); ed.commands.focus(); }
+    }
     bump();
     return done;
   }, [proofreader, textareaRef]);
 
   const dismiss = useCallback((issue: PlacedIssue, action: DismissAction) => {
     proofreader?.dismiss(issue, action);
-  }, [proofreader]);
+    if (popupRef.current?.key === issue.key) closePopup(true);
+  }, [proofreader, closePopup]);
 
   const sendWarningIssues = useCallback(() => proofreader?.issuesForSendWarning() ?? [], [proofreader]);
 
-  return { issues, status, composerOn, setComposerOn, apply, dismiss, browserSpellcheck, sendWarningIssues };
+  return {
+    issues: visibleIssues, status: visibleStatus, composerOn, setComposerOn, apply, dismiss, browserSpellcheck, sendWarningIssues,
+    popup, openPopup, closePopup, panel, setPanel, navigate, jumpTo, editorHandlers,
+  };
 }

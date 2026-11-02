@@ -6359,5 +6359,76 @@
       "added_from": "Hozzáadva egy {domain} által küldött levélből",
       "added_from_subject": "Hozzáadva a(z) {domain} által küldött „{subject}” levélből"
     }
+  },
+  "proofreading": {
+    "kind": {
+      "spelling": "Helyesírás",
+      "grammar": "Nyelvtan",
+      "style": "Stílus",
+      "other": "Javaslat"
+    },
+    "popup": {
+      "label": "{kind}: {word}",
+      "no_suggestions": "Nincs javaslat",
+      "suggestions": "Javaslatok",
+      "replace_with": "Csere erre: {text}",
+      "also": "Ezt is jelezte: {checker}",
+      "ignore": "Figyelmen kívül hagyás",
+      "add_to_dictionary": "Hozzáadás a szótárhoz",
+      "disable_rule": "Szabály kikapcsolása",
+      "changed": "A szöveg megváltozott. Várd meg a következő ellenőrzést."
+    },
+    "list_item": "{word}: {message} Javaslat: {suggestion}",
+    "list_item_no_suggestion": "{word}: {message}",
+    "announce_count": "{count, plural, =0 {Nincs helyesírási vagy nyelvtani hiba} one {# helyesírási vagy nyelvtani hiba} other {# helyesírási vagy nyelvtani hiba}}",
+    "status": {
+      "title": "Helyesírás-ellenőrzés",
+      "off": "Helyesírás-ellenőrzés kikapcsolva",
+      "paused": "Helyesírás-ellenőrzés szüneteltetve",
+      "rate_limited": "Ellenőrzés szüneteltetve",
+      "unavailable": "Az ellenőrzés nem érhető el",
+      "checking": "Ellenőrzés…",
+      "issues": "{count, plural, =0 {Nincs probléma} one {# probléma} other {# probléma}}"
+    },
+    "panel": {
+      "title": "Helyesírás-ellenőrzés",
+      "required": "A szervezeted előírja",
+      "check_message": "Üzenet ellenőrzése",
+      "notice": "Gépelés közben a beírt szöveg ellenőrzésre kerül ide: {checkers}. Az aláírásod és az idézett üzenet kimarad, és az aláírt vagy titkosított üzenetekből semmi nem kerül elküldésre.",
+      "turn_on": "Helyesírás-ellenőrzés bekapcsolása",
+      "paused_protected": "Amíg ez az üzenet aláírásra vagy titkosításra van beállítva, semmi nem kerül ellenőrzésre.",
+      "paused_unknown": "{plugin} úgy is aláírhat vagy titkosíthat üzeneteket, hogy az itt nem látszik, ezért amíg be van kapcsolva, semmi nem kerül ellenőrzésre.",
+      "rate_limited": "{checker} várakozást kért. Az ellenőrzés egy perc múlva folytatódik.",
+      "unavailable": "{checker} most nem tud ellenőrizni. Újra próbálkozik, amikor tovább gépelsz.",
+      "no_issues": "Nem található probléma.",
+      "list_label": "Problémák ebben az üzenetben",
+      "shortcuts": "Következő probléma: {next}. Előző: {previous}."
+    },
+    "notice": {
+      "on": "A helyesírás-ellenőrzés be van kapcsolva. Gépelés közben a beírt szöveg ellenőrzésre kerül ide: {checkers}, az aláírásod és az idézett üzenet nélkül. Az aláírt vagy titkosított üzenetekből semmi nem kerül elküldésre.",
+      "forced": "A szervezeted bekapcsolta a helyesírás-ellenőrzést. Gépelés közben a beírt szöveg ellenőrzésre kerül ide: {checkers}, az aláírásod és az idézett üzenet nélkül. Az aláírt vagy titkosított üzenetekből semmi nem kerül elküldésre.",
+      "ok": "OK"
+    },
+    "send_warning": {
+      "title": "Elküldöd megoldatlan problémákkal?",
+      "body": "{count, plural, one {# helyesírási vagy nyelvtani hiba} other {# helyesírási vagy nyelvtani hiba}} még megoldatlan ebben az üzenetben.",
+      "review": "Átnézés",
+      "send": "Küldés így is"
+    },
+    "settings": {
+      "title": "Helyesírás-ellenőrzés",
+      "description": "Írás közben aláhúzza a helyesírási és nyelvtani hibákat, és javaslatot ad a javításukra.",
+      "enable": "Helyesírás és nyelvtan ellenőrzése gépelés közben",
+      "enable_description": "A beírt szöveg a helyesírás-ellenőrző bővítményhez és az általa használt szolgáltatáshoz kerül. Az aláírásod és az idézett üzenetek kimaradnak, az aláírt vagy titkosított üzeneteket pedig soha nem ellenőrzi.",
+      "no_checker": "Nincs telepítve helyesírás-ellenőrző bővítmény. Kérd meg a rendszergazdát, hogy adjon hozzá egyet.",
+      "plugin_description": "Elküldi, amit írsz, ide: {plugin}.",
+      "writing_language": "Írás nyelve",
+      "writing_language_description": "Az a nyelv, amelyen általában írsz. A helyesírás-ellenőrzés és a böngésző helyesírás-ellenőrzője is ezt használja.",
+      "auto": "Automatikus felismerés"
+    },
+    "shortcuts": {
+      "next_issue": "Következő helyesírási vagy nyelvtani hiba",
+      "previous_issue": "Előző helyesírási vagy nyelvtani hiba"
+    }
   }
 }

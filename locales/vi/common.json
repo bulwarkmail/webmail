@@ -6371,5 +6371,76 @@
       "added_from": "Được thêm từ một thư của {domain}",
       "added_from_subject": "Được thêm từ thư “{subject}” của {domain}"
     }
+  },
+  "proofreading": {
+    "kind": {
+      "spelling": "Chính tả",
+      "grammar": "Ngữ pháp",
+      "style": "Văn phong",
+      "other": "Gợi ý"
+    },
+    "popup": {
+      "label": "{kind}: {word}",
+      "no_suggestions": "Không có gợi ý",
+      "suggestions": "Gợi ý",
+      "replace_with": "Thay bằng {text}",
+      "also": "{checker} cũng phát hiện",
+      "ignore": "Bỏ qua",
+      "add_to_dictionary": "Thêm vào từ điển",
+      "disable_rule": "Tắt quy tắc này",
+      "changed": "Văn bản đã thay đổi. Hãy chờ lần kiểm tra tiếp theo."
+    },
+    "list_item": "{word}: {message} Gợi ý: {suggestion}",
+    "list_item_no_suggestion": "{word}: {message}",
+    "announce_count": "{count, plural, =0 {Không có lỗi chính tả hay ngữ pháp} other {# lỗi chính tả hoặc ngữ pháp}}",
+    "status": {
+      "title": "Soát lỗi",
+      "off": "Đã tắt soát lỗi",
+      "paused": "Đã tạm dừng soát lỗi",
+      "rate_limited": "Đã tạm dừng kiểm tra",
+      "unavailable": "Không thể kiểm tra",
+      "checking": "Đang kiểm tra…",
+      "issues": "{count, plural, =0 {Không có vấn đề} other {# vấn đề}}"
+    },
+    "panel": {
+      "title": "Soát lỗi",
+      "required": "Tổ chức của bạn yêu cầu bật",
+      "check_message": "Kiểm tra thư này",
+      "notice": "Khi bạn gõ, văn bản bạn viết được gửi đến {checkers} để kiểm tra. Chữ ký của bạn và thư được trích dẫn không được gửi, và không có gì được gửi đi với thư bạn ký hoặc mã hóa.",
+      "turn_on": "Bật soát lỗi",
+      "paused_protected": "Không kiểm tra gì trong khi thư này được đặt để ký hoặc mã hóa.",
+      "paused_unknown": "{plugin} có thể ký hoặc mã hóa thư mà không hiển thị ở đây, nên không kiểm tra gì khi nó đang bật.",
+      "rate_limited": "{checker} yêu cầu chờ. Việc kiểm tra sẽ tiếp tục sau một phút.",
+      "unavailable": "{checker} hiện không thể kiểm tra. Nó sẽ thử lại khi bạn tiếp tục gõ.",
+      "no_issues": "Không tìm thấy vấn đề nào.",
+      "list_label": "Các vấn đề trong thư này",
+      "shortcuts": "Vấn đề tiếp theo: {next}. Trước đó: {previous}."
+    },
+    "notice": {
+      "on": "Soát lỗi đang bật. Khi bạn gõ, văn bản bạn viết được gửi đến {checkers} để kiểm tra, không kèm chữ ký của bạn và thư được trích dẫn. Không có gì được gửi đi với thư bạn ký hoặc mã hóa.",
+      "forced": "Tổ chức của bạn đã bật soát lỗi. Khi bạn gõ, văn bản bạn viết được gửi đến {checkers} để kiểm tra, không kèm chữ ký của bạn và thư được trích dẫn. Không có gì được gửi đi với thư bạn ký hoặc mã hóa.",
+      "ok": "OK"
+    },
+    "send_warning": {
+      "title": "Gửi khi vẫn còn vấn đề?",
+      "body": "Thư này vẫn còn {count, plural, other {# lỗi chính tả hoặc ngữ pháp}} chưa xử lý.",
+      "review": "Xem lại",
+      "send": "Vẫn gửi"
+    },
+    "settings": {
+      "title": "Soát lỗi",
+      "description": "Gạch dưới lỗi chính tả và ngữ pháp khi bạn viết, kèm gợi ý để sửa.",
+      "enable": "Kiểm tra chính tả và ngữ pháp khi tôi gõ",
+      "enable_description": "Văn bản bạn viết được gửi đến tiện ích bổ sung soát lỗi và dịch vụ mà nó dùng. Chữ ký của bạn và thư được trích dẫn không được gửi, và thư đã ký hoặc mã hóa không bao giờ được kiểm tra.",
+      "no_checker": "Chưa cài tiện ích bổ sung soát lỗi nào. Hãy nhờ quản trị viên thêm một tiện ích.",
+      "plugin_description": "Gửi những gì bạn viết đến {plugin}.",
+      "writing_language": "Ngôn ngữ viết",
+      "writing_language_description": "Ngôn ngữ bạn thường dùng để viết. Soát lỗi và trình kiểm tra chính tả của trình duyệt sẽ dùng ngôn ngữ này.",
+      "auto": "Tự động phát hiện"
+    },
+    "shortcuts": {
+      "next_issue": "Lỗi chính tả hoặc ngữ pháp tiếp theo",
+      "previous_issue": "Lỗi chính tả hoặc ngữ pháp trước đó"
+    }
   }
 }

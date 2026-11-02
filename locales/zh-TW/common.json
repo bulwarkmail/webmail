@@ -6359,5 +6359,76 @@
       "added_from": "新增自 {domain} 寄來的郵件",
       "added_from_subject": "新增自 {domain} 寄來的郵件「{subject}」"
     }
+  },
+  "proofreading": {
+    "kind": {
+      "spelling": "拼字",
+      "grammar": "文法",
+      "style": "文風",
+      "other": "建議"
+    },
+    "popup": {
+      "label": "{kind}：{word}",
+      "no_suggestions": "沒有建議",
+      "suggestions": "建議",
+      "replace_with": "取代為 {text}",
+      "also": "{checker} 也指出了此問題",
+      "ignore": "忽略",
+      "add_to_dictionary": "加入字典",
+      "disable_rule": "關閉此規則",
+      "changed": "文字已變更。請等候下一次檢查。"
+    },
+    "list_item": "{word}：{message} 建議：{suggestion}",
+    "list_item_no_suggestion": "{word}：{message}",
+    "announce_count": "{count, plural, =0 {沒有拼字或文法問題} other {# 個拼字或文法問題}}",
+    "status": {
+      "title": "校對",
+      "off": "校對已關閉",
+      "paused": "校對已暫停",
+      "rate_limited": "檢查已暫停",
+      "unavailable": "無法使用檢查",
+      "checking": "正在檢查…",
+      "issues": "{count, plural, =0 {沒有問題} other {# 個問題}}"
+    },
+    "panel": {
+      "title": "校對",
+      "required": "您的組織要求開啟",
+      "check_message": "檢查此郵件",
+      "notice": "在您輸入時，您寫的文字會傳送到 {checkers} 進行檢查。您的簽名和引用的郵件不會傳送，您簽署或加密的郵件也不會傳送任何內容。",
+      "turn_on": "開啟校對",
+      "paused_protected": "此郵件設定為簽署或加密期間，不會檢查任何內容。",
+      "paused_unknown": "{plugin} 可以在此處不顯示的情況下簽署或加密郵件，因此在它開啟期間不會檢查任何內容。",
+      "rate_limited": "{checker} 要求稍候。檢查將在一分鐘後恢復。",
+      "unavailable": "{checker} 目前無法檢查。您繼續輸入時它會重試。",
+      "no_issues": "未發現問題。",
+      "list_label": "此郵件中的問題",
+      "shortcuts": "下一個問題：{next}。上一個：{previous}。"
+    },
+    "notice": {
+      "on": "校對已開啟。在您輸入時，您寫的文字會傳送到 {checkers} 進行檢查，不包括您的簽名和引用的郵件。您簽署或加密的郵件不會傳送任何內容。",
+      "forced": "您的組織已開啟校對。在您輸入時，您寫的文字會傳送到 {checkers} 進行檢查，不包括您的簽名和引用的郵件。您簽署或加密的郵件不會傳送任何內容。",
+      "ok": "確定"
+    },
+    "send_warning": {
+      "title": "仍有未解決的問題，確定傳送嗎？",
+      "body": "此郵件中還有 {count, plural, other {# 個拼字或文法問題}}未解決。",
+      "review": "查看",
+      "send": "仍然傳送"
+    },
+    "settings": {
+      "title": "校對",
+      "description": "在您書寫時為拼字和文法錯誤加上底線，並提供修改建議。",
+      "enable": "輸入時檢查拼字和文法",
+      "enable_description": "您寫的文字會傳送到校對附加元件及其使用的服務。您的簽名和引用的郵件不會傳送，已簽署或加密的郵件絕不會被檢查。",
+      "no_checker": "未安裝校對附加元件。請聯絡管理員新增。",
+      "plugin_description": "將您寫的內容傳送到 {plugin}。",
+      "writing_language": "書寫語言",
+      "writing_language_description": "您通常使用的書寫語言。校對和瀏覽器的拼字檢查會使用它。",
+      "auto": "自動偵測"
+    },
+    "shortcuts": {
+      "next_issue": "下一個拼字或文法問題",
+      "previous_issue": "上一個拼字或文法問題"
+    }
   }
 }

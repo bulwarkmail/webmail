@@ -6359,5 +6359,76 @@
       "added_from": "Hinzugefügt aus einer E-Mail von {domain}",
       "added_from_subject": "Hinzugefügt aus der E-Mail „{subject}“ von {domain}"
     }
+  },
+  "proofreading": {
+    "kind": {
+      "spelling": "Rechtschreibung",
+      "grammar": "Grammatik",
+      "style": "Stil",
+      "other": "Vorschlag"
+    },
+    "popup": {
+      "label": "{kind}: {word}",
+      "no_suggestions": "Keine Vorschläge",
+      "suggestions": "Vorschläge",
+      "replace_with": "Durch {text} ersetzen",
+      "also": "Auch von {checker}",
+      "ignore": "Ignorieren",
+      "add_to_dictionary": "Zum Wörterbuch hinzufügen",
+      "disable_rule": "Diese Regel ausschalten",
+      "changed": "Der Text hat sich geändert. Warten Sie auf die nächste Prüfung."
+    },
+    "list_item": "{word}: {message} Vorschlag: {suggestion}",
+    "list_item_no_suggestion": "{word}: {message}",
+    "announce_count": "{count, plural, =0 {Keine Rechtschreib- oder Grammatikfehler} one {# Rechtschreib- oder Grammatikfehler} other {# Rechtschreib- oder Grammatikfehler}}",
+    "status": {
+      "title": "Korrekturhilfe",
+      "off": "Korrekturhilfe aus",
+      "paused": "Korrekturhilfe pausiert",
+      "rate_limited": "Prüfung pausiert",
+      "unavailable": "Prüfung nicht verfügbar",
+      "checking": "Wird geprüft…",
+      "issues": "{count, plural, =0 {Keine Hinweise} one {# Hinweis} other {# Hinweise}}"
+    },
+    "panel": {
+      "title": "Korrekturhilfe",
+      "required": "Von Ihrer Organisation vorgeschrieben",
+      "check_message": "Diese Nachricht prüfen",
+      "notice": "Während Sie tippen, geht Ihr Text zur Prüfung an {checkers}. Ihre Signatur und die zitierte Nachricht bleiben außen vor, und bei einer Nachricht, die Sie signieren oder verschlüsseln, wird nichts gesendet.",
+      "turn_on": "Korrekturhilfe einschalten",
+      "paused_protected": "Solange diese Nachricht signiert oder verschlüsselt werden soll, wird nichts geprüft.",
+      "paused_unknown": "{plugin} kann Nachrichten signieren oder verschlüsseln, ohne dass es hier angezeigt wird. Solange es aktiv ist, wird deshalb nichts geprüft.",
+      "rate_limited": "{checker} bittet um eine Pause. Die Prüfung startet in einer Minute wieder.",
+      "unavailable": "{checker} kann gerade nicht prüfen. Sobald Sie weitertippen, wird es erneut versucht.",
+      "no_issues": "Keine Hinweise gefunden.",
+      "list_label": "Hinweise in dieser Nachricht",
+      "shortcuts": "Nächster Hinweis: {next}. Vorheriger: {previous}."
+    },
+    "notice": {
+      "on": "Die Korrekturhilfe ist an. Während Sie tippen, geht Ihr Text zur Prüfung an {checkers}, ohne Ihre Signatur und die zitierte Nachricht. Bei einer Nachricht, die Sie signieren oder verschlüsseln, wird nichts gesendet.",
+      "forced": "Ihre Organisation hat die Korrekturhilfe eingeschaltet. Während Sie tippen, geht Ihr Text zur Prüfung an {checkers}, ohne Ihre Signatur und die zitierte Nachricht. Bei einer Nachricht, die Sie signieren oder verschlüsseln, wird nichts gesendet.",
+      "ok": "OK"
+    },
+    "send_warning": {
+      "title": "Mit offenen Hinweisen senden?",
+      "body": "{count, plural, one {# Rechtschreib- oder Grammatikfehler ist} other {# Rechtschreib- oder Grammatikfehler sind}} in dieser Nachricht noch offen.",
+      "review": "Ansehen",
+      "send": "Trotzdem senden"
+    },
+    "settings": {
+      "title": "Korrekturhilfe",
+      "description": "Rechtschreib- und Grammatikfehler beim Schreiben unterstreichen, mit Vorschlägen zur Korrektur.",
+      "enable": "Rechtschreibung und Grammatik beim Tippen prüfen",
+      "enable_description": "Ihr Text geht an die Erweiterung für die Korrekturhilfe und an den Dienst, den sie nutzt. Ihre Signatur und zitierte Nachrichten bleiben außen vor, und signierte oder verschlüsselte Nachrichten werden nie geprüft.",
+      "no_checker": "Es ist keine Erweiterung für die Korrekturhilfe installiert. Bitten Sie Ihre Administration, eine hinzuzufügen.",
+      "plugin_description": "Sendet Ihren Text an {plugin}.",
+      "writing_language": "Schreibsprache",
+      "writing_language_description": "Die Sprache, in der Sie meistens schreiben. Die Korrekturhilfe und die Rechtschreibprüfung Ihres Browsers nutzen sie.",
+      "auto": "Automatisch erkennen"
+    },
+    "shortcuts": {
+      "next_issue": "Nächster Rechtschreib- oder Grammatikfehler",
+      "previous_issue": "Vorheriger Rechtschreib- oder Grammatikfehler"
+    }
   }
 }

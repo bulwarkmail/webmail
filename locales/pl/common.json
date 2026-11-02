@@ -6359,5 +6359,76 @@
       "added_from": "Dodano z wiadomości od {domain}",
       "added_from_subject": "Dodano z wiadomości „{subject}” od {domain}"
     }
+  },
+  "proofreading": {
+    "kind": {
+      "spelling": "Pisownia",
+      "grammar": "Gramatyka",
+      "style": "Styl",
+      "other": "Sugestia"
+    },
+    "popup": {
+      "label": "{kind}: {word}",
+      "no_suggestions": "Brak sugestii",
+      "suggestions": "Sugestie",
+      "replace_with": "Zastąp przez {text}",
+      "also": "Także od {checker}",
+      "ignore": "Ignoruj",
+      "add_to_dictionary": "Dodaj do słownika",
+      "disable_rule": "Wyłącz tę regułę",
+      "changed": "Tekst się zmienił. Poczekaj na następne sprawdzenie."
+    },
+    "list_item": "{word}: {message} Sugestia: {suggestion}",
+    "list_item_no_suggestion": "{word}: {message}",
+    "announce_count": "{count, plural, =0 {Brak błędów pisowni i gramatyki} one {# błąd pisowni lub gramatyki} few {# błędy pisowni lub gramatyki} many {# błędów pisowni lub gramatyki} other {# błędu pisowni lub gramatyki}}",
+    "status": {
+      "title": "Korekta",
+      "off": "Korekta wyłączona",
+      "paused": "Korekta wstrzymana",
+      "rate_limited": "Sprawdzanie wstrzymane",
+      "unavailable": "Sprawdzanie niedostępne",
+      "checking": "Sprawdzanie…",
+      "issues": "{count, plural, =0 {Brak problemów} one {# problem} few {# problemy} many {# problemów} other {# problemu}}"
+    },
+    "panel": {
+      "title": "Korekta",
+      "required": "Wymagane przez Twoją organizację",
+      "check_message": "Sprawdź tę wiadomość",
+      "notice": "Podczas pisania Twój tekst trafia do {checkers} do sprawdzenia. Twój podpis i cytowana wiadomość są pomijane, a z wiadomości, którą podpisujesz lub szyfrujesz, nic nie jest wysyłane.",
+      "turn_on": "Włącz korektę",
+      "paused_protected": "Nic nie jest sprawdzane, dopóki ta wiadomość ma zostać podpisana lub zaszyfrowana.",
+      "paused_unknown": "{plugin} może podpisywać lub szyfrować wiadomości bez pokazywania tego tutaj, więc nic nie jest sprawdzane, dopóki jest włączony.",
+      "rate_limited": "{checker} poprosił o chwilę przerwy. Sprawdzanie wznowi się za minutę.",
+      "unavailable": "{checker} nie może teraz sprawdzić tekstu. Spróbuje ponownie, gdy będziesz dalej pisać.",
+      "no_issues": "Nie znaleziono problemów.",
+      "list_label": "Problemy w tej wiadomości",
+      "shortcuts": "Następny problem: {next}. Poprzedni: {previous}."
+    },
+    "notice": {
+      "on": "Korekta jest włączona. Podczas pisania Twój tekst trafia do {checkers} do sprawdzenia, bez Twojego podpisu i cytowanej wiadomości. Z wiadomości, którą podpisujesz lub szyfrujesz, nic nie jest wysyłane.",
+      "forced": "Twoja organizacja włączyła korektę. Podczas pisania Twój tekst trafia do {checkers} do sprawdzenia, bez Twojego podpisu i cytowanej wiadomości. Z wiadomości, którą podpisujesz lub szyfrujesz, nic nie jest wysyłane.",
+      "ok": "OK"
+    },
+    "send_warning": {
+      "title": "Wysłać mimo nierozwiązanych problemów?",
+      "body": "{count, plural, one {W tej wiadomości pozostaje # błąd pisowni lub gramatyki.} few {W tej wiadomości pozostają # błędy pisowni lub gramatyki.} many {W tej wiadomości pozostaje # błędów pisowni lub gramatyki.} other {W tej wiadomości pozostaje # błędu pisowni lub gramatyki.}}",
+      "review": "Przejrzyj",
+      "send": "Wyślij mimo to"
+    },
+    "settings": {
+      "title": "Korekta",
+      "description": "Podkreśla błędy pisowni i gramatyki podczas pisania i podpowiada, jak je poprawić.",
+      "enable": "Sprawdzaj pisownię i gramatykę podczas pisania",
+      "enable_description": "Tekst, który piszesz, trafia do dodatku do korekty i usługi, z której korzysta. Twój podpis i cytowane wiadomości są pomijane, a podpisane lub zaszyfrowane wiadomości nigdy nie są sprawdzane.",
+      "no_checker": "Nie zainstalowano żadnego dodatku do korekty. Poproś administratora o dodanie.",
+      "plugin_description": "Wysyła to, co piszesz, do {plugin}.",
+      "writing_language": "Język pisania",
+      "writing_language_description": "Język, w którym zwykle piszesz. Korzystają z niego korekta i sprawdzanie pisowni w przeglądarce.",
+      "auto": "Wykrywaj automatycznie"
+    },
+    "shortcuts": {
+      "next_issue": "Następny błąd pisowni lub gramatyki",
+      "previous_issue": "Poprzedni błąd pisowni lub gramatyki"
+    }
   }
 }

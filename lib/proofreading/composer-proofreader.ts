@@ -43,6 +43,8 @@ export interface ProofreaderStatus {
   available: boolean;
   /** At least one checker is on in this composer. */
   on: boolean;
+  /** Proofreading is on for the user (before this composer's switch). */
+  userOn: boolean;
   /** The admin requires checking: no switch. */
   forced: boolean;
   /** The admin turned checking off. */
@@ -55,6 +57,10 @@ export interface ProofreaderStatus {
   count: number;
   /** Labels of the checkers that are on, for the notice. */
   activeLabels: string[];
+  /** The checkers that are on, by plugin. */
+  activePlugins: { pluginId: string; label: string }[];
+  /** The checkers the user could turn on (not locked off). */
+  availablePlugins: { pluginId: string; label: string }[];
 }
 
 export interface ProofreaderDeps {
@@ -245,19 +251,25 @@ export class ComposerProofreader {
     let forced = false;
     let lockedOff = this.sessions.size > 0;
     let on = false;
+    let userOn = false;
     let checking = false;
     let trouble: ProofreaderStatus['trouble'] = null;
     const activeLabels: string[] = [];
+    const activePlugins: { pluginId: string; label: string }[] = [];
+    const availablePlugins: { pluginId: string; label: string }[] = [];
     for (const { spec, session } of this.sessions.values()) {
       const access = this.deps.access(spec.pluginId);
       if (!access.lockedOff) lockedOff = false;
       if (access.lockedOff) continue;
       available = true;
+      availablePlugins.push({ pluginId: spec.pluginId, label: spec.label });
       if (access.forced) forced = true;
+      if (access.on) userOn = true;
       const isOn = access.on && (access.forced || this.deps.composerOn());
       if (!isOn) continue;
       on = true;
       activeLabels.push(spec.label);
+      activePlugins.push({ pluginId: spec.pluginId, label: spec.label });
       if (protection.protected) continue;
       if (session.status === 'checking') checking = true;
       if ((session.status === 'unavailable' || session.status === 'paused') && !trouble) {
@@ -265,11 +277,11 @@ export class ComposerProofreader {
       }
     }
     return {
-      available, on, forced, lockedOff,
+      available, on, userOn, forced, lockedOff,
       paused: on && protection.protected ? protection : null,
       checking, trouble,
       count: on && !protection.protected ? this.issues().length : 0,
-      activeLabels,
+      activeLabels, activePlugins, availablePlugins,
     };
   }
 

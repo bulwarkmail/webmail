@@ -6359,5 +6359,76 @@
       "added_from": "Pievienots no {domain} e-pasta",
       "added_from_subject": "Pievienots no {domain} e-pasta “{subject}”"
     }
+  },
+  "proofreading": {
+    "kind": {
+      "spelling": "Pareizrakstība",
+      "grammar": "Gramatika",
+      "style": "Stils",
+      "other": "Ieteikums"
+    },
+    "popup": {
+      "label": "{kind}: {word}",
+      "no_suggestions": "Nav ieteikumu",
+      "suggestions": "Ieteikumi",
+      "replace_with": "Aizstāt ar {text}",
+      "also": "Arī no {checker}",
+      "ignore": "Ignorēt",
+      "add_to_dictionary": "Pievienot vārdnīcai",
+      "disable_rule": "Izslēgt šo noteikumu",
+      "changed": "Teksts ir mainījies. Pagaidiet nākamo pārbaudi."
+    },
+    "list_item": "{word}: {message} Ieteikums: {suggestion}",
+    "list_item_no_suggestion": "{word}: {message}",
+    "announce_count": "{count, plural, =0 {Nav pareizrakstības vai gramatikas kļūdu} zero {# pareizrakstības vai gramatikas kļūdu} one {# pareizrakstības vai gramatikas kļūda} other {# pareizrakstības vai gramatikas kļūdas}}",
+    "status": {
+      "title": "Teksta pārbaude",
+      "off": "Teksta pārbaude izslēgta",
+      "paused": "Teksta pārbaude apturēta",
+      "rate_limited": "Pārbaude apturēta",
+      "unavailable": "Pārbaude nav pieejama",
+      "checking": "Pārbauda…",
+      "issues": "{count, plural, =0 {Nav problēmu} zero {# problēmu} one {# problēma} other {# problēmas}}"
+    },
+    "panel": {
+      "title": "Teksta pārbaude",
+      "required": "Pieprasa jūsu organizācija",
+      "check_message": "Pārbaudīt šo ziņojumu",
+      "notice": "Kamēr rakstāt, jūsu teksts tiek nosūtīts pārbaudei uz {checkers}. Jūsu paraksts un citētais ziņojums netiek sūtīti, un ziņojumam, ko parakstāt vai šifrējat, netiek sūtīts nekas.",
+      "turn_on": "Ieslēgt teksta pārbaudi",
+      "paused_protected": "Kamēr šis ziņojums ir iestatīts parakstīšanai vai šifrēšanai, nekas netiek pārbaudīts.",
+      "paused_unknown": "{plugin} var parakstīt vai šifrēt ziņojumus, to šeit nerādot, tāpēc, kamēr tas ir ieslēgts, nekas netiek pārbaudīts.",
+      "rate_limited": "{checker} lūdza pagaidīt. Pārbaude atsāksies pēc minūtes.",
+      "unavailable": "{checker} pašlaik nevar pārbaudīt. Tas mēģinās vēlreiz, kad turpināsiet rakstīt.",
+      "no_issues": "Problēmas nav atrastas.",
+      "list_label": "Problēmas šajā ziņojumā",
+      "shortcuts": "Nākamā problēma: {next}. Iepriekšējā: {previous}."
+    },
+    "notice": {
+      "on": "Teksta pārbaude ir ieslēgta. Kamēr rakstāt, jūsu teksts tiek nosūtīts pārbaudei uz {checkers}, bez jūsu paraksta un citētā ziņojuma. Ziņojumam, ko parakstāt vai šifrējat, netiek sūtīts nekas.",
+      "forced": "Jūsu organizācija ieslēdza teksta pārbaudi. Kamēr rakstāt, jūsu teksts tiek nosūtīts pārbaudei uz {checkers}, bez jūsu paraksta un citētā ziņojuma. Ziņojumam, ko parakstāt vai šifrējat, netiek sūtīts nekas.",
+      "ok": "Labi"
+    },
+    "send_warning": {
+      "title": "Sūtīt ar neatrisinātām problēmām?",
+      "body": "{count, plural, zero {Šajā ziņojumā joprojām ir # neatrisinātu pareizrakstības vai gramatikas kļūdu.} one {Šajā ziņojumā joprojām ir # neatrisināta pareizrakstības vai gramatikas kļūda.} other {Šajā ziņojumā joprojām ir # neatrisinātas pareizrakstības vai gramatikas kļūdas.}}",
+      "review": "Pārskatīt",
+      "send": "Sūtīt tik un tā"
+    },
+    "settings": {
+      "title": "Teksta pārbaude",
+      "description": "Rakstīšanas laikā pasvītro pareizrakstības un gramatikas kļūdas un iesaka labojumus.",
+      "enable": "Pārbaudīt pareizrakstību un gramatiku rakstīšanas laikā",
+      "enable_description": "Jūsu rakstītais teksts tiek nosūtīts teksta pārbaudes papildinājumam un pakalpojumam, ko tas izmanto. Jūsu paraksts un citētie ziņojumi netiek sūtīti, un parakstīti vai šifrēti ziņojumi nekad netiek pārbaudīti.",
+      "no_checker": "Nav instalēts neviens teksta pārbaudes papildinājums. Lūdziet administratoram to pievienot.",
+      "plugin_description": "Nosūta jūsu rakstīto uz {plugin}.",
+      "writing_language": "Rakstīšanas valoda",
+      "writing_language_description": "Valoda, kurā parasti rakstāt. To izmanto teksta pārbaude un pārlūka pareizrakstības pārbaude.",
+      "auto": "Noteikt automātiski"
+    },
+    "shortcuts": {
+      "next_issue": "Nākamā pareizrakstības vai gramatikas kļūda",
+      "previous_issue": "Iepriekšējā pareizrakstības vai gramatikas kļūda"
+    }
   }
 }

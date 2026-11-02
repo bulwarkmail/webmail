@@ -6359,5 +6359,76 @@
       "added_from": "Lisatud kirjast, mille saatis {domain}",
       "added_from_subject": "Lisatud kirjast „{subject}“, mille saatis {domain}"
     }
+  },
+  "proofreading": {
+    "kind": {
+      "spelling": "Õigekiri",
+      "grammar": "Grammatika",
+      "style": "Stiil",
+      "other": "Soovitus"
+    },
+    "popup": {
+      "label": "{kind}: {word}",
+      "no_suggestions": "Soovitusi pole",
+      "suggestions": "Soovitused",
+      "replace_with": "Asenda: {text}",
+      "also": "Ka {checker} leidis",
+      "ignore": "Eira",
+      "add_to_dictionary": "Lisa sõnastikku",
+      "disable_rule": "Lülita see reegel välja",
+      "changed": "Tekst muutus. Oota järgmist kontrolli."
+    },
+    "list_item": "{word}: {message} Soovitus: {suggestion}",
+    "list_item_no_suggestion": "{word}: {message}",
+    "announce_count": "{count, plural, =0 {Õigekirja- ega grammatikavigu pole} one {# õigekirja- või grammatikaviga} other {# õigekirja- või grammatikaviga}}",
+    "status": {
+      "title": "Õigekirja kontroll",
+      "off": "Õigekirja kontroll väljas",
+      "paused": "Õigekirja kontroll peatatud",
+      "rate_limited": "Kontroll peatatud",
+      "unavailable": "Kontroll pole saadaval",
+      "checking": "Kontrollin…",
+      "issues": "{count, plural, =0 {Probleeme pole} one {# probleem} other {# probleemi}}"
+    },
+    "panel": {
+      "title": "Õigekirja kontroll",
+      "required": "Sinu organisatsiooni nõue",
+      "check_message": "Kontrolli seda sõnumit",
+      "notice": "Kirjutamise ajal läheb sinu tekst kontrollimiseks teenusele {checkers}. Sinu allkiri ja tsiteeritud sõnum jäetakse välja ning sõnumi kohta, mille allkirjastad või krüpteerid, ei saadeta midagi.",
+      "turn_on": "Lülita õigekirja kontroll sisse",
+      "paused_protected": "Midagi ei kontrollita, kuni see sõnum on määratud allkirjastamiseks või krüpteerimiseks.",
+      "paused_unknown": "{plugin} võib sõnumeid allkirjastada või krüpteerida ilma seda siin näitamata, seega ei kontrollita midagi, kuni see on sees.",
+      "rate_limited": "{checker} palus oodata. Kontroll jätkub minuti pärast.",
+      "unavailable": "{checker} ei saa praegu kontrollida. See proovib uuesti, kui jätkad kirjutamist.",
+      "no_issues": "Probleeme ei leitud.",
+      "list_label": "Probleemid selles sõnumis",
+      "shortcuts": "Järgmine probleem: {next}. Eelmine: {previous}."
+    },
+    "notice": {
+      "on": "Õigekirja kontroll on sees. Kirjutamise ajal läheb sinu tekst kontrollimiseks teenusele {checkers}, ilma sinu allkirja ja tsiteeritud sõnumita. Sõnumi kohta, mille allkirjastad või krüpteerid, ei saadeta midagi.",
+      "forced": "Sinu organisatsioon lülitas õigekirja kontrolli sisse. Kirjutamise ajal läheb sinu tekst kontrollimiseks teenusele {checkers}, ilma sinu allkirja ja tsiteeritud sõnumita. Sõnumi kohta, mille allkirjastad või krüpteerid, ei saadeta midagi.",
+      "ok": "OK"
+    },
+    "send_warning": {
+      "title": "Kas saata lahendamata probleemidega?",
+      "body": "{count, plural, one {# õigekirja- või grammatikaviga on} other {# õigekirja- või grammatikaviga on}} selles sõnumis veel lahendamata.",
+      "review": "Vaata üle",
+      "send": "Saada ikkagi"
+    },
+    "settings": {
+      "title": "Õigekirja kontroll",
+      "description": "Joonib kirjutamise ajal alla õigekirja- ja grammatikavead ning pakub parandusi.",
+      "enable": "Kontrolli õigekirja ja grammatikat kirjutamise ajal",
+      "enable_description": "Sinu kirjutatud tekst läheb õigekirja kontrolli lisale ja teenusele, mida see kasutab. Sinu allkiri ja tsiteeritud sõnumid jäetakse välja ning allkirjastatud või krüpteeritud sõnumeid ei kontrollita kunagi.",
+      "no_checker": "Õigekirja kontrolli lisa pole paigaldatud. Palu administraatoril see lisada.",
+      "plugin_description": "Saadab sinu kirjutatu teenusele {plugin}.",
+      "writing_language": "Kirjutamise keel",
+      "writing_language_description": "Keel, milles tavaliselt kirjutad. Seda kasutavad õigekirja kontroll ja sinu brauseri õigekirjakontroll.",
+      "auto": "Tuvasta automaatselt"
+    },
+    "shortcuts": {
+      "next_issue": "Järgmine õigekirja- või grammatikaviga",
+      "previous_issue": "Eelmine õigekirja- või grammatikaviga"
+    }
   }
 }

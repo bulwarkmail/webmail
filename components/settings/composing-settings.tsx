@@ -8,6 +8,7 @@ import { useAuthStore } from '@/stores/auth-store';
 import { usePolicyStore } from '@/stores/policy-store';
 import { SettingsSection, SettingItem, Select, ToggleSwitch } from './settings-section';
 import { TemplateSettings } from './template-settings';
+import { ProofreadingSettings } from './proofreading-settings';
 import { Button } from '@/components/ui/button';
 import { X, ChevronRight } from '@/components/icons';
 
@@ -84,6 +85,8 @@ export function ComposingSettings() {
           />
         </SettingItem>
       </SettingsSection>
+
+      <ProofreadingSettings />
 
       <SettingsSection id="replying" title={tPage('sections.replying')}>
         <SettingItem label={t('quick_reply.label')} description={t('quick_reply.description')}>

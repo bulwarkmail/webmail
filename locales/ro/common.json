@@ -6359,5 +6359,76 @@
       "added_from": "Adăugat dintr-un e-mail de la {domain}",
       "added_from_subject": "Adăugat din e-mailul „{subject}” de la {domain}"
     }
+  },
+  "proofreading": {
+    "kind": {
+      "spelling": "Ortografie",
+      "grammar": "Gramatică",
+      "style": "Stil",
+      "other": "Sugestie"
+    },
+    "popup": {
+      "label": "{kind}: {word}",
+      "no_suggestions": "Nicio sugestie",
+      "suggestions": "Sugestii",
+      "replace_with": "Înlocuiește cu {text}",
+      "also": "Și de la {checker}",
+      "ignore": "Ignoră",
+      "add_to_dictionary": "Adaugă în dicționar",
+      "disable_rule": "Dezactivează această regulă",
+      "changed": "Textul s-a schimbat. Așteptați următoarea verificare."
+    },
+    "list_item": "{word}: {message} Sugestie: {suggestion}",
+    "list_item_no_suggestion": "{word}: {message}",
+    "announce_count": "{count, plural, =0 {Nicio greșeală de ortografie sau gramatică} one {# greșeală de ortografie sau gramatică} few {# greșeli de ortografie sau gramatică} other {# de greșeli de ortografie sau gramatică}}",
+    "status": {
+      "title": "Verificare text",
+      "off": "Verificarea textului este oprită",
+      "paused": "Verificarea textului este întreruptă",
+      "rate_limited": "Verificare întreruptă",
+      "unavailable": "Verificare indisponibilă",
+      "checking": "Se verifică…",
+      "issues": "{count, plural, =0 {Nicio problemă} one {# problemă} few {# probleme} other {# de probleme}}"
+    },
+    "panel": {
+      "title": "Verificare text",
+      "required": "Cerută de organizația dvs.",
+      "check_message": "Verifică acest mesaj",
+      "notice": "În timp ce tastați, textul scris ajunge la {checkers} pentru verificare. Semnătura și mesajul citat sunt lăsate deoparte, iar pentru un mesaj pe care îl semnați sau îl criptați nu se trimite nimic.",
+      "turn_on": "Pornește verificarea textului",
+      "paused_protected": "Nu se verifică nimic cât timp acest mesaj este setat să fie semnat sau criptat.",
+      "paused_unknown": "{plugin} poate semna sau cripta mesaje fără să arate asta aici, așa că nu se verifică nimic cât timp este pornit.",
+      "rate_limited": "{checker} a cerut o pauză. Verificarea reîncepe peste un minut.",
+      "unavailable": "{checker} nu poate verifica acum. Încearcă din nou când continuați să scrieți.",
+      "no_issues": "Nu s-au găsit probleme.",
+      "list_label": "Probleme în acest mesaj",
+      "shortcuts": "Problema următoare: {next}. Anterioara: {previous}."
+    },
+    "notice": {
+      "on": "Verificarea textului este pornită. În timp ce tastați, textul scris ajunge la {checkers} pentru verificare, fără semnătură și fără mesajul citat. Pentru un mesaj pe care îl semnați sau îl criptați nu se trimite nimic.",
+      "forced": "Organizația dvs. a pornit verificarea textului. În timp ce tastați, textul scris ajunge la {checkers} pentru verificare, fără semnătură și fără mesajul citat. Pentru un mesaj pe care îl semnați sau îl criptați nu se trimite nimic.",
+      "ok": "OK"
+    },
+    "send_warning": {
+      "title": "Trimiteți cu probleme nerezolvate?",
+      "body": "{count, plural, one {În acest mesaj a rămas # greșeală de ortografie sau gramatică.} few {În acest mesaj au rămas # greșeli de ortografie sau gramatică.} other {În acest mesaj au rămas # de greșeli de ortografie sau gramatică.}}",
+      "review": "Revizuiți",
+      "send": "Trimite oricum"
+    },
+    "settings": {
+      "title": "Verificare text",
+      "description": "Subliniază greșelile de ortografie și gramatică în timp ce scrieți, cu sugestii de corectare.",
+      "enable": "Verifică ortografia și gramatica în timp ce tastez",
+      "enable_description": "Textul pe care îl scrieți ajunge la suplimentul de verificare și la serviciul pe care îl folosește. Semnătura și mesajele citate sunt lăsate deoparte, iar mesajele semnate sau criptate nu sunt verificate niciodată.",
+      "no_checker": "Nu este instalat niciun supliment de verificare a textului. Cereți administratorului să adauge unul.",
+      "plugin_description": "Trimite ce scrieți către {plugin}.",
+      "writing_language": "Limba de scriere",
+      "writing_language_description": "Limba în care scrieți de obicei. O folosesc verificarea textului și corectorul ortografic al browserului.",
+      "auto": "Detectează automat"
+    },
+    "shortcuts": {
+      "next_issue": "Următoarea greșeală de ortografie sau gramatică",
+      "previous_issue": "Greșeala de ortografie sau gramatică anterioară"
+    }
   }
 }

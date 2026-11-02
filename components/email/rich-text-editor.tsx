@@ -144,8 +144,8 @@ interface RichTextEditorProps {
   spellcheck?: boolean;
   /** The language the text is written in (the writing-language setting). */
   lang?: string;
-  /** An underline of a proofreading issue was clicked, tapped or right-clicked. */
-  onTextIssueOpen?: TextCheckOptions['onOpen'];
+  /** Proofreading underlines: clicks on them, and keys in the text. */
+  textCheck?: TextCheckOptions;
 }
 
 /** What the editing area tells assistive technology, besides TipTap's role=textbox. */
@@ -405,7 +405,7 @@ export function RichTextEditor({
   defaultTextStyle,
   spellcheck = true,
   lang,
-  onTextIssueOpen,
+  textCheck: textCheckHandlers,
 }: RichTextEditorProps) {
   const rtlEditingSupport = useSettingsStore((st) => st.rtlEditingSupport);
   const tComposer = useTranslations("email_composer");
@@ -414,11 +414,12 @@ export function RichTextEditor({
   onImageUploadRef.current = onImageUpload;
   const onEditorReadyRef = React.useRef(onEditorReady);
   onEditorReadyRef.current = onEditorReady;
-  const onTextIssueOpenRef = React.useRef(onTextIssueOpen);
-  onTextIssueOpenRef.current = onTextIssueOpen;
-  // Built once with the editor; reads the latest handler.
+  const textCheckRef = React.useRef(textCheckHandlers);
+  textCheckRef.current = textCheckHandlers;
+  // Built once with the editor; reads the latest handlers.
   const [textCheck] = useState(() => createTextCheckExtension(() => ({
-    onOpen: (key, anchor, via) => onTextIssueOpenRef.current?.(key, anchor, via),
+    onOpen: (key, anchor, via) => textCheckRef.current?.onOpen(key, anchor, via),
+    onKey: (event) => textCheckRef.current?.onKey?.(event) ?? false,
   })));
   const mentionCandidatesRef = React.useRef<MentionCandidate[]>([]);
   mentionCandidatesRef.current = mentionCandidates ?? [];

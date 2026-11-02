@@ -6359,5 +6359,76 @@
       "added_from": "Added from a mail from {domain}",
       "added_from_subject": "Added from the mail “{subject}” from {domain}"
     }
+  },
+  "proofreading": {
+    "kind": {
+      "spelling": "Spelling",
+      "grammar": "Grammar",
+      "style": "Style",
+      "other": "Suggestion"
+    },
+    "popup": {
+      "label": "{kind}: {word}",
+      "no_suggestions": "No suggestions",
+      "suggestions": "Suggestions",
+      "replace_with": "Replace with {text}",
+      "also": "Also from {checker}",
+      "ignore": "Ignore",
+      "add_to_dictionary": "Add to dictionary",
+      "disable_rule": "Turn off this rule",
+      "changed": "The text changed. Wait for the next check."
+    },
+    "list_item": "{word}: {message} Suggestion: {suggestion}",
+    "list_item_no_suggestion": "{word}: {message}",
+    "announce_count": "{count, plural, =0 {No spelling or grammar issues} one {# spelling or grammar issue} other {# spelling or grammar issues}}",
+    "status": {
+      "title": "Proofreading",
+      "off": "Proofreading off",
+      "paused": "Proofreading paused",
+      "rate_limited": "Checking paused",
+      "unavailable": "Checking unavailable",
+      "checking": "Checking…",
+      "issues": "{count, plural, =0 {No issues} one {# issue} other {# issues}}"
+    },
+    "panel": {
+      "title": "Proofreading",
+      "required": "Required by your organisation",
+      "check_message": "Check this message",
+      "notice": "While you type, the text you write goes to {checkers} to be checked. Your signature and the quoted message are left out, and nothing is sent for a message you sign or encrypt.",
+      "turn_on": "Turn on proofreading",
+      "paused_protected": "Nothing is checked while this message is set to be signed or encrypted.",
+      "paused_unknown": "{plugin} can sign or encrypt messages without showing it here, so nothing is checked while it is on.",
+      "rate_limited": "{checker} asked to wait. Checking starts again in a minute.",
+      "unavailable": "{checker} can't check right now. It tries again when you keep typing.",
+      "no_issues": "No issues found.",
+      "list_label": "Issues in this message",
+      "shortcuts": "Next issue: {next}. Previous: {previous}."
+    },
+    "notice": {
+      "on": "Proofreading is on. While you type, the text you write goes to {checkers} to be checked, without your signature or the quoted message. Nothing is sent for a message you sign or encrypt.",
+      "forced": "Your organisation turned on proofreading. While you type, the text you write goes to {checkers} to be checked, without your signature or the quoted message. Nothing is sent for a message you sign or encrypt.",
+      "ok": "OK"
+    },
+    "send_warning": {
+      "title": "Send with open issues?",
+      "body": "{count, plural, one {# spelling or grammar issue is} other {# spelling or grammar issues are}} still open in this message.",
+      "review": "Review",
+      "send": "Send anyway"
+    },
+    "settings": {
+      "title": "Proofreading",
+      "description": "Underline spelling and grammar mistakes while you write, with suggestions to fix them.",
+      "enable": "Check spelling and grammar while I type",
+      "enable_description": "The text you write goes to the proofreading add-on and the service it uses. Your signature and quoted messages are left out, and signed or encrypted messages are never checked.",
+      "no_checker": "No proofreading add-on is installed. Ask your administrator to add one.",
+      "plugin_description": "Sends what you write to {plugin}.",
+      "writing_language": "Writing language",
+      "writing_language_description": "The language you usually write in. Proofreading and your browser's spell check use it.",
+      "auto": "Detect automatically"
+    },
+    "shortcuts": {
+      "next_issue": "Next spelling or grammar issue",
+      "previous_issue": "Previous spelling or grammar issue"
+    }
   }
 }

@@ -6359,5 +6359,76 @@
       "added_from": "Toegevoegd vanuit een e-mail van {domain}",
       "added_from_subject": "Toegevoegd vanuit de e-mail ‘{subject}’ van {domain}"
     }
+  },
+  "proofreading": {
+    "kind": {
+      "spelling": "Spelling",
+      "grammar": "Grammatica",
+      "style": "Stijl",
+      "other": "Suggestie"
+    },
+    "popup": {
+      "label": "{kind}: {word}",
+      "no_suggestions": "Geen suggesties",
+      "suggestions": "Suggesties",
+      "replace_with": "Vervangen door {text}",
+      "also": "Ook van {checker}",
+      "ignore": "Negeren",
+      "add_to_dictionary": "Toevoegen aan woordenboek",
+      "disable_rule": "Deze regel uitzetten",
+      "changed": "De tekst is gewijzigd. Wacht op de volgende controle."
+    },
+    "list_item": "{word}: {message} Suggestie: {suggestion}",
+    "list_item_no_suggestion": "{word}: {message}",
+    "announce_count": "{count, plural, =0 {Geen spel- of grammaticafouten} one {# spel- of grammaticafout} other {# spel- of grammaticafouten}}",
+    "status": {
+      "title": "Tekstcontrole",
+      "off": "Tekstcontrole uit",
+      "paused": "Tekstcontrole gepauzeerd",
+      "rate_limited": "Controle gepauzeerd",
+      "unavailable": "Controle niet beschikbaar",
+      "checking": "Controleren…",
+      "issues": "{count, plural, =0 {Geen problemen} one {# probleem} other {# problemen}}"
+    },
+    "panel": {
+      "title": "Tekstcontrole",
+      "required": "Verplicht gesteld door je organisatie",
+      "check_message": "Dit bericht controleren",
+      "notice": "Terwijl je typt, gaat de tekst die je schrijft naar {checkers} om te worden gecontroleerd. Je handtekening en het geciteerde bericht worden overgeslagen, en er wordt niets verstuurd voor een bericht dat je ondertekent of versleutelt.",
+      "turn_on": "Tekstcontrole aanzetten",
+      "paused_protected": "Er wordt niets gecontroleerd zolang dit bericht wordt ondertekend of versleuteld.",
+      "paused_unknown": "{plugin} kan berichten ondertekenen of versleutelen zonder dat hier te tonen, dus er wordt niets gecontroleerd zolang het aan staat.",
+      "rate_limited": "{checker} vroeg om te wachten. De controle start over een minuut opnieuw.",
+      "unavailable": "{checker} kan nu niet controleren. Het probeert het opnieuw als je verder typt.",
+      "no_issues": "Geen problemen gevonden.",
+      "list_label": "Problemen in dit bericht",
+      "shortcuts": "Volgend probleem: {next}. Vorige: {previous}."
+    },
+    "notice": {
+      "on": "Tekstcontrole staat aan. Terwijl je typt, gaat de tekst die je schrijft naar {checkers} om te worden gecontroleerd, zonder je handtekening of het geciteerde bericht. Er wordt niets verstuurd voor een bericht dat je ondertekent of versleutelt.",
+      "forced": "Je organisatie heeft tekstcontrole aangezet. Terwijl je typt, gaat de tekst die je schrijft naar {checkers} om te worden gecontroleerd, zonder je handtekening of het geciteerde bericht. Er wordt niets verstuurd voor een bericht dat je ondertekent of versleutelt.",
+      "ok": "OK"
+    },
+    "send_warning": {
+      "title": "Versturen met openstaande problemen?",
+      "body": "{count, plural, one {Er staat nog # spel- of grammaticafout} other {Er staan nog # spel- of grammaticafouten}} open in dit bericht.",
+      "review": "Bekijken",
+      "send": "Toch versturen"
+    },
+    "settings": {
+      "title": "Tekstcontrole",
+      "description": "Spel- en grammaticafouten onderstrepen terwijl je schrijft, met suggesties om ze te verbeteren.",
+      "enable": "Spelling en grammatica controleren terwijl ik typ",
+      "enable_description": "De tekst die je schrijft gaat naar de add-on voor tekstcontrole en de dienst die die gebruikt. Je handtekening en geciteerde berichten worden overgeslagen, en ondertekende of versleutelde berichten worden nooit gecontroleerd.",
+      "no_checker": "Er is geen add-on voor tekstcontrole geïnstalleerd. Vraag je beheerder er een toe te voegen.",
+      "plugin_description": "Stuurt wat je schrijft naar {plugin}.",
+      "writing_language": "Schrijftaal",
+      "writing_language_description": "De taal waarin je meestal schrijft. De tekstcontrole en de spellingcontrole van je browser gebruiken die.",
+      "auto": "Automatisch herkennen"
+    },
+    "shortcuts": {
+      "next_issue": "Volgende spel- of grammaticafout",
+      "previous_issue": "Vorige spel- of grammaticafout"
+    }
   }
 }
