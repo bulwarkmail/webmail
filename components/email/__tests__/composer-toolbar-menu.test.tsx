@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
 import { ComposerToolbarMenu, ComposerToolbarMenuItem, ComposerToolbarMenuCheckItem } from '../composer-toolbar-menu';
 import { Paperclip } from '@/components/icons';
 
@@ -80,4 +80,17 @@ describe('ComposerToolbarMenu', () => {
     expect(onSelect).toHaveBeenCalledTimes(1);
     expect(screen.queryByRole('menu')).toBeNull();
   });
+});
+
+it('opens a named composer menu with Down and returns focus on Escape without invoking an action', async () => {
+  const action=vi.fn();
+  render(<ComposerToolbarMenu icon={Paperclip} label="Attachment options">{()=> <ComposerToolbarMenuItem onSelect={action}>Attach file</ComposerToolbarMenuItem>}</ComposerToolbarMenu>);
+  const trigger=screen.getByRole('button',{name:'Attachment options'});
+  trigger.focus();
+  fireEvent.keyDown(trigger,{key:'ArrowDown'});
+  expect(screen.getByRole('menu',{name:'Attachment options'})).toBeInTheDocument();
+  await waitFor(()=>expect(screen.getByRole('menuitem',{name:'Attach file'})).toHaveFocus());
+  fireEvent.keyDown(document.activeElement!,{key:'Escape'});
+  expect(trigger).toHaveFocus();
+  expect(action).not.toHaveBeenCalled();
 });

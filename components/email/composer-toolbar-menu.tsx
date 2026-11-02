@@ -38,6 +38,12 @@ export function ComposerToolbarMenu({ icon: Icon, label, activeCount = 0, testId
           if (open) close();
           else menu.openContextMenuFrom(e.currentTarget, null, "start");
         }}
+        onKeyDown={(event) => {
+          if (event.key === 'ArrowDown' && !open && !event.altKey && !event.ctrlKey && !event.metaKey) {
+            event.preventDefault(); event.stopPropagation();
+            menu.openContextMenuFrom(event.currentTarget, null, 'start');
+          }
+        }}
         // 44px on a phone, where 36px was hard to hit with a finger.
         className={cn("h-9 max-md:h-11 max-md:min-w-11 justify-center gap-1.5 px-2 sm:px-2.5", open && "bg-muted")}
         title={label}
@@ -57,7 +63,7 @@ export function ComposerToolbarMenu({ icon: Icon, label, activeCount = 0, testId
         )}
         <ChevronDown className="hidden @[40rem]/composer-bar:block w-3.5 h-3.5 text-muted-foreground" />
       </Button>
-      <ContextMenu ref={menu.menuRef} isOpen={open} position={menu.contextMenu.position} onClose={close}>
+      <ContextMenu label={label} ref={menu.menuRef} isOpen={open} position={menu.contextMenu.position} onClose={close}>
         <div className="min-w-56">{children(close)}</div>
       </ContextMenu>
     </div>

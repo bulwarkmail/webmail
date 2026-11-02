@@ -226,3 +226,56 @@ describe('ContextMenuSubMenu', () => {
     expect(onPick).toHaveBeenCalledWith('inbox');
   });
 });
+
+describe('menu type-to-focus', () => {
+  it('finds a prefix, scrolls its target into view and never activates it', async () => {
+    const onPick=vi.fn();
+    await openByKeyboard({onPick});
+    const scroll=vi.fn();
+    Object.defineProperty(item('Rename'),'scrollIntoView',{value:scroll});
+    key('r');
+    key('e');
+    expect(item('Rename')).toHaveFocus();
+    expect(scroll).toHaveBeenCalledWith({block:'nearest',inline:'nearest'});
+    expect(onPick).not.toHaveBeenCalled();
+  });
+  it('cycles repeated letters, skips disabled entries and matches accented labels after timeout', async () => {
+    let now=1000;
+    vi.spyOn(Date,'now').mockImplementation(()=>now);
+    render(<ContextMenu isOpen position={{x:10,y:10}} onClose={()=>{}} label="Actions">
+      <ContextMenuItem label="Reply" onClick={()=>{}} />
+      <ContextMenuItem label="Reply all" onClick={()=>{}} />
+      <ContextMenuItem label="Remove" disabled onClick={()=>{}} />
+      <ContextMenuItem label="Remind later" onClick={()=>{}} />
+      <ContextMenuItem label="Éxport" onClick={()=>{}} />
+    </ContextMenu>);
+    await waitFor(()=>expect(item('Reply')).toHaveFocus());
+    key('r');expect(item('Reply all')).toHaveFocus();
+    key('r');expect(item('Remind later')).toHaveFocus();
+    key('r');expect(item('Reply')).toHaveFocus();
+    now+=700;
+    key('e');expect(item('Éxport')).toHaveFocus();
+    vi.restoreAllMocks();
+  });
+  it('searches only the current submenu level', async () => {
+    await openByKeyboard({withSub:true});
+    key('m');
+    expect(item('Move to')).toHaveFocus();
+    key('ArrowRight');
+    await waitFor(()=>expect(item('Inbox')).toHaveFocus());
+    key('s');
+    expect(item('Spam')).toHaveFocus();
+    key('Escape');
+    expect(item('Move to')).toHaveFocus();
+  });
+  it('leaves typing in a menu search field to the field', async () => {
+    render(<ContextMenu isOpen position={{x:10,y:10}} onClose={()=>{}} label="Folders">
+      <input type="search" aria-label="Find a folder" />
+      <ContextMenuItem label="Rename" onClick={()=>{}} />
+    </ContextMenu>);
+    const input=screen.getByRole('searchbox',{name:'Find a folder'});
+    await waitFor(()=>expect(input).toHaveFocus());
+    expect(fireEvent.keyDown(input,{key:'r'})).toBe(true);
+    expect(input).toHaveFocus();
+  });
+});

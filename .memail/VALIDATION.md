@@ -177,3 +177,12 @@ The preview is in draft PR #3. Phase 0 and full phase 1 acceptance are not compl
 - Browser verified Heroicons in the current local demo workspace. Settings search showed expandable groups of 27 and 11 matches for the sample query; expansion and input/result focus were verified without opening a setting or changing preferences. At 320px, settings page width stayed 320px and clearing no matches returned focus to Search settings.
 - An isolated production SearchChips fixture verified next-criterion focus, final-clear focus to Results preview, and 320px page width. No mailbox query was issued by the fixture. Review tabs closed, temporary route removed and viewport reset. No draft or mail content was modified and no mail was sent.
 - Screenshots: research workspace `memail-heroicons-sidebar.jpg`, `memail-settings-search.jpg`, `memail-settings-search-phone.jpg`, and `memail-search-chips-phone.jpg`. Full dark/RTL/zoom and real-account search/large-settings acceptance remain open. Expansion labels are currently English; filter labels reuse translations. AI deferred; production unchanged.
+
+
+## Shared menu layout and command focus
+
+- 104 checks passed across 14 files: menu keyboard/fit/submenu/touch/hover behavior, composer menus/a11y/short panes, reader flyouts/panel layering, plugin list surfaces, batch actions, folder menus and rail leave guards. Added checks cover typed prefixes, repeat-letter cycling, diacritics, disabled skipping, current submenu scope, search-field ownership, scroll requests and named composer-menu opening/focus return.
+- Production build including TypeScript and scoped ESLint passed after removing the temporary review route. Existing Vite config-loader and Turbopack filesystem-tracing warnings remain.
+- Browser verified the live local demo reader's More actions menu: p moved focus to Pin then Print, and Escape closed it without invoking either action. No mail or draft content was changed.
+- An isolated production menu with local no-op actions was checked at 320x568. The long root panel stayed approximately x68..310/y10..558; type-to-focus scrolled its inner container about 146px to show Print at y477..509. The submenu stayed within x130..310/y484..558. Escape returned to Message actions. Viewport reset, review tab closed and temporary route removed.
+- Screenshots: research workspace `memail-menu-polish.jpg` (native reader) and `memail-menu-phone.jpg` (isolated long menu). Full dark/RTL/zoom/device and plugin-specific interactive-form acceptance remain open. AI deferred; production unchanged.

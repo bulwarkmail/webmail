@@ -136,6 +136,7 @@ function needsKeys(el: Element): boolean {
 
 function focusEl(el: HTMLElement | undefined | null) {
   el?.focus({ preventScroll: true });
+  if (el?.closest('[role="menu"]')) el.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
 }
 
 /**
@@ -331,6 +332,10 @@ export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
       openMenus.push(token);
       syncOpenFlag();
       const menuNode = localRef.current;
+      let typed = '';
+      let typedAt = 0;
+      let typedLevel: HTMLElement | null = null;
+      const normalizeLabel = (value: string) => value.trim().normalize('NFKD').replace(/\p{M}/gu, '').toLocaleLowerCase();
 
       const onKeyDown = (e: KeyboardEvent) => {
         if (openMenus[openMenus.length - 1] !== token) return;
@@ -378,6 +383,7 @@ export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
         const backKey = rtl ? "ArrowRight" : "ArrowLeft";
         const submenuTrigger = submenuTriggerOf(active);
 
+        if (e.key.length > 1) typed = '';
         switch (e.key) {
           case "ArrowDown":
           case "ArrowUp": {
@@ -420,7 +426,26 @@ export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
             if (!text) consume(false);
             return;
           default:
-            // Letters and the rest: the app's shortcuts are suspended.
+            if (!text && e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+              consume();
+              const now = Date.now();
+              typed = current !== typedLevel || now - typedAt > 650 ? e.key : typed + e.key;
+              typedAt = now;
+              typedLevel = current;
+              const normalized = normalizeLabel(typed);
+              const repeated = [...normalized].every(letter => letter === normalized[0]);
+              const prefix = repeated ? normalized[0] : normalized;
+              const items = menuLevelItems(current);
+              const index = items.indexOf(active);
+              const start = normalized.length > 1 && !repeated ? Math.max(0,index) : index + 1;
+              for (let offset = 0; offset < items.length; offset++) {
+                const candidate = items[(start + offset) % items.length];
+                const label = candidate.getAttribute('aria-label') ?? candidate.dataset.menuLabel ?? candidate.textContent ?? '';
+                if (normalizeLabel(label).startsWith(prefix)) { focusEl(candidate); break; }
+              }
+              return;
+            }
+            // Other keys still belong to the menu, not the mail behind it.
             if (!text) consume(false);
         }
       };
@@ -489,7 +514,7 @@ export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
           }}
         >
           {/* Taller than the window: scroll inside the menu. */}
-          <div className="py-1 overflow-y-auto" style={{ maxHeight: `calc(100vh - ${2 * VIEWPORT_MARGIN + 2}px)` }}>
+          <div className="p-1 overflow-y-auto" style={{ maxHeight: `calc(100vh - ${2 * VIEWPORT_MARGIN + 2}px)` }}>
             {children}
           </div>
         </div>
@@ -509,12 +534,12 @@ ContextMenu.displayName = "ContextMenu";
  * (R7); the desktop keeps its density.
  */
 export const CONTEXT_MENU_ITEM_CLASS =
-  "w-full px-3 py-1.5 text-sm text-start flex items-center gap-2 pointer-coarse:min-h-11 " +
+  "w-full min-h-8 rounded-lg px-3 py-1.5 text-sm text-start flex items-center gap-2 pointer-coarse:min-h-11 " +
   "transition-colors duration-150 focus:outline-none focus-visible:bg-muted hover:bg-muted cursor-pointer " +
   "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent";
 
 /** The menu's panel look, for a host that draws its own panel (a sheet on the phone). */
-export const CONTEXT_MENU_PANEL_CLASS = "bg-background rounded-md shadow-lg border border-border";
+export const CONTEXT_MENU_PANEL_CLASS = "bg-background rounded-xl shadow-xl border border-border";
 
 interface ContextMenuItemProps {
   icon?: React.ComponentType<{ className?: string }>;
@@ -547,6 +572,7 @@ export function ContextMenuItem({
     <button
       type="button"
       role="menuitem"
+      data-menu-label={label}
       data-testid={testId}
       disabled={disabled}
       title={title}
@@ -681,8 +707,9 @@ export function ContextMenuSubMenu({
       <div
         ref={triggerRef}
         data-submenu-trigger=""
+        data-menu-label={label}
         className={cn(
-          "w-full px-3 py-1.5 text-sm flex items-center gap-2 outline-none pointer-coarse:min-h-11",
+          "w-full min-h-8 rounded-lg px-3 py-1.5 text-sm flex items-center gap-2 outline-none pointer-coarse:min-h-11",
           "transition-colors duration-150",
           disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:bg-muted focus-visible:bg-muted",
           isOpen && !disabled && "bg-muted"
@@ -720,10 +747,10 @@ export function ContextMenuSubMenu({
             data-submenu-panel=""
             aria-label={label}
             onPlaced={onPanelPlaced}
-            className="min-w-[180px] bg-background rounded-md shadow-lg border border-border"
+            className={cn("min-w-[180px]", CONTEXT_MENU_PANEL_CLASS)}
             role="menu"
           >
-            <div className="py-1 max-h-[min(300px,calc(100vh-40px))] overflow-y-auto">
+            <div className="p-1 max-h-[min(300px,calc(100vh-40px))] overflow-y-auto">
               {children}
             </div>
           </SubMenuPanel>
