@@ -223,6 +223,14 @@ describe('file-preview-section', () => {
     onToggleStar: vi.fn(),
   } as unknown as React.ComponentProps<typeof FileDetailsPanel>;
 
+  it('gives the details panel the same header height as the other side panels', () => {
+    render(<FileDetailsPanel {...panelProps} pluginFile={notesView} />);
+    const header = document.querySelector('[data-details-header]') as HTMLElement;
+    expect(header.className).toContain('h-14');
+    expect(header.className).toContain('box-content');
+    expect(header.className).not.toContain('h-11');
+  });
+
   it('shows the selected file in the details panel', () => {
     offerSlots('p1', ['file-preview-section']);
     render(<FileDetailsPanel {...panelProps} pluginFile={notesView} />);

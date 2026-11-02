@@ -59,7 +59,8 @@ export function FileDetailsPanel({
   const pluginProps = useMemo(() => (pluginFile ? { file: pluginFile } : null), [pluginFile]);
 
   const header = (
-    <div className="flex items-center justify-between px-4 h-11 border-b border-border flex-shrink-0">
+    // h-14 like the other side panels' headers (the contact panel, the plugin panels).
+    <div className="flex items-center justify-between px-4 h-14 box-content border-b border-border flex-shrink-0" data-details-header="">
       <h2 className="text-sm font-semibold">{t("details")}</h2>
       <Button variant="ghost" size="icon" className="h-7 w-7 -me-1.5" onClick={onClose} aria-label={t("close_details")}>
         <X className="w-4 h-4" />
