@@ -117,7 +117,7 @@ import {
   Pencil,
   Paperclip,
 } from "@/components/icons";
-import { MailMessageSkeleton } from "@/components/boot-skeleton/mail-skeleton";
+import { MailMessageSkeleton, MailMessageToolbarSkeleton } from "@/components/boot-skeleton/mail-skeleton";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import type { Attachment as PostalMimeAttachment } from 'postal-mime';
@@ -3930,12 +3930,12 @@ ${printWatermark ? printWatermark.html : ''}
     )}
   </>
   );
-  const shell = (content: React.ReactNode) => (
+  const shell = (content: React.ReactNode, top: React.ReactNode = null) => (
     <div
       ref={setViewerRootEl}
       className={cn("flex-1 flex flex-col h-full bg-background overflow-hidden relative", className)}
     >
-      {null}
+      {top}
       <div className="flex-1 min-h-0 flex flex-row overflow-hidden relative">
         {content}
         {sidePanel}
@@ -3947,8 +3947,11 @@ ${printWatermark ? printWatermark.html : ''}
   // Show loading skeleton while email is being fetched: the page skeleton's
   // message pane, so a linked message keeps the shape it had before the app
   // started.
+  // Its toolbar sits where the loaded reader puts its own: above the message
+  // row when lifted, so the row doesn't move when the message arrives.
   if (isLoading && !email) {
-    return shell(<MailMessageSkeleton />);
+    const lifted = toolbarPosition === 'top' && liftToolbar;
+    return shell(<MailMessageSkeleton toolbar={!lifted} />, lifted ? <MailMessageToolbarSkeleton /> : null);
   }
 
   if (!email) {

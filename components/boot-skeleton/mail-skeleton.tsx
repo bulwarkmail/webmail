@@ -400,43 +400,55 @@ function MobileHeaderSkeleton() {
  * same component): the toolbar, the subject block and the sender block of the
  * default reader, then the message body's tinted sheet.
  */
-export function MailMessageSkeleton({ className }: { className?: string }) {
+/**
+ * The reader's top toolbar while a message loads. The loaded reader lifts its
+ * toolbar above the message row on a tablet or desktop (EmailViewer's
+ * `liftToolbar`); its loading state draws this there too, so the row below
+ * doesn't move when the message arrives.
+ */
+export function MailMessageToolbarSkeleton() {
   const button = "h-8 w-20 rounded-md";
   return (
-    <div aria-hidden="true" className={cn("flex-1 min-w-0 flex flex-col h-full bg-background overflow-hidden", className)}>
-      <div className="bg-background flex-shrink-0 border-b border-border">
-        <div className="px-2 sm:px-4 lg:px-6 flex items-center h-14">
-          {/* Phones: back, then icon-over-label actions. */}
-          <div className="sm:hidden flex items-center justify-between gap-0.5 w-full">
-            <span className="flex items-center justify-center h-9 w-9 -ms-1 flex-shrink-0">
+    <div className="bg-background flex-shrink-0 border-b border-border">
+      <div className="px-2 sm:px-4 lg:px-6 flex items-center h-14">
+        {/* Phones: back, then icon-over-label actions. */}
+        <div className="sm:hidden flex items-center justify-between gap-0.5 w-full">
+          <span className="flex items-center justify-center h-9 w-9 -ms-1 flex-shrink-0">
+            <ArrowLeft className="w-5 h-5" />
+          </span>
+          {repeat(6, (i) => (
+            <span className="flex flex-col items-center gap-1 px-1 flex-1">
+              <Block className="w-5 h-5 rounded" />
+              <Bar className="h-2" w={i === 5 ? "3.5rem" : "2.25rem"} />
+            </span>
+          ))}
+        </div>
+        <div className="max-sm:hidden flex items-center justify-between gap-2 w-full">
+          <div className="flex items-center gap-2">
+            {/* Back to the list, where the reader has the list's place (tablet, focus). */}
+            <span className="hidden md:max-lg:flex md:boot-focus:flex items-center justify-center h-9 w-9 -ms-1 flex-shrink-0">
               <ArrowLeft className="w-5 h-5" />
             </span>
-            {repeat(6, (i) => (
-              <span className="flex flex-col items-center gap-1 px-1 flex-1">
-                <Block className="w-5 h-5 rounded" />
-                <Bar className="h-2" w={i === 5 ? "3.5rem" : "2.25rem"} />
-              </span>
-            ))}
+            <Block className={button} />
+            <Block className={button} />
+            <Block className={button} />
           </div>
-          <div className="max-sm:hidden flex items-center justify-between gap-2 w-full">
-            <div className="flex items-center gap-2">
-              {/* Back to the list, where the reader has the list's place (tablet, focus). */}
-              <span className="hidden md:max-lg:flex md:boot-focus:flex items-center justify-center h-9 w-9 -ms-1 flex-shrink-0">
-                <ArrowLeft className="w-5 h-5" />
-              </span>
-              <Block className={button} />
-              <Block className={button} />
-              <Block className={button} />
-            </div>
-            <div className="flex items-center gap-2">
-              <Block className={button} />
-              <Block className={button} />
-              <Block className={cn(button, "max-md:hidden")} />
-              <Block className="h-8 w-8 rounded-md" />
-            </div>
+          <div className="flex items-center gap-2">
+            <Block className={button} />
+            <Block className={button} />
+            <Block className={cn(button, "max-md:hidden")} />
+            <Block className="h-8 w-8 rounded-md" />
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+export function MailMessageSkeleton({ className, toolbar = true }: { className?: string; toolbar?: boolean }) {
+  return (
+    <div aria-hidden="true" className={cn("flex-1 min-w-0 flex flex-col h-full bg-background overflow-hidden", className)}>
+      {toolbar ? <MailMessageToolbarSkeleton /> : null}
       <div className="bg-background border-b border-border">
         <div className="px-4 lg:px-6" style={{ paddingBlock: "var(--density-header-py)" }}>
           <div className="flex items-start justify-between gap-2 lg:gap-4">
