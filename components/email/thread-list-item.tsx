@@ -26,8 +26,8 @@ import { emailKeyFor, getThreadTagIds, getEmailTagIds } from "@/lib/thread-utils
 import { useKeywordFormat } from "@/hooks/use-keyword-format";
 import { useEmailTagScope } from "@/hooks/use-account-tags";
 import { useTagDisplay } from "@/hooks/use-tag-display";
-import { TAG_LOZENGE_CLASS } from "./tag-badge";
-import { RowTags } from "./row-tags";
+import { TagBadge, TAG_LOZENGE_CLASS } from "./tag-badge";
+import { ROW_TAG_GROUP_CLASS } from "./row-tag-classes";
 import { useEmailDrag } from "@/hooks/use-email-drag";
 import { useLongPress } from "@/hooks/use-long-press";
 import { useSwipeActions } from "@/hooks/use-swipe-actions";
@@ -787,7 +787,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                     </span>
                   )}
                   <span dir={columns ? undefined : "auto"} className={cn(
-                    columns ? cn(LIST_COLUMN_CLASS.from, 'flex items-center gap-2') : 'w-32 shrink-0 truncate lg:w-40',
+                    columns ? cn(LIST_COLUMN_CLASS.from, 'flex items-center gap-2') : 'w-32 min-w-0 shrink-[9999] truncate lg:w-40',
                     'text-sm',
                     isUnread ? (mvRow ? 'font-bold text-foreground' : 'font-semibold text-foreground') : 'font-medium text-foreground/80'
                   )}>
@@ -810,19 +810,24 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                       </>
                     ) : (sender?.name || (sender?.email && formatAddress(sender.email)) || tUnknown)}
                   </span>
-                  <div className={cn("flex min-w-0 flex-1 items-center overflow-hidden text-sm", mvRow ? "gap-0" : "gap-2")}>
+                  <div className={cn("flex min-w-0 flex-1 items-center text-sm", mvRow ? "gap-0" : "gap-2")}>
                     {tagIds.length > 0 && (
-                      <RowTags tagIds={tagIds} variant={tagVariant} scope={tagScope} className={mvRow ? "me-2" : undefined} />
+                      <span className={cn(ROW_TAG_GROUP_CLASS, "basis-12 grow", mvRow && "me-2")}>
+                        {tagIds.map((id) => (
+                          <TagBadge key={id} tagId={id} variant={tagVariant} scope={tagScope} className="max-w-[min(12rem,100%)]" />
+                        ))}
+                      </span>
                     )}
-                    <span data-tag-text="" dir="auto" className={cn(
-                      'min-w-0 truncate',
+                    <span dir="auto" className={cn(
+                      'min-w-0 shrink-[9999] truncate',
+                      tagIds.length > 0 && "max-w-40 shrink-[2]",
                       isUnread ? (mvRow ? 'font-bold text-foreground' : 'font-semibold text-foreground') : 'text-foreground/90'
                     )}>
                       <bdi>{subjectSnippet ? <SearchSnippetText snippet={subjectSnippet} /> : (email.subject || tNoSubject)}</bdi>
                     </span>
                     <PluginRowBadges email={email} className={mvRow ? "ms-2" : undefined} />
                     {(previewSnippet || inlinePreview) && (
-                      <span data-tag-text="preview" dir="auto" className="min-w-0 shrink-[9999] truncate text-muted-foreground">
+                      <span dir="auto" className="min-w-0 shrink-[9999] truncate text-muted-foreground">
                         {/* Gmail runs the snippet on from the subject after a dash. */}
                         {mvRow && '\u00a0-\u00a0'}
                         {previewSnippet ? <> <SearchSnippetText snippet={previewSnippet} /></> : (mvRow ? trimmedPreview : inlinePreview)}
@@ -870,7 +875,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
             ) : (
               <>
                 <div className="flex items-center justify-between gap-2 mb-1">
-                  <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
                     {isUnifiedView && email.accountId && accountColor && showAccountDot && (
                       <span
                         className="w-2 h-2 rounded-full flex-shrink-0"
@@ -880,8 +885,9 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                         <span className="sr-only">{accountDescription}</span>
                       </span>
                     )}
-                    <span data-tag-text="" dir="auto" className={cn(
-                      "truncate text-sm",
+                    <span dir="auto" className={cn(
+                      "min-w-0 shrink-[9999] truncate text-sm",
+                      tagPlacement === 'sender' && tagIds.length > 0 && "max-w-24 shrink-[2]",
                       isUnread
                         ? "font-bold text-foreground"
                         : "font-medium text-muted-foreground"
@@ -889,7 +895,11 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                       {sender?.name || (sender?.email && formatAddress(sender.email)) || tUnknown}
                     </span>
                     {tagPlacement === 'sender' && tagIds.length > 0 && (
-                      <RowTags tagIds={tagIds} variant={tagVariant} scope={tagScope} />
+                      <span className={cn(ROW_TAG_GROUP_CLASS, 'basis-12 grow')}>
+                        {tagIds.map((id) => (
+                          <TagBadge key={id} tagId={id} variant={tagVariant} scope={tagScope} className="max-w-[min(12rem,100%)]" />
+                        ))}
+                      </span>
                   )}
                     <div className="flex shrink-0 items-center gap-1.5">
                       {isPinned && (
@@ -945,12 +955,17 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                   </div>
                 </div>
 
-                <div className="mb-1 flex min-w-0 items-center gap-1.5 overflow-hidden">
+                <div className="mb-1 flex min-w-0 items-center gap-1.5">
                   {tagPlacement === 'subject' && tagIds.length > 0 && (
-                      <RowTags tagIds={tagIds} variant={tagVariant} scope={tagScope} />
+                      <span className={cn(ROW_TAG_GROUP_CLASS, 'basis-12 grow')}>
+                        {tagIds.map((id) => (
+                          <TagBadge key={id} tagId={id} variant={tagVariant} scope={tagScope} className="max-w-[min(12rem,100%)]" />
+                        ))}
+                      </span>
                   )}
-                  <span data-tag-text="" dir="auto" className={cn(
-                    "min-w-0 flex-1 truncate text-sm",
+                  <span dir="auto" className={cn(
+                    "min-w-0 flex-1 shrink-[9999] truncate text-sm",
+                    tagPlacement === 'subject' && tagIds.length > 0 && "max-w-40 shrink-[2]",
                     isUnread
                       ? "font-semibold text-foreground"
                       : "font-normal text-foreground/90"
@@ -1535,7 +1550,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                             <span className="sr-only">{threadAccountDescription}</span>
                           </span>
                         )}
-                        <span dir="auto" className={cn('min-w-0 truncate', hasUnread ? 'font-semibold text-foreground' : 'font-medium text-foreground/80')}>
+                        <span dir="auto" className={cn('min-w-0 shrink-[9999] truncate', hasUnread ? 'font-semibold text-foreground' : 'font-medium text-foreground/80')}>
                           {displayNames.join(', ')}
                         </span>
                         <span className="shrink-0 text-xs text-muted-foreground" title={t('messages_tooltip', { count: emailCount })}>
@@ -1544,8 +1559,8 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                       </span>
                     ) : mvRow ? (
                       // Gmail puts the message count after the names, in grey.
-                      <span data-mv-names="" className="flex w-32 shrink-0 items-baseline gap-1 text-sm lg:w-40">
-                        <span dir="auto" className={cn('min-w-0 truncate', hasUnread ? 'font-bold text-foreground' : 'font-medium text-foreground/80')}>
+                      <span data-mv-names="" className="flex w-32 min-w-0 shrink-[9999] items-baseline gap-1 text-sm lg:w-40">
+                        <span dir="auto" className={cn('min-w-0 shrink-[9999] truncate', hasUnread ? 'font-bold text-foreground' : 'font-medium text-foreground/80')}>
                           {displayNames.join(', ')}
                         </span>
                         <span className="shrink-0 text-xs text-muted-foreground" title={t('messages_tooltip', { count: emailCount })}>
@@ -1557,34 +1572,37 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                       // Matches SingleEmailItem: the sender column sets where
                       // every row's tags and subject begin, so the two have to
                       // agree or thread rows sit 1rem further right.
-                      'w-32 shrink-0 truncate text-sm lg:w-40',
+                      'w-32 min-w-0 shrink-[9999] truncate text-sm lg:w-40',
                       hasUnread ? 'font-semibold text-foreground' : 'font-medium text-foreground/80'
                     )}>
                       {displayNames.join(', ')}
                     </span>
                     )}
-                    <div className={cn("flex min-w-0 flex-1 items-center overflow-hidden text-sm", mvRow ? "gap-0" : "gap-2")}>
-                      {((!mvRow && !columns) || tagIds.length > 0) && (
-                        <RowTags tagIds={tagIds} variant={tagVariant} scope={tagScope}
-                          className={mvRow ? "me-2" : undefined}
-                          leading={!mvRow && !columns ? (
-                            <ThreadCountPill
-                              count={emailCount}
-                              hasUnread={hasUnread}
-                              title={t('messages_tooltip', { count: emailCount })}
-                            />
-                          ) : undefined}
+                    <div className={cn("flex min-w-0 flex-1 items-center text-sm", mvRow ? "gap-0" : "gap-2")}>
+                      {!mvRow && !columns && (
+                        <ThreadCountPill
+                          count={emailCount}
+                          hasUnread={hasUnread}
+                          title={t('messages_tooltip', { count: emailCount })}
                         />
                       )}
-                      <span data-tag-text="" dir="auto" className={cn(
-                        'min-w-0 truncate',
+                      {tagIds.length > 0 && (
+                        <span className={cn(ROW_TAG_GROUP_CLASS, "basis-12 grow", mvRow && "me-2")}>
+                          {tagIds.map((id) => (
+                            <TagBadge key={id} tagId={id} variant={tagVariant} scope={tagScope} className="max-w-[min(12rem,100%)]" />
+                          ))}
+                        </span>
+                      )}
+                      <span dir="auto" className={cn(
+                        'min-w-0 shrink-[9999] truncate',
+                        tagIds.length > 0 && "max-w-40 shrink-[2]",
                         hasUnread ? (mvRow ? 'font-bold text-foreground' : 'font-semibold text-foreground') : 'text-foreground/90'
                       )}>
                         <bdi>{subjectSnippet ? <SearchSnippetText snippet={subjectSnippet} /> : (latestEmail.subject || tNoSubject)}</bdi>
                       </span>
                       <PluginRowBadges email={latestEmail} className={mvRow ? "ms-2" : undefined} />
                       {(previewSnippet || inlinePreview) && (
-                        <span data-tag-text="preview" dir="auto" className="min-w-0 shrink-[9999] truncate text-muted-foreground">
+                        <span dir="auto" className="min-w-0 shrink-[9999] truncate text-muted-foreground">
                           {mvRow && '\u00a0-\u00a0'}
                           {previewSnippet ? <> <SearchSnippetText snippet={previewSnippet} /></> : (mvRow ? trimmedPreview : inlinePreview)}
                         </span>
@@ -1636,7 +1654,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
               ) : (
                 <>
                   <div className="flex items-center justify-between gap-2 mb-1">
-                    <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
                       {isUnifiedView && latestEmail.accountId && threadAccountColor && showAccountDot && (
                         <span
                           className="w-2 h-2 rounded-full flex-shrink-0"
@@ -1646,21 +1664,27 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                           <span className="sr-only">{threadAccountDescription}</span>
                         </span>
                       )}
-                      <span data-tag-text="" dir="auto" className={cn(
-                        "truncate text-sm",
+                      <span dir="auto" className={cn(
+                        "min-w-0 shrink-[9999] truncate text-sm",
+                        tagPlacement === 'sender' && tagIds.length > 0 && "max-w-24 shrink-[2]",
                         hasUnread
                           ? "font-bold text-foreground"
                           : "font-medium text-muted-foreground"
                       )}>
                         {displayNames.join(", ")}
                       </span>
-                      <RowTags tagIds={tagPlacement === 'sender' ? tagIds : []}
-                        variant={tagVariant} scope={tagScope}
-                        leading={<ThreadCountPill
-                          count={emailCount}
-                          hasUnread={hasUnread}
-                          title={t('messages_tooltip', { count: emailCount })}
-                        />} />
+                      <ThreadCountPill
+                        count={emailCount}
+                        hasUnread={hasUnread}
+                        title={t('messages_tooltip', { count: emailCount })}
+                      />
+                      {tagPlacement === 'sender' && tagIds.length > 0 && (
+                        <span className={cn(ROW_TAG_GROUP_CLASS, 'basis-12 grow')}>
+                          {tagIds.map((id) => (
+                            <TagBadge key={id} tagId={id} variant={tagVariant} scope={tagScope} className="max-w-[min(12rem,100%)]" />
+                          ))}
+                        </span>
+                      )}
                       <div className="flex shrink-0 items-center gap-1.5">
                         {hasPinned && (
                           <StatusIcon icon={Pin} label={tStatus('pinned')} className="w-3.5 h-3.5 text-primary" />
@@ -1715,12 +1739,17 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                     </div>
                   </div>
 
-                  <div className="mb-1 flex min-w-0 items-center gap-1.5 overflow-hidden">
+                  <div className="mb-1 flex min-w-0 items-center gap-1.5">
                     {tagPlacement === 'subject' && tagIds.length > 0 && (
-                        <RowTags tagIds={tagIds} variant={tagVariant} scope={tagScope} />
+                        <span className={cn(ROW_TAG_GROUP_CLASS, 'basis-12 grow')}>
+                          {tagIds.map((id) => (
+                            <TagBadge key={id} tagId={id} variant={tagVariant} scope={tagScope} className="max-w-[min(12rem,100%)]" />
+                          ))}
+                        </span>
                     )}
-                    <span data-tag-text="" dir="auto" className={cn(
-                      "min-w-0 flex-1 truncate text-sm",
+                    <span dir="auto" className={cn(
+                      "min-w-0 flex-1 shrink-[9999] truncate text-sm",
+                      tagPlacement === 'subject' && tagIds.length > 0 && "max-w-40 shrink-[2]",
                       hasUnread
                         ? "font-semibold text-foreground"
                         : "font-normal text-foreground/90"
