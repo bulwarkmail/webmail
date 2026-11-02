@@ -1552,6 +1552,7 @@ function LoginPageContent() {
                       <Input
                         id="jmap-endpoint"
                         type="url"
+                        dir="ltr"
                         value={jmapEndpoint}
                         onChange={(e) => setJmapEndpoint(e.target.value)}
                         className="h-11 px-3.5 bg-muted/40 border-border/60 rounded-xl focus:bg-background focus:border-primary/50 transition-all duration-200"
@@ -1575,6 +1576,7 @@ function LoginPageContent() {
                         ref={inputRef}
                         id="username"
                         type="text"
+                        dir="ltr"
                         value={formData.username}
                         onChange={handleUsernameChange}
                         onFocus={handleUsernameFocus}
@@ -1655,6 +1657,7 @@ function LoginPageContent() {
                       <Input
                         id="password"
                         type={showPassword ? "text" : "password"}
+                        dir="ltr"
                         value={formData.password}
                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                         className="h-11 px-3.5 pe-11 bg-muted/40 border-border/60 rounded-xl focus:bg-background focus:border-primary/50 transition-all duration-200"
@@ -1735,6 +1738,7 @@ function LoginPageContent() {
                         ref={totpInputRef}
                         id="totp"
                         type="text"
+                        dir="ltr"
                         inputMode="numeric"
                         maxLength={6}
                         value={totpCode}
