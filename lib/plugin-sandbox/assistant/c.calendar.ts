@@ -12,7 +12,7 @@ import { answerInvitation, attendeeOf, readOwnInvitation, type RsvpStatus } from
 import { readId, sessionClient } from '../host-api-input';
 import { readNamedEmail } from '../host-api-mail';
 import { doCalendarDeleteEvent } from '../host-api-calendar';
-import { issueUndoToken, redeemUndoToken, undoAccount } from './c.undo';
+import { issueUndoToken, undoAccount, withUndoToken } from './c.undo';
 import type { EventDeleteResult, InvitationResponseView } from './c.types';
 
 const STATUSES: readonly RsvpStatus[] = ['accepted', 'tentative', 'declined'];
@@ -161,11 +161,17 @@ export async function doCalendarDeleteWithUndo(pluginId: string, idArg: unknown)
   return { undoToken: issueUndoToken(pluginId, undoAccount(client), 'event', copy) };
 }
 
-/** Puts back an event calendar.deleteEvent deleted, from the host's copy. Sends no invitations. */
-export async function doCalendarUndoDelete(pluginId: string, tokenArg: unknown): Promise<{ id: string } | null> {
+/**
+ * Puts back an event calendar.deleteEvent deleted, from the host's copy.
+ * Sends no invitations. When it can't be created (another plugin stopped
+ * it, the server refused) the token stays for another try.
+ */
+export async function doCalendarUndoDelete(pluginId: string, tokenArg: unknown): Promise<{ id: string }> {
   const method = 'calendar.undoDelete';
   const client = sessionClient(method);
-  const copy = redeemUndoToken<Partial<CalendarEvent>>(method, pluginId, undoAccount(client), 'event', tokenArg);
-  const created = await useCalendarStore.getState().createEvent(client, copy, false);
-  return created ? { id: created.id } : null;
+  return withUndoToken<Partial<CalendarEvent>, { id: string }>(method, pluginId, undoAccount(client), 'event', tokenArg, async (copy) => {
+    const created = await useCalendarStore.getState().createEvent(client, copy, false);
+    if (!created) throw new Error(`${method}: the event was not created again`);
+    return { id: created.id };
+  });
 }

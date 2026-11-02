@@ -19,6 +19,8 @@ interface Entry {
   kind: string;
   expires: number;
   data: unknown;
+  /** Its undo is running: a second call waits for nothing and is refused. */
+  busy?: boolean;
 }
 
 const tokens = new Map<string, Entry>();
@@ -39,18 +41,28 @@ export function issueUndoToken(pluginId: string, accountId: string, kind: string
 }
 
 /**
- * Takes the data of a token: only for the plugin that got it, in the same
- * account, for the same kind, before it ran out. A token works once.
+ * Runs the undo a token stands for: only for the plugin that got it, in the
+ * same account, for the same kind, before it ran out. The token is spent
+ * when the undo went through; when it failed the token stays, so the plugin
+ * can try again. One undo at a time per token.
  */
-export function redeemUndoToken<T>(method: string, pluginId: string, accountId: string, kind: string, token: unknown): T {
+export async function withUndoToken<T, R>(
+  method: string, pluginId: string, accountId: string, kind: string, token: unknown, run: (data: T) => Promise<R>,
+): Promise<R> {
   if (typeof token !== 'string' || !token) throw new Error(`${method}: undoToken must be a string`);
+  // Expired tokens are dropped when new ones are made; the time is checked here.
   const entry = tokens.get(token);
-  prune(Date.now());
-  if (!entry || entry.expires <= Date.now() || entry.pluginId !== pluginId || entry.accountId !== accountId || entry.kind !== kind) {
+  if (!entry || entry.busy || entry.expires <= Date.now() || entry.pluginId !== pluginId || entry.accountId !== accountId || entry.kind !== kind) {
     throw new Error(`${method}: this can't be undone any more`);
   }
-  tokens.delete(token);
-  return entry.data as T;
+  entry.busy = true;
+  try {
+    const result = await run(entry.data as T);
+    tokens.delete(token);
+    return result;
+  } finally {
+    entry.busy = false;
+  }
 }
 
 /** The account an undo token is bound to: the client's JMAP account, else the signed-in login. */

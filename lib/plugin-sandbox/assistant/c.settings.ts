@@ -26,7 +26,7 @@ import {
 } from '../../settings-schema';
 import { isPlainRecord, sessionClient } from '../host-api-input';
 import { messagesFor } from '../host-api-app';
-import { issueUndoToken, redeemUndoToken, undoAccount } from './c.undo';
+import { issueUndoToken, undoAccount, withUndoToken } from './c.undo';
 import type {
   SettingDescription, SettingRefusal, SettingValue, SettingsChangeResult, SettingsUndoResult,
 } from './c.types';
@@ -268,7 +268,11 @@ export async function doSetSettings(pluginId: string, arg: unknown): Promise<Set
 export async function doUndoSettings(pluginId: string, token: unknown): Promise<SettingsUndoResult> {
   const method = 'app.undoSettings';
   const client = sessionClient(method);
-  const previous = redeemUndoToken<Record<string, SettingValue | null>>(method, pluginId, undoAccount(client), 'settings', token);
+  return withUndoToken<Record<string, SettingValue | null>, SettingsUndoResult>(method, pluginId, undoAccount(client), 'settings', token, (previous) => restoreSettings(previous));
+}
+
+/** Writes the old values back, setting by setting (see doUndoSettings). */
+async function restoreSettings(previous: Record<string, SettingValue | null>): Promise<SettingsUndoResult> {
   const restored: string[] = [];
   const refused: SettingsUndoResult['refused'] = {};
   for (const [key, old] of Object.entries(previous)) {

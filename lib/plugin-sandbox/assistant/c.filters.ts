@@ -21,7 +21,7 @@ import { KEYWORD_PREFIX, KEYWORD_PREFIX_LEGACY } from '../../thread-utils';
 import { generateUUID } from '../../utils';
 import { isPlainRecord, readId, readObject, readString, sessionClient } from '../host-api-input';
 import { isSharedOut } from '../../mailbox-shared-out';
-import { issueUndoToken, redeemUndoToken, undoAccount } from './c.undo';
+import { issueUndoToken, undoAccount, withUndoToken } from './c.undo';
 import type {
   FilterCreateResult, FilterRuleActionType, FilterRuleField, FilterRuleInfo, FilterRuleOp, FiltersListView,
 } from './c.types';
@@ -231,12 +231,13 @@ export async function doFiltersCreate(pluginId: string, input: unknown): Promise
 export async function doFiltersUndo(pluginId: string, token: unknown): Promise<void> {
   const method = 'filters.undo';
   const client = sieveClient(method);
-  const change = redeemUndoToken<FiltersChange>(method, pluginId, undoAccount(client), 'filters', token);
-  try {
-    await restoreAccountFilters(client, change);
-  } catch (err) {
-    if (err instanceof FiltersChangedError) throw new Error(`${method}: the filters changed since; change them in Settings > Filters`);
-    throw err;
-  }
-  refreshFilterStore(client, change.accountId);
+  await withUndoToken<FiltersChange, void>(method, pluginId, undoAccount(client), 'filters', token, async (change) => {
+    try {
+      await restoreAccountFilters(client, change);
+    } catch (err) {
+      if (err instanceof FiltersChangedError) throw new Error(`${method}: the filters changed since; change them in Settings > Filters`);
+      throw err;
+    }
+    refreshFilterStore(client, change.accountId);
+  });
 }

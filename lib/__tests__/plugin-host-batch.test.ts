@@ -129,6 +129,15 @@ describe('api.email.batch', () => {
     expect(store.batchMoveToMailbox).not.toHaveBeenCalled();
   });
 
+  it('lets the plugin try a failed undo again', async () => {
+    const { undoToken } = await call(WRITER, 'email.batch', { emailIds: ['m1'], action: 'archive' }) as { undoToken: string };
+    store.undoMove.mockRejectedValueOnce(new Error('server down'));
+    await expect(call(WRITER, 'email.undoBatch', undoToken)).rejects.toThrow('server down');
+    await call(WRITER, 'email.undoBatch', undoToken);
+    expect(store.undoMove).toHaveBeenCalledTimes(2);
+    await expect(call(WRITER, 'email.undoBatch', undoToken)).rejects.toThrow(/can't be undone/);
+  });
+
   it('keeps the undo to the plugin that made it, and needs email:write', async () => {
     const { undoToken } = await call(WRITER, 'email.batch', { emailIds: ['m1'], action: 'archive' }) as { undoToken: string };
     await expect(call(plugin('other', ['email:write']), 'email.undoBatch', undoToken)).rejects.toThrow(/can't be undone/);
