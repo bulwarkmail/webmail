@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useMemo } from "react";
+import { useEffect, useId, useRef, useMemo } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { contactDateParts, formatContactDate } from "@/lib/contact-dates";
 import { Mail, Phone, Building, MapPin, StickyNote, Pencil, BookUser, Copy, Send, Globe, Cake, KeyRound, Users, Briefcase, Heart, Languages, Calendar, UserCircle, MoreVertical, Printer } from "@/components/icons";
@@ -76,6 +76,8 @@ function getCompletedYears(dateInput: AnniversaryDate): number | null {
 
 export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onDuplicate, onMoveTo, onCompose, onPrint, isMobile, className }: ContactDetailProps) {
   const t = useTranslations("contacts");
+  const detailRef = useRef<HTMLDivElement>(null);
+  const nameId = useId();
   const tCommon = useTranslations("common");
   const locale = useLocale();
   // The ⋮ shows the contact's menu, the one right-click shows in the list (R6).
@@ -137,25 +139,41 @@ export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onDupli
   const hasGender = !!(contact.speakToAs && (contact.speakToAs.grammaticalGender || contact.speakToAs.pronouns));
   const hasPersonal = anniversaries.length > 0 || personalInfo.length > 0 || hasGender || preferredLanguages.length > 0;
 
+  const navigation = [
+    {key: "contact", label: t("detail.section_contact"), visible: hasContactDetails},
+    {key: "work", label: t("detail.section_work"), visible: hasWork},
+    {key: "personal", label: t("detail.section_personal"), visible: hasPersonal},
+    {key: "categories", label: t("detail.categories"), visible: keywords.length > 0},
+    {key: "related", label: t("detail.related_contacts"), visible: relatedTo.length > 0},
+    {key: "keys", label: t("detail.crypto_keys"), visible: cryptoKeys.length > 0},
+    {key: "calendar", label: t("detail.calendar"), visible: !!(contact.calendarUri || contact.schedulingUri || contact.freeBusyUri)},
+    {key: "notes", label: t("detail.notes"), visible: notes.length > 0},
+  ].filter(section => section.visible);
+  const jumpTo = (key: string) => {
+    const target = detailRef.current?.querySelector<HTMLElement>(`[data-contact-section="${key}"]`);
+    target?.focus({preventScroll: true});
+    target?.scrollIntoView?.({block: "start"});
+  };
+
   return (
-    <div className={cn("flex flex-col h-full overflow-y-auto", className)}>
-      <div className={cn("border-b border-border", isMobile ? "px-4 py-4" : "px-6 py-6")}>
-        <div className={cn("flex gap-4", isMobile ? "flex-col" : "flex-wrap items-start justify-between")}>
-          <div className={cn("flex items-center gap-4 min-w-0 flex-1", !isMobile && "basis-60")}>
-            <Avatar name={name} email={email} contactPhoto={photo} size={isMobile ? "md" : "lg"} />
+    <div ref={detailRef} data-memail-contact-detail="" className={cn("flex min-h-0 min-w-0 flex-col h-full overflow-hidden", className)}>
+      <div className="shrink-0 border-b border-border px-4 py-3">
+        <div className="flex flex-col gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <Avatar name={name} email={email} contactPhoto={photo} size="md" />
             <div className="min-w-0 flex-1">
-              <h2 className={cn("font-semibold truncate", isMobile ? "text-lg" : "text-xl")}>{name || "-"}</h2>
+              <h2 id={nameId} className="line-clamp-2 break-words text-lg font-semibold" title={name || "-"}>{name || "-"}</h2>
               {hasNickname && (
-                <p className="text-sm text-muted-foreground truncate">&ldquo;{nicknames.map(n => n.name).join(", ")}&rdquo;</p>
+                <p className="text-sm text-muted-foreground truncate" title={nicknames.map(n => n.name).join(", ")}>&ldquo;{nicknames.map(n => n.name).join(", ")}&rdquo;</p>
               )}
               {subtitleParts.length > 0 && (
-                <p className="text-sm text-muted-foreground truncate">{subtitleParts.join(" · ")}</p>
+                <p className="line-clamp-2 break-words text-sm text-muted-foreground" title={subtitleParts.join(" · ")}>{subtitleParts.join(" · ")}</p>
               )}
             </div>
           </div>
-          <div className="flex items-center gap-1.5 flex-shrink-0 flex-wrap">
+          <div data-memail-contact-actions="" className="flex min-w-0 flex-wrap items-center gap-1.5">
             {email && onCompose && (
-              <Button variant="outline" size="xs" onClick={onCompose} className="gap-1.5 touch-manipulation">
+              <Button size="xs" onClick={onCompose} className="gap-1.5 touch-manipulation">
                 <Send />
                 {t("detail.compose_email")}
               </Button>
@@ -207,9 +225,39 @@ export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onDupli
         </div>
       </div>
 
-      <div className={cn("divide-y divide-border/60", isMobile ? "px-4" : "px-6")}>
+      {navigation.length > 1 && (
+        <nav aria-labelledby={nameId} className="shrink-0 overflow-x-auto border-b border-border px-3 py-2"
+          onKeyDown={(event) => {
+            if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || event.nativeEvent.isComposing) return;
+            const buttons = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>('button'));
+            const current = buttons.indexOf(event.target as HTMLButtonElement);
+            if (current < 0) return;
+            const rtl = getComputedStyle(event.currentTarget).direction === "rtl";
+            let next = -1;
+            if (event.key === "Home") next = 0;
+            else if (event.key === "End") next = buttons.length - 1;
+            else if (event.key === (rtl ? "ArrowLeft" : "ArrowRight")) next = (current + 1) % buttons.length;
+            else if (event.key === (rtl ? "ArrowRight" : "ArrowLeft")) next = (current - 1 + buttons.length) % buttons.length;
+            if (next < 0) return;
+            event.preventDefault();
+            event.stopPropagation();
+            buttons[next].focus();
+            buttons[next].scrollIntoView?.({block: "nearest", inline: "nearest"});
+          }}>
+          <div className="flex w-max min-w-full gap-1">
+            {navigation.map(section => <button key={section.key} type="button" onClick={() => jumpTo(section.key)}
+              className="min-h-8 shrink-0 rounded-md px-2.5 py-1 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring pointer-coarse:min-h-11">
+              {section.label}
+            </button>)}
+          </div>
+        </nav>
+      )}
+      <div role="region" aria-labelledby={nameId} tabIndex={0} data-memail-contact-scroll=""
+        className="min-h-0 flex-1 overflow-y-auto outline-none focus-inset">
+      <div data-memail-contact-content="" className={cn("grid items-start gap-4", isMobile ? "p-4" : "p-5")}>
+
         {hasContactDetails && (
-          <Section title={t("detail.section_contact")}>
+          <Section sectionKey="contact" title={t("detail.section_contact")}>
             <div className="space-y-3">
               {emails.map((e, i) => (
                 <FieldRow key={`em${i}`} icon={Mail} label={e.label || formatContexts(e.contexts, contextLabel) || t("detail.email_default_label")}>
@@ -301,7 +349,7 @@ export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onDupli
         )}
 
         {hasWork && (
-          <Section title={t("detail.section_work")}>
+          <Section sectionKey="work" title={t("detail.section_work")}>
             <div className="space-y-3">
               {orgs.map((o, i) => (
                 <FieldRow key={`org${i}`} icon={Building} label={t("detail.organization_label")}>
@@ -327,7 +375,7 @@ export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onDupli
         )}
 
         {hasPersonal && (
-          <Section title={t("detail.section_personal")}>
+          <Section sectionKey="personal" title={t("detail.section_personal")}>
             <div className="space-y-3">
               {anniversaries.map((ann, i) => {
                 const years = getCompletedYears(ann.date);
@@ -381,7 +429,7 @@ export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onDupli
         )}
 
         {keywords.length > 0 && (
-          <Section title={t("detail.categories")}>
+          <Section sectionKey="categories" title={t("detail.categories")}>
             <div className="flex flex-wrap gap-1.5">
               {keywords.map((kw, i) => (
                 <span key={i} className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary">
@@ -393,7 +441,7 @@ export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onDupli
         )}
 
         {relatedTo.length > 0 && (
-          <Section title={t("detail.related_contacts")}>
+          <Section sectionKey="related" title={t("detail.related_contacts")}>
             <div className="space-y-2">
               {relatedTo.map(([uri, rel], i) => {
                 const relType = rel.relation ? Object.keys(rel.relation).find(k => rel.relation![k]) : undefined;
@@ -408,7 +456,7 @@ export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onDupli
         )}
 
         {cryptoKeys.length > 0 && (
-          <Section title={t("detail.crypto_keys")}>
+          <Section sectionKey="keys" title={t("detail.crypto_keys")}>
             <div className="space-y-3">
 
              {hasCryptoKeysSlotOffers && (
@@ -434,7 +482,7 @@ export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onDupli
         )}
 
         {(contact.calendarUri || contact.schedulingUri || contact.freeBusyUri) && (
-          <Section title={t("detail.calendar")}>
+          <Section sectionKey="calendar" title={t("detail.calendar")}>
             <div className="space-y-3">
               {contact.calendarUri && (
                 <FieldRow icon={Calendar} label={t("detail.calendar_uri")}>
@@ -462,7 +510,7 @@ export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onDupli
         )}
 
         {notes.length > 0 && (
-          <Section title={t("detail.notes")}>
+          <Section sectionKey="notes" title={t("detail.notes")}>
             <div className="flex items-start gap-3">
               <StickyNote className="w-4 h-4 text-muted-foreground mt-1 flex-shrink-0" />
               <div className="text-sm space-y-2 flex-1 min-w-0">
@@ -487,6 +535,7 @@ export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onDupli
           </div>
         )}
       </div>
+      </div>
     </div>
   );
 }
@@ -496,10 +545,12 @@ function formatContexts(contexts: Record<string, boolean> | undefined, label: (k
   return Object.keys(contexts).filter(k => contexts[k]).map(label).join(", ");
 }
 
-export function Section({ title, children, className }: { title: string; children: React.ReactNode; className?: string }) {
+export function Section({ title, children, className, sectionKey }: { title: string; children: React.ReactNode; className?: string; sectionKey?: string }) {
+  const headingId = useId();
   return (
-    <section className={cn("py-6", className)}>
-      <h3 className="text-xs font-semibold text-muted-foreground mb-3">{title}</h3>
+    <section aria-labelledby={headingId} data-contact-section={sectionKey} tabIndex={sectionKey ? -1 : undefined}
+      className={cn("py-6 outline-none focus-inset", className)}>
+      <h3 id={headingId} className="text-xs font-semibold text-muted-foreground mb-3">{title}</h3>
       {children}
     </section>
   );
@@ -509,7 +560,7 @@ function FieldRow({ icon: Icon, label, children }: { icon: React.ComponentType<{
   return (
     <div className="flex items-start gap-3">
       <Icon className="w-4 h-4 text-muted-foreground mt-1 flex-shrink-0" />
-      <div className="flex-1 min-w-0">
+      <div data-contact-field-value="" className="flex-1 min-w-0">
         {label && <div className="text-xs text-muted-foreground mb-0.5">{label}</div>}
         {children}
       </div>
@@ -521,7 +572,7 @@ function RowActions({ children }: { children: React.ReactNode }) {
   // Shown on hover, while the keyboard is in the row and always on touch
   // screens, which have no hover (WCAG 2.1.1, 2.4.7).
   return (
-    <div data-row-actions className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 pointer-coarse:opacity-100 transition-opacity">
+    <div data-row-actions className="flex shrink-0 items-center gap-0.5 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 pointer-coarse:opacity-100 transition-opacity">
       {children}
     </div>
   );
@@ -539,8 +590,10 @@ function CopyButton({ value, label, successMsg, failMsg, className }: { value: s
         }
       }}
       className={cn("p-1.5 rounded hover:bg-muted transition-colors touch-manipulation", className)}
+      type="button"
       title={label}
       aria-label={label}
+      aria-description={value}
     >
       <Copy className="w-3.5 h-3.5 text-muted-foreground" />
     </button>

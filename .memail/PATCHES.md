@@ -194,3 +194,11 @@ Add each customization here. Include the relevant upstream files, the reason it 
 - FileDetailsPanel supports an explicit narrow-overlay mode, wired from FileBrowser. It uses the native focus trap, named modal semantics and Escape/focus return. Desktop details remains complementary and does not take focus on open; Escape within it closes and returns focus to the opener when available. Selection is retained.
 - Details has a compact preview area, clearer filename/metadata spacing and values that wrap long paths. The metadata scroll region is keyboard-focusable. Native Open/Edit/Preview, Download, Share and folder favorite actions move to a persistent, bounded footer, retaining capability/device/symlink checks and callbacks. Favorite exposes pressed state. Plugin preview content remains in the scroll body.
 - Shared PreviewShell reserves a filename row below 40rem and wraps its actions. Native arrows, download, extra actions and Close remain available. File-switch arrows ignore select/editable controls, composition and modified keys. Existing Heroicons are reused throughout.
+
+
+## Contact profile layout and section navigation
+
+- ContactDetail keeps identity and native Compose/Call/Edit/Print/More actions outside the property scroll area. Names and role/company summaries allow two lines with full-value titles. A focusable content region supports keyboard scrolling.
+- Available Contact, Work, Personal, Categories, Related, Keys, Calendar and Notes sections get local jump buttons. Activating a button focuses/scrolls its own profile's named section without changing the URL. Arrow/Home/End move button focus without invoking actions, with RTL and composition/modifier guards. Minimal profiles omit unnecessary navigation; section headings have per-instance IDs.
+- Native properties use bordered cards that follow pane width: one column in narrow readers, two above 46rem, with notes/keys and plugin/activity sections spanning full width where appropriate. Long values wrap and row actions keep their space. Copy controls retain action names and expose their value as an accessible description.
+- Existing contact data, copy/compose/link gating, activity, print, plugin hooks and menu callbacks remain in place. Heroicons are reused throughout.

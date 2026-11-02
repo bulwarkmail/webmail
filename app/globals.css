@@ -1719,3 +1719,20 @@ optgroup {
   [data-memail-preview-header] { grid-template-columns: minmax(0, 1fr); }
   [data-memail-preview-actions] { justify-content: flex-end; }
 }
+
+/* Contact properties follow the profile pane width, not the whole viewport. */
+[data-memail-contact-detail] { container: memail-contact-detail / inline-size; }
+[data-memail-contact-content] > [data-contact-section] {
+  min-width: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  scroll-margin-block: 1rem;
+}
+[data-memail-contact-content] > :not([data-contact-section]) { grid-column: 1 / -1; min-width: 0; }
+[data-memail-contact-detail] [data-contact-field-value],
+[data-memail-contact-detail] [data-contact-section="notes"] { overflow-wrap: anywhere; }
+@container memail-contact-detail (min-width: 46rem) {
+  [data-memail-contact-content] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  [data-contact-section="notes"], [data-contact-section="keys"] { grid-column: 1 / -1; }
+}

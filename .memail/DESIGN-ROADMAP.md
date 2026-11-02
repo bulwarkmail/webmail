@@ -34,7 +34,11 @@ Acceptance: save/reopen/reload/account-switch recovery; reply/forward correctnes
 
 ## 4. Search, settings and connected apps
 
-Progress: settings all-match expansion, keyboard/focus recovery, active-filter controls and Heroicons folder/app/settings navigation are implemented for review. Shared menus now have consistent row/panel spacing, type-to-focus command navigation and visible focused items in long lists. Files now has pane-responsive tools, separate account context, compact deep paths, keyboard view switching and search focus recovery. Contacts now has a dedicated search row, explicit presence filters, bounded pane-responsive filter layout, disclosure focus return and no-results recovery. Calendar now has separated phone navigation rows, keyboard view selection, accessible calendar visibility and pane-responsive desktop tools. Heroicons now cover all built-in application exports. Calendar search now has pane-local keyboard navigation, responsive result rows, unique/sticky section headings and search-close focus recovery. Files details now has persistent actions, keyboard-scrollable metadata and narrow-overlay focus handling; preview headers reserve filename space on phones. Remaining connected-app consistency and full phase acceptance remain open.
+Progress: settings finder expansion, keyboard/focus recovery, active-filter controls and shared menu spacing/type-to-focus are implemented for review. Heroicons cover built-in application exports.
+
+Files has pane-responsive navigation, persistent details actions, keyboard-scrollable metadata, overlay focus handling and phone preview headers. Contacts has explicit presence filters, search recovery, persistent profile actions, pane-responsive property cards and local section navigation.
+
+Calendar has separated phone navigation, keyboard view selection, accessible visibility controls and pane-responsive desktop tools. Its search has local focus boundaries, responsive rows, unique section headings and close recovery. Remaining connected-app consistency and full phase acceptance remain open.
 
 Unify saved and advanced search, organize settings by task, and bring Calendar/Contacts/Files into the same navigation and menu system. Improve shortcut discovery and focus return. Translate downstream strings and verify RTL, zoom, reduced motion, mobile safe areas and touch targets.
 

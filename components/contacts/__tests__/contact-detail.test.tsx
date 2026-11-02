@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act, within } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ContactDetail } from '../contact-detail';
 import { exportContacts } from '../contact-export';
@@ -184,5 +184,50 @@ describe('ContactDetail plugin hooks', () => {
     expect(opened).toHaveBeenCalledTimes(2);
     expect(opened.mock.calls[0][0]).toMatchObject({ id: '1', fullName: 'Alice Smith', emails: ['alice@example.com'] });
     expect(opened.mock.calls[1][0]).toMatchObject({ id: '2' });
+  });
+});
+
+
+describe('contact profile navigation',()=>{
+  it('jumps to a named section within the current profile only',()=>{
+    const second={...contact,id:'second',name:{full:'Morgan Lee'}};
+    render(<><ContactDetail contact={contact} onEdit={vi.fn()} onDelete={vi.fn()}/><ContactDetail contact={second} onEdit={vi.fn()} onDelete={vi.fn()}/></>);
+    const nav=screen.getByRole('navigation',{name:'Morgan Lee'});
+    const root=nav.closest('[data-memail-contact-detail]')! as HTMLElement;
+    fireEvent.click(within(nav).getByRole('button',{name:'detail.notes'}));
+    expect(within(root).getByRole('region',{name:'detail.notes'})).toHaveFocus();
+    const headings=screen.getAllByRole('heading');
+    expect(new Set(headings.map(node=>node.id)).size).toBe(headings.length);
+  });
+
+  it('supports RTL-aware section focus without invoking contact actions',()=>{
+    const onEdit=vi.fn();const onCompose=vi.fn();
+    render(<ContactDetail contact={contact} onEdit={onEdit} onCompose={onCompose} onDelete={vi.fn()}/>);
+    const nav=screen.getByRole('navigation',{name:'Alice Smith'});
+    const notes=within(nav).getByRole('button',{name:'detail.notes'});
+    const first=within(nav).getByRole('button',{name:'detail.section_contact'});
+    first.focus();fireEvent.keyDown(first,{key:'End'});expect(notes).toHaveFocus();
+    fireEvent.keyDown(notes,{key:'Home'});expect(first).toHaveFocus();
+    nav.style.direction='rtl';fireEvent.keyDown(first,{key:'ArrowLeft'});
+    const work=within(nav).getByRole('button',{name:'detail.section_work'});expect(work).toHaveFocus();
+    fireEvent.keyDown(work,{key:'ArrowLeft',isComposing:true});fireEvent.keyDown(work,{key:'Home',ctrlKey:true});expect(work).toHaveFocus();
+    expect(onEdit).not.toHaveBeenCalled();expect(onCompose).not.toHaveBeenCalled();
+  });
+
+  it('keeps actions outside the focusable scroll area and describes copied values',()=>{
+    render(<ContactDetail contact={contact} onEdit={vi.fn()} onDelete={vi.fn()}/>);
+    const content=screen.getByRole('region',{name:'Alice Smith'});
+    expect(content).toHaveAttribute('tabindex','0');
+    expect(within(content).queryByRole('button',{name:'form.edit_title'})).toBeNull();
+    expect(screen.getByRole('button',{name:'detail.copy_email'})).toHaveAttribute('aria-description','alice@example.com');
+  });
+
+  it('lists only available sections and omits navigation for a minimal card',()=>{
+    const {rerender}=render(<ContactDetail contact={{id:'minimal',addressBookIds:{},name:{full:'Minimal card'}}} onEdit={vi.fn()} onDelete={vi.fn()}/>);
+    expect(screen.queryByRole('navigation')).toBeNull();
+    rerender(<ContactDetail contact={contact} onEdit={vi.fn()} onDelete={vi.fn()}/>);
+    const nav=screen.getByRole('navigation');
+    expect(within(nav).getAllByRole('button')).toHaveLength(3);
+    expect(within(nav).queryByRole('button',{name:'detail.crypto_keys'})).toBeNull();
   });
 });
