@@ -26,7 +26,8 @@ import { emailKeyFor, getThreadTagIds, getEmailTagIds } from "@/lib/thread-utils
 import { useKeywordFormat } from "@/hooks/use-keyword-format";
 import { useEmailTagScope } from "@/hooks/use-account-tags";
 import { useTagDisplay } from "@/hooks/use-tag-display";
-import { TagBadge, TAG_GROUP_CLASS, TAG_LOZENGE_CLASS } from "./tag-badge";
+import { TAG_LOZENGE_CLASS } from "./tag-badge";
+import { RowTags } from "./row-tags";
 import { useEmailDrag } from "@/hooks/use-email-drag";
 import { useLongPress } from "@/hooks/use-long-press";
 import { useSwipeActions } from "@/hooks/use-swipe-actions";
@@ -809,15 +810,11 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                       </>
                     ) : (sender?.name || (sender?.email && formatAddress(sender.email)) || tUnknown)}
                   </span>
-                  <div className={cn("flex min-w-0 flex-1 items-center text-sm", mvRow ? "gap-0" : "gap-2")}>
+                  <div className={cn("flex min-w-0 flex-1 items-center overflow-hidden text-sm", mvRow ? "gap-0" : "gap-2")}>
                     {tagIds.length > 0 && (
-                      <span className={cn(TAG_GROUP_CLASS, mvRow && "me-2")}>
-                        {tagIds.map((id) => (
-                          <TagBadge key={id} tagId={id} variant={tagVariant} scope={tagScope} />
-                        ))}
-                      </span>
+                      <RowTags tagIds={tagIds} variant={tagVariant} scope={tagScope} className={mvRow ? "me-2" : undefined} />
                     )}
-                    <span dir="auto" className={cn(
+                    <span data-tag-text="" dir="auto" className={cn(
                       'min-w-0 truncate',
                       isUnread ? (mvRow ? 'font-bold text-foreground' : 'font-semibold text-foreground') : 'text-foreground/90'
                     )}>
@@ -825,7 +822,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                     </span>
                     <PluginRowBadges email={email} className={mvRow ? "ms-2" : undefined} />
                     {(previewSnippet || inlinePreview) && (
-                      <span dir="auto" className="min-w-0 shrink-[9999] truncate text-muted-foreground">
+                      <span data-tag-text="preview" dir="auto" className="min-w-0 shrink-[9999] truncate text-muted-foreground">
                         {/* Gmail runs the snippet on from the subject after a dash. */}
                         {mvRow && '\u00a0-\u00a0'}
                         {previewSnippet ? <> <SearchSnippetText snippet={previewSnippet} /></> : (mvRow ? trimmedPreview : inlinePreview)}
@@ -873,7 +870,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
             ) : (
               <>
                 <div className="flex items-center justify-between gap-2 mb-1">
-                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
                     {isUnifiedView && email.accountId && accountColor && showAccountDot && (
                       <span
                         className="w-2 h-2 rounded-full flex-shrink-0"
@@ -883,7 +880,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                         <span className="sr-only">{accountDescription}</span>
                       </span>
                     )}
-                    <span dir="auto" className={cn(
+                    <span data-tag-text="" dir="auto" className={cn(
                       "truncate text-sm",
                       isUnread
                         ? "font-bold text-foreground"
@@ -892,13 +889,9 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                       {sender?.name || (sender?.email && formatAddress(sender.email)) || tUnknown}
                     </span>
                     {tagPlacement === 'sender' && tagIds.length > 0 && (
-                      <span className={TAG_GROUP_CLASS}>
-                        {tagIds.map((id) => (
-                          <TagBadge key={id} tagId={id} variant={tagVariant} scope={tagScope} />
-                        ))}
-                      </span>
+                      <RowTags tagIds={tagIds} variant={tagVariant} scope={tagScope} />
                   )}
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex shrink-0 items-center gap-1.5">
                       {isPinned && (
                         <StatusIcon icon={Pin} label={tStatus('pinned')} className="w-3.5 h-3.5 text-primary" />
                       )}
@@ -952,15 +945,11 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                   </div>
                 </div>
 
-                <div className="mb-1 flex min-w-0 items-center gap-1.5">
+                <div className="mb-1 flex min-w-0 items-center gap-1.5 overflow-hidden">
                   {tagPlacement === 'subject' && tagIds.length > 0 && (
-                      <span className={TAG_GROUP_CLASS}>
-                        {tagIds.map((id) => (
-                          <TagBadge key={id} tagId={id} variant={tagVariant} scope={tagScope} />
-                        ))}
-                      </span>
+                      <RowTags tagIds={tagIds} variant={tagVariant} scope={tagScope} />
                   )}
-                  <span dir="auto" className={cn(
+                  <span data-tag-text="" dir="auto" className={cn(
                     "min-w-0 flex-1 truncate text-sm",
                     isUnread
                       ? "font-semibold text-foreground"
@@ -1574,22 +1563,20 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                       {displayNames.join(', ')}
                     </span>
                     )}
-                    <div className={cn("flex min-w-0 flex-1 items-center text-sm", mvRow ? "gap-0" : "gap-2")}>
+                    <div className={cn("flex min-w-0 flex-1 items-center overflow-hidden text-sm", mvRow ? "gap-0" : "gap-2")}>
                       {((!mvRow && !columns) || tagIds.length > 0) && (
-                      <span className={cn(TAG_GROUP_CLASS, mvRow && "me-2")}>
-                        {!mvRow && !columns && (
-                          <ThreadCountPill
-                            count={emailCount}
-                            hasUnread={hasUnread}
-                            title={t('messages_tooltip', { count: emailCount })}
-                          />
-                        )}
-                        {tagIds.map((id) => (
-                          <TagBadge key={id} tagId={id} variant={tagVariant} scope={tagScope} />
-                        ))}
-                      </span>
+                        <RowTags tagIds={tagIds} variant={tagVariant} scope={tagScope}
+                          className={mvRow ? "me-2" : undefined}
+                          leading={!mvRow && !columns ? (
+                            <ThreadCountPill
+                              count={emailCount}
+                              hasUnread={hasUnread}
+                              title={t('messages_tooltip', { count: emailCount })}
+                            />
+                          ) : undefined}
+                        />
                       )}
-                      <span dir="auto" className={cn(
+                      <span data-tag-text="" dir="auto" className={cn(
                         'min-w-0 truncate',
                         hasUnread ? (mvRow ? 'font-bold text-foreground' : 'font-semibold text-foreground') : 'text-foreground/90'
                       )}>
@@ -1597,7 +1584,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                       </span>
                       <PluginRowBadges email={latestEmail} className={mvRow ? "ms-2" : undefined} />
                       {(previewSnippet || inlinePreview) && (
-                        <span dir="auto" className="min-w-0 shrink-[9999] truncate text-muted-foreground">
+                        <span data-tag-text="preview" dir="auto" className="min-w-0 shrink-[9999] truncate text-muted-foreground">
                           {mvRow && '\u00a0-\u00a0'}
                           {previewSnippet ? <> <SearchSnippetText snippet={previewSnippet} /></> : (mvRow ? trimmedPreview : inlinePreview)}
                         </span>
@@ -1649,7 +1636,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
               ) : (
                 <>
                   <div className="flex items-center justify-between gap-2 mb-1">
-                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
                       {isUnifiedView && latestEmail.accountId && threadAccountColor && showAccountDot && (
                         <span
                           className="w-2 h-2 rounded-full flex-shrink-0"
@@ -1659,7 +1646,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                           <span className="sr-only">{threadAccountDescription}</span>
                         </span>
                       )}
-                      <span dir="auto" className={cn(
+                      <span data-tag-text="" dir="auto" className={cn(
                         "truncate text-sm",
                         hasUnread
                           ? "font-bold text-foreground"
@@ -1667,17 +1654,14 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                       )}>
                         {displayNames.join(", ")}
                       </span>
-                      <span className={TAG_GROUP_CLASS}>
-                        <ThreadCountPill
+                      <RowTags tagIds={tagPlacement === 'sender' ? tagIds : []}
+                        variant={tagVariant} scope={tagScope}
+                        leading={<ThreadCountPill
                           count={emailCount}
                           hasUnread={hasUnread}
                           title={t('messages_tooltip', { count: emailCount })}
-                        />
-                        {tagPlacement === 'sender' && tagIds.map((id) => (
-                          <TagBadge key={id} tagId={id} variant={tagVariant} scope={tagScope} />
-                        ))}
-                      </span>
-                      <div className="flex items-center gap-1.5">
+                        />} />
+                      <div className="flex shrink-0 items-center gap-1.5">
                         {hasPinned && (
                           <StatusIcon icon={Pin} label={tStatus('pinned')} className="w-3.5 h-3.5 text-primary" />
                         )}
@@ -1731,15 +1715,11 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                     </div>
                   </div>
 
-                  <div className="mb-1 flex min-w-0 items-center gap-1.5">
+                  <div className="mb-1 flex min-w-0 items-center gap-1.5 overflow-hidden">
                     {tagPlacement === 'subject' && tagIds.length > 0 && (
-                        <span className={TAG_GROUP_CLASS}>
-                          {tagIds.map((id) => (
-                            <TagBadge key={id} tagId={id} variant={tagVariant} scope={tagScope} />
-                          ))}
-                        </span>
+                        <RowTags tagIds={tagIds} variant={tagVariant} scope={tagScope} />
                     )}
-                    <span dir="auto" className={cn(
+                    <span data-tag-text="" dir="auto" className={cn(
                       "min-w-0 flex-1 truncate text-sm",
                       hasUnread
                         ? "font-semibold text-foreground"

@@ -1,12 +1,13 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import type { ReactNode, Ref } from "react";
 import { X } from "@/components/icons";
 import { cn } from "@/lib/utils";
 import { useKeywordFormat } from "@/hooks/use-keyword-format";
 import type { TagScope } from "@/hooks/use-account-tags";
 import { useShortenedText } from "@/hooks/use-shortened-text";
-import { useSettingsStore } from "@/stores/settings-store";
+import { useSettingsStore, type KeywordColor } from "@/stores/settings-store";
 
 /**
  * How much room the surface has for a tag.
@@ -65,6 +66,38 @@ export function TagBadge({
   const name = tagName(tagId);
   const showColorNames = useSettingsStore((st) => st.showColorNames);
 
+  return tagBadgeMarkup({
+    name, label: shortenedName, labelRef, color, variant, showColorNames, className,
+    suffix: onRemove ? (
+        <button
+          type="button"
+          onClick={onRemove}
+          // 24px to hit, drawn as before: the margins give the padding back.
+          className="-my-1 -me-1 shrink-0 rounded-full p-1.5 hover:bg-black/10 dark:hover:bg-white/10"
+          title={t("remove_tag")}
+          aria-label={t("remove_tag")}
+        >
+          <X className="w-3 h-3" />
+        </button>
+      ) : undefined,
+  });
+}
+
+/**
+ * Hook-free markup shared with row sizing samples. Samples use the resolved
+ * account label and actual badge CSS, without subscribing or shortening text.
+ */
+export function tagBadgeMarkup({ name, label, labelRef, color, variant, showColorNames, className, suffix, key }: {
+  name: string;
+  label: string;
+  labelRef?: Ref<HTMLSpanElement>;
+  color: KeywordColor;
+  variant: TagBadgeVariant;
+  showColorNames: boolean;
+  className?: string;
+  suffix?: ReactNode;
+  key?: string;
+}) {
   // "Show colour names" (Settings > Accessibility): the named form even where
   // only a dot fits, so no tag is told apart by its colour alone.
   if (variant === "dot" && !showColorNames) {
@@ -72,7 +105,7 @@ export function TagBadge({
     // in the lozenge's own colours (WCAG 1.4.1).
     const initial = [...name.trim()][0]?.toLocaleUpperCase() ?? "";
     return (
-      <span
+      <span key={key}
         className={cn(
           "inline-flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full border px-0.5 text-[0.5625rem] font-bold leading-none",
           color.fill,
@@ -90,7 +123,7 @@ export function TagBadge({
   }
 
   return (
-    <span
+    <span key={key}
       className={cn(
         TAG_LOZENGE_CLASS,
         "max-w-[12rem] border",
@@ -102,20 +135,9 @@ export function TagBadge({
       title={name}
     >
       <span ref={labelRef} className="min-w-0 truncate">
-        {shortenedName}
+        {label}
       </span>
-      {onRemove && (
-        <button
-          type="button"
-          onClick={onRemove}
-          // 24px to hit, drawn as before: the margins give the padding back.
-          className="-my-1 -me-1 shrink-0 rounded-full p-1.5 hover:bg-black/10 dark:hover:bg-white/10"
-          title={t("remove_tag")}
-          aria-label={t("remove_tag")}
-        >
-          <X className="w-3 h-3" />
-        </button>
-      )}
+      {suffix}
     </span>
   );
 }

@@ -20,7 +20,7 @@ import { emailKeyFor, getEmailTagIds } from "@/lib/thread-utils";
 import { useKeywordFormat } from "@/hooks/use-keyword-format";
 import { useEmailTagScope } from "@/hooks/use-account-tags";
 import { useTagDisplay } from "@/hooks/use-tag-display";
-import { TagBadge } from "./tag-badge";
+import { RowTags } from "./row-tags";
 import { useListRowShape, LIST_COLUMN_CLASS } from "@/hooks/use-list-row-shape";
 import { SizeCell, listLeadClass } from "./list-columns";
 import { rowA11yProps, rowLabel } from "./list-a11y";
@@ -195,11 +195,9 @@ export function ThreadEmailItem({
                   {sender?.name || sender?.email?.split('@')[0] || t('unknown_sender')}
                 </span>
               </span>
-              <div className="flex min-w-0 flex-1 items-center gap-2 text-sm">
-                {tagIds.map((id) => (
-                  <TagBadge key={id} tagId={id} variant={tagVariant} scope={tagScope} />
-                ))}
-                <span className={cn("min-w-0 truncate", isUnread ? "text-muted-foreground" : "text-muted-foreground")}>
+              <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden text-sm">
+                {tagIds.length > 0 && <RowTags tagIds={tagIds} variant={tagVariant} scope={tagScope} />}
+                <span data-tag-text="" className={cn("min-w-0 truncate", isUnread ? "text-muted-foreground" : "text-muted-foreground")}>
                   {cleanPreview(email.preview) || t('no_preview_available')}
                 </span>
               </div>
@@ -304,9 +302,9 @@ export function ThreadEmailItem({
         {/* Content */}
         <div className="flex-1 min-w-0">
           {/* Single line: Sender, indicators, preview, date */}
-          <div className="flex items-center gap-2">
-            <span className={cn(
-              "truncate text-sm flex-shrink-0 max-w-[150px]",
+          <div className="flex min-w-0 items-center gap-2 overflow-hidden">
+            <span data-tag-text="" className={cn(
+              "min-w-0 truncate text-sm max-w-[150px]",
               isUnread
                 ? "font-semibold text-foreground"
                 : "font-medium text-muted-foreground"
@@ -315,35 +313,36 @@ export function ThreadEmailItem({
             </span>
 
             {/* Indicators */}
-            <div className="flex items-center gap-1 flex-shrink-0">
-              {email.isScheduled && (
-                <CalendarClock className="w-3 h-3 text-primary" />
-              )}
-              {isStarred && (
-                <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-              )}
-              {isAnswered && !isForwarded && (
-                <Reply className="w-3 h-3 text-muted-foreground" />
-              )}
-              {isForwarded && !isAnswered && (
-                <Forward className="w-3 h-3 text-muted-foreground" />
-              )}
-              {isAnswered && isForwarded && (
+            <RowTags tagIds={tagIds} variant={tagVariant} scope={tagScope}
+              leading={email.isScheduled || isStarred || isAnswered || isForwarded || email.hasAttachment ? (
                 <>
-                  <Reply className="w-3 h-3 text-muted-foreground" />
-                  <Forward className="w-3 h-3 text-muted-foreground" />
+                  {email.isScheduled && (
+                    <CalendarClock className="w-3 h-3 text-primary" />
+                  )}
+                  {isStarred && (
+                    <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                  )}
+                  {isAnswered && !isForwarded && (
+                    <Reply className="w-3 h-3 text-muted-foreground" />
+                  )}
+                  {isForwarded && !isAnswered && (
+                    <Forward className="w-3 h-3 text-muted-foreground" />
+                  )}
+                  {isAnswered && isForwarded && (
+                    <>
+                      <Reply className="w-3 h-3 text-muted-foreground" />
+                      <Forward className="w-3 h-3 text-muted-foreground" />
+                    </>
+                  )}
+                  {email.hasAttachment && (
+                    <Paperclip className="w-3 h-3 text-muted-foreground" />
+                  )}
                 </>
-              )}
-              {email.hasAttachment && (
-                <Paperclip className="w-3 h-3 text-muted-foreground" />
-              )}
-              {tagIds.map((id) => (
-                <TagBadge key={id} tagId={id} variant={tagVariant} scope={tagScope} />
-              ))}
-            </div>
+              ) : undefined}
+            />
 
             {/* Preview snippet */}
-            <span className={cn(
+            <span data-tag-text="preview" className={cn(
               "text-sm truncate flex-1 min-w-0",
               isUnread
                 ? "text-muted-foreground"

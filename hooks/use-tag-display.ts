@@ -31,8 +31,8 @@ const NAMED_BESIDE_SUBJECT: TagDisplay = { variant: "badge", placement: "subject
  * How message rows should draw their tags.
  *
  * One value for the whole list, never per row: rows are all the same width, so
- * measuring each would burn a `ResizeObserver` per virtualised row and, worse,
- * let neighbours disagree - one naming its tags while the next showed dots.
+ * placement stays consistent between neighbours. RowTags further bounds each
+ * group's contents against its own text and controls, compacting when needed.
  */
 export const TagDisplayContext = createContext<TagDisplay>(NAMED_BESIDE_SUBJECT);
 
