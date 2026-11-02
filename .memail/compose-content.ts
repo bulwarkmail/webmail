@@ -1,12 +1,12 @@
 import { marked } from 'marked';
 import { sanitizeEmailHtml } from '../lib/email-sanitization';
 
-const STYLE_KEYS = ['font-family','font-size','font-weight','font-style','text-decoration','color','background-color','text-align','line-height','letter-spacing','white-space','vertical-align','border','border-color','border-width','border-style','padding','padding-left','padding-right','padding-top','padding-bottom','margin-left','width','height'];
+const STYLE_KEYS = ['font-family','font-size','font-weight','font-style','text-decoration','color','background-color','text-align','line-height','letter-spacing','white-space','vertical-align','border','border-color','border-width','border-style','padding','padding-left','padding-right','padding-top','padding-bottom','margin','margin-top','margin-bottom','margin-left','margin-right','margin-block','margin-block-start','margin-block-end','width','height'];
 const INLINE_KEYS = ['font-family','font-size','font-weight','font-style','text-decoration','color','background-color'];
 function safeStyles(source: string): string {
   const style = document.createElement('span').style;
   style.cssText = source;
-  return STYLE_KEYS.flatMap(key => {
+  return Array.from({length:style.length},(_,index)=>style.item(index)).filter(key=>STYLE_KEYS.includes(key)).flatMap(key => {
     const value = style.getPropertyValue(key);
     return value && !/url\s*\(|expression\s*\(|[<>\\]/i.test(value) ? [`${key}:${value}`] : [];
   }).join(';');
@@ -73,6 +73,24 @@ export function normalizeComposeHtml(source: string): string {
     const safe = safeStyles(el.getAttribute('style') ?? '');
     if (safe) el.setAttribute('style',safe); else el.removeAttribute('style');
   }
+  // Clipboard fragments from LLMs often contain semantic paragraphs but no
+  // stylesheet. Materialize their normal document spacing before the editor's
+  // compact typed-line defaults can replace it. Explicit source margins win.
+  for (const block of root.querySelectorAll<HTMLElement>('p,h1,h2,h3,h4,h5,h6')) {
+    if (!block.textContent?.trim() && !block.querySelector('img')) continue;
+    const compact = !!block.closest('td,th,li');
+    if (!block.style.marginTop && !block.style.marginBlock && !block.style.marginBlockStart) {
+      block.style.marginTop = compact ? '0' : block.tagName === 'P' ? '1em' : '1.25em';
+    }
+    if (!block.style.marginBottom && !block.style.marginBlock && !block.style.marginBlockEnd) {
+      block.style.marginBottom = compact ? '0' : block.tagName === 'P' ? '1em' : '0.5em';
+    }
+    if (!block.style.lineHeight) {
+      for (let parent = block.parentElement; parent; parent = parent.parentElement) {
+        if (parent.style.lineHeight) { block.style.lineHeight = parent.style.lineHeight; break; }
+      }
+    }
+  }
   // Carry inherited typography onto text spans before unsupported wrappers
   // (Docs divs and Word containers) are flattened by the editor schema.
   const texts: Text[] = [];
@@ -108,3 +126,15 @@ export const COMPOSE_FONTS = [
   ['Georgia','Georgia, serif'],['Times New Roman','Times New Roman, Times, serif'],
   ['Verdana','Verdana, Geneva, sans-serif'],['Monospace','Consolas, Courier New, monospace'],
 ] as const;
+
+/** Preserve literal text and blank lines without interpreting Markdown or HTML. */
+export function plainTextToComposeHtml(source: string): string {
+  const container = document.createElement('div');
+  for (const line of source.split(/\r\n?|\n/)) {
+    const paragraph = document.createElement('p');
+    paragraph.textContent = line;
+    if (!line) paragraph.append(document.createElement('br'));
+    container.append(paragraph);
+  }
+  return container.innerHTML;
+}

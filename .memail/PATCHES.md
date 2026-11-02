@@ -47,3 +47,11 @@ Add each customization here. Include the relevant upstream files, the reason it 
 - `.memail/compose-import-dialog.tsx`: editable insertion of Markdown or sanitized HTML source. `app/globals.css`: heading levels and table-header colors follow pasted formatting instead of an overriding theme rule.
 - `.memail/saved-search*`, `workspace-toolbar.tsx`, `components/mail/mail-app.tsx`: account-scoped device-local saved queries, filters and folder scope. Missing folders disable restoration. Unified, scheduled and plugin searches are excluded. Recheck search store wiring and account switching when merging upstream.
 - Recheck real editor paste, toolbar accessibility, undo, sanitization, plain text, quoted originals, table styling and draft serialization after TipTap upgrades. New labels remain English; embedded fonts, arbitrary document page layout and complex stylesheet rules are not supported.
+
+
+## Composition review and paragraph spacing
+
+- `.memail/compose-content.ts`: preserve vertical margin declarations and inherited line height; supply document paragraph/heading spacing when clipboard HTML has no spacing. Keep list/table paragraphs compact and preserve indentation. This fixes LLM copy/paste being flattened to the editor's 4px typed-line defaults.
+- `.memail/paragraph-spacing.ts`, `rich-text-editor.tsx`: selectable Compact/Comfortable/Spacious paragraph spacing and all six heading levels. Spacing changes preserve paragraph text, marks and existing alignment/styles; they do not edit drafts automatically.
+- `.memail/compose-import-dialog.tsx`, `compose-preview.ts`: Markdown/HTML/plain-text source and local file import, isolated desktop/phone-width preview, stale file-read protection and a 1 MB import bound. Preview is approximate, sandboxed and blocks remote resources/navigation; insertions still use the existing sanitizer.
+- `components/email/email-composer.tsx`: capture-phase composer shortcuts yield to nested menus, dialogs and listboxes, fixing Escape opening the save/discard prompt while a formatting menu is focused. Recheck with the composer-mention integration suite after upstream changes.

@@ -13,6 +13,7 @@ import Link from "@tiptap/extension-link";
 import TextAlign from "@tiptap/extension-text-align";
 import { TextDirection } from "@/components/email/text-direction";
 import { normalizeComposeHtml, markdownToComposeHtml, looksLikeMarkdown, COMPOSE_FONTS } from '@/.memail/compose-content';
+import { paragraphSpacingValue, setParagraphSpacing } from '@/.memail/paragraph-spacing';
 import { ComposeImportDialog } from '@/.memail/compose-import-dialog';
 import { PlainTextPaste } from "@/components/email/plain-text-paste";
 import { pastedImageFiles } from "@/components/email/paste-images";
@@ -62,8 +63,6 @@ import {
   Quote,
   Code,
   RemoveFormatting,
-  Heading1,
-  Heading2,
   Table as TableIcon,
   Baseline,
   Highlighter,
@@ -107,6 +106,34 @@ const StyledTableCell = TableCell.extend({
 const StyledTableHeader = TableHeader.extend({
   addAttributes() { return {...this.parent?.(), style:styledBlockAttributes.style}; },
 });
+
+/** Menu choices share the formatting toolbar's keyboard and focus behavior. */
+function ToolbarChoice({item,label,value,choices,onSelect,buttonLabel}: {
+  item:string; label:string; value:string; buttonLabel?:string;
+  choices:{value:string;label:string}[]; onSelect:(value:string)=>void;
+}) {
+  const [open,setOpen] = useState(false);
+  const trigger = useRef<HTMLButtonElement>(null);
+  const wrapper = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const dismiss = (event:PointerEvent) => {
+      if (event.target instanceof Node && !wrapper.current?.contains(event.target)) setOpen(false);
+    };
+    document.addEventListener('pointerdown',dismiss);
+    return () => document.removeEventListener('pointerdown',dismiss);
+  },[open]);
+  return <div ref={wrapper} className="relative">
+    <ToolbarButton ref={trigger} item={item} title={label} popup="menu" expanded={open} active={open} onClick={()=>setOpen(v=>!v)}>
+      <span className="px-1 text-xs">{buttonLabel ?? choices.find(choice=>choice.value===value)?.label ?? label}</span>
+    </ToolbarButton>
+    {open && <ToolbarPopover label={label} role="menu" triggerRef={trigger} onClose={()=>setOpen(false)} className="min-w-40 p-1">
+      {choices.map(choice=><button key={choice.value} type="button" role="menuitemradio" aria-checked={choice.value===value}
+        className="block w-full rounded px-3 py-2 text-start text-sm hover:bg-accent focus-visible:bg-accent"
+        onClick={()=>{onSelect(choice.value);setOpen(false);}}>{choice.label}</button>)}
+    </ToolbarPopover>}
+  </div>;
+}
 
 interface RichTextEditorProps {
   content: string;
@@ -656,7 +683,7 @@ export function RichTextEditor({
       ].map((name) => ed.isActive(name)).concat(
         ed.isActive("heading", { level: 1 }), ed.isActive("heading", { level: 2 }),
         ed.isActive({ textAlign: "left" }), ed.isActive({ textAlign: "center" }), ed.isActive({ textAlign: "right" }),
-      ).join() + `|${style.fontSize ?? ""}|${style.color ?? ""}|${style.backgroundColor ?? ""}|${ed.getAttributes("paragraph").dir ?? ""}`;
+      ).join() + `|${ed.getAttributes("heading").level ?? ""}|${style.fontFamily ?? ""}|${style.fontSize ?? ""}|${style.color ?? ""}|${style.backgroundColor ?? ""}|${ed.getAttributes("paragraph").style ?? ""}|${ed.getAttributes("paragraph").dir ?? ""}`;
     },
   });
 
@@ -1105,22 +1132,18 @@ export function RichTextEditor({
 
         <ToolbarSeparator />
 
-        <ToolbarButton
-          item="heading-1"
-          pressed={editor.isActive("heading", { level: 1 })}
-          onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-          title={tToolbar("heading_1")}
-        >
-          <Heading1 className="w-4 h-4" />
-        </ToolbarButton>
-        <ToolbarButton
-          item="heading-2"
-          pressed={editor.isActive("heading", { level: 2 })}
-          onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-          title={tToolbar("heading_2")}
-        >
-          <Heading2 className="w-4 h-4" />
-        </ToolbarButton>
+        <ToolbarChoice
+          item="text-style" label="Text style"
+          value={String(editor.getAttributes('heading').level ?? 0)}
+          choices={[
+            {value:'0',label:'Normal text'},
+            ...([1,2,3,4,5,6] as const).map(level => ({value:String(level),label:`Heading ${level}`})),
+          ]}
+          onSelect={value => {
+            if (value === '0') editor.chain().focus().setParagraph().run();
+            else editor.chain().focus().setHeading({level:Number(value) as 1|2|3|4|5|6}).run();
+          }}
+        />
 
         <ToolbarSeparator />
 
@@ -1288,6 +1311,10 @@ export function RichTextEditor({
             {([['Default font',''],...COMPOSE_FONTS] as const).map(([name,value])=><button key={name} type="button" role="menuitemradio" aria-checked={(editor.getAttributes('textStyle').fontFamily ?? '')===value} className="block w-full rounded px-3 py-2 text-start text-sm hover:bg-accent focus-visible:bg-accent" style={{fontFamily:value || undefined}} onClick={()=>{if(value) editor.chain().focus().setFontFamily(value).run(); else editor.chain().focus().unsetFontFamily().run(); setFontFamilyOpen(false);}}>{name}</button>)}
           </ToolbarPopover>}
         </div>
+        <ToolbarChoice item="paragraph-spacing" label="Paragraph spacing" buttonLabel="Spacing"
+          value={paragraphSpacingValue(editor.getAttributes('paragraph').style)}
+          choices={[{value:'4px',label:'Compact'},{value:'1em',label:'Comfortable'},{value:'1.5em',label:'Spacious'}]}
+          onSelect={value=>{setParagraphSpacing(editor,value);}} />
         <ToolbarButton item="insert-source" title="Insert Markdown or HTML" onClick={()=>setImportOpen(true)}><Code className="size-4" /></ToolbarButton>
         <ToolbarButton
           item="clear-formatting"

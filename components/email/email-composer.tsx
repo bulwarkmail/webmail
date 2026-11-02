@@ -4132,6 +4132,10 @@ export function EmailComposer({
     // through React's tree although the dialog portals to the body: they
     // belong to that dialog, and Escape must close only it.
     if (!(e.target instanceof Node) || !e.currentTarget.contains(e.target)) return;
+    // Capture runs before nested formatting menus can consume Escape. Let
+    // those surfaces own their keys, including Enter with modifiers.
+    if (e.target instanceof Element && e.target.closest('[role="menu"], [role="dialog"], [role="listbox"]')) return;
+
 
     const isPlainEscape = e.key === 'Escape' && !e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey;
     const hasPrimaryModifier = e.ctrlKey || e.metaKey;

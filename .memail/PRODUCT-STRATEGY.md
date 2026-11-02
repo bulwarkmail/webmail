@@ -188,3 +188,8 @@ The integrated view controls are implemented. Conversation hierarchy refinement,
 Implemented editable rich HTML paste, GFM Markdown insertion and recognized Markdown clipboard conversion, fonts with fallback stacks, six heading levels, styled table cells and Word list/style normalization. Explicit plain-text paste bypasses Markdown conversion. The native draft pipeline retains the resulting HTML in the HTTP demo.
 
 Acceptance still needs live copy/paste samples from Word desktop, Google Docs and major LLM clients across browsers; representative Gmail/Outlook/Apple Mail received-message rendering; mobile toolbar review; and localization. Arbitrary document page layout and embedded fonts are not promised. Account-scoped device-local saved searches are also implemented; cross-device synchronization remains a later phase.
+
+
+### Composition review and repair checkpoint
+
+Added six-level text styles, paragraph-spacing repair for existing drafts, local Markdown/HTML/text import and isolated desktop/phone-width preview. Rich clipboard content now retains vertical margins and gains document spacing when source CSS is absent. A real-composer shortcut regression ensures Escape in formatting menus does not close the draft. Recipient rendering, localization and live source-application clipboard coverage remain acceptance work.

@@ -63,8 +63,8 @@ it('auto-pastes Markdown with one undo and honors explicit plain-text paste',asy
 it('applies font family to the selection and retains it in outgoing HTML',async()=>{
   const editor = await setup();
   act(()=>{editor.commands.setContent('<p>Font selection</p>');editor.commands.selectAll();});
-  fireEvent.click(screen.getByRole('button',{name:'Font family',exact:true}));
-  fireEvent.click(screen.getByRole('menuitemradio',{name:'Georgia',exact:true}));
+  fireEvent.click(screen.getByRole('button',{name:'Font family'}));
+  fireEvent.click(screen.getByRole('menuitemradio',{name:'Georgia'}));
   expect(serializeEditorContent(editor)).toContain('font-family: Georgia, serif');
 });
 
@@ -77,4 +77,66 @@ it('preserves nested Word lists and item typography',async()=>{
   expect(output.querySelector('ol > li > ol > li')?.textContent).toBe('Nested');
   expect(output.querySelector('ol > li > p span')?.getAttribute('style')).toContain('Calibri');
   expect(output.querySelectorAll(':scope > ol > li')).toHaveLength(2);
+});
+
+
+it('offers all heading levels, tracks caret style, and returns selected blocks to normal text',async()=>{
+  const editor = await setup();
+  act(()=>{editor.commands.setContent('<p>Title</p><p>Body</p>');editor.commands.setTextSelection(2);});
+  fireEvent.click(screen.getByRole('button',{name:'Text style'}));
+  fireEvent.click(screen.getByRole('menuitemradio',{name:'Heading 4'}));
+  expect(editor.getHTML()).toContain('<h4');
+  expect(screen.getByRole('button',{name:'Text style'})).toHaveTextContent('Heading 4');
+  act(()=>{editor.commands.setTextSelection(9);});
+  expect(screen.getByRole('button',{name:'Text style'})).toHaveTextContent('Normal text');
+  act(()=>{editor.commands.setTextSelection(2);});
+  fireEvent.click(screen.getByRole('button',{name:'Text style'}));
+  fireEvent.click(screen.getByRole('menuitemradio',{name:'Normal text'}));
+  expect(editor.getHTML()).not.toContain('<h4');
+});
+
+
+it('preserves readable paragraph gaps in LLM HTML through paste, save and reopen',async()=>{
+  const editor = await setup();
+  act(()=>{editor.view.pasteHTML('<p><strong>Subject: Project next steps</strong></p><p>Hi Alex,</p><p>First full paragraph.</p><p>Second full paragraph.</p><h3>1. Ownership</h3><p>Section body.</p>',new Event('paste') as ClipboardEvent);});
+  const saved = serializeEditorContent(editor);
+  const document = new DOMParser().parseFromString(saved,'text/html');
+  expect(Array.from(document.querySelectorAll('p')).map(p=>p.style.marginTop)).toEqual(['1em','1em','1em','1em','1em']);
+  expect(document.querySelector('h3')?.style.marginTop).toBe('1.25em');
+  act(()=>{editor.commands.setContent(saved);});
+  expect(serializeEditorContent(editor)).toBe(saved);
+});
+
+it('keeps explicit document margins, inherited line height and compact table/list paragraphs',async()=>{
+  const editor = await setup();
+  act(()=>{editor.commands.setContent(normalizeComposeHtml('<div style="line-height:1.7"><p style="margin:18pt 0 12pt">Word spacing</p><p style="margin:0">No gap</p><ul><li><p>Item</p></li></ul><table><tr><td><p>Cell</p></td></tr></table></div>'));});
+  const document = new DOMParser().parseFromString(serializeEditorContent(editor),'text/html');
+  expect(document.querySelector('p')?.style.marginTop).toBe('18pt');
+  expect(document.querySelector('p')?.style.marginBottom).toBe('12pt');
+  expect(document.querySelector('p')?.style.lineHeight).toBe('1.7');
+  expect(document.querySelectorAll('p')[1].style.marginTop).toBe('0px');
+  expect(document.querySelector('li p')?.style.marginTop).toBe('0px');
+  expect(document.querySelector('td p')?.style.marginTop).toBe('0px');
+});
+
+
+it('repairs selected paragraph spacing without changing text, emphasis or alignment',async()=>{
+  const editor = await setup();
+  act(()=>{editor.commands.setContent('<p style="text-align:right;color:#123456"><strong>Keep emphasis</strong></p><p>Leave this paragraph</p>');editor.commands.setTextSelection(3);});
+  fireEvent.click(screen.getByRole('button',{name:'Paragraph spacing'}));
+  fireEvent.click(screen.getByRole('menuitemradio',{name:'Comfortable'}));
+  const document = new DOMParser().parseFromString(serializeEditorContent(editor),'text/html');
+  expect(document.querySelector('p')?.style.marginTop).toBe('1em');
+  expect(document.querySelector('p')?.style.textAlign).toBe('right');
+  expect(document.querySelector('strong')?.textContent).toBe('Keep emphasis');
+  expect(document.querySelectorAll('p')[1].style.marginTop).toBe('4px');
+});
+
+
+it('keeps paragraph indentation while supplying missing document spacing',()=>{
+  const document = new DOMParser().parseFromString(normalizeComposeHtml('<p style="margin-left:24px;margin-top:0">Indented</p>'),'text/html');
+  const style = document.querySelector('p')!.style;
+  expect(style.marginLeft).toBe('24px');
+  expect(style.marginTop).toBe('0px');
+  expect(style.marginBottom).toBe('1em');
 });
