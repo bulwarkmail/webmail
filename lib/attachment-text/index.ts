@@ -78,7 +78,7 @@ async function read(bytes: Uint8Array, format: TextFormat, budget: number): Prom
     case 'vcf':
       return { status: 'ok', text: vcfText(decodeText(bytes)), truncated: false };
     case 'pdf':
-      return pdfText(bytes);
+      return pdfText(bytes, { budget });
     case 'docx': case 'xlsx': case 'pptx': case 'odt': case 'ods': case 'odp':
       return officeText(bytes, format, { budget });
     default:
