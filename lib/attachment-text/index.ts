@@ -3,7 +3,8 @@
 // file name, then the media type, and hands the bytes to its reader:
 // plain.ts (text, CSV, HTML, calendar files, address cards), pdf.ts
 // (pdf.js), office.ts (docx, xlsx, pptx, odt, ods, odp). Never throws: a
-// file that can't be read answers with a status.
+// file that can't be read answers with a status. Import it on demand: the
+// readers are only loaded when a file is read.
 
 import { MAX_HTML_CHARS, decodeText, htmlText, icsToText, looksLikeText, vcfText } from './plain';
 import { pdfText } from './pdf';
@@ -14,7 +15,6 @@ import {
 } from './types';
 
 export * from './types';
-export { setPdfLoader, type PdfLib } from './pdf';
 
 const BY_EXTENSION: Record<string, TextFormat> = {
   txt: 'text', text: 'text', md: 'text', markdown: 'text', log: 'text', json: 'text', xml: 'text',
@@ -86,16 +86,35 @@ async function read(bytes: Uint8Array, format: TextFormat, budget: number): Prom
   }
 }
 
+/** Extractions running at once: each holds a file, and an Office file's DOM, on the main thread. */
+export const MAX_EXTRACTIONS_AT_ONCE = 2;
+let running = 0;
+const waiting: (() => void)[] = [];
+
+/** Runs `work` when fewer than MAX_EXTRACTIONS_AT_ONCE extractions are running. */
+async function inTurn<T>(work: () => Promise<T>): Promise<T> {
+  while (running >= MAX_EXTRACTIONS_AT_ONCE) await new Promise<void>((resolve) => waiting.push(resolve));
+  running++;
+  try {
+    return await work();
+  } finally {
+    running--;
+    waiting.shift()?.();
+  }
+}
+
 /**
- * The text of a file's bytes. Statuses: too_big over MAX_TEXT_SOURCE_BYTES
- * (or an Office file that unpacks to more than 50 MB), unsupported for
- * images, archives and the legacy .doc/.xls/.ppt, no_text for a scanned
- * PDF or a file with nothing in it, encrypted, failed.
+ * The text of a file (its bytes, or a Blob such as a file in Files).
+ * Statuses: too_big over MAX_TEXT_SOURCE_BYTES (or an Office file that
+ * unpacks to more than 50 MB), unsupported for images, archives and the
+ * legacy .doc/.xls/.ppt, no_text for a scanned PDF or a file with nothing
+ * in it, encrypted, failed. At most MAX_EXTRACTIONS_AT_ONCE run at a time;
+ * the others wait their turn.
  */
-export async function extractText(data: ArrayBuffer | Uint8Array, options: ExtractOptions = {}): Promise<ExtractedText> {
-  const bytes = data instanceof Uint8Array ? data : new Uint8Array(data);
+export async function extractText(data: ArrayBuffer | Uint8Array | Blob, options: ExtractOptions = {}): Promise<ExtractedText> {
   const format = textFormatOf(options.name, options.type);
-  if (bytes.byteLength > MAX_TEXT_SOURCE_BYTES) return empty(format, 'too_big');
+  const size = data instanceof Blob ? data.size : data.byteLength;
+  if (size > MAX_TEXT_SOURCE_BYTES) return empty(format, 'too_big');
   // Files calls this directly: anything but a positive number means the default.
   const asked = Number(options.maxChars);
   const maxChars = Number.isFinite(asked) && asked >= 1 ? Math.min(MAX_TEXT_CHARS, Math.floor(asked)) : DEFAULT_TEXT_CHARS;
@@ -103,7 +122,10 @@ export async function extractText(data: ArrayBuffer | Uint8Array, options: Extra
   if (format === 'other') return empty(format, 'unsupported');
   let result: Omit<ExtractedText, 'format'>;
   try {
-    result = await read(bytes, format, maxChars + TEXT_BUDGET_SLACK);
+    result = await inTurn(async () => {
+      const bytes = data instanceof Uint8Array ? data : new Uint8Array(data instanceof Blob ? await data.arrayBuffer() : data);
+      return read(bytes, format, maxChars + TEXT_BUDGET_SLACK);
+    });
   } catch {
     return empty(format, 'failed');
   }

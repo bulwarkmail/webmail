@@ -10,7 +10,8 @@ import type { AreaHostFeaturesB, AttachmentImageView, AttachmentTextView } from 
 import { attachmentExtras, cidAltTexts } from './b.projection';
 import { readNamedEmail } from '../host-api-mail';
 import { readBoolean, readId, readInteger, readObject, sessionClient, withinRate } from '../host-api-input';
-import { DEFAULT_TEXT_CHARS, MAX_TEXT_CHARS, MAX_TEXT_SOURCE_BYTES, extractText, textFormatOf } from '@/lib/attachment-text';
+// The readers (pdf.js, the Office reader) load only when an attachment is read.
+import { DEFAULT_TEXT_CHARS, MAX_TEXT_CHARS, MAX_TEXT_SOURCE_BYTES } from '@/lib/attachment-text/types';
 import { DEFAULT_IMAGE_SIDE, MAX_IMAGE_SIDE, MIN_IMAGE_SIDE, shrinkImage, toBase64 } from '@/lib/image-shrink';
 import { readPhotoExif } from '@/lib/exif';
 import { emailToReadView } from '@/lib/plugin-projection';
@@ -77,6 +78,7 @@ export async function doEmailGetAttachmentText(
   const name = part.name || 'attachment';
   const type = part.type || 'application/octet-stream';
   const base = { name, type, size: part.size || 0 };
+  const { extractText, textFormatOf } = await import('@/lib/attachment-text');
   if ((part.size || 0) > MAX_TEXT_SOURCE_BYTES) {
     return { ...base, format: textFormatOf(name, type), status: 'too_big', text: '', truncated: false };
   }

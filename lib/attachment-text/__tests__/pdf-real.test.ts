@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { extractText, setPdfLoader, type PdfLib } from '@/lib/attachment-text';
+import { extractText } from '@/lib/attachment-text';
+import { setPdfLoader, type PdfLib } from '@/lib/attachment-text/pdf';
 
 // The PDF the test rig seeds: one page, Helvetica, a few lines of text.
 function pdf(lines: string[]): Uint8Array {

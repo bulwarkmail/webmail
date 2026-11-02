@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { strToU8, zipSync, type Zippable } from 'fflate';
-import { extractText, setPdfLoader, textFormatOf, type PdfLib } from '@/lib/attachment-text';
+import { extractText, textFormatOf } from '@/lib/attachment-text';
+import { setPdfLoader, type PdfLib } from '@/lib/attachment-text/pdf';
 import { officeText } from '@/lib/attachment-text/office';
 
 // Office files are ZIPs of XML: the fixtures are built here, as small as a

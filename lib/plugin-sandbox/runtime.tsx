@@ -39,6 +39,7 @@ import type {
 } from '../plugin-types';
 import { AddressBook, ContactCard } from '../jmap/types';
 import { withAssistantRuntime } from './assistant/runtime';
+import { DEFAULT_API_TIMEOUT_MS, NETWORK_API_TIMEOUT_MS } from './api-timeouts';
 import { EncryptionAtRestConfig, PublicKeyInput } from '@/stores/account-security-store';
 
 // ─── Module-scope state ──────────────────────────────────────
@@ -287,12 +288,6 @@ function uid(): string {
 
 // ─── Sandboxed API facade (calls flow to host via postMessage) ─
 
-const DEFAULT_API_TIMEOUT_MS = 30_000;
-// http.post / http.fetch can be carrying an attachment to an external store,
-// which is a transfer rather than a round-trip - 30s is not enough for the
-// files a plugin has any reason to offload. Still bounded so a hung host
-// can't leak the pending promise.
-const NETWORK_API_TIMEOUT_MS = 120_000;
 
 function callApi(method: string, args: unknown[], timeoutMs: number = DEFAULT_API_TIMEOUT_MS): Promise<unknown> {
   const id = uid();
