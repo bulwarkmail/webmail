@@ -103,6 +103,12 @@ function attr(el: Element, local: string): string | null {
   return null;
 }
 
+/** The r:id of a reference to another part (an attribute named id in a namespace, not a plain id). */
+function relId(el: Element): string | null {
+  for (const a of Array.from(el.attributes)) if (a.localName === 'id' && a.namespaceURI) return a.value;
+  return null;
+}
+
 const cell = (text: string) => (text.length > MAX_CELL_CHARS ? text.slice(0, MAX_CELL_CHARS) : text);
 
 /** A cell for CSV-like rows: quoted when it holds a comma, a quote or a line break. */
@@ -116,18 +122,88 @@ function csvRow(cells: string[]): string {
   return cells.slice(0, end).map(csvCell).join(',');
 }
 
+// ─── Package parts (docx, xlsx, pptx) ────────────────────────
+
+function normalisePath(path: string): string {
+  const parts: string[] = [];
+  for (const part of path.split('/')) {
+    if (part === '..') parts.pop();
+    else if (part && part !== '.') parts.push(part);
+  }
+  return parts.join('/');
+}
+
+interface Relation { target: string; type: string }
+
+/** The relations of `part` (its _rels/<name>.rels next to it): rId → target path and type. */
+async function relationsOf(zip: Unpacker, part: string): Promise<Map<string, Relation>> {
+  const slash = part.lastIndexOf('/');
+  const dir = slash === -1 ? '' : part.slice(0, slash);
+  const relsPath = part === '' ? '_rels/.rels' : `${dir ? `${dir}/` : ''}_rels/${part.slice(slash + 1)}.rels`;
+  const rels = await zip.xml(relsPath);
+  const map = new Map<string, Relation>();
+  if (!rels) return map;
+  for (const rel of all(rels, 'Relationship')) {
+    const id = rel.getAttribute('Id');
+    const target = rel.getAttribute('Target');
+    if (!id || !target || rel.getAttribute('TargetMode') === 'External') continue;
+    map.set(id, {
+      target: target.startsWith('/') ? normalisePath(target) : normalisePath(`${dir}/${target}`),
+      type: rel.getAttribute('Type') ?? '',
+    });
+  }
+  return map;
+}
+
+/** The package's main part (document, workbook, presentation), as its _rels/.rels names it. */
+async function mainPart(zip: Unpacker, fallback: string): Promise<string> {
+  for (const rel of (await relationsOf(zip, '')).values()) {
+    if (rel.type.endsWith('/officeDocument')) return rel.target;
+  }
+  return fallback;
+}
+
+/** Elements of `local` name under `root`, in document order, leaving out mc:Fallback copies. */
+function without(root: Element, local: string, skip: ReadonlySet<string> = FALLBACK): Element[] {
+  const out: Element[] = [];
+  const walk = (el: Element) => {
+    for (const c of Array.from(el.children)) {
+      if (skip.has(c.localName)) continue;
+      if (c.localName === local) out.push(c);
+      else walk(c);
+    }
+  };
+  walk(root);
+  return out;
+}
+const FALLBACK: ReadonlySet<string> = new Set(['Fallback']);
+
 // ─── Word (docx) ─────────────────────────────────────────────
 
-function wordRuns(el: Element): string {
+/**
+ * Not part of what the reader sees: deleted and moved-away text of tracked
+ * changes, field codes, and the Fallback copy of anything in
+ * mc:AlternateContent (the Choice holds the same).
+ */
+const WORD_SKIP: ReadonlySet<string> = new Set(['delText', 'instrText', 'del', 'moveFrom', 'Fallback', 'sectPr']);
+
+/** A paragraph's text; the paragraphs of text boxes in it go to `boxes`, each its own line. */
+function wordRuns(el: Element, boxes: string[]): string {
   let out = '';
   for (const c of Array.from(el.children)) {
+    if (WORD_SKIP.has(c.localName)) continue;
     switch (c.localName) {
       case 't': out += c.textContent ?? ''; break;
       case 'tab': out += '\t'; break;
       case 'br': case 'cr': out += '\n'; break;
-      // Deleted text of tracked changes, field codes: not part of what the reader sees.
-      case 'delText': case 'instrText': case 'del': break;
-      default: out += wordRuns(c);
+      case 'txbxContent': {
+        const inner = new TextSink(MAX_CELL_CHARS);
+        wordBlocks(c, inner);
+        const text = inner.text();
+        if (text) boxes.push(text);
+        break;
+      }
+      default: out += wordRuns(c, boxes);
     }
   }
   return out;
@@ -136,18 +212,28 @@ function wordRuns(el: Element): string {
 function wordBlocks(el: Element, out: TextSink): void {
   for (const c of Array.from(el.children)) {
     if (out.full) return;
-    if (c.localName === 'p') out.line(wordRuns(c));
-    else if (c.localName === 'tbl') {
+    if (WORD_SKIP.has(c.localName)) continue;
+    if (c.localName === 'p') {
+      const boxes: string[] = [];
+      const text = wordRuns(c, boxes);
+      if (text || !boxes.length) out.line(text);
+      for (const box of boxes) out.line(box);
+    } else if (c.localName === 'tbl') {
       for (const row of kids(c, 'tr')) {
-        if (!out.line(kids(row, 'tc').map((td) => cell(all(td, 'p').map(wordRuns).join(' ').trim())).join(' | '))) return;
+        const cells = kids(row, 'tc').map((td) => {
+          const inner = new TextSink(MAX_CELL_CHARS);
+          wordBlocks(td, inner);
+          return inner.text().replace(/\s*\n\s*/g, ' ');
+        });
+        if (!out.line(cells.join(' | '))) return;
       }
       out.line('');
-    } else if (c.localName !== 'sectPr') wordBlocks(c, out);
+    } else wordBlocks(c, out);
   }
 }
 
 async function docx(zip: Unpacker, sink: TextSink): Promise<Result> {
-  const doc = await zip.xml('word/document.xml');
+  const doc = await zip.xml(await mainPart(zip, 'word/document.xml'));
   if (!doc) return { status: 'failed', text: '', truncated: false };
   wordBlocks(all(doc, 'body')[0] ?? doc.documentElement, sink);
   return { status: 'ok', text: sink.text(), truncated: sink.full };
@@ -164,49 +250,70 @@ function columnOf(ref: string | null): number | null {
   return n - 1;
 }
 
-/** rId → target path inside the archive, from a .rels file next to `base`. */
-async function relations(zip: Unpacker, relsPath: string, baseDir: string): Promise<Map<string, string>> {
-  const rels = await zip.xml(relsPath);
-  const map = new Map<string, string>();
-  if (!rels) return map;
-  for (const rel of all(rels, 'Relationship')) {
-    const id = rel.getAttribute('Id');
-    const target = rel.getAttribute('Target');
-    if (!id || !target) continue;
-    map.set(id, target.startsWith('/') ? target.slice(1) : normalisePath(`${baseDir}/${target}`));
-  }
-  return map;
+/** Built-in number formats that are dates or times (ECMA-376 18.8.30). */
+const DATE_FORMAT_IDS = new Set([14, 15, 16, 17, 18, 19, 20, 21, 22, 45, 46, 47]);
+
+/** True for a custom format code that shows a date or a time (d, m with y, y, h, s outside quotes and brackets). */
+export function isDateFormatCode(code: string): boolean {
+  const bare = code.replace(/"[^"]*"/g, '').replace(/\\./g, '').replace(/\[[^\]]*\]/g, '');
+  return /[dyhs]/i.test(bare);
 }
 
-function normalisePath(path: string): string {
-  const parts: string[] = [];
-  for (const part of path.split('/')) {
-    if (part === '..') parts.pop();
-    else if (part && part !== '.') parts.push(part);
-  }
-  return parts.join('/');
+/** The cell styles (index in cellXfs) whose number format is a date or a time. */
+async function dateStyles(zip: Unpacker, path: string): Promise<Set<number>> {
+  const out = new Set<number>();
+  const styles = await zip.xml(path);
+  if (!styles) return out;
+  const custom = new Map<number, string>();
+  for (const fmt of all(styles, 'numFmt')) custom.set(Number(fmt.getAttribute('numFmtId')), fmt.getAttribute('formatCode') ?? '');
+  const xfs = all(styles, 'cellXfs')[0];
+  kids(xfs ?? styles.documentElement, 'xf').forEach((xf, index) => {
+    if (!xfs) return;
+    const id = Number(xf.getAttribute('numFmtId') ?? 0);
+    const code = custom.get(id);
+    if (code !== undefined ? isDateFormatCode(code) : DATE_FORMAT_IDS.has(id)) out.add(index);
+  });
+  return out;
+}
+
+/** A date serial as "2026-10-31", "2026-10-31 12:00" or, below one day, "12:00". */
+export function excelDate(serial: number, date1904 = false): string | null {
+  if (!Number.isFinite(serial) || serial < 0 || serial > 2_958_465) return null;
+  const days = Math.floor(serial);
+  const seconds = Math.round((serial - days) * 86400);
+  // 1899-12-30 makes Excel's day 60 (a 29 February 1900 that never was) come out right after it.
+  const base = date1904 ? Date.UTC(1904, 0, 1) : Date.UTC(1899, 11, 30);
+  const iso = new Date(base + days * 86_400_000 + seconds * 1000).toISOString();
+  if (days === 0 && !date1904) return iso.slice(11, 16);
+  return seconds ? `${iso.slice(0, 10)} ${iso.slice(11, 16)}` : iso.slice(0, 10);
 }
 
 async function xlsx(zip: Unpacker, sink: TextSink): Promise<Result> {
-  const book = await zip.xml('xl/workbook.xml');
+  const bookPath = await mainPart(zip, 'xl/workbook.xml');
+  const book = await zip.xml(bookPath);
   if (!book) return { status: 'failed', text: '', truncated: false };
-  const rels = await relations(zip, 'xl/_rels/workbook.xml.rels', 'xl');
+  const rels = await relationsOf(zip, bookPath);
+  const dir = bookPath.includes('/') ? bookPath.slice(0, bookPath.lastIndexOf('/')) : '';
+  const related = (type: string, fallback: string) => [...rels.values()].find((r) => r.type.endsWith(type))?.target ?? fallback;
   const shared: string[] = [];
-  const strings = await zip.xml('xl/sharedStrings.xml');
+  const strings = await zip.xml(related('/sharedStrings', `${dir}/sharedStrings.xml`));
   if (strings) {
     for (const si of all(strings, 'si')) {
       // Phonetic runs (rPh) are reading aids, not the cell's text.
       shared.push(cell(all(si, 't').filter((t) => t.parentElement?.localName !== 'rPh').map((t) => t.textContent ?? '').join('')));
     }
   }
+  const dates = await dateStyles(zip, related('/styles', `${dir}/styles.xml`));
+  const pr = all(book, 'workbookPr')[0];
+  const date1904 = pr?.getAttribute('date1904') === '1' || pr?.getAttribute('date1904') === 'true';
   const sheets = all(book, 'sheet');
   const names: string[] = [];
   let truncated = sheets.length > MAX_SHEETS;
   for (const sheet of sheets.slice(0, MAX_SHEETS)) {
     if (sink.full) break;
     const name = sheet.getAttribute('name') ?? `Sheet ${names.length + 1}`;
-    const rid = attr(sheet, 'id');
-    const path = rid ? rels.get(rid) : undefined;
+    const rid = relId(sheet);
+    const path = rid ? rels.get(rid)?.target : undefined;
     const doc = path ? await zip.xml(path) : null;
     names.push(name);
     if (names.length > 1) sink.line('');
@@ -225,6 +332,7 @@ async function xlsx(zip: Unpacker, sink: TextSink): Promise<Result> {
         if (type === 's') value = shared[Number(v)] ?? '';
         else if (type === 'inlineStr') value = cell(all(c, 't').map((t) => t.textContent ?? '').join(''));
         else if (type === 'b') value = v === '1' ? 'TRUE' : v === '0' ? 'FALSE' : v;
+        else if ((!type || type === 'n') && v && dates.has(Number(c.getAttribute('s') ?? 0))) value = excelDate(Number(v), date1904) ?? v;
         else value = cell(v);
         while (cells.length < col) cells.push('');
         cells[col] = value;
@@ -238,19 +346,32 @@ async function xlsx(zip: Unpacker, sink: TextSink): Promise<Result> {
 
 // ─── PowerPoint (pptx) ───────────────────────────────────────
 
-async function pptx(zip: Unpacker, sink: TextSink): Promise<Result> {
-  const slides = zip.entries
+/** The slides in the order the deck shows them (sldIdLst), else by their file numbers. */
+async function slidePaths(zip: Unpacker, presentation: string): Promise<string[]> {
+  const pres = await zip.xml(presentation);
+  if (pres) {
+    const rels = await relationsOf(zip, presentation);
+    const ordered = all(pres, 'sldId').map((s) => rels.get(relId(s) ?? '')?.target).filter((p): p is string => !!p);
+    if (ordered.length) return ordered;
+  }
+  return zip.entries
     .map((e) => ({ name: e.name, n: Number(/^ppt\/slides\/slide(\d+)\.xml$/.exec(e.name)?.[1]) }))
     .filter((s) => Number.isFinite(s.n))
-    .sort((a, b) => a.n - b.n);
-  if (!slides.length && !zip.has('ppt/presentation.xml')) return { status: 'failed', text: '', truncated: false };
+    .sort((a, b) => a.n - b.n)
+    .map((s) => s.name);
+}
+
+async function pptx(zip: Unpacker, sink: TextSink): Promise<Result> {
+  const presentation = await mainPart(zip, 'ppt/presentation.xml');
+  const slides = await slidePaths(zip, presentation);
+  if (!slides.length && !zip.has(presentation)) return { status: 'failed', text: '', truncated: false };
   for (const [i, slide] of slides.entries()) {
     if (sink.full) break;
-    const doc = await zip.xml(slide.name);
+    const doc = await zip.xml(slide);
     if (!doc) continue;
     if (i > 0) sink.line('');
     sink.line(`Slide ${i + 1}`);
-    for (const p of all(doc, 'p')) {
+    for (const p of without(doc.documentElement, 'p')) {
       const text = all(p, 't').map((t) => t.textContent ?? '').join('').trim();
       if (text && !sink.line(text)) break;
     }
