@@ -1,12 +1,10 @@
-import DOMPurify from 'dompurify';
-import { sanitizeEmailHtml } from './email-sanitization';
+import { escapeHtml, sanitizeEmailHtml } from './email-sanitization';
 import type { EmailTemplate } from './template-types';
 import { BUILT_IN_PLACEHOLDERS } from './template-types';
 import { generateUUID } from './utils';
 
 const PLACEHOLDER_REGEX = /\{\{(\w+)\}\}/g;
 const MAX_TEMPLATE_NAME_LENGTH = 200;
-const STRIP_HTML_CONFIG = { ALLOWED_TAGS: [] as string[], ALLOWED_ATTR: [] as string[] };
 
 export function extractPlaceholders(text: string): string[] {
   const matches = new Set<string>();
@@ -18,13 +16,18 @@ export function extractPlaceholders(text: string): string[] {
   return Array.from(matches);
 }
 
+/**
+ * Fill in {{placeholders}}. Values are text: escaped for an HTML template,
+ * kept as typed for a plain one, so "Smith <j@x.com>" survives either way.
+ */
 export function substitutePlaceholders(
   text: string,
-  values: Record<string, string>
+  values: Record<string, string>,
+  options: { html?: boolean } = {},
 ): string {
   return text.replace(PLACEHOLDER_REGEX, (full, name) => {
     if (values[name] === undefined) return full;
-    return DOMPurify.sanitize(values[name], STRIP_HTML_CONFIG);
+    return options.html ? escapeHtml(values[name]) : values[name];
   });
 }
 
@@ -189,8 +192,11 @@ export async function embedTemplateImages(
   return changed ? doc.body.innerHTML : html;
 }
 
+// Names, subjects, categories and plain bodies are text, shown as text and
+// escaped wherever they go into HTML. Running them through an HTML sanitizer
+// cut "<sales@example.com>" out and turned "&" into "&amp;".
 function sanitizeText(value: unknown): string {
-  return DOMPurify.sanitize(String(value || ''), STRIP_HTML_CONFIG);
+  return String(value || '');
 }
 
 /**

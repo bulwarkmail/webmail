@@ -2165,7 +2165,7 @@ export function EmailComposer({
       ? substitutePlaceholders(template.subject, filledValues)
       : template.subject;
     const filledBody = Object.keys(filledValues).length > 0
-      ? substitutePlaceholders(template.body, filledValues)
+      ? substitutePlaceholders(template.body, filledValues, { html: !!template.isHTML })
       : template.body;
 
     // Match the template to the draft's format: an HTML template goes into a
