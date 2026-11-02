@@ -198,3 +198,8 @@ Added six-level text styles, paragraph-spacing repair for existing drafts, local
 ### Search management checkpoint
 
 Saved searches now expose their criteria and folder scope, indicate a matching current search, support rename and explicit criteria replacement, and offer undo for the last removal. Quick unread/starred/attachment searches use the existing native search pipeline. Account isolation and missing-folder guards remain enforced. Cross-device synchronization and localization remain future work.
+
+
+## Latest overhaul direction
+
+See [DESIGN-ROADMAP.md](DESIGN-ROADMAP.md) for the current UI, feature and acceptance phases. ReUI remains postponed. AI must support multiple providers and starts after UI/UX and core-workflow acceptance, as requested by the owner. The native dock and identity changes are the first phase.

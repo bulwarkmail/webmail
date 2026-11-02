@@ -1913,7 +1913,7 @@ function SidebarImpl({
         // Border lives on the wrapper (outside the h-14 box) so the bar's total
         // height matches the search/reply toolbars, which border-b their wrapper too.
         <div className="border-b border-border">
-          <div className={cn("flex items-center h-14", isCollapsed ? "justify-center px-2" : "gap-1 px-2")}>
+          <div className={cn("flex items-center h-16", isCollapsed ? "justify-center px-2" : "gap-1 px-2")}>
             <Button
               variant="ghost"
               size="icon"

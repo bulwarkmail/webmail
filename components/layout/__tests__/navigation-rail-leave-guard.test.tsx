@@ -2,6 +2,8 @@ import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+const route = vi.hoisted(() => ({ pathname: '/contacts' }));
+
 // An editor with unsaved changes registers a leave guard; the rail and the
 // phone tab bar ask it before they leave the app (R5).
 
@@ -13,7 +15,7 @@ vi.mock('@/hooks/use-config', () => ({ useConfig: () => ({ appName: 'Mail' }) })
 vi.mock('@/hooks/use-stalwart-admin', () => ({ useStalwartAdmin: () => false }));
 vi.mock('@/i18n/navigation', () => ({
   useRouter: () => ({ push: vi.fn(), back: vi.fn(), replace: vi.fn() }),
-  usePathname: () => '/contacts',
+  usePathname: () => route.pathname,
   Link: ({ children, href, ...rest }: { children: React.ReactNode; href: string }) => <a href={href} {...rest}>{children}</a>,
 }));
 
@@ -23,12 +25,14 @@ const { registerLeaveGuard } = await import('@/lib/leave-guard');
 
 let off: (() => void) | null = null;
 beforeEach(() => {
+  route.pathname = '/contacts';
   useUpdateStore.setState({ startPolling: vi.fn() } as never);
 });
 afterEach(() => { off?.(); off = null; });
 
 describe.each([
   ['desktop rail', { orientation: 'vertical', collapsed: true }],
+  ['workspace dock', { orientation: 'vertical', collapsed: true, variant: 'workspace' }],
   ['phone tab bar', { orientation: 'horizontal', collapsed: false }],
 ] as const)('%s', (_name, props) => {
   it('asks before leaving an editor with unsaved changes, and stays on "Keep editing"', async () => {
@@ -49,4 +53,11 @@ describe.each([
     fireEvent.click(screen.getAllByRole('link', { name: 'mail' })[0]);
     expect(confirm).not.toHaveBeenCalled();
   });
+});
+
+
+it.each(['/mail', '/mail/folder/inbox', '/mail/message/example'])('marks Mail current on nested mail route %s', pathname => {
+  route.pathname = pathname;
+  render(<NavigationRail orientation="vertical" collapsed variant="workspace" />);
+  expect(screen.getByRole('link', { name: 'mail' })).toHaveAttribute('aria-current', 'page');
 });

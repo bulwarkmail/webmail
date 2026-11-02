@@ -4950,8 +4950,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         {/* Desktop Navigation Rail (hidden when embedded inside Pro shell, and
             under Mountain View, whose header carries the app grid instead) */}
         {!isMobile && !isTablet && !isEmbedded && !mvShell && (
-          <div className="w-14 bg-secondary flex flex-col flex-shrink-0" style={{ borderRight: '1px solid rgba(128, 128, 128, 0.3)' }}>
-            <NavigationRail
+          <div className="memail-app-rail bg-secondary flex flex-col flex-shrink-0" style={{ borderRight: '1px solid rgba(128, 128, 128, 0.3)' }}>
+            <NavigationRail variant="workspace"
               collapsed
               quota={quota}
               isPushConnected={isPushConnected}
@@ -5076,8 +5076,21 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           pane={false}
           heading={t('shell.heading', { place: currentMailboxName, app: t('sidebar.mail') })}
           data-mv-card={mvShell ? "" : undefined}
+          data-memail-mail-workspace={!mvShell && !isEmbedded ? "" : undefined}
           className={cn("flex flex-col flex-1 min-w-0", mvShell ? "mb-4 me-4" : "h-full", inlineApp && "hidden")}
         >
+            {!mvShell && <WorkspaceToolbar
+              title={!isScheduledView && (searchQuery || !isFilterEmpty(searchFilters)) ? 'Search results' : currentMailboxName}
+              context={!isScheduledView && (searchQuery || !isFilterEmpty(searchFilters)) ? (isUnifiedView ? 'Unified search' : searchMailboxId ? viewMailboxes.find(mailbox=>mailbox.id===searchMailboxId)?.name ?? 'Selected folder' : 'All folders') : undefined}
+              onClearSearch={!isScheduledView && (searchQuery || !isFilterEmpty(searchFilters)) ? ()=>void handleClearSearch() : undefined}
+              onShortcuts={() => setShowShortcutsModal(true)} searchActions={!isUnifiedView && !isScheduledView && activeAccountId ? <SavedSearchMenu
+              key={`${activeAccountId}:${viewingAccountId ?? ''}`}
+              scope={`${activeAccountId}:${viewingAccountId ?? ''}`}
+              query={searchQuery} filters={searchFilters} mailboxId={searchMailboxId} mailboxes={viewMailboxes}
+              onApply={entry => {
+                clearSearchFilters(); setSearchFilters(entry.filters); setSearchQuery(entry.query); setSearchMailboxId(entry.mailboxId);
+                void runAdvancedSearchNow();
+              }} /> : undefined} />}
           <div className={cn("relative flex flex-1 min-h-0", isHorizontalMailLayout && "md:flex-col")}>
           {/* Email List - full width on mobile, fixed width/height on tablet/desktop */}
           <section
@@ -5320,18 +5333,6 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             <div className="flex-1 min-h-0 flex flex-col">
             {/* Plugin-registered category tabs (Gmail-style). Renders nothing
                 unless an enabled plugin registered tabs via api.tabs.set. */}
-            {!mvShell && <WorkspaceToolbar
-              title={!isScheduledView && (searchQuery || !isFilterEmpty(searchFilters)) ? 'Search results' : currentMailboxName}
-              context={!isScheduledView && (searchQuery || !isFilterEmpty(searchFilters)) ? (isUnifiedView ? 'Unified search' : searchMailboxId ? viewMailboxes.find(mailbox=>mailbox.id===searchMailboxId)?.name ?? 'Selected folder' : 'All folders') : undefined}
-              onClearSearch={!isScheduledView && (searchQuery || !isFilterEmpty(searchFilters)) ? ()=>void handleClearSearch() : undefined}
-              onShortcuts={() => setShowShortcutsModal(true)} searchActions={!isUnifiedView && !isScheduledView && activeAccountId ? <SavedSearchMenu
-              key={`${activeAccountId}:${viewingAccountId ?? ''}`}
-              scope={`${activeAccountId}:${viewingAccountId ?? ''}`}
-              query={searchQuery} filters={searchFilters} mailboxId={searchMailboxId} mailboxes={viewMailboxes}
-              onApply={entry => {
-                clearSearchFilters(); setSearchFilters(entry.filters); setSearchQuery(entry.query); setSearchMailboxId(entry.mailboxId);
-                void runAdvancedSearchNow();
-              }} /> : undefined} />}
             {!isScheduledView && <MessageListTabs panelId={messageListPanelId} />}
             <WelcomeBanner />
 

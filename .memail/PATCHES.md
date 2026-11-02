@@ -88,3 +88,13 @@ Add each customization here. Include the relevant upstream files, the reason it 
 - `.memail/workspace-toolbar.tsx`, `saved-search-menu.tsx`: pane-width-responsive labels, quieter heading, and grouped native reading-layout and density controls. Focus/Side/Below map to existing settings without replacing native readers or resize behavior. Customize header stays visible during panel scrolling.
 - `.memail/rail-navigation.ts`, `components/layout/navigation-rail.tsx`: arrow/Home/End focus navigation, horizontal RTL support and disabled/hidden-item skipping. Normal Tab and link activation retain upstream semantics and leave guards. Collapsed custom-app buttons expose names and pressed state.
 - `components/layout/sidebar.tsx`, `.memail/theme/skin.mjs`: stable chrome selectors and scoped navigation insets/active treatment, preserving folder row density and virtual message geometry. No ReUI source or dependency added.
+
+
+## Native Memail workspace identity
+
+- `components/layout/navigation-rail.tsx`: opt-in workspace variant with visible app labels and larger dock targets; compact rails remain available. The standard app containers opt into an 80px dock. Nested /mail routes now correctly mark Mail active. Phone labels and quota text are more readable.
+- `components/mail/mail-app.tsx`: the workspace toolbar now spans list and reader, with search/results kept together in the list. The native regions remain mounted; their resize and mobile overlay logic is retained. AppMain carries a stable downstream styling marker.
+- `app/globals.css`: original native dock/workspace layout; dark/light dock foreground/background tokens, active and keyboard-focus states, and an inset desktop mail surface. No ReUI source is used.
+- `components/icons/memail-glyphs.tsx`: 52 primary Phosphor glyph adapters with direct SSR imports; explicit unfilled state remains visible, heavy numeric stroke selects bold, and SVG/ref props are forwarded. The popular named-icon table shares these glyphs. Remaining specialized Lucide and custom Tabler names remain compatible. MIT notice: `.memail/licenses/PHOSPHOR-MIT.txt`.
+- `.memail/theme/manifest.json`: 0.4 forest/neutral theme with light/dark contrast checks; user accent settings still take precedence.
+- `.memail/DESIGN-ROADMAP.md`: researched overhaul sequence. AI supports multiple providers conceptually and is explicitly deferred until UI/core acceptance; no AI provider is enabled.

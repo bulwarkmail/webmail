@@ -49,6 +49,7 @@
     "@opentelemetry/exporter-trace-otlp-http": "0.219.0",
     "@opentelemetry/resources": "2.8.0",
     "@opentelemetry/sdk-trace-node": "2.8.0",
+    "@phosphor-icons/react": "^2.1.10",
     "@prometheus-io/client": "0.16.1",
     "@tabler/icons-react": "^3.50.0",
     "@tanstack/react-virtual": "^3.14.23",

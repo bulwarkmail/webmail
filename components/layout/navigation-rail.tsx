@@ -47,6 +47,7 @@ interface NavItem {
 
 interface NavigationRailProps {
   orientation?: "vertical" | "horizontal";
+  variant?: "compact" | "workspace";
   collapsed?: boolean;
   className?: string;
   quota?: StorageQuota | null;
@@ -164,7 +165,7 @@ function StorageQuotaCircle({ quota, usagePercent }: { quota: StorageQuota; usag
             style={{ transition: "stroke-dasharray 0.3s" }}
           />
         </svg>
-        <span className="absolute text-[0.4375rem] font-bold text-muted-foreground tabular-nums">
+        <span className="absolute text-xs font-semibold text-muted-foreground tabular-nums">
           {Math.round(usagePercent)}%
         </span>
       </button>
@@ -211,6 +212,7 @@ function StorageQuotaCircle({ quota, usagePercent }: { quota: StorageQuota; usag
 
 export function NavigationRail({
   orientation = "vertical",
+  variant = "compact",
   collapsed = false,
   className,
   quota,
@@ -225,6 +227,7 @@ export function NavigationRail({
   onOpenSearch,
   adminActive = false,
 }: NavigationRailProps) {
+  const workspaceRail = variant === "workspace" && orientation === "vertical";
   const t = useTranslations("sidebar");
   const tGlobalSearch = useTranslations("global_search");
   // The phone tab bar: toasts sit above it.
@@ -356,7 +359,7 @@ export function NavigationRail({
     }
     if (href === "/") {
       // Mountain View's bottom bar marks the mail tab on mail routes too.
-      return pathname === "/" || pathname === "" || (mountainView && pathname.startsWith("/mail"));
+      return pathname === "/" || pathname === "" || pathname === "/mail" || pathname.startsWith("/mail/");
     }
     return pathname.startsWith(href);
   };
@@ -424,7 +427,7 @@ export function NavigationRail({
                   <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-0.5 rounded-full bg-primary" />
                 )}
               </div>
-              <span className="text-[0.625rem] font-medium leading-tight truncate max-w-full">{t(item.labelKey)}</span>
+              <span className="text-xs font-medium leading-tight truncate max-w-full">{t(item.labelKey)}</span>
             </Link>
           );
         })}
@@ -458,7 +461,7 @@ export function NavigationRail({
                   <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-0.5 rounded-full bg-primary" />
                 )}
               </div>
-              <span className="text-[0.625rem] font-medium leading-tight truncate max-w-full">{page.title}</span>
+              <span className="text-xs font-medium leading-tight truncate max-w-full">{page.title}</span>
             </Link>
           );
         })}
@@ -493,7 +496,7 @@ export function NavigationRail({
                   <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-0.5 rounded-full bg-primary" />
                 )}
               </div>
-              <span className="text-[0.625rem] font-medium leading-tight truncate max-w-full">{app.name}</span>
+              <span className="text-xs font-medium leading-tight truncate max-w-full">{app.name}</span>
             </button>
           );
         })}
@@ -524,7 +527,7 @@ export function NavigationRail({
                 />
               )}
             </span>
-            <span className="text-[0.625rem] font-medium leading-tight truncate max-w-full">{t("admin") || "Admin"}</span>
+            <span className="text-xs font-medium leading-tight truncate max-w-full">{t("admin") || "Admin"}</span>
             {updateLabel && <span className="sr-only">{`, ${updateLabel}`}</span>}
           </a>
         )}
@@ -549,7 +552,7 @@ export function NavigationRail({
               <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-0.5 rounded-full bg-primary" />
             )}
           </div>
-          <span className="text-[0.625rem] font-medium leading-tight truncate max-w-full">{t("settings")}</span>
+          <span className="text-xs font-medium leading-tight truncate max-w-full">{t("settings")}</span>
         </Link>
       </nav>
     );
@@ -559,7 +562,7 @@ export function NavigationRail({
 
   return (
     <div
-      data-memail-rail=""
+      data-memail-rail={workspaceRail ? "workspace" : "compact"}
       className={cn(
         "flex flex-col h-full",
         collapsed ? "items-center" : "",
@@ -594,7 +597,7 @@ export function NavigationRail({
             data-tour="nav-search"
             className={cn(
               "relative flex items-center gap-2.5 rounded-md transition-colors duration-150 cursor-pointer",
-              collapsed ? "justify-center w-10 h-10" : "px-2.5 text-sm",
+              workspaceRail ? "memail-dock-item" : collapsed ? "justify-center w-10 h-10" : "px-2.5 text-sm",
               "max-lg:min-h-[44px]",
               "text-muted-foreground hover:bg-muted hover:text-foreground"
             )}
@@ -602,7 +605,7 @@ export function NavigationRail({
             style={collapsed ? undefined : { paddingBlock: 'var(--density-sidebar-py)' }}
           >
             <Search className="w-[18px] h-[18px] flex-shrink-0" />
-            {!collapsed && <span className="truncate">{tGlobalSearch("title")}</span>}
+            {(!collapsed || workspaceRail) && <span className={workspaceRail ? "memail-dock-label" : "truncate"}>{tGlobalSearch("title")}</span>}
           </button>
         )}
         {visibleItems.map((item) => {
@@ -616,7 +619,9 @@ export function NavigationRail({
               data-tour={`nav-${item.id}`}
               className={cn(
                 "relative flex items-center gap-2.5 rounded-md transition-colors duration-150",
-                collapsed
+                workspaceRail
+                  ? "memail-dock-item"
+                  : collapsed
                   ? "justify-center w-10 h-10"
                   : "px-2.5 text-sm",
                 "max-lg:min-h-[44px]",
@@ -630,7 +635,7 @@ export function NavigationRail({
               style={collapsed ? undefined : { paddingBlock: 'var(--density-sidebar-py)' }}
             >
               <Icon className={cn("w-[18px] h-[18px] flex-shrink-0", isActive && "text-primary")} />
-              {!collapsed && <span className="truncate">{t(item.labelKey)}</span>}
+              {(!collapsed || workspaceRail) && <span className={workspaceRail ? "memail-dock-label" : "truncate"}>{t(item.labelKey)}</span>}
               {badgeShown(item) && (unreadCountStyle === 'dot' ? (
                 <span aria-hidden="true" data-testid="rail-unread-dot" className={cn(
                   "absolute w-2.5 h-2.5 rounded-full bg-red-500",
@@ -660,7 +665,9 @@ export function NavigationRail({
               data-plugin-page-link={`${page.pluginId}/${page.id}`}
               className={cn(
                 "relative flex items-center gap-2.5 rounded-md transition-colors duration-150",
-                collapsed
+                workspaceRail
+                  ? "memail-dock-item"
+                  : collapsed
                   ? "justify-center w-10 h-10"
                   : "px-2.5 text-sm",
                 "max-lg:min-h-[44px]",
@@ -674,7 +681,7 @@ export function NavigationRail({
               style={collapsed ? undefined : { paddingBlock: 'var(--density-sidebar-py)' }}
             >
               <PageIcon className={cn("w-[18px] h-[18px] flex-shrink-0", isActive && "text-primary")} />
-              {!collapsed && <span className="truncate">{page.title}</span>}
+              {(!collapsed || workspaceRail) && <span className={workspaceRail ? "memail-dock-label" : "truncate"}>{page.title}</span>}
             </Link>
           );
         })}
@@ -706,7 +713,9 @@ export function NavigationRail({
               }}
               className={cn(
                 "relative flex items-center gap-2.5 rounded-md transition-colors duration-150",
-                collapsed
+                workspaceRail
+                  ? "memail-dock-item"
+                  : collapsed
                   ? "justify-center w-10 h-10"
                   : "px-2.5 text-sm",
                 "max-lg:min-h-[44px]",
@@ -720,7 +729,7 @@ export function NavigationRail({
               style={collapsed ? undefined : { paddingBlock: 'var(--density-sidebar-py)' }}
             >
               {AppIcon ? <AppIcon className={cn("w-[18px] h-[18px] flex-shrink-0", isActive && "text-primary")} /> : null}
-              {!collapsed && <span className="truncate">{app.name}</span>}
+              {(!collapsed || workspaceRail) && <span className={workspaceRail ? "memail-dock-label" : "truncate"}>{app.name}</span>}
             </button>
           );
         })}
@@ -731,7 +740,9 @@ export function NavigationRail({
             onClick={onManageApps}
             className={cn(
               "relative flex items-center gap-2.5 rounded-md transition-colors duration-150",
-              collapsed
+              workspaceRail
+                ? "memail-dock-item"
+                : collapsed
                 ? "justify-center w-10 h-10"
                 : "px-2.5 text-sm",
               "max-lg:min-h-[44px]",
@@ -741,7 +752,7 @@ export function NavigationRail({
             style={collapsed ? undefined : { paddingBlock: 'var(--density-sidebar-py)' }}
           >
             <Plus className="w-[18px] h-[18px] flex-shrink-0" />
-            {!collapsed && <span className="truncate">{t("add_app")}</span>}
+            {(!collapsed || workspaceRail) && <span className={workspaceRail ? "memail-dock-label" : "truncate"}>{t("add_app")}</span>}
           </button>
         )}
       </nav>

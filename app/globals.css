@@ -1301,3 +1301,57 @@ optgroup {
     width: var(--mv-rail-peek-w);
   }
 }
+
+
+/* Memail's native application dock. Compact Pro/admin rails keep their layout. */
+.memail-app-rail { width: 5rem; border-inline-end: 0 !important; }
+[data-memail-rail="workspace"] {
+  --memail-dock-background: #202a25;
+  --memail-dock-foreground: #f4f7f3;
+  background: var(--memail-dock-background);
+  color: var(--memail-dock-foreground);
+}
+[data-memail-rail="workspace"] :is(a,button) {
+  color: color-mix(in srgb, var(--memail-dock-foreground) 76%, transparent);
+}
+[data-memail-rail="workspace"] :is(a,button):hover,
+[data-memail-rail="workspace"] [aria-current="page"] {
+  color: var(--memail-dock-foreground);
+  background: color-mix(in srgb, var(--memail-dock-foreground) 13%, transparent);
+}
+[data-memail-rail="workspace"] :is(a,button):focus-visible {
+  outline: 2px solid var(--memail-dock-foreground);
+  outline-offset: 2px;
+}
+[data-memail-rail="workspace"] .memail-dock-item {
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.375rem;
+  width: 4rem;
+  min-height: 4rem;
+  padding: 0.5rem 0.25rem;
+  border-radius: 0.875rem;
+}
+[data-memail-rail="workspace"] .memail-dock-item > svg { width: 1.5rem; height: 1.5rem; color: inherit; }
+.memail-dock-label { max-width: 100%; overflow: hidden; text-overflow: ellipsis; font-size: 0.75rem; line-height: 1rem; }
+[data-memail-rail="workspace"] .text-primary { color: inherit; }
+[data-memail-mail-workspace] { background: var(--color-muted); }
+[data-memail-mail-workspace] > header { background: var(--color-background); }
+[data-memail-mail-workspace] > div.relative { margin: 0.75rem; overflow: hidden; border: 1px solid var(--color-border); border-radius: 1rem; background: var(--color-background); }
+@media (width < 768px) {
+  [data-memail-mail-workspace] > div.relative { margin: 0; border: 0; border-radius: 0; }
+}
+
+.memail-app-rail.memail-app-rail [data-memail-rail="workspace"] [aria-current="page"] {
+  color: var(--memail-dock-foreground);
+  background: color-mix(in srgb, var(--memail-dock-foreground) 15%, transparent);
+  box-shadow: none;
+}
+[data-memail-rail="workspace"] .text-muted-foreground {
+  color: color-mix(in srgb, var(--memail-dock-foreground) 76%, transparent);
+}
+
+.dark [data-memail-rail="workspace"] {
+  --memail-dock-background: #101813;
+  --memail-dock-foreground: #e6f0e6;
+}

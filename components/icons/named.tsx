@@ -10,7 +10,8 @@
 // "show all" list opens.
 
 import { adaptIcon } from './adapt';
-import { Inbox, Focus, Newspaper, Mail, CalendarDays, Users, Folder, Settings, Search, Archive, Send, FileText, Trash2, CircleAlert } from 'lucide-react';
+import { Focus, Newspaper, CircleAlert } from 'lucide-react';
+import * as MemailGlyphs from './memail-glyphs';
 import { forwardRef, useEffect, useState } from 'react';
 import type { TablerIcon } from '@tabler/icons-react';
 import {
@@ -437,9 +438,9 @@ function lazyIcon(name: string): TablerIcon {
  * name. Unknown names render the world icon once the full set has loaded.
  */
 const WORKSPACE_ICONS: Record<string, TablerIcon> = {
-  inbox: adaptIcon(Inbox), focus: adaptIcon(Focus), news: adaptIcon(Newspaper), mail: adaptIcon(Mail), calendar: adaptIcon(CalendarDays),
-  users: adaptIcon(Users), folder: adaptIcon(Folder), settings: adaptIcon(Settings), search: adaptIcon(Search), archive: adaptIcon(Archive),
-  send: adaptIcon(Send), 'file-text': adaptIcon(FileText), trash: adaptIcon(Trash2), 'alert-circle': adaptIcon(CircleAlert),
+  inbox: MemailGlyphs.Inbox, focus: adaptIcon(Focus), news: adaptIcon(Newspaper), mail: MemailGlyphs.Mail, calendar: MemailGlyphs.CalendarDays,
+  users: MemailGlyphs.Users, folder: MemailGlyphs.Folder, settings: MemailGlyphs.Settings, search: MemailGlyphs.Search, archive: MemailGlyphs.Archive,
+  send: MemailGlyphs.Send, 'file-text': MemailGlyphs.FileText, trash: MemailGlyphs.Trash2, 'alert-circle': adaptIcon(CircleAlert),
 };
 
 export function iconForName(stored: string | null | undefined): TablerIcon | undefined {
