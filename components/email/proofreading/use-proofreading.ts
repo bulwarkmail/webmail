@@ -18,7 +18,7 @@ import { actionsFor, subscribeActions } from "@/lib/plugin-sandbox/actions";
 import { all as allActivePlugins, subscribe as subscribeActivePlugins } from "@/lib/plugin-sandbox/registry";
 import { replaceTextareaRange, type PlainOwnOptions } from "@/lib/plugin-sandbox/composer-edit";
 import { usePolicyStore } from "@/stores/policy-store";
-import { usePluginStore } from "@/stores/plugin-store";
+import { knownPlugins, subscribeKnownPlugins } from "@/lib/plugin-sandbox/known-plugins";
 import type { InstalledPlugin } from "@/lib/plugin-types";
 import { useSettingsStore } from "@/stores/settings-store";
 import {
@@ -48,7 +48,7 @@ export function policySettled(s: Pick<ReturnType<typeof usePolicyStore.getState>
 /** Plugins turned on that aren't running yet (still loading). */
 function startingPlugins(running: InstalledPlugin[]): InstalledPlugin[] {
   const up = new Set(running.map((p) => p.id));
-  return usePluginStore.getState().plugins.filter((p) => p.enabled && p.status !== 'error' && p.status !== 'disabled' && !up.has(p.id));
+  return knownPlugins().filter((p) => p.enabled && p.status !== 'error' && p.status !== 'disabled' && !up.has(p.id));
 }
 
 // The per-composer switch outlives a remount (pop-out, layout switch).
@@ -148,7 +148,7 @@ export function useProofreading({ composerId, sessionKey, editor, textareaRef, p
       subscribeCheckers(() => p.sync()),
       subscribeActions(() => p.gateChanged()),
       subscribeActivePlugins(() => p.gateChanged()),
-      usePluginStore.subscribe(() => p.gateChanged()),
+      subscribeKnownPlugins(() => p.gateChanged()),
       usePolicyStore.subscribe(() => p.gateChanged()),
       useSettingsStore.subscribe((s, prev) => {
         if (s.writingLanguage !== prev.writingLanguage) p.edited("now");
@@ -205,7 +205,7 @@ export function useProofreading({ composerId, sessionKey, editor, textareaRef, p
   // Underlines in the rich editor.
   const drawnRef = useRef("");
   useEffect(() => {
-    if (!editor || editor.isDestroyed || plainTextMode) return;
+    if (!editor || editor.isDestroyed || !editor.state || plainTextMode) return;
     const ranges = issues.map((i) => ({ key: i.key, from: i.from, to: i.to, kind: i.kind, text: i.annotation.text }));
     const signature = ranges.map((r) => `${r.key}@${r.from}`).join(",");
     if (signature === drawnRef.current) return;
@@ -217,7 +217,7 @@ export function useProofreading({ composerId, sessionKey, editor, textareaRef, p
   // and the list and the count follow.
   const [drawnKeys, setDrawnKeys] = useState<string[] | null>(null);
   useEffect(() => {
-    if (!editor || editor.isDestroyed || plainTextMode) { setDrawnKeys(null); return; }
+    if (!editor || editor.isDestroyed || !editor.state || plainTextMode) { setDrawnKeys(null); return; }
     const read = () => {
       const keys = drawnIssues(editor.state).map((r) => r.key);
       setDrawnKeys((prev) => (prev && prev.length === keys.length && prev.every((k, i) => k === keys[i]) ? prev : keys));

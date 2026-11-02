@@ -194,21 +194,21 @@ export function createTextCheckExtension(options: () => TextCheckOptions) {
 
 /** Put the checkers' issues on the editor, replacing what was there. */
 export function setTextIssues(editor: Editor, issues: TextIssueRange[]): void {
-  if (editor.isDestroyed) return;
+  if (editor.isDestroyed || !editor.state) return;
   const { tr } = editor.state;
   editor.view.dispatch(tr.setMeta(textCheckKey, { issues } satisfies Meta).setMeta('addToHistory', false));
 }
 
 /** Mark the issue whose popup is open (or none). */
 export function setActiveIssue(editor: Editor, key: string | null): void {
-  if (editor.isDestroyed) return;
+  if (editor.isDestroyed || !editor.state) return;
   const { tr } = editor.state;
   editor.view.dispatch(tr.setMeta(textCheckKey, { active: key } satisfies Meta).setMeta('addToHistory', false));
 }
 
 /** The issues drawn now, in document order, with their current ranges. */
-export function drawnIssues(state: EditorState): TextIssueRange[] {
-  const set = textCheckKey.getState(state)?.decos;
+export function drawnIssues(state: EditorState | undefined): TextIssueRange[] {
+  const set = state ? textCheckKey.getState(state)?.decos : undefined;
   if (!set) return [];
   return set.find().map((d) => {
     const spec = d.spec as IssueSpec;

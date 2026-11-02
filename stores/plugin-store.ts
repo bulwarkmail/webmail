@@ -1,6 +1,7 @@
 // Plugin store - manages installed plugins and lifecycle. Slot registrations
 // are owned by `lib/plugin-sandbox/registry` (per-iframe), not by the store.
 
+import { setKnownPlugins } from '@/lib/plugin-sandbox/known-plugins';
 import { cancelConnectFor, forgetCredentials } from '@/lib/plugin-sandbox/connect-dialog';
 import { create } from 'zustand';
 import { persist, type PersistStorage, type StorageValue } from 'zustand/middleware';
@@ -876,3 +877,7 @@ if (!IS_LITE) {
     },
   });
 }
+
+// The list for code that shouldn't import this store (lib/plugin-sandbox/known-plugins.ts).
+setKnownPlugins(usePluginStore.getState().plugins);
+usePluginStore.subscribe((state) => setKnownPlugins(state.plugins));
