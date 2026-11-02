@@ -1,0 +1,44 @@
+{
+  "id": "memail-focus-inbox",
+  "name": "Memail Focus Inbox",
+  "version": "0.1.0",
+  "author": "Saivra",
+  "description": "Read-only inbox views: all mail, starred or unread correspondence, and newsletters.",
+  "type": "ui-extension",
+  "entrypoint": "index.js",
+  "minAppVersion": "1.19.1",
+  "permissions": [
+    "ui:message-list-tabs",
+    "ui:commands"
+  ],
+  "settingsSchema": {
+    "enabled": {
+      "type": "boolean",
+      "label": "Show focus tabs",
+      "description": "Adds views to Inbox folders. Mail is never moved or relabeled.",
+      "default": true
+    },
+    "showNewsletters": {
+      "type": "boolean",
+      "label": "Show Newsletters view",
+      "description": "Matches messages with a List-Unsubscribe header. Starred newsletters also appear in Focus.",
+      "default": true
+    },
+    "showUnreadBadges": {
+      "type": "boolean",
+      "label": "Show unread counts",
+      "description": "Counts unread messages in each view, not total messages.",
+      "default": true
+    }
+  },
+  "locales": {
+    "en": {
+      "tab.all": "All inbox",
+      "tab.focus": "Focus",
+      "tab.newsletters": "Newsletters",
+      "action.hide": "Hide Memail focus tabs",
+      "action.show": "Show Memail focus tabs",
+      "error.otherTabs": "Another inbox category plugin is active. Memail focus tabs are paused; disable the other category plugin before showing them."
+    }
+  }
+}

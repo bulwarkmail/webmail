@@ -38,3 +38,7 @@ node .memail/package-theme.mjs
 
 Upload `out/memail-theme.zip` through the existing theme upload UI in Settings or Admin > Themes, then select Memail. An administrator can make it the default using the existing theme policy. Packaging does not change anyone's theme automatically. The theme changes semantic color tokens only; upstream layout, component sizes and animation remain intact.
 
+
+## Focus inbox plugin
+
+The phase 1 preview adds native All inbox, Focus and Newsletters views without mail mutations. Build it with `node .memail/package-focus-plugin.mjs`, then follow the [plugin installation and semantics](plugins/focus-inbox/README.md). It is an optional full-edition plugin, not enabled by the branding launcher.
