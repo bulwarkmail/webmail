@@ -32,7 +32,6 @@ import {
   Search,
   Settings,
   Square,
-  Star,
   Users,
 } from "@/components/icons";
 import { cn } from "@/lib/cn";
@@ -75,7 +74,7 @@ function TextLine({ className, w, bar = "h-3" }: { className?: string; w: string
 export function FolderRowsSkeleton({ count = 7 }: { count?: number }) {
   return (
     // On the sidebar's panel colour, which dark themes share with the shapes.
-    <div aria-hidden="true" className="dark:[&_.sk-shape]:bg-foreground/10">
+    <div aria-hidden="true" className="sk-lift-dark">
       {repeat(count, (i) => (
         <div
           className={cn(
@@ -118,7 +117,7 @@ function SidebarSkeleton({ embedded }: { embedded: boolean }) {
       className={cn(
         "relative flex flex-col h-full border-e overflow-hidden bg-secondary border-border",
         // Dark themes draw the panel in the shapes' own colour: lift them off it.
-        "dark:[&_.sk-shape]:bg-foreground/10",
+        "sk-lift-dark",
         !embedded && "lg:mv:bg-[var(--mv-canvas)] lg:mv:border-transparent",
       )}
     >
@@ -172,7 +171,7 @@ interface RowOptions {
 
 /** Classes for the avatar, or null where the density has none. */
 function avatarClass(o: RowOptions): string | null {
-  if (o.density === undefined) return "boot-xc:hidden";
+  if (o.density === undefined) return "boot-density-xc:hidden";
   return o.density === "extra-compact" ? null : "";
 }
 
@@ -182,37 +181,49 @@ function previewClass(o: RowOptions): string | null {
   return o.preview === false || o.density === "compact" || o.density === "extra-compact" ? null : "";
 }
 
+/*
+ * The rows below are drawn dozens of times, so they use the short classes in
+ * app/boot-skeleton.css (mail section) for what every row repeats: sk-mrow
+ * (the row and its rule), sk-mcell (the cell: the density's padding and gap,
+ * and its minimum height), sk-mav (the avatar's column) and sk-ml (a line of
+ * text, with its bar).
+ */
+
+/** One line of row text, as tall as the real line; `w` is the bar's width. */
+function L({ className, w }: { className?: string; w: string }) {
+  return (
+    <span className={cn("sk-ml", className)}>
+      <span className="sk-shape" style={{ width: w }} />
+    </span>
+  );
+}
+
 /** A stacked row (ThreadListItem on phones and in the split list). */
 function StackedRow({ i, o }: { i: number; o: RowOptions }) {
   const avatar = avatarClass(o);
   const preview = previewClass(o);
   return (
-    <div className="border-b border-border max-md:mv:border-b-transparent">
-      <div className="bg-background" style={{ minHeight: "var(--list-item-height)" }}>
-        <div
-          className="px-3 flex items-start"
-          style={{ gap: "var(--density-item-gap)", paddingBlock: "var(--density-item-py)" }}
-        >
-          {avatar !== null && (
-            <span className={cn("flex flex-shrink-0 items-center self-stretch", avatar)}>
-              <Circle className="w-10 h-10" />
+    <div className="sk-mrow max-md:mv:border-b-transparent">
+      <div className="sk-mcell sk-mcell-min">
+        {avatar !== null && (
+          <span className={cn("sk-mav", avatar)}>
+            <span className="sk-shape block rounded-full w-10 h-10" />
+          </span>
+        )}
+        <span className="block flex-1 min-w-0">
+          <span className="flex items-center justify-between gap-2 mb-1">
+            <L className="text-sm flex-1" w={textWidth(i, 30, 30)} />
+            <L className="text-xs w-10" w="100%" />
+          </span>
+          <L className="mb-1 text-sm" w={textWidth(i + 3, 55, 35)} />
+          {preview !== null && (
+            <span className={cn("block", preview)}>
+              {/* Mountain View's phone rows keep the preview to one line, beside a 32px star. */}
+              <L className="text-sm leading-relaxed max-md:mv:h-8" w="95%" />
+              <L className="text-sm leading-relaxed max-md:mv:hidden" w={textWidth(i + 5, 45, 40)} />
             </span>
           )}
-          <span className="block flex-1 min-w-0">
-            <span className="flex items-center justify-between gap-2 mb-1">
-              <TextLine className="text-sm flex-1" w={textWidth(i, 30, 30)} />
-              <TextLine className="text-xs w-10 flex-shrink-0" w="100%" />
-            </span>
-            <TextLine className="mb-1 text-sm" w={textWidth(i + 3, 55, 35)} />
-            {preview !== null && (
-              <span className={cn("block", preview)}>
-                <TextLine className="text-sm leading-relaxed" w="95%" />
-                {/* Mountain View's phone rows keep the preview to one line. */}
-                <TextLine className="text-sm leading-relaxed max-md:mv:hidden" w={textWidth(i + 5, 45, 40)} />
-              </span>
-            )}
-          </span>
-        </div>
+        </span>
       </div>
     </div>
   );
@@ -222,25 +233,18 @@ function StackedRow({ i, o }: { i: number; o: RowOptions }) {
 function OneLineRow({ i, o }: { i: number; o: RowOptions }) {
   const avatar = avatarClass(o);
   return (
-    <div className="border-b border-border">
-      <div className="bg-background">
-        <div
-          className="px-3 flex items-center"
-          style={{ gap: "var(--density-item-gap)", paddingBlock: "var(--density-item-py)" }}
-        >
-          {avatar !== null && (
-            <span className={cn("flex flex-shrink-0 items-center self-stretch", avatar)}>
-              <Circle className="w-8 h-8" />
-            </span>
-          )}
-          <span className="flex flex-1 min-w-0 items-center justify-between gap-3">
-            <span className="flex min-w-0 flex-1 items-center gap-3">
-              <TextLine className="w-32 shrink-0 text-sm lg:w-40" w={textWidth(i, 50, 40)} />
-              <TextLine className="min-w-0 flex-1 text-sm" w={textWidth(i + 2, 35, 45)} />
-            </span>
-            <TextLine className="w-10 shrink-0 text-xs" w="100%" />
+    <div className="sk-mrow">
+      <div className="sk-mcell items-center">
+        {avatar !== null && (
+          <span className={cn("sk-mav", avatar)}>
+            <span className="sk-shape block rounded-full w-8 h-8" />
           </span>
-        </div>
+        )}
+        <span className="flex flex-1 min-w-0 gap-3">
+          <L className="w-32 lg:w-40 text-sm" w={textWidth(i, 50, 40)} />
+          <L className="flex-1 text-sm" w={textWidth(i + 2, 35, 45)} />
+          <L className="w-10 text-xs self-center" w="100%" />
+        </span>
       </div>
     </div>
   );
@@ -249,29 +253,18 @@ function OneLineRow({ i, o }: { i: number; o: RowOptions }) {
 /** Mountain View's row on a tablet or desktop: check box and star, then one 40px line. */
 function MvRow({ i }: { i: number }) {
   return (
-    <div className="border-b border-border">
-      <div className="bg-[var(--mv-row-read,var(--color-background))]">
-        <div className="px-3 flex items-center min-h-10" style={{ gap: "var(--density-item-gap)" }}>
-          <span className="flex flex-shrink-0 items-start self-stretch text-muted-foreground">
-            <span className="-ms-3 ps-3 pe-0.5 flex h-10 items-center">
-              <span className="p-1">
-                <Square className="w-[18px] h-[18px]" />
-              </span>
-            </span>
-            <span className="flex h-10 items-center">
-              <span className="p-1">
-                <Star className="w-[18px] h-[18px] text-muted-foreground/60" />
-              </span>
-            </span>
-          </span>
-          <span className="flex flex-1 min-w-0 min-h-10 items-center justify-between gap-3">
-            <span className="flex min-w-0 flex-1 items-center gap-3">
-              <TextLine className="w-32 shrink-0 text-sm lg:w-40" w={textWidth(i, 45, 40)} />
-              <TextLine className="min-w-0 flex-1 text-sm" w={textWidth(i + 2, 35, 45)} />
-            </span>
-            <TextLine className="w-10 shrink-0 text-xs" w="100%" />
-          </span>
-        </div>
+    <div className="sk-mrow">
+      <div className="sk-mcell items-center py-0 min-h-10">
+        {/* The check box and the star, 26px each (an 18px icon in p-1). */}
+        <span className="flex flex-shrink-0 items-center gap-[2px]">
+          <span className="block w-3.5 h-3.5 m-[6px] rounded-[3px] border-2 border-muted-foreground/70" />
+          <span className="sk-shape block w-3.5 h-3.5 m-[6px] rounded-full" />
+        </span>
+        <span className="flex flex-1 min-w-0 gap-3">
+          <L className="w-32 lg:w-40 text-sm" w={textWidth(i, 45, 40)} />
+          <L className="flex-1 text-sm" w={textWidth(i + 2, 35, 45)} />
+          <L className="w-10 text-xs self-center" w="100%" />
+        </span>
       </div>
     </div>
   );
@@ -375,7 +368,7 @@ function MobileHeaderSkeleton() {
         "border-b border-border bg-background px-4",
         "mv:mx-2 mv:mt-2 mv:mb-1 mv:rounded-full mv:border-0 mv:bg-muted mv:px-2 mv:shadow-sm",
         // Mountain View's pill is the shapes' own colour: lift them off it.
-        "mv:[&_.sk-shape]:bg-foreground/10",
+        "sk-lift-mv",
       )}
     >
       <span className="flex items-center gap-2 min-w-0 flex-shrink-0">
@@ -384,7 +377,7 @@ function MobileHeaderSkeleton() {
         </span>
         <TextLine className="max-md:hidden w-28 font-semibold text-lg" w="100%" bar="h-4" />
       </span>
-      <span className="md:hidden flex-1 min-w-0 h-10 flex items-center gap-2 rounded-full pe-1 mx-1 bg-muted ps-3 mv:mx-0 mv:bg-transparent mv:ps-2 text-muted-foreground [&_.sk-shape]:bg-foreground/10">
+      <span className="md:hidden flex-1 min-w-0 h-10 flex items-center gap-2 rounded-full pe-1 mx-1 bg-muted ps-3 mv:mx-0 mv:bg-transparent mv:ps-2 text-muted-foreground sk-lift">
         <Search className="h-4 w-4 flex-shrink-0" />
         <TextLine className="flex-1 text-sm" w="7rem" />
       </span>

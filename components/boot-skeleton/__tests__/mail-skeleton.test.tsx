@@ -47,7 +47,7 @@ describe('mail skeleton', () => {
 
   it('draws every shape for the boot page and lets the boot attributes pick', () => {
     const rows = html(<MailListRowsSkeleton />);
-    expect(rows.querySelector('.boot-xc\\:hidden')).not.toBeNull();
+    expect(rows.querySelector('.boot-density-xc\\:hidden')).not.toBeNull();
     expect(rows.querySelector('.boot-dense\\:hidden')).not.toBeNull();
     expect(rows.querySelector('.md\\:mv\\:block')).not.toBeNull();
   });

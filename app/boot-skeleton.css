@@ -95,8 +95,9 @@
 /* mail */
 
 /* List density (the density setting, data-boot-density): extra-compact rows
+   (boot-density-xc, the same variant contacts uses: drop one copy on merging)
    have no avatar, compact and extra-compact ones no preview. */
-@custom-variant boot-xc (&:where([data-boot-density="extra-compact"] *));
+@custom-variant boot-density-xc (&:where([data-boot-density="extra-compact"] *));
 @custom-variant boot-dense (&:where([data-boot-density="compact"] *, [data-boot-density="extra-compact"] *));
 /* Message previews turned off (showPreview). */
 @custom-variant boot-no-preview (&:where([data-boot-preview="off"] *));
@@ -104,3 +105,56 @@
 @custom-variant boot-std (&:where(:root:not([data-interface-layout="mountain-view"]) *));
 /* Mountain View's side panel shows only with calendar or contacts. */
 @custom-variant boot-no-mv-side (&:where([data-boot-rail]:not([data-boot-rail~="calendar"]):not([data-boot-rail~="contacts"]) *));
+
+/* Message list rows (MailListRowsSkeleton), in short classes because a
+   skeleton draws dozens of them. Geometry as ThreadListItem's: a 1px rule,
+   the cell's density padding and gap, its minimum height on stacked rows.
+   In the components layer, so utilities on the same element still win. */
+@layer components {
+  .sk-mrow {
+    border-bottom: 1px solid var(--color-border);
+    background-color: var(--color-background);
+  }
+  .sk-mcell {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--density-item-gap);
+    padding: var(--density-item-py) 0.75rem;
+  }
+  .sk-mcell-min {
+    min-height: var(--list-item-height);
+  }
+  /* The avatar's column: centred on the row. */
+  .sk-mav {
+    display: flex;
+    flex-shrink: 0;
+    align-self: stretch;
+    align-items: center;
+  }
+  /* A line of text as tall as the real one (font size and leading from its
+     classes), with its bar centred on it. */
+  .sk-ml {
+    position: relative;
+    display: block;
+    height: 1lh;
+  }
+  .sk-ml > .sk-shape {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    height: 0.75rem;
+    margin-block: auto;
+    border-radius: 0.25rem;
+  }
+}
+
+/* Panels drawn in the shapes' own colour (the sidebar in dark themes, the
+   Mountain View phone header): lift the shapes off them. Below the contrast
+   rules' specificity, and not in forced colours. */
+@media not (forced-colors: active) {
+  :where(.dark) .sk-lift-dark .sk-shape,
+  :where([data-interface-layout="mountain-view"]) .sk-lift-mv .sk-shape,
+  .sk-lift .sk-shape {
+    background-color: color-mix(in oklab, var(--color-foreground) 10%, transparent);
+  }
+}

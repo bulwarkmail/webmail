@@ -182,10 +182,6 @@ export function MvTopBarSkeleton({ search = true, className }: { search?: boolea
         <span className={round}>
           <Grid3x3 className="w-5 h-5" />
         </span>
-        {/* The account switcher. */}
-        <span className="ms-1 flex items-center justify-center w-10 h-10 pointer-coarse:w-11 pointer-coarse:h-11">
-          <Circle className="w-8 h-8" />
-        </span>
       </div>
     </div>
   );
