@@ -236,3 +236,120 @@
 
 /* /contacts/new: the new-contact form (data-boot-pane="create"). */
 @custom-variant boot-create (&:where([data-boot-pane="create"] *));
+
+/* calendar */
+
+/* Week numbers beside the sidebar's mini month (showWeekNumbers). */
+@custom-variant boot-cal-weeknums (&:where([data-boot-cal-weeknums="on"] *));
+
+/* Calendar tasks are on (enableCalendarTasks): a view pill and a sidebar row. */
+@custom-variant boot-cal-tasks-on (&:where([data-boot-cal-tasks="on"] *));
+
+/* The views measure their pane to size their rows; the skeleton does the
+   same with the pane as a size container. --sk-head is the header's
+   offsetHeight (whole pixels, as the views read it). */
+.sk-cal-view {
+  container-type: size;
+}
+.sk-cal-week,
+.sk-cal-day {
+  /* pt-2 + weekday line + gap-0.5 + date circle + pb-1.5 + border */
+  --sk-head: round(nearest, 3.5rem + 1.03125rem + 1px, 1px);
+  --sk-hour-min: 60px;
+  /* fillHourHeight takes the fitted height from ceil(min * 0.9) up. */
+  --sk-hour-floor: 54px;
+  --sk-hour: var(--sk-hour-min);
+  --sk-shift: 0px;
+}
+.sk-cal-day {
+  --sk-hour-min: 64px;
+  --sk-hour-floor: 58px;
+}
+.sk-cal-month {
+  /* py-2 + text-xs line + border */
+  --sk-head: calc(2rem + 1px);
+  --sk-week-min: 146px;
+  --sk-week: var(--sk-week-min);
+}
+@media (width < 48rem) {
+  .sk-cal-week {
+    --sk-head: round(nearest, 3rem + 1.03125rem + 1px, 1px);
+  }
+  .sk-cal-month {
+    --sk-head: round(nearest, 0.75rem + 1.03125rem + 1px, 1px);
+    --sk-week-min: 52px;
+  }
+}
+@supports (height: round(down, 1.5px, 1px)) and (height: 1cqh) {
+  .sk-cal-week,
+  .sk-cal-day {
+    /* clientHeight, a whole number of pixels */
+    --sk-pane: round(nearest, 100cqh, 1px);
+    --sk-fit: round(down, (var(--sk-pane) - var(--sk-head)) / var(--boot-cal-hours, 12), 1px);
+    --sk-hour: max(var(--sk-fit), clamp(0px, (var(--sk-hour-floor) - var(--sk-fit)) * 1000, var(--sk-hour-min)));
+    /* The scroll the grid opens at: an hour before now, at most to the end. */
+    --sk-shift: clamp(
+      0px,
+      var(--boot-cal-scroll, -1) * var(--sk-hour-min) - 8px,
+      var(--boot-cal-hours, 12) * var(--sk-hour) - (var(--sk-pane) - var(--sk-head))
+    );
+  }
+  .sk-cal-month {
+    --sk-week: max(var(--sk-week-min), round(down, (round(nearest, 100cqh, 1px) - var(--sk-head)) / 6, 1px));
+  }
+}
+.sk-cal-hours {
+  height: calc(var(--boot-cal-hours, 12) * var(--sk-hour));
+}
+.sk-cal-hours > * {
+  top: calc(-1 * var(--sk-shift));
+}
+.sk-cal-hour {
+  height: var(--sk-hour);
+}
+/* The slots' border-b border-border/50, one per hour, as a background. */
+.sk-cal-slots {
+  background-image: linear-gradient(
+    to bottom,
+    transparent calc(var(--sk-hour) - 1px),
+    color-mix(in oklab, var(--color-border) 50%, transparent) calc(var(--sk-hour) - 1px)
+  );
+  background-size: 100% var(--sk-hour);
+}
+/* A range that starts at midnight leaves its first hour unlabelled. */
+.sk-cal-first-label {
+  opacity: min(1, var(--boot-cal-start, 8));
+}
+/* The all-hours toggle shows while the hours are limited. */
+.sk-cal-hours-toggle {
+  opacity: min(1, 24 - var(--boot-cal-hours, 12));
+}
+.sk-cal-month-week {
+  height: var(--sk-week);
+}
+.sk-cal-mini-days {
+  height: calc(var(--boot-cal-mini-rows, 6) * 1.75rem);
+}
+@media (pointer: coarse) {
+  .sk-cal-mini-days {
+    height: calc(var(--boot-cal-mini-rows, 6) * 2.75rem);
+  }
+}
+/* Week columns: floor((pane - gutter) / columns), at least 80px; 120px on
+   phones (calendar-week-view.tsx, measureColWidth). Columns past the pane
+   are the next days of the strip, cut off. */
+.sk-cal-cols {
+  --sk-col: calc((100cqw - 3.5rem) / var(--boot-cal-cols, 7));
+  grid-auto-flow: column;
+  grid-auto-columns: var(--sk-col);
+}
+@supports (width: round(down, 1.5px, 1px)) and (width: 1cqw) {
+  .sk-cal-cols {
+    --sk-col: max(80px, round(down, (100cqw - 3.5rem) / var(--boot-cal-cols, 7), 1px));
+  }
+}
+@media (width < 48rem) {
+  .sk-cal-cols {
+    --sk-col: 120px;
+  }
+}

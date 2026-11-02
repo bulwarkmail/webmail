@@ -298,7 +298,44 @@ export function applyBootLayout(root: HTMLElement, c: BootLayoutConfig): void {
       hours = end - start;
     }
     root.style.setProperty('--boot-cal-hours', String(hours));
-  } else mark('calendar-view', null);
+    var firstHour = hours === 24 ? 0 : (start as number);
+    root.style.setProperty('--boot-cal-start', String(firstHour));
+    // The wall clock in the calendar's time zone (lib/timezone.ts, displayNow).
+    var now = new Date();
+    var clock = [now.getFullYear(), now.getMonth() + 1, now.getDate(), now.getHours()];
+    if (typeof s.timeZone === 'string' && s.timeZone && s.timeZone !== 'auto') {
+      try {
+        var parts = new Intl.DateTimeFormat('en-US', {
+          timeZone: s.timeZone, year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', hourCycle: 'h23',
+        }).formatToParts(now);
+        var names = ['year', 'month', 'day', 'hour'];
+        for (var p = 0; p < parts.length; p++) {
+          var at = names.indexOf(parts[p].type);
+          if (at !== -1) clock[at] = Number(parts[p].value) % (at === 3 ? 24 : 100000);
+        }
+      } catch { /* an unknown zone: the browser's own, as resolveTimeZone does */ }
+    }
+    // The hour row a time grid opens at (hooks/use-display-hours.ts): an hour
+    // before now when now is inside the shown hours, else the top (-1).
+    var nowHour = clock[3];
+    root.style.setProperty('--boot-cal-scroll', String(nowHour >= firstHour && nowHour < firstHour + hours ? nowHour - 1 - firstHour : -1));
+    // Week rows of the sidebar's mini month: the linked date's month, else
+    // this one (calendar-app.tsx, miniMonth).
+    var linkDate = /^\d{4}-\d{2}-\d{2}$/.test(seg[2] || '') ? seg[2] : /^\d{4}-\d{2}-\d{2}$/.test(view) ? view : '';
+    var year = linkDate ? Number(linkDate.slice(0, 4)) : clock[0];
+    var month = linkDate ? Number(linkDate.slice(5, 7)) : clock[1];
+    var weekStart = s.firstDayOfWeek === 0 ? 0 : s.firstDayOfWeek === 6 ? 6 : 1;
+    var lead = (new Date(year, month - 1, 1).getDay() - weekStart + 7) % 7;
+    var rows = Math.ceil((lead + new Date(year, month, 0).getDate()) / 7);
+    root.style.setProperty('--boot-cal-mini-rows', String(rows >= 4 && rows <= 6 ? rows : 6));
+    mark('cal-weeknums', s.showWeekNumbers === true ? 'on' : null);
+    // Tasks add a view pill and a sidebar row (enableCalendarTasks).
+    mark('cal-tasks', s.enableCalendarTasks === true ? 'on' : null);
+  } else {
+    mark('calendar-view', null);
+    mark('cal-weeknums', null);
+    mark('cal-tasks', null);
+  }
 
   // --- Sizes the user dragged ------------------------------------------
   var widths = parse(readLocal('column-widths')) || {};

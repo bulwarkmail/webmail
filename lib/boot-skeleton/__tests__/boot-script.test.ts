@@ -251,6 +251,87 @@ describe('boot script: calendar', () => {
     boot('/en/calendar');
     expect(attr('collapsed')).toBe('calendar');
   });
+
+  it('gives the first shown hour, 0 for the whole day', () => {
+    boot('/en/calendar/week');
+    expect(cssVar('--boot-cal-start')).toBe('8');
+    settings({ calendarDayStartHour: 6, calendarDayEndHour: 22 });
+    boot('/en/calendar/week');
+    expect(cssVar('--boot-cal-start')).toBe('6');
+    settings({ calendarLimitHours: false, calendarDayStartHour: 6, calendarDayEndHour: 22 });
+    boot('/en/calendar/week');
+    expect(cssVar('--boot-cal-start')).toBe('0');
+  });
+
+  describe('with a fixed clock', () => {
+    afterEach(() => vi.useRealTimers());
+
+    it('opens the hour grid an hour before now, at the top when now is outside the shown hours', () => {
+      vi.useFakeTimers({ toFake: ['Date'] });
+      vi.setSystemTime(new Date(2026, 10, 4, 15, 30));
+      boot('/en/calendar/week');
+      expect(cssVar('--boot-cal-scroll')).toBe('6');
+      settings({ calendarLimitHours: false });
+      boot('/en/calendar/day');
+      expect(cssVar('--boot-cal-scroll')).toBe('14');
+      vi.setSystemTime(new Date(2026, 10, 4, 21, 0));
+      settings({});
+      boot('/en/calendar/week');
+      expect(cssVar('--boot-cal-scroll')).toBe('-1');
+    });
+
+    it('reads the clock in the time zone the settings name', () => {
+      vi.useFakeTimers({ toFake: ['Date'] });
+      vi.setSystemTime(new Date(Date.UTC(2026, 10, 4, 14, 0)));
+      settings({ calendarLimitHours: false, timeZone: 'Asia/Tokyo' });
+      boot('/en/calendar/week');
+      // 23:00 in Tokyo.
+      expect(cssVar('--boot-cal-scroll')).toBe('22');
+      settings({ calendarLimitHours: false, timeZone: 'Not/AZone' });
+      boot('/en/calendar/week');
+      expect(cssVar('--boot-cal-scroll')).toBe(String(new Date().getHours() - 1));
+    });
+
+    it('counts the mini month rows of the linked month, else this one', () => {
+      vi.useFakeTimers({ toFake: ['Date'] });
+      vi.setSystemTime(new Date(2026, 1, 10, 12, 0));
+      // February 2026 starts on a Sunday and has 28 days.
+      boot('/en/calendar');
+      expect(cssVar('--boot-cal-mini-rows')).toBe('5');
+      settings({ firstDayOfWeek: 0 });
+      boot('/en/calendar');
+      expect(cssVar('--boot-cal-mini-rows')).toBe('4');
+      // November 2026 starts on a Sunday: six rows from Monday, five from Sunday.
+      settings({});
+      boot('/en/calendar/week/2026-11-04');
+      expect(cssVar('--boot-cal-mini-rows')).toBe('6');
+      boot('/en/calendar/2026-11-04');
+      expect(cssVar('--boot-cal-mini-rows')).toBe('6');
+      settings({ firstDayOfWeek: 0 });
+      boot('/en/calendar/week/2026-11-04');
+      expect(cssVar('--boot-cal-mini-rows')).toBe('5');
+    });
+  });
+
+  it('marks week numbers in the mini month', () => {
+    boot('/en/calendar');
+    expect(attr('cal-weeknums')).toBeNull();
+    settings({ showWeekNumbers: true });
+    boot('/en/calendar');
+    expect(attr('cal-weeknums')).toBe('on');
+    boot('/en/mail');
+    expect(attr('cal-weeknums')).toBeNull();
+  });
+
+  it('marks calendar tasks as on', () => {
+    boot('/en/calendar');
+    expect(attr('cal-tasks')).toBeNull();
+    settings({ enableCalendarTasks: true });
+    boot('/en/calendar');
+    expect(attr('cal-tasks')).toBe('on');
+    boot('/en/contacts');
+    expect(attr('cal-tasks')).toBeNull();
+  });
 });
 
 describe('boot script: settings', () => {

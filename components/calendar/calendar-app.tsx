@@ -21,7 +21,9 @@ import { toast } from "@/stores/toast-store";
 import { useIsDesktop, useIsMobile } from "@/hooks/use-media-query";
 import { useAccountPrincipalEmails } from "@/hooks/use-account-principal-emails";
 import { Button } from "@/components/ui/button";
-import { PaneSpinner, Spinner } from "@/components/ui/spinner";
+import { CalendarSkeleton, CalendarSkeletonBody, CalendarViewSkeleton, calendarSkeletonText } from "@/components/boot-skeleton/calendar-skeleton";
+import { SkeletonRegion } from "@/components/boot-skeleton/kit";
+import { useSkeletonLabels } from "@/components/boot-skeleton/use-skeleton-labels";
 import { CalendarToolbar } from "@/components/calendar/calendar-toolbar";
 import { CalendarMonthView } from "@/components/calendar/calendar-month-view";
 import { CalendarWeekView } from "@/components/calendar/calendar-week-view";
@@ -150,6 +152,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
   const describeError = useCalendarErrorMessage();
   const tSidebar = useTranslations("sidebar");
   useDocumentTitle(tSidebar("calendar"));
+  const skeletonLabels = useSkeletonLabels();
   const tWebcalAction = useTranslations("calendar.webcal_action");
   const { demoMode } = useConfig();
   // Subscriptions fetch the feed through /api/fetch-ical, which the demo has no
@@ -1845,13 +1848,27 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     </Dialog>
   ) : null;
 
-  if (!isAuthenticated) return null;
+  // Until the session says what the account has, the page is drawn as the
+  // skeleton the server sent (components/boot-skeleton): the same markup, so
+  // nothing moves while the sign-in is restored or the redirects decide.
+  const skeletonText = calendarSkeletonText(t);
+  const skeleton = isEmbedded ? (
+    <SkeletonRegion surface="calendar" label={skeletonLabels.label} className="flex flex-col h-full">
+      <CalendarSkeletonBody embedded text={skeletonText} />
+    </SkeletonRegion>
+  ) : (
+    <CalendarSkeleton label={skeletonLabels.label} labels={skeletonLabels.labels} text={skeletonText} />
+  );
+  if (!isAuthenticated) return skeleton;
+  // Turned off by policy: nothing, while the effect above leaves for mail.
   if (!calendarEnabled) return null;
-  if (!supportsCalendar) return renderWebcalAccountPicker();
+  if (!supportsCalendar) return renderWebcalAccountPicker() ?? skeleton;
 
   const renderView = () => {
+    // The calendars are loading: the view's grid in the skeleton's shapes,
+    // where the real one is about to be drawn.
     if (isLoading && calendars.length === 0) {
-      return <PaneSpinner label={t("status.loading_calendars")} className="flex-1" />;
+      return <CalendarViewSkeleton view={normalizedViewMode} label={t("status.loading_calendars")} text={skeletonText} />;
     }
 
     const viewContent = (() => {
@@ -2013,10 +2030,11 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
           <CalendarLoadErrorNotice onRetry={retryEventsLoad} />
         )}
         {viewContent}
+        {/* The first events: the grid is drawn already and they fill in on
+            it, so this is said rather than shown (a dimmed grid with a
+            spinner flashed between the skeleton and the events). */}
         {isLoadingEvents && calendars.length > 0 && events.length === 0 && (
-          <div className="absolute inset-0 bg-background/50 flex items-center justify-center pointer-events-none">
-            <Spinner label={t("status.loading_events")} />
-          </div>
+          <span role="status" className="sr-only">{t("status.loading_events")}</span>
         )}
       </div>
     );
