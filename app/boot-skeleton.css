@@ -351,6 +351,8 @@
 @media (width < 48rem) {
   .sk-cal-cols {
     --sk-col: 120px;
+  }
+}
 
 /* mail */
 
