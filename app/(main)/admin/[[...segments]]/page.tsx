@@ -14,6 +14,7 @@ import { OrgTemplatesPage } from '../_pages/org-templates';
 import { OrgSecurityPage } from '../_pages/org-security';
 import { OrgSharingPage } from '../_pages/org-sharing';
 import { OrgLabelsPage } from '../_pages/org-labels';
+import { OrgProofreadingPage } from '../_pages/org-proofreading';
 import { OrgCalendarsPage } from '../_pages/org-calendars';
 import { OrgNoticesPage } from '../_pages/org-notices';
 import { OrgDevicesPage } from '../_pages/org-devices';
@@ -57,6 +58,7 @@ export default function AdminPage() {
     case 'org-security': return <OrgSecurityPage />;
     case 'org-sharing': return <OrgSharingPage />;
     case 'org-labels': return <OrgLabelsPage />;
+    case 'org-proofreading': return <OrgProofreadingPage />;
     case 'org-calendars': return <OrgCalendarsPage />;
     case 'org-notices': return <OrgNoticesPage />;
     case 'org-devices': return <OrgDevicesPage />;

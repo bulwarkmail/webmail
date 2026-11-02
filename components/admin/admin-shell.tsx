@@ -30,6 +30,7 @@ import {
   Store,
   SwatchBook,
   Tag,
+  SpellCheck,
   X,
   type AppIcon,
 } from '@/components/icons';
@@ -60,6 +61,7 @@ const PAGE_ICONS: Record<AdminPageId, AppIcon> = {
   'org-security': ShieldCheck,
   'org-sharing': Share2,
   'org-labels': Tag,
+  'org-proofreading': SpellCheck,
   'org-calendars': CalendarDays,
   'org-notices': Bell,
   'org-devices': Smartphone,

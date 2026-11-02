@@ -23,6 +23,7 @@ export const ADMIN_PAGE_IDS = [
   'org-security',
   'org-sharing',
   'org-labels',
+  'org-proofreading',
   'org-calendars',
   'org-notices',
   'org-devices',
@@ -198,6 +199,16 @@ export const ADMIN_PAGES: readonly AdminPageDef[] = [
     keywords: 'classification label sensitivity confidential internal public vs-nfd sio-label header subject prefix required',
     sections: [
       { id: 'labels', title: 'Classification labels', keywords: 'labels presets default required header prefix colour' },
+    ],
+  },
+  {
+    id: 'org-proofreading',
+    label: 'Proofreading',
+    description: 'Spelling and grammar checks while users write: required, off, or their choice',
+    group: 'organisation',
+    keywords: 'proofreading spelling grammar spell check languagetool writing language mandatory required',
+    sections: [
+      { id: 'proofreading', title: 'Proofreading', keywords: 'checker plugin required lock language force' },
     ],
   },
   {
