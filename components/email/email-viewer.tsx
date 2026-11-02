@@ -4236,7 +4236,7 @@ ${printWatermark ? printWatermark.html : ''}
         )}
         {!isScheduled && !isDraft && !mvViewer && (<>
         <Button
-          variant="ghost"
+          variant="default"
           size="sm"
           onClick={() => onReply?.()}
           data-overflow-item
@@ -4676,7 +4676,7 @@ ${printWatermark ? printWatermark.html : ''}
       </div>
     )}
     {/* Main email content */}
-    <div className="flex-1 flex flex-col h-full overflow-hidden min-w-0">
+    <div data-memail-reader-column="" className={cn("flex-1 flex flex-col h-full overflow-hidden min-w-0 w-full", !mvViewer && isFocusedMailLayout && "max-w-5xl mx-auto")}>
       {/* === TOOLBAR (top position) === */}
       {toolbarPosition === 'top' && !liftToolbar && topToolbar}
 
@@ -4709,7 +4709,7 @@ ${printWatermark ? printWatermark.html : ''}
                     blocks below are h3 and h4, so no level is skipped. */}
                 <h2 dir="auto" className={cn(
                   "text-foreground break-words min-w-0",
-                  mvViewer ? "text-[1.375rem] leading-7 font-normal" : "text-lg lg:text-xl font-bold tracking-tight"
+                  mvViewer ? "text-[1.375rem] leading-7 font-normal" : "text-lg lg:text-2xl font-semibold tracking-tight leading-snug"
                 )}>
                   {email.subject || t('no_subject')}
                 </h2>

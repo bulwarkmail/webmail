@@ -76,7 +76,7 @@ export function MessageListTabs({ panelId }: { panelId: string }) {
     const accountId = mailbox.isShared ? mailbox.accountId : undefined;
     void useMessageListTabsStore.getState().refreshCounts(client, jmapMailboxId, accountId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visible, client, selectedMailbox, tabs]);
+  }, [visible, client, selectedMailbox, tabs, mailbox?.unreadEmails, mailbox?.totalEmails]);
 
   // A plugin registering (or clearing) tabs after the list was fetched leaves
   // the visible list out of sync with the strip's active-tab filter - refetch

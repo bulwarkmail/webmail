@@ -45,6 +45,7 @@ interface MockMailbox {
 }
 
 interface MockEmail {
+  headers?: Record<string, string>;
   id: string;
   threadId: string;
   mailboxIds: Record<string, boolean>;
@@ -200,6 +201,7 @@ const emails: MockEmail[] = [
   {
     id: 'email-013', threadId: 'thread-012', mailboxIds: { 'mb-inbox': true }, keywords: { '$label:personal/finance': true }, size: 18200, receivedAt: daysAgo(0),
     from: [{ name: 'Sidenote', email: 'post@sidenote.example' }],
+    headers: { 'List-Unsubscribe': '<https://sidenote.example/unsubscribe>' },
     to: [{ name: 'Dev User', email: 'dev@localhost' }], cc: [],
     subject: 'Sidenote 47: the Component Model shipped and nobody has to care yet',
     preview: 'Wasm components reached 1.0 last week. The spec is done, the toolchain is not, and that gap is the whole story.',
@@ -528,6 +530,7 @@ const emails: MockEmail[] = [
   {
     id: 'email-024', threadId: 'thread-023', mailboxIds: { 'mb-inbox': true }, keywords: { $seen: true }, size: 7200, receivedAt: daysAgo(5),
     from: [{ name: 'DEV Community', email: 'digest@dev-community.example' }],
+    headers: { 'List-Unsubscribe': '<https://dev-community.example/unsubscribe>' },
     to: [{ name: 'Dev User', email: 'dev@localhost' }], cc: [],
     subject: 'Most read this week',
     preview: 'Why I moved off React and what it cost, a CLI in Rust without clap, and the state of CSS in 2026.',
@@ -1699,8 +1702,18 @@ function handleEmailQuery(args: MethodArgs, callId: string): MethodResult {
       } else if (f.operator === 'OR') {
         const ids = new Set(sub.flat().map(e => e.id));
         result = result.filter(e => ids.has(e.id));
+      } else if (f.operator === 'NOT') {
+        const excluded = new Set(sub.flat().map(e => e.id));
+        result = result.filter(e => !excluded.has(e.id));
       }
       return result;
+    }
+    if (typeof f.minSize === 'number') result = result.filter(e => e.size >= (f.minSize as number));
+    if (typeof f.maxSize === 'number') result = result.filter(e => e.size < (f.maxSize as number));
+    if (f.header !== undefined) {
+      const header = f.header;
+      if (!Array.isArray(header) || header.length < 1 || header.length > 2 || header.some(v => typeof v !== 'string') || !header[0]) return [];
+      result = result.filter(e => Object.entries(e.headers ?? {}).some(([name, value]) => name.toLowerCase() === header[0].toLowerCase() && (header.length === 1 || value.toLowerCase().includes(header[1].toLowerCase()))));
     }
     if (f.inMailbox) {
       result = result.filter((e) => e.mailboxIds[f.inMailbox as string]);

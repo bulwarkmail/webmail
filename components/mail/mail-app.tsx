@@ -5319,7 +5319,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             <div className="flex-1 min-h-0 flex flex-col">
             {/* Plugin-registered category tabs (Gmail-style). Renders nothing
                 unless an enabled plugin registered tabs via api.tabs.set. */}
-            {!mvShell && <WorkspaceToolbar title={currentMailboxName} />}
+            {!mvShell && <WorkspaceToolbar title={currentMailboxName} onShortcuts={() => setShowShortcutsModal(true)} />}
             {!isScheduledView && <MessageListTabs panelId={messageListPanelId} />}
             <WelcomeBanner />
 

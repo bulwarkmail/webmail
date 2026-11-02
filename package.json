@@ -76,6 +76,7 @@
     "ioredis": "^5.11.1",
     "jalaali-js": "^2.0.1",
     "jszip": "^3.10.2",
+    "lucide-react": "^1.66.0",
     "next": "^16.4.3",
     "next-intl": "^4.13.3",
     "otpauth": "^9.5.2",

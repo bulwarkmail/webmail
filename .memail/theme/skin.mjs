@@ -18,7 +18,7 @@ body[data-theme-skin="builtin-memail"] :is([data-tour="sidebar"], [data-tour="em
   font-weight: 650;
 }
 
-/* Keep Tabler's silhouettes and filled icons; normalize only outline strokes
+/* Preserve icon silhouettes and filled icons; normalize only outline strokes
    in interface controls, never in a message body or attachment preview. */
 body[data-theme-skin="builtin-memail"] :is(button, [data-tour^="nav-"], [data-testid="folder-row"]) svg[stroke="currentColor"] {
   stroke-width: 1.75;
@@ -87,5 +87,47 @@ body[data-theme-skin="builtin-memail"] :is([role="menu"], [role="listbox"], [rol
 body[data-theme-skin="builtin-memail"] :is(button, a, input, textarea, select):focus-visible {
   outline: 2px solid var(--color-ring);
   outline-offset: 2px;
+}
+/* Quiet rounded navigation and a clear split selector. Preserve the native
+   virtual row heights and user-controlled tag colors. */
+body[data-theme-skin="builtin-memail"] [data-testid="folder-row"] {
+  border-radius: 6px;
+  margin-inline: 8px;
+  width: auto;
+}
+body[data-theme-skin="builtin-memail"] [role="tablist"]:has([id*="memail-"]) {
+  gap: 6px;
+  padding: 8px 24px 12px;
+}
+body[data-theme-skin="builtin-memail"] [role="tab"][id*="memail-"] {
+  border: 0;
+  border-radius: 7px;
+  margin-bottom: 0;
+  padding: 8px 12px;
+}
+body[data-theme-skin="builtin-memail"] [role="tab"][id*="memail-"][aria-selected="true"] {
+  background: var(--color-accent);
+  color: var(--color-accent-foreground);
+}
+body[data-theme-skin="builtin-memail"] [data-testid="email-list-item"] {
+  border-bottom-color: color-mix(in srgb, var(--color-border) 65%, transparent);
+}
+body[data-theme-skin="builtin-memail"] [data-memail-reader-column] {
+  background: var(--color-background);
+}
+/* Match the compose canvas to the reader at wide sizes. Keep narrow panes
+   fluid, and preserve the upstream editor, signature and attachment layout. */
+@media (min-width: 1024px) {
+  body[data-theme-skin="builtin-memail"] [data-tour="composer"] {
+    max-width: 64rem;
+    margin-inline: auto;
+  }
+}
+body[data-theme-skin="builtin-memail"] [data-testid="composer-subject"] {
+  font-weight: 600;
+}
+body[data-theme-skin="builtin-memail"] [data-testid="composer-save-status"] {
+  font-size: 1rem;
+  letter-spacing: -0.02em;
 }
 `;

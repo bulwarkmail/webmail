@@ -9,6 +9,8 @@
 // Tabler set once, lazily, the first time it is rendered or the picker's
 // "show all" list opens.
 
+import { adaptIcon } from './adapt';
+import { Inbox, Focus, Newspaper, Mail, CalendarDays, Users, Folder, Settings, Search, Archive, Send, FileText, Trash2, CircleAlert } from 'lucide-react';
 import { forwardRef, useEffect, useState } from 'react';
 import type { TablerIcon } from '@tabler/icons-react';
 import {
@@ -434,10 +436,16 @@ function lazyIcon(name: string): TablerIcon {
  * The component for a stored icon name, or undefined when there is no usable
  * name. Unknown names render the world icon once the full set has loaded.
  */
+const WORKSPACE_ICONS: Record<string, TablerIcon> = {
+  inbox: adaptIcon(Inbox), focus: adaptIcon(Focus), news: adaptIcon(Newspaper), mail: adaptIcon(Mail), calendar: adaptIcon(CalendarDays),
+  users: adaptIcon(Users), folder: adaptIcon(Folder), settings: adaptIcon(Settings), search: adaptIcon(Search), archive: adaptIcon(Archive),
+  send: adaptIcon(Send), 'file-text': adaptIcon(FileText), trash: adaptIcon(Trash2), 'alert-circle': adaptIcon(CircleAlert),
+};
+
 export function iconForName(stored: string | null | undefined): TablerIcon | undefined {
   const name = toTablerName(stored);
   if (!name) return undefined;
-  const curated = CURATED[name];
+  const curated = WORKSPACE_ICONS[name] ?? CURATED[name];
   if (curated) return curated;
   let icon = lazyIcons.get(name);
   if (!icon) {

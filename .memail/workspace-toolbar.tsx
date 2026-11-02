@@ -5,13 +5,14 @@ import { useWorkspacePreferences } from './workspace-preferences';
 import { FOCUS_MODES } from './plugins/focus-inbox/views';
 import { useSettingsStore } from '../stores/settings-store';
 import { useMessageListTabsStore } from '../stores/message-list-tabs-store';
-import { PanelRight, List, Rows3, Settings } from '../components/icons';
+import { PanelRight, List, Rows3, Settings, Keyboard, Zap } from '../components/icons';
 
 const control = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-md px-3 text-sm text-muted-foreground hover:bg-accent aria-pressed:bg-accent aria-pressed:text-foreground focus-visible:outline-2 focus-visible:outline-ring';
 
-export function WorkspaceToolbar({ title }: { title: string }) {
+export function WorkspaceToolbar({ title, onShortcuts }: { title: string; onShortcuts: () => void }) {
   useEffect(acquireWorkspaceViews, []);
   const density = useSettingsStore(s => s.density);
+  const readingWidth = useSettingsStore(s => s.readingWidth);
   const layout = useSettingsStore(s => s.mailLayout);
   const update = useSettingsStore(s => s.updateSetting);
   const preferences = useWorkspacePreferences();
@@ -26,8 +27,9 @@ export function WorkspaceToolbar({ title }: { title: string }) {
     return () => document.removeEventListener('pointerdown', dismiss);
   }, []);
   return <header className="relative flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-border bg-background px-4 py-3 sm:px-6">
-    <h2 className="min-w-0 truncate text-xl font-semibold tracking-tight">{title}</h2>
+    <div className="min-w-0"><p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Your workspace</p><h2 className="truncate text-2xl font-semibold tracking-tight">{title}</h2></div>
     <div className="flex items-center gap-1" role="group" aria-label="Mail workspace layout">
+      <button type="button" className={control} aria-label="Triage layout" title="Focus layout, compact rows, no sender avatars and comfortable reading width" aria-pressed={layout === 'focus' && density === 'compact' && readingWidth === 'comfortable' && !preferences.showSenderAvatars} onClick={() => { update('mailLayout', 'focus'); update('density', 'compact'); update('readingWidth', 'comfortable'); preferences.configure({showSenderAvatars:false}); }}><Zap className="size-4" aria-hidden="true" /><span className="hidden lg:inline">Triage</span></button>
       <button type="button" aria-label="Compact conversations" title="Compact conversations" aria-pressed={density === 'compact'} onClick={() => update('density', density === 'compact' ? 'regular' : 'compact')} className={control}><Rows3 className="size-4" aria-hidden="true" /></button>
       <div className="hidden items-center rounded-lg border border-border p-0.5 md:flex">
         <button type="button" aria-pressed={layout === 'focus'} onClick={() => update('mailLayout', 'focus')} className={control}><List className="size-4" aria-hidden="true" />Focus</button>
@@ -38,7 +40,11 @@ export function WorkspaceToolbar({ title }: { title: string }) {
       }}>
         <summary className={`${control} cursor-pointer list-none [&::-webkit-details-marker]:hidden`} aria-label="Inbox view rules" title="Inbox view rules"><Settings className="size-4" aria-hidden="true" /><span className="hidden sm:inline">Views</span></summary>
         <section aria-label="Inbox view rules" className="absolute end-3 top-full z-40 mt-2 w-80 max-w-[calc(100vw-1.5rem)] rounded-xl border border-border bg-popover p-5 text-popover-foreground shadow-lg">
-          <h3 className="font-semibold">Inbox views</h3>
+          <h3 className="font-semibold">Workspace preferences</h3>
+          <label className="mt-3 flex min-h-11 items-center justify-between gap-3 text-sm">Comfortable reading width<input type="checkbox" checked={readingWidth === 'comfortable'} onChange={e => update('readingWidth', e.target.checked ? 'comfortable' : 'full')} className="size-4 accent-primary" /></label>
+          <label className="mt-2 flex min-h-11 items-center justify-between gap-3 text-sm">Sender avatars in wide lists<input type="checkbox" checked={preferences.showSenderAvatars} onChange={e => preferences.configure({showSenderAvatars:e.target.checked})} className="size-4 accent-primary" /></label>
+          <div className="my-3 border-t border-border" />
+          <h4 className="text-sm font-semibold">Inbox views</h4>
           <p className="mt-1 text-sm leading-relaxed text-muted-foreground">Filter your inbox without moving mail. All inbox always includes every inbox conversation.</p>
           {foreignProvider ? <p role="status" className="mt-4 text-sm">An installed category provider controls your inbox views. Its rules take priority.</p> : <>
             <label className="mt-4 flex min-h-11 items-center justify-between gap-3 text-sm">Show inbox views<input type="checkbox" checked={preferences.enabled} onChange={e => preferences.configure({enabled:e.target.checked})} className="size-4 accent-primary" /></label>
@@ -51,6 +57,7 @@ export function WorkspaceToolbar({ title }: { title: string }) {
           </>}
         </section>
       </details>
+      <button type="button" onClick={onShortcuts} className={control} title="Keyboard shortcuts" aria-label="Keyboard shortcuts"><Keyboard className="size-4" aria-hidden="true" /></button>
     </div>
   </header>;
 }

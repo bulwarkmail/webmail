@@ -41,3 +41,13 @@ The preview is in draft PR #3. Phase 0 and full phase 1 acceptance are not compl
 - 20 targeted tests passed for registration lifecycle/provider precedence, live preference updates, demo filter membership, host tab keyboard behavior and sidebar regressions. TypeScript and scoped ESLint passed.
 - Browser verification blocked by the connected browser reporting that its user surface is unavailable. No new screenshots or full visual/triage acceptance claimed. No production build was run for this checkpoint.
 - English labels and device-local preferences are explicit limitations. Remaining design gates are in PRODUCT-STRATEGY.md.
+
+## Workspace visual and interaction pass (0.3)
+
+- Browser connection recovered. Reviewed desktop inbox, focused reader and reply composer. Reply opens with the intended recipient/subject; no message was sent. Newsletter view visibly contains two fixtures, one unread.
+- 24 icon/theme/registry/reader tests passed, plus 82 existing selection/thread tests. Added avatar-free selection/expansion regression; the updated 67-test thread suite passes. TypeScript passes. Scoped ESLint passes; mail-app retains one unrelated existing effect-ref warning.
+- Production build passed, including TypeScript. Final compose-only CSS passed package validation and contrast checks; no claim of exhaustive device or accessibility acceptance.
+- Native split tabs pass four tests, including the new count-refresh regression after marking mail read.
+- HTTP smoke assertions pass for case-insensitive headers, NOT partitioning, size boundaries and query totals.
+- Mobile reader checked at 390px: document width equals viewport width. Temporary viewport override reset. Desktop screenshot: research workspace `memail-workspace-redesign.jpg`.
+- Real Stalwart, full suite, localization of downstream labels, cross-device workspace preferences and comprehensive keyboard/mobile acceptance remain outstanding. Custom Tabler picker icons intentionally remain supported.
