@@ -21,6 +21,10 @@ import type { CheckerSpec } from '@/lib/plugin-sandbox/checkers';
 
 export const OPEN_GRACE_MS = 1000;
 
+function newToken(): string {
+  return `chk-${typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2)}`;
+}
+
 export interface PlacedIssue {
   key: string;
   checkerKey: string;
@@ -57,7 +61,11 @@ export interface ProofreaderStatus {
   count: number;
   /** Labels of the checkers that are on, for the notice. */
   activeLabels: string[];
-  /** The checkers that are on, by plugin. */
+  /**
+   * The checkers that are on, by plugin, with the plugin's name from its
+   * manifest (the one shown at install), not a label the plugin can change:
+   * the notices say where the text goes.
+   */
   activePlugins: { pluginId: string; label: string }[];
   /** The checkers the user could turn on (not locked off). */
   availablePlugins: { pluginId: string; label: string }[];
@@ -91,7 +99,7 @@ interface Dismissal {
 
 export class ComposerProofreader {
   private readonly deps: ProofreaderDeps;
-  private readonly sessions = new Map<string, { spec: CheckerSpec; session: CheckSession }>();
+  private readonly sessions = new Map<string, { spec: CheckerSpec; session: CheckSession; token: string }>();
   private readonly dismissed: Dismissal[] = [];
   private readonly wasAllowed = new Map<string, boolean>();
   private readonly openedAt: number;
@@ -130,9 +138,12 @@ export class ComposerProofreader {
         if (recheck && spec.mode === 'typing' && this.allowed(spec)) entry.session.schedule('now');
         continue;
       }
-      const holder = { spec, session: null as unknown as CheckSession };
+      // The checker gets a name for this composer of its own, never the
+      // composer's id: with that id a plugin could reach the composer through
+      // the other api.composer calls, past proofreading's rules.
+      const holder = { spec, session: null as unknown as CheckSession, token: newToken() };
       holder.session = new CheckSession({
-        composerId: this.deps.composerId,
+        composerId: holder.token,
         spec: () => holder.spec,
         readSegments: this.deps.readSegments,
         language: this.deps.language,
@@ -242,7 +253,7 @@ export class ComposerProofreader {
     this.dismissed.push({ checkerKey: issue.checkerKey, action, segmentId: a.segmentId, offset: a.offset, text: a.text, ruleId: a.ruleId });
     this.deps.onChange();
     const { text, ...rest } = a;
-    void this.deps.action(entry.spec, { composerId: this.deps.composerId, annotation: { ...rest, text }, action }).catch(() => {});
+    void this.deps.action(entry.spec, { composerId: entry.token, annotation: { ...rest, text }, action }).catch(() => {});
   }
 
   status(): ProofreaderStatus {
@@ -262,14 +273,14 @@ export class ComposerProofreader {
       if (!access.lockedOff) lockedOff = false;
       if (access.lockedOff) continue;
       available = true;
-      availablePlugins.push({ pluginId: spec.pluginId, label: spec.label });
+      if (!availablePlugins.some((x) => x.pluginId === spec.pluginId)) availablePlugins.push({ pluginId: spec.pluginId, label: spec.pluginName });
       if (access.forced) forced = true;
       if (access.on) userOn = true;
       const isOn = access.on && (access.forced || this.deps.composerOn());
       if (!isOn) continue;
       on = true;
       activeLabels.push(spec.label);
-      activePlugins.push({ pluginId: spec.pluginId, label: spec.label });
+      if (!activePlugins.some((x) => x.pluginId === spec.pluginId)) activePlugins.push({ pluginId: spec.pluginId, label: spec.pluginName });
       if (protection.protected) continue;
       if (session.status === 'checking') checking = true;
       if ((session.status === 'unavailable' || session.status === 'paused') && !trouble) {

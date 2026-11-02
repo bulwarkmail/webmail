@@ -34,6 +34,8 @@ describe('text check underlines', () => {
     setTextIssues(editor, [range(editor, 'dem'), { ...range(editor, 'Brief', 'stale'), text: 'Briefe' }]);
     expect(drawnIssues(editor.state).map((r) => r.key)).toEqual(['dem']);
     expect(editor.view.dom.querySelector('[data-text-issue="dem"]')?.className).toContain('text-issue-grammar');
+    // Screen readers hear it as they do the browser's own markers.
+    expect(editor.view.dom.querySelector('[data-text-issue="dem"]')?.getAttribute('aria-invalid')).toBe('grammar');
   });
 
   it('moves with typing before it, keeps still for typing after it, and goes when its text is edited', () => {
@@ -103,11 +105,11 @@ describe('text check underlines', () => {
     const { editor, onOpen } = setup('Ich habe dem Brief');
     setTextIssues(editor, [range(editor, 'dem')]);
     const el = editor.view.dom.querySelector('[data-text-issue="dem"]')!;
-    const event = new MouseEvent('contextmenu', { bubbles: true, cancelable: true });
+    const event = new MouseEvent('contextmenu', { bubbles: true, cancelable: true, clientX: 20, clientY: 20 });
     el.dispatchEvent(event);
     expect(event.defaultPrevented).toBe(true);
     expect(onOpen).toHaveBeenCalledWith('dem', expect.anything(), 'contextmenu');
-    const plain = new MouseEvent('contextmenu', { bubbles: true, cancelable: true });
+    const plain = new MouseEvent('contextmenu', { bubbles: true, cancelable: true, clientX: 5, clientY: 5 });
     editor.view.dom.querySelector('p')!.dispatchEvent(plain);
     expect(plain.defaultPrevented).toBe(false);
   });

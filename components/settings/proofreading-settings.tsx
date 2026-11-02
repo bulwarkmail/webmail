@@ -12,6 +12,7 @@ import { usePolicyStore } from "@/stores/policy-store";
 import { allCheckers, subscribeCheckers } from "@/lib/plugin-sandbox/checkers";
 import { checkerAccess, proofreadingAccess, PROOFREADING_KEY, type PolicyView } from "@/lib/proofreading/gate";
 import { writingLanguageOptions } from "@/lib/proofreading/languages";
+import { policySettled } from "@/components/email/proofreading/use-proofreading";
 import { SettingsSection, SettingItem, Select, ToggleSwitch } from "./settings-section";
 
 export function ProofreadingSettings() {
@@ -23,7 +24,7 @@ export function ProofreadingSettings() {
   const writingLanguage = useSettingsStore((s) => s.writingLanguage);
   const updateSetting = useSettingsStore((s) => s.updateSetting);
   const policy = usePolicyStore((s) => s.policy);
-  const settled = usePolicyStore((s) => s.loaded && !s.partial && !s.subjectPending);
+  const settled = usePolicyStore(policySettled);
   const view: PolicyView = { restrictions: policy.restrictions ?? {}, defaults: (policy.defaults ?? {}) as Record<string, unknown>, settled };
   const user = { proofreading, proofreadingPlugins };
   const main = proofreadingAccess(view, user);

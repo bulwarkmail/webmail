@@ -6079,7 +6079,7 @@
       },
       "compose_check": {
         "title": "Kiểm tra những gì bạn viết",
-        "body": "Đọc những gì bạn viết trong trình soạn thảo khi bạn gõ và có thể gửi đến dịch vụ mà nó dùng. Chỉ khi bật soát lỗi, và không bao giờ với thư bạn ký hoặc mã hóa."
+        "body": "Đọc những gì bạn viết trong trình soạn thảo khi bạn gõ và có thể gửi đến dịch vụ mà nó dùng. Chỉ khi bật soát lỗi, và không gửi gì khi thư được đặt để ký hoặc mã hóa. Văn bản bạn viết trước khi bật tùy chọn đó có thể đã được kiểm tra."
       },
       "email_forward": {
         "title": "Chuyển tiếp thư của bạn",
@@ -6406,7 +6406,7 @@
       "title": "Soát lỗi",
       "required": "Tổ chức của bạn yêu cầu bật",
       "check_message": "Kiểm tra thư này",
-      "notice": "Khi bạn gõ, văn bản bạn viết được gửi đến {checkers} để kiểm tra. Chữ ký của bạn và thư được trích dẫn không được gửi, và không có gì được gửi đi với thư bạn ký hoặc mã hóa.",
+      "notice": "Khi bạn gõ, văn bản bạn viết được gửi đến {checkers} để kiểm tra. Chữ ký của bạn và thư được trích dẫn không được gửi. Không có gì được gửi đi khi thư được đặt để ký hoặc mã hóa; những gì bạn viết trước khi bật tùy chọn đó có thể đã được kiểm tra.",
       "turn_on": "Bật soát lỗi",
       "paused_protected": "Không kiểm tra gì trong khi thư này được đặt để ký hoặc mã hóa.",
       "paused_unknown": "{plugin} có thể ký hoặc mã hóa thư mà không hiển thị ở đây, nên không kiểm tra gì khi nó đang bật.",
@@ -6417,8 +6417,8 @@
       "shortcuts": "Vấn đề tiếp theo: {next}. Trước đó: {previous}."
     },
     "notice": {
-      "on": "Soát lỗi đang bật. Khi bạn gõ, văn bản bạn viết được gửi đến {checkers} để kiểm tra, không kèm chữ ký của bạn và thư được trích dẫn. Không có gì được gửi đi với thư bạn ký hoặc mã hóa.",
-      "forced": "Tổ chức của bạn đã bật soát lỗi. Khi bạn gõ, văn bản bạn viết được gửi đến {checkers} để kiểm tra, không kèm chữ ký của bạn và thư được trích dẫn. Không có gì được gửi đi với thư bạn ký hoặc mã hóa.",
+      "on": "Soát lỗi đang bật. Khi bạn gõ, văn bản bạn viết được gửi đến {checkers} để kiểm tra, không kèm chữ ký của bạn và thư được trích dẫn. Không có gì được gửi đi khi thư được đặt để ký hoặc mã hóa; những gì bạn viết trước đó có thể đã được kiểm tra.",
+      "forced": "Tổ chức của bạn đã bật soát lỗi. Khi bạn gõ, văn bản bạn viết được gửi đến {checkers} để kiểm tra, không kèm chữ ký của bạn và thư được trích dẫn. Không có gì được gửi đi khi thư được đặt để ký hoặc mã hóa; những gì bạn viết trước đó có thể đã được kiểm tra.",
       "ok": "OK"
     },
     "send_warning": {
@@ -6431,7 +6431,7 @@
       "title": "Soát lỗi",
       "description": "Gạch dưới lỗi chính tả và ngữ pháp khi bạn viết, kèm gợi ý để sửa.",
       "enable": "Kiểm tra chính tả và ngữ pháp khi tôi gõ",
-      "enable_description": "Văn bản bạn viết được gửi đến tiện ích bổ sung soát lỗi và dịch vụ mà nó dùng. Chữ ký của bạn và thư được trích dẫn không được gửi, và thư đã ký hoặc mã hóa không bao giờ được kiểm tra.",
+      "enable_description": "Văn bản bạn viết được gửi đến tiện ích bổ sung soát lỗi và dịch vụ mà nó dùng, không kèm chữ ký của bạn và thư được trích dẫn. Không có gì được gửi đi khi thư được đặt để ký hoặc mã hóa.",
       "no_checker": "Chưa cài tiện ích bổ sung soát lỗi nào. Hãy nhờ quản trị viên thêm một tiện ích.",
       "plugin_description": "Gửi những gì bạn viết đến {plugin}.",
       "writing_language": "Ngôn ngữ viết",

@@ -14,7 +14,7 @@ import { currentPolicyView } from '@/components/email/proofreading/use-proofread
 
 const settings = () => useSettingsStore.getState();
 const loadPolicy = (patch: Partial<SettingsPolicy>) =>
-  usePolicyStore.setState({ policy: { ...DEFAULT_POLICY, ...patch }, loaded: true, partial: false, subjectPending: false });
+  usePolicyStore.setState({ policy: { ...DEFAULT_POLICY, ...patch }, loaded: true, partial: false, subjectPending: false, source: 'server' });
 
 beforeEach(() => {
   localStorage.clear();
@@ -62,13 +62,18 @@ describe('proofreading settings', () => {
 
   it('checks nothing until the policy has loaded', () => {
     useSettingsStore.setState({ proofreading: true });
-    usePolicyStore.setState({ loaded: false });
+    usePolicyStore.setState({ loaded: false, source: 'server' });
     expect(checkerAccess(currentPolicyView(), settings(), 'lt').on).toBe(false);
     usePolicyStore.setState({ loaded: true, partial: true });
     expect(checkerAccess(currentPolicyView(), settings(), 'lt').on).toBe(false);
     usePolicyStore.setState({ partial: false, subjectPending: true });
     expect(checkerAccess(currentPolicyView(), settings(), 'lt').on).toBe(false);
-    usePolicyStore.setState({ subjectPending: false });
+    usePolicyStore.setState({ subjectPending: false, source: 'fallback' });
+    // The fetch failed and nothing was ever fetched: the defaults could undo a lock.
+    expect(checkerAccess(currentPolicyView(), settings(), 'lt').on).toBe(false);
+    usePolicyStore.setState({ source: 'cache' });
+    expect(checkerAccess(currentPolicyView(), settings(), 'lt').on).toBe(true);
+    usePolicyStore.setState({ source: 'server' });
     expect(checkerAccess(currentPolicyView(), settings(), 'lt').on).toBe(true);
   });
 });

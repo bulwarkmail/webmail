@@ -252,12 +252,23 @@ const BOOKKEEPING_SETTING_KEYS = new Set<string>(['onboardingCompleted', 'tourCo
  * tells onSettingChange. With no interceptor registered the change applies
  * synchronously, so inputs bound to the store keep behaving as before.
  */
+/**
+ * Turning proofreading off, overall or for one plugin, stops text going to a
+ * plugin: no plugin may hold that up (onBeforeSettingChange).
+ */
+function stopsSendingText(key: string, value: unknown, previous: unknown): boolean {
+  if (key === 'proofreading') return value === false;
+  if (key !== 'proofreadingPlugins' || !value || typeof value !== 'object') return false;
+  const before = (previous && typeof previous === 'object' ? previous : {}) as Record<string, unknown>;
+  return Object.entries(value as Record<string, unknown>).some(([id, on]) => on === false && before[id] !== false);
+}
+
 function changePreference(key: string, value: unknown, previous: unknown, apply: () => void): void {
   const commit = () => {
     apply();
     void settingsHooks.onSettingChange.emit({ key, value, previous });
   };
-  if (settingsHooks.onBeforeSettingChange.size === 0) {
+  if (settingsHooks.onBeforeSettingChange.size === 0 || stopsSendingText(key, value, previous)) {
     commit();
     return;
   }

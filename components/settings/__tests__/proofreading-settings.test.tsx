@@ -14,7 +14,7 @@ vi.mock('../settings-section', async (importOriginal) => ({
 }));
 
 const policy = (patch: Partial<SettingsPolicy>) =>
-  usePolicyStore.setState({ policy: { ...DEFAULT_POLICY, ...patch }, loaded: true, partial: false, subjectPending: false });
+  usePolicyStore.setState({ policy: { ...DEFAULT_POLICY, ...patch }, loaded: true, partial: false, subjectPending: false, source: 'server' });
 
 const register = (pluginId: string, pluginName: string) => setPluginChecker(pluginId, pluginName, {
   id: 'check', label: pluginName, kinds: ['spelling'], debounceMs: 800, languages: ['de-DE'], mode: 'typing', warnBeforeSend: false,

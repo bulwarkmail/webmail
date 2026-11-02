@@ -9,7 +9,8 @@
 // issue list, the context-menu key), it takes the focus: arrows move between
 // its buttons, Enter picks, Escape goes back to the text.
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import { issueNavigationKey } from "./text-check-extension";
 import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
 import type { DismissAction, PlacedIssue } from "@/lib/proofreading/composer-proofreader";
@@ -27,23 +28,35 @@ interface Props {
   onApply: (issue: PlacedIssue, replacement: string) => boolean;
   onDismiss: (issue: PlacedIssue, action: DismissAction) => void;
   onClose: (refocus: boolean) => void;
+  /** Next or previous issue (Mod+' and Mod+; work in the popup too). */
+  onNavigate: (dir: 1 | -1) => void;
+  /** The text being written: focus going back there leaves the popup open. */
+  textRoot: () => HTMLElement | null;
+  /**
+   * Where the popup goes in the page: inside an open modal (Mountain View's
+   * maximised composer), so screen readers don't hide it with the rest.
+   */
+  container: HTMLElement;
 }
 
 function place(anchor: DOMRect | null, height: number): { top: number; left: number } {
   const vw = window.innerWidth;
-  const vh = window.innerHeight;
-  if (!anchor) return { top: Math.max(8, vh / 2 - height / 2), left: Math.max(8, vw / 2 - WIDTH / 2) };
+  // Above an on-screen keyboard, where there is one.
+  const vh = window.visualViewport?.height ?? window.innerHeight;
+  const width = Math.min(WIDTH, vw - 16);
+  if (!anchor) return { top: Math.max(8, vh / 2 - height / 2), left: Math.max(8, vw / 2 - width / 2) };
   const rtl = document.documentElement.dir === "rtl";
-  let left = rtl ? anchor.right - WIDTH : anchor.left;
-  left = Math.min(Math.max(8, left), vw - WIDTH - 8);
+  let left = rtl ? anchor.right - width : anchor.left;
+  left = Math.min(Math.max(8, left), vw - width - 8);
   let top = anchor.bottom + GAP;
   if (top + height > vh - 8 && anchor.top - GAP - height > 8) top = anchor.top - GAP - height;
   return { top: Math.max(8, top), left };
 }
 
-export function IssuePopup({ state, issue, anchor, onApply, onDismiss, onClose }: Props) {
+export function IssuePopup({ state, issue, anchor, onApply, onDismiss, onClose, onNavigate, textRoot, container }: Props) {
   const t = useTranslations("proofreading");
   const ref = useRef<HTMLDivElement>(null);
+  const messageId = useId();
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const anchorRef = useRef(anchor);
@@ -87,6 +100,23 @@ export function IssuePopup({ state, issue, anchor, onApply, onDismiss, onClose }
       onClose(true);
       return;
     }
+    const dir = issueNavigationKey(e.nativeEvent);
+    if (dir) {
+      e.preventDefault();
+      onNavigate(dir);
+      return;
+    }
+    if (e.key === "Tab") {
+      // The popup sits at the end of the page: Tab past its edges goes back
+      // to the text instead of off the page or somewhere before it.
+      const items = Array.from(ref.current?.querySelectorAll<HTMLElement>("[data-popup-item]") ?? []);
+      const at = items.indexOf(document.activeElement as HTMLElement);
+      if ((e.shiftKey && at === 0) || (!e.shiftKey && at === items.length - 1)) {
+        e.preventDefault();
+        onClose(true);
+      }
+      return;
+    }
     if (e.key !== "ArrowDown" && e.key !== "ArrowUp" && e.key !== "ArrowLeft" && e.key !== "ArrowRight" && e.key !== "Home" && e.key !== "End") return;
     const items = Array.from(ref.current?.querySelectorAll<HTMLElement>("[data-popup-item]") ?? []);
     if (!items.length) return;
@@ -111,19 +141,20 @@ export function IssuePopup({ state, issue, anchor, onApply, onDismiss, onClose }
       ref={ref}
       role="dialog"
       aria-label={t("popup.label", { kind: t(`kind.${issue.kind}`), word: issue.annotation.text })}
+      aria-describedby={messageId}
       data-testid="proofreading-popup"
-      className="fixed z-50 rounded-md border border-border bg-popover p-3 text-popover-foreground shadow-lg"
-      style={{ width: WIDTH, maxWidth: "calc(100vw - 16px)", top: pos?.top ?? -9999, left: pos?.left ?? -9999 }}
+      className="fixed z-50 overflow-y-auto rounded-md border border-border bg-popover p-3 text-popover-foreground shadow-lg"
+      style={{ width: WIDTH, maxWidth: "calc(100vw - 16px)", maxHeight: "calc(100dvh - 16px)", top: pos?.top ?? -9999, left: pos?.left ?? -9999 }}
       onKeyDown={onKeyDown}
       onBlur={(e) => {
         // Tabbing out of it closes it; a click inside, or going back to the
         // text (where Escape closes it), doesn't.
         const next = e.relatedTarget as Element | null;
-        if (next && !ref.current?.contains(next) && !next.closest?.(".tiptap")) onClose(false);
+        if (next && !ref.current?.contains(next) && !textRoot()?.contains(next)) onClose(false);
       }}
     >
-      <IssueActions issue={issue} onApply={apply} onDismiss={onDismiss} error={error} />
+      <IssueActions issue={issue} onApply={apply} onDismiss={onDismiss} error={error} messageId={messageId} />
     </div>,
-    document.body,
+    container,
   );
 }

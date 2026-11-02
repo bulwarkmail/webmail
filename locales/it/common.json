@@ -6039,7 +6039,7 @@
       },
       "compose_check": {
         "title": "Controllare ciò che scrivi",
-        "body": "Legge ciò che scrivi nell'editor mentre digiti e può inviarlo al servizio che usa. Solo quando la correzione è attiva, e mai per un messaggio che firmi o cifri."
+        "body": "Legge ciò che scrivi nell'editor mentre digiti e può inviarlo al servizio che usa. Solo quando la correzione è attiva, e nulla finché un messaggio è impostato per essere firmato o cifrato. Il testo scritto prima di attivarlo potrebbe essere già stato controllato."
       },
       "email_forward": {
         "title": "Inoltrare la tua posta",
@@ -6394,7 +6394,7 @@
       "title": "Correzione",
       "required": "Richiesto dalla tua organizzazione",
       "check_message": "Controlla questo messaggio",
-      "notice": "Mentre digiti, il testo che scrivi viene inviato a {checkers} per il controllo. La tua firma e il messaggio citato sono esclusi, e non viene inviato nulla per un messaggio che firmi o cifri.",
+      "notice": "Mentre digiti, il testo che scrivi viene inviato a {checkers} per il controllo. La tua firma e il messaggio citato sono esclusi. Non viene inviato nulla finché un messaggio è impostato per essere firmato o cifrato; ciò che hai scritto prima di attivarlo potrebbe essere già stato controllato.",
       "turn_on": "Attiva la correzione",
       "paused_protected": "Non viene controllato nulla finché questo messaggio è impostato per essere firmato o cifrato.",
       "paused_unknown": "{plugin} può firmare o cifrare i messaggi senza mostrarlo qui, quindi non viene controllato nulla finché è attivo.",
@@ -6405,8 +6405,8 @@
       "shortcuts": "Problema successivo: {next}. Precedente: {previous}."
     },
     "notice": {
-      "on": "La correzione è attiva. Mentre digiti, il testo che scrivi viene inviato a {checkers} per il controllo, senza la tua firma né il messaggio citato. Non viene inviato nulla per un messaggio che firmi o cifri.",
-      "forced": "La tua organizzazione ha attivato la correzione. Mentre digiti, il testo che scrivi viene inviato a {checkers} per il controllo, senza la tua firma né il messaggio citato. Non viene inviato nulla per un messaggio che firmi o cifri.",
+      "on": "La correzione è attiva. Mentre digiti, il testo che scrivi viene inviato a {checkers} per il controllo, senza la tua firma né il messaggio citato. Non viene inviato nulla finché un messaggio è impostato per essere firmato o cifrato; ciò che hai scritto prima potrebbe essere già stato controllato.",
+      "forced": "La tua organizzazione ha attivato la correzione. Mentre digiti, il testo che scrivi viene inviato a {checkers} per il controllo, senza la tua firma né il messaggio citato. Non viene inviato nulla finché un messaggio è impostato per essere firmato o cifrato; ciò che hai scritto prima potrebbe essere già stato controllato.",
       "ok": "OK"
     },
     "send_warning": {
@@ -6419,7 +6419,7 @@
       "title": "Correzione",
       "description": "Sottolinea gli errori di ortografia e grammatica mentre scrivi, con suggerimenti per correggerli.",
       "enable": "Controlla ortografia e grammatica mentre digito",
-      "enable_description": "Il testo che scrivi viene inviato al componente aggiuntivo di correzione e al servizio che usa. La tua firma e i messaggi citati sono esclusi, e i messaggi firmati o cifrati non vengono mai controllati.",
+      "enable_description": "Il testo che scrivi viene inviato al componente aggiuntivo di correzione e al servizio che usa, senza la tua firma né i messaggi citati. Non viene inviato nulla finché un messaggio è impostato per essere firmato o cifrato.",
       "no_checker": "Nessun componente aggiuntivo di correzione installato. Chiedi all'amministratore di aggiungerne uno.",
       "plugin_description": "Invia ciò che scrivi a {plugin}.",
       "writing_language": "Lingua di scrittura",

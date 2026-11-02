@@ -6039,7 +6039,7 @@
       },
       "compose_check": {
         "title": "Pārbaudīt, ko rakstāt",
-        "body": "Rakstīšanas laikā lasa to, ko rakstāt redaktorā, un var to nosūtīt pakalpojumam, ko izmanto. Tikai tad, ja pārbaude ir ieslēgta, un nekad ziņojumam, ko parakstāt vai šifrējat."
+        "body": "Rakstīšanas laikā lasa to, ko rakstāt redaktorā, un var to nosūtīt pakalpojumam, ko izmanto. Tikai tad, ja pārbaude ir ieslēgta, un nekas, kamēr ziņojums ir iestatīts parakstīšanai vai šifrēšanai. Teksts, ko uzrakstījāt pirms šī iestatījuma ieslēgšanas, jau var būt pārbaudīts."
       },
       "email_forward": {
         "title": "Pārsūtīt jūsu pastu",
@@ -6394,7 +6394,7 @@
       "title": "Teksta pārbaude",
       "required": "Pieprasa jūsu organizācija",
       "check_message": "Pārbaudīt šo ziņojumu",
-      "notice": "Kamēr rakstāt, jūsu teksts tiek nosūtīts pārbaudei uz {checkers}. Jūsu paraksts un citētais ziņojums netiek sūtīti, un ziņojumam, ko parakstāt vai šifrējat, netiek sūtīts nekas.",
+      "notice": "Kamēr rakstāt, jūsu teksts tiek nosūtīts pārbaudei uz {checkers}. Jūsu paraksts un citētais ziņojums netiek sūtīti. Kamēr ziņojums ir iestatīts parakstīšanai vai šifrēšanai, nekas netiek sūtīts; tas, ko uzrakstījāt pirms šī iestatījuma ieslēgšanas, jau var būt pārbaudīts.",
       "turn_on": "Ieslēgt teksta pārbaudi",
       "paused_protected": "Kamēr šis ziņojums ir iestatīts parakstīšanai vai šifrēšanai, nekas netiek pārbaudīts.",
       "paused_unknown": "{plugin} var parakstīt vai šifrēt ziņojumus, to šeit nerādot, tāpēc, kamēr tas ir ieslēgts, nekas netiek pārbaudīts.",
@@ -6405,8 +6405,8 @@
       "shortcuts": "Nākamā problēma: {next}. Iepriekšējā: {previous}."
     },
     "notice": {
-      "on": "Teksta pārbaude ir ieslēgta. Kamēr rakstāt, jūsu teksts tiek nosūtīts pārbaudei uz {checkers}, bez jūsu paraksta un citētā ziņojuma. Ziņojumam, ko parakstāt vai šifrējat, netiek sūtīts nekas.",
-      "forced": "Jūsu organizācija ieslēdza teksta pārbaudi. Kamēr rakstāt, jūsu teksts tiek nosūtīts pārbaudei uz {checkers}, bez jūsu paraksta un citētā ziņojuma. Ziņojumam, ko parakstāt vai šifrējat, netiek sūtīts nekas.",
+      "on": "Teksta pārbaude ir ieslēgta. Kamēr rakstāt, jūsu teksts tiek nosūtīts pārbaudei uz {checkers}, bez jūsu paraksta un citētā ziņojuma. Kamēr ziņojums ir iestatīts parakstīšanai vai šifrēšanai, nekas netiek sūtīts; tas, ko uzrakstījāt pirms tam, jau var būt pārbaudīts.",
+      "forced": "Jūsu organizācija ieslēdza teksta pārbaudi. Kamēr rakstāt, jūsu teksts tiek nosūtīts pārbaudei uz {checkers}, bez jūsu paraksta un citētā ziņojuma. Kamēr ziņojums ir iestatīts parakstīšanai vai šifrēšanai, nekas netiek sūtīts; tas, ko uzrakstījāt pirms tam, jau var būt pārbaudīts.",
       "ok": "Labi"
     },
     "send_warning": {
@@ -6419,7 +6419,7 @@
       "title": "Teksta pārbaude",
       "description": "Rakstīšanas laikā pasvītro pareizrakstības un gramatikas kļūdas un iesaka labojumus.",
       "enable": "Pārbaudīt pareizrakstību un gramatiku rakstīšanas laikā",
-      "enable_description": "Jūsu rakstītais teksts tiek nosūtīts teksta pārbaudes papildinājumam un pakalpojumam, ko tas izmanto. Jūsu paraksts un citētie ziņojumi netiek sūtīti, un parakstīti vai šifrēti ziņojumi nekad netiek pārbaudīti.",
+      "enable_description": "Jūsu rakstītais teksts tiek nosūtīts teksta pārbaudes papildinājumam un pakalpojumam, ko tas izmanto, bez jūsu paraksta un citēto ziņojumu. Kamēr ziņojums ir iestatīts parakstīšanai vai šifrēšanai, nekas netiek sūtīts.",
       "no_checker": "Nav instalēts neviens teksta pārbaudes papildinājums. Lūdziet administratoram to pievienot.",
       "plugin_description": "Nosūta jūsu rakstīto uz {plugin}.",
       "writing_language": "Rakstīšanas valoda",

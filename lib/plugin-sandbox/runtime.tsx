@@ -726,10 +726,10 @@ function buildPluginApi(manifest: PluginManifest) {
           },
         };
       },
-      /** The whole text of a composer the plugin was handed, request-shaped, for an on-demand check. Needs compose:check. */
+      /** The whole text of a composer the plugin was handed, request-shaped, for an on-demand check. Needs compose:check, or compose:read for an on-demand checker. */
       getCheckText: (composerId: string, checkerId: string) =>
         callApi('composer.getCheckText', [composerId, checkerId]) as Promise<CheckRequest>,
-      /** Results for a request from getCheckText; resolves to how many were kept. Needs compose:check. */
+      /** Results for a request from getCheckText; resolves to how many were kept. Needs compose:check, or compose:read for an on-demand checker. */
       setAnnotations: (composerId: string, checkerId: string, revision: string, annotations: CheckAnnotation[]) =>
         callApi('composer.setAnnotations', [composerId, checkerId, revision, annotations]) as Promise<number>,
     },

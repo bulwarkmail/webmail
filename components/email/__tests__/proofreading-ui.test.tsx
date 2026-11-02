@@ -83,7 +83,7 @@ describe('ProofreadingStatus', () => {
   it('lists issues that jump to the text, each read out with its first suggestion', () => {
     const p = proofreading({ panel: { focusKey: null } });
     render(<ProofreadingStatus proofreading={p} plainTextMode={false} />);
-    const item = screen.getByRole('button', { name: 'list_item' });
+    const item = screen.getByRole('button', { name: /^list_item/ });
     fireEvent.click(item);
     expect(p.jumpTo).toHaveBeenCalledWith(expect.objectContaining({ key: issue().key }));
   });
@@ -92,6 +92,17 @@ describe('ProofreadingStatus', () => {
     const p = proofreading({ panel: { focusKey: issue().key } });
     render(<ProofreadingStatus proofreading={p} plainTextMode={false} />);
     expect(document.activeElement?.getAttribute('data-issue-key')).toBe(issue().key);
+  });
+
+  it('names the control with what it is about, and groups each plain-text issue', () => {
+    render(<ProofreadingStatus proofreading={proofreading({ panel: { focusKey: null } })} plainTextMode />);
+    expect(screen.getByTestId('proofreading-status').getAttribute('aria-label')).toBe('status.issues, status.title');
+    expect(screen.getByRole('group', { name: /list_item/ })).toBeInTheDocument();
+  });
+
+  it('does not read out "no issues" when a message opens with none', () => {
+    render(<ProofreadingStatus proofreading={proofreading({ status: status({ count: 0 }), issues: [] })} plainTextMode={false} />);
+    expect(announce).not.toHaveBeenCalled();
   });
 
   it('in plain text, puts the suggestions in the list', () => {
@@ -105,7 +116,8 @@ describe('ProofreadingStatus', () => {
 describe('IssuePopup', () => {
   const props = (over: Partial<React.ComponentProps<typeof IssuePopup>> = {}) => ({
     state: { key: issue().key, anchor: new DOMRect(10, 10, 30, 16), via: 'click' as const },
-    issue: issue(), anchor: () => null, onApply: vi.fn(() => true), onDismiss: vi.fn(), onClose: vi.fn(), ...over,
+    issue: issue(), anchor: () => null, onApply: vi.fn(() => true), onDismiss: vi.fn(), onClose: vi.fn(),
+    onNavigate: vi.fn(), textRoot: () => null, container: document.body, ...over,
   });
 
   it('puts in a suggestion, and says so when the text changed meanwhile', () => {
@@ -134,6 +146,27 @@ describe('IssuePopup', () => {
     expect(document.activeElement?.textContent).toBe('popup.ignore');
     fireEvent.keyDown(document.activeElement!, { key: 'Escape' });
     expect(p.onClose).toHaveBeenCalledWith(true);
+  });
+
+  it('goes back to the text on Tab past its last button or Shift+Tab before its first', () => {
+    const p = props({ state: { key: issue().key, anchor: null, via: 'keyboard' } });
+    render(<IssuePopup {...p} />);
+    const items = screen.getByTestId('proofreading-popup').querySelectorAll<HTMLElement>('[data-popup-item]');
+    fireEvent.keyDown(items[0], { key: 'Tab', shiftKey: true });
+    expect(p.onClose).toHaveBeenCalledWith(true);
+    vi.mocked(p.onClose).mockClear();
+    items[items.length - 1].focus();
+    fireEvent.keyDown(items[items.length - 1], { key: 'Tab' });
+    expect(p.onClose).toHaveBeenCalledWith(true);
+  });
+
+  it('steps to the next issue with the shortcut and is described by its message', () => {
+    const p = props({ state: { key: issue().key, anchor: null, via: 'keyboard' } });
+    render(<IssuePopup {...p} />);
+    fireEvent.keyDown(document.activeElement!, { key: "'", code: 'Quote', ctrlKey: true });
+    expect(p.onNavigate).toHaveBeenCalledWith(1);
+    const dialog = screen.getByTestId('proofreading-popup');
+    expect(document.getElementById(dialog.getAttribute('aria-describedby')!)?.textContent).toContain('Did you mean');
   });
 
   it('leaves the focus in the text when opened with the mouse', () => {

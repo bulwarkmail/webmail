@@ -6039,7 +6039,7 @@
       },
       "compose_check": {
         "title": "Ellenőrizni, amit ír",
-        "body": "Gépelés közben olvassa, amit a szerkesztőben ír, és elküldheti az általa használt szolgáltatásnak. Csak ha a helyesírás-ellenőrzés be van kapcsolva, és soha nem olyan üzenetnél, amelyet aláír vagy titkosít."
+        "body": "Gépelés közben olvassa, amit a szerkesztőben ír, és elküldheti az általa használt szolgáltatásnak. Csak ha a helyesírás-ellenőrzés be van kapcsolva, és semmit, amíg egy üzenet aláírásra vagy titkosításra van beállítva. Amit a bekapcsolása előtt írt, azt már ellenőrizhették."
       },
       "email_forward": {
         "title": "Leveleid továbbítása",
@@ -6394,7 +6394,7 @@
       "title": "Helyesírás-ellenőrzés",
       "required": "A szervezeted előírja",
       "check_message": "Üzenet ellenőrzése",
-      "notice": "Gépelés közben a beírt szöveg ellenőrzésre kerül ide: {checkers}. Az aláírásod és az idézett üzenet kimarad, és az aláírt vagy titkosított üzenetekből semmi nem kerül elküldésre.",
+      "notice": "Gépelés közben a beírt szöveg ellenőrzésre kerül ide: {checkers}. Az aláírásod és az idézett üzenet kimarad. Amíg egy üzenet aláírásra vagy titkosításra van beállítva, semmi nem megy el; amit a bekapcsolása előtt írtál, azt már ellenőrizhették.",
       "turn_on": "Helyesírás-ellenőrzés bekapcsolása",
       "paused_protected": "Amíg ez az üzenet aláírásra vagy titkosításra van beállítva, semmi nem kerül ellenőrzésre.",
       "paused_unknown": "{plugin} úgy is aláírhat vagy titkosíthat üzeneteket, hogy az itt nem látszik, ezért amíg be van kapcsolva, semmi nem kerül ellenőrzésre.",
@@ -6405,8 +6405,8 @@
       "shortcuts": "Következő probléma: {next}. Előző: {previous}."
     },
     "notice": {
-      "on": "A helyesírás-ellenőrzés be van kapcsolva. Gépelés közben a beírt szöveg ellenőrzésre kerül ide: {checkers}, az aláírásod és az idézett üzenet nélkül. Az aláírt vagy titkosított üzenetekből semmi nem kerül elküldésre.",
-      "forced": "A szervezeted bekapcsolta a helyesírás-ellenőrzést. Gépelés közben a beírt szöveg ellenőrzésre kerül ide: {checkers}, az aláírásod és az idézett üzenet nélkül. Az aláírt vagy titkosított üzenetekből semmi nem kerül elküldésre.",
+      "on": "A helyesírás-ellenőrzés be van kapcsolva. Gépelés közben a beírt szöveg ellenőrzésre kerül ide: {checkers}, az aláírásod és az idézett üzenet nélkül. Amíg egy üzenet aláírásra vagy titkosításra van beállítva, semmi nem megy el; amit előtte írtál, azt már ellenőrizhették.",
+      "forced": "A szervezeted bekapcsolta a helyesírás-ellenőrzést. Gépelés közben a beírt szöveg ellenőrzésre kerül ide: {checkers}, az aláírásod és az idézett üzenet nélkül. Amíg egy üzenet aláírásra vagy titkosításra van beállítva, semmi nem megy el; amit előtte írtál, azt már ellenőrizhették.",
       "ok": "OK"
     },
     "send_warning": {
@@ -6419,7 +6419,7 @@
       "title": "Helyesírás-ellenőrzés",
       "description": "Írás közben aláhúzza a helyesírási és nyelvtani hibákat, és javaslatot ad a javításukra.",
       "enable": "Helyesírás és nyelvtan ellenőrzése gépelés közben",
-      "enable_description": "A beírt szöveg a helyesírás-ellenőrző bővítményhez és az általa használt szolgáltatáshoz kerül. Az aláírásod és az idézett üzenetek kimaradnak, az aláírt vagy titkosított üzeneteket pedig soha nem ellenőrzi.",
+      "enable_description": "A beírt szöveg a helyesírás-ellenőrző bővítményhez és az általa használt szolgáltatáshoz kerül, az aláírásod és az idézett üzenetek nélkül. Amíg egy üzenet aláírásra vagy titkosításra van beállítva, semmi nem megy el.",
       "no_checker": "Nincs telepítve helyesírás-ellenőrző bővítmény. Kérd meg a rendszergazdát, hogy adjon hozzá egyet.",
       "plugin_description": "Elküldi, amit írsz, ide: {plugin}.",
       "writing_language": "Írás nyelve",

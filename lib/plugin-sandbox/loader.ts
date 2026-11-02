@@ -20,7 +20,7 @@ import { verifyBundle } from './bundle-integrity';
 import { downloadManagedBundle } from './bundle-fetch';
 import { createBackgroundInstance, forEachInstance, snapshotRegionalSettings, type InitDoneInfo, type RegionalSnapshot } from './host-bridge';
 import { resolvePluginTier } from './tier';
-import { register as registerActive, deregister as deregisterActive, all as allActiveEntries, get as getActive, type SlotOffer } from './registry';
+import { register as registerActive, deregister as deregisterActive, all as allActiveEntries, get as getActive, subscribe as subscribeActive, type SlotOffer } from './registry';
 import { cancelPluginDialogs } from './host-api';
 import { hasDialogFor, whenNoDialogFor } from './host-dialog';
 import { registerShortcuts } from './shortcuts';
@@ -379,15 +379,29 @@ setActionDispatcher(async (pluginId, surface, actionId, context) => {
 // A slow or failing checker is not a broken plugin: its server may be down.
 // Its errors stay with the composer that asked (shown as "checking
 // unavailable") and don't count towards turning the plugin off.
-function backgroundOf(pluginId: string) {
-  const entry = getActive(pluginId);
+// A plugin registers its checker in activate(), a moment before the loader
+// counts it as running: wait for that rather than fail the first check.
+async function backgroundOf(pluginId: string) {
+  let entry = getActive(pluginId);
+  if (!entry) {
+    entry = await new Promise<ReturnType<typeof getActive>>((resolve) => {
+      const timer = setTimeout(() => { unsubscribe(); resolve(getActive(pluginId)); }, 10_000);
+      const unsubscribe = subscribeActive(() => {
+        const found = getActive(pluginId);
+        if (!found) return;
+        clearTimeout(timer);
+        unsubscribe();
+        resolve(found);
+      });
+    });
+  }
   if (!entry) throw new Error('plugin is not running');
   return entry.background;
 }
 
 setCheckerDispatcher({
-  check: (pluginId, checkerId, request) => backgroundOf(pluginId).invokeHook(`checker:${checkerId}`, [request]),
-  action: (pluginId, checkerId, payload) => backgroundOf(pluginId).invokeHook(`checker-action:${checkerId}`, [payload]),
+  check: async (pluginId, checkerId, request) => (await backgroundOf(pluginId)).invokeHook(`checker:${checkerId}`, [request]),
+  action: async (pluginId, checkerId, payload) => (await backgroundOf(pluginId)).invokeHook(`checker-action:${checkerId}`, [payload]),
 });
 
 // ─── Unload ───────────────────────────────────────────────────

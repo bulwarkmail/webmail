@@ -6039,7 +6039,7 @@
       },
       "compose_check": {
         "title": "Controleren wat u schrijft",
-        "body": "Leest wat u in de editor schrijft terwijl u typt en kan het naar de dienst sturen die het gebruikt. Alleen als de controle aan staat, en nooit voor een bericht dat u ondertekent of versleutelt."
+        "body": "Leest wat u in de editor schrijft terwijl u typt en kan het naar de dienst sturen die het gebruikt. Alleen als de controle aan staat, en niets zolang een bericht is ingesteld om te worden ondertekend of versleuteld. Tekst die u schreef voordat u dat aanzette, is mogelijk al gecontroleerd."
       },
       "email_forward": {
         "title": "Je e-mail doorsturen",
@@ -6394,7 +6394,7 @@
       "title": "Tekstcontrole",
       "required": "Verplicht gesteld door je organisatie",
       "check_message": "Dit bericht controleren",
-      "notice": "Terwijl je typt, gaat de tekst die je schrijft naar {checkers} om te worden gecontroleerd. Je handtekening en het geciteerde bericht worden overgeslagen, en er wordt niets verstuurd voor een bericht dat je ondertekent of versleutelt.",
+      "notice": "Terwijl je typt, gaat de tekst die je schrijft naar {checkers} om te worden gecontroleerd. Je handtekening en het geciteerde bericht worden overgeslagen. Er wordt niets verstuurd zolang een bericht is ingesteld om te worden ondertekend of versleuteld; wat je schreef voordat je dat aanzette, is mogelijk al gecontroleerd.",
       "turn_on": "Tekstcontrole aanzetten",
       "paused_protected": "Er wordt niets gecontroleerd zolang dit bericht wordt ondertekend of versleuteld.",
       "paused_unknown": "{plugin} kan berichten ondertekenen of versleutelen zonder dat hier te tonen, dus er wordt niets gecontroleerd zolang het aan staat.",
@@ -6405,8 +6405,8 @@
       "shortcuts": "Volgend probleem: {next}. Vorige: {previous}."
     },
     "notice": {
-      "on": "Tekstcontrole staat aan. Terwijl je typt, gaat de tekst die je schrijft naar {checkers} om te worden gecontroleerd, zonder je handtekening of het geciteerde bericht. Er wordt niets verstuurd voor een bericht dat je ondertekent of versleutelt.",
-      "forced": "Je organisatie heeft tekstcontrole aangezet. Terwijl je typt, gaat de tekst die je schrijft naar {checkers} om te worden gecontroleerd, zonder je handtekening of het geciteerde bericht. Er wordt niets verstuurd voor een bericht dat je ondertekent of versleutelt.",
+      "on": "Tekstcontrole staat aan. Terwijl je typt, gaat de tekst die je schrijft naar {checkers} om te worden gecontroleerd, zonder je handtekening of het geciteerde bericht. Er wordt niets verstuurd zolang een bericht is ingesteld om te worden ondertekend of versleuteld; wat je daarvoor schreef, is mogelijk al gecontroleerd.",
+      "forced": "Je organisatie heeft tekstcontrole aangezet. Terwijl je typt, gaat de tekst die je schrijft naar {checkers} om te worden gecontroleerd, zonder je handtekening of het geciteerde bericht. Er wordt niets verstuurd zolang een bericht is ingesteld om te worden ondertekend of versleuteld; wat je daarvoor schreef, is mogelijk al gecontroleerd.",
       "ok": "OK"
     },
     "send_warning": {
@@ -6419,7 +6419,7 @@
       "title": "Tekstcontrole",
       "description": "Spel- en grammaticafouten onderstrepen terwijl je schrijft, met suggesties om ze te verbeteren.",
       "enable": "Spelling en grammatica controleren terwijl ik typ",
-      "enable_description": "De tekst die je schrijft gaat naar de add-on voor tekstcontrole en de dienst die die gebruikt. Je handtekening en geciteerde berichten worden overgeslagen, en ondertekende of versleutelde berichten worden nooit gecontroleerd.",
+      "enable_description": "De tekst die je schrijft gaat naar de add-on voor tekstcontrole en de dienst die die gebruikt, zonder je handtekening of geciteerde berichten. Er wordt niets verstuurd zolang een bericht is ingesteld om te worden ondertekend of versleuteld.",
       "no_checker": "Er is geen add-on voor tekstcontrole geïnstalleerd. Vraag je beheerder er een toe te voegen.",
       "plugin_description": "Stuurt wat je schrijft naar {plugin}.",
       "writing_language": "Schrijftaal",

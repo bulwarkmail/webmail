@@ -6039,7 +6039,7 @@
       },
       "compose_check": {
         "title": "Tjekke det, du skriver",
-        "body": "Læser det, du skriver i editoren, mens du skriver, og kan sende det til den tjeneste, den bruger. Kun når korrekturen er slået til, og aldrig for en besked, du signerer eller krypterer."
+        "body": "Læser det, du skriver i editoren, mens du skriver, og kan sende det til den tjeneste, den bruger. Kun når korrekturen er slået til, og intet, så længe en besked er sat til at blive signeret eller krypteret. Tekst, du skrev, før du slog det til, kan allerede være tjekket."
       },
       "email_forward": {
         "title": "Videresende din post",
@@ -6394,7 +6394,7 @@
       "title": "Korrektur",
       "required": "Krævet af din organisation",
       "check_message": "Tjek denne besked",
-      "notice": "Mens du skriver, sendes teksten til {checkers} for at blive tjekket. Din signatur og den citerede besked udelades, og der sendes intet for en besked, du signerer eller krypterer.",
+      "notice": "Mens du skriver, sendes teksten til {checkers} for at blive tjekket. Din signatur og den citerede besked udelades. Der sendes intet, så længe en besked er sat til at blive signeret eller krypteret; det, du skrev, før du slog det til, kan allerede være tjekket.",
       "turn_on": "Slå korrektur til",
       "paused_protected": "Intet bliver tjekket, så længe denne besked er sat til at blive signeret eller krypteret.",
       "paused_unknown": "{plugin} kan signere eller kryptere beskeder uden at vise det her, så intet bliver tjekket, mens den er slået til.",
@@ -6405,8 +6405,8 @@
       "shortcuts": "Næste problem: {next}. Forrige: {previous}."
     },
     "notice": {
-      "on": "Korrektur er slået til. Mens du skriver, sendes teksten til {checkers} for at blive tjekket, uden din signatur og den citerede besked. Der sendes intet for en besked, du signerer eller krypterer.",
-      "forced": "Din organisation har slået korrektur til. Mens du skriver, sendes teksten til {checkers} for at blive tjekket, uden din signatur og den citerede besked. Der sendes intet for en besked, du signerer eller krypterer.",
+      "on": "Korrektur er slået til. Mens du skriver, sendes teksten til {checkers} for at blive tjekket, uden din signatur og den citerede besked. Der sendes intet, så længe en besked er sat til at blive signeret eller krypteret; det, du skrev før, kan allerede være tjekket.",
+      "forced": "Din organisation har slået korrektur til. Mens du skriver, sendes teksten til {checkers} for at blive tjekket, uden din signatur og den citerede besked. Der sendes intet, så længe en besked er sat til at blive signeret eller krypteret; det, du skrev før, kan allerede være tjekket.",
       "ok": "OK"
     },
     "send_warning": {
@@ -6419,7 +6419,7 @@
       "title": "Korrektur",
       "description": "Understreg stave- og grammatikfejl, mens du skriver, med forslag til at rette dem.",
       "enable": "Tjek stavning og grammatik, mens jeg skriver",
-      "enable_description": "Teksten, du skriver, sendes til korrekturtilføjelsen og den tjeneste, den bruger. Din signatur og citerede beskeder udelades, og signerede eller krypterede beskeder bliver aldrig tjekket.",
+      "enable_description": "Teksten, du skriver, sendes til korrekturtilføjelsen og den tjeneste, den bruger, uden din signatur og citerede beskeder. Der sendes intet, så længe en besked er sat til at blive signeret eller krypteret.",
       "no_checker": "Der er ingen korrekturtilføjelse installeret. Bed din administrator om at tilføje en.",
       "plugin_description": "Sender det, du skriver, til {plugin}.",
       "writing_language": "Skrivesprog",

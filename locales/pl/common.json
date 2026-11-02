@@ -6039,7 +6039,7 @@
       },
       "compose_check": {
         "title": "Sprawdzać to, co piszesz",
-        "body": "Czyta to, co piszesz w edytorze, w trakcie pisania i może wysyłać to do usługi, z której korzysta. Tylko gdy sprawdzanie jest włączone, i nigdy dla wiadomości, którą podpisujesz lub szyfrujesz."
+        "body": "Czyta to, co piszesz w edytorze, w trakcie pisania i może wysyłać to do usługi, z której korzysta. Tylko gdy sprawdzanie jest włączone, i nic, dopóki wiadomość ma zostać podpisana lub zaszyfrowana. Tekst napisany przed włączeniem tej opcji mógł już zostać sprawdzony."
       },
       "email_forward": {
         "title": "Przekazywanie Twojej poczty",
@@ -6394,7 +6394,7 @@
       "title": "Korekta",
       "required": "Wymagane przez Twoją organizację",
       "check_message": "Sprawdź tę wiadomość",
-      "notice": "Podczas pisania Twój tekst trafia do {checkers} do sprawdzenia. Twój podpis i cytowana wiadomość są pomijane, a z wiadomości, którą podpisujesz lub szyfrujesz, nic nie jest wysyłane.",
+      "notice": "Podczas pisania Twój tekst trafia do {checkers} do sprawdzenia. Twój podpis i cytowana wiadomość są pomijane. Nic nie jest wysyłane, dopóki wiadomość ma zostać podpisana lub zaszyfrowana; to, co napisano przed włączeniem tej opcji, mogło już zostać sprawdzone.",
       "turn_on": "Włącz korektę",
       "paused_protected": "Nic nie jest sprawdzane, dopóki ta wiadomość ma zostać podpisana lub zaszyfrowana.",
       "paused_unknown": "{plugin} może podpisywać lub szyfrować wiadomości bez pokazywania tego tutaj, więc nic nie jest sprawdzane, dopóki jest włączony.",
@@ -6405,8 +6405,8 @@
       "shortcuts": "Następny problem: {next}. Poprzedni: {previous}."
     },
     "notice": {
-      "on": "Korekta jest włączona. Podczas pisania Twój tekst trafia do {checkers} do sprawdzenia, bez Twojego podpisu i cytowanej wiadomości. Z wiadomości, którą podpisujesz lub szyfrujesz, nic nie jest wysyłane.",
-      "forced": "Twoja organizacja włączyła korektę. Podczas pisania Twój tekst trafia do {checkers} do sprawdzenia, bez Twojego podpisu i cytowanej wiadomości. Z wiadomości, którą podpisujesz lub szyfrujesz, nic nie jest wysyłane.",
+      "on": "Korekta jest włączona. Podczas pisania Twój tekst trafia do {checkers} do sprawdzenia, bez Twojego podpisu i cytowanej wiadomości. Nic nie jest wysyłane, dopóki wiadomość ma zostać podpisana lub zaszyfrowana; to, co napisano wcześniej, mogło już zostać sprawdzone.",
+      "forced": "Twoja organizacja włączyła korektę. Podczas pisania Twój tekst trafia do {checkers} do sprawdzenia, bez Twojego podpisu i cytowanej wiadomości. Nic nie jest wysyłane, dopóki wiadomość ma zostać podpisana lub zaszyfrowana; to, co napisano wcześniej, mogło już zostać sprawdzone.",
       "ok": "OK"
     },
     "send_warning": {
@@ -6419,7 +6419,7 @@
       "title": "Korekta",
       "description": "Podkreśla błędy pisowni i gramatyki podczas pisania i podpowiada, jak je poprawić.",
       "enable": "Sprawdzaj pisownię i gramatykę podczas pisania",
-      "enable_description": "Tekst, który piszesz, trafia do dodatku do korekty i usługi, z której korzysta. Twój podpis i cytowane wiadomości są pomijane, a podpisane lub zaszyfrowane wiadomości nigdy nie są sprawdzane.",
+      "enable_description": "Tekst, który piszesz, trafia do dodatku do korekty i usługi, z której korzysta, bez Twojego podpisu i cytowanych wiadomości. Nic nie jest wysyłane, dopóki wiadomość ma zostać podpisana lub zaszyfrowana.",
       "no_checker": "Nie zainstalowano żadnego dodatku do korekty. Poproś administratora o dodanie.",
       "plugin_description": "Wysyła to, co piszesz, do {plugin}.",
       "writing_language": "Język pisania",

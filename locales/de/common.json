@@ -6039,7 +6039,7 @@
       },
       "compose_check": {
         "title": "Prüfen, was Sie schreiben",
-        "body": "Liest, was Sie im Editor schreiben, während Sie tippen, und kann es an den Dienst senden, den es nutzt. Nur wenn die Korrekturhilfe an ist, und nie bei einer Nachricht, die Sie signieren oder verschlüsseln."
+        "body": "Liest, was Sie im Editor schreiben, während Sie tippen, und kann es an den Dienst senden, den es nutzt. Nur wenn die Korrekturhilfe an ist, und nichts, solange eine Nachricht signiert oder verschlüsselt werden soll. Text, den Sie geschrieben haben, bevor Sie das eingeschaltet haben, wurde möglicherweise schon geprüft."
       },
       "email_forward": {
         "title": "E-Mails weiterleiten",
@@ -6394,7 +6394,7 @@
       "title": "Korrekturhilfe",
       "required": "Von Ihrer Organisation vorgeschrieben",
       "check_message": "Diese Nachricht prüfen",
-      "notice": "Während Sie tippen, geht Ihr Text zur Prüfung an {checkers}. Ihre Signatur und die zitierte Nachricht bleiben außen vor, und bei einer Nachricht, die Sie signieren oder verschlüsseln, wird nichts gesendet.",
+      "notice": "Während Sie tippen, geht Ihr Text zur Prüfung an {checkers}. Ihre Signatur und die zitierte Nachricht bleiben außen vor. Solange eine Nachricht signiert oder verschlüsselt werden soll, wird nichts gesendet. Was Sie geschrieben haben, bevor Sie das eingeschaltet haben, wurde möglicherweise schon geprüft.",
       "turn_on": "Korrekturhilfe einschalten",
       "paused_protected": "Solange diese Nachricht signiert oder verschlüsselt werden soll, wird nichts geprüft.",
       "paused_unknown": "{plugin} kann Nachrichten signieren oder verschlüsseln, ohne dass es hier angezeigt wird. Solange es aktiv ist, wird deshalb nichts geprüft.",
@@ -6405,8 +6405,8 @@
       "shortcuts": "Nächster Hinweis: {next}. Vorheriger: {previous}."
     },
     "notice": {
-      "on": "Die Korrekturhilfe ist an. Während Sie tippen, geht Ihr Text zur Prüfung an {checkers}, ohne Ihre Signatur und die zitierte Nachricht. Bei einer Nachricht, die Sie signieren oder verschlüsseln, wird nichts gesendet.",
-      "forced": "Ihre Organisation hat die Korrekturhilfe eingeschaltet. Während Sie tippen, geht Ihr Text zur Prüfung an {checkers}, ohne Ihre Signatur und die zitierte Nachricht. Bei einer Nachricht, die Sie signieren oder verschlüsseln, wird nichts gesendet.",
+      "on": "Die Korrekturhilfe ist an. Während Sie tippen, geht Ihr Text zur Prüfung an {checkers}, ohne Ihre Signatur und die zitierte Nachricht. Solange eine Nachricht signiert oder verschlüsselt werden soll, wird nichts gesendet. Was Sie vorher geschrieben haben, wurde möglicherweise schon geprüft.",
+      "forced": "Ihre Organisation hat die Korrekturhilfe eingeschaltet. Während Sie tippen, geht Ihr Text zur Prüfung an {checkers}, ohne Ihre Signatur und die zitierte Nachricht. Solange eine Nachricht signiert oder verschlüsselt werden soll, wird nichts gesendet. Was Sie vorher geschrieben haben, wurde möglicherweise schon geprüft.",
       "ok": "OK"
     },
     "send_warning": {
@@ -6419,7 +6419,7 @@
       "title": "Korrekturhilfe",
       "description": "Rechtschreib- und Grammatikfehler beim Schreiben unterstreichen, mit Vorschlägen zur Korrektur.",
       "enable": "Rechtschreibung und Grammatik beim Tippen prüfen",
-      "enable_description": "Ihr Text geht an die Erweiterung für die Korrekturhilfe und an den Dienst, den sie nutzt. Ihre Signatur und zitierte Nachrichten bleiben außen vor, und signierte oder verschlüsselte Nachrichten werden nie geprüft.",
+      "enable_description": "Ihr Text geht an die Erweiterung für die Korrekturhilfe und an den Dienst, den sie nutzt, ohne Ihre Signatur und zitierte Nachrichten. Solange eine Nachricht signiert oder verschlüsselt werden soll, wird nichts gesendet.",
       "no_checker": "Es ist keine Erweiterung für die Korrekturhilfe installiert. Bitten Sie Ihre Administration, eine hinzuzufügen.",
       "plugin_description": "Sendet Ihren Text an {plugin}.",
       "writing_language": "Schreibsprache",

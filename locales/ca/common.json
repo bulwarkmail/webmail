@@ -6039,7 +6039,7 @@
       },
       "compose_check": {
         "title": "Revisar el que escriviu",
-        "body": "Llegeix el que escriviu a l'editor mentre teclegeu i ho pot enviar al servei que fa servir. Només quan la revisió està activada, i mai per a un missatge que signeu o xifreu."
+        "body": "Llegeix el que escriviu a l'editor mentre teclegeu i ho pot enviar al servei que fa servir. Només quan la revisió està activada, i res mentre un missatge estigui configurat per signar-se o xifrar-se. El text que heu escrit abans d'activar-ho potser ja s'ha revisat."
       },
       "email_forward": {
         "title": "Reenviar el vostre correu",
@@ -6394,7 +6394,7 @@
       "title": "Revisió",
       "required": "Exigit per la vostra organització",
       "check_message": "Revisa aquest missatge",
-      "notice": "Mentre escriviu, el text s'envia a {checkers} perquè el revisi. La vostra signatura i el missatge citat en queden fora, i no s'envia res d'un missatge que signeu o xifreu.",
+      "notice": "Mentre escriviu, el text s'envia a {checkers} perquè el revisi. La vostra signatura i el missatge citat en queden fora. No s'envia res mentre un missatge estigui configurat per signar-se o xifrar-se; el que heu escrit abans d'activar-ho potser ja s'ha revisat.",
       "turn_on": "Activa la revisió",
       "paused_protected": "No es revisa res mentre aquest missatge estigui configurat per signar-se o xifrar-se.",
       "paused_unknown": "{plugin} pot signar o xifrar missatges sense mostrar-ho aquí, així que no es revisa res mentre estigui activat.",
@@ -6405,8 +6405,8 @@
       "shortcuts": "Problema següent: {next}. Anterior: {previous}."
     },
     "notice": {
-      "on": "La revisió està activada. Mentre escriviu, el text s'envia a {checkers} perquè el revisi, sense la vostra signatura ni el missatge citat. No s'envia res d'un missatge que signeu o xifreu.",
-      "forced": "La vostra organització ha activat la revisió. Mentre escriviu, el text s'envia a {checkers} perquè el revisi, sense la vostra signatura ni el missatge citat. No s'envia res d'un missatge que signeu o xifreu.",
+      "on": "La revisió està activada. Mentre escriviu, el text s'envia a {checkers} perquè el revisi, sense la vostra signatura ni el missatge citat. No s'envia res mentre un missatge estigui configurat per signar-se o xifrar-se; el que heu escrit abans potser ja s'ha revisat.",
+      "forced": "La vostra organització ha activat la revisió. Mentre escriviu, el text s'envia a {checkers} perquè el revisi, sense la vostra signatura ni el missatge citat. No s'envia res mentre un missatge estigui configurat per signar-se o xifrar-se; el que heu escrit abans potser ja s'ha revisat.",
       "ok": "D'acord"
     },
     "send_warning": {
@@ -6419,7 +6419,7 @@
       "title": "Revisió",
       "description": "Subratlla els errors d'ortografia i de gramàtica mentre escriviu, amb suggeriments per corregir-los.",
       "enable": "Revisa l'ortografia i la gramàtica mentre escric",
-      "enable_description": "El text que escriviu s'envia al complement de revisió i al servei que fa servir. La vostra signatura i els missatges citats en queden fora, i els missatges signats o xifrats no es revisen mai.",
+      "enable_description": "El text que escriviu s'envia al complement de revisió i al servei que fa servir, sense la vostra signatura ni els missatges citats. No s'envia res mentre un missatge estigui configurat per signar-se o xifrar-se.",
       "no_checker": "No hi ha cap complement de revisió instal·lat. Demaneu a l'administrador que n'afegeixi un.",
       "plugin_description": "Envia el que escriviu a {plugin}.",
       "writing_language": "Llengua d'escriptura",

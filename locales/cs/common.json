@@ -6039,7 +6039,7 @@
       },
       "compose_check": {
         "title": "Kontrolovat, co píšete",
-        "body": "Čte, co píšete v editoru, během psaní a může to posílat službě, kterou používá. Jen když je kontrola zapnutá, a nikdy u zprávy, kterou podepisujete nebo šifrujete."
+        "body": "Čte, co píšete v editoru, během psaní a může to posílat službě, kterou používá. Jen když je kontrola zapnutá, a nic, dokud je zpráva nastavená k podepsání nebo zašifrování. Text, který jste napsali, než jste to zapnuli, už mohl být zkontrolován."
       },
       "email_forward": {
         "title": "Přeposílat vaši poštu",
@@ -6394,7 +6394,7 @@
       "title": "Kontrola textu",
       "required": "Vyžaduje vaše organizace",
       "check_message": "Zkontrolovat tuto zprávu",
-      "notice": "Během psaní se váš text posílá ke kontrole službě {checkers}. Váš podpis a citovaná zpráva se vynechávají a u zprávy, kterou podepisujete nebo šifrujete, se neposílá nic.",
+      "notice": "Během psaní se váš text posílá ke kontrole službě {checkers}. Váš podpis a citovaná zpráva se vynechávají. Dokud je zpráva nastavená k podepsání nebo zašifrování, neposílá se nic; co jste napsali předtím, než jste to zapnuli, už mohlo být zkontrolováno.",
       "turn_on": "Zapnout kontrolu textu",
       "paused_protected": "Dokud je tato zpráva nastavená k podepsání nebo zašifrování, nic se nekontroluje.",
       "paused_unknown": "{plugin} může podepisovat nebo šifrovat zprávy, aniž by se to zde zobrazilo, proto se nic nekontroluje, dokud je zapnutý.",
@@ -6405,8 +6405,8 @@
       "shortcuts": "Další problém: {next}. Předchozí: {previous}."
     },
     "notice": {
-      "on": "Kontrola textu je zapnutá. Během psaní se váš text posílá ke kontrole službě {checkers}, bez vašeho podpisu a citované zprávy. U zprávy, kterou podepisujete nebo šifrujete, se neposílá nic.",
-      "forced": "Vaše organizace zapnula kontrolu textu. Během psaní se váš text posílá ke kontrole službě {checkers}, bez vašeho podpisu a citované zprávy. U zprávy, kterou podepisujete nebo šifrujete, se neposílá nic.",
+      "on": "Kontrola textu je zapnutá. Během psaní se váš text posílá ke kontrole službě {checkers}, bez vašeho podpisu a citované zprávy. Dokud je zpráva nastavená k podepsání nebo zašifrování, neposílá se nic; co jste napsali předtím, už mohlo být zkontrolováno.",
+      "forced": "Vaše organizace zapnula kontrolu textu. Během psaní se váš text posílá ke kontrole službě {checkers}, bez vašeho podpisu a citované zprávy. Dokud je zpráva nastavená k podepsání nebo zašifrování, neposílá se nic; co jste napsali předtím, už mohlo být zkontrolováno.",
       "ok": "OK"
     },
     "send_warning": {
@@ -6419,7 +6419,7 @@
       "title": "Kontrola textu",
       "description": "Podtrhává pravopisné a gramatické chyby během psaní a nabízí návrhy na opravu.",
       "enable": "Kontrolovat pravopis a gramatiku během psaní",
-      "enable_description": "Text, který píšete, se posílá doplňku pro kontrolu textu a službě, kterou používá. Váš podpis a citované zprávy se vynechávají a podepsané nebo šifrované zprávy se nikdy nekontrolují.",
+      "enable_description": "Text, který píšete, se posílá doplňku pro kontrolu textu a službě, kterou používá, bez vašeho podpisu a citovaných zpráv. Dokud je zpráva nastavená k podepsání nebo zašifrování, neposílá se nic.",
       "no_checker": "Není nainstalovaný žádný doplněk pro kontrolu textu. Požádejte správce, aby nějaký přidal.",
       "plugin_description": "Posílá, co píšete, do {plugin}.",
       "writing_language": "Jazyk psaní",

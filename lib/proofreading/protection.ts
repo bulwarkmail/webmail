@@ -14,6 +14,9 @@
 //
 // The plugins' choice isn't per composer (S/MIME keeps one intent for the
 // next message), so one answer covers every open composer.
+//
+// A crypto:full plugin that is turned on but still starting can't have said
+// anything yet (S/MIME may encrypt by default): it pauses checking too.
 
 import type { RegisteredAction } from '@/lib/plugin-sandbox/actions';
 import type { InstalledPlugin } from '@/lib/plugin-types';
@@ -32,9 +35,16 @@ function canSign(plugin: InstalledPlugin): boolean {
 
 /**
  * `options`: the actions on the composer's Options menu. `running`: the
- * plugins currently loaded.
+ * plugins currently loaded. `starting`: plugins turned on that aren't
+ * running yet.
  */
-export function draftProtection(options: readonly RegisteredAction[], running: readonly InstalledPlugin[]): Protection {
+export function draftProtection(
+  options: readonly RegisteredAction[],
+  running: readonly InstalledPlugin[],
+  starting: readonly InstalledPlugin[] = [],
+): Protection {
+  const loading = starting.find(canSign);
+  if (loading) return { protected: true, reason: 'unknown', pluginName: loading.name };
   const signers = new Map(running.filter(canSign).map((p) => [p.id, p]));
   const speaks = new Set<string>();
   for (const a of options) {

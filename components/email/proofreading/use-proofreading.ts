@@ -5,6 +5,8 @@
 // textarea, draws their underlines and applies the fixes the user picks.
 
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState, useSyncExternalStore, type RefObject } from "react";
+import { useTranslations } from "next-intl";
+import { announce } from "@/lib/announce";
 import type { Editor } from "@tiptap/core";
 import { TextSelection } from "@tiptap/pm/state";
 import { ComposerProofreader, type DismissAction, type PlacedIssue, type ProofreaderStatus } from "@/lib/proofreading/composer-proofreader";
@@ -16,20 +18,37 @@ import { actionsFor, subscribeActions } from "@/lib/plugin-sandbox/actions";
 import { all as allActivePlugins, subscribe as subscribeActivePlugins } from "@/lib/plugin-sandbox/registry";
 import { replaceTextareaRange, type PlainOwnOptions } from "@/lib/plugin-sandbox/composer-edit";
 import { usePolicyStore } from "@/stores/policy-store";
+import { usePluginStore } from "@/stores/plugin-store";
+import type { InstalledPlugin } from "@/lib/plugin-types";
 import { useSettingsStore } from "@/stores/settings-store";
 import {
   applyIssueReplacement, drawnIssues, issueNavigationKey, issueRect, selectNextIssue, setActiveIssue, setTextIssues,
   type IssueOpenVia, type TextCheckOptions,
 } from "./text-check-extension";
 
-/** The policy as the gate needs it, read now. */
+/**
+ * The policy as the gate needs it, read now. Settled only with a policy from
+ * the server (or the copy this browser kept of one): when the fetch failed
+ * and nothing was ever fetched, the built-in defaults could undo an admin's
+ * lock, so nothing is checked.
+ */
 export function currentPolicyView(): PolicyView {
   const s = usePolicyStore.getState();
   return {
     restrictions: s.policy.restrictions ?? {},
     defaults: (s.policy.defaults ?? {}) as Record<string, unknown>,
-    settled: s.loaded && !s.partial && !s.subjectPending,
+    settled: policySettled(s),
   };
+}
+
+export function policySettled(s: Pick<ReturnType<typeof usePolicyStore.getState>, 'loaded' | 'partial' | 'subjectPending' | 'source'>): boolean {
+  return s.loaded && !s.partial && !s.subjectPending && s.source !== 'fallback' && s.source !== 'none';
+}
+
+/** Plugins turned on that aren't running yet (still loading). */
+function startingPlugins(running: InstalledPlugin[]): InstalledPlugin[] {
+  const up = new Set(running.map((p) => p.id));
+  return usePluginStore.getState().plugins.filter((p) => p.enabled && p.status !== 'error' && p.status !== 'disabled' && !up.has(p.id));
 }
 
 // The per-composer switch outlives a remount (pop-out, layout switch).
@@ -91,6 +110,9 @@ export function useProofreading({ composerId, sessionKey, editor, textareaRef, p
   composerOnRef.current = composerOn;
   const editorRef = useRef(editor);
   editorRef.current = editor;
+  const t = useTranslations("proofreading");
+  const tRef = useRef(t);
+  tRef.current = t;
   const plainRef = useRef(plainTextMode);
   plainRef.current = plainTextMode;
   const hasCheckers = checkers.length > 0;
@@ -108,7 +130,10 @@ export function useProofreading({ composerId, sessionKey, editor, textareaRef, p
       },
       language: () => useSettingsStore.getState().writingLanguage,
       access: (pluginId) => checkerAccess(currentPolicyView(), useSettingsStore.getState(), pluginId),
-      protection: () => draftProtection(actionsFor(OPTIONS_SURFACE), allActivePlugins().map((e) => e.plugin)),
+      protection: () => {
+        const running = allActivePlugins().map((e) => e.plugin);
+        return draftProtection(actionsFor(OPTIONS_SURFACE), running, startingPlugins(running));
+      },
       composerOn: () => composerOnRef.current,
       send: (spec, request) => dispatchCheck(spec, request),
       action: (spec, payload) => dispatchCheckerAction(spec, payload),
@@ -123,6 +148,7 @@ export function useProofreading({ composerId, sessionKey, editor, textareaRef, p
       subscribeCheckers(() => p.sync()),
       subscribeActions(() => p.gateChanged()),
       subscribeActivePlugins(() => p.gateChanged()),
+      usePluginStore.subscribe(() => p.gateChanged()),
       usePolicyStore.subscribe(() => p.gateChanged()),
       useSettingsStore.subscribe((s, prev) => {
         if (s.writingLanguage !== prev.writingLanguage) p.edited("now");
@@ -246,7 +272,10 @@ export function useProofreading({ composerId, sessionKey, editor, textareaRef, p
   /** Go to the next or previous issue: in the text (rich) or in the list (plain). */
   const navigate = useCallback((dir: 1 | -1) => {
     const list = visibleRef.current;
-    if (!list.length) return false;
+    if (!list.length) {
+      if (composerOnRef.current) announce(tRef.current("panel.no_issues"), { key: "proofreading-count" });
+      return false;
+    }
     const ed = editorRef.current;
     if (ed && !plainRef.current) {
       const key = selectNextIssue(ed, dir);
@@ -309,8 +338,11 @@ export function useProofreading({ composerId, sessionKey, editor, textareaRef, p
   }, [plainTextMode, textareaRef, proofreader, navigate]);
 
   // An issue that went away (fixed, typed over) closes its popup.
+  // With the focus in it, the focus goes back to the text.
   useEffect(() => {
-    if (popup && !visibleIssues.some((i) => i.key === popup.key)) closePopup(false);
+    if (!popup || visibleIssues.some((i) => i.key === popup.key)) return;
+    const focusInside = !!(document.activeElement as Element | null)?.closest?.('[data-testid="proofreading-popup"]');
+    closePopup(focusInside);
   }, [popup, visibleIssues, closePopup]);
 
   const apply = useCallback((issue: PlacedIssue, replacement: string): boolean => {

@@ -285,6 +285,7 @@ html.dark[data-contrast="more"] {
     text-decoration-thickness: 2px;
   }
   .tiptap .text-issue-active {
+    forced-color-adjust: none;
     background-color: Highlight;
     color: HighlightText;
   }

@@ -6039,7 +6039,7 @@
       },
       "compose_check": {
         "title": "Verificar o que escreve",
-        "body": "Lê o que escreve no editor enquanto digita e pode enviá-lo ao serviço que usa. Só quando a revisão está ativada, e nunca numa mensagem que assine ou cifre."
+        "body": "Lê o que escreve no editor enquanto digita e pode enviá-lo ao serviço que usa. Só quando a revisão está ativada, e nada enquanto uma mensagem estiver configurada para ser assinada ou criptografada. O texto que escreveu antes de ativar isso pode já ter sido verificado."
       },
       "email_forward": {
         "title": "Encaminhar seus e-mails",
@@ -6394,7 +6394,7 @@
       "title": "Revisão",
       "required": "Exigido pela sua organização",
       "check_message": "Verificar esta mensagem",
-      "notice": "Enquanto digita, o texto que escreve é enviado para {checkers} para ser verificado. Sua assinatura e a mensagem citada ficam de fora, e nada é enviado de uma mensagem que você assine ou criptografe.",
+      "notice": "Enquanto digita, o texto que escreve é enviado para {checkers} para ser verificado. Sua assinatura e a mensagem citada ficam de fora. Nada é enviado enquanto uma mensagem estiver configurada para ser assinada ou criptografada; o que você escreveu antes de ativar isso pode já ter sido verificado.",
       "turn_on": "Ativar a revisão",
       "paused_protected": "Nada é verificado enquanto esta mensagem estiver configurada para ser assinada ou criptografada.",
       "paused_unknown": "{plugin} pode assinar ou criptografar mensagens sem mostrar isso aqui, por isso nada é verificado enquanto ele estiver ativo.",
@@ -6405,8 +6405,8 @@
       "shortcuts": "Próximo problema: {next}. Anterior: {previous}."
     },
     "notice": {
-      "on": "A revisão está ativada. Enquanto digita, o texto que escreve é enviado para {checkers} para ser verificado, sem sua assinatura nem a mensagem citada. Nada é enviado de uma mensagem que você assine ou criptografe.",
-      "forced": "Sua organização ativou a revisão. Enquanto digita, o texto que escreve é enviado para {checkers} para ser verificado, sem sua assinatura nem a mensagem citada. Nada é enviado de uma mensagem que você assine ou criptografe.",
+      "on": "A revisão está ativada. Enquanto digita, o texto que escreve é enviado para {checkers} para ser verificado, sem sua assinatura nem a mensagem citada. Nada é enviado enquanto uma mensagem estiver configurada para ser assinada ou criptografada; o que você escreveu antes pode já ter sido verificado.",
+      "forced": "Sua organização ativou a revisão. Enquanto digita, o texto que escreve é enviado para {checkers} para ser verificado, sem sua assinatura nem a mensagem citada. Nada é enviado enquanto uma mensagem estiver configurada para ser assinada ou criptografada; o que você escreveu antes pode já ter sido verificado.",
       "ok": "OK"
     },
     "send_warning": {
@@ -6419,7 +6419,7 @@
       "title": "Revisão",
       "description": "Sublinha erros de ortografia e gramática enquanto você escreve, com sugestões para corrigi-los.",
       "enable": "Verificar ortografia e gramática enquanto digito",
-      "enable_description": "O texto que você escreve é enviado para o extra de revisão e para o serviço que ele usa. Sua assinatura e as mensagens citadas ficam de fora, e mensagens assinadas ou criptografadas nunca são verificadas.",
+      "enable_description": "O texto que você escreve é enviado para o extra de revisão e para o serviço que ele usa, sem sua assinatura nem as mensagens citadas. Nada é enviado enquanto uma mensagem estiver configurada para ser assinada ou criptografada.",
       "no_checker": "Nenhum extra de revisão está instalado. Peça ao administrador para adicionar um.",
       "plugin_description": "Envia o que você escreve para {plugin}.",
       "writing_language": "Idioma de escrita",

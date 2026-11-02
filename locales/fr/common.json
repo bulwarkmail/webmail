@@ -6039,7 +6039,7 @@
       },
       "compose_check": {
         "title": "Vérifier ce que vous écrivez",
-        "body": "Lit ce que vous écrivez dans l'éditeur pendant la saisie et peut l'envoyer au service qu'il utilise. Seulement quand la correction est activée, et jamais pour un message que vous signez ou chiffrez."
+        "body": "Lit ce que vous écrivez dans l'éditeur pendant la saisie et peut l'envoyer au service qu'il utilise. Seulement quand la correction est activée, et rien tant qu'un message doit être signé ou chiffré. Le texte écrit avant d'activer cette option a peut-être déjà été vérifié."
       },
       "email_forward": {
         "title": "Transférer vos e-mails",
@@ -6394,7 +6394,7 @@
       "title": "Correction",
       "required": "Exigé par votre organisation",
       "check_message": "Vérifier ce message",
-      "notice": "Pendant la saisie, le texte que vous écrivez est envoyé à {checkers} pour être vérifié. Votre signature et le message cité sont exclus, et rien n'est envoyé pour un message que vous signez ou chiffrez.",
+      "notice": "Pendant la saisie, le texte que vous écrivez est envoyé à {checkers} pour être vérifié. Votre signature et le message cité sont exclus. Rien n'est envoyé tant qu'un message doit être signé ou chiffré ; ce que vous avez écrit avant d'activer cette option a peut-être déjà été vérifié.",
       "turn_on": "Activer la correction",
       "paused_protected": "Rien n'est vérifié tant que ce message doit être signé ou chiffré.",
       "paused_unknown": "{plugin} peut signer ou chiffrer des messages sans que cela s'affiche ici, donc rien n'est vérifié tant qu'il est actif.",
@@ -6405,8 +6405,8 @@
       "shortcuts": "Problème suivant : {next}. Précédent : {previous}."
     },
     "notice": {
-      "on": "La correction est activée. Pendant la saisie, le texte que vous écrivez est envoyé à {checkers} pour être vérifié, sans votre signature ni le message cité. Rien n'est envoyé pour un message que vous signez ou chiffrez.",
-      "forced": "Votre organisation a activé la correction. Pendant la saisie, le texte que vous écrivez est envoyé à {checkers} pour être vérifié, sans votre signature ni le message cité. Rien n'est envoyé pour un message que vous signez ou chiffrez.",
+      "on": "La correction est activée. Pendant la saisie, le texte que vous écrivez est envoyé à {checkers} pour être vérifié, sans votre signature ni le message cité. Rien n'est envoyé tant qu'un message doit être signé ou chiffré ; ce que vous avez écrit avant a peut-être déjà été vérifié.",
+      "forced": "Votre organisation a activé la correction. Pendant la saisie, le texte que vous écrivez est envoyé à {checkers} pour être vérifié, sans votre signature ni le message cité. Rien n'est envoyé tant qu'un message doit être signé ou chiffré ; ce que vous avez écrit avant a peut-être déjà été vérifié.",
       "ok": "OK"
     },
     "send_warning": {
@@ -6419,7 +6419,7 @@
       "title": "Correction",
       "description": "Souligner les fautes d'orthographe et de grammaire pendant que vous écrivez, avec des suggestions pour les corriger.",
       "enable": "Vérifier l'orthographe et la grammaire pendant la saisie",
-      "enable_description": "Le texte que vous écrivez est envoyé à l'extension de correction et au service qu'elle utilise. Votre signature et les messages cités sont exclus, et les messages signés ou chiffrés ne sont jamais vérifiés.",
+      "enable_description": "Le texte que vous écrivez est envoyé à l'extension de correction et au service qu'elle utilise, sans votre signature ni les messages cités. Rien n'est envoyé tant qu'un message doit être signé ou chiffré.",
       "no_checker": "Aucune extension de correction n'est installée. Demandez à votre administrateur d'en ajouter une.",
       "plugin_description": "Envoie ce que vous écrivez à {plugin}.",
       "writing_language": "Langue de rédaction",

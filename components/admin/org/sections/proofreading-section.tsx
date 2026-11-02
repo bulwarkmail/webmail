@@ -132,7 +132,7 @@ export function ProofreadingSection({ draft }: { draft: OrgPolicyDraft }) {
     <SettingsSection
       id="proofreading"
       title="Proofreading"
-      description="Proofreading plugins underline spelling and grammar mistakes while users write. The text users write (not their signature or quoted messages) goes to the service the plugin uses, never for a message that will be signed or encrypted, also when proofreading is required."
+      description="Proofreading plugins underline spelling and grammar mistakes while users write. The text users write (not their signature or quoted messages) goes to the service the plugin uses. Nothing is sent while a message is set to be signed or encrypted, also when proofreading is required; text written before the user turned that on may already have been checked."
     >
       <SettingItem label="Proofreading" description="Off and locked hides the setting. On and required keeps it on in every composer.">
         <div className="flex flex-col items-start gap-1 sm:items-end">

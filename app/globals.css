@@ -934,7 +934,6 @@ optgroup {
   text-decoration-thickness: 1.5px;
   text-underline-offset: 3px;
   text-decoration-skip-ink: none;
-  cursor: pointer;
 }
 .tiptap .text-issue-spelling {
   text-decoration-style: wavy;
@@ -955,6 +954,8 @@ optgroup {
 }
 .tiptap .text-issue-active {
   background-color: color-mix(in srgb, var(--color-primary) 18%, transparent);
+  outline: 1px solid var(--color-primary);
+  outline-offset: 1px;
   border-radius: 2px;
 }
 

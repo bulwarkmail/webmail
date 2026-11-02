@@ -6039,7 +6039,7 @@
       },
       "compose_check": {
         "title": "Revisar lo que escribe",
-        "body": "Lee lo que escribe en el editor mientras teclea y puede enviarlo al servicio que usa. Solo cuando la revisión está activada, y nunca en un mensaje que firme o cifre."
+        "body": "Lee lo que escribe en el editor mientras teclea y puede enviarlo al servicio que usa. Solo cuando la revisión está activada, y nada mientras un mensaje esté configurado para firmarse o cifrarse. El texto que escribió antes de activarlo puede que ya se haya revisado."
       },
       "email_forward": {
         "title": "Reenviar tu correo",
@@ -6394,7 +6394,7 @@
       "title": "Revisión",
       "required": "Exigido por tu organización",
       "check_message": "Revisar este mensaje",
-      "notice": "Mientras escribes, el texto se envía a {checkers} para revisarlo. Tu firma y el mensaje citado quedan fuera, y no se envía nada de un mensaje que firmes o cifres.",
+      "notice": "Mientras escribes, el texto se envía a {checkers} para revisarlo. Tu firma y el mensaje citado quedan fuera. No se envía nada mientras un mensaje esté configurado para firmarse o cifrarse; lo que escribiste antes de activarlo puede que ya se haya revisado.",
       "turn_on": "Activar la revisión",
       "paused_protected": "No se revisa nada mientras este mensaje esté configurado para firmarse o cifrarse.",
       "paused_unknown": "{plugin} puede firmar o cifrar mensajes sin mostrarlo aquí, así que no se revisa nada mientras esté activo.",
@@ -6405,8 +6405,8 @@
       "shortcuts": "Siguiente problema: {next}. Anterior: {previous}."
     },
     "notice": {
-      "on": "La revisión está activada. Mientras escribes, el texto se envía a {checkers} para revisarlo, sin tu firma ni el mensaje citado. No se envía nada de un mensaje que firmes o cifres.",
-      "forced": "Tu organización ha activado la revisión. Mientras escribes, el texto se envía a {checkers} para revisarlo, sin tu firma ni el mensaje citado. No se envía nada de un mensaje que firmes o cifres.",
+      "on": "La revisión está activada. Mientras escribes, el texto se envía a {checkers} para revisarlo, sin tu firma ni el mensaje citado. No se envía nada mientras un mensaje esté configurado para firmarse o cifrarse; lo que escribiste antes puede que ya se haya revisado.",
+      "forced": "Tu organización ha activado la revisión. Mientras escribes, el texto se envía a {checkers} para revisarlo, sin tu firma ni el mensaje citado. No se envía nada mientras un mensaje esté configurado para firmarse o cifrarse; lo que escribiste antes puede que ya se haya revisado.",
       "ok": "Aceptar"
     },
     "send_warning": {
@@ -6419,7 +6419,7 @@
       "title": "Revisión",
       "description": "Subraya los errores de ortografía y gramática mientras escribes, con sugerencias para corregirlos.",
       "enable": "Revisar la ortografía y la gramática mientras escribo",
-      "enable_description": "El texto que escribes se envía al complemento de revisión y al servicio que usa. Tu firma y los mensajes citados quedan fuera, y los mensajes firmados o cifrados nunca se revisan.",
+      "enable_description": "El texto que escribes se envía al complemento de revisión y al servicio que usa, sin tu firma ni los mensajes citados. No se envía nada mientras un mensaje esté configurado para firmarse o cifrarse.",
       "no_checker": "No hay ningún complemento de revisión instalado. Pide a tu administrador que añada uno.",
       "plugin_description": "Envía lo que escribes a {plugin}.",
       "writing_language": "Idioma de escritura",

@@ -160,7 +160,7 @@ describe('ComposerProofreader: issues', () => {
     r.p.dismiss(first, 'disable-rule');
     await settle();
     expect(r.p.issues().map((i) => i.annotation.text)).toEqual(['dem']);
-    expect(r.actions).toEqual([{ composerId: 'c1', action: 'disable-rule', annotation: expect.objectContaining({ text: 'Ich', ruleId: 'R1' }) }]);
+    expect(r.actions).toEqual([{ composerId: expect.stringMatching(/^chk-/), action: 'disable-rule', annotation: expect.objectContaining({ text: 'Ich', ruleId: 'R1' }) }]);
   });
 
   it('turns the browser spell check off only while a spelling checker works here', async () => {

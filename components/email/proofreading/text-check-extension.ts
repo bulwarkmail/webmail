@@ -51,11 +51,17 @@ export interface TextCheckOptions {
 }
 
 /**
- * Next (1) or previous (-1) issue: Mod+' and Mod+;, by the key's place on
- * the keyboard (Ä and Ö on a German one), with or without Shift.
+ * Next (1) or previous (-1) issue: Mod+' and Mod+;. By the character the
+ * key types, so other layouts keep their own keys (on Dvorak the ;-position
+ * types "s": Ctrl+S stays Save). Only where those keys type a letter of
+ * their own (Ä and Ö on a German keyboard) by their place on the keyboard.
  */
 export function issueNavigationKey(event: KeyboardEvent): 1 | -1 | null {
   if (!(event.ctrlKey || event.metaKey) || event.altKey) return null;
+  if (event.key === "'") return 1;
+  if (event.key === ';') return -1;
+  const ascii = event.key.length === 1 && event.key.charCodeAt(0) < 128;
+  if (ascii) return null;
   if (event.code === 'Quote') return 1;
   if (event.code === 'Semicolon') return -1;
   return null;
@@ -68,6 +74,9 @@ function decorationFor(range: TextIssueRange, active: boolean): Decoration {
     {
       class: `text-issue text-issue-${range.kind}${active ? ' text-issue-active' : ''}`,
       'data-text-issue': range.key,
+      // Screen readers announce this as they do the browser's own markers,
+      // which are off while a checker checks spelling.
+      'aria-invalid': range.kind === 'spelling' ? 'spelling' : 'grammar',
     },
     { key: range.key, kind: range.kind, text: range.text } satisfies IssueSpec,
   );
@@ -157,7 +166,13 @@ export function createTextCheckExtension(options: () => TextCheckOptions) {
             },
             handleDOMEvents: {
               contextmenu(view, event) {
-                const el = (event.target as Element | null)?.closest?.('[data-text-issue]');
+                let el = (event.target as Element | null)?.closest?.('[data-text-issue]') ?? null;
+                // From the keyboard (Shift+F10, the Menu key) the event can
+                // land on the editor: take the issue at the caret.
+                if (!el && event.clientX === 0 && event.clientY === 0) {
+                  const at = issueAt(view, view.state.selection.from);
+                  if (at) el = view.dom.querySelector(`[data-text-issue="${CSS.escape((at.spec as IssueSpec).key)}"]`);
+                }
                 const key = el?.getAttribute('data-text-issue');
                 if (!el || !key) return false;
                 const known = textCheckKey.getState(view.state)?.decos.find().some((d) => (d.spec as IssueSpec).key === key);
@@ -166,7 +181,7 @@ export function createTextCheckExtension(options: () => TextCheckOptions) {
                 // plugins' selection menu above it).
                 event.preventDefault();
                 event.stopPropagation();
-                options().onOpen(key, el.getBoundingClientRect(), 'contextmenu');
+                options().onOpen(key, el.getBoundingClientRect(), event.clientX === 0 && event.clientY === 0 ? 'keyboard' : 'contextmenu');
                 return true;
               },
             },

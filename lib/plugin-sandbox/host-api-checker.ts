@@ -19,9 +19,11 @@ import {
   removePluginChecker, setPluginChecker, updatePluginChecker, type CheckerSpec,
 } from './checkers';
 import { readId, withinRate } from './host-api-input';
+import { MAX_ANNOTATIONS } from '@/lib/proofreading/annotations';
 import { pluginHasPermission } from './permissions';
 
 const CALLS_PER_MINUTE = 60;
+const MAX_PUSHED = 2 * MAX_ANNOTATIONS;
 
 function rate(method: string, plugin: InstalledPlugin): void {
   if (!withinRate('composer-check', plugin.id, CALLS_PER_MINUTE)) throw new Error(`${method}: at most ${CALLS_PER_MINUTE} calls a minute`);
@@ -91,6 +93,7 @@ export function doSetAnnotations(plugin: InstalledPlugin, composerId: unknown, c
   const spec = checkerOf(method, plugin, checkerId);
   const rev = readId(revision, method, 'revision');
   if (!Array.isArray(annotations)) throw new Error(`${method}: annotations must be a list`);
+  if (annotations.length > MAX_PUSHED) throw new Error(`${method}: at most ${MAX_PUSHED} annotations`);
   const target = checkTarget(id);
   if (!target) throw new Error(`${method}: that composer is not open any more`);
   rate(method, plugin);

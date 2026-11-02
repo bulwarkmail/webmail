@@ -6067,7 +6067,7 @@
       },
       "compose_check": {
         "title": "Check what you write",
-        "body": "Reads what you write in the composer while you type and may send it to the service it uses. Only where proofreading is on, and never for a message you sign or encrypt."
+        "body": "Reads what you write in the composer while you type and may send it to the service it uses. Only where proofreading is on, and nothing while a message is set to be signed or encrypted. Text you wrote before you turned that on may already have been checked."
       },
       "email_forward": {
         "title": "Forward your mail",
@@ -6394,7 +6394,7 @@
       "title": "Proofreading",
       "required": "Required by your organisation",
       "check_message": "Check this message",
-      "notice": "While you type, the text you write goes to {checkers} to be checked. Your signature and the quoted message are left out, and nothing is sent for a message you sign or encrypt.",
+      "notice": "While you type, the text you write goes to {checkers} to be checked. Your signature and the quoted message are left out. Nothing is sent while a message is set to be signed or encrypted; what you wrote before turning that on may already have been checked.",
       "turn_on": "Turn on proofreading",
       "paused_protected": "Nothing is checked while this message is set to be signed or encrypted.",
       "paused_unknown": "{plugin} can sign or encrypt messages without showing it here, so nothing is checked while it is on.",
@@ -6405,8 +6405,8 @@
       "shortcuts": "Next issue: {next}. Previous: {previous}."
     },
     "notice": {
-      "on": "Proofreading is on. While you type, the text you write goes to {checkers} to be checked, without your signature or the quoted message. Nothing is sent for a message you sign or encrypt.",
-      "forced": "Your organisation turned on proofreading. While you type, the text you write goes to {checkers} to be checked, without your signature or the quoted message. Nothing is sent for a message you sign or encrypt.",
+      "on": "Proofreading is on. While you type, the text you write goes to {checkers} to be checked, without your signature or the quoted message. Nothing is sent while a message is set to be signed or encrypted; what you wrote before that may already have been checked.",
+      "forced": "Your organisation turned on proofreading. While you type, the text you write goes to {checkers} to be checked, without your signature or the quoted message. Nothing is sent while a message is set to be signed or encrypted; what you wrote before that may already have been checked.",
       "ok": "OK"
     },
     "send_warning": {
@@ -6419,7 +6419,7 @@
       "title": "Proofreading",
       "description": "Underline spelling and grammar mistakes while you write, with suggestions to fix them.",
       "enable": "Check spelling and grammar while I type",
-      "enable_description": "The text you write goes to the proofreading add-on and the service it uses. Your signature and quoted messages are left out, and signed or encrypted messages are never checked.",
+      "enable_description": "The text you write goes to the proofreading add-on and the service it uses, without your signature or quoted messages. Nothing is sent while a message is set to be signed or encrypted.",
       "no_checker": "No proofreading add-on is installed. Ask your administrator to add one.",
       "plugin_description": "Sends what you write to {plugin}.",
       "writing_language": "Writing language",

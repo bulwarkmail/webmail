@@ -4198,8 +4198,8 @@ export function EmailComposer({
       // Same for the "@" recipient list in the body: this handler runs in the
       // capture phase, before the editor could close the list itself.
       if (isRecipientMentionActive(editorRef.current)) return;
-      // And for a proofreading popup: Escape closes only it.
-      if (proofreading.popup) return;
+      // And for proofreading's popup and panel: Escape closes only them.
+      if (proofreading.popup || proofreading.panel) return;
       e.preventDefault();
       handleClose();
       return;
@@ -4766,6 +4766,9 @@ export function EmailComposer({
               onApply={proofreading.apply}
               onDismiss={proofreading.dismiss}
               onClose={proofreading.closePopup}
+              onNavigate={proofreading.navigate}
+              textRoot={() => (pluginEditor.isDestroyed ? null : pluginEditor.view.dom)}
+              container={(pluginEditor.isDestroyed ? null : pluginEditor.view.dom.closest<HTMLElement>('[aria-modal="true"]')) ?? document.body}
             />
           ) : null;
         })()}

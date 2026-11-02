@@ -28,6 +28,8 @@ interface Props {
   showWord?: boolean;
   /** Shown when a suggestion could not be put in (the text changed). */
   error?: string | null;
+  /** id for the message, which the popup is described by. */
+  messageId?: string;
 }
 
 export function IssueHeading({ issue }: { issue: PlacedIssue }) {
@@ -67,13 +69,13 @@ function Suggestions({ issue, onApply }: Pick<Props, "issue" | "onApply">) {
   );
 }
 
-export function IssueActions({ issue, onApply, onDismiss, showWord = false, error }: Props) {
+export function IssueActions({ issue, onApply, onDismiss, showWord = false, error, messageId }: Props) {
   const t = useTranslations("proofreading");
   const a = issue.annotation;
   return (
     <div className="flex flex-col gap-2">
       <IssueHeading issue={issue} />
-      <p className="text-sm text-foreground" dir="auto">
+      <p id={messageId} className="text-sm text-foreground" dir="auto">
         {showWord && <><bdi className="font-semibold">{a.text}</bdi>{": "}</>}
         {a.message}
       </p>
@@ -112,10 +114,11 @@ export function IssueActions({ issue, onApply, onDismiss, showWord = false, erro
   );
 }
 
-/** What a screen reader reads for an issue in the list. */
+/** What a screen reader reads for an issue in the list: the word first, as it shows. */
 export function issueListLabel(t: ReturnType<typeof useTranslations>, issue: PlacedIssue): string {
   const a = issue.annotation;
-  return a.replacements.length
+  const text = a.replacements.length
     ? t("list_item", { word: a.text, message: a.message, suggestion: a.replacements[0] })
     : t("list_item_no_suggestion", { word: a.text, message: a.message });
+  return `${text} (${t(`kind.${issue.kind}`)})`;
 }

@@ -36,15 +36,32 @@ export interface Annotation {
   text: string;
 }
 
-/** The text without control characters other than tab and line breaks. */
+const isHigh = (c: number) => c >= 0xd800 && c <= 0xdbff;
+const isLow = (c: number) => c >= 0xdc00 && c <= 0xdfff;
+
+/**
+ * Text shown in the popup: no control characters, and no bidi overrides,
+ * which could make a message read differently from what it says.
+ */
 function stripControls(s: string): string {
-  let out = '';
-  for (const ch of s) {
-    const c = ch.charCodeAt(0);
-    if ((c < 32 && c !== 9 && c !== 10 && c !== 13) || c === 127) continue;
-    out += ch;
-  }
-  return out;
+  return s.replace(/[\p{Cc}\p{Bidi_Control}]/gu, (ch) => (ch === '\t' || ch === '\n' ? ch : ''));
+}
+
+/**
+ * Text that goes into the message: what a user could type. No control or
+ * format characters (zero-width, bidi, a watermark nobody sees), no line or
+ * paragraph separators, no object placeholder.
+ */
+function insertable(s: string): boolean {
+  return !/[\p{Cc}\p{Cf}\p{Zl}\p{Zp}]/u.test(s) && !s.includes(OBJECT_CHAR);
+}
+
+/** The first `max` characters, never half a character. */
+function cut(s: string, max: number): string {
+  if (s.length <= max) return s;
+  let end = max - 1;
+  if (isHigh(s.charCodeAt(end - 1))) end--;
+  return `${s.slice(0, end)}…`;
 }
 
 const isKind = (v: unknown): v is CheckKind => typeof v === 'string' && (CHECK_KINDS as readonly string[]).includes(v);
@@ -53,11 +70,9 @@ function str(v: unknown, max: number): string | undefined {
   if (typeof v !== 'string') return undefined;
   const s = stripControls(v).trim();
   if (!s) return undefined;
-  return s.length > max ? `${s.slice(0, max - 1)}…` : s;
+  return cut(s, max);
 }
 
-const isHigh = (c: number) => c >= 0xd800 && c <= 0xdbff;
-const isLow = (c: number) => c >= 0xdc00 && c <= 0xdfff;
 
 /**
  * The annotations of a checker's answer that may be drawn. `segments` maps
@@ -74,7 +89,7 @@ export function validateAnnotations(
   let dropped = 0;
   if (!Array.isArray(raw)) return { annotations: out, dropped };
   for (const item of raw) {
-    if (out.length >= max) { dropped++; continue; }
+    if (out.length >= max) { dropped = raw.length - out.length; break; }
     const a = item as Record<string, unknown> | null;
     if (!a || typeof a !== 'object') { dropped++; continue; }
     const text = typeof a.segmentId === 'string' ? segments.get(a.segmentId) : undefined;
@@ -93,8 +108,8 @@ export function validateAnnotations(
     if (Array.isArray(a.replacements)) {
       for (const r of a.replacements) {
         if (replacements.length >= MAX_REPLACEMENTS) break;
-        // A replacement is put in the text as typed: no line breaks, no objects.
-        if (typeof r !== 'string' || r.length > MAX_REPLACEMENT || stripControls(r) !== r || /[\n\r]/.test(r) || r.includes(OBJECT_CHAR)) continue;
+        // A replacement is put in the text as typed.
+        if (typeof r !== 'string' || r.length > MAX_REPLACEMENT || !insertable(r)) continue;
         if (r === covered || replacements.includes(r)) continue;
         replacements.push(r);
       }

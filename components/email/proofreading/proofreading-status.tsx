@@ -20,6 +20,7 @@ import { useSettingsStore } from "@/stores/settings-store";
 import { formatShortcutCombo } from "@/lib/shortcut-keys";
 import type { Proofreading } from "./use-proofreading";
 import { IssueActions, KIND_DOT, issueListLabel } from "./issue-actions";
+import { issueNavigationKey } from "./text-check-extension";
 
 interface Props {
   proofreading: Proofreading;
@@ -37,12 +38,14 @@ export function ProofreadingStatus({ proofreading, plainTextMode }: Props) {
   const panelId = useId();
   const open = panel !== null;
 
-  // The count, read out when it settles.
+  // The count, read out when it settles; not "no issues" on opening a message.
   const lastCount = useRef<number | null>(null);
   useEffect(() => {
     if (!status.on || status.paused || status.checking) return;
     if (lastCount.current === status.count) return;
+    const first = lastCount.current === null;
     lastCount.current = status.count;
+    if (first && status.count === 0) return;
     announce(t("announce_count", { count: status.count }), { key: "proofreading-count", debounceMs: 1500 });
   }, [status.on, status.paused, status.checking, status.count, t]);
 
@@ -91,9 +94,16 @@ export function ProofreadingStatus({ proofreading, plainTextMode }: Props) {
   }
 
   const close = (refocus: boolean) => {
+    // Opened from the text (next/previous issue in plain text): back there.
+    const fromText = panel?.focusKey != null;
     setPanel(null);
-    if (refocus) buttonRef.current?.focus();
+    if (!refocus) return;
+    if (fromText) proofreading.closePopup(true);
+    else buttonRef.current?.focus();
   };
+  const focusFirst = () => requestAnimationFrame(() => {
+    panelRef.current?.querySelector<HTMLElement>("button, [href], [tabindex]:not([tabindex='-1'])")?.focus();
+  });
 
   return (
     <div className="relative">
@@ -104,11 +114,12 @@ export function ProofreadingStatus({ proofreading, plainTextMode }: Props) {
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-controls={open ? panelId : undefined}
+        aria-label={`${label}, ${t("status.title")}`}
         title={t("status.title")}
         onClick={() => setPanel(open ? null : { focusKey: null })}
         className={cn(
           "inline-flex h-8 items-center gap-1.5 rounded-md px-2 text-xs transition-colors hover:bg-muted",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring max-md:h-10",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring max-md:h-10 pointer-coarse:min-h-11",
           tone,
         )}
       >
@@ -122,19 +133,21 @@ export function ProofreadingStatus({ proofreading, plainTextMode }: Props) {
           role="dialog"
           aria-label={t("panel.title")}
           data-testid="proofreading-panel"
-          className="absolute bottom-full start-0 z-50 mb-1 flex max-h-[60vh] w-80 max-w-[calc(100vw-2rem)] flex-col gap-3 overflow-y-auto rounded-md border border-border bg-popover p-3 text-popover-foreground shadow-lg"
+          className="absolute bottom-full start-0 z-50 mb-1 flex max-h-[60vh] w-80 max-w-[calc(100vw-2rem)] flex-col gap-3 overflow-y-auto rounded-md border border-border bg-popover p-3 text-popover-foreground shadow-lg max-md:fixed max-md:inset-x-2 max-md:bottom-20 max-md:w-auto max-md:max-w-none"
           onKeyDown={(e) => {
-            if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); close(true); }
+            if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); close(true); return; }
+            const dir = issueNavigationKey(e.nativeEvent);
+            if (dir) { e.preventDefault(); proofreading.navigate(dir); }
           }}
         >
-          <PanelBody proofreading={proofreading} plainTextMode={plainTextMode} issues={issues} onDone={() => close(false)} />
+          <PanelBody proofreading={proofreading} plainTextMode={plainTextMode} issues={issues} onDone={() => close(false)} onTurnedOn={focusFirst} />
         </div>
       )}
     </div>
   );
 }
 
-function PanelBody({ proofreading, plainTextMode, issues, onDone }: Props & { issues: Proofreading["issues"]; onDone: () => void }) {
+function PanelBody({ proofreading, plainTextMode, issues, onDone, onTurnedOn }: Props & { issues: Proofreading["issues"]; onDone: () => void; onTurnedOn: () => void }) {
   const t = useTranslations("proofreading");
   const { status, composerOn, setComposerOn } = proofreading;
   const updateSetting = useSettingsStore((s) => s.updateSetting);
@@ -146,6 +159,8 @@ function PanelBody({ proofreading, plainTextMode, issues, onDone }: Props & { is
     updateSetting("proofreading", true);
     updateSetting("proofreadingNoticeSeen", { ...noticeSeen, ...Object.fromEntries(checkers.map((c) => [c.pluginId, true])) });
     if (!composerOn) setComposerOn(true);
+    // The button goes away: the focus goes to the panel's first control.
+    onTurnedOn();
   };
 
   return (
@@ -213,9 +228,11 @@ function PanelBody({ proofreading, plainTextMode, issues, onDone }: Props & { is
                     <span className="min-w-0 flex-1">
                       <bdi className="font-medium">{issue.annotation.text}</bdi>
                       {issue.annotation.replacements[0] && (
-                        <> <span aria-hidden="true">→</span> <bdi>{issue.annotation.replacements[0]}</bdi></>
+                        <> <span aria-hidden="true" className="inline-block rtl:-scale-x-100">→</span> <bdi>{issue.annotation.replacements[0]}</bdi></>
                       )}
-                      <span className="block truncate text-xs text-muted-foreground" dir="auto">{issue.annotation.shortMessage ?? issue.annotation.message}</span>
+                      <span className="block truncate text-xs text-muted-foreground">
+                        {t(`kind.${issue.kind}`)} · <span dir="auto">{issue.annotation.shortMessage ?? issue.annotation.message}</span>
+                      </span>
                     </span>
                   </button>
                 )}
@@ -236,14 +253,33 @@ function PanelBody({ proofreading, plainTextMode, issues, onDone }: Props & { is
 
 function PlainIssue({ issue, proofreading }: { issue: Proofreading["issues"][number]; proofreading: Proofreading }) {
   const t = useTranslations("proofreading");
+  const ref = useRef<HTMLDivElement>(null);
+  // The card goes away with its issue: the focus moves to the next card, or
+  // back to the text when it was the last.
+  const thenFocusNext = (act: () => void) => {
+    const card = ref.current?.closest("li");
+    const next = (card?.nextElementSibling ?? card?.previousElementSibling)?.querySelector<HTMLElement>("[data-issue-key]");
+    act();
+    requestAnimationFrame(() => {
+      if (next?.isConnected) next.focus();
+      else { proofreading.setPanel(null); proofreading.closePopup(true); }
+    });
+  };
   return (
     <div
+      ref={ref}
+      role="group"
       tabIndex={-1}
       data-issue-key={issue.key}
       aria-label={issueListLabel(t, issue)}
-      className="rounded-md border border-border p-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="rounded-md border border-border p-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
     >
-      <IssueActions issue={issue} showWord onApply={(i, r) => { proofreading.apply(i, r); }} onDismiss={proofreading.dismiss} />
+      <IssueActions
+        issue={issue}
+        showWord
+        onApply={(i, r) => thenFocusNext(() => { proofreading.apply(i, r); })}
+        onDismiss={(i, action) => thenFocusNext(() => proofreading.dismiss(i, action))}
+      />
     </div>
   );
 }

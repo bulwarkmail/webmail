@@ -6039,7 +6039,7 @@
       },
       "compose_check": {
         "title": "Yazdıklarınızı denetleme",
-        "body": "Düzenleyicide yazdıklarınızı siz yazarken okur ve kullandığı hizmete gönderebilir. Yalnızca yazım denetimi açıkken; imzaladığınız veya şifrelediğiniz bir iletide asla."
+        "body": "Düzenleyicide yazdıklarınızı siz yazarken okur ve kullandığı hizmete gönderebilir. Yalnızca yazım denetimi açıkken; bir ileti imzalanacak veya şifrelenecek şekilde ayarlıyken hiçbir şey gönderilmez. Bunu açmadan önce yazdıklarınız zaten denetlenmiş olabilir."
       },
       "email_forward": {
         "title": "Postanızı iletme",
@@ -6394,7 +6394,7 @@
       "title": "Yazım denetimi",
       "required": "Kuruluşunuz tarafından zorunlu tutuluyor",
       "check_message": "Bu iletiyi denetle",
-      "notice": "Siz yazarken, yazdığınız metin denetlenmek üzere {checkers} hizmetine gider. İmzanız ve alıntılanan ileti dışarıda bırakılır; imzaladığınız veya şifrelediğiniz bir ileti için hiçbir şey gönderilmez.",
+      "notice": "Siz yazarken, yazdığınız metin denetlenmek üzere {checkers} hizmetine gider. İmzanız ve alıntılanan ileti dışarıda bırakılır. Bir ileti imzalanacak veya şifrelenecek şekilde ayarlıyken hiçbir şey gönderilmez; bunu açmadan önce yazdıklarınız zaten denetlenmiş olabilir.",
       "turn_on": "Yazım denetimini aç",
       "paused_protected": "Bu ileti imzalanacak veya şifrelenecek şekilde ayarlıyken hiçbir şey denetlenmez.",
       "paused_unknown": "{plugin} iletileri burada göstermeden imzalayabilir veya şifreleyebilir, bu yüzden açıkken hiçbir şey denetlenmez.",
@@ -6405,8 +6405,8 @@
       "shortcuts": "Sonraki sorun: {next}. Önceki: {previous}."
     },
     "notice": {
-      "on": "Yazım denetimi açık. Siz yazarken, yazdığınız metin imzanız ve alıntılanan ileti olmadan denetlenmek üzere {checkers} hizmetine gider. İmzaladığınız veya şifrelediğiniz bir ileti için hiçbir şey gönderilmez.",
-      "forced": "Kuruluşunuz yazım denetimini açtı. Siz yazarken, yazdığınız metin imzanız ve alıntılanan ileti olmadan denetlenmek üzere {checkers} hizmetine gider. İmzaladığınız veya şifrelediğiniz bir ileti için hiçbir şey gönderilmez.",
+      "on": "Yazım denetimi açık. Siz yazarken, yazdığınız metin imzanız ve alıntılanan ileti olmadan denetlenmek üzere {checkers} hizmetine gider. Bir ileti imzalanacak veya şifrelenecek şekilde ayarlıyken hiçbir şey gönderilmez; bundan önce yazdıklarınız zaten denetlenmiş olabilir.",
+      "forced": "Kuruluşunuz yazım denetimini açtı. Siz yazarken, yazdığınız metin imzanız ve alıntılanan ileti olmadan denetlenmek üzere {checkers} hizmetine gider. Bir ileti imzalanacak veya şifrelenecek şekilde ayarlıyken hiçbir şey gönderilmez; bundan önce yazdıklarınız zaten denetlenmiş olabilir.",
       "ok": "Tamam"
     },
     "send_warning": {
@@ -6419,7 +6419,7 @@
       "title": "Yazım denetimi",
       "description": "Siz yazarken yazım ve dil bilgisi hatalarının altını çizer ve düzeltme önerileri sunar.",
       "enable": "Yazarken yazım ve dil bilgisini denetle",
-      "enable_description": "Yazdığınız metin, yazım denetimi eklentisine ve onun kullandığı hizmete gider. İmzanız ve alıntılanan iletiler dışarıda bırakılır; imzalı veya şifreli iletiler hiçbir zaman denetlenmez.",
+      "enable_description": "Yazdığınız metin, imzanız ve alıntılanan iletiler olmadan yazım denetimi eklentisine ve onun kullandığı hizmete gider. Bir ileti imzalanacak veya şifrelenecek şekilde ayarlıyken hiçbir şey gönderilmez.",
       "no_checker": "Yüklü bir yazım denetimi eklentisi yok. Yöneticinizden bir tane eklemesini isteyin.",
       "plugin_description": "Yazdıklarınızı {plugin} eklentisine gönderir.",
       "writing_language": "Yazma dili",

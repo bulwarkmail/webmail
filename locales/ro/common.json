@@ -6039,7 +6039,7 @@
       },
       "compose_check": {
         "title": "Verificarea a ceea ce scrieți",
-        "body": "Citește ce scrieți în editor în timp ce tastați și poate trimite textul serviciului pe care îl folosește. Doar când verificarea este pornită și niciodată pentru un mesaj pe care îl semnați sau îl criptați."
+        "body": "Citește ce scrieți în editor în timp ce tastați și poate trimite textul serviciului pe care îl folosește. Doar când verificarea este pornită și nimic cât timp un mesaj este setat să fie semnat sau criptat. Textul scris înainte de a activa asta poate fi deja verificat."
       },
       "email_forward": {
         "title": "Redirecționarea mesajelor dvs.",
@@ -6394,7 +6394,7 @@
       "title": "Verificare text",
       "required": "Cerută de organizația dvs.",
       "check_message": "Verifică acest mesaj",
-      "notice": "În timp ce tastați, textul scris ajunge la {checkers} pentru verificare. Semnătura și mesajul citat sunt lăsate deoparte, iar pentru un mesaj pe care îl semnați sau îl criptați nu se trimite nimic.",
+      "notice": "În timp ce tastați, textul scris ajunge la {checkers} pentru verificare. Semnătura și mesajul citat sunt lăsate deoparte. Nu se trimite nimic cât timp un mesaj este setat să fie semnat sau criptat; ce ați scris înainte de a activa asta poate fi deja verificat.",
       "turn_on": "Pornește verificarea textului",
       "paused_protected": "Nu se verifică nimic cât timp acest mesaj este setat să fie semnat sau criptat.",
       "paused_unknown": "{plugin} poate semna sau cripta mesaje fără să arate asta aici, așa că nu se verifică nimic cât timp este pornit.",
@@ -6405,8 +6405,8 @@
       "shortcuts": "Problema următoare: {next}. Anterioara: {previous}."
     },
     "notice": {
-      "on": "Verificarea textului este pornită. În timp ce tastați, textul scris ajunge la {checkers} pentru verificare, fără semnătură și fără mesajul citat. Pentru un mesaj pe care îl semnați sau îl criptați nu se trimite nimic.",
-      "forced": "Organizația dvs. a pornit verificarea textului. În timp ce tastați, textul scris ajunge la {checkers} pentru verificare, fără semnătură și fără mesajul citat. Pentru un mesaj pe care îl semnați sau îl criptați nu se trimite nimic.",
+      "on": "Verificarea textului este pornită. În timp ce tastați, textul scris ajunge la {checkers} pentru verificare, fără semnătură și fără mesajul citat. Nu se trimite nimic cât timp un mesaj este setat să fie semnat sau criptat; ce ați scris înainte poate fi deja verificat.",
+      "forced": "Organizația dvs. a pornit verificarea textului. În timp ce tastați, textul scris ajunge la {checkers} pentru verificare, fără semnătură și fără mesajul citat. Nu se trimite nimic cât timp un mesaj este setat să fie semnat sau criptat; ce ați scris înainte poate fi deja verificat.",
       "ok": "OK"
     },
     "send_warning": {
@@ -6419,7 +6419,7 @@
       "title": "Verificare text",
       "description": "Subliniază greșelile de ortografie și gramatică în timp ce scrieți, cu sugestii de corectare.",
       "enable": "Verifică ortografia și gramatica în timp ce tastez",
-      "enable_description": "Textul pe care îl scrieți ajunge la suplimentul de verificare și la serviciul pe care îl folosește. Semnătura și mesajele citate sunt lăsate deoparte, iar mesajele semnate sau criptate nu sunt verificate niciodată.",
+      "enable_description": "Textul pe care îl scrieți ajunge la suplimentul de verificare și la serviciul pe care îl folosește, fără semnătură și fără mesajele citate. Nu se trimite nimic cât timp un mesaj este setat să fie semnat sau criptat.",
       "no_checker": "Nu este instalat niciun supliment de verificare a textului. Cereți administratorului să adauge unul.",
       "plugin_description": "Trimite ce scrieți către {plugin}.",
       "writing_language": "Limba de scriere",

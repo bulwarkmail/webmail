@@ -6067,7 +6067,7 @@
       },
       "compose_check": {
         "title": "Kontrollida, mida kirjutate",
-        "body": "Loeb kirjutamise ajal, mida koostajas kirjutate, ja võib selle saata teenusele, mida kasutab. Ainult siis, kui õigekirja kontroll on sees, ja mitte kunagi sõnumi puhul, mille allkirjastate või krüpteerite."
+        "body": "Loeb kirjutamise ajal, mida koostajas kirjutate, ja võib selle saata teenusele, mida kasutab. Ainult siis, kui õigekirja kontroll on sees, ja mitte midagi, kuni sõnum on määratud allkirjastamiseks või krüpteerimiseks. Tekst, mille kirjutasite enne selle sisselülitamist, võib olla juba kontrollitud."
       },
       "email_forward": {
         "title": "Sinu kirjade edasisaatmine",
@@ -6394,7 +6394,7 @@
       "title": "Õigekirja kontroll",
       "required": "Sinu organisatsiooni nõue",
       "check_message": "Kontrolli seda sõnumit",
-      "notice": "Kirjutamise ajal läheb sinu tekst kontrollimiseks teenusele {checkers}. Sinu allkiri ja tsiteeritud sõnum jäetakse välja ning sõnumi kohta, mille allkirjastad või krüpteerid, ei saadeta midagi.",
+      "notice": "Kirjutamise ajal läheb sinu tekst kontrollimiseks teenusele {checkers}. Sinu allkiri ja tsiteeritud sõnum jäetakse välja. Midagi ei saadeta, kuni sõnum on määratud allkirjastamiseks või krüpteerimiseks; see, mille kirjutasid enne selle sisselülitamist, võib olla juba kontrollitud.",
       "turn_on": "Lülita õigekirja kontroll sisse",
       "paused_protected": "Midagi ei kontrollita, kuni see sõnum on määratud allkirjastamiseks või krüpteerimiseks.",
       "paused_unknown": "{plugin} võib sõnumeid allkirjastada või krüpteerida ilma seda siin näitamata, seega ei kontrollita midagi, kuni see on sees.",
@@ -6405,8 +6405,8 @@
       "shortcuts": "Järgmine probleem: {next}. Eelmine: {previous}."
     },
     "notice": {
-      "on": "Õigekirja kontroll on sees. Kirjutamise ajal läheb sinu tekst kontrollimiseks teenusele {checkers}, ilma sinu allkirja ja tsiteeritud sõnumita. Sõnumi kohta, mille allkirjastad või krüpteerid, ei saadeta midagi.",
-      "forced": "Sinu organisatsioon lülitas õigekirja kontrolli sisse. Kirjutamise ajal läheb sinu tekst kontrollimiseks teenusele {checkers}, ilma sinu allkirja ja tsiteeritud sõnumita. Sõnumi kohta, mille allkirjastad või krüpteerid, ei saadeta midagi.",
+      "on": "Õigekirja kontroll on sees. Kirjutamise ajal läheb sinu tekst kontrollimiseks teenusele {checkers}, ilma sinu allkirja ja tsiteeritud sõnumita. Midagi ei saadeta, kuni sõnum on määratud allkirjastamiseks või krüpteerimiseks; see, mille kirjutasid enne seda, võib olla juba kontrollitud.",
+      "forced": "Sinu organisatsioon lülitas õigekirja kontrolli sisse. Kirjutamise ajal läheb sinu tekst kontrollimiseks teenusele {checkers}, ilma sinu allkirja ja tsiteeritud sõnumita. Midagi ei saadeta, kuni sõnum on määratud allkirjastamiseks või krüpteerimiseks; see, mille kirjutasid enne seda, võib olla juba kontrollitud.",
       "ok": "OK"
     },
     "send_warning": {
@@ -6419,7 +6419,7 @@
       "title": "Õigekirja kontroll",
       "description": "Joonib kirjutamise ajal alla õigekirja- ja grammatikavead ning pakub parandusi.",
       "enable": "Kontrolli õigekirja ja grammatikat kirjutamise ajal",
-      "enable_description": "Sinu kirjutatud tekst läheb õigekirja kontrolli lisale ja teenusele, mida see kasutab. Sinu allkiri ja tsiteeritud sõnumid jäetakse välja ning allkirjastatud või krüpteeritud sõnumeid ei kontrollita kunagi.",
+      "enable_description": "Sinu kirjutatud tekst läheb õigekirja kontrolli lisale ja teenusele, mida see kasutab, ilma sinu allkirja ja tsiteeritud sõnumiteta. Midagi ei saadeta, kuni sõnum on määratud allkirjastamiseks või krüpteerimiseks.",
       "no_checker": "Õigekirja kontrolli lisa pole paigaldatud. Palu administraatoril see lisada.",
       "plugin_description": "Saadab sinu kirjutatu teenusele {plugin}.",
       "writing_language": "Kirjutamise keel",
