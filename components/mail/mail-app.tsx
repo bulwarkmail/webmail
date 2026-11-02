@@ -5119,8 +5119,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
               sidebarId={sidebarId}
               onOpenSearch={isMobile ? () => setMobileSearchOpen(true) : undefined}
               // No "(press /)" on a phone: there is no key to press (R8).
-              searchPlaceholder={searchQuery || t('sidebar.search_placeholder')}
-              searchActive={!!searchQuery}
+              searchPlaceholder={searchQuery || (!isFilterEmpty(searchFilters) ? 'Filtered mail' : t('sidebar.search_placeholder'))}
+              searchActive={!!searchQuery || !isFilterEmpty(searchFilters)}
               onClearSearch={handleClearSearch}
               onSelectAllInboxes={
                 allInboxesReachable ? () => handleMailboxSelect(UNIFIED_MAILBOX_IDS.inbox) : undefined
@@ -5320,7 +5320,11 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             <div className="flex-1 min-h-0 flex flex-col">
             {/* Plugin-registered category tabs (Gmail-style). Renders nothing
                 unless an enabled plugin registered tabs via api.tabs.set. */}
-            {!mvShell && <WorkspaceToolbar title={currentMailboxName} onShortcuts={() => setShowShortcutsModal(true)} searchActions={!isUnifiedView && !isScheduledView && activeAccountId ? <SavedSearchMenu
+            {!mvShell && <WorkspaceToolbar
+              title={!isScheduledView && (searchQuery || !isFilterEmpty(searchFilters)) ? 'Search results' : currentMailboxName}
+              context={!isScheduledView && (searchQuery || !isFilterEmpty(searchFilters)) ? (isUnifiedView ? 'Unified search' : searchMailboxId ? viewMailboxes.find(mailbox=>mailbox.id===searchMailboxId)?.name ?? 'Selected folder' : 'All folders') : undefined}
+              onClearSearch={!isScheduledView && (searchQuery || !isFilterEmpty(searchFilters)) ? ()=>void handleClearSearch() : undefined}
+              onShortcuts={() => setShowShortcutsModal(true)} searchActions={!isUnifiedView && !isScheduledView && activeAccountId ? <SavedSearchMenu
               key={`${activeAccountId}:${viewingAccountId ?? ''}`}
               scope={`${activeAccountId}:${viewingAccountId ?? ''}`}
               query={searchQuery} filters={searchFilters} mailboxId={searchMailboxId} mailboxes={viewMailboxes}

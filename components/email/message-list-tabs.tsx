@@ -13,6 +13,7 @@ import { useMessageListTabsStore } from '@/stores/message-list-tabs-store';
 import { useEmailStore } from '@/stores/email-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { cn } from '@/lib/utils';
+import { isFilterEmpty } from '@/lib/jmap/search-utils';
 
 /**
  * The DOM id of a category tab, which labels the panel while it is active.
@@ -29,6 +30,7 @@ export function useMessageListTabsVisible(): boolean {
   const mailboxes = useEmailStore((s) => s.mailboxes);
   const selectedKeyword = useEmailStore((s) => s.selectedKeyword);
   const searchQuery = useEmailStore((s) => s.searchQuery);
+  const searchFilters = useEmailStore((s) => s.searchFilters);
   const isUnifiedView = useEmailStore((s) => s.isUnifiedView);
   const role = mailboxes.find((mb) => mb.id === selectedMailbox)?.role?.toLowerCase() ?? null;
   // Tabs only make sense on a plain mailbox view: tag views, searches and
@@ -40,6 +42,7 @@ export function useMessageListTabsVisible(): boolean {
     mailboxRoles.includes(role) &&
     !selectedKeyword &&
     !searchQuery &&
+    isFilterEmpty(searchFilters) &&
     !isUnifiedView
   );
 }

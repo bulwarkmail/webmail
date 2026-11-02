@@ -61,3 +61,10 @@ Add each customization here. Include the relevant upstream files, the reason it 
 
 - `.memail/saved-searches.ts`: scoped updates and duplicate-ID prevention; readable criteria summaries include negative boolean filters. Exact criteria and folder comparison drive the current-search indicator.
 - `.memail/saved-search-menu.tsx`: rename and opt-in replacement from current criteria, undo last removal, readable criteria cards, account limit count and quick unread/starred/attachment searches. Keyboard focus returns to the edited control or disclosure. The panel scrolls within a bounded height and sits above floating Compose. Preferences remain device-local.
+
+
+## Mobile search context
+
+- `components/mail/mail-app.tsx`, `.memail/workspace-toolbar.tsx`: active searches show a Search results heading, folder/unified scope and a visible Clear action using the existing clear-search handler. Mobile filter-only search is marked active. Narrow screens put the toolbar controls on a separate row to avoid truncating the heading.
+- `.memail/saved-search-menu.tsx`, `workspace-toolbar.tsx`: visible close controls restore disclosure focus; phone panels are viewport-bounded above the bottom navigation with internal scrolling.
+- `components/email/message-list-tabs.tsx`: category visibility now checks advanced filters as well as query text. The shared panel hook removes tabpanel ARIA references while categories are hidden and restores them on clear.

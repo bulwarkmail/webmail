@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useId, useRef, useState } from 'react';
-import { Bookmark, Plus, Trash2, Search, Pencil, Check } from '../components/icons';
+import { Bookmark, Plus, Trash2, Search, Pencil, Check, X } from '../components/icons';
 import { DEFAULT_SEARCH_FILTERS, isFilterEmpty, type SearchFilters } from '../lib/jmap/search-utils';
 import { MAX_SAVED_SEARCHES, useSavedSearches, type SavedSearch, savedSearchDescription, matchesSavedSearch } from './saved-searches';
 
@@ -41,8 +41,8 @@ export function SavedSearchMenu({scope,query,filters,mailboxId,mailboxes,onApply
     <summary aria-label="Saved searches" title="Saved searches" className="flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-md px-3 text-sm text-muted-foreground hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring [&::-webkit-details-marker]:hidden">
       <Bookmark className="size-4" aria-hidden="true" /><span className="hidden xl:inline">Saved</span>
     </summary>
-    <section aria-label="Saved searches" className="absolute end-3 top-full z-50 mt-2 w-96 max-h-[min(36rem,75dvh)] overflow-y-auto max-w-[calc(100vw-2rem)] rounded-xl border border-border bg-popover p-4 text-popover-foreground shadow-lg">
-      <div className="flex items-center justify-between"><h3 className="font-semibold">Saved searches</h3><span className="text-xs tabular-nums text-muted-foreground">{entries.length} / {MAX_SAVED_SEARCHES}</span></div>
+    <section aria-label="Saved searches" className="absolute end-3 top-full z-50 mt-2 w-96 max-h-[min(36rem,75dvh)] overflow-y-auto max-w-[calc(100vw-2rem)] rounded-xl border border-border bg-popover p-4 text-popover-foreground shadow-lg max-sm:fixed max-sm:inset-x-3 max-sm:bottom-[calc(4.5rem+env(safe-area-inset-bottom))] max-sm:top-auto max-sm:mt-0 max-sm:w-auto max-sm:max-w-none max-sm:max-h-[calc(100dvh-6rem)]">
+      <div className="flex items-center justify-between"><h3 className="font-semibold">Saved searches</h3><div className="flex items-center gap-2"><span className="text-xs tabular-nums text-muted-foreground">{entries.length} / {MAX_SAVED_SEARCHES}</span><button type="button" aria-label="Close saved searches" className="grid min-h-11 min-w-11 place-items-center rounded-md text-muted-foreground hover:bg-accent" onClick={()=>{menu.current?.removeAttribute('open');menu.current?.querySelector('summary')?.focus();}}><X className="size-4" aria-hidden="true" /></button></div></div>
       <p className="mt-1 text-xs leading-5 text-muted-foreground">Saved on this device for this account. Each search keeps its filters and folder scope.</p>
       <div className="mt-3 border-b border-border pb-3">
         <p className="mb-2 text-xs text-muted-foreground">Quick searches · {mailboxId ? mailboxes.find(m=>m.id===mailboxId)?.name ?? 'Selected folder' : 'All folders'}</p>

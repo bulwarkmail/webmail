@@ -85,3 +85,11 @@ The preview is in draft PR #3. Phase 0 and full phase 1 acceptance are not compl
 - Production build and TypeScript passed; final focus-return refinement passed the targeted suite afterward.
 - Browser verified attachment quick search (10 synthetic results), creation/rename, current-search indication, removal/undo, and Escape returning focus to the disclosure. Removed only the temporary review search; the pre-existing saved search was retained. No draft text or message content was changed.
 - Screenshot: research workspace `memail-saved-search-management.jpg`. Phone viewport acceptance and translation of these controls remain open; the panel has bounded scrolling and viewport-constrained width but no new mobile acceptance claim.
+
+
+## Mobile search context
+
+- 16 targeted tests pass across toolbar, saved-search and category-tab suites. New regression covers filter-only searches, including explicit false filters, and restoration of the accessible tab panel after clearing. Production build and TypeScript passed; scoped lint has zero errors (mail-app retains its previously recorded effect-ref warning).
+- Browser at 390×844: attachment quick search showed Search results / All folders and Filtered mail in the mobile search bar. Category tabs disappeared during the search, and Clear restored Inbox and its tabs. Document width equalled viewport width. Screenshot: research workspace `memail-mobile-search.jpg`.
+- Browser at 320×568: found and fixed below-screen panels. Saved searches occupied y=47..496; workspace preferences occupied y=24..496. Both fit above navigation and close controls returned focus. Temporary viewport override was reset. No draft edits or outgoing mail.
+- This is a responsive smoke check, not full mobile-device or assistive-technology acceptance. New downstream labels remain English.
