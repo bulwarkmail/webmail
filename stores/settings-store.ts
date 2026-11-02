@@ -932,8 +932,10 @@ const DEFAULT_SETTINGS = {
   subAddressDelimiter: DEFAULT_SUB_ADDRESS_DELIMITER,
   sendDelaySeconds: 0 as SendDelaySeconds,
   signaturePosition: 'below_quote' as SignaturePosition,
-  signatureNewMailEnabled: false,
-  signatureReplyForwardEnabled: false,
+  // On, as before the toggles existed: saved settings and server copies
+  // from older builds lack these keys and fall back to this default.
+  signatureNewMailEnabled: true,
+  signatureReplyForwardEnabled: true,
   signatureSeparatorEnabled: false,
   signatureDetails: EMPTY_SIGNATURE_DETAILS,
   requestReadReceiptDefault: false,

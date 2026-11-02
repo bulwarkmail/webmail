@@ -52,18 +52,39 @@ describe('settings sync debounce', () => {
     });
   });
 
-  it('defaults the signature auto-insert toggles and the separator to off, and exports all three', () => {
+  it('defaults the signature auto-insert toggles to on and exports them', () => {
     const settings = useSettingsStore.getState();
-    expect(settings.signatureNewMailEnabled).toBe(false);
-    expect(settings.signatureReplyForwardEnabled).toBe(false);
+    expect(settings.signatureNewMailEnabled).toBe(true);
+    expect(settings.signatureReplyForwardEnabled).toBe(true);
     expect(settings.signatureSeparatorEnabled).toBe(false);
 
     const exported = JSON.parse(settings.exportSettings()) as Record<string, unknown>;
     expect(exported).toMatchObject({
-      signatureNewMailEnabled: false,
-      signatureReplyForwardEnabled: false,
+      signatureNewMailEnabled: true,
+      signatureReplyForwardEnabled: true,
       signatureSeparatorEnabled: false,
     });
+  });
+
+  it('keeps inserting the signature for users whose saved settings predate the toggles', async () => {
+    useSettingsStore.getState().resetToDefaults();
+    // Saved by a build without the toggles: the keys are missing.
+    localStorage.setItem('settings-storage', JSON.stringify({
+      state: { signaturePosition: 'below_quote', signatureSeparatorEnabled: true },
+      version: 12,
+    }));
+    await useSettingsStore.persist.rehydrate();
+    expect(useSettingsStore.getState().signatureNewMailEnabled).toBe(true);
+    expect(useSettingsStore.getState().signatureReplyForwardEnabled).toBe(true);
+
+    // A server copy written by such a build has no toggles either.
+    useSettingsStore.getState().importSettings(
+      JSON.stringify({ signaturePosition: 'above_quote' }),
+      { serverAccountId: 'a@example.com' },
+    );
+    expect(useSettingsStore.getState().signatureNewMailEnabled).toBe(true);
+    expect(useSettingsStore.getState().signatureReplyForwardEnabled).toBe(true);
+    localStorage.removeItem('settings-storage');
   });
 
   it('does not rewrite a pending account snapshot after another account becomes active', async () => {
