@@ -61,6 +61,16 @@ interface Issued {
 
 let nonceSeq = 0;
 
+/**
+ * Debug log for checker authors: set localStorage `bulwark-debug-proofreading`
+ * to 1 to see in the console when the host sends text and what it decides.
+ */
+export function proofreadingDebug(...args: unknown[]): void {
+  try {
+    if (typeof localStorage !== 'undefined' && localStorage.getItem('bulwark-debug-proofreading') === '1') console.debug('[proofreading]', ...args);
+  } catch { /* storage blocked */ }
+}
+
 export class CheckSession {
   status: CheckStatus = 'idle';
   message: string | undefined;
@@ -88,6 +98,7 @@ export class CheckSession {
 
   /** Text changed: `typing` waits for the debounce, `now` (paste, blur, start) doesn't. */
   schedule(reason: 'typing' | 'now' = 'typing'): void {
+    proofreadingDebug('schedule', reason, { inFlight: this.inFlight, disposed: this.disposed });
     if (this.disposed) return;
     if (this.inFlight) { this.dirty = true; return; }
     const wait = Math.max(reason === 'now' ? 0 : this.deps.spec().debounceMs, this.blockedUntil - Date.now());
@@ -193,6 +204,17 @@ export class CheckSession {
 
   /** Send what the checker hasn't seen yet. Exposed for tests. */
   async run(): Promise<void> {
+    try {
+      await this.runOnce();
+    } catch (err) {
+      // A bug here must not stop checking for the rest of the session.
+      this.inFlight = false;
+      console.warn('[proofreading] check failed', err);
+    }
+  }
+
+  private async runOnce(): Promise<void> {
+    proofreadingDebug('run', { allowed: this.deps.allowed(), inFlight: this.inFlight, blockedFor: this.blockedUntil - Date.now() });
     if (this.disposed) return;
     if (!this.deps.allowed()) {
       if (this.status !== 'off' || this.annotations.size) this.clear();

@@ -197,6 +197,22 @@ describe('CheckSession', () => {
     expect(r.sent[1]).toMatchObject({ full: true, segments: [{ id: 'a', text: 'Eins' }] });
   });
 
+  it('logs a check that threw and keeps checking', async () => {
+    const r = rig([seg('a', 'Eins')]);
+    const good = r.segments;
+    let calls = 0;
+    Object.defineProperty(r, 'segments', { get: () => { calls++; if (calls === 1) throw new Error('boom'); return good; } });
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    r.session.schedule('now');
+    await flush();
+    expect(r.sent).toHaveLength(0);
+    expect(warn).toHaveBeenCalledWith('[proofreading] check failed', expect.any(Error));
+    r.session.schedule('now');
+    await flush();
+    expect(r.sent).toHaveLength(1);
+    warn.mockRestore();
+  });
+
   it('keeps to the rate per minute', async () => {
     const r = rig([seg('a0', '0')], { maxPerMinute: 2 });
     for (let i = 1; i <= 3; i++) {

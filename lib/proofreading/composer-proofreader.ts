@@ -12,7 +12,7 @@
 //   choice for a new message when it opens).
 // When one stops holding, every session drops what it had at once.
 
-import { CheckSession, type CheckRequest, type CheckStatus } from './check-session';
+import { CheckSession, proofreadingDebug, type CheckRequest, type CheckStatus } from './check-session';
 import type { Annotation, CheckKind } from './annotations';
 import type { Segment } from './segments';
 import type { CheckerAccess } from './gate';
@@ -167,6 +167,7 @@ export class ComposerProofreader {
 
   /** The text changed. */
   edited(reason: 'typing' | 'now' = 'typing'): void {
+    proofreadingDebug('edited', reason, [...this.sessions.values()].map(({ spec }) => ({ checker: checkerKeyOf(spec), allowed: this.allowed(spec) })));
     for (const { spec, session } of this.sessions.values()) {
       if (spec.mode === 'typing' && this.allowed(spec)) session.schedule(reason);
     }
