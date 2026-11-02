@@ -8,6 +8,7 @@ import { MvComposeInline, MvComposeWindow } from "@/components/email/mv-compose-
 import { usePinnedPerSession } from "@/hooks/use-pinned-per-session";
 import { useConfig } from "@/hooks/use-config";
 import { productName } from "@/lib/product-name";
+import { SavedSearchMenu } from '@/.memail/saved-search-menu';
 import { WorkspaceToolbar } from "../../.memail/workspace-toolbar";
 import { MessageListTabs, useMessageListPanelProps } from "@/components/email/message-list-tabs";
 import dynamic from "next/dynamic";
@@ -5319,7 +5320,14 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             <div className="flex-1 min-h-0 flex flex-col">
             {/* Plugin-registered category tabs (Gmail-style). Renders nothing
                 unless an enabled plugin registered tabs via api.tabs.set. */}
-            {!mvShell && <WorkspaceToolbar title={currentMailboxName} onShortcuts={() => setShowShortcutsModal(true)} />}
+            {!mvShell && <WorkspaceToolbar title={currentMailboxName} onShortcuts={() => setShowShortcutsModal(true)} searchActions={!isUnifiedView && !isScheduledView && activeAccountId ? <SavedSearchMenu
+              key={`${activeAccountId}:${viewingAccountId ?? ''}`}
+              scope={`${activeAccountId}:${viewingAccountId ?? ''}`}
+              query={searchQuery} filters={searchFilters} mailboxId={searchMailboxId} mailboxes={viewMailboxes}
+              onApply={entry => {
+                clearSearchFilters(); setSearchFilters(entry.filters); setSearchQuery(entry.query); setSearchMailboxId(entry.mailboxId);
+                void runAdvancedSearchNow();
+              }} /> : undefined} />}
             {!isScheduledView && <MessageListTabs panelId={messageListPanelId} />}
             <WelcomeBanner />
 

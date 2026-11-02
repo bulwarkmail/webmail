@@ -59,3 +59,12 @@ The preview is in draft PR #3. Phase 0 and full phase 1 acceptance are not compl
 - This validation uses the HTTP demo, not a real Stalwart server. Durable reminders/follow-up remain a separate unimplemented backend phase.
 - Browser draft editing exposed discarded body parts in the HTTP mock. Fixed the create/get round trip; new HTTP checks pass for plain text, HTML, UTF-8 byte lengths, Bcc and reply headers. Previously created malformed demo drafts cannot recover text the mock discarded.
 - Repeated browser check after the fix: saved the synthetic recovery draft, reloaded Drafts, opened it and selected Edit; the exact typed text remained in the editor. Screenshot: `memail-focused-compose.jpg` in the research workspace. No outgoing send was attempted.
+
+
+## Rich composition and saved searches
+
+- 61 targeted tests pass across seven suites: Markdown conversion/paste/undo, explicit plain-text paste, document typography/table serialization, nested Word lists, unsafe HTML removal, font selection, saved-search isolation/limits/missing folders, and existing editor accessibility, blank-line, image-paste and font-size regressions.
+- TypeScript passed; scoped lint has zero errors and the existing mail-app effect-ref warning. Production build and TypeScript passed again after the final table-header CSS and nested-Word-list refinements.
+- Browser: pasted a synthetic document with Georgia text, emphasis, links, a colored table and lists; inserted Markdown through the dialog. Saved, reloaded, reopened and edited the draft. Verified retained Georgia and table-header RGB(232,227,250) via rendered DOM. Screenshot: research workspace `memail-rich-composer.jpg`. Nothing was sent.
+- Browser: saved a GitHub query, cleared it, restored it and verified the same three results. Filter and account isolation are covered in unit tests; multi-account browser acceptance is still open.
+- This is representative fixture coverage, not a claim of exhaustive live ChatGPT/Google Docs/Word clipboard compatibility. Complex CSS, embedded applications, page layouts, math/footnote extensions and recipient font availability remain limitations. Real Stalwart and cross-client received-email rendering are unverified.

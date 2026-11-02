@@ -7,7 +7,7 @@ const OFFICE_DOCUMENT = /<meta[^>]+name=["']?ProgId["']?[^>]+content=["']?(?:Exc
 const TABLE = /<table[\s>]/i;
 
 export function prefersPastedHtml(html: string): boolean {
-  return TABLE.test(html) || OFFICE_DOCUMENT.test(html);
+  return TABLE.test(html) || OFFICE_DOCUMENT.test(html) || /<(?:p|h[1-6]|ul|ol|blockquote)[\s>]/i.test(html);
 }
 
 /** The image files a paste should upload, or none to let the editor parse it. */

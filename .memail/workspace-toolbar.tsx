@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useRef, useId } from 'react';
+import { useEffect, useRef, useId, type ReactNode } from 'react';
 import { acquireWorkspaceViews } from './workspace-views';
 import { useWorkspacePreferences } from './workspace-preferences';
 import { FOCUS_MODES } from './plugins/focus-inbox/views';
@@ -9,7 +9,7 @@ import { PanelRight, List, Rows3, Settings, Keyboard, Zap } from '../components/
 
 const control = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-md px-3 text-sm text-muted-foreground hover:bg-accent aria-pressed:bg-accent aria-pressed:text-foreground focus-visible:outline-2 focus-visible:outline-ring';
 
-export function WorkspaceToolbar({ title, onShortcuts }: { title: string; onShortcuts: () => void }) {
+export function WorkspaceToolbar({ title, onShortcuts, searchActions }: { title: string; onShortcuts: () => void; searchActions?: ReactNode }) {
   useEffect(acquireWorkspaceViews, []);
   const density = useSettingsStore(s => s.density);
   const readingWidth = useSettingsStore(s => s.readingWidth);
@@ -29,6 +29,7 @@ export function WorkspaceToolbar({ title, onShortcuts }: { title: string; onShor
   return <header className="relative flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-border bg-background px-4 py-3 sm:px-6">
     <div className="min-w-0"><p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Your workspace</p><h2 className="truncate text-2xl font-semibold tracking-tight">{title}</h2></div>
     <div className="flex items-center gap-1" role="group" aria-label="Mail workspace layout">
+      {searchActions}
       <button type="button" className={control} aria-label="Triage layout" title="Focus layout, compact rows, no sender avatars and comfortable reading width" aria-pressed={layout === 'focus' && density === 'compact' && readingWidth === 'comfortable' && !preferences.showSenderAvatars} onClick={() => { update('mailLayout', 'focus'); update('density', 'compact'); update('readingWidth', 'comfortable'); preferences.configure({showSenderAvatars:false}); }}><Zap className="size-4" aria-hidden="true" /><span className="hidden lg:inline">Triage</span></button>
       <button type="button" aria-label="Compact conversations" title="Compact conversations" aria-pressed={density === 'compact'} onClick={() => update('density', density === 'compact' ? 'regular' : 'compact')} className={control}><Rows3 className="size-4" aria-hidden="true" /></button>
       <div className="hidden items-center rounded-lg border border-border p-0.5 md:flex">

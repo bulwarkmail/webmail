@@ -181,3 +181,10 @@ Acceptance requires an actual inbox-to-reply-to-archive browser walkthrough and 
 3. Follow-through: durable waiting/read-later/reminder state with account-scoped persistence and restart recovery, then contextual AI behind explicit provider configuration.
 
 The integrated view controls are implemented. Conversation hierarchy refinement, reader/composer redesign and browser acceptance remain open. Current workspace preferences are local to the device; they are not advertised as cross-device settings.
+
+
+### Composition fidelity checkpoint
+
+Implemented editable rich HTML paste, GFM Markdown insertion and recognized Markdown clipboard conversion, fonts with fallback stacks, six heading levels, styled table cells and Word list/style normalization. Explicit plain-text paste bypasses Markdown conversion. The native draft pipeline retains the resulting HTML in the HTTP demo.
+
+Acceptance still needs live copy/paste samples from Word desktop, Google Docs and major LLM clients across browsers; representative Gmail/Outlook/Apple Mail received-message rendering; mobile toolbar review; and localization. Arbitrary document page layout and embedded fonts are not promised. Account-scoped device-local saved searches are also implemented; cross-device synchronization remains a later phase.
