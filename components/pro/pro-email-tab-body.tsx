@@ -22,7 +22,7 @@ import { getQuoteBodies } from "@/lib/email-composer-utils";
 import { buildForwardAsAttachmentPayload } from "@/lib/forward-as-attachment";
 import { KEYWORD_PREFIX, KEYWORD_PREFIX_LEGACY, emailKeyFor } from "@/lib/thread-utils";
 import { cn } from "@/lib/utils";
-import { getDraftTextBody } from '@/lib/email-body-selection';
+import { getDraftComposerBody } from '@/lib/email-body-selection';
 import { messagePriorityFromHeaders } from '@/lib/message-priority';
 import { labelSourceHeaders, reopenedLabelChoice } from '@/lib/outgoing/classification';
 import { useArchiveActionEnabled } from '@/lib/archive-gate';
@@ -461,17 +461,7 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
   const handleEditDraft = useCallback(() => {
     if (!email) return;
 
-    // Only the parts the server lists as the body: bodyValues also carries
-    // every text/* ATTACHMENT, which used to be joined in as the message.
-    const bodyText = getDraftTextBody(email);
-    // A plain-text-only draft lists its text/plain part under htmlBody
-    // (RFC 8621 § 4.1.4 fallback) - only treat it as HTML when it really is.
-    const draftHtmlPart = email.htmlBody?.[0];
-    const htmlBody = draftHtmlPart?.partId
-      && (!draftHtmlPart.type || draftHtmlPart.type.toLowerCase() === 'text/html')
-      && email.bodyValues?.[draftHtmlPart.partId]
-      ? email.bodyValues[draftHtmlPart.partId].value
-      : undefined;
+    const { body, bodyText, plainTextMode } = getDraftComposerBody(email);
 
     // Preserve the identity the draft was composed with — match name + address
     // against the same list the composer renders, this login's identities
@@ -493,7 +483,10 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
         // Drafts saved before #1189 stored an empty subject as the composer's
         // "(No Subject)" placeholder; reopen those with an empty field.
         subject: email.subject && email.subject !== t('email_composer.no_subject') ? email.subject : '',
-        body: htmlBody || bodyText,
+        body,
+        // Re-open in the format the draft was written in, as the classic
+        // view does: without it the composer's setting decided.
+        plainTextMode,
         showCc: (email.cc?.length || 0) > 0,
         showBcc: (email.bcc?.length || 0) > 0,
         selectedIdentityId: matchedIdentityId,

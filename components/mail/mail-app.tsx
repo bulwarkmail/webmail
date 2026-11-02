@@ -111,7 +111,7 @@ import { PluginSidePanel } from "@/components/plugins/plugin-side-panels";
 import { MvListToolbar } from "@/components/email/mv-list-toolbar";
 import { SidebarAppsModal } from "@/components/layout/sidebar-apps-modal";
 import { InlineAppView } from "@/components/layout/inline-app-view";
-import { getDraftTextBody } from '@/lib/email-body-selection';
+import { getDraftComposerBody } from '@/lib/email-body-selection';
 import { useSidebarApps } from "@/hooks/use-sidebar-apps";
 import { useIdentitySync } from "@/hooks/use-identity-sync";
 import { useIsEmbedded } from "@/hooks/use-is-embedded";
@@ -2468,17 +2468,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
 
     draft = await emailHooks.onBeforeEditDraft.transform(draft);
 
-    // Only the parts the server lists as the body: bodyValues also carries
-    // every text/* ATTACHMENT, which used to be joined in as the message.
-    const bodyText = getDraftTextBody(draft);
-    // A plain-text-only draft lists its text/plain part under htmlBody
-    // (RFC 8621 § 4.1.4 fallback) - only treat it as HTML when it really is.
-    const draftHtmlPart = draft.htmlBody?.[0];
-    const htmlBody = draftHtmlPart?.partId
-      && (!draftHtmlPart.type || draftHtmlPart.type.toLowerCase() === 'text/html')
-      && draft.bodyValues?.[draftHtmlPart.partId]
-      ? draft.bodyValues[draftHtmlPart.partId].value
-      : undefined;
+    const { body: draftBody, bodyText, plainTextMode: draftPlainTextMode } = getDraftComposerBody(draft);
 
     // Restore the identity the draft was composed with. Match the saved From
     // (name + address) against the same list the composer renders — the flat
@@ -2508,12 +2498,9 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       // Drafts saved before #1189 stored an empty subject as the composer's
       // "(No Subject)" placeholder; reopen those with an empty field.
       subject: draft.subject && draft.subject !== t('email_composer.no_subject') ? draft.subject : '',
-      body: htmlBody || bodyText,
-      // Re-open in the format the draft was written in: a text-only draft
-      // used to land raw in the rich-text editor (newlines collapsed) and an
-      // HTML draft raw in the plain-text textarea. Empty draft: the setting
-      // decides (#1022).
-      plainTextMode: htmlBody != null ? false : bodyText ? true : undefined,
+      body: draftBody,
+      // Re-open in the format the draft was written in (#1022).
+      plainTextMode: draftPlainTextMode,
       showCc: (draft.cc?.length || 0) > 0,
       showBcc: (draft.bcc?.length || 0) > 0,
       selectedIdentityId: matchedIdentityId,
