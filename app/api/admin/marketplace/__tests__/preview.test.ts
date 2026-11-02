@@ -5,6 +5,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 import JSZip from 'jszip';
 
+const appName = vi.hoisted(() => ({ value: 'Webmail' }));
+
 vi.mock('@/lib/admin/session', () => ({
   requireAdminAuth: vi.fn(async () => ({ session: { sub: 'admin' } })),
   getClientIP: () => '127.0.0.1',
@@ -12,7 +14,7 @@ vi.mock('@/lib/admin/session', () => ({
 vi.mock('@/lib/admin/config-manager', () => ({
   configManager: {
     ensureLoaded: vi.fn(async () => {}),
-    get: vi.fn((key: string) => (key === 'extensionDirectoryUrl' ? 'https://extensions.test' : undefined)),
+    get: vi.fn((key: string) => (key === 'extensionDirectoryUrl' ? 'https://extensions.test' : key === 'appName' ? appName.value : undefined)),
   },
 }));
 vi.mock('@/lib/admin/plugin-registry', () => ({
@@ -54,7 +56,9 @@ function directory() {
     const u = new URL(String(url));
     calls.push(u.pathname + u.search);
     if (u.pathname === '/api/v2/extensions/pretty-dates') {
-      return Response.json({ data: { ...summary, latest: versions[0], newest: versions[0], longDescription: 'long', versions: versions.slice(0, 2), screenshots: [], themePreviews: [], advisories: [], permissions: [] } });
+      return Response.json({ data: { ...summary, latest: versions[0], newest: versions[0], longDescription: 'long', versions: versions.slice(0, 2), screenshots: [], themePreviews: [], advisories: [], permissions: [
+        { id: 'http:proxy', title: 'Use accounts you connect', body: "Send requests through {appName}'s server.", highRisk: true },
+      ] } });
     }
     if (u.pathname === '/api/v2/extensions/pretty-dates/versions') return Response.json({ data: versions });
     const m = /\/versions\/([^/]+)\/bundle$/.exec(u.pathname);
@@ -103,6 +107,19 @@ describe('GET /api/admin/marketplace/[slug]', () => {
     const body = await (await preview('?version=0.9.0')).json();
     expect(body.requestedVersionMissing).toBe('0.9.0');
     expect(body.preview.version).toBe('1.2.0');
+  });
+
+  it('fills the app name into the permission texts the directory sends', async () => {
+    directory();
+    appName.value = 'Acme Mail';
+    let body = await (await preview()).json();
+    expect(body.extension.permissionDetails).toEqual([
+      { id: 'http:proxy', title: 'Use accounts you connect', body: "Send requests through Acme Mail's server.", highRisk: true },
+    ]);
+
+    appName.value = 'Webmail';
+    body = await (await preview()).json();
+    expect(body.extension.permissionDetails[0].body).toBe("Send requests through Bulwark's server.");
   });
 
   it('refuses a malformed version instead of forwarding it', async () => {
