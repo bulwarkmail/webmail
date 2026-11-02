@@ -1,4 +1,10 @@
-// Host side of the text checker calls (compose:check). See checkers.ts.
+// Host side of the text checker calls. See checkers.ts.
+//
+// A checker the host sends text to while the user types needs compose:check:
+// it reads every message being written, without the user pointing it at
+// one. A checker that checks only when the user asks (an assistant's "check
+// spelling" button, with the composer id that click hands over) needs no
+// more than compose:read, like the plugin's other reads of that message.
 //
 //   composer.registerChecker(data)                               background frame only
 //   composer.updateChecker(checkerId, patch)
@@ -13,6 +19,7 @@ import {
   removePluginChecker, setPluginChecker, updatePluginChecker, type CheckerSpec,
 } from './checkers';
 import { readId, withinRate } from './host-api-input';
+import { pluginHasPermission } from './permissions';
 
 const CALLS_PER_MINUTE = 60;
 
@@ -20,9 +27,18 @@ function rate(method: string, plugin: InstalledPlugin): void {
   if (!withinRate('composer-check', plugin.id, CALLS_PER_MINUTE)) throw new Error(`${method}: at most ${CALLS_PER_MINUTE} calls a minute`);
 }
 
+/** compose:check, or for a checker that checks only when asked, compose:read. */
+function requirePermission(method: string, plugin: InstalledPlugin, mode: 'typing' | 'on-demand'): void {
+  if (pluginHasPermission(plugin, 'compose:check')) return;
+  if (mode === 'on-demand' && pluginHasPermission(plugin, 'compose:read')) return;
+  throw new Error(`Plugin "${plugin.id}" lacks permission "compose:check"${mode === 'on-demand' ? ' or "compose:read"' : ''} for ${method}`);
+}
+
 function checkerOf(method: string, plugin: InstalledPlugin, checkerId: unknown): CheckerSpec {
   const spec = getChecker(plugin.id, checkerId);
   if (!spec) throw new Error(`${method}: no checker "${String(checkerId)}" registered by this plugin`);
+  // Checked again on every call, in case the permission went since.
+  requirePermission(method, plugin, spec.mode);
   return spec;
 }
 
@@ -30,8 +46,10 @@ export function doRegisterChecker(plugin: InstalledPlugin, data: unknown, frame:
   // The host calls a checker in the plugin's background frame; a slot
   // frame comes and goes with the screen.
   if (frame === 'slot') throw new Error('composer.registerChecker: register checkers from activate(), not from a slot');
+  const checked = checkCheckerData(data);
+  requirePermission('composer.registerChecker', plugin, checked.mode);
   rate('composer.registerChecker', plugin);
-  setPluginChecker(plugin.id, plugin.name, checkCheckerData(data));
+  setPluginChecker(plugin.id, plugin.name, checked);
   return true;
 }
 

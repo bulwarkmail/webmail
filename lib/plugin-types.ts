@@ -1559,6 +1559,7 @@ export const ALL_PERMISSIONS = [
   // writes, without the user pointing it at a composer, and draws its
   // results as underlines. Only where the user (or the admin) turned
   // proofreading on, and never for a message that will be signed or encrypted.
+  // A checker that checks only when asked needs compose:read instead.
   'compose:check',
   // Forward a message of the account with its attachments, without the
   // composer (api.email.forward). The host asks the user once per address.

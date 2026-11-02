@@ -31,12 +31,28 @@ beforeEach(() => resetPluginRateLimits());
 afterEach(() => resetCheckers());
 
 describe('compose:check', () => {
-  it('is a high-risk permission, and compose:read/write do not grant checking', async () => {
+  it('is a high-risk permission, and compose:read/write do not grant checking while typing', async () => {
     expect(HIGH_RISK_PERMISSIONS.has('compose:check')).toBe(true);
-    for (const method of ['composer.registerChecker', 'composer.setAnnotations', 'composer.getCheckText', 'composer.recheck']) {
-      await expect(call(READ_WRITE, method, [DATA])).rejects.toThrow('lacks permission "compose:check"');
+    await expect(call(READ_WRITE, 'composer.registerChecker', [DATA])).rejects.toThrow('lacks permission "compose:check"');
+    await expect(call(plugin([]), 'composer.registerChecker', [{ ...DATA, mode: 'on-demand' }])).rejects.toThrow('lacks permission');
+    for (const method of ['composer.setAnnotations', 'composer.getCheckText', 'composer.recheck']) {
+      await expect(call(READ_WRITE, method, ['composer-1', 'lt'])).rejects.toThrow();
     }
     expect(allCheckers()).toHaveLength(0);
+  });
+
+  it('lets a plugin with compose:read check when the user asks, never while typing', async () => {
+    await call(READ_WRITE, 'composer.registerChecker', [{ ...DATA, mode: 'on-demand' }]);
+    expect(getChecker('lt', 'lt')).toMatchObject({ mode: 'on-demand' });
+    const target = { getCheckText: vi.fn(() => ({ revision: 'r1' })), setAnnotations: vi.fn(() => 1) };
+    const unregister = registerCheckTarget('composer-1', target);
+    expect(await call(READ_WRITE, 'composer.getCheckText', ['composer-1', 'lt'])).toEqual({ revision: 'r1' });
+    expect(await call(READ_WRITE, 'composer.setAnnotations', ['composer-1', 'lt', 'r1', []])).toBe(1);
+    unregister();
+    // Re-registering as a typing checker needs compose:check.
+    await expect(call(READ_WRITE, 'composer.registerChecker', [{ ...DATA, mode: 'typing' }])).rejects.toThrow('compose:check');
+    // A permission taken away stops the calls of a checker already registered.
+    await expect(call(plugin([]), 'composer.recheck', ['lt'])).rejects.toThrow('lacks permission');
   });
 
   it('registers a checker from the background frame, with defaults filled in', async () => {

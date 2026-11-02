@@ -326,14 +326,15 @@ export const PERM_PER_METHOD: Readonly<Record<string, Permission | null>> = {
   'composer.replaceBody': 'compose:write',
   // Attach a file the plugin uploaded (jmap.uploadBlob).
   'composer.attach': 'email:blob-write',
-  // Text checkers: the host sends what the user writes in every composer
-  // where checking is on (checkers.ts).
-  'composer.registerChecker': 'compose:check',
-  'composer.updateChecker': 'compose:check',
-  'composer.recheck': 'compose:check',
-  'composer.unregisterChecker': 'compose:check',
-  'composer.getCheckText': 'compose:check',
-  'composer.setAnnotations': 'compose:check',
+  // Text checkers (checkers.ts): compose:check for one the host sends text
+  // to while the user types, compose:read for one that checks when asked.
+  // host-api-checker.ts checks which, by the checker's mode.
+  'composer.registerChecker': null,
+  'composer.updateChecker': null,
+  'composer.recheck': null,
+  'composer.unregisterChecker': null,
+  'composer.getCheckText': null,
+  'composer.setAnnotations': null,
 };
 
 // ─── Cross-origin allow-list (mirrors lib/plugin-api.ts) ──────

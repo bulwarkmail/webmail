@@ -20,6 +20,7 @@ const root = path.resolve(__dirname, '../..');
  */
 const OTHER_GATES: Record<string, { file: string; call: string }> = {
   'ui:keyboard': { file: 'lib/plugin-sandbox/loader.ts', call: "pluginHasPermission(plugin, 'ui:keyboard')" },
+  'compose:check': { file: 'lib/plugin-sandbox/host-api-checker.ts', call: "pluginHasPermission(plugin, 'compose:check')" },
 };
 
 /**
