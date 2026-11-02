@@ -256,3 +256,41 @@ describe('archiving a group message by month', () => {
     expect(client.createMailbox).toHaveBeenCalledWith('2026', 'k', 'ce', undefined);
   });
 });
+
+describe('shared message deep link from the personal Inbox (#1491)', () => {
+  it('selects the shared folder for a freshly fetched message without source stamps', async () => {
+    window.history.replaceState(null, '', '/mail/message/eaaaaab?owner=ce');
+    const email = { ...groupMessage, mailboxIds: { 'ce:a': true }, sourceClientAccountId: undefined, sourceAccountId: undefined } as Email;
+    const fetchContent = vi.fn().mockImplementation(async () => {
+      useEmailStore.setState({ selectedEmail: email });
+      return email;
+    });
+    const fetchEmails = vi.fn().mockResolvedValue(undefined);
+    useEmailStore.setState({
+      emails: [], selectedEmail: null, selectedMailbox: 'a', selectedKeyword: null,
+      fetchEmailContent: fetchContent, fetchEmails,
+    });
+    const mounted = render(<MailApp linkSegments={['message', 'eaaaaab']} />);
+    try {
+      await waitFor(() => expect(fetchContent).toHaveBeenCalledWith(client, 'eaaaaab', 'ce'));
+      await waitFor(() => expect(useEmailStore.getState().selectedMailbox).toBe('ce:a'));
+      expect(fetchEmails).toHaveBeenCalledWith(client, 'ce:a', { background: true });
+      expect(useEmailStore.getState().selectedEmail?.subject).toBe('GRP one');
+    } finally {
+      mounted.unmount();
+      window.history.replaceState(null, '', '/');
+    }
+  });
+
+  it('opens the shared Inbox for a grouped notification of the shared account', async () => {
+    window.history.replaceState(null, '', '/mail/folder/inbox?owner=ce');
+    useEmailStore.setState({ emails: [], selectedEmail: null, selectedMailbox: 'a', selectedKeyword: null } as never);
+    const mounted = render(<MailApp linkSegments={['folder', 'inbox']} />);
+    try {
+      await waitFor(() => expect(useEmailStore.getState().selectedMailbox).toBe('ce:a'));
+    } finally {
+      mounted.unmount();
+      window.history.replaceState(null, '', '/');
+    }
+  });
+});
