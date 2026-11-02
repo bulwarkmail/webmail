@@ -14,6 +14,7 @@ import { useVacationStore } from '@/stores/vacation-store';
 import { doVacationGet, doVacationSet } from '../host-api-settings';
 import { isPlainRecord, sessionClient } from '../host-api-input';
 import { NOT_MINE } from './not-mine';
+import { pluginHasPermission } from '../permissions';
 import { doCalendarDeleteWithUndo, doCalendarRespond, doCalendarUndoDelete } from './c.calendar';
 import { doFiltersCreate, doFiltersList, doFiltersUndo } from './c.filters';
 import { doEmailBatch, doEmailUndoBatch } from './c.batch';
@@ -94,13 +95,18 @@ export async function dispatch(plugin: InstalledPlugin, method: string, args: un
   }
 }
 
-/** This area's flags in api.host.features, right now. */
-export function features(): AreaHostFeaturesC {
+/**
+ * This area's flags in api.host.features, right now. For one plugin, the
+ * calls behind a new optional permission count only once it was granted (a
+ * plugin enabled before an update lacks them until turned off and on).
+ */
+export function features(plugin?: InstalledPlugin): AreaHostFeaturesC {
   const client = useAuthStore.getState().client;
+  const granted = (permission: Permission) => !plugin || pluginHasPermission(plugin, permission);
   return {
-    answerInvitation: true,
+    answerInvitation: granted('calendar:respond'),
     filterRules: client?.supportsSieve?.() === true,
     batchMail: true,
-    changeSettings: true,
+    changeSettings: granted('settings:change'),
   };
 }
