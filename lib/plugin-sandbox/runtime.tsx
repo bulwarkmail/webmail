@@ -161,6 +161,11 @@ function applyHostFeatures(next: HostFeaturesView | undefined): void {
   hostFeaturesState.externalRecipientWarning = next.externalRecipientWarning === true;
   // A host older than 1.20 doesn't send it, and never let such a plugin run in the mode.
   hostFeaturesState.noThirdPartyTraffic = next.noThirdPartyTraffic === true;
+  // The AI assistant's flags (lib/plugin-sandbox/assistant): whatever the host names, true or false.
+  const flags = hostFeaturesState as unknown as Record<string, boolean>;
+  for (const [key, value] of Object.entries(next)) {
+    if (key !== 'externalSenderLabel' && key !== 'externalRecipientWarning' && key !== 'noThirdPartyTraffic') flags[key] = value === true;
+  }
   for (const listener of hostFeatureListeners) {
     try { listener(hostFeaturesState); } catch (err) { console.error('[plugin] host feature listener failed', err); }
   }
