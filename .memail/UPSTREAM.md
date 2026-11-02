@@ -48,6 +48,8 @@ If the helper reports an existing local sync branch, inspect that branch and its
 
 ## Review and validation
 
+The update helper has a local Git regression test: `node --test .memail/sync-upstream.test.mjs`. It verifies an actual merge preserves upstream and downstream parent commits, leaves origin/main unchanged, and refuses dirty checkouts and incorrect upstream remotes. It uses temporary local repositories and makes no public network requests.
+
 1. Review changed workflows, dependency/install scripts, licensing, authentication, sanitizer, plugin sandbox, network guards and configuration before executing new upstream code.
 2. Follow upstream CONTRIBUTING.md. Use Node 22 as the current CI baseline and `npm ci` with the committed lockfile.
 3. Run `npm run typecheck`, `npm run lint`, and `npx vitest run --pool=forks --maxWorkers=2 --testTimeout=15000`.

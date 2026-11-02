@@ -4,7 +4,7 @@ Base: Bulwark Webmail, https://github.com/bulwarkmail/webmail.
 
 | Change | Location | Upstream impact | Verification |
 | --- | --- | --- | --- |
-| Fork maintenance guide and update helper | `.memail/` | Additive; no application or upstream workflow edits | Node syntax check; sync preparation against upstream |
+| Fork maintenance guide and update helper | `.memail/` | Additive; no application or upstream workflow edits | Node syntax check; local Git merge/guard regression test |
 
 No product behavior, authentication, mail rendering, synchronization, dependencies or license text has been changed by this initial setup.
 
