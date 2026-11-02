@@ -84,7 +84,8 @@ describe('SETTINGS_SCHEMA', () => {
       if (!isAllowedSettingValue(entry, value)) refused.push(`${entry.key}=${JSON.stringify(value)}`);
     }
     // Confirm delete is off by default; a plugin may turn it on, not off.
-    expect(refused).toEqual(['confirmDelete=false']);
+    // Sender favicons are on by default; a plugin may only switch them off.
+    expect(refused.sort()).toEqual(['confirmDelete=false', 'senderFavicons=true']);
   });
 
   it('marks presets, third-party rows and the inverted switch', () => {
@@ -148,6 +149,9 @@ describe('isAllowedSettingValue', () => {
     refuse('timeZone', 'Mars/Base');
     refuse('composeFontFamily', 'Comic Sans MS; background: url(https://evil.example/x)');
     refuse('composeFontSize', '13px');
+    // They make the server fetch the sender's domain.
+    refuse('senderFavicons', true);
+    refuse('showAvatarsInJunk', true);
   });
 
   it('allows the values the pages offer', () => {
@@ -158,6 +162,8 @@ describe('isAllowedSettingValue', () => {
     allow('confirmDelete', true);
     allow('confirmBulkDelete', true);
     allow('permanentlyDeleteJunk', false);
+    allow('senderFavicons', false);
+    allow('showAvatarsInJunk', false);
     allow('postExportAction', 'archive');
     allow('composeFontFamily', 'serif');
     allow('composeFontSize', '18px');

@@ -214,8 +214,9 @@ const ENTRIES: SettingSchemaEntry[] = [
   ]),
   bool('tintListRowsByTag', 'message_list', `${AP}tint_list_rows.label`),
   bool('showVerificationCodes', 'message_list', `${EB}show_verification_codes.label`),
-  bool('senderFavicons', 'message_list', 'settings.advanced.sender_favicons.label', { thirdParty: true }),
-  bool('showAvatarsInJunk', 'message_list', 'settings.advanced.show_avatars_in_junk.label', { thirdParty: true }),
+  // Both make the server fetch the sender's domain: the assistant may only switch them off.
+  bool('senderFavicons', 'message_list', 'settings.advanced.sender_favicons.label', { thirdParty: true, only: false }),
+  bool('showAvatarsInJunk', 'message_list', 'settings.advanced.show_avatars_in_junk.label', { thirdParty: true, only: false }),
   entry('hoverActions', 'message_list', `${EB}hover_actions.label`, {
     type: 'list',
     options: HOVER_ACTION_IDS.map(([value, labelKey]) => ({
