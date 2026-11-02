@@ -603,6 +603,23 @@ const MAILBOX_PROPERTIES = [
   "isSubscribed",
 ] as const;
 
+// A Mailbox/get without ids over maxObjectsInGet: Stalwart 0.16 cuts the list
+// at the limit without saying so, 1.0 answers requestTooLarge (RFC 8620 §5.1).
+function mailboxListCapped(response: JMAPResponse["methodResponses"][number] | undefined, maxObjects: number): boolean {
+  if (response?.[0] === "Mailbox/get") return Array.isArray(response[1].list) && response[1].list.length >= maxObjects;
+  return response?.[0] === "error" && response[1].type === "requestTooLarge";
+}
+
+// Every new message or flag change moves the Mailbox state (the counts), so a
+// paged load is retried a few times before the refresh gives up.
+const MAILBOX_TREE_ATTEMPTS = 3;
+
+class MailboxListChangedError extends Error {
+  constructor() {
+    super("Mailbox list changed while it was being loaded");
+  }
+}
+
 // SieveScript properties (RFC 9661 §2), explicit for the same reason.
 const SIEVE_SCRIPT_PROPERTIES = ["id", "name", "blobId", "isActive"] as const;
 
@@ -2159,11 +2176,13 @@ export class JMAPClient implements IJMAPClient {
   }
 
   /**
+   * `skipOfflineRecord`: mailbox pagination records the complete list once,
+   * never a capped initial response or an individual page.
    * `transfer`: a mail import or export's own request. A 429 throws
    * RateLimitError for the transfer to wait on, without pausing the rest of
    * the client, and a pause the client is in doesn't hold the transfer up.
    */
-  private async request(methodCalls: JMAPMethodCall[], using?: string[], opts?: { transfer?: boolean }): Promise<JMAPResponse> {
+  private async request(methodCalls: JMAPMethodCall[], using?: string[], opts?: { transfer?: boolean; skipOfflineRecord?: boolean }): Promise<JMAPResponse> {
     if (!this.apiUrl) {
       throw new Error('Not connected. Call connect() first.');
     }
@@ -2193,7 +2212,7 @@ export class JMAPClient implements IJMAPClient {
     }
     if (offline) {
       offline.noteNetwork(this, true);
-      offline.record(this, methodCalls, answer);
+      if (!opts?.skipOfflineRecord) offline.record(this, methodCalls, answer);
     }
     return answer;
   }
@@ -2270,36 +2289,120 @@ export class JMAPClient implements IJMAPClient {
     }
   }
 
+  /**
+   * Mailbox/get without ids can silently stop at maxObjectsInGet, leaving
+   * children without their parents. Querying all ids keeps the tree complete.
+   */
+  private async fetchMailboxTree(accountId: string): Promise<JMAPResponse> {
+    for (let attempt = 1; ; attempt++) {
+      try {
+        return await this.fetchMailboxTreeOnce(accountId);
+      } catch (error) {
+        if (!(error instanceof MailboxListChangedError) || attempt >= MAILBOX_TREE_ATTEMPTS) throw error;
+      }
+    }
+  }
+
+  private async fetchMailboxTreeOnce(accountId: string): Promise<JMAPResponse> {
+    const mailboxes: JMAPMailbox[] = [];
+    const seenIds = new Set<string>();
+    let position = 0;
+    let total: number | undefined;
+    let queryState: string | undefined;
+    let mailboxState: string | undefined;
+
+    let hasMorePages = true;
+    while (hasMorePages) {
+      const queryCall: JMAPMethodCall = ["Mailbox/query", {
+        accountId,
+        position,
+        limit: this.getMaxObjectsInGet(),
+        calculateTotal: position === 0,
+      }, "query"];
+      const combined = this.getMaxCallsInRequest() > 1;
+      const response = await this.request(combined ? [queryCall,
+        ["Mailbox/get", {
+          accountId,
+          properties: MAILBOX_PROPERTIES,
+          "#ids": { resultOf: "query", name: "Mailbox/query", path: "/ids" },
+        }, "get"],
+      ] : [queryCall], undefined, { skipOfflineRecord: true });
+
+      const queryResponse = response.methodResponses?.[0];
+      let getResponse = response.methodResponses?.[1];
+      if (!combined) {
+        const queriedIds = queryResponse?.[1]?.ids;
+        if (queryResponse?.[0] !== "Mailbox/query" || !Array.isArray(queriedIds) ||
+            !queriedIds.every((id: unknown) => typeof id === "string")) {
+          throw new Error("Failed to load the complete mailbox list");
+        }
+        // Result references cannot cross requests. Respect single-call servers
+        // by passing this page's IDs explicitly, still deferring cache writes.
+        const fetched = await this.request([["Mailbox/get", {
+          accountId, properties: MAILBOX_PROPERTIES, ids: queriedIds,
+        }, "get"]], undefined, { skipOfflineRecord: true });
+        getResponse = fetched.methodResponses?.[0];
+      }
+      const ids = queryResponse?.[1]?.ids;
+      const pageQueryState = queryResponse?.[1]?.queryState;
+      const page = getResponse?.[1]?.list;
+      const pageMailboxState = getResponse?.[1]?.state;
+
+      if (
+        queryResponse?.[0] !== "Mailbox/query" ||
+        !Array.isArray(ids) ||
+        !ids.every((id: unknown) => typeof id === "string") ||
+        typeof pageQueryState !== "string" ||
+        getResponse?.[0] !== "Mailbox/get" ||
+        !Array.isArray(page) ||
+        getResponse[1].notFound?.length ||
+        page.length !== ids.length
+      ) {
+        throw new Error("Failed to load the complete mailbox list");
+      }
+
+      if (queryState !== undefined && pageQueryState !== queryState) {
+        throw new MailboxListChangedError();
+      }
+      if (mailboxState !== undefined && pageMailboxState !== undefined && pageMailboxState !== mailboxState) {
+        throw new MailboxListChangedError();
+      }
+      queryState = pageQueryState;
+      if (typeof pageMailboxState === "string") mailboxState = pageMailboxState;
+      for (const id of ids) {
+        if (seenIds.has(id)) throw new Error("Mailbox/query returned duplicate ids");
+        seenIds.add(id);
+      }
+      mailboxes.push(...page);
+      if (typeof queryResponse[1].total === "number") total = queryResponse[1].total;
+      position += ids.length;
+      hasMorePages = ids.length > 0 && (total === undefined || position < total);
+    }
+
+    if (total !== undefined && seenIds.size !== total) {
+      throw new Error(`Mailbox/query returned ${seenIds.size} of ${total} mailboxes`);
+    }
+
+    return { methodResponses: [["Mailbox/get", { list: mailboxes, state: mailboxState }, "0"]] };
+  }
+
   async getMailboxes(accountId?: string): Promise<Mailbox[]> {
     const acctId = accountId || this.accountId;
     try {
-      const response = await this.request([
-        ["Mailbox/get", { accountId: acctId, properties: MAILBOX_PROPERTIES }, "0"]
-      ]);
+      const calls: JMAPMethodCall[] = [
+        ["Mailbox/get", { accountId: acctId, properties: MAILBOX_PROPERTIES }, "0"],
+      ];
+      let response = await this.request(calls, undefined, { skipOfflineRecord: true });
+      const first = response.methodResponses?.[0];
+      if (mailboxListCapped(first, this.getMaxObjectsInGet())) {
+        response = await this.fetchMailboxTree(acctId);
+      }
+      getOfflineHooks()?.record(this, calls, response);
 
       if (response.methodResponses?.[0]?.[0] === "Mailbox/get") {
         const rawMailboxes = (response.methodResponses[0][1].list || []) as JMAPMailbox[];
 
         debug.log('jmap', `[JMAP Mailbox] getMailboxes returned ${rawMailboxes.length} mailboxes for account ${acctId}`);
-
-        // Warn if response might be truncated
-        const maxObjects = this.getMaxObjectsInGet();
-        if (rawMailboxes.length >= maxObjects) {
-          debug.warn('jmap', 
-            `[JMAP Mailbox] Response contains ${rawMailboxes.length} mailboxes which equals maxObjectsInGet (${maxObjects}). ` +
-            `Some mailboxes may be missing - nested folders could appear orphaned at root level.`
-          );
-        }
-
-        // Log parentId references to detect potential orphans
-        const returnedIds = new Set(rawMailboxes.map(mb => mb.id));
-        const missingParents = rawMailboxes.filter(mb => mb.parentId && !returnedIds.has(mb.parentId));
-        if (missingParents.length > 0) {
-          debug.warn('jmap', 
-            `[JMAP Mailbox] ${missingParents.length} mailbox(es) reference parentId not in response (will be orphaned):`,
-            missingParents.map(mb => ({ id: mb.id, name: mb.name, parentId: mb.parentId }))
-          );
-        }
 
         return rawMailboxes.map((mb) => ({
           id: mb.id,
@@ -2354,6 +2457,7 @@ export class JMAPClient implements IJMAPClient {
       }
 
       let fetchFailed = false;
+      let paginationFailed = false;
 
       // One Mailbox/get per account, packed maxCallsInRequest to a request and
       // a few requests in flight at once. One request per account, one after
@@ -2370,14 +2474,31 @@ export class JMAPClient implements IJMAPClient {
             "Mailbox/get",
             { accountId, properties: MAILBOX_PROPERTIES },
             String(i),
-          ]));
+          ]), undefined, { skipOfflineRecord: true });
 
-          batch.forEach((accountId, i) => {
-            const match = response.methodResponses?.find((r) => r[2] === String(i));
+          for (const [i, accountId] of batch.entries()) {
+            let match = response.methodResponses?.find((r) => r[2] === String(i));
+            // Keep the packed fast path for small accounts. A full-sized result
+            // may be capped, so reload that account through query/get pages.
+            if (mailboxListCapped(match, maxObjects)) {
+              try {
+                const complete = await this.fetchMailboxTree(accountId);
+                match = complete.methodResponses[0];
+              } catch (error) {
+                fetchFailed = true;
+                paginationFailed = true;
+                console.error(`Failed to fetch all mailboxes for account ${accountId}:`, error);
+                continue;
+              }
+            }
             if (match?.[0] !== "Mailbox/get") {
               if (match) debug.warn('jmap', `[JMAP Mailbox] getAllMailboxes: account ${accountId} answered ${match[0]}`, match[1]);
-              return;
+              continue;
             }
+            getOfflineHooks()?.record(this,
+              [["Mailbox/get", { accountId, properties: MAILBOX_PROPERTIES }, "0"]],
+              { methodResponses: [["Mailbox/get", match[1], "0"]] },
+            );
             const rawMailboxes = (match[1].list || []) as JMAPMailbox[];
             const mailboxState = (match[1] as { state?: unknown }).state;
             if (typeof mailboxState === 'string') {
@@ -2386,16 +2507,8 @@ export class JMAPClient implements IJMAPClient {
 
             debug.log('jmap', `[JMAP Mailbox] getAllMailboxes: account ${accountId} returned ${rawMailboxes.length} mailboxes (isPrimary: ${accountId === this.accountId})`);
 
-            // Warn if response might be truncated
-            if (rawMailboxes.length >= maxObjects) {
-              debug.warn('jmap',
-                `[JMAP Mailbox] Account ${accountId}: response contains ${rawMailboxes.length} mailboxes which equals maxObjectsInGet (${maxObjects}). ` +
-                `Some mailboxes may be missing.`
-              );
-            }
-
             perAccount[offset + i] = rawMailboxes.map((mb) => this.mapRawMailbox(mb, accountId));
-          });
+          }
         } catch (error) {
           fetchFailed = true;
           console.error(`Failed to fetch mailboxes for accounts ${batch.join(', ')}:`, error);
@@ -2413,6 +2526,10 @@ export class JMAPClient implements IJMAPClient {
         },
       );
       await Promise.all(workers);
+
+      // The store replaces the whole folder list on a successful refresh.
+      // Never publish sibling accounts as a complete list after paging fails.
+      if (paginationFailed) throw new Error('Failed to load the complete mailbox list');
 
       // Accounts keep the session's order, whichever batch answered first.
       for (const mailboxes of perAccount) allMailboxes.push(...mailboxes);
