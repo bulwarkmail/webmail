@@ -20,9 +20,10 @@ function variantSelector(name: string): string {
   return match[1].trim();
 }
 
+/** The standard settings frame (the hidden Pro frame carries its own copy of the body). */
 function mount(html: string) {
   document.body.innerHTML = html;
-  return document.body;
+  return document.body.querySelector<HTMLElement>('[data-boot-skeleton="settings"]') ?? document.body;
 }
 
 afterEach(() => {

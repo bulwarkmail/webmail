@@ -55,9 +55,9 @@ describe('AppShellSkeleton under the Pro interface', () => {
       const [strip, body] = [...pane.children];
       expect(strip.querySelectorAll('[data-sk-pro-tab]')).toHaveLength(8);
       expect(classes(strip)).toEqual(expect.arrayContaining(['h-9', 'bg-secondary']));
-      expect([...body.children].map((b) => b.getAttribute('data-sk-pro-body'))).toEqual([
-        'mail', 'calendar', 'contacts', 'files', 'settings', 'other',
-      ]);
+      // A page Pro takes over only draws its own body: the redirect focuses
+      // its tab. (The /pro page draws all of them, see ProSkeleton below.)
+      expect([...body.children].map((b) => b.getAttribute('data-sk-pro-body'))).toEqual(['calendar', 'other']);
     }
     // The split pane only shows with a split.
     expect(classes(panes[1])).toEqual(expect.arrayContaining(['hidden', 'boot-pro-split:flex']));
@@ -77,6 +77,16 @@ describe('ProSkeleton', () => {
     expect(classes(pro)).toContain('boot-out:hidden');
     expect(pro?.querySelector('[data-pro-shell]')).not.toBeNull();
     expect(container.querySelector('[data-boot-skeleton="login"]')).not.toBeNull();
+  });
+
+  it('draws every page body in both panes on /pro, where the stored tabs decide', () => {
+    const container = html(<ProSkeleton label="Loading" />);
+    for (const pane of container.querySelectorAll('[data-sk-pro-pane]')) {
+      const body = pane.children[1];
+      expect([...body.children].map((b) => b.getAttribute('data-sk-pro-body'))).toEqual([
+        'mail', 'calendar', 'contacts', 'files', 'settings', 'other',
+      ]);
+    }
   });
 });
 
