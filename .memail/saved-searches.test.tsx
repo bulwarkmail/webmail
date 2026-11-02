@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { DEFAULT_SEARCH_FILTERS } from '../lib/jmap/search-utils';
-import { normalizeSavedSearch, useSavedSearches } from './saved-searches';
+import { normalizeSavedSearch, useSavedSearches, savedSearchDescription, matchesSavedSearch } from './saved-searches';
 import { SavedSearchMenu } from './saved-search-menu';
 const entry = {id:'one',scope:'account-a',name:'Invoices',query:'invoice',mailboxId:'inbox',filters:{...DEFAULT_SEARCH_FILTERS,hasAttachment:true}};
 beforeEach(() => useSavedSearches.setState({entries:[]}));
@@ -38,4 +38,54 @@ describe('saved searches', () => {
     fireEvent.click(screen.getByLabelText('Saved searches',{selector:'summary'}));
     expect(screen.getByRole('button',{name:'Open saved search Invoices'})).toBeDisabled();
   });
+});
+
+
+it('renames only the intended account entry and preserves its search criteria',()=>{
+  useSavedSearches.setState({entries:[entry,{...entry,scope:'account-b'}]});
+  expect(useSavedSearches.getState().update('account-a','one',{name:'Receipts'})).toBe(true);
+  expect(useSavedSearches.getState().entries[0]).toEqual({...entry,name:'Receipts'});
+  expect(useSavedSearches.getState().entries[1]).toEqual({...entry,scope:'account-b'});
+  expect(useSavedSearches.getState().update('missing','one',{name:'Wrong'})).toBe(false);
+  expect(useSavedSearches.getState().update('account-a','one',{name:' '})).toBe(false);
+  expect(useSavedSearches.getState().save(entry)).toBe(false);
+});
+
+it('describes negative filters and requires exact scope and filters for the current indicator',()=>{
+  const negative = {...entry,filters:{...entry.filters,isUnread:false,isStarred:false,hasAttachment:false}};
+  expect(savedSearchDescription(negative)).toContain('Read · Not starred');
+  expect(savedSearchDescription(negative)).toContain('No attachments');
+  expect(matchesSavedSearch(negative,' invoice ',negative.filters,'inbox')).toBe(true);
+  expect(matchesSavedSearch(negative,'invoice',negative.filters,'')).toBe(false);
+  expect(matchesSavedSearch(negative,'invoice',{...negative.filters,isUnread:null},'inbox')).toBe(false);
+});
+
+it('edits a name without replacing filters unless explicitly selected, and can undo removal',()=>{
+  useSavedSearches.setState({entries:[entry]});
+  render(<SavedSearchMenu scope="account-a" query="new query" filters={DEFAULT_SEARCH_FILTERS} mailboxId="" mailboxes={[{id:'inbox',name:'Inbox'}]} onApply={()=>{}} />);
+  fireEvent.click(screen.getByLabelText('Saved searches',{selector:'summary'}));
+  fireEvent.click(screen.getByRole('button',{name:'Edit saved search Invoices'}));
+  fireEvent.change(screen.getByLabelText('Search name'),{target:{value:'Receipts'}});
+  fireEvent.click(screen.getByRole('button',{name:'Save changes'}));
+  expect(useSavedSearches.getState().entries[0]).toEqual({...entry,name:'Receipts'});
+  expect(document.activeElement).toBe(screen.getByRole('button',{name:'Edit saved search Receipts'}));
+  fireEvent.click(screen.getByRole('button',{name:'Remove saved search Receipts'}));
+  expect(useSavedSearches.getState().entries).toHaveLength(0);
+  fireEvent.click(screen.getByRole('button',{name:'Undo removal'}));
+  expect(useSavedSearches.getState().entries[0]).toEqual({...entry,name:'Receipts'});
+});
+
+it('replaces saved criteria only when requested and quick searches use the current folder scope',()=>{
+  const onApply = vi.fn();
+  useSavedSearches.setState({entries:[entry]});
+  render(<SavedSearchMenu scope="account-a" query="review" filters={{...DEFAULT_SEARCH_FILTERS,isUnread:true}} mailboxId="inbox" mailboxes={[{id:'inbox',name:'Inbox'}]} onApply={onApply} />);
+  fireEvent.click(screen.getByLabelText('Saved searches',{selector:'summary'}));
+  fireEvent.click(screen.getByRole('button',{name:'Edit saved search Invoices'}));
+  fireEvent.click(screen.getByLabelText('Use the current query, filters and folder'));
+  fireEvent.click(screen.getByRole('button',{name:'Save changes'}));
+  expect(useSavedSearches.getState().entries[0].query).toBe('review');
+  expect(useSavedSearches.getState().entries[0].filters.hasAttachment).toBeNull();
+  expect(screen.getByRole('button',{name:'Open saved search Invoices'})).toHaveAttribute('aria-current','true');
+  fireEvent.click(screen.getByRole('button',{name:'Attachments'}));
+  expect(onApply.mock.calls[0][0]).toMatchObject({query:'',mailboxId:'inbox',filters:{hasAttachment:true,isUnread:null}});
 });

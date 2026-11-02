@@ -55,3 +55,9 @@ Add each customization here. Include the relevant upstream files, the reason it 
 - `.memail/paragraph-spacing.ts`, `rich-text-editor.tsx`: selectable Compact/Comfortable/Spacious paragraph spacing and all six heading levels. Spacing changes preserve paragraph text, marks and existing alignment/styles; they do not edit drafts automatically.
 - `.memail/compose-import-dialog.tsx`, `compose-preview.ts`: Markdown/HTML/plain-text source and local file import, isolated desktop/phone-width preview, stale file-read protection and a 1 MB import bound. Preview is approximate, sandboxed and blocks remote resources/navigation; insertions still use the existing sanitizer.
 - `components/email/email-composer.tsx`: capture-phase composer shortcuts yield to nested menus, dialogs and listboxes, fixing Escape opening the save/discard prompt while a formatting menu is focused. Recheck with the composer-mention integration suite after upstream changes.
+
+
+## Saved-search management
+
+- `.memail/saved-searches.ts`: scoped updates and duplicate-ID prevention; readable criteria summaries include negative boolean filters. Exact criteria and folder comparison drive the current-search indicator.
+- `.memail/saved-search-menu.tsx`: rename and opt-in replacement from current criteria, undo last removal, readable criteria cards, account limit count and quick unread/starred/attachment searches. Keyboard focus returns to the edited control or disclosure. The panel scrolls within a bounded height and sits above floating Compose. Preferences remain device-local.

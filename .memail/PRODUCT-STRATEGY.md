@@ -193,3 +193,8 @@ Acceptance still needs live copy/paste samples from Word desktop, Google Docs an
 ### Composition review and repair checkpoint
 
 Added six-level text styles, paragraph-spacing repair for existing drafts, local Markdown/HTML/text import and isolated desktop/phone-width preview. Rich clipboard content now retains vertical margins and gains document spacing when source CSS is absent. A real-composer shortcut regression ensures Escape in formatting menus does not close the draft. Recipient rendering, localization and live source-application clipboard coverage remain acceptance work.
+
+
+### Search management checkpoint
+
+Saved searches now expose their criteria and folder scope, indicate a matching current search, support rename and explicit criteria replacement, and offer undo for the last removal. Quick unread/starred/attachment searches use the existing native search pipeline. Account isolation and missing-folder guards remain enforced. Cross-device synchronization and localization remain future work.

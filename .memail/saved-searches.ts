@@ -27,14 +27,23 @@ export function normalizeSavedSearch(value: unknown): SavedSearch | null {
 interface SavedSearchState {
   entries: SavedSearch[];
   save: (entry: SavedSearch) => boolean;
+  update: (scope:string, id:string, changes:Partial<Pick<SavedSearch,'name'|'query'|'filters'|'mailboxId'>>) => boolean;
   remove: (scope: string, id: string) => void;
 }
 export const useSavedSearches = create<SavedSearchState>()(persist((set,get) => ({
   entries: [],
   save: input => {
     const entry = normalizeSavedSearch(input);
-    if (!entry || get().entries.filter(e => e.scope === entry.scope).length >= MAX_SAVED_SEARCHES) return false;
+    if (!entry || get().entries.some(e=>e.id===entry.id && e.scope===entry.scope) || get().entries.filter(e => e.scope === entry.scope).length >= MAX_SAVED_SEARCHES) return false;
     set(s => ({entries:[...s.entries,entry]}));
+    return true;
+  },
+  update: (scope,id,changes) => {
+    const existing = get().entries.find(e=>e.scope===scope && e.id===id);
+    if (!existing) return false;
+    const updated = normalizeSavedSearch({...existing,...changes,id,scope});
+    if (!updated) return false;
+    set(s=>({entries:s.entries.map(e=>e.scope===scope && e.id===id ? updated : e)}));
     return true;
   },
   remove: (scope,id) => set(s => ({entries:s.entries.filter(e => e.scope !== scope || e.id !== id)})),
@@ -51,3 +60,25 @@ export const useSavedSearches = create<SavedSearchState>()(persist((set,get) => 
     return {...current,entries};
   },
 }));
+
+
+/** Human-readable criteria, including negative filters (read, unstarred, no attachments). */
+export function savedSearchDescription(entry: Pick<SavedSearch,'query'|'filters'>): string {
+  const parts:string[] = [];
+  if (entry.query) parts.push(`“${entry.query}”`);
+  const filters = entry.filters;
+  for (const [key,label] of [['from','From'],['to','To'],['subject','Subject'],['body','Body'],['dateAfter','After'],['dateBefore','Before']] as const) {
+    if (filters[key]) parts.push(`${label}: ${filters[key]}`);
+  }
+  if (filters.hasAttachment !== null) parts.push(filters.hasAttachment ? 'Has attachments' : 'No attachments');
+  if (filters.isUnread !== null) parts.push(filters.isUnread ? 'Unread' : 'Read');
+  if (filters.isStarred !== null) parts.push(filters.isStarred ? 'Starred' : 'Not starred');
+  if (filters.minSizeKb) parts.push(`At least ${filters.minSizeKb} KB`);
+  if (filters.maxSizeKb) parts.push(`At most ${filters.maxSizeKb} KB`);
+  return parts.join(' · ');
+}
+
+export function matchesSavedSearch(entry:SavedSearch, query:string, filters:SearchFilters, mailboxId:string): boolean {
+  return entry.query === query.trim() && entry.mailboxId === mailboxId && !filters.pluginFilter &&
+    Object.keys(DEFAULT_SEARCH_FILTERS).filter(key=>key!=='pluginFilter').every(key=>entry.filters[key as keyof SearchFilters]===filters[key as keyof SearchFilters]);
+}

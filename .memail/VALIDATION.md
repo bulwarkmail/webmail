@@ -77,3 +77,11 @@ The preview is in draft PR #3. Phase 0 and full phase 1 acceptance are not compl
 - Browser verified a Markdown source preview at phone width and inserted editable headings/table/list content. Selecting Heading 4 updates the actual node. Browser discovered the capture-phase Escape defect, which is now covered by the integration test; a second browser check was interrupted by changing UI state, so keyboard closure is not claimed as browser-verified after the fix.
 - For the user's spacing report, a temporary isolated page rendered the production RichTextEditor without touching mailbox drafts. Pasting representative synthetic LLM email HTML produced 14px paragraph gaps and 22.5px heading top margins, instead of 4px. Screenshot: research workspace `memail-paste-spacing-fixed.jpg`. The temporary route was removed and clipboard contents restored. No user draft body was changed.
 - Existing drafts cannot recover original spacing that was already discarded automatically. Select affected paragraphs and use Formatting > Spacing > Comfortable, or paste the original source again. Preview and file import do not guarantee exact Word page layout or every recipient's rendering.
+
+
+## Saved-search management
+
+- Nine saved-search tests pass, including account isolation for updates, criteria preservation on rename, explicit criteria replacement, negative-filter summaries, exact active-state matching, quick-search scope, undo removal and focus return after editing. Scoped lint passes.
+- Production build and TypeScript passed; final focus-return refinement passed the targeted suite afterward.
+- Browser verified attachment quick search (10 synthetic results), creation/rename, current-search indication, removal/undo, and Escape returning focus to the disclosure. Removed only the temporary review search; the pre-existing saved search was retained. No draft text or message content was changed.
+- Screenshot: research workspace `memail-saved-search-management.jpg`. Phone viewport acceptance and translation of these controls remain open; the panel has bounded scrolling and viewport-constrained width but no new mobile acceptance claim.
