@@ -32,7 +32,10 @@ describe('batch functions with an explicit target', () => {
       // The selection names another message: a targeted call must leave it alone.
       selectedEmailKeys: new Set(['keep']),
       isUnifiedView: true,
+      selectedMailbox: 'inbox',
+      searchQuery: '',
       fetchTagCounts: vi.fn(),
+      fetchMailboxes: vi.fn(async () => {}),
     } as never);
   });
 
@@ -46,6 +49,19 @@ describe('batch functions with an explicit target', () => {
     expect(other.batchArchiveEmails).not.toHaveBeenCalled();
     expect(useEmailStore.getState().emails.map((e) => e.id)).toEqual(['keep']);
     expect([...useEmailStore.getState().selectedEmailKeys]).toEqual(['keep']);
+  });
+
+  it('keeps the rows where they are still listed, and refreshes the folder counts', async () => {
+    const target = { emailIds: ['m1'], client, emails: [email('m1')] };
+    // The Archive is the open folder: the archived message belongs there.
+    useEmailStore.setState({ selectedMailbox: 'arch' } as never);
+    await useEmailStore.getState().batchArchive(other, target);
+    expect(useEmailStore.getState().emails.map((e) => e.id)).toEqual(['m1', 'keep']);
+    // A search still finds it.
+    useEmailStore.setState({ selectedMailbox: 'inbox', searchQuery: 'invoice' } as never);
+    await useEmailStore.getState().batchArchive(other, target);
+    expect(useEmailStore.getState().emails.map((e) => e.id)).toEqual(['m1', 'keep']);
+    expect(useEmailStore.getState().fetchMailboxes).toHaveBeenCalledTimes(2);
   });
 
   it('refuses an Archive someone else reads, asking the server for its share map', async () => {
