@@ -85,8 +85,25 @@ describe('compose-format (#1022): HTML <-> plain text switch', () => {
 
     it('keeps a body without signature signature-free', () => {
       const html = plainComposeBodyToHtml('Thanks\n\n> original', identity, { separator: true });
-      expect(html).toBe('<p>Thanks</p><p>&gt; original</p>');
+      expect(html).toBe('<p>Thanks</p><blockquote><p>original</p></blockquote>');
       expect(containsEmbeddedSignature(html)).toBe(false);
+    });
+
+    it('turns "> " lines back into a quote, one level per marker', () => {
+      const text = 'Thanks\n\nOn Monday Bob wrote:\n> Line one\n> Line two\n>\n> > older\nnot quoted';
+      expect(plainComposeBodyToHtml(text, identity, { separator: true })).toBe(
+        '<p>Thanks</p><p>On Monday Bob wrote:</p>'
+        + '<blockquote><p>Line one<br>Line two</p><blockquote><p>older</p></blockquote></blockquote>'
+        + '<p>not quoted</p>',
+      );
+    });
+
+    it('round-trips a quoted reply through plain text and back', () => {
+      const start = `<p>Thanks</p><p>On Monday Bob wrote:</p>${buildQuotedHtmlBlock('<p>Line one</p><blockquote><p>older</p></blockquote>')}`;
+      const text = htmlComposeBodyToPlainText(start, identity, { separator: true });
+      const back = plainComposeBodyToHtml(text, identity, { separator: true });
+      expect(back).toBe('<p>Thanks</p><p>On Monday Bob wrote:</p><blockquote><p>Line one</p><blockquote><p>older</p></blockquote></blockquote>');
+      expect(htmlComposeBodyToPlainText(back, identity, { separator: true })).toBe(text);
     });
 
     it('gives an untouched signature-only body an empty paragraph to type into', () => {

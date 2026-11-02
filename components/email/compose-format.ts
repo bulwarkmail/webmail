@@ -217,11 +217,34 @@ export function htmlComposeBodyToPlainText(
   return appendPlainTextSignature(text, identity, { separator: options.separator });
 }
 
+const QUOTE_LINE = /^>/;
+
+// Plain text to editor HTML, with runs of "> " lines as a <blockquote> (one
+// level per ">"), so a quote stays a quote in the rich editor.
+function plainTextWithQuotesToHtml(text: string): string {
+  const lines = text.replace(/\r\n?/g, '\n').split('\n');
+  if (!lines.some((line) => QUOTE_LINE.test(line))) return plainTextToComposerBody(text);
+  const parts: string[] = [];
+  let i = 0;
+  while (i < lines.length) {
+    const quoted = QUOTE_LINE.test(lines[i]);
+    const run: string[] = [];
+    while (i < lines.length && QUOTE_LINE.test(lines[i]) === quoted) run.push(lines[i++]);
+    if (quoted) {
+      parts.push(`<blockquote>${plainTextWithQuotesToHtml(run.map((line) => line.replace(/^> ?/, '')).join('\n')) || '<p></p>'}</blockquote>`);
+    } else {
+      parts.push(plainTextToComposerBody(run.join('\n').replace(/^\n+|\n+$/g, '')));
+    }
+  }
+  return parts.join('');
+}
+
 /**
  * Convert a plain-text body to editor HTML: paragraphs per blank line, <br>
- * per newline. A trailing plain-text signature is swapped for the embedded
- * (marker-bracketed) HTML signature so identity switches and the send path
- * keep working as in a body that started out as HTML.
+ * per newline, "> " lines as a quote. A trailing plain-text signature is
+ * swapped for the embedded (marker-bracketed) HTML signature so identity
+ * switches and the send path keep working as in a body that started out as
+ * HTML.
  */
 export function plainComposeBodyToHtml(
   text: string,
@@ -230,7 +253,7 @@ export function plainComposeBodyToHtml(
 ): string {
   const hadSignature = plainTextBodyHasSignature(text, identity);
   const userText = hadSignature ? plainTextBodyWithoutSignature(text, identity) : text;
-  const html = plainTextToComposerBody(userText);
+  const html = plainTextWithQuotesToHtml(userText);
   if (!hadSignature) return html;
   const embedded = buildEmbeddedSignatureHtml(identity, { embed: true, separator: options.separator });
   return `${html || '<p></p>'}${embedded}`;
