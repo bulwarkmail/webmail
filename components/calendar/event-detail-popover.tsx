@@ -25,6 +25,7 @@ import { canUserRsvp, getEventEditability, type EditabilityContext } from "@/lib
 import { useFormatEventDate } from "@/hooks/use-format-event-date";
 import { useContactNameResolver } from "@/hooks/use-contact-name-resolver";
 import { findMeetingLink, locationAction, mapsUrl, primaryLocationName } from "@/lib/event-links";
+import { descriptionAsText } from "@/lib/calendar-description";
 import { useNoThirdPartyTraffic } from "@/hooks/use-third-party-mode";
 import { PluginSlot } from "@/components/plugins/plugin-slot";
 import { eventToView } from "@/lib/plugin-projection";
@@ -174,6 +175,7 @@ export function EventDetailPopover({
   // join URL in the description; surface it as the meeting link anyway.
   const meeting = useMemo(() => findMeetingLink(event), [event]);
   const pluginProps = useMemo(() => ({ event: eventToView(event) }), [event]);
+  const description = useMemo(() => descriptionAsText(event), [event]);
   const virtualLocation = meeting?.uri ?? null;
 
   // A URL opens as a link, a location that only names the service joins the
@@ -630,11 +632,11 @@ export function EventDetailPopover({
         )}
 
         {/* Description */}
-        {event.description && (
+        {description && (
           <div className="flex items-start gap-2.5">
             <AlignLeft className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
             <p dir="auto" className="text-sm text-muted-foreground whitespace-pre-line line-clamp-3 break-words">
-              <LinkifiedText text={event.description} />
+              <LinkifiedText text={description} />
             </p>
           </div>
         )}

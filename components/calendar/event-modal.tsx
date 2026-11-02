@@ -9,6 +9,7 @@ import { LinkifiedText } from "@/components/ui/linkified-text";
 import { X, Trash2, Users, CalendarDays, CopyPlus, Pencil, Clock, MapPin, Video, Repeat, Bell, AlignLeft, AlertTriangle, MoreVertical } from "@/components/icons";
 import { IconButton } from "@/components/ui/icon-button";
 import { findMeetingLink, locationAction, mapsUrl, primaryLocationName } from "@/lib/event-links";
+import { descriptionAsText } from "@/lib/calendar-description";
 import { ParticipantStatusBadge } from "./rsvp-buttons";
 import { format, parseISO, addHours, isSameDay } from "date-fns";
 import type { CalendarEvent, Calendar, CalendarParticipant, CalendarEventAlert, CalendarRecurrenceRule } from "@/lib/jmap/types";
@@ -371,7 +372,9 @@ export function EventModal({
   };
 
   const [title, setTitle] = useState(event?.title || defaultTitle || "");
-  const [description, setDescription] = useState(event?.description || "");
+  // An HTML description is shown and edited as its text.
+  const eventDescription = useMemo(() => (event ? descriptionAsText(event) : ""), [event]);
+  const [description, setDescription] = useState(eventDescription);
   const [location, setLocation] = useState(
     event?.locations ? Object.values(event.locations)[0]?.name || "" : ""
   );
@@ -1189,11 +1192,11 @@ export function EventModal({
             )}
 
             {/* Description */}
-            {event.description && (
+            {eventDescription && (
               <div className="flex items-start gap-2.5">
                 <AlignLeft className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                 <p className="text-sm text-muted-foreground whitespace-pre-line break-words">
-                  <LinkifiedText text={event.description} />
+                  <LinkifiedText text={eventDescription} />
                 </p>
               </div>
             )}

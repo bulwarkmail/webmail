@@ -1,4 +1,5 @@
 import type { CalendarEvent } from "@/lib/jmap/types";
+import { descriptionAsText } from "@/lib/calendar-description";
 
 const MAX_LINE_OCTETS = 75;
 const utf8 = new TextEncoder();
@@ -139,7 +140,9 @@ export function eventToICS(event: CalendarEvent): string {
   }
 
   if (event.title) lines.push(`SUMMARY:${escapeText(event.title)}`);
-  if (event.description) lines.push(`DESCRIPTION:${escapeText(event.description)}`);
+  // DESCRIPTION is plain text; an HTML description goes out as its text.
+  const description = descriptionAsText(event);
+  if (description) lines.push(`DESCRIPTION:${escapeText(description)}`);
   if (event.status) lines.push(`STATUS:${event.status.toUpperCase()}`);
   if (event.privacy) lines.push(`CLASS:${event.privacy.toUpperCase()}`);
   if (event.freeBusyStatus) {

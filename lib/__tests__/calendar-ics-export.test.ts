@@ -52,4 +52,20 @@ describe('eventToICS', () => {
 
     expect(line(ics, 'ORGANIZER')).toBe('ORGANIZER;CN=Alice:mailto:alice@example.com');
   });
+
+  // DESCRIPTION is plain text: an HTML description goes out as its text.
+  it('writes an HTML description as text', () => {
+    const ics = eventToICS(event({
+      description: '<p>Budget &amp; plans<br>Room 2</p>',
+      descriptionContentType: 'text/html',
+    }));
+
+    expect(line(ics, 'DESCRIPTION:')).toBe('DESCRIPTION:Budget & plans\\nRoom 2');
+  });
+
+  it('writes a plain-text description as it is', () => {
+    const ics = eventToICS(event({ description: 'a <b> c', descriptionContentType: 'text/plain' }));
+
+    expect(line(ics, 'DESCRIPTION:')).toBe('DESCRIPTION:a <b> c');
+  });
 });
