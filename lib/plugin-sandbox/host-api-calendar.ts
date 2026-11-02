@@ -34,6 +34,7 @@ import { expandRecurringEvents } from '../recurrence-expansion';
 import { buildParticipantMap } from '../calendar-participants';
 import { parseDurationSeconds } from '../calendar-event-normalization';
 import { parseAlertOffset, withOwnAlertIds } from '../calendar-alerts';
+import { plainDescriptionFields } from '../calendar-description';
 import { patchPath } from '../jmap/patch-object';
 import { isValidEmail } from '../validation';
 import { getEffectiveTimeZone } from '../timezone';
@@ -537,6 +538,8 @@ export async function doCalendarUpdateEvent(id: unknown, patch: unknown): Promis
     updates.calendarIds = { [await pickCalendar(client, method, data.calendarId, false)]: true };
   }
   const existing = await eventForMutation(client, method, eventId);
+  // A plugin writes plain text, also over an HTML description.
+  if (updates.description !== undefined) Object.assign(updates, plainDescriptionFields(existing, updates.description));
 
   const timeKeys = ['start', 'end', 'duration', 'timeZone', 'isAllDay'] as const;
   if (timeKeys.some((k) => data[k] !== undefined)) {

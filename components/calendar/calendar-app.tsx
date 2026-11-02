@@ -60,6 +60,7 @@ import { useIsFocusedProTab, useIsPaneScoped } from "@/hooks/use-pane-context";
 import { useProMultiAccountCalendars } from "@/hooks/use-pro-multi-account-calendars";
 import { ResizeHandle } from "@/components/layout/resize-handle";
 import { buildDuplicateEventData } from "@/lib/calendar-duplicate";
+import { descriptionWithNote } from "@/lib/calendar-description";
 import { filterTasksByCalendars } from "@/lib/calendar-tasks";
 import { baseEventStoreId, isServerRecurrenceInstance } from "@/lib/recurrence-instances";
 import { deleteOccurrence, saveOccurrenceEdit, type EventEditorState } from "@/lib/recurrence-scope-edit";
@@ -1532,13 +1533,10 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
   const handleSaveNoteFromDetail = useCallback(async (note: string) => {
     if (!detailEvent || !client) return;
     const timestamp = format(displayNow(), "yyyy-MM-dd HH:mm");
-    const separator = `\n\n--- ${timestamp} ---\n`;
-    const newDescription = detailEvent.description
-      ? `${detailEvent.description}${separator}${note}`
-      : `--- ${timestamp} ---\n${note}`;
+    const fields = descriptionWithNote(detailEvent, `--- ${timestamp} ---`, note);
     try {
-      if (!(await updateEvent(client, detailEvent.id, { description: newDescription }))) return;
-      setDetailEvent({ ...detailEvent, description: newDescription });
+      if (!(await updateEvent(client, detailEvent.id, fields))) return;
+      setDetailEvent({ ...detailEvent, ...fields });
       toast.success(t("detail.note_saved"));
     } catch (error) {
       toast.error(describeError(error, t("notifications.event_error")));

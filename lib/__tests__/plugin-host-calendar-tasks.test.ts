@@ -204,6 +204,16 @@ describe('api.calendar', () => {
     await expect(call(WRITE, 'calendar.updateEvent', 'e1', {})).rejects.toThrow(/patch is empty/);
   });
 
+  // A plugin writes plain text; left labelled text/html, other clients would
+  // run its lines together.
+  it('labels a description written over an HTML one as plain text', async () => {
+    client.getCalendarEvent.mockResolvedValue(event({ description: '<p>Old</p>', descriptionContentType: 'text/html' }));
+    await call(WRITE, 'calendar.updateEvent', 'e1', { description: 'New\nlines' });
+    expect(client.updateCalendarEvent).toHaveBeenCalledWith('e1', expect.objectContaining({
+      description: 'New\nlines', descriptionContentType: 'text/plain',
+    }), false, undefined);
+  });
+
   it('includes the virtual birthday calendar in listCalendars only when contacts:read is held and showBirthdayCalendar is enabled', async () => {
     useSettingsStore.setState({ showBirthdayCalendar: true, birthdayCalendarColor: '#f59e0b' });
     // Plugin without contacts:read does not see the birthday calendar

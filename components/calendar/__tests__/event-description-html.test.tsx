@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { EventDetailPopover } from '../event-detail-popover';
 import { EventModal } from '../event-modal';
@@ -66,5 +66,40 @@ describe('HTML event descriptions', () => {
       <EventPrintSheet event={event} calendar={calendar} timeFormat="24h" timeZone="Europe/Berlin" />,
     );
     expect(container.querySelector('.pr-text')?.textContent).toBe('a <b> c');
+  });
+});
+
+describe('saving an HTML event description from the editor', () => {
+  async function save(event: CalendarEvent, newDescription?: string): Promise<Partial<CalendarEvent>> {
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    render(<EventModal event={event} calendars={[calendar]} onSave={onSave} onClose={vi.fn()} currentUserEmails={['me@example.com']} />);
+    fireEvent.click(screen.getByText('events.edit'));
+    if (newDescription !== undefined) {
+      fireEvent.change(screen.getByPlaceholderText('form.description'), { target: { value: newDescription } });
+    }
+    fireEvent.click(screen.getByText('form.save'));
+    await waitFor(() => expect(onSave).toHaveBeenCalledTimes(1));
+    return onSave.mock.calls[0][0] as Partial<CalendarEvent>;
+  }
+
+  // Other clients would read the text as HTML and run its lines together.
+  it('labels an edited description as plain text', async () => {
+    const data = await save(htmlEvent(), `${TEXT}\nMore`);
+    expect(data.description).toBe(`${TEXT}\nMore`);
+    expect(data.descriptionContentType).toBe('text/plain');
+  });
+
+  it('leaves an untouched HTML description as it was', async () => {
+    const data = await save(htmlEvent());
+    expect(data).not.toHaveProperty('description');
+    expect(data).not.toHaveProperty('descriptionContentType');
+  });
+
+  // Stalwart writes a set type as STYLED-DESCRIPTION, which many clients skip.
+  it('sends no type for an event that had none', async () => {
+    const event = { ...htmlEvent(), description: 'old', descriptionContentType: undefined } as unknown as CalendarEvent;
+    const data = await save(event, 'new');
+    expect(data.description).toBe('new');
+    expect(data).not.toHaveProperty('descriptionContentType');
   });
 });
