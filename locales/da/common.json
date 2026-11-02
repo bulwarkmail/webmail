@@ -843,6 +843,7 @@
     "mv_position": "{index} af {total}",
     "plugin_panel_show": "Vis pluginpanel",
     "plugin_panel_hide": "Skjul pluginpanel",
+    "plugin_panel": "Pluginpanel",
     "copy": "Kopiér",
     "contact_added": "Kontakt tilføjet",
     "save_to_files": {
@@ -5976,6 +5977,10 @@
       "ui_email_details": {
         "title": "Tilføje paneler til beskeddetaljer",
         "body": "Vise sit eget panel ved siden af eller under en åben besked."
+      },
+      "ui_side_panel": {
+        "title": "Tilføj et panel til andre visninger",
+        "body": "Vis sit eget panel ved siden af Kalender, Kontakter, Filer og Indstillinger."
       },
       "ui_download_file": {
         "title": "Gemme filer på din enhed",

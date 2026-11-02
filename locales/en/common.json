@@ -853,6 +853,7 @@
     },
     "plugin_panel_show": "Show plugin panel",
     "plugin_panel_hide": "Hide plugin panel",
+    "plugin_panel": "Plugin panel",
     "frame_title": "Message: {subject}",
     "frame_title_from": "Message from {sender}",
     "download_named": "Download {name}",
@@ -5976,6 +5977,10 @@
       "ui_email_details": {
         "title": "Add panels to message details",
         "body": "Show its own panel next to or below an open message."
+      },
+      "ui_side_panel": {
+        "title": "Add a panel to other views",
+        "body": "Show its own panel next to Calendar, Contacts, Files and Settings."
       },
       "ui_download_file": {
         "title": "Save files to your device",

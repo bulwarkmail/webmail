@@ -118,6 +118,7 @@ function PluginDialogView({ current, layer }: { current: DialogRequest; layer: '
   // Footer buttons of a custom dialog: the plugin declares them, the host
   // draws them and passes each click back as `dialogButtonClick` ({ id, n }).
   const [buttons, setButtons] = useState<DialogButtonSpec[]>([]);
+  const viewportHeight = useVisibleHeight(current?.kind === 'custom' && current.fill === true);
   const [buttonClick, setButtonClick] = useState<{ id: string; n: number }>({ id: '', n: 0 });
   const setDialogButtons = useCallback((value: unknown) => { setButtons(readDialogButtons(value)); }, []);
   const pressButton = (id: string) => setButtonClick((c) => ({ id, n: c.n + 1 }));
@@ -220,7 +221,10 @@ function PluginDialogView({ current, layer }: { current: DialogRequest; layer: '
       <div
         ref={panelRef}
         className="flex w-full flex-col overflow-hidden rounded-lg border border-border bg-background text-foreground shadow-xl animate-in zoom-in-95 duration-200"
-        style={{ maxWidth: custom ? (current.width ?? 560) : 448, maxHeight: '90vh' }}
+        style={custom && current.fill
+          // As tall as the visible window lets it be (a phone's keyboard takes its share).
+          ? { maxWidth: current.width ?? 560, height: Math.min(640, Math.round(viewportHeight * 0.9) - 16) }
+          : { maxWidth: custom ? (current.width ?? 560) : 448, maxHeight: '90vh' }}
         data-plugin-dialog={current.pluginId}
       >
         {custom ? (
@@ -240,12 +244,13 @@ function PluginDialogView({ current, layer }: { current: DialogRequest; layer: '
                 <X className="w-5 h-5" aria-hidden="true" />
               </button>
             </div>
-            <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
+            <div className={cn('min-h-0 flex-1 px-6 py-4', current.fill ? 'flex flex-col overflow-hidden' : 'overflow-y-auto')}>
               {message}
               <PluginIframeSlot
                 pluginId={current.pluginId}
                 slot={(current.slot ?? 'plugin-dialog') as SlotName}
                 extraProps={customProps}
+                fill={current.fill === true}
               />
             </div>
             {buttons.length > 0 && (
@@ -329,6 +334,21 @@ function PluginDialogView({ current, layer }: { current: DialogRequest; layer: '
 }
 
 /** A footer button's icon by name; unknown names show none. */
+/** The height of what the window shows now (the visual viewport, without a phone's keyboard), followed while `on`. */
+function useVisibleHeight(on: boolean): number {
+  const read = () => (typeof window === 'undefined' ? 800 : Math.round(window.visualViewport?.height ?? window.innerHeight));
+  const [height, setHeight] = useState(read);
+  useEffect(() => {
+    if (!on || typeof window === 'undefined') return;
+    const update = () => setHeight(read());
+    update();
+    const target = window.visualViewport ?? window;
+    target.addEventListener('resize', update);
+    return () => target.removeEventListener('resize', update);
+  }, [on]);
+  return height;
+}
+
 function FooterIcon({ name }: { name?: string }) {
   const Glyph = name ? iconForName(name) : null;
   return Glyph ? <Glyph className="w-4 h-4" aria-hidden="true" /> : null;

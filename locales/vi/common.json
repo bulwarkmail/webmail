@@ -853,6 +853,7 @@
     },
     "plugin_panel_show": "Hiện bảng plugin",
     "plugin_panel_hide": "Ẩn bảng plugin",
+    "plugin_panel": "Bảng plugin",
     "frame_title": "Thư: {subject}",
     "frame_title_from": "Thư từ {sender}",
     "download_named": "Tải xuống {name}",
@@ -5988,6 +5989,10 @@
       "ui_email_details": {
         "title": "Thêm bảng vào chi tiết thư",
         "body": "Hiển thị bảng riêng bên cạnh hoặc bên dưới thư đang mở."
+      },
+      "ui_side_panel": {
+        "title": "Thêm bảng vào các chế độ xem khác",
+        "body": "Hiển thị bảng riêng bên cạnh Lịch, Danh bạ, Tệp và Cài đặt."
       },
       "ui_download_file": {
         "title": "Lưu tệp vào thiết bị",
