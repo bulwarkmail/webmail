@@ -52,6 +52,14 @@ export function currentSettingValue(entry: SettingSchemaEntry): SettingValue | n
 
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 
+/**
+ * app.getSettings names two settings after what they mean to a reader
+ * (language, calendarView); setSettings takes those names too.
+ */
+const SETTING_ALIASES: Readonly<Record<string, string>> = { language: 'locale', calendarView: 'viewMode' };
+export const canonicalSetting = (name: string): string => SETTING_ALIASES[name] ?? name;
+const schemaEntry = (key: string): SettingSchemaEntry | undefined => (Object.prototype.hasOwnProperty.call(SETTINGS_SCHEMA, key) ? SETTINGS_SCHEMA[key] : undefined);
+
 function gateOn(gate: Parameters<ReturnType<typeof usePolicyStore.getState>['isFeatureEnabled']>[0]): boolean {
   try { return usePolicyStore.getState().isFeatureEnabled(gate); } catch { return true; }
 }
@@ -61,8 +69,9 @@ function gateOn(gate: Parameters<ReturnType<typeof usePolicyStore.getState>['isF
  * `pending` holds the other values of the same call (calendar hours are
  * checked against each other).
  */
-export function settingRefusal(key: string, value?: unknown, pending: Record<string, unknown> = {}): SettingRefusal | null {
-  const entry = Object.prototype.hasOwnProperty.call(SETTINGS_SCHEMA, key) ? SETTINGS_SCHEMA[key] : undefined;
+export function settingRefusal(name: string, value?: unknown, pending: Record<string, unknown> = {}): SettingRefusal | null {
+  const key = canonicalSetting(name);
+  const entry = schemaEntry(key);
   if (!entry) return DENIED_SETTINGS.includes(key) || key in (useSettingsStore.getState() as object) ? 'not_allowed' : 'unknown';
   const policy = usePolicyStore.getState();
   if (entry.gate && !gateOn(entry.gate)) return 'unavailable';
@@ -79,21 +88,28 @@ export function settingRefusal(key: string, value?: unknown, pending: Record<str
     const gated = entry.kind.options.filter((o) => o.gate && !gateOn(o.gate));
     if (gated.some((o) => values.includes(o.value))) return 'unavailable';
   }
-  const restriction = entry.store === 'settings' ? policy.getRestriction(key) : undefined;
-  if (restriction) {
-    if (restriction.allowedValues && !restriction.allowedValues.some((v) => same(v, value))) return 'bad_value';
-    if (typeof value === 'number') {
-      if (key === 'toastDuration' && typeof restriction.min === 'number') {
-        if (!toastDurationAtLeast(value, restriction.min)) return 'bad_value';
-      } else if (typeof restriction.min === 'number' && value < restriction.min) return 'bad_value';
-      if (typeof restriction.max === 'number' && value > restriction.max) return 'bad_value';
-    }
-  }
+  const restricted = restrictionRefusal(entry, value);
+  if (restricted) return restricted;
   if (key === 'calendarDayStartHour' || key === 'calendarDayEndHour') {
     const state = useSettingsStore.getState();
     const start = Number(key === 'calendarDayStartHour' ? value : pending.calendarDayStartHour ?? state.calendarDayStartHour);
     const end = Number(key === 'calendarDayEndHour' ? value : pending.calendarDayEndHour ?? state.calendarDayEndHour);
     if (!(end > start)) return 'bad_value';
+  }
+  return null;
+}
+
+/** The admin's restriction on the value (allowed values, minimum, maximum), or null. */
+function restrictionRefusal(entry: SettingSchemaEntry, value: unknown): SettingRefusal | null {
+  const key = entry.key;
+  const restriction = entry.store === 'settings' ? usePolicyStore.getState().getRestriction(key) : undefined;
+  if (!restriction) return null;
+  if (restriction.allowedValues && !restriction.allowedValues.some((v) => same(v, value))) return 'bad_value';
+  if (typeof value === 'number') {
+    if (key === 'toastDuration' && typeof restriction.min === 'number') {
+      if (!toastDurationAtLeast(value, restriction.min)) return 'bad_value';
+    } else if (typeof restriction.min === 'number' && value < restriction.min) return 'bad_value';
+    if (typeof restriction.max === 'number' && value > restriction.max) return 'bad_value';
   }
   return null;
 }
@@ -164,7 +180,7 @@ export async function doDescribeSettings(arg: unknown): Promise<Record<string, S
   for (const [key, next] of Object.entries(changes)) {
     if (key.length > 100) continue;
     const reason = settingRefusal(key, next, changes);
-    const entry = Object.prototype.hasOwnProperty.call(SETTINGS_SCHEMA, key) ? SETTINGS_SCHEMA[key] : undefined;
+    const entry = schemaEntry(canonicalSetting(key));
     if (!entry) {
       out[key] = { key, label: key, page: '', pageLabel: '', current: null, currentLabel: '', allowed: false, reason: reason ?? 'unknown' };
       continue;
@@ -172,7 +188,7 @@ export async function doDescribeSettings(arg: unknown): Promise<Record<string, S
     const current = currentSettingValue(entry);
     const options = entry.kind.type === 'choice' || entry.kind.type === 'boolean'
       ? (entry.kind.type === 'boolean' ? [true, false] : entry.kind.options.map((o) => o.value))
-        .filter((v) => settingRefusal(key, v, changes) === null)
+        .filter((v) => settingRefusal(entry.key, v, changes) === null)
         .map((v) => ({ value: v, label: settingValueLabel(entry, v, messages, locale) }))
       : undefined;
     out[key] = {
@@ -231,12 +247,12 @@ export async function doSetSettings(pluginId: string, arg: unknown): Promise<Set
   for (const [key, value] of Object.entries(changes)) {
     const reason = settingRefusal(key, value, changes);
     if (reason) { refused[key] = reason; continue; }
-    const entry = SETTINGS_SCHEMA[key];
+    const entry = SETTINGS_SCHEMA[canonicalSetting(key)];
     const old = currentSettingValue(entry);
     if (same(old, value)) { applied[key] = { old, new: value as SettingValue }; continue; }
     if (!(await writeAndCheck(entry, value))) { refused[key] = 'stopped'; continue; }
     applied[key] = { old, new: value as SettingValue };
-    previous[key] = old;
+    previous[entry.key] = old;
   }
   const undoToken = Object.keys(previous).length > 0
     ? issueUndoToken(pluginId, undoAccount(client), 'settings', previous)
@@ -255,15 +271,15 @@ export async function doUndoSettings(pluginId: string, token: unknown): Promise<
   const previous = redeemUndoToken<Record<string, SettingValue | null>>(method, pluginId, undoAccount(client), 'settings', token);
   const restored: string[] = [];
   const refused: SettingsUndoResult['refused'] = {};
-  const policy = usePolicyStore.getState();
   for (const [key, old] of Object.entries(previous)) {
-    const entry = SETTINGS_SCHEMA[key];
+    const entry = schemaEntry(key);
     if (!entry || old === null) { refused[key] = 'unknown'; continue; }
-    if ((entry.store === 'settings' && policy.isSettingLocked(key) && !entry.preset)
-      || (entry.store === 'theme' && policy.getColorModePolicy().locked)) {
-      refused[key] = 'locked';
-      continue;
-    }
+    // As for a change: not where the admin has locked or hidden the setting
+    // since, a gate now hides its row, or the admin's restriction rules the
+    // old value out. The value itself needn't be one the assistant offers:
+    // the user had it.
+    const reason = settingRefusal(key) ?? restrictionRefusal(entry, old);
+    if (reason) { refused[key] = reason; continue; }
     if (same(currentSettingValue(entry), old) || (await writeAndCheck(entry, old))) restored.push(key);
     else refused[key] = 'stopped';
   }

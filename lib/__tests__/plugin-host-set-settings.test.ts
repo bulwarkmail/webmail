@@ -5,6 +5,7 @@ import { useAuthStore } from '@/stores/auth-store';
 import { useSettingsStore } from '@/stores/settings-store';
 import { usePolicyStore } from '@/stores/policy-store';
 import { useLocaleStore } from '@/stores/locale-store';
+import { useCalendarStore } from '@/stores/calendar-store';
 import { settingsHooks } from '../plugin-hooks';
 import { clearUndoTokens } from '../plugin-sandbox/assistant/c.undo';
 
@@ -106,6 +107,28 @@ describe('api.app.setSettings', () => {
     expect(undone).toEqual({ restored: ['deleteAction'], refused: { timeFormat: 'locked' } });
     // A value the assistant may not set, put back because the user had it.
     expect(useSettingsStore.getState().deleteAction).toBe('permanent');
+  });
+
+  it('takes the names app.getSettings uses for language and the calendar view', async () => {
+    const result = await call(ASSISTANT, 'app.setSettings', { language: 'fr', calendarView: 'week' }) as Change;
+    expect(Object.keys(result.applied).sort()).toEqual(['calendarView', 'language']);
+    expect(useLocaleStore.getState().locale).toBe('fr');
+    expect(useCalendarStore.getState().viewMode).toBe('week');
+    const described = await call(ASSISTANT, 'app.describeSettings', ['language']) as Record<string, { allowed: boolean; current: unknown }>;
+    expect(described.language).toMatchObject({ allowed: true, current: 'fr' });
+    await call(ASSISTANT, 'app.undoSettings', result.undoToken);
+    expect(useLocaleStore.getState().locale).toBe('en');
+  });
+
+  it('undo checks what a change checks: hidden, a gate and the restriction now', async () => {
+    useSettingsStore.setState({ markAsReadDelay: 0, unifiedCrossAccount: false } as never);
+    restrict({}, { unifiedCrossAccountEnabled: true });
+    const result = await call(ASSISTANT, 'app.setSettings', { timeFormat: '12h', markAsReadDelay: 3000, unifiedCrossAccount: true }) as Change;
+    expect(Object.keys(result.applied).sort()).toEqual(['markAsReadDelay', 'timeFormat', 'unifiedCrossAccount']);
+    restrict({ timeFormat: { hidden: true }, markAsReadDelay: { allowedValues: [3000] } }, { unifiedCrossAccountEnabled: false });
+    const undone = await call(ASSISTANT, 'app.undoSettings', result.undoToken) as { restored: string[]; refused: Record<string, string> };
+    expect(undone).toEqual({ restored: [], refused: { timeFormat: 'hidden', markAsReadDelay: 'bad_value', unifiedCrossAccount: 'unavailable' } });
+    expect(useSettingsStore.getState().timeFormat).toBe('12h');
   });
 
   it('needs settings:change, and keeps the undo to its plugin', async () => {
