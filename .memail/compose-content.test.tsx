@@ -140,3 +140,46 @@ it('keeps paragraph indentation while supplying missing document spacing',()=>{
   expect(style.marginTop).toBe('0px');
   expect(style.marginBottom).toBe('1em');
 });
+
+
+it('clears pasted block typography while preserving paragraph gaps and unselected content',async()=>{
+  const editor = await setup();
+  act(()=>{editor.commands.setContent('<p style="font-family:Georgia;color:red;text-align:center;margin:1em 0"><strong>Selected</strong></p><p><em>Untouched</em></p>');editor.commands.setTextSelection({from:1,to:9});});
+  fireEvent.click(screen.getByTitle('clear_formatting'));
+  const document = new DOMParser().parseFromString(serializeEditorContent(editor),'text/html');
+  const first=document.querySelector('p')!;
+  expect(first.textContent).toBe('Selected');
+  expect(first.style.color).toBe(''); expect(first.style.fontFamily).toBe(''); expect(first.style.textAlign).toBe('');
+  expect(first.style.marginTop).toBe('1em'); expect(first.querySelector('strong')).toBeNull();
+  expect(document.querySelector('em')?.textContent).toBe('Untouched');
+});
+
+it('sets paragraph line height, removes conflicting pasted span height and keeps other formatting',async()=>{
+  const editor = await setup();
+  act(()=>{editor.commands.setContent('<p style="margin:1em 0;line-height:1.7"><span style="font-family:Georgia;color:red;line-height:3">First line</span><br>Second line</p><p>Unselected</p>');editor.commands.setTextSelection(2);});
+  fireEvent.click(screen.getByRole('button',{name:'Line height'}));
+  fireEvent.click(screen.getByRole('menuitemradio',{name:'Double spaced'}));
+  const saved = serializeEditorContent(editor);
+  const document = new DOMParser().parseFromString(saved,'text/html');
+  expect(document.querySelector('p')?.style.lineHeight).toBe('2');
+  expect(document.querySelector('p')?.style.marginTop).toBe('1em');
+  expect(document.querySelector('span')?.style.fontFamily).toBe('Georgia');
+  expect(document.querySelector('span')?.style.lineHeight).toBe('');
+  expect(document.querySelectorAll('p')[1].style.lineHeight).toBe('');
+  act(()=>{editor.commands.setContent(saved);});
+  expect(serializeEditorContent(editor)).toBe(saved);
+});
+
+
+it('clears heading/list formatting as one undoable change without losing paragraph spacing',async()=>{
+  const editor = await setup();
+  act(()=>{editor.commands.setContent('<h3 style="margin:1em 0;color:red">Title</h3><ul><li><p style="margin:1.5em 0"><strong>Item</strong></p></li></ul>');editor.commands.selectAll();});
+  const before = serializeEditorContent(editor);
+  fireEvent.click(screen.getByTitle('clear_formatting'));
+  const document = new DOMParser().parseFromString(serializeEditorContent(editor),'text/html');
+  expect(document.querySelector('h3,ul,strong')).toBeNull();
+  expect(Array.from(document.querySelectorAll('p')).map(p=>p.textContent).filter(Boolean)).toEqual(['Title','Item']);
+  expect(document.querySelectorAll('p')[1].style.marginTop).toBe('1.5em');
+  act(()=>{editor.commands.undo();});
+  expect(serializeEditorContent(editor)).toBe(before);
+});

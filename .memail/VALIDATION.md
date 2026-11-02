@@ -100,3 +100,10 @@ The preview is in draft PR #3. Phase 0 and full phase 1 acceptance are not compl
 - 35 targeted tests pass across saved searches, workspace toolbar and global shortcut guards. New coverage checks criteria/folder matching, no-results recovery without store mutations, and Delete/Archive suppression while a marked disclosure is open, with shortcuts restored after closing.
 - TypeScript, scoped lint and production build passed. Final focus-return refinements passed the targeted suite afterward.
 - Browser verified saved-search matching, no-results recovery and Escape returning focus to the disclosure. No saved entries, messages or draft bodies changed. Screenshot: research workspace `memail-search-finder.jpg`.
+
+
+## Composer typography controls
+
+- 46 tests pass across content fidelity, toolbar accessibility and real-composer keyboard integration. New coverage checks line-height serialization/reopen, removal of conflicting span height, retained fonts/spacing, selected-block formatting reset, untouched neighboring text, and one-step undo of heading/list normalization. Scoped lint passes.
+- Browser used a temporary isolated production-editor route: double spacing computed to 28px at a 14px font while paragraph margins stayed 14px; unselected paragraph remained 20px line height. Clear formatting removed font/color/bold while keeping text and 1em margins; Undo restored Georgia and bold. Screenshot: research workspace `memail-line-height.jpg`. Temporary route removed; no user drafts edited.
+- Production build includes TypeScript validation. Broad mobile toolbar and recipient-client rendering acceptance remain open.

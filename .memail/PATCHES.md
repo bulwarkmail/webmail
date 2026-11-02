@@ -74,3 +74,9 @@ Add each customization here. Include the relevant upstream files, the reason it 
 
 - `.memail/saved-search-menu.tsx`: local case-insensitive finder matches saved names, criteria and folders; no-results recovery returns focus to the finder. It never changes stored entries.
 - `lib/keyboard.ts`: marked open native disclosures are keyboard-owning layers, alongside existing dialogs and menus. The two workspace panels carry `data-keyboard-layer`, close when focus leaves, and consume Escape before global mailbox shortcuts. Closed disclosures do not block shortcuts.
+
+
+## Composer typography controls
+
+- `.memail/compose-formatting.ts`, `components/email/rich-text-editor.tsx`: paragraph/heading line-height choices with removal of conflicting imported span line heights. Existing font, color and paragraph spacing are retained.
+- Clear formatting now strips pasted typography on selected blocks as well as marks, maps preserved spacing through heading/list normalization, and starts a separate undo group. Quoted/signature atom content is not traversed.

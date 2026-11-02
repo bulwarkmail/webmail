@@ -13,6 +13,7 @@ import Link from "@tiptap/extension-link";
 import TextAlign from "@tiptap/extension-text-align";
 import { TextDirection } from "@/components/email/text-direction";
 import { normalizeComposeHtml, markdownToComposeHtml, looksLikeMarkdown, COMPOSE_FONTS } from '@/.memail/compose-content';
+import { clearComposeFormatting, setComposeLineHeight, composeLineHeightValue } from '@/.memail/compose-formatting';
 import { paragraphSpacingValue, setParagraphSpacing } from '@/.memail/paragraph-spacing';
 import { ComposeImportDialog } from '@/.memail/compose-import-dialog';
 import { PlainTextPaste } from "@/components/email/plain-text-paste";
@@ -683,7 +684,7 @@ export function RichTextEditor({
       ].map((name) => ed.isActive(name)).concat(
         ed.isActive("heading", { level: 1 }), ed.isActive("heading", { level: 2 }),
         ed.isActive({ textAlign: "left" }), ed.isActive({ textAlign: "center" }), ed.isActive({ textAlign: "right" }),
-      ).join() + `|${ed.getAttributes("heading").level ?? ""}|${style.fontFamily ?? ""}|${style.fontSize ?? ""}|${style.color ?? ""}|${style.backgroundColor ?? ""}|${ed.getAttributes("paragraph").style ?? ""}|${ed.getAttributes("paragraph").dir ?? ""}`;
+      ).join() + `|${ed.getAttributes("heading").style ?? ""}|${ed.getAttributes("heading").level ?? ""}|${style.fontFamily ?? ""}|${style.fontSize ?? ""}|${style.color ?? ""}|${style.backgroundColor ?? ""}|${ed.getAttributes("paragraph").style ?? ""}|${ed.getAttributes("paragraph").dir ?? ""}`;
     },
   });
 
@@ -1315,10 +1316,14 @@ export function RichTextEditor({
           value={paragraphSpacingValue(editor.getAttributes('paragraph').style)}
           choices={[{value:'4px',label:'Compact'},{value:'1em',label:'Comfortable'},{value:'1.5em',label:'Spacious'}]}
           onSelect={value=>{setParagraphSpacing(editor,value);}} />
+        <ToolbarChoice item="line-height" label="Line height" buttonLabel="Line height"
+          value={composeLineHeightValue(editor)}
+          choices={[{value:'',label:'Default line height'},{value:'1.15',label:'1.15 lines'},{value:'1.5',label:'1.5 lines'},{value:'1.75',label:'1.75 lines'},{value:'2',label:'Double spaced'}]}
+          onSelect={value=>{setComposeLineHeight(editor,value);}} />
         <ToolbarButton item="insert-source" title="Insert Markdown or HTML" onClick={()=>setImportOpen(true)}><Code className="size-4" /></ToolbarButton>
         <ToolbarButton
           item="clear-formatting"
-          onClick={() => editor.chain().focus().clearNodes().unsetAllMarks().run()}
+          onClick={() => clearComposeFormatting(editor)}
           title={tToolbar("clear_formatting")}
         >
           <RemoveFormatting className="w-4 h-4" />
