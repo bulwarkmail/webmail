@@ -247,6 +247,8 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
     { label: 'settings.email_behavior.quick_reply.label' },
     { label: 'settings.email_behavior.auto_select_reply_identity.label' },
     { label: 'settings.email_behavior.signature_position.label' },
+    { label: 'settings.email_behavior.signature_new_mail.label' },
+    { label: 'settings.email_behavior.signature_reply_forward.label' },
     { label: 'settings.email_behavior.signature_separator.label', advanced: true },
     { label: 'settings.composing_page.sections.sending' },
     { label: 'settings.email_behavior.send_delay.label' },

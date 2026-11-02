@@ -6,18 +6,29 @@
 // Plugins describe events in a small shape of their own (CalendarEventInput
 // in plugin-types.ts); arbitrary JSCalendar objects are not accepted.
 
+import { addDays, parseISO, subDays } from 'date-fns';
 import { createRecurrenceRule } from '@/lib/recurrence-rule';
 import type {
-  CalendarEventInput, CalendarEventView, CalendarView, TaskInput, TaskView,
+  CalendarEventInput, CalendarEventView, CalendarView, InstalledPlugin, TaskInput, TaskView,
 } from '../plugin-types';
 import type {
   Calendar, CalendarEvent, CalendarEventAlert, CalendarLink, CalendarParticipant, CalendarRecurrenceRule,
-  CalendarRelation, CalendarTask,
+  CalendarRelation, CalendarTask, ContactCard,
 } from '../jmap/types';
 import type { IJMAPClient } from '../jmap/client-interface';
 import { useCalendarStore } from '@/stores/calendar-store';
 import { useTaskStore } from '@/stores/task-store';
 import { useIdentityStore } from '@/stores/identity-store';
+import { useSettingsStore } from '@/stores/settings-store';
+import { useContactStore } from '@/stores/contact-store';
+import {
+  BIRTHDAY_CALENDAR_ID,
+  createBirthdayCalendar,
+  generateBirthdayEvents,
+} from '@/lib/birthday-calendar';
+import { getEffectiveLocale } from '@/i18n/detect-locale';
+import { messagesFor } from './host-api-app';
+import { pluginHasPermission } from './permissions';
 import { eventToView, taskToView } from '../plugin-projection';
 import { expandRecurringEvents } from '../recurrence-expansion';
 import { buildParticipantMap } from '../calendar-participants';
@@ -221,9 +232,39 @@ async function pickCalendar(
   return choice.id;
 }
 
-export async function doCalendarListCalendars(): Promise<CalendarView[]> {
+async function birthdayCalendarName(): Promise<string> {
+  try {
+    const locale = getEffectiveLocale();
+    const msgs = await messagesFor(locale);
+    if (typeof msgs?.birthday_calendar === 'string') return msgs.birthday_calendar;
+  } catch {
+    // fallback
+  }
+  return 'Birthdays';
+}
+
+async function ensureContacts(client: IJMAPClient): Promise<ContactCard[]> {
+  const store = useContactStore.getState();
+  if (!store.contactsLoaded && store.contacts.length === 0 && client?.supportsContacts?.()) {
+    try {
+      await store.fetchContacts(client);
+    } catch {
+      // Ignore network errors; proceed with current contacts
+    }
+  }
+  return useContactStore.getState().contacts;
+}
+
+export async function doCalendarListCalendars(plugin?: InstalledPlugin): Promise<CalendarView[]> {
   const client = sessionClient('calendar.listCalendars');
-  return (await ensureCalendars(client)).map(calendarToView);
+  const calendars = (await ensureCalendars(client)).map(calendarToView);
+  const settings = useSettingsStore.getState();
+  const canReadContacts = plugin ? pluginHasPermission(plugin, 'contacts:read') : false;
+  if (settings.showBirthdayCalendar && canReadContacts) {
+    const name = await birthdayCalendarName();
+    calendars.push(calendarToView(createBirthdayCalendar(name, settings.birthdayCalendarColor)));
+  }
+  return calendars;
 }
 
 // ─── Reading events ───────────────────────────────────────────
@@ -233,7 +274,7 @@ function rangeBound(when: WhenParts): string {
   return `${when.date}T${when.time ?? '00:00:00'}${when.utc ? 'Z' : ''}`;
 }
 
-export async function doCalendarGetEvents(options: unknown): Promise<CalendarEventView[]> {
+export async function doCalendarGetEvents(options: unknown, plugin?: InstalledPlugin): Promise<CalendarEventView[]> {
   const method = 'calendar.getEvents';
   const opts = readObject(options, method, 'options', ['from', 'to', 'calendarIds']);
   const from = readWhen(opts.from, method, 'from');
@@ -260,6 +301,24 @@ export async function doCalendarGetEvents(options: unknown): Promise<CalendarEve
   const valid = raw.filter((e) => typeof e.start === 'string' && e.start && !Number.isNaN(Date.parse(e.start)));
   const events = expandRecurringEvents(valid, start, end)
     .filter((e) => !calendarIds || Object.keys(e.calendarIds || {}).some((id) => e.calendarIds[id] && calendarIds.has(id)));
+
+  const canReadContacts = plugin ? pluginHasPermission(plugin, 'contacts:read') : false;
+  const { showBirthdayCalendar } = useSettingsStore.getState();
+  if (showBirthdayCalendar && canReadContacts && (!calendarIds || calendarIds.has(BIRTHDAY_CALENDAR_ID))) {
+    const contacts = await ensureContacts(client);
+    // A birthday lasts its whole day. Keep the ones whose day overlaps the
+    // range the way the server does for regular events: the day ends after
+    // `from` and starts before `to`, so `to` itself is excluded.
+    const rangeStart = parseISO(start);
+    const rangeEnd = parseISO(end);
+    const birthdays = generateBirthdayEvents(contacts, subDays(rangeStart, 1).toISOString(), end)
+      .filter((b) => {
+        const dayStart = parseISO(b.start);
+        return dayStart < rangeEnd && addDays(dayStart, 1) > rangeStart;
+      });
+    events.push(...birthdays);
+  }
+
   const sortKey = (e: CalendarEvent) => e.utcStart ?? e.start;
   events.sort((a, b) => (sortKey(a) < sortKey(b) ? -1 : sortKey(a) > sortKey(b) ? 1 : 0));
   return events.slice(0, MAX_PLUGIN_EVENTS).map(eventToView);
@@ -294,9 +353,21 @@ async function loadEvent(client: IJMAPClient, id: string): Promise<CalendarEvent
   };
 }
 
-export async function doCalendarGetEvent(id: unknown): Promise<CalendarEventView | null> {
+export async function doCalendarGetEvent(id: unknown, plugin?: InstalledPlugin): Promise<CalendarEventView | null> {
   const method = 'calendar.getEvent';
   const eventId = readId(id, method);
+  if (eventId.startsWith('birthday-')) {
+    const canReadContacts = plugin ? pluginHasPermission(plugin, 'contacts:read') : false;
+    const { showBirthdayCalendar } = useSettingsStore.getState();
+    if (!showBirthdayCalendar || !canReadContacts) return null;
+    const client = sessionClient(method);
+    const contacts = await ensureContacts(client);
+    const match = eventId.match(/^birthday-(.+)-(\d{4})$/);
+    const year = match ? parseInt(match[2], 10) : new Date().getFullYear();
+    const birthdays = generateBirthdayEvents(contacts, `${year}-01-01T00:00:00`, `${year}-12-31T23:59:59`);
+    const found = birthdays.find((b) => b.id === eventId);
+    return found ? eventToView(found) : null;
+  }
   const event = await loadEvent(sessionClient(method), eventId);
   return event ? eventToView(event) : null;
 }
@@ -307,6 +378,9 @@ export async function doCalendarGetEvent(id: unknown): Promise<CalendarEventView
  * range the calendar has loaded is added to that list first.
  */
 async function eventForMutation(client: IJMAPClient, method: string, id: string): Promise<CalendarEvent> {
+  if (id.startsWith('birthday-')) {
+    throw new Error(`${method}: birthday events cannot be modified`);
+  }
   const event = await loadEvent(client, id);
   if (!event) throw new Error(`${method}: no event with id "${id}"`);
   if (!useCalendarStore.getState().events.some((e) => e.id === id)) {

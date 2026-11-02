@@ -141,6 +141,54 @@ export function composeBodyHasUserContent(prevHtml: string): boolean {
   return doc.body.querySelector('img, table, hr, [data-quoted-html]') !== null;
 }
 
+const DATA_IMAGE = /^data:(image\/(?:png|jpe?g|gif|webp|bmp|avif));base64,([a-z0-9+/=\s]+)$/i;
+
+function dataImageFile(src: string, name: string): File | null {
+  const match = DATA_IMAGE.exec(src);
+  if (!match) return null;
+  try {
+    const binary = atob(match[2].replace(/\s+/g, ''));
+    const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0));
+    const type = match[1].toLowerCase();
+    return new File([bytes], `${name}.${type.slice('image/'.length).replace('jpeg', 'jpg')}`, { type });
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * A template's images arrive as data: URIs (an imported templates file, or a
+ * template saved from a message with a pasted image). Sent as they are, Gmail
+ * and Outlook don't show them, so hand each one to `upload` - the composer's
+ * pasted-image upload - and tag it with the returned cid; the send path then
+ * turns it into a cid: part (#1490). An image whose upload fails is left as is.
+ */
+export async function embedTemplateImages(
+  html: string,
+  upload: (file: File) => Promise<{ cid: string } | null>,
+): Promise<string> {
+  if (!/<img\b[^>]*\bsrc\s*=\s*["']?\s*data:image\//i.test(html)) return html;
+  const doc = new DOMParser().parseFromString(`<body>${html}</body>`, 'text/html');
+  const images = Array.from(doc.querySelectorAll('img[src]'))
+    .map((img) => ({ img, src: img.getAttribute('src')!.trim() }))
+    .filter(({ src }) => DATA_IMAGE.test(src));
+  if (images.length === 0) return html;
+  // The same image shown twice goes out as one part.
+  const sources = Array.from(new Set(images.map(({ src }) => src)));
+  const cids = new Map(await Promise.all(sources.map(async (src, i) => {
+    const file = dataImageFile(src, `image-${i + 1}`);
+    return [src, file ? (await upload(file))?.cid : undefined] as const;
+  })));
+  let changed = false;
+  for (const { img, src } of images) {
+    const cid = cids.get(src);
+    if (!cid) continue;
+    img.setAttribute('data-cid', cid);
+    changed = true;
+  }
+  return changed ? doc.body.innerHTML : html;
+}
+
 function sanitizeText(value: unknown): string {
   return DOMPurify.sanitize(String(value || ''), STRIP_HTML_CONFIG);
 }

@@ -52,6 +52,41 @@ describe('settings sync debounce', () => {
     });
   });
 
+  it('defaults the signature auto-insert toggles and the separator to on and exports them', () => {
+    const settings = useSettingsStore.getState();
+    expect(settings.signatureNewMailEnabled).toBe(true);
+    expect(settings.signatureReplyForwardEnabled).toBe(true);
+    expect(settings.signatureSeparatorEnabled).toBe(true);
+
+    const exported = JSON.parse(settings.exportSettings()) as Record<string, unknown>;
+    expect(exported).toMatchObject({
+      signatureNewMailEnabled: true,
+      signatureReplyForwardEnabled: true,
+      signatureSeparatorEnabled: true,
+    });
+  });
+
+  it('keeps inserting the signature for users whose saved settings predate the toggles', async () => {
+    useSettingsStore.getState().resetToDefaults();
+    // Saved by a build without the toggles: the keys are missing.
+    localStorage.setItem('settings-storage', JSON.stringify({
+      state: { signaturePosition: 'below_quote', signatureSeparatorEnabled: true },
+      version: 12,
+    }));
+    await useSettingsStore.persist.rehydrate();
+    expect(useSettingsStore.getState().signatureNewMailEnabled).toBe(true);
+    expect(useSettingsStore.getState().signatureReplyForwardEnabled).toBe(true);
+
+    // A server copy written by such a build has no toggles either.
+    useSettingsStore.getState().importSettings(
+      JSON.stringify({ signaturePosition: 'above_quote' }),
+      { serverAccountId: 'a@example.com' },
+    );
+    expect(useSettingsStore.getState().signatureNewMailEnabled).toBe(true);
+    expect(useSettingsStore.getState().signatureReplyForwardEnabled).toBe(true);
+    localStorage.removeItem('settings-storage');
+  });
+
   it('does not rewrite a pending account snapshot after another account becomes active', async () => {
     const settings = useSettingsStore.getState();
     settings.enableSync('a@example.com', 'https://mail-a.example.com');

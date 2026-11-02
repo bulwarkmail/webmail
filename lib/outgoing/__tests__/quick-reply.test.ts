@@ -33,6 +33,14 @@ describe('prepareQuickReply', () => {
     expect(plain?.text).toMatch(/Thanks <3[\s\S]*-- \nMe$/);
   });
 
+  it('sends the bare text when the reply signature toggle is off', async () => {
+    const withHtml = await prepareQuickReply({ ...input(html), insertSignature: false });
+    expect(withHtml?.html).toBeUndefined();
+    expect(withHtml?.text).toBe('Thanks <3');
+    const plain = await prepareQuickReply({ ...input(text), insertSignature: false });
+    expect(plain?.text).toBe('Thanks <3');
+  });
+
   it('runs the finalisers with a reply context', async () => {
     const contexts: unknown[] = [];
     registerOutgoingFinalizer('f', 10, (bodies, context) => {

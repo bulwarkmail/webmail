@@ -103,7 +103,7 @@ import { OrgDisclaimerPreview } from "@/components/email/org-disclaimer-preview"
 import "@/lib/org/outgoing";
 import { SubAddressHelper } from "@/components/identity/sub-address-helper";
 import { generateSubAddress } from "@/lib/sub-addressing";
-import { substitutePlaceholders, spliceTemplateAboveSignature, composeBodyHasUserContent } from "@/lib/template-utils";
+import { substitutePlaceholders, spliceTemplateAboveSignature, composeBodyHasUserContent, embedTemplateImages } from "@/lib/template-utils";
 import { findUnfilledPlaceholders, stripEmbeddedSignatureHtml } from "@/lib/placeholder-check";
 import enMessages from "@/locales/en/common.json";
 import { TemplatePicker } from "@/components/templates/template-picker";
@@ -547,6 +547,13 @@ export function EmailComposer({
   const updateSetting = useSettingsStore((state) => state.updateSetting);
   const sendDelaySeconds = useSettingsStore((state) => state.sendDelaySeconds);
   const signaturePosition = useSettingsStore((state) => state.signaturePosition);
+  const signatureNewMailEnabled = useSettingsStore((state) => state.signatureNewMailEnabled);
+  const signatureReplyForwardEnabled = useSettingsStore((state) => state.signatureReplyForwardEnabled);
+  // Whether automatic signature insertion is on for this composer mode: new
+  // mail (and re-opened drafts, which open in compose mode) follow the
+  // new-mail toggle, replies and forwards the reply/forward one. What the
+  // body already carries is never stripped - only the insert/append is gated.
+  const autoSignatureEnabled = mode === 'compose' ? signatureNewMailEnabled : signatureReplyForwardEnabled;
   const signatureSeparatorEnabled = useSettingsStore((state) => state.signatureSeparatorEnabled);
   const requestReadReceiptDefault = useSettingsStore((state) => state.requestReadReceiptDefault);
   // A draft belongs to the account the composer was opened in. Switching
@@ -622,12 +629,13 @@ export function EmailComposer({
   const shouldEmbedSignatureAboveQuote =
     (mode === 'reply' || mode === 'replyAll' || mode === 'forward') &&
     signaturePosition === 'above_quote' &&
+    signatureReplyForwardEnabled &&
     hasInitialSignature;
   // New-mail composes always embed the signature into the editor body so it's
   // editable/removable (the previous read-only preview below the editor was
   // never spec-correct - see #329). Compose mode also ignores any leftover
   // `replyTo` from a still-selected email; getInitialBody short-circuits below.
-  const shouldEmbedSignatureInNewMail = mode === 'compose' && hasInitialSignature;
+  const shouldEmbedSignatureInNewMail = mode === 'compose' && signatureNewMailEnabled && hasInitialSignature;
 
   // Format a single EmailAddress for display in the composer input
   const toRecipient = (r: { name?: string; email?: string }): Recipient =>
@@ -1320,6 +1328,9 @@ export function EmailComposer({
     const isReplyLike = mode === 'reply' || mode === 'replyAll' || mode === 'forward';
     if (!isReplyLike && mode !== 'compose') return;
     if (isReplyLike && signaturePosition !== 'above_quote') return;
+    // With automatic insertion off the body never got a signature spliced
+    // in, so there is nothing to swap.
+    if (!autoSignatureEnabled) return;
 
     if (plainTextMode) {
       // A new plain-text message carries the signature at the end of the
@@ -1361,7 +1372,7 @@ export function EmailComposer({
     // would re-run on unrelated identity-field changes and re-splice the
     // signature into the live editor.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [signatureIdentity?.id, signatureContent, signatureSeparatorEnabled, signaturePosition, mode, plainTextMode, pluginSignatureRevision]);
+  }, [signatureIdentity?.id, signatureContent, signatureSeparatorEnabled, signaturePosition, mode, plainTextMode, pluginSignatureRevision, autoSignatureEnabled]);
 
   const openScheduleDialog = useCallback(() => {
     setShowScheduleDialog(true);
@@ -2106,6 +2117,40 @@ export function EmailComposer({
     }
   };
 
+  const handleImageUpload = useCallback(async (
+    file: File,
+  ): Promise<{ src: string; cid: string } | null> => {
+    if (!client) return null;
+    try {
+      const readAsDataUrl = new Promise<string | null>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve((e.target?.result as string) ?? null);
+        reader.onerror = () => resolve(null);
+        reader.readAsDataURL(file);
+      });
+      const [{ blobId }, dataUrl] = await Promise.all([
+        (composerClientRef.current ?? client).uploadBlob(file),
+        readAsDataUrl,
+      ]);
+      if (!dataUrl) throw new Error('Failed to read image as data URL');
+      const cid = `${generateUUID()}@webmail`;
+      inlineImagesRef.current.push({
+        cid,
+        blobId,
+        type: file.type || 'application/octet-stream',
+        name: file.name,
+        size: file.size,
+        dataUrl,
+        uploadedAt: Date.now(),
+      });
+      return { src: dataUrl, cid };
+    } catch (error) {
+      debug.error(`Failed to upload inline image ${file.name}:`, error);
+      toast.error(t('upload_failed', { filename: file.name }));
+      return null;
+    }
+  }, [client, t]);
+
   const handleTemplateSelect = useCallback(async (template: EmailTemplate, filledValues: Record<string, string>) => {
     let filledSubject = Object.keys(filledValues).length > 0
       ? substitutePlaceholders(template.subject, filledValues)
@@ -2128,6 +2173,8 @@ export function EmailComposer({
       filledSubject = rendered.subject;
       bodyContent = plainTextMode ? rendered.text : sanitizePluginBodyHtml(rendered.html);
     }
+    // Its data: images go out as cid: parts, like pasted ones (#1490).
+    if (!plainTextMode) bodyContent = await embedTemplateImages(bodyContent, handleImageUpload);
 
     if (mode === 'compose') {
       // An empty template subject must not wipe one the user typed (#540).
@@ -2213,7 +2260,7 @@ export function EmailComposer({
 
     setShowTemplatePicker(false);
     notifyTemplateApplied(template);
-  }, [mode, plainTextMode, signatureIdentity, signatureSeparatorEnabled]);
+  }, [mode, plainTextMode, signatureIdentity, signatureSeparatorEnabled, handleImageUpload]);
 
   useEffect(() => {
     const handleTemplateKey = (e: KeyboardEvent) => {
@@ -2395,40 +2442,6 @@ export function EmailComposer({
       }
     }
   }, [client, t, plainTextMode]);
-
-  const handleImageUpload = useCallback(async (
-    file: File,
-  ): Promise<{ src: string; cid: string } | null> => {
-    if (!client) return null;
-    try {
-      const readAsDataUrl = new Promise<string | null>((resolve) => {
-        const reader = new FileReader();
-        reader.onload = (e) => resolve((e.target?.result as string) ?? null);
-        reader.onerror = () => resolve(null);
-        reader.readAsDataURL(file);
-      });
-      const [{ blobId }, dataUrl] = await Promise.all([
-        (composerClientRef.current ?? client).uploadBlob(file),
-        readAsDataUrl,
-      ]);
-      if (!dataUrl) throw new Error('Failed to read image as data URL');
-      const cid = `${generateUUID()}@webmail`;
-      inlineImagesRef.current.push({
-        cid,
-        blobId,
-        type: file.type || 'application/octet-stream',
-        name: file.name,
-        size: file.size,
-        dataUrl,
-        uploadedAt: Date.now(),
-      });
-      return { src: dataUrl, cid };
-    } catch (error) {
-      debug.error(`Failed to upload inline image ${file.name}:`, error);
-      toast.error(t('upload_failed', { filename: file.name }));
-      return null;
-    }
-  }, [client, t]);
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!event.target.files) return;
@@ -2661,7 +2674,7 @@ export function EmailComposer({
     // below the editor - was saved without it (#823). Embed the *marked-up*
     // form so re-opening the draft round-trips the signature as one block and
     // signatureAlreadyInBody sees it instead of appending a second copy.
-    const draftSignatureHtml = signatureAlreadyInBody
+    const draftSignatureHtml = signatureAlreadyInBody || !autoSignatureEnabled
       ? ''
       : buildEmbeddedSignatureHtml(signatureIdentity, {
           embed: true,
@@ -2669,7 +2682,7 @@ export function EmailComposer({
         });
     const draftHtmlBody = plainTextMode ? undefined : `${body}${draftSignatureHtml}`;
     const draftTextBody = plainTextMode
-      ? (signatureAlreadyInBody
+      ? (signatureAlreadyInBody || !autoSignatureEnabled
           ? body
           : appendPlainTextSignature(body, signatureIdentity, { separator: signatureSeparatorEnabled }))
       : htmlToPlainText(draftHtmlBody!, imageAltText);
@@ -3606,9 +3619,14 @@ export function EmailComposer({
     // above-quote replies, a re-opened draft) `signatureAlreadyInBody` is set
     // and the trailing append below is skipped so we don't duplicate it.
 
+    // Whether automatic signature insertion is on for this composer mode
+    // (component-level `autoSignatureEnabled` - see signatureAlreadyInBody).
+    // What the body already carries is never stripped - only the append is
+    // gated.
+
     // Build HTML signature block (used only in rich text mode)
     const buildSignatureHtml = (): string => {
-      if (signatureAlreadyInBody) return '';
+      if (signatureAlreadyInBody || !autoSignatureEnabled) return '';
       const sep = wantsSignatureSeparator(signatureSeparatorEnabled, signatureIdentity) ? `<br><br>-- <br>` : `<br><br>`;
       if (signatureIdentity?.htmlSignature) {
         return `${sep}${sanitizeSignatureHtml(signatureIdentity.htmlSignature)}`;
@@ -3625,8 +3643,8 @@ export function EmailComposer({
     // In plain text mode, send text/plain only (no HTML body)
     const signatureOpts = { separator: signatureSeparatorEnabled };
     const builtTextBody = plainTextMode
-      ? (signatureAlreadyInBody ? body : appendPlainTextSignature(body, signatureIdentity, signatureOpts))
-      : (signatureAlreadyInBody ? htmlToPlainText(body, imageAltText) : appendPlainTextSignature(htmlToPlainText(body, imageAltText), signatureIdentity, signatureOpts));
+      ? (signatureAlreadyInBody || !autoSignatureEnabled ? body : appendPlainTextSignature(body, signatureIdentity, signatureOpts))
+      : (signatureAlreadyInBody || !autoSignatureEnabled ? htmlToPlainText(body, imageAltText) : appendPlainTextSignature(htmlToPlainText(body, imageAltText), signatureIdentity, signatureOpts));
 
     // Before any blobId is read: forwarded parts may still sit on the account
     // that holds the original message.
@@ -4778,8 +4796,10 @@ export function EmailComposer({
 
         {/* Hide the visual signature preview when the signature has already been
             embedded into the body (compose, above-quote replies, re-opened
-            drafts) - it would otherwise read as a second signature. */}
-        {signatureAlreadyInBody ? null
+            drafts) - it would otherwise read as a second signature. Also when
+            automatic insertion is off: nothing will be appended at send time,
+            so a preview would promise a signature that never goes out. */}
+        {signatureAlreadyInBody || !autoSignatureEnabled ? null
           : plainTextMode ? (
           getPlainTextSignature(signatureIdentity) ? (
             <div className="px-4 pb-3 text-sm leading-6 text-muted-foreground break-words whitespace-pre-wrap font-mono">

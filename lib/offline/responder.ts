@@ -9,7 +9,7 @@
  * is refused, as are calls the cache can't answer (search, changes since a
  * state): the whole request then fails as it would without offline mode.
  *
- * Answers carry no state strings: a made-up one would end up in an
+ * Answers carry no collection state strings: a made-up one would end up in an
  * Email/changes once the server is back, which refuses it.
  */
 
@@ -267,6 +267,23 @@ async function listGet(ctx: ResponderContext, args: Record<string, unknown>, nam
   };
 }
 
+/** Unfiltered mailbox pages used to load a complete folder list offline. */
+async function mailboxQuery(ctx: ResponderContext, args: Record<string, unknown>): Promise<MethodResult> {
+  if (args.filter || args.sort || args.anchor || args.sortAsTree) throw new Unanswerable();
+  const { list } = await listGet(ctx, { accountId: args.accountId }, 'mailboxes');
+  const mailboxes = list as Record<string, unknown>[];
+  const position = typeof args.position === 'number' ? args.position : 0;
+  const limit = typeof args.limit === 'number' ? args.limit : mailboxes.length;
+  return {
+    accountId: (args.accountId as string) || ctx.defaultJmap,
+    // A query token only, never a Mailbox collection state for /changes.
+    queryState: JSON.stringify(mailboxes),
+    position,
+    ids: mailboxes.slice(position, position + limit).map((mailbox) => mailbox.id),
+    ...(args.calculateTotal ? { total: mailboxes.length } : {}),
+  };
+}
+
 /** Whether a PatchObject only changes what offline mode may queue. */
 function queueablePatch(patch: Record<string, unknown>): boolean {
   return Object.keys(patch).length > 0 && Object.keys(patch).every((path) =>
@@ -361,6 +378,7 @@ export async function answerOffline(ctx: ResponderContext, methodCalls: OfflineM
         case 'Email/query': result = await emailQuery(ctx, args); break;
         case 'Email/get': result = await emailGet(ctx, args); break;
         case 'Thread/get': result = await threadGet(ctx, args); break;
+        case 'Mailbox/query': result = await mailboxQuery(ctx, args); break;
         case 'Mailbox/get': result = await listGet(ctx, args, 'mailboxes'); break;
         case 'Identity/get': result = await listGet(ctx, args, 'identities'); break;
         case 'Email/set': result = await emailSet(ctx, args); break;

@@ -35,12 +35,19 @@ export interface QuickReplyQuestions {
  * (onBeforeEmailSend) run on it too, after the organisation signature and
  * before the disclaimer, as in the composer; `onSendCheckStopped` hears
  * why one stopped it.
+ *
+ * `insertSignature` is the user's reply/forward signature toggle: false
+ * sends the bare typed text, with no signature of the user's own. The
+ * organisation signature and disclaimer still apply - they are policy,
+ * not the user's choice.
  */
 export async function prepareQuickReply(input: {
   body: string;
   signatureIdentity: Identity | null | undefined;
   sendingIdentity?: Identity | null;
   separator: boolean;
+  /** The user's signature auto-insert toggle for replies/forwards. */
+  insertSignature?: boolean;
   to: string[];
   fromEmail?: string;
   identityId?: string;
@@ -66,7 +73,10 @@ export async function prepareQuickReply(input: {
   }
 
   const signatureIdentity = currentSignatureIdentity(input.signatureIdentity, input.sendingIdentity ?? undefined);
-  const text = appendPlainTextSignature(body, signatureIdentity, { separator });
+  const insertSignature = input.insertSignature !== false;
+  const text = insertSignature
+    ? appendPlainTextSignature(body, signatureIdentity, { separator })
+    : body;
 
   // When the identity has an HTML signature, send a matching HTML body so the
   // signature keeps its formatting; appendPlainTextSignature would otherwise
@@ -77,7 +87,7 @@ export async function prepareQuickReply(input: {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/\n/g, '<br>');
-  const html = signatureIdentity?.htmlSignature?.trim()
+  const html = insertSignature && signatureIdentity?.htmlSignature?.trim()
     ? appendHtmlSignature(`<div>${escapedBody}</div>`, signatureIdentity, { separator })
     : undefined;
 

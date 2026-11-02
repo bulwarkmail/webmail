@@ -77,6 +77,12 @@ describe('settings search index (English messages)', () => {
     expect(resultsFor('composing', 'reply signature').map((r) => r.label)).toContain('Signature position');
   });
 
+  it('finds the newer signature settings on their tabs', () => {
+    expect(labelsFor('composing')).toContain('Signature on new mail');
+    expect(labelsFor('composing')).toContain('Signature on replies & forwards');
+    expect(labelsFor('composing')).toContain('Undo send / send delay');
+  });
+
   it('marks the rows the Advanced switch hides', () => {
     const advanced = settingsSubResults(en, 'message_list', 'Bulwark').filter((r) => r.advanced).map((r) => r.label);
     expect(advanced).toContain('Emails per page');

@@ -1952,6 +1952,14 @@
         "above_quote": "Pred citovaným textom",
         "below_quote": "Za citovaným textom"
       },
+      "signature_new_mail": {
+        "label": "Podpis pri nových správach",
+        "description": "Pri písaní novej správy automaticky vloží váš podpis. Vypnite, ak chcete každú novú správu začať bez podpisu."
+      },
+      "signature_reply_forward": {
+        "label": "Podpis pri odpovediach a preposielaní",
+        "description": "Pri odpovedaní alebo preposielaní automaticky priloží váš podpis. Vypnite, ak ich chcete odosielať bez podpisu."
+      },
       "signature_separator": {
         "label": "Oddeľovač podpisu",
         "description": "Pred podpis pridať štandardný oddeľovací riadok \"-- \" (RFC 3676)."
@@ -6055,7 +6063,7 @@
       },
       "ui_tasks": {
         "title": "Pridávať obsah do sekcie Úlohy",
-        "body": "Zobrazuje vlastné sekcie v podrobnostiach úlohy a tlačidlá v zozname úloh."
+        "body": "Zobrazuje vlastné sekcie v podrobnostiach úlohy, tlačidlá v zozname úloh a vlastný zoznam úloh namiesto zoznamu Bulwarku."
       },
       "ui_files": {
         "title": "Pridávať obsah do sekcie Súbory",

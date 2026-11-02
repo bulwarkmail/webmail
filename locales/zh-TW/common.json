@@ -1952,6 +1952,14 @@
         "above_quote": "引用文字之前",
         "below_quote": "引用文字之後"
       },
+      "signature_new_mail": {
+        "label": "新郵件簽名",
+        "description": "撰寫新郵件時自動插入簽名。關閉後每封新郵件都不帶簽名。"
+      },
+      "signature_reply_forward": {
+        "label": "回覆轉寄簽名",
+        "description": "回覆或轉寄時自動附加簽名。關閉後回覆和轉寄不帶簽名。"
+      },
       "signature_separator": {
         "label": "簽名檔分隔線",
         "description": "在簽名檔前加入標準的「-- 」分隔線（RFC 3676）。若希望內文直接接續簽名檔，請停用此選項。"
@@ -6055,7 +6063,7 @@
       },
       "ui_tasks": {
         "title": "新增到工作畫面",
-        "body": "在工作詳細資料中顯示它自己的區塊，並在工作清單中顯示按鈕。"
+        "body": "在工作詳細資料中顯示它自己的區塊，在工作清單中顯示按鈕，並可用它自己的工作清單取代 Bulwark 的工作清單。"
       },
       "ui_files": {
         "title": "新增到檔案畫面",
